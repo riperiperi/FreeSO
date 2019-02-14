@@ -34,6 +34,22 @@ namespace FSO.Client.UI.Panels.Neighborhoods
 
         //Mixing concerns here but binding avatar id is much nicer than lots of plumbing each time
         private IClientDataService DataService;
+        public event Action<uint, string> OnNameChange;
+
+        private string _AvatarName = "";
+        public string AvatarName
+        {
+            get
+            {
+                return _AvatarName;
+            }
+            set
+            {
+                MainButton.Tooltip = value;
+                OnNameChange?.Invoke(AvatarId, value);
+                _AvatarName = value;
+            }
+        }
 
         public UIBigPersonButton()
         {
@@ -49,7 +65,7 @@ namespace FSO.Client.UI.Panels.Neighborhoods
             Add(MainButton);
 
             User = new Binding<Avatar>()
-                .WithBinding(this, "MainButton.Tooltip", "Avatar_Name")
+                .WithBinding(this, "AvatarName", "Avatar_Name")
                 .WithBinding(this, "Sim.Avatar.HeadOutfitId", "Avatar_Appearance.AvatarAppearance_HeadOutfitID")
                 .WithBinding(this, "Sim.Avatar.BodyOutfitId", "Avatar_Appearance.AvatarAppearance_BodyOutfitID")
                 .WithBinding(this, "Sim.Avatar.Appearance", "Avatar_Appearance.AvatarAppearance_SkinTone", (x) => (Vitaboy.AppearanceType)((byte)(x ?? (byte)0)));

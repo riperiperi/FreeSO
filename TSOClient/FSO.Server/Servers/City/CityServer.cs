@@ -240,7 +240,8 @@ namespace FSO.Server.Servers.City
                 typeof(AvatarRetireHandler),
                 typeof(MailHandler),
                 typeof(MatchmakerNotifyHandler),
-                typeof(NhoodHandler)
+                typeof(NhoodHandler),
+                typeof(BulletinHandler)
             };
         }
     }

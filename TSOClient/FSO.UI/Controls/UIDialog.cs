@@ -41,7 +41,7 @@ namespace FSO.Client.UI.Controls
     /// </summary>
     public class UIDialog : UICachedContainer
     {
-        protected UIImage Background;
+        public UIImage Background;
         public string Caption { get; set; }
         public TextStyle CaptionStyle = TextStyle.DefaultTitle;
         public Rectangle CaptionMargin = new Rectangle(0, 3, 0, 0);

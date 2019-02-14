@@ -93,6 +93,7 @@ namespace FSO.IDE.EditorComponent.DataView
                     if (ID >= Frame.Args.Length) return 0;
                     return (int)Frame.Args[ID];
                 case VMExtDataType.Local:
+                    if (ID >= Frame.Locals.Length) return 0;
                     return (int)Frame.Locals[ID];
                 case VMExtDataType.Attributes:
                     return (int)Object.GetAttribute((ushort)ID);

@@ -175,9 +175,10 @@ namespace FSO.SimAntics
         /// <returns>A VMEntity instance associated with the ID.</returns>
         public VMEntity GetObjectById(short id)
         {
-            if (ObjectsById.ContainsKey(id))
+            VMEntity result;
+            if (ObjectsById.TryGetValue(id, out result))
             {
-                return ObjectsById[id];
+                return result;
             }
             return null;
         }
@@ -394,6 +395,7 @@ namespace FSO.SimAntics
                 Scheduler.RunTick();
             }
 
+            if (tickID % Math.Max(1, SpeedMultiplier) == 0) Context.ProcessLightingChanges();
             //Context.SetToNextCache.VerifyPositions(); use only for debug!
         }
 
@@ -442,6 +444,48 @@ namespace FSO.SimAntics
             // list.Insert((list[min].ObjectID>id)?min:((list[max].ObjectID > id)?max:max+1), entity);
         }
 
+        public static void DeleteFromObjList(List<VMEntity> list, VMEntity entity)
+        {
+            if (list.Count == 0) { return; }
+            int id = entity.ObjectID;
+            int max = list.Count;
+            int min = 0;
+            while (max > min)
+            {
+                int mid = (max + min) / 2;
+                int nid = list[mid].ObjectID;
+                if (id < nid) max = mid;
+                else if (id == nid)
+                {
+                    list.RemoveAt(mid); //found it
+                    return;
+                }
+                else min = mid + 1;
+            }
+            //list.RemoveAt(min);
+        }
+
+        public static int FindNextIndexInObjList(List<VMEntity> list, short targId)
+        {
+            if (list.Count == 0) return 0;
+            int count = list.Count;
+            int max = count;
+            int min = 0;
+            while (max > min)
+            {
+                int mid = (max + min) / 2;
+                int nid = list[mid].ObjectID;
+                if (targId < nid) max = mid; //target object is below us
+                else if (targId == nid)
+                {
+                    //found it. find NEXT!
+                    return mid+1;
+                }
+                else min = mid + 1; //target object is above us
+            }
+            return list[min].ObjectID > targId ? min : min+1;
+        }
+
         /// <summary>
         /// Removes an entity from this Virtual Machine.
         /// </summary>
@@ -451,7 +495,7 @@ namespace FSO.SimAntics
             if (Entities.Contains(entity))
             {
                 Context.ObjectQueries.RemoveObject(entity);
-                this.Entities.Remove(entity);
+                DeleteFromObjList(Entities, entity);
                 ObjectsById.Remove(entity.ObjectID);
                 Scheduler.DescheduleTick(entity);
                 if (entity.ObjectID < ObjectId) ObjectId = entity.ObjectID; //this id is now the smallest free object id.

@@ -201,6 +201,7 @@
     <Compile Include="Servers\City\CityServerModule.cs" />
     <Compile Include="Servers\City\Domain\EventSystem.cs" />
     <Compile Include="Servers\City\Domain\Neighborhoods.cs" />
+    <Compile Include="Servers\City\Handlers\BulletinHandler.cs" />
     <Compile Include="Servers\City\Handlers\NhoodHandler.cs" />
     <Compile Include="Servers\City\Handlers\MailHandler.cs" />
     <Compile Include="Servers\City\Handlers\MatchmakerNotifyHandler.cs" />

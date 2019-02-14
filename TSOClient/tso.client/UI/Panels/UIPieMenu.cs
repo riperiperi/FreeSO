@@ -148,7 +148,7 @@ namespace FSO.Client.UI.Panels
             HeadCamera.Position = new Vector3(0, pos2.Y, 12.5f);
             HeadCamera.Target = pos2;
 
-            HeadScene = new _3DTargetScene(GameFacade.GraphicsDevice, HeadCamera, new Point((int)(200*TrueScale),(int)(200*TrueScale)), (GlobalSettings.Default.AntiAlias) ? 8 : 0);
+            HeadScene = new _3DTargetScene(GameFacade.GraphicsDevice, HeadCamera, new Point((int)(200*TrueScale),(int)(200*TrueScale)), (GlobalSettings.Default.AntiAlias > 0) ? 8 : 0);
             HeadScene.ID = "UIPieMenuHead";
 
             m_Head.Scene = HeadScene;

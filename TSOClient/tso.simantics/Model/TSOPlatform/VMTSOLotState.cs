@@ -31,6 +31,7 @@ namespace FSO.SimAntics.Model.TSOPlatform
 
         public byte SkillMode;
         public List<VMTSOChatChannel> ChatChannels = new List<VMTSOChatChannel>();
+        public uint NhoodID;
 
         public bool CommunityLot
         {
@@ -93,6 +94,10 @@ namespace FSO.SimAntics.Model.TSOPlatform
                     ChatChannels.Add(chan);
                 }
             }
+            if (Version > 32)
+            {
+                NhoodID = reader.ReadUInt32();
+            }
         }
 
         public override void SerializeInto(BinaryWriter writer)
@@ -118,6 +123,7 @@ namespace FSO.SimAntics.Model.TSOPlatform
             {
                 channel.SerializeInto(writer);
             }
+            writer.Write(NhoodID);
         }
 
         public override bool CanPlaceNewUserObject(VM vm)

@@ -66,7 +66,8 @@ namespace FSO.LotView.Model
         public bool[] Cutaway;
 
         private Color _OutsideColor = Color.White;
-        public float MinOutMul = (150 / 400f);
+        public float MinOutMul = (175 / 400f);
+        public Vector4 ColorMul = new Vector4(0.8f, 0.8f, 1f, 0.87f);
         public Color MinOut;
         public Color OutsideColor
         {
@@ -78,7 +79,7 @@ namespace FSO.LotView.Model
             {
                 _OutsideColor = value;
                 var aFactor = 1f - ((value.R + value.G + value.B) - 115) / (512f*2);
-                MinOut = value * MinOutMul * aFactor;
+                MinOut = new Color(value.ToVector4() * MinOutMul * aFactor * ColorMul);
                 if (MinOut.R == 0) MinOut.R = 1;
                 if (MinOut.G == 0) MinOut.G = 1;
                 if (MinOut.B == 0) MinOut.B = 1;
@@ -374,6 +375,45 @@ namespace FSO.LotView.Model
                 }
             }
             return Indoors;
+        }
+
+        private byte[] GrassMask;
+        public byte[] GetGrassMask()
+        {
+            if (GrassMask != null) return GrassMask;
+            else
+            {
+                GrassMask = new byte[Width * Height];
+
+                //1: top tri clear
+                //2: right tri clear
+                //4: bottom tri clear
+                //8: left tri clear
+
+                var walls = Walls[0];
+                var floors = Floors[0];
+                for (int i=0; i<GrassMask.Length; i++)
+                {
+                    var wall = walls[i];
+                    if ((wall.Segments & WallSegments.AnyDiag) > 0)
+                    {
+                        //diagonal tile here - check both sides for grass
+                        byte result = 0;
+                        if ((wall.Segments & WallSegments.HorizontalDiag) > 0)
+                        {
+
+                        }
+                        else
+                        {
+
+                        }
+                    } else
+                    {
+                        GrassMask[i] = (byte)((floors[i].Pattern == 0) ? 0xFF : 0);
+                    }
+                }
+                return GrassMask;
+            }
         }
     }
 

@@ -85,11 +85,17 @@ namespace FSO.LotView.Components
             var skyCol = new Color(0x00, 0x80, 0xFF, 0xFF);
 
             float skyPos = OutsideSkyP(time);
-            verts.Add(new VertexPositionTexture(new Vector3(0, 1, 0), new Vector2(skyPos, 0f)));
             LastSkyPos = time;
             skyPos += 1 / 16f;
             int vertLastStart = 0;
             int vertLastLength = 1;
+            var yGap = 1f / GradTex.Height;
+            var range = 1 - yGap;
+            var topRange = 0.9f * range;
+            var btmRange = 0.1f * range;
+
+            verts.Add(new VertexPositionTexture(new Vector3(0, 1, 0), new Vector2(skyPos, yGap)));
+
             for (int y = 1; y < subdivs; y++)
             {
                 int start = verts.Count;
@@ -98,7 +104,8 @@ namespace FSO.LotView.Components
                 var height = Math.Cos(angley);
                 //var aheight = (height < -0.6f)?((-0.12f) - height):height;
                 //var tpos = (0.9f - (float)Math.Sqrt(Math.Abs(aheight)) * 0.9f);
-                var tpos = (float)((height > 0) ? (0.9f - Math.Sqrt(height) * 0.9f) : 0.9f + Math.Sqrt(-height) * 0.1f);
+                
+                var tpos = (float)((height > 0) ? (0.9f - Math.Sqrt(height) * topRange) : 0.9f + Math.Sqrt(-height) * btmRange);
 
                 for (int x = 0; x < subdivs + 1; x++)
                 {

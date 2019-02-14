@@ -172,7 +172,6 @@ namespace FSO.SimAntics.Utils
             arch.RegenRoomMap();
             VM.Context.RegeneratePortalInfo();
 
-
             var objm = iff.Get<OBJM>(1);
 
             var objt = iff.Get<OBJT>(0);

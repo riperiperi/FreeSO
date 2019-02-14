@@ -33,6 +33,10 @@ namespace FSO.Client.UI.Panels
         public UIButton CharacterDetailMedButton { get; set; }
         public UIButton CharacterDetailHighButton { get; set; }
 
+        public UIButton AALowButton { get; set; }
+        public UIButton AAMedButton { get; set; }
+        public UIButton AAHighButton { get; set; }
+
         public UILabel UIEffectsLabel { get; set; }
         public UILabel AntiAliasLabel { get; set; }
         public UILabel CharacterDetailLabel { get; set; }
@@ -52,6 +56,9 @@ namespace FSO.Client.UI.Panels
 
         public UIButton CompressionButton { get; set; }
         public UILabel CompressionLabel { get; set; }
+
+        public UIButton AdvancedButton { get; set; }
+        public UILabel AdvancedLabel { get; set; }
 
         public UIButton DPIButton { get; set; }
         public UISlider LightingSlider;
@@ -93,6 +100,16 @@ namespace FSO.Client.UI.Panels
             };
             foreach (var item in moveItems) item.Position += new Vector2(57, 27);
 
+            var aa = CloneDetail(new Vector2(0, 23*2));
+            AALowButton = aa.Item1;
+            AAMedButton = aa.Item2;
+            AAHighButton = aa.Item3;
+
+            AALowButton.OnButtonClick += new ButtonClickDelegate(ChangeAA);
+            AAMedButton.OnButtonClick += new ButtonClickDelegate(ChangeAA);
+            AAHighButton.OnButtonClick += new ButtonClickDelegate(ChangeAA);
+            aa.Item4.Caption = AntiAliasLabel.Caption;
+
             var clone = CloneCheckbox();
             Wall3DButton = clone.Item1; Wall3DLabel = clone.Item2;
             Wall3DButton.Visible = FSOEnvironment.Enable3D;
@@ -106,6 +123,12 @@ namespace FSO.Client.UI.Panels
             DirectionLabel.Caption = GameFacade.Strings.GetString("f103", "18");
 
             clone = CloneCheckbox();
+            AdvancedButton = clone.Item1; AdvancedLabel = clone.Item2;
+            AdvancedLabel.Caption = GameFacade.Strings.GetString("f103", "26");
+            AdvancedLabel.Tooltip = GameFacade.Strings.GetString("f103", "27");
+            AdvancedButton.Tooltip = AdvancedLabel.Tooltip;
+
+            clone = CloneCheckbox();
             CompressionButton = clone.Item1; CompressionLabel = clone.Item2;
             CompressionLabel.Caption = GameFacade.Strings.GetString("f103", "23");
             CompressionLabel.Tooltip = GameFacade.Strings.GetString("f103", "24");
@@ -114,16 +137,18 @@ namespace FSO.Client.UI.Panels
 
             AntiAliasCheckButton.Disabled = !FSOEnvironment.MSAASupport;
 
+            AntiAliasCheckButton.Visible = false;
+            AntiAliasLabel.Visible = false;
             var toggles = new Dictionary<UIButton, UILabel>()
             {
-                { AntiAliasCheckButton, AntiAliasLabel },
                 { ShadowsCheckButton, ShadowsLabel },
                 { LightingCheckButton, LightingLabel },
                 { UIEffectsCheckButton, UIEffectsLabel },
                 { EdgeScrollingCheckButton, EdgeScrollingLabel },
                 { CompressionButton, CompressionLabel },
-                { DirectionButton, DirectionLabel },
                 { Wall3DButton, Wall3DLabel },
+                { DirectionButton, DirectionLabel },
+                { AdvancedButton, AdvancedLabel },
             };
 
             int i = 0;
@@ -143,7 +168,7 @@ namespace FSO.Client.UI.Panels
             LightingSlider.MinValue = 0f;
             LightingSlider.MaxValue = 3f;
             LightingSlider.AllowDecimals = false;
-            LightingSlider.Position = new Vector2(184, 167);
+            LightingSlider.Position = new Vector2(184, 167+10);
             LightingSlider.SetSize(240f, 0f);
             Add(LightingSlider);
             //LightingLabel.X -= 24;
@@ -173,12 +198,12 @@ namespace FSO.Client.UI.Panels
             var adv = new UILabel();
             adv.CaptionStyle = style;
             adv.Caption = GameFacade.Strings.GetString("f103", "16");
-            adv.Position = new Vector2(180, 117);
+            adv.Position = new Vector2(180, 117+10);
             Add(adv);
 
             var types = new UILabel();
             types.Caption = GameFacade.Strings.GetString("f103", "17");
-            types.Position = new Vector2(180, 145);
+            types.Position = new Vector2(180, 145+10);
             types.Size = new Vector2(240, 0);
             types.Alignment = TextAlignment.Center;
             Add(types);
@@ -207,6 +232,23 @@ namespace FSO.Client.UI.Panels
             UIScreen.GlobalShowDialog(new UIDPIScaleDialog(), true);
         }
 
+        public Tuple<UIButton, UIButton, UIButton, UILabel> CloneDetail(Vector2 posOffset)
+        {
+            var check = new UIButton(TerrainDetailLowButton.Texture) { Position = TerrainDetailLowButton.Position + posOffset };
+            Add(check);
+            var check2 = new UIButton(TerrainDetailLowButton.Texture) { Position = TerrainDetailMedButton.Position + posOffset };
+            Add(check2);
+            var check3 = new UIButton(TerrainDetailLowButton.Texture) { Position = TerrainDetailHighButton.Position + posOffset };
+            Add(check3);
+            var label = new UILabel();
+            label.CaptionStyle = TerrainDetailLabel.CaptionStyle;
+            label.Position = TerrainDetailLabel.Position + posOffset;
+            label.Size = TerrainDetailLabel.Size;
+            label.Alignment = TerrainDetailLabel.Alignment;
+            Add(label);
+            return new Tuple<UIButton, UIButton, UIButton, UILabel>(check, check2, check3, label);
+        }
+
         public Tuple<UIButton, UILabel> CloneCheckbox()
         {
             var check = new UIButton(AntiAliasCheckButton.Texture);
@@ -233,12 +275,13 @@ namespace FSO.Client.UI.Panels
         private void FlipSetting(UIElement button)
         {
             var settings = GlobalSettings.Default;
-            if (button == AntiAliasCheckButton) settings.AntiAlias = !(settings.AntiAlias);
+            if (button == AntiAliasCheckButton) settings.AntiAlias = settings.AntiAlias ^ 1;
             else if (button == ShadowsCheckButton) settings.SmoothZoom = !(settings.SmoothZoom);
             else if (button == LightingCheckButton) settings.Weather = !(settings.Weather);
             else if (button == UIEffectsCheckButton) settings.CityShadows = !(settings.CityShadows);
             else if (button == EdgeScrollingCheckButton) settings.EdgeScroll = !(settings.EdgeScroll);
             else if (button == DirectionButton) settings.DirectionalLight3D = !(settings.DirectionalLight3D);
+            else if (button == AdvancedButton) settings.ComplexShaders = !(settings.ComplexShaders);
             else if (button == CompressionButton)
             {
                 settings.TexCompression = (((settings.TexCompression) & 1) ^ 1) | 2;
@@ -273,15 +316,26 @@ namespace FSO.Client.UI.Panels
             SettingsChanged();
         }
 
+        private void ChangeAA(UIElement button)
+        {
+            var settings = GlobalSettings.Default;
+            if (button == AALowButton) settings.AntiAlias = 0;
+            else if (button == AAMedButton) settings.AntiAlias = 1;
+            else if (button == AAHighButton) settings.AntiAlias = 2;
+            GlobalSettings.Default.Save();
+            SettingsChanged();
+        }
+
         private void SettingsChanged()
         {
             var settings = GlobalSettings.Default;
-            AntiAliasCheckButton.Selected = settings.AntiAlias; //antialias for render targets
+            AntiAliasCheckButton.Selected = settings.AntiAlias > 0; //antialias for render targets
             ShadowsCheckButton.Selected = settings.SmoothZoom;
             LightingCheckButton.Selected = settings.Weather;
             UIEffectsCheckButton.Selected = settings.CityShadows; //instead of being able to disable UI transparency, you can toggle City Shadows.
             EdgeScrollingCheckButton.Selected = settings.EdgeScroll;
             DirectionButton.Selected = settings.DirectionalLight3D;
+            AdvancedButton.Selected = settings.ComplexShaders;
 
             // Character detail changed for city shadow detail.
             CharacterDetailLowButton.Selected = (settings.ShadowQuality <= 512);
@@ -292,6 +346,10 @@ namespace FSO.Client.UI.Panels
             TerrainDetailLowButton.Selected = (settings.SurroundingLotMode == 0);
             TerrainDetailMedButton.Selected = (settings.SurroundingLotMode == 1);
             TerrainDetailHighButton.Selected = (settings.SurroundingLotMode == 2);
+
+            AALowButton.Selected = (settings.AntiAlias == 0);
+            AAMedButton.Selected = (settings.AntiAlias == 1);
+            AAHighButton.Selected = (settings.AntiAlias == 2);
 
             InternalChange = true;
             LightingSlider.Value = settings.LightingMode;
@@ -309,7 +367,8 @@ namespace FSO.Client.UI.Panels
                 SurroundingLots = settings.SurroundingLotMode,
                 AA = settings.AntiAlias,
                 Weather = settings.Weather,
-                Directional = settings.DirectionalLight3D
+                Directional = settings.DirectionalLight3D,
+                Complex = settings.ComplexShaders
             };
 
             var vm = ((IGameScreen)GameFacade.Screens.CurrentUIScreen)?.vm;

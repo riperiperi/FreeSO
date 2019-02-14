@@ -172,7 +172,8 @@ namespace FSO.Client.UI.Controls
             if (options.GenericAddition != null)
             {
                 GenericAddition = options.GenericAddition;
-                Add(GenericAddition);
+                if (options.GenericAdditionDynamic) DynamicOverlay.Add(GenericAddition);
+                else Add(GenericAddition);
             }
 
             /** Position buttons **/
@@ -391,6 +392,7 @@ namespace FSO.Client.UI.Controls
         public bool Color;
         public bool AllowEmojis;
         public bool AllowBB;
+        public bool GenericAdditionDynamic;
 
         public UIContainer GenericAddition;
 

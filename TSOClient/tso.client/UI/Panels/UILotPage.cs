@@ -501,8 +501,8 @@ namespace FSO.Client.UI.Panels
 
     public class UILotThumbButton : UIContainer
     {
-        private UIButton RoommateButton;
-        private UIButton VisitorButton;
+        protected UIButton RoommateButton;
+        protected UIButton VisitorButton;
         private UIImage Thumbnail;
         public ButtonClickDelegate OnLotClick;
         public uint CurrentLotThumb;
@@ -553,8 +553,8 @@ namespace FSO.Client.UI.Panels
             if (thumbnail != null)
             {
                 Thumbnail.SetSize((thumbnail.Width > 144) ? thumbnail.Width / 2 : thumbnail.Width, (thumbnail.Height > 144) ? thumbnail.Height / 2 : thumbnail.Height);
-                Thumbnail.Y = (95 - Thumbnail.Height) / 2.0f;
-                Thumbnail.X = (4 + 128 - Thumbnail.Width) / 2.0f;
+                Thumbnail.Y = (VisitorButton.Texture.Height - Thumbnail.Height) / 2.0f;
+                Thumbnail.X = (VisitorButton.Texture.Width/4 - Thumbnail.Width) / 2.0f;
             }
             CurrentLotThumb = lot;
         }

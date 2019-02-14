@@ -181,7 +181,7 @@
     size            = (205,132) 
     font            = 9 
     backgroundColor = (0,0,0)
-    capacity        = 499
+    capacity        = 1000
     frameOnFocus    = 0
     color           = (255,249,157) 
     backColor       = (0,0,0)

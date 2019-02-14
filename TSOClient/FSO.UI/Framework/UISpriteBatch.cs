@@ -50,6 +50,26 @@ namespace FSO.Client.UI.Framework
         public static bool Invalidated = false;
         public Stack<Matrix> BatchMatrixStack = new Stack<Matrix>();
 
+        public void SetEffect(Effect effect)
+        {
+            End();
+            var mat = (BatchMatrixStack.Count > 0) ? BatchMatrixStack.Peek() : (Matrix?)null;
+            if (mat != null)
+                Begin(transformMatrix: mat, rasterizerState: RasterizerState.CullNone, effect: effect);
+            else
+                Begin(rasterizerState: RasterizerState.CullNone, effect: effect);
+        }
+
+        public void SetEffect()
+        {
+            End();
+            var mat = (BatchMatrixStack.Count > 0) ? BatchMatrixStack.Peek() : (Matrix?)null;
+            if (mat != null)
+                Begin(transformMatrix: mat, rasterizerState: RasterizerState.CullNone);
+            else
+                Begin(rasterizerState: RasterizerState.CullNone);
+        }
+
         private int _Width;
         public int Width
         {

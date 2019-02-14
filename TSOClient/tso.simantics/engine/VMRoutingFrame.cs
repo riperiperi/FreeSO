@@ -351,12 +351,14 @@ namespace FSO.SimAntics.Engine
             if (myRoom == 0) return false;
 
             var roomInfo = VM.Context.RoomInfo[myRoom];
-            var obstacles = new List<VMObstacle>();
 
             int bx = (roomInfo.Room.Bounds.X-1) << 4;
             int by = (roomInfo.Room.Bounds.Y-1) << 4;
             int width = (roomInfo.Room.Bounds.Width+2) << 4;
             int height = (roomInfo.Room.Bounds.Height+2) << 4;
+
+            var obstacles = new VMObstacleSet(roomInfo.Room.RoutingObstacles);//new List<VMObstacle>();
+
             obstacles.Add(new VMObstacle(bx-16, by-16, bx+width+16, by));
             obstacles.Add(new VMObstacle(bx-16, by+height, bx+width+16, by+height+16));
 
@@ -378,13 +380,7 @@ namespace FSO.SimAntics.Engine
                     obstacles.Add(new VMObstacle(ft.x1-3, ft.y1-3, ft.x2+3, ft.y2+3));
             }
 
-            obstacles.AddRange(roomInfo.Room.WallObs); //can be null
-            obstacles.AddRange(roomInfo.Room.RoomObs);
-
-            foreach (var rect in obstacles)
-            {
-                if (rect.HardContains(startPoint)) return false;
-            }
+            if (obstacles.SearchForIntersect(new VMObstacle(startPoint, startPoint))) return false;
 
             var router = new VMRectRouter(obstacles);
 
@@ -983,6 +979,7 @@ namespace FSO.SimAntics.Engine
             if (ParentRoute == null)
             {
                 var obj = (VMAvatar)Caller;
+                obj.SetObstacleStatic(true);
                 if (obj.Animations.Count > 1)
                 {
                     while (obj.Animations.Count > 1)
@@ -1157,6 +1154,7 @@ namespace FSO.SimAntics.Engine
         private void StartWalkAnimation()
         {
             var obj = (VMAvatar)Caller;
+            obj.SetObstacleStatic(false);
             var pool = VM.Context.RoomInfo[VM.Context.GetRoomAt(Caller.Position)].Room.IsPool;
             var anims = (pool) ? obj.SwimAnimations:obj.WalkAnimations;
 

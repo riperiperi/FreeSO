@@ -243,11 +243,11 @@ namespace FSO.LotView.Facade
                 var basetc = new Vector2((1 / 3f) * ((Math.Min(i, 4) % 3)+1), (1 / 2f) * ((Math.Min(i, 4) / 3) + 1));
                 var data = bp.RoofComp.MeshRectData(i + 1);
                 if (RoofOnFloor)
-                    verts.AddRange(data.Item1.Select(x => new VertexPositionTexture(x.Position / 3f, basetc - new Vector2((x.Position.X-basepos.X) / (3f*FLOOR_TILES*3), (x.Position.Z- basepos.Y) / (3f * FLOOR_TILES * 2)))));
+                    verts.AddRange(data.Vertices.Select(x => new VertexPositionTexture(x.Position / 3f, basetc - new Vector2((x.Position.X-basepos.X) / (3f*FLOOR_TILES*3), (x.Position.Z- basepos.Y) / (3f * FLOOR_TILES * 2)))));
                 else
-                    verts.AddRange(data.Item1.Select(x => new VertexPositionTexture(x.Position / 3f, new Vector2(x.GrassInfo.Y, x.GrassInfo.Z))));
-                inds.AddRange(data.Item2.Select(x => x + baseIndex));
-                baseIndex += data.Item1.Length;
+                    verts.AddRange(data.Vertices.Select(x => new VertexPositionTexture(x.Position / 3f, new Vector2(x.GrassInfo.Y, x.GrassInfo.Z))));
+                inds.AddRange(data.Indices.Select(x => x + baseIndex));
+                baseIndex += data.Vertices.Length;
             }
 
             RoofVerts = verts.ToArray();

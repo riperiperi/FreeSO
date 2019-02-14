@@ -44,5 +44,29 @@ namespace FSO.Client.Controllers.Panels
                     callback(results);
                 });
         }
+
+        public void SearchLots(string query, bool exact, Action<List<GizmoLotSearchResult>> callback)
+        {
+            DatabaseService.Search(new SearchRequest { Query = query, Type = SearchType.LOTS }, exact)
+                .ContinueWith(x =>
+                {
+                    object[] ids = x.Result.Items.Select(y => (object)y.EntityId).ToArray();
+                    var results = x.Result.Items.Select(q =>
+                    {
+                        return new GizmoLotSearchResult() { Result = q };
+                    }).ToList();
+
+                    if (ids.Length > 0)
+                    {
+                        var lots = DataService.GetMany<Lot>(ids).Result;
+                        foreach (var item in lots)
+                        {
+                            results.First(f => f.Result.EntityId == item.Id).Lot = item;
+                        }
+                    }
+
+                    callback(results);
+                });
+        }
     }
 }

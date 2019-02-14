@@ -140,7 +140,7 @@ namespace FSO.Client.UI.Screens
                     settings.LightingMode = 0;
                     settings.SurroundingLotMode = 0;
                     settings.CityShadows = false;
-                    settings.AntiAlias = false;
+                    settings.AntiAlias = 0;
                     settings.Save();
 
                     LotView.WorldConfig.Current = new LotView.WorldConfig()
@@ -156,6 +156,8 @@ namespace FSO.Client.UI.Screens
             GameThread.NextUpdate(x =>
             {
                 FSOFacade.Hints.TriggerHint("screen:login");
+
+                //UIScreen.GlobalShowDialog(new Panels.Neighborhoods.UIBulletinDialog(), false);
                 //Content.Content.Get().UIGraphics.ExportAll(GameFacade.GraphicsDevice);
             });
         }

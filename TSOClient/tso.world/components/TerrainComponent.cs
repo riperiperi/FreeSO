@@ -186,7 +186,7 @@ namespace FSO.LotView.Components
             var numQuads = quads * quads;
             var archSize = quads;
 
-            TerrainVertex[] Geom = new TerrainVertex[numQuads * 4];
+            TerrainParallaxVertex[] Geom = new TerrainParallaxVertex[numQuads * 4];
             int[] Indexes = new int[numQuads * 6];
             int[] BladeIndexes = new int[numQuads * 6];
             NumPrimitives = (numQuads * 2);
@@ -239,17 +239,17 @@ namespace FSO.LotView.Components
                     Color blCol = Color.Lerp(LightGreen, LightBrown, GetGrassState(x, y + 1));
                     Color brCol = Color.Lerp(LightGreen, LightBrown, GetGrassState(x + 1, y + 1));
 
-                    Geom[geomOffset++] = new TerrainVertex(tl, tlCol.ToVector4(), new Vector2(((x - y) + 1) * 0.5f, (x + y) * 0.5f), GetGrassState(x, y), GetNormalAt(x, y));
-                    Geom[geomOffset++] = new TerrainVertex(tr, trCol.ToVector4(), new Vector2(((x - y) + 2) * 0.5f, (x + 1 + y) * 0.5f), GetGrassState(x + 1, y), GetNormalAt(x + 1, y));
-                    Geom[geomOffset++] = new TerrainVertex(br, brCol.ToVector4(), new Vector2(((x - y) + 1) * 0.5f, (x + y + 2) * 0.5f), GetGrassState(x + 1, y + 1), GetNormalAt(x + 1, y + 1));
-                    Geom[geomOffset++] = new TerrainVertex(bl, blCol.ToVector4(), new Vector2((x - y) * 0.5f, (x + y + 1) * 0.5f), GetGrassState(x, y + 1), GetNormalAt(x, y + 1));
+                    Geom[geomOffset++] = new TerrainParallaxVertex(tl, tlCol.ToVector4(), new Vector2(((x - y) + 1) * 0.5f, (x + y) * 0.5f), GetGrassState(x, y), GetNormalAt(x, y));
+                    Geom[geomOffset++] = new TerrainParallaxVertex(tr, trCol.ToVector4(), new Vector2(((x - y) + 2) * 0.5f, (x + 1 + y) * 0.5f), GetGrassState(x + 1, y), GetNormalAt(x + 1, y));
+                    Geom[geomOffset++] = new TerrainParallaxVertex(br, brCol.ToVector4(), new Vector2(((x - y) + 1) * 0.5f, (x + y + 2) * 0.5f), GetGrassState(x + 1, y + 1), GetNormalAt(x + 1, y + 1));
+                    Geom[geomOffset++] = new TerrainParallaxVertex(bl, blCol.ToVector4(), new Vector2((x - y) * 0.5f, (x + y + 1) * 0.5f), GetGrassState(x, y + 1), GetNormalAt(x, y + 1));
                 }
             }
 
             var GridIndices = (Bp.FineArea != null) ? GetGridIndicesForFine(Bp.FineArea, quads) : GetGridIndicesForArea(Bp.BuildableArea, quads);
             var TGridIndices = GetGridIndicesForArea(Bp.TargetBuildableArea, quads);
 
-            VertexBuffer = new VertexBuffer(device, typeof(TerrainVertex), Geom.Length, BufferUsage.None);
+            VertexBuffer = new VertexBuffer(device, typeof(TerrainParallaxVertex), Geom.Length, BufferUsage.None);
             VertexBuffer.SetData(Geom);
 
             IndexBuffer = new IndexBuffer(device, IndexElementSize.ThirtyTwoBits, sizeof(int) * Indexes.Length, BufferUsage.None);
@@ -276,11 +276,11 @@ namespace FSO.LotView.Components
             }
         }
 
-        public TerrainVertex[] GetVertices(GraphicsDevice gd)
+        public TerrainParallaxVertex[] GetVertices(GraphicsDevice gd)
         {
             if (VertexBuffer == null) RegenTerrain(gd, Bp);
-            var dat = new TerrainVertex[VertexBuffer.VertexCount];
-            VertexBuffer.GetData<TerrainVertex>(dat);
+            var dat = new TerrainParallaxVertex[VertexBuffer.VertexCount];
+            VertexBuffer.GetData<TerrainParallaxVertex>(dat);
             return dat;
         }
 
@@ -444,7 +444,7 @@ namespace FSO.LotView.Components
             pass.Apply();
             //device.DrawIndexedPrimitives(PrimitiveType.TriangleList, 0, 0, NumPrimitives);
 
-            int grassScale;
+            float grassScale;
             float grassDensity;
             switch (world.Zoom)
             {
@@ -467,6 +467,8 @@ namespace FSO.LotView.Components
             grassDensity *= GrassDensityScale;
             var primitives = Bp.FloorGeom.SetGrassIndices(device, Effect, world);
 
+            var parallax = false;
+
             if (primitives > 0 && _3D == _3d)
             {
                 Effect.Parameters["Alpha"].SetValue((Alpha-0.75f) * 4);
@@ -486,10 +488,20 @@ namespace FSO.LotView.Components
                 }
                 var depth = device.DepthStencilState;
                 device.DepthStencilState = DepthStencilState.DepthRead;
-                for (int i = 0; i < grassNum; i++)
+                
+                if (parallax) { 
+                    grassScale *= grassNum;
+                    grassNum = 1;
+                    }
+                for (int i = 1; i <= grassNum; i++)
                 {
                     Effect.Parameters["World"].SetValue(Matrix.Identity * Matrix.CreateTranslation(0, i * (20 / 522f) * grassScale - altOff, 0));
-                    Effect.Parameters["GrassProb"].SetValue(grassDensity * ((grassNum - (i / (2f * grassNum))) / (float)grassNum));
+
+                    if (!parallax)
+                        Effect.Parameters["GrassProb"].SetValue(grassDensity * ((grassNum - (i / (2f * grassNum))) / (float)grassNum));
+                    else
+                        Effect.Parameters["GrassProb"].SetValue(grassDensity * ((4 - (2 / (2f * 4))) / (float)4));
+                    Effect.Parameters["ParallaxHeight"].SetValue(grassScale * (20 / 522f) * (100/512f) / 4);
                     offset += new Vector2(0, 1);
                         
                     var off2 = new Vector2(world.WorldSpace.WorldPxWidth, world.WorldSpace.WorldPxHeight);
@@ -497,7 +509,7 @@ namespace FSO.LotView.Components
 
                         Effect.Parameters["ScreenOffset"].SetValue(offset - off2);
 
-                        pass = Effect.CurrentTechnique.Passes[(_3d)?2:WorldConfig.Current.PassOffset];
+                        pass = Effect.CurrentTechnique.Passes[(_3d)?((parallax)?3:2):WorldConfig.Current.PassOffset];
                         pass.Apply();
                         device.DrawIndexedPrimitives(PrimitiveType.TriangleList, 0, 0, primitives);
                     }

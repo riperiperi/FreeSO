@@ -10,6 +10,8 @@ using System.Linq;
 using System.Text;
 using FSO.Files.Formats.IFF;
 using FSO.Files.Formats.IFF.Chunks;
+using FSO.SimAntics.Engine;
+using FSO.SimAntics.Primitives;
 
 namespace FSO.SimAntics
 {
@@ -29,6 +31,28 @@ namespace FSO.SimAntics
 
         public BHAV Chunk;
         public uint RuntimeVer;
+
+        public virtual VMPrimitiveExitCode Execute(VMStackFrame frame, out VMInstruction instruction)
+        {
+            instruction = frame.GetCurrentInstruction();
+            var opcode = instruction.Opcode;
+
+            if (opcode >= 256)
+            {
+                frame.Thread.ExecuteSubRoutine(frame, opcode, (VMSubRoutineOperand)instruction.Operand);
+                return VMPrimitiveExitCode.CONTINUE;
+            }
+
+
+            var primitive = VMContext.Primitives[opcode];
+            if (primitive == null)
+            {
+                return VMPrimitiveExitCode.GOTO_TRUE;
+            }
+
+            VMPrimitiveHandler handler = primitive.GetHandler();
+            return handler.Execute(frame, instruction.Operand);
+        }
     }
 
 

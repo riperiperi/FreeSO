@@ -328,6 +328,20 @@ namespace FSO.Client.UI.Panels.Neighborhoods
                 (UIScreen.Current as CoreGameScreen).CityRenderer.NeighGeom.CenterNHood((int)(CurrentNeigh.Value?.Id ?? 0));
             };
 
+            BulletinButton.OnButtonClick += (btn) =>
+            {
+                var id = CurrentNeigh?.Value?.Id ?? 0;
+                if (id != 0 && !UIBulletinDialog.Present)
+                {
+                    var dialog = new UIBulletinDialog(id);
+                    dialog.CloseButton.OnButtonClick += (btn2) =>
+                    {
+                        UIScreen.RemoveDialog(dialog);
+                    };
+                    UIScreen.GlobalShowDialog(dialog, false);
+                }
+            };
+
             CloseButton.OnButtonClick += (btn) =>
             {
                 FindController<NeighPageController>().Close();
@@ -579,7 +593,7 @@ namespace FSO.Client.UI.Panels.Neighborhoods
         private int GetTermsSince(uint time)
         {
             var startDate = ClientEpoch.ToDate(time);
-            var now = DateTime.Now;
+            var now = DateTime.UtcNow;
 
             var months = 0;
             if (now.Year != startDate.Year)
@@ -635,6 +649,7 @@ namespace FSO.Client.UI.Panels.Neighborhoods
             {
                 CurrentNeigh.Value.Neighborhood_Description = DescriptionText.CurrentText;
                 FindController<NeighPageController>().SaveDescription(CurrentNeigh.Value);
+                DescriptionChanged = false;
             }
         }
 
@@ -841,7 +856,7 @@ namespace FSO.Client.UI.Panels.Neighborhoods
                     if (hasElect && CurrentNeigh.Value.Neighborhood_ElectionCycle != null)
                     {
                         var electionOver = ClientEpoch.Now > CurrentNeigh.Value.Neighborhood_ElectionCycle.ElectionCycle_EndDate;
-                        var currentMayorDate = ClientEpoch.ToDate(CurrentNeigh.Value.Neighborhood_ElectedDate);
+                        var currentMayorDate = ClientEpoch.ToDate(CurrentNeigh.Value.Neighborhood_ElectedDate).ToLocalTime();
                         var awaitingResult = electionOver && CurrentNeigh.Value.Neighborhood_ElectedDate < CurrentNeigh.Value.Neighborhood_ElectionCycle.ElectionCycle_EndDate;
                         MayorStatusLabel.Caption = GameFacade.Strings.GetString("f115", awaitingResult ? "29" : "30", new string[] { currentMayorDate.ToShortDateString() });
 

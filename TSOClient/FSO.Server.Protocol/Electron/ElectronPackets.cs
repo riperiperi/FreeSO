@@ -32,7 +32,9 @@ namespace FSO.Server.Protocol.Electron
             typeof(MailResponse),
             typeof(NhoodRequest),
             typeof(NhoodResponse),
-            typeof(NhoodCandidateList)
+            typeof(NhoodCandidateList),
+            typeof(BulletinRequest),
+            typeof(BulletinResponse)
         };
 
         static ElectronPackets()

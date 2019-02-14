@@ -15,14 +15,35 @@ namespace FSO.SimAntics.Engine
 {
     public class VMTranslator
     {
-        public static VMRoutine Assemble(BHAV bhav){
+        private static VMTranslator _INSTANCE;
+        public static VMTranslator INSTANCE
+        {
+            get
+            {
+                if (_INSTANCE == null) _INSTANCE = new VMTranslator();
+                return _INSTANCE;
+            }
+            set
+            {
+                _INSTANCE = value;
+            }
+        }
+
+        public virtual VMRoutine Assemble(BHAV bhav){
             var routine = new VMRoutine();
+            PopulateRoutineFields(bhav, routine);
+            return routine;
+        }
+
+        protected void PopulateRoutineFields(BHAV bhav, VMRoutine routine)
+        {
             routine.Locals = bhav.Locals;
             routine.Arguments = bhav.Args;
             routine.Type = bhav.Type;
             routine.ID = bhav.ChunkID;
             routine.Chunk = bhav;
-            routine.Rti = new VMFunctionRTI {
+            routine.Rti = new VMFunctionRTI
+            {
                 Name = bhav.ChunkLabel
             };
 
@@ -64,7 +85,6 @@ namespace FSO.SimAntics.Engine
 
             }
             routine.Instructions = instructions;
-            return routine;
         }
     }
 }

@@ -4,6 +4,7 @@ using FSO.Common.Security;
 using FSO.Files.Formats.tsodata;
 using FSO.Server.Common;
 using FSO.Server.Database.DA;
+using FSO.Server.Database.DA.Bulletin;
 using FSO.Server.Database.DA.Elections;
 using FSO.Server.Database.DA.LotVisits;
 using FSO.Server.Database.DA.Neighborhoods;
@@ -43,6 +44,26 @@ namespace FSO.Server.Servers.City.Domain
             DAFactory = daFactory;
             Context = context;
             Sessions = sessions;
+        }
+
+        public void SendBulletinPost(IDA da, int nhoodID, string cst, int subjectIndex, int msgIndex, uint expireDate, params string[] args)
+        {
+            for (int i = 0; i < args.Length; i++)
+            {
+                args[i] = args[i].Replace(';', ':');
+            }
+
+            var item = new DbBulletinPost()
+            {
+                neighborhood_id = nhoodID,
+                title = ";" + cst + ";" + subjectIndex,
+                body = ";" + expireDate + ";" + cst + ";" + msgIndex + ';' + string.Join(";", args),
+                date = Epoch.Now,
+                flags = 0,
+                type = DbBulletinType.system
+            };
+
+            da.BulletinPosts.Create(item);
         }
 
         public void UserJoined(IVoltronSession session)
@@ -154,8 +175,8 @@ namespace FSO.Server.Servers.City.Domain
             {
                 using (var str = File.Open("nhoodCheat.txt", FileMode.Create, FileAccess.Write, FileShare.None))
                 {
-                    var writer = new StreamWriter(str);
-                    writer.Write(offset.ToString());
+                    using (var writer = new StreamWriter(str))
+                        writer.Write(offset.ToString());
                 }
             }
             catch
@@ -286,7 +307,8 @@ namespace FSO.Server.Servers.City.Domain
                                 nhoodDS.Neighborhood_Flag = nhood.flag;
                                 da.Neighborhoods.UpdateFlag((uint)nhood.neighborhood_id, nhood.flag);
 
-                                //TODO: post to bulletin?
+                                SendBulletinPost(da, nhood.neighborhood_id, "f123", (int)NeighBulletinStrings.ElectionBeginSubject, (int)NeighBulletinStrings.ElectionBegin, 
+                                    0, nhood.name, MayorElegibilityLimit.ToString());
                             }
                         }
                         else
@@ -316,6 +338,9 @@ namespace FSO.Server.Servers.City.Domain
                                     ElectionCycle_EndDate = dbCycle.end_date
                                 };
                                 da.Neighborhoods.UpdateCycle((uint)nhood.neighborhood_id, cycleID);
+
+                                SendBulletinPost(da, nhood.neighborhood_id, "f123", (int)NeighBulletinStrings.ElectionCancelledSubject, (int)NeighBulletinStrings.ElectionCancelled,
+                                    0, nhood.name);
                             }
                         }
 
@@ -382,6 +407,10 @@ namespace FSO.Server.Servers.City.Domain
             {
                 case DbElectionCycleState.nomination:
                     //start nominations for this cycle.
+                    var endDate = cycle.end_date - 60 * 60 * 24 * 3; //nomination ends 3 days before end of cycle
+                    SendBulletinPost(da, nhood.neighborhood_id, "f123", (int)NeighBulletinStrings.NominateSubject, (int)NeighBulletinStrings.Nominate, endDate,
+                        nhood.name, endDate.ToString());
+
                     break;
                 case DbElectionCycleState.election:
                     //end nominations. choose the candidate sims.
@@ -389,8 +418,10 @@ namespace FSO.Server.Servers.City.Domain
                     var toRemove = da.Elections.GetCandidates(cycle.cycle_id).ToDictionary(x => x.candidate_avatar_id);
                     if (cycleNoms.Count > 0)
                     {
-                        var grouped = cycleNoms.GroupBy(x => x.target_avatar_id).OrderBy(x => x.Count());
+                        var grouped = cycleNoms.GroupBy(x => x.target_avatar_id).OrderByDescending(x => x.Count());
                         var selected = 0;
+
+                        var candidates = new List<IGrouping<uint, DbElectionVote>>();
 
                         foreach (var winner in grouped)
                         {
@@ -404,6 +435,8 @@ namespace FSO.Server.Servers.City.Domain
                                 mail.SendSystemEmail("f116", (int)NeighMailStrings.RunningForMayorSubject, (int)NeighMailStrings.RunningForMayor,
                                         1, MessageSpecialType.Normal, cycle.end_date, winner.Key, nhood.name, cand.comment, cycle.end_date.ToString());
 
+                                candidates.Add(winner);
+
                                 if (++selected >= 5) break;
                             }
                         }
@@ -412,8 +445,15 @@ namespace FSO.Server.Servers.City.Domain
                         {
                             da.Elections.DeleteCandidate(remove.Value.election_cycle_id, remove.Value.candidate_avatar_id);
 
-                            mail.SendSystemEmail("f116", (int)NeighMailStrings.TooFewNominationsSubject, (int)NeighMailStrings.TooFewNominations,
-                                1, MessageSpecialType.Normal, cycle.end_date, remove.Key, nhood.name, cycle.end_date.ToString());
+                            if (remove.Value.state == DbCandidateState.running)
+                            {
+                                mail.SendSystemEmail("f116", (int)NeighMailStrings.TooFewNominationsSubject, (int)NeighMailStrings.TooFewNominations,
+                                    1, MessageSpecialType.Normal, cycle.end_date, remove.Key, nhood.name, cycle.end_date.ToString());
+                            } else
+                            {
+                                mail.SendSystemEmail("f116", (int)NeighMailStrings.NominationNotAcceptedSubject, (int)NeighMailStrings.NominationNotAccepted,
+                                    1, MessageSpecialType.Normal, cycle.end_date, remove.Key, nhood.name, cycle.end_date.ToString());
+                            }
                         }
 
                         if (selected == 0)
@@ -422,7 +462,9 @@ namespace FSO.Server.Servers.City.Domain
                             break;
                         }
 
-                        //send email to everyone else? (event system delayed?)
+                        //email will be sent by event system. make a bulletin post too
+                        SendBulletinPost(da, nhood.neighborhood_id, "f123", (int)NeighBulletinStrings.VoteSubject, (int)NeighBulletinStrings.Vote, cycle.end_date,
+                            nhood.name, string.Join("\n", candidates.Select(x => "- " + (da.Avatars.Get(x.Key)?.name ?? "(unknown)"))), cycle.end_date.ToString()); 
                     }
                     break;
                 case DbElectionCycleState.ended:
@@ -430,7 +472,7 @@ namespace FSO.Server.Servers.City.Domain
                     var cycleVotes = da.Elections.GetCycleVotes(cycle.cycle_id, DbElectionVoteType.vote);
                     if (cycleVotes.Count > 0)
                     {
-                        var grouped = cycleVotes.GroupBy(x => x.target_avatar_id).OrderBy(x => x.Count()).ToList();
+                        var grouped = cycleVotes.GroupBy(x => x.target_avatar_id).OrderByDescending(x => x.Count()).ToList();
 
                         //verify the winner is still alive and still in this neighborhood
                         string name = "";
@@ -471,11 +513,22 @@ namespace FSO.Server.Servers.City.Domain
                             });
                             placement++;
                         }
+
+                        int runnerI = 2;
+                        SendBulletinPost(da, nhood.neighborhood_id, "f123", (int)NeighBulletinStrings.ElectionOverSubject, (int)NeighBulletinStrings.ElectionOver, cycle.end_date,
+                            (da.Avatars.Get(winner.Key)?.name ?? "(unknown)"),
+                            nhood.name, 
+                            string.Join("\n", grouped.Select(x => (runnerI++).ToString() + ". " + (da.Avatars.Get(x.Key)?.name ?? "(unknown)"))));
                     }
                     break;
             }
 
             da.Elections.UpdateCycleState(cycle.cycle_id, state);
+            if (state == DbElectionCycleState.failsafe && state != cycle.current_state)
+            {
+                SendBulletinPost(da, nhood.neighborhood_id, "f123", (int)NeighBulletinStrings.FailsafeSubject, (int)NeighBulletinStrings.Failsafe, 
+                    0, nhood.name);
+            }
             cycle.current_state = state;
 
             if (StateHasEmail(state))
@@ -570,5 +623,26 @@ namespace FSO.Server.Servers.City.Domain
                 }
             }
         }
+    }
+
+    public enum NeighBulletinStrings : int
+    {
+        NominateSubject = 1,
+        Nominate = 2,
+
+        VoteSubject = 3,
+        Vote = 4,
+
+        ElectionOverSubject = 5,
+        ElectionOver = 6,
+
+        ElectionCancelledSubject = 7,
+        ElectionCancelled = 8,
+
+        FailsafeSubject = 9,
+        Failsafe = 10,
+
+        ElectionBeginSubject = 9,
+        ElectionBegin = 10
     }
 }

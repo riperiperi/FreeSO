@@ -55,6 +55,8 @@ namespace FSO.LotView.RC
             get { return (_Use2DCam)?WorldCamera:(ICamera)_Camera; }
         }
 
+        public WorldCamera3D Camera3D => _Camera;
+
         public bool FixedCam;
 
         public override void SetDimensions(Vector2 dim)
@@ -198,8 +200,16 @@ namespace FSO.LotView.RC
             base.PrepareLighting();
 
             var frontDir = WorldCamera.FrontDirection();
-            var lightOffset = -GetWallOffset()*6 / (6 * 75);
-            if (Light != null) lightOffset *= Light.InvMapLayout;
+            Vector2 lightOffset;
+            if (Light != null)
+            {
+                lightOffset = -GetWallOffset() * 6 / (6 * (Light.Blueprint.Width-2));
+                lightOffset *= Light.InvMapLayout;
+            } else
+            {
+                lightOffset = -GetWallOffset() * 6 / (6 * 75);
+            }
+            
             WorldContent._2DWorldBatchEffect.Parameters["LightOffset"].SetValue(lightOffset);
             WorldContent.GrassEffect.Parameters["LightOffset"].SetValue(lightOffset);
             Avatar.Effect.Parameters["LightOffset"].SetValue(lightOffset);

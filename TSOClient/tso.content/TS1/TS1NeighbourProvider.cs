@@ -264,12 +264,27 @@ namespace FSO.Content.TS1
 
         public short SetToNext(short current)
         {
+            //short form: if we can find current, then we can get its entry index and add 1.
+            var currentN = GetNeighborByID(current);
+            if (currentN != null)
+            {
+                var id = currentN.RuntimeIndex + 1;
+                return (short)((id == Neighbors.Entries.Count) ? -1 : Neighbors.Entries[id]?.NeighbourID ?? -1);
+            }
             return (short)(Neighbors.Entries.FirstOrDefault(x => x.NeighbourID > current)?.NeighbourID ?? -1);
         }
 
         public short SetToNext(short current, uint guid)
         {
-            return (short)(Neighbors.Entries.FirstOrDefault(x => x.NeighbourID > current && x.GUID == guid)?.NeighbourID ?? -1);
+            IEnumerable<Neighbour> search = Neighbors.Entries;
+            var firstNID = GetNeighborIDForGUID(guid);
+            if (firstNID != null)
+            {
+                var firstN = GetNeighborByID(firstNID.Value);
+                if (firstN != null)
+                    search = search.Skip(firstN.RuntimeIndex);
+            }
+            return (short)(search.FirstOrDefault(x => x.NeighbourID > current && x.GUID == guid)?.NeighbourID ?? -1);
         }
 
         public void AvatarChanged(uint guid)

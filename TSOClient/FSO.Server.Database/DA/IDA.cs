@@ -31,6 +31,7 @@ using FSO.Server.Database.DA.DynPayouts;
 using FSO.Server.Database.DA.EmailConfirmation;
 using FSO.Server.Database.DA.Neighborhoods;
 using FSO.Server.Database.DA.Elections;
+using FSO.Server.Database.DA.Bulletin;
 
 namespace FSO.Server.Database.DA
 {
@@ -49,6 +50,7 @@ namespace FSO.Server.Database.DA
         ILotClaims LotClaims { get; }
         INeighborhoods Neighborhoods { get; }
         IElections Elections { get; }
+        IBulletinPosts BulletinPosts { get; }
         IAvatarClaims AvatarClaims { get; }
         IBookmarks Bookmarks { get; }
         IOutfits Outfits { get; }

@@ -12,6 +12,7 @@ using Microsoft.Xna.Framework;
 using FSO.Common.Rendering.Framework.Model;
 using FSO.Common.Rendering.Framework.IO;
 using FSO.Client.UI;
+using System;
 
 namespace FSO.Client.Utils
 {
@@ -38,6 +39,11 @@ namespace FSO.Client.Utils
 
         public static UIWordWrapOutput WordWrap(string text, int width, TextStyle style)
         {
+            return WordWrap(text, width, style, int.MaxValue);
+        }
+
+        public static UIWordWrapOutput WordWrap(string text, int width, TextStyle style, int maxLines)
+        {
             var result = new UIWordWrapOutput();
             result.Lines = new List<string>();
             var textLines = text.Split('\n');// new string[] {text}; //only support single line for now, since we're only using this utility function for captions
@@ -48,6 +54,7 @@ namespace FSO.Client.Utils
 			    List<string> words = textLines[l].Split(' ').ToList();
 
 			    while (words.Count > 0) {
+                    var atMax = maxLines == result.Lines.Count+1;
 				    var lineBuffer = new List<string>();
                     int i = 0;
 				    for (i=0; i<words.Count; i++) {
@@ -55,6 +62,13 @@ namespace FSO.Client.Utils
 					    var str = JoinWordList(lineBuffer);      //(lineBuffer.concat([words[i]])).join(" ");
                         int w = (int)(style.MeasureString(str).X);
 					    if (w > width) {
+                            if (atMax)
+                            {
+                                lineBuffer.Clear();
+                                lineBuffer.Add(style.TruncateToWidth(str, width));
+                                break;
+                            }
+
                             lineBuffer.RemoveAt(lineBuffer.Count-1);
 						    if (lineBuffer.Count == 0) {
 							    for (var j=words[i].Length-1; j>0; j--) {
@@ -77,8 +91,13 @@ namespace FSO.Client.Utils
 				    }
                     result.Lines.Add(JoinWordList(lineBuffer));
                     positions.Add(curpos);
-                    words.RemoveRange(0, i);
-                    
+                    if (atMax)
+                    {
+                        words.Clear();
+                        l = textLines.Length; //exit early
+                    }
+                    else
+                        words.RemoveRange(0, i);
 			    }
 			    //curpos++;
 		    }

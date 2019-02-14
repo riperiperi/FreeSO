@@ -276,6 +276,9 @@ namespace FSO.Server.Servers.City.Handlers
         Cancelled = 30,
 
         FailsafeSubject = 31,
-        Failsafe = 32
+        Failsafe = 32,
+
+        NominationNotAcceptedSubject = 33,
+        NominationNotAccepted = 34
     }
 }

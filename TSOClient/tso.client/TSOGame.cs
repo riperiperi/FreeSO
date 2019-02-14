@@ -139,7 +139,7 @@ namespace FSO.Client
 
             FeatureLevelTest.UpdateFeatureLevel(GraphicsDevice);
             if (!FSOEnvironment.MSAASupport)
-                settings.AntiAlias = false;
+                settings.AntiAlias = 0;
 
             LotView.WorldConfig.Current = new LotView.WorldConfig()
             {

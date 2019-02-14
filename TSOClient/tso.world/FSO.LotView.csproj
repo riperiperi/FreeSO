@@ -129,6 +129,7 @@
     <Compile Include="Utils\IsometricTileIterator.cs" />
     <Compile Include="Utils\ParticleVertex.cs" />
     <Compile Include="Utils\SSAADownsample.cs" />
+    <Compile Include="Utils\TerrainParallaxVertex.cs" />
     <Compile Include="Utils\TerrainVertex.cs" />
     <Compile Include="Utils\WorldCamera.cs" />
     <Compile Include="Utils\WorldCamera3D.cs" />

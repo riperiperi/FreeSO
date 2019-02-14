@@ -109,6 +109,9 @@
     <Compile Include="DA\Bookmarks\DbBookmark.cs" />
     <Compile Include="DA\Bookmarks\IBookmarks.cs" />
     <Compile Include="DA\Bookmarks\SqlBookmarks.cs" />
+    <Compile Include="DA\Bulletin\DbBulletinPost.cs" />
+    <Compile Include="DA\Bulletin\IBulletinPosts.cs" />
+    <Compile Include="DA\Bulletin\SqlBulletinPosts.cs" />
     <Compile Include="DA\DbChanges\DbChange.cs" />
     <Compile Include="DA\DbEvents\DbEvent.cs" />
     <Compile Include="DA\DbEvents\IEvents.cs" />

@@ -99,6 +99,11 @@ namespace FSO.Client.UI.Framework
 
         }
 
+        public override Rectangle GetBounds()
+        {
+            return new Rectangle(0, 0, (int)Size.X, (int)Size.Y);
+        }
+
         public override void Update(UpdateState state)
         {
             BaseUpdate(state);

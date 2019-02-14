@@ -45,6 +45,9 @@ namespace FSO.SimAntics.Engine.TSOTransaction
         //FSO Newspaper
         void GetDynPayouts(VMAsyncNewspaperCallback callback);
 
+        //FSO Bulletin
+        void GetBulletinState(VM vm, VMAsyncBulletinCallback callback);
+
         void Tick(VM vm);
         void FindLotAndValue(VM vm, uint persistID, VMAsyncFindLotCallback p);
     }
@@ -66,6 +69,7 @@ namespace FSO.SimAntics.Engine.TSOTransaction
     public delegate void VMAsyncPurchaseOutfitCallback(bool success);
 
     public delegate void VMAsyncNewspaperCallback(VMEODFNewspaperData datapoints);
+    public delegate void VMAsyncBulletinCallback(uint lastID, int activity);
     public delegate void VMAsyncSecureTradeCallback(VMEODSecureTradeError result);
     public delegate void VMAsyncFindLotCallback(uint lotID, int objectCount, long objectValue, string lotName);
 }

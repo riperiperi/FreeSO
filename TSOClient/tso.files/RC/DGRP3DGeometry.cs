@@ -47,7 +47,8 @@ namespace FSO.Files.RC
                 Indices.SetData(SIndices.ToArray());
             }
 
-            if (!IffFile.RETAIN_CHUNK_DATA) {
+            if (!IffFile.RETAIN_CHUNK_DATA)
+            {
                 SVerts = null;
                 SIndices = null;
             }
@@ -64,8 +65,10 @@ namespace FSO.Files.RC
                 if (source == null)
                 {
                     //temporary system for models without DGRP
-                    Pixel = ReplTextureProvider("FSO_TEX_"+ PixelSPR + ".png");
-                } else {
+                    Pixel = ReplTextureProvider("FSO_TEX_" + PixelSPR + ".png");
+                }
+                else
+                {
                     var name = source.ChunkParent.Filename.Replace('.', '_').Replace("spf", "iff");
                     name += "_TEX_" + PixelSPR + ".png";
                     Pixel = ReplTextureProvider(name);
@@ -91,7 +94,9 @@ namespace FSO.Files.RC
                 Marshal.Copy(bytes, 0, pinnedHandle.AddrOfPinnedObject(), bytes.Length);
                 pinnedHandle.Free();
                 SVerts = readVerts.ToList();
-            } else { 
+            }
+            else
+            {
                 for (int i = 0; i < vertCount; i++)
                 {
                     var x = io.ReadFloat();
@@ -115,7 +120,7 @@ namespace FSO.Files.RC
             SIndices.Clear();
             foreach (var item in ordered) SIndices.AddRange(item);
             */
-            
+
 
             if (Version < 2) GenerateNormals(false);
 
@@ -147,17 +152,24 @@ namespace FSO.Files.RC
 
             SVerts = new List<DGRP3DVert>();
             SIndices = new List<int>();
-            var dict = new Dictionary<Tuple<int, int>, int>();
+            var dict = new Dictionary<Tuple<int, int, int>, int>();
+            var hasNormals = false;
 
             foreach (var ind in indices)
             {
-                var tup = new Tuple<int, int>(ind[0], ind[1]);
+                var tup = new Tuple<int, int, int>(ind[0], ind[1], (ind.Length > 2) ? ind[2] : -1);
                 int targ;
                 if (!dict.TryGetValue(tup, out targ))
                 {
                     //add a vertex
                     targ = SVerts.Count;
-                    var vert = new DGRP3DVert(obj.Vertices[ind[0] - 1], Vector3.Zero, obj.TextureCoords[ind[1] - 1]);
+                    Vector3 normal = Vector3.Zero;
+                    if (tup.Item3 > -1)
+                    {
+                        normal = obj.Normals[tup.Item3 - 1];
+                        hasNormals = true;
+                    }
+                    var vert = new DGRP3DVert(obj.Vertices[ind[0] - 1], normal, obj.TextureCoords[ind[1] - 1]);
                     vert.TextureCoordinate.Y = 1 - vert.TextureCoordinate.Y;
                     SVerts.Add(vert);
                     dict[tup] = targ;
@@ -165,8 +177,8 @@ namespace FSO.Files.RC
                 SIndices.Add(targ);
             }
 
-            GenerateNormals(false);
-            
+            if (!hasNormals) GenerateNormals(false);
+
             /*
             var triBase = new int[SIndices.Count / 3][];
             for (int i = 0; i < triBase.Length; i++) triBase[i] = new int[] { SIndices[i * 3], SIndices[i * 3 + 1], SIndices[i * 3 + 2] };
@@ -209,9 +221,10 @@ namespace FSO.Files.RC
             if (CustomTexture == 0)
             {
                 return dyn + "_SPR_rot" + PixelDir + "_" + PixelSPR;
-            } else
+            }
+            else
             {
-                return dyn + "_TEX_"+PixelSPR;
+                return dyn + "_TEX_" + PixelSPR;
             }
         }
 
@@ -220,26 +233,31 @@ namespace FSO.Files.RC
             string o_name = GetOName(dyn);
 
             io.WriteLine("usemtl " + o_name);
-            io.WriteLine("o "+o_name);
+            io.WriteLine("o " + o_name);
             foreach (var vert in SVerts)
             {
-                io.WriteLine("v "+vert.Position.X.ToString(CultureInfo.InvariantCulture) +" "+vert.Position.Y.ToString(CultureInfo.InvariantCulture) +" "+vert.Position.Z.ToString(CultureInfo.InvariantCulture));
+                io.WriteLine("v " + vert.Position.X.ToString(CultureInfo.InvariantCulture) + " " + vert.Position.Y.ToString(CultureInfo.InvariantCulture) + " " + vert.Position.Z.ToString(CultureInfo.InvariantCulture));
             }
             foreach (var vert in SVerts)
             {
-                io.WriteLine("vt " + vert.TextureCoordinate.X.ToString(CultureInfo.InvariantCulture) + " " + (1-vert.TextureCoordinate.Y).ToString(CultureInfo.InvariantCulture));
+                io.WriteLine("vt " + vert.TextureCoordinate.X.ToString(CultureInfo.InvariantCulture) + " " + (1 - vert.TextureCoordinate.Y).ToString(CultureInfo.InvariantCulture));
             }
+            foreach (var vert in SVerts)
+            {
+                io.WriteLine("vn " + vert.Normal.X.ToString(CultureInfo.InvariantCulture) + " " + vert.Normal.Y.ToString(CultureInfo.InvariantCulture) + " " + vert.Normal.Z.ToString(CultureInfo.InvariantCulture));
+            }
+
             io.Write("f ");
             var ticker = 0;
             var j = 0;
             foreach (var ind in SIndices)
             {
                 var i = ind + baseInd;
-                io.Write(i+"/"+i + " ");
+                io.Write(i + "/" + i + "/" + i + " ");
                 if (++ticker == 3)
                 {
                     io.WriteLine("");
-                    if (j < SIndices.Count-1) io.Write("f ");
+                    if (j < SIndices.Count - 1) io.Write("f ");
                     ticker = 0;
                 }
                 j++;
@@ -250,14 +268,16 @@ namespace FSO.Files.RC
         public void SaveMTL(StreamWriter io, int dyn, string path)
         {
             var oname = GetOName(dyn);
-            if (Pixel != null) {
+            if (Pixel != null)
+            {
                 Common.Utils.GameThread.NextUpdate(x =>
                 {
                     try
                     {
                         using (var io2 = File.Open(Path.Combine(path, oname + ".png"), FileMode.Create))
                             Pixel.SaveAsPng(io2, Pixel.Width, Pixel.Height);
-                    } catch (Exception e)
+                    }
+                    catch (Exception e)
                     {
 
                     }
@@ -271,8 +291,8 @@ namespace FSO.Files.RC
             io.WriteLine("Ns 10.0000");
             io.WriteLine("illum 2");
 
-            io.WriteLine("map_Kd "+oname+".png");
-            io.WriteLine("map_d "+ oname + ".png");
+            io.WriteLine("map_Kd " + oname + ".png");
+            io.WriteLine("map_d " + oname + ".png");
         }
 
         public void Dispose()

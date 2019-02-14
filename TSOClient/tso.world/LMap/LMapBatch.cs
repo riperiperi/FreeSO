@@ -544,8 +544,8 @@ namespace FSO.LotView.LMap
 
                 if (WorldConfig.Current.UltraLighting)
                 {
-                    LightEffect.Parameters["BlurMin"].SetValue((light.OutdoorsColor)?(1 / (75f*9)):0);
-                    LightEffect.Parameters["BlurMax"].SetValue((1 / (75f * 5)));
+                    LightEffect.Parameters["BlurMin"].SetValue((light.OutdoorsColor)?(1 / (Blueprint.Width*9f)):0);
+                    LightEffect.Parameters["BlurMax"].SetValue((1 / (Blueprint.Width * 5f)));
                     passes[5].Apply();
                 } else
                     passes[0].Apply();
@@ -723,9 +723,9 @@ namespace FSO.LotView.LMap
         {
             if (OutsideShadowTarg == null || OutsideShadowTarg.IsDisposed)
             {
-                OutsideShadowTarg = new RenderTarget2D(GD, ShadowTarg.Width, ShadowTarg.Height, false, SurfaceFormat.Color, DepthFormat.None, 0, RenderTargetUsage.PreserveContents);
-                OutsideShadowTargPost = new RenderTarget2D(GD, ShadowTarg.Width, ShadowTarg.Height, false, SurfaceFormat.Color, DepthFormat.None, 0, RenderTargetUsage.PreserveContents);
-                LightEffect.Parameters["SSAASize"].SetValue(new Vector2(0f / OutsideShadowTarg.Width, 0f / OutsideShadowTarg.Height));
+                OutsideShadowTarg = new RenderTarget2D(GD, ShadowTarg.Width*2, ShadowTarg.Height*2, false, SurfaceFormat.Color, DepthFormat.None, 0, RenderTargetUsage.PreserveContents);
+                OutsideShadowTargPost = new RenderTarget2D(GD, ShadowTarg.Width*2, ShadowTarg.Height*2, false, SurfaceFormat.Color, DepthFormat.None, 0, RenderTargetUsage.PreserveContents);
+                LightEffect.Parameters["SSAASize"].SetValue(new Vector2(1f / OutsideShadowTarg.Width, 1f / OutsideShadowTarg.Height));
             }
         }
 

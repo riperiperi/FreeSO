@@ -56,5 +56,22 @@ namespace FSO.Common.Utils
         {
             return (x % m + m) % m;
         }
+
+        private static int[] tab32 = new int[] {
+             0,  9,  1, 10, 13, 21,  2, 29,
+            11, 14, 16, 18, 22, 25,  3, 30,
+             8, 12, 20, 28, 15, 17, 24,  7,
+            19, 27, 23,  6, 26,  5,  4, 31
+        };
+
+        public static int Log2Int(uint value)
+        {
+            value |= value >> 1;
+            value |= value >> 2;
+            value |= value >> 4;
+            value |= value >> 8;
+            value |= value >> 16;
+            return tab32[(uint)(value * 0x07C4ACDD) >> 27];
+        }
     }
 }

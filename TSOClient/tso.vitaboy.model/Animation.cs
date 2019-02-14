@@ -33,29 +33,12 @@ namespace FSO.Vitaboy
         public Quaternion[] Rotations;
         public AnimationMotion[] Motions;
 
-        public int FramesPerSecond
-        {
-            get
-            {
-                return (int)Math.Round(NumFrames / (Duration / 1000));
-            }
-        }
+        public int FramesPerSecond { get; internal set; }
 
         /// <summary>
         /// Total number of frames in this animation.
         /// </summary>
-        public int NumFrames
-        {
-            get
-            {
-                var result = 0;
-                foreach (var motion in Motions)
-                {
-                    result = (int)Math.Max(result, motion.FrameCount);
-                }
-                return result;
-            }
-        }
+        public int NumFrames { get; internal set; }
 
         /// <summary>
         /// Reads an animation from a stream.
@@ -63,109 +46,114 @@ namespace FSO.Vitaboy
         /// <param name="stream">The Stream instance to read from.</param>
         public void Read(BCFReadProxy io, bool bcf)
         {
+            if (!bcf)
+            {
+                var version = io.ReadUInt32();
+            }
 
+            if (bcf)
+            {
+                Name = io.ReadPascalString();
+                XSkillName = io.ReadPascalString();
+            }
+            else
+            {
+                Name = io.ReadLongPascalString();
+            }
+            Duration = io.ReadFloat();
+            Distance = io.ReadFloat();
+            IsMoving = (bcf) ? ((byte)io.ReadInt32()) : io.ReadByte();
+
+            TranslationCount = io.ReadUInt32();
+            if (!bcf)
+            {
+                Translations = new Vector3[TranslationCount];
+                for (var i = 0; i < TranslationCount; i++)
+                {
+                    Translations[i] = new Vector3
+                    {
+                        X = -io.ReadFloat(),
+                        Y = io.ReadFloat(),
+                        Z = io.ReadFloat()
+                    };
+                }
+            }
+
+            RotationCount = io.ReadUInt32();
+            if (!bcf)
+            {
+                Rotations = new Quaternion[RotationCount];
+                for (var i = 0; i < RotationCount; i++)
+                {
+                    Rotations[i] = new Quaternion
+                    {
+                        X = io.ReadFloat(),
+                        Y = -io.ReadFloat(),
+                        Z = -io.ReadFloat(),
+                        W = -io.ReadFloat()
+                    };
+                }
+            }
+
+            var motionCount = io.ReadUInt32();
+            NumFrames = 0;
+            Motions = new AnimationMotion[motionCount];
+            for (var i = 0; i < motionCount; i++)
+            {
+                var motion = new AnimationMotion();
                 if (!bcf)
                 {
-                    var version = io.ReadUInt32();
+                    var unknown = io.ReadUInt32();
                 }
+                motion.BoneName = io.ReadPascalString();
+                motion.FrameCount = io.ReadUInt32();
+                if (motion.FrameCount > NumFrames) NumFrames = (int)motion.FrameCount;
+                motion.Duration = io.ReadFloat();
+                motion.HasTranslation = (((bcf) ? io.ReadInt32() : io.ReadByte()) == 1);
+                motion.HasRotation = (((bcf) ? io.ReadInt32() : io.ReadByte()) == 1);
+                motion.FirstTranslationIndex = io.ReadUInt32();
+                motion.FirstRotationIndex = io.ReadUInt32();
 
-                if (bcf)
+                var hasPropsList = bcf || io.ReadByte() == 1;
+                if (hasPropsList)
                 {
-                    Name = io.ReadPascalString();
-                    XSkillName = io.ReadPascalString();
-                }
-                else
-                {
-                    Name = io.ReadLongPascalString();
-                }
-                Duration = io.ReadFloat();
-                Distance = io.ReadFloat();
-                IsMoving = (bcf)?((byte)io.ReadInt32()):io.ReadByte();
-
-                TranslationCount = io.ReadUInt32();
-                if (!bcf)
-                {
-                    Translations = new Vector3[TranslationCount];
-                    for (var i = 0; i < TranslationCount; i++)
+                    var propListCount = io.ReadUInt32();
+                    var props = new PropertyList[propListCount];
+                    for (var x = 0; x < propListCount; x++)
                     {
-                        Translations[i] = new Vector3
+                        props[x] = ReadPropertyList(io, bcf);
+                    }
+                    motion.Properties = props;
+                }
+
+                var hasTimeProps = bcf || io.ReadByte() == 1;
+                if (hasTimeProps)
+                {
+                    var timePropsListCount = io.ReadUInt32();
+                    var timePropsList = new TimePropertyList[timePropsListCount];
+
+                    for (var x = 0; x < timePropsListCount; x++)
+                    {
+                        var list = new TimePropertyList();
+                        var timePropsCount = io.ReadUInt32();
+                        list.Items = new TimePropertyListItem[timePropsCount];
+                        for (var y = 0; y < timePropsCount; y++)
                         {
-                            X = -io.ReadFloat(),
-                            Y = io.ReadFloat(),
-                            Z = io.ReadFloat()
-                        };
-                    }
-                }
-
-                RotationCount = io.ReadUInt32();
-                if (!bcf)
-                {
-                    Rotations = new Quaternion[RotationCount];
-                    for (var i = 0; i < RotationCount; i++)
-                    {
-                        Rotations[i] = new Quaternion
-                        {
-                            X = io.ReadFloat(),
-                            Y = -io.ReadFloat(),
-                            Z = -io.ReadFloat(),
-                            W = -io.ReadFloat()
-                        };
-                    }
-                }
-
-                var motionCount = io.ReadUInt32();
-                Motions = new AnimationMotion[motionCount];
-                for (var i = 0; i < motionCount; i++){
-                    var motion = new AnimationMotion();
-                    if (!bcf)
-                    {
-                        var unknown = io.ReadUInt32();
-                    }
-                    motion.BoneName = io.ReadPascalString();
-                    motion.FrameCount = io.ReadUInt32();
-                    motion.Duration = io.ReadFloat();
-                    motion.HasTranslation = (((bcf) ? io.ReadInt32() : io.ReadByte()) == 1);
-                    motion.HasRotation = (((bcf) ? io.ReadInt32() : io.ReadByte()) == 1);
-                    motion.FirstTranslationIndex = io.ReadUInt32();
-                    motion.FirstRotationIndex = io.ReadUInt32();
-
-                    var hasPropsList = bcf || io.ReadByte() == 1;
-                    if (hasPropsList)
-                    {
-                        var propListCount = io.ReadUInt32();
-                        var props = new PropertyList[propListCount];
-                        for (var x = 0; x < propListCount; x++){
-                            props[x] = ReadPropertyList(io, bcf);
-                        }
-                        motion.Properties = props;
-                    }
-
-                    var hasTimeProps = bcf || io.ReadByte() == 1;
-                    if (hasTimeProps)
-                    {
-                        var timePropsListCount = io.ReadUInt32();
-                        var timePropsList = new TimePropertyList[timePropsListCount];
-
-                        for (var x = 0; x < timePropsListCount; x++)
-                        {
-                            var list = new TimePropertyList();
-                            var timePropsCount = io.ReadUInt32();
-                            list.Items = new TimePropertyListItem[timePropsCount];
-                            for (var y = 0; y < timePropsCount; y++)
+                            var id = io.ReadInt32();
+                            list.Items[y] = new TimePropertyListItem
                             {
-                                var id = io.ReadInt32();
-                                list.Items[y] = new TimePropertyListItem {
-                                    ID = id,
-                                    Properties = ReadPropertyList(io, bcf)
-                                };
-                            }
-                            timePropsList[x] = list;
+                                ID = id,
+                                Properties = ReadPropertyList(io, bcf)
+                            };
                         }
-                        motion.TimeProperties = timePropsList;
+                        timePropsList[x] = list;
                     }
-
-                    Motions[i] = motion;
+                    motion.TimeProperties = timePropsList;
                 }
+
+                Motions[i] = motion;
+            }
+            FramesPerSecond = (int)Math.Round(NumFrames / (Duration / 1000));
         }
 
         /// <summary>

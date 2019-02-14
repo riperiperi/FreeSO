@@ -665,6 +665,8 @@ namespace FSO.Server.Servers.Lot.Domain
 
             Lot.TSOState.Terrain = Terrain;
             Lot.TSOState.Name = LotPersist.name;
+            Lot.TSOState.NhoodID = LotPersist.neighborhood_id;
+            Lot.TSOState.LotID = LotPersist.location;
             Lot.TSOState.SkillMode = LotPersist.skill_mode;
             Lot.TSOState.PropertyCategory = (byte)LotPersist.category;
 
@@ -797,6 +799,8 @@ namespace FSO.Server.Servers.Lot.Domain
 
         private static uint PAYPHONE_GUID = 0x313D2F9A;
         private static uint NHOOD_PAYPHONE_GUID = 0x303CD603;
+        private static uint NHOOD_BULLETIN_GUID = 0x4B489F30;
+        private static uint NHOOD_BULLETIN_SMART_GUID = 0x792617D7;
 
         private void EnsureCommunityObjects()
         {
@@ -812,6 +816,15 @@ namespace FSO.Server.Servers.Lot.Domain
                     Lot.Context.CreateObjectInstance(NHOOD_PAYPHONE_GUID, pos, dir);
                 }
             }
+
+            var bulletin = Lot.Context.ObjectQueries.GetObjectsByGUID(NHOOD_BULLETIN_SMART_GUID)?.FirstOrDefault();
+            if (bulletin == null)
+            {
+                var mailbox = Lot.Entities.FirstOrDefault(x => (x.Object.OBJ.GUID == 0xEF121974 || x.Object.OBJ.GUID == 0x1D95C9B0));
+                bulletin = Lot.Context.CreateObjectInstance(NHOOD_BULLETIN_GUID, LotTilePos.OUT_OF_WORLD, Direction.NORTH).BaseObject;
+                SimAntics.Primitives.VMFindLocationFor.FindLocationFor(bulletin, mailbox, Lot.Context, VMPlaceRequestFlags.UserPlacement);
+            }
+
         }
 
         private void Lot_OnChatEvent(VMChatEvent evt)

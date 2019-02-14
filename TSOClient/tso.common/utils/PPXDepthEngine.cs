@@ -158,7 +158,13 @@ namespace FSO.Common.Utils
             }
             else
             {
-                SB.Begin();
+                if (FSOEnvironment.Enable3D)
+                {
+                    SB.Begin(blendState: BlendState.Opaque);
+                    opacity = 1;
+                }
+                else
+                    SB.Begin(blendState: BlendState.AlphaBlend);
                 SB.Draw(Backbuffer, new Vector2(Backbuffer.Width * (1 - scale) / 2, Backbuffer.Height * (1 - scale) / 2), null, Color.White * opacity, 0f, new Vector2(), scale,
                     SpriteEffects.None, 0);
                 SB.End();

@@ -228,43 +228,68 @@ namespace FSO.SimAntics.Engine.Primitives
                     }
 
                 case VMExpressionOperator.Push:
-                    var lhsList = VMMemory.GetList(context, operand.LhsOwner);
-                    rhsValue = VMMemory.GetBigVariable(context, operand.RhsOwner, operand.RhsData);
-
-                    switch (operand.LhsData)
+                    if (context.VM.TS1)
                     {
-                        case 0: //front
-                            lhsList.AddFirst((short)rhsValue);
-                            break;
-                        case 1: //back
-                            lhsList.AddLast((short)rhsValue);
-                            break;
-                        case 2:
-                            throw new VMSimanticsException("Unknown list push destination: "+operand.LhsData, context);
+                        //OrEquals
+                        lhsValue = VMMemory.GetBigVariable(context, operand.LhsOwner, operand.LhsData);
+                        rhsValue = VMMemory.GetBigVariable(context, operand.RhsOwner, operand.RhsData);
+                        lhsValue |= rhsValue;
+                        VMMemory.SetBigVariable(context, operand.LhsOwner, operand.LhsData, lhsValue);
+                    }
+                    else
+                    {
+                        var lhsList = VMMemory.GetList(context, operand.LhsOwner);
+                        rhsValue = VMMemory.GetBigVariable(context, operand.RhsOwner, operand.RhsData);
+
+                        switch (operand.LhsData)
+                        {
+                            case 0: //front
+                                lhsList.AddFirst((short)rhsValue);
+                                break;
+                            case 1: //back
+                                lhsList.AddLast((short)rhsValue);
+                                break;
+                            case 2:
+                                throw new VMSimanticsException("Unknown list push destination: " + operand.LhsData, context);
+                        }
                     }
                     return VMPrimitiveExitCode.GOTO_TRUE;
 
                 case VMExpressionOperator.Pop:
-                    var rhsList = VMMemory.GetList(context, operand.RhsOwner);
-                    if (rhsList.Count == 0) return VMPrimitiveExitCode.GOTO_FALSE;
-
-                    switch (operand.RhsData)
+                    if (context.VM.TS1)
                     {
-                        case 0: //front
-                            lhsValue = rhsList.First.Value;
-                            rhsList.RemoveFirst();
-                            break;
-                        case 1: //back
-                            lhsValue = rhsList.Last.Value;
-                            rhsList.RemoveLast();
-                            break;
-                        case 2:
-                            throw new VMSimanticsException("Unknown list pop source: "+operand.LhsData, context);
+                        //XorEquals
+                        lhsValue = VMMemory.GetBigVariable(context, operand.LhsOwner, operand.LhsData);
+                        rhsValue = VMMemory.GetBigVariable(context, operand.RhsOwner, operand.RhsData);
+                        lhsValue ^= rhsValue;
+                        VMMemory.SetBigVariable(context, operand.LhsOwner, operand.LhsData, lhsValue);
                     }
+                    else
+                    {
+                        var rhsList = VMMemory.GetList(context, operand.RhsOwner);
+                        if (rhsList.Count == 0) return VMPrimitiveExitCode.GOTO_FALSE;
 
-                    VMMemory.SetBigVariable(context, operand.LhsOwner, operand.LhsData, lhsValue);
+                        switch (operand.RhsData)
+                        {
+                            case 0: //front
+                                lhsValue = rhsList.First.Value;
+                                rhsList.RemoveFirst();
+                                break;
+                            case 1: //back
+                                lhsValue = rhsList.Last.Value;
+                                rhsList.RemoveLast();
+                                break;
+                            case 2:
+                                throw new VMSimanticsException("Unknown list pop source: " + operand.LhsData, context);
+                        }
+
+                        VMMemory.SetBigVariable(context, operand.LhsOwner, operand.LhsData, lhsValue);
+                    }
                     return VMPrimitiveExitCode.GOTO_TRUE;
-
+                case VMExpressionOperator.TS1AssignSqrtRHS:
+                    rhsValue = VMMemory.GetBigVariable(context, operand.RhsOwner, operand.RhsData);
+                    setResult = VMMemory.SetBigVariable(context, operand.LhsOwner, operand.LhsData, (short)Math.Sqrt(rhsValue));
+                    return VMPrimitiveExitCode.GOTO_TRUE;
                 default:
                     throw new VMSimanticsException("Unknown expression type", context);
             }
@@ -332,6 +357,10 @@ namespace FSO.SimAntics.Engine.Primitives
         NotEqualTo = 16,
         DecAndGreaterThan = 17,
         Push = 18,
-        Pop = 19
+        Pop = 19,
+
+        TS1OrEquals = 18,
+        TS1XorEquals = 19,
+        TS1AssignSqrtRHS = 20
     }
 }

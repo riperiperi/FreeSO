@@ -1,8 +1,10 @@
-﻿using FSO.Files.Formats.IFF;
+﻿using FSO.Content;
+using FSO.Files.Formats.IFF;
 using FSO.IDE.Common;
 using FSO.IDE.ContentEditors;
 using FSO.IDE.Managers;
 using FSO.SimAntics;
+using FSO.SimAntics.JIT.Translation.CSharp;
 using FSO.SimAntics.NetPlay.Model.Commands;
 using System;
 using System.Collections.Generic;
@@ -310,6 +312,85 @@ namespace FSO.IDE
         {
             var ds = new TSODataDefinitionEditor();
             ds.Show();
+        }
+
+        private void saveGlobalscsToolStripMenuItem_Click(object sender, EventArgs e)
+        {
+            var trans = new AOTGenerator();
+            trans.Show();
+
+            /*
+            var translator = new CSTranslator();
+            var globalRes = Content.Content.Get().WorldObjectGlobals.Get("global").Resource;
+
+            var iff = globalRes.MainIff;
+            iff.Filename = "global.iff";
+            translator.Context.GlobalRes = globalRes;
+            var globalText = translator.TranslateIff(iff);
+            using (var file = System.IO.File.Open(@"C:\Users\Rhys\Desktop\AOT\global.cs", System.IO.FileMode.Create))
+            {
+                using (var writer = new System.IO.StreamWriter(file))
+                {
+                    writer.Write(globalText);
+                }
+            }
+
+            var globalContext = (CSTranslationContext)translator.Context;
+
+            var compiledSG = new Dictionary<GameGlobalResource, CSTranslationContext>();
+            var objs = Content.Content.Get().WorldObjects.Entries.ToList();
+            var fileComplete = new HashSet<string>();
+            foreach (var obj in objs)
+            {
+                var r = obj.Value;
+                if (!fileComplete.Contains(r.FileName))
+                {
+                    fileComplete.Add(r.FileName);
+                    var objRes = r.Get();
+
+                    CSTranslationContext sg = null;
+                    if (objRes.Resource.SemiGlobal != null)
+                    {
+                        if (!compiledSG.TryGetValue(objRes.Resource.SemiGlobal, out sg))
+                        {
+                            //compile semiglobals
+                            translator = new CSTranslator();
+                            var sgIff = objRes.Resource.SemiGlobal.MainIff;
+                            translator.Context.ObjectRes = objRes.Resource; //pass this in as occasionally *local* tuning constants are used in *semiglobal* functions.
+                            translator.Context.GlobalRes = globalRes;
+                            translator.Context.SemiGlobalRes = objRes.Resource.SemiGlobal;
+                            translator.Context.GlobalContext = globalContext;
+                            var semiglobalText = translator.TranslateIff(sgIff);
+                            using (var file = System.IO.File.Open(@"C:\Users\Rhys\Desktop\AOT\" + sgIff.Filename.ToString().Replace(".iff", ".cs"), System.IO.FileMode.Create))
+                            {
+                                using (var writer = new System.IO.StreamWriter(file))
+                                {
+                                    writer.Write(semiglobalText);
+                                }
+                            }
+                            sg = (CSTranslationContext)translator.Context;
+                            compiledSG[objRes.Resource.SemiGlobal] = sg;
+                        }
+                    }
+
+                    translator = new CSTranslator();
+                    var objIff = objRes.Resource.MainIff;
+                    translator.Context.GlobalRes = globalRes;
+                    translator.Context.SemiGlobalRes = objRes.Resource.SemiGlobal;
+                    translator.Context.ObjectRes = objRes.Resource;
+                    translator.Context.GlobalContext = globalContext;
+                    translator.Context.SemiGlobalContext = sg;
+                    var objText = translator.TranslateIff(objIff);
+                    using (var file = System.IO.File.Open(@"C:\Users\Rhys\Desktop\AOT\" + objIff.Filename.ToString().Replace(".iff", ".cs"), System.IO.FileMode.Create))
+                    {
+                        using (var writer = new System.IO.StreamWriter(file))
+                        {
+                            writer.Write(objText);
+                        }
+                    }
+                }
+            }
+            */
         }
     }
 

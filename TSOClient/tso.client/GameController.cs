@@ -141,7 +141,8 @@ namespace FSO.Client
             var purch = new Regulators.PurchaseLotRegulator(null);
             var conn = new Regulators.LotConnectionRegulator(null, null, null);
             var t2 = new Regulators.CityConnectionRegulator(null, null, null, null, Kernel, null);
-            var neigh = new Regulators.NeighborhoodActionRegulator(null);
+            var neigh = new Regulators.GenericActionRegulator<NhoodRequest, NhoodResponse>(null);
+            var bulletin = new Regulators.GenericActionRegulator<BulletinRequest, BulletinResponse>(null);
             var regu = new Regulators.RegulatorsModule();
 
             var prov = new CacheProvider();

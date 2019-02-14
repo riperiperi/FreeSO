@@ -19,6 +19,8 @@ namespace FSO.SimAntics.Model.Routing
         public int y1;
         public int y2;
 
+        public VMObstacle() { }
+
         public VMObstacle(int x1, int y1, int x2, int y2)
         {
             if (x1 > x2) { var temp = x1; x1 = x2; x2 = temp; }
@@ -53,7 +55,6 @@ namespace FSO.SimAntics.Model.Routing
             return new Point(Math.Max(Math.Min(x2, x), x1), Math.Max(Math.Min(y2, y), y1));
         }
 
-
         public Point ClosestHiP(int x, int y)
         {
             return new Point(Math.Max(Math.Min(x2 * 0x8000, x), x1 * 0x8000), Math.Max(Math.Min(y2 * 0x8000, y), y1 * 0x8000));
@@ -62,6 +63,11 @@ namespace FSO.SimAntics.Model.Routing
         public bool Intersects(VMObstacle other)
         {
             return !((other.x1 >= x2 || other.x2 <= x1) || (other.y1 >= y2 || other.y2 <= y1));
+        }
+
+        public bool OnEdge(VMObstacle other)
+        {
+            return (x2 == other.x1) || (x1 == other.x2) || (y1 == other.y2) || (y2 == other.y1);
         }
 
         public Rectangle ToRectangle()

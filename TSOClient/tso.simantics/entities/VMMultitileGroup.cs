@@ -140,13 +140,15 @@ namespace FSO.SimAntics.Entities
             if (pos.Level > context.Architecture.Stories) return new VMPlacementResult(VMPlacementError.NotAllowedOnFloor);
             if (Objects.Count == 0) return new VMPlacementResult(VMPlacementError.Success);
 
-            VMEntity[] OldContainers = new VMEntity[Objects.Count];
-            short[] OldSlotNum = new short[Objects.Count];
-            for (int i = 0; i < Objects.Count(); i++)
+            var count = Objects.Count;
+            VMEntity[] OldContainers = new VMEntity[count];
+            short[] OldSlotNum = new short[count];
+            bool[] RoomChange = new bool[count];
+            LotTilePos[] Targets = new LotTilePos[count];
+            for (int i = 0; i < count; i++)
             {
                 OldContainers[i] = Objects[i].Container;
                 OldSlotNum[i] = Objects[i].ContainerSlot;
-                Objects[i].PrePositionChange(context);
             }
 
             int Dir = 0;
@@ -163,7 +165,7 @@ namespace FSO.SimAntics.Entities
             }
 
             Matrix rotMat = Matrix.CreateRotationZ((float)(Dir * Math.PI / 4.0));
-            VMPlacementResult[] places = new VMPlacementResult[Objects.Count];
+            VMPlacementResult[] places = new VMPlacementResult[count];
 
             var bObj = BaseObject;
             var bOff = Offsets[Objects.IndexOf(BaseObject)];
@@ -173,7 +175,7 @@ namespace FSO.SimAntics.Entities
             //TODO: optimize so we don't have to recalculate all of this
             if (pos != LotTilePos.OUT_OF_WORLD)
             {
-                for (int i = 0; i < Objects.Count(); i++)
+                for (int i = 0; i < count; i++)
                 {
                     var sub = Objects[i];
                     var off = new Vector3(Offsets[i].x, Offsets[i].y, 0);
@@ -181,48 +183,54 @@ namespace FSO.SimAntics.Entities
                     offTotal += off;
 
                     var offPos = new LotTilePos((short)Math.Round(pos.x + off.X), (short)Math.Round(pos.y + off.Y), (sbyte)(pos.Level + Offsets[i].Level));
+                    Targets[i] = offPos;
+                    var roomChange = context.GetRoomAt(offPos) != context.GetObjectRoom(sub);
+                    RoomChange[i] = roomChange;
+                    sub.PrePositionChange(context, roomChange);
                     places[i] = sub.PositionValid(offPos, direction, context, flags);
                     if (places[i].Status != VMPlacementError.Success)
                     {
                         //go back to where we started: we're no longer out of world.
-                        for (int j = 0; j < Objects.Count(); j++)
+                        for (int j = 0; j <= i; j++)
                         {
                             //need to restore slot we were in
                             if (j <OldContainers.Length && OldContainers[j] != null) {
                                 OldContainers[j].PlaceInSlot(Objects[j], OldSlotNum[j], false, context);
                             }
-                            Objects[j].PositionChange(context, false);
+                            Objects[j].PositionChange(context, false, RoomChange[j]);
                         }
                         return places[i];
                     }
                 }
             } else
             {
-                for (int i = 0; i < Objects.Count(); i++)
+                for (int i = 0; i < count; i++)
                 {
+                    Objects[i].PrePositionChange(context, true);
+                    RoomChange[i] = true;
                     var off = new Vector3(Offsets[i].x, Offsets[i].y, 0);
                     off = Vector3.Transform(off - leadOff, rotMat);
                     offTotal += off;
                 }
             }
 
-            offTotal /= Objects.Count(); //this is now the average offset
+            offTotal /= count; //this is now the average offset
             //verification success
 
-            for (int i = 0; i < Objects.Count(); i++)
+
+            for (int i = 0; i < count; i++)
             {
                 var sub = Objects[i];
-                var off = new Vector3(Offsets[i].x, Offsets[i].y, 0);
-                off = Vector3.Transform(off-leadOff, rotMat);
 
                 var offPos = (pos==LotTilePos.OUT_OF_WORLD)?
                     LotTilePos.OUT_OF_WORLD :
-                    new LotTilePos((short)Math.Round(pos.x + off.X), (short)Math.Round(pos.y + off.Y), (sbyte)(pos.Level + Offsets[i].Level));
+                    Targets[i];
 
-                if (VM.UseWorld) sub.WorldUI.MTOffset = off - offTotal;
+                if (VM.UseWorld && count > 1) sub.WorldUI.MTOffset = Vector3.Transform(new Vector3(Offsets[i].x, Offsets[i].y, 0) - leadOff, rotMat) - offTotal;
                 sub.SetIndivPosition(offPos, direction, context, places[i]);
             }
-            for (int i = 0; i < Objects.Count(); i++) Objects[i].PositionChange(context, false);
+            
+            for (int i = 0; i < count; i++) Objects[i].PositionChange(context, false, RoomChange[i]);
             return new VMPlacementResult(VMPlacementError.Success);
         }
 

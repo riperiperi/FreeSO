@@ -23,7 +23,8 @@ namespace FSO.SimAntics.Marshals
         // 30 - LastWalkStyle (for auto run)
         // 31 - Object Flags (donated), Last Lot Owner ID (other mayor stuff)
         // 32 - Bezier Routing
-        public static readonly int LATEST_VERSION = 32;
+        // 33 - NhoodID and Location
+        public static readonly int LATEST_VERSION = 33;
 
         public int Version = LATEST_VERSION;
         public bool Compressed = true;

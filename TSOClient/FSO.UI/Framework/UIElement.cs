@@ -250,6 +250,7 @@ namespace FSO.Client.UI.Framework
             set
             {
                 _BlendColor = value;
+                _OpacityDirty = false;
             }
         }
 
@@ -855,7 +856,7 @@ namespace FSO.Client.UI.Framework
         /// <param name="scale"></param>
         public void DrawLocalTexture(SpriteBatch batch, Texture2D texture, Nullable<Rectangle> from, Vector2 to, Vector2 scale, Color color, float rotation)
         {
-            DrawLocalTexture(batch, texture, from, to, scale, color, 0, Vector2.Zero);
+            DrawLocalTexture(batch, texture, from, to, scale, color, rotation, Vector2.Zero);
             //if (!m_IsInvalidated)
             //{
             //batch.Draw(DPISwitch(texture), FlooredLocalPoint(to), RectScale(texture, from), color, rotation,

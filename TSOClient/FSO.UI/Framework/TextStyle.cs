@@ -143,7 +143,7 @@ namespace FSO.Client.UI.Framework
                     _LineHeight = (int)MeasureString("D").Y;
                 }
 
-                return _LineHeight.Value;
+                return _LineHeight.Value + LineHeightModifier;
             }
         }
 

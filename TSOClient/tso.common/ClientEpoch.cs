@@ -35,7 +35,15 @@ namespace FSO.Common
         {
             TimeSpan span = (ToDate(date) - ToDate(ClientEpoch.Now));
 
-            return String.Format("{0} hours, {1} minutes and {2} seconds", span.Hours, span.Minutes, span.Seconds);
+            return String.Format("{0} hours, {1} minutes and {2} seconds", (int)span.TotalHours, span.Minutes, span.Seconds);
+        }
+
+        public static string DHMRemaining(uint date)
+        {
+            if (date == uint.MaxValue) return "Permanent";
+            TimeSpan span = (ToDate(date) - ToDate(ClientEpoch.Now));
+
+            return String.Format("{0} days, {1} hours and {2} minutes", (int)span.TotalDays, span.Hours, span.Minutes);
         }
 
         public static uint Default

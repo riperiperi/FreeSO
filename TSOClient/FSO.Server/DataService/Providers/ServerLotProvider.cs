@@ -235,6 +235,7 @@ namespace FSO.Server.DataService.Providers
                     uint minSkill;
                     if (!SkillGameplayCategory.TryGetValue((LotCategory)lot.Lot_Category, out minSkill)) minSkill = 0;
                     lot.Lot_SkillGamemode = Math.Min(2, Math.Max(minSkill, lot.Lot_SkillGamemode));
+                    lot.Lot_LastCatChange = Epoch.Now;
                     using (var db = DAFactory.Get())
                     {
                         db.Lots.UpdateLotCategory(lot.DbId, (LotCategory)(lot.Lot_Category), lot.Lot_SkillGamemode);

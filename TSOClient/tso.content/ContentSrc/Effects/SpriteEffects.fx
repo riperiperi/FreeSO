@@ -70,6 +70,73 @@ technique NoiseAccum
     }
 }
 
+float3 RGBToHSV(float3 rgb)
+{
+	float4 k = float4(0.0, -1.0 / 3.0, 2.0 / 3.0, -1.0);
+	float4 p = lerp(float4(rgb.bg, k.wz), float4(rgb.gb, k.xy), step(rgb.b, rgb.g));
+	float4 q = lerp(float4(p.xyw, rgb.r), float4(rgb.r, p.yzx), step(p.x, rgb.r));
+
+	float d = q.x - min(q.w, q.y);
+	float e = 1.0e-10;
+	return float3(abs(q.z + (q.w - q.y) / (6.0 * d + e)), d / (q.x + e), q.x);
+}
+
+float3 HSVToRGB(float3 hsv)
+{
+	float4 k = float4(1.0, 2.0 / 3.0, 1.0 / 3.0, 3.0);
+	float3 p = abs(frac(hsv.xxx + k.xyz) * 6.0 - k.www);
+
+	return hsv.z * lerp(k.xxx, clamp(p - k.xxx, 0.0, 1.0), hsv.y);
+}
+
+float2 SVToSL(float2 sv) {
+	float e = 1.0e-10;
+	float l = sv.y - sv.y * sv.x / 2.0;
+	return float2((sv.y - l) / (min(l, 1 - l) + e), l);
+	/*
+	float2 sl = float2(sv.x * sv.y, (2.0 - sv.x) * sv.y);
+	sl.x /= (sl.y <= 1.0) ? sl.y : (2 - sl.y);
+	sl.y /= 2.0;
+	return sl;
+	*/
+}
+
+float2 SLToSV(float2 sl) {
+	float e = 1.0e-10;
+	float v = sl.y + sl.x * min(sl.y, 1 - sl.y);
+	return float2(2 - 2 * sl.y / (v + e), v);
+	/*
+	float2 sv = float2((sl.y <= 0.5) ? sl.y : 1 - sl.y, sl.x + sl.y);
+	sv.x = 2 * sv.x / (sl.y + sv.x);
+	return sv;
+	*/
+	
+}
+
+float Highlight;
+
+float4 hsvMod(float4 position : SV_Position, float4 color : COLOR0, float2 texCoord : TEXCOORD0) : COLOR0
+{
+	float4 result = tex2D(TextureSampler, texCoord);
+	result.xyz = RGBToHSV(result.rgb);
+	result.yz = SVToSL(result.yz);
+	result.x = (result.x + color.x) % 1;
+	float3 mul = color.yzw;
+	mul.y += Highlight;
+	result.yzw *= mul;
+	result.yz = SLToSV(result.yz);
+	result.rgb = HSVToRGB(result.xyz) * result.a;
+	return result;
+}
+
+technique HSVEffect
+{
+	pass Pass1
+	{
+		PixelShader = compile PS_SHADERMODEL hsvMod();
+	}
+}
+
 /*
 static const float GaussianKernel7[49] = {
 	0,  0,   0,   5,   0,  0, 0,
@@ -358,5 +425,26 @@ technique ShadowSeparableBlit4
 	pass Pass4
 	{
 		PixelShader = compile PS_SHADERMODEL3 OutdoorsPCFStage4();
+	}
+}
+
+float easeInSine(float t) {
+	return 1 - cos(t * (3.141592 / 2));
+};
+
+float stickyOffset;
+float stickyPersp;
+float4 StickyEffectPS(float4 position : SV_Position, float4 color : COLOR0, float2 texCoord : TEXCOORD0) : COLOR0
+{
+	float2 z = float2(easeInSine(pow(texCoord.y, 1.2)), 0);
+	z.x = z.x * stickyOffset + (texCoord.x - 0.5) * z.x * stickyPersp;
+	return tex2D(TextureSampler, texCoord + z) * color;
+}
+
+technique StickyEffect
+{
+	pass Pass4
+	{
+		PixelShader = compile PS_SHADERMODEL StickyEffectPS();
 	}
 }

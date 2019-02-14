@@ -1,0 +1,32 @@
+﻿//mail
+
+//nominations starting [event] (nhood name, end date, award sum)
+1 ^Nominate your Mayor!^
+2 ^The election cycle for %s has started, and we're looking for nominations for which resident should become Mayor. If you live in this neighborhood, check your email for the nomination ballot. You have until %s to cast your nomination!^
+
+//elections starting [event] (nhood name, candidates, end date, award sum)
+3 ^Voting has begun!^
+4 ^The candidates have been selected, and final voting for the Mayor of %s has started. The final candidates are as follows:
+%s
+If you live in this neighborhood, check your email for the final ballot. You have until %s to cast your vote!^
+
+//elections over [sent to voters] (winner, nhood name, other placements)
+5 ^The new Mayor!^
+6 ^The votes are in - %s is now the mayor of %s! Why not celebrate at the town hall? The new mayor should be getting set up there - they might even need your help! 
+
+The runners up (in order) were:
+%s^ //todo: runners up?
+
+7 ^Election Cancelled^ (nhood name)
+8 ^We regret to inform you that this neighborhood, %s, has fallen too far in the rankings to be eligible for elections. However, this means that whole new opportunities have arisen in other neighborhoods... just, uh, not for you. The current Mayor will be removed at the end of this month, but its Town Hall should still remain openable (but -uneditable-). You may wish to have a farewell party for your mayor, and make sure the property is still usable with only the donated objects left!^
+
+9 ^Your, uh, new Mayor^ (nhood name)
+10 ^So apparently, every important person in %s has disappeared overnight, leaving absolutely nobody to become Mayor. Only one person showed up to the polling station, a llama. Yes, we know that doesn't count as a person - but we were desperate so let it run anyways. It's now the mayor, and its only ordinance is to be fed hourly. Strangely, this is clearly the best life for everyone. Thanks.^
+
+11 ^Congratulations!^ (nhood name, top limit)
+12 ^The city council has acknowledged the recent surging activity of %s, and it has succesfully made the top %s neighborhoods list! This means that we will now be splashing out all of our collected tax money to run Mayor elections for this neighbourhood, since we can't actually handle this many people ourselves. These will be beginning shortly, check your inbox for the ballot!
+
+NOTE: Our budget is limited, and may be redirected to other neighborhoods if activity levels drop severely. Our 'business trips' always take priority.^
+
+13 ^PLACEHOLDER JOB TOP^ (player, job level, job type)
+14 ^PLACEHOLDER JOB TOP BODY^

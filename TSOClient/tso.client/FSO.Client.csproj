@@ -98,6 +98,7 @@
     <Prefer32Bit>true</Prefer32Bit>
   </PropertyGroup>
   <ItemGroup>
+    <Compile Include="Controllers\BulletinActionController.cs" />
     <Compile Include="Controllers\GizmoTop100Controller.cs" />
     <Compile Include="Controllers\InboxController.cs" />
     <Compile Include="Controllers\JoinLotProgressController.cs" />
@@ -110,6 +111,7 @@
     <Compile Include="Controllers\LoadingScreenController.cs" />
     <Compile Include="Controllers\NeighborhoodActionController.cs" />
     <Compile Include="Controllers\Panels\BookmarksController.cs" />
+    <Compile Include="Controllers\Panels\BulletinDialogController.cs" />
     <Compile Include="Controllers\Panels\GenericSearchController.cs" />
     <Compile Include="Controllers\Panels\LotAdmitController.cs" />
     <Compile Include="Controllers\Panels\LotPageController.cs" />
@@ -137,7 +139,7 @@
     <Compile Include="Network\TopicSubscription.cs" />
     <Compile Include="Network\VMDataServiceNameCache.cs" />
     <Compile Include="Regulators\LotConnectionRegulator.cs" />
-    <Compile Include="Regulators\NeighborhoodActionRegulator.cs" />
+    <Compile Include="Regulators\GenericActionRegulator.cs" />
     <Compile Include="Regulators\PurchaseLotRegulator.cs" />
     <Compile Include="Rendering\City\CityCamera2D.cs" />
     <Compile Include="Rendering\City\CityCamera3D.cs" />
@@ -171,6 +173,7 @@
     <Compile Include="UI\Panels\Chat\UIChatCategoryList.cs" />
     <Compile Include="UI\Panels\EODs\Archetypes\UIBasicEOD.cs" />
     <Compile Include="UI\Panels\EODs\UIBandEOD.cs" />
+    <Compile Include="UI\Panels\EODs\UIBulletinEOD.cs" />
     <Compile Include="UI\Panels\EODs\UIDJStationEOD.cs" />
     <Compile Include="UI\Panels\EODs\UIBlackjackEOD.cs" />
     <Compile Include="UI\Panels\EODs\UIGameCompDrawACardPluginEOD.cs" />
@@ -202,16 +205,25 @@
     <Compile Include="UI\Panels\LotControls\UIGrassPaint.cs" />
     <Compile Include="UI\Panels\LotControls\UITerrainRaiser.cs" />
     <Compile Include="UI\Panels\MessageStore\UIMessageStore.cs" />
+    <Compile Include="UI\Panels\Neighborhoods\UIBulletinBoard.cs" />
+    <Compile Include="UI\Panels\Neighborhoods\UIBulletinDialog.cs" />
+    <Compile Include="UI\Panels\Neighborhoods\UIBulletinPost.cs" />
+    <Compile Include="UI\Panels\Neighborhoods\UILargeBulletinSummary.cs" />
+    <Compile Include="UI\Panels\Neighborhoods\UIAbstractStickyContainer.cs" />
     <Compile Include="UI\Panels\Neighborhoods\UIBigPersonButton.cs" />
     <Compile Include="UI\Panels\Neighborhoods\UIDonatorDialog.cs" />
     <Compile Include="UI\Panels\Neighborhoods\UIFullRatingItem.cs" />
+    <Compile Include="UI\Panels\Neighborhoods\UILotThumbButtonAuto.cs" />
     <Compile Include="UI\Panels\Neighborhoods\UIManageDonatorDialog.cs" />
+    <Compile Include="UI\Panels\Neighborhoods\UIMediumBulletinSummary.cs" />
     <Compile Include="UI\Panels\Neighborhoods\UINeighBanner.cs" />
     <Compile Include="UI\Panels\Neighborhoods\UINeighPage.cs" />
     <Compile Include="UI\Panels\Neighborhoods\UINominationSelectContainer.cs" />
+    <Compile Include="UI\Panels\Neighborhoods\UIPropertySelectContainer.cs" />
     <Compile Include="UI\Panels\Neighborhoods\UIRatingContainer.cs" />
     <Compile Include="UI\Panels\Neighborhoods\UIRatingList.cs" />
     <Compile Include="UI\Panels\Neighborhoods\UIRatingSummaryPanel.cs" />
+    <Compile Include="UI\Panels\Neighborhoods\UISmallBulletinSummary.cs" />
     <Compile Include="UI\Panels\Neighborhoods\UITop10Pedestal.cs" />
     <Compile Include="UI\Panels\Neighborhoods\UIVoteCandidate.cs" />
     <Compile Include="UI\Panels\Neighborhoods\UIVoteContainer.cs" />

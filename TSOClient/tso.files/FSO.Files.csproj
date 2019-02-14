@@ -104,6 +104,9 @@
     </Reference>
     <Reference Include="System.Data" />
     <Reference Include="System.Xml" />
+    <Reference Include="xxHashSharp, Version=1.0.0.0, Culture=neutral, processorArchitecture=MSIL">
+      <HintPath>..\packages\xxHashSharp.1.0.0\lib\net45\xxHashSharp.dll</HintPath>
+    </Reference>
   </ItemGroup>
   <ItemGroup>
     <Compile Include="Formats\IFF\Chunks\ARRY.cs" />
@@ -127,6 +130,7 @@
     <Compile Include="Formats\IFF\Chunks\TRCN.cs" />
     <Compile Include="Formats\IFF\Chunks\TTAT.cs" />
     <Compile Include="Formats\IFF\Chunks\WALm.cs" />
+    <Compile Include="Formats\tsodata\BulletinItem.cs" />
     <Compile Include="Formats\tsodata\TSODataDefinition.cs" />
     <Compile Include="Formats\IFF\ChunkRuntimeInfo.cs" />
     <Compile Include="Formats\IFF\Chunks\PIFF.cs" />

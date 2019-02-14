@@ -113,6 +113,7 @@
   </ItemGroup>
   <ItemGroup>
     <Compile Include="Engine\Debug\VMSyncTrace.cs" />
+    <Compile Include="Engine\JitIdeas.cs" />
     <Compile Include="Engine\Routing\VMIPathSegment.cs" />
     <Compile Include="Engine\Routing\VMPathBezierSegment.cs" />
     <Compile Include="Engine\Routing\VMPathLineSegment.cs" />
@@ -166,6 +167,9 @@
     <Compile Include="Model\Platform\VMIAvatarState.cs" />
     <Compile Include="Model\Platform\VMIObjectState.cs" />
     <Compile Include="Model\Platform\VMAbstractValidator.cs" />
+    <Compile Include="Model\Routing\VMEntityObstacle.cs" />
+    <Compile Include="Model\Routing\VMObstacleSet.cs" />
+    <Compile Include="Model\Routing\VMObstacleSetOld.cs" />
     <Compile Include="Model\TS1Platform\VMTS1AvatarState.cs" />
     <Compile Include="Model\TS1Platform\VMTS1EntityState.cs" />
     <Compile Include="Model\TS1Platform\VMTS1LotState.cs" />
@@ -221,6 +225,7 @@
     <Compile Include="NetPlay\EODs\Handlers\Data\VMEODSignsData.cs" />
     <Compile Include="NetPlay\EODs\Archetypes\VMBasicEOD.cs" />
     <Compile Include="NetPlay\EODs\Handlers\VMEODBandPlugin.cs" />
+    <Compile Include="NetPlay\EODs\Handlers\VMEODBulletinPlugin.cs" />
     <Compile Include="NetPlay\EODs\Handlers\VMEODDancePlatformPlugin.cs" />
     <Compile Include="NetPlay\EODs\Handlers\VMEODDJStationPlugin.cs" />
     <Compile Include="NetPlay\EODs\Handlers\VMEODHoldEmCasinoPlugin.cs" />

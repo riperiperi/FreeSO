@@ -51,10 +51,10 @@ namespace FSO.SimAntics.Primitives
     public class VMSetBalloonHeadlineOperand : VMPrimitiveOperand
     {
         public ushort Flags2;
-        public sbyte Index;
-        public VMSetBalloonHeadlineOperandGroup Group;
-        public short Duration;
-        public byte Type;
+        public sbyte Index { get; set; }
+        public VMSetBalloonHeadlineOperandGroup Group { get; set; }
+        public short Duration { get; set; }
+        public byte Type { get; set; }
         public byte Flags;
 
         public int Algorithmic
@@ -62,6 +62,11 @@ namespace FSO.SimAntics.Primitives
             get
             {
                 return Flags2 >> 1;
+            }
+            set
+            {
+                Flags2 &= 1;
+                Flags2 |= (ushort)(value << 1);
             }
         }
 
@@ -71,6 +76,11 @@ namespace FSO.SimAntics.Primitives
             {
                 return (Flags2 & 0x1) > 0;
             }
+            set
+            {
+                if (value) Flags2 |= 1;
+                else Flags2 &= unchecked((byte)~1);
+            }
         }
 
         public bool Inactive
@@ -78,6 +88,11 @@ namespace FSO.SimAntics.Primitives
             get
             {
                 return (Flags & 0x1) > 0;
+            }
+            set
+            {
+                if (value) Flags |= 1;
+                else Flags &= unchecked((byte)~1);
             }
         }
 
@@ -87,6 +102,11 @@ namespace FSO.SimAntics.Primitives
             {
                 return (Flags & 0x2) > 0;
             }
+            set
+            {
+                if (value) Flags |= 2;
+                else Flags &= unchecked((byte)~2);
+            }
         }
 
         public bool Backwards
@@ -94,6 +114,11 @@ namespace FSO.SimAntics.Primitives
             get
             {
                 return (Flags & 0x4) > 0;
+            }
+            set
+            {
+                if (value) Flags |= 4;
+                else Flags &= unchecked((byte)~4);
             }
         }
 
@@ -103,6 +128,11 @@ namespace FSO.SimAntics.Primitives
             {
                 return (Flags & 0x8) > 0;
             }
+            set
+            {
+                if (value) Flags |= 8;
+                else Flags &= unchecked((byte)~8);
+            }
         }
 
         public bool Indexed
@@ -110,6 +140,11 @@ namespace FSO.SimAntics.Primitives
             get
             {
                 return (Flags & 0x10) > 0;
+            }
+            set
+            {
+                if (value) Flags |= 0x10;
+                else Flags &= unchecked((byte)~0x10);
             }
         }
 

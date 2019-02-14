@@ -937,6 +937,20 @@ namespace FSO.Server.Servers.Lot.Domain
             });
         }
 
+        public void GetBulletinState(VM vm, VMAsyncBulletinCallback callback)
+        {
+            Host.InBackground(() =>
+            {
+                using (var db = DAFactory.Get())
+                {
+                    var lastPost = db.BulletinPosts.LastPostID(vm.TSOState.NhoodID);
+                    var activity = db.BulletinPosts.CountPosts(vm.TSOState.NhoodID, Epoch.Now - 60 * 60 * 24 * 7);
+
+                    callback(lastPost, activity);
+                }
+            });
+        }
+
         public void FindLotAndValue(VM vm, uint persistID, VMAsyncFindLotCallback p)
         {
             Host.InBackground(() =>

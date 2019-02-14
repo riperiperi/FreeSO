@@ -246,6 +246,7 @@ namespace FSO.SimAntics.Model
                         Bounds = bounds,
                         WallObs = wallObs,
                         RoomObs = roomObs,
+                        RoutingObstacles = VMObstacleSet.RoughBalanced(wallObs.Concat(roomObs).ToList()),
                         WallLines = (deferredLit) ? null : wallLines?.Lines,
                         FenceLines = (deferredLit) ? null : fenceLines?.Lines,
                         AdjRooms = adjRooms,

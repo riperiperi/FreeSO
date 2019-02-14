@@ -2,6 +2,7 @@
 using FSO.Client.UI.Controls;
 using FSO.Client.UI.Framework;
 using FSO.Client.UI.Panels.Neighborhoods;
+using FSO.Common;
 using FSO.Common.Utils;
 using FSO.Server.Protocol.Electron.Packets;
 using System;
@@ -15,11 +16,11 @@ namespace FSO.Client.Controllers
     public class NeighborhoodActionController : IDisposable
     {
         private UIElement BlockingDialog;
-        NeighborhoodActionRegulator ConnectionReg;
+        GenericActionRegulator<NhoodRequest, NhoodResponse> ConnectionReg;
         private List<Callback<NhoodResponseCode>> Callbacks = new List<Callback<NhoodResponseCode>>();
         private bool Blocked = false;
 
-        public NeighborhoodActionController(NeighborhoodActionRegulator regulator)
+        public NeighborhoodActionController(GenericActionRegulator<NhoodRequest, NhoodResponse> regulator)
         {
             regulator.OnError += Regulator_OnError;
             regulator.OnTransition += Regulator_OnTransition;
@@ -46,6 +47,20 @@ namespace FSO.Client.Controllers
             Callbacks.Add(callback);
         }
 
+        public void BanUser(uint avatarID, uint untilDate, string message, Callback<NhoodResponseCode> callback)
+        {
+            if (Blocked) return;
+            Blocked = true;
+            ConnectionReg.MakeRequest(new NhoodRequest()
+            {
+                Type = NhoodRequestType.NHOOD_GAMEPLAY_BAN,
+                TargetAvatar = avatarID,
+                Value = untilDate,
+                Message = message
+            });
+            Callbacks.Add(callback);
+        }
+
         public void SetMayor(uint nhoodID, uint avatarID, Callback<NhoodResponseCode> callback)
         {
             if (Blocked) return;
@@ -55,6 +70,18 @@ namespace FSO.Client.Controllers
                 Type = NhoodRequestType.FORCE_MAYOR,
                 TargetAvatar = avatarID,
                 TargetNHood = nhoodID
+            });
+            Callbacks.Add(callback);
+        }
+
+        public void DeleteRate(uint rateID, Callback<NhoodResponseCode> callback)
+        {
+            if (Blocked) return;
+            Blocked = true;
+            ConnectionReg.MakeRequest(new NhoodRequest()
+            {
+                Type = NhoodRequestType.DELETE_RATE,
+                Value = rateID
             });
             Callbacks.Add(callback);
         }
@@ -134,7 +161,7 @@ namespace FSO.Client.Controllers
                     errorTitle = GameFacade.Strings.GetString("f117", "1");
                     errorBody = GameFacade.Strings.GetString("f117", ((int)response.Code + 1).ToString(), 
                         new string[] {
-                            "<INSERT DURATION>",
+                            ClientEpoch.DHMRemaining(response.BanEndDate),
                             response.Message
                         });
                 }
@@ -167,7 +194,8 @@ namespace FSO.Client.Controllers
                 Buttons = UIAlertButton.Ok(x => {
                     UIScreen.RemoveDialog(BlockingDialog);
                     UIScreen.RemoveDialog(alert);
-                })
+                }),
+                AllowEmojis = true
             }, true);
         }
 

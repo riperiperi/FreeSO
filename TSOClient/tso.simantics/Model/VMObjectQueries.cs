@@ -138,7 +138,7 @@ namespace FSO.SimAntics.Model
             List<VMEntity> tile = null;
             ObjectsByCategory.TryGetValue(category, out tile);
             if (tile == null) return; //???
-            tile.Remove(obj);
+            VM.DeleteFromObjList(tile, obj);
             if (tile.Count == 0) ObjectsByCategory.Remove(category);
         }
 
@@ -169,7 +169,7 @@ namespace FSO.SimAntics.Model
             ObjectsByGUID.TryGetValue(guid, out list);
             if (list != null)
             {
-                list.Remove(obj);
+                VM.DeleteFromObjList(list, obj);
                 if (list.Count == 0) ObjectsByGUID.Remove(guid);
             }
             RemoveCategory(obj, obj.GetValue(VMStackObjectVariable.Category));

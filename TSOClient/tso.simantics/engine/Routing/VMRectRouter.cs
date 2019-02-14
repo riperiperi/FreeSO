@@ -15,11 +15,11 @@ namespace FSO.SimAntics.Engine.Routing
 {
     public class VMRectRouter
     {
-        private List<VMObstacle> Map;
+        private VMObstacleSet TreeMap;
 
-        public VMRectRouter(List<VMObstacle> map)
+        public VMRectRouter(VMObstacleSet map)
         {
-            Map = map;
+            TreeMap = map;
         }
 
         public LinkedList<VMWalkableRect> Route(Point from, Point to, int startCardinal)
@@ -324,7 +324,10 @@ namespace FSO.SimAntics.Engine.Routing
                 newRect.Free[(dir + 2) % 4] = new VMFreeList(0, 0);
 
                 ConstructFree(newRect, ((dir % 2) == 1), ((dir % 2) == 0), ((dir % 2) == 1), ((dir % 2) == 0));
-                if (!source.Start) Map.Add(newRect);
+                if (!source.Start)
+                {
+                    TreeMap.Add(newRect);
+                }
             }
 		}
 
@@ -332,13 +335,16 @@ namespace FSO.SimAntics.Engine.Routing
         {
             int bestN = ((dir + 1) % 4 < 2) ? int.MinValue : int.MaxValue;
             var best = new List<VMExtendRegion>();
-            foreach (VMObstacle r in Map)
+            VMObstacle extendRange;
+
+            switch (dir)
             {
-                switch (dir)
-                {
-                    case 0: //top
-                        if (r.y2 > p) break; //bottom of rect lower than start point = no hit
-                        if (r.x1 >= d2 || r.x2 <= d1) break; //does not intersect
+                case 0: //top
+                    extendRange = new VMObstacle(d1, int.MinValue, d2, p);
+                    foreach (VMObstacle r in IntersectSet(extendRange))
+                    {
+                        if (r.y2 > p) continue; //bottom of rect lower than start point = no hit
+                        if (r.x1 >= d2 || r.x2 <= d1) continue; //does not intersect
                         if (r.y2 > bestN)
                         {
                             bestN = r.y2;
@@ -349,51 +355,63 @@ namespace FSO.SimAntics.Engine.Routing
                         {
                             best.Add(new VMExtendRegion(r.x1, r.x2, r));
                         }
-					break;
-				    case 1: //right
-					    if (r.x1<p) break; //left of rect lefter than start point = no hit
-					    if (r.y1 >= d2 || r.y2 <= d1) break; //does not intersect
-					    if (r.x1<bestN)
+                    }
+                    break;
+                case 1: //right
+                    extendRange = new VMObstacle(p, d1, int.MaxValue, d2);
+                    foreach (VMObstacle r in IntersectSet(extendRange))
+                    {
+                        if (r.x1 < p) continue; //left of rect lefter than start point = no hit
+                        if (r.y1 >= d2 || r.y2 <= d1) continue; //does not intersect
+                        if (r.x1 < bestN)
                         {
-						    bestN = r.x1;
+                            bestN = r.x1;
                             best.Clear();
                             best.Add(new VMExtendRegion(r.y1, r.y2, r));
-					    }
+                        }
                         else if (r.x1 == bestN)
                         {
                             best.Add(new VMExtendRegion(r.y1, r.y2, r));
                         }
-					    break;
-				    case 2: //bottom
-					    if (r.y1<p) break; //top of rect higher than start point = no hit
-					    if (r.x1 >= d2 || r.x2 <= d1) break; //does not intersect
-					    if (r.y1<bestN)
+                    }
+                    break;
+                case 2: //bottom
+                    extendRange = new VMObstacle(d1, p, d2, int.MaxValue);
+                    foreach (VMObstacle r in IntersectSet(extendRange))
+                    {
+                        if (r.y1 < p) continue; //top of rect higher than start point = no hit
+                        if (r.x1 >= d2 || r.x2 <= d1) continue; //does not intersect
+                        if (r.y1 < bestN)
                         {
-						    bestN = r.y1;
+                            bestN = r.y1;
                             best.Clear();
                             best.Add(new VMExtendRegion(r.x1, r.x2, r));
-					    }
+                        }
                         else if (r.y1 == bestN)
                         {
                             best.Add(new VMExtendRegion(r.x1, r.x2, r));
                         }
-					    break;
-				    case 3: //left
-					    if (r.x2 > p) break; //right of rect righter than start point = no hit
-					    if (r.y1 >= d2 || r.y2 <= d1) break; //does not intersect
-					    if (r.x2 > bestN)
+                    }
+                    break;
+                case 3: //left
+                    extendRange = new VMObstacle(int.MinValue, d1, p, d2);
+                    foreach (VMObstacle r in IntersectSet(extendRange))
+                    {
+                        if (r.x2 > p) continue; //right of rect righter than start point = no hit
+                        if (r.y1 >= d2 || r.y2 <= d1) continue; //does not intersect
+                        if (r.x2 > bestN)
                         {
-						    bestN = r.x2;
+                            bestN = r.x2;
                             best.Clear();
                             best.Add(new VMExtendRegion(r.y1, r.y2, r));
-					    }
+                        }
                         else if (r.x2 == bestN)
                         {
                             best.Add(new VMExtendRegion(r.y1, r.y2, r));
                         }
-					    break;
-			    }
-		    }		
+                    }
+                    break;
+            }
 		    return new VMExtendRectResult { Best = best, BestN = bestN };
 	    }
 
@@ -404,7 +422,7 @@ namespace FSO.SimAntics.Engine.Routing
             if (d3) rect.Free[2] = new VMFreeList(rect.x1, rect.x2);
             if (d4) rect.Free[3] = new VMFreeList(rect.y1, rect.y2);
 
-            foreach (VMObstacle r in Map)
+            foreach (VMObstacle r in EdgeSet(rect))
             {
                 if (r == rect) continue;
                 if (d1 && r.y2 == rect.y1 && !(r.x2 <= rect.x1 || r.x1 >= rect.x2))
@@ -454,6 +472,15 @@ namespace FSO.SimAntics.Engine.Routing
             }
 	    }
 
+        private List<VMObstacle> IntersectSet(VMObstacle search)
+        {
+            return TreeMap.AllIntersect(search);
+        }
+
+        private List<VMObstacle> EdgeSet(VMObstacle search)
+        {
+            return TreeMap.OnEdge(search);
+        }
 
         private void ConstructFirstFree(VMWalkableRect rect)
         {
@@ -462,7 +489,7 @@ namespace FSO.SimAntics.Engine.Routing
             rect.Free[2] = new VMFreeList(rect.x1);
             rect.Free[3] = new VMFreeList(rect.y1);
 
-            foreach (VMObstacle r in Map)
+            foreach (VMObstacle r in EdgeSet(rect))
             {
                 if (r == rect) continue;
                 if (r.y2 == rect.y1 && !(r.x2 <= rect.x1 || r.x1 >= rect.x2))

@@ -42,6 +42,7 @@ namespace FSO.Client.Controllers
 
         public TerrainController Terrain;
         public NeighborhoodActionController NeighborhoodProtocol;
+        public BulletinActionController BulletinProtocol;
 
         public CoreGameScreenController(CoreGameScreen view, Network.Network network, IClientDataService dataService, IKernel kernel, LotConnectionRegulator joinLotRegulator)
         {
@@ -52,6 +53,7 @@ namespace FSO.Client.Controllers
             this.JoinLotRegulator = joinLotRegulator;
             this.RoommateProtocol = new RoommateRequestController(this, network, dataService);
             this.NeighborhoodProtocol = kernel.Get<NeighborhoodActionController>();
+            this.BulletinProtocol = kernel.Get<BulletinActionController>();
 
             joinLotRegulator.OnTransition += JoinLotRegulator_OnTransition;
 
@@ -388,6 +390,11 @@ namespace FSO.Client.Controllers
         public bool IsMe(uint id)
         {
             return id == Network.MyCharacter;
+        }
+
+        public uint MyID()
+        {
+            return Network.MyCharacter;
         }
 
         public void Dispose()

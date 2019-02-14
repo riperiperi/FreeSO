@@ -87,7 +87,7 @@ namespace FSO.SimAntics
 
         public virtual short GetAttribute(int index)
         {
-            while (index >= Attributes.Count) Attributes.Add(0);
+            while (index >= Attributes.Count) return 0;
             return Attributes[index];
         }
 
@@ -111,7 +111,8 @@ namespace FSO.SimAntics
 
         public ulong DynamicSpriteFlags; /** Used to show/hide dynamic sprites **/
         public ulong DynamicSpriteFlags2;
-        public VMObstacle Footprint;
+        public VMEntityObstacle Footprint;
+        public bool StaticFootprint = true;
 
         private LotTilePos _Position = new LotTilePos(LotTilePos.OUT_OF_WORLD);
         public EntityComponent WorldUI;
@@ -688,12 +689,44 @@ namespace FSO.SimAntics
             }
         }
 
+        public void UpdateFootprint()
+        {
+            var current = Footprint;
+            Footprint = GetObstacle(Position, Direction, false);
+            if (current != Footprint)
+            {
+                if (current != null && current.Set != null)
+                {
+                    //remove current from its structure
+                    if (StaticFootprint) current.Set.Delete(current);
+                    else current.Dynamic.Remove(current);
+                }
+
+                if (Footprint != null)
+                {
+                    if (current != null)
+                    {
+                        //add this footprint to the set the Current had
+                        Footprint.Set = current.Set;
+                        Footprint.Dynamic = current.Dynamic;
+
+                        if (StaticFootprint) Footprint.Set.Add(Footprint);
+                        else Footprint.Dynamic.Add(Footprint);
+                    } else
+                    {
+                        //new footprint started existing. To add this to the room we need the VMContext...
+                        Thread?.Context?.AddFootprint(Footprint);
+                    }
+                }
+            }
+        }
+
         public void SetFlag(VMEntityFlags flag, bool set)
         {
             if (set) ObjectData[(int)VMStackObjectVariable.Flags] |= (short)(flag);
             else ObjectData[(int)VMStackObjectVariable.Flags] &= ((short)~(flag));
 
-            if (flag == VMEntityFlags.HasZeroExtent) Footprint = GetObstacle(Position, Direction);
+            if (flag == VMEntityFlags.HasZeroExtent) UpdateFootprint();
             return;
         }
 
@@ -741,7 +774,7 @@ namespace FSO.SimAntics
             {
                 case VMStackObjectVariable.Flags:
                     if (((value ^ ObjectData[(short)var]) & (int)VMEntityFlags.HasZeroExtent) > 0)
-                        Footprint = GetObstacle(Position, Direction);
+                        UpdateFootprint();
                     if (this is VMAvatar && ((value ^ ObjectData[(short)var]) & (int)VMEntityFlags.Burning) > 0)
                         this.Reset(Thread.Context);
                     break;
@@ -792,7 +825,7 @@ namespace FSO.SimAntics
 
         public void RecurseSlotPositionChange(VMContext context, bool noEntryPoint)
         {
-            context.UnregisterObjectPos(this);
+            context.UnregisterObjectPos(this, true);
             var total = TotalSlots();
             for (int i=0; i<total; i++)
             {
@@ -1271,16 +1304,46 @@ namespace FSO.SimAntics
             }
         }
 
-        public abstract VMObstacle GetObstacle(LotTilePos pos, Direction dir);
+        public abstract VMEntityObstacle GetObstacle(LotTilePos pos, Direction dir, bool temp);
 
-        public virtual void PrePositionChange(VMContext context)
+        public void SetObstacleStatic(bool newStatic) {
+            if (newStatic != StaticFootprint)
+            {
+                if (Footprint != null && Footprint.Set != null)
+                {
+                    if (newStatic)
+                    {
+                        Footprint.Dynamic.Remove(Footprint);
+                        Footprint.Set.Add(Footprint);
+                    }
+                    else
+                    {
+                        Footprint.Dynamic.Add(Footprint);
+                        Footprint.Set.Delete(Footprint);
+                    }
+                }
+                StaticFootprint = newStatic;
+            }
+        }
+
+        public void PrePositionChange(VMContext context)
+        {
+            PrePositionChange(context, true);
+        }
+
+        public virtual void PrePositionChange(VMContext context, bool roomChange)
         {
 
         }
 
-        public virtual void PositionChange(VMContext context, bool noEntryPoint)
+        public void PositionChange(VMContext context, bool noEntryPoint)
         {
-            Footprint = GetObstacle(Position, Direction);
+            PositionChange(context, noEntryPoint, true);
+        }
+
+
+        public virtual void PositionChange(VMContext context, bool noEntryPoint, bool roomChange)
+        {
             if (!(GhostImage || noEntryPoint)) ExecuteEntryPoint(9, context, true); //Placement
         }
         

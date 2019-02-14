@@ -291,8 +291,16 @@ namespace FSO.LotView
             Avatar.Effect.Parameters["advancedDirection"].SetValue(advDir);
 
             var frontDir = WorldCamera.FrontDirection();
-            var lightOffset = new Vector2(frontDir.X / (6 * 75), frontDir.Z / (6 * 75));
-            if (Light != null) lightOffset *= Light.InvMapLayout;
+            Vector2 lightOffset;
+            if (Light != null)
+            {
+                lightOffset = new Vector2(frontDir.X / (6 * (Light.Blueprint.Width - 2)), frontDir.Z / (6 * (Light.Blueprint.Width - 2)));
+                lightOffset *= Light.InvMapLayout;
+            }
+            else
+            {
+                lightOffset = new Vector2(frontDir.X / (6 * 75), frontDir.Z / (6 * 75));
+            }
             WorldContent._2DWorldBatchEffect.Parameters["LightOffset"].SetValue(lightOffset);
             WorldContent.GrassEffect.Parameters["LightOffset"].SetValue(lightOffset);
             Avatar.Effect.Parameters["LightOffset"].SetValue(lightOffset);

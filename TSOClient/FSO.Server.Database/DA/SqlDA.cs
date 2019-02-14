@@ -26,6 +26,7 @@ using FSO.Server.Database.DA.DynPayouts;
 using FSO.Server.Database.DA.EmailConfirmation;
 using FSO.Server.Database.DA.Neighborhoods;
 using FSO.Server.Database.DA.Elections;
+using FSO.Server.Database.DA.Bulletin;
 
 namespace FSO.Server.Database.DA
 {
@@ -202,6 +203,19 @@ namespace FSO.Server.Database.DA
                     _Elections = new SqlElections(Context);
                 }
                 return _Elections;
+            }
+        }
+
+        private IBulletinPosts _BulletinPosts;
+        public IBulletinPosts BulletinPosts
+        {
+            get
+            {
+                if (_BulletinPosts == null)
+                {
+                    _BulletinPosts = new SqlBulletinPosts(Context);
+                }
+                return _BulletinPosts;
             }
         }
 

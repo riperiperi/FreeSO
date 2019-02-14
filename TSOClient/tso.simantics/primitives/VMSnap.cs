@@ -57,6 +57,8 @@ namespace FSO.SimAntics.Primitives
 
             if (slot == null) return VMPrimitiveExitCode.GOTO_FALSE;
 
+            var dirSnap = (slot.Rsflags & SLOTFlags.SnapToDirection) > 0;
+
             if (operand.Mode != VMSnapSlotScope.BeContained)
             {
                 var parser = new VMSlotParser(slot);
@@ -71,9 +73,12 @@ namespace FSO.SimAntics.Primitives
                     if (locations.Count > 0)
                     {
                         if (!SetPosition(avatar, locations[0].Position,
-                            ((slot.Rsflags & SLOTFlags.SnapToDirection) > 0) ? locations[0].RadianDirection : avatar.RadianDirection,
+                            (dirSnap) ? locations[0].RadianDirection : avatar.RadianDirection,
                             operand.Shoo, context.VM.Context))
+                        {
+                            if (dirSnap) avatar.RadianDirection = locations[0].RadianDirection; //set direction regardless
                             return VMPrimitiveExitCode.GOTO_FALSE;
+                        }
                     }
                     else
                     {

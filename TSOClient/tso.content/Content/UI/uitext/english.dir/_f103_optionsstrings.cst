@@ -19,7 +19,7 @@
 
 16 ^Advanced Lighting:^
 17 ^Off/FSO/+Walls/+Objs^
-18 ^Directional Lighting (3D Only)^
+18 ^Directional Lighting^
 
 19 ^Toggle Settings:^
 20 ^Weather^
@@ -29,3 +29,8 @@
 23 ^Texture Compression^
 24 ^Enables DXT5 Texture Compression for walls, floors and objects. Sprites take up 1/4 of the VRAM at the cost of visual quality. Useful for avoiding crashes on Intel HD Graphics or old GPUs.^
 25 ^This option will not take full effect until you restart the game!^
+
+26 ^Complex Shaders^
+27 ^Enables several complex effects for high end GPUs.
+- Parallax+Normal mapping for Roofs and Grass
+- Any future compex shaders added to the game^

@@ -264,6 +264,12 @@ namespace FSO.SimAntics.Engine.Primitives
             {
                 return (byte)((Flags&1) | ((Flags >> 3) & 2));
             }
+
+            set
+            {
+                Flags &= unchecked((byte)~(1 | (2 << 3)));
+                Flags |= (byte)((value & 1) | ((value & 2) << 3));
+            }
         }
 
         public override string ToString(){

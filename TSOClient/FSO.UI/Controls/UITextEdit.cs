@@ -128,6 +128,11 @@ namespace FSO.Client.UI.Controls
             }
         }
 
+        public void ForceDirty()
+        {
+            m_DrawDirty = true;
+        }
+
         //formatted mode abstractions
 
         public bool BBCodeEnabled;

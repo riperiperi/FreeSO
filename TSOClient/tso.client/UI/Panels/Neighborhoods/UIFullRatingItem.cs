@@ -1,4 +1,5 @@
-﻿using FSO.Client.Controllers.Panels;
+﻿using FSO.Client.Controllers;
+using FSO.Client.Controllers.Panels;
 using FSO.Client.UI.Controls;
 using FSO.Client.UI.Framework;
 using FSO.Client.Utils;
@@ -22,6 +23,7 @@ namespace FSO.Client.UI.Panels.Neighborhoods
         public UIRatingDisplay Rating;
         public UILabel StarLabel;
         public Binding<MayorRating> CurrentRating { get; set; }
+        public UIButton DeleteButton;
 
         private Texture2D PxWhite;
 
@@ -104,8 +106,48 @@ namespace FSO.Client.UI.Panels.Neighborhoods
                    return ((uint)id == 0) ? "Anon" : "unknown";
                });
 
+            var ui = Content.Content.Get().CustomUI;
+            var btnTex = ui.Get("chat_cat.png").Get(GameFacade.GraphicsDevice);
+
+            var btnCaption = TextStyle.DefaultLabel.Clone();
+            btnCaption.Size = 8;
+            btnCaption.Shadow = true;
+
+            if (GameFacade.EnableMod)
+            {
+                DeleteButton = new UIButton(btnTex);
+                DeleteButton.Caption = "Delete";
+                DeleteButton.CaptionStyle = btnCaption;
+                DeleteButton.OnButtonClick += DeletePost;
+                DeleteButton.Width = 64;
+                DeleteButton.X = 135;
+                DeleteButton.Y = 4;
+                Add(DeleteButton);
+            }
+
             Size = new Vector2(475, 70);
             PxWhite = TextureGenerator.GetPxWhite(GameFacade.GraphicsDevice);
+        }
+
+        private void DeletePost(UIElement btn)
+        {
+            UIAlert.YesNo("", "Are you sure you want to delete this rating?", true, (del) =>
+            {
+                if (del)
+                {
+                    var protocol = FindController<CoreGameScreenController>()?.NeighborhoodProtocol;
+                    if (protocol != null)
+                    {
+                        protocol.DeleteRate(RatingID, (code) =>
+                        {
+                            if (code == Server.Protocol.Electron.Packets.NhoodResponseCode.SUCCESS)
+                            {
+                                UIAlert.Alert("", "Rating deleted.", true);
+                            }
+                        });
+                    }
+                }
+            });
         }
 
         public override void Update(UpdateState state)

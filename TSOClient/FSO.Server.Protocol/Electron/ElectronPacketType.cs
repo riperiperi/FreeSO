@@ -30,6 +30,8 @@ namespace FSO.Server.Protocol.Electron
         NhoodRequest,
         NhoodResponse,
         NhoodCandidateList,
+        BulletinRequest,
+        BulletinResponse,
         Unknown = 0xFFFF
     }
 

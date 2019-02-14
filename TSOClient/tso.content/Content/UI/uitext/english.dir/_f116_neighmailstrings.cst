@@ -62,3 +62,7 @@ Until next month, have fun!^
 
 31 ^Your, uh, new Mayor^ (nhood name)
 32 ^So apparently, every important person in %s has disappeared overnight, leaving absolutely nobody to become Mayor. Only one person showed up to the polling station, a llama. Yes, we know that doesn't count as a person - but we were desperate so let it run anyways. It's now the mayor, and its only ordinance is to be fed hourly. Strangely, this is clearly the best life for everyone. Thanks.^
+
+//player nominated but not accepted [sent once candidates are chosen] (nhood name, end date)
+33 ^Nomination not Accepted!^
+34 ^You were nominated multiple times, but did not accept to run for mayor of %s in time. You can still vote for any of the candidates, and help decide who will become Mayor on %s. ^

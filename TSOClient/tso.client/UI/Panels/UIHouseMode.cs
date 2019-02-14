@@ -629,7 +629,7 @@ namespace FSO.Client.UI.Panels
             SizeLevelLabel.Size = new Vector2(41, 1);
 
             PreviewTarget = new RenderTarget2D(GameFacade.GraphicsDevice, 72, 72, false, SurfaceFormat.Color, DepthFormat.None,
-    (GlobalSettings.Default.AntiAlias) ? 4 : 0, RenderTargetUsage.PreserveContents);
+                (GlobalSettings.Default.AntiAlias > 0) ? 4 : 0, RenderTargetUsage.PreserveContents);
             Batch = new SpriteBatch(GameFacade.GraphicsDevice);
 
             PreviewImage = new UIImage(PreviewTarget);

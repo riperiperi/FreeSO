@@ -201,7 +201,7 @@ namespace FSO.SimAntics.Engine
                 if (IsCheck || ((item.Mode != VMQueueMode.ParentIdle || !Entity.GetFlag(VMEntityFlags.InteractionCanceled)) && CheckAction(item) != null))
                 {
                     Entity.SetFlag(VMEntityFlags.InteractionCanceled, false);
-                    ExecuteAction(item);
+                    if (!ExecuteAction(item)) return false;
                     ActiveQueueBlock++;
                     return true;
                 }
@@ -388,7 +388,12 @@ namespace FSO.SimAntics.Engine
             if (currentFrame == null) return;
 
             if (currentFrame is VMRoutingFrame) HandleResult(currentFrame, null, ((VMRoutingFrame)currentFrame).Tick());
-            else ExecuteInstruction(currentFrame);
+            else
+            {
+                VMInstruction instruction;
+                VMPrimitiveExitCode result = currentFrame.Routine.Execute(currentFrame, out instruction);
+                HandleResult(currentFrame, instruction, result);
+            }
         }
 
         public VMRoutingFrame PushNewRoutingFrame(VMStackFrame frame, bool failureTrees)
@@ -440,6 +445,46 @@ namespace FSO.SimAntics.Engine
             Push(childFrame);
         }
 
+        public VMPrimitiveExitCode ExecuteSubRoutine(VMStackFrame frame, ushort opcode, VMSubRoutineOperand operand)
+        {
+            VMRoutine bhav = null;
+
+            GameObject CodeOwner;
+            if (opcode >= 8192)
+            {
+                // Semi-Global sub-routine call
+                bhav = (VMRoutine)frame.ScopeResource.SemiGlobal.GetRoutine(opcode);
+            }
+            else if (opcode >= 4096)
+            {
+                // Private sub-routine call
+                bhav = (VMRoutine)frame.ScopeResource.GetRoutine(opcode);
+            }
+            else
+            {
+                // Global sub-routine call
+                //CodeOwner = frame.Global.Resource;
+                bhav = (VMRoutine)frame.Global.Resource.GetRoutine(opcode);
+            }
+
+            CodeOwner = frame.CodeOwner;
+            
+            ExecuteSubRoutine(frame, bhav, CodeOwner, operand);
+#if IDE_COMPAT
+            if (Stack.LastOrDefault().GetCurrentInstruction().Breakpoint || ThreadBreak == VMThreadBreakMode.StepIn)
+            {
+                Breakpoint(frame, "Stepped in.");
+                ContinueExecution = false;
+            }
+            else
+#endif
+            {
+                ContinueExecution = true;
+            }
+
+            return VMPrimitiveExitCode.CONTINUE;
+        }
+
         private void ExecuteInstruction(VMStackFrame frame)
         {
             var instruction = frame.GetCurrentInstruction();
@@ -447,41 +492,7 @@ namespace FSO.SimAntics.Engine
 
             if (opcode >= 256)
             {
-                VMRoutine bhav = null;
-
-                GameObject CodeOwner;
-                if (opcode >= 8192)
-                {
-                    // Semi-Global sub-routine call
-                    bhav = (VMRoutine)frame.ScopeResource.SemiGlobal.GetRoutine(opcode);
-                }
-                else if (opcode >= 4096)
-                {
-                    // Private sub-routine call
-                    bhav = (VMRoutine)frame.ScopeResource.GetRoutine(opcode);
-                }
-                else
-                {
-                    // Global sub-routine call
-                    //CodeOwner = frame.Global.Resource;
-                    bhav = (VMRoutine)frame.Global.Resource.GetRoutine(opcode);
-                }
-
-                CodeOwner = frame.CodeOwner;
-
-                var operand = (VMSubRoutineOperand)instruction.Operand;
-                ExecuteSubRoutine(frame, bhav, CodeOwner, operand);
-#if IDE_COMPAT
-                if (Stack.LastOrDefault().GetCurrentInstruction().Breakpoint || ThreadBreak == VMThreadBreakMode.StepIn)
-                {
-                    Breakpoint(frame, "Stepped in.");
-                    ContinueExecution = false;
-                } else
-#endif
-                {
-                    ContinueExecution = true;
-                }
-
+                ExecuteSubRoutine(frame, opcode, (VMSubRoutineOperand)instruction.Operand);
                 return;
             }
 
@@ -658,9 +669,9 @@ namespace FSO.SimAntics.Engine
             }
         }
 
-        public void Push(VMStackFrame frame)
+        public bool Push(VMStackFrame frame)
         {
-            if (frame.Routine.Instructions.Length == 0) return; //some bhavs are empty... do not execute these.
+            if (frame.Routine.Instructions.Length == 0) return false; //some bhavs are empty... do not execute these.
             Stack.Add(frame);
 
             /** Initialize the locals **/
@@ -669,6 +680,7 @@ namespace FSO.SimAntics.Engine
             frame.Thread = this;
 
             frame.InstructionPointer = 0;
+            return true;
         }
 
         /// <summary>
@@ -780,11 +792,11 @@ namespace FSO.SimAntics.Engine
             }
         }
 
-        private void ExecuteAction(VMQueuedAction action)
+        private bool ExecuteAction(VMQueuedAction action)
         {
             var frame = action.ToStackFrame(Entity);
             frame.DiscardResult = true;
-            Push(frame);
+            return Push(frame);
         }
 
         public List<VMPieMenuInteraction> CheckTS1Action(VMQueuedAction action)

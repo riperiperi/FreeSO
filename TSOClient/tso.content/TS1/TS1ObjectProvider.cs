@@ -41,6 +41,7 @@ namespace FSO.Content.TS1
                 var file = (IffFile)iff.GetThrowawayGeneric();
                 file.MarkThrowaway();
                 var objects = file.List<OBJD>();
+                var slots = file.List<SLOT>();
                 if (objects != null)
                 {
                     foreach (var obj in objects)
@@ -103,12 +104,14 @@ namespace FSO.Content.TS1
                 if (reference.Source == GameObjectSource.Far)
                 {
                     iff = GameObjects.Get(reference.FileName.ToLower());
+                    iff.InitHash();
                     if (iff != null) iff.RuntimeInfo.Path = reference.FileName;
                 }
                 else
                 {
                     //unused
                     iff = new IffFile(reference.FileName, reference.Source == GameObjectSource.User);
+                    iff.InitHash();
                     iff.RuntimeInfo.Path = reference.FileName;
                     iff.RuntimeInfo.State = IffRuntimeState.Standalone;
                 }

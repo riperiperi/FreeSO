@@ -33,19 +33,19 @@ namespace FSO.Files.Formats.IFF.Chunks
             0 //TODO: unknown
         };
 
-        public Dictionary<ushort, List<SLOTItem>> Slots;
-        public List<SLOTItem> Chronological;
+        public Dictionary<ushort, List<SLOTItem>> Slots = new Dictionary<ushort, List<SLOTItem>>();
+        public List<SLOTItem> Chronological = new List<SLOTItem>();
+
+        public uint Version;
 
         public override void Read(IffFile iff, System.IO.Stream stream)
         {
             using (var io = IoBuffer.FromStream(stream, ByteOrder.LITTLE_ENDIAN)){
                 var zero = io.ReadUInt32();
                 var version = io.ReadUInt32();
+                Version = version;
                 var slotMagic = io.ReadBytes(4);
                 var numSlots = io.ReadUInt32();
-
-                Slots = new Dictionary<ushort, List<SLOTItem>>();
-                Chronological = new List<SLOTItem>();
 
                 /** The span for version 4 is 34. 
                  * The span for version 6 is 54. 
@@ -103,7 +103,10 @@ namespace FSO.Files.Formats.IFF.Chunks
 
                     if (item.Height == 0) item.Height = 5; //use offset height, nonstandard.
 
-                    if (version >= 9) item.Facing = (SLOTFacing)io.ReadInt32();
+                    if (version >= 9)
+                    {
+                        item.Facing = (SLOTFacing)io.ReadInt32();
+                    }
 
                     if (version >= 10) item.Resolution = io.ReadInt32();
 
@@ -162,14 +165,14 @@ namespace FSO.Files.Formats.IFF.Chunks
         SOUTH_WEST = 32,
         WEST = 64,
         NORTH_WEST = 128,
-        AllowAnyRotation = 256,
-        Absolute = 512,
-        FacingAwayFromObject = 1024,
+        AllowAnyRotation = 256, //unknown - used for snap to offset? (but not all the time?)
+        Absolute = 512, //do not rotate goal around object
+        FacingAwayFromObject = 1024, //deprecated. does not appear - replaced by Facing field
         IgnoreRooms = 2048,
         SnapToDirection = 4096,
-        RandomScoring=8192,
+        RandomScoring = 8192,
         AllowFailureTrees = 16385,
-        AllowDifferentAlts=32768,
+        AllowDifferentAlts = 32768,
         UseAverageObjectLocation = 65536
     }
 
@@ -182,21 +185,39 @@ namespace FSO.Files.Formats.IFF.Chunks
 
     public class SLOTItem
     {
-        public ushort Type;
+        public ushort Type { get; set; }
         public Vector3 Offset;
-        public int Standing = 1;
-        public int Sitting = 0;
-        public int Ground = 0;
-        public SLOTFlags Rsflags;
-        public int SnapTargetSlot = -1;
-        public int MinProximity;
-        public int MaxProximity = 0;
-        public int OptimalProximity = 0;
+        public int Standing { get; set; } = 1;
+        public int Sitting { get; set; } = 0;
+        public int Ground { get; set; } = 0;
+        public SLOTFlags Rsflags { get; set; }
+        public int SnapTargetSlot { get; set; } = -1;
+        public int MinProximity { get; set; }
+        public int MaxProximity { get; set; } = 0;
+        public int OptimalProximity { get; set; } = 0;
         public int I9;
         public int I10;
-        public float Gradient;
-        public SLOTFacing Facing = SLOTFacing.FaceTowardsObject;
-        public int Resolution = 16;
-        public int Height;
+        public float Gradient { get; set; }
+        public SLOTFacing Facing { get; set; } = SLOTFacing.FaceTowardsObject;
+        public int Resolution { get; set; } = 16;
+        public int Height { get; set; }
+
+        public float OffsetX
+        {
+            get => Offset.X;
+            set => Offset.X = value;
+        }
+
+        public float OffsetY
+        {
+            get => Offset.Y;
+            set => Offset.Y = value;
+        }
+
+        public float OffsetZ
+        {
+            get => Offset.Z;
+            set => Offset.Z = value;
+        }
     }
 }

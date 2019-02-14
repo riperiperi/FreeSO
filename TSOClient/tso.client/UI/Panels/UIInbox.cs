@@ -382,5 +382,20 @@ namespace FSO.Client.UI.Panels
             }
             MenuListBox.Items = MenuListBox.Items;
         }
+
+        public void SetResults(List<GizmoLotSearchResult> results)
+        {
+            MenuListBox.Items.Clear();
+            if (results != null)
+            {
+                MenuListBox.Items.AddRange(results.Select(x =>
+                {
+                    return new UIListBoxItem(x.Result, new object[] { x.Result.Name })
+                    {
+                    };
+                }));
+            }
+            MenuListBox.Items = MenuListBox.Items;
+        }
     }
 }

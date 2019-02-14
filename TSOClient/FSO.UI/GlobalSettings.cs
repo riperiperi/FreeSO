@@ -47,7 +47,7 @@ namespace FSO.Client
             { "CityShadows", "false"},
             { "ShadowQuality", "2048"},
             { "SmoothZoom", "true"},
-            { "AntiAlias", "false"},
+            { "AntiAlias", "0"},
             { "EdgeScroll", "true"},
             { "Lighting", "true"},
             { "FXVolume", "10"},
@@ -98,7 +98,9 @@ namespace FSO.Client
             {"ChatLocationX", "20" },
             {"ChatLocationY", "20" },
             {"ChatDeltaScale", "8" },
-            { "ChatWindowsOpacity", "0.8" }
+            { "ChatWindowsOpacity", "0.8" },
+
+            { "ComplexShaders", "false" }
         };
         public override Dictionary<string, string> DefaultValues
         {
@@ -111,7 +113,7 @@ namespace FSO.Client
         public bool CityShadows { get; set; }
         public int ShadowQuality { get; set; }
         public bool SmoothZoom { get; set; }
-        public bool AntiAlias { get; set; }
+        public int AntiAlias { get; set; }
         public bool EdgeScroll { get; set; }
         public bool Lighting { get; set; }
         public byte FXVolume { get; set; }
@@ -163,6 +165,8 @@ namespace FSO.Client
         public float ChatLocationY { get; set; }
         public int ChatDeltaScale { get; set; }
         public float ChatWindowsOpacity { get; set; }
+
+        public bool ComplexShaders { get; set; }
 
         public static int TARGET_COMPAT_STATE = 2;
     }

@@ -117,6 +117,7 @@ namespace FSO.Content
                 if (reference.Source == GameObjectSource.Far)
                 {
                     iff = this.Iffs.Get(reference.FileName + ".iff");
+                    iff.InitHash();
                     iff.RuntimeInfo.Path = reference.FileName;
                     if (WithSprites) sprites = this.Sprites.Get(reference.FileName + ".spf");
                     var rewrite = PIFFRegistry.GetOTFRewrite(reference.FileName + ".otf");
@@ -132,6 +133,7 @@ namespace FSO.Content
                 else
                 {
                     iff = new IffFile(reference.FileName);
+                    iff.InitHash();
                     iff.RuntimeInfo.Path = reference.FileName;
                     iff.RuntimeInfo.State = IffRuntimeState.Standalone;
                 }

@@ -164,6 +164,12 @@
     <Compile Include="Common\Debug3DControl.Designer.cs">
       <DependentUpon>Debug3DControl.cs</DependentUpon>
     </Compile>
+    <Compile Include="ContentEditors\AOTGenerator.cs">
+      <SubType>Form</SubType>
+    </Compile>
+    <Compile Include="ContentEditors\AOTGenerator.Designer.cs">
+      <DependentUpon>AOTGenerator.cs</DependentUpon>
+    </Compile>
     <Compile Include="ContentEditors\TSODataDefinitionEditor.cs">
       <SubType>Form</SubType>
     </Compile>
@@ -249,6 +255,7 @@
     <Compile Include="EditorComponent\Primitives\BreakpointDescriptor.cs" />
     <Compile Include="EditorComponent\Primitives\DialogDescriptors.cs" />
     <Compile Include="EditorComponent\Primitives\GenericTSOCallDescriptor.cs" />
+    <Compile Include="EditorComponent\Primitives\SetBalloonHeadlineDescriptor.cs" />
     <Compile Include="EditorComponent\Primitives\TS1InventoryOperationsDescriptor.cs" />
     <Compile Include="EditorComponent\Primitives\InvokePluginDescriptor.cs" />
     <Compile Include="EditorComponent\Primitives\PushInteractionDescriptor.cs" />
@@ -421,6 +428,12 @@
       <DependentUpon>BHAVResourceControl.cs</DependentUpon>
     </Compile>
     <Compile Include="ResourceBrowser\ResourceEditors\IResourceControl.cs" />
+    <Compile Include="ResourceBrowser\ResourceEditors\SLOTResourceControl.cs">
+      <SubType>UserControl</SubType>
+    </Compile>
+    <Compile Include="ResourceBrowser\ResourceEditors\SLOTResourceControl.Designer.cs">
+      <DependentUpon>SLOTResourceControl.cs</DependentUpon>
+    </Compile>
     <Compile Include="ResourceBrowser\ResourceEditors\SPR2ResourceControl.cs">
       <SubType>UserControl</SubType>
     </Compile>
@@ -471,6 +484,9 @@
     </EmbeddedResource>
     <EmbeddedResource Include="Common\NewObjectDialog.resx">
       <DependentUpon>NewObjectDialog.cs</DependentUpon>
+    </EmbeddedResource>
+    <EmbeddedResource Include="ContentEditors\AOTGenerator.resx">
+      <DependentUpon>AOTGenerator.cs</DependentUpon>
     </EmbeddedResource>
     <EmbeddedResource Include="ContentEditors\TSODataDefinitionEditor.resx">
       <DependentUpon>TSODataDefinitionEditor.cs</DependentUpon>
@@ -572,6 +588,9 @@
     <EmbeddedResource Include="ResourceBrowser\ResourceEditors\BHAVResourceControl.resx">
       <DependentUpon>BHAVResourceControl.cs</DependentUpon>
     </EmbeddedResource>
+    <EmbeddedResource Include="ResourceBrowser\ResourceEditors\SLOTResourceControl.resx">
+      <DependentUpon>SLOTResourceControl.cs</DependentUpon>
+    </EmbeddedResource>
     <EmbeddedResource Include="ResourceBrowser\ResourceEditors\SPR2ResourceControl.resx">
       <DependentUpon>SPR2ResourceControl.cs</DependentUpon>
     </EmbeddedResource>
@@ -620,6 +639,10 @@
     <ProjectReference Include="..\..\Other\libs\TargaImage\TargaImage.csproj">
       <Project>{56f4bd87-2404-4263-80d5-6fa2161eb0a4}</Project>
       <Name>TargaImage</Name>
+    </ProjectReference>
+    <ProjectReference Include="..\FSO.SimAntics.JIT\FSO.SimAntics.JIT.csproj">
+      <Project>{b8ab3711-7b4f-4126-9bf3-4ddde9475b74}</Project>
+      <Name>FSO.SimAntics.JIT</Name>
     </ProjectReference>
     <ProjectReference Include="..\FSO.UI\FSO.UI.csproj">
       <Project>{73e2ad5b-720b-4ef3-9b7c-55931d0ec693}</Project>

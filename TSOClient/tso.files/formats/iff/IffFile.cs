@@ -28,6 +28,8 @@ namespace FSO.Files.Formats.IFF
         /// </summary>
         public static bool RETAIN_CHUNK_DATA = false;
         public bool RetainChunkData = RETAIN_CHUNK_DATA;
+        public object CachedJITModule; //for JIT and AOT modes
+        public uint ExecutableHash; //hash of BHAV and BCON chunks
 
         public string Filename;
 
@@ -163,11 +165,28 @@ namespace FSO.Files.Formats.IFF
                 }
 
                 var rsmpOffset = io.ReadUInt32();
-
+                
                 while (io.HasMore)
                 {
                     var newChunk = AddChunk(stream, io, true);
                 }
+            }
+        }
+
+        public void InitHash()
+        {
+            if (ExecutableHash != 0) return;
+            if (ByChunkType.ContainsKey(typeof(BHAV)))
+            {
+                IEnumerable<object> executableTypes = ByChunkType[typeof(BHAV)];
+                if (ByChunkType.ContainsKey(typeof(BCON))) executableTypes = executableTypes.Concat(ByChunkType[typeof(BCON)]);
+                var hash = new xxHashSharp.xxHash();
+                hash.Init();
+                foreach (IffChunk chunk in executableTypes)
+                {
+                    hash.Update(chunk.ChunkData ?? chunk.OriginalData, chunk.ChunkData.Length);
+                }
+                ExecutableHash = hash.Digest();
             }
         }
 

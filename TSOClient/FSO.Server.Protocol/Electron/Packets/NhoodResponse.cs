@@ -4,15 +4,19 @@ using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 using FSO.Common.Serialization;
+using FSO.Server.Protocol.Electron.Model;
 using Mina.Core.Buffer;
 
 namespace FSO.Server.Protocol.Electron.Packets
 {
-    public class NhoodResponse : AbstractElectronPacket
+    public class NhoodResponse : AbstractElectronPacket, IActionResponse
     {
         public NhoodResponseCode Code;
         public uint BanEndDate;
         public string Message = "";
+
+        public bool Success => Code == NhoodResponseCode.SUCCESS;
+        public object OCode => Code;
 
         public override void Deserialize(IoBuffer input, ISerializationContext context)
         {

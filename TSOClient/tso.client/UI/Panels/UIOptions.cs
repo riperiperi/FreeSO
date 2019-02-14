@@ -522,7 +522,7 @@ namespace FSO.Client.UI.Panels
         private void FlipSetting(UIElement button)
         {
             var settings = GlobalSettings.Default;
-            if (button == AntiAliasCheckButton) settings.AntiAlias = !(settings.AntiAlias);
+            if (button == AntiAliasCheckButton) settings.AntiAlias = settings.AntiAlias ^ 1;
             else if (button == ShadowsCheckButton) settings.SmoothZoom = !(settings.SmoothZoom);
             else if (button == LightingCheckButton) settings.Lighting = !(settings.Lighting);
             else if (button == UIEffectsCheckButton) settings.CityShadows = !(settings.CityShadows);
@@ -559,7 +559,7 @@ namespace FSO.Client.UI.Panels
         private void SettingsChanged()
         {
             var settings = GlobalSettings.Default;
-            AntiAliasCheckButton.Selected = settings.AntiAlias; //antialias for render targets
+            AntiAliasCheckButton.Selected = settings.AntiAlias > 0; //antialias for render targets
             ShadowsCheckButton.Selected = settings.SmoothZoom;
             LightingCheckButton.Selected = settings.Lighting;
             UIEffectsCheckButton.Selected = settings.CityShadows; //instead of being able to disable UI transparency, you can toggle City Shadows.

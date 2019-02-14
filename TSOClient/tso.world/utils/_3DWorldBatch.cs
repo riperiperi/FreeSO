@@ -95,6 +95,16 @@ namespace FSO.LotView.Utils
             Effect.End();*/
         }
 
+        private Vector4 PowColorVec(Vector4 vec, float pow)
+        {
+            vec.X = (float)Math.Pow(vec.X, pow);
+            vec.Y = (float)Math.Pow(vec.Y, pow);
+            vec.Z = (float)Math.Pow(vec.Z, pow);
+
+            return vec;
+        }
+
+
         private void RenderSpriteList(List<_3DSprite> sprites, Effect effect, EffectTechnique technique){
             //TODO: multiple types of 3dsprite. This was originally here to group meshes by texture, 
             //but since passing a texture uniform is less expensive than passing >16 matrices we now group
@@ -112,7 +122,7 @@ namespace FSO.LotView.Utils
                     effect.Parameters["Level"].SetValue((float)geom.Level + 0.0001f);
                     if (RoomLights != null)
                     {
-                        var col = ((WorldConfig.Current.AdvancedLighting)?new Vector4(1):RoomLights[geom.Room].ToVector4()) * geom.Color.ToVector4();
+                        var col = ((WorldConfig.Current.AdvancedLighting)?new Vector4(1): PowColorVec(RoomLights[geom.Room].ToVector4(), 1/2.2f)) * geom.Color.ToVector4();
                         effect.Parameters["AmbientLight"].SetValue(col);
                     }
                     /*if (geom.Geometry is Avatar)

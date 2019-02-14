@@ -38,8 +38,9 @@ namespace FSO.LotView
         public bool Weather = true;
         public int SurroundingLots = 0;
         public bool SmoothZoom = false;
-        public bool AA = false;
+        public int AA = 0;
         public bool Directional = true;
+        public bool Complex = false;
 
         public int PassOffset
         {
