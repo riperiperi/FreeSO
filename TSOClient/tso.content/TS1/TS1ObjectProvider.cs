@@ -126,7 +126,7 @@ namespace FSO.Content.TS1
                     iff.RuntimeInfo.UseCase = IffUseCase.Object;
                 }
 
-                return new GameObjectResource(iff, null, null, reference.FileName);
+                return new GameObjectResource(iff, null, null, reference.FileName, ContentManager);
             };
         }
 

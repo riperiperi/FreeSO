@@ -92,12 +92,12 @@ namespace FSO.SimAntics
                 Clock.TicksPerMinute = 30 * 5; //1 minute per 5 irl second
         }
 
-        public static void InitVMConfig(bool ts1)
+        public static void BindAssembler()
         {
-            InitVMConfig();
+            GameObjectResource.BHAVAssembler = VMTranslator.INSTANCE.Assemble;
         }
 
-        public static void InitVMConfig()
+        public static void InitVMConfig(bool ts1)
         {
             AddPrimitive(new VMPrimitiveRegistration(new VMSleep())
             {
@@ -453,7 +453,7 @@ namespace FSO.SimAntics
                 OperandModel = typeof(VMInventoryOperationsOperand)
             });
 
-            if (Content.Content.Get().TS1)
+            if (ts1)
             {
                 AddPrimitive(new VMPrimitiveRegistration(new VMFindBestAction())
                 {
@@ -514,8 +514,7 @@ namespace FSO.SimAntics
                     OperandModel = typeof(VMTransferFundsOperand)
                 });
             }
-
-            GameObjectResource.BHAVAssembler = VMTranslator.INSTANCE.Assemble;
+            BindAssembler();
         }
 
         /// <summary>

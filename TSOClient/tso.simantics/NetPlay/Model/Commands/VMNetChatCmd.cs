@@ -162,6 +162,28 @@ namespace FSO.SimAntics.NetPlay.Model.Commands
                             Tuning = vm.Tuning
                         });
                         break;
+                    case "fixall":
+                        var fixCount = 0;
+                        foreach (var ent in vm.Entities)
+                        {
+                            if (ent is VMGameObject && ent == ent.MultitileGroup.BaseObject)
+                            {
+                                var state = (VMTSOObjectState)ent.TSOState;
+                                if (state.Broken)
+                                {
+                                    foreach (var objr in ent.MultitileGroup.Objects)
+                                    {
+                                        ((VMGameObject)objr).DisableParticle(256);
+                                    }
+                                    fixCount++;
+                                }
+                                state.QtrDaysSinceLastRepair = 0;
+                                state.Wear = 0;
+                            }
+                        }
+                        vm.SignalChatEvent(new VMChatEvent(null, VMChatEventType.Generic, "Fixed " + fixCount + " objects."));
+                        break;
+
                 }
                 return true;
             }

@@ -38,7 +38,7 @@ namespace FSO.SimAntics.NetPlay.Model.Commands
                 // If we're the server, tell the global link to give their money back.
                 if (vm.GlobalLink != null)
                 {
-                    vm.GlobalLink.PerformTransaction(vm, false, uint.MaxValue, caller?.PersistID ?? uint.MaxValue, obj.MultitileGroup.Price,
+                    vm.GlobalLink.PerformTransaction(vm, false, uint.MaxValue, caller?.PersistID ?? uint.MaxValue, (obj.PersistID != 0)?obj.MultitileGroup.Price:0,
                     (bool success, int transferAmount, uint uid1, uint budget1, uint uid2, uint budget2) =>
                     {
 

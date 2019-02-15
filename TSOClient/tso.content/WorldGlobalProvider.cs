@@ -87,13 +87,13 @@ namespace FSO.Content
                 }
                 else
                 { 
-                    var iff = new IffFile(Path.Combine(Content.Get().BasePath, "objectdata/globals/" + filename + ".iff"));
+          var iff = new IffFile(Path.Combine(ContentManager.BasePath, "objectdata/globals/" + filename + ".iff"));
                     iff.InitHash();
                     OTFFile otf = null;
                     try
                     {
                         var rewrite = PIFFRegistry.GetOTFRewrite(filename + ".otf");
-                        otf = new OTFFile(rewrite ?? Path.Combine(Content.Get().BasePath, ("objectdata/globals/" + filename + ".otf")));
+                        otf = new OTFFile(rewrite ?? Path.Combine(ContentManager.BasePath, ("objectdata/globals/" + filename + ".otf")));
                     }
                     catch (IOException)
                     {

@@ -71,14 +71,19 @@ namespace FSO.LotView.Components
         {
             //DECEMBER TEMP: snow replace
             //TODO: tie to tuning, or serverside weather system.
-            //if (light == TerrainType.GRASS || light == TerrainType.SAND) light = TerrainType.SNOW;
-            //if (dark == TerrainType.SAND) dark = TerrainType.SNOW;
             LightType = light;
             DarkType = dark;
+            //ForceSnow();
             GrassState = grass;
             GroundHeight = heights;
             UpdateLotType();
             TerrainDirty = true;
+        }
+
+        public void ForceSnow()
+        {
+            if (LightType == TerrainType.GRASS || LightType == TerrainType.SAND) LightType = TerrainType.SNOW;
+            if (DarkType == TerrainType.SAND) DarkType = TerrainType.SNOW;
         }
 
         public void UpdateLotType()

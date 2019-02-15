@@ -403,6 +403,12 @@
     <Compile Include="ResourceBrowser\IFFResComponent.Designer.cs">
       <DependentUpon>IFFResComponent.cs</DependentUpon>
     </Compile>
+    <Compile Include="ResourceBrowser\XMLEntryEditor.cs">
+      <SubType>UserControl</SubType>
+    </Compile>
+    <Compile Include="ResourceBrowser\XMLEntryEditor.Designer.cs">
+      <DependentUpon>XMLEntryEditor.cs</DependentUpon>
+    </Compile>
     <Compile Include="ResourceBrowser\OBJDEditor.cs">
       <SubType>UserControl</SubType>
     </Compile>
@@ -575,6 +581,9 @@
     </EmbeddedResource>
     <EmbeddedResource Include="ResourceBrowser\IffResourceViewer.resx">
       <DependentUpon>IffResourceViewer.cs</DependentUpon>
+    </EmbeddedResource>
+    <EmbeddedResource Include="ResourceBrowser\XMLEntryEditor.resx">
+      <DependentUpon>XMLEntryEditor.cs</DependentUpon>
     </EmbeddedResource>
     <EmbeddedResource Include="ResourceBrowser\OBJDEditor.resx">
       <DependentUpon>OBJDEditor.cs</DependentUpon>

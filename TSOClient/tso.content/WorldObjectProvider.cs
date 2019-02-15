@@ -104,6 +104,12 @@ namespace FSO.Content
                     });
                 }
             }
+
+            var piffModified = PIFFRegistry.GetOBJDRewriteNames();
+            foreach (var name in piffModified)
+            {
+                ProcessedFiles.GetOrAdd(name, GenerateResource(new GameObjectReference(this) { FileName = name.Substring(0, name.Length-4), Source = GameObjectSource.Far }));
+            }
         }
 
         protected override Func<string, GameObjectResource> GenerateResource(GameObjectReference reference)
@@ -147,7 +153,7 @@ namespace FSO.Content
                 iff.RuntimeInfo.UseCase = IffUseCase.Object;
                 if (sprites != null) sprites.RuntimeInfo.UseCase = IffUseCase.ObjectSprites;
 
-                return new GameObjectResource(iff, sprites, tuning, reference.FileName);
+                return new GameObjectResource(iff, sprites, tuning, reference.FileName, ContentManager);
             };
         }
     }
@@ -288,7 +294,7 @@ namespace FSO.Content
             get { return Iff; }
         }
 
-        public GameObjectResource(IffFile iff, IffFile sprites, OTFFile tuning, string iname)
+        public GameObjectResource(IffFile iff, IffFile sprites, OTFFile tuning, string iname, Content content)
         {
             this.Iff = iff;
             this.Sprites = sprites;
@@ -299,7 +305,7 @@ namespace FSO.Content
             var GLOBChunks = iff.List<GLOB>();
             if (GLOBChunks != null && GLOBChunks[0].Name != "")
             {
-                var sg = FSO.Content.Content.Get().WorldObjectGlobals.Get(GLOBChunks[0].Name);
+                var sg = content.WorldObjectGlobals.Get(GLOBChunks[0].Name);
                 if (sg != null) SemiGlobal = sg.Resource; //used for tuning constant fetching.
             }
 

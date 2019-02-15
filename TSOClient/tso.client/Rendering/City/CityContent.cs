@@ -171,7 +171,8 @@ namespace FSO.Client.Rendering.City
         {
             var dat = new Color[VertexColor.Width * VertexColor.Height];
             VertexColor.GetData(dat);
-            var type = MapData.TerrainTypeColorData;
+            var typeC = MapData.TerrainTypeColorData;
+            var type = MapData.TerrainType;
 
             for (int i = 0; i < dat.Length; i++)
             {
@@ -182,10 +183,11 @@ namespace FSO.Client.Rendering.City
                     //make this pixel grayscale
                     dat[i] = new Color(greater, greater, greater);
                 }
-                var oldType = type[i];
+                var oldType = typeC[i];
                 if (oldType == new Color(0, 255, 0) || oldType == Color.Yellow)
                 {
-                    type[i] = Color.White;
+                    typeC[i] = Color.White;
+                    type[i] = 3;
                 }
             }
 

@@ -46,16 +46,19 @@
             this.DefinitionEditor = new FSO.IDE.ResourceBrowser.OBJDEditor();
             this.objPages = new System.Windows.Forms.TabControl();
             this.Debug3D = new System.Windows.Forms.TabPage();
+            this.FSOMEdit = new FSO.IDE.ResourceBrowser.FSOMEditor();
+            this.XMLEntryTab = new System.Windows.Forms.TabPage();
+            this.XMLEdit = new FSO.IDE.ResourceBrowser.XMLEntryEditor();
             this.NewOBJD = new System.Windows.Forms.Button();
             this.DeleteOBJD = new System.Windows.Forms.Button();
             this.ObjThumb = new FSO.IDE.Common.ObjThumbnailControl();
-            this.FSOMEdit = new FSO.IDE.ResourceBrowser.FSOMEditor();
             this.AppearanceTab.SuspendLayout();
             this.tabPage3.SuspendLayout();
             this.tabPage2.SuspendLayout();
             this.DefinitionTab.SuspendLayout();
             this.objPages.SuspendLayout();
             this.Debug3D.SuspendLayout();
+            this.XMLEntryTab.SuspendLayout();
             this.SuspendLayout();
             // 
             // ObjCombo
@@ -212,6 +215,7 @@
             this.objPages.Controls.Add(this.tabPage3);
             this.objPages.Controls.Add(this.AppearanceTab);
             this.objPages.Controls.Add(this.Debug3D);
+            this.objPages.Controls.Add(this.XMLEntryTab);
             this.objPages.Location = new System.Drawing.Point(7, 68);
             this.objPages.Name = "objPages";
             this.objPages.SelectedIndex = 0;
@@ -228,6 +232,31 @@
             this.Debug3D.TabIndex = 5;
             this.Debug3D.Text = "3D Debug";
             this.Debug3D.UseVisualStyleBackColor = true;
+            // 
+            // FSOMEdit
+            // 
+            this.FSOMEdit.Location = new System.Drawing.Point(0, 0);
+            this.FSOMEdit.Margin = new System.Windows.Forms.Padding(0);
+            this.FSOMEdit.Name = "FSOMEdit";
+            this.FSOMEdit.Size = new System.Drawing.Size(762, 459);
+            this.FSOMEdit.TabIndex = 0;
+            // 
+            // XMLEntryTab
+            // 
+            this.XMLEntryTab.Controls.Add(this.XMLEdit);
+            this.XMLEntryTab.Location = new System.Drawing.Point(4, 22);
+            this.XMLEntryTab.Name = "XMLEntryTab";
+            this.XMLEntryTab.Size = new System.Drawing.Size(762, 459);
+            this.XMLEntryTab.TabIndex = 6;
+            this.XMLEntryTab.Text = "XML Entry";
+            this.XMLEntryTab.UseVisualStyleBackColor = true;
+            // 
+            // XMLEdit
+            // 
+            this.XMLEdit.Location = new System.Drawing.Point(-1, 0);
+            this.XMLEdit.Name = "XMLEdit";
+            this.XMLEdit.Size = new System.Drawing.Size(762, 459);
+            this.XMLEdit.TabIndex = 0;
             // 
             // NewOBJD
             // 
@@ -255,14 +284,6 @@
             this.ObjThumb.Name = "ObjThumb";
             this.ObjThumb.Size = new System.Drawing.Size(48, 48);
             this.ObjThumb.TabIndex = 23;
-            // 
-            // FSOMEdit
-            // 
-            this.FSOMEdit.Location = new System.Drawing.Point(0, 0);
-            this.FSOMEdit.Margin = new System.Windows.Forms.Padding(0);
-            this.FSOMEdit.Name = "FSOMEdit";
-            this.FSOMEdit.Size = new System.Drawing.Size(762, 459);
-            this.FSOMEdit.TabIndex = 0;
             // 
             // ObjectWindow
             // 
@@ -292,6 +313,7 @@
             this.DefinitionTab.ResumeLayout(false);
             this.objPages.ResumeLayout(false);
             this.Debug3D.ResumeLayout(false);
+            this.XMLEntryTab.ResumeLayout(false);
             this.ResumeLayout(false);
 
         }
@@ -318,5 +340,7 @@
         private System.Windows.Forms.Button DeleteOBJD;
         private System.Windows.Forms.TabPage Debug3D;
         private ResourceBrowser.FSOMEditor FSOMEdit;
+        private System.Windows.Forms.TabPage XMLEntryTab;
+        private ResourceBrowser.XMLEntryEditor XMLEdit;
     }
 }

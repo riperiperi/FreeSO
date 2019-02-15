@@ -178,7 +178,7 @@ namespace FSO.Files.RC
             }
 
             if (!hasNormals) GenerateNormals(false);
-
+            
             /*
             var triBase = new int[SIndices.Count / 3][];
             for (int i = 0; i < triBase.Length; i++) triBase[i] = new int[] { SIndices[i * 3], SIndices[i * 3 + 1], SIndices[i * 3 + 2] };

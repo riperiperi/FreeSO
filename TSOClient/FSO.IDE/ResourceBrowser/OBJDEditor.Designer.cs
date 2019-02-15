@@ -1194,6 +1194,7 @@
             this.GUIDButton.TabIndex = 78;
             this.GUIDButton.Text = "0xDEADBEEF";
             this.GUIDButton.UseVisualStyleBackColor = true;
+            this.GUIDButton.MouseDown += new System.Windows.Forms.MouseEventHandler(this.GUIDButton_MouseDown);
             // 
             // OBJDEditor
             // 
