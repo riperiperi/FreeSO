@@ -874,7 +874,7 @@ namespace FSO.SimAntics
 
         public override VMEntityObstacle GetObstacle(LotTilePos pos, Direction dir, bool temp)
         {
-            if (KillTimeout > -1 && !GetFlag(VMEntityFlags.HasZeroExtent) || Container != null) return null;
+            if (KillTimeout > -1 && !GetFlag(VMEntityFlags.HasZeroExtent) || (Container != null && !temp)) return null;
             if (Footprint == null || temp)
             {
                 return new VMEntityObstacle(

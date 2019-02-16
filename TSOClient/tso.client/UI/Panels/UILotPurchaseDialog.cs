@@ -65,7 +65,7 @@ namespace FSO.Client.UI.Panels
             NameTextEditValidation.ErrorPrefix = InvalidNameErrorTitle;
             NameTextEditValidation.Position = new Vector2(NameTextEdit.X, NameTextEdit.Y + NameTextEdit.Height);
             NameTextEditValidation.Width = (int)NameTextEdit.Width;
-            Add(NameTextEditValidation);
+            DynamicOverlay.Add(NameTextEditValidation);
 
             GameFacade.Screens.inputManager.SetFocus(NameTextEdit);
 

@@ -24,6 +24,7 @@ namespace FSO.Client.Controllers.Panels
         private IClientDataService DataService;
         private IUIAbstractRating View;
         private BookmarkType CurrentType = BookmarkType.AVATAR;
+        private uint RatingID = uint.MaxValue;
 
         public RatingSummaryController(IUIAbstractRating view, IClientDataService dataService, Network.Network network)
         {
@@ -34,6 +35,7 @@ namespace FSO.Client.Controllers.Panels
 
         public void SetRating(uint ratingID)
         {
+            if (ratingID == RatingID) return;
             if (ratingID == 0)
             {
                 View.HalfStars = uint.MaxValue;
@@ -45,6 +47,7 @@ namespace FSO.Client.Controllers.Panels
                     View.CurrentRating.Value = (x.Result as MayorRating);
                 });
             }
+            RatingID = ratingID;
         }
 
         public void Dispose()

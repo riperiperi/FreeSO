@@ -117,6 +117,7 @@ namespace FSO.Client.UI.Panels
 
         private List<GizmoAvatarSearchResult> SimResults;
         private List<GizmoLotSearchResult> LotResults;
+        private List<GizmoNhoodSearchResult> NhoodResults;
 
         public UIGizmoSearch(UIScript script, UIGizmo parent)
         {
@@ -152,6 +153,10 @@ namespace FSO.Client.UI.Panels
                 case UIGizmoTab.Property:
                     FindController<CoreGameScreenController>().ShowLotPage(item.EntityId);
                     break;
+                case UIGizmoTab.Neighborhood:
+                    FindController<CoreGameScreenController>().ShowNeighPage(item.EntityId);
+                    (UIScreen.Current as CoreGameScreen)?.CityRenderer?.NeighGeom?.CenterNHood((int)item.EntityId);
+                    break;
             }
         }
 
@@ -177,7 +182,16 @@ namespace FSO.Client.UI.Panels
         private void SendSearch(UIElement button)
         {
             var exact = button == NarrowSearchButton;
-            var type = _Tab == UIGizmoTab.Property ? SearchType.LOTS : SearchType.SIMS;
+            SearchType type = SearchType.SIMS;
+            switch (_Tab)
+            {
+                case UIGizmoTab.People:
+                    type = SearchType.SIMS; break;
+                case UIGizmoTab.Property:
+                    type = SearchType.LOTS; break;
+                case UIGizmoTab.Neighborhood:
+                    type = SearchType.NHOOD; break;
+            }
 
             if(type == SearchType.SIMS){
                 PendingSimSearch = true;
@@ -211,16 +225,33 @@ namespace FSO.Client.UI.Panels
             }else{
                 NarrowSearchButton.Disabled = WideSearchUpButton.Disabled = PendingLotSearch;
 
-                if(LotResults != null)
+                if (_Tab == UIGizmoTab.Neighborhood)
                 {
-                    SearchResult.Items.AddRange(LotResults.Select(x =>
+                    if (NhoodResults != null)
                     {
-                        return new UIListBoxItem(x.Result, new object[] { (rank++).ToString(), x.Result.Name })
+                        SearchResult.Items.AddRange(NhoodResults.Select(x =>
                         {
-                            CustomStyle = ListBoxColors,
-                            UseDisabledStyleByDefault = new ValuePointer(x, "IsOffline")
-                        };
-                    }));
+                            return new UIListBoxItem(x.Result, new object[] { (rank++).ToString(), x.Result.Name })
+                            {
+                                CustomStyle = ListBoxColors,
+                                UseDisabledStyleByDefault = new ValuePointer(x, "IsOffline")
+                            };
+                        }));
+                    }
+                }
+                else
+                {
+                    if (LotResults != null)
+                    {
+                        SearchResult.Items.AddRange(LotResults.Select(x =>
+                        {
+                            return new UIListBoxItem(x.Result, new object[] { (rank++).ToString(), x.Result.Name })
+                            {
+                                CustomStyle = ListBoxColors,
+                                UseDisabledStyleByDefault = new ValuePointer(x, "IsOffline")
+                            };
+                        }));
+                    }
                 }
             }
 
@@ -238,6 +269,13 @@ namespace FSO.Client.UI.Panels
         {
             PendingLotSearch = false;
             LotResults = results;
+            UpdateUI();
+        }
+
+        public void SetResults(List<GizmoNhoodSearchResult> results)
+        {
+            PendingLotSearch = false;
+            NhoodResults = results;
             UpdateUI();
         }
     }
@@ -542,6 +580,7 @@ namespace FSO.Client.UI.Panels
             AddAt(0, (NHoodTabBackground = ui.Create<UIImage>("HousesTabBackground")));
             Add((NHoodTabButton = ui.Create<UIButton>("HousesTabButton")));
 
+            NHoodTabButton.Texture = Content.Content.Get().CustomUI.Get("neighp_infobtn.png").Get(GameFacade.GraphicsDevice);
             NHoodTab.X += 42;
             NHoodTabBackground.X += 42;
             NHoodTabButton.X += 42;

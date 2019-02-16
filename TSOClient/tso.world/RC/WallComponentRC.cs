@@ -128,8 +128,8 @@ namespace FSO.LotView.RC
                             //generate the geometry for this line
                             var l = level - 1;
                             var baseI = g.Verts.Count;
-                            var h1 = (topMode == 4) ? 1: GetWallHeight(p1);
-                            var h2 = (topMode == 4) ? 1 : GetWallHeight(p2);
+                            var h1 = (topMode == 4) ? 0.98f : GetWallHeight(p1);
+                            var h2 = (topMode == 4) ? 0.98f : GetWallHeight(p2);
                             var col = (from.X == to.X) ? darker : white;
                             g.Verts.Add(new WallVertexRC(p1, col, new Vector3(starttc, l, aboveFloor)));
                             g.Verts.Add(new WallVertexRC(p2, col, new Vector3(endtc, l, aboveFloor)));
@@ -268,6 +268,7 @@ namespace FSO.LotView.RC
                                 }
                                 else
                                 {
+                                    //fence horiz
                                     addLineGeom(new Vector2(0, 1), new Vector2(1, 0), comp.BottomRightPattern, (comp.ObjSetTRStyle == 0) ? comp.TopRightStyle : comp.ObjSetTRStyle, 4, 0, 1, bl1);
                                     addLineGeom(new Vector2(1, 0), new Vector2(0, 1), comp.BottomLeftPattern, (comp.ObjSetTRStyle == 0) ? comp.TopRightStyle : comp.ObjSetTRStyle, 4, 0, 1, bl2);
                                 }
@@ -288,6 +289,7 @@ namespace FSO.LotView.RC
                                 }
                                 else
                                 {
+                                    // fence vert
                                     addLineGeom(new Vector2(0, 0), new Vector2(1, 1), comp.BottomLeftPattern, (comp.ObjSetTRStyle == 0) ? comp.TopRightStyle : comp.ObjSetTRStyle, 4, 0, 1, bl1);
                                     addLineGeom(new Vector2(1, 1), new Vector2(0, 0), comp.BottomRightPattern, (comp.ObjSetTRStyle == 0) ? comp.TopRightStyle : comp.ObjSetTRStyle, 4, 0, 1, bl2);
                                 }

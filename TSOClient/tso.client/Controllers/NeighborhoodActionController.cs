@@ -18,6 +18,7 @@ namespace FSO.Client.Controllers
         private UIElement BlockingDialog;
         GenericActionRegulator<NhoodRequest, NhoodResponse> ConnectionReg;
         private List<Callback<NhoodResponseCode>> Callbacks = new List<Callback<NhoodResponseCode>>();
+        public string LastMessage = "";
         private bool Blocked = false;
 
         public NeighborhoodActionController(GenericActionRegulator<NhoodRequest, NhoodResponse> regulator)
@@ -159,7 +160,7 @@ namespace FSO.Client.Controllers
                 {
                     //print message and end date
                     errorTitle = GameFacade.Strings.GetString("f117", "1");
-                    errorBody = GameFacade.Strings.GetString("f117", ((int)response.Code + 1).ToString(), 
+                    errorBody = GameFacade.Strings.GetString("f117", ((int)response.Code + 1).ToString(),
                         new string[] {
                             ClientEpoch.DHMRemaining(response.BanEndDate),
                             response.Message
@@ -179,6 +180,7 @@ namespace FSO.Client.Controllers
                     errorTitle = GameFacade.Strings.GetString("f117", "1");
                     errorBody = GameFacade.Strings.GetString("f117", ((int)response.Code + 1).ToString());
                 }
+                LastMessage = response.Message;
                 ResolveCallbacks(response.Code);
             }
             else
@@ -354,6 +356,7 @@ namespace FSO.Client.Controllers
                         }
                         break;
                     case "ActionSuccess":
+                        LastMessage = ((NhoodResponse)data).Message;
                         ResolveCallbacks(NhoodResponseCode.SUCCESS);
                         break;
                 }

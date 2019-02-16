@@ -355,6 +355,16 @@ namespace FSO.Client.UI.Panels.Neighborhoods
             ModActionSetMayor.OnButtonClick += ModSetMayor;
 
             ModActionReturn.OnButtonClick += (btn) => { CurrentMayorTab = UINeighMayorTabMode.Actions; Redraw(); };
+            ModActionManageRatings.OnButtonClick += (btn) => {
+                var ratingList = new UIRatingList(CurrentMayor.Value?.Avatar_Id ?? 0);
+                UIScreen.GlobalShowAlert(new UIAlertOptions()
+                {
+                    Title = GameFacade.Strings.GetString("f118", "23", new string[] { "Retrieving..." }),
+                    Message = GameFacade.Strings.GetString("f118", "24", new string[] { "Retrieving..." }),
+                    GenericAddition = ratingList,
+                    Width = 530
+                }, true);
+            };
 
             foreach (var elem in Children)
             {
@@ -423,7 +433,14 @@ namespace FSO.Client.UI.Panels.Neighborhoods
                     CurrentNeigh.Value?.Neighborhood_MayorID ?? 0,
                     (success) =>
                     {
-                        RefreshMayor();
+                        if (success == Server.Protocol.Electron.Packets.NhoodResponseCode.SUCCESS)
+                        {
+                            UIAlert.Alert("", GameFacade.Strings.GetString("f115", "97"), true);
+                        }
+                        GameThread.SetTimeout(() =>
+                        {
+                            RefreshMayor();
+                        }, 500);
                     });
             }
         }
@@ -808,8 +825,8 @@ namespace FSO.Client.UI.Panels.Neighborhoods
             TopSTabTab4SeatImage.Visible = false;
 
             TopTab1Button.Visible = isTop;
-            TopTab2Button.Visible = isTop;
-            TopTab3Button.Visible = isPeople;
+            TopTab2Button.Visible = isTop && !isPeople; //top famous and infamous disabled til relationship rework
+            TopTab3Button.Visible = false;// isPeople;
             TopTab4Button.Visible = false;
 
             TopTab1Button.Selected = TopSTabTab1BackgroundImage.Visible;
@@ -897,7 +914,7 @@ namespace FSO.Client.UI.Panels.Neighborhoods
             MayorActionMoveTH.Disabled = !HasTownHall;
             MayorActionNewTH.Visible = isMayorAction;
             MayorActionNewTH.Disabled = HasTownHall;
-            MayorActionOrdinances.Visible = isMayorAction;
+            MayorActionOrdinances.Visible = false; //isMayorAction;
             MayorActionReturn.Visible = isMayorAction;
 
             bool isModAction = isMayor && CurrentMayorTab == UINeighMayorTabMode.ModActions;

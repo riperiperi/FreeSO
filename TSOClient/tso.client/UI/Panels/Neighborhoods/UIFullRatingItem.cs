@@ -3,6 +3,7 @@ using FSO.Client.Controllers.Panels;
 using FSO.Client.UI.Controls;
 using FSO.Client.UI.Framework;
 using FSO.Client.Utils;
+using FSO.Common;
 using FSO.Common.DataService.Model;
 using FSO.Common.Rendering.Framework.Model;
 using FSO.Common.Utils;
@@ -129,20 +130,68 @@ namespace FSO.Client.UI.Panels.Neighborhoods
             PxWhite = TextureGenerator.GetPxWhite(GameFacade.GraphicsDevice);
         }
 
+        private void NhoodGameplayBan(uint avatarID)
+        {
+            var controller = UIScreen.Current.FindController<FSO.Client.Controllers.CoreGameScreenController>();
+
+            UIAlert.Prompt("Neighborhood Gameplay Ban", "Ban this user for how long? (in days, 0 for perma)", true, (result) =>
+            {
+                if (result == null) return;
+                uint dayCount;
+                if (!uint.TryParse(result, out dayCount))
+                {
+                    UIAlert.Alert("Neighborhood Gameplay Ban", "Invalid number of days. Please try again.", true);
+                }
+                uint untilDate = (dayCount == 0) ? uint.MaxValue : ClientEpoch.Now + dayCount * 60 * 60 * 24;
+
+                UIAlert.Prompt("Neighborhood Gameplay Ban", "What message do you want to leave? (optional)", true, (result2) =>
+                {
+                    if (result2 == null) return;
+                    if (controller != null)
+                    {
+                        controller.NeighborhoodProtocol.BanUser(avatarID, untilDate, result2, (code) =>
+                        {
+                            //response
+                            if (code == Server.Protocol.Electron.Packets.NhoodResponseCode.SUCCESS)
+                            {
+                                UIAlert.Alert("Neighborhood Gameplay Ban", "Ban has been submitted. Note that if you ban someone twice your second ban will overwrite the first.", true);
+                            }
+                        });
+                    }
+                });
+            });
+        }
+
         private void DeletePost(UIElement btn)
         {
             UIAlert.YesNo("", "Are you sure you want to delete this rating?", true, (del) =>
             {
                 if (del)
                 {
-                    var protocol = FindController<CoreGameScreenController>()?.NeighborhoodProtocol;
+                    var protocol = UIScreen.Current.FindController<CoreGameScreenController>()?.NeighborhoodProtocol;
                     if (protocol != null)
                     {
                         protocol.DeleteRate(RatingID, (code) =>
                         {
                             if (code == Server.Protocol.Electron.Packets.NhoodResponseCode.SUCCESS)
                             {
-                                UIAlert.Alert("", "Rating deleted.", true);
+                                uint avaID = 0;
+                                if (uint.TryParse(protocol.LastMessage, out avaID) && avaID != 0)
+                                {
+                                    var alert = UIAlert.YesNo("", "Rating deleted. Neighborhood ban the poster? (icon at top left of window)", false,
+                                        (ban) =>
+                                        {
+                                            if (ban)
+                                            {
+                                                NhoodGameplayBan(avaID);
+                                            }
+                                        });
+                                    alert.Add(new UIPersonButton() { AvatarId = avaID, FrameSize = UIPersonButtonSize.SMALL, Position = new Vector2(45, 3) });
+                                }
+                                else
+                                {
+                                    UIAlert.Alert("", "Rating deleted.", true);
+                                }
                             }
                         });
                     }

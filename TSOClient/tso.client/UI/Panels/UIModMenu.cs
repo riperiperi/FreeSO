@@ -96,7 +96,7 @@ namespace FSO.Client.UI.Panels
                                 //response
                                 if (code == Server.Protocol.Electron.Packets.NhoodResponseCode.SUCCESS)
                                 {
-                                    UIAlert.Alert("Neighborhood Gameplay Ban", "Ban has been submitted. Note that if you ban someone twice they will be displayed the first ban they recieved (that is still active).", true);
+                                    UIAlert.Alert("Neighborhood Gameplay Ban", "Ban has been submitted. Note that if you ban someone twice your second ban will overwrite the first.", true);
                                 }
                             });
                         }

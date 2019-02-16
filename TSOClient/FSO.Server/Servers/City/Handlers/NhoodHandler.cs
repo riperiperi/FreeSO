@@ -159,12 +159,12 @@ namespace FSO.Server.Servers.City.Handlers
                                         anonymous = 1,
                                     });
 
+                                    var ds = Kernel.Get<IDataService>();
                                     if (id != 0)
                                     {
-                                        var ds = Kernel.Get<IDataService>();
                                         ds.Invalidate<MayorRating>(id); //update this rating in data service
-                                        ds.Invalidate<Avatar>(packet.TargetAvatar);
                                     }
+                                    ds.Invalidate<Avatar>(packet.TargetAvatar);
                                 }
 
                                 session.Write(Code(NhoodResponseCode.SUCCESS)); return;
@@ -460,8 +460,25 @@ namespace FSO.Server.Servers.City.Handlers
                             }
                         //management
                         case NhoodRequestType.DELETE_RATE:
+                            var beforeDelete = da.Elections.GetRating(packet.Value);
                             if (da.Elections.DeleteRating(packet.Value))
-                                session.Write(Code(NhoodResponseCode.SUCCESS));
+                            {
+                                var ds = Kernel.Get<IDataService>();
+                                try
+                                {
+                                    ds.Invalidate<Avatar>(beforeDelete.from_avatar_id);
+                                    ds.Invalidate<MayorRating>(packet.Value); //update this rating in data service
+                                } catch (Exception)
+                                {
+
+                                }
+
+                                session.Write(new NhoodResponse()
+                                {
+                                    Code = NhoodResponseCode.SUCCESS,
+                                    Message = (beforeDelete?.from_avatar_id ?? 0).ToString()
+                                });
+                            }
                             else
                                 session.Write(Code(NhoodResponseCode.MISSING_ENTITY));
                             return;

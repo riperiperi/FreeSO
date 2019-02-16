@@ -77,7 +77,7 @@ namespace FSO.Client.UI.Controls
             }, modal);
         }
 
-        public static void YesNo(string title, string message, bool modal, Callback<bool> callback)
+        public static UIAlert YesNo(string title, string message, bool modal, Callback<bool> callback)
         {
             UIAlert alert = null;
             alert = UIScreen.GlobalShowAlert(new UIAlertOptions()
@@ -89,6 +89,7 @@ namespace FSO.Client.UI.Controls
                     (btn) => { callback(false); UIScreen.RemoveDialog(alert); }
                     )
             }, modal);
+            return alert;
         }
 
         public static void Prompt(string title, string message, bool modal, Callback<string> callback)

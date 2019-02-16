@@ -215,7 +215,7 @@
       ]
     },
     {
-      "id": "b390f324-74f1-4a75-992e-e5a81ec3967a",
+      "id": "0c3bb214-d47e-4efb-9d0e-d6127ccbd6ee",
       "script": "changes/0022_lastlogin.sql",
       "idempotent": false
     },
@@ -223,6 +223,14 @@
       "id": "3b87e93a-5fae-437b-8ba5-1e46ebb4cd15",
       "script": "changes/0023_neighborhoods.sql",
       "idempotent": false
+    },
+    {
+      "id": "19dbbb59-378d-4374-9ec6-eed6f7ff815a",
+      "script": "changes/0024_bulletin.sql",
+      "idempotent": false,
+      "requires": [
+        "3b87e93a-5fae-437b-8ba5-1e46ebb4cd15"
+      ]
     }
   ]
 }

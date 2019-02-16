@@ -745,6 +745,9 @@ namespace FSO.Client.UI.Panels.Neighborhoods
             ScrollMayorRight.Visible = MayorPage != Math.Max(MayorPosts.Count-1, 0)/4;
             ScrollSystemRight.Visible = SystemPage != Math.Max(SystemPosts.Count - 1, 0) / 4;
             ScrollCommunityRight.Visible = CommunityPage != Math.Max(CommunityPosts.Count, 0) / 8;
+            ScrollMayorRight.Disabled = false;
+            ScrollSystemRight.Disabled = false;
+            ScrollCommunityRight.Disabled = false;
         }
 
         public void InitAllSummaries()

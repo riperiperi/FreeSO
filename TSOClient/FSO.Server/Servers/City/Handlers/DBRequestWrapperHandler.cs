@@ -149,6 +149,14 @@ namespace FSO.Server.Servers.City.Handlers
                         EntityId = x.avatar_id
                     }).ToList();
                 }
+                else if (request.Type == SearchType.NHOOD)
+                {
+                    results = db.Neighborhoods.SearchExact(Context.ShardId, request.Query, 100).Select(x => new SearchResponseItem
+                    {
+                        Name = x.name,
+                        EntityId = (uint)x.neighborhood_id
+                    }).ToList();
+                }
                 else
                 {
                     results = db.Lots.SearchExact(Context.ShardId, request.Query, 100).Select(x => new SearchResponseItem
@@ -189,6 +197,14 @@ namespace FSO.Server.Servers.City.Handlers
                     {
                         Name = x.name,
                         EntityId = x.avatar_id
+                    }).ToList();
+                }
+                else if (request.Type == SearchType.NHOOD)
+                {
+                    results = db.Neighborhoods.SearchWildcard(Context.ShardId, request.Query, 100).Select(x => new SearchResponseItem
+                    {
+                        Name = x.name,
+                        EntityId = (uint)x.neighborhood_id
                     }).ToList();
                 }
                 else

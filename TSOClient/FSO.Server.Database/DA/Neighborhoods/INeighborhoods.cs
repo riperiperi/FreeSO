@@ -24,5 +24,8 @@ namespace FSO.Server.Database.DA.Neighborhoods
 
         DbNhoodBan GetNhoodBan(uint user_id);
         bool AddNhoodBan(DbNhoodBan ban);
+
+        List<DbNeighborhood> SearchExact(int shard_id, string name, int limit);
+        List<DbNeighborhood> SearchWildcard(int shard_id, string name, int limit);
     }
 }
