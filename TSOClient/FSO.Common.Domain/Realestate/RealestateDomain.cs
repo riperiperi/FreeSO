@@ -19,7 +19,7 @@ namespace FSO.Common.Domain.Realestate
         private Regex VALIDATE_SPECIAL_CHARS = new Regex(@"[^\p{L} '-]"); // Numbers are special chars in this case
         private Regex VALIDATE_APOSTROPHES = new Regex("^[^']*'?[^']*$");
         private Regex VALIDATE_DASHES = new Regex("^[^-]*-?[^-]*$");
-        private Regex VALIDATE_SPACES = new Regex("^[^ ]+( [^ ]+)?( [^ ]+)?$");
+        private Regex VALIDATE_SPACES = new Regex("^[^ ]+( [^ ]+)*$");
 
         private Dictionary<int, ShardRealestateDomain> _ByShard;
         private IShardsDomain _Shards;
