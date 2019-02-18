@@ -405,7 +405,7 @@ float2 GrassParallaxMapping(float2 texCoords, float3 viewDir, float probability)
 	probability += probDelta;
 
 	[unroll(20)]
-	for (float currentLayerDepth = 0; currentLayerDepth < 1; currentLayerDepth += layerDepth)/
+	for (float currentLayerDepth = 0; currentLayerDepth < 1; currentLayerDepth += layerDepth)
 	{
 		if (currentLayerDepth >= currentTexDepth) break; //are we under the surface yet?
 		//shift texture coordinates for the next layer

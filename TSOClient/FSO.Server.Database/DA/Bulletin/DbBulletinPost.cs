@@ -17,6 +17,7 @@ namespace FSO.Server.Database.DA.Bulletin
         public uint flags { get; set; }
         public int? lot_id { get; set; }
         public DbBulletinType type { get; set; }
+        public byte deleted { get; set; }
 
         public string string_type { get
             {

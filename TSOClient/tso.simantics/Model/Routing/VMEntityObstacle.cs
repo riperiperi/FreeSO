@@ -23,5 +23,13 @@ namespace FSO.SimAntics.Model.Routing
         {
             Parent = ent;
         }
+
+        public void Unregister()
+        {
+            if (Parent.StaticFootprint) Set?.Delete(this);
+            else Dynamic?.Remove(this);
+            Set = null;
+            Dynamic = null;
+        }
     }
 }

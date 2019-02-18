@@ -37,6 +37,10 @@ namespace FSO.Server.Servers.City.Handlers
             DataService = dataService;
             Kernel = kernel;
             Nhoods = nhoods;
+
+            POST_FREQ_LIMIT = context.Config.Neighborhoods.Bulletin_Post_Frequency * 60 * 60 * 24;
+            POST_FREQ_LIMIT_MAYOR = context.Config.Neighborhoods.Bulletin_Mayor_Frequency * 60 * 60 * 24;
+            MOVE_LIMIT_PERIOD = context.Config.Neighborhoods.Bulletin_Move_Penalty * 60 * 60 * 24;
         }
 
         private BulletinItem ToItem(DbBulletinPost post)
@@ -107,7 +111,7 @@ namespace FSO.Server.Servers.City.Handlers
                                     }
                                 }
 
-                                da.BulletinPosts.Delete(message.Value);
+                                da.BulletinPosts.SoftDelete(message.Value);
                                 session.Write(Code(BulletinResponseType.SUCCESS));
                                 return;
                             }
@@ -201,7 +205,7 @@ namespace FSO.Server.Servers.City.Handlers
                                 }
 
                                 //verify post frequency
-                                var last = da.BulletinPosts.LastUserPost(myAva.user_id);
+                                var last = da.BulletinPosts.LastUserPost(myAva.user_id, message.TargetNHood);
                                 int frequency = 0;
                                 switch (type)
                                 {
@@ -261,8 +265,9 @@ namespace FSO.Server.Servers.City.Handlers
                                 {
                                     db.bulletin_id = da.BulletinPosts.Create(db);
                                 }
-                                catch (Exception)
+                                catch (Exception e)
                                 {
+                                    LOG.Error(e.ToString());
                                     session.Write(Code(BulletinResponseType.FAIL_UNKNOWN));
                                     return;
                                 }
@@ -277,8 +282,9 @@ namespace FSO.Server.Servers.City.Handlers
                     }
                 }
             }
-            catch
+            catch (Exception e)
             {
+                LOG.Error(e.ToString());
                 session.Write(Code(BulletinResponseType.FAIL_UNKNOWN));
                 return;
             }

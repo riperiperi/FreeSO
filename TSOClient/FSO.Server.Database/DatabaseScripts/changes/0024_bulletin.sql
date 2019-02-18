@@ -29,3 +29,6 @@ ADD CONSTRAINT `fso_bulletin_lot`
   REFERENCES `fso_lots` (`location`)
   ON DELETE SET NULL
   ON UPDATE CASCADE;
+
+ALTER TABLE `fso_bulletin_posts` 
+ADD COLUMN `deleted` TINYINT UNSIGNED NOT NULL DEFAULT 0 AFTER `type`;

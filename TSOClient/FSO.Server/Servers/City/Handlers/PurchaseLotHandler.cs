@@ -112,12 +112,16 @@ namespace FSO.Server.Servers.City.Handlers
                 {
                     if ((targNhood.flag & 1) > 0)
                     {
-                        session.Write(new PurchaseLotResponse()
+                        var me = db.Avatars.Get(session.AvatarId);
+                        if (me == null || me.moderation_level == 0)
                         {
-                            Status = PurchaseLotStatus.FAILED,
-                            Reason = PurchaseLotFailureReason.NHOOD_RESERVED,
-                        });
-                        return;
+                            session.Write(new PurchaseLotResponse()
+                            {
+                                Status = PurchaseLotStatus.FAILED,
+                                Reason = PurchaseLotFailureReason.NHOOD_RESERVED,
+                            });
+                            return;
+                        }
                     }
 
                     ownedLot = db.Lots.GetByOwner(session.AvatarId);

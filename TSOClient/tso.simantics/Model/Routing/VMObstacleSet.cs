@@ -282,7 +282,7 @@ namespace FSO.SimAntics.Model.Routing
             else
             {
                 var result = Delete(ref Nodes[Root], rect, ref Nodes[Root]);
-                if (!result) { }
+                if (result) { Count--;  }
                 return result;
             }
         }

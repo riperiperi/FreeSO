@@ -927,14 +927,7 @@ namespace FSO.SimAntics
                 VM.DeleteFromObjList(RoomInfo[room].Entities, obj);
 
                 //unregister collision footprint (if present)
-                var footprint = obj.Footprint;
-                if (footprint != null && footprint.Set != null)
-                {
-                    if (obj.StaticFootprint) footprint.Set.Delete(footprint);
-                    else footprint.Dynamic.Remove(footprint);
-                    footprint.Set = null;
-                    footprint.Dynamic = null;
-                }
+                obj.Footprint?.Unregister();
 
                 if (obj.EntryPoints[15].ActionFunction != 0)
                 { //portal
@@ -950,7 +943,7 @@ namespace FSO.SimAntics
             }
             else
             {
-                if (obj.StaticFootprint)
+                if (obj.StaticFootprint) //only unregister static
                 {
                     var footprint = obj.Footprint;
                     if (footprint != null && footprint.Set != null)

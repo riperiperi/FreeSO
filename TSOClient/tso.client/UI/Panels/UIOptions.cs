@@ -588,6 +588,9 @@ namespace FSO.Client.UI.Panels
                 SmoothZoom = settings.SmoothZoom,
                 SurroundingLots = settings.SurroundingLotMode,
                 AA = settings.AntiAlias,
+                Weather = settings.Weather,
+                Directional = settings.DirectionalLight3D,
+                Complex = settings.ComplexShaders
             };
 
             var vm = ((IGameScreen)GameFacade.Screens.CurrentUIScreen)?.vm;

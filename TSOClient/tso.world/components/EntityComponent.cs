@@ -35,6 +35,7 @@ namespace FSO.LotView.Components
         }
         public Blueprint blueprint;
         public Vector3 MTOffset;
+        public Matrix? GroundAlign; //for realigning objects on sloped terrain (optional, for cars)
 
         public short ObjectID; //set this any time it changes so that hit test works.
 
@@ -67,7 +68,7 @@ namespace FSO.LotView.Components
             set
             {
                 _Position = value;
-                if (blueprint != null) _Position.Z += blueprint.InterpAltitude(new Vector3(0.5f, 0.5f, 0) + _Position - MTOffset / 16);
+                if (blueprint != null) _Position.Z += blueprint.InterpAltitude(new Vector3(0.5f, 0.5f, 0) + _Position - MTOffset / 16) + MTOffset.Z / 16f;
                 OnPositionChanged();
                 _WorldDirty = true;
             }

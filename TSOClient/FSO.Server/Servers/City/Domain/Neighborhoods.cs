@@ -29,15 +29,6 @@ namespace FSO.Server.Servers.City.Domain
         private IKernel Kernel;
         private ISessions Sessions;
 
-        public int MinNominations = 1;
-
-        //if a neighbourhood with no elections is within this number from the top in activity (and not reserved),
-        //we should start an election cycle anyways.
-        private int MayorElegibilityLimit = 999;
-        //if a neighbourhood that had elections is no longer within the falloff range in popularity,
-        //elections are disabled.
-        private int MayorElegililityFalloff = 999; 
-
         public Neighborhoods(IDAFactory daFactory, CityServerContext context, IKernel kernel, ISessions sessions)
         {
             Kernel = kernel;
@@ -91,17 +82,6 @@ namespace FSO.Server.Servers.City.Domain
                     }
                 }
             }
-
-            /*
-            mail.SendSystemEmail("f116", (int)NeighMailStrings.NominateSubject, (int)NeighMailStrings.Nominate,
-                1, MessageSpecialType.Nominate, 0, session.AvatarId, "TEST NHOOD", Epoch.Now.ToString());
-
-            mail.SendSystemEmail("f116", (int)NeighMailStrings.VoteSubject, (int)NeighMailStrings.Vote,
-                1, MessageSpecialType.Vote, 0, session.AvatarId, "TEST NHOOD", Epoch.Now.ToString());
-
-            mail.SendSystemEmail("f116", (int)NeighMailStrings.NominationQuerySubject, (int)NeighMailStrings.NominationQuery,
-                1, MessageSpecialType.AcceptNomination, 0, session.AvatarId, "TEST NHOOD", Epoch.Now.ToString());
-                */
         }
 
         public void BroadcastNhoodState(IDA da, MailHandler mail, DbNeighborhood nhood, DbElectionCycle cycle)
@@ -204,6 +184,7 @@ namespace FSO.Server.Servers.City.Domain
 
         public async Task TickNeighborhoods(DateTime now)
         {
+            var config = Context.Config.Neighborhoods;
             //process the neighbourhoods for this city
             var endDate = new DateTime(now.Year, now.Month, 1).AddMonths(1);
             var timeToNextMonth = (endDate - now);
@@ -293,14 +274,14 @@ namespace FSO.Server.Servers.City.Domain
                     }
 
                     //do we need to start a new cycle?
-                    if (!stillActive && timeToNextMonth.TotalDays < 7)
+                    if (!stillActive && timeToNextMonth.TotalDays < 7 && (nhood.flag & 1) == 0)
                     {
                         //update eligibility
                         if ((nhood.flag & 2) > 0)
                         {
                             //not eligibile for elections (temp)
                             //is our placement within bounds?
-                            if (placement != -1 && placement < MayorElegibilityLimit)
+                            if (placement != -1 && placement < config.Mayor_Elegibility_Limit)
                             {
                                 //make us eligible.
                                 nhood.flag &= ~(uint)2;
@@ -308,13 +289,13 @@ namespace FSO.Server.Servers.City.Domain
                                 da.Neighborhoods.UpdateFlag((uint)nhood.neighborhood_id, nhood.flag);
 
                                 SendBulletinPost(da, nhood.neighborhood_id, "f123", (int)NeighBulletinStrings.ElectionBeginSubject, (int)NeighBulletinStrings.ElectionBegin, 
-                                    0, nhood.name, MayorElegibilityLimit.ToString());
+                                    0, nhood.name, config.Mayor_Elegibility_Limit.ToString());
                             }
                         }
                         else
                         {
                             //is our placement outwith bounds?
-                            if (placement == -1 || placement >= MayorElegililityFalloff)
+                            if (placement == -1 || placement >= config.Mayor_Elegilility_Falloff)
                             {
                                 //make us ineligible.
                                 nhood.flag |= 2;

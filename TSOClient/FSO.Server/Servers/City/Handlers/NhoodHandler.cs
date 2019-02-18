@@ -69,7 +69,8 @@ namespace FSO.Server.Servers.City.Handlers
             if (session.IsAnonymous) //CAS users can't do this.
                 return;
 
-            var moveTime = 0; //24 * 60 * 60 * 30; //must live in an nhood 30 days before participating in an election
+            var moveTime = Context.Config.Neighborhoods.Election_Move_Penalty * 24 * 60 * 60; //24 * 60 * 60 * 30; //must live in an nhood 30 days before participating in an election
+            var rateMoveTime = Context.Config.Neighborhoods.Rating_Move_Penalty * 24 * 60 * 60; //24 * 60 * 60 * 30; //must live in an nhood 30 days before participating in an election
             var mail = Kernel.Get<MailHandler>();
 
             try
@@ -126,6 +127,10 @@ namespace FSO.Server.Servers.City.Handlers
                                 {
                                     session.Write(Code(NhoodResponseCode.CANT_RATE_AVATAR)); //you can't rate yourself...
                                     return;
+                                }
+                                if (Epoch.Now - myAva.move_date < rateMoveTime)
+                                {
+                                    session.Write(Code(NhoodResponseCode.YOU_MOVED_RECENTLY)); return;
                                 }
                                 //verify the target avatar is the current mayor
                                 var rateNhood = da.Neighborhoods.Get(packet.TargetNHood);
@@ -368,7 +373,7 @@ namespace FSO.Server.Servers.City.Handlers
 
                                     //if >= 3 nominations, allow the player to run for election.
                                     var noms = da.Elections.GetCycleVotesForAvatar(packet.TargetAvatar, cycle.cycle_id, DbElectionVoteType.nomination);
-                                    if (noms.Count() >= Nhoods.MinNominations)
+                                    if (noms.Count() >= Context.Config.Neighborhoods.Min_Nominations)
                                     {
                                         var created = da.Elections.CreateCandidate(new DbElectionCandidate() {
                                             candidate_avatar_id = packet.TargetAvatar,
@@ -425,7 +430,7 @@ namespace FSO.Server.Servers.City.Handlers
 
                                 //have we been nominated the minimum number of times? (3)
                                 var noms = da.Elections.GetCycleVotesForAvatar(session.AvatarId, cycle.cycle_id, DbElectionVoteType.nomination);
-                                if (noms.Count < Nhoods.MinNominations)
+                                if (noms.Count < Context.Config.Neighborhoods.Min_Nominations)
                                 {
                                     session.Write(Code(NhoodResponseCode.NOBODY_NOMINATED_YOU_IDIOT)); return;
                                 }

@@ -695,12 +695,7 @@ namespace FSO.SimAntics
             Footprint = GetObstacle(Position, Direction, false);
             if (current != Footprint)
             {
-                if (current != null && current.Set != null)
-                {
-                    //remove current from its structure
-                    if (StaticFootprint) current.Set.Delete(current);
-                    else current.Dynamic.Remove(current);
-                }
+                current?.Unregister();
 
                 if (Footprint != null)
                 {
@@ -773,11 +768,13 @@ namespace FSO.SimAntics
             switch (var) //special cases
             {
                 case VMStackObjectVariable.Flags:
-                    if (((value ^ ObjectData[(short)var]) & (int)VMEntityFlags.HasZeroExtent) > 0)
+                    var old = ObjectData[(short)var];
+                    ObjectData[(short)var] = value;
+                    if (((value ^ old) & (int)VMEntityFlags.HasZeroExtent) > 0)
                         UpdateFootprint();
-                    if (this is VMAvatar && ((value ^ ObjectData[(short)var]) & (int)VMEntityFlags.Burning) > 0)
+                    if (this is VMAvatar && ((value ^ old) & (int)VMEntityFlags.Burning) > 0)
                         this.Reset(Thread.Context);
-                    break;
+                    return true;
                 case VMStackObjectVariable.Direction:
                     value = (short)(((int)value + 65536) % 8);
                     Direction = DirectionNotches[value];

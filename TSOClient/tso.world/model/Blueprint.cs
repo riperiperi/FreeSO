@@ -169,7 +169,6 @@ namespace FSO.LotView.Model
             return (Altitude[((y % Height) * Width + (x % Width))]);
         }
 
-
         public float InterpAltitude(Vector3 Position)
         {
             if (Altitude == null) return 0f;

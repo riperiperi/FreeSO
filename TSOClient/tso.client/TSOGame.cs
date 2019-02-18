@@ -147,6 +147,9 @@ namespace FSO.Client
                 SmoothZoom = settings.SmoothZoom,
                 SurroundingLots = settings.SurroundingLotMode,
                 AA = settings.AntiAlias,
+                Weather = settings.Weather,
+                Directional = settings.DirectionalLight3D,
+                Complex = settings.ComplexShaders
             };
 
             if (!FSOEnvironment.TexCompressSupport) settings.TexCompression = 0;
