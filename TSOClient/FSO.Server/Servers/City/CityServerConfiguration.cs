@@ -57,6 +57,11 @@ namespace FSO.Server.Servers.City
          * The number of days the mayor must wait between bulletin posts.
          */
         public int Bulletin_Mayor_Frequency = 1;
+
+        /**
+         * If true, starts elections on the last monday in a month, rather than 7 days before the end of the month.
+         */
+        public bool Election_Week_Align = true;
     }
 
     public class CityServerMaintenanceConfiguration

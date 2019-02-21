@@ -719,7 +719,14 @@ namespace FSO.Client.UI.Panels
             }
             else if (vm.TSOState.Roommates.Contains(vm.MyUID))
             {
-                hints.TriggerHint("land:roomie");
+                if (vm.TSOState.PropertyCategory == (int)LotCategory.community)
+                {
+                    hints.TriggerHint("ui:donator");
+                }
+                else
+                {
+                    hints.TriggerHint("land:roomie");
+                }
             }
             else if (vm.GetGlobalValue(11) > -1)
             {

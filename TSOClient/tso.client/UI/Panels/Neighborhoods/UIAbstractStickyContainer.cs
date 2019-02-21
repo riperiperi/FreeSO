@@ -20,6 +20,7 @@ namespace FSO.Client.UI.Panels.Neighborhoods
         public UIMouseEventRef MouseEvent;
         public Vector2 ContainerSize = new Vector2(600, 600);
         public bool IgnoreMouse;
+        public float OffsetMultiplier = 1f;
 
         public Action<UIAbstractStickyContainer> OnClick;
         private float Highlight = 0f;
@@ -83,7 +84,10 @@ namespace FSO.Client.UI.Panels.Neighborhoods
             //Convert the opacity percentage into a byte (0-255)
             _BlendColor.A = (byte)Math.Round(Opacity * 255);
             DrawLocalTexture(batch, BackgroundImg, null, new Vector2(), Vector2.One, HSVMod);
-            CalculateOpacity();
+
+            _BlendColor = Color.White;
+            _BlendColor *= Opacity;
+
             batch.SetEffect();
             effect.Parameters["Highlight"].SetValue(0f);
         }
@@ -108,7 +112,7 @@ namespace FSO.Client.UI.Panels.Neighborhoods
 
                 effect.CurrentTechnique = effect.Techniques["StickyEffect"];
                 var off = ((Position + Size * Scale / 2) - ContainerSize / 2).X * -0.001f * (Size.Y/240f);
-                effect.Parameters["stickyOffset"].SetValue(off);
+                effect.Parameters["stickyOffset"].SetValue(off * OffsetMultiplier);
                 effect.Parameters["stickyPersp"].SetValue((Size.Y/240f) * -0.2f);
 
                 DrawLocalTexture(batch, Target, 

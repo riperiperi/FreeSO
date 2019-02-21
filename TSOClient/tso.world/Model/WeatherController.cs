@@ -56,6 +56,15 @@ namespace FSO.LotView.Model
                 col.W);
         }
 
+        private Vector4 SRGBToLinear(Vector4 col)
+        {
+            return new Vector4(
+                (float)Math.Pow(col.X, 2.2f),
+                (float)Math.Pow(col.Y, 2.2f),
+                (float)Math.Pow(col.Z, 2.2f),
+                col.W);
+        }
+
         public void Update()
         {
             var now = DateTime.UtcNow;
@@ -66,10 +75,10 @@ namespace FSO.LotView.Model
             //should also eventually introduce rain
 
             var ocolor = TintColor ?? Bp.OutsideColor.ToVector4();
-            var color = ocolor - new Vector4(0.35f) * 1.5f + new Vector4(0.35f);
+            var color = SRGBToLinear(LinearToSRGB(ocolor) - new Vector4(0.35f) * 1.5f + new Vector4(0.35f));
             color.W = 1;
             var wint = WeatherIntensity;
-            FogColor = (color * new Color(0x80, 0xC0, 0xFF, 0xFF).ToVector4()) * (1 - wint * 0.75f) + ocolor * (wint * 0.75f);
+            FogColor = (color * new Color(0x80, 0xC0, 0xFF, 0xFF).ToVector4()) * (1 - wint * 0.75f) + LinearToSRGB(ocolor) * (wint * 0.75f);
             FogColor.W = (wint) * (15 * 75f) + (1 - wint) * (300f * 75f);
             var enabled = WorldConfig.Current.Weather;
 

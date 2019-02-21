@@ -683,9 +683,15 @@ namespace FSO.Client.UI.Panels.Neighborhoods
             Scroll(UIBulletinBoardType.Mayor, 0);
         }
 
+        private bool HintShown;
         public override void Update(UpdateState state)
         {
             base.Update(state);
+            if (!HintShown)
+            {
+                FSOFacade.Hints.TriggerHint("ui:bulletin_board");
+                HintShown = true;
+            }
         }
 
         public override void InternalDraw(UISpriteBatch batch)

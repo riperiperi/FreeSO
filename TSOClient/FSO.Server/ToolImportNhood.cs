@@ -76,11 +76,20 @@ namespace FSO.Server
                 else
                 {
                     Console.WriteLine(existing.Count + " neighborhoods are already present in this shard.");
+
+                    foreach (var datan in data)
+                    {
+                        //assume guid of closest nhood
+                        var nhood2 = existing.OrderBy(x => (MapCoordinates.Unpack(x.location).ToVector2() - datan.Location.ToVector2()).Length()).First();
+                        datan.GUID = nhood2.guid;
+                    }
+
+                    /*
                     foreach (var nhood in existing)
                     {
                         var nhood2 = data.FirstOrDefault(x => x.Name == nhood.name);
                         if (nhood2 != null) nhood2.GUID = nhood.guid;
-                    }
+                    }*/
 
                     Deleted = existing.Where(x => !data.Any(y => y.GUID == x.guid));
                     if (Deleted.Count() > 0)

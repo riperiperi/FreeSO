@@ -36,6 +36,8 @@ namespace FSO.Client.UI.Panels.Neighborhoods
             LotThumb.Init(lottex, lottex);
             LotThumb.Position = new Vector2(30, 107);
             Add(LotThumb);
+
+            OffsetMultiplier = 0.75f;
         }
 
         public override void SetItem(BulletinItem item)

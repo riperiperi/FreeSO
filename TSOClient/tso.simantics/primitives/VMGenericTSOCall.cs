@@ -114,17 +114,54 @@ namespace FSO.SimAntics.Primitives
                     return VMPrimitiveExitCode.GOTO_TRUE;
 
                 case VMGenericTSOCallMode.LeaveLot: //25
-                    ((VMAvatar)context.Caller).UserLeaveLot();
-                    if (context.VM.GlobalLink != null)
+                    //SPECIAL: cancel all interactions with us that have not been started. 
+                    bool canLeave = true;
+                    var avaUs = ((VMAvatar)context.Caller);
+                    foreach (var ava2 in context.VM.Context.ObjectQueries.Avatars)
                     {
-                        context.VM.GlobalLink.LeaveLot(context.VM, (VMAvatar)context.Caller);
+                        if (ava2 == avaUs) continue;
+                        var queueCopy = ava2.Thread.Queue.ToList();
+                        foreach (var qitem in queueCopy)
+                        {
+                            //checking the icon owner is a bit of a hack, but it is a surefire way of detecting sim2sim interactions (callee for these is the interaction object)
+                            if (qitem.Callee == avaUs || qitem.IconOwner == avaUs) ava2.Thread.CancelAction(qitem.UID);
+                        }
+                        var action = ava2.Thread.ActiveAction;
+                        if (action != null)
+                        {
+                            //need to wait for this action to stop
+                            if (action.Callee == avaUs || action.IconOwner == avaUs) canLeave = false; //already cancelled above, but we do need to wait for it to end.
+                            else
+                            {
+                                //check the stack of this sim. ANY reference to us is dangerous, so get them to cancel their interactions gracefully.
+                                foreach (var frame in ava2.Thread.Stack)
+                                {
+                                    if (frame.Callee == avaUs || frame.StackObject == avaUs)
+                                    {
+                                        ava2.Thread.CancelAction(action.UID);
+                                        canLeave = false;
+                                    }
+                                }
+                            }
+                        }
                     }
-                    else
+                    if (canLeave)
                     {
-                        // use our stub to remove the sim and potentially disconnect the client.
-                        context.VM.CheckGlobalLink.LeaveLot(context.VM, (VMAvatar)context.Caller);
+                        ((VMAvatar)context.Caller).UserLeaveLot();
+                        if (context.VM.GlobalLink != null)
+                        {
+                            context.VM.GlobalLink.LeaveLot(context.VM, (VMAvatar)context.Caller);
+                        }
+                        else
+                        {
+                            // use our stub to remove the sim and potentially disconnect the client.
+                            context.VM.CheckGlobalLink.LeaveLot(context.VM, (VMAvatar)context.Caller);
+                        }
+                        return VMPrimitiveExitCode.GOTO_TRUE;
+                    } else
+                    {
+                        return VMPrimitiveExitCode.CONTINUE_NEXT_TICK;
                     }
-                    return VMPrimitiveExitCode.GOTO_TRUE;
 
                 // 26. UNUSED
                 case VMGenericTSOCallMode.KickoutRoommate:

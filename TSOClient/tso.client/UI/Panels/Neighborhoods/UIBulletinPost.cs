@@ -4,6 +4,7 @@ using FSO.Client.UI.Controls;
 using FSO.Client.UI.Framework;
 using FSO.Common;
 using FSO.Common.Rendering.Framework.Model;
+using FSO.Common.Utils;
 using FSO.Files.Formats.tsodata;
 using Microsoft.Xna.Framework;
 using System;
@@ -126,6 +127,10 @@ namespace FSO.Client.UI.Panels.Neighborhoods
             BodyText.ScrollbarImage = GetTexture(0x4AB00000001);
             BodyText.InitDefaultSlider();
             BodyText.OnChange += BodyText_OnChange;
+
+            var emojis = new UIEmojiSuggestions(BodyText);
+            DynamicOverlay.Add(emojis);
+            emojis.Parent = this;
 
             var whiteText = TextStyle.DefaultLabel.Clone();
             whiteText.Color = Color.White;
@@ -344,6 +349,7 @@ namespace FSO.Client.UI.Panels.Neighborhoods
                 EditorMode = true;
                 TitleEdit.CurrentText = "";
                 TitleEdit.Mode = UITextEditMode.Editor;
+                BodyText.BBCodeEnabled = false;
                 BodyText.CurrentText = "";
                 BodyText.Mode = UITextEditMode.Editor;
                 TimeLabel.Caption = "0/1000";
@@ -370,7 +376,8 @@ namespace FSO.Client.UI.Panels.Neighborhoods
                 EditorMode = false;
                 TitleEdit.CurrentText = item.Subject;
                 TitleEdit.Mode = UITextEditMode.ReadOnly;
-                BodyText.CurrentText = item.Body;
+                BodyText.BBCodeEnabled = true;
+                BodyText.CurrentText = GameFacade.Emojis.EmojiToBB(BBCodeParser.SanitizeBB(item.Body));
                 BodyText.Mode = UITextEditMode.ReadOnly;
                 var time = ClientEpoch.ToDate((uint)item.Time).ToLocalTime();
                 TimeLabel.Caption = time.ToShortTimeString() + " " + time.ToShortDateString();

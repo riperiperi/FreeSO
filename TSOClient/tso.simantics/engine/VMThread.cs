@@ -646,7 +646,9 @@ namespace FSO.SimAntics.Engine
                 if (Queue.Count > 0) Queue.RemoveAt(ActiveQueueBlock);
                 if (Entity is VMAvatar && !IsCheck && ActiveQueueBlock == 0)
                 {
+                    //some things are reset when an interaction ends
                     //motive deltas reset between interactions
+                    ((VMAvatar)Entity).SetPersonData(VMPersonDataVariable.NonInterruptable, 0); //verified in ts1
                     ((VMAvatar)Entity).ClearMotiveChanges();
                 }
                 ContinueExecution = true; //continue where the Allow Push idle left off

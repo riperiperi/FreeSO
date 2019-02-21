@@ -182,11 +182,25 @@ namespace FSO.Server.Servers.City.Domain
             return offset;
         }
 
+        /**
+         * Given the first day in the next month, find the monday after the final week of the last month.
+         */
+        private DateTime FindLastWeek(DateTime date)
+        {
+            var lastday = date.AddDays(-1); //move back into this month
+            var weekStart = date.AddDays(-(((int)date.DayOfWeek + 6) % 7)); //move back to monday
+            return weekStart.AddDays(7); //monday next week. (the date that we end the election for good)
+        }
+
         public async Task TickNeighborhoods(DateTime now)
         {
             var config = Context.Config.Neighborhoods;
             //process the neighbourhoods for this city
             var endDate = new DateTime(now.Year, now.Month, 1).AddMonths(1);
+            if (config.Election_Week_Align)
+            {
+                endDate = FindLastWeek(endDate);
+            }
             var timeToNextMonth = (endDate - now);
             var ds = Kernel.Get<IDataService>();
 
@@ -242,7 +256,7 @@ namespace FSO.Server.Servers.City.Domain
                                 || cycle.current_state == DbElectionCycleState.failsafe)
                             {
                                 long timeToEnd = (long)cycle.end_date - epochNow;
-                                if (timeToEnd < 0 && nhood.mayor_id != null)
+                                if (timeToEnd <= 0 && nhood.mayor_id != null)
                                 {
                                     await SetMayor(da, 0, (uint)nhood.neighborhood_id);
                                 }
@@ -255,7 +269,7 @@ namespace FSO.Server.Servers.City.Domain
                                 long timeToEnd = (long)cycle.end_date - epochNow;
 
                                 DbElectionCycleState targetState;
-                                if (timeToEnd < 0)
+                                if (timeToEnd <= 0)
                                     targetState = DbElectionCycleState.ended;
                                 else if (timeToEnd <= 60 * 60 * 24 * 3) //last 3 days are the full election
                                     targetState = DbElectionCycleState.election;
@@ -327,13 +341,13 @@ namespace FSO.Server.Servers.City.Domain
 
                         var eligible = (nhood.flag & 2) == 0;
 
-                        if (eligible)
+                        if (eligible || nhood.election_cycle_id == null)
                         {
                             //yes
                             var dbCycle = new DbElectionCycle
                             {
-                                current_state = DbElectionCycleState.nomination,
-                                election_type = DbElectionCycleType.election,
+                                current_state = (eligible) ? DbElectionCycleState.nomination : DbElectionCycleState.shutdown,
+                                election_type = (eligible) ? DbElectionCycleType.election : DbElectionCycleType.shutdown,
                                 start_date = Epoch.FromDate(midnight),
                                 end_date = Epoch.FromDate(endDate)
                             };
@@ -348,12 +362,20 @@ namespace FSO.Server.Servers.City.Domain
                             };
                             da.Neighborhoods.UpdateCycle((uint)nhood.neighborhood_id, cycleID);
 
-                            //notify current mayor
-                            if (nhood.mayor_id != null)
+                            if (eligible)
                             {
-                                var mail = Kernel.Get<MailHandler>();
-                                mail.SendSystemEmail("f116", (int)NeighMailStrings.TermLengthSubject, (int)NeighMailStrings.TermLength,
-                                    1, MessageSpecialType.Nominate, dbCycle.end_date, nhood.mayor_id.Value, nhood.name, dbCycle.end_date.ToString());
+                                //notify current mayor
+                                if (nhood.mayor_id != null)
+                                {
+                                    var mail = Kernel.Get<MailHandler>();
+                                    mail.SendSystemEmail("f116", (int)NeighMailStrings.TermLengthSubject, (int)NeighMailStrings.TermLength,
+                                        1, MessageSpecialType.Nominate, dbCycle.end_date, nhood.mayor_id.Value, nhood.name, dbCycle.end_date.ToString());
+                                }
+
+                                //post to bulletin
+                                var nomEndDate = dbCycle.end_date - 60 * 60 * 24 * 3; //nomination ends 3 days before end of cycle
+                                SendBulletinPost(da, nhood.neighborhood_id, "f123", (int)NeighBulletinStrings.NominateSubject, (int)NeighBulletinStrings.Nominate, nomEndDate,
+                                    nhood.name, nomEndDate.ToString());
                             }
                         }
                     }
@@ -430,7 +452,8 @@ namespace FSO.Server.Servers.City.Domain
                             {
                                 mail.SendSystemEmail("f116", (int)NeighMailStrings.TooFewNominationsSubject, (int)NeighMailStrings.TooFewNominations,
                                     1, MessageSpecialType.Normal, cycle.end_date, remove.Key, nhood.name, cycle.end_date.ToString());
-                            } else
+                            }
+                            else
                             {
                                 mail.SendSystemEmail("f116", (int)NeighMailStrings.NominationNotAcceptedSubject, (int)NeighMailStrings.NominationNotAccepted,
                                     1, MessageSpecialType.Normal, cycle.end_date, remove.Key, nhood.name, cycle.end_date.ToString());
@@ -446,6 +469,10 @@ namespace FSO.Server.Servers.City.Domain
                         //email will be sent by event system. make a bulletin post too
                         SendBulletinPost(da, nhood.neighborhood_id, "f123", (int)NeighBulletinStrings.VoteSubject, (int)NeighBulletinStrings.Vote, cycle.end_date,
                             nhood.name, string.Join("\n", candidates.Select(x => "- " + (da.Avatars.Get(x.Key)?.name ?? "(unknown)"))), cycle.end_date.ToString()); 
+                    }
+                    else
+                    {
+                        state = DbElectionCycleState.failsafe;
                     }
                     break;
                 case DbElectionCycleState.ended:
@@ -465,6 +492,7 @@ namespace FSO.Server.Servers.City.Domain
                         if (grouped.Count == 0)
                         {
                             state = DbElectionCycleState.failsafe;
+                            if (nhood.mayor_id != null) await SetMayor(da, 0, (uint)nhood.neighborhood_id);
                             break;
                         }
 
@@ -500,6 +528,10 @@ namespace FSO.Server.Servers.City.Domain
                             (da.Avatars.Get(winner.Key)?.name ?? "(unknown)"),
                             nhood.name, 
                             string.Join("\n", grouped.Select(x => (runnerI++).ToString() + ". " + (da.Avatars.Get(x.Key)?.name ?? "(unknown)"))));
+                    } else
+                    {
+                        state = DbElectionCycleState.failsafe;
+                        if (nhood.mayor_id != null) await SetMayor(da, 0, (uint)nhood.neighborhood_id);
                     }
                     break;
             }

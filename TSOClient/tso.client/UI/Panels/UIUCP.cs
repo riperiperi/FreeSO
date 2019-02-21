@@ -598,6 +598,15 @@ namespace FSO.Client.UI.Panels
                 {
                     Game.LotControl.SetDonatorDialogVisible(newPanel > 1 && newPanel < 4);
                     Game.LotControl.PanelActive = true;
+                    if ((newPanel == 2 || newPanel == 3) && Game.vm.TSOState.CommunityLot)
+                    {
+                        if (Game.vm.TSOState.OwnerID == Game.vm.MyUID)
+                        {
+                            FSOFacade.Hints.TriggerHint("ui:mayor_buildbuy");
+                            FSOFacade.Hints.TriggerHint("ui:mayor_donators");
+                        }
+                        else if (Game.vm.TSOState.Roommates.Contains(Game.vm.MyUID)) FSOFacade.Hints.TriggerHint("ui:donator");
+                    }
                 }
                 switch (newPanel)
                 {

@@ -258,7 +258,7 @@ namespace FSO.LotView.RC
             switch (WorldConfig.Current.AA)
             {
                 case 1:
-                    PPXDepthEngine.MSAA = 8;
+                    PPXDepthEngine.MSAA = 4;
                     PPXDepthEngine.SSAA = 1;
                     break;
                 case 2:

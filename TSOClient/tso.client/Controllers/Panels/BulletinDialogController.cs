@@ -53,7 +53,7 @@ namespace FSO.Client.Controllers.Panels
                         //system posts can have CST replacement, identical to mail.
                         if (item.Type == Files.Formats.tsodata.BulletinType.System)
                         {
-                            var cst = MessagingController.CSTReplace(item.SenderName, item.Subject, item.Body);
+                            var cst = MessagingController.CSTReplace(";default", item.Subject, item.Body);
                             item.SenderName = cst.Item1;
                             item.Subject = cst.Item2;
                             item.Body = cst.Item3;
@@ -77,6 +77,7 @@ namespace FSO.Client.Controllers.Panels
             {
                 if (response == BulletinResponseType.SUCCESS)
                 {
+                    FSOFacade.Hints.TriggerHint("ui:nhood_rules");
                     View.SelectedPost(null);
                 }
                 else

@@ -1,0 +1,8 @@
+{
+    "guid": "891d4ffc-47f8-4903-9116-1a0adb1c28bd", 
+    "trigger": "ui:nhood_rules",
+    "title": "Neighborhood Rules",
+    "category": "Neighborhoods",
+    "image": "hint_neigh_rules.png",
+    "body": "Neighborhood features have publically visible content and effects, which may include content submitted by users (eg. bulletin posts, ratings, campaign messages). Normally we allow properties to manage their own moderation through the admit/ban features and ignore list, but these are privately owned. Therefore, we have a few extra rules you must follow when using neighborhood related gameplay features: \n\n[s][color=red]- NO HARASSMENT:[/color][/s] Do not single out or harass any single user, in the related neighborhood or not.\n[s][color=red]- NO SPAMMING:[/color][/s] The bulletin board system operates on community trust - spamming posts about the same topic will just make the board useless for everyone else. If you are hosting an event, you should only be posting up to two posts about it, an announcement and a reminder. (can have more if you are announcing months in advance, be sensible though)\n[s][color=red]- NO ELECTION BRIBERY:[/color][/s] Do not bribe users to vote for you in exchange for money, objects or any other benefits. Example: promising payouts at your lot upon winning. Campaigns should be on what you will do with the town hall, Mayor bulletin section and your personality.\n\nFailure to follow these rules may get you temporarily banned from neighborhood gameplay... However, following them will make the game much more fun for everyone! More up to date information can be found at http://freeso.org/nhoodrules ."
+}

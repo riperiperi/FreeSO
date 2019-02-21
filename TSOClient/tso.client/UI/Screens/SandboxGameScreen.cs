@@ -187,19 +187,6 @@ namespace FSO.Client.UI.Screens
                 };
                 Add(TS1NeighPanel);
             }
-
-            GameThread.NextUpdate(x =>
-            {
-                var alert = GlobalShowAlert(new Controls.UIAlertOptions()
-                {
-                    Width = 600,
-                    Title = "Vote for your Mayor!",
-                    Message = "The nominations are in; this ballot shows the top nominated candidates for your neighborhood. It's up to you to decide which one should be your Mayor, " +
-                    "based on their plans, ratings from past terms and your personal experience with them! \n\nChoose carefully, as your vote cannot be changed once cast. NOTE: You can only vote " +
-                    "in each election once - across your 3 sims AND related (same household) accounts.\n\n\n\n\n\n\n\n\n\n"
-                }, false);
-                alert.Opacity = 1;
-            });
         }
 
         public override void GameResized()
@@ -540,7 +527,7 @@ namespace FSO.Client.UI.Screens
                 });
                 vm.ForwardCommand(new VMNetTuningCmd { Tuning = experimentalTuning });
 
-                vm.TSOState.PropertyCategory = 11;
+                vm.TSOState.PropertyCategory = 255; //11 is community
                 vm.TSOState.ActivateValidator(vm);
                 vm.Context.Clock.Hours = 0;
                 vm.TSOState.Size = (10) | (3 << 8);

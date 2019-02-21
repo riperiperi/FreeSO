@@ -15,6 +15,7 @@ using FSO.SimAntics.Utils;
 using FSO.SimAntics.Marshals;
 using FSO.SimAntics.NetPlay.Model;
 using FSO.Content;
+using FSO.Common.Rendering;
 
 namespace FSO.SimAntics
 {
@@ -70,24 +71,6 @@ namespace FSO.SimAntics
         private bool TerrainDirty;
 
         private bool Redraw;
-
-        private Color[] m_TimeColors = new Color[]
-        {
-            new Color(50, 70, 122)*1.25f,
-            new Color(50, 70, 122)*1.25f,
-            new Color(55, 75, 111)*1.25f,
-            new Color(70, 70, 70)*1.25f,
-            new Color(217, 109, 50), //sunrise
-            new Color(255, 255, 255),
-            new Color(255, 255, 255), //peak
-            new Color(255, 255, 255), //peak
-            new Color(255, 255, 255),
-            new Color(255, 255, 255),
-            new Color(217, 109, 50), //sunset
-            new Color(70, 70, 70)*1.25f,
-            new Color(55, 75, 111)*1.25f,
-            new Color(50, 70, 122)*1.25f,
-        };
 
         private float[] m_SkyColors = new float[]
         {
@@ -196,10 +179,7 @@ namespace FSO.SimAntics
         {
             if (VM.UseWorld)
             {
-                Color col1 = m_TimeColors[(int)Math.Floor(time * (m_TimeColors.Length - 1))]; //first colour
-                Color col2 = m_TimeColors[(int)Math.Floor(time * (m_TimeColors.Length - 1)) + 1]; //second colour
-                double Progress = (time * (m_TimeColors.Length - 1)) % 1; //interpolation progress (mod 1)
-                WorldUI.OutsideColor = PowColor(Color.Lerp(col1, col2, (float)Progress), 2.2f); //linearly interpolate between the two colours for this specific time.
+                WorldUI.OutsideColor = TimeOfDayConfig.ColorFromTime(time);
                 if (WorldUI.OutsideWeatherTintP > 0)
                 {
                     //tint the outside colour, usually with some darkening effect.
@@ -210,6 +190,7 @@ namespace FSO.SimAntics
                 }
                 WorldUI.OutsideTime = time;
 
+                double Progress = (time * (m_SkyColors.Length - 1)) % 1; //interpolation progress (mod 1)
                 var sky1 = m_SkyColors[(int)Math.Floor(time * (m_SkyColors.Length - 1))]; //first colour
                 var sky2 = m_SkyColors[(int)Math.Floor(time * (m_SkyColors.Length - 1)) + 1]; //second colour
                 if (sky1 == 1f && sky2 == 0f) Progress = 0;

@@ -34,6 +34,7 @@ using FSO.LotView.Model;
 using FSO.Files.RC;
 using FSO.Common.Rendering.Framework.IO;
 using FSO.Client.UI.Panels;
+using FSO.Common.Rendering;
 
 namespace FSO.Client.Rendering.City
 {
@@ -156,23 +157,6 @@ namespace FSO.Client.Rendering.City
 
         private float DayOffset = 0.25f;
         private float DayDuration = 0.60f;
-        private Color[] m_TimeColors = new Color[]
-        {
-            new Color(50, 70, 122)*1.25f,
-            new Color(50, 70, 122)*1.25f,
-            new Color(55, 75, 111)*1.25f,
-            new Color(70, 70, 70)*1.25f,
-            new Color(217, 109, 50), //sunrise
-            new Color(255, 255, 255),
-            new Color(255, 255, 255), //peak
-            new Color(255, 255, 255), //peak
-            new Color(255, 255, 255),
-            new Color(255, 255, 255),
-            new Color(217, 109, 50), //sunset
-            new Color(70, 70, 70)*1.25f,
-            new Color(55, 75, 111)*1.25f,
-            new Color(50, 70, 122)*1.25f,
-        };
 
         private SpriteBatch m_Batch;
         private RenderTarget2D ShadowTarget;
@@ -1202,11 +1186,8 @@ namespace FSO.Client.Rendering.City
         {
             time = Math.Min(0.999999999, time);
             Time = (float)time;
-            Color col1 = m_TimeColors[(int)Math.Floor(time * (m_TimeColors.Length - 1))]; //first colour
-            Color col2 = m_TimeColors[(int)Math.Floor(time * (m_TimeColors.Length - 1))+1]; //second colour
-            double Progress = (time * (m_TimeColors.Length - 1)) % 1; //interpolation progress (mod 1)
+            m_TintColor = TimeOfDayConfig.ColorFromTime(time);
 
-            m_TintColor = PowColor(Color.Lerp(col1, col2, (float)Progress), 2.2f); //linearly interpolate between the two colours for this specific time.
             if (Weather.Darken > 0)
             {
                 //tint the outside colour, usually with some darkening effect.
@@ -1215,7 +1196,6 @@ namespace FSO.Client.Rendering.City
                         Weather.OutsideWeatherTint.ToVector4()
                         );
             }
-
 
             m_LightPosition = new Vector3(0, 0, -263);
             Matrix Transform = Matrix.Identity;
