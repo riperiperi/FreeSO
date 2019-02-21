@@ -32,7 +32,7 @@ namespace FSO.Server.Api.Core
                 .UseUrls(args[0])
                 .ConfigureLogging(x =>
                 {
-                    x.SetMinimumLevel(LogLevel.Error);
+                    x.SetMinimumLevel(LogLevel.Critical);
                 })
                 .SuppressStatusMessages(true)
                 .UseStartup<Startup>();
