@@ -47,7 +47,7 @@ namespace FSO.LotView.LMap
         public LightData(Vector2 pos, bool outdoors, int size, ushort room, sbyte level, Color color, Components.ObjectComponent comp)
             : this(pos, outdoors, size, room, level, color)
         {
-            if (comp != null)
+            if (comp != null && Common.Utils.GameThread.IsInGameThread())
             {
                 var bounds = comp.GetParticleBounds();
                 var mid = (bounds.Min + bounds.Max) / 2;

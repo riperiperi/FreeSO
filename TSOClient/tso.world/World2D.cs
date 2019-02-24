@@ -67,8 +67,7 @@ namespace FSO.LotView
 
 
         public static readonly int SCROLL_BUFFER = 512; //resolution to add to render size for scroll reasons
-
-
+        
         protected Blueprint Blueprint;
         private Dictionary<WorldComponent, WorldObjectRenderInfo> RenderInfo = new Dictionary<WorldComponent, WorldObjectRenderInfo>();
 
@@ -79,6 +78,7 @@ namespace FSO.LotView
         private List<_2DDrawBuffer> StaticWallCache = new List<_2DDrawBuffer>();
         private ScrollBuffer StaticFloor;
         private ScrollBuffer StaticWall;
+        private int LastSubLightUpdate = 0; //rotate through subworlds to update shadows periodically.
 
         protected int TicksSinceLight = 0;
 
@@ -460,6 +460,12 @@ namespace FSO.LotView
                             state.AmbientLight.SetData(Blueprint.RoomColors);
                         }
                         state.Light?.InvalidateOutdoors();
+
+                        if (Blueprint.SubWorlds.Count > 0)
+                        {
+                            Blueprint.SubWorlds[LastSubLightUpdate].RefreshLighting();
+                            LastSubLightUpdate = (LastSubLightUpdate + 1) % Blueprint.SubWorlds.Count;
+                        }
 
                         TicksSinceLight = 0;
                         break;

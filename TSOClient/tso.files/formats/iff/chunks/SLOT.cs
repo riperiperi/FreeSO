@@ -87,7 +87,7 @@ namespace FSO.Files.Formats.IFF.Chunks
                         item.MinProximity = minproximity;
                         item.MaxProximity = maxproximity;
                         item.OptimalProximity = optimalproximity;
-                        item.I9 = i9;
+                        item.MaxSize = i9;
                         item.I10 = i10;
                     }
 
@@ -141,7 +141,7 @@ namespace FSO.Files.Formats.IFF.Chunks
                     io.WriteInt32(slot.MinProximity);
                     io.WriteInt32(slot.MaxProximity);
                     io.WriteInt32(slot.OptimalProximity);
-                    io.WriteInt32(slot.I9);
+                    io.WriteInt32(slot.MaxSize);
                     io.WriteInt32(slot.I10);
 
                     io.WriteFloat(slot.Gradient);
@@ -195,7 +195,7 @@ namespace FSO.Files.Formats.IFF.Chunks
         public int MinProximity { get; set; }
         public int MaxProximity { get; set; } = 0;
         public int OptimalProximity { get; set; } = 0;
-        public int I9;
+        public int MaxSize { get; set; } = 100;
         public int I10;
         public float Gradient { get; set; }
         public SLOTFacing Facing { get; set; } = SLOTFacing.FaceTowardsObject;

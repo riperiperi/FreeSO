@@ -77,6 +77,7 @@ namespace FSO.Server
                 {
                     Console.WriteLine(existing.Count + " neighborhoods are already present in this shard.");
 
+                    /*
                     foreach (var datan in data)
                     {
                         //assume guid of closest nhood
@@ -84,7 +85,7 @@ namespace FSO.Server
                         datan.GUID = nhood2.guid;
                     }
 
-                    /*
+                    
                     foreach (var nhood in existing)
                     {
                         var nhood2 = data.FirstOrDefault(x => x.Name == nhood.name);

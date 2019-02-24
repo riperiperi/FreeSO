@@ -21,10 +21,12 @@ float3 WorldToLightFactor;
 float2 LightOffset;
 float2 MapLayout;
 float Level;
+
+float3 LightingAdjust; //should default to 1s. Used to adjust slow updating surround lighting to match main lighting.
 //END LIGHTING
 
 float4 lightColor(float4 intensities) {
-	return float4(intensities.rgb, 1);
+	return float4(intensities.rgb * LightingAdjust, 1);
 }
 
 float4 lightColorFloor(float4 intensities) {
@@ -35,7 +37,7 @@ float4 lightColorFloor(float4 intensities) {
 
 	float fshad = intensities.a / avg;
 
-	return lerp(OutsideDark, float4(intensities.rgb, 1), (fshad - MinAvg.x) * MinAvg.y);
+	return lerp(OutsideDark, float4(intensities.rgb * LightingAdjust, 1), (fshad - MinAvg.x) * MinAvg.y);
 }
 
 float4 lightColorIAvg(float4 intensities, float i, float avg) {
@@ -43,7 +45,7 @@ float4 lightColorIAvg(float4 intensities, float i, float avg) {
 	float fshad = intensities.a / avg;
 	fshad = lerp(fshad, 1, i);
 
-	return lerp(OutsideDark, float4(intensities.rgb, 1), (fshad - MinAvg.x) * MinAvg.y);
+	return lerp(OutsideDark, float4(intensities.rgb * LightingAdjust, 1), (fshad - MinAvg.x) * MinAvg.y);
 }
 
 float4 lightColorI(float4 intensities, float i) {
@@ -54,7 +56,7 @@ float4 lightColorI(float4 intensities, float i) {
 	float fshad = intensities.a / avg;
 	fshad = lerp(fshad, 1, i);
 
-	return lerp(OutsideDark, float4(intensities.rgb, 1), (fshad - MinAvg.x) * MinAvg.y);
+	return lerp(OutsideDark, float4(intensities.rgb * LightingAdjust, 1), (fshad - MinAvg.x) * MinAvg.y);
 }
 
 float4 lightProcessLevel(float4 inPosition, float level) {

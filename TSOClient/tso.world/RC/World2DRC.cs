@@ -26,6 +26,7 @@ namespace FSO.LotView.RC
         public RenderTarget2D LotThumbTarget;
         public RenderTarget2D ObjThumbTarget;
         public double LastTimeOfDay = -99999;
+        private int LastSubLightUpdate = 0; //rotate through subworlds to update shadows periodically.
 
         public override void PreDraw(GraphicsDevice gd, WorldState state)
         {
@@ -111,6 +112,12 @@ namespace FSO.LotView.RC
                             state.AmbientLight.SetData(Blueprint.RoomColors);
                         }
                         state.Light?.InvalidateOutdoors();
+
+                        if (Blueprint.SubWorlds.Count > 0)
+                        {
+                            Blueprint.SubWorlds[LastSubLightUpdate].RefreshLighting();
+                            LastSubLightUpdate = (LastSubLightUpdate + 1) % Blueprint.SubWorlds.Count;
+                        }
 
                         TicksSinceLight = 0;
                         break;

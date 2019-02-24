@@ -43,10 +43,11 @@ namespace FSO.Server.Api.Core
             {
                 app.UseHsts();
             }
-
             app.UseCors(x =>
             {
-                x.AllowAnyOrigin().AllowAnyMethod().AllowAnyHeader().AllowCredentials().WithExposedHeaders("content-disposition");
+                x
+                .AllowAnyOrigin().AllowAnyMethod().AllowAnyHeader().AllowCredentials().WithExposedHeaders("content-disposition");
+                //TODO: limit credentials passing to only trusted URLs.
             });
             //app.UseHttpsRedirection();
             app.UseMvc();

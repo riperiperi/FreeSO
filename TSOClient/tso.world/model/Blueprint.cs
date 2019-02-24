@@ -200,6 +200,36 @@ namespace FSO.LotView.Model
             effect.Parameters["MinAvg"]?.SetValue(minAvg);
         }
 
+        public sbyte GetFloorsUsed()
+        {
+            sbyte bestResult = 1;
+            for (sbyte i=1; i<Stories; i++)
+            {
+                var hasAnything = false;
+                foreach (var floor in Floors[i])
+                {
+                    if (floor.Pattern != 0)
+                    {
+                        hasAnything = true;
+                        break;
+                    }
+                }
+                if (!hasAnything)
+                {
+                    foreach (var wall in Walls[i])
+                    {
+                        if (wall.Segments != 0)
+                        {
+                            hasAnything = true;
+                            break;
+                        }
+                    }
+                }
+                if (hasAnything) bestResult = (sbyte)(i + 1);
+            }
+            return bestResult;
+        }
+
         public void GenerateRoomLights()
         {
             var minOut = MinOut;

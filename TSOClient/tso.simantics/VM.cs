@@ -875,6 +875,7 @@ namespace FSO.SimAntics
         public void LoadComplete()
         {
             FSOVAsyncLoading = false;
+            Context.RefreshAllLighting(); //height of some objects not loaded during async load - must regenerate lighting for the rooms.
             if (FSOVClientJoin)
             {
                 //run clientJoin functions to play object sounds, update some gfx.

@@ -29,6 +29,11 @@ namespace MSDFData
             {
                 this.Glyphs.Add(glyph.Character, glyph);
             }
+            FieldGlyph space;
+            if (this.Glyphs.TryGetValue(' ', out space))
+            {
+                this.Glyphs['\u00A0'] = space;
+            }
         }
 
         /// <summary>

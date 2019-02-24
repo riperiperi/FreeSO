@@ -76,7 +76,8 @@ namespace FSO.SimAntics.Primitives
                             (dirSnap) ? locations[0].RadianDirection : avatar.RadianDirection,
                             operand.Shoo, context.VM.Context))
                         {
-                            if (dirSnap) avatar.RadianDirection = locations[0].RadianDirection; //set direction regardless
+                            //set direction regardless. TS1, experimental, breaks chairs snapping onto avatars. if this were correct, it also needs to be in the false branch.
+                            //if (dirSnap) avatar.RadianDirection = locations[0].RadianDirection; 
                             return VMPrimitiveExitCode.GOTO_FALSE;
                         }
                     }

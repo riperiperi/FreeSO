@@ -185,7 +185,13 @@ namespace FSO.LotView.RC
             State.OutsideColor = Blueprint.OutsideColor;
             FSO.Common.Rendering.Framework.GameScreen.ClearColor = new Color(State.OutsideColor.ToVector4()); //new Color(0x72, 0x72, 0x72).ToVector4() * 
 
-            foreach (var sub in Blueprint.SubWorlds) sub.PreDraw(device, State);
+            var frustrum = new BoundingFrustum(State.Camera.View * State.Camera.Projection);
+            foreach (var sub in Blueprint.SubWorlds)
+            {
+                var bounds = ((SubWorldComponentRC)sub).Bounds;
+                if (bounds.Intersects(frustrum))
+                    sub.PreDraw(device, State);
+            }
             if (Blueprint != null)
             {
                 foreach (var ent in Blueprint.Objects)

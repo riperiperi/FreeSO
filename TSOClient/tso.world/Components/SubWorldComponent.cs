@@ -1,5 +1,7 @@
-﻿using FSO.Common.Rendering.Framework;
+﻿using FSO.Common;
+using FSO.Common.Rendering.Framework;
 using FSO.Common.Utils;
+using FSO.LotView.LMap;
 using FSO.LotView.Model;
 using FSO.LotView.Utils;
 using Microsoft.Xna.Framework;
@@ -27,7 +29,7 @@ namespace FSO.LotView.Components
 
         private List<_2DDrawBuffer> StaticObjectsCache = new List<_2DDrawBuffer>();
         private List<_2DDrawBuffer> StaticArchCache = new List<_2DDrawBuffer>();
-        private int TicksSinceLight = 0;
+        protected sbyte FloorsUsed = 1;
 
         /// <summary>
         /// Setup anything that needs a GraphicsDevice
@@ -45,6 +47,8 @@ namespace FSO.LotView.Components
             {
                 State.AmbientLight = new Texture2D(device, 256, 256);
                 State.OutsidePx = new Texture2D(device, 1, 1);
+
+                ChangedWorldConfig(device);
             });
 
             HasInitGPU = true;
@@ -56,6 +60,16 @@ namespace FSO.LotView.Components
             this.Blueprint = blueprint;
             HasInitBlueprint = true;
             HasInit = HasInitGPU & HasInitBlueprint;
+
+            Light?.Init(Blueprint);
+            State.Rooms.Init(blueprint);
+            Blueprint.Damage.Add(new BlueprintDamage(BlueprintDamageType.ROOM_CHANGED));
+            Blueprint.Damage.Add(new BlueprintDamage(BlueprintDamageType.OUTDOORS_LIGHTING_CHANGED));
+        }
+
+        public void CalculateFloorsUsed()
+        {
+            FloorsUsed = (sbyte)(Blueprint.GetFloorsUsed() + 1);
         }
 
         /// <summary>
@@ -74,6 +88,8 @@ namespace FSO.LotView.Components
             state.SilentLevel = State.Level;
             state.SilentBuildMode = 0;
 
+            int lightChangeType = 0;
+
             /**
              * This is a little bit different from a normal 2d world. All objects are part of the static 
              * buffer, and they are redrawn into the parent world's scroll buffers.
@@ -81,8 +97,9 @@ namespace FSO.LotView.Components
 
             var recacheWalls = false;
             var recacheObjects = false;
+            var updateColor = false;
 
-            if (TicksSinceLight++ > 60 * 4) damage.Add(new BlueprintDamage(BlueprintDamageType.OUTDOORS_LIGHTING_CHANGED));
+            Blueprint.OutsideTime = state.Light?.Blueprint?.OutsideTime ?? 0.5f;
 
             foreach (var item in damage)
             {
@@ -96,14 +113,6 @@ namespace FSO.LotView.Components
                         break;
                     case BlueprintDamageType.SCROLL:
                         break;
-                    case BlueprintDamageType.LIGHTING_CHANGED:
-                        Blueprint.OutsideColor = state.OutsideColor;
-                        Blueprint.GenerateRoomLights();
-                        State.OutsideColor = Blueprint.RoomColors[1];
-                        State.OutsidePx.SetData(new Color[] { state.OutsideColor });
-                        State.AmbientLight.SetData(Blueprint.RoomColors);
-                        TicksSinceLight = 0;
-                        break;
                     case BlueprintDamageType.OBJECT_MOVE:
                     case BlueprintDamageType.OBJECT_GRAPHIC_CHANGE:
                     case BlueprintDamageType.OBJECT_RETURN_TO_STATIC:
@@ -114,9 +123,54 @@ namespace FSO.LotView.Components
                     case BlueprintDamageType.WALL_CHANGED:
                         recacheWalls = true;
                         break;
+
+                    case BlueprintDamageType.LIGHTING_CHANGED:
+                        if (lightChangeType >= 2) break;
+                        var room = (ushort)item.TileX;
+
+                        State.Light?.InvalidateRoom(room);
+                        updateColor = true;
+                        //TicksSinceLight = 0;
+                        break;
+                    case BlueprintDamageType.OUTDOORS_LIGHTING_CHANGED:
+                        if (lightChangeType >= 1) break;
+                        lightChangeType = 1;
+
+                        updateColor = true;
+                        State.Light?.BuildOutdoorsLight(Blueprint.OutsideTime);
+                        State.Light?.InvalidateOutdoors();
+
+                        //TicksSinceLight = 0;
+                        break;
+                    case BlueprintDamageType.ROOM_CHANGED:
+                        for (sbyte i = 0; i < Blueprint.RoomMap.Length; i++)
+                        {
+                            State.Rooms.SetRoomMap(i, Blueprint.RoomMap[i]);
+                        }
+                        if (State.Light != null)
+                        {
+                            if (lightChangeType < 2)
+                            {
+                                lightChangeType = 2;
+                                State.Light?.BuildOutdoorsLight(Blueprint.OutsideTime);
+                                updateColor = true;
+                                State.Light.InvalidateAll();
+                            }
+                        }
+                        Blueprint.Indoors = null;
+                        Blueprint.RoofComp.ShapeDirty = true;
+                        break;
                 }
             }
             damage.Clear();
+
+            if (updateColor)
+            {
+                State.OutsideColor = state.OutsideColor;
+                Blueprint.OutsideColor = state.OutsideColor;
+            }
+            State.LightingAdjust = state.OutsideColor.ToVector3() / State.OutsideColor.ToVector3();
+            State.Light?.ParseInvalidated(FloorsUsed, State);
 
             var is2d = state.Camera is WorldCamera;
             if (is2d) {
@@ -164,7 +218,14 @@ namespace FSO.LotView.Components
 
             var pxOffset = -parentState.WorldSpace.GetScreenOffset();
 
-            parentState.ClearLighting(true);
+            if (State.Light != null)
+            {
+                State.PrepareLighting();
+            }
+            else
+            {
+                parentState.ClearLighting(true);
+            }
 
             parentState._2D.SetScroll(pxOffset);
             var level = parentState.SilentLevel;
@@ -189,7 +250,14 @@ namespace FSO.LotView.Components
             var parentScroll = parentState.CenterTile;
             parentState.CenterTile += GlobalPosition; //TODO: vertical offset
 
-            parentState.ClearLighting(true);
+            if (State.Light != null)
+            {
+                State.PrepareLighting();
+            }
+            else
+            {
+                parentState.ClearLighting(true);
+            }
             var pxOffset = -parentState.WorldSpace.GetScreenOffset();
 
             parentState._2D.SetScroll(pxOffset);
@@ -197,6 +265,62 @@ namespace FSO.LotView.Components
 
             parentState.CenterTile = parentScroll;
             parentState.PrepareLighting();
+        }
+
+        public void RefreshLighting()
+        {
+            Blueprint.Damage.Add(new BlueprintDamage(BlueprintDamageType.OUTDOORS_LIGHTING_CHANGED));
+        }
+
+        public override void ChangedWorldConfig(GraphicsDevice gd)
+        {
+            //destroy any features that are no longer enabled.
+
+            var config = WorldConfig.Current;
+            if (config.AdvancedLighting && config.Complex)
+            {
+                State.AmbientLight?.Dispose();
+                State.AmbientLight = null;
+                Light?.Dispose();
+                Light = null;
+                if (Light == null)
+                {
+                    Light = new LMapBatch(gd, 6);
+                    if (Blueprint != null)
+                    {
+                        Light?.Init(Blueprint);
+                        Blueprint.Damage.Add(new BlueprintDamage(BlueprintDamageType.ROOM_CHANGED));
+                        Blueprint.Damage.Add(new BlueprintDamage(BlueprintDamageType.OUTDOORS_LIGHTING_CHANGED));
+                    }
+                    State.Light = Light;
+                }
+            }
+            else
+            {
+                Light?.Dispose();
+                Light = null;
+                State.Light = null;
+            }
+
+            if (Blueprint != null && !FSOEnvironment.Enable3D)
+            {
+                var shad3D = (Blueprint.WCRC != null);
+                if (config.Shadow3D != shad3D)
+                {
+                    if (Light != null && config.Shadow3D)
+                    {
+                        Blueprint.WCRC = new RC.WallComponentRC();
+                        Blueprint.WCRC.blueprint = Blueprint;
+                        Blueprint.WCRC.Generate(gd, State, false);
+                    }
+                    else
+                    {
+                        Blueprint.WCRC?.Dispose();
+                        Blueprint.WCRC = null;
+                    }
+                    Blueprint.Damage.Add(new BlueprintDamage(BlueprintDamageType.OUTDOORS_LIGHTING_CHANGED));
+                }
+            }
         }
 
         public override void Dispose()

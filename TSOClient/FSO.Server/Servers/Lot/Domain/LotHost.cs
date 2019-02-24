@@ -304,7 +304,7 @@ namespace FSO.Server.Servers.Lot.Domain
                             ClaimId = claimId,
                             ShardId = lot.shard_id,
                             Action = openAction,
-                            HighMax = lot.admit_mode > 4
+                            HighMax = lot.admit_mode > 4 || lot.category == FSO.Common.Enum.LotCategory.community
                         });
                         LOG.Info("Bootstrapped lot with dbid = " + lotId + "!");
                         return true;
@@ -575,7 +575,7 @@ namespace FSO.Server.Servers.Lot.Domain
             if (Container.IsAvatarOnLot(session.AvatarId)) return false; //already on the lot.
             lock (_Visitors)
             {
-                if (ShuttingDown || (_Visitors.Count >= ((Context.HighMax)?256:24)))
+                if (ShuttingDown || (_Visitors.Count >= ((Context.HighMax)?128:24)))
                 {
                     if (ShuttingDown) return false; //cannot join
 

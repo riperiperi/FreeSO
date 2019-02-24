@@ -56,7 +56,7 @@ namespace FSO.LotView
         protected WorldCamera WorldCamera;
 
         /// <summary>
-        /// Gets the camera used by this WorldState instance.
+        /// Gets the camera used by this WorldState instance.s
         /// </summary>
         public virtual ICamera Camera 
         {
@@ -74,6 +74,7 @@ namespace FSO.LotView
         public Color OutsideColor; //temporary to give this to terrain component. in future it will use ambient light texture
         public bool DynamicCutaway;
         public float SimSpeed = 1f;
+        public Vector3 LightingAdjust = Vector3.One;
 
         public bool ThisFrameImmediate;
 
@@ -307,6 +308,12 @@ namespace FSO.LotView
             WorldContent.RCObject.Parameters["LightOffset"].SetValue(lightOffset);
             WorldContent.ParticleEffect.Parameters["LightOffset"].SetValue(lightOffset);
 
+            WorldContent._2DWorldBatchEffect.Parameters["LightingAdjust"].SetValue(LightingAdjust);
+            WorldContent.GrassEffect.Parameters["LightingAdjust"].SetValue(LightingAdjust);
+            Avatar.Effect.Parameters["LightingAdjust"].SetValue(LightingAdjust);
+            WorldContent.RCObject.Parameters["LightingAdjust"].SetValue(LightingAdjust);
+            WorldContent.ParticleEffect.Parameters["LightingAdjust"].SetValue(LightingAdjust);
+
             WorldContent._2DWorldBatchEffect.Parameters["MaxFloor"].SetValue((float)Level-0.999f);
         }
 
@@ -321,6 +328,12 @@ namespace FSO.LotView
             WorldContent.RCObject.Parameters["advancedLight"].SetValue(adv);
             WorldContent._2DWorldBatchEffect.Parameters["ambientLight"].SetValue(amb);
             Avatar.Effect.Parameters["advancedLight"].SetValue(adv);
+
+            WorldContent._2DWorldBatchEffect.Parameters["LightingAdjust"].SetValue(LightingAdjust);
+            WorldContent.GrassEffect.Parameters["LightingAdjust"].SetValue(LightingAdjust);
+            Avatar.Effect.Parameters["LightingAdjust"].SetValue(LightingAdjust);
+            WorldContent.RCObject.Parameters["LightingAdjust"].SetValue(LightingAdjust);
+            WorldContent.ParticleEffect.Parameters["LightingAdjust"].SetValue(LightingAdjust);
         }
     }
 

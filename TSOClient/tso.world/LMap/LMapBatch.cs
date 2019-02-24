@@ -22,11 +22,15 @@ namespace FSO.LotView.LMap
 {
     public class LMapBatch : IDisposable
     {
+        int targetResPerTile = 16;
         int resPerTile = 16;
         int borderSize = 1;
 
         public RenderTarget2D ShadowTarg;
         public RenderTarget2D ObjShadowTarg;
+
+        public int ShadowTargQualityDivider = 1;
+        public int LastShadowTargQualityDivider = 1;
         public RenderTarget2D OutsideShadowTarg;
         public RenderTarget2D OutsideShadowTargPost;
         private SpriteBatch ShadowTargBlit;
@@ -93,6 +97,8 @@ namespace FSO.LotView.LMap
         public LMapBatch(GraphicsDevice device, int res)
         {
             GD = device;
+            targetResPerTile = res;
+
             this.GradEffect = WorldContent.Grad2DEffect;
             this.LightEffect = WorldContent.Light2DEffect;
 
@@ -151,7 +157,7 @@ namespace FSO.LotView.LMap
 
             if (w > 64 && FSOEnvironment.SoftwareDepth) ultra = false;
 
-            resPerTile = ultra?16:8;
+            resPerTile = ultra ? targetResPerTile : targetResPerTile/2;
 
             var wl = resPerTile * (w - borderSize);
             var wh = resPerTile * (h - borderSize);
@@ -245,7 +251,7 @@ namespace FSO.LotView.LMap
             SetMapLayout(3, 2);
             if (floorLimit > RedrawFloor)
             {
-                RedrawAll(state);
+                RedrawAll(state, 6);
                 RedrawFloor = 6;
             }
 
@@ -281,7 +287,7 @@ namespace FSO.LotView.LMap
             RedrawFloor = 0;
         }
 
-        public void RedrawAll(WorldState state)
+        public void RedrawAll(WorldState state, int floorLimit)
         {
             OutShadowFloor = -1;
             DirtyRooms.Clear();
@@ -302,7 +308,7 @@ namespace FSO.LotView.LMap
             for (int i = 0; i < rooms.Count; i++)
             {
                 var room = rooms[i];
-                if (room.WallLines == null) continue;
+                if (room.WallLines == null || room.Floor > floorLimit) continue;
                 if (room.Floor != floor)
                 {
                     floor = room.Floor;
@@ -721,11 +727,18 @@ namespace FSO.LotView.LMap
 
         public void CreateOutsideIfMissing()
         {
+            if (LastShadowTargQualityDivider != ShadowTargQualityDivider)
+            {
+                OutsideShadowTarg.Dispose();
+                OutsideShadowTargPost.Dispose();
+            }
             if (OutsideShadowTarg == null || OutsideShadowTarg.IsDisposed)
             {
-                OutsideShadowTarg = new RenderTarget2D(GD, ShadowTarg.Width*2, ShadowTarg.Height*2, false, SurfaceFormat.Color, DepthFormat.None, 0, RenderTargetUsage.PreserveContents);
-                OutsideShadowTargPost = new RenderTarget2D(GD, ShadowTarg.Width*2, ShadowTarg.Height*2, false, SurfaceFormat.Color, DepthFormat.None, 0, RenderTargetUsage.PreserveContents);
+                var div = ShadowTargQualityDivider;
+                OutsideShadowTarg = new RenderTarget2D(GD, (ShadowTarg.Width*2)/div, (ShadowTarg.Height*2) / div, false, SurfaceFormat.Color, DepthFormat.None, 0, RenderTargetUsage.PreserveContents);
+                OutsideShadowTargPost = new RenderTarget2D(GD, (ShadowTarg.Width*2) / div, (ShadowTarg.Height*2) / div, false, SurfaceFormat.Color, DepthFormat.None, 0, RenderTargetUsage.PreserveContents);
                 LightEffect.Parameters["SSAASize"].SetValue(new Vector2(1f / OutsideShadowTarg.Width, 1f / OutsideShadowTarg.Height));
+                LastShadowTargQualityDivider = ShadowTargQualityDivider;
             }
         }
 
@@ -791,6 +804,20 @@ namespace FSO.LotView.LMap
                     var blur = (0.2f / Blueprint.Width) * (float)Math.Pow(pointLight.FalloffMultiplier, 0.8f);
                     var height = Math.Max(pointLight.FalloffMultiplier / 1.5f, 1);
                     var harden = 0.03f * (float)Math.Sqrt(pointLight.FalloffMultiplier);
+
+                    //lower shadow target quality as blur size increases (to save on memory bandwidth)
+                    if (pointLight.FalloffMultiplier > 6)
+                    {
+                        ShadowTargQualityDivider = 4;
+                    }
+                    if (pointLight.FalloffMultiplier > 3)
+                    {
+                        ShadowTargQualityDivider = 2;
+                    }
+                    else
+                    {
+                        ShadowTargQualityDivider = 1;
+                    }
 
                     seffect.Parameters["blurAmount"].SetValue(new Vector2(blur, blur * 2 / 5f));
                     seffect.Parameters["heightMultiplier"].SetValue(new Vector2(height, height * 5 / 2f));
@@ -915,7 +942,7 @@ namespace FSO.LotView.LMap
 
         public RenderTarget2D DebugLightMap()
         {
-            RedrawAll(null);
+            RedrawAll(null, 6);
             return LightMap;
         }
 

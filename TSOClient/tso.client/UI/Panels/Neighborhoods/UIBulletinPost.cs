@@ -254,7 +254,7 @@ namespace FSO.Client.UI.Panels.Neighborhoods
                 else
                 {
                     //delete or promote
-                    if (FindController<CoreGameScreenController>()?.IsMe(LotThumbButton.LotId) ?? false)
+                    if (FindController<CoreGameScreenController>()?.IsMe(ActiveItem.SenderID) ?? false)
                     {
                         //delete
                         UIAlert.YesNo("", GameFacade.Strings.GetString("f120", "21"), true, (answer) =>

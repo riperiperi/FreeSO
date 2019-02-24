@@ -1731,20 +1731,26 @@ namespace FSO.Client.Rendering.City
                 var col = (new Vector4(m_TintColor.R / 255.0f, m_TintColor.G / 255.0f, m_TintColor.B / 255.0f, 1)) / (new Color(50, 70, 122).ToVector4() * 1.25f);// / fsof.NightLightColor.ToVector4();
                 PixelShader.Parameters["LightCol"].SetValue(col);
             }
-            
-            PixelShader.Parameters["ObjTex"].SetValue((drawNight)?fsof.NightWallTexture:fsof.WallTexture);
-            PixelShader.CurrentTechnique.Passes[passIndex].Apply();
-            gfx.SetVertexBuffer(fsof.WallVGPU);
-            gfx.Indices = fsof.WallIGPU;
 
-            gfx.DrawIndexedPrimitives(PrimitiveType.TriangleList, 0, 0, fsof.WallPrims);
+            if (fsof.WallVGPU != null)
+            {
+                PixelShader.Parameters["ObjTex"].SetValue((drawNight) ? fsof.NightWallTexture : fsof.WallTexture);
+                PixelShader.CurrentTechnique.Passes[passIndex].Apply();
+                gfx.SetVertexBuffer(fsof.WallVGPU);
+                gfx.Indices = fsof.WallIGPU;
 
-            PixelShader.Parameters["ObjTex"].SetValue((drawNight)?fsof.NightFloorTexture:fsof.FloorTexture);
-            PixelShader.CurrentTechnique.Passes[passIndex].Apply();
-            gfx.SetVertexBuffer(fsof.FloorVGPU);
-            gfx.Indices = fsof.FloorIGPU;
+                gfx.DrawIndexedPrimitives(PrimitiveType.TriangleList, 0, 0, fsof.WallPrims);
+            }
 
-            gfx.DrawIndexedPrimitives(PrimitiveType.TriangleList, 0, 0, fsof.FloorPrims);
+            if (fsof.FloorVGPU != null)
+            {
+                PixelShader.Parameters["ObjTex"].SetValue((drawNight) ? fsof.NightFloorTexture : fsof.FloorTexture);
+                PixelShader.CurrentTechnique.Passes[passIndex].Apply();
+                gfx.SetVertexBuffer(fsof.FloorVGPU);
+                gfx.Indices = fsof.FloorIGPU;
+
+                gfx.DrawIndexedPrimitives(PrimitiveType.TriangleList, 0, 0, fsof.FloorPrims);
+            }
 
             if (drawNight)
             {

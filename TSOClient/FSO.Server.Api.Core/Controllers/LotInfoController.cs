@@ -12,6 +12,7 @@ using FSO.Server.Api.Core.Utils;
 using FSO.Common.Enum;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.Extensions.Caching.Memory;
+using Microsoft.AspNetCore.Http;
 
 namespace FSO.Server.Api.Core.Controllers
 {
@@ -206,8 +207,46 @@ namespace FSO.Server.Api.Core.Controllers
 
         [HttpPost]
         [Route("userapi/city/{shardid}/uploadfacade/{id}")]
-        public HttpResponseMessage UploadFacade(int shardid, uint id)
+        public IActionResult UploadFacade(int shardid, uint id, List<IFormFile> files)
         {
+            var api = Api.INSTANCE;
+            api.DemandModerator(Request);
+
+            if (files != null)
+                return NotFound();
+
+            byte[] data = null;
+            foreach (var file in files)
+            {
+                var filename = file.FileName.Trim('\"');
+                using (var memoryStream = new MemoryStream())
+                {
+                    file.CopyTo(memoryStream);
+                    data = memoryStream.ToArray();
+                }
+            }
+
+            if (data == null) return NotFound();
+
+            using (var da = api.DAFactory.Get())
+            {
+                var lot = da.Lots.GetByLocation(shardid, id);
+                if (lot == null) return NotFound();
+
+                FileStream stream;
+                try
+                {
+                    var path = Path.Combine(api.Config.NFSdir, "Lots/" + lot.lot_id.ToString("x8") + "/thumb.fsof");
+                    stream = System.IO.File.Open(path, FileMode.Create, FileAccess.Write, FileShare.Write);
+                    stream.Write(data, 0, data.Length);
+                    return Ok();
+                }
+                catch (Exception e)
+                {
+                    return NotFound();
+                }
+            }
+
             /*
             var api = Api.INSTANCE;
             api.DemandModerator(Request);
@@ -249,7 +288,6 @@ namespace FSO.Server.Api.Core.Controllers
                 }
             }
             */
-            return new HttpResponseMessage(HttpStatusCode.NotFound);
         }
     }
 

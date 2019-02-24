@@ -797,7 +797,7 @@ namespace FSO.LotView
                 Light = null;
                 if (Light == null)
                 {
-                    Light = new LMapBatch(gd, 8);
+                    Light = new LMapBatch(gd, 16);
                     if (Blueprint != null)
                     {
                         Light?.Init(Blueprint);

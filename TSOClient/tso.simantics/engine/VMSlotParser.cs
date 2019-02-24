@@ -102,8 +102,10 @@ namespace FSO.SimAntics.Engine
                 center /= objs.Count;
             } else center = new Vector2(obj.Position.x/16f, obj.Position.y/16f);
 
+            var onPoint = ((int)Flags & 255) == 0 || Slot.Offset != new Vector3(); //
+
             //add offset of slot if it exists. must be rotated to be relative to object
-            var dir = ((Flags & SLOTFlags.Absolute) > 0) ? 0 : obj.RadianDirection;
+            var dir = ((Flags & SLOTFlags.Absolute) > 0 && !onPoint) ? 0 : obj.RadianDirection;
             var rotOff = Vector3.Transform(Slot.Offset, Matrix.CreateRotationZ(dir));
             var circleCtr = new Vector2(center.X + rotOff.X / 16, center.Y + rotOff.Y / 16);
 
@@ -134,7 +136,7 @@ namespace FSO.SimAntics.Engine
             }
             else
             {
-                if (((int)Flags & 255) == 0 || Slot.Offset != new Vector3())
+                if (onPoint)
                 {
                     //exact position
                     //Flags |= (SLOTFlags)255;

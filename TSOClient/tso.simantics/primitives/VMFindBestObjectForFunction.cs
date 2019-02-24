@@ -80,6 +80,7 @@ namespace FSO.SimAntics.Engine.Primitives
 
             int bestScore = int.MinValue;
             VMEntity bestObj = null;
+            var funcVar = ScoreVar[operand.Function];
 
             var entry = FunctionToEntryPoint[operand.Function];
             for (int i=0; i<entities.Count; i++) {
@@ -88,7 +89,10 @@ namespace FSO.SimAntics.Engine.Primitives
                 if (ent.GetValue(VMStackObjectVariable.LockoutCount) > 0
                     || (ent is VMGameObject && ((VMGameObject)ent).Disabled > 0)
                     || ent.Position == LotTilePos.OUT_OF_WORLD
-                    || (!context.VM.TS1 && ((ent.TSOState as VMTSOObjectState)?.Broken ?? false))) continue; //this object is not important!!!
+                    || (!context.VM.TS1 && funcVar != VMStackObjectVariable.RepairState && ((ent.MultitileGroup.BaseObject.TSOState as VMTSOObjectState)?.Broken ?? false)))
+                {
+                    continue; //this object is not important!!!
+                }
 
                 if (ent.EntryPoints[entry].ActionFunction != 0) {
                     bool Execute;
@@ -123,14 +127,14 @@ namespace FSO.SimAntics.Engine.Primitives
                         //calculate the score for this object.
                         int score = 0;
                         if (ScoreVar[operand.Function] != VMStackObjectVariable.Invalid) {
-                            var funcVar = ScoreVar[operand.Function];
+                            
                             score = ent.GetValue(funcVar);
                             short threshold;
                             if (context.VM.TS1 || funcVar != VMStackObjectVariable.RepairState)
                             {
                                 if (Thresholds.TryGetValue(funcVar, out threshold) && score < threshold) continue;
                             }
-                            else if (ent is VMAvatar ||     !((VMTSOObjectState)ent.TSOState).Broken) continue;
+                            else if (ent is VMAvatar || !((VMTSOObjectState)ent.MultitileGroup.BaseObject.TSOState).Broken) continue;
                         }
 
                         LotTilePos posDiff = ent.Position - context.Caller.Position;

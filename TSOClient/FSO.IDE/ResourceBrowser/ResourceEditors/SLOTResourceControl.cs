@@ -97,6 +97,7 @@ namespace FSO.IDE.ResourceBrowser.ResourceEditors
                 { MaxEntry, "MaxProximity" },
 
                 { SnapSlotEntry, "SnapTargetSlot" },
+                { MaxSizeEntry, "MaxSize" },
             };
 
             SLOTFlagEntries = new Dictionary<CheckBox, PropFlagCombo>()

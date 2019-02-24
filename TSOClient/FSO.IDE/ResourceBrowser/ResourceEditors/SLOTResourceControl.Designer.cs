@@ -71,19 +71,21 @@
             this.OffsetYEntry = new System.Windows.Forms.NumericUpDown();
             this.OffsetZEntry = new System.Windows.Forms.NumericUpDown();
             this.groupBox1 = new System.Windows.Forms.GroupBox();
-            this.AbsoluteCheck = new System.Windows.Forms.CheckBox();
-            this.IgnoreCheck = new System.Windows.Forms.CheckBox();
-            this.SnapDirCheck = new System.Windows.Forms.CheckBox();
-            this.RandomCheck = new System.Windows.Forms.CheckBox();
-            this.FailureCheck = new System.Windows.Forms.CheckBox();
-            this.MultitileCheck = new System.Windows.Forms.CheckBox();
-            this.AltsCheck = new System.Windows.Forms.CheckBox();
             this.label13 = new System.Windows.Forms.Label();
+            this.AltsCheck = new System.Windows.Forms.CheckBox();
+            this.MultitileCheck = new System.Windows.Forms.CheckBox();
+            this.FailureCheck = new System.Windows.Forms.CheckBox();
+            this.RandomCheck = new System.Windows.Forms.CheckBox();
+            this.SnapDirCheck = new System.Windows.Forms.CheckBox();
+            this.IgnoreCheck = new System.Windows.Forms.CheckBox();
+            this.AbsoluteCheck = new System.Windows.Forms.CheckBox();
             this.FacingCombo = new System.Windows.Forms.ComboBox();
             this.label12 = new System.Windows.Forms.Label();
             this.SnapSlotEntry = new System.Windows.Forms.NumericUpDown();
             this.TypeCombo = new System.Windows.Forms.ComboBox();
             this.NameBox = new System.Windows.Forms.TextBox();
+            this.MaxSizeEntry = new System.Windows.Forms.NumericUpDown();
+            this.MaxSizeLabel = new System.Windows.Forms.Label();
             ((System.ComponentModel.ISupportInitialize)(this.StandingEntry)).BeginInit();
             ((System.ComponentModel.ISupportInitialize)(this.SittingEntry)).BeginInit();
             ((System.ComponentModel.ISupportInitialize)(this.GroundEntry)).BeginInit();
@@ -97,6 +99,7 @@
             ((System.ComponentModel.ISupportInitialize)(this.OffsetZEntry)).BeginInit();
             this.groupBox1.SuspendLayout();
             ((System.ComponentModel.ISupportInitialize)(this.SnapSlotEntry)).BeginInit();
+            ((System.ComponentModel.ISupportInitialize)(this.MaxSizeEntry)).BeginInit();
             this.SuspendLayout();
             // 
             // Selector
@@ -512,65 +515,14 @@
             this.groupBox1.TabStop = false;
             this.groupBox1.Text = "Flags";
             // 
-            // AbsoluteCheck
+            // label13
             // 
-            this.AbsoluteCheck.AutoSize = true;
-            this.AbsoluteCheck.Location = new System.Drawing.Point(4, 14);
-            this.AbsoluteCheck.Name = "AbsoluteCheck";
-            this.AbsoluteCheck.Size = new System.Drawing.Size(67, 17);
-            this.AbsoluteCheck.TabIndex = 0;
-            this.AbsoluteCheck.Text = "Absolute";
-            this.AbsoluteCheck.UseVisualStyleBackColor = true;
-            // 
-            // IgnoreCheck
-            // 
-            this.IgnoreCheck.AutoSize = true;
-            this.IgnoreCheck.Location = new System.Drawing.Point(4, 30);
-            this.IgnoreCheck.Name = "IgnoreCheck";
-            this.IgnoreCheck.Size = new System.Drawing.Size(92, 17);
-            this.IgnoreCheck.TabIndex = 1;
-            this.IgnoreCheck.Text = "Ignore Rooms";
-            this.IgnoreCheck.UseVisualStyleBackColor = true;
-            // 
-            // SnapDirCheck
-            // 
-            this.SnapDirCheck.AutoSize = true;
-            this.SnapDirCheck.Location = new System.Drawing.Point(4, 46);
-            this.SnapDirCheck.Name = "SnapDirCheck";
-            this.SnapDirCheck.Size = new System.Drawing.Size(112, 17);
-            this.SnapDirCheck.TabIndex = 2;
-            this.SnapDirCheck.Text = "Snap To Direction";
-            this.SnapDirCheck.UseVisualStyleBackColor = true;
-            // 
-            // RandomCheck
-            // 
-            this.RandomCheck.AutoSize = true;
-            this.RandomCheck.Location = new System.Drawing.Point(76, 14);
-            this.RandomCheck.Name = "RandomCheck";
-            this.RandomCheck.Size = new System.Drawing.Size(105, 17);
-            this.RandomCheck.TabIndex = 3;
-            this.RandomCheck.Text = "Random Scoring";
-            this.RandomCheck.UseVisualStyleBackColor = true;
-            // 
-            // FailureCheck
-            // 
-            this.FailureCheck.AutoSize = true;
-            this.FailureCheck.Location = new System.Drawing.Point(151, 47);
-            this.FailureCheck.Name = "FailureCheck";
-            this.FailureCheck.Size = new System.Drawing.Size(57, 17);
-            this.FailureCheck.TabIndex = 4;
-            this.FailureCheck.Text = "Failure";
-            this.FailureCheck.UseVisualStyleBackColor = true;
-            // 
-            // MultitileCheck
-            // 
-            this.MultitileCheck.AutoSize = true;
-            this.MultitileCheck.Location = new System.Drawing.Point(100, 30);
-            this.MultitileCheck.Name = "MultitileCheck";
-            this.MultitileCheck.Size = new System.Drawing.Size(144, 17);
-            this.MultitileCheck.TabIndex = 5;
-            this.MultitileCheck.Text = "Multitile Average Position";
-            this.MultitileCheck.UseVisualStyleBackColor = true;
+            this.label13.AutoSize = true;
+            this.label13.Location = new System.Drawing.Point(116, 48);
+            this.label13.Name = "label13";
+            this.label13.Size = new System.Drawing.Size(35, 13);
+            this.label13.TabIndex = 59;
+            this.label13.Text = "Allow:";
             // 
             // AltsCheck
             // 
@@ -582,14 +534,65 @@
             this.AltsCheck.Text = "Alts";
             this.AltsCheck.UseVisualStyleBackColor = true;
             // 
-            // label13
+            // MultitileCheck
             // 
-            this.label13.AutoSize = true;
-            this.label13.Location = new System.Drawing.Point(116, 48);
-            this.label13.Name = "label13";
-            this.label13.Size = new System.Drawing.Size(35, 13);
-            this.label13.TabIndex = 59;
-            this.label13.Text = "Allow:";
+            this.MultitileCheck.AutoSize = true;
+            this.MultitileCheck.Location = new System.Drawing.Point(100, 30);
+            this.MultitileCheck.Name = "MultitileCheck";
+            this.MultitileCheck.Size = new System.Drawing.Size(144, 17);
+            this.MultitileCheck.TabIndex = 5;
+            this.MultitileCheck.Text = "Multitile Average Position";
+            this.MultitileCheck.UseVisualStyleBackColor = true;
+            // 
+            // FailureCheck
+            // 
+            this.FailureCheck.AutoSize = true;
+            this.FailureCheck.Location = new System.Drawing.Point(151, 47);
+            this.FailureCheck.Name = "FailureCheck";
+            this.FailureCheck.Size = new System.Drawing.Size(57, 17);
+            this.FailureCheck.TabIndex = 4;
+            this.FailureCheck.Text = "Failure";
+            this.FailureCheck.UseVisualStyleBackColor = true;
+            // 
+            // RandomCheck
+            // 
+            this.RandomCheck.AutoSize = true;
+            this.RandomCheck.Location = new System.Drawing.Point(76, 14);
+            this.RandomCheck.Name = "RandomCheck";
+            this.RandomCheck.Size = new System.Drawing.Size(105, 17);
+            this.RandomCheck.TabIndex = 3;
+            this.RandomCheck.Text = "Random Scoring";
+            this.RandomCheck.UseVisualStyleBackColor = true;
+            // 
+            // SnapDirCheck
+            // 
+            this.SnapDirCheck.AutoSize = true;
+            this.SnapDirCheck.Location = new System.Drawing.Point(4, 46);
+            this.SnapDirCheck.Name = "SnapDirCheck";
+            this.SnapDirCheck.Size = new System.Drawing.Size(112, 17);
+            this.SnapDirCheck.TabIndex = 2;
+            this.SnapDirCheck.Text = "Snap To Direction";
+            this.SnapDirCheck.UseVisualStyleBackColor = true;
+            // 
+            // IgnoreCheck
+            // 
+            this.IgnoreCheck.AutoSize = true;
+            this.IgnoreCheck.Location = new System.Drawing.Point(4, 30);
+            this.IgnoreCheck.Name = "IgnoreCheck";
+            this.IgnoreCheck.Size = new System.Drawing.Size(92, 17);
+            this.IgnoreCheck.TabIndex = 1;
+            this.IgnoreCheck.Text = "Ignore Rooms";
+            this.IgnoreCheck.UseVisualStyleBackColor = true;
+            // 
+            // AbsoluteCheck
+            // 
+            this.AbsoluteCheck.AutoSize = true;
+            this.AbsoluteCheck.Location = new System.Drawing.Point(4, 14);
+            this.AbsoluteCheck.Name = "AbsoluteCheck";
+            this.AbsoluteCheck.Size = new System.Drawing.Size(67, 17);
+            this.AbsoluteCheck.TabIndex = 0;
+            this.AbsoluteCheck.Text = "Absolute";
+            this.AbsoluteCheck.UseVisualStyleBackColor = true;
             // 
             // FacingCombo
             // 
@@ -636,10 +639,33 @@
             this.NameBox.TabIndex = 63;
             this.NameBox.TextChanged += new System.EventHandler(this.NameBox_TextChanged);
             // 
+            // MaxSizeEntry
+            // 
+            this.MaxSizeEntry.Location = new System.Drawing.Point(172, 334);
+            this.MaxSizeEntry.Maximum = new decimal(new int[] {
+            10000,
+            0,
+            0,
+            0});
+            this.MaxSizeEntry.Name = "MaxSizeEntry";
+            this.MaxSizeEntry.Size = new System.Drawing.Size(75, 20);
+            this.MaxSizeEntry.TabIndex = 64;
+            // 
+            // MaxSizeLabel
+            // 
+            this.MaxSizeLabel.AutoSize = true;
+            this.MaxSizeLabel.Location = new System.Drawing.Point(169, 317);
+            this.MaxSizeLabel.Name = "MaxSizeLabel";
+            this.MaxSizeLabel.Size = new System.Drawing.Size(53, 13);
+            this.MaxSizeLabel.TabIndex = 65;
+            this.MaxSizeLabel.Text = "Max Size:";
+            // 
             // SLOTResourceControl
             // 
             this.AutoScaleDimensions = new System.Drawing.SizeF(6F, 13F);
             this.AutoScaleMode = System.Windows.Forms.AutoScaleMode.Font;
+            this.Controls.Add(this.MaxSizeLabel);
+            this.Controls.Add(this.MaxSizeEntry);
             this.Controls.Add(this.NameBox);
             this.Controls.Add(this.TypeCombo);
             this.Controls.Add(this.SnapSlotEntry);
@@ -700,6 +726,7 @@
             this.groupBox1.ResumeLayout(false);
             this.groupBox1.PerformLayout();
             ((System.ComponentModel.ISupportInitialize)(this.SnapSlotEntry)).EndInit();
+            ((System.ComponentModel.ISupportInitialize)(this.MaxSizeEntry)).EndInit();
             this.ResumeLayout(false);
             this.PerformLayout();
 
@@ -762,5 +789,7 @@
         private System.Windows.Forms.NumericUpDown SnapSlotEntry;
         private System.Windows.Forms.ComboBox TypeCombo;
         private System.Windows.Forms.TextBox NameBox;
+        private System.Windows.Forms.NumericUpDown MaxSizeEntry;
+        private System.Windows.Forms.Label MaxSizeLabel;
     }
 }

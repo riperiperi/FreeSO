@@ -1014,6 +1014,7 @@ namespace FSO.SimAntics.Utils
                             }
 
                             tempVM.Tick();
+                            subworld.CalculateFloorsUsed();
                         } catch (Exception)
                         {
                             hollow = null;
@@ -1041,6 +1042,9 @@ namespace FSO.SimAntics.Utils
 
                         PopulateBlankTerrain(tempVM);
                         tempVM.Context.Architecture.ClearDirty();
+                        tempVM.Context.Architecture.RegenRoomMap();
+                        tempVM.Context.RegeneratePortalInfo();
+                        tempVM.Context.RefreshAllLighting();
                         tempVM.Tick();
                     }
 
