@@ -92,6 +92,7 @@
   <ItemGroup>
     <Reference Include="MonoGame.Framework, Version=3.6.0.1625, Culture=neutral, processorArchitecture=MSIL">
       <HintPath>..\packages\MonoGame.Framework.Portable.3.6.0.1625\lib\portable-net45+win8+wpa81\MonoGame.Framework.dll</HintPath>
+      <Private>False</Private>
     </Reference>
     <Reference Include="HandEvaluator, Version=1.2.0.0, Culture=neutral, processorArchitecture=MSIL">
       <HintPath>..\packages\FreeSO.HandEvaluator.1.2.0\lib\net20\HandEvaluator.dll</HintPath>
