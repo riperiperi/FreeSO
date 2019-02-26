@@ -212,7 +212,7 @@ namespace FSO.Server.Api.Core.Controllers
             var api = Api.INSTANCE;
             api.DemandModerator(Request);
 
-            if (files != null)
+            if (files == null)
                 return NotFound();
 
             byte[] data = null;
