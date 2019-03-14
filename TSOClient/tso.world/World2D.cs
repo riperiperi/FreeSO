@@ -300,35 +300,40 @@ namespace FSO.LotView
             var lastLight = state.OutsideColor;
             state.OutsideColor = Color.White;
             state._2D.OBJIDMode = false;
-            using (var buffer = state._2D.WithBuffer(BUFFER_LOTTHUMB, ref bufferTexture))
-            {
-                _2d.SetScroll(pxOffset);
-                while (buffer.NextPass())
-                {
-                    _2d.Pause();
-                    _2d.Resume(); 
-                    Blueprint.FloorGeom.SliceReset(gd, new Rectangle(6, 6, Blueprint.Width - 13, Blueprint.Height - 13));
-                    //Blueprint.SetLightColor(WorldContent.GrassEffect, Color.White, Color.White);
-                    Blueprint.Terrain.Draw(gd, state);
-                    Blueprint.Terrain.DrawMask(gd, state, state.Camera.View, state.Camera.Projection);
-                    Blueprint.WallComp.Draw(gd, state);
-                    _2d.Pause();
-                    _2d.Resume();
-                    foreach (var obj in Blueprint.Objects)
-                    {
-                        var renderInfo = GetRenderInfo(obj);
-                        var tilePosition = obj.Position;
-                        _2d.OffsetPixel(state.WorldSpace.GetScreenFromTile(tilePosition));
-                        _2d.OffsetTile(tilePosition);
-                        obj.Draw(gd, state);
-                    }
-                    _2d.Pause();
-                    _2d.Resume();
-                    rooflessCallback?.Invoke(bufferTexture.Get());
-                    Blueprint.RoofComp.Draw(gd, state);
-                }
 
+            using (state._2D.WithBuffer(BUFFER_LOTTHUMB, ref bufferTexture)) { }
+
+            _2d.SetScroll(pxOffset);
+
+            _2d.Pause();
+            gd.SetRenderTarget((RenderTarget2D)bufferTexture.Get());
+            _2d.Resume();
+
+            _2d.Pause();
+            _2d.Resume(); 
+            Blueprint.FloorGeom.SliceReset(gd, new Rectangle(6, 6, Blueprint.Width - 13, Blueprint.Height - 13));
+            //Blueprint.SetLightColor(WorldContent.GrassEffect, Color.White, Color.White);
+            Blueprint.Terrain.Draw(gd, state);
+            Blueprint.Terrain.DrawMask(gd, state, state.Camera.View, state.Camera.Projection);
+            Blueprint.WallComp.Draw(gd, state);
+            _2d.Pause();
+            _2d.Resume();
+            foreach (var obj in Blueprint.Objects)
+            {
+                var renderInfo = GetRenderInfo(obj);
+                var tilePosition = obj.Position;
+                _2d.OffsetPixel(state.WorldSpace.GetScreenFromTile(tilePosition));
+                _2d.OffsetTile(tilePosition);
+                obj.Draw(gd, state);
             }
+            _2d.Pause();
+            _2d.Resume();
+
+            rooflessCallback?.Invoke(bufferTexture.Get());
+            Blueprint.RoofComp.Draw(gd, state);
+            _2d.Pause();
+            gd.SetRenderTarget(null);
+            _2d.Resume();
 
             Blueprint.Damage.Add(new BlueprintDamage(BlueprintDamageType.LIGHTING_CHANGED));
             Blueprint.Damage.Add(new BlueprintDamage(BlueprintDamageType.FLOOR_CHANGED));
