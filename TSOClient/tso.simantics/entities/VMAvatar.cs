@@ -704,6 +704,11 @@ namespace FSO.SimAntics
             return PersonData[(ushort)variable];
         }
 
+        public short[] GetPersonDataClone()
+        {
+            return PersonData.ToArray();
+        }
+
         public bool ForceEnableSkill;
         public int SkillGameplayMul(VM vm)
         {

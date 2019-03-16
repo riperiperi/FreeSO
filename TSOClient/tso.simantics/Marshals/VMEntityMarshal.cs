@@ -49,6 +49,9 @@ namespace FSO.SimAntics.Marshals
         public int Version;
         public bool TS1;
 
+        //runtime
+        public bool LoadFailed;
+
         public VMEntityMarshal() { }
         public VMEntityMarshal(int version, bool ts1) { Version = version; TS1 = ts1; }
 

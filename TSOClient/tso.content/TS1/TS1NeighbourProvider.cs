@@ -15,6 +15,9 @@ namespace FSO.Content.TS1
     /// </summary>
     public class TS1NeighborhoodProvider
     {
+        //injected from game. requires instantiating a vm and getting the person data after Init runs.
+        public Func<uint, short[]> PreparePersonDataFromObject;
+
         public IffFile MainResource;
         public IffFile LotLocations;
         public IffFile StreetNames;
@@ -36,7 +39,7 @@ namespace FSO.Content.TS1
         public TS1NeighborhoodProvider(Content contentManager)
         {
             ContentManager = contentManager;
-            InitSpecific(1);
+            InitSpecific(0);
         }
 
         /// <summary>
@@ -49,7 +52,7 @@ namespace FSO.Content.TS1
             ZoningDictionary.Clear();
             FamilyForHouse.Clear();
 
-            var udName = "UserData" + ((id == 0) ? "" : (id+1).ToString());
+            var udName = "UserData" + ((id == 0) ? "" : (id + 1).ToString());
             //simitone shouldn't modify existing ts1 data, since our house saves are incompatible.
             //therefore we should copy to the simitone user data.
 
@@ -114,6 +117,7 @@ namespace FSO.Content.TS1
                     NeighbourID = id,
                     GUID = (uint)obj.GUID,
                     Name = Path.GetFileName(obj.Resource.Name).ToLowerInvariant().Replace(".iff", ""),
+                    PersonData = PreparePersonDataFromObject((uint)obj.GUID),
                     PersonMode = 9,
                     Relationships = new Dictionary<int, List<short>>()
                 });

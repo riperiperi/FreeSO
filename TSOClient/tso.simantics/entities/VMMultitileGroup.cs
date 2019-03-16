@@ -403,7 +403,7 @@ namespace FSO.SimAntics.Entities
             SalePrice = input.SalePrice;
             if (SalePrice == 0) SalePrice = -1;
             Objects = new List<VMEntity>();
-            for (int i= 0; i<input.Objects.Length; i++)
+            for (int i = 0; i<input.Objects.Length; i++)
             {
                 var id = input.Objects[i];
                 var obj = context.VM.GetObjectById(id);

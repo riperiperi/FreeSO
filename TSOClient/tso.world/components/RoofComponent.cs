@@ -53,7 +53,7 @@ namespace FSO.LotView.Components
             texture.GetData(data);
             texture.Dispose();
             texture = new Texture2D(device, texture.Width, texture.Height, true, SurfaceFormat.Color);
-            TextureUtils.UploadWithMips(texture, device, data);
+            TextureUtils.UploadWithAvgMips(texture, device, data);
             return texture;
         }
 
@@ -841,6 +841,17 @@ namespace FSO.LotView.Components
                 var pass = Effect.CurrentTechnique.Passes[2];
                 pass.Apply();
                 device.DrawIndexedPrimitives(PrimitiveType.TriangleList, 0, 0, dg.NumPrimitives);
+
+                if (dg.AdvNumPrimitives > 0)
+                {
+                    device.SetVertexBuffer(dg.AdvVertexBuffer);
+                    device.Indices = dg.AdvIndexBuffer;
+                    Effect.Parameters["BaseTex"].SetValue(EdgeTexture);
+                    Effect.Parameters["GrassShininess"].SetValue(0.003f);
+                    pass = Effect.CurrentTechnique.Passes[2];
+                    pass.Apply();
+                    device.DrawIndexedPrimitives(PrimitiveType.TriangleList, 0, 0, dg.AdvNumPrimitives);
+                }
             }
         }
 

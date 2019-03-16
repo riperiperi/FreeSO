@@ -895,6 +895,18 @@ namespace FSO.SimAntics
 
         public bool OutsideClip(short tileX, short tileY, sbyte level)
         {
+            var fine = FineBuildableArea;
+            if (fine != null)
+            {
+                if (tileX < 0 || tileX >= Width) return true;
+                else if (tileY < 0 || tileY >= Height) return true;
+                else if (level < 1) return true;
+                else
+                {
+                    return !fine[tileX + tileY * Width];
+                }
+            }
+
             var area = BuildableArea;
             if (DisableClip)
                 return (tileX < 0 || tileY < 0 || level < 1 || tileX >= Width || tileY >= Height || level > Stories);

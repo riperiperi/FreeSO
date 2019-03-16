@@ -289,7 +289,10 @@ namespace FSO.SimAntics.Utils
             }
 
             var entClone = new List<VMEntity>(VM.Entities);
-            foreach (var nobj in entClone) nobj.ExecuteEntryPoint(11, VM.Context, true);
+            foreach (var nobj in entClone)
+            {
+                nobj.ExecuteEntryPoint(11, VM.Context, true);
+            }
 
             arch.SignalTerrainRedraw();
             VM.Context.World?.InitBlueprint(Blueprint);

@@ -59,6 +59,11 @@ namespace FSO.SimAntics.NetPlay.Model.Commands
                     var activator = new VMTS1Activator(vm, vm.Context.World, JobLevel);
                     var blueprint = activator.LoadFromIff(iff);
                 }
+                var entClone = new List<VMEntity>(vm.Entities);
+                foreach (var nobj in entClone)
+                {
+                    nobj.ExecuteEntryPoint(2, vm.Context, true);
+                }
                 vm.TS1State.VerifyFamily(vm);
             }
             else

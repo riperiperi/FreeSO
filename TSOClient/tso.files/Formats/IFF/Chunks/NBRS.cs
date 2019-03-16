@@ -46,7 +46,7 @@ namespace FSO.Files.Formats.IFF.Chunks
 
                 for (int i=0; i<count; i++)
                 {
-                    if (!io.HasMore) return;
+                    if (!io.HasMore) break;
                     var neigh = new Neighbour(io);
                     Entries.Add(neigh);
                     if (neigh.Unknown1 > 0)

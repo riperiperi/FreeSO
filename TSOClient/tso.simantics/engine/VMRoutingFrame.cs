@@ -390,7 +390,7 @@ namespace FSO.SimAntics.Engine
             var parent = ParentRoute ?? this;
             var inDir = (parent.State == VMRoutingFrameState.ROOM_PORTAL || parent.PortalTurns > 0) ? Caller.RadianDirection : (float?)null;
             router.OptimizeLines(rectRoute, endPoint, inDir);
-            var useBezier = (VM.Tuning.GetTuning("feature", 0, 1) ?? 0) == 0;
+            var useBezier = (VM.Tuning?.GetTuning("feature", 0, 1) ?? 0) == 0;
             if (useBezier)
             {
                 WalkTo = VMPathBezierSegment.GeneratePath(rectRoute, endPoint,

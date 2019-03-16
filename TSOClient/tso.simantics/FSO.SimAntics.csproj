@@ -193,6 +193,7 @@
     <Compile Include="Model\VMArchitectureTerrain.cs" />
     <Compile Include="Model\VMBudget.cs" />
     <Compile Include="Model\VMHeadlineRenderer.cs" />
+    <Compile Include="Model\VMLoadError.cs" />
     <Compile Include="Model\VMOutfitReference.cs" />
     <Compile Include="Model\VMPlaceRequestFlags.cs" />
     <Compile Include="Model\VMPlatformState.cs" />

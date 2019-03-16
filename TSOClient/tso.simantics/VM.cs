@@ -118,6 +118,7 @@ namespace FSO.SimAntics
         //attributes for the current VM session.
         public uint MyUID; //UID of this client in the VM
         public VMSyncTrace Trace;
+        public List<VMLoadError> LoadErrors = new List<VMLoadError>();
         public List<VMInventoryItem> MyInventory = new List<VMInventoryItem>();
 
         public event VMDialogHandler OnDialog;
@@ -752,6 +753,13 @@ namespace FSO.SimAntics
             {
                 VMEntity realEnt;
                 var objDefinition = FSO.Content.Content.Get().WorldObjects.Get(ent.GUID);
+                if (objDefinition == null)
+                {
+                    LoadErrors.Add(new VMLoadError(VMLoadErrorCode.MISSING_OBJECT, 
+                        ent.GUID.ToString("x8") + " " + input.MultitileGroups.FirstOrDefault()?.Name ?? "(unknown name)", (ushort)ent.ObjectID));
+                    ent.LoadFailed = true;
+                    continue;
+                }
                 if (ent is VMAvatarMarshal)
                 {
                     var avatar = new VMAvatar(objDefinition);
@@ -782,6 +790,11 @@ namespace FSO.SimAntics
             int i = 0;
             foreach (var ent in input.Entities)
             {
+                if (ent.LoadFailed)
+                {
+                    i++;
+                    continue;
+                }
                 var threadMarsh = input.Threads[i];
                 var realEnt = Entities[i++];
 

@@ -45,6 +45,7 @@ namespace FSO.Files.Formats.IFF.Chunks
                     NeighborhoodData[i] = io.ReadInt16();
                 }
 
+                if (!io.HasMore) return; //no inventory present (yet)
                 var count = io.ReadInt32();
                 for (int i = 0; i < count; i++)
                 {

@@ -192,7 +192,7 @@ namespace FSO.HIT
             var content = FSO.Content.Content.Get();
             var evts = content.Audio.Events;
 
-            if (evts.ContainsKey(evt))
+            if (evts != null && evts.ContainsKey(evt))
             {
                 var evtent = evts[evt];
 

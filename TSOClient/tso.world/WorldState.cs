@@ -297,6 +297,7 @@ namespace FSO.LotView
             {
                 lightOffset = new Vector2(frontDir.X / (6 * (Light.Blueprint.Width - 2)), frontDir.Z / (6 * (Light.Blueprint.Width - 2)));
                 lightOffset *= Light.InvMapLayout;
+                Light.SetMapLayout(3, 2);
             }
             else
             {
