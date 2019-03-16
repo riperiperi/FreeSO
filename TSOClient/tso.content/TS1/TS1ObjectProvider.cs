@@ -54,7 +54,7 @@ namespace FSO.Content.TS1
                             Source = GameObjectSource.Far,
                             Group = (short)obj.MasterID,
                             SubIndex = obj.SubIndex,
-                            GlobalSimObject = obj.ObjectType == OBJDType.SimType && obj.Global == 1
+                            GlobalSimObject = ((obj.ObjectType == OBJDType.SimType) || (obj.ObjectType == OBJDType.Normal)) && obj.Global == 1
                         };
                         if (obj.ObjectType == OBJDType.Person) PersonGUIDs.Add(obj.GUID);
 
