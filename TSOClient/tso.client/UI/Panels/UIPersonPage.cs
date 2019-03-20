@@ -898,6 +898,43 @@ namespace FSO.Client.UI.Panels
                     (currentJob.JobLevel_JobGrade == 10) ? GameFacade.Strings.GetString("189", "79") :
                     GameFacade.Strings.GetString("272", (((currentJob.JobLevel_JobType - 1) * 11) + currentJob.JobLevel_JobGrade + 2).ToString())
                 });
+
+                int jobMultipler = -1;
+                int jobExperienceFactor = 1;
+                switch (currentJob.JobLevel_JobType - 1)
+                {
+                    case 0: // Robot Factory
+                        jobMultipler = 5;
+                        jobExperienceFactor = 2;
+                        break;
+                    case 1: // Restaurant
+                        jobMultipler = 5;
+                        jobExperienceFactor = 2;
+                        break;
+                    case 2: // Nightclub
+                        jobMultipler = 10;
+                        jobExperienceFactor = 1;
+                        break;
+                    case 4: // Nightclub - Dancer
+                        jobMultipler = 10;
+                        jobExperienceFactor = 1;
+                        break;
+                    default: // Other
+                        jobMultipler = -1;
+                        break;
+                }
+
+                if ( jobMultipler >= 0 && currentJob.JobLevel_JobGrade < 10)
+                {
+                    int nextJobGrade = currentJob.JobLevel_JobGrade + 1;
+                    int maxRequiredRounds = jobMultipler * (nextJobGrade * nextJobGrade);
+                    int totalRoundsCompleted = (int)currentJob.JobLevel_JobExperience / jobExperienceFactor;
+                    int totalRoundsTillPromotion = maxRequiredRounds - totalRoundsCompleted;
+                    JobAlertText += "\r\nShifts till next Promotion: " + totalRoundsTillPromotion;
+                }
+
+
+                
             }
             JobsText.CurrentText = outText.ToString();
             JobsText.SetSize(JobsText.Width, 160);
