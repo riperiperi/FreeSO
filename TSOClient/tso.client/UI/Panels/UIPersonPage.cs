@@ -2,6 +2,7 @@
 using FSO.Client.UI.Controls;
 using FSO.Client.UI.Framework;
 using FSO.Client.UI.Screens;
+using FSO.Client.UI.Profile;
 using FSO.Client.Utils;
 using FSO.Common.DataService.Model;
 using FSO.Common.Utils;
@@ -696,6 +697,10 @@ namespace FSO.Client.UI.Panels
 
         private void ShowJobInfo(UIElement button)
         {
+
+            var jobInfo = new UIJobInfo(JobAlertText);
+            jobInfo.Show();
+
             UIScreen.GlobalShowAlert(new UIAlertOptions()
             {
                 Title = GameFacade.Strings.GetString("189", "64"),
