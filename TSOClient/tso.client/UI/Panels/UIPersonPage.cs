@@ -165,6 +165,8 @@ namespace FSO.Client.UI.Panels
         private UIRelationshipsTab _RelationshipsTab = UIRelationshipsTab.Outgoing;
         private string OriginalDescription;
         private string JobAlertText;
+        private JobInformation JobInfo;
+
         private bool LocalDataChange;
 
         private int TotalLocks = 20;
@@ -697,16 +699,8 @@ namespace FSO.Client.UI.Panels
 
         private void ShowJobInfo(UIElement button)
         {
-
-            var jobInfo = new UIJobInfo(JobAlertText);
-            jobInfo.Show();
-
-            UIScreen.GlobalShowAlert(new UIAlertOptions()
-            {
-                Title = GameFacade.Strings.GetString("189", "64"),
-                Message = JobAlertText,
-                Buttons = UIAlertButton.Ok(),
-            }, true);
+            var jobInfo = new UIJobInfo(JobInfo.MaxLevel);
+            jobInfo.Show(JobInfo);
         }
 
         public void TrySaveDescription()
@@ -929,17 +923,27 @@ namespace FSO.Client.UI.Panels
                         break;
                 }
 
+
+                float promotionPercentage = 0;
                 if ( jobMultipler >= 0 && currentJob.JobLevel_JobGrade < 10)
                 {
                     int nextJobGrade = currentJob.JobLevel_JobGrade + 1;
-                    int maxRequiredRounds = jobMultipler * (nextJobGrade * nextJobGrade);
-                    int totalRoundsCompleted = (int)currentJob.JobLevel_JobExperience / jobExperienceFactor;
-                    int totalRoundsTillPromotion = maxRequiredRounds - totalRoundsCompleted;
-                    JobAlertText += "\r\nShifts till next Promotion: " + totalRoundsTillPromotion;
+                    float maxRequiredRounds = jobMultipler * (nextJobGrade * nextJobGrade);
+                    float totalRoundsCompleted = (int)currentJob.JobLevel_JobExperience / jobExperienceFactor;
+                    //int totalRoundsTillPromotion = maxRequiredRounds - totalRoundsCompleted;
+                    promotionPercentage = totalRoundsCompleted / maxRequiredRounds;
                 }
 
-
-                
+                JobInfo = new JobInformation();
+                JobInfo.Title = title;
+                JobInfo.Type = GameFacade.Strings.GetString("189", (67 + currentJob.JobLevel_JobType).ToString());
+                JobInfo.Level = currentJob.JobLevel_JobGrade == 0 ? "Trainee" : "Level " + currentJob.JobLevel_JobGrade;
+                JobInfo.Hours = GameFacade.Strings.GetString("189", (73 + poolTime * 2).ToString());
+                JobInfo.CarpoolHours = "Carpool at " + GameFacade.Strings.GetString("189", (74 + poolTime * 2).ToString());
+                JobInfo.NextPosition = (currentJob.JobLevel_JobGrade == 10) ? GameFacade.Strings.GetString("189", "79") :
+                    GameFacade.Strings.GetString("272", (((currentJob.JobLevel_JobType - 1) * 11) + currentJob.JobLevel_JobGrade + 2).ToString());
+                JobInfo.PromotionPercentage = (int)(promotionPercentage * 100);
+                JobInfo.MaxLevel = (currentJob.JobLevel_JobGrade == 10);
             }
             JobsText.CurrentText = outText.ToString();
             JobsText.SetSize(JobsText.Width, 160);
