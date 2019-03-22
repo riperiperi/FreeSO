@@ -52,8 +52,6 @@ namespace FSO.Client.UI.Controls
             StandardCaptionStyle.Color = new Color(0, 0, 0);
         }
 
-
-
         private float m_Width;
         private float m_Height;
 
@@ -146,8 +144,6 @@ namespace FSO.Client.UI.Controls
             }
         }
 
-
-
         private float m_Value = 0;
         public float Value
         {
@@ -165,12 +161,6 @@ namespace FSO.Client.UI.Controls
             }
         }
 
-
-
-
-
-
-
         public float Width
         {
             get { return m_Width; }
@@ -187,7 +177,6 @@ namespace FSO.Client.UI.Controls
             m_Height = height;
             m_Bounds = new Rectangle(0, 0, (int)width, (int)height);
         }
-
 
         public override void Update(UpdateState state)
         {
