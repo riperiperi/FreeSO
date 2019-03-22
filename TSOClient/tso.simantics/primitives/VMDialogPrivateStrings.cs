@@ -272,7 +272,8 @@ namespace FSO.SimAntics.Primitives
         TS1Cookbook = 15,
         
         FSOColor = 128,
-        FSOChars = 129
+        FSOChars = 129,
+        FSOJob = 130
     }
 
     public class VMDialogResult : VMAsyncState

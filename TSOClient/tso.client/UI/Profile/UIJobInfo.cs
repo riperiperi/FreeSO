@@ -167,7 +167,6 @@ namespace FSO.Client.UI.Profile
 
             if (!maxLevel)
             {
-
                 PromotionRequirements = new UILabel();
                 PromotionRequirements.Position = new Vector2(30, verticalSpace);
                 PromotionRequirements.Size = new Vector2(200, 16);

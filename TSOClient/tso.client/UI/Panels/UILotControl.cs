@@ -280,6 +280,11 @@ namespace FSO.Client.UI.Panels
 
             VMDialogType type = (info.Operand == null) ? VMDialogType.Message : info.Operand.Type;
 
+            if (info.Operand.MessageStringID == 19)
+            {
+                type = VMDialogType.FSOJob;
+            }
+
             switch (type)
             {
                 default:
@@ -322,6 +327,10 @@ namespace FSO.Client.UI.Panels
                     options.Buttons = new UIAlertButton[] { new UIAlertButton(UIAlertButtonType.OK, b0Event, info.Yes), new UIAlertButton(UIAlertButtonType.Cancel, b1Event, info.Cancel) };
                     options.GenericAddition = new UIColorPicker();
                     break;
+                case VMDialogType.FSOJob:
+                    VMAvatar avatar = (VMAvatar)info.Caller;
+                    VMAvatar something = ((info.Caller as VMAvatar));
+                    return;
             }
 
             var alert = UIScreen.GlobalShowAlert(options, false);

@@ -699,8 +699,20 @@ namespace FSO.Client.UI.Panels
 
         private void ShowJobInfo(UIElement button)
         {
-            var jobInfo = new UIJobInfo(JobInfo.MaxLevel);
-            jobInfo.Show(JobInfo);
+            if (!JobInfo.Equals(default(JobInformation)))
+            {
+                var jobInfoAlert = new UIJobInfo(JobInfo.MaxLevel);
+                jobInfoAlert.Show(JobInfo);
+                JobInfo = default(JobInformation);
+            } else
+            {
+                UIScreen.GlobalShowAlert(new UIAlertOptions()
+                {
+                    Title = GameFacade.Strings.GetString("189", "64"),
+                    Message = JobAlertText,
+                    Buttons = UIAlertButton.Ok(),
+                }, true);
+            }
         }
 
         public void TrySaveDescription()
@@ -871,6 +883,7 @@ namespace FSO.Client.UI.Panels
             {
                 outText.Append(GameFacade.Strings.GetString("189", "61") + "\r\n\r\n"); //unemployed
                 JobAlertText = GameFacade.Strings.GetString("189", "66");
+                JobInfo = default(JobInformation);
             }
             else
             {
@@ -888,16 +901,17 @@ namespace FSO.Client.UI.Panels
                         outText.Append("\r\n");
                     }
                 }
-                int poolTime = Math.Min(2, currentJob.JobLevel_JobType - 1);
-                JobAlertText = GameFacade.Strings.GetString("189", "65", new string[] {
-                    GameFacade.Strings.GetString("189", (67+currentJob.JobLevel_JobType).ToString()),
-                    title,
-                    GameFacade.Strings.GetString("189", (73+poolTime*2).ToString()),
-                    GameFacade.Strings.GetString("189", (74+poolTime*2).ToString()),
-                    (currentJob.JobLevel_JobGrade == 10) ? GameFacade.Strings.GetString("189", "79") :
-                    GameFacade.Strings.GetString("272", (((currentJob.JobLevel_JobType - 1) * 11) + currentJob.JobLevel_JobGrade + 2).ToString())
-                });
 
+                //JobAlertText = GameFacade.Strings.GetString("189", "65", new string[] {
+                //    GameFacade.Strings.GetString("189", (67+currentJob.JobLevel_JobType).ToString()),
+                //    title,
+                //    GameFacade.Strings.GetString("189", (73+poolTime*2).ToString()),
+                //    GameFacade.Strings.GetString("189", (74+poolTime*2).ToString()),
+                //    (currentJob.JobLevel_JobGrade == 10) ? GameFacade.Strings.GetString("189", "79") :
+                //    GameFacade.Strings.GetString("272", (((currentJob.JobLevel_JobType - 1) * 11) + currentJob.JobLevel_JobGrade + 2).ToString())
+                //});
+
+                int poolTime = Math.Min(2, currentJob.JobLevel_JobType - 1);
                 int jobMultipler = -1;
                 int jobExperienceFactor = 1;
                 switch (currentJob.JobLevel_JobType - 1)
@@ -928,10 +942,12 @@ namespace FSO.Client.UI.Panels
                 if ( jobMultipler >= 0 && currentJob.JobLevel_JobGrade < 10)
                 {
                     int nextJobGrade = currentJob.JobLevel_JobGrade + 1;
-                    float maxRequiredRounds = jobMultipler * (nextJobGrade * nextJobGrade);
+                    float currentRequiredRounds = jobMultipler * (currentJob.JobLevel_JobGrade * currentJob.JobLevel_JobGrade); //jobMultipler * nextJobGrade^2
+                    float maxRequiredRounds = jobMultipler * (nextJobGrade * nextJobGrade); //jobMultipler * nextJobGrade^2
                     float totalRoundsCompleted = (int)currentJob.JobLevel_JobExperience / jobExperienceFactor;
-                    //int totalRoundsTillPromotion = maxRequiredRounds - totalRoundsCompleted;
-                    promotionPercentage = totalRoundsCompleted / maxRequiredRounds;
+                    float totalRoundsTillPromotion = maxRequiredRounds - totalRoundsCompleted;
+                    float currentRoundsTotal = maxRequiredRounds - currentRequiredRounds;
+                    promotionPercentage = (currentRoundsTotal - totalRoundsTillPromotion) / currentRoundsTotal;
                 }
 
                 JobInfo = new JobInformation();
