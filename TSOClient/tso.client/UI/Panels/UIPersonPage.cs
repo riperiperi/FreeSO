@@ -701,8 +701,8 @@ namespace FSO.Client.UI.Panels
         {
             if (!JobInfo.Equals(default(JobInformation)))
             {
-                var jobInfoAlert = new UIJobInfo(JobInfo.MaxLevel);
-                jobInfoAlert.Show(JobInfo);
+                var jobInfoAlert = new UIJobInfo(JobInfo);
+                jobInfoAlert.Show();
                 JobInfo = default(JobInformation);
             } else
             {
@@ -902,64 +902,7 @@ namespace FSO.Client.UI.Panels
                     }
                 }
 
-                //JobAlertText = GameFacade.Strings.GetString("189", "65", new string[] {
-                //    GameFacade.Strings.GetString("189", (67+currentJob.JobLevel_JobType).ToString()),
-                //    title,
-                //    GameFacade.Strings.GetString("189", (73+poolTime*2).ToString()),
-                //    GameFacade.Strings.GetString("189", (74+poolTime*2).ToString()),
-                //    (currentJob.JobLevel_JobGrade == 10) ? GameFacade.Strings.GetString("189", "79") :
-                //    GameFacade.Strings.GetString("272", (((currentJob.JobLevel_JobType - 1) * 11) + currentJob.JobLevel_JobGrade + 2).ToString())
-                //});
-
-                int poolTime = Math.Min(2, currentJob.JobLevel_JobType - 1);
-                int jobMultipler = -1;
-                int jobExperienceFactor = 1;
-                switch (currentJob.JobLevel_JobType - 1)
-                {
-                    case 0: // Robot Factory
-                        jobMultipler = 5;
-                        jobExperienceFactor = 2;
-                        break;
-                    case 1: // Restaurant
-                        jobMultipler = 5;
-                        jobExperienceFactor = 2;
-                        break;
-                    case 2: // Nightclub
-                        jobMultipler = 10;
-                        jobExperienceFactor = 1;
-                        break;
-                    case 4: // Nightclub - Dancer
-                        jobMultipler = 10;
-                        jobExperienceFactor = 1;
-                        break;
-                    default: // Other
-                        jobMultipler = -1;
-                        break;
-                }
-
-
-                float promotionPercentage = 0;
-                if ( jobMultipler >= 0 && currentJob.JobLevel_JobGrade < 10)
-                {
-                    int nextJobGrade = currentJob.JobLevel_JobGrade + 1;
-                    float currentRequiredRounds = jobMultipler * (currentJob.JobLevel_JobGrade * currentJob.JobLevel_JobGrade); //jobMultipler * nextJobGrade^2
-                    float maxRequiredRounds = jobMultipler * (nextJobGrade * nextJobGrade); //jobMultipler * nextJobGrade^2
-                    float totalRoundsCompleted = (int)currentJob.JobLevel_JobExperience / jobExperienceFactor;
-                    float totalRoundsTillPromotion = maxRequiredRounds - totalRoundsCompleted;
-                    float currentRoundsTotal = maxRequiredRounds - currentRequiredRounds;
-                    promotionPercentage = (currentRoundsTotal - totalRoundsTillPromotion) / currentRoundsTotal;
-                }
-
-                JobInfo = new JobInformation();
-                JobInfo.Title = title;
-                JobInfo.Type = GameFacade.Strings.GetString("189", (67 + currentJob.JobLevel_JobType).ToString());
-                JobInfo.Level = currentJob.JobLevel_JobGrade == 0 ? "Trainee" : "Level " + currentJob.JobLevel_JobGrade;
-                JobInfo.Hours = GameFacade.Strings.GetString("189", (73 + poolTime * 2).ToString());
-                JobInfo.CarpoolHours = "Carpool at " + GameFacade.Strings.GetString("189", (74 + poolTime * 2).ToString());
-                JobInfo.NextPosition = (currentJob.JobLevel_JobGrade == 10) ? GameFacade.Strings.GetString("189", "79") :
-                    GameFacade.Strings.GetString("272", (((currentJob.JobLevel_JobType - 1) * 11) + currentJob.JobLevel_JobGrade + 2).ToString());
-                JobInfo.PromotionPercentage = (int)(promotionPercentage * 100);
-                JobInfo.MaxLevel = (currentJob.JobLevel_JobGrade == 10);
+                JobInfo = new JobInformation(currentJob.JobLevel_JobGrade, currentJob.JobLevel_JobType, (int)currentJob.JobLevel_JobExperience);
             }
             JobsText.CurrentText = outText.ToString();
             JobsText.SetSize(JobsText.Width, 160);
