@@ -136,10 +136,10 @@ namespace FSO.Client.UI.Profile
 
             int sectionHeight = 54;
 
-            UIImage HoursSectionImage = new UIImage(TextureGenerator.GenerateRoundedRectangle(GameFacade.GraphicsDevice, new Color(59, 84, 116), 360, sectionHeight, 6))
-            {
-                Position = new Vector2(20, verticalSpace)
-            };
+            UIImage HoursSectionImage = new UIImage(GetTexture((ulong)0x7A400000001)).With9Slice(13, 13, 13, 13);
+            HoursSectionImage.SetSize(360, sectionHeight);
+            HoursSectionImage.Position = new Vector2(20, verticalSpace);
+            Add(HoursSectionImage);
             this.Add(HoursSectionImage);
             verticalSpace += standardVerticalSpace;
 
@@ -187,10 +187,10 @@ namespace FSO.Client.UI.Profile
             this.Add(CarPoolHours);
             verticalSpace += 12 + standardVerticalSpace + standardVerticalSpace;
 
-            UIImage PositionSectionImage = new UIImage(TextureGenerator.GenerateRoundedRectangle(GameFacade.GraphicsDevice, new Color(59, 84, 116), 360, sectionHeight, 6))
-            {
-                Position = new Vector2(20, verticalSpace)
-            };
+            UIImage PositionSectionImage = new UIImage(GetTexture((ulong)0x7A400000001)).With9Slice(13, 13, 13, 13);
+            PositionSectionImage.SetSize(360, sectionHeight);
+            PositionSectionImage.Position = new Vector2(20, verticalSpace);
+            Add(PositionSectionImage);
             this.Add(PositionSectionImage);
             verticalSpace += standardVerticalSpace;
 
@@ -255,10 +255,10 @@ namespace FSO.Client.UI.Profile
                 this.Add(PromotionRequirements);
                 verticalSpace += 16 + standardVerticalSpace;
 
-                UIImage PerformanceSectionImage = new UIImage(TextureGenerator.GenerateRoundedRectangle(GameFacade.GraphicsDevice, new Color(59, 84, 116), 360, sectionHeight, 6))
-                {
-                    Position = new Vector2(20, verticalSpace)
-                };
+                UIImage PerformanceSectionImage = new UIImage(GetTexture((ulong)0x7A400000001)).With9Slice(13, 13, 13, 13);
+                PerformanceSectionImage.SetSize(360, sectionHeight);
+                PerformanceSectionImage.Position = new Vector2(20, verticalSpace);
+                Add(PerformanceSectionImage);
                 this.Add(PerformanceSectionImage);
 
                 int performanceTitleSectionHeight = (sectionHeight / 2) - 8;
@@ -277,23 +277,24 @@ namespace FSO.Client.UI.Profile
                 PerformanceTitle.Caption = "Performance";
                 this.Add(PerformanceTitle);
 
+                int progressBarWidth = 180;
                 ProgressBar = new UIProgressBar()
                 {
                     X = 360 - 180,
                     Y = verticalSpace + performanceTitleSectionHeight - 6,
                     Value = 75
                 };
-                ProgressBar.SetSize(185, 27);
+                ProgressBar.SetSize(progressBarWidth, 27);
                 ProgressBar.Caption = "";
-                ProgressBar.Background = TextureGenerator.GenerateRoundedRectangle(GameFacade.GraphicsDevice, new Color(64, 101, 141), 190, 27, 12);
+                ProgressBar.Background = TextureGenerator.GenerateRoundedRectangle(GameFacade.GraphicsDevice, new Color(64, 101, 141), progressBarWidth, 27, 12);
                 this.Add(ProgressBar);
 
                 verticalSpace += sectionHeight + standardVerticalSpace;
 
-                UIImage NextPositionSectionImage = new UIImage(TextureGenerator.GenerateRoundedRectangle(GameFacade.GraphicsDevice, new Color(59, 84, 116), 360, sectionHeight, 6))
-                {
-                    Position = new Vector2(20, verticalSpace)
-                };
+                UIImage NextPositionSectionImage = new UIImage(GetTexture((ulong)0x7A400000001)).With9Slice(13, 13, 13, 13);
+                NextPositionSectionImage.SetSize(360, sectionHeight);
+                NextPositionSectionImage.Position = new Vector2(20, verticalSpace);
+                Add(NextPositionSectionImage);
                 this.Add(NextPositionSectionImage);
 
                 int nextPositionTitleSectionHeight = (sectionHeight / 2) - 8;
