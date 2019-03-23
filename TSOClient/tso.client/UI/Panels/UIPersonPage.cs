@@ -703,7 +703,6 @@ namespace FSO.Client.UI.Panels
             {
                 var jobInfoAlert = new UIJobInfo(JobInfo);
                 jobInfoAlert.Show();
-                JobInfo = default(JobInformation);
             } else
             {
                 UIScreen.GlobalShowAlert(new UIAlertOptions()

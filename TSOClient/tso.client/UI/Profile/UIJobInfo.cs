@@ -116,6 +116,7 @@ namespace FSO.Client.UI.Profile
 
             int standardVerticalSpace = 10;
             int verticalSpace = 40;
+            int sectionHeight = 54;
 
             OKButton = ButtonMap[UIAlertButtonType.OK];
             OKButton.OnButtonClick += (btn) => Destory();
@@ -133,8 +134,6 @@ namespace FSO.Client.UI.Profile
             Type.Alignment = TextAlignment.Left | TextAlignment.Middle;
             this.Add(Type);
             verticalSpace += 16 + standardVerticalSpace;
-
-            int sectionHeight = 54;
 
             UIImage HoursSectionImage = new UIImage(GetTexture((ulong)0x7A400000001)).With9Slice(13, 13, 13, 13);
             HoursSectionImage.SetSize(360, sectionHeight);
@@ -277,16 +276,17 @@ namespace FSO.Client.UI.Profile
                 PerformanceTitle.Caption = "Performance";
                 this.Add(PerformanceTitle);
 
-                int progressBarWidth = 180;
+                int progressBarWidth = 145;
                 ProgressBar = new UIProgressBar()
                 {
-                    X = 360 - 180,
-                    Y = verticalSpace + performanceTitleSectionHeight - 6,
-                    Value = 75
+                    X = 360 - progressBarWidth,
+                    Y = verticalSpace + performanceTitleSectionHeight - 5,
+                    Value = 0
                 };
                 ProgressBar.SetSize(progressBarWidth, 27);
                 ProgressBar.Caption = "";
-                ProgressBar.Background = TextureGenerator.GenerateRoundedRectangle(GameFacade.GraphicsDevice, new Color(64, 101, 141), progressBarWidth, 27, 12);
+                
+                ProgressBar.Background = TextureGenerator.GenerateRoundedRectangle(GameFacade.GraphicsDevice, new Color(37, 58, 77), progressBarWidth, 27, 9);
                 this.Add(ProgressBar);
 
                 verticalSpace += sectionHeight + standardVerticalSpace;
