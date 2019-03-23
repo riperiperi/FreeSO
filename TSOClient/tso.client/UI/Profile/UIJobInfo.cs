@@ -24,7 +24,7 @@ namespace FSO.Client.UI.Profile
         public int PromotionPercentage;
         public bool MaxLevel;
 
-        public JobInformation(int jobGrade, int jobType, int jobExperience) //Let's assume JobLevel = JobGrade?
+        public JobInformation(int jobGrade, int jobType, int jobExperience)
         {
             int poolTime = Math.Min(2, jobType - 1);
             int jobMultipler = -1;
@@ -120,10 +120,12 @@ namespace FSO.Client.UI.Profile
             OKButton = ButtonMap[UIAlertButtonType.OK];
             OKButton.OnButtonClick += (btn) => Destory();
 
-            Type = new UILabel();
-            Type.Position = new Vector2(30, verticalSpace);
-            Type.Size = new Vector2(200, 16);
-            Type.CaptionStyle = TextStyle.DefaultTitle;
+            Type = new UILabel
+            {
+                Position = new Vector2(30, verticalSpace),
+                Size = new Vector2(200, 16),
+                CaptionStyle = TextStyle.DefaultTitle
+            };
             Type.CaptionStyle = Type.CaptionStyle.Clone();
             Type.CaptionStyle.Color = Color.White;
             Type.CaptionStyle.Size = 16;
@@ -134,17 +136,21 @@ namespace FSO.Client.UI.Profile
 
             int sectionHeight = 54;
 
-            UIImage HoursSectionImage = new UIImage(TextureGenerator.GenerateRoundedRectangle(GameFacade.GraphicsDevice, new Color(59, 84, 116), 360, sectionHeight, 6));
-            HoursSectionImage.Position = new Vector2(20, verticalSpace);
+            UIImage HoursSectionImage = new UIImage(TextureGenerator.GenerateRoundedRectangle(GameFacade.GraphicsDevice, new Color(59, 84, 116), 360, sectionHeight, 6))
+            {
+                Position = new Vector2(20, verticalSpace)
+            };
             this.Add(HoursSectionImage);
             verticalSpace += standardVerticalSpace;
 
             int hoursTitleSectionHeight = (sectionHeight / 2) - 12 - 6;
 
-            HoursTitle = new UILabel();
-            HoursTitle.Position = new Vector2(40, verticalSpace + hoursTitleSectionHeight);
-            HoursTitle.Size = new Vector2(200, 12);
-            HoursTitle.CaptionStyle = TextStyle.DefaultTitle;
+            HoursTitle = new UILabel
+            {
+                Position = new Vector2(40, verticalSpace + hoursTitleSectionHeight),
+                Size = new Vector2(200, 12),
+                CaptionStyle = TextStyle.DefaultTitle
+            };
             HoursTitle.CaptionStyle = HoursTitle.CaptionStyle.Clone();
             HoursTitle.CaptionStyle.Color = new Color(238, 247, 169);
             HoursTitle.CaptionStyle.Size = 14;
@@ -153,10 +159,12 @@ namespace FSO.Client.UI.Profile
             HoursTitle.Caption = "Hours";
             this.Add(HoursTitle);
 
-            Hours = new UILabel();
-            Hours.Position = new Vector2(40, verticalSpace);
-            Hours.Size = new Vector2(320, 12);
-            Hours.CaptionStyle = TextStyle.DefaultTitle;
+            Hours = new UILabel
+            {
+                Position = new Vector2(40, verticalSpace),
+                Size = new Vector2(320, 12),
+                CaptionStyle = TextStyle.DefaultTitle
+            };
             Hours.CaptionStyle = Hours.CaptionStyle.Clone();
             Hours.CaptionStyle.Color = new Color(238, 247, 169);
             Hours.CaptionStyle.Size = 12;
@@ -165,10 +173,12 @@ namespace FSO.Client.UI.Profile
             this.Add(Hours);
             verticalSpace += 12 + standardVerticalSpace;
 
-            CarPoolHours = new UILabel();
-            CarPoolHours.Position = new Vector2(40, verticalSpace);
-            CarPoolHours.Size = new Vector2(320, 12);
-            CarPoolHours.CaptionStyle = TextStyle.DefaultTitle;
+            CarPoolHours = new UILabel
+            {
+                Position = new Vector2(40, verticalSpace),
+                Size = new Vector2(320, 12),
+                CaptionStyle = TextStyle.DefaultTitle
+            };
             CarPoolHours.CaptionStyle = CarPoolHours.CaptionStyle.Clone();
             CarPoolHours.CaptionStyle.Color = new Color(238, 247, 169);
             CarPoolHours.CaptionStyle.Size = 12;
@@ -177,17 +187,21 @@ namespace FSO.Client.UI.Profile
             this.Add(CarPoolHours);
             verticalSpace += 12 + standardVerticalSpace + standardVerticalSpace;
 
-            UIImage PositionSectionImage = new UIImage(TextureGenerator.GenerateRoundedRectangle(GameFacade.GraphicsDevice, new Color(59, 84, 116), 360, sectionHeight, 6));
-            PositionSectionImage.Position = new Vector2(20, verticalSpace);
+            UIImage PositionSectionImage = new UIImage(TextureGenerator.GenerateRoundedRectangle(GameFacade.GraphicsDevice, new Color(59, 84, 116), 360, sectionHeight, 6))
+            {
+                Position = new Vector2(20, verticalSpace)
+            };
             this.Add(PositionSectionImage);
             verticalSpace += standardVerticalSpace;
 
             int positionTitleSectionHeight = (sectionHeight / 2) - 12 - 6;
 
-            PositionTitle = new UILabel();
-            PositionTitle.Position = new Vector2(40, verticalSpace + positionTitleSectionHeight);
-            PositionTitle.Size = new Vector2(200, 12);
-            PositionTitle.CaptionStyle = TextStyle.DefaultTitle;
+            PositionTitle = new UILabel
+            {
+                Position = new Vector2(40, verticalSpace + positionTitleSectionHeight),
+                Size = new Vector2(200, 12),
+                CaptionStyle = TextStyle.DefaultTitle
+            };
             PositionTitle.CaptionStyle = PositionTitle.CaptionStyle.Clone();
             PositionTitle.CaptionStyle.Color = new Color(238, 247, 169);
             PositionTitle.CaptionStyle.Size = 14;
@@ -196,10 +210,12 @@ namespace FSO.Client.UI.Profile
             PositionTitle.Caption = "Position";
             this.Add(PositionTitle);
 
-            Title = new UILabel();
-            Title.Position = new Vector2(40, verticalSpace);
-            Title.Size = new Vector2(320, 12);
-            Title.CaptionStyle = TextStyle.DefaultTitle;
+            Title = new UILabel
+            {
+                Position = new Vector2(40, verticalSpace),
+                Size = new Vector2(320, 12),
+                CaptionStyle = TextStyle.DefaultTitle
+            };
             Title.CaptionStyle = Title.CaptionStyle.Clone();
             Title.CaptionStyle.Color = new Color(238, 247, 169);
             Title.CaptionStyle.Size = 12;
@@ -208,10 +224,12 @@ namespace FSO.Client.UI.Profile
             this.Add(Title);
             verticalSpace += 12 + standardVerticalSpace;
 
-            Level = new UILabel();
-            Level.Position = new Vector2(40, verticalSpace);
-            Level.Size = new Vector2(320, 12);
-            Level.CaptionStyle = TextStyle.DefaultTitle;
+            Level = new UILabel
+            {
+                Position = new Vector2(40, verticalSpace),
+                Size = new Vector2(320, 12),
+                CaptionStyle = TextStyle.DefaultTitle
+            };
             Level.CaptionStyle = Level.CaptionStyle.Clone();
             Level.CaptionStyle.Color = new Color(238, 247, 169);
             Level.CaptionStyle.Size = 12;
@@ -222,10 +240,12 @@ namespace FSO.Client.UI.Profile
 
             if (!jobInformation.MaxLevel)
             {
-                PromotionRequirements = new UILabel();
-                PromotionRequirements.Position = new Vector2(30, verticalSpace);
-                PromotionRequirements.Size = new Vector2(200, 16);
-                PromotionRequirements.CaptionStyle = TextStyle.DefaultTitle;
+                PromotionRequirements = new UILabel
+                {
+                    Position = new Vector2(30, verticalSpace),
+                    Size = new Vector2(200, 16),
+                    CaptionStyle = TextStyle.DefaultTitle
+                };
                 PromotionRequirements.CaptionStyle = PromotionRequirements.CaptionStyle.Clone();
                 PromotionRequirements.CaptionStyle.Color = Color.White;
                 PromotionRequirements.CaptionStyle.Size = 16;
@@ -235,16 +255,20 @@ namespace FSO.Client.UI.Profile
                 this.Add(PromotionRequirements);
                 verticalSpace += 16 + standardVerticalSpace;
 
-                UIImage PerformanceSectionImage = new UIImage(TextureGenerator.GenerateRoundedRectangle(GameFacade.GraphicsDevice, new Color(59, 84, 116), 360, sectionHeight, 6));
-                PerformanceSectionImage.Position = new Vector2(20, verticalSpace);
+                UIImage PerformanceSectionImage = new UIImage(TextureGenerator.GenerateRoundedRectangle(GameFacade.GraphicsDevice, new Color(59, 84, 116), 360, sectionHeight, 6))
+                {
+                    Position = new Vector2(20, verticalSpace)
+                };
                 this.Add(PerformanceSectionImage);
 
                 int performanceTitleSectionHeight = (sectionHeight / 2) - 8;
 
-                PerformanceTitle = new UILabel();
-                PerformanceTitle.Position = new Vector2(40, verticalSpace + performanceTitleSectionHeight);
-                PerformanceTitle.Size = new Vector2(200, 12);
-                PerformanceTitle.CaptionStyle = TextStyle.DefaultTitle;
+                PerformanceTitle = new UILabel
+                {
+                    Position = new Vector2(40, verticalSpace + performanceTitleSectionHeight),
+                    Size = new Vector2(200, 12),
+                    CaptionStyle = TextStyle.DefaultTitle
+                };
                 PerformanceTitle.CaptionStyle = PerformanceTitle.CaptionStyle.Clone();
                 PerformanceTitle.CaptionStyle.Color = new Color(238, 247, 169);
                 PerformanceTitle.CaptionStyle.Size = 14;
@@ -266,16 +290,20 @@ namespace FSO.Client.UI.Profile
 
                 verticalSpace += sectionHeight + standardVerticalSpace;
 
-                UIImage NextPositionSectionImage = new UIImage(TextureGenerator.GenerateRoundedRectangle(GameFacade.GraphicsDevice, new Color(59, 84, 116), 360, sectionHeight, 6));
-                NextPositionSectionImage.Position = new Vector2(20, verticalSpace);
+                UIImage NextPositionSectionImage = new UIImage(TextureGenerator.GenerateRoundedRectangle(GameFacade.GraphicsDevice, new Color(59, 84, 116), 360, sectionHeight, 6))
+                {
+                    Position = new Vector2(20, verticalSpace)
+                };
                 this.Add(NextPositionSectionImage);
 
                 int nextPositionTitleSectionHeight = (sectionHeight / 2) - 8;
 
-                NextPositionTitle = new UILabel();
-                NextPositionTitle.Position = new Vector2(40, verticalSpace + nextPositionTitleSectionHeight);
-                NextPositionTitle.Size = new Vector2(200, 12);
-                NextPositionTitle.CaptionStyle = TextStyle.DefaultTitle;
+                NextPositionTitle = new UILabel
+                {
+                    Position = new Vector2(40, verticalSpace + nextPositionTitleSectionHeight),
+                    Size = new Vector2(200, 12),
+                    CaptionStyle = TextStyle.DefaultTitle
+                };
                 NextPositionTitle.CaptionStyle = NextPositionTitle.CaptionStyle.Clone();
                 NextPositionTitle.CaptionStyle.Color = new Color(238, 247, 169);
                 NextPositionTitle.CaptionStyle.Size = 14;
@@ -284,10 +312,12 @@ namespace FSO.Client.UI.Profile
                 NextPositionTitle.Caption = "Next Position";
                 this.Add(NextPositionTitle);
 
-                NextPosition = new UILabel();
-                NextPosition.Position = new Vector2(40, verticalSpace + nextPositionTitleSectionHeight);
-                NextPosition.Size = new Vector2(320, 12);
-                NextPosition.CaptionStyle = TextStyle.DefaultTitle;
+                NextPosition = new UILabel
+                {
+                    Position = new Vector2(40, verticalSpace + nextPositionTitleSectionHeight),
+                    Size = new Vector2(320, 12),
+                    CaptionStyle = TextStyle.DefaultTitle
+                };
                 NextPosition.CaptionStyle = NextPosition.CaptionStyle.Clone();
                 NextPosition.CaptionStyle.Color = new Color(238, 247, 169);
                 NextPosition.CaptionStyle.Size = 12;
