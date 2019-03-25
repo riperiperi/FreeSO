@@ -1,4 +1,4 @@
-﻿using Assimp;
+﻿//using Assimp;
 using System;
 using System.Collections.Generic;
 using System.IO;
@@ -10,6 +10,7 @@ namespace FSO.IDE.Common
 {
     public class MeshExporter
     {
+        /*
         private static void RecursiveBoneAdd(Scene scn, Node parentNode, Vitaboy.Bone bone)
         {
             var node = new Node(bone.Name);
@@ -68,12 +69,6 @@ namespace FSO.IDE.Common
             var superRoot = new Node("<superRoot>");
 
             var meshNode = new Node("mesh");
-            /*superRoot.Transform = new Matrix4x4(
-                1, 0, 0, 0,
-                0, 0, -1, 0,
-                0, 1, 0, 0,
-                0, 0, 0, 1
-                );*/
             superRoot.Children.Add(meshNode);
             superRoot.Children.Add(scn.RootNode);
             scn.RootNode = superRoot;
@@ -107,7 +102,7 @@ namespace FSO.IDE.Common
                 }
 
                 int[] realVToBlendV = new int[mesh.VertexBuffer.Length];
-                */
+                
 
 
                 foreach (var bone in mesh.BoneBindings)
@@ -204,26 +199,7 @@ namespace FSO.IDE.Common
             mat.M13, mat.M23, mat.M33, mat.M43,
             mat.M14, mat.M24, mat.M34, mat.M44
             );
-            /*new Matrix4x4(
-        mat.M11, mat.M12, mat.M13, mat.M14,
-        mat.M21, mat.M22, mat.M23, mat.M24,
-        mat.M31, mat.M32, mat.M33, mat.M34,
-        mat.M41, mat.M42, mat.M43, mat.M44
-        );*/
 
-            /**/
-
-            /*new Matrix4x4(
-            mat.M11, mat.M13, mat.M12, mat.M14,
-            mat.M31, mat.M33, mat.M32, mat.M34,
-            mat.M21, mat.M23, mat.M22, mat.M24,
-            mat.M41, mat.M43, mat.M42, mat.M44
-            );new Matrix4x4(
-            mat.M11, mat.M12, mat.M13, mat.M14,
-            mat.M21, mat.M22, mat.M23, mat.M24,
-            mat.M31, mat.M32, mat.M33, mat.M34,
-            mat.M41, mat.M42, mat.M43, mat.M44
-            );*/
             //result.Transpose();
             return result;
         }
@@ -263,5 +239,6 @@ namespace FSO.IDE.Common
             
             context.ExportFile(scn, path, "collada");
         }
+    */
     }
 }

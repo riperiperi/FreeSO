@@ -150,6 +150,7 @@ namespace FSO.IDE.EditorComponent
                 var interactive = AnimDisplay.Renderer;
                 var ava = (VMAvatar)interactive.TargetOBJ.BaseObject;
 
+                /*
                 var scn = MeshExporter.SceneGroup(
                     ava.Avatar.Bindings.Select(x => x.Mesh).ToList(),
                     new List<Animation> { ava.Animations[0].Anim },
@@ -157,6 +158,7 @@ namespace FSO.IDE.EditorComponent
                     ava.Avatar.BaseSkeleton);
 
                 MeshExporter.ExportToFBX(scn, @"C:\Users\Rhys\Desktop\fsoexport\test.dae");
+                */
             }));
         }
     }
