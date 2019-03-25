@@ -772,6 +772,8 @@ namespace FSO.SimAntics
                     ObjectData[(short)var] = value;
                     if (((value ^ old) & (int)VMEntityFlags.HasZeroExtent) > 0)
                         UpdateFootprint();
+                    if (((value ^ old) & (int)VMEntityFlags.FSODynamicFootprint) != 0)
+                        StaticFootprint = (value & (int)VMEntityFlags.FSODynamicFootprint) == 0;
                     if (this is VMAvatar && ((value ^ old) & (int)VMEntityFlags.Burning) > 0)
                         this.Reset(Thread.Context);
                     return true;
@@ -852,6 +854,59 @@ namespace FSO.SimAntics
             SetValue(VMStackObjectVariable.Room, (short)room);
         }
 
+        public List<VMPieMenuInteraction> GetPieMenuForInteraction(VM vm, VMEntity caller, int index, bool global, bool includeHidden)
+        {
+            TTABInteraction ia;
+            TTAs ttas = TreeTableStrings;
+            if (index < 0) return null;
+            if (!global)
+            {
+                if (!TreeTable.InteractionByIndex.TryGetValue((uint)index, out ia)) return null;
+            }
+            else
+            {
+                if (!vm.Context.GlobalTreeTable.InteractionByIndex.TryGetValue((uint)index, out ia)) return null;
+                ttas = vm.Context.GlobalTTAs;
+            }
+            var id = ia.TTAIndex;
+            var action = GetAction((int)id, caller, vm.Context, global);
+
+            caller.ObjectData[(int)VMStackObjectVariable.HideInteraction] = 0;
+            if (action != null) action.Flags &= ~TTABFlags.MustRun;
+            var actionStrings = caller.Thread.CheckAction(action);
+            if ((caller.ObjectData[(int)VMStackObjectVariable.Hidden] == 1 ||
+                caller.ObjectData[(int)VMStackObjectVariable.HideInteraction] == 1 ||
+                caller.Position == LotTilePos.OUT_OF_WORLD) && !includeHidden) return null;
+
+            if (actionStrings != null)
+            {
+                if (actionStrings.Count > 0)
+                {
+                    foreach (var actionS in actionStrings)
+                    {
+                        actionS.ID = (byte)id;
+                        actionS.Entry = ia;
+                        actionS.Global = global;
+                    }
+                }
+                else
+                {
+                    if (ttas != null)
+                    {
+                        actionStrings.Add(new VMPieMenuInteraction()
+                        {
+                            Name = ttas.GetString((int)id),
+                            ID = (byte)id,
+                            Entry = ia,
+                            Global = global
+                        });
+                    }
+                }
+            }
+
+            return actionStrings;
+        }
+
         public List<VMPieMenuInteraction> GetPieMenu(VM vm, VMEntity caller, bool includeHidden, bool includeGlobal)
         {
             var pie = new List<VMPieMenuInteraction>();
@@ -881,7 +936,9 @@ namespace FSO.SimAntics
                 caller.ObjectData[(int)VMStackObjectVariable.HideInteraction] = 0;
                 if (action != null) action.Flags &= ~TTABFlags.MustRun;
                 var actionStrings = caller.Thread.CheckAction(action);
-                if (caller.ObjectData[(int)VMStackObjectVariable.HideInteraction] == 1 && !includeHidden) continue;
+                if ((caller.ObjectData[(int)VMStackObjectVariable.Hidden] == 1 ||
+                    caller.ObjectData[(int)VMStackObjectVariable.HideInteraction] == 1 ||
+                    caller.Position == LotTilePos.OUT_OF_WORLD) && !includeHidden) continue;
 
                 if (actionStrings != null)
                 {
@@ -1609,6 +1666,7 @@ namespace FSO.SimAntics
         TurnedOff = 1 << 12,
         NeedsMaintinance = 1 << 13,
         ShowDynObjNameInTooltip = 1 << 14,
+        FSODynamicFootprint = 1 << 15
     }
 
 

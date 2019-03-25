@@ -543,6 +543,16 @@ void GridPS3D(GrassPSVTX input, out float4 color:COLOR0)
 	}
 }
 
+void GridPSTex3D(GrassPSVTX input, out float4 color:COLOR0)
+{
+	if (depthOutMode == true) {
+		discard;
+	}
+	else {
+		color = tex2Dbias(TexSampler, float4(input.GrassInfo.yz, 0, -0.5)) * DiffuseColor * Alpha;
+	}
+}
+
 bool Water;
 
 float2 LoopUV(float2 uv) {
@@ -619,9 +629,15 @@ float MulBase = 0.2;
 float MulRange = 7;
 float4 BlurBounds = float4(6, 6, 68, 68);
 
+float AvgVector(float3 vec) {
+	return (vec.r + vec.b + vec.g) / 3;
+}
+
 void BasePSMul(GrassPSVTX input, out float4 color:COLOR0)
 {
 	float4 c = LightDot(input.Normal);
+	float4 light = lightProcessFloor(input.ModelPos);
+	//float diff = AvgVector(light) / AvgVector(DiffuseColor);
 
 	float2 edgeDistXY = min(input.ModelPos.xz-BlurBounds.xy*3, BlurBounds.zw*3 - input.ModelPos.xz);
 	float edgeDist = min(edgeDistXY.x, edgeDistXY.y);
@@ -631,7 +647,8 @@ void BasePSMul(GrassPSVTX input, out float4 color:COLOR0)
 	//we want to mask out the terrain using its difference from the expected ground colour. 
 	//close to 0 should be zero, but past 30% should be fully apparent.
 	float3 expected = lerp(LightGreen.rgb, DarkGreen.rgb, 0.1);
-	c *= input.Color;
+	//c *= input.Color;
+	c = gammaMul(input.Color, c * (light / DiffuseColor));
 	float diff = length(expected - c.rgb);
 	color = float4(1, 1, 1, 1)*max(0, min(1, (diff - MulBase) * MulRange)) * edgeDist;
 }
@@ -774,6 +791,19 @@ technique DrawGrid
 #endif;
 
 	}
+
+	pass MainPass3DTex
+	{
+
+#if SM4
+		VertexShader = compile vs_4_0_level_9_1 GrassVS();
+		PixelShader = compile ps_4_0_level_9_1 GridPSTex3D();
+#else
+		VertexShader = compile vs_3_0 GrassVS();
+		PixelShader = compile ps_3_0 GridPSTex3D();
+#endif;
+
+	}
 }
 
 technique DrawBlades
@@ -849,7 +879,7 @@ technique DrawMask
 
 #if SM4
 		VertexShader = compile vs_4_0_level_9_1 GrassVS();
-		PixelShader = compile ps_4_0_level_9_1 BasePSMul();
+		PixelShader = compile ps_4_0_level_9_3 BasePSMul();
 #else
 		VertexShader = compile vs_3_0 GrassVS();
 		PixelShader = compile ps_3_0 BasePSMul();

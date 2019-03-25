@@ -79,6 +79,24 @@ namespace FSO.Server
             if (Content.Model.AbstractTextureRef.ImageFetchFunction == null)
                 Content.Model.AbstractTextureRef.ImageFetchFunction = Utils.CoreImageLoader.SoftImageFetch;
 
+            LOG.Info("Checking for scheduled updates...");
+            if (AutoUpdateUtility.QueueUpdateIfRequired(Kernel, Config.UpdateBranch))
+            {
+                //update queued, restart
+                LOG.Info("An update was scheduled, and has been queued for the watchdog to apply. Restarting...");
+                return 4;
+            }
+
+            //get server update ID if present in a file (from auto updater)
+            if (File.Exists("updateID.txt"))
+            {
+                var stringID = File.ReadAllText("updateID.txt");
+                int id;
+                if (int.TryParse(stringID, out id)) {
+                    Config.UpdateID = id;
+                }
+            }
+
             //TODO: Some content preloading
             LOG.Info("Scanning content");
             VMContext.InitVMConfig(false);
@@ -207,6 +225,13 @@ namespace FSO.Server
 
                             Kernel.Get<IGluonHostPool>().Stop();
 
+                            LOG.Info("(pre-close) checking for scheduled updates...");
+                            if (AutoUpdateUtility.QueueUpdateIfRequired(Kernel, Config.UpdateBranch))
+                            {
+                                LOG.Info("An update was scheduled, and has been queued for the watchdog to apply on restart.");
+                                return 4;
+                            }
+
                             /*var domain = AppDomain.CreateDomain("RebootApp");
 
                             var assembly = "FSO.Server.Updater, Version=1.0.0.0, Culture=neutral, PublicKeyToken=null";
@@ -267,7 +292,8 @@ namespace FSO.Server
             //TODO: select shard to send disconnection request
             foreach (var city in CityServers)
             {
-                city.Sessions.GetByAvatarId(user_id)?.Close();
+                var session = city.Sessions.GetByAvatarId(user_id);
+                session?.Close();
             }
         }
 

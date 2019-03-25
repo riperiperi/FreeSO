@@ -1,0 +1,16 @@
+<md-dialog>
+    <md-content class="md-padding">
+        <form name="reqForm">
+            <label>Your update is currently generating. Please wait!</label>
+            <br>
+            <md-progress-linear md-mode="determinate" ng-value="progressPct" style="margin-top: 5px;margin-bottom: 5px !important;"></md-progress-linear>
+            <label>{{progressString}}</label>
+
+            <label style="color: red" ng-if="progressError"><br>{{progressError}}</label>
+        </form>
+    </md-content>
+    <div class="md-actions" layout="row">
+        <span flex></span>
+        <md-button ng-click="close();"> Done </md-button>
+    </div>
+</md-dialog>

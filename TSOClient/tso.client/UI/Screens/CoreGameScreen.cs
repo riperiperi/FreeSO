@@ -314,6 +314,9 @@ namespace FSO.Client.UI.Screens
             Inbox.Visible = false;
             ControllerUtils.BindController<InboxController>(Inbox);
             WindowContainer.Add(Inbox);
+
+            var status = new UINetStatusTray();
+            Add(status);
         }
 
         public override void GameResized()

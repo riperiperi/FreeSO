@@ -34,6 +34,10 @@ namespace FSO.Server.Api.Core
                 {
                     x.SetMinimumLevel(LogLevel.Critical);
                 })
+                .UseKestrel(options =>
+                {
+                    options.Limits.MaxRequestBodySize = 500000000;
+                })
                 .SuppressStatusMessages(true)
                 .UseStartup<Startup>();
     }

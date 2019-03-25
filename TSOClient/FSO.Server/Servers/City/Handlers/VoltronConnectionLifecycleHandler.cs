@@ -96,6 +96,11 @@ namespace FSO.Server.Servers.City.Handlers
         {
         }
 
+        public void SessionMigrated(IAriesSession session)
+        {
+            //on reconnect to city. nothing right now.
+        }
+
         public async void SessionUpgraded(IAriesSession oldSession, IAriesSession newSession)
         {
             if (!(newSession is IVoltronSession))

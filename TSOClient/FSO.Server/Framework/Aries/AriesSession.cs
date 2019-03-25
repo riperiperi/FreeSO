@@ -12,11 +12,29 @@ namespace FSO.Server.Framework.Aries
         public bool IsAuthenticated { get; set; }
         public uint LastRecv { get; set; }
         public IoSession IoSession;
+        protected Dictionary<string, object> MigratableAttributes = new Dictionary<string, object>();
+        public TaskCompletionSource<bool> DisconnectSource = new TaskCompletionSource<bool>();
 
         public AriesSession(IoSession ioSession)
         {
             this.IoSession = ioSession;
             IsAuthenticated = false;
+        }
+
+        public virtual void Migrate(IoSession newSession)
+        {
+            //migrate this aries session and all attributes onto a new IoSession.
+            lock (MigratableAttributes)
+            {
+                foreach (var attr in MigratableAttributes)
+                {
+                    newSession.SetAttribute(attr.Key, attr.Value);
+                }
+            }
+            IoSession.SetAttribute("migrated", true);
+            DisconnectSource = new TaskCompletionSource<bool>();
+            newSession.SetAttribute("s", this);
+            IoSession = newSession;
         }
 
         public bool Connected
@@ -29,6 +47,9 @@ namespace FSO.Server.Framework.Aries
 
         public virtual void Close()
         {
+            SetAttribute("dc", true);
+            //if we're being kept alive, cut the disconnection timeout short
+            DisconnectSource.TrySetResult(true);
             this.IoSession.Close(false);
         }
         
@@ -60,6 +81,7 @@ namespace FSO.Server.Framework.Aries
 
         public void SetAttribute(string key, object value)
         {
+            lock (MigratableAttributes) MigratableAttributes[key] = value;
             IoSession.SetAttribute(key, value);
         }
     }

@@ -649,6 +649,10 @@
       <Project>{56f4bd87-2404-4263-80d5-6fa2161eb0a4}</Project>
       <Name>TargaImage</Name>
     </ProjectReference>
+    <ProjectReference Include="..\FSO.Patcher\FSO.Patcher.csproj">
+      <Project>{4e43ce64-343f-4c53-a055-bbf0f4986a16}</Project>
+      <Name>FSO.Patcher</Name>
+    </ProjectReference>
     <ProjectReference Include="..\FSO.SimAntics.JIT\FSO.SimAntics.JIT.csproj">
       <Project>{b8ab3711-7b4f-4126-9bf3-4ddde9475b74}</Project>
       <Name>FSO.SimAntics.JIT</Name>

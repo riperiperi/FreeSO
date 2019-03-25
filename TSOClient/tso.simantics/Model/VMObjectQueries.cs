@@ -129,8 +129,9 @@ namespace FSO.SimAntics.Model
                 tile = new List<VMEntity>();
                 ObjectsByCategory.Add(category, tile);
             }
-            if (!tile.Contains(obj)) VM.AddToObjList(tile, obj); //shouldn't be a problem any more, but just in case check first.
-            else { }
+            //debug check: use if things are going weird
+            //if (!tile.Contains(obj))
+            VM.AddToObjList(tile, obj); 
         }
 
         public void RemoveCategory(VMEntity obj, short category)

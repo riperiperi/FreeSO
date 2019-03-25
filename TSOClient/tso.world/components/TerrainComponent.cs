@@ -59,10 +59,14 @@ namespace FSO.LotView.Components
         private Blueprint Bp;
         public bool _3D = false;
 
+        private bool GridAsTexture;
+        private Texture GridTex;
+
         public TerrainComponent(Rectangle size, Blueprint blueprint) {
             this.Size = size;
             this.Effect = WorldContent.GrassEffect;
             this.Bp = blueprint;
+            GridAsTexture = FSOEnvironment.Enable3D;
 
             UpdateLotType();
         }
@@ -266,19 +270,39 @@ namespace FSO.LotView.Components
             BladeIndexBuffer.SetData(BladeIndexes);
             GeomLength = Geom.Length;
 
+            var primLength = (GridAsTexture) ? 3 : 2;
+
             if (GridIndices.Length > 0)
             {
                 GridIndexBuffer = new IndexBuffer(device, IndexElementSize.ThirtyTwoBits, sizeof(int) * GridIndices.Length, BufferUsage.None);
                 GridIndexBuffer.SetData(GridIndices);
-                GridPrimitives = GridIndices.Length / 2;
+                GridPrimitives = GridIndices.Length / primLength;
             }
 
             if (TGridIndices.Length > 0)
             {
                 TGridIndexBuffer = new IndexBuffer(device, IndexElementSize.ThirtyTwoBits, sizeof(int) * TGridIndices.Length, BufferUsage.None);
                 TGridIndexBuffer.SetData(TGridIndices);
-                TGridPrimitives = TGridIndices.Length / 2;
+                TGridPrimitives = TGridIndices.Length / primLength;
             }
+
+            if (GridTex == null)
+            {
+                using (var strm = File.OpenRead($"Content/Textures/lot/tile_dashed.png"))
+                {
+                    GridTex = GenMips(device, Texture2D.FromStream(device, strm));
+                }
+            }
+        }
+
+        private Texture2D GenMips(GraphicsDevice device, Texture2D texture)
+        {
+            var data = new Color[texture.Width * texture.Height];
+            texture.GetData(data);
+            texture.Dispose();
+            texture = new Texture2D(device, texture.Width, texture.Height, true, SurfaceFormat.Color);
+            TextureUtils.UploadWithAvgMips(texture, device, data);
+            return texture;
         }
 
         public TerrainParallaxVertex[] GetVertices(GraphicsDevice gd)
@@ -298,40 +322,57 @@ namespace FSO.LotView.Components
 
         private int[] GetGridIndicesForArea(Rectangle area, int quads)
         {
-            var gridIndexOff = 0;
-            var w = area.Width;
-            var h = area.Height;
+            area = Rectangle.Intersect(area, new Rectangle(0, 0, quads, quads));
+            var fine = new bool[quads * quads];
             var ox = area.X;
             var oy = area.Y;
-            int[] GridIndices = new int[(w * h) * 4 + (w + h) * 4]; //top left top right for all tiles, then the lines at the ends on bottom sides. Note that we need line start and endpoints.
-
+            var w = area.Width;
+            var h = area.Height;
             for (var y = 0; y < h; y++)
             {
                 for (var x = 0; x < w; x++)
                 {
-                    var tileOff = ((y + oy) * quads + x + ox) * 4;
-                    GridIndices[gridIndexOff++] = tileOff;
-                    GridIndices[gridIndexOff++] = tileOff + 1;
-                    GridIndices[gridIndexOff++] = tileOff;
-                    GridIndices[gridIndexOff++] = tileOff + 3;
-
-                    if (x == w - 1)
-                    {
-                        GridIndices[gridIndexOff++] = tileOff + 1; //+x
-                        GridIndices[gridIndexOff++] = tileOff + 2; //+x+y
-                    }
-                    if (y == h - 1)
-                    {
-                        GridIndices[gridIndexOff++] = tileOff + 3; //+y
-                        GridIndices[gridIndexOff++] = tileOff + 2; //+x+y
-                    }
+                    fine[x + ox + (y + oy) * quads] = true;
                 }
             }
-            return GridIndices;
+
+            return GetGridIndicesForFine(fine, quads);
+        }
+
+        private int[] GetGridTrisForFine(bool[] area, int quads)
+        {
+            List<int> GridIndices = new List<int>();
+            var i = quads + 1;
+            for (var y = 1; y < quads - 1; y++)
+            {
+                for (var x = 1; x < quads - 1; x++)
+                {
+                    var tile = area[i];
+
+                    if (tile)
+                    {
+                        var tileOff = i * 4;
+                        GridIndices.Add(tileOff);
+                        GridIndices.Add(tileOff + 1);
+                        GridIndices.Add(tileOff + 2); //+x+y
+
+                        GridIndices.Add(tileOff);
+                        GridIndices.Add(tileOff + 2); //+x+y
+                        GridIndices.Add(tileOff + 3);
+                    }
+                    i++;
+                }
+                i += 2;
+            }
+            return GridIndices.ToArray();
         }
 
         private int[] GetGridIndicesForFine(bool[] area, int quads)
         {
+            if (GridAsTexture)
+            {
+                return GetGridTrisForFine(area, quads);
+            }
             List<int> GridIndices = new List<int>();
             var i = quads+1;
             for (var y = 1; y < quads-1; y++)
@@ -407,7 +448,7 @@ namespace FSO.LotView.Components
             Effect.Parameters["GrassFadeMul"].SetValue((float)Math.Sqrt(device.Viewport.Width/1920f));
 
             Effect.Parameters["FadeRectangle"].SetValue(new Vector4(77*3/2f + SubworldOff.X, 77*3/ 2f + SubworldOff.Y, 77*3, 77*3));
-            Effect.Parameters["FadeWidth"].SetValue(35f*3);
+            Effect.Parameters["FadeWidth"].SetValue(100*35f*3);
 
             Effect.Parameters["TileSize"].SetValue(new Vector2(1f / Bp.Width, 1f / Bp.Height));
             Effect.Parameters["RoomMap"].SetValue(world.Rooms.RoomMaps[0]);
@@ -473,6 +514,9 @@ namespace FSO.LotView.Components
             var primitives = Bp.FloorGeom.SetGrassIndices(device, Effect, world);
 
             var parallax = false;
+
+            Effect.Parameters["TexMatrix"].SetValue(new Vector4(1f, 1f, -1f, 1f));
+            Effect.Parameters["TexOffset"].SetValue(new Vector2(0.5f, 0.5f));
 
             if (primitives > 0 && _3D == _3d)
             {
@@ -540,23 +584,30 @@ namespace FSO.LotView.Components
                     var depth = device.DepthStencilState;
                     device.DepthStencilState = DepthStencilState.DepthRead;
                     Effect.CurrentTechnique = Effect.Techniques["DrawGrid"];
+                    Effect.Parameters["BaseTex"].SetValue(GridTex);
                     Effect.Parameters["World"].SetValue(Matrix.Identity * Matrix.CreateTranslation(0, (18 / 522f) * grassScale - altOff, 0));
+                    pass = Effect.CurrentTechnique.Passes[(GridAsTexture)?2:0];
 
-                    if (TGridPrimitives > 0 && !TGridIndexBuffer.IsDisposed)
+                    if (GridAsTexture)
                     {
-                        //draw target size in red, below old size
-                        device.Indices = TGridIndexBuffer;
-                        Effect.Parameters["DiffuseColor"].SetValue(new Vector4(0.5f, 1f, 0.5f, 1.0f));
-                        pass = Effect.CurrentTechnique.Passes[(_3d)?1:0];
-                        pass.Apply();
-                        device.DrawIndexedPrimitives(PrimitiveType.LineList, 0, 0, TGridPrimitives);
-                    }
+                        if (TGridPrimitives > 0 && !TGridIndexBuffer.IsDisposed)
+                        {
+                            //draw target size in red, below old size
+                            device.Indices = TGridIndexBuffer;
+                            Effect.Parameters["DiffuseColor"].SetValue(new Vector4(0.5f, 1f, 0.5f, 1.0f));
+                            pass.Apply();
+                            device.DrawIndexedPrimitives(PrimitiveType.TriangleList, 0, 0, TGridPrimitives);
+                        }
 
-                    Effect.Parameters["DiffuseColor"].SetValue(new Vector4(0, 0, 0, 1.0f));
-                    device.Indices = GridIndexBuffer;
-                    pass = Effect.CurrentTechnique.Passes[(_3d) ? 1 : 0];
-                    pass.Apply();
-                    device.DrawIndexedPrimitives(PrimitiveType.LineList, 0, 0, GridPrimitives);
+                        
+                        Effect.Parameters["DiffuseColor"].SetValue(
+                            Content.Content.Get().TS1 ?
+                            new Vector4(1.0f, 1.0f, 1.0f, 0.8f) :
+                            new Vector4(0.0f, 0.0f, 0.0f, 0.8f));
+                        device.Indices = GridIndexBuffer;
+                        pass.Apply();
+                        device.DrawIndexedPrimitives(PrimitiveType.TriangleList, 0, 0, GridPrimitives);
+                    }
 
 
                     device.DepthStencilState = depth;
@@ -645,8 +696,9 @@ namespace FSO.LotView.Components
 
                 Effect.Parameters["LightVec"].SetValue(LightVec);
                 Effect.Parameters["MulRange"].SetValue(3f);
-                Effect.Parameters["MulBase"].SetValue(0.15f);
+                Effect.Parameters["MulBase"].SetValue(0.12f);
                 Effect.Parameters["BlurBounds"].SetValue(new Vector4(6, 6, 68, 68));
+                Effect.Parameters["DiffuseColor"].SetValue(world.OutsideColor.ToVector4());
 
 
                 var pass = Effect.CurrentTechnique.Passes[0];

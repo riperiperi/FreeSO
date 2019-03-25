@@ -31,6 +31,7 @@ using FSO.SimAntics;
 using FSO.UI.Framework;
 using MSDFData;
 using FSO.Common.Audio;
+using System.Linq;
 
 namespace FSO.Client
 {
@@ -44,6 +45,11 @@ namespace FSO.Client
 
 		public TSOGame() : base()
         {
+            /*
+            var test = new Utils.TestFunctions.ProjectionTest();
+            test.TestCombo();
+            */
+            
             GameFacade.Game = this;
             //if (GameFacade.DirectX) TimedReferenceController.SetMode(CacheType.PERMANENT);
             Content.RootDirectory = FSOEnvironment.GFXContentDir;
@@ -199,7 +205,7 @@ namespace FSO.Client
             hit.SetMasterVolume(HITVolumeGroup.AMBIENCE, GlobalSettings.Default.AmbienceVolume / 10f);
 
             GameFacade.Strings = new ContentStrings();
-            FSOFacade.Controller.StartLoading();
+            FSOFacade.Controller.Start();
 
             GraphicsDevice.RasterizerState = new RasterizerState() { CullMode = CullMode.None };
 
@@ -272,6 +278,12 @@ namespace FSO.Client
         protected override void OnExiting(object sender, EventArgs args)
         {
             base.OnExiting(sender, args);
+            var kernel = FSOFacade.Kernel;
+            if (kernel != null)
+            {
+                kernel.Get<LotConnectionRegulator>()?.Disconnect();
+                kernel.Get<CityConnectionRegulator>()?.Disconnect();
+            }
             GameThread.Killed = true;
             GameThread.OnKilled.Set();
         }

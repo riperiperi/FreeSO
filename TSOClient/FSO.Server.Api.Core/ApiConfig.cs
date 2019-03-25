@@ -1,4 +1,6 @@
-﻿using System;
+﻿using FSO.Server.Api.Core.Services;
+using FSO.Server.Common.Config;
+using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Web;
@@ -36,5 +38,10 @@ namespace FSO.Server.Api.Core
 
         public bool SmtpEnabled { get; set;  }
         public bool UseProxy { get; set; }
+
+        public int? UpdateID { get; set; }
+
+        public string BranchName { get; set; } = "dev";
+        public IUpdateUploader UpdateUploader { get; set; }
     }
 }

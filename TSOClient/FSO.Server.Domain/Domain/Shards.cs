@@ -49,6 +49,11 @@ namespace FSO.Server.Domain
             });
         }
 
+        public void Update()
+        {
+
+        }
+
         private void Poll()
         {
             _LastPoll = DateTime.UtcNow;
@@ -65,7 +70,8 @@ namespace FSO.Server.Domain
                     PublicHost = x.public_host,
                     InternalHost = x.internal_host,
                     VersionName = x.version_name,
-                    VersionNumber = x.version_number
+                    VersionNumber = x.version_number,
+                    UpdateID = x.update_id
                 }).ToList();
             }
         }

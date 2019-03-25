@@ -27,6 +27,7 @@ using FSO.Server.Database.DA.EmailConfirmation;
 using FSO.Server.Database.DA.Neighborhoods;
 using FSO.Server.Database.DA.Elections;
 using FSO.Server.Database.DA.Bulletin;
+using FSO.Server.Database.DA.Updates;
 
 namespace FSO.Server.Database.DA
 {
@@ -369,6 +370,16 @@ namespace FSO.Server.Database.DA
             {
                 if (_Transactions == null) _Transactions = new SqlTransactions(Context);
                 return _Transactions;
+            }
+        }
+
+        private IUpdates _Updates;
+        public IUpdates Updates
+        {
+            get
+            {
+                if (_Updates == null) _Updates = new SqlUpdates(Context);
+                return _Updates;
             }
         }
 

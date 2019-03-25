@@ -82,6 +82,7 @@ namespace FSO.Server.Api.Controllers
 
                     result.Address = shard.PublicHost;
                     result.PlayerID = user.UserID;
+                    result.AvatarID = avatarId;
                     result.Ticket = ticket.ticket_id;
                     result.ConnectionID = ticket.ticket_id;
                     result.AvatarID = avatarId;

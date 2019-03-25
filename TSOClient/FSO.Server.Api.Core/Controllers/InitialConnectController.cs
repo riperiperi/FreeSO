@@ -60,13 +60,29 @@ namespace FSO.Server.Api.Core.Controllers
                 var shardOne = api.Shards.GetById(1);
 
                 var token = api.JWT.CreateToken(session);
-                var response = ApiResponse.Xml(HttpStatusCode.OK, new UserAuthorized()
+
+                IActionResult response;
+                if (shardOne.UpdateID != null)
                 {
-                    FSOBranch = shardOne.VersionName,
-                    FSOVersion = shardOne.VersionNumber,
-                    FSOUpdateUrl = api.Config.UpdateUrl,
-                    FSOCDNUrl = api.Config.CDNUrl
-                });
+                    var update = db.Updates.GetUpdate(shardOne.UpdateID.Value);
+                    response = ApiResponse.Xml(HttpStatusCode.OK, new UserAuthorized()
+                    {
+                        FSOBranch = shardOne.VersionName,
+                        FSOVersion = shardOne.VersionNumber,
+                        FSOUpdateUrl = update.full_zip,
+                        FSOCDNUrl = api.Config.CDNUrl
+                    });
+                }
+                else
+                {
+                    response = ApiResponse.Xml(HttpStatusCode.OK, new UserAuthorized()
+                    {
+                        FSOBranch = shardOne.VersionName,
+                        FSOVersion = shardOne.VersionNumber,
+                        FSOUpdateUrl = api.Config.UpdateUrl,
+                        FSOCDNUrl = api.Config.CDNUrl
+                    });
+                }
                 Response.Cookies.Append("fso", token.Token, new Microsoft.AspNetCore.Http.CookieOptions()
                 {
                     Expires = DateTimeOffset.Now.AddDays(1),

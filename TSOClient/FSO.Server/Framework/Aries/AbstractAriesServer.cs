@@ -50,6 +50,8 @@ namespace FSO.Server.Framework.Aries
 
         private List<IAriesSessionInterceptor> _SessionInterceptors = new List<IAriesSessionInterceptor>();
 
+        public int UnexpectedDisconnectWaitSeconds = 0;
+
         public AbstractAriesServer(AbstractAriesServerConfig config, IKernel kernel)
         {
             _Sessions = new Sessions(this);
@@ -227,12 +229,87 @@ namespace FSO.Server.Framework.Aries
         {
         }
 
+        public bool AttemptMigration(AriesSession newSession, string userID, string password)
+        {
+            //search for a session for a specific user
+            uint avatarID;
+            if (!uint.TryParse(userID, out avatarID)) return false;
+            var session = _Sessions.GetByAvatarId(avatarID);
+            if (session == null || (string)session.GetAttribute("sessionKey") != password) return false;
+            MigrateSession((AriesSession)session, newSession);
+            return true;
+        }
+
+        public void MigrateSession(AriesSession oldSession, AriesSession newSession)
+        {
+            oldSession.Migrate(newSession.IoSession);
+            //remove the new session as its connection has been migrated to the old.
+            _Sessions.Remove(newSession);
+
+            foreach (var interceptor in _SessionInterceptors)
+            {
+                try
+                {
+                    interceptor.SessionMigrated(oldSession);
+                }
+                catch (Exception ex)
+                {
+                    LOG.Error(ex);
+                }
+            }
+
+            oldSession.Write(new HostOnlinePDU
+            {
+                ClientBufSize = 4096,
+                HostVersion = 0x7FFF,
+                HostReservedWords = 0
+            });
+        }
+
         public void SessionClosed(IoSession session)
         {
-            LOG.Info("[SESSION-CLOSED (" + Config.Call_Sign + ")]");
-
             var ariesSession = session.GetAttribute<IAriesSession>("s");
             _Sessions.Remove(ariesSession);
+
+            if (session.GetAttribute("dc") == null && session.GetAttribute("sessionKey") != null)
+            {
+                //unexpected disconnect.
+                if (UnexpectedDisconnectWaitSeconds > 0)
+                {
+                    //close this session after the timeout, if it isn't migrated.
+                    LOG.Info("[SESSION-INTERRUPTED (" + Config.Call_Sign + ")]");
+
+                    Task.Run(async () =>
+                    {
+                        await Task.WhenAny(
+                            ((AriesSession)ariesSession).DisconnectSource.Task, 
+                            Task.Delay(UnexpectedDisconnectWaitSeconds * 1000)
+                            );
+
+                        if (session.GetAttribute("migrated") != null)
+                        {
+                            //this session has been migrated to another connection - it no longer needs to be closed
+                            return;
+                        }
+                        LOG.Info("[SESSION-TIMEOUT (" + Config.Call_Sign + ")]");
+
+                        foreach (var interceptor in _SessionInterceptors)
+                        {
+                            try
+                            {
+                                interceptor.SessionClosed(ariesSession);
+                            }
+                            catch (Exception ex)
+                            {
+                                LOG.Error(ex);
+                            }
+                        }
+                    });
+                    return;
+                }
+            }
+
+            LOG.Info("[SESSION-CLOSED (" + Config.Call_Sign + ")]");
 
             foreach (var interceptor in _SessionInterceptors)
             {
@@ -282,12 +359,17 @@ namespace FSO.Server.Framework.Aries
 
         public override void Shutdown()
         {
+            var sendBye = UnexpectedDisconnectWaitSeconds > 0;
+            UnexpectedDisconnectWaitSeconds = 0;
             Acceptor.Dispose();
             PlainAcceptor.Dispose();
 
             var sessionClone = _Sessions.Clone();
             foreach (var session in sessionClone)
+            {
+                if (sendBye) session.Write(new ServerByePDU());
                 session.Close();
+            }
 
             MarkHostDown();
         }

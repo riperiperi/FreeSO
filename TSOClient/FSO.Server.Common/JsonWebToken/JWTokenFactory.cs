@@ -25,7 +25,7 @@ namespace FSO.Server.Servers.Api.JsonWebToken
 
         public JWTUser DecodeToken(string token)
         {
-            var payload = JWT.JsonWebToken.Decode(token, Config.Key, true);
+            var payload = JWT.JsonWebToken.Decode(token, Config.Key, false);
             Dictionary<string, string> payloadParsed = JsonConvert.DeserializeObject<Dictionary<string, string>>(payload);
             return Newtonsoft.Json.JsonConvert.DeserializeObject<JWTUser>(payloadParsed["data"]);
         }

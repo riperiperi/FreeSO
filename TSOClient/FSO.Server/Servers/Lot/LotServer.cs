@@ -15,6 +15,7 @@ using System.Text;
 using System.Threading.Tasks;
 using FSO.Server.Database.DA.Hosts;
 using FSO.Server.Servers.Shared.Handlers;
+using FSO.Server.Protocol.Voltron.Packets;
 
 namespace FSO.Server.Servers.Lot
 {
@@ -30,6 +31,7 @@ namespace FSO.Server.Servers.Lot
         public LotServer(LotServerConfiguration config, Ninject.IKernel kernel) : base(config, kernel)
         {
             this.Config = config;
+            this.UnexpectedDisconnectWaitSeconds = 30;
 
             Kernel.Bind<LotServerConfiguration>().ToConstant(Config);
             Kernel.Bind<LotHost>().To<LotHost>().InSingletonScope();
@@ -102,6 +104,18 @@ namespace FSO.Server.Servers.Lot
 
             if (message != null)
             {
+                if (packet.Unknown2 == 1)
+                {
+                    //connection re-establish.
+                    if (!AttemptMigration(rawSession, packet.User, packet.Password))
+                    {
+                        //failed to find a session to migrate
+                        rawSession.Write(new ServerByePDU() { }); //try and close the connection safely
+                        rawSession.Close();
+                    }
+                    return;
+                }
+
                 DbLotServerTicket ticket = null;
 
                 using (var da = DAFactory.Get())
@@ -112,7 +126,6 @@ namespace FSO.Server.Servers.Lot
                         //TODO: Check if its expired
                         da.Lots.DeleteLotServerTicket(packet.Password);
                     }
-
 
                     if (ticket != null)
                     {
@@ -148,6 +161,7 @@ namespace FSO.Server.Servers.Lot
                         });
 
                         newSession.SetAttribute("cityCallSign", ticket.avatar_claim_owner);
+                        newSession.SetAttribute("sessionKey", packet.Password);
 
                         //Try and join the lot, no reason to keep this connection alive if you can't get in
                         if (!Lots.TryJoin(ticket.lot_id, newSession))

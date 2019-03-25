@@ -1,4 +1,5 @@
 ﻿using FSO.Server;
+using FSO.Server.Api.Core.Services;
 using FSO.Server.Common;
 using FSO.Server.Servers.UserApi;
 using Microsoft.AspNetCore;
@@ -45,9 +46,11 @@ namespace FSO.Server.Core
             settings.Add("smtpPassword", userApiConfig.SmtpPassword);
             settings.Add("smtpPort", userApiConfig.SmtpPort.ToString());
             settings.Add("useProxy", userApiConfig.UseProxy.ToString());
-            
+            settings.Add("updateID", config.UpdateID?.ToString() ?? "");
+
             var api2 = new FSO.Server.Api.Core.Api();
             api2.Init(settings);
+            if (userApiConfig.AwsConfig != null) api2.UpdateUploader = new AWSUpdateUploader(userApiConfig.AwsConfig);
             api.SetupInstance(api2);
             api2.HostPool = api.GetGluonHostPool();
             

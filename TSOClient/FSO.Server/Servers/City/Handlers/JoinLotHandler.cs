@@ -106,7 +106,7 @@ namespace FSO.Server.Servers.City.Handlers
                         LotId = find.LotId, //can be modified by job matchmaker
                         LotServerTicket = ticket.ticket_id,
                         Address = find.Server.PublicHost,
-                        User = session.UserId.ToString()
+                        User = session.AvatarId.ToString()
                     });
                 }
                 else

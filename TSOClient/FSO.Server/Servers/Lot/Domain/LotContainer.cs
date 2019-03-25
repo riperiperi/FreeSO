@@ -1494,5 +1494,12 @@ namespace FSO.Server.Servers.Lot.Domain
             ClientCount--;
         }
 
+        public void AvatarRefresh(IVoltronSession session)
+        {
+            //Exit lot, Persist the avatars data, remove avatar lock
+            LOG.Info("Avatar " + session.AvatarId + " re-established connection to lot " + Context.DbId);
+
+            VMDriver.RefreshClient(session.AvatarId);
+        }
     }
 }

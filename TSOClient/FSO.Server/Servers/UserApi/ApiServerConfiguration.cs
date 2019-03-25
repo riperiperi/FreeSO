@@ -1,4 +1,5 @@
-﻿using System;
+﻿using FSO.Server.Common.Config;
+using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Text;
@@ -46,6 +47,8 @@ namespace FSO.Server.Servers.UserApi
         public string SmtpUser { get; set; }
         public bool ForceEmailConfirmation { get; set; }
         public bool UseProxy { get; set; } = true;
+
+        public AWSConfig AwsConfig { get; set; }
     }
 
     public enum ApiServerControllers

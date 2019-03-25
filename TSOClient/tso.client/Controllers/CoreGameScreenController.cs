@@ -111,6 +111,7 @@ namespace FSO.Client.Controllers
                     case "LotCommandStream":
                         //forward the command to the VM
                         //doesn't really need to be next update... but we don't want to catch the VM in a half-init state.
+                        if (data == null) break;
                         VMNetMessage msg = null;
                         if (data is FSOVMTickBroadcast)
                             msg = new VMNetMessage(VMNetMessageType.BroadcastTick, ((FSOVMTickBroadcast)data).Data);

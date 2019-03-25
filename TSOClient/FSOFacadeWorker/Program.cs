@@ -160,6 +160,7 @@ namespace FSOFacadeWorker
                         //    LotQueue.RemoveAt(0);
                         //}
                         RenderLot();
+                        RenderLot();
                     });
                 }
 

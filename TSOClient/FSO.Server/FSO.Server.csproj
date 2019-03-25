@@ -195,7 +195,6 @@
     <Compile Include="DataService\ServerNFSProvider.cs" />
     <Compile Include="DataService\ShardDataServiceModule.cs" />
     <Compile Include="Domain\ServerDomainModule.cs" />
-    <Compile Include="Domain\Shards.cs" />
     <Compile Include="Domain\ServerTop100Domain.cs" />
     <Compile Include="Servers\City\CityLivenessHandler.cs" />
     <Compile Include="Servers\City\CityServerModule.cs" />
@@ -271,6 +270,7 @@
     <Compile Include="ToolInitDatabase.cs" />
     <Compile Include="ToolRunServer.cs" />
     <Compile Include="Servers\AbstractServer.cs" />
+    <Compile Include="Utils\AutoUpdateUtility.cs" />
     <Compile Include="Utils\CoreImageLoader.cs" />
     <Compile Include="Utils\GluonHostPool.cs" />
     <Compile Include="Servers\Tasks\TaskEngine.cs" />

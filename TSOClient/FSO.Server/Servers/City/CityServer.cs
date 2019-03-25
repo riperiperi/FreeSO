@@ -3,6 +3,7 @@ using FSO.Server.Common;
 using FSO.Server.Database.DA;
 using FSO.Server.Database.DA.AvatarClaims;
 using FSO.Server.Database.DA.Hosts;
+using FSO.Server.Domain;
 using FSO.Server.Framework;
 using FSO.Server.Framework.Aries;
 using FSO.Server.Framework.Voltron;
@@ -34,6 +35,7 @@ namespace FSO.Server.Servers.City
 
         public CityServer(CityServerConfiguration config, IKernel kernel) : base(config, kernel)
         {
+            this.UnexpectedDisconnectWaitSeconds = 30;
             this.Config = config;
             VoltronSessions = Sessions.GetOrCreateGroup(Groups.VOLTRON);
         }
@@ -75,7 +77,8 @@ namespace FSO.Server.Servers.City
             IDAFactory da = Kernel.Get<IDAFactory>();
             using (var db = da.Get()){
                 var version = ServerVersion.Get();
-                db.Shards.UpdateVersion(shard.Id, version.Name, version.Number);
+                db.Shards.UpdateVersion(shard.Id, version.Name, version.Number, version.UpdateID);
+                ((Shards)shards).Update();
 
                 var oldClaims = db.LotClaims.GetAllByOwner(context.Config.Call_Sign).ToList();
                 if(oldClaims.Count > 0)
@@ -121,6 +124,18 @@ namespace FSO.Server.Servers.City
 
             if (message != null)
             {
+                if (packet.Unknown2 == 1)
+                {
+                    //connection re-establish.
+                    if (!AttemptMigration(rawSession, packet.User, packet.Password))
+                    {
+                        //failed to find a session to migrate
+                        rawSession.Write(new ServerByePDU() { }); //try and close the connection safely
+                        rawSession.Close();
+                    }
+                    return;
+                }
+
                 using (var da = DAFactory.Get())
                 {
                     var ticket = da.Shards.GetTicket(packet.Password);
@@ -201,6 +216,7 @@ namespace FSO.Server.Servers.City
                             x.IsAuthenticated = true;
                             x.AvatarClaimId = claim.Value;
                         });
+                        newSession.SetAttribute("sessionKey", packet.Password);
                         return;
                     }
                 }

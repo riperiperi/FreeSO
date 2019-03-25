@@ -190,6 +190,11 @@
     <Compile Include="DA\Tuning\DbTuning.cs" />
     <Compile Include="DA\Tuning\ITuning.cs" />
     <Compile Include="DA\Tuning\SqlTuning.cs" />
+    <Compile Include="DA\Updates\DbUpdate.cs" />
+    <Compile Include="DA\Updates\DbUpdateAddon.cs" />
+    <Compile Include="DA\Updates\DbUpdateBranch.cs" />
+    <Compile Include="DA\Updates\IUpdates.cs" />
+    <Compile Include="DA\Updates\SqlUpdates.cs" />
     <Compile Include="DA\Users\IUsers.cs" />
     <Compile Include="DA\Users\SqlUsers.cs" />
     <Compile Include="DA\Users\User.cs" />
@@ -225,6 +230,9 @@
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </Content>
     <Content Include="DatabaseScripts\changes\0024_bulletin.sql">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </Content>
+    <Content Include="DatabaseScripts\changes\0025_updates.sql">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </Content>
     <Content Include="DatabaseScripts\manifest.json">

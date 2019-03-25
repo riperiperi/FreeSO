@@ -143,11 +143,18 @@ namespace FSO.Client.UI.Panels
             Add(benchmarkBtn);
 
             var resyncBtn = new UIButton();
-            resyncBtn.Caption = "Force Resync";
+            resyncBtn.Caption = "Lot Disconnect";
             resyncBtn.Position = new Microsoft.Xna.Framework.Vector2(160, 210);
-            resyncBtn.Width = 300;
+            resyncBtn.Width = 150;
             resyncBtn.OnButtonClick += x =>
             {
+                var kernel = FSOFacade.Kernel;
+                if (kernel != null)
+                {
+                    var reg = kernel.Get<Regulators.LotConnectionRegulator>();
+                    reg.Client.Disconnect();
+                }
+                /*
                 var core = (GameFacade.Screens.CurrentUIScreen as IGameScreen);
                 if (core == null || core.vm == null)
                 {
@@ -158,8 +165,24 @@ namespace FSO.Client.UI.Panels
                     return;
                 }
                 core.vm.SendCommand(new VMRequestResyncCmd());
+                */
             };
             Add(resyncBtn);
+
+            var cityDCBtn = new UIButton();
+            cityDCBtn.Caption = "City Disconnect";
+            cityDCBtn.Position = new Microsoft.Xna.Framework.Vector2(160+150, 210);
+            cityDCBtn.Width = 150;
+            cityDCBtn.OnButtonClick += x =>
+            {
+                var kernel = FSOFacade.Kernel;
+                if (kernel != null)
+                {
+                    var reg = kernel.Get<Regulators.CityConnectionRegulator>();
+                    reg.Client.Disconnect();
+                }
+            };
+            Add(cityDCBtn);
 
             serverNameBox = new UITextBox();
             serverNameBox.X = 50;

@@ -288,6 +288,7 @@
     <Compile Include="NetPlay\Model\Commands\VMNetInteractionResultCmd.cs" />
     <Compile Include="NetPlay\Model\Commands\VMNetLockCmd.cs" />
     <Compile Include="NetPlay\Model\Commands\VMNetMoveObjectCmd.cs" />
+    <Compile Include="NetPlay\Model\Commands\VMNetPingCmd.cs" />
     <Compile Include="NetPlay\Model\Commands\VMNetPlaceInventoryCmd.cs" />
     <Compile Include="NetPlay\Model\Commands\VMNetSendToInventoryCmd.cs" />
     <Compile Include="NetPlay\Model\Commands\VMNetSetOutfitCmd.cs" />

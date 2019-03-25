@@ -376,6 +376,10 @@ namespace FSO.SimAntics.Primitives
                     context.StackObject.MeToObject.Clear();
                     context.StackObject.MeToPersist.Clear();
                     return VMPrimitiveExitCode.GOTO_TRUE;
+                case VMGenericTSOCallMode.FSOMarkDonated:
+                    var ostate = (context.StackObject?.TSOState as VMTSOObjectState);
+                    if (ostate != null) ostate.ObjectFlags |= VMTSOObjectFlags.FSODonated;
+                    return VMPrimitiveExitCode.GOTO_TRUE;
                 default:
                     return VMPrimitiveExitCode.GOTO_TRUE;
             }
@@ -388,7 +392,7 @@ namespace FSO.SimAntics.Primitives
             else
             {
                 var objState = (obj.TSOState as VMTSOObjectState);
-                if (objState.ObjectFlags.HasFlag(VMTSOObjectFlags.FSODonated))
+                if (objState.ObjectFlags.HasFlag(VMTSOObjectFlags.FSODonated) && context.VM.TSOState.CommunityLot)
                     return context.VM.TSOState.OwnerID;
                 else
                     return objState.OwnerID;

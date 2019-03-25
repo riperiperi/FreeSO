@@ -29,8 +29,8 @@ namespace FSO.Server.Protocol.CitySelector
             {
                 result.AppendTextNode("ConnectionID", ConnectionID);
                 result.AppendTextNode("EntitlementLevel", "");
-                result.AppendTextNode("AvatarID", AvatarID);
             }
+            result.AppendTextNode("AvatarID", AvatarID); //freeso now uses this
 
             return result;
         }
@@ -41,7 +41,7 @@ namespace FSO.Server.Protocol.CitySelector
             this.Ticket = element.ReadTextNode("Authorization-Ticket");
             this.PlayerID = uint.Parse(element.ReadTextNode("PlayerID"));
 
-            //this.AvatarID = element.ReadTextNode("AvatarID");
+            this.AvatarID = element.ReadTextNode("AvatarID");
         }
 
         #endregion

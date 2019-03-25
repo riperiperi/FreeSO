@@ -72,7 +72,9 @@ namespace FSO.Server.Protocol.Aries
                     buffer.Get(data, 0, (int)payloadSize);
                     
                     IAriesPacket packet = (IAriesPacket)Activator.CreateInstance(packetClass);
-                    packet.Deserialize(IoBuffer.Wrap(data), Context);
+                    var io = IoBuffer.Wrap(data);
+                    io.Order = ByteOrder.LittleEndian;
+                    packet.Deserialize(io, Context);
                     output.Write(packet);
 
                     payloadSize = 0;

@@ -243,6 +243,13 @@
     <Compile Include="Utils\TSOTime.cs" />
     <Compile Include="Utils\ValuePointer.cs" />
     <Compile Include="Utils\XMLList.cs" />
+    <Compile Include="WorldGeometry\MeshProjector.cs" />
+    <Compile Include="WorldGeometry\Paths\LinePath.cs" />
+    <Compile Include="WorldGeometry\Paths\SVGParser.cs" />
+    <Compile Include="WorldGeometry\RoadGeometry.cs" />
+    <Compile Include="WorldGeometry\SimplifiedHeightmap.cs" />
+    <Compile Include="WorldGeometry\TS1RoadTemplates.cs" />
+    <Compile Include="WorldGeometry\Utils\TriangleSet.cs" />
   </ItemGroup>
   <ItemGroup>
     <ProjectReference Include="..\..\Other\libs\FSOMina.NET\Mina.NET\Mina.NET.csproj">

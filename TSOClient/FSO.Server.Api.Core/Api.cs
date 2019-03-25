@@ -1,4 +1,5 @@
-﻿using FSO.Server.Api.Core.Utils;
+﻿using FSO.Server.Api.Core.Services;
+using FSO.Server.Api.Core.Utils;
 using FSO.Server.Common;
 using FSO.Server.Database.DA;
 using FSO.Server.Domain;
@@ -25,6 +26,7 @@ namespace FSO.Server.Api.Core
         public JWTFactory JWT;
         public Shards Shards;
         public IGluonHostPool HostPool;
+        public IUpdateUploader UpdateUploader;
 
         public Api()
         {
@@ -42,9 +44,10 @@ namespace FSO.Server.Api.Core
             Config.CDNUrl = appSettings["cdnUrl"];
             Config.NFSdir = appSettings["nfsdir"];
             Config.UseProxy = bool.Parse(appSettings["useProxy"]);
+            Config.UpdateID = (appSettings["updateID"] == "") ? (int?)null : int.Parse(appSettings["updateID"]);
 
             // new smtp config vars
-            if(appSettings["smtpHost"]!=null&&
+            if (appSettings["smtpHost"]!=null&&
                 appSettings["smtpUser"]!=null&&
                 appSettings["smtpPassword"]!=null&&
                 appSettings["smtpPort"]!=null)

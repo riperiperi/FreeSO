@@ -23,7 +23,7 @@ namespace FSO.SimAntics.Engine
         private static string[] valid = {
             "Object", "Me", "TempXL:", "Temp:", "$", "Attribute:", "DynamicStringLocal:", "Local:", "TimeLocal:", "NameLocal:",
             "FixedLocal:", "DynamicObjectName", "MoneyXL:", "JobOffer:", "Job:", "JobDesc:", "Param:", "Neighbor", "\r\n", "ListObject",
-            "CatalogLocal:", "\\n"
+            "CatalogLocal:", "DateLocal:", "\\n"
         };
 
         public static void ShowDialog(VMStackFrame context, VMDialogOperand operand, STR source)
@@ -98,7 +98,7 @@ namespace FSO.SimAntics.Engine
                         {
                             try
                             {
-                                if (cmdString == "DynamicStringLocal:" || cmdString == "TimeLocal:" || cmdString == "JobOffer:" || cmdString == "Job:" || cmdString == "JobDesc:")
+                                if (cmdString == "DynamicStringLocal:" || cmdString == "TimeLocal:" || cmdString == "JobOffer:" || cmdString == "Job:" || cmdString == "JobDesc:" || cmdString == "DateLocal:")
                                 {
                                     values[1] = -1;
                                     values[2] = -1;
@@ -250,6 +250,10 @@ namespace FSO.SimAntics.Engine
                                     var catObj = context.VM.GetObjectById(VMMemory.GetVariable(context, Scopes.VMVariableScope.Local, values[0]));
                                     var cat = catObj.Object.Resource.Get<CTSS>(catObj.Object.OBJ.CatalogStringsID)?.GetString(1);
                                     output.Append(cat ?? "");
+                                    break;
+                                case "DateLocal:":
+                                    var date = new DateTime(context.Locals[values[2]], context.Locals[values[1]], context.Locals[values[0]]);
+                                    output.Append(date.ToLongDateString());
                                     break;
                                 case "\\n":
                                     output.Append("\n");

@@ -150,9 +150,18 @@ namespace FSO.Server.Servers.Lot.Domain
         public void SessionClosed(IVoltronSession session)
         {
             var lot = GetLot(session);
-            if(lot != null)
+            if (lot != null)
             {
                 lot.Leave(session);
+            }
+        }
+
+        public void SessionMigrated(IVoltronSession session)
+        {
+            var lot = GetLot(session);
+            if (lot != null)
+            {
+                lot.Refresh(session);
             }
         }
 
@@ -567,6 +576,14 @@ namespace FSO.Server.Servers.Lot.Domain
             lock (_Visitors)
             {
                 InBackground(() => Container.AvatarLeave(session));
+            }
+        }
+
+        public void Refresh(IVoltronSession session)
+        {
+            lock (_Visitors)
+            {
+                InBackground(() => Container.AvatarRefresh(session));
             }
         }
 

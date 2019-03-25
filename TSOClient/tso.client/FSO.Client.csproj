@@ -123,6 +123,7 @@
     <Compile Include="Controllers\Panels\SecureTradeController.cs" />
     <Compile Include="Controllers\RoommateRequestController.cs" />
     <Compile Include="Controllers\TerrainController.cs" />
+    <Compile Include="Controllers\UpdateController.cs" />
     <Compile Include="FSOFacade.cs" />
     <Compile Include="FSOProgram.cs" />
     <Compile Include="GameStartProxy.cs" />
@@ -130,6 +131,7 @@
     <Compile Include="GameContent\CacheModule.cs" />
     <Compile Include="Network\ClientDataService.cs" />
     <Compile Include="Network\IClientDataService.cs" />
+    <Compile Include="Network\NetworkStatus.cs" />
     <Compile Include="Network\Sandbox\FSOSandboxClient.cs" />
     <Compile Include="Network\Sandbox\FSOSandboxProtocol.cs" />
     <Compile Include="Network\Sandbox\FSOSandboxProtocolDecoder.cs" />
@@ -232,6 +234,7 @@
     <Compile Include="UI\Hints\UIHintAlert.cs" />
     <Compile Include="UI\Panels\UILotControlTouchHelper.cs" />
     <Compile Include="UI\Panels\UILotSkillModeDialog.cs" />
+    <Compile Include="UI\Panels\UINetStatusTray.cs" />
     <Compile Include="UI\Panels\UISandboxSelector.cs" />
     <Compile Include="UI\Panels\UINeighborhoodSelectionPanel.cs" />
     <Compile Include="UI\Panels\UISortedContainer.cs" />
@@ -270,6 +273,7 @@
     <Compile Include="UI\Panels\WorldUI\UIMoneyHeadline.cs" />
     <Compile Include="UI\Screens\IGameScreen.cs" />
     <Compile Include="UI\Screens\SandboxGameScreen.cs" />
+    <Compile Include="UI\Screens\TSOVersionPatchScreen.cs" />
     <Compile Include="UI\UIRelationshipBar.cs" />
     <Compile Include="Utils\ControllerUtils.cs" />
     <Compile Include="Utils\Endian.cs" />
@@ -278,6 +282,7 @@
     <Compile Include="Utils\GameLocator\WindowsLocator.cs" />
     <Compile Include="Utils\MonogameLinker.cs" />
     <Compile Include="Utils\PalMapper.cs" />
+    <Compile Include="Utils\TestFunctions\ProjectionTest.cs" />
     <Compile Include="Utils\ThreeDMesh.cs" />
     <Content Include="..\..\Other\libs\FSOMonoGame\MonoGame.Framework\obj\Linux\AnyCPU\Release\MonoGame.Framework.dll">
       <Link>Monogame\Linux\MonoGame.Framework.dll</Link>

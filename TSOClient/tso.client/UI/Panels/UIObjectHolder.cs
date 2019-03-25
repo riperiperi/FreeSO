@@ -79,6 +79,7 @@ namespace FSO.Client.UI.Panels
                 if (target is VMGameObject) ((ObjectComponent)target.WorldUI).ForceDynamic = true;
                 CursorTiles[i] = vm.Context.CreateObjectInstance(0x00000437, new LotTilePos(target.Position), FSO.LotView.Model.Direction.NORTH, true).Objects[0];
                 CursorTiles[i].SetPosition(new LotTilePos(0,0,1), Direction.NORTH, vm.Context);
+                CursorTiles[i].SetRoom(65535);
                 ((ObjectComponent)CursorTiles[i].WorldUI).ForceDynamic = true;
             }
             Holding.TilePosOffset = new Vector2(0, 0);

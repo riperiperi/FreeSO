@@ -11,6 +11,7 @@ namespace FSO.Server.Common
     {
         public string Name;
         public string Number;
+        public int? UpdateID;
 
         public static ServerVersion Get()
         {
@@ -27,7 +28,7 @@ namespace FSO.Server.Common
                     var str = Reader.ReadLine();
                     var split = str.LastIndexOf('-');
 
-                    result.Name= str;
+                    result.Name = str;
                     if (split != -1)
                     {
                         result.Name = str.Substring(0, split);
@@ -35,6 +36,17 @@ namespace FSO.Server.Common
                     }
                 }
             }
+
+            if (File.Exists("updateID.txt"))
+            {
+                var stringID = File.ReadAllText("updateID.txt");
+                int id;
+                if (int.TryParse(stringID, out id))
+                {
+                    result.UpdateID = id;
+                }
+            }
+
             return result;
         }
     }

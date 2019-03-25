@@ -30,6 +30,8 @@ namespace FSO.SimAntics.NetPlay.Drivers
         private bool ExecutedAnything;
         private int DriverTickPhase = 0;
 
+        private int TicksSinceLastCommand;
+
         private VM VMHook; //should probably always backreference the VM anyways, but just used by disconnect
         //todo: clean up everything in all of these classes.
 
@@ -105,6 +107,7 @@ namespace FSO.SimAntics.NetPlay.Drivers
                 tickSpeed = 2;
             else tickSpeed = 1;
 
+            TicksSinceLastCommand++;
             if (TickBuffer.Count == 0)
             {
                 tickSpeed = 0;
@@ -113,10 +116,18 @@ namespace FSO.SimAntics.NetPlay.Drivers
                     BufferSize++;
                     ReplenishBuffer = true;
                 }
-
+                
+                if (TicksSinceLastCommand > 45)
+                {
+                    SendCommand(new Model.Commands.VMNetPingCmd());
+                    TicksSinceLastCommand = -30*30;
+                }
             }
-            else if (TickBuffer.Count <= TICKS_PER_PACKET)
-                TicksSinceCloseCall = 0;
+            else
+            {
+                TicksSinceLastCommand = Math.Min(TicksSinceLastCommand, 0);
+                if (TickBuffer.Count <= TICKS_PER_PACKET) TicksSinceCloseCall = 0;
+            }
 
             if (ReplenishBuffer)
             {

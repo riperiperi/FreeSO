@@ -32,6 +32,7 @@ using FSO.Server.Database.DA.EmailConfirmation;
 using FSO.Server.Database.DA.Neighborhoods;
 using FSO.Server.Database.DA.Elections;
 using FSO.Server.Database.DA.Bulletin;
+using FSO.Server.Database.DA.Updates;
 
 namespace FSO.Server.Database.DA
 {
@@ -68,6 +69,7 @@ namespace FSO.Server.Database.DA
         IHosts Hosts { get; }
         ITasks Tasks { get; }
         IEmailConfirmations EmailConfirmations { get; }
+        IUpdates Updates { get; }
 
         void Flush();
     }

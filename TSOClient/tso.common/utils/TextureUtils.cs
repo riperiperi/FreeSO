@@ -867,7 +867,7 @@ namespace FSO.Common.Utils
                         (byte)(r / t),
                         (byte)(g / t),
                         (byte)(b / t),
-                        (byte)(a / t)
+                        (byte)(a / 4)
                         );
                     find += 2;
                 }

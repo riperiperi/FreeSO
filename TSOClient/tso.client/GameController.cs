@@ -67,6 +67,23 @@ namespace FSO.Client
             });
         }
 
+        public void Start()
+        {
+            var version = Content.Content.Get().VersionString;
+            if (version == "1.1097.1.0") StartLoading();
+            else WrongVersion();
+        }
+
+        /// <summary>
+        /// Shows up before login if the current TSO version is incorrect. Allows patching of known TSO versions.
+        /// </summary>
+        public void WrongVersion()
+        {
+            var screen = Kernel.Get<TSOVersionPatchScreen>();
+            GameFacade.Screens.RemoveCurrent();
+            GameFacade.Screens.AddScreen(screen);
+        }
+
         /// <summary>
         /// Show the login screen
         /// </summary>

@@ -92,6 +92,7 @@ namespace FSO.Content
         public TS1Provider TS1Global;
         public TS1BCFProvider BCFGlobal;
         public string TS1BasePath = TS1HybridBasePath;
+        public string VersionString = "unidentified";
         public bool Inited = false;
 
         public ChangeManager Changes;
@@ -227,6 +228,15 @@ namespace FSO.Content
                         DataDefinition.Read(stream);
                     }
                 }
+
+                try
+                {
+                    VersionString = File.ReadAllText(GetPath("version"));
+                }
+                catch { }
+            } else
+            {
+                VersionString = "TS1";
             }
         }
 

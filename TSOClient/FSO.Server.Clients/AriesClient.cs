@@ -106,17 +106,24 @@ namespace FSO.Server.Clients
             //Connector.FilterChain.AddFirst("ssl", ssl);
 
             Connector.FilterChain.AddLast("protocol", new ProtocolCodecFilter(new AriesProtocol(Kernel)));
-            Connector.Connect(target, new Action<IoSession, IConnectFuture>(OnConnect));
+            var future = Connector.Connect(target, new Action<IoSession, IConnectFuture>(OnConnect));
+
+            Task.Run(() =>
+            {
+                if (!future.Await(10000)) SessionClosed(null);
+                if (future.Canceled || future.Exception != null) SessionClosed(null);
+            });
         }
 
         private void OnConnect(IoSession session, IConnectFuture future)
         {
+            if (future.Canceled || future.Exception != null) SessionClosed(session);
             this.Session = session;
         }
 
         public void Write(params object[] packets)
         {
-            if (this.Session != null)
+            if (this.Session != null && this.Session.Connected)
             {
                 this.Session.Write(packets);
             }
