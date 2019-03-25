@@ -188,7 +188,7 @@ namespace FSO.Server.Servers.City.Domain
         private DateTime FindLastWeek(DateTime date)
         {
             var lastday = date.AddDays(-1); //move back into this month
-            var weekStart = date.AddDays(-(((int)date.DayOfWeek + 6) % 7)); //move back to monday
+            var weekStart = lastday.AddDays(-(((int)lastday.DayOfWeek + 6) % 7)); //move back to monday
             return weekStart.AddDays(7); //monday next week. (the date that we end the election for good)
         }
 
