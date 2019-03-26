@@ -59,10 +59,10 @@ namespace FSO.Server.Utils
 
                 //does the latest update for our branch match our current update id?
 
-                var published = da.Updates.GetRecentUpdatesForBranchByName(branch, 100);
-                var latest = da.Updates.GetBranch(branch).current_dist_id;
+                var latest = da.Updates.GetBranch(branch)?.current_dist_id;
                 if (latest != version.UpdateID)
                 {
+                    var published = da.Updates.GetRecentUpdatesForBranchByName(branch, 100);
                     var path = FindPath(published.ToList(), version.UpdateID, latest);
                     if (path == null)
                     {

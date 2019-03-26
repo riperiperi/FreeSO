@@ -71,6 +71,13 @@ CHANGE COLUMN `flags` `flags` INT(11) NOT NULL COMMENT '1 - Disable Incremental 
 ALTER TABLE `fso_update_branch` 
 ADD COLUMN `branch_name` VARCHAR(128) NOT NULL DEFAULT 'dev' AFTER `branch_id`;
 
+ALTER TABLE `fso_updates` 
+CHANGE COLUMN `full_zip` `full_zip` VARCHAR(256) NULL DEFAULT NULL COMMENT 'URL for the zip file containing the full client distribution. Should be used for new users and fixing failed updates.' ,
+CHANGE COLUMN `manfest_url` `manifest_url` VARCHAR(256) NULL DEFAULT NULL COMMENT 'Manifest file for the incremental zip.' ;
+
+ALTER TABLE `fso_update_branch` 
+ADD COLUMN `minor_version_number` INT NOT NULL DEFAULT 0 AFTER `last_version_number`;
+
 ALTER TABLE `fso_shards` 
 ADD COLUMN `update_id` INT NULL DEFAULT NULL AFTER `version_number`,
 ADD INDEX `fso_shard_update_id_idx` (`update_id` ASC);

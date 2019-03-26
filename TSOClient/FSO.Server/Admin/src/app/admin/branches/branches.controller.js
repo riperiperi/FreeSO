@@ -54,7 +54,7 @@ angular.module('admin')
               }
           })
             .then(function (branchInfo) {
-                Api.one('updates/branches').post(branchInfo).then(function (result) {
+                Api.all('updates/branches').post(branchInfo).then(function (result) {
                     console.log(result);
                     refresh();
                 });
@@ -76,7 +76,7 @@ angular.module('admin')
               }
           })
             .then(function (branchInfo) {
-                Api.one('updates/branches', branchInfo.branch_id).post(branchInfo).then(function (result) {
+                Api.one('updates/branches', branchInfo.branch_id).customPOST(branchInfo).then(function (result) {
                     console.log(result);
                     refresh();
                 });

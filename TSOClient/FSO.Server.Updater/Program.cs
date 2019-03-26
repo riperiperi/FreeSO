@@ -33,6 +33,13 @@ namespace FSO.Server.Watchdog
                 Update(new string[0]);
                 args = args.Where(x => x != "--update").ToArray();
             }
+
+            if (args.Length > 0 && args.Any(x => x == "--core"))
+            {
+                Update(new string[0]);
+                return 0; //sh script handles restarting when in core mode
+            }
+
             while (restart)
             {
                 var setup = AppDomain.CurrentDomain.SetupInformation;

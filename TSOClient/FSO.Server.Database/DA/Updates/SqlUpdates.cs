@@ -135,7 +135,7 @@ namespace FSO.Server.Database.DA.Updates
             {
                 var result = Context.Connection.Execute("UPDATE fso_update_branch SET " +
                     "branch_name = @branch_name, version_format = @version_format, last_version_number = @last_version_number, " +
-                    "current_dist_id = @current_dist_id, addon_id = @addon_id, base_build_url = @base_build_url, " +
+                    "minor_version_number = @minor_version_number, addon_id = @addon_id, base_build_url = @base_build_url, " +
                     "base_server_build_url = @base_server_build_url, build_mode = @build_mode, flags = @flags " +
                     "WHERE branch_id = @branch_id"
                     , branch);
