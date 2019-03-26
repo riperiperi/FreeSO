@@ -46,7 +46,7 @@ using Ninject;
 using FSO.Client.Network;
 using FSO.Client.UI.Panels.Neighborhoods;
 using FSO.UI.Controls;
-using FSO.Client.UI.Profile;
+using FSO.Client.UI.Panels.Profile;
 
 namespace FSO.Client.UI.Panels
 {
@@ -280,11 +280,6 @@ namespace FSO.Client.UI.Panels
             var b2Event = (info.Block) ? new ButtonClickDelegate(DialogButton2) : null;
 
             VMDialogType type = (info.Operand == null) ? VMDialogType.Message : info.Operand.Type;
-
-            if (info.Operand.MessageStringID == 19)
-            {
-                type = VMDialogType.FSOJob;
-            }
 
             switch (type)
             {

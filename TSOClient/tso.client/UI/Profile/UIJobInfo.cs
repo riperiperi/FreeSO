@@ -11,7 +11,7 @@ using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 
-namespace FSO.Client.UI.Profile
+namespace FSO.Client.UI.Panels.Profile
 {
     public struct JobInformation
     {
@@ -119,7 +119,7 @@ namespace FSO.Client.UI.Profile
             int sectionHeight = 54;
 
             OKButton = ButtonMap[UIAlertButtonType.OK];
-            OKButton.OnButtonClick += (btn) => Destory();
+            OKButton.OnButtonClick += (btn) => Destroy();
 
             Type = new UILabel
             {
@@ -151,9 +151,9 @@ namespace FSO.Client.UI.Profile
                 CaptionStyle = TextStyle.DefaultTitle
             };
             HoursTitle.CaptionStyle = HoursTitle.CaptionStyle.Clone();
-            HoursTitle.CaptionStyle.Color = new Color(238, 247, 169);
+            //HoursTitle.CaptionStyle.Color = new Color(238, 247, 169);
             HoursTitle.CaptionStyle.Size = 14;
-            HoursTitle.CaptionStyle.Shadow = false;
+            //HoursTitle.CaptionStyle.Shadow = false;
             HoursTitle.Alignment = TextAlignment.Left | TextAlignment.Middle;
             HoursTitle.Caption = "Hours";
             this.Add(HoursTitle);
@@ -331,7 +331,7 @@ namespace FSO.Client.UI.Profile
         public override void Removed()
         {
             base.Removed();
-            Icon.Texture?.Dispose();
+            ProgressBar.Background.Dispose();
         }
 
         public void Show()
@@ -346,32 +346,13 @@ namespace FSO.Client.UI.Profile
                 NextPosition.Caption = jobInformation.NextPosition;
                 ProgressBar.Value = jobInformation.PromotionPercentage;
             }
-            ShowDialog(this, false);
+            UIScreen.GlobalShowDialog(this, false);
             this.CenterAround(UIScreen.Current, -(int)UIScreen.Current.X * 2, -(int)UIScreen.Current.Y * 2);
         }
 
-        public void Destory()
+        public void Destroy()
         {
             UIScreen.RemoveDialog(this);
-        }
-
-        public static void ShowDialog(UIElement dialog, bool modal)
-        {
-            ShowDialog(new DialogReference
-            {
-                Dialog = dialog,
-                Modal = modal
-            });
-        }
-
-        public static void ShowDialog(DialogReference dialog)
-        {
-            GameFacade.Screens.AddDialog(dialog);
-
-            if (dialog.Dialog is UIDialog)
-            {
-                ((UIDialog)dialog.Dialog).CenterAround(UIScreen.Current, -(int)UIScreen.Current.X * 2, -(int)UIScreen.Current.Y * 2);
-            }
         }
     }
 }

@@ -1,6 +1,5 @@
 ﻿using FSO.Client.UI.Hints;
 using FSO.Client.UI.Panels;
-using FSO.Client.UI.Profile;
 using Ninject;
 using System;
 using System.Collections.Generic;

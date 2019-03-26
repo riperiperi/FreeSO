@@ -2,7 +2,7 @@
 using FSO.Client.UI.Controls;
 using FSO.Client.UI.Framework;
 using FSO.Client.UI.Screens;
-using FSO.Client.UI.Profile;
+using FSO.Client.UI.Panels.Profile;
 using FSO.Client.Utils;
 using FSO.Common.DataService.Model;
 using FSO.Common.Utils;
