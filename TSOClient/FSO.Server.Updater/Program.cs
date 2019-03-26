@@ -153,7 +153,7 @@ namespace FSO.Server.Watchdog
                 if (File.Exists("scheduledUpdate/update.txt"))
                 {
                     var lines = File.ReadAllLines("scheduledUpdate/update.txt");
-                    DownloadAndExtractAll(lines.Take(lines.Length - 1).ToArray());
+                    DownloadAndExtractAll(lines.Skip(1).Take(lines.Length - 1).ToArray());
                     Console.WriteLine("Writing update complete acknowledgement...");
                     File.WriteAllText("scheduledUpdate/complete.txt", lines.Last());
                     File.WriteAllText("updateID.txt", lines.Last());
