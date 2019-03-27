@@ -216,7 +216,7 @@ namespace FSO.Server.Api.Core.Services
                         {
                             status.UpdateStatus(UpdateGenerationStatusCode.BUILDING_CLIENT);
                             var finalClientZip = updateDir + "clientResult.zip";
-                            ZipFile.CreateFromDirectory(updateDir + "client/", finalClientZip, CompressionLevel.Optimal, true);
+                            ZipFile.CreateFromDirectory(updateDir + "client/", finalClientZip, CompressionLevel.Optimal, false);
                             Directory.Delete(updateDir + "client/", true);
 
                             status.UpdateStatus(UpdateGenerationStatusCode.PUBLISHING_CLIENT);
