@@ -12,7 +12,10 @@ namespace FSO.Client.UI.Panels
     public class UIAsyncPriceDialog : UIDialog
     {
         public delegate void SalePriceDelegate(uint SalePrice);
+        public delegate void SalePriceCanceledDelegate();
         public event SalePriceDelegate OnPriceChange;
+        public event SalePriceCanceledDelegate OnPriceChangeCancel;
+
         public UITextEdit ForSalePrice { get; set; }
         public UITextEdit topText { get; set; }
 
@@ -28,10 +31,13 @@ namespace FSO.Client.UI.Panels
             ForSalePrice.CurrentText = originalPrice.ToString();
             OKButton.OnButtonClick += OKClicked;
             CloseButton.OnButtonClick += CloseClicked;
+
+            GameFacade.Screens.inputManager.SetFocus(ForSalePrice);
         }
 
         private void CloseClicked(UIElement button)
         {
+            OnPriceChangeCancel?.Invoke();
             UIScreen.RemoveDialog(this);
         }
 

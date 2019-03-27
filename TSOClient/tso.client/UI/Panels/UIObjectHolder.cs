@@ -56,6 +56,8 @@ namespace FSO.Client.UI.Panels
 
         public UIObjectSelection Holding;
 
+        private UIAsyncPriceDialog PriceDialog;
+
         public UIObjectHolder(VM vm, LotView.World World, UILotControl parent)
         {
             this.vm = vm;
@@ -373,16 +375,23 @@ namespace FSO.Client.UI.Panels
                 var movable = obj.IsUserMovable(vm.Context, true);
                 if (movable == VMPlacementError.Success)
                 {
-                    var dialog = new UIAsyncPriceDialog(obj.ToString(), (obj.MultitileGroup.Price<0)?0:(uint)obj.MultitileGroup.Price);
-                    dialog.OnPriceChange += (uint salePrice) =>
+                    PriceDialog = new UIAsyncPriceDialog(obj.ToString(), (obj.MultitileGroup.Price<0)?0:(uint)obj.MultitileGroup.Price);
+                    PriceDialog.OnPriceChange += (uint salePrice) =>
                     {
                         vm.SendCommand(new VMNetAsyncPriceCmd
                         {
                             NewPrice = (int)Math.Min(int.MaxValue, salePrice),
                             ObjectPID = obj.PersistID
                         });
+                        PriceDialog = null;
                     };
-                    UIScreen.GlobalShowDialog(dialog, true);
+
+                    PriceDialog.OnPriceChangeCancel += () =>
+                    {
+                        PriceDialog = null;
+                    };
+
+                    UIScreen.GlobalShowDialog(PriceDialog, true);
                 }
                 else ShowErrorAtMouse(LastState, movable);
             }
@@ -423,7 +432,10 @@ namespace FSO.Client.UI.Panels
                 if (Roommate) cur = CursorType.SimsPlace;
                 if (state.KeyboardState.IsKeyDown(Keys.Delete))
                 {
-                    SellBack(null);
+                    if(PriceDialog == null)
+                    {
+                        SellBack(null);
+                    }
                 } else if (state.KeyboardState.IsKeyDown(Keys.Escape))
                 {
                     OnDelete(Holding, null);
