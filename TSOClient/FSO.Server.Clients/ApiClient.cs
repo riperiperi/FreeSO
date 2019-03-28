@@ -161,7 +161,7 @@ namespace FSO.Server.Clients
         public void GetUpdateList(Action<ApiUpdate[]> callback)
         {
             var client = Client();
-            var request = new RestRequest("userapi/updates");
+            var request = new RestRequest("userapi/update");
 
             client.ExecuteAsync(request, (resp, h) =>
             {

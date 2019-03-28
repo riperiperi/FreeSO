@@ -185,7 +185,7 @@ namespace FSO.Patcher
         {
             Console.WriteLine("===== FreeSO Patcher CLI - 2019 =====");
             Console.WriteLine(Path.Count + " update(s) to apply.");
-            Task.Run(() => AdvanceExtract());
+            Task.Run(() => AdvanceExtract()).Wait();
         }
     }
 }
