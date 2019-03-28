@@ -288,7 +288,7 @@ namespace FSO.LotView.Components
 
             if (GridTex == null)
             {
-                using (var strm = File.OpenRead($"Content/Textures/lot/tile_dashed.png"))
+                using (var strm = File.Open($"Content/Textures/lot/tile_dashed.png", FileMode.Open, FileAccess.Read, FileShare.Read))
                 {
                     GridTex = GenMips(device, Texture2D.FromStream(device, strm));
                 }
@@ -599,7 +599,7 @@ namespace FSO.LotView.Components
                             device.DrawIndexedPrimitives(PrimitiveType.TriangleList, 0, 0, TGridPrimitives);
                         }
 
-                        
+
                         Effect.Parameters["DiffuseColor"].SetValue(
                             Content.Content.Get().TS1 ?
                             new Vector4(1.0f, 1.0f, 1.0f, 0.8f) :
@@ -607,6 +607,24 @@ namespace FSO.LotView.Components
                         device.Indices = GridIndexBuffer;
                         pass.Apply();
                         device.DrawIndexedPrimitives(PrimitiveType.TriangleList, 0, 0, GridPrimitives);
+                    }
+                    else
+                    {
+                        if (TGridPrimitives > 0 && !TGridIndexBuffer.IsDisposed)
+                        {
+                            //draw target size in red, below old size
+                            device.Indices = TGridIndexBuffer;
+                            Effect.Parameters["DiffuseColor"].SetValue(new Vector4(0.5f, 1f, 0.5f, 1.0f));
+                            pass = Effect.CurrentTechnique.Passes[(_3d) ? 1 : 0];
+                            pass.Apply();
+                            device.DrawIndexedPrimitives(PrimitiveType.LineList, 0, 0, TGridPrimitives);
+                        }
+
+                        Effect.Parameters["DiffuseColor"].SetValue(new Vector4(0, 0, 0, 1.0f));
+                        device.Indices = GridIndexBuffer;
+                        pass = Effect.CurrentTechnique.Passes[(_3d) ? 1 : 0];
+                        pass.Apply();
+                        device.DrawIndexedPrimitives(PrimitiveType.LineList, 0, 0, GridPrimitives);
                     }
 
 
@@ -824,6 +842,7 @@ namespace FSO.LotView.Components
                 VertexBuffer.Dispose();
                 GridIndexBuffer?.Dispose();
                 TGridIndexBuffer?.Dispose();
+                GridTex?.Dispose();
             }
         }
     }

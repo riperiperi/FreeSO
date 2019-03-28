@@ -70,7 +70,7 @@ namespace FSO.Server.Servers.City.Handlers
                     // if we don't own the claim for the avatar, we need to tell the server that does to release the avatar.
                     // right now it's just lot servers.
 
-                    var claim = db.AvatarClaims.GetByAvatarID((uint)voltronSession.AvatarClaimId);
+                    var claim = db.AvatarClaims.Get(voltronSession.AvatarClaimId);
                     if (claim != null && claim.owner != Context.Config.Call_Sign)
                     {
                         var lotServer = LotServers.GetLotServerSession(claim.owner);

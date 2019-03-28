@@ -14,6 +14,18 @@ namespace FSO.Server.Protocol.Electron.Packets
         public string Title;
         public string Message;
 
+        public FSOVMProtocolMessage()
+        {
+
+        }
+
+        public FSOVMProtocolMessage(bool cst, string title, string body)
+        {
+            UseCst = cst;
+            Title = title;
+            Message = body;
+        }
+
         public override void Deserialize(IoBuffer input, ISerializationContext context)
         {
             UseCst = input.GetBool();

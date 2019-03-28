@@ -1,4 +1,5 @@
-﻿using FSO.Common.DataService;
+﻿using FSO.Client.UI.Controls;
+using FSO.Common.DataService;
 using FSO.Common.Utils;
 using FSO.Server.Clients;
 using FSO.Server.Clients.Framework;
@@ -100,11 +101,13 @@ namespace FSO.Client.Regulators
                 .OnlyTransitionFrom("Reestablish");
 
             AddState("Reestablished")
+                .OnData(typeof(ServerByePDU)).TransitionTo("UnexpectedDisconnect")
             .OnData(typeof(AriesDisconnected)).TransitionTo("ReestablishFail")
             .OnlyTransitionFrom("Reestablishing");
 
             AddState("ReestablishFail")
-                .OnlyTransitionFrom("Reestablish", "Reestablishing");
+                .OnData(typeof(ServerByePDU)).TransitionTo("UnexpectedDisconnect")
+                .OnlyTransitionFrom("Reestablish", "Reestablishing", "Reestablished");
 
             AddState("UnexpectedDisconnect");
             
@@ -221,7 +224,7 @@ namespace FSO.Client.Regulators
                     {
                         GameThread.SetTimeout(() =>
                         {
-                            AsyncTransition("Reestablish");
+                            if (CurrentState?.Name == "ReestablishFail") AsyncTransition("Reestablish");
                         }, 1000);
                     }
                     else
@@ -292,12 +295,25 @@ namespace FSO.Client.Regulators
                     //force in order
                     this.SyncProcessMessage(message);
                 }
+
+                if (message is FSOVMProtocolMessage)
+                {
+                    var msg = (FSOVMProtocolMessage)message;
+                    GameThread.InUpdate(() => {
+                        if (msg.UseCst)
+                        {
+                            if (msg.Title != "") msg.Title = GameFacade.Strings.GetString("223", msg.Title);
+                            msg.Message = GameFacade.Strings.GetString("223", msg.Message);
+                        }
+                        UIAlert.Alert(msg.Title, msg.Message, true);
+                        });
+                }
             }
         }
 
         public void SessionCreated(AriesClient client)
         {
-            this.AsyncProcessMessage(new AriesConnected());
+            if (client == Client || CurrentState?.Name != "Reestablish") this.AsyncProcessMessage(new AriesConnected());
         }
 
         public void SessionOpened(AriesClient client)
@@ -318,7 +334,8 @@ namespace FSO.Client.Regulators
 
         public void InputClosed(AriesClient session)
         {
-            AsyncProcessMessage(new AriesDisconnected());
+            if (session == Client)
+                AsyncProcessMessage(new AriesDisconnected());
         }
     }
 

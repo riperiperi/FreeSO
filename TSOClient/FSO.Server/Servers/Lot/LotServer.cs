@@ -16,6 +16,7 @@ using System.Threading.Tasks;
 using FSO.Server.Database.DA.Hosts;
 using FSO.Server.Servers.Shared.Handlers;
 using FSO.Server.Protocol.Voltron.Packets;
+using FSO.Server.Protocol.Electron.Packets;
 
 namespace FSO.Server.Servers.Lot
 {
@@ -136,6 +137,7 @@ namespace FSO.Server.Servers.Lot
                             var lot = da.Lots.Get(ticket.lot_id);
                             if (lot == null)
                             {
+                                rawSession.Write(new FSOVMProtocolMessage(true, "25", "24"));
                                 rawSession.Close();
                                 return;
                             }
@@ -146,6 +148,7 @@ namespace FSO.Server.Servers.Lot
                         var didClaim = da.AvatarClaims.Claim(ticket.avatar_claim_id, ticket.avatar_claim_owner, Config.Call_Sign, location);
                         if (!didClaim)
                         {
+                            rawSession.Write(new FSOVMProtocolMessage(true, "6", "26"));
                             rawSession.Close();
                             return;
                         }

@@ -64,6 +64,12 @@ namespace FSO.SimAntics.Model.TSOPlatform
 
         public void ProcessQTRDay(VM vm, VMEntity owner) {
             if (((VMGameObject)owner).Disabled > 0) return;
+            if (ObjectFlags.HasFlag(VMTSOObjectFlags.FSODonated))
+            {
+                Wear = 0;
+                QtrDaysSinceLastRepair = 0;
+                return;
+            }
             Wear += 1;
             if (Wear > 90 * 4) Wear = 90 * 4;
 

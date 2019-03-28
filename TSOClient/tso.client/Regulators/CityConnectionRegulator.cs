@@ -132,7 +132,8 @@ namespace FSO.Client.Regulators
                 .OnlyTransitionFrom("Reestablishing");
             
             AddState("ReestablishFail")
-                .OnlyTransitionFrom("Reestablish", "Reestablishing");
+                .OnData(typeof(ServerByePDU)).TransitionTo("UnexpectedDisconnect")
+                .OnlyTransitionFrom("Reestablish", "Reestablishing", "Reestablished");
 
             AddState("Disconnect")
                 .OnData(typeof(AriesDisconnected))
@@ -347,7 +348,7 @@ namespace FSO.Client.Regulators
                     {
                         GameThread.SetTimeout(() =>
                         {
-                            AsyncTransition("Reestablish");
+                            if (CurrentState?.Name == "ReestablishFail") AsyncTransition("Reestablish");
                         }, 1000);
                     } else
                     {

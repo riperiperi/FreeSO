@@ -242,9 +242,14 @@ namespace FSO.Server.Framework.Aries
 
         public void MigrateSession(AriesSession oldSession, AriesSession newSession)
         {
+            var oldIO = oldSession.IoSession;
             oldSession.Migrate(newSession.IoSession);
             //remove the new session as its connection has been migrated to the old.
             _Sessions.Remove(newSession);
+            //may still be connected. disconnect the old tcp connection.
+            oldIO.SetAttribute("s", null);
+            oldIO.Write(new ServerByePDU());
+            oldIO.Close(false);
 
             foreach (var interceptor in _SessionInterceptors)
             {
@@ -269,6 +274,11 @@ namespace FSO.Server.Framework.Aries
         public void SessionClosed(IoSession session)
         {
             var ariesSession = session.GetAttribute<IAriesSession>("s");
+            if (ariesSession == null)
+            {
+                LOG.Info("[SESSION-REPLACED (" + Config.Call_Sign + ")]");
+                return;
+            }
             _Sessions.Remove(ariesSession);
 
             if (session.GetAttribute("dc") == null && session.GetAttribute("sessionKey") != null)

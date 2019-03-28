@@ -933,13 +933,22 @@ namespace FSO.Server.Servers.Lot.Domain
                         return; //background thread has already released all our avatars and our claim. exit immediately.
                     }
 
-                    if (noRoomies)
+                    if (noRoomies && !noRemainingUsers)
                     {
-                        //no roommates are here, so all visitors must be kicked out.
-                        foreach (var avatar in preTickAvatars)
+                        if (TimeToShutdown == -1)
                         {
-                            if (avatar.KillTimeout == -1) avatar.UserLeaveLot();
-                            VMDriver.DropAvatar(avatar);
+                            TimeToShutdown = (Context.Action == ClaimAction.LOT_CLEANUP) ? 1 : TICKRATE * 40;
+                        }
+
+                        if (--TimeToShutdown < TICKRATE * 10)
+                        {
+                            //no roommates are here, so all visitors must be kicked out.
+                            Host.Broadcast(new HashSet<uint>(), new FSOVMProtocolMessage(true, "21", "22"));
+                            foreach (var avatar in preTickAvatars)
+                            {
+                                if (avatar.KillTimeout == -1) avatar.UserLeaveLot();
+                                VMDriver.DropAvatar(avatar);
+                            }
                         }
                     }
 

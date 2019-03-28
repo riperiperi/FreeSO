@@ -589,7 +589,11 @@ namespace FSO.Server.Servers.Lot.Domain
 
         public bool TryJoin(IVoltronSession session)
         {
-            if (Container.IsAvatarOnLot(session.AvatarId)) return false; //already on the lot.
+            if (Container.IsAvatarOnLot(session.AvatarId))
+            {
+                session.Write(new FSOVMProtocolMessage(true, "11", "12"));
+                return false; //already on the lot.
+            }
             lock (_Visitors)
             {
                 if (ShuttingDown || (_Visitors.Count >= ((Context.HighMax)?128:24)))
@@ -604,7 +608,10 @@ namespace FSO.Server.Servers.Lot.Domain
                         if (avatar.moderation_level == 0 && !Context.JobLot)
                         {
                             if (da.Roommates.Get(session.AvatarId, Context.DbId) == null)
+                            {
+                                session.Write(new FSOVMProtocolMessage(true, "15", "16"));
                                 return false; //not a roommate
+                            }
                         }
                     }
                 }
