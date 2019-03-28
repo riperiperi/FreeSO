@@ -46,6 +46,7 @@ using Ninject;
 using FSO.Client.Network;
 using FSO.Client.UI.Panels.Neighborhoods;
 using FSO.UI.Controls;
+using FSO.Client.UI.Panels.Profile;
 
 namespace FSO.Client.UI.Panels
 {
@@ -322,6 +323,19 @@ namespace FSO.Client.UI.Panels
                     options.Buttons = new UIAlertButton[] { new UIAlertButton(UIAlertButtonType.OK, b0Event, info.Yes), new UIAlertButton(UIAlertButtonType.Cancel, b1Event, info.Cancel) };
                     options.GenericAddition = new UIColorPicker();
                     break;
+                case VMDialogType.FSOJob:
+                    VMAvatar avatar = (VMAvatar)info.Caller;
+
+                    //Find their current active job
+                    VMTSOAvatarState state = (VMTSOAvatarState)avatar.TSOState;
+                    KeyValuePair<short, VMTSOJobInfo> jobInfo = state.JobInfo.FirstOrDefault(x => x.Value.StatusFlags == 1);
+                    if (jobInfo.Key != 0)
+                    {
+                        JobInformation JobInfo = new JobInformation((int)jobInfo.Value.Level, (int)jobInfo.Key, (int)jobInfo.Value.Experience); //Job Grade, Job Type, Experience
+                        var jobInfoAlert = new UIJobInfo(JobInfo);
+                        jobInfoAlert.Show();
+                    }
+                    return;
             }
 
             var alert = UIScreen.GlobalShowAlert(options, false);

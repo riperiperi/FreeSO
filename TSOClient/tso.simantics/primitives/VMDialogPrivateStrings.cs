@@ -270,9 +270,11 @@ namespace FSO.SimAntics.Primitives
         TS1Magictown = 13,
         TS1TransformMe = 14,
         TS1Cookbook = 15,
-        
+
+        FSOJob = 127,
         FSOColor = 128,
-        FSOChars = 129
+        FSOChars = 129,
+        
     }
 
     public class VMDialogResult : VMAsyncState
