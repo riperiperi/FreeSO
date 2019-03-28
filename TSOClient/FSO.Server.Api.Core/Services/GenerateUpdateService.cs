@@ -9,6 +9,7 @@ using System.Net;
 using System.Threading.Tasks;
 using FSO.Files.Utils;
 using FSO.Server.Common;
+using System.Diagnostics;
 
 namespace FSO.Server.Api.Core.Services
 {
@@ -47,6 +48,33 @@ namespace FSO.Server.Api.Core.Services
             }
             Task.Run(() => BuildUpdate(task));
             return task;
+        }
+
+        private void Exec(string cmd)
+        {
+            var escapedArgs = cmd.Replace("\"", "\\\"");
+
+            var process = new Process
+            {
+                StartInfo = new ProcessStartInfo
+                {
+                    RedirectStandardOutput = true,
+                    UseShellExecute = false,
+                    CreateNoWindow = true,
+                    WindowStyle = ProcessWindowStyle.Hidden,
+                    FileName = "/bin/sh",
+                    Arguments = $"-c \"{escapedArgs}\""
+                }
+            };
+
+            process.Start();
+            process.WaitForExit();
+        }
+
+        private void ClearFolderPermissions(string folder)
+        {
+            if (Environment.OSVersion.Platform == PlatformID.Unix)
+                Exec($"chmod -R 777 {folder}");
         }
 
         public async Task BuildUpdate(UpdateGenerationStatus status)
@@ -198,6 +226,7 @@ namespace FSO.Server.Api.Core.Services
                                 System.IO.File.Copy(Path.Combine(updateDir + "client/", diff.Path), Path.Combine(updateDir + "diff/", diff.Path));
                             }
                             diffZip = updateDir + "diffResult.zip";
+                            ClearFolderPermissions(updateDir + "diff/");
                             ZipFile.CreateFromDirectory(updateDir + "diff/", diffZip, CompressionLevel.Optimal, false);
                             Directory.Delete(updateDir + "diff/", true);
                             manifest = new FSOUpdateManifest() { Diffs = diffs };
@@ -216,6 +245,7 @@ namespace FSO.Server.Api.Core.Services
                         {
                             status.UpdateStatus(UpdateGenerationStatusCode.BUILDING_CLIENT);
                             var finalClientZip = updateDir + "clientResult.zip";
+                            ClearFolderPermissions(updateDir + "client/");
                             ZipFile.CreateFromDirectory(updateDir + "client/", finalClientZip, CompressionLevel.Optimal, false);
                             Directory.Delete(updateDir + "client/", true);
 
@@ -255,6 +285,7 @@ namespace FSO.Server.Api.Core.Services
 
                         status.UpdateStatus(UpdateGenerationStatusCode.BUILDING_SERVER);
                         var finalServerZip = updateDir + "serverResult.zip";
+                        ClearFolderPermissions(updateDir + "server/");
                         ZipFile.CreateFromDirectory(updateDir + "server/", finalServerZip, CompressionLevel.Optimal, false);
                         Directory.Delete(updateDir + "server/", true);
 
