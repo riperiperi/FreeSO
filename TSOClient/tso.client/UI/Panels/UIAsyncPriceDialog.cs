@@ -12,9 +12,7 @@ namespace FSO.Client.UI.Panels
     public class UIAsyncPriceDialog : UIDialog
     {
         public delegate void SalePriceDelegate(uint SalePrice);
-        public delegate void SalePriceCanceledDelegate();
         public event SalePriceDelegate OnPriceChange;
-        public event SalePriceCanceledDelegate OnPriceChangeCancel;
 
         public UITextEdit ForSalePrice { get; set; }
         public UITextEdit topText { get; set; }
@@ -37,7 +35,6 @@ namespace FSO.Client.UI.Panels
 
         private void CloseClicked(UIElement button)
         {
-            OnPriceChangeCancel?.Invoke();
             UIScreen.RemoveDialog(this);
         }
 
