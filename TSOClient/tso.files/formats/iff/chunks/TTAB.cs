@@ -322,7 +322,7 @@ namespace FSO.Files.Formats.IFF.Chunks
         AutoFirstSelect = 1 << 8, //TODO (autonomus first select?)
 
         TS1AllowCats = 1 << 9,
-        TS1AllowDogs = 1 << 10,
+        TS1AllowDogs = 1 << 8,
 
         Leapfrog = 1 << 9, //COVERED
         MustRun = 1 << 10, //TODO (where would this NOT run?)
