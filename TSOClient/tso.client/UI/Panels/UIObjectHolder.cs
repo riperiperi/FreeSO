@@ -382,7 +382,11 @@ namespace FSO.Client.UI.Panels
                             NewPrice = (int)Math.Min(int.MaxValue, salePrice),
                             ObjectPID = obj.PersistID
                         });
+
+                        OnDelete(Holding, null);
+                        ClearSelected();
                     };
+
                     UIScreen.GlobalShowDialog(dialog, true);
                 }
                 else ShowErrorAtMouse(LastState, movable);
@@ -424,7 +428,10 @@ namespace FSO.Client.UI.Panels
                 if (Roommate) cur = CursorType.SimsPlace;
                 if (state.KeyboardState.IsKeyDown(Keys.Delete))
                 {
-                    SellBack(null);
+                    if (state.InputManager.GetFocus() == null)
+                    {
+                        SellBack(null);
+                    }
                 } else if (state.KeyboardState.IsKeyDown(Keys.Escape))
                 {
                     OnDelete(Holding, null);
