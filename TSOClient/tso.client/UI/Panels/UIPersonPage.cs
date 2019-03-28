@@ -2,6 +2,7 @@
 using FSO.Client.UI.Controls;
 using FSO.Client.UI.Framework;
 using FSO.Client.UI.Screens;
+using FSO.Client.UI.Panels.Profile;
 using FSO.Client.Utils;
 using FSO.Common.DataService.Model;
 using FSO.Common.Utils;
@@ -164,6 +165,8 @@ namespace FSO.Client.UI.Panels
         private UIRelationshipsTab _RelationshipsTab = UIRelationshipsTab.Outgoing;
         private string OriginalDescription;
         private string JobAlertText;
+        private JobInformation JobInfo;
+
         private bool LocalDataChange;
 
         private int TotalLocks = 20;
@@ -696,12 +699,19 @@ namespace FSO.Client.UI.Panels
 
         private void ShowJobInfo(UIElement button)
         {
-            UIScreen.GlobalShowAlert(new UIAlertOptions()
+            if (!JobInfo.Equals(default(JobInformation)))
             {
-                Title = GameFacade.Strings.GetString("189", "64"),
-                Message = JobAlertText,
-                Buttons = UIAlertButton.Ok(),
-            }, true);
+                var jobInfoAlert = new UIJobInfo(JobInfo);
+                jobInfoAlert.Show();
+            } else
+            {
+                UIScreen.GlobalShowAlert(new UIAlertOptions()
+                {
+                    Title = GameFacade.Strings.GetString("189", "64"),
+                    Message = JobAlertText,
+                    Buttons = UIAlertButton.Ok(),
+                }, true);
+            }
         }
 
         public void TrySaveDescription()
@@ -872,6 +882,7 @@ namespace FSO.Client.UI.Panels
             {
                 outText.Append(GameFacade.Strings.GetString("189", "61") + "\r\n\r\n"); //unemployed
                 JobAlertText = GameFacade.Strings.GetString("189", "66");
+                JobInfo = default(JobInformation);
             }
             else
             {
@@ -889,15 +900,8 @@ namespace FSO.Client.UI.Panels
                         outText.Append("\r\n");
                     }
                 }
-                int poolTime = Math.Min(2, currentJob.JobLevel_JobType - 1);
-                JobAlertText = GameFacade.Strings.GetString("189", "65", new string[] {
-                    GameFacade.Strings.GetString("189", (67+currentJob.JobLevel_JobType).ToString()),
-                    title,
-                    GameFacade.Strings.GetString("189", (73+poolTime*2).ToString()),
-                    GameFacade.Strings.GetString("189", (74+poolTime*2).ToString()),
-                    (currentJob.JobLevel_JobGrade == 10) ? GameFacade.Strings.GetString("189", "79") :
-                    GameFacade.Strings.GetString("272", (((currentJob.JobLevel_JobType - 1) * 11) + currentJob.JobLevel_JobGrade + 2).ToString())
-                });
+
+                JobInfo = new JobInformation(currentJob.JobLevel_JobGrade, currentJob.JobLevel_JobType, (int)currentJob.JobLevel_JobExperience);
             }
             JobsText.CurrentText = outText.ToString();
             JobsText.SetSize(JobsText.Width, 160);

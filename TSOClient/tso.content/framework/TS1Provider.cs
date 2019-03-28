@@ -27,7 +27,7 @@ namespace FSO.Content.Framework
 
         public TS1Provider(Content contentManager)
         {
-            FarProvider = new FAR1Provider<object>(contentManager, null, new Regex(@".*\.far"), true);
+            FarProvider = new FAR1Provider<object>(contentManager, null, new Regex(@".*\.far", RegexOptions.IgnoreCase), true);
             Manager = contentManager;
             FileProvider = new FileProvider<object>(contentManager, null, new Regex(@".*"));
             //todo: files provider?
