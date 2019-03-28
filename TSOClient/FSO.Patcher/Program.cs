@@ -22,6 +22,7 @@ namespace FSO.Patcher
             {
                 //console only application
                 var patcher = new CLIPatcher(path, args);
+                patcher.Begin();
             }
             else
             {

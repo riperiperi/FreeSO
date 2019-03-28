@@ -181,7 +181,7 @@ namespace FSO.Patcher
             Environment.Exit(0);
         }
 
-        private void Begin()
+        public void Begin()
         {
             Console.WriteLine("===== FreeSO Patcher CLI - 2019 =====");
             Console.WriteLine(Path.Count + " update(s) to apply.");
