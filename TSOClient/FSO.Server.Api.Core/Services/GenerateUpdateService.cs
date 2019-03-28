@@ -212,7 +212,7 @@ namespace FSO.Server.Api.Core.Services
                             prevZip.Dispose();
                             File.Delete(updateDir + "prev.zip");
 
-                            var diffs = DiffGenerator.GetDiffs(Path.GetFullPath(updateDir + "prev/" + "client/"), Path.GetFullPath(updateDir + "client/"));
+                            var diffs = DiffGenerator.GetDiffs(Path.GetFullPath(updateDir + "prev/"), Path.GetFullPath(updateDir + "client/"));
 
                             status.UpdateStatus(UpdateGenerationStatusCode.BUILDING_INCREMENTAL_UPDATE);
                             var toZip = diffs.Where(x => x.DiffType == FileDiffType.Add || x.DiffType == FileDiffType.Modify);
