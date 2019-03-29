@@ -62,6 +62,14 @@ namespace FSO.SimAntics.Utils
             foreach (var item in info.BodyStringReplace)
             {
                 bodyStrings.SetString(item.Key, item.Value);
+                if (bodyStrings.GetString(item.Key) != item.Value)
+                {
+                    var sitem = new STRItem()
+                    {
+                        Value = item.Value
+                    };
+                    bodyStrings.InsertString(item.Key, sitem);
+                }
             }
 
             neigh.SaveNewNeighbour(tempObj);
