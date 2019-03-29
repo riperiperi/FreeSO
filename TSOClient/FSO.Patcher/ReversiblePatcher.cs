@@ -43,7 +43,11 @@ namespace FSO.Patcher
             //"updater.exe",
             "Content/config.ini",
             "NLog.config",
-            "update.pdb"
+            "update.pdb",
+
+            //monogame in the base directory is not used on fso windows, and is manually replaced on unix
+            "MonoGame.Framework.dll",
+            "MonoGame.Framework.xml",
         };
 
         public static HashSet<string> UnimportantFiles = new HashSet<string>()

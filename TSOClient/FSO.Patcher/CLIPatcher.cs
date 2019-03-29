@@ -6,6 +6,7 @@ using System.IO.Compression;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
+using System.Net;
 
 namespace FSO.Patcher
 {
@@ -170,7 +171,9 @@ namespace FSO.Patcher
         {
             if (Environment.OSVersion.Platform == PlatformID.Unix || Environment.OSVersion.Platform == PlatformID.MacOSX)
             {
-                var startArgs = new ProcessStartInfo("mono", "FreeSO.exe " + string.Join(" ", Args));
+                var args = string.Join(" ", Args);
+                if (args.Length > 0) args = " " + args;
+                var startArgs = new ProcessStartInfo("mono", "FreeSO.exe" + args);
                 startArgs.UseShellExecute = false;
                 System.Diagnostics.Process.Start(startArgs);
             }
@@ -181,11 +184,56 @@ namespace FSO.Patcher
             Environment.Exit(0);
         }
 
+        public async Task DownloadAndAdvance()
+        {
+            Console.WriteLine("Downloading archives:");
+            //download the file then set it as our path
+            var client = new WebClient();
+            Directory.CreateDirectory("PatchFiles/");
+
+            int i = 0;
+            foreach (var file in ToDownload) {
+                try
+                {
+                    Console.WriteLine($"Downloading {file}...");
+                    await client.DownloadFileTaskAsync(new Uri(file), $"PatchFiles/extra{i}.zip");
+                    Path.Add($"PatchFiles/extra{i}.zip");
+                }
+                catch (Exception e)
+                {
+                    Console.WriteLine($"Could not download {file}: {e.Message}");
+                }
+                i++;
+            }
+            await AdvanceExtract();
+        }
+
+        public List<string> ToDownload = new List<string>();
+
         public void Begin()
         {
             Console.WriteLine("===== FreeSO Patcher CLI - 2019 =====");
             Console.WriteLine(Path.Count + " update(s) to apply.");
-            Task.Run(() => AdvanceExtract()).Wait();
+
+            if (Args.Contains("--extras"))
+            {
+                Console.WriteLine("Unix Extras requested. Downloading from FreeSO.org.");
+                ToDownload.Add("http://freeso.org/stuff/macextras.zip");
+            }
+
+            if (Args.Contains("--client"))
+            {
+                Console.WriteLine("FreeSO client requested. Downloading from servo.freeso.org.");
+                ToDownload.Add("http://servo.freeso.org/guestAuth/repository/download/FreeSO_TsoClient/.lastSuccessful/client-<>.zip?branch=master");
+            }
+
+            if (ToDownload.Count > 0)
+            {
+                Task.Run(() => DownloadAndAdvance()).Wait();
+            }
+            else {
+                Task.Run(() => AdvanceExtract()).Wait();
+            }
         }
     }
 }
