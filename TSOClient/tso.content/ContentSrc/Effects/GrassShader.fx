@@ -528,23 +528,30 @@ void RoofParallaxPS3D(GrassParallaxPSVTX input, out float4 color:COLOR0)
 	color = gammaMad(color, lightProcessRoof(input.ModelPos) * LightDotVec(normal, lightDir), LightSpecularVec(normal, viewDir));
 }
 
-void FloorParallaxPS3D(GrassParallaxPSVTX input, out float4 color:COLOR0)
+void FloorParallaxPS3D(GrassParallaxPSVTX input, out float4 color:COLOR0, out float4 depthB : COLOR1)
 {
 	float3 viewDir = normalize(input.TangentViewPos.xyz - input.TangentModelPos);
 	float d = input.GrassInfo.w;
 	if (IgnoreColor == false) color = input.Color;
 	else color = float4(1, 1, 1, 1);//*DiffuseColor;
-	float2 texCoords = ParallaxMapping(LoopUV(input.GrassInfo.yz), viewDir);
-	color *= tex2Dgrad(TexSampler, texCoords, ddx(input.GrassInfo.yz), ddy(input.GrassInfo.yz));
-	if (color.a == 0) discard;
 
-	float3 normal = float3(0, 0, 1);
+	depthB = packDepth(d);
+	if (depthOutMode == true) {
+		color = depthB;
+	}
+	else {
+		float2 texCoords = ParallaxMapping(LoopUV(input.GrassInfo.yz), viewDir);
+		color *= tex2Dgrad(TexSampler, texCoords, ddx(input.GrassInfo.yz), ddy(input.GrassInfo.yz));
+		if (color.a == 0) discard;
+
+		float3 normal = float3(0, 0, 1);
 		//tex2D(NormalMapSampler, texCoords).xyz;
 	//normal = normalize(normal * 2.0 - 1.0);
 	//normal.xy *= -1;
-	float3 lightDir = normalize(input.TangentLightVec);
+		float3 lightDir = normalize(input.TangentLightVec);
 
-	color = gammaMad(color, lightProcessRoof(input.ModelPos) * LightDotVec(normal, lightDir), LightSpecularVec(normal, viewDir));
+		color = gammaMad(color, lightProcessRoof(input.ModelPos) * LightDotVec(normal, lightDir), LightSpecularVec(normal, viewDir));
+	}
 }
 #endif
 
