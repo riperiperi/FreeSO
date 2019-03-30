@@ -20,6 +20,7 @@ namespace FSO.Patcher
         private List<string> Path;
         private int PathProgress = 0;
         private ReversiblePatcher CurrentPatcher;
+        private bool CleanPatch;
         public FormsPatcher(List<string> extractPath, string[] args)
         {
             InitializeComponent();
@@ -118,16 +119,19 @@ namespace FSO.Patcher
                         //first patch
                         try
                         {
-                            foreach (var file in Directory.GetFiles("Content/Patch/"))
+                            if (CleanPatch)
                             {
-                                //delete any stray patch files. Don't delete user or subfolders (eg. translations) because they might be important
-                                try
+                                foreach (var file in Directory.GetFiles("Content/Patch/"))
                                 {
-                                    File.Delete(file);
-                                }
-                                catch (Exception)
-                                {
+                                    //delete any stray patch files. Don't delete user or subfolders (eg. translations) because they might be important
+                                    try
+                                    {
+                                        File.Delete(file);
+                                    }
+                                    catch (Exception)
+                                    {
 
+                                    }
                                 }
                             }
                         } catch (Exception)
@@ -260,6 +264,7 @@ namespace FSO.Patcher
                 client.DownloadFileCompleted += (obj, evt) =>
                 {
                     Path.Add("PatchFiles/patch.zip");
+                    CleanPatch = true;
                     Task.Run(() => AdvanceExtract());
                 };
 
@@ -282,6 +287,18 @@ namespace FSO.Patcher
             }
             else
             {
+                CleanPatch = File.Exists("PatchFiles/clean.txt");
+                if (CleanPatch)
+                {
+                    try
+                    {
+                        File.Delete("PatchFiles/clean.txt");
+                    }
+                    catch
+                    {
+
+                    }
+                }
                 Task.Run(() => AdvanceExtract());
             }
         }

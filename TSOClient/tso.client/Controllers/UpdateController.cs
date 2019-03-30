@@ -106,6 +106,18 @@ namespace FSO.Client.Controllers
         public void AcceptUpdate(UpdatePath path)
         {
             UIScreen.RemoveDialog(_UpdaterAlert);
+
+            try
+            {
+                if (path.FullZipStart)
+                {
+                    System.IO.File.WriteAllText("PatchFiles/clean.txt", "CLEAN");
+                } else
+                {
+                    System.IO.File.Delete("PatchFiles/clean.txt");
+                }
+            }
+
             var downloader = new UIWebDownloaderDialog(GameFacade.Strings.GetString("f101", "1"), BuildFiles(path));
             downloader.OnComplete += (bool success) => {
                 UIScreen.RemoveDialog(downloader);
@@ -236,6 +248,7 @@ namespace FSO.Client.Controllers
                     }
                 }
                 GameFacade.Kill();
+                if (FSOEnvironment.Linux) Environment.Exit(0); //we're serious
             }
             catch (Exception e)
             {

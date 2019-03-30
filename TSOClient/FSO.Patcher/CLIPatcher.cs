@@ -16,6 +16,8 @@ namespace FSO.Patcher
         private List<string> Path;
         private int PathProgress = 0;
         private ReversiblePatcher CurrentPatcher;
+        private bool AllowMonogameMod;
+        private bool CleanPatch;
         public CLIPatcher(List<string> extractPath, string[] args)
         {
             Path = extractPath;
@@ -80,21 +82,28 @@ namespace FSO.Patcher
                         return;
                     }
                     var patcher = new ReversiblePatcher(archive);
+                    if (path.Contains("extra") && AllowMonogameMod)
+                    {
+                        patcher.IgnoreFiles.RemoveWhere(x => x.Contains("MonoGame"));
+                    }
                     CurrentPatcher = patcher;
                     patcher.OnStatus += Patcher_OnStatus;
                     if (PathProgress == 1)
                     {
                         //first patch
-                        foreach (var file in Directory.GetFiles("Content/Patch/"))
+                        if (CleanPatch)
                         {
-                            //delete any stray patch files. Don't delete user or subfolders (eg. translations) because they might be important
-                            try
+                            foreach (var file in Directory.GetFiles("Content/Patch/"))
                             {
-                                File.Delete(file);
-                            }
-                            catch (Exception)
-                            {
+                                //delete any stray patch files. Don't delete user or subfolders (eg. translations) because they might be important
+                                try
+                                {
+                                    File.Delete(file);
+                                }
+                                catch (Exception)
+                                {
 
+                                }
                             }
                         }
                         var worked = await patcher.AttemptRename(8);
@@ -135,8 +144,10 @@ namespace FSO.Patcher
                         }
                         else
                         {
+                            Console.WriteLine($"===== Completed {path} =====");
                             patcher.Final();
                             File.Delete(path);
+                            await AdvanceExtract();
                         }
                     }
                 }
@@ -171,6 +182,7 @@ namespace FSO.Patcher
         {
             if (Environment.OSVersion.Platform == PlatformID.Unix || Environment.OSVersion.Platform == PlatformID.MacOSX)
             {
+                Console.WriteLine($"===== Starting FreeSO... Please wait! =====");
                 var args = string.Join(" ", Args);
                 if (args.Length > 0) args = " " + args;
                 var startArgs = new ProcessStartInfo("mono", "FreeSO.exe" + args);
@@ -215,23 +227,37 @@ namespace FSO.Patcher
             Console.WriteLine("===== FreeSO Patcher CLI - 2019 =====");
             Console.WriteLine(Path.Count + " update(s) to apply.");
 
-            if (Args.Contains("--extras"))
-            {
-                Console.WriteLine("Unix Extras requested. Downloading from FreeSO.org.");
-                ToDownload.Add("http://freeso.org/stuff/macextras.zip");
-            }
-
             if (Args.Contains("--client"))
             {
                 Console.WriteLine("FreeSO client requested. Downloading from servo.freeso.org.");
                 ToDownload.Add("http://servo.freeso.org/guestAuth/repository/download/FreeSO_TsoClient/.lastSuccessful/client-<>.zip?branch=master");
             }
 
+            if (Args.Contains("--extras"))
+            {
+                Console.WriteLine("Unix Extras requested. Downloading from FreeSO.org.");
+                ToDownload.Add("http://freeso.org/stuff/macextras.zip");
+                AllowMonogameMod = true;
+            }
+
             if (ToDownload.Count > 0)
             {
+                CleanPatch = true;
                 Task.Run(() => DownloadAndAdvance()).Wait();
             }
             else {
+                CleanPatch = File.Exists("PatchFiles/clean.txt");
+                if (CleanPatch)
+                {
+                    try
+                    {
+                        File.Delete("PatchFiles/clean.txt");
+                    }
+                    catch
+                    {
+
+                    }
+                }
                 Task.Run(() => AdvanceExtract()).Wait();
             }
         }

@@ -38,7 +38,7 @@ namespace FSO.Patcher
             Directory.CreateDirectory("updateBackup/");
         }
 
-        public static HashSet<string> IgnoreFiles = new HashSet<string>()
+        public HashSet<string> IgnoreFiles = new HashSet<string>()
         {
             //"updater.exe",
             "Content/config.ini",
@@ -92,7 +92,7 @@ namespace FSO.Patcher
             catch (Exception e)
             {
                 if (e is DirectoryNotFoundException) return true;
-                if (tryNum++ > 3)
+                if (tryNum++ > 3 || Errors.Count > 4)
                 {
                     Status($"Could not replace {targPath}!");
                     Errors.Add($"{targPath}: {e.Message}");
