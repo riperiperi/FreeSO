@@ -471,7 +471,10 @@ namespace FSO.LotView.Components
             var worldmat = Matrix.Identity * Matrix.CreateTranslation(0, translation - altOff, 0);
             Effect.Parameters["World"].SetValue(worldmat);
             if ((world as RC.WorldStateRC)?.Use2DCam == false) Effect.Parameters["CamPos"]?.SetValue(world.Camera.Position + world.Camera.Translation);
-            else Effect.Parameters["CamPos"]?.SetValue(new Vector3(0, 9999, 0));
+            else
+            {
+                Effect.Parameters["CamPos"]?.SetValue(new Vector3(10000, 7071.0678118654752440084436210485f, 10000));
+            }
             Effect.Parameters["DiffuseColor"].SetValue(world.OutsideColor.ToVector4() * Color.Lerp(LightGreen, Color.White, 0.25f).ToVector4());
 
             device.SetVertexBuffer(VertexBuffer);

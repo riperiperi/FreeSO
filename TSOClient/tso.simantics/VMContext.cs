@@ -538,6 +538,7 @@ namespace FSO.SimAntics
             if (VM?.Tuning == null) return;
             DisableAvatarCollision = (VM.Tuning.GetTuning("special", 0, 1) ?? 0f) > 0;
             var minLight = VM.Tuning.GetTuning("special", 0, 2);
+            _3DFloorGeometry.af2019 = VM.Tuning.GetTuning("aprilfools", 0, 2019) == 1;
 
             if (DisableAvatarCollision)
             {

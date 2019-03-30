@@ -121,6 +121,21 @@ struct GrassPSVTX {
 	float3 Normal : TEXCOORD3;
 };
 
+bool Water;
+
+float2 LoopUV(float2 uv) {
+	if (Water == false) return uv;
+	uv = frac(uv);
+
+	float dir1 = uv.x + uv.y;
+	float dir2 = uv.x + (1 - uv.y);
+	if (dir1 < 0.5 || dir1 > 1.5 || dir2 < 0.5 || dir2 > 1.5) {
+		uv = frac(uv + float2(0.5, 0.5));
+	}
+	return uv;
+}
+
+
 // from shadertoy.
 // https://www.shadertoy.com/view/4djSRW
 
@@ -512,6 +527,25 @@ void RoofParallaxPS3D(GrassParallaxPSVTX input, out float4 color:COLOR0)
 
 	color = gammaMad(color, lightProcessRoof(input.ModelPos) * LightDotVec(normal, lightDir), LightSpecularVec(normal, viewDir));
 }
+
+void FloorParallaxPS3D(GrassParallaxPSVTX input, out float4 color:COLOR0)
+{
+	float3 viewDir = normalize(input.TangentViewPos.xyz - input.TangentModelPos);
+	float d = input.GrassInfo.w;
+	if (IgnoreColor == false) color = input.Color;
+	else color = float4(1, 1, 1, 1);//*DiffuseColor;
+	float2 texCoords = ParallaxMapping(LoopUV(input.GrassInfo.yz), viewDir);
+	color *= tex2Dgrad(TexSampler, texCoords, ddx(input.GrassInfo.yz), ddy(input.GrassInfo.yz));
+	if (color.a == 0) discard;
+
+	float3 normal = float3(0, 0, 1);
+		//tex2D(NormalMapSampler, texCoords).xyz;
+	//normal = normalize(normal * 2.0 - 1.0);
+	//normal.xy *= -1;
+	float3 lightDir = normalize(input.TangentLightVec);
+
+	color = gammaMad(color, lightProcessRoof(input.ModelPos) * LightDotVec(normal, lightDir), LightSpecularVec(normal, viewDir));
+}
 #endif
 
 void GridPS(GrassPSVTX input, out float4 color:COLOR0)
@@ -551,20 +585,6 @@ void GridPSTex3D(GrassPSVTX input, out float4 color:COLOR0)
 	else {
 		color = tex2Dbias(TexSampler, float4(input.GrassInfo.yz, 0, -0.5)) * DiffuseColor * Alpha;
 	}
-}
-
-bool Water;
-
-float2 LoopUV(float2 uv) {
-	if (Water == false) return uv;
-	uv = frac(uv);
-
-	float dir1 = uv.x + uv.y;
-	float dir2 = uv.x + (1 - uv.y);
-	if (dir1 < 0.5 || dir1 > 1.5 || dir2 < 0.5 || dir2 > 1.5) {
-		uv = frac(uv + float2(0.5, 0.5));
-	}
-	return uv;
 }
 
 #if SIMPLE
@@ -759,6 +779,19 @@ technique DrawBase
 #else
 		VertexShader = compile vs_3_0 GrassParallaxVS();
 		PixelShader = compile ps_3_0 RoofParallaxPS3D();
+#endif;
+	}
+#endif
+
+#if !SIMPLE
+	pass FloorParallax3D
+	{
+#if SM4
+		VertexShader = compile vs_4_0_level_9_3 GrassParallaxVS();
+		PixelShader = compile ps_4_0_level_9_3 FloorParallaxPS3D();
+#else
+		VertexShader = compile vs_3_0 GrassParallaxVS();
+		PixelShader = compile ps_3_0 FloorParallaxPS3D();
 #endif;
 	}
 #endif

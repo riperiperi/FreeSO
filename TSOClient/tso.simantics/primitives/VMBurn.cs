@@ -25,6 +25,9 @@ namespace FSO.SimAntics.Primitives
                 return VMPrimitiveExitCode.GOTO_FALSE;
             }
 
+            var myRoom = context.VM.Context.GetObjectRoom(context.Caller);
+            if (context.VM.Context.RoomInfo[myRoom].Room.IsPool) return VMPrimitiveExitCode.GOTO_FALSE;
+
             //as fires burn, the chance they can spread lowers dramatically.
             context.VM.Context.Clock.FirePercent -= 500; // lower by 5% every spread. 40 spreads reaches 0.
             if (context.VM.Context.Clock.FirePercent < 0) context.VM.Context.Clock.FirePercent = 0;

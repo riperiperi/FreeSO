@@ -63,6 +63,13 @@ namespace FSO.SimAntics.NetPlay.Model.Commands
             else sim.SetPosition(LotTilePos.FromBigTile(3, 3, 1), Direction.NORTH, vm.Context);
             sim.PersistID = ActorUID;
 
+            if (vm.Tuning?.GetTuning("aprilfools", 0, 2019) == 1f)
+            {
+                var sum = AvatarState.Name.Sum(x => x);
+                if (sum % 4 == 0) ((VMAvatar)sim).SetPersonData(VMPersonDataVariable.JobPerformance, 50);
+                if (sum % 128 == 127) ((VMAvatar)sim).SetPersonData(VMPersonDataVariable.JobPerformance, 2);
+            }
+
             VMAvatar avatar = (VMAvatar)sim;
 
             if (vm.TSOState.CommunityLot && AvatarState.Permissions < VMTSOAvatarPermissions.Owner)

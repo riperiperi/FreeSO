@@ -763,6 +763,13 @@ namespace FSO.SimAntics
             VMTSOJobInfo jobInfo = null;
             switch (variable)
             {
+                case VMPersonDataVariable.JobPerformance:
+                    if (Thread?.Context?.VM?.TS1 != true && VM.UseWorld)
+                    {
+                        if (value == 0) ((AvatarComponent)WorldUI).Scale = 1f;
+                        else ((AvatarComponent)WorldUI).Scale = value / 100f;
+                    }
+                    break;
                 case VMPersonDataVariable.TS1ScalingSim:
                     if (Thread?.Context?.VM?.TS1 == true && VM.UseWorld)
                         ((AvatarComponent)WorldUI).Scale = value / 100f;
@@ -1151,6 +1158,7 @@ namespace FSO.SimAntics
             SetPersonData(VMPersonDataVariable.Gender, gender);
             SetPersonData(VMPersonDataVariable.RenderDisplayFlags, GetPersonData(VMPersonDataVariable.RenderDisplayFlags));
             SetPersonData(VMPersonDataVariable.IsGhost, GetPersonData(VMPersonDataVariable.IsGhost));
+            SetPersonData(VMPersonDataVariable.JobPerformance, GetPersonData(VMPersonDataVariable.JobPerformance));
             if (input.TS1)
             {
                 SetPersonData(VMPersonDataVariable.CurrentOutfit, GetPersonData(VMPersonDataVariable.CurrentOutfit));
