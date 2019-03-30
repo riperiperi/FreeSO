@@ -116,6 +116,9 @@ namespace FSO.Client.Controllers
                 {
                     System.IO.File.Delete("PatchFiles/clean.txt");
                 }
+            } catch
+            {
+
             }
 
             var downloader = new UIWebDownloaderDialog(GameFacade.Strings.GetString("f101", "1"), BuildFiles(path));
