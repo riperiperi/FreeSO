@@ -180,6 +180,7 @@ namespace FSO.Patcher
 
         public void StartFreeSO()
         {
+            if (!File.Exists("FreeSO.exe")) File.Copy("FreeSO.exe.old", "FreeSO.exe", true);
             if (Environment.OSVersion.Platform == PlatformID.Unix || Environment.OSVersion.Platform == PlatformID.MacOSX)
             {
                 Console.WriteLine($"===== Starting FreeSO... Please wait! =====");

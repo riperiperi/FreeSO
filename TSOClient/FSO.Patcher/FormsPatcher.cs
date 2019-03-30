@@ -224,6 +224,7 @@ namespace FSO.Patcher
         {
             try
             {
+                if (!File.Exists("FreeSO.exe")) File.Copy("FreeSO.exe.old", "FreeSO.exe", true);
                 if (Environment.OSVersion.Platform == PlatformID.Unix || Environment.OSVersion.Platform == PlatformID.MacOSX)
                 {
                     var startArgs = new ProcessStartInfo("mono", "FreeSO.exe " + string.Join(" ", Args));
