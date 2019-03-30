@@ -215,7 +215,7 @@ namespace FSO.Client.Controllers
                     {
                         path = UpdatePath.FindPath(updates.ToList(), str, versionName);
                     }
-                    else
+                    if (path == null)
                     {
                         path = new UpdatePath(new List<ApiUpdate>() { new ApiUpdate() { version_name = versionName, full_zip = url } }, true);
                         path.MissingInfo = true;
