@@ -861,7 +861,7 @@ namespace FSO.SimAntics
             if (index < 0) return null;
             if (!global)
             {
-                if (!TreeTable.InteractionByIndex.TryGetValue((uint)index, out ia)) return null;
+                if (TreeTable == null || !TreeTable.InteractionByIndex.TryGetValue((uint)index, out ia)) return null;
             }
             else
             {

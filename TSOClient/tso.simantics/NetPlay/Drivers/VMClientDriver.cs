@@ -225,6 +225,8 @@ namespace FSO.SimAntics.NetPlay.Drivers
                 }
                 catch (Exception e)
                 {
+                    CloseReason = VMCloseNetReason.NetExceptionDirect;
+                    CloseString = "An exception occurred while running a direct tick from the server, so the lot connection was terminated: \n\n" + e.ToString();
                     Shutdown();
                     return;
                 }
@@ -241,6 +243,8 @@ namespace FSO.SimAntics.NetPlay.Drivers
                 }
                 catch (Exception e)
                 {
+                    CloseReason = VMCloseNetReason.NetException;
+                    CloseString = "An exception occurred while running a broadcast tick from the server, so the lot connection was terminated: \n\n" + e.ToString();
                     Shutdown();
                     return;
                 }

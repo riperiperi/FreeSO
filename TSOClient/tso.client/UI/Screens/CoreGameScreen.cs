@@ -616,6 +616,10 @@ namespace FSO.Client.UI.Screens
 
         private void VMShutdown(VMCloseNetReason reason)
         {
+            if (reason == VMCloseNetReason.NetException || reason == VMCloseNetReason.NetExceptionDirect)
+            {
+                UIAlert.Alert("Fatal Networking Error", Driver.CloseString, true);
+            }
             var controller = FindController<CoreGameScreenController>();
 
             if (controller != null)
