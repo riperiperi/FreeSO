@@ -151,9 +151,7 @@ namespace FSO.Client.UI.Panels.Profile
                 CaptionStyle = TextStyle.DefaultTitle
             };
             HoursTitle.CaptionStyle = HoursTitle.CaptionStyle.Clone();
-            //HoursTitle.CaptionStyle.Color = new Color(238, 247, 169);
             HoursTitle.CaptionStyle.Size = 14;
-            //HoursTitle.CaptionStyle.Shadow = false;
             HoursTitle.Alignment = TextAlignment.Left | TextAlignment.Middle;
             HoursTitle.Caption = "Hours";
             this.Add(HoursTitle);
@@ -331,7 +329,7 @@ namespace FSO.Client.UI.Panels.Profile
         public override void Removed()
         {
             base.Removed();
-            ProgressBar.Background.Dispose();
+            ProgressBar?.Background?.Dispose();
         }
 
         public void Show()
