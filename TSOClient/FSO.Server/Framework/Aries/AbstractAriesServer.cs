@@ -212,7 +212,8 @@ namespace FSO.Server.Framework.Aries
                 /** You can only use aries packets when anon **/
                 if(!(message is IAriesPacket))
                 {
-                    throw new Exception("Voltron packets are forbidden before aries authentication has completed");
+                    throw new Exception($"Voltron packets are forbidden before aries authentication has completed. \n" +
+                        $"(got {message.GetType().ToString()} on connection for {Config.Call_Sign})");
                 }
             }
 

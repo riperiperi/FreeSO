@@ -11,7 +11,6 @@ using System.Text;
 using Microsoft.Xna.Framework.Graphics;
 using System.IO;
 using Microsoft.Xna.Framework;
-using System.Runtime.InteropServices;
 
 namespace FSO.Files
 {

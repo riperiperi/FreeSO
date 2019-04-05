@@ -236,7 +236,15 @@ namespace FSO.SimAntics.NetPlay.Drivers
             for (int i = 0; i < cmdQueue.Count; i++)
             {
                 var caller = vm.GetAvatarByPersist(cmdQueue[i].Command.ActorUID);
-                if (!cmdQueue[i].Command.Verify(vm, caller)) cmdQueue.RemoveAt(i--);
+                try
+                {
+                    if (!cmdQueue[i].Command.Verify(vm, caller)) cmdQueue.RemoveAt(i--);
+                }
+                catch
+                {
+                    //verification of a command threw an exception - remove. (and perhaps set a warning on sending client
+                    cmdQueue.RemoveAt(i--);
+                }
             }
 
             var tick = new VMNetTick();

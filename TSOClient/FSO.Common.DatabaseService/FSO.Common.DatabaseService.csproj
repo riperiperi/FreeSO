@@ -47,6 +47,9 @@
     <Reference Include="Common.Logging.Core, Version=3.4.1.0, Culture=neutral, PublicKeyToken=af08829b84f0328e, processorArchitecture=MSIL">
       <HintPath>..\packages\Common.Logging.Core.3.4.1\lib\net40\Common.Logging.Core.dll</HintPath>
     </Reference>
+    <Reference Include="Mina.NET, Version=2.0.11.0, Culture=neutral, PublicKeyToken=bc4dde96e5154fe5, processorArchitecture=MSIL">
+      <HintPath>..\packages\Mina.2.0.11\lib\net40\Mina.NET.dll</HintPath>
+    </Reference>
     <Reference Include="Ninject, Version=3.0.0.0, Culture=neutral, PublicKeyToken=c7192dc5380945e7, processorArchitecture=MSIL">
       <HintPath>..\packages\Portable.Ninject.3.3.1\lib\net40-client\Ninject.dll</HintPath>
     </Reference>
@@ -89,10 +92,6 @@
     <None Include="packages.config" />
   </ItemGroup>
   <ItemGroup>
-    <ProjectReference Include="..\..\Other\libs\FSOMina.NET\Mina.NET\Mina.NET.csproj">
-      <Project>{28abbf94-0584-4254-a8b4-4843e6f4e867}</Project>
-      <Name>Mina.NET</Name>
-    </ProjectReference>
     <ProjectReference Include="..\FSO.Server.Clients\FSO.Server.Clients.csproj">
       <Project>{329e0aee-7871-40a7-b5af-8c0d0086ef71}</Project>
       <Name>FSO.Server.Clients</Name>

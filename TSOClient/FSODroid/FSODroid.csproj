@@ -73,6 +73,9 @@
     <Reference Include="Common.Logging.Core, Version=3.4.1.0, Culture=neutral, PublicKeyToken=af08829b84f0328e, processorArchitecture=MSIL">
       <HintPath>..\packages\Common.Logging.Core.3.4.1\lib\netstandard1.0\Common.Logging.Core.dll</HintPath>
     </Reference>
+    <Reference Include="CoreCompat.System.Configuration, Version=4.2.3.0, Culture=neutral, processorArchitecture=MSIL">
+      <HintPath>..\packages\CoreCompat.System.Configuration.4.2.3-r4\lib\netstandard1.5\CoreCompat.System.Configuration.dll</HintPath>
+    </Reference>
     <Reference Include="FSO.Client">
       <HintPath>..\tso.client\bin\WindowsGL\Release\FSO.Client.dll</HintPath>
     </Reference>
@@ -157,6 +160,12 @@
     </Reference>
     <Reference Include="NLog, Version=4.0.0.0, Culture=neutral, PublicKeyToken=5120e14c03d0593c, processorArchitecture=MSIL">
       <HintPath>..\packages\NLog.4.5.7\lib\monoandroid44\NLog.dll</HintPath>
+    </Reference>
+    <Reference Include="Shim, Version=2.0.1.0, Culture=neutral, PublicKeyToken=c55ec16d10c4b366, processorArchitecture=MSIL">
+      <HintPath>..\packages\shim.2.0.1\lib\MonoAndroid1\Shim.dll</HintPath>
+    </Reference>
+    <Reference Include="Shim.Drawing, Version=3.0.1.0, Culture=neutral, PublicKeyToken=a7d03c0bc8d64dbc, processorArchitecture=MSIL">
+      <HintPath>..\packages\shim.drawing.3.0.1\lib\MonoAndroid1\Shim.Drawing.dll</HintPath>
     </Reference>
     <Reference Include="System" />
     <Reference Include="System.Collections.Immutable, Version=1.2.3.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a, processorArchitecture=MSIL">

@@ -490,8 +490,8 @@ float2 ParallaxMapping(float2 texCoords, float3 viewDir)
 	//find the points before and after the ray collision and interpolate between them.
 	float2 lastTC = currentTexCoords + deltaTexCoords;
 
-	float postDepth = currentTexDepth - currentLayerDepth;
-	float preDepth = tex2D(ParallaxTexSampler, lastTC).x - currentLayerDepth + layerDepth;
+	float postDepth = currentTexDepth - currentLayerDepth; //should be negative - how much past current layer depth we travel
+	float preDepth = tex2D(ParallaxTexSampler, lastTC).x - (currentLayerDepth - layerDepth); //should be positive - how much after last layer travel we'd need to go to intersect
 
 	//interpolate between the depth after and before collision to find a midpoint tex-coord.
 	//this removes some of the "layered" effect from most front facing angles... at least the ones where we do get a before and after intersection.
