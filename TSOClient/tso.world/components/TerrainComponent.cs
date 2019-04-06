@@ -448,7 +448,7 @@ namespace FSO.LotView.Components
             Effect.Parameters["GrassFadeMul"].SetValue((float)Math.Sqrt(device.Viewport.Width/1920f));
 
             Effect.Parameters["FadeRectangle"].SetValue(new Vector4(77*3/2f + SubworldOff.X, 77*3/ 2f + SubworldOff.Y, 77*3, 77*3));
-            Effect.Parameters["FadeWidth"].SetValue(100*35f*3);
+            Effect.Parameters["FadeWidth"].SetValue(35f*3);
 
             Effect.Parameters["TileSize"].SetValue(new Vector2(1f / Bp.Width, 1f / Bp.Height));
             Effect.Parameters["RoomMap"].SetValue(world.Rooms.RoomMaps[0]);

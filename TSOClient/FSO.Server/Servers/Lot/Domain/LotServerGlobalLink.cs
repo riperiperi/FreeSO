@@ -875,12 +875,20 @@ namespace FSO.Server.Servers.Lot.Domain
                                     //objects removed, or if we're not giving them the objects on our lot (they must be removed)
                                     //if the lot's open then we need to tell it we're no longer the roommate. 
                                     //we can't detect this from this side, so do it anyways.
-                                    cityMessages.Add(new NotifyLotRoommateChange()
+
+                                    var tradeLot2 = (i == 1) ? lot1 : lot2; //other lot being traded
+                                    //IMPORTANT: DO NOT TELL THE OTHER PROPERTY THAT THE USER HAS BEEN REMOVED AS A ROOMMATE IF THEY THIS IS A 2 PROPERTY TRADE
+                                    //we do not want the objects for a roommate to be removed before they are traded to the other player via the owner switch...
+                                    //this can cause one person to end up with the objects they attempted to train back in their inventory, AS WELL AS the new property.
+                                    if (tradeLot2?.LotID != olot.lot_id || tradeLot2.GUID != 2)
                                     {
-                                        LotId = olot.lot_id,
-                                        AvatarId = olot.avatar_id,
-                                        Change = ChangeType.REMOVE_ROOMMATE
-                                    });
+                                        cityMessages.Add(new NotifyLotRoommateChange()
+                                        {
+                                            LotId = olot.lot_id,
+                                            AvatarId = olot.avatar_id,
+                                            Change = ChangeType.REMOVE_ROOMMATE
+                                        });
+                                    }
                                 }
                                 //create the other avatar as a roommate in this lot, then assign them as owner
                                 db.Roommates.CreateOrUpdate(new DbRoommate() { avatar_id = otherP.PlayerPersist, lot_id = lot.lot_id, permissions_level = 2 });

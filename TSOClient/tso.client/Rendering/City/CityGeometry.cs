@@ -792,7 +792,7 @@ namespace FSO.Client.Rendering.City
                 var trans = (1 - (i - 1) / 2) * 2 + ((4 - i) % 2);
                 ps.Parameters["TransAtlasTex"].SetValue((i==0)?null:content.TransAtlas[trans]);
 
-                if (i == 4)
+                if (i == 4 && psn != 1)
                 {
                     ps.CurrentTechnique = ps.Techniques[3];
                     ps.Parameters["BigWTex"].SetValue(content.BigWNormal);
@@ -808,7 +808,7 @@ namespace FSO.Client.Rendering.City
                 gd.SetVertexBuffer(LayerVertices[i]);
                 gd.Indices = LayerIndices[i];
                 if (LayerPrims[i] > 0) gd.DrawIndexedPrimitives(PrimitiveType.TriangleList, 0, 0, LayerPrims[i]);
-                if (i == 4)
+                if (i == 4 && psn != 1)
                 {
                     //HACK HACK HACK HACK
                     //Monogame OpenGL DOES NOT like these textures staying in samplers 3 and 4.

@@ -1467,7 +1467,7 @@ namespace FSO.Server.Servers.Lot.Domain
 
             //if we have a null owner, this lot needs to be deleted.
 
-            if (!JobLot) {
+            if (!(JobLot || LotPersist.category == LotCategory.community)) {
                 using (var da = DAFactory.Get())
                 {
                     var lot = da.Lots.Get(Context.DbId);

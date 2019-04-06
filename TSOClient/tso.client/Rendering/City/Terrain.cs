@@ -1403,6 +1403,7 @@ namespace FSO.Client.Rendering.City
             PixelShader.Parameters["SmallWTex"].SetValue(Content.SmallWNormal);
 
             PixelShader.Parameters["WavePow"].SetValue(5/2f);
+            PixelShader.Parameters["RealNormalPct"].SetValue(2f);
             PixelShader.Parameters["ShadowMult"].SetValue(m_ShadowMult);
             var fog = true; //(Camera is CityCamera3D) || Weather.WeatherIntensity > 0.01f;
             if (fog)
@@ -1627,6 +1628,7 @@ namespace FSO.Client.Rendering.City
             PixelShader.Parameters["SmallWTex"].SetValue(Content.SmallWNormal);
 
             PixelShader.Parameters["WavePow"].SetValue(5 / 2f);
+            PixelShader.Parameters["RealNormalPct"].SetValue(2f);
             PixelShader.Parameters["ShadowMult"].SetValue(m_ShadowMult);
             PixelShader.Parameters["Time"].SetValue(ITime / (float)FSOEnvironment.RefreshRate);
 

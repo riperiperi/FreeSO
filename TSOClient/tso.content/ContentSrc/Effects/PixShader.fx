@@ -518,6 +518,7 @@ sampler2D SmallWSampler = sampler_state
 float Time;
 float WavePow;
 float SunStrength;
+float RealNormalPct;
 float4x4 InvView;
 
 float3 NTex(float4 col) {
@@ -527,10 +528,10 @@ float3 NTex(float4 col) {
 float4 WSpecular(CityVertexOut Input) {
 	float3 light = normalize(LightVec.xyz);
 
-	float3 normal = NTex(tex2D(SmallWSampler, Input.VertexCoord*256 + Time * float2(0.62, 0.23)/15.0))
-		+ NTex(tex2D(SmallWSampler, Input.VertexCoord * 196 + Time * float2(-0.11, -0.73) / 11.0))
-		+ NTex(tex2D(BigWSampler, Input.VertexCoord * 12 + Time * float2(0.93, 0.06) / 6.0))
-		+ Input.NormalTrans.xyz * 2;
+	float3 normal = NTex(tex2D(SmallWSampler, Input.VertexCoord*256 + Time * float2(0.62, 0.23)/15.0)) * 0.6
+		+ NTex(tex2D(SmallWSampler, Input.VertexCoord * 196 + Time * float2(-0.11, -0.73) / 11.0)) * 0.6
+		+ NTex(tex2D(BigWSampler, Input.VertexCoord * 5 + Time * float2(-0.93, 0.06) / 18.0))
+		+ Input.NormalTrans.xyz * RealNormalPct;
 	normal = normalize(normal);
 
 	//float3 normal = normalize(Input.NormalTrans.xyz);
@@ -539,13 +540,13 @@ float4 WSpecular(CityVertexOut Input) {
 	float3 v = camVec;
 
 	float dotProduct = dot(r, v);
-	float SunShininess = 150;
+	float SunShininess = 120;
 	float SkyShininess = 0.20;
 	float SpecularIntensity = 1;
 
 	float cosan = abs(dot(camVec, normal));
 
-	return LinearToSRGB(float4(LightCol.xyz, 1)) * SpecularIntensity * (pow(max(dotProduct, 0), SunShininess) * 0.6*SunStrength + (1 - pow(cosan, SkyShininess))*0.65);
+	return LinearToSRGB(float4(LightCol.xyz, 1)) * SpecularIntensity * (pow(max(dotProduct, 0), SunShininess) * 0.6*SunStrength + (1 - pow(cosan, SkyShininess))*0.75);
 }
 
 float4 GetWCityColor(CityVertexOut Input) {

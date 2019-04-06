@@ -234,9 +234,24 @@ namespace FSO.Server.Framework.Aries
         {
             //search for a session for a specific user
             uint avatarID;
-            if (!uint.TryParse(userID, out avatarID)) return false;
+            if (!uint.TryParse(userID, out avatarID))
+            {
+                LOG.Info($"Rejected migration: could not parse userID {userID}");
+                return false;
+            }
             var session = _Sessions.GetByAvatarId(avatarID);
-            if (session == null || (string)session.GetAttribute("sessionKey") != password) return false;
+            if (session == null)
+            {
+                LOG.Info($"Rejected migration: could not find session for userID {userID}");
+                return false;
+            }
+            if ((string)session.GetAttribute("sessionKey") != password)
+            {
+                var nullified = (session.GetAttribute("sessionKey") == null) ? "null" : "non-null";
+                LOG.Info($"Rejected migration: incorrect session key for user {userID}. (session key is {nullified})");
+                return false;
+            }
+            LOG.Info($"Migrating session for user {userID}...");
             MigrateSession((AriesSession)session, newSession);
             return true;
         }
@@ -280,7 +295,6 @@ namespace FSO.Server.Framework.Aries
                 LOG.Info("[SESSION-REPLACED (" + Config.Call_Sign + ")]");
                 return;
             }
-            _Sessions.Remove(ariesSession);
 
             if (session.GetAttribute("dc") == null && session.GetAttribute("sessionKey") != null)
             {
@@ -302,6 +316,7 @@ namespace FSO.Server.Framework.Aries
                             //this session has been migrated to another connection - it no longer needs to be closed
                             return;
                         }
+                        _Sessions.Remove(ariesSession);
                         LOG.Info("[SESSION-TIMEOUT (" + Config.Call_Sign + ")]");
 
                         foreach (var interceptor in _SessionInterceptors)
@@ -319,7 +334,8 @@ namespace FSO.Server.Framework.Aries
                     return;
                 }
             }
-
+            
+            _Sessions.Remove(ariesSession);
             LOG.Info("[SESSION-CLOSED (" + Config.Call_Sign + ")]");
 
             foreach (var interceptor in _SessionInterceptors)
