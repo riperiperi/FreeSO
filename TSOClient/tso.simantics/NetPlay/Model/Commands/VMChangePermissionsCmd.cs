@@ -52,8 +52,12 @@ namespace FSO.SimAntics.NetPlay.Model.Commands
                         var owner = ((VMTSOObjectState)ent.TSOState).OwnerID;
                         if (Mode == VMChangePermissionsMode.OWNER_SWITCH_WITH_OBJECTS && owner == ReplaceUID && ReplaceUID != 0)
                         {
-                            ((VMTSOObjectState)ent.TSOState).OwnerID = TargetUID;
-                            owner = TargetUID;
+                            var item = Content.Content.Get().WorldCatalog.GetItemByGUID((ent.MasterDefinition ?? ent.Object.OBJ).GUID);
+                            if (item == null || item.Value.DisableLevel < 2) //do not trade objects that are untradable.
+                            {
+                                ((VMTSOObjectState)ent.TSOState).OwnerID = TargetUID;
+                                owner = TargetUID;
+                            }
                         }
                         var wasDisabled = (((VMGameObject)ent).Disabled & VMGameObjectDisableFlags.PendingRoommateDeletion) > 0;
 

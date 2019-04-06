@@ -855,6 +855,7 @@ namespace FSO.Server.Servers.Lot.Domain
                                 if (lot.owner_id != null) db.Roommates.RemoveRoommate(lot.owner_id.Value, lot.lot_id);
                                 //evict this roommate from any lots they are on
                                 var otherLots = db.Roommates.GetAvatarsLots(otherP.PlayerPersist);
+                                uint lastNhood = 0;
                                 foreach (var olot in otherLots)
                                 {
                                     db.Roommates.RemoveRoommate(olot.avatar_id, olot.lot_id);
@@ -870,6 +871,8 @@ namespace FSO.Server.Servers.Lot.Domain
                                             db.Lots.ReassignOwner(olot.lot_id);
                                         }
                                     }
+
+                                    lastNhood = (db.Lots.Get(olot.lot_id)?.neighborhood_id) ?? 0;
 
                                     //our lot will be changed. update it if we're not giving them our lot (the lot may need to be deleted, and our 
                                     //objects removed, or if we're not giving them the objects on our lot (they must be removed)
@@ -893,6 +896,10 @@ namespace FSO.Server.Servers.Lot.Domain
                                 //create the other avatar as a roommate in this lot, then assign them as owner
                                 db.Roommates.CreateOrUpdate(new DbRoommate() { avatar_id = otherP.PlayerPersist, lot_id = lot.lot_id, permissions_level = 2 });
                                 db.Lots.UpdateOwner(lot.lot_id, otherP.PlayerPersist);
+                                if (lot.neighborhood_id != lastNhood)
+                                {
+                                    db.Avatars.UpdateMoveDate(otherP.PlayerPersist, Epoch.Now);
+                                }
 
                                 if (iLot.GUID == 2)
                                 {

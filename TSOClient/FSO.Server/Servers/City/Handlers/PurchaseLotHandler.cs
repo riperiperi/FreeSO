@@ -319,8 +319,8 @@ namespace FSO.Server.Servers.City.Handlers
                         {
                             nhoodDS.Neighborhood_LotCount = (uint)db.Lots.GetLocationsInNhood(nhoodDS.Id).Count;
                             nhoodDS.Neighborhood_AvatarCount = (uint)db.Avatars.GetLivingInNhood(nhoodDS.Id).Count;
+                            db.Avatars.UpdateMoveDate(session.AvatarId, Epoch.Now);
                         }
-                        db.Avatars.UpdateMoveDate(session.AvatarId, Epoch.Now);
                     }
                     catch (Exception ex)
                     {
