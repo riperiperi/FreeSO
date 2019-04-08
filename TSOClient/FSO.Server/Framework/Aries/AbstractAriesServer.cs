@@ -47,6 +47,9 @@ namespace FSO.Server.Framework.Aries
 
         private AriesPacketRouter _Router = new AriesPacketRouter();
         private Sessions _Sessions;
+        private int ConnectionCount;
+        private int TotalConnectionCount;
+        private int MigrationCount;
 
         private List<IAriesSessionInterceptor> _SessionInterceptors = new List<IAriesSessionInterceptor>();
 
@@ -228,6 +231,8 @@ namespace FSO.Server.Framework.Aries
 
         public void SessionOpened(IoSession session)
         {
+            ConnectionCount++;
+            TotalConnectionCount++;
         }
 
         public bool AttemptMigration(AriesSession newSession, string userID, string password)
@@ -258,6 +263,7 @@ namespace FSO.Server.Framework.Aries
 
         public void MigrateSession(AriesSession oldSession, AriesSession newSession)
         {
+            MigrationCount++;
             var oldIO = oldSession.IoSession;
             oldSession.Migrate(newSession.IoSession);
             //remove the new session as its connection has been migrated to the old.
@@ -265,7 +271,10 @@ namespace FSO.Server.Framework.Aries
             //may still be connected. disconnect the old tcp connection.
             oldIO.SetAttribute("s", null);
             oldIO.Write(new ServerByePDU());
-            oldIO.Close(false);
+            Task.Delay(100).ContinueWith((task) =>
+            {
+                oldIO.Close(true);
+            });
 
             foreach (var interceptor in _SessionInterceptors)
             {
@@ -289,6 +298,7 @@ namespace FSO.Server.Framework.Aries
 
         public void SessionClosed(IoSession session)
         {
+            ConnectionCount--;
             var ariesSession = session.GetAttribute<IAriesSession>("s");
             if (ariesSession == null)
             {
@@ -386,6 +396,12 @@ namespace FSO.Server.Framework.Aries
 
         public override void Shutdown()
         {
+            LOG.Info($"Health on {Config.Call_Sign} shutdown:");
+            LOG.Info($"  Sessions open: {_Sessions.Clone().Count}");
+            LOG.Info($"  Connections open: {ConnectionCount}");
+            LOG.Info($"  Connection total (lifetime): {TotalConnectionCount}");
+            LOG.Info($"  Connections migrated (lifetime): {MigrationCount}");
+
             var sendBye = UnexpectedDisconnectWaitSeconds > 0;
             UnexpectedDisconnectWaitSeconds = 0;
             Acceptor.Dispose();
