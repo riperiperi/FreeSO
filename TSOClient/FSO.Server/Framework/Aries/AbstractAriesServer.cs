@@ -324,6 +324,7 @@ namespace FSO.Server.Framework.Aries
                         if (session.GetAttribute("migrated") != null)
                         {
                             //this session has been migrated to another connection - it no longer needs to be closed
+                            LOG.Info("[SESSION-REPLACED (" + Config.Call_Sign + ")]");
                             return;
                         }
                         _Sessions.Remove(ariesSession);
