@@ -47,6 +47,7 @@ namespace FSO.Server.Core
             settings.Add("smtpPort", userApiConfig.SmtpPort.ToString());
             settings.Add("useProxy", userApiConfig.UseProxy.ToString());
             settings.Add("updateID", config.UpdateID?.ToString() ?? "");
+            settings.Add("branchName", config.UpdateBranch);
 
             var api2 = new FSO.Server.Api.Core.Api();
             api2.Init(settings);

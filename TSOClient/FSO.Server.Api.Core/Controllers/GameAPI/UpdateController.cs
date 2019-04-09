@@ -18,7 +18,7 @@ namespace FSO.Server.Api.Core.Controllers.GameAPI
             var api = Api.INSTANCE;
             using (var da = api.DAFactory.Get())
             {
-                var recents = da.Updates.GetRecentUpdatesForBranchByName("dev", 20);
+                var recents = da.Updates.GetRecentUpdatesForBranchByName(api.Config.BranchName, 20);
                 return new JsonResult(recents.ToList());
             }
         }
