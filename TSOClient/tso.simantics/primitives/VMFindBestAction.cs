@@ -70,7 +70,7 @@ namespace FSO.SimAntics.Primitives
                         //if (interpScore > baseScore) baseScore = interpScore;
                     }
                     baseScore -= negScore;
-                    float atten = (entry.AttenuationCode == 0) ? entry.AttenuationValue : TTAB.AttenuationValues[entry.AttenuationCode];
+                    float atten = (entry.AttenuationCode == 0) ? entry.AttenuationValue : (entry.AttenuationCode < TTAB.AttenuationValues.Length) ? TTAB.AttenuationValues[entry.AttenuationCode] : 0f;
                     int attenScore = (int)Math.Max(0, baseScore * (1f - (distance * atten)));
                     if (attenScore != 0) attenScore += (int)context.VM.Context.NextRandom(31) - 15;
 
