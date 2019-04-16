@@ -484,6 +484,7 @@ namespace FSO.SimAntics
                 }
                 else min = mid + 1; //target object is above us
             }
+            if (min >= count) return count;
             return list[min].ObjectID > targId ? min : min+1;
         }
 
