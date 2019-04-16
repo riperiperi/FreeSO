@@ -33,6 +33,7 @@ namespace FSO.Server.Servers.Lot
         {
             this.Config = config;
             this.UnexpectedDisconnectWaitSeconds = 30;
+            this.TimeoutIfNoAuth = true;
 
             Kernel.Bind<LotServerConfiguration>().ToConstant(Config);
             Kernel.Bind<LotHost>().To<LotHost>().InSingletonScope();
@@ -157,14 +158,14 @@ namespace FSO.Server.Servers.Lot
                         //Time to upgrade to a voltron session
                         var newSession = Sessions.UpgradeSession<VoltronSession>(rawSession, x =>
                         {
+                            rawSession.IsAuthenticated = true;
                             x.UserId = ticket.user_id;
                             x.AvatarId = ticket.avatar_id;
-                            x.IsAuthenticated = true;
+                            x.Authenticate(packet.Password);
                             x.AvatarClaimId = ticket.avatar_claim_id;
                         });
 
                         newSession.SetAttribute("cityCallSign", ticket.avatar_claim_owner);
-                        newSession.SetAttribute("sessionKey", packet.Password);
 
                         //Try and join the lot, no reason to keep this connection alive if you can't get in
                         if (!Lots.TryJoin(ticket.lot_id, newSession))

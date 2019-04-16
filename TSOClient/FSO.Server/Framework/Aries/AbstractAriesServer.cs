@@ -54,6 +54,7 @@ namespace FSO.Server.Framework.Aries
         private List<IAriesSessionInterceptor> _SessionInterceptors = new List<IAriesSessionInterceptor>();
 
         public int UnexpectedDisconnectWaitSeconds = 0;
+        public bool TimeoutIfNoAuth;
 
         public AbstractAriesServer(AbstractAriesServerConfig config, IKernel kernel)
         {
@@ -192,6 +193,7 @@ namespace FSO.Server.Framework.Aries
                     LOG.Error(ex);
                 }
             }
+            if (TimeoutIfNoAuth) ariesSession.TimeoutIfNoAuth(20000);
 
             //Ask for session info
             session.Write(new RequestClientSession());
@@ -257,6 +259,7 @@ namespace FSO.Server.Framework.Aries
                 return false;
             }
             LOG.Info($"Migrating session for user {userID}...");
+            newSession.Authenticate(password); //make sure the new session knows that authentication has completed.
             MigrateSession((AriesSession)session, newSession);
             return true;
         }

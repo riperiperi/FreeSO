@@ -1330,6 +1330,7 @@ namespace FSO.Client.Rendering.City
             m_GraphicsDevice.DrawUserPrimitives<VertexPositionColor>(PrimitiveType.TriangleList, Vert2D, 0, Vert2D.Length/3); //draw 2d coloured triangle array (for spotlights etc)
 
             m_GraphicsDevice.DepthStencilState = DepthStencilState.Default;
+            m_2DVerts.Clear();
         }
 
         public float GetIsoScale()
@@ -1503,8 +1504,8 @@ namespace FSO.Client.Rendering.City
                     DrawTileBorders(0, m_Batch);
                     m_Batch.End();
                     m_GraphicsDevice.DepthStencilState = DepthStencilState.Default;
-                    DrawFacades(Camera.CalculateR(), pass, false, frustum);
                     Draw2DPoly(true);
+                    DrawFacades(Camera.CalculateR(), pass, false, frustum);
                 }
             }
             
@@ -1808,6 +1809,7 @@ namespace FSO.Client.Rendering.City
                             if (online && !useLocked)
                             {
                                 PathTile(x, y, 0, new Color(1.0f, 1.0f, 1.0f, (float)(0.3 + Math.Sin(4 * Math.PI * (m_SpotOsc % 1)) * 0.15)));
+                                Draw2DPoly(true);
                             }
 
                             FSOF lotImg = null;

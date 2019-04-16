@@ -733,7 +733,7 @@ namespace FSO.Client.UI.Screens
                     var dialog = new UITimeOutDialog(vm, (int)data);
                     UIScreen.GlobalShowDialog(dialog, true);
                     var rnd = new Random();
-                    dialog.Position = new Vector2(rnd.Next(ScreenWidth - 500), rnd.Next(ScreenHeight - 500));
+                    dialog.Position = new Vector2(rnd.Next(Math.Max(0, ScreenWidth - 380)), rnd.Next(Math.Max(0, ScreenHeight - 180)));
                     break;
             }
         }

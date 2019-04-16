@@ -36,6 +36,7 @@ namespace FSO.Server.Servers.City
         public CityServer(CityServerConfiguration config, IKernel kernel) : base(config, kernel)
         {
             this.UnexpectedDisconnectWaitSeconds = 30;
+            this.TimeoutIfNoAuth = true;
             this.Config = config;
             VoltronSessions = Sessions.GetOrCreateGroup(Groups.VOLTRON);
         }
@@ -213,10 +214,10 @@ namespace FSO.Server.Servers.City
                         var newSession = Sessions.UpgradeSession<VoltronSession>(rawSession, x => {
                             x.UserId = ticket.user_id;
                             x.AvatarId = ticket.avatar_id;
-                            x.IsAuthenticated = true;
+                            rawSession.IsAuthenticated = true;
+                            x.Authenticate(packet.Password);
                             x.AvatarClaimId = claim.Value;
                         });
-                        newSession.SetAttribute("sessionKey", packet.Password);
                         return;
                     }
                 }

@@ -261,7 +261,7 @@ float4 GetObjColor(ObjVertexOut Input) {
 float4 CityObjPS(ObjVertexOut Input) : COLOR0
 {
 	float4 BCol = GetObjColor(Input);
-	if (BCol.a < 0.1) discard;
+	if (BCol.a < 0.01) discard;
 	float depth = Input.shadPos.z;
 	float diffuse = 1;//dot(normalize(Input.normal.xyz), LightVec.xyz);
 	if (diffuse < 0) diffuse *= 0.5;
@@ -272,7 +272,7 @@ float4 CityObjPS(ObjVertexOut Input) : COLOR0
 float4 CityObjPSNoShad(ObjVertexOut Input) : COLOR0
 {
 	float4 BCol = GetObjColor(Input);
-	if (BCol.a < 0.1) discard;
+	if (BCol.a < 0.01) discard;
 	float diffuse = 1;//dot(normalize(Input.normal.xyz), LightVec.xyz);
 	if (diffuse < 0) diffuse *= 0.5;
 	return float4(gammaMul(float4(BCol.xyz, 1), float4(LightCol.xyz*lerp(ShadowMult, 1, diffuse),1)).rgb*BCol.a, BCol.a);
@@ -281,7 +281,7 @@ float4 CityObjPSNoShad(ObjVertexOut Input) : COLOR0
 float4 CityObjPSFog(ObjVertexOut Input) : COLOR0
 {
 	float4 BCol = GetObjColor(Input);
-	if (BCol.a < 0.1) discard;
+	if (BCol.a < 0.01) discard;
 	float diffuse = 1;//dot(normalize(Input.normal.xyz), LightVec.xyz);
 	if (diffuse < 0) diffuse *= 0.5;
 
@@ -294,7 +294,7 @@ float4 CityObjPSFog(ObjVertexOut Input) : COLOR0
 float4 CityObjPSFogShad(ObjVertexOut Input) : COLOR0
 {
 	float4 BCol = GetObjColor(Input);
-	if (BCol.a < 0.1) discard;
+	if (BCol.a < 0.01) discard;
 	float depth = Input.shadPos.z;
 	float diffuse = 1;//dot(normalize(Input.normal.xyz), LightVec.xyz);
 	if (diffuse < 0) diffuse *= 0.5;

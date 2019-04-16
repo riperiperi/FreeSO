@@ -191,7 +191,18 @@ namespace FSO.Client.Regulators
                     }
                     else
                     {
-                        AsyncTransition("Reestablish");
+                        GameThread.SetTimeout(() =>
+                        {
+                            if (CurrentState?.Name == "UnexpectedDisconnect")
+                            {
+                                AsyncTransition("Reestablish");
+                            }
+                            else if (CurrentState?.Name != "Disconnected")
+                            {
+                                IsDisconnecting = true;
+                                AsyncTransition("Disconnected");
+                            }
+                        }, 100);
                     }
                     break;
 

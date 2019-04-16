@@ -40,7 +40,7 @@ namespace FSO.Server.Servers.Shared.Handlers
             });
         }
 
-        public void Handle(IAriesSession session, AnswerChallenge answer)
+        public void Handle(AriesSession session, AnswerChallenge answer)
         {
             var challenge = session.GetAttribute("challenge") as string;
             if(challenge == null)
@@ -58,7 +58,8 @@ namespace FSO.Server.Servers.Shared.Handlers
 
             //Trust established, good to go
             var newSession = Sessions.UpgradeSession<GluonSession>(session, x => {
-                x.IsAuthenticated = true;
+                session.IsAuthenticated = true;
+                x.Authenticate(Secret);
                 x.CallSign = (string)session.GetAttribute("callSign");
                 x.PublicHost = (string)session.GetAttribute("publicHost");
                 x.InternalHost = (string)session.GetAttribute("internalHost");

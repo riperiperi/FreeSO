@@ -168,6 +168,7 @@ namespace FSO.LotView.RC
             Blueprint.RoofComp.Draw(gd, parentState);
             parentState.SilentLevel = level;
             effect.CurrentTechnique = effect.Techniques["Draw"];
+            gd.BlendState = BlendState.NonPremultiplied;
 
             var frustrum = new BoundingFrustum(vp);
             var objs = Blueprint.Objects.Where(x => frustrum.Intersects(((ObjectComponentRC)x).GetBounds()))

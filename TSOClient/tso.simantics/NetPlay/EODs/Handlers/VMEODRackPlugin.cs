@@ -54,7 +54,6 @@ namespace FSO.SimAntics.NetPlay.EODs.Handlers
 
                     //Take payment
                     VM.GlobalLink.PerformTransaction(VM, false, client.Avatar.PersistID, Server.Object.PersistID, (int)outfit.sale_price,
-
                     (bool success, int transferAmount, uint uid1, uint budget1, uint uid2, uint budget2) =>
                     {
                         if (success)
@@ -64,6 +63,12 @@ namespace FSO.SimAntics.NetPlay.EODs.Handlers
                                     if (purchaseSuccess && putOnNow)
                                     {
                                         PutOnNow(outfit, client);
+                                    }
+                                    if (!purchaseSuccess) {
+                                        VM.GlobalLink.PerformTransaction(VM, false, Server.Object.PersistID, client.Avatar.PersistID, (int)outfit.sale_price,
+                                        (bool success2, int transferAmount2, uint uid1d, uint budget1d, uint uid2d, uint budget2d) =>
+                                        {
+                                        });
                                     }
 
                                     BroadcastOutfits(VM, true);

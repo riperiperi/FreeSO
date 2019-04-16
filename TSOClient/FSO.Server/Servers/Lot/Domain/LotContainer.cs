@@ -943,7 +943,10 @@ namespace FSO.Server.Servers.Lot.Domain
                         if (--TimeToShutdown < TICKRATE * 10)
                         {
                             //no roommates are here, so all visitors must be kicked out.
-                            Host.Broadcast(new HashSet<uint>(), new FSOVMProtocolMessage(true, "21", "22"));
+                            if (preTickAvatars.Count > 0)
+                            {
+                                Host.Broadcast(new HashSet<uint>(), new FSOVMProtocolMessage(true, "21", "22"));
+                            }
                             foreach (var avatar in preTickAvatars)
                             {
                                 if (avatar.KillTimeout == -1) avatar.UserLeaveLot();
