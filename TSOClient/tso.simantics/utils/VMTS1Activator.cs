@@ -201,6 +201,7 @@ namespace FSO.SimAntics.Utils
                     {
                         var x = i % 64;
                         var y = i / 64;
+                        if (x >= size || y >= size) continue;
                         MappedObject targ;
                         if (!objm.ObjectData.TryGetValue(obj, out targ)) continue;
                         targ.ArryX = x;
