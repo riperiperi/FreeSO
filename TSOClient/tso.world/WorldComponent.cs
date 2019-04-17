@@ -22,25 +22,15 @@ namespace FSO.LotView
         public abstract float PreferredDrawOrder { get; }
 
         public virtual void Initialize(GraphicsDevice device, WorldState world){
-            OnWorldChanged(world);
         }
 
         public abstract void Draw(GraphicsDevice device, WorldState world);
         public virtual void Update(GraphicsDevice device, WorldState world) { }
 
         public virtual void OnRotationChanged(WorldState world){
-            OnWorldChanged(world);
         }
 
         public virtual void OnZoomChanged(WorldState world){
-            OnWorldChanged(world);
-        }
-
-        public virtual void OnScrollChanged(WorldState world){
-            OnWorldChanged(world);
-        }
-
-        public virtual void OnWorldChanged(WorldState world){
         }
 
         public virtual void OnPositionChanged() { }

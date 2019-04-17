@@ -158,7 +158,7 @@ namespace FSO.LotView.Components
 
         public override void Draw(GraphicsDevice device, WorldState world)
         {
-            var scale2d = (1 << (3 - (int)world.Zoom));
+            int scale2d = 1;
             var weather = (Mode < ParticleType.GENERIC_BOX);
             if (Vertices == null || (LastZoom != world.Zoom && weather))
             {
@@ -169,6 +169,7 @@ namespace FSO.LotView.Components
                         Volume = new BoundingBox(new Vector3(-50, -50, -50), new Vector3(50, 50, 50));
                     else
                     {
+                        scale2d = (1 << (3 - (int)world.Zoom));
                         Volume = new BoundingBox(new Vector3(-100, 0, -100) * scale2d, new Vector3(100 * scale2d, 2.95f * 3 * 5 * 2, 100 * scale2d));
                     }
                     if (Indoors == null)

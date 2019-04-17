@@ -254,6 +254,7 @@ namespace FSO.LotView.LMap
                 RedrawAll(state, 6);
                 RedrawFloor = 6;
             }
+            if (DirtyRooms.Count == 0) return;
 
             //initialize lighteffect with default params
             sbyte floor = 0;
@@ -264,10 +265,17 @@ namespace FSO.LotView.LMap
 
             var dirty = new List<ushort>(DirtyRooms);
             var ordered = dirty.OrderBy(x => rooms[x].Floor);
+            var speed = Math.Max(1, (DirtyRooms.Count - 64 / 16)); //speed up quickly if we have a lot of rooms to get thru
+            int i = 0;
             foreach (var rm in ordered)
             {
+                if (i >= speed) break;
                 var room = rooms[rm];
-                if (room.WallLines == null || room.Floor > floorLimit) continue;
+                if (room.WallLines == null || room.Floor > floorLimit)
+                {
+                    DirtyRooms.Remove(rm);
+                    continue;
+                }
                 if (room.Floor != floor)
                 {
                     floor = room.Floor;

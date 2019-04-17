@@ -170,10 +170,6 @@ namespace FSO.LotView
         public void InvalidateScroll()
         {
             if (Blueprint == null) { return; }
-
-            foreach (var item in Blueprint.Objects){
-                item.OnScrollChanged(State);
-            }
             Blueprint.Damage.Add(new BlueprintDamage(BlueprintDamageType.SCROLL));
         }
 

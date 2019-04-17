@@ -250,14 +250,6 @@ namespace FSO.LotView.Components
             }
         }
 
-        public override void OnScrollChanged(WorldState world)
-        {
-            base.OnScrollChanged(world);
-            if (dgrp != null) {
-                dgrp.InvalidateScroll();
-            }
-        }
-
         public void ValidateSprite(WorldState world)
         {
             dgrp.ValidateSprite(world);
