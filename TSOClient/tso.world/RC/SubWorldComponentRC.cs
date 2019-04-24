@@ -9,6 +9,7 @@ using FSO.LotView.Utils;
 using Microsoft.Xna.Framework;
 using FSO.Content;
 using FSO.LotView.Model;
+using FSO.LotView.Effects;
 
 namespace FSO.LotView.RC
 {
@@ -163,11 +164,11 @@ namespace FSO.LotView.RC
             parentState.DrawOOB = false;
             var view = parentState.Camera.View;
             var vp = view * parentState.Camera.Projection;
-            effect.Parameters["ViewProjection"].SetValue(vp);
+            effect.ViewProjection = vp;
             Blueprint.WCRC.Draw(gd, parentState);
             Blueprint.RoofComp.Draw(gd, parentState);
             parentState.SilentLevel = level;
-            effect.CurrentTechnique = effect.Techniques["Draw"];
+            effect.SetTechnique(RCObjectTechniques.Draw);
             gd.BlendState = BlendState.NonPremultiplied;
 
             var frustrum = new BoundingFrustum(vp);

@@ -16,6 +16,7 @@ using FSO.Vitaboy;
 using FSO.LotView.LMap;
 using FSO.LotView.RC;
 using FSO.Common;
+using FSO.LotView.Effects;
 
 namespace FSO.LotView.Model
 {
@@ -190,14 +191,14 @@ namespace FSO.LotView.Model
             return yLerp * xl2 + (1 - yLerp) * xl1 - BaseAlt * TerrainFactor;
         }
 
-        public static void SetLightColor(Effect effect, Color outside, Color minOut)
+        public static void SetLightColor(LightMappedEffect effect, Color outside, Color minOut)
         {
             //return;
-            effect.Parameters["OutsideDark"]?.SetValue(minOut.ToVector4());
+            effect.OutsideDark = minOut.ToVector4();
             var avg = (minOut.R + minOut.G + minOut.B) / (255 * 3f);
             var minAvg = new Vector2(avg, 1 / (1 - avg));
             if (float.IsInfinity(minAvg.Y)) minAvg.Y = 1;
-            effect.Parameters["MinAvg"]?.SetValue(minAvg);
+            effect.MinAvg = minAvg;
         }
 
         public sbyte GetFloorsUsed()
@@ -235,11 +236,10 @@ namespace FSO.LotView.Model
             var minOut = MinOut;
             minOut.A = 255;
 
-            SetLightColor(WorldContent._2DWorldBatchEffect, OutsideColor, minOut);
-            SetLightColor(WorldContent.GrassEffect, OutsideColor, minOut);
-            SetLightColor(Avatar.Effect, OutsideColor, minOut);
-            SetLightColor(WorldContent.RCObject, OutsideColor, minOut);
-            SetLightColor(WorldContent.ParticleEffect, OutsideColor, minOut);
+            foreach (var effect in WorldContent.LightEffects)
+            {
+                SetLightColor(effect, OutsideColor, minOut);
+            }
 
             for (int i=0; i<Light.Length; i++)
             {

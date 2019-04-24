@@ -9,6 +9,7 @@ using Microsoft.Xna.Framework;
 using FSO.LotView.Components;
 using FSO.LotView.Utils;
 using FSO.Common.Utils;
+using FSO.LotView.Effects;
 
 namespace FSO.LotView.RC
 {
@@ -313,8 +314,8 @@ namespace FSO.LotView.RC
             gd.RasterizerState = RasterizerState.CullNone;
             gd.DepthStencilState = DepthStencilState.Default;
             var effect = WorldContent.RCObject;
-            effect.Parameters["ViewProjection"].SetValue(vp);
-            effect.CurrentTechnique = effect.Techniques["Draw"];
+            effect.ViewProjection = vp;
+            effect.SetTechnique(RCObjectTechniques.Draw);
             state.ClearLighting(false);
             Blueprint.SetLightColor(WorldContent.RCObject, Color.White, Color.White);
 
@@ -450,7 +451,7 @@ namespace FSO.LotView.RC
             gd.BlendState = BlendState.NonPremultiplied;
             var view = state.Camera.View;
             var vp = view * state.Camera.Projection;
-            effect.Parameters["ViewProjection"].SetValue(vp);
+            effect.ViewProjection = vp;
 
             var cuts = Blueprint.Cutaway;
             Blueprint.Cutaway = new bool[cuts.Length];
@@ -462,7 +463,7 @@ namespace FSO.LotView.RC
             gd.BlendState = BlendState.NonPremultiplied;
             gd.RasterizerState = RasterizerState.CullNone;
 
-            effect.CurrentTechnique = effect.Techniques["Draw"];
+            effect.SetTechnique(RCObjectTechniques.Draw);
             var frustrum = new BoundingFrustum(vp);
             var objs = Blueprint.Objects.OrderBy(x => ((ObjectComponentRC)x).SortDepth(view));
             var fine = Blueprint.FineArea;
@@ -543,15 +544,14 @@ namespace FSO.LotView.RC
             gd.BlendState = BlendState.NonPremultiplied;
             var view = state.Camera.View;
             var vp = view * state.Camera.Projection;
-            effect.Parameters["ViewProjection"].SetValue(vp);
-
+            effect.ViewProjection = vp;
 
             Blueprint.WCRC?.Draw(gd, state);
 
             gd.BlendState = BlendState.NonPremultiplied;
             gd.RasterizerState = RasterizerState.CullNone;
 
-            effect.CurrentTechnique = effect.Techniques["Draw"];
+            effect.SetTechnique(RCObjectTechniques.Draw);
             var frustrum = new BoundingFrustum(vp);
             var objs = Blueprint.Objects.Where(x => x.Level <= state.Level && frustrum.Intersects(((ObjectComponentRC)x).GetBounds()))
                 .OrderBy(x => ((ObjectComponentRC)x).SortDepth(view));

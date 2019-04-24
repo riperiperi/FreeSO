@@ -72,9 +72,9 @@ namespace FSO.LotView.Utils
             var advDir = (WorldConfig.Current.Directional && WorldConfig.Current.AdvancedLighting);
             var pass = advDir ? 5:WorldConfig.Current.PassOffset*2;
 
-            PPXDepthEngine.RenderPPXDepth(Avatar.Effect, true, (depth) =>
+            PPXDepthEngine.RenderPPXDepth(WorldContent.AvatarEffect, true, (depth) =>
             {
-                RenderSpriteList(character, Avatar.Effect, Avatar.Effect.Techniques[OBJIDMode ? 1 : pass]);
+                RenderSpriteList(character, WorldContent.AvatarEffect, WorldContent.AvatarEffect.Techniques[OBJIDMode ? 1 : pass]);
             });
             Device.RasterizerState = RasterizerState.CullNone;
 

@@ -12,13 +12,14 @@ using Microsoft.Xna.Framework.Content;
 using Microsoft.Xna.Framework;
 using Microsoft.Xna.Framework.Graphics;
 using FSO.Common;
+using FSO.LotView.Effects;
 
 namespace FSO.LotView
 {
     /// <summary>
     /// Handles XNA content for the world.
     /// </summary>
-    public class WorldContent
+    public static class WorldContent
     {
         public static ContentManager ContentManager;
         private static BasicEffect _be;
@@ -27,75 +28,56 @@ namespace FSO.LotView
         {
             ContentManager = new ContentManager(serviceContainer);
             ContentManager.RootDirectory = rootDir;
+
+            LoadEffects(false);
         }
+
+        public static void LoadEffects(bool reload)
+        {
+            _2DWorldBatchEffect = new WorldBatchEffect(ContentManager.Load<Effect>("Effects/2DWorldBatch" + EffectSuffix));
+            Grad2DEffect = new GradEffect(ContentManager.Load<Effect>("Effects/gradpoly2D"));
+            Light2DEffect = new LightMap2DEffect(ContentManager.Load<Effect>("Effects/LightMap2D"));
+            GrassEffect = new GrassEffect(ContentManager.Load<Effect>("Effects/GrassShader" + EffectSuffix));
+            RCObject = new RCObjectEffect(ContentManager.Load<Effect>("Effects/RCObject" + EffectSuffix));
+            SSAA = ContentManager.Load<Effect>("Effects/SSAA");
+            SpriteEffect = new Effects.SpriteEffect(ContentManager.Load<Effect>("Effects/SpriteEffects" + EffectSuffix));
+            ParticleEffect = new LightMappedEffect(ContentManager.Load<Effect>("Effects/ParticleShader"));
+            AvatarEffect = new LightMappedEffect(ContentManager.Load<Effect>("Effects/Vitaboy" + EffectSuffix));
+
+            LightEffects = new List<LightMappedEffect>()
+            {
+                _2DWorldBatchEffect,
+                GrassEffect,
+                RCObject,
+                ParticleEffect,
+                AvatarEffect
+            };
+        }
+
+        public static List<LightMappedEffect> LightEffects;
 
         public static string EffectSuffix
         {
             get { return ((FSOEnvironment.GLVer == 2) ?"iOS":""); }
         }
 
-        public static Effect _2DWorldBatchEffect
-        {
-            get{
-                return ContentManager.Load<Effect>("Effects/2DWorldBatch"+EffectSuffix);
-            }
-        }
+        public static WorldBatchEffect _2DWorldBatchEffect;
 
-        public static Effect Grad2DEffect
-        {
-            get
-            {
-                return ContentManager.Load<Effect>("Effects/gradpoly2D");
-            }
-        }
+        public static GradEffect Grad2DEffect;
 
-        public static Effect Light2DEffect
-        {
-            get
-            {
-                return ContentManager.Load<Effect>("Effects/LightMap2D");
-            }
-        }
+        public static LightMap2DEffect Light2DEffect;
 
-        public static Effect GrassEffect
-        {
-            get
-            {
-                return ContentManager.Load<Effect>("Effects/GrassShader"+EffectSuffix);
-            }
-        }
+        public static GrassEffect GrassEffect;
 
-        public static Effect RCObject
-        {
-            get
-            {
-                return ContentManager.Load<Effect>("Effects/RCObject" + EffectSuffix);
-            }
-        }
+        public static RCObjectEffect RCObject;
 
-        public static Effect SSAA
-        {
-            get
-            {
-                return ContentManager.Load<Effect>("Effects/SSAA");
-            }
-        }
+        public static Effect SSAA;
 
-        public static Effect SpriteEffect
-        {
-            get
-            {
-                return ContentManager.Load<Effect>("Effects/SpriteEffects" + EffectSuffix);
-            }
-        }
+        public static Effects.SpriteEffect SpriteEffect;
 
-        public static Effect ParticleEffect
-        {
-            get
-            {
-                return ContentManager.Load<Effect>("Effects/ParticleShader");
-            }
-        }
+        public static LightMappedEffect ParticleEffect;
+
+        public static LightMappedEffect AvatarEffect;
 
         private static VertexBuffer _TextureVerts;
         public static VertexBuffer GetTextureVerts(GraphicsDevice gd) 

@@ -1,6 +1,7 @@
 ﻿using FSO.Common.MeshSimplify;
 using FSO.Common.Utils;
 using FSO.Files.RC;
+using FSO.LotView.Effects;
 using FSO.LotView.Model;
 using FSO.LotView.RC;
 using Microsoft.Xna.Framework;
@@ -145,11 +146,11 @@ namespace FSO.LotView.Facade
                     var effect = WorldContent.RCObject;
                     gd.BlendState = BlendState.NonPremultiplied;
                     var vp = lookat * ortho;
-                    effect.Parameters["ViewProjection"].SetValue(vp);
+                    effect.ViewProjection = vp;
 
                     bp.WCRC?.Draw(gd, world.State);
 
-                    effect.CurrentTechnique = effect.Techniques["Draw"];
+                    effect.SetTechnique(RCObjectTechniques.Draw);
 
                     var objs = bp.Objects.Where(x => x.Level >= wall.Room.Floor - 5 && frustrum.Intersects(((ObjectComponentRC)x).GetBounds()))
                         .OrderBy(x => ((ObjectComponentRC)x).SortDepth(lookat));
@@ -283,10 +284,10 @@ namespace FSO.LotView.Facade
                     var effect = WorldContent.RCObject;
                     gd.BlendState = BlendState.NonPremultiplied;
                     var vp = lookat * baseO * offMat;
-                    effect.Parameters["ViewProjection"].SetValue(vp);
+                    effect.ViewProjection = vp;
                     var frustrum = new BoundingFrustum(lookat * baseO);
 
-                    effect.CurrentTechnique = effect.Techniques["Draw"];
+                    effect.SetTechnique(RCObjectTechniques.Draw);
 
                     var objs = bp.Objects.Where(o => o.Level == 1 && frustrum.Intersects(((ObjectComponentRC)o).GetBounds())).OrderBy(o => ((ObjectComponentRC)o).SortDepth(lookat));
                     foreach (var obj in objs)
@@ -305,10 +306,10 @@ namespace FSO.LotView.Facade
                     var effect = WorldContent.RCObject;
                     gd.BlendState = BlendState.NonPremultiplied;
                     var vp = lookat * baseO * offMat;
-                    effect.Parameters["ViewProjection"].SetValue(vp);
+                    effect.ViewProjection = vp;
                     var frustrum = new BoundingFrustum(lookat * baseO);
 
-                    effect.CurrentTechnique = effect.Techniques["Draw"];
+                    effect.SetTechnique(RCObjectTechniques.Draw);
 
                     var objs = bp.Objects.Where(o => o.Level == i+1 && frustrum.Intersects(((ObjectComponentRC)o).GetBounds())).OrderBy(o => ((ObjectComponentRC)o).SortDepth(lookat));
                     foreach (var obj in objs)

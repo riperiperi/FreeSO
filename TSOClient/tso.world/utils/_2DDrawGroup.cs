@@ -1,4 +1,5 @@
 ﻿using FSO.Common.Model;
+using FSO.LotView.Effects;
 using Microsoft.Xna.Framework.Graphics;
 using System;
 using System.Collections.Generic;
@@ -34,7 +35,7 @@ namespace FSO.LotView.Utils
         public Texture2D Pixel;
         public Texture2D Depth;
         public Texture2D Mask;
-        public EffectTechnique Technique;
+        public WorldBatchTechniques Technique;
         public bool Floors;
 
         public void Dispose()

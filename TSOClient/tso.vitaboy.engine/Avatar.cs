@@ -343,7 +343,7 @@ namespace FSO.Vitaboy
                 //effect.Parameters["FloorHeight"].SetValue((float)(Math.Floor(Position.Y/2.95)*2.95 + 0.05));
                 effect.Parameters["LightPosition"].SetValue(light);
                 var oldTech = effect.CurrentTechnique;
-                effect.CurrentTechnique = Avatar.Effect.Techniques[4];
+                effect.CurrentTechnique = effect.Techniques[4];
                 effect.CurrentTechnique.Passes[0].Apply();
                 device.DepthStencilState = DepthStencilState.DepthRead;
                 device.SetVertexBuffer(ShadBuf);
@@ -365,7 +365,7 @@ namespace FSO.Vitaboy
             var headObj = HeadObject;
             if (headObj == null) return;
             var oldTech = effect.CurrentTechnique;
-            effect.CurrentTechnique = Avatar.Effect.Techniques[6];
+            effect.CurrentTechnique = effect.Techniques[6];
             device.RasterizerState = RasterizerState.CullClockwise;
 
             var trans = Matrix.Invert(effect.Parameters["View"].GetValueMatrix()).Translation;

@@ -281,15 +281,12 @@ namespace FSO.LotView
             var advDir = (Light?.LightMapDirection) ?? TextureGenerator.GetDefaultAdv(Device);
             var amb = AmbientLight ?? TextureGenerator.GetPxWhite(Device);
 
-            WorldContent._2DWorldBatchEffect.Parameters["advancedLight"].SetValue(adv);
-            //WorldContent._2DWorldBatchEffect.Parameters["advancedDirection"].SetValue(advDir);
-            WorldContent.GrassEffect.Parameters["advancedLight"].SetValue(adv);
-            WorldContent._2DWorldBatchEffect.Parameters["ambientLight"].SetValue(amb);
-            WorldContent.RCObject.Parameters["advancedLight"].SetValue(adv);
-            WorldContent.RCObject.Parameters["advancedDirection"].SetValue(advDir);
-            WorldContent.ParticleEffect.Parameters["advancedLight"]?.SetValue(adv);
-            Avatar.Effect.Parameters["advancedLight"].SetValue(adv);
-            Avatar.Effect.Parameters["advancedDirection"].SetValue(advDir);
+            foreach (var effect in WorldContent.LightEffects)
+            {
+                effect.AdvancedLight = adv;
+                effect.AdvancedDirection = advDir;
+            }
+            WorldContent._2DWorldBatchEffect.ambientLight = amb;
 
             var frontDir = WorldCamera.FrontDirection();
             Vector2 lightOffset;
@@ -303,19 +300,14 @@ namespace FSO.LotView
             {
                 lightOffset = new Vector2(frontDir.X / (6 * 75), frontDir.Z / (6 * 75));
             }
-            WorldContent._2DWorldBatchEffect.Parameters["LightOffset"].SetValue(lightOffset);
-            WorldContent.GrassEffect.Parameters["LightOffset"].SetValue(lightOffset);
-            Avatar.Effect.Parameters["LightOffset"].SetValue(lightOffset);
-            WorldContent.RCObject.Parameters["LightOffset"].SetValue(lightOffset);
-            WorldContent.ParticleEffect.Parameters["LightOffset"].SetValue(lightOffset);
 
-            WorldContent._2DWorldBatchEffect.Parameters["LightingAdjust"].SetValue(LightingAdjust);
-            WorldContent.GrassEffect.Parameters["LightingAdjust"].SetValue(LightingAdjust);
-            Avatar.Effect.Parameters["LightingAdjust"].SetValue(LightingAdjust);
-            WorldContent.RCObject.Parameters["LightingAdjust"].SetValue(LightingAdjust);
-            WorldContent.ParticleEffect.Parameters["LightingAdjust"].SetValue(LightingAdjust);
+            foreach (var effect in WorldContent.LightEffects)
+            {
+                effect.LightOffset = lightOffset;
+                effect.LightingAdjust = LightingAdjust;
+            }
 
-            WorldContent._2DWorldBatchEffect.Parameters["MaxFloor"].SetValue((float)Level-0.999f);
+            WorldContent._2DWorldBatchEffect.MaxFloor = (float)Level-0.999f;
         }
 
         public void ClearLighting(bool indoors)
@@ -324,17 +316,13 @@ namespace FSO.LotView
             var amb = TextureGenerator.GetPxWhite(Device);
             //if (indoors) adv = amb;
 
-            WorldContent._2DWorldBatchEffect.Parameters["advancedLight"].SetValue(adv);
-            WorldContent.GrassEffect.Parameters["advancedLight"].SetValue(adv);
-            WorldContent.RCObject.Parameters["advancedLight"].SetValue(adv);
-            WorldContent._2DWorldBatchEffect.Parameters["ambientLight"].SetValue(amb);
-            Avatar.Effect.Parameters["advancedLight"].SetValue(adv);
-
-            WorldContent._2DWorldBatchEffect.Parameters["LightingAdjust"].SetValue(LightingAdjust);
-            WorldContent.GrassEffect.Parameters["LightingAdjust"].SetValue(LightingAdjust);
-            Avatar.Effect.Parameters["LightingAdjust"].SetValue(LightingAdjust);
-            WorldContent.RCObject.Parameters["LightingAdjust"].SetValue(LightingAdjust);
-            WorldContent.ParticleEffect.Parameters["LightingAdjust"].SetValue(LightingAdjust);
+            foreach (var effect in WorldContent.LightEffects)
+            {
+                effect.AdvancedLight = adv;
+                effect.LightingAdjust = LightingAdjust;
+            }
+            WorldContent._2DWorldBatchEffect.ambientLight = amb;
+            //WorldContent._2DWorldBatchEffect.Parameters["ambientLight"].SetValue(amb);
         }
     }
 

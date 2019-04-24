@@ -94,6 +94,14 @@
     <Compile Include="Components\TerrainComponent.cs" />
     <Compile Include="Components\WallComponent.cs" />
     <Compile Include="Debug\Debug3DDGRPComponent.cs" />
+    <Compile Include="Effects\GradEffect.cs" />
+    <Compile Include="Effects\GrassEffect.cs" />
+    <Compile Include="Effects\LightMap2DEffect.cs" />
+    <Compile Include="Effects\LightMappedEffect.cs" />
+    <Compile Include="Effects\RCObjectEffect.cs" />
+    <Compile Include="Effects\SpriteEffect.cs" />
+    <Compile Include="Effects\WorldBatchEffect.cs" />
+    <Compile Include="Effects\WorldEffect.cs" />
     <Compile Include="Facade\LotFacadeGenerator.cs" />
     <Compile Include="LMap\GPURoomMaps.cs" />
     <Compile Include="LMap\GradVertex.cs" />
@@ -104,6 +112,7 @@
     <Compile Include="Model\Blueprint.cs" />
     <Compile Include="Model\Direction.cs" />
     <Compile Include="Model\FloorTile.cs" />
+    <Compile Include="Model\GroupedGeometry.cs" />
     <Compile Include="Model\LotTilePos.cs" />
     <Compile Include="Model\LotTypes.cs" />
     <Compile Include="Model\PixelMaskTuple.cs" />

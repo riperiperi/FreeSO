@@ -210,11 +210,10 @@ namespace FSO.LotView.RC
                 lightOffset = -GetWallOffset() * 6 / (6 * 75);
             }
             
-            WorldContent._2DWorldBatchEffect.Parameters["LightOffset"].SetValue(lightOffset);
-            WorldContent.GrassEffect.Parameters["LightOffset"].SetValue(lightOffset);
-            Avatar.Effect.Parameters["LightOffset"].SetValue(lightOffset);
-            WorldContent.RCObject.Parameters["LightOffset"].SetValue(lightOffset);
-            WorldContent.ParticleEffect.Parameters["LightOffset"].SetValue(lightOffset);
+            foreach (var effect in WorldContent.LightEffects)
+            {
+                effect.LightOffset = lightOffset;
+            }
         }
     }
 }

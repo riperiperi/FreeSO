@@ -10,6 +10,7 @@ using Microsoft.Xna.Framework;
 using Microsoft.Xna.Framework.Graphics;
 using FSO.Common.Rendering;
 using FSO.Common.Utils;
+using FSO.LotView.Effects;
 
 namespace FSO.LotView.RC
 {
@@ -125,8 +126,8 @@ namespace FSO.LotView.RC
             var device = world.Device;
             var effect = WorldContent.RCObject;
 
-            effect.Parameters["World"].SetValue(World);
-            effect.Parameters["Level"].SetValue((float)(Level-0.999f));
+            effect.World = World;
+            effect.Level = (float)(Level-0.999f);
             var advDir = WorldConfig.Current.Directional && WorldConfig.Current.AdvancedLighting;
 
             if (Mesh.DepthMask != null)
@@ -135,7 +136,7 @@ namespace FSO.LotView.RC
                 //depth mask for drawing into a surface or wall
                 if (geom.Verts != null)
                 {
-                    effect.CurrentTechnique = effect.Techniques["DepthClear"];
+                    effect.SetTechnique(RCObjectTechniques.DepthClear);
                     effect.CurrentTechnique.Passes[0].Apply();
 
                     device.DepthStencilState = DepthClear1;
@@ -151,11 +152,11 @@ namespace FSO.LotView.RC
 
                     device.DepthStencilState = DepthStencilState.Default;
                     device.BlendState = BlendState.NonPremultiplied;
-                    effect.CurrentTechnique = effect.Techniques["Draw"];
+                    effect.SetTechnique(RCObjectTechniques.Draw);
                 }
             }
 
-            if (Room == 65533) effect.CurrentTechnique = effect.Techniques["DisabledDraw"];
+            if (Room == 65533) effect.SetTechnique(RCObjectTechniques.DisabledDraw);
 
             int i = 0;
             foreach (var spr in Mesh.Geoms)
@@ -167,9 +168,9 @@ namespace FSO.LotView.RC
                         if (geom.PrimCount == 0) continue;
                         if (Mesh.MaskType == DGRP3DMaskType.Portal && i == Mesh.Geoms.Count - 1)
                             device.DepthStencilState = Portal;
-                        effect.Parameters["MeshTex"].SetValue(geom.Pixel);
+                        effect.MeshTex = geom.Pixel;
                         var info = geom.Pixel?.Tag as TextureInfo;
-                        effect.Parameters["UVScale"].SetValue(info?.UVScale ?? Vector2.One);
+                        effect.UVScale = info?.UVScale ?? Vector2.One;
                         var pass = effect.CurrentTechnique.Passes[(advDir && Room < 65533) ? 1:0];
                         pass.Apply();
                         if (geom.Rendered)
@@ -192,7 +193,7 @@ namespace FSO.LotView.RC
                 //clear the stencil, so it doesn't interfere with future portals.
                 if (geom.Verts != null)
                 {
-                    effect.CurrentTechnique = effect.Techniques["DepthClear"];
+                    effect.SetTechnique(RCObjectTechniques.DepthClear);
                     effect.CurrentTechnique.Passes[1].Apply();
 
                     device.DepthStencilState = StencilClearOnly;
@@ -204,9 +205,9 @@ namespace FSO.LotView.RC
                     device.BlendState = BlendState.NonPremultiplied;
                 }
                 device.DepthStencilState = DepthStencilState.Default;
-                effect.CurrentTechnique = effect.Techniques["Draw"];
+                effect.SetTechnique(RCObjectTechniques.Draw);
             }
-            if (Room == 65533) effect.CurrentTechnique = effect.Techniques["Draw"];
+            if (Room == 65533) effect.SetTechnique(RCObjectTechniques.Draw);
         }
 
         public void DrawLMap(GraphicsDevice device, sbyte level, float yOff)
@@ -224,7 +225,7 @@ namespace FSO.LotView.RC
 
             var mat = World;
             mat.M42 = ((Level-level) -1)*2.95f + yOff; //set y translation to 0
-            effect.Parameters["World"].SetValue(mat);
+            effect.World = mat;
 
             int i = 0;
             foreach (var spr in Mesh.Geoms)

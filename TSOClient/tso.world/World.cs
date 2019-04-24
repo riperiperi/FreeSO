@@ -35,7 +35,7 @@ namespace FSO.LotView
         public World(GraphicsDevice Device)
             : base(Device)
         {
-            var e = WorldContent.Grad2DEffect;
+            Effect e = WorldContent.Grad2DEffect;
             e = WorldContent.GrassEffect;
             e = WorldContent.Light2DEffect;
             e = WorldContent.ParticleEffect;

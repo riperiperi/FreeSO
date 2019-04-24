@@ -20,15 +20,25 @@ float4 TexMatrix;
 float2 TileSize;
 
 bool depthOutMode;
+bool Water;
 float3 CamPos;
 float3 LightVec;
 float Alpha;
 float GrassShininess;
 bool UseTexture;
 bool IgnoreColor;
+
+float ParallaxHeight = 1.0;
+float4 ParallaxUVTexMat;
+
 texture BaseTex;
 texture ParallaxTex;
 texture NormalMapTex;
+texture RoomMap : Diffuse;
+texture RoomLight : Diffuse;
+texture TerrainNoise : Diffuse;
+texture TerrainNoiseMip : Diffuse;
+
 sampler TexSampler = sampler_state {
 	texture = <BaseTex>;
 	AddressU = Wrap;
@@ -63,21 +73,19 @@ sampler AnisoTexSampler = sampler_state {
 };
 #endif
 
-texture RoomMap : Diffuse;
 sampler RoomMapSampler = sampler_state {
 	texture = <RoomMap>;
 	AddressU = WRAP; AddressV = WRAP; AddressW = WRAP;
 	MIPFILTER = POINT; MINFILTER = POINT; MAGFILTER = POINT;
 };
 
-texture RoomLight : Diffuse;
+
 sampler RoomLightSampler = sampler_state {
 	texture = <RoomLight>;
 	AddressU = WRAP; AddressV = WRAP; AddressW = WRAP;
 	MIPFILTER = POINT; MINFILTER = POINT; MAGFILTER = POINT;
 };
 
-texture TerrainNoise : Diffuse;
 sampler TerrainNoiseSampler = sampler_state {
 	texture = <TerrainNoise>;
 	AddressU = WRAP; AddressV = WRAP; AddressW = WRAP;
@@ -85,7 +93,6 @@ sampler TerrainNoiseSampler = sampler_state {
 	MaxLOD = 0;
 };
 
-texture TerrainNoiseMip : Diffuse;
 sampler TerrainNoiseMipSampler = sampler_state {
 	texture = <TerrainNoiseMip>;
 	AddressU = WRAP; AddressV = WRAP; AddressW = WRAP;
@@ -120,8 +127,6 @@ struct GrassPSVTX {
 	float4 ModelPos : TEXCOORD2;
 	float3 Normal : TEXCOORD3;
 };
-
-bool Water;
 
 float2 LoopUV(float2 uv) {
 	if (Water == false) return uv;
@@ -390,8 +395,6 @@ GrassParallaxPSVTX GrassParallaxVS(GrassParallaxVTX input)
 	return output;
 }
 
-float ParallaxHeight = 1.0;
-
 float2 GrassParallaxMapping(float2 texCoords, float3 viewDir, float probability)
 {
 	const float minLayers = 4.0;
@@ -456,7 +459,6 @@ void BladesParallaxPS3D(GrassParallaxPSVTX input, out float4 color:COLOR0)
 
 //roof parallax
 
-float4 ParallaxUVTexMat;
 float2 ParallaxMapping(float2 texCoords, float3 viewDir)
 {
 	const float minLayers = 4.0; 
