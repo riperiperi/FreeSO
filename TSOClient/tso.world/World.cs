@@ -924,6 +924,10 @@ namespace FSO.LotView
                 {
                     world.Dispose();
                 }
+                foreach (var obj in Blueprint.Objects)
+                {
+                    obj.Dispose();
+                }
                 foreach (var particle in Blueprint.Particles)
                 {
                     particle.Dispose();

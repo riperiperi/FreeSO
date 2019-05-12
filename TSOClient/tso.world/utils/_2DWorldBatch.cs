@@ -50,6 +50,7 @@ namespace FSO.LotView.Utils
         public bool OBJIDMode = false;
         public Texture2D AmbientLight;
         public Texture2D AdvLight;
+        public IndexBuffer SpriteIndices;
 
         private Vector2 Scroll;
         private int LastWidth;
@@ -102,6 +103,8 @@ namespace FSO.LotView.Utils
             AlwaysDS = alwaysDS;
 
             GenBuffers(device.Viewport.Width, device.Viewport.Height);
+            SpriteIndices = new IndexBuffer(device, IndexElementSize.ThirtyTwoBits, 6, BufferUsage.None);
+            SpriteIndices.SetData(_2DStandaloneSprite.indices);
         }
 
         public void GenBuffers(int bwidth, int bheight)
@@ -175,7 +178,6 @@ namespace FSO.LotView.Utils
 
             sprite.AbsoluteDestRect = new Rectangle((int)(x + PxOffset.X), (int)(y + PxOffset.Y), width, height);
             sprite.AbsoluteWorldPosition = sprite.WorldPosition + WorldOffset;
-            sprite.AbsoluteTilePosition = sprite.TilePosition + TileOffset; 
             if (sprite.ObjectID == 0) sprite.ObjectID = ObjectID;
             sprite.DrawOrder = DrawOrder;
 
@@ -277,6 +279,64 @@ namespace FSO.LotView.Utils
                 promise,
                 Buffers[bufferIndex]
             );
+        }
+
+        public void PrepareImmediate(WorldBatchTechniques technique)
+        {
+            var effect = this.Effect;
+            Device.BlendState = BlendState.AlphaBlend;
+            //  set the only parameter this effect takes.
+            var frontDir = FrontDirForRot(((FSO.LotView.Utils.WorldCamera)WorldCamera).Rotation);
+            effect.dirToFront = frontDir;
+            effect.offToBack = BackOffForRot(((FSO.LotView.Utils.WorldCamera)WorldCamera).Rotation);
+            //frontDir /= 3;
+            //WorldContent._2DWorldBatchEffect.Parameters["LightOffset"].SetValue(new Vector2(frontDir.X / (6 * 75), frontDir.Z / (6 * 75)));
+            var mat = this.WorldCamera.View * this.WorldCamera.Projection;
+            effect.worldViewProjection = mat;
+            var inv = Matrix.Invert(mat);
+            effect.iWVP = inv;
+            effect.rotProjection = ((WorldCamera)this.WorldCamera).GetRotationMatrix() * this.WorldCamera.Projection;
+
+            effect.PxOffset = new Vector2();
+            effect.WorldOffset = new Vector4();
+
+            effect.SetTechnique(technique);
+            Device.Indices = SpriteIndices;
+        }
+
+        public void SetShaderOffsets(Vector2 pxOffset, Vector3 worldOffset)
+        {
+            var effect = this.Effect;
+            effect.PxOffset = pxOffset;
+            effect.WorldOffset = new Vector4(worldOffset, 0);
+        }
+
+        public void DrawImmediate(_2DStandaloneSprite sprite)
+        {
+            var effect = this.Effect;
+            PPXDepthEngine.RenderPPXDepth(effect, false, (depth) =>
+            {
+                effect.pixelTexture = sprite.Pixel;
+                if (sprite.Depth != null) effect.depthTexture = sprite.Depth;
+                if (sprite.Mask != null) effect.maskTexture = sprite.Mask;
+                
+                EffectPassCollection passes = effect.CurrentTechnique.Passes;
+
+                EffectPass pass = passes[Math.Min(passes.Count - 1, WorldConfig.Current.DirPassOffset)];
+                pass.Apply();
+                if (sprite.GPUVertices != null)
+                {
+                    Device.SetVertexBuffer(sprite.GPUVertices);
+                    Device.DrawIndexedPrimitives(PrimitiveType.TriangleList, 0, 0, 2);
+                }
+            });
+        }
+
+        public void EndImmediate()
+        {
+            var effect = this.Effect;
+            effect.PxOffset = new Vector2();
+            effect.WorldOffset = new Vector4();
         }
 
         public void End() { End(null, true); }
@@ -681,6 +741,7 @@ namespace FSO.LotView.Utils
 
         public void Dispose()
         {
+            SpriteIndices.Dispose();
             foreach (var buf in Buffers)
             {
                 buf.Dispose();

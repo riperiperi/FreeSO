@@ -91,7 +91,7 @@ namespace FSO.Server.Servers.City.Domain
                     if (lot != null)
                     {
                         location = lot.location;
-                        if (lot.owner_id == null) da.Lots.Delete(lotId); //this lot should no longer exist.
+                        if (lot.owner_id == null && lot.category != FSO.Common.Enum.LotCategory.community) da.Lots.Delete(lotId); //this lot should no longer exist.
                     }
                 }
             }

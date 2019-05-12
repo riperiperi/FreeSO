@@ -498,14 +498,6 @@ namespace FSO.LotView.Components
             2, 3, 1, -1
         };
 
-        public override float PreferredDrawOrder
-        {
-            get
-            {
-                return 0f;
-            }
-        }
-
         private void RoofSpread(LotTilePos start, bool[] evaluated, int width, int height, sbyte level, List<RoofRect> result)
         {
             var rect = new RoofRect(start.x, start.y, start.x + 8, start.y + 8);

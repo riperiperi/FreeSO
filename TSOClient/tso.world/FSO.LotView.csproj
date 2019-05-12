@@ -119,11 +119,15 @@
     <Compile Include="Model\Room.cs" />
     <Compile Include="Model\RoomLighting.cs" />
     <Compile Include="Model\ScrollBuffer.cs" />
+    <Compile Include="Model\TimedDynamicBuffer.cs" />
     <Compile Include="Model\WallTile.cs" />
     <Compile Include="Model\WeatherController.cs" />
     <Compile Include="Model\WorldRotation.cs" />
     <Compile Include="Model\WorldZoom.cs" />
     <Compile Include="Model\XmlHouse.cs" />
+    <Compile Include="Platform\IWorldPlatform.cs" />
+    <Compile Include="Platform\WorldPlatform2D.cs" />
+    <Compile Include="Platform\WorldPlatform3D.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
     <Compile Include="RC\DGRPRendererRC.cs" />
     <Compile Include="RC\IRCSurroundings.cs" />
@@ -146,15 +150,19 @@
     <Compile Include="Utils\_2DSprite.cs" />
     <Compile Include="Utils\_2DSpriteSorter.cs" />
     <Compile Include="Utils\_2DSpriteVertex.cs" />
+    <Compile Include="Utils\_2DStandaloneSprite.cs" />
     <Compile Include="Utils\_2DWorldBatch.cs" />
     <Compile Include="Utils\_3DSprite.cs" />
     <Compile Include="Utils\_3DWorldBatch.cs" />
     <Compile Include="World.cs" />
     <Compile Include="World2D.cs" />
     <Compile Include="World3D.cs" />
+    <Compile Include="WorldArchitecture.cs" />
+    <Compile Include="Model\BlueprintChanges.cs" />
     <Compile Include="WorldComponent.cs" />
     <Compile Include="WorldConfig.cs" />
     <Compile Include="WorldContent.cs" />
+    <Compile Include="WorldEntities.cs" />
     <Compile Include="WorldState.cs" />
   </ItemGroup>
   <ItemGroup>

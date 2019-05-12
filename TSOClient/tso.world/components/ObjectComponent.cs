@@ -18,7 +18,7 @@ using FSO.Common.Utils;
 
 namespace FSO.LotView.Components
 {
-    public class ObjectComponent : EntityComponent
+    public class ObjectComponent : EntityComponent, IDisposable
     {
         private static Vector2[] PosCenterOffsets = new Vector2[]{
             new Vector2(2+16, 79+8),
@@ -30,10 +30,12 @@ namespace FSO.LotView.Components
 
         protected DGRP DrawGroup;
         protected DGRPRenderer dgrp;
-        public WorldObjectRenderInfo renderInfo;
+        public WorldObjectRenderInfo RenderInfo;
         public int DynamicCounter; //how long this sprite has been dynamic without changing sprite
         public List<SLOTItem> ContainerSlots;
         public List<ParticleComponent> Particles = new List<ParticleComponent>();
+        public _2DStandaloneSprite HeadlineSprite;
+        protected float ZOrder;
 
         public bool HideForCutaway;
         public WallSegments AdjacentWall;
@@ -69,6 +71,14 @@ namespace FSO.LotView.Components
             }
         }
 
+        public override short ObjectID {
+            get => base.ObjectID;
+            set {
+                dgrp.ObjectID = value;
+                base.ObjectID = value;
+            }
+        }
+
         public override Vector3 GetSLOTPosition(int slot, bool avatar)
         {
             var item = (ContainerSlots != null && ContainerSlots.Count > slot) ? ContainerSlots[slot] : null;
@@ -84,7 +94,7 @@ namespace FSO.LotView.Components
 
         public ObjectComponent(GameObject obj) {
             this.Obj = obj;
-            renderInfo = new WorldObjectRenderInfo();
+            RenderInfo = new WorldObjectRenderInfo();
             if (obj.OBJ.BaseGraphicID > 0)
             {
                 var gid = obj.OBJ.BaseGraphicID;
@@ -123,7 +133,7 @@ namespace FSO.LotView.Components
             }
             set
             {
-                if (blueprint != null && _CutawayHidden != value && renderInfo.Layer == WorldObjectRenderLayer.STATIC)
+                if (blueprint != null && _CutawayHidden != value && RenderInfo.Layer == WorldObjectRenderLayer.STATIC)
                 {
                     blueprint.Damage.Add(new BlueprintDamage(BlueprintDamageType.OBJECT_GRAPHIC_CHANGE, TileX, TileY, Level, this));
                     DynamicCounter = 0;
@@ -189,13 +199,6 @@ namespace FSO.LotView.Components
             }
         }
 
-        public override float PreferredDrawOrder
-        {
-            get {
-                return 2000.0f + (this.Position.X + this.Position.Y);
-            }
-        }
-
         public float RadianDirection
         {
             get
@@ -237,7 +240,8 @@ namespace FSO.LotView.Components
         public override void OnRotationChanged(WorldState world)
         {
             base.OnRotationChanged(world);
-            if (dgrp != null) {
+            if (dgrp != null)
+            {
                 dgrp.InvalidateRotation();
             }
         }
@@ -248,6 +252,16 @@ namespace FSO.LotView.Components
             if (dgrp != null) {
                 dgrp.InvalidateZoom();
             }
+        }
+
+        public override void OnPositionChanged()
+        {
+            dgrp.Position = Position;
+        }
+
+        public void UpdateDrawOrder(WorldState world)
+        {
+            DrawOrder = world.WorldSpace.GetDepthFromTile(Position);
         }
 
         public void ValidateSprite(WorldState world)
@@ -282,7 +296,7 @@ namespace FSO.LotView.Components
         {
             if (Headline != null)
             {
-                if (blueprint != null && renderInfo.Layer == WorldObjectRenderLayer.STATIC) blueprint.Damage.Add(new BlueprintDamage(BlueprintDamageType.OBJECT_GRAPHIC_CHANGE, TileX, TileY, Level, this));
+                if (blueprint != null && RenderInfo.Layer == WorldObjectRenderLayer.STATIC) blueprint.Damage.Add(new BlueprintDamage(BlueprintDamageType.OBJECT_GRAPHIC_CHANGE, TileX, TileY, Level, this));
                 DynamicCounter = 0; //keep windows and doors on the top floor on the dynamic layer.
             }
 
@@ -290,7 +304,7 @@ namespace FSO.LotView.Components
             {
                 if (!(world.BuildMode > 1) && world.DynamicCutaway && Level == world.Level)
                 {
-                    if (blueprint != null && renderInfo.Layer == WorldObjectRenderLayer.STATIC) blueprint.Damage.Add(new BlueprintDamage(BlueprintDamageType.OBJECT_GRAPHIC_CHANGE, TileX, TileY, Level, this));
+                    if (blueprint != null && RenderInfo.Layer == WorldObjectRenderLayer.STATIC) blueprint.Damage.Add(new BlueprintDamage(BlueprintDamageType.OBJECT_GRAPHIC_CHANGE, TileX, TileY, Level, this));
                     DynamicCounter = 0; //keep windows and doors on the top floor on the dynamic layer.
                 }
 
@@ -326,9 +340,9 @@ namespace FSO.LotView.Components
             if (Container != null && Container is ObjectComponent)
             {
                 forceDynamic = ((ObjectComponent)Container).ForceDynamic;
-                if (forceDynamic && renderInfo.Layer == WorldObjectRenderLayer.STATIC) blueprint.Damage.Add(new BlueprintDamage(BlueprintDamageType.OBJECT_GRAPHIC_CHANGE, TileX, TileY, Level, this));
+                if (forceDynamic && RenderInfo.Layer == WorldObjectRenderLayer.STATIC) blueprint.Damage.Add(new BlueprintDamage(BlueprintDamageType.OBJECT_GRAPHIC_CHANGE, TileX, TileY, Level, this));
             }
-            if (renderInfo.Layer == WorldObjectRenderLayer.DYNAMIC && !forceDynamic && DynamicCounter++ > 120 && blueprint != null)
+            if (RenderInfo.Layer == WorldObjectRenderLayer.DYNAMIC && !forceDynamic && DynamicCounter++ > 120 && blueprint != null)
             {
                 blueprint.Damage.Add(new BlueprintDamage(BlueprintDamageType.OBJECT_RETURN_TO_STATIC, TileX, TileY, Level, this));
             }
@@ -350,14 +364,19 @@ namespace FSO.LotView.Components
             if (!Visible || (!world.DrawOOB && (Position.X < -2043 && Position.Y < -2043))) return;
             //#endif
             if (CutawayHidden) return;
-            if (this.DrawGroup != null) dgrp.Draw(world);
+            var pos = Position;
+            if (this.DrawGroup != null) {
+                if (Container != null) dgrp.Position = pos;
+                dgrp.Draw(world);
+            }
 
             if (Headline != null && !Headline.IsDisposed)
             {
+                if (HeadlineSprite == null) HeadlineSprite = new _2DStandaloneSprite();
                 var headOff = new Vector3(0, 0, 0.66f);
                 var headPx = world.WorldSpace.GetScreenFromTile(headOff);
 
-                var item = world._2D.NewSprite(_2DBatchRenderMode.Z_BUFFER);
+                var item = HeadlineSprite;
                 item.Pixel = Headline;
                 item.Depth = TextureGenerator.GetWallZBuffer(device)[30];
 
@@ -367,9 +386,71 @@ namespace FSO.LotView.Components
                 item.DestRect = new Rectangle(
                     ((int)headPx.X - Headline.Width / 2) + (int)off.X,
                     ((int)headPx.Y - Headline.Height / 2) + (int)off.Y, Headline.Width, Headline.Height);
+
+                item.AbsoluteDestRect = item.DestRect;
+                item.AbsoluteDestRect.Offset(world.WorldSpace.GetScreenFromTile(pos));
+                item.AbsoluteWorldPosition = item.WorldPosition + WorldSpace.GetWorldFromTile(pos); ;
+                HeadlineSprite.PrepareVertices(device);
                 world._2D.Draw(item);
             }
             
+            for (int i = 0; i < Particles.Count; i++)
+            {
+                var part = Particles[i];
+                if (part.BoundsDirty && part.AutoBounds && dgrp != null)
+                {
+                    //this particle needs updated bounds.
+                    BoundingBox bounds;
+                    if (ShadowComponent != null)
+                        bounds = ShadowComponent.GetParticleBounds();
+                    else
+                        bounds = GetParticleBounds();
+                    part.Volume = bounds;
+                    part.BoundsDirty = false;
+                    part.Dispose();
+                }
+                part.Level = Level;
+                part.OwnerWorld = Matrix.CreateScale(3) * World * Matrix.CreateTranslation(1.5f, 0, 1.5f) * Matrix.CreateScale(2);
+                if (part.Dead) Particles.RemoveAt(i--);
+            }
+        }
+
+        public void DrawImmediate(GraphicsDevice device, WorldState world)
+        {
+            if (!Visible || (!world.DrawOOB && (Position.X < -2043 && Position.Y < -2043))) return;
+            //#endif
+            if (CutawayHidden) return;
+            var pos = Position;
+            if (this.DrawGroup != null)
+            {
+                if (Container != null) dgrp.Position = pos;
+                dgrp.DrawImmediate(world);
+            }
+
+            if (Headline != null && !Headline.IsDisposed)
+            {
+                if (HeadlineSprite == null) HeadlineSprite = new _2DStandaloneSprite();
+                var headOff = new Vector3(0, 0, 0.66f);
+                var headPx = world.WorldSpace.GetScreenFromTile(headOff);
+
+                var item = HeadlineSprite;
+                item.Pixel = Headline;
+                item.Depth = TextureGenerator.GetWallZBuffer(device)[30];
+
+                item.SrcRect = new Rectangle(0, 0, Headline.Width, Headline.Height);
+                item.WorldPosition = headOff;
+                var off = PosCenterOffsets[(int)world.Zoom - 1];
+                item.DestRect = new Rectangle(
+                    ((int)headPx.X - Headline.Width / 2) + (int)off.X,
+                    ((int)headPx.Y - Headline.Height / 2) + (int)off.Y, Headline.Width, Headline.Height);
+
+                item.AbsoluteDestRect = item.DestRect;
+                item.AbsoluteDestRect.Offset(world.WorldSpace.GetScreenFromTile(pos));
+                item.AbsoluteWorldPosition = item.WorldPosition + WorldSpace.GetWorldFromTile(pos);
+                HeadlineSprite.PrepareVertices(device);
+                world._2D.DrawImmediate(item);
+            }
+
             for (int i = 0; i < Particles.Count; i++)
             {
                 var part = Particles[i];
@@ -441,6 +522,12 @@ namespace FSO.LotView.Components
             if (ShadowComponent.DynamicSpriteFlags2 != DynamicSpriteFlags2) ShadowComponent.DynamicSpriteFlags2 = DynamicSpriteFlags2;
             if (ShadowComponent.Level != Level) ShadowComponent.Level = Level;
             ShadowComponent.DrawLMap(device, level);
+        }
+
+        public void Dispose()
+        {
+            dgrp.Dispose();
+            HeadlineSprite?.Dispose();
         }
     }
 }

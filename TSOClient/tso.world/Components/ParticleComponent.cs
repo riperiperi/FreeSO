@@ -104,14 +104,6 @@ namespace FSO.LotView.Components
             Primitives = indices.Count / 3;
         }
 
-        public override float PreferredDrawOrder
-        {
-            get
-            {
-                return float.MaxValue;
-            }
-        }
-
         public float Time;
         public float TimeRate;
         public float StopTime = float.PositiveInfinity;

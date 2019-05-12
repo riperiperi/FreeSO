@@ -19,7 +19,7 @@ namespace FSO.LotView
         /** Instance ID **/
         public long ID;
 
-        public abstract float PreferredDrawOrder { get; }
+        public float DrawOrder;
 
         public virtual void Initialize(GraphicsDevice device, WorldState world){
         }

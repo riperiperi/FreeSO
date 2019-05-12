@@ -32,6 +32,9 @@ namespace FSO.LotView.Effects
         private EffectParameter pTexOffset;
         private EffectParameter pTexMatrix;
 
+        private EffectParameter pScreenAlignUV;
+        private EffectParameter pTexSize;
+
         private EffectParameter pTileSize;
 
         private EffectParameter pdepthOutMode;
@@ -161,6 +164,23 @@ namespace FSO.LotView.Effects
                 pTexMatrix.SetValue(value);
             }
         }
+
+        public bool ScreenAlignUV
+        {
+            set
+            {
+                pScreenAlignUV.SetValue(value);
+            }
+        }
+
+        public Vector2 TexSize
+        {
+            set
+            {
+                pTexSize.SetValue(value);
+            }
+        }
+
 
         public Vector2 TileSize
         {
@@ -373,6 +393,9 @@ namespace FSO.LotView.Effects
 
             pTexOffset = Parameters["TexOffset"];
             pTexMatrix = Parameters["TexMatrix"];
+
+            pScreenAlignUV = Parameters["ScreenAlignUV"];
+            pTexSize = Parameters["TexSize"];
 
             pTileSize = Parameters["TileSize"];
 

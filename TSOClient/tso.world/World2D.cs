@@ -89,7 +89,7 @@ namespace FSO.LotView
 
         private WorldObjectRenderInfo GetRenderInfo(WorldComponent component)
         {
-            return ((ObjectComponent)component).renderInfo;
+            return ((ObjectComponent)component).RenderInfo;
         }
 
         /// <summary>
@@ -121,24 +121,20 @@ namespace FSO.LotView
                 
                 while (buffer.NextPass())
                 {
-                    foreach (var obj in Blueprint.Objects) { 
+                    _2d.PrepareImmediate(Effects.WorldBatchTechniques.drawZSpriteOBJID);
+                    foreach (var obj in Blueprint.Objects) {
+                       
+                        var tilePosition = obj.Position;
 
-                                var tilePosition = obj.Position;
+                        if (obj.Level != state.Level) continue;
 
-                                if (obj.Level != state.Level) continue;
-
-                                var oPx = state.WorldSpace.GetScreenFromTile(tilePosition);
-                                obj.ValidateSprite(state);
-                                var offBound = new Rectangle(obj.Bounding.Location + oPx.ToPoint(), obj.Bounding.Size);
-                                if (!offBound.Intersects(worldBounds)) continue;
-
-                                var renderInfo = GetRenderInfo(obj);
-                                
-                                _2d.OffsetPixel(oPx);
-                                _2d.OffsetTile(tilePosition);
-                                _2d.SetObjID(obj.ObjectID);
-                                obj.Draw(gd, state);
+                        var oPx = state.WorldSpace.GetScreenFromTile(tilePosition);
+                        obj.ValidateSprite(state);
+                        var offBound = new Rectangle(obj.Bounding.Location + oPx.ToPoint(), obj.Bounding.Size);
+                        if (!offBound.Intersects(worldBounds)) continue;
+                        obj.DrawImmediate(gd, state);
                     }
+                    _2d.EndImmediate();
 
                     state._3D.Begin(gd);
                     foreach (var avatar in Blueprint.Avatars)
@@ -209,10 +205,13 @@ namespace FSO.LotView
                 _2d.SetScroll(new Vector2());
                 while (buffer.NextPass())
                 {
+                    _2d.PrepareImmediate(Effects.WorldBatchTechniques.drawZSpriteDepthChannel);
                     for (int i=0; i<objects.Length; i++)
                     {
                         var obj = objects[i];
                         var tilePosition = positions[i];
+
+                        var tileOff = tilePosition - obj.Position;
 
                         //we need to trick the object into believing it is in a set world state.
                         var oldObjRot = obj.Direction;
@@ -222,14 +221,21 @@ namespace FSO.LotView
                         obj.Room = 65535;
                         state.SilentZoom = WorldZoom.Near;
                         state.SilentRotation = WorldRotation.BottomRight;
+                        _2d.SetShaderOffsets(pxOffset + state.WorldSpace.GetScreenFromTile(tileOff), tileOff); //offset object into rotated position
                         obj.OnRotationChanged(state);
                         obj.OnZoomChanged(state);
 
-                        _2d.OffsetPixel(state.WorldSpace.GetScreenFromTile(tilePosition) + pxOffset);
-                        _2d.OffsetTile(tilePosition);
-                        _2d.SetObjID(obj.ObjectID);
+                        var oPx = state.WorldSpace.GetScreenFromTile(tilePosition) + pxOffset;
+                        obj.ValidateSprite(state);
+                        var offBound = new Rectangle(obj.Bounding.Location + oPx.ToPoint(), obj.Bounding.Size);
 
-                        obj.Draw(gd, state);
+                        if (obj.Bounding.Location.X != int.MaxValue)
+                        {
+                            if (i == 0) bounds = offBound;
+                            else bounds = Rectangle.Union(offBound, bounds);
+                        }
+
+                        obj.DrawImmediate(gd, state);
 
                         //return everything to normal
                         obj.Direction = oldObjRot;
@@ -239,7 +245,7 @@ namespace FSO.LotView
                         obj.OnRotationChanged(state);
                         obj.OnZoomChanged(state);
                     }
-                    bounds = _2d.GetSpriteListBounds();
+                    _2d.EndImmediate();
                 }
             }
             bounds.Inflate(1, 1);
@@ -709,7 +715,15 @@ namespace FSO.LotView
             var diff = pxOffset - mainBd;
             var worldBounds = new Rectangle((pxOffset).ToPoint(), size.ToPoint());
 
-            foreach (var obj in Blueprint.Objects)
+            //_2d.OffsetPixel(mainBd);
+            //_2d.OffsetTile(new Vector3(state.CenterTile, 0));
+            _2d.OffsetPixel(new Vector2());
+            _2d.OffsetTile(new Vector3()); // new Vector3(state.CenterTile, 0));
+            _2d.PrepareImmediate(Effects.WorldBatchTechniques.drawZSpriteDepthChannel);
+
+            var dyn = Blueprint.Objects.Where(x => (x.Level <= state.Level) && GetRenderInfo(x).Layer == WorldObjectRenderLayer.DYNAMIC).OrderBy(x => x.DrawOrder);
+
+            foreach (var obj in dyn)
             {
                 if (obj.Level > state.Level) continue;
                 var renderInfo = GetRenderInfo(obj);
@@ -720,12 +734,15 @@ namespace FSO.LotView
                     obj.ValidateSprite(state);
                     var offBound = new Rectangle(obj.Bounding.Location + oPx.ToPoint(), obj.Bounding.Size);
                     if (!offBound.Intersects(worldBounds)) continue;
-                    _2d.OffsetPixel(oPx);
-                    _2d.OffsetTile(tilePosition);
-                    _2d.SetObjID(obj.ObjectID);
-                    obj.Draw(gd, state);
+                    //_2d.OffsetPixel(oPx);
+                    //_2d.OffsetTile(tilePosition);
+                    //_2d.SetObjID(obj.ObjectID);
+                    obj.DrawImmediate(gd, state);
+                    //obj.Draw(gd, state);
                 }
             }
+
+            _2d.EndImmediate();
 
             foreach (var op in Blueprint.ObjectParticles)
             {
@@ -751,18 +768,13 @@ namespace FSO.LotView
     public class WorldObjectRenderInfo
     {
         public WorldObjectRenderLayer Layer = WorldObjectRenderLayer.STATIC;
+        public int DynamicCounter;
+        public int DynamicRemoveCycle;
     }
 
     public enum WorldObjectRenderLayer
     {
         STATIC,
         DYNAMIC
-    }
-
-    public struct WorldTileRenderingInfo
-    {
-        public bool Dirty;
-        public Texture2D Pixel;
-        public Texture2D ZBuffer;
     }
 }

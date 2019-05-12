@@ -505,6 +505,12 @@ namespace FSO.LotView
             return new Vector2(screenx, screeny);
         }
 
+        public float GetDepthFromTile(Vector3 tile)
+        {
+            var pos = GetScreenFromTile(tile);
+            return pos.Y + tile.Z * OneUnitDistance * 2;
+        }
+
         public static float GetWorldFromTile(float tile)
         {
             return tile * WorldUnitsPerTile;

@@ -32,6 +32,9 @@ namespace FSO.LotView.Effects
         private EffectParameter pMaskTexture;
         private EffectParameter pAmbientLight;
 
+        private EffectParameter pPxOffset;
+        private EffectParameter pWorldOffset;
+
         public Matrix viewProjection
         {
             set
@@ -128,6 +131,22 @@ namespace FSO.LotView.Effects
             }
         }
 
+        public Vector2 PxOffset
+        {
+            set
+            {
+                pPxOffset.SetValue(value);
+            }
+        }
+
+        public Vector4 WorldOffset
+        {
+            set
+            {
+                pWorldOffset.SetValue(value);
+            }
+        }
+
         public WorldBatchEffect(GraphicsDevice graphicsDevice, byte[] effectCode) : base(graphicsDevice, effectCode)
         {
         }
@@ -161,6 +180,9 @@ namespace FSO.LotView.Effects
             pDepthTexture = Parameters["depthTexture"];
             pMaskTexture = Parameters["maskTexture"];
             pAmbientLight = Parameters["ambientLight"];
+
+            pPxOffset = Parameters["PxOffset"];
+            pWorldOffset = Parameters["WorldOffset"];
         }
 
         public void SetTechnique(WorldBatchTechniques technique)

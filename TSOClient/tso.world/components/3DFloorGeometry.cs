@@ -254,7 +254,7 @@ namespace FSO.LotView.Components
         private bool Alt;
 
         public void DrawFloor(GraphicsDevice gd, GrassEffect e, WorldZoom zoom, WorldRotation rot, List<Texture2D> roommaps, HashSet<sbyte> floors, EffectPass pass, 
-            Matrix? lightWorld = null, WorldState state = null, int minFloor = 0)
+            Matrix? lightWorld = null, WorldState state = null, int minFloor = 0, bool screenAlignUV = false)
         {
             var parallax = WorldConfig.Current.Complex;
             //assumes the effect and all its parameters have been set up already
@@ -264,6 +264,7 @@ namespace FSO.LotView.Components
             e.TexOffset = new Vector2();// TexOffset[zoom]*-1f);
             var tmat = TexMat[rot];
             e.TexMatrix = tmat;
+            e.ScreenAlignUV = screenAlignUV;
 
             var f = 0;
             foreach (var floor in Floors)
@@ -325,6 +326,7 @@ namespace FSO.LotView.Components
                             else
                             {
                                 e.Water = true;
+                                e.ScreenAlignUV = false;
                                 var pool = id >= 65520;
                                 water = true;
                                 if (!pool)
@@ -413,6 +415,7 @@ namespace FSO.LotView.Components
                     }
 
                     e.BaseTex = SPR;
+                    if (SPR != null) e.TexSize = new Vector2(SPR.Width, SPR.Height);
                     if (SPR != null && SPR.Name == null)
                     {
                         doubleDraw = true;
@@ -446,6 +449,7 @@ namespace FSO.LotView.Components
                     }
                     if (water)
                     {
+                        e.ScreenAlignUV = screenAlignUV;
                         e.World = worldmat;
                         e.TexMatrix = tmat;
                         e.Water = false;

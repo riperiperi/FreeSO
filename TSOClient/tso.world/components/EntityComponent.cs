@@ -37,7 +37,18 @@ namespace FSO.LotView.Components
         public Vector3 MTOffset;
         public Matrix? GroundAlign; //for realigning objects on sloped terrain (optional, for cars)
 
-        public short ObjectID; //set this any time it changes so that hit test works.
+        protected short _ObjectID;
+        public virtual short ObjectID
+        {
+            get
+            {
+                return _ObjectID;
+            }
+            set
+            {
+                _ObjectID = value;
+            }
+        } //set this any time it changes so that hit test works.
 
         public abstract Vector2 GetScreenPos(WorldState world);
 
@@ -85,14 +96,6 @@ namespace FSO.LotView.Components
                 _Position = value;
                 OnPositionChanged();
                 _WorldDirty = true;
-            }
-        }
-
-        public override float PreferredDrawOrder
-        {
-            get
-            {
-                return 0;
             }
         }
 

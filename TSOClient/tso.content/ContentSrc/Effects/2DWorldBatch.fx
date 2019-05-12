@@ -12,6 +12,9 @@ float3 dirToFront;
 float4 offToBack;
 bool depthOutMode;
 
+float2 PxOffset;
+float4 WorldOffset;
+
 float MaxFloor;
 
 texture pixelTexture : Diffuse;
@@ -190,7 +193,9 @@ float4 lightInterp2D(float4 inPosition) {
 
 ZVertexOut vsZSprite(ZVertexIn v){
     ZVertexOut result;
-	float4 pos = mul(v.position, viewProjection);
+	float4 inPos = v.position;
+	inPos.xy += PxOffset;
+	float4 pos = mul(inPos, viewProjection);
     result.position = pos;
 	result.screenPos = pos.xy;
     result.texCoords = v.texCoords;
@@ -200,7 +205,7 @@ ZVertexOut vsZSprite(ZVertexIn v){
     //HACK: somehow prevents result.roomVec from failing to set?? Condition should never occur.
     if (v.room.x == 2.0 && v.room.y == 2.0 && v.objectID.x == -1.0) result.texCoords /= 2.0; 
     
-    float4 backPosition = float4(v.worldCoords.x, v.worldCoords.y, v.worldCoords.z, 1)+offToBack;
+    float4 backPosition = float4(v.worldCoords.x, v.worldCoords.y, v.worldCoords.z, 1) + WorldOffset + offToBack;
     float4 frontPosition = float4(backPosition.x, backPosition.y, backPosition.z, backPosition.w);
     frontPosition.x += dirToFront.x;
     frontPosition.z += dirToFront.z;

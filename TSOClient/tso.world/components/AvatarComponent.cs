@@ -19,12 +19,13 @@ using FSO.LotView.RC;
 
 namespace FSO.LotView.Components
 {
-    public class AvatarComponent : EntityComponent
+    public class AvatarComponent : EntityComponent, IDisposable
     {
         public Avatar Avatar;
         public bool IsPet;
         public float Scale = 1;
         public int ALevel = 0;
+        public _2DStandaloneSprite HeadlineSprite;
 
         private static Vector2[] PosCenterOffsets = new Vector2[]{
             new Vector2(2+16, 79+8),
@@ -105,11 +106,6 @@ namespace FSO.LotView.Components
             get { return _Position; }
         }
 
-        public override float PreferredDrawOrder
-        {
-            get { return 5000.0f;  }
-        }
-
         public override void Initialize(GraphicsDevice device, WorldState world)
         {
             base.Initialize(device, world);
@@ -160,11 +156,12 @@ namespace FSO.LotView.Components
 
         public override void Draw(GraphicsDevice device, WorldState world)
         {
-            Avatar.Position = WorldSpace.GetWorldFromTile(Position);
+            var pos = Position;
+            Avatar.Position = WorldSpace.GetWorldFromTile(pos);
             if (Avatar.Skeleton == null) return;
             var headpos = Avatar.Skeleton.GetBone("HEAD").AbsolutePosition / 3.0f;
             var tHead1 = Vector3.Transform(new Vector3(headpos.X, headpos.Z, headpos.Y), Matrix.CreateRotationZ((float)(RadianDirection + Math.PI)));
-            var transhead = tHead1 + this.Position - new Vector3(0.5f, 0.5f, 0f);
+            var transhead = tHead1 + pos - new Vector3(0.5f, 0.5f, 0f);
 
             if (!Visible) return;
 
@@ -191,18 +188,24 @@ namespace FSO.LotView.Components
                 {
                     var headPx = world.WorldSpace.GetScreenFromTile(headOff);
 
-                    var item = world._2D.NewSprite(_2DBatchRenderMode.Z_BUFFER);
-                    item.Pixel = Headline;
-                    item.Depth = TextureGenerator.GetWallZBuffer(device)[30];
+                    if (HeadlineSprite == null) HeadlineSprite = new _2DStandaloneSprite();
+                    HeadlineSprite.Pixel = Headline;
+                    HeadlineSprite.Depth = TextureGenerator.GetWallZBuffer(device)[30];
 
-                    item.SrcRect = new Rectangle(0, 0, Headline.Width, Headline.Height);
-                    item.WorldPosition = headOff;
+                    HeadlineSprite.SrcRect = new Rectangle(0, 0, Headline.Width, Headline.Height);
+                    HeadlineSprite.WorldPosition = headOff;
                     var off = PosCenterOffsets[(int)world.Zoom - 1];
-                    item.DestRect = new Rectangle(
+                    HeadlineSprite.DestRect = new Rectangle(
                         ((int)headPx.X - Headline.Width / 2) + (int)off.X,
                         ((int)headPx.Y - Headline.Height / 2) + (int)off.Y, Headline.Width, Headline.Height);
-                    item.Room = Room;
-                    world._2D.Draw(item);
+
+                    HeadlineSprite.AbsoluteDestRect = HeadlineSprite.DestRect;
+                    HeadlineSprite.AbsoluteDestRect.Offset(world.WorldSpace.GetScreenFromTile(pos));
+                    HeadlineSprite.AbsoluteWorldPosition = HeadlineSprite.WorldPosition + WorldSpace.GetWorldFromTile(pos);
+
+                    HeadlineSprite.Room = Room;
+                    HeadlineSprite.PrepareVertices(device);
+                    world._2D.DrawImmediate(HeadlineSprite);
                 }
             }
         }
@@ -210,6 +213,11 @@ namespace FSO.LotView.Components
         public override void Preload(GraphicsDevice device, WorldState world)
         {
             //nothing important to do here
+        }
+
+        public void Dispose()
+        {
+            HeadlineSprite?.Dispose();
         }
     }
 }

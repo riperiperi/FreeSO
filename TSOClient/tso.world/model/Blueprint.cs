@@ -32,6 +32,8 @@ namespace FSO.LotView.Model
         public int Height;
         public sbyte Stories = 5;
 
+        public BlueprintChanges Changes; // changes for the renderer to track, to invalidate components, lighting and scroll buffers.
+
         /// <summary>
         /// Only read these arrays, do not modify them!
         /// </summary>
@@ -503,7 +505,6 @@ namespace FSO.LotView.Model
         OUTDOORS_LIGHTING_CHANGED,
         ROOM_CHANGED,
         ROOF_STYLE_CHANGED,
-        ROOM_MAP_CHANGED,
         OPENGL_SECOND_DRAW
     }
 

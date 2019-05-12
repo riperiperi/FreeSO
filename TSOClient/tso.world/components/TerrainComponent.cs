@@ -166,11 +166,6 @@ namespace FSO.LotView.Components
             return GroundHeight[((y) * (Size.Width) + (x))] * Bp.TerrainFactor * 3;
         }
 
-        public override float PreferredDrawOrder
-        {
-            get { return 0.0f; }
-        }
-
         public void RegenTerrain(GraphicsDevice device, Blueprint blueprint)
         {
             if (GrassState == null)
@@ -488,7 +483,7 @@ namespace FSO.LotView.Components
             var floors = new HashSet<sbyte>();
             for (sbyte f = 0; f < world.Level; f++) floors.Add(f);
             var pass = Effect.CurrentTechnique.Passes[(_3d) ? 2 : WorldConfig.Current.PassOffset];
-            Bp.FloorGeom.DrawFloor(device, Effect, world.Zoom, world.Rotation, world.Rooms.RoomMaps, floors, pass, state: world);
+            Bp.FloorGeom.DrawFloor(device, Effect, world.Zoom, world.Rotation, world.Rooms.RoomMaps, floors, pass, state: world, screenAlignUV: !_3d);
             Effect.GrassShininess = 0.02f;// (float)0.25);
 
             pass.Apply();

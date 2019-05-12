@@ -17,6 +17,9 @@ float GrassFadeMul;
 float2 TexOffset;
 float4 TexMatrix;
 
+bool ScreenAlignUV;
+float2 TexSize;
+
 float2 TileSize;
 
 bool depthOutMode;
@@ -238,12 +241,21 @@ GrassPSVTX GrassVS(GrassVTX input)
     output.Color = input.Color;
     output.GrassInfo = input.GrassInfo;
 	output.GrassInfo.yz = output.GrassInfo.yz*TexMatrix.xw + output.GrassInfo.zy*TexMatrix.zy + TexOffset;
+
     output.GrassInfo.w = position.z / position.w;
 	output.Normal = input.Normal;
 
 	float4 position2 = mul(float4(input.Position.x, 0, input.Position.z, input.Position.w), Temp4x4);
 	output.ScreenPos.xy = ((position2.xy*float2(0.5, -0.5)) + float2(0.5, 0.5)) * ScreenSize;
 	output.ScreenPos.z = position.z;
+
+	if (ScreenAlignUV == true) {
+		// results in sharper textures for flat surfaces in 2d mode. may slightly distort sloped surfaces.
+		// otherwise, even flat surfaces would not identically match their flat sprites as there would be a subpixel offset 
+		// (and we use linear blend, so it mushes together).
+		output.GrassInfo.yz = round((output.GrassInfo.yz * TexSize) + output.ScreenPos.xy);
+		output.GrassInfo.yz = (output.GrassInfo.yz - output.ScreenPos.xy) / TexSize; //reverse operation
+	}
 
     if (output.GrassInfo.x == -1.2 && output.GrassInfo.y == -1.2 && output.GrassInfo.z == -1.2 && output.GrassInfo.w < -1.0 && output.ScreenPos.x < -200 && output.ScreenPos.y < -300) output.Color *= 0.5; 
 
