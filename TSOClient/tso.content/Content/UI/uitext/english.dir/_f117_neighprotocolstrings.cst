@@ -30,4 +30,10 @@ Reason: %s^
 21 ^The sim you are attempting to vote for is currently unable to participate in elections.^
 22 ^An entity required by this action could not be found - perhaps something was deleted while we were working. Try again later.^
 
-23 ^An unknown error has occured. This has been logged on the server, so you should probably report the issue and what you were requesting so we can look into it.^
+23 ^The neighborhood you selected does not have an ongoing election. Please try again.^
+24 ^You are already enrolled for a free vote in this election cycle. Check your confirmation email for more information!^
+25 ^Your neighborhood has its own elections, so you cannot perform a free vote.^
+26 ^You are not allowed to enroll for a free vote if you've moved neighborhood after the election cycle started. Sorry!^
+27 ^There are no elections you can use a Free Vote in. Please try again later.^
+
+28 ^An unknown error has occured. This has been logged on the server, so you should probably report the issue and what you were requesting so we can look into it.^

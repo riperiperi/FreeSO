@@ -135,6 +135,17 @@ namespace FSO.Client.Controllers
             Callbacks.Add(callback);
         }
 
+        public void BeginFreeVote(uint nhoodID, Callback<NhoodResponseCode> callback)
+        {
+            if (Blocked) return;
+            Blocked = true;
+            ConnectionReg.MakeRequest(new NhoodRequest()
+            {
+                Type = NhoodRequestType.CAN_FREE_VOTE
+            });
+            Callbacks.Add(callback);
+        }
+
         private void ResolveCallbacks(NhoodResponseCode code)
         {
             GameThread.InUpdate(() =>
@@ -169,7 +180,7 @@ namespace FSO.Client.Controllers
                 else if (response.Code == NhoodResponseCode.UNKNOWN_ERROR)
                 {
                     errorTitle = GameFacade.Strings.GetString("f117", "1");
-                    errorBody = GameFacade.Strings.GetString("f117", "23");
+                    errorBody = GameFacade.Strings.GetString("f117", "28");
                     if (response.Message != "")
                     {
                         errorBody += "\n\n" + response.Message;
@@ -349,6 +360,44 @@ namespace FSO.Client.Controllers
 
                                 BlockingDialog.Opacity = 1;
                                 break;
+
+                            case NhoodRequestType.CAN_FREE_VOTE:
+                                //free vote dialog
+
+                                var freeCont = new UINominationSelectContainer(ConnectionReg.CandidateList, true);
+                                BlockingDialog = UIScreen.GlobalShowAlert(new UIAlertOptions()
+                                {
+                                    Title = GameFacade.Strings.GetString("f118", "25"),
+                                    Message = GameFacade.Strings.GetString("f118", "26"),
+                                    Width = 440,
+                                    GenericAddition = freeCont,
+                                    Buttons = new UIAlertButton[] {
+                                        new UIAlertButton(UIAlertButtonType.OK, (btn2) => {
+                                            var newReq = freeCont.GetRequest(req);
+                                            if (newReq != null) {
+                                                UIAlert.YesNo(
+                                                    GameFacade.Strings.GetString("f118", "27"),
+                                                    GameFacade.Strings.GetString("f118", "28", new string[] { freeCont.SelectedCandidate.Name }),
+                                                    true,
+                                                    (result) =>
+                                                    {
+                                                        if (result) ConnectionReg.MakeRequest(newReq);
+                                                    }
+                                                    );
+                                            }
+                                            else
+                                            {
+                                                //tell user they should select a neighborhood
+                                            }
+                                        }, GameFacade.Strings.GetString("f118", "29")),
+                                        new UIAlertButton(UIAlertButtonType.Cancel, (btn2) => {
+                                            ConnectionReg.AsyncReset();
+                                        })
+                                    }
+                                }, false);
+                                BlockingDialog.Opacity = 1;
+                                break;
+
                             default:
                                 //something went terribly wrong - we don't have any dialog to handle this.
                                 ConnectionReg.AsyncReset();

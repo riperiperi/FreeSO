@@ -69,8 +69,9 @@ namespace FSO.Server.Servers.City.Handlers
             if (session.IsAnonymous) //CAS users can't do this.
                 return;
 
-            var moveTime = Context.Config.Neighborhoods.Election_Move_Penalty * 24 * 60 * 60; //24 * 60 * 60 * 30; //must live in an nhood 30 days before participating in an election
-            var rateMoveTime = Context.Config.Neighborhoods.Rating_Move_Penalty * 24 * 60 * 60; //24 * 60 * 60 * 30; //must live in an nhood 30 days before participating in an election
+            var config = Context.Config.Neighborhoods;
+            var moveTime = config.Election_Move_Penalty * 24 * 60 * 60; //24 * 60 * 60 * 30; //must live in an nhood 30 days before participating in an election
+            var rateMoveTime = config.Rating_Move_Penalty * 24 * 60 * 60; //24 * 60 * 60 * 30; //must live in an nhood 30 days before participating in an election
             var mail = Kernel.Get<MailHandler>();
 
             try
@@ -106,6 +107,14 @@ namespace FSO.Server.Servers.City.Handlers
                     //common info used by most requests
                     var myLotID = da.Roommates.GetAvatarsLots(session.AvatarId).FirstOrDefault();
                     var myLot = (myLotID == null) ? null : da.Lots.Get(myLotID.lot_id);
+
+                    var freeVote = da.Elections.GetFreeVote(session.AvatarId);
+                    var freeNhood = (int)(myLot?.neighborhood_id ?? 0);
+                    var voteValue = (freeVote == null) ? config.Vote_Normal_Value : config.Vote_Free_Value;
+                    if (freeVote != null)
+                    {
+                        freeNhood = freeVote.neighborhood_id;
+                    }
 
                     switch (packet.Type)
                     {
@@ -180,8 +189,7 @@ namespace FSO.Server.Servers.City.Handlers
                         case NhoodRequestType.CAN_VOTE:
                         case NhoodRequestType.VOTE:
                             {
-
-                                if (myLot == null || myLot.neighborhood_id != packet.TargetNHood)
+                                if (myLot == null || freeNhood != packet.TargetNHood)
                                 {
                                     session.Write(Code(NhoodResponseCode.NOT_IN_NHOOD)); return;
                                 }
@@ -191,7 +199,7 @@ namespace FSO.Server.Servers.City.Handlers
                                 {
                                     session.Write(Code(NhoodResponseCode.YOU_MOVED_RECENTLY)); return;
                                 }
-                                
+
                                 //check if voting cycle in correct state
                                 var nhood = da.Neighborhoods.Get(packet.TargetNHood);
                                 if (nhood == null)
@@ -255,7 +263,7 @@ namespace FSO.Server.Servers.City.Handlers
                                         if (existing.from_avatar_id != session.AvatarId)
                                             session.Write(Code(NhoodResponseCode.ALREADY_VOTED_SAME_IP)); //couldn't vote due to relation
                                         else
-                                            session.Write(Code(NhoodResponseCode.ALREADY_VOTED)); 
+                                            session.Write(Code(NhoodResponseCode.ALREADY_VOTED));
                                     }
 
                                     if (packet.Type == NhoodRequestType.CAN_VOTE)
@@ -264,7 +272,7 @@ namespace FSO.Server.Servers.City.Handlers
 
                                         //send back the candidate list
 
-                                        
+
                                         var sims = da.Elections.GetCandidates(cycle.cycle_id);
                                         var result = new List<NhoodCandidate>();
 
@@ -309,7 +317,8 @@ namespace FSO.Server.Servers.City.Handlers
                                         election_cycle_id = cycle.cycle_id,
                                         from_avatar_id = session.AvatarId,
                                         target_avatar_id = packet.TargetAvatar,
-                                        type = DbElectionVoteType.vote
+                                        type = DbElectionVoteType.vote,
+                                        value = voteValue
                                     });
                                     if (!success)
                                     {
@@ -337,14 +346,14 @@ namespace FSO.Server.Servers.City.Handlers
                                     if (packet.Type == NhoodRequestType.CAN_NOMINATE)
                                     {
                                         //we are allowed to nominate.
-                                        
+
                                         //send back the list of sims in nhood
                                         var sims = da.Avatars.GetPossibleCandidatesNhood((uint)packet.TargetNHood);
                                         var result = sims.Select(x => new NhoodCandidate()
                                         {
                                             ID = x.avatar_id,
                                             Name = x.name,
-                                            Rating = (x.rating == null) ? uint.MaxValue: (uint)((x.rating / 2) * 100)
+                                            Rating = (x.rating == null) ? uint.MaxValue : (uint)((x.rating / 2) * 100)
                                         });
 
                                         session.Write(new NhoodCandidateList()
@@ -363,7 +372,8 @@ namespace FSO.Server.Servers.City.Handlers
                                         election_cycle_id = cycle.cycle_id,
                                         from_avatar_id = session.AvatarId,
                                         target_avatar_id = packet.TargetAvatar,
-                                        type = DbElectionVoteType.nomination
+                                        type = DbElectionVoteType.nomination,
+                                        value = voteValue
                                     });
                                     if (!success)
                                     {
@@ -373,7 +383,7 @@ namespace FSO.Server.Servers.City.Handlers
 
                                     //if >= 3 nominations, allow the player to run for election.
                                     var noms = da.Elections.GetCycleVotesForAvatar(packet.TargetAvatar, cycle.cycle_id, DbElectionVoteType.nomination);
-                                    if (noms.Count() >= Context.Config.Neighborhoods.Min_Nominations)
+                                    if (noms.Count() >= config.Min_Nominations)
                                     {
                                         var created = da.Elections.CreateCandidate(new DbElectionCandidate() {
                                             candidate_avatar_id = packet.TargetAvatar,
@@ -430,7 +440,7 @@ namespace FSO.Server.Servers.City.Handlers
 
                                 //have we been nominated the minimum number of times? (3)
                                 var noms = da.Elections.GetCycleVotesForAvatar(session.AvatarId, cycle.cycle_id, DbElectionVoteType.nomination);
-                                if (noms.Count < Context.Config.Neighborhoods.Min_Nominations)
+                                if (noms.Count < config.Min_Nominations)
                                 {
                                     session.Write(Code(NhoodResponseCode.NOBODY_NOMINATED_YOU_IDIOT)); return;
                                 }
@@ -463,7 +473,108 @@ namespace FSO.Server.Servers.City.Handlers
                                 }
                                 return;
                             }
-                        //management
+
+                        case NhoodRequestType.CAN_FREE_VOTE:
+                        case NhoodRequestType.FREE_VOTE:
+                            {
+                                //should live somewhere:
+                                if (myLot == null)
+                                {
+                                    session.Write(Code(NhoodResponseCode.MISSING_ENTITY)); return;
+                                }
+
+                                //we shouldn't already be enrolled
+                                if (freeNhood != myLot.neighborhood_id)
+                                {
+                                    session.Write(Code(NhoodResponseCode.ALREADY_ENROLLED_FOR_FREE_VOTE)); return;
+                                }
+
+                                //our nhood needs to be ineligible
+                                var ourNhood = da.Neighborhoods.Get(myLot.neighborhood_id);
+                                if (ourNhood == null)
+                                {
+                                    session.Write(Code(NhoodResponseCode.MISSING_ENTITY)); return;
+                                }
+
+                                var cycle = (ourNhood.election_cycle_id == null) ? null : da.Elections.GetCycle(ourNhood.election_cycle_id.Value);
+                                if (cycle != null && cycle.current_state != DbElectionCycleState.shutdown)
+                                {
+                                    session.Write(Code(NhoodResponseCode.FREE_VOTE_ALREADY_ELIGIBLE)); return;
+                                }
+
+                                //get eligible nhoods
+                                var eligible = da.Elections.GetActiveCycles(Context.ShardId);
+
+                                if (eligible.Count == 0)
+                                {
+                                    session.Write(Code(NhoodResponseCode.FREE_VOTE_ELECTION_OVER)); return;
+                                }
+
+                                //our last move needs to have been before the nhood cycle started
+                                var now = Epoch.Now;
+                                if (eligible.All(x => x.start_date < myAva.move_date))
+                                {
+                                    session.Write(Code(NhoodResponseCode.FREE_VOTE_MOVE_DATE)); return;
+                                }
+
+                                if (packet.Type == NhoodRequestType.CAN_FREE_VOTE)
+                                {
+                                    //send the eligible nhoods
+                                    var result = eligible.Select(x => new NhoodCandidate()
+                                    {
+                                        ID = (uint)x.nhood_id,
+                                        Name = x.name,
+                                        Rating = uint.MaxValue
+                                    });
+
+                                    session.Write(new NhoodCandidateList()
+                                    {
+                                        NominationMode = true,
+                                        Candidates = result.ToList()
+                                    });
+
+                                    session.Write(Code(NhoodResponseCode.SUCCESS));
+                                    return;
+                                }
+
+                                //the target nhood needs to be eligible, and have an ongoing election
+                                var targ = da.Neighborhoods.Get(packet.TargetNHood);
+                                if (targ == null || targ.election_cycle_id == null)
+                                {
+                                    session.Write(Code(NhoodResponseCode.MISSING_ENTITY));
+                                    return;
+                                }
+
+                                var targCycle = da.Elections.GetCycle((uint)targ.election_cycle_id);
+                                if (targCycle == null || targCycle.current_state == DbElectionCycleState.shutdown)
+                                {
+                                    session.Write(Code(NhoodResponseCode.NHOOD_NO_ELECTION));
+                                    return;
+                                }
+
+                                var fVote = new DbElectionFreeVote() {
+                                    avatar_id = session.AvatarId,
+                                    cycle_id = targCycle.cycle_id,
+                                    neighborhood_id = targ.neighborhood_id,
+                                    date = Epoch.Now,
+                                    expire_date = targCycle.end_date
+                                };
+                                if (!da.Elections.EnrollFreeVote(fVote))
+                                {
+                                    session.Write(Code(NhoodResponseCode.ALREADY_ENROLLED_FOR_FREE_VOTE));
+                                    return;
+                                }
+
+                                mail.SendSystemEmail("f116", (int)NeighMailStrings.FreeVoteConfirmationSubject, (int)NeighMailStrings.FreeVoteConfirmation,
+                                        1, MessageSpecialType.Normal, targCycle.end_date, session.AvatarId, targ.name);
+
+                                Nhoods.SendStateEmail(da, mail, targ, targCycle, session.AvatarId);
+
+                                session.Write(Code(NhoodResponseCode.SUCCESS));
+                                return;
+                            }
+
+                        // ======= management =======
                         case NhoodRequestType.DELETE_RATE:
                             var beforeDelete = da.Elections.GetRating(packet.Value);
                             if (da.Elections.DeleteRating(packet.Value))

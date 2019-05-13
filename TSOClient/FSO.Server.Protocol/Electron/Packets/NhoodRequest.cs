@@ -18,7 +18,7 @@ namespace FSO.Server.Protocol.Electron.Packets
         public object OType => Type;
         public bool NeedsValidation => 
             Type == NhoodRequestType.CAN_NOMINATE || Type == NhoodRequestType.CAN_RATE 
-            || Type == NhoodRequestType.CAN_RUN || Type == NhoodRequestType.CAN_VOTE;
+            || Type == NhoodRequestType.CAN_RUN || Type == NhoodRequestType.CAN_VOTE || Type == NhoodRequestType.CAN_FREE_VOTE;
 
         public string Message = ""; //bulletin, rate
         public uint Value; //rate (stars), nomination_run (accept if >0)
@@ -60,7 +60,10 @@ namespace FSO.Server.Protocol.Electron.Packets
         CAN_RATE,
         NOMINATION_RUN,
         CAN_RUN,
-        
+
+        CAN_FREE_VOTE,
+        FREE_VOTE,
+
         //moderator commands
         DELETE_RATE,
         FORCE_MAYOR,

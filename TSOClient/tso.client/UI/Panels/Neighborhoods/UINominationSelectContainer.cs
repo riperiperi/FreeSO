@@ -25,6 +25,7 @@ namespace FSO.Client.UI.Panels.Neighborhoods
 
         public UITextBox SearchBox;
         private NhoodCandidateList Candidates;
+        private bool NonPerson;
 
         public NhoodCandidate SelectedCandidate
         {
@@ -33,27 +34,20 @@ namespace FSO.Client.UI.Panels.Neighborhoods
                 return RoommateListBox.SelectedItem?.Data as NhoodCandidate;
             }
         }
-
-        public UINominationSelectContainer(NhoodCandidateList candidates) 
+        public UINominationSelectContainer(NhoodCandidateList candidates) : this(candidates, false)
         {
+
+        }
+
+        public UINominationSelectContainer(NhoodCandidateList candidates, bool nonPerson) 
+        {
+            NonPerson = nonPerson;
             var ui = RenderScript("fsodonatorlist.uis");
             var listBg = ui.Create<UIImage>("ListBoxBackground");
             AddAt(0, listBg);
             listBg.With9Slice(25, 25, 25, 25);
             listBg.Width += 110;
             listBg.Height += 50;
-
-            /*
-            Dropdown = ui.Create<UIInboxDropdown>("PullDownMenuSetup");
-            Dropdown.OnSearch += (query) =>
-            {
-                FindController<GenericSearchController>()?.Search(query, false, (results) =>
-                {
-                    Dropdown.SetResults(results);
-                });
-            };
-            Dropdown.OnSelect += AddDonator;
-            Add(Dropdown);*/
 
             RoommateListSlider.AttachButtons(RoommateListScrollUpButton, RoommateScrollDownButton, 1);
             RoommateListBox.AttachSlider(RoommateListSlider);
@@ -98,12 +92,23 @@ namespace FSO.Client.UI.Panels.Neighborhoods
         public NhoodRequest GetRequest(NhoodRequest initial)
         {
             if (SelectedCandidate == null) return null;
-            return new NhoodRequest()
+            if (NonPerson)
             {
-                Type = NhoodRequestType.NOMINATE,
-                TargetNHood = initial.TargetNHood,
-                TargetAvatar = SelectedCandidate.ID
-            };
+                return new NhoodRequest()
+                {
+                    Type = NhoodRequestType.FREE_VOTE,
+                    TargetNHood = SelectedCandidate.ID
+                };
+            }
+            else
+            {
+                return new NhoodRequest()
+                {
+                    Type = NhoodRequestType.NOMINATE,
+                    TargetNHood = initial.TargetNHood,
+                    TargetAvatar = SelectedCandidate.ID
+                };
+            }
         }
 
         public void UpdateCandidateList(NhoodCandidateList candidates)
@@ -113,12 +118,16 @@ namespace FSO.Client.UI.Panels.Neighborhoods
             if (SearchBox.CurrentText != "") sims = sims.Where(x => x.Name.ToLowerInvariant().Contains(searchString));
             RoommateListBox.Items = sims.OrderBy(x => x.Name).Select(x =>
             {
-                var personBtn = new UIPersonButton()
+                UIPersonButton personBtn = null;
+                if (!NonPerson)
                 {
-                    AvatarId = x.ID,
-                    FrameSize = UIPersonButtonSize.SMALL
-                };
-                personBtn.LogicalParent = this;
+                    personBtn = new UIPersonButton()
+                    {
+                        AvatarId = x.ID,
+                        FrameSize = UIPersonButtonSize.SMALL
+                    };
+                    personBtn.LogicalParent = this;
+                }
 
                 UIRatingDisplay rating = null;
                 if (x.Rating != uint.MaxValue)
@@ -130,7 +139,7 @@ namespace FSO.Client.UI.Panels.Neighborhoods
                 }
                 return new UIListBoxItem(
                     x,
-                    personBtn,
+                    (object)personBtn ?? "",
                     x.Name,
                     "",
                     (object)rating ?? ""
