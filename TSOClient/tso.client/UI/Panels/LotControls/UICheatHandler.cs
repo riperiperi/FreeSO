@@ -1,11 +1,13 @@
 ﻿using FSO.Client.UI.Framework;
 using FSO.Common;
 using FSO.Common.Rendering.Framework.Model;
+using FSO.Common.Utils;
 using FSO.LotView.LMap;
 using FSO.LotView.Model;
 using FSO.SimAntics;
 using FSO.SimAntics.NetPlay.Model;
 using FSO.SimAntics.NetPlay.Model.Commands;
+using FSO.SimAntics.Test;
 using Microsoft.Xna.Framework;
 using Microsoft.Xna.Framework.Graphics;
 using System;
@@ -26,6 +28,8 @@ namespace FSO.Client.UI.Panels.LotControls
         }
         private UpdateState LastState;
         private Texture2D DebugTexture;
+
+        private GameThreadInterval CollisionTestInterval;
 
         private float tod = 0;
 
@@ -135,9 +139,9 @@ namespace FSO.Client.UI.Panels.LotControls
                 {
                     case "roomat":
                         //!roomat
-                        LotTilePos targetrPos = new LotTilePos((short)(tilePos.X*16), (short)(tilePos.Y*16), vm.Context.World.State.Level);
+                        LotTilePos targetrPos = new LotTilePos((short)(tilePos.X * 16), (short)(tilePos.Y * 16), vm.Context.World.State.Level);
                         var room = vm.Context.GetRoomAt(targetrPos);
-                        response += "Room at (" + targetrPos.TileX + ", " + targetrPos.TileY + ", " + targetrPos.Level + ") is "+room+"\r\n";
+                        response += "Room at (" + targetrPos.TileX + ", " + targetrPos.TileY + ", " + targetrPos.Level + ") is " + room + "\r\n";
                         var roomInfo = vm.Context.RoomInfo[room];
                         foreach (var obj in roomInfo.Room.AdjRooms)
                         {
@@ -151,7 +155,7 @@ namespace FSO.Client.UI.Panels.LotControls
                         LotTilePos targetPos = LotTilePos.FromBigTile((short)tilePos.X, (short)tilePos.Y, vm.Context.World.State.Level);
                         if (args == "oow") targetPos = LotTilePos.OUT_OF_WORLD;
                         var objs = vm.Context.ObjectQueries.GetObjectsAt(targetPos);
-                        response += "Objects at (" + targetPos.TileX + ", " + targetPos.TileY + ", " + targetPos.Level + ")\r\n"; 
+                        response += "Objects at (" + targetPos.TileX + ", " + targetPos.TileY + ", " + targetPos.Level + ")\r\n";
                         foreach (var obj in objs)
                         {
                             response += ObjectSummary(obj);
@@ -171,6 +175,21 @@ namespace FSO.Client.UI.Panels.LotControls
                         var on = args.ToLowerInvariant() == "true" || args == "1";
                         SimAntics.Engine.VMRoutingFrame.DEBUG_DRAW = on;
                         response += "Debug Routes Set: " + on;
+                        break;
+                    case "vc":
+                    case "validcollision":
+                        if (CollisionTestInterval != null)
+                        {
+                            CollisionTestInterval.Clear();
+                            CollisionTestInterval = null;
+                            response += "Collision validator is now disabled.";
+                        }
+                        else
+                        {
+                            var collisionValidator = new CollisionTestUtils();
+                            CollisionTestInterval = GameThread.SetInterval(() => { collisionValidator.VerifyAllCollision(vm); }, 1000);
+                            response += "Collision validator is now running every second. An exception will be thrown if collision state is inconsistent.";
+                        }
                         break;
                     default:
                         response += "Unknown command.";

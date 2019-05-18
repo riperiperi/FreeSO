@@ -186,6 +186,9 @@ namespace FSO.Client.UI.Panels
                     case MessageSpecialType.AcceptNomination:
                         controller.NeighborhoodProtocol.AcceptNominations(nhoodID, SpecialResult);
                         break;
+                    case MessageSpecialType.FreeVote:
+                        controller.NeighborhoodProtocol.BeginFreeVote(nhoodID, SpecialResult);
+                        break;
                 }
             });
         }

@@ -49,6 +49,7 @@ namespace FSO.Server.Servers.UserApi
         public bool UseProxy { get; set; } = true;
 
         public AWSConfig AwsConfig { get; set; }
+        public GithubConfig GithubConfig { get; set; }
     }
 
     public enum ApiServerControllers

@@ -129,7 +129,7 @@ namespace FSO.Server.Api.Core.Controllers.Admin
                 {
                     await upload.clientAddon.CopyToAsync(file);
                 }
-                info.addon_zip_url = await api.UpdateUploader.UploadFile($"addons/client{addonID}.zip", $"updateTemp/addons/client{reqID}.zip");
+                info.addon_zip_url = await api.UpdateUploader.UploadFile($"addons/client{addonID}.zip", $"updateTemp/addons/client{reqID}.zip", $"addon-{addonID}");
                 System.IO.File.Delete($"updateTemp/addons/client{reqID}.zip");
             }
 
@@ -139,7 +139,7 @@ namespace FSO.Server.Api.Core.Controllers.Admin
                 {
                     await upload.serverAddon.CopyToAsync(file);
                 }
-                info.server_zip_url = await api.UpdateUploader.UploadFile($"addons/server{addonID}.zip", $"updateTemp/addons/server{reqID}.zip");
+                info.server_zip_url = await api.UpdateUploader.UploadFile($"addons/server{addonID}.zip", $"updateTemp/addons/server{reqID}.zip", $"addon-{addonID}");
                 System.IO.File.Delete($"updateTemp/addons/server{reqID}.zip");
             }
 

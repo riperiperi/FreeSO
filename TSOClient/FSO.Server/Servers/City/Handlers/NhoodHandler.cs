@@ -189,6 +189,7 @@ namespace FSO.Server.Servers.City.Handlers
                         case NhoodRequestType.CAN_VOTE:
                         case NhoodRequestType.VOTE:
                             {
+                                if (freeVote != null) packet.TargetNHood = (uint)freeNhood;
                                 if (myLot == null || freeNhood != packet.TargetNHood)
                                 {
                                     session.Write(Code(NhoodResponseCode.NOT_IN_NHOOD)); return;
@@ -228,7 +229,7 @@ namespace FSO.Server.Servers.City.Handlers
                                     {
                                         session.Write(Code(NhoodResponseCode.INVALID_AVATAR)); return;
                                     }
-                                    var targLotID = da.Roommates.GetAvatarsLots(session.AvatarId).FirstOrDefault();
+                                    var targLotID = da.Roommates.GetAvatarsLots(packet.TargetAvatar).FirstOrDefault();
                                     var targLot = (targLotID == null) ? null : da.Lots.Get(targLotID.lot_id);
 
                                     if (targLot == null || targLot.neighborhood_id != packet.TargetNHood)

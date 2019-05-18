@@ -19,7 +19,7 @@ namespace FSO.Server.Api.Core.Services
             Config = config;
         }
 
-        public async Task<string> UploadFile(string destPath, string fileName)
+        public async Task<string> UploadFile(string destPath, string fileName, string groupName)
         {
             var region = Config.Region;
             var bucket = Config.Bucket;

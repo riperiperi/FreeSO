@@ -65,6 +65,7 @@
   <ItemGroup>
     <Compile Include="ApiAbstract.cs" />
     <Compile Include="Config\AWSConfig.cs" />
+    <Compile Include="Config\GithubConfig.cs" />
     <Compile Include="Epoch.cs" />
     <Compile Include="IAPIController.cs" />
     <Compile Include="IPAddress.cs" />

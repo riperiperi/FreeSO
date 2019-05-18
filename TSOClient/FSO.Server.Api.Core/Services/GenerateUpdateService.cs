@@ -250,15 +250,15 @@ namespace FSO.Server.Api.Core.Services
                             Directory.Delete(updateDir + "client/", true);
 
                             status.UpdateStatus(UpdateGenerationStatusCode.PUBLISHING_CLIENT);
-                            result.full_zip = await Api.INSTANCE.UpdateUploader.UploadFile($"{baseUpdateKey}client-{versionName}.zip", finalClientZip);
+                            result.full_zip = await Api.INSTANCE.UpdateUploaderClient.UploadFile($"{baseUpdateKey}client-{versionName}.zip", finalClientZip, versionName);
                         }
                         status.UpdateStatus(UpdateGenerationStatusCode.PUBLISHING_CLIENT);
                         if (diffZip != null)
                         {
-                            result.incremental_zip = await Api.INSTANCE.UpdateUploader.UploadFile($"{baseUpdateKey}incremental-{versionName}.zip", diffZip);
+                            result.incremental_zip = await Api.INSTANCE.UpdateUploaderClient.UploadFile($"{baseUpdateKey}incremental-{versionName}.zip", diffZip, versionName);
                         }
                         await System.IO.File.WriteAllTextAsync(updateDir + "manifest.json", Newtonsoft.Json.JsonConvert.SerializeObject(manifest));
-                        result.manifest_url = await Api.INSTANCE.UpdateUploader.UploadFile($"{baseUpdateKey}{versionName}.json", updateDir + "manifest.json");
+                        result.manifest_url = await Api.INSTANCE.UpdateUploaderClient.UploadFile($"{baseUpdateKey}{versionName}.json", updateDir + "manifest.json", versionName);
                     }
 
                     if (serverArti != null && !request.contentOnly)
@@ -290,7 +290,7 @@ namespace FSO.Server.Api.Core.Services
                         Directory.Delete(updateDir + "server/", true);
 
                         status.UpdateStatus(UpdateGenerationStatusCode.PUBLISHING_SERVER);
-                        result.server_zip = await Api.INSTANCE.UpdateUploader.UploadFile($"{baseUpdateKey}server-{versionName}.zip", finalServerZip);
+                        result.server_zip = await Api.INSTANCE.UpdateUploader.UploadFile($"{baseUpdateKey}server-{versionName}.zip", finalServerZip, versionName);
                     } else
                     {
                         result.server_zip = result.incremental_zip; //same as client, as server uses same content.

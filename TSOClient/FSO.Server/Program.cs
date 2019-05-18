@@ -40,6 +40,10 @@ namespace FSO.Server
                             toolType = typeof(ToolImportNhood);
                             toolOptions = subOptions;
                             break;
+                        case "restore-lots":
+                            toolType = typeof(ToolRestoreLots);
+                            toolOptions = subOptions;
+                            break;
                         default:
                             Console.Write(options.GetUsage(verb));
                             break;
