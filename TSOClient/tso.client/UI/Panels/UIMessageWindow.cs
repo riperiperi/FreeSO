@@ -211,6 +211,9 @@ namespace FSO.Client.UI.Panels
                     case MessageSpecialType.AcceptNomination:
                         message = GameFacade.Strings.GetString("f118", "19");
                         break;
+                    case MessageSpecialType.FreeVote:
+                        message = GameFacade.Strings.GetString("f118", "30");
+                        break;
                 }
 
                 UIAlert.Alert(title, message, true);
