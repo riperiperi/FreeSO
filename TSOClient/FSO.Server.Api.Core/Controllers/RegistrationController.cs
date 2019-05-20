@@ -1,6 +1,7 @@
 ﻿using FSO.Server.Api.Core.Utils;
 using FSO.Server.Common;
 using FSO.Server.Database.DA.EmailConfirmation;
+using Microsoft.AspNetCore.Cors;
 using Microsoft.AspNetCore.Mvc;
 using System.Linq;
 using System.Net;
@@ -14,6 +15,8 @@ namespace FSO.Server.Api.Core.Controllers
     /// Controller for user registrations.
     /// Supports email confirmation if enabled in config.json.
     /// </summary>
+
+    [EnableCors]
     [Route("userapi/registration")]
     [ApiController]
     public class RegistrationController : ControllerBase

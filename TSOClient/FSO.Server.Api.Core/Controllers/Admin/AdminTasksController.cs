@@ -9,9 +9,11 @@ using System.Web;
 using System.Linq;
 using System.Web.Http;
 using Microsoft.AspNetCore.Mvc;
+using Microsoft.AspNetCore.Cors;
 
 namespace FSO.Server.Api.Core.Controllers.Admin
 {
+    [EnableCors("AdminAppPolicy")]
     [Route("admin/tasks")]
     [ApiController]
     public class AdminTasksController : ControllerBase

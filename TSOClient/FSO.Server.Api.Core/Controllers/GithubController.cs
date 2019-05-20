@@ -3,18 +3,18 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Security.Cryptography;
 using System.Threading.Tasks;
+using Microsoft.AspNetCore.Cors;
 using Microsoft.AspNetCore.Mvc;
 using Octokit;
 
-// For more information on enabling MVC for empty projects, visit https://go.microsoft.com/fwlink/?LinkID=397860
-
 namespace FSO.Server.Api.Core.Controllers
 {
+    [EnableCors]
     [ApiController]
     public class GithubController : ControllerBase
     {
         readonly GitHubClient client =
-            new GitHubClient(new ProductHeaderValue("FreeSO"), new Uri("https://github.com/"));
+            new GitHubClient(new ProductHeaderValue(Api.INSTANCE.Github.AppName), new Uri("https://github.com/"));
 
         private string StoredToken;
         private static string CSRF;

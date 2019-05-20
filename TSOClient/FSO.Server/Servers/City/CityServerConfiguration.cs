@@ -10,6 +10,7 @@ namespace FSO.Server.Servers.City
     public class CityServerConfiguration : AbstractAriesServerConfig
     {
         public int ID;
+        public bool Timeout_No_Auth = true;
 
         public CityServerNhoodConfiguration Neighborhoods = new CityServerNhoodConfiguration();
         public CityServerMaintenanceConfiguration Maintenance;

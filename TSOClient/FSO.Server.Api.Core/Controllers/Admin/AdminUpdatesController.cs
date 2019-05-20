@@ -10,6 +10,7 @@ using FSO.Server.Api.Core.Models;
 using FSO.Server.Api.Core.Services;
 using FSO.Server.Api.Core.Utils;
 using FSO.Server.Database.DA.Updates;
+using Microsoft.AspNetCore.Cors;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
 using Newtonsoft.Json;
@@ -18,6 +19,7 @@ using Newtonsoft.Json;
 
 namespace FSO.Server.Api.Core.Controllers.Admin
 {
+    [EnableCors("AdminAppPolicy")]
     [Route("admin/updates")]
     public class AdminUpdatesController : ControllerBase
     {

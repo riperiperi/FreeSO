@@ -1,5 +1,6 @@
 ﻿using FSO.Server.Api.Core.Utils;
 using FSO.Server.Common;
+using Microsoft.AspNetCore.Cors;
 using Microsoft.AspNetCore.Mvc;
 using System;
 using System.Collections.Generic;
@@ -10,6 +11,7 @@ using System.Web.Http;
 
 namespace FSO.Server.Api.Core.Controllers
 {
+    [EnableCors]
     [ApiController]
     public class CityJSONController : ControllerBase
     {

@@ -22,6 +22,20 @@ namespace FSO.Server.Api.Core.Controllers
         private static Func<IActionResult> ERROR_302 = printError("INV-302", "The game has experienced an internal error. Please try again.");
         private static Func<IActionResult> ERROR_160 = printError("INV-160", "The server is currently down for maintainance. Please try again later.");
         private static Func<IActionResult> ERROR_150 = printError("INV-150", "We're sorry, but your account has been suspended or cancelled.");
+        private static string LOCK_MESSAGE = "Your account has been locked due to too many incorrect login attempts. " +
+            "If you cannot remember your password, it can be reset at https://beta.freeso.org/forgot. Locked for: ";
+
+        public static int LockAttempts = 5;
+
+        public static int[] LockDuration = new int[] {
+            5,
+            15,
+            30,
+            60,
+            120,
+            720,
+            1440
+        };
 
         // GET api/<controller>
         [HttpGet]
@@ -54,6 +68,14 @@ namespace FSO.Server.Api.Core.Controllers
                     return ERROR_160();
                 }
 
+                var ip = ApiUtils.GetIP(Request);
+
+                var accLock = db.Users.GetRemainingAuth(user.user_id, ip);
+                if (accLock != null && (accLock.active || accLock.count >= LockAttempts) && accLock.expire_time > Epoch.Now)
+                {
+                    return printError("INV-170", LOCK_MESSAGE + Epoch.HMSRemaining(accLock.expire_time))();
+                }
+
                 var authSettings = db.Users.GetAuthenticationSettings(user.user_id);
                 var isPasswordCorrect = PasswordHasher.Verify(password, new PasswordHash
                 {
@@ -63,17 +85,26 @@ namespace FSO.Server.Api.Core.Controllers
 
                 if (!isPasswordCorrect)
                 {
+                    var failDelay = 60 * LockDuration[Math.Min(LockDuration.Length - 1, db.Users.FailedConsecutive(user.user_id, ip))];
+                    if (accLock == null)
+                    {
+                        db.Users.NewFailedAuth(user.user_id, ip, (uint)failDelay);
+                    } else
+                    {
+                        var remaining = db.Users.FailedAuth(accLock.attempt_id, (uint)failDelay, LockAttempts);
+                        if (remaining == 0)
+                            return printError("INV-170", LOCK_MESSAGE + Epoch.HMSRemaining(Epoch.Now + (uint)failDelay))();
+                    }
                     return ERROR_110();
                 }
-
-                var ip = ApiUtils.GetIP(Request);
-
+                
                 var ban = db.Bans.GetByIP(ip);
                 if (ban != null)
                 {
                     return ERROR_110();
                 }
 
+                db.Users.SuccessfulAuth(user.user_id, ip);
                 db.Users.UpdateClientID(user.user_id, clientid ?? "0");
 
                 /** Make a ticket **/

@@ -197,6 +197,7 @@
     <Compile Include="DA\Updates\DbUpdateBranch.cs" />
     <Compile Include="DA\Updates\IUpdates.cs" />
     <Compile Include="DA\Updates\SqlUpdates.cs" />
+    <Compile Include="DA\Users\DbAuthAttempt.cs" />
     <Compile Include="DA\Users\IUsers.cs" />
     <Compile Include="DA\Users\SqlUsers.cs" />
     <Compile Include="DA\Users\User.cs" />

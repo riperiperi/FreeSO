@@ -33,7 +33,7 @@ namespace FSO.Server.Servers.Lot
         {
             this.Config = config;
             this.UnexpectedDisconnectWaitSeconds = 30;
-            this.TimeoutIfNoAuth = true;
+            this.TimeoutIfNoAuth = config.Timeout_No_Auth;
 
             Kernel.Bind<LotServerConfiguration>().ToConstant(Config);
             Kernel.Bind<LotHost>().To<LotHost>().InSingletonScope();
