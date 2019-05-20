@@ -436,6 +436,12 @@ namespace FSO.Client.UI.Panels
                 {
                     OnDelete(Holding, null);
                     ClearSelected();
+                } else if (state.KeyboardState.IsKeyDown(Keys.I))
+                {
+                    if (state.InputManager.GetFocus() == null)
+                    {
+                        MoveToInventory(null);
+                    }
                 }
             }
             if (Holding != null && Roommate)
