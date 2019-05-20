@@ -119,6 +119,11 @@ namespace FSO.Server.Database.DA.Lots
             return Context.Connection.Query<string>("SELECT name FROM fso_lots WHERE shard_id = @shard_id", new { shard_id = shard_id }).ToList();
         }
 
+        public DbLot GetByName(int shard_id, string name)
+        {
+            return Context.Connection.Query<DbLot>("SELECT * FROM fso_lots WHERE name = @name AND shard_id = @shard_id", new { name, shard_id = shard_id }).FirstOrDefault();
+        }
+
         public DbLot GetByLocation(int shard_id, uint location)
         {
             return Context.Connection.Query<DbLot>("SELECT * FROM fso_lots WHERE location = @location AND shard_id = @shard_id", new { location = location, shard_id = shard_id }).FirstOrDefault();

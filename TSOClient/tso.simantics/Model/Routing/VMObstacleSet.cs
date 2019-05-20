@@ -102,6 +102,18 @@ namespace FSO.SimAntics.Model.Routing
             else FreeList.Add(index);
         }
 
+        public List<VMObstacleSetNode> All()
+        {
+            var result = new List<VMObstacleSetNode>();
+            var free = new HashSet<int>(FreeList);
+            for (int i=0; i<PoolInd; i++)
+            {
+                if (free.Contains(i)) continue;
+                result.Add(Nodes[i]);
+            }
+            return result;
+        }
+
         public void Add(VMObstacle rect)
         {
             if (PoolInd >= Nodes.Length && FreeList.Count == 0) InitNodes(Nodes.Length * 2);

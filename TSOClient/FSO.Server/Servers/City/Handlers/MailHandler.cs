@@ -279,6 +279,12 @@ namespace FSO.Server.Servers.City.Handlers
         Failsafe = 32,
 
         NominationNotAcceptedSubject = 33,
-        NominationNotAccepted = 34
+        NominationNotAccepted = 34,
+
+        FreeVoteSubject = 35,
+        FreeVote = 36,
+
+        FreeVoteConfirmationSubject = 37,
+        FreeVoteConfirmation = 38
     }
 }

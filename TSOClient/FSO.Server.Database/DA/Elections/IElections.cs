@@ -1,4 +1,5 @@
-﻿using System;
+﻿using FSO.Server.Database.DA.Neighborhoods;
+using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Text;
@@ -10,6 +11,7 @@ namespace FSO.Server.Database.DA.Elections
     {
         DbElectionCycle GetCycle(uint cycle_id);
         DbElectionCandidate GetCandidate(uint avatar_id, uint cycle_id, DbCandidateState state);
+        List<DbElectionCycle> GetActiveCycles(int shard_id);
         List<DbElectionCandidate> GetCandidates(uint cycle_id, DbCandidateState state);
         List<DbElectionCandidate> GetCandidates(uint cycle_id);
         List<DbElectionVote> GetCycleVotes(uint cycle_id, DbElectionVoteType type);
@@ -30,6 +32,9 @@ namespace FSO.Server.Database.DA.Elections
 
         bool EmailRegistered(DbElectionCycleMail p);
         bool TryRegisterMail(DbElectionCycleMail p);
+
+        bool EnrollFreeVote(DbElectionFreeVote entry);
+        DbElectionFreeVote GetFreeVote(uint avatar_id);
 
         DbElectionWin FindLastWin(uint avatar_id);
     }

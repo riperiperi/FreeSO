@@ -260,6 +260,7 @@
     <Compile Include="Servers\UserApi\UserApi.cs" />
     <Compile Include="ToolImportNhood.cs" />
     <Compile Include="ToolInitDatabase.cs" />
+    <Compile Include="ToolRestoreLots.cs" />
     <Compile Include="ToolRunServer.cs" />
     <Compile Include="Servers\AbstractServer.cs" />
     <Compile Include="Utils\AutoUpdateUtility.cs" />

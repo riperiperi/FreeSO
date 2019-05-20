@@ -236,6 +236,14 @@
       "id": "1da5c115-35e3-4117-a2be-b874d0017700",
       "script": "changes/0025_updates.sql",
       "idempotent": false
+    },
+    {
+      "id": "64dfb448-1a52-45b7-be2f-056d8ddfd305",
+      "script": "changes/0026_freevote.sql",
+      "idempotent": false,
+      "requires": [
+        "3b87e93a-5fae-437b-8ba5-1e46ebb4cd15"
+      ]
     }
   ]
 }

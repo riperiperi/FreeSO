@@ -13,6 +13,10 @@ namespace FSO.Server.Database.DA.Elections
         public uint end_date { get; set; }
         public DbElectionCycleState current_state { get; set; }
         public DbElectionCycleType election_type { get; set; }
+
+        //for free vote
+        public string name { get; set; }
+        public int nhood_id { get; set; }
     }
 
     public enum DbElectionCycleState : byte

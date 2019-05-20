@@ -85,6 +85,9 @@
   <ItemGroup>
     <Compile Include="DatabaseConfiguration.cs" />
     <Compile Include="DatabaseModule.cs" />
+    <Content Include="DatabaseScripts\changes\0026_freevote.sql">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </Content>
     <Compile Include="DA\AbstractSqlDA.cs" />
     <Compile Include="DA\AuthTickets\AuthTicket.cs" />
     <Compile Include="DA\AuthTickets\IAuthTickets.cs" />
@@ -121,6 +124,7 @@
     <Compile Include="DA\Elections\DbElectionCandidate.cs" />
     <Compile Include="DA\Elections\DbElectionCycle.cs" />
     <Compile Include="DA\Elections\DbElectionCycleMail.cs" />
+    <Compile Include="DA\Elections\DbElectionFreeVote.cs" />
     <Compile Include="DA\Elections\DbElectionVote.cs" />
     <Compile Include="DA\Elections\DbMayorRating.cs" />
     <Compile Include="DA\Elections\IElections.cs" />
@@ -193,6 +197,7 @@
     <Compile Include="DA\Updates\DbUpdateBranch.cs" />
     <Compile Include="DA\Updates\IUpdates.cs" />
     <Compile Include="DA\Updates\SqlUpdates.cs" />
+    <Compile Include="DA\Users\DbAuthAttempt.cs" />
     <Compile Include="DA\Users\IUsers.cs" />
     <Compile Include="DA\Users\SqlUsers.cs" />
     <Compile Include="DA\Users\User.cs" />

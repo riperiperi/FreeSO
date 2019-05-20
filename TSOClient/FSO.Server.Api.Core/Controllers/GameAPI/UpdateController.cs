@@ -2,10 +2,12 @@
 using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
+using Microsoft.AspNetCore.Cors;
 using Microsoft.AspNetCore.Mvc;
 
 namespace FSO.Server.Api.Core.Controllers.GameAPI
 {
+    [EnableCors]
     [Route("userapi/update")]
     public class UpdateController : ControllerBase
     {

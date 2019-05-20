@@ -66,3 +66,16 @@ Until next month, have fun!^
 //player nominated but not accepted [sent once candidates are chosen] (nhood name, end date)
 33 ^Nomination not Accepted!^
 34 ^You were nominated multiple times, but did not accept to run for mayor of %s in time. You can still vote for any of the candidates, and help decide who will become Mayor on %s. ^
+
+//free-vote info
+35 ^Free Vote Enrollment^ (nhood name)
+36 ^Unfortunately, your neighborhood %s was not popular enough to have elections of its own... However, this means that your neighborhood is entirely neutral, meaning you are entitled to a Free Vote!
+
+A Free Vote allows you to vote for the mayor in one election, from any eligible neighborhood. This could be an election in a neighborhood that you visit often, or for a specific person you want to control a town hall for events and gatherings! Your vote won't count as much as someone who lives in that neighborhood, but it could still be enough to tip the scales in a candidate's favor, or get them on the ballot at all. Isn't democracy exciting?
+
+Click the button below to choose a neighborhood to free-vote in. Once you are signed up to a neighborhood's election, you will receive nomination and election ballots for that neighborhood. Note that you cannot change your election neighborhood until the next voting cycle!^
+
+37 ^Free Vote Confirmation^ (nhood name)
+38 ^Thank you for signing up for the Free Vote! Democracy would offer you a firm handshake, if it existed in any physical form.
+
+Nominations and Votes you cast in this election cycle will be for the neighborhood %s. Choose your candidates wisely!^

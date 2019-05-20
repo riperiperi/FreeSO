@@ -32,7 +32,7 @@ namespace FSO.Server.Api.Core
                 .UseUrls(args[0])
                 .ConfigureLogging(x =>
                 {
-                    x.SetMinimumLevel(LogLevel.Critical);
+                    x.SetMinimumLevel(LogLevel.None);
                 })
                 .UseKestrel(options =>
                 {

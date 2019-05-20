@@ -13,6 +13,7 @@ using FSO.Common.Enum;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.Extensions.Caching.Memory;
 using Microsoft.AspNetCore.Http;
+using Microsoft.AspNetCore.Cors;
 
 namespace FSO.Server.Api.Core.Controllers
 {
@@ -38,7 +39,8 @@ namespace FSO.Server.Api.Core.Controllers
             memoryCache.Remove(key);
         }
     }
-    
+
+    [EnableCors]
     [ApiController]
     public class LotInfoController : ControllerBase
     {
