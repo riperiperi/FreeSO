@@ -86,7 +86,7 @@ namespace FSO.Client.Regulators
                 .OnData(typeof(AriesDisconnected)).TransitionTo("UnexpectedDisconnect")
                 .OnData(typeof(FSOVMTickBroadcast)).TransitionTo("LotCommandStream")
                 .OnData(typeof(FSOVMDirectToClient)).TransitionTo("LotCommandStream")
-                .OnData(typeof(ServerByePDU)).TransitionTo("Disconnected");
+                .OnData(typeof(ServerByePDU)).TransitionTo("Disconnect");
 
             AddState("Reestablish")
                 .OnData(typeof(ServerByePDU)).TransitionTo("UnexpectedDisconnect")
@@ -294,7 +294,7 @@ namespace FSO.Client.Regulators
                     AsyncProcessMessage(message);
                 }
             }
-            else
+            else if (client == Client)
             {
                 if (message is RequestClientSession ||
                     message is HostOnlinePDU ||

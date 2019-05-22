@@ -96,6 +96,12 @@ namespace FSO.Server.Clients
 
         public void Connect(IPEndPoint target)
         {
+            if (Connector != null)
+            {
+                //dispose our old connector, if one is present.
+                Connector.Dispose();
+                Disconnect();
+            }
             Connector = new AsyncSocketConnector();
             Connector.ConnectTimeoutInMillis = 10000;
             //Connector.FilterChain.AddLast("logging", new LoggingFilter());
