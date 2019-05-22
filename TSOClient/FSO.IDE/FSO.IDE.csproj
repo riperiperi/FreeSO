@@ -399,6 +399,12 @@
     <Compile Include="ResourceBrowser\IFFResComponent.Designer.cs">
       <DependentUpon>IFFResComponent.cs</DependentUpon>
     </Compile>
+    <Compile Include="ResourceBrowser\ResourceEditors\OTFResourceControl.cs">
+      <SubType>UserControl</SubType>
+    </Compile>
+    <Compile Include="ResourceBrowser\ResourceEditors\OTFResourceControl.Designer.cs">
+      <DependentUpon>OTFResourceControl.cs</DependentUpon>
+    </Compile>
     <Compile Include="ResourceBrowser\XMLEntryEditor.cs">
       <SubType>UserControl</SubType>
     </Compile>
@@ -577,6 +583,9 @@
     </EmbeddedResource>
     <EmbeddedResource Include="ResourceBrowser\IffResourceViewer.resx">
       <DependentUpon>IffResourceViewer.cs</DependentUpon>
+    </EmbeddedResource>
+    <EmbeddedResource Include="ResourceBrowser\ResourceEditors\OTFResourceControl.resx">
+      <DependentUpon>OTFResourceControl.cs</DependentUpon>
     </EmbeddedResource>
     <EmbeddedResource Include="ResourceBrowser\XMLEntryEditor.resx">
       <DependentUpon>XMLEntryEditor.cs</DependentUpon>
