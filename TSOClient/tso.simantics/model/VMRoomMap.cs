@@ -419,7 +419,7 @@ namespace FSO.SimAntics.Model
                         if (door != null)
                         {
                             //ok... is is a portal to this room? block all sides that are not a portal to this room
-                            var otherSide = door.MultitileGroup.Objects.FirstOrDefault(o => context.GetObjectRoom(o) == room && o.EntryPoints[15].ActionFunction != 0);
+                            var otherSide = door.MultitileGroup.Objects.FirstOrDefault(o => context.GetObjectRoom(o) == room && o.Portal);
                             if (otherSide != null)
                             {
                                 //make a hole for this door

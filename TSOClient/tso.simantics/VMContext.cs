@@ -610,10 +610,10 @@ namespace FSO.SimAntics
                     footprint.Dynamic = roomInfo.DynamicObstacles;
                 }
 
-                if (obj.EntryPoints[15].ActionFunction != 0)
+                if (obj.Portal)
                 { //portal object
                     AddRoomPortal(obj, room);
-                } else if (((VMEntityFlags2)obj.GetValue(VMStackObjectVariable.FlagField2)).HasFlag(VMEntityFlags2.ArchitectualWindow))
+                } else if (obj.Window)
                 {
                     AddWindowPortal(obj, room);
                 }
@@ -810,7 +810,7 @@ namespace FSO.SimAntics
             foreach (var obj2 in obj.MultitileGroup.Objects)
             {
                 var room2 = GetObjectRoom(obj2);
-                if (obj != obj2 && room2 != room && obj2.EntryPoints[15].ActionFunction != 0)
+                if (obj != obj2 && room2 != room && obj2.Portal)
                 {
                     RoomInfo[room].Portals.Add(new VMRoomPortal(obj.ObjectID, room2));
                     break;
@@ -893,12 +893,12 @@ namespace FSO.SimAntics
                     footprint.Dynamic = roomInfo.DynamicObstacles;
                 }
 
-                if (obj.EntryPoints[15].ActionFunction != 0)
+                if (obj.Portal)
                 { //portal
                     AddRoomPortal(obj, room);
                     RegenRoomObs(room, obj.Position.Level); //the other portal side will call this on the other room, which is what we really affect.
                 }
-                else if (((VMEntityFlags2)obj.GetValue(VMStackObjectVariable.FlagField2)).HasFlag(VMEntityFlags2.ArchitectualWindow))
+                else if (obj.Window)
                 {
                     AddWindowPortal(obj, room);
                 }
@@ -939,12 +939,12 @@ namespace FSO.SimAntics
                 //unregister collision footprint (if present)
                 obj.Footprint?.Unregister();
 
-                if (obj.EntryPoints[15].ActionFunction != 0)
+                if (obj.Portal)
                 { //portal
                     RemoveRoomPortal(obj, room);
                     RegenRoomObs(room, obj.Position.Level); //the other portal side will call this on the other room, which is what we really affect.
                 }
-                else if (((VMEntityFlags2)obj.GetValue(VMStackObjectVariable.FlagField2)).HasFlag(VMEntityFlags2.ArchitectualWindow))
+                else if (obj.Window)
                     RemoveWindowPortal(obj, room);
                 if (obj.GetValue(VMStackObjectVariable.LightingContribution) > 0 || !obj.MovesOften)
                     DeferredLightingRefresh.Add(room); //RefreshLighting(room, true, new HashSet<ushort>())

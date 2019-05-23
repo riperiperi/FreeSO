@@ -128,6 +128,8 @@ namespace FSO.SimAntics
         public SLOT Slots;
         public OBJD MasterDefinition; //if this object is multitile, its master definition will be stored here.
         public OBJfFunctionEntry[] EntryPoints;  /** Entry points for specific events, eg. init, main, clean... **/
+        public bool Portal => EntryPoints[15].ActionFunction != 0;
+        public bool Window => ((VMEntityFlags2)GetValue(VMStackObjectVariable.FlagField2)).HasFlag(VMEntityFlags2.ArchitectualWindow);
         public virtual bool MovesOften
         {
             get
