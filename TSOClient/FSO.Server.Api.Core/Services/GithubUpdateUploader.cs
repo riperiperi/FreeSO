@@ -32,7 +32,14 @@ namespace FSO.Server.Api.Core.Services
             var client = new GitHubClient(new ProductHeaderValue(Config.AppName), credentials);
 
             Release release;
-            release = await client.Repository.Release.Get(Config.User, Config.Repository, groupName);
+            try
+            {
+                release = await client.Repository.Release.Get(Config.User, Config.Repository, groupName);
+            }
+            catch (Exception)
+            {
+                release = null;
+            }
             if (release == null) {
                 var newRel = new NewRelease(groupName);
                 newRel.Body = Description;
