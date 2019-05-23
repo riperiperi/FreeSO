@@ -61,6 +61,8 @@ namespace FSO.SimAntics
             }
         }
 
+        public static string TestBinding;
+
         public bool IsServer
         {
             get { return GlobalLink != null; }
