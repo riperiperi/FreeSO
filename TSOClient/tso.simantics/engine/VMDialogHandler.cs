@@ -84,9 +84,10 @@ namespace FSO.SimAntics.Engine
                 else
                 {
                     command.Append(input[i]);
-                    if (i == input.Length - 1 || !CommandSubstrValid(command.ToString()))
+                    var invalid = !CommandSubstrValid(command.ToString());
+                    if (i == input.Length - 1 || invalid)
                     {
-                        if (i != input.Length - 1 || char.IsDigit(input[i]))
+                        if (invalid || char.IsDigit(input[i]))
                         {
                             command.Remove(command.Length - 1, 1);
                             i--;
