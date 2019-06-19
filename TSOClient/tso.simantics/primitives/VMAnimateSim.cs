@@ -33,6 +33,11 @@ namespace FSO.SimAntics.Engine.Primitives
 
             if (id == 0)
             { //reset
+                if (operand.Mode == 3)
+                {
+                    avatar.CarryAnimationState = null;
+                    return VMPrimitiveExitCode.GOTO_TRUE;
+                }
                 avatar.Animations.Clear();
                 var posture = avatar.GetPersonData(VMPersonDataVariable.Posture);
 

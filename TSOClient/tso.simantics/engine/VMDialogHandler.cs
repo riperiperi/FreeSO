@@ -23,7 +23,7 @@ namespace FSO.SimAntics.Engine
         private static string[] valid = {
             "Object", "Me", "TempXL:", "Temp:", "$", "Attribute:", "DynamicStringLocal:", "Local:", "TimeLocal:", "NameLocal:",
             "FixedLocal:", "DynamicObjectName", "MoneyXL:", "JobOffer:", "Job:", "JobDesc:", "Param:", "Neighbor", "\r\n", "ListObject",
-            "CatalogLocal:", "DateLocal:", "\\n"
+            "CatalogLocal:", "DateLocal:", "ObjectLocal:", "\\n"
         };
 
         public static void ShowDialog(VMStackFrame context, VMDialogOperand operand, STR source)
@@ -219,6 +219,8 @@ namespace FSO.SimAntics.Engine
                                     output.Append(mins.ToString().PadLeft(2, '0'));
                                     output.Append(suffix);
                                     break;
+                                case "ObjectLocal:":
+                                    output.Append(context.VM.GetObjectById(VMMemory.GetVariable(context, Scopes.VMVariableScope.Local, values[0]))?.ToString() ?? ""); break;
                                 case "JobOffer:":
                                     output.Append(Content.Content.Get().Jobs.JobOffer(
                                         (short)VMMemory.GetBigVariable(context, Scopes.VMVariableScope.Local, values[0]),

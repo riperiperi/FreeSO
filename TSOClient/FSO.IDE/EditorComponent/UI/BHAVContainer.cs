@@ -241,6 +241,11 @@ namespace FSO.IDE.EditorComponent.UI
                 child.ShadDraw(batch);
             }
 
+            foreach (var child in Primitives)
+            {
+                child.NodeDraw(batch);
+            }
+
             base.Draw(batch);
         }
 

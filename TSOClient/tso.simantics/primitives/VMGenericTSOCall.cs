@@ -366,6 +366,12 @@ namespace FSO.SimAntics.Primitives
                         (context.StackObject as VMAvatar)?.SetPersonData(VMPersonDataVariable.NonInterruptable, 0);
                     }
 
+                    //if we're in the idle interaction, END IT INSTANTLY.
+                    if (sthread.ActiveAction?.Mode == VMQueueMode.Idle)
+                    {
+                        sthread.AbortCurrentInteraction();
+                    }
+
                     var actionClone = new List<VMQueuedAction>(sthread.Queue);
                     foreach (var action in actionClone)
                     {
@@ -379,6 +385,10 @@ namespace FSO.SimAntics.Primitives
                 case VMGenericTSOCallMode.FSOMarkDonated:
                     var ostate = (context.StackObject?.TSOState as VMTSOObjectState);
                     if (ostate != null) ostate.ObjectFlags |= VMTSOObjectFlags.FSODonated;
+                    return VMPrimitiveExitCode.GOTO_TRUE;
+                case VMGenericTSOCallMode.FSOAccurateDirectionInTemp0:
+                    var dir = (short)((context.StackObject.RadianDirection / Math.PI) * 32767);
+                    context.Thread.TempRegisters[0] = dir;
                     return VMPrimitiveExitCode.GOTO_TRUE;
                 default:
                     return VMPrimitiveExitCode.GOTO_TRUE;

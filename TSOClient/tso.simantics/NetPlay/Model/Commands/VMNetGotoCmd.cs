@@ -17,6 +17,7 @@ namespace FSO.SimAntics.NetPlay.Model.Commands
     public class VMNetGotoCmd : VMNetCommandBodyAbstract
     {
         public ushort Interaction;
+        public short Param0;
 
         public short x;
         public short y;
@@ -31,7 +32,7 @@ namespace FSO.SimAntics.NetPlay.Model.Commands
             VMEntity callee = vm.Context.CreateObjectInstance(GOTO_GUID, new LotTilePos(x, y, level), Direction.NORTH).Objects[0];
             if (callee?.Position == LotTilePos.OUT_OF_WORLD) callee.Delete(true, vm.Context);
             if (callee == null) return false;
-            callee.PushUserInteraction(Interaction, caller, vm.Context, false);
+            callee.PushUserInteraction(Interaction, caller, vm.Context, false, new short[] { Param0, 0, 0, 0 });
 
             return true;
         }
@@ -42,6 +43,7 @@ namespace FSO.SimAntics.NetPlay.Model.Commands
         {
             base.SerializeInto(writer);
             writer.Write(Interaction);
+            writer.Write(Param0);
             writer.Write(x);
             writer.Write(y);
             writer.Write(level);
@@ -51,6 +53,7 @@ namespace FSO.SimAntics.NetPlay.Model.Commands
         {
             base.Deserialize(reader);
             Interaction = reader.ReadUInt16();
+            Param0 = reader.ReadInt16();
             x = reader.ReadInt16();
             y = reader.ReadInt16();
             level = reader.ReadSByte();

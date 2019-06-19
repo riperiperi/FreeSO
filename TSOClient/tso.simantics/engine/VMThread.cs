@@ -241,6 +241,41 @@ namespace FSO.SimAntics.Engine
             }
         }
 
+        private void EndCurrentInteraction()
+        {
+            QueueDirty = true;
+            var interaction = Queue[ActiveQueueBlock];
+            //clear "interaction cancelled" since we are leaving the interaction
+            if (interaction.Mode != VMQueueMode.ParentIdle) Entity.SetFlag(VMEntityFlags.InteractionCanceled, false);
+            if (interaction.Callback != null) interaction.Callback.Run(Entity);
+            if (Queue.Count > 0) Queue.RemoveAt(ActiveQueueBlock);
+            if (Entity is VMAvatar && !IsCheck && ActiveQueueBlock == 0)
+            {
+                //some things are reset when an interaction ends
+                //motive deltas reset between interactions
+                ((VMAvatar)Entity).SetPersonData(VMPersonDataVariable.NonInterruptable, 0); //verified in ts1
+                ((VMAvatar)Entity).ClearMotiveChanges();
+            }
+            ContinueExecution = true; //continue where the Allow Push idle left off
+            ActiveQueueBlock--;
+            if (ActiveQueueBlock > -1) Queue[ActiveQueueBlock].Cancelled = interaction.Cancelled;
+        }
+
+        public void AbortCurrentInteraction()
+        {
+            //go all the way back to the stack frame that Allow Push'd us.
+            var returnTo = Stack.FindLast(x => x.DiscardResult);
+            if (returnTo != null)
+            {
+                var ind = Stack.IndexOf(returnTo);
+                while (Stack.Count > ind)
+                {
+                    Stack.RemoveAt(Stack.Count-1);
+                }
+                EndCurrentInteraction();
+            }
+        }
+
         public void Tick(){
 #if IDE_COMPAT
             if (ThreadBreak == VMThreadBreakMode.Pause) return;
@@ -638,22 +673,8 @@ namespace FSO.SimAntics.Engine
 
             if (discardResult) //interaction switching back to main (it cannot be the other way...)
             {
-                QueueDirty = true;
                 var interaction = Queue[ActiveQueueBlock];
-                //clear "interaction cancelled" since we are leaving the interaction
-                if (interaction.Mode != VMQueueMode.ParentIdle) Entity.SetFlag(VMEntityFlags.InteractionCanceled, false);
-                if (interaction.Callback != null) interaction.Callback.Run(Entity);
-                if (Queue.Count > 0) Queue.RemoveAt(ActiveQueueBlock);
-                if (Entity is VMAvatar && !IsCheck && ActiveQueueBlock == 0)
-                {
-                    //some things are reset when an interaction ends
-                    //motive deltas reset between interactions
-                    ((VMAvatar)Entity).SetPersonData(VMPersonDataVariable.NonInterruptable, 0); //verified in ts1
-                    ((VMAvatar)Entity).ClearMotiveChanges();
-                }
-                ContinueExecution = true; //continue where the Allow Push idle left off
-                ActiveQueueBlock--;
-                if (ActiveQueueBlock > -1) Queue[ActiveQueueBlock].Cancelled = interaction.Cancelled;
+                EndCurrentInteraction();
                 result = (!interaction.Flags.HasFlag(TTABFlags.RunImmediately)) ? VMPrimitiveExitCode.CONTINUE_NEXT_TICK : VMPrimitiveExitCode.CONTINUE;
             }
             if (Stack.Count > 0)

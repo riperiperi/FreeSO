@@ -16,6 +16,7 @@ using FSO.LotView.Components;
 using FSO.LotView.LMap;
 using FSO.Common.Utils;
 using FSO.Vitaboy;
+using FSO.Common;
 
 namespace FSO.LotView
 {
@@ -26,6 +27,8 @@ namespace FSO.LotView
     {
         private World World;
         public GraphicsDevice Device;
+        public float FramePerDraw;
+        public int FramesSinceLastDraw;
 
         /// <summary>
         /// Creates a new WorldState instance.
@@ -39,12 +42,19 @@ namespace FSO.LotView
             this.Device = device;
             this.World = world;
             this.WorldCamera = new WorldCamera(device);
+            this.FramePerDraw = 30f/FSOEnvironment.RefreshRate;
             WorldCamera.ViewDimensions = new Vector2(worldPxWidth, worldPxHeight);
             Rooms = new GPURoomMaps(device);
             WorldSpace = new WorldSpace(worldPxWidth, worldPxHeight, this);
             Zoom = WorldZoom.Near;
             Rotation = WorldRotation.TopLeft;
             Level = 1;
+        }
+
+        public void UpdateInterpolation()
+        {
+            FramePerDraw = (30f * FramesSinceLastDraw * SimSpeed) / FSOEnvironment.RefreshRate;
+            FramesSinceLastDraw = 0;
         }
 
         public virtual void SetDimensions(Vector2 dim)

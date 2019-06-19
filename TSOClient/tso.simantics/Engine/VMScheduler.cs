@@ -24,6 +24,7 @@ namespace FSO.SimAntics.Engine
         public void ScheduleTickIn(VMEntity ent, uint delay)
         {
             if (delay > 1 && ent.RunEveryFrame()) delay = 1;
+            if (VM.UseWorld) ent.WorldUI.IdleFrames = (int)delay;
             ScheduleTick(ent, CurrentTickID + delay);
         }
 

@@ -59,14 +59,20 @@ namespace FSO.Server.Servers.City.Domain
 
         public void UserJoined(IVoltronSession session)
         {
-            //common info used by most requests
             using (var da = DAFactory.Get())
             {
                 var myLotID = da.Roommates.GetAvatarsLots(session.AvatarId).FirstOrDefault();
                 var myLot = (myLotID == null) ? null : da.Lots.Get(myLotID.lot_id);
                 if (myLot != null)
                 {
-                    var myNeigh = da.Neighborhoods.Get(myLot.neighborhood_id);
+                    var free = da.Elections.GetFreeVote(session.AvatarId);
+                    var nhoodID = (int)(myLot?.neighborhood_id ?? 0);
+                    if (free != null)
+                    {
+                        nhoodID = free.neighborhood_id; //enrolled to a free vote. receive vote mail for that neighborhood
+                    }
+
+                    var myNeigh = da.Neighborhoods.Get((uint)nhoodID);
                     if (myNeigh != null && myNeigh.election_cycle_id != null)
                     {
                         var curCycle = da.Elections.GetCycle(myNeigh.election_cycle_id.Value);

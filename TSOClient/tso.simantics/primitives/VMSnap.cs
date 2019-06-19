@@ -31,7 +31,11 @@ namespace FSO.SimAntics.Primitives
             var operand = (VMSnapOperand)args;
             var avatar = context.Caller; //todo, can sometimes be an object?? see roaches object tile movement, snaps to its own routing slot
             var obj = context.StackObject;
-            if (obj == context.Caller) obj.MovedSelf = true;
+            if (obj == context.Caller)
+            {
+                obj.MovedSelf = true;
+                if (obj is VMGameObject) obj.WorldUI?.PrepareSnapInterpolation();
+            }
 
             if (operand.OriginOnly) { } //origin only. unused?
 

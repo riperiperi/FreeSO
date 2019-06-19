@@ -1,4 +1,5 @@
 ﻿using FSO.Server.Database;
+using FSO.Server.Discord;
 using FSO.Server.Servers.Api;
 using FSO.Server.Servers.Api.JsonWebToken;
 using FSO.Server.Servers.City;
@@ -24,7 +25,7 @@ namespace FSO.Server
 
         public DatabaseConfiguration Database;
         public ServerConfigurationservices Services;
-
+        public DiscordConfiguration Discord;
 
         /// <summary>
         /// Secret string used as a key for signing JWT tokens for the admin system

@@ -134,7 +134,11 @@ namespace FSO.SimAntics
         {
             get
             {
-                if (Container != null && Container is VMAvatar) return true;
+                if (Container != null)
+                {
+                    if (Container is VMAvatar) return true;
+                    return Container.MovesOften;
+                }
                 if (Slots == null) return false;
                 if (!Slots.Slots.ContainsKey(3)) return false;
                 var slots = Slots.Slots[3];

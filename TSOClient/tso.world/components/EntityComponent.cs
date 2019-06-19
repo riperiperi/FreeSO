@@ -62,7 +62,17 @@ namespace FSO.LotView.Components
         {
             get
             {
-                if (Container == null) return _Position;
+                if (Container == null)
+                {
+                    if (_IdleFramesPct <= 0)
+                    {
+                        return _Position;
+                    }
+                    else
+                    {
+                        return Vector3.Lerp(_Position, SnapSelfPrevious, _IdleFramesPct);
+                    }
+                }
                 else return Container.GetSLOTPosition(ContainerSlot, false);
             }
             set
@@ -72,6 +82,40 @@ namespace FSO.LotView.Components
                 OnPositionChanged();
                 _WorldDirty = true;
             }
+        }
+
+        protected int _IdleFrames;
+        protected float _IdleFramesPct;
+        public int IdleFrames
+        {
+            set
+            {
+                if (value < 20)
+                {
+                    _IdleFrames = value;
+                } else
+                {
+                    if (_IdleFramesPct < -3) _IdleFrames = 0;
+                }
+            }
+            get {
+                return _IdleFrames;
+            }
+        }
+        public Vector3 SnapSelfPrevious;
+
+        public void PrepareSnapInterpolation()
+        {
+            if (_Position != SnapSelfPrevious)
+            {
+                _IdleFramesPct = 1f;
+                SnapSelfPrevious = _Position;
+            }
+        }
+
+        public void PrepareSlotInterpolation()
+        {
+            //unimplemented
         }
 
         public Vector3 UnmoddedPosition

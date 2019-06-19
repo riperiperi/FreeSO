@@ -409,6 +409,7 @@ namespace FSO.LotView
         public override void Update(UpdateState state)
         {
             base.Update(state);
+            State.FramesSinceLastDraw++;
 
             if (Blueprint != null)
             {
@@ -478,6 +479,7 @@ namespace FSO.LotView
             State.OutsideColor = Blueprint.OutsideColor;
             FSO.Common.Rendering.Framework.GameScreen.ClearColor = new Color(new Color(0x72, 0x72, 0x72).ToVector4() * State.OutsideColor.ToVector4());
             foreach (var sub in Blueprint.SubWorlds) sub.PreDraw(device, State);
+            State.UpdateInterpolation();
             if (Blueprint != null)
             {
                 foreach (var ent in Blueprint.Objects)

@@ -75,7 +75,7 @@ namespace FSO.LotView.Components
             if (item != null)
             {
                 var off = item.Offset;
-                var centerRelative = new Vector3(off.X * (1 / 16.0f), off.Y * (1 / 16.0f), ((item.Height != 5) ? SLOT.HeightOffsets[item.Height - 1] : off.Z) * (1 / 5.0f));
+                var centerRelative = new Vector3(off.X * (1 / 16.0f), off.Y * (1 / 16.0f), ((item.Height != 5 && item.Height != 0) ? SLOT.HeightOffsets[item.Height - 1] : off.Z) * (1 / 5.0f));
                 centerRelative = Vector3.Transform(centerRelative, Matrix.CreateRotationZ(RadianDirection));
                 if (avatar) centerRelative.Z = 0;
                 return this.Position + centerRelative;
@@ -293,6 +293,16 @@ namespace FSO.LotView.Components
                 if (blueprint != null && renderInfo.Layer == WorldObjectRenderLayer.STATIC) blueprint.Damage.Add(new BlueprintDamage(BlueprintDamageType.OBJECT_GRAPHIC_CHANGE, TileX, TileY, Level, this));
                 DynamicCounter = 0; //keep windows and doors on the top floor on the dynamic layer.
             }
+
+            if (IdleFrames > 0)
+            {
+                if (_IdleFramesPct > -3)
+                {
+                    _IdleFramesPct -= world.FramePerDraw / IdleFrames;
+                    _WorldDirty = true;
+                }
+            }
+            else _IdleFramesPct = 0;
 
             if (HideForCutaway && Level > 0)
             {

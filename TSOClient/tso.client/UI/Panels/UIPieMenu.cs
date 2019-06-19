@@ -346,6 +346,7 @@ namespace FSO.Client.UI.Panels
                     m_Parent.vm.SendCommand(new VMNetGotoCmd
                     {
                         Interaction = action.ID,
+                        Param0 = action.Param0,
                         ActorUID = m_Caller.PersistID,
                         x = m_Obj.Position.x,
                         y = m_Obj.Position.y,
