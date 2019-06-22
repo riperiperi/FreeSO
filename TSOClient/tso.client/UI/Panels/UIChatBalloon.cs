@@ -9,6 +9,7 @@ using FSO.Common.Rendering.Framework.Model;
 using FSO.Client.UI.Controls;
 using FSO.SimAntics;
 using FSO.SimAntics.Model.TSOPlatform;
+using FSO.Common.Utils;
 //using System.Speech.Synthesis;
 
 namespace FSO.Client.UI.Panels
@@ -94,7 +95,7 @@ namespace FSO.Client.UI.Panels
 
         private string SanitizeBB(string input)
         {
-            return input.Replace("[", "\\[");
+            return BBCodeParser.SanitizeBB(input);
         }
 
         private void TextChanged()

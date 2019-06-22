@@ -11,6 +11,7 @@ using FSO.Common.Rendering.Framework.Model;
 using FSO.Common.Rendering.Framework.IO;
 using FSO.SimAntics.Model.TSOPlatform;
 using FSO.Client.UI.Panels.Chat;
+using FSO.Common.Utils;
 
 namespace FSO.Client.UI.Panels
 {
@@ -359,7 +360,7 @@ namespace FSO.Client.UI.Panels
 
         public string SanitizeBB(string input)
         {
-            return input.Replace("[", "\\[");
+            return BBCodeParser.SanitizeBB(input);
         }
 
         public string CleanUserMessage(string msg, VMChatEvent evt)
