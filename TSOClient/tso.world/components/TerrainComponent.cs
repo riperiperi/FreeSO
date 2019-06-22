@@ -18,6 +18,7 @@ using FSO.Content.Model;
 using FSO.Common;
 using FSO.Common.Utils;
 using FSO.LotView.LMap;
+using FSO.Common.Model;
 
 namespace FSO.LotView.Components
 {
@@ -77,17 +78,32 @@ namespace FSO.LotView.Components
             //TODO: tie to tuning, or serverside weather system.
             LightType = light;
             DarkType = dark;
-            //ForceSnow();
+
+            //special tuning from server
+            var forceSnow = DynamicTuning.Global?.GetTuning("city", 0, 0);
+            if (forceSnow != null) ForceSnow(forceSnow > 0);
+
             GrassState = grass;
             GroundHeight = heights;
             UpdateLotType();
             TerrainDirty = true;
         }
 
-        public void ForceSnow()
+        public void ForceSnow(bool toGrass)
         {
-            if (LightType == TerrainType.GRASS || LightType == TerrainType.SAND) LightType = TerrainType.SNOW;
-            if (DarkType == TerrainType.SAND) DarkType = TerrainType.SNOW;
+            if (toGrass)
+            {
+                if (LightType == TerrainType.SNOW)
+                {
+                    LightType = TerrainType.GRASS;
+                    if (DarkType == TerrainType.SNOW) DarkType = TerrainType.GRASS;
+                }
+            }
+            else
+            {
+                if (LightType == TerrainType.GRASS || LightType == TerrainType.SAND) LightType = TerrainType.SNOW;
+                if (DarkType == TerrainType.SAND) DarkType = TerrainType.SNOW;
+            }
         }
 
         public void UpdateLotType()

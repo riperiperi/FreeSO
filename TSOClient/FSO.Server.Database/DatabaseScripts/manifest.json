@@ -244,6 +244,14 @@
       "requires": [
         "3b87e93a-5fae-437b-8ba5-1e46ebb4cd15"
       ]
+    },
+    {
+      "id": "2b6e2b3f-81af-4f23-8a69-2428debcfcc5",
+      "script": "changes/0027_tuning_presets.sql",
+      "idempotent": false,
+      "requires": [
+        "b21e29a1-8c25-465e-aa43-c7a0d6f44fb8"
+      ]
     }
   ]
 }

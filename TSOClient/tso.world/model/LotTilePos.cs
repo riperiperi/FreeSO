@@ -129,6 +129,11 @@ namespace FSO.LotView.Model
             return new Point(x, y);
         }
 
+        public override string ToString()
+        {
+            return $"({x}, {y}, {Level})";
+        }
+
         public static LotTilePos OUT_OF_WORLD = new LotTilePos(-32768, -32768, 1);
 
         public void Deserialize(BinaryReader reader)

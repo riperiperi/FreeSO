@@ -6,6 +6,7 @@ using FSO.Common.DatabaseService;
 using FSO.Common.DatabaseService.Model;
 using FSO.Common.DataService;
 using FSO.Common.Domain.Shards;
+using FSO.Common.Model;
 using FSO.Common.Utils;
 using FSO.Server.Clients;
 using FSO.Server.Clients.Framework;
@@ -402,13 +403,15 @@ namespace FSO.Client.Regulators
         public void MessageReceived(AriesClient client, object message)
         {
 
-            if (message is RequestClientSession || 
-                message is HostOnlinePDU || message is ServerByePDU){
+            if (message is RequestClientSession ||
+                message is HostOnlinePDU || message is ServerByePDU)
+            {
                 this.AsyncProcessMessage(message);
             }
             else if (message is AnnouncementMsgPDU)
             {
-                GameThread.InUpdate(() => {
+                GameThread.InUpdate(() =>
+                {
                     var msg = (AnnouncementMsgPDU)message;
                     UIAlert alert = null;
                     alert = UIScreen.GlobalShowAlert(new UIAlertOptions()
@@ -421,7 +424,12 @@ namespace FSO.Client.Regulators
                         Alignment = TextAlignment.Left
                     }, true);
                 });
-            } else if (message is ChangeRoommateResponse)
+            }
+            else if (message is GlobalTuningUpdate)
+            {
+                DynamicTuning.Global = (message as GlobalTuningUpdate).Tuning;
+            }
+            else if (message is ChangeRoommateResponse)
             {
 
             }

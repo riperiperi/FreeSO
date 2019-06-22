@@ -142,6 +142,7 @@ namespace FSO.SimAntics
                 if (Slots == null) return false;
                 if (!Slots.Slots.ContainsKey(3)) return false;
                 var slots = Slots.Slots[3];
+                if (slots.Count > 20) return true;
                 return MovedSelf;
             }
         }

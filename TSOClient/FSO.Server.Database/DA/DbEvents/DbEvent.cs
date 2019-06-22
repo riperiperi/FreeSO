@@ -20,6 +20,12 @@ namespace FSO.Server.Database.DA.DbEvents
         public string mail_message { get; set; }
         public int? mail_sender { get; set; }
         public string mail_sender_name { get; set; }
+
+        public string type_str {
+            get {
+                return type.ToString();
+            }
+        }
     }
 
     public class DbEventParticipation

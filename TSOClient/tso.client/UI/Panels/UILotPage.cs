@@ -200,7 +200,7 @@ namespace FSO.Client.UI.Panels
                         case LotCategory.community:
                             return HouseCategory_CommunityButtonImage;
                         default:
-                            return null;
+                            return HouseCategory_CommunityButtonImage;
                     }
                 }).WithBinding(HouseCategoryButton, "Position", "Lot_Category", x =>
                 {

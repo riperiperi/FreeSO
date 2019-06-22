@@ -903,7 +903,7 @@ namespace FSO.SimAntics
                     AddWindowPortal(obj, room);
                 }
                 obj.SetRoom(room);
-                if (obj.GetValue(VMStackObjectVariable.LightingContribution) > 0 || !obj.MovesOften)
+                if ((obj.GetValue(VMStackObjectVariable.LightingContribution) > 0 || !obj.MovesOften) && obj.GetValue(VMStackObjectVariable.Hidden) == 0)
                     DeferredLightingRefresh.Add(room);
                 else if (obj.GetValue(VMStackObjectVariable.RoomImpact) > 0)
                     RefreshRoomScore(room);

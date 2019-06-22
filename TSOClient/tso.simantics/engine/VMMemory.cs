@@ -578,7 +578,7 @@ namespace FSO.SimAntics.Engine.Utils
                 case VMOBJDVariable.TileWidth:
                     return (short)objd.TileWidth;
                 case VMOBJDVariable.LotCategories:
-                    return 0; //NOT IN OBJD RIGHT NOW!
+                    return (short)objd.LotCategories; 
                 case VMOBJDVariable.BuildModeType:
                     return (short)objd.BuildModeType;
                 case VMOBJDVariable.OriginalGUID1:

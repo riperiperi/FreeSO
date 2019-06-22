@@ -72,6 +72,7 @@ namespace FSO.Server.Servers.City
             Kernel.Bind<LotServerPicker>().To<LotServerPicker>().InSingletonScope();
             Kernel.Bind<LotAllocations>().To<LotAllocations>().InSingletonScope();
             Kernel.Bind<Neighborhoods>().ToSelf().InSingletonScope();
+            Kernel.Bind<Tuning>().ToSelf().InSingletonScope();
 
             Liveness = Kernel.Get<CityLivenessEngine>();
 

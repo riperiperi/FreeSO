@@ -47,8 +47,16 @@ namespace FSO.Server.Api.Core.Services
             }
 
             using (var file = File.Open(fileName, System.IO.FileMode.Open, FileAccess.Read, FileShare.Read)) {
-                var asset = await client.Repository.Release.UploadAsset(release, new ReleaseAssetUpload(destPath, "application/zip", file, new TimeSpan(1, 0, 0)));
-                return asset.BrowserDownloadUrl;
+                try
+                {
+                    var asset = await client.Repository.Release.UploadAsset(release, new ReleaseAssetUpload(destPath, "application/zip", file, null));
+                    return asset.BrowserDownloadUrl;
+                } catch (Exception e)
+                {
+                    //last time i tried, it mysteriously failed here but the file was uploaded :thinking:
+                    Console.WriteLine($"!! Upload request for {destPath} failed, check it actually succeeded !! \n" + e.ToString());
+                    return $"https://github.com/{Config.User}/{Config.Repository}/releases/download/{groupName}/{destPath}";
+                }
             }
         }
     }

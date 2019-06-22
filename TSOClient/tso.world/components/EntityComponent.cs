@@ -73,7 +73,19 @@ namespace FSO.LotView.Components
                         return Vector3.Lerp(_Position, SnapSelfPrevious, _IdleFramesPct);
                     }
                 }
-                else return Container.GetSLOTPosition(ContainerSlot, false);
+                else
+                {
+                    if (_IdleFramesPct <= 0 || PreviousSlotOffset == null)
+                    {
+                        return Container.GetSLOTPosition(ContainerSlot, false);
+                    } else
+                    {
+                        var oldP = Container.Position + PreviousSlotOffset.Value;
+                        var newP = Container.GetSLOTPosition(ContainerSlot, false);
+                        if (Vector3.Distance(oldP, newP) > 1.5) oldP = newP;
+                        return Vector3.Lerp(newP, oldP, _IdleFramesPct);
+                    }
+                }
             }
             set
             {
@@ -110,12 +122,24 @@ namespace FSO.LotView.Components
             {
                 _IdleFramesPct = 1f;
                 SnapSelfPrevious = _Position;
+                PreviousSlotOffset = null;
             }
         }
 
+        public Vector3? PreviousSlotOffset;
+
         public void PrepareSlotInterpolation()
         {
-            //unimplemented
+            _IdleFramesPct = 1f;
+            SnapSelfPrevious = _Position;
+            if (Container != null)
+            {
+                PreviousSlotOffset = Container.GetSLOTPosition(ContainerSlot, false) - Container.Position;
+            }
+            else
+            {
+                PreviousSlotOffset = null;
+            }
         }
 
         public Vector3 UnmoddedPosition

@@ -89,6 +89,7 @@ namespace FSO.IDE.ResourceBrowser
                 { CatGames, new PropFlagCombo("LotCategories", 8) },
                 { CatEntertainment, new PropFlagCombo("LotCategories", 9) },
                 { CatResidence, new PropFlagCombo("LotCategories", 10) },
+                { CatCommunity, new PropFlagCombo("LotCategories", 11) },
                 { SklCooking, new PropFlagCombo("RatingSkillFlags", 0) },
                 { SklMechanical, new PropFlagCombo("RatingSkillFlags", 1) },
                 { SklLogic, new PropFlagCombo("RatingSkillFlags", 2) },

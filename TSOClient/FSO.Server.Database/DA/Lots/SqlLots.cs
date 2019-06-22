@@ -111,7 +111,7 @@ namespace FSO.Server.Database.DA.Lots
 
         public List<uint> GetCommunityLocations(int shard_id)
         {
-            return Context.Connection.Query<uint>("SELECT location FROM fso_lots WHERE shard_id = @shard_id AND category = 'community'", new { shard_id = shard_id }).ToList();
+            return Context.Connection.Query<uint>("SELECT location FROM fso_lots WHERE shard_id = @shard_id AND (category = 'community' OR category = 'recent')", new { shard_id = shard_id }).ToList();
         }
 
         public List<string> AllNames(int shard_id)

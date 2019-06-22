@@ -118,17 +118,20 @@ namespace FSO.Server.Utils
 
         public IEnumerable<IGluonHost> GetByRole(DbHostRole role)
         {
-            return Pool.Values.Where(x => x.Role == role);
+            lock (Pool)
+                return Pool.Values.Where(x => x.Role == role).ToList();
         }
 
         public IEnumerable<IGluonHost> GetAll()
         {
-            return Pool.Values;
+            lock (Pool)
+                return Pool.Values.ToList();
         }
 
         public IGluonHost GetByShardId(int shard_id)
         {
-            return Pool.Values.FirstOrDefault(x => x.ShardId == shard_id);
+            lock (Pool)
+                return Pool.Values.FirstOrDefault(x => x.ShardId == shard_id);
         }
     }
 

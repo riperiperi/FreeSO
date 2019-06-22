@@ -26,9 +26,10 @@ namespace FSO.Server.Servers.City.Handlers
         private CityLivenessEngine Liveness;
         private EventSystem Events;
         private Neighborhoods Neigh;
+        private Tuning TuningDomain;
 
         public VoltronConnectionLifecycleHandler(ISessions sessions, IDataService dataService, IDAFactory da, CityServerContext context, LotServerPicker lotServers, CityLivenessEngine engine,
-            EventSystem events, Neighborhoods neigh)
+            EventSystem events, Neighborhoods neigh, Tuning tuning)
         {
             this.VoltronSessions = sessions.GetOrCreateGroup(Groups.VOLTRON);
             this.Sessions = sessions;
@@ -39,6 +40,7 @@ namespace FSO.Server.Servers.City.Handlers
             this.Liveness = engine;
             this.Events = events;
             this.Neigh = neigh;
+            this.TuningDomain = tuning;
         }
 
         public void Handle(IVoltronSession session, ClientByePDU packet)
@@ -131,6 +133,7 @@ namespace FSO.Server.Servers.City.Handlers
             VoltronSessions.Enroll(newSession);
             Events.UserJoined(voltronSession);
             Neigh.UserJoined(voltronSession);
+            TuningDomain.UserJoined(voltronSession);
 
             //TODO: Somehow alert people this sim is online?
         }

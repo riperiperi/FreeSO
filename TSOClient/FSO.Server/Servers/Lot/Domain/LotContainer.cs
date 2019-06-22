@@ -797,6 +797,19 @@ namespace FSO.Server.Servers.Lot.Domain
             }
         }
 
+        public void UpdateTuning(IEnumerable<DynTuningEntry> tuning)
+        {
+            Tuning = new DynamicTuning(tuning);
+            if (Lot == null) return;
+            if (Lot.Tuning == null || (Lot.Tuning.GetTuning("forcedTuning", 0, 0) ?? 0f) == 0f)
+            {
+                Lot.ForwardCommand(new VMNetTuningCmd()
+                {
+                    Tuning = Tuning
+                });
+            }
+        }
+
         private static uint PAYPHONE_GUID = 0x313D2F9A;
         private static uint NHOOD_PAYPHONE_GUID = 0x303CD603;
         private static uint NHOOD_BULLETIN_GUID = 0x4B489F30;

@@ -4,6 +4,7 @@ using FSO.Server.Framework.Aries;
 using FSO.Server.Framework.Voltron;
 using FSO.Server.Servers.City.Handlers;
 using Ninject;
+using NLog;
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -19,16 +20,19 @@ namespace FSO.Server.Servers.City.Domain
         private CityServerContext Context;
         private ISessions Sessions;
         private IKernel Kernel;
+        private Tuning TuningDomain;
+        private static Logger LOG = LogManager.GetCurrentClassLogger();
 
         public List<DbEvent> ActiveEvents = new List<DbEvent>();
         public DateTime Next = new DateTime(0);
 
-        public EventSystem(IDAFactory da, CityServerContext ctx, ISessions sessions, IKernel kernel)
+        public EventSystem(IDAFactory da, CityServerContext ctx, ISessions sessions, IKernel kernel, Tuning tuning)
         {
             DA = da;
             Kernel = kernel;
             Context = ctx;
             Sessions = sessions;
+            TuningDomain = tuning;
         }
 
         public void Init()
@@ -57,7 +61,7 @@ namespace FSO.Server.Servers.City.Domain
                         ActiveEvents.AddRange(active);
                     }
                     //TODO: deactivation event
-                    ActivateEvents(newEvts);
+                    ActivateEvents(da, newEvts);
                 }
             }
         }
@@ -71,9 +75,44 @@ namespace FSO.Server.Servers.City.Domain
             return new DateTime(date.Ticks - date.Ticks % roundTicks);
         }
 
-
-        public void ActivateEvents(List<DbEvent> evts)
+        public void ActivateEvents(IDA da, List<DbEvent> evts)
         {
+            //ensure events that have not started 
+
+            int[] activeIDs;
+            lock (ActiveEvents) {
+                activeIDs = ActiveEvents.Select(x => x.event_id).ToArray();
+            }
+            bool changed = false;
+            try
+            {
+                changed = da.Tuning.ClearInactiveTuning(activeIDs);
+            }
+            catch (Exception e)
+            {
+                LOG.Error(e, "Failed to clear inactive tuning!");
+            }
+
+            foreach (var evt in evts)
+            {
+                switch (evt.type)
+                {
+                    case DbEventType.obj_tuning:
+                        try
+                        {
+                            da.Tuning.ActivatePreset(evt.value, evt.event_id);
+                        }
+                        catch (Exception e)
+                        {
+                            LOG.Error(e, $"Failed to activate preset {evt.value}!");
+                        }
+                        changed = true;
+                        break;
+                }
+            }
+
+            if (changed) TuningDomain.BroadcastTuningUpdate(true);
+
             var all = Sessions.Clone();
             foreach (var session in all.OfType<IVoltronSession>())
             {

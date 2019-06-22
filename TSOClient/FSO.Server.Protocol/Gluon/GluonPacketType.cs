@@ -24,6 +24,8 @@ namespace FSO.Server.Protocol.Gluon
         MatchmakerNotify,
         CityNotify,
 
+        TuningChanged,
+
         Unknown
     }
 
@@ -59,6 +61,8 @@ namespace FSO.Server.Protocol.Gluon
                     return GluonPacketType.MatchmakerNotify;
                 case 0x0013:
                     return GluonPacketType.CityNotify;
+                case 0x0014:
+                    return GluonPacketType.TuningChanged;
                 default:
                     return GluonPacketType.Unknown;
             }
@@ -94,6 +98,8 @@ namespace FSO.Server.Protocol.Gluon
                     return 0x0012;
                 case GluonPacketType.CityNotify:
                     return 0x0013;
+                case GluonPacketType.TuningChanged:
+                    return 0x0014;
             }
 
             return 0xFFFF;

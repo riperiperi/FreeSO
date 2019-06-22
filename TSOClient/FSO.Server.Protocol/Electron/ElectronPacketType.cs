@@ -32,6 +32,7 @@ namespace FSO.Server.Protocol.Electron
         NhoodCandidateList,
         BulletinRequest,
         BulletinResponse,
+        GlobalTuningUpdate,
         Unknown = 0xFFFF
     }
 
