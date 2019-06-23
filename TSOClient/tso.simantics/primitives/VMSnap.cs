@@ -34,7 +34,14 @@ namespace FSO.SimAntics.Primitives
             if (obj == context.Caller)
             {
                 obj.MovedSelf = true;
-                if (obj is VMGameObject) obj.WorldUI?.PrepareSnapInterpolation();
+                if (obj is VMGameObject)
+                {
+                    if (VM.UseWorld)
+                    {
+                        foreach (var obj2 in obj.MultitileGroup.Objects)
+                            obj2.WorldUI.PrepareSnapInterpolation(obj.WorldUI);
+                    }
+                }
             }
 
             if (operand.OriginOnly) { } //origin only. unused?

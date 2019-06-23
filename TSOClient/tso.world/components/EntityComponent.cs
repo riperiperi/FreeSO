@@ -97,6 +97,7 @@ namespace FSO.LotView.Components
         }
 
         protected int _IdleFrames;
+        protected EntityComponent InterpolationOwner;
         protected float _IdleFramesPct;
         public int IdleFrames
         {
@@ -116,10 +117,11 @@ namespace FSO.LotView.Components
         }
         public Vector3 SnapSelfPrevious;
 
-        public void PrepareSnapInterpolation()
+        public void PrepareSnapInterpolation(EntityComponent ent)
         {
             if (_Position != SnapSelfPrevious)
             {
+                InterpolationOwner = ent;
                 _IdleFramesPct = 1f;
                 SnapSelfPrevious = _Position;
                 PreviousSlotOffset = null;

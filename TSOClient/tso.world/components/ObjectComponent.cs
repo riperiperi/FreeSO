@@ -93,6 +93,7 @@ namespace FSO.LotView.Components
             dgrp = new DGRPRenderer(this.DrawGroup);
             dgrp.DynamicSpriteBaseID = obj.OBJ.DynamicSpriteBaseId;
             dgrp.NumDynamicSprites = obj.OBJ.NumDynamicSprites;
+            InterpolationOwner = this;
         }
 
         public virtual DGRP DGRP
@@ -294,11 +295,12 @@ namespace FSO.LotView.Components
                 DynamicCounter = 0; //keep windows and doors on the top floor on the dynamic layer.
             }
 
-            if (IdleFrames > 0)
+            var idleFrames = InterpolationOwner.IdleFrames;
+            if (idleFrames > 0)
             {
                 if (_IdleFramesPct > -3)
                 {
-                    _IdleFramesPct -= world.FramePerDraw / IdleFrames;
+                    _IdleFramesPct -= world.FramePerDraw / idleFrames;
                     _WorldDirty = true;
                 }
             }
