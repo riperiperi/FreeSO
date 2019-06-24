@@ -422,6 +422,18 @@ namespace FSO.Client.UI.Panels
             }
         }
 
+        private short GetFloorBlockableHover(Point pt)
+        {
+            var tilePos = World.EstTileAtPosWithScroll3D(new Vector2(pt.X, pt.Y) / FSOEnvironment.DPIScaleFactor);
+            var newHover = World.GetObjectIDAtScreenPos(pt.X,
+                    pt.Y,
+                    GameFacade.GraphicsDevice);
+
+            var hobj = vm.GetObjectById(newHover);
+            if (hobj == null || hobj.Position.Level < tilePos.Z) newHover = 0;
+            return newHover;
+        }
+
         public void Click(Point pt, UpdateState state)
         {
             if (!LiveMode)
@@ -434,9 +446,9 @@ namespace FSO.Client.UI.Panels
             {
                 VMEntity obj;
                 //get new pie menu, make new pie menu panel for it
-                var tilePos = World.EstTileAtPosWithScroll(new Vector2(pt.X, pt.Y) / FSOEnvironment.DPIScaleFactor);
+                var tilePos = World.EstTileAtPosWithScroll3D(new Vector2(pt.X, pt.Y) / FSOEnvironment.DPIScaleFactor);
 
-                LotTilePos targetPos = LotTilePos.FromBigTile((short)tilePos.X, (short)tilePos.Y, World.State.Level);
+                LotTilePos targetPos = LotTilePos.FromBigTile((short)tilePos.X, (short)tilePos.Y, (sbyte)tilePos.Z);
                 if (vm.Context.SolidToAvatars(targetPos).Solid) targetPos = LotTilePos.OUT_OF_WORLD;
 
                 GotoObject.SetPosition(targetPos, Direction.NORTH, vm.Context);
@@ -445,6 +457,8 @@ namespace FSO.Client.UI.Panels
                     pt.Y,
                     GameFacade.GraphicsDevice);
 
+                var hobj = vm.GetObjectById(newHover);
+                if (hobj == null || hobj.Position.Level < tilePos.Z) newHover = 0;
                 ObjectHover = newHover;
 
                 bool objSelected = ObjectHover > 0;
@@ -574,9 +588,7 @@ namespace FSO.Client.UI.Panels
                     OldMX = state.MouseState.X;
                     OldMY = state.MouseState.Y;
                     var scaled = GetScaledPoint(state.MouseState.Position);
-                    var newHover = World.GetObjectIDAtScreenPos(scaled.X, 
-                        scaled.Y, 
-                        GameFacade.GraphicsDevice);
+                    var newHover = GetFloorBlockableHover(scaled);
 
                     if (ObjectHover != newHover)
                     {

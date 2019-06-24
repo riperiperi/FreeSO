@@ -242,7 +242,7 @@ namespace FSO.LotView.RC
             float bestDistance = float.MaxValue;
             foreach (var obj in Blueprint.Objects)
             {
-                if (obj.Level != state.Level || !obj.Visible || obj.CutawayHidden) continue;
+                if (obj.Level > state.Level || !obj.Visible || obj.CutawayHidden) continue;
                 var objR = (ObjectComponentRC)obj;
                 var intr = objR.IntersectsBounds(ray);
                 if (obj.Container != null && intr != null) intr = intr.Value - 1.5f;
@@ -255,7 +255,7 @@ namespace FSO.LotView.RC
 
             foreach (var sim in Blueprint.Avatars)
             {
-                if (!sim.Visible) continue;
+                if (!sim.Visible || sim.Level > state.Level) continue;
                 var pos = sim.GetPelvisPosition()*3;
                 pos = new Vector3(pos.X, pos.Z, pos.Y) + new Vector3(1.5f, 0, 1.5f);
                 var box = new BoundingBox(pos - new Vector3(0.5f, 2, 0.5f), pos + new Vector3(0.5f, 2, 0.5f));

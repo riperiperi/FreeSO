@@ -653,11 +653,12 @@ namespace FSO.LotView
             return tMin;
         }
 
-        public Vector2 EstTileAtPosWithScroll(Vector2 pos)
+        public Vector2 EstTileAtPosWithScroll(Vector2 pos, sbyte level = -1)
         {
+            if (level == -1) level = State.Level;
             pos *= new Vector2(FSOEnvironment.DPIScaleFactor);
             var sPos = new Vector3(pos, 0);
-            
+
             var p1 = State.Device.Viewport.Unproject(sPos, State.Camera.Projection, State.Camera.View, Matrix.Identity);
             sPos.Z = 1;
             var p2 = State.Device.Viewport.Unproject(sPos, State.Camera.Projection, State.Camera.View, Matrix.Identity);
@@ -665,9 +666,9 @@ namespace FSO.LotView
             dir.Normalize();
             var ray = new Ray(p1, p2 - p1);
             ray.Direction.Normalize();
-            ray.Position -= new Vector3(0, (State.Level-1) * 2.95f * 3, 0);
-            
-            var baseBox = new BoundingBox(new Vector3(0, -5000, 0), new Vector3(Blueprint.Width*3, 5000, Blueprint.Height*3));
+            ray.Position -= new Vector3(0, (level - 1) * 2.95f * 3, 0);
+
+            var baseBox = new BoundingBox(new Vector3(0, -5000, 0), new Vector3(Blueprint.Width * 3, 5000, Blueprint.Height * 3));
             if (baseBox.Contains(ray.Position) != ContainmentType.Contains)
             {
                 //move ray start inside box
@@ -685,15 +686,15 @@ namespace FSO.LotView
             var py = (ray.Direction.Z > 0);
 
             int iteration = 0;
-            while (mx >= 0 && mx < Blueprint.Width && my >= 0 && my<Blueprint.Width)
+            while (mx >= 0 && mx < Blueprint.Width && my >= 0 && my < Blueprint.Width)
             {
                 //test triangle 1. (centre of tile down xz, we lean towards positive x)
                 var plane = new Plane(
-                    new Vector3(mx * 3, Blueprint.GetAltPoint(mx, my) * Blueprint.TerrainFactor*3, my * 3),
-                    new Vector3(mx * 3+3, Blueprint.GetAltPoint(mx+1, my) * Blueprint.TerrainFactor*3, my * 3),
-                    new Vector3(mx * 3+3, Blueprint.GetAltPoint(mx+1, my+1) * Blueprint.TerrainFactor*3, my * 3+3)
+                    new Vector3(mx * 3, Blueprint.GetAltPoint(mx, my) * Blueprint.TerrainFactor * 3, my * 3),
+                    new Vector3(mx * 3 + 3, Blueprint.GetAltPoint(mx + 1, my) * Blueprint.TerrainFactor * 3, my * 3),
+                    new Vector3(mx * 3 + 3, Blueprint.GetAltPoint(mx + 1, my + 1) * Blueprint.TerrainFactor * 3, my * 3 + 3)
                     );
-                var tBounds = new BoundingBox(new Vector3(mx*3, -5000, my*3), new Vector3(mx*3+3, 5000, my*3+3));
+                var tBounds = new BoundingBox(new Vector3(mx * 3, -5000, my * 3), new Vector3(mx * 3 + 3, 5000, my * 3 + 3));
 
                 var t1 = ray.Intersects(plane);
                 var t2 = BoxRC2(ray, 3);
@@ -705,11 +706,12 @@ namespace FSO.LotView
                     var tentative = ray.Position + ray.Direction * (t1.Value + 0.00001f);
 
                     //did it hit the correct side of the triangle?
-                    var mySide = ((tentative.X / 3)%1) - ((tentative.Z / 3)%1);
+                    var mySide = ((tentative.X / 3) % 1) - ((tentative.Z / 3) % 1);
                     if (mySide >= 0)
                     {
                         return new Vector2(tentative.X / 3, tentative.Z / 3);
-                    } else
+                    }
+                    else
                     {
                         //test the other side (positive z)
                         plane = new Plane(
@@ -747,6 +749,20 @@ namespace FSO.LotView
             }
 
             return new Vector2(0, 0);
+        }
+
+        public Vector3 EstTileAtPosWithScroll3D(Vector2 pos, sbyte startFloor = -1)
+        {
+            if (startFloor == -1) startFloor = State.Level;
+            for (sbyte floor = startFloor; floor > 0; floor--)
+            {
+                var result = EstTileAtPosWithScroll(pos, floor);
+                if (floor == 1 || (Blueprint.TileInbounds(result) && Blueprint.GetFloor((short)result.X, (short)result.Y, floor).Pattern != 0))
+                {
+                    return new Vector3(result, floor);
+                }
+            }
+            return new Vector3(EstTileAtPosWithScroll(pos), State.Level);
         }
 
         /// <summary>

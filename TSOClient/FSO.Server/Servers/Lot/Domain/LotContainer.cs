@@ -108,6 +108,8 @@ namespace FSO.Server.Servers.Lot.Domain
             0x50907E06, //flies - controller
             0x3161BB5B, //job controller
 
+            0x475CC813, //water balloon controller
+
             0x5157DDF2, //cat carrier
             0x3278BD34, //dog carrier
         };

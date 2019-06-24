@@ -96,7 +96,10 @@ namespace FSO.LotView.Components
                 if (LightType == TerrainType.SNOW)
                 {
                     LightType = TerrainType.GRASS;
-                    if (DarkType == TerrainType.SNOW) DarkType = TerrainType.GRASS;
+                }
+                if (DarkType == TerrainType.SNOW)
+                {
+                    DarkType = TerrainType.GRASS;
                 }
             }
             else

@@ -220,6 +220,7 @@ namespace FSO.Client.UI.Panels
         }
 
         private string[] AdStrings;
+        private string[] CategoryStrings;
 
         private int _Mode;
         public int Mode
@@ -262,6 +263,13 @@ namespace FSO.Client.UI.Panels
                 string str = GameFacade.Strings.GetString("206", (i + 4).ToString());
                 AdStrings[i] = ((i<7)?str.Substring(0,str.Length-2)+"{0}":str) + "\r\n";
             }
+
+            CategoryStrings = new string[11];
+            for (int i = 0; i < 10; i++)
+            {
+                CategoryStrings[i] = GameFacade.Strings.GetString("f115", (i + 73).ToString());
+            }
+            CategoryStrings[10] = GameFacade.Strings.GetString("f115", "98");
 
             var useSmall = (GlobalSettings.Default.GraphicsWidth < 1024) || FSOEnvironment.UIZoomFactor > 1f;
             var script = this.RenderScript("querypanel"+(useSmall?"":"1024")+".uis");
@@ -504,18 +512,25 @@ namespace FSO.Client.UI.Panels
             {
                 motivesString.AppendFormat(GameFacade.Strings.GetString("206", "19") + "${0}\r\n", price);
             }
-            if (def.RatingHunger != 0) { motivesString.AppendFormat(AdStrings[0], def.RatingHunger); }
-            if (def.RatingComfort != 0) { motivesString.AppendFormat(AdStrings[1], def.RatingComfort); }
-            if (def.RatingHygiene != 0) { motivesString.AppendFormat(AdStrings[2], def.RatingHygiene); }
-            if (def.RatingBladder != 0) { motivesString.AppendFormat(AdStrings[3], def.RatingBladder); }
-            if (def.RatingEnergy != 0) { motivesString.AppendFormat(AdStrings[4], def.RatingEnergy); }
-            if (def.RatingFun != 0) { motivesString.AppendFormat(AdStrings[5], def.RatingFun); }
-            if (def.RatingRoom != 0) { motivesString.AppendFormat(AdStrings[6], def.RatingRoom); }
+
+            var catFlags = def.LotCategories;
+            for (int i = 1; i < 12; i++)
+            {
+                if ((catFlags & (1 << i)) > 0) motivesString.AppendLine(CategoryStrings[i - 1]);
+            }
+
+            if (def.RatingHunger != 0) { motivesString.AppendFormat(AdStrings[0], (short)def.RatingHunger); }
+            if (def.RatingComfort != 0) { motivesString.AppendFormat(AdStrings[1], (short)def.RatingComfort); }
+            if (def.RatingHygiene != 0) { motivesString.AppendFormat(AdStrings[2], (short)def.RatingHygiene); }
+            if (def.RatingBladder != 0) { motivesString.AppendFormat(AdStrings[3], (short)def.RatingBladder); }
+            if (def.RatingEnergy != 0) { motivesString.AppendFormat(AdStrings[4], (short)def.RatingEnergy); }
+            if (def.RatingFun != 0) { motivesString.AppendFormat(AdStrings[5], (short)def.RatingFun); }
+            if (def.RatingRoom != 0) { motivesString.AppendFormat(AdStrings[6], (short)def.RatingRoom); }
 
             var sFlags = def.RatingSkillFlags;
             for (int i = 0; i < 7; i++)
             {
-                if ((sFlags & (1 << i)) > 0) motivesString.Append(AdStrings[i+7]);
+                if ((sFlags & (1 << i)) > 0) motivesString.Append(AdStrings[i + 7]);
             }
 
             MotivesText.CurrentText = motivesString.ToString();
