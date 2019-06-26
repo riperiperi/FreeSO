@@ -106,22 +106,6 @@ namespace FSO.Client.UI
         }
 
         /// <summary>
-        /// A spritefont used to display big text.
-        /// </summary>
-        public SpriteFont SprFontBig
-        {
-            get { return m_SprFontBig; }
-        }
-
-        /// <summary>
-        /// A spritefont used to display small text.
-        /// </summary>
-        public SpriteFont SprFontSmall
-        {
-            get { return m_SprFontSmall; }
-        }
-
-        /// <summary>
         /// The UIScreen instance that is currently being 
         /// updated and rendered by this ScreenManager instance.
         /// </summary>
@@ -142,14 +126,12 @@ namespace FSO.Client.UI
             set { m_TextDict = value; }
         }
 
-        public UILayer(Microsoft.Xna.Framework.Game G, SpriteFont SprFontBig, SpriteFont SprFontSmall)
+        public UILayer(Microsoft.Xna.Framework.Game G)
         {
             fpsStopwatch = new Stopwatch();
             fpsStopwatch.Start();
 
             m_G = G;
-            m_SprFontBig = SprFontBig;
-            m_SprFontSmall = SprFontSmall;
 
             m_WorldMatrix = Matrix.Identity;
             m_ViewMatrix = Matrix.CreateLookAt(Vector3.Right * 5, Vector3.Zero, Vector3.Forward);
@@ -160,6 +142,7 @@ namespace FSO.Client.UI
 
             TextStyle.DefaultTitle = new TextStyle {
                 Font = GameFacade.MainFont,
+                VFont = GameFacade.VectorFont,
                 Size = 10,
                 Color = new Color(255,249,157),
                 SelectedColor = new Color(0x00, 0x38, 0x7B),
@@ -169,6 +152,7 @@ namespace FSO.Client.UI
             TextStyle.DefaultButton = new TextStyle
             {
                 Font = GameFacade.MainFont,
+                VFont = GameFacade.VectorFont,
                 Size = 10,
                 Color = new Color(255, 249, 157),
                 SelectedColor = new Color(0x00, 0x38, 0x7B),
@@ -178,6 +162,7 @@ namespace FSO.Client.UI
             TextStyle.DefaultLabel = new TextStyle
             {
                 Font = GameFacade.MainFont,
+                VFont = GameFacade.VectorFont,
                 Size = 10,
                 Color = new Color(255, 249, 157),
                 SelectedColor = new Color(0x00, 0x38, 0x7B),
@@ -378,7 +363,7 @@ namespace FSO.Client.UI
                 scale = new Vector2(scale.X * style.Scale, scale.Y * style.Scale);
             }
 
-            var wrapped = UIUtils.WordWrap(Tooltip, (int)(290*toolScale), style, scale); //tooltip max width should be 300. There is a 5px margin on each side.
+            var wrapped = UIUtils.WordWrap(Tooltip, (int)(290*toolScale), style); //tooltip max width should be 300. There is a 5px margin on each side.
 
             int width = (int)(wrapped.MaxWidth + 10*toolScale);
             int height = (int)(toolScale * 13 * wrapped.Lines.Count + 4); //13 per line + 4.
@@ -400,8 +385,16 @@ namespace FSO.Client.UI
 
             for (int i = 0; i < wrapped.Lines.Count; i++)
             {
-                int thisWidth = (int)(style.SpriteFont.MeasureString(wrapped.Lines[i]).X * scale.X);
-                batch.DrawString(style.SpriteFont, wrapped.Lines[i], position + new Vector2((width - thisWidth) / 2, 0), color*opacity, 0, Vector2.Zero, scale, SpriteEffects.None, 0);
+                int thisWidth = (int)(style.MeasureString(wrapped.Lines[i]).X);
+                var pos = position + new Vector2((width - thisWidth) / 2, 0);
+                if (style.VFont != null)
+                {
+                    batch.End();
+                    style.VFont.Draw(batch.GraphicsDevice, wrapped.Lines[i], pos, color * opacity, scale, null);
+                    batch.Begin();
+                }
+                else
+                    batch.DrawString(style.SpriteFont, wrapped.Lines[i], pos, color * opacity, 0, Vector2.Zero, scale, SpriteEffects.None, 0);
                 position.Y += 13 * FSOEnvironment.DPIScaleFactor;
             }
         }

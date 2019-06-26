@@ -199,7 +199,7 @@ namespace FSO.Client.UI.Panels.EODs
             UIPlayBackground.Y += 2;
 
             // show EOD
-            Controller.ShowEODMode(new EODLiveModeOpt
+            EODController.ShowEODMode(new EODLiveModeOpt
             {
                 Buttons = 0,
                 Height = EODHeight.Tall,
@@ -246,7 +246,7 @@ namespace FSO.Client.UI.Panels.EODs
             }
 
             // show EOD
-            Controller.ShowEODMode(new EODLiveModeOpt
+            EODController.ShowEODMode(new EODLiveModeOpt
             {
                 Buttons = 0,
                 Height = EODHeight.Tall,

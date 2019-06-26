@@ -21,6 +21,9 @@ namespace FSO.SimAntics.Model
         public List<VMRoomPortal> Portals;
         public List<VMRoomPortal> WindowPortals;
         public List<VMEntity> Entities;
+
+        public List<VMObstacle> DynamicObstacles;
+        public VMObstacleSet StaticObstacles;
         public RoomLighting Light;
         public VMRoom Room;
     }
@@ -39,6 +42,7 @@ namespace FSO.SimAntics.Model
         public HashSet<ushort> AdjRooms; //all adjacent rooms, for DFS traversal of light
         public List<VMObstacle> WallObs;
         public List<VMObstacle> RoomObs;
+        public VMObstacleSet RoutingObstacles;
         public List<Vector2[]> WallLines;
         public List<Vector2[]> FenceLines;
         public Rectangle Bounds;

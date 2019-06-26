@@ -12,6 +12,7 @@ using FSO.Common.Content;
 using System.Text.RegularExpressions;
 using System.IO;
 using FSO.Content.Codecs;
+using FSO.Files.Utils;
 
 namespace FSO.Content.Framework
 {
@@ -66,7 +67,7 @@ namespace FSO.Content.Framework
                 foreach (var file in matchedFiles)
                 {
                     var name = Path.GetFileName(file).ToLowerInvariant();
-                    EntriesByName.Add(name, file);
+                    EntriesByName[name] = file;
                     Items.Add(new FileContentReference<T>(name, this));
                 }
             }
@@ -95,6 +96,7 @@ namespace FSO.Content.Framework
                         T item;
                         if (Codec == null) item = (T)SmartCodec.Decode(reader, Path.GetExtension(fullPath));
                         else item = Codec.Decode(reader);
+                        if (item is IFileInfoUtilizer) ((IFileInfoUtilizer)item).SetFilename(Path.GetFileName(fullPath));
                         Cache.Add(name, item);
                         return item;
                     }
@@ -117,6 +119,12 @@ namespace FSO.Content.Framework
                 }
             }
             return default(T);
+        }
+
+        public List<FileContentReference<T>> GetEntriesForExtension(string ext)
+        {
+            List<FileContentReference<T>> result = Items.Where(x => Path.GetExtension(x.Name) == ext).ToList();
+            return result;
         }
 
         #region IContentProvider<T> Members

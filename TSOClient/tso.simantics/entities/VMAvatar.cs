@@ -78,6 +78,7 @@ namespace FSO.SimAntics
         public int KillTimeout = -1;
         private static readonly int FORCE_DELETE_TIMEOUT = 60 * 30;
         private readonly ushort LEAVE_LOT_TREE = 8373;
+        private readonly ushort LEAVE_LOT_ACTION = 173;
 
         /*
             APPEARANCE DATA
@@ -157,7 +158,7 @@ namespace FSO.SimAntics
                 int midPointDir = (int)DirectionUtils.PosMod(Math.Round(_RadianDirection / (Math.PI / 4f)), 8);
                 return (Direction)(1 << (midPointDir));
             }
-            set { RadianDirection = ((int)Math.Round(Math.Log((double)value, 2))) * (float)(Math.PI / 4.0); }
+            set { RadianDirection = DirectionUtils.Log2Int((uint)value) * (float)(Math.PI / 4.0); }
         }
 
         //inferred properties
@@ -478,6 +479,22 @@ namespace FSO.SimAntics
                     owner.TickSounds();
                 }
             }
+
+            var dress = tp.Properties["dress"];
+            if (dress != null)
+            {
+                var apr = (VM.UseWorld) ? FSO.Content.Content.Get().AvatarAppearances.Get(dress + ".apr") : null;
+                avatar.BoundAppearances.Add(dress);
+                if (VM.UseWorld && apr != null) avatar.Avatar.AddAccessory(apr);
+            }
+
+            var undress = tp.Properties["undress"];
+            if (undress != null)
+            {
+                var apr = (VM.UseWorld) ? FSO.Content.Content.Get().AvatarAppearances.Get(undress + ".apr") : null;
+                avatar.BoundAppearances.Remove(undress);
+                if (VM.UseWorld && apr != null) avatar.Avatar.RemoveAccessory(apr);
+            }
         }
 
         public override void Tick()
@@ -616,20 +633,10 @@ namespace FSO.SimAntics
             var tree = GetRoutineWithOwner(LEAVE_LOT_TREE, Thread.Context);
             var routine = tree.routine;
 
-            Thread.EnqueueAction(
-                new FSO.SimAntics.Engine.VMQueuedAction
-                {
-                    Callee = this,
-                    CodeOwner = tree.owner,
-                    ActionRoutine = routine,
-                    Name = "Leave Lot",
-                    StackObject = this,
-                    Args = new short[4],
-                    InteractionNumber = -1,
-                    Priority = short.MaxValue,
-                    Flags = TTABFlags.MustRun
-                }
-            );
+            var qaction = GetAction(LEAVE_LOT_ACTION, this, Thread.Context, false);
+            qaction.Flags |= TTABFlags.FSOSkipPermissions;
+            if (qaction != null) Thread.EnqueueAction(qaction);
+
             if (KillTimeout == -1) KillTimeout = 0;
         }
 
@@ -697,6 +704,11 @@ namespace FSO.SimAntics
             return PersonData[(ushort)variable];
         }
 
+        public short[] GetPersonDataClone()
+        {
+            return PersonData.ToArray();
+        }
+
         public bool ForceEnableSkill;
         public int SkillGameplayMul(VM vm)
         {
@@ -751,6 +763,13 @@ namespace FSO.SimAntics
             VMTSOJobInfo jobInfo = null;
             switch (variable)
             {
+                case VMPersonDataVariable.JobPerformance:
+                    if (Thread?.Context?.VM?.TS1 != true && VM.UseWorld)
+                    {
+                        if (value == 0) ((AvatarComponent)WorldUI).Scale = 1f;
+                        else ((AvatarComponent)WorldUI).Scale = value / 100f;
+                    }
+                    break;
                 case VMPersonDataVariable.TS1ScalingSim:
                     if (Thread?.Context?.VM?.TS1 == true && VM.UseWorld)
                         ((AvatarComponent)WorldUI).Scale = value / 100f;
@@ -865,14 +884,26 @@ namespace FSO.SimAntics
             MotiveData = dat;
         }
 
-        public override VMObstacle GetObstacle(LotTilePos pos, Direction dir)
+        public override VMEntityObstacle GetObstacle(LotTilePos pos, Direction dir, bool temp)
         {
-            return (KillTimeout > -1 && !GetFlag(VMEntityFlags.HasZeroExtent)) ? null :
-                new VMObstacle(
-                (pos.x - 3),
-                (pos.y - 3),
-                (pos.x + 3),
-                (pos.y + 3));
+            if ((KillTimeout > -1 && !GetFlag(VMEntityFlags.HasZeroExtent)) || (Container != null && !temp)) return null;
+            if (Footprint == null || temp)
+            {
+                return new VMEntityObstacle(
+                    (pos.x - 3),
+                    (pos.y - 3),
+                    (pos.x + 3),
+                    (pos.y + 3),
+                    this);
+            } else
+            {
+                Footprint.x1 = (pos.x - 3);
+                Footprint.y1 = (pos.y - 3);
+                Footprint.x2 = (pos.x + 3);
+                Footprint.y2 = (pos.y + 3);
+
+                return Footprint;
+            }
         }
 
         public void ShowMoneyHeadline(int value)
@@ -891,7 +922,7 @@ namespace FSO.SimAntics
             HeadlineRenderer = Thread?.Context.VM.Headline.Get(Headline);
         }
 
-        public override void PositionChange(VMContext context, bool noEntryPoint)
+        public override void PositionChange(VMContext context, bool noEntryPoint, bool roomChange)
         {
             if (GhostImage) return;
 
@@ -900,21 +931,21 @@ namespace FSO.SimAntics
 
             if (HandObject != null)
             {
-                context.UnregisterObjectPos(HandObject);
+                context.UnregisterObjectPos(HandObject, roomChange);
                 HandObject.Position = Position;
-                HandObject.PositionChange(context, noEntryPoint);
+                HandObject.PositionChange(context, noEntryPoint, roomChange);
             }
-
-            context.RegisterObjectPos(this);
+            
+            Footprint = GetObstacle(Position, Direction, false);
+            context.RegisterObjectPos(this, roomChange);
             if (Container != null) return;
             if (Position == LotTilePos.OUT_OF_WORLD) return;
 
-            base.PositionChange(context, noEntryPoint);
+            base.PositionChange(context, noEntryPoint, roomChange);
         }
 
-        public override void PrePositionChange(VMContext context)
+        public override void PrePositionChange(VMContext context, bool roomChange)
         {
-            Footprint = null;
             if (GhostImage && UseWorld)
             {
                 if (WorldUI.Container != null)
@@ -925,14 +956,14 @@ namespace FSO.SimAntics
                 return;
             }
 
-            context.UnregisterObjectPos(this);
+            context.UnregisterObjectPos(this, roomChange);
             if (Container != null)
             {
                 Container.ClearSlot(ContainerSlot);
                 return;
             }
             if (Position == LotTilePos.OUT_OF_WORLD) return;
-            base.PrePositionChange(context);
+            base.PrePositionChange(context, roomChange);
         }
 
         // Begin Container SLOTs interface
@@ -1025,6 +1056,10 @@ namespace FSO.SimAntics
             var ico = FSO.Content.Content.Get().AvatarThumbnails.Get(Appearance.ThumbnailTypeID, Appearance.ThumbnailFileID)?.Get(gd);
 
             //todo: better dispose handling for these icons
+            if (ico == null)
+            {
+                ico = MissingIconProvider(this);
+            }
             return (store > 0 && ico != null)?TextureUtils.Decimate(ico, gd, 1<<(2-store), false):ico;
         }
 
@@ -1123,6 +1158,7 @@ namespace FSO.SimAntics
             SetPersonData(VMPersonDataVariable.Gender, gender);
             SetPersonData(VMPersonDataVariable.RenderDisplayFlags, GetPersonData(VMPersonDataVariable.RenderDisplayFlags));
             SetPersonData(VMPersonDataVariable.IsGhost, GetPersonData(VMPersonDataVariable.IsGhost));
+            SetPersonData(VMPersonDataVariable.JobPerformance, GetPersonData(VMPersonDataVariable.JobPerformance));
             if (input.TS1)
             {
                 SetPersonData(VMPersonDataVariable.CurrentOutfit, GetPersonData(VMPersonDataVariable.CurrentOutfit));

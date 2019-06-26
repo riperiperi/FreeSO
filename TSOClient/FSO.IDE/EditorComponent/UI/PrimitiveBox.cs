@@ -117,10 +117,12 @@ namespace FSO.IDE.EditorComponent.UI
             this.Add(Title);
             Title.CaptionStyle = TextStyle.DefaultLabel.Clone();
             Title.CaptionStyle.Font = FSO.Client.GameFacade.EdithFont;
+            Title.CaptionStyle.VFont = FSO.Client.GameFacade.EdithVectorFont;
             Title.CaptionStyle.Size = 14;
 
             BodyTextStyle = TextStyle.DefaultLabel.Clone();
             BodyTextStyle.Font = FSO.Client.GameFacade.EdithFont;
+            BodyTextStyle.VFont = FSO.Client.GameFacade.EdithVectorFont;
             BodyTextStyle.Size = 12;
 
             this.Add(Nodes[0]);
@@ -207,6 +209,14 @@ namespace FSO.IDE.EditorComponent.UI
             }
         }
 
+        public void NodeDraw(UISpriteBatch batch)
+        {
+            foreach (var child in Nodes)
+            {
+                child.Draw(batch);
+            }
+        }
+
         protected override void CalculateMatrix()
         {
             base.CalculateMatrix();
@@ -236,7 +246,7 @@ namespace FSO.IDE.EditorComponent.UI
 
         public override void Draw(UISpriteBatch batch)
         {
-            base.Draw(batch);
+            //base.Draw(batch);
 
             var res = EditorResource.Get();
 

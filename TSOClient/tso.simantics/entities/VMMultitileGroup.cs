@@ -140,13 +140,15 @@ namespace FSO.SimAntics.Entities
             if (pos.Level > context.Architecture.Stories) return new VMPlacementResult(VMPlacementError.NotAllowedOnFloor);
             if (Objects.Count == 0) return new VMPlacementResult(VMPlacementError.Success);
 
-            VMEntity[] OldContainers = new VMEntity[Objects.Count];
-            short[] OldSlotNum = new short[Objects.Count];
-            for (int i = 0; i < Objects.Count(); i++)
+            var count = Objects.Count;
+            VMEntity[] OldContainers = new VMEntity[count];
+            short[] OldSlotNum = new short[count];
+            bool[] RoomChange = new bool[count];
+            LotTilePos[] Targets = new LotTilePos[count];
+            for (int i = 0; i < count; i++)
             {
                 OldContainers[i] = Objects[i].Container;
                 OldSlotNum[i] = Objects[i].ContainerSlot;
-                Objects[i].PrePositionChange(context);
             }
 
             int Dir = 0;
@@ -163,17 +165,16 @@ namespace FSO.SimAntics.Entities
             }
 
             Matrix rotMat = Matrix.CreateRotationZ((float)(Dir * Math.PI / 4.0));
-            VMPlacementResult[] places = new VMPlacementResult[Objects.Count];
+            VMPlacementResult[] places = new VMPlacementResult[count];
 
             var bObj = BaseObject;
             var bOff = Offsets[Objects.IndexOf(BaseObject)];
             var leadOff = new Vector3(bOff.x, bOff.y, 0);
             var offTotal = new Vector3();
-
-            //TODO: optimize so we don't have to recalculate all of this
+            
             if (pos != LotTilePos.OUT_OF_WORLD)
             {
-                for (int i = 0; i < Objects.Count(); i++)
+                for (int i = 0; i < count; i++)
                 {
                     var sub = Objects[i];
                     var off = new Vector3(Offsets[i].x, Offsets[i].y, 0);
@@ -181,48 +182,115 @@ namespace FSO.SimAntics.Entities
                     offTotal += off;
 
                     var offPos = new LotTilePos((short)Math.Round(pos.x + off.X), (short)Math.Round(pos.y + off.Y), (sbyte)(pos.Level + Offsets[i].Level));
+                    Targets[i] = offPos;
+                    var roomChange = context.GetRoomAt(offPos) != context.GetObjectRoom(sub) || OldContainers[i] != null || sub.Portal;
+                    RoomChange[i] = roomChange;
+                    sub.PrePositionChange(context, roomChange);
                     places[i] = sub.PositionValid(offPos, direction, context, flags);
+                    
                     if (places[i].Status != VMPlacementError.Success)
                     {
                         //go back to where we started: we're no longer out of world.
-                        for (int j = 0; j < Objects.Count(); j++)
+                        for (int j = 0; j <= i; j++)
                         {
                             //need to restore slot we were in
                             if (j <OldContainers.Length && OldContainers[j] != null) {
                                 OldContainers[j].PlaceInSlot(Objects[j], OldSlotNum[j], false, context);
                             }
-                            Objects[j].PositionChange(context, false);
+                            Objects[j].PositionChange(context, false, RoomChange[j]);
                         }
                         return places[i];
+                    }
+                    else if (places[i].Object != null && !sub.StaticFootprint && !roomChange)
+                    {
+                        //edge case: we will be placed in a slot, but have a dynamic footprint still in the room.
+                        //when placed in a slot, our collision footprint should become null.
+                        //Static footprints are deleted before every move, but dynamic footprints are only removed when there is a room change.
+                        //if the flag was not set, then we still need to remove the dynamic footprint for this object entering a slot.
+                        sub.Footprint?.Unregister();
                     }
                 }
             } else
             {
-                for (int i = 0; i < Objects.Count(); i++)
+                for (int i = 0; i < count; i++)
                 {
+                    Objects[i].PrePositionChange(context, true);
+                    RoomChange[i] = true;
                     var off = new Vector3(Offsets[i].x, Offsets[i].y, 0);
                     off = Vector3.Transform(off - leadOff, rotMat);
                     offTotal += off;
                 }
             }
 
-            offTotal /= Objects.Count(); //this is now the average offset
+            offTotal /= count; //this is now the average offset
             //verification success
 
-            for (int i = 0; i < Objects.Count(); i++)
+            Matrix? groundAlign = null;
+            //ground align
+            if (VM.UseWorld && pos != LotTilePos.OUT_OF_WORLD && false) //wip ground alignment for carpool. currently disabled!
+            {
+                //find alignment
+                var bp = context.Blueprint;
+                var spos = (new Vector3(pos.x, pos.y, 0) + offTotal) / 16;
+                var tBase = new Vector3(spos.X, bp.InterpAltitude(spos), spos.Y);
+                var ty = new Vector3(spos.X, bp.InterpAltitude(spos + new Vector3(0, 1 / 32f, 0)), spos.Y + 1 / 32f);
+                var tx = new Vector3(spos.X + 1 / 32f, bp.InterpAltitude(spos + new Vector3(1 / 32f, 0, 0)), spos.Y);
+
+                var front = ty - tBase;
+                front.Normalize();
+                var side = tx - tBase;
+                side.Normalize();
+                var top = Vector3.Cross(front, side);
+                groundAlign = Matrix.CreateLookAt(Vector3.Zero, new Vector3(front.X, front.Y, front.Z), top);
+                //more direct coordinate creation - messes up with diagonally sloped tiles but could be useful for something else
+                //groundAlign = new Matrix(new Vector4(side, 0), new Vector4(top, 0), new Vector4(front, 0), new Vector4(0, 0, 0, 1));
+                if (pos != LotTilePos.OUT_OF_WORLD) { }
+            }
+
+            for (int i = 0; i < count; i++)
             {
                 var sub = Objects[i];
-                var off = new Vector3(Offsets[i].x, Offsets[i].y, 0);
-                off = Vector3.Transform(off-leadOff, rotMat);
 
-                var offPos = (pos==LotTilePos.OUT_OF_WORLD)?
+                var offPos = (pos == LotTilePos.OUT_OF_WORLD) ?
                     LotTilePos.OUT_OF_WORLD :
-                    new LotTilePos((short)Math.Round(pos.x + off.X), (short)Math.Round(pos.y + off.Y), (sbyte)(pos.Level + Offsets[i].Level));
+                    Targets[i];
 
-                if (VM.UseWorld) sub.WorldUI.MTOffset = off - offTotal;
+                if (VM.UseWorld)
+                {
+                    if (count > 0)
+                    {
+                        sub.WorldUI.MTOffset = Vector3.Transform(new Vector3(Offsets[i].x, Offsets[i].y, 0) - leadOff, rotMat) - offTotal;
+                    }
+                    if (groundAlign != null)
+                    {
+                        var mt = sub.WorldUI.MTOffset;
+                        mt = new Vector3(mt.X / 16, mt.Z, mt.Y / 16);
+                        mt = Vector3.Transform(mt, groundAlign.Value);
+                        mt = new Vector3(mt.X, mt.Z, mt.Y) * 16;
+                        sub.WorldUI.MTOffset = mt;
+                    }
+                    sub.WorldUI.GroundAlign = groundAlign;
+                }
                 sub.SetIndivPosition(offPos, direction, context, places[i]);
             }
-            for (int i = 0; i < Objects.Count(); i++) Objects[i].PositionChange(context, false);
+
+
+            if (groundAlign != null)
+            {
+                //retarget floor
+                var ctr = new Vector3(Offsets[0].x, Offsets[0].y, 0) - leadOff - offTotal;
+                for (int i = 0; i < count; i++)
+                {
+                    var sub = Objects[i];
+                    var mo = Vector3.Transform(new Vector3(Offsets[i].x, Offsets[i].y, 0) - leadOff, rotMat) - offTotal;
+                    var mo2 = sub.WorldUI.MTOffset;
+                    if (mo != mo2) { }
+                    mo2.Z = 0;
+                    sub.VisualPosition = new Vector3(sub.VisualPosition.X, sub.VisualPosition.Y, 0) + (mo2 - mo) / 16;
+                }
+            }
+            
+            for (int i = 0; i < count; i++) Objects[i].PositionChange(context, false, RoomChange[i]);
             return new VMPlacementResult(VMPlacementError.Success);
         }
 
@@ -335,7 +403,7 @@ namespace FSO.SimAntics.Entities
             SalePrice = input.SalePrice;
             if (SalePrice == 0) SalePrice = -1;
             Objects = new List<VMEntity>();
-            for (int i= 0; i<input.Objects.Length; i++)
+            for (int i = 0; i<input.Objects.Length; i++)
             {
                 var id = input.Objects[i];
                 var obj = context.VM.GetObjectById(id);

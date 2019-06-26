@@ -34,7 +34,9 @@ namespace FSO.SimAntics.Primitives
             } 
             else 
             {
-                var suit = VMSuitProvider.GetSuit(context, operand.SuitScope, operand.SuitData);
+                var data = operand.SuitData;
+                if (operand.Flags.HasFlag(VMChangeSuitOrAccessoryFlags.UseTemp)) data = (byte)context.Thread.TempRegisters[data];
+                var suit = VMSuitProvider.GetSuit(context, operand.SuitScope, data);
                 if (suit == null){
                     return VMPrimitiveExitCode.GOTO_TRUE;
                 }
@@ -197,6 +199,7 @@ namespace FSO.SimAntics.Primitives
     public enum VMChangeSuitOrAccessoryFlags
     {
         Remove = 1,
+        UseTemp = 2,
         Update = 4
     }
 }

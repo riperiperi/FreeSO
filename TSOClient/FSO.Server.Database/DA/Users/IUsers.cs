@@ -22,5 +22,11 @@ namespace FSO.Server.Database.DA.Users
         User GetByEmail(string email);
         void UpdateAuth(UserAuthenticate auth);
         void UpdateLastLogin(uint id, uint last_login);
+
+        DbAuthAttempt GetRemainingAuth(uint user_id, string ip);
+        int FailedConsecutive(uint user_id, string ip);
+        int FailedAuth(uint attempt_id, uint delay, int failLimit);
+        void NewFailedAuth(uint user_id, string ip, uint delay);
+        void SuccessfulAuth(uint user_id, string ip);
     }
 }

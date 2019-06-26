@@ -128,6 +128,11 @@ namespace FSO.Client.UI.Controls
             }
         }
 
+        public void ForceDirty()
+        {
+            m_DrawDirty = true;
+        }
+
         //formatted mode abstractions
 
         public bool BBCodeEnabled;
@@ -600,15 +605,16 @@ namespace FSO.Client.UI.Controls
                 m_SBuilder.Remove(MaxChars, m_SBuilder.Length - MaxChars);
             }
 
-            var lines = m_SBuilder.ToString().Split(new string[] { "\n" }, StringSplitOptions.None);
-            if (lines.Length > MaxLines)
+            var lines = m_SBuilder.ToString().Split(new string[] { "\n" }, StringSplitOptions.None).ToList();
+            if (lines.Count > MaxLines)
             {
-                var newLines = new string[MaxLines];
-                for (var i = 0; i < MaxLines; i++)
+                //remove newlines on last line
+                while (lines.Count > MaxLines && lines.Count >= 1)
                 {
-                    newLines[i] = lines[i].Replace("\r", "");
+                    lines[MaxLines - 1] += lines[MaxLines].Replace("\r", "");
+                    lines.RemoveAt(MaxLines);
                 }
-                m_SBuilder = new StringBuilder(String.Join("\n", newLines));
+                m_SBuilder = new StringBuilder(String.Join("\n", lines));
             }
 
             SelectionStart = Math.Min(m_SBuilder.Length, SelectionStart);
@@ -866,9 +872,12 @@ namespace FSO.Client.UI.Controls
                 var thisLineWidth = segments.Sum(x => x.Size.X);
 
                 /** Alignment **/
-                if (Alignment == TextAlignment.Center)
+                if (Alignment.HasFlag(TextAlignment.Center))
                 {
                     xPosition += (int)Math.Round((lineWidth - thisLineWidth) / 2);
+                } else if (Alignment.HasFlag(TextAlignment.Right))
+                {
+                    xPosition += (int)Math.Round((lineWidth - thisLineWidth));
                 }
                 line.LineStartX = (int)xPosition;
 
@@ -1465,15 +1474,42 @@ namespace FSO.Client.UI.Controls
         #region ITextDrawCmd Members
         public virtual void Draw(UIElement ui, SpriteBatch batch)
         {
-            if (Selected)
+            if (Style.VFont != null)
             {
-                batch.DrawString(Style.SpriteFont, Text, Position, Style.SelectedColor, 0, Vector2.Zero, Scale, SpriteEffects.None, 0);
+                batch.End();
+                Matrix? mat = null;
+                var uib = (batch as UISpriteBatch);
+                if (uib != null && uib.BatchMatrixStack.Count > 0)
+                    mat = uib.BatchMatrixStack.Peek();
+
+                if (Selected)
+                {
+                    Style.VFont.Draw(batch.GraphicsDevice, Text, Position, Style.SelectedColor, Scale, mat);
+                }
+                else
+                {
+                    if (Style.Shadow)
+                        Style.VFont.Draw(batch.GraphicsDevice, Text, Position + new Vector2(0, FSOEnvironment.DPIScaleFactor), Color.Black, Scale, mat);
+                    Style.VFont.Draw(batch.GraphicsDevice, Text, Position, Style.Color, Scale, mat);
+                }
+
+                if (mat != null)
+                    batch.Begin(transformMatrix: mat, rasterizerState: RasterizerState.CullNone);
+                else
+                    batch.Begin(rasterizerState: RasterizerState.CullNone);
             }
             else
             {
-                if (Style.Shadow)
-                    batch.DrawString(Style.SpriteFont, Text, Position + new Vector2(0, 1), Color.Black, 0, Vector2.Zero, Scale, SpriteEffects.None, 0);
-                batch.DrawString(Style.SpriteFont, Text, Position, Style.Color, 0, Vector2.Zero, Scale, SpriteEffects.None, 0);
+                if (Selected)
+                {
+                    batch.DrawString(Style.SpriteFont, Text, Position, Style.SelectedColor, 0, Vector2.Zero, Scale, SpriteEffects.None, 0);
+                }
+                else
+                {
+                    if (Style.Shadow)
+                        batch.DrawString(Style.SpriteFont, Text, Position + new Vector2(0, 1), Color.Black, 0, Vector2.Zero, Scale, SpriteEffects.None, 0);
+                    batch.DrawString(Style.SpriteFont, Text, Position, Style.Color, 0, Vector2.Zero, Scale, SpriteEffects.None, 0);
+                }
             }
         }
         #endregion

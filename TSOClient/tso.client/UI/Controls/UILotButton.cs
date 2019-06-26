@@ -24,6 +24,7 @@ using FSO.HIT;
 using FSO.Client.UI.Model;
 using FSO.Common.Rendering.Framework.Model;
 using FSO.Client.Rendering.City;
+using FSO.Common;
 
 namespace FSO.Client.UI.Controls
 {
@@ -108,6 +109,37 @@ namespace FSO.Client.UI.Controls
             }
         }
 
+        public override void Update(UpdateState state)
+        {
+            base.Update(state);
+            var terrain = ((CoreGameScreen)GameFacade.Screens.CurrentUIScreen).CityRenderer;
+            if (Is3D || terrain.Camera.CenterCam != null) UpdatePosition3D();
+        }
+
+        public void UpdatePosition3D()
+        {
+            var xp = (int)_LotId >> 16;
+            var yp = (int)_LotId & 0xFFFF;
+
+            var terrain = ((CoreGameScreen)GameFacade.Screens.CurrentUIScreen).CityRenderer;
+            var pos = terrain.transformSpr4(new Vector3(xp+0.5f, terrain.InterpElevationAt(new Vector2(xp + 0.5f, yp + 0.5f))+2f, yp+0.5f));
+        
+            Position = new Vector2(pos.X-40, pos.Y-110) / FSOEnvironment.DPIScaleFactor;
+            ZOrder = pos.Z;
+            Visible = (pos.Z < 0);
+            //AvoidOther();
+        }
+
+        public float ZOrder;
+
+        private bool Is3D
+        {
+            get
+            {
+                return FSOEnvironment.Enable3D;
+            }
+        }
+
         private uint _LotId;
         public uint LotId
         {
@@ -122,15 +154,17 @@ namespace FSO.Client.UI.Controls
                  });
                 DataService.Request(Server.DataService.Model.MaskedStruct.PropertyPage_LotInfo, _LotId);
 
-                var xp = (int)value >> 16;
-                var yp = (int)value & 0xFFFF;
+                if (!Is3D)
+                {
+                    var xp = (int)value >> 16;
+                    var yp = (int)value & 0xFFFF;
 
-                var terrain = ((CoreGameScreen)GameFacade.Screens.CurrentUIScreen).CityRenderer;    
-                var pos = (terrain.GetFar2DFromTile(xp, yp) + terrain.GetFar2DFromTile(xp + 1, yp + 1)) / 2;
+                    var terrain = ((CoreGameScreen)GameFacade.Screens.CurrentUIScreen).CityRenderer;
+                    var pos = (terrain.GetFar2DFromTile(xp, yp) + terrain.GetFar2DFromTile(xp + 1, yp + 1)) / 2;
 
-                Position = pos - new Vector2(40, 110);
-                AvoidOther();
-
+                    Position = pos - new Vector2(40, 110);
+                    AvoidOther();
+                }
                 Thumb = FindController<CoreGameScreenController>().Terrain.LockLotThumb(value);
             }
         }
@@ -231,11 +265,13 @@ namespace FSO.Client.UI.Controls
 
         public override void Draw(UISpriteBatch batch)
         {
-            if (!Visible) return;
+            if (!Visible || Thumb == null) return;
             var ThumbImg = Thumb.LotTexture;
             if (ThumbImg != null && BgImg != null && HoverImg != null)
             {
-                UITerrainHighlight.DrawArrow(batch, ((CoreGameScreen)GameFacade.Screens.CurrentUIScreen).CityRenderer, Position + new Vector2(40, 25), (int)LotId);
+                UITerrainHighlight.DrawArrow(batch, 
+                    ((CoreGameScreen)GameFacade.Screens.CurrentUIScreen).CityRenderer, 
+                    (Position + new Vector2(40, 25)) * FSOEnvironment.DPIScaleFactor, (int)LotId);
                 DrawLocalTexture(batch, (m_isOver && !m_isDown) ? HoverImg : BgImg, new Vector2());
 
                 var scale = new Vector2(0.25f, 0.25f);

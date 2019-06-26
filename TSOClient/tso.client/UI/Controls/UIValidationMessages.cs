@@ -61,7 +61,7 @@ namespace FSO.Client.UI.Controls
                     text += msg + "\n";
                 }
 
-                Text = UIUtils.WordWrap(text, Width - (Padding*2), Style, new Microsoft.Xna.Framework.Vector2(Style.Scale));
+                Text = UIUtils.WordWrap(text, Width - (Padding*2), Style);
                 return false;
             }
             else

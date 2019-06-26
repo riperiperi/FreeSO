@@ -35,6 +35,7 @@ namespace FSO.LotView.Components
         }
         public Blueprint blueprint;
         public Vector3 MTOffset;
+        public Matrix? GroundAlign; //for realigning objects on sloped terrain (optional, for cars)
 
         public short ObjectID; //set this any time it changes so that hit test works.
 
@@ -61,15 +62,85 @@ namespace FSO.LotView.Components
         {
             get
             {
-                if (Container == null) return _Position;
-                else return Container.GetSLOTPosition(ContainerSlot, false);
+                if (Container == null)
+                {
+                    if (_IdleFramesPct <= 0)
+                    {
+                        return _Position;
+                    }
+                    else
+                    {
+                        return Vector3.Lerp(_Position, SnapSelfPrevious, _IdleFramesPct);
+                    }
+                }
+                else
+                {
+                    if (_IdleFramesPct <= 0 || PreviousSlotOffset == null)
+                    {
+                        return Container.GetSLOTPosition(ContainerSlot, false);
+                    } else
+                    {
+                        var oldP = Container.Position + PreviousSlotOffset.Value;
+                        var newP = Container.GetSLOTPosition(ContainerSlot, false);
+                        if (Vector3.Distance(oldP, newP) > 1.5) oldP = newP;
+                        return Vector3.Lerp(newP, oldP, _IdleFramesPct);
+                    }
+                }
             }
             set
             {
                 _Position = value;
-                if (blueprint != null) _Position.Z += blueprint.InterpAltitude(new Vector3(0.5f, 0.5f, 0) + _Position - MTOffset / 16);
+                if (blueprint != null) _Position.Z += blueprint.InterpAltitude(new Vector3(0.5f, 0.5f, 0) + _Position - MTOffset / 16) + MTOffset.Z / 16f;
                 OnPositionChanged();
                 _WorldDirty = true;
+            }
+        }
+
+        protected int _IdleFrames;
+        protected EntityComponent InterpolationOwner;
+        protected float _IdleFramesPct;
+        public int IdleFrames
+        {
+            set
+            {
+                if (value < 20)
+                {
+                    _IdleFrames = value;
+                } else
+                {
+                    if (_IdleFramesPct < -3) _IdleFrames = 0;
+                }
+            }
+            get {
+                return _IdleFrames;
+            }
+        }
+        public Vector3 SnapSelfPrevious;
+
+        public void PrepareSnapInterpolation(EntityComponent ent)
+        {
+            if (_Position != SnapSelfPrevious)
+            {
+                InterpolationOwner = ent;
+                _IdleFramesPct = 1f;
+                SnapSelfPrevious = _Position;
+                PreviousSlotOffset = null;
+            }
+        }
+
+        public Vector3? PreviousSlotOffset;
+
+        public void PrepareSlotInterpolation()
+        {
+            _IdleFramesPct = 1f;
+            SnapSelfPrevious = _Position;
+            if (Container != null)
+            {
+                PreviousSlotOffset = Container.GetSLOTPosition(ContainerSlot, false) - Container.Position;
+            }
+            else
+            {
+                PreviousSlotOffset = null;
             }
         }
 

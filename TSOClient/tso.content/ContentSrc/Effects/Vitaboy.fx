@@ -172,7 +172,7 @@ float4 psVitaboyAdv(VitaVertexOut v) : COLOR0
 		//SOFTWARE DEPTH
 		if (SoftwareDepth == true && depthOutMode == false && unpackDepth(tex2D(depthMapSampler, v.screenPos.xy)) < depth) discard;
 #endif
-		float4 color = aaTex(v) * lightProcess(v.modelPos) * AmbientLight;
+		float4 color = gammaMul(aaTex(v), lightProcess(v.modelPos) * AmbientLight);
 		color.rgb *= pow((dot(normalize(v.normal), float3(0, 1, 0)) + 1) / 2, 0.5)*0.5 + 0.5f;
 		return color;
 	}
@@ -189,7 +189,7 @@ float4 psVitaboyDir(VitaVertexOut v) : COLOR0
 		//SOFTWARE DEPTH
 		if (SoftwareDepth == true && depthOutMode == false && unpackDepth(tex2D(depthMapSampler, v.screenPos.xy)) < depth) discard;
 	#endif
-		float4 color = aaTex(v) * lightProcessDirection(v.modelPos, normalize(v.normal)) * AmbientLight;
+		float4 color = gammaMul(aaTex(v), lightProcessDirection(v.modelPos, normalize(v.normal)) * AmbientLight);
 		return color;
 	}
 }

@@ -13,6 +13,7 @@ namespace FSO.Common.Rendering.Framework
         public RenderTarget2D Target;
         private GraphicsDevice Device;
         private int Multisample = 0;
+        public Color ClearColor = Color.Transparent;
         public _3DTargetScene(GraphicsDevice device, ICamera camera, Point size, int multisample) : this(device, size, multisample) { Camera = camera; }
         public _3DTargetScene(GraphicsDevice device, Point size, int multisample) : base(device)
         {
@@ -31,7 +32,7 @@ namespace FSO.Common.Rendering.Framework
         {
             var oldTargets = device.GetRenderTargets();
             device.SetRenderTarget(Target);
-            device.Clear(Color.Transparent);
+            device.Clear(ClearColor);
             device.DepthStencilState = DepthStencilState.Default;
             Camera.ProjectionDirty();
             base.Draw(device);

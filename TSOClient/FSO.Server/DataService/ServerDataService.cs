@@ -21,6 +21,13 @@ namespace FSO.Server.DataService
             AddProvider(lots);
             var city = kernel.Get<ServerCityProvider>();
             AddProvider(city);
+            var nhood = kernel.Get<ServerNeighborhoodProvider>();
+            nhood.BindCityRep(lots);
+            AddProvider(nhood);
+
+            var ratings = kernel.Get<ServerMayorRatingProvider>();
+            AddProvider(ratings);
+
             city.BindLots(lots);
         }
     }

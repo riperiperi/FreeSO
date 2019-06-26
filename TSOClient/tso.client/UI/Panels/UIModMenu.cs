@@ -1,6 +1,7 @@
 ﻿using FSO.Client.UI.Controls;
 using FSO.Client.UI.Framework;
 using FSO.Client.UI.Screens;
+using FSO.Common;
 using FSO.Debug.Content;
 using FSO.Server.Protocol.Electron.Model;
 using System;
@@ -66,6 +67,43 @@ namespace FSO.Client.UI.Panels
                 UIScreen.RemoveDialog(this);
             };
             Add(kickButton);
+
+            var nhoodBanButton = new UIButton();
+            nhoodBanButton.Caption = "Nhood Ban";
+            nhoodBanButton.Position = new Microsoft.Xna.Framework.Vector2(40, 170);
+            nhoodBanButton.Width = 300;
+            nhoodBanButton.OnButtonClick += x =>
+            {
+                var controller = FindController<FSO.Client.Controllers.CoreGameScreenController>();
+
+                UIAlert.Prompt("Neighborhood Gameplay Ban", "Ban this user for how long? (in days, 0 for perma)", true, (result) =>
+                {
+                    if (result == null) return;
+                    uint dayCount;
+                    if (!uint.TryParse(result, out dayCount))
+                    {
+                        UIAlert.Alert("Neighborhood Gameplay Ban", "Invalid number of days. Please try again.", true);
+                    }
+                    uint untilDate = (dayCount == 0) ? uint.MaxValue : ClientEpoch.Now + dayCount * 60 * 60 * 24;
+
+                    UIAlert.Prompt("Neighborhood Gameplay Ban", "What message do you want to leave? (optional)", true, (result2) =>
+                    {
+                        if (result2 == null) return;
+                        if (controller != null)
+                        {
+                            controller.NeighborhoodProtocol.BanUser(AvatarID, untilDate, result2, (code) =>
+                            {
+                                //response
+                                if (code == Server.Protocol.Electron.Packets.NhoodResponseCode.SUCCESS)
+                                {
+                                    UIAlert.Alert("Neighborhood Gameplay Ban", "Ban has been submitted. Note that if you ban someone twice your second ban will overwrite the first.", true);
+                                }
+                            });
+                        }
+                    });
+                });
+            };
+            Add(nhoodBanButton);
 
             CloseButton.OnButtonClick += CloseButton_OnButtonClick;
         }

@@ -90,8 +90,22 @@
     <CodeAnalysisRuleSet>MinimumRecommendedRules.ruleset</CodeAnalysisRuleSet>
   </PropertyGroup>
   <ItemGroup>
+    <Reference Include="Common.Logging, Version=3.4.1.0, Culture=neutral, PublicKeyToken=af08829b84f0328e, processorArchitecture=MSIL">
+      <HintPath>..\packages\Common.Logging.3.4.1\lib\net40\Common.Logging.dll</HintPath>
+    </Reference>
+    <Reference Include="Common.Logging.Core, Version=3.4.1.0, Culture=neutral, PublicKeyToken=af08829b84f0328e, processorArchitecture=MSIL">
+      <HintPath>..\packages\Common.Logging.Core.3.4.1\lib\net40\Common.Logging.Core.dll</HintPath>
+    </Reference>
     <Reference Include="HandEvaluator, Version=1.2.0.0, Culture=neutral, processorArchitecture=MSIL">
       <HintPath>..\packages\FreeSO.HandEvaluator.1.2.0\lib\net20\HandEvaluator.dll</HintPath>
+    </Reference>
+    <Reference Include="Microsoft.CSharp" />
+    <Reference Include="Mina.NET, Version=2.0.11.0, Culture=neutral, PublicKeyToken=bc4dde96e5154fe5, processorArchitecture=MSIL">
+      <HintPath>..\packages\Mina.2.0.11\lib\net40\Mina.NET.dll</HintPath>
+    </Reference>
+    <Reference Include="MonoGame.Framework, Version=3.6.0.1625, Culture=neutral, processorArchitecture=MSIL">
+      <HintPath>..\packages\MonoGame.Framework.Portable.3.6.0.1625\lib\portable-net45+win8+wpa81\MonoGame.Framework.dll</HintPath>
+      <Private>False</Private>
     </Reference>
     <Reference Include="OpenTK, Version=1.1.0.0, Culture=neutral, PublicKeyToken=bad199fe84eb3df4, processorArchitecture=MSIL">
       <HintPath>..\packages\MonoGame.Framework.WindowsGL.3.4.0.459\lib\net40\OpenTK.dll</HintPath>
@@ -110,6 +124,10 @@
   </ItemGroup>
   <ItemGroup>
     <Compile Include="Engine\Debug\VMSyncTrace.cs" />
+    <Compile Include="Engine\JitIdeas.cs" />
+    <Compile Include="Engine\Routing\VMIPathSegment.cs" />
+    <Compile Include="Engine\Routing\VMPathBezierSegment.cs" />
+    <Compile Include="Engine\Routing\VMPathLineSegment.cs" />
     <Compile Include="Engine\Routing\VMRectRouter.cs" />
     <Compile Include="Engine\TSOGlobalLink\IVMTSOGlobalLink.cs" />
     <Compile Include="Engine\TSOGlobalLink\Model\VMGLOutfit.cs" />
@@ -155,12 +173,19 @@
     <Compile Include="Marshals\VMStandaloneObjectMarshal.cs" />
     <Compile Include="Model\Platform\VMAbstractEntityState.cs" />
     <Compile Include="Model\Platform\VMAbstractLotState.cs" />
+    <Compile Include="Model\Platform\VMDefaultValidator.cs" />
+    <Compile Include="Model\Platform\VMFSOCommunityValidator.cs" />
     <Compile Include="Model\Platform\VMIAvatarState.cs" />
     <Compile Include="Model\Platform\VMIObjectState.cs" />
+    <Compile Include="Model\Platform\VMAbstractValidator.cs" />
+    <Compile Include="Model\Routing\VMEntityObstacle.cs" />
+    <Compile Include="Model\Routing\VMObstacleSet.cs" />
+    <Compile Include="Model\Routing\VMObstacleSetOld.cs" />
     <Compile Include="Model\TS1Platform\VMTS1AvatarState.cs" />
     <Compile Include="Model\TS1Platform\VMTS1EntityState.cs" />
     <Compile Include="Model\TS1Platform\VMTS1LotState.cs" />
     <Compile Include="Model\TS1Platform\VMTS1ObjectState.cs" />
+    <Compile Include="Model\TSOPlatform\IVMAvatarNameCache.cs" />
     <Compile Include="Model\VMGenericTS1CallMode.cs" />
     <Compile Include="Model\Routing\VMRouteFailCode.cs" />
     <Compile Include="Model\Sound\VMSoundEntry.cs" />
@@ -178,6 +203,7 @@
     <Compile Include="Model\VMArchitectureTerrain.cs" />
     <Compile Include="Model\VMBudget.cs" />
     <Compile Include="Model\VMHeadlineRenderer.cs" />
+    <Compile Include="Model\VMLoadError.cs" />
     <Compile Include="Model\VMOutfitReference.cs" />
     <Compile Include="Model\VMPlaceRequestFlags.cs" />
     <Compile Include="Model\VMPlatformState.cs" />
@@ -211,6 +237,7 @@
     <Compile Include="NetPlay\EODs\Handlers\Data\VMEODSignsData.cs" />
     <Compile Include="NetPlay\EODs\Archetypes\VMBasicEOD.cs" />
     <Compile Include="NetPlay\EODs\Handlers\VMEODBandPlugin.cs" />
+    <Compile Include="NetPlay\EODs\Handlers\VMEODBulletinPlugin.cs" />
     <Compile Include="NetPlay\EODs\Handlers\VMEODDancePlatformPlugin.cs" />
     <Compile Include="NetPlay\EODs\Handlers\VMEODDJStationPlugin.cs" />
     <Compile Include="NetPlay\EODs\Handlers\VMEODHoldEmCasinoPlugin.cs" />
@@ -271,6 +298,7 @@
     <Compile Include="NetPlay\Model\Commands\VMNetInteractionResultCmd.cs" />
     <Compile Include="NetPlay\Model\Commands\VMNetLockCmd.cs" />
     <Compile Include="NetPlay\Model\Commands\VMNetMoveObjectCmd.cs" />
+    <Compile Include="NetPlay\Model\Commands\VMNetPingCmd.cs" />
     <Compile Include="NetPlay\Model\Commands\VMNetPlaceInventoryCmd.cs" />
     <Compile Include="NetPlay\Model\Commands\VMNetSendToInventoryCmd.cs" />
     <Compile Include="NetPlay\Model\Commands\VMNetSetOutfitCmd.cs" />
@@ -356,6 +384,7 @@
     <Compile Include="Primitives\VMTS1Budget.cs" />
     <Compile Include="Primitives\VMTS1InventoryOperations.cs" />
     <Compile Include="Primitives\VMTS1MakeNewCharacter.cs" />
+    <Compile Include="Test\CollisionTestUtils.cs" />
     <Compile Include="Utils\SimitoneNeighbourGenerator.cs" />
     <Compile Include="Utils\TimePropertyListItemSorter.cs" />
     <Compile Include="Utils\VMArchitectureStats.cs" />
@@ -379,15 +408,6 @@
     <Compile Include="Engine\Scopes\VMVariableScope.cs" />
   </ItemGroup>
   <ItemGroup>
-    <ProjectReference Include="..\..\Other\libs\FSOMina.NET\Mina.NET\Mina.NET.csproj">
-      <Project>{28abbf94-0584-4254-a8b4-4843e6f4e867}</Project>
-      <Name>Mina.NET</Name>
-    </ProjectReference>
-    <ProjectReference Include="..\..\Other\libs\FSOMonoGame\MonoGame.Framework\MonoGame.Framework.Windows.csproj">
-      <Project>{7de47032-a904-4c29-bd22-2d235e8d91ba}</Project>
-      <Name>MonoGame.Framework.Windows</Name>
-      <Private>False</Private>
-    </ProjectReference>
     <ProjectReference Include="..\tso.world\FSO.LotView.csproj">
       <Project>{B1A6E4C2-E080-4C34-A604-D11B5296A9B8}</Project>
       <Name>FSO.LotView</Name>
@@ -440,6 +460,7 @@
     </BootstrapperPackage>
   </ItemGroup>
   <ItemGroup>
+    <None Include="app.config" />
     <None Include="packages.config" />
   </ItemGroup>
   <ItemGroup />

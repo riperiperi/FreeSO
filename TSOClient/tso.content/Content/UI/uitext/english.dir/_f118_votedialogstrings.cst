@@ -1,0 +1,64 @@
+﻿1 ^Thank you!^ //generic title for confirmation
+
+//pre voting dialog
+2 ^Before Voting...^
+3 ^The nominations are in; this ballot shows the top nominated candidates for your neighborhood. It's up to you to decide which one should be your Mayor, based on their plans, ratings from past terms and your personal experience with them!
+
+Campaign messages have been written by the candidates to try and convince you why they are the best choice as Mayor, and may be unmoderated. Any bribes (eg. payouts/giveaways if they win) are against the rules and will likely get the candidate disqualified, so your vote may be lost if you vote for offenders.
+
+Choose carefully, as your vote cannot be changed once cast. NOTE: You can only vote in each election once - across your 3 sims AND related (same household) accounts. These sims will still be able to vote in elections in *other* neighborhoods, though.^
+
+//voting dialog
+
+4 ^Vote for your Mayor!^
+5 ^Please select which candidate you want to vote for.^
+
+6 ^Newcomer^ //no previous neighborhood mentioned
+7 ^Running for %s Consecutive Term^ //non-zero term number
+8 ^Ex-Mayor of %s^ //zero term number but previous neighborhood mentioned
+
+//confirm dialog
+9 ^Are you sure?^
+10 ^You have chosen to vote for %s. Are you confident that this is the candidate you wish to vote for? Take careful note of their past rating and campaign message.
+
+Once you vote in an election, you cannot change it or vote for another sim. Additionally, the other sims on your account, and any sims on *related* accounts (same real household) will not be able to vote in this election.^
+
+11 ^Thank you for voting. You should recieve a confirmation email shortly.^
+
+//nomination dialog
+12 ^Nominate for Mayor^
+13 ^Select a sim to nominate for Mayor, from the list of residents in %s. Residents with a star rating have been elected before - click it to view individual ratings.
+
+Choose carefully, as your nomination cannot be changed once cast. NOTE: You can only nominate in each election once - across your 3 sims AND related (same household) accounts. These sims will still be able to nominate in elections in *other* neighborhoods, though.^
+
+14 ^Are you sure?^
+15 ^You have chosen to nominate %s. Are you confident that this is the sim you wish to nominate?
+
+Once you nominate in an election, you cannot change it or nominate another sim. Additionally, the other sims on your account, and any sims on *related* accounts (same real household) will not be able to nominate in this election.^
+
+16 ^Thank you for nominating. You should recieve a confirmation email shortly.^
+
+//run for mayor dialog
+17 ^Entering as a Mayoral Candidate^
+18 ^Enter a campaign message. If you're within the top 5 nominated sims by the time nominations end, you will be a candidate on the final voting ballot, and your campaign message will show below your name.
+
+Before running, please review the rules on http://freeso.org/nhoodrules . Specifically, your message and all ingame campaigning should not personally attack other players or attempt to bribe voters (eg. payouts/giveaways if you win), or you may be disqualified. If you've changed your mind about running, just hit Cancel.^
+
+19 ^Thank you for entering the campaign, and good luck! You should recieve a confirmation email shortly.^
+
+//button strings
+20 ^Nominate^
+21 ^    VOTE^
+22 ^42^ //X offset for voting icon. feel free to localise. (MUST be a number)
+
+//ratings dialog
+23 ^Ratings for %s^
+24 ^Listed are ratings for avatar %s, from best to worst. Ratings were given when this user was mayor of a neighborhood, either now or any time in the past.^
+
+//free vote nhood dialog
+25 ^Choose Neighborhood for Free Vote^
+26 ^You will participate in the chosen neighborhood's election for the rest of the voting cycle. Note that sims from the same real-world household cannot vote and nominate in the same election, and you cannot change your Free Vote neighborhood until the end of the election.^
+27 ^Confirm Free Vote Neighborhood^
+28 ^Are you sure you want to vote in the election for %s? It might be a good idea to think of which residents you might vote for before confirming.^
+29 ^Select^
+30 ^You have successfully enrolled for the free vote! You should recieve a confirmation email shortly.^

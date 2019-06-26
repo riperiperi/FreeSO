@@ -92,6 +92,7 @@ namespace FSO.Content
         public TS1Provider TS1Global;
         public TS1BCFProvider BCFGlobal;
         public string TS1BasePath = TS1HybridBasePath;
+        public string VersionString = "unidentified";
         public bool Inited = false;
 
         public ChangeManager Changes;
@@ -179,8 +180,8 @@ namespace FSO.Content
             LoadProgress = ContentLoadingProgress.InitObjects;
             if (TS1)
             {
-                ((TS1ObjectProvider)WorldObjects).Init();
                 WorldObjectGlobals.Init();
+                ((TS1ObjectProvider)WorldObjects).Init();
                 LoadProgress = ContentLoadingProgress.InitArch;
 
                 WorldWalls.InitTS1();
@@ -188,9 +189,9 @@ namespace FSO.Content
             }
             else
             {
+                WorldObjectGlobals.Init();
                 ((WorldObjectProvider)WorldObjects).Init((Device != null));
                 ((WorldObjectCatalog)WorldCatalog).Init(this);
-                WorldObjectGlobals.Init();
                 LoadProgress = ContentLoadingProgress.InitArch;
 
                 WorldWalls.Init();
@@ -213,10 +214,29 @@ namespace FSO.Content
                 AllFiles = allFiles.ToArray();
                 UIGraphics?.Init();
                 DataDefinition = new TSODataDefinition();
-                using (var stream = File.OpenRead(GetPath("TSOData_datadefinition.dat")))
+                try
                 {
-                    DataDefinition.Read(stream);
+                    using (var stream = File.Open("Content/FSODataDefinition.dat", FileMode.Open, FileAccess.Read, FileShare.Read))
+                    {
+                        DataDefinition.Read(stream);
+                    }
                 }
+                catch
+                {
+                    using (var stream = File.OpenRead(GetPath("TSOData_datadefinition.dat")))
+                    {
+                        DataDefinition.Read(stream);
+                    }
+                }
+
+                try
+                {
+                    VersionString = File.ReadAllText(GetPath("version"));
+                }
+                catch { }
+            } else
+            {
+                VersionString = "TS1";
             }
         }
 

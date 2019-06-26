@@ -14,7 +14,7 @@ namespace FSO.IDE.Common
 {
     public partial class AvatarAnimatorControl : FSOUIControl
     {
-        private UIAvatarAnimator Renderer;
+        public UIAvatarAnimator Renderer;
         public void ShowAnim(string anim)
         {
             if (FSOUI == null)

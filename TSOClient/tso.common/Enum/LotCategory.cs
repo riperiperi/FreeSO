@@ -18,6 +18,9 @@ namespace FSO.Common.Enum
         welcome = 7,
         games = 8,
         entertainment = 9,
-        residence = 10
+        residence = 10,
+        community = 11, //cannot be set by users
+
+        recent = 255 //for filter searches
     }
 }

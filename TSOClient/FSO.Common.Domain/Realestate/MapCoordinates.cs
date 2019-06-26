@@ -1,4 +1,5 @@
-﻿using System;
+﻿using Microsoft.Xna.Framework;
+using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Text;
@@ -75,5 +76,10 @@ namespace FSO.Common.Domain.Realestate
 
         public ushort X;
         public ushort Y;
+
+        public Vector2 ToVector2()
+        {
+            return new Vector2(X, Y);
+        }
     }
 }

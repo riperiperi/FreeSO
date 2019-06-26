@@ -286,7 +286,6 @@ float4 DirectionFunctionMask(VertexShaderOutput input) : COLOR0{
 	return float4(LightColor.w, LightColor.w, LightColor.w, LightColor.w); //multiply light color onto the room
 }
 
-
 technique Draw2D
 {
     pass MainPass

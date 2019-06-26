@@ -57,6 +57,8 @@ namespace FSO.LotView.Model
         public List<ParticleComponent> Particles = new List<ParticleComponent>();
         public List<ParticleComponent> ObjectParticles = new List<ParticleComponent>();
 
+        public List<DebugLinesComponent> DebugLines = new List<DebugLinesComponent>();
+
         /// <summary>
         /// Walls Cutaway sections. Remember to manage these correctly - i.e remove when you're finished with them!
         /// </summary>
@@ -64,7 +66,8 @@ namespace FSO.LotView.Model
         public bool[] Cutaway;
 
         private Color _OutsideColor = Color.White;
-        public float MinOutMul = (150 / 400f);
+        public float MinOutMul = (175 / 400f);
+        public Vector4 ColorMul = new Vector4(0.8f, 0.8f, 1f, 0.87f);
         public Color MinOut;
         public Color OutsideColor
         {
@@ -75,7 +78,8 @@ namespace FSO.LotView.Model
             set
             {
                 _OutsideColor = value;
-                MinOut = value * MinOutMul;
+                var aFactor = 1f - ((value.R + value.G + value.B) - 115) / (512f*2);
+                MinOut = new Color(value.ToVector4() * MinOutMul * aFactor * ColorMul);
                 if (MinOut.R == 0) MinOut.R = 1;
                 if (MinOut.G == 0) MinOut.G = 1;
                 if (MinOut.B == 0) MinOut.B = 1;
@@ -83,6 +87,18 @@ namespace FSO.LotView.Model
                 //MinOut = value * (float)(150 / Math.Sqrt(value.R * value.R + value.G * value.G + value.B * value.B));
             }
         }
+
+        private Color PowColor(Color col, float pow)
+        {
+            var vec = col.ToVector4();
+            vec.X = (float)Math.Pow(vec.X, pow);
+            vec.Y = (float)Math.Pow(vec.Y, pow);
+            vec.Z = (float)Math.Pow(vec.Z, pow);
+            vec.W = (float)Math.Pow(vec.W, pow);
+
+            return new Color(vec);
+        }
+
         public double OutsideTime;
         public float OutsideSkyP;
         public Color OutsideWeatherTint;
@@ -153,7 +169,6 @@ namespace FSO.LotView.Model
             return (Altitude[((y % Height) * Width + (x % Width))]);
         }
 
-
         public float InterpAltitude(Vector3 Position)
         {
             if (Altitude == null) return 0f;
@@ -183,6 +198,36 @@ namespace FSO.LotView.Model
             var minAvg = new Vector2(avg, 1 / (1 - avg));
             if (float.IsInfinity(minAvg.Y)) minAvg.Y = 1;
             effect.Parameters["MinAvg"]?.SetValue(minAvg);
+        }
+
+        public sbyte GetFloorsUsed()
+        {
+            sbyte bestResult = 1;
+            for (sbyte i=1; i<Stories; i++)
+            {
+                var hasAnything = false;
+                foreach (var floor in Floors[i])
+                {
+                    if (floor.Pattern != 0)
+                    {
+                        hasAnything = true;
+                        break;
+                    }
+                }
+                if (!hasAnything)
+                {
+                    foreach (var wall in Walls[i])
+                    {
+                        if (wall.Segments != 0)
+                        {
+                            hasAnything = true;
+                            break;
+                        }
+                    }
+                }
+                if (hasAnything) bestResult = (sbyte)(i + 1);
+            }
+            return bestResult;
         }
 
         public void GenerateRoomLights()
@@ -221,6 +266,7 @@ namespace FSO.LotView.Model
         public void RemoveAvatar(AvatarComponent avatar)
         {
             this.Avatars.Remove(avatar);
+            HeadlineObjects.Remove(avatar);
         }
 
         public void SignalWallChange()
@@ -251,6 +297,11 @@ namespace FSO.LotView.Model
         {
             var offset = GetOffset(tileX, tileY);
             return Floors[level-1][offset];
+        }
+
+        public bool TileInbounds(Vector2 tile)
+        {
+            return (tile.X >= 0 && tile.Y >= 0 && tile.X < Width && tile.Y < Height);
         }
 
         public void ChangeObjectLocation(ObjectComponent component, LotTilePos pos)
@@ -358,6 +409,45 @@ namespace FSO.LotView.Model
                 }
             }
             return Indoors;
+        }
+
+        private byte[] GrassMask;
+        public byte[] GetGrassMask()
+        {
+            if (GrassMask != null) return GrassMask;
+            else
+            {
+                GrassMask = new byte[Width * Height];
+
+                //1: top tri clear
+                //2: right tri clear
+                //4: bottom tri clear
+                //8: left tri clear
+
+                var walls = Walls[0];
+                var floors = Floors[0];
+                for (int i=0; i<GrassMask.Length; i++)
+                {
+                    var wall = walls[i];
+                    if ((wall.Segments & WallSegments.AnyDiag) > 0)
+                    {
+                        //diagonal tile here - check both sides for grass
+                        byte result = 0;
+                        if ((wall.Segments & WallSegments.HorizontalDiag) > 0)
+                        {
+
+                        }
+                        else
+                        {
+
+                        }
+                    } else
+                    {
+                        GrassMask[i] = (byte)((floors[i].Pattern == 0) ? 0xFF : 0);
+                    }
+                }
+                return GrassMask;
+            }
         }
     }
 

@@ -41,9 +41,13 @@ namespace FSO.Client.UI.Panels.WorldUI
                 GD.SetRenderTarget(MoneyTarget);
                 GD.Clear(new Color(48, 69, 90));
                 var batch = GameFacade.Screens.SpriteBatch;
+                Style.VFont.Draw(GD, Text, new Vector2(5, 1), Style.Color, new Vector2(Style.Scale), null);
+
+                /*
                 batch.Begin();
                 batch.DrawString(Style.SpriteFont, Text, new Vector2(5, 1), Style.Color);
                 batch.End();
+                */
                 GD.SetRenderTarget(null);
                 Inited = true;
             }

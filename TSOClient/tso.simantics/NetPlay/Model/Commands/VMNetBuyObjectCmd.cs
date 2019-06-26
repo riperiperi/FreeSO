@@ -14,6 +14,7 @@ using FSO.SimAntics.Primitives;
 using FSO.SimAntics.Model.TSOPlatform;
 using FSO.SimAntics.Entities;
 using FSO.SimAntics.Model;
+using FSO.SimAntics.Model.Platform;
 
 namespace FSO.SimAntics.NetPlay.Model.Commands
 {
@@ -25,6 +26,8 @@ namespace FSO.SimAntics.NetPlay.Model.Commands
         public sbyte level;
         public Direction dir;
         public bool Verified;
+
+        public PurchaseMode Mode = PurchaseMode.Normal;
 
         private int value = -1;
 
@@ -70,7 +73,7 @@ namespace FSO.SimAntics.NetPlay.Model.Commands
 
                 var objDefinition = CreatedGroup.BaseObject.MasterDefinition ?? CreatedGroup.BaseObject.Object.OBJ;
 
-                CreatedGroup.InitialPrice = (int)value;
+                if (Mode != PurchaseMode.Donate) CreatedGroup.InitialPrice = (int)value;
 
                 return true;
             }
@@ -88,7 +91,9 @@ namespace FSO.SimAntics.NetPlay.Model.Commands
 
         private bool TryPlace(VM vm, VMAvatar caller)
         {
-            if (!vm.PlatformState.CanPlaceNewUserObject(vm)) return false;
+            if (Mode != PurchaseMode.Donate && !vm.PlatformState.CanPlaceNewUserObject(vm)) return false;
+            if (Mode == PurchaseMode.Donate && !vm.PlatformState.CanPlaceNewDonatedObject(vm)) return false;
+
             var catalog = Content.Content.Get().WorldCatalog;
             var item = catalog.GetItemByGUID(GUID);
 
@@ -112,6 +117,12 @@ namespace FSO.SimAntics.NetPlay.Model.Commands
             }
             CreatedGroup = group;
 
+            if (Mode == PurchaseMode.Donate)
+            {
+                //this object should be donated.
+                (CreatedGroup.BaseObject.TSOState as VMTSOObjectState).Donate(vm, CreatedGroup.BaseObject);
+            }
+
             vm.SignalChatEvent(new VMChatEvent(caller, VMChatEventType.Arch,
                 caller?.Name ?? "Unknown",
                 vm.GetUserIP(caller?.PersistID ?? 0),
@@ -126,31 +137,22 @@ namespace FSO.SimAntics.NetPlay.Model.Commands
             value = 0; //do not trust value from net
             if (!vm.TS1)
             {
-                if (caller == null || //caller must be on lot, have build permissions
-                    caller.AvatarState.Permissions < VMTSOAvatarPermissions.Roommate ||
-                    !vm.PlatformState.CanPlaceNewUserObject(vm))
-                    return false;
+                Mode = vm.PlatformState.Validator.GetPurchaseMode(Mode, caller, GUID, false);
+                if (Mode == PurchaseMode.Disallowed) return false;
+                if (Mode == PurchaseMode.Normal && !vm.PlatformState.CanPlaceNewUserObject(vm)) return false;
+                if (Mode == PurchaseMode.Donate && !vm.PlatformState.CanPlaceNewDonatedObject(vm)) return false;
             }
-            //get entry in catalog. first verify if it can be bought at all. (if not, error out)
+
             //TODO: error feedback for client
             var catalog = Content.Content.Get().WorldCatalog;
             var item = catalog.GetItemByGUID(GUID);
-
-            if (!vm.TS1)
-            {
-                var whitelist = (caller.AvatarState.Permissions == VMTSOAvatarPermissions.Roommate) ? RoomieWhiteList : BuilderWhiteList;
-                if (item == null || !whitelist.Contains(item.Value.Category))
-                {
-                    if (caller.AvatarState.Permissions == VMTSOAvatarPermissions.Admin) return true;
-                    return false; //not purchasable
-                }
-            }
             
             if (item != null)
             {
                 var price = (int)item.Value.Price;
                 var dcPercent = VMBuildableAreaInfo.GetDiscountFor(item.Value, vm);
                 value = (price * (100 - dcPercent)) / 100;
+                if (Mode == PurchaseMode.Donate) value -= (value * 2) / 3;
             }
 
             //TODO: fine grained purchase control based on user status
@@ -180,6 +182,8 @@ namespace FSO.SimAntics.NetPlay.Model.Commands
             writer.Write(level);
             writer.Write((byte)dir);
             writer.Write(value);
+
+            writer.Write((byte)Mode);
         }
 
         public override void Deserialize(BinaryReader reader)
@@ -191,6 +195,8 @@ namespace FSO.SimAntics.NetPlay.Model.Commands
             level = reader.ReadSByte();
             dir = (Direction)reader.ReadByte();
             value = reader.ReadInt32();
+
+            Mode = (PurchaseMode)reader.ReadByte();
         }
 
         #endregion

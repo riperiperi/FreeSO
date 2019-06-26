@@ -10,7 +10,7 @@ namespace FSO.Common.Utils
     public class Binding <T> : IDisposable where T : INotifyPropertyChanged
     {
         private List<IBinding> Bindings = new List<IBinding>();
-        private List<INotifyPropertyChanged> Watching = new List<INotifyPropertyChanged>();
+        private HashSet<INotifyPropertyChanged> Watching = new HashSet<INotifyPropertyChanged>();
         private T _Value;
 
         public event Callback<T> ValueChanged;
@@ -44,7 +44,7 @@ namespace FSO.Common.Utils
                 ClearWatching();
                 _Value = value;
                 if(_Value != null){
-                    Watch(_Value);
+                    Watch(_Value, null);
                 }
                 Digest();
 
@@ -68,12 +68,16 @@ namespace FSO.Common.Utils
             }
         }
 
-        private void Watch(INotifyPropertyChanged source)
+        private void Watch(INotifyPropertyChanged source, HashSet<INotifyPropertyChanged> toWatch)
         {
             lock (Watching)
             {
-                source.PropertyChanged += OnPropertyChanged;
-                Watching.Add(source);
+                if (!Watching.Contains(source))
+                {
+                    source.PropertyChanged += OnPropertyChanged;
+                    Watching.Add(source);
+                }
+                toWatch?.Add(source);
 
                 var properties = source.GetType().GetProperties();
                 foreach (var property in properties)
@@ -83,7 +87,7 @@ namespace FSO.Common.Utils
                         var value = (INotifyPropertyChanged)property.GetValue(source, null);
                         if (value != null)
                         {
-                            Watch(value);
+                            Watch(value, toWatch);
                         }
                     }
                 }
@@ -98,10 +102,18 @@ namespace FSO.Common.Utils
                 if (typeof(INotifyPropertyChanged).IsAssignableFrom(property.PropertyType))
                 {
                     //We may have a new nested object to watch
-                    ClearWatching();
+                    //ClearWatching();
                     if (_Value != null)
                     {
-                        Watch(_Value);
+                        var toWatch = new HashSet<INotifyPropertyChanged>();
+                        Watch(_Value, toWatch);
+
+                        var toRemove = Watching.Except(toWatch).ToList();
+                        foreach (var rem in toRemove)
+                        {
+                            Watching.Remove(rem);
+                            rem.PropertyChanged -= OnPropertyChanged;
+                        }
                     }
                 }
             }

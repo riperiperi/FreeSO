@@ -188,17 +188,23 @@ namespace FSO.Files.RC
                 }
             }
 
-            FloorVGPU = new VertexBuffer(gd, typeof(DGRP3DVert), FloorVertices.Length, BufferUsage.None);
-            FloorVGPU.SetData(FloorVertices);
-            FloorIGPU = new IndexBuffer(gd, IndexElementSize.ThirtyTwoBits, FloorIndices.Length, BufferUsage.None);
-            FloorIGPU.SetData(FloorIndices);
-            FloorPrims = FloorIndices.Length / 3;
+            if (FloorVertices.Length > 0)
+            {
+                FloorVGPU = new VertexBuffer(gd, typeof(DGRP3DVert), FloorVertices.Length, BufferUsage.None);
+                FloorVGPU.SetData(FloorVertices);
+                FloorIGPU = new IndexBuffer(gd, IndexElementSize.ThirtyTwoBits, FloorIndices.Length, BufferUsage.None);
+                FloorIGPU.SetData(FloorIndices);
+                FloorPrims = FloorIndices.Length / 3;
+            }
 
-            WallVGPU = new VertexBuffer(gd, typeof(DGRP3DVert), WallVertices.Length, BufferUsage.None);
-            WallVGPU.SetData(WallVertices);
-            WallIGPU = new IndexBuffer(gd, IndexElementSize.ThirtyTwoBits, WallIndices.Length, BufferUsage.None);
-            WallIGPU.SetData(WallIndices);
-            WallPrims = WallIndices.Length / 3;
+            if (WallVertices.Length > 0)
+            {
+                WallVGPU = new VertexBuffer(gd, typeof(DGRP3DVert), WallVertices.Length, BufferUsage.None);
+                WallVGPU.SetData(WallVertices);
+                WallIGPU = new IndexBuffer(gd, IndexElementSize.ThirtyTwoBits, WallIndices.Length, BufferUsage.None);
+                WallIGPU.SetData(WallIndices);
+                WallPrims = WallIndices.Length / 3;
+            }
         }
 
         public void Dispose()

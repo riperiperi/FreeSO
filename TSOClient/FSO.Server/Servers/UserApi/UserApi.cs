@@ -15,13 +15,15 @@ using static FSO.Server.Api.Api;
 using Ninject;
 using FSO.Server.Utils;
 using FSO.Server.Domain;
+using System.Threading;
+using static FSO.Server.Common.ApiAbstract;
 
 namespace FSO.Server.Servers.UserApi
 {
     public class UserApi : AbstractServer
     {
         private IDisposable App;
-        private ServerConfiguration Config;
+        public ServerConfiguration Config;
         private IKernel Kernel;
 
         public event APIRequestShutdownDelegate OnRequestShutdown;
@@ -41,21 +43,40 @@ namespace FSO.Server.Servers.UserApi
 
         public override void Shutdown()
         {
+            APIThread?.Stop();
         }
 
+        private IAPILifetime APIThread;
+
+        public static Func<UserApi, string, IAPILifetime> CustomStartup;
         public override void Start()
         {
-            // Start OWIN host 
-            App = WebApp.Start(Config.Services.UserApi.Bindings[0], x =>
+            // Start OWIN host
+            if (CustomStartup != null) APIThread = CustomStartup(this, Config.Services.UserApi.Bindings[0]);
+            else
             {
-                new UserApiStartup().Configuration(x, Config);
-                var api = INSTANCE;
-                api.OnBroadcastMessage += (s, t, m) => { OnBroadcastMessage?.Invoke(s, t, m); };
-                api.OnRequestShutdown += (t, st) => { OnRequestShutdown?.Invoke(t, st); };
-                api.OnRequestUserDisconnect += (i) => { OnRequestUserDisconnect?.Invoke(i); };
-                api.OnRequestMailNotify += (i, s, b, t) => { OnRequestMailNotify?.Invoke(i, s, b, t); };
-                api.HostPool = Kernel.Get<IGluonHostPool>();
-            });
+                App = WebApp.Start(Config.Services.UserApi.Bindings[0], x =>
+                {
+                    new UserApiStartup().Configuration(x, Config);
+                    SetupInstance(INSTANCE);
+                    ((FSO.Server.Api.Api)INSTANCE).HostPool = Kernel.Get<IGluonHostPool>();
+                });
+            }
+        }
+
+        public IGluonHostPool GetGluonHostPool()
+        {
+            return Kernel.Get<IGluonHostPool>();
+        }
+
+        public void SetupInstance(ApiAbstract api)
+        {
+            api.OnBroadcastMessage += (s, t, m) => { OnBroadcastMessage?.Invoke(s, t, m); };
+            api.OnRequestShutdown += (t, st) => { OnRequestShutdown?.Invoke(t, st); };
+            api.OnRequestUserDisconnect += (i) => { OnRequestUserDisconnect?.Invoke(i); };
+            api.OnRequestMailNotify += (i, s, b, t) => { OnRequestMailNotify?.Invoke(i, s, b, t); };
+            
+            var config = Config;
         }
     }
 

@@ -31,6 +31,18 @@ namespace FSO.SimAntics.Primitives
             var operand = (VMSnapOperand)args;
             var avatar = context.Caller; //todo, can sometimes be an object?? see roaches object tile movement, snaps to its own routing slot
             var obj = context.StackObject;
+            if (obj == context.Caller)
+            {
+                obj.MovedSelf = true;
+                if (obj is VMGameObject)
+                {
+                    if (VM.UseWorld)
+                    {
+                        foreach (var obj2 in obj.MultitileGroup.Objects)
+                            obj2.WorldUI.PrepareSnapInterpolation(obj.WorldUI);
+                    }
+                }
+            }
 
             if (operand.OriginOnly) { } //origin only. unused?
 
@@ -56,6 +68,8 @@ namespace FSO.SimAntics.Primitives
 
             if (slot == null) return VMPrimitiveExitCode.GOTO_FALSE;
 
+            var dirSnap = (slot.Rsflags & SLOTFlags.SnapToDirection) > 0;
+
             if (operand.Mode != VMSnapSlotScope.BeContained)
             {
                 var parser = new VMSlotParser(slot);
@@ -70,9 +84,13 @@ namespace FSO.SimAntics.Primitives
                     if (locations.Count > 0)
                     {
                         if (!SetPosition(avatar, locations[0].Position,
-                            ((slot.Rsflags & SLOTFlags.SnapToDirection) > 0) ? locations[0].RadianDirection : avatar.RadianDirection,
+                            (dirSnap) ? locations[0].RadianDirection : avatar.RadianDirection,
                             operand.Shoo, context.VM.Context))
+                        {
+                            //set direction regardless. TS1, experimental, breaks chairs snapping onto avatars. if this were correct, it also needs to be in the false branch.
+                            //if (dirSnap) avatar.RadianDirection = locations[0].RadianDirection; 
                             return VMPrimitiveExitCode.GOTO_FALSE;
+                        }
                     }
                     else
                     {

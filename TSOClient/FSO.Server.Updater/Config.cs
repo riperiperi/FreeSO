@@ -25,6 +25,8 @@ namespace FSO.Server.Watchdog
 
         private Dictionary<string, string> _DefaultValues = new Dictionary<string, string>()
         {
+            { "ManifestDownload", "True" },
+
             { "UseTeamCity", "False" },
             { "TeamCityUrl", "http://servo.freeso.org" },
             { "TeamCityProject", "FreeSO_TsoClient" },
@@ -38,6 +40,7 @@ namespace FSO.Server.Watchdog
             set { _DefaultValues = value; }
         }
 
+        public bool ManifestDownload { get; set; }
         public bool UseTeamCity { get; set; }
         public string TeamCityUrl { get; set; }
         public string TeamCityProject { get; set; }

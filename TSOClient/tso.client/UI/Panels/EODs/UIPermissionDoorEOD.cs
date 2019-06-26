@@ -224,7 +224,7 @@ namespace FSO.Client.UI.Panels.EODs
             }
             else
             {
-                Controller.ShowEODMode(new EODLiveModeOpt
+                EODController.ShowEODMode(new EODLiveModeOpt
                 {
                     Buttons = 0,
                     Expandable = false,

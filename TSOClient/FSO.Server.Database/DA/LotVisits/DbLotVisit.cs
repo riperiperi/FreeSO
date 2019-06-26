@@ -1,4 +1,5 @@
-﻿using System;
+﻿using FSO.Common.Enum;
+using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Text;
@@ -15,6 +16,13 @@ namespace FSO.Server.Database.DA.LotVisitors
         public DbLotVisitorStatus status { get; set; }
         public DateTime time_created { get; set; }
         public DateTime? time_closed { get; set; }
+    }
+
+    public class DbLotVisitNhood : DbLotVisit
+    {
+        public uint neighborhood_id { get; set; }
+        public uint location { get; set; }
+        public LotCategory category { get; set; }
     }
 
     public enum DbLotVisitorType

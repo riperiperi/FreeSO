@@ -1,0 +1,20 @@
+﻿1 ^Error^
+2 ^An unknown error has occured. This has been logged on the server, so you should probably report the issue and what you were requesting so we can look into it.^
+
+3 ^Your message has been posted! Note that you cannot post again for %s day(s).^
+
+4 ^You do not live in this neighborhood, so you cannot post to its bulletin board. Maybe a move is in order?^
+5 ^You are not allowed to post a message on this bulletin board.^
+6 ^The lot you have specified could not be found. Perhaps it was deleted or moved some time between you selecting it and now.^
+7 ^The message you have sent is invalid. Please make sure it is not empty and is less than the given character limit.^
+8 ^The title you have sent is invalid. Please make sure it is not empty and is less than the given character limit.^
+9 ^SEND_FAIL_GAMEPLAY_BAN^
+10 ^You're posting messages too quickly! The limit for normal residents is %s day(s), and %s day(s) for the mayor.^
+11 ^We appreciate the enthusiasm, but only sims who have been in a neighborhood for at least a week can post to its bulletin board.^
+12 ^Couldn't find the given message. Perhaps it was deleted?^
+13 ^You cannot perform this action because you are not the Mayor of this neighborhood. Perhaps the Mayorship recently passed to someone else?^
+14 ^You cannot delete this post - it doesn't belong to you. Nice try though.^
+15 ^Calm down! This post has already been promoted to the Mayor section, you don't need to do it again.^
+16 ^You are not allowed to perform this action.^
+
+16 ^You are not allowed to perform this action.^

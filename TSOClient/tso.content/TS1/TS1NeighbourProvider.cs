@@ -15,6 +15,9 @@ namespace FSO.Content.TS1
     /// </summary>
     public class TS1NeighborhoodProvider
     {
+        //injected from game. requires instantiating a vm and getting the person data after Init runs.
+        public Func<uint, short[]> PreparePersonDataFromObject;
+
         public IffFile MainResource;
         public IffFile LotLocations;
         public IffFile StreetNames;
@@ -36,7 +39,7 @@ namespace FSO.Content.TS1
         public TS1NeighborhoodProvider(Content contentManager)
         {
             ContentManager = contentManager;
-            InitSpecific(1);
+            InitSpecific(0);
         }
 
         /// <summary>
@@ -49,7 +52,7 @@ namespace FSO.Content.TS1
             ZoningDictionary.Clear();
             FamilyForHouse.Clear();
 
-            var udName = "UserData" + ((id == 0) ? "" : (id+1).ToString());
+            var udName = "UserData" + ((id == 0) ? "" : (id + 1).ToString());
             //simitone shouldn't modify existing ts1 data, since our house saves are incompatible.
             //therefore we should copy to the simitone user data.
 
@@ -99,8 +102,26 @@ namespace FSO.Content.TS1
             }
 
             LoadCharacters(true);
-
             //todo: manage avatar iffs here
+        }
+
+        public void AddMissingNeighbors()
+        {
+            var objs = (TS1ObjectProvider)ContentManager.WorldObjects;
+            var missing = objs.PersonGUIDs.Where(x => !Neighbors.Entries.Any(y => y.GUID == x)).Select(x => objs.Get(x));
+            foreach (var obj in missing)
+            {
+                var id = Neighbors.GetFreeID();
+                Neighbors.AddNeighbor(new Neighbour()
+                {
+                    NeighbourID = id,
+                    GUID = (uint)obj.GUID,
+                    Name = Path.GetFileName(obj.Resource.Name).ToLowerInvariant().Replace(".iff", ""),
+                    PersonData = PreparePersonDataFromObject((uint)obj.GUID),
+                    PersonMode = 9,
+                    Relationships = new Dictionary<int, List<short>>()
+                });
+            }
         }
 
         public void LoadCharacters(bool clearLast)
@@ -110,7 +131,10 @@ namespace FSO.Content.TS1
             if (clearLast)
             {
                 foreach (var obj in objs.Entries.Where(x => x.Value.Source == GameObjectSource.User))
+                {
                     objs.RemoveObject((uint)obj.Key);
+                    objs.PersonGUIDs.Add((uint)obj.Key);
+                }
             }
 
             NextSim = 0;
@@ -144,6 +168,7 @@ namespace FSO.Content.TS1
                             Group = (short)obj.MasterID,
                             SubIndex = obj.SubIndex
                         };
+                        if (obj.ObjectType == OBJDType.Person) objs.PersonGUIDs.Add(obj.GUID);
                     }
                 }
             }
@@ -243,12 +268,27 @@ namespace FSO.Content.TS1
 
         public short SetToNext(short current)
         {
+            //short form: if we can find current, then we can get its entry index and add 1.
+            var currentN = GetNeighborByID(current);
+            if (currentN != null)
+            {
+                var id = currentN.RuntimeIndex + 1;
+                return (short)((id == Neighbors.Entries.Count) ? -1 : Neighbors.Entries[id]?.NeighbourID ?? -1);
+            }
             return (short)(Neighbors.Entries.FirstOrDefault(x => x.NeighbourID > current)?.NeighbourID ?? -1);
         }
 
         public short SetToNext(short current, uint guid)
         {
-            return (short)(Neighbors.Entries.FirstOrDefault(x => x.NeighbourID > current && x.GUID == guid)?.NeighbourID ?? -1);
+            IEnumerable<Neighbour> search = Neighbors.Entries;
+            var firstNID = GetNeighborIDForGUID(guid);
+            if (firstNID != null)
+            {
+                var firstN = GetNeighborByID(firstNID.Value);
+                if (firstN != null)
+                    search = search.Skip(firstN.RuntimeIndex);
+            }
+            return (short)(search.FirstOrDefault(x => x.NeighbourID > current && x.GUID == guid)?.NeighbourID ?? -1);
         }
 
         public void AvatarChanged(uint guid)

@@ -19,6 +19,8 @@ namespace FSO.Client.Rendering.City
         float LotSquish { get; }
         float FogMultiplier { get; }
         float DepthBiasScale { get; }
+        float FarUIFade { get; }
+        CityCameraCenter CenterCam { get; set; }
         bool HideUI { get; }
 
         void Update(UpdateState state, Terrain city);
@@ -27,5 +29,18 @@ namespace FSO.Client.Rendering.City
         Vector2 CalculateR();
         Vector2 CalculateRShadow();
         void InheritPosition(Terrain parent, World lotWorld, CoreGameScreenController controller);
+
+        void CenterCamera(CityCameraCenter center);
+        void ClearCenter();
+    }
+
+    public class CityCameraCenter
+    {
+        public Vector2 Center;
+        public float YAngle;
+        public float Dist;
+
+        public float RotAngle;
+        public int ID;
     }
 }

@@ -51,6 +51,9 @@
             this.objectToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
             this.semiGlobalToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
             this.toolsToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
+            this.dataServiceEditorToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
+            this.simAnticsAOTToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
+            this.saveGlobalscsToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
             this.windowToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
             this.hideAllToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
             this.toolStripSeparator1 = new System.Windows.Forms.ToolStripSeparator();
@@ -156,9 +159,34 @@
             // 
             // toolsToolStripMenuItem
             // 
+            this.toolsToolStripMenuItem.DropDownItems.AddRange(new System.Windows.Forms.ToolStripItem[] {
+            this.dataServiceEditorToolStripMenuItem,
+            this.simAnticsAOTToolStripMenuItem});
             this.toolsToolStripMenuItem.Name = "toolsToolStripMenuItem";
             this.toolsToolStripMenuItem.Size = new System.Drawing.Size(47, 20);
             this.toolsToolStripMenuItem.Text = "Tools";
+            // 
+            // dataServiceEditorToolStripMenuItem
+            // 
+            this.dataServiceEditorToolStripMenuItem.Name = "dataServiceEditorToolStripMenuItem";
+            this.dataServiceEditorToolStripMenuItem.Size = new System.Drawing.Size(180, 22);
+            this.dataServiceEditorToolStripMenuItem.Text = "Data Service Editor";
+            this.dataServiceEditorToolStripMenuItem.Click += new System.EventHandler(this.dataServiceEditorToolStripMenuItem_Click);
+            // 
+            // simAnticsAOTToolStripMenuItem
+            // 
+            this.simAnticsAOTToolStripMenuItem.DropDownItems.AddRange(new System.Windows.Forms.ToolStripItem[] {
+            this.saveGlobalscsToolStripMenuItem});
+            this.simAnticsAOTToolStripMenuItem.Name = "simAnticsAOTToolStripMenuItem";
+            this.simAnticsAOTToolStripMenuItem.Size = new System.Drawing.Size(180, 22);
+            this.simAnticsAOTToolStripMenuItem.Text = "SimAntics AOT";
+            // 
+            // saveGlobalscsToolStripMenuItem
+            // 
+            this.saveGlobalscsToolStripMenuItem.Name = "saveGlobalscsToolStripMenuItem";
+            this.saveGlobalscsToolStripMenuItem.Size = new System.Drawing.Size(216, 22);
+            this.saveGlobalscsToolStripMenuItem.Text = "Generate AOT Sources (.cs)";
+            this.saveGlobalscsToolStripMenuItem.Click += new System.EventHandler(this.saveGlobalscsToolStripMenuItem_Click);
             // 
             // windowToolStripMenuItem
             // 
@@ -173,14 +201,14 @@
             // hideAllToolStripMenuItem
             // 
             this.hideAllToolStripMenuItem.Name = "hideAllToolStripMenuItem";
-            this.hideAllToolStripMenuItem.Size = new System.Drawing.Size(116, 22);
+            this.hideAllToolStripMenuItem.Size = new System.Drawing.Size(180, 22);
             this.hideAllToolStripMenuItem.Text = "Hide All";
             this.hideAllToolStripMenuItem.Click += new System.EventHandler(this.hideAllToolStripMenuItem_Click);
             // 
             // toolStripSeparator1
             // 
             this.toolStripSeparator1.Name = "toolStripSeparator1";
-            this.toolStripSeparator1.Size = new System.Drawing.Size(113, 6);
+            this.toolStripSeparator1.Size = new System.Drawing.Size(177, 6);
             // 
             // helpToolStripMenuItem
             // 
@@ -497,5 +525,8 @@
         private System.Windows.Forms.Button ChunkDiscard;
         private EntityInspector entityInspector1;
         private System.Windows.Forms.Button NewOBJButton;
+        private System.Windows.Forms.ToolStripMenuItem dataServiceEditorToolStripMenuItem;
+        private System.Windows.Forms.ToolStripMenuItem simAnticsAOTToolStripMenuItem;
+        private System.Windows.Forms.ToolStripMenuItem saveGlobalscsToolStripMenuItem;
     }
 }

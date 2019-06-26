@@ -89,6 +89,7 @@ namespace FSO.Client.UI.Panels
 
         private UILabel ObjLimitLabel;
         private int LastObjCount = -1;
+        private bool LastDonator;
 
         private bool RoomCategories = false;
         private bool Roommate = true; //if false, shows visitor inventory only.
@@ -127,7 +128,7 @@ namespace FSO.Client.UI.Panels
             this.AddAt(5, InventoryCatalogVisitorIcon);
 
             Catalog = new UICatalog(useSmall ? 14 : 24);
-            Catalog.ActiveVM = lotController.vm;
+            Catalog.LotControl = lotController;
             Catalog.OnSelectionChange += new CatalogSelectionChangeDelegate(Catalog_OnSelectionChange);
             Catalog.Position = new Microsoft.Xna.Framework.Vector2(275, 7);
             this.Add(Catalog);
@@ -248,18 +249,33 @@ namespace FSO.Client.UI.Panels
         public override void Update(UpdateState state)
         {
             var objCount = LotController.vm.Context.ObjectQueries.NumUserObjects;
-            if (LastObjCount != objCount)
+            if (LastObjCount != objCount || LastDonator != LotController.ObjectHolder.DonateMode)
             {
-                var limit = LotController.vm.TSOState.ObjectLimit;
-                ObjLimitLabel.Caption = objCount + "/"+limit+" Objects";
-                var lerp = objCount / (float)limit;
-                if (lerp < 0.5)
-                    ObjLimitLabel.CaptionStyle.Color = Color.White;
-                if (lerp < 0.75)
-                    ObjLimitLabel.CaptionStyle.Color = Color.Lerp(Color.White, new Color(255, 201, 38), lerp * 4 - 2);
+                if (LastDonator != LotController.ObjectHolder.DonateMode)
+                {
+                    if (CurrentInventory != null && CurrentCategory == CurrentInventory && LotController.ObjectHolder.DonateMode)
+                        UIAlert.Alert(GameFacade.Strings.GetString("f114", "2"), GameFacade.Strings.GetString("f114", "3"), true);
+                    Catalog.SetPage(Catalog.Page); //update prices
+                }
+                if (LotController.ObjectHolder.DonateMode)
+                {
+                    ObjLimitLabel.Caption = GameFacade.Strings.GetString("f114", "4");
+                    ObjLimitLabel.CaptionStyle.Color = new Color(255, 201, 38);
+                }
                 else
-                    ObjLimitLabel.CaptionStyle.Color = Color.Lerp(new Color(255, 201, 38), Color.Red, lerp * 4 - 3);
+                {
+                    var limit = LotController.vm.TSOState.ObjectLimit;
+                    ObjLimitLabel.Caption = objCount + "/" + limit + " Objects";
+                    var lerp = objCount / (float)limit;
+                    if (lerp < 0.5)
+                        ObjLimitLabel.CaptionStyle.Color = Color.White;
+                    if (lerp < 0.75)
+                        ObjLimitLabel.CaptionStyle.Color = Color.Lerp(Color.White, new Color(255, 201, 38), lerp * 4 - 2);
+                    else
+                        ObjLimitLabel.CaptionStyle.Color = Color.Lerp(new Color(255, 201, 38), Color.Red, lerp * 4 - 3);
+                }
                 LastObjCount = objCount;
+                LastDonator = LotController.ObjectHolder.DonateMode;
             }
 
             if (LotController.ActiveEntity != null)
@@ -423,7 +439,14 @@ namespace FSO.Client.UI.Panels
             UIButton button = (UIButton)elem;
             button.Selected = true;
             SetMode((elem == InventoryButton) ? 2 : 1);
-            if (elem == InventoryButton) CurrentCategory = CurrentInventory;
+            if (elem == InventoryButton)
+            {
+                if (CurrentCategory != CurrentInventory && LotController.ObjectHolder.DonateMode)
+                {
+                    UIAlert.Alert(GameFacade.Strings.GetString("f114", "2"), GameFacade.Strings.GetString("f114", "3"), true);
+                }
+                CurrentCategory = CurrentInventory;
+            }
             else
             {
                 if (!CategoryMap.ContainsKey(button)) return;

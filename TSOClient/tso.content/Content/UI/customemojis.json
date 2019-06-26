@@ -1,42 +1,47 @@
 {
   "rip": {
-    "keywords": ["death", "sims", "tombstone"],
+    "keywords": [ "death", "sims", "tombstone" ],
     "url": "http://freeso.org/emoji/rip.png",
     "category": "custom"
   },
   "rel_plus": {
-    "keywords": ["sims", "relationship", "friendship", "positive"],
+    "keywords": [ "sims", "relationship", "friendship", "positive" ],
     "url": "http://freeso.org/emoji/relplus.png",
     "category": "custom"
   },
   "rel_minus": {
-    "keywords": ["sims", "relationship", "friendship", "negative", "enemy"],
+    "keywords": [ "sims", "relationship", "friendship", "negative", "enemy" ],
     "url": "http://freeso.org/emoji/relminus.png",
     "category": "custom"
   },
   "hc": {
-    "keywords": ["sims", "food", "cooking", "home", "salisbury", "steak"],
+    "keywords": [ "sims", "food", "cooking", "home", "salisbury", "steak" ],
     "url": "http://freeso.org/emoji/hc.png",
     "category": "custom"
   },
   "tso": {
-    "keywords": ["sims", "online", "the"],
+    "keywords": [ "sims", "online", "the" ],
     "url": "http://freeso.org/emoji/tso.png",
     "category": "custom"
   },
   "wall": {
-    "keywords": ["sims", "build", "mode"],
+    "keywords": [ "sims", "build", "mode" ],
     "url": "http://freeso.org/emoji/wall.png",
     "category": "custom"
   },
   "tsomania": {
-    "keywords": ["sims", "tso", "mania"],
+    "keywords": [ "sims", "tso", "mania" ],
     "url": "http://freeso.org/emoji/tsomania.png",
     "category": "custom"
   },
   "leak": {
-    "keywords": ["sims", "leak", "gopher", "wtf"],
+    "keywords": [ "sims", "leak", "gopher", "wtf" ],
     "url": "http://freeso.org/emoji/leak.png",
+    "category": "custom"
+  },
+  "joyfuljams": {
+    "keywords": [ "jams", "joy", "wtf", "lool" ],
+    "url": "http://freeso.org/emoji/joyfuljams.png",
     "category": "custom"
   }
 }

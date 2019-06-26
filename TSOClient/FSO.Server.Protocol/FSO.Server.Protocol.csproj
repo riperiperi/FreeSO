@@ -41,23 +41,28 @@
     <CodeAnalysisRuleSet>MinimumRecommendedRules.ruleset</CodeAnalysisRuleSet>
   </PropertyGroup>
   <ItemGroup>
-    <Reference Include="Common.Logging, Version=3.4.0.0, Culture=neutral, PublicKeyToken=af08829b84f0328e, processorArchitecture=MSIL">
-      <HintPath>..\packages\Common.Logging.3.4.0\lib\net40\Common.Logging.dll</HintPath>
-      <Private>True</Private>
+    <Reference Include="Common.Logging, Version=3.4.1.0, Culture=neutral, PublicKeyToken=af08829b84f0328e, processorArchitecture=MSIL">
+      <HintPath>..\packages\Common.Logging.3.4.1\lib\net40\Common.Logging.dll</HintPath>
     </Reference>
-    <Reference Include="Common.Logging.Core, Version=3.4.0.0, Culture=neutral, PublicKeyToken=af08829b84f0328e, processorArchitecture=MSIL">
-      <HintPath>..\packages\Common.Logging.Core.3.4.0\lib\net40\Common.Logging.Core.dll</HintPath>
-      <Private>True</Private>
+    <Reference Include="Common.Logging.Core, Version=3.4.1.0, Culture=neutral, PublicKeyToken=af08829b84f0328e, processorArchitecture=MSIL">
+      <HintPath>..\packages\Common.Logging.Core.3.4.1\lib\net40\Common.Logging.Core.dll</HintPath>
+    </Reference>
+    <Reference Include="Mina.NET, Version=2.0.11.0, Culture=neutral, PublicKeyToken=bc4dde96e5154fe5, processorArchitecture=MSIL">
+      <HintPath>..\packages\Mina.2.0.11\lib\net40\Mina.NET.dll</HintPath>
     </Reference>
     <Reference Include="Ninject, Version=3.0.0.0, Culture=neutral, PublicKeyToken=c7192dc5380945e7, processorArchitecture=MSIL">
       <HintPath>..\packages\Portable.Ninject.3.3.1\lib\net40-client\Ninject.dll</HintPath>
     </Reference>
     <Reference Include="NLog, Version=4.0.0.0, Culture=neutral, PublicKeyToken=5120e14c03d0593c, processorArchitecture=MSIL">
-      <HintPath>..\packages\NLog.4.3.11\lib\net45\NLog.dll</HintPath>
-      <Private>True</Private>
+      <HintPath>..\packages\NLog.4.5.7\lib\net45\NLog.dll</HintPath>
     </Reference>
     <Reference Include="System" />
+    <Reference Include="System.Configuration" />
     <Reference Include="System.Core" />
+    <Reference Include="System.IO.Compression" />
+    <Reference Include="System.Runtime.Serialization" />
+    <Reference Include="System.ServiceModel" />
+    <Reference Include="System.Transactions" />
     <Reference Include="System.Xml.Linq" />
     <Reference Include="System.Data.DataSetExtensions" />
     <Reference Include="Microsoft.CSharp" />
@@ -100,11 +105,16 @@
     <Compile Include="Electron\Model\ChangeRoommateType.cs" />
     <Compile Include="Electron\Model\FindAvatarResponseStatus.cs" />
     <Compile Include="Electron\Model\FindLotResponseStatus.cs" />
+    <Compile Include="Electron\Model\IActionRequest.cs" />
+    <Compile Include="Electron\Model\IActionResponse.cs" />
     <Compile Include="Electron\Model\ModerationRequestType.cs" />
     <Compile Include="Electron\Packets\AvatarRetireRequest.cs" />
+    <Compile Include="Electron\Packets\BulletinRequest.cs" />
+    <Compile Include="Electron\Packets\BulletinResponse.cs" />
     <Compile Include="Electron\Packets\ChangeRoommateRequest.cs" />
     <Compile Include="Electron\Packets\ChangeRoommateResponse.cs" />
     <Compile Include="Electron\Packets\FSOVMProtocolMessage.cs" />
+    <Compile Include="Electron\Packets\GlobalTuningUpdate.cs" />
     <Compile Include="Electron\Packets\MailRequest.cs" />
     <Compile Include="Electron\Packets\MailResponse.cs" />
     <Compile Include="Electron\Packets\ModerationRequest.cs" />
@@ -118,6 +128,9 @@
     <Compile Include="Electron\Packets\InstantMessage.cs" />
     <Compile Include="Electron\Packets\FindLotRequest.cs" />
     <Compile Include="Electron\Packets\KeepAlive.cs" />
+    <Compile Include="Electron\Packets\NhoodCandidateList.cs" />
+    <Compile Include="Electron\Packets\NhoodRequest.cs" />
+    <Compile Include="Electron\Packets\NhoodResponse.cs" />
     <Compile Include="Electron\Packets\PurchaseLotRequest.cs" />
     <Compile Include="Electron\Packets\PurchaseLotResponse.cs" />
     <Compile Include="Gluon\AbstractElectronPacket.cs" />
@@ -127,8 +140,8 @@
     <Compile Include="Gluon\Model\ChangeType.cs" />
     <Compile Include="Gluon\Model\ClaimAction.cs" />
     <Compile Include="Gluon\Model\ClaimType.cs" />
-    <Compile Include="Gluon\Model\ShutdownType.cs" />
     <Compile Include="Gluon\Packets\AdvertiseCapacity.cs" />
+    <Compile Include="Gluon\Packets\CityNotify.cs" />
     <Compile Include="Gluon\Packets\HealthPing.cs" />
     <Compile Include="Gluon\Packets\HealthPingResponse.cs" />
     <Compile Include="Gluon\Packets\IGluonCall.cs" />
@@ -141,6 +154,7 @@
     <Compile Include="Gluon\Packets\ShardShutdownRequest.cs" />
     <Compile Include="Gluon\Packets\TransferClaim.cs" />
     <Compile Include="Gluon\Packets\TransferClaimResponse.cs" />
+    <Compile Include="Gluon\Packets\TuningChanged.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
     <Compile Include="Utils\ChallengeResponse.cs" />
     <Compile Include="Utils\SslClientFilter.cs" />
@@ -189,10 +203,6 @@
   </ItemGroup>
   <ItemGroup />
   <ItemGroup>
-    <ProjectReference Include="..\..\Other\libs\FSOMina.NET\Mina.NET\Mina.NET.csproj">
-      <Project>{28abbf94-0584-4254-a8b4-4843e6f4e867}</Project>
-      <Name>Mina.NET</Name>
-    </ProjectReference>
     <ProjectReference Include="..\FSO.Server.Common\FSO.Server.Common.csproj">
       <Project>{39b61962-fe43-4b64-8e57-8f793737fffe}</Project>
       <Name>FSO.Server.Common</Name>

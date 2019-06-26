@@ -18,13 +18,13 @@ namespace FSO.Server.Database.DA.DynPayouts
 
         public List<DbDynPayout> GetPayoutHistory(int limitDay)
         {
-            return Context.Connection.Query<DbDynPayout>("SELECT * FROM fso.fso_dyn_payouts ORDER BY day DESC LIMIT 56", new { limitDay = limitDay }).ToList();
+            return Context.Connection.Query<DbDynPayout>("SELECT * FROM fso_dyn_payouts ORDER BY day DESC LIMIT 56", new { limitDay = limitDay }).ToList();
         }
 
         public List<DbTransSummary> GetSummary(int limitDay)
         {
             return Context.Connection.Query<DbTransSummary>("SELECT transaction_type, sum(value) AS value, sum(count) AS sum FROM fso.fso_transactions "
-                +"WHERE transaction_type > 40 AND day >= @limitDay GROUP BY transaction_type", new { limitDay = limitDay }).ToList();
+                +"WHERE transaction_type > 40 AND transaction_type < 51 AND day >= @limitDay GROUP BY transaction_type", new { limitDay = limitDay }).ToList();
         }
 
         public bool InsertDynRecord(List<DbDynPayout> dynPayout)

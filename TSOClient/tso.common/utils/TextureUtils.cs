@@ -143,22 +143,27 @@ namespace FSO.Common.Utils
 
         private static SpriteBatch CopyBatch;
 
+        public static Texture2D CopyAccelerated(GraphicsDevice gd, Texture2D texture)
+        {
+            var old = gd.GetRenderTargets();
+            var rt = new RenderTarget2D(gd, texture.Width, texture.Height);
+            gd.SetRenderTarget(rt);
+            gd.Clear(Color.TransparentBlack);
+            if (CopyBatch == null) CopyBatch = new SpriteBatch(gd);
+            CopyBatch.Begin();
+            CopyBatch.Draw(texture, Vector2.Zero, Color.White);
+            CopyBatch.End();
+
+            gd.SetRenderTargets(old);
+
+            return rt;
+        }
+
         public static Texture2D Copy(GraphicsDevice gd, Texture2D texture)
         {
             if (texture.Format == SurfaceFormat.Dxt5)
             {
-                var old = gd.GetRenderTargets();
-                var rt = new RenderTarget2D(gd, texture.Width, texture.Height);
-                gd.SetRenderTarget(rt);
-                gd.Clear(Color.TransparentBlack);
-                if (CopyBatch == null) CopyBatch = new SpriteBatch(gd);
-                CopyBatch.Begin();
-                CopyBatch.Draw(texture, Vector2.Zero, Color.White);
-                CopyBatch.End();
-
-                gd.SetRenderTargets(old);
-
-                return rt;
+                return CopyAccelerated(gd, texture);
             }
             else
             {
@@ -862,7 +867,7 @@ namespace FSO.Common.Utils
                         (byte)(r / t),
                         (byte)(g / t),
                         (byte)(b / t),
-                        (byte)(a / t)
+                        (byte)(a / 4)
                         );
                     find += 2;
                 }

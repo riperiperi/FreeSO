@@ -25,6 +25,21 @@ angular.module('admin')
               link: '/admin/tasks',
               title: 'Tasks',
               icon: 'alarm'
+          },
+          {
+              link: '/admin/updates',
+              title: 'Updates',
+              icon: 'system_update'
+          },
+          {
+              link: '/admin/addons',
+              title: 'Update Addons',
+              icon: 'archive'
+          },
+          {
+              link: '/admin/branches',
+              title: 'Update Branches',
+              icon: 'call_split'
           }
       ];
 

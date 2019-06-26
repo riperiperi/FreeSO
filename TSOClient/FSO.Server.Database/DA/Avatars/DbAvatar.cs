@@ -53,6 +53,10 @@ namespace FSO.Server.Database.DA.Avatars
         public ushort ticker_repairman { get; set; }
 
         public byte moderation_level { get; set; }
+        public uint? custom_guid { get; set; }
+        public uint move_date { get; set; }
+        public uint name_date { get; set; }
+        public int? mayor_nhood { get; set; }
     }
 
 

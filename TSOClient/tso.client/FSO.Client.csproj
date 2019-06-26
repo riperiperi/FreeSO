@@ -1,4 +1,4 @@
-﻿<?xml version="1.0" encoding="utf-8"?>
+<?xml version="1.0" encoding="utf-8"?>
 <Project ToolsVersion="12.0" DefaultTargets="Build" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
   <PropertyGroup>
     <Configuration Condition=" '$(Configuration)' == '' ">Debug</Configuration>
@@ -98,6 +98,7 @@
     <Prefer32Bit>true</Prefer32Bit>
   </PropertyGroup>
   <ItemGroup>
+    <Compile Include="Controllers\BulletinActionController.cs" />
     <Compile Include="Controllers\GizmoTop100Controller.cs" />
     <Compile Include="Controllers\InboxController.cs" />
     <Compile Include="Controllers\JoinLotProgressController.cs" />
@@ -108,14 +109,21 @@
     <Compile Include="Controllers\GizmoController.cs" />
     <Compile Include="Controllers\GizmoSearchController.cs" />
     <Compile Include="Controllers\LoadingScreenController.cs" />
+    <Compile Include="Controllers\NeighborhoodActionController.cs" />
     <Compile Include="Controllers\Panels\BookmarksController.cs" />
+    <Compile Include="Controllers\Panels\BulletinDialogController.cs" />
+    <Compile Include="Controllers\Panels\GenericSearchController.cs" />
     <Compile Include="Controllers\Panels\LotAdmitController.cs" />
     <Compile Include="Controllers\Panels\LotPageController.cs" />
+    <Compile Include="Controllers\Panels\NeighPageController.cs" />
     <Compile Include="Controllers\Panels\PersonPageController.cs" />
+    <Compile Include="Controllers\Panels\RatingListController.cs" />
+    <Compile Include="Controllers\Panels\RatingSummaryController.cs" />
     <Compile Include="Controllers\Panels\RelationshipDialogController.cs" />
     <Compile Include="Controllers\Panels\SecureTradeController.cs" />
     <Compile Include="Controllers\RoommateRequestController.cs" />
     <Compile Include="Controllers\TerrainController.cs" />
+    <Compile Include="Controllers\UpdateController.cs" />
     <Compile Include="FSOFacade.cs" />
     <Compile Include="FSOProgram.cs" />
     <Compile Include="GameStartProxy.cs" />
@@ -123,6 +131,7 @@
     <Compile Include="GameContent\CacheModule.cs" />
     <Compile Include="Network\ClientDataService.cs" />
     <Compile Include="Network\IClientDataService.cs" />
+    <Compile Include="Network\NetworkStatus.cs" />
     <Compile Include="Network\Sandbox\FSOSandboxClient.cs" />
     <Compile Include="Network\Sandbox\FSOSandboxProtocol.cs" />
     <Compile Include="Network\Sandbox\FSOSandboxProtocolDecoder.cs" />
@@ -130,7 +139,9 @@
     <Compile Include="Network\Sandbox\FSOSandboxServer.cs" />
     <Compile Include="Network\Topics.cs" />
     <Compile Include="Network\TopicSubscription.cs" />
+    <Compile Include="Network\VMDataServiceNameCache.cs" />
     <Compile Include="Regulators\LotConnectionRegulator.cs" />
+    <Compile Include="Regulators\GenericActionRegulator.cs" />
     <Compile Include="Regulators\PurchaseLotRegulator.cs" />
     <Compile Include="Rendering\City\CityCamera2D.cs" />
     <Compile Include="Rendering\City\CityCamera3D.cs" />
@@ -143,12 +154,16 @@
     <Compile Include="Rendering\City\Graph\VoronoiCellGraph.cs" />
     <Compile Include="Rendering\City\ICityCamera.cs" />
     <Compile Include="Rendering\City\LotThumbContent.cs" />
+    <Compile Include="Rendering\City\Model\CityNeighbourhood.cs" />
     <Compile Include="Rendering\City\Plugins\AbstractCityPlugin.cs" />
     <Compile Include="Rendering\City\Plugins\MapPainterPlugin.cs" />
+    <Compile Include="Rendering\City\Plugins\NeighbourhoodEditPlugin.cs" />
     <Compile Include="Rendering\City\TLayerVertex.cs" />
-    <Compile Include="UI\Controls\UIInvisibleButton.cs" />
+    <Compile Include="UI\Profile\UIJobInfo.cs" />
+    <Compile Include="UI\Controls\UIRatingDisplay.cs" />
     <Compile Include="UI\Controls\UISlotsImage.cs" />
     <Compile Include="UI\Controls\UIAvatarThumbnail.cs" />
+    <Compile Include="UI\Controls\UIInvisibleButton.cs" />
     <Compile Include="UI\Controls\UILotButton.cs" />
     <Compile Include="UI\Controls\UIPersonButton.cs" />
     <Compile Include="UI\Controls\UISkillBar.cs" />
@@ -157,10 +172,12 @@
     <Compile Include="UI\Hints\UIHintListItem.cs" />
     <Compile Include="UI\Hints\UIHintManager.cs" />
     <Compile Include="UI\Hints\UIHintWindow.cs" />
+    <Compile Include="UI\Model\UIIconCache.cs" />
     <Compile Include="UI\Panels\Chat\UIChatCategoryDialog.cs" />
     <Compile Include="UI\Panels\Chat\UIChatCategoryList.cs" />
     <Compile Include="UI\Panels\EODs\Archetypes\UIBasicEOD.cs" />
     <Compile Include="UI\Panels\EODs\UIBandEOD.cs" />
+    <Compile Include="UI\Panels\EODs\UIBulletinEOD.cs" />
     <Compile Include="UI\Panels\EODs\UIDJStationEOD.cs" />
     <Compile Include="UI\Panels\EODs\UIBlackjackEOD.cs" />
     <Compile Include="UI\Panels\EODs\UIGameCompDrawACardPluginEOD.cs" />
@@ -192,13 +209,37 @@
     <Compile Include="UI\Panels\LotControls\UIGrassPaint.cs" />
     <Compile Include="UI\Panels\LotControls\UITerrainRaiser.cs" />
     <Compile Include="UI\Panels\MessageStore\UIMessageStore.cs" />
+    <Compile Include="UI\Panels\Neighborhoods\UIBulletinBoard.cs" />
+    <Compile Include="UI\Panels\Neighborhoods\UIBulletinDialog.cs" />
+    <Compile Include="UI\Panels\Neighborhoods\UIBulletinPost.cs" />
+    <Compile Include="UI\Panels\Neighborhoods\UILargeBulletinSummary.cs" />
+    <Compile Include="UI\Panels\Neighborhoods\UIAbstractStickyContainer.cs" />
+    <Compile Include="UI\Panels\Neighborhoods\UIBigPersonButton.cs" />
+    <Compile Include="UI\Panels\Neighborhoods\UIDonatorDialog.cs" />
+    <Compile Include="UI\Panels\Neighborhoods\UIFullRatingItem.cs" />
+    <Compile Include="UI\Panels\Neighborhoods\UILotThumbButtonAuto.cs" />
+    <Compile Include="UI\Panels\Neighborhoods\UIManageDonatorDialog.cs" />
+    <Compile Include="UI\Panels\Neighborhoods\UIMediumBulletinSummary.cs" />
+    <Compile Include="UI\Panels\Neighborhoods\UINeighBanner.cs" />
+    <Compile Include="UI\Panels\Neighborhoods\UINeighPage.cs" />
+    <Compile Include="UI\Panels\Neighborhoods\UINominationSelectContainer.cs" />
+    <Compile Include="UI\Panels\Neighborhoods\UIPropertySelectContainer.cs" />
+    <Compile Include="UI\Panels\Neighborhoods\UIRatingContainer.cs" />
+    <Compile Include="UI\Panels\Neighborhoods\UIRatingList.cs" />
+    <Compile Include="UI\Panels\Neighborhoods\UIRatingSummaryPanel.cs" />
+    <Compile Include="UI\Panels\Neighborhoods\UISmallBulletinSummary.cs" />
+    <Compile Include="UI\Panels\Neighborhoods\UITop10Pedestal.cs" />
+    <Compile Include="UI\Panels\Neighborhoods\UIVoteCandidate.cs" />
+    <Compile Include="UI\Panels\Neighborhoods\UIVoteContainer.cs" />
     <Compile Include="UI\Panels\UIEmojiSuggestions.cs" />
     <Compile Include="UI\Panels\UIGraphicsOptionsDialog.cs" />
     <Compile Include="UI\Hints\UIHintAlert.cs" />
     <Compile Include="UI\Panels\UILotControlTouchHelper.cs" />
     <Compile Include="UI\Panels\UILotSkillModeDialog.cs" />
+    <Compile Include="UI\Panels\UINetStatusTray.cs" />
     <Compile Include="UI\Panels\UISandboxSelector.cs" />
     <Compile Include="UI\Panels\UINeighborhoodSelectionPanel.cs" />
+    <Compile Include="UI\Panels\UISortedContainer.cs" />
     <Compile Include="UI\Panels\UITimeOutDialog.cs" />
     <Compile Include="UI\Panels\UIAsyncPriceDialog.cs" />
     <Compile Include="UI\Panels\UIBonusDialog.cs" />
@@ -234,6 +275,7 @@
     <Compile Include="UI\Panels\WorldUI\UIMoneyHeadline.cs" />
     <Compile Include="UI\Screens\IGameScreen.cs" />
     <Compile Include="UI\Screens\SandboxGameScreen.cs" />
+    <Compile Include="UI\Screens\TSOVersionPatchScreen.cs" />
     <Compile Include="UI\UIRelationshipBar.cs" />
     <Compile Include="Utils\ControllerUtils.cs" />
     <Compile Include="Utils\Endian.cs" />
@@ -241,6 +283,8 @@
     <Compile Include="Utils\GameLocator\LinuxLocator.cs" />
     <Compile Include="Utils\GameLocator\WindowsLocator.cs" />
     <Compile Include="Utils\MonogameLinker.cs" />
+    <Compile Include="Utils\PalMapper.cs" />
+    <Compile Include="Utils\TestFunctions\ProjectionTest.cs" />
     <Compile Include="Utils\ThreeDMesh.cs" />
     <Content Include="..\..\Other\libs\FSOMonoGame\MonoGame.Framework\obj\Linux\AnyCPU\Release\MonoGame.Framework.dll">
       <Link>Monogame\Linux\MonoGame.Framework.dll</Link>
@@ -474,6 +518,28 @@
     <Content Include="Content\UI\hints\english.dir\vm_firstvisitor.json">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </Content>
+    <Content Include="Content\UI\hints\english.dir\land_community.json">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </Content>
+    <Content Include="Content\UI\hints\english.dir\ui_donator.json">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </Content>
+    <Content Include="Content\UI\hints\english.dir\ui_mayor_buildbuy.json">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </Content>
+    <Content Include="Content\UI\hints\english.dir\ui_mayor_donators.json">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </Content>
+    <Content Include="Content\UI\hints\english.dir\ui_bulletin_board.json">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </Content>
+    <Content Include="Content\UI\hints\english.dir\ui_neigh_page.json">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </Content>
+    <Content Include="Content\UI\hints\english.dir\ui_nhood_rules.json">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </Content>
+    <None Include="packages.config" />
     <None Include="Resources\Icon.bmp" />
     <None Include="Resources\ico256.fw.png" />
     <Content Include="sdl2.dll">
@@ -485,31 +551,42 @@
     </Content>
   </ItemGroup>
   <ItemGroup>
+    <Reference Include="Common.Logging, Version=3.4.1.0, Culture=neutral, PublicKeyToken=af08829b84f0328e, processorArchitecture=MSIL">
+      <HintPath>..\packages\Common.Logging.3.4.1\lib\net40\Common.Logging.dll</HintPath>
+    </Reference>
+    <Reference Include="Common.Logging.Core, Version=3.4.1.0, Culture=neutral, PublicKeyToken=af08829b84f0328e, processorArchitecture=MSIL">
+      <HintPath>..\packages\Common.Logging.Core.3.4.1\lib\net40\Common.Logging.Core.dll</HintPath>
+    </Reference>
     <Reference Include="MIConvexHull, Version=1.0.17.1019, Culture=neutral, PublicKeyToken=bdc96d69606221fd, processorArchitecture=MSIL">
       <HintPath>..\packages\MIConvexHull.1.1.17.1019\lib\netstandard1.0\MIConvexHull.dll</HintPath>
-      <Private>True</Private>
+    </Reference>
+    <Reference Include="Microsoft.CSharp" />
+    <Reference Include="Mina.NET, Version=2.0.11.0, Culture=neutral, PublicKeyToken=bc4dde96e5154fe5, processorArchitecture=MSIL">
+      <HintPath>..\packages\Mina.2.0.11\lib\net40\Mina.NET.dll</HintPath>
     </Reference>
     <Reference Include="Newtonsoft.Json, Version=11.0.0.0, Culture=neutral, PublicKeyToken=30ad4fe6b2a6aeed, processorArchitecture=MSIL">
       <HintPath>..\packages\Newtonsoft.Json.11.0.2\lib\net45\Newtonsoft.Json.dll</HintPath>
-      <Private>True</Private>
     </Reference>
     <Reference Include="Ninject, Version=3.0.0.0, Culture=neutral, PublicKeyToken=c7192dc5380945e7, processorArchitecture=MSIL">
       <HintPath>..\packages\Portable.Ninject.3.3.1\lib\net40-client\Ninject.dll</HintPath>
     </Reference>
     <Reference Include="NLog, Version=4.0.0.0, Culture=neutral, PublicKeyToken=5120e14c03d0593c, processorArchitecture=MSIL">
-      <HintPath>..\packages\NLog.4.3.11\lib\net45\NLog.dll</HintPath>
-      <Private>True</Private>
+      <HintPath>..\packages\NLog.4.5.7\lib\net45\NLog.dll</HintPath>
     </Reference>
     <Reference Include="OpenTK, Version=1.1.0.0, Culture=neutral, PublicKeyToken=bad199fe84eb3df4, processorArchitecture=MSIL">
       <HintPath>..\packages\MonoGame.Framework.WindowsGL.3.4.0.459\lib\net40\OpenTK.dll</HintPath>
       <Private>True</Private>
     </Reference>
-    <Reference Include="System.Collections.Immutable, Version=1.2.1.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a, processorArchitecture=MSIL">
-      <HintPath>..\packages\System.Collections.Immutable.1.3.0\lib\portable-net45+win8+wp8+wpa81\System.Collections.Immutable.dll</HintPath>
-      <Private>True</Private>
+    <Reference Include="System.Collections.Immutable, Version=1.2.3.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a, processorArchitecture=MSIL">
+      <HintPath>..\packages\System.Collections.Immutable.1.5.0\lib\portable-net45+win8+wp8+wpa81\System.Collections.Immutable.dll</HintPath>
     </Reference>
+    <Reference Include="System.Configuration" />
     <Reference Include="System.Data" />
     <Reference Include="System" />
+    <Reference Include="System.IO.Compression" />
+    <Reference Include="System.Runtime.Serialization" />
+    <Reference Include="System.ServiceModel" />
+    <Reference Include="System.Transactions" />
     <Reference Include="System.Xml" />
     <Reference Include="GOLDEngine">
       <HintPath>Dependencies\GOLDEngine.dll</HintPath>
@@ -566,7 +643,6 @@
     <Content Include="Monogame\MacOS\Tao.Sdl.dll.config">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </Content>
-    <None Include="packages.config" />
   </ItemGroup>
   <ItemGroup>
     <EmbeddedResource Include="Properties\Resources.resx">
@@ -576,27 +652,21 @@
     </EmbeddedResource>
   </ItemGroup>
   <ItemGroup>
-    <ProjectReference Include="..\..\Other\libs\FSOMina.NET\Mina.NET\Mina.NET.csproj">
-      <Project>{28abbf94-0584-4254-a8b4-4843e6f4e867}</Project>
-      <Name>Mina.NET</Name>
-    </ProjectReference>
     <ProjectReference Include="..\..\Other\libs\FSOMonoGame\MonoGame.Framework\MonoGame.Framework.Net.WindowsGL.csproj">
       <Project>{6d6009f4-0afb-4806-89d7-7945f20270f5}</Project>
       <Name>MonoGame.Framework.Net.WindowsGL</Name>
     </ProjectReference>
-    <ProjectReference Include="..\..\Other\libs\FSOMonoGame\MonoGame.Framework\MonoGame.Framework.Windows.csproj">
-      <Project>{7de47032-a904-4c29-bd22-2d235e8d91ba}</Project>
-      <Name>MonoGame.Framework.Windows</Name>
-      <Private>False</Private>
-    </ProjectReference>
     <ProjectReference Include="..\..\Other\libs\FSOMonoGame\MonoGame.Framework\MonoGame.Framework.WindowsGL.csproj">
       <Project>{6d75e618-19ca-4c51-9546-f10965fbc0b8}</Project>
       <Name>MonoGame.Framework.WindowsGL</Name>
-      <Private>False</Private>
     </ProjectReference>
     <ProjectReference Include="..\..\Other\libs\mp3sharp\mp3sharp\Mp3Sharp.csproj">
       <Project>{834cab58-648d-47cc-ac6f-d01c08c809a4}</Project>
       <Name>Mp3Sharp</Name>
+    </ProjectReference>
+    <ProjectReference Include="..\..\Other\libs\MSDFData\MSDFData.csproj">
+      <Project>{eabea510-3e53-4f19-9f0b-75c5ca9dfa3b}</Project>
+      <Name>MSDFData</Name>
     </ProjectReference>
     <ProjectReference Include="..\..\Other\libs\VoronoiLib\VoronoiLib.csproj">
       <Project>{5d6b850b-3084-4c45-a8d7-7ccf67260b21}</Project>
@@ -689,9 +759,7 @@
       <Install>true</Install>
     </BootstrapperPackage>
   </ItemGroup>
-  <ItemGroup>
-    <Folder Include="UI\Model\" />
-  </ItemGroup>
+  <ItemGroup />
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
   <!-- To modify your build process, add your task inside one of the targets below and uncomment it. 
        Other similar extension points exist, see Microsoft.Common.targets.

@@ -423,7 +423,7 @@ namespace FSO.Vitaboy
         }
 
         private ulong _BodyOutfitId;
-        public ulong BodyOutfitId
+        public virtual ulong BodyOutfitId
         {
             set
             {
@@ -439,7 +439,7 @@ namespace FSO.Vitaboy
         }
 
         private ulong _HeadOutfitId;
-        public ulong HeadOutfitId
+        public virtual ulong HeadOutfitId
         {
             set
             {

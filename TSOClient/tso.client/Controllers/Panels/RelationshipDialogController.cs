@@ -3,6 +3,7 @@ using FSO.Common.DatabaseService;
 using FSO.Common.DatabaseService.Model;
 using FSO.Common.DataService;
 using FSO.Common.DataService.Model;
+using FSO.Common.Utils;
 using FSO.Server.DataService.Model;
 using System;
 using System.Collections.Generic;
@@ -81,7 +82,10 @@ namespace FSO.Client.Controllers.Panels
             DatabaseService.Search(new SearchRequest { Query = name, Type = SearchType.SIMS }, false)
             .ContinueWith(x =>
             {
-                View.SetFilter(new HashSet<uint>(x.Result.Items.Select(y => y.EntityId)));
+                GameThread.InUpdate(() =>
+                {
+                    View.SetFilter(new HashSet<uint>(x.Result.Items.Select(y => y.EntityId)));
+                });
             });
         }
 

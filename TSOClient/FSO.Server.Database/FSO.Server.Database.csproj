@@ -47,7 +47,6 @@
     </Reference>
     <Reference Include="Dapper, Version=1.40.0.0, Culture=neutral, processorArchitecture=MSIL">
       <HintPath>..\packages\Dapper.1.42\lib\net45\Dapper.dll</HintPath>
-      <Private>True</Private>
     </Reference>
     <Reference Include="IBatisNet.Common, Version=1.6.2.0, Culture=neutral, PublicKeyToken=ed781d9fc396c6ca, processorArchitecture=MSIL">
       <SpecificVersion>False</SpecificVersion>
@@ -67,11 +66,9 @@
     </Reference>
     <Reference Include="MySql.Data, Version=6.9.7.0, Culture=neutral, PublicKeyToken=c5687fc88969c44d, processorArchitecture=MSIL">
       <HintPath>..\packages\MySql.Data.6.9.7\lib\net45\MySql.Data.dll</HintPath>
-      <Private>True</Private>
     </Reference>
-    <Reference Include="Newtonsoft.Json, Version=7.0.0.0, Culture=neutral, PublicKeyToken=30ad4fe6b2a6aeed, processorArchitecture=MSIL">
-      <HintPath>..\packages\Newtonsoft.Json.7.0.1\lib\net45\Newtonsoft.Json.dll</HintPath>
-      <Private>True</Private>
+    <Reference Include="Newtonsoft.Json, Version=11.0.0.0, Culture=neutral, PublicKeyToken=30ad4fe6b2a6aeed, processorArchitecture=MSIL">
+      <HintPath>..\packages\Newtonsoft.Json.11.0.2\lib\net45\Newtonsoft.Json.dll</HintPath>
     </Reference>
     <Reference Include="Ninject, Version=3.0.0.0, Culture=neutral, PublicKeyToken=c7192dc5380945e7, processorArchitecture=MSIL">
       <HintPath>..\packages\Portable.Ninject.3.3.1\lib\net40-client\Ninject.dll</HintPath>
@@ -88,6 +85,12 @@
   <ItemGroup>
     <Compile Include="DatabaseConfiguration.cs" />
     <Compile Include="DatabaseModule.cs" />
+    <Content Include="DatabaseScripts\changes\0026_freevote.sql">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </Content>
+    <Content Include="DatabaseScripts\changes\0027_tuning_presets.sql">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </Content>
     <Compile Include="DA\AbstractSqlDA.cs" />
     <Compile Include="DA\AuthTickets\AuthTicket.cs" />
     <Compile Include="DA\AuthTickets\IAuthTickets.cs" />
@@ -110,6 +113,9 @@
     <Compile Include="DA\Bookmarks\DbBookmark.cs" />
     <Compile Include="DA\Bookmarks\IBookmarks.cs" />
     <Compile Include="DA\Bookmarks\SqlBookmarks.cs" />
+    <Compile Include="DA\Bulletin\DbBulletinPost.cs" />
+    <Compile Include="DA\Bulletin\IBulletinPosts.cs" />
+    <Compile Include="DA\Bulletin\SqlBulletinPosts.cs" />
     <Compile Include="DA\DbChanges\DbChange.cs" />
     <Compile Include="DA\DbEvents\DbEvent.cs" />
     <Compile Include="DA\DbEvents\IEvents.cs" />
@@ -118,6 +124,14 @@
     <Compile Include="DA\DynPayouts\DbTransSummary.cs" />
     <Compile Include="DA\DynPayouts\IDynPayouts.cs" />
     <Compile Include="DA\DynPayouts\SqlDynPayouts.cs" />
+    <Compile Include="DA\Elections\DbElectionCandidate.cs" />
+    <Compile Include="DA\Elections\DbElectionCycle.cs" />
+    <Compile Include="DA\Elections\DbElectionCycleMail.cs" />
+    <Compile Include="DA\Elections\DbElectionFreeVote.cs" />
+    <Compile Include="DA\Elections\DbElectionVote.cs" />
+    <Compile Include="DA\Elections\DbMayorRating.cs" />
+    <Compile Include="DA\Elections\IElections.cs" />
+    <Compile Include="DA\Elections\SqlElections.cs" />
     <Compile Include="DA\EmailConfirmations\EmailConfirmation.cs" />
     <Compile Include="DA\EmailConfirmations\IEmailConfirmations.cs" />
     <Compile Include="DA\EmailConfirmations\SqlEmailConfirmations.cs" />
@@ -143,6 +157,7 @@
     <Compile Include="DA\LotTop100\ILotTop100.cs" />
     <Compile Include="DA\LotTop100\DbLotTop100.cs" />
     <Compile Include="DA\LotTop100\SqlLotTop100.cs" />
+    <Compile Include="DA\LotVisits\LotVisitUtils.cs" />
     <Compile Include="DA\LotVisitTotals\DbLotVisitTotal.cs" />
     <Compile Include="DA\LotVisitTotals\ILotVisitTotals.cs" />
     <Compile Include="DA\LotVisits\DbLotVisit.cs" />
@@ -150,6 +165,10 @@
     <Compile Include="DA\LotVisits\SqlLotVisits.cs" />
     <Compile Include="DA\LotVisitTotals\SqlLotVisitTotals.cs" />
     <Compile Include="DA\MySqlContext.cs" />
+    <Compile Include="DA\Neighborhoods\DbNeighborhood.cs" />
+    <Compile Include="DA\Neighborhoods\DbNhoodBan.cs" />
+    <Compile Include="DA\Neighborhoods\INeighborhoods.cs" />
+    <Compile Include="DA\Neighborhoods\SqlNeighborhoods.cs" />
     <Compile Include="DA\Objects\DbObject.cs" />
     <Compile Include="DA\Objects\IObjects.cs" />
     <Compile Include="DA\Objects\SqlObjects.cs" />
@@ -174,8 +193,15 @@
     <Compile Include="DA\Transactions\ITransactions.cs" />
     <Compile Include="DA\Transactions\SqlTransactions.cs" />
     <Compile Include="DA\Tuning\DbTuning.cs" />
+    <Compile Include="DA\Tuning\DbTuningPreset.cs" />
     <Compile Include="DA\Tuning\ITuning.cs" />
     <Compile Include="DA\Tuning\SqlTuning.cs" />
+    <Compile Include="DA\Updates\DbUpdate.cs" />
+    <Compile Include="DA\Updates\DbUpdateAddon.cs" />
+    <Compile Include="DA\Updates\DbUpdateBranch.cs" />
+    <Compile Include="DA\Updates\IUpdates.cs" />
+    <Compile Include="DA\Updates\SqlUpdates.cs" />
+    <Compile Include="DA\Users\DbAuthAttempt.cs" />
     <Compile Include="DA\Users\IUsers.cs" />
     <Compile Include="DA\Users\SqlUsers.cs" />
     <Compile Include="DA\Users\User.cs" />
@@ -188,7 +214,6 @@
   </ItemGroup>
   <ItemGroup>
     <None Include="app.config" />
-    <None Include="packages.config" />
     <Content Include="DatabaseScripts\changes\0017_inbox_events.sql">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </Content>
@@ -207,9 +232,19 @@
     <Content Include="DatabaseScripts\changes\0021_3dthumb.sql">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </Content>
+    <Content Include="DatabaseScripts\changes\0023_neighborhoods.sql">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </Content>
+    <Content Include="DatabaseScripts\changes\0024_bulletin.sql">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </Content>
+    <Content Include="DatabaseScripts\changes\0025_updates.sql">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </Content>
     <Content Include="DatabaseScripts\manifest.json">
       <CopyToOutputDirectory>Always</CopyToOutputDirectory>
     </Content>
+    <None Include="packages.config" />
   </ItemGroup>
   <ItemGroup>
     <ProjectReference Include="..\FSO.Server.Common\FSO.Server.Common.csproj">

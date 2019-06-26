@@ -102,6 +102,26 @@ namespace FSO.SimAntics.NetPlay.Drivers
             }
         }
 
+        public void RefreshClient(uint id)
+        {
+            //if connection was lost, resends the lot state to the client as if they connected for the first time.
+            //(in case they dropped any packets)
+            VMNetClient client = null;
+            lock (Clients)
+            {
+                if (!Clients.TryGetValue(id, out client)) return;
+            }
+
+            lock (ClientsToSync)
+            {
+                if (client.PersistID != uint.MaxValue)
+                {
+                    ClientsToSync.Add(client);
+                    NewClients.Add(client); //note that the lock for clientstosync is valid for newclients too.
+                }
+            }
+        }
+
         public void DisconnectClient(uint id)
         {
             lock (Clients)
@@ -216,7 +236,15 @@ namespace FSO.SimAntics.NetPlay.Drivers
             for (int i = 0; i < cmdQueue.Count; i++)
             {
                 var caller = vm.GetAvatarByPersist(cmdQueue[i].Command.ActorUID);
-                if (!cmdQueue[i].Command.Verify(vm, caller)) cmdQueue.RemoveAt(i--);
+                try
+                {
+                    if (!cmdQueue[i].Command.Verify(vm, caller)) cmdQueue.RemoveAt(i--);
+                }
+                catch
+                {
+                    //verification of a command threw an exception - remove. (and perhaps set a warning on sending client
+                    cmdQueue.RemoveAt(i--);
+                }
             }
 
             var tick = new VMNetTick();

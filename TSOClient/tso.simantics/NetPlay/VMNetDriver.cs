@@ -24,6 +24,7 @@ namespace FSO.SimAntics.NetPlay
         public abstract bool Tick(VM vm);
         public abstract string GetUserIP(uint uid);
         public VMCloseNetReason CloseReason;
+        public string CloseString;
         private BinaryWriter RecordStream;
         public VMNetCommand Executing;
 
@@ -138,5 +139,7 @@ namespace FSO.SimAntics.NetPlay
         Unspecified = 0,
         LeaveLot = 1,
         ServerShutdown = 2,
+        NetException = 3, //server sent a bad tick
+        NetExceptionDirect = 4
     }
 }

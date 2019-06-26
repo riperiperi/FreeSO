@@ -17,6 +17,7 @@ namespace FSO.Server.Database.DA.Shards
         public string public_host;
         public string version_name;
         public string version_number;
+        public int? update_id; //new update system. set by whichever server is running the shard.
     }
 
     public enum ShardStatus

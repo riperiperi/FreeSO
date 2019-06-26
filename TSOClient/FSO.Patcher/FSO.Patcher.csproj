@@ -60,6 +60,13 @@
     <Reference Include="System.Xml" />
   </ItemGroup>
   <ItemGroup>
+    <Compile Include="CLIPatcher.cs" />
+    <Compile Include="FormsPatcher.cs">
+      <SubType>Form</SubType>
+    </Compile>
+    <Compile Include="FormsPatcher.Designer.cs">
+      <DependentUpon>FormsPatcher.cs</DependentUpon>
+    </Compile>
     <Compile Include="Patcher.cs">
       <SubType>Form</SubType>
     </Compile>
@@ -68,6 +75,10 @@
     </Compile>
     <Compile Include="Program.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
+    <Compile Include="ReversiblePatcher.cs" />
+    <EmbeddedResource Include="FormsPatcher.resx">
+      <DependentUpon>FormsPatcher.cs</DependentUpon>
+    </EmbeddedResource>
     <EmbeddedResource Include="Patcher.resx">
       <DependentUpon>Patcher.cs</DependentUpon>
     </EmbeddedResource>

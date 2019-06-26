@@ -258,7 +258,7 @@ void psZSprite(ZVertexOut v, out float4 color:COLOR, out float depth:DEPTH0) {
 		pixel = pixel;
 	}
 	else {
-		pixel *= tex2D(ambientSampler, v.roomVec);
+		pixel = gammaMulSimple(pixel, tex2D(ambientSampler, v.roomVec));
 	}
 
 	pixel.rgb *= pixel.a; //"pre"multiply, just here for experimentation
@@ -270,7 +270,7 @@ void psZSprite(ZVertexOut v, out float4 color:COLOR, out float depth:DEPTH0) {
 //walls work the same as z sprites, except with an additional mask texture.
 
 void psZWall(ZVertexOut v, out float4 color:COLOR, out float depth:DEPTH0) {
-    color = tex2D(pixelSampler, v.texCoords) * tex2D(ambientSampler, v.roomVec);
+    color = gammaMulSimple(tex2D(pixelSampler, v.texCoords), tex2D(ambientSampler, v.roomVec));
     color.a = tex2D(maskSampler, v.texCoords).a;
 	if (color.a == 0) discard;
 	color.rgb *= color.a; //"pre"multiply, just here for experimentation
@@ -343,11 +343,11 @@ void psZDepthSprite(ZVertexOut v, out float4 color:COLOR0, out float4 depthB:COL
 			}
 			//255 does not light pixel at all.
 		}
-		else if (v.roomVec.x < 0.0) pixel *= tex2D(ambientSampler, v.roomVec);
+		else if (v.roomVec.x < 0.0) pixel = gammaMulSimple(pixel, tex2D(ambientSampler, v.roomVec));
 		else if (v.roomVec.x != 0.0) {
 			//advanced lighting mode
 			float4 projection = mul(float4(v.screenPos.x, v.screenPos.y, d.x*d.y, d.y), iWVP);
-			pixel *= lightProcessLevel(projection, v.objectID.y);
+			pixel = gammaMul(pixel, lightProcessLevel(projection, v.objectID.y));
 			pixel.rgb += projection.yzw * 0.00000000001; //monogame keeps trying to optimise out entire matrix columns im like well played guys who needs those right
 		}
 		color = pixel;
@@ -375,11 +375,9 @@ void psZDepthSpriteSimple(ZVertexOut v, out float4 color:COLOR0, out float4 dept
 			pixel = float4(gray, gray, gray, pixel.a);
 		}
 		else if (v.roomVec.x != 0.0) {
-			pixel *= tex2D(ambientSampler, v.roomVec);
+			pixel = gammaMulSimple(pixel, tex2D(ambientSampler, v.roomVec));
 		}
 		color = pixel;
-
-		color.rgb *= max(1, v.objectID.x); //hack - otherwise v.objectID always equals 0 on intel and 1 on nvidia (yeah i don't know)
 		color.rgb *= color.a; //"pre"multiply, just here for experimentation
 	}
 }
@@ -478,7 +476,7 @@ void psZDepthWall(ZVertexOut v, out float4 color:COLOR0, out float4 depthB:COLOR
 		//advanced light
 		float4 projection = mul(float4(v.screenPos.x, v.screenPos.y, d.x*d.y, d.y), iWVP);
 		projection.y -= v.objectID.x;
-		pixel *= lightInterp2D(projection);
+		pixel = gammaMul(pixel, lightInterp2D(projection));
 		pixel.rgb += projection.yzw * 0.00000000001; //monogame keeps trying to optimise out entire matrix columns im like well played guys who needs those right
 		color = pixel;
 
@@ -498,7 +496,7 @@ void psZDepthWallSimple(ZVertexOut v, out float4 color:COLOR0, out float4 depthB
 		color = depthB;
 	}
 	else {
-		color = pixel * tex2D(ambientSampler, v.roomVec);
+		color = gammaMulSimple(pixel, tex2D(ambientSampler, v.roomVec));
 		color.rgb *= color.a; //"pre"multiply, just here for experimentation
 	}
 }

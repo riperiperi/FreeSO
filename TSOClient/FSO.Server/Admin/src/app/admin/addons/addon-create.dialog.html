@@ -1,0 +1,37 @@
+<md-dialog>
+    <md-content class="md-padding">
+        <form name="reqForm">
+            <label>Upload an addon. Addons are extracted over client and server builds to create updates for the server, and could contain extra objects, a catalog xml or even extra plugin dlls. If a server addon is not specified, the client one will be used for both.</label>
+            <div layout layout-sm="column">
+                <md-input-container flex> <label>Name</label> <input md-maxlength="50" ng-model="req.name" required placeholder="Name"> </md-input-container>
+            </div>
+            <div layout layout-sm="column">
+                <md-input-container flex> 
+                    <label>Description</label> 
+                    <textarea ng-model="req.description" placeholder="Description" md-select-on-focus md-maxlength="1000"></textarea>
+                </md-input-container>
+            </div>
+
+            <div layout layout-sm="column">
+                <md-input-container flex md-no-float> 
+                    
+                    <label>Client Addon Zip</label> 
+                    <input type="file" name="clientUpload" onchange="angular.element(this).scope().clientChanged(event)" placeholder="x"></input>
+                </md-input-container>
+            </div>
+
+            <div layout layout-sm="column">
+                <md-input-container flex md-no-float>
+                    
+                    <label>Server Addon Zip (Optional)</label> 
+                    <input type="file" name="serverUpload" onchange="angular.element(this).scope().serverChanged(event)" placeholder="x"></input>
+                </md-input-container>
+            </div>
+        </form>
+    </md-content>
+    <div class="md-actions" layout="row">
+        <span flex></span>
+        <md-button ng-click="cancel();"> Cancel </md-button>
+        <md-button ng-click="ok()" ng-disabled="reqForm.$invalid || clientFile == null" class="md-primary"> Upload Addon </md-button>
+    </div>
+</md-dialog>

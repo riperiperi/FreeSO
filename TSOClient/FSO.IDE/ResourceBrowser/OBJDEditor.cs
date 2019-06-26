@@ -14,6 +14,7 @@ using FSO.Files.Formats.IFF.Chunks;
 using System.IO;
 using FSO.UI.Utils;
 using FSO.Client;
+using FSO.Windows;
 using System.Runtime.InteropServices;
 using FSO.Files.Formats.IFF;
 using System.Threading;
@@ -68,7 +69,12 @@ namespace FSO.IDE.ResourceBrowser
                 { ShadowEntry, "ShadowBrightness" },
                 { DeprInitial, "InitialDepreciation" },
                 { DeprDaily, "DailyDepreciation" },
-                { DeprLimit, "DepreciationLimit" }
+                { DeprLimit, "DepreciationLimit" },
+
+                { FootprintNorth, "FootprintNorth" },
+                { FootprintEast, "FootprintEast" },
+                { FootprintSouth, "FootprintSouth" },
+                { FootprintWest, "FootprintWest" },
             };
 
             OBJDFlagEntries = new Dictionary<CheckBox, PropFlagCombo>()
@@ -83,6 +89,7 @@ namespace FSO.IDE.ResourceBrowser
                 { CatGames, new PropFlagCombo("LotCategories", 8) },
                 { CatEntertainment, new PropFlagCombo("LotCategories", 9) },
                 { CatResidence, new PropFlagCombo("LotCategories", 10) },
+                { CatCommunity, new PropFlagCombo("LotCategories", 11) },
                 { SklCooking, new PropFlagCombo("RatingSkillFlags", 0) },
                 { SklMechanical, new PropFlagCombo("RatingSkillFlags", 1) },
                 { SklLogic, new PropFlagCombo("RatingSkillFlags", 2) },
@@ -217,12 +224,6 @@ namespace FSO.IDE.ResourceBrowser
                 .Where(x => x.MasterID == ActiveObj.OBJ.MasterID)
                 .OrderBy(x => x.SubIndex)
                 .ToArray());
-
-            //set up collision
-            FootprintNorth.Value = ActiveObj.OBJ.FootprintMask & 15;
-            FootprintEast.Value = (ActiveObj.OBJ.FootprintMask >> 4) & 15;
-            FootprintSouth.Value = (ActiveObj.OBJ.FootprintMask >> 8) & 15;
-            FootprintWest.Value = (ActiveObj.OBJ.FootprintMask >> 12) & 15;
 
             var isMultitileMaster = ActiveObj.OBJ.MasterID > 0 && ActiveObj.OBJ.SubIndex == -1;
             if (isMaster)
@@ -511,6 +512,15 @@ namespace FSO.IDE.ResourceBrowser
             return;
         }
 
+        // MouseDown instead of MouseClick for right-click handling
+        private void GUIDButton_MouseDown(object sender, MouseEventArgs e)
+        {
+            if (e.Button == MouseButtons.Right)
+            {
+                WinFormsClipboard clipboard = new WinFormsClipboard();
+                clipboard.Set((sender as Button).Text);
+            }
+        }
     }
     public class NameValueCombo
     {

@@ -12,11 +12,50 @@ namespace FSO.Server.Framework.Aries
         public bool IsAuthenticated { get; set; }
         public uint LastRecv { get; set; }
         public IoSession IoSession;
+        protected Dictionary<string, object> MigratableAttributes = new Dictionary<string, object>();
+        public TaskCompletionSource<bool> DisconnectSource = new TaskCompletionSource<bool>();
+        public TaskCompletionSource<bool> AuthSource = new TaskCompletionSource<bool>();
 
         public AriesSession(IoSession ioSession)
         {
             this.IoSession = ioSession;
             IsAuthenticated = false;
+        }
+
+        public void TimeoutIfNoAuth(int time)
+        {
+            Task.Run(async () =>
+            {
+                var timeout = Task.Delay(time);
+                await Task.WhenAny(timeout, DisconnectSource.Task, AuthSource.Task);
+                if (!IsAuthenticated && IoSession.Connected)
+                {
+                    Close();
+                }
+            });
+        }
+
+        public void Authenticate(string secret)
+        {
+            IsAuthenticated = true;
+            SetAttribute("sessionKey", secret);
+            AuthSource.SetResult(true);
+        }
+
+        public virtual void Migrate(IoSession newSession)
+        {
+            //migrate this aries session and all attributes onto a new IoSession.
+            lock (MigratableAttributes)
+            {
+                foreach (var attr in MigratableAttributes)
+                {
+                    newSession.SetAttribute(attr.Key, attr.Value);
+                }
+            }
+            IoSession.SetAttribute("migrated", true);
+            DisconnectSource = new TaskCompletionSource<bool>();
+            newSession.SetAttribute("s", this);
+            IoSession = newSession;
         }
 
         public bool Connected
@@ -29,6 +68,9 @@ namespace FSO.Server.Framework.Aries
 
         public virtual void Close()
         {
+            SetAttribute("dc", true);
+            //if we're being kept alive, cut the disconnection timeout short
+            DisconnectSource.TrySetResult(true);
             this.IoSession.Close(false);
         }
         
@@ -49,6 +91,8 @@ namespace FSO.Server.Framework.Aries
         public T UpgradeSession<T>() where T : AriesSession {
             var instance = (T)Activator.CreateInstance(typeof(T), new object[] { IoSession });
             instance.IsAuthenticated = this.IsAuthenticated;
+            instance.DisconnectSource = this.DisconnectSource;
+            instance.AuthSource = this.AuthSource;
             IoSession.SetAttribute("s", instance);
             return instance;
         }
@@ -60,6 +104,7 @@ namespace FSO.Server.Framework.Aries
 
         public void SetAttribute(string key, object value)
         {
+            lock (MigratableAttributes) MigratableAttributes[key] = value;
             IoSession.SetAttribute(key, value);
         }
     }

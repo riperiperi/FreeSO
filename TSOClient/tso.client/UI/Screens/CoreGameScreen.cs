@@ -39,6 +39,7 @@ using FSO.SimAntics.Engine.TSOTransaction;
 using FSO.Common;
 using FSO.Common.Utils;
 using FSO.UI.Model;
+using FSO.Client.UI.Panels.Neighborhoods;
 
 namespace FSO.Client.UI.Screens
 {
@@ -49,9 +50,11 @@ namespace FSO.Client.UI.Screens
         public UIInbox Inbox;
         public UIGameTitle Title;
 
+        public UISortedContainer CityFloatingContainer;
         public UIContainer WindowContainer;
         public UIPersonPage PersonPage;
         public UILotPage LotPage;
+        public UINeighPage NeighPage;
         public UIBookmarks Bookmarks;
         public UIRelationshipDialog Relationships;
 
@@ -66,7 +69,7 @@ namespace FSO.Client.UI.Screens
 
         public UILotControl LotControl { get; set; } //world, lotcontrol and vm will be null if we aren't in a lot.
         private LotView.World World;
-        private bool WorldLoaded;
+        public bool WorldLoaded;
         public FSO.SimAntics.VM vm { get; set; }
         public VMClientDriver Driver;
         public uint VisualBudget { get; set; }
@@ -111,13 +114,21 @@ namespace FSO.Client.UI.Screens
                     if (vm == null) ZoomLevel = 4; //call this again but set minimum cityrenderer view
                     else
                     {
+                        CityRenderer.Camera.ClearCenter();
+                        var childClone = CityFloatingContainer.GetChildren().ToList();
+                        foreach (var child in childClone)
+                        {
+                            CityFloatingContainer.Remove(child);
+                            child.Parent = null;
+                        }
+                        
                         CityTooltipHitArea.HideTooltip();
                         SetTitle();
                         var targ = (WorldZoom)(4 - value); //near is 3 for some reason... will probably revise
                         LotControl.SetTargetZoom(targ);
                         if (m_ZoomLevel > 3)
                         {
-                            HITVM.Get().PlaySoundEvent(UIMusic.None);
+                            if (!ucp.SpecialMusic) HITVM.Get().PlaySoundEvent(UIMusic.None);
                             if (CityRenderer != null) CityRenderer.m_Zoomed = TerrainZoomMode.Lot;
                             gizmo.Visible = false;
                             LotControl.Visible = true;
@@ -145,7 +156,7 @@ namespace FSO.Client.UI.Screens
                         { //coming from lot view... snap zoom % to 0 or 1
                             Title.SetTitle(GameFacade.CurrentCityName);
                             CityRenderer.m_ZoomProgress = 1;
-                            HITVM.Get().PlaySoundEvent(UIMusic.Map); //play the city music as well
+                            if (!ucp.SpecialMusic) HITVM.Get().PlaySoundEvent(UIMusic.Map); //play the city music as well
                             CityRenderer.Visible = true;
                             gizmo.Visible = true;
                             if (World != null)
@@ -154,7 +165,9 @@ namespace FSO.Client.UI.Screens
                             }
                             ucp.SetMode(UIUCP.UCPMode.CityMode);
                         }
+                        if (m_ZoomLevel == 4) CityRenderer.Camera.ClearCenter();
                         m_ZoomLevel = value;
+                        
                         CityRenderer.m_Zoomed = (value == 4)?TerrainZoomMode.Near:TerrainZoomMode.Far;
                     }
                 }
@@ -242,6 +255,9 @@ namespace FSO.Client.UI.Screens
             SaveHouseButton.OnButtonClick += new ButtonClickDelegate(SaveHouseButton_OnButtonClick);
             this.Add(SaveHouseButton);*/
 
+            CityFloatingContainer = new UISortedContainer();
+            Add(CityFloatingContainer);
+
             ucp = new UIUCP(this);
             ucp.Y = ScreenHeight - 210;
             ucp.SetInLot(false);
@@ -279,6 +295,11 @@ namespace FSO.Client.UI.Screens
             ControllerUtils.BindController<LotPageController>(LotPage);
             WindowContainer.Add(LotPage);
 
+            NeighPage = new UINeighPage();
+            NeighPage.Visible = false;
+            ControllerUtils.BindController<NeighPageController>(NeighPage);
+            WindowContainer.Add(NeighPage);
+
             Bookmarks = new UIBookmarks();
             Bookmarks.Visible = false;
             ControllerUtils.BindController<BookmarksController>(Bookmarks);
@@ -293,11 +314,17 @@ namespace FSO.Client.UI.Screens
             Inbox.Visible = false;
             ControllerUtils.BindController<InboxController>(Inbox);
             WindowContainer.Add(Inbox);
+
+            var status = new UINetStatusTray();
+            Add(status);
         }
 
         public override void GameResized()
         {
             base.GameResized();
+            CalculateMatrix();
+            CityFloatingContainer.ScaleX = 1f / Scale.X;
+            CityFloatingContainer.ScaleY = 1f / Scale.Y;
             CityRenderer.Camera.ProjectionDirty();
             Title.SetTitle(Title.Label.Caption);
             ucp.Y = ScreenHeight - 210;
@@ -313,6 +340,10 @@ namespace FSO.Client.UI.Screens
 
         public void Initialize(string cityName, int cityMap, TerrainController terrainController)
         {
+            CalculateMatrix();
+            CityFloatingContainer.ScaleX = 1f / Scale.X;
+            CityFloatingContainer.ScaleY = 1f / Scale.Y;
+
             Title.SetTitle(cityName);
             GameFacade.CurrentCityName = cityName;
             InitializeMap(cityMap);
@@ -585,6 +616,10 @@ namespace FSO.Client.UI.Screens
 
         private void VMShutdown(VMCloseNetReason reason)
         {
+            if (reason == VMCloseNetReason.NetException || reason == VMCloseNetReason.NetExceptionDirect)
+            {
+                UIAlert.Alert("Fatal Networking Error", Driver.CloseString, true);
+            }
             var controller = FindController<CoreGameScreenController>();
 
             if (controller != null)
@@ -698,7 +733,7 @@ namespace FSO.Client.UI.Screens
                     var dialog = new UITimeOutDialog(vm, (int)data);
                     UIScreen.GlobalShowDialog(dialog, true);
                     var rnd = new Random();
-                    dialog.Position = new Vector2(rnd.Next(ScreenWidth - 500), rnd.Next(ScreenHeight - 500));
+                    dialog.Position = new Vector2(rnd.Next(Math.Max(0, ScreenWidth - 380)), rnd.Next(Math.Max(0, ScreenHeight - 180)));
                     break;
             }
         }

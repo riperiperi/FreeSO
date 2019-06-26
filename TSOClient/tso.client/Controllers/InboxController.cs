@@ -84,22 +84,25 @@ namespace FSO.Client.Controllers
             DatabaseService.Search(new SearchRequest { Query = query, Type = SearchType.SIMS }, exact)
                 .ContinueWith(x =>
                 {
-                    object[] ids = x.Result.Items.Select(y => (object)y.EntityId).ToArray();
-                    var results = x.Result.Items.Select(q =>
+                    GameThread.InUpdate(() =>
                     {
-                        return new GizmoAvatarSearchResult() { Result = q };
-                    }).ToList();
-
-                    if (ids.Length > 0)
-                    {
-                        var avatars = DataService.GetMany<Avatar>(ids).Result;
-                        foreach (var item in avatars)
+                        object[] ids = x.Result.Items.Select(y => (object)y.EntityId).ToArray();
+                        var results = x.Result.Items.Select(q =>
                         {
-                            results.First(f => f.Result.EntityId == item.Avatar_Id).Avatar = item;
-                        }
-                    }
+                            return new GizmoAvatarSearchResult() { Result = q };
+                        }).ToList();
 
-                    View.SetAvatarResults(results, exact);
+                        if (ids.Length > 0)
+                        {
+                            var avatars = DataService.GetMany<Avatar>(ids).Result;
+                            foreach (var item in avatars)
+                            {
+                                results.First(f => f.Result.EntityId == item.Avatar_Id).Avatar = item;
+                            }
+                        }
+
+                        View.SetAvatarResults(results, exact);
+                    });
                 });
         }
 

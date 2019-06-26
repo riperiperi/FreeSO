@@ -67,8 +67,7 @@ namespace FSO.LotView
 
 
         public static readonly int SCROLL_BUFFER = 512; //resolution to add to render size for scroll reasons
-
-
+        
         protected Blueprint Blueprint;
         private Dictionary<WorldComponent, WorldObjectRenderInfo> RenderInfo = new Dictionary<WorldComponent, WorldObjectRenderInfo>();
 
@@ -79,6 +78,7 @@ namespace FSO.LotView
         private List<_2DDrawBuffer> StaticWallCache = new List<_2DDrawBuffer>();
         private ScrollBuffer StaticFloor;
         private ScrollBuffer StaticWall;
+        private int LastSubLightUpdate = 0; //rotate through subworlds to update shadows periodically.
 
         protected int TicksSinceLight = 0;
 
@@ -125,7 +125,7 @@ namespace FSO.LotView
 
                                 var tilePosition = obj.Position;
 
-                                if (obj.Level != state.Level) continue;
+                                if (obj.Level > state.Level) continue;
 
                                 var oPx = state.WorldSpace.GetScreenFromTile(tilePosition);
                                 obj.ValidateSprite(state);
@@ -143,6 +143,7 @@ namespace FSO.LotView
                     state._3D.Begin(gd);
                     foreach (var avatar in Blueprint.Avatars)
                     {
+                        if (avatar.Level > state.Level) continue;
                         _2d.OffsetPixel(state.WorldSpace.GetScreenFromTile(avatar.Position));
                         _2d.OffsetTile(avatar.Position);
                         avatar.Draw(gd, state);
@@ -460,6 +461,12 @@ namespace FSO.LotView
                             state.AmbientLight.SetData(Blueprint.RoomColors);
                         }
                         state.Light?.InvalidateOutdoors();
+
+                        if (Blueprint.SubWorlds.Count > 0)
+                        {
+                            Blueprint.SubWorlds[LastSubLightUpdate].RefreshLighting();
+                            LastSubLightUpdate = (LastSubLightUpdate + 1) % Blueprint.SubWorlds.Count;
+                        }
 
                         TicksSinceLight = 0;
                         break;

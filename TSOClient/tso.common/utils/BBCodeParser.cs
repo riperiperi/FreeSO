@@ -69,6 +69,7 @@ namespace FSO.Common.Utils
 
         public static string SanitizeBB(string input)
         {
+            if (input.LastOrDefault() == '\\') input += ' ';
             return input.Replace("[", "\\[");
         }
     }

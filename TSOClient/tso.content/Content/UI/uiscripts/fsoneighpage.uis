@@ -1,0 +1,258 @@
+# UI properties for Neighborhood Page control (freeso)
+
+<Begin>
+
+    # Images ----------------------------------------------------------------------------------------------------
+
+    # Shared Images
+    <DefineImage "Background" assetID="neigh/neighp_bg.png">
+    <DefineImage "HouseNameButtonImage"                 assetID="0x00000AFE00000001"> #./uigraphics/housepage/hpage_namebtn.bmp
+    <DefineImage "CenterButtonImage" assetID="neigh/neighp_centerbtn.png">
+    <DefineImage "BulletinButtonImage" assetID="neigh/neighp_bulletinbtn.png">
+
+    <DefineImage "Tab1BackgroundImage" assetID="neigh/neighp_btab1.png">
+    <DefineImage "Tab2BackgroundImage" assetID="neigh/neighp_btab2.png">
+    <DefineImage "Tab3BackgroundImage" assetID="neigh/neighp_btab3.png">
+    <DefineImage "Tab4BackgroundImage" assetID="neigh/neighp_btab4.png">
+
+    <DefineImage "InfoButtonImage" assetID="neigh/neighp_infobtn.png">
+    <DefineImage "HouseButtonImage" assetID="neigh/neighp_housebtn.png">
+    <DefineImage "PersonButtonImage" assetID="neigh/neighp_personbtn.png">
+    <DefineImage "MayorButtonImage" assetID="neigh/neighp_mayorbtn.png">
+
+    <DefineImage "CloseButtonImage" assetID="neigh/neighp_closebtn.png">
+
+    # Tab 1 Images
+    <DefineImage "Tab1Image" assetID="neigh/neighp_tab1_bg.png">
+
+    # these might end up being replaced with png variants.
+    <DefineImage "ScrollbarImage"        assetID="0x0000031000000001"> #path = ./uigraphics/gizmo/gizmo_scrollbarimg.bmp
+    <DefineImage "ScrollDownButtonImage" assetID="0x0000031100000001"> #path = ./uigraphics/gizmo/gizmo_scrolldownbtn.bmp
+    <DefineImage "ScrollUpButtonImage"   assetID="0x0000031200000001"> #path = ./uigraphics/gizmo/gizmo_scrollupbtn.bmp
+
+    <DefineImage "RoommateThumbButtonImage"             assetID="0x0000079300000001"> #./uigraphics/housepage/hpage_thumbroommatebtn.bmp
+    <DefineImage "VisitorThumbButtonImage"              assetID="0x0000079400000001"> #./uigraphics/housepage/hpage_thumbvisitorbtn.bmp
+
+    # Tab 2/3 Images
+    <DefineImage "TopTabImage" assetID="neigh/neighp_tabtop_bg.png">
+    <DefineImage "TopTabTab1BackgroundImage" assetID="neigh/neighp_tabtop_btab1.png">
+    <DefineImage "TopTabTab2BackgroundImage" assetID="neigh/neighp_tabtop_btab2.png">
+    <DefineImage "TopTabTab3BackgroundImage" assetID="neigh/neighp_tabtop_btab3.png">
+    <DefineImage "TopTabTab4BackgroundImage" assetID="neigh/neighp_tabtop_btab4.png">
+
+    <DefineImage "TopTabSeatImage" assetID="neigh/neighp_btab_seat.png">
+
+    <DefineImage "TOverallButtonImage" assetID="neigh/neighp_overallbtn.png">
+    <DefineImage "TCategoryButtonImage" assetID="neigh/neighp_categorybtn.png">
+
+    # Tab 4 Images
+    <DefineImage "Tab4Image" assetID="neigh/neighp_tab4_bg.png">
+    <DefineImage "Tab4RateImage" assetID="neigh/neighp_tab4_rate.png">
+    <DefineImage "RateButtonImage" assetID="neigh/neighp_ratebtn.png">
+
+    # Strings -----------------------------------------------------------------------------------------------
+
+    <Begin><SetSharedProperties stringDir = "UIText" stringTable = "f115">
+        <DefineString "InfoButtonTooltip" stringIndex = 1>
+        <DefineString "HouseButtonTooltip" stringIndex = 2>
+        <DefineString "PersonButtonTooltip" stringIndex = 3>
+        <DefineString "MayorButtonTooltip" stringIndex = 4>
+        <DefineString "CloseButtonTooltip" stringIndex = 5>
+
+        <DefineString "CenterButtonTooltip" stringIndex = 6>
+        <DefineString "BulletinButtonTooltip" stringIndex = 7>
+
+        <DefineString "DescriptionTextTooltip" stringIndex = 8>
+
+        <DefineString "ScrollUpTooltip" stringIndex = 9>
+        <DefineString "ScrollDownTooltip" stringIndex = 10>
+
+        <DefineString "StatusLabelText" stringIndex = 11>
+        <DefineString "StatusLabelTextReserved" stringIndex = 12>
+
+        <DefineString "ActivityRatingLabelText" stringIndex = 13>
+        <DefineString "TownHallNameLabelText" stringIndex = 14>
+        <DefineString "ResidentCountLabelText" stringIndex = 15>
+        <DefineString "PropertyCountLabelText" stringIndex = 16>
+
+        <DefineString "TabTypeLabelText" stringIndex = 17>
+        <DefineString "TabTypeLabelTextPCat" stringIndex = 18>
+        <DefineString "TabTypeLabelTextSAct" stringIndex = 19>
+        <DefineString "TabTypeLabelTextSFam" stringIndex = 20>
+        <DefineString "TabTypeLabelTextSInf" stringIndex = 21>
+
+        <DefineString "MayorTickerText" stringIndex = 22>
+
+        <DefineString "TermTextNst" stringIndex = 23>
+        <DefineString "TermTextNnd" stringIndex = 24>
+        <DefineString "TermTextNrd" stringIndex = 25>
+        <DefineString "TermTextNth" stringIndex = 26>
+
+        <DefineString "StarsTooltipText" stringIndex = 27>
+
+        <DefineString "MayorStatusLabelText" stringIndex = 28>
+        <DefineString "MayorStatusLabelTextNone" stringIndex = 29>
+        <DefineString "MayorStatusLabelTextNamed" stringIndex = 30>
+
+        <DefineString "MayorElectionLabelText" stringIndex = 31>
+        <DefineString "MayorNominationLabelText" stringIndex = 32>
+        <DefineString "RateButtonText" stringIndex = 33>
+
+        <DefineString "MayorRatingFlairLabelText" stringIndex = 37>
+        <DefineString "MayorRatingFlairLabelTextTownHall" stringIndex = 38>
+        <DefineString "MayorRatingFlairLabelTextAdmin" stringIndex = 39>
+
+        <DefineString "MayorActionReturnText" stringIndex = 84>
+        <DefineString "MayorActionMoveTHText" stringIndex = 41>
+        <DefineString "MayorActionNewTHText" stringIndex = 40>
+
+        <DefineString "MayorActionOrdinancesText" stringIndex = 85>
+        <DefineString "MayorActionModText" stringIndex = 86>
+
+
+        <DefineString "ModActionSetMayorText" stringIndex = 43>
+        <DefineString "ModActionManageRatingsText" stringIndex = 45>
+        <DefineString "ModActionReservedText" stringIndex = 44>
+
+        <DefineString "ModActionTestCycleText" stringIndex = 87>
+        <DefineString "ModActionReturnText" stringIndex = 88>
+    <End>
+
+    # Background Images -----------------------------------------------------------------------------------------
+
+    <SetControlProperties "BackgroundImage"       image="Background"  position=(0,0)>
+
+
+    # Tab Images ------------------------------------------------------------------------------------------------
+
+    <SetControlProperties "InfoTabBackgroundImage" image="Tab1BackgroundImage"      position=(233,0)>
+    <SetControlProperties "InfoTabImage"           image="Tab1Image"                position=(66,71)>
+
+    <SetControlProperties "TopSTab2BackgroundImage" image="Tab2BackgroundImage"      position=(278,0)>
+    <SetControlProperties "TopSTab3BackgroundImage" image="Tab3BackgroundImage"      position=(323,0)>
+    <SetControlProperties "TopSTabImage"           image="TopTabImage"                position=(53,82)>
+
+    <SetControlProperties "TopSTabTab1BackgroundImage" image="TopTabTab1BackgroundImage"      position=(71,42)>
+    <SetControlProperties "TopSTabTab2BackgroundImage" image="TopTabTab2BackgroundImage"      position=(116,42)>
+    <SetControlProperties "TopSTabTab3BackgroundImage" image="TopTabTab3BackgroundImage"      position=(161,42)>
+    <SetControlProperties "TopSTabTab4BackgroundImage" image="TopTabTab4BackgroundImage"      position=(206,42)>
+
+    <SetControlProperties "TopSTabTab1SeatImage" image="TopTabSeatImage"      position=(93,51)>
+    <SetControlProperties "TopSTabTab2SeatImage" image="TopTabSeatImage"      position=(138,51)>
+    <SetControlProperties "TopSTabTab3SeatImage" image="TopTabSeatImage"      position=(183,51)>
+    <SetControlProperties "TopSTabTab4SeatImage" image="TopTabSeatImage"      position=(228,51)>
+
+    <SetControlProperties "MayorTabBackgroundImage" image="Tab4BackgroundImage"      position=(368,0)>
+    <SetControlProperties "MayorTabImage"           image="Tab4Image"                position=(58,47)>
+    <SetControlProperties "MayorTabRateImage"       image="Tab4RateImage"            position=(198,92)>
+
+    # Shared Controls --------------------------------------------------------------------------------------------
+
+    <AddButton "HouseNameButton" 
+    
+        id = 100
+
+        font                 = 9
+        textColor            = (255,249,157) 
+        textColorSelected    = (0,243,247)
+        textColorHighlighted = (255,255,255)    
+        textColorDisabled    = (255,249,157)
+        image                = "HouseNameButtonImage" 
+        position             = (13,13)
+        size                 = (223,10)
+    >
+
+    <AddButton "InfoButton"        id = 101 image = "InfoButtonImage"        position=(258,13)   tooltip="InfoButtonTooltip">
+    <AddButton "HouseButton"       id = 102 image = "HouseButtonImage"       position=(303,13)   tooltip="HouseButtonTooltip">
+    <AddButton "PersonButton"      id = 103 image = "PersonButtonImage"      position=(348,13)   tooltip="PersonButtonTooltip">
+    <AddButton "MayorButton"       id = 104 image = "MayorButtonImage"       position=(393,13)   tooltip="MayorButtonTooltip">
+    <AddButton "CloseButton"       id = 105 image = "CloseButtonImage"       position=(468,31)   tooltip="CloseButtonTooltip">
+
+    <AddButton "CenterButton"       id = 106 image = "CenterButtonImage"       position=(11,51) tooltip="CenterButtonTooltip">
+    <AddButton "BulletinButton"     id = 107 image = "BulletinButtonImage"     position=(14,103) tooltip="BulletinButtonTooltip">
+
+    # Tab 1 Controls --------------------------------------------------------------------------------------------
+
+    <AddTextEdit "DescriptionText" 
+
+    id = 200
+
+    position        = (235,80)  
+    size            = (205,132) 
+    font            = 9 
+    backgroundColor = (0,0,0)
+    capacity        = 1000
+    frameOnFocus    = 0
+    color           = (255,249,157) 
+    backColor       = (0,0,0)
+    cursorColor     = (255,255,255)
+    frameColor      = (250,211,28)
+    transparent     = 1 
+    mode            = "kReadOnly"
+
+    toolTip = "DescriptionTextTooltip">
+
+    <AddSlider "DescriptionSlider"           id = 201 minValue=0 maxValue=10          position=(454,87)  size=(10,114) orientation=1 image="ScrollbarImage">
+    <AddButton "DescriptionScrollUpButton"   id = 202 image = "ScrollUpButtonImage"   position=(450,77)  tooltip="ScrollUpTooltip">
+    <AddButton "DescriptionScrollDownButton" id = 203 image = "ScrollDownButtonImage" position=(450,205) tooltip="ScrollDownTooltip">
+
+    <SetControlProperties "HouseThumbSetup" position=(69,94)>
+
+    <AddText "StatusLabel" font=9 color=(255,255,255) size=(194,19) id = 204 position=(226,51) text="StatusLabelText">
+
+    <Begin><SetSharedProperties font=9 size=(1,1) alignment=3>
+
+        <AddText "ActivityRatingLabel" id = 205 color=(179,255,153) position=(136,62) text="ActivityRatingLabelText">
+        <SetControlProperties "TownNameBanner"  position=(136,87) id = 206>
+        # <AddText "TownHallNameLabel" id = 206 position=(136,82) text="TownHallNameLabelText">
+        <AddText "ResidentCountLabel" id = 207 position=(136,197) text="ResidentCountLabelText">
+        <AddText "PropertyCountLabel" id = 208 position=(136,210) text="PropertyCountLabelText">
+
+    <End>
+
+    # Tab 2/3 Controls ------------------------------------------------------------------------------------------
+    <AddText "TabTypeLabel" font=11 size=(164,22) id = 300 position=(293,56) text="TabTypeLabelText" alignment=2>
+
+    <AddButton "TopTab1Button"       id = 301 image = "TOverallButtonImage"       position=(96,54)   tooltip="HouseButtonTooltip">
+    <AddButton "TopTab2Button"       id = 302 image = "TCategoryButtonImage"      position=(141,54)  tooltip="PersonButtonTooltip">
+    <AddButton "TopTab3Button"       id = 303 image = "TOverallButtonImage"       position=(186,54) tooltip="MayorButtonTooltip">
+    <AddButton "TopTab4Button"       id = 304 image = "TOverallButtonImage"       position=(231,54) tooltip="CloseButtonTooltip">
+
+    # Tab 4 Controls ------------------------------------------------------------------------------------------
+
+    <AddButton "RateButton"       id = 400 image = "RateButtonImage"       position=(396,94)   tooltip="RateButtonText"   text="RateButtonText">
+    <SetControlProperties "MayorPersonButton" position=(61,50) id = 401>
+
+    <SetControlProperties "MayorRatingBox1" position=(198,113) id = 402>
+    <SetControlProperties "MayorRatingBox2" position=(335,113) id = 403>
+
+    <SetControlProperties "MayorBanner" position=(118,68) id = 404>
+    <SetControlProperties "TermBanner"  position=(118,202) id = 405>
+    <SetControlProperties "RatingStars" position=(95,185) id = 406>
+
+    <Begin><SetSharedProperties font=9 alignment=5>
+        <AddText "MayorElectionLabel"   id = 407 position=(191,67) size=(122,19) text="MayorElectionLabelText">
+        <AddText "MayorNominationLabel" id = 408 position=(332,67) size=(147,19) text="MayorNominationLabelText">
+        <AddText "MayorStatusLabel"     id = 409 color=(255,255,255) position=(190,50) size=(279,17) text="MayorStatusLabelText">
+    <End>
+
+    <AddText "MayorRatingFlairLabel" id = 410 position=(203,92) text="MayorRatingFlairLabelText">
+
+    # Mayor and Mod actions -----------------------------------------------------------------------------------
+
+    <AddButton "MayorActionReturn" id = 450 position=(340,98) size=(119,33) text="MayorActionReturnText">
+    <AddButton "MayorActionMoveTH" id = 451 position=(320,135) size=(139,33) text="MayorActionMoveTHText">
+    <AddButton "MayorActionNewTH" id = 452 position=(280,172) size=(179,33) text="MayorActionNewTHText">
+
+    <AddButton "MayorActionOrdinances" id = 453 position=(203,135) size=(111,33) text="MayorActionOrdinancesText">
+    <AddButton "MayorActionMod" id = 454 position=(203,172) size=(71,33) text="MayorActionModText">
+
+
+    <AddButton "ModActionSetMayor" id = 460 position=(340,98) size=(119,33) text="ModActionSetMayorText">
+    <AddButton "ModActionManageRatings" id = 461 position=(320,135) size=(139,33) text="ModActionManageRatingsText">
+    <AddButton "ModActionReserved" id = 462 position=(280,172) size=(179,33) text="ModActionReservedText">
+
+    <AddButton "ModActionTestCycle" id = 463 position=(203,135) size=(111,33) text="ModActionTestCycleText">
+    <AddButton "ModActionReturn" id = 464 position=(203,172) size=(71,33) text="ModActionReturnText">
+
+<End>

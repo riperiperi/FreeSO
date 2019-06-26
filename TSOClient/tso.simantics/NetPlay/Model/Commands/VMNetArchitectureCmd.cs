@@ -38,7 +38,7 @@ namespace FSO.SimAntics.NetPlay.Model.Commands
 
             if (Verified) return true;
             if (!vm.TS1 && (caller == null || //caller must be on lot, have build permissions
-                caller.AvatarState.Permissions < VMTSOAvatarPermissions.BuildBuyRoommate)) return false; 
+                !vm.PlatformState.Validator.CanBuildTool(caller))) return false; 
 
             for (int i = 0; i < Commands.Count; i++)
             {

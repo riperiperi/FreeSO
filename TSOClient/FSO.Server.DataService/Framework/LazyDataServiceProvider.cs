@@ -50,13 +50,22 @@ namespace FSO.Common.DataService.Framework
                 else if (Values.ContainsKey(castKey))
                 {
                     return Values[castKey].Get();
-                } else
+                }
+                else
                 {
                     var result = new TaskWrap<object>(ResolveMissingKey(castKey));
                     return Values.GetOrAdd(castKey, result).Get();
                 }
+            }
+        }
 
-
+        public override void Invalidate(object key)
+        {
+            if (!(key is KEY)) return;
+            lock (Values)
+            {
+                TaskWrap<object> oldval;
+                Values.TryRemove((KEY)key, out oldval);
             }
         }
 

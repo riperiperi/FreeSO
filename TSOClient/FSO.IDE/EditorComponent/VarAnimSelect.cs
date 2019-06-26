@@ -1,5 +1,9 @@
-﻿using FSO.Content;
+﻿using FSO.Client;
+using FSO.Content;
 using FSO.Files.Formats.IFF.Chunks;
+using FSO.IDE.Common;
+using FSO.SimAntics;
+using FSO.Vitaboy;
 using System;
 using System.Collections.Generic;
 using System.ComponentModel;
@@ -137,6 +141,25 @@ namespace FSO.IDE.EditorComponent
         {
             DialogResult = DialogResult.OK;
             this.Close();
+        }
+
+        private void FBXButton_Click(object sender, EventArgs e)
+        {
+            Content.Content.Get().Changes.BlockingResMod(new ResAction(() =>
+            {
+                var interactive = AnimDisplay.Renderer;
+                var ava = (VMAvatar)interactive.TargetOBJ.BaseObject;
+
+                /*
+                var scn = MeshExporter.SceneGroup(
+                    ava.Avatar.Bindings.Select(x => x.Mesh).ToList(),
+                    new List<Animation> { ava.Animations[0].Anim },
+                    ava.Avatar.Bindings.Select(x => x.Texture?.Get(GameFacade.GraphicsDevice)).ToList(),
+                    ava.Avatar.BaseSkeleton);
+
+                MeshExporter.ExportToFBX(scn, @"C:\Users\Rhys\Desktop\fsoexport\test.dae");
+                */
+            }));
         }
     }
 }

@@ -29,7 +29,7 @@ namespace FSO.SimAntics.Engine
         public VMRoutine Routine;
         
         /** Current instruction **/
-        public ushort InstructionPointer;
+        public byte InstructionPointer;
 
         /** The object who executed this behavior **/
         public VMEntity Caller;
@@ -162,7 +162,7 @@ namespace FSO.SimAntics.Engine
             else if (input.RoutineID >= 4096) Routine = (VMRoutine)ScopeResource.GetRoutine(input.RoutineID);
             else Routine = (VMRoutine)Global.Resource.GetRoutine(input.RoutineID);
 
-            InstructionPointer = input.InstructionPointer;
+            InstructionPointer = (byte)input.InstructionPointer;
             Caller = context.VM.GetObjectById(input.Caller);
             Callee = context.VM.GetObjectById(input.Callee);
             StackObjectID = input.StackObject;

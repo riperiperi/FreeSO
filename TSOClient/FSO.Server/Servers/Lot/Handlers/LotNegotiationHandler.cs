@@ -79,5 +79,10 @@ namespace FSO.Server.Servers.Lot.Handlers
         {
             Lots.NotifyRoommateChange(request.LotId, request.AvatarId, request.ReplaceId, request.Change);
         }
+
+        public void Handle(IGluonSession session, TuningChanged request)
+        {
+            Lots.UpdateTuning(request.UpdateInstantly);
+        }
     }
 }

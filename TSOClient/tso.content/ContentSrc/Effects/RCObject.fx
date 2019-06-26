@@ -71,14 +71,14 @@ VertexOut vsRC(VertexIn v) {
 
 float4 psRC(VertexOut v) : COLOR0
 {
-	float4 color = tex2D(TexSampler, v.texCoord) * lightProcess(v.modelPos);
+	float4 color = gammaMul(tex2D(TexSampler, v.texCoord), lightProcess(v.modelPos));
 	if (color.a < 0.01) discard;
 	return color;
 }
 
 float4 psDirRC(VertexOut v) : COLOR0
 {
-	float4 color = tex2D(TexSampler, v.texCoord) * lightProcessDirection(v.modelPos, normalize(v.normal));
+	float4 color = gammaMul(tex2D(TexSampler, v.texCoord), lightProcessDirection(v.modelPos, normalize(v.normal)));
 	if (color.a < 0.01) discard;
 	return color;
 }
@@ -101,7 +101,7 @@ float4 psLMapRC(VertexOut v) : COLOR0
 
 float4 psDisabledRC(VertexOut v) : COLOR0
 {
-	float4 color = tex2D(TexSampler, v.texCoord) * lightProcess(v.modelPos);
+	float4 color = gammaMul(tex2D(TexSampler, v.texCoord), lightProcess(v.modelPos));
 	float gray = dot(color.xyz, float3(0.2989, 0.5870, 0.1140));
 	color = float4(gray, gray, gray, color.a);
 	return color;
@@ -111,14 +111,14 @@ struct WallVertexIn
 {
 	float4 position : SV_Position0;
 	float4 color : COLOR0;
-	float2 texCoord : TEXCOORD0;
+	float3 texCoord : TEXCOORD0;
 };
 
 struct WallVertexOut
 {
 	float4 position : SV_Position0;
 	float4 color : COLOR0;
-	float2 texCoord : TEXCOORD0;
+	float3 texCoord : TEXCOORD0;
 	float4 modelPos : TEXCOORD1;
 };
 
@@ -153,13 +153,13 @@ float4 psWallRC(WallVertexOut v) : COLOR0
 {
 	float4 mPos = v.modelPos;
 	mPos.y = v.texCoord.y*2.95*3;
-	float2 texC = v.texCoord;
+	float2 texC = v.texCoord.xy;
 	texC.x = frac(texC.x);
 	texC.y = frac(((v.texCoord.y % 1)-1/240)/-1.04);
 #if SIMPLE
-	float4 color = v.color * tex2D(TexSampler, texC) * lightInterp(mPos); // version for no mipmaps
+	float4 color = gammaMul(v.color * tex2D(TexSampler, texC), lightInterp(mPos, v.texCoord.z)); // version for no mipmaps
 #else
-	float4 color = v.color * tex2Dgrad(AnisoSampler, texC, ddx(v.texCoord), ddy(v.texCoord)) * lightInterp(mPos);
+	float4 color = gammaMul(v.color * tex2Dgrad(AnisoSampler, texC, ddx(v.texCoord.xy), ddy(v.texCoord.xy)), lightInterp(mPos, v.texCoord.z));
 #endif
 	if (SideMask != 0) {
 		//our mask is actually a texture of a top right wall.
@@ -178,12 +178,12 @@ WallVertexOut vsWallLMap(WallVertexIn v) {
 	WallVertexOut result;
 
 	float4 position = v.position;
-	float2 tc = v.texCoord;
+	float2 tc = v.texCoord.xy;
 	//we don't care about the terrain elevation of walls in this mode, only their level...
 	//first we want to remove cutaways. this is easy - ceiling the y component of the texcoord
 	tc.y = ceil(tc.y - 0.001);
 	position.z = tc.y; //this makes a wall's height equal to its level. of course, two 
-	result.texCoord = tc;
+	result.texCoord = float3(tc, v.texCoord.z);
 
 	float4 wPos = mul(position, World);
 	float4 finalPos = mul(wPos, ViewProjection);
@@ -196,7 +196,7 @@ WallVertexOut vsWallLMap(WallVertexIn v) {
 
 float4 psWallLMap(WallVertexOut v) : COLOR0
 {
-	float2 texC = v.texCoord;
+	float3 texC = v.texCoord;
 	if (texC.y - 0.001 < Level) discard; //ignore under current level
 	//fade out as we get further away from the floor.
 	//of course, lightmaps for upper levels
@@ -213,7 +213,7 @@ float4 psWallLMap(WallVertexOut v) : COLOR0
 		texC.x = frac(texC.x);
 		texC.y = frac((frac(v.texCoord.y)*0.970)*(-(1 - 0.1185)) + (1 - texC.x)*0.1185*SideMask - 0.117);
 	}
-	float4 maskC = tex2D(MaskSampler, texC);
+	float4 maskC = tex2D(MaskSampler, texC.xy);
 	color.a *= maskC.a;
 	if (color.a < 0.02) discard;
 	return color;

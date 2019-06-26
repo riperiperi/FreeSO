@@ -336,5 +336,10 @@ namespace FSO.SimAntics.Engine.TSOTransaction
         public void FindLotAndValue(VM vm, uint persistID, VMAsyncFindLotCallback p)
         {
         }
+        
+        public void GetBulletinState(VM vm, VMAsyncBulletinCallback callback)
+        {
+            callback(0, 7);
+        }
     }
 }

@@ -77,7 +77,7 @@ namespace FSOiOS
             set.CurrentLang = "english";
             set.Lighting = true;
             set.SmoothZoom = true;
-            set.AntiAlias = false;
+            set.AntiAlias = 0;
             set.LightingMode = 3;
             set.AmbienceVolume = 10;
             set.FXVolume = 10;
@@ -86,6 +86,8 @@ namespace FSOiOS
             set.GraphicsWidth = (int)UIScreen.MainScreen.Bounds.Width;
             set.DirectionalLight3D = false;
             set.GraphicsHeight = (int)UIScreen.MainScreen.Bounds.Height;
+            set.CitySelectorUrl = "http://46.101.67.219:8081";
+            set.GameEntryUrl = "http://46.101.67.219:8081";
 
             if (File.Exists(Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.MyDocuments), "The Sims Online.zip")))
                 File.Delete(Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.MyDocuments), "The Sims Online.zip"));

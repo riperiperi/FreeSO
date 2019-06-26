@@ -15,9 +15,9 @@ namespace FSO.Server.Protocol.Aries.Packets
         public string Email { get; set; }
         public string Authserv { get; set; }
         public ushort Product { get; set; }
-        public byte Unknown { get; set; }
+        public byte Unknown { get; set; } = 39;
         public string ServiceIdent { get; set; }
-        public ushort Unknown2 { get; set; }
+        public ushort Unknown2 { get; set; } = 4; //1 if re-establishing
         public string Password { get; set; }
 
         public void Deserialize(IoBuffer input, ISerializationContext context)
@@ -45,7 +45,7 @@ namespace FSO.Server.Protocol.Aries.Packets
             output.PutString(this.Email, 40, Encoding.ASCII);
             output.PutString(this.Authserv, 84, Encoding.ASCII);
             output.PutUInt16(this.Product);
-            output.Put(0x39);
+            output.Put(this.Unknown);
             output.PutString(this.ServiceIdent, 3, Encoding.ASCII);
             output.PutUInt16(this.Unknown2);
             output.PutString(this.Password, 32, Encoding.ASCII);

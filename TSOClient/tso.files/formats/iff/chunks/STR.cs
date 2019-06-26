@@ -118,6 +118,20 @@ namespace FSO.Files.Formats.IFF.Chunks
             return null;
         }
 
+        public string GetComment(int index)
+        {
+            return GetComment(index, STRLangCode.Default);
+        }
+        public string GetComment(int index, STRLangCode language)
+        {
+            var item = GetStringEntry(index, language);
+            if (item != null)
+            {
+                return item.Comment;
+            }
+            return null;
+        }
+
         public void SetString(int index, string value)
         {
             SetString(index, value, STRLangCode.Default);
@@ -353,6 +367,17 @@ namespace FSO.Files.Formats.IFF.Chunks
         public byte LanguageCode;
         public string Value;
         public string Comment;
+
+        public STRItem()
+        {
+
+        }
+
+        public STRItem(string value)
+        {
+            Value = value;
+            Comment = "";
+        }
     }
 
     public enum STRLangCode : byte

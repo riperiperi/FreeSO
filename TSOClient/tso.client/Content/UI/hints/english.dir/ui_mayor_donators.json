@@ -1,0 +1,8 @@
+{
+    "guid": "0d0984bb-fa4c-41bb-895f-5be5c6f3c294", 
+    "trigger": "ui:mayor_donators",
+    "title": "Post-Campaign Donations",
+    "category": "Neighborhoods",
+    "image": "hint_mayor_donators.png",
+    "body": "Building a Community Lot for your neighborhood is tough work - you can't be expected to shoulder the burden all by yourself! The people didn't elect you for your building skills - they elected you for your dashing personality. You can whitelist any number of sims to allow them to donate objects to the property, either from their inventory or for a discounted price from the category.\n\nThere are two types of donator: [s][color=white]'Donator'[/color][/s] allows a sim to donate and move buy mode objects in the property, and [s][color=white]'Benefactor'[/color][/s] allows a sim to add AND remove build mode objects as well as fully use the build mode tools (eg. wall and floor). You can add both from the Roommates section of the House Panel (F4). Note that no donators of any kind are allowed to delete buy mode or mayor owned objects in the property - only the mayor can do this. Add a sim as a [s]Donator[/s] if you want to let them funish an area, add them as a [s]Benefactor[/s] if you want them to contribute architecturally. Note that donators can also perform roommate actions on objects or sims, but they cannot manage the admit/ban list. The list of donators resets whenever the mayor changes... as long as you're re-elected, your donators will remain whitelisted!"
+}

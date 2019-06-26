@@ -44,6 +44,24 @@ angular.module('admin', ['ngSanitize', 'restangular', 'ui.router', 'ngMaterial',
             templateUrl: 'app/admin/tasks/tasks.html',
             requiresAuth: true,
             resolve: resolve
+        }).state('admin.updates', {
+            url: '/updates',
+            controller: 'UpdatesCtrl',
+            templateUrl: 'app/admin/updates/updates.html',
+            requiresAuth: true,
+            resolve: resolve
+        }).state('admin.addons', {
+            url: '/addons',
+            controller: 'AddonsCtrl',
+            templateUrl: 'app/admin/addons/addons.html',
+            requiresAuth: true,
+            resolve: resolve
+        }).state('admin.branches', {
+            url: '/branches',
+            controller: 'BranchesCtrl',
+            templateUrl: 'app/admin/branches/branches.html',
+            requiresAuth: true,
+            resolve: resolve
         });
 
     $urlRouterProvider.otherwise('/login');

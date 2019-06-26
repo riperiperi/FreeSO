@@ -29,7 +29,13 @@ namespace FSO.Server.Protocol.Electron
             typeof(FSOVMProtocolMessage),
             typeof(AvatarRetireRequest),
             typeof(MailRequest),
-            typeof(MailResponse)
+            typeof(MailResponse),
+            typeof(NhoodRequest),
+            typeof(NhoodResponse),
+            typeof(NhoodCandidateList),
+            typeof(BulletinRequest),
+            typeof(BulletinResponse),
+            typeof(GlobalTuningUpdate)
         };
 
         static ElectronPackets()

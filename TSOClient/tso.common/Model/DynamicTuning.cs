@@ -9,6 +9,12 @@ namespace FSO.Common.Model
 {
     public class DynamicTuning
     {
+        //global tuning:
+        // city -
+        //  0: terrain
+        //   0: forceSnow (0/1/null)
+        public static DynamicTuning Global;
+
         //string type/iff, int table, int index.
         public Dictionary<string, Dictionary<int, Dictionary<int, float>>> Tuning = new Dictionary<string, Dictionary<int, Dictionary<int, float>>>();
         public const int CURRENT_VERSION = 0;

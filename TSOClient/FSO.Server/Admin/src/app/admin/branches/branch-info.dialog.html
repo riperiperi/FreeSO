@@ -1,0 +1,51 @@
+<md-dialog>
+    <md-content class="md-padding">
+        <form name="reqForm">
+            <label>An update branch is a specific update path based on some build source, such as a master/develop/feature branch build. </label>
+            <label ng-if="!create">Updating branch with ID {{req.branch_id}}.</label>
+            <div layout layout-sm="column">
+                <md-input-container flex> <label>Name</label> <input md-maxlength="128" ng-model="req.branch_name" required placeholder="Name"> </md-input-container>
+            </div>
+            <div layout layout-sm="column">
+                <md-input-container flex> <label>Version Format</label> <input md-maxlength="128" ng-model="req.version_format" required placeholder="Version Format"> </md-input-container>
+            </div>
+            <div layout layout-sm="column">
+                <md-input-container flex> <label>Last Version Number</label> <input md-maxlength="50" ng-model="req.last_version_number" required placeholder="Last Version Number" type="number"> </md-input-container>
+            </div>
+            <div layout layout-sm="column">
+                <md-input-container flex> <label>Minor Version Number (converted to letter)</label> <input md-maxlength="50" ng-model="req.minor_version_number" required placeholder="Minor Version Number (converted to letter)" type="number"> </md-input-container>
+            </div>
+
+            <div layout layout-sm="column">
+                <md-input-container flex> 
+                    <label>Addon</label> 
+                    <md-select ng-model="req.addon_id">
+                        <md-option ng-value="addon.addon_id" ng-repeat="addon in addons">{{addon.name}}</md-option>
+                    </md-select>
+                </md-input-container>
+            </div>
+
+            <div layout layout-sm="column">
+                <md-input-container flex> <label>Base Build URL</label> <input md-maxlength="256" ng-model="req.base_build_url" required placeholder="Base Build URL"> </md-input-container>
+            </div>
+
+            <div layout layout-sm="column">
+                <md-input-container flex> <label>Server Build URL</label> <input md-maxlength="256" ng-model="req.base_server_build_url" placeholder="Server Build URL"> </md-input-container>
+            </div>
+
+            <div layout layout-sm="column">
+                <md-input-container flex> 
+                    <md-checkbox ng-model="req.disableIncremental" aria-label="Disable Incremental Updates">
+                        Disable Incremental Updates
+                    </md-checkbox>
+                </md-input-container>
+            </div>
+
+        </form>
+    </md-content>
+    <div class="md-actions" layout="row">
+        <span flex></span>
+        <md-button ng-click="cancel();"> Cancel </md-button>
+        <md-button ng-click="ok()" ng-disabled="reqForm.$invalid" class="md-primary"> {{(create) ? "Create Branch" : "Update Branch"}} </md-button>
+    </div>
+</md-dialog>

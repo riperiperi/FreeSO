@@ -33,6 +33,10 @@ namespace FSO.LotView.Components
         public Blueprint Bp;
         public FloorLevel[] Floors;
 
+        public static bool af2019;
+        static Dictionary<int, Texture2D> PoolReplace; //af2019
+        static Dictionary<int, Texture2D> PoolReplaceParallax;
+
         public _3DFloorGeometry(Blueprint bp)
         {
             Bp = bp;
@@ -43,8 +47,28 @@ namespace FSO.LotView.Components
             }
         }
 
+        private void LoadPoolReplace(GraphicsDevice gd, string folder)
+        {
+            //don't worry this will be removed when i do graphics refactor
+            //probably
+            PoolReplace = new Dictionary<int, Texture2D>();
+            PoolReplaceParallax = new Dictionary<int, Texture2D>();
+
+            for (int i=0; i<16; i++)
+            {
+                using (var file = System.IO.File.Open($"Content/Textures/{folder}/diffuse/pool{i}.png", System.IO.FileMode.Open, System.IO.FileAccess.Read, System.IO.FileShare.Read)) {
+                    PoolReplace[i] = Files.ImageLoader.FromStream(gd, file);
+                }
+                using (var file = System.IO.File.Open($"Content/Textures/{folder}/parallax/pool{i}.png", System.IO.FileMode.Open, System.IO.FileAccess.Read, System.IO.FileShare.Read))
+                {
+                    PoolReplaceParallax[i] = Files.ImageLoader.FromStream(gd, file);
+                }
+            }
+        }
+
         public void FullReset(GraphicsDevice gd, bool buildMode)
         {
+            if (af2019 && PoolReplace == null) LoadPoolReplace(gd, "af19");
             for (int i=0; i<Floors.Length; i++)
             {
                 var lvl = Floors[i];
@@ -231,6 +255,7 @@ namespace FSO.LotView.Components
         public void DrawFloor(GraphicsDevice gd, Effect e, WorldZoom zoom, WorldRotation rot, List<Texture2D> roommaps, HashSet<sbyte> floors, EffectPass pass, 
             Matrix? lightWorld = null, WorldState state = null, int minFloor = 0)
         {
+            var parallax = WorldConfig.Current.Complex;
             //assumes the effect and all its parameters have been set up already
             //we just need to get the right texture and offset
             var flrContent = Content.Content.Get().WorldFloors;
@@ -266,14 +291,17 @@ namespace FSO.LotView.Components
                     var id = type.Key;
                     var doubleDraw = false;
                     Texture2D SPR = null;
+                    Texture2D pSPR = null;
 
                     if (id == 0)
                     {
                         e.Parameters["UseTexture"].SetValue(false);
                         e.Parameters["IgnoreColor"].SetValue(false);
+                        e.Parameters["GrassShininess"].SetValue(0.02f);// (float)0.25);
                     }
                     else
                     {
+                        e.Parameters["GrassShininess"].SetValue((id >= 65503)?0.02f:0f);
                         if (id >= 65503)
                         {
                             if (id == 65503)
@@ -328,22 +356,30 @@ namespace FSO.LotView.Components
                                 int frameNum = 0;
                                 if (state != null)
                                 {
-                                    switch (zoom)
+                                    if (PoolReplace != null && pool)
                                     {
-                                        case WorldZoom.Far:
-                                            baseSPR = (pool) ? 0x400 : 0x800;
-                                            frameNum = (pool) ? 0 : 2;
-                                            SPR = state._2D.GetTexture(flrContent.GetGlobalSPR((ushort)(baseSPR + id)).Frames[frameNum]);
-                                            break;
-                                        case WorldZoom.Medium:
-                                            baseSPR = (pool) ? 0x410 : 0x800;
-                                            frameNum = (pool) ? 0 : 1;
-                                            SPR = state._2D.GetTexture(flrContent.GetGlobalSPR((ushort)(baseSPR + id)).Frames[frameNum]);
-                                            break;
-                                        default:
-                                            baseSPR = (pool) ? 0x420 : 0x800;
-                                            SPR = state._2D.GetTexture(flrContent.GetGlobalSPR((ushort)(baseSPR + id)).Frames[frameNum]);
-                                            break;
+                                        SPR = PoolReplace[id];
+                                        if (parallax) pSPR = PoolReplaceParallax[id];
+                                    }
+                                    else
+                                    {
+                                        switch (zoom)
+                                        {
+                                            case WorldZoom.Far:
+                                                baseSPR = (pool) ? 0x400 : 0x800;
+                                                frameNum = (pool) ? 0 : 2;
+                                                SPR = state._2D.GetTexture(flrContent.GetGlobalSPR((ushort)(baseSPR + id)).Frames[frameNum]);
+                                                break;
+                                            case WorldZoom.Medium:
+                                                baseSPR = (pool) ? 0x410 : 0x800;
+                                                frameNum = (pool) ? 0 : 1;
+                                                SPR = state._2D.GetTexture(flrContent.GetGlobalSPR((ushort)(baseSPR + id)).Frames[frameNum]);
+                                                break;
+                                            default:
+                                                baseSPR = (pool) ? 0x420 : 0x800;
+                                                SPR = state._2D.GetTexture(flrContent.GetGlobalSPR((ushort)(baseSPR + id)).Frames[frameNum]);
+                                                break;
+                                        }
                                     }
                                 }
                             }
@@ -381,7 +417,18 @@ namespace FSO.LotView.Components
                         doubleDraw = true;
                         SPR.Name = Alt.ToString();
                     }
-                    pass.Apply();
+                    if (pSPR != null)
+                    {
+                        var parallaxPass = e.CurrentTechnique.Passes[4];
+                        e.Parameters["ParallaxTex"].SetValue(pSPR);
+                        e.Parameters["ParallaxUVTexMat"].SetValue(new Vector4(0.7071f, -0.7071f, 0.7071f, 0.7071f));
+                        e.Parameters["ParallaxHeight"].SetValue(0.1f);
+                        parallaxPass.Apply();
+                    }
+                    else
+                    {
+                        pass.Apply();
+                    }
                     if (Alt && !FSOEnvironment.DirectX)
                     {
                         //opengl bug workaround. For some reason, the texture is set to clamp mode by some outside force on first draw. 

@@ -1,0 +1,10 @@
+﻿// Fill out and copy to facadeconfig.json
+// Make sure you don't upload your config anywhere like an idiot.
+
+{
+  "api_url": "https://api.freeso.org",
+  "user": "admin",
+  "password": "yourpassword",
+  "limit": 1000,
+  "sleep_time": 30000
+}

@@ -1,5 +1,6 @@
 ﻿using FSO.Common.Serialization;
 using FSO.Server.Protocol.Gluon.Model;
+using FSO.Server.Common;
 using Mina.Core.Buffer;
 using System;
 using System.Collections.Generic;

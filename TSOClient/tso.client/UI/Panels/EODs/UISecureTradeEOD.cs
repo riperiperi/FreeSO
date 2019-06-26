@@ -85,16 +85,19 @@ namespace FSO.Client.UI.Panels.EODs
             Script = this.RenderScript("securetradingeod"+((Small800)?"":"1024")+".uis");
 
             Catalog = new UICatalog(Small800 ? 18 : 28);
+            Catalog.LotControl = EODController.Lot;
             Script.ApplyControlProperties(Catalog, "InventoryCatalogSecureTrading");
             Catalog.X -= 2;
             Add(Catalog);
 
             OfferCatalog = new UICatalog(10); //only uses top row
+            OfferCatalog.LotControl = EODController.Lot;
             OfferCatalog.Position = Catalog.Position + new Vector2(41, 116);
             Add(OfferCatalog);
 
             OtherOfferCatalog = new UICatalog(10); //only uses top row
             OtherOfferCatalog.Position = Catalog.Position + new Vector2(41, 166);
+            OtherOfferCatalog.LotControl = EODController.Lot;
             Add(OtherOfferCatalog);
 
             OurAvatarMoneySymbol.CurrentText = "$";
@@ -570,7 +573,7 @@ namespace FSO.Client.UI.Panels.EODs
         protected virtual void P_Show(string evt, string txt)
         {
             var options = GetEODOptions();
-            Controller.ShowEODMode(options);
+            EODController.ShowEODMode(options);
         }
 
         protected virtual void P_Message(string evt, string txt)

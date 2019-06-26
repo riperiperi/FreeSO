@@ -33,6 +33,7 @@
             this.IndexColumn = ((System.Windows.Forms.ColumnHeader)(new System.Windows.Forms.ColumnHeader()));
             this.NameColumn = ((System.Windows.Forms.ColumnHeader)(new System.Windows.Forms.ColumnHeader()));
             this.ReconBox = new System.Windows.Forms.GroupBox();
+            this.BlenderCheck = new System.Windows.Forms.CheckBox();
             this.SimpleCheck = new System.Windows.Forms.CheckBox();
             this.ExportButton2 = new System.Windows.Forms.Button();
             this.ToCustom = new System.Windows.Forms.Button();
@@ -52,7 +53,6 @@
             this.ToRecon = new System.Windows.Forms.Button();
             this.IffCheck = new System.Windows.Forms.CheckBox();
             this.Debug3D = new FSO.IDE.Common.Debug3DControl();
-            this.BlenderCheck = new System.Windows.Forms.CheckBox();
             this.DGRPBox.SuspendLayout();
             this.ReconBox.SuspendLayout();
             this.CustomBox.SuspendLayout();
@@ -119,6 +119,17 @@
             this.ReconBox.TabIndex = 9;
             this.ReconBox.TabStop = false;
             this.ReconBox.Text = "Reconstruction";
+            // 
+            // BlenderCheck
+            // 
+            this.BlenderCheck.AutoSize = true;
+            this.BlenderCheck.Location = new System.Drawing.Point(14, 102);
+            this.BlenderCheck.Name = "BlenderCheck";
+            this.BlenderCheck.Size = new System.Drawing.Size(106, 17);
+            this.BlenderCheck.TabIndex = 19;
+            this.BlenderCheck.Text = "Blender Imported";
+            this.BlenderCheck.UseVisualStyleBackColor = true;
+            this.BlenderCheck.CheckedChanged += new System.EventHandler(this.UpdateFSOR);
             // 
             // SimpleCheck
             // 
@@ -267,6 +278,7 @@
             this.EmptyButton.TabIndex = 18;
             this.EmptyButton.Text = "Make Empty";
             this.EmptyButton.UseVisualStyleBackColor = true;
+            this.EmptyButton.Click += new System.EventHandler(this.EmptyButton_Click);
             // 
             // HelpButton
             // 
@@ -276,6 +288,7 @@
             this.HelpButton.TabIndex = 17;
             this.HelpButton.Text = "Help";
             this.HelpButton.UseVisualStyleBackColor = true;
+            this.HelpButton.Click += new System.EventHandler(this.HelpButton_Click);
             // 
             // ImportButton
             // 
@@ -324,17 +337,6 @@
             this.Debug3D.Name = "Debug3D";
             this.Debug3D.Size = new System.Drawing.Size(553, 459);
             this.Debug3D.TabIndex = 8;
-            // 
-            // BlenderCheck
-            // 
-            this.BlenderCheck.AutoSize = true;
-            this.BlenderCheck.Location = new System.Drawing.Point(14, 102);
-            this.BlenderCheck.Name = "BlenderCheck";
-            this.BlenderCheck.Size = new System.Drawing.Size(106, 17);
-            this.BlenderCheck.TabIndex = 19;
-            this.BlenderCheck.Text = "Blender Imported";
-            this.BlenderCheck.UseVisualStyleBackColor = true;
-            this.BlenderCheck.CheckedChanged += new System.EventHandler(this.UpdateFSOR);
             // 
             // FSOMEditor
             // 

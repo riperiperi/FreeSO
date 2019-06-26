@@ -7,6 +7,7 @@ using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 using System.IO;
+using FSO.SimAntics.Model;
 
 namespace FSO.SimAntics.Marshals
 {
@@ -83,15 +84,10 @@ namespace FSO.SimAntics.Marshals
             Roof = content.WorldRoofs.IDToName((int)arch.RoofStyle);
         }
 
-        public VMArchLoadFailure Apply(VM vm)
+        public void Apply(VM vm)
         {
-            var failures = VMArchLoadFailure.SUCCESS;
-            int failCount = 0;
-            var wallMap = BuildDict(WallNamesByID, Content.Content.Get().WorldWalls.DynamicWallFromID, ref failCount);
-            if (failCount > 0) failures |= VMArchLoadFailure.WALL_MISSING;
-            failCount = 0;
-            var floorMap = BuildDict(FloorNamesByID, Content.Content.Get().WorldFloors.DynamicFloorFromID, ref failCount);
-            if (failCount > 0) failures |= VMArchLoadFailure.FLOOR_MISSING;
+            var wallMap = BuildDict(WallNamesByID, Content.Content.Get().WorldWalls.DynamicWallFromID, vm.LoadErrors, VMLoadErrorCode.MISSING_WALL);
+            var floorMap = BuildDict(FloorNamesByID, Content.Content.Get().WorldFloors.DynamicFloorFromID, vm.LoadErrors, VMLoadErrorCode.MISSING_FLOOR);
 
             var arch = vm.Context.Architecture;
             foreach (var floors in arch.Floors)
@@ -159,14 +155,13 @@ namespace FSO.SimAntics.Marshals
             arch.RoofStyle = (uint)Content.Content.Get().WorldRoofs.NameToID(Roof);
             if (arch.RoofStyle == int.MaxValue)
             {
-                failures |= VMArchLoadFailure.ROOF_MISSING;
+                vm.LoadErrors.Add(new VMLoadError(VMLoadErrorCode.MISSING_ROOF, Roof));
                 arch.RoofStyle = 0;
             }
             arch.SignalAllDirty();
-            return failures;
         }
 
-        private Dictionary<ushort, ushort> BuildDict(Dictionary<ushort, string> oldIDToName, Dictionary<string, ushort> nameToID, ref int failCount)
+        private Dictionary<ushort, ushort> BuildDict(Dictionary<ushort, string> oldIDToName, Dictionary<string, ushort> nameToID, List<VMLoadError> errors, VMLoadErrorCode code)
         {
             var result = new Dictionary<ushort, ushort>();
             foreach (var entry in oldIDToName)
@@ -177,7 +172,7 @@ namespace FSO.SimAntics.Marshals
                     result[entry.Key] = newID;
                 } else
                 {
-                    failCount++;
+                    errors.Add(new VMLoadError(code, entry.Value));
                 }
             }
             return result;
@@ -222,14 +217,5 @@ namespace FSO.SimAntics.Marshals
 
             Roof = reader.ReadString();
         }
-    }
-
-    [Flags]
-    public enum VMArchLoadFailure
-    {
-        SUCCESS = 0,
-        WALL_MISSING = 1,
-        FLOOR_MISSING = 2,
-        ROOF_MISSING = 4
     }
 }

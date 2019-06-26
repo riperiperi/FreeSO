@@ -136,7 +136,7 @@ namespace FSO.SimAntics.Engine
                 case VMPersonSuits.DefaultSleepwear:
                     if (IsValid(bodyStrings.GetString(32))) goto case VMPersonSuits.TS1ExpandedPajamas;
                     var pj = (child ? "pjs" : "pajama");
-                    var gen = (child ? (male ? "m" : "f") : (code));
+                    var gen = (child ? (male ? "m" : "f")+"chd" : (code));
                     var gen2 = (male ? "m" : "f");
                     toHandCopy = new VMOutfitReference(pj + gen + "_01,BODY=" + pj + gen2 + skn + "_01", false);
                     break;

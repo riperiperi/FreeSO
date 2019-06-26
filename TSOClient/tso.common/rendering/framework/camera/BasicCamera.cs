@@ -102,7 +102,19 @@ namespace FSO.Common.Rendering.Framework.Camera
             }
         }
 
-        public float FOV = (float)Math.PI / 4f;
+        private float _FOV = (float)Math.PI / 4f;
+        public float FOV
+        {
+            get
+            {
+                return _FOV;
+            }
+            set
+            {
+                _FOV = value;
+                ProjectionDirty();
+            }
+        }
 
         protected virtual void CalculateProjection()
         {

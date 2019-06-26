@@ -29,6 +29,8 @@
     <IsWebBootstrapper>false</IsWebBootstrapper>
     <UseApplicationTrust>false</UseApplicationTrust>
     <BootstrapperEnabled>true</BootstrapperEnabled>
+    <NuGetPackageImportStamp>
+    </NuGetPackageImportStamp>
   </PropertyGroup>
   <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Debug|AnyCPU' ">
     <PlatformTarget>AnyCPU</PlatformTarget>
@@ -95,9 +97,8 @@
     <CodeAnalysisRuleSet>MinimumRecommendedRules.ruleset</CodeAnalysisRuleSet>
   </PropertyGroup>
   <ItemGroup>
-    <Reference Include="OpenTK, Version=1.1.0.0, Culture=neutral, PublicKeyToken=bad199fe84eb3df4, processorArchitecture=MSIL">
-      <HintPath>..\packages\MonoGame.Framework.WindowsGL.3.4.0.459\lib\net40\OpenTK.dll</HintPath>
-      <Private>True</Private>
+    <Reference Include="MonoGame.Framework, Version=3.6.0.1625, Culture=neutral, processorArchitecture=MSIL">
+      <HintPath>..\packages\MonoGame.Framework.Portable.3.6.0.1625\lib\portable-net45+win8+wpa81\MonoGame.Framework.dll</HintPath>
     </Reference>
     <Reference Include="System" />
     <Reference Include="System.Core" />
@@ -132,6 +133,7 @@
     <Compile Include="Common\InteractiveDGRPControl.Designer.cs">
       <DependentUpon>InteractiveDGRPControl.cs</DependentUpon>
     </Compile>
+    <Compile Include="Common\MeshExporter.cs" />
     <Compile Include="Common\NewIffDialog.cs">
       <SubType>Form</SubType>
     </Compile>
@@ -158,6 +160,19 @@
     <Compile Include="Common\Debug3DControl.Designer.cs">
       <DependentUpon>Debug3DControl.cs</DependentUpon>
     </Compile>
+    <Compile Include="ContentEditors\AOTGenerator.cs">
+      <SubType>Form</SubType>
+    </Compile>
+    <Compile Include="ContentEditors\AOTGenerator.Designer.cs">
+      <DependentUpon>AOTGenerator.cs</DependentUpon>
+    </Compile>
+    <Compile Include="ContentEditors\TSODataDefinitionEditor.cs">
+      <SubType>Form</SubType>
+    </Compile>
+    <Compile Include="ContentEditors\TSODataDefinitionEditor.Designer.cs">
+      <DependentUpon>TSODataDefinitionEditor.cs</DependentUpon>
+    </Compile>
+    <Compile Include="ContentEditors\TSODataObjects.cs" />
     <Compile Include="EditorComponent\BHAVViewControl.cs">
       <SubType>UserControl</SubType>
     </Compile>
@@ -236,6 +251,7 @@
     <Compile Include="EditorComponent\Primitives\BreakpointDescriptor.cs" />
     <Compile Include="EditorComponent\Primitives\DialogDescriptors.cs" />
     <Compile Include="EditorComponent\Primitives\GenericTSOCallDescriptor.cs" />
+    <Compile Include="EditorComponent\Primitives\SetBalloonHeadlineDescriptor.cs" />
     <Compile Include="EditorComponent\Primitives\TS1InventoryOperationsDescriptor.cs" />
     <Compile Include="EditorComponent\Primitives\InvokePluginDescriptor.cs" />
     <Compile Include="EditorComponent\Primitives\PushInteractionDescriptor.cs" />
@@ -383,6 +399,18 @@
     <Compile Include="ResourceBrowser\IFFResComponent.Designer.cs">
       <DependentUpon>IFFResComponent.cs</DependentUpon>
     </Compile>
+    <Compile Include="ResourceBrowser\ResourceEditors\OTFResourceControl.cs">
+      <SubType>UserControl</SubType>
+    </Compile>
+    <Compile Include="ResourceBrowser\ResourceEditors\OTFResourceControl.Designer.cs">
+      <DependentUpon>OTFResourceControl.cs</DependentUpon>
+    </Compile>
+    <Compile Include="ResourceBrowser\XMLEntryEditor.cs">
+      <SubType>UserControl</SubType>
+    </Compile>
+    <Compile Include="ResourceBrowser\XMLEntryEditor.Designer.cs">
+      <DependentUpon>XMLEntryEditor.cs</DependentUpon>
+    </Compile>
     <Compile Include="ResourceBrowser\OBJDEditor.cs">
       <SubType>UserControl</SubType>
     </Compile>
@@ -408,6 +436,12 @@
       <DependentUpon>BHAVResourceControl.cs</DependentUpon>
     </Compile>
     <Compile Include="ResourceBrowser\ResourceEditors\IResourceControl.cs" />
+    <Compile Include="ResourceBrowser\ResourceEditors\SLOTResourceControl.cs">
+      <SubType>UserControl</SubType>
+    </Compile>
+    <Compile Include="ResourceBrowser\ResourceEditors\SLOTResourceControl.Designer.cs">
+      <DependentUpon>SLOTResourceControl.cs</DependentUpon>
+    </Compile>
     <Compile Include="ResourceBrowser\ResourceEditors\SPR2ResourceControl.cs">
       <SubType>UserControl</SubType>
     </Compile>
@@ -458,6 +492,12 @@
     </EmbeddedResource>
     <EmbeddedResource Include="Common\NewObjectDialog.resx">
       <DependentUpon>NewObjectDialog.cs</DependentUpon>
+    </EmbeddedResource>
+    <EmbeddedResource Include="ContentEditors\AOTGenerator.resx">
+      <DependentUpon>AOTGenerator.cs</DependentUpon>
+    </EmbeddedResource>
+    <EmbeddedResource Include="ContentEditors\TSODataDefinitionEditor.resx">
+      <DependentUpon>TSODataDefinitionEditor.cs</DependentUpon>
     </EmbeddedResource>
     <EmbeddedResource Include="EditorComponent\BHAVViewControl.resx">
       <DependentUpon>BHAVViewControl.cs</DependentUpon>
@@ -544,6 +584,12 @@
     <EmbeddedResource Include="ResourceBrowser\IffResourceViewer.resx">
       <DependentUpon>IffResourceViewer.cs</DependentUpon>
     </EmbeddedResource>
+    <EmbeddedResource Include="ResourceBrowser\ResourceEditors\OTFResourceControl.resx">
+      <DependentUpon>OTFResourceControl.cs</DependentUpon>
+    </EmbeddedResource>
+    <EmbeddedResource Include="ResourceBrowser\XMLEntryEditor.resx">
+      <DependentUpon>XMLEntryEditor.cs</DependentUpon>
+    </EmbeddedResource>
     <EmbeddedResource Include="ResourceBrowser\OBJDEditor.resx">
       <DependentUpon>OBJDEditor.cs</DependentUpon>
     </EmbeddedResource>
@@ -555,6 +601,9 @@
     </EmbeddedResource>
     <EmbeddedResource Include="ResourceBrowser\ResourceEditors\BHAVResourceControl.resx">
       <DependentUpon>BHAVResourceControl.cs</DependentUpon>
+    </EmbeddedResource>
+    <EmbeddedResource Include="ResourceBrowser\ResourceEditors\SLOTResourceControl.resx">
+      <DependentUpon>SLOTResourceControl.cs</DependentUpon>
     </EmbeddedResource>
     <EmbeddedResource Include="ResourceBrowser\ResourceEditors\SPR2ResourceControl.resx">
       <DependentUpon>SPR2ResourceControl.cs</DependentUpon>
@@ -597,11 +646,6 @@
       <Project>{37812a22-91f3-4220-891e-5c26da64a975}</Project>
       <Name>SimplePaletteQuantizer</Name>
     </ProjectReference>
-    <ProjectReference Include="..\..\Other\libs\FSOMonoGame\MonoGame.Framework\MonoGame.Framework.Windows.csproj">
-      <Project>{7de47032-a904-4c29-bd22-2d235e8d91ba}</Project>
-      <Name>MonoGame.Framework.Windows</Name>
-      <Private>False</Private>
-    </ProjectReference>
     <ProjectReference Include="..\..\Other\libs\mp3sharp\mp3sharp\Mp3Sharp.csproj">
       <Project>{834cab58-648d-47cc-ac6f-d01c08c809a4}</Project>
       <Name>Mp3Sharp</Name>
@@ -609,6 +653,14 @@
     <ProjectReference Include="..\..\Other\libs\TargaImage\TargaImage.csproj">
       <Project>{56f4bd87-2404-4263-80d5-6fa2161eb0a4}</Project>
       <Name>TargaImage</Name>
+    </ProjectReference>
+    <ProjectReference Include="..\FSO.Patcher\FSO.Patcher.csproj">
+      <Project>{4e43ce64-343f-4c53-a055-bbf0f4986a16}</Project>
+      <Name>FSO.Patcher</Name>
+    </ProjectReference>
+    <ProjectReference Include="..\FSO.SimAntics.JIT\FSO.SimAntics.JIT.csproj">
+      <Project>{b8ab3711-7b4f-4126-9bf3-4ddde9475b74}</Project>
+      <Name>FSO.SimAntics.JIT</Name>
     </ProjectReference>
     <ProjectReference Include="..\FSO.UI\FSO.UI.csproj">
       <Project>{73e2ad5b-720b-4ef3-9b7c-55931d0ec693}</Project>
@@ -674,6 +726,11 @@
   </ItemGroup>
   <ItemGroup>
     <EmbeddedResource Include="Icon.bmp" />
+    <Content Include="assimp-vc140-mt.dll">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </Content>
+    <Content Include="Assimp32.dll" />
+    <Content Include="Assimp64.dll" />
     <Content Include="IDE.ico" />
     <Content Include="IDERes\arrowBG.png">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>

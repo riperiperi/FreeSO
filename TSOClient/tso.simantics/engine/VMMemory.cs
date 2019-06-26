@@ -70,7 +70,7 @@ namespace FSO.SimAntics.Engine.Utils
                     //throw new VMSimanticsException("Not implemented...", context);
 
                 case VMVariableScope.StackObjectTemp: //13
-                    throw new VMSimanticsException("Not implemented...", context); //accesses the stack object's thread and gets its temp...
+                    return context.StackObject.Thread.TempRegisters[data];
 
                 case VMVariableScope.MyMotives: //14
                     return ((VMAvatar)context.Caller).GetMotiveData((VMMotive)data);
@@ -79,8 +79,7 @@ namespace FSO.SimAntics.Engine.Utils
                     return (context.StackObject as VMAvatar)?.GetMotiveData((VMMotive)data) ?? 0;
 
                 case VMVariableScope.StackObjectSlot: //16
-                    var slotObj = context.StackObject.GetSlot(data);
-                    return (slotObj == null)?(short)0:slotObj.ObjectID;
+                    return context.StackObject.GetSlot(data)?.ObjectID ?? 0;
 
                 case VMVariableScope.StackObjectMotiveByTemp: //17
                     return ((VMAvatar)context.StackObject).GetMotiveData((VMMotive)context.Thread.TempRegisters[data]);
@@ -92,8 +91,7 @@ namespace FSO.SimAntics.Engine.Utils
                     return ((VMAvatar)context.StackObject).GetPersonData((VMPersonDataVariable)data);
 
                 case VMVariableScope.MySlot: //20
-                    var slotObj2 = context.Caller.GetSlot(data);
-                    return (slotObj2 == null) ? (short)0 : slotObj2.ObjectID;
+                    return context.Caller.GetSlot(data)?.ObjectID ?? 0;
 
                 case VMVariableScope.StackObjectDefinition: //21
                     return GetEntityDefinitionVar(context.StackObject.Object.OBJ, (VMOBJDVariable)data, context);
@@ -301,10 +299,10 @@ namespace FSO.SimAntics.Engine.Utils
                     return context.StackObject.MultitileGroup.BaseObject.GetAttribute((ushort)data);
 
                 case VMVariableScope.MyLeadTile: //51
-                    throw new VMSimanticsException("Not implemented...", context);
+                    return context.Caller.MultitileGroup.BaseObject.GetValue((VMStackObjectVariable)data);
 
                 case VMVariableScope.StackObjectLeadTile: //52
-                    throw new VMSimanticsException("Not implemented...", context);
+                    return context.StackObject.MultitileGroup.BaseObject.GetValue((VMStackObjectVariable)data);
 
                 case VMVariableScope.StackObjectMasterDef: //53
                     //gets definition of the master tile of a multi tile object in the stack object.
@@ -580,7 +578,7 @@ namespace FSO.SimAntics.Engine.Utils
                 case VMOBJDVariable.TileWidth:
                     return (short)objd.TileWidth;
                 case VMOBJDVariable.LotCategories:
-                    return 0; //NOT IN OBJD RIGHT NOW!
+                    return (short)objd.LotCategories; 
                 case VMOBJDVariable.BuildModeType:
                     return (short)objd.BuildModeType;
                 case VMOBJDVariable.OriginalGUID1:
@@ -699,7 +697,8 @@ namespace FSO.SimAntics.Engine.Utils
                     return false; //can't set this!
 
                 case VMVariableScope.StackObjectTemp: //13
-                    throw new VMSimanticsException("Not implemented...", context);
+                    context.StackObject.Thread.TempRegisters[data] = value;
+                    return true;
 
                 case VMVariableScope.MyMotives: //14
                     return ((VMAvatar)context.Caller).SetMotiveData((VMMotive)data, value);
@@ -818,7 +817,11 @@ namespace FSO.SimAntics.Engine.Utils
                     return true;
 
                 case VMVariableScope.MyLeadTile: //51
+                    context.Caller.MultitileGroup.BaseObject.SetValue((VMStackObjectVariable)data, value);
+                    return true;
                 case VMVariableScope.StackObjectLeadTile: //52
+                    context.StackObject.MultitileGroup.BaseObject.SetValue((VMStackObjectVariable)data, value);
+                    return true;
                 case VMVariableScope.StackObjectMasterDef: //53
                     return false;
 

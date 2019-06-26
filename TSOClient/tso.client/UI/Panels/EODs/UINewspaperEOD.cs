@@ -132,7 +132,7 @@ namespace FSO.Client.UI.Panels.EODs
             //force the eod expanded.
             var opt = GetEODOptions();
             opt.Expanded = true;
-            Controller.ShowEODMode(opt);
+            EODController.ShowEODMode(opt);
             OnExpand();
         }
 

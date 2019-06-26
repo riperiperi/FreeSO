@@ -44,6 +44,12 @@ namespace FSO.Server.Database.DA.Tasks
             });
         }
 
+        public DbTask CompletedAfter(DbTaskType type, DateTime time)
+        {
+            return Context.Connection.Query<DbTask>("SELECT * FROM fso_tasks WHERE task_type = @type AND task_status = 'completed' AND time_completed >= @time", 
+                new { type = type.ToString(), time }).FirstOrDefault();
+        }
+
         public PagedList<DbTask> All(int offset = 1, int limit = 20)
         {
             var connection = Context.Connection;

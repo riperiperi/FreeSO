@@ -19,6 +19,7 @@ using FSO.SimAntics.NetPlay.Model.Commands;
 using FSO.SimAntics.Model.TSOPlatform;
 using Microsoft.Xna.Framework;
 using FSO.Common.Rendering.Framework.Model;
+using FSO.UI.Controls;
 using FSO.SimAntics.NetPlay.Model;
 
 namespace FSO.Client.UI.Panels
@@ -222,7 +223,7 @@ namespace FSO.Client.UI.Panels
                 {
                     Title = "",
                     Message = GameFacade.Strings.GetString("f113", "8"),
-                    Color = true,
+                    GenericAddition = new UIColorPicker(),
                     Buttons = new UIAlertButton[]
                     {
                         new UIAlertButton(UIAlertButtonType.OK, (btn) => {
@@ -521,7 +522,7 @@ namespace FSO.Client.UI.Panels
         private void FlipSetting(UIElement button)
         {
             var settings = GlobalSettings.Default;
-            if (button == AntiAliasCheckButton) settings.AntiAlias = !(settings.AntiAlias);
+            if (button == AntiAliasCheckButton) settings.AntiAlias = settings.AntiAlias ^ 1;
             else if (button == ShadowsCheckButton) settings.SmoothZoom = !(settings.SmoothZoom);
             else if (button == LightingCheckButton) settings.Lighting = !(settings.Lighting);
             else if (button == UIEffectsCheckButton) settings.CityShadows = !(settings.CityShadows);
@@ -558,7 +559,7 @@ namespace FSO.Client.UI.Panels
         private void SettingsChanged()
         {
             var settings = GlobalSettings.Default;
-            AntiAliasCheckButton.Selected = settings.AntiAlias; //antialias for render targets
+            AntiAliasCheckButton.Selected = settings.AntiAlias > 0; //antialias for render targets
             ShadowsCheckButton.Selected = settings.SmoothZoom;
             LightingCheckButton.Selected = settings.Lighting;
             UIEffectsCheckButton.Selected = settings.CityShadows; //instead of being able to disable UI transparency, you can toggle City Shadows.
@@ -587,13 +588,19 @@ namespace FSO.Client.UI.Panels
                 SmoothZoom = settings.SmoothZoom,
                 SurroundingLots = settings.SurroundingLotMode,
                 AA = settings.AntiAlias,
+                Weather = settings.Weather,
+                Directional = settings.DirectionalLight3D,
+                Complex = settings.ComplexShaders
             };
 
             var vm = ((IGameScreen)GameFacade.Screens.CurrentUIScreen)?.vm;
             if (vm != null)
             {
                 vm.Context.World.ChangedWorldConfig(GameFacade.GraphicsDevice);
-                if (oldSurrounding != settings.SurroundingLotMode) SimAntics.Utils.VMLotTerrainRestoreTools.RestoreSurroundings(vm, vm.HollowAdj);
+                if (oldSurrounding != settings.SurroundingLotMode)
+                {
+                    SimAntics.Utils.VMLotTerrainRestoreTools.RestoreSurroundings(vm, vm.HollowAdj);
+                }
             }
         }
     }

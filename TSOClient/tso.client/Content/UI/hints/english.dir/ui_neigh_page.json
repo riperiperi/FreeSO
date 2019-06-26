@@ -1,0 +1,8 @@
+{
+    "guid": "d2c8753a-a56b-4cb7-b30c-5fc19d37f5e3", 
+    "trigger": "ui:neigh_page",
+    "title": "The Neighborhood Page",
+    "category": "Neighborhoods",
+    "image": "hint_neigh_page.png",
+    "body": "Neighborhoods are slices of the city that have different jurisdiction, and typically different types of players! The top neighborhoods in the city have election cycles, where a neighborhood Mayor is elected to create and manage that neighborhood's Town Hall for a term lasting a month. This page details all of that, including the top 10 properties and sims over the last few days. Each neighborhood also has a bulletin board, which lets residents post public messages about anything they wish. If you live in this neighborhood, you can even submit anonymous ratings for the mayor, which are shown on this page and any future elections that sim participates in. (nothing mean though! see 'Neighborhood Rules' in the help topics)"
+}

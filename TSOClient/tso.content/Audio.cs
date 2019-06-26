@@ -81,6 +81,9 @@ namespace FSO.Content
             {"KMAP", "Music/Modes/Map/"},
             {"KSEL", "Music/Modes/Select/"},
             {"KCRE", "Music/Modes/Create/"},
+
+            {"KBUY", "Music/Modes/.*buy.*\\.mp3"},
+            {"KBUI", "Music/Modes/.*build.*\\.mp3"},
 //tv
             { "KACT", "sounddata/tvstations/tv_action/" },
             { "KCOM", "sounddata/tvstations/tv_comedy_cartoon/" },
@@ -97,7 +100,10 @@ namespace FSO.Content
             { 11, "KSEL" },
             { 12, "KCRE" },
             { 13, "KMAP" },
-            { 9, "" }
+            { 9, "" },
+
+            { 1, "KBUY" }, //buy
+            { 2, "KBUI" }, //build
         };
 
         public Dictionary<string, string> StationPaths

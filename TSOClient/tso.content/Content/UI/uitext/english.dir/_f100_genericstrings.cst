@@ -1,3 +1,6 @@
 ﻿1 ^FreeSO^
 2 ^Feature Disabled^
 3 ^This feature has not been implemented yet!^
+4 ^Reconnecting to City Server... (%s/10)^
+5 ^Reconnecting to Lot Server... (%s/10)^
+6 ^3D Meshes Generating... (%s in queue)^

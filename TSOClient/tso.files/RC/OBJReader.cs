@@ -16,6 +16,7 @@ namespace FSO.Files.RC
     {
         public List<Vector3> Vertices = new List<Vector3>();
         public List<Vector2> TextureCoords = new List<Vector2>();
+        public List<Vector3> Normals = new List<Vector3>();
         public Dictionary<string, List<int[]>> FacesByObjgroup = new Dictionary<string, List<int[]>>();
 
         public OBJ(Stream obj)
@@ -53,12 +54,17 @@ namespace FSO.Files.RC
                     case "vt":
                         TextureCoords.Add(new Vector2(float.Parse(split[1], CultureInfo.InvariantCulture), float.Parse(split[2], CultureInfo.InvariantCulture)));
                         break;
+                    case "vn":
+                        Normals.Add(new Vector3(float.Parse(split[1], CultureInfo.InvariantCulture), float.Parse(split[2], CultureInfo.InvariantCulture), float.Parse(split[3], CultureInfo.InvariantCulture)));
+                        break;
                     case "f":
-                        for (int i=0; i<3; i++)
+                        for (int i = 0; i < 3; i++)
                         {
                             var split2 = split[i + 1].Split('/');
-                            if (split2.Length != 2) continue;
-                            indices.Add(new int[] { int.Parse(split2[0]), int.Parse(split2[1]) });
+                            if (split2.Length == 2)
+                                indices.Add(new int[] { int.Parse(split2[0]), int.Parse(split2[1]) });
+                            else if (split2.Length == 3)
+                                indices.Add(new int[] { int.Parse(split2[0]), int.Parse(split2[1]), int.Parse(split2[2]) });
                         }
                         break;
                 }

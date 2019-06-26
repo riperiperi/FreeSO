@@ -50,6 +50,7 @@ namespace FSO.SimAntics.Engine
     /// </summary>
     public class VMRoutingFrame : VMStackFrame
     {
+        public static bool DEBUG_DRAW = false;
 
         private static ushort ROUTE_FAIL_TREE = 398;
         private static uint GOTO_GUID = 0x000007C4;
@@ -63,7 +64,7 @@ namespace FSO.SimAntics.Engine
         private Stack<VMRoomPortal> Rooms = new Stack<VMRoomPortal>();
         private VMRoomPortal CurrentPortal;
 
-        public LinkedList<Point> WalkTo;
+        public LinkedList<VMIPathSegment> WalkTo;
         private double WalkDirection;
         private double TargetDirection;
         private bool IgnoreRooms;
@@ -109,7 +110,7 @@ namespace FSO.SimAntics.Engine
         private HashSet<VMAvatar> AvatarsToConsider = new HashSet<VMAvatar>();
 
         private LotTilePos PreviousPosition;
-        private LotTilePos CurrentWaypoint = LotTilePos.OUT_OF_WORLD;
+        private VMIPathSegment CurrentPath;
 
         private bool RoomRouteInvalid;
         private SLOTItem Slot;
@@ -332,7 +333,9 @@ namespace FSO.SimAntics.Engine
             //when evaluating possible adjacent tiles we use the Caller's current floor.
 
             LotTilePos startPos = Caller.Position;
-            CurrentWaypoint = CurRoute.Position;
+            //CurrentPath = VMPathLineSegment.LoP(Caller.Position.ToPoint(), CurRoute.Position.ToPoint());
+            //CurrentPath.CalculateTotalFrames();
+            //CurrentWaypoint = CurRoute.Position;
             WalkTo = null;
 
             var startPoint = new Point((int)startPos.x, (int)startPos.y);
@@ -348,12 +351,14 @@ namespace FSO.SimAntics.Engine
             if (myRoom == 0) return false;
 
             var roomInfo = VM.Context.RoomInfo[myRoom];
-            var obstacles = new List<VMObstacle>();
 
             int bx = (roomInfo.Room.Bounds.X-1) << 4;
             int by = (roomInfo.Room.Bounds.Y-1) << 4;
             int width = (roomInfo.Room.Bounds.Width+2) << 4;
             int height = (roomInfo.Room.Bounds.Height+2) << 4;
+
+            var obstacles = new VMObstacleSet(roomInfo.Room.RoutingObstacles);//new List<VMObstacle>();
+
             obstacles.Add(new VMObstacle(bx-16, by-16, bx+width+16, by));
             obstacles.Add(new VMObstacle(bx-16, by+height, bx+width+16, by+height+16));
 
@@ -375,23 +380,68 @@ namespace FSO.SimAntics.Engine
                     obstacles.Add(new VMObstacle(ft.x1-3, ft.y1-3, ft.x2+3, ft.y2+3));
             }
 
-            obstacles.AddRange(roomInfo.Room.WallObs); //can be null
-            obstacles.AddRange(roomInfo.Room.RoomObs);
-
-            foreach (var rect in obstacles)
-            {
-                if (rect.HardContains(startPoint)) return false;
-            }
+            if (obstacles.SearchForIntersect(new VMObstacle(startPoint, startPoint))) return false;
 
             var router = new VMRectRouter(obstacles);
 
-            WalkTo = router.Route(startPoint, endPoint); //returns linked list with size 1 or greater or null
+            int dir = (int)DirectionUtils.PosMod(Math.Round(Caller.RadianDirection / (Math.PI / 2f)), 4);
+
+            var rectRoute = router.Route(startPoint, endPoint, dir);// (6-dir)%4);
+            var parent = ParentRoute ?? this;
+            var inDir = (parent.State == VMRoutingFrameState.ROOM_PORTAL || parent.PortalTurns > 0) ? Caller.RadianDirection : (float?)null;
+            router.OptimizeLines(rectRoute, endPoint, inDir);
+            var useBezier = (VM.Tuning?.GetTuning("feature", 0, 1) ?? 0) == 0;
+            if (useBezier)
+            {
+                WalkTo = VMPathBezierSegment.GeneratePath(rectRoute, endPoint,
+                    inDir,
+                    CurRoute.FaceAnywhere ? (float?)null : CurRoute.RadianDirection);
+            } else
+            {
+                WalkTo = VMPathLineSegment.GeneratePath(rectRoute, endPoint);
+            }
+            if (DEBUG_DRAW) DebugDraw(rectRoute);
             if (WalkTo != null)
             {
-                if (WalkTo.First.Value != endPoint && WalkTo.Count > 1) WalkTo.RemoveFirst();
+                //if (WalkTo.First.Value.Source != endPoint && WalkTo.Count > 1) WalkTo.RemoveFirst();
                 AdvanceWaypoint();
             }
             return (WalkTo != null);
+        }
+
+        private void DebugDraw(LinkedList<VMWalkableRect> rects)
+        {
+            if (rects == null || !VM.UseWorld) return;
+            var component = new DebugLinesComponent(VM.Context.Blueprint);
+            component.Level = Caller.Position.Level;
+            component.Owner = this;
+
+            foreach (var rect in rects)
+            {
+                component.AddRectangle(rect.ToRectangle(), Color.White);
+            }
+
+            var path = new List<Vector2>();
+            bool start = true;
+            foreach (var segment in WalkTo)
+            {
+                segment.AddToPath(path, start);
+                segment.AddDebugExtras(component);
+                start = false;
+            }
+            component.AddPath(path, Color.Red);
+
+            VM.Context.Blueprint.DebugLines.Add(component);
+        }
+
+        public void DebugRemove()
+        {
+            var toRemove = VM.Context.Blueprint.DebugLines.Where(x => x.Owner == this).ToList();
+            foreach (var remove in toRemove)
+            {
+                remove.Dispose();
+                VM.Context.Blueprint.DebugLines.Remove(remove);
+            }
         }
 
         private void OpenSetSortedInsert(List<VMRoomPortal> set, Dictionary<VMRoomPortal, double> fScore, VMRoomPortal portal)
@@ -725,22 +775,30 @@ namespace FSO.SimAntics.Engine
                         //move us to the final spot, then attempt an advance.
                     }
                     //normal sims can move 0.05 units in a frame.
-
+                    
+                    /*
                     if (TurnFrames > 0)
                     {
-                        var newDir = (float)(TargetDirection + DirectionUtils.Difference(TargetDirection, WalkDirection) * (TurnFrames / 10.0));
+                        var newDir = (float)(TargetDirection + DirectionUtils.Difference(TargetDirection, WalkDirection) * (TurnFrames / Math.Min(MoveTotalFrames, 10.0)));
                         avatar.TurnVelocity = DirectionUtils.Difference(newDir, avatar.RadianDirection);
                         avatar.RadianDirection = newDir;
                         TurnFrames--;
                     }
-                    else avatar.RadianDirection = (float)TargetDirection;
-                    
-                    var diff = CurrentWaypoint - PreviousPosition;
-                    diff.x = (short)((diff.x * MoveFrames) / MoveTotalFrames);
-                    diff.y = (short)((diff.y * MoveFrames) / MoveTotalFrames);
+                    else
+                        avatar.RadianDirection = (float)TargetDirection;
+                        */
+
+                    //time to shine
+                    var step = CurrentPath.NextPointAndVel(MoveFrames);
+
+                    //var diff = CurrentWaypoint - PreviousPosition;
+                    //diff.x = (short)((diff.x * MoveFrames) / MoveTotalFrames);
+                    //diff.y = (short)((diff.y * MoveFrames) / MoveTotalFrames);
+                    var pos = step.Item1;
+                    pos.Level = PreviousPosition.Level;
 
                     var storedDir = avatar.RadianDirection;
-                    var result = Caller.SetPosition(PreviousPosition + diff, Direction.NORTH, VM.Context);
+                    var result = Caller.SetPosition(pos, Direction.NORTH, VM.Context);
                     avatar.RadianDirection = storedDir;
                     if (result.Status != VMPlacementError.Success && result.Status != VMPlacementError.CantBeThroughWall)
                     {
@@ -750,6 +808,7 @@ namespace FSO.SimAntics.Engine
                         //
                         //if we need to route around a stopped avatar we add them to our "avatars to consider" set.
 
+                        CurrentPath.ResetToFrame(MoveFrames);
                         bool routeAround = true;
                         VMRoutingFrame colRoute = null;
 
@@ -799,7 +858,7 @@ namespace FSO.SimAntics.Engine
 
                         if (routeAround)
                         {
-                            var oldWalk = new LinkedList<Point>(WalkTo);
+                            var oldWalk = new LinkedList<VMIPathSegment>(WalkTo);
                             if (AttemptWalk()) return VMPrimitiveExitCode.CONTINUE;
                             else
                             {
@@ -862,10 +921,32 @@ namespace FSO.SimAntics.Engine
                         }
 
                     }
-                    avatar.VisualPosition = Vector3.Lerp(PreviousPosition.ToVector3(), CurrentWaypoint.ToVector3(), MoveFrames / (float)MoveTotalFrames);
+                    avatar.VisualPosition = new Vector3(step.Item2, (PreviousPosition.Level-1) * 2.95f);//Vector3.Lerp(PreviousPosition.ToVector3(), CurrentWaypoint.ToVector3(), MoveFrames / (float)MoveTotalFrames);
                     avatar.VisualPositionStart = avatar.VisualPosition;
 
-                    var velocity = Vector3.Lerp(PreviousPosition.ToVector3(), CurrentWaypoint.ToVector3(), Velocity / (float)MoveTotalFrames) - PreviousPosition.ToVector3();
+                    avatar.RadianDirection = (float)TargetDirection; //(float)Math.Atan2(avatar.Velocity.X, -avatar.Velocity.Y); //y+ as north. x+ is -90 degrees.
+
+                    var velocity = new Vector3(step.Item3 * Velocity, 0);
+                    var newTarget = Math.Atan2(velocity.X, -velocity.Y); //y+ as north. x+ is -90 degrees.
+                    var diff = DirectionUtils.Difference(newTarget, avatar.RadianDirection);
+                    var aDiff = Math.Abs(diff);
+                    if (aDiff > 0.25) {
+                        if (diff > 0) diff = 0.25;
+                        else diff = -0.25;
+                        if (aDiff > 0.5)
+                        {
+                            if (Velocity > 4) Velocity -= 2;
+                            if (aDiff > 1)
+                            {
+                                if (Velocity > 2) Velocity -= 2;
+                                if (aDiff > Math.PI / 2) Velocity = 0; 
+                            }
+                        }
+                    }
+                    
+                    TargetDirection = DirectionUtils.Normalize(avatar.RadianDirection - diff);
+                    avatar.TurnVelocity = diff;
+                    //var velocity = Vector3.Lerp(PreviousPosition.ToVector3(), CurrentWaypoint.ToVector3(), Velocity / (float)MoveTotalFrames) - PreviousPosition.ToVector3();
                     velocity.Z = 0;
                     avatar.Velocity = velocity;
 
@@ -894,9 +975,11 @@ namespace FSO.SimAntics.Engine
         private void PreExit()
         {
             //about to exit the routing frame
+            if (DEBUG_DRAW && VM.UseWorld) DebugRemove();
             if (ParentRoute == null)
             {
                 var obj = (VMAvatar)Caller;
+                obj.SetObstacleStatic(true);
                 if (obj.Animations.Count > 1)
                 {
                     while (obj.Animations.Count > 1)
@@ -1071,6 +1154,7 @@ namespace FSO.SimAntics.Engine
         private void StartWalkAnimation()
         {
             var obj = (VMAvatar)Caller;
+            obj.SetObstacleStatic(false);
             var pool = VM.Context.RoomInfo[VM.Context.GetRoomAt(Caller.Position)].Room.IsPool;
             var anims = (pool) ? obj.SwimAnimations:obj.WalkAnimations;
 
@@ -1112,21 +1196,28 @@ namespace FSO.SimAntics.Engine
 
             var point = WalkTo.First.Value;
             WalkTo.RemoveFirst();
+            CurrentPath = point;
+            /*
             if (WalkTo.Count > 0)
             {
-                CurrentWaypoint = new LotTilePos((short)point.X, (short)point.Y, Caller.Position.Level);
+                CurrentPath = point;
+                //CurrentWaypoint = new LotTilePos((short)point.X, (short)point.Y, Caller.Position.Level);
             }
-            else CurrentWaypoint = CurRoute.Position; //go directly to position at last
+            else CurrentPath = new VMPathLineSegment(Caller.Position.ToPoint(), CurRoute.Position.ToPoint()); //go directly to position at last
+            // not particularly sure about the above - seems like this failsafe causes impossible routes to be ran through
+            */
             PreviousPosition = Caller.Position;
             MoveFrames = 0;
 
-            MoveTotalFrames = ((LotTilePos.Distance(CurrentWaypoint, Caller.Position) * 20) / 2);
+            MoveTotalFrames = CurrentPath.CalculateTotalFrames(); //((LotTilePos.Distance(CurrentWaypoint, Caller.Position) * 20) / 2);
             if (((VMAvatar)Caller).IsPet || InPool) MoveTotalFrames *= 2;
             MoveTotalFrames = Math.Max(1, MoveTotalFrames/((WalkStyle == 1) ? 3 : 1));
+            CurrentPath.UpdateTotalFrames(MoveTotalFrames);
 
             WalkDirection = Caller.RadianDirection;
-            TargetDirection = Math.Atan2(CurrentWaypoint.x - Caller.Position.x, Caller.Position.y - CurrentWaypoint.y); //y+ as north. x+ is -90 degrees.
-            TurnFrames = 10;
+            if (State == VMRoutingFrameState.WALKING) TargetDirection = WalkDirection;
+            else TargetDirection = Math.Atan2(CurrentPath.Destination.X - Caller.Position.x * 0x8000, Caller.Position.y * 0x8000 - CurrentPath.Destination.Y); //y+ as north. x+ is -90 degrees.
+            TurnFrames = Math.Min(10, MoveTotalFrames);
             return true;
         }
 
@@ -1197,7 +1288,7 @@ namespace FSO.SimAntics.Engine
                 AvatarsToConsider = atC,
 
                 PreviousPosition = PreviousPosition,
-                CurrentWaypoint = CurrentWaypoint,
+                CurrentPath = CurrentPath,
 
                 RoomRouteInvalid = RoomRouteInvalid,
                 Slot = Slot, //NULLable
@@ -1219,7 +1310,7 @@ namespace FSO.SimAntics.Engine
 
             ParentRoute = GetParentFrame(); //should be able to, since all arrays are generated left to right, including the stacks.
 
-            WalkTo = (inR.WalkTo == null)?null:new LinkedList<Point>(inR.WalkTo);
+            WalkTo = (inR.WalkTo == null)?null:new LinkedList<VMIPathSegment>(inR.WalkTo);
             WalkDirection = inR.WalkDirection;
             TargetDirection = inR.TargetDirection;
             IgnoreRooms = inR.IgnoreRooms;
@@ -1248,7 +1339,7 @@ namespace FSO.SimAntics.Engine
                 AvatarsToConsider.Add((VMAvatar)context.VM.GetObjectById(avatar));
 
             PreviousPosition = inR.PreviousPosition;
-            CurrentWaypoint = inR.CurrentWaypoint;
+            CurrentPath = inR.CurrentPath;
 
             RoomRouteInvalid = inR.RoomRouteInvalid;
             Slot = inR.Slot; //NULLable

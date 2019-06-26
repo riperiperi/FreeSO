@@ -113,13 +113,16 @@ namespace FSO.LotView.Components
         }
 
         public float Time;
+        public float TimeRate;
         public float StopTime = float.PositiveInfinity;
         public bool Dead;
 
         public override void Update(GraphicsDevice device, WorldState world)
         {
             base.Update(device, world);
-            Time += (Mode < ParticleType.GENERIC_BOX)?(0.001f / FSOEnvironment.RefreshRate):(1f / FSOEnvironment.RefreshRate);
+            if (world != null) TimeRate = world.SimSpeed;
+            else TimeRate = 1f;
+            Time += TimeRate*((Mode < ParticleType.GENERIC_BOX)?(0.001f / FSOEnvironment.RefreshRate):(1f / FSOEnvironment.RefreshRate));
 
             if (Time > StopTime + Duration)
             {
@@ -227,6 +230,7 @@ namespace FSO.LotView.Components
                 var velocity = (FSOEnvironment.Enable3D) ? transp - LastPosition : new Vector3();
                 effect.Parameters["CameraVelocity"].SetValue(velocity);
                 opacity = Math.Min(1, (3f / velocity.Length() + 0.001f));
+                opacity /= (float)Math.Sqrt(Math.Max(1, TimeRate));
                 LastPosition = transp;
                 effect.Parameters["Level"].SetValue((float)(Math.Min((world.Level + 1), Bp.Stories) - 0.999f));
             } else
@@ -316,7 +320,7 @@ namespace FSO.LotView.Components
 
             var fade = FadeProgress ?? 0f;
             effect.Parameters["Color"].SetValue(Tint.ToVector4() * (1 - Math.Abs(fade)));
-            effect.Parameters["TimeRate"].SetValue(0.001f/ FSOEnvironment.RefreshRate);
+            effect.Parameters["TimeRate"].SetValue(Math.Max(1,TimeRate)*0.001f/ FSOEnvironment.RefreshRate);
 
             //Parameters:
             //miny, yrange, fall speed, fall speed variation

@@ -43,6 +43,16 @@ namespace FSO.Server.Servers.Lot.Handlers
         {
         }
 
+        public void SessionMigrated(IAriesSession session)
+        {
+            if (!(session is IVoltronSession))
+            {
+                return;
+            }
+            IVoltronSession voltronSession = (IVoltronSession)session;
+            Lots.SessionMigrated(voltronSession);
+        }
+
         public async void SessionUpgraded(IAriesSession oldSession, IAriesSession newSession)
         {
             if (!(newSession is IVoltronSession))

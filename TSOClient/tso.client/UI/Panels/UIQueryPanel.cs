@@ -23,12 +23,13 @@ using FSO.SimAntics.Model.TSOPlatform;
 using FSO.Common;
 using FSO.SimAntics.Model;
 using FSO.UI.Panels;
+using FSO.SimAntics.Model.Platform;
 
 namespace FSO.Client.UI.Panels
 {
     public class UIQueryPanel : UICachedContainer
     {
-
+        public UILotControl LotParent;
         public Texture2D BackgroundImageCatalog { get; set; }
         public Texture2D BackgroundImageTrade { get; set; }
         public Texture2D BackgroundImagePanel { get; set; }
@@ -85,6 +86,7 @@ namespace FSO.Client.UI.Panels
         public UIButton AsyncCancelSaleButton { get; set; }
         public UIButton AsyncEditPriceButton { get; set; }
         public UIButton AsyncBuyButton { get; set; }
+        public UIImage AsyncSaleButtonBG { get; set; }
         public UIImage AsyncCancelSaleButtonBG { get; set; }
 
         public Texture2D GeneralOwnerPriceBack { get; set; }
@@ -164,10 +166,13 @@ namespace FSO.Client.UI.Panels
 
                 ForSalePrice.Visible = (value == 1);
 
+                var validator = LotParent.vm.PlatformState.Validator;
                 SellBackButton.Visible = (value == 1);
-                SellBackButton.Disabled = !Roommate || Ghost;
+                var delMode = validator.GetDeleteMode(DeleteMode.Delete, (VMAvatar)LotParent.ActiveEntity, ActiveEntity);
+                SellBackButton.Disabled = delMode == DeleteMode.Disallowed || Ghost;
                 InventoryButton.Visible = (value == 1);
-                InventoryButton.Disabled = !IAmOwner || Ghost;
+                var sendbackMode = validator.GetDeleteMode(DeleteMode.Sendback, (VMAvatar)LotParent.ActiveEntity, ActiveEntity);
+                InventoryButton.Disabled = sendbackMode != DeleteMode.Sendback || Ghost;
 
                 ObjectNameText.Visible = (value == 1);
                 ObjectOwnerText.Visible = (value == 1);
@@ -175,9 +180,7 @@ namespace FSO.Client.UI.Panels
                 ObjectCrafterText.Visible = (value == 1);
 
                 WearProgressBar.Visible = (value == 1);
-
-                //async sale stuff, as in "once I know what this actually does I'll care"
-
+                
                 AsyncSaleButton.Visible = (value == 1) && LastSalePrice < 0 && !Ghost && CanSell;
                 AsyncCancelSaleButton.Visible = (value == 1) && IAmOwner && LastSalePrice > -1;
                 AsyncCancelSaleButtonBG.Visible = AsyncCancelSaleButton.Visible;
@@ -188,6 +191,8 @@ namespace FSO.Client.UI.Panels
                 {
                     bg.Visible = (value == 1);
                 }
+
+                AsyncSaleButtonBG.Visible = AsyncSaleButton.Visible || LastSalePrice > -1;
 
                 //uh..
                 OwnerPriceBack.Visible = (value == 1) && IAmOwner && LastSalePrice > -1;
@@ -215,6 +220,7 @@ namespace FSO.Client.UI.Panels
         }
 
         private string[] AdStrings;
+        private string[] CategoryStrings;
 
         private int _Mode;
         public int Mode
@@ -244,7 +250,8 @@ namespace FSO.Client.UI.Panels
             }
         }
 
-        public UIQueryPanel(LotView.World world) {
+        public UIQueryPanel(UILotControl parent, LotView.World world) {
+            LotParent = parent;
             World = world;
             Active = false;
             Opacity = 0;
@@ -256,6 +263,13 @@ namespace FSO.Client.UI.Panels
                 string str = GameFacade.Strings.GetString("206", (i + 4).ToString());
                 AdStrings[i] = ((i<7)?str.Substring(0,str.Length-2)+"{0}":str) + "\r\n";
             }
+
+            CategoryStrings = new string[11];
+            for (int i = 0; i < 10; i++)
+            {
+                CategoryStrings[i] = GameFacade.Strings.GetString("f115", (i + 73).ToString());
+            }
+            CategoryStrings[10] = GameFacade.Strings.GetString("f115", "98");
 
             var useSmall = (GlobalSettings.Default.GraphicsWidth < 1024) || FSOEnvironment.UIZoomFactor > 1f;
             var script = this.RenderScript("querypanel"+(useSmall?"":"1024")+".uis");
@@ -341,7 +355,8 @@ namespace FSO.Client.UI.Panels
             SpecificBtnBGs = new List<UIImage>();
             SpecificBtnBGs.Add(AddButtonBackground(SellBackButton, btnBg));
             SpecificBtnBGs.Add(AddButtonBackground(InventoryButton, btnBg));
-            SpecificBtnBGs.Add(AddButtonBackground(AsyncSaleButton, btnBg));
+            AsyncSaleButtonBG = AddButtonBackground(AsyncSaleButton, btnBg);
+            SpecificBtnBGs.Add(AsyncSaleButtonBG);
             AsyncCancelSaleButtonBG = AddButtonBackground(AsyncCancelSaleButton, btnBg);
 
             var progressBG = new UIImage(ImageWearBack);
@@ -467,7 +482,9 @@ namespace FSO.Client.UI.Panels
             IAmOwner = ((entity.TSOState as VMTSOObjectState)?.OwnerID ?? 0) == vm.MyUID;
             Ghost = entity.GhostImage;
             LastSalePrice = entity.MultitileGroup.SalePrice;
-            CanSell = (item?.DisableLevel ?? 0) < 2;
+            CanSell = 
+                vm.PlatformState.Validator.CanManageAsyncSale((VMAvatar)LotParent.ActiveEntity, ActiveEntity as VMGameObject)
+                && (item?.DisableLevel ?? 0) < 2;
 
             int price = def.Price;
             int finalPrice = price;
@@ -477,6 +494,11 @@ namespace FSO.Client.UI.Panels
                 price = (int)item.Value.Price;
                 dcPercent = VMBuildableAreaInfo.GetDiscountFor(item.Value, vm);
                 finalPrice = (price * (100-dcPercent)) / 100;
+                if (LotParent.ObjectHolder.DonateMode)
+                {
+                    finalPrice -= (finalPrice * 2) / 3;
+                    dcPercent = 66;
+                }
             }
 
             StringBuilder motivesString = new StringBuilder();
@@ -490,31 +512,44 @@ namespace FSO.Client.UI.Panels
             {
                 motivesString.AppendFormat(GameFacade.Strings.GetString("206", "19") + "${0}\r\n", price);
             }
-            if (def.RatingHunger != 0) { motivesString.AppendFormat(AdStrings[0], def.RatingHunger); }
-            if (def.RatingComfort != 0) { motivesString.AppendFormat(AdStrings[1], def.RatingComfort); }
-            if (def.RatingHygiene != 0) { motivesString.AppendFormat(AdStrings[2], def.RatingHygiene); }
-            if (def.RatingBladder != 0) { motivesString.AppendFormat(AdStrings[3], def.RatingBladder); }
-            if (def.RatingEnergy != 0) { motivesString.AppendFormat(AdStrings[4], def.RatingEnergy); }
-            if (def.RatingFun != 0) { motivesString.AppendFormat(AdStrings[5], def.RatingFun); }
-            if (def.RatingRoom != 0) { motivesString.AppendFormat(AdStrings[6], def.RatingRoom); }
+
+            var catFlags = def.LotCategories;
+            for (int i = 1; i < 12; i++)
+            {
+                if ((catFlags & (1 << i)) > 0) motivesString.AppendLine(CategoryStrings[i - 1]);
+            }
+
+            if (def.RatingHunger != 0) { motivesString.AppendFormat(AdStrings[0], (short)def.RatingHunger); }
+            if (def.RatingComfort != 0) { motivesString.AppendFormat(AdStrings[1], (short)def.RatingComfort); }
+            if (def.RatingHygiene != 0) { motivesString.AppendFormat(AdStrings[2], (short)def.RatingHygiene); }
+            if (def.RatingBladder != 0) { motivesString.AppendFormat(AdStrings[3], (short)def.RatingBladder); }
+            if (def.RatingEnergy != 0) { motivesString.AppendFormat(AdStrings[4], (short)def.RatingEnergy); }
+            if (def.RatingFun != 0) { motivesString.AppendFormat(AdStrings[5], (short)def.RatingFun); }
+            if (def.RatingRoom != 0) { motivesString.AppendFormat(AdStrings[6], (short)def.RatingRoom); }
 
             var sFlags = def.RatingSkillFlags;
             for (int i = 0; i < 7; i++)
             {
-                if ((sFlags & (1 << i)) > 0) motivesString.Append(AdStrings[i+7]);
+                if ((sFlags & (1 << i)) > 0) motivesString.Append(AdStrings[i + 7]);
             }
 
             MotivesText.CurrentText = motivesString.ToString();
 
             string owner = "Nobody";
+            var ownerTable = "206";
+            var ownerEntry = "24";
             if (entity is VMGameObject && ((VMTSOObjectState)entity.TSOState).OwnerID > 0)
             {
                 var ownerID = ((VMTSOObjectState)entity.TSOState).OwnerID;
-                var ownerEnt = vm.GetAvatarByPersist(ownerID);
-                owner = (ownerEnt != null) ? owner = ownerEnt.Name : "(offline user)";
+                owner = (vm.TSOState.Names.GetNameForID(vm, ownerID));
+                if (((VMTSOObjectState)entity.TSOState).ObjectFlags.HasFlag(VMTSOObjectFlags.FSODonated))
+                {
+                    ownerTable = "f114";
+                    ownerEntry = "1";
+                }
             }
 
-            ObjectOwnerText.Caption = (!entity.GhostImage)?GameFacade.Strings.GetString("206", "24", new string[] { owner }):"";
+            ObjectOwnerText.Caption = (!entity.GhostImage)?GameFacade.Strings.GetString(ownerTable, ownerEntry, new string[] { owner }):"";
 
             SpecificTabButton.Disabled = !bought;
 

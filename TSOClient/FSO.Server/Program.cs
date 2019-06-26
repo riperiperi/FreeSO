@@ -12,9 +12,9 @@ using System.Threading.Tasks;
 
 namespace FSO.Server
 {
-    class Program
+    public class Program
     {
-        static int Main(string[] args)
+        public static int Main(string[] args)
         {
             Type toolType = null;
             object toolOptions = null;
@@ -36,6 +36,14 @@ namespace FSO.Server
                             toolType = typeof(ToolInitDatabase);
                             toolOptions = subOptions;
                             break;
+                        case "import-nhood":
+                            toolType = typeof(ToolImportNhood);
+                            toolOptions = subOptions;
+                            break;
+                        case "restore-lots":
+                            toolType = typeof(ToolRestoreLots);
+                            toolOptions = subOptions;
+                            break;
                         default:
                             Console.Write(options.GetUsage(verb));
                             break;
@@ -52,7 +60,6 @@ namespace FSO.Server
                 new ServerConfigurationModule(),
                 new DatabaseModule(),
                 new GlobalDataServiceModule(),
-                new Nancy.Bootstrappers.Ninject.FactoryModule(),
                 new GluonHostPoolModule()
             );
 

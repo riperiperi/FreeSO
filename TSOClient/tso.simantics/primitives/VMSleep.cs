@@ -35,7 +35,7 @@ namespace FSO.SimAntics.Primitives
             if (context.Args[operand.StackVarToDec] <= -1) { 
                 context.Thread.ScheduleIdleStart = 0;
                 context.VM.Context.NextRandom(1); //rng cycle - for desync detect
-                return VMPrimitiveExitCode.GOTO_TRUE;
+                return (context.Caller.Dead)?VMPrimitiveExitCode.GOTO_TRUE_NEXT_TICK:VMPrimitiveExitCode.GOTO_TRUE;
             }
             else
             {

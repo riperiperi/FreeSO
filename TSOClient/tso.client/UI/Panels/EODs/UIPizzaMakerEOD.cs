@@ -122,7 +122,7 @@ namespace FSO.Client.UI.Panels.EODs
 
         public void P_Show(string evt, string txt)
         {
-            Controller.ShowEODMode(new EODLiveModeOpt
+            EODController.ShowEODMode(new EODLiveModeOpt
             {
                 Buttons = 0,
                 Expandable = false,
@@ -146,7 +146,7 @@ namespace FSO.Client.UI.Panels.EODs
             for (int i=0; i<4; i++)
             {
                 if (!int.TryParse(split[i], out items[i])) return;
-                var avatar = (VMAvatar)Controller.Lot.vm.GetObjectById((short)items[i]);
+                var avatar = (VMAvatar)EODController.Lot.vm.GetObjectById((short)items[i]);
                 if (avatar == null)
                 {
                     if (Players[i] != null)
@@ -156,7 +156,7 @@ namespace FSO.Client.UI.Panels.EODs
                 {
                     if (Players[i] != null)
                         Remove(Players[i]);
-                    Players[i] = new UIVMPersonButton((VMAvatar)avatar, Controller.Lot.vm, true);
+                    Players[i] = new UIVMPersonButton((VMAvatar)avatar, EODController.Lot.vm, true);
                     var bgs = new UIImage[] { PersonBG1, PersonBG2, PersonBG3, PersonBG4 };
                     Players[i].Position = bgs[i].Position + new Microsoft.Xna.Framework.Vector2(2, 2);
                     Add(Players[i]);

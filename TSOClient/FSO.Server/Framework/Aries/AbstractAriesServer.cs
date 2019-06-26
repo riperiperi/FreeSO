@@ -47,8 +47,14 @@ namespace FSO.Server.Framework.Aries
 
         private AriesPacketRouter _Router = new AriesPacketRouter();
         private Sessions _Sessions;
+        private int ConnectionCount;
+        private int TotalConnectionCount;
+        private int MigrationCount;
 
         private List<IAriesSessionInterceptor> _SessionInterceptors = new List<IAriesSessionInterceptor>();
+
+        public int UnexpectedDisconnectWaitSeconds = 0;
+        public bool TimeoutIfNoAuth;
 
         public AbstractAriesServer(AbstractAriesServerConfig config, IKernel kernel)
         {
@@ -187,6 +193,7 @@ namespace FSO.Server.Framework.Aries
                     LOG.Error(ex);
                 }
             }
+            if (TimeoutIfNoAuth) ariesSession.TimeoutIfNoAuth(20000);
 
             //Ask for session info
             session.Write(new RequestClientSession());
@@ -208,9 +215,10 @@ namespace FSO.Server.Framework.Aries
             if (!ariesSession.IsAuthenticated)
             {
                 /** You can only use aries packets when anon **/
-                if(!(message is IAriesPacket))
+                if(!(message is IAriesPacket) && !(message is ClientByePDU))
                 {
-                    throw new Exception("Voltron packets are forbidden before aries authentication has completed");
+                    throw new Exception($"Voltron packets are forbidden before aries authentication has completed. \n" +
+                        $"(got {message.GetType().ToString()} on connection for {Config.Call_Sign})");
                 }
             }
 
@@ -225,14 +233,124 @@ namespace FSO.Server.Framework.Aries
 
         public void SessionOpened(IoSession session)
         {
+            ConnectionCount++;
+            TotalConnectionCount++;
+        }
+
+        public bool AttemptMigration(AriesSession newSession, string userID, string password)
+        {
+            //search for a session for a specific user
+            uint avatarID;
+            if (!uint.TryParse(userID, out avatarID))
+            {
+                LOG.Info($"Rejected migration: could not parse userID {userID}");
+                return false;
+            }
+            var session = _Sessions.GetByAvatarId(avatarID);
+            if (session == null)
+            {
+                LOG.Info($"Rejected migration: could not find session for userID {userID}");
+                return false;
+            }
+            if ((string)session.GetAttribute("sessionKey") != password)
+            {
+                var nullified = (session.GetAttribute("sessionKey") == null) ? "null" : "non-null";
+                LOG.Info($"Rejected migration: incorrect session key for user {userID}. (session key is {nullified})");
+                return false;
+            }
+            LOG.Info($"Migrating session for user {userID}...");
+            newSession.Authenticate(password); //make sure the new session knows that authentication has completed.
+            MigrateSession((AriesSession)session, newSession);
+            return true;
+        }
+
+        public void MigrateSession(AriesSession oldSession, AriesSession newSession)
+        {
+            MigrationCount++;
+            var oldIO = oldSession.IoSession;
+            oldSession.Migrate(newSession.IoSession);
+            //remove the new session as its connection has been migrated to the old.
+            _Sessions.Remove(newSession);
+            //may still be connected. disconnect the old tcp connection.
+            oldIO.SetAttribute("s", null);
+            oldIO.Write(new ServerByePDU());
+            Task.Delay(100).ContinueWith((task) =>
+            {
+                oldIO.Close(true);
+            });
+
+            foreach (var interceptor in _SessionInterceptors)
+            {
+                try
+                {
+                    interceptor.SessionMigrated(oldSession);
+                }
+                catch (Exception ex)
+                {
+                    LOG.Error(ex);
+                }
+            }
+
+            oldSession.Write(new HostOnlinePDU
+            {
+                ClientBufSize = 4096,
+                HostVersion = 0x7FFF,
+                HostReservedWords = 0
+            });
         }
 
         public void SessionClosed(IoSession session)
         {
-            LOG.Info("[SESSION-CLOSED (" + Config.Call_Sign + ")]");
-
+            ConnectionCount--;
             var ariesSession = session.GetAttribute<IAriesSession>("s");
+            if (ariesSession == null)
+            {
+                LOG.Info("[SESSION-REPLACED (" + Config.Call_Sign + ")]");
+                return;
+            }
+
+            if (session.GetAttribute("dc") == null && session.GetAttribute("sessionKey") != null)
+            {
+                //unexpected disconnect.
+                if (UnexpectedDisconnectWaitSeconds > 0)
+                {
+                    //close this session after the timeout, if it isn't migrated.
+                    LOG.Info("[SESSION-INTERRUPTED (" + Config.Call_Sign + ")]");
+
+                    Task.Run(async () =>
+                    {
+                        await Task.WhenAny(
+                            ((AriesSession)ariesSession).DisconnectSource.Task, 
+                            Task.Delay(UnexpectedDisconnectWaitSeconds * 1000)
+                            );
+
+                        if (session.GetAttribute("migrated") != null)
+                        {
+                            //this session has been migrated to another connection - it no longer needs to be closed
+                            LOG.Info("[SESSION-REPLACED (" + Config.Call_Sign + ")]");
+                            return;
+                        }
+                        _Sessions.Remove(ariesSession);
+                        LOG.Info("[SESSION-TIMEOUT (" + Config.Call_Sign + ")]");
+
+                        foreach (var interceptor in _SessionInterceptors)
+                        {
+                            try
+                            {
+                                interceptor.SessionClosed(ariesSession);
+                            }
+                            catch (Exception ex)
+                            {
+                                LOG.Error(ex);
+                            }
+                        }
+                    });
+                    return;
+                }
+            }
+            
             _Sessions.Remove(ariesSession);
+            LOG.Info("[SESSION-CLOSED (" + Config.Call_Sign + ")]");
 
             foreach (var interceptor in _SessionInterceptors)
             {
@@ -282,12 +400,23 @@ namespace FSO.Server.Framework.Aries
 
         public override void Shutdown()
         {
+            LOG.Info($"Health on {Config.Call_Sign} shutdown:");
+            LOG.Info($"  Sessions open: {_Sessions.Clone().Count}");
+            LOG.Info($"  Connections open: {ConnectionCount}");
+            LOG.Info($"  Connection total (lifetime): {TotalConnectionCount}");
+            LOG.Info($"  Connections migrated (lifetime): {MigrationCount}");
+
+            var sendBye = UnexpectedDisconnectWaitSeconds > 0;
+            UnexpectedDisconnectWaitSeconds = 0;
             Acceptor.Dispose();
             PlainAcceptor.Dispose();
 
             var sessionClone = _Sessions.Clone();
             foreach (var session in sessionClone)
+            {
+                if (sendBye) session.Write(new ServerByePDU());
                 session.Close();
+            }
 
             MarkHostDown();
         }

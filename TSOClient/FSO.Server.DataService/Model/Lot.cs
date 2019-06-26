@@ -192,5 +192,19 @@ namespace FSO.Common.DataService.Model
         {
             get { return Lot_Name == "Retrieving..."; }
         }
+
+        private uint _Lot_NeighborhoodID;
+        public uint Lot_NeighborhoodID
+        {
+            get { return _Lot_NeighborhoodID; }
+            set { _Lot_NeighborhoodID = value; NotifyPropertyChanged("Lot_NeighborhoodID"); }
+        }
+
+        private string _Lot_NeighborhoodName;
+        public string Lot_NeighborhoodName
+        {
+            get { return _Lot_NeighborhoodName; }
+            set { _Lot_NeighborhoodName = value; NotifyPropertyChanged("Lot_NeighborhoodName"); }
+        }
     }
 }

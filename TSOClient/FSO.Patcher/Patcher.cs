@@ -105,7 +105,7 @@ namespace FSO.Patcher
                             return;
                         } else if (dresult == DialogResult.Ignore)
                         {
-                            break;
+                            continue;
                         }
                     } else
                     {

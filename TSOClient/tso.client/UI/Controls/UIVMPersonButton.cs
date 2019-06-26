@@ -26,6 +26,7 @@ namespace FSO.Client.UI.Controls
         private Texture2D Overlay;
         private Texture2D Icon;
         private Texture2D Target;
+        private Texture2D MayorIcon;
         private bool RMB;
 
         public UIVMPersonButton(VMAvatar ava, VM vm, bool small)
@@ -34,6 +35,10 @@ namespace FSO.Client.UI.Controls
             this.vm = vm;
 
             Small = small;
+            if (((VMTSOAvatarState)Avatar.TSOState).Flags.HasFlag(VMTSOAvatarFlags.Mayor))
+            {
+                MayorIcon = Content.Content.Get().CustomUI.Get("mayor_icon.png").Get(GameFacade.GraphicsDevice);
+            }
             UpdateAvatarState(((VMTSOAvatarState)Avatar.TSOState).Permissions);
             OnButtonClick += CenterPerson;
         }
@@ -116,22 +121,42 @@ namespace FSO.Client.UI.Controls
         private string GetAvatarString(VMAvatar ava)
         {
             int prefixNum = 3;
+            string prefixSrc = "217";
             if (ava.IsPet) prefixNum = 5;
             else if (ava.PersistID == 0) prefixNum = 4;
             else
             {
                 var permissionsLevel = ((VMTSOAvatarState)ava.TSOState).Permissions;
-                switch (permissionsLevel)
+                if (vm.TSOState.CommunityLot)
                 {
-                    case VMTSOAvatarPermissions.Visitor: prefixNum = 3; break;
-                    case VMTSOAvatarPermissions.Roommate:
-                    case VMTSOAvatarPermissions.BuildBuyRoommate: prefixNum = 2; break;
-                    case VMTSOAvatarPermissions.Admin:
-                    case VMTSOAvatarPermissions.Owner: prefixNum = 1; break;
+                    switch (permissionsLevel)
+                    {
+                        case VMTSOAvatarPermissions.Visitor: prefixNum = 3; break;
+                        case VMTSOAvatarPermissions.Roommate: prefixSrc = "f114"; prefixNum = 11; break;
+                        case VMTSOAvatarPermissions.BuildBuyRoommate: prefixSrc = "f114"; prefixNum = 10; break;
+                        case VMTSOAvatarPermissions.Admin:
+                        case VMTSOAvatarPermissions.Owner: prefixNum = 1; break;
+                    }
+                }
+                else
+                {
+                    switch (permissionsLevel)
+                    {
+                        case VMTSOAvatarPermissions.Visitor: prefixNum = 3; break;
+                        case VMTSOAvatarPermissions.Roommate:
+                        case VMTSOAvatarPermissions.BuildBuyRoommate: prefixNum = 2; break;
+                        case VMTSOAvatarPermissions.Admin:
+                        case VMTSOAvatarPermissions.Owner: prefixNum = 1; break;
+                    }
                 }
             }
 
-            return GameFacade.Strings.GetString("217", prefixNum.ToString()) + ava.ToString();
+            var result = GameFacade.Strings.GetString(prefixSrc, prefixNum.ToString()) + ava.ToString();
+            if (MayorIcon != null)
+            {
+                result += GameFacade.Strings.GetString("f114", "8");
+            }
+            return result;
         }
 
         public override void Draw(UISpriteBatch SBatch)
@@ -156,6 +181,11 @@ namespace FSO.Client.UI.Controls
             if (Icon != null && vm.Context.World.State.ScrollAnchor == Avatar?.WorldUI)
             {
                 DrawLocalTexture(SBatch, Target, new Vector2(Icon.Width-Target.Width, Icon.Height-Target.Height));
+            }
+
+            if (MayorIcon != null)
+            {
+                DrawLocalTexture(SBatch, MayorIcon, new Vector2(1));
             }
             //draw the icon over the button
         }

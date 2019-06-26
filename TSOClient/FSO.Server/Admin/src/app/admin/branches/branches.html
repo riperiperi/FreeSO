@@ -1,0 +1,91 @@
+<md-fab-toolbar count="toolbar.count" md-direction='left' class="md-fab-bottom-right">
+    <md-fab-trigger class="align-with-text">
+        <md-button aria-label="menu" class="md-fab md-primary">
+            <md-icon ng-md-icon icon="menu"></md-icon>
+        </md-button>
+    </md-fab-trigger>
+
+    <md-toolbar>
+        <md-fab-actions class = "md-toolbar-tools">
+            <md-button class="md-icon-button" aria-label="Upload branch" ng-click="showCreateBranch($event)">
+                <md-tooltip>Add Branch</md-tooltip>
+                <md-icon ng-md-icon icon="add"></md-icon>
+            </md-button>
+            <md-button class="md-icon-button" aria-label="Update Branch Info" ng-click="showUpdateBranch($event)" ng-disabled="selected.length == 0">
+                <md-tooltip>Update Branch Info</md-tooltip>
+                <md-icon ng-md-icon icon="edit"></md-icon>
+            </md-button>
+        </md-fab-actions>
+    </md-toolbar>
+</md-fab-toolbar>
+
+<md-toolbar ng-show="!showSearch">
+    <div class="md-toolbar-tools">
+        <md-button ng-click="toggleSidenav('left')" hide-gt-md aria-label="Menu">
+            <ng-md-icon icon="menu"></ng-md-icon>
+        </md-button>
+        <h3>
+            Update Branches
+        </h3>
+        <span flex></span>
+    </div>
+</md-toolbar>
+<md-content flex md-scroll-y>
+
+    <md-table-container>
+        <table md-row-select ng-model="selected" md-table ng-model="selected" md-progress="promise">
+            <thead md-head md-order="query.order" md-on-reorder="onOrderChange">
+                <tr md-row>
+                    <th md-column md-order-by="branch_id"><span>ID</span></th>
+                    <th md-column md-order-by="branch_name"><span>Name</span></th>
+                    <th md-column>Version Format</th>
+                    <th md-column>Last Version #</th>
+                    <th md-column>Minor Version #</th>
+                    <th md-column>Current Update</th>
+                    <th md-column>Addon ID</th>
+                    <th md-column>Client URL</th>
+                    <th md-column>Server URL</th>
+                    <th md-column>Build Mode</th>
+                </tr>
+            </thead>
+            <tbody md-body>
+                <tr md-row md-select="branch" md-select-id="branch_id" md-auto-select ng-repeat="branch in branches">
+                    <td md-cell>{{branch.branch_id}}</td>
+                    <td md-cell>{{branch.branch_name}}</td>
+                    <td md-cell>{{branch.version_format}}</td>
+                    <td md-cell>{{branch.last_version_number}}</td>
+                    <td md-cell>{{branch.minor_version_number}}</td>
+                    <td md-cell>{{branch.current_dist_id}}</td>
+                    <td md-cell>{{branch.addon_id}}</td>
+                    <td md-cell><a href="{{branch.base_build_url}}">Link</a></td>
+                    <td md-cell><a href="{{branch.base_server_build_url}}">Link</a></td>
+                    <td md-cell>{{branch.build_mode}}</td>
+                </tr>
+            </tbody>
+        </table>
+    </md-table-container>
+
+    <md-table-pagination md-limit="query.limit" md-limit-options="[5, 10, 15]" md-page="query.page" md-total="{{branches.total}}" md-on-paginate="onPaginationChange" md-page-select></md-table-pagination>
+
+
+
+
+
+
+    <md-data-table-container>
+        <table md-data-table md-row-select="selected" md-progress="">
+            <thead md-order="query.order" md-trigger="onOrderChange">
+                <tr>
+                </tr>
+            </thead>
+            <tbody>
+                <tr md-auto-select ng-repeat="branch in branches">
+                    
+                </tr>
+            </tbody>
+        </table>
+    </md-data-table-container>
+
+    <md-data-table-pagination md-limit="query.limit" md-page="query.page" md-total="{{branches.total}}" md-trigger="onPaginationChange"></md-data-table-pagination>
+</md-content>
+

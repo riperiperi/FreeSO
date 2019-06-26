@@ -37,7 +37,7 @@ namespace FSO.Client.UI.Panels.EODs.Archetypes
 
         protected virtual void Show(string evt, string txt)
         {
-            Controller.ShowEODMode(GetEODOptions());
+            EODController.ShowEODMode(GetEODOptions());
         }
 
         public override void OnClose()

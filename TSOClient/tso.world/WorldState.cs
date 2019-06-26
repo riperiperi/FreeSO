@@ -16,6 +16,7 @@ using FSO.LotView.Components;
 using FSO.LotView.LMap;
 using FSO.Common.Utils;
 using FSO.Vitaboy;
+using FSO.Common;
 
 namespace FSO.LotView
 {
@@ -26,6 +27,8 @@ namespace FSO.LotView
     {
         private World World;
         public GraphicsDevice Device;
+        public float FramePerDraw;
+        public int FramesSinceLastDraw;
 
         /// <summary>
         /// Creates a new WorldState instance.
@@ -39,12 +42,19 @@ namespace FSO.LotView
             this.Device = device;
             this.World = world;
             this.WorldCamera = new WorldCamera(device);
+            this.FramePerDraw = 30f/FSOEnvironment.RefreshRate;
             WorldCamera.ViewDimensions = new Vector2(worldPxWidth, worldPxHeight);
             Rooms = new GPURoomMaps(device);
             WorldSpace = new WorldSpace(worldPxWidth, worldPxHeight, this);
             Zoom = WorldZoom.Near;
             Rotation = WorldRotation.TopLeft;
             Level = 1;
+        }
+
+        public void UpdateInterpolation()
+        {
+            FramePerDraw = (30f * FramesSinceLastDraw * SimSpeed) / FSOEnvironment.RefreshRate;
+            FramesSinceLastDraw = 0;
         }
 
         public virtual void SetDimensions(Vector2 dim)
@@ -56,7 +66,7 @@ namespace FSO.LotView
         protected WorldCamera WorldCamera;
 
         /// <summary>
-        /// Gets the camera used by this WorldState instance.
+        /// Gets the camera used by this WorldState instance.s
         /// </summary>
         public virtual ICamera Camera 
         {
@@ -73,6 +83,8 @@ namespace FSO.LotView
         public GPURoomMaps Rooms;
         public Color OutsideColor; //temporary to give this to terrain component. in future it will use ambient light texture
         public bool DynamicCutaway;
+        public float SimSpeed = 1f;
+        public Vector3 LightingAdjust = Vector3.One;
 
         public bool ThisFrameImmediate;
 
@@ -290,13 +302,28 @@ namespace FSO.LotView
             Avatar.Effect.Parameters["advancedDirection"].SetValue(advDir);
 
             var frontDir = WorldCamera.FrontDirection();
-            var lightOffset = new Vector2(frontDir.X / (6 * 75), frontDir.Z / (6 * 75));
-            if (Light != null) lightOffset *= Light.InvMapLayout;
+            Vector2 lightOffset;
+            if (Light != null)
+            {
+                lightOffset = new Vector2(frontDir.X / (6 * (Light.Blueprint.Width - 2)), frontDir.Z / (6 * (Light.Blueprint.Width - 2)));
+                lightOffset *= Light.InvMapLayout;
+                Light.SetMapLayout(3, 2);
+            }
+            else
+            {
+                lightOffset = new Vector2(frontDir.X / (6 * 75), frontDir.Z / (6 * 75));
+            }
             WorldContent._2DWorldBatchEffect.Parameters["LightOffset"].SetValue(lightOffset);
             WorldContent.GrassEffect.Parameters["LightOffset"].SetValue(lightOffset);
             Avatar.Effect.Parameters["LightOffset"].SetValue(lightOffset);
             WorldContent.RCObject.Parameters["LightOffset"].SetValue(lightOffset);
             WorldContent.ParticleEffect.Parameters["LightOffset"].SetValue(lightOffset);
+
+            WorldContent._2DWorldBatchEffect.Parameters["LightingAdjust"].SetValue(LightingAdjust);
+            WorldContent.GrassEffect.Parameters["LightingAdjust"].SetValue(LightingAdjust);
+            Avatar.Effect.Parameters["LightingAdjust"].SetValue(LightingAdjust);
+            WorldContent.RCObject.Parameters["LightingAdjust"].SetValue(LightingAdjust);
+            WorldContent.ParticleEffect.Parameters["LightingAdjust"].SetValue(LightingAdjust);
 
             WorldContent._2DWorldBatchEffect.Parameters["MaxFloor"].SetValue((float)Level-0.999f);
         }
@@ -312,6 +339,12 @@ namespace FSO.LotView
             WorldContent.RCObject.Parameters["advancedLight"].SetValue(adv);
             WorldContent._2DWorldBatchEffect.Parameters["ambientLight"].SetValue(amb);
             Avatar.Effect.Parameters["advancedLight"].SetValue(adv);
+
+            WorldContent._2DWorldBatchEffect.Parameters["LightingAdjust"].SetValue(LightingAdjust);
+            WorldContent.GrassEffect.Parameters["LightingAdjust"].SetValue(LightingAdjust);
+            Avatar.Effect.Parameters["LightingAdjust"].SetValue(LightingAdjust);
+            WorldContent.RCObject.Parameters["LightingAdjust"].SetValue(LightingAdjust);
+            WorldContent.ParticleEffect.Parameters["LightingAdjust"].SetValue(LightingAdjust);
         }
     }
 

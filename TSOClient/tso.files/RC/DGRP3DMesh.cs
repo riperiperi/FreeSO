@@ -95,6 +95,11 @@ namespace FSO.Files.RC
             }
         }
 
+        public static int GetWorkCount()
+        {
+            lock (QueuedRC) return QueuedRC.Count;
+        }
+
         public static void RCWorkerLoop()
         {
             while (!GameThread.Killed)

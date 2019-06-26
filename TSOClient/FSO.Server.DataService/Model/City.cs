@@ -66,5 +66,12 @@ namespace FSO.Common.DataService.Model
             set { _City_Top100ListIDs = value; NotifyPropertyChanged("City_Top100ListIDs"); }
         }
 
+        private string _City_NeighJSON;
+        public string City_NeighJSON
+        {
+            get { return _City_NeighJSON; }
+            set { _City_NeighJSON = value; NotifyPropertyChanged("City_NeighJSON"); }
+        }
+
     }
 }

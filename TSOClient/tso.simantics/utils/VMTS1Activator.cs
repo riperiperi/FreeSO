@@ -17,7 +17,7 @@ namespace FSO.SimAntics.Utils
 {
     public class VMTS1Activator
     {
-        public static HashSet<uint> ControllerObjects = new HashSet<uint>()
+        /*public static HashSet<uint> ControllerObjects = new HashSet<uint>()
         {
             0xAED879C5, //phone line
             0xC61F8102, //go studio plugin
@@ -25,7 +25,7 @@ namespace FSO.SimAntics.Utils
             0xA6F31853, //go downtown
             0xABA9DF4A, //go vacation
             0x99197314, //go magictown
-        };
+        };*/
 
         public bool DeleteAvatars = true;
 
@@ -172,7 +172,6 @@ namespace FSO.SimAntics.Utils
             arch.RegenRoomMap();
             VM.Context.RegeneratePortalInfo();
 
-
             var objm = iff.Get<OBJM>(1);
 
             var objt = iff.Get<OBJT>(0);
@@ -202,6 +201,7 @@ namespace FSO.SimAntics.Utils
                     {
                         var x = i % 64;
                         var y = i / 64;
+                        if (x >= size || y >= size) continue;
                         MappedObject targ;
                         if (!objm.ObjectData.TryGetValue(obj, out targ)) continue;
                         targ.ArryX = x;
@@ -212,6 +212,7 @@ namespace FSO.SimAntics.Utils
             }
 
             var content = Content.Content.Get();
+            var ControllerObjects = content.WorldObjects.ControllerObjects.Select(x => (uint)x.ID);
             foreach (var controller in ControllerObjects)
             {
                 VM.Context.CreateObjectInstance(controller, LotTilePos.OUT_OF_WORLD, Direction.NORTH);
@@ -289,7 +290,10 @@ namespace FSO.SimAntics.Utils
             }
 
             var entClone = new List<VMEntity>(VM.Entities);
-            foreach (var nobj in entClone) nobj.ExecuteEntryPoint(11, VM.Context, true);
+            foreach (var nobj in entClone)
+            {
+                nobj.ExecuteEntryPoint(11, VM.Context, true);
+            }
 
             arch.SignalTerrainRedraw();
             VM.Context.World?.InitBlueprint(Blueprint);

@@ -44,68 +44,20 @@ namespace FSO.SimAntics.Primitives
             //we should take the first result with object id > targetValue.
 
             if (operand.SearchType == VMSetToNextSearchType.PartOfAMultipartTile) {
-                var target = context.VM.GetObjectById(targetValue);
-                if (target == null || (!target.MultitileGroup.MultiTile)) return VMPrimitiveExitCode.GOTO_FALSE; //single part
-                else
-                {
-                    var group = target.MultitileGroup.Objects;
-                    bool found = false;
-                    short bestID = 0;
-                    short smallestID = 0;
-                    for (int i = 0; i < group.Count; i++)
-                    {
-                        var temp = group[i];
-                        if (temp.ObjectID < smallestID || smallestID == 0) smallestID = temp.ObjectID;
-                        if (temp.ObjectID > targetValue)
-                        {
-                            if ((!found) || (temp.ObjectID < bestID))
-                            {
-                                found = true;
-                                bestID = temp.ObjectID;
-                            }
-                        }
-                    }
-                    if (found)
-                    {
-                        VMMemory.SetVariable(context, operand.TargetOwner, operand.TargetData, bestID);
-                        return VMPrimitiveExitCode.GOTO_TRUE;
-                    }
-                    else
-                    {
-                        VMMemory.SetVariable(context, operand.TargetOwner, operand.TargetData, smallestID);
-                        return VMPrimitiveExitCode.GOTO_TRUE;
-                    }
-                }
+                var result = MultitilePart(context, Pointer, targetValue);
+                if (result == 0) return VMPrimitiveExitCode.GOTO_FALSE;
+                VMMemory.SetVariable(context, operand.TargetOwner, operand.TargetData, result);
+                return VMPrimitiveExitCode.GOTO_TRUE;
             }
             else if (operand.SearchType == VMSetToNextSearchType.ObjectAdjacentToObjectInLocal)
             {
-                VMEntity anchor = context.VM.GetObjectById((short)context.Locals[operand.Local]);
-                int ptrDir = -1;
-
-                targetValue = 0;
-                if (Pointer != null)
+                var result = AdjToLocal(context, Pointer, operand.Local);
+                if (result == null) return VMPrimitiveExitCode.GOTO_FALSE;
+                else
                 {
-                    ptrDir = getAdjDir(anchor, Pointer);
-                    if (ptrDir == 3) return VMPrimitiveExitCode.GOTO_FALSE; //reached end
+                    VMMemory.SetVariable(context, operand.TargetOwner, operand.TargetData, result.ObjectID);
+                    return VMPrimitiveExitCode.GOTO_TRUE;
                 }
-
-                //iterate through all following dirs til we find an object
-                for (int i = ptrDir + 1; i < 4; i++)
-                {
-                    var off = AdjStep[i];
-                    var adj = context.VM.Context.ObjectQueries.GetObjectsAt(LotTilePos.FromBigTile(
-                        (short)(anchor.Position.TileX + off.X),
-                        (short)(anchor.Position.TileY + off.Y),
-                        anchor.Position.Level));
-
-                    if (adj != null && adj.Count > 0)
-                    {
-                        //lists are ordered by object id. first is the smallest.
-                        VMMemory.SetVariable(context, operand.TargetOwner, operand.TargetData, adj[0].ObjectID);
-                        return VMPrimitiveExitCode.GOTO_TRUE;
-                    }
-                }
-                return VMPrimitiveExitCode.GOTO_FALSE;
             } else if (operand.SearchType == VMSetToNextSearchType.Career)
             {
                 var next = Content.Content.Get().Jobs.SetToNext(targetValue);
@@ -146,9 +98,9 @@ namespace FSO.SimAntics.Primitives
                 if (entities == null) return VMPrimitiveExitCode.GOTO_FALSE;
 
                 bool loop = (operand.SearchType == VMSetToNextSearchType.ObjectOnSameTile);
-                VMEntity first = null;
 
-                for (int i=0; i<entities.Count; i++) //generic search through all objects
+                var ind = VM.FindNextIndexInObjList(entities, targetValue);
+                for (int i=ind; i<entities.Count; i++) //generic search through all objects
                 {
                     var temp = entities[i];
                     bool found = false;
@@ -169,12 +121,13 @@ namespace FSO.SimAntics.Primitives
                                 //set to next object, or cached search.
                                 found = true; break;
                         }
+                        /*
                         if (temp.ObjectID <= targetValue && found)
                         {
                             //remember the first element in case we need to loop back to it (set to next tile on same location)
                             if (first == null) first = temp; 
                             found = false;
-                        }
+                        }*/
                     }
                     if (found)
                     {
@@ -185,6 +138,7 @@ namespace FSO.SimAntics.Primitives
 
                 if (loop)
                 {
+                    VMEntity first = entities.FirstOrDefault();
                     if (first == null || !entities.Contains(Pointer)) return VMPrimitiveExitCode.GOTO_FALSE; //no elements of this kind at all.
                     else
                     {
@@ -198,7 +152,62 @@ namespace FSO.SimAntics.Primitives
             return VMPrimitiveExitCode.GOTO_FALSE; //ran out of objects to test
         }
 
-        private int getAdjDir(VMEntity src, VMEntity dest)
+        public static short MultitilePart(VMStackFrame context, VMEntity pointer, short targetValue)
+        {
+            if (pointer == null || (!pointer.MultitileGroup.MultiTile)) return 0; //single part
+            else
+            {
+                var group = pointer.MultitileGroup.Objects;
+                bool found = false;
+                short bestID = 0;
+                short smallestID = 0;
+                for (int i = 0; i < group.Count; i++)
+                {
+                    var temp = group[i];
+                    if (temp.ObjectID < smallestID || smallestID == 0) smallestID = temp.ObjectID;
+                    if (temp.ObjectID > targetValue)
+                    {
+                        if ((!found) || (temp.ObjectID < bestID))
+                        {
+                            found = true;
+                            bestID = temp.ObjectID;
+                        }
+                    }
+                }
+                if (found) return bestID;
+                else return smallestID;
+            }
+        }
+
+        public static VMEntity AdjToLocal(VMStackFrame context, VMEntity pointer, int local)
+        {
+            VMEntity anchor = context.VM.GetObjectById((short)context.Locals[local]);
+            int ptrDir = -1;
+            
+            if (pointer != null)
+            {
+                ptrDir = getAdjDir(anchor, pointer);
+                if (ptrDir == 3) return null; //reached end
+            }
+
+            //iterate through all following dirs til we find an object
+            for (int i = ptrDir + 1; i < 4; i++)
+            {
+                var off = AdjStep[i];
+                var adj = context.VM.Context.ObjectQueries.GetObjectsAt(LotTilePos.FromBigTile(
+                    (short)(anchor.Position.TileX + off.X),
+                    (short)(anchor.Position.TileY + off.Y),
+                    anchor.Position.Level));
+
+                if (adj != null && adj.Count > 0)
+                {
+                    return adj[0];
+                }
+            }
+            return null;
+        }
+
+        private static int getAdjDir(VMEntity src, VMEntity dest)
         {
             int diffX = dest.Position.TileX - src.Position.TileX;
             int diffY = dest.Position.TileY - src.Position.TileY;
@@ -206,7 +215,7 @@ namespace FSO.SimAntics.Primitives
             return getAdjDir(diffX, diffY);
         }
 
-        private int getAdjDir(int diffX, int diffY)
+        private static int getAdjDir(int diffX, int diffY)
         {
 
             //negative y is anchor

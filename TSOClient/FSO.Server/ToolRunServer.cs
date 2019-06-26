@@ -1,9 +1,9 @@
 ﻿using FSO.Common.DataService.Framework;
 using FSO.Common.Domain;
 using FSO.Common.Utils;
+using FSO.Server.Common;
 using FSO.Server.Database.DA;
 using FSO.Server.DataService;
-using FSO.Server.Debug;
 using FSO.Server.Domain;
 using FSO.Server.Protocol.Electron.Packets;
 using FSO.Server.Servers;
@@ -27,7 +27,6 @@ using System.Runtime.Caching;
 using System.Text;
 using System.Threading;
 using System.Threading.Tasks;
-using System.Windows.Forms;
 
 namespace FSO.Server
 {
@@ -41,11 +40,10 @@ namespace FSO.Server
         private bool Running;
         private List<AbstractServer> Servers;
         private List<CityServer> CityServers;
-        private ApiServer ActiveApiServer;
         private UserApi ActiveUApiServer;
         private TaskServer ActiveTaskServer;
         private RunServerOptions Options;
-        private Protocol.Gluon.Model.ShutdownType ShutdownMode;
+        private ShutdownType ShutdownMode;
 
         private IGluonHostPool HostPool;
 
@@ -78,13 +76,32 @@ namespace FSO.Server
             Directory.CreateDirectory(Path.Combine(Config.SimNFS, "Lots/"));
             Directory.CreateDirectory(Path.Combine(Config.SimNFS, "Objects/"));
 
-            Content.Model.AbstractTextureRef.ImageFetchFunction = Utils.SoftwareImageLoader.SoftImageFetch;
+            if (Content.Model.AbstractTextureRef.ImageFetchFunction == null)
+                Content.Model.AbstractTextureRef.ImageFetchFunction = Utils.CoreImageLoader.SoftImageFetch;
+
+            LOG.Info("Checking for scheduled updates...");
+            if (AutoUpdateUtility.QueueUpdateIfRequired(Kernel, Config.UpdateBranch))
+            {
+                //update queued, restart
+                LOG.Info("An update was scheduled, and has been queued for the watchdog to apply. Restarting...");
+                return 4;
+            }
+
+            //get server update ID if present in a file (from auto updater)
+            if (File.Exists("updateID.txt"))
+            {
+                var stringID = File.ReadAllText("updateID.txt");
+                int id;
+                if (int.TryParse(stringID, out id)) {
+                    Config.UpdateID = id;
+                }
+            }
 
             //TODO: Some content preloading
             LOG.Info("Scanning content");
+            VMContext.InitVMConfig(false);
             Content.Content.Init(Config.GameLocation, Content.ContentMode.SERVER);
             Kernel.Bind<Content.Content>().ToConstant(Content.Content.Get());
-            VMContext.InitVMConfig();
             Kernel.Bind<MemoryCache>().ToConstant(new MemoryCache("fso_server"));
 
             LOG.Info("Loading domain logic");
@@ -181,6 +198,7 @@ namespace FSO.Server
             LOG.Info("Starting services");
             foreach (AbstractServer server in Servers)
             {
+                LOG.Info("Starting " + server.GetType().ToString() + "...");
                 server.Start();
             }
 
@@ -206,6 +224,13 @@ namespace FSO.Server
                             LOG.Info("All servers shut down, shutting down program...");
 
                             Kernel.Get<IGluonHostPool>().Stop();
+
+                            LOG.Info("(pre-close) checking for scheduled updates...");
+                            if (AutoUpdateUtility.QueueUpdateIfRequired(Kernel, Config.UpdateBranch))
+                            {
+                                LOG.Info("An update was scheduled, and has been queued for the watchdog to apply on restart.");
+                                return 4;
+                            }
 
                             /*var domain = AppDomain.CreateDomain("RebootApp");
 
@@ -267,7 +292,8 @@ namespace FSO.Server
             //TODO: select shard to send disconnection request
             foreach (var city in CityServers)
             {
-                city.Sessions.GetByAvatarId(user_id)?.Close();
+                var session = city.Sessions.GetByAvatarId(user_id);
+                session?.Close();
             }
         }
 
@@ -315,7 +341,7 @@ namespace FSO.Server
             }
         }
 
-        private async void RequestedShutdown(uint time, Protocol.Gluon.Model.ShutdownType type)
+        private async void RequestedShutdown(uint time, ShutdownType type)
         {
             //TODO: select which shards to operate on
             ShutdownMode = type;
@@ -332,7 +358,7 @@ namespace FSO.Server
 
                 string timeString = (remaining % 60 == 0 && remaining > 60) ? ((remaining / 60) + " minutes") : (remaining + " seconds");
                 LOG.Info("Shutdown in " + timeString);
-                BroadcastMessage("FreeSO Server", "Shutting down", "The game server will go down for maintainance in " + timeString + ".");
+                BroadcastMessage("FreeSO Server", "Shutting down", "The game server will go down for maintenance in " + timeString + ".");
             }
 
             await Task.Delay((int)remaining * 1000);
@@ -347,11 +373,6 @@ namespace FSO.Server
             LOG.Info("Successfully shut down all city servers!");
             lock (Servers)
             {
-                if (ActiveApiServer != null)
-                {
-                    ActiveApiServer.Shutdown();
-                    Servers.Remove(ActiveApiServer);
-                }
                 if (ActiveUApiServer != null)
                 {
                     ActiveUApiServer.Shutdown();
@@ -365,7 +386,7 @@ namespace FSO.Server
             }
         }
 
-        private void ServerInternalShutdown(AbstractServer server, Protocol.Gluon.Model.ShutdownType data)
+        private void ServerInternalShutdown(AbstractServer server, ShutdownType data)
         {
             lock (Servers)
             {

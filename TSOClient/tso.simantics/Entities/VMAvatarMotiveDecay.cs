@@ -89,7 +89,7 @@ namespace FSO.SimAntics.Entities
             if (cat != LastCategory)
             {
                 LotMuls = new int[7];
-                string category = CategoryNames[(cat == 255) ? 0 : cat];
+                string category = CategoryNames[(cat>10) ? 0 : cat];
                 for (int i = 0; i < 7; i++)
                 {
                     LotMuls[i] = ToFixed1000(LotMotives.GetNum(category + "_" + LotMotiveNames[i] + "Weight"));

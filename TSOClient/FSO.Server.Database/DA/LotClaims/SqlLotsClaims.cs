@@ -85,5 +85,15 @@ namespace FSO.Server.Database.DA.LotClaims
             "ORDER BY active DESC " +
             "LIMIT @limit", new { shard_id = shard_id, category = category.ToString(), limit = limit }).ToList();
         }
+
+        public List<uint> RecentsFilter(uint avatar_id, int limit)
+        {
+            return Context.Connection.Query<uint>("SELECT b.location " +
+            "FROM fso_lot_visits a JOIN fso_lots b ON a.lot_id = b.lot_id " +
+            "WHERE avatar_id = @avatar_id " +
+            "GROUP BY a.lot_id " +
+            "ORDER BY MAX(time_created) DESC " +
+            "LIMIT @limit", new { avatar_id = avatar_id, limit = limit }).ToList();
+        }
     }
 }

@@ -13,26 +13,31 @@ namespace FSO.Content.Framework
     public class TS1Provider
     {
         private FAR1Provider<object> FarProvider;
+        private FileProvider<object> FileProvider;
         private Content Manager;
         private Dictionary<string, string[]> BareFoldersByExtension = new Dictionary<string, string[]>()
         {
             { ".bmp", new string[] { "GameData/Skins/", "ExpansionShared/SkinsBuy/" } },
             { ".cmx", new string[] { "GameData/Skins/", "ExpansionShared/SkinsBuy/" } },
-            { ".skn", new string[] { "GameData/Skins/", "ExpansionShared/SkinsBuy/" } }
+            { ".skn", new string[] { "GameData/Skins/", "ExpansionShared/SkinsBuy/" } },
+            { ".iff", new string[] { "Downloads/" } }
         };
 
         private Dictionary<string, FileProvider<object>> FileProvidersByRegex = new Dictionary<string, FileProvider<object>>();
 
         public TS1Provider(Content contentManager)
         {
-            FarProvider = new FAR1Provider<object>(contentManager, null, new Regex(@".*\.far"), true);
+            FarProvider = new FAR1Provider<object>(contentManager, null, new Regex(@".*\.far", RegexOptions.IgnoreCase), true);
             Manager = contentManager;
+            FileProvider = new FileProvider<object>(contentManager, null, new Regex(@".*"));
             //todo: files provider?
         }
         
         public void Init()
         {
             FarProvider.Init();
+            FileProvider.UseTS1 = true;
+            FileProvider.Init();
         }
 
         public Dictionary<string, IContentReference> BuildDictionary(string ext, string exclude)
@@ -72,11 +77,20 @@ namespace FSO.Content.Framework
                 result[name] = entry;
             }
 
+            /*
+            var entries3 = FileProvider.GetEntriesForExtension(ext);
+            foreach (var entry in entries3)
+            {
+                var name = Path.GetFileName(entry.Name.ToLowerInvariant().Replace('\\', '/'));
+                if (name.Contains(exclude)) continue;
+                result[name] = entry;
+            }*/
+
             return result;
         }
 
         public object Get(string item) {
-            return FarProvider.Get(item);
+            return FarProvider.Get(item) ?? FileProvider.Get(item);
         }
     }
 

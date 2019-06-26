@@ -14,6 +14,7 @@ using System.IO;
 using FSO.Files.RC;
 using FSO.Common.Utils;
 using FSO.Common;
+using System.Diagnostics;
 
 namespace FSO.IDE.ResourceBrowser
 {
@@ -249,35 +250,7 @@ namespace FSO.IDE.ResourceBrowser
                         }
                     }
 
-                    GameThread.NextUpdate(x =>
-                    {
-                        var mesh = new DGRP3DMesh(ActiveDGRP, obj, Client.GameFacade.GraphicsDevice);
-                        if (IffMode)
-                        {
-                            var fsom = ActiveObject.Resource.Get<FSOM>(ActiveDGRP.ChunkID);
-                            if (fsom == null)
-                            {
-                                fsom = new FSOM();
-                                fsom.ChunkLabel = "OBJ Import Mesh";
-                                fsom.ChunkID = ActiveDGRP.ChunkID;
-                                fsom.ChunkProcessed = true;
-                                fsom.ChunkType = "FSOM";
-                                fsom.AddedByPatch = true;
-                                (ActiveObject.Resource.Sprites ?? ActiveObject.Resource.MainIff).AddChunk(fsom);
-                            }
-                            Content.Content.Get().Changes.QueueResMod(new ResAction(() =>
-                            {
-                                fsom.SetMesh(mesh);
-                                Content.Content.Get().RCMeshes.ClearCache(ActiveDGRP);
-                                Debug3D.ForceUpdate();
-                            }, fsom));
-                        }
-                        else
-                        {
-                            Content.Content.Get().RCMeshes.Replace(ActiveDGRP, mesh);
-                            Debug3D.ForceUpdate();
-                        }
-                    });
+                    OBJToFSOM(obj);
 
                     str.Close();
                 }
@@ -377,6 +350,61 @@ namespace FSO.IDE.ResourceBrowser
             Rot3.Checked = ActiveParams.Rotations[2];
             Rot4.Checked = ActiveParams.Rotations[3];
             InternalChange = false;
+        }
+
+        private void HelpButton_Click(object sender, EventArgs e)
+        {
+            ProcessStartInfo sInfo = new ProcessStartInfo("http://forum.freeso.org/threads/3d-remeshing-basics-remeshing-an-object-from-scratch-tutorial.6294/");
+            Process.Start(sInfo);
+        }
+
+        private void OBJToFSOM(OBJ obj)
+        {
+            GameThread.NextUpdate(x =>
+                {
+                    var mesh = new DGRP3DMesh(ActiveDGRP, obj, Client.GameFacade.GraphicsDevice);
+                    if (IffMode)
+                    {
+                        var fsom = ActiveObject.Resource.Get<FSOM>(ActiveDGRP.ChunkID);
+                        if (fsom == null)
+                        {
+                            fsom = new FSOM();
+                            fsom.ChunkLabel = "OBJ Import Mesh";
+                            fsom.ChunkID = ActiveDGRP.ChunkID;
+                            fsom.ChunkProcessed = true;
+                            fsom.ChunkType = "FSOM";
+                            fsom.AddedByPatch = true;
+                            (ActiveObject.Resource.Sprites ?? ActiveObject.Resource.MainIff).AddChunk(fsom);
+                        }
+                        Content.Content.Get().Changes.QueueResMod(new ResAction(() =>
+                        {
+                            fsom.SetMesh(mesh);
+                            Content.Content.Get().RCMeshes.ClearCache(ActiveDGRP);
+                            Debug3D.ForceUpdate();
+                        }, fsom));
+                    }
+                    else
+                    {
+                        Content.Content.Get().RCMeshes.Replace(ActiveDGRP, mesh);
+                        Debug3D.ForceUpdate();
+                    }
+                });
+        }
+
+        private void EmptyButton_Click(object sender, EventArgs e)
+        {
+            var dgrp = ActiveDGRP;
+
+            try
+            {
+                var obj = new OBJ(new MemoryStream(new byte[] { (byte)'#' }));
+
+                OBJToFSOM(obj);
+            }
+            catch (Exception)
+            {
+
+            }
         }
     }
 }

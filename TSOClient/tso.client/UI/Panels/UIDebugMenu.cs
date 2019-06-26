@@ -12,6 +12,8 @@ using FSO.Server.Clients;
 using Ninject;
 using System.Diagnostics;
 using FSO.SimAntics.NetPlay.Model.Commands;
+using FSO.Client.Controllers;
+using FSO.Common;
 
 namespace FSO.Client.UI.Panels
 {
@@ -37,12 +39,18 @@ namespace FSO.Client.UI.Panels
             });
 
             ContentBrowserBtn = new UIButton();
-            ContentBrowserBtn.Caption = "Browse Content";
+            ContentBrowserBtn.Caption = "Nhood Global Cycle";
             ContentBrowserBtn.Position = new Microsoft.Xna.Framework.Vector2(160, 50);
             ContentBrowserBtn.Width = 300;
             ContentBrowserBtn.OnButtonClick += x =>
             {
-                //ShowTool(new ContentBrowser());
+                UIAlert.Prompt("Force Cycle", "How many days in the future do you want neighbourhoods to process?", true, (response) =>
+                {
+                    uint result;
+                    if (!uint.TryParse(response, out result)) return;
+
+                    FindController<CoreGameScreenController>()?.NeighborhoodProtocol.PretendDate(ClientEpoch.Now + 60 * 60 * 24 * result, (code) => { });
+                });
             };
             Add(ContentBrowserBtn);
 
@@ -59,9 +67,9 @@ namespace FSO.Client.UI.Panels
             Add(connectLocalBtn);
 
             var cityPainterBtn = new UIButton();
-            cityPainterBtn.Caption = "Toggle City Painter";
+            cityPainterBtn.Caption = "City Painter";
             cityPainterBtn.Position = new Microsoft.Xna.Framework.Vector2(160, 130);
-            cityPainterBtn.Width = 300;
+            cityPainterBtn.Width = 150;
             cityPainterBtn.OnButtonClick += x =>
             {
                 var core = (GameFacade.Screens.CurrentUIScreen as CoreGameScreen);
@@ -69,15 +77,36 @@ namespace FSO.Client.UI.Panels
                 if (core.CityRenderer.Plugin == null)
                 {
                     core.CityRenderer.Plugin = new Rendering.City.Plugins.MapPainterPlugin(core.CityRenderer);
-                    cityPainterBtn.Caption = "Disable City Painter";
+                    cityPainterBtn.Caption = "Disable Painter";
                 }
                 else
                 {
                     core.CityRenderer.Plugin = null;
-                    cityPainterBtn.Caption = "Enable City Painter";
+                    cityPainterBtn.Caption = "City Painter";
                 }
             };
             Add(cityPainterBtn);
+
+            var ngbhBtn = new UIButton();
+            ngbhBtn.Caption = "Ngbh Editor";
+            ngbhBtn.Position = new Microsoft.Xna.Framework.Vector2(160+150, 130);
+            ngbhBtn.Width = 150;
+            ngbhBtn.OnButtonClick += x =>
+            {
+                var core = (GameFacade.Screens.CurrentUIScreen as CoreGameScreen);
+                if (core == null) return;
+                if (core.CityRenderer.Plugin == null)
+                {
+                    core.CityRenderer.Plugin = new Rendering.City.Plugins.NeighbourhoodEditPlugin(core.CityRenderer);
+                    ngbhBtn.Caption = "Disable Editor";
+                }
+                else
+                {
+                    core.CityRenderer.Plugin = null;
+                    ngbhBtn.Caption = "Ngbh Editor";
+                }
+            };
+            Add(ngbhBtn);
 
             var benchmarkBtn = new UIButton();
             benchmarkBtn.Caption = "VM Performance Benchmark (100k ticks)";
@@ -114,11 +143,18 @@ namespace FSO.Client.UI.Panels
             Add(benchmarkBtn);
 
             var resyncBtn = new UIButton();
-            resyncBtn.Caption = "Force Resync";
+            resyncBtn.Caption = "Lot Disconnect";
             resyncBtn.Position = new Microsoft.Xna.Framework.Vector2(160, 210);
-            resyncBtn.Width = 300;
+            resyncBtn.Width = 150;
             resyncBtn.OnButtonClick += x =>
             {
+                var kernel = FSOFacade.Kernel;
+                if (kernel != null)
+                {
+                    var reg = kernel.Get<Regulators.LotConnectionRegulator>();
+                    reg.Client.Disconnect();
+                }
+                /*
                 var core = (GameFacade.Screens.CurrentUIScreen as IGameScreen);
                 if (core == null || core.vm == null)
                 {
@@ -129,8 +165,24 @@ namespace FSO.Client.UI.Panels
                     return;
                 }
                 core.vm.SendCommand(new VMRequestResyncCmd());
+                */
             };
             Add(resyncBtn);
+
+            var cityDCBtn = new UIButton();
+            cityDCBtn.Caption = "City Disconnect";
+            cityDCBtn.Position = new Microsoft.Xna.Framework.Vector2(160+150, 210);
+            cityDCBtn.Width = 150;
+            cityDCBtn.OnButtonClick += x =>
+            {
+                var kernel = FSOFacade.Kernel;
+                if (kernel != null)
+                {
+                    var reg = kernel.Get<Regulators.CityConnectionRegulator>();
+                    reg.Client.Disconnect();
+                }
+            };
+            Add(cityDCBtn);
 
             serverNameBox = new UITextBox();
             serverNameBox.X = 50;

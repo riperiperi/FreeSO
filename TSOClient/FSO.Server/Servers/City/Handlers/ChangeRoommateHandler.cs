@@ -1,6 +1,7 @@
 ﻿using FSO.Common.DataService;
 using FSO.Common.DataService.Model;
 using FSO.Common.Security;
+using FSO.Server.Common;
 using FSO.Server.Database.DA;
 using FSO.Server.Database.DA.Lots;
 using FSO.Server.Database.DA.Roommates;
@@ -126,6 +127,7 @@ namespace FSO.Server.Servers.City.Handlers
 
                             var avatar = await DataService.Get<Avatar>(session.AvatarId);
                             if (avatar != null) avatar.Avatar_LotGridXY = packet.LotLocation;
+                            da.Avatars.UpdateMoveDate(session.AvatarId, Epoch.Now);
                             Status(session, ChangeRoommateResponseStatus.ACCEPT_SUCCESS); return;
                         }
                         else

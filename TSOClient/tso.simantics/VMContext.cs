@@ -63,6 +63,8 @@ namespace FSO.SimAntics
         public VM VM;
         public bool DisableRouteInvalidation;
 
+        public HashSet<ushort> DeferredLightingRefresh = new HashSet<ushort>();
+
         public VMContext(LotView.World world) : this(world, null) { }
 
         public VMContext(LotView.World world, VMContext oldContext){
@@ -90,7 +92,12 @@ namespace FSO.SimAntics
                 Clock.TicksPerMinute = 30 * 5; //1 minute per 5 irl second
         }
 
-        public static void InitVMConfig()
+        public static void BindAssembler()
+        {
+            GameObjectResource.BHAVAssembler = VMTranslator.INSTANCE.Assemble;
+        }
+
+        public static void InitVMConfig(bool ts1)
         {
             AddPrimitive(new VMPrimitiveRegistration(new VMSleep())
             {
@@ -446,7 +453,7 @@ namespace FSO.SimAntics
                 OperandModel = typeof(VMInventoryOperationsOperand)
             });
 
-            if (Content.Content.Get().TS1)
+            if (ts1)
             {
                 AddPrimitive(new VMPrimitiveRegistration(new VMFindBestAction())
                 {
@@ -507,8 +514,7 @@ namespace FSO.SimAntics
                     OperandModel = typeof(VMTransferFundsOperand)
                 });
             }
-
-            GameObjectResource.BHAVAssembler = VMTranslator.Assemble;
+            BindAssembler();
         }
 
         /// <summary>
@@ -532,6 +538,7 @@ namespace FSO.SimAntics
             if (VM?.Tuning == null) return;
             DisableAvatarCollision = (VM.Tuning.GetTuning("special", 0, 1) ?? 0f) > 0;
             var minLight = VM.Tuning.GetTuning("special", 0, 2);
+            _3DFloorGeometry.af2019 = VM.Tuning.GetTuning("aprilfools", 0, 2019) == 1;
 
             if (DisableAvatarCollision)
             {
@@ -574,6 +581,7 @@ namespace FSO.SimAntics
 
         public void RegeneratePortalInfo()
         {
+            DeferredLightingRefresh.Clear();
             RoomInfo = new VMRoomInfo[Architecture.RoomData.Count()];
             for (int i = 0; i < RoomInfo.Length; i++)
             {
@@ -582,16 +590,30 @@ namespace FSO.SimAntics
                 RoomInfo[i].WindowPortals = new List<VMRoomPortal>();
                 RoomInfo[i].Room = Architecture.RoomData[i];
                 RoomInfo[i].Light = new RoomLighting();
+                RoomInfo[i].StaticObstacles = new VMObstacleSet();
+                RoomInfo[i].DynamicObstacles = new List<VMObstacle>();
             }
 
             foreach (var obj in VM.Entities)
             {
                 var room = GetObjectRoom(obj);
-                VM.AddToObjList(RoomInfo[room].Entities, obj);
-                if (obj.EntryPoints[15].ActionFunction != 0)
+                var roomInfo = RoomInfo[room];
+                VM.AddToObjList(roomInfo.Entities, obj);
+
+                //register collision footprint (if present)
+                var footprint = obj.Footprint;
+                if (footprint != null)
+                {
+                    if (obj.StaticFootprint) roomInfo.StaticObstacles.Add(footprint);
+                    else roomInfo.DynamicObstacles.Add(footprint);
+                    footprint.Set = roomInfo.StaticObstacles;
+                    footprint.Dynamic = roomInfo.DynamicObstacles;
+                }
+
+                if (obj.Portal)
                 { //portal object
                     AddRoomPortal(obj, room);
-                } else if (((VMEntityFlags2)obj.GetValue(VMStackObjectVariable.FlagField2)).HasFlag(VMEntityFlags2.ArchitectualWindow))
+                } else if (obj.Window)
                 {
                     AddWindowPortal(obj, room);
                 }
@@ -639,6 +661,24 @@ namespace FSO.SimAntics
             light.RoomScore = (short)Math.Min(100, Math.Max(-100, roomScore));
         }
 
+        public void ProcessLightingChanges()
+        {
+            for (int i = 0; i < DeferredLightingRefresh.Count; i++)
+            {
+                RefreshLighting(DeferredLightingRefresh.ElementAt(i), i == DeferredLightingRefresh.Count - 1, new HashSet<ushort>());
+            }
+            DeferredLightingRefresh.Clear();
+        }
+
+        public void RefreshAllLighting()
+        {
+            var visited = new HashSet<ushort>();
+            for (ushort i = 0; i < RoomInfo.Length; i++)
+            {
+                RefreshLighting(i, i == (RoomInfo.Length - 1), visited);
+            }
+        }
+
         public void RefreshLighting(ushort room, bool commit, HashSet<ushort> visited)
         {
             if (RoomInfo == null || room == 0) return;
@@ -679,12 +719,12 @@ namespace FSO.SimAntics
                         {
                             if ((flags2 & (VMEntityFlags2.ArchitectualWindow | VMEntityFlags2.ArchitectualDoor)) > 0)
                             {
-                                if (true) light.Lights.Add(new LotView.LMap.LightData(new Vector2(ent.Position.x, ent.Position.y), true, 160, room, info.Room.Floor, ent.LightColor));
+                                if (true) light.Lights.Add(new LotView.LMap.LightData(new Vector2(ent.Position.x, ent.Position.y), true, 160, room, info.Room.Floor, ent.LightColor, ent.WorldUI as ObjectComponent));
                                 outside += (ushort)cont;
                             }
                             else
                             {
-                                if (mainSource) light.Lights.Add(new LotView.LMap.LightData(new Vector2(ent.Position.x, ent.Position.y), false, 160, room, info.Room.Floor, ent.LightColor));
+                                if (mainSource) light.Lights.Add(new LotView.LMap.LightData(new Vector2(ent.Position.x, ent.Position.y), false, 160, room, info.Room.Floor, ent.LightColor, ent.WorldUI as ObjectComponent));
                                 inside += (ushort)cont;
                             }
                         }
@@ -752,6 +792,17 @@ namespace FSO.SimAntics
             }
         }
 
+        public void AddFootprint(VMEntityObstacle footprint)
+        {
+            var room = GetObjectRoom(footprint.Parent);
+            var roomInfo = RoomInfo[room];
+            if (footprint.Parent.StaticFootprint) roomInfo.StaticObstacles.Add(footprint);
+            else roomInfo.DynamicObstacles.Add(footprint);
+
+            footprint.Set = roomInfo.StaticObstacles;
+            footprint.Dynamic = roomInfo.DynamicObstacles;
+        }
+
         public void AddRoomPortal(VMEntity obj, ushort room)
         {
             if (obj.MultitileGroup == null) return;
@@ -759,7 +810,7 @@ namespace FSO.SimAntics
             foreach (var obj2 in obj.MultitileGroup.Objects)
             {
                 var room2 = GetObjectRoom(obj2);
-                if (obj != obj2 && room2 != room && obj2.EntryPoints[15].ActionFunction != 0)
+                if (obj != obj2 && room2 != room && obj2.Portal)
                 {
                     RoomInfo[room].Portals.Add(new VMRoomPortal(obj.ObjectID, room2));
                     break;
@@ -820,51 +871,100 @@ namespace FSO.SimAntics
             RoomInfo[room].Room.RoomObs = Architecture.Rooms[level - 1].GenerateRoomObs(room, level, RoomInfo[room].Room.Bounds, this);
         }
 
-        public void RegisterObjectPos(VMEntity obj)
+        public void RegisterObjectPos(VMEntity obj, bool roomChange)
         {
             var pos = obj.Position;
             if (pos.Level < 1) return;
 
             //add object to room
-
             var room = GetObjectRoom(obj);
-            VM.AddToObjList(RoomInfo[room].Entities, obj); //if it's already in this room, this will do nothing
-            if (obj.EntryPoints[15].ActionFunction != 0)
-            { //portal
-                AddRoomPortal(obj, room);
-                RegenRoomObs(room, obj.Position.Level); //the other portal side will call this on the other room, which is what we really affect.
-            } else if (((VMEntityFlags2)obj.GetValue(VMStackObjectVariable.FlagField2)).HasFlag(VMEntityFlags2.ArchitectualWindow))
+            if (roomChange)
             {
-                AddWindowPortal(obj, room);
+                var roomInfo = RoomInfo[room];
+                VM.AddToObjList(roomInfo.Entities, obj); //if it's already in this room, this will do nothing
+
+                //register collision footprint (if present)
+                var footprint = obj.Footprint;
+                if (footprint != null)
+                {
+                    if (obj.StaticFootprint) roomInfo.StaticObstacles.Add(footprint);
+                    else roomInfo.DynamicObstacles.Add(footprint);
+                    footprint.Set = roomInfo.StaticObstacles;
+                    footprint.Dynamic = roomInfo.DynamicObstacles;
+                }
+
+                if (obj.Portal)
+                { //portal
+                    AddRoomPortal(obj, room);
+                    RegenRoomObs(room, obj.Position.Level); //the other portal side will call this on the other room, which is what we really affect.
+                }
+                else if (obj.Window)
+                {
+                    AddWindowPortal(obj, room);
+                }
+                obj.SetRoom(room);
+                if ((obj.GetValue(VMStackObjectVariable.LightingContribution) > 0 || !obj.MovesOften) && obj.GetValue(VMStackObjectVariable.Hidden) == 0)
+                    DeferredLightingRefresh.Add(room);
+                else if (obj.GetValue(VMStackObjectVariable.RoomImpact) > 0)
+                    RefreshRoomScore(room);
             }
-            obj.SetRoom(room);
-            if (obj.GetValue(VMStackObjectVariable.LightingContribution) > 0 || !obj.MovesOften)
-                RefreshLighting(room, true, new HashSet<ushort>());
-            else if (obj.GetValue(VMStackObjectVariable.RoomImpact) > 0)
-                RefreshRoomScore(room);
+            else
+            {
+                if (obj.StaticFootprint)
+                {
+                    var footprint = obj.Footprint;
+                    if (footprint != null && footprint.Set != null)
+                    {
+                        RoomInfo[room].StaticObstacles.Add(footprint);
+                    }
+                }
+                if (obj.GetValue(VMStackObjectVariable.LightingContribution) > 0 || !obj.MovesOften)
+                    DeferredLightingRefresh.Add(room);
+            }
 
             ObjectQueries.RegisterObjectPos(obj);
         }
 
-        public void UnregisterObjectPos(VMEntity obj)
+        public void UnregisterObjectPos(VMEntity obj, bool roomChange)
         {
             var pos = obj.Position;
 
             //remove object from room
 
-            var room = GetObjectRoom(obj);
-            RoomInfo[room].Entities.Remove(obj);
-            if (obj.EntryPoints[15].ActionFunction != 0)
-            { //portal
-                RemoveRoomPortal(obj, room);
-                RegenRoomObs(room, obj.Position.Level); //the other portal side will call this on the other room, which is what we really affect.
+            if (roomChange)
+            {
+                var room = GetObjectRoom(obj);
+                VM.DeleteFromObjList(RoomInfo[room].Entities, obj);
+
+                //unregister collision footprint (if present)
+                obj.Footprint?.Unregister();
+
+                if (obj.Portal)
+                { //portal
+                    RemoveRoomPortal(obj, room);
+                    RegenRoomObs(room, obj.Position.Level); //the other portal side will call this on the other room, which is what we really affect.
+                }
+                else if (obj.Window)
+                    RemoveWindowPortal(obj, room);
+                if (obj.GetValue(VMStackObjectVariable.LightingContribution) > 0 || !obj.MovesOften)
+                    DeferredLightingRefresh.Add(room); //RefreshLighting(room, true, new HashSet<ushort>())
+                else if (obj.GetValue(VMStackObjectVariable.RoomImpact) > 0)
+                    RefreshRoomScore(room);
             }
-            else if (((VMEntityFlags2)obj.GetValue(VMStackObjectVariable.FlagField2)).HasFlag(VMEntityFlags2.ArchitectualWindow))
-                RemoveWindowPortal(obj, room);
-            if (obj.GetValue(VMStackObjectVariable.LightingContribution) > 0 || !obj.MovesOften)
-                RefreshLighting(room, true, new HashSet<ushort>());
-            else if (obj.GetValue(VMStackObjectVariable.RoomImpact) > 0)
-                RefreshRoomScore(room);
+            else
+            {
+                if (obj.StaticFootprint) //only unregister static
+                {
+                    var footprint = obj.Footprint;
+                    if (footprint != null && footprint.Set != null)
+                    {
+                        footprint.Set.Delete(footprint);
+                    }
+                }
+
+                if (obj.GetValue(VMStackObjectVariable.LightingContribution) > 0 || !obj.MovesOften)
+                    DeferredLightingRefresh.Add(GetObjectRoom(obj)); //RefreshLighting(room, true, new HashSet<ushort>())
+            }
 
             ObjectQueries.UnregisterObjectPos(obj);
         }
@@ -1030,7 +1130,7 @@ namespace FSO.SimAntics
         {
             //avatars cannot be placed in slots under any circumstances, so we skip a few steps.
 
-            VMObstacle footprint = target.GetObstacle(pos, dir);
+            VMObstacle footprint = target.GetObstacle(pos, dir, true);
             ushort room = GetRoomAt(pos);
 
             VMPlacementError status = VMPlacementError.Success;
@@ -1041,16 +1141,18 @@ namespace FSO.SimAntics
                 return new VMPlacementResult(status);
             }
             var allASolid = pflags.HasFlag(VMPlaceRequestFlags.AllAvatarsSolid);
-            var objs = RoomInfo[room].Entities;
             var meAllowAvatars = target.GetFlag(VMEntityFlags.AllowPersonIntersection) && !allASolid;
-            foreach (var obj in objs)
+
+            var ftsL = RoomInfo[room].StaticObstacles.AllIntersect(footprint);
+            ftsL.AddRange(RoomInfo[room].DynamicObstacles.Where(x => x.Intersects(footprint) && ((VMEntityObstacle)x).Parent != target));
+            var fts = (ftsL.Count > 1) ? ftsL.OrderBy(x => ((VMEntityObstacle)x).Parent.ObjectID) : (IEnumerable<VMObstacle>)ftsL;
+            foreach (var ft in fts)
             {
+                var obj = ((VMEntityObstacle)ft).Parent;
                 if (obj.MultitileGroup == target.MultitileGroup) continue;
-                var oFoot = obj.Footprint;
                 var ghost = (short)((target.GhostImage || obj.GhostImage) ? 1 : 0);
 
-                if (oFoot != null && oFoot.Intersects(footprint)
-                        && (!(target.ExecuteEntryPoint(5, this, true, obj, new short[] { obj.ObjectID, ghost, 0, 0 })
+                if ((!(target.ExecuteEntryPoint(5, this, true, obj, new short[] { obj.ObjectID, ghost, 0, 0 })
                         || obj.ExecuteEntryPoint(5, this, true, target, new short[] { target.ObjectID, ghost, 0, 0 })))
                     )
                 {
@@ -1082,7 +1184,7 @@ namespace FSO.SimAntics
             var flags = (VMEntityFlags)target.GetValue(VMStackObjectVariable.Flags);
             bool allowAvatars = ((flags & VMEntityFlags.DisallowPersonIntersection) == 0) && ((flags & VMEntityFlags.AllowPersonIntersection) > 0);
 
-            VMObstacle footprint = target.GetObstacle(pos, dir);
+            VMObstacle footprint = target.GetObstacle(pos, dir, true);
             ushort room = GetRoomAt(pos);
 
             VMPlacementError status = (noFloor)?VMPlacementError.HeightNotAllowed:VMPlacementError.Success;
@@ -1093,16 +1195,17 @@ namespace FSO.SimAntics
                 return new VMPlacementResult { Status = status };
             }
 
-            var objs = RoomInfo[room].Entities;
-            foreach (var obj in objs)
+            var ftsL = RoomInfo[room].StaticObstacles.AllIntersect(footprint);
+            ftsL.AddRange(RoomInfo[room].DynamicObstacles.Where(x => x.Intersects(footprint)));
+            var fts = (ftsL.Count > 1) ? ftsL.OrderBy(x => ((VMEntityObstacle)x).Parent.ObjectID) : (IEnumerable<VMObstacle>)ftsL;
+            foreach (var ft in fts)
             {
+                var obj = ((VMEntityObstacle)ft).Parent;
                 if (obj.MultitileGroup == target.MultitileGroup || (obj is VMAvatar && allowAvatars) 
                     || (target.IgnoreIntersection != null && target.IgnoreIntersection.Objects.Contains(obj))) continue;
-                var oFoot = obj.Footprint;
                 var ghost = (short)((target.GhostImage || obj.GhostImage) ? 1 : 0);
 
-                if (oFoot != null && oFoot.Intersects(footprint)
-                    && (!(target.ExecuteEntryPoint(5, this, true, obj, new short[] { obj.ObjectID, ghost, 0, 0 })
+                if ((!(target.ExecuteEntryPoint(5, this, true, obj, new short[] { obj.ObjectID, ghost, 0, 0 })
                         || obj.ExecuteEntryPoint(5, this, true, target, new short[] { target.ObjectID, ghost, 0, 0 })))
                     )
                 {

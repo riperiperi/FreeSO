@@ -24,6 +24,10 @@ using FSO.Server.Database.DA.Tuning;
 using FSO.Server.Database.DA.Transactions;
 using FSO.Server.Database.DA.DynPayouts;
 using FSO.Server.Database.DA.EmailConfirmation;
+using FSO.Server.Database.DA.Neighborhoods;
+using FSO.Server.Database.DA.Elections;
+using FSO.Server.Database.DA.Bulletin;
+using FSO.Server.Database.DA.Updates;
 
 namespace FSO.Server.Database.DA
 {
@@ -177,6 +181,45 @@ namespace FSO.Server.Database.DA
             }
         }
 
+        private INeighborhoods _Neighborhoods;
+        public INeighborhoods Neighborhoods
+        {
+            get
+            {
+                if (_Neighborhoods == null)
+                {
+                    _Neighborhoods = new SqlNeighborhoods(Context);
+                }
+                return _Neighborhoods;
+            }
+        }
+
+        private IElections _Elections;
+        public IElections Elections
+        {
+            get
+            {
+                if (_Elections == null)
+                {
+                    _Elections = new SqlElections(Context);
+                }
+                return _Elections;
+            }
+        }
+
+        private IBulletinPosts _BulletinPosts;
+        public IBulletinPosts BulletinPosts
+        {
+            get
+            {
+                if (_BulletinPosts == null)
+                {
+                    _BulletinPosts = new SqlBulletinPosts(Context);
+                }
+                return _BulletinPosts;
+            }
+        }
+
         private IAvatarClaims _AvatarClaims;
         public IAvatarClaims AvatarClaims
         {
@@ -327,6 +370,16 @@ namespace FSO.Server.Database.DA
             {
                 if (_Transactions == null) _Transactions = new SqlTransactions(Context);
                 return _Transactions;
+            }
+        }
+
+        private IUpdates _Updates;
+        public IUpdates Updates
+        {
+            get
+            {
+                if (_Updates == null) _Updates = new SqlUpdates(Context);
+                return _Updates;
             }
         }
 

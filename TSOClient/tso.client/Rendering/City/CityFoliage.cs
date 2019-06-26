@@ -139,7 +139,7 @@ namespace FSO.Client.Rendering.City
             PixelShader.CurrentTechnique.Passes[passIndex].Apply();
 
             gd.SamplerStates[1] = SamplerState.AnisotropicClamp;
-            gd.BlendState = BlendState.AlphaBlend;
+            gd.BlendState = BlendState.NonPremultiplied;
 
             VertexShader.CurrentTechnique = VertexShader.Techniques[1];
             VertexShader.CurrentTechnique.Passes[5].Apply();
