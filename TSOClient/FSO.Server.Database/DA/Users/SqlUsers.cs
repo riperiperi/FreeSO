@@ -4,6 +4,7 @@ using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 using Dapper;
+using FSO.Server.Common;
 using FSO.Server.Database.DA.Utils;
 
 namespace FSO.Server.Database.DA.Users
@@ -88,6 +89,67 @@ namespace FSO.Server.Database.DA.Users
             Context.Connection.Execute(
                 "UPDATE fso_user_authenticate SET scheme_class = @scheme_class, data = @data WHERE user_id = @user_id;",
                 new { auth.scheme_class, auth.data, auth.user_id }
+            );
+        }
+
+        public DbAuthAttempt GetRemainingAuth(uint user_id, string ip)
+        {
+            var result = Context.Connection.Query<DbAuthAttempt>(
+                "SELECT * FROM fso_auth_attempts WHERE user_id = @user_id AND ip = @ip AND invalidated = 0 ORDER BY expire_time DESC",
+                new { user_id, ip }
+                ).FirstOrDefault();
+            if (result != null && result.active && result.expire_time < Epoch.Now) return null;
+            else return result;
+        }
+
+        public int FailedConsecutive(uint user_id, string ip)
+        {
+            return Context.Connection.Query<int>(
+            "SELECT COUNT(*) FROM fso_auth_attempts WHERE user_id = @user_id AND ip = @ip AND active = 1 AND invalidated = 0",
+            new { user_id, ip }
+            ).First();
+        }
+
+        public int FailedAuth(uint attempt_id, uint delay, int failLimit)
+        {
+            Context.Connection.Execute(
+                "UPDATE fso_auth_attempts SET count = count + 1, expire_time = @time WHERE attempt_id = @attempt_id",
+                new { attempt_id, time = Epoch.Now + delay }
+            );
+            var result = Context.Connection.Query<DbAuthAttempt>(
+                "SELECT * FROM fso_auth_attempts WHERE attempt_id = @attempt_id", new { attempt_id }).FirstOrDefault();
+            if (result != null)
+            {
+                if (result.count >= failLimit)
+                {
+                    Context.Connection.Execute(
+                        "UPDATE fso_auth_attempts SET active = 1 WHERE attempt_id = @attempt_id",
+                        new { attempt_id });
+                    return 0;
+                } else
+                {
+                    return failLimit - result.count;
+                }
+            } else
+            {
+                return failLimit;
+            }
+        }
+
+        public void NewFailedAuth(uint user_id, string ip, uint delay)
+        {
+            //create a new entry
+            Context.Connection.Execute(
+                "INSERT INTO fso_auth_attempts (ip, user_id, expire_time, count) VALUES (@ip, @user_id, @time, 1)",
+                new { user_id, ip, time = Epoch.Now + delay }
+            );
+        }
+
+        public void SuccessfulAuth(uint user_id, string ip)
+        {
+            Context.Connection.Execute(
+                "UPDATE fso_auth_attempts SET invalidated = 1 WHERE user_id = @user_id AND ip = @ip",
+                new { user_id, ip }
             );
         }
     }

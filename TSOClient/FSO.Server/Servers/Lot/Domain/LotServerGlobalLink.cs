@@ -25,6 +25,7 @@ using FSO.SimAntics.NetPlay.EODs.Handlers;
 using FSO.Server.Protocol.Gluon.Packets;
 using FSO.Server.Protocol.Gluon.Model;
 using FSO.Server.Servers.Lot.Lifecycle;
+using FSO.Server.Common;
 
 namespace FSO.Server.Servers.Lot.Domain
 {
@@ -125,6 +126,7 @@ namespace FSO.Server.Servers.Lot.Domain
                                     Level = VMTSOAvatarPermissions.Roommate,
                                     Verified = true
                                 });
+                                db.Avatars.UpdateMoveDate(avatarID, Epoch.Now);
                             }
                             break;
                         //the following code enables pending requests, like in the original game. I decided they only really make sense for requests initiated from city.
@@ -845,9 +847,15 @@ namespace FSO.Server.Servers.Lot.Domain
                                     failState = VMEODSecureTradeError.WRONG_OWNER_LOT;
                                     return false;
                                 }
+                                if (lot.category == FSO.Common.Enum.LotCategory.community)
+                                {
+                                    failState = VMEODSecureTradeError.CANNOT_TRADE_COMMUNITY_LOT;
+                                    return false;
+                                }
                                 if (lot.owner_id != null) db.Roommates.RemoveRoommate(lot.owner_id.Value, lot.lot_id);
                                 //evict this roommate from any lots they are on
                                 var otherLots = db.Roommates.GetAvatarsLots(otherP.PlayerPersist);
+                                uint lastNhood = 0;
                                 foreach (var olot in otherLots)
                                 {
                                     db.Roommates.RemoveRoommate(olot.avatar_id, olot.lot_id);
@@ -864,20 +872,34 @@ namespace FSO.Server.Servers.Lot.Domain
                                         }
                                     }
 
+                                    lastNhood = (db.Lots.Get(olot.lot_id)?.neighborhood_id) ?? 0;
+
                                     //our lot will be changed. update it if we're not giving them our lot (the lot may need to be deleted, and our 
                                     //objects removed, or if we're not giving them the objects on our lot (they must be removed)
                                     //if the lot's open then we need to tell it we're no longer the roommate. 
                                     //we can't detect this from this side, so do it anyways.
-                                    cityMessages.Add(new NotifyLotRoommateChange()
+
+                                    var tradeLot2 = (i == 1) ? lot1 : lot2; //other lot being traded
+                                    //IMPORTANT: DO NOT TELL THE OTHER PROPERTY THAT THE USER HAS BEEN REMOVED AS A ROOMMATE IF THEY THIS IS A 2 PROPERTY TRADE
+                                    //we do not want the objects for a roommate to be removed before they are traded to the other player via the owner switch...
+                                    //this can cause one person to end up with the objects they attempted to train back in their inventory, AS WELL AS the new property.
+                                    if (tradeLot2?.LotID != olot.lot_id || tradeLot2.GUID != 2)
                                     {
-                                        LotId = olot.lot_id,
-                                        AvatarId = olot.avatar_id,
-                                        Change = ChangeType.REMOVE_ROOMMATE
-                                    });
+                                        cityMessages.Add(new NotifyLotRoommateChange()
+                                        {
+                                            LotId = olot.lot_id,
+                                            AvatarId = olot.avatar_id,
+                                            Change = ChangeType.REMOVE_ROOMMATE
+                                        });
+                                    }
                                 }
                                 //create the other avatar as a roommate in this lot, then assign them as owner
                                 db.Roommates.CreateOrUpdate(new DbRoommate() { avatar_id = otherP.PlayerPersist, lot_id = lot.lot_id, permissions_level = 2 });
                                 db.Lots.UpdateOwner(lot.lot_id, otherP.PlayerPersist);
+                                if (lot.neighborhood_id != lastNhood)
+                                {
+                                    db.Avatars.UpdateMoveDate(otherP.PlayerPersist, Epoch.Now);
+                                }
 
                                 if (iLot.GUID == 2)
                                 {
@@ -927,6 +949,20 @@ namespace FSO.Server.Servers.Lot.Domain
                     }
                 }
 
+            });
+        }
+
+        public void GetBulletinState(VM vm, VMAsyncBulletinCallback callback)
+        {
+            Host.InBackground(() =>
+            {
+                using (var db = DAFactory.Get())
+                {
+                    var lastPost = db.BulletinPosts.LastPostID(vm.TSOState.NhoodID);
+                    var activity = db.BulletinPosts.CountPosts(vm.TSOState.NhoodID, Epoch.Now - 60 * 60 * 24 * 7);
+
+                    callback(lastPost, activity);
+                }
             });
         }
 

@@ -32,16 +32,18 @@ namespace FSO.Client.UI.Controls
 
         private List<UIButton> Buttons;
         private UITextBox TextBox;
-        private UIColorPicker ColorEntry;
+
+        private UIContainer GenericAddition;
 
         public string ResponseText
         {
             get
             {
                 if (TextBox != null) return TextBox.CurrentText;
-                else if (ColorEntry != null)
+                else if (GenericAddition is UIColorPicker)
                 {
-                    var color = ColorEntry.Color;
+                    var colorEntry = (UIColorPicker)GenericAddition;
+                    var color = colorEntry.Color;
                     return ((color.R << 16) | (color.G << 8) | color.B).ToString();
                 }
                 return null;
@@ -62,6 +64,47 @@ namespace FSO.Client.UI.Controls
             {
                 m_Options.Message = value;
             }
+        }
+
+        public static void Alert(string title, string message, bool modal)
+        {
+            UIAlert alert = null;
+            alert = UIScreen.GlobalShowAlert(new UIAlertOptions()
+            {
+                Title = title,
+                Message = message,
+                Buttons = UIAlertButton.Ok((btn) => { UIScreen.RemoveDialog(alert); })
+            }, modal);
+        }
+
+        public static UIAlert YesNo(string title, string message, bool modal, Callback<bool> callback)
+        {
+            UIAlert alert = null;
+            alert = UIScreen.GlobalShowAlert(new UIAlertOptions()
+            {
+                Title = title,
+                Message = message,
+                Buttons = UIAlertButton.YesNo(
+                    (btn) => { callback(true); UIScreen.RemoveDialog(alert); },
+                    (btn) => { callback(false); UIScreen.RemoveDialog(alert); }
+                    )
+            }, modal);
+            return alert;
+        }
+
+        public static void Prompt(string title, string message, bool modal, Callback<string> callback)
+        {
+            UIAlert alert = null;
+            alert = UIScreen.GlobalShowAlert(new UIAlertOptions()
+            {
+                Title = title,
+                Message = message,
+                TextEntry = true,
+                Buttons = UIAlertButton.OkCancel(
+                    (btn) => { callback(alert.ResponseText); UIScreen.RemoveDialog(alert); },
+                    (btn) => { callback(null); UIScreen.RemoveDialog(alert); }
+                    )
+            }, modal);
         }
 
         public UIAlert(UIAlertOptions options) : base(UIDialogStyle.Standard, true)
@@ -127,10 +170,11 @@ namespace FSO.Client.UI.Controls
                 this.Add(TextBox);
             }
 
-            if (options.Color)
+            if (options.GenericAddition != null)
             {
-                ColorEntry = new UIColorPicker();
-                Add(ColorEntry);
+                GenericAddition = options.GenericAddition;
+                if (options.GenericAdditionDynamic) DynamicOverlay.Add(GenericAddition);
+                else Add(GenericAddition);
             }
 
             /** Position buttons **/
@@ -166,11 +210,12 @@ namespace FSO.Client.UI.Controls
                 h += 45;
             }
 
-            if (m_Options.Color)
+            if (GenericAddition != null)
             {
-                ColorEntry.X = (w - 272) / 2;
-                ColorEntry.Y = h - 54;
-                h += 148;
+                var size = GenericAddition.GetBounds();
+                GenericAddition.X = (w - size.Width) / 2;
+                GenericAddition.Y = h - 54;
+                h += size.Height;
             }
 
             var buttonMaxWidth = (Buttons.Count == 0)? 0 : Buttons.Max(x => x.Width);
@@ -306,6 +351,33 @@ namespace FSO.Client.UI.Controls
 
             TextRenderer.DrawText(m_MessageText.DrawingCommands, this, batch);
         }
+
+        #region Static Methods for Debug Dialogs
+
+        public static void Prompt(UIAlertOptions options, Action<bool, UIAlert> resultBox)
+        {
+            UIAlert alert = null;
+            options.Buttons = UIAlertButton.YesNo((btn) =>
+            {
+                resultBox(true, alert);
+                UIScreen.RemoveDialog(alert);
+            }, (btn) =>
+            {
+                resultBox(false, alert);
+                UIScreen.RemoveDialog(alert);
+            });
+            alert = UIScreen.GlobalShowAlert(options, true);
+        }
+
+        public static void Prompt(string message, Action<bool, UIAlert> resultBox)
+        {
+            Prompt(new UIAlertOptions()
+            {
+                Message = message
+            }, resultBox);
+        }
+
+        #endregion
     }
 
     public class UIAlertOptions
@@ -321,6 +393,9 @@ namespace FSO.Client.UI.Controls
         public bool Color;
         public bool AllowEmojis;
         public bool AllowBB;
+        public bool GenericAdditionDynamic;
+
+        public UIContainer GenericAddition;
 
         public bool TextEntry = false;
         public UIAlertButton[] Buttons = new UIAlertButton[] { new UIAlertButton() };
@@ -336,6 +411,11 @@ namespace FSO.Client.UI.Controls
         public static UIAlertButton[] Ok(ButtonClickDelegate callback)
         {
             return new UIAlertButton[] { new UIAlertButton(UIAlertButtonType.OK, callback) };
+        }
+
+        public static UIAlertButton[] OkCancel(ButtonClickDelegate okCallback, ButtonClickDelegate noCallback)
+        {
+            return new UIAlertButton[] { new UIAlertButton(UIAlertButtonType.OK, okCallback), new UIAlertButton(UIAlertButtonType.Cancel, noCallback) };
         }
 
         public static UIAlertButton[] YesNo(ButtonClickDelegate yesCallback, ButtonClickDelegate noCallback)

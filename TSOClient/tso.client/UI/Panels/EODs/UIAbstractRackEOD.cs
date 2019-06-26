@@ -125,7 +125,7 @@ namespace FSO.Client.UI.Panels.EODs
             SetRackType((RackType)short.Parse(txt));
             var options = GetEODOptions();
             UpdateUIState();
-            Controller.ShowEODMode(options);
+            EODController.ShowEODMode(options);
         }
 
         protected virtual void RackNameHandler(string evt, string rackName)

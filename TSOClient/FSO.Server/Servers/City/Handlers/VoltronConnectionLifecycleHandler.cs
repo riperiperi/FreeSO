@@ -25,9 +25,11 @@ namespace FSO.Server.Servers.City.Handlers
         private LotServerPicker LotServers;
         private CityLivenessEngine Liveness;
         private EventSystem Events;
+        private Neighborhoods Neigh;
+        private Tuning TuningDomain;
 
         public VoltronConnectionLifecycleHandler(ISessions sessions, IDataService dataService, IDAFactory da, CityServerContext context, LotServerPicker lotServers, CityLivenessEngine engine,
-            EventSystem events)
+            EventSystem events, Neighborhoods neigh, Tuning tuning)
         {
             this.VoltronSessions = sessions.GetOrCreateGroup(Groups.VOLTRON);
             this.Sessions = sessions;
@@ -37,6 +39,8 @@ namespace FSO.Server.Servers.City.Handlers
             this.LotServers = lotServers;
             this.Liveness = engine;
             this.Events = events;
+            this.Neigh = neigh;
+            this.TuningDomain = tuning;
         }
 
         public void Handle(IVoltronSession session, ClientByePDU packet)
@@ -68,7 +72,7 @@ namespace FSO.Server.Servers.City.Handlers
                     // if we don't own the claim for the avatar, we need to tell the server that does to release the avatar.
                     // right now it's just lot servers.
 
-                    var claim = db.AvatarClaims.GetByAvatarID((uint)voltronSession.AvatarClaimId);
+                    var claim = db.AvatarClaims.Get(voltronSession.AvatarClaimId);
                     if (claim != null && claim.owner != Context.Config.Call_Sign)
                     {
                         var lotServer = LotServers.GetLotServerSession(claim.owner);
@@ -92,6 +96,11 @@ namespace FSO.Server.Servers.City.Handlers
 
         public void SessionCreated(IAriesSession session)
         {
+        }
+
+        public void SessionMigrated(IAriesSession session)
+        {
+            //on reconnect to city. nothing right now.
         }
 
         public async void SessionUpgraded(IAriesSession oldSession, IAriesSession newSession)
@@ -118,11 +127,13 @@ namespace FSO.Server.Servers.City.Handlers
             }
 
             //New avatar, enroll in voltron group
-            var avatar = await DataService.Get<Avatar>(voltronSession.AvatarId);
+            var avatar = await DataService.Get<Avatar>(voltronSession.AvatarId); //can throw?
             //Mark as online
             avatar.Avatar_IsOnline = true;
             VoltronSessions.Enroll(newSession);
             Events.UserJoined(voltronSession);
+            Neigh.UserJoined(voltronSession);
+            TuningDomain.UserJoined(voltronSession);
 
             //TODO: Somehow alert people this sim is online?
         }

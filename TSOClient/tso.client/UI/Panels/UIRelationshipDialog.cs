@@ -267,6 +267,7 @@ namespace FSO.Client.UI.Panels
 
         public void UpdateRelationships(ImmutableList<Relationship> rels)
         {
+            if (rels == null) rels = ImmutableList<Relationship>.Empty;
             Rels = rels;
             FriendLabel.Caption = GameFacade.Strings.GetString("f106", "7", new string[] {
                 rels.Count(x => x.Relationship_IsOutgoing && x.Relationship_LTR >= 60).ToString(),

@@ -46,6 +46,32 @@ namespace FSO.Server.Servers.Tasks
         {
             LOG.Info("starting task engine");
             Timer.Start();
+
+            Task.Delay(30000).ContinueWith(x =>
+            {
+                RunMissedTasks();
+            });
+        }
+
+        public void RunMissedTasks()
+        {
+            using (var db = DAFactory.Get())
+            {
+                foreach (var task in _Schedule)
+                {
+                    if (!task.Run_If_Missed) continue;
+
+                    DbTaskType type;
+                    if (!Enum.TryParse(task.Task, out type)) continue;
+
+                    var rangeEnd = task.CronSchedule.GetLastValidTime();
+                    var rangeStart = task.CronSchedule.GetStartOfRange(rangeEnd);
+
+                    var lastRun = db.Tasks.CompletedAfter(type, rangeStart);
+
+                    if (lastRun == null) Run(task);
+                }
+            }
         }
 
         public void Stop()
@@ -204,6 +230,7 @@ namespace FSO.Server.Servers.Tasks
     {
         public string Task;
         public bool AllowTaskOverlap = false;
+        public bool Run_If_Missed = false;
         public int Timeout = 3600; //1hr
         public int? Shard_Id;
         public dynamic Parameter;
@@ -246,6 +273,8 @@ namespace FSO.Server.Servers.Tasks
     {
         bool isValid(string expression);
         bool isTime(DateTime date_time);
+        DateTime GetLastValidTime();
+        DateTime GetStartOfRange(DateTime result);
     }
 
     public class CronSchedule : ICronSchedule
@@ -305,6 +334,106 @@ namespace FSO.Server.Servers.Tasks
                    days_of_month.Contains(date_time.Day) &&
                    months.Contains(date_time.Month) &&
                    days_of_week.Contains((int)date_time.DayOfWeek);
+        }
+
+        public DateTime GetLastValidTime()
+        {
+            //gets the last time this cron schedule item was valid.
+            //this is at the *end* of the last valid range
+            //used to determine if the last valid time fired an event.
+
+            var result = DateTime.UtcNow;
+            int lastChange = 0;
+            //note that all of these changes can cascade to the last.
+
+            while (!minutes.Contains(result.Minute))
+            {
+                result = result.AddMinutes(-1);
+                lastChange = 1;
+            }
+
+            while (!hours.Contains(result.Hour))
+            {
+                result = result.AddHours(-1);
+                lastChange = 2;
+            }
+
+            while (true)
+            {
+                while (!months.Contains(result.Month))
+                {
+                    result = result.AddMonths(-1);
+                    lastChange = 4;
+                }
+
+                bool dirty = false;
+                while (!(days_of_week.Contains((int)result.DayOfWeek) && days_of_month.Contains(result.Day)))
+                {
+                    result = result.AddDays(-1);
+                    lastChange = 3;
+                    dirty = true;
+                }
+                if (dirty) continue;
+
+                break;
+            }
+
+            result = result.AddSeconds(-result.Second).AddMinutes(1);
+            /*
+            switch (lastChange)
+            {
+                case 1:
+                    result = result.AddSeconds(-result.Second).AddMinutes(1);
+                    break;
+                case 2:
+                    result = result.AddSeconds(-result.Second).AddMinutes(-result.Minute).AddHours(1);
+                    break;
+                case 3:
+                    result.AddSeconds(-result.Second).AddMinutes(-result.Minute).AddHours(-result.Hour).AddDays(1);
+                    break;
+                case 4:
+                    result.AddSeconds(-result.Second).AddMinutes(-result.Minute).AddHours(-result.Hour).AddDays(-result.Day).AddMonths(1);
+                    break;
+            }*/
+
+            return result;
+        }
+
+        public DateTime GetStartOfRange(DateTime result)
+        {
+            result = result.AddSeconds(-1);
+            //find first time that is outwith the bounds of this cron schedule, from the given time.
+            //rather inefficient, but this is not used often.
+
+            if (minutes.Count != 60)
+            {
+                while (minutes.Contains(result.Minute))
+                    result = result.AddMinutes(-1);
+
+                result = result.AddSeconds(-result.Second).AddMinutes(1);
+            }
+            else if (hours.Count != 24)
+            {
+                while (hours.Contains(result.Hour))
+                    result = result.AddHours(-1);
+
+                result = result.AddSeconds(-result.Second).AddMinutes(-result.Minute).AddHours(1);
+            }
+            else if (days_of_week.Count != 7 || days_of_month.Count != 32)
+            {
+                while (days_of_week.Contains((int)result.DayOfWeek) && days_of_month.Contains(result.Day))
+                    result = result.AddDays(-1);
+
+                result = result.AddSeconds(-result.Second).AddMinutes(-result.Minute).AddHours(-result.Hour).AddDays(1);
+            }
+            else if (months.Count != 12 )
+            {
+                while (months.Contains(result.Month))
+                    result = result.AddMonths(-1);
+
+                result = result.AddSeconds(-result.Second).AddMinutes(-result.Minute).AddHours(-result.Hour).AddDays(-result.Day).AddMonths(1);
+            }
+            return result;
         }
 
         private void generate()

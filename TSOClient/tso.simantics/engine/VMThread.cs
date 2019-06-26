@@ -201,7 +201,7 @@ namespace FSO.SimAntics.Engine
                 if (IsCheck || ((item.Mode != VMQueueMode.ParentIdle || !Entity.GetFlag(VMEntityFlags.InteractionCanceled)) && CheckAction(item) != null))
                 {
                     Entity.SetFlag(VMEntityFlags.InteractionCanceled, false);
-                    ExecuteAction(item);
+                    if (!ExecuteAction(item)) return false;
                     ActiveQueueBlock++;
                     return true;
                 }
@@ -238,6 +238,41 @@ namespace FSO.SimAntics.Engine
                 {
                     break;
                 }
+            }
+        }
+
+        private void EndCurrentInteraction()
+        {
+            QueueDirty = true;
+            var interaction = Queue[ActiveQueueBlock];
+            //clear "interaction cancelled" since we are leaving the interaction
+            if (interaction.Mode != VMQueueMode.ParentIdle) Entity.SetFlag(VMEntityFlags.InteractionCanceled, false);
+            if (interaction.Callback != null) interaction.Callback.Run(Entity);
+            if (Queue.Count > 0) Queue.RemoveAt(ActiveQueueBlock);
+            if (Entity is VMAvatar && !IsCheck && ActiveQueueBlock == 0)
+            {
+                //some things are reset when an interaction ends
+                //motive deltas reset between interactions
+                ((VMAvatar)Entity).SetPersonData(VMPersonDataVariable.NonInterruptable, 0); //verified in ts1
+                ((VMAvatar)Entity).ClearMotiveChanges();
+            }
+            ContinueExecution = true; //continue where the Allow Push idle left off
+            ActiveQueueBlock--;
+            if (ActiveQueueBlock > -1) Queue[ActiveQueueBlock].Cancelled = interaction.Cancelled;
+        }
+
+        public void AbortCurrentInteraction()
+        {
+            //go all the way back to the stack frame that Allow Push'd us.
+            var returnTo = Stack.FindLast(x => x.DiscardResult);
+            if (returnTo != null)
+            {
+                var ind = Stack.IndexOf(returnTo);
+                while (Stack.Count > ind)
+                {
+                    Stack.RemoveAt(Stack.Count-1);
+                }
+                EndCurrentInteraction();
             }
         }
 
@@ -388,7 +423,12 @@ namespace FSO.SimAntics.Engine
             if (currentFrame == null) return;
 
             if (currentFrame is VMRoutingFrame) HandleResult(currentFrame, null, ((VMRoutingFrame)currentFrame).Tick());
-            else ExecuteInstruction(currentFrame);
+            else
+            {
+                VMInstruction instruction;
+                VMPrimitiveExitCode result = currentFrame.Routine.Execute(currentFrame, out instruction);
+                HandleResult(currentFrame, instruction, result);
+            }
         }
 
         public VMRoutingFrame PushNewRoutingFrame(VMStackFrame frame, bool failureTrees)
@@ -440,6 +480,46 @@ namespace FSO.SimAntics.Engine
             Push(childFrame);
         }
 
+        public VMPrimitiveExitCode ExecuteSubRoutine(VMStackFrame frame, ushort opcode, VMSubRoutineOperand operand)
+        {
+            VMRoutine bhav = null;
+
+            GameObject CodeOwner;
+            if (opcode >= 8192)
+            {
+                // Semi-Global sub-routine call
+                bhav = (VMRoutine)frame.ScopeResource.SemiGlobal.GetRoutine(opcode);
+            }
+            else if (opcode >= 4096)
+            {
+                // Private sub-routine call
+                bhav = (VMRoutine)frame.ScopeResource.GetRoutine(opcode);
+            }
+            else
+            {
+                // Global sub-routine call
+                //CodeOwner = frame.Global.Resource;
+                bhav = (VMRoutine)frame.Global.Resource.GetRoutine(opcode);
+            }
+
+            CodeOwner = frame.CodeOwner;
+            
+            ExecuteSubRoutine(frame, bhav, CodeOwner, operand);
+#if IDE_COMPAT
+            if (Stack.LastOrDefault().GetCurrentInstruction().Breakpoint || ThreadBreak == VMThreadBreakMode.StepIn)
+            {
+                Breakpoint(frame, "Stepped in.");
+                ContinueExecution = false;
+            }
+            else
+#endif
+            {
+                ContinueExecution = true;
+            }
+
+            return VMPrimitiveExitCode.CONTINUE;
+        }
+
         private void ExecuteInstruction(VMStackFrame frame)
         {
             var instruction = frame.GetCurrentInstruction();
@@ -447,41 +527,7 @@ namespace FSO.SimAntics.Engine
 
             if (opcode >= 256)
             {
-                VMRoutine bhav = null;
-
-                GameObject CodeOwner;
-                if (opcode >= 8192)
-                {
-                    // Semi-Global sub-routine call
-                    bhav = (VMRoutine)frame.ScopeResource.SemiGlobal.GetRoutine(opcode);
-                }
-                else if (opcode >= 4096)
-                {
-                    // Private sub-routine call
-                    bhav = (VMRoutine)frame.ScopeResource.GetRoutine(opcode);
-                }
-                else
-                {
-                    // Global sub-routine call
-                    //CodeOwner = frame.Global.Resource;
-                    bhav = (VMRoutine)frame.Global.Resource.GetRoutine(opcode);
-                }
-
-                CodeOwner = frame.CodeOwner;
-
-                var operand = (VMSubRoutineOperand)instruction.Operand;
-                ExecuteSubRoutine(frame, bhav, CodeOwner, operand);
-#if IDE_COMPAT
-                if (Stack.LastOrDefault().GetCurrentInstruction().Breakpoint || ThreadBreak == VMThreadBreakMode.StepIn)
-                {
-                    Breakpoint(frame, "Stepped in.");
-                    ContinueExecution = false;
-                } else
-#endif
-                {
-                    ContinueExecution = true;
-                }
-
+                ExecuteSubRoutine(frame, opcode, (VMSubRoutineOperand)instruction.Operand);
                 return;
             }
 
@@ -627,20 +673,8 @@ namespace FSO.SimAntics.Engine
 
             if (discardResult) //interaction switching back to main (it cannot be the other way...)
             {
-                QueueDirty = true;
                 var interaction = Queue[ActiveQueueBlock];
-                //clear "interaction cancelled" since we are leaving the interaction
-                if (interaction.Mode != VMQueueMode.ParentIdle) Entity.SetFlag(VMEntityFlags.InteractionCanceled, false);
-                if (interaction.Callback != null) interaction.Callback.Run(Entity);
-                if (Queue.Count > 0) Queue.RemoveAt(ActiveQueueBlock);
-                if (Entity is VMAvatar && !IsCheck && ActiveQueueBlock == 0)
-                {
-                    //motive deltas reset between interactions
-                    ((VMAvatar)Entity).ClearMotiveChanges();
-                }
-                ContinueExecution = true; //continue where the Allow Push idle left off
-                ActiveQueueBlock--;
-                if (ActiveQueueBlock > -1) Queue[ActiveQueueBlock].Cancelled = interaction.Cancelled;
+                EndCurrentInteraction();
                 result = (!interaction.Flags.HasFlag(TTABFlags.RunImmediately)) ? VMPrimitiveExitCode.CONTINUE_NEXT_TICK : VMPrimitiveExitCode.CONTINUE;
             }
             if (Stack.Count > 0)
@@ -658,9 +692,9 @@ namespace FSO.SimAntics.Engine
             }
         }
 
-        public void Push(VMStackFrame frame)
+        public bool Push(VMStackFrame frame)
         {
-            if (frame.Routine.Instructions.Length == 0) return; //some bhavs are empty... do not execute these.
+            if (frame.Routine.Instructions.Length == 0) return false; //some bhavs are empty... do not execute these.
             Stack.Add(frame);
 
             /** Initialize the locals **/
@@ -669,6 +703,7 @@ namespace FSO.SimAntics.Engine
             frame.Thread = this;
 
             frame.InstructionPointer = 0;
+            return true;
         }
 
         /// <summary>
@@ -765,7 +800,9 @@ namespace FSO.SimAntics.Engine
                     }
                 }
 
-                if ((index > ActiveQueueBlock || Stack.LastOrDefault()?.ActionTree == false) && interaction.Mode == Engine.VMQueueMode.Normal)
+                var canQueueSkip = !interaction.Flags.HasFlag(TTABFlags.MustRun);
+
+                if (canQueueSkip && (index > ActiveQueueBlock || Stack.LastOrDefault()?.ActionTree == false) && interaction.Mode == Engine.VMQueueMode.Normal)
                 {
                     Queue.Remove(interaction);
                     if (Context.VM.TS1) interaction.Callee.ExecuteEntryPoint(4, Context, true); //queue skipped
@@ -778,11 +815,11 @@ namespace FSO.SimAntics.Engine
             }
         }
 
-        private void ExecuteAction(VMQueuedAction action)
+        private bool ExecuteAction(VMQueuedAction action)
         {
             var frame = action.ToStackFrame(Entity);
             frame.DiscardResult = true;
-            Push(frame);
+            return Push(frame);
         }
 
         public List<VMPieMenuInteraction> CheckTS1Action(VMQueuedAction action)
@@ -862,8 +899,8 @@ namespace FSO.SimAntics.Engine
             if (action == null) return null;
             if (Context.VM.TS1) return CheckTS1Action(action);
             var result = new List<VMPieMenuInteraction>();
-
-            if (((action.Flags & TTABFlags.MustRun) == 0) && Entity is VMAvatar) //just let everyone use the CSR interactions
+            
+            if (!action.Flags.HasFlag(TTABFlags.FSOSkipPermissions) && Entity is VMAvatar) //just let everyone use the CSR interactions
             {
                 var avatar = (VMAvatar)Entity;
 
@@ -881,8 +918,18 @@ namespace FSO.SimAntics.Engine
 
                 if ((action.Flags & TTABFlags.TSOIsRepair) > 0 != ((action.Callee.MultitileGroup.BaseObject?.TSOState as VMTSOObjectState)?.Broken ?? false)) return null;
 
+                uint ownerID = 0;
+                if (action.Callee is VMGameObject) {
+                    var state = ((VMTSOObjectState)action.Callee.TSOState);
+                    ownerID = state?.OwnerID ?? 0;
+                    if (ownerID != 0 && state.ObjectFlags.HasFlag(VMTSOObjectFlags.FSODonated))
+                    {
+                        ownerID = Context.VM.TSOState.OwnerID; //owner rewrite to mayor
+                    }
+                }
+
                 TSOFlags tsoState =
-                    ((!(action.Callee is VMGameObject) || avatar.PersistID == ((VMTSOObjectState)action.Callee.TSOState).OwnerID)
+                    ((!(action.Callee is VMGameObject) || avatar.PersistID == ownerID)
                     ? TSOFlags.AllowObjectOwner : 0)
                     | ((avatar.AvatarState.Permissions == VMTSOAvatarPermissions.Visitor) ? TSOFlags.AllowVisitors : 0)
                     | ((avatar.AvatarState.Permissions >= VMTSOAvatarPermissions.Roommate) ? TSOFlags.AllowRoommates : 0)
@@ -916,7 +963,7 @@ namespace FSO.SimAntics.Engine
                     if ((tsoCompare & TSOFlags.AllowCSRs) > 0 && (tsoState & TSOFlags.AllowCSRs) == 0) return null; // only admins can run csr.
                 }
             }
-            if (((action.Flags & TTABFlags.MustRun) == 0 || ((action.Flags & TTABFlags.TSORunCheckAlways) > 0))
+            if ((!action.Flags.HasFlag(TTABFlags.FSOSkipPermissions) || ((action.Flags & TTABFlags.TSORunCheckAlways) > 0))
                 && action.CheckRoutine != null && EvaluateCheck(Context, Entity, new VMStackFrame()
                 {
                     Caller = Entity,

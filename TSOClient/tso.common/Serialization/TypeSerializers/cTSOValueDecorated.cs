@@ -28,21 +28,27 @@ namespace FSO.Common.Serialization.TypeSerializers
 
         protected virtual void ScanAssembly(Assembly assembly)
         {
-            foreach (Type type in assembly.GetTypes())
+            try
             {
-                System.Attribute[] attributes = System.Attribute.GetCustomAttributes(type);
-
-                foreach (Attribute attribute in attributes)
+                foreach (Type type in assembly.GetTypes())
                 {
-                    if (attribute is cTSOValue)
+                    System.Attribute[] attributes = System.Attribute.GetCustomAttributes(type);
+
+                    foreach (Attribute attribute in attributes)
                     {
-                        foreach(uint clsid in ((cTSOValue)attribute).ClsId)
+                        if (attribute is cTSOValue)
                         {
-                            ClsIdToType.Add(clsid, type);
-                            TypeToClsId.Add(type, clsid);
+                            foreach (uint clsid in ((cTSOValue)attribute).ClsId)
+                            {
+                                ClsIdToType.Add(clsid, type);
+                                TypeToClsId.Add(type, clsid);
+                            }
                         }
                     }
                 }
+            } catch (Exception)
+            {
+
             }
         }
 

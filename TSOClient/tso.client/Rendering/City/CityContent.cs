@@ -1,5 +1,6 @@
 ﻿using FSO.Client.UI.Framework;
 using FSO.Common;
+using FSO.Common.Model;
 using FSO.Common.Utils;
 using FSO.Files;
 using Microsoft.Xna.Framework;
@@ -83,10 +84,11 @@ namespace FSO.Client.Rendering.City
 
             MapData = new CityMapData();
             MapData.Load(CityStr, LoadTex, ext);
-
-            //DECEMBER TEMP: snow replace
-            //TODO: tie to tuning, or serverside weather system.
-            //ForceSnow();
+            
+            //special tuning from server
+            var terrainTuning = DynamicTuning.Global?.GetTable("city", 0);
+            float forceSnow;
+            if (terrainTuning != null && terrainTuning.TryGetValue(0, out forceSnow)) ForceSnow(forceSnow > 0);
 
             //grass, sand, rock, snow, water
             TerrainTextures[0] = RTToMip(LoadTex(gamepath + "gamedata/terrain/newformat/gr.tga"), gd);
@@ -167,25 +169,41 @@ namespace FSO.Client.Rendering.City
             for (int x = 0; x < 16; x++) RoadCorners[x].Dispose();
         }
 
-        public void ForceSnow()
+        public void ForceSnow(bool toGrass)
         {
             var dat = new Color[VertexColor.Width * VertexColor.Height];
             VertexColor.GetData(dat);
-            var type = MapData.TerrainTypeColorData;
+            var typeC = MapData.TerrainTypeColorData;
+            var type = MapData.TerrainType;
 
             for (int i = 0; i < dat.Length; i++)
             {
                 var old = dat[i];
                 var greater = Math.Max(old.R, old.G);
-                if (old.B < greater)
+                if (!toGrass)
                 {
-                    //make this pixel grayscale
-                    dat[i] = new Color(greater, greater, greater);
+                    if (old.B < greater)
+                    {
+                        //make this pixel grayscale
+                        dat[i] = new Color(greater, greater, greater);
+                    }
                 }
-                var oldType = type[i];
-                if (oldType == new Color(0, 255, 0) || oldType == Color.Yellow)
+                var oldType = typeC[i];
+                if (toGrass) //change snow to grass
                 {
-                    type[i] = Color.White;
+                    if (oldType == Color.White)
+                    {
+                        typeC[i] = new Color(0, 255, 0);
+                        type[i] = 0;
+                    }
+                }
+                else
+                {
+                    if (oldType == new Color(0, 255, 0) || oldType == Color.Yellow)
+                    {
+                        typeC[i] = Color.White;
+                        type[i] = 3;
+                    }
                 }
             }
 

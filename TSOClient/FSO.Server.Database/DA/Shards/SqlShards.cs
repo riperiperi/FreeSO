@@ -39,12 +39,13 @@ namespace FSO.Server.Database.DA.Shards
             Context.Connection.Query("DELETE FROM fso_shard_tickets WHERE date < @time", new { time = time });
         }
 
-        public void UpdateVersion(int shard_id, string name, string number)
+        public void UpdateVersion(int shard_id, string name, string number, int? update_id)
         {
-            Context.Connection.Query("UPDATE fso_shards SET version_name = @version_name, version_number = @version_number WHERE shard_id = @shard_id", new
+            Context.Connection.Query("UPDATE fso_shards SET version_name = @version_name, version_number = @version_number, update_id = @update_id WHERE shard_id = @shard_id", new
             {
                 version_name = name,
                 version_number = number,
+                update_id = update_id,
                 shard_id = shard_id
             });
         }

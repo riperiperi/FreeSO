@@ -18,6 +18,7 @@ namespace FSO.Content.Model
     {
         Texture2D Get(GraphicsDevice device);
         TexBitmap GetImage();
+        string ReplacePath { get; set; }
     }
 
     public class FileTextureRef : AbstractTextureRef
@@ -84,8 +85,30 @@ namespace FSO.Content.Model
         }
     }
 
+    public class LoadedTextureRef : ITextureRef
+    {
+        public string ReplacePath { get; set; }
+
+        private Texture2D Loaded;
+        public LoadedTextureRef(Texture2D tex)
+        {
+            Loaded = tex;
+        }
+
+        public Texture2D Get(GraphicsDevice device)
+        {
+            return Loaded;
+        }
+
+        public TexBitmap GetImage()
+        {
+            throw new NotImplementedException();
+        }
+    }
+
     public abstract class AbstractTextureRef : ITextureRef
     {
+        public string ReplacePath { get; set; }
         public delegate TexBitmap SimpleBitmapProvider(Stream stream, AbstractTextureRef texRef);
         public static SimpleBitmapProvider ImageFetchFunction;
         private Texture2D _Instance;
@@ -134,7 +157,19 @@ namespace FSO.Content.Model
                         }
                     }
                     if (!FSOEnvironment.DirectX) GC.SuppressFinalize(_Instance); //do not run the default finalizer on the texture.
+
+                    if (ReplacePath != null)
+                    {
+                        using (var str = File.Open(ReplacePath, FileMode.Open, FileAccess.Read, FileShare.Read))
+                        {
+                            var hidef = ImageLoader.FromStream(device, str);
+                            hidef.Tag = new { obj = this, _Instance };
+                            _Instance.Tag = hidef;
+                        }
+                    } else
+                    {
                     _Instance.Tag = this; //form a destiny bond with the texture
+                    }
                 }
                 return _Instance;
             }

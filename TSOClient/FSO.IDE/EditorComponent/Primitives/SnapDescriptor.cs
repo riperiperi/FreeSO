@@ -33,7 +33,7 @@ namespace FSO.IDE.EditorComponent.Primitives
             {
                 case VMSnapSlotScope.Global:
                     var gslots = scope.GetResource<STR>(257, ScopeSource.Global);
-                    result.Append(gslots.GetString(op.Index));
+                    result.Append(gslots?.GetString(op.Index) ?? "Global slot " + op.Index);
                     break;
                 case VMSnapSlotScope.Literal:
                     var slotNs = scope.GetResource<STR>(257, ScopeSource.Private);
@@ -81,8 +81,16 @@ namespace FSO.IDE.EditorComponent.Primitives
             {
                 case VMSnapSlotScope.Global:
                     var gslots = scope.GetResource<STR>(257, ScopeSource.Global);
-                    for (int i = 0; i < gslots.Length; i++)
-                        map.Add(i, gslots.GetString(i));
+                    if (gslots == null)
+                    {
+                        var gslotsres = scope.GetResource<SLOT>(100, ScopeSource.Global);
+                        for (int i = 0; i < gslotsres.Chronological.Count; i++)
+                            map.Add(i, i.ToString());
+                    } else
+                    {
+                        for (int i = 0; i < gslots.Length; i++)
+                            map.Add(i, gslots.GetString(i));
+                    }
                     return map;
                 case VMSnapSlotScope.Literal:
                     var slotNs = scope.GetResource<STR>(257, ScopeSource.Private);

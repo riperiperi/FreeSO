@@ -122,7 +122,11 @@ namespace FSO.IDE.Common.Debug
             Camera.ProjectionOrigin = new Vector2(batch.GraphicsDevice.Viewport.Width, batch.GraphicsDevice.Viewport.Height) / 2;
             Scene.Draw(batch.GraphicsDevice);
 
-            batch.DrawString(GameFacade.MainFont.GetNearest(8).Font, (Comp3D?.Sum(x => x.Mesh?.Geoms?.FirstOrDefault()?.Sum(y => y.Value.PrimCount) ??0)??0)+" tris", new Vector2(10, 10), Color.Red);
+            var text = (Comp3D?.Sum(x => x.Mesh?.Geoms?.FirstOrDefault()?.Sum(y => y.Value.PrimCount) ?? 0) ?? 0) + " tris";
+            batch.End();
+            GameFacade.EdithVectorFont.Draw(batch.GraphicsDevice, text, new Vector2(10), Color.Black, Vector2.One*0.6f, null);
+
+            batch.Begin();
         }
     }
 }

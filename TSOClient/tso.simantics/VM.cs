@@ -61,6 +61,8 @@ namespace FSO.SimAntics
             }
         }
 
+        public static string TestBinding;
+
         public bool IsServer
         {
             get { return GlobalLink != null; }
@@ -118,6 +120,7 @@ namespace FSO.SimAntics
         //attributes for the current VM session.
         public uint MyUID; //UID of this client in the VM
         public VMSyncTrace Trace;
+        public List<VMLoadError> LoadErrors = new List<VMLoadError>();
         public List<VMInventoryItem> MyInventory = new List<VMInventoryItem>();
 
         public event VMDialogHandler OnDialog;
@@ -175,9 +178,10 @@ namespace FSO.SimAntics
         /// <returns>A VMEntity instance associated with the ID.</returns>
         public VMEntity GetObjectById(short id)
         {
-            if (ObjectsById.ContainsKey(id))
+            VMEntity result;
+            if (ObjectsById.TryGetValue(id, out result))
             {
-                return ObjectsById[id];
+                return result;
             }
             return null;
         }
@@ -205,6 +209,7 @@ namespace FSO.SimAntics
             GlobalState[25] = 4; //as seen in EA-Land edith's simulator globals, this needs to be set for people to do their idle interactions.
             GlobalState[17] = 4; //Runtime Code Version, is this in EA-Land.
             if (Driver is VMServerDriver) EODHost = new VMEODHost();
+            PlatformState.ActivateValidator(this);
         }
 
         public void Reset()
@@ -242,6 +247,7 @@ namespace FSO.SimAntics
                 forward.X *= -1f;
                 forward.Normalize();
                 listener.Forward = forward;
+                Context.World.State.SimSpeed = SpeedMultiplier;
             }
 
             if (LastFrameSpeed != SpeedMultiplier)
@@ -392,6 +398,7 @@ namespace FSO.SimAntics
                 Scheduler.RunTick();
             }
 
+            if (tickID % Math.Max(1, SpeedMultiplier) == 0) Context.ProcessLightingChanges();
             //Context.SetToNextCache.VerifyPositions(); use only for debug!
         }
 
@@ -440,6 +447,49 @@ namespace FSO.SimAntics
             // list.Insert((list[min].ObjectID>id)?min:((list[max].ObjectID > id)?max:max+1), entity);
         }
 
+        public static void DeleteFromObjList(List<VMEntity> list, VMEntity entity)
+        {
+            if (list.Count == 0) { return; }
+            int id = entity.ObjectID;
+            int max = list.Count;
+            int min = 0;
+            while (max > min)
+            {
+                int mid = (max + min) / 2;
+                int nid = list[mid].ObjectID;
+                if (id < nid) max = mid;
+                else if (id == nid)
+                {
+                    list.RemoveAt(mid); //found it
+                    return;
+                }
+                else min = mid + 1;
+            }
+            //list.RemoveAt(min);
+        }
+
+        public static int FindNextIndexInObjList(List<VMEntity> list, short targId)
+        {
+            if (list.Count == 0) return 0;
+            int count = list.Count;
+            int max = count;
+            int min = 0;
+            while (max > min)
+            {
+                int mid = (max + min) / 2;
+                int nid = list[mid].ObjectID;
+                if (targId < nid) max = mid; //target object is below us
+                else if (targId == nid)
+                {
+                    //found it. find NEXT!
+                    return mid+1;
+                }
+                else min = mid + 1; //target object is above us
+            }
+            if (min >= count) return count;
+            return list[min].ObjectID > targId ? min : min+1;
+        }
+
         /// <summary>
         /// Removes an entity from this Virtual Machine.
         /// </summary>
@@ -449,7 +499,7 @@ namespace FSO.SimAntics
             if (Entities.Contains(entity))
             {
                 Context.ObjectQueries.RemoveObject(entity);
-                this.Entities.Remove(entity);
+                DeleteFromObjList(Entities, entity);
                 ObjectsById.Remove(entity.ObjectID);
                 Scheduler.DescheduleTick(entity);
                 if (entity.ObjectID < ObjectId) ObjectId = entity.ObjectID; //this id is now the smallest free object id.
@@ -706,6 +756,13 @@ namespace FSO.SimAntics
             {
                 VMEntity realEnt;
                 var objDefinition = FSO.Content.Content.Get().WorldObjects.Get(ent.GUID);
+                if (objDefinition == null)
+                {
+                    LoadErrors.Add(new VMLoadError(VMLoadErrorCode.MISSING_OBJECT, 
+                        ent.GUID.ToString("x8") + " " + input.MultitileGroups.FirstOrDefault()?.Name ?? "(unknown name)", (ushort)ent.ObjectID));
+                    ent.LoadFailed = true;
+                    continue;
+                }
                 if (ent is VMAvatarMarshal)
                 {
                     var avatar = new VMAvatar(objDefinition);
@@ -736,6 +793,11 @@ namespace FSO.SimAntics
             int i = 0;
             foreach (var ent in input.Entities)
             {
+                if (ent.LoadFailed)
+                {
+                    i++;
+                    continue;
+                }
                 var threadMarsh = input.Threads[i];
                 var realEnt = Entities[i++];
 
@@ -782,7 +844,13 @@ namespace FSO.SimAntics
             {
                 ((VMTS1LotState)input.PlatformState).CurrentFamily = TS1State.CurrentFamily;
             }
+            var lastPlatformState = PlatformState;
             PlatformState = input.PlatformState;
+            PlatformState.ActivateValidator(this);
+            if (lastPlatformState != null && lastPlatformState is VMTSOLotState)
+            {
+                TSOState.Names = ((VMTSOLotState)lastPlatformState).Names;
+            }
             ObjectId = input.ObjectId;
 
             //just a few final changes to refresh everything, and avoid signalling objects
@@ -823,6 +891,7 @@ namespace FSO.SimAntics
         public void LoadComplete()
         {
             FSOVAsyncLoading = false;
+            Context.RefreshAllLighting(); //height of some objects not loaded during async load - must regenerate lighting for the rooms.
             if (FSOVClientJoin)
             {
                 //run clientJoin functions to play object sounds, update some gfx.

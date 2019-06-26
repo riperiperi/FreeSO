@@ -220,7 +220,7 @@ namespace FSO.Client.UI.Panels.EODs
 
         public void Show(string evt, string txt)
         {
-            Controller.ShowEODMode(new EODLiveModeOpt
+            EODController.ShowEODMode(new EODLiveModeOpt
             {
                 Buttons = 0,
                 Expandable = false,

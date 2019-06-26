@@ -1,0 +1,53 @@
+﻿//the bulletin board dialog and associated text.
+1 ^%s Bulletin Board^
+
+2 ^Mayor Posts^
+3 ^The latest news endorsed by your neighborhood’s elected mayor!^
+
+4 ^System Messages^
+5 ^The latest in elections and resident achievements!^
+
+6 ^Community Posts^
+7 ^Events and news from residents around the neighborhood!^
+
+8 ^Page %s^
+9 ^Next Page^
+10 ^Previous Page^
+11 ^Click to view the full post.^
+
+12 ^POST^
+13 ^Back^
+14 ^Promote^
+
+15 ^Return to the Bulletin Board^
+16 ^Promote this post to the Mayor section^
+17 ^Promoted by the Mayor^
+18 ^Write a post^
+
+19 ^If you exit now, you will lose the post you've started writing. Is that OK?^
+20 ^Promoting a post will make it appear in the Mayor section rather than the Community section. This is useful if you want to promote an event hosted by the resident in the area - the post will be given a larger post summary and appear at the top. If it's the latest post in the Mayor section, the linked lot will also be clickable directly from the summary view! Note that this action cannot be reversed, so choose your promotions wisely!^
+21 ^If you delete this post, it will be gone for good. Are you sure you want to delete this post?^
+22 ^(because you're a moderator) Do you want to ban the user that post this message from neighborhood gameplay?^
+
+23 ^<enter title>^
+24 ^Community Post^
+25 ^System Post^
+26 ^Mayor Post^
+27 ^Promoted Post^
+
+28 ^No linked property.^
+29 ^Click to link a property to this post.^
+
+30 ^Property Search^
+31 ^Search for a property to link to this post. By clicking OK without selecting a property, you will clear your current selected property.^
+32 ^<no selected property>^
+
+33 ^Ready to Post?^
+34 ^Are you ready to send your post? Please make sure you are following the rules at http://freeso.org/nhoodrules/, the most important of which being no harassment and no spamming. Note that you cannot edit a bulletin post - and after it is made you will only be able to make another a few days later!^
+35 ^Delete^
+
+36 ^See Bulletin Dialog.^
+
+37 ^Your message has been posted!^
+38 ^(No Posts)^
+39 ^This section of the bulletin board does not have any posts yet.^

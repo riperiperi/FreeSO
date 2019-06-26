@@ -138,7 +138,7 @@ namespace FSO.Client.UI.Panels.EODs
 
         private void SetMode()
         {
-            Controller.ShowEODMode(new EODLiveModeOpt {
+            EODController.ShowEODMode(new EODLiveModeOpt {
                 Buttons = Options.Buttons,
                 Expandable = Options.Expandable,
                 Height = Options.Height,

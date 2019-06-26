@@ -29,6 +29,7 @@ namespace FSO.IDE.EditorComponent.Primitives
             if (op.AnimationID != 0)
             {
                 var animName = (GetAnimationName(scope, op.Source, op.AnimationID));
+                if (op.IDFromParam) animName = "Animation indexed by param[" + op.AnimationID + "]";
                 switch (op.Mode)
                 {
                     case 0:
@@ -57,6 +58,7 @@ namespace FSO.IDE.EditorComponent.Primitives
                 string prepend = "";
                 if (op.PlayBackwards) { flagStr.Append("Play Backwards"); prepend = ", "; }
                 if (op.StoreFrameInLocal) { flagStr.Append(prepend + "Place events in Local " + op.LocalEventNumber); prepend = ", "; }
+                if (op.Hurryable) { flagStr.Append(prepend + "Hurryable"); prepend = ", "; }
 
                 if (flagStr.Length != 0)
                 {
@@ -105,10 +107,15 @@ namespace FSO.IDE.EditorComponent.Primitives
             panel.Controls.Add(new OpComboControl(master, escope, Operand, "Animation Source:", "Source", new OpStaticNamedPropertyProvider(
                 new string[] { "This Tree's Object", "Global", "Person", "Misc" }, 0)));
 
+            panel.Controls.Add(new OpComboControl(master, escope, Operand, "Animation Mode:", "Mode", new OpStaticNamedPropertyProvider(
+                new string[] { "Play", "Set as Background", "Set as Carry", "Clear Carry & Play" }, 0)));
+
             panel.Controls.Add(new OpValueControl(master, escope, Operand, "Expected Events:", "ExpectedEventCount", new OpStaticValueBoundsProvider(0, 255)));
             panel.Controls.Add(new OpFlagsControl(master, escope, Operand, "Flags:", new OpFlag[] {
                 new OpFlag("Play Backwards", "PlayBackwards"),
-                new OpFlag("Place Events in Local", "StoreFrameInLocal")
+                new OpFlag("Place Events in Local", "StoreFrameInLocal"),
+                new OpFlag("Hurryable", "Hurryable"),
+                new OpFlag("ID in Parameter", "IDFromParam")
                 }));
 
             panel.Controls.Add(new OpValueControl(master, escope, Operand, "Target Local:", "LocalEventNumber", new OpStaticValueBoundsProvider(0, 255)));

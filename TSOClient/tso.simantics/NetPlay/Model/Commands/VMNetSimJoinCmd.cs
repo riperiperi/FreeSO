@@ -53,7 +53,9 @@ namespace FSO.SimAntics.NetPlay.Model.Commands
             }
             
             var name = AvatarState.Name.Substring(0, Math.Min(AvatarState.Name.Length, 64));
-            var sim = vm.Context.CreateObjectInstance(VMAvatar.TEMPLATE_PERSON, LotTilePos.OUT_OF_WORLD, Direction.NORTH).Objects[0];
+            var guid = (AvatarState.CustomGUID == 0) ? VMAvatar.TEMPLATE_PERSON : AvatarState.CustomGUID;
+
+            var sim = vm.Context.CreateObjectInstance(guid, LotTilePos.OUT_OF_WORLD, Direction.NORTH).Objects[0];
             var mailbox = vm.Entities.FirstOrDefault(x => (x.Object.OBJ.GUID == 0xEF121974 || x.Object.OBJ.GUID == 0x1D95C9B0));
 
             if (VM.UseWorld) FSO.HIT.HITVM.Get().PlaySoundEvent("lot_enter");
@@ -61,7 +63,30 @@ namespace FSO.SimAntics.NetPlay.Model.Commands
             else sim.SetPosition(LotTilePos.FromBigTile(3, 3, 1), Direction.NORTH, vm.Context);
             sim.PersistID = ActorUID;
 
+            if (vm.Tuning?.GetTuning("aprilfools", 0, 2019) == 1f)
+            {
+                var sum = AvatarState.Name.Sum(x => x);
+                if (sum % 4 == 0) ((VMAvatar)sim).SetPersonData(VMPersonDataVariable.JobPerformance, 50);
+                if (sum % 128 == 127) ((VMAvatar)sim).SetPersonData(VMPersonDataVariable.JobPerformance, 2);
+            }
+
             VMAvatar avatar = (VMAvatar)sim;
+
+            if (vm.TSOState.CommunityLot && AvatarState.Permissions < VMTSOAvatarPermissions.Owner)
+            {
+                if (vm.TSOState.Roommates.Contains(AvatarState.PersistID))
+                {
+                    if (vm.TSOState.BuildRoommates.Contains(AvatarState.PersistID))
+                    {
+                        AvatarState.Permissions = VMTSOAvatarPermissions.BuildBuyRoommate;
+                    }
+                    else
+                    {
+                        AvatarState.Permissions = VMTSOAvatarPermissions.Roommate;
+                    }
+                }
+            }
+
             AvatarState.Apply(avatar);
 
             var oldRoomCount = vm.TSOState.Roommates.Count;

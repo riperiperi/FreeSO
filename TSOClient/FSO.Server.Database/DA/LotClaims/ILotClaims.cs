@@ -20,5 +20,6 @@ namespace FSO.Server.Database.DA.LotClaims
         void Delete(uint id, string owner);
         List<DbLotStatus> AllLocations(int shardId);
         List<DbLotStatus> Top100Filter(int shard_id, LotCategory category, int limit);
+        List<uint> RecentsFilter(uint avatar_id, int limit);
     }
 }

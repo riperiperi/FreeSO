@@ -12,6 +12,7 @@ namespace FSO.Files.Formats.IFF
         private static Dictionary<string, List<IffFile>> PIFFsByName = new Dictionary<string, List<IffFile>>();
         private static Dictionary<string, string> OtfRewrite = new Dictionary<string, string>();
         private static Dictionary<string, bool> IsPIFFUser = new Dictionary<string, bool>(); //if a piff is User, all other piffs for that file are ignored.
+        private static HashSet<string> OBJDAdded = new HashSet<string>();
 
         public static void Init(string basePath)
         {
@@ -62,6 +63,31 @@ namespace FSO.Files.Formats.IFF
                 string entry = otf.Replace('\\', '/');
                 OtfRewrite[Path.GetFileName(entry)] = entry;
             }
+
+            foreach (var piffs in PIFFsByName)
+            {
+                foreach (var piff in piffs.Value)
+                {
+                    var addedOBJD = piff.List<OBJD>();
+                    if (addedOBJD != null)
+                    {
+                        OBJDAdded.Add(piffs.Key);
+                        continue;
+                    }
+
+                    var pChunk = piff.List<PIFF>()?.FirstOrDefault();
+                    if (pChunk != null && pChunk.Entries.Any(x => x.Type == "OBJD"))
+                    {
+                        OBJDAdded.Add(piffs.Key); 
+                        continue;
+                    }
+                }
+            }
+        }
+
+        public static HashSet<string> GetOBJDRewriteNames()
+        {
+            return OBJDAdded;
         }
 
         public static string GetOTFRewrite(string srcFile)

@@ -1,0 +1,8 @@
+{
+    "guid": "f526e19c-7301-42be-8a2a-07424a45ee68", 
+    "trigger": "ui:bulletin_board",
+    "title": "The Bulletin Board",
+    "category": "Neighborhoods",
+    "image": "hint_bulletin_board.png",
+    "body": "Need to pull your neighbors together for an event? Want to know what's going on in a neighborhood? Bulletin boards are public forums that each neighborhood has for helping residents organize events, start discussions or look for assistance. There are three sections in each bulletin board - Mayor, System and Community. [s][color=#FFA64D]Mayor[/color][/s] posts are messages written or promoted by the elected Mayor of this neighborhood, and will appear larger than most other posts. [s][color=#B3FF99]System[/color][/s] posts are made automatically as various events occur in the neighborhood, such as elections or notable individual achievements. [s][color=#CCD8E6]Community[/color][/s] posts can be made by anyone, and can be about anything! If you live in this neighborhood, you can freely post in the community section, and even link a lot to your post! If the Mayor appreciates your post, they can promote it to the Mayor section for the most visibility. \n\nNote that neighborhood features and the bulletin board have their own set of rules, specifically forbidding harassment, election bribery and spamming. For more information see http://freeso.org/nhoodrules/ ."
+}

@@ -32,11 +32,15 @@ namespace FSO.SimAntics.Primitives
 
         public short[] Arguments;
 
-        public short Arg0 { get { return Arguments[0]; } set { Arguments[0] = value; } }
-        public short Arg1 { get { return Arguments[1]; } set { Arguments[1] = value; } }
-        public short Arg2 { get { return Arguments[2]; } set { Arguments[2] = value; } }
-        public short Arg3 { get { return Arguments[3]; } set { Arguments[3] = value; } }
-        public bool UseTemp0; //TODO: make IDE set this when the special case arises.
+        private void UpdateUseTemp0()
+        {
+            UseTemp0 = !(Arg1 == 0 && Arg2 == 0 && Arg3 == 0);
+        }
+        public short Arg0 { get { return Arguments[0]; } set { Arguments[0] = value; UpdateUseTemp0(); } }
+        public short Arg1 { get { return Arguments[1]; } set { Arguments[1] = value; UpdateUseTemp0(); } }
+        public short Arg2 { get { return Arguments[2]; } set { Arguments[2] = value; UpdateUseTemp0(); } }
+        public short Arg3 { get { return Arguments[3]; } set { Arguments[3] = value; UpdateUseTemp0(); } }
+        public bool UseTemp0;
 
 
         #region VMPrimitiveOperand Members

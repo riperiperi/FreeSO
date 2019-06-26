@@ -307,6 +307,25 @@ namespace FSO.SimAntics.Primitives
                 // 40. PetToAdult
                 // 41. HeadFlush
                 // 42. MakeTemp0SelectedSim,
+                case VMGenericTS1CallMode.MakeTemp0SelectedSim:
+                    //right now assume there's only one ts1 client, and that's us.
+                    var vm = context.VM;
+                    var target = vm.GetObjectById(context.Thread.TempRegisters[0]);
+                    if (target == null || target is VMGameObject) return VMPrimitiveExitCode.GOTO_FALSE;
+
+                    var caller = vm.GetAvatarByPersist(vm.MyUID);
+                    if (caller != null)
+                    {
+                        //relinquish previous control
+                        vm.Context.ObjectQueries.RemoveAvatarPersist(caller.PersistID);
+                        caller.PersistID = 0;
+                    }
+
+                    target.PersistID = vm.MyUID;
+                    vm.Context.ObjectQueries.RegisterAvatarPersist((VMAvatar)target, target.PersistID);
+                    vm.SetGlobalValue(3, target.ObjectID);
+                    
+                    return VMPrimitiveExitCode.GOTO_TRUE;
                 // 43. FamilySpellsIntoController
             }
             return VMPrimitiveExitCode.GOTO_TRUE;

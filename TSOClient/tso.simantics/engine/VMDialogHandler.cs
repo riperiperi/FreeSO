@@ -13,6 +13,7 @@ using FSO.SimAntics.Engine.Utils;
 using FSO.SimAntics.Primitives;
 using FSO.Files.Formats.IFF.Chunks;
 using FSO.SimAntics.Model;
+using FSO.SimAntics.Model.TSOPlatform;
 
 namespace FSO.SimAntics.Engine
 {
@@ -22,7 +23,7 @@ namespace FSO.SimAntics.Engine
         private static string[] valid = {
             "Object", "Me", "TempXL:", "Temp:", "$", "Attribute:", "DynamicStringLocal:", "Local:", "TimeLocal:", "NameLocal:",
             "FixedLocal:", "DynamicObjectName", "MoneyXL:", "JobOffer:", "Job:", "JobDesc:", "Param:", "Neighbor", "\r\n", "ListObject",
-            "CatalogLocal:", "\\n"
+            "CatalogLocal:", "DateLocal:", "ObjectLocal:", "\\n"
         };
 
         public static void ShowDialog(VMStackFrame context, VMDialogOperand operand, STR source)
@@ -83,9 +84,10 @@ namespace FSO.SimAntics.Engine
                 else
                 {
                     command.Append(input[i]);
-                    if (i == input.Length - 1 || !CommandSubstrValid(command.ToString()))
+                    var invalid = !CommandSubstrValid(command.ToString());
+                    if (i == input.Length - 1 || invalid)
                     {
-                        if (i != input.Length - 1 || char.IsDigit(input[i]))
+                        if (invalid || char.IsDigit(input[i]))
                         {
                             command.Remove(command.Length - 1, 1);
                             i--;
@@ -97,7 +99,7 @@ namespace FSO.SimAntics.Engine
                         {
                             try
                             {
-                                if (cmdString == "DynamicStringLocal:" || cmdString == "TimeLocal:" || cmdString == "JobOffer:" || cmdString == "Job:" || cmdString == "JobDesc:")
+                                if (cmdString == "DynamicStringLocal:" || cmdString == "TimeLocal:" || cmdString == "JobOffer:" || cmdString == "Job:" || cmdString == "JobDesc:" || cmdString == "DateLocal:")
                                 {
                                     values[1] = -1;
                                     values[2] = -1;
@@ -144,7 +146,21 @@ namespace FSO.SimAntics.Engine
                             {
                                 case "Object":
                                 case "DynamicObjectName":
-                                    output.Append(context.StackObject.ToString()); break;
+                                    //hack: if stack object doesn't exist and should contain owner's id,
+                                    //try output the callee's owner id instead for tip jar.
+                                    //special id for this is -1.
+                                    if (context.StackObjectID == -1 && !context.VM.TS1)
+                                    {
+                                        //StackObjectOwnerID call sets the id to -1 if no owner found. (null is usually 0)
+                                        output.Append(context.VM.TSOState.Names.GetNameForID(
+                                            context.VM, 
+                                            (context.Callee.TSOState as VMTSOObjectState)?.OwnerID ?? 0
+                                            ));
+                                    } else
+                                    {
+                                        output.Append(context.StackObject.ToString());
+                                    }
+                                    break;
                                 case "Me":
                                     output.Append(context.Caller.ToString()); break;
                                 case "TempXL:":
@@ -204,6 +220,8 @@ namespace FSO.SimAntics.Engine
                                     output.Append(mins.ToString().PadLeft(2, '0'));
                                     output.Append(suffix);
                                     break;
+                                case "ObjectLocal:":
+                                    output.Append(context.VM.GetObjectById(VMMemory.GetVariable(context, Scopes.VMVariableScope.Local, values[0]))?.ToString() ?? ""); break;
                                 case "JobOffer:":
                                     output.Append(Content.Content.Get().Jobs.JobOffer(
                                         (short)VMMemory.GetBigVariable(context, Scopes.VMVariableScope.Local, values[0]),
@@ -235,6 +253,10 @@ namespace FSO.SimAntics.Engine
                                     var catObj = context.VM.GetObjectById(VMMemory.GetVariable(context, Scopes.VMVariableScope.Local, values[0]));
                                     var cat = catObj.Object.Resource.Get<CTSS>(catObj.Object.OBJ.CatalogStringsID)?.GetString(1);
                                     output.Append(cat ?? "");
+                                    break;
+                                case "DateLocal:":
+                                    var date = new DateTime(context.Locals[values[2]], context.Locals[values[1]], context.Locals[values[0]]);
+                                    output.Append(date.ToLongDateString());
                                     break;
                                 case "\\n":
                                     output.Append("\n");

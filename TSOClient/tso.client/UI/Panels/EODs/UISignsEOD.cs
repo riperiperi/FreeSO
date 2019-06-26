@@ -129,7 +129,7 @@ namespace FSO.Client.UI.Panels.EODs
         public void B_Show(string evt, byte[] data)
         {
             Data = new VMEODSignsData(data);
-            Controller.ShowEODMode(new EODLiveModeOpt
+            EODController.ShowEODMode(new EODLiveModeOpt
             {
                 Buttons = 0,
                 Expandable = false,

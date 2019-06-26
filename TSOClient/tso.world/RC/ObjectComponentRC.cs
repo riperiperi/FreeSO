@@ -44,8 +44,9 @@ namespace FSO.LotView.RC
                 {
                     _BoundsDirty = true;
                     var worldPosition = WorldSpace.GetWorldFromTile(Position);
-                    _World = Matrix.CreateTranslation(worldPosition);
-                    _World = Matrix.CreateScale(3f) * Matrix.CreateRotationY(-RadianDirection) * Matrix.CreateTranslation(new Vector3(1.5f, 0.1f, 1.5f)) * _World;
+                    _World = Matrix.CreateTranslation(new Vector3(1.5f, 0.1f, 1.5f)) * Matrix.CreateTranslation(worldPosition);
+                    if (GroundAlign != null) _World = GroundAlign.Value * _World;
+                    _World = Matrix.CreateScale(3f) * Matrix.CreateRotationY(-RadianDirection) * _World;
                     _WorldDirty = false;
                 }
                 return _World;

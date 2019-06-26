@@ -123,6 +123,7 @@
             this.NameLabel = new System.Windows.Forms.Label();
             this.NameEntry = new System.Windows.Forms.TextBox();
             this.GUIDButton = new System.Windows.Forms.Button();
+            this.CatCommunity = new System.Windows.Forms.CheckBox();
             this.ThumbnailBox.SuspendLayout();
             ((System.ComponentModel.ISupportInitialize)(this.ThumbnailPic)).BeginInit();
             this.VisualBox.SuspendLayout();
@@ -662,6 +663,7 @@
             // 
             // CatalogBox
             // 
+            this.CatalogBox.Controls.Add(this.CatCommunity);
             this.CatalogBox.Controls.Add(this.CatResidence);
             this.CatalogBox.Controls.Add(this.CatEntertainment);
             this.CatalogBox.Controls.Add(this.CatGames);
@@ -941,7 +943,6 @@
             // 
             // FootprintSouth
             // 
-            this.FootprintSouth.Enabled = false;
             this.FootprintSouth.Location = new System.Drawing.Point(42, 90);
             this.FootprintSouth.Maximum = new decimal(new int[] {
             15,
@@ -954,7 +955,6 @@
             // 
             // FootprintNorth
             // 
-            this.FootprintNorth.Enabled = false;
             this.FootprintNorth.Location = new System.Drawing.Point(42, 36);
             this.FootprintNorth.Maximum = new decimal(new int[] {
             15,
@@ -967,7 +967,6 @@
             // 
             // FootprintWest
             // 
-            this.FootprintWest.Enabled = false;
             this.FootprintWest.Location = new System.Drawing.Point(8, 63);
             this.FootprintWest.Maximum = new decimal(new int[] {
             15,
@@ -1010,7 +1009,6 @@
             // 
             // FootprintEast
             // 
-            this.FootprintEast.Enabled = false;
             this.FootprintEast.Location = new System.Drawing.Point(76, 63);
             this.FootprintEast.Maximum = new decimal(new int[] {
             15,
@@ -1198,6 +1196,17 @@
             this.GUIDButton.TabIndex = 78;
             this.GUIDButton.Text = "0xDEADBEEF";
             this.GUIDButton.UseVisualStyleBackColor = true;
+            this.GUIDButton.MouseDown += new System.Windows.Forms.MouseEventHandler(this.GUIDButton_MouseDown);
+            // 
+            // CatCommunity
+            // 
+            this.CatCommunity.AutoSize = true;
+            this.CatCommunity.Location = new System.Drawing.Point(94, 107);
+            this.CatCommunity.Name = "CatCommunity";
+            this.CatCommunity.Size = new System.Drawing.Size(134, 17);
+            this.CatCommunity.TabIndex = 47;
+            this.CatCommunity.Text = "Community (Town Hall)";
+            this.CatCommunity.UseVisualStyleBackColor = true;
             // 
             // OBJDEditor
             // 
@@ -1357,5 +1366,6 @@
         private System.Windows.Forms.TextBox NameEntry;
         private System.Windows.Forms.Button GUIDButton;
         private System.Windows.Forms.Button ThumbSave;
+        private System.Windows.Forms.CheckBox CatCommunity;
     }
 }

@@ -102,9 +102,14 @@ namespace FSO.SimAntics.Engine
                 center /= objs.Count;
             } else center = new Vector2(obj.Position.x/16f, obj.Position.y/16f);
 
+            var onPoint = ((int)Flags & 255) == 0 || Slot.Offset != new Vector3(); //
+
             //add offset of slot if it exists. must be rotated to be relative to object
-            var rotOff = Vector3.Transform(Slot.Offset, Matrix.CreateRotationZ(obj.RadianDirection));
+            var dir = ((Flags & SLOTFlags.Absolute) > 0 && !onPoint) ? 0 : obj.RadianDirection;
+            var rotOff = Vector3.Transform(Slot.Offset, Matrix.CreateRotationZ(dir));
             var circleCtr = new Vector2(center.X + rotOff.X / 16, center.Y + rotOff.Y / 16);
+
+            sbyte level = (sbyte)(obj.Position.Level + (int)Math.Floor(Slot.Offset.Z / 15));
 
             ushort room = context.VM.Context.GetRoomAt(obj.Position);
             Results = new List<VMFindLocationResult>();
@@ -125,21 +130,21 @@ namespace FSO.SimAntics.Engine
                     if (((int)Flags & 255) == 0) Flags |= SLOTFlags.NORTH;
                 }
 
-                var flagRot = DirectionUtils.PosMod(obj.RadianDirection+FlagsAsRad(Flags), Math.PI*2);
+                var flagRot = DirectionUtils.PosMod(dir+FlagsAsRad(Flags), Math.PI*2);
                 if (flagRot > Math.PI) flagRot -= Math.PI * 2;
 
-                VerifyAndAddLocation(obj, circleCtr, center, Flags, Double.MaxValue, context, caller, (float)flagRot); 
+                VerifyAndAddLocation(obj, circleCtr, center, Flags, Double.MaxValue, context, caller, (float)flagRot, level); 
                 return Results;
             }
             else
             {
-                if (((int)Flags & 255) == 0 || Slot.Offset != new Vector3())
+                if (onPoint)
                 {
                     //exact position
                     //Flags |= (SLOTFlags)255;
 
                     // special case, walk directly to point. 
-                    VerifyAndAddLocation(obj, circleCtr, center, Flags, Double.MaxValue, context, caller, float.NaN);
+                    VerifyAndAddLocation(obj, circleCtr, center, Flags, Double.MaxValue, context, caller, float.NaN, level);
                     return Results;
                 }
                 var maxScore = Math.Max(DesiredProximity - MinProximity, MaxProximity - DesiredProximity) + (LotTilePos.Distance(obj.Position, caller.Position)+MaxProximity)/3 + 2;
@@ -150,11 +155,11 @@ namespace FSO.SimAntics.Engine
                     var pos = new Vector2(circleCtr.X + x / 16.0f, circleCtr.Y + y / 16.0f);
                     if (distance >= MinProximity - 0.5 && distance <= MaxProximity + 0.5 && (ignoreRooms || context.VM.Context.GetRoomAt(new LotTilePos((short)Math.Round(pos.X * 16), (short)Math.Round(pos.Y * 16), obj.Position.Level)) == room)) //slot is within proximity
                     {
-                        var routeEntryFlags = (GetSearchDirection(circleCtr, pos, obj.RadianDirection) & Flags); //the route needs to know what conditions it fulfilled
+                        var routeEntryFlags = (GetSearchDirection(circleCtr, pos, dir) & Flags); //the route needs to know what conditions it fulfilled
                         if (routeEntryFlags > 0) //within search location
                         {
                             double baseScore = ((maxScore - Math.Abs(DesiredProximity - distance)) + context.VM.Context.NextRandom(1024) / 1024.0f);
-                            VerifyAndAddLocation(obj, pos, center, routeEntryFlags, baseScore, context, caller, float.NaN);
+                            VerifyAndAddLocation(obj, pos, center, routeEntryFlags, baseScore, context, caller, float.NaN, level);
                         }
                     }
                 });
@@ -195,16 +200,16 @@ namespace FSO.SimAntics.Engine
             }
         }
 
-        private void VerifyAndAddLocation(VMEntity obj, Vector2 pos, Vector2 center, SLOTFlags entryFlags, double score, VMContext context, VMEntity caller, float facingDir)
+        private void VerifyAndAddLocation(VMEntity obj, Vector2 pos, Vector2 center, SLOTFlags entryFlags, double score, VMContext context, VMEntity caller, float facingDir, sbyte level)
         {
             //note: verification is not performed if snap target slot is enabled.
-            var tpos = new LotTilePos((short)Math.Round(pos.X * 16), (short)Math.Round(pos.Y * 16), obj.Position.Level);
+            var tpos = new LotTilePos((short)Math.Round(pos.X * 16), (short)Math.Round(pos.Y * 16), level);
 
             if (context.IsOutOfBounds(tpos)) return;
 
             score -= LotTilePos.Distance(tpos, caller.Position)/3.0;
 
-            if (Slot.SnapTargetSlot < 0 && context.Architecture.RaycastWall(new Point((int)pos.X, (int)pos.Y), new Point(obj.Position.TileX, obj.Position.TileY), obj.Position.Level))
+            if (Slot.SnapTargetSlot < 0 && context.Architecture.RaycastWall(new Point((int)pos.X, (int)pos.Y), new Point(obj.Position.TileX, obj.Position.TileY), level))
             {
                 SetFail(VMRouteFailCode.WallInWay, null);
                 return;
@@ -215,6 +220,17 @@ namespace FSO.SimAntics.Engine
             {
                 var obj3P = obj.Position.ToVector3();
                 var objP = new Vector2(obj3P.X, obj3P.Y);
+                // if we need to use the average location of an object group, it needs to be calculated.
+                if (((Flags & SLOTFlags.UseAverageObjectLocation) > 0) && (obj.MultitileGroup.MultiTile))
+                {
+                    objP = new Vector2(0, 0);
+                    var objs = obj.MultitileGroup.Objects;
+                    for (int i = 0; i < objs.Count; i++)
+                    {
+                        objP += new Vector2(objs[i].Position.x / 16f, objs[i].Position.y / 16f);
+                    }
+                    objP /= objs.Count;
+                }
                 switch (Slot.Facing)
                 {
                     case SLOTFacing.FaceTowardsObject:
@@ -233,7 +249,7 @@ namespace FSO.SimAntics.Engine
 
             VMFindLocationResult result = new VMFindLocationResult
             {
-                Position = new LotTilePos((short)Math.Round(pos.X * 16), (short)Math.Round(pos.Y * 16), obj.Position.Level),
+                Position = new LotTilePos((short)Math.Round(pos.X * 16), (short)Math.Round(pos.Y * 16), level),
                 RadianDirection = facingDir,
                 FaceAnywhere = faceAnywhere,
                 RouteEntryFlags = entryFlags

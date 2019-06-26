@@ -17,6 +17,7 @@ namespace FSO.Content.Interfaces
         protected Content ContentManager;
 
         public Dictionary<ulong, GameObjectReference> Entries;
+        public List<GameObjectReference> ControllerObjects = new List<GameObjectReference>();
 
         public AbstractObjectProvider(Content contentManager)
         {
@@ -25,7 +26,7 @@ namespace FSO.Content.Interfaces
 
         private bool WithSprites;
 
-        private TimedReferenceCache<string, GameObjectResource> ProcessedFiles = new TimedReferenceCache<string, GameObjectResource>();
+        protected TimedReferenceCache<string, GameObjectResource> ProcessedFiles = new TimedReferenceCache<string, GameObjectResource>();
 
         #region IContentProvider<GameObject> Members
 

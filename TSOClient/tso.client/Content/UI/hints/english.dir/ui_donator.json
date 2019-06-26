@@ -1,0 +1,8 @@
+{
+    "guid": "b94db82d-74eb-4893-9131-5531b0b37762", 
+    "trigger": "ui:donator",
+    "title": "Donating to The Cause",
+    "category": "Neighborhoods",
+    "image": "hint_donator.png",
+    "body": "You've been whitelisted as a potential donator for this Community Lot. That means that you can freely place objects on this property up to its limit, bought from the catalog or from your inventory. However, there are [s]very important differences[/s] you need to be aware of before you go nuts.\n\nObjects you donate to a community lot [s][color=red]CANNOT RETURN TO YOUR INVENTORY[/color][/s]. You also cannot delete them - only the mayor can delete your object after placement, and neither of you get any money back. When you donate an object to a community lot, it is destined to become a long term fixture that belongs to the neighborhood as a whole, and may persist as the lot changes hands between different mayors. A reminder will appear each time you open your inventory, just in case you have plans to put any rare objects down.\n\nThere's an upside though - when you buy objects out of the catalog to be donated, [s][color=#B3FF99]they cost 1/3rd of the price![/color][/s] This makes it a lot easier to get started or do renovations worrying less about your contributions disappearing in future."
+}

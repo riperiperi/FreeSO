@@ -21,6 +21,7 @@ using FSO.Client.UI;
 using System.Diagnostics;
 using Microsoft.Xna.Framework;
 using FSO.Common.Rendering.Emoji;
+using FSO.UI.Framework;
 
 namespace FSO.Client
 {
@@ -39,6 +40,8 @@ namespace FSO.Client
         //public static TSOClientTools DebugWindow;
         public static Font MainFont;
         public static Font EdithFont;
+        public static MSDFFont VectorFont;
+        public static MSDFFont EdithVectorFont;
         public static UpdateState LastUpdateState;
         public static Thread GameThread;
         public static bool Focus = true;

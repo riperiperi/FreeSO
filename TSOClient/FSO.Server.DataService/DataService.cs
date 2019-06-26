@@ -177,7 +177,8 @@ namespace FSO.Common.DataService
             if (ModelIdByType.ContainsKey(type))
             {
                 var modelId = ModelIdByType[type];
-                return StructToActualFields[modelId].Where(x => field == x.Name).FirstOrDefault();
+                var structs = StructToActualFields[modelId];
+                return structs.Where(x => field == x.Name).FirstOrDefault();
             }
             return null;
         }
@@ -317,7 +318,11 @@ namespace FSO.Common.DataService
                         if (!clientSourced || objectField.GetCustomAttribute<ClientSourced>() == null)
                         {
                             provider.DemandMutation(entity.Value, MutationType.SET_FIELD_VALUE, path.GetKeyPath(objectField.Name), value, context);
-                            objectField.SetValue(target.Value, value);
+
+                            var lastValue = objectField.GetValue(target.Value);
+                            //only set a value if it changed. lessens performance impact for polling
+                            if (!(lastValue?.Equals(value) ?? (value == null)))
+                                objectField.SetValue(target.Value, value);
 
                             if (persist != null)
                             {

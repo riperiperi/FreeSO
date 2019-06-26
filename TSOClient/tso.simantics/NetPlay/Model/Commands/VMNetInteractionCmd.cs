@@ -26,7 +26,7 @@ namespace FSO.SimAntics.NetPlay.Model.Commands
             VMEntity callee = vm.GetObjectById(CalleeID);
             if (caller == null && CallerID > 0)
             {
-                //try get caller from normal id;
+                //try get caller from normal id
                 caller = (vm.GetObjectById(CallerID) as VMAvatar);
                 if (caller == null) return false;
             }
@@ -41,7 +41,26 @@ namespace FSO.SimAntics.NetPlay.Model.Commands
         public override bool Verify(VM vm, VMAvatar caller)
         {
             if (caller == null && FromNet) return false;
-            return true;
+
+            if (!FromNet) return true;
+            VMEntity callee = vm.GetObjectById(CalleeID);
+            if (caller == null && CallerID > 0)
+            {
+                //try get caller from normal id
+                caller = (vm.GetObjectById(CallerID) as VMAvatar);
+                if (caller == null) return false;
+            }
+            if (callee == null) return false;
+            if (callee is VMGameObject && ((VMGameObject)callee).Disabled > 0) return false;
+            if ((caller.Thread?.Queue?.Count ?? 0) >= VMThread.MAX_USER_ACTIONS) return false;
+
+            var oldInUse = callee.GetFlag(VMEntityFlags.Occupied);
+            callee.SetFlag(VMEntityFlags.Occupied, false); //ignore this for now - it only matters when we're running the interaction
+            var pie = callee.GetPieMenuForInteraction(vm, caller, Interaction, Global, false);
+            callee.SetFlag(VMEntityFlags.Occupied, oldInUse); //reset back to normal
+
+            //does the pie generated for this object contain the variant the client asked for?
+            return pie != null && pie.Any(x => x.Param0 == Param0);
         }
 
         #region VMSerializable Members

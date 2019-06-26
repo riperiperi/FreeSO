@@ -36,6 +36,17 @@ namespace FSO.Server.Framework.Aries
             }
         }
 
+        public IVoltronSession GetByUserId(uint id)
+        {
+            lock (_Sessions)
+            {
+                return (IVoltronSession)_Sessions.FirstOrDefault(x =>
+                {
+                    return x is IVoltronSession && ((IVoltronSession)x).UserId == id;
+                });
+            }
+        }
+
         public T UpgradeSession<T>(IAriesSession session, Callback<T> init) where T : AriesSession
         {
             var newSession = ((AriesSession)session).UpgradeSession<T>();

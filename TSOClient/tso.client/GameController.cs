@@ -28,6 +28,7 @@ using System.Collections.Immutable;
 using FSO.Common.DataService.Model;
 using FSO.Common.Serialization.Primitives;
 using FSO.UI.Model;
+using MSDFData;
 
 namespace FSO.Client
 {
@@ -64,6 +65,23 @@ namespace FSO.Client
             {
                 controller.Preload();
             });
+        }
+
+        public void Start()
+        {
+            var version = Content.Content.Get().VersionString;
+            if (version == "1.1097.1.0") StartLoading();
+            else WrongVersion();
+        }
+
+        /// <summary>
+        /// Shows up before login if the current TSO version is incorrect. Allows patching of known TSO versions.
+        /// </summary>
+        public void WrongVersion()
+        {
+            var screen = Kernel.Get<TSOVersionPatchScreen>();
+            GameFacade.Screens.RemoveCurrent();
+            GameFacade.Screens.AddScreen(screen);
         }
 
         /// <summary>
@@ -140,6 +158,8 @@ namespace FSO.Client
             var purch = new Regulators.PurchaseLotRegulator(null);
             var conn = new Regulators.LotConnectionRegulator(null, null, null);
             var t2 = new Regulators.CityConnectionRegulator(null, null, null, null, Kernel, null);
+            var neigh = new Regulators.GenericActionRegulator<NhoodRequest, NhoodResponse>(null);
+            var bulletin = new Regulators.GenericActionRegulator<BulletinRequest, BulletinResponse>(null);
             var regu = new Regulators.RegulatorsModule();
 
             var prov = new CacheProvider();
@@ -155,6 +175,13 @@ namespace FSO.Client
             var arp = new Server.Protocol.Aries.AriesProtocolDecoder(null);
             var are = new Server.Protocol.Aries.AriesProtocolEncoder(null);
             var serc = new Common.Serialization.SerializationContext(null, null);
+
+            var ff = new FieldFont();
+            var fa = new FieldAtlas();
+            var fg = new FieldGlyph();
+            var kp = new KerningPair();
+            var met = new Metrics();
+            var dict = new Dictionary<char, FieldGlyph>();
 
             var packets = new object[]
             {
@@ -188,6 +215,11 @@ namespace FSO.Client
                 new InboxController(null, null, null, null),
                 new JoinLotProgressController(null, null),
                 new DisconnectController(null, null, null, null, null),
+                new GenericSearchController(null, null),
+                new NeighPageController(null, null),
+                new RatingListController(null, null, null),
+                new RatingSummaryController(null, null, null),
+                new NeighborhoodActionController(null),
 
                 ImmutableList.Create<uint>(),
                 ImmutableList.Create<JobLevel>(),

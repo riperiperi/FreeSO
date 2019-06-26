@@ -171,7 +171,8 @@ namespace FSO.SimAntics.NetPlay.EODs.Handlers
                             CalleeID = dancer.ObjectID,
                             CallerID = dancer.ObjectID,
                             Global = false,
-                            Interaction = (ushort)(pattern + 4)
+                            Interaction = (ushort)(pattern + 4),
+                            FromNet = false
                         });
                         if (DancerIndex >= Dancers.Count) DancerIndex = 0;
                     }

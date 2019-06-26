@@ -36,8 +36,27 @@ namespace FSO.Client.Controllers
             {
                 case "UpdateRequired":
                     var info = (UserAuthorized)data;
-                    DoUpdate(info.FSOBranch ?? "", info.FSOVersion ?? "", info.FSOUpdateUrl ?? "");
+                    View.LoginDialog.Visible = false;
+                    View.LoginProgress.Visible = false;
+                    var controller = new UpdateController(ContinueFromUpdate);
+                    controller.DoUpdate((info.FSOBranch ?? "") + "-" + (info.FSOVersion ?? ""), info.FSOUpdateUrl ?? "");
                     break;
+            }
+        }
+
+        private void ContinueFromUpdate(bool toSAS)
+        {
+            if (toSAS)
+            {
+                Regulator.AsyncTransition("AvatarData");
+                View.LoginDialog.Visible = true;
+                View.LoginProgress.Visible = true;
+            }
+            else
+            {
+                View.LoginDialog.Visible = true;
+                View.LoginProgress.Visible = true;
+                Regulator.AsyncReset();
             }
         }
 

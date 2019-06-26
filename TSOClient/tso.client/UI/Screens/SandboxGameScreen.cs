@@ -85,7 +85,7 @@ namespace FSO.Client.UI.Screens
                     else
                     {
                         var targ = (WorldZoom)(4 - value); //near is 3 for some reason... will probably revise
-                        HITVM.Get().PlaySoundEvent(UIMusic.None);
+                        if (!ucp.SpecialMusic) HITVM.Get().PlaySoundEvent(UIMusic.None);
                         LotControl.Visible = true;
                         World.Visible = true;
                         ucp.SetMode(UIUCP.UCPMode.LotMode);
@@ -431,6 +431,7 @@ namespace FSO.Client.UI.Screens
                 SkinTone = (byte)settings.DebugSkin,
                 Gender = (short)(settings.DebugGender ? 0 : 1),
                 Permissions = SimAntics.Model.TSOPlatform.VMTSOAvatarPermissions.Admin,
+                //CustomGUID = 0x396CD3D1,
                 Budget = 1000000,
             };
 
@@ -526,7 +527,8 @@ namespace FSO.Client.UI.Screens
                 });
                 vm.ForwardCommand(new VMNetTuningCmd { Tuning = experimentalTuning });
 
-                vm.TSOState.PropertyCategory = 255;
+                vm.TSOState.PropertyCategory = 255; //11 is community
+                vm.TSOState.ActivateValidator(vm);
                 vm.Context.Clock.Hours = 0;
                 vm.TSOState.Size = (10) | (3 << 8);
                 vm.Context.UpdateTSOBuildableArea();

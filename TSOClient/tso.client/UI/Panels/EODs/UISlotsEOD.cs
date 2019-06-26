@@ -262,7 +262,7 @@ namespace FSO.Client.UI.Panels.EODs
         }
         private void PlayerInitHandler(string evt, byte[] args)
         {
-            Controller.ShowEODMode(new EODLiveModeOpt
+            EODController.ShowEODMode(new EODLiveModeOpt
             {
                 Buttons = 1,
                 Height = EODHeight.TallTall,
@@ -539,7 +539,7 @@ namespace FSO.Client.UI.Panels.EODs
             OwnerPanel.OnNewByteMessage += SendByteMessage;
             OwnerPanel.OnNewStringMessage += SendStringMessage;
 
-            Controller.ShowEODMode(new EODLiveModeOpt
+            EODController.ShowEODMode(new EODLiveModeOpt
             {
                 Buttons = 0,
                 Height = EODHeight.Normal,
@@ -723,7 +723,7 @@ namespace FSO.Client.UI.Panels.EODs
             Parent.Invalidate();
             if (!IsManaging)
             {
-                if (Controller.EODMessage.Equals(GameFacade.Strings["UIText", "259", "22"])) // "Closed for Maintenance"
+                if (EODController.EODMessage.Equals(GameFacade.Strings["UIText", "259", "22"])) // "Closed for Maintenance"
                     SetTip(GameFacade.Strings["UIText", "259", "23"]); // "Please play another machine"
                 else
                 SetTip(GameFacade.Strings["UIText", "259", "22"]); // "Closed for Maintenance"

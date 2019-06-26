@@ -74,7 +74,7 @@ namespace FSO.Client.UI.Framework
         {
             //this should be called on the UI thread, otherwise monogame will lose it.
             if (Batch != null) Batch.Dispose();
-            Batch = new UISpriteBatch(GameFacade.GraphicsDevice, 1, width, height, (GlobalSettings.Default.AntiAlias && !FSOEnvironment.DirectX)? 4:0);
+            Batch = new UISpriteBatch(GameFacade.GraphicsDevice, 1, width, height, (GlobalSettings.Default.AntiAlias > 0 && !FSOEnvironment.DirectX)? 4:0);
             RawImage = new byte[width * height * 4];
             BatchDirty = false;
 
@@ -96,12 +96,14 @@ namespace FSO.Client.UI.Framework
                 }
                 Target.GetData(RawImage, 0, (GameFacade.DirectX) ? RawImage.Length : RawImage.Length);
 
+                
                 for (int i = 0; i < RawImage.Length; i += 4)
                 {
                     var swap = RawImage[i];
                     RawImage[i] = RawImage[i + 2];
                     RawImage[i + 2] = swap;
                 }
+
                 if (OnFrame != null) OnFrame();
             }
             //    if (BatchDirty) WidthHeightChange(Width, Height);

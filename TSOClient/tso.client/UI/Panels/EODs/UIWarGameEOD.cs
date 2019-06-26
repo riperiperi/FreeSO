@@ -118,17 +118,17 @@ namespace FSO.Client.UI.Panels.EODs
             // place player Avatar into Players
             if (Int16.TryParse(split[0], out avatarID))
             {
-                var avatar = (VMAvatar)Controller.Lot.vm.GetObjectById(avatarID);
+                var avatar = (VMAvatar)EODController.Lot.vm.GetObjectById(avatarID);
                 if (split[1].Equals("blue"))
                 {
-                    Players[0] = new UIVMPersonButton((VMAvatar)avatar, Controller.Lot.vm, false);
+                    Players[0] = new UIVMPersonButton((VMAvatar)avatar, EODController.Lot.vm, false);
                     Players[0].Position = BluePlayerPos.Position;
                     PlayerIsBlue = true;
                     Add(Players[0]);
                 }
                 else
                 {
-                    Players[1] = new UIVMPersonButton((VMAvatar)avatar, Controller.Lot.vm, false);
+                    Players[1] = new UIVMPersonButton((VMAvatar)avatar, EODController.Lot.vm, false);
                     Players[1].Position = RedPlayerPos.Position;
                     Add(Players[1]);
                 }
@@ -177,7 +177,7 @@ namespace FSO.Client.UI.Panels.EODs
             AddBefore(DefeatIntelPos, IntelButton);
             DefeatIntelPos.Visible = false;
 
-            Controller.ShowEODMode(new EODLiveModeOpt
+            EODController.ShowEODMode(new EODLiveModeOpt
             {
                 Buttons = 0,
                 Height = EODHeight.Tall,
@@ -208,16 +208,16 @@ namespace FSO.Client.UI.Panels.EODs
             short avatarID;
             if (Int16.TryParse(opponentID, out avatarID))
             {
-                var avatar = (VMAvatar)Controller.Lot.vm.GetObjectById(avatarID);
+                var avatar = (VMAvatar)EODController.Lot.vm.GetObjectById(avatarID);
                 if (PlayerIsBlue)
                 {
-                    Players[1] = new UIVMPersonButton(avatar, Controller.Lot.vm, false);
+                    Players[1] = new UIVMPersonButton(avatar, EODController.Lot.vm, false);
                     Players[1].Position = RedPlayerPos.Position;
                     Add(Players[1]);
                 }
                 else
                 {
-                    Players[0] = new UIVMPersonButton(avatar, Controller.Lot.vm, false);
+                    Players[0] = new UIVMPersonButton(avatar, EODController.Lot.vm, false);
                     Players[0].Position = BluePlayerPos.Position;
                     Add(Players[0]);
                 }

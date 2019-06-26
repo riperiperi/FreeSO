@@ -59,5 +59,26 @@ namespace FSO.Server.Database.DA.LotVisitors
                     "AND (time_created BETWEEN @start AND @end OR time_closed BETWEEN @start and @end)",
                 new { start = start, end = end, shard_id = shard_id }, buffered: false);
         }
+
+        public IEnumerable<DbLotVisitNhood> StreamBetweenPlusNhood(int shard_id, DateTime start, DateTime end)
+        {
+            return Context.Connection.Query<DbLotVisitNhood>(
+                "SELECT * FROM `fso_lot_visits` v INNER JOIN fso_lots l ON v.lot_id = l.lot_id " +
+                    "WHERE l.shard_id = @shard_id AND status != 'failed' " +
+                    "AND time_closed IS NOT NULL " +
+                    "AND (time_created BETWEEN @start AND @end OR time_closed BETWEEN @start and @end)",
+                new { start = start, end = end, shard_id = shard_id }, buffered: false);
+        }
+
+        public IEnumerable<DbLotVisitNhood> StreamBetweenOneNhood(uint neighborhood_id, DateTime start, DateTime end)
+        {
+            return Context.Connection.Query<DbLotVisitNhood>(
+                "SELECT * FROM `fso_lot_visits` v INNER JOIN fso_lots l ON v.lot_id = l.lot_id " +
+                    "WHERE l.neighborhood_id = @neighborhood_id AND status != 'failed' " +
+                    "AND time_closed IS NOT NULL " +
+                    "AND type = 'visitor' " +
+                    "AND (time_created BETWEEN @start AND @end OR time_closed BETWEEN @start and @end)",
+                new { start = start, end = end, neighborhood_id = neighborhood_id }, buffered: false);
+        }
     }
 }

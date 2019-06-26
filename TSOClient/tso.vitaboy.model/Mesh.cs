@@ -27,9 +27,9 @@ namespace FSO.Vitaboy
         public VitaboyVertex[] VertexBuffer;
 
         private int[] BlendVertBoneIndices;
-        private Vector3[] BlendVerts;
+        public Vector3[] BlendVerts;
 
-        protected short[] IndexBuffer;
+        public short[] IndexBuffer;
         protected int NumPrimitives;
         public BoneBinding[] BoneBindings;
         public BlendData[] BlendData;

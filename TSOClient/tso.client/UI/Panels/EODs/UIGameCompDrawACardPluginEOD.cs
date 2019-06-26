@@ -160,7 +160,7 @@ namespace FSO.Client.UI.Panels.EODs
         {
             DisableButtons();
             BetterLabel.CurrentText = LoadingString;
-            Controller.ShowEODMode(new EODLiveModeOpt
+            EODController.ShowEODMode(new EODLiveModeOpt
             {
                 Buttons = 0,
                 Height = EODHeight.Tall,
@@ -833,7 +833,7 @@ namespace FSO.Client.UI.Panels.EODs
 
             UpdateGameData(gameData);
 
-            Controller.ShowEODMode(new EODLiveModeOpt
+            EODController.ShowEODMode(new EODLiveModeOpt
             {
                 Buttons = 0,
                 Height = EODHeight.Tall,
@@ -891,7 +891,7 @@ namespace FSO.Client.UI.Panels.EODs
             // update the card
             UpdateCurrentCardHandler("", cardData);
 
-            Controller.ShowEODMode(new EODLiveModeOpt
+            EODController.ShowEODMode(new EODLiveModeOpt
             {
                 Buttons = 0,
                 Height = EODHeight.Tall,
@@ -1104,7 +1104,7 @@ namespace FSO.Client.UI.Panels.EODs
             // hide delete button
             DeleteBtn.Visible = false;
 
-            Controller.ShowEODMode(new EODLiveModeOpt
+            EODController.ShowEODMode(new EODLiveModeOpt
             {
                 Buttons = 1,
                 Height = EODHeight.Tall,
@@ -1156,7 +1156,7 @@ namespace FSO.Client.UI.Panels.EODs
             DeleteBtn.Visible = false;
             SaveBtn.Visible = false;
 
-            Controller.ShowEODMode(new EODLiveModeOpt
+            EODController.ShowEODMode(new EODLiveModeOpt
             {
                 Buttons = 0,
                 Height = EODHeight.Tall,
@@ -1208,7 +1208,7 @@ namespace FSO.Client.UI.Panels.EODs
             DeleteBtn.Visible = true;
             SaveBtn.Visible = true;
             
-            Controller.ShowEODMode(new EODLiveModeOpt
+            EODController.ShowEODMode(new EODLiveModeOpt
             {
                 Buttons = 2,
                 Height = EODHeight.Tall,
@@ -1285,7 +1285,7 @@ namespace FSO.Client.UI.Panels.EODs
             DeleteBtn.Visible = true;
             SaveBtn.Visible = true;
 
-            Controller.ShowEODMode(new EODLiveModeOpt
+            EODController.ShowEODMode(new EODLiveModeOpt
             {
                 Buttons = 2,
                 Height = EODHeight.Tall,

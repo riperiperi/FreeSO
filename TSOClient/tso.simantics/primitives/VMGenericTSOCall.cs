@@ -15,6 +15,7 @@ using System.IO;
 using FSO.SimAntics.Model.TSOPlatform;
 using FSO.SimAntics.NetPlay.Drivers;
 using Microsoft.Xna.Framework;
+using FSO.SimAntics.NetPlay.Model.Commands;
 
 namespace FSO.SimAntics.Primitives
 {
@@ -87,9 +88,10 @@ namespace FSO.SimAntics.Primitives
                     //todo: set interaction result to value of temp 0. UNUSED.
                     return VMPrimitiveExitCode.GOTO_TRUE;
                 case VMGenericTSOCallMode.DoIOwnThisObject: //19
-                    context.Thread.TempRegisters[0] = (context.StackObject is VMAvatar
-                    || ((VMTSOObjectState)context.StackObject.TSOState).OwnerID != context.Caller.PersistID)
-                    ? (short)0 : (short)1;
+                    uint ownerID = GetOwnerID(context.StackObject, context);
+
+                    context.Thread.TempRegisters[0] = (ownerID != context.Caller.PersistID)
+                        ? (short)0 : (short)1;
                     return VMPrimitiveExitCode.GOTO_TRUE;
                 case VMGenericTSOCallMode.DoesTheLocalMachineSimOwnMe: //20
                     context.Thread.TempRegisters[1] = 1; //TODO
@@ -112,20 +114,67 @@ namespace FSO.SimAntics.Primitives
                     return VMPrimitiveExitCode.GOTO_TRUE;
 
                 case VMGenericTSOCallMode.LeaveLot: //25
-                    ((VMAvatar)context.Caller).UserLeaveLot();
-                    if (context.VM.GlobalLink != null)
+                    //SPECIAL: cancel all interactions with us that have not been started. 
+                    bool canLeave = true;
+                    var avaUs = ((VMAvatar)context.Caller);
+                    foreach (var ava2 in context.VM.Context.ObjectQueries.Avatars)
                     {
-                        context.VM.GlobalLink.LeaveLot(context.VM, (VMAvatar)context.Caller);
+                        if (ava2 == avaUs) continue;
+                        var queueCopy = ava2.Thread.Queue.ToList();
+                        foreach (var qitem in queueCopy)
+                        {
+                            //checking the icon owner is a bit of a hack, but it is a surefire way of detecting sim2sim interactions (callee for these is the interaction object)
+                            if (qitem.Callee == avaUs || qitem.IconOwner == avaUs) ava2.Thread.CancelAction(qitem.UID);
+                        }
+                        var action = ava2.Thread.ActiveAction;
+                        if (action != null)
+                        {
+                            //need to wait for this action to stop
+                            if (action.Callee == avaUs || action.IconOwner == avaUs) canLeave = false; //already cancelled above, but we do need to wait for it to end.
+                            else
+                            {
+                                //check the stack of this sim. ANY reference to us is dangerous, so get them to cancel their interactions gracefully.
+                                foreach (var frame in ava2.Thread.Stack)
+                                {
+                                    if (frame.Callee == avaUs || frame.StackObject == avaUs)
+                                    {
+                                        ava2.Thread.CancelAction(action.UID);
+                                        canLeave = false;
+                                    }
+                                }
+                            }
+                        }
                     }
-                    else
+                    if (canLeave)
                     {
-                        // use our stub to remove the sim and potentially disconnect the client.
-                        context.VM.CheckGlobalLink.LeaveLot(context.VM, (VMAvatar)context.Caller);
+                        ((VMAvatar)context.Caller).UserLeaveLot();
+                        if (context.VM.GlobalLink != null)
+                        {
+                            context.VM.GlobalLink.LeaveLot(context.VM, (VMAvatar)context.Caller);
+                        }
+                        else
+                        {
+                            // use our stub to remove the sim and potentially disconnect the client.
+                            context.VM.CheckGlobalLink.LeaveLot(context.VM, (VMAvatar)context.Caller);
+                        }
+                        return VMPrimitiveExitCode.GOTO_TRUE;
+                    } else
+                    {
+                        return VMPrimitiveExitCode.CONTINUE_NEXT_TICK;
                     }
-                    return VMPrimitiveExitCode.GOTO_TRUE;
 
                 // 26. UNUSED
                 case VMGenericTSOCallMode.KickoutRoommate:
+                    if (context.VM.TSOState.CommunityLot)
+                    {
+                        //remove their donator status. don't tell the database.
+                        context.VM.SendCommand(new VMChangePermissionsCmd()
+                        {
+                            TargetUID = context.StackObject.PersistID,
+                            Level = VMTSOAvatarPermissions.Visitor
+                        });
+                        return VMPrimitiveExitCode.GOTO_TRUE;
+                    }
                     if (context.VM.GlobalLink != null) context.VM.GlobalLink.RemoveRoommate(context.VM, (VMAvatar)context.StackObject);
                     return VMPrimitiveExitCode.GOTO_TRUE;
 
@@ -143,8 +192,9 @@ namespace FSO.SimAntics.Primitives
                     if (context.StackObject is VMAvatar) context.Thread.TempRegisters[0] = 0;
                     else
                     {
-                        var owner = context.VM.GetObjectByPersist(((VMTSOObjectState)context.StackObject.TSOState).OwnerID);
-                        context.Thread.TempRegisters[0] = (owner == null) ? (short)0 : owner.ObjectID;
+                        var ownerid = GetOwnerID(context.StackObject, context);
+                        var owner = context.VM.GetObjectByPersist(ownerid);
+                        context.Thread.TempRegisters[0] = (owner == null) ? (short)-1 : owner.ObjectID;
                     }
                     return VMPrimitiveExitCode.GOTO_TRUE;
 
@@ -200,12 +250,14 @@ namespace FSO.SimAntics.Primitives
                     // - Avatar we're asking must be resident of less lots than the maximum (currently 1)
                     // - This lot must have less than (MAX_ROOMIES) roommates. (currently 8)
                     // - Caller must be lot owner.
+                    // - This must not be a community lot.
                     short result = 0;
                     if (context.Caller is VMAvatar && context.Callee is VMAvatar)
                     {
                         var caller = (VMAvatar)context.Caller;
                         var callee = (VMAvatar)context.Callee;
-                        if (caller.AvatarState.Permissions == VMTSOAvatarPermissions.Owner && context.VM.TSOState.Roommates.Count < 8
+                        if (caller.AvatarState.Permissions == VMTSOAvatarPermissions.Owner && !context.VM.TSOState.CommunityLot
+                            && context.VM.TSOState.Roommates.Count < 8
                             && (((VMTSOAvatarState)callee.TSOState).Flags & VMTSOAvatarFlags.CanBeRoommate) > 0)
                         {
                             result = 2;
@@ -215,8 +267,7 @@ namespace FSO.SimAntics.Primitives
                     // 2 is "true". not sure what 1 is. (interaction shows up, but fails on trying to run it. likely "guessed" state for client)
                     return VMPrimitiveExitCode.GOTO_TRUE;
                 case VMGenericTSOCallMode.ReturnLotCategory: //39
-                    context.Thread.TempRegisters[0] = context.VM.TSOState.PropertyCategory; //skills lot. see #Lot Types in global.iff
-                    //TODO: set based on lot state
+                    context.Thread.TempRegisters[0] = context.VM.TSOState.PropertyCategory;
                     return VMPrimitiveExitCode.GOTO_TRUE;
                 case VMGenericTSOCallMode.TestStackObject: //40
                     return (context.StackObject != null) ? VMPrimitiveExitCode.GOTO_TRUE : VMPrimitiveExitCode.GOTO_FALSE;
@@ -234,8 +285,7 @@ namespace FSO.SimAntics.Primitives
                 //44. Is Full Refund (TODO: small grace period after purchase/until user exits buy mode)
                 //45. Refresh buy/build (TODO? we probably don't need this)
                 case VMGenericTSOCallMode.GetLotOwner: //46
-                    // TODO! global lot state not in yet
-                    context.Thread.TempRegisters[0] = context.Caller.ObjectID;
+                    context.Thread.TempRegisters[0] = context.VM.GetAvatarByPersist(context.VM.TSOState.OwnerID)?.ObjectID ?? 0;
                     return VMPrimitiveExitCode.GOTO_TRUE;
                 case VMGenericTSOCallMode.CopyDynObjNameFromTemp0ToTemp1: //47
                     var obj1 = context.VM.GetObjectById(context.Thread.TempRegisters[0]);
@@ -316,14 +366,46 @@ namespace FSO.SimAntics.Primitives
                         (context.StackObject as VMAvatar)?.SetPersonData(VMPersonDataVariable.NonInterruptable, 0);
                     }
 
+                    //if we're in the idle interaction, END IT INSTANTLY.
+                    if (sthread.ActiveAction?.Mode == VMQueueMode.Idle)
+                    {
+                        sthread.AbortCurrentInteraction();
+                    }
+
                     var actionClone = new List<VMQueuedAction>(sthread.Queue);
                     foreach (var action in actionClone)
                     {
                         sthread.CancelAction(action.UID);
                     }
                     return VMPrimitiveExitCode.GOTO_TRUE;
+                case VMGenericTSOCallMode.FSOClearStackObjRelationships:
+                    context.StackObject.MeToObject.Clear();
+                    context.StackObject.MeToPersist.Clear();
+                    return VMPrimitiveExitCode.GOTO_TRUE;
+                case VMGenericTSOCallMode.FSOMarkDonated:
+                    var ostate = (context.StackObject?.TSOState as VMTSOObjectState);
+                    if (ostate != null) ostate.ObjectFlags |= VMTSOObjectFlags.FSODonated;
+                    return VMPrimitiveExitCode.GOTO_TRUE;
+                case VMGenericTSOCallMode.FSOAccurateDirectionInTemp0:
+                    var dir = (short)((context.StackObject.RadianDirection / Math.PI) * 32767);
+                    context.Thread.TempRegisters[0] = dir;
+                    return VMPrimitiveExitCode.GOTO_TRUE;
                 default:
                     return VMPrimitiveExitCode.GOTO_TRUE;
+            }
+        }
+
+        private uint GetOwnerID(VMEntity obj, VMStackFrame context)
+        {
+            if (obj is VMAvatar)
+                return 0;
+            else
+            {
+                var objState = (obj.TSOState as VMTSOObjectState);
+                if (objState.ObjectFlags.HasFlag(VMTSOObjectFlags.FSODonated) && context.VM.TSOState.CommunityLot)
+                    return context.VM.TSOState.OwnerID;
+                else
+                    return objState.OwnerID;
             }
         }
     }

@@ -108,6 +108,8 @@ namespace FSO.Server.Servers.Lot.Domain
             0x50907E06, //flies - controller
             0x3161BB5B, //job controller
 
+            0x475CC813, //water balloon controller
+
             0x5157DDF2, //cat carrier
             0x3278BD34, //dog carrier
         };
@@ -230,7 +232,7 @@ namespace FSO.Server.Servers.Lot.Domain
                     return obj.ToString() + " Running ("+i+"): \r\n\r\n" + VMSimanticsException.GetStackTrace(ActiveStack);
                 } catch (Exception)
                 {
-
+                    //try to get the trace. we might a collection enumerated exception, in which case we should try again
                 }
             }
 
@@ -466,9 +468,13 @@ namespace FSO.Server.Servers.Lot.Domain
                         {
                             foreach (var e in ent.MultitileGroup.Objects) ((VMTSOObjectState)e.TSOState).OwnerID = info.owner_id ?? 0;
                         }
+
+                        //send back if they arent meant to be here
+                        //or if the object is not donated and the owner is not a roomie
                         if (info.lot_id != Context.DbId)
                             deleteMode = 2;
-                        else if (removeAll || !Lot.TSOState.Roommates.Contains(((VMTSOObjectState)ent.TSOState).OwnerID))
+                        else if (removeAll || !(Lot.TSOState.Roommates.Contains(((VMTSOObjectState)ent.TSOState).OwnerID) 
+                            || ((VMTSOObjectState)ent.TSOState).ObjectFlags.HasFlag(VMTSOObjectFlags.FSODonated)))
                             deleteMode = 1;
                     }
 
@@ -661,20 +667,46 @@ namespace FSO.Server.Servers.Lot.Domain
 
             Lot.TSOState.Terrain = Terrain;
             Lot.TSOState.Name = LotPersist.name;
-            Lot.TSOState.OwnerID = LotPersist.owner_id ?? 0;
-            Lot.TSOState.Roommates = new HashSet<uint>();
-            Lot.TSOState.BuildRoommates = new HashSet<uint>();
-            Lot.TSOState.PropertyCategory = (byte)LotPersist.category;
+            Lot.TSOState.NhoodID = LotPersist.neighborhood_id;
+            Lot.TSOState.LotID = LotPersist.location;
             Lot.TSOState.SkillMode = LotPersist.skill_mode;
-            foreach (var roomie in LotRoommates)
+            Lot.TSOState.PropertyCategory = (byte)LotPersist.category;
+
+            if (LotPersist.category == LotCategory.community)
             {
-                if (roomie.is_pending > 0) continue;
-                Lot.TSOState.Roommates.Add(roomie.avatar_id);
-                if (roomie.permissions_level > 0)
-                    Lot.TSOState.BuildRoommates.Add(roomie.avatar_id);
-                if (roomie.permissions_level > 1)
-                    Lot.TSOState.OwnerID = roomie.avatar_id;
+                var owner = LotPersist.owner_id ?? 0;
+                if (Lot.TSOState.OwnerID != owner)
+                {
+                    //a new mayor owns this property.
+                    //clear the donators lists (roomies lists)
+
+                    Lot.TSOState.Roommates.Clear();
+                    Lot.TSOState.BuildRoommates.Clear();
+
+                    Lot.TSOState.Roommates.Add(owner);
+                    Lot.TSOState.BuildRoommates.Add(owner);
+                    Lot.TSOState.OwnerID = owner;
+                }
+
+                EnsureCommunityObjects();
             }
+            else
+            {
+                Lot.TSOState.OwnerID = LotPersist.owner_id ?? 0;
+                Lot.TSOState.Roommates = new HashSet<uint>();
+                Lot.TSOState.BuildRoommates = new HashSet<uint>();
+                foreach (var roomie in LotRoommates)
+                {
+                    if (roomie.is_pending > 0) continue;
+                    Lot.TSOState.Roommates.Add(roomie.avatar_id);
+                    if (roomie.permissions_level > 0)
+                        Lot.TSOState.BuildRoommates.Add(roomie.avatar_id);
+                    if (roomie.permissions_level > 1)
+                        Lot.TSOState.OwnerID = roomie.avatar_id;
+                }
+            }
+
+            Lot.TSOState.ActivateValidator(Lot);
 
             var time = DateTime.UtcNow;
             var tsoTime = TSOTime.FromUTC(time);
@@ -714,6 +746,8 @@ namespace FSO.Server.Servers.Lot.Domain
                 {
                     ((VMGameObject)ent).Disabled &= ~VMGameObjectDisableFlags.TransactionIncomplete;
                     ((VMGameObject)ent).DisableIfTSOCategoryWrong(Lot.Context);
+                    if (ent.Object.OBJ.GUID == 0x34D777C3 && ent.GetValue(VMStackObjectVariable.Hidden) > 0)
+                        ent.SetValue(VMStackObjectVariable.Hidden, 0);
                     if (PetCrateGUIDs.Contains(ent.Object.OBJ.GUID) && ent.GetAttribute(1) == 0)
                     {
                         //if this pet isn't out, but their crate is out of world, place it near the mailbox.
@@ -763,6 +797,49 @@ namespace FSO.Server.Servers.Lot.Domain
                     Run = false,
                 });
             }
+        }
+
+        public void UpdateTuning(IEnumerable<DynTuningEntry> tuning)
+        {
+            Tuning = new DynamicTuning(tuning);
+            if (Lot == null) return;
+            if (Lot.Tuning == null || (Lot.Tuning.GetTuning("forcedTuning", 0, 0) ?? 0f) == 0f)
+            {
+                Lot.ForwardCommand(new VMNetTuningCmd()
+                {
+                    Tuning = Tuning
+                });
+            }
+        }
+
+        private static uint PAYPHONE_GUID = 0x313D2F9A;
+        private static uint NHOOD_PAYPHONE_GUID = 0x303CD603;
+        private static uint NHOOD_BULLETIN_GUID = 0x4B489F30;
+        private static uint NHOOD_BULLETIN_SMART_GUID = 0x792617D7;
+
+        private void EnsureCommunityObjects()
+        {
+            var payphones = Lot.Context.ObjectQueries.GetObjectsByGUID(PAYPHONE_GUID)?.ToList(); //clone as we will be removing them
+            if (payphones != null)
+            {
+                foreach (var phone in payphones)
+                {
+                    var pos = phone.Position;
+                    var dir = phone.Direction;
+                    phone.Delete(true, Lot.Context);
+
+                    Lot.Context.CreateObjectInstance(NHOOD_PAYPHONE_GUID, pos, dir);
+                }
+            }
+
+            var bulletin = Lot.Context.ObjectQueries.GetObjectsByGUID(NHOOD_BULLETIN_SMART_GUID)?.FirstOrDefault();
+            if (bulletin == null)
+            {
+                var mailbox = Lot.Entities.FirstOrDefault(x => (x.Object.OBJ.GUID == 0xEF121974 || x.Object.OBJ.GUID == 0x1D95C9B0));
+                bulletin = Lot.Context.CreateObjectInstance(NHOOD_BULLETIN_GUID, LotTilePos.OUT_OF_WORLD, Direction.NORTH).BaseObject;
+                SimAntics.Primitives.VMFindLocationFor.FindLocationFor(bulletin, mailbox, Lot.Context, VMPlaceRequestFlags.UserPlacement);
+            }
+
         }
 
         private void Lot_OnChatEvent(VMChatEvent evt)
@@ -850,7 +927,8 @@ namespace FSO.Server.Servers.Lot.Domain
                     //sometimes avatars can be killed immediately after their kill timer starts (this frame will run the leave lot interaction)
                     //this works around that possibility. 
                     var preTickAvatars = Lot.Context.ObjectQueries.AvatarsByPersist.Values.Select(x => x).ToList();
-                    var noRoomies = !(preTickAvatars.Any(x => ((VMTSOAvatarState)x.TSOState).Permissions > VMTSOAvatarPermissions.Visitor)) && LotPersist.admit_mode < 4;
+                    var noRoomies = !(preTickAvatars.Any(x => ((VMTSOAvatarState)x.TSOState).Permissions > VMTSOAvatarPermissions.Visitor)) 
+                        && (LotPersist.admit_mode < 4 && LotPersist.category != LotCategory.community);
 
                     try
                     {
@@ -870,13 +948,25 @@ namespace FSO.Server.Servers.Lot.Domain
                         return; //background thread has already released all our avatars and our claim. exit immediately.
                     }
 
-                    if (noRoomies)
+                    if (noRoomies && !noRemainingUsers)
                     {
-                        //no roommates are here, so all visitors must be kicked out.
-                        foreach (var avatar in preTickAvatars)
+                        if (TimeToShutdown == -1)
                         {
-                            if (avatar.KillTimeout == -1) avatar.UserLeaveLot();
-                            VMDriver.DropAvatar(avatar);
+                            TimeToShutdown = (Context.Action == ClaimAction.LOT_CLEANUP) ? 1 : TICKRATE * 40;
+                        }
+
+                        if (--TimeToShutdown < TICKRATE * 10)
+                        {
+                            //no roommates are here, so all visitors must be kicked out.
+                            if (preTickAvatars.Count > 0)
+                            {
+                                Host.Broadcast(new HashSet<uint>(), new FSOVMProtocolMessage(true, "21", "22"));
+                            }
+                            foreach (var avatar in preTickAvatars)
+                            {
+                                if (avatar.KillTimeout == -1) avatar.UserLeaveLot();
+                                VMDriver.DropAvatar(avatar);
+                            }
                         }
                     }
 
@@ -1176,6 +1266,7 @@ namespace FSO.Server.Servers.Lot.Domain
             state.Gender = (short)avatar.gender;
             state.Budget = (uint)avatar.budget;
             state.SkinTone = avatar.skin_tone;
+            state.CustomGUID = avatar.custom_guid ?? 0;
 
             var now = Epoch.Now;
             var rage = (uint)((now - user.register_date) / ((long)60 * 60 * 24));
@@ -1216,26 +1307,39 @@ namespace FSO.Server.Servers.Lot.Domain
                 };
             }
 
-            if (myRoomieLots.Count == 0)
+            if (avatar.mayor_nhood == LotPersist.neighborhood_id)
+                state.AvatarFlags |= VMTSOAvatarFlags.Mayor; //we're not roommate anywhere, so we can be here.
+
+            if (myRoomieLots.Count == 0 && LotPersist.category != LotCategory.community)
                 state.AvatarFlags |= VMTSOAvatarFlags.CanBeRoommate; //we're not roommate anywhere, so we can be here.
 
             if (rage < 7)
                 state.AvatarFlags |= VMTSOAvatarFlags.NewPlayer;
 
-            var roomieStatus = myRoomieLots.FindAll(x => x.lot_id == Context.DbId).FirstOrDefault();
-            if (roomieStatus != null && roomieStatus.is_pending == 0)
+            if (LotPersist.category == LotCategory.community)
             {
-                switch (roomieStatus.permissions_level)
+                if (LotPersist.owner_id == avatar.avatar_id)
                 {
-                    case 0:
-                        state.Permissions = VMTSOAvatarPermissions.Roommate; break;
-                    case 1:
-                        state.Permissions = VMTSOAvatarPermissions.BuildBuyRoommate; break;
-                    case 2:
-                        state.Permissions = VMTSOAvatarPermissions.Owner; break;
-                }
+                    state.Permissions = VMTSOAvatarPermissions.Owner;
+                } else state.Permissions = VMTSOAvatarPermissions.Visitor; //needs to be set by the VM.
             }
-            else state.Permissions = VMTSOAvatarPermissions.Visitor;
+            else
+            {
+                var roomieStatus = myRoomieLots.FindAll(x => x.lot_id == Context.DbId).FirstOrDefault();
+                if (roomieStatus != null && roomieStatus.is_pending == 0)
+                {
+                    switch (roomieStatus.permissions_level)
+                    {
+                        case 0:
+                            state.Permissions = VMTSOAvatarPermissions.Roommate; break;
+                        case 1:
+                            state.Permissions = VMTSOAvatarPermissions.BuildBuyRoommate; break;
+                        case 2:
+                            state.Permissions = VMTSOAvatarPermissions.Owner; break;
+                    }
+                }
+                else state.Permissions = VMTSOAvatarPermissions.Visitor;
+            }
 
             if (avatar.moderation_level > 0) state.Permissions = VMTSOAvatarPermissions.Admin;
 
@@ -1381,7 +1485,7 @@ namespace FSO.Server.Servers.Lot.Domain
 
             //if we have a null owner, this lot needs to be deleted.
 
-            if (!JobLot) {
+            if (!(JobLot || LotPersist.category == LotCategory.community)) {
                 using (var da = DAFactory.Get())
                 {
                     var lot = da.Lots.Get(Context.DbId);
@@ -1417,5 +1521,12 @@ namespace FSO.Server.Servers.Lot.Domain
             ClientCount--;
         }
 
+        public void AvatarRefresh(IVoltronSession session)
+        {
+            //Exit lot, Persist the avatars data, remove avatar lock
+            LOG.Info("Avatar " + session.AvatarId + " re-established connection to lot " + Context.DbId);
+
+            VMDriver.RefreshClient(session.AvatarId);
+        }
     }
 }

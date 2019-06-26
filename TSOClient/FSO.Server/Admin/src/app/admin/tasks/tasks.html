@@ -28,7 +28,7 @@
             <tbody md-body>
                 <tr md-row ng-repeat="task in tasks">
                     <td md-cell>{{task.task_id}}</td>
-                    <td md-cell>{{ {0:'prune_database', 1:'bonus'}[task.task_type] }}</td>
+                    <td md-cell>{{ {0:'prune_database', 1:'bonus', 2:'shutdown', 3:'job_balance', 4:'multi_check', 5:'prune_abandoned_lots', 6:'neighborhood_tick'}[task.task_type] }}</td>
                     <td md-cell>{{ task.shard_name }}</td>
                     <td md-cell>
                         <ng-md-icon title="In Progress" ng-show="task.task_status == 0" icon="timer" style="fill: orange"></ng-md-icon> 

@@ -9,6 +9,7 @@ using Microsoft.Xna.Framework.Graphics;
 using FSO.LotView.Utils;
 using FSO.Common.Utils;
 using FSO.LotView.LMap;
+using System.IO;
 
 namespace FSO.LotView.Components
 {
@@ -19,12 +20,17 @@ namespace FSO.LotView.Components
         private RoofDrawGroup[] Drawgroups;
         private Effect Effect;
         public Texture2D Texture;
+        public Texture2D ParallaxTexture;
+        public Texture2D NormalMap;
+        public Texture2D EdgeTexture;
+        public Color RoofAvgColor;
 
         public uint RoofStyle;
         public float RoofPitch;
 
         public bool StyleDirty = false;
         public bool ShapeDirty = true;
+        public float TexRescale = 1f;
 
         public void SetStylePitch(uint style, float pitch)
         {
@@ -41,10 +47,81 @@ namespace FSO.LotView.Components
             this.Effect = WorldContent.GrassEffect;
         }
 
+        private Texture2D GenMips(GraphicsDevice device, Texture2D texture)
+        {
+            var data = new Color[texture.Width * texture.Height];
+            texture.GetData(data);
+            texture.Dispose();
+            texture = new Texture2D(device, texture.Width, texture.Height, true, SurfaceFormat.Color);
+            TextureUtils.UploadWithAvgMips(texture, device, data);
+            return texture;
+        }
+
+        private void PrepTextures(GraphicsDevice device)
+        {
+            ParallaxTexture?.Dispose();
+            NormalMap?.Dispose();
+            EdgeTexture?.Dispose();
+            var roofs = Content.Content.Get().WorldRoofs;
+            var name = roofs.IDToName((int)RoofStyle);
+
+            var indu = Array.FindIndex(name.ToCharArray(), (char c) => { return c == '_' || char.IsDigit(c) || c == '.'; });
+            if (name.Contains("drk")) indu -= 3;
+
+            var searchName = (indu == -1) ? name : name.Substring(0, indu);
+
+            try
+            {
+                TexRescale = 0.2f;
+                using (var strm = File.OpenRead($"Content/Textures/roof/{searchName}.png"))
+                {
+                    Texture = Texture2D.FromStream(device, strm);
+                }
+            }
+            catch
+            {
+                TexRescale = 1f;
+                Texture = roofs.Get(name).Get(device);
+            }
+
+            ParallaxTexture = null;
+            NormalMap = null;
+            try
+            {
+                using (var strm = File.OpenRead($"Content/Textures/roof/{searchName}_h.png"))
+                {
+                    ParallaxTexture = Texture2D.FromStream(device, strm);
+                }
+
+                using (var strm = File.OpenRead($"Content/Textures/roof/{searchName}_n.png"))
+                {
+                    NormalMap = GenMips(device, Texture2D.FromStream(device, strm));
+                }
+            } catch (Exception)
+            {
+
+            }
+
+            using (var strm = File.OpenRead($"Content/Textures/roof/default_edge.png"))
+            {
+                EdgeTexture = GenMips(device, Files.ImageLoader.FromStream(device, strm));
+            }
+
+            var color = new Vector4();
+            var data = new Color[Texture.Width * Texture.Height];
+            Texture.GetData(data);
+            foreach (var col in data)
+            {
+                color += col.ToVector4();
+            }
+            color /= data.Length;
+            RoofAvgColor = new Color(color);
+        }
+
         public void RegenRoof(GraphicsDevice device)
         {
-            var roofs = Content.Content.Get().WorldRoofs;
-            Texture = roofs.Get(roofs.IDToName((int)RoofStyle)).Get(device);
+            if (Texture == null) PrepTextures(device);
+
             for (int i = 1; i <= blueprint.Stories; i++)
             {
                 RegenRoof((sbyte)(i + 1), device);
@@ -53,9 +130,9 @@ namespace FSO.LotView.Components
 
         public void RemeshRoof(GraphicsDevice device)
         {
-            var roofs = Content.Content.Get().WorldRoofs;
-            Texture = roofs.Get(roofs.IDToName((int)RoofStyle)).Get(device);
-            for (int i = 1; i < blueprint.Stories; i++)
+            PrepTextures(device);
+
+            for (int i = 1; i <= blueprint.Stories; i++)
             {
                 MeshRects((sbyte)(i + 1), device);
             }
@@ -100,18 +177,51 @@ namespace FSO.LotView.Components
             MeshRects(level, device);
         }
 
-        public Tuple<TerrainVertex[], int[], int> MeshRectData(int level)
+        private Vector2 PosToTexCRim(Vector3 pos, float ypos)
+        {
+            return new Vector2((pos.X + pos.Z) * 0.66f, ypos);
+        }
+
+        public RoofData MeshRectData(int level)
         {
             var rects = RoofRects[level - 2];
             if (rects == null) return null;
+            var advRoof = true;
 
             var numQuads = rects.Count * 4; //4 sides for each roof rectangle
-            TerrainVertex[] Geom = new TerrainVertex[numQuads * 4];
-            int[] Indexes = new int[numQuads * 6];
+            TerrainParallaxVertex[] Vertices = new TerrainParallaxVertex[numQuads * 4];
+            int[] Indices = new int[numQuads * 6];
+
+            TerrainParallaxVertex[] AdvVertices = null;
+            int[] AdvIndices = null;
+            int advNumPrimitives = 0;
+            if (advRoof)
+            {
+                //advanced roof: add down facing edges at each side,
+                //and edge guards
+                var advQuads = numQuads * (1 + 3); //1 quad for the rim, then 3 for the edge
+                advQuads += rects.Count; //bottom
+                AdvVertices = new TerrainParallaxVertex[advQuads * 4];
+                AdvIndices = new int[advQuads * 6];
+                advNumPrimitives = advQuads * 2;
+            }
 
             var numPrimitives = (numQuads * 2);
             int geomOffset = 0;
             int indexOffset = 0;
+
+            int advGeomOffset = 0;
+            int advIndexOffset = 0;
+
+            var mat3 = Matrix.CreateRotationZ((float)(Math.PI / -2f)); //good
+            var mat1 = Matrix.CreateRotationZ((float)(Math.PI / -2f));
+            var mat4 = Matrix.CreateRotationX((float)(Math.PI / 2f)) * Matrix.CreateRotationZ((float)(Math.PI / -2f)); //good
+            var mat2 = Matrix.CreateRotationX((float)(Math.PI / 2f)) * Matrix.CreateRotationZ((float)(Math.PI / 2f));
+
+            var edgeT = 0.7f;
+            var edgeO = new Vector3(0, 0.005f, 0);
+
+            var advCol = RoofAvgColor.ToVector4();
 
             foreach (var rect in rects)
             {
@@ -127,13 +237,18 @@ namespace FSO.LotView.Components
                 var tr = ToWorldPos(rect.x2, rect.y1, 0, level, pitch) + new Vector3(0, heightMod, 0);
                 var bl = ToWorldPos(rect.x1, rect.y2, 0, level, pitch) + new Vector3(0, heightMod, 0);
                 var br = ToWorldPos(rect.x2, rect.y2, 0, level, pitch) + new Vector3(0, heightMod, 0);
-
-                //middle vertices. todo: height modifier (not hard)
-
+                
                 var m_tl = ToWorldPos(rect.x1 + height, rect.y1 + height, height, level, pitch) + new Vector3(0, heightMod, 0);
                 var m_tr = ToWorldPos(rect.x2 - height, rect.y1 + height, height, level, pitch) + new Vector3(0, heightMod, 0);
                 var m_bl = ToWorldPos(rect.x1 + height, rect.y2 - height, height, level, pitch) + new Vector3(0, heightMod, 0);
                 var m_br = ToWorldPos(rect.x2 - height, rect.y2 - height, height, level, pitch) + new Vector3(0, heightMod, 0);
+
+                var thickness = new Vector3(0, -0.5f, 0);
+
+                var b_tl = tl+thickness;
+                var b_tr = tr+thickness;
+                var b_bl = bl+thickness;
+                var b_br = br+thickness;
 
                 Color topCol = Color.White; //Color.Lerp(Color.White, new Color(175, 175, 175), pitch);
                 Color rightCol = Color.White; //Color.White;
@@ -144,74 +259,194 @@ namespace FSO.LotView.Components
                 //quad as two tris
                 for (int j = 0; j < 16; j += 4)
                 {
-                    Indexes[indexOffset++] = (geomOffset + 2) + j;
-                    Indexes[indexOffset++] = (geomOffset + 1) + j;
-                    Indexes[indexOffset++] = geomOffset + j;
+                    Indices[indexOffset++] = (geomOffset + 2) + j;
+                    Indices[indexOffset++] = (geomOffset + 1) + j;
+                    Indices[indexOffset++] = geomOffset + j;
 
-                    Indexes[indexOffset++] = geomOffset + j;
-                    Indexes[indexOffset++] = (geomOffset + 3) + j;
-                    Indexes[indexOffset++] = (geomOffset + 2) + j;
+                    Indices[indexOffset++] = geomOffset + j;
+                    Indices[indexOffset++] = (geomOffset + 3) + j;
+                    Indices[indexOffset++] = (geomOffset + 2) + j;
                 }
 
                 var n1 = -Vector3.Normalize(Vector3.Cross(tl - tr, tr - m_tr));
-                var n1m = Vector3.Normalize(n1 + Vector3.Up);
-                Vector2 texScale = new Vector2(2 / 3f, 1f);
-                Geom[geomOffset++] = new TerrainVertex(tl, topCol.ToVector4(), new Vector2(tl.X, tl.Z * -1) * texScale, 0, n1);
-                Geom[geomOffset++] = new TerrainVertex(tr, topCol.ToVector4(), new Vector2(tr.X, tr.Z * -1) * texScale, 0, n1);
-                Geom[geomOffset++] = new TerrainVertex(m_tr, topCol.ToVector4(), new Vector2(m_tr.X, m_tr.Z * -1) * texScale, 0, n1m);
-                Geom[geomOffset++] = new TerrainVertex(m_tl, topCol.ToVector4(), new Vector2(m_tl.X, m_tl.Z * -1) * texScale, 0, n1m);
+                Vector2 texScale = new Vector2(2 / 3f, 1f) * TexRescale;
+                Vertices[geomOffset++] = new TerrainParallaxVertex(tl, topCol.ToVector4(), new Vector2(tl.X, tl.Z * -1) * texScale, 0, n1, mat1, true);
+                Vertices[geomOffset++] = new TerrainParallaxVertex(tr, topCol.ToVector4(), new Vector2(tr.X, tr.Z * -1) * texScale, 0, n1, mat1, true);
+                Vertices[geomOffset++] = new TerrainParallaxVertex(m_tr, topCol.ToVector4()*1.25f, new Vector2(m_tr.X, m_tr.Z * -1) * texScale, 0, n1, mat1, true);
+                Vertices[geomOffset++] = new TerrainParallaxVertex(m_tl, topCol.ToVector4() * 1.25f, new Vector2(m_tl.X, m_tl.Z * -1) * texScale, 0, n1, mat1, true);
 
-                n1 = -Vector3.Normalize(Vector3.Cross(tr - br, br - m_br));
-                n1m = Vector3.Normalize(n1 + Vector3.Up);
-                Geom[geomOffset++] = new TerrainVertex(tr, rightCol.ToVector4(), new Vector2(tr.Z, tr.X) * texScale, 0, n1);
-                Geom[geomOffset++] = new TerrainVertex(br, rightCol.ToVector4(), new Vector2(br.Z, br.X) * texScale, 0, n1);
-                Geom[geomOffset++] = new TerrainVertex(m_br, rightCol.ToVector4(), new Vector2(m_br.Z, m_br.X) * texScale, 0, n1m);
-                Geom[geomOffset++] = new TerrainVertex(m_tr, rightCol.ToVector4(), new Vector2(m_tr.Z, m_tr.X) * texScale, 0, n1m);
+                var n2 = -Vector3.Normalize(Vector3.Cross(tr - br, br - m_br));
+                Vertices[geomOffset++] = new TerrainParallaxVertex(tr, rightCol.ToVector4(), new Vector2(tr.Z, tr.X) * texScale, 0, n2, mat2, true);
+                Vertices[geomOffset++] = new TerrainParallaxVertex(br, rightCol.ToVector4(), new Vector2(br.Z, br.X) * texScale, 0, n2, mat2, true);
+                Vertices[geomOffset++] = new TerrainParallaxVertex(m_br, rightCol.ToVector4() * 1.25f, new Vector2(m_br.Z, m_br.X) * texScale, 0, n2, mat2, true);
+                Vertices[geomOffset++] = new TerrainParallaxVertex(m_tr, rightCol.ToVector4() * 1.25f, new Vector2(m_tr.Z, m_tr.X) * texScale, 0, n2, mat2, true);
 
-                n1 = -Vector3.Normalize(Vector3.Cross(br - bl, bl - m_bl));
-                n1m = Vector3.Normalize(n1 + Vector3.Up);
-                Geom[geomOffset++] = new TerrainVertex(br, btmCol.ToVector4(), new Vector2(br.X, br.Z) * texScale, 0, n1);
-                Geom[geomOffset++] = new TerrainVertex(bl, btmCol.ToVector4(), new Vector2(bl.X, bl.Z) * texScale, 0, n1);
-                Geom[geomOffset++] = new TerrainVertex(m_bl, btmCol.ToVector4(), new Vector2(m_bl.X, m_bl.Z) * texScale, 0, n1m);
-                Geom[geomOffset++] = new TerrainVertex(m_br, btmCol.ToVector4(), new Vector2(m_br.X, m_br.Z) * texScale, 0, n1m);
+                var n3 = -Vector3.Normalize(Vector3.Cross(br - bl, bl - m_bl));
+                Vertices[geomOffset++] = new TerrainParallaxVertex(br, btmCol.ToVector4(), new Vector2(br.X, br.Z) * texScale, 0, n3, mat3, false);
+                Vertices[geomOffset++] = new TerrainParallaxVertex(bl, btmCol.ToVector4(), new Vector2(bl.X, bl.Z) * texScale, 0, n3, mat3, false);
+                Vertices[geomOffset++] = new TerrainParallaxVertex(m_bl, btmCol.ToVector4() * 1.25f, new Vector2(m_bl.X, m_bl.Z) * texScale, 0, n3, mat3, false);
+                Vertices[geomOffset++] = new TerrainParallaxVertex(m_br, btmCol.ToVector4() * 1.25f, new Vector2(m_br.X, m_br.Z) * texScale, 0, n3, mat3, false);
 
-                n1 = -Vector3.Normalize(Vector3.Cross(bl - tl, tl - m_tl));
-                n1m = Vector3.Normalize(n1 + Vector3.Up);
-                Geom[geomOffset++] = new TerrainVertex(bl, leftCol.ToVector4(), new Vector2(bl.Z, bl.X * -1) * texScale, 0, n1);
-                Geom[geomOffset++] = new TerrainVertex(tl, leftCol.ToVector4(), new Vector2(tl.Z, tl.X * -1) * texScale, 0, n1);
-                Geom[geomOffset++] = new TerrainVertex(m_tl, leftCol.ToVector4(), new Vector2(m_tl.Z, m_tl.X * -1) * texScale, 0, n1m);
-                Geom[geomOffset++] = new TerrainVertex(m_bl, leftCol.ToVector4(), new Vector2(m_bl.Z, m_bl.X * -1) * texScale, 0, n1m);
+                var n4 = -Vector3.Normalize(Vector3.Cross(bl - tl, tl - m_tl));
+                Vertices[geomOffset++] = new TerrainParallaxVertex(bl, leftCol.ToVector4(), new Vector2(bl.Z, bl.X * -1) * texScale, 0, n4, mat4, false);
+                Vertices[geomOffset++] = new TerrainParallaxVertex(tl, leftCol.ToVector4(), new Vector2(tl.Z, tl.X * -1) * texScale, 0, n4, mat4, false);
+                Vertices[geomOffset++] = new TerrainParallaxVertex(m_tl, leftCol.ToVector4() * 1.25f, new Vector2(m_tl.Z, m_tl.X * -1) * texScale, 0, n4, mat4, false);
+                Vertices[geomOffset++] = new TerrainParallaxVertex(m_bl, leftCol.ToVector4() * 1.25f, new Vector2(m_bl.Z, m_bl.X * -1) * texScale, 0, n4, mat4, false);
+
+                if (advRoof)
+                {
+                    for (int j = 0; j < 20; j += 4)
+                    {
+                        AdvIndices[advIndexOffset++] = (advGeomOffset + 2) + j;
+                        AdvIndices[advIndexOffset++] = (advGeomOffset + 1) + j;
+                        AdvIndices[advIndexOffset++] = advGeomOffset + j;
+
+                        AdvIndices[advIndexOffset++] = advGeomOffset + j;
+                        AdvIndices[advIndexOffset++] = (advGeomOffset + 3) + j;
+                        AdvIndices[advIndexOffset++] = (advGeomOffset + 2) + j;
+                    }
+
+                    //thickness
+                    var n5 = Vector3.Normalize(Vector3.Cross(tl - tr, tr - b_tr));
+                    AdvVertices[advGeomOffset++] = new TerrainParallaxVertex(b_tr, advCol, PosToTexCRim(b_tr, 0.73f), 0, n5, mat1, true);
+                    AdvVertices[advGeomOffset++] = new TerrainParallaxVertex(tr, advCol, PosToTexCRim(tr, 0.4f), 0, n5, mat1, true);
+                    AdvVertices[advGeomOffset++] = new TerrainParallaxVertex(tl, advCol, PosToTexCRim(tl, 0.4f), 0, n5, mat1, true);
+                    AdvVertices[advGeomOffset++] = new TerrainParallaxVertex(b_tl, advCol, PosToTexCRim(b_tl, 0.73f), 0, n5, mat1, true);
+
+                    n5 = Vector3.Normalize(Vector3.Cross(tr - br, br - b_br));
+                    AdvVertices[advGeomOffset++] = new TerrainParallaxVertex(b_br, advCol, PosToTexCRim(b_br, 0.73f), 0, n5, mat2, true);
+                    AdvVertices[advGeomOffset++] = new TerrainParallaxVertex(br, advCol, PosToTexCRim(br, 0.4f), 0, n5, mat2, true);
+                    AdvVertices[advGeomOffset++] = new TerrainParallaxVertex(tr, advCol, PosToTexCRim(tr, 0.4f), 0, n5, mat2, true);
+                    AdvVertices[advGeomOffset++] = new TerrainParallaxVertex(b_tr, advCol, PosToTexCRim(b_tr, 0.73f), 0, n5, mat2, true);
+
+                    n5 = Vector3.Normalize(Vector3.Cross(br - bl, bl - b_bl));
+                    AdvVertices[advGeomOffset++] = new TerrainParallaxVertex(b_bl, advCol, PosToTexCRim(b_bl, 0.73f), 0, n5, mat3, false);
+                    AdvVertices[advGeomOffset++] = new TerrainParallaxVertex(bl, advCol, PosToTexCRim(bl, 0.4f), 0, n5, mat3, false);
+                    AdvVertices[advGeomOffset++] = new TerrainParallaxVertex(br, advCol, PosToTexCRim(br, 0.4f), 0, n5, mat3, false);
+                    AdvVertices[advGeomOffset++] = new TerrainParallaxVertex(b_br, advCol, PosToTexCRim(b_br, 0.73f), 0, n5, mat3, false);
+
+                    n5 = Vector3.Normalize(Vector3.Cross(bl - tl, tl - b_tl));
+                    AdvVertices[advGeomOffset++] = new TerrainParallaxVertex(b_tl, advCol, PosToTexCRim(b_tl, 0.73f), 0, n5, mat4, false);
+                    AdvVertices[advGeomOffset++] = new TerrainParallaxVertex(tl, advCol, PosToTexCRim(tl, 0.4f), 0, n5, mat4, false);
+                    AdvVertices[advGeomOffset++] = new TerrainParallaxVertex(bl, advCol, PosToTexCRim(bl, 0.4f), 0, n5, mat4, false);
+                    AdvVertices[advGeomOffset++] = new TerrainParallaxVertex(b_bl, advCol, PosToTexCRim(b_bl, 0.73f), 0, n5, mat4, false);
+
+                    //bottom (solid black)
+
+                    n5 = Vector3.Normalize(Vector3.Cross(b_tl - b_br, b_br - b_bl));
+                    AdvVertices[advGeomOffset++] = new TerrainParallaxVertex(b_bl, advCol, new Vector2(0, 0.4f+0.33f), 0, n5, mat4, false);
+                    AdvVertices[advGeomOffset++] = new TerrainParallaxVertex(b_br, advCol, new Vector2(0, 0.4f + 0.33f), 0, n5, mat4, false);
+                    AdvVertices[advGeomOffset++] = new TerrainParallaxVertex(b_tr, advCol, new Vector2(0, 0.4f + 0.33f), 0, n5, mat4, false);
+                    AdvVertices[advGeomOffset++] = new TerrainParallaxVertex(b_tl, advCol, new Vector2(0, 0.4f + 0.33f), 0, n5, mat4, false);
+
+                    //outer edge: 3 quads for top, left and right edges (on each side!)
+
+                    Action<Vector3, Vector3, Vector3, Vector3, Vector3, Matrix, bool> addEdge = (l, r, m_l, m_r, normal, mat, flip) =>
+                    {
+                        var lToR = r - l;
+                        lToR.Normalize();
+                        var lInner = l + lToR * edgeT;
+                        var rInner = r - lToR * edgeT;
+
+                        var mlToL = l - m_l;
+                        var diagLength = mlToL.Length();
+                        mlToL.Normalize();
+                        var mlInner = m_l + (mlToL + lToR) * edgeT;
+                        var innerDiagLength = (mlInner - lInner).Length();
+
+                        var mrToR = r - m_r;
+                        mrToR.Normalize();
+                        var mrInner = m_r + (mrToR - lToR) * edgeT;
+
+                        for (int j = 0; j < 12; j += 4)
+                        {
+                            AdvIndices[advIndexOffset++] = (advGeomOffset + 2) + j;
+                            AdvIndices[advIndexOffset++] = (advGeomOffset + 1) + j;
+                            AdvIndices[advIndexOffset++] = advGeomOffset + j;
+
+                            AdvIndices[advIndexOffset++] = advGeomOffset + j;
+                            AdvIndices[advIndexOffset++] = (advGeomOffset + 3) + j;
+                            AdvIndices[advIndexOffset++] = (advGeomOffset + 2) + j;
+                        }
+
+                        var idOff = (diagLength - innerDiagLength) * 0.1f;
+                        var hmul = 0.5f;
+                        AdvVertices[advGeomOffset++] = new TerrainParallaxVertex(mlInner + edgeO, advCol, new Vector2(-idOff * hmul, 0.33f), 0, normal, mat, flip);
+                        AdvVertices[advGeomOffset++] = new TerrainParallaxVertex(m_l + edgeO, advCol, new Vector2(0, 0), 0, normal, mat, flip);
+                        AdvVertices[advGeomOffset++] = new TerrainParallaxVertex(l + edgeO, advCol, new Vector2(diagLength * -hmul, 0), 0, normal, mat, flip);
+                        AdvVertices[advGeomOffset++] = new TerrainParallaxVertex(lInner + edgeO, advCol, new Vector2((idOff + innerDiagLength) * -hmul, 0.33f), 0, normal, mat, flip);
+
+                        var topLength = (m_r - m_l).Length();
+                        var innerTopLength = (mrInner - mlInner).Length();
+                        var itOff = (topLength - innerTopLength) / 2;
+
+                        AdvVertices[advGeomOffset++] = new TerrainParallaxVertex(mrInner + edgeO, advCol, new Vector2((itOff + innerTopLength) * hmul, 0.33f), 0, normal, mat, flip);
+                        AdvVertices[advGeomOffset++] = new TerrainParallaxVertex(m_r + edgeO, advCol, new Vector2(topLength* hmul, 0), 0, normal, mat, flip);
+                        AdvVertices[advGeomOffset++] = new TerrainParallaxVertex(m_l + edgeO, advCol, new Vector2(0, 0), 0, normal, mat, flip);
+                        AdvVertices[advGeomOffset++] = new TerrainParallaxVertex(mlInner + edgeO, advCol, new Vector2(itOff * hmul, 0.33f), 0, normal, mat, flip);
+
+                        AdvVertices[advGeomOffset++] = new TerrainParallaxVertex(mrInner + edgeO, advCol, new Vector2((topLength + idOff) * hmul, 0.33f), 0, normal, mat, flip);
+                        AdvVertices[advGeomOffset++] = new TerrainParallaxVertex(rInner + edgeO, advCol, new Vector2((topLength + idOff + innerDiagLength) * hmul, 0.33f), 0, normal, mat, flip);
+                        AdvVertices[advGeomOffset++] = new TerrainParallaxVertex(r + edgeO, advCol, new Vector2((topLength + diagLength) * hmul, 0f), 0, normal, mat, flip);
+                        AdvVertices[advGeomOffset++] = new TerrainParallaxVertex(m_r + edgeO, advCol, new Vector2(topLength * hmul, 0f), 0, normal, mat, flip);
+                    };
+
+                    addEdge(tl, tr, m_tl, m_tr, n1, mat1, true);
+                    addEdge(tr, br, m_tr, m_br, n2, mat2, true);
+                    addEdge(br, bl, m_br, m_bl, n3, mat3, false);
+                    addEdge(bl, tl, m_bl, m_tl, n4, mat4, false);
+                }
             }
 
-            return new Tuple<TerrainVertex[], int[], int>(Geom, Indexes, numPrimitives);
+            var result = new RoofData()
+            {
+                Vertices = Vertices,
+                Indices = Indices,
+                NumPrimitives = numPrimitives,
+
+                AdvVertices = AdvVertices,
+                AdvIndices = AdvIndices,
+                AdvNumPrimitives = advNumPrimitives
+            };
+
+            return result;
         }
 
         public void MeshRects(int level, GraphicsDevice device)
         {
             var data = MeshRectData(level);
             if (data == null) return;
-
-            var Geom = data.Item1;
-            var Indexes = data.Item2;
-            var numPrimitives = data.Item3;
-
+            
             if (Drawgroups[level - 2] != null && Drawgroups[level - 2].NumPrimitives > 0)
             {
                 Drawgroups[level - 2].VertexBuffer.Dispose();
                 Drawgroups[level - 2].IndexBuffer.Dispose();
+
+                Drawgroups[level - 2].AdvVertexBuffer?.Dispose();
+                Drawgroups[level - 2].AdvIndexBuffer?.Dispose();
             }
 
             var result = new RoofDrawGroup();
-            if (numPrimitives > 0)
+            if (data.NumPrimitives > 0)
             {
-                result.VertexBuffer = new VertexBuffer(device, typeof(TerrainVertex), Geom.Length, BufferUsage.None);
-                if (Geom.Length > 0) result.VertexBuffer.SetData(Geom);
+                result.VertexBuffer = new VertexBuffer(device, typeof(TerrainParallaxVertex), data.Vertices.Length, BufferUsage.None);
+                if (data.Vertices.Length > 0) result.VertexBuffer.SetData(data.Vertices);
 
-                result.IndexBuffer = new IndexBuffer(device, IndexElementSize.ThirtyTwoBits, sizeof(int) * Indexes.Length, BufferUsage.None);
-                if (Geom.Length > 0) result.IndexBuffer.SetData(Indexes);
+                result.IndexBuffer = new IndexBuffer(device, IndexElementSize.ThirtyTwoBits, sizeof(int) * data.Indices.Length, BufferUsage.None);
+                if (data.Vertices.Length > 0) result.IndexBuffer.SetData(data.Indices);
             }
 
-            result.NumPrimitives = numPrimitives;
+            if (data.AdvNumPrimitives > 0)
+            {
+                result.AdvVertexBuffer = new VertexBuffer(device, typeof(TerrainParallaxVertex), data.AdvVertices.Length, BufferUsage.None);
+                if (data.AdvVertices.Length > 0) result.AdvVertexBuffer.SetData(data.AdvVertices);
+
+                result.AdvIndexBuffer = new IndexBuffer(device, IndexElementSize.ThirtyTwoBits, sizeof(int) * data.AdvIndices.Length, BufferUsage.None);
+                if (data.AdvVertices.Length > 0) result.AdvIndexBuffer.SetData(data.AdvIndices);
+            }
+
+            result.NumPrimitives = data.NumPrimitives;
+            result.AdvNumPrimitives = data.AdvNumPrimitives;
 
             Drawgroups[level - 2] = result;
         }
@@ -490,12 +725,16 @@ namespace FSO.LotView.Components
                 {
                     buf.IndexBuffer.Dispose();
                     buf.VertexBuffer.Dispose();
+                    
+                    buf.AdvIndexBuffer?.Dispose();
+                    buf.AdvVertexBuffer?.Dispose();
                 }
             }
         }
 
         public override void Draw(GraphicsDevice device, WorldState world)
         {
+            var enableParallax = WorldConfig.Current.Complex && ParallaxTexture != null;
             device.RasterizerState = RasterizerState.CullNone;
             if (ShapeDirty)
             {
@@ -509,6 +748,7 @@ namespace FSO.LotView.Components
                 StyleDirty = false;
             }
 
+            device.RasterizerState = RasterizerState.CullClockwise;
             for (int i = 0; i < Drawgroups.Length; i++)
             {
                 if (i > world.Level - 1) return;
@@ -528,17 +768,36 @@ namespace FSO.LotView.Components
                         Effect.Parameters["IgnoreColor"].SetValue(false);
                         Effect.Parameters["TexOffset"].SetValue(Vector2.Zero);
                         Effect.Parameters["TexMatrix"].SetValue(new Vector4(1, 0, 0, 1));
+                        Effect.Parameters["ParallaxUVTexMat"]?.SetValue(new Vector4(1, 0, 1, 0));
+                        Effect.Parameters["ParallaxHeight"]?.SetValue(0.2f * TexRescale);
+                        Effect.Parameters["ParallaxTex"]?.SetValue(ParallaxTexture);
+                        Effect.Parameters["NormalMapTex"]?.SetValue(NormalMap);
+                        Effect.Parameters["GrassShininess"].SetValue(0.01f);//005f);
+
+                        var baseShad = (enableParallax) ? 3 : 2;
 
                         device.SetVertexBuffer(dg.VertexBuffer);
                         device.Indices = dg.IndexBuffer;
 
                         Effect.CurrentTechnique = Effect.Techniques["DrawBase"];
-                        var pass = Effect.CurrentTechnique.Passes[(Common.FSOEnvironment.Enable3D && (world as RC.WorldStateRC)?.Use2DCam == false)?2:WorldConfig.Current.PassOffset];
+                        var pass = Effect.CurrentTechnique.Passes[(Common.FSOEnvironment.Enable3D && (world as RC.WorldStateRC)?.Use2DCam == false)?baseShad:WorldConfig.Current.PassOffset];
                         pass.Apply();
                         device.DrawIndexedPrimitives(PrimitiveType.TriangleList, 0, 0, dg.NumPrimitives);
+
+                        if (dg.AdvNumPrimitives > 0)
+                        {
+                            device.SetVertexBuffer(dg.AdvVertexBuffer);
+                            device.Indices = dg.AdvIndexBuffer;
+                            Effect.Parameters["BaseTex"].SetValue(EdgeTexture);
+                            Effect.Parameters["GrassShininess"].SetValue(0.003f);
+                            pass = Effect.CurrentTechnique.Passes[(Common.FSOEnvironment.Enable3D && (world as RC.WorldStateRC)?.Use2DCam == false) ? 2 : WorldConfig.Current.PassOffset];
+                            pass.Apply();
+                            device.DrawIndexedPrimitives(PrimitiveType.TriangleList, 0, 0, dg.AdvNumPrimitives);
+                        }
                     });
                 }
             }
+            device.RasterizerState = RasterizerState.CullNone;
         }
 
         public void DrawOne(GraphicsDevice device, Matrix view, Matrix projection, WorldState world, int i)
@@ -582,6 +841,17 @@ namespace FSO.LotView.Components
                 var pass = Effect.CurrentTechnique.Passes[2];
                 pass.Apply();
                 device.DrawIndexedPrimitives(PrimitiveType.TriangleList, 0, 0, dg.NumPrimitives);
+
+                if (dg.AdvNumPrimitives > 0)
+                {
+                    device.SetVertexBuffer(dg.AdvVertexBuffer);
+                    device.Indices = dg.AdvIndexBuffer;
+                    Effect.Parameters["BaseTex"].SetValue(EdgeTexture);
+                    Effect.Parameters["GrassShininess"].SetValue(0.003f);
+                    pass = Effect.CurrentTechnique.Passes[2];
+                    pass.Apply();
+                    device.DrawIndexedPrimitives(PrimitiveType.TriangleList, 0, 0, dg.AdvNumPrimitives);
+                }
             }
         }
 
@@ -637,10 +907,25 @@ namespace FSO.LotView.Components
         }
     }
 
+    public class RoofData
+    {
+        public int[] Indices;
+        public TerrainParallaxVertex[] Vertices;
+        public int NumPrimitives;
+
+        public int[] AdvIndices;
+        public TerrainParallaxVertex[] AdvVertices;
+        public int AdvNumPrimitives;
+    }
+
     public class RoofDrawGroup
     {
         public IndexBuffer IndexBuffer;
         public VertexBuffer VertexBuffer;
         public int NumPrimitives;
+        
+        public IndexBuffer AdvIndexBuffer;
+        public VertexBuffer AdvVertexBuffer;
+        public int AdvNumPrimitives;
     }
 }

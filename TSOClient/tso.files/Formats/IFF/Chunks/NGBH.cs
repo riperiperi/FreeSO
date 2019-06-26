@@ -45,6 +45,7 @@ namespace FSO.Files.Formats.IFF.Chunks
                     NeighborhoodData[i] = io.ReadInt16();
                 }
 
+                if (!io.HasMore) return; //no inventory present (yet)
                 var count = io.ReadInt32();
                 for (int i = 0; i < count; i++)
                 {
@@ -75,7 +76,7 @@ namespace FSO.Files.Formats.IFF.Chunks
                     io.WriteInt16(NeighborhoodData[i]);
                 }
 
-                io.WriteInt32(NeighborhoodData.Length);
+                io.WriteInt32(InventoryByID.Count);
                 foreach (var item in InventoryByID)
                 {
                     io.WriteInt32(1);

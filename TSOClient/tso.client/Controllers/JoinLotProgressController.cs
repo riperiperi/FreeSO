@@ -37,50 +37,53 @@ namespace FSO.Client.Controllers
         private void Regulator_OnError(object data)
         {
             //UIScreen.RemoveDialog(View);
-
-            GameFacade.Cursor.SetCursor(CursorType.Normal);
-
-            var errorTitle = GameFacade.Strings.GetString("211", "45");
-            var errorBody = GameFacade.Strings.GetString("211", "45");
-
-            if (data is FindLotResponseStatus)
+            GameThread.InUpdate(() =>
             {
-                var status = (FindLotResponseStatus)data;
+                GameFacade.Cursor.SetCursor(CursorType.Normal);
 
-                switch (status)
+                var errorTitle = GameFacade.Strings.GetString("211", "45");
+                var errorBody = GameFacade.Strings.GetString("211", "45");
+
+                if (data is FindLotResponseStatus)
                 {
-                    case FindLotResponseStatus.NOT_OPEN:
-                    case FindLotResponseStatus.NOT_PERMITTED_TO_OPEN:
-                        errorTitle = GameFacade.Strings.GetString("211", "7");
-                        errorBody = GameFacade.Strings.GetString("211", "8");
-                        break;
-                    case FindLotResponseStatus.NO_CAPACITY:
-                        errorTitle = GameFacade.Strings.GetString("211", "11");
-                        errorBody = GameFacade.Strings.GetString("211", "12");
-                        break;
-                    case FindLotResponseStatus.CLAIM_FAILED:
-                        errorTitle = GameFacade.Strings.GetString("211", "45");
-                        errorBody = GameFacade.Strings.GetString("211", "41");
-                        break;
-                    case FindLotResponseStatus.NO_ADMIT:
-                        errorTitle = GameFacade.Strings.GetString("211", "45");
-                        errorBody = GameFacade.Strings.GetString("211", "42");
-                        break;
-                    default:
-                        break;
-                }
-            }
+                    var status = (FindLotResponseStatus)data;
 
-            UIAlert alert = null;
-            alert = UIScreen.GlobalShowAlert(new UIAlertOptions()
-            {
-                Title = errorTitle,
-                Message = errorBody,
-                Buttons = UIAlertButton.Ok(x => {
-                    UIScreen.RemoveDialog(View);
-                    UIScreen.RemoveDialog(alert);
-                })
-            }, true);
+                    switch (status)
+                    {
+                        case FindLotResponseStatus.NOT_OPEN:
+                        case FindLotResponseStatus.NOT_PERMITTED_TO_OPEN:
+                            errorTitle = GameFacade.Strings.GetString("211", "7");
+                            errorBody = GameFacade.Strings.GetString("211", "8");
+                            break;
+                        case FindLotResponseStatus.NO_CAPACITY:
+                            errorTitle = GameFacade.Strings.GetString("211", "11");
+                            errorBody = GameFacade.Strings.GetString("211", "12");
+                            break;
+                        case FindLotResponseStatus.CLAIM_FAILED:
+                            errorTitle = GameFacade.Strings.GetString("211", "45");
+                            errorBody = GameFacade.Strings.GetString("211", "41");
+                            break;
+                        case FindLotResponseStatus.NO_ADMIT:
+                            errorTitle = GameFacade.Strings.GetString("211", "45");
+                            errorBody = GameFacade.Strings.GetString("211", "42");
+                            break;
+                        default:
+                            break;
+                    }
+                }
+
+                UIAlert alert = null;
+                alert = UIScreen.GlobalShowAlert(new UIAlertOptions()
+                {
+                    Title = errorTitle,
+                    Message = errorBody,
+                    Buttons = UIAlertButton.Ok(x =>
+                    {
+                        UIScreen.RemoveDialog(View);
+                        UIScreen.RemoveDialog(alert);
+                    })
+                }, true);
+            });
         }
 
         private void Regulator_OnTransition(string state, object data)

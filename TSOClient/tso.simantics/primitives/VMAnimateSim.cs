@@ -29,10 +29,15 @@ namespace FSO.SimAntics.Engine.Primitives
             Animation animation = null;
             var id = (operand.IDFromParam) ? (ushort)(context.Args[operand.AnimationID]) : operand.AnimationID;
 
-            var newMode = (context.VM.Tuning?.GetTuning("feature", 0, 0) ?? 0) != 0; //might need to disable this suddenly - too many things to test
+            var newMode = true; // (context.VM.Tuning?.GetTuning("feature", 0, 0) ?? 0) != 0; //might need to disable this suddenly - too many things to test
 
             if (id == 0)
             { //reset
+                if (operand.Mode == 3)
+                {
+                    avatar.CarryAnimationState = null;
+                    return VMPrimitiveExitCode.GOTO_TRUE;
+                }
                 avatar.Animations.Clear();
                 var posture = avatar.GetPersonData(VMPersonDataVariable.Posture);
 
@@ -263,6 +268,12 @@ namespace FSO.SimAntics.Engine.Primitives
             get
             {
                 return (byte)((Flags&1) | ((Flags >> 3) & 2));
+            }
+
+            set
+            {
+                Flags &= unchecked((byte)~(1 | (2 << 3)));
+                Flags |= (byte)((value & 1) | ((value & 2) << 3));
             }
         }
 

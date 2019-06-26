@@ -54,6 +54,12 @@ namespace FSO.Server.Protocol.Electron.Packets
         IN_LOT_CANT_EVICT = 0x06,
         NOT_OFFLINE_FOR_MOVE = 0x07,
         LOCATION_TAKEN = 0x08,
+        NHOOD_RESERVED = 0x09,
+
+        TH_NOT_MAYOR = 0x80,
+        TH_INCORRECT_NHOOD = 0x81,
+
+
         UNKNOWN = 0xFF
     }
 }

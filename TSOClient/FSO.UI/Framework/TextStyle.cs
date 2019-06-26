@@ -12,6 +12,7 @@ using Microsoft.Xna.Framework.Graphics;
 using FSO.Client.UI.Framework.Parser;
 using Microsoft.Xna.Framework;
 using FSO.Client.UI.Model;
+using FSO.UI.Framework;
 
 namespace FSO.Client.UI.Framework
 {
@@ -22,6 +23,7 @@ namespace FSO.Client.UI.Framework
         public static TextStyle DefaultButton;
 
         public Font Font;
+        public MSDFFont VFont;
         public bool Shadow; //some text has a shadow
         private int m_pxSize;
 
@@ -41,6 +43,7 @@ namespace FSO.Client.UI.Framework
                 Color = this.Color,
                 CursorColor = this.CursorColor,
                 Font = this.Font,
+                VFont = this.VFont,
                 SelectedColor = this.SelectedColor,
                 SelectionBoxColor = this.SelectionBoxColor,
                 Size = this.Size,
@@ -69,9 +72,17 @@ namespace FSO.Client.UI.Framework
 
         public Vector2 MeasureString(string text)
         {
-            SpriteFont.DefaultCharacter = '*';
-            var result = SpriteFont.MeasureString(text);
-            return result * Scale;
+            if (VFont != null)
+            {
+                var result = VFont.MeasureString(text);
+                return result * Scale;
+            }
+            else
+            {
+                SpriteFont.DefaultCharacter = '*';
+                var result = SpriteFont.MeasureString(text);
+                return result * Scale;
+            }
         }
 
         public string TruncateToWidth(string text, int width)
@@ -103,10 +114,19 @@ namespace FSO.Client.UI.Framework
             {
                 m_pxSize = value;
 
-                var bestFont = Font.GetNearest(m_pxSize);
-                SpriteFont = bestFont.Font;
-                Scale = ((float)m_pxSize) / ((float)bestFont.Size);
-                BaselineOffset = (float)Math.Floor(((m_pxSize + 5) * Scale));
+
+                if (VFont != null)
+                {
+                    Scale = (m_pxSize * VFont.VectorScale) / 11.5f;
+                    BaselineOffset = m_pxSize + 5;
+                }
+                else
+                {
+                    var bestFont = Font.GetNearest(m_pxSize);
+                    SpriteFont = bestFont.Font;
+                    Scale = ((float)m_pxSize) / ((float)bestFont.Size);
+                    BaselineOffset = m_pxSize + 5 + (float)Math.Floor(((m_pxSize + 5) * Scale));
+                }
             }
         }
 
@@ -123,12 +143,12 @@ namespace FSO.Client.UI.Framework
                     _LineHeight = (int)MeasureString("D").Y;
                 }
 
-                return _LineHeight.Value;
+                return _LineHeight.Value + LineHeightModifier;
             }
         }
 
         public SpriteFont SpriteFont { get; internal set; }
-        public float Scale { get; internal set; }
+        public float Scale { get; set; }
 
 
 
@@ -195,6 +215,7 @@ namespace FSO.Client.UI.Framework
             }
 
             Font = GameFacade.MainFont;
+            VFont = GameFacade.VectorFont;
             Size = fontSize;
             Color = fontColor;
 

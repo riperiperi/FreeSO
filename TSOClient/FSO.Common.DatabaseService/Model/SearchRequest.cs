@@ -28,6 +28,7 @@ namespace FSO.Common.DatabaseService.Model
     public enum SearchType
     {
         SIMS = 0x01,
-        LOTS = 0x02
+        LOTS = 0x02,
+        NHOOD = 0x03
     }
 }

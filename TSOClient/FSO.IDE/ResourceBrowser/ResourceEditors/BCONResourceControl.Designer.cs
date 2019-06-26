@@ -74,11 +74,12 @@
             // NameHeader
             // 
             this.NameHeader.Text = "Name";
-            this.NameHeader.Width = 100;
+            this.NameHeader.Width = 112;
             // 
             // ValueHeader
             // 
             this.ValueHeader.Text = "Value";
+            this.ValueHeader.Width = 62;
             // 
             // CommentHeader
             // 

@@ -15,6 +15,8 @@ using System.Text;
 using System.Threading.Tasks;
 using FSO.Server.Database.DA.Hosts;
 using FSO.Server.Servers.Shared.Handlers;
+using FSO.Server.Protocol.Voltron.Packets;
+using FSO.Server.Protocol.Electron.Packets;
 
 namespace FSO.Server.Servers.Lot
 {
@@ -30,6 +32,8 @@ namespace FSO.Server.Servers.Lot
         public LotServer(LotServerConfiguration config, Ninject.IKernel kernel) : base(config, kernel)
         {
             this.Config = config;
+            this.UnexpectedDisconnectWaitSeconds = 30;
+            this.TimeoutIfNoAuth = config.Timeout_No_Auth;
 
             Kernel.Bind<LotServerConfiguration>().ToConstant(Config);
             Kernel.Bind<LotHost>().To<LotHost>().InSingletonScope();
@@ -102,6 +106,18 @@ namespace FSO.Server.Servers.Lot
 
             if (message != null)
             {
+                if (packet.Unknown2 == 1)
+                {
+                    //connection re-establish.
+                    if (!AttemptMigration(rawSession, packet.User, packet.Password))
+                    {
+                        //failed to find a session to migrate
+                        rawSession.Write(new ServerByePDU() { }); //try and close the connection safely
+                        rawSession.Close();
+                    }
+                    return;
+                }
+
                 DbLotServerTicket ticket = null;
 
                 using (var da = DAFactory.Get())
@@ -113,7 +129,6 @@ namespace FSO.Server.Servers.Lot
                         da.Lots.DeleteLotServerTicket(packet.Password);
                     }
 
-
                     if (ticket != null)
                     {
                         uint location = 0;
@@ -123,6 +138,7 @@ namespace FSO.Server.Servers.Lot
                             var lot = da.Lots.Get(ticket.lot_id);
                             if (lot == null)
                             {
+                                rawSession.Write(new FSOVMProtocolMessage(true, "25", "24"));
                                 rawSession.Close();
                                 return;
                             }
@@ -133,6 +149,7 @@ namespace FSO.Server.Servers.Lot
                         var didClaim = da.AvatarClaims.Claim(ticket.avatar_claim_id, ticket.avatar_claim_owner, Config.Call_Sign, location);
                         if (!didClaim)
                         {
+                            rawSession.Write(new FSOVMProtocolMessage(true, "6", "26"));
                             rawSession.Close();
                             return;
                         }
@@ -141,9 +158,10 @@ namespace FSO.Server.Servers.Lot
                         //Time to upgrade to a voltron session
                         var newSession = Sessions.UpgradeSession<VoltronSession>(rawSession, x =>
                         {
+                            rawSession.IsAuthenticated = true;
                             x.UserId = ticket.user_id;
                             x.AvatarId = ticket.avatar_id;
-                            x.IsAuthenticated = true;
+                            x.Authenticate(packet.Password);
                             x.AvatarClaimId = ticket.avatar_claim_id;
                         });
 

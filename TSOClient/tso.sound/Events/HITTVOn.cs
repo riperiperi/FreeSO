@@ -13,6 +13,7 @@ using System.Collections.Generic;
 using System.IO;
 using System.Linq;
 using System.Text;
+using System.Text.RegularExpressions;
 
 namespace FSO.HIT.Events
 {
@@ -64,7 +65,7 @@ namespace FSO.HIT.Events
             if (FadeOut > 0)
             {
                 FadeOut--;
-                if (Instance != null) Instance.Volume = Math.Max(0f, ((FadeOut - 60) / 120f)) * GetVolFactor();
+                if (Instance != null) Instance.Volume = Math.Max(0f, ((FadeOut / (Common.FSOEnvironment.RefreshRate*2f))-0.5f)) * GetVolFactor();
                 if (FadeOut == 0)
                 {
                     Kill();
@@ -126,14 +127,23 @@ namespace FSO.HIT.Events
 
         public void Fade()
         {
-            if (FadeOut == -1) FadeOut = 60*3;
+            if (FadeOut == -1) FadeOut = Common.FSOEnvironment.RefreshRate*3;
         }
 
         private void LoadStation(string path)
         {
+            var isRegex = path.Contains('*');
             var content = Content.Content.Get();
-            var statBase = (content.TS1)?Path.Combine(content.TS1BasePath, path):content.GetPath(path);
-            var files = Directory.GetFiles(statBase, "*.xa", SearchOption.AllDirectories);
+            string statBase;
+            string[] files;
+            if (!isRegex) {
+                statBase = (content.TS1) ? Path.Combine(content.TS1BasePath, path) : content.GetPath(path);
+                files = Directory.GetFiles(statBase, "*.xa", SearchOption.AllDirectories);
+            } else
+            {
+                statBase = (content.TS1) ? content.TS1BasePath : content.BasePath;
+                files = new string[0];
+            }
             var rand = new Random();
 
             if (files.Length > 0)
@@ -155,7 +165,12 @@ namespace FSO.HIT.Events
             else
             {
                 //mp3 music
-                files = Directory.GetFiles(statBase, "*.mp3", SearchOption.AllDirectories);
+                if (isRegex) {
+                    var regex = new Regex(path);
+                    files = content.AllFiles.Where(x => regex.IsMatch(x.Replace('\\', '/'))).Select(x => content.GetPath(x)).ToArray();
+                } else {
+                    files = Directory.GetFiles(statBase, "*.mp3", SearchOption.AllDirectories);
+                }
                 IsMusic = true;
             }
 
@@ -215,7 +230,7 @@ namespace FSO.HIT.Events
 
         public override void Resume()
         {
-            Instance.Resume();
+            Instance?.Resume();
         }
 
         public override void Dispose()

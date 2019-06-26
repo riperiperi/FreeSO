@@ -1,0 +1,49 @@
+<md-dialog>
+    <md-content class="md-padding">
+        <form name="reqForm">
+            <label>Create an update for a given branch. This update will be generated and uploaded to whatever public store has been configured in config.json. If a server on this branch restarts after the publish date, the update will be queued.<br>If specified, the pasted catalog will override the one in the build + addon.</label>
+            <div layout layout-sm="column">
+                <md-input-container flex> 
+                    <label>Branch</label> 
+                    <md-select required ng-model="req.branchID">
+                        <md-option ng-value="branch.branch_id" ng-repeat="branch in branches">{{branch.branch_name}}</md-option>
+                    </md-select>
+                </md-input-container>
+            </div>
+            <div layout layout-sm="column">
+                <md-input-container flex> 
+                    <label>Publish Date</label> 
+                    <md-datepicker ng-model="req.date"></md-datepicker>
+                </md-input-container>
+            </div>
+            <div layout layout-sm="column">
+                <md-input-container flex md-no-float> 
+                    <label>Catalog XML</label> 
+                    <input type="file" name="catalogUpload" onchange="angular.element(this).scope().clientChanged(event)" placeholder="x"></input>
+                </md-input-container>
+            </div>
+
+            <div layout layout-sm="column">
+                <md-input-container flex> 
+                    <md-checkbox ng-model="req.contentOnly" aria-label="Content Only">
+                        Content Only
+                    </md-checkbox>
+                    <md-checkbox ng-model="req.includeMonogameDelta" aria-label="Include Monogame Delta">
+                        Include Monogame Delta
+                    </md-checkbox>
+                    <md-checkbox ng-model="req.disableIncremental" aria-label="Disable Incremental Update">
+                        Disable Incremental Update
+                    </md-checkbox>
+                    <md-checkbox ng-model="req.minorVersion" aria-label="Minor Version">
+                        Minor Version
+                    </md-checkbox>
+                </md-input-container>
+            </div>
+        </form>
+    </md-content>
+    <div class="md-actions" layout="row">
+        <span flex></span>
+        <md-button ng-click="cancel();"> Cancel </md-button>
+        <md-button ng-click="ok()" ng-disabled="reqForm.$invalid" class="md-primary"> Create Update </md-button>
+    </div>
+</md-dialog>

@@ -16,6 +16,7 @@ using FSO.Server.DataService.Model;
 using FSO.Server.Protocol.Electron.Packets;
 using Microsoft.Xna.Framework;
 using Microsoft.Xna.Framework.Graphics;
+using Newtonsoft.Json;
 using System;
 using System.Collections.Generic;
 using System.IO;
@@ -37,6 +38,11 @@ namespace FSO.Client.Controllers
         private Binding<City> CurrentCity;
         private GameThreadTimeout HoverTimeout;
         private Network.Network Network;
+
+        public bool PlacingTownHall;
+        public bool TownHallMove;
+        public uint TownHallNhood;
+        public string TownHallNhoodName;
 
         public TerrainController(CoreGameScreenController parent, IClientDataService ds, Network.Network network, IRealestateDomain domain, PurchaseLotRegulator purchaseRegulator)
         {
@@ -93,7 +99,20 @@ namespace FSO.Client.Controllers
                     var occupied = IsTileOccupied((int)(lot.Id >> 16), (int)(lot.Id & 0xFFFF));
                     if (!occupied)
                     {
-                        Parent.Screen.CityTooltip.Text = GameFacade.Strings.GetString("215", "9", new string[] { lot.Lot_Price.ToString() });
+                        var text = GameFacade.Strings.GetString("215", "9", new string[] { lot.Lot_Price.ToString() });
+                        var flat = Realestate.GetSlope((ushort)(lot.Id >> 16), (ushort)(lot.Id & 0xFFFF));
+                        var map = Realestate.GetMap();
+                        var type = map.GetTerrain((ushort)(lot.Id >> 16), (ushort)(lot.Id & 0xFFFF));
+
+                        text += "\r\n"+type.ToString()+", "+((flat == 0)?"Flat":"Sloped ("+flat+")");
+
+                        var nhood = View.NeighGeom.NhoodNearest((int)(lot.Id >> 16), (int)(lot.Id & 0xFFFF));
+                        if (nhood != -1)
+                        {
+                            var nhoodObj = View.NeighGeom.Data[nhood];
+                            text += "\r\n" + nhoodObj.Name;
+                        }
+                        Parent.Screen.CityTooltip.Text = text;
                     }
                     else
                     {
@@ -112,11 +131,13 @@ namespace FSO.Client.Controllers
             });
         }
 
+        private string LastLotJSON;
         private void RefreshCity(BindingChange[] changes)
         {
             if (CurrentCity.Value != null)
             {
                 var mapData = LotTileEntry.GenFromCity(CurrentCity.Value);
+                var neighJSON = CurrentCity.Value.City_NeighJSON;
 
                 //We know if lots are online, we can update the data service
                 DataService.GetMany<Lot>(mapData.Select(x => (object)(uint)x.packed_pos).ToArray()).ContinueWith(x =>
@@ -134,7 +155,25 @@ namespace FSO.Client.Controllers
                     }
                 });
 
-                GameThread.NextUpdate((state) => View.populateCityLookup(mapData));        
+                GameThread.NextUpdate((state) => {
+                    View.populateCityLookup(mapData);
+                    if (neighJSON != LastLotJSON)
+                    {
+                        try
+                        {
+                            var neigh = JsonConvert.DeserializeObject<List<Rendering.City.Model.CityNeighbourhood>>(neighJSON);
+                            Rendering.City.Model.CityNeighbourhood.Init(neigh);
+                            View.NeighGeom.Data = neigh;
+                            View.NeighGeom.Generate(GameFacade.GraphicsDevice);
+                        } catch
+                        {
+
+                        }
+
+                        LastLotJSON = neighJSON;
+                    }
+
+                    });        
             }
         }
 
@@ -145,11 +184,14 @@ namespace FSO.Client.Controllers
             {
                 CurrentCity.Value = city.Result;
                 DataService.Request(Server.DataService.Model.MaskedStruct.CurrentCity, 0);
+                DataService.Request(Server.DataService.Model.MaskedStruct.City_NeighLayout, 0);
             });
         }
 
         public void RequestNewCity()
         {
+            if (LastLotJSON == null)
+                DataService.Request(MaskedStruct.City_NeighLayout, 0);
             DataService.Request(MaskedStruct.CurrentCity, 0);
         }
 
@@ -233,22 +275,84 @@ namespace FSO.Client.Controllers
 
                 if (occupied)
                 {
-                    GameThread.InUpdate(() => { Parent.ShowLotPage(id); });
+                    GameThread.InUpdate(() =>
+                    {
+                        if (PlacingTownHall)
+                            UIAlert.Alert("", GameFacade.Strings.GetString("f115", "51"), true);
+                        else
+                            Parent.ShowLotPage(id);
+                    });
                 }
                 else if (!Realestate.IsPurchasable((ushort)x, (ushort)y))
                     return;
-                else if (result.Result.Lot_Price == 0)
+                else if (PlacingTownHall && View.NeighGeom.NhoodNearestDB(x, y) != TownHallNhood)
                 {
-                    //We need to request the price
-                    DataService.Request(MaskedStruct.MapView_RollOverInfo_Lot_Price, id).ContinueWith(masked =>
-                    {
-                        ShowLotBuyDialog((Lot)masked.Result);
-                    });
+                    UIAlert.Alert("", GameFacade.Strings.GetString("f115", "50", new string[] { TownHallNhoodName }), true);
+                    return;
                 }
                 else
                 {
-                    //Good to show dialog
-                    ShowLotBuyDialog(result.Result);
+                    if (PlacingTownHall)
+                    {
+                        //we don't particularly care about the price,
+                        //all we need to know is if it is in the correct nhood
+
+                        var ourCash = Parent.Screen.VisualBudget;
+                        _BuyLot = result.Result;
+
+                        if (ourCash < 2000)
+                        {
+                            UIAlert.Alert("", GameFacade.Strings.GetString("f115", "90"), true);
+                        }
+                        else
+                        {
+                            UIAlert.YesNo("", GameFacade.Strings.GetString("f115", "49"), true,
+                                (complete) =>
+                                {
+                                    if (complete)
+                                    {
+                                        if (!TownHallMove)
+                                        {
+                                            //User needs to name the property
+                                            _LotBuyName = new UILotPurchaseDialog();
+                                            UIScreen.GlobalShowDialog(new DialogReference
+                                            {
+                                                Dialog = _LotBuyName,
+                                                Controller = this,
+                                                Modal = true,
+                                            });
+                                        }
+                                        else
+                                        {
+                                            PurchaseRegulator.Purchase(new Regulators.PurchaseLotRequest
+                                            {
+                                                X = _BuyLot.Lot_Location.Location_X,
+                                                Y = _BuyLot.Lot_Location.Location_Y,
+                                                Name = "",
+                                                StartFresh = false,
+                                                Mayor = true
+                                            });
+                                        }
+                                    }
+                                });
+                        }
+                    }
+                    else
+                    {
+                        if (result.Result.Lot_Price == 0)
+                        {
+                            //We need to request the price
+                            DataService.Request(MaskedStruct.MapView_RollOverInfo_Lot_Price, id).ContinueWith(masked =>
+                            {
+                                ShowLotBuyDialog((Lot)masked.Result);
+                            });
+                        }
+                        else
+                        {
+                            //Good to show dialog
+                            ShowLotBuyDialog(result.Result);
+                        }
+                    }
                 }
             });            
         }
@@ -429,11 +533,35 @@ namespace FSO.Client.Controllers
             PurchaseRegulator.Purchase(new Regulators.PurchaseLotRequest {
                 X = _BuyLot.Lot_Location.Location_X,
                 Y = _BuyLot.Lot_Location.Location_Y,
-                Name = name
+                Name = name,
+                Mayor = PlacingTownHall
             });
             _LotBuyName = null;
         }
 
+        public void PlaceTownHall(bool move, uint nhoodID, string nhoodName)
+        {
+            if (PlacingTownHall) return;
+
+            PlacingTownHall = true;
+            TownHallMove = move;
+            TownHallNhood = nhoodID;
+            TownHallNhoodName = nhoodName;
+
+            Parent.Screen.Title.SetOverrideMode(
+                GameFacade.Strings.GetString("f115", move ? "47" : "46", new string[] { nhoodName }), 
+                () => {
+                    EndTownHall();
+                });
+
+            UIAlert.Alert("", GameFacade.Strings.GetString("f115", "91", new string[] { nhoodName }), true);
+        }
+
+        public void EndTownHall()
+        {
+            Parent.Screen.Title.ClearOverrideMode();
+            PlacingTownHall = false;
+        }
 
         private void PurchaseRegulator_OnError(object data)
         {
@@ -484,6 +612,10 @@ namespace FSO.Client.Controllers
                 {
                     DataService.Request(MaskedStruct.CurrentCity, 0);
                     ShowCreationProgressBar(false);
+                    if (PlacingTownHall)
+                    {
+                        EndTownHall();
+                    }
                 }
             });
         }

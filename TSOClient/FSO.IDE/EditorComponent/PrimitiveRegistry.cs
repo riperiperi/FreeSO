@@ -41,6 +41,7 @@ namespace FSO.IDE.EditorComponent
             {36, typeof(DialogDescriptors) },
             {38, typeof(DialogDescriptors) },
             {39, typeof(DialogDescriptors) },
+            {41, typeof(SetBalloonHeadlineDescriptor) },
             {42, typeof(CreateObjectInstanceDescriptor) },
             {43, typeof(DropOntoDescriptor) },
             {44, typeof(AnimateSimDescriptor) },

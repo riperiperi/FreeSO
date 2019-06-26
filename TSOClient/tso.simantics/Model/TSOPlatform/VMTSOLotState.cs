@@ -11,6 +11,10 @@ namespace FSO.SimAntics.Model.TSOPlatform
 {
     public class VMTSOLotState : VMAbstractLotState
     {
+        //ephemeral state
+        public IVMAvatarNameCache Names = new VMBasicAvatarNameCache();
+
+        //permanent state
         public string Name = "Lot";
         public uint LotID;
         public VMTSOSurroundingTerrain Terrain = new VMTSOSurroundingTerrain();
@@ -27,6 +31,18 @@ namespace FSO.SimAntics.Model.TSOPlatform
 
         public byte SkillMode;
         public List<VMTSOChatChannel> ChatChannels = new List<VMTSOChatChannel>();
+        public uint NhoodID;
+
+        public bool CommunityLot
+        {
+            //some notes for state when in a community lot
+            //roommates is now donators. build roommates is now benefactors.
+            //serve a similar purpose, but are NOT flashed from database.
+            //they are cleared in the saved state when the DB Owner ID differs from the ID here.
+            get { return PropertyCategory == 11; }
+        }
+
+        public int DonateLimit = 2000;
 
         public VMTSOLotState() { }
         public VMTSOLotState(int version) : base(version) { }
@@ -78,6 +94,10 @@ namespace FSO.SimAntics.Model.TSOPlatform
                     ChatChannels.Add(chan);
                 }
             }
+            if (Version > 32)
+            {
+                NhoodID = reader.ReadUInt32();
+            }
         }
 
         public override void SerializeInto(BinaryWriter writer)
@@ -103,6 +123,7 @@ namespace FSO.SimAntics.Model.TSOPlatform
             {
                 channel.SerializeInto(writer);
             }
+            writer.Write(NhoodID);
         }
 
         public override bool CanPlaceNewUserObject(VM vm)
@@ -110,8 +131,25 @@ namespace FSO.SimAntics.Model.TSOPlatform
             return (vm.Context.ObjectQueries.NumUserObjects < ObjectLimit);
         }
 
+        public override bool CanPlaceNewDonatedObject(VM vm)
+        {
+            return (vm.Context.ObjectQueries.NumDonatedObjects < DonateLimit);
+        }
+
         public override void Tick(VM vm, object owner)
         {
+            
+        }
+
+        public override void ActivateValidator(VM vm)
+        {
+            switch (PropertyCategory)
+            {
+                case 11:
+                    Validator = new VMFSOCommunityValidator(vm); break;
+                default:
+                    Validator = new VMDefaultValidator(vm); break;
+            }
             
         }
     }

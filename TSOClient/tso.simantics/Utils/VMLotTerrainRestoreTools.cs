@@ -714,6 +714,7 @@ namespace FSO.SimAntics.Utils
             new GUIDToPosition(0x39CCF441, -1, 0, 0), //mailbox (2tile)
             new GUIDToPosition(0xA4258067, 1, 1, 0), //bin
             new GUIDToPosition(0x313D2F9A, 4, 1, 0), //phone
+            new GUIDToPosition(0x303CD603, 4, 1, 0), //phone (nhood)
             new GUIDToPosition(0x865A6812, 0, 3, 2), //car portal 1
             new GUIDToPosition(0xD564C66B, -5, 3, 2), //car portal 2
         };
@@ -1013,6 +1014,7 @@ namespace FSO.SimAntics.Utils
                             }
 
                             tempVM.Tick();
+                            subworld.CalculateFloorsUsed();
                         } catch (Exception)
                         {
                             hollow = null;
@@ -1026,19 +1028,23 @@ namespace FSO.SimAntics.Utils
                         subworld.InitBlueprint(blueprint);
                         tempVM.Context.Architecture = new VMArchitecture(size, size, blueprint, tempVM.Context);
 
-                        tempVM.Context.Architecture.RegenRoomMap();
+                        tempVM.Context.Architecture.EmptyRoomMap();
                         tempVM.Context.RegeneratePortalInfo();
 
                         var terrainC = new TerrainComponent(new Rectangle(0, 0, size, size), blueprint);
                         terrainC.Initialize(subworld.State.Device, subworld.State);
                         blueprint.Terrain = terrainC;
 
+                        tempVM.Context.Architecture.Terrain.LowQualityGrassState = true;
                         RestoreTerrain(tempVM, terrain.BlendN[x, y], terrain.Roads[x, y]);
                         height = RestoreHeight(tempVM, terrain, x, y);
                         tempVM.Context.Blueprint.BaseAlt = (int)((baseHeight - height));
 
                         PopulateBlankTerrain(tempVM);
-
+                        tempVM.Context.Architecture.ClearDirty();
+                        tempVM.Context.Architecture.RegenRoomMap();
+                        tempVM.Context.RegeneratePortalInfo();
+                        tempVM.Context.RefreshAllLighting();
                         tempVM.Tick();
                     }
 

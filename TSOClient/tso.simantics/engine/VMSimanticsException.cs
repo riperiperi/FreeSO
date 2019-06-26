@@ -76,16 +76,19 @@ namespace FSO.SimAntics.Engine
                     output.Append("VMRoutingFrame with state: ");
                     output.Append(((VMRoutingFrame)frame).State.ToString());
                 }
-                else 
+                else if (frame.Routine != null)
                 {
                     output.Append(frame.Routine.Rti.Name.TrimEnd('\0'));
                     output.Append(':');
                     output.Append(frame.InstructionPointer);
-                    output.Append(" (");
-                    var opcode = frame.GetCurrentInstruction().Opcode;
-                    var primitive = (opcode > 255)?null:VMContext.Primitives[opcode];
-                    output.Append((primitive == null)?opcode.ToString():primitive.Name);
-                    output.Append(")");
+                    if (frame.InstructionPointer < frame.Routine.Instructions.Length)
+                    {
+                        output.Append(" (");
+                        var opcode = frame.GetCurrentInstruction().Opcode;
+                        var primitive = (opcode > 255) ? null : VMContext.Primitives[opcode];
+                        output.Append((primitive == null) ? opcode.ToString() : primitive.Name);
+                        output.Append(")");
+                    }
                 }
                 output.AppendLine();
             }

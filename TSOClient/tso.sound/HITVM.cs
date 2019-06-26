@@ -192,7 +192,7 @@ namespace FSO.HIT
             var content = FSO.Content.Content.Get();
             var evts = content.Audio.Events;
 
-            if (evts.ContainsKey(evt))
+            if (evts != null && evts.ContainsKey(evt))
             {
                 var evtent = evts[evt];
 
@@ -246,6 +246,11 @@ namespace FSO.HIT
                 }
                 else if (evtent.EventType == HITEvents.kSetMusicMode)
                 {
+                    if (evtent.TrackID == 0)
+                    {
+                        if (evtent.Name == "bkground_buy1") evtent.TrackID = 1;
+                        else if (evtent.Name == "bkground_build") evtent.TrackID = 2;
+                    }
                     var thread = new HITTVOn(evtent.TrackID, this, true);
                     thread.VolGroup = HITVolumeGroup.MUSIC;
                     ActiveEvents.Add(evt, thread);

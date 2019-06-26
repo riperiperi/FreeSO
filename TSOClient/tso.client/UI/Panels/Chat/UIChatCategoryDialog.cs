@@ -1,6 +1,7 @@
 ﻿using FSO.Client.UI.Controls;
 using FSO.Client.UI.Framework;
 using FSO.SimAntics.Model.TSOPlatform;
+using FSO.UI.Controls;
 using Microsoft.Xna.Framework;
 using System;
 using System.Collections.Generic;
@@ -144,7 +145,7 @@ namespace FSO.Client.UI.Panels.Chat
                 {
                     Title = "",
                     Message = GameFacade.Strings.GetString("f113", "8"),
-                    Color = true,
+                    GenericAddition = new UIColorPicker(),
                     Buttons = new UIAlertButton[]
                     {
                         new UIAlertButton(UIAlertButtonType.OK, (btn2) => {

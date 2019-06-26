@@ -21,8 +21,8 @@ namespace FSO.Client.Controllers
 
             Loader.MainContentAction = (Action donePart) =>
             {
+                VMContext.InitVMConfig(false);
                 FSO.Content.Content.Init(GlobalSettings.Default.StartupPath, GameFacade.GraphicsDevice);
-                VMContext.InitVMConfig();
             };
 
             /** Init cache **/

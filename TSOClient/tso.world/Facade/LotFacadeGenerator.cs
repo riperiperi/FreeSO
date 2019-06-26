@@ -34,7 +34,7 @@ namespace FSO.LotView.Facade
         public int FLOOR_RES_PER_TILE = 2;
         public int FLOOR_TILES = 64;//98;
 
-        public int GROUND_SUBDIV = 5;
+        public int GROUND_SUBDIV = 10;
 
         public int LastIndex;
         public string LotName = "lot";
@@ -55,6 +55,7 @@ namespace FSO.LotView.Facade
         public int[] FloorIndices;
 
         public bool RoofOnFloor;
+        public sbyte FloorsUsed;
 
         public void GenerateWalls(GraphicsDevice gd, WorldRC world, Blueprint bp, bool justTexture)
         {
@@ -106,8 +107,9 @@ namespace FSO.LotView.Facade
 
                     var ctr = (wall.Points[0] + wall.Points[1]) / (2 * 16);
                     var rNorm = wall.Points[1] - wall.Points[0];
-                    rNorm = new Vector2(rNorm.Y, -rNorm.X);
+                    rNorm = new Vector2(-rNorm.Y, rNorm.X);
                     rNorm.Normalize();
+                    var xFlip = 1f;
                     //which side is "outside"?
                     //check one side. assume the other is outside if we fail
                     var testPos = (ctr + rNorm * 0.6f).ToPoint();
@@ -117,6 +119,7 @@ namespace FSO.LotView.Facade
                         if (!bp.Rooms[bp.Rooms[(ushort)room].Base].IsOutside)
                         {
                             rNorm *= -1;
+                            xFlip *= -1;
                         }
                     }
 
@@ -125,6 +128,7 @@ namespace FSO.LotView.Facade
                     var objp = ctr * 3;
                     var lookat = Matrix.CreateLookAt(new Vector3(camp.X, height, camp.Y), new Vector3(objp.X, height, objp.Y), Vector3.Up);
                     var ortho = Matrix.CreateOrthographic(3 * wall.PhysicalLength, 2.90f * 3, 0, 6);
+                    ortho *= Matrix.CreateScale(xFlip, 1f, 1f);
 
                     //rescale our camera matrix to render to the correct part of the render target. Apply scissor test for that area.
                     var rect = new Rectangle(xPos + (wall.EffectiveLength - (wall.Length + GAP)), yPos, wall.Length, WALL_HEIGHT);
@@ -148,7 +152,7 @@ namespace FSO.LotView.Facade
                     effect.CurrentTechnique = effect.Techniques["Draw"];
 
                     var objs = bp.Objects.Where(x => x.Level >= wall.Room.Floor - 5 && frustrum.Intersects(((ObjectComponentRC)x).GetBounds()))
-                        .OrderBy(x => ((ObjectComponentRC)x).SortDepth(vp));
+                        .OrderBy(x => ((ObjectComponentRC)x).SortDepth(lookat));
                     foreach (var obj in objs)
                     {
                         obj.Draw(gd, world.State);
@@ -243,19 +247,20 @@ namespace FSO.LotView.Facade
                 var basetc = new Vector2((1 / 3f) * ((Math.Min(i, 4) % 3)+1), (1 / 2f) * ((Math.Min(i, 4) / 3) + 1));
                 var data = bp.RoofComp.MeshRectData(i + 1);
                 if (RoofOnFloor)
-                    verts.AddRange(data.Item1.Select(x => new VertexPositionTexture(x.Position / 3f, basetc - new Vector2((x.Position.X-basepos.X) / (3f*FLOOR_TILES*3), (x.Position.Z- basepos.Y) / (3f * FLOOR_TILES * 2)))));
+                    verts.AddRange(data.Vertices.Select(x => new VertexPositionTexture(x.Position / 3f, basetc - new Vector2((x.Position.X-basepos.X) / (3f*FLOOR_TILES*3), (x.Position.Z- basepos.Y) / (3f * FLOOR_TILES * 2)))));
                 else
-                    verts.AddRange(data.Item1.Select(x => new VertexPositionTexture(x.Position / 3f, new Vector2(x.GrassInfo.Y, x.GrassInfo.Z))));
-                inds.AddRange(data.Item2.Select(x => x + baseIndex));
-                baseIndex += data.Item1.Length;
+                    verts.AddRange(data.Vertices.Select(x => new VertexPositionTexture(x.Position / 3f, new Vector2(x.GrassInfo.Y, x.GrassInfo.Z))));
+                inds.AddRange(data.Indices.Select(x => x + baseIndex));
+                baseIndex += data.Vertices.Length;
             }
 
             RoofVerts = verts.ToArray();
             RoofIndices = inds.ToArray();
         }
 
-        public void GenerateFloor(GraphicsDevice gd, WorldRC world, Blueprint bp, bool justTexture)
+        public void GenerateFloor(GraphicsDevice gd, WorldRC world, Blueprint bp, bool justTexture, sbyte floorsNum)
         {
+            FloorsUsed = floorsNum;
             var dim = FLOOR_RES_PER_TILE * FLOOR_TILES;
             var tex = new RenderTarget2D(gd, dim * 3, dim * 2, false, SurfaceFormat.Color, DepthFormat.Depth24);
             gd.SetRenderTarget(tex);
@@ -264,7 +269,7 @@ namespace FSO.LotView.Facade
             var baseO = Matrix.CreateOrthographic(FLOOR_TILES * 3f, FLOOR_TILES * 3f, 0, 400);
 
             var oldLevel = world.State.SilentLevel;
-            for (int i = 0; i < bp.Stories + 1; i++) {
+            for (int i = 0; i < floorsNum + 1; i++) {
                 world.State.SilentLevel = (sbyte)(i + 1);
                 var x = i % 3;
                 var y = i / 3;
@@ -283,7 +288,7 @@ namespace FSO.LotView.Facade
 
                     effect.CurrentTechnique = effect.Techniques["Draw"];
 
-                    var objs = bp.Objects.Where(o => o.Level == 1 && frustrum.Intersects(((ObjectComponentRC)o).GetBounds())).OrderBy(o => ((ObjectComponentRC)o).SortDepth(vp));
+                    var objs = bp.Objects.Where(o => o.Level == 1 && frustrum.Intersects(((ObjectComponentRC)o).GetBounds())).OrderBy(o => ((ObjectComponentRC)o).SortDepth(lookat));
                     foreach (var obj in objs)
                     {
                         obj.Draw(gd, world.State);
@@ -305,7 +310,7 @@ namespace FSO.LotView.Facade
 
                     effect.CurrentTechnique = effect.Techniques["Draw"];
 
-                    var objs = bp.Objects.Where(o => o.Level == i+1 && frustrum.Intersects(((ObjectComponentRC)o).GetBounds())).OrderBy(o => ((ObjectComponentRC)o).SortDepth(vp));
+                    var objs = bp.Objects.Where(o => o.Level == i+1 && frustrum.Intersects(((ObjectComponentRC)o).GetBounds())).OrderBy(o => ((ObjectComponentRC)o).SortDepth(lookat));
                     foreach (var obj in objs)
                     {
                         obj.Draw(gd, world.State);
@@ -340,14 +345,37 @@ namespace FSO.LotView.Facade
                 var basetc = new Vector2(1 / 3f, 1 / 2f);
                 FloorVerts = new VertexPositionTexture[vertDiv * vertDiv];
 
+                var indoors = bp.GetIndoors();
+                var partition = 255 / (bp.Stories + 1);
+
                 //output vertices
                 int verti = 0;
                 for (int y = 0; y < vertDiv; y++)
                 {
                     for (int x = 0; x < vertDiv; x++)
                     {
+                        //find the best vertex position for this ground tile
+                        //if there are any indoors tiles next to us, we should keep their altitude.
+                        float indoorsHeight = 0f;
+                        int indoorsTotal = 0;
+
+                        int xLim = (int)Math.Min(bp.Width, Math.Round((x + 1f) * inc + basepos.X));
+                        int yLim = (int)Math.Min(bp.Height, Math.Round((y + 1f) * inc + basepos.Y));
+                        for (int y2 = (int)Math.Max(0, Math.Round((y - 1f) * inc + basepos.Y)); y2 < yLim; y2++)
+                        {
+                            for (int x2 = (int)Math.Max(0, Math.Round((x - 1f) * inc + basepos.X)); x2 < xLim; x2++)
+                            {
+                                var tileInside = indoors[y2 * bp.Width + x2] > 0;
+                                if (tileInside)
+                                {
+                                    indoorsHeight += bp.InterpAltitude(new Vector3(x2, y2, 0));
+                                    indoorsTotal++;
+                                }
+                            }
+                        }
+
                         var pos = basepos + new Vector2(x * inc, y * inc);
-                        var height = bp.InterpAltitude(new Vector3(pos, 0));
+                        var height = (indoorsTotal > 0) ? (indoorsHeight / indoorsTotal) : bp.InterpAltitude(new Vector3(pos, 0));
                         FloorVerts[verti++] = new VertexPositionTexture(new Vector3(pos.X, height, pos.Y), basetc - new Vector2(x * invDiv / 3, y * invDiv / 2));
                     }
                 }
@@ -429,7 +457,8 @@ namespace FSO.LotView.Facade
             RoofOnFloor = true;
             GenerateWalls(gd, world, bp, false);
             //GROUND_SUBDIV = 64;
-            GenerateFloor(gd, world, bp, false);
+            var floors = bp.GetFloorsUsed();
+            GenerateFloor(gd, world, bp, false, floors);
             //SimplifyFloor();
             GenerateRoof(gd, world, bp);
 
@@ -442,10 +471,11 @@ namespace FSO.LotView.Facade
             result.FloorTextureData = TexToData(FloorTexture, compressed);
             result.WallTextureData = TexToData(WallTarget, compressed);
 
+            
             var tVerts = new List<DGRP3DVert>();
             var tInd = new List<int>();
             var indOff = 0;
-            for (int i = 0; i < 5; i++)
+            for (int i = 0; i < floors; i++)
             {
                 var tcOffset = new Vector2((i % 3) / 3f, (i / 3) / 2f);
                 //save each floor. offset the floor for each level
@@ -482,7 +512,7 @@ namespace FSO.LotView.Facade
 
             onNight();
             GenerateWalls(gd, world, bp, true);
-            GenerateFloor(gd, world, bp, true);
+            GenerateFloor(gd, world, bp, true, floors);
 
             result.NightFloorTextureData = TexToData(FloorTexture, compressed);
             result.NightWallTextureData = TexToData(WallTarget, compressed);
@@ -495,7 +525,7 @@ namespace FSO.LotView.Facade
         {
             GenerateWalls(gd, world, bp, false);
             //GROUND_SUBDIV = 64;
-            GenerateFloor(gd, world, bp, false);
+            GenerateFloor(gd, world, bp, false, bp.GetFloorsUsed());
             //SimplifyFloor();
             GenerateRoof(gd, world, bp);
         }
@@ -621,7 +651,7 @@ namespace FSO.LotView.Facade
                     SaveOBJData(io, RoofVerts, RoofIndices, ref indCount, "TEX_"+(TexBase+((RoofOnFloor)?1:2)));
                 }
             }
-            for (int i = 0; i < 5; i++)
+            for (int i = 0; i < FloorsUsed; i++)
             {
                 //save each floor. offset the floor for each level
                 var floorName = (TexBase == null)?(LotName + "_floor"): "TEX_" + (TexBase+1);

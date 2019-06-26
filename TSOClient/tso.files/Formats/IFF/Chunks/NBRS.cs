@@ -46,7 +46,7 @@ namespace FSO.Files.Formats.IFF.Chunks
 
                 for (int i=0; i<count; i++)
                 {
-                    if (!io.HasMore) return;
+                    if (!io.HasMore) break;
                     var neigh = new Neighbour(io);
                     Entries.Add(neigh);
                     if (neigh.Unknown1 > 0)
@@ -57,6 +57,8 @@ namespace FSO.Files.Formats.IFF.Chunks
                 }
             }
             Entries = Entries.OrderBy(x => x.NeighbourID).ToList();
+            foreach (var entry in Entries)
+                entry.RuntimeIndex = Entries.IndexOf(entry);
         }
 
         /// <summary>
@@ -83,8 +85,24 @@ namespace FSO.Files.Formats.IFF.Chunks
         public void AddNeighbor(Neighbour nb) {
             Entries.Add(nb);
             Entries = Entries.OrderBy(x => x.NeighbourID).ToList();
+            foreach (var entry in Entries)
+                entry.RuntimeIndex = Entries.IndexOf(entry);
+
             NeighbourByID.Add(nb.NeighbourID, nb);
             DefaultNeighbourByGUID[nb.GUID] = nb.NeighbourID;
+        }
+
+        public short GetFreeID()
+        {
+            //find the lowest id that is free
+            short newID = 1;
+            for (int i = 0; i < Entries.Count; i++)
+            {
+                if (Entries[i].NeighbourID == newID) newID++;
+                else if (Entries[i].NeighbourID < newID) continue;
+                else break;
+            }
+            return newID;
         }
     }
 
@@ -105,6 +123,8 @@ namespace FSO.Files.Formats.IFF.Chunks
         public int UnknownNegOne = -1; //negative 1 usually
 
         public Dictionary<int, List<short>> Relationships;
+
+        public int RuntimeIndex; //used for fast continuation of Set to Next
 
         public Neighbour() { }
 
@@ -160,6 +180,11 @@ namespace FSO.Files.Formats.IFF.Chunks
                 }
                 Relationships.Add(key, values);
             }
+        }
+
+        public override string ToString()
+        {
+            return Name;
         }
 
         public void Save(IoWriter io)

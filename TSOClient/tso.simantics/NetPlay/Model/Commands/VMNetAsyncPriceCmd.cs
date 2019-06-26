@@ -16,13 +16,14 @@ namespace FSO.SimAntics.NetPlay.Model.Commands
 
         public override bool Execute(VM vm, VMAvatar caller)
         {
-            if (caller == null || caller.AvatarState.Permissions < VMTSOAvatarPermissions.Roommate) return false;
             VMEntity obj = vm.GetObjectByPersist(ObjectPID);
             //object must not be in use to set it for sale (will be disabled).
-            if (obj == null || (obj is VMAvatar) || (NewPrice > 0 && obj.IsUserMovable(vm.Context, true) != VMPlacementError.Success)) return false;
+            if (!vm.PlatformState.Validator.CanManageAsyncSale(caller, (VMGameObject)obj)) return false;
+
+            if (NewPrice > 0 && obj.IsUserMovable(vm.Context, true) != VMPlacementError.Success) return false;
             if ((((VMGameObject)obj).Disabled & VMGameObjectDisableFlags.TransactionIncomplete) > 0) return false; //can't change price mid trasaction...
             //must own the object to set it for sale
-            if (obj.PersistID == 0 || ((VMTSOObjectState)obj.TSOState).OwnerID != caller.PersistID) return false;
+            
 
             if (NewPrice >= 0) {
                 //get catalog item for the object

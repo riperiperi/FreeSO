@@ -115,8 +115,11 @@ namespace FSO.Client.Controllers
                         }
                         break;
                     case ChangeRoommateResponseStatus.DECLINE_SUCCESS:
-                    case ChangeRoommateResponseStatus.INVITE_SUCCESS:
                         return;
+                    case ChangeRoommateResponseStatus.INVITE_SUCCESS:
+                        title = "";
+                        msg = GameFacade.Strings.GetString("f114", "14");
+                        break;
                     case ChangeRoommateResponseStatus.LOT_MUST_BE_CLOSED:
                     case ChangeRoommateResponseStatus.YOU_ARE_NOT_ROOMMATE:
                         //unable to kickout
@@ -124,9 +127,12 @@ namespace FSO.Client.Controllers
                         msg = GameFacade.Strings.GetString("208", "83");
                         break;
                     case ChangeRoommateResponseStatus.ROOMIE_ELSEWHERE:
+                        title = GameFacade.Strings.GetString("208", "40");
+                        msg = GameFacade.Strings.GetString("f114", "15");
+                        break;
                     case ChangeRoommateResponseStatus.OTHER_INVITE_PENDING:
                         title = GameFacade.Strings.GetString("208", "40");
-                        msg = GameFacade.Strings.GetString("208", "43");
+                        msg = GameFacade.Strings.GetString("f114", "16");
                         break;
                     case ChangeRoommateResponseStatus.ROOMMATE_LEFT:
                         DataService.Request(MaskedStruct.SimPage_Main, resp.Extra).ContinueWith(x =>

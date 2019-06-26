@@ -1,4 +1,6 @@
-﻿using FSO.Common.DataService;
+﻿using FSO.Client.UI.Controls;
+using FSO.Common.DataService;
+using FSO.Common.Utils;
 using FSO.Server.Clients;
 using FSO.Server.Clients.Framework;
 using FSO.Server.Protocol.Aries.Packets;
@@ -21,6 +23,20 @@ namespace FSO.Client.Regulators
         private AriesClient City;
         private uint LotId;
         private bool IsDisconnecting = true;
+        private string LastAddress;
+        private int _ReestablishAttempt;
+        private int ReestablishAttempt
+        {
+            get
+            {
+                return _ReestablishAttempt;
+            }
+            set
+            {
+                FSOFacade.NetStatus.LotReconnectAttempt = value;
+                _ReestablishAttempt = value;
+            }
+        }
 
         private FindLotResponse FindLotResponse;
         private IClientDataService DataService;
@@ -34,8 +50,6 @@ namespace FSO.Client.Regulators
             this.Client.AddSubscriber(this);
 
             this.DataService = dataService;
-
-            City.AddSubscriber(this);
 
             AddState("Disconnected")
                 .Transition()
@@ -71,7 +85,29 @@ namespace FSO.Client.Regulators
             AddState("LotCommandStream")
                 .OnData(typeof(AriesDisconnected)).TransitionTo("UnexpectedDisconnect")
                 .OnData(typeof(FSOVMTickBroadcast)).TransitionTo("LotCommandStream")
-                .OnData(typeof(FSOVMDirectToClient)).TransitionTo("LotCommandStream");
+                .OnData(typeof(FSOVMDirectToClient)).TransitionTo("LotCommandStream")
+                .OnData(typeof(ServerByePDU)).TransitionTo("Disconnect");
+
+            AddState("Reestablish")
+                .OnData(typeof(ServerByePDU)).TransitionTo("UnexpectedDisconnect")
+                .OnData(typeof(AriesDisconnected)).TransitionTo("ReestablishFail")
+                .OnData(typeof(AriesConnected)).TransitionTo("Reestablishing")
+                .OnlyTransitionFrom("UnexpectedDisconnect", "ReestablishFail");
+
+            AddState("Reestablishing")
+                .OnData(typeof(AriesDisconnected)).TransitionTo("ReestablishFail")
+                .OnData(typeof(ServerByePDU)).TransitionTo("UnexpectedDisconnect")
+                .OnData(typeof(HostOnlinePDU)).TransitionTo("Reestablished")
+                .OnlyTransitionFrom("Reestablish");
+
+            AddState("Reestablished")
+                .OnData(typeof(ServerByePDU)).TransitionTo("UnexpectedDisconnect")
+            .OnData(typeof(AriesDisconnected)).TransitionTo("ReestablishFail")
+            .OnlyTransitionFrom("Reestablishing");
+
+            AddState("ReestablishFail")
+                .OnData(typeof(ServerByePDU)).TransitionTo("UnexpectedDisconnect")
+                .OnlyTransitionFrom("Reestablish", "Reestablishing", "Reestablished");
 
             AddState("UnexpectedDisconnect");
             
@@ -110,7 +146,9 @@ namespace FSO.Client.Regulators
                     break;
 
                 case "OpenSocket":
+                    ReestablishAttempt = 0;
                     var address = data as string;
+                    LastAddress = address;
                     if (address == null)
                     {
                         this.ThrowErrorAndReset(new Exception("Unknown parameter"));
@@ -146,9 +184,66 @@ namespace FSO.Client.Regulators
                     DataService.Request(Server.DataService.Model.MaskedStruct.PropertyPage_LotInfo, LotId);
                     break;
                 case "UnexpectedDisconnect":
-                    IsDisconnecting = true;
-                    AsyncTransition("Disconnected");
+                    if (ReestablishAttempt > 0)
+                    {
+                        IsDisconnecting = true;
+                        AsyncTransition("Disconnected");
+                    }
+                    else
+                    {
+                        GameThread.SetTimeout(() =>
+                        {
+                            if (CurrentState?.Name == "UnexpectedDisconnect")
+                            {
+                                AsyncTransition("Reestablish");
+                            }
+                            else if (CurrentState?.Name != "Disconnected")
+                            {
+                                IsDisconnecting = true;
+                                AsyncTransition("Disconnected");
+                            }
+                        }, 100);
+                    }
                     break;
+
+                case "Reestablish":
+                    ReestablishAttempt++;
+                    Client.Connect(LastAddress + "101");
+                    break;
+
+                case "Reestablishing":
+                    Client.Write(new RequestClientSessionResponse
+                    {
+                        Password = FindLotResponse.LotServerTicket,
+                        User = FindLotResponse.User,
+                        Unknown2 = 1
+                    });
+                    break;
+
+                case "Reestablished":
+                    Client.Write(
+                        new ClientOnlinePDU
+                        {
+                        }
+                        );
+                    ReestablishAttempt = 0;
+                    AsyncTransition("LotCommandStream");
+                    break;
+
+                case "ReestablishFail":
+                    if (ReestablishAttempt < 10)
+                    {
+                        GameThread.SetTimeout(() =>
+                        {
+                            if (CurrentState?.Name == "ReestablishFail") AsyncTransition("Reestablish");
+                        }, 1000);
+                    }
+                    else
+                    {
+                        AsyncTransition("UnexpectedDisconnect");
+                    }
+                    break;
+
 
                 case "Disconnect":
                     if (Client.IsConnected && !IsDisconnecting)
@@ -163,6 +258,10 @@ namespace FSO.Client.Regulators
                     {
                         AsyncTransition("Disconnected");
                     }
+                    break;
+
+                case "Disconnected":
+                    ReestablishAttempt = 0;
                     break;
             }
         }
@@ -195,22 +294,37 @@ namespace FSO.Client.Regulators
                     AsyncProcessMessage(message);
                 }
             }
-            else
+            else if (client == Client)
             {
                 if (message is RequestClientSession ||
                     message is HostOnlinePDU ||
                     message is FSOVMTickBroadcast ||
-                    message is FSOVMDirectToClient)
+                    message is FSOVMDirectToClient ||
+                    message is ServerByePDU)
                 {
+                    if (message is ServerByePDU) { }
                     //force in order
                     this.SyncProcessMessage(message);
+                }
+
+                if (message is FSOVMProtocolMessage)
+                {
+                    var msg = (FSOVMProtocolMessage)message;
+                    GameThread.InUpdate(() => {
+                        if (msg.UseCst)
+                        {
+                            if (msg.Title != "") msg.Title = GameFacade.Strings.GetString("223", msg.Title);
+                            msg.Message = GameFacade.Strings.GetString("223", msg.Message);
+                        }
+                        UIAlert.Alert(msg.Title, msg.Message, true);
+                        });
                 }
             }
         }
 
         public void SessionCreated(AriesClient client)
         {
-            this.AsyncProcessMessage(new AriesConnected());
+            if (client == Client || CurrentState?.Name != "Reestablish") this.AsyncProcessMessage(new AriesConnected());
         }
 
         public void SessionOpened(AriesClient client)
@@ -220,7 +334,8 @@ namespace FSO.Client.Regulators
 
         public void SessionClosed(AriesClient client)
         {
-            AsyncProcessMessage(new AriesDisconnected());
+            if (client == Client)
+                AsyncProcessMessage(new AriesDisconnected());
         }
 
         public void SessionIdle(AriesClient client)
@@ -230,7 +345,8 @@ namespace FSO.Client.Regulators
 
         public void InputClosed(AriesClient session)
         {
-            AsyncProcessMessage(new AriesDisconnected());
+            if (session == Client)
+                AsyncProcessMessage(new AriesDisconnected());
         }
     }
 

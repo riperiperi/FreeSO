@@ -17,6 +17,7 @@ namespace FSO.Content.TS1
         private TS1SubProvider<IffFile> GameObjects;
         private static List<ObjectCatalogItem>[] ItemsByCategory;
         private static Dictionary<uint, ObjectCatalogItem> ItemsByGUID;
+        public HashSet<uint> PersonGUIDs = new HashSet<uint>();
 
         public TS1ObjectProvider(Content contentManager, TS1Provider provider) : base(contentManager)
         {
@@ -40,6 +41,7 @@ namespace FSO.Content.TS1
                 var file = (IffFile)iff.GetThrowawayGeneric();
                 file.MarkThrowaway();
                 var objects = file.List<OBJD>();
+                var slots = file.List<SLOT>();
                 if (objects != null)
                 {
                     foreach (var obj in objects)
@@ -51,8 +53,10 @@ namespace FSO.Content.TS1
                             Name = obj.ChunkLabel,
                             Source = GameObjectSource.Far,
                             Group = (short)obj.MasterID,
-                            SubIndex = obj.SubIndex
+                            SubIndex = obj.SubIndex,
+                            GlobalSimObject = obj.ObjectType == OBJDType.SimType && obj.Global == 1
                         };
+                        if (obj.ObjectType == OBJDType.Person) PersonGUIDs.Add(obj.GUID);
 
                         //does this object appear in the catalog?
                         if ((obj.FunctionFlags > 0 || obj.BuildModeType > 0) && obj.Disabled == 0 && (obj.MasterID == 0 || obj.SubIndex == -1))
@@ -83,6 +87,10 @@ namespace FSO.Content.TS1
                 }
             }
 
+            var globalSims = Entries.Values.Where(x => x.GlobalSimObject);
+            ControllerObjects.Clear();
+            ControllerObjects.AddRange(globalSims);
+
             ContentManager.Neighborhood.LoadCharacters(false);
         }
 
@@ -96,12 +104,14 @@ namespace FSO.Content.TS1
                 if (reference.Source == GameObjectSource.Far)
                 {
                     iff = GameObjects.Get(reference.FileName.ToLower());
+                    iff.InitHash();
                     if (iff != null) iff.RuntimeInfo.Path = reference.FileName;
                 }
                 else
                 {
                     //unused
                     iff = new IffFile(reference.FileName, reference.Source == GameObjectSource.User);
+                    iff.InitHash();
                     iff.RuntimeInfo.Path = reference.FileName;
                     iff.RuntimeInfo.State = IffRuntimeState.Standalone;
                 }
@@ -116,7 +126,7 @@ namespace FSO.Content.TS1
                     iff.RuntimeInfo.UseCase = IffUseCase.Object;
                 }
 
-                return new GameObjectResource(iff, null, null, reference.FileName);
+                return new GameObjectResource(iff, null, null, reference.FileName, ContentManager);
             };
         }
 

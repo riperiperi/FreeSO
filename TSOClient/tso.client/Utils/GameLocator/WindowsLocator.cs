@@ -15,6 +15,10 @@ namespace FSO.Client.Utils.GameLocator
         {
             string Software = "";
 
+            // Search relative directory similar to how macOS and Linux works; allows portability
+            string localDir = @"../The Sims Online/TSOClient/";
+            if (File.Exists(Path.Combine(localDir, "tuning.dat"))) return localDir;
+
             using (var hklm = RegistryKey.OpenBaseKey(RegistryHive.LocalMachine, RegistryView.Registry32))
             {
                 //Find the path to TSO on the user's system.
@@ -32,9 +36,6 @@ namespace FSO.Client.Utils.GameLocator
                     }
                 }
             }
-            // Search relative directory similar to how macOS and Linux works; allows portability
-            string localDir = @"The Sims Online\TSOClient\";
-            if (File.Exists(Path.Combine(localDir, "tuning.dat"))) return localDir.Replace("\\", "/");
 
             // Fall back to the default install location if the other two checks fail
             return @"C:\Program Files\Maxis\The Sims Online\TSOClient\".Replace('\\', '/');

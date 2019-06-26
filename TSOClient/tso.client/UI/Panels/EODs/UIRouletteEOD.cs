@@ -254,7 +254,7 @@ namespace FSO.Client.UI.Panels.EODs
                 Add(btnShowAllBets);
                 UpdateTotalBets();
                 AddListeners();
-                Controller.ShowEODMode(new EODLiveModeOpt
+                EODController.ShowEODMode(new EODLiveModeOpt
                 {
                     Buttons = 1,
                     Height = EODHeight.Tall,
@@ -295,7 +295,7 @@ namespace FSO.Client.UI.Panels.EODs
                     OwnerPanel.OnNewByteMessage += SendByteMessage;
                     OwnerPanel.OnNewStringMessage += SendStringMessage;
 
-                    Controller.ShowEODMode(new EODLiveModeOpt
+                    EODController.ShowEODMode(new EODLiveModeOpt
                     {
                         Buttons = 0,
                         Height = EODHeight.Normal,

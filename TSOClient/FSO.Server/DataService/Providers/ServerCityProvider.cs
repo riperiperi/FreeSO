@@ -10,7 +10,6 @@ namespace FSO.Server.DataService.Providers
 {
     public class ServerCityProvider : AbstractDataServiceProvider<uint, City>
     {
-
         private ServerLotProvider Lots;
 
         public void BindLots(ServerLotProvider lots)

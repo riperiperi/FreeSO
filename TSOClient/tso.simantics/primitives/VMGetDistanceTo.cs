@@ -31,8 +31,9 @@ namespace FSO.SimAntics.Primitives
             var pos2 = obj2.Position;
 
             var result = (short)Math.Floor(Math.Sqrt(Math.Pow(pos1.x - pos2.x, 2) + Math.Pow(pos1.y - pos2.y, 2))/16.0);
+            var levelDiff = Math.Abs(pos2.Level - pos1.Level);
 
-            context.Thread.TempRegisters[operand.TempNum] = result;        
+            context.Thread.TempRegisters[operand.TempNum] = (short)Math.Max(20 * levelDiff, result + 5 * levelDiff);        
             return VMPrimitiveExitCode.GOTO_TRUE;
         }
     }

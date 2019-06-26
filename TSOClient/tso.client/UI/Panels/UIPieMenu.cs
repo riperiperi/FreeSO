@@ -36,6 +36,10 @@ namespace FSO.Client.UI.Panels
         public UILotControl m_Parent;
         public UIImage m_Bg;
 
+        private Vector2 currentTarget;
+        private Vector2 curRot;
+        private float lerpSpeed;
+
         private _3DTargetScene HeadScene;
         private BasicCamera HeadCamera;
         private double m_BgGrow;
@@ -61,6 +65,7 @@ namespace FSO.Client.UI.Panels
             this.ButtonStyle = new TextStyle
             {
                 Font = GameFacade.MainFont,
+                VFont = GameFacade.VectorFont,
                 Size = 12,
                 Color = new Color(0xA5, 0xC3, 0xD6),
                 SelectedColor = new Color(0x00, 0xFF, 0xFF),
@@ -70,6 +75,7 @@ namespace FSO.Client.UI.Panels
             HighlightStyle = ButtonStyle.Clone();
             HighlightStyle.Color = Color.Yellow;
 
+            lerpSpeed = 0.125f * (60.0f / FSOEnvironment.RefreshRate);
             m_Bg = new UIImage(TextureGenerator.GetPieBG(GameFacade.GraphicsDevice));
             m_Bg.SetSize(0, 0); //is scaled up later
             this.AddAt(0, m_Bg);
@@ -142,10 +148,12 @@ namespace FSO.Client.UI.Panels
         {
             HeadCamera = new BasicCamera(GameFacade.GraphicsDevice, new Vector3(0.0f, 7.0f, -17.0f), Vector3.Zero, Vector3.Up);
 
-            HeadCamera.Position = new Vector3(0, 5.2f, 12.5f);
-            HeadCamera.Target = new Vector3(0, 5.2f, 0.0f);
+            var pos2 = m_Head.Skeleton.GetBone("HEAD").AbsolutePosition;
 
-            HeadScene = new _3DTargetScene(GameFacade.GraphicsDevice, HeadCamera, new Point((int)(200*TrueScale),(int)(200*TrueScale)), (GlobalSettings.Default.AntiAlias) ? 8 : 0);
+            HeadCamera.Position = new Vector3(0, pos2.Y, 12.5f);
+            HeadCamera.Target = pos2;
+
+            HeadScene = new _3DTargetScene(GameFacade.GraphicsDevice, HeadCamera, new Point((int)(200*TrueScale),(int)(200*TrueScale)), (GlobalSettings.Default.AntiAlias > 0) ? 8 : 0);
             HeadScene.ID = "UIPieMenuHead";
 
             m_Head.Scene = HeadScene;
@@ -158,8 +166,9 @@ namespace FSO.Client.UI.Panels
 
         public void RotateHeadCam(Vector2 point)
         {
-            double xdir = Math.Atan(-point.X / 100.0);
-            double ydir = Math.Atan(-point.Y / 100.0);
+            curRot = Vector2.Lerp(curRot, currentTarget, lerpSpeed);
+            double xdir = Math.Atan(-curRot.X / 100.0);
+            double ydir = Math.Atan(-curRot.Y / 100.0);
 
             Vector3 off = new Vector3(0, 0, 13.5f);
             Matrix mat = Microsoft.Xna.Framework.Matrix.CreateRotationY((float)xdir) * Microsoft.Xna.Framework.Matrix.CreateRotationX((float)ydir);
@@ -245,6 +254,7 @@ namespace FSO.Client.UI.Panels
                 m_PieButtons.Add(but);
                 but.OnButtonClick += new ButtonClickDelegate(PieButtonClick);
                 but.OnButtonHover += new ButtonClickDelegate(PieButtonHover);
+                but.OnButtonExit += new ButtonClickDelegate(PieButtonExit);
             }
 
             bool top = true;
@@ -274,7 +284,7 @@ namespace FSO.Client.UI.Panels
                 m_PieButtons.Add(but);
                 but.OnButtonClick += new ButtonClickDelegate(PieButtonClick);
                 but.OnButtonHover += new ButtonClickDelegate(PieButtonHover);
-
+                but.OnButtonExit += new ButtonClickDelegate(PieButtonExit);
                 top = !top;
             }
 
@@ -300,9 +310,15 @@ namespace FSO.Client.UI.Panels
 
         void PieButtonHover(UIElement button)
         {
-            int index = m_PieButtons.IndexOf((UIButton)button);
-            //todo, make sim look at button
+            var uiB = (UIButton)button;
+            int index = m_PieButtons.IndexOf(uiB);
+            currentTarget = button.Position + new Vector2(uiB.Width/2f, uiB.Size.Y/2f);
             HITVM.Get().PlaySoundEvent(UISounds.PieMenuHighlight);
+        }
+
+        void PieButtonExit(UIElement button)
+        {
+            currentTarget = Vector2.Zero;
         }
 
         void BackButtonPress(UIElement button)
@@ -330,6 +346,7 @@ namespace FSO.Client.UI.Panels
                     m_Parent.vm.SendCommand(new VMNetGotoCmd
                     {
                         Interaction = action.ID,
+                        Param0 = action.Param0,
                         ActorUID = m_Caller.PersistID,
                         x = m_Obj.Position.x,
                         y = m_Obj.Position.y,

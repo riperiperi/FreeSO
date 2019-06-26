@@ -2,6 +2,7 @@
 using FSO.SimAntics.Entities;
 using FSO.SimAntics.Marshals;
 using FSO.SimAntics.Model;
+using FSO.SimAntics.Model.Platform;
 using FSO.SimAntics.Model.TSOPlatform;
 using System;
 using System.Collections.Generic;
@@ -20,6 +21,8 @@ namespace FSO.SimAntics.NetPlay.Model.Commands
         public short y;
         public sbyte level;
         public Direction dir;
+
+        public PurchaseMode Mode = PurchaseMode.Normal;
 
         //data sent back to the client only
         public uint GUID;
@@ -74,7 +77,9 @@ namespace FSO.SimAntics.NetPlay.Model.Commands
 
         private bool TryPlace(VM vm, VMAvatar caller)
         {
-            if (!vm.TSOState.CanPlaceNewUserObject(vm)) return false;
+            if (Mode != PurchaseMode.Donate && !vm.PlatformState.CanPlaceNewUserObject(vm)) return false;
+            if (Mode == PurchaseMode.Donate && !vm.PlatformState.CanPlaceNewDonatedObject(vm)) return false;
+
             VMStandaloneObjectMarshal state;
 
             if ((Data?.Length ?? 0) == 0) state = null;
@@ -140,6 +145,12 @@ namespace FSO.SimAntics.NetPlay.Model.Commands
                 if (index != -1) vm.MyInventory.RemoveAt(index);
             }
 
+            if (Mode == PurchaseMode.Donate)
+            {
+                //this object should be donated.
+                (CreatedGroup.BaseObject.TSOState as VMTSOObjectState).Donate(vm, CreatedGroup.BaseObject);
+            }
+
             vm.SignalChatEvent(new VMChatEvent(caller, VMChatEventType.Arch,
                 caller.Name,
                 vm.GetUserIP(caller.PersistID),
@@ -158,8 +169,9 @@ namespace FSO.SimAntics.NetPlay.Model.Commands
         public override bool Verify(VM vm, VMAvatar caller)
         {
             if (Verified) return true; //set internally when transaction succeeds. trust that the verification happened.
-            if (caller == null || //caller must be on lot, be a roommate.
-                caller.AvatarState.Permissions < VMTSOAvatarPermissions.Roommate ||
+            //typically null caller, non-roommate cause failure. some lot specific things may apply.
+            Mode = vm.PlatformState.Validator.GetPurchaseMode(Mode, caller, 0, true);
+            if (Mode == PurchaseMode.Disallowed ||
                 !vm.TSOState.CanPlaceNewUserObject(vm))
                 return false;
 
@@ -189,6 +201,8 @@ namespace FSO.SimAntics.NetPlay.Model.Commands
             writer.Write(GUID);
             writer.Write((Data?.Length)??0);
             if (Data != null) writer.Write(Data);
+
+            writer.Write((byte)Mode);
         }
 
         public override void Deserialize(BinaryReader reader)
@@ -204,6 +218,8 @@ namespace FSO.SimAntics.NetPlay.Model.Commands
             var length = reader.ReadInt32();
             if (length > 4096) throw new Exception("Object data cannot be this large!");
             Data = reader.ReadBytes(length);
+
+            Mode = (PurchaseMode)reader.ReadByte();
         }
 
         #endregion

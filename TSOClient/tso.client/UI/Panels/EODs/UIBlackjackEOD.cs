@@ -373,7 +373,7 @@ namespace FSO.Client.UI.Panels.EODs
                 DisableHandButtons();
 
                 // show EOD
-                Controller.ShowEODMode(new EODLiveModeOpt
+                EODController.ShowEODMode(new EODLiveModeOpt
                 {
                     Buttons = 2,
                     Height = EODHeight.TallTall,
@@ -455,7 +455,7 @@ namespace FSO.Client.UI.Panels.EODs
                     OwnerPanel.OnNewByteMessage += SendByteMessage;
                     OwnerPanel.OnNewStringMessage += SendStringMessage;
 
-                    Controller.ShowEODMode(new EODLiveModeOpt
+                    EODController.ShowEODMode(new EODLiveModeOpt
                     {
                         Buttons = 0,
                         Height = EODHeight.Normal,

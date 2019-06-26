@@ -6,6 +6,7 @@ using FSO.Common.DatabaseService;
 using FSO.Common.DatabaseService.Model;
 using FSO.Common.DataService;
 using FSO.Common.Domain.Shards;
+using FSO.Common.Model;
 using FSO.Common.Utils;
 using FSO.Server.Clients;
 using FSO.Server.Clients.Framework;
@@ -35,6 +36,20 @@ namespace FSO.Client.Regulators
         private IDatabaseService DB;
         private IClientDataService DataService;
         private IShardsDomain Shards;
+        private int _ReestablishAttempt;
+        private int ReestablishAttempt
+        {
+            get
+            {
+                return _ReestablishAttempt;
+            }
+            set
+            {
+                FSOFacade.NetStatus.CityReconnectAttempt = value;
+                _ReestablishAttempt = value;
+            }
+        }
+        public bool CanReestablish;
 
         public CityConnectionRegulator(CityClient cityApi, [Named("City")] AriesClient cityClient, IDatabaseService db, IClientDataService ds, IKernel kernel, IShardsDomain shards)
         {
@@ -92,12 +107,34 @@ namespace FSO.Client.Regulators
             AddState("ReceivedAvatarData").OnlyTransitionFrom("AskForAvatarData");
             AddState("AskForCharacterData").OnlyTransitionFrom("ReceivedAvatarData");
             AddState("ReceivedCharacterData").OnlyTransitionFrom("AskForCharacterData");
-            
+
             AddState("Connected")
+                .OnData(typeof(ServerByePDU)).TransitionTo("Disconnected")
                 .OnData(typeof(AriesDisconnected)).TransitionTo("UnexpectedDisconnect")
-                .OnlyTransitionFrom("ReceivedCharacterData");
+                .OnlyTransitionFrom("ReceivedCharacterData", "Reestablished");
 
             AddState("UnexpectedDisconnect");
+
+            AddState("Reestablish")
+                .OnData(typeof(ServerByePDU)).TransitionTo("UnexpectedDisconnect")
+                .OnData(typeof(AriesDisconnected)).TransitionTo("ReestablishFail")
+                .OnData(typeof(AriesConnected)).TransitionTo("Reestablishing")
+                .OnlyTransitionFrom("UnexpectedDisconnect", "ReestablishFail");
+
+            AddState("Reestablishing")
+                .OnData(typeof(AriesDisconnected)).TransitionTo("ReestablishFail")
+                .OnData(typeof(ServerByePDU)).TransitionTo("UnexpectedDisconnect")
+                .OnData(typeof(HostOnlinePDU)).TransitionTo("Reestablished")
+                .OnlyTransitionFrom("Reestablish");
+
+            AddState("Reestablished")
+                .OnData(typeof(ServerByePDU)).TransitionTo("UnexpectedDisconnect")
+                .OnData(typeof(AriesDisconnected)).TransitionTo("ReestablishFail")
+                .OnlyTransitionFrom("Reestablishing");
+            
+            AddState("ReestablishFail")
+                .OnData(typeof(ServerByePDU)).TransitionTo("UnexpectedDisconnect")
+                .OnlyTransitionFrom("Reestablish", "Reestablishing", "Reestablished");
 
             AddState("Disconnect")
                 .OnData(typeof(AriesDisconnected))
@@ -108,8 +145,7 @@ namespace FSO.Client.Regulators
                 .TransitionTo("Reconnecting");
 
             AddState("Reconnecting")
-                .OnData(typeof(ShardSelectorServletRequest))
-                .TransitionTo("SelectCity")
+                .OnData(typeof(HostOnlinePDU)).TransitionTo("Connected")
                 .OnlyTransitionFrom("Reconnect");
 
             GameThread.SetInterval(() =>
@@ -147,6 +183,8 @@ namespace FSO.Client.Regulators
         {
         }
 
+        private ShardSelectorServletResponse LastSettings;
+
         protected override void OnBeforeTransition(RegulatorState oldState, RegulatorState newState, object data)
         {
             switch (newState.Name)
@@ -176,11 +214,13 @@ namespace FSO.Client.Regulators
                     break;
 
                 case "OpenSocket":
+                    ReestablishAttempt = 0;
                     var settings = data as ShardSelectorServletResponse;
                     if (settings == null){
                         this.ThrowErrorAndReset(new Exception("Unknown parameter"));
                     }else{
                         //101 is plain
+                        LastSettings = settings;
                         Client.Connect(settings.Address + "101");
                     }
                     break;
@@ -191,7 +231,7 @@ namespace FSO.Client.Regulators
                 case "RequestClientSession":
                     Client.Write(new RequestClientSessionResponse {
                         Password = ShardSelectResponse.Ticket,
-                        User = ShardSelectResponse.PlayerID.ToString()
+                        User = ShardSelectResponse.AvatarID.ToString()
                     });
                     break;
 
@@ -266,10 +306,55 @@ namespace FSO.Client.Regulators
                     break;
 
                 case "Connected":
+                    CanReestablish = true;
                     break;
 
                 case "UnexpectedDisconnect":
-                    FSOFacade.Controller.FatalNetworkError(23);
+                    if (ReestablishAttempt > 0 || !CanReestablish)
+                    {
+                        FSOFacade.Controller.FatalNetworkError(23);
+                    }
+                    else
+                    {
+                        AsyncTransition("Reestablish");
+                    }
+                    break;
+
+                case "Reestablish":
+                    ReestablishAttempt++;
+                    Client.Connect(LastSettings.Address + "101");
+                    break;
+
+                case "Reestablishing":
+                    Client.Write(new RequestClientSessionResponse
+                    {
+                        Password = ShardSelectResponse.Ticket,
+                        User = ShardSelectResponse.AvatarID,
+                        Unknown2 = 1
+                    });
+                    break;
+
+                case "Reestablished":
+                    Client.Write(
+                        new ClientOnlinePDU
+                        {
+                        }
+                        );
+                    ReestablishAttempt = 0;
+                    AsyncTransition("Connected");
+                    break;
+
+                case "ReestablishFail":
+                    if (ReestablishAttempt < 10 && CanReestablish)
+                    {
+                        GameThread.SetTimeout(() =>
+                        {
+                            if (CurrentState?.Name == "ReestablishFail") AsyncTransition("Reestablish");
+                        }, 1000);
+                    } else
+                    {
+                        AsyncTransition("UnexpectedDisconnect");
+                    }
                     break;
 
                 case "Disconnect":
@@ -299,9 +384,12 @@ namespace FSO.Client.Regulators
                     break;
                 case "Reconnecting":
                     AsyncProcessMessage(CurrentShard);
+
                     break;
                 case "Disconnected":
                     ((ClientShards)Shards).CurrentShard = null;
+                    ReestablishAttempt = 0;
+                    CanReestablish = false;
                     break;
             }
         }
@@ -315,13 +403,15 @@ namespace FSO.Client.Regulators
         public void MessageReceived(AriesClient client, object message)
         {
 
-            if (message is RequestClientSession || 
-                message is HostOnlinePDU){
+            if (message is RequestClientSession ||
+                message is HostOnlinePDU || message is ServerByePDU)
+            {
                 this.AsyncProcessMessage(message);
             }
             else if (message is AnnouncementMsgPDU)
             {
-                GameThread.InUpdate(() => {
+                GameThread.InUpdate(() =>
+                {
                     var msg = (AnnouncementMsgPDU)message;
                     UIAlert alert = null;
                     alert = UIScreen.GlobalShowAlert(new UIAlertOptions()
@@ -334,7 +424,12 @@ namespace FSO.Client.Regulators
                         Alignment = TextAlignment.Left
                     }, true);
                 });
-            } else if (message is ChangeRoommateResponse)
+            }
+            else if (message is GlobalTuningUpdate)
+            {
+                DynamicTuning.Global = (message as GlobalTuningUpdate).Tuning;
+            }
+            else if (message is ChangeRoommateResponse)
             {
 
             }

@@ -92,6 +92,16 @@ namespace FSO.Content.Framework
             return ResolveById(ID);
         }
 
+        public string GetNameByID(ulong ID)
+        {
+            Far3ProviderEntry<T> entry = null;
+            if (EntriesById.TryGetValue(ID, out entry))
+            {
+                return entry.ToString();
+            }
+            return "unnamed";
+        }
+
         protected virtual T ResolveById(ulong id)
         {
             Far3ProviderEntry<T> entry = null;

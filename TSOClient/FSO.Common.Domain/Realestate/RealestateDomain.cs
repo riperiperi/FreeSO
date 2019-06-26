@@ -13,8 +13,13 @@ namespace FSO.Common.Domain.Realestate
 {
     public class RealestateDomain : IRealestateDomain
     {
-        private Regex VALIDATE_NUMERIC = new Regex(".*[0-9]+.*");
-        private Regex VALIDATE_SPECIAL_CHARS = new Regex("[a-z|A-Z|-| |']*");
+        // No need to check redundant regex conditions until you have to throw various errors
+        // (vide tso.client/UI/Panels/UILotPurchaseDialog.cs)
+        // I tried to combine conditions to reduce redundancy
+        private Regex VALIDATE_SPECIAL_CHARS = new Regex(@"[^\p{L} '-]"); // Numbers are special chars in this case
+        private Regex VALIDATE_APOSTROPHES = new Regex("^[^']*'?[^']*$");
+        private Regex VALIDATE_DASHES = new Regex("^[^-]*-?[^-]*$");
+        private Regex VALIDATE_SPACES = new Regex("^[^ ]+(?: [^ ]+)*$");
 
         private Dictionary<int, ShardRealestateDomain> _ByShard;
         private IShardsDomain _Shards;
@@ -52,10 +57,10 @@ namespace FSO.Common.Domain.Realestate
             if (string.IsNullOrEmpty(name) ||
                 name.Length < 3 ||
                 name.Length > 24 ||
-                VALIDATE_NUMERIC.IsMatch(name) ||
-                !VALIDATE_SPECIAL_CHARS.IsMatch(name) ||
-                name.Split(new char[] { '\'' }).Length > 1 ||
-                name.Split(new char[] { '-' }).Length > 1)
+                VALIDATE_SPECIAL_CHARS.IsMatch(name) ||
+                !VALIDATE_APOSTROPHES.IsMatch(name) ||
+                !VALIDATE_DASHES.IsMatch(name) ||
+                !VALIDATE_SPACES.IsMatch(name))
             {
                 return false;
             }
@@ -92,6 +97,14 @@ namespace FSO.Common.Domain.Realestate
             var terrain = _Map.GetTerrain(x, y);
             if (terrain == TerrainType.WATER) { return false; }
 
+            var slope = GetSlope(x, y);
+
+            //10 is threshold for now
+            return (slope < 10);
+        }
+
+        public int GetSlope(ushort x, ushort y)
+        {
             x += 1;
             //Check elevation is ok, get all 4 corners and then decide
             var tl = _Map.GetElevation(x, y);
@@ -105,8 +118,7 @@ namespace FSO.Common.Domain.Realestate
             int max = Math.Max(tl, Math.Max(tr, Math.Max(bl, br)));
             int min = Math.Min(tl, Math.Min(tr, Math.Min(bl, br)));
 
-            //10 is threshold for now
-            return (max - min < 10);
+            return (max - min);
         }
 
         public CityMap GetMap()

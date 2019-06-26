@@ -12,7 +12,7 @@ namespace FSO.Client.UI.Panels.MessageStore
     public class UIMessageStore
     {
         public int AvatarID = 0;
-        public List<MessageItem> Items;
+        public List<MessageItem> Items = new List<MessageItem>();
         public long LastMessageTime;
 
         private static UIMessageStore _store;

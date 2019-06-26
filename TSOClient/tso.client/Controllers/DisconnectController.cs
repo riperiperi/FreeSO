@@ -25,8 +25,6 @@ namespace FSO.Client.Controllers
             View = view;
             View.ShowProgress = false;
 
-            network.LotClient.Disconnect();
-            network.CityClient.Disconnect();
             CityConnectionRegulator = cityRegulator;
             CityConnectionRegulator.OnTransition += CityConnectionRegulator_OnTransition;
             LotConnectionRegulator = lotRegulator;

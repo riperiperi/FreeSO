@@ -38,8 +38,13 @@ namespace FSO.LotView.RC
              * buffer, and they are redrawn into the parent world's scroll buffers.
              */
 
+            var lightChangeType = 0;
+
             var recacheWalls = false;
             var recacheObjects = false;
+            var updateColor = false;
+
+            Blueprint.OutsideTime = state.Light?.Blueprint?.OutsideTime ?? 0.5f;
 
             foreach (var item in damage)
             {
@@ -53,8 +58,6 @@ namespace FSO.LotView.RC
                         break;
                     case BlueprintDamageType.SCROLL:
                         break;
-                    case BlueprintDamageType.LIGHTING_CHANGED:
-                        break;
                     case BlueprintDamageType.OBJECT_MOVE:
                     case BlueprintDamageType.OBJECT_GRAPHIC_CHANGE:
                     case BlueprintDamageType.OBJECT_RETURN_TO_STATIC:
@@ -65,9 +68,54 @@ namespace FSO.LotView.RC
                     case BlueprintDamageType.WALL_CHANGED:
                         recacheWalls = true;
                         break;
+
+                    case BlueprintDamageType.LIGHTING_CHANGED:
+                        if (lightChangeType >= 2) break;
+                        var room = (ushort)item.TileX;
+
+                        State.Light?.InvalidateRoom(room);
+                        updateColor = true;
+                        //TicksSinceLight = 0;
+                        break;
+                    case BlueprintDamageType.OUTDOORS_LIGHTING_CHANGED:
+                        if (lightChangeType >= 1) break;
+                        lightChangeType = 1;
+
+                        updateColor = true;
+                        State.Light?.BuildOutdoorsLight(Blueprint.OutsideTime);
+                        State.Light?.InvalidateOutdoors();
+
+                        //TicksSinceLight = 0;
+                        break;
+                    case BlueprintDamageType.ROOM_CHANGED:
+                        for (sbyte i = 0; i < Blueprint.RoomMap.Length; i++)
+                        {
+                            State.Rooms.SetRoomMap(i, Blueprint.RoomMap[i]);
+                        }
+                        if (State.Light != null)
+                        {
+                            if (lightChangeType < 2)
+                            {
+                                lightChangeType = 2;
+                                State.Light?.BuildOutdoorsLight(Blueprint.OutsideTime);
+                                updateColor = true;
+                                State.Light.InvalidateAll();
+                            }
+                        }
+                        Blueprint.Indoors = null;
+                        Blueprint.RoofComp.ShapeDirty = true;
+                        break;
                 }
             }
             damage.Clear();
+
+            if (updateColor)
+            {
+                State.OutsideColor = state.OutsideColor;
+                Blueprint.OutsideColor = state.OutsideColor;
+            }
+            State.LightingAdjust = state.OutsideColor.ToVector3() / State.OutsideColor.ToVector3();
+            State.Light?.ParseInvalidated(FloorsUsed, State);
 
             var is2d = state.Camera is WorldCamera;
             if (is2d)
@@ -94,7 +142,14 @@ namespace FSO.LotView.RC
                 parentState.Camera.Translation = new Vector3(GlobalPosition.X * 3, 0, GlobalPosition.Y * 3);
             else parentState.CenterTile += GlobalPosition; //TODO: vertical offset
 
-            parentState.ClearLighting(true);
+            if (State.Light != null)
+            {
+                State.PrepareLighting();
+            }
+            else
+            {
+                parentState.ClearLighting(true);
+            }
             
             var level = parentState.SilentLevel;
             var build = parentState.SilentBuildMode;
@@ -113,6 +168,7 @@ namespace FSO.LotView.RC
             Blueprint.RoofComp.Draw(gd, parentState);
             parentState.SilentLevel = level;
             effect.CurrentTechnique = effect.Techniques["Draw"];
+            gd.BlendState = BlendState.NonPremultiplied;
 
             var frustrum = new BoundingFrustum(vp);
             var objs = Blueprint.Objects.Where(x => frustrum.Intersects(((ObjectComponentRC)x).GetBounds()))

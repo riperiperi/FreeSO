@@ -59,7 +59,7 @@
     <DeviceSpecificBuild>true</DeviceSpecificBuild>
     <MtouchI18n>west</MtouchI18n>
     <IpaMetadata>iTunesMetadata.plist</IpaMetadata>
-    <MtouchExtraArgs>--linkskip=MonoGame.Framework --linkskip=FSO.Files --linkskip=FSO.SimAntics --linkskip=FSO.Content --linkskip=Ninject --linkskip=FSO.Client --linkskip=FSO.Server.Protocol --linkskip=FSO.Common.Domain --linkskip=FSO.Common.DatabaseService --linkskip=FSO.Common.DataService --linkskip=FSO.UI --linkskip=System.Collections.Immutable --nolinkaway -v -v -v -v</MtouchExtraArgs>
+    <MtouchExtraArgs>--linkskip=MonoGame.Framework --linkskip=FSO.Files --linkskip=FSO.SimAntics --linkskip=FSO.Content --linkskip=Ninject --linkskip=FSO.Client --linkskip=FSO.Server.Protocol --linkskip=FSO.Common.Domain --linkskip=FSO.Common.DatabaseService --linkskip=FSO.Common.DataService --linkskip=FSO.UI --linkskip=System.Collections.Immutable --linkskip=MSDFData --nolinkaway -v -v -v -v</MtouchExtraArgs>
     <MtouchEnableSGenConc>true</MtouchEnableSGenConc>
   </PropertyGroup>
   <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Release|iPhoneSimulator' ">
@@ -106,11 +106,12 @@
   <ItemGroup>
     <Reference Include="Common.Logging, Version=3.4.1.0, Culture=neutral, PublicKeyToken=af08829b84f0328e, processorArchitecture=MSIL">
       <HintPath>..\packages\Common.Logging.3.4.1\lib\netstandard1.3\Common.Logging.dll</HintPath>
-      <Private>True</Private>
     </Reference>
     <Reference Include="Common.Logging.Core, Version=3.4.1.0, Culture=neutral, PublicKeyToken=af08829b84f0328e, processorArchitecture=MSIL">
       <HintPath>..\packages\Common.Logging.Core.3.4.1\lib\netstandard1.0\Common.Logging.Core.dll</HintPath>
-      <Private>True</Private>
+    </Reference>
+    <Reference Include="CoreCompat.System.Configuration, Version=4.2.3.0, Culture=neutral, processorArchitecture=MSIL">
+      <HintPath>..\packages\CoreCompat.System.Configuration.4.2.3-r4\lib\netstandard1.5\CoreCompat.System.Configuration.dll</HintPath>
     </Reference>
     <Reference Include="FSO.Client">
       <HintPath>..\tso.client\bin\WindowsGL\Release\FSO.Client.dll</HintPath>
@@ -136,16 +137,14 @@
     <Reference Include="FSO.UI">
       <HintPath>..\tso.client\bin\WindowsGL\Release\FSO.UI.dll</HintPath>
     </Reference>
-    <Reference Include="JWT, Version=3.0.0.0, Culture=neutral, processorArchitecture=MSIL">
-      <HintPath>..\packages\JWT.3.0.2\lib\netstandard1.3\JWT.dll</HintPath>
-      <Private>True</Private>
+    <Reference Include="JWT, Version=4.0.0.0, Culture=neutral, processorArchitecture=MSIL">
+      <HintPath>..\packages\JWT.4.0.0\lib\netstandard1.3\JWT.dll</HintPath>
     </Reference>
     <Reference Include="Lidgren.Network">
       <HintPath>..\..\Other\libs\FSOMonoGame\MonoGame.Framework\bin\iOS\iPhone\Lidgren.Network.dll</HintPath>
     </Reference>
     <Reference Include="MIConvexHull, Version=1.0.17.1019, Culture=neutral, PublicKeyToken=bdc96d69606221fd, processorArchitecture=MSIL">
       <HintPath>..\packages\MIConvexHull.1.1.17.1019\lib\netstandard1.0\MIConvexHull.dll</HintPath>
-      <Private>True</Private>
     </Reference>
     <Reference Include="Microsoft.CSharp" />
     <Reference Include="Mina.NET">
@@ -157,29 +156,32 @@
     <Reference Include="MonoGame.Framework.Net">
       <HintPath>..\..\Other\libs\FSOMonoGame\MonoGame.Framework\bin\iOS\iPhone\MonoGame.Framework.Net.dll</HintPath>
     </Reference>
-    <Reference Include="Newtonsoft.Json, Version=10.0.0.0, Culture=neutral, PublicKeyToken=30ad4fe6b2a6aeed, processorArchitecture=MSIL">
-      <HintPath>..\packages\Newtonsoft.Json.10.0.3\lib\netstandard1.3\Newtonsoft.Json.dll</HintPath>
-      <Private>True</Private>
+    <Reference Include="MSDFData">
+      <HintPath>..\FSO.Windows\bin\Release\MSDFData.dll</HintPath>
+    </Reference>
+    <Reference Include="Newtonsoft.Json, Version=11.0.0.0, Culture=neutral, PublicKeyToken=30ad4fe6b2a6aeed, processorArchitecture=MSIL">
+      <HintPath>..\packages\Newtonsoft.Json.11.0.2\lib\netstandard2.0\Newtonsoft.Json.dll</HintPath>
     </Reference>
     <Reference Include="Ninject, Version=3.0.0.0, Culture=neutral, PublicKeyToken=c7192dc5380945e7, processorArchitecture=MSIL">
       <HintPath>..\packages\Portable.Ninject.3.3.1\lib\Xamarin.iOS\Ninject.dll</HintPath>
     </Reference>
     <Reference Include="NLog, Version=4.0.0.0, Culture=neutral, PublicKeyToken=5120e14c03d0593c, processorArchitecture=MSIL">
-      <HintPath>..\packages\NLog.4.5.5\lib\xamarinios10\NLog.dll</HintPath>
-      <Private>True</Private>
+      <HintPath>..\packages\NLog.4.5.7\lib\xamarinios10\NLog.dll</HintPath>
     </Reference>
     <Reference Include="RestSharp, Version=105.2.3.0, Culture=neutral, processorArchitecture=MSIL">
       <HintPath>..\packages\RestSharp.105.2.3\lib\Xamarin.iOS10\RestSharp.dll</HintPath>
-      <Private>True</Private>
     </Reference>
     <Reference Include="System" />
-    <Reference Include="System.Collections.Immutable, Version=1.2.1.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a, processorArchitecture=MSIL">
-      <HintPath>..\packages\System.Collections.Immutable.1.3.0\lib\portable-net45+win8+wp8+wpa81\System.Collections.Immutable.dll</HintPath>
-      <Private>True</Private>
+    <Reference Include="System.Collections.Immutable, Version=1.2.3.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a, processorArchitecture=MSIL">
+      <HintPath>..\packages\System.Collections.Immutable.1.5.0\lib\netstandard2.0\System.Collections.Immutable.dll</HintPath>
     </Reference>
     <Reference Include="System.Runtime.Serialization" />
     <Reference Include="System.Xml" />
     <Reference Include="System.Core" />
+    <Reference Include="VoronoiLib, Version=1.0.0.0, Culture=neutral, processorArchitecture=MSIL">
+      <SpecificVersion>False</SpecificVersion>
+      <HintPath>..\tso.client\bin\WindowsGL\Release\VoronoiLib.dll</HintPath>
+    </Reference>
     <Reference Include="Xamarin.iOS" />
     <Reference Include="FSO.Common">
       <HintPath>..\tso.client\bin\WindowsGL\Release\FSO.Common.dll</HintPath>

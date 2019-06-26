@@ -3,6 +3,7 @@ using FSO.Common.DatabaseService;
 using FSO.Common.DatabaseService.Model;
 using FSO.Common.DataService;
 using FSO.Common.DataService.Model;
+using FSO.Common.Utils;
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -29,40 +30,64 @@ namespace FSO.Client.Controllers
             DatabaseService.Search(new SearchRequest { Query = query, Type = type }, exact)
                 .ContinueWith(x =>
                 {
-                    object[] ids = x.Result.Items.Select(y => (object)y.EntityId).ToArray();
-                    if (type == SearchType.SIMS)
+                    GameThread.InUpdate(() =>
                     {
-                        var results = x.Result.Items.Select(q =>
+                        object[] ids = x.Result.Items.Select(y => (object)y.EntityId).ToArray();
+                        if (type == SearchType.SIMS)
                         {
-                            return new GizmoAvatarSearchResult() { Result = q };
-                        }).ToList();
+                            var results = x.Result.Items.Select(q =>
+                            {
+                                return new GizmoAvatarSearchResult() { Result = q };
+                            }).ToList();
 
-                        if (ids.Length > 0)
-                        {
-                            var avatars = DataService.GetMany<Avatar>(ids).Result;
-                            foreach(var item in avatars){
-                                results.First(f => f.Result.EntityId == item.Avatar_Id).Avatar = item;
+                            if (ids.Length > 0)
+                            {
+                                var avatars = DataService.GetMany<Avatar>(ids).Result;
+                                foreach (var item in avatars)
+                                {
+                                    results.First(f => f.Result.EntityId == item.Avatar_Id).Avatar = item;
+                                }
                             }
+
+                            View.SetResults(results);
                         }
-
-                        View.SetResults(results);
-                    }else if(type == SearchType.LOTS)
-                    {
-                        var results = x.Result.Items.Select(q =>
+                        else if (type == SearchType.LOTS)
                         {
-                            return new GizmoLotSearchResult() { Result = q };
-                        }).ToList();
+                            var results = x.Result.Items.Select(q =>
+                            {
+                                return new GizmoLotSearchResult() { Result = q };
+                            }).ToList();
 
-                        if(ids.Length > 0)
-                        {
-                            var lots = DataService.GetMany<Lot>(ids).Result;
-                            foreach(var item in lots){
-                                results.First(f => f.Result.EntityId == item.Id).Lot = item;
+                            if (ids.Length > 0)
+                            {
+                                var lots = DataService.GetMany<Lot>(ids).Result;
+                                foreach (var item in lots)
+                                {
+                                    results.First(f => f.Result.EntityId == item.Id).Lot = item;
+                                }
                             }
-                        }
 
-                        View.SetResults(results);
-                    }
+                            View.SetResults(results);
+                        }
+                        else if (type == SearchType.NHOOD)
+                        {
+                            var results = x.Result.Items.Select(q =>
+                            {
+                                return new GizmoNhoodSearchResult() { Result = q };
+                            }).ToList();
+
+                            if (ids.Length > 0)
+                            {
+                                var lots = DataService.GetMany<Neighborhood>(ids).Result;
+                                foreach (var item in lots)
+                                {
+                                    results.First(f => f.Result.EntityId == item.Id).Lot = item;
+                                }
+                            }
+
+                            View.SetResults(results);
+                        }
+                    });
                 });
         }
     }
@@ -108,6 +133,28 @@ namespace FSO.Client.Controllers
                     return Lot.Lot_IsOnline;
                 }
                 return false;
+            }
+        }
+
+        public bool IsOffline
+        {
+            get
+            {
+                return !IsOnline;
+            }
+        }
+    }
+
+    public class GizmoNhoodSearchResult
+    {
+        public Neighborhood Lot;
+        public SearchResponseItem Result;
+
+        public bool IsOnline
+        {
+            get
+            {
+                return true;
             }
         }
 

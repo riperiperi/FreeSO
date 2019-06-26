@@ -178,8 +178,9 @@ namespace FSO.Client.Rendering.City.Plugins
 
         public override void Draw(SpriteBatch sb)
         {
+            TextStyle.DefaultLabel.VFont.Draw(sb.GraphicsDevice, Mode.ToString(), new Vector2(10, 10), Color.White, new Vector2(TextStyle.DefaultLabel.Scale), null);
+
             sb.Begin();
-            sb.DrawString(TextStyle.DefaultLabel.Font.GetNearest(12).Font, Mode.ToString(), new Vector2(10, 10), Color.White);
             var ePos = new Point((int)Math.Round(LastPos.X), (int)Math.Round(LastPos.Y));
 
             switch (Mode)

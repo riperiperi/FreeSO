@@ -42,12 +42,13 @@ namespace FSO.LotView.RC
             var rcState = ((WorldStateRC)State);
 
             float terrainHeight = 0;
+            var hz = FSOEnvironment.RefreshRate;
             if (Blueprint != null)
             {
                 terrainHeight = (Blueprint.InterpAltitude(new Vector3(State.CenterTile, 0))) * 3;
                 var targHeight = terrainHeight + (State.Level - 1) * 2.95f * 3;
                 targHeight = Math.Max((Blueprint.InterpAltitude(new Vector3(State.Camera.Position.X, State.Camera.Position.Z, 0)/3) + (State.Level - 1) * 2.95f) * 3, terrainHeight);
-                rcState.CamHeight += (targHeight - rcState.CamHeight) * (1f-(float)Math.Pow(0.8f, 60f/FSOEnvironment.RefreshRate));
+                rcState.CamHeight += (targHeight - rcState.CamHeight) * (1f-(float)Math.Pow(0.8f, 60f/hz));
             }
 
             if (Visible && !rcState.FixedCam)
@@ -56,6 +57,7 @@ namespace FSO.LotView.RC
                 if (state.NewKeys.Contains(Microsoft.Xna.Framework.Input.Keys.Tab))
                 {
                     rcState.CameraMode = !rcState.CameraMode;
+                    ((WorldCamera3D)rcState.Camera).FOV = (float)Math.PI / 4f;
                 }
 
                 if (rcState.CameraMode)
@@ -66,14 +68,23 @@ namespace FSO.LotView.RC
                         var my = (int)State.WorldSpace.WorldPxHeight / (2 * PPXDepthEngine.SSAA);
 
                         var mpos = state.MouseState.Position;
+                        var camera = rcState.Camera3D;
                         if (LastFP)
                         {
-                            rcState.RotationX -= (mpos.X - mx) / 500f;
-                            rcState.RotationY += (mpos.Y - my) / 500f;
+                            rcState.RotationX -= ((mpos.X - mx) / 500f) * camera.FOV;
+                            rcState.RotationY += ((mpos.Y - my) / 500f) * camera.FOV;
                         }
                         Mouse.SetPosition(mx, my);
 
                         var speed = (state.KeyboardState.IsKeyDown(Keys.LeftShift)) ? 1.5f : 0.5f;
+                        
+                        if (camera.FOV < Math.PI * 0.6f)
+                            if (state.KeyboardState.IsKeyDown(Keys.Z))
+                                camera.FOV += 1f/hz;
+
+                        if (camera.FOV > Math.PI * 0.025f)
+                            if (state.KeyboardState.IsKeyDown(Keys.X))
+                                camera.FOV -= 1f/hz;
 
                         if (state.KeyboardState.IsKeyDown(Keys.W))
                             FPCamVelocity.Z -= speed;
@@ -174,7 +185,14 @@ namespace FSO.LotView.RC
             State.OutsideColor = Blueprint.OutsideColor;
             FSO.Common.Rendering.Framework.GameScreen.ClearColor = new Color(State.OutsideColor.ToVector4()); //new Color(0x72, 0x72, 0x72).ToVector4() * 
 
-            foreach (var sub in Blueprint.SubWorlds) sub.PreDraw(device, State);
+            var frustrum = new BoundingFrustum(State.Camera.View * State.Camera.Projection);
+            foreach (var sub in Blueprint.SubWorlds)
+            {
+                var bounds = ((SubWorldComponentRC)sub).Bounds;
+                if (bounds.Intersects(frustrum))
+                    sub.PreDraw(device, State);
+            }
+            State.UpdateInterpolation();
             if (Blueprint != null)
             {
                 foreach (var ent in Blueprint.Objects)
@@ -224,6 +242,11 @@ namespace FSO.LotView.RC
             {
                 particle.Draw(device, State);
             }
+
+            foreach (var debug in Blueprint.DebugLines)
+            {
+                debug.Draw(device, State);
+            }
         }
 
         public override ObjectComponent MakeObjectComponent(Content.GameObject obj)
@@ -239,9 +262,23 @@ namespace FSO.LotView.RC
         public override void ChangedWorldConfig(GraphicsDevice gd)
         {
             base.ChangedWorldConfig(gd);
-            PPXDepthEngine.SSAA = (WorldConfig.Current.AA ? 2 : 1);
+            switch (WorldConfig.Current.AA)
+            {
+                case 1:
+                    PPXDepthEngine.MSAA = 4;
+                    PPXDepthEngine.SSAA = 1;
+                    break;
+                case 2:
+                    PPXDepthEngine.SSAA = 2;
+                    PPXDepthEngine.MSAA = 0;
+                    break;
+                default:
+                    PPXDepthEngine.MSAA = 0;
+                    PPXDepthEngine.SSAA = 1;
+                    break;
+            }
             PPXDepthEngine.InitScreenTargets();
-            UseBackbuffer = WorldConfig.Current.AA;
+            UseBackbuffer = WorldConfig.Current.AA > 0;
         }
 
         public BoundingBox[] SkyBounds;

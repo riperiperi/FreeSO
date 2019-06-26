@@ -290,7 +290,7 @@ namespace FSO.Client.UI.Panels.EODs
                 SetNewTip(GameFacade.Strings.GetString("f111", "47")); // "Wait until the next hand to bet."
 
                 // show the UIEOD
-                Controller.ShowEODMode(GetEODOptions(false));
+                EODController.ShowEODMode(GetEODOptions(false));
             }
             else // invalid data sent
             {
@@ -398,7 +398,7 @@ namespace FSO.Client.UI.Panels.EODs
                     SetNewTip(GameFacade.Strings["UIText", "259", "22"]); // "Closed for Maintenance"
 
                     // show the UIEOD
-                    Controller.ShowEODMode(GetEODOptions(true));
+                    EODController.ShowEODMode(GetEODOptions(true));
                 }
             }
         }

@@ -1,4 +1,5 @@
-﻿using FSO.Server.Framework.Gluon;
+﻿using FSO.Server.Common;
+using FSO.Server.Framework.Gluon;
 using FSO.Server.Protocol.Gluon.Model;
 using FSO.Server.Protocol.Gluon.Packets;
 using System;
@@ -45,6 +46,19 @@ namespace FSO.Server.Servers.City.Domain
                 LotServerState state = null;
                 if (ServersByCallsign.TryGetValue(callSign, out state)) result = state.Session;
                 return result;
+            }
+        }
+
+        public void BroadcastMessage(object message)
+        {
+            List<IGluonSession> sessions;
+            lock (Servers)
+            {
+                sessions = Servers.Select(x => x.Session).ToList();
+            }
+            foreach (var session in sessions)
+            {
+                session?.Write(message);
             }
         }
 

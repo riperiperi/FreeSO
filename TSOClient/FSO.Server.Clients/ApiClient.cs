@@ -24,7 +24,7 @@ namespace FSO.Server.Clients
 
         public void GetThumbnailAsync(uint shardID, uint location, Action<byte[]> callback)
         {
-            var client = Client();
+            //var client = Client();
             var request = new RestRequest("userapi/city/" + shardID + "/" + location + ".png");
 
             client.ExecuteAsync(request, (resp, h) =>
@@ -41,7 +41,7 @@ namespace FSO.Server.Clients
 
         public void GetFacadeAsync(uint shardID, uint location, Action<byte[]> callback)
         {
-            var client = Client();
+            //var client = Client();
             var request = new RestRequest("userapi/city/" + shardID + "/" + location + ".fsof");
 
             client.ExecuteAsync(request, (resp, h) =>
@@ -122,12 +122,13 @@ namespace FSO.Server.Clients
         {
             var client = Client();
             var request = new RestRequest("userapi/city/" + shardID + "/uploadfacade/" + lotLocation, Method.POST);
-            request.AddFile("application/octet-stream", data, lotLocation + ".fsof");
+            request.AddFile("files", data, lotLocation + ".fsof", "application/octet-stream");
             request.AddHeader("authorization", "bearer " + AuthKey);
 
             client.ExecuteAsync(request, (resp, h) =>
             {
                 var ok = resp.StatusCode == System.Net.HttpStatusCode.OK;
+                Console.WriteLine(resp.StatusCode);
                 GameThread.NextUpdate(x =>
                 {
                     callback(ok);
@@ -152,6 +153,46 @@ namespace FSO.Server.Clients
                         Newtonsoft.Json.Linq.JArray data = obj.reservedLots;
                         uint[] result = data.Select(y => Convert.ToUInt32(y)).ToArray();
                         callback(result);
+                    }
+                });
+            });
+        }
+
+        public void GetUpdateList(Action<ApiUpdate[]> callback)
+        {
+            var client = Client();
+            var request = new RestRequest("userapi/update");
+
+            client.ExecuteAsync(request, (resp, h) =>
+            {
+                GameThread.NextUpdate(x =>
+                {
+                    if (resp.StatusCode != System.Net.HttpStatusCode.OK)
+                        callback(null);
+                    else
+                    {
+                        var obj = JsonConvert.DeserializeObject<ApiUpdate[]>(resp.Content);
+                        callback(obj);
+                    }
+                });
+            });
+        }
+
+        public void GetUpdateList(string branchName, Action<ApiUpdate[]> callback)
+        {
+            var client = Client();
+            var request = new RestRequest("userapi/updates/" + branchName);
+
+            client.ExecuteAsync(request, (resp, h) =>
+            {
+                GameThread.NextUpdate(x =>
+                {
+                    if (resp.StatusCode != System.Net.HttpStatusCode.OK)
+                        callback(null);
+                    else
+                    {
+                        var obj = JsonConvert.DeserializeObject<ApiUpdate[]>(resp.Content);
+                        callback(obj);
                     }
                 });
             });

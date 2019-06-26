@@ -47,5 +47,23 @@ namespace FSO.Server.Database.DA.LotVisitors
         /// <param name="end"></param>
         /// <returns></returns>
         IEnumerable<DbLotVisit> StreamBetween(int shard_id, DateTime start, DateTime end);
+
+        /// <summary>
+        /// 
+        /// </summary>
+        /// <param name="start"></param>
+        /// <param name="end"></param>
+        /// <returns></returns>
+        IEnumerable<DbLotVisitNhood> StreamBetweenPlusNhood(int shard_id, DateTime start, DateTime end);
+
+        /// <summary>
+        /// 
+        /// </summary>
+        /// <param name="start"></param>
+        /// <param name="end"></param>
+        /// <returns></returns>
+        IEnumerable<DbLotVisitNhood> StreamBetweenOneNhood(uint nhood_id, DateTime start, DateTime end);
+
+
     }
 }

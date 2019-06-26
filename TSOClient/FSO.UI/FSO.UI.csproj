@@ -94,6 +94,9 @@
     <Compile Include="Framework\IUIAutoSize.cs" />
     <Compile Include="Framework\IUIProcess.cs" />
     <Compile Include="Framework\Matrix2D.cs" />
+    <Compile Include="Framework\MSDFFont.cs" />
+    <Compile Include="Framework\MSDFFontVert.cs" />
+    <Compile Include="Framework\MSDFRenderer.cs" />
     <Compile Include="Framework\Parser\UIAttribute.cs" />
     <Compile Include="Framework\Parser\UIScript.cs" />
     <Compile Include="Framework\Parser\UIScriptModel.cs" />
@@ -151,6 +154,10 @@
     <ProjectReference Include="..\..\Other\libs\FSOMonoGame\MonoGame.Framework\MonoGame.Framework.Windows.csproj">
       <Project>{7de47032-a904-4c29-bd22-2d235e8d91ba}</Project>
       <Name>MonoGame.Framework.Windows</Name>
+    </ProjectReference>
+    <ProjectReference Include="..\..\Other\libs\MSDFData\MSDFData.csproj">
+      <Project>{eabea510-3e53-4f19-9f0b-75c5ca9dfa3b}</Project>
+      <Name>MSDFData</Name>
     </ProjectReference>
     <ProjectReference Include="..\tso.common\FSO.Common.csproj">
       <Project>{c42962a1-8796-4f47-9dcd-79ed5904d8ca}</Project>

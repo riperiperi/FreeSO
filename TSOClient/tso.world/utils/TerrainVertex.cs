@@ -28,7 +28,7 @@ namespace FSO.LotView.Utils
         {
         }
 
-        public static int SizeInBytes = sizeof(float) * 14;
+        public static int SizeInBytes = sizeof(float) * 13;
 
         public static VertexDeclaration VertexElements = new VertexDeclaration
         (

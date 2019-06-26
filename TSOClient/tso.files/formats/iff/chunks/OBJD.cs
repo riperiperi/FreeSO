@@ -269,6 +269,61 @@ namespace FSO.Files.Formats.IFF.Chunks
         public ushort STSubsort { get; set; }
         public ushort MTSubsort { get; set; }
 
+        public ushort FootprintNorth
+        {
+            get
+            {
+                return (ushort)(FootprintMask & 0xF);
+            }
+            set
+            {
+                FootprintMask &= 0xFFF0;
+                FootprintMask |= (ushort)(value & 0xF);
+            }
+        }
+
+
+        public ushort FootprintEast
+        {
+            get
+            {
+                return (ushort)((FootprintMask >> 4) & 0xF);
+            }
+            set
+            {
+                FootprintMask &= 0xFF0F;
+                FootprintMask |= (ushort)((value & 0xF) << 4);
+            }
+        }
+
+
+        public ushort FootprintSouth
+        {
+            get
+            {
+                return (ushort)((FootprintMask >> 8) & 0xF);
+            }
+            set
+            {
+                FootprintMask &= 0xF0FF;
+                FootprintMask |= (ushort)((value & 0xF) << 8);
+            }
+        }
+
+
+        public ushort FootprintWest
+        {
+            get
+            {
+                return (ushort)((FootprintMask >> 12) & 0xF);
+            }
+            set
+            {
+                FootprintMask &= 0x0FFF;
+                FootprintMask |= (ushort)((value & 0xF) << 12);
+            }
+        }
+
         public ushort TypeAttrGUID1
         {
             get { return (ushort)(TypeAttrGUID); }

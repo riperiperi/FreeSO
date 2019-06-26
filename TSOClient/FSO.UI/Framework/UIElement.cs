@@ -19,6 +19,7 @@ using FSO.Common.Rendering.Framework.Model;
 using FSO.Common.Rendering.Framework.IO;
 using FSO.Common.Rendering.Framework;
 using FSO.Common.Content;
+using FSO.Common;
 
 namespace FSO.Client.UI.Framework
 {
@@ -47,7 +48,7 @@ namespace FSO.Client.UI.Framework
         /// parent component.
         /// </summary>
         protected float _X;
-        
+
         /// <summary>
         /// Y position of this UIComponent. This coordinate is relative to this UIElement's
         /// parent component.
@@ -135,7 +136,7 @@ namespace FSO.Client.UI.Framework
         /// 
         /// It is used to convert local coordinates into absolute screen coordinates for drawing.
         /// </summary>
-        protected float[] _Mtx = Matrix2D.IDENTITY;
+        protected float[] _Mtx = Matrix2D.IDENTITY.CloneMatrix();
 
         /// <summary>
         /// This is the absolute scale of this UIElement, Aka it is all the parent
@@ -284,7 +285,8 @@ namespace FSO.Client.UI.Framework
         /// </summary>
         public float Opacity
         {
-            get {
+            get
+            {
                 return _Opacity;
             }
             set
@@ -308,6 +310,11 @@ namespace FSO.Client.UI.Framework
                     CalculateOpacity();
                 }
                 return _BlendColor;
+            }
+            set
+            {
+                _BlendColor = value;
+                _OpacityDirty = false;
             }
         }
 
@@ -334,7 +341,7 @@ namespace FSO.Client.UI.Framework
 
             set
             {
-                
+
             }
         }
 
@@ -354,7 +361,7 @@ namespace FSO.Client.UI.Framework
                 CalculateMatrix();
             }
         }
-        
+
         /// <summary>
         /// Matrix object which represents the position & scale of this UIElement.
         /// 
@@ -412,7 +419,7 @@ namespace FSO.Client.UI.Framework
             else
             {
                 _ScaleParent = Vector2.One;
-                _Mtx = Matrix2D.IDENTITY;
+                _Mtx = Matrix2D.IDENTITY.CloneMatrix();
             }
 
             //Translate by our x and y coordinates
@@ -558,7 +565,8 @@ namespace FSO.Client.UI.Framework
         {
             UIElement elem = this;
             if (!elem.Visible) return false;
-            while (elem.Parent != null) {
+            while (elem.Parent != null)
+            {
                 elem = elem.Parent;
                 if (!elem.Visible) return false;
             }
@@ -705,6 +713,8 @@ namespace FSO.Client.UI.Framework
         /// <param name="style">The text style</param>
         public void DrawLocalString(SpriteBatch batch, string text, Vector2 to, TextStyle style)
         {
+            DrawLocalString(batch, text, to, style, Rectangle.Empty, 0);
+            /*
             var scale = _Scale;
             if (style.Scale != 1.0f)
             {
@@ -713,8 +723,9 @@ namespace FSO.Client.UI.Framework
             //to.Y += style.BaselineOffset;
             to.X = (float)Math.Floor(to.X);
             to.Y = (float)Math.Floor(to.Y);
-            if (style.Shadow) batch.DrawString(style.SpriteFont, text, LocalPoint(to) + new Vector2(1, 1), Color.Black, 0, Vector2.Zero, scale, _SpriteEffects, 0);
-            batch.DrawString(style.SpriteFont, text, LocalPoint(to), style.Color, 0, Vector2.Zero, scale, _SpriteEffects, 0);
+            if (style.Shadow) batch.DrawString(style.SpriteFont, text, LocalPoint(to) + new Vector2(1, 1), Color.Black, 0, Vector2.Zero, scale, SpriteEffects.None, 0);
+            batch.DrawString(style.SpriteFont, text, LocalPoint(to), style.Color, 0, Vector2.Zero, scale, SpriteEffects.None, 0);
+            */
         }
 
         /// <summary>
@@ -776,8 +787,7 @@ namespace FSO.Client.UI.Framework
             }
 
             /** Work out how big the text will be so we can align it **/
-            var textSize = style.SpriteFont.MeasureString(text);
-            Vector2 size = textSize * style.Scale;
+            var size = (align == 0) ? Vector2.Zero : style.MeasureString(text);
 
             /** Apply margins **/
             if (margin != Rectangle.Empty)
@@ -792,7 +802,7 @@ namespace FSO.Client.UI.Framework
             var pos = to;
             pos.X += bounds.X;
             pos.Y += bounds.Y;
-            
+
             if ((align & TextAlignment.Right) == TextAlignment.Right)
             {
                 pos.X += (bounds.Width - size.X);
@@ -816,8 +826,44 @@ namespace FSO.Client.UI.Framework
             /** Draw the string **/
             pos = FlooredLocalPoint(pos);
 
-            if (style.Shadow) batch.DrawString(style.SpriteFont, text, pos + new Vector2(1, 1), Color.Black, 0, Vector2.Zero, scale, _SpriteEffects, 0);
-            batch.DrawString(style.SpriteFont, text, pos, style.GetColor(state)*Opacity, 0, Vector2.Zero, scale, _SpriteEffects, 0);
+            if (style.VFont != null)
+            {
+                batch.End();
+                Matrix? mat = null;
+                var ui = (batch as UISpriteBatch);
+                if (ui != null && ui.BatchMatrixStack.Count > 0)
+                    mat = ui.BatchMatrixStack.Peek();
+
+                if (style.Shadow)
+                    style.VFont.Draw(batch.GraphicsDevice, text, pos + new Vector2(FSOEnvironment.DPIScaleFactor), Color.Black, scale, mat);
+                style.VFont.Draw(batch.GraphicsDevice, text, pos, style.GetColor(state) * Opacity, scale, mat);
+
+                if (mat != null)
+                    batch.Begin(transformMatrix: mat, rasterizerState: RasterizerState.CullNone);
+                else
+                    batch.Begin(rasterizerState: RasterizerState.CullNone);
+            }
+            else
+            {
+                if (style.Shadow) batch.DrawString(style.SpriteFont, text, pos + new Vector2(FSOEnvironment.DPIScaleFactor), Color.Black, 0, Vector2.Zero, scale, SpriteEffects.None, 0);
+                batch.DrawString(style.SpriteFont, text, pos, style.GetColor(state) * Opacity, 0, Vector2.Zero, scale, SpriteEffects.None, 0);
+            }
+
+
+        }
+
+        private void DPISwitch(ref Texture2D texture, ref Vector2 scale, ref Rectangle? rect)
+        {
+            if (texture.Tag is Texture2D)
+            {
+                var tex2 = (Texture2D)texture.Tag;
+                scale *= new Vector2(texture.Width / (float)tex2.Width, texture.Height / (float)tex2.Height);
+
+                var rscale = 2;
+                rect = new Rectangle(rect.Value.X * rscale, rect.Value.Y * rscale, rect.Value.Width * rscale, rect.Value.Height * rscale);
+
+                texture = tex2;
+            }
         }
 
         /// <summary>
@@ -880,12 +926,33 @@ namespace FSO.Client.UI.Framework
         /// <param name="from"></param>
         /// <param name="to"></param>
         /// <param name="scale"></param>
-        public void DrawLocalTexture(SpriteBatch batch, Texture2D texture, Nullable<Rectangle> from, Vector2 to, Vector2 scale, Color color, float rotation)
+        /// <param name="blend"></param>
+        public void DrawLocalTexture(SpriteBatch batch, Texture2D texture, Nullable<Rectangle> from, Vector2 to, Vector2 scale, Color blend)
         {
             //if (!m_IsInvalidated)
             //{
-            batch.Draw(texture, FlooredLocalPoint(to), from, color, rotation,
-                        new Vector2(0.0f, 0.0f), _Scale * scale, _SpriteEffects, 0.0f);
+            DPISwitch(ref texture, ref scale, ref from);
+            batch.Draw(texture, FlooredLocalPoint(to), from, new Color(_BlendColor.ToVector4() * blend.ToVector4()), 0.0f,
+                        new Vector2(0.0f, 0.0f), _Scale * scale, SprEffects, 0.0f);
+            //}
+        }
+
+        /// <summary>
+        /// Draws a texture to the UIElement. This method will deal with
+        /// the matrix calculations
+        /// </summary>
+        /// <param name="batch"></param>
+        /// <param name="texture"></param>
+        /// <param name="from"></param>
+        /// <param name="to"></param>
+        /// <param name="scale"></param>
+        public void DrawLocalTexture(SpriteBatch batch, Texture2D texture, Nullable<Rectangle> from, Vector2 to, Vector2 scale, Color color, float rotation)
+        {
+            DrawLocalTexture(batch, texture, from, to, scale, color, rotation, Vector2.Zero);
+            //if (!m_IsInvalidated)
+            //{
+            //batch.Draw(DPISwitch(texture), FlooredLocalPoint(to), RectScale(texture, from), color, rotation,
+            //            new Vector2(0.0f, 0.0f), TexScale(texture, _Scale * scale), SprEffects, 0.0f);
             //}
         }
 
@@ -900,44 +967,32 @@ namespace FSO.Client.UI.Framework
         /// <param name="scale"></param>
         public void DrawLocalTexture(SpriteBatch batch, Texture2D texture, Nullable<Rectangle> from, Vector2 to, Vector2 scale, Color color, float rotation, Vector2 origin)
         {
+            DPISwitch(ref texture, ref scale, ref from);
             batch.Draw(texture, FlooredLocalPoint(to), from, color, rotation,
-                        origin, _Scale * scale, _SpriteEffects, 0.0f);
+                        origin, _Scale * scale, SprEffects, 0.0f);
         }
 
-        /// <summary>
-        /// Draws a texture to the UIElement. This method will deal with
-        /// the matrix calculations
-        /// </summary>
-        /// <param name="batch"></param>
-        /// <param name="texture"></param>
-        /// <param name="from"></param>
-        /// <param name="to"></param>
-        /// <param name="scale"></param>
-        /// <param name="blend"></param>
-        public void DrawLocalTexture(SpriteBatch batch, Texture2D texture, Nullable<Rectangle> from, Vector2 to, Vector2 scale, Color blend)
-        {
-            //if (!m_IsInvalidated)
-            //{
-            batch.Draw(texture, FlooredLocalPoint(to), from, new Color(_BlendColor.ToVector4()*blend.ToVector4()), 0.0f,
-                        new Vector2(0.0f, 0.0f), _Scale * scale, _SpriteEffects, 0.0f);
-            //}
-        }
+        protected SpriteEffects SprEffects = SpriteEffects.None;
+
 
         public void DrawTiledTexture(SpriteBatch batch, Texture2D texture, Rectangle dest, Color blend)
         {
             //if (!m_IsInvalidated)
             //{
+
             var col = new Color(_BlendColor.ToVector4() * blend.ToVector4());
-            for (int x = 0; x < dest.Width; x+=texture.Width)
+            for (int x = 0; x < dest.Width; x += texture.Width)
             {
-                for (int y= 0; y<dest.Height; y += texture.Height)
+                for (int y = 0; y < dest.Height; y += texture.Height)
                 {
-                    batch.Draw(texture, FlooredLocalPoint(new Vector2(dest.X+x, dest.Y+y)), new Rectangle(0, 0, Math.Min(texture.Width, dest.Width-x), Math.Min(texture.Height, dest.Height - y)), col, 0.0f,
-                        new Vector2(0.0f, 0.0f), _Scale, _SpriteEffects, 0.0f);
+                    var scale = _Scale;
+                    var tex = texture;
+                    Rectangle? from = new Rectangle(0, 0, Math.Min(texture.Width, dest.Width - x), Math.Min(texture.Height, dest.Height - y));
+                    DPISwitch(ref tex, ref scale, ref from);
+                    batch.Draw(texture, FlooredLocalPoint(new Vector2(dest.X + x, dest.Y + y)), from, col, 0.0f,
+                        new Vector2(0.0f, 0.0f), scale, SpriteEffects.None, 0.0f);
                 }
             }
-
-
             //}
         }
 
@@ -1010,13 +1065,26 @@ namespace FSO.Client.UI.Framework
         {
             return GetTexture(id.Shift());
         }
-        
+
         private static List<ulong> UI_TEMP_CACHE = new List<ulong>();
         public static Texture2D GetTexture(ulong id)
         {
             try
             {
                 return Content.Content.Get().UIGraphics.Get(id).Get(GameFacade.GraphicsDevice);
+            }
+            catch (Exception e)
+            {
+            }
+            //TODO: darren wants to return null here. that might break some existing code
+            return new Texture2D(GameFacade.GraphicsDevice, 1, 1);
+        }
+
+        public static Texture2D GetTexture(string path)
+        {
+            try
+            {
+                return Content.Content.Get().CustomUI.Get(Path.GetFileName(path)).Get(GameFacade.GraphicsDevice);
             }
             catch (Exception e)
             {
@@ -1125,7 +1193,7 @@ namespace FSO.Client.UI.Framework
         }
 
         public delegate void AsyncHandler();
-        
+
         public object Controller { get; set; }
 
         public void SetController(object controller)
@@ -1136,16 +1204,17 @@ namespace FSO.Client.UI.Framework
         public T FindController<T>()
         {
             var target = this;
-            while(target != null)
+            while (target != null)
             {
-                if(target.Controller is T)
+                if (target.Controller is T)
                 {
                     return (T)target.Controller;
                 }
                 target = target.Parent;
             }
 
-            if(LogicalParent != null){
+            if (LogicalParent != null)
+            {
                 return LogicalParent.FindController<T>();
             }
             return default(T);
@@ -1182,7 +1251,8 @@ namespace FSO.Client.UI.Framework
         {
             if (_Debounces == null) { _Debounces = new Dictionary<string, UIDebounce>(); }
 
-            if (!_Debounces.ContainsKey(id)){
+            if (!_Debounces.ContainsKey(id))
+            {
                 _Debounces.Add(id, new UIDebounce(timeout));
             }
 

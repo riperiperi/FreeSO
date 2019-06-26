@@ -1,5 +1,6 @@
 ﻿using FSO.LotView.Model;
 using FSO.SimAntics.Entities;
+using FSO.SimAntics.Model.TSOPlatform;
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -22,7 +23,20 @@ namespace FSO.SimAntics.Model
         {
             get
             {
-                return MultitileByPersist.Count;
+                //if we're not a community lot, we can short ciruit this.
+                if (!Context.VM.TSOState.CommunityLot) return MultitileByPersist.Count;
+
+                return MultitileByPersist.Count(x => (((x.Value.BaseObject.TSOState as VMTSOObjectState)
+                    ?.ObjectFlags ?? 0) & VMTSOObjectFlags.FSODonated) == 0);
+            }
+        }
+
+        public int NumDonatedObjects
+        {
+            get
+            {
+                return MultitileByPersist.Count(x => (((x.Value.BaseObject.TSOState as VMTSOObjectState)
+                    ?.ObjectFlags ?? 0) & VMTSOObjectFlags.FSODonated) > 0);
             }
         }
 
@@ -115,8 +129,9 @@ namespace FSO.SimAntics.Model
                 tile = new List<VMEntity>();
                 ObjectsByCategory.Add(category, tile);
             }
-            if (!tile.Contains(obj)) VM.AddToObjList(tile, obj); //shouldn't be a problem any more, but just in case check first.
-            else { }
+            //debug check: use if things are going weird
+            //if (!tile.Contains(obj))
+            VM.AddToObjList(tile, obj); 
         }
 
         public void RemoveCategory(VMEntity obj, short category)
@@ -124,7 +139,7 @@ namespace FSO.SimAntics.Model
             List<VMEntity> tile = null;
             ObjectsByCategory.TryGetValue(category, out tile);
             if (tile == null) return; //???
-            tile.Remove(obj);
+            VM.DeleteFromObjList(tile, obj);
             if (tile.Count == 0) ObjectsByCategory.Remove(category);
         }
 
@@ -155,7 +170,7 @@ namespace FSO.SimAntics.Model
             ObjectsByGUID.TryGetValue(guid, out list);
             if (list != null)
             {
-                list.Remove(obj);
+                VM.DeleteFromObjList(list, obj);
                 if (list.Count == 0) ObjectsByGUID.Remove(guid);
             }
             RemoveCategory(obj, obj.GetValue(VMStackObjectVariable.Category));

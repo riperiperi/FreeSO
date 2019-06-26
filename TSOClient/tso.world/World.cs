@@ -409,6 +409,7 @@ namespace FSO.LotView
         public override void Update(UpdateState state)
         {
             base.Update(state);
+            State.FramesSinceLastDraw++;
 
             if (Blueprint != null)
             {
@@ -478,6 +479,7 @@ namespace FSO.LotView
             State.OutsideColor = Blueprint.OutsideColor;
             FSO.Common.Rendering.Framework.GameScreen.ClearColor = new Color(new Color(0x72, 0x72, 0x72).ToVector4() * State.OutsideColor.ToVector4());
             foreach (var sub in Blueprint.SubWorlds) sub.PreDraw(device, State);
+            State.UpdateInterpolation();
             if (Blueprint != null)
             {
                 foreach (var ent in Blueprint.Objects)
@@ -651,11 +653,12 @@ namespace FSO.LotView
             return tMin;
         }
 
-        public Vector2 EstTileAtPosWithScroll(Vector2 pos)
+        public Vector2 EstTileAtPosWithScroll(Vector2 pos, sbyte level = -1)
         {
+            if (level == -1) level = State.Level;
             pos *= new Vector2(FSOEnvironment.DPIScaleFactor);
             var sPos = new Vector3(pos, 0);
-            
+
             var p1 = State.Device.Viewport.Unproject(sPos, State.Camera.Projection, State.Camera.View, Matrix.Identity);
             sPos.Z = 1;
             var p2 = State.Device.Viewport.Unproject(sPos, State.Camera.Projection, State.Camera.View, Matrix.Identity);
@@ -663,9 +666,9 @@ namespace FSO.LotView
             dir.Normalize();
             var ray = new Ray(p1, p2 - p1);
             ray.Direction.Normalize();
-            ray.Position -= new Vector3(0, (State.Level-1) * 2.95f * 3, 0);
-            
-            var baseBox = new BoundingBox(new Vector3(0, -5000, 0), new Vector3(Blueprint.Width*3, 5000, Blueprint.Height*3));
+            ray.Position -= new Vector3(0, (level - 1) * 2.95f * 3, 0);
+
+            var baseBox = new BoundingBox(new Vector3(0, -5000, 0), new Vector3(Blueprint.Width * 3, 5000, Blueprint.Height * 3));
             if (baseBox.Contains(ray.Position) != ContainmentType.Contains)
             {
                 //move ray start inside box
@@ -683,15 +686,15 @@ namespace FSO.LotView
             var py = (ray.Direction.Z > 0);
 
             int iteration = 0;
-            while (mx >= 0 && mx < Blueprint.Width && my >= 0 && my<Blueprint.Width)
+            while (mx >= 0 && mx < Blueprint.Width && my >= 0 && my < Blueprint.Width)
             {
                 //test triangle 1. (centre of tile down xz, we lean towards positive x)
                 var plane = new Plane(
-                    new Vector3(mx * 3, Blueprint.GetAltPoint(mx, my) * Blueprint.TerrainFactor*3, my * 3),
-                    new Vector3(mx * 3+3, Blueprint.GetAltPoint(mx+1, my) * Blueprint.TerrainFactor*3, my * 3),
-                    new Vector3(mx * 3+3, Blueprint.GetAltPoint(mx+1, my+1) * Blueprint.TerrainFactor*3, my * 3+3)
+                    new Vector3(mx * 3, Blueprint.GetAltPoint(mx, my) * Blueprint.TerrainFactor * 3, my * 3),
+                    new Vector3(mx * 3 + 3, Blueprint.GetAltPoint(mx + 1, my) * Blueprint.TerrainFactor * 3, my * 3),
+                    new Vector3(mx * 3 + 3, Blueprint.GetAltPoint(mx + 1, my + 1) * Blueprint.TerrainFactor * 3, my * 3 + 3)
                     );
-                var tBounds = new BoundingBox(new Vector3(mx*3, -5000, my*3), new Vector3(mx*3+3, 5000, my*3+3));
+                var tBounds = new BoundingBox(new Vector3(mx * 3, -5000, my * 3), new Vector3(mx * 3 + 3, 5000, my * 3 + 3));
 
                 var t1 = ray.Intersects(plane);
                 var t2 = BoxRC2(ray, 3);
@@ -703,11 +706,12 @@ namespace FSO.LotView
                     var tentative = ray.Position + ray.Direction * (t1.Value + 0.00001f);
 
                     //did it hit the correct side of the triangle?
-                    var mySide = ((tentative.X / 3)%1) - ((tentative.Z / 3)%1);
+                    var mySide = ((tentative.X / 3) % 1) - ((tentative.Z / 3) % 1);
                     if (mySide >= 0)
                     {
                         return new Vector2(tentative.X / 3, tentative.Z / 3);
-                    } else
+                    }
+                    else
                     {
                         //test the other side (positive z)
                         plane = new Plane(
@@ -745,6 +749,20 @@ namespace FSO.LotView
             }
 
             return new Vector2(0, 0);
+        }
+
+        public Vector3 EstTileAtPosWithScroll3D(Vector2 pos, sbyte startFloor = -1)
+        {
+            if (startFloor == -1) startFloor = State.Level;
+            for (sbyte floor = startFloor; floor > 0; floor--)
+            {
+                var result = EstTileAtPosWithScroll(pos, floor);
+                if (floor == 1 || (Blueprint.TileInbounds(result) && Blueprint.GetFloor((short)result.X, (short)result.Y, floor).Pattern != 0))
+                {
+                    return new Vector3(result, floor);
+                }
+            }
+            return new Vector3(EstTileAtPosWithScroll(pos), State.Level);
         }
 
         /// <summary>
@@ -797,7 +815,7 @@ namespace FSO.LotView
                 Light = null;
                 if (Light == null)
                 {
-                    Light = new LMapBatch(gd, 8);
+                    Light = new LMapBatch(gd, 16);
                     if (Blueprint != null)
                     {
                         Light?.Init(Blueprint);
@@ -835,6 +853,13 @@ namespace FSO.LotView
                     Blueprint.Damage.Add(new BlueprintDamage(BlueprintDamageType.OUTDOORS_LIGHTING_CHANGED));
                 }
             }
+
+            if (!FSOEnvironment.Enable3D)
+            {
+                var last = PPXDepthEngine.MSAA;
+                PPXDepthEngine.MSAA = ((WorldConfig.Current.AA>0) ? 4 : 0);
+                if (last != PPXDepthEngine.MSAA) PPXDepthEngine.InitScreenTargets();
+            }
         }
 
         public virtual ObjectComponent MakeObjectComponent(Content.GameObject obj)
@@ -861,16 +886,18 @@ namespace FSO.LotView
             watch.Start();
 
             if (PreloadProgress == 0) {
+                var done = 0;
                 for (int i = PreloadObjProgress; i < Blueprint.Objects.Count; i++)
                 {
                     var obj = Blueprint.Objects[i];
                     obj.Preload(gd, State);
                     PreloadObjProgress++;
-                    if (watch.ElapsedMilliseconds > 16)
+                    if (watch.ElapsedMilliseconds > 16 && done >= 6)
                     {
                         watch.Stop();
                         return false;
                     }
+                    done++;
                 }
 
                 for (int i=0; i<Blueprint.Avatars.Count; i++)

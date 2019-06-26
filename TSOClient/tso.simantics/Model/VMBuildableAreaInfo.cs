@@ -108,6 +108,7 @@ namespace FSO.SimAntics.Model
         public static int GetObjectLimit(VM vm)
         {
             if (vm.TSOState.PropertyCategory == 255) return 10000;
+            else if (vm.TSOState.CommunityLot) return 100;
             var lotInfo = vm.TSOState;
             var lotSize = lotInfo.Size & 255;
             var lotFloors = (lotInfo.Size >> 8) & 255;
@@ -132,35 +133,39 @@ namespace FSO.SimAntics.Model
             var limit = GetObjectLimit(vm);
             vm.TSOState.ObjectLimit = limit;
 
-            var multInUse = new HashSet<VMMultitileGroup>();
-            foreach (var ava in vm.Context.ObjectQueries.Avatars)
+            //community lots cannot go overbudget, as the object limit does not change!
+            if (!vm.TSOState.CommunityLot)
             {
-                if (ava.Thread == null) continue;
-                foreach (var frame in ava.Thread.Stack)
+                var multInUse = new HashSet<VMMultitileGroup>();
+                foreach (var ava in vm.Context.ObjectQueries.Avatars)
                 {
-                    if (frame.Callee != null && frame.Callee is VMGameObject) multInUse.Add(frame.Callee.MultitileGroup);
-                }
-            }
-
-            int i = 0;
-            var ordered = vm.Context.ObjectQueries.MultitileByPersist.Values.OrderBy(x => x.BaseObject.ObjectID);
-            foreach (var obj in ordered)
-            {
-                var isPortal = (obj.Objects.Count > 0) && (obj.BaseObject is VMGameObject) && ((VMGameObject)obj.BaseObject).PartOfPortal();
-                foreach (var o in obj.Objects)
-                {
-                    if (o is VMGameObject)
+                    if (ava.Thread == null) continue;
+                    foreach (var frame in ava.Thread.Stack)
                     {
-                        if (i >= limit)
-                        {
-                            ((VMGameObject)o).Disabled |= VMGameObjectDisableFlags.ObjectLimitExceeded;
-                            ((VMGameObject)o).Disabled &= ~VMGameObjectDisableFlags.ObjectLimitThreadDisable;
-                            if (!multInUse.Contains(obj) && !o.GetFlag(VMEntityFlags.Occupied) && !isPortal) ((VMGameObject)o).Disabled |= VMGameObjectDisableFlags.ObjectLimitThreadDisable;
-                        }
-                        else ((VMGameObject)o).Disabled &= ~(VMGameObjectDisableFlags.ObjectLimitExceeded | VMGameObjectDisableFlags.ObjectLimitThreadDisable);
+                        if (frame.Callee != null && frame.Callee is VMGameObject) multInUse.Add(frame.Callee.MultitileGroup);
                     }
                 }
-                i++;
+
+                int i = 0;
+                var ordered = vm.Context.ObjectQueries.MultitileByPersist.Values.OrderBy(x => x.BaseObject.ObjectID);
+                foreach (var obj in ordered)
+                {
+                    var isPortal = (obj.Objects.Count > 0) && (obj.BaseObject is VMGameObject) && ((VMGameObject)obj.BaseObject).PartOfPortal();
+                    foreach (var o in obj.Objects)
+                    {
+                        if (o is VMGameObject)
+                        {
+                            if (i >= limit)
+                            {
+                                ((VMGameObject)o).Disabled |= VMGameObjectDisableFlags.ObjectLimitExceeded;
+                                ((VMGameObject)o).Disabled &= ~VMGameObjectDisableFlags.ObjectLimitThreadDisable;
+                                if (!multInUse.Contains(obj) && !o.GetFlag(VMEntityFlags.Occupied) && !isPortal) ((VMGameObject)o).Disabled |= VMGameObjectDisableFlags.ObjectLimitThreadDisable;
+                            }
+                            else ((VMGameObject)o).Disabled &= ~(VMGameObjectDisableFlags.ObjectLimitExceeded | VMGameObjectDisableFlags.ObjectLimitThreadDisable);
+                        }
+                    }
+                    i++;
+                }
             }
 
             vm.TSOState.LimitExceeded = vm.Context.ObjectQueries.NumUserObjects > limit;

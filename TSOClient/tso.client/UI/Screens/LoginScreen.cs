@@ -140,7 +140,7 @@ namespace FSO.Client.UI.Screens
                     settings.LightingMode = 0;
                     settings.SurroundingLotMode = 0;
                     settings.CityShadows = false;
-                    settings.AntiAlias = false;
+                    settings.AntiAlias = 0;
                     settings.Save();
 
                     LotView.WorldConfig.Current = new LotView.WorldConfig()
@@ -149,13 +149,18 @@ namespace FSO.Client.UI.Screens
                         SmoothZoom = settings.SmoothZoom,
                         SurroundingLots = settings.SurroundingLotMode,
                         AA = settings.AntiAlias,
-                        Weather = settings.Weather
+                        Weather = settings.Weather,
+                        Directional = settings.DirectionalLight3D,
+                        Complex = settings.ComplexShaders
                     };
                 });
             }
             GameThread.NextUpdate(x =>
             {
                 FSOFacade.Hints.TriggerHint("screen:login");
+
+                //UIScreen.GlobalShowDialog(new Panels.Neighborhoods.UIBulletinDialog(), false);
+                //Content.Content.Get().UIGraphics.ExportAll(GameFacade.GraphicsDevice);
             });
         }
 

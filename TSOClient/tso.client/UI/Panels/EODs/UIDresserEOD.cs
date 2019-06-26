@@ -110,7 +110,7 @@ namespace FSO.Client.UI.Panels.EODs
         {
             var options = GetEODOptions();
             UpdateUIState();
-            Controller.ShowEODMode(options);
+            EODController.ShowEODMode(options);
         }
 
         /**

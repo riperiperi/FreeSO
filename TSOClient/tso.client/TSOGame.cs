@@ -28,7 +28,10 @@ using FSO.UI.Model;
 using FSO.Files.RC;
 using FSO.Files.Formats.IFF;
 using FSO.SimAntics;
-//using System.Windows.Forms;
+using FSO.UI.Framework;
+using MSDFData;
+using FSO.Common.Audio;
+using System.Linq;
 
 namespace FSO.Client
 {
@@ -42,6 +45,11 @@ namespace FSO.Client
 
 		public TSOGame() : base()
         {
+            /*
+            var test = new Utils.TestFunctions.ProjectionTest();
+            test.TestCombo();
+            */
+            
             GameFacade.Game = this;
             //if (GameFacade.DirectX) TimedReferenceController.SetMode(CacheType.PERMANENT);
             Content.RootDirectory = FSOEnvironment.GFXContentDir;
@@ -65,6 +73,7 @@ namespace FSO.Client
 
             try
             {
+                GameThread.Game = Thread.CurrentThread;
                 Thread.CurrentThread.Name = "Game";
             } catch
             {
@@ -134,15 +143,20 @@ namespace FSO.Client
                 settings.Save();
             }
 
+            FeatureLevelTest.UpdateFeatureLevel(GraphicsDevice);
+            if (!FSOEnvironment.MSAASupport)
+                settings.AntiAlias = 0;
+
             LotView.WorldConfig.Current = new LotView.WorldConfig()
             {
                 LightingMode = settings.LightingMode,
                 SmoothZoom = settings.SmoothZoom,
                 SurroundingLots = settings.SurroundingLotMode,
                 AA = settings.AntiAlias,
+                Weather = settings.Weather,
+                Directional = settings.DirectionalLight3D,
+                Complex = settings.ComplexShaders
             };
-
-            FeatureLevelTest.UpdateFeatureLevel(GraphicsDevice);
 
             if (!FSOEnvironment.TexCompressSupport) settings.TexCompression = 0;
             else if ((settings.TexCompression & 2) == 0)
@@ -159,6 +173,8 @@ namespace FSO.Client
             FSO.Content.Content.TS1Hybrid = GlobalSettings.Default.TS1HybridEnable;
             FSO.Content.Content.TS1HybridBasePath = GlobalSettings.Default.TS1HybridPath;
             FSO.Content.Content.InitBasic(GlobalSettings.Default.StartupPath, GraphicsDevice);
+            FSO.SimAntics.VMAvatar.MissingIconProvider = FSO.Client.UI.Model.UIIconCache.GetObject;
+            FSO.SimAntics.VM.TestBinding = "Value";
             //VMContext.InitVMConfig();
             base.Initialize();
 
@@ -190,7 +206,7 @@ namespace FSO.Client
             hit.SetMasterVolume(HITVolumeGroup.AMBIENCE, GlobalSettings.Default.AmbienceVolume / 10f);
 
             GameFacade.Strings = new ContentStrings();
-            FSOFacade.Controller.StartLoading();
+            FSOFacade.Controller.Start();
 
             GraphicsDevice.RasterizerState = new RasterizerState() { CullMode = CullMode.None };
 
@@ -228,6 +244,10 @@ namespace FSO.Client
             {
                 GameFacade.GraphicsDeviceManager.ToggleFullScreen();
             }
+
+            if (GameFacade.Linux) MP3Player.NewMode = false;
+
+            //(new Utils.PalMapper()).DoIt();
         }
 
         /// <summary>
@@ -235,7 +255,7 @@ namespace FSO.Client
         /// </summary>
         public new void Run()
         {
-            Run(GameRunBehavior.Synchronous);
+             Run(GameRunBehavior.Synchronous);
         }
 
         /// <summary>
@@ -259,6 +279,12 @@ namespace FSO.Client
         protected override void OnExiting(object sender, EventArgs args)
         {
             base.OnExiting(sender, args);
+            var kernel = FSOFacade.Kernel;
+            if (kernel != null)
+            {
+                kernel.Get<LotConnectionRegulator>()?.Disconnect();
+                kernel.Get<CityConnectionRegulator>()?.Disconnect();
+            }
             GameThread.Killed = true;
             GameThread.OnKilled.Set();
         }
@@ -273,6 +299,7 @@ namespace FSO.Client
             Effect vitaboyEffect = null;
             try
             {
+                /*
                 GameFacade.MainFont = new FSO.Client.UI.Framework.Font();
                 GameFacade.MainFont.AddSize(10, Content.Load<SpriteFont>("Fonts/FreeSO_10px"));
                 GameFacade.MainFont.AddSize(12, Content.Load<SpriteFont>("Fonts/FreeSO_12px"));
@@ -282,9 +309,17 @@ namespace FSO.Client
                 GameFacade.EdithFont = new FSO.Client.UI.Framework.Font();
                 GameFacade.EdithFont.AddSize(12, Content.Load<SpriteFont>("Fonts/Trebuchet_12px"));
                 GameFacade.EdithFont.AddSize(14, Content.Load<SpriteFont>("Fonts/Trebuchet_14px"));
+                */
+
+                GameFacade.VectorFont = new MSDFFont(Content.Load<FieldFont>("../Fonts/simdialogue"));
+                GameFacade.EdithVectorFont = new MSDFFont(Content.Load<FieldFont>("../Fonts/trebuchet"));
+                GameFacade.EdithVectorFont.VectorScale = 0.366f;
+                GameFacade.EdithVectorFont.Height = 15;
+                GameFacade.EdithVectorFont.YOff = 11;
+                MSDFFont.MSDFEffect = Content.Load<Effect>("Effects/MSDFFont");
 
                 vitaboyEffect = Content.Load<Effect>((FSOEnvironment.GLVer == 2)?"Effects/VitaboyiOS":"Effects/Vitaboy");
-                uiLayer = new UILayer(this, Content.Load<SpriteFont>("Fonts/FreeSO_12px"), Content.Load<SpriteFont>("Fonts/FreeSO_16px"));
+                uiLayer = new UILayer(this);
             }
             catch (Exception e)
             {

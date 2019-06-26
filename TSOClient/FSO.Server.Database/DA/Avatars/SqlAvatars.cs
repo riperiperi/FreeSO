@@ -17,6 +17,22 @@ namespace FSO.Server.Database.DA.Avatars
             return Context.Connection.Query<DbAvatar>("SELECT * FROM fso_avatars WHERE shard_id = @shard_id", new { shard_id = shard_id });
         }
 
+        public List<uint> GetLivingInNhood(uint neigh_id)
+        {
+            return Context.Connection.Query<uint>("SELECT avatar_id FROM fso_roommates r JOIN fso_lots l ON r.lot_id = l.lot_id "
+                + "WHERE neighborhood_id = @neigh_id", new { neigh_id = neigh_id }).ToList();
+        }
+        
+        public List<AvatarRating> GetPossibleCandidatesNhood(uint neigh_id)
+        {
+            return Context.Connection.Query<AvatarRating>("SELECT r.avatar_id, a.name, AVG(CAST(v.rating as DECIMAL(10,6))) AS rating " +
+                "FROM (fso_roommates r JOIN fso_lots l ON r.lot_id = l.lot_id) " +
+                "LEFT JOIN fso_mayor_ratings v ON v.to_avatar_id = r.avatar_id " +
+                "JOIN fso_avatars a ON r.avatar_id = a.avatar_id " +
+                "WHERE l.neighborhood_id = @neigh_id " +
+                "GROUP BY avatar_id", new { neigh_id = neigh_id }).ToList();
+        }
+
         public DbAvatar Get(uint id){
             return Context.Connection.Query<DbAvatar>("SELECT * FROM fso_avatars WHERE avatar_id = @id", new { id = id }).FirstOrDefault();
         }
@@ -39,9 +55,11 @@ namespace FSO.Server.Database.DA.Avatars
         public uint Create(DbAvatar avatar)
         {
             return (uint)Context.Connection.Query<int>("INSERT INTO fso_avatars (shard_id, user_id, name, " +
-                                        "gender, date, skin_tone, head, body, description, budget, moderation_level) " +
+                                        "gender, date, skin_tone, head, body, description, budget, moderation_level, " +
+                                        " body_swimwear, body_sleepwear) " +
                                         " VALUES (@shard_id, @user_id, @name, @gender, @date, " +
-                                        " @skin_tone, @head, @body, @description, @budget, @moderation_level); SELECT LAST_INSERT_ID();", new
+                                        " @skin_tone, @head, @body, @description, @budget, @moderation_level, "+
+                                        " @body_swimwear, @body_sleepwear); SELECT LAST_INSERT_ID();", new
                                         {
                                             shard_id = avatar.shard_id,
                                             user_id = avatar.user_id,
@@ -53,7 +71,9 @@ namespace FSO.Server.Database.DA.Avatars
                                             body = avatar.body,
                                             description = avatar.description,
                                             budget = avatar.budget,
-                                            moderation_level = avatar.moderation_level
+                                            moderation_level = avatar.moderation_level,
+                                            body_swimwear = avatar.body_swimwear,
+                                            body_sleepwear = avatar.body_sleepwear
                                         }).First();
             //for now, everything else assumes default values.
         }
@@ -97,6 +117,17 @@ namespace FSO.Server.Database.DA.Avatars
         {
             Context.Connection.Query("UPDATE fso_avatars SET privacy_mode = @privacy_mode WHERE avatar_id = @id", new { id = id, privacy_mode = mode });
         }
+
+        public void UpdateMoveDate(uint id, uint date)
+        {
+            Context.Connection.Query("UPDATE fso_avatars SET move_date = @date WHERE avatar_id = @id", new { id = id, date = date });
+        }
+
+        public void UpdateMayorNhood(uint id, uint? nhood)
+        {
+            Context.Connection.Query("UPDATE fso_avatars SET mayor_nhood = @nhood WHERE avatar_id = @id", new { id = id, nhood = nhood });
+        }
+
 
         public void UpdateAvatarLotSave(uint id, DbAvatar avatar)
         {

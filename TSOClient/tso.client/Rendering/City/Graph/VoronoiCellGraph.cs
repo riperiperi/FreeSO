@@ -27,7 +27,7 @@ namespace FSO.Client.Rendering.City.Graph
 
         public VoronoiCellGraph(List<Vector2> verts)
         {
-            var mesh = VoronoiLib.FortunesAlgorithm.Run(verts.Select(x => new VoronoiLib.Structures.FortuneSite(x.X, x.Y)).ToList(), 0, 0, 512, 512);
+            var mesh = VoronoiLib.FortunesAlgorithm.Run(verts.Select(x => new VoronoiLib.Structures.FortuneSite(x.X, x.Y)).ToList(), -512, -512, 1024, 1024);
 
             var ptDict = new Dictionary<Vector2, int>();
             var pts = new List<Vector2>();
@@ -132,7 +132,49 @@ namespace FSO.Client.Rendering.City.Graph
             Result = new List<CompleteVCell>();
             foreach (int[] cy in cycles)
             {
-                Result.Add(new CompleteVCell() { Cycle = cy.Select(x => pts[x]).ToArray() });
+                var avgPos = new Vector2();
+                foreach (var c in cy)
+                {
+                    avgPos += pts[c];
+                }
+                avgPos /= cy.Length;
+
+                //find closest input point
+
+                var bestIn = -1;
+                var bestDist = float.PositiveInfinity;
+                var ind = 0;
+                foreach (var pt in verts)
+                {
+                    var dist = (pt - avgPos).Length();
+                    if (dist < bestDist)
+                    {
+                        bestDist = dist;
+                        bestIn = ind;
+                    }
+                    ind++;
+                }
+
+                //run again with limits to get a nicer center and size for visuals
+                avgPos = new Vector2();
+                foreach (var c in cy)
+                {
+                    avgPos += LimitPosition(pts[c]);
+                }
+                avgPos /= cy.Length;
+
+                float maxSize = 0;
+                foreach (var c in cy)
+                {
+                    var dist = (LimitPosition(pts[c]) - avgPos).Length();
+                    if (dist > maxSize)
+                    {
+                        maxSize = dist;
+                    }
+                }
+
+
+                Result.Add(new CompleteVCell() { Cycle = cy.Select(x => pts[x]).ToArray(), Ind = bestIn, Center = avgPos, Size = maxSize });
             }
         }
 
@@ -247,6 +289,17 @@ namespace FSO.Client.Rendering.City.Graph
 
             return ret;
         }
+
+        public Vector2 LimitPosition(Vector2 value)
+        {
+            var trans = new Vector2((value.X + value.Y) / 2, (value.Y - value.X) / 2);
+
+            trans.X = Math.Max(153.5f, Math.Min(358.5f, trans.X));
+            trans.Y = Math.Max(-152, Math.Min(152, trans.Y));
+
+            value = new Vector2(trans.X - trans.Y, trans.X + trans.Y);
+            return value;
+        }
     }
 
     public class CompleteVCell
@@ -254,8 +307,10 @@ namespace FSO.Client.Rendering.City.Graph
         public Vector2[] Cycle;
 
         public int Ind; //index of the closest point (usually neighbourhood id)
+        public Vector2 Center;
         public VertexBuffer Vertices;
         public IndexBuffer Indices;
+        public float Size;
 
         public void Dispose()
         {

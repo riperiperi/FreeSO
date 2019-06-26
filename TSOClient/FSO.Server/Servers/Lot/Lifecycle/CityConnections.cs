@@ -32,14 +32,20 @@ namespace FSO.Server.Servers.Lot.Lifecycle
         public CityConnections(LotServerConfiguration config, IKernel kernel)
         {
             Config = config;
-            CpuCounter = new PerformanceCounter();
-            CpuCounter.CategoryName = "Processor";
-            CpuCounter.CounterName = "% Processor Time";
-            CpuCounter.InstanceName = "_Total";
-
-            if (PerformanceCounterCategory.Exists("Processor"))
+            try
             {
-                var firstValue = CpuCounter.NextValue();
+                CpuCounter = new PerformanceCounter();
+                CpuCounter.CategoryName = "Processor";
+                CpuCounter.CounterName = "% Processor Time";
+                CpuCounter.InstanceName = "_Total";
+
+                if (PerformanceCounterCategory.Exists("Processor"))
+                {
+                    var firstValue = CpuCounter.NextValue();
+                }
+            } catch
+            {
+                LOG.Info("Performance counters are not supported on this platform, running without.");
             }
 
             Connections = new Dictionary<LotServerConfigurationCity, CityConnection>();
@@ -76,16 +82,7 @@ namespace FSO.Server.Servers.Lot.Lifecycle
         public void Stop()
         {
             _Running = false;
-            if (ConnectionWatcher != null)
-            {
-                try
-                {
-                    ConnectionWatcher.Abort();
-                }
-                catch (Exception ex)
-                {
-                }
-            }
+            ConnectionChanged.Set(); //wakes the thread a bit quicker
         }
 
         private void CheckConnections()
@@ -94,7 +91,7 @@ namespace FSO.Server.Servers.Lot.Lifecycle
             while (_Running)
             {
                 float cpu = 1;
-                if (PerformanceCounterCategory.Exists("Processor"))
+                if (CpuCounter != null && PerformanceCounterCategory.Exists("Processor"))
                     cpu = CpuCounter.NextValue();
                 var capacity = new AdvertiseCapacity
                 {

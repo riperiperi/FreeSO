@@ -20,3 +20,45 @@ Remember that you should only install updates and content packs from servers you
 11 ^Version Warning^
 12 ^You have chosen to ignore version differences. Note that this will not affect gameplay on the server side, but could cause increased desyncs, clientside crashes and unexpected behaviour. You should only do this for development purposes!^
 13 ^The game will now restart. Click OK to begin the update.^
+
+
+14 ^Incorrect TSO Version^
+15 ^FreeSO requires files from The Sims Online to run. FreeSO did detect these files, but with version '%s', when FreeSO expects version '1.1097.1.0'. 
+
+%s
+
+(you can ignore this by pressing the cheat combo from TS1, but it is DEV ONLY as your game will likely just crash.)^
+
+16 ^A patch is available to convert your TSO version into the correct one. It will be applied if you click OK. (only perform this operation once)^
+17 ^Your version could not be identified, so the FreeSO client does not know what to do with it. Please visit http://freeso.org for the correct way to download TSO files. (usually via a launcher)^
+18 ^Patching TSO Files...^
+
+19 ^Fatal Error^
+20 ^A fatal error has occurred while patching the game:
+
+%s
+
+If The Sims Online is installed in Program Files, make sure FreeSO is running as admin (this is the default when using the launcher). If you have an antivirus installed, it may also be preventing FreeSO from modifying files in Program Files - try adding an exception for FreeSO.exe and update.exe, or disabling it altogether when updating FreeSO (last resort!).^
+
+21 ^Update Required^
+22 ^The server you are connecting to requires version %s to be installed. Given your current version (%s) the following update path has been found:
+
+%s
+
+Would you like to download and apply this update?
+Remember that you should only install updates and content packs from servers you trust! If you do not want to install this update, you will be returned to the login screen.^
+
+23 ^(delta) ^
+24 ^(full) ^
+25 ^(full - missing delta info) ^
+26 ^(current) ^
+
+27 ^Obtaining Update Info...^
+28 ^The file %s could not be downloaded or was empty/corrupted. You will now return to the login screen.^
+29 ^ Manifest^
+
+30 ^Updater failed!^
+31 ^The updater could not be opened. If you have anti-virus software, try disabling real-time protection or adding an exception for FreeSO.exe and update.exe. If you still experience problems, open up update.exe from the FreeSO folder manually. (as administrator if you have installed in Program Files)
+
+Error Message:
+%s^

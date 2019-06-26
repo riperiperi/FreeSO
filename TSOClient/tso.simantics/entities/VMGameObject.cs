@@ -179,7 +179,7 @@ namespace FSO.SimAntics
         {
             foreach (var obj in MultitileGroup.Objects)
             {
-                if (obj.EntryPoints[15].ActionFunction != 0) return true;
+                if (obj.Portal) return true;
             }
             return false;
         }
@@ -201,7 +201,7 @@ namespace FSO.SimAntics
         {
             get
             {
-                double dir = Math.Log((double)Direction, 2.0)*(Math.PI/4);
+                double dir = DirectionUtils.Log2Int((uint)Direction) * (float)(Math.PI / 4.0);
                 if (dir > Math.PI) dir -= 2*Math.PI;
                 return (float)dir;
             }
@@ -325,9 +325,8 @@ namespace FSO.SimAntics
             else return null;
         }
 
-        public override void PrePositionChange(VMContext context)
+        public override void PrePositionChange(VMContext context, bool roomChange)
         {
-            Footprint = null;
             if (GhostImage && UseWorld)
             {
                 if (WorldUI.Container != null)
@@ -337,7 +336,7 @@ namespace FSO.SimAntics
                 }
                 return; 
             }
-            context.UnregisterObjectPos(this);
+            context.UnregisterObjectPos(this, roomChange);
             if (Container != null)
             {
                 Container.ClearSlot(ContainerSlot);
@@ -358,12 +357,12 @@ namespace FSO.SimAntics
             }
             SetWallUse(arch, false, ((exclusive & 2) > 0));
             if (GetValue(VMStackObjectVariable.Category) == 8) context.Architecture.SetObjectSupported(Position.TileX, Position.TileY, Position.Level, false);
-            base.PrePositionChange(context);
+            base.PrePositionChange(context, roomChange);
         }
 
-        public override VMObstacle GetObstacle(LotTilePos pos, Direction dir)
+        public override VMEntityObstacle GetObstacle(LotTilePos pos, Direction dir, bool temp)
         {
-            if (GetFlag(VMEntityFlags.HasZeroExtent)) return null;
+            if (GetFlag(VMEntityFlags.HasZeroExtent) || Container != null) return null;
 
             var idir = (DirectionToWallOff(dir)*4);
 
@@ -373,23 +372,29 @@ namespace FSO.SimAntics
             int tileWidth = Object.OBJ.TileWidth / 2;
             if (tileWidth == 0) tileWidth = 8;
 
-            return new VMObstacle(
-                (pos.x + tileWidth) - ((int)(rotatedFPM >> 4) & 0xF),
-                (pos.y + tileWidth) - ((int)(rotatedFPM >> 8) & 0xF),
-                (pos.x - tileWidth) + ((int)(rotatedFPM >> 12) & 0xF),
-                (pos.y - tileWidth) + ((int)rotatedFPM & 0xF));
-                
+            var footprint = Footprint;
+            if (footprint == null || temp)
+            {
+                footprint = new VMEntityObstacle();
+                footprint.Parent = this;
+            }
+
+            footprint.x2 = (pos.x + tileWidth) - ((int)(rotatedFPM >> 4) & 0xF);
+            footprint.y2 = (pos.y + tileWidth) - ((int)(rotatedFPM >> 8) & 0xF);
+            footprint.x1 = (pos.x - tileWidth) + ((int)(rotatedFPM >> 12) & 0xF);
+            footprint.y1 = (pos.y - tileWidth) + ((int)rotatedFPM & 0xF);
+            return footprint;
         }
 
-        public override void PositionChange(VMContext context, bool noEntryPoint)
+        public override void PositionChange(VMContext context, bool noEntryPoint, bool roomChange)
         {
             for (int i = 0; i < Contained.Length; i++)
             {
                 if (Contained[i] != null)
                 {
-                    context.UnregisterObjectPos(Contained[i]);
+                    context.UnregisterObjectPos(Contained[i], roomChange);
                     Contained[i].Position = Position;
-                    Contained[i].PositionChange(context, noEntryPoint); //recursive
+                    Contained[i].PositionChange(context, noEntryPoint, roomChange); //recursive
                 }
             }
             if (GhostImage) return;
@@ -397,7 +402,8 @@ namespace FSO.SimAntics
             var room = context.GetObjectRoom(this);
             SetRoom(room);
 
-            context.RegisterObjectPos(this);
+            Footprint = GetObstacle(Position, Direction, false);
+            context.RegisterObjectPos(this, roomChange);
 
             if (Container != null) return;
             if (Position == LotTilePos.OUT_OF_WORLD) return;
@@ -440,7 +446,7 @@ namespace FSO.SimAntics
 
             if (EntryPoints[8].ActionFunction != 0) UpdateDynamicMultitile(context);
 
-            base.PositionChange(context, noEntryPoint);
+            base.PositionChange(context, noEntryPoint, roomChange);
         }
 
         #region FSO Particles

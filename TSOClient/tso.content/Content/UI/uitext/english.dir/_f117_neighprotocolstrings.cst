@@ -1,0 +1,39 @@
+﻿
+1 ^Error^
+2 ^You don't live in this neighborhood!^ //NOT_IN_NHOOD
+3 ^This election/nomination has closed. Please check the neighborhood page for updates!^ //ELECTION_OVER
+4 ^The candidate you have chosen does not live in this neighborhood. Please select someone else.^
+5 ^The candidate you have chosen to vote for has not been nominated. Please select someone else.^
+6 ^You have already voted in this part of the election! Votes are final, so you'll have to wait until it's all over. ^
+7 ^Another user or sim on an account related to yours has already voted for a sim in this election. To avoid ballot stuffing, accounts or sims that are related cannot vote in the same election.^
+8 ^This election cycle has moved onto another stage. Please check the neighborhood page for updates!^
+
+9 ^The sim you are attempting to rate is not the Mayor of your neighborhood. Please check the neighborhood page - if you are seeing this it is likely the mayor updated since you started rating.^
+10 ^The rating you have submitted is invalid, somehow. Ratings must be from 0-10 half stars, and comments shouldn't be too long.^
+11 ^You cannot rate yourself. Come on, like, really?^
+
+12 ^You can't run for election because you didn't get enough nominations for this election cycle.^
+13 ^You are already running for this election - you do not need to accept again.^
+14 ^Your comment is invalid - it should be at most 200 characters long.^
+
+15 ^Only moderators can perform this action.^
+16 ^Could not find the target avatar.^
+17 ^Could not find the target neighborhood.^
+
+18 ^You cannot perform this action because you have been suspended from neighborhood gameplay.
+
+Duration: %s
+Reason: %s^
+19 ^The sim you are attempting to vote for has moved recently (last 30 days), so they are exempt from neighborhood gameplay.^
+20 ^You're not able to do this yet - to participate in elections as voter or candidate, you must have been living in the neighborhood for at least 30 days.^
+
+21 ^The sim you are attempting to vote for is currently unable to participate in elections.^
+22 ^An entity required by this action could not be found - perhaps something was deleted while we were working. Try again later.^
+
+23 ^The neighborhood you selected does not have an ongoing election. Please try again.^
+24 ^You are already enrolled for a free vote in this election cycle. Check your confirmation email for more information!^
+25 ^Your neighborhood has its own elections, so you cannot perform a free vote.^
+26 ^You are not allowed to enroll for a free vote if you've moved neighborhood after the election cycle started. Sorry!^
+27 ^There are no elections you can use a Free Vote in. Please try again later.^
+
+28 ^An unknown error has occured. This has been logged on the server, so you should probably report the issue and what you were requesting so we can look into it.^

@@ -25,6 +25,7 @@ namespace FSO.Client.UI.Panels
         I3DRotate Rotate { get; }
         bool TVisible { get; }
         bool UserModZoom { get; set; }
+        void ClearCenter();
     }
 
     public class UILotControlTouchHelper : UIElement
@@ -82,20 +83,18 @@ namespace FSO.Client.UI.Panels
             base.Update(state);
             bool rotated = false;
 
-            if (!Master.TVisible || !UIScreen.Current.Visible || !state.ProcessMouseEvents)
-            {
-                ScrollWheelInvalid = true;
-            }
+            var invalidNow = !Master.TVisible || !UIScreen.Current.Visible || !state.ProcessMouseEvents || state.MouseState.ScrollWheelValue == 0;
+            if (invalidNow) ScrollWheelInvalid = invalidNow;
 
             if (!FSOEnvironment.SoftwareKeyboard)
             {
-                if (!state.WindowFocused) ScrollWheelInvalid = true;
-                else if (ScrollWheelInvalid)
+                //if (!state.WindowFocused) ScrollWheelInvalid = true;
+                if (ScrollWheelInvalid)
                 {
                     LastMouseWheel = state.MouseState.ScrollWheelValue;
-                    ScrollWheelInvalid = false;
+                    //ScrollWheelInvalid = false;
                 }
-                if (state.WindowFocused && state.MouseState.ScrollWheelValue != LastMouseWheel)
+                else if (state.WindowFocused && state.MouseState.ScrollWheelValue != LastMouseWheel)
                 {
                     var diff = state.MouseState.ScrollWheelValue - LastMouseWheel;
                     Master.TargetZoom = Master.TargetZoom + diff / 1600f;
@@ -103,7 +102,9 @@ namespace FSO.Client.UI.Panels
                     Master.TargetZoom = Math.Max(MinZoom, Math.Min(Master.TargetZoom, MaxZoom));
                     Master.UserModZoom = true;
                     ZoomFreezeTime = (10 * FSOEnvironment.RefreshRate) / 60;
+                    Master.ClearCenter();
                 }
+                ScrollWheelInvalid = invalidNow;
             }
 
             MiceDown = new HashSet<int>(MiceDown.Intersect(state.MouseStates.Select(x => x.ID)));

@@ -41,13 +41,13 @@ namespace FSO.Client.UI.Controls
     /// </summary>
     public class UIDialog : UICachedContainer
     {
-        protected UIImage Background;
+        public UIImage Background;
         public string Caption { get; set; }
         public TextStyle CaptionStyle = TextStyle.DefaultTitle;
         public Rectangle CaptionMargin = new Rectangle(0, 3, 0, 0);
 
         //if dialog type does not specify these, they do not exist
-        private UIImage CloseBg;
+        public UIImage CloseBg;
         private UIImage OKBg;
         public UIButton OKButton;
         public UIButton CloseButton;

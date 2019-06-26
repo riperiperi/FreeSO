@@ -433,9 +433,10 @@ namespace FSO.Client.UI.Framework.Parser
         public void DefineImage(UINode node)
         {
             var assetID = node["assetID"];
-            var assetNum = ulong.Parse(assetID.Substring(2), NumberStyles.HexNumber);
+            
             try
             {
+                var assetNum = ulong.Parse(assetID.Substring(2), NumberStyles.HexNumber);
                 var texture = UIElement.GetTexture(assetNum);
 
                 Textures.Add(node.ID.ToLowerInvariant(), texture);
@@ -443,7 +444,11 @@ namespace FSO.Client.UI.Framework.Parser
             }
             catch
             {
-                System.Diagnostics.Debug.WriteLine("Failed to load texture: " + assetID);
+                //might be a string. check custom
+                var texture = UIElement.GetTexture(assetID);
+
+                Textures.Add(node.ID.ToLowerInvariant(), texture);
+                WireUp(node.ID, texture);
             }
         }
 

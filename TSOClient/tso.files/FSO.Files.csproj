@@ -96,15 +96,24 @@
     <CodeAnalysisRuleSet>MinimumRecommendedRules.ruleset</CodeAnalysisRuleSet>
   </PropertyGroup>
   <ItemGroup>
-    <Reference Include="OpenTK">
-      <HintPath>..\packages\MonoGame.Framework.WindowsGL.3.4.0.459\lib\net40\OpenTK.dll</HintPath>
-      <Private>True</Private>
+    <Reference Include="bz2portable, Version=0.86.0.518, Culture=neutral, PublicKeyToken=43072770b20d93eb, processorArchitecture=MSIL">
+      <HintPath>..\packages\bz2portable.1.0.1\lib\bz2portable.dll</HintPath>
+    </Reference>
+    <Reference Include="deltaq, Version=1.0.0.0, Culture=neutral, PublicKeyToken=4ec66318c45104d7, processorArchitecture=MSIL">
+      <HintPath>..\packages\deltaq.1.0.1\lib\deltaq.dll</HintPath>
+    </Reference>
+    <Reference Include="MonoGame.Framework, Version=3.6.0.1625, Culture=neutral, processorArchitecture=MSIL">
+      <HintPath>..\packages\MonoGame.Framework.Portable.3.6.0.1625\lib\portable-net45+win8+wpa81\MonoGame.Framework.dll</HintPath>
+      <Private>False</Private>
     </Reference>
     <Reference Include="System" />
     <Reference Include="System.Core">
     </Reference>
     <Reference Include="System.Data" />
     <Reference Include="System.Xml" />
+    <Reference Include="xxHashSharp, Version=1.0.0.0, Culture=neutral, processorArchitecture=MSIL">
+      <HintPath>..\packages\xxHashSharp.1.0.0\lib\net45\xxHashSharp.dll</HintPath>
+    </Reference>
   </ItemGroup>
   <ItemGroup>
     <Compile Include="Formats\IFF\Chunks\ARRY.cs" />
@@ -128,6 +137,7 @@
     <Compile Include="Formats\IFF\Chunks\TRCN.cs" />
     <Compile Include="Formats\IFF\Chunks\TTAT.cs" />
     <Compile Include="Formats\IFF\Chunks\WALm.cs" />
+    <Compile Include="Formats\tsodata\BulletinItem.cs" />
     <Compile Include="Formats\tsodata\TSODataDefinition.cs" />
     <Compile Include="Formats\IFF\ChunkRuntimeInfo.cs" />
     <Compile Include="Formats\IFF\Chunks\PIFF.cs" />
@@ -137,6 +147,7 @@
     <Compile Include="Formats\IFF\PIFFRegistry.cs" />
     <Compile Include="Formats\PiffEncoder.cs" />
     <Compile Include="Formats\tsodata\MessageItem.cs" />
+    <Compile Include="Formats\tsodata\TSOp.cs" />
     <Compile Include="HIT\Patch.cs" />
     <Compile Include="ImageLoader.cs" />
     <Compile Include="FAR1\FAR1Archive.cs" />
@@ -193,6 +204,7 @@
     <Compile Include="Tuning.cs" />
     <Compile Include="Utils\BCFReadProxy.cs" />
     <Compile Include="Utils\CurLoader.cs" />
+    <Compile Include="Utils\DiffGenerator.cs" />
     <Compile Include="Utils\IFileInfoUtilizer.cs" />
     <Compile Include="Utils\IoWriter.cs" />
     <Compile Include="Utils\IoBuffer.cs" />
@@ -229,11 +241,6 @@
     </BootstrapperPackage>
   </ItemGroup>
   <ItemGroup>
-    <ProjectReference Include="..\..\Other\libs\FSOMonoGame\MonoGame.Framework\MonoGame.Framework.Windows.csproj">
-      <Project>{7de47032-a904-4c29-bd22-2d235e8d91ba}</Project>
-      <Name>MonoGame.Framework.Windows</Name>
-      <Private>False</Private>
-    </ProjectReference>
     <ProjectReference Include="..\..\Other\libs\TargaImagePCL\TargaImagePCL.csproj">
       <Project>{d8232422-9d79-4200-a981-eb70ed82ccf3}</Project>
       <Name>TargaImagePCL</Name>

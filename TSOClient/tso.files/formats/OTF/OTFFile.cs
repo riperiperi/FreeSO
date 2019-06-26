@@ -10,6 +10,7 @@ using System.Linq;
 using System.Text;
 using System.IO;
 using System.Xml;
+using FSO.Files.Formats.IFF;
 
 namespace FSO.Files.Formats.OTF
 {
@@ -18,6 +19,7 @@ namespace FSO.Files.Formats.OTF
     /// </summary>
     public class OTFFile
     {
+        public XmlDocument Document;
 
         /// <summary>
         /// Constructs an OTF instance from a filepath.
@@ -56,6 +58,8 @@ namespace FSO.Files.Formats.OTF
         {
             var doc = new XmlDocument();
             doc.Load(stream);
+
+            if (IffFile.RETAIN_CHUNK_DATA) Document = doc;
 
             var tables = doc.GetElementsByTagName("T");
             Tables = new OTFTable[tables.Count];

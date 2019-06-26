@@ -244,12 +244,10 @@ namespace FSO.Client.UI.Controls
             if (m_ResizeWidth == 0)
             {
                 /** Measure the text **/
-                var size = m_CaptionStyle.SpriteFont.MeasureString(m_Caption);
-                size.X *= m_CaptionStyle.Scale;
-                size.Y *= m_CaptionStyle.Scale;
+                var size = m_CaptionStyle.MeasureString(m_Caption);
 
-                if (m_AutoMargins == -1) Width = (m_WidthDiv3 * 2) + size.X;
-                else Width = m_AutoMargins*2 + size.X;
+                if (m_AutoMargins == -1) Width = (m_WidthDiv3 * 2) + (int)size.X;
+                else Width = m_AutoMargins*2 + (int)size.X;
             }
         }
 
@@ -275,6 +273,7 @@ namespace FSO.Client.UI.Controls
         public event ButtonClickDelegate OnButtonClick;
         public event ButtonClickDelegate OnButtonHover;
         public event ButtonClickDelegate OnButtonDown;
+        public event ButtonClickDelegate OnButtonExit;
 
         public bool Highlight
         {
@@ -334,7 +333,7 @@ namespace FSO.Client.UI.Controls
         protected void OnMouseEvent(UIMouseEventType type, UpdateState state)
         {
             if ((m_Disabled || Opacity < 1f) && type != UIMouseEventType.MouseOut) { return; }
-
+            Invalidate();
             switch (type)
             {
                 case UIMouseEventType.MouseOver:
@@ -354,6 +353,10 @@ namespace FSO.Client.UI.Controls
                     if (!m_isDown)
                     {
                         CurrentFrame = 0;
+                        if (OnButtonExit != null)
+                        {
+                            OnButtonExit(this);
+                        }
                     }
                     break;
 

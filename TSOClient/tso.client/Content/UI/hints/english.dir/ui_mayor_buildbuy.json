@@ -1,0 +1,8 @@
+{
+    "guid": "98bfcfa8-00b1-47be-9a61-63cc9236c898", 
+    "trigger": "ui:mayor_buildbuy",
+    "title": "To Donate or not to Donate",
+    "category": "Neighborhoods",
+    "image": "hint_mayor_buildbuy.png",
+    "body": "As the Mayor of this neighborhood, you have full control over its Town Hall and the objects placed in it. There are two ways you can place objects: [s][color=white]'Normal'[/color][/s] placement behaves similarly to placing objects on player owned properties - you can freely move objects between the property and your inventory, and the objects will return when you move out. [s][color=white]'Donate'[/color][/s] placement has a much higher object limit, but these objects can [s][color=red]NEVER RETURN TO YOU[/color][/s] and cannot be refunded. When you donate an object to a community lot, it is destined to become a long term fixture that belongs to the neighborhood as a whole, and may persist as the lot changes hands between different mayors. A reminder will appear each time you open your inventory, just in case you have plans to put any rare objects down.\n\nThere's a huge benefit though - when you buy objects out of the catalog to be donated, [s][color=#B3FF99]they cost 1/3rd of the price![/color][/s] This makes it a lot easier to get started or do renovations worrying less about your contributions disappearing in future.\n\nAs mayor, you can also whitelist any number of other players as 'donators', allowing them to donate and move objects, or even build. You can control this in the house panel (F4)."
+}

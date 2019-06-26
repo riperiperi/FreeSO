@@ -18,10 +18,10 @@ namespace FSO.Server.Watchdog
         static HashSet<string> IgnoreFiles = new HashSet<string>()
         {
             "watchdog.exe",
-            "config.json",
+            "watchdog.sh",
+            "watchdog.bat",
             "watchdog.ini",
-            "Ninject.dll",
-            "Ninject.xml",
+            "config.json",
             "NLog.config"
         };
 
@@ -33,6 +33,13 @@ namespace FSO.Server.Watchdog
                 Update(new string[0]);
                 args = args.Where(x => x != "--update").ToArray();
             }
+
+            if (args.Length > 0 && args.Any(x => x == "--core"))
+            {
+                Update(new string[0]);
+                return 0; //sh script handles restarting when in core mode
+            }
+
             while (restart)
             {
                 var setup = AppDomain.CurrentDomain.SetupInformation;
@@ -97,35 +104,11 @@ namespace FSO.Server.Watchdog
             return null;
         }
 
-        static void Update(string[] args)
+        static void DownloadAndExtractAll(string[] urls)
         {
-            var config = Config.Default;
-            Uri url;
-
-            if (!config.UseTeamCity)
+            foreach (var url in urls)
             {
-                Console.WriteLine("Fetching update from " + config.NormalUpdateUrl + "...");
-                url = new Uri(config.NormalUpdateUrl);
-            }
-            else
-            {
-                Console.WriteLine("Fetching update from " + config.TeamCityUrl + "/" + config.TeamCityProject + "...");
-                url = new Uri(GetTeamcityLatestURL());
-                Console.WriteLine("(specifically " + url.ToString() + ")");
-                //var baseUri = new Uri(config.TeamCityUrl);
-                //if (!Uri.TryCreate(baseUri, "guestAuth/downloadArtifacts.html?buildTypeId=" + config.TeamCityProject + "&buildId=lastSuccessful", out url))
-                //    url = null;
-            }
-
-            using (var file = File.Open("updateUrl.txt", FileMode.Create, FileAccess.Write))
-            {
-                var writer = new StreamWriter(file);
-                writer.WriteLine(url.ToString().Replace(":id/server-", ":id/client-"));
-                writer.Close();
-            }
-
-            var wait = new AutoResetEvent(false);
-            if (url != null) {
+                var wait = new AutoResetEvent(false);
                 if (Directory.Exists("selfUpdate/")) Directory.Delete("selfUpdate/", true);
                 Directory.CreateDirectory("selfUpdate/");
                 Console.WriteLine("Downloading artifacts...");
@@ -156,10 +139,61 @@ namespace FSO.Server.Watchdog
                     wait.Set();
                 };
 
-                client.DownloadFileAsync(url, "selfUpdate/artifact.zip");
+                client.DownloadFileAsync(new Uri(url), "selfUpdate/artifact.zip");
+                wait.WaitOne();
             }
+        }
 
-            wait.WaitOne();
+        static void Update(string[] args)
+        {
+            var config = Config.Default;
+
+            if (config.ManifestDownload)
+            {
+                if (File.Exists("scheduledUpdate/update.txt"))
+                {
+                    var lines = File.ReadAllLines("scheduledUpdate/update.txt");
+                    DownloadAndExtractAll(lines.Skip(1).Take(lines.Length - 2).ToArray());
+                    Console.WriteLine("Writing update complete acknowledgement...");
+                    File.WriteAllText("scheduledUpdate/complete.txt", lines.Last());
+                    File.WriteAllText("updateID.txt", lines.Last());
+                }
+                else
+                {
+                    Console.WriteLine("No scheduled update found...");
+                }
+            }
+            else
+            {
+                Uri url;
+
+                if (!config.UseTeamCity)
+                {
+                    Console.WriteLine("Fetching update from " + config.NormalUpdateUrl + "...");
+                    url = new Uri(config.NormalUpdateUrl);
+                }
+                else
+                {
+                    Console.WriteLine("Fetching update from " + config.TeamCityUrl + "/" + config.TeamCityProject + "...");
+                    url = new Uri(GetTeamcityLatestURL());
+                    Console.WriteLine("(specifically " + url.ToString() + ")");
+                    //var baseUri = new Uri(config.TeamCityUrl);
+                    //if (!Uri.TryCreate(baseUri, "guestAuth/downloadArtifacts.html?buildTypeId=" + config.TeamCityProject + "&buildId=lastSuccessful", out url))
+                    //    url = null;
+                }
+
+                using (var file = File.Open("updateUrl.txt", FileMode.Create, FileAccess.Write))
+                {
+                    var writer = new StreamWriter(file);
+                    writer.WriteLine(url.ToString().Replace(":id/server-", ":id/client-"));
+                    writer.Close();
+                }
+                
+                if (url != null)
+                {
+                    DownloadAndExtractAll(new string[] { url.AbsoluteUri });
+                }
+            }
         }
     }
 }

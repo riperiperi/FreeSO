@@ -28,6 +28,8 @@ namespace FSO.Files.Formats.IFF
         /// </summary>
         public static bool RETAIN_CHUNK_DATA = false;
         public bool RetainChunkData = RETAIN_CHUNK_DATA;
+        public object CachedJITModule; //for JIT and AOT modes
+        public uint ExecutableHash; //hash of BHAV and BCON chunks
 
         public string Filename;
 
@@ -163,48 +165,81 @@ namespace FSO.Files.Formats.IFF
                 }
 
                 var rsmpOffset = io.ReadUInt32();
-
+                
                 while (io.HasMore)
                 {
-                    var chunkType = io.ReadCString(4);
-                    var chunkSize = io.ReadUInt32();
-                    var chunkID = io.ReadUInt16();
-                    var chunkFlags = io.ReadUInt16();
-                    var chunkLabel = io.ReadCString(64).TrimEnd('\0');
-                    var chunkDataSize = chunkSize - 76;
-
-                    /** Do we understand this chunk type? **/
-                    if (!CHUNK_TYPES.ContainsKey(chunkType))
-                    {
-                        /** Skip it! **/
-                        io.Skip(Math.Min(chunkDataSize, stream.Length - stream.Position - 1)); //if the chunk is invalid, it will likely provide a chunk size beyond the limits of the file. (walls2.iff)
-                    }else{
-                        Type chunkClass = CHUNK_TYPES[chunkType];
-                        IffChunk newChunk = (IffChunk)Activator.CreateInstance(chunkClass);
-                        newChunk.ChunkID = chunkID;
-                        newChunk.OriginalID = chunkID;
-                        newChunk.ChunkFlags = chunkFlags;
-                        newChunk.ChunkLabel = chunkLabel;
-                        newChunk.ChunkType = chunkType;
-                        newChunk.ChunkData = io.ReadBytes(chunkDataSize);
-                        if (RetainChunkData)
-                        {
-                            newChunk.OriginalLabel = chunkLabel;
-                            newChunk.OriginalData = newChunk.ChunkData;
-                        }
-                        newChunk.ChunkParent = this;
-
-                        if (!ByChunkType.ContainsKey(chunkClass)){
-                            ByChunkType.Add(chunkClass, new List<object>());
-                        }
-                        if (!ByChunkId.ContainsKey(chunkClass)){
-                            ByChunkId.Add(chunkClass, new Dictionary<ushort, object>());
-                        }
-
-                        ByChunkType[chunkClass].Add(newChunk);
-                        if (!ByChunkId[chunkClass].ContainsKey(chunkID)) ByChunkId[chunkClass].Add(chunkID, newChunk);
-                    }
+                    var newChunk = AddChunk(stream, io, true);
                 }
+            }
+        }
+
+        public void InitHash()
+        {
+            if (ExecutableHash != 0) return;
+            if (ByChunkType.ContainsKey(typeof(BHAV)))
+            {
+                IEnumerable<object> executableTypes = ByChunkType[typeof(BHAV)];
+                if (ByChunkType.ContainsKey(typeof(BCON))) executableTypes = executableTypes.Concat(ByChunkType[typeof(BCON)]);
+                var hash = new xxHashSharp.xxHash();
+                hash.Init();
+                foreach (IffChunk chunk in executableTypes)
+                {
+                    hash.Update(chunk.ChunkData ?? chunk.OriginalData, chunk.ChunkData.Length);
+                }
+                ExecutableHash = hash.Digest();
+            }
+        }
+
+        public IffChunk AddChunk(Stream stream, IoBuffer io, bool add)
+        {
+            var chunkType = io.ReadCString(4);
+            var chunkSize = io.ReadUInt32();
+            var chunkID = io.ReadUInt16();
+            var chunkFlags = io.ReadUInt16();
+            var chunkLabel = io.ReadCString(64).TrimEnd('\0');
+            var chunkDataSize = chunkSize - 76;
+
+            /** Do we understand this chunk type? **/
+            if (!CHUNK_TYPES.ContainsKey(chunkType))
+            {
+                /** Skip it! **/
+                io.Skip(Math.Min(chunkDataSize, stream.Length - stream.Position - 1)); //if the chunk is invalid, it will likely provide a chunk size beyond the limits of the file. (walls2.iff)
+                return null;
+            }
+            else
+            {
+                Type chunkClass = CHUNK_TYPES[chunkType];
+                IffChunk newChunk = (IffChunk)Activator.CreateInstance(chunkClass);
+                newChunk.ChunkID = chunkID;
+                newChunk.OriginalID = chunkID;
+                newChunk.ChunkFlags = chunkFlags;
+                newChunk.ChunkLabel = chunkLabel;
+                newChunk.ChunkType = chunkType;
+                newChunk.ChunkData = io.ReadBytes(chunkDataSize);
+                
+                if (RetainChunkData)
+                {
+                    newChunk.OriginalLabel = chunkLabel;
+                    newChunk.OriginalData = newChunk.ChunkData;
+                }
+
+                if (add)
+                {
+                    newChunk.ChunkParent = this;
+
+                    if (!ByChunkType.ContainsKey(chunkClass))
+                    {
+                        ByChunkType.Add(chunkClass, new List<object>());
+                    }
+                    if (!ByChunkId.ContainsKey(chunkClass))
+                    {
+                        ByChunkId.Add(chunkClass, new Dictionary<ushort, object>());
+                    }
+
+                    ByChunkType[chunkClass].Add(newChunk);
+                    if (!ByChunkId[chunkClass].ContainsKey(chunkID)) ByChunkId[chunkClass].Add(chunkID, newChunk);
+                }
+                return newChunk;
             }
         }
 
@@ -218,28 +253,33 @@ namespace FSO.Files.Formats.IFF
                 var chunks = ListAll();
                 foreach (var c in chunks)
                 {
-                    var typeString = CHUNK_TYPES.FirstOrDefault(x => x.Value == c.GetType()).Key;
-
-                    io.WriteCString((typeString == null) ? c.ChunkType : typeString, 4);
-
-                    byte[] data;
-                    using (var cstr = new MemoryStream())
-                    {
-                        if (c.Write(this, cstr)) data = cstr.ToArray();
-                        else data = c.OriginalData;
-                    }
-
-                    //todo: exporting PIFF as IFF SHOULD NOT DO THIS
-                    c.OriginalData = data; //if we revert, it is to the last save.
-                    c.RuntimeInfo = ChunkRuntimeState.Normal;
-
-                    io.WriteUInt32((uint)data.Length+76);
-                    io.WriteUInt16(c.ChunkID);
-                    io.WriteUInt16(c.ChunkFlags);
-                    io.WriteCString(c.ChunkLabel, 64);
-                    io.WriteBytes(data);
+                    WriteChunk(io, c);
                 }
             }
+        }
+
+        public void WriteChunk(IoWriter io, IffChunk c)
+        {
+            var typeString = CHUNK_TYPES.FirstOrDefault(x => x.Value == c.GetType()).Key;
+
+            io.WriteCString((typeString == null) ? c.ChunkType : typeString, 4);
+
+            byte[] data;
+            using (var cstr = new MemoryStream())
+            {
+                if (c.Write(this, cstr)) data = cstr.ToArray();
+                else data = c.OriginalData;
+            }
+
+            //todo: exporting PIFF as IFF SHOULD NOT DO THIS
+            c.OriginalData = data; //if we revert, it is to the last save.
+            c.RuntimeInfo = ChunkRuntimeState.Normal;
+
+            io.WriteUInt32((uint)data.Length + 76);
+            io.WriteUInt16(c.ChunkID);
+            io.WriteUInt16(c.ChunkFlags);
+            io.WriteCString(c.ChunkLabel, 64);
+            io.WriteBytes(data);
         }
 
         private T prepare<T>(object input)
@@ -458,6 +498,7 @@ namespace FSO.Files.Formats.IFF
                     { 
                         var type = CHUNK_TYPES[e.Type];
                         if (!(type.IsAssignableFrom(chunk.GetType())) || e.ChunkID != chunk.ChunkID) continue;
+                        if (chunk.RuntimeInfo == ChunkRuntimeState.Patched) continue;
 
                         chunk.ChunkData = e.Apply(chunk.ChunkData);
                         chunk.RuntimeInfo = ChunkRuntimeState.Patched;

@@ -17,6 +17,7 @@ using FSO.Common.Rendering.Framework.IO;
 using FSO.Client;
 using FSO.Client.UI.Panels;
 using System.Windows.Forms;
+using System.Text.RegularExpressions;
 
 namespace FSO.Windows
 {
@@ -41,6 +42,7 @@ namespace FSO.Windows
             //initialize some platform specific stuff
             FSO.Files.ImageLoaderHelpers.BitmapFunction = BitmapReader;
             ClipboardHandler.Default = new WinFormsClipboard();
+            FSO.Files.ImageLoaderHelpers.SavePNGFunc = SavePNG;
 
             OperatingSystem os = Environment.OSVersion;
             PlatformID pid = os.Platform;
@@ -54,20 +56,70 @@ namespace FSO.Windows
 
         public static void ShowDialog(string text)
         {
-            MessageBox.Show(text);
+            OperatingSystem os = Environment.OSVersion;
+            PlatformID pid = os.Platform;
+            bool linux = pid == PlatformID.MacOSX || pid == PlatformID.Unix;
+            if (linux)
+            {
+                Console.WriteLine(text);
+                Environment.Exit(0);
+            }
+            else
+            {
+                MessageBox.Show(text);
+            }
         }
 
         private static void CurrentDomain_UnhandledException(object sender, UnhandledExceptionEventArgs e)
         {
             var exception = e.ExceptionObject;
-            if (exception is OutOfMemoryException)
+
+            OperatingSystem os = Environment.OSVersion;
+            PlatformID pid = os.Platform;
+            bool linux = pid == PlatformID.MacOSX || pid == PlatformID.Unix;
+            if (linux)
             {
-                MessageBox.Show(e.ExceptionObject.ToString(), "Out of Memory! FreeSO needs to close.");
+                Console.WriteLine("===== FATAL ERROR =====");
+                Console.WriteLine(e.ExceptionObject.ToString());
+                Environment.Exit(0);
+            } else { 
+                if (exception is OutOfMemoryException)
+                {
+                    MessageBox.Show(e.ExceptionObject.ToString(), "Out of Memory! FreeSO needs to close.");
+                }
+                else
+                {
+                    MessageBox.Show(e.ExceptionObject.ToString(), "A fatal error occured! Screenshot this dialog and post it on Discord.");
+                }
             }
-            else
+        }
+
+        public static void SavePNG(byte[] data, int width, int height, Stream str)
+        {
+            Bitmap image = new Bitmap(width, height, PixelFormat.Format32bppArgb);
+
+            // Fix up the Image to match the expected format
+            //image = (Bitmap)image.RGBToBGR();
+
+            BitmapData bitmapData = image.LockBits(new System.Drawing.Rectangle(0, 0, image.Width, image.Height),
+                ImageLockMode.WriteOnly, System.Drawing.Imaging.PixelFormat.Format32bppArgb);
+
+            if (bitmapData.Stride != image.Width * 4)
+                throw new NotImplementedException();
+
+            
+            for (int i = 0; i < data.Length; i += 4)
             {
-                MessageBox.Show(e.ExceptionObject.ToString(), "A fatal error occured! Screenshot this dialog and post it on Discord.");
+                //if (data[i+3] == 0) { }
+                //var temp = data[i];
+                //data[i] = data[i + 2];
+                //data[i + 2] = temp;
             }
+
+            Marshal.Copy(data, 0, bitmapData.Scan0, data.Length);
+            image.UnlockBits(bitmapData);
+
+            image.Save(str, ImageFormat.Png);
         }
 
         public static Tuple<byte[], int, int> BitmapReader(Stream str)
@@ -76,16 +128,24 @@ namespace FSO.Windows
             try
             {
                 // Fix up the Image to match the expected format
-                image = (Bitmap)image.RGBToBGR();
+                //image = (Bitmap)image.RGBToBGR();
 
                 var data = new byte[image.Width * image.Height * 4];
 
                 BitmapData bitmapData = image.LockBits(new System.Drawing.Rectangle(0, 0, image.Width, image.Height),
                     ImageLockMode.ReadOnly, System.Drawing.Imaging.PixelFormat.Format32bppArgb);
+
                 if (bitmapData.Stride != image.Width * 4)
                     throw new NotImplementedException();
                 Marshal.Copy(bitmapData.Scan0, data, 0, data.Length);
                 image.UnlockBits(bitmapData);
+
+                for (int i = 0; i < data.Length; i += 4)
+                {
+                    var temp = data[i];
+                    data[i] = data[i + 2];
+                    data[i + 2] = temp;
+                }
 
                 return new Tuple<byte[], int, int>(data, image.Width, image.Height);
             }

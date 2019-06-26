@@ -27,8 +27,24 @@ float GrassShininess;
 bool UseTexture;
 bool IgnoreColor;
 texture BaseTex;
+texture ParallaxTex;
+texture NormalMapTex;
 sampler TexSampler = sampler_state {
 	texture = <BaseTex>;
+	AddressU = Wrap;
+	AddressV = Wrap;
+	MIPFILTER = LINEAR; MINFILTER = LINEAR; MAGFILTER = LINEAR;
+};
+
+sampler ParallaxTexSampler = sampler_state {
+	texture = <ParallaxTex>;
+	AddressU = Wrap;
+	AddressV = Wrap;
+	MIPFILTER = LINEAR; MINFILTER = LINEAR; MAGFILTER = LINEAR;
+};
+
+sampler NormalMapSampler = sampler_state {
+	texture = <NormalMapTex>;
 	AddressU = Wrap;
 	AddressV = Wrap;
 	MIPFILTER = LINEAR; MINFILTER = LINEAR; MAGFILTER = LINEAR;
@@ -104,6 +120,21 @@ struct GrassPSVTX {
 	float4 ModelPos : TEXCOORD2;
 	float3 Normal : TEXCOORD3;
 };
+
+bool Water;
+
+float2 LoopUV(float2 uv) {
+	if (Water == false) return uv;
+	uv = frac(uv);
+
+	float dir1 = uv.x + uv.y;
+	float dir2 = uv.x + (1 - uv.y);
+	if (dir1 < 0.5 || dir1 > 1.5 || dir2 < 0.5 || dir2 > 1.5) {
+		uv = frac(uv + float2(0.5, 0.5));
+	}
+	return uv;
+}
+
 
 // from shadertoy.
 // https://www.shadertoy.com/view/4djSRW
@@ -255,7 +286,7 @@ void BladesPS(GrassPSVTX input, out float4 color:COLOR0, out float4 depthB : COL
         float bladeCol = rand.x*0.6;
         float4 green = lerp(LightGreen, DarkGreen, bladeCol);
         float4 brown = lerp(LightBrown, DarkBrown, bladeCol);
-		color = lerp(green, brown, input.GrassInfo.x) * lightProcessFloor(input.ModelPos) * LightDot(input.Normal);//DiffuseColor;
+		color = gammaMul(lerp(green, brown, input.GrassInfo.x), lightProcessFloor(input.ModelPos) * LightDot(input.Normal));//DiffuseColor;
     }
 }
 
@@ -284,7 +315,7 @@ void BladesPSSimple(GrassPSVTX input, out float4 color:COLOR0, out float4 depthB
 		float bladeCol = rand.x*0.6;
 		float4 green = lerp(LightGreen, DarkGreen, bladeCol);
 		float4 brown = lerp(LightBrown, DarkBrown, bladeCol);
-		color = lerp(green, brown, input.GrassInfo.x) * SimpleLight(input.ModelPos.xz) * LightDot(input.Normal);
+		color = gammaMul(lerp(green, brown, input.GrassInfo.x), SimpleLight(input.ModelPos.xz) * LightDot(input.Normal));
 	}
 }
 
@@ -299,10 +330,230 @@ void BladesPS3D(GrassPSVTX input, out float4 color:COLOR0)
 	float bladeCol = rand.x*0.6;
 	float4 green = lerp(LightGreen, DarkGreen, bladeCol);
 	float4 brown = lerp(LightBrown, DarkBrown, bladeCol);
-	color = lerp(green, brown, input.GrassInfo.x) * lightProcessFloor(input.ModelPos) * LightDot(input.Normal) + LightSpecular(input.Normal, input.ModelPos);
+	color = gammaMad(lerp(green, brown, input.GrassInfo.x), lightProcessFloor(input.ModelPos) * LightDot(input.Normal), LightSpecular(input.Normal, input.ModelPos));
 	color.a = a;
 	color.a *= Alpha;
 }
+
+#if !SIMPLE
+struct GrassParallaxVTX
+{
+	float4 Position : SV_Position0;
+	float4 Color : COLOR0;
+	float4 GrassInfo : TEXCOORD0; //x is liveness, yz is position
+	float3 Normal : TEXCOORD1;
+	float3 Tangent : TEXCOORD2;
+	float3 Bitangent : TEXCOORD3;
+};
+
+struct GrassParallaxPSVTX {
+	float4 Position : SV_Position0;
+	float4 Color : COLOR0;
+	float4 GrassInfo : TEXCOORD0; //x is liveness, yz is position
+	float4 ModelPos : TEXCOORD1;
+	float3 Normal : TEXCOORD2;
+
+	float4 TangentViewPos : TEXCOORD3; //ScreenPos.z folded in here
+	float3 TangentModelPos : TEXCOORD4;
+	float3 TangentLightVec : TEXCOORD5;
+};
+
+GrassParallaxPSVTX GrassParallaxVS(GrassParallaxVTX input)
+{
+	GrassParallaxPSVTX output = (GrassParallaxPSVTX)0;
+	float4x4 Temp4x4 = mul(World, mul(View, Projection));
+	float4 position = mul(input.Position, Temp4x4);
+	output.Position = position;
+	output.ModelPos = mul(input.Position, World);
+	output.Color = input.Color;
+	output.GrassInfo = input.GrassInfo;
+	output.GrassInfo.yz = output.GrassInfo.yz*TexMatrix.xw + output.GrassInfo.zy*TexMatrix.zy + TexOffset;
+	output.GrassInfo.w = position.z / position.w;
+
+	output.Normal = normalize(input.Normal);
+
+	float3 T = normalize(input.Tangent);
+	float3 B = normalize(input.Bitangent);
+	float3 N = output.Normal;
+	float3x3 TBN = float3x3(T, B, N);
+
+	output.TangentViewPos.xyz = mul(TBN, CamPos);
+	output.TangentModelPos = mul(TBN, output.ModelPos.xyz);
+	output.TangentLightVec = mul(TBN, normalize(LightVec));
+
+	float4 position2 = mul(float4(input.Position.x, 0, input.Position.z, input.Position.w), Temp4x4);
+	//output.ScreenPos.xy = ((position2.xy*float2(0.5, -0.5)) + float2(0.5, 0.5)) * ScreenSize;
+	output.TangentViewPos.w = position.z;
+
+	if (output.GrassInfo.x == -1.2 && output.GrassInfo.y == -1.2 && output.GrassInfo.z == -1.2 && output.GrassInfo.w < -1.0) output.Color *= 0.5;
+
+	return output;
+}
+
+float ParallaxHeight = 1.0;
+
+float2 GrassParallaxMapping(float2 texCoords, float3 viewDir, float probability)
+{
+	const float minLayers = 4.0;
+	const float maxLayers = 20.0;
+	//add more layers the further we are from directly facing the surface
+	float layers = round(lerp(maxLayers, minLayers, abs(dot(float3(0.0, 0.0, 1.0), viewDir))));
+	//our depth range is 0 to 1 - change the slice we check by this much each iteration
+	float layerDepth = 1.0 / layers;
+
+	viewDir.xy /= abs(viewDir.z);
+	//P is how much to shift tex coords by through the whole 0-1 depth space
+	float2 P = viewDir.xy * ParallaxHeight;
+	float2 deltaTexCoords = P / layers;
+
+	//correction since grass repeats at a diagonal
+	deltaTexCoords = float2(deltaTexCoords.x*0.7071 - deltaTexCoords.y*0.7071, deltaTexCoords.y*0.7071 + deltaTexCoords.x*0.7071);
+
+	float2 currentTexCoords = texCoords;
+
+	//grass is based on probability, rather than using a texture verbatim.
+	float probDelta = probability * 0.5/layers;
+	probability -= probDelta * layers;
+
+	float rand = tex2D(TerrainNoiseSampler, texCoords).y;
+	float currentTexDepth = step(probability, rand);
+	probability += probDelta;
+
+	[unroll(20)]
+	for (float currentLayerDepth = 0; currentLayerDepth < 1; currentLayerDepth += layerDepth)
+	{
+		if (currentLayerDepth >= currentTexDepth) break; //are we under the surface yet?
+		//shift texture coordinates for the next layer
+		currentTexCoords -= deltaTexCoords;
+		//depth value at new texture coordinates
+		currentTexDepth = step(probability, tex2D(TerrainNoiseSampler, currentTexCoords).y);
+
+		probability += probDelta; //probability increases the closer to the ground we are (varying grass height)
+	}
+
+	if (currentTexDepth == 1) discard;
+	return currentTexCoords;
+}
+
+void BladesParallaxPS3D(GrassParallaxPSVTX input, out float4 color:COLOR0)
+{
+	float a = 2 - sqrt(input.TangentViewPos.w / (25 * GrassFadeMul));
+	if (a <= 0) discard;
+
+	float3 viewDir = normalize(input.TangentViewPos.xyz - input.TangentModelPos);
+	float2 texCoords = GrassParallaxMapping(input.GrassInfo.yz * 100 / 512, viewDir, GrassProb * ((2.0 - input.GrassInfo.x) / 2));
+	
+	float2 rand = iterhash22(texCoords * 512); //nearest neighbour effect
+	//grass blade here
+
+	float bladeCol = rand.x*0.6;
+	float4 green = lerp(LightGreen, DarkGreen, bladeCol);
+	float4 brown = lerp(LightBrown, DarkBrown, bladeCol);
+	color = gammaMad(lerp(green, brown, input.GrassInfo.x), lightProcessFloor(input.ModelPos) * LightDot(input.Normal), LightSpecular(input.Normal, input.ModelPos));
+	color.a = a;
+	color.a *= Alpha;
+}
+
+//roof parallax
+
+float4 ParallaxUVTexMat;
+float2 ParallaxMapping(float2 texCoords, float3 viewDir)
+{
+	const float minLayers = 4.0; 
+	const float maxLayers = 16.0;
+	//add more layers the further we are from directly facing the surface
+	float layers = round(lerp(maxLayers, minLayers, abs(dot(float3(0.0, 0.0, 1.0), viewDir))));
+	//our depth range is 0 to 1 - change the slice we check by this much each iteration
+	float layerDepth = 1.0 / layers;
+	viewDir.xy /= abs(viewDir.z);
+	//P is how much to shift tex coords by through the whole 0-1 depth space
+	float2 P = viewDir.xy * ParallaxHeight;
+	float2 deltaTexCoords = P / layers; //how much to shift per layer
+
+	deltaTexCoords = float2(deltaTexCoords.x*ParallaxUVTexMat.x + deltaTexCoords.y*ParallaxUVTexMat.y, deltaTexCoords.y*ParallaxUVTexMat.z + deltaTexCoords.x*ParallaxUVTexMat.w);
+
+	float2 currentTexCoords = texCoords;
+	float currentTexDepth = tex2D(ParallaxTexSampler, texCoords).x; //break if our current layer is beneath this
+
+	[unroll(16)]
+	for (float currentLayerDepth = 0; currentLayerDepth < 1; currentLayerDepth += layerDepth)
+	{
+		if (currentLayerDepth >= currentTexDepth) break; //are we under the surface yet?
+		//shift texture coordinates for the next layer
+		currentTexCoords -= deltaTexCoords;
+		//depth value at new texture coordinates
+		currentTexDepth = tex2D(ParallaxTexSampler, currentTexCoords).x;
+	}
+
+	//parallax occlusion mapping
+	//we want a better estimate of where we hit the surface to avoid a layered appearance (steep mapping)
+	//find the points before and after the ray collision and interpolate between them.
+	float2 lastTC = currentTexCoords + deltaTexCoords;
+
+	float postDepth = currentTexDepth - currentLayerDepth; //should be negative - how much past current layer depth we travel
+	float preDepth = tex2D(ParallaxTexSampler, lastTC).x - (currentLayerDepth - layerDepth); //should be positive - how much after last layer travel we'd need to go to intersect
+
+	//interpolate between the depth after and before collision to find a midpoint tex-coord.
+	//this removes some of the "layered" effect from most front facing angles... at least the ones where we do get a before and after intersection.
+	float i = postDepth / (postDepth - preDepth);
+	currentTexCoords = lerp(currentTexCoords, lastTC, i);
+
+	return currentTexCoords;
+}
+
+float4 LightDotVec(float3 normal, float3 vec) {
+	return CM(dot(vec, normalize(normal)) * 0.6f + 0.4f);
+}
+
+float4 LightSpecularVec(float3 normal, float3 pos) {
+	float cosan = abs(dot(pos, normal));
+	return DiffuseColor * (1 - pow(cosan, GrassShininess));
+}
+
+void RoofParallaxPS3D(GrassParallaxPSVTX input, out float4 color:COLOR0)
+{
+	float3 viewDir = normalize(input.TangentViewPos.xyz - input.TangentModelPos);
+	float d = input.GrassInfo.w;
+	if (IgnoreColor == false) color = input.Color;
+	else color = float4(1, 1, 1, 1);//*DiffuseColor;
+	float2 texCoords = ParallaxMapping(input.GrassInfo.yz, viewDir);
+	color *= tex2Dgrad(TexSampler, texCoords, ddx(input.GrassInfo.yz), ddy(input.GrassInfo.yz));
+	if (color.a == 0) discard;
+
+	float3 normal = tex2D(NormalMapSampler, texCoords).xyz;
+	normal = normalize(normal * 2.0 - 1.0);
+	normal.xy *= -1;
+	float3 lightDir = normalize(input.TangentLightVec);
+
+	color = gammaMad(color, lightProcessRoof(input.ModelPos) * LightDotVec(normal, lightDir), LightSpecularVec(normal, viewDir));
+}
+
+void FloorParallaxPS3D(GrassParallaxPSVTX input, out float4 color:COLOR0, out float4 depthB : COLOR1)
+{
+	float3 viewDir = normalize(input.TangentViewPos.xyz - input.TangentModelPos);
+	float d = input.GrassInfo.w;
+	if (IgnoreColor == false) color = input.Color;
+	else color = float4(1, 1, 1, 1);//*DiffuseColor;
+
+	depthB = packDepth(d);
+	if (depthOutMode == true) {
+		color = depthB;
+	}
+	else {
+		float2 texCoords = ParallaxMapping(LoopUV(input.GrassInfo.yz), viewDir);
+		color *= tex2Dgrad(TexSampler, texCoords, ddx(input.GrassInfo.yz), ddy(input.GrassInfo.yz));
+		if (color.a == 0) discard;
+
+		float3 normal = float3(0, 0, 1);
+		//tex2D(NormalMapSampler, texCoords).xyz;
+	//normal = normalize(normal * 2.0 - 1.0);
+	//normal.xy *= -1;
+		float3 lightDir = normalize(input.TangentLightVec);
+
+		color = gammaMad(color, lightProcessRoof(input.ModelPos) * LightDotVec(normal, lightDir), LightSpecularVec(normal, viewDir));
+	}
+}
+#endif
 
 void GridPS(GrassPSVTX input, out float4 color:COLOR0)
 {
@@ -333,18 +584,14 @@ void GridPS3D(GrassPSVTX input, out float4 color:COLOR0)
 	}
 }
 
-bool Water;
-
-float2 LoopUV(float2 uv) {
-	if (Water == false) return uv;
-	uv = frac(uv);
-
-	float dir1 = uv.x + uv.y;
-	float dir2 = uv.x + (1 - uv.y);
-	if (dir1 < 0.5 || dir1 > 1.5 || dir2 < 0.5 || dir2 > 1.5) {
-		uv = frac(uv + float2(0.5, 0.5));
+void GridPSTex3D(GrassPSVTX input, out float4 color:COLOR0)
+{
+	if (depthOutMode == true) {
+		discard;
 	}
-	return uv;
+	else {
+		color = tex2Dbias(TexSampler, float4(input.GrassInfo.yz, 0, -0.5)) * DiffuseColor * Alpha;
+	}
 }
 
 #if SIMPLE
@@ -366,12 +613,13 @@ void BasePS(GrassPSVTX input, out float4 color:COLOR0, out float4 depthB : COLOR
 		//software depth
 		if (unpackDepth(tex2D(depthMapSampler, input.ScreenPos.xy / ScreenSize)) < d) discard;
 #endif
-        color = lightProcessFloor(input.ModelPos) * LightDot(input.Normal);//*DiffuseColor;
+        color = float4(1,1,1,1);//*DiffuseColor;
 		if (IgnoreColor == false) color *= input.Color;
 		if (UseTexture == true) {
 			color *= tex2D(TexSampler, LoopUV(input.GrassInfo.yz));
 			if (color.a < 0.5) discard;
 		}
+		color = gammaMul(color, lightProcessRoof(input.ModelPos) * LightDot(input.Normal));
     }
 }
 
@@ -394,12 +642,13 @@ void BasePSSimple(GrassPSVTX input, out float4 color:COLOR0, out float4 depthB :
 		//software depth
 		if (unpackDepth(tex2D(depthMapSampler, input.ScreenPos.xy / ScreenSize)) < d) discard;
 #endif
-		color = SimpleLight(input.ModelPos.xz) * LightDot(input.Normal);
+		color = float4(1, 1, 1, 1);
 		if (IgnoreColor == false) color *= input.Color;
 		if (UseTexture == true) {
 			color *= tex2D(TexSampler, LoopUV(input.GrassInfo.yz));
 			if (color.a < 0.5) discard;
 		}
+		color = gammaMul(color, SimpleLight(input.ModelPos.xz) * LightDot(input.Normal));
 	}
 }
 
@@ -407,9 +656,15 @@ float MulBase = 0.2;
 float MulRange = 7;
 float4 BlurBounds = float4(6, 6, 68, 68);
 
+float AvgVector(float3 vec) {
+	return (vec.r + vec.b + vec.g) / 3;
+}
+
 void BasePSMul(GrassPSVTX input, out float4 color:COLOR0)
 {
 	float4 c = LightDot(input.Normal);
+	float4 light = lightProcessFloor(input.ModelPos);
+	//float diff = AvgVector(light) / AvgVector(DiffuseColor);
 
 	float2 edgeDistXY = min(input.ModelPos.xz-BlurBounds.xy*3, BlurBounds.zw*3 - input.ModelPos.xz);
 	float edgeDist = min(edgeDistXY.x, edgeDistXY.y);
@@ -419,7 +674,8 @@ void BasePSMul(GrassPSVTX input, out float4 color:COLOR0)
 	//we want to mask out the terrain using its difference from the expected ground colour. 
 	//close to 0 should be zero, but past 30% should be fully apparent.
 	float3 expected = lerp(LightGreen.rgb, DarkGreen.rgb, 0.1);
-	c *= input.Color;
+	//c *= input.Color;
+	c = gammaMul(input.Color, c * (light / DiffuseColor));
 	float diff = length(expected - c.rgb);
 	color = float4(1, 1, 1, 1)*max(0, min(1, (diff - MulBase) * MulRange)) * edgeDist;
 }
@@ -435,7 +691,7 @@ float RectangleFade(float2 xz, float extend) {
 void BasePS3D(GrassPSVTX input, out float4 color:COLOR0)
 {
 	float d = input.GrassInfo.w;
-	color = lightProcessFloor(input.ModelPos) * LightDot(input.Normal) + LightSpecular(input.Normal, input.ModelPos);
+	color = float4(1,1,1,1);
 	if (IgnoreColor == false) color *= input.Color;
 	if (UseTexture == true) {
 #if SIMPLE
@@ -447,10 +703,12 @@ void BasePS3D(GrassPSVTX input, out float4 color:COLOR0)
 		color *= tex2Dgrad(TexSampler, LoopUV(input.GrassInfo.yz), ddx(input.GrassInfo.yz), ddy(input.GrassInfo.yz));
 #endif
 #endif
-		if (color.a < 0.5) discard;
+		if (color.a == 0) discard;
+		color = gammaMad(color, lightProcessRoof(input.ModelPos) * LightDot(input.Normal), LightSpecular(input.Normal, input.ModelPos));
 		color.a *= (1 - RectangleFade(input.ModelPos.xz, FadeWidth / 2));
 	}
 	else {
+		color = gammaMad(color, lightProcessRoof(input.ModelPos) * LightDot(input.Normal), LightSpecular(input.Normal, input.ModelPos));
 		float a = 1 - (2 - sqrt(input.ScreenPos.z / (25 * GrassFadeMul)));
 		if (a > 0) {
 			a = min(1, a);
@@ -464,7 +722,7 @@ void BasePS3D(GrassPSVTX input, out float4 color:COLOR0)
 			float bladeCol = rand.y*0.6;
 			float4 green = lerp(LightGreen, DarkGreen, bladeCol);
 			float4 brown = lerp(LightBrown, DarkBrown, bladeCol);
-			float4 bladecolor = lerp(green, brown, input.GrassInfo.x) * lightProcessFloor(input.ModelPos) * LightDot(input.Normal);
+			float4 bladecolor = gammaMul(lerp(green, brown, input.GrassInfo.x), lightProcessFloor(input.ModelPos) * LightDot(input.Normal));
 			color = lerp(color, bladecolor, multex);
 		}
 		color.a *= (1 - RectangleFade(input.ModelPos.xz, 0.0));
@@ -518,6 +776,32 @@ technique DrawBase
 #endif;
 
 	}
+
+#if !SIMPLE
+	pass RoofParallax3D
+	{
+#if SM4
+		VertexShader = compile vs_4_0_level_9_3 GrassParallaxVS();
+		PixelShader = compile ps_4_0_level_9_3 RoofParallaxPS3D();
+#else
+		VertexShader = compile vs_3_0 GrassParallaxVS();
+		PixelShader = compile ps_3_0 RoofParallaxPS3D();
+#endif;
+	}
+#endif
+
+#if !SIMPLE
+	pass FloorParallax3D
+	{
+#if SM4
+		VertexShader = compile vs_4_0_level_9_3 GrassParallaxVS();
+		PixelShader = compile ps_4_0_level_9_3 FloorParallaxPS3D();
+#else
+		VertexShader = compile vs_3_0 GrassParallaxVS();
+		PixelShader = compile ps_3_0 FloorParallaxPS3D();
+#endif;
+	}
+#endif
 }
 
 technique DrawGrid
@@ -544,6 +828,19 @@ technique DrawGrid
 #else
 		VertexShader = compile vs_3_0 GrassVS();
 		PixelShader = compile ps_3_0 GridPS3D();
+#endif;
+
+	}
+
+	pass MainPass3DTex
+	{
+
+#if SM4
+		VertexShader = compile vs_4_0_level_9_1 GrassVS();
+		PixelShader = compile ps_4_0_level_9_1 GridPSTex3D();
+#else
+		VertexShader = compile vs_3_0 GrassVS();
+		PixelShader = compile ps_3_0 GridPSTex3D();
 #endif;
 
 	}
@@ -583,6 +880,20 @@ technique DrawBlades
 		PixelShader = compile ps_3_0 BladesPS3D();
 #endif;
 	}
+
+#if !SIMPLE
+	pass MainBladesParallax3D
+	{
+#if SM4
+		VertexShader = compile vs_4_0_level_9_3 GrassParallaxVS();
+		PixelShader = compile ps_4_0_level_9_3 BladesParallaxPS3D();
+#else
+		VertexShader = compile vs_3_0 GrassParallaxVS();
+		PixelShader = compile ps_3_0 BladesParallaxPS3D();
+#endif;
+	}
+#endif
+
 }
 
 technique DrawLMap
@@ -608,7 +919,7 @@ technique DrawMask
 
 #if SM4
 		VertexShader = compile vs_4_0_level_9_1 GrassVS();
-		PixelShader = compile ps_4_0_level_9_1 BasePSMul();
+		PixelShader = compile ps_4_0_level_9_3 BasePSMul();
 #else
 		VertexShader = compile vs_3_0 GrassVS();
 		PixelShader = compile ps_3_0 BasePSMul();

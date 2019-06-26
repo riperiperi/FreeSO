@@ -91,5 +91,10 @@ namespace FSO.SimAntics.Model.TS1Platform
             SimulationInfo.Version = 0x3E;
             SimulationInfo.GlobalData = vm.GlobalState;
         }
+
+        public override void ActivateValidator(VM vm)
+        {
+            Validator = new VMDefaultValidator(vm);
+        }
     }
 }
