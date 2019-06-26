@@ -233,7 +233,10 @@ namespace FSO.Client.UI.Controls
                 }
             } 
         }
-
+        public void ActivateTooltip()
+        {
+            m_TooltipHandler = UIUtils.GiveTooltip(this); //buttons can have tooltips
+        }
         private bool m_CalcAutoSize;
         private void CalculateAutoSize()
         {
@@ -328,7 +331,7 @@ namespace FSO.Client.UI.Controls
             get { return m_isDown; }
         }
 
-        private void OnMouseEvent(UIMouseEventType type, UpdateState state)
+        protected void OnMouseEvent(UIMouseEventType type, UpdateState state)
         {
             if ((m_Disabled || Opacity < 1f) && type != UIMouseEventType.MouseOut) { return; }
 

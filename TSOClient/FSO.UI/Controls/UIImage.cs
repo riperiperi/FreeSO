@@ -13,6 +13,7 @@ using FSO.Client.UI.Framework;
 using FSO.Client.UI.Framework.Parser;
 using FSO.Client.UI.Model;
 using FSO.Client.Utils;
+using FSO.Common.Utils;
 using FSO.Common.Rendering.Framework.Model;
 using FSO.Common.Rendering.Framework.IO;
 
@@ -34,6 +35,24 @@ namespace FSO.Client.UI.Controls
 
         private float m_Width;
         private float m_Height;
+
+        private float _DissolveOpacity = 1f;
+        private Color[] OriginalTextureColors;
+        private float[] TransparentNoiseMap;
+        private Random RandomFloat = new Random();
+        
+        /// <summary>
+        /// A nullable rectangular boundary for the source texture used in draw functions.
+        /// </summary>
+        protected Rectangle? _TextureSourceRectangle;
+        /// <summary>
+        /// The nullable Rectangle X value for the source texture, used for calcuations.
+        /// </summary>
+        private float m_SourceRectangleX;
+        /// /// <summary>
+        /// The nullable Rectangle Y value for the source texture, used for calcuations.
+        /// </summary>
+        private float m_SourceRectangleY;
 
         public UIImage()
         {
@@ -77,6 +96,7 @@ namespace FSO.Client.UI.Controls
             get { return m_Texture; }
             set
             {
+                TransparentNoiseMap = null;
                 m_Texture = value;
                 if (value != null)
                 {
@@ -89,6 +109,62 @@ namespace FSO.Client.UI.Controls
                         m_Height = m_Texture.Height;
                     }
                 }
+            }
+        }
+
+        public float DissolveOpacity
+        {
+            get { return _DissolveOpacity; }
+            set
+            {
+                if (TransparentNoiseMap == null)
+                {
+                    // first run, but there must be a texture
+                    if (m_Texture == null || m_Texture.Width == 0 || m_Texture.Height == 0)
+                        return;
+
+                    // this needs its own texture since it's going to use Texture2D.SetData(Color[])
+                    var newTex = TextureUtils.Copy(m_Texture.GraphicsDevice, m_Texture);
+                    
+                    OriginalTextureColors = new Color[m_Texture.Height * m_Texture.Width];
+                    m_Texture.GetData(OriginalTextureColors);
+                    // need a consistent matrix in order to achieve the dissolve effect
+                    TransparentNoiseMap = new float[m_Texture.Height * m_Texture.Width];
+                    for (int i = 0; i < TransparentNoiseMap.Length; i++)
+                        TransparentNoiseMap[i] = (float)RandomFloat.NextDouble();
+
+                    m_Texture = newTex;
+                }
+                // finally set the new value, and then update the texture
+                _DissolveOpacity = value;
+                Color[] newColors;
+                if (_DissolveOpacity == 0)
+                {
+                    newColors = new Color[m_Texture.Height * m_Texture.Width];
+                    for (int i = 0; i < newColors.Length; i++)
+                        newColors[i] = Color.Transparent;
+                }
+                else if (_DissolveOpacity != 1.0f)
+                {
+                    newColors = new Color[m_Texture.Height * m_Texture.Width];
+                    for (int i = 0; i < TransparentNoiseMap.Length; i++)
+                    {
+                        // if it's not already transparent
+                        if (!OriginalTextureColors[i].Equals(Color.Transparent))
+                        {
+                            if (TransparentNoiseMap[i] > _DissolveOpacity)
+                            {
+                                newColors[i] = Color.Transparent;
+                                continue;
+                            }
+                        }
+                        newColors[i] = OriginalTextureColors[i];
+                    }
+                }
+                else // opacity is 1.0
+                    newColors = OriginalTextureColors;
+                // update the texture
+                m_Texture.SetData(newColors);
             }
         }
 
@@ -147,6 +223,26 @@ namespace FSO.Client.UI.Controls
             {
                 m_MouseEvent.Region = new Rectangle(0, 0, (int)m_Width, (int)m_Height);
             }
+        }
+
+        /// <summary>
+        /// The source rectangle declares boundarys from the source texture of the UIElement, effectively
+        /// masking it during draw calls. See SpiteBatch.Draw(sourceRectangle) and DrawLocalTexture() below.
+        /// </summary>
+        public Rectangle? SourceRectangle
+        {
+            get { return _TextureSourceRectangle; }
+            set { _TextureSourceRectangle = value; }
+        }
+        public float AbstractX
+        {
+            get { return m_SourceRectangleX; }
+            set { m_SourceRectangleX = value; }
+        }
+        public float AbstractY
+        {
+            get { return m_SourceRectangleY; }
+            set { m_SourceRectangleY = value; }
         }
 
         [UIAttribute("size")]
@@ -228,9 +324,9 @@ namespace FSO.Client.UI.Controls
                 if (m_Width != 0 && m_Height != 0)
                 {
                     if (ApplyRotation)
-                        DrawLocalTexture(SBatch, m_Texture, null, Vector2.Zero, new Vector2(m_Width / m_Texture.Width, m_Height / m_Texture.Height), _BlendColor, Rotation);
+                        DrawLocalTexture(SBatch, m_Texture, SourceRectangle, Vector2.Zero, new Vector2(m_Width / m_Texture.Width, m_Height / m_Texture.Height), _BlendColor, Rotation);
                     else
-                        DrawLocalTexture(SBatch, m_Texture, null, Vector2.Zero, new Vector2(m_Width / m_Texture.Width, m_Height / m_Texture.Height));
+                        DrawLocalTexture(SBatch, m_Texture, SourceRectangle, Vector2.Zero, new Vector2(m_Width / m_Texture.Width, m_Height / m_Texture.Height));
                 }
                 else
                 {

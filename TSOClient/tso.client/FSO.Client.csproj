@@ -146,6 +146,7 @@
     <Compile Include="Rendering\City\Plugins\AbstractCityPlugin.cs" />
     <Compile Include="Rendering\City\Plugins\MapPainterPlugin.cs" />
     <Compile Include="Rendering\City\TLayerVertex.cs" />
+    <Compile Include="UI\Controls\UIInvisibleButton.cs" />
     <Compile Include="UI\Controls\UISlotsImage.cs" />
     <Compile Include="UI\Controls\UIAvatarThumbnail.cs" />
     <Compile Include="UI\Controls\UILotButton.cs" />

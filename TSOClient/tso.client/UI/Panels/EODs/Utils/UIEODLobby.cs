@@ -39,7 +39,7 @@ namespace FSO.Client.UI.Panels.EODs.Utils
 
         public UIVMPersonButton GetPlayerButton(int playerIndex)
         {
-            if (playerIndex != -1)
+            if (playerIndex > -1 && playerIndex < PlayerUI.Count)
                 return PlayerUI[playerIndex].PersonButton;
             return null;
         }

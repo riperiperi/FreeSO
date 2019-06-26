@@ -19,7 +19,10 @@ namespace FSO.Client.UI.Framework
     /// </summary>
     public class UITween : IUIProcess
     {
+        private Action m_CompleteAction;
         private List<UITweenInstance> m_ActiveTweens = new List<UITweenInstance>();
+        private List<List<UITweenInstanceMembers>> m_TweenQueue = new List<List<UITweenInstanceMembers>>();
+        private List<Action> CompleteActionsQueue = new List<Action>();
 
         public UITweenInstance To(object obj, float duration, Dictionary<string, float> args)
         {
@@ -37,19 +40,240 @@ namespace FSO.Client.UI.Framework
             return inst;
         }
 
-        public void Stop(UITweenInstance inst, bool complete)
+        public Action CompleteAction
         {
-            if (complete)
+            set
             {
-                inst.RenderPercent(1.0f);
-                inst.Stop();
+                if (m_CompleteAction == null)
+                    m_CompleteAction = value;
+                else
+                    CompleteActionsQueue.Add(value);
             }
-            lock (m_ActiveTweens)
+            get
             {
-                m_ActiveTweens.Remove(inst);
+                if (m_CompleteAction == null)
+                {
+                    if (CompleteActionsQueue.Count > 0)
+                        return CompleteActionsQueue[0];
+                }
+                return m_CompleteAction;
             }
         }
 
+        public void OverrideCompleteAction(Action newCompleteAction)
+        {
+            CompleteActionsQueue = new List<Action>();
+            m_CompleteAction = newCompleteAction;
+        }
+
+        public void StopQueue(bool complete, bool completeAction)
+        {
+            StopAll(complete, completeAction);
+        }
+
+        public void StopAll(bool complete, bool completeAction)
+        {
+            if (m_ActiveTweens.Count > 0)
+            {
+                var instances = new List<UITweenInstance>(m_ActiveTweens);
+                foreach (var inst in instances)
+                    Stop(inst, complete);
+            }
+            if (!completeAction)
+            {
+                m_CompleteAction = null;
+                CompleteActionsQueue = new List<Action>();
+            }
+            else
+                CompleteActionHandler();
+        }
+
+        public void Stop(UITweenInstance inst, bool complete)
+        {
+            if (complete)
+                inst.Complete();
+            else if (inst.Active)
+                inst.Stop();
+            else
+            {
+                lock (m_ActiveTweens)
+                {
+                    m_ActiveTweens.Remove(inst);
+                    if (m_ActiveTweens.Count == 0)
+                    {
+                        CompleteActionHandler();
+                    }
+                }
+            }
+        }
+
+        private void CompleteActionHandler()
+        {
+            m_CompleteAction?.Invoke();
+            if (CompleteActionsQueue.Count > 0)
+            {
+                m_CompleteAction = CompleteActionsQueue[0];
+                CompleteActionsQueue.Remove(m_CompleteAction);
+            }
+            else
+                m_CompleteAction = null;
+        }
+
+        public bool HasQueue
+        {
+            get { return m_TweenQueue.Count > 0 || m_ActiveTweens.Count > 0; }
+        }
+
+        public void PlayQueue()
+        {
+            if (m_TweenQueue.Count > 0)
+            {
+                AddQueueCompleteHandler();
+                ProcessMembersIntoInstances(m_TweenQueue[0]);
+                m_TweenQueue.Remove(m_TweenQueue[0]);
+                PlayAll();
+            }
+            else if (m_ActiveTweens.Count == 0)
+            {
+                CompleteActionHandler();
+            }
+        }
+
+        public void PlayAll()
+        {
+            lock (m_ActiveTweens)
+            {
+                if (m_ActiveTweens.Count > 0)
+                {
+                    foreach (var inst in m_ActiveTweens)
+                        inst.Start();
+                }
+            }
+        }
+
+        public void ProcessMembersIntoInstances(List<UITweenInstanceMembers> memberQueue)
+        {
+            var collection = new List<UITweenInstanceMembers>(memberQueue);
+            lock (m_ActiveTweens)
+            {
+                foreach (var tween in collection)
+                {
+                    var inst = new UITweenInstance(tween.Owner, tween.TargetObject, tween.Duration, tween.Arguments, tween.Ease).OnCompleteAction(tween.CompleteAction).OnUpdateAction(tween.UpdateAction);
+                    m_ActiveTweens.Add(inst);
+                }
+            }
+        }
+
+        public UITween Queue(UITweenQueueTypes type, params UITweenInstanceMembers[] instances)
+        {
+            return Queue(type, null, instances);
+        }
+
+        public UITween Queue(UITweenQueueTypes type, Action finalAction, params UITweenInstanceMembers[] instances)
+        {
+            UITween lastTween = this;
+            bool appended = false;
+            for (var count = 0; count < instances.Length; count++)
+            {
+                if (type.Equals(UITweenQueueTypes.AppendedSynchronous) && !appended)
+                {
+                    appended = true;
+                    lastTween = EnQueue(instances[count], UITweenQueueTypes.Sequential, finalAction);
+                }
+                else
+                    lastTween = EnQueue(instances[count], type, finalAction);
+            }
+            return lastTween;
+        }
+
+        public UITween Queue(UITweenQueueTypes type, Action finalAction, object obj, float duration, Dictionary<string, float> args)
+        {
+            var inst = new UITweenInstanceMembers(this, obj, duration, args, TweenLinear.EaseNone);
+            return EnQueue(inst, type, finalAction);
+        }
+
+        public UITween Queue(UITweenQueueTypes type, Action finalAction, object obj, float duration, Dictionary<string, float> args, Action completeAction)
+        {
+            var inst = new UITweenInstanceMembers(this, obj, duration, args, TweenLinear.EaseNone).OnCompleteAction(completeAction);
+            return EnQueue(inst, type, finalAction);
+        }
+
+        public UITween Queue(UITweenQueueTypes type, Action finalAction, object obj, float duration, Dictionary<string, float> args, Action completeAction, Action updateAction)
+        {
+            var inst = new UITweenInstanceMembers(this, obj, duration, args, TweenLinear.EaseNone).OnCompleteAction(completeAction).OnUpdateAction(updateAction);
+            return EnQueue(inst, type, finalAction);
+        }
+
+        public UITween Queue(UITweenQueueTypes type, Action finalAction, object obj, float duration, Dictionary<string, float> args, EaseFunction ease)
+        {
+            var inst = new UITweenInstanceMembers(this, obj, duration, args, ease);
+            return EnQueue(inst, type, finalAction);
+        }
+
+        public UITween Queue(UITweenQueueTypes type, Action finalAction, object obj, float duration, Dictionary<string, float> args, EaseFunction ease, Action completeAction)
+        {
+            var inst = new UITweenInstanceMembers(this, obj, duration, args, ease).OnCompleteAction(completeAction);
+            return EnQueue(inst, type, finalAction);
+        }
+
+        public UITween Queue(UITweenQueueTypes type, Action finalAction, object obj, float duration, Dictionary<string, float> args, EaseFunction ease, Action completeAction, Action updateAction)
+        {
+            var inst = new UITweenInstanceMembers(this, obj, duration, args, ease).OnCompleteAction(completeAction).OnUpdateAction(updateAction);
+            return EnQueue(inst, type, finalAction);
+        }
+
+        private UITween EnQueue(UITweenInstanceMembers inst, UITweenQueueTypes type, Action completeAction)
+        {
+            List<UITweenInstanceMembers> lastQueue = null;
+            if (type.Equals(UITweenQueueTypes.Sequential))
+            {
+                lastQueue = AddQueueCompleteHandler();
+                m_TweenQueue.Add(lastQueue);
+            }
+            else // synchronous
+            {
+                if (m_TweenQueue.Count > 0)
+                    lastQueue = m_TweenQueue[m_TweenQueue.Count - 1];
+                else
+                {
+                    lastQueue = new List<UITweenInstanceMembers>();
+                    m_TweenQueue.Add(lastQueue);
+                }
+            }
+            lock (lastQueue)
+            {
+                lastQueue.Add(inst);
+            }
+            if (completeAction != null)
+                CompleteAction = completeAction;
+            return this;
+        }
+        private List<UITweenInstanceMembers> AddQueueCompleteHandler()
+        {
+            // if there's a previous UITween in the queue, get an instance from it and make its complete action be PlayQueue
+            var count = m_TweenQueue.Count;
+            if (count > 0)
+            {
+                var queue = m_TweenQueue[count - 1];
+                count = queue.Count;
+                if (count > 0)
+                {
+                    var finalMember = queue[count - 1];
+                    var action = finalMember.CompleteAction;
+                    if (action != null)
+                    {
+                        finalMember.CompleteAction = () =>
+                        {
+                            action();
+                            PlayQueue();
+                        };
+                    }
+                    else
+                        finalMember.CompleteAction = PlayQueue;
+                }
+            }
+            return new List<UITweenInstanceMembers>();
+        }
 
         #region IUIProcess Members
 
@@ -60,8 +284,6 @@ namespace FSO.Client.UI.Framework
 
             lock (m_ActiveTweens)
             {
-                if (m_ActiveTweens.Count == 0) { return; }
-
                 var now = state.Time.TotalGameTime.Ticks;
 
                 var copy = m_ActiveTweens.ToList();
@@ -85,11 +307,45 @@ namespace FSO.Client.UI.Framework
         #endregion
     }
 
+    public class UITweenInstanceMembers
+    {
+        public UITweenQueueTypes Type;
+        public Action FinalAction;
+        public UITween Owner;
+        public object TargetObject;
+        public float Duration;
+        public Dictionary<string, float> Arguments;
+        public EaseFunction Ease = TweenLinear.EaseNone;
+        public Action UpdateAction;
+        public Action CompleteAction;
+
+        public UITweenInstanceMembers(UITween owner, object obj, float duration, Dictionary<string, float> args, EaseFunction ease)
+        {
+            Owner = owner;
+            TargetObject = obj;
+            Duration = duration;
+            Arguments = args;
+            Ease = ease;
+        }
+        public UITweenInstanceMembers OnUpdateAction(Action action)
+        {
+            UpdateAction = action;
+            return this;
+        }
+        public UITweenInstanceMembers OnCompleteAction(Action action)
+        {
+            CompleteAction = action;
+            return this;
+        }
+    }
+
     public delegate void TweenEvent(UITweenInstance tween, float progress);
 
     public class UITweenInstance
     {
         private List<UITweenInstanceField> m_Fields;
+        private Action m_CompleteAction;
+        private Action m_UpdateAction;
         private object m_Object;
         private float m_Duration;
         private float m_StartTime;
@@ -100,7 +356,7 @@ namespace FSO.Client.UI.Framework
 
 
         public event TweenEvent OnComplete;
-        
+        public event TweenEvent OnUpdate;
 
 
         public UITweenInstance(UITween owner, object obj, float duration, Dictionary<string, float> args, EaseFunction ease)
@@ -132,6 +388,16 @@ namespace FSO.Client.UI.Framework
                 }
             }
         }
+        public UITweenInstance OnUpdateAction(Action action)
+        {
+            m_UpdateAction = action;
+            return this;
+        }
+        public UITweenInstance OnCompleteAction(Action action)
+        {
+            m_CompleteAction = action;
+            return this;
+        }
 
         public void Start()
         {
@@ -146,11 +412,8 @@ namespace FSO.Client.UI.Framework
                 RenderPercent(1.0f);
                 Stop();
             }
-            if (OnComplete != null)
-            {
-                OnComplete(this, 1.0f);
-            }
-            m_Owner.Stop(this, false);
+            else
+                m_Owner.Stop(this, false);
         }
 
 
@@ -192,9 +455,17 @@ namespace FSO.Client.UI.Framework
 
         public void RenderPercent(float progress)
         {
-            foreach (var field in m_Fields)
+            for (int index = 0; index < m_Fields.Count; index++)
             {
+                var field = m_Fields[index];
                 field.SetValue(field.Start + ((field.End - field.Start) * progress), m_Object);
+            }
+            OnUpdate?.Invoke(this, progress);
+            m_UpdateAction?.Invoke();
+            if (progress == 1.0f)
+            {
+                OnComplete?.Invoke(this, 1.0f);
+                m_CompleteAction?.Invoke();
             }
         }
 
@@ -368,4 +639,11 @@ namespace FSO.Client.UI.Framework
 
 
     #endregion
+
+    public enum UITweenQueueTypes
+    {
+        Synchronous = 0,
+        Sequential = 1,
+        AppendedSynchronous = 2
+    }
 }

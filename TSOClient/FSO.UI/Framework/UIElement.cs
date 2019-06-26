@@ -105,6 +105,11 @@ namespace FSO.Client.UI.Framework
         protected bool _HasOpacity = false;
 
         /// <summary>
+        /// SpriteEffect of this Element, applied during batch drawing.
+        /// </summary>
+        protected SpriteEffects _SpriteEffects = SpriteEffects.None;
+
+        /// <summary>
         /// The container which this element is a child of. Can be null if top level UI object.
         /// UIContainer sets this in its Add method. Helps describe the UI Tree.
         /// </summary>
@@ -237,7 +242,7 @@ namespace FSO.Client.UI.Framework
         /// <summary>
         /// Rotation of this compoment, in radians.
         /// </summary>
-        public float Rotation
+        public virtual float Rotation
         {
             get { return _Rotation; }
             set
@@ -260,7 +265,7 @@ namespace FSO.Client.UI.Framework
         /// <summary>
         /// Center of the rotation of this UIElement.
         /// </summary>
-        public Vector2 Origin
+        public virtual Vector2 Origin
         {
             get { return _MtxRotOrigin; }
             set
@@ -303,6 +308,16 @@ namespace FSO.Client.UI.Framework
                     CalculateOpacity();
                 }
                 return _BlendColor;
+            }
+        }
+
+        public SpriteEffects SpriteEffect
+        {
+            get { return _SpriteEffects; }
+            set
+            {
+                if (Enum.IsDefined(typeof(SpriteEffects), value))
+                    _SpriteEffects = value;
             }
         }
 
@@ -698,8 +713,8 @@ namespace FSO.Client.UI.Framework
             //to.Y += style.BaselineOffset;
             to.X = (float)Math.Floor(to.X);
             to.Y = (float)Math.Floor(to.Y);
-            if (style.Shadow) batch.DrawString(style.SpriteFont, text, LocalPoint(to) + new Vector2(1, 1), Color.Black, 0, Vector2.Zero, scale, SpriteEffects.None, 0);
-            batch.DrawString(style.SpriteFont, text, LocalPoint(to), style.Color, 0, Vector2.Zero, scale, SpriteEffects.None, 0);
+            if (style.Shadow) batch.DrawString(style.SpriteFont, text, LocalPoint(to) + new Vector2(1, 1), Color.Black, 0, Vector2.Zero, scale, _SpriteEffects, 0);
+            batch.DrawString(style.SpriteFont, text, LocalPoint(to), style.Color, 0, Vector2.Zero, scale, _SpriteEffects, 0);
         }
 
         /// <summary>
@@ -801,8 +816,8 @@ namespace FSO.Client.UI.Framework
             /** Draw the string **/
             pos = FlooredLocalPoint(pos);
 
-            if (style.Shadow) batch.DrawString(style.SpriteFont, text, pos + new Vector2(1, 1), Color.Black, 0, Vector2.Zero, scale, SpriteEffects.None, 0);
-            batch.DrawString(style.SpriteFont, text, pos, style.GetColor(state)*Opacity, 0, Vector2.Zero, scale, SpriteEffects.None, 0);
+            if (style.Shadow) batch.DrawString(style.SpriteFont, text, pos + new Vector2(1, 1), Color.Black, 0, Vector2.Zero, scale, _SpriteEffects, 0);
+            batch.DrawString(style.SpriteFont, text, pos, style.GetColor(state)*Opacity, 0, Vector2.Zero, scale, _SpriteEffects, 0);
         }
 
         /// <summary>
@@ -817,7 +832,7 @@ namespace FSO.Client.UI.Framework
             //if (!m_IsInvalidated)
             //{
             batch.Draw(texture, FlooredLocalPoint(to), null, _BlendColor, 0.0f,
-                        new Vector2(0.0f, 0.0f), _Scale, SpriteEffects.None, 0.0f);
+                        new Vector2(0.0f, 0.0f), _Scale, _SpriteEffects, 0.0f);
             //}
         }
 
@@ -834,7 +849,7 @@ namespace FSO.Client.UI.Framework
             //if (!m_IsInvalidated)
             //{
             batch.Draw(texture, FlooredLocalPoint(to), from, _BlendColor, 0.0f,
-                        new Vector2(0.0f, 0.0f), _Scale, SpriteEffects.None, 0.0f);
+                        new Vector2(0.0f, 0.0f), _Scale, _SpriteEffects, 0.0f);
             //}
         }
 
@@ -852,7 +867,7 @@ namespace FSO.Client.UI.Framework
             //if (!m_IsInvalidated)
             //{
             batch.Draw(texture, FlooredLocalPoint(to), from, _BlendColor, 0.0f,
-                        new Vector2(0.0f, 0.0f), _Scale * scale, SpriteEffects.None, 0.0f);
+                        new Vector2(0.0f, 0.0f), _Scale * scale, _SpriteEffects, 0.0f);
             //}
         }
 
@@ -870,7 +885,7 @@ namespace FSO.Client.UI.Framework
             //if (!m_IsInvalidated)
             //{
             batch.Draw(texture, FlooredLocalPoint(to), from, color, rotation,
-                        new Vector2(0.0f, 0.0f), _Scale * scale, SpriteEffects.None, 0.0f);
+                        new Vector2(0.0f, 0.0f), _Scale * scale, _SpriteEffects, 0.0f);
             //}
         }
 
@@ -886,7 +901,7 @@ namespace FSO.Client.UI.Framework
         public void DrawLocalTexture(SpriteBatch batch, Texture2D texture, Nullable<Rectangle> from, Vector2 to, Vector2 scale, Color color, float rotation, Vector2 origin)
         {
             batch.Draw(texture, FlooredLocalPoint(to), from, color, rotation,
-                        origin, _Scale * scale, SpriteEffects.None, 0.0f);
+                        origin, _Scale * scale, _SpriteEffects, 0.0f);
         }
 
         /// <summary>
@@ -904,7 +919,7 @@ namespace FSO.Client.UI.Framework
             //if (!m_IsInvalidated)
             //{
             batch.Draw(texture, FlooredLocalPoint(to), from, new Color(_BlendColor.ToVector4()*blend.ToVector4()), 0.0f,
-                        new Vector2(0.0f, 0.0f), _Scale * scale, SpriteEffects.None, 0.0f);
+                        new Vector2(0.0f, 0.0f), _Scale * scale, _SpriteEffects, 0.0f);
             //}
         }
 
@@ -918,7 +933,7 @@ namespace FSO.Client.UI.Framework
                 for (int y= 0; y<dest.Height; y += texture.Height)
                 {
                     batch.Draw(texture, FlooredLocalPoint(new Vector2(dest.X+x, dest.Y+y)), new Rectangle(0, 0, Math.Min(texture.Width, dest.Width-x), Math.Min(texture.Height, dest.Height - y)), col, 0.0f,
-                        new Vector2(0.0f, 0.0f), _Scale, SpriteEffects.None, 0.0f);
+                        new Vector2(0.0f, 0.0f), _Scale, _SpriteEffects, 0.0f);
                 }
             }
 
