@@ -52,6 +52,8 @@
             this.NewOBJD = new System.Windows.Forms.Button();
             this.DeleteOBJD = new System.Windows.Forms.Button();
             this.ObjThumb = new FSO.IDE.Common.ObjThumbnailControl();
+            this.PatchTab = new System.Windows.Forms.TabPage();
+            this.PIFFEditor = new FSO.IDE.ResourceBrowser.PIFFEditor();
             this.AppearanceTab.SuspendLayout();
             this.tabPage3.SuspendLayout();
             this.tabPage2.SuspendLayout();
@@ -59,6 +61,7 @@
             this.objPages.SuspendLayout();
             this.Debug3D.SuspendLayout();
             this.XMLEntryTab.SuspendLayout();
+            this.PatchTab.SuspendLayout();
             this.SuspendLayout();
             // 
             // ObjCombo
@@ -216,6 +219,7 @@
             this.objPages.Controls.Add(this.AppearanceTab);
             this.objPages.Controls.Add(this.Debug3D);
             this.objPages.Controls.Add(this.XMLEntryTab);
+            this.objPages.Controls.Add(this.PatchTab);
             this.objPages.Location = new System.Drawing.Point(7, 68);
             this.objPages.Name = "objPages";
             this.objPages.SelectedIndex = 0;
@@ -230,7 +234,7 @@
             this.Debug3D.Padding = new System.Windows.Forms.Padding(3);
             this.Debug3D.Size = new System.Drawing.Size(762, 459);
             this.Debug3D.TabIndex = 5;
-            this.Debug3D.Text = "3D Debug";
+            this.Debug3D.Text = "3D Mode";
             this.Debug3D.UseVisualStyleBackColor = true;
             // 
             // FSOMEdit
@@ -285,6 +289,24 @@
             this.ObjThumb.Size = new System.Drawing.Size(48, 48);
             this.ObjThumb.TabIndex = 23;
             // 
+            // PatchTab
+            // 
+            this.PatchTab.Controls.Add(this.PIFFEditor);
+            this.PatchTab.Location = new System.Drawing.Point(4, 22);
+            this.PatchTab.Name = "PatchTab";
+            this.PatchTab.Size = new System.Drawing.Size(762, 459);
+            this.PatchTab.TabIndex = 7;
+            this.PatchTab.Text = "Patch Info";
+            this.PatchTab.UseVisualStyleBackColor = true;
+            // 
+            // PIFFEditor
+            // 
+            this.PIFFEditor.Dock = System.Windows.Forms.DockStyle.Fill;
+            this.PIFFEditor.Location = new System.Drawing.Point(0, 0);
+            this.PIFFEditor.Name = "PIFFEditor";
+            this.PIFFEditor.Size = new System.Drawing.Size(762, 459);
+            this.PIFFEditor.TabIndex = 0;
+            // 
             // ObjectWindow
             // 
             this.AutoScaleDimensions = new System.Drawing.SizeF(6F, 13F);
@@ -314,6 +336,7 @@
             this.objPages.ResumeLayout(false);
             this.Debug3D.ResumeLayout(false);
             this.XMLEntryTab.ResumeLayout(false);
+            this.PatchTab.ResumeLayout(false);
             this.ResumeLayout(false);
 
         }
@@ -342,5 +365,7 @@
         private ResourceBrowser.FSOMEditor FSOMEdit;
         private System.Windows.Forms.TabPage XMLEntryTab;
         private ResourceBrowser.XMLEntryEditor XMLEdit;
+        private System.Windows.Forms.TabPage PatchTab;
+        private ResourceBrowser.PIFFEditor PIFFEditor;
     }
 }

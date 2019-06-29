@@ -28,7 +28,7 @@ namespace FSO.Files.Formats
                         && (disallowedTypes == null || !disallowedTypes.Contains(c.GetType())))
                     {
                         entries.Add(new PIFFEntry {
-                            Type = c.ChunkType, ChunkID = c.OriginalID, Delete = true,
+                            Type = c.ChunkType, ChunkID = c.OriginalID, EntryType = PIFFEntryType.Remove,
                             ChunkLabel = c.ChunkLabel, ChunkFlags = c.ChunkFlags
                         });
                     }
@@ -79,7 +79,7 @@ namespace FSO.Files.Formats
             var e = new PIFFEntry { Type = chk.ChunkType, ChunkID = chk.OriginalID, NewChunkID = chk.ChunkID };
             if (chk == null)
             {
-                e.Delete = true;
+                e.EntryType = PIFFEntryType.Remove;
                 return e;
             }
 

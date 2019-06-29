@@ -114,6 +114,7 @@ namespace FSO.IDE
             DrawgroupEdit.SetActiveObject(ActiveObj);
             FSOMEdit.SetActiveObject(ActiveObj);
             XMLEdit.SetActiveObject(ActiveObj);
+            PIFFEditor.SetActiveObject(ActiveObj);
 
             //update top var
 

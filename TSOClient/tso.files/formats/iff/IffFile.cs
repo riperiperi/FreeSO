@@ -33,7 +33,7 @@ namespace FSO.Files.Formats.IFF
 
         public string Filename;
 
-        private static Dictionary<string, Type> CHUNK_TYPES = new Dictionary<string, Type>()
+        public static Dictionary<string, Type> CHUNK_TYPES = new Dictionary<string, Type>()
         {
             {"STR#", typeof(STR)},
             {"CTSS", typeof(CTSS)},
@@ -83,6 +83,7 @@ namespace FSO.Files.Formats.IFF
         private Dictionary<Type, Dictionary<ushort, object>> ByChunkId;
         private Dictionary<Type, List<object>> ByChunkType;
         public List<IffChunk> RemovedOriginal = new List<IffChunk>();
+        public PIFF CurrentPIFF;
 
         /// <summary>
         /// Constructs a new IFF instance.
@@ -514,6 +515,7 @@ namespace FSO.Files.Formats.IFF
         {
             if (RuntimeInfo.State == IffRuntimeState.ReadOnly) RuntimeInfo.State = IffRuntimeState.PIFFPatch;
             var piff = piffFile.List<PIFF>()[0];
+            CurrentPIFF = piff;
 
             //patch existing chunks using the PIFF chunk
             //also delete chunks marked for deletion
@@ -533,11 +535,11 @@ namespace FSO.Files.Formats.IFF
                 if (objC == null) continue;
 
                 var chunk = (IffChunk)objC;
-                if (e.Delete)
+                if (e.EntryType == PIFFEntryType.Remove)
                 {
                     FullRemoveChunk(chunk); //removed by PIFF
                 }
-                else
+                else if(e.EntryType == PIFFEntryType.Patch)
                 {
                     chunk.ChunkData = e.Apply(chunk.ChunkData);
                     if (e.ChunkLabel != "") chunk.ChunkLabel = e.ChunkLabel;
