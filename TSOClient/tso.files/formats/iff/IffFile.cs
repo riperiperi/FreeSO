@@ -541,7 +541,8 @@ namespace FSO.Files.Formats.IFF
                 }
                 else if(e.EntryType == PIFFEntryType.Patch)
                 {
-                    chunk.ChunkData = e.Apply(chunk.ChunkData);
+                    chunk.ChunkData = e.Apply(chunk.ChunkData ?? chunk.OriginalData);
+                    chunk.ChunkProcessed = false;
                     if (e.ChunkLabel != "") chunk.ChunkLabel = e.ChunkLabel;
                     chunk.RuntimeInfo = ChunkRuntimeState.Patched;
 

@@ -20,6 +20,25 @@ namespace FSO.Files.Formats.IFF.Chunks
             ChunkType = "PIFF";
         }
 
+        public void AppendAddedChunks(IffFile file)
+        {
+            foreach (var chunk in file.SilentListAll())
+            {
+                if (chunk == this) continue;
+                var entries = Entries.ToList();
+                entries.Add(new PIFFEntry()
+                {
+                    ChunkID = chunk.ChunkID,
+                    ChunkLabel = chunk.ChunkLabel,
+                    ChunkFlags = chunk.ChunkFlags,
+                    EntryType = PIFFEntryType.Add,
+                    NewDataSize = (uint)(chunk.ChunkData?.Length ?? 0),
+                    Type = chunk.ChunkType
+                });
+                Entries = entries.ToArray();
+            }
+        }
+
         public override void Read(IffFile iff, Stream stream)
         {
             using (var io = IoBuffer.FromStream(stream, ByteOrder.LITTLE_ENDIAN))

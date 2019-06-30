@@ -55,6 +55,7 @@
             this.SaveIff.TabIndex = 0;
             this.SaveIff.Text = "Save Complete Iff...";
             this.SaveIff.UseVisualStyleBackColor = true;
+            this.SaveIff.Click += new System.EventHandler(this.SaveIff_Click);
             // 
             // EntryList
             // 
@@ -212,6 +213,7 @@
             this.EntryDelete.TabIndex = 7;
             this.EntryDelete.Text = "Delete";
             this.EntryDelete.UseVisualStyleBackColor = true;
+            this.EntryDelete.Click += new System.EventHandler(this.EntryDelete_Click);
             // 
             // PIFFEditor
             // 
