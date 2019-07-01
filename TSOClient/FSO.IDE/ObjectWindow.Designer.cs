@@ -49,11 +49,13 @@
             this.FSOMEdit = new FSO.IDE.ResourceBrowser.FSOMEditor();
             this.XMLEntryTab = new System.Windows.Forms.TabPage();
             this.XMLEdit = new FSO.IDE.ResourceBrowser.XMLEntryEditor();
+            this.PatchTab = new System.Windows.Forms.TabPage();
+            this.PIFFEditor = new FSO.IDE.ResourceBrowser.PIFFEditor();
             this.NewOBJD = new System.Windows.Forms.Button();
             this.DeleteOBJD = new System.Windows.Forms.Button();
             this.ObjThumb = new FSO.IDE.Common.ObjThumbnailControl();
-            this.PatchTab = new System.Windows.Forms.TabPage();
-            this.PIFFEditor = new FSO.IDE.ResourceBrowser.PIFFEditor();
+            this.UpgradeTab = new System.Windows.Forms.TabPage();
+            this.UpgradeEditor = new FSO.IDE.ResourceBrowser.UpgradeEditor();
             this.AppearanceTab.SuspendLayout();
             this.tabPage3.SuspendLayout();
             this.tabPage2.SuspendLayout();
@@ -62,6 +64,7 @@
             this.Debug3D.SuspendLayout();
             this.XMLEntryTab.SuspendLayout();
             this.PatchTab.SuspendLayout();
+            this.UpgradeTab.SuspendLayout();
             this.SuspendLayout();
             // 
             // ObjCombo
@@ -219,6 +222,7 @@
             this.objPages.Controls.Add(this.AppearanceTab);
             this.objPages.Controls.Add(this.Debug3D);
             this.objPages.Controls.Add(this.XMLEntryTab);
+            this.objPages.Controls.Add(this.UpgradeTab);
             this.objPages.Controls.Add(this.PatchTab);
             this.objPages.Location = new System.Drawing.Point(7, 68);
             this.objPages.Name = "objPages";
@@ -262,6 +266,24 @@
             this.XMLEdit.Size = new System.Drawing.Size(762, 459);
             this.XMLEdit.TabIndex = 0;
             // 
+            // PatchTab
+            // 
+            this.PatchTab.Controls.Add(this.PIFFEditor);
+            this.PatchTab.Location = new System.Drawing.Point(4, 22);
+            this.PatchTab.Name = "PatchTab";
+            this.PatchTab.Size = new System.Drawing.Size(762, 459);
+            this.PatchTab.TabIndex = 7;
+            this.PatchTab.Text = "Patch Info";
+            this.PatchTab.UseVisualStyleBackColor = true;
+            // 
+            // PIFFEditor
+            // 
+            this.PIFFEditor.Dock = System.Windows.Forms.DockStyle.Fill;
+            this.PIFFEditor.Location = new System.Drawing.Point(0, 0);
+            this.PIFFEditor.Name = "PIFFEditor";
+            this.PIFFEditor.Size = new System.Drawing.Size(762, 459);
+            this.PIFFEditor.TabIndex = 0;
+            // 
             // NewOBJD
             // 
             this.NewOBJD.Location = new System.Drawing.Point(416, 11);
@@ -289,23 +311,23 @@
             this.ObjThumb.Size = new System.Drawing.Size(48, 48);
             this.ObjThumb.TabIndex = 23;
             // 
-            // PatchTab
+            // UpgradeTab
             // 
-            this.PatchTab.Controls.Add(this.PIFFEditor);
-            this.PatchTab.Location = new System.Drawing.Point(4, 22);
-            this.PatchTab.Name = "PatchTab";
-            this.PatchTab.Size = new System.Drawing.Size(762, 459);
-            this.PatchTab.TabIndex = 7;
-            this.PatchTab.Text = "Patch Info";
-            this.PatchTab.UseVisualStyleBackColor = true;
+            this.UpgradeTab.Controls.Add(this.UpgradeEditor);
+            this.UpgradeTab.Location = new System.Drawing.Point(4, 22);
+            this.UpgradeTab.Name = "UpgradeTab";
+            this.UpgradeTab.Size = new System.Drawing.Size(762, 459);
+            this.UpgradeTab.TabIndex = 8;
+            this.UpgradeTab.Text = "Upgrades";
+            this.UpgradeTab.UseVisualStyleBackColor = true;
             // 
-            // PIFFEditor
+            // UpgradeEditor
             // 
-            this.PIFFEditor.Dock = System.Windows.Forms.DockStyle.Fill;
-            this.PIFFEditor.Location = new System.Drawing.Point(0, 0);
-            this.PIFFEditor.Name = "PIFFEditor";
-            this.PIFFEditor.Size = new System.Drawing.Size(762, 459);
-            this.PIFFEditor.TabIndex = 0;
+            this.UpgradeEditor.Dock = System.Windows.Forms.DockStyle.Fill;
+            this.UpgradeEditor.Location = new System.Drawing.Point(0, 0);
+            this.UpgradeEditor.Name = "UpgradeEditor";
+            this.UpgradeEditor.Size = new System.Drawing.Size(762, 459);
+            this.UpgradeEditor.TabIndex = 0;
             // 
             // ObjectWindow
             // 
@@ -337,6 +359,7 @@
             this.Debug3D.ResumeLayout(false);
             this.XMLEntryTab.ResumeLayout(false);
             this.PatchTab.ResumeLayout(false);
+            this.UpgradeTab.ResumeLayout(false);
             this.ResumeLayout(false);
 
         }
@@ -367,5 +390,7 @@
         private ResourceBrowser.XMLEntryEditor XMLEdit;
         private System.Windows.Forms.TabPage PatchTab;
         private ResourceBrowser.PIFFEditor PIFFEditor;
+        private System.Windows.Forms.TabPage UpgradeTab;
+        private ResourceBrowser.UpgradeEditor UpgradeEditor;
     }
 }

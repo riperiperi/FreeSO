@@ -411,6 +411,12 @@
     <Compile Include="ResourceBrowser\PIFFEditor.Designer.cs">
       <DependentUpon>PIFFEditor.cs</DependentUpon>
     </Compile>
+    <Compile Include="ResourceBrowser\UpgradeEditor.cs">
+      <SubType>UserControl</SubType>
+    </Compile>
+    <Compile Include="ResourceBrowser\UpgradeEditor.Designer.cs">
+      <DependentUpon>UpgradeEditor.cs</DependentUpon>
+    </Compile>
     <Compile Include="ResourceBrowser\XMLEntryEditor.cs">
       <SubType>UserControl</SubType>
     </Compile>
@@ -595,6 +601,9 @@
     </EmbeddedResource>
     <EmbeddedResource Include="ResourceBrowser\ResourceEditors\OTFResourceControl.resx">
       <DependentUpon>OTFResourceControl.cs</DependentUpon>
+    </EmbeddedResource>
+    <EmbeddedResource Include="ResourceBrowser\UpgradeEditor.resx">
+      <DependentUpon>UpgradeEditor.cs</DependentUpon>
     </EmbeddedResource>
     <EmbeddedResource Include="ResourceBrowser\XMLEntryEditor.resx">
       <DependentUpon>XMLEntryEditor.cs</DependentUpon>
