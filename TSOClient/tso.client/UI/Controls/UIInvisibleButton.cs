@@ -14,11 +14,9 @@ namespace FSO.Client.UI.Controls
     /// </summary>
     public class UIInvisibleButton : UIButton
     {
-        public UIInvisibleButton(int width, int height)
+        public UIInvisibleButton(int width, int height, Texture2D invisibleTexture)
         {
-            Texture2D texture = new Texture2D(GameFacade.GraphicsDevice, width, width);
-
-            Texture = texture;
+            Texture = invisibleTexture;
 
             ImageStates = 1;
 
