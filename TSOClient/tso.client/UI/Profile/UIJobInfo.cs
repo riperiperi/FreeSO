@@ -39,11 +39,11 @@ namespace FSO.Client.UI.Panels.Profile
                     jobMultipler = 5;
                     jobExperienceFactor = 2;
                     break;
-                case 2: // Nightclub
+                case 3: // Nightclub
                     jobMultipler = 10;
                     jobExperienceFactor = 1;
                     break;
-                case 3: // Nightclub - Dancer
+                case 4: // Nightclub - Dancer
                     jobMultipler = 10;
                     jobExperienceFactor = 1;
                     break;
