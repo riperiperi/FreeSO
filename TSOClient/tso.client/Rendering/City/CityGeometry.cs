@@ -49,7 +49,7 @@ namespace FSO.Client.Rendering.City
             if ((i + 1 < 512) && (t > sample) && t != 255) edges[2] = t;
             t = TerrainTypeData[i * 512 + j - 1];
             if ((j - 1 >= 0) && (t > sample) && t != 255) edges[3] = t;
-            
+
 
             int binary =
             ((edges[0] > -1) ? 0 : 2) |
@@ -58,7 +58,7 @@ namespace FSO.Client.Rendering.City
             ((edges[3] > -1) ? 0 : 4);
 
             int remap = CityContent.FlagLayout[binary];
-            var atlasPos = new Vector2( (remap%7)/7f, (remap / 7) / 3f );
+            var atlasPos = new Vector2((remap % 7) / 7f, (remap / 7) / 3f);
 
             int maxEdge = 4;
 
@@ -126,7 +126,7 @@ namespace FSO.Client.Rendering.City
 
             float mu2 = mu * mu;
             float mu3 = mu2 * mu;
-            float m0 = (v1 - v0) * (1 + bias) * (1 - tension) * (1+continuity) / 2;
+            float m0 = (v1 - v0) * (1 + bias) * (1 - tension) * (1 + continuity) / 2;
             m0 += (v2 - v1) * (1 - bias) * (1 - tension) * (1 - continuity) / 2;
             float m1 = (v2 - v1) * (1 + bias) * (1 - tension) * (1 - continuity) / 2;
             m1 += (v3 - v2) * (1 - bias) * (1 - tension) * (1 + continuity) / 2;
@@ -160,7 +160,7 @@ namespace FSO.Client.Rendering.City
             var bDelta = new Vector2(1 / 7f, 1 / 3f);
             var rDelta = new Vector2(1f / CityContent.RoadWidth, 1f / CityContent.RoadHeight);
 
-            for (int i=0; i<5; i++)
+            for (int i = 0; i < 5; i++)
             {
                 indices[i] = new List<int>();
                 vertices[i] = new List<TLayerVertex>();
@@ -172,22 +172,22 @@ namespace FSO.Client.Rendering.City
             int xStart, xEnd;
 
             int chunkSize = 16;
-            
+
             int yStart = 0, yEnd = 512;
 
             var chunkWidth = 512 / chunkSize;
             var chunkCount = chunkWidth * chunkWidth;
-            for (int i=0; i<5; i++)
+            for (int i = 0; i < 5; i++)
                 LayerSubPrims[i] = new int[chunkCount];
             RoadSubPrims = new int[chunkCount];
 
             var ci = 0;
-            for (int cy = 0; cy<chunkWidth; cy++)
+            for (int cy = 0; cy < chunkWidth; cy++)
             {
                 for (int cx = 0; cx < chunkWidth; cx++)
                 {
                     yStart = cy * chunkSize;
-                    yEnd = (cy+1) * chunkSize;
+                    yEnd = (cy + 1) * chunkSize;
                     var xLim = cx * chunkSize;
                     var xLimEnd = (cx + 1) * chunkSize;
 
@@ -214,8 +214,6 @@ namespace FSO.Client.Rendering.City
 
                         if (xEnd <= xStart) continue;
 
-                        int baseInd = 0;
-
                         for (int j = xStart; j < xEnd; j++)
                         { //where the magic happens
                             var ex = Math.Min(Math.Max(rXS, j), rXE - 1);
@@ -225,8 +223,8 @@ namespace FSO.Client.Rendering.City
 
                             //huge segment of code for generating triangles incoming
                             var norm1 = GetNormalAt(Math.Min(rXE, Math.Max(rXS, j)), i);
-                            var norm2 = GetNormalAt(Math.Min(rXE, Math.Max(rXS, j+1)), i);
-                            var norm3 = GetNormalAt(Math.Min(rXE2, Math.Max(rXS2, j+1)), Math.Min(511, i + 1));
+                            var norm2 = GetNormalAt(Math.Min(rXE, Math.Max(rXS, j + 1)), i);
+                            var norm3 = GetNormalAt(Math.Min(rXE2, Math.Max(rXS2, j + 1)), Math.Min(511, i + 1));
                             var norm4 = GetNormalAt(Math.Min(rXE2, Math.Max(rXS2, j)), Math.Min(511, i + 1));
 
                             var pos1 = new Vector3(j, MapData.ElevationData[(i * 512 + Math.Min(rXE, Math.Max(rXS, j)))] / 12.0f, i);
@@ -239,52 +237,50 @@ namespace FSO.Client.Rendering.City
                             var trans3 = Math.Min(1, Math.Max(0, Math.Max(rXS2 - (j + 1), (j + 1) - rXE2) * fR));
                             var trans4 = Math.Min(1, Math.Max(0, Math.Max(rXS2 - j, j - rXE2) * fR));
 
-                            if (type < vertices.Length)
+                            var baseInd = vertices[type].Count;
+                            vertices[type].Add(new TLayerVertex()
                             {
-                                baseInd = vertices[type].Count;
-                                vertices[type].Add(new TLayerVertex()
-                                {
-                                    Position = pos1,
-                                    Normal = norm1,
-                                    Transparency = trans1,
-                                    TextureCoord = new Vector2(j, i) / 4,
-                                    MaskTextureCoord = new Vector2(-1, -1)
-                                });
+                                Position = pos1,
+                                Normal = norm1,
+                                Transparency = trans1,
+                                TextureCoord = new Vector2(j, i) / 4,
+                                MaskTextureCoord = new Vector2(-1, -1)
+                            });
 
-                                vertices[type].Add(new TLayerVertex()
-                                {
-                                    Position = pos2,
-                                    Normal = norm2,
-                                    Transparency = trans2,
-                                    TextureCoord = new Vector2(j + 1, i) / 4,
-                                    MaskTextureCoord = new Vector2(-1, -1)
-                                });
+                            vertices[type].Add(new TLayerVertex()
+                            {
+                                Position = pos2,
+                                Normal = norm2,
+                                Transparency = trans2,
+                                TextureCoord = new Vector2(j + 1, i) / 4,
+                                MaskTextureCoord = new Vector2(-1, -1)
+                            });
 
-                                vertices[type].Add(new TLayerVertex()
-                                {
-                                    Position = pos3,
-                                    Normal = norm3,
-                                    Transparency = trans3,
-                                    TextureCoord = new Vector2(j + 1, i + 1) / 4,
-                                    MaskTextureCoord = new Vector2(-1, -1)
-                                });
+                            vertices[type].Add(new TLayerVertex()
+                            {
+                                Position = pos3,
+                                Normal = norm3,
+                                Transparency = trans3,
+                                TextureCoord = new Vector2(j + 1, i + 1) / 4,
+                                MaskTextureCoord = new Vector2(-1, -1)
+                            });
 
-                                vertices[type].Add(new TLayerVertex()
-                                {
-                                    Position = pos4,
-                                    Normal = norm4,
-                                    Transparency = trans4,
-                                    TextureCoord = new Vector2(j, i + 1) / 4,
-                                    MaskTextureCoord = new Vector2(-1, -1)
-                                });
+                            vertices[type].Add(new TLayerVertex()
+                            {
+                                Position = pos4,
+                                Normal = norm4,
+                                Transparency = trans4,
+                                TextureCoord = new Vector2(j, i + 1) / 4,
+                                MaskTextureCoord = new Vector2(-1, -1)
+                            });
 
-                                indices[type].Add(baseInd);
-                                indices[type].Add(baseInd + 1);
-                                indices[type].Add(baseInd + 2);
-                                indices[type].Add(baseInd);
-                                indices[type].Add(baseInd + 2);
-                                indices[type].Add(baseInd + 3);
-                            }
+                            indices[type].Add(baseInd);
+                            indices[type].Add(baseInd + 1);
+                            indices[type].Add(baseInd + 2);
+                            indices[type].Add(baseInd);
+                            indices[type].Add(baseInd + 2);
+                            indices[type].Add(baseInd + 3);
+
                             if (j > rXS && j < rXE)
                             {
                                 if (blendData.Binary < 15)
@@ -451,14 +447,22 @@ namespace FSO.Client.Rendering.City
             }
 
             //upload to gpu
-            for (int i=0; i<5; i++)
+            for (int i = 0; i < 5; i++)
             {
                 LayerIndices[i]?.Dispose();
                 LayerVertices[i]?.Dispose();
-                LayerIndices[i] = new IndexBuffer(gd, IndexElementSize.ThirtyTwoBits, indices[i].Count, BufferUsage.None);
-                LayerIndices[i].SetData(indices[i].ToArray());
-                LayerVertices[i] = new VertexBuffer(gd, typeof(TLayerVertex), vertices[i].Count, BufferUsage.None);
-                LayerVertices[i].SetData(vertices[i].ToArray());
+                if (vertices[i].Count == 0)
+                {
+                    LayerIndices[i] = null;
+                    LayerVertices[i] = null;
+                }
+                else
+                {
+                    LayerIndices[i] = new IndexBuffer(gd, IndexElementSize.ThirtyTwoBits, indices[i].Count, BufferUsage.None);
+                    LayerIndices[i].SetData(indices[i].ToArray());
+                    LayerVertices[i] = new VertexBuffer(gd, typeof(TLayerVertex), vertices[i].Count, BufferUsage.None);
+                    LayerVertices[i].SetData(vertices[i].ToArray());
+                }
                 LayerPrims[i] = indices[i].Count / 3;
             }
 
@@ -499,8 +503,8 @@ namespace FSO.Client.Rendering.City
             int index = 0;
             int yStart = 0, yEnd = 512;
             int subd1 = subdiv + 1;
-            float subd1f = 1f/subdiv;
-            int vertCount = subd1*subd1;
+            float subd1f = 1f / subdiv;
+            int vertCount = subd1 * subd1;
 
             if (range.HasValue)
             {
@@ -555,7 +559,7 @@ namespace FSO.Client.Rendering.City
                         var norm2 = GetNormalAt(Math.Min(rXE, Math.Max(rXS, j + 1)), i);
                         var norm3 = GetNormalAt(Math.Min(rXE2, Math.Max(rXS2, j + 1)), Math.Min(511, i + 1));
                         var norm4 = GetNormalAt(Math.Min(rXE2, Math.Max(rXS2, j)), Math.Min(511, i + 1));
-                        
+
                         var trans1 = Math.Min(1, Math.Max(0, Math.Max(rXS - j, j - rXE) * fR));
                         var trans2 = Math.Min(1, Math.Max(0, Math.Max(rXS - (j + 1), (j + 1) - rXE) * fR));
                         var trans3 = Math.Min(1, Math.Max(0, Math.Max(rXS2 - (j + 1), (j + 1) - rXE2) * fR));
@@ -611,10 +615,10 @@ namespace FSO.Client.Rendering.City
                                 float lerpT = 0;
                                 if (!normalTile)
                                 {
-                                    var lerpTX = trans1*(1-xi)+trans2*xi;
-                                    var lerpTX2 = trans4*(1-xi)+trans3*xi;
+                                    var lerpTX = trans1 * (1 - xi) + trans2 * xi;
+                                    var lerpTX2 = trans4 * (1 - xi) + trans3 * xi;
 
-                                    lerpT = lerpTX*(1-yi)+lerpTX2*yi;
+                                    lerpT = lerpTX * (1 - yi) + lerpTX2 * yi;
                                 }
 
                                 var pos = new Vector3(j + xi, h / 12f, i + yi);
@@ -781,12 +785,12 @@ namespace FSO.Client.Rendering.City
             ps.Parameters["VertexColorTex"].SetValue(content.VertexColor);
             ps.Parameters["UseVertexColor"].SetValue(true);
             vs.Parameters["DepthBias"].SetValue(0f);
-            
+
             for (int i = 0; i < 5; i++)
             {
                 ps.Parameters["TextureAtlasTex"].SetValue(content.TerrainTextures[i]);
                 var trans = (1 - (i - 1) / 2) * 2 + ((4 - i) % 2);
-                ps.Parameters["TransAtlasTex"].SetValue((i==0)?null:content.TransAtlas[trans]);
+                ps.Parameters["TransAtlasTex"].SetValue((i == 0) ? null : content.TransAtlas[trans]);
 
                 if (i == 4 && psn != 1)
                 {
@@ -800,7 +804,7 @@ namespace FSO.Client.Rendering.City
 
                 gd.SamplerStates[0] = SamplerState.LinearWrap;
                 gd.SamplerStates[1] = SamplerState.LinearClamp;
-                
+
                 gd.SetVertexBuffer(LayerVertices[i]);
                 gd.Indices = LayerIndices[i];
                 if (LayerPrims[i] > 0) gd.DrawIndexedPrimitives(PrimitiveType.TriangleList, 0, 0, LayerPrims[i]);
@@ -882,7 +886,7 @@ namespace FSO.Client.Rendering.City
                 ps.Parameters["TextureAtlasTex"].SetValue(content.TerrainTextures[i]);
                 var trans = (1 - (i - 1) / 2) * 2 + ((4 - i) % 2);
                 ps.Parameters["TransAtlasTex"].SetValue((i == 0) ? null : content.TransAtlas[trans]);
-                
+
                 if (i == 4)
                 {
                     ps.CurrentTechnique = ps.Techniques[3];
@@ -931,7 +935,8 @@ namespace FSO.Client.Rendering.City
             DrawChunk(gd, ind, chunkWidth, RoadSubPrims, RoadPrims);
         }
 
-        public void Dispose() {
+        public void Dispose()
+        {
             foreach (var buf in LayerIndices) buf?.Dispose();
             foreach (var buf in LayerVertices) buf?.Dispose();
             RoadIndices?.Dispose();
