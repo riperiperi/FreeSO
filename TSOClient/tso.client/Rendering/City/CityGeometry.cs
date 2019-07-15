@@ -214,6 +214,8 @@ namespace FSO.Client.Rendering.City
 
                         if (xEnd <= xStart) continue;
 
+                        int baseInd = 0;
+
                         for (int j = xStart; j < xEnd; j++)
                         { //where the magic happens
                             var ex = Math.Min(Math.Max(rXS, j), rXE - 1);
@@ -237,50 +239,52 @@ namespace FSO.Client.Rendering.City
                             var trans3 = Math.Min(1, Math.Max(0, Math.Max(rXS2 - (j + 1), (j + 1) - rXE2) * fR));
                             var trans4 = Math.Min(1, Math.Max(0, Math.Max(rXS2 - j, j - rXE2) * fR));
 
-                            var baseInd = vertices[type].Count;
-                            vertices[type].Add(new TLayerVertex()
+                            if (type < vertices.Length)
                             {
-                                Position = pos1,
-                                Normal = norm1,
-                                Transparency = trans1,
-                                TextureCoord = new Vector2(j, i) / 4,
-                                MaskTextureCoord = new Vector2(-1, -1)
-                            });
+                                baseInd = vertices[type].Count;
+                                vertices[type].Add(new TLayerVertex()
+                                {
+                                    Position = pos1,
+                                    Normal = norm1,
+                                    Transparency = trans1,
+                                    TextureCoord = new Vector2(j, i) / 4,
+                                    MaskTextureCoord = new Vector2(-1, -1)
+                                });
 
-                            vertices[type].Add(new TLayerVertex()
-                            {
-                                Position = pos2,
-                                Normal = norm2,
-                                Transparency = trans2,
-                                TextureCoord = new Vector2(j + 1, i) / 4,
-                                MaskTextureCoord = new Vector2(-1, -1)
-                            });
+                                vertices[type].Add(new TLayerVertex()
+                                {
+                                    Position = pos2,
+                                    Normal = norm2,
+                                    Transparency = trans2,
+                                    TextureCoord = new Vector2(j + 1, i) / 4,
+                                    MaskTextureCoord = new Vector2(-1, -1)
+                                });
 
-                            vertices[type].Add(new TLayerVertex()
-                            {
-                                Position = pos3,
-                                Normal = norm3,
-                                Transparency = trans3,
-                                TextureCoord = new Vector2(j + 1, i + 1) / 4,
-                                MaskTextureCoord = new Vector2(-1, -1)
-                            });
+                                vertices[type].Add(new TLayerVertex()
+                                {
+                                    Position = pos3,
+                                    Normal = norm3,
+                                    Transparency = trans3,
+                                    TextureCoord = new Vector2(j + 1, i + 1) / 4,
+                                    MaskTextureCoord = new Vector2(-1, -1)
+                                });
 
-                            vertices[type].Add(new TLayerVertex()
-                            {
-                                Position = pos4,
-                                Normal = norm4,
-                                Transparency = trans4,
-                                TextureCoord = new Vector2(j, i + 1) / 4,
-                                MaskTextureCoord = new Vector2(-1, -1)
-                            });
+                                vertices[type].Add(new TLayerVertex()
+                                {
+                                    Position = pos4,
+                                    Normal = norm4,
+                                    Transparency = trans4,
+                                    TextureCoord = new Vector2(j, i + 1) / 4,
+                                    MaskTextureCoord = new Vector2(-1, -1)
+                                });
 
-                            indices[type].Add(baseInd);
-                            indices[type].Add(baseInd + 1);
-                            indices[type].Add(baseInd + 2);
-                            indices[type].Add(baseInd);
-                            indices[type].Add(baseInd + 2);
-                            indices[type].Add(baseInd + 3);
-
+                                indices[type].Add(baseInd);
+                                indices[type].Add(baseInd + 1);
+                                indices[type].Add(baseInd + 2);
+                                indices[type].Add(baseInd);
+                                indices[type].Add(baseInd + 2);
+                                indices[type].Add(baseInd + 3);
+                            }
                             if (j > rXS && j < rXE)
                             {
                                 if (blendData.Binary < 15)
@@ -451,18 +455,10 @@ namespace FSO.Client.Rendering.City
             {
                 LayerIndices[i]?.Dispose();
                 LayerVertices[i]?.Dispose();
-                if (vertices[i].Count == 0)
-                {
-                    LayerIndices[i] = null;
-                    LayerVertices[i] = null;
-                }
-                else
-                {
-                    LayerIndices[i] = new IndexBuffer(gd, IndexElementSize.ThirtyTwoBits, indices[i].Count, BufferUsage.None);
-                    LayerIndices[i].SetData(indices[i].ToArray());
-                    LayerVertices[i] = new VertexBuffer(gd, typeof(TLayerVertex), vertices[i].Count, BufferUsage.None);
-                    LayerVertices[i].SetData(vertices[i].ToArray());
-                }
+                LayerIndices[i] = new IndexBuffer(gd, IndexElementSize.ThirtyTwoBits, indices[i].Count, BufferUsage.None);
+                LayerIndices[i].SetData(indices[i].ToArray());
+                LayerVertices[i] = new VertexBuffer(gd, typeof(TLayerVertex), vertices[i].Count, BufferUsage.None);
+                LayerVertices[i].SetData(vertices[i].ToArray());
                 LayerPrims[i] = indices[i].Count / 3;
             }
 
