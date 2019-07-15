@@ -148,7 +148,7 @@ namespace FSO.Client.UI.Panels.LotControls
                 var finalDir = VMArchitectureTools.GetPatternDirection(vm.Context.Architecture, cursor, pattern, dir, altdir, World.State.Level);
                 if (finalDir != -1)
                 {
-                    CursorDir = finalDir;
+                    CursorDir = (finalDir + 1) % 4;
                     var cmd = new VMArchitectureCommand
                     {
                         Type = VMArchitectureCommandType.PATTERN_DOT,
@@ -197,7 +197,7 @@ namespace FSO.Client.UI.Panels.LotControls
                 }
             }
 
-            WallCursor.SetVisualPosition(new Vector3(cursor.X+0.5f, cursor.Y+0.5f, (World.State.Level-1)*2.95f), (Direction)(1<<((3-CursorDir)*2)), vm.Context);
+            WallCursor.SetVisualPosition(new Vector3(cursor.X+0.5f, cursor.Y+0.5f, (World.State.Level-1)*2.95f), (Direction)(1<<(CursorDir*2)), vm.Context);
         }
     }
 }
