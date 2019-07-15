@@ -35,11 +35,6 @@ namespace FSO.Client.UI.Controls
 
         private float m_Width;
         private float m_Height;
-
-        private float _DissolveOpacity = 1f;
-        private Color[] OriginalTextureColors;
-        private float[] TransparentNoiseMap;
-        private Random RandomFloat = new Random();
         
         /// <summary>
         /// A nullable rectangular boundary for the source texture used in draw functions.
@@ -96,7 +91,6 @@ namespace FSO.Client.UI.Controls
             get { return m_Texture; }
             set
             {
-                TransparentNoiseMap = null;
                 m_Texture = value;
                 if (value != null)
                 {
@@ -111,63 +105,7 @@ namespace FSO.Client.UI.Controls
                 }
             }
         }
-
-        public float DissolveOpacity
-        {
-            get { return _DissolveOpacity; }
-            set
-            {
-                if (TransparentNoiseMap == null)
-                {
-                    // first run, but there must be a texture
-                    if (m_Texture == null || m_Texture.Width == 0 || m_Texture.Height == 0)
-                        return;
-
-                    // this needs its own texture since it's going to use Texture2D.SetData(Color[])
-                    var newTex = TextureUtils.Copy(m_Texture.GraphicsDevice, m_Texture);
-                    
-                    OriginalTextureColors = new Color[m_Texture.Height * m_Texture.Width];
-                    m_Texture.GetData(OriginalTextureColors);
-                    // need a consistent matrix in order to achieve the dissolve effect
-                    TransparentNoiseMap = new float[m_Texture.Height * m_Texture.Width];
-                    for (int i = 0; i < TransparentNoiseMap.Length; i++)
-                        TransparentNoiseMap[i] = (float)RandomFloat.NextDouble();
-
-                    m_Texture = newTex;
-                }
-                // finally set the new value, and then update the texture
-                _DissolveOpacity = value;
-                Color[] newColors;
-                if (_DissolveOpacity == 0)
-                {
-                    newColors = new Color[m_Texture.Height * m_Texture.Width];
-                    for (int i = 0; i < newColors.Length; i++)
-                        newColors[i] = Color.Transparent;
-                }
-                else if (_DissolveOpacity != 1.0f)
-                {
-                    newColors = new Color[m_Texture.Height * m_Texture.Width];
-                    for (int i = 0; i < TransparentNoiseMap.Length; i++)
-                    {
-                        // if it's not already transparent
-                        if (!OriginalTextureColors[i].Equals(Color.Transparent))
-                        {
-                            if (TransparentNoiseMap[i] > _DissolveOpacity)
-                            {
-                                newColors[i] = Color.Transparent;
-                                continue;
-                            }
-                        }
-                        newColors[i] = OriginalTextureColors[i];
-                    }
-                }
-                else // opacity is 1.0
-                    newColors = OriginalTextureColors;
-                // update the texture
-                m_Texture.SetData(newColors);
-            }
-        }
-
+        
         public void BlockInput()
         {
             ListenForMouse(new UIMouseEvent(BlockMouseEvent));
