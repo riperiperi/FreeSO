@@ -191,7 +191,19 @@ namespace FSO.Content.Interfaces
 
         public GameObject Get(string name)
         {
-            throw new NotImplementedException();
+            //special: attempt to find the first object in the specified file.
+            if (name.EndsWith(".iff")) name = name.Substring(0, name.Length - 4);
+            ulong guid = 0;
+            lock (Entries)
+            {
+                var result = Entries.Values.FirstOrDefault(x => x.FileName == name);
+                if (result != null)
+                {
+                    guid = result.ID;
+                }
+            }
+            if (guid == 0) return null;
+            return Get(guid);
         }
     }
 }

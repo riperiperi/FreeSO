@@ -287,7 +287,7 @@ namespace FSO.Client.UI.Controls
             TC_Scale = new Vector2((width - (Left + Right)) / (TC.Width), 1);
             MC_Scale = new Vector2(
                             (float)Math.Ceiling(width - (Left + Right)) / (MC.Width),
-                            (height - (Top + Bottom)) / (MC.Height)
+                            (float)Math.Ceiling((height - (Top + Bottom))) / (MC.Height)
                        );
             BC_Scale = new Vector2((width - (Left + Right)) / (BC.Width), 1);
 

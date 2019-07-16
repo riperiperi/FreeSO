@@ -413,6 +413,10 @@ namespace FSO.SimAntics
         public void UpdateTuning()
         {
             TuningCache.UpdateTuning(this);
+            foreach (var entity in Entities)
+            {
+                entity.UpdateTuning(this);
+            }
             Context.InitSpecialTuning();
         }
 
@@ -994,6 +998,7 @@ namespace FSO.SimAntics
         TSOUnignore,
         TSOTimeout,
         TS1LotChange,
-        TS1BuildBuyChange
+        TS1BuildBuyChange,
+        TSOUpgraded
     }
 }

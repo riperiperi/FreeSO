@@ -1,0 +1,14 @@
+﻿1 ^Object Upgrades^
+2 ^This purchased object can be upgraded!^
+3 ^You can purchase this object with an upgrade!^
+4 ^Congratulations! This object is fully upgraded.^
+5 ^Purchasing at Level "%s"^
+6 ^Upgrade Level^
+7 ^Upgrade Price (from current level)^
+8 ^Upgrade to %s^
+9 ^Purchase at Level "%s"^
+10 ^Upgrading to %s^
+11 ^Upgrading the %s to %s will cost you %s. This action cannot be reversed. Are you sure you want to continue?
+Note: Purchasing an upgrade after the object has been purchased includes the price lost to deprecation, but the object will be restored to a newly purchased state.^
+12 ^This object does not have any upgrades available.^
+13 ^This upgrade has been purchased.^

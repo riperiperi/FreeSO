@@ -57,7 +57,8 @@ namespace FSO.SimAntics.NetPlay.Model
             { VMCommandType.BatchGraphic, typeof(VMNetBatchGraphicCmd) },
             { VMCommandType.ChatParameters, typeof(VMNetChatParamCmd) },
             { VMCommandType.ChatEditChan, typeof(VMNetChatEditChanCmd) },
-            { VMCommandType.Ping, typeof(VMNetPingCmd) }
+            { VMCommandType.Ping, typeof(VMNetPingCmd) },
+            { VMCommandType.Upgrade, typeof(VMNetUpgradeCmd) }
         };
         public static Dictionary<Type, VMCommandType> ReverseMap = CmdMap.ToDictionary(x => x.Value, x => x.Key);
 
@@ -161,6 +162,7 @@ namespace FSO.SimAntics.NetPlay.Model
 
         ChatParameters = 39,
         ChatEditChan = 40,
-        Ping = 41
+        Ping = 41,
+        Upgrade = 42
     }
 }

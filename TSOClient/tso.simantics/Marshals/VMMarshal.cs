@@ -24,7 +24,8 @@ namespace FSO.SimAntics.Marshals
         // 31 - Object Flags (donated), Last Lot Owner ID (other mayor stuff)
         // 32 - Bezier Routing
         // 33 - NhoodID and Location
-        public static readonly int LATEST_VERSION = 33;
+        // 34 - Upgrade Level
+        public static readonly int LATEST_VERSION = 34;
 
         public int Version = LATEST_VERSION;
         public bool Compressed = true;

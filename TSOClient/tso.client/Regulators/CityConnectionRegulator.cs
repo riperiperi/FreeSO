@@ -427,7 +427,9 @@ namespace FSO.Client.Regulators
             }
             else if (message is GlobalTuningUpdate)
             {
-                DynamicTuning.Global = (message as GlobalTuningUpdate).Tuning;
+                var msg = (message as GlobalTuningUpdate);
+                DynamicTuning.Global = msg.Tuning;
+                Content.Content.Get().Upgrades.LoadNetTuning(msg.ObjectUpgrades);
             }
             else if (message is ChangeRoommateResponse)
             {

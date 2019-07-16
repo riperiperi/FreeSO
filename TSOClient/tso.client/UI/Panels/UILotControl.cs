@@ -71,6 +71,14 @@ namespace FSO.Client.UI.Panels
         public FSO.SimAntics.VM vm;
         public LotView.World World;
         public VMEntity ActiveEntity;
+        public uint Budget
+        {
+            get
+            {
+                if (ActiveEntity == null) return uint.MaxValue;
+                return ActiveEntity.TSOState.Budget.Value;
+            }
+        }
         public uint SelectedSimID {
             get
             {
@@ -666,8 +674,14 @@ namespace FSO.Client.UI.Panels
                     {
                         if (InteractionsAvailable)
                         {
-                            if (vm.GetObjectById(ObjectHover) is VMAvatar) cursor = CursorType.LivePerson;
-                            else cursor = CursorType.LiveObjectAvail;
+                            var obj = vm.GetObjectById(ObjectHover);
+                            if (obj is VMAvatar) cursor = CursorType.LivePerson;
+                            else
+                            {
+                                var tsoState = obj?.PlatformState as VMTSOObjectState;
+                                if (tsoState != null) cursor = CursorType.LiveObjectAvail + tsoState.UpgradeLevel;
+                                else cursor = CursorType.LiveObjectAvail;
+                            }
                         }
                         else
                         {
@@ -1043,7 +1057,7 @@ namespace FSO.Client.UI.Panels
             });
 
             //init tuning vars for UI
-            var emojiOnly = vm.Tuning.GetTuning("ui", 0, 0) == 1f;
+            var emojiOnly = (int)(vm.Tuning.GetTuning("ui", 0, 0) ?? 0);
             if (emojiOnly != GlobalSettings.Default.ChatOnlyEmoji)
             {
                 GlobalSettings.Default.ChatOnlyEmoji = emojiOnly;

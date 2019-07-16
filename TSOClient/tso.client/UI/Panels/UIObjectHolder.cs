@@ -25,6 +25,7 @@ using FSO.Common;
 using FSO.Client.UI.Controls;
 using FSO.Common.Rendering.Framework;
 using FSO.SimAntics.Model.Platform;
+using FSO.SimAntics.Model.TSOPlatform;
 
 namespace FSO.Client.UI.Panels
 {
@@ -98,6 +99,8 @@ namespace FSO.Client.UI.Panels
                 var finalPrice = (price * (100 - dcPercent)) / 100;
                 if (DonateMode) finalPrice -= (finalPrice * 2) / 3;
                 Holding.Price = finalPrice;
+                Group.InitialPrice = finalPrice;
+                Group.BeforeDCPrice = price;
             }
         }
 
@@ -236,6 +239,7 @@ namespace FSO.Client.UI.Panels
                 level = pos.Level,
                 x = pos.x,
                 y = pos.y,
+                TargetUpgradeLevel = (Holding.Group.BaseObject.PlatformState as VMTSOObjectState)?.UpgradeLevel ?? 0,
 
                 Mode = (DonateMode) ? PurchaseMode.Donate : PurchaseMode.Normal
             });
@@ -519,7 +523,7 @@ namespace FSO.Client.UI.Panels
                     {
                         MoveSelected(Holding.TilePos, Holding.Level);
                         if (!Holding.IsBought && Holding.CanPlace == VMPlacementError.Success && 
-                            ParentControl.ActiveEntity != null && ParentControl.ActiveEntity.TSOState.Budget.Value < Holding.Price)
+                            ParentControl.ActiveEntity != null && ParentControl.Budget < Holding.Price)
                             Holding.CanPlace = VMPlacementError.InsufficientFunds;
                         if (Holding.CanPlace != VMPlacementError.Success)
                         {
@@ -546,8 +550,17 @@ namespace FSO.Client.UI.Panels
                 else
                 {
                     var scaled = GetScaledPoint(state.MouseState.Position);
-                    var tilePos = World.EstTileAtPosWithScroll3D(new Vector2(scaled.X, scaled.Y) / FSOEnvironment.DPIScaleFactor + Holding.MousePosOffset);
-                    MoveSelected(new Vector2(tilePos.X, tilePos.Y), (sbyte)tilePos.Z); // + Holding.TilePosOffset
+                    if ((Holding.Group.BaseObject.GetValue(VMStackObjectVariable.PlacementFlags) & (short)VMPlacementFlags.InAir) > 0)
+                    {
+                        //if this object can be placed in air, only consider the current level.
+                        var tilePos = World.EstTileAtPosWithScroll(new Vector2(scaled.X, scaled.Y) / FSOEnvironment.DPIScaleFactor + Holding.MousePosOffset);
+                        MoveSelected(new Vector2(tilePos.X, tilePos.Y), World.State.Level);
+                    } else
+                    {
+                        //can place on any level below
+                        var tilePos = World.EstTileAtPosWithScroll3D(new Vector2(scaled.X, scaled.Y) / FSOEnvironment.DPIScaleFactor + Holding.MousePosOffset);
+                        MoveSelected(new Vector2(tilePos.X, tilePos.Y), (sbyte)tilePos.Z); // + Holding.TilePosOffset
+                    }
                 }
             }
             else if (MouseClicked)

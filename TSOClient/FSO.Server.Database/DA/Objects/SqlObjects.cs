@@ -21,9 +21,9 @@ namespace FSO.Server.Database.DA.Objects
         public uint Create(DbObject obj)
         {
             return (uint)Context.Connection.Query<int>("INSERT INTO fso_objects (shard_id, owner_id, lot_id, " +
-                                        "dyn_obj_name, type, graphic, value, budget) " +
+                                        "dyn_obj_name, type, graphic, value, budget, upgrade_level) " +
                                         " VALUES (@shard_id, @owner_id, @lot_id, @dyn_obj_name, @type," +
-                                        " @graphic, @value, @budget); SELECT LAST_INSERT_ID();"
+                                        " @graphic, @value, @budget, @upgrade_level); SELECT LAST_INSERT_ID();"
                                         , obj).First();
         }
 
@@ -142,7 +142,8 @@ namespace FSO.Server.Database.DA.Objects
                 + "graphic = @graphic, "
                 + "value = @value, "
                 + "dyn_flags_1 = @dyn_flags_1, "
-                + "dyn_flags_2 = @dyn_flags_2 "
+                + "dyn_flags_2 = @dyn_flags_2, "
+                + "upgrade_level = @upgrade_level "
                 + "WHERE object_id = @object_id AND (@lot_id IS NULL OR lot_id = @lot_id);", obj) > 0;
         }
 

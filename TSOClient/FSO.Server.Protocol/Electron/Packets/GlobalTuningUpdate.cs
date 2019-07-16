@@ -13,9 +13,12 @@ namespace FSO.Server.Protocol.Electron.Packets
     public class GlobalTuningUpdate : AbstractElectronPacket
     {
         public DynamicTuning Tuning;
+        public byte[] ObjectUpgrades;
         public override void Deserialize(IoBuffer input, ISerializationContext context)
         {
-            var dataLen = input.GetInt32(); //TODO: limits? 4MB is probably reasonable.
+            
+            var dataLen = input.GetInt32();
+            if (dataLen > 4000000 || dataLen > input.Remaining) throw new Exception("Tuning too long");
             var data = new byte[dataLen];
             input.Get(data, 0, dataLen);
             using (var mem = new MemoryStream(data))
@@ -25,6 +28,10 @@ namespace FSO.Server.Protocol.Electron.Packets
                     Tuning = new DynamicTuning(reader);
                 }
             }
+            var upgLen = input.GetInt32();
+            if (upgLen > 10000000 || upgLen > input.Remaining) throw new Exception("Upgrades too long");
+            ObjectUpgrades = new byte[upgLen];
+            input.Get(ObjectUpgrades, 0, upgLen);
         }
 
         public override ElectronPacketType GetPacketType()
@@ -44,6 +51,8 @@ namespace FSO.Server.Protocol.Electron.Packets
                     output.Put(result, 0, result.Length);
                 }
             }
+            output.PutInt32(ObjectUpgrades.Length);
+            output.Put(ObjectUpgrades, 0, ObjectUpgrades.Length);
         }
     }
 }

@@ -67,7 +67,7 @@ namespace FSO.IDE
                 dir = LotView.Model.Direction.NORTH,
                 level = HookedVM.Context.World.State.Level,
                 x = (short)(((short)Math.Floor(HookedVM.Context.World.State.CenterTile.X) << 4) + 8),
-                y = (short)(((short)Math.Floor(HookedVM.Context.World.State.CenterTile.Y) << 4) + 8)
+                y = (short)(((short)Math.Floor(HookedVM.Context.World.State.CenterTile.Y) << 4) + 8),
             });
         }
 

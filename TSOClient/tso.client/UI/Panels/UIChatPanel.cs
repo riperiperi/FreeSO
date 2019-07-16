@@ -148,9 +148,9 @@ namespace FSO.Client.UI.Panels
 
         private void SendMessage(string message)
         {
-            if (GlobalSettings.Default.ChatOnlyEmoji && message != "")
+            if (GlobalSettings.Default.ChatOnlyEmoji > 0 && message != "")
             {
-                message = GameFacade.Emojis.EmojiOnly(message);
+                message = GameFacade.Emojis.EmojiOnly(message, GlobalSettings.Default.ChatOnlyEmoji);
                 if (message == "")
                 {
                     HistoryDialog.ReceiveEvent
