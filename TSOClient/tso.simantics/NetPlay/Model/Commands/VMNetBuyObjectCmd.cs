@@ -28,6 +28,7 @@ namespace FSO.SimAntics.NetPlay.Model.Commands
         public bool Verified;
 
         public PurchaseMode Mode = PurchaseMode.Normal;
+        public byte TargetUpgradeLevel;
 
         private int value = -1;
 
@@ -112,7 +113,15 @@ namespace FSO.SimAntics.NetPlay.Model.Commands
             {
                 foreach (var obj in group.Objects)
                 {
-                    if (obj is VMGameObject) ((VMTSOObjectState)obj.TSOState).OwnerID = caller.PersistID;
+                    if (obj is VMGameObject) {
+                        var state = ((VMTSOObjectState)obj.TSOState);
+                        state.OwnerID = caller.PersistID;
+                        if (TargetUpgradeLevel > 0)
+                        {
+                            state.UpgradeLevel = TargetUpgradeLevel;
+                            obj.UpdateTuning(vm);
+                        }
+                    }
                 }
             }
             CreatedGroup = group;
@@ -145,11 +154,24 @@ namespace FSO.SimAntics.NetPlay.Model.Commands
 
             //TODO: error feedback for client
             var catalog = Content.Content.Get().WorldCatalog;
+            var objects = Content.Content.Get().WorldObjects;
             var item = catalog.GetItemByGUID(GUID);
             
             if (item != null)
             {
                 var price = (int)item.Value.Price;
+
+                if (TargetUpgradeLevel > 0)
+                {
+                    var obj = objects.Get(GUID);
+                    if (obj != null)
+                    {
+                        var upgradePrice = Content.Content.Get().Upgrades.GetUpgradePrice(obj.Resource.MainIff.Filename, GUID, TargetUpgradeLevel);
+                        if (upgradePrice == null) return false; //invalid upgrade level
+                        price = upgradePrice.Value;
+                    }
+                }
+
                 var dcPercent = VMBuildableAreaInfo.GetDiscountFor(item.Value, vm);
                 value = (price * (100 - dcPercent)) / 100;
                 if (Mode == PurchaseMode.Donate) value -= (value * 2) / 3;
@@ -184,6 +206,7 @@ namespace FSO.SimAntics.NetPlay.Model.Commands
             writer.Write(value);
 
             writer.Write((byte)Mode);
+            writer.Write(TargetUpgradeLevel);
         }
 
         public override void Deserialize(BinaryReader reader)
@@ -197,6 +220,7 @@ namespace FSO.SimAntics.NetPlay.Model.Commands
             value = reader.ReadInt32();
 
             Mode = (PurchaseMode)reader.ReadByte();
+            TargetUpgradeLevel = reader.ReadByte();
         }
 
         #endregion

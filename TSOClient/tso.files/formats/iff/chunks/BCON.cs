@@ -20,7 +20,7 @@ namespace FSO.Files.Formats.IFF.Chunks
     public class BCON : IffChunk
     {
         public byte Flags;
-        public ushort[] Constants;
+        public ushort[] Constants = new ushort[0];
 
         /// <summary>
         /// Reads a BCON chunk from a stream.

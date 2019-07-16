@@ -22,6 +22,15 @@ namespace FSO.Client.UI.Framework
         public static TextStyle DefaultLabel;
         public static TextStyle DefaultButton;
 
+        public static TextStyle Create(Color color, int size, bool shadow = false)
+        {
+            var style = DefaultLabel.Clone();
+            style.Color = color;
+            style.Size = size;
+            style.Shadow = shadow;
+            return style;
+        }
+
         public Font Font;
         public MSDFFont VFont;
         public bool Shadow; //some text has a shadow

@@ -25,8 +25,7 @@ namespace FSO.SimAntics.NetPlay.Model.Commands
         public PurchaseMode Mode = PurchaseMode.Normal;
 
         //data sent back to the client only
-        public uint GUID;
-        public byte[] Data;
+        public VMInventoryRestoreObject Info = new VMInventoryRestoreObject();
 
         //internal
         private VMMultitileGroup CreatedGroup;
@@ -44,7 +43,7 @@ namespace FSO.SimAntics.NetPlay.Model.Commands
             if (caller == null) return false;
 
             //careful here! if the object can't be placed, we have to put their object back
-            if (!vm.Context.ObjectQueries.MultitileByPersist.ContainsKey(GUID) && TryPlace(vm, caller))
+            if (!vm.Context.ObjectQueries.MultitileByPersist.ContainsKey(Info.GUID) && TryPlace(vm, caller))
             {
                 if (CreatedGroup.BaseObject is VMGameObject)
                 {
@@ -82,13 +81,13 @@ namespace FSO.SimAntics.NetPlay.Model.Commands
 
             VMStandaloneObjectMarshal state;
 
-            if ((Data?.Length ?? 0) == 0) state = null;
+            if ((Info.Data?.Length ?? 0) == 0) state = null;
             else
             {
                 state = new VMStandaloneObjectMarshal();
                 try
                 {
-                    using (var reader = new BinaryReader(new MemoryStream(Data)))
+                    using (var reader = new BinaryReader(new MemoryStream(Info.Data)))
                     {
                         state.Deserialize(reader);
                     }
@@ -100,7 +99,6 @@ namespace FSO.SimAntics.NetPlay.Model.Commands
                     state = null;
                 }
             }
-
             
             if (state != null)
             {
@@ -115,9 +113,9 @@ namespace FSO.SimAntics.NetPlay.Model.Commands
             else
             {
                 var catalog = Content.Content.Get().WorldCatalog;
-                var item = catalog.GetItemByGUID(GUID);
+                var item = catalog.GetItemByGUID(Info.GUID);
 
-                CreatedGroup = vm.Context.CreateObjectInstance(GUID, LotTilePos.OUT_OF_WORLD, dir);
+                CreatedGroup = vm.Context.CreateObjectInstance(Info.GUID, LotTilePos.OUT_OF_WORLD, dir);
                 if (CreatedGroup == null) return false;
                 CreatedGroup.ChangePosition(new LotTilePos(x, y, level), dir, vm.Context, VMPlaceRequestFlags.UserPlacement);
 
@@ -132,7 +130,15 @@ namespace FSO.SimAntics.NetPlay.Model.Commands
 
             foreach (var obj in CreatedGroup.Objects)
             {
-                if (obj is VMGameObject) ((VMTSOObjectState)obj.TSOState).OwnerID = caller.PersistID;
+                var tsostate = (obj.PlatformState as VMTSOObjectState);
+                if (tsostate != null) {
+                    tsostate.OwnerID = caller.PersistID;
+                    if (Info.UpgradeLevel > tsostate.UpgradeLevel)
+                    {
+                        tsostate.UpgradeLevel = Info.UpgradeLevel;
+                    }
+                    obj.UpdateTuning(vm);
+                }
                 obj.PersistID = ObjectPID;
                 ((VMGameObject)obj).DisableIfTSOCategoryWrong(vm.Context);
             }
@@ -175,11 +181,10 @@ namespace FSO.SimAntics.NetPlay.Model.Commands
                 !vm.TSOState.CanPlaceNewUserObject(vm))
                 return false;
 
-            vm.GlobalLink.RetrieveFromInventory(vm, ObjectPID, caller.PersistID, true, (uint guid, byte[] data) =>
+            vm.GlobalLink.RetrieveFromInventory(vm, ObjectPID, caller.PersistID, true, (info) =>
             {
-                if (guid == 0) return; //todo: error feedback?
-                GUID = guid;
-                Data = data;
+                if (info.GUID == 0) return; //todo: error feedback?
+                Info = info;
                 Verified = true;
                 vm.ForwardCommand(this);
             });
@@ -198,9 +203,7 @@ namespace FSO.SimAntics.NetPlay.Model.Commands
             writer.Write(level);
             writer.Write((byte)dir);
 
-            writer.Write(GUID);
-            writer.Write((Data?.Length)??0);
-            if (Data != null) writer.Write(Data);
+            Info.SerializeInto(writer);
 
             writer.Write((byte)Mode);
         }
@@ -214,14 +217,54 @@ namespace FSO.SimAntics.NetPlay.Model.Commands
             level = reader.ReadSByte();
             dir = (Direction)reader.ReadByte();
 
-            GUID = reader.ReadUInt32();
-            var length = reader.ReadInt32();
-            if (length > 4096) throw new Exception("Object data cannot be this large!");
-            Data = reader.ReadBytes(length);
+            Info.Deserialize(reader);
 
             Mode = (PurchaseMode)reader.ReadByte();
         }
 
         #endregion
+    }
+
+    public class VMInventoryRestoreObject
+    {
+        public uint GUID;
+
+        //important state that is saved in the db for redundancy, in case inventory state is missing, outdated or corrupt
+        //only used if save state is missing
+        public byte UpgradeLevel; //prefer larger of restore data and this
+        public int Wear; //prefer larger of restore data and this
+
+        public VMInventoryRestoreObject()
+        {
+
+        }
+
+        public VMInventoryRestoreObject(uint guid, byte upgradeLevel, int wear)
+        {
+            GUID = guid;
+            UpgradeLevel = upgradeLevel;
+            Wear = wear;
+        }
+
+        public byte[] Data;
+
+        public void SerializeInto(BinaryWriter writer)
+        {
+            writer.Write(GUID);
+            writer.Write(UpgradeLevel);
+            writer.Write(Wear);
+            writer.Write(Data?.Length ?? 0);
+            if (Data != null) writer.Write(Data);
+        }
+
+        public void Deserialize(BinaryReader reader)
+        {
+            GUID = reader.ReadUInt32();
+            UpgradeLevel = reader.ReadByte();
+            Wear = reader.ReadInt32();
+            var length = reader.ReadInt32();
+            if (length > 4096) throw new Exception("Object data cannot be this large!");
+            Data = reader.ReadBytes(length);
+        }
     }
 }

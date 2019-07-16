@@ -101,9 +101,9 @@ namespace FSO.Client.UI.Panels
         private void TextChanged()
         {
             BodyText = Message;
-            if (GlobalSettings.Default.ChatOnlyEmoji)
+            if (GlobalSettings.Default.ChatOnlyEmoji > 0)
             {
-                BodyText = GameFacade.Emojis.EmojiOnly(BodyText);
+                BodyText = GameFacade.Emojis.EmojiOnly(BodyText, GlobalSettings.Default.ChatOnlyEmoji);
             }
             BodyText = ((Offscreen && Message != "") ? "\\[" + Name + "] " : "") + GameFacade.Emojis.EmojiToBB(SanitizeBB(BodyText));
 

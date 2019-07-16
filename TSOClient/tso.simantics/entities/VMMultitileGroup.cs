@@ -35,6 +35,8 @@ namespace FSO.SimAntics.Entities
         }
         public int InitialPrice;
         public int SalePrice = -1;
+        //runtime only
+        public int BeforeDCPrice;
         public List<VMEntity> Objects = new List<VMEntity>();
         public List<LotTilePos> Offsets = new List<LotTilePos>();
 

@@ -235,7 +235,7 @@ namespace FSO.SimAntics.Engine.TSOTransaction
         public void RetrieveFromInventory(VM vm, uint objectPID, uint ownerPID, bool setOnLot, VMAsyncInventoryRetrieveCallback callback)
         {
             //todo: nice stub for this using database?
-            callback(0, null); 
+            callback(new VMInventoryRestoreObject(0, 0, 0)); 
         }
 
         public void ForceInInventory(VM vm, uint objectPID, VMAsyncInventorySaveCallback callback)

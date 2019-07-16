@@ -295,7 +295,6 @@ namespace FSO.Client
         /// </summary>
         protected override void LoadContent()
         {
-
             Effect vitaboyEffect = null;
             try
             {

@@ -24,6 +24,7 @@ namespace FSO.SimAntics.Model.TSOPlatform
         }
 
         public VMTSOObjectFlags ObjectFlags;
+        public byte UpgradeLevel;
 
         public VMTSOObjectState() { }
 
@@ -44,6 +45,11 @@ namespace FSO.SimAntics.Model.TSOPlatform
             {
                 ObjectFlags = (VMTSOObjectFlags)reader.ReadByte();
             }
+
+            if (Version > 33)
+            {
+                UpgradeLevel = reader.ReadByte();
+            }
         }
 
         public override void SerializeInto(BinaryWriter writer)
@@ -55,6 +61,7 @@ namespace FSO.SimAntics.Model.TSOPlatform
             writer.Write(QtrDaysSinceLastRepair);
 
             writer.Write((byte)ObjectFlags);
+            writer.Write(UpgradeLevel);
         }
 
         public override void Tick(VM vm, object owner)

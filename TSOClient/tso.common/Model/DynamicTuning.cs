@@ -123,6 +123,16 @@ namespace FSO.Common.Model
             return null;
         }
 
+        public Dictionary<int, Dictionary<int, float>> GetTables(string type)
+        {
+            Dictionary<int, Dictionary<int, float>> tables;
+            if (Tuning.TryGetValue(type, out tables))
+            {
+                return tables;
+            }
+            return null;
+        }
+
         public float? GetTuning(string type, int table, int index)
         {
             Dictionary<int, Dictionary<int, float>> tables;
