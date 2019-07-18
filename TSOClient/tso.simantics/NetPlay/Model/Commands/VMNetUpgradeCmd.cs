@@ -22,11 +22,13 @@ namespace FSO.SimAntics.NetPlay.Model.Commands
         {
             var pobj = vm.GetObjectByPersist(ObjectPID);
             if (pobj == null) return false;
+            var isDonated = false;
             foreach (var obj in pobj.MultitileGroup.Objects)
             {
                 var state = obj?.PlatformState as VMTSOObjectState;
                 if (state != null)
                 {
+                    if (state.ObjectFlags.HasFlag(VMTSOObjectFlags.FSODonated)) isDonated = true;
                     state.UpgradeLevel = TargetUpgradeLevel;
                     state.Wear = 20 * 4;
                     state.QtrDaysSinceLastRepair = 0;
@@ -34,7 +36,7 @@ namespace FSO.SimAntics.NetPlay.Model.Commands
                 }
             }
 
-            pobj.MultitileGroup.InitialPrice += AddedValue;
+            if (!isDonated) pobj.MultitileGroup.InitialPrice += AddedValue;
 
             if (vm.IsServer)
                 vm.GlobalLink.UpdateObjectPersist(vm, pobj.MultitileGroup, (worked, objid) => { });

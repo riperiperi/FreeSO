@@ -40,6 +40,15 @@ namespace FSO.SimAntics.Entities
         public List<VMEntity> Objects = new List<VMEntity>();
         public List<LotTilePos> Offsets = new List<LotTilePos>();
 
+        public uint GUID
+        {
+            get
+            {
+                var obj = BaseObject;
+                return (obj.MasterDefinition ?? obj.Object.OBJ).GUID;
+            }
+        }
+
         public VMEntity BaseObject
         {
             get

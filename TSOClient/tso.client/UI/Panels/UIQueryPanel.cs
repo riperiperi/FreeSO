@@ -112,6 +112,7 @@ namespace FSO.Client.UI.Panels
         public UIImage Thumbnail;
         public UI3DThumb Thumb3D;
         public bool Roommate = true;
+        public bool InInventory = false;
 
         private VMEntity ActiveEntity;
         private int LastSalePrice;
@@ -554,7 +555,7 @@ namespace FSO.Client.UI.Panels
                 && (item?.DisableLevel ?? 0) < 2;
 
             var upgrades = Content.Content.Get().Upgrades.GetFile(entity.Object.Resource.MainIff.Filename);
-            if (!sameEntity) SetHasUpgrades(upgrades != null);
+            if (!sameEntity) SetHasUpgrades(upgrades != null, bought);
 
             var upgradeLevel = (entity.PlatformState as VMTSOObjectState)?.UpgradeLevel ?? 0;
             int price = def.Price;
@@ -693,7 +694,7 @@ namespace FSO.Client.UI.Panels
 
             SpecificTabButton.Disabled = true;
             SellBackButton.Disabled = true;
-            SetHasUpgrades(null);
+            SetHasUpgrades(null, false);
 
             if (Thumbnail.Texture != null) Thumbnail.Texture.Dispose();
             if (Thumb3D != null) Thumb3D.Dispose();
@@ -701,10 +702,10 @@ namespace FSO.Client.UI.Panels
             Thumbnail.Texture = thumb;
             UpdateImagePosition();
         }
-
-        private void SetHasUpgrades(bool? hasUpgrades)
+        
+        private void SetHasUpgrades(bool? hasUpgrades, bool bought)
         {
-            if (hasUpgrades == null)
+            if (hasUpgrades == null || (InInventory && !bought))
             {
                 UpgradeBack.Visible = false;
                 UpgradeButton.Visible = false;
