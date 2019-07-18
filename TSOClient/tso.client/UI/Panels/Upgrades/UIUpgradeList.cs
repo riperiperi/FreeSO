@@ -132,6 +132,14 @@ namespace FSO.Client.UI.Panels.Upgrades
             }
             if (ActiveEntity.GhostImage)
             {
+                var item = Items[level];
+                item.UpdateCanPurchase(); //make sure this is up to date.
+                if (!item.CanPurchase)
+                {
+                    HITVM.Get().PlaySoundEvent(UISounds.Error);
+                    return;
+                }
+
                 //object has not been bought yet
                 //instantly switch the upgrade level. Notify the query panel that the level and price has changed.
                 foreach (var obj in ActiveEntity.MultitileGroup.Objects)
@@ -142,14 +150,7 @@ namespace FSO.Client.UI.Panels.Upgrades
                         state.UpgradeLevel = (byte)level;
                     }
                 }
-
-                var item = Items[level];
-                item.UpdateCanPurchase(); //make sure this is up to date.
-                if (!item.CanPurchase)
-                {
-                    HITVM.Get().PlaySoundEvent(UISounds.Error);
-                    return;
-                }
+                
                 var price = item.Price;
                 ActiveEntity.MultitileGroup.InitialPrice = price;
                 // notify the querypanel that it needs to update

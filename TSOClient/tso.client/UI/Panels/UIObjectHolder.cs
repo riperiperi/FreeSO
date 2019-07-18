@@ -52,6 +52,7 @@ namespace FSO.Client.UI.Panels
         public bool DonateMode;
         private bool Locked;
 
+        public event HolderEventHandler BeforeRelease;
         public event HolderEventHandler OnPickup;
         public event HolderEventHandler OnDelete;
         public event HolderEventHandler OnPutDown;
@@ -94,7 +95,7 @@ namespace FSO.Client.UI.Panels
             var catalogItem = Content.Content.Get().WorldCatalog.GetItemByGUID(guid);
             if (catalogItem != null)
             {
-                var price = (int)catalogItem.Value.Price;
+                var price = Group.InitialPrice; //(int)catalogItem.Value.Price;
                 var dcPercent = VMBuildableAreaInfo.GetDiscountFor(catalogItem.Value, vm);
                 var finalPrice = (price * (100 - dcPercent)) / 100;
                 if (DonateMode) finalPrice -= (finalPrice * 2) / 3;
@@ -164,9 +165,7 @@ namespace FSO.Client.UI.Panels
 
         public void ClearSelected()
         {
-            //TODO: selected items are only spooky ghosts of the items themselves.
-            //      ...so that they dont cause serverside desyncs
-            //      and so that clearing selections doesnt delete already placed objects.
+            if (Holding != null) BeforeRelease?.Invoke(Holding, LastState);
             if (Holding != null)
             {
                 RecursiveDelete(vm.Context, Holding.Group.BaseObject);
@@ -281,7 +280,7 @@ namespace FSO.Client.UI.Panels
                                     if (Holding.InventoryPID > 0) InventoryPlaceHolding();
                                     else BuyHolding();
                                     ClearSelected();
-                                    if (OnPutDown != null) OnPutDown(putDown, state); //call this after so that buy mode etc can produce more.
+                                    OnPutDown?.Invoke(putDown, state); //call this after so that buy mode etc can produce more.
                                 });
                             return;
                         } else
@@ -293,7 +292,7 @@ namespace FSO.Client.UI.Panels
                         
                     }
                     ClearSelected();
-                    if (OnPutDown != null) OnPutDown(putDown, state); //call this after so that buy mode etc can produce more.
+                    OnPutDown?.Invoke(putDown, state); //call this after so that buy mode etc can produce more.
                 }
                 else
                 {

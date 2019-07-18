@@ -70,6 +70,7 @@ namespace FSO.Client.UI.Panels
             Holder.OnPickup += HolderPickup;
             Holder.OnDelete += HolderDelete;
             Holder.OnPutDown += HolderPutDown;
+            Holder.BeforeRelease += HolderBeforeRelease;
             DynamicOverlay.Add(QueryPanel);
 
             ObjLimitLabel = new UILabel();
@@ -82,6 +83,18 @@ namespace FSO.Client.UI.Panels
             ObjLimitLabel.Size = new Microsoft.Xna.Framework.Vector2(200, 0);
             ObjLimitLabel.Alignment = TextAlignment.Center;
             DynamicOverlay.Add(ObjLimitLabel);
+        }
+
+        private void HolderBeforeRelease(UIObjectSelection holding, UpdateState state)
+        {
+            // remember the upgrade level between entering the catalog
+            if (!holding.IsBought)
+            {
+                var guid = holding.Group.GUID;
+                var baseObj = holding.Group.BaseObject;
+                var level = (baseObj.PlatformState as VMTSOObjectState)?.UpgradeLevel ?? 0;
+                UpgradeLevelMemory[guid] = level;
+            }
         }
 
         public abstract void InitCategoryMap();
@@ -170,7 +183,7 @@ namespace FSO.Client.UI.Panels
             QueryPanel.Active = false;
         }
 
-        private void UpgradeBuyItem(uint guid, byte level)
+        private float? UpgradeBuyItem(uint guid, byte level)
         {
             var upgrades = Content.Content.Get().Upgrades;
             var filename = BuyItem.BaseObject.Object.Resource.Iff.Filename;
@@ -185,7 +198,10 @@ namespace FSO.Client.UI.Panels
                         state.UpgradeLevel = level;
                     }
                 }
+                BuyItem.InitialPrice = price.Value;
+                return price.Value;
             }
+            return null;
         }
 
         protected virtual void Catalog_OnSelectionChange(int selection)
@@ -235,9 +251,10 @@ namespace FSO.Client.UI.Panels
             {
                 BuyItem = LotController.vm.Context.CreateObjectInstance(item.Item.GUID, LotTilePos.OUT_OF_WORLD, Direction.NORTH, true);
                 byte upgradeLevel = 0;
+                float? price = null;
                 if (UpgradeLevelMemory.TryGetValue(item.Item.GUID, out upgradeLevel) && upgradeLevel > 0)
                 {
-                    UpgradeBuyItem(item.Item.GUID, upgradeLevel);
+                    price = UpgradeBuyItem(item.Item.GUID, upgradeLevel);
                 }
                 Holder.SetSelected(BuyItem);
                 QueryPanel.SetInfo(LotController.vm, BuyItem.Objects[0], false);

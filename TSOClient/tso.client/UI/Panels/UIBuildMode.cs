@@ -153,6 +153,7 @@ namespace FSO.Client.UI.Panels
 
         public override void ChangeCategory(UIElement elem)
         {
+            QueryPanel.InInventory = false;
             foreach (var btn in CategoryMap.Keys)
                 btn.Selected = false;
 

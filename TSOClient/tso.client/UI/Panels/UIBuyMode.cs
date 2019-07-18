@@ -325,6 +325,7 @@ namespace FSO.Client.UI.Panels
         public void SetMode(int mode)
         {
             if (!Roommate) mode = 2;
+            QueryPanel.InInventory = mode == 2;
             CatBg.Visible = (mode == 1);
             ProductCatalogSlider.Visible = (mode == 1);
             ProductCatalogNextPageButton.Visible = (mode == 1);
