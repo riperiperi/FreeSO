@@ -53,7 +53,7 @@ namespace FSO.Content.Upgrades.Model.Runtime
 
             foreach (var level in File.Upgrades)
             {
-                var runtime = new RuntimeUpgradeLevel(level, res);
+                var runtime = new RuntimeUpgradeLevel(level, res, content);
                 Levels.Add(runtime);
             }
             Loaded = true;
@@ -164,7 +164,7 @@ namespace FSO.Content.Upgrades.Model.Runtime
 
         public Dictionary<int, Dictionary<int, short>> Subs;
 
-        public RuntimeUpgradeLevel(UpgradeLevel level, GameObjectResource res)
+        public RuntimeUpgradeLevel(UpgradeLevel level, GameObjectResource res, Content content)
         {
             Level = level;
             if (Level.Price.Length == 0) throw new Exception("Missing price.");
@@ -178,7 +178,7 @@ namespace FSO.Content.Upgrades.Model.Runtime
                 uint guid;
                 if (!uint.TryParse(Level.Price, System.Globalization.NumberStyles.HexNumber, null, out guid))
                     throw new Exception("Could parse guid for upgrade level price! " + Level.Price);
-                var item = Content.Get().WorldCatalog.GetItemByGUID(guid);
+                var item = content.WorldCatalog.GetItemByGUID(guid);
                 if (item == null)
                     throw new Exception("Could not find catalog entry for price reference! This error is fatal because a 0 price upgrade would be really bad." + Level.Price);
                 Price = (int)item.Value.Price;
