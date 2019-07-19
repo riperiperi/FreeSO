@@ -108,6 +108,8 @@ namespace FSO.Server.Servers.Lot.Domain
             0x50907E06, //flies - controller
             0x3161BB5B, //job controller
 
+            0x475CC813, //water balloon controller
+
             0x5157DDF2, //cat carrier
             0x3278BD34, //dog carrier
         };
@@ -793,6 +795,19 @@ namespace FSO.Server.Servers.Lot.Domain
                 {
                     State = Lot.Save(),
                     Run = false,
+                });
+            }
+        }
+
+        public void UpdateTuning(IEnumerable<DynTuningEntry> tuning)
+        {
+            Tuning = new DynamicTuning(tuning);
+            if (Lot == null) return;
+            if (Lot.Tuning == null || (Lot.Tuning.GetTuning("forcedTuning", 0, 0) ?? 0f) == 0f)
+            {
+                Lot.ForwardCommand(new VMNetTuningCmd()
+                {
+                    Tuning = Tuning
                 });
             }
         }

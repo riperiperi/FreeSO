@@ -10,6 +10,7 @@ namespace FSO.Server.Servers.City
     public class CityServerConfiguration : AbstractAriesServerConfig
     {
         public int ID;
+        public bool Timeout_No_Auth = true;
 
         public CityServerNhoodConfiguration Neighborhoods = new CityServerNhoodConfiguration();
         public CityServerMaintenanceConfiguration Maintenance;
@@ -62,6 +63,21 @@ namespace FSO.Server.Servers.City
          * If true, starts elections on the last monday in a month, rather than 7 days before the end of the month.
          */
         public bool Election_Week_Align = true;
+
+        /**
+         * If true, sims in areas without an election are offered a free vote.
+         */
+        public bool Election_Free_Vote = true;
+
+        /**
+         * The value of a vote/nomination made by a resident.
+         */
+        public int Vote_Normal_Value = 2;
+
+        /**
+         * The value of a vote/nomination made by a non-resident.
+         */
+        public int Vote_Free_Value = 1;
     }
 
     public class CityServerMaintenanceConfiguration

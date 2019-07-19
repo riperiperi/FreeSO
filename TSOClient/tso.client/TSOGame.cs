@@ -174,6 +174,7 @@ namespace FSO.Client
             FSO.Content.Content.TS1HybridBasePath = GlobalSettings.Default.TS1HybridPath;
             FSO.Content.Content.InitBasic(GlobalSettings.Default.StartupPath, GraphicsDevice);
             FSO.SimAntics.VMAvatar.MissingIconProvider = FSO.Client.UI.Model.UIIconCache.GetObject;
+            FSO.SimAntics.VM.TestBinding = "Value";
             //VMContext.InitVMConfig();
             base.Initialize();
 
@@ -294,7 +295,6 @@ namespace FSO.Client
         /// </summary>
         protected override void LoadContent()
         {
-
             Effect vitaboyEffect = null;
             try
             {

@@ -123,6 +123,7 @@
             this.NameLabel = new System.Windows.Forms.Label();
             this.NameEntry = new System.Windows.Forms.TextBox();
             this.GUIDButton = new System.Windows.Forms.Button();
+            this.CatCommunity = new System.Windows.Forms.CheckBox();
             this.ThumbnailBox.SuspendLayout();
             ((System.ComponentModel.ISupportInitialize)(this.ThumbnailPic)).BeginInit();
             this.VisualBox.SuspendLayout();
@@ -662,6 +663,7 @@
             // 
             // CatalogBox
             // 
+            this.CatalogBox.Controls.Add(this.CatCommunity);
             this.CatalogBox.Controls.Add(this.CatResidence);
             this.CatalogBox.Controls.Add(this.CatEntertainment);
             this.CatalogBox.Controls.Add(this.CatGames);
@@ -1196,6 +1198,16 @@
             this.GUIDButton.UseVisualStyleBackColor = true;
             this.GUIDButton.MouseDown += new System.Windows.Forms.MouseEventHandler(this.GUIDButton_MouseDown);
             // 
+            // CatCommunity
+            // 
+            this.CatCommunity.AutoSize = true;
+            this.CatCommunity.Location = new System.Drawing.Point(94, 107);
+            this.CatCommunity.Name = "CatCommunity";
+            this.CatCommunity.Size = new System.Drawing.Size(134, 17);
+            this.CatCommunity.TabIndex = 47;
+            this.CatCommunity.Text = "Community (Town Hall)";
+            this.CatCommunity.UseVisualStyleBackColor = true;
+            // 
             // OBJDEditor
             // 
             this.AutoScaleDimensions = new System.Drawing.SizeF(6F, 13F);
@@ -1354,5 +1366,6 @@
         private System.Windows.Forms.TextBox NameEntry;
         private System.Windows.Forms.Button GUIDButton;
         private System.Windows.Forms.Button ThumbSave;
+        private System.Windows.Forms.CheckBox CatCommunity;
     }
 }

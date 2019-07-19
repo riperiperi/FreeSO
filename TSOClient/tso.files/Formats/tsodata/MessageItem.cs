@@ -86,6 +86,7 @@ namespace FSO.Files.Formats.tsodata
         Nominate = 1,
         Vote = 2,
 
-        AcceptNomination = 3
+        AcceptNomination = 3,
+        FreeVote = 4
     }
 }

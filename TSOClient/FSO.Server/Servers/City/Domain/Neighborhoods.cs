@@ -59,14 +59,20 @@ namespace FSO.Server.Servers.City.Domain
 
         public void UserJoined(IVoltronSession session)
         {
-            //common info used by most requests
             using (var da = DAFactory.Get())
             {
                 var myLotID = da.Roommates.GetAvatarsLots(session.AvatarId).FirstOrDefault();
                 var myLot = (myLotID == null) ? null : da.Lots.Get(myLotID.lot_id);
                 if (myLot != null)
                 {
-                    var myNeigh = da.Neighborhoods.Get(myLot.neighborhood_id);
+                    var free = da.Elections.GetFreeVote(session.AvatarId);
+                    var nhoodID = (int)(myLot?.neighborhood_id ?? 0);
+                    if (free != null)
+                    {
+                        nhoodID = free.neighborhood_id; //enrolled to a free vote. receive vote mail for that neighborhood
+                    }
+
+                    var myNeigh = da.Neighborhoods.Get((uint)nhoodID);
                     if (myNeigh != null && myNeigh.election_cycle_id != null)
                     {
                         var curCycle = da.Elections.GetCycle(myNeigh.election_cycle_id.Value);
@@ -94,7 +100,14 @@ namespace FSO.Server.Servers.City.Domain
                 var myLotID = da.Roommates.GetAvatarsLots(session.AvatarId).FirstOrDefault();
                 var myLot = (myLotID == null) ? null : da.Lots.Get(myLotID.lot_id);
 
-                if (myLot != null && myLot.neighborhood_id == nhood.neighborhood_id)
+                var free = da.Elections.GetFreeVote(session.AvatarId);
+                var nhoodID = (int)(myLot?.neighborhood_id ?? 0);
+                if (free != null)
+                {
+                    nhoodID = free.neighborhood_id; //enrolled to a free vote. receive vote mail for that neighborhood
+                }
+
+                if (myLot != null && nhoodID == nhood.neighborhood_id)
                     SendStateEmail(da, mail, nhood, cycle, session.AvatarId);
             }
         }
@@ -128,6 +141,14 @@ namespace FSO.Server.Servers.City.Domain
                         1, MessageSpecialType.Normal, endDate, avatarID, nhood.name);
                     break;
 
+                case DbElectionCycleState.shutdown:
+                    if (Context.Config.Neighborhoods.Election_Free_Vote)
+                    {
+                        mail.SendSystemEmail("f116", (int)NeighMailStrings.FreeVoteSubject, (int)NeighMailStrings.FreeVote,
+                        1, MessageSpecialType.FreeVote, endDate, avatarID, nhood.name, endDate.ToString());
+                    }
+                    break;
+
                 case DbElectionCycleState.ended:
                     var winner = da.Avatars.Get(nhood.mayor_id ?? 0)?.name;
                     if (winner == null) return;
@@ -141,7 +162,8 @@ namespace FSO.Server.Servers.City.Domain
         public bool StateHasEmail(DbElectionCycleState state)
         {
             return state == DbElectionCycleState.nomination || state == DbElectionCycleState.election
-                || state == DbElectionCycleState.ended || state == DbElectionCycleState.failsafe;
+                || state == DbElectionCycleState.ended || state == DbElectionCycleState.failsafe 
+                || (state == DbElectionCycleState.shutdown && Context.Config.Neighborhoods.Election_Free_Vote);
         }
 
         public Task TickNeighborhoods()
@@ -293,7 +315,7 @@ namespace FSO.Server.Servers.City.Domain
                         //update eligibility
                         if ((nhood.flag & 2) > 0)
                         {
-                            //not eligibile for elections (temp)
+                            //not eligibile for elections (right now, at least)
                             //is our placement within bounds?
                             if (placement != -1 && placement < config.Mayor_Elegibility_Limit)
                             {
@@ -302,8 +324,36 @@ namespace FSO.Server.Servers.City.Domain
                                 nhoodDS.Neighborhood_Flag = nhood.flag;
                                 da.Neighborhoods.UpdateFlag((uint)nhood.neighborhood_id, nhood.flag);
 
-                                SendBulletinPost(da, nhood.neighborhood_id, "f123", (int)NeighBulletinStrings.ElectionBeginSubject, (int)NeighBulletinStrings.ElectionBegin, 
+                                SendBulletinPost(da, nhood.neighborhood_id, "f123", (int)NeighBulletinStrings.ElectionBeginSubject, (int)NeighBulletinStrings.ElectionBegin,
                                     0, nhood.name, config.Mayor_Elegibility_Limit.ToString());
+                            }
+                            else if (Context.Config.Neighborhoods.Election_Free_Vote)
+                            {
+                                //still ineligible for elections, but we need to tell resdients they are eligible for a free vote
+                                var cycle = da.Elections.GetCycle(nhood.election_cycle_id ?? 0);
+                                if (cycle == null || cycle.end_date < epochNow)
+                                {
+                                    //free vote needs to start another shutdown cycle, so we can keep track of reminder emails sent to residents
+                                    //this will set stillActive to true for the rest of the election cycle (time to next month < 7), 
+                                    //so we won't get back here til next cycle
+                                    var dbCycle = new DbElectionCycle
+                                    {
+                                        current_state = DbElectionCycleState.shutdown,
+                                        election_type = DbElectionCycleType.shutdown,
+                                        start_date = Epoch.FromDate(midnight),
+                                        end_date = Epoch.FromDate(endDate)
+                                    };
+
+                                    var cycleID = da.Elections.CreateCycle(dbCycle);
+                                    nhoodDS.Neighborhood_ElectionCycle = new ElectionCycle()
+                                    {
+                                        ElectionCycle_CurrentState = (byte)dbCycle.current_state,
+                                        ElectionCycle_ElectionType = (byte)dbCycle.election_type,
+                                        ElectionCycle_StartDate = dbCycle.start_date,
+                                        ElectionCycle_EndDate = dbCycle.end_date
+                                    };
+                                    da.Neighborhoods.UpdateCycle((uint)nhood.neighborhood_id, cycleID);
+                                }
                             }
                         }
                         else
@@ -421,7 +471,7 @@ namespace FSO.Server.Servers.City.Domain
                     var toRemove = da.Elections.GetCandidates(cycle.cycle_id).ToDictionary(x => x.candidate_avatar_id);
                     if (cycleNoms.Count > 0)
                     {
-                        var grouped = cycleNoms.GroupBy(x => x.target_avatar_id).OrderByDescending(x => x.Count());
+                        var grouped = cycleNoms.GroupBy(x => x.target_avatar_id).OrderByDescending(x => x.Sum(y => y.value));
                         var selected = 0;
 
                         var candidates = new List<IGrouping<uint, DbElectionVote>>();
@@ -480,7 +530,7 @@ namespace FSO.Server.Servers.City.Domain
                     var cycleVotes = da.Elections.GetCycleVotes(cycle.cycle_id, DbElectionVoteType.vote);
                     if (cycleVotes.Count > 0)
                     {
-                        var grouped = cycleVotes.GroupBy(x => x.target_avatar_id).OrderByDescending(x => x.Count()).ToList();
+                        var grouped = cycleVotes.GroupBy(x => x.target_avatar_id).OrderByDescending(x => x.Sum(y => y.value)).ToList();
 
                         //verify the winner is still alive and still in this neighborhood
                         string name = "";

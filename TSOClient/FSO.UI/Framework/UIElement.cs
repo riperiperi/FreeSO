@@ -370,6 +370,7 @@ namespace FSO.Client.UI.Framework
 
         public void Invalidate()
         {
+            if (InvalidationParent?.GetType()?.Name == "UIUpgradeItem") { }
             if (InvalidationParent != null) InvalidationParent.Invalidated = true;
         }
 
@@ -388,7 +389,6 @@ namespace FSO.Client.UI.Framework
         public void InvalidateOpacity()
         {
             _OpacityDirty = true;
-            Invalidate();
         }
 
         /// <summary>

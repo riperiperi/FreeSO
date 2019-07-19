@@ -29,7 +29,21 @@ namespace FSO.Server.Api.Core
         // This method gets called by the runtime. Use this method to add services to the container.
         public void ConfigureServices(IServiceCollection services)
         {
-            services.AddCors().AddMvc().SetCompatibilityVersion(CompatibilityVersion.Version_2_1);
+            services.AddCors(options =>
+            {
+               options.AddDefaultPolicy(
+                   builder =>
+                   {
+
+                       builder.AllowAnyOrigin().AllowAnyMethod().AllowAnyHeader().WithExposedHeaders("content-disposition");
+                   });
+
+                options.AddPolicy("AdminAppPolicy",
+                    builder =>
+                    {
+                        builder.WithOrigins("https://freeso.org", "http://localhost:8080").AllowAnyMethod().AllowAnyHeader().AllowCredentials().WithExposedHeaders("content-disposition");
+                    });
+            }).AddMvc().SetCompatibilityVersion(CompatibilityVersion.Version_2_1);
         }
 
         // This method gets called by the runtime. Use this method to configure the HTTP request pipeline.
@@ -43,12 +57,7 @@ namespace FSO.Server.Api.Core
             {
                 app.UseHsts();
             }
-            app.UseCors(x =>
-            {
-                x
-                .AllowAnyOrigin().AllowAnyMethod().AllowAnyHeader().AllowCredentials().WithExposedHeaders("content-disposition");
-                //TODO: limit credentials passing to only trusted URLs.
-            });
+            app.UseCors();
             //app.UseHttpsRedirection();
             app.UseMvc();
             AppLifetime = appLifetime;

@@ -85,6 +85,7 @@ namespace FSO.SimAntics.Model
         FSOLightRGBFromTemp012 = 128,
         FSOAbortAllInteractions = 129,
         FSOClearStackObjRelationships = 130,
-        FSOMarkDonated = 131
+        FSOMarkDonated = 131,
+        FSOAccurateDirectionInTemp0 = 132
     }
 }

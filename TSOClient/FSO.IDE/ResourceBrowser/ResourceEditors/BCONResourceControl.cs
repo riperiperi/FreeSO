@@ -133,15 +133,15 @@ namespace FSO.IDE.ResourceBrowser.ResourceEditors
 
         private void NewButton_Click(object sender, EventArgs e)
         {
-            /*
             var ind = SelectedStringInd+1;
             Content.Content.Get().Changes.BlockingResMod(new ResAction(() =>
             {
-                ActiveConst.InsertString(ind, new STRItem());
+                var c = ActiveConst.Constants.ToList();
+                c.Add(0);
+                ActiveConst.Constants = c.ToArray();
             }, ActiveConst));
             UpdateStrings();
             SelectedStringInd = StringList.Items.Count-1;
-            */
         }
 
         private void RemoveButton_Click(object sender, EventArgs e)

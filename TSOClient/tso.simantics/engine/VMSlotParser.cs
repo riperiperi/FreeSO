@@ -109,6 +109,8 @@ namespace FSO.SimAntics.Engine
             var rotOff = Vector3.Transform(Slot.Offset, Matrix.CreateRotationZ(dir));
             var circleCtr = new Vector2(center.X + rotOff.X / 16, center.Y + rotOff.Y / 16);
 
+            sbyte level = (sbyte)(obj.Position.Level + (int)Math.Floor(Slot.Offset.Z / 15));
+
             ushort room = context.VM.Context.GetRoomAt(obj.Position);
             Results = new List<VMFindLocationResult>();
 
@@ -131,7 +133,7 @@ namespace FSO.SimAntics.Engine
                 var flagRot = DirectionUtils.PosMod(dir+FlagsAsRad(Flags), Math.PI*2);
                 if (flagRot > Math.PI) flagRot -= Math.PI * 2;
 
-                VerifyAndAddLocation(obj, circleCtr, center, Flags, Double.MaxValue, context, caller, (float)flagRot); 
+                VerifyAndAddLocation(obj, circleCtr, center, Flags, Double.MaxValue, context, caller, (float)flagRot, level); 
                 return Results;
             }
             else
@@ -142,7 +144,7 @@ namespace FSO.SimAntics.Engine
                     //Flags |= (SLOTFlags)255;
 
                     // special case, walk directly to point. 
-                    VerifyAndAddLocation(obj, circleCtr, center, Flags, Double.MaxValue, context, caller, float.NaN);
+                    VerifyAndAddLocation(obj, circleCtr, center, Flags, Double.MaxValue, context, caller, float.NaN, level);
                     return Results;
                 }
                 var maxScore = Math.Max(DesiredProximity - MinProximity, MaxProximity - DesiredProximity) + (LotTilePos.Distance(obj.Position, caller.Position)+MaxProximity)/3 + 2;
@@ -157,7 +159,7 @@ namespace FSO.SimAntics.Engine
                         if (routeEntryFlags > 0) //within search location
                         {
                             double baseScore = ((maxScore - Math.Abs(DesiredProximity - distance)) + context.VM.Context.NextRandom(1024) / 1024.0f);
-                            VerifyAndAddLocation(obj, pos, center, routeEntryFlags, baseScore, context, caller, float.NaN);
+                            VerifyAndAddLocation(obj, pos, center, routeEntryFlags, baseScore, context, caller, float.NaN, level);
                         }
                     }
                 });
@@ -198,16 +200,16 @@ namespace FSO.SimAntics.Engine
             }
         }
 
-        private void VerifyAndAddLocation(VMEntity obj, Vector2 pos, Vector2 center, SLOTFlags entryFlags, double score, VMContext context, VMEntity caller, float facingDir)
+        private void VerifyAndAddLocation(VMEntity obj, Vector2 pos, Vector2 center, SLOTFlags entryFlags, double score, VMContext context, VMEntity caller, float facingDir, sbyte level)
         {
             //note: verification is not performed if snap target slot is enabled.
-            var tpos = new LotTilePos((short)Math.Round(pos.X * 16), (short)Math.Round(pos.Y * 16), obj.Position.Level);
+            var tpos = new LotTilePos((short)Math.Round(pos.X * 16), (short)Math.Round(pos.Y * 16), level);
 
             if (context.IsOutOfBounds(tpos)) return;
 
             score -= LotTilePos.Distance(tpos, caller.Position)/3.0;
 
-            if (Slot.SnapTargetSlot < 0 && context.Architecture.RaycastWall(new Point((int)pos.X, (int)pos.Y), new Point(obj.Position.TileX, obj.Position.TileY), obj.Position.Level))
+            if (Slot.SnapTargetSlot < 0 && context.Architecture.RaycastWall(new Point((int)pos.X, (int)pos.Y), new Point(obj.Position.TileX, obj.Position.TileY), level))
             {
                 SetFail(VMRouteFailCode.WallInWay, null);
                 return;
@@ -247,7 +249,7 @@ namespace FSO.SimAntics.Engine
 
             VMFindLocationResult result = new VMFindLocationResult
             {
-                Position = new LotTilePos((short)Math.Round(pos.X * 16), (short)Math.Round(pos.Y * 16), obj.Position.Level),
+                Position = new LotTilePos((short)Math.Round(pos.X * 16), (short)Math.Round(pos.Y * 16), level),
                 RadianDirection = facingDir,
                 FaceAnywhere = faceAnywhere,
                 RouteEntryFlags = entryFlags

@@ -19,19 +19,29 @@ namespace FSO.Server.Database.DA.Elections
         {
             return Context.Connection.Query<DbElectionCandidate>("SELECT * FROM fso_election_candidates WHERE candidate_avatar_id = @avatar_id " +
                 "AND election_cycle_id = @cycle_id AND state = @state",
-                new { avatar_id = avatar_id, cycle_id = cycle_id, state = state.ToString() }).FirstOrDefault();
+                new { avatar_id, cycle_id, state = state.ToString() }).FirstOrDefault();
         }
 
         public List<DbElectionCandidate> GetCandidates(uint cycle_id, DbCandidateState state)
         {
             return Context.Connection.Query<DbElectionCandidate>("SELECT * FROM fso_election_candidates WHERE election_cycle_id = @cycle_id AND state = @state", 
-                new { cycle_id = cycle_id, state = state.ToString() }).ToList();
+                new { cycle_id, state = state.ToString() }).ToList();
         }
 
         public List<DbElectionCandidate> GetCandidates(uint cycle_id)
         {
             return Context.Connection.Query<DbElectionCandidate>("SELECT * FROM fso_election_candidates WHERE election_cycle_id = @cycle_id",
-                new { cycle_id = cycle_id }).ToList();
+                new { cycle_id }).ToList();
+        }
+
+        public List<DbElectionCycle> GetActiveCycles(int shard_id)
+        {
+            
+            return Context.Connection.Query<DbElectionCycle>("SELECT *, n.neighborhood_id AS 'nhood_id' " +
+                "FROM fso_election_cycles JOIN fso_neighborhoods n ON election_cycle_id = cycle_id " +
+                "WHERE current_state != 'shutdown' " +
+                "AND cycle_id IN (SELECT election_cycle_id FROM fso_neighborhoods WHERE shard_id = @shard_id)",
+                new { shard_id }).ToList();
         }
 
         public DbElectionCycle GetCycle(uint cycle_id)
@@ -229,6 +239,40 @@ namespace FSO.Server.Database.DA.Elections
                 //already exists, or foreign key fails
                 return false;
             }
+        }
+
+        public bool EnrollFreeVote(DbElectionFreeVote entry)
+        {
+            try
+            {
+                return (Context.Connection.Execute("INSERT INTO fso_election_freevotes (avatar_id, neighborhood_id, cycle_id, date, expire_date) " +
+                    "VALUES (@avatar_id, @neighborhood_id, @cycle_id, @date, @expire_date)",
+                    entry) > 0);
+            }
+            catch
+            {
+                //already exists, or foreign key fails
+                return false;
+            }
+        }
+
+        public DbElectionFreeVote GetFreeVote(uint avatar_id)
+        {
+            var result = Context.Connection.Query<DbElectionFreeVote>("SELECT * FROM fso_election_freevotes WHERE avatar_id = @avatar_id",
+                new { avatar_id }).FirstOrDefault();
+            if (result != null && result.expire_date < Epoch.Now)
+            {
+                //outdated. delete and set null.
+                try
+                {
+                    Context.Connection.Execute("DELETE FROM fso_election_freevotes WHERE avatar_id = @avatar_id", new { avatar_id });
+                }
+                catch (Exception)
+                {
+                }
+                result = null;
+            }
+            return result;
         }
 
         public DbElectionWin FindLastWin(uint avatar_id)

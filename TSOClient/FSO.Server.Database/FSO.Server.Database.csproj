@@ -85,6 +85,12 @@
   <ItemGroup>
     <Compile Include="DatabaseConfiguration.cs" />
     <Compile Include="DatabaseModule.cs" />
+    <Content Include="DatabaseScripts\changes\0026_freevote.sql">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </Content>
+    <Content Include="DatabaseScripts\changes\0027_tuning_presets.sql">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </Content>
     <Compile Include="DA\AbstractSqlDA.cs" />
     <Compile Include="DA\AuthTickets\AuthTicket.cs" />
     <Compile Include="DA\AuthTickets\IAuthTickets.cs" />
@@ -121,6 +127,7 @@
     <Compile Include="DA\Elections\DbElectionCandidate.cs" />
     <Compile Include="DA\Elections\DbElectionCycle.cs" />
     <Compile Include="DA\Elections\DbElectionCycleMail.cs" />
+    <Compile Include="DA\Elections\DbElectionFreeVote.cs" />
     <Compile Include="DA\Elections\DbElectionVote.cs" />
     <Compile Include="DA\Elections\DbMayorRating.cs" />
     <Compile Include="DA\Elections\IElections.cs" />
@@ -186,6 +193,7 @@
     <Compile Include="DA\Transactions\ITransactions.cs" />
     <Compile Include="DA\Transactions\SqlTransactions.cs" />
     <Compile Include="DA\Tuning\DbTuning.cs" />
+    <Compile Include="DA\Tuning\DbTuningPreset.cs" />
     <Compile Include="DA\Tuning\ITuning.cs" />
     <Compile Include="DA\Tuning\SqlTuning.cs" />
     <Compile Include="DA\Updates\DbUpdate.cs" />
@@ -193,6 +201,7 @@
     <Compile Include="DA\Updates\DbUpdateBranch.cs" />
     <Compile Include="DA\Updates\IUpdates.cs" />
     <Compile Include="DA\Updates\SqlUpdates.cs" />
+    <Compile Include="DA\Users\DbAuthAttempt.cs" />
     <Compile Include="DA\Users\IUsers.cs" />
     <Compile Include="DA\Users\SqlUsers.cs" />
     <Compile Include="DA\Users\User.cs" />
@@ -230,6 +239,9 @@
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </Content>
     <Content Include="DatabaseScripts\changes\0025_updates.sql">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </Content>
+    <Content Include="DatabaseScripts\changes\0028_upgradelevel.sql">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </Content>
     <Content Include="DatabaseScripts\manifest.json">

@@ -313,7 +313,8 @@ namespace FSO.Vitaboy
                 }
             }
 
-            if (LightPositions == null) return;
+            //skip drawing shadows if we're drawing id
+            if (LightPositions == null || effect.CurrentTechnique == effect.Techniques[1]) return;
 
             if (ShadBuf == null)
             {

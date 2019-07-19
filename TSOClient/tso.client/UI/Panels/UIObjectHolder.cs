@@ -25,6 +25,7 @@ using FSO.Common;
 using FSO.Client.UI.Controls;
 using FSO.Common.Rendering.Framework;
 using FSO.SimAntics.Model.Platform;
+using FSO.SimAntics.Model.TSOPlatform;
 
 namespace FSO.Client.UI.Panels
 {
@@ -49,7 +50,9 @@ namespace FSO.Client.UI.Panels
         public bool Roommate;
 
         public bool DonateMode;
+        private bool Locked;
 
+        public event HolderEventHandler BeforeRelease;
         public event HolderEventHandler OnPickup;
         public event HolderEventHandler OnDelete;
         public event HolderEventHandler OnPutDown;
@@ -92,11 +95,13 @@ namespace FSO.Client.UI.Panels
             var catalogItem = Content.Content.Get().WorldCatalog.GetItemByGUID(guid);
             if (catalogItem != null)
             {
-                var price = (int)catalogItem.Value.Price;
+                var price = Group.InitialPrice; //(int)catalogItem.Value.Price;
                 var dcPercent = VMBuildableAreaInfo.GetDiscountFor(catalogItem.Value, vm);
                 var finalPrice = (price * (100 - dcPercent)) / 100;
                 if (DonateMode) finalPrice -= (finalPrice * 2) / 3;
                 Holding.Price = finalPrice;
+                Group.InitialPrice = finalPrice;
+                Group.BeforeDCPrice = price;
             }
         }
 
@@ -131,7 +136,7 @@ namespace FSO.Client.UI.Panels
             {
                 for (int i = 0; i < 4; i++)
                 {
-                    status = Holding.Group.ChangePosition(LotTilePos.FromBigTile((short)pos.X, (short)pos.Y, World.State.Level), dir, vm.Context, VMPlaceRequestFlags.UserPlacement).Status;
+                    status = Holding.Group.ChangePosition(LotTilePos.FromBigTile((short)pos.X, (short)pos.Y, level), dir, vm.Context, VMPlaceRequestFlags.UserPlacement).Status;
                     if (status != VMPlacementError.MustBeAgainstWall) break;
                     dir = (Direction)((((int)dir << 6) & 255) | ((int)dir >> 2));
                 }
@@ -143,7 +148,7 @@ namespace FSO.Client.UI.Panels
                 Holding.Group.ChangePosition(LotTilePos.OUT_OF_WORLD, Holding.Dir, vm.Context, VMPlaceRequestFlags.UserPlacement);
 
                 Holding.Group.SetVisualPosition(new Vector3(pos,
-                (((Holding.Group.Objects[0].GetValue(VMStackObjectVariable.AllowedHeightFlags) & 1) == 1) ? 0 : 4f / 5f) + (World.State.Level-1)*2.95f),
+                (((Holding.Group.Objects[0].GetValue(VMStackObjectVariable.AllowedHeightFlags) & 1) == 1) ? 0 : 4f / 5f) + (level-1)*2.95f),
                     //^ if we can't be placed on the floor, default to table height.
                 Holding.Dir, vm.Context);
             }
@@ -152,7 +157,7 @@ namespace FSO.Client.UI.Panels
             {
                 var target = Holding.Group.Objects[i];
                 var tpos = target.VisualPosition;
-                tpos.Z = (World.State.Level - 1)*2.95f;
+                tpos.Z = (level - 1)*2.95f;
                 Holding.CursorTiles[i].MultitileGroup.SetVisualPosition(tpos, Holding.Dir, vm.Context);
             }
             Holding.CanPlace = status;
@@ -160,9 +165,7 @@ namespace FSO.Client.UI.Panels
 
         public void ClearSelected()
         {
-            //TODO: selected items are only spooky ghosts of the items themselves.
-            //      ...so that they dont cause serverside desyncs
-            //      and so that clearing selections doesnt delete already placed objects.
+            if (Holding != null) BeforeRelease?.Invoke(Holding, LastState);
             if (Holding != null)
             {
                 RecursiveDelete(vm.Context, Holding.Group.BaseObject);
@@ -209,6 +212,38 @@ namespace FSO.Client.UI.Panels
             }
         }
 
+        private void InventoryPlaceHolding()
+        {
+            var pos = Holding.Group.BaseObject.Position;
+            vm.SendCommand(new VMNetPlaceInventoryCmd
+            {
+                ObjectPID = Holding.InventoryPID,
+                dir = Holding.Dir,
+                level = pos.Level,
+                x = pos.x,
+                y = pos.y,
+
+                Mode = (DonateMode) ? PurchaseMode.Donate : PurchaseMode.Normal
+            });
+        }
+
+        private void BuyHolding()
+        {
+            var pos = Holding.Group.BaseObject.Position;
+            var GUID = (Holding.Group.MultiTile) ? Holding.Group.BaseObject.MasterDefinition.GUID : Holding.Group.BaseObject.Object.OBJ.GUID;
+            vm.SendCommand(new VMNetBuyObjectCmd
+            {
+                GUID = GUID,
+                dir = Holding.Dir,
+                level = pos.Level,
+                x = pos.x,
+                y = pos.y,
+                TargetUpgradeLevel = (Holding.Group.BaseObject.PlatformState as VMTSOObjectState)?.UpgradeLevel ?? 0,
+
+                Mode = (DonateMode) ? PurchaseMode.Donate : PurchaseMode.Normal
+            });
+        }
+
         public void MouseUp(UpdateState state)
         {
             MouseIsDown = false;
@@ -216,12 +251,13 @@ namespace FSO.Client.UI.Panels
             {
                 if (Holding.CanPlace == VMPlacementError.Success)
                 {
-                    HITVM.Get().PlaySoundEvent((Holding.IsBought) ? UISounds.ObjectMovePlace : UISounds.ObjectPlace);
                     //ExecuteEntryPoint(11); //User Placement
                     var putDown = Holding;
                     var pos = Holding.Group.BaseObject.Position;
+                    var badCategory = ((Holding.Group.BaseObject as VMGameObject)?.Disabled ?? 0).HasFlag(VMGameObjectDisableFlags.LotCategoryWrong);
                     if (Holding.IsBought)
                     {
+                        HITVM.Get().PlaySoundEvent(UISounds.ObjectMovePlace);
                         vm.SendCommand(new VMNetMoveObjectCmd
                         {
                             ObjectID = Holding.MoveTarget,
@@ -231,35 +267,32 @@ namespace FSO.Client.UI.Panels
                             y = pos.y
                         });
                     }
-                    else if (Holding.InventoryPID > 0)
-                    {
-                        vm.SendCommand(new VMNetPlaceInventoryCmd
+                    else {
+                        if (badCategory)
                         {
-                            ObjectPID = Holding.InventoryPID,
-                            dir = Holding.Dir,
-                            level = pos.Level,
-                            x = pos.x,
-                            y = pos.y,
-
-                            Mode = (DonateMode) ? PurchaseMode.Donate : PurchaseMode.Normal
-                        });
-                    }
-                    else
-                    {
-                        var GUID = (Holding.Group.MultiTile)? Holding.Group.BaseObject.MasterDefinition.GUID : Holding.Group.BaseObject.Object.OBJ.GUID;
-                        vm.SendCommand(new VMNetBuyObjectCmd
+                            Locked = true;
+                            UIAlert.YesNo(GameFacade.Strings.GetString("245", "5"), GameFacade.Strings.GetString("245", (Holding.InventoryPID > 0)?"7":"6"), true,
+                                (confirm) =>
+                                {
+                                    Locked = false;
+                                    if (!confirm) return;
+                                    HITVM.Get().PlaySoundEvent(UISounds.ObjectPlace);
+                                    if (Holding.InventoryPID > 0) InventoryPlaceHolding();
+                                    else BuyHolding();
+                                    ClearSelected();
+                                    OnPutDown?.Invoke(putDown, state); //call this after so that buy mode etc can produce more.
+                                });
+                            return;
+                        } else
                         {
-                            GUID = GUID,
-                            dir = Holding.Dir,
-                            level = pos.Level,
-                            x = pos.x,
-                            y = pos.y,
-
-                            Mode = (DonateMode) ? PurchaseMode.Donate : PurchaseMode.Normal
-                        });
+                            HITVM.Get().PlaySoundEvent(UISounds.ObjectPlace);
+                            if (Holding.InventoryPID > 0) InventoryPlaceHolding();
+                            else BuyHolding();
+                        }
+                        
                     }
                     ClearSelected();
-                    if (OnPutDown != null) OnPutDown(putDown, state); //call this after so that buy mode etc can produce more.
+                    OnPutDown?.Invoke(putDown, state); //call this after so that buy mode etc can produce more.
                 }
                 else
                 {
@@ -416,11 +449,24 @@ namespace FSO.Client.UI.Panels
             return ((TapPoint - screenMiddle).ToVector2() / World.BackbufferScale).ToPoint() + screenMiddle;
         }
 
+        private short GetFloorBlockableHover(Point pt)
+        {
+            var tilePos = World.EstTileAtPosWithScroll3D(new Vector2(pt.X, pt.Y) / FSOEnvironment.DPIScaleFactor);
+            var newHover = World.GetObjectIDAtScreenPos(pt.X,
+                    pt.Y,
+                    GameFacade.GraphicsDevice);
+
+            var hobj = vm.GetObjectById(newHover);
+            if (hobj == null || hobj.Position.Level < tilePos.Z) newHover = 0;
+            return newHover;
+        }
+
         public void Update(UpdateState state, bool scrolled)
         {
             LastState = state;
             if (ShowTooltip) state.UIState.TooltipProperties.UpdateDead = false;
             MouseClicked = (MouseIsDown && (!MouseWasDown));
+            if (Locked) return;
 
             CursorType cur = CursorType.SimsMove;
             if (Holding != null)
@@ -436,6 +482,12 @@ namespace FSO.Client.UI.Panels
                 {
                     OnDelete(Holding, null);
                     ClearSelected();
+                } else if (state.KeyboardState.IsKeyDown(Keys.I))
+                {
+                    if (state.InputManager.GetFocus() == null)
+                    {
+                        MoveToInventory(null);
+                    }
                 }
             }
             if (Holding != null && Roommate)
@@ -449,8 +501,8 @@ namespace FSO.Client.UI.Panels
                     cur = CursorType.SimsRotate;
                     if (Math.Sqrt(xDiff * xDiff + yDiff * yDiff) > 64)
                     {
-                        var from = World.EstTileAtPosWithScroll(new Vector2(MouseDownX, MouseDownY));
-                        var target = World.EstTileAtPosWithScroll(state.MouseState.Position.ToVector2());
+                        var from = World.EstTileAtPosWithScroll(new Vector2(MouseDownX, MouseDownY), Holding.Level);
+                        var target = World.EstTileAtPosWithScroll(state.MouseState.Position.ToVector2(), Holding.Level);
 
                         var vec = target - from;
                         var dir = Math.Atan2(vec.Y, vec.X);
@@ -470,7 +522,7 @@ namespace FSO.Client.UI.Panels
                     {
                         MoveSelected(Holding.TilePos, Holding.Level);
                         if (!Holding.IsBought && Holding.CanPlace == VMPlacementError.Success && 
-                            ParentControl.ActiveEntity != null && ParentControl.ActiveEntity.TSOState.Budget.Value < Holding.Price)
+                            ParentControl.ActiveEntity != null && ParentControl.Budget < Holding.Price)
                             Holding.CanPlace = VMPlacementError.InsufficientFunds;
                         if (Holding.CanPlace != VMPlacementError.Success)
                         {
@@ -497,15 +549,24 @@ namespace FSO.Client.UI.Panels
                 else
                 {
                     var scaled = GetScaledPoint(state.MouseState.Position);
-                    var tilePos = World.EstTileAtPosWithScroll(new Vector2(scaled.X, scaled.Y) / FSOEnvironment.DPIScaleFactor) + Holding.TilePosOffset;
-                    MoveSelected(tilePos, 1);
+                    if ((Holding.Group.BaseObject.GetValue(VMStackObjectVariable.PlacementFlags) & (short)VMPlacementFlags.InAir) > 0)
+                    {
+                        //if this object can be placed in air, only consider the current level.
+                        var tilePos = World.EstTileAtPosWithScroll(new Vector2(scaled.X, scaled.Y) / FSOEnvironment.DPIScaleFactor + Holding.MousePosOffset);
+                        MoveSelected(new Vector2(tilePos.X, tilePos.Y), World.State.Level);
+                    } else
+                    {
+                        //can place on any level below
+                        var tilePos = World.EstTileAtPosWithScroll3D(new Vector2(scaled.X, scaled.Y) / FSOEnvironment.DPIScaleFactor + Holding.MousePosOffset);
+                        MoveSelected(new Vector2(tilePos.X, tilePos.Y), (sbyte)tilePos.Z); // + Holding.TilePosOffset
+                    }
                 }
             }
             else if (MouseClicked)
             {
                 //not holding an object, but one can be selected
                 var scaled = GetScaledPoint(state.MouseState.Position);
-                var newHover = World.GetObjectIDAtScreenPos(scaled.X, scaled.Y, GameFacade.GraphicsDevice);
+                var newHover = GetFloorBlockableHover(scaled); //World.GetObjectIDAtScreenPos(scaled.X, scaled.Y, GameFacade.GraphicsDevice);
                 if (MouseClicked && (newHover != 0) && (vm.GetObjectById(newHover) is VMGameObject))
                 {
                     var objGroup = vm.GetObjectById(newHover).MultitileGroup;
@@ -513,7 +574,7 @@ namespace FSO.Client.UI.Panels
                     var allowMove = vm.PlatformState.Validator.CanMoveObject((VMAvatar)ParentControl.ActiveEntity, objGroup.BaseObject);
                     var success = (Roommate || objGroup.SalePrice > -1)?objGroup.BaseObject.IsUserMovable(vm.Context, false): VMPlacementError.ObjectNotOwnedByYou;
                     if (GameFacade.EnableMod) success = VMPlacementError.Success;
-                    if (objBasePos.Level != World.State.Level) success = VMPlacementError.CantEffectFirstLevelFromSecondLevel;
+                    //if (objBasePos.Level != World.State.Level) success = VMPlacementError.CantEffectFirstLevelFromSecondLevel;
                     if (success == VMPlacementError.Success)
                     {
                         var ghostGroup = vm.Context.GhostCopyGroup(objGroup);
@@ -527,6 +588,7 @@ namespace FSO.Client.UI.Panels
                         Holding.CanDelete = canDelete;
                         Holding.DeleteError = canDelete ? VMPlacementError.CannotDeleteObject : VMPlacementError.ObjectNotOwnedByYou;
                         Holding.MoveTarget = newHover;
+                        Holding.MousePosOffset = (objGroup.BaseObject.WorldUI.GetScreenPos(World.State) - GetScaledPoint(state.MouseState.Position).ToVector2()) / FSOEnvironment.DPIScaleFactor;
                         Holding.TilePosOffset = new Vector2(objBasePos.x / 16f, objBasePos.y / 16f) - World.EstTileAtPosWithScroll(GetScaledPoint(state.MouseState.Position).ToVector2() / FSOEnvironment.DPIScaleFactor);
                         if (OnPickup != null) OnPickup(Holding, state);
                         //ExecuteEntryPoint(12); //User Pickup
@@ -572,6 +634,7 @@ namespace FSO.Client.UI.Panels
         public Direction Dir = Direction.NORTH;
         public Vector2 TilePos;
         public Vector2 TilePosOffset;
+        public Vector2 MousePosOffset;
         public bool Clicked;
         public VMPlacementError CanPlace;
         public sbyte Level;

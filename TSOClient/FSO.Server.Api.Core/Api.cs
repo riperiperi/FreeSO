@@ -1,6 +1,7 @@
 ﻿using FSO.Server.Api.Core.Services;
 using FSO.Server.Api.Core.Utils;
 using FSO.Server.Common;
+using FSO.Server.Common.Config;
 using FSO.Server.Database.DA;
 using FSO.Server.Domain;
 using FSO.Server.Protocol.Gluon.Model;
@@ -27,6 +28,8 @@ namespace FSO.Server.Api.Core
         public Shards Shards;
         public IGluonHostPool HostPool;
         public IUpdateUploader UpdateUploader;
+        public IUpdateUploader UpdateUploaderClient;
+        public GithubConfig Github;
 
         public Api()
         {

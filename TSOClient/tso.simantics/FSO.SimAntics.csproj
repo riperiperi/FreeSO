@@ -152,6 +152,7 @@
     <Compile Include="Engine\VMSuitProvider.cs" />
     <Compile Include="Engine\VMStackFrame.cs" />
     <Compile Include="Entities\VMAvatarMotiveDecay.cs" />
+    <Compile Include="Entities\VMEntityTuning.cs" />
     <Compile Include="Entities\VMMultitileGroup.cs" />
     <Compile Include="Entities\VMTS1MotiveDecay.cs" />
     <Compile Include="Marshals\Hollow\VMHollowGameObjectMarshal.cs" />
@@ -313,6 +314,7 @@
     <Compile Include="NetPlay\Model\Commands\VMNetTuningCmd.cs" />
     <Compile Include="NetPlay\Model\Commands\VMNetUpdateInventoryCmd.cs" />
     <Compile Include="NetPlay\Model\Commands\VMNetUpdatePersistStateCmd.cs" />
+    <Compile Include="NetPlay\Model\Commands\VMNetUpgradeCmd.cs" />
     <Compile Include="NetPlay\Model\Commands\VMRequestResyncCmd.cs" />
     <Compile Include="NetPlay\Model\Commands\VMStateSyncCmd.cs" />
     <Compile Include="NetPlay\Model\VMChatEvent.cs" />
@@ -384,6 +386,7 @@
     <Compile Include="Primitives\VMTS1Budget.cs" />
     <Compile Include="Primitives\VMTS1InventoryOperations.cs" />
     <Compile Include="Primitives\VMTS1MakeNewCharacter.cs" />
+    <Compile Include="Test\CollisionTestUtils.cs" />
     <Compile Include="Utils\SimitoneNeighbourGenerator.cs" />
     <Compile Include="Utils\TimePropertyListItemSorter.cs" />
     <Compile Include="Utils\VMArchitectureStats.cs" />

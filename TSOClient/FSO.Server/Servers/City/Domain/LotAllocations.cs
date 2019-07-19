@@ -1,4 +1,5 @@
-﻿using FSO.Common.Security;
+﻿using FSO.Common.Enum;
+using FSO.Common.Security;
 using FSO.Server.Database.DA;
 using FSO.Server.Database.DA.Lots;
 using FSO.Server.Framework.Gluon;
@@ -91,7 +92,7 @@ namespace FSO.Server.Servers.City.Domain
                     if (lot != null)
                     {
                         location = lot.location;
-                        if (lot.owner_id == null && lot.category != FSO.Common.Enum.LotCategory.community) da.Lots.Delete(lotId); //this lot should no longer exist.
+                        if (lot.owner_id == null && lot.category != LotCategory.community) da.Lots.Delete(lotId); //this lot should no longer exist.
                     }
                 }
             }

@@ -179,7 +179,7 @@ namespace FSO.SimAntics
         {
             foreach (var obj in MultitileGroup.Objects)
             {
-                if (obj.EntryPoints[15].ActionFunction != 0) return true;
+                if (obj.Portal) return true;
             }
             return false;
         }

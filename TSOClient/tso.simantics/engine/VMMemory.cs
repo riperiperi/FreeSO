@@ -356,6 +356,11 @@ namespace FSO.SimAntics.Engine.Utils
             }
         }
 
+        private static ushort[] TableIDOffsets = new ushort[]{
+            4096,
+            8192,
+            256
+        };
 
         public static short GetTuningVariable(VMEntity entity, ushort data, VMStackFrame context) {
             var tableID = (ushort)(data >> 7);
@@ -370,7 +375,11 @@ namespace FSO.SimAntics.Engine.Utils
             OTFTable tuning;
 
             /** This could be in a BCON or an OTF **/
+            tableID = (ushort)(tableID + TableIDOffsets[mode]);
 
+            var replacement = entity.TuningReplacement?.TryGetEntry(tableID, keyID);
+            if (replacement.HasValue) return replacement.Value;
+            /*
             var dyn = context.VM.Tuning;
             if (dyn != null) {
                 string name = "object";
@@ -386,24 +395,22 @@ namespace FSO.SimAntics.Engine.Utils
                 var replacement = dyn.GetTuning(name, tableID, keyID);
                 if (replacement != null) return (short)replacement;
             }
+            */
 
-            uint targID = 0;
+            uint targID = ((uint)tableID << 16) | keyID;
             Dictionary<uint, short> tuningCache = null;
 
             switch (mode) {
                 case 0: //local
                     tuningCache = context.ScopeResource.TuningCache;
-                    targID = ((uint)(tableID + 4096) << 16) | keyID; 
                     break;
                 case 1: //semi globals
-                    targID = ((uint)(tableID + 8192) << 16) | keyID;
                     if (context.ScopeResource.SemiGlobal != null)
                         tuningCache = context.ScopeResource.SemiGlobal.TuningCache;
                     else
                         tuningCache = context.ScopeResource.TuningCache;
                     break;
                 case 2: //global
-                    targID = ((uint)(tableID + 256) << 16) | keyID;
                     tuningCache = context.Global.Resource.TuningCache;
                     break;
             }
@@ -578,7 +585,7 @@ namespace FSO.SimAntics.Engine.Utils
                 case VMOBJDVariable.TileWidth:
                     return (short)objd.TileWidth;
                 case VMOBJDVariable.LotCategories:
-                    return 0; //NOT IN OBJD RIGHT NOW!
+                    return (short)objd.LotCategories; 
                 case VMOBJDVariable.BuildModeType:
                     return (short)objd.BuildModeType;
                 case VMOBJDVariable.OriginalGUID1:

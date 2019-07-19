@@ -128,14 +128,22 @@ namespace FSO.SimAntics
         public SLOT Slots;
         public OBJD MasterDefinition; //if this object is multitile, its master definition will be stored here.
         public OBJfFunctionEntry[] EntryPoints;  /** Entry points for specific events, eg. init, main, clean... **/
+        public VMEntityTuning TuningReplacement;
+        public bool Portal => EntryPoints[15].ActionFunction != 0;
+        public bool Window => ((VMEntityFlags2)GetValue(VMStackObjectVariable.FlagField2)).HasFlag(VMEntityFlags2.ArchitectualWindow);
         public virtual bool MovesOften
         {
             get
             {
-                if (Container != null && Container is VMAvatar) return true;
+                if (Container != null)
+                {
+                    if (Container is VMAvatar) return true;
+                    return Container.MovesOften;
+                }
                 if (Slots == null) return false;
                 if (!Slots.Slots.ContainsKey(3)) return false;
                 var slots = Slots.Slots[3];
+                if (slots.Count > 20) return true;
                 return MovedSelf;
             }
         }
@@ -496,6 +504,8 @@ namespace FSO.SimAntics
                 SetValue(VMStackObjectVariable.Room, -1);
                 if (this is VMGameObject) ((VMGameObject)this).RefreshLight();
             }
+
+            UpdateTuning(context.VM);
         }
 
         private bool InReset = false;
@@ -687,6 +697,11 @@ namespace FSO.SimAntics
                     DynamicSpriteFlags = DynamicSpriteFlags & (~((ulong)0x1 << index));
                 }
             }
+        }
+
+        public void UpdateTuning(VM vm)
+        {
+            TuningReplacement = new VMEntityTuning(this, vm);
         }
 
         public void UpdateFootprint()
@@ -1644,6 +1659,8 @@ namespace FSO.SimAntics
                 if (obj != null) obj.MayHaveRelToMe.Add((ushort)ObjectID);
                 else MeToObject.Remove(objID); //cleanup refs to missing objects
             }
+
+            UpdateTuning(context.VM);
         }
         #endregion
     }

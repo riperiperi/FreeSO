@@ -35,8 +35,19 @@ namespace FSO.SimAntics.Entities
         }
         public int InitialPrice;
         public int SalePrice = -1;
+        //runtime only
+        public int BeforeDCPrice;
         public List<VMEntity> Objects = new List<VMEntity>();
         public List<LotTilePos> Offsets = new List<LotTilePos>();
+
+        public uint GUID
+        {
+            get
+            {
+                var obj = BaseObject;
+                return (obj.MasterDefinition ?? obj.Object.OBJ).GUID;
+            }
+        }
 
         public VMEntity BaseObject
         {
@@ -183,7 +194,7 @@ namespace FSO.SimAntics.Entities
 
                     var offPos = new LotTilePos((short)Math.Round(pos.x + off.X), (short)Math.Round(pos.y + off.Y), (sbyte)(pos.Level + Offsets[i].Level));
                     Targets[i] = offPos;
-                    var roomChange = context.GetRoomAt(offPos) != context.GetObjectRoom(sub) || OldContainers[i] != null;
+                    var roomChange = context.GetRoomAt(offPos) != context.GetObjectRoom(sub) || OldContainers[i] != null || sub.Portal;
                     RoomChange[i] = roomChange;
                     sub.PrePositionChange(context, roomChange);
                     places[i] = sub.PositionValid(offPos, direction, context, flags);

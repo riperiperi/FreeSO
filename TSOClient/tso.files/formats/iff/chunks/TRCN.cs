@@ -38,7 +38,7 @@ namespace FSO.Files.Formats.IFF.Chunks
                 for (int i=0; i<count; i++)
                 {
                     var entry = new TRCNEntry();
-                    entry.Read(io, Version);
+                    entry.Read(io, Version, i > 0 && Version > 0);
                     Entries[i] = entry;
                 }
             }
@@ -73,18 +73,21 @@ namespace FSO.Files.Formats.IFF.Chunks
         public short LowRange;
         public short HighRange = 100;
 
-        public void Read(IoBuffer io, int version)
+        public void Read(IoBuffer io, int version, bool odd)
         {
             Flags = io.ReadInt32();
             Unknown = io.ReadInt32();
             Label = (version > 1) ? io.ReadVariableLengthPascalString() : io.ReadNullTerminatedString();
+            if (version < 2 && ((Label.Length % 2 == 0) ^ odd)) io.ReadByte();
             Comment = (version > 1) ? io.ReadVariableLengthPascalString() : io.ReadNullTerminatedString();
+            if (version < 2 && (Comment.Length % 2 == 0)) io.ReadByte();
 
             if (version > 0)
             {
                 RangeEnabled = io.ReadByte();
                 LowRange = io.ReadInt16();
                 HighRange = io.ReadInt16();
+                //io.ReadByte();
             }
         }
         

@@ -11,6 +11,7 @@ using FSO.Common.Rendering.Framework.Model;
 using FSO.Common.Rendering.Framework.IO;
 using FSO.SimAntics.Model.TSOPlatform;
 using FSO.Client.UI.Panels.Chat;
+using FSO.Common.Utils;
 
 namespace FSO.Client.UI.Panels
 {
@@ -225,9 +226,9 @@ namespace FSO.Client.UI.Panels
 
             //play TTS for this event?
             if (evt.Type == VMChatEventType.Message || evt.Type == VMChatEventType.MessageMe) {
-                if (GlobalSettings.Default.ChatOnlyEmoji)
+                if (GlobalSettings.Default.ChatOnlyEmoji > 0)
                 {
-                    evt.Text[1] = GameFacade.Emojis.EmojiOnly(evt.Text[1]);
+                    evt.Text[1] = GameFacade.Emojis.EmojiOnly(evt.Text[1], GlobalSettings.Default.ChatOnlyEmoji);
                 }
 
                 var ttsmode = GlobalSettings.Default.TTSMode;
@@ -359,7 +360,7 @@ namespace FSO.Client.UI.Panels
 
         public string SanitizeBB(string input)
         {
-            return input.Replace("[", "\\[");
+            return BBCodeParser.SanitizeBB(input);
         }
 
         public string CleanUserMessage(string msg, VMChatEvent evt)

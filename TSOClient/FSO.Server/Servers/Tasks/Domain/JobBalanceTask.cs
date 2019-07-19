@@ -7,6 +7,8 @@ using FSO.Server.Database.DA.Tasks;
 using FSO.Server.Database.DA;
 using FSO.Server.Database.DA.DynPayouts;
 using FSO.Server.Database.DA.Tuning;
+using FSO.Server.Domain;
+using FSO.Server.Protocol.Gluon.Packets;
 
 namespace FSO.Server.Servers.Tasks.Domain
 {
@@ -15,6 +17,7 @@ namespace FSO.Server.Servers.Tasks.Domain
         private IDAFactory DAFactory;
         private bool Running;
         private TaskTuning Tuning;
+        private IGluonHostPool HostPool;
 
         private static Dictionary<int, int> TransactionToType = new Dictionary<int, int>()
         {
@@ -54,10 +57,11 @@ namespace FSO.Server.Servers.Tasks.Domain
             5 //telemarketing
         };
 
-        public JobBalanceTask(IDAFactory DAFactory, TaskTuning tuning)
+        public JobBalanceTask(IDAFactory DAFactory, TaskTuning tuning, IGluonHostPool hosts)
         {
             this.DAFactory = DAFactory;
             this.Tuning = tuning;
+            this.HostPool = hosts;
         }
 
         public void Abort()
@@ -161,6 +165,12 @@ namespace FSO.Server.Servers.Tasks.Domain
                 }
 
                 db.DynPayouts.ReplaceDynTuning(dbTuning);
+                //tell lots tuning has changed
+                var lots = HostPool.GetByRole(Database.DA.Hosts.DbHostRole.lot);
+                foreach (var lot in lots)
+                {
+                    lot.Write(new TuningChanged() { UpdateInstantly = true });
+                }
             }
         }
 

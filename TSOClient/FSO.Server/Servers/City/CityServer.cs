@@ -36,7 +36,7 @@ namespace FSO.Server.Servers.City
         public CityServer(CityServerConfiguration config, IKernel kernel) : base(config, kernel)
         {
             this.UnexpectedDisconnectWaitSeconds = 30;
-            this.TimeoutIfNoAuth = true;
+            this.TimeoutIfNoAuth = config.Timeout_No_Auth;
             this.Config = config;
             VoltronSessions = Sessions.GetOrCreateGroup(Groups.VOLTRON);
         }
@@ -72,6 +72,7 @@ namespace FSO.Server.Servers.City
             Kernel.Bind<LotServerPicker>().To<LotServerPicker>().InSingletonScope();
             Kernel.Bind<LotAllocations>().To<LotAllocations>().InSingletonScope();
             Kernel.Bind<Neighborhoods>().ToSelf().InSingletonScope();
+            Kernel.Bind<Tuning>().ToSelf().InSingletonScope();
 
             Liveness = Kernel.Get<CityLivenessEngine>();
 

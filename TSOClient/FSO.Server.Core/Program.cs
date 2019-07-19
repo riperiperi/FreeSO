@@ -1,6 +1,7 @@
 ﻿using FSO.Server;
 using FSO.Server.Api.Core.Services;
 using FSO.Server.Common;
+using FSO.Server.Common.Config;
 using FSO.Server.Servers.UserApi;
 using Microsoft.AspNetCore;
 using Microsoft.AspNetCore.Builder;
@@ -52,6 +53,9 @@ namespace FSO.Server.Core
             var api2 = new FSO.Server.Api.Core.Api();
             api2.Init(settings);
             if (userApiConfig.AwsConfig != null) api2.UpdateUploader = new AWSUpdateUploader(userApiConfig.AwsConfig);
+            if (userApiConfig.GithubConfig != null) api2.UpdateUploaderClient = new GithubUpdateUploader(userApiConfig.GithubConfig);
+            else api2.UpdateUploaderClient = api2.UpdateUploader;
+            api2.Github = userApiConfig.GithubConfig;
             api.SetupInstance(api2);
             api2.HostPool = api.GetGluonHostPool();
             

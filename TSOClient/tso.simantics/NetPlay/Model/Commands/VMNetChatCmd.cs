@@ -7,6 +7,7 @@
 using FSO.SimAntics.Engine.TSOTransaction;
 using FSO.SimAntics.Model.TSOPlatform;
 using FSO.SimAntics.NetPlay.Drivers;
+using FSO.SimAntics.Test;
 using System;
 using System.Collections.Generic;
 using System.IO;
@@ -183,7 +184,18 @@ namespace FSO.SimAntics.NetPlay.Model.Commands
                         }
                         vm.SignalChatEvent(new VMChatEvent(null, VMChatEventType.Generic, "Fixed " + fixCount + " objects."));
                         break;
-
+                    case "testcollision":
+                        vm.SignalChatEvent(new VMChatEvent(null, VMChatEventType.Debug, $"Scanning collision for lot { vm.TSOState.Name }."));
+                        try
+                        {
+                            var collisionValidator = new CollisionTestUtils();
+                            collisionValidator.VerifyAllCollision(vm);
+                            vm.SignalChatEvent(new VMChatEvent(null, VMChatEventType.Debug, "No issue detected with collision."));
+                        } catch (Exception e)
+                        {
+                            vm.SignalChatEvent(new VMChatEvent(null, VMChatEventType.Debug, e.Message));
+                        }
+                        break;
                 }
                 return true;
             }

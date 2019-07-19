@@ -6,9 +6,11 @@ using System.Web;
 using System.Web.Http;
 using System.Linq;
 using Microsoft.AspNetCore.Mvc;
+using Microsoft.AspNetCore.Cors;
 
 namespace FSO.Server.Api.Core.Controllers.Admin
 {
+    [EnableCors("AdminAppPolicy")]
     [Route("admin/hosts")]
     [ApiController]
     public class AdminHostsController : ControllerBase

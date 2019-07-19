@@ -31,7 +31,7 @@ namespace FSO.Server.Api.Core.Utils
                     ip = xff.First();
                     ip = ip.Substring(ip.IndexOf(",") + 1);
                     var last = ip.LastIndexOf(":");
-                    if (last < ip.Length - 5) ip = ip.Substring(0, last);
+                    if (last != -1 && last < ip.Length - 5) ip = ip.Substring(0, last);
                 }
                 return ip;
             }

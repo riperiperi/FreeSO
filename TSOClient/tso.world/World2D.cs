@@ -126,7 +126,7 @@ namespace FSO.LotView
                        
                         var tilePosition = obj.Position;
 
-                        if (obj.Level != state.Level) continue;
+                        if (obj.Level > state.Level) continue;
 
                         var oPx = state.WorldSpace.GetScreenFromTile(tilePosition);
                         obj.ValidateSprite(state);
@@ -139,6 +139,7 @@ namespace FSO.LotView
                     state._3D.Begin(gd);
                     foreach (var avatar in Blueprint.Avatars)
                     {
+                        if (avatar.Level > state.Level) continue;
                         _2d.OffsetPixel(state.WorldSpace.GetScreenFromTile(avatar.Position));
                         _2d.OffsetTile(avatar.Position);
                         avatar.Draw(gd, state);

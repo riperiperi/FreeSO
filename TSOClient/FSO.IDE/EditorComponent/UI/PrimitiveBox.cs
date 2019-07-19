@@ -209,6 +209,14 @@ namespace FSO.IDE.EditorComponent.UI
             }
         }
 
+        public void NodeDraw(UISpriteBatch batch)
+        {
+            foreach (var child in Nodes)
+            {
+                child.Draw(batch);
+            }
+        }
+
         protected override void CalculateMatrix()
         {
             base.CalculateMatrix();
@@ -238,7 +246,7 @@ namespace FSO.IDE.EditorComponent.UI
 
         public override void Draw(UISpriteBatch batch)
         {
-            base.Draw(batch);
+            //base.Draw(batch);
 
             var res = EditorResource.Get();
 

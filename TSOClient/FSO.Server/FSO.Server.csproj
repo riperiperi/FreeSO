@@ -185,6 +185,7 @@
     <Compile Include="DataService\ServerDataService.cs" />
     <Compile Include="DataService\ServerNFSProvider.cs" />
     <Compile Include="DataService\ShardDataServiceModule.cs" />
+    <Compile Include="Discord\DiscordConfiguration.cs" />
     <Compile Include="Domain\ServerDomainModule.cs" />
     <Compile Include="Domain\ServerTop100Domain.cs" />
     <Compile Include="Mono.Options\Options.cs" />
@@ -192,6 +193,7 @@
     <Compile Include="Servers\City\CityServerModule.cs" />
     <Compile Include="Servers\City\Domain\EventSystem.cs" />
     <Compile Include="Servers\City\Domain\Neighborhoods.cs" />
+    <Compile Include="Servers\City\Domain\Tuning.cs" />
     <Compile Include="Servers\City\Handlers\BulletinHandler.cs" />
     <Compile Include="Servers\City\Handlers\NhoodHandler.cs" />
     <Compile Include="Servers\City\Handlers\MailHandler.cs" />
@@ -260,6 +262,7 @@
     <Compile Include="Servers\UserApi\UserApi.cs" />
     <Compile Include="ToolImportNhood.cs" />
     <Compile Include="ToolInitDatabase.cs" />
+    <Compile Include="ToolRestoreLots.cs" />
     <Compile Include="ToolRunServer.cs" />
     <Compile Include="Servers\AbstractServer.cs" />
     <Compile Include="Utils\AutoUpdateUtility.cs" />

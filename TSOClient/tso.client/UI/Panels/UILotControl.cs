@@ -71,6 +71,14 @@ namespace FSO.Client.UI.Panels
         public FSO.SimAntics.VM vm;
         public LotView.World World;
         public VMEntity ActiveEntity;
+        public uint Budget
+        {
+            get
+            {
+                if (ActiveEntity == null) return uint.MaxValue;
+                return ActiveEntity.TSOState.Budget.Value;
+            }
+        }
         public uint SelectedSimID {
             get
             {
@@ -422,6 +430,18 @@ namespace FSO.Client.UI.Panels
             }
         }
 
+        private short GetFloorBlockableHover(Point pt)
+        {
+            var tilePos = World.EstTileAtPosWithScroll3D(new Vector2(pt.X, pt.Y) / FSOEnvironment.DPIScaleFactor);
+            var newHover = World.GetObjectIDAtScreenPos(pt.X,
+                    pt.Y,
+                    GameFacade.GraphicsDevice);
+
+            var hobj = vm.GetObjectById(newHover);
+            if (hobj == null || hobj.Position.Level < tilePos.Z) newHover = 0;
+            return newHover;
+        }
+
         public void Click(Point pt, UpdateState state)
         {
             if (!LiveMode)
@@ -434,9 +454,9 @@ namespace FSO.Client.UI.Panels
             {
                 VMEntity obj;
                 //get new pie menu, make new pie menu panel for it
-                var tilePos = World.EstTileAtPosWithScroll(new Vector2(pt.X, pt.Y) / FSOEnvironment.DPIScaleFactor);
+                var tilePos = World.EstTileAtPosWithScroll3D(new Vector2(pt.X, pt.Y) / FSOEnvironment.DPIScaleFactor);
 
-                LotTilePos targetPos = LotTilePos.FromBigTile((short)tilePos.X, (short)tilePos.Y, World.State.Level);
+                LotTilePos targetPos = LotTilePos.FromBigTile((short)tilePos.X, (short)tilePos.Y, (sbyte)tilePos.Z);
                 if (vm.Context.SolidToAvatars(targetPos).Solid) targetPos = LotTilePos.OUT_OF_WORLD;
 
                 GotoObject.SetPosition(targetPos, Direction.NORTH, vm.Context);
@@ -445,6 +465,8 @@ namespace FSO.Client.UI.Panels
                     pt.Y,
                     GameFacade.GraphicsDevice);
 
+                var hobj = vm.GetObjectById(newHover);
+                if (hobj == null || hobj.Position.Level < tilePos.Z) newHover = 0;
                 ObjectHover = newHover;
 
                 bool objSelected = ObjectHover > 0;
@@ -574,9 +596,7 @@ namespace FSO.Client.UI.Panels
                     OldMX = state.MouseState.X;
                     OldMY = state.MouseState.Y;
                     var scaled = GetScaledPoint(state.MouseState.Position);
-                    var newHover = World.GetObjectIDAtScreenPos(scaled.X, 
-                        scaled.Y, 
-                        GameFacade.GraphicsDevice);
+                    var newHover = GetFloorBlockableHover(scaled);
 
                     if (ObjectHover != newHover)
                     {
@@ -654,8 +674,14 @@ namespace FSO.Client.UI.Panels
                     {
                         if (InteractionsAvailable)
                         {
-                            if (vm.GetObjectById(ObjectHover) is VMAvatar) cursor = CursorType.LivePerson;
-                            else cursor = CursorType.LiveObjectAvail;
+                            var obj = vm.GetObjectById(ObjectHover);
+                            if (obj is VMAvatar) cursor = CursorType.LivePerson;
+                            else
+                            {
+                                var tsoState = obj?.PlatformState as VMTSOObjectState;
+                                if (tsoState != null) cursor = CursorType.LiveObjectAvail + tsoState.UpgradeLevel;
+                                else cursor = CursorType.LiveObjectAvail;
+                            }
                         }
                         else
                         {
@@ -1031,7 +1057,7 @@ namespace FSO.Client.UI.Panels
             });
 
             //init tuning vars for UI
-            var emojiOnly = vm.Tuning.GetTuning("ui", 0, 0) == 1f;
+            var emojiOnly = (int)(vm.Tuning.GetTuning("ui", 0, 0) ?? 0);
             if (emojiOnly != GlobalSettings.Default.ChatOnlyEmoji)
             {
                 GlobalSettings.Default.ChatOnlyEmoji = emojiOnly;

@@ -4,6 +4,7 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
+using FSO.Server.Database.DA.Utils;
 
 namespace FSO.Server.Database.DA.DbEvents
 {
@@ -12,11 +13,19 @@ namespace FSO.Server.Database.DA.DbEvents
         public SqlEvents(ISqlContext context) : base(context){
         }
 
+        public PagedList<DbEvent> All(int offset = 1, int limit = 20, string orderBy = "start_day")
+        {
+            var connection = Context.Connection;
+            var total = connection.Query<int>("SELECT COUNT(*) FROM fso_events").FirstOrDefault();
+            var results = connection.Query<DbEvent>("SELECT * FROM fso_events ORDER BY @order DESC LIMIT @offset, @limit", new { order = orderBy, offset = offset, limit = limit });
+            return new PagedList<DbEvent>(results, offset, total);
+        }
+
         public int Add(DbEvent evt)
         {
-            var result = Context.Connection.Query<int>("INSERT INTO fso_inbox (title, description, start_day, " +
+            var result = Context.Connection.Query<int>("INSERT INTO fso_events (title, description, start_day, " +
                          "end_day, type, value, value2, mail_subject, mail_message, mail_sender, mail_sender_name) " +
-                         " VALUES (@title, @description, @start_day, @end_day, @type, @value, @value2, " +
+                         " VALUES (@title, @description, @start_day, @end_day, @type_str, @value, @value2, " +
                          " @mail_subject, @mail_message, @mail_sender, @mail_sender_name); SELECT LAST_INSERT_ID();", evt).First();
             return result;
         }

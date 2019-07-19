@@ -16,6 +16,7 @@ using FSO.IDE.EditorComponent;
 using FSO.IDE.ResourceBrowser.ResourceEditors;
 using System.IO;
 using FSO.Files.Utils;
+using FSO.Files.Formats.OTF;
 
 namespace FSO.IDE.ResourceBrowser
 {
@@ -32,7 +33,8 @@ namespace FSO.IDE.ResourceBrowser
             { typeof(TTAB), typeof(TTABResourceControl) },
             { typeof(SPR2), typeof(SPR2ResourceControl) },
             { typeof(BCON), typeof(BCONResourceControl) },
-            { typeof(SLOT), typeof(SLOTResourceControl) }
+            { typeof(SLOT), typeof(SLOTResourceControl) },
+            { typeof(OTFFile), typeof(OTFResourceControl) }
         };
 
         public Type[] ChunkTypes = new Type[]
@@ -43,7 +45,8 @@ namespace FSO.IDE.ResourceBrowser
             typeof(BCON),
             typeof(SLOT),
             typeof(CTSS),
-            typeof(SPR2)
+            typeof(SPR2),
+            typeof(OTFFile)
         };
         public string[] TypeNames = new string[]
         {
@@ -53,7 +56,8 @@ namespace FSO.IDE.ResourceBrowser
             "Constants",
             "SLOTs",
             "Catalog Strings",
-            "Sprites"
+            "Sprites",
+            "Tuning (OTF)"
         };
         public OBJDSelector[][] OBJDSelectors = new OBJDSelector[][]
         {
@@ -67,6 +71,7 @@ namespace FSO.IDE.ResourceBrowser
             new OBJDSelector[] { },
             new OBJDSelector[] { new OBJDSelector("My SLOTs", "SlotID") },
             new OBJDSelector[] { new OBJDSelector("My Catalog Strings", "CatalogStringsID") },
+            new OBJDSelector[] { },
             new OBJDSelector[] { }
         };
 
@@ -173,11 +178,19 @@ namespace FSO.IDE.ResourceBrowser
 
             ActiveSelectors = OBJDSelectors[Array.IndexOf(ChunkTypes, selectedType.ChunkType)];
 
-            MethodInfo method = typeof(GameIffResource).GetMethod("ListArray");
-            MethodInfo generic = method.MakeGenericMethod(selectedType.ChunkType);
-            var chunks = (object[])generic.Invoke(ActiveIff, new object[0]);
+            List<ObjectResourceEntry> items;
+            if (selectedType.ChunkType == typeof(OTFFile)) {
+                items = new List<ObjectResourceEntry>() { new ObjectResourceEntry("OTF File", 0) };
+            }
+            else
+            {
+                MethodInfo method = typeof(GameIffResource).GetMethod("ListArray");
+                MethodInfo generic = method.MakeGenericMethod(selectedType.ChunkType);
+                var chunks = (object[])generic.Invoke(ActiveIff, new object[0]);
 
-            var items = GetResList((IffChunk[])chunks);
+                items = GetResList((IffChunk[])chunks);
+            }
+
             object[] listItems;
             if (AlphaOrder) listItems = items.OrderBy(x => x.Name).ToArray();
             else listItems = items.OrderBy(x => x.ID).ToArray();

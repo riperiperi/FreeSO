@@ -9,13 +9,34 @@ namespace FSO.Files.Formats.IFF.Chunks
 {
     public class PIFF : IffChunk
     {
-        public ushort Version = 1;
+        public static ushort CURRENT_VERSION = 2;
+        public ushort Version = CURRENT_VERSION;
         public string SourceIff;
+        public string Comment = "";
         public PIFFEntry[] Entries;
 
         public PIFF()
         {
             ChunkType = "PIFF";
+        }
+
+        public void AppendAddedChunks(IffFile file)
+        {
+            foreach (var chunk in file.SilentListAll())
+            {
+                if (chunk == this) continue;
+                var entries = Entries.ToList();
+                entries.Add(new PIFFEntry()
+                {
+                    ChunkID = chunk.ChunkID,
+                    ChunkLabel = chunk.ChunkLabel,
+                    ChunkFlags = chunk.ChunkFlags,
+                    EntryType = PIFFEntryType.Add,
+                    NewDataSize = (uint)(chunk.ChunkData?.Length ?? 0),
+                    Type = chunk.ChunkType
+                });
+                Entries = entries.ToArray();
+            }
         }
 
         public override void Read(IffFile iff, Stream stream)
@@ -24,15 +45,17 @@ namespace FSO.Files.Formats.IFF.Chunks
             {
                 Version = io.ReadUInt16();
                 SourceIff = io.ReadVariableLengthPascalString();
+                if (Version > 1) Comment = io.ReadVariableLengthPascalString();
                 Entries = new PIFFEntry[io.ReadUInt16()];
                 for (int i=0; i<Entries.Length; i++)
                 {
                     var e = new PIFFEntry();
                     e.Type = io.ReadCString(4);
                     e.ChunkID = io.ReadUInt16();
-                    e.Delete = io.ReadByte()>0;
-                    
-                    if (!e.Delete)
+                    if (Version > 1) e.Comment = io.ReadVariableLengthPascalString();
+                    e.EntryType = (PIFFEntryType)io.ReadByte();
+
+                    if (e.EntryType == PIFFEntryType.Patch)
                     {
                         e.ChunkLabel = io.ReadVariableLengthPascalString();
                         e.ChunkFlags = io.ReadUInt16();
@@ -66,16 +89,18 @@ namespace FSO.Files.Formats.IFF.Chunks
         {
             using (var io = IoWriter.FromStream(stream, ByteOrder.LITTLE_ENDIAN))
             {
-                io.WriteUInt16(1);
+                io.WriteUInt16(CURRENT_VERSION);
                 io.WriteVariableLengthPascalString(SourceIff);
+                io.WriteVariableLengthPascalString(Comment);
                 io.WriteUInt16((ushort)Entries.Length);
                 foreach (var ent in Entries)
                 {
                     io.WriteCString(ent.Type, 4);
                     io.WriteUInt16(ent.ChunkID);
-                    io.WriteByte((byte)(ent.Delete ? 1 : 0));
+                    io.WriteVariableLengthPascalString(ent.Comment);
+                    io.WriteByte((byte)(ent.EntryType));
 
-                    if (!ent.Delete)
+                    if (ent.EntryType == PIFFEntryType.Patch)
                     {
                         io.WriteVariableLengthPascalString(ent.ChunkLabel); //0 length means no replacement
                         io.WriteUInt16(ent.ChunkFlags);
@@ -104,7 +129,8 @@ namespace FSO.Files.Formats.IFF.Chunks
         public string Type;
         public ushort ChunkID;
         public ushort NewChunkID;
-        public bool Delete;
+        public PIFFEntryType EntryType;
+        public string Comment = "";
 
         public string ChunkLabel;
         public ushort ChunkFlags;
@@ -138,6 +164,13 @@ namespace FSO.Files.Formats.IFF.Chunks
 
             return result;
         }
+    }
+
+    public enum PIFFEntryType : byte
+    {
+        Patch,
+        Remove,
+        Add
     }
 
     public struct PIFFPatch

@@ -301,6 +301,11 @@ namespace FSO.LotView.Model
             return Floors[level-1][offset];
         }
 
+        public bool TileInbounds(Vector2 tile)
+        {
+            return (tile.X >= 0 && tile.Y >= 0 && tile.X < Width && tile.Y < Height);
+        }
+
         public void ChangeObjectLocation(ObjectComponent component, LotTilePos pos)
         {
             short tileX = (pos.x < 0) ? (short)0 : pos.TileX;

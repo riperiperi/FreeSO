@@ -215,7 +215,7 @@ namespace FSO.Server.Framework.Aries
             if (!ariesSession.IsAuthenticated)
             {
                 /** You can only use aries packets when anon **/
-                if(!(message is IAriesPacket))
+                if(!(message is IAriesPacket) && !(message is ClientByePDU))
                 {
                     throw new Exception($"Voltron packets are forbidden before aries authentication has completed. \n" +
                         $"(got {message.GetType().ToString()} on connection for {Config.Call_Sign})");

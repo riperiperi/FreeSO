@@ -72,7 +72,14 @@ namespace FSO.Server.Protocol.Electron.Packets
         YOU_MOVED_RECENTLY = 0x13,
         CANDIDATE_NHOOD_GAMEPLAY_BAN = 0x14,
         MISSING_ENTITY = 0x15, //missing someone
-        
+
+        //free vote
+        NHOOD_NO_ELECTION = 0x16,
+        ALREADY_ENROLLED_FOR_FREE_VOTE = 0x17,
+        FREE_VOTE_ALREADY_ELIGIBLE = 0x18,
+        FREE_VOTE_MOVE_DATE = 0x19,
+        FREE_VOTE_ELECTION_OVER = 0x1A,
+
         CANCEL = 0xFE,
         UNKNOWN_ERROR = 0xFF
     };

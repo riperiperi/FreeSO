@@ -49,6 +49,19 @@ namespace FSO.Server.Servers.City.Domain
             }
         }
 
+        public void BroadcastMessage(object message)
+        {
+            List<IGluonSession> sessions;
+            lock (Servers)
+            {
+                sessions = Servers.Select(x => x.Session).ToList();
+            }
+            foreach (var session in sessions)
+            {
+                session?.Write(message);
+            }
+        }
+
         public async Task<bool> ShutdownAllLotServers(ShutdownType type)
         {
             if (AllServersShutdown != null) return false;

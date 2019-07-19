@@ -85,7 +85,7 @@ namespace FSO.LotView.Components
             if (item != null)
             {
                 var off = item.Offset;
-                var centerRelative = new Vector3(off.X * (1 / 16.0f), off.Y * (1 / 16.0f), ((item.Height != 5) ? SLOT.HeightOffsets[item.Height - 1] : off.Z) * (1 / 5.0f));
+                var centerRelative = new Vector3(off.X * (1 / 16.0f), off.Y * (1 / 16.0f), ((item.Height != 5 && item.Height != 0) ? SLOT.HeightOffsets[item.Height - 1] : off.Z) * (1 / 5.0f));
                 centerRelative = Vector3.Transform(centerRelative, Matrix.CreateRotationZ(RadianDirection));
                 if (avatar) centerRelative.Z = 0;
                 return this.Position + centerRelative;
@@ -103,6 +103,7 @@ namespace FSO.LotView.Components
             dgrp = new DGRPRenderer(this.DrawGroup);
             dgrp.DynamicSpriteBaseID = obj.OBJ.DynamicSpriteBaseId;
             dgrp.NumDynamicSprites = obj.OBJ.NumDynamicSprites;
+            InterpolationOwner = this;
         }
 
         public virtual DGRP DGRP
@@ -299,6 +300,17 @@ namespace FSO.LotView.Components
                 if (blueprint != null && RenderInfo.Layer == WorldObjectRenderLayer.STATIC) blueprint.Damage.Add(new BlueprintDamage(BlueprintDamageType.OBJECT_GRAPHIC_CHANGE, TileX, TileY, Level, this));
                 DynamicCounter = 0; //keep windows and doors on the top floor on the dynamic layer.
             }
+
+            var idleFrames = InterpolationOwner.IdleFrames;
+            if (idleFrames > 0)
+            {
+                if (_IdleFramesPct > -3)
+                {
+                    _IdleFramesPct -= world.FramePerDraw / idleFrames;
+                    _WorldDirty = true;
+                }
+            }
+            else _IdleFramesPct = 0;
 
             if (HideForCutaway && Level > 0)
             {

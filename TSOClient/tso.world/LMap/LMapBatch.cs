@@ -405,7 +405,8 @@ namespace FSO.LotView.LMap
         public void DrawRoom(Room room, RoomLighting lighting, bool clear)
         {
             var size = Blueprint.Width - borderSize;
-            LightEffect.TargetRoom = (float)room.RoomID;
+            //TODO: set floor shadow map here to stop surrounding light issues
+            LightEffect.TargetRoom = (float)room.RoomID; 
             var bigBounds = new Rectangle(lighting.Bounds.X * resPerTile, lighting.Bounds.Y * resPerTile, lighting.Bounds.Width * resPerTile, lighting.Bounds.Height * resPerTile);
             bigBounds = Rectangle.Intersect(bigBounds, new Rectangle(0, 0, size * resPerTile, size * resPerTile));
             GD.RasterizerState = Scissor;

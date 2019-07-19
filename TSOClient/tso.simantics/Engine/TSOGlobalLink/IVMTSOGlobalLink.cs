@@ -58,7 +58,7 @@ namespace FSO.SimAntics.Engine.TSOTransaction
     public delegate void VMAsyncPersistIDCallback(short objectID, uint persistID);
 
     public delegate void VMAsyncInventorySaveCallback(bool success, uint objid); //todo: failure reasons
-    public delegate void VMAsyncInventoryRetrieveCallback(uint guid, byte[] data);
+    public delegate void VMAsyncInventoryRetrieveCallback(VMInventoryRestoreObject obj);
     public delegate void VMAsyncInventoryConsumeCallback(bool success, int result); //todo: failure reasons
     public delegate void VMAsyncDeleteObjectCallback(bool success); //todo: failure reasons
 

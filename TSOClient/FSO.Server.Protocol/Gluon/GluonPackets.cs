@@ -24,7 +24,8 @@ namespace FSO.Server.Protocol.Gluon
             typeof(RequestTaskResponse),
             typeof(NotifyLotRoommateChange),
             typeof(MatchmakerNotify),
-            typeof(CityNotify)
+            typeof(CityNotify),
+            typeof(TuningChanged)
         };
 
         static GluonPackets()

@@ -25,6 +25,7 @@ namespace FSO.SimAntics.Primitives
             var item = context.Caller.GetSlot(src);
             if (item != null)
             {
+                if (item is VMGameObject) item.WorldUI?.PrepareSlotInterpolation();
                 var itemTest = context.StackObject.GetSlot(dest);
                 if (itemTest == null)
                 {

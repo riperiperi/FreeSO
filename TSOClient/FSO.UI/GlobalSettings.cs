@@ -157,7 +157,7 @@ namespace FSO.Client
 
         public uint ChatColor { get; set; }
         public int ChatTTSPitch { get; set; }
-        public bool ChatOnlyEmoji { get; set; }
+        public int ChatOnlyEmoji { get; set; }
         public bool ChatShowTimestamp { get; set; }
         public float ChatSizeX { get; set; }
         public float ChatSizeY { get; set; }

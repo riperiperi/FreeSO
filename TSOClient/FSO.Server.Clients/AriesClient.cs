@@ -35,7 +35,40 @@ namespace FSO.Server.Clients
         void InputClosed(AriesClient session);
     }
 
+    public class NullIOHandler : IoHandler
+    {
+        public void ExceptionCaught(IoSession session, Exception cause)
+        {
+        }
 
+        public void InputClosed(IoSession session)
+        {
+        }
+
+        public void MessageReceived(IoSession session, object message)
+        {
+        }
+
+        public void MessageSent(IoSession session, object message)
+        {
+        }
+
+        public void SessionClosed(IoSession session)
+        {
+        }
+
+        public void SessionCreated(IoSession session)
+        {
+        }
+
+        public void SessionIdle(IoSession session, IdleStatus status)
+        {
+        }
+
+        public void SessionOpened(IoSession session)
+        {
+        }
+    }
 
     public class AriesClient : IoHandler
     {
@@ -96,7 +129,17 @@ namespace FSO.Server.Clients
 
         public void Connect(IPEndPoint target)
         {
+            if (Connector != null)
+            {
+                //old connector might still be establishing connection...
+                //we need to stop that
+                Connector.Handler = new NullIOHandler(); //don't hmu
+                //we can't cancel a mina.net connector, but we can sure as hell ~~avenge it~~ stop it from firing events.
+                //if we tried to dispose it, we'd get random disposed object exceptions because mina doesn't expect you to cancel that early.
+                Disconnect(); //if we have already established a connection, make sure it is closed.
+            }
             Connector = new AsyncSocketConnector();
+            var connector = Connector;
             Connector.ConnectTimeoutInMillis = 10000;
             //Connector.FilterChain.AddLast("logging", new LoggingFilter());
             
@@ -106,7 +149,16 @@ namespace FSO.Server.Clients
             //Connector.FilterChain.AddFirst("ssl", ssl);
 
             Connector.FilterChain.AddLast("protocol", new ProtocolCodecFilter(new AriesProtocol(Kernel)));
-            var future = Connector.Connect(target, new Action<IoSession, IConnectFuture>(OnConnect));
+            var future = Connector.Connect(target, (IoSession session, IConnectFuture future2) =>
+            {
+                if (future2.Canceled || future2.Exception != null)
+                {
+                   if (connector.Handler != null) SessionClosed(session);
+                }
+                
+                if (connector.Handler is NullIOHandler) session.Close(true);
+                else this.Session = session;
+            });
 
             Task.Run(() =>
             {

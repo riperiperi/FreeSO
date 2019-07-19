@@ -34,7 +34,8 @@ namespace FSO.Server.Protocol.Electron
             typeof(NhoodResponse),
             typeof(NhoodCandidateList),
             typeof(BulletinRequest),
-            typeof(BulletinResponse)
+            typeof(BulletinResponse),
+            typeof(GlobalTuningUpdate)
         };
 
         static ElectronPackets()

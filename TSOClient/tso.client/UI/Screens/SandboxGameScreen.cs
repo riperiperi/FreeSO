@@ -411,6 +411,8 @@ namespace FSO.Client.UI.Screens
             var recording = lotName.ToLowerInvariant().EndsWith(".fsor");
             CleanupLastWorld();
 
+            Content.Content.Get().Upgrades.LoadJSONTuning();
+
             if (FSOEnvironment.Enable3D)
             {
                 var rc = new LotView.RC.WorldRC(GameFacade.GraphicsDevice);

@@ -1,4 +1,5 @@
 ﻿using FSO.Common.DataService;
+using FSO.Common.Model;
 using FSO.Common.Serialization.Primitives;
 using FSO.Common.Utils;
 using FSO.Server.Common;
@@ -207,6 +208,23 @@ namespace FSO.Server.Servers.Lot.Domain
             return true;
         }
 
+        public void UpdateTuning(bool immediately)
+        {
+            LOG.Info("Updating tuning on lot server " + Config.Call_Sign + "...");
+            using (var da = DAFactory.Get()) {
+                var tuning = da.Tuning.All().ToList();
+                List<LotHostEntry> lots;
+                lock (Lots) lots = Lots.Values.ToList();
+                foreach (var lot in lots)
+                {
+                    var container = lot.Container;
+                    lot.InBackground(() =>
+                    {
+                        container?.UpdateTuning(tuning);
+                    });
+                }
+            }
+        }
 
         private LotHostEntry GetLot(IVoltronSession session)
         {

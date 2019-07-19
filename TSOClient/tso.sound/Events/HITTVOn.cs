@@ -230,7 +230,7 @@ namespace FSO.HIT.Events
 
         public override void Resume()
         {
-            Instance.Resume();
+            Instance?.Resume();
         }
 
         public override void Dispose()

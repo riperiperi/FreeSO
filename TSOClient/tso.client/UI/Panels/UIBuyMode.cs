@@ -25,9 +25,8 @@ using FSO.Content.Interfaces;
 
 namespace FSO.Client.UI.Panels
 {
-    public class UIBuyMode : UICachedContainer
+    public class UIBuyMode : UIAbstractCatalogPanel
     {
-        public UIImage Background;
         public Texture2D catalogBackground { get; set; }
         public Texture2D inventoryRoommateBackground { get; set; }
         public Texture2D inventoryVisitorBackground { get; set; }
@@ -76,86 +75,33 @@ namespace FSO.Client.UI.Panels
         public UIButton MapBuildingModeButton { get; set; }
         public UIButton PetsButton { get; set; }
 
-        public UICatalog Catalog;
-        public UIObjectHolder Holder;
-        public UIQueryPanel QueryPanel { get { return LotController.QueryPanel; } }
-        public UILotControl LotController;
-        private VMMultitileGroup BuyItem;
-
-        private Dictionary<UIButton, int> CategoryMap;
-        private List<UICatalogElement> CurrentCategory;
         private List<VMInventoryItem> LastInventory;
         private List<UICatalogElement> CurrentInventory;
-
-        private UILabel ObjLimitLabel;
-        private int LastObjCount = -1;
-        private bool LastDonator;
-
+        
         private bool RoomCategories = false;
         private bool Roommate = true; //if false, shows visitor inventory only.
         private int Mode = 0;
-        private int OldSelection = -1;
-        private bool UseSmall;
 
-        public UIBuyMode(UILotControl lotController) {
+        public UIBuyMode(UILotControl lotController) : base("buypanel", lotController) {
 
-            LotController = lotController;
-            Holder = LotController.ObjectHolder;
-
-            var useSmall = (FSOEnvironment.UIZoomFactor > 1f || GlobalSettings.Default.GraphicsWidth < 1024);
-            UseSmall = useSmall;
-            var script = this.RenderScript("buypanel"+(useSmall?"":"1024")+".uis");
-
-            Background = new UIImage(GetTexture(useSmall ? (ulong)0x000000D800000002 : (ulong)0x0000018300000002));
-            Background.Y = 0;
-            Background.BlockInput();
-            this.AddAt(0, Background);
-            Size = Background.Size.ToVector2();
-
-            InventoryButtonBackgroundImage = script.Create<UIImage>("InventoryButtonBackgroundImage");
+            InventoryButtonBackgroundImage = Script.Create<UIImage>("InventoryButtonBackgroundImage");
             this.AddAt(1, InventoryButtonBackgroundImage);
             
-            CatBg = script.Create<UIImage>("ProductCatalogImage");
+            CatBg = Script.Create<UIImage>("ProductCatalogImage");
             this.AddAt(2, CatBg);
 
-            InventoryCatBg = script.Create<UIImage>("InventoryCatalogRoommateImage");
+            InventoryCatBg = Script.Create<UIImage>("InventoryCatalogRoommateImage");
             this.AddAt(3, InventoryCatBg);
 
-            NonRMInventoryCatBg = script.Create<UIImage>("InventoryCatalogVisitorImage");
+            NonRMInventoryCatBg = Script.Create<UIImage>("InventoryCatalogVisitorImage");
             this.AddAt(4, NonRMInventoryCatBg);
 
-            InventoryCatalogVisitorIcon = script.Create<UIImage>("InventoryCatalogVisitorIcon");
+            InventoryCatalogVisitorIcon = Script.Create<UIImage>("InventoryCatalogVisitorIcon");
             this.AddAt(5, InventoryCatalogVisitorIcon);
 
-            Catalog = new UICatalog(useSmall ? 14 : 24);
-            Catalog.LotControl = lotController;
-            Catalog.OnSelectionChange += new CatalogSelectionChangeDelegate(Catalog_OnSelectionChange);
             Catalog.Position = new Microsoft.Xna.Framework.Vector2(275, 7);
-            this.Add(Catalog);
 
-            CategoryMap = new Dictionary<UIButton, int>
-            {
-                { SeatingButton, 12 },
-                { SurfacesButton, 13 },
-                { AppliancesButton, 14 },
-                { ElectronicsButton, 15 },
-                { SkillButton, 16 },
-                { DecorativeButton, 17 },
-                { MiscButton, 18 },
-                { LightingButton, 19 },
-                { PetsButton, 20 },
-            };
-
-            SeatingButton.OnButtonClick += ChangeCategory;
-            SurfacesButton.OnButtonClick += ChangeCategory;
-            DecorativeButton.OnButtonClick += ChangeCategory;
-            ElectronicsButton.OnButtonClick += ChangeCategory;
-            AppliancesButton.OnButtonClick += ChangeCategory;
-            SkillButton.OnButtonClick += ChangeCategory;
-            LightingButton.OnButtonClick += ChangeCategory;
-            MiscButton.OnButtonClick += ChangeCategory;
-            PetsButton.OnButtonClick += ChangeCategory;
-            MapBuildingModeButton.OnButtonClick += ChangeCategory;
+            //MapBuildingModeButton.OnButtonClick += ChangeCategory;
             InventoryButton.OnButtonClick += ChangeCategory;
 
             ProductCatalogPreviousPageButton.OnButtonClick += PreviousPage;
@@ -176,74 +122,22 @@ namespace FSO.Client.UI.Panels
 
             SetMode(0);
             SetRoomCategories(false);
-
-            Holder.OnPickup += HolderPickup;
-            Holder.OnDelete += HolderDelete;
-            Holder.OnPutDown += HolderPutDown;
-            DynamicOverlay.Add(QueryPanel);
-
-            ObjLimitLabel = new UILabel();
-            ObjLimitLabel.CaptionStyle = ObjLimitLabel.CaptionStyle.Clone();
-            ObjLimitLabel.CaptionStyle.Shadow = true;
-            ObjLimitLabel.CaptionStyle.Color = Microsoft.Xna.Framework.Color.White;
-            ObjLimitLabel.Caption = "127/250 Objects";
-            ObjLimitLabel.Y = -20;
-            ObjLimitLabel.X = Background.Width/2 - 100;
-            ObjLimitLabel.Size = new Microsoft.Xna.Framework.Vector2(200, 0);
-            ObjLimitLabel.Alignment = TextAlignment.Center;
-            DynamicOverlay.Add(ObjLimitLabel);
         }
 
-        public override void Removed()
+        public override void InitCategoryMap()
         {
-            //clean up loose ends
-            Holder.OnPickup -= HolderPickup;
-            Holder.OnDelete -= HolderDelete;
-            Holder.OnPutDown -= HolderPutDown;
-
-            if (Holder.Holding != null)
+            CategoryMap = new Dictionary<UIButton, int>
             {
-                //delete object that hasn't been placed yet
-                //TODO: all holding objects should obviously just be ghosts.
-                //Holder.Holding.Group.Delete(vm.Context);
-                Holder.ClearSelected();
-                QueryPanel.Active = false;
-            }
-            base.Removed();
-        }
-
-        private void HolderPickup(UIObjectSelection holding, UpdateState state)
-        {
-            QueryPanel.Mode = 0;
-            QueryPanel.Active = true;
-            QueryPanel.SetInfo(LotController.vm, holding.RealEnt ?? holding.Group.BaseObject, holding.IsBought);
-            QueryPanel.Tab = 1;
-        }
-        private void HolderPutDown(UIObjectSelection holding, UpdateState state)
-        {
-            if (OldSelection != -1)
-            {
-                if (!holding.IsBought && holding.InventoryPID == 0 && (state.ShiftDown)) {
-                    //place another
-                    var prevDir = holding.Dir;
-                    Catalog_OnSelectionChange(OldSelection);
-                    if (Holder.Holding != null) Holder.Holding.Dir = prevDir;
-                } else {
-                    Catalog.SetActive(OldSelection, false);
-                    OldSelection = -1;
-                }
-            }
-            QueryPanel.Active = false;
-        }
-
-        private void HolderDelete(UIObjectSelection holding, UpdateState state)
-        {
-            if (OldSelection != -1)
-            {
-                Catalog.SetActive(OldSelection, false);
-                OldSelection = -1;
-            }
-            QueryPanel.Active = false;
+                { SeatingButton, 12 },
+                { SurfacesButton, 13 },
+                { AppliancesButton, 14 },
+                { ElectronicsButton, 15 },
+                { SkillButton, 16 },
+                { DecorativeButton, 17 },
+                { MiscButton, 18 },
+                { LightingButton, 19 },
+                { PetsButton, 20 },
+            };
         }
 
         public override void Update(UpdateState state)
@@ -280,7 +174,7 @@ namespace FSO.Client.UI.Panels
 
             if (LotController.ActiveEntity != null)
             {
-                Catalog.Budget = (int)LotController.ActiveEntity.TSOState.Budget.Value;
+                Catalog.Budget = (int)LotController.Budget;
                 bool refreshInventory = false;
                 var inventory = LotController.vm.MyInventory;
                 if (LastInventory != null)
@@ -348,29 +242,9 @@ namespace FSO.Client.UI.Panels
             }
         }
 
-        void Catalog_OnSelectionChange(int selection)
+        override protected void Catalog_OnSelectionChange(int selection)
         {
-            var item = CurrentCategory[selection];
-
-            if (LotController.ActiveEntity != null && item.CalcPrice > LotController.ActiveEntity.TSOState.Budget.Value)
-            {
-                HIT.HITVM.Get().PlaySoundEvent(Model.UISounds.Error);
-                return;
-            }
-
-            if (OldSelection != -1) Catalog.SetActive(OldSelection, false);
-            Catalog.SetActive(selection, true);
-            BuyItem = LotController.vm.Context.CreateObjectInstance(item.Item.GUID, LotTilePos.OUT_OF_WORLD, Direction.NORTH, true);
-            if (BuyItem == null || BuyItem.Objects.Count == 0)
-            {
-                BuyItem = null;
-                return; //uh
-            }
-            QueryPanel.SetInfo(LotController.vm, BuyItem.Objects[0], false);
-            QueryPanel.Mode = 1;
-            QueryPanel.Tab = 0;
-            QueryPanel.Active = true;
-            Holder.SetSelected(BuyItem);
+            base.Catalog_OnSelectionChange(selection);
             if (CurrentCategory == CurrentInventory)
             {
                 if (selection < LastInventory.Count)
@@ -379,16 +253,9 @@ namespace FSO.Client.UI.Panels
                     Holder.Holding.Price = 0;
                 }
             }
-            OldSelection = selection;
         }
 
-        public void PageSlider(UIElement element)
-        {
-            var slider = (UISlider)element;
-            SetPage((int)Math.Round(slider.Value));
-        }
-
-        public void SetPage(int page)
+        public override void SetPage(int page)
         {
             bool noPrev = (page == 0);
             ProductCatalogPreviousPageButton.Disabled = noPrev;
@@ -408,32 +275,10 @@ namespace FSO.Client.UI.Panels
             InventoryCatalogVisitorSlider.Value = page;
         }
 
-        public void PreviousPage(UIElement button)
+        public override void ChangeCategory(UIElement elem)
         {
-            int page = Catalog.GetPage();
-            if (page == 0) return;
-            SetPage(page - 1);
-        }
-
-        public void NextPage(UIElement button)
-        {
-            int page = Catalog.GetPage();
-            int totalPages = Catalog.TotalPages();
-            if (page+1 == totalPages) return;
-            SetPage(page + 1);
-        }
-
-        public void ChangeCategory(UIElement elem)
-        {
-            SeatingButton.Selected = false;
-            SurfacesButton.Selected = false;
-            DecorativeButton.Selected = false;
-            ElectronicsButton.Selected = false;
-            AppliancesButton.Selected = false;
-            SkillButton.Selected = false;
-            LightingButton.Selected = false;
-            MiscButton.Selected = false;
-            PetsButton.Selected = false;
+            foreach (var btn in CategoryMap.Keys)
+                btn.Selected = false;
             InventoryButton.Selected = false;
 
             UIButton button = (UIButton)elem;
@@ -480,6 +325,7 @@ namespace FSO.Client.UI.Panels
         public void SetMode(int mode)
         {
             if (!Roommate) mode = 2;
+            QueryPanel.InInventory = mode == 2;
             CatBg.Visible = (mode == 1);
             ProductCatalogSlider.Visible = (mode == 1);
             ProductCatalogNextPageButton.Visible = (mode == 1);

@@ -192,6 +192,7 @@ namespace FSO.LotView.RC
                 if (bounds.Intersects(frustrum))
                     sub.PreDraw(device, State);
             }
+            State.UpdateInterpolation();
             if (Blueprint != null)
             {
                 foreach (var ent in Blueprint.Objects)
