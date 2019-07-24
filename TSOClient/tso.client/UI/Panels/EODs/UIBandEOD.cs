@@ -350,6 +350,7 @@ namespace FSO.Client.UI.Panels.EODs
             RemoveListeners();
             SetTip(GameFacade.Strings["UIText", "253", "20"].Replace("%s", avatarName));
             Parent.Invalidate();
+            ForceNotesButtonsState((int)UIElementState.Normal);
             PlaySound((byte)UIBANDEODSoundNames.band_note_buzz);
         }
         private void TimeoutHandler(string evt, string msg)
@@ -424,12 +425,14 @@ namespace FSO.Client.UI.Panels.EODs
         private void IntermissionHandler(string evt, byte[] serializedPayoutStrings)
         {
             RemoveListeners();
+            ForceNotesButtonsState((int)UIElementState.Normal);
             var data = SimAntics.NetPlay.EODs.Handlers.Data.VMEODGameCompDrawACardData.DeserializeStrings(serializedPayoutStrings);
             SetTip(GameFacade.Strings["UIText", "253", "13"] + "?");
             Parent.Invalidate();
             if (data != null && data.Length == 3 && Int32.TryParse(data[2], out int index))
                 UpdatePayouts(data[0], data[1], index);
             EnableIntermissionButtons();
+            DisableNoteButtons();
         }
         private void SyncTimerElapsedHandler(object source, ElapsedEventArgs args)
         {
@@ -500,9 +503,6 @@ namespace FSO.Client.UI.Panels.EODs
         private void IntermissionButtonClickedHandler(UIElement clicked)
         {
             DisableIntermissionButtons();
-            // TODO: replace 2nd useless face icon with chosen button icon
-
-            
             var index = Array.IndexOf(MiscButtonArray, clicked);
             Send("Band_Decision", new byte[] { (byte)index });
         }
@@ -563,6 +563,15 @@ namespace FSO.Client.UI.Panels.EODs
             if (DOH2 == null)
                 DOH2 = Script.Create<UIButton>("DOH2");
 
+            DOH.Tooltip = "E1(lo)";
+            RE.Tooltip = "F";
+            MI.Tooltip = "G";
+            FA.Tooltip = "A";
+            SO.Tooltip = "B";
+            LA.Tooltip = "C";
+            TI.Tooltip = "D";
+            DOH2.Tooltip = "E2(hi)";
+
             CONTINUE = MiscButtonArray[Array.LastIndexOf(MiscButtonArray, CONTINUE)];
             if (CONTINUE == null)
                 CONTINUE = Script.Create<UIButton>("CONTINUE");
@@ -581,7 +590,6 @@ namespace FSO.Client.UI.Panels.EODs
                 btnn.Position += TallTallOffset;
             ButtonBack.Position += TallTallOffset;
             
-            DOH.Tooltip = DOH.Tooltip.Replace("h","");
             Add(DOH);
             Add(RE);
             Add(MI);
@@ -589,7 +597,6 @@ namespace FSO.Client.UI.Panels.EODs
             Add(SO);
             Add(LA);
             Add(TI);
-            DOH2.Tooltip = DOH2.Tooltip.Replace("h", "");
             Add(DOH2);
             Add(BUZZ);
             Add(CONTINUE);
@@ -768,7 +775,6 @@ namespace FSO.Client.UI.Panels.EODs
 
             AnimateLevels();
             ResetPayouts();
-            //UpdatePayouts("0", "1", 0);
 
             Remove(Lobby);
 
@@ -778,6 +784,8 @@ namespace FSO.Client.UI.Panels.EODs
             Player2Wait.Visible = false;
             Player3Wait.Visible = false;
             Player4Wait.Visible = false;
+
+            ForceNotesButtonsState((int)UIElementState.Normal);
 
             EODController.ShowEODMode(new EODLiveModeOpt
             {
@@ -843,18 +851,8 @@ namespace FSO.Client.UI.Panels.EODs
         private void RemoveListeners()
         {
             foreach (var btn in NoteButtonArray)
-            {
-                try
-                {
-                    btn.OnButtonClick -= NoteButtonClickedHandler;
-                }
-                catch (Exception) { }
-            }
-            try
-            {
-                BUZZ.OnButtonClick -= NoteButtonClickedHandler;
-            }
-            catch (Exception) { }
+                btn.OnButtonClick -= NoteButtonClickedHandler;
+            BUZZ.OnButtonClick -= NoteButtonClickedHandler;
         }
         private void DisableNoteButtons()
         {
@@ -874,6 +872,7 @@ namespace FSO.Client.UI.Panels.EODs
 
         private void EnableIntermissionButtons()
         {
+            ForceNotesButtonsState((int)UIElementState.Normal);
             foreach (var btn in MiscButtonArray)
             {
                 btn.Disabled = false;
@@ -1128,11 +1127,19 @@ namespace FSO.Client.UI.Panels.EODs
 
             for (int index = 0; index < PayoutTextEdits.Length; index++)
             {
-                int payout = index * index;
-                if (index > 0 && Int32.TryParse(PayoutTextEdits[index - 1].CurrentText, out int prior))
+                int payout;
+                if (index == 0)
+                    payout = 0;
+                else if (index == 1)
+                    payout = 40;
+                else
                 {
-                    payout += prior;
+                    payout = index * index + (20 - index) * 5;
+                    if (index % 5 == 0) // bonus for milestone
+                        payout += 200;
                 }
+                if (index > 0 && Int32.TryParse(PayoutTextEdits[index - 1].CurrentText, out int prior))
+                    payout += prior;
                 PayoutTextEdits[index] = new UITextEdit()
                 {
                     X = (index % 2 == 0) ? LeftPayoutX + 60 : LeftPayoutX,

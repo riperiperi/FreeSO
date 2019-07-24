@@ -131,9 +131,11 @@ namespace FSO.SimAntics.NetPlay.EODs.Handlers
                         }
                     case VMEODBandStates.Intermission:
                         {
-                            if (UITimer == 0)
+                            if (ValidateRockOn(false))
+                                EnqueueGotoState(VMEODBandStates.Rehearsal);
+                            else if (UITimer == 0)
                             {
-                                if (ValidateRockOn())
+                                if (ValidateRockOn(true))
                                     EnqueueGotoState(VMEODBandStates.Rehearsal);
                                 else
                                     GameOver(true, null);
@@ -156,54 +158,59 @@ namespace FSO.SimAntics.NetPlay.EODs.Handlers
         }
         private void GotoState(VMEODBandStates newState)
         {
-            State = newState;
-
-            switch (State)
+            if (!Lobby.IsFull() && !newState.Equals(VMEODBandStates.Lobby))
+                EnqueueGotoState(VMEODBandStates.Lobby);
+            else
             {
-                case VMEODBandStates.Lobby:
-                    {
-                        SetTimer(-1);
-                        break;
-                    }
-                case VMEODBandStates.PreShow:
-                    {
-                        InitGame(PRESHOW_TIMER_DEFAULT);
-                        Lobby.Broadcast("Band_Show", new byte[0]);
-                        break;
-                    }
-                case VMEODBandStates.Rehearsal:
-                    {
-                        SetTimer(-1);
-                        ResetRockOn();
-                        PlayNextSequence();
-                        break;
-                    }
-                case VMEODBandStates.Performance:
-                    {
-                        NoteState = VMEODBandStates.Performance;
-                        Lobby.Broadcast("Band_Performance", new byte[0]);
-                        SetTimer(NOTE_TIMER_DEFAULT);
-                        break;
-                    }
-                case VMEODBandStates.Intermission:
-                    {
-                        // ask players if they wish to continue, and update payout string
-                        Lobby.Broadcast("Band_Intermission", GetPayoutData());
-                        SetTimer(DECISION_TIMER_DEFAULT);
-                        break;
-                    }
-                case VMEODBandStates.MinPayment:
-                    {
-                        // reduce the current song length to the closest achieved minimum
-                        CurrentSongLength -= (short)(CurrentSongLength % 5);
-                        break;
-                    }
-                case VMEODBandStates.Electric:
-                    {
-                        SetTimer(-1);
-                        Lobby.Broadcast("Band_Electric", new byte[0]);
-                        break;
-                    }
+                State = newState;
+
+                switch (State)
+                {
+                    case VMEODBandStates.Lobby:
+                        {
+                            SetTimer(-1);
+                            break;
+                        }
+                    case VMEODBandStates.PreShow:
+                        {
+                            InitGame(PRESHOW_TIMER_DEFAULT);
+                            Lobby.Broadcast("Band_Show", new byte[0]);
+                            break;
+                        }
+                    case VMEODBandStates.Rehearsal:
+                        {
+                            SetTimer(-1);
+                            ResetRockOn();
+                            PlayNextSequence();
+                            break;
+                        }
+                    case VMEODBandStates.Performance:
+                        {
+                            NoteState = VMEODBandStates.Performance;
+                            Lobby.Broadcast("Band_Performance", new byte[0]);
+                            SetTimer(NOTE_TIMER_DEFAULT);
+                            break;
+                        }
+                    case VMEODBandStates.Intermission:
+                        {
+                            // ask players if they wish to continue, and update payout string
+                            Lobby.Broadcast("Band_Intermission", GetPayoutData());
+                            SetTimer(DECISION_TIMER_DEFAULT);
+                            break;
+                        }
+                    case VMEODBandStates.MinPayment:
+                        {
+                            // reduce the current song length to the closest achieved minimum
+                            CurrentSongLength -= (short)(CurrentSongLength % 5);
+                            break;
+                        }
+                    case VMEODBandStates.Electric:
+                        {
+                            SetTimer(-1);
+                            Lobby.Broadcast("Band_Electric", new byte[0]);
+                            break;
+                        }
+                }
             }
         }
         /*
@@ -361,7 +368,16 @@ namespace FSO.SimAntics.NetPlay.EODs.Handlers
         {
             PayoutScheme = new int[MAX_SONG_LENGTH + 1];
             for (int index = 1; index < PayoutScheme.Length; index++)
-                PayoutScheme[index] = index * index + PayoutScheme[index - 1];
+            {
+                if (index == 1)
+                    PayoutScheme[1] = 40;
+                else
+                {
+                    PayoutScheme[index] = index * index + (20 - index) * 5 + PayoutScheme[index - 1];
+                    if (index % 5 == 0) // bonus for milestone
+                        PayoutScheme[index] += 200;
+                }
+            }
         }
         private void SetTimer(int newValue)
         {
@@ -408,11 +424,10 @@ namespace FSO.SimAntics.NetPlay.EODs.Handlers
             SequenceTimer.Start();
         }
 
-        private bool ValidateRockOn()
+        private bool ValidateRockOn(bool timeExpired)
         {
-            SetTimer(-1);
             int rockOnCount = 0;
-            int sellOutCount = 0;
+            int selloutCount = 0;
             foreach (var player in Lobby.Players)
             {
                 var slot = Lobby.GetSlotData(player);
@@ -420,20 +435,21 @@ namespace FSO.SimAntics.NetPlay.EODs.Handlers
                     continue;
                 if (slot.RockOn == null)
                 {
-                    // rockon is chosen for you if you never chose
-                    slot.RockOn = true;
-                    player.Send("Band_RockOn", "");
-                    rockOnCount++;
+                    if (timeExpired)
+                    {
+                        // rockon is chosen for you if you never chose
+                        slot.RockOn = true;
+                        player.Send("Band_RockOn", "");
+                        rockOnCount++;
+                    }
                 }
                 else if (slot.RockOn == true)
                     rockOnCount++;
-                else
-                    sellOutCount++;
+                else selloutCount++;
             }
-            if (sellOutCount > rockOnCount)
-                return false;
-            else // tie goes to rock on
-                return true;
+            if (selloutCount > 2)
+                SetTimer(0);
+            return rockOnCount > 1;
         }
 
         private void ResetRockOn()
