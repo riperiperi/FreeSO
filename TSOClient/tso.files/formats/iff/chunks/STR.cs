@@ -332,24 +332,51 @@ namespace FSO.Files.Formats.IFF.Chunks
         {
             using (var io = IoWriter.FromStream(stream, ByteOrder.LITTLE_ENDIAN))
             {
-                io.WriteInt16(-4);
-                io.WriteByte(20);
-
-                foreach (var set in LanguageSets)
+                if (IffFile.TargetTS1)
                 {
-                    if (set?.Strings == null)
+                    // TS1 format - null terminated string
+                    io.WriteInt16(-3);
+                    var total = (short)LanguageSets.Sum(x => x?.Strings?.Length ?? 0);
+                    io.WriteInt16(total);
+                    foreach (var set in LanguageSets)
                     {
-                        io.WriteInt16(0);
-                    }
-                    else
-                    {
-                        io.WriteUInt16((ushort)set.Strings.Length);
-
-                        foreach (var str in set.Strings)
+                        if (set?.Strings != null)
                         {
-                            io.WriteByte((byte)(str.LanguageCode - 1));
-                            io.WriteVariableLengthPascalString(str.Value);
-                            io.WriteVariableLengthPascalString(str.Comment);
+                            foreach (var str in set.Strings)
+                            {
+                                io.WriteByte((byte)(str.LanguageCode));
+                                io.WriteNullTerminatedString(str.Value);
+                                io.WriteNullTerminatedString(str.Comment);
+                            }
+                        }
+                    }
+                    for (int i=0; i<total; i++)
+                    {
+                        io.WriteByte(0xA3);
+                    }
+                }
+                else
+                {
+                    // TSO format - variable length pascal
+                    io.WriteInt16(-4);
+                    io.WriteByte(20);
+
+                    foreach (var set in LanguageSets)
+                    {
+                        if (set?.Strings == null)
+                        {
+                            io.WriteInt16(0);
+                        }
+                        else
+                        {
+                            io.WriteUInt16((ushort)set.Strings.Length);
+
+                            foreach (var str in set.Strings)
+                            {
+                                io.WriteByte((byte)(str.LanguageCode - 1));
+                                io.WriteVariableLengthPascalString(str.Value);
+                                io.WriteVariableLengthPascalString(str.Comment);
+                            }
                         }
                     }
                 }

@@ -25,6 +25,48 @@ namespace FSO.LotView.Utils
     /// </summary>
     public class _2DWorldBatch : IDisposable
     {
+        public static SurfaceFormat[] BUFFER_SURFACE_FORMATS = new SurfaceFormat[] {
+            /** Static Buffers **/
+            SurfaceFormat.Color,
+            SurfaceFormat.Color, //depth, using a 24-bit packed format
+
+            /** Object ID buffer **/
+            SurfaceFormat.Color,
+
+            /** Obj thumbnail buffers **/
+            SurfaceFormat.Color,
+            SurfaceFormat.Color, //depth, using a 24-bit packed format
+
+            /** Lot Thumbnail Buffer **/
+            SurfaceFormat.Color
+        };
+
+        public static bool[] FORMAT_ALWAYS_DEPTHSTENCIL = new bool[] {
+            /** Static Object Buffers **/
+            true,
+            false, //depth, using a 24-bit packed format
+
+            /** Object ID buffer **/
+            true,
+
+            //Thumbnail depth
+            true,
+            false,
+
+            //lot thumb
+            true,
+        };
+
+        public static readonly int NUM_2D_BUFFERS = 6;
+        public static readonly int BUFFER_STATIC = 0;
+        public static readonly int BUFFER_STATIC_DEPTH = 1;
+        public static readonly int BUFFER_OBJID = 2;
+        public static readonly int BUFFER_THUMB = 3; //used for drawing thumbnails
+        public static readonly int BUFFER_THUMB_DEPTH = 4; //used for drawing thumbnails
+        public static readonly int BUFFER_LOTTHUMB = 5;
+
+        public static readonly int SCROLL_BUFFER = 512; //resolution to add to render size for scroll reasons
+
         protected Matrix World;
         protected Matrix View;
         protected Matrix Projection;
@@ -53,8 +95,8 @@ namespace FSO.LotView.Utils
         public IndexBuffer SpriteIndices;
 
         private Vector2 Scroll;
-        private int LastWidth;
-        private int LastHeight;
+        public int LastWidth;
+        public int LastHeight;
         private int ScrollBuffer;
 
         public float PreciseZoom;

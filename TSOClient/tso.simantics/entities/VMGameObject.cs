@@ -469,7 +469,7 @@ namespace FSO.SimAntics
                     });
                     ((ObjectComponent)WorldUI).Particles.Add(part);
                     part.Owner = WorldUI;
-                    WorldUI.blueprint.Damage.Add(new BlueprintDamage(BlueprintDamageType.OBJECT_GRAPHIC_CHANGE, WorldUI.TileX, WorldUI.TileY, WorldUI.Level, WorldUI));
+                    WorldUI.blueprint.Changes.RegisterObjectChange(WorldUI as ObjectComponent);
                 }
             }
         }

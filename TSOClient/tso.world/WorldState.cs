@@ -17,6 +17,8 @@ using FSO.LotView.LMap;
 using FSO.Common.Utils;
 using FSO.Vitaboy;
 using FSO.Common;
+using FSO.LotView.Platform;
+using FSO.LotView.Model;
 
 namespace FSO.LotView
 {
@@ -27,6 +29,9 @@ namespace FSO.LotView
     {
         private World World;
         public GraphicsDevice Device;
+        public BlueprintChanges Changes; //also in Blueprint, but mirrored here for easy access
+        public IWorldPlatform Platform;
+        public CameraRenderMode CameraMode = CameraRenderMode._2D;
         public float FramePerDraw;
         public int FramesSinceLastDraw;
 
@@ -63,7 +68,11 @@ namespace FSO.LotView
             WorldSpace.SetDimensions(dim);
         }
 
-        protected WorldCamera WorldCamera;
+        public WorldCamera WorldCamera;
+        // used for culling - updated just before draw.
+        public Matrix ViewProjection;
+        public BoundingFrustum Frustum;
+        public Rectangle WorldRectangle;
 
         /// <summary>
         /// Gets the camera used by this WorldState instance.s
@@ -74,6 +83,7 @@ namespace FSO.LotView
         }
 
         public bool TempDraw; //set for OBJID mode and thumbs
+        public bool ObjectIDMode;
         public WorldSpace WorldSpace;
         public _2DWorldBatch _2D;
         public _3DWorldBatch _3D;
@@ -85,6 +95,10 @@ namespace FSO.LotView
         public bool DynamicCutaway;
         public float SimSpeed = 1f;
         public Vector3 LightingAdjust = Vector3.One;
+
+        // new objects
+        public WorldArchitecture Architecture;
+        public WorldEntities Entities;
 
         public bool ThisFrameImmediate;
 
@@ -185,7 +199,7 @@ namespace FSO.LotView
         private WorldRotation _Rotation;
         public WorldRotation Rotation {
             get { return _Rotation; }
-            set { _Rotation = value; InvalidateRotation();  }
+            set { SetRotation(value); InvalidateRotation();  }
         }
 
         public virtual WorldRotation CutRotation {
@@ -199,6 +213,34 @@ namespace FSO.LotView
         {
             get { return _Rotation; }
             set { _Rotation = value; }
+        }
+
+        private void SetRotation(WorldRotation rot)
+        {
+            var old = _Rotation;
+            _Rotation = rot;
+
+            RotationOffFrom = ((rot - old) * 90) + WorldCamera.RotateOff;
+            RotationOffFrom = ((RotationOffFrom + 540) % 360) - 180;
+            WorldCamera.RotateOff = RotationOffFrom;
+            RotationOffPct = 0;
+        }
+
+        public float RotationOffFrom;
+        public float RotationOffPct;
+
+        public void Update()
+        {
+            if (RotationOffFrom != 0) {
+                RotationOffPct += 3f / FSOEnvironment.RefreshRate;
+                if (RotationOffPct > 1)
+                {
+                    RotationOffFrom = 0;
+                    RotationOffPct = 0;
+                }
+
+                WorldCamera.RotateOff = RotationOffFrom * (float)(Math.Cos((RotationOffPct) * Math.PI) + 1) / 2;
+            }
         }
 
         /// <summary>

@@ -57,7 +57,7 @@ namespace FSO.LotView.RC
             var recacheObjects = false;
             var drawImmediate = false;
 
-            var lightChangeType = 0;
+            var lightChangeType = -99999;
 
             if (Math.Abs(Blueprint.OutsideTime - LastTimeOfDay) > 0.001f)
             {

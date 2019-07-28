@@ -99,9 +99,6 @@ void psSimple(SimpleVertex v, out float4 color: COLOR0){
 
 technique drawSimple {
    pass p0 {
-        ZEnable = false; ZWriteEnable = false;
-        CullMode = CCW;
-        
 #if SM4
         VertexShader = compile vs_4_0_level_9_1 vsSimple();
         PixelShader = compile ps_4_0_level_9_1 psSimple();
@@ -121,9 +118,6 @@ void psIDSimple(SimpleVertex v, out float4 color: COLOR0){
 
 technique drawSimpleID {
    pass p0 {
-        ZEnable = false; ZWriteEnable = false;
-        CullMode = CCW;
-
 #if SM4
         VertexShader = compile vs_4_0_level_9_1 vsSimple();
         PixelShader = compile ps_4_0_level_9_1 psIDSimple();
@@ -285,10 +279,7 @@ void psZWall(ZVertexOut v, out float4 color:COLOR, out float depth:DEPTH0) {
 
 
 technique drawZSprite {
-   pass p0 {   
-        ZEnable = true; ZWriteEnable = true;
-        CullMode = CCW;
-        
+   pass p0 {
 #if SM4
         VertexShader = compile vs_4_0_level_9_1 vsZSprite(); //_level_9_1
         PixelShader = compile ps_4_0_level_9_1 psZSprite();
@@ -303,9 +294,6 @@ technique drawZSprite {
 
 technique drawZWall {
    pass p0 {
-        ZEnable = true; ZWriteEnable = true;
-        CullMode = CCW;
-        
 #if SM4
         VertexShader = compile vs_4_0_level_9_1 vsZSprite();
         PixelShader = compile ps_4_0_level_9_1 psZWall();
@@ -425,9 +413,6 @@ void psZDepthSpriteDirLight(ZVertexOut v, out float4 color:COLOR0, out float4 de
 
 technique drawZSpriteDepthChannel {
 	pass simple {
-		ZEnable = true; ZWriteEnable = true;
-		CullMode = CCW;
-
 #if SM4
 		VertexShader = compile vs_4_0_level_9_1 vsZSprite(); //_level_9_1
 		PixelShader = compile ps_4_0_level_9_1 psZDepthSpriteSimple(); //_level_9_1
@@ -438,9 +423,6 @@ technique drawZSpriteDepthChannel {
 	}
 
     pass advLighting {
-        ZEnable = true; ZWriteEnable = true;
-        CullMode = CCW;
-        
 #if SM4
         VertexShader = compile vs_4_0_level_9_3 vsZSprite(); //_level_9_1
         PixelShader = compile ps_4_0_level_9_3 psZDepthSprite(); //_level_9_1
@@ -508,9 +490,6 @@ void psZDepthWallSimple(ZVertexOut v, out float4 color:COLOR0, out float4 depthB
 
 technique drawZWallDepthChannel {
 	pass simple {
-		ZEnable = true; ZWriteEnable = true;
-		CullMode = CCW;
-
 #if SM4
 		VertexShader = compile vs_4_0_level_9_1 vsZSprite(); //_level_9_1
 		PixelShader = compile ps_4_0_level_9_1 psZDepthWallSimple(); //_level_9_1
@@ -522,9 +501,6 @@ technique drawZWallDepthChannel {
 	}
 
     pass advLighting { 
-        ZEnable = true; ZWriteEnable = true;
-        CullMode = CCW;
-        
 #if SM4
         VertexShader = compile vs_4_0_level_9_3 vsZSprite(); //_level_9_1
         PixelShader = compile ps_4_0_level_9_3 psZDepthWall(); //_level_9_1
@@ -559,8 +535,6 @@ void psZIDSprite(ZVertexOut v, out float4 color:COLOR, out float depth:DEPTH0) {
 technique drawZSpriteOBJID {
    pass p0 {
         AlphaBlendEnable = FALSE;
-        ZEnable = true; ZWriteEnable = true;
-        CullMode = CCW;
         
 #if SM4
         VertexShader = compile vs_4_0_level_9_1 vsZSprite();
@@ -597,9 +571,6 @@ void psSimpleRestoreDepth(ZVertexOut v, out float4 color: COLOR0, out float dept
 
 technique drawSimpleRestoreDepth {
    pass p0 {
-        ZEnable = true; ZWriteEnable = true;
-        CullMode = CCW;
-
 #if SM4
         VertexShader = compile vs_4_0_level_9_1 restoreZSprite();
         PixelShader = compile ps_4_0_level_9_1 psSimpleRestoreDepth();

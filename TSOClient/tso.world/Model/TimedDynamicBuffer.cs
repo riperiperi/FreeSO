@@ -34,7 +34,7 @@ namespace FSO.LotView.Model
         {
             if (++Timer >= FSOEnvironment.RefreshRate / 2)
             {
-                CurrentRing = (CurrentRing + 1 % HalfSeconds);
+                CurrentRing = (CurrentRing + 1) % HalfSeconds;
                 var toClear = Schedule[CurrentRing];
                 var newEntry = new List<ObjectComponent>();
                 foreach (var obj in toClear)
@@ -52,6 +52,7 @@ namespace FSO.LotView.Model
                 }
                 toClear.Clear();
                 foreach (var item in newEntry) toClear.Add(item);
+                Timer = 0;
             }
             var dirty = Dirty;
             Dirty = false;
@@ -60,7 +61,10 @@ namespace FSO.LotView.Model
 
         public void RegisterObject(ObjectComponent obj)
         {
-            StaticObjects.Add(obj);
+            if (obj.RenderInfo.Layer == WorldObjectRenderLayer.STATIC)
+                StaticObjects.Add(obj);
+            else
+                EnsureDynamic(obj);
         }
 
         public void UnregisterObject(ObjectComponent obj)
@@ -77,6 +81,7 @@ namespace FSO.LotView.Model
             obj.RenderInfo.Layer = WorldObjectRenderLayer.STATIC;
             DynamicObjects.Remove(obj);
             StaticObjects.Add(obj);
+            Dirty = true;
         }
 
         public void EnsureDynamic(ObjectComponent obj)

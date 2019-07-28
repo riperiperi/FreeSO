@@ -68,7 +68,6 @@ namespace FSO.LotView.Components
         /// <summary>
         /// Position of the object in tile units
         /// </summary>
-        protected Vector3 _Position = new Vector3(0.0f, 0.0f, 0.0f);
         public override Vector3 Position
         {
             get

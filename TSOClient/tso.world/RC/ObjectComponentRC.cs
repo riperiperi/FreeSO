@@ -27,14 +27,7 @@ namespace FSO.LotView.RC
             dgrp.DynamicSpriteBaseID = obj.OBJ.DynamicSpriteBaseId;
             dgrp.NumDynamicSprites = obj.OBJ.NumDynamicSprites;
         }
-
-        public override sbyte Level
-        {
-            get { return _Level; }
-            set { _Level = value; dgrp.Level = value; }
-        }
-
-        private bool _BoundsDirty = true;
+        
         private BoundingBox _Bounds;
         public override Matrix World
         {
@@ -53,42 +46,6 @@ namespace FSO.LotView.RC
             }
         }
 
-        public override DGRP DGRP
-        {
-            get
-            {
-                return DrawGroup;
-            }
-            set
-            {
-                _BoundsDirty = true;
-                DrawGroup = value;
-                if (blueprint != null && dgrp.DGRP != value)
-                {
-                    blueprint.Damage.Add(new BlueprintDamage(BlueprintDamageType.OBJECT_GRAPHIC_CHANGE, TileX, TileY, Level, this));
-                    DynamicCounter = 0;
-                }
-                dgrp.DGRP = value;
-            }
-        }
-
-        public BoundingBox GetBounds()
-        {
-            if (_BoundsDirty || _WorldDirty)
-            {
-                var bounds = ((DGRPRendererRC)dgrp).GetBounds();
-                if (bounds == null) return new BoundingBox(); //don't cache
-                _Bounds = BoundingBox.CreateFromPoints(bounds.Value.GetCorners().Select(x => Vector3.Transform(x, World)));
-                _BoundsDirty = false;
-            }
-            return _Bounds;
-        }
-
-        public float? IntersectsBounds(Ray ray)
-        {
-            return GetBounds().Intersects(ray);
-        }
-
         public float SortDepth (Matrix vp)
         {
             if (!Visible) return 0;
@@ -100,22 +57,13 @@ namespace FSO.LotView.RC
             return Vector3.Dot(ctr, forward);
         }
 
-        public override Vector2 GetScreenPos(WorldState world)
-        {
-            var projected = Vector4.Transform(new Vector4(0, 0, 0, 1f), this.World * world.Camera.View * world.Camera.Projection);
-            if (world.Camera is WorldCamera) projected.Z = 1;
-            var res1 = new Vector2(projected.X / projected.Z, -projected.Y / projected.Z);
-            var size = PPXDepthEngine.GetWidthHeight();
-            return new Vector2((size.X / PPXDepthEngine.SSAA) * 0.5f * (res1.X + 1f), (size.Y / PPXDepthEngine.SSAA) * 0.5f * (res1.Y + 1f)); //world.WorldSpace.GetScreenFromTile(transhead) + world.WorldSpace.GetScreenOffset() + PosCenterOffsets[(int)world.Zoom - 1];
-        }
-
         public override void Draw(GraphicsDevice device, WorldState world)
         {
             //#if !DEBUG 
             if (!Visible || (!world.DrawOOB && (Position.X < -2043 && Position.Y < -2043)) || Level < 1) return;
             if (CutawayHidden) return;
             //#endif
-            var mworld = World;
+            var mworld = World3D;
             ((DGRPRendererRC)dgrp).World = mworld;
             if (this.DrawGroup != null) dgrp.Draw(world);
 
@@ -142,28 +90,6 @@ namespace FSO.LotView.RC
         public override BoundingBox GetParticleBounds()
         {
             return ((DGRPRendererRC)dgrp).GetBounds() ?? new BoundingBox();
-        }
-
-        public override void DrawLMap(GraphicsDevice device, sbyte level)
-        {
-            //#if !DEBUG 
-            if (!Visible || (Position.X < -2043 && Position.Y < -2043) || Level < 1) return;
-            //#endif
-            ((DGRPRendererRC)dgrp).World = World;
-            if (this.DrawGroup != null)
-            {
-                float yOff = 0;
-                if (this.Container != null)
-                {
-                    yOff = this.Position.Z - this.Container.Position.Z;
-                }
-                ((DGRPRendererRC)dgrp).DrawLMap(device, level, yOff);
-            }
-        }
-
-        public override void Update(GraphicsDevice device, WorldState world)
-        {
-            base.Update(device, world);
         }
     }
 }

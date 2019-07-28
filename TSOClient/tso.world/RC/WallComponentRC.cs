@@ -311,7 +311,7 @@ namespace FSO.LotView.RC
 
             var lastSideMask = false;
 
-            var xz = ((WorldStateRC)state).GetWallOffset() * 0.7f;
+            var xz = state.GetWallOffset() * 0.7f;
 
             gd.BlendState = BlendState.Opaque;
             if (!gd.RasterizerState.ScissorTestEnable) gd.RasterizerState = RasterizerState.CullCounterClockwise;

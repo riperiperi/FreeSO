@@ -114,38 +114,21 @@ namespace FSO.LotView.Utils
             }
         }
 
-        private float _RotateX = 30.0f;
+        private float _RotateOff = 315.0f;
 
         /// <summary>
-        /// Gets or sets camera's rotation along the x axis.
+        /// Gets or sets the camera's offset rotation along the y axis.
+        /// A non-zero value MUST be rendered using 3D components.
         /// </summary>
-        public float RotateX
+        public float RotateOff
         {
             get
             {
-                return _RotateX;
+                return _RotateOff;
             }
             set
             {
-                _RotateX = value;
-                m_ViewDirty = true;
-            }
-        }
-
-        private float _RotateY = 315.0f;
-
-        /// <summary>
-        /// Gets or sets the camera's rotation along the y axis.
-        /// </summary>
-        public float RotateY
-        {
-            get
-            {
-                return _RotateY;
-            }
-            set
-            {
-                _RotateY = value;
+                _RotateOff = value;
                 m_ViewDirty = true;
             }
         }
@@ -223,6 +206,7 @@ namespace FSO.LotView.Utils
                     rotationY = 45.0f;
                     break;
             }
+            rotationY += _RotateOff;
 
             var view = Matrix.Identity;
             view *= Matrix.CreateRotationY(MathHelper.ToRadians(rotationY));
@@ -233,7 +217,6 @@ namespace FSO.LotView.Utils
 
         protected override void CalculateView()
         {
-
             var centerX = CenterTile.X * WorldSpace.WorldUnitsPerTile;
             var centerY = CenterTile.Y * WorldSpace.WorldUnitsPerTile;
             var size = WorldSize * WorldSpace.WorldUnitsPerTile;

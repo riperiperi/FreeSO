@@ -16,13 +16,13 @@ namespace FSO.LotView.Platform
 {
     public class WorldPlatform3D : IWorldPlatform
     {
-        public Blueprint Blueprint;
+        public Blueprint bp;
         public RenderTarget2D LotThumbTarget;
         public RenderTarget2D ObjThumbTarget;
 
         public WorldPlatform3D(Blueprint bp)
         {
-            this.Blueprint = bp;
+            this.bp = bp;
         }
 
         public void Dispose()
@@ -36,7 +36,7 @@ namespace FSO.LotView.Platform
             var oldZoom = state.Zoom;
             var oldRotation = state.Rotation;
             var oldLevel = state.Level;
-            var oldCutaway = Blueprint.Cutaway;
+            var oldCutaway = bp.Cutaway;
             ((WorldStateRC)state).Use2DCam = true;
             var wCam = (WorldCamera)state.Camera;
             var oldViewDimensions = wCam.ViewDimensions;
@@ -46,20 +46,20 @@ namespace FSO.LotView.Platform
             //full invalidation because we must recalculate all object sprites. slow but necessary!
             state.Zoom = WorldZoom.Far;
             state.Rotation = WorldRotation.TopLeft;
-            state.Level = Blueprint.Stories;
+            state.Level = bp.Stories;
             var ts1 = Content.Content.Get().TS1;
             state.PreciseZoom = ts1 ? (1 / 2f) : (1 / 4f);
-            var size = ts1 ? (Blueprint.Width * 16) : (576);
+            var size = ts1 ? (bp.Width * 16) : (576);
             state._2D.PreciseZoom = state.PreciseZoom;
             state.WorldSpace.Invalidate();
             state.InvalidateCamera();
 
             var oldCenter = state.CenterTile;
-            state.CenterTile = Blueprint.GetThumbCenterTile(state);
+            state.CenterTile = bp.GetThumbCenterTile(state);
             state.CenterTile -= state.WorldSpace.GetTileFromScreen(new Vector2((size - state.WorldSpace.WorldPxWidth) / state.PreciseZoom, (size - state.WorldSpace.WorldPxHeight) / state.PreciseZoom) / 2);
             var pxOffset = -state.WorldSpace.GetScreenOffset();
             state.TempDraw = true;
-            Blueprint.Cutaway = new bool[Blueprint.Cutaway.Length];
+            bp.Cutaway = new bool[bp.Cutaway.Length];
 
 
             state.ClearLighting(false);
@@ -75,14 +75,14 @@ namespace FSO.LotView.Platform
 
             state._2D.ResetMatrices(size, size);
 
-            if (Blueprint.FineArea != null) Blueprint.FloorGeom.BuildableReset(gd, Blueprint.FineArea);
-            else Blueprint.FloorGeom.SliceReset(gd, new Rectangle(6, 6, Blueprint.Width - 13, Blueprint.Height - 13));
+            if (bp.FineArea != null) bp.FloorGeom.BuildableReset(gd, bp.FineArea);
+            else bp.FloorGeom.SliceReset(gd, new Rectangle(6, 6, bp.Width - 13, bp.Height - 13));
             Blueprint.SetLightColor(WorldContent.GrassEffect, Color.White, Color.White * 0.75f);
             Blueprint.SetLightColor(WorldContent.RCObject, Color.White, Color.White * 0.75f);
             var build = state.BuildMode;
             state.SilentBuildMode = 0;
-            Blueprint.Terrain.Draw(gd, state);
-            Blueprint.Terrain.DrawMask(gd, state, state.Camera.View, state.Camera.Projection);
+            bp.Terrain.Draw(gd, state);
+            bp.Terrain.DrawMask(gd, state, state.Camera.View, state.Camera.Projection);
             state.SilentBuildMode = build;
 
             var effect = WorldContent.RCObject;
@@ -91,36 +91,36 @@ namespace FSO.LotView.Platform
             var vp = view * state.Camera.Projection;
             effect.ViewProjection = vp;
 
-            var cuts = Blueprint.Cutaway;
-            Blueprint.Cutaway = new bool[cuts.Length];
-            Blueprint.WCRC?.Generate(gd, state, false);
-            Blueprint.WCRC?.Draw(gd, state);
-            Blueprint.Cutaway = cuts;
-            Blueprint.WCRC?.Generate(gd, state, false);
+            var cuts = bp.Cutaway;
+            bp.Cutaway = new bool[cuts.Length];
+            bp.WCRC?.Generate(gd, state, false);
+            bp.WCRC?.Draw(gd, state);
+            bp.Cutaway = cuts;
+            bp.WCRC?.Generate(gd, state, false);
 
             gd.BlendState = BlendState.NonPremultiplied;
             gd.RasterizerState = RasterizerState.CullNone;
 
             effect.SetTechnique(RCObjectTechniques.Draw);
             var frustrum = new BoundingFrustum(vp);
-            var objs = Blueprint.Objects.OrderBy(x => ((ObjectComponentRC)x).SortDepth(view));
-            var fine = Blueprint.FineArea;
+            var objs = bp.Objects.OrderBy(x => ((ObjectComponentRC)x).SortDepth(view));
+            var fine = bp.FineArea;
             foreach (var obj in objs)
             {
                 if (fine != null && (
                     obj.Position.X < 0 ||
-                    obj.Position.X >= Blueprint.Width ||
+                    obj.Position.X >= bp.Width ||
                     obj.Position.Y < 0 ||
-                    obj.Position.Y >= Blueprint.Width || !fine[(int)obj.Position.X + Blueprint.Width * (int)obj.Position.Y])) continue;
+                    obj.Position.Y >= bp.Width || !fine[(int)obj.Position.X + bp.Width * (int)obj.Position.Y])) continue;
                 obj.Draw(gd, state);
             }
             rooflessCallback?.Invoke(LotThumbTarget);
-            Blueprint.RoofComp.Draw(gd, state);
+            bp.RoofComp.Draw(gd, state);
 
             gd.SetRenderTarget(null);
 
-            Blueprint.Damage.Add(new BlueprintDamage(BlueprintDamageType.LIGHTING_CHANGED));
-            Blueprint.Damage.Add(new BlueprintDamage(BlueprintDamageType.FLOOR_CHANGED));
+            bp.Changes.SetFlag(BlueprintGlobalChanges.LIGHTING_CHANGED);
+            bp.Changes.SetFlag(BlueprintGlobalChanges.FLOOR_CHANGED);
             //return things to normal
             //state.PrepareLighting();
             state.OutsideColor = lastLight;
@@ -134,7 +134,7 @@ namespace FSO.LotView.Platform
             state.Zoom = oldZoom;
             state.Rotation = oldRotation;
             state.Level = oldLevel;
-            Blueprint.Cutaway = oldCutaway;
+            bp.Cutaway = oldCutaway;
 
             ((WorldStateRC)state).Use2DCam = false;
 
@@ -155,7 +155,7 @@ namespace FSO.LotView.Platform
             ray.Direction.Normalize();
             short bestObj = 0;
             float bestDistance = float.MaxValue;
-            foreach (var obj in Blueprint.Objects)
+            foreach (var obj in bp.Objects)
             {
                 if (obj.Level != state.Level || !obj.Visible || obj.CutawayHidden) continue;
                 var objR = (ObjectComponentRC)obj;
@@ -168,7 +168,7 @@ namespace FSO.LotView.Platform
                 }
             }
 
-            foreach (var sim in Blueprint.Avatars)
+            foreach (var sim in bp.Avatars)
             {
                 if (!sim.Visible) continue;
                 var pos = sim.GetPelvisPosition() * 3;
@@ -276,7 +276,7 @@ namespace FSO.LotView.Platform
             if (bounds.Width + bounds.X > 1024) bounds.Width = 1024 - bounds.X;
             if (bounds.Height + bounds.Y > 1024) bounds.Height = 1024 - bounds.Y;
 
-            Blueprint.Damage.Add(new BlueprintDamage(BlueprintDamageType.LIGHTING_CHANGED));
+            bp.Changes.SetFlag(BlueprintGlobalChanges.LIGHTING_CHANGED);
 
             //return things to normal
             state.DrawOOB = false;
@@ -292,9 +292,9 @@ namespace FSO.LotView.Platform
             return dec;
         }
 
-        public void RecacheWalls()
+        public void RecacheWalls(GraphicsDevice gd, WorldState state, bool cutawayOnly)
         {
-            throw new NotImplementedException();
+            bp.WCRC?.Generate(gd, state, cutawayOnly);
         }
     }
 }

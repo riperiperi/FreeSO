@@ -84,20 +84,41 @@ namespace FSO.Files.Formats.IFF.Chunks
         {
             using (var io = IoWriter.FromStream(stream, ByteOrder.LITTLE_ENDIAN))
             {
-                io.WriteUInt16(0x8003);
-                io.WriteByte(Type);
-                io.WriteByte(Args);
-                io.WriteByte((byte)Locals);
-                io.WriteBytes(new byte[] { 0, 0 });
-                io.WriteUInt16(Flags);
-                io.WriteUInt32((ushort)Instructions.Length);
+                if (IffFile.TargetTS1)
+                { //version 0x8002
+                    io.WriteUInt16(0x8002);
+                    io.WriteUInt16((ushort)Instructions.Length);
+                    io.WriteByte(Type);
+                    io.WriteByte(Args);
+                    io.WriteUInt16(Locals);
+                    io.WriteUInt16(Flags);
+                    io.WriteBytes(new byte[] { 0, 0 });
 
-                foreach(var inst in Instructions)
+                    foreach (var inst in Instructions)
+                    {
+                        io.WriteUInt16(inst.Opcode);
+                        io.WriteByte(inst.TruePointer);
+                        io.WriteByte(inst.FalsePointer);
+                        io.WriteBytes(inst.Operand);
+                    }
+                }
+                else
                 {
-                    io.WriteUInt16(inst.Opcode);
-                    io.WriteByte(inst.TruePointer);
-                    io.WriteByte(inst.FalsePointer);
-                    io.WriteBytes(inst.Operand);
+                    io.WriteUInt16(0x8003);
+                    io.WriteByte(Type);
+                    io.WriteByte(Args);
+                    io.WriteByte((byte)Locals);
+                    io.WriteBytes(new byte[] { 0, 0 });
+                    io.WriteUInt16(Flags);
+                    io.WriteUInt32((ushort)Instructions.Length);
+
+                    foreach (var inst in Instructions)
+                    {
+                        io.WriteUInt16(inst.Opcode);
+                        io.WriteByte(inst.TruePointer);
+                        io.WriteByte(inst.FalsePointer);
+                        io.WriteBytes(inst.Operand);
+                    }
                 }
             }
             return true;

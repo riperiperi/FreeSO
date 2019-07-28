@@ -28,16 +28,29 @@ namespace FSO.LotView.RC
         {
             if (Blueprint == null) return;
             Blueprint.Terrain.SubworldOff = GlobalPosition * 3;
+            Blueprint.OutsideTime = state.Light?.Blueprint?.OutsideTime ?? 0.5f;
+            Blueprint.Changes.PreDraw(gd, State);
+
+            /**
+             * This is a little bit different from a normal 2d world. All objects are part of the static 
+             * buffer, and they are redrawn into the parent world's scroll buffers.
+             * We use the same BlueprintChanges for simplicity, though after load it won't really change. (and static/dynamic distinction is ignored)
+             */
+
+            if (Blueprint.Changes.UpdateColor)
+            {
+                State.OutsideColor = state.OutsideColor;
+                Blueprint.OutsideColor = state.OutsideColor;
+            }
+            State.LightingAdjust = state.OutsideColor.ToVector3() / State.OutsideColor.ToVector3();
+
+            /*
+
             var damage = Blueprint.Damage;
             var oldLevel = state.Level;
             var oldBuild = state.BuildMode;
             state.SilentLevel = State.Level;
             state.SilentBuildMode = 0;
-
-            /**
-             * This is a little bit different from a normal 2d world. All objects are part of the static 
-             * buffer, and they are redrawn into the parent world's scroll buffers.
-             */
 
             var lightChangeType = 0;
 
@@ -134,6 +147,7 @@ namespace FSO.LotView.RC
 
             state.SilentBuildMode = oldBuild;
             state.SilentLevel = oldLevel;
+            */
         }
 
         public override void DrawArch(GraphicsDevice gd, WorldState parentState)

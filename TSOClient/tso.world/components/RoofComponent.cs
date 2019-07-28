@@ -37,7 +37,7 @@ namespace FSO.LotView.Components
         {
             RoofStyle = style;
             RoofPitch = pitch;
-            blueprint.Damage.Add(new BlueprintDamage(BlueprintDamageType.ROOF_STYLE_CHANGED, 0, 0, 1));
+            blueprint.Changes.SetFlag(BlueprintGlobalChanges.ROOF_STYLE_CHANGED);
         }
 
         public RoofComponent(Blueprint bp)

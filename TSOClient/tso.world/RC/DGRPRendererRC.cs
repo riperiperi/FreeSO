@@ -11,115 +11,26 @@ using Microsoft.Xna.Framework.Graphics;
 using FSO.Common.Rendering;
 using FSO.Common.Utils;
 using FSO.LotView.Effects;
+using FSO.LotView.Model;
 
 namespace FSO.LotView.RC
 {
     public class DGRPRendererRC : DGRPRenderer
     {
         private DGRP3DMesh Mesh;
-        public OBJD Source;
-        public Matrix World;
 
-        public DGRPRendererRC(DGRP group, OBJD source) : base(group)
+        public DGRPRendererRC(DGRP group, OBJD source) : base(group, source)
         {
-            Source = source;
+
         }
-
-        public BoundingBox? GetBounds()
-        {
-            if (_Dirty && DrawGroup != null)
-            {
-                Mesh = Content.Content.Get().RCMeshes.Get(DrawGroup, Source);
-                _Dirty = false;
-            }
-            return Mesh?.Bounds;
-        }
-
-        //depth clear mask
-        //how it works:
-        //pass 1: draw mask to stencil 1 with normal depth rules. no depth write.
-        //pass 2: draw mask where stencil 1 exists with max far depth. depth write override, stencil clear.
-        //pass 3: draw object normally
-
-        public static DepthStencilState DepthClear1 = new DepthStencilState()
-        {
-            StencilEnable = true,
-            StencilFunction = CompareFunction.Always,
-
-            TwoSidedStencilMode = true,
-
-            CounterClockwiseStencilFail = StencilOperation.Keep,
-            CounterClockwiseStencilPass = StencilOperation.Replace,
-            CounterClockwiseStencilDepthBufferFail = StencilOperation.Keep,
-
-            StencilDepthBufferFail = StencilOperation.Keep,
-            StencilPass = StencilOperation.Zero,
-            StencilFail = StencilOperation.Keep,
-
-            ReferenceStencil = 1,
-            DepthBufferWriteEnable = true
-        };
-
-        public static DepthStencilState DepthClear2 = new DepthStencilState()
-        {
-            StencilEnable = true,
-            StencilFunction = CompareFunction.Equal,
-            StencilFail = StencilOperation.Keep,
-            StencilPass = StencilOperation.Zero,
-            StencilDepthBufferFail = StencilOperation.Zero,
-            ReferenceStencil = 1,
-            DepthBufferWriteEnable = true,
-            DepthBufferFunction = CompareFunction.Always
-        };
-
-        public static DepthStencilState DepthClear2Strict = new DepthStencilState()
-        {
-            StencilEnable = true,
-            StencilFunction = CompareFunction.Equal,
-            StencilFail = StencilOperation.Keep,
-            StencilPass = StencilOperation.Keep,
-            StencilDepthBufferFail = StencilOperation.Keep,
-            ReferenceStencil = 1,
-            DepthBufferWriteEnable = true,
-            DepthBufferFunction = CompareFunction.Always
-        };
-
-
-        public static DepthStencilState Portal = new DepthStencilState()
-        {
-            StencilEnable = true,
-            StencilFunction = CompareFunction.Equal,
-            StencilFail = StencilOperation.Keep,
-            StencilPass = StencilOperation.Keep,
-            StencilDepthBufferFail = StencilOperation.Keep,
-            ReferenceStencil = 1,
-            DepthBufferWriteEnable = true,
-        };
-
-        public static DepthStencilState StencilClearOnly = new DepthStencilState()
-        {
-            StencilEnable = true,
-            StencilFunction = CompareFunction.Equal,
-            StencilFail = StencilOperation.Keep,
-            StencilPass = StencilOperation.Zero,
-            StencilDepthBufferFail = StencilOperation.Keep,
-            ReferenceStencil = 1,
-            DepthBufferWriteEnable = false,
-            DepthBufferFunction = CompareFunction.Always
-        };
-
-        public static BlendState NoColor = new BlendState()
-        {
-            ColorWriteChannels = ColorWriteChannels.None
-        };
 
         public override void Draw(WorldState world)
         {
             if (DrawGroup == null) return;
-            if (_Dirty)
+            if (_Dirty.HasFlag(ComponentRenderMode._3D))
             {
                 Mesh = Content.Content.Get().RCMeshes.Get(DrawGroup, Source);
-                _Dirty = false;
+                _Dirty &= ~ComponentRenderMode._3D;
             }
 
             //immedately draw the mesh.
@@ -208,56 +119,6 @@ namespace FSO.LotView.RC
                 effect.SetTechnique(RCObjectTechniques.Draw);
             }
             if (Room == 65533) effect.SetTechnique(RCObjectTechniques.Draw);
-        }
-
-        public void DrawLMap(GraphicsDevice device, sbyte level, float yOff)
-        {
-            if (DrawGroup == null) return;
-            if (_Dirty)
-            {
-                Mesh = Content.Content.Get().RCMeshes.Get(DrawGroup, Source);
-                _Dirty = false;
-            }
-
-            if (Mesh.MaskType == DGRP3DMaskType.Portal) return;
-            //immedately draw the mesh.
-            var effect = WorldContent.RCObject;
-
-            var mat = World;
-            mat.M42 = ((Level-level) -1)*2.95f + yOff; //set y translation to 0
-            effect.World = mat;
-
-            int i = 0;
-            foreach (var spr in Mesh.Geoms)
-            {
-                if (i == 0 || (((i - 1) > 63) ? ((DynamicSpriteFlags2 & ((ulong)0x1 << ((i - 1) - 64))) > 0) :
-                    ((DynamicSpriteFlags & ((ulong)0x1 << (i - 1))) > 0)))
-                {
-                    foreach (var geom in spr.Values)
-                    {
-                        if (geom.PrimCount == 0) continue;
-                        foreach (var pass in effect.CurrentTechnique.Passes)
-                        {
-                            pass.Apply();
-                            if (!geom.Rendered) continue;
-                            device.Indices = geom.Indices;
-                            device.SetVertexBuffer(geom.Verts);
-
-                            device.DrawIndexedPrimitives(PrimitiveType.TriangleList, 0, 0, geom.PrimCount);
-                        }
-                    }
-                }
-                i++;
-            }
-        }
-
-        public override void Preload(WorldState world)
-        {
-            if (_Dirty)
-            {
-                Mesh = Content.Content.Get().RCMeshes.Get(DrawGroup, Source);
-                _Dirty = false;
-            }
         }
     }
 }

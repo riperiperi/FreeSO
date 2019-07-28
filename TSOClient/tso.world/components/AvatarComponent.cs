@@ -118,8 +118,6 @@ namespace FSO.LotView.Components
             var projected = Vector4.Transform(new Vector4(headpos, 1), Matrix.CreateRotationY((float)(Math.PI - RadianDirection)) * this.World * world.Camera.View * world.Camera.Projection);
             if (world.Camera is WorldCamera) projected.Z = 1;
             var res1 = new Vector2(projected.X / projected.Z, -projected.Y / projected.Z);
-            //res1.X /= PPXDepthEngine.SSAA;
-            //res1.Y /= PPXDepthEngine.SSAA;
             var size = PPXDepthEngine.GetWidthHeight();
             return new Vector2((size.X / PPXDepthEngine.SSAA) * 0.5f * (res1.X + 1f), (size.Y / PPXDepthEngine.SSAA) * 0.5f * (res1.Y + 1f)); //world.WorldSpace.GetScreenFromTile(transhead) + world.WorldSpace.GetScreenOffset() + PosCenterOffsets[(int)world.Zoom - 1];
         }
@@ -154,6 +152,37 @@ namespace FSO.LotView.Components
             return Vector3.Transform(new Vector3(headpos.X, headpos.Z, headpos.Y), Matrix.CreateRotationZ((float)(RadianDirection + Math.PI)));
         }
 
+        private Vector4 PowColorVec(Vector4 vec, float pow)
+        {
+            vec.X = (float)Math.Pow(vec.X, pow);
+            vec.Y = (float)Math.Pow(vec.Y, pow);
+            vec.Z = (float)Math.Pow(vec.Z, pow);
+
+            return vec;
+        }
+
+        public void DrawAvatarMesh(GraphicsDevice device, WorldState state, Matrix world, Color baseCol)
+        {
+            var effect = WorldContent.AvatarEffect;
+            var technique = effect.CurrentTechnique;
+            var room = (Room > 65530 || Room == 0) ? Room : blueprint.Rooms[Room].Base;
+            foreach (var pass in technique.Passes)
+            {
+                if (state.ObjectIDMode) effect.Parameters["ObjectID"].SetValue(ObjectID / 65535f);
+                effect.Parameters["Level"].SetValue(ALevel + 0.0001f);
+                var roomLights = blueprint?.RoomColors;
+                if (roomLights != null)
+                {
+                    var col = ((WorldConfig.Current.AdvancedLighting) ? new Vector4(1) : PowColorVec(roomLights[room].ToVector4(), 1 / 2.2f)) * baseCol.ToVector4();
+                    effect.Parameters["AmbientLight"].SetValue(col);
+                }
+                effect.Parameters["World"].SetValue(world);
+                pass.Apply();
+
+                Avatar.DrawGeometry(device, effect);
+            }
+        }
+
         public override void Draw(GraphicsDevice device, WorldState world)
         {
             var pos = Position;
@@ -174,7 +203,8 @@ namespace FSO.LotView.Components
                 Avatar.LightPositions = (WorldConfig.Current.AdvancedLighting)?CloseLightPositions(Position):null;
                 var newWorld = Matrix.CreateRotationY((float)(Math.PI - RadianDirection)) * this.World;
                 if (Scale != 1f) newWorld = Matrix.CreateScale(Scale) * newWorld;
-                world._3D.DrawMesh(newWorld, Avatar, (short)ObjectID, (Room>65530 || Room == 0)?Room:blueprint.Rooms[Room].Base, col, ALevel); 
+                DrawAvatarMesh(device, world, newWorld, col);
+                //world._3D.DrawMesh(newWorld, Avatar, (short)ObjectID, (Room>65530 || Room == 0)?Room:blueprint.Rooms[Room].Base, col, ALevel); 
             }
 
             if (Headline != null && !Headline.IsDisposed)

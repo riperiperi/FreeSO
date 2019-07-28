@@ -62,63 +62,44 @@ namespace FSO.LotView
     public class WorldArchitecture
     {
         public Blueprint Blueprint;
+        public WorldArchitecture(Blueprint blueprint)
+        {
+            Blueprint = blueprint;
+        }
 
-        public void Predraw2D(GraphicsDevice gd, WorldState state)
+        public void StaticDraw(GraphicsDevice gd, WorldState state, Vector2 pxOffset)
         {
             var _2d = state._2D;
             var changes = Blueprint.Changes;
-            if (recacheWalls || recacheCutaway)
-            {
-                _2d.Pause();
-                _2d.Resume(); //clear the sprite buffer before we begin drawing what we're going to cache
-                Blueprint.WallComp.Draw(gd, state);
-                ClearDrawBuffer(StaticWallCache);
-                state.PrepareLighting();
-                _2d.End(StaticWallCache, true);
-            }
-
-            if (recacheFloors)
-            {
-                //TODO: replace with partial update
-                Blueprint.FloorGeom.FullReset(gd, state.BuildMode > 1);
-            }
-
-            if (changes.StaticSurfaceDirty)
-            {
-                //draw wall and floors to static buffer
-
-            }
+            //draw wall and floors to static buffer
+            DrawFloorBuf(gd, state);
+            DrawWallBuf(gd, state, pxOffset);
+            //if (false)
+            //{
+                foreach (var sub in Blueprint.SubWorlds) sub.SubDraw(gd, state, (pxOffsetSub) => { sub.Architecture.StaticDraw(gd, state, pxOffsetSub); });
+            //}
         }
 
         public void Draw2D(GraphicsDevice gd, WorldState state)
         {
-            var _2d = state._2D;
-            /**
-             * Draw static layers
-             */
-            _2d.OffsetPixel(Vector2.Zero);
-            _2d.SetScroll(new Vector2());
-
             var pxOffset = -state.WorldSpace.GetScreenOffset();
-            var tileOffset = state.CenterTile;
-
-            if (state.ThisFrameImmediate)
+            var changes = Blueprint.Changes;
+            if (changes.DrawImmediate)
             {
                 DrawFloorBuf(gd, state);
                 DrawWallBuf(gd, state, pxOffset);
+                foreach (var sub in Blueprint.SubWorlds) sub.SubDraw(gd, state, (pxOffsetSub) => { sub.Architecture.StaticDraw(gd, state, pxOffsetSub); });
             }
-            else
-            {
-                _2d.SetScroll(new Vector2());
-                _2d.Begin(state.Camera);
-                state._2D.PreciseZoom = 1f;
-                if (StaticSurface != null)
-                {
-                    _2d.DrawScrollBuffer(StaticSurface, pxOffset, new Vector3(tileOffset, 0), state);
-                    _2d.Pause();
-                    _2d.Resume();
-                }
-                state._2D.PreciseZoom = state.PreciseZoom;
+
+            if (state.CameraMode > CameraRenderMode._2D) { 
+                var effect = WorldContent.RCObject;
+                gd.BlendState = BlendState.NonPremultiplied;
+                var view = state.Camera.View;
+                var vp = view * state.Camera.Projection;
+                effect.ViewProjection = vp;
+
+                if (Blueprint.WCRC != null) Blueprint.WCRC.Draw(gd, state);
+                if (state.DrawRoofs) Blueprint.RoofComp.Draw(gd, state);
             }
         }
 
@@ -129,14 +110,17 @@ namespace FSO.LotView
                 Blueprint.Terrain.DepthMode = state._2D.OutputDepth;
                 Blueprint.Terrain.Draw(gd, state);
             }
-            foreach (var sub in Blueprint.SubWorlds) sub.DrawArch(gd, state);
+            //foreach (var sub in Blueprint.SubWorlds) sub.DrawArch(gd, state);
         }
 
         private void DrawWallBuf(GraphicsDevice gd, WorldState state, Vector2 pxOffset)
         {
+            if (Blueprint.WallCache2D == null || state.CameraMode > CameraRenderMode._2D) return;
             var _2d = state._2D;
             _2d.SetScroll(pxOffset);
-            _2d.RenderCache(StaticWallCache);
+            _2d.RenderCache(Blueprint.WallCache2D);
+            _2d.Pause();
+            _2d.Resume();
         }
     }
 }

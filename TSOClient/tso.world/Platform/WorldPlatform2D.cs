@@ -61,7 +61,7 @@ namespace FSO.LotView.Platform
             var lastLight = state.OutsideColor;
             state.OutsideColor = Color.White;
             state._2D.OBJIDMode = false;
-            using (var buffer = state._2D.WithBuffer(BUFFER_LOTTHUMB, ref bufferTexture))
+            using (var buffer = state._2D.WithBuffer(_2DWorldBatch.BUFFER_LOTTHUMB, ref bufferTexture))
             {
                 _2d.SetScroll(pxOffset);
                 while (buffer.NextPass())
@@ -90,8 +90,8 @@ namespace FSO.LotView.Platform
 
             }
 
-            bp.Damage.Add(new BlueprintDamage(BlueprintDamageType.LIGHTING_CHANGED));
-            bp.Damage.Add(new BlueprintDamage(BlueprintDamageType.FLOOR_CHANGED));
+            bp.Changes.SetFlag(BlueprintGlobalChanges.LIGHTING_CHANGED);
+            bp.Changes.SetFlag(BlueprintGlobalChanges.FLOOR_CHANGED);
             //return things to normal
             //state.PrepareLighting();
             state.OutsideColor = lastLight;
@@ -121,12 +121,13 @@ namespace FSO.LotView.Platform
             var _2d = state._2D;
             Promise<Texture2D> bufferTexture = null;
 
-            var worldBounds = new Rectangle((-pxOffset).ToPoint(), new Point(1, 1));
+            state.WorldRectangle = new Rectangle((-pxOffset).ToPoint(), new Point(1, 1));
 
             state.TempDraw = true;
+            state.ObjectIDMode = true;
             state._2D.OBJIDMode = true;
             state._3D.OBJIDMode = true;
-            using (var buffer = _2d.WithBuffer(BUFFER_OBJID, ref bufferTexture))
+            using (var buffer = _2d.WithBuffer(_2DWorldBatch.BUFFER_OBJID, ref bufferTexture))
             {
                 _2d.SetScroll(-pxOffset);
 
@@ -136,28 +137,28 @@ namespace FSO.LotView.Platform
                     foreach (var obj in bp.Objects)
                     {
                         var tilePosition = obj.Position;
-
-                        if (obj.Level != state.Level) continue;
-
-                        var oPx = state.WorldSpace.GetScreenFromTile(tilePosition);
-                        obj.ValidateSprite(state);
-                        var offBound = new Rectangle(obj.Bounding.Location + oPx.ToPoint(), obj.Bounding.Size);
-                        if (!offBound.Intersects(worldBounds)) continue;
+                        if (obj.Level != state.Level || !obj.DoDraw(state)) continue;
                         obj.DrawImmediate(gd, state);
                     }
                     _2d.EndImmediate();
 
-                    state._3D.Begin(gd);
+                    //state._3D.Begin(gd);
+                    var effect = WorldContent.AvatarEffect;
+                    effect.CurrentTechnique = WorldContent.AvatarEffect.Techniques[1];
+                    effect.Parameters["View"].SetValue(state.Camera.View);
+                    effect.Parameters["Projection"].SetValue(state.Camera.Projection);
+
                     foreach (var avatar in bp.Avatars)
                     {
                         _2d.OffsetPixel(state.WorldSpace.GetScreenFromTile(avatar.Position));
                         _2d.OffsetTile(avatar.Position);
                         avatar.Draw(gd, state);
                     }
-                    state._3D.End();
+                    //state._3D.End();
                 }
 
             }
+            state.ObjectIDMode = false;
             state._3D.OBJIDMode = false;
             state._2D.OBJIDMode = false;
             state.TempDraw = false;
@@ -204,7 +205,7 @@ namespace FSO.LotView.Platform
             //Blueprint.SetLightColor(WorldContent.GrassEffect, Color.White, Color.White);
             //Blueprint.SetLightColor(Vitaboy.Avatar.Effect, Color.White, Color.White);
 
-            using (var buffer = state._2D.WithBuffer(BUFFER_THUMB, ref bufferTexture, BUFFER_THUMB_DEPTH, ref depthTexture))
+            using (var buffer = state._2D.WithBuffer(_2DWorldBatch.BUFFER_THUMB, ref bufferTexture, _2DWorldBatch.BUFFER_THUMB_DEPTH, ref depthTexture))
             {
                 _2d.SetScroll(new Vector2());
                 while (buffer.NextPass())
@@ -231,9 +232,9 @@ namespace FSO.LotView.Platform
 
                         var oPx = state.WorldSpace.GetScreenFromTile(tilePosition) + pxOffset;
                         obj.ValidateSprite(state);
-                        var offBound = new Rectangle(obj.Bounding.Location + oPx.ToPoint(), obj.Bounding.Size);
+                        var offBound = obj.Bounding; // new Rectangle(obj.Bounding.Location + oPx.ToPoint(), obj.Bounding.Size);
 
-                        if (obj.Bounding.Location.X != int.MaxValue)
+                        if (offBound.Location.X != int.MaxValue)
                         {
                             if (i == 0) bounds = offBound;
                             else bounds = Rectangle.Union(offBound, bounds);
@@ -278,9 +279,9 @@ namespace FSO.LotView.Platform
             _2d.Pause();
             _2d.Resume(); //clear the sprite buffer before we begin drawing what we're going to cache
             bp.WallComp.Draw(gd, state);
-            ClearDrawBuffer(StaticWallCache);
+            ClearDrawBuffer(bp.WallCache2D);
             state.PrepareLighting();
-            _2d.End(StaticWallCache, true);
+            _2d.End(bp.WallCache2D, true);
         }
 
         public void ClearDrawBuffer(List<_2DDrawBuffer> buf)

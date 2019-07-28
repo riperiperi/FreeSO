@@ -112,6 +112,7 @@
     <Compile Include="Model\Blueprint.cs" />
     <Compile Include="Model\Direction.cs" />
     <Compile Include="Model\FloorTile.cs" />
+    <Compile Include="Model\GraphicsModes.cs" />
     <Compile Include="Model\GroupedGeometry.cs" />
     <Compile Include="Model\LotTilePos.cs" />
     <Compile Include="Model\LotTypes.cs" />
@@ -164,6 +165,7 @@
     <Compile Include="WorldContent.cs" />
     <Compile Include="WorldEntities.cs" />
     <Compile Include="WorldState.cs" />
+    <Compile Include="WorldStatic.cs" />
   </ItemGroup>
   <ItemGroup>
     <Reference Include="Lidgren.Network">

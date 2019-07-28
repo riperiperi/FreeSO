@@ -46,7 +46,7 @@ namespace FSO.LotView.Platform
         /// <returns>Object's ID if the object was found at the given position.</returns>
         Texture2D GetLotThumb(GraphicsDevice gd, WorldState state, Action<Texture2D> rooflessCallback);
 
-        void RecacheWalls(GraphicsDevice gd, WorldState state);
+        void RecacheWalls(GraphicsDevice gd, WorldState state, bool cutawayOnly);
 
     }
 }

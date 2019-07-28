@@ -116,6 +116,7 @@ namespace FSO.Content
             {
                 RCMeshes = new RCMeshProvider(device);
                 UIGraphics = new UIGraphicsProvider(this);
+                IffFile.TargetTS1 = TS1;
                 if (TS1)
                 {
                     TS1Global = new TS1Provider(this);

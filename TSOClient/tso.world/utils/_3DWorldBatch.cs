@@ -104,7 +104,6 @@ namespace FSO.LotView.Utils
             return vec;
         }
 
-
         private void RenderSpriteList(List<_3DSprite> sprites, Effect effect, EffectTechnique technique){
             //TODO: multiple types of 3dsprite. This was originally here to group meshes by texture, 
             //but since passing a texture uniform is less expensive than passing >16 matrices we now group

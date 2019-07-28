@@ -12,6 +12,9 @@ using Microsoft.Xna.Framework;
 using FSO.Files.Formats.IFF.Chunks;
 using FSO.LotView.Model;
 using FSO.Common.Rendering;
+using Microsoft.Xna.Framework.Graphics;
+using FSO.Files.RC;
+using FSO.LotView.Effects;
 
 namespace FSO.LotView.Utils
 {
@@ -27,8 +30,8 @@ namespace FSO.LotView.Utils
     public class DGRPRenderer : IDisposable
     {
         protected DGRP DrawGroup;
-        public Rectangle Bounding;
-        private List<DGRPRendererItem> Items = new List<DGRPRendererItem>();
+        protected OBJD Source;
+        public Rectangle? Bounding;
         public ulong DynamicSpriteFlags = 0x00000000;
         public ulong DynamicSpriteFlags2 = 0x00000000;
         public ushort DynamicSpriteBaseID;
@@ -38,9 +41,17 @@ namespace FSO.LotView.Utils
         public sbyte Level = 1;
         public short ObjectID;
 
-        public DGRPRenderer(DGRP group)
+        //2d cache
+        private List<DGRPRendererItem> Items = new List<DGRPRendererItem>();
+
+        //3d cache
+        private DGRP3DMesh Mesh;
+        public Matrix World;
+        
+        public DGRPRenderer(DGRP group, OBJD source)
         {
             this.DrawGroup = group;
+            this.Source = source;
         }
 
         /// <summary>
@@ -56,11 +67,11 @@ namespace FSO.LotView.Utils
             {
                 DrawGroup = value;
                 _TextureDirty = true;
-                _Dirty = true;
+                _Dirty = ComponentRenderMode.Both;
             }
         }
 
-        protected bool _Dirty = true;
+        protected ComponentRenderMode _Dirty = ComponentRenderMode.Both;
         private bool _TextureDirty = true;
 
         private Direction _Direction;
@@ -76,7 +87,7 @@ namespace FSO.LotView.Utils
             set{
                 _Direction = value;
                 _TextureDirty = true;
-                _Dirty = true;
+                _Dirty = ComponentRenderMode.Both;
             }
         }
 
@@ -89,7 +100,7 @@ namespace FSO.LotView.Utils
             }
             set
             {
-                if (_Position != value) _Dirty = true;
+                if (_Position != value) _Dirty = ComponentRenderMode.Both;
                 _Position = value;
             }
         }
@@ -117,13 +128,13 @@ namespace FSO.LotView.Utils
         public void InvalidateRotation()
         {
             _TextureDirty = true;
-            _Dirty = true;
+            _Dirty = ComponentRenderMode.Both;
         }
 
         public void InvalidateZoom()
         {
             _TextureDirty = true;
-            _Dirty = true;
+            _Dirty = ComponentRenderMode.Both;
         }
 
         public void InvalidateScroll()
@@ -131,10 +142,20 @@ namespace FSO.LotView.Utils
             //_Dirty = true;
         }
 
+        public BoundingBox? GetBounds()
+        {
+            if (_Dirty.HasFlag(ComponentRenderMode._3D) && DrawGroup != null)
+            {
+                Mesh = Content.Content.Get().RCMeshes.Get(DrawGroup, Source);
+                _Dirty &= ~ComponentRenderMode._3D;
+            }
+            return Mesh?.Bounds;
+        }
+
         public virtual void ValidateSprite(WorldState world)
         {
             if (DrawGroup == null) return;
-            if (_Dirty)
+            if (_Dirty.HasFlag(ComponentRenderMode._2D))
             {
                 if (_TextureDirty)
                 {
@@ -217,14 +238,18 @@ namespace FSO.LotView.Utils
                     Bounding = new Rectangle(minX, minY, maxX - minX, maxY - minY);
                 }
 
+                Rectangle? bounding = null;
                 foreach (var item in Items) {
                     item.Sprite.AbsoluteDestRect = item.Sprite.DestRect;
                     item.Sprite.AbsoluteDestRect.Offset(world.WorldSpace.GetScreenFromTile(_Position));
+                    if (bounding == null) bounding = item.Sprite.AbsoluteDestRect;
+                    else bounding = Rectangle.Union(bounding.Value, item.Sprite.AbsoluteDestRect);
                     item.Sprite.AbsoluteWorldPosition = item.Sprite.WorldPosition + WorldSpace.GetWorldFromTile(_Position);
                     item.Sprite.PrepareVertices(world.Device);
                 }
+                Bounding = bounding ?? new Rectangle();
 
-                _Dirty = false;
+                _Dirty &= ~ComponentRenderMode._2D;
             }
         }
 
@@ -248,9 +273,157 @@ namespace FSO.LotView.Utils
             }
         }
 
-        public virtual void Preload(WorldState world)
+        public void Draw3D(WorldState world)
         {
-            ValidateSprite(world);
+            if (DrawGroup == null) return;
+            if (_Dirty.HasFlag(ComponentRenderMode._3D) || Mesh == null)
+            {
+                Mesh = Content.Content.Get().RCMeshes.Get(DrawGroup, Source);
+                _Dirty &= ~ComponentRenderMode._3D;
+            }
+
+            //immedately draw the mesh.
+            var device = world.Device;
+            var effect = WorldContent.RCObject;
+
+            effect.World = World;
+            effect.Level = (float)(Level - 0.999f);
+            var advDir = WorldConfig.Current.Directional && WorldConfig.Current.AdvancedLighting;
+
+            if (Mesh.DepthMask != null)
+            {
+                var geom = Mesh.DepthMask;
+                //depth mask for drawing into a surface or wall
+                if (geom.Verts != null)
+                {
+                    effect.SetTechnique(RCObjectTechniques.DepthClear);
+                    effect.CurrentTechnique.Passes[0].Apply();
+
+                    device.DepthStencilState = DepthClear1;
+                    device.Indices = geom.Indices;
+                    device.SetVertexBuffer(geom.Verts);
+
+                    device.BlendState = NoColor;
+                    device.DrawIndexedPrimitives(PrimitiveType.TriangleList, 0, 0, geom.PrimCount);
+
+                    device.DepthStencilState = (Mesh.MaskType == DGRP3DMaskType.Portal) ? DepthClear2Strict : DepthClear2;
+                    effect.CurrentTechnique.Passes[1].Apply();
+                    device.DrawIndexedPrimitives(PrimitiveType.TriangleList, 0, 0, geom.PrimCount);
+
+                    device.DepthStencilState = DepthStencilState.Default;
+                    device.BlendState = BlendState.NonPremultiplied;
+                    effect.SetTechnique(RCObjectTechniques.Draw);
+                }
+            }
+
+            if (Room == 65533) effect.SetTechnique(RCObjectTechniques.DisabledDraw);
+
+            int i = 0;
+            foreach (var spr in Mesh.Geoms)
+            {
+                if (i == 0 || (((i - 1) > 63) ? ((DynamicSpriteFlags2 & ((ulong)0x1 << ((i - 1) - 64))) > 0) :
+                    ((DynamicSpriteFlags & ((ulong)0x1 << (i - 1))) > 0)) || (Mesh.MaskType == DGRP3DMaskType.Portal && i == Mesh.Geoms.Count - 1))
+                {
+                    foreach (var geom in spr.Values)
+                    {
+                        if (geom.PrimCount == 0) continue;
+                        if (Mesh.MaskType == DGRP3DMaskType.Portal && i == Mesh.Geoms.Count - 1)
+                            device.DepthStencilState = Portal;
+                        effect.MeshTex = geom.Pixel;
+                        var info = geom.Pixel?.Tag as TextureInfo;
+                        effect.UVScale = info?.UVScale ?? Vector2.One;
+                        var pass = effect.CurrentTechnique.Passes[(advDir && Room < 65533) ? 1 : 0];
+                        pass.Apply();
+                        if (geom.Rendered)
+                        {
+                            device.Indices = geom.Indices;
+                            device.SetVertexBuffer(geom.Verts);
+
+                            device.DrawIndexedPrimitives(PrimitiveType.TriangleList, 0, 0, geom.PrimCount);
+                        }
+                        if (Mesh.MaskType == DGRP3DMaskType.Portal && i == Mesh.Geoms.Count - 1)
+                            device.DepthStencilState = DepthStencilState.Default;
+                    }
+                }
+                i++;
+            }
+
+            if (Mesh.MaskType == DGRP3DMaskType.Portal)
+            {
+                var geom = Mesh.DepthMask;
+                //clear the stencil, so it doesn't interfere with future portals.
+                if (geom.Verts != null)
+                {
+                    effect.SetTechnique(RCObjectTechniques.DepthClear);
+                    effect.CurrentTechnique.Passes[1].Apply();
+
+                    device.DepthStencilState = StencilClearOnly;
+                    device.Indices = geom.Indices;
+                    device.SetVertexBuffer(geom.Verts);
+
+                    device.BlendState = NoColor;
+                    device.DrawIndexedPrimitives(PrimitiveType.TriangleList, 0, 0, geom.PrimCount);
+                    device.BlendState = BlendState.NonPremultiplied;
+                }
+                device.DepthStencilState = DepthStencilState.Default;
+                effect.SetTechnique(RCObjectTechniques.Draw);
+            }
+            if (Room == 65533) effect.SetTechnique(RCObjectTechniques.Draw);
+        }
+
+        public void DrawLMap(GraphicsDevice device, sbyte level, float yOff)
+        {
+            if (DrawGroup == null) return;
+            if (_Dirty.HasFlag(ComponentRenderMode._3D))
+            {
+                Mesh = Content.Content.Get().RCMeshes.Get(DrawGroup, Source);
+                _Dirty &= ~ComponentRenderMode._3D;
+            }
+
+            if (Mesh.MaskType == DGRP3DMaskType.Portal) return;
+            //immedately draw the mesh.
+            var effect = WorldContent.RCObject;
+
+            var mat = World;
+            mat.M42 = ((Level - level) - 1) * 2.95f + yOff; //set y translation to 0
+            effect.World = mat;
+
+            int i = 0;
+            foreach (var spr in Mesh.Geoms)
+            {
+                if (i == 0 || (((i - 1) > 63) ? ((DynamicSpriteFlags2 & ((ulong)0x1 << ((i - 1) - 64))) > 0) :
+                    ((DynamicSpriteFlags & ((ulong)0x1 << (i - 1))) > 0)))
+                {
+                    foreach (var geom in spr.Values)
+                    {
+                        if (geom.PrimCount == 0) continue;
+                        foreach (var pass in effect.CurrentTechnique.Passes)
+                        {
+                            pass.Apply();
+                            if (!geom.Rendered) continue;
+                            device.Indices = geom.Indices;
+                            device.SetVertexBuffer(geom.Verts);
+
+                            device.DrawIndexedPrimitives(PrimitiveType.TriangleList, 0, 0, geom.PrimCount);
+                        }
+                    }
+                }
+                i++;
+            }
+        }
+
+        public virtual void Preload(WorldState world, ComponentRenderMode mode)
+        {
+            if (mode.HasFlag(ComponentRenderMode._2D))
+                ValidateSprite(world);
+            if (mode.HasFlag(ComponentRenderMode._3D))
+            {
+                if (_Dirty.HasFlag(ComponentRenderMode._3D))
+                {
+                    Mesh = Content.Content.Get().RCMeshes.Get(DrawGroup, Source);
+                    _Dirty &= ~ComponentRenderMode._3D;
+                }
+            }
         }
 
         public void Dispose()
@@ -260,5 +433,87 @@ namespace FSO.LotView.Utils
                 item.Sprite.Dispose();
             }
         }
+
+        #region 3D GPU States
+
+        //depth clear mask
+        //how it works:
+        //pass 1: draw mask to stencil 1 with normal depth rules. no depth write.
+        //pass 2: draw mask where stencil 1 exists with max far depth. depth write override, stencil clear.
+        //pass 3: draw object normally
+
+        public static DepthStencilState DepthClear1 = new DepthStencilState()
+        {
+            StencilEnable = true,
+            StencilFunction = CompareFunction.Always,
+
+            TwoSidedStencilMode = true,
+
+            CounterClockwiseStencilFail = StencilOperation.Keep,
+            CounterClockwiseStencilPass = StencilOperation.Replace,
+            CounterClockwiseStencilDepthBufferFail = StencilOperation.Keep,
+
+            StencilDepthBufferFail = StencilOperation.Keep,
+            StencilPass = StencilOperation.Zero,
+            StencilFail = StencilOperation.Keep,
+
+            ReferenceStencil = 1,
+            DepthBufferWriteEnable = true
+        };
+
+        public static DepthStencilState DepthClear2 = new DepthStencilState()
+        {
+            StencilEnable = true,
+            StencilFunction = CompareFunction.Equal,
+            StencilFail = StencilOperation.Keep,
+            StencilPass = StencilOperation.Zero,
+            StencilDepthBufferFail = StencilOperation.Zero,
+            ReferenceStencil = 1,
+            DepthBufferWriteEnable = true,
+            DepthBufferFunction = CompareFunction.Always
+        };
+
+        public static DepthStencilState DepthClear2Strict = new DepthStencilState()
+        {
+            StencilEnable = true,
+            StencilFunction = CompareFunction.Equal,
+            StencilFail = StencilOperation.Keep,
+            StencilPass = StencilOperation.Keep,
+            StencilDepthBufferFail = StencilOperation.Keep,
+            ReferenceStencil = 1,
+            DepthBufferWriteEnable = true,
+            DepthBufferFunction = CompareFunction.Always
+        };
+
+
+        public static DepthStencilState Portal = new DepthStencilState()
+        {
+            StencilEnable = true,
+            StencilFunction = CompareFunction.Equal,
+            StencilFail = StencilOperation.Keep,
+            StencilPass = StencilOperation.Keep,
+            StencilDepthBufferFail = StencilOperation.Keep,
+            ReferenceStencil = 1,
+            DepthBufferWriteEnable = true,
+        };
+
+        public static DepthStencilState StencilClearOnly = new DepthStencilState()
+        {
+            StencilEnable = true,
+            StencilFunction = CompareFunction.Equal,
+            StencilFail = StencilOperation.Keep,
+            StencilPass = StencilOperation.Zero,
+            StencilDepthBufferFail = StencilOperation.Keep,
+            ReferenceStencil = 1,
+            DepthBufferWriteEnable = false,
+            DepthBufferFunction = CompareFunction.Always
+        };
+
+        public static BlendState NoColor = new BlendState()
+        {
+            ColorWriteChannels = ColorWriteChannels.None
+        };
+
+        #endregion
     }
 }

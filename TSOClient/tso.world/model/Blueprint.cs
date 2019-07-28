@@ -44,7 +44,9 @@ namespace FSO.LotView.Model
         public FloorTile[][] Floors;
         public FloorComponent FloorComp;
         public _3DFloorGeometry FloorGeom;
+
         public WallComponentRC WCRC;
+        public List<_2DDrawBuffer> WallCache2D = new List<_2DDrawBuffer>(); //temporary: to replace with a smarter wall component with caching
 
         public RoofComponent RoofComp;
 
@@ -156,6 +158,7 @@ namespace FSO.LotView.Model
             this.Cutaway = new bool[numTiles];
             this.Weather = new WeatherController(this);
 
+            this.Changes = new BlueprintChanges(this);
         }
 
         public float GetAltitude(int x, int y)
@@ -273,21 +276,21 @@ namespace FSO.LotView.Model
 
         public void SignalWallChange()
         {
-            Damage.Add(new BlueprintDamage(BlueprintDamageType.WALL_CHANGED, 0, 0, 1)); 
+            Changes.SetFlag(BlueprintGlobalChanges.WALL_CHANGED);
             //todo: should this even have a position? we're rerendering the whole thing atm
             //should eventually consider level
         }
 
         public void SignalRoomChange()
         {
-            Damage.Add(new BlueprintDamage(BlueprintDamageType.ROOM_CHANGED, 0, 0, 1));
+            Changes.SetFlag(BlueprintGlobalChanges.ROOM_CHANGED);
             //todo: should this even have a position? we're rerendering the whole thing atm
             //should eventually consider level
         }
 
         public void SignalFloorChange()
         {
-            Damage.Add(new BlueprintDamage(BlueprintDamageType.FLOOR_CHANGED, 0, 0, 1));
+            Changes.SetFlag(BlueprintGlobalChanges.FLOOR_CHANGED);
         }
 
         public WallTile GetWall(short tileX, short tileY, sbyte level)
@@ -312,7 +315,7 @@ namespace FSO.LotView.Model
             short tileY = (pos.y < 0) ? (short)0 : pos.TileY;
             sbyte level = pos.Level;
 
-            Damage.Add(new BlueprintDamage(BlueprintDamageType.OBJECT_MOVE, tileX, tileY, level) { Component = component });
+            Changes.RegisterObjectChange(component);
 
             component.blueprint = this;
             component.TileX = tileX;
@@ -322,14 +325,16 @@ namespace FSO.LotView.Model
 
         public void AddObject(ObjectComponent component)
         {
+            Changes.RegisterObject(component);
             Objects.Add(component);
         }
 
         public void RemoveObject(ObjectComponent component)
         {
-            Damage.Add(new BlueprintDamage(BlueprintDamageType.OBJECT_MOVE, component.TileX, component.TileY, component.Level) { Component = component });
+            Changes.UnregisterObject(component);
             Objects.Remove(component);
             HeadlineObjects.Remove(component);
+            component.Dead = true;
             //remove all of this object's particles, and make sure we dispose their vertex buffers.
             foreach (var part in component.Particles)
             {

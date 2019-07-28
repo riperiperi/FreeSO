@@ -774,10 +774,10 @@ namespace FSO.SimAntics
 
                 if (useWorld)
                 {
-                    Blueprint.Damage.Add(new BlueprintDamage(BlueprintDamageType.LIGHTING_CHANGED, (short)room, 0, 0));
+                    Blueprint.Changes.LightChange((short)room);
                     foreach (var a in affected)
                     {
-                        Blueprint.Damage.Add(new BlueprintDamage(BlueprintDamageType.LIGHTING_CHANGED, (short)a, 0, 0));
+                        Blueprint.Changes.LightChange((short)a);
                     }
                 }
             }

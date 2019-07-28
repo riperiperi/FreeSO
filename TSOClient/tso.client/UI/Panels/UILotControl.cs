@@ -811,7 +811,7 @@ namespace FSO.Client.UI.Panels
             if (vm.Context.Blueprint != null && LastCuts != null)
             {
                 vm.Context.Blueprint.Cutaway = LastCuts;
-                vm.Context.Blueprint.Damage.Add(new FSO.LotView.Model.BlueprintDamage(FSO.LotView.Model.BlueprintDamageType.WALL_CUT_CHANGED));
+                vm.Context.Blueprint.Changes.SetFlag(BlueprintGlobalChanges.WALL_CUT_CHANGED);
             }
 
             //MouseCutRect = new Rectangle(0,0,0,0);
@@ -1185,7 +1185,7 @@ namespace FSO.Client.UI.Panels
                     {
                         LastCuts = new bool[vm.Context.Architecture.Width * vm.Context.Architecture.Height];
                         vm.Context.Blueprint.Cutaway = LastCuts;
-                        vm.Context.Blueprint.Damage.Add(new FSO.LotView.Model.BlueprintDamage(FSO.LotView.Model.BlueprintDamageType.WALL_CUT_CHANGED));
+                        vm.Context.Blueprint.Changes.SetFlag(BlueprintGlobalChanges.WALL_CUT_CHANGED);
                         for (int i = 0; i < LastCuts.Length; i++) LastCuts[i] = true;
                     }
                     else if (WallsMode == 1)
@@ -1197,7 +1197,7 @@ namespace FSO.Client.UI.Panels
                     {
                         LastCuts = new bool[vm.Context.Architecture.Width * vm.Context.Architecture.Height];
                         vm.Context.Blueprint.Cutaway = LastCuts;
-                        vm.Context.Blueprint.Damage.Add(new FSO.LotView.Model.BlueprintDamage(FSO.LotView.Model.BlueprintDamageType.WALL_CUT_CHANGED));
+                        vm.Context.Blueprint.Changes.SetFlag(BlueprintGlobalChanges.WALL_CUT_CHANGED);
                     }
                     LastWallMode = WallsMode;
                 }
@@ -1234,7 +1234,7 @@ namespace FSO.Client.UI.Panels
                         if (recut > 1 || notableChange || LastRectCutNotable)
                         {
                             vm.Context.Blueprint.Cutaway = finalCut;
-                            vm.Context.Blueprint.Damage.Add(new FSO.LotView.Model.BlueprintDamage(FSO.LotView.Model.BlueprintDamageType.WALL_CUT_CHANGED));
+                            vm.Context.Blueprint.Changes.SetFlag(BlueprintGlobalChanges.WALL_CUT_CHANGED);
                         }
                         LastRectCutNotable = notableChange;
                     }

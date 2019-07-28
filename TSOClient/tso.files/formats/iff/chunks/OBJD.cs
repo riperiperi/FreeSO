@@ -146,6 +146,21 @@ namespace FSO.Files.Formats.IFF.Chunks
             "TypeAttrGUID2"
         };
 
+        public static string[] VERSION_138b_Extra_Fields = new string[]
+        {
+            "FunctionSubsort",
+            "DTSubsort",
+            "KeepBuying",
+            "VacationSubsort",
+            "ResetLotAction",
+            "CommunitySubsort",
+            "DreamFlags",
+            "RenderFlags",
+            "VitaboyFlags",
+            "STSubsort",
+            "MTSubsort"
+        };
+
         public ushort GUID1
         {
             get { return (ushort)(GUID); }
@@ -542,14 +557,32 @@ namespace FSO.Files.Formats.IFF.Chunks
         {
             using (var io = IoWriter.FromStream(stream, ByteOrder.LITTLE_ENDIAN))
             {
-                io.WriteUInt32(142);
-                foreach (var prop in VERSION_142_Fields)
+                if (IffFile.TargetTS1)
                 {
-                    io.WriteUInt16((ushort)GetPropertyByName<int>(prop));
+                    //version 138
+                    io.WriteUInt32(138);
+                    var fields = VERSION_142_Fields.Concat(VERSION_138b_Extra_Fields);
+                    foreach (var prop in fields)
+                    {
+                        io.WriteUInt16((ushort)GetPropertyByName<int>(prop));
+                    }
+                    for (int i = fields.Count(); i < 108; i++)
+                    {
+                        io.WriteUInt16(0);
+                    }
                 }
-                for (int i = VERSION_142_Fields.Length; i < 105; i++)
+                else
                 {
-                    io.WriteUInt16(0);
+                    //tso version 142
+                    io.WriteUInt32(142);
+                    foreach (var prop in VERSION_142_Fields)
+                    {
+                        io.WriteUInt16((ushort)GetPropertyByName<int>(prop));
+                    }
+                    for (int i = VERSION_142_Fields.Length; i < 105; i++)
+                    {
+                        io.WriteUInt16(0);
+                    }
                 }
             }
             return true;
