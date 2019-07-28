@@ -29,6 +29,11 @@ namespace FSO.Content.Upgrades.Model
         /// </summary>
         public bool? Special;
 
+        /// <summary>
+        /// If true, the object's init function will be run again when upgrading to this level.
+        /// </summary>
+        public bool Reinit;
+
         public void Load(int version, BinaryReader reader)
         {
             GUID = reader.ReadString();
@@ -36,6 +41,7 @@ namespace FSO.Content.Upgrades.Model
             Limit = reader.ReadInt32();
             if (Limit < 0) Limit = null;
             Special = reader.ReadBoolean();
+            Reinit = reader.ReadBoolean();
         }
 
         public void Save(BinaryWriter writer)
@@ -44,6 +50,7 @@ namespace FSO.Content.Upgrades.Model
             writer.Write(Level);
             writer.Write(Limit ?? -1);
             writer.Write(Special ?? false);
+            writer.Write(Reinit);
         }
     }
 }

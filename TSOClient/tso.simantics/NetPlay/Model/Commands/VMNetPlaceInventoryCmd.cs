@@ -133,11 +133,14 @@ namespace FSO.SimAntics.NetPlay.Model.Commands
                 var tsostate = (obj.PlatformState as VMTSOObjectState);
                 if (tsostate != null) {
                     tsostate.OwnerID = caller.PersistID;
+                    bool reinitRequired = false;
                     if (Info.UpgradeLevel > tsostate.UpgradeLevel)
                     {
                         tsostate.UpgradeLevel = Info.UpgradeLevel;
+                        reinitRequired = true;
                     }
                     obj.UpdateTuning(vm);
+                    if (reinitRequired) VMNetUpgradeCmd.TryReinit(obj, vm, tsostate.UpgradeLevel);
                 }
                 obj.PersistID = ObjectPID;
                 ((VMGameObject)obj).DisableIfTSOCategoryWrong(vm.Context);
