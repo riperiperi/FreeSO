@@ -18,6 +18,15 @@ namespace FSO.SimAntics.NetPlay.Model.Commands
         public byte TargetUpgradeLevel;
         public int AddedValue;
 
+        public static void TryReinit(VMEntity obj, VM vm, int level)
+        {
+            var config = Content.Content.Get().Upgrades.GetUpgradeConfig(
+                        obj.Object.Resource.Iff.Filename,
+                        (obj.MasterDefinition ?? obj.Object.OBJ).GUID,
+                        level);
+            if (config?.Reinit == true) obj.ExecuteEntryPoint(0, vm.Context, true);
+        }
+
         public override bool Execute(VM vm, VMAvatar caller)
         {
             var pobj = vm.GetObjectByPersist(ObjectPID);
@@ -33,6 +42,7 @@ namespace FSO.SimAntics.NetPlay.Model.Commands
                     state.Wear = 20 * 4;
                     state.QtrDaysSinceLastRepair = 0;
                     obj.UpdateTuning(vm);
+                    TryReinit(obj, vm, TargetUpgradeLevel);
                 }
             }
 

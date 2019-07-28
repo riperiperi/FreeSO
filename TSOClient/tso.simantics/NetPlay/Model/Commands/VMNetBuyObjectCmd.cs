@@ -120,6 +120,7 @@ namespace FSO.SimAntics.NetPlay.Model.Commands
                         {
                             state.UpgradeLevel = TargetUpgradeLevel;
                             obj.UpdateTuning(vm);
+                            VMNetUpgradeCmd.TryReinit(obj, vm, TargetUpgradeLevel);
                         }
                     }
                 }

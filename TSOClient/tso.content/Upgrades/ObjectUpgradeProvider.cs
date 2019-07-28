@@ -119,6 +119,17 @@ namespace FSO.Content.Upgrades
             return null;
         }
 
+        public ObjectUpgradeConfig GetUpgradeConfig(string file, uint guid, int level)
+        {
+            RuntimeUpgradeFile upgradeFile = null;
+            if (FileUpgrades.TryGetValue(file, out upgradeFile))
+            {
+                upgradeFile.Load(ContentManager);
+                return upgradeFile.GetConfig(guid);
+            }
+            return null;
+        }
+
         public Dictionary<int, Dictionary<int, short>> GetUpgrade(string file, uint guid, int level)
         {
             // find upgrade table for this file, find entries for this object, and the specified level.
