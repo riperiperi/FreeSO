@@ -12,6 +12,7 @@ namespace FSO.LotView
 {
     public class BlueprintChanges
     {
+        public bool Subworld = false;
         public TimedDynamicStaticLayers Layers = new TimedDynamicStaticLayers(5);
 
         public HashSet<ObjectComponent> DynamicObjects => Layers.DynamicObjects;

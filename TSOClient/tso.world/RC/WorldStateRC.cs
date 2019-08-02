@@ -194,26 +194,5 @@ namespace FSO.LotView.RC
                 , mat);
 
         }
-
-        public override void PrepareLighting()
-        {
-            base.PrepareLighting();
-
-            var frontDir = WorldCamera.FrontDirection();
-            Vector2 lightOffset;
-            if (Light != null)
-            {
-                lightOffset = -GetWallOffset() * 6 / (6 * (Light.Blueprint.Width-2));
-                lightOffset *= Light.InvMapLayout;
-            } else
-            {
-                lightOffset = -GetWallOffset() * 6 / (6 * 75);
-            }
-            
-            foreach (var effect in WorldContent.LightEffects)
-            {
-                effect.LightOffset = lightOffset;
-            }
-        }
     }
 }

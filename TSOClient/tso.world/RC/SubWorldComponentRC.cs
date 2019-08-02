@@ -176,8 +176,8 @@ namespace FSO.LotView.RC
             var effect = WorldContent.RCObject;
             gd.BlendState = BlendState.NonPremultiplied;
             parentState.DrawOOB = false;
-            var view = parentState.Camera.View;
-            var vp = view * parentState.Camera.Projection;
+            var view = parentState.View;
+            var vp = view * parentState.Projection;
             effect.ViewProjection = vp;
             Blueprint.WCRC.Draw(gd, parentState);
             Blueprint.RoofComp.Draw(gd, parentState);

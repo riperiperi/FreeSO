@@ -677,13 +677,16 @@ namespace FSO.Client.UI.Screens
         {
             CleanupLastWorld();
 
+            /*
             if (FSOEnvironment.Enable3D)
             {
                 var rc = new LotView.RC.WorldRC(GameFacade.GraphicsDevice);
                 rc.SetSurroundingWorld(CityRenderer);
                 World = rc;
             }
-            else World = new World(GameFacade.GraphicsDevice);
+            else */
+            World = new World(GameFacade.GraphicsDevice);
+            World.Surroundings = CityRenderer;
 
             WorldLoaded = false;
             World.Opacity = 0;

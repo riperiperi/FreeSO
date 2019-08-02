@@ -30,11 +30,18 @@ namespace FSO.IDE.EditorComponent
         public EditorScope(GameObject obj, BHAV active)
         {
             Object = obj;
-            var GLOBChunks = Object.Resource.List<GLOB>();
+            var GLOBChunks = Object?.Resource.List<GLOB>();
             if (GLOBChunks != null)
             {
                 SemiGlobalName = GLOBChunks[0].Name;
-                SemiGlobal = FSO.Content.Content.Get().WorldObjectGlobals.Get(SemiGlobalName).Resource;
+                try
+                {
+                    SemiGlobal = FSO.Content.Content.Get().WorldObjectGlobals.Get(SemiGlobalName).Resource;
+                }
+                catch
+                {
+                    //failed to load semiglobal!
+                }
             }
 
             AttributeTable = obj.Resource.Get<STR>(256);
@@ -270,7 +277,7 @@ namespace FSO.IDE.EditorComponent
                     if (bcon != null && keyID < bcon.Constants.Length) return (short)bcon.Constants[keyID];
 
                     tuning = Globals.Resource.Get<OTFTable>((ushort)(tableID + 256));
-                    if (tuning != null) return (short)tuning.GetKey(keyID).Value;
+                    if (tuning != null) return (short)(tuning.GetKey(keyID)?.Value ?? 0);
                     break;
             }
             
@@ -307,6 +314,7 @@ namespace FSO.IDE.EditorComponent
                     }
                     break;
                 case 1:
+                    if (SemiGlobal == null) break;
                     bcon = SemiGlobal.Get<BCON>((ushort)(tableID + 8192));
                     if (bcon != null)
                     {
@@ -329,7 +337,7 @@ namespace FSO.IDE.EditorComponent
                     tuning = Globals.Resource.Get<OTFTable>((ushort)(tableID + 256));
                     if (tuning != null)
                     {
-                        return tuning.GetKey(keyID).Label;
+                        return tuning.GetKey(keyID)?.Label ?? tuning.Name + " #" + keyID;
                     }
                     break;
             }
@@ -339,7 +347,7 @@ namespace FSO.IDE.EditorComponent
 
         public BHAV GetBHAV(ushort id)
         {
-            if (id >= 8192) return SemiGlobal.Get<BHAV>(id); //semiglobal
+            if (id >= 8192) return SemiGlobal?.Get<BHAV>(id); //semiglobal
             else if (id >= 4096) return Object.Resource.Get<BHAV>(id); //private
             else return Globals.Resource.Get<BHAV>(id); //global
         }

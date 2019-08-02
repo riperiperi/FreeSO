@@ -53,6 +53,7 @@ namespace FSO.LotView
         public float Opacity = 1f;
         public float BackbufferScale = 1f;
         public bool ForceAdvLight;
+        public IRCSurroundings Surroundings;
 
         public float SmoothZoomTimer = -1;
         public float SmoothZoomFrom = 1f;
@@ -138,6 +139,7 @@ namespace FSO.LotView
             Platform = new WorldPlatform2D(blueprint);
             Entities = new WorldEntities(blueprint);
             Architecture = new WorldArchitecture(blueprint);
+            Static.InitBlueprint(blueprint);
 
             State.Platform = Platform;
             State.Changes = blueprint.Changes;
@@ -349,6 +351,15 @@ namespace FSO.LotView
         public void Scroll(Vector2 dir)
         {
             Scroll(dir, true);
+        }
+
+        public Tuple<float, float> Get3DTTHeights()
+        {
+            if (Blueprint == null) { return new Tuple<float, float>(0, 0); }
+            var terrainHeight = (Blueprint.InterpAltitude(new Vector3(State.CenterTile, 0))) * 3;
+            var targHeight = terrainHeight + (State.Level - 1) * 2.95f * 3;
+            targHeight = Math.Max((Blueprint.InterpAltitude(new Vector3(State.Camera.Position.X, State.Camera.Position.Z, 0) / 3) + (State.Level - 1) * 2.95f) * 3, terrainHeight);
+            return new Tuple<float, float>(terrainHeight, targHeight);
         }
 
         public virtual Vector2[] GetScrollBasis(bool multiplied)
@@ -689,9 +700,9 @@ namespace FSO.LotView
             pos *= new Vector2(FSOEnvironment.DPIScaleFactor);
             var sPos = new Vector3(pos, 0);
 
-            var p1 = State.Device.Viewport.Unproject(sPos, State.Camera.Projection, State.Camera.View, Matrix.Identity);
+            var p1 = State.Device.Viewport.Unproject(sPos, State.Projection, State.View, Matrix.Identity);
             sPos.Z = 1;
-            var p2 = State.Device.Viewport.Unproject(sPos, State.Camera.Projection, State.Camera.View, Matrix.Identity);
+            var p2 = State.Device.Viewport.Unproject(sPos, State.Projection, State.View, Matrix.Identity);
             var dir = p2 - p1;
             dir.Normalize();
             var ray = new Ray(p1, p2 - p1);
@@ -905,9 +916,33 @@ namespace FSO.LotView
             return new SubWorldComponent(gd);
         }
 
+        public BoundingBox[] SkyBounds;
+
         public virtual void InitSubWorlds()
         {
+            float minAlt = 0;
+            foreach (var height in Blueprint.Altitude)
+            {
+                var alt = height * Blueprint.TerrainFactor - Blueprint.BaseAlt;
+                if (alt < minAlt)
+                {
+                    minAlt = alt;
+                }
+            }
 
+            BoundingBox overall = new BoundingBox(new Vector3(0, minAlt, 0), new Vector3(Blueprint.Width * 3, 1000, Blueprint.Height * 3));
+            foreach (var world in Blueprint.SubWorlds)
+            {
+                world.UpdateBounds();
+                overall = BoundingBox.CreateMerged(overall, world.Bounds);
+            }
+            //update sky bounding box edge
+
+            SkyBounds = new BoundingBox[4];
+            SkyBounds[0] = new BoundingBox(new Vector3(overall.Min.X - 1, overall.Min.Y, overall.Min.Z), new Vector3(overall.Min.X, overall.Max.Y, overall.Max.Z));
+            SkyBounds[1] = new BoundingBox(new Vector3(overall.Min.X, overall.Min.Y, overall.Min.Z - 1), new Vector3(overall.Max.X, overall.Max.Y, overall.Min.Z));
+            SkyBounds[2] = new BoundingBox(new Vector3(overall.Min.X, overall.Min.Y, overall.Max.Z), new Vector3(overall.Max.X, overall.Max.Y, overall.Max.Z + 1));
+            SkyBounds[3] = new BoundingBox(new Vector3(overall.Max.X, overall.Min.Y, overall.Min.Z), new Vector3(overall.Max.X + 1, overall.Max.Y, overall.Max.Z));
         }
 
         public int PreloadProgress;

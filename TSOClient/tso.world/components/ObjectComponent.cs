@@ -27,7 +27,7 @@ namespace FSO.LotView.Components
         };
 
         public GameObject Obj;
-        public ComponentRenderMode Mode = ComponentRenderMode._3D;
+        public ComponentRenderMode Mode = ComponentRenderMode.Both;
 
         protected DGRP DrawGroup;
         protected DGRPRenderer dgrp;
@@ -96,7 +96,7 @@ namespace FSO.LotView.Components
             {
                 var bounds = dgrp.GetBounds();
                 if (bounds == null) return new BoundingBox(); //don't cache
-                _Bounds = BoundingBox.CreateFromPoints(bounds.Value.GetCorners().Select(x => Vector3.Transform(x, World)));
+                _Bounds = BoundingBox.CreateFromPoints(bounds.Value.GetCorners().Select(x => Vector3.Transform(x, World3D)));
                 _BoundsDirty = false;
             }
             return _Bounds;
@@ -209,7 +209,7 @@ namespace FSO.LotView.Components
         {
             get
             {
-                return (_ForceDynamic || Headline != null || Mode.HasFlag(ComponentRenderMode._3D));
+                return (_ForceDynamic || Headline != null);// || Mode.HasFlag(ComponentRenderMode._3D));
             }
             set
             {
@@ -319,7 +319,7 @@ namespace FSO.LotView.Components
 
         public void UpdateDrawOrder(WorldState world)
         {
-            if (world.CameraMode > CameraRenderMode._2D)
+            if (world.CameraMode > CameraRenderMode._2DRotate)
             {
                 if (!Visible) DrawOrder = 0;
                 var w = World3D;
@@ -337,13 +337,13 @@ namespace FSO.LotView.Components
 
         public bool DoDraw(WorldState world)
         {
+            if (!Visible || (Room == 0 && !world.DrawOOB)) return false;
             bool result = false;
             if (world.CameraMode == CameraRenderMode._2D && Mode.HasFlag(ComponentRenderMode._2D))
             {
                 ValidateSprite(world);
                 if (dgrp.Bounding != null) result |= world.WorldRectangle.Intersects(dgrp.Bounding.Value);
-            }
-            if (Mode.HasFlag(ComponentRenderMode._3D))
+            } else if (Mode.HasFlag(ComponentRenderMode._3D))
             {
                 result |= world.Frustum.Intersects(GetBounds());
             }
@@ -357,7 +357,7 @@ namespace FSO.LotView.Components
 
         public override Vector2 GetScreenPos(WorldState world)
         {
-            var projected = Vector4.Transform(new Vector4(1.5f, 0, 1.5f, 1f), this.World * world.Camera.View * world.Camera.Projection);
+            var projected = Vector4.Transform(new Vector4(1.5f, 0, 1.5f, 1f), this.World * world.View * world.Projection);
             if (world.Camera is WorldCamera) projected.Z = 1;
             var res1 = new Vector2(projected.X / projected.Z, -projected.Y / projected.Z);
             var size = PPXDepthEngine.GetWidthHeight();
@@ -450,9 +450,6 @@ namespace FSO.LotView.Components
 
         public override void Draw(GraphicsDevice device, WorldState world)
         {
-            //#if !DEBUG 
-            if (!Visible || (!world.DrawOOB && (Position.X < -2043 && Position.Y < -2043))) return;
-            //#endif
             if (CutawayHidden) return;
             var pos = Position;
             if (this.DrawGroup != null) {

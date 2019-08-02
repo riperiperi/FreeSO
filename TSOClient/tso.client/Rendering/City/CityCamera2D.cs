@@ -80,7 +80,7 @@ namespace FSO.Client.Rendering.City
             float LisoScale = (float)Math.Sqrt(0.5 * 0.5 * 2) / m_LotZoomSize;  // currently set 144 to near zoom
 
             float IsoScale = (1 - ZoomProgress) * FisoScale + (ZoomProgress) * ZisoScale;
-            if (FSOEnvironment.Enable3D) return IsoScale;
+            //if (FSOEnvironment.Enable3D) return IsoScale;
             return (1 - LotZoomProgress) * IsoScale + LotZoomProgress * LisoScale;
         }
 

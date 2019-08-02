@@ -193,7 +193,7 @@ namespace FSO.LotView.Components
             Vector3 scale;
             Quaternion rotation;
             Vector3 translation;
-            world.Camera.View.Decompose(out scale, out rotation, out translation);
+            world.View.Decompose(out scale, out rotation, out translation);
             var tHead1 = GetHeadlinePos();
             var hScale = GetHeadlineScale();
             var newWorld = Matrix.CreateScale(hScale*Headline.Width / 64f, hScale*Headline.Height / -64f, 1) * Matrix.Invert(Matrix.CreateFromQuaternion(rotation)) * Matrix.CreateTranslation(new Vector3(tHead1.X * 3, 1.6f + tHead1.Z * 3, tHead1.Y * 3)) * this.World;
@@ -201,8 +201,8 @@ namespace FSO.LotView.Components
             effect.DiffuseColor = Color.White.ToVector3();
             effect.World = newWorld;
             effect.Texture = Headline;
-            effect.View = world.Camera.View;
-            effect.Projection = world.Camera.Projection;
+            effect.View = world.View;
+            effect.Projection = world.Projection;
             effect.CurrentTechnique.Passes[0].Apply();
 
             gd.SetVertexBuffer(WorldContent.GetTextureVerts(gd));

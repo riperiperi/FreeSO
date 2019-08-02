@@ -17,6 +17,7 @@ namespace FSO.IDE.Managers
 
         public BHAVEditor OpenEditor(BHAV bhav, GameObject srcobj)
         {
+            if (bhav == null) return null;
             BHAVEditor window;
             if (Editors.ContainsKey(bhav))
             {

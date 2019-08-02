@@ -65,6 +65,7 @@ namespace FSO.IDE.EditorComponent.UI
 
         private int DoubleClickTime = 0;
         private UILabel Title;
+        private UILabel Index;
         public string TitleText;
         public string BodyText;
         private TextRendererResult BodyTextLabels;
@@ -120,6 +121,16 @@ namespace FSO.IDE.EditorComponent.UI
             Title.CaptionStyle.VFont = FSO.Client.GameFacade.EdithVectorFont;
             Title.CaptionStyle.Size = 14;
 
+            Index = new UILabel();
+            Index.Alignment = TextAlignment.Right | TextAlignment.Center;
+            Index.Y = 0;
+            Index.X = 0;
+            this.Add(Index);
+            Index.CaptionStyle = TextStyle.DefaultLabel.Clone();
+            Index.CaptionStyle.Font = FSO.Client.GameFacade.EdithFont;
+            Index.CaptionStyle.VFont = FSO.Client.GameFacade.EdithVectorFont;
+            Index.CaptionStyle.Size = 10;
+
             BodyTextStyle = TextStyle.DefaultLabel.Clone();
             BodyTextStyle.Font = FSO.Client.GameFacade.EdithFont;
             BodyTextStyle.VFont = FSO.Client.GameFacade.EdithVectorFont;
@@ -148,6 +159,8 @@ namespace FSO.IDE.EditorComponent.UI
             var titleWidth = Title.CaptionStyle.MeasureString(TitleText).X;
             Title.Caption = TitleText;
             Title.CaptionStyle.Color = Style.Title;
+            Index.Caption = InstPtr.ToString();
+            Index.CaptionStyle.Color = Style.Title;
 
             BodyText = Descriptor.GetBody(Master.Scope);
             BodyTextStyle.Color = Style.Body;
@@ -165,6 +178,7 @@ namespace FSO.IDE.EditorComponent.UI
             Width = Math.Max((int)titleWidth, BodyTextLabels.MaxWidth)+10;
             Height = BodyTextLabels.BoundingBox.Height+43;
             Title.Size = new Vector2(Width, 24);
+            Index.Size = new Vector2(Width - 4, 20);
 
             var shift = (Width - 300) / 2;
             foreach (var cmd in BodyTextLabels.DrawingCommands)
@@ -263,6 +277,7 @@ namespace FSO.IDE.EditorComponent.UI
                 DrawTiledTexture(batch, res.DiagTile, new Rectangle(1, 1, Width - 2, Height - 2), Color.White * Style.DiagBrightness);
                 DrawLocalTexture(batch, res.WhiteTex, null, new Vector2(1, 1), new Vector2(Width - 2, 20), Color.White * 0.66f); //title bg
 
+                Index?.Draw(batch);
                 Title.Draw(batch);
                 if (BodyTextLabels != null) TextRenderer.DrawText(BodyTextLabels.DrawingCommands, this, batch);
 

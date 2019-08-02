@@ -1,5 +1,7 @@
 ﻿using FSO.Common.Utils;
+using FSO.LotView.Components;
 using FSO.LotView.Model;
+using FSO.LotView.Utils;
 using Microsoft.Xna.Framework;
 using Microsoft.Xna.Framework.Graphics;
 using System;
@@ -27,10 +29,17 @@ namespace FSO.LotView
 
         public ScrollBuffer StaticSurface;
         public World World;
+        private Blueprint Bp;
+        public SkyDomeComponent Dome;
 
         public WorldStatic(World world)
         {
             World = world;
+        }
+
+        public void InitBlueprint(Blueprint bp)
+        {
+            Bp = bp;
         }
 
         private Vector2 GetScrollIncrement(Vector2 pxOffset, WorldState state)
@@ -72,7 +81,11 @@ namespace FSO.LotView
         public void Draw(WorldState state)
         {
             var changes = state.Changes;
-            if (changes.DrawImmediate) return;
+            if (changes.DrawImmediate)
+            {
+                if (state.CameraMode == CameraRenderMode._3D) DrawBg(state.Device, state, World.SkyBounds, false);
+                return;
+            }
             var _2d = state._2D;
             var pxOffset = -state.WorldSpace.GetScreenOffset();
             var tileOffset = state.CenterTile;
@@ -88,6 +101,21 @@ namespace FSO.LotView
                 _2d.Resume();
             }
             state._2D.PreciseZoom = state.PreciseZoom;
+        }
+
+        public void DrawBg(GraphicsDevice gd, WorldState state, BoundingBox[] skyBounds, bool forceSurround)
+        {
+            if (forceSurround || (state.Camera as WorldCamera3D)?.FromIntensity > 0 || skyBounds?.Any(x => x.Intersects(state.Frustum)) != false)
+            {
+                if (Dome == null) Dome = new SkyDomeComponent(gd, Bp);
+                Dome.BP = Bp;
+                Dome.Draw(gd, state);
+
+                World.Surroundings?.DrawSurrounding(gd, state.Camera, Bp.Weather.FogColor, (Bp.SubWorlds.Count > 0) ? 1 : 0);
+            }
+            gd.Clear(ClearOptions.DepthBuffer, Color.White, 1, 0);
+
+            //if (((WorldCamera3D)state.Camera).FromIntensity > 0) state.CenterTile = state.CenterTile;
         }
     }
 }

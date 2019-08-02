@@ -82,13 +82,13 @@ namespace FSO.LotView.Platform
             var build = state.BuildMode;
             state.SilentBuildMode = 0;
             bp.Terrain.Draw(gd, state);
-            bp.Terrain.DrawMask(gd, state, state.Camera.View, state.Camera.Projection);
+            bp.Terrain.DrawMask(gd, state, state.View, state.Projection);
             state.SilentBuildMode = build;
 
             var effect = WorldContent.RCObject;
             gd.BlendState = BlendState.NonPremultiplied;
-            var view = state.Camera.View;
-            var vp = view * state.Camera.Projection;
+            var view = state.View;
+            var vp = view * state.Projection;
             effect.ViewProjection = vp;
 
             var cuts = bp.Cutaway;
@@ -146,9 +146,9 @@ namespace FSO.LotView.Platform
         {
             //var sPos = new Vector3(((float)x / state.WorldSpace.WorldPxWidth) * 2 - 1, 1 - ((float)y / state.WorldSpace.WorldPxHeight) * 2, 0);
             var sPos = new Vector3(x, y, 0);
-            var p1 = gd.Viewport.Unproject(sPos, state.Camera.Projection, state.Camera.View, Matrix.Identity);
+            var p1 = gd.Viewport.Unproject(sPos, state.Projection, state.View, Matrix.Identity);
             sPos.Z = 1;
-            var p2 = gd.Viewport.Unproject(sPos, state.Camera.Projection, state.Camera.View, Matrix.Identity);
+            var p2 = gd.Viewport.Unproject(sPos, state.Projection, state.View, Matrix.Identity);
             var dir = p2 - p1;
             dir.Normalize();
             var ray = new Ray(p1, p2 - p1);
@@ -214,8 +214,8 @@ namespace FSO.LotView.Platform
 
             gd.SetRenderTarget(ObjThumbTarget);
             var cpoints = new List<Vector3>();
-            var view = state.Camera.View;
-            var vp = view * state.Camera.Projection;
+            var view = state.View;
+            var vp = view * state.Projection;
             gd.BlendState = BlendState.NonPremultiplied;
             gd.RasterizerState = RasterizerState.CullNone;
             gd.DepthStencilState = DepthStencilState.Default;

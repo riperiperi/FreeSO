@@ -232,9 +232,9 @@ namespace FSO.LotView.RC
         {
             //var sPos = new Vector3(((float)x / state.WorldSpace.WorldPxWidth) * 2 - 1, 1 - ((float)y / state.WorldSpace.WorldPxHeight) * 2, 0);
             var sPos = new Vector3(x, y, 0);
-            var p1 = gd.Viewport.Unproject(sPos, state.Camera.Projection, state.Camera.View, Matrix.Identity);
+            var p1 = gd.Viewport.Unproject(sPos, state.Projection, state.View, Matrix.Identity);
             sPos.Z = 1;
-            var p2 = gd.Viewport.Unproject(sPos, state.Camera.Projection, state.Camera.View, Matrix.Identity);
+            var p2 = gd.Viewport.Unproject(sPos, state.Projection, state.View, Matrix.Identity);
             var dir = p2 - p1;
             dir.Normalize();
             var ray = new Ray(p1, p2 - p1);
@@ -308,8 +308,8 @@ namespace FSO.LotView.RC
 
             gd.SetRenderTarget(ObjThumbTarget);
             var cpoints = new List<Vector3>();
-            var view = state.Camera.View;
-            var vp = view * state.Camera.Projection;
+            var view = state.View;
+            var vp = view * state.Projection;
             gd.BlendState = BlendState.NonPremultiplied;
             gd.RasterizerState = RasterizerState.CullNone;
             gd.DepthStencilState = DepthStencilState.Default;
@@ -444,13 +444,13 @@ namespace FSO.LotView.RC
             var build = state.BuildMode;
             state.SilentBuildMode = 0;
             Blueprint.Terrain.Draw(gd, state);
-            Blueprint.Terrain.DrawMask(gd, state, state.Camera.View, state.Camera.Projection);
+            Blueprint.Terrain.DrawMask(gd, state, state.View, state.Projection);
             state.SilentBuildMode = build;
 
             var effect = WorldContent.RCObject;
             gd.BlendState = BlendState.NonPremultiplied;
-            var view = state.Camera.View;
-            var vp = view * state.Camera.Projection;
+            var view = state.View;
+            var vp = view * state.Projection;
             effect.ViewProjection = vp;
 
             var cuts = Blueprint.Cutaway;
@@ -508,7 +508,7 @@ namespace FSO.LotView.RC
 
         public void DrawBg(GraphicsDevice gd, WorldState state, BoundingBox[] skyBounds, bool forceSurround)
         {
-            var frustrum = new BoundingFrustum(state.Camera.View * state.Camera.Projection);
+            var frustrum = new BoundingFrustum(state.View * state.Projection);
 
             //frustrum.Contains(skyBounds)
             if (forceSurround || (state.Camera as WorldCamera3D)?.FromIntensity > 0 || skyBounds?.Any(x => x.Intersects(frustrum)) != false)
@@ -542,8 +542,8 @@ namespace FSO.LotView.RC
         {
             var effect = WorldContent.RCObject;
             gd.BlendState = BlendState.NonPremultiplied;
-            var view = state.Camera.View;
-            var vp = view * state.Camera.Projection;
+            var view = state.View;
+            var vp = view * state.Projection;
             effect.ViewProjection = vp;
 
             Blueprint.WCRC?.Draw(gd, state);

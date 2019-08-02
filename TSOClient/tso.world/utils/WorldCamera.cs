@@ -173,6 +173,7 @@ namespace FSO.LotView.Utils
                 diagnal = 256.0f;
                 depthRange = 64.0f;
             }
+            depthRange *= 4;
             diagnal *= PreciseZoom;
             depthRange /= PreciseZoom;
 

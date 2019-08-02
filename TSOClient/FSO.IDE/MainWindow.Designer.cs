@@ -54,6 +54,7 @@
             this.dataServiceEditorToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
             this.simAnticsAOTToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
             this.saveGlobalscsToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
+            this.openExternalIffToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
             this.windowToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
             this.hideAllToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
             this.toolStripSeparator1 = new System.Windows.Forms.ToolStripSeparator();
@@ -147,21 +148,23 @@
             // objectToolStripMenuItem
             // 
             this.objectToolStripMenuItem.Name = "objectToolStripMenuItem";
-            this.objectToolStripMenuItem.Size = new System.Drawing.Size(139, 22);
+            this.objectToolStripMenuItem.Size = new System.Drawing.Size(180, 22);
             this.objectToolStripMenuItem.Text = "Object";
             this.objectToolStripMenuItem.Click += new System.EventHandler(this.NewOBJButton_Click);
             // 
             // semiGlobalToolStripMenuItem
             // 
             this.semiGlobalToolStripMenuItem.Name = "semiGlobalToolStripMenuItem";
-            this.semiGlobalToolStripMenuItem.Size = new System.Drawing.Size(139, 22);
+            this.semiGlobalToolStripMenuItem.Size = new System.Drawing.Size(180, 22);
             this.semiGlobalToolStripMenuItem.Text = "Semi-Global";
+            this.semiGlobalToolStripMenuItem.Click += new System.EventHandler(this.semiGlobalToolStripMenuItem_Click);
             // 
             // toolsToolStripMenuItem
             // 
             this.toolsToolStripMenuItem.DropDownItems.AddRange(new System.Windows.Forms.ToolStripItem[] {
             this.dataServiceEditorToolStripMenuItem,
-            this.simAnticsAOTToolStripMenuItem});
+            this.simAnticsAOTToolStripMenuItem,
+            this.openExternalIffToolStripMenuItem});
             this.toolsToolStripMenuItem.Name = "toolsToolStripMenuItem";
             this.toolsToolStripMenuItem.Size = new System.Drawing.Size(47, 20);
             this.toolsToolStripMenuItem.Text = "Tools";
@@ -188,6 +191,13 @@
             this.saveGlobalscsToolStripMenuItem.Text = "Generate AOT Sources (.cs)";
             this.saveGlobalscsToolStripMenuItem.Click += new System.EventHandler(this.saveGlobalscsToolStripMenuItem_Click);
             // 
+            // openExternalIffToolStripMenuItem
+            // 
+            this.openExternalIffToolStripMenuItem.Name = "openExternalIffToolStripMenuItem";
+            this.openExternalIffToolStripMenuItem.Size = new System.Drawing.Size(180, 22);
+            this.openExternalIffToolStripMenuItem.Text = "Open External Iff...";
+            this.openExternalIffToolStripMenuItem.Click += new System.EventHandler(this.openExternalIffToolStripMenuItem_Click);
+            // 
             // windowToolStripMenuItem
             // 
             this.windowToolStripMenuItem.DropDownItems.AddRange(new System.Windows.Forms.ToolStripItem[] {
@@ -201,14 +211,14 @@
             // hideAllToolStripMenuItem
             // 
             this.hideAllToolStripMenuItem.Name = "hideAllToolStripMenuItem";
-            this.hideAllToolStripMenuItem.Size = new System.Drawing.Size(180, 22);
+            this.hideAllToolStripMenuItem.Size = new System.Drawing.Size(116, 22);
             this.hideAllToolStripMenuItem.Text = "Hide All";
             this.hideAllToolStripMenuItem.Click += new System.EventHandler(this.hideAllToolStripMenuItem_Click);
             // 
             // toolStripSeparator1
             // 
             this.toolStripSeparator1.Name = "toolStripSeparator1";
-            this.toolStripSeparator1.Size = new System.Drawing.Size(177, 6);
+            this.toolStripSeparator1.Size = new System.Drawing.Size(113, 6);
             // 
             // helpToolStripMenuItem
             // 
@@ -528,5 +538,6 @@
         private System.Windows.Forms.ToolStripMenuItem dataServiceEditorToolStripMenuItem;
         private System.Windows.Forms.ToolStripMenuItem simAnticsAOTToolStripMenuItem;
         private System.Windows.Forms.ToolStripMenuItem saveGlobalscsToolStripMenuItem;
+        private System.Windows.Forms.ToolStripMenuItem openExternalIffToolStripMenuItem;
     }
 }

@@ -19,6 +19,7 @@ using FSO.Vitaboy;
 using FSO.Common;
 using FSO.LotView.Platform;
 using FSO.LotView.Model;
+using FSO.LotView.Utils.Camera;
 
 namespace FSO.LotView
 {
@@ -74,6 +75,18 @@ namespace FSO.LotView
         public BoundingFrustum Frustum;
         public Rectangle WorldRectangle;
 
+        public void PrepareCulling(Vector2 pxOffset)
+        {
+            var size = new Vector2(_2D.LastWidth, _2D.LastHeight);
+            var mainBd = WorldSpace.GetScreenFromTile(CenterTile);
+            var diff = pxOffset - mainBd;
+            WorldRectangle = new Rectangle((pxOffset).ToPoint(), size.ToPoint());
+
+            var view = View;
+            ViewProjection = view * Projection;
+            Frustum = new BoundingFrustum(ViewProjection);
+        }
+
         /// <summary>
         /// Gets the camera used by this WorldState instance.s
         /// </summary>
@@ -81,6 +94,11 @@ namespace FSO.LotView
         {
             get { return WorldCamera; }
         }
+
+        // new camera stuff
+        public CameraControllers Cameras;
+        public Matrix View => Cameras.View;
+        public Matrix Projection => Cameras.Projection;
 
         public bool TempDraw; //set for OBJID mode and thumbs
         public bool ObjectIDMode;
@@ -315,7 +333,7 @@ namespace FSO.LotView
         public Vector2 GetWallOffset()
         {
             if (ZeroWallOffset) return Vector2.Zero;
-            var vd = Camera.View;
+            var vd = View;
             vd.M41 = 0; vd.M42 = 0; vd.M43 = 0;
 
             var transform = Vector3.Transform(new Vector3(1, 0, 0), vd);
@@ -340,17 +358,17 @@ namespace FSO.LotView
             }
             WorldContent._2DWorldBatchEffect.ambientLight = amb;
 
-            var frontDir = WorldCamera.FrontDirection();
+            //var frontDir = WorldCamera.FrontDirection();
             Vector2 lightOffset;
             if (Light != null)
             {
-                lightOffset = new Vector2(frontDir.X / (6 * (Light.Blueprint.Width - 2)), frontDir.Z / (6 * (Light.Blueprint.Width - 2)));
+                lightOffset = -GetWallOffset() * 6 / (6 * (Light.Blueprint.Width - 2)); //new Vector2(frontDir.X / (6 * (Light.Blueprint.Width - 2)), frontDir.Z / (6 * (Light.Blueprint.Width - 2)));
                 lightOffset *= Light.InvMapLayout;
                 Light.SetMapLayout(3, 2);
             }
             else
             {
-                lightOffset = new Vector2(frontDir.X / (6 * 75), frontDir.Z / (6 * 75));
+                lightOffset = -GetWallOffset() * 6 / (6 * 75); //new Vector2(frontDir.X / (6 * 75), frontDir.Z / (6 * 75));
             }
 
             foreach (var effect in WorldContent.LightEffects)

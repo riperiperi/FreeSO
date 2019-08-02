@@ -53,7 +53,8 @@ namespace FSO.IDE.EditorComponent
                 {
                     foreach (var anim in anims)
                     {
-                        var name = anim.Substring(0, anim.Length - 5).ToLowerInvariant();
+                        string name = anim.Substring(0, anim.Length - 5);
+                        if (!Content.Content.Get().TS1) name = name.ToLowerInvariant();
                         if (searchString.IsMatch(name)) AllList.Items.Add(name); //keys are names
                     }
                 }

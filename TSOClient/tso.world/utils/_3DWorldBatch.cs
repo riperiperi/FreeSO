@@ -139,13 +139,13 @@ namespace FSO.LotView.Utils
         }
 
         public void ApplyCamera(Effect effect){
-            effect.Parameters["View"].SetValue(State.Camera.View);
-            effect.Parameters["Projection"].SetValue(State.Camera.Projection);
+            effect.Parameters["View"].SetValue(State.View);
+            effect.Parameters["Projection"].SetValue(State.Projection);
         }
         public void ApplyCamera(BasicEffect effect, WorldComponent component)
         {
-            effect.View = State.Camera.View;
-            effect.Projection = State.Camera.Projection;
+            effect.View = State.View;
+            effect.Projection = State.Projection;
             effect.World = component.World;
         }
     }

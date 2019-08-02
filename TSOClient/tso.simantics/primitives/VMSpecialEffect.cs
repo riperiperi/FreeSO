@@ -18,6 +18,7 @@ namespace FSO.SimAntics.Primitives
     {
         public override VMPrimitiveExitCode Execute(VMStackFrame context, VMPrimitiveOperand args)
         {
+            //string table 305 used by this primitive for screenshot caption
             var operand = (VMSpecialEffectOperand)args;
             if (context.VM.TS1 && VM.UseWorld)
             {

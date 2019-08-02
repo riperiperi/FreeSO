@@ -51,22 +51,19 @@ namespace FSO.LotView
         public void StaticDraw(GraphicsDevice gd, WorldState state, Vector2 pxOffset)
         {
             var changes = Blueprint.Changes;
-            state.PrepareLighting();
-
-            var view = state.Camera.View;
-            var vp = view * state.Camera.Projection;
-            state.Frustum = new BoundingFrustum(vp);
+            //state.PrepareLighting();
+            state.PrepareCulling(pxOffset);
 
             var effect = WorldContent.RCObject;
             gd.BlendState = BlendState.NonPremultiplied;
-            effect.ViewProjection = vp;
+            effect.ViewProjection = state.ViewProjection;
 
             effect.SetTechnique(RCObjectTechniques.Draw);
 
             DrawObjBuf(gd, state, pxOffset);
             //if (false)
             //{
-                foreach (var sub in Blueprint.SubWorlds) sub.SubDraw(gd, state, (pxOffsetSub) => sub.Entities.StaticDraw(gd, state, pxOffsetSub));
+                //foreach (var sub in Blueprint.SubWorlds) sub.SubDraw(gd, state, (pxOffsetSub) => sub.Entities.StaticDraw(gd, state, pxOffsetSub));
             //}
         }
 
@@ -82,8 +79,8 @@ namespace FSO.LotView
             var effect = WorldContent.AvatarEffect;
             effect.CurrentTechnique = WorldContent.AvatarEffect.Techniques[pass];
 
-            effect.Parameters["View"].SetValue(state.Camera.View);
-            effect.Parameters["Projection"].SetValue(state.Camera.Projection);
+            effect.Parameters["View"].SetValue(state.View);
+            effect.Parameters["Projection"].SetValue(state.Projection);
 
             var _2d = state._2D;
             _2d.OffsetPixel(new Vector2());
@@ -103,33 +100,26 @@ namespace FSO.LotView
             var changes = Blueprint.Changes;
             var _2d = state._2D;
 
-            // prepare 3d
-
-            var view = state.Camera.View;
-            var vp = view * state.Camera.Projection;
-            state.Frustum = new BoundingFrustum(vp);
-
-            var effect = WorldContent.RCObject;
-            gd.BlendState = BlendState.NonPremultiplied;
-            effect.ViewProjection = vp;
-            gd.RasterizerState = RasterizerState.CullNone;
-
-            effect.SetTechnique(RCObjectTechniques.Draw);
-
             // prepare 2d
             // Static objects have been drawn as part of the single static buffer in WorldStatic. 
 
             var pxOffset = -state.WorldSpace.GetScreenOffset();
             var tileOffset = state.CenterTile;
 
-            //Draw dynamic objects.
-
             _2d.SetScroll(pxOffset);
 
-            var size = new Vector2(state.WorldSpace.WorldPxWidth, state.WorldSpace.WorldPxHeight);
-            var mainBd = state.WorldSpace.GetScreenFromTile(state.CenterTile);
-            var diff = pxOffset - mainBd;
-            state.WorldRectangle = new Rectangle((pxOffset).ToPoint(), size.ToPoint());
+            // prepare 3d
+
+            state.PrepareCulling(pxOffset);
+
+            var effect = WorldContent.RCObject;
+            gd.BlendState = BlendState.NonPremultiplied;
+            effect.ViewProjection = state.ViewProjection;
+            gd.RasterizerState = RasterizerState.CullNone;
+
+            effect.SetTechnique(RCObjectTechniques.Draw);
+
+            //Draw dynamic objects.
             
             _2d.OffsetPixel(new Vector2());
             _2d.OffsetTile(new Vector3());
@@ -138,27 +128,20 @@ namespace FSO.LotView
             //if we're not using static, draw all the objects here instead
             //TODO: in-place re-order the dynamic objects list to shorten sort time? might not matter for lists this short, and would make it harder to use a hashset
             IEnumerable<ObjectComponent> dyn;
-            if (changes.DrawImmediate)
-            {
-                dyn = Blueprint.Objects;
-            }
-            else
-            {
-                dyn = changes.DynamicObjects;
-            }
+            if (changes.DrawImmediate) dyn = Blueprint.Objects;
+            else dyn = changes.DynamicObjects;
 
-            dyn = dyn.Where(x => x.DoDraw(state)).OrderBy(x => x.DrawOrder);
+            gd.BlendState = BlendState.NonPremultiplied;
+            dyn = dyn.Where(x => (x.Level <= state.Level) && x.DoDraw(state));
+            if (state.CameraMode == CameraRenderMode._3D) //only use for full 3d - the draw order for 2d rotation is a completely different coordinate space.
+            {
+                foreach (var obj in dyn) obj.UpdateDrawOrder(state);
+            }
+            dyn = dyn.OrderBy(x => x.DrawOrder);
 
+            gd.BlendState = BlendState.NonPremultiplied;
             foreach (var obj in dyn)
             {
-                if (obj.Level > state.Level) continue;
-                /*
-                var tilePosition = obj.Position;
-                var oPx = state.WorldSpace.GetScreenFromTile(tilePosition);
-                
-                var offBound = new Rectangle(obj.Bounding.Location + oPx.ToPoint(), obj.Bounding.Size);
-                if (!offBound.Intersects(state.WorldRectangle)) continue;
-                */
                 obj.DrawImmediate(gd, state);
             }
 
@@ -170,6 +153,8 @@ namespace FSO.LotView
                 if (op.Level <= state.Level && op.Owner.Visible && (op.Owner.Position.X > -2043 || op.Owner.Position.Y > -2043))
                     op.Draw(gd, state);
             }
+
+            //foreach (var sub in Blueprint.SubWorlds) sub.SubDraw(gd, state, (pxOffsetSub) => sub.Entities.StaticDraw(gd, state, pxOffsetSub));
         }
 
         private void DrawObjBuf(GraphicsDevice gd, WorldState state, Vector2 pxOffset)
@@ -182,24 +167,20 @@ namespace FSO.LotView
             _2d.OffsetPixel(new Vector2());
             _2d.OffsetTile(new Vector3());
             _2d.PrepareImmediate(Effects.WorldBatchTechniques.drawZSpriteDepthChannel);
-
+            
             var size = new Vector2(state._2D.LastWidth, state._2D.LastHeight);
             var mainBd = state.WorldSpace.GetScreenFromTile(state.CenterTile);
             var diff = pxOffset - mainBd;
             state.WorldRectangle = new Rectangle((pxOffset).ToPoint(), size.ToPoint());
+            state.PrepareCulling(pxOffset);
 
-            var staticObj = Blueprint.Changes.StaticObjects.Where(x => x.DoDraw(state)).OrderBy(x => x.DrawOrder);
+            IEnumerable<ObjectComponent> staticObj;
+            if (Blueprint.Changes.Subworld) staticObj = Blueprint.Objects;
+            else staticObj = Blueprint.Changes.StaticObjects;
+            staticObj = staticObj.Where(x => (x.Level <= state.Level) && x.DoDraw(state)).OrderBy(x => x.DrawOrder);
 
             foreach (var obj in staticObj)
             {
-                if (obj.Level > state.Level) continue;
-                /*
-                var tilePosition = obj.Position;
-                var oPx = state.WorldSpace.GetScreenFromTile(tilePosition);
-                obj.ValidateSprite(state);
-                */
-                //var offBound = new Rectangle(obj.Bounding.Location + oPx.ToPoint(), obj.Bounding.Size);
-                //if (!offBound.Intersects(worldBounds)) continue;
                 obj.DrawImmediate(gd, state);
             }
 

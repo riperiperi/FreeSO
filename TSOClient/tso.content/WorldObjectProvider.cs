@@ -305,7 +305,14 @@ namespace FSO.Content
             var GLOBChunks = iff.List<GLOB>();
             if (GLOBChunks != null && GLOBChunks[0].Name != "")
             {
-                var sg = content.WorldObjectGlobals.Get(GLOBChunks[0].Name);
+                GameGlobal sg = null;
+                try
+                {
+                    sg = content.WorldObjectGlobals.Get(GLOBChunks[0].Name);
+                } catch (Exception)
+                {
+
+                }
                 if (sg != null) SemiGlobal = sg.Resource; //used for tuning constant fetching.
             }
 

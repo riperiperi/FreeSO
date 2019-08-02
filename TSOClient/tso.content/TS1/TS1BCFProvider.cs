@@ -20,6 +20,7 @@ namespace FSO.Content.TS1
         public TS1SubProvider<CFP> CFPProvider;
         public TS1Provider BaseProvider;
         public Dictionary<string, string> AnimHostBCF = new Dictionary<string, string>();
+        public Dictionary<string, string> AnimRealCase = new Dictionary<string, string>();
         public Dictionary<string, string> SkinHostBCF = new Dictionary<string, string>();
         public Dictionary<string, string> SkelHostBCF = new Dictionary<string, string>();
         public Content ContentManager;
@@ -47,6 +48,7 @@ namespace FSO.Content.TS1
                 foreach (var anim in file.Animations)
                 {
                     AnimHostBCF[anim.Name.ToLowerInvariant()] = Path.GetFileName(bcf.ToString().ToLowerInvariant().Replace('\\', '/'));
+                    AnimRealCase[anim.Name.ToLowerInvariant()] = anim.Name;
                 }
                 foreach (var skin in file.Appearances)
                 {
@@ -96,7 +98,7 @@ namespace FSO.Content.TS1
 
         public List<string> ListAllAnimations()
         {
-            return AnimHostBCF.Keys.Select(x => x+".anim").ToList();
+            return AnimHostBCF.Keys.Select(x => AnimRealCase[x]+".anim").ToList();
         }
 
         public object Get(string name, Type expected)

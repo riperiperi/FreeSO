@@ -115,7 +115,7 @@ namespace FSO.LotView.Components
         public override Vector2 GetScreenPos(WorldState world)
         {
             var headpos = Avatar.Skeleton.GetBone("HEAD").AbsolutePosition;
-            var projected = Vector4.Transform(new Vector4(headpos, 1), Matrix.CreateRotationY((float)(Math.PI - RadianDirection)) * this.World * world.Camera.View * world.Camera.Projection);
+            var projected = Vector4.Transform(new Vector4(headpos, 1), Matrix.CreateRotationY((float)(Math.PI - RadianDirection)) * this.World * world.View * world.Projection);
             if (world.Camera is WorldCamera) projected.Z = 1;
             var res1 = new Vector2(projected.X / projected.Z, -projected.Y / projected.Z);
             var size = PPXDepthEngine.GetWidthHeight();

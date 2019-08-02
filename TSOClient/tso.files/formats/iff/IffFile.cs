@@ -28,6 +28,7 @@ namespace FSO.Files.Formats.IFF
         /// </summary>
         public static bool RETAIN_CHUNK_DATA = false;
         public static bool TargetTS1 = false;
+        public bool TSBO = false;
         public bool RetainChunkData = RETAIN_CHUNK_DATA;
         public object CachedJITModule; //for JIT and AOT modes
         public uint ExecutableHash; //hash of BHAV and BCON chunks

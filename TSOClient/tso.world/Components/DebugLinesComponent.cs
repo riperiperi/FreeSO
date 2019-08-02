@@ -112,8 +112,8 @@ namespace FSO.LotView.Components
             effect.TextureEnabled = false;
 
             //var view = view;state.Camera.View;
-            var view = state.Camera.View;
-            var projection = state.Camera.Projection;
+            var view = state.View;
+            var projection = state.Projection;
             effect.View = view;
             effect.Projection = projection;// (state.Camera as WorldCamera3D)?.BaseProjection() ?? state.Camera.Projection;
             effect.World = Matrix.CreateTranslation(0, (Level-1)*2.95f, 0) * Matrix.CreateScale(3f);

@@ -1369,7 +1369,7 @@ namespace FSO.Client.Rendering.City
             float HB = m_ScrWidth * IsoScale;
             float VB = m_ScrHeight * IsoScale;
 
-            if (FSOEnvironment.Enable3D && m_LotZoomProgress > 0.0001f) return;
+            if (Camera is CityCamera3D && m_LotZoomProgress > 0.0001f) return;
 
             Matrix ProjectionMatrix = Camera.Projection;
 

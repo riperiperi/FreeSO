@@ -29,7 +29,7 @@ namespace FSO.LotView.Platform
 
         public Texture2D GetLotThumb(GraphicsDevice gd, WorldState state, Action<Texture2D> rooflessCallback)
         {
-            if (!(state.Camera is WorldCamera)) return new Texture2D(gd, 8, 8);
+            //if (!(state.Camera is WorldCamera)) return new Texture2D(gd, 8, 8);
             var oldZoom = state.Zoom;
             var oldRotation = state.Rotation;
             var oldLevel = state.Level;
@@ -71,7 +71,7 @@ namespace FSO.LotView.Platform
                     bp.FloorGeom.SliceReset(gd, new Rectangle(6, 6, bp.Width - 13, bp.Height - 13));
                     //Blueprint.SetLightColor(WorldContent.GrassEffect, Color.White, Color.White);
                     bp.Terrain.Draw(gd, state);
-                    bp.Terrain.DrawMask(gd, state, state.Camera.View, state.Camera.Projection);
+                    bp.Terrain.DrawMask(gd, state, state.View, state.Projection);
                     bp.WallComp.Draw(gd, state);
                     _2d.Pause();
                     _2d.Resume();
@@ -145,8 +145,8 @@ namespace FSO.LotView.Platform
                     //state._3D.Begin(gd);
                     var effect = WorldContent.AvatarEffect;
                     effect.CurrentTechnique = WorldContent.AvatarEffect.Techniques[1];
-                    effect.Parameters["View"].SetValue(state.Camera.View);
-                    effect.Parameters["Projection"].SetValue(state.Camera.Projection);
+                    effect.Parameters["View"].SetValue(state.View);
+                    effect.Parameters["Projection"].SetValue(state.Projection);
 
                     foreach (var avatar in bp.Avatars)
                     {

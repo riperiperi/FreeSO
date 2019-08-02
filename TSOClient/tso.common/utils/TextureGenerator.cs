@@ -122,7 +122,7 @@ namespace FSO.Common.Utils
         {
             if (TerrainNoise == null)
             {
-                TerrainNoise = new Texture2D(gd, 512, 512, FSOEnvironment.Enable3D, SurfaceFormat.Color);
+                TerrainNoise = new Texture2D(gd, 512, 512, true, SurfaceFormat.Color);
                 Color[] data = new Color[512 * 512];
 
                 var rd = new Random();
@@ -134,7 +134,7 @@ namespace FSO.Common.Utils
                     data[i].B = (byte)((rd.Next(255) + rd.Next(255)) / 2);
                     data[i].A = (byte)((rd.Next(255) + rd.Next(255)) / 2);
                 }
-                if (FSOEnvironment.Enable3D) TextureUtils.UploadWithMips(TerrainNoise, gd, data);
+                TextureUtils.UploadWithMips(TerrainNoise, gd, data);
                 else TerrainNoise.SetData(data);
             }
             return TerrainNoise;
@@ -144,7 +144,7 @@ namespace FSO.Common.Utils
         {
             if (UniformNoise == null)
             {
-                UniformNoise = new Texture2D(gd, 512, 512, FSOEnvironment.Enable3D, SurfaceFormat.Color);
+                UniformNoise = new Texture2D(gd, 512, 512, true, SurfaceFormat.Color);
                 Color[] data = new Color[512 * 512];
 
                 var rd = new Random();
@@ -156,7 +156,7 @@ namespace FSO.Common.Utils
                     data[i].B = (byte)(rd.Next(255));
                     data[i].A = (byte)(rd.Next(255));
                 }
-                if (FSOEnvironment.Enable3D) TextureUtils.UploadWithMips(UniformNoise, gd, data);
+                TextureUtils.UploadWithMips(UniformNoise, gd, data);
                 else UniformNoise.SetData(data);
             }
             return UniformNoise;

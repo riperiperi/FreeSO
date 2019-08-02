@@ -72,6 +72,7 @@ namespace FSO.LotView.Components
             Platform = new WorldPlatform2D(blueprint);
             State.Platform = Platform;
             State.Changes = blueprint.Changes;
+            blueprint.Changes.Subworld = true;
         }
 
         public void CalculateFloorsUsed()
@@ -271,6 +272,36 @@ namespace FSO.LotView.Components
                 parentState.Camera.Translation = Vector3.Zero;
             parentState.PrepareLighting();
         }
+
+        public bool DoDraw(WorldState state)
+        {
+            return state.Frustum.Intersects(Bounds);
+        }
+
+        public BoundingBox Bounds;
+
+        public void UpdateBounds()
+        {
+            float minAlt = 0;
+            float maxAlt = 0;
+            foreach (var height in Blueprint.Altitude)
+            {
+                var alt = height * Blueprint.TerrainFactor - Blueprint.BaseAlt;
+                if (alt < minAlt)
+                {
+                    minAlt = alt;
+                }
+                if (alt > maxAlt)
+                {
+                    maxAlt = alt;
+                }
+            }
+            //calculate the maximum floor. shave 1 off to account for buildable area being smaller, but minimum 1 floor as trees are likely on floor 1
+            maxAlt += Math.Max(1, FloorsUsed - 1) * 2.95f * 3;
+            Bounds = new BoundingBox(new Vector3(GlobalPosition.X * -3, minAlt, GlobalPosition.Y * -3), new Vector3(GlobalPosition.X * -3 + Blueprint.Width * 3, maxAlt, GlobalPosition.Y * -3 + Blueprint.Height * 3));
+        }
+
+        // unused
 
         public virtual void DrawArch(GraphicsDevice gd, WorldState parentState)
         {

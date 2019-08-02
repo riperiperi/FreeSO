@@ -77,12 +77,36 @@ namespace FSO.Client.UI.Panels
             BgEdge.SetSize(Background.Width + 64 * 2, ScreenHeight + 2);
         }
 
+        float test = 0;
         public override void Draw(UISpriteBatch batch)
         {
             var ScreenWidth = GlobalSettings.Default.GraphicsWidth;
             var ScreenHeight = GlobalSettings.Default.GraphicsHeight;
+            
+
+            var effect = LotView.WorldContent.SpriteEffect;
+
+            test -= 0.01f;
+            /*
+            effect.CurrentTechnique = effect.Techniques["Maze2Grid"];
+            effect.Parameters["MazeGridOffset"].SetValue(new Vector2(0.5f, test));
+            effect.Parameters["MazeRotation"].SetValue(0f);
+            effect.Parameters["MazeUseTexture"].SetValue(true);
+            */
+
+            effect.CurrentTechnique = effect.Techniques["Dissolve"];
+            effect.Parameters["TexSize"].SetValue(new Vector2(ScreenWidth, ScreenHeight));
+            effect.Parameters["DissolvePercent"].SetValue((-test) % 1); //
+
             DrawLocalTexture(batch, TextureGenerator.GetPxWhite(batch.GraphicsDevice), null, Vector2.Zero, new Vector2(ScreenWidth, ScreenHeight), new Color(0x09, 0x18, 0x2F), 0f);
+
+            batch.SetEffect(effect);
             base.Draw(batch);
+            batch.SetEffect();
+
+            
+
+            //base.Draw(batch);
         }
 
     }

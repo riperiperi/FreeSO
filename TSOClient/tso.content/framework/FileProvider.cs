@@ -57,6 +57,7 @@ namespace FSO.Content.Framework
             {
                 List<string> matchedFiles = new List<string>();
                 var files = UseContent ? ContentManager.ContentFiles : (UseTS1?ContentManager.TS1AllFiles:ContentManager.AllFiles);
+                var basePath = UseTS1 ? ContentManager.TS1BasePath : ContentManager.BasePath;
                 foreach (var file in files)
                 {
                     if (FilePattern.IsMatch(file.Replace('\\', '/')))
@@ -68,7 +69,7 @@ namespace FSO.Content.Framework
                 {
                     var name = Path.GetFileName(file).ToLowerInvariant();
                     EntriesByName[name] = file;
-                    Items.Add(new FileContentReference<T>(name, this));
+                    Items.Add(new FileContentReference<T>(name, Path.Combine(basePath, file), this));
                 }
             }
         }
@@ -159,10 +160,12 @@ namespace FSO.Content.Framework
     public class FileContentReference<T> : IContentReference<T>
     {
         public string Name;
+        public string Filename;
         private FileProvider<T> Provider;
 
-        public FileContentReference(string name, FileProvider<T> provider){
+        public FileContentReference(string name, string filename, FileProvider<T> provider){
             this.Name = name;
+            this.Filename = filename;
             this.Provider = provider;
         }
 

@@ -67,6 +67,20 @@ namespace FSO.LotView
             Blueprint = blueprint;
         }
 
+        public void DrawSub(GraphicsDevice gd, WorldState state, Vector2 pxOffset)
+        {
+            state.PrepareCulling(pxOffset);
+            var subs = Blueprint.SubWorlds.Where(sub => sub.DoDraw(state)).ToList();
+            foreach (var sub in subs)
+            {
+                sub.SubDraw(gd, state, (pxOffsetSub) =>
+                {
+                    sub.Architecture.StaticDraw(gd, state, pxOffsetSub);
+                    sub.Entities.StaticDraw(gd, state, pxOffsetSub);
+                });
+            }
+        }
+
         public void StaticDraw(GraphicsDevice gd, WorldState state, Vector2 pxOffset)
         {
             var _2d = state._2D;
@@ -74,9 +88,10 @@ namespace FSO.LotView
             //draw wall and floors to static buffer
             DrawFloorBuf(gd, state);
             DrawWallBuf(gd, state, pxOffset);
+            DrawSub(gd, state, pxOffset);
             //if (false)
             //{
-                foreach (var sub in Blueprint.SubWorlds) sub.SubDraw(gd, state, (pxOffsetSub) => { sub.Architecture.StaticDraw(gd, state, pxOffsetSub); });
+            //foreach (var sub in Blueprint.SubWorlds) sub.SubDraw(gd, state, (pxOffsetSub) => { sub.Architecture.StaticDraw(gd, state, pxOffsetSub); });
             //}
         }
 
@@ -88,14 +103,15 @@ namespace FSO.LotView
             {
                 DrawFloorBuf(gd, state);
                 DrawWallBuf(gd, state, pxOffset);
-                foreach (var sub in Blueprint.SubWorlds) sub.SubDraw(gd, state, (pxOffsetSub) => { sub.Architecture.StaticDraw(gd, state, pxOffsetSub); });
+                DrawSub(gd, state, pxOffset);
+                //foreach (var sub in Blueprint.SubWorlds) sub.SubDraw(gd, state, (pxOffsetSub) => { sub.Architecture.StaticDraw(gd, state, pxOffsetSub); });
             }
 
             if (state.CameraMode > CameraRenderMode._2D) { 
                 var effect = WorldContent.RCObject;
                 gd.BlendState = BlendState.NonPremultiplied;
-                var view = state.Camera.View;
-                var vp = view * state.Camera.Projection;
+                var view = state.View;
+                var vp = view * state.Projection;
                 effect.ViewProjection = vp;
 
                 if (Blueprint.WCRC != null) Blueprint.WCRC.Draw(gd, state);

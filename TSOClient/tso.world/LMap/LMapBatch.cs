@@ -234,6 +234,7 @@ namespace FSO.LotView.LMap
             var rooms = Blueprint.Rooms;
             var lightRooms = Blueprint.Light;
 
+            if (room >= rooms.Count) return;
             var rep = rooms[room];
             if (rep.Floor > RedrawFloor) return;
 

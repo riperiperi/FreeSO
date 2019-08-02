@@ -473,8 +473,8 @@ namespace FSO.LotView.Components
 
             var offset = -world.WorldSpace.GetScreenOffset();
 
-            Effect.Projection = world.Camera.Projection;
-            var view = world.Camera.View;
+            Effect.Projection = world.Projection;
+            var view = world.View;
             var _3d = _3D;
             if (!_3d) view = view * Matrix.CreateTranslation(0, 0, -0.25f);
             Effect.View = view;
