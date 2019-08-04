@@ -144,6 +144,262 @@ namespace FSO.Server.Api.Core.Controllers
             }
         }
 
+        //New user API calls might replace old once later
+        //get lot information by location
+        [HttpGet]
+        [Route("userapi/lots/id/{lotid}.json")]
+        public IActionResult GetByID(int lotid)
+        {
+            var api = Api.INSTANCE;
+
+            using (var da = api.DAFactory.Get())
+            {
+                var Lot = da.Lots.Get(lotid);
+                if (Lot == null)
+                {
+                    var JSONError = new JSONLotError();
+                    JSONError.Error = "No lot found";
+                    return ApiResponse.Json(HttpStatusCode.NotFound, JSONError);
+                }
+
+                var roomies = da.Roommates.GetLotRoommates(Lot.lot_id).Where(x => x.is_pending == 0).Select(x => x.avatar_id).ToArray();
+
+                var LotJSON = new JSONLot
+                {
+                    admit_mode = Lot.admit_mode,
+                    category = Lot.category,
+                    created_date = Lot.created_date,
+                    description = Lot.description,
+                    location = Lot.location,
+                    name = Lot.name,
+                    neighborhood_id = Lot.neighborhood_id,
+                    owner_id = Lot.owner_id,
+                    shard_id = Lot.shard_id,
+                    skill_mode = Lot.skill_mode,
+                    roommates = roomies
+                };
+
+                return ApiResponse.Json(HttpStatusCode.OK, LotJSON);
+            }
+        }
+        //get lot information by location
+        [HttpGet]
+        [Route("userapi/city/{shardid}/lots/location/{locationid}.json")]
+        public IActionResult GetByLocation(int shardid, uint locationid)
+        {
+            var api = Api.INSTANCE;
+
+            using (var da = api.DAFactory.Get())
+            {
+                var Lot = da.Lots.GetByLocation(shardid, locationid);
+                if (Lot == null)
+                {
+                    var JSONError = new JSONLotError();
+                    JSONError.Error = "No lot found";
+                    return ApiResponse.Json(HttpStatusCode.NotFound, JSONError);
+                }
+
+                var roomies = da.Roommates.GetLotRoommates(Lot.lot_id).Where(x => x.is_pending == 0).Select(x => x.avatar_id).ToArray();
+
+                var LotJSON = new JSONLot
+                {
+                    admit_mode = Lot.admit_mode,
+                    category = Lot.category,
+                    created_date = Lot.created_date,
+                    description = Lot.description,
+                    location = Lot.location,
+                    name = Lot.name,
+                    neighborhood_id = Lot.neighborhood_id,
+                    owner_id = Lot.owner_id,
+                    shard_id = Lot.shard_id,
+                    skill_mode = Lot.skill_mode,
+                    roommates = roomies
+                };
+
+                return ApiResponse.Json(HttpStatusCode.OK, LotJSON);
+            }
+        }
+        //get lot information By neighbourhood
+        [HttpGet]
+        [Route("userapi/city/{shardid}/lots/neighborhood/{nhoodid}.json")]
+        public IActionResult GetByNhood(int shardid, uint nhoodid)
+        {
+            var api = Api.INSTANCE;
+
+            using (var da = api.DAFactory.Get())
+            {
+                var Lots = da.Lots.All(shardid).Where(x => x.neighborhood_id == nhoodid);
+                if (Lots == null)
+                {
+                    var JSONError = new JSONLotError();
+                    JSONError.Error = "No lots found";
+                    return ApiResponse.Json(HttpStatusCode.NotFound, JSONError);
+                }
+                List<JSONLotSmall> LotArray = new List<JSONLotSmall>();
+                foreach (var lot in Lots)
+                {
+                    LotArray.Add(new JSONLotSmall
+                    {
+                        Location = lot.location,
+                        Name = lot.name,
+                        Description = lot.description,
+                        Category = lot.category,
+                        Neighborhood_ID = lot.neighborhood_id
+                    });
+                }
+                var LotsJSON = new JSONLots();
+                LotsJSON.Lots = LotArray;
+                return ApiResponse.Json(HttpStatusCode.OK, LotsJSON);
+            }
+        }
+        //get lot information by name
+        [HttpGet]
+        [Route("userapi/city/{shardid}/lots/name/{lotname}.json")]
+        public IActionResult GetByName(int shardid, string lotname)
+        {
+            var api = Api.INSTANCE;
+
+            using (var da = api.DAFactory.Get())
+            {
+                var Lot = da.Lots.GetByName(shardid, lotname);
+                if (Lot == null)
+                {
+                    var JSONError = new JSONLotError();
+                    JSONError.Error = "No lot found";
+                    return ApiResponse.Json(HttpStatusCode.NotFound, JSONError);
+                }
+
+                var roomies = da.Roommates.GetLotRoommates(Lot.lot_id).Where(x => x.is_pending == 0).Select(x => x.avatar_id).ToArray();
+
+                var LotJSON = new JSONLot
+                {
+                    admit_mode = Lot.admit_mode,
+                    category = Lot.category,
+                    created_date = Lot.created_date,
+                    description = Lot.description,
+                    location = Lot.location,
+                    name = Lot.name,
+                    neighborhood_id = Lot.neighborhood_id,
+                    owner_id = Lot.owner_id,
+                    shard_id = Lot.shard_id,
+                    skill_mode = Lot.skill_mode,
+                    roommates = roomies
+                };
+
+                return ApiResponse.Json(HttpStatusCode.OK, LotJSON);
+            }
+        }
+        //get online lots
+        [HttpGet]
+        [Route("userapi/city/{shardid}/lots/online.json")]
+        public IActionResult GetOnline(int shardid)
+        {
+            var api = Api.INSTANCE;
+
+            using (var da = api.DAFactory.Get())
+            {
+                var Lots = da.LotClaims.AllLocations(shardid);
+                if (Lots == null)
+                {
+                    var JSONError = new JSONLotError();
+                    JSONError.Error = "No lots found";
+                    return ApiResponse.Json(HttpStatusCode.NotFound, JSONError);
+                }
+                
+                List<JSONLotSmall> LotSmallJSON = new List<JSONLotSmall>();
+                var total_avatars = 0;
+                foreach(var Lot in Lots)
+                {
+                    var lotInfo = da.Lots.GetByLocation(shardid, Lot.location);
+                    LotSmallJSON.Add(new JSONLotSmall
+                    {
+                        Location = Lot.location,
+                        Name = lotInfo.name,
+                        Description = lotInfo.description,
+                        Category = lotInfo.category,
+                        Neighborhood_ID = lotInfo.neighborhood_id,
+                        Avatars_In_Lot = Lot.active
+                    });
+                    total_avatars += Lot.active;
+                }
+                var lotsonlineJSON = new JSONLotsOnline();
+                lotsonlineJSON.Total_Lots_Online = Lots.Count();
+                lotsonlineJSON.Total_Avatars_In_Lots_Online = total_avatars;
+                lotsonlineJSON.Lots = LotSmallJSON;
+                return ApiResponse.Json(HttpStatusCode.OK, lotsonlineJSON);
+            }
+        }
+        //get Top-100 lots by category
+        [HttpGet]
+        [Route("userapi/city/{shardid}/lots/top100/category/{lotcategory}.json")]
+        public IActionResult GetTop100ByCategory(int shardid, LotCategory lotcategory)
+        {
+            var api = Api.INSTANCE;
+
+            using (var da = api.DAFactory.Get())
+            {
+                var Lots = da.LotTop100.GetByCategory(shardid, lotcategory);
+              
+                if (Lots == null)
+                {
+                    var JSONError = new JSONLotError();
+                    JSONError.Error = "No top 100 lots found";
+                    return ApiResponse.Json(HttpStatusCode.NotFound, JSONError);
+                }
+
+                List<JSONTop100Lot> Top100Lots = new List<JSONTop100Lot>();
+                foreach (var Top100Lot in Lots)
+                {
+                    Top100Lots.Add(new JSONTop100Lot
+                    {
+                        Category = Top100Lot.category,
+                        Rank = Top100Lot.rank,
+                        Shard_ID = Top100Lot.shard_id,
+                        Lot_Location = Top100Lot.lot_location,
+                        Lot_Name = Top100Lot.lot_name
+                    });
+                }
+                var Top100JSON = new JSONTop100Lots();
+                Top100JSON.Lots = Top100Lots;
+                return ApiResponse.Json(HttpStatusCode.OK, Top100JSON);
+            }
+        }
+        //get Top-100 lots by shard
+        [HttpGet]
+        [Route("userapi/city/{shardid}/lots/top100/all.json")]
+        public IActionResult GetTop100ByShard(int shardid)
+        {
+            var api = Api.INSTANCE;
+
+            using (var da = api.DAFactory.Get())
+            {
+                var Lots = da.LotTop100.GetAllByShard(shardid);
+
+                if (Lots == null)
+                {
+                    var JSONError = new JSONLotError();
+                    JSONError.Error = "No top 100 lots found";
+                    return ApiResponse.Json(HttpStatusCode.NotFound, JSONError);
+                }
+
+                List<JSONTop100Lot> Top100Lots = new List<JSONTop100Lot>();
+                foreach (var Top100Lot in Lots)
+                {
+                    Top100Lots.Add(new JSONTop100Lot
+                    {
+                        Category = Top100Lot.category,
+                        Rank = Top100Lot.rank,
+                        Shard_ID = Top100Lot.shard_id,
+                        Lot_Location = Top100Lot.lot_location,
+                        Lot_Name = Top100Lot.lot_name
+                    });
+                }
+                var Top100JSON = new JSONTop100Lots();
+                Top100JSON.Lots = Top100Lots;
+                return ApiResponse.Json(HttpStatusCode.OK, Top100JSON);
+            }
+        }
+
         //moderation only functions, such as downloading lot state
         [HttpGet]
         [Route("userapi/city/{shardid}/{id}.fsov")]
@@ -305,6 +561,29 @@ namespace FSO.Server.Api.Core.Controllers
         }
     }
 
+    public class JSONLotError
+    {
+        public string Error { get; set; }
+    }
+    public class JSONLots
+    {
+        public List<JSONLotSmall> Lots { get; set; }
+    }
+    public class JSONLotsOnline
+    {
+        public int Total_Lots_Online { get; set; }
+        public int Total_Avatars_In_Lots_Online { get; set; }
+        public List<JSONLotSmall> Lots { get; set; }
+    }
+    public class JSONLotSmall
+    {
+        public uint Location { get; set; }
+        public string Name { get; set; }
+        public string Description { get; set; }
+        public LotCategory Category { get; set; }
+        public uint Neighborhood_ID { get; set; }
+        public int Avatars_In_Lot { get; set; }
+    }
     public class JSONLot
     {
         public int shard_id { get; set; }
@@ -320,5 +599,17 @@ namespace FSO.Server.Api.Core.Controllers
         public LotCategory category { get; set; }
         public byte skill_mode { get; set; }
         public byte admit_mode { get; set; }
+    }
+    public class JSONTop100Lots
+    {
+        public List<JSONTop100Lot> Lots { get; set; }
+    }
+    public class JSONTop100Lot
+    {
+        public LotCategory Category { get; set; }
+        public byte Rank { get; set; }
+        public int Shard_ID { get; set; }
+        public string Lot_Name { get; set; }
+        public uint? Lot_Location { get; set; }
     }
 }
