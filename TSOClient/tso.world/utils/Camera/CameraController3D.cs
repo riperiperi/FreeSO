@@ -7,37 +7,50 @@ using FSO.Common;
 using FSO.Common.Rendering.Framework.Camera;
 using FSO.Common.Rendering.Framework.Model;
 using FSO.Common.Utils;
+using FSO.LotView.RC;
 using Microsoft.Xna.Framework;
+using Microsoft.Xna.Framework.Graphics;
 
 namespace FSO.LotView.Utils.Camera
 {
-    public class CameraController3D : ICameraController
+    public class CameraController3D : ICameraController, I3DRotate
     {
         public WorldCamera3D Camera;
         private bool MouseWasDown;
         private Point LastMouse;
+        private WorldState State;
         protected float CamHeight;
 
         public bool UseZoomHold => true;
         public bool UseRotateHold => true;
         public ICamera BaseCamera => Camera;
 
+        protected float _RotationX = -(float)(Math.PI / 4);
+        protected float _RotationY = 1f;
+        protected float _Zoom3D = 3.7f;
+
         public float RotationX
         {
             get { return _RotationX; }
-            set { _RotationX = value; InvalidateCamera(); }
+            set { _RotationX = value; InvalidateCamera(State); }
         }
         
         public float RotationY
         {
             get { return _RotationY; }
-            set { _RotationY = (float)Math.Min(Math.PI, Math.Max(0, value)); InvalidateCamera(); }
+            set { _RotationY = (float)Math.Min(Math.PI, Math.Max(0, value)); InvalidateCamera(State); }
         }
         
         public float Zoom3D
         {
             get { return _Zoom3D; }
-            set { value = Math.Min(100, Math.Max(0, value)); _Zoom3D = value; InvalidateCamera(); }
+            set { value = Math.Min(100, Math.Max(0, value)); _Zoom3D = value; InvalidateCamera(State); }
+        }
+
+        public CameraController3D(GraphicsDevice gd, WorldState state)
+        {
+            Camera = new WorldCamera3D(gd, Vector3.Zero, Vector3.Zero, Vector3.Up);
+            State = state;
         }
 
         public void SetDimensions(Vector2 dim)
@@ -47,8 +60,9 @@ namespace FSO.LotView.Utils.Camera
 
         public virtual void InvalidateCamera(WorldState state)
         {
+            if (state == null) return;
             var baseHeight = CamHeight;
-                Camera.Target = new Vector3(CenterTile.X * WorldSpace.WorldUnitsPerTile, baseHeight + 3, CenterTile.Y * WorldSpace.WorldUnitsPerTile);
+                Camera.Target = new Vector3(state.CenterTile.X * WorldSpace.WorldUnitsPerTile, baseHeight + 3, state.CenterTile.Y * WorldSpace.WorldUnitsPerTile);
                 Camera.Position = Camera.Target + ComputeCenterRelative();
         }
 
@@ -84,19 +98,38 @@ namespace FSO.LotView.Utils.Camera
             if (previous is CameraControllerFP)
             {
                 var fp = (CameraControllerFP)previous;
-                _RotationY = SavedYRot;
+                _RotationY = fp.SavedYRot;
                 var relative = ComputeCenterRelative();
-                CenterTile -= new Vector2(relative.X / WorldSpace.WorldUnitsPerTile, relative.Z / WorldSpace.WorldUnitsPerTile);
+                world.State.CenterTile -= new Vector2(relative.X / WorldSpace.WorldUnitsPerTile, relative.Z / WorldSpace.WorldUnitsPerTile);
 
-                _CamHeight -= relative.Y - FPCamHeight;
+                CamHeight = fp.CamHeight;
+                CamHeight -= relative.Y - fp.FPCamHeight;
             }
             else if (previous is CameraController2D)
             {
                 //just guess camera zoom and rotation?
+                Inherit2D((CameraController2D)previous, world);
             }
         }
 
-    protected float CorrectCameraHeight(World world)
+        public void Inherit2D(CameraController2D controller, World world)
+        {
+            var cam = controller.Camera;
+            switch (cam.Zoom)
+            {
+                case WorldZoom.Near:
+                    Zoom3D = 3.7f; break;
+                case WorldZoom.Medium:
+                    Zoom3D = 7f; break;
+                case WorldZoom.Far:
+                    Zoom3D = 11f; break;
+            }
+
+            RotationX = (float)Math.PI * (((int)cam.Rotation) / 2f - 0.25f);
+            RotationY = 0;
+        }
+
+        protected float CorrectCameraHeight(World world)
         {
             var tt = world.Get3DTTHeights();
             CamHeight += (tt.Item2 - CamHeight) * (1f - (float)Math.Pow(0.8f, 60f / FSOEnvironment.RefreshRate));
@@ -111,8 +144,8 @@ namespace FSO.LotView.Utils.Camera
             if (MouseWasDown)
             {
                 var mpos = state.MouseState.Position;
-                rcState.RotationX += (mpos.X - LastMouse.X) / 250f;
-                rcState.RotationY += (mpos.Y - LastMouse.Y) / 150f;
+                RotationX += (mpos.X - LastMouse.X) / 250f;
+                RotationY += (mpos.Y - LastMouse.Y) / 150f;
             }
 
             if (md)

@@ -658,7 +658,7 @@ namespace FSO.Client.UI.Panels
                 if (Thumbnail.Texture != null) Thumbnail.Texture.Dispose();
                 if (Thumb3D != null) Thumb3D.Dispose();
                 Thumb3D = null; Thumbnail.Texture = null;
-                if (FSOEnvironment.Enable3D)
+                if (World.State.CameraMode == LotView.Model.CameraRenderMode._3D)
                 {
                     Thumb3D = new UI3DThumb(entity);
                 }

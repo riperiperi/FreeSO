@@ -358,7 +358,7 @@ namespace FSO.LotView.Components
         public override Vector2 GetScreenPos(WorldState world)
         {
             var projected = Vector4.Transform(new Vector4(1.5f, 0, 1.5f, 1f), this.World * world.View * world.Projection);
-            if (world.Camera is WorldCamera) projected.Z = 1;
+            if (world.CameraMode < CameraRenderMode._3D) projected.Z = 1;
             var res1 = new Vector2(projected.X / projected.Z, -projected.Y / projected.Z);
             var size = PPXDepthEngine.GetWidthHeight();
             return new Vector2((size.X / PPXDepthEngine.SSAA) * 0.5f * (res1.X + 1f), (size.Y / PPXDepthEngine.SSAA) * 0.5f * (res1.Y + 1f));

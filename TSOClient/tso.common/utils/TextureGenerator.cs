@@ -135,7 +135,6 @@ namespace FSO.Common.Utils
                     data[i].A = (byte)((rd.Next(255) + rd.Next(255)) / 2);
                 }
                 TextureUtils.UploadWithMips(TerrainNoise, gd, data);
-                else TerrainNoise.SetData(data);
             }
             return TerrainNoise;
         }
@@ -157,7 +156,6 @@ namespace FSO.Common.Utils
                     data[i].A = (byte)(rd.Next(255));
                 }
                 TextureUtils.UploadWithMips(UniformNoise, gd, data);
-                else UniformNoise.SetData(data);
             }
             return UniformNoise;
         }

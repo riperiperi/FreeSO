@@ -52,9 +52,9 @@ namespace FSO.LotView
             DrawImmediate = false;
             if (state.CameraMode < CameraRenderMode._3D)
             {
-                state.CameraMode = (state.WorldCamera.RotateOff == 0) ? CameraRenderMode._2D : CameraRenderMode._2DRotate;
-                if (state.CameraMode == CameraRenderMode._2DRotate) DrawImmediate = true;
+                state.CameraMode = (state.Cameras.Safe2D) ? CameraRenderMode._2D : CameraRenderMode._2DRotate;
             }
+            if (state.CameraMode > CameraRenderMode._2D) DrawImmediate = true;
 
             if (Math.Abs(Blueprint.OutsideTime - LastTimeOfDay) > 0.001f)
             {
@@ -95,17 +95,16 @@ namespace FSO.LotView
                 if ((Dirty & BlueprintGlobalChanges.LIGHTING_ANY) > 0)
                 {
                     UpdateColor = true;
+                    Blueprint.GenerateRoomLights();
+                    state.OutsideColor = Blueprint.RoomColors[1];
+                    state._3D.RoomLights = Blueprint.RoomColors;
+                    state.OutsidePx.SetData(new Color[] { new Color(Blueprint.OutsideColor, (Blueprint.OutsideColor.R + Blueprint.OutsideColor.G + Blueprint.OutsideColor.B) / (255 * 3f)) });
+                    if (state.AmbientLight != null)
+                    {
+                        state.AmbientLight.SetData(Blueprint.RoomColors);
+                    }
                     if ((Dirty & BlueprintGlobalChanges.ROOM_CHANGED) == 0)
                     {
-                        Blueprint.GenerateRoomLights();
-                        state.OutsideColor = Blueprint.RoomColors[1];
-                        state._3D.RoomLights = Blueprint.RoomColors;
-                        state.OutsidePx.SetData(new Color[] { new Color(Blueprint.OutsideColor, (Blueprint.OutsideColor.R + Blueprint.OutsideColor.G + Blueprint.OutsideColor.B) / (255 * 3f)) });
-                        if (state.AmbientLight != null)
-                        {
-                            state.AmbientLight.SetData(Blueprint.RoomColors);
-                        }
-
                         if ((Dirty & BlueprintGlobalChanges.LIGHTING_CHANGED) > 0 && state.Light != null)
                         {
                             //pass invalidated rooms
@@ -124,10 +123,10 @@ namespace FSO.LotView
                                 LastSubLightUpdate = (LastSubLightUpdate + 1) % Blueprint.SubWorlds.Count;
                             }
                         }
-
-                        TicksSinceLight = 0;
-                        StaticSurfaceDirty = true;
                     }
+
+                    TicksSinceLight = 0;
+                    StaticSurfaceDirty = true;
                 }
 
                 var wallFlags = (Dirty & (BlueprintGlobalChanges.WALL_CHANGED | BlueprintGlobalChanges.WALL_CUT_CHANGED));

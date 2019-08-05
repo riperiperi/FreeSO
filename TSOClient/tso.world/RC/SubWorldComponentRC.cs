@@ -153,7 +153,7 @@ namespace FSO.LotView.RC
         public override void DrawArch(GraphicsDevice gd, WorldState parentState)
         {
             var parentScroll = parentState.CenterTile;
-            if (!(parentState.Camera is WorldCamera))
+            if (!(parentState.CameraMode < CameraRenderMode._3D))
                 parentState.Camera.Translation = new Vector3(GlobalPosition.X * 3, 0, GlobalPosition.Y * 3);
             else parentState.CenterTile += GlobalPosition; //TODO: vertical offset
 
@@ -194,7 +194,7 @@ namespace FSO.LotView.RC
             }
 
             parentState.CenterTile = parentScroll;
-            if (!(parentState.Camera is WorldCamera))
+            if (!(parentState.CameraMode < CameraRenderMode._3D))
                 parentState.Camera.Translation = Vector3.Zero;
             parentState.PrepareLighting();
         }

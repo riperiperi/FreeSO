@@ -7,6 +7,7 @@ using FSO.Common;
 using FSO.Common.Rendering.Framework.Model;
 using FSO.Common.Utils;
 using Microsoft.Xna.Framework;
+using Microsoft.Xna.Framework.Graphics;
 using Microsoft.Xna.Framework.Input;
 
 namespace FSO.LotView.Utils.Camera
@@ -17,6 +18,10 @@ namespace FSO.LotView.Utils.Camera
         public float FPCamHeight;
         public bool LastFP;
         public float SavedYRot;
+
+        public CameraControllerFP(GraphicsDevice gd, WorldState state) : base(gd, state)
+        {
+        }
 
         public override void InvalidateCamera(WorldState state)
         {
@@ -31,6 +36,7 @@ namespace FSO.LotView.Utils.Camera
         {
             var worldState = world.State;
             var terrainHeight = CorrectCameraHeight(world);
+            var hz = FSOEnvironment.RefreshRate;
             if (state.WindowFocused)
             {
                 var mx = (int)worldState.WorldSpace.WorldPxWidth / (2 * PPXDepthEngine.SSAA);
@@ -40,8 +46,8 @@ namespace FSO.LotView.Utils.Camera
                 var camera = Camera;
                 if (LastFP)
                 {
-                    rcState.RotationX -= ((mpos.X - mx) / 500f) * camera.FOV;
-                    rcState.RotationY += ((mpos.Y - my) / 500f) * camera.FOV;
+                    RotationX -= ((mpos.X - mx) / 500f) * camera.FOV;
+                    RotationY += ((mpos.Y - my) / 500f) * camera.FOV;
                 }
                 Mouse.SetPosition(mx, my);
 

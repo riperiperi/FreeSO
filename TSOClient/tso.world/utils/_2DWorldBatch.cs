@@ -81,7 +81,7 @@ namespace FSO.LotView.Utils
 
         protected int DrawOrder;
 
-        protected ICamera WorldCamera;
+        protected WorldCamera WorldCamera;
 
         private Vector2 PxOffset;
         private Vector3 WorldOffset;
@@ -264,10 +264,10 @@ namespace FSO.LotView.Utils
         /// <summary>
         /// Reset for a draw loop
         /// </summary>
-        public void Begin(ICamera worldCamera)
+        public void Begin(WorldCamera camera2D)
         {
-            this.WorldCamera = worldCamera;
-            (worldCamera as WorldCamera)?.ProjectionDirty();
+            this.WorldCamera = camera2D;
+            camera2D.ProjectionDirty();
 
             this.Sprites.Clear();
             SpriteIndex = 0;

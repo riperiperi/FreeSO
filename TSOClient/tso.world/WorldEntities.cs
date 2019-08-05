@@ -83,6 +83,10 @@ namespace FSO.LotView
             effect.Parameters["Projection"].SetValue(state.Projection);
 
             var _2d = state._2D;
+            var pxOffset = -state.WorldSpace.GetScreenOffset();
+            var tileOffset = state.CenterTile;
+
+            _2d.SetScroll(pxOffset);
             _2d.OffsetPixel(new Vector2());
             _2d.OffsetTile(new Vector3());
             _2d.PrepareImmediate(Effects.WorldBatchTechniques.drawZSpriteDepthChannel);
@@ -99,18 +103,6 @@ namespace FSO.LotView
         {
             var changes = Blueprint.Changes;
             var _2d = state._2D;
-
-            // prepare 2d
-            // Static objects have been drawn as part of the single static buffer in WorldStatic. 
-
-            var pxOffset = -state.WorldSpace.GetScreenOffset();
-            var tileOffset = state.CenterTile;
-
-            _2d.SetScroll(pxOffset);
-
-            // prepare 3d
-
-            state.PrepareCulling(pxOffset);
 
             var effect = WorldContent.RCObject;
             gd.BlendState = BlendState.NonPremultiplied;

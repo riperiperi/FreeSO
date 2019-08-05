@@ -399,8 +399,9 @@ namespace FSO.LotView.RC
             var oldRotation = state.Rotation;
             var oldLevel = state.Level;
             var oldCutaway = Blueprint.Cutaway;
+            //TODO: switch to 2D cam
             ((WorldStateRC)state).Use2DCam = true;
-            var wCam = (WorldCamera)state.Camera;
+            var wCam = (WorldCamera)state.Camera2D;
             var oldViewDimensions = wCam.ViewDimensions;
             //wCam.ViewDimensions = new Vector2(-1, -1);
             var oldPreciseZoom = state.PreciseZoom;

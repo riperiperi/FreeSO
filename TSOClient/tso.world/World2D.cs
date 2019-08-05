@@ -280,7 +280,7 @@ namespace FSO.LotView
             var oldRotation = state.Rotation;
             var oldLevel = state.Level;
             var oldCutaway = Blueprint.Cutaway;
-            var wCam = (WorldCamera)state.Camera;
+            var wCam = (WorldCamera)state.Camera2D;
             var oldViewDimensions = wCam.ViewDimensions;
             //wCam.ViewDimensions = new Vector2(-1, -1);
             var oldPreciseZoom = state.PreciseZoom;
@@ -680,7 +680,7 @@ namespace FSO.LotView
             if (state.ThisFrameImmediate)
             {
                 _2d.SetScroll(pxOffset);
-                _2d.Begin(state.Camera);
+                _2d.Begin(state.Camera2D);
 
                 var p2O = pxOffset;
                 DrawFloorBuf(gd, state, p2O);
@@ -690,7 +690,7 @@ namespace FSO.LotView
             else
             {
                 _2d.SetScroll(new Vector2());
-                _2d.Begin(state.Camera);
+                _2d.Begin(state.Camera2D);
                 state._2D.PreciseZoom = 1f;
                 if (StaticObjects != null)
                 {
@@ -703,7 +703,7 @@ namespace FSO.LotView
             _2d.SetScroll(pxOffset);
 
             _2d.End();
-            _2d.Begin(state.Camera);
+            _2d.Begin(state.Camera2D);
 
             /**
              * Draw dynamic objects. If an object has been static for X frames move it back into the static layer

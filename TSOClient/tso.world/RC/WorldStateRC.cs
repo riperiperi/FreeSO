@@ -50,10 +50,12 @@ namespace FSO.LotView.RC
         }
 
         private WorldCamera3D _Camera;
+        /*
         public override ICamera Camera
         {
             get { return (_Use2DCam)?WorldCamera:(ICamera)_Camera; }
         }
+        */
 
         public WorldCamera3D Camera3D => _Camera;
 

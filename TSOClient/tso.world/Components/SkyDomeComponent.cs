@@ -27,8 +27,8 @@ namespace FSO.LotView.Components
         public void Draw(GraphicsDevice gd, WorldState state)
         {
             Draw(gd, state.OutsideColor,
-                state.View,
-                state.Projection, //((state.Camera as WorldCamera3D)?.BaseProjection() ?? state.Camera.Projection), 
+                state.Camera3D.View,
+                state.Camera3D.Projection, //((state.Camera as WorldCamera3D)?.BaseProjection() ?? state.Camera.Projection), 
                 (float)BP.OutsideTime, 
                 BP.Weather, 
                 state.Light?.SunVector ?? 

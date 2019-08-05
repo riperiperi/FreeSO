@@ -116,7 +116,7 @@ namespace FSO.LotView.Components
         {
             var headpos = Avatar.Skeleton.GetBone("HEAD").AbsolutePosition;
             var projected = Vector4.Transform(new Vector4(headpos, 1), Matrix.CreateRotationY((float)(Math.PI - RadianDirection)) * this.World * world.View * world.Projection);
-            if (world.Camera is WorldCamera) projected.Z = 1;
+            if (world.CameraMode < CameraRenderMode._3D) projected.Z = 1;
             var res1 = new Vector2(projected.X / projected.Z, -projected.Y / projected.Z);
             var size = PPXDepthEngine.GetWidthHeight();
             return new Vector2((size.X / PPXDepthEngine.SSAA) * 0.5f * (res1.X + 1f), (size.Y / PPXDepthEngine.SSAA) * 0.5f * (res1.Y + 1f)); //world.WorldSpace.GetScreenFromTile(transhead) + world.WorldSpace.GetScreenOffset() + PosCenterOffsets[(int)world.Zoom - 1];
@@ -209,10 +209,14 @@ namespace FSO.LotView.Components
 
             if (Headline != null && !Headline.IsDisposed)
             {
+                var lastCull = device.RasterizerState;
+                var lastBlend = device.BlendState;
+                device.RasterizerState = RasterizerState.CullNone;
+                device.BlendState = BlendState.NonPremultiplied;
                 var headOff = (transhead-Position) + new Vector3(0,0,0.66f);
-                if (world is WorldStateRC)
+                if (!world.Cameras.Safe2D)
                 {
-                    //this is done in world2DRC, after everything else.
+                    DrawHeadline3D(device, world);
                 }
                 else
                 {
@@ -237,6 +241,8 @@ namespace FSO.LotView.Components
                     HeadlineSprite.PrepareVertices(device);
                     world._2D.DrawImmediate(HeadlineSprite);
                 }
+                device.RasterizerState = lastCull;
+                device.BlendState = lastBlend;
             }
         }
 

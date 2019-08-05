@@ -37,8 +37,9 @@ namespace FSO.LotView.Platform
             var oldRotation = state.Rotation;
             var oldLevel = state.Level;
             var oldCutaway = bp.Cutaway;
+            //TODO: switch to 2D cam
             ((WorldStateRC)state).Use2DCam = true;
-            var wCam = (WorldCamera)state.Camera;
+            var wCam = state.Camera2D;
             var oldViewDimensions = wCam.ViewDimensions;
             //wCam.ViewDimensions = new Vector2(-1, -1);
             var oldPreciseZoom = state.PreciseZoom;
@@ -158,8 +159,7 @@ namespace FSO.LotView.Platform
             foreach (var obj in bp.Objects)
             {
                 if (obj.Level != state.Level || !obj.Visible || obj.CutawayHidden) continue;
-                var objR = (ObjectComponentRC)obj;
-                var intr = objR.IntersectsBounds(ray);
+                var intr = obj.IntersectsBounds(ray);
                 if (obj.Container != null && intr != null) intr = intr.Value - 1.5f;
                 if (intr != null && intr.Value < bestDistance)
                 {
@@ -187,10 +187,8 @@ namespace FSO.LotView.Platform
 
         public Texture2D GetObjectThumb(ObjectComponent[] objects, Vector3[] positions, GraphicsDevice gd, WorldState state)
         {
-            var cam = (WorldCamera3D)state.Camera;
-            var oldCamOrg = cam.ProjectionOrigin;
-            var oldCamPos = cam.Position;
-            var oldCamTarg = cam.Target;
+            var cam = new WorldCamera3D(gd, Vector3.Zero, Vector3.Zero, Vector3.Up);// WorldCamera3D)state.Camera;
+            var oldVp = state.ViewProjection;
 
             /** Center average position **/
             Vector3 average = new Vector3();
@@ -221,17 +219,17 @@ namespace FSO.LotView.Platform
             gd.DepthStencilState = DepthStencilState.Default;
             var effect = WorldContent.RCObject;
             effect.ViewProjection = vp;
+            state.ViewProjection = vp;
             effect.SetTechnique(RCObjectTechniques.Draw);
             state.ClearLighting(false);
             Blueprint.SetLightColor(WorldContent.RCObject, Color.White, Color.White);
 
-            var objs = objects.OrderBy(x => ((ObjectComponentRC)x).SortDepth(view)).ToList();
+            var objs = objects.OrderBy(x => { x.UpdateDrawOrder(state); return x.DrawOrder; }).ToList();
 
             gd.Clear(Color.Transparent);
             for (int i = 0; i < objs.Count; i++)
             {
                 var obj = objs[i];
-                var robj = (ObjectComponentRC)obj;
                 var tilePosition = positions[Array.IndexOf(objects, obj)];
 
                 //we need to trick the object into believing it is in a set world state.
@@ -244,10 +242,10 @@ namespace FSO.LotView.Platform
                 obj.OnRotationChanged(state);
                 obj.OnZoomChanged(state);
                 obj.Position = tilePosition;
-                obj.Draw(gd, state);
+                obj.DrawImmediate(gd, state);
 
                 var mat = obj.World * vp;
-                cpoints.AddRange(robj.GetBounds().GetCorners().Select(x =>
+                cpoints.AddRange(obj.GetBounds().GetCorners().Select(x =>
                 {
                     var proj = Vector3.Transform(x, vp);
                     proj.X /= proj.Z;
@@ -282,9 +280,7 @@ namespace FSO.LotView.Platform
             state.DrawOOB = false;
             state.TempDraw = false;
 
-            cam.ProjectionOrigin = oldCamOrg;
-            cam.Target = oldCamTarg;
-            cam.Position = oldCamPos;
+            state.ViewProjection = oldVp;
 
             gd.DepthStencilState = DepthStencilState.None;
             var clip = TextureUtils.Clip(gd, ObjThumbTarget, bounds);

@@ -95,6 +95,22 @@ namespace FSO.LotView
             return _TextureVerts;
         }
 
+        private static VertexBuffer _TextureVertsInv;
+        public static VertexBuffer GetTextureVertsInv(GraphicsDevice gd)
+        {
+            if (_TextureVertsInv == null)
+            {
+                var verts = new VertexPositionTexture[4];
+                verts[0] = new VertexPositionTexture(new Vector3(-1, -1, 0), new Vector2(0, 0));
+                verts[2] = new VertexPositionTexture(new Vector3(-1, 1, 0), new Vector2(0, 1));
+                verts[1] = new VertexPositionTexture(new Vector3(1, -1, 0), new Vector2(1, 0));
+                verts[3] = new VertexPositionTexture(new Vector3(1, 1, 0), new Vector2(1, 1));
+                _TextureVertsInv = new VertexBuffer(gd, typeof(VertexPositionTexture), 4, BufferUsage.None);
+                _TextureVertsInv.SetData(verts);
+            }
+            return _TextureVertsInv;
+        }
+
         public static BasicEffect GetBE(GraphicsDevice gd)
         {
             if (_be == null) _be = new BasicEffect(gd);

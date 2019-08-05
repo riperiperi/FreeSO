@@ -34,7 +34,7 @@ namespace FSO.LotView.Platform
             var oldRotation = state.Rotation;
             var oldLevel = state.Level;
             var oldCutaway = bp.Cutaway;
-            var wCam = (WorldCamera)state.Camera;
+            var wCam = state.Camera2D;
             var oldViewDimensions = wCam.ViewDimensions;
             //wCam.ViewDimensions = new Vector2(-1, -1);
             var oldPreciseZoom = state.PreciseZoom;
@@ -226,13 +226,15 @@ namespace FSO.LotView.Platform
                         obj.Room = 65535;
                         state.SilentZoom = WorldZoom.Near;
                         state.SilentRotation = WorldRotation.BottomRight;
-                        _2d.SetShaderOffsets(pxOffset + state.WorldSpace.GetScreenFromTile(tileOff), tileOff); //offset object into rotated position
+                        var thumbOffset = state.WorldSpace.GetScreenFromTile(tileOff);
+                        _2d.SetShaderOffsets(pxOffset + thumbOffset, tileOff); //offset object into rotated position
                         obj.OnRotationChanged(state);
                         obj.OnZoomChanged(state);
 
                         var oPx = state.WorldSpace.GetScreenFromTile(tilePosition) + pxOffset;
                         obj.ValidateSprite(state);
                         var offBound = obj.Bounding; // new Rectangle(obj.Bounding.Location + oPx.ToPoint(), obj.Bounding.Size);
+                        offBound.Offset(thumbOffset);
 
                         if (offBound.Location.X != int.MaxValue)
                         {

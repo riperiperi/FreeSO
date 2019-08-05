@@ -120,7 +120,7 @@ namespace FSO.Client.UI.Panels
         public float TargetZoom { get; set; } = 1;
 
         public float BBScale { get { return World.BackbufferScale; } }
-        public I3DRotate Rotate { get { return (I3DRotate)World.State; } }
+        public I3DRotate Rotate { get { return World.State.Cameras.Camera3D; } } //(I3DRotate)World.State; } }
         public bool TVisible { get { return Visible; } }
         public bool UserModZoom { get; set; }
 
@@ -848,9 +848,12 @@ namespace FSO.Client.UI.Panels
             if (!vm.Ready || vm.Context.Architecture == null) return;
 
             //handling smooth scaled zoom
-            if (FSOEnvironment.Enable3D)
+            var _3d = World.State.CameraMode == CameraRenderMode._3D;
+            Touch._3D = _3d;
+            if (_3d)
             {
-                var s3d = ((WorldStateRC)World.State);
+                if (World.BackbufferScale != 1) World.BackbufferScale = 1;
+                var s3d = World.State.Cameras.Camera3D; //((WorldStateRC)World.State);
                 if (TargetZoom < -0.65f)
                 {
                     //switch to city

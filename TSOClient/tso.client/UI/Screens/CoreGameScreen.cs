@@ -136,10 +136,7 @@ namespace FSO.Client.UI.Screens
                             ucp.SetMode(UIUCP.UCPMode.LotMode);
                         } else
                         {
-                            if (!FSOEnvironment.Enable3D)
-                            {
-                                if (m_ZoomLevel != value) vm.Context.World.InitiateSmoothZoom(targ);
-                            }
+                            if (m_ZoomLevel != value) vm.Context.World.InitiateSmoothZoom(targ);
                         }
 
                         m_ZoomLevel = value;
@@ -842,10 +839,8 @@ namespace FSO.Client.UI.Screens
         {
             //zooming back to city using mouse wheel.
             ZoomLevel = 4;
-            if (FSOEnvironment.Enable3D)
-            {
-                ((CityCamera3D)CityRenderer.Camera).TargetZoom = 2.2f;
-            }
+            var cam3d = CityRenderer.Camera as CityCamera3D;
+            if (cam3d != null) cam3d.TargetZoom = 2.2f;
         }
     }
 

@@ -83,7 +83,6 @@ namespace FSO.LotView
             var changes = state.Changes;
             if (changes.DrawImmediate)
             {
-                if (state.CameraMode == CameraRenderMode._3D) DrawBg(state.Device, state, World.SkyBounds, false);
                 return;
             }
             var _2d = state._2D;
@@ -92,7 +91,7 @@ namespace FSO.LotView
 
             _2d.OffsetPixel(Vector2.Zero);
             _2d.SetScroll(new Vector2());
-            _2d.Begin(state.Camera);
+            _2d.Begin(state.Camera2D);
             state._2D.PreciseZoom = 1f;
             if (StaticSurface != null)
             {

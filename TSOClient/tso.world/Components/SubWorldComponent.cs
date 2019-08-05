@@ -69,7 +69,7 @@ namespace FSO.LotView.Components
             blueprint.Changes.SetFlag(BlueprintGlobalChanges.OUTDOORS_LIGHTING_CHANGED);
             Architecture = new WorldArchitecture(blueprint);
             Entities = new WorldEntities(blueprint);
-            Platform = new WorldPlatform2D(blueprint);
+            Platform = new WorldPlatform3D(blueprint);
             State.Platform = Platform;
             State.Changes = blueprint.Changes;
             blueprint.Changes.Subworld = true;
@@ -247,7 +247,7 @@ namespace FSO.LotView.Components
         public void SubDraw(GraphicsDevice gd, WorldState parentState, Action<Vector2> action)
         {
             var parentScroll = parentState.CenterTile;
-            if (!(parentState.Camera is WorldCamera))
+            if (!(parentState.CameraMode < CameraRenderMode._3D))
                 parentState.Camera.Translation = new Vector3(GlobalPosition.X * 3, 0, GlobalPosition.Y * 3);
             else parentState.CenterTile += GlobalPosition; //TODO: vertical offset
             var pxOffset = -parentState.WorldSpace.GetScreenOffset();
@@ -268,7 +268,7 @@ namespace FSO.LotView.Components
             parentState.SilentLevel = oldLevel;
 
             parentState.CenterTile = parentScroll;
-            if (!(parentState.Camera is WorldCamera))
+            if (!(parentState.CameraMode < CameraRenderMode._3D))
                 parentState.Camera.Translation = Vector3.Zero;
             parentState.PrepareLighting();
         }
@@ -306,7 +306,7 @@ namespace FSO.LotView.Components
         public virtual void DrawArch(GraphicsDevice gd, WorldState parentState)
         {
             var parentScroll = parentState.CenterTile;
-            if (!(parentState.Camera is WorldCamera))
+            if (!(parentState.CameraMode < CameraRenderMode._3D))
                 parentState.Camera.Translation = new Vector3(GlobalPosition.X*3, 0, GlobalPosition.Y*3);
             else parentState.CenterTile += GlobalPosition; //TODO: vertical offset
 
@@ -325,7 +325,7 @@ namespace FSO.LotView.Components
             var level = parentState.SilentLevel;
             parentState.SilentLevel = 5;
             Blueprint.Terrain.Draw(gd, parentState);
-            if (parentState.Camera is WorldCamera)
+            if (parentState.CameraMode < CameraRenderMode._3D)
             {
                 //parentState._2D.RenderCache(StaticArchCache);
                 parentState._2D.Pause();
@@ -334,7 +334,7 @@ namespace FSO.LotView.Components
             parentState.SilentLevel = level;
 
             parentState.CenterTile = parentScroll;
-            if (!(parentState.Camera is WorldCamera))
+            if (!(parentState.CameraMode < CameraRenderMode._3D))
                 parentState.Camera.Translation = Vector3.Zero;
             parentState.PrepareLighting();
         }

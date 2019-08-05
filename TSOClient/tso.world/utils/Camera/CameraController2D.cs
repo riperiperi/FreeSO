@@ -3,19 +3,26 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
+using FSO.Common;
 using FSO.Common.Rendering.Framework.Camera;
 using FSO.Common.Rendering.Framework.Model;
 using Microsoft.Xna.Framework;
+using Microsoft.Xna.Framework.Graphics;
 
 namespace FSO.LotView.Utils.Camera
 {
     public class CameraController2D : ICameraController
     {
-        private WorldCamera Camera;
+        public WorldCamera Camera;
         public ICamera BaseCamera => Camera;
-        public bool UseZoomHold => throw new NotImplementedException();
+        public bool UseZoomHold => false;
 
-        public bool UseRotateHold => throw new NotImplementedException();
+        public bool UseRotateHold => false;
+
+        public CameraController2D(GraphicsDevice gd)
+        {
+            Camera = new WorldCamera(gd);
+        }
 
         public void InvalidateCamera(WorldState state)
         {
@@ -48,12 +55,46 @@ namespace FSO.LotView.Utils.Camera
 
         public void SetActive(ICameraController previous, World world)
         {
-
+            //from 3d??
+            if (previous is CameraController3D)
+            {
+                //set rotation based on 3d camera
+                var cam3d = (CameraController3D)previous;
+                //(float)Math.PI * (((int)cam.Rotation) / 2f - 0.25f);
+                var rot = Math.Round((Common.Utils.DirectionUtils.PosMod(cam3d.RotationX, Math.PI * 2) / Math.PI + 0.25f) * 2) % 4;
+                world.State.Rotation = (WorldRotation)rot;
+                Camera.RotateOff = 0;
+                RotationOffFrom = 0;
+            }
         }
+
+        public void SetRotation(WorldState state, WorldRotation rot)
+        {
+            var old = state.Rotation;
+            state.SilentRotation = rot;
+
+            RotationOffFrom = ((rot - old) * 90) + Camera.RotateOff;
+            RotationOffFrom = ((RotationOffFrom + 540) % 360) - 180;
+            Camera.RotateOff = RotationOffFrom;
+            RotationOffPct = 0;
+        }
+
+        private float RotationOffFrom;
+        private float RotationOffPct;
 
         public void Update(UpdateState state, World world)
         {
+            if (RotationOffFrom != 0)
+            {
+                RotationOffPct += 3f / FSOEnvironment.RefreshRate;
+                if (RotationOffPct > 1)
+                {
+                    RotationOffFrom = 0;
+                    RotationOffPct = 0;
+                }
 
+                Camera.RotateOff = RotationOffFrom * (float)(Math.Cos((RotationOffPct) * Math.PI) + 1) / 2;
+            }
         }
 
         public void ZoomHold(float intensity)

@@ -112,8 +112,6 @@ namespace FSO.Client.UI.Panels
 
             var clone = CloneCheckbox();
             Wall3DButton = clone.Item1; Wall3DLabel = clone.Item2;
-            Wall3DButton.Visible = FSOEnvironment.Enable3D;
-            Wall3DLabel.Visible = FSOEnvironment.Enable3D;
             Wall3DLabel.Caption = GameFacade.Strings.GetString("f103", "12");
 
             clone = CloneCheckbox();
@@ -289,8 +287,7 @@ namespace FSO.Client.UI.Panels
             }
             else if (button == Wall3DButton)
             {
-                if (FSOEnvironment.Enable3D) settings.CitySkybox = !settings.CitySkybox;
-                else settings.Shadows3D = !settings.Shadows3D;
+                settings.CitySkybox = !settings.CitySkybox;
             }
             GlobalSettings.Default.Save();
             SettingsChanged();
@@ -355,7 +352,7 @@ namespace FSO.Client.UI.Panels
             LightingSlider.Value = settings.LightingMode;
             InternalChange = false;
 
-            Wall3DButton.Selected = (FSOEnvironment.Enable3D) ? settings.CitySkybox : settings.Shadows3D;
+            Wall3DButton.Selected = settings.CitySkybox;
             FSOEnvironment.TexCompress = (settings.TexCompression & 1) > 0;
             CompressionButton.Selected = FSOEnvironment.TexCompress;
 

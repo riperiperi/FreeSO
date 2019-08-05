@@ -475,7 +475,7 @@ namespace FSO.LotView.Components
 
             Effect.Projection = world.Projection;
             var view = world.View;
-            var _3d = _3D;
+            var _3d = world.CameraMode == CameraRenderMode._3D;
             if (!_3d) view = view * Matrix.CreateTranslation(0, 0, -0.25f);
             Effect.View = view;
             //world._3D.ApplyCamera(Effect);
@@ -536,7 +536,7 @@ namespace FSO.LotView.Components
             Effect.TexMatrix = new Vector4(1f, 1f, -1f, 1f);
             Effect.TexOffset = new Vector2(0.5f, 0.5f);
 
-            if (primitives > 0 && _3D == _3d)
+            if (primitives > 0)
             {
                 Effect.Alpha = (Alpha-0.75f) * 4;
                 Effect.Level = (float)0.0001f;

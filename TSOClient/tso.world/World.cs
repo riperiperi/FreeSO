@@ -136,10 +136,10 @@ namespace FSO.LotView
             this.Blueprint = blueprint;
             Platform?.Dispose();
 
-            Platform = new WorldPlatform2D(blueprint);
+            Platform = new WorldPlatform3D(blueprint);
             Entities = new WorldEntities(blueprint);
             Architecture = new WorldArchitecture(blueprint);
-            Static.InitBlueprint(blueprint);
+            Static?.InitBlueprint(blueprint);
 
             State.Platform = Platform;
             State.Changes = blueprint.Changes;
@@ -353,6 +353,25 @@ namespace FSO.LotView
             Scroll(dir, true);
         }
 
+        public void SetGraphicsMode(GlobalGraphicsMode mode)
+        {
+            switch (mode)
+            {
+                case GlobalGraphicsMode.Full2D:
+                case GlobalGraphicsMode.Hybrid2D:
+                    State.CameraMode = CameraRenderMode._2D;
+                    State.Cameras.SetCameraType(this, Utils.Camera.CameraControllerType._2D);
+                    Platform = new WorldPlatform2D(Blueprint);
+                    break;
+                case GlobalGraphicsMode.Full3D:
+                    State.CameraMode = CameraRenderMode._3D;
+                    State.Cameras.SetCameraType(this, Utils.Camera.CameraControllerType._3D);
+                    Platform = new WorldPlatform3D(Blueprint);
+                    break;
+            }
+            State.Platform = Platform;
+        }
+
         public Tuple<float, float> Get3DTTHeights()
         {
             if (Blueprint == null) { return new Tuple<float, float>(0, 0); }
@@ -364,37 +383,50 @@ namespace FSO.LotView
 
         public virtual Vector2[] GetScrollBasis(bool multiplied)
         {
-            Vector2[] output = new Vector2[2];
-            switch (State.Rotation)
+            if (State.CameraMode == CameraRenderMode._3D)
             {
-                case WorldRotation.TopLeft:
-                    output[1] = new Vector2(2, 2);
-                    output[0] = new Vector2(1, -1);
-                    break;
-                case WorldRotation.TopRight:
-                    output[1] = new Vector2(2, -2);
-                    output[0] = new Vector2(-1, -1);
-                    break;
-                case WorldRotation.BottomRight:
-                    output[1] = new Vector2(-2, -2);
-                    output[0] = new Vector2(-1, 1);
-                    break;
-                case WorldRotation.BottomLeft:
-                    output[1] = new Vector2(-2, 2);
-                    output[0] = new Vector2(1, 1);
-                    break;
+                var mat = Matrix.CreateRotationZ(-State.Cameras.Camera3D.RotationX);
+                var z = multiplied ? ((1 + (float)Math.Sqrt(State.Cameras.Camera3D.Zoom3D)) / 2) : 1;
+                return new Vector2[] {
+                    Vector2.Transform(new Vector2(0, -1), mat) * z,
+                    Vector2.Transform(new Vector2(1, 0), mat) * z
+                };
             }
-            if (multiplied)
+            else
             {
-                int multiplier = ((1 << (3 - (int)State.Zoom)) * 3) / 2;
-                output[0] *= multiplier;
-                output[1] *= multiplier;
+                Vector2[] output = new Vector2[2];
+                switch (State.Rotation)
+                {
+                    case WorldRotation.TopLeft:
+                        output[1] = new Vector2(2, 2);
+                        output[0] = new Vector2(1, -1);
+                        break;
+                    case WorldRotation.TopRight:
+                        output[1] = new Vector2(2, -2);
+                        output[0] = new Vector2(-1, -1);
+                        break;
+                    case WorldRotation.BottomRight:
+                        output[1] = new Vector2(-2, -2);
+                        output[0] = new Vector2(-1, 1);
+                        break;
+                    case WorldRotation.BottomLeft:
+                        output[1] = new Vector2(-2, 2);
+                        output[0] = new Vector2(1, 1);
+                        break;
+                }
+                if (multiplied)
+                {
+                    int multiplier = ((1 << (3 - (int)State.Zoom)) * 3) / 2;
+                    output[0] *= multiplier;
+                    output[1] *= multiplier;
+                }
+                return output;
             }
-            return output;
         }
 
         public void InitiateSmoothZoom(WorldZoom zoom)
         {
+            //TODO: disable in 3d
             if (!WorldConfig.Current.SmoothZoom)
             {
                 return;
@@ -458,7 +490,8 @@ namespace FSO.LotView
                 CenterTo(State.ScrollAnchor);
             }
 
-            State.Update();
+            State.Cameras.Update(state, this);
+            //State.Update();
             if (SmoothZoomTimer > -1)
             {
                 SmoothZoomTimer += 60f / FSOEnvironment.RefreshRate;
@@ -472,6 +505,11 @@ namespace FSO.LotView
                     var p = Math.Sin((SmoothZoomTimer / 30.0) * Math.PI);
                     State.PreciseZoom = (float)((p) + (1 - p) * SmoothZoomFrom);
                 }
+            }
+
+            if (state.WindowFocused && Visible && state.NewKeys.Contains(Microsoft.Xna.Framework.Input.Keys.Tab))
+            {
+                SetGraphicsMode((State.CameraMode == CameraRenderMode._3D) ? GlobalGraphicsMode.Hybrid2D : GlobalGraphicsMode.Full3D);
             }
         }
 
@@ -518,8 +556,8 @@ namespace FSO.LotView
             //For all the tiles in the dirty list, re-render them
             //PPXDepthEngine.SetPPXTarget(null, null, true);
             State.PrepareLighting();
+            State._2D.Begin(this.State.Camera2D);
             Blueprint.Changes.PreDraw(device, State);
-            State._2D.Begin(this.State.Camera);
             Static?.PreDraw(device, State);
 
             /*
@@ -569,14 +607,16 @@ namespace FSO.LotView
             State._2D.OutputDepth = true;
 
             State._3D.Begin(device);
-            State._2D.Begin(this.State.Camera);
+            State._2D.Begin(this.State.Camera2D);
 
             //State._2D.PreciseZoom = State.PreciseZoom;
             State._2D.ResetMatrices(device.Viewport.Width, device.Viewport.Height);
 
             device.DepthStencilState = DepthStencilState.Default;
+            if (State.CameraMode == CameraRenderMode._3D) Static.DrawBg(State.Device, State, SkyBounds, false);
             Architecture.Draw2D(device, State);
             Static?.Draw(State);
+            State.PrepareCamera();
             Entities.DrawAvatars(device, State);
             Entities.Draw(device, State);
 
@@ -815,7 +855,7 @@ namespace FSO.LotView
         /// <returns>ID of object at position if found.</returns>
         public short GetObjectIDAtScreenPos(int x, int y, GraphicsDevice gd)
         {
-            State._2D.Begin(this.State.Camera);
+            State._2D.Begin(this.State.Camera2D);
             return Platform.GetObjectIDAtScreenPos(x, y, gd, State);
             return _2DWorld.GetObjectIDAtScreenPos(x, y, gd, State);
         }
@@ -829,14 +869,14 @@ namespace FSO.LotView
         /// <returns>Object's ID if the object was found at the given position.</returns>
         public Texture2D GetObjectThumb(ObjectComponent[] objects, Vector3[] positions, GraphicsDevice gd)
         {
-            State._2D.Begin(this.State.Camera);
+            State._2D.Begin(this.State.Camera2D);
             return Platform.GetObjectThumb(objects, positions, gd, State);
             return _2DWorld.GetObjectThumb(objects, positions, gd, State);
         }
 
         public Texture2D GetLotThumb(GraphicsDevice gd, Action<Texture2D> rooflessCallback)
         {
-            State._2D.Begin(this.State.Camera);
+            State._2D.Begin(this.State.Camera2D);
             return Platform.GetLotThumb(gd, State, rooflessCallback);
             return _2DWorld.GetLotThumb(gd, State, rooflessCallback);
         }

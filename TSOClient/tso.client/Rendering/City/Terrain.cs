@@ -94,6 +94,7 @@ namespace FSO.Client.Rendering.City
             new Color(0xFF, 0x01, 0xFF, 0xFF).PackedValue
         };
 
+        //TODO: NEW 3D
         public ICityCamera Camera = (FSOEnvironment.Enable3D)?new CityCamera3D():(ICityCamera)new CityCamera2D();
 
         public static float NEAR_ZOOM_SIZE = 288;

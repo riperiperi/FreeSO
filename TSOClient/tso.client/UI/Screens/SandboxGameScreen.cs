@@ -90,10 +90,7 @@ namespace FSO.Client.UI.Screens
                         World.Visible = true;
                         ucp.SetMode(UIUCP.UCPMode.LotMode);
                         LotControl.SetTargetZoom(targ);
-                        if (!FSOEnvironment.Enable3D)
-                        {
-                            if (m_ZoomLevel != value) vm.Context.World.InitiateSmoothZoom(targ);
-                        }
+                        if (m_ZoomLevel != value) vm.Context.World.InitiateSmoothZoom(targ);
                         m_ZoomLevel = value;
                     }
                 }
@@ -413,12 +410,7 @@ namespace FSO.Client.UI.Screens
 
             Content.Content.Get().Upgrades.LoadJSONTuning();
 
-            if (FSOEnvironment.Enable3D)
-            {
-                var rc = new LotView.RC.WorldRC(GameFacade.GraphicsDevice);
-                World = rc;
-            }
-            else World = new World(GameFacade.GraphicsDevice);
+            World = new World(GameFacade.GraphicsDevice);
             World.Opacity = 1;
             GameFacade.Scenes.Add(World);
 

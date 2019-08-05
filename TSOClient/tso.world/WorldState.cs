@@ -47,11 +47,13 @@ namespace FSO.LotView
         {
             this.Device = device;
             this.World = world;
-            this.WorldCamera = new WorldCamera(device);
             this.FramePerDraw = 30f/FSOEnvironment.RefreshRate;
-            WorldCamera.ViewDimensions = new Vector2(worldPxWidth, worldPxHeight);
+            this.Cameras = new CameraControllers(device, this);
+            Cameras.SetCameraType(world, CameraControllerType._3D);
+            CameraMode = CameraRenderMode._3D;
             Rooms = new GPURoomMaps(device);
             WorldSpace = new WorldSpace(worldPxWidth, worldPxHeight, this);
+            SetDimensions(new Vector2(worldPxWidth, worldPxHeight));
             Zoom = WorldZoom.Near;
             Rotation = WorldRotation.TopLeft;
             Level = 1;
@@ -65,15 +67,24 @@ namespace FSO.LotView
 
         public virtual void SetDimensions(Vector2 dim)
         {
-            WorldCamera.ViewDimensions = dim;
+            Cameras.SetDimensions(dim);
+            //WorldCamera.ViewDimensions = dim;
             WorldSpace.SetDimensions(dim);
         }
-
-        public WorldCamera WorldCamera;
+        
         // used for culling - updated just before draw.
         public Matrix ViewProjection;
         public BoundingFrustum Frustum;
         public Rectangle WorldRectangle;
+
+        public void PrepareCamera()
+        {
+            var pxOffset = -WorldSpace.GetScreenOffset();
+            var tileOffset = CenterTile;
+
+            _2D.SetScroll(pxOffset);
+            PrepareCulling(pxOffset);
+        }
 
         public void PrepareCulling(Vector2 pxOffset)
         {
@@ -88,11 +99,21 @@ namespace FSO.LotView
         }
 
         /// <summary>
-        /// Gets the camera used by this WorldState instance.s
+        /// Gets the camera used by this WorldState instance.
         /// </summary>
         public virtual ICamera Camera 
         {
-            get { return WorldCamera; }
+            get { return Cameras; } // WorldCamera;
+        }
+
+        public virtual WorldCamera Camera2D
+        {
+            get { return Cameras.Camera2D.Camera; }
+        }
+
+        public WorldCamera3D Camera3D
+        {
+            get { return Cameras.Camera3D.Camera; }
         }
 
         // new camera stuff
@@ -134,7 +155,7 @@ namespace FSO.LotView
             }
             set {
                 _WorldSize = value;
-                WorldCamera.WorldSize = value;
+                Camera2D.WorldSize = value;
                 InvalidateWorldSize();
             }
         }
@@ -235,6 +256,8 @@ namespace FSO.LotView
 
         private void SetRotation(WorldRotation rot)
         {
+            Cameras.Camera2D.SetRotation(this, rot);
+            /*
             var old = _Rotation;
             _Rotation = rot;
 
@@ -242,23 +265,7 @@ namespace FSO.LotView
             RotationOffFrom = ((RotationOffFrom + 540) % 360) - 180;
             WorldCamera.RotateOff = RotationOffFrom;
             RotationOffPct = 0;
-        }
-
-        public float RotationOffFrom;
-        public float RotationOffPct;
-
-        public void Update()
-        {
-            if (RotationOffFrom != 0) {
-                RotationOffPct += 3f / FSOEnvironment.RefreshRate;
-                if (RotationOffPct > 1)
-                {
-                    RotationOffFrom = 0;
-                    RotationOffPct = 0;
-                }
-
-                WorldCamera.RotateOff = RotationOffFrom * (float)(Math.Cos((RotationOffPct) * Math.PI) + 1) / 2;
-            }
+            */
         }
 
         /// <summary>
@@ -306,6 +313,7 @@ namespace FSO.LotView
             var radius = WorldSpace.WorldUnitsPerTile * (edge / 2.0f);
             var opposite = (float)Math.Cos(MathHelper.ToRadians(30.0f)) * radius;
 
+            //is this even used?
             Camera.Position = new Vector3(radius * 2, opposite, radius * 2);
             Camera.Target = new Vector3(radius, 0.0f, radius);
 
@@ -317,6 +325,8 @@ namespace FSO.LotView
 
         public virtual void InvalidateCamera()
         {
+            Cameras.InvalidateCamera(this);
+            /*
             var ctr = WorldSpace.GetScreenFromTile(CenterTile);
             ctr.X = (float)Math.Round(ctr.X);
             ctr.Y = (float)Math.Round(ctr.Y);
@@ -327,6 +337,7 @@ namespace FSO.LotView
             WorldCamera.Zoom = Zoom;
             WorldCamera.Rotation = Rotation;
             WorldCamera.PreciseZoom = PreciseZoom;
+            */
         }
 
         public bool ZeroWallOffset = false;
