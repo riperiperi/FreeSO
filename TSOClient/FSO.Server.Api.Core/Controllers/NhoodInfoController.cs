@@ -50,7 +50,7 @@ namespace FSO.Server.Api.Core.Controllers
             }
         }
         [HttpGet]
-        [Route("userapi/neighborhoods/{NhoodId}")]
+        [Route("userapi/neighborhoods/{nhoodId}")]
         public IActionResult GetByID(uint nhoodId)
         {
             var api = Api.INSTANCE;
