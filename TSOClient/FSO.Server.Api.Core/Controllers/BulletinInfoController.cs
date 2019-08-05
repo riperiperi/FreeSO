@@ -16,171 +16,123 @@ namespace FSO.Server.Api.Core.Controllers
     [ApiController]
     public class BulletinInfoController : ControllerBase
     {
-        [HttpGet]
-        [Route("userapi/bulletins/neighborhood/{nhoodid}.json")]
-        public IActionResult GetByNhood(uint nhoodid)
+        [HttpGet("nhoodId")]
+        [Route("userapi/neighborhood/{nhoodId}/bulletins")]
+        public IActionResult GetByNhoodAndAfter(uint nhoodId, [FromQuery(Name = "after")]uint after)
         {
             var api = Api.INSTANCE;
-
+            
             using (var da = api.DAFactory.Get())
             {
-                var Bulletins = da.BulletinPosts.GetByNhoodId(nhoodid,0);
-                if (Bulletins == null)
-                {
-                    var JSONError = new JSONBulletinError();
-                    JSONError.Error = "Bulletins not found";
-                    return ApiResponse.Json(HttpStatusCode.NotFound, JSONError);
-                }
+                if (after == null) after = 0;
+                var bulletins = da.BulletinPosts.GetByNhoodId(nhoodId, after);
+                if (bulletins == null) return ApiResponse.Json(HttpStatusCode.NotFound, new JSONBulletinError("Bulletins not found"));
 
-                List<JSONBulletin> BulletinJSON = new List<JSONBulletin>();
-                foreach (var Bulletin in Bulletins)
+                List<JSONBulletin> bulletinJson = new List<JSONBulletin>();
+                foreach (var bulletin in bulletins)
                 {
-                    BulletinJSON.Add(new JSONBulletin
+                    bulletinJson.Add(new JSONBulletin
                     {
-                        Bulletin_ID = Bulletin.bulletin_id,
-                        Neighborhood_ID = Bulletin.neighborhood_id,
-                        Avatar_ID = Bulletin.avatar_id,
-                        Title = Bulletin.title,
-                        Body = Bulletin.body,
-                        Date = Bulletin.date,
-                        Flags = Bulletin.flags,
-                        Lot_ID = Bulletin.lot_id,
-                        Type = Bulletin.type
+                        bulletin_id = bulletin.bulletin_id,
+                        neighborhood_id = bulletin.neighborhood_id,
+                        avatar_id = bulletin.avatar_id,
+                        title = bulletin.title,
+                        body = bulletin.body,
+                        date = bulletin.date,
+                        flags = bulletin.flags,
+                        lot_id = bulletin.lot_id,
+                        type = bulletin.type
                     });
 
                 }
-                var BulletinsJSON = new JSONBulletins();
-                BulletinsJSON.Bulletins = BulletinJSON;
-                return ApiResponse.Json(HttpStatusCode.OK, BulletinsJSON);
+                var bulletinsJson = new JSONBulletins();
+                bulletinsJson.bulletins = bulletinJson;
+                return ApiResponse.Json(HttpStatusCode.OK, bulletinsJson);
             }
         }
         [HttpGet]
-        [Route("userapi/bulletins/neighborhood/{nhoodid}/after/{timestamp}.json")]
-        public IActionResult GetByNhoodAndAfter(uint nhoodid, uint timestamp)
+        [Route("userapi/neighborhood/{nhoodid}/bulletins/{bulletinId}")]
+        public IActionResult GetByID(uint bulletinId)
         {
             var api = Api.INSTANCE;
 
             using (var da = api.DAFactory.Get())
             {
-                var Bulletins = da.BulletinPosts.GetByNhoodId(nhoodid, timestamp);
-                if (Bulletins == null)
-                {
-                    var JSONError = new JSONBulletinError();
-                    JSONError.Error = "Bulletins not found";
-                    return ApiResponse.Json(HttpStatusCode.NotFound, JSONError);
-                }
+                var bulletin = da.BulletinPosts.Get(bulletinId);
+                if (bulletin == null) return ApiResponse.Json(HttpStatusCode.NotFound, new JSONBulletinError("Bulletin not found"));
 
-                List<JSONBulletin> BulletinJSON = new List<JSONBulletin>();
-                foreach (var Bulletin in Bulletins)
+                var bulletinJson = new JSONBulletin();
+                bulletinJson = new JSONBulletin
                 {
-                    BulletinJSON.Add(new JSONBulletin
-                    {
-                        Bulletin_ID = Bulletin.bulletin_id,
-                        Neighborhood_ID = Bulletin.neighborhood_id,
-                        Avatar_ID = Bulletin.avatar_id,
-                        Title = Bulletin.title,
-                        Body = Bulletin.body,
-                        Date = Bulletin.date,
-                        Flags = Bulletin.flags,
-                        Lot_ID = Bulletin.lot_id,
-                        Type = Bulletin.type
-                    });
-
-                }
-                var BulletinsJSON = new JSONBulletins();
-                BulletinsJSON.Bulletins = BulletinJSON;
-                return ApiResponse.Json(HttpStatusCode.OK, BulletinsJSON);
-            }
-        }
-        [HttpGet]
-        [Route("userapi/bulletins/id/{bulletinid}.json")]
-        public IActionResult GetByID(uint bulletinid)
-        {
-            var api = Api.INSTANCE;
-
-            using (var da = api.DAFactory.Get())
-            {
-                var Bulletin = da.BulletinPosts.Get(bulletinid);
-                if (Bulletin == null)
-                {
-                    var JSONError = new JSONBulletinError();
-                    JSONError.Error = "Bulletin not found";
-                    return ApiResponse.Json(HttpStatusCode.NotFound, JSONError);
-                }
-
-                var BulletinJSON = new JSONBulletin();
-                BulletinJSON = new JSONBulletin
-                {
-                    Bulletin_ID = Bulletin.bulletin_id,
-                    Neighborhood_ID = Bulletin.neighborhood_id,
-                    Avatar_ID = Bulletin.avatar_id,
-                    Title = Bulletin.title,
-                    Body = Bulletin.body,
-                    Date = Bulletin.date,
-                    Flags = Bulletin.flags,
-                    Lot_ID = Bulletin.lot_id,
-                    Type = Bulletin.type
+                    bulletin_id = bulletin.bulletin_id,
+                    neighborhood_id = bulletin.neighborhood_id,
+                    avatar_id = bulletin.avatar_id,
+                    title = bulletin.title,
+                    body = bulletin.body,
+                    date = bulletin.date,
+                    flags = bulletin.flags,
+                    lot_id = bulletin.lot_id,
+                    type = bulletin.type
                 };
-                return ApiResponse.Json(HttpStatusCode.OK, BulletinJSON);
+                return ApiResponse.Json(HttpStatusCode.OK, bulletinJson);
             }
         }
         [HttpGet]
-        [Route("userapi/bulletins/neighborhood/{nhoodid}/type/{bulletintype}.json")]
-        public IActionResult GetByNhoodAndType(uint nhoodid,DbBulletinType bulletintype)
+        [Route("userapi/neighborhood/{nhoodId}/bulletins/type/{bulletinType}")]
+        public IActionResult GetByNhoodAndType(uint nhoodId,DbBulletinType bulletinType)
         {
             var api = Api.INSTANCE;
 
             using (var da = api.DAFactory.Get())
             {
-                var Bulletins = da.BulletinPosts.GetByNhoodId(nhoodid, 0).Where(x => x.type == bulletintype);
-                if (Bulletins == null)
-                {
-                    var JSONError = new JSONBulletinError();
-                    JSONError.Error = "Bulletins not found";
-                    return ApiResponse.Json(HttpStatusCode.NotFound, JSONError);
-                }
+                var bulletins = da.BulletinPosts.GetByNhoodId(nhoodId, 0).Where(x => x.type == bulletinType);
+                if (bulletins == null) return ApiResponse.Json(HttpStatusCode.NotFound, new JSONBulletinError("Bulletins not found"));
 
-                List<JSONBulletin> BulletinJSON = new List<JSONBulletin>();
-                foreach (var Bulletin in Bulletins)
+                List<JSONBulletin> bulletinJson = new List<JSONBulletin>();
+                foreach (var bulletin in bulletins)
                 {
-                    BulletinJSON.Add(new JSONBulletin
+                    bulletinJson.Add(new JSONBulletin
                     {
-                        Bulletin_ID = Bulletin.bulletin_id,
-                        Neighborhood_ID = Bulletin.neighborhood_id,
-                        Avatar_ID = Bulletin.avatar_id,
-                        Title = Bulletin.title,
-                        Body = Bulletin.body,
-                        Date = Bulletin.date,
-                        Flags = Bulletin.flags,
-                        Lot_ID = Bulletin.lot_id,
-                        Type = Bulletin.type
+                        bulletin_id = bulletin.bulletin_id,
+                        neighborhood_id = bulletin.neighborhood_id,
+                        avatar_id = bulletin.avatar_id,
+                        title = bulletin.title,
+                        body = bulletin.body,
+                        date = bulletin.date,
+                        flags = bulletin.flags,
+                        lot_id = bulletin.lot_id,
+                        type = bulletin.type
                     });
 
                 }
-                var BulletinsJSON = new JSONBulletins();
-                BulletinsJSON.Bulletins = BulletinJSON;
-                return ApiResponse.Json(HttpStatusCode.OK, BulletinsJSON);
+                var bulletinsJson = new JSONBulletins();
+                bulletinsJson.bulletins = bulletinJson;
+                return ApiResponse.Json(HttpStatusCode.OK, bulletinsJson);
             }
         }
     }
     public class JSONBulletinError
     {
-        public string Error { get; set; }
+        public string error;
+        public JSONBulletinError(string errorString)
+        {
+            error = errorString;
+        }
     }
     public class JSONBulletins
     {
-        public List<JSONBulletin> Bulletins { get; set; }
+        public List<JSONBulletin> bulletins { get; set; }
     }
     public class JSONBulletin
     {
-        public uint Bulletin_ID { get; set; }
-        public int Neighborhood_ID { get; set; }
-        public uint? Avatar_ID { get; set; }
-        public string Title { get; set; }
-        public string Body { get; set; }
-        public uint Date { get; set; }
-        public uint Flags { get; set; }
-        public int? Lot_ID { get; set; }
-        public DbBulletinType Type { get; set; }
+        public uint bulletin_id { get; set; }
+        public int neighborhood_id { get; set; }
+        public uint? avatar_id { get; set; }
+        public string title { get; set; }
+        public string body { get; set; }
+        public uint date { get; set; }
+        public uint flags { get; set; }
+        public int? lot_id { get; set; }
+        public DbBulletinType type { get; set; }
     }
 }

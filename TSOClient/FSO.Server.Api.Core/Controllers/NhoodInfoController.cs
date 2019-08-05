@@ -17,133 +17,117 @@ namespace FSO.Server.Api.Core.Controllers
     public class NhoodInfoController : ControllerBase
     {
         [HttpGet]
-        [Route("userapi/city/{shardid}/neighborhoods/all.json")]
-        public IActionResult GetAll(int shardid)
+        [Route("userapi/city/{shardId}/neighborhoods/all")]
+        public IActionResult GetAll(int shardId)
         {
             var api = Api.INSTANCE;
 
             using (var da = api.DAFactory.Get())
             {
-                var Nhoods = da.Neighborhoods.All(shardid);
-                if (Nhoods == null)
-                {
-                    var JSONError = new JSONNhoodError();
-                    JSONError.Error = "Neighborhoods not found";
-                    return ApiResponse.Json(HttpStatusCode.NotFound, JSONError);
-                }
+                var nhoods = da.Neighborhoods.All(shardId);
+                if (nhoods == null) return ApiResponse.Json(HttpStatusCode.NotFound, new JSONNhoodError("Neighborhoods not found"));
 
-                List<JSONNhood> NhoodJSON = new List<JSONNhood>();
-                foreach (var Nhood in Nhoods)
+                List<JSONNhood> nhoodJson = new List<JSONNhood>();
+                foreach (var nhood in nhoods)
                 {
-                    NhoodJSON.Add(new JSONNhood
+                    nhoodJson.Add(new JSONNhood
                     {
-                        Neighborhood_ID = Nhood.neighborhood_id,
-                        Name = Nhood.name,
-                        Description = Nhood.description,
-                        Color = Nhood.color,
-                        Town_Hall_ID = Nhood.town_hall_id,
-                        Icon_Url = Nhood.icon_url,
-                        Mayor_ID = Nhood.mayor_id,
-                        Mayor_Elected_Date = Nhood.mayor_elected_date,
-                        Election_Cycle_ID = Nhood.election_cycle_id
+                        neighborhood_id = nhood.neighborhood_id,
+                        name = nhood.name,
+                        description = nhood.description,
+                        color = nhood.color,
+                        town_hall_id = nhood.town_hall_id,
+                        icon_url = nhood.icon_url,
+                        mayor_id = nhood.mayor_id,
+                        mayor_elected_date = nhood.mayor_elected_date,
+                        election_cycle_id = nhood.election_cycle_id
                     });
 
                 }
-                var NhoodsJSON = new JSONNhoods();
-                NhoodsJSON.Neighborhoods = NhoodJSON;
-                return ApiResponse.Json(HttpStatusCode.OK, NhoodsJSON);
+                var nhoodsJson = new JSONNhoods();
+                nhoodsJson.neighborhoods = nhoodJson;
+                return ApiResponse.Json(HttpStatusCode.OK, nhoodsJson);
             }
         }
         [HttpGet]
-        [Route("userapi/neighborhoods/id/{Nhoodid}.json")]
-        public IActionResult GetByID(uint Nhoodid)
+        [Route("userapi/neighborhoods/{NhoodId}")]
+        public IActionResult GetByID(uint nhoodId)
         {
             var api = Api.INSTANCE;
 
             using (var da = api.DAFactory.Get())
             {
-                var Nhood = da.Neighborhoods.Get(Nhoodid);
-                if (Nhood == null)
-                {
-                    var JSONError = new JSONNhoodError();
-                    JSONError.Error = "Neighborhood not found";
-                    return ApiResponse.Json(HttpStatusCode.NotFound, JSONError);
-                }
+                var nhood = da.Neighborhoods.Get(nhoodId);
+                if (nhood == null) return ApiResponse.Json(HttpStatusCode.NotFound, new JSONNhoodError("Neighborhood not found"));
 
-                var NhoodJSON = new JSONNhood
+                var nhoodJson = new JSONNhood
                 {
-                    Neighborhood_ID = Nhood.neighborhood_id,
-                    Name = Nhood.name,
-                    Description = Nhood.description,
-                    Color = Nhood.color,
-                    Town_Hall_ID = Nhood.town_hall_id,
-                    Icon_Url = Nhood.icon_url,
-                    Mayor_ID = Nhood.mayor_id,
-                    Mayor_Elected_Date = Nhood.mayor_elected_date,
-                    Election_Cycle_ID = Nhood.election_cycle_id
+                    neighborhood_id = nhood.neighborhood_id,
+                    name = nhood.name,
+                    description = nhood.description,
+                    color = nhood.color,
+                    town_hall_id = nhood.town_hall_id,
+                    icon_url = nhood.icon_url,
+                    mayor_id = nhood.mayor_id,
+                    mayor_elected_date = nhood.mayor_elected_date,
+                    election_cycle_id = nhood.election_cycle_id
                 };
-                return ApiResponse.Json(HttpStatusCode.OK, NhoodJSON);
+                return ApiResponse.Json(HttpStatusCode.OK, nhoodJson);
             }
         }
         [HttpGet]
-        [Route("userapi/city/{shardid}/neighborhoods/name/{NhoodName}.json")]
-        public IActionResult GetByName(int shardid, string NhoodName)
+        [Route("userapi/city/{shardId}/neighborhoods/name/{nhoodName}")]
+        public IActionResult GetByName(int shardId, string nhoodName)
         {
             var api = Api.INSTANCE;
 
             using (var da = api.DAFactory.Get())
             {
-                var SearchNhood = da.Neighborhoods.SearchExact(shardid, NhoodName, 1).FirstOrDefault();
-                if (SearchNhood == null)
-                {
-                    var JSONError = new JSONNhoodError();
-                    JSONError.Error = "Neighborhood not found";
-                    return ApiResponse.Json(HttpStatusCode.NotFound, JSONError);
-                }
+                var searchNhood = da.Neighborhoods.SearchExact(shardId, nhoodName, 1).FirstOrDefault();
+                if (searchNhood == null) return ApiResponse.Json(HttpStatusCode.NotFound, new JSONNhoodError("Neighborhood not found"));
 
-                var Nhood = da.Neighborhoods.Get((uint)SearchNhood.neighborhood_id);
-                if (Nhood == null)
-                {
-                    var JSONError = new JSONNhoodError();
-                    JSONError.Error = "Neighborhood not found";
-                    return ApiResponse.Json(HttpStatusCode.NotFound, JSONError);
-                }
+                var nhood = da.Neighborhoods.Get((uint)searchNhood.neighborhood_id);
+                if (nhood == null) return ApiResponse.Json(HttpStatusCode.NotFound, new JSONNhoodError("Neighborhood not found"));
 
-                var NhoodJSON = new JSONNhood
+                var nhoodJson = new JSONNhood
                 {
-                    Neighborhood_ID = Nhood.neighborhood_id,
-                    Name = Nhood.name,
-                    Description = Nhood.description,
-                    Color = Nhood.color,
-                    Town_Hall_ID = Nhood.town_hall_id,
-                    Icon_Url = Nhood.icon_url,
-                    Mayor_ID = Nhood.mayor_id,
-                    Mayor_Elected_Date = Nhood.mayor_elected_date,
-                    Election_Cycle_ID = Nhood.election_cycle_id
+                    neighborhood_id = nhood.neighborhood_id,
+                    name = nhood.name,
+                    description = nhood.description,
+                    color = nhood.color,
+                    town_hall_id = nhood.town_hall_id,
+                    icon_url = nhood.icon_url,
+                    mayor_id = nhood.mayor_id,
+                    mayor_elected_date = nhood.mayor_elected_date,
+                    election_cycle_id = nhood.election_cycle_id
                 };
-                return ApiResponse.Json(HttpStatusCode.OK, NhoodJSON);
+                return ApiResponse.Json(HttpStatusCode.OK, nhoodJson);
             }
         }
     }
     public class JSONNhoodError
     {
-        public string Error { get; set; }
+        public string error;
+        public JSONNhoodError(string errorString)
+        {
+            error = errorString;
+        }
     }
     public class JSONNhoods
     {
-        public List<JSONNhood> Neighborhoods { get; set; }
+        public List<JSONNhood> neighborhoods { get; set; }
     }
     public class JSONNhood
     {
-        public int Neighborhood_ID { get; set; }
-        public string Name { get; set; }
-        public string Description { get; set; }
-        public uint Color { get; set; }
-        public int? Town_Hall_ID { get; set; }
-        public string Icon_Url { get; set; }
-        public uint? Mayor_ID { get; set; }
-        public uint Mayor_Elected_Date { get; set; }
-        public uint? Election_Cycle_ID { get; set; }
+        public int neighborhood_id { get; set; }
+        public string name { get; set; }
+        public string description { get; set; }
+        public uint color { get; set; }
+        public int? town_hall_id { get; set; }
+        public string icon_url { get; set; }
+        public uint? mayor_id { get; set; }
+        public uint mayor_elected_date { get; set; }
+        public uint? election_cycle_id { get; set; }
 
     }
 }

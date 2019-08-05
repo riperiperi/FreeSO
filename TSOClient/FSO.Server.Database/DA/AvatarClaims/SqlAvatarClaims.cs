@@ -52,6 +52,11 @@ namespace FSO.Server.Database.DA.AvatarClaims
         {
             return Context.Connection.Query<DbAvatarClaim>("SELECT * FROM fso_avatar_claims");
         }
+        public IEnumerable<DbAvatarActive> GetAllActiveAvatars()
+        {
+            return Context.Connection.Query<DbAvatarActive>("SELECT b.*, a.location FROM fso.fso_avatar_claims as a "+
+                "inner join fso.fso_avatars as b ON a.avatar_id = b.avatar_id;");
+        }
         public DbAvatarClaim GetByAvatarID(uint id)
         {
             return Context.Connection.Query<DbAvatarClaim>("SELECT * FROM fso_avatar_claims WHERE avatar_id = @id", new { id = id }).FirstOrDefault();

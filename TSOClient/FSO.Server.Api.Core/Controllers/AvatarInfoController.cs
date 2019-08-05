@@ -16,254 +16,226 @@ namespace FSO.Server.Api.Core.Controllers
     [ApiController]
     public class AvatarInfoController : ControllerBase
     {
+        //get the avatar by id
+        [HttpGet]
+        [Route("userapi/avatars/{avartarId}")]
+        public IActionResult GetByID(uint avartarId)
+        {
+            var api = Api.INSTANCE;
+
+            using (var da = api.DAFactory.Get())
+            {
+                var avatar = da.Avatars.Get(avartarId);
+                if (avatar == null) return ApiResponse.Json(HttpStatusCode.NotFound, new JSONAvatarError("Avatar not found"));
+
+                var avatarJson = new JSONAvatar
+                {
+                    avatar_id = avatar.avatar_id,
+                    shard_id = avatar.shard_id,
+                    name = avatar.name,
+                    gender = avatar.gender,
+                    date = avatar.date,
+                    description = avatar.description,
+                    current_job = avatar.current_job,
+                    mayor_nhood = avatar.mayor_nhood
+
+                };
+
+                return ApiResponse.Json(HttpStatusCode.OK, avatarJson);
+            }
+        }
         //gets all the avatars from one city
         [HttpGet]
-        [Route("userapi/city/{shardid}/avatars/all/page/{pagenum}.json")]
-        public IActionResult GetAll(int shardid,int pagenum)
+        [Route("userapi/city/{shardId}/avatars/page/{pageNum}")]
+        public IActionResult GetAll(int shardId,int pageNum)
         {
             var api = Api.INSTANCE;
             
             using (var da = api.DAFactory.Get())
             {
-                pagenum = pagenum - 1;
+                pageNum = pageNum - 1;
                 
-                var Avatar = da.Avatars.All(shardid);
-                var Avatar_Count = Avatar.Count();
-                var Total_Pages = Math.Ceiling((decimal)Avatar.Count()/100);
-                Avatar = Avatar.Skip(pagenum * 100);
-                Avatar = Avatar.Take(100);
+                var avatars = da.Avatars.All(shardId);
+                var avatarCount = avatars.Count();
+                var totalPages = (avatars.Count() - 1)/100 + 1;
+                avatars = avatars.Skip(pageNum * 100);
+                avatars = avatars.Take(100);
 
-                var PageAvatarsJSON = new JSONAvatarsPage();
-                PageAvatarsJSON.Total_Avatars = Avatar_Count;
-                PageAvatarsJSON.Page = pagenum + 1;
-                PageAvatarsJSON.Total_Pages = (int)Total_Pages;
-                PageAvatarsJSON.Avatars_On_Page = Avatar.Count();
+                var pageAvatarsJson = new JSONAvatarsPage();
+                pageAvatarsJson.total_avatars = avatarCount;
+                pageAvatarsJson.page = pageNum + 1;
+                pageAvatarsJson.total_pages = (int)totalPages;
+                pageAvatarsJson.avatars_on_page = avatars.Count();
 
-                if (pagenum < 0 || pagenum >= (int)Total_Pages)
-                {
-                    var JSONError = new JSONAvatarError();
-                    JSONError.Error = "Sorry page not found";
-                    return ApiResponse.Json(HttpStatusCode.NotFound, JSONError);
-                }
-                if (Avatar == null)
-                {
-                    var JSONError = new JSONAvatarError();
-                    JSONError.Error = "No avatars found";
-                    return ApiResponse.Json(HttpStatusCode.NotFound, JSONError);
-                }
+                if (pageNum < 0 || pageNum >= (int)totalPages) return ApiResponse.Json(HttpStatusCode.NotFound, new JSONAvatarError("Page not found"));
+                if (avatars == null) return ApiResponse.Json(HttpStatusCode.NotFound, new JSONAvatarError("Avatar not found"));
 
-                List<JSONAvatar> AvatarJSON = new List<JSONAvatar>();
-                foreach (var avatar in Avatar)
+                List<JSONAvatar> avatarJson = new List<JSONAvatar>();
+                foreach (var avatar in avatars)
                 {
-                    AvatarJSON.Add(new JSONAvatar
+                    avatarJson.Add(new JSONAvatar
                     {
-                        Avatar_ID = avatar.avatar_id,
-                        Shard_ID = avatar.shard_id,
-                        Name = avatar.name,
-                        Gender = avatar.gender,
-                        Date = avatar.date,
-                        Description = avatar.description,
-                        Current_Job = avatar.current_job,
-                        Mayor_Nhood = avatar.mayor_nhood
+                        avatar_id = avatar.avatar_id,
+                        shard_id = avatar.shard_id,
+                        name = avatar.name,
+                        gender = avatar.gender,
+                        date = avatar.date,
+                        description = avatar.description,
+                        current_job = avatar.current_job,
+                        mayor_nhood = avatar.mayor_nhood
                     });
 
                 }
                 
-                PageAvatarsJSON.Avatars = AvatarJSON;
-                return ApiResponse.Json(HttpStatusCode.OK, PageAvatarsJSON);
+                pageAvatarsJson.avatars = avatarJson;
+                return ApiResponse.Json(HttpStatusCode.OK, pageAvatarsJson);
             }
         }
         //gets avatar by name
         [HttpGet]
-        [Route("userapi/city/{shardid}/avatars/name/{name}.json")]
-        public IActionResult GetByName(int shardid, string name)
+        [Route("userapi/city/{shardId}/avatars/name/{name}")]
+        public IActionResult GetByName(int shardId, string name)
         {
             var api = Api.INSTANCE;
 
             using (var da = api.DAFactory.Get())
             {
-                var Avatar = da.Avatars.SearchExact(shardid, name, 1).FirstOrDefault();
-                if (Avatar == null)
-                {
-                    var JSONError = new JSONAvatarError();
-                    JSONError.Error = "No avatar found";
-                    return ApiResponse.Json(HttpStatusCode.NotFound, JSONError);
-                }
+                var avatar = da.Avatars.SearchExact(shardId, name, 1).FirstOrDefault();
+                if (avatar == null) return ApiResponse.Json(HttpStatusCode.NotFound, new JSONAvatarError("Avatar not found"));
 
-                var AvatarJSON = new JSONAvatar();
-                var avatarById = da.Avatars.Get(Avatar.avatar_id);
-                if (avatarById == null)
+                var avatarJson = new JSONAvatar();
+                var avatarById = da.Avatars.Get(avatar.avatar_id);
+                if (avatarById == null) return ApiResponse.Json(HttpStatusCode.NotFound, new JSONAvatarError("Avatar not found"));
+                avatarJson = (new JSONAvatar
                 {
-                    return ApiResponse.Json(HttpStatusCode.NotFound, "avatar not found");
-                }
-                AvatarJSON = (new JSONAvatar
-                {
-                    Avatar_ID = avatarById.avatar_id,
-                    Shard_ID = avatarById.shard_id,
-                    Name = avatarById.name,
-                    Gender = avatarById.gender,
-                    Date = avatarById.date,
-                    Description = avatarById.description,
-                    Current_Job = avatarById.current_job,
-                    Mayor_Nhood = avatarById.mayor_nhood
+                    avatar_id = avatarById.avatar_id,
+                    shard_id = avatarById.shard_id,
+                    name = avatarById.name,
+                    gender = avatarById.gender,
+                    date = avatarById.date,
+                    description = avatarById.description,
+                    current_job = avatarById.current_job,
+                    mayor_nhood = avatarById.mayor_nhood
                 });
-                return ApiResponse.Json(HttpStatusCode.OK, AvatarJSON);
+                return ApiResponse.Json(HttpStatusCode.OK, avatarJson);
             }
         }
         //gets all the avatars that live in a specific neighbourhood
         [HttpGet]
-        [Route("userapi/city/{shardid}/avatars/neighborhood/{nhoodid}.json")]
-        public IActionResult GetByNhood(int shardid, uint nhoodid)
+        [Route("userapi/city/{shardId}/avatars/neighborhood/{nhoodId}")]
+        public IActionResult GetByNhood(int shardId, uint nhoodId)
         {
             var api = Api.INSTANCE;
 
             using (var da = api.DAFactory.Get())
             {
-                var Lots = da.Lots.All(shardid).Where(x => x.neighborhood_id == nhoodid);
-                if (Lots == null)
+                var lots = da.Lots.All(shardId).Where(x => x.neighborhood_id == nhoodId);
+                if (lots == null) return ApiResponse.Json(HttpStatusCode.NotFound, new JSONAvatarError("Lots not found"));
+
+                List<JSONAvatar> avatarJson = new List<JSONAvatar>();
+                foreach (var lot in lots)
                 {
-                    var JSONError = new JSONAvatarError();
-                    JSONError.Error = "No avatars found";
-                    return ApiResponse.Json(HttpStatusCode.NotFound, JSONError);
-                }
-                List<JSONAvatar> AvatarJSON = new List<JSONAvatar>();
-                foreach (var lot in Lots)
-                {
-                    var Roomies = da.Roommates.GetLotRoommates(lot.lot_id).Where(x => x.is_pending == 0).Select(x => x.avatar_id);
-                    foreach (var roomie in Roomies)
+                    var roomies = da.Roommates.GetLotRoommates(lot.lot_id).Where(x => x.is_pending == 0).Select(x => x.avatar_id);
+                    foreach (var roomie in roomies)
                     {
                         var roomieAvatar = da.Avatars.Get(roomie);
-                        AvatarJSON.Add(new JSONAvatar
+                        avatarJson.Add(new JSONAvatar
                         {
-                            Avatar_ID = roomieAvatar.avatar_id,
-                            Shard_ID = roomieAvatar.shard_id,
-                            Name = roomieAvatar.name,
-                            Gender = roomieAvatar.gender,
-                            Date = roomieAvatar.date,
-                            Description = roomieAvatar.description,
-                            Current_Job = roomieAvatar.current_job,
-                            Mayor_Nhood = roomieAvatar.mayor_nhood
+                            avatar_id = roomieAvatar.avatar_id,
+                            shard_id = roomieAvatar.shard_id,
+                            name = roomieAvatar.name,
+                            gender = roomieAvatar.gender,
+                            date = roomieAvatar.date,
+                            description = roomieAvatar.description,
+                            current_job = roomieAvatar.current_job,
+                            mayor_nhood = roomieAvatar.mayor_nhood
                         });
                     }
                 }
-                var AvatarsJSON = new JSONAvatars();
-                AvatarsJSON.Avatars = AvatarJSON;
-                return ApiResponse.Json(HttpStatusCode.OK, AvatarsJSON);
-            }
-        }
-        //get the avatar by id
-        [HttpGet]
-        [Route("userapi/avatars/id/{avartarid}.json")]
-        public IActionResult GetByID(uint avartarid)
-        {
-            var api = Api.INSTANCE;
-
-            using (var da = api.DAFactory.Get())
-            {
-                var Avatar = da.Avatars.Get(avartarid);
-                if (Avatar == null)
-                {
-                    var JSONError = new JSONAvatarError();
-                    JSONError.Error = "No avatar found";
-                    return ApiResponse.Json(HttpStatusCode.NotFound, JSONError);
-                }
-
-                var AvatarJSON = new JSONAvatar
-                {
-                    Avatar_ID = Avatar.avatar_id,
-                    Shard_ID = Avatar.shard_id,
-                    Name = Avatar.name,
-                    Gender = Avatar.gender,
-                    Date = Avatar.date,
-                    Description = Avatar.description,
-                    Current_Job = Avatar.current_job,
-                    Mayor_Nhood = Avatar.mayor_nhood
-
-                };
-
-                return ApiResponse.Json(HttpStatusCode.OK, AvatarJSON);
+                var avatarsJson = new JSONAvatars();
+                avatarsJson.avatars = avatarJson;
+                return ApiResponse.Json(HttpStatusCode.OK, avatarsJson);
             }
         }
         //get all online Avatars
         [HttpGet]
-        [Route("userapi/avatars/online.json")]
+        [Route("userapi/avatars/online")]
         public IActionResult GetOnline()
         {
             var api = Api.INSTANCE;
 
             using (var da = api.DAFactory.Get())
             {
-                var AvatarStatus = da.AvatarClaims.GetAll();
-                if (AvatarStatus == null)
-                {
-                    var JSONError = new JSONAvatarError();
-                    JSONError.Error = "No avatars found";
-                    return ApiResponse.Json(HttpStatusCode.NotFound, JSONError);
-                }
+                var avatarStatus = da.AvatarClaims.GetAllActiveAvatars();
+                if (avatarStatus == null) return ApiResponse.Json(HttpStatusCode.NotFound, new JSONAvatarError("Avatars not found"));
+                
 
-                List<JSONAvatarSmall> AvatarSmallJSON = new List<JSONAvatarSmall>();
+                List<JSONAvatarSmall> avatarSmallJson = new List<JSONAvatarSmall>();
 
-                foreach (var Avatar in AvatarStatus)
+                foreach (var avatar in avatarStatus)
                 {
-                    var online = da.Avatars.Get(Avatar.avatar_id);
-                    uint Location = 0;
-                    if (online.privacy_mode == 0)
+                    uint location = 0;
+                    if (avatar.privacy_mode == 0)
                     {
-                        Location = Avatar.location;
+                        location = avatar.location;
                     }
-                    AvatarSmallJSON.Add(new JSONAvatarSmall
+                    avatarSmallJson.Add(new JSONAvatarSmall
                     {
-                        Avatar_ID = online.avatar_id,
-                        Name = online.name,
-                        Privacy_Mode = online.privacy_mode,
-                        Location = Location
+                        avatar_id = avatar.avatar_id,
+                        name = avatar.name,
+                        privacy_mode = avatar.privacy_mode,
+                        location = location
                     });
 
                 }
-                var AvatarJSON = new JSONAvatarOnline();
-                AvatarJSON.Avatars_Online_Count = AvatarStatus.Count();
-                AvatarJSON.Avatars = AvatarSmallJSON;
-                return ApiResponse.Json(HttpStatusCode.OK, AvatarJSON);
+                var avatarJson = new JSONAvatarOnline();
+                avatarJson.avatars_online_count = avatarStatus.Count();
+                avatarJson.avatars = avatarSmallJson;
+                return ApiResponse.Json(HttpStatusCode.OK, avatarJson);
             }
+        }
+    }
+    public class JSONAvatarError
+    {
+        public string error;
+        public JSONAvatarError(string errorString)
+        {
+            error = errorString;
         }
     }
     public class JSONAvatarsPage
     {
-        public int Page { get; set; }
-        public int Total_Pages { get; set; }
-        public int Total_Avatars { get; set; }
-        public int Avatars_On_Page { get; set; }
-        public List<JSONAvatar> Avatars { get; set; }
-    }
-    public class JSONAvatarError
-    {
-        public string Error { get; set; }
+        public int page { get; set; }
+        public int total_pages { get; set; }
+        public int total_avatars { get; set; }
+        public int avatars_on_page { get; set; }
+        public List<JSONAvatar> avatars { get; set; }
     }
     public class JSONAvatarOnline
     {
-        public int Avatars_Online_Count { get; set; }
-        public List<JSONAvatarSmall> Avatars { get; set; }
+        public int avatars_online_count { get; set; }
+        public List<JSONAvatarSmall> avatars { get; set; }
     }
     public class JSONAvatarSmall
     {
-        public uint Avatar_ID { get; set; }
-        public string Name { get; set; }
-        public byte Privacy_Mode { get; set; }
-        public uint Location { get; set; }
+        public uint avatar_id { get; set; }
+        public string name { get; set; }
+        public byte privacy_mode { get; set; }
+        public uint location { get; set; }
     }
     public class JSONAvatars
     {
-        public List<JSONAvatar> Avatars { get; set; }
+        public List<JSONAvatar> avatars { get; set; }
     }
     public class JSONAvatar
     {
-        public uint Avatar_ID { get; set; }
-        public int Shard_ID { get; set; }
-        public string Name { get; set; }
-        public DbAvatarGender Gender { get; set; }
-        public uint Date { get; set; }
-        public string Description { get; set; }
-        public ushort Current_Job { get; set; }
-        public int? Mayor_Nhood { get; set; }
+        public uint avatar_id { get; set; }
+        public int shard_id { get; set; }
+        public string name { get; set; }
+        public DbAvatarGender gender { get; set; }
+        public uint date { get; set; }
+        public string description { get; set; }
+        public ushort current_job { get; set; }
+        public int? mayor_nhood { get; set; }
     }
 }

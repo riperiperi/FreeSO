@@ -19,77 +19,68 @@ namespace FSO.Server.Api.Core.Controllers
     public class ElectionController : ControllerBase
     {
         [HttpGet]
-        [Route("userapi/elections/neighborhood/id/{nhoodid}.json")]
-        public IActionResult GetByNhood(int shardid, uint nhoodid)
+        [Route("userapi/neighborhood/{nhoodId}/elections")]
+        public IActionResult GetByNhood(uint nhoodId)
         {
             var api = Api.INSTANCE;
 
             using (var da = api.DAFactory.Get())
             {
-                var Nhood = da.Neighborhoods.Get(nhoodid);
-                if (Nhood.election_cycle_id == null)
-                {
-                    var JSONError = new JSONElectionError();
-                    JSONError.Error = "Election Cycle not found";
-                    return ApiResponse.Json(HttpStatusCode.NotFound, JSONError);
-                }
+                var nhood = da.Neighborhoods.Get(nhoodId);
+                if (nhood.election_cycle_id == null) return ApiResponse.Json(HttpStatusCode.NotFound, new JSONElectionError("Election cycle not found"));
 
-                var ElectionCycle = da.Elections.GetCycle((uint)Nhood.election_cycle_id);
+                var electionCycle = da.Elections.GetCycle((uint)nhood.election_cycle_id);
                 
-                var ElectionCandidates = new List<DbElectionCandidate>();
-                if (ElectionCycle.current_state == Database.DA.Elections.DbElectionCycleState.election)
-                {
-                    ElectionCandidates = da.Elections.GetCandidates(ElectionCycle.cycle_id, Database.DA.Elections.DbCandidateState.running);
-                }
-                if (ElectionCycle.current_state == Database.DA.Elections.DbElectionCycleState.ended)
-                {
-                    ElectionCandidates = da.Elections.GetCandidates(ElectionCycle.cycle_id, Database.DA.Elections.DbCandidateState.won);
-                }
+                var electionCandidates = new List<DbElectionCandidate>();
+                if (electionCycle.current_state == Database.DA.Elections.DbElectionCycleState.election)
+                    electionCandidates = da.Elections.GetCandidates(electionCycle.cycle_id, Database.DA.Elections.DbCandidateState.running);
 
-                if (ElectionCycle == null)
-                {
-                    var JSONError = new JSONElectionError();
-                    JSONError.Error = "Election Cycle not found";
-                    return ApiResponse.Json(HttpStatusCode.NotFound, JSONError);
-                }
+                if (electionCycle.current_state == Database.DA.Elections.DbElectionCycleState.ended)
+                    electionCandidates = da.Elections.GetCandidates(electionCycle.cycle_id, Database.DA.Elections.DbCandidateState.won);
 
-                List<JSONCandidates> CandidatesJSON = new List<JSONCandidates>();
-                foreach (var Candidate in ElectionCandidates)
+                if (electionCycle == null) return ApiResponse.Json(HttpStatusCode.NotFound, new JSONElectionError("Election cycle not found"));
+
+                List<JSONCandidates> candidatesJson = new List<JSONCandidates>();
+                foreach (var candidate in electionCandidates)
                 {
-                    CandidatesJSON.Add(new JSONCandidates
+                    candidatesJson.Add(new JSONCandidates
                     {
-                       Candidate_Avatar_ID = Candidate.candidate_avatar_id,
-                       Comment = Candidate.comment,
-                       State = Candidate.state
+                       candidate_avatar_id = candidate.candidate_avatar_id,
+                       comment = candidate.comment,
+                       state = candidate.state
                     });
 
                 }
-                var ElectionJSON = new JSONElections();
-                ElectionJSON.Candidates = CandidatesJSON;
-                ElectionJSON.Current_State = ElectionCycle.current_state;
-                ElectionJSON.Neighborhood_ID = Nhood.neighborhood_id;
-                ElectionJSON.Start_Date = ElectionCycle.start_date;
-                ElectionJSON.End_Date = ElectionCycle.end_date;
-                return ApiResponse.Json(HttpStatusCode.OK, ElectionJSON);
+                var electionJson = new JSONElections();
+                electionJson.candidates = candidatesJson;
+                electionJson.current_state = electionCycle.current_state;
+                electionJson.neighborhood_id = nhood.neighborhood_id;
+                electionJson.start_date = electionCycle.start_date;
+                electionJson.end_date = electionCycle.end_date;
+                return ApiResponse.Json(HttpStatusCode.OK, electionJson);
             }
         }
     }
     public class JSONElectionError
     {
-        public string Error { get; set; }
+        public string error;
+        public JSONElectionError(string errorString)
+        {
+            error = errorString;
+        }
     }
     public class JSONElections
     {
-        public DbElectionCycleState Current_State { get; set; }
-        public int Neighborhood_ID { get; set; }
-        public uint Start_Date { get; set; }
-        public uint End_Date { get; set; }
-        public List<JSONCandidates> Candidates { get; set; }
+        public DbElectionCycleState current_state { get; set; }
+        public int neighborhood_id { get; set; }
+        public uint start_date { get; set; }
+        public uint end_date { get; set; }
+        public List<JSONCandidates> candidates { get; set; }
     }
     public class JSONCandidates
     {
-        public uint Candidate_Avatar_ID { get; set; }
-        public string Comment { get; set; }
-        public DbCandidateState State { get; set; }
+        public uint candidate_avatar_id { get; set; }
+        public string comment { get; set; }
+        public DbCandidateState state { get; set; }
     }
 }
