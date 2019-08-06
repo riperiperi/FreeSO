@@ -13,6 +13,7 @@ using FSO.Client.UI.Model;
 using FSO.LotView.RC;
 using FSO.Common.Utils;
 using FSO.Client.UI.Screens;
+using FSO.LotView.Model;
 
 namespace FSO.Client.UI.Panels
 {

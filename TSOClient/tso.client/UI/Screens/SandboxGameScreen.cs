@@ -279,7 +279,7 @@ namespace FSO.Client.UI.Screens
         {
             GameFacade.Game.IsFixedTimeStep = (vm == null || vm.Ready);
 
-            Visible = World?.Visible == true && (World?.State as FSO.LotView.RC.WorldStateRC)?.CameraMode != true;
+            Visible = World?.Visible == true && World?.State.Cameras.HideUI == false;
             GameFacade.Game.IsMouseVisible = Visible;
 
             if (state.NewKeys.Contains(Microsoft.Xna.Framework.Input.Keys.F1) && state.CtrlDown)

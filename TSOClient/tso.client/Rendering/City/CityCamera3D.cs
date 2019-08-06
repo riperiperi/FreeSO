@@ -16,6 +16,7 @@ using FSO.Client.UI.Framework;
 using FSO.LotView.RC;
 using FSO.Client.UI.Panels;
 using FSO.Common.Rendering.Framework.IO;
+using FSO.LotView.Model;
 
 namespace FSO.Client.Rendering.City
 {
@@ -153,13 +154,13 @@ namespace FSO.Client.Rendering.City
                     parent.LotPosition = new Vector3((float)(x + 1), elev / 12.0f, (float)(y + 0));
 
                     CenterTile += (new Vector2((float)(x + 1) - tile.Y, (float)(y + 0) + tile.X) - CenterTile) * (1f - (float)Math.Pow(0.975f, 60f / FSOEnvironment.RefreshRate));
-                    TargRX = (((LotView.RC.WorldStateRC)lotWorld.State).RotationX - (float)Math.PI / 2);
-                    TargRY = (((LotView.RC.WorldStateRC)lotWorld.State).RotationY);
+                    TargRX = lotWorld.State.Cameras.Camera3D.RotationX - (float)Math.PI / 2;
+                    TargRY = lotWorld.State.Cameras.Camera3D.RotationY;
 
                     if (LotZoomProgress == 0)
                     {
-                        ((LotView.RC.WorldStateRC)lotWorld.State).RotationX = RotationX + (float)Math.PI / 2;
-                        (((LotView.RC.WorldStateRC)lotWorld.State).RotationY) = (RotationY - 1.10f) / (1.10f / (float)(Math.PI / 2));
+                        lotWorld.State.Cameras.Camera3D.RotationX = RotationX + (float)Math.PI / 2;
+                        lotWorld.State.Cameras.Camera3D.RotationY = (RotationY - 1.10f) / (1.10f / (float)(Math.PI / 2));
                     }
                     else if (LotZoomProgress != 1)
                     {

@@ -134,7 +134,7 @@ namespace FSO.LotView
             gd.BlendState = BlendState.NonPremultiplied;
             foreach (var obj in dyn)
             {
-                obj.DrawImmediate(gd, state);
+                obj.Draw(gd, state);
             }
 
             _2d.EndImmediate();
@@ -173,7 +173,7 @@ namespace FSO.LotView
 
             foreach (var obj in staticObj)
             {
-                obj.DrawImmediate(gd, state);
+                obj.Draw(gd, state);
             }
 
             _2d.EndImmediate();

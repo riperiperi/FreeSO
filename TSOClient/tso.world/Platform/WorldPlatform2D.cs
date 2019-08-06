@@ -75,6 +75,7 @@ namespace FSO.LotView.Platform
                     bp.WallComp.Draw(gd, state);
                     _2d.Pause();
                     _2d.Resume();
+                    _2d.PrepareImmediate(Effects.WorldBatchTechniques.drawZSpriteOBJID);
                     foreach (var obj in bp.Objects)
                     {
                         var tilePosition = obj.Position;
@@ -126,7 +127,6 @@ namespace FSO.LotView.Platform
             state.TempDraw = true;
             state.ObjectIDMode = true;
             state._2D.OBJIDMode = true;
-            state._3D.OBJIDMode = true;
             using (var buffer = _2d.WithBuffer(_2DWorldBatch.BUFFER_OBJID, ref bufferTexture))
             {
                 _2d.SetScroll(-pxOffset);
@@ -138,7 +138,7 @@ namespace FSO.LotView.Platform
                     {
                         var tilePosition = obj.Position;
                         if (obj.Level != state.Level || !obj.DoDraw(state)) continue;
-                        obj.DrawImmediate(gd, state);
+                        obj.Draw(gd, state);
                     }
                     _2d.EndImmediate();
 
@@ -159,7 +159,6 @@ namespace FSO.LotView.Platform
 
             }
             state.ObjectIDMode = false;
-            state._3D.OBJIDMode = false;
             state._2D.OBJIDMode = false;
             state.TempDraw = false;
             state.CenterTile = oldCenter;
@@ -242,7 +241,7 @@ namespace FSO.LotView.Platform
                             else bounds = Rectangle.Union(offBound, bounds);
                         }
 
-                        obj.DrawImmediate(gd, state);
+                        obj.Draw(gd, state);
 
                         //return everything to normal
                         obj.Direction = oldObjRot;

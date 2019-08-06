@@ -85,6 +85,7 @@ namespace FSO.LotView.Utils.Camera
         public float FarPlane { get => ActiveCamera.BaseCamera.FarPlane; set => ActiveCamera.BaseCamera.FarPlane = value; }
         public float Zoom { get => ActiveCamera.BaseCamera.Zoom; set => ActiveCamera.BaseCamera.Zoom = value; }
         public float AspectRatioMultiplier { get => ActiveCamera.BaseCamera.AspectRatioMultiplier; set => ActiveCamera.BaseCamera.AspectRatioMultiplier = value; }
+        public bool HideUI => ActiveCamera == CameraFirstPerson;
 
         public List<CameraTransition> TransitionWeights = new List<CameraTransition>();
 
@@ -136,6 +137,34 @@ namespace FSO.LotView.Utils.Camera
                 TransitionWeights.RemoveAll(x => x.Camera == target);
                 ActiveCamera = target;
                 InvalidateCamera(world.State);
+            }
+        }
+
+        public void ForceCamera(WorldState state, CameraControllerType type)
+        {
+            TransitionWeights.Clear();
+            ICameraController target;
+            switch (type)
+            {
+                case CameraControllerType._2D:
+                    target = Camera2D;
+                    break;
+                case CameraControllerType._3D:
+                    target = Camera3D;
+                    break;
+                case CameraControllerType.FirstPerson:
+                    target = CameraFirstPerson;
+                    break;
+                default:
+                    target = null;
+                    break;
+            }
+
+            
+            if (target != null)
+            {
+                ActiveCamera = target;
+                InvalidateCamera(state);
             }
         }
 

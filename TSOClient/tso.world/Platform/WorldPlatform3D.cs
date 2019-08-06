@@ -9,6 +9,7 @@ using FSO.LotView.Effects;
 using FSO.LotView.Model;
 using FSO.LotView.RC;
 using FSO.LotView.Utils;
+using FSO.LotView.Utils.Camera;
 using Microsoft.Xna.Framework;
 using Microsoft.Xna.Framework.Graphics;
 
@@ -38,7 +39,9 @@ namespace FSO.LotView.Platform
             var oldLevel = state.Level;
             var oldCutaway = bp.Cutaway;
             //TODO: switch to 2D cam
-            ((WorldStateRC)state).Use2DCam = true;
+            var lastCamera = (state.CameraMode == CameraRenderMode._3D) ? CameraControllerType._3D : CameraControllerType._2D;
+            state.ForceCamera(CameraControllerType._2D);
+
             var wCam = state.Camera2D;
             var oldViewDimensions = wCam.ViewDimensions;
             //wCam.ViewDimensions = new Vector2(-1, -1);
@@ -104,9 +107,11 @@ namespace FSO.LotView.Platform
 
             effect.SetTechnique(RCObjectTechniques.Draw);
             var frustrum = new BoundingFrustum(vp);
-            var objs = bp.Objects.OrderBy(x => ((ObjectComponentRC)x).SortDepth(view));
+            /*
+            var objs = bp.Objects.OrderBy(x => x.UpdateDrawOrder);
+            */
             var fine = bp.FineArea;
-            foreach (var obj in objs)
+            foreach (var obj in bp.Objects)
             {
                 if (fine != null && (
                     obj.Position.X < 0 ||
@@ -137,7 +142,7 @@ namespace FSO.LotView.Platform
             state.Level = oldLevel;
             bp.Cutaway = oldCutaway;
 
-            ((WorldStateRC)state).Use2DCam = false;
+            state.ForceCamera(lastCamera);
 
             var tex = LotThumbTarget;
             return tex; //TextureUtils.Clip(gd, tex, bounds);
@@ -242,7 +247,7 @@ namespace FSO.LotView.Platform
                 obj.OnRotationChanged(state);
                 obj.OnZoomChanged(state);
                 obj.Position = tilePosition;
-                obj.DrawImmediate(gd, state);
+                obj.Draw(gd, state);
 
                 var mat = obj.World * vp;
                 cpoints.AddRange(obj.GetBounds().GetCorners().Select(x =>

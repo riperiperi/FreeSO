@@ -1146,7 +1146,7 @@ namespace FSO.Client.UI.Panels
                                     facade.RoofOnFloor = true;
                                 }
                                 facade.RoofOnFloor = true;
-                                facade.Generate(GameFacade.GraphicsDevice, (WorldRC)World, vm.Context.Blueprint);
+                                facade.Generate(GameFacade.GraphicsDevice, World, vm.Context.Blueprint);
                                 facade.SaveToPath(path);
                                 UIScreen.GlobalShowAlert(new UIAlertOptions { Message = "Save successful!" }, true);
                             }

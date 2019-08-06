@@ -59,6 +59,18 @@ namespace FSO.LotView
             Level = 1;
         }
 
+        public void SetCameraType(World world, CameraControllerType type)
+        {
+            CameraMode = (type == CameraControllerType._2D) ? CameraRenderMode._2D : CameraRenderMode._3D;
+            Cameras.SetCameraType(world, type);
+        }
+
+        public void ForceCamera(CameraControllerType type)
+        {
+            CameraMode = (type == CameraControllerType._2D) ? CameraRenderMode._2D : CameraRenderMode._3D;
+            Cameras.ForceCamera(this, type);
+        }
+
         public void UpdateInterpolation()
         {
             FramePerDraw = (30f * FramesSinceLastDraw * SimSpeed) / FSOEnvironment.RefreshRate;
@@ -125,7 +137,6 @@ namespace FSO.LotView
         public bool ObjectIDMode;
         public WorldSpace WorldSpace;
         public _2DWorldBatch _2D;
-        public _3DWorldBatch _3D;
         public LMapBatch Light;
         public Texture2D AmbientLight;
         public Texture2D OutsidePx;

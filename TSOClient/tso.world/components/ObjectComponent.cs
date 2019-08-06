@@ -450,60 +450,6 @@ namespace FSO.LotView.Components
 
         public override void Draw(GraphicsDevice device, WorldState world)
         {
-            if (CutawayHidden) return;
-            var pos = Position;
-            if (this.DrawGroup != null) {
-                if (Container != null) dgrp.Position = pos;
-                dgrp.Draw(world);
-            }
-
-            if (Headline != null && !Headline.IsDisposed)
-            {
-                if (HeadlineSprite == null) HeadlineSprite = new _2DStandaloneSprite();
-                var headOff = new Vector3(0, 0, 0.66f);
-                var headPx = world.WorldSpace.GetScreenFromTile(headOff);
-
-                var item = HeadlineSprite;
-                item.Pixel = Headline;
-                item.Depth = TextureGenerator.GetWallZBuffer(device)[30];
-
-                item.SrcRect = new Rectangle(0, 0, Headline.Width, Headline.Height);
-                item.WorldPosition = headOff;
-                var off = PosCenterOffsets[(int)world.Zoom - 1];
-                item.DestRect = new Rectangle(
-                    ((int)headPx.X - Headline.Width / 2) + (int)off.X,
-                    ((int)headPx.Y - Headline.Height / 2) + (int)off.Y, Headline.Width, Headline.Height);
-
-                item.AbsoluteDestRect = item.DestRect;
-                item.AbsoluteDestRect.Offset(world.WorldSpace.GetScreenFromTile(pos));
-                item.AbsoluteWorldPosition = item.WorldPosition + WorldSpace.GetWorldFromTile(pos); ;
-                HeadlineSprite.PrepareVertices(device);
-                world._2D.Draw(item);
-            }
-            
-            for (int i = 0; i < Particles.Count; i++)
-            {
-                var part = Particles[i];
-                if (part.BoundsDirty && part.AutoBounds && dgrp != null)
-                {
-                    //this particle needs updated bounds.
-                    BoundingBox bounds;
-                    if (ShadowComponent != null)
-                        bounds = ShadowComponent.GetParticleBounds();
-                    else
-                        bounds = GetParticleBounds();
-                    part.Volume = bounds;
-                    part.BoundsDirty = false;
-                    part.Dispose();
-                }
-                part.Level = Level;
-                part.OwnerWorld = Matrix.CreateScale(3) * World * Matrix.CreateTranslation(1.5f, 0, 1.5f) * Matrix.CreateScale(2);
-                if (part.Dead) Particles.RemoveAt(i--);
-            }
-        }
-
-        public void DrawImmediate(GraphicsDevice device, WorldState world)
-        {
             if (!Visible || (!world.DrawOOB && (Position.X < -2043 && Position.Y < -2043))) return;
             //#endif
             if (CutawayHidden) return;

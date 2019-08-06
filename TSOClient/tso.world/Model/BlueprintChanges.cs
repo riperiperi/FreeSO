@@ -97,7 +97,6 @@ namespace FSO.LotView
                     UpdateColor = true;
                     Blueprint.GenerateRoomLights();
                     state.OutsideColor = Blueprint.RoomColors[1];
-                    state._3D.RoomLights = Blueprint.RoomColors;
                     state.OutsidePx.SetData(new Color[] { new Color(Blueprint.OutsideColor, (Blueprint.OutsideColor.R + Blueprint.OutsideColor.G + Blueprint.OutsideColor.B) / (255 * 3f)) });
                     if (state.AmbientLight != null)
                     {

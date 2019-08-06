@@ -115,8 +115,8 @@ namespace FSO.LotView
                 effect.ViewProjection = vp;
 
                 if (Blueprint.WCRC != null) Blueprint.WCRC.Draw(gd, state);
-                if (state.DrawRoofs) Blueprint.RoofComp.Draw(gd, state);
             }
+            if (state.DrawRoofs) Blueprint.RoofComp.Draw(gd, state);
         }
 
         private void DrawFloorBuf(GraphicsDevice gd, WorldState state)

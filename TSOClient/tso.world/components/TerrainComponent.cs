@@ -438,7 +438,12 @@ namespace FSO.LotView.Components
         /// <param name="device"></param>
         /// <param name="world"></param>
         public override void Draw(GraphicsDevice device, WorldState world){
-            if (TerrainDirty || VertexBuffer == null) RegenTerrain(device, Bp);
+            var _3d = world.CameraMode == CameraRenderMode._3D;
+            if (TerrainDirty || VertexBuffer == null || GridAsTexture != _3d)
+            {
+                GridAsTexture = _3d;
+                RegenTerrain(device, Bp);
+            }
             if (VertexBuffer == null) return;
             if (world.Light != null) LightVec = world.Light.LightVec;
             var transitionIntensity = (world.Camera as WorldCamera3D)?.FromIntensity ?? 0f;
@@ -475,7 +480,6 @@ namespace FSO.LotView.Components
 
             Effect.Projection = world.Projection;
             var view = world.View;
-            var _3d = world.CameraMode == CameraRenderMode._3D;
             if (!_3d) view = view * Matrix.CreateTranslation(0, 0, -0.25f);
             Effect.View = view;
             //world._3D.ApplyCamera(Effect);
@@ -485,7 +489,7 @@ namespace FSO.LotView.Components
             var altOff = Bp.BaseAlt * Bp.TerrainFactor * 3;
             var worldmat = Matrix.Identity * Matrix.CreateTranslation(0, translation - altOff, 0);
             Effect.World = worldmat;
-            if ((world as RC.WorldStateRC)?.Use2DCam == false) Effect.CamPos = world.Camera.Position + world.Camera.Translation;
+            if (_3d) Effect.CamPos = world.Camera.Position + world.Camera.Translation;
             else
             {
                 Effect.CamPos = new Vector3(10000, 7071.0678118654752440084436210485f, 10000);
@@ -799,7 +803,7 @@ namespace FSO.LotView.Components
             var altOff = Bp.BaseAlt * Bp.TerrainFactor * 3;
             var worldmat = Matrix.Identity * Matrix.CreateTranslation(0, translation - altOff, 0);
             Effect.World = worldmat;
-            if ((world as RC.WorldStateRC)?.Use2DCam == false) Effect.CamPos = world.Camera.Position + world.Camera.Translation;
+            if (world.CameraMode == CameraRenderMode._3D) Effect.CamPos = world.Camera.Position + world.Camera.Translation;
             else Effect.CamPos = new Vector3(0, 9999, 0);
             Effect.GrassShininess = (float)0.0;
             Effect.DiffuseColor = world.OutsideColor.ToVector4() * Color.Lerp(LightGreen, Color.White, 0.25f).ToVector4();

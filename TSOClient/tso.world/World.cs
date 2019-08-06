@@ -21,6 +21,7 @@ using FSO.LotView.LMap;
 using FSO.LotView.RC;
 using System.Diagnostics;
 using FSO.LotView.Platform;
+using FSO.LotView.Utils;
 
 namespace FSO.LotView
 {
@@ -63,12 +64,7 @@ namespace FSO.LotView
         protected bool HasInitGPU;
         protected bool HasInitBlueprint;
         protected bool HasInit;
-
-        //old
-        protected World2D _2DWorld = new World2D();
-        protected World3D _3DWorld = new World3D();
-
-        //new
+        
         public WorldStatic Static;
         public WorldArchitecture Architecture;
         public WorldEntities Entities;
@@ -101,10 +97,9 @@ namespace FSO.LotView
              * state settings for the world and helper functions
              */
             State = new WorldState(layer.Device, layer.Device.Viewport.Width, layer.Device.Viewport.Height, this);
-
-            State._3D = new FSO.LotView.Utils._3DWorldBatch(State);
-            State._2D = new FSO.LotView.Utils._2DWorldBatch(layer.Device, World2D.NUM_2D_BUFFERS, 
-                World2D.BUFFER_SURFACE_FORMATS, World2D.FORMAT_ALWAYS_DEPTHSTENCIL, World2D.SCROLL_BUFFER);
+            
+            State._2D = new _2DWorldBatch(layer.Device, _2DWorldBatch.NUM_2D_BUFFERS,
+                _2DWorldBatch.BUFFER_SURFACE_FORMATS, _2DWorldBatch.FORMAT_ALWAYS_DEPTHSTENCIL, _2DWorldBatch.SCROLL_BUFFER);
 
             Static = new WorldStatic(this);
 
@@ -143,8 +138,6 @@ namespace FSO.LotView
 
             State.Platform = Platform;
             State.Changes = blueprint.Changes;
-            _2DWorld.Init(blueprint);
-            _3DWorld.Init(blueprint);
             GameThread.InUpdate(() =>
             {
                 Light?.Init(blueprint);
@@ -451,9 +444,8 @@ namespace FSO.LotView
             }
             State.CenterTile = new Vector2(pelvisCenter.X, pelvisCenter.Y);
             if (State.Level != comp.Level) State.Level = comp.Level;
-
-            if (!(this is RC.WorldRC))
-                State.CenterTile -= (pelvisCenter.Z/2.95f) * State.WorldSpace.GetTileFromScreen(new Vector2(0, 230)) / (1 << (3 - (int)State.Zoom));
+            
+            // State.CenterTile -= (pelvisCenter.Z/2.95f) * State.WorldSpace.GetTileFromScreen(new Vector2(0, 230)) / (1 << (3 - (int)State.Zoom));
 
         }
 
@@ -605,8 +597,7 @@ namespace FSO.LotView
             device.RasterizerState = RasterizerState.CullNone;
             State.PrepareLighting();
             State._2D.OutputDepth = true;
-
-            State._3D.Begin(device);
+            
             State._2D.Begin(this.State.Camera2D);
 
             //State._2D.PreciseZoom = State.PreciseZoom;
@@ -644,8 +635,9 @@ namespace FSO.LotView
 
         public void Force2DPredraw(GraphicsDevice device)
         {
-            if (_2DWorld is World2DRC) ((World2DRC)_2DWorld).Drawn = true;
-            _2DWorld.PreDraw(device, State);
+            Static.PreDraw(device, State);
+            //if (_2DWorld is World2DRC) ((World2DRC)_2DWorld).Drawn = true;
+            //_2DWorld.PreDraw(device, State);
         }
 
         public float? BoxRC2(Ray ray, float tileSize)
@@ -857,7 +849,6 @@ namespace FSO.LotView
         {
             State._2D.Begin(this.State.Camera2D);
             return Platform.GetObjectIDAtScreenPos(x, y, gd, State);
-            return _2DWorld.GetObjectIDAtScreenPos(x, y, gd, State);
         }
 
          /// <summary>
@@ -871,14 +862,12 @@ namespace FSO.LotView
         {
             State._2D.Begin(this.State.Camera2D);
             return Platform.GetObjectThumb(objects, positions, gd, State);
-            return _2DWorld.GetObjectThumb(objects, positions, gd, State);
         }
 
         public Texture2D GetLotThumb(GraphicsDevice gd, Action<Texture2D> rooflessCallback)
         {
             State._2D.Begin(this.State.Camera2D);
             return Platform.GetLotThumb(gd, State, rooflessCallback);
-            return _2DWorld.GetLotThumb(gd, State, rooflessCallback);
         }
 
         public virtual void ChangedWorldConfig(GraphicsDevice gd)
@@ -1048,7 +1037,6 @@ namespace FSO.LotView
             Platform?.Dispose();
             State.Rooms.Dispose();
             if (State._2D != null) State._2D.Dispose();
-            if (_2DWorld != null) _2DWorld.Dispose();
             if (Blueprint != null)
             {
                 foreach (var world in Blueprint.SubWorlds)

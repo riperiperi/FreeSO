@@ -98,7 +98,6 @@ namespace FSO.LotView.Components
             state.SilentLevel = State.Level;
             state.SilentBuildMode = 0;
             State._2D = state._2D;
-            State._3D = state._3D;
             Blueprint.Changes.PreDraw(gd, State);
 
             state.SilentBuildMode = oldBuild;
