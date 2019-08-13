@@ -32,6 +32,7 @@ namespace FSO.IDE.EditorComponent.UI
         private PrimitiveBox Placement;
 
         public int UndoRedoDir;
+        public bool Refocused;
 
         private UILabel PlacingName;
         private UILabel PlacingDesc;
@@ -40,6 +41,7 @@ namespace FSO.IDE.EditorComponent.UI
 
         private int LastWidth;
         private int LastHeight;
+        private uint LastTreeVersion = 0;
 
         private bool MouseWasDown;
         private bool RightMouseWasDown;
@@ -72,6 +74,7 @@ namespace FSO.IDE.EditorComponent.UI
             }
 
             ContainerByID = new Dictionary<ushort, BHAVContainer>();
+            LastTreeVersion = scope.ActiveTree.TreeVersion;
             BHAVView = new BHAVContainer(target, scope);
             ContainerByID.Add(target.ChunkID, BHAVView);
             this.Add(BHAVView);
@@ -173,6 +176,22 @@ namespace FSO.IDE.EditorComponent.UI
                 DebugLabel.Position = new Vector2(115, 9);
                 Add(DebugLabel);
             }
+        }
+
+        public TREE GetSavableTree()
+        {
+            var tree = BHAVView.EditTargetTree;
+            if (tree.ChunkParent == null)
+            {
+                //add it to the iff
+                var iff = BHAVView.EditTarget.ChunkParent;
+                iff.AddChunk(tree);
+                Content.Content.Get().Changes.IffChanged(iff);
+            }
+            tree.TreeVersion++;
+            LastTreeVersion = tree.TreeVersion;
+
+            return tree;
         }
 
         private void DebugButtonClick(UIElement button)
@@ -289,6 +308,20 @@ namespace FSO.IDE.EditorComponent.UI
 
         public override void Update(UpdateState state)
         {
+            if (Refocused)
+            {
+                Refocused = false;
+                if (LastTreeVersion != BHAVView.EditTargetTree.TreeVersion)
+                {
+                    //reload the BHAV
+                    BHAVView.Init();
+                    UndoStack.Clear();
+                    RedoStack.Clear();
+                    LastTreeVersion = BHAVView.EditTargetTree.TreeVersion;
+                    if (DebugMode && DebugFrame != null) UpdateDebugPointer(DebugFrame);
+                }
+            }
+
             lock (Commands)
             {
                 if (Commands.Count > 0) RedoStack.Clear();
@@ -368,7 +401,7 @@ namespace FSO.IDE.EditorComponent.UI
 
             if (BHAVView.HoverPrim != null && (!RightMouseWasDown) && 
                 state.MouseState.RightButton == ButtonState.Pressed
-                && BHAVView.HoverPrim.Type == PrimBoxType.Primitive)
+                && BHAVView.HoverPrim.Type == TREEBoxType.Primitive)
             {
                 QueueCommand(new ToggleBreakpointCommand(BHAVView.HoverPrim));
             }
@@ -400,6 +433,27 @@ namespace FSO.IDE.EditorComponent.UI
             }
         }
 
+        public void SetPlacement(TREEBoxType type)
+        {
+            SetPlacement(type, null);
+        }
+
+        public void SetPlacement(TREEBoxType type, PrimitiveBox target)
+        {
+            PlacingName.Visible = true;
+            PlacingDesc.Visible = true;
+
+            var tree = BHAVView.EditTargetTree;
+            var box = new TREEBox(tree);
+            if (target != null) box.TruePointer = target.TreeBox.InternalID;
+            box.Width = 200;
+            box.Height = 60;
+            box.Type = type;
+            if (type == TREEBoxType.Label) box.Comment = "Label " + (tree.Entries.Count(x => x.Type == TREEBoxType.Label) + 1);
+            Placement = new PrimitiveBox(box, BHAVView);
+            PlacingName.Caption = "Placing " + type.ToString();
+            Placement.Parent = this;
+        }
 
         public void SetPlacement(ushort primType)
         {
@@ -408,7 +462,9 @@ namespace FSO.IDE.EditorComponent.UI
             
             if (primType == 254 || primType == 255)
             {
-                Placement = new PrimitiveBox((primType == 254) ? PrimBoxType.True : PrimBoxType.False, BHAVView);
+                var box = new TREEBox(null);
+                box.Type = (primType == 254) ? TREEBoxType.True : TREEBoxType.False;
+                Placement = new PrimitiveBox(box, BHAVView);
                 PlacingName.Caption = "Placing Return " + ((primType == 254) ? "True" : "False");
             }
             else
@@ -419,7 +475,7 @@ namespace FSO.IDE.EditorComponent.UI
                     FalsePointer = 253,
                     Opcode = primType,
                     Operand = new byte[8]
-                }, 255, BHAVView);
+                }, BHAVView);
                 PlacingName.Caption = "Placing " + Placement.TitleText;
             }
             Placement.Parent = this;
@@ -442,6 +498,7 @@ namespace FSO.IDE.EditorComponent.UI
             base.Draw(batch);
             if (Placement != null)
             {
+                Placement.PreDraw(batch);
                 Placement.ShadDraw(batch);
                 Placement.Draw(batch);
             }

@@ -26,6 +26,7 @@ namespace FSO.IDE.EditorComponent
 
         private STR AttributeTable;
         private BHAV Active;
+        public TREE ActiveTree;
 
         public EditorScope(GameObject obj, BHAV active)
         {
@@ -48,6 +49,16 @@ namespace FSO.IDE.EditorComponent
             StackObject = obj;
             CallerObject = obj;
 
+            ActiveTree = active.ChunkParent.Get<TREE>(active.ChunkID);
+            if (ActiveTree == null) ActiveTree = active.RuntimeTree;
+            if (ActiveTree == null)
+            {
+                ActiveTree = TREE.GenerateEmpty(active);
+                //remember this tree as the user might start more than one window with it, and they need to be kept in sync
+                //don't add to the iff unless a change is made.
+                active.RuntimeTree = ActiveTree; 
+            }
+            else ActiveTree.CorrectConnections(active);
             BHAVNames = GetLabels(active.ChunkID);
             Active = active;
         }

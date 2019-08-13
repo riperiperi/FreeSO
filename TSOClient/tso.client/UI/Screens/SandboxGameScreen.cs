@@ -1,5 +1,6 @@
 ﻿using FSO.Client.Debug;
 using FSO.Client.Network.Sandbox;
+using FSO.Client.UI.Controls;
 using FSO.Client.UI.Framework;
 using FSO.Client.UI.Model;
 using FSO.Client.UI.Panels;
@@ -292,8 +293,15 @@ namespace FSO.Client.UI.Screens
             if (state.NewKeys.Contains(Keys.P)) ChangeSpeedTo(0);
 
             if (World != null)
-            { 
+            {
                 //stub smooth zoom?
+                if (state.NewKeys.Contains(Keys.F12))
+                {
+                    //render lot thumbnail test
+                    var thumb = World.GetLotThumb(GameFacade.GraphicsDevice, null);
+                    var alert = UIAlert.Alert("Thumbnail Test", "", false);
+                    alert.SetIcon(thumb, 256, 256);
+                }
             }
 
             lock (StateChanges)

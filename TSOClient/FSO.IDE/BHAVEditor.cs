@@ -1,5 +1,6 @@
 ﻿using FSO.Client;
 using FSO.Client.UI.Framework;
+using FSO.Common.Utils;
 using FSO.Files.Formats.IFF.Chunks;
 using FSO.IDE.EditorComponent;
 using FSO.IDE.EditorComponent.Commands;
@@ -395,9 +396,21 @@ namespace FSO.IDE
         {
             lock (EditorLock)
             {
-                foreach (var prim in Editor.BHAVView.Selected)
+                var selected = Editor.BHAVView.Selected;
+                foreach (var prim in selected)
                 {
-                    Editor.QueueCommand(new RemovePrimCommand(Editor.BHAVView.RealPrim, prim));
+                    if (prim.Type == TREEBoxType.Label)
+                    {
+                        //remove gotos pointing at this object
+                        foreach (var prim2 in Editor.BHAVView.Primitives)
+                        {
+                            if (prim2.Type == TREEBoxType.Goto && prim2.TreeBox.TruePointer == prim.TreeBox.InternalID && !selected.Contains(prim2))
+                            {
+                                Editor.QueueCommand(new RemovePrimCommand(Editor.BHAVView.Primitives, prim2));
+                            }
+                        }
+                    }
+                    Editor.QueueCommand(new RemovePrimCommand(Editor.BHAVView.Primitives, prim));
                 }
                 Editor.BHAVView.ClearSelection();
             }
@@ -426,6 +439,44 @@ namespace FSO.IDE
         private void openParentResourceToolStripMenuItem_Click(object sender, EventArgs e)
         {
             MainWindow.Instance.IffManager.OpenResourceWindow(Scope.Object);
+        }
+
+        private void BHAVEditor_KeyPress(object sender, KeyPressEventArgs e)
+        {
+            if (EditorControl.Focused)
+            {
+                EditorControl.FSOUI.SubmitKey(e.KeyChar);
+            }
+        }
+
+        private void labelToolStripMenuItem_Click(object sender, EventArgs e)
+        {
+            lock (EditorLock) Editor.SetPlacement(TREEBoxType.Label);
+        }
+
+        private void commentToolStripMenuItem_Click(object sender, EventArgs e)
+        {
+            lock (EditorLock) Editor.SetPlacement(TREEBoxType.Comment);
+        }
+
+        private void BHAVEditor_Activated(object sender, EventArgs e)
+        {
+            //if the tree has changed, it must be reloaded
+            lock (EditorLock)
+            {
+                Editor.Refocused = true;
+            }
+            
+        }
+
+        private void BHAVEditor_Deactivate(object sender, EventArgs e)
+        {
+            EditorControl.ClearMouseState();
+            var ui = EditorControl.FSOUI;
+            GameThread.NextUpdate(state =>
+            {
+                ui.CleanupFocus(state);
+            });
         }
     }
 }

@@ -179,6 +179,8 @@
     <Compile Include="EditorComponent\Commands\AddPrimCommand.cs" />
     <Compile Include="EditorComponent\Commands\BHAVCommand.cs" />
     <Compile Include="EditorComponent\Commands\ChangeBHAVCommand.cs" />
+    <Compile Include="EditorComponent\Commands\CommentModifyCommand.cs" />
+    <Compile Include="EditorComponent\Commands\UpdateBoxPosCommand.cs" />
     <Compile Include="EditorComponent\Commands\SetFirstCommand.cs" />
     <Compile Include="EditorComponent\Commands\ToggleBreakpointCommand.cs" />
     <Compile Include="EditorComponent\Commands\ChangePointerCommand.cs" />
@@ -280,6 +282,7 @@
     <Compile Include="EditorComponent\Primitives\RelationshipDescriptor.cs" />
     <Compile Include="EditorComponent\Primitives\SleepDescriptor.cs" />
     <Compile Include="EditorComponent\Primitives\TransferFundsDescriptor.cs" />
+    <Compile Include="EditorComponent\UI\CommentContainer.cs" />
     <Compile Include="EditorComponent\UI\UIBHAVEditor.cs" />
     <Compile Include="EditorComponent\VarSoundSelect.cs">
       <SubType>Form</SubType>
@@ -553,6 +556,9 @@
     <EmbeddedResource Include="EntityInspector.resx">
       <DependentUpon>EntityInspector.cs</DependentUpon>
     </EmbeddedResource>
+    <EmbeddedResource Include="FSOUIControl.resx">
+      <DependentUpon>FSOUIControl.cs</DependentUpon>
+    </EmbeddedResource>
     <EmbeddedResource Include="MainWindow.resx">
       <DependentUpon>MainWindow.cs</DependentUpon>
     </EmbeddedResource>
@@ -790,6 +796,18 @@
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </Content>
     <Content Include="IDERes\diagbg.png">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </Content>
+    <Content Include="IDERes\tree\comment_box.png">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </Content>
+    <Content Include="IDERes\tree\comment_bubble.png">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </Content>
+    <Content Include="IDERes\tree\goto_box.png">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </Content>
+    <Content Include="IDERes\tree\label_box.png">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </Content>
     <Content Include="IDERes\viewBG.png">

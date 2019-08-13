@@ -333,7 +333,7 @@ namespace FSO.Client.UI.Framework
         /// <summary>
         /// Calculate a matrix which represents this objects position in screen space
         /// </summary>
-        protected virtual void CalculateMatrix()
+        public virtual void CalculateMatrix()
         {
             //If we are a child of another UIElement, start with our container's Matrix.
             //Otherwise, assume our matrix is IDENTITY (aka no scale & positioned at 0,0)

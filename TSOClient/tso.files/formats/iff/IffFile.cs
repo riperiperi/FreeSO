@@ -74,6 +74,8 @@ namespace FSO.Files.Formats.IFF
             {"HOUS", typeof(HOUS) },
             //todo: FAMh (family motives ("family house"?)) field encoded.
 
+            {"TREE", typeof(TREE) },
+
             {"FSOR", typeof(FSOR) },
             {"FSOM", typeof(FSOM) },
             {"MTEX", typeof(MTEX) },

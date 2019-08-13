@@ -24,6 +24,7 @@ namespace FSO.IDE.EditorComponent.UI
 
         public EditorScope Scope;
         public BHAV EditTarget;
+        public TREE EditTargetTree;
         public UIBHAVEditor Editor {
             get
             {
@@ -75,6 +76,7 @@ namespace FSO.IDE.EditorComponent.UI
             switch (evt)
             {
                 case UIMouseEventType.MouseDown:
+                    state.InputManager.SetFocus(null);
                     m_doDrag = true;
                     var position = this.GetMousePosition(state.MouseState);
                     m_dragOffsetX = position.X;
@@ -100,48 +102,55 @@ namespace FSO.IDE.EditorComponent.UI
             if (OnSelectedChanged != null) OnSelectedChanged(Selected);
         }
 
-        public BHAVContainer(BHAV target, EditorScope scope)
+        public BHAVInstruction GetInstruction(byte pointer)
         {
-            Scope = scope;
-            EditTarget = target;
+            if (pointer >= EditTarget.Instructions.Length) return null;
+            return EditTarget.Instructions[pointer];
+        }
 
+        public void Init()
+        {
             Selected = new List<PrimitiveBox>();
             Primitives = new List<PrimitiveBox>();
             RealPrim = new List<PrimitiveBox>();
 
-            byte i = 0;
-            foreach (var inst in EditTarget.Instructions)
+            var childCopy = GetChildren().ToList();
+            foreach (var child in childCopy) Remove(child);
+
+            HoverPrim = null;
+
+            foreach (var box in EditTargetTree.Entries)
             {
-                var ui = new PrimitiveBox(inst, i++, this);
+                var ui = new PrimitiveBox(box, this);
                 Primitives.Add(ui);
-                RealPrim.Add(ui);
+                if (box.Type == TREEBoxType.Primitive) RealPrim.Add(ui);
                 this.Add(ui);
             }
 
-            var RealPrims = new List<PrimitiveBox>(Primitives);
-            foreach (var prim in RealPrims)
+            foreach (var prim in Primitives)
             {
-                if (prim.Instruction.FalsePointer > 252 && prim.Returns != PrimitiveReturnTypes.Done)
+                var box = prim.TreeBox;
+                if (box.TruePointer != -1)
                 {
-                    var dest = new PrimitiveBox((prim.Instruction.FalsePointer == 254) ? PrimBoxType.True : PrimBoxType.False, this);
-                    Primitives.Add(dest);
-                    this.Add(dest);
-                    prim.FalseUI = dest;
+                    prim.TrueUI = Primitives[box.TruePointer];
                 }
-                else if (prim.Instruction.FalsePointer < RealPrim.Count) prim.FalseUI = RealPrim[prim.Instruction.FalsePointer];
-
-                if (prim.Instruction.TruePointer > 252)
+                if (box.FalsePointer != -1)
                 {
-                    var dest = new PrimitiveBox((prim.Instruction.TruePointer == 254) ? PrimBoxType.True : PrimBoxType.False, this);
-                    Primitives.Add(dest);
-                    this.Add(dest);
-                    prim.TrueUI = dest;
+                    prim.FalseUI = Primitives[box.FalsePointer];
                 }
-                else if (prim.Instruction.TruePointer < RealPrim.Count) prim.TrueUI = RealPrim[prim.Instruction.TruePointer];
             }
-            CleanPosition();
 
-            HitTest = ListenForMouse(new Rectangle(Int32.MinValue/2, Int32.MinValue / 2, Int32.MaxValue, Int32.MaxValue), new UIMouseEvent(DragMouseEvents));
+            CleanPosition();
+        }
+
+        public BHAVContainer(BHAV target, EditorScope scope)
+        {
+            Scope = scope;
+            EditTarget = target;
+            EditTargetTree = scope.ActiveTree;
+
+            Init();
+            HitTest = ListenForMouse(new Rectangle(Int32.MinValue / 2, Int32.MinValue / 2, Int32.MaxValue, Int32.MaxValue), new UIMouseEvent(DragMouseEvents));
         }
 
         public void AddPrimitive(PrimitiveBox prim)
@@ -153,13 +162,56 @@ namespace FSO.IDE.EditorComponent.UI
 
         public void RemovePrimitive(PrimitiveBox prim)
         {
+            if (prim.TreeBox.InternalID != -1)
+            {
+                EditTargetTree.DeleteBox(prim.TreeBox);
+            }
             Primitives.Remove(prim);
             RealPrim.RemoveAt(prim.InstPtr);
-            for (byte i=0; i<RealPrim.Count; i++)
-            {
-                RealPrim[i].InstPtr = i;
-            }
             this.Remove(prim);
+        }
+
+        public void UpdateLabelPointers(short index)
+        {
+            UpdateLabelPointers(index, new HashSet<short>());
+        }
+
+        public void UpdateLabelPointers(short index, HashSet<short> traversed)
+        {
+            //if we've already traversed this label, we're in a loop and don't need to update our pointers
+            //should probably show a warning telling the user not to do this
+            if (traversed.Contains(index)) return;
+
+            traversed.Add(index);
+            foreach (var prim in Primitives)
+            {
+                if (prim.Type == TREEBoxType.Goto && prim.TreeBox.TruePointer == index)
+                {
+                    //update bhav instructions of all primitives pointing to this goto
+                    foreach (var prim2 in Primitives)
+                    {
+                        if (prim2.TrueUI == prim)
+                        {
+                            if (prim2.Type == TREEBoxType.Label)
+                            {
+                                //we need to update this label too
+                                UpdateLabelPointers(prim2.TreeBox.InternalID, traversed);
+                            }
+                            else if (prim2.Type == TREEBoxType.Primitive)
+                            {
+                                prim2.Instruction.TruePointer = prim.InstPtr;
+                            }
+                        }
+                        if (prim2.FalseUI == prim)
+                        {
+                            if (prim2.Type == TREEBoxType.Primitive)
+                            {
+                                prim2.Instruction.FalsePointer = prim.InstPtr;
+                            }
+                        }
+                    }
+                }
+            }
         }
 
         public void UpdateOperand(PrimitiveBox target)
@@ -173,7 +225,7 @@ namespace FSO.IDE.EditorComponent.UI
 
         public void CleanPosition()
         {
-            var notTraversed = new HashSet<PrimitiveBox>(Primitives);
+            var notTraversed = new HashSet<PrimitiveBox>(Primitives.Where(x => x.TreeBox.PosisionInvalid));
             int xOff = 0;
             while (notTraversed.Count > 0)
             {
@@ -195,8 +247,10 @@ namespace FSO.IDE.EditorComponent.UI
                     int maxHeight = 0;
                     foreach (var inst in row)
                     {
+                        inst.TreeBox.PosisionInvalid = false;
                         treePrims.Add(inst);
                         inst.Position = new Vector2(xPos, yPos);
+                        
                         if (inst.Height > maxHeight) maxHeight = inst.Height;
                         xPos += inst.Width + 45;
                     }
@@ -208,6 +262,7 @@ namespace FSO.IDE.EditorComponent.UI
                 foreach (var ui in treePrims)
                 {
                     ui.Position = new Vector2(ui.X + xOff + halfWidth + 20, ui.Y);
+                    ui.CopyPosToTree();
                 }
                 xOff += treeWidth + 60;
             }

@@ -149,7 +149,7 @@ namespace FSO.Client.UI.Framework
         /// <summary>
         /// 
         /// </summary>
-        protected override void CalculateMatrix()
+        public override void CalculateMatrix()
         {
             base.CalculateMatrix();
 

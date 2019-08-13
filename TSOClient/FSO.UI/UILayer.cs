@@ -257,6 +257,7 @@ namespace FSO.Client.UI
                 //todo: release resources?
                 GameThread.NextUpdate(x =>
                 {
+                    cont.CleanupFocus(x);
                     cont.Removed();
                 });
                 m_ExtContainers.Remove(cont);

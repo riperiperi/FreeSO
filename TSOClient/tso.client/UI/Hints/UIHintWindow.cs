@@ -107,7 +107,7 @@ namespace FSO.Client.UI.Hints
         }
 
         private bool m_TextDirty = false;
-        protected override void CalculateMatrix()
+        public override void CalculateMatrix()
         {
             base.CalculateMatrix();
             foreach (var cat in Categories)

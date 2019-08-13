@@ -65,9 +65,11 @@ namespace FSO.Client.UI.Controls
         protected int SelectionEnd = -1;
 
         public event ChangeDelegate OnChange;
+        public event ChangeDelegate OnFocusOut;
         public event KeyPressDelegate OnEnterPress;
         public event KeyPressDelegate OnTabPress;
         public event KeyPressDelegate OnShiftTabPress;
+        public event UIMouseEvent NoFocusPassthrough;
         public bool EventSuppressed;
 
         private UITextEditMode m_Mode = UITextEditMode.Editor;
@@ -312,6 +314,11 @@ namespace FSO.Client.UI.Controls
         {
             if (m_IsReadOnly) { return; }
 
+            if (NoFocusPassthrough != null && state.InputManager.GetFocus() != this)
+            {
+                NoFocusPassthrough?.Invoke(evt, state);
+                return;
+            }
             switch (evt)
             {
                 case UIMouseEventType.MouseDown:
@@ -384,6 +391,7 @@ namespace FSO.Client.UI.Controls
             }
             else
             {
+                OnFocusOut?.Invoke(this);
                 m_cursorBlink = false;
                 SelectionEnd = -1;
                 SelectionStart = -1;
@@ -796,6 +804,14 @@ namespace FSO.Client.UI.Controls
         private Vector2 m_CursorPosition = Vector2.Zero;
         private float m_LineHeight;
         private int m_NumVisibleLines;
+
+        public int TotalLines
+        {
+            get
+            {
+                return m_Lines.Count;
+            }
+        }
 
         /// <summary>
         /// When the text / scroll / highlight changes we need to
@@ -1252,7 +1268,7 @@ namespace FSO.Client.UI.Controls
 
         #endregion
 
-        protected override void CalculateMatrix()
+        public override void CalculateMatrix()
         {
             base.CalculateMatrix();
             m_DrawDirty = true;

@@ -604,7 +604,7 @@ namespace FSO.LotView
             State._2D.ResetMatrices(device.Viewport.Width, device.Viewport.Height);
 
             device.DepthStencilState = DepthStencilState.Default;
-            if (State.CameraMode == CameraRenderMode._3D) Static.DrawBg(State.Device, State, SkyBounds, false);
+            if (State.CameraMode == CameraRenderMode._3D) Static?.DrawBg(State.Device, State, SkyBounds, false);
             Architecture.Draw2D(device, State);
             Static?.Draw(State);
             State.PrepareCamera();
