@@ -104,6 +104,7 @@ namespace FSO.LotView
 
         public void DrawBg(GraphicsDevice gd, WorldState state, BoundingBox[] skyBounds, bool forceSurround)
         {
+            state.PrepareCamera();
             if (forceSurround || (state.Camera as WorldCamera3D)?.FromIntensity > 0 || skyBounds?.Any(x => x.Intersects(state.Frustum)) != false)
             {
                 if (Dome == null) Dome = new SkyDomeComponent(gd, Bp);

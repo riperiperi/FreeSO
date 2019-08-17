@@ -385,7 +385,7 @@ namespace FSO.Client.UI.Screens
         {
             //GameFacade.Game.IsFixedTimeStep = (vm == null || vm.Ready);
 
-            Visible = ((World?.Visible == false || World?.State.Cameras.HideUI == false) && !CityRenderer.Camera.HideUI);
+            Visible = ((World?.Visible == false || World?.State.Cameras.HideUI != true) && !CityRenderer.Camera.HideUI);
             GameFacade.Game.IsMouseVisible = Visible;
 
             base.Update(state);

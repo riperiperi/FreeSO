@@ -14,6 +14,8 @@ namespace FSO.LotView.Utils.Camera
     public class CameraControllers : ICamera
     {
         private float TransitionTime = 0.66f;
+        public bool DisableTransitions = false;
+        public Vector3? ModelTranslation;
 
         //lerp on transitions:
         // start with active camera. (get matrix)
@@ -22,12 +24,17 @@ namespace FSO.LotView.Utils.Camera
         {
             get
             {
-                if (TransitionWeights.Count > 0)
+                Matrix result;
+                if (TransitionWeights.Count > 0 && !DisableTransitions)
                 {
                     //blend together cameras
-                    return GetTransitionMtx(cam => cam.BaseCamera.View, DecompLerp); //
+                    result = GetTransitionMtx(cam => cam.BaseCamera.View, DecompLerp); //
+                } else
+                {
+                    result = ActiveCamera.BaseCamera.View;
                 }
-                return ActiveCamera.BaseCamera.View;
+                if (ModelTranslation == null) return result;
+                else return Matrix.CreateTranslation(-ModelTranslation.Value) * result;
             }
         }
 
@@ -35,7 +42,7 @@ namespace FSO.LotView.Utils.Camera
         {
             get
             {
-                if (TransitionWeights.Count > 0)
+                if (TransitionWeights.Count > 0 && !DisableTransitions)
                 {
                     //blend together cameras
                     return GetTransitionMtx(cam => cam.BaseCamera.Projection, LerpProj);

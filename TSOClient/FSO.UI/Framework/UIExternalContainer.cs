@@ -36,6 +36,8 @@ namespace FSO.Client.UI.Framework
         public Dictionary<char, Keys> NonPrintingKeys = new Dictionary<char, Keys>()
         {
             { '\b', Keys.Back },
+            { '\n', Keys.Enter },
+
         };
 
         public List<char> KeysPressed = new List<char>();

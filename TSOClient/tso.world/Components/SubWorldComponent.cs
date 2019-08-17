@@ -246,8 +246,8 @@ namespace FSO.LotView.Components
         public void SubDraw(GraphicsDevice gd, WorldState parentState, Action<Vector2> action)
         {
             var parentScroll = parentState.CenterTile;
-            if (!(parentState.CameraMode < CameraRenderMode._3D))
-                parentState.Camera.Translation = new Vector3(GlobalPosition.X * 3, 0, GlobalPosition.Y * 3);
+            if (parentState.CameraMode > CameraRenderMode._2D)
+                parentState.Cameras.ModelTranslation = new Vector3(GlobalPosition.X * 3, 0, GlobalPosition.Y * 3);
             else parentState.CenterTile += GlobalPosition; //TODO: vertical offset
             var pxOffset = -parentState.WorldSpace.GetScreenOffset();
 
@@ -267,8 +267,8 @@ namespace FSO.LotView.Components
             parentState.SilentLevel = oldLevel;
 
             parentState.CenterTile = parentScroll;
-            if (!(parentState.CameraMode < CameraRenderMode._3D))
-                parentState.Camera.Translation = Vector3.Zero;
+            if (parentState.CameraMode > CameraRenderMode._2D)
+                parentState.Cameras.ModelTranslation = Vector3.Zero;
             parentState.PrepareLighting();
         }
 
@@ -305,8 +305,8 @@ namespace FSO.LotView.Components
         public virtual void DrawArch(GraphicsDevice gd, WorldState parentState)
         {
             var parentScroll = parentState.CenterTile;
-            if (!(parentState.CameraMode < CameraRenderMode._3D))
-                parentState.Camera.Translation = new Vector3(GlobalPosition.X*3, 0, GlobalPosition.Y*3);
+            if (parentState.CameraMode > CameraRenderMode._2D)
+                parentState.Cameras.ModelTranslation = new Vector3(GlobalPosition.X*3, 0, GlobalPosition.Y*3);
             else parentState.CenterTile += GlobalPosition; //TODO: vertical offset
 
             var pxOffset = -parentState.WorldSpace.GetScreenOffset();
@@ -333,8 +333,8 @@ namespace FSO.LotView.Components
             parentState.SilentLevel = level;
 
             parentState.CenterTile = parentScroll;
-            if (!(parentState.CameraMode < CameraRenderMode._3D))
-                parentState.Camera.Translation = Vector3.Zero;
+            if (parentState.CameraMode > CameraRenderMode._2D)
+                parentState.Cameras.ModelTranslation = Vector3.Zero;
             parentState.PrepareLighting();
         }
 

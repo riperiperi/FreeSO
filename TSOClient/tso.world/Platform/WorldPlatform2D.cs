@@ -38,8 +38,10 @@ namespace FSO.LotView.Platform
             var oldViewDimensions = wCam.ViewDimensions;
             //wCam.ViewDimensions = new Vector2(-1, -1);
             var oldPreciseZoom = state.PreciseZoom;
+            state.ForceCamera(Utils.Camera.CameraControllerType._2D);
 
             //full invalidation because we must recalculate all object sprites. slow but necessary!
+            state.RenderingThumbnail = true;
             state.Zoom = WorldZoom.Far;
             state.Rotation = WorldRotation.TopLeft;
             state.Level = bp.Stories;
@@ -61,6 +63,7 @@ namespace FSO.LotView.Platform
             var lastLight = state.OutsideColor;
             state.OutsideColor = Color.White;
             state._2D.OBJIDMode = false;
+            state.PrepareCamera();
             using (var buffer = state._2D.WithBuffer(_2DWorldBatch.BUFFER_LOTTHUMB, ref bufferTexture))
             {
                 _2d.SetScroll(pxOffset);
@@ -75,7 +78,7 @@ namespace FSO.LotView.Platform
                     bp.WallComp.Draw(gd, state);
                     _2d.Pause();
                     _2d.Resume();
-                    _2d.PrepareImmediate(Effects.WorldBatchTechniques.drawZSpriteOBJID);
+                    _2d.PrepareImmediate(Effects.WorldBatchTechniques.drawZSpriteDepthChannel);
                     foreach (var obj in bp.Objects)
                     {
                         var tilePosition = obj.Position;
@@ -106,6 +109,7 @@ namespace FSO.LotView.Platform
             state.Zoom = oldZoom;
             state.Rotation = oldRotation;
             state.Level = oldLevel;
+            state.RenderingThumbnail = false;
             bp.Cutaway = oldCutaway;
 
             var tex = bufferTexture.Get();
@@ -183,6 +187,8 @@ namespace FSO.LotView.Platform
             }
             average /= positions.Length;
 
+            state.ForceCamera(Utils.Camera.CameraControllerType._2D);
+            state.RenderingThumbnail = true;
             state.SilentZoom = WorldZoom.Near;
             state.SilentRotation = WorldRotation.BottomRight;
             state.SilentPreciseZoom = 1;
@@ -203,6 +209,9 @@ namespace FSO.LotView.Platform
             //Blueprint.SetLightColor(WorldContent._2DWorldBatchEffect, Color.White, Color.White);
             //Blueprint.SetLightColor(WorldContent.GrassEffect, Color.White, Color.White);
             //Blueprint.SetLightColor(Vitaboy.Avatar.Effect, Color.White, Color.White);
+            var oldDS = gd.DepthStencilState;
+            gd.DepthStencilState = DepthStencilState.Default;
+            state.PrepareCamera();
 
             using (var buffer = state._2D.WithBuffer(_2DWorldBatch.BUFFER_THUMB, ref bufferTexture, _2DWorldBatch.BUFFER_THUMB_DEPTH, ref depthTexture))
             {
@@ -232,13 +241,16 @@ namespace FSO.LotView.Platform
 
                         var oPx = state.WorldSpace.GetScreenFromTile(tilePosition) + pxOffset;
                         obj.ValidateSprite(state);
-                        var offBound = obj.Bounding; // new Rectangle(obj.Bounding.Location + oPx.ToPoint(), obj.Bounding.Size);
-                        offBound.Offset(thumbOffset);
-
-                        if (offBound.Location.X != int.MaxValue)
+                        var offBound = obj.Bounding;
+                        if (offBound.Width != 0)
                         {
-                            if (i == 0) bounds = offBound;
-                            else bounds = Rectangle.Union(offBound, bounds);
+                            offBound.Offset(pxOffset + thumbOffset);
+
+                            if (offBound.Location.X != int.MaxValue)
+                            {
+                                if (i == 0) bounds = offBound;
+                                else bounds = Rectangle.Union(offBound, bounds);
+                            }
                         }
 
                         obj.Draw(gd, state);
@@ -254,7 +266,9 @@ namespace FSO.LotView.Platform
                     _2d.EndImmediate();
                 }
             }
+            
             bounds.Inflate(1, 1);
+            //bounds = new Rectangle(0, 0, 1024, 1024);
             bounds.X = Math.Max(0, Math.Min(1023, bounds.X));
             bounds.Y = Math.Max(0, Math.Min(1023, bounds.Y));
             if (bounds.Width + bounds.X > 1024) bounds.Width = 1024 - bounds.X;
@@ -266,6 +280,8 @@ namespace FSO.LotView.Platform
             state.WorldSpace.Invalidate();
             state.InvalidateCamera();
             state.TempDraw = false;
+            state.RenderingThumbnail = false;
+            gd.DepthStencilState = oldDS;
 
             var tex = bufferTexture.Get();
             return TextureUtils.Clip(gd, tex, bounds);

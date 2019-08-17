@@ -41,6 +41,7 @@ namespace FSO.LotView.Platform
             //TODO: switch to 2D cam
             var lastCamera = (state.CameraMode == CameraRenderMode._3D) ? CameraControllerType._3D : CameraControllerType._2D;
             state.ForceCamera(CameraControllerType._2D);
+            state.RenderingThumbnail = true;
 
             var wCam = state.Camera2D;
             var oldViewDimensions = wCam.ViewDimensions;
@@ -78,6 +79,7 @@ namespace FSO.LotView.Platform
             gd.Clear(Color.Transparent);
 
             state._2D.ResetMatrices(size, size);
+            state.PrepareCamera();
 
             if (bp.FineArea != null) bp.FloorGeom.BuildableReset(gd, bp.FineArea);
             else bp.FloorGeom.SliceReset(gd, new Rectangle(6, 6, bp.Width - 13, bp.Height - 13));
@@ -118,7 +120,10 @@ namespace FSO.LotView.Platform
                     obj.Position.X >= bp.Width ||
                     obj.Position.Y < 0 ||
                     obj.Position.Y >= bp.Width || !fine[(int)obj.Position.X + bp.Width * (int)obj.Position.Y])) continue;
+                var lastMode = obj.Mode;
+                obj.Mode = ComponentRenderMode._3D;
                 obj.Draw(gd, state);
+                obj.Mode = lastMode;
             }
             rooflessCallback?.Invoke(LotThumbTarget);
             bp.RoofComp.Draw(gd, state);
@@ -141,6 +146,7 @@ namespace FSO.LotView.Platform
             state.Rotation = oldRotation;
             state.Level = oldLevel;
             bp.Cutaway = oldCutaway;
+            state.RenderingThumbnail = false;
 
             state.ForceCamera(lastCamera);
 

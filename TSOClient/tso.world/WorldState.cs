@@ -36,6 +36,17 @@ namespace FSO.LotView
         public float FramePerDraw;
         public int FramesSinceLastDraw;
 
+        private bool _RenderingThumbnail;
+        public bool RenderingThumbnail
+        {
+            get => _RenderingThumbnail;
+            set
+            {
+                Cameras.DisableTransitions = value;
+                _RenderingThumbnail = value;
+            }
+        }
+
         /// <summary>
         /// Creates a new WorldState instance.
         /// </summary>

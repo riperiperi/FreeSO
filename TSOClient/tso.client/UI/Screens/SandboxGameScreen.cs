@@ -300,7 +300,7 @@ namespace FSO.Client.UI.Screens
                     //render lot thumbnail test
                     var thumb = World.GetLotThumb(GameFacade.GraphicsDevice, null);
                     var alert = UIAlert.Alert("Thumbnail Test", "", false);
-                    alert.SetIcon(thumb, 256, 256);
+                    alert.SetIcon(thumb, thumb.Width, thumb.Height);
                 }
             }
 

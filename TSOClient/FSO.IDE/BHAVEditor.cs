@@ -445,7 +445,8 @@ namespace FSO.IDE
         {
             if (EditorControl.Focused)
             {
-                EditorControl.FSOUI.SubmitKey(e.KeyChar);
+                var c = (e.KeyChar == '\r') ? '\n' : e.KeyChar;
+                EditorControl.FSOUI.SubmitKey(c);
             }
         }
 

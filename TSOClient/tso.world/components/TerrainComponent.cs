@@ -489,7 +489,7 @@ namespace FSO.LotView.Components
             var altOff = Bp.BaseAlt * Bp.TerrainFactor * 3;
             var worldmat = Matrix.Identity * Matrix.CreateTranslation(0, translation - altOff, 0);
             Effect.World = worldmat;
-            if (_3d) Effect.CamPos = world.Camera.Position + world.Camera.Translation;
+            if (_3d) Effect.CamPos = world.Camera.Position + (world.Cameras.ModelTranslation ?? new Vector3());
             else
             {
                 Effect.CamPos = new Vector3(10000, 7071.0678118654752440084436210485f, 10000);
@@ -803,7 +803,7 @@ namespace FSO.LotView.Components
             var altOff = Bp.BaseAlt * Bp.TerrainFactor * 3;
             var worldmat = Matrix.Identity * Matrix.CreateTranslation(0, translation - altOff, 0);
             Effect.World = worldmat;
-            if (world.CameraMode == CameraRenderMode._3D) Effect.CamPos = world.Camera.Position + world.Camera.Translation;
+            if (world.CameraMode == CameraRenderMode._3D) Effect.CamPos = world.Camera.Position + (world.Cameras.ModelTranslation ?? new Vector3());
             else Effect.CamPos = new Vector3(0, 9999, 0);
             Effect.GrassShininess = (float)0.0;
             Effect.DiffuseColor = world.OutsideColor.ToVector4() * Color.Lerp(LightGreen, Color.White, 0.25f).ToVector4();

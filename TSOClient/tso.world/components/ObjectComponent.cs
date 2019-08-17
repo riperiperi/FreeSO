@@ -27,7 +27,8 @@ namespace FSO.LotView.Components
         };
 
         public GameObject Obj;
-        public ComponentRenderMode Mode = ComponentRenderMode.Both;
+        // the modes that this object renders with. most objects are 2d only (with 3d drop ins) but objects can also force 3d components in 2d
+        public ComponentRenderMode Mode = ComponentRenderMode._2D;
 
         protected DGRP DrawGroup;
         protected DGRPRenderer dgrp;
@@ -209,7 +210,7 @@ namespace FSO.LotView.Components
         {
             get
             {
-                return (_ForceDynamic || Headline != null);// || Mode.HasFlag(ComponentRenderMode._3D));
+                return _ForceDynamic || Headline != null || Mode.HasFlag(ComponentRenderMode._3D);
             }
             set
             {
@@ -343,7 +344,11 @@ namespace FSO.LotView.Components
             {
                 ValidateSprite(world);
                 if (dgrp.Bounding != null) result |= world.WorldRectangle.Intersects(dgrp.Bounding.Value);
-            } else if (Mode.HasFlag(ComponentRenderMode._3D))
+                if (Mode.HasFlag(ComponentRenderMode._3D))
+                {
+                    result |= world.Frustum.Intersects(GetBounds());
+                }
+            } else 
             {
                 result |= world.Frustum.Intersects(GetBounds());
             }
@@ -455,13 +460,13 @@ namespace FSO.LotView.Components
             if (CutawayHidden) return;
             var pos = Position;
 
-            if (world.CameraMode > CameraRenderMode._2D) //Mode == ComponentRenderMode._3D)
+            if (world.CameraMode > CameraRenderMode._2D || Mode.HasFlag(ComponentRenderMode._3D)) //)
             {
                 var mworld = World3D;
                 dgrp.World = mworld;
                 if (this.DrawGroup != null) dgrp.Draw3D(world);
             }
-            else
+            if (world.CameraMode == CameraRenderMode._2D && Mode.HasFlag(ComponentRenderMode._2D))
             {
                 if (this.DrawGroup != null)
                 {

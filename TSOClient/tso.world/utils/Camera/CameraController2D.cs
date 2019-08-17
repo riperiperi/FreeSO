@@ -16,7 +16,6 @@ namespace FSO.LotView.Utils.Camera
         public WorldCamera Camera;
         public ICamera BaseCamera => Camera;
         public bool UseZoomHold => false;
-
         public bool UseRotateHold => false;
 
         public CameraController2D(GraphicsDevice gd)
@@ -73,10 +72,19 @@ namespace FSO.LotView.Utils.Camera
             var old = state.Rotation;
             state.SilentRotation = rot;
 
-            RotationOffFrom = ((rot - old) * 90) + Camera.RotateOff;
-            RotationOffFrom = ((RotationOffFrom + 540) % 360) - 180;
-            Camera.RotateOff = RotationOffFrom;
-            RotationOffPct = 0;
+            if (state.RenderingThumbnail)
+            {
+                RotationOffFrom = 0;
+                RotationOffPct = 0;
+                Camera.RotateOff = 0;
+            }
+            else
+            {
+                RotationOffFrom = ((rot - old) * 90) + Camera.RotateOff;
+                RotationOffFrom = ((RotationOffFrom + 540) % 360) - 180;
+                Camera.RotateOff = RotationOffFrom;
+                RotationOffPct = 0;
+            }
         }
 
         private float RotationOffFrom;
