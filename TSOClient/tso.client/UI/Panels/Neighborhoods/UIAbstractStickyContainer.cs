@@ -81,8 +81,6 @@ namespace FSO.Client.UI.Panels.Neighborhoods
             effect.CurrentTechnique = effect.Techniques["HSVEffect"];
             effect.Parameters["Highlight"].SetValue(Highlight);
             _BlendColor = Color.White;
-            //Convert the opacity percentage into a byte (0-255)
-            _BlendColor.A = (byte)Math.Round(Opacity * 255);
             DrawLocalTexture(batch, BackgroundImg, null, new Vector2(), Vector2.One, HSVMod);
 
             _BlendColor = Color.White;

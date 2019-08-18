@@ -419,7 +419,7 @@ namespace FSO.Client.UI.Panels.EODs
         }
         private void SequenceSuccessMessage(string evt, byte[] nothing)
         {
-            SetTip(GameFacade.Strings.GetString("f124", "5")); // "That was electric! Great job!"
+            SetTip(GameFacade.Strings.GetString("f126", "5")); // "That was electric! Great job!"
             Parent.Invalidate();
         }
         private void IntermissionHandler(string evt, byte[] serializedPayoutStrings)
@@ -747,7 +747,7 @@ namespace FSO.Client.UI.Panels.EODs
 
         private void GotoBandGame()
         {
-            SetTip(GameFacade.Strings.GetString("f124", "6")); // "Are you ready to rock?!"
+            SetTip(GameFacade.Strings.GetString("f126", "6")); // "Are you ready to rock?!"
             Parent.Invalidate();
             // show game-related elements
             ButtonBack.Visible = true;
@@ -901,7 +901,7 @@ namespace FSO.Client.UI.Panels.EODs
         {
             EarningString.CurrentText = GameFacade.Strings["UIText", "253", "14"].Replace("%d.%02d", CurrentSkillTotalString + "        ");
             EarningString.CurrentText = EarningString.CurrentText.Replace("$%d", "$" + CurrentPayoutString);
-            TotalSkillLevelsTextEdit.CurrentText = GameFacade.Strings.GetString("f124", "1").Replace("%d.%02d", CurrentSkillTotalString);
+            TotalSkillLevelsTextEdit.CurrentText = GameFacade.Strings.GetString("f126", "1").Replace("%d.%02d", CurrentSkillTotalString);
         }
         // new for FreeSO Band, Band 2.0
         private void InitUpperUI()
@@ -1039,7 +1039,7 @@ namespace FSO.Client.UI.Panels.EODs
                 Size = new Vector2(214, 14),
                 Alignment = TextAlignment.Center,
                 Mode = UITextEditMode.ReadOnly,
-                CurrentText = GameFacade.Strings.GetString("f124", "1") // "Total Skill Levels: %d.%02d"
+                CurrentText = GameFacade.Strings.GetString("f126", "1") // "Total Skill Levels: %d.%02d"
             };
             Add(TotalSkillLevelsTextEdit);
             UpperUIElements.Add(TotalSkillLevelsTextEdit);
@@ -1051,7 +1051,7 @@ namespace FSO.Client.UI.Panels.EODs
                 Size = new Vector2(100, 14),
                 Alignment = TextAlignment.Center,
                 Mode = UITextEditMode.ReadOnly,
-                CurrentText = GameFacade.Strings.GetString("f124", "2") // "Payout"
+                CurrentText = GameFacade.Strings.GetString("f126", "2") // "Payout"
             };
             Add(PayoutsTextEdit);
             UpperUIElements.Add(PayoutsTextEdit);
@@ -1064,7 +1064,7 @@ namespace FSO.Client.UI.Panels.EODs
                 Mode = UITextEditMode.ReadOnly,
                 Alignment = TextAlignment.Center,
                 TextStyle = newStyle,
-                CurrentText = GameFacade.Strings.GetString("f124", "3") // "Current"
+                CurrentText = GameFacade.Strings.GetString("f126", "3") // "Current"
             };
             Add(CurrentPayoutLabelTextEdit);
             UpperUIElements.Add(CurrentPayoutLabelTextEdit);
@@ -1090,7 +1090,7 @@ namespace FSO.Client.UI.Panels.EODs
                 Mode = UITextEditMode.ReadOnly,
                 Alignment = TextAlignment.Center,
                 TextStyle = newStyleAqua,
-                CurrentText = GameFacade.Strings.GetString("f124", "4") // "Minimum"
+                CurrentText = GameFacade.Strings.GetString("f126", "4") // "Minimum"
             };
             Add(MinimumPayoutLabelTextEdit);
             UpperUIElements.Add(MinimumPayoutLabelTextEdit);
