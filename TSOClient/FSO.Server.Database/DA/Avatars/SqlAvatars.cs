@@ -1,4 +1,5 @@
 ﻿using Dapper;
+using FSO.Server.Database.DA.Utils;
 using System;
 using System.Collections.Generic;
 using System.Data.SqlClient;
@@ -11,6 +12,12 @@ namespace FSO.Server.Database.DA.Avatars
     public class SqlAvatars : AbstractSqlDA, IAvatars
     {
         public SqlAvatars(ISqlContext context) : base(context){
+        }
+        public PagedList<DbAvatar> AllByPage(int shard_id,int offset = 1, int limit = 100, string orderBy = "avatar_id")
+        {
+            var total = Context.Connection.Query<int>("SELECT COUNT(*) FROM fso_avatars WHERE shard_id = @shard_id",new { shard_id = shard_id }).FirstOrDefault();
+            var results = Context.Connection.Query<DbAvatar>("SELECT * FROM fso_avatars WHERE shard_id = @shard_id ORDER BY @order DESC LIMIT @offset, @limit", new { shard_id = shard_id, order = orderBy, offset = offset, limit = limit });
+            return new PagedList<DbAvatar>(results, offset, total);
         }
 
         public IEnumerable<DbAvatar> All(int shard_id){

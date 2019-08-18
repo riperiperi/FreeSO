@@ -126,11 +126,9 @@ namespace FSO.Server.Api.Core.Controllers
             {
                 pageNum = pageNum - 1;
                 
-                var avatars = da.Avatars.All(shardId);
-                var avatarCount = avatars.Count();
-                var totalPages = (avatars.Count() - 1)/perPage + 1;
-                avatars = avatars.Skip(pageNum * perPage);
-                avatars = avatars.Take(perPage);
+                var avatars = da.Avatars.AllByPage(shardId, pageNum * perPage, perPage,"avatar_id");
+                var avatarCount = avatars.Total;
+                var totalPages = (avatars.Total - 1)/perPage + 1;
 
                 var pageAvatarsJson = new JSONAvatarsPage();
                 pageAvatarsJson.total_avatars = avatarCount;
@@ -241,12 +239,21 @@ namespace FSO.Server.Api.Core.Controllers
 
             using (var da = api.DAFactory.Get())
             {
-                var avatarStatus = da.AvatarClaims.GetAllActiveAvatars();
-                if (avatarStatus == null) return ApiResponse.Json(HttpStatusCode.NotFound, new JSONAvatarError("Avatars not found"));
-                
                 List<JSONAvatarSmall> avatarSmallJson = new List<JSONAvatarSmall>();
+                var avatarJson = new JSONAvatarOnline();
+                if (compact)
+                {
+                    var avatarStatus = da.AvatarClaims.GetAllActiveAvatarsCount();
+                    if (avatarStatus == null) return ApiResponse.Json(HttpStatusCode.NotFound, new JSONAvatarError("ammount not found"));
+                    avatarJson.avatars_online_count = avatarStatus;
+                }
+                
+                
                 if (!compact)
                 {
+                    var avatarStatus = da.AvatarClaims.GetAllActiveAvatars();
+                    if (avatarStatus == null) return ApiResponse.Json(HttpStatusCode.NotFound, new JSONAvatarError("Avatars not found"));
+
                     foreach (var avatar in avatarStatus)
                     {
                         uint location = 0;
@@ -263,9 +270,9 @@ namespace FSO.Server.Api.Core.Controllers
                         });
 
                     }
+                    avatarJson.avatars_online_count = avatarStatus.Count();
                 }
-                var avatarJson = new JSONAvatarOnline();
-                avatarJson.avatars_online_count = avatarStatus.Count();
+                
                 avatarJson.avatars = avatarSmallJson;
                 return ApiResponse.Json(HttpStatusCode.OK, avatarJson);
             }
@@ -289,7 +296,7 @@ namespace FSO.Server.Api.Core.Controllers
     }
     public class JSONAvatarOnline
     {
-        public int avatars_online_count { get; set; }
+        public int? avatars_online_count { get; set; }
         public List<JSONAvatarSmall> avatars { get; set; }
     }
     public class JSONAvatarSmall

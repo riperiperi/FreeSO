@@ -3,6 +3,7 @@ using FSO.Common.Enum;
 using FSO.Server.Common;
 using FSO.Server.Database.DA.Roommates;
 using FSO.Server.Database.DA.Shards;
+using FSO.Server.Database.DA.Utils;
 using System;
 using System.Collections.Generic;
 using System.Data.SqlClient;
@@ -111,6 +112,12 @@ namespace FSO.Server.Database.DA.Lots
         public IEnumerable<DbLot> All(int shard_id)
         {
             return Context.Connection.Query<DbLot>("SELECT * FROM fso_lots WHERE shard_id = @shard_id", new { shard_id = shard_id });
+        }
+        public PagedList<DbLot> AllByPage(int shard_id, int offset = 1, int limit = 100, string orderBy = "lot_id")
+        {
+            var total = Context.Connection.Query<int>("SELECT COUNT(*) FROM fso_lots WHERE shard_id = @shard_id", new { shard_id = shard_id }).FirstOrDefault();
+            var results = Context.Connection.Query<DbLot>("SELECT * FROM fso_lots WHERE shard_id = @shard_id ORDER BY @order DESC LIMIT @offset, @limit", new { shard_id = shard_id, order = orderBy, offset = offset, limit = limit });
+            return new PagedList<DbLot>(results, offset, total);
         }
 
         public List<DbLot> AllLocations(int shard_id)

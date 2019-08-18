@@ -14,6 +14,7 @@ using Microsoft.AspNetCore.Mvc;
 using Microsoft.Extensions.Caching.Memory;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Cors;
+using FSO.Server.Database.DA.LotClaims;
 
 namespace FSO.Server.Api.Core.Controllers
 {
@@ -235,12 +236,10 @@ namespace FSO.Server.Api.Core.Controllers
             {
                 pageNum = pageNum - 1;
 
-                var lots = da.Lots.All(shardId);
-                var lotCount = lots.Count();
-                var totalPages = (lots.Count() - 1) / perPage + 1;
-                lots = lots.Skip(pageNum * perPage);
-                lots = lots.Take(perPage);
-
+                var lots = da.Lots.AllByPage(shardId, pageNum * perPage, perPage,"lot_id");
+                var lotCount = lots.Total;
+                var totalPages = (lots.Total - 1) / perPage + 1;
+                
                 var pageLotsJson = new JSONLotsPage();
                 pageLotsJson.total_lots = lotCount;
                 pageLotsJson.page = pageNum + 1;
@@ -374,14 +373,15 @@ namespace FSO.Server.Api.Core.Controllers
 
             using (var da = api.DAFactory.Get())
             {
-                var activeLots = da.LotClaims.AllActiveLots(shardId);
-                if (activeLots == null) return ApiResponse.Json(HttpStatusCode.NotFound, new JSONLotError("Lots not found"));
-
                 List<JSONLotSmall> lotSmallJson = new List<JSONLotSmall>();
-                var totalAvatars = 0;
-                foreach (var lot in activeLots)
+                var lotsOnlineJson = new JSONLotsOnline();
+                
+                if (!compact)
                 {
-                    if (!compact)
+                    var activeLots = da.LotClaims.AllActiveLots(shardId);
+                    if (activeLots == null) return ApiResponse.Json(HttpStatusCode.NotFound, new JSONLotError("Lots not found"));
+                    var totalAvatars = 0;
+                    foreach (var lot in activeLots)
                     {
                         lotSmallJson.Add(new JSONLotSmall
                         {
@@ -394,12 +394,25 @@ namespace FSO.Server.Api.Core.Controllers
                             avatars_in_lot = lot.active,
                             lot_id = lot.lot_id
                         });
+                        totalAvatars += lot.active;
                     }
-                    totalAvatars += lot.active;
+                    lotsOnlineJson.total_lots_online = activeLots.Count();
+                    lotsOnlineJson.total_avatars_in_lots_online = totalAvatars;
                 }
-                var lotsOnlineJson = new JSONLotsOnline();
-                lotsOnlineJson.total_lots_online = activeLots.Count();
-                lotsOnlineJson.total_avatars_in_lots_online = totalAvatars;
+                else
+                {
+                    var activeLots = da.LotClaims.AllLocations(shardId);
+                    if (activeLots == null) return ApiResponse.Json(HttpStatusCode.NotFound, new JSONLotError("Lots not found"));
+                    var totalAvatars = 0;
+                    foreach (var lot in activeLots)
+                    {
+                        totalAvatars += lot.active;
+                    }
+
+                    lotsOnlineJson.total_lots_online = activeLots.Count();
+                    lotsOnlineJson.total_avatars_in_lots_online = totalAvatars;
+                }
+
                 lotsOnlineJson.lots = lotSmallJson;
                 return ApiResponse.Json(HttpStatusCode.OK, lotsOnlineJson);
             }

@@ -1,4 +1,5 @@
-﻿using System;
+﻿using FSO.Server.Database.DA.Utils;
+using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Text;
@@ -18,6 +19,7 @@ namespace FSO.Server.Database.DA.Avatars
         DbJobLevel GetCurrentJobLevel(uint avatar_id);
         List<DbJobLevel> GetJobLevels(uint avatar_id);
         IEnumerable<DbAvatar> All(int shard_id);
+        PagedList<DbAvatar> AllByPage(int shard_id, int offset, int limit, string orderBy);
         List<uint> GetLivingInNhood(uint nhood_id);
         List<AvatarRating> GetPossibleCandidatesNhood(uint nhood_id);
 
