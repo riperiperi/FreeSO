@@ -51,7 +51,7 @@ namespace FSO.Client.UI.Framework
         /// Adds a UIElement at the top most position in the container
         /// </summary>
         /// <param name="child"></param>
-        public void AddBefore(UIElement child, UIElement before)
+        public virtual void AddBefore(UIElement child, UIElement before)
         {
             var index = Children.IndexOf(before);
             if (index != -1)
@@ -144,6 +144,13 @@ namespace FSO.Client.UI.Framework
         public List<UIElement> GetChildren()
         {
             return Children;
+        }
+        /// <summary>
+        /// Simply returns the number of children of this container
+        /// </summary>
+        public int ChildCount
+        {
+            get { return Children.Count; }
         }
 
         /// <summary>

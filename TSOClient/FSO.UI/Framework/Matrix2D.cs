@@ -47,6 +47,26 @@ namespace FSO.Client.UI.Framework
             M[3] *= sy;
         }
 
+        public static void Rotate(this float[] M, float angle)
+        {
+            float tempM0 = M[0];
+            float tempM1 = M[1];
+            float tempM2 = M[2];
+            float tempM3 = M[3];
+            Vector2 tempTransform = new Vector2(0, 0);
+            var cos = (float)(Math.Cos(angle));
+            var sin = (float)(Math.Sin(angle));
+            var nsin = sin * -1;
+            tempM0 = M[0] * cos + M[2] * sin;
+            tempM1 = M[1] * cos + M[3] * sin;
+            tempM2 = M[0] * nsin + M[2]* cos;
+            tempM3 = M[1] * nsin + M[3] * cos;
+            M[0] = tempM0;
+            M[1] = tempM1;
+            M[2] = tempM2;
+            M[3] = tempM3;
+        }
+
         public static void TransformPoint(this float[] M, ref float x, ref float y)
         {
             x = x * M[0] + y * M[2] + M[4];

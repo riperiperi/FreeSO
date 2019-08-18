@@ -659,34 +659,34 @@ namespace FSO.Client.UI.Panels.EODs
         {
             WheelSpinTickCounter++;
 
-            if (WheelSpinTickCounter >= 160)
+            if (WheelSpinTickCounter >= 134)
             {
-                if (WheelSpinTickCounter == 160)
+                if (WheelSpinTickCounter == 134)
                 {
                     WheelListOne.Start();
                 }
-                else if (WheelSpinTickCounter == 162)
+                else if (WheelSpinTickCounter == 137)
                 {
                     WheelListTwo.Start();
                 }
-                else if (WheelSpinTickCounter == 164)
+                else if (WheelSpinTickCounter == 140)
                 {
                     WheelListThree.Start();
                 }
-                else if (WheelSpinTickCounter == 184)
+                else if (WheelSpinTickCounter == 147)
                 {
                     WheelListOne.SlowDown();
                 }
-                else if (WheelSpinTickCounter == 214)
+                else if (WheelSpinTickCounter == 177)
                 {
                     WheelListTwo.SlowDown();
                 }
-                else if (WheelSpinTickCounter == 244)
+                else if (WheelSpinTickCounter == 204)
                 {
                     WheelListThree.SlowDown();
                 }
-                // 40 ticks times 7 seconds = 280
-                else if (WheelSpinTickCounter == 280)
+                // originally 280, 1.2 animation speed changed it
+                else if (WheelSpinTickCounter == 240)
                 {
                     // tell the plugin that the wheels have stopped spinning
                     WheelsSpinTimer.Stop();

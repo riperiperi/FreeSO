@@ -13,6 +13,7 @@ using FSO.Client.UI.Framework;
 using FSO.Client.UI.Framework.Parser;
 using FSO.Client.UI.Model;
 using FSO.Client.Utils;
+using FSO.Common.Utils;
 using FSO.Common.Rendering.Framework.Model;
 using FSO.Common.Rendering.Framework.IO;
 
@@ -34,6 +35,19 @@ namespace FSO.Client.UI.Controls
 
         private float m_Width;
         private float m_Height;
+        
+        /// <summary>
+        /// A nullable rectangular boundary for the source texture used in draw functions.
+        /// </summary>
+        protected Rectangle? _TextureSourceRectangle;
+        /// <summary>
+        /// The nullable Rectangle X value for the source texture, used for calcuations.
+        /// </summary>
+        private float m_SourceRectangleX;
+        /// /// <summary>
+        /// The nullable Rectangle Y value for the source texture, used for calcuations.
+        /// </summary>
+        private float m_SourceRectangleY;
 
         public UIImage()
         {
@@ -91,7 +105,7 @@ namespace FSO.Client.UI.Controls
                 }
             }
         }
-
+        
         public void BlockInput()
         {
             ListenForMouse(new UIMouseEvent(BlockMouseEvent));
@@ -147,6 +161,26 @@ namespace FSO.Client.UI.Controls
             {
                 m_MouseEvent.Region = new Rectangle(0, 0, (int)m_Width, (int)m_Height);
             }
+        }
+
+        /// <summary>
+        /// The source rectangle declares boundarys from the source texture of the UIElement, effectively
+        /// masking it during draw calls. See SpiteBatch.Draw(sourceRectangle) and DrawLocalTexture() below.
+        /// </summary>
+        public Rectangle? SourceRectangle
+        {
+            get { return _TextureSourceRectangle; }
+            set { _TextureSourceRectangle = value; }
+        }
+        public float AbstractX
+        {
+            get { return m_SourceRectangleX; }
+            set { m_SourceRectangleX = value; }
+        }
+        public float AbstractY
+        {
+            get { return m_SourceRectangleY; }
+            set { m_SourceRectangleY = value; }
         }
 
         [UIAttribute("size")]
@@ -227,7 +261,10 @@ namespace FSO.Client.UI.Controls
 
                 if (m_Width != 0 && m_Height != 0)
                 {
-                    DrawLocalTexture(SBatch, m_Texture, null, Vector2.Zero, new Vector2(m_Width / m_Texture.Width, m_Height / m_Texture.Height));
+                    if (ApplyRotation)
+                        DrawLocalTexture(SBatch, m_Texture, SourceRectangle, Vector2.Zero, new Vector2(m_Width / m_Texture.Width, m_Height / m_Texture.Height), _BlendColor, Rotation);
+                    else
+                        DrawLocalTexture(SBatch, m_Texture, SourceRectangle, Vector2.Zero, new Vector2(m_Width / m_Texture.Width, m_Height / m_Texture.Height));
                 }
                 else
                 {
