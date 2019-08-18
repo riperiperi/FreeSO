@@ -87,6 +87,21 @@ namespace FSO.Server.Database.DA.Avatars
             ).ToList();
         }
 
+        public List<DbAvatar> GetMultiple(uint[] id)
+        {
+            String inClause = "IN (";
+            for (int i = 0; i < id.Length; i++)
+            {
+                inClause = inClause + "'" + id.ElementAt(i) + "'" + ",";
+            }
+            inClause = inClause.Substring(0, inClause.Length - 1);
+            inClause = inClause + ")";
+
+            return Context.Connection.Query<DbAvatar>(
+                "Select * from fso_avatars Where avatar_id "+ inClause
+            ).ToList();
+        }
+
         public List<DbAvatar> SearchExact(int shard_id, string name, int limit)
         {
             return Context.Connection.Query<DbAvatar>(

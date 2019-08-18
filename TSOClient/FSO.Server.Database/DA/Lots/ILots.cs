@@ -18,6 +18,7 @@ namespace FSO.Server.Database.DA.Lots
         List<DbLot> GetAdjToLocation(int shard_id, uint location);
         DbLot GetByOwner(uint owner_id);
         DbLot Get(int id);
+        List<DbLot> GetMultiple(int[] ids);
         List<DbLot> Get(IEnumerable<int> ids);
         uint Create(DbLot lot);
         bool Delete(int id);

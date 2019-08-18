@@ -16,6 +16,37 @@ namespace FSO.Server.Api.Core.Controllers
     [ApiController]
     public class AvatarInfoController : ControllerBase
     {
+        //get the avatars by user_id
+        [Route("userapi/user/avatars")]
+        public IActionResult GetByUser()
+        {
+            var api = Api.INSTANCE;
+            var user = api.RequireAuthentication(Request);
+            if (!user.Claims.Contains("userReadPermissions")) return ApiResponse.Json(HttpStatusCode.OK, new JSONAvatarError("No read premissions found."));
+
+            using (var da = api.DAFactory.Get())
+            {
+                var avatars = da.Avatars.GetByUserId(user.UserID);
+                List<JSONAvatar> avatarJson = new List<JSONAvatar>();
+                foreach (var avatar in avatars)
+                {
+                    avatarJson.Add(new JSONAvatar
+                    {
+                        avatar_id = avatar.avatar_id,
+                        shard_id = avatar.shard_id,
+                        name = avatar.name,
+                        gender = avatar.gender,
+                        date = avatar.date,
+                        description = avatar.description,
+                        current_job = avatar.current_job,
+                        mayor_nhood = avatar.mayor_nhood
+                    });
+                }
+                var avatarsJson = new JSONAvatars();
+                avatarsJson.avatars = avatarJson;
+                return ApiResponse.Json(HttpStatusCode.OK, avatarsJson);
+            }
+        }
         //get the avatar by id
         [HttpGet]
         [Route("userapi/avatars/{avartarId}")]
@@ -44,22 +75,62 @@ namespace FSO.Server.Api.Core.Controllers
                 return ApiResponse.Json(HttpStatusCode.OK, avatarJson);
             }
         }
+        //get the avatars by ids
+        [Route("userapi/avatars")]
+        public IActionResult GetByIDs([FromQuery(Name = "ids")]string idsString)
+        {
+            var api = Api.INSTANCE;
+            try
+            {
+                uint[] ids = Array.ConvertAll(idsString.Split(","), uint.Parse);
+                using (var da = api.DAFactory.Get())
+                {
+                    var avatars = da.Avatars.GetMultiple(ids);
+                    List<JSONAvatar> avatarJson = new List<JSONAvatar>();
+                    foreach (var avatar in avatars)
+                    {
+                        avatarJson.Add(new JSONAvatar
+                        {
+                            avatar_id = avatar.avatar_id,
+                            shard_id = avatar.shard_id,
+                            name = avatar.name,
+                            gender = avatar.gender,
+                            date = avatar.date,
+                            description = avatar.description,
+                            current_job = avatar.current_job,
+                            mayor_nhood = avatar.mayor_nhood
+                        });
+                    }
+                    var avatarsJson = new JSONAvatars();
+                    avatarsJson.avatars = avatarJson;
+                    return ApiResponse.Json(HttpStatusCode.OK, avatarsJson);
+                }
+            }
+            catch
+            {
+                return ApiResponse.Json(HttpStatusCode.NotFound, new JSONAvatarError("Error during cast. (invalid_value)"));
+            }
+        }
         //gets all the avatars from one city
         [HttpGet]
         [Route("userapi/city/{shardId}/avatars/page/{pageNum}")]
-        public IActionResult GetAll(int shardId,int pageNum)
+        public IActionResult GetAll(int shardId,int pageNum, [FromQuery(Name = "avatars_on_page")]int perPage)
         {
             var api = Api.INSTANCE;
-            
+            if(perPage == 0)
+            {
+                perPage = 100;
+            }
+            if (perPage > 500) return ApiResponse.Json(HttpStatusCode.NotFound, new JSONLotError("The max amount of avatars per page is 500"));
             using (var da = api.DAFactory.Get())
             {
                 pageNum = pageNum - 1;
                 
                 var avatars = da.Avatars.All(shardId);
                 var avatarCount = avatars.Count();
-                var totalPages = (avatars.Count() - 1)/100 + 1;
-                avatars = avatars.Skip(pageNum * 100);
-                avatars = avatars.Take(100);
+                var totalPages = (avatars.Count() - 1)/perPage + 1;
+                avatars = avatars.Skip(pageNum * perPage);
+                avatars = avatars.Take(perPage);
 
                 var pageAvatarsJson = new JSONAvatarsPage();
                 pageAvatarsJson.total_avatars = avatarCount;
@@ -135,22 +206,26 @@ namespace FSO.Server.Api.Core.Controllers
                 List<JSONAvatar> avatarJson = new List<JSONAvatar>();
                 foreach (var lot in lots)
                 {
-                    var roomies = da.Roommates.GetLotRoommates(lot.lot_id).Where(x => x.is_pending == 0).Select(x => x.avatar_id);
-                    foreach (var roomie in roomies)
+                    if(lot.category != FSO.Common.Enum.LotCategory.community)
                     {
-                        var roomieAvatar = da.Avatars.Get(roomie);
-                        avatarJson.Add(new JSONAvatar
+                        var roomies = da.Roommates.GetLotRoommates(lot.lot_id).Where(x => x.is_pending == 0).Select(x => x.avatar_id);
+                        var avatars = da.Avatars.GetMultiple(roomies.ToArray());
+                        foreach (var avatar in avatars)
                         {
-                            avatar_id = roomieAvatar.avatar_id,
-                            shard_id = roomieAvatar.shard_id,
-                            name = roomieAvatar.name,
-                            gender = roomieAvatar.gender,
-                            date = roomieAvatar.date,
-                            description = roomieAvatar.description,
-                            current_job = roomieAvatar.current_job,
-                            mayor_nhood = roomieAvatar.mayor_nhood
-                        });
+                            avatarJson.Add(new JSONAvatar
+                            {
+                                avatar_id = avatar.avatar_id,
+                                shard_id = avatar.shard_id,
+                                name = avatar.name,
+                                gender = avatar.gender,
+                                date = avatar.date,
+                                description = avatar.description,
+                                current_job = avatar.current_job,
+                                mayor_nhood = avatar.mayor_nhood
+                            });
+                        }
                     }
+                    
                 }
                 var avatarsJson = new JSONAvatars();
                 avatarsJson.avatars = avatarJson;
@@ -160,7 +235,7 @@ namespace FSO.Server.Api.Core.Controllers
         //get all online Avatars
         [HttpGet]
         [Route("userapi/avatars/online")]
-        public IActionResult GetOnline()
+        public IActionResult GetOnline([FromQuery(Name = "compact")]bool compact)
         {
             var api = Api.INSTANCE;
 
@@ -169,24 +244,25 @@ namespace FSO.Server.Api.Core.Controllers
                 var avatarStatus = da.AvatarClaims.GetAllActiveAvatars();
                 if (avatarStatus == null) return ApiResponse.Json(HttpStatusCode.NotFound, new JSONAvatarError("Avatars not found"));
                 
-
                 List<JSONAvatarSmall> avatarSmallJson = new List<JSONAvatarSmall>();
-
-                foreach (var avatar in avatarStatus)
+                if (!compact)
                 {
-                    uint location = 0;
-                    if (avatar.privacy_mode == 0)
+                    foreach (var avatar in avatarStatus)
                     {
-                        location = avatar.location;
-                    }
-                    avatarSmallJson.Add(new JSONAvatarSmall
-                    {
-                        avatar_id = avatar.avatar_id,
-                        name = avatar.name,
-                        privacy_mode = avatar.privacy_mode,
-                        location = location
-                    });
+                        uint location = 0;
+                        if (avatar.privacy_mode == 0)
+                        {
+                            location = avatar.location;
+                        }
+                        avatarSmallJson.Add(new JSONAvatarSmall
+                        {
+                            avatar_id = avatar.avatar_id,
+                            name = avatar.name,
+                            privacy_mode = avatar.privacy_mode,
+                            location = location
+                        });
 
+                    }
                 }
                 var avatarJson = new JSONAvatarOnline();
                 avatarJson.avatars_online_count = avatarStatus.Count();
