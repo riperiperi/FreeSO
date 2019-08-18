@@ -10,7 +10,7 @@ namespace FSO.Content.Upgrades.Model
     public class UpgradeSubstitution
     {
         /// <summary>
-        /// Tuning value to replace. Format: table:id... eg 4097:0
+        /// Tuning value to replace. Format: table:id... eg 4097:0. Can also point to a group: "G0".
         /// </summary>
         public string Old = "0:0";
 

@@ -152,6 +152,7 @@ namespace FSO.Client.UI.Framework
         /// <param name="time"></param>
         public override void Update(UpdateState state)
         {
+            if (!HasFocus && HasUpdated) return;
             HasUpdated = true;
             State.Time = (state != null)?state.Time:new GameTime();
             State.PreviousKeyboardState = State.KeyboardState;

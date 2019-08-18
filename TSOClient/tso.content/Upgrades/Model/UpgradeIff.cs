@@ -20,6 +20,13 @@ namespace FSO.Content.Upgrades.Model
         public List<UpgradeSubstitution> Subs = new List<UpgradeSubstitution>();
 
         /// <summary>
+        /// A list of tuning groups for this file. Groups allow the developer to group together tuning values with the same target effect, but
+        /// used by different objects, eg. "Cheap Max Fun", "Expensive Max Fun". With these groups set up, tuning values can be easily copied
+        /// between objects (as they point to the groups instead of object specific entries) for easier maintainance and rebalancing.
+        /// </summary>
+        public List<UpgradeGroup> Groups = new List<UpgradeGroup>();
+
+        /// <summary>
         /// Upgrade Levels that objects in this iff can use.
         /// </summary>
         public List<UpgradeLevel> Upgrades = new List<UpgradeLevel>();
@@ -34,6 +41,7 @@ namespace FSO.Content.Upgrades.Model
             Name = reader.ReadString();
 
             Subs.Clear();
+            Groups.Clear();
             Upgrades.Clear();
             Config.Clear();
 
@@ -43,6 +51,16 @@ namespace FSO.Content.Upgrades.Model
                 var sub = new UpgradeSubstitution();
                 sub.Load(version, reader);
                 Subs.Add(sub);
+            }
+            if (version > 1)
+            {
+                var groupCount = reader.ReadInt32();
+                for (int i = 0; i < groupCount; i++)
+                {
+                    var group = new UpgradeGroup();
+                    group.Load(version, reader);
+                    Groups.Add(group);
+                }
             }
             var upgradeCount = reader.ReadInt32();
             for (int i = 0; i < upgradeCount; i++)
@@ -65,6 +83,8 @@ namespace FSO.Content.Upgrades.Model
             writer.Write(Name);
             writer.Write(Subs.Count);
             foreach (var sub in Subs) sub.Save(writer);
+            writer.Write(Groups.Count);
+            foreach (var group in Groups) group.Save(writer);
             writer.Write(Upgrades.Count);
             foreach (var upgrade in Upgrades) upgrade.Save(writer);
             writer.Write(Config.Count);

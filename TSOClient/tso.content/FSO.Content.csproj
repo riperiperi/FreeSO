@@ -437,7 +437,9 @@
     <Compile Include="TS1\TS1NeighbourProvider.cs" />
     <Compile Include="TS1\TS1ObjectProvider.cs" />
     <Compile Include="Upgrades\Model\ObjectUpgradeConfig.cs" />
+    <Compile Include="Upgrades\Model\Runtime\RuntimeTuningGroup.cs" />
     <Compile Include="Upgrades\Model\Runtime\RuntimeUpgradeFile.cs" />
+    <Compile Include="Upgrades\Model\UpgradeGroup.cs" />
     <Compile Include="Upgrades\Model\UpgradeIff.cs" />
     <Compile Include="Upgrades\Model\UpgradeLevel.cs" />
     <Compile Include="Upgrades\Model\UpgradesFile.cs" />
