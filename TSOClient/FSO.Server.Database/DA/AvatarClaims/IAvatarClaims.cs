@@ -11,6 +11,7 @@ namespace FSO.Server.Database.DA.AvatarClaims
         DbAvatarClaim Get(int id);
         IEnumerable<DbAvatarClaim> GetAll();
         IEnumerable<DbAvatarActive> GetAllActiveAvatars();
+        int? GetAllActiveAvatarsCount();
         DbAvatarClaim GetByAvatarID(uint id);
         IEnumerable<DbAvatarClaim> GetAllByOwner(string owner);
 
