@@ -32,7 +32,6 @@ namespace FSO.Common.Rendering.Framework
         ArrowLeft,
         ArrowRight,
         LiveNothing,
-        LiveObjectAvail,
         LiveObjectUnavail,
         LivePerson,
         IBeam,
@@ -46,7 +45,15 @@ namespace FSO.Common.Rendering.Framework
         SimsMove,
         SimsPlace,
 
-        Hourglass
+        Hourglass,
+
+        LiveObjectAvail,
+        LiveObject1Star,
+        LiveObject2Star,
+        LiveObject3Star,
+        LiveObject4Star,
+        LiveObject5Star,
+        LiveObjectSpecial,
     }
 
     /// <summary>
@@ -109,23 +116,32 @@ namespace FSO.Common.Rendering.Framework
         public void Init(string basepath, bool ts1)
         {
             var map = GenMap();
-
+            var curPath = "UIGraphics/Shared/cursors/";
+            if (!ts1) curPath = curPath.ToLowerInvariant();
             foreach (var item in map)
             {
-                var curPath = "UIGraphics/Shared/cursors/" + item.Value;
-                if (!ts1) curPath = curPath.ToLowerInvariant();
                 m_CursorMap.Add(item.Key,
                     LoadCustomCursor(
-                        Path.Combine(basepath, curPath)
+                        Path.Combine(basepath, curPath, item.Value)
                     ));
             }
-            
+
+            var starMax = 5;
+            var stars = LoadUpgradeCursors(Path.Combine(basepath, curPath, "liveobjectavail.cur"), starMax);
+            for (int i=0; i<starMax; i++)
+            {
+                m_CursorMap.Add(CursorType.LiveObject1Star + i, stars[i]);
+            }
+
             m_CursorMap.Add(CursorType.IBeam, MouseCursor.IBeam);
             //m_CursorMap.Add(CursorType.Hourglass, MouseCursor.Wait);
             m_CursorMap.Add(CursorType.Normal, MouseCursor.Arrow);
         }
 
-
+        private MouseCursor[] LoadUpgradeCursors(string path, int maxStars)
+        {
+            return CurLoader.LoadUpgradeCursors(GD, File.Open(path, FileMode.Open, FileAccess.Read, FileShare.Read), maxStars);
+        }
 
         private MouseCursor LoadCustomCursor(string path)
         {

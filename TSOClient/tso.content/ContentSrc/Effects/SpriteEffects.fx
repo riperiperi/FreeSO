@@ -77,7 +77,7 @@ float3 RGBToHSV(float3 rgb)
 	float4 q = lerp(float4(p.xyw, rgb.r), float4(rgb.r, p.yzx), step(p.x, rgb.r));
 
 	float d = q.x - min(q.w, q.y);
-	float e = 1.0e-10;
+	float e = 1.0e-5;
 	return float3(abs(q.z + (q.w - q.y) / (6.0 * d + e)), d / (q.x + e), q.x);
 }
 
@@ -90,7 +90,7 @@ float3 HSVToRGB(float3 hsv)
 }
 
 float2 SVToSL(float2 sv) {
-	float e = 1.0e-10;
+	float e = 1.0e-5;
 	float l = sv.y - sv.y * sv.x / 2.0;
 	return float2((sv.y - l) / (min(l, 1 - l) + e), l);
 	/*
@@ -102,7 +102,7 @@ float2 SVToSL(float2 sv) {
 }
 
 float2 SLToSV(float2 sl) {
-	float e = 1.0e-10;
+	float e = 1.0e-5;
 	float v = sl.y + sl.x * min(sl.y, 1 - sl.y);
 	return float2(2 - 2 * sl.y / (v + e), v);
 	/*

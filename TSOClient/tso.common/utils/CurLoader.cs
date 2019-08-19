@@ -19,6 +19,39 @@ namespace FSO.Common.Utils
             return MouseCursor.FromTexture2D(cur.Item1, cur.Item2.X, cur.Item2.Y);
         }
 
+        public static MouseCursor[] LoadUpgradeCursors(GraphicsDevice gd, Stream stream, int maxStars)
+        {
+            var cur = LoadCursor(gd, stream);
+            Texture2D starTex;
+            using (var str = File.Open("Content/uigraphics/upgrade_star.png", FileMode.Open, FileAccess.Read, FileShare.Read))
+            {
+                starTex = Texture2D.FromStream(gd, str);
+            }
+
+            var batch = new SpriteBatch(gd);
+            var results = new MouseCursor[maxStars];
+            for (int i = 0; i < maxStars; i++) {
+                var starPos = cur.Item1.Width - 12;
+                var width = Math.Max(starPos + 8 * i + 9, cur.Item1.Width);
+                var tex = new RenderTarget2D(gd, width, Math.Max(width, cur.Item1.Height));
+                gd.SetRenderTarget(tex);
+                gd.Clear(Color.Transparent);
+                batch.Begin(SpriteSortMode.Immediate);
+                batch.Draw(cur.Item1, Vector2.Zero, Color.White);
+                for (int j=0; j<=i; j++)
+                {
+                    batch.Draw(starTex, new Vector2(starPos, 5), Color.White);
+                    starPos += 8;
+                }
+                batch.End();
+                gd.SetRenderTarget(null);
+                results[i] = MouseCursor.FromTexture2D(tex, cur.Item2.X, cur.Item2.Y);
+            }
+            starTex.Dispose();
+
+            return results;
+        }
+
         public static Func<GraphicsDevice, Stream, Texture2D> BmpLoaderFunc;
 
         public static Tuple<Texture2D, Point> LoadCursor(GraphicsDevice gd, Stream stream)

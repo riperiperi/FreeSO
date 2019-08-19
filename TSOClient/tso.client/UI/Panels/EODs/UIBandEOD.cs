@@ -153,9 +153,9 @@ namespace FSO.Client.UI.Panels.EODs
             LevelTimer.Elapsed += SkillLevelHandler;
 
             // get the buttons and put into array in order to recover their references when the client connects
-            NoteButtonArray = new UIButton[] { BUZZ, DOH, RE, MI, FA, SO, LA, TI, DOH2}; // matches order of VMEODBandPlugin.VMEODBandNoteTypes
+            NoteButtonArray = new UIButton[] { BUZZ, DOH, RE, MI, FA, SO, LA, TI, DOH2 }; // matches order of VMEODBandPlugin.VMEODBandNoteTypes
             MiscButtonArray = new UIButton[] { CASHOUT, CONTINUE };
-            
+
             // make the waiting for players images
             WaitPlayer1 = Script.Create<UIImage>("WaitPlayer1");
             WaitPlayer1.Texture = PlayerImage;
@@ -176,7 +176,7 @@ namespace FSO.Client.UI.Panels.EODs
             Player2Wait.Alignment = TextAlignment.Left;
             Player3Wait.Alignment = TextAlignment.Left;
             Player4Wait.Alignment = TextAlignment.Left;
-            
+
             /*foreach (var player in WaitPlayers)
                 player.Position += TallTallOffset;
             Player1Wait.Position += TallTallOffset;
@@ -271,7 +271,7 @@ namespace FSO.Client.UI.Panels.EODs
             CloseInteraction();
             base.OnClose();
         }
-        
+
         private void PlayerRosterHandler(string evt, string msg)
         {
             Lobby.UpdatePlayers(evt, msg);
@@ -324,10 +324,11 @@ namespace FSO.Client.UI.Panels.EODs
         private void NoteSyncHandler(string evt, byte[] noteArray)
         {
             var note = noteArray[0];
-            if (Enum.IsDefined(typeof(UIBANDEODSoundNames),note))
+            if (Enum.IsDefined(typeof(UIBANDEODSoundNames), note))
             {
                 // if this note does not belong to my 1st or 2nd button
-                if (!NoteButtonArray[note].Equals(MyFirstButton) && !NoteButtonArray[note].Equals(MySecondButton)) {
+                if (!NoteButtonArray[note].Equals(MyFirstButton) && !NoteButtonArray[note].Equals(MySecondButton))
+                {
                     SyncButton = NoteButtonArray[note];
                     ForceNoteButtonState(SyncButton, (int)UIElementState.Highlighted);
                     PlaySound(note);
@@ -419,7 +420,7 @@ namespace FSO.Client.UI.Panels.EODs
         }
         private void SequenceSuccessMessage(string evt, byte[] nothing)
         {
-            SetTip(GameFacade.Strings.GetString("f124", "5")); // "That was electric! Great job!"
+            SetTip(GameFacade.Strings.GetString("f126", "5")); // "That was electric! Great job!"
             Parent.Invalidate();
         }
         private void IntermissionHandler(string evt, byte[] serializedPayoutStrings)
@@ -589,7 +590,7 @@ namespace FSO.Client.UI.Panels.EODs
             foreach (var btnn in MiscButtonArray)
                 btnn.Position += TallTallOffset;
             ButtonBack.Position += TallTallOffset;
-            
+
             Add(DOH);
             Add(RE);
             Add(MI);
@@ -747,7 +748,7 @@ namespace FSO.Client.UI.Panels.EODs
 
         private void GotoBandGame()
         {
-            SetTip(GameFacade.Strings.GetString("f124", "6")); // "Are you ready to rock?!"
+            SetTip(GameFacade.Strings.GetString("f126", "6")); // "Are you ready to rock?!"
             Parent.Invalidate();
             // show game-related elements
             ButtonBack.Visible = true;
@@ -901,7 +902,7 @@ namespace FSO.Client.UI.Panels.EODs
         {
             EarningString.CurrentText = GameFacade.Strings["UIText", "253", "14"].Replace("%d.%02d", CurrentSkillTotalString + "        ");
             EarningString.CurrentText = EarningString.CurrentText.Replace("$%d", "$" + CurrentPayoutString);
-            TotalSkillLevelsTextEdit.CurrentText = GameFacade.Strings.GetString("f124", "1").Replace("%d.%02d", CurrentSkillTotalString);
+            TotalSkillLevelsTextEdit.CurrentText = GameFacade.Strings.GetString("f126", "1").Replace("%d.%02d", CurrentSkillTotalString);
         }
         // new for FreeSO Band, Band 2.0
         private void InitUpperUI()
@@ -1039,7 +1040,7 @@ namespace FSO.Client.UI.Panels.EODs
                 Size = new Vector2(214, 14),
                 Alignment = TextAlignment.Center,
                 Mode = UITextEditMode.ReadOnly,
-                CurrentText = GameFacade.Strings.GetString("f124", "1") // "Total Skill Levels: %d.%02d"
+                CurrentText = GameFacade.Strings.GetString("f126", "1") // "Total Skill Levels: %d.%02d"
             };
             Add(TotalSkillLevelsTextEdit);
             UpperUIElements.Add(TotalSkillLevelsTextEdit);
@@ -1051,7 +1052,7 @@ namespace FSO.Client.UI.Panels.EODs
                 Size = new Vector2(100, 14),
                 Alignment = TextAlignment.Center,
                 Mode = UITextEditMode.ReadOnly,
-                CurrentText = GameFacade.Strings.GetString("f124", "2") // "Payout"
+                CurrentText = GameFacade.Strings.GetString("f126", "2") // "Payout"
             };
             Add(PayoutsTextEdit);
             UpperUIElements.Add(PayoutsTextEdit);
@@ -1064,7 +1065,7 @@ namespace FSO.Client.UI.Panels.EODs
                 Mode = UITextEditMode.ReadOnly,
                 Alignment = TextAlignment.Center,
                 TextStyle = newStyle,
-                CurrentText = GameFacade.Strings.GetString("f124", "3") // "Current"
+                CurrentText = GameFacade.Strings.GetString("f126", "3") // "Current"
             };
             Add(CurrentPayoutLabelTextEdit);
             UpperUIElements.Add(CurrentPayoutLabelTextEdit);
@@ -1090,7 +1091,7 @@ namespace FSO.Client.UI.Panels.EODs
                 Mode = UITextEditMode.ReadOnly,
                 Alignment = TextAlignment.Center,
                 TextStyle = newStyleAqua,
-                CurrentText = GameFacade.Strings.GetString("f124", "4") // "Minimum"
+                CurrentText = GameFacade.Strings.GetString("f126", "4") // "Minimum"
             };
             Add(MinimumPayoutLabelTextEdit);
             UpperUIElements.Add(MinimumPayoutLabelTextEdit);
@@ -1177,7 +1178,7 @@ namespace FSO.Client.UI.Panels.EODs
         }
     }
     [Flags]
-    public enum UIBANDEODSoundNames: byte
+    public enum UIBANDEODSoundNames : byte
     {
         band_note_buzz = 0,
         band_note_a = 1,

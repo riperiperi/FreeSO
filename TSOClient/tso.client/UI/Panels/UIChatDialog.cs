@@ -226,9 +226,9 @@ namespace FSO.Client.UI.Panels
 
             //play TTS for this event?
             if (evt.Type == VMChatEventType.Message || evt.Type == VMChatEventType.MessageMe) {
-                if (GlobalSettings.Default.ChatOnlyEmoji)
+                if (GlobalSettings.Default.ChatOnlyEmoji > 0)
                 {
-                    evt.Text[1] = GameFacade.Emojis.EmojiOnly(evt.Text[1]);
+                    evt.Text[1] = GameFacade.Emojis.EmojiOnly(evt.Text[1], GlobalSettings.Default.ChatOnlyEmoji);
                 }
 
                 var ttsmode = GlobalSettings.Default.TTSMode;

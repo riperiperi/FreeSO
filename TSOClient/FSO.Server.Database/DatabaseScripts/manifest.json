@@ -252,6 +252,14 @@
       "requires": [
         "b21e29a1-8c25-465e-aa43-c7a0d6f44fb8"
       ]
+    },
+    {
+      "id": "500dbdd2-7d4d-4d68-a3a6-b6abbbe1f1e8",
+      "script": "changes/0028_upgradelevel.sql",
+      "idempotent": false,
+      "requires": [
+        "52795d47-a25e-418f-a618-fb89300aab02"
+      ]
     }
   ]
 }

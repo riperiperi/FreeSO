@@ -25,6 +25,7 @@ using FSO.Common;
 using FSO.Client.UI.Controls;
 using FSO.Common.Rendering.Framework;
 using FSO.SimAntics.Model.Platform;
+using FSO.SimAntics.Model.TSOPlatform;
 
 namespace FSO.Client.UI.Panels
 {
@@ -51,6 +52,7 @@ namespace FSO.Client.UI.Panels
         public bool DonateMode;
         private bool Locked;
 
+        public event HolderEventHandler BeforeRelease;
         public event HolderEventHandler OnPickup;
         public event HolderEventHandler OnDelete;
         public event HolderEventHandler OnPutDown;
@@ -93,11 +95,13 @@ namespace FSO.Client.UI.Panels
             var catalogItem = Content.Content.Get().WorldCatalog.GetItemByGUID(guid);
             if (catalogItem != null)
             {
-                var price = (int)catalogItem.Value.Price;
+                var price = Group.InitialPrice; //(int)catalogItem.Value.Price;
                 var dcPercent = VMBuildableAreaInfo.GetDiscountFor(catalogItem.Value, vm);
                 var finalPrice = (price * (100 - dcPercent)) / 100;
                 if (DonateMode) finalPrice -= (finalPrice * 2) / 3;
                 Holding.Price = finalPrice;
+                Group.InitialPrice = finalPrice;
+                Group.BeforeDCPrice = price;
             }
         }
 
@@ -161,9 +165,7 @@ namespace FSO.Client.UI.Panels
 
         public void ClearSelected()
         {
-            //TODO: selected items are only spooky ghosts of the items themselves.
-            //      ...so that they dont cause serverside desyncs
-            //      and so that clearing selections doesnt delete already placed objects.
+            if (Holding != null) BeforeRelease?.Invoke(Holding, LastState);
             if (Holding != null)
             {
                 RecursiveDelete(vm.Context, Holding.Group.BaseObject);
@@ -236,6 +238,7 @@ namespace FSO.Client.UI.Panels
                 level = pos.Level,
                 x = pos.x,
                 y = pos.y,
+                TargetUpgradeLevel = (Holding.Group.BaseObject.PlatformState as VMTSOObjectState)?.UpgradeLevel ?? 0,
 
                 Mode = (DonateMode) ? PurchaseMode.Donate : PurchaseMode.Normal
             });
@@ -277,7 +280,7 @@ namespace FSO.Client.UI.Panels
                                     if (Holding.InventoryPID > 0) InventoryPlaceHolding();
                                     else BuyHolding();
                                     ClearSelected();
-                                    if (OnPutDown != null) OnPutDown(putDown, state); //call this after so that buy mode etc can produce more.
+                                    OnPutDown?.Invoke(putDown, state); //call this after so that buy mode etc can produce more.
                                 });
                             return;
                         } else
@@ -289,7 +292,7 @@ namespace FSO.Client.UI.Panels
                         
                     }
                     ClearSelected();
-                    if (OnPutDown != null) OnPutDown(putDown, state); //call this after so that buy mode etc can produce more.
+                    OnPutDown?.Invoke(putDown, state); //call this after so that buy mode etc can produce more.
                 }
                 else
                 {
@@ -519,7 +522,7 @@ namespace FSO.Client.UI.Panels
                     {
                         MoveSelected(Holding.TilePos, Holding.Level);
                         if (!Holding.IsBought && Holding.CanPlace == VMPlacementError.Success && 
-                            ParentControl.ActiveEntity != null && ParentControl.ActiveEntity.TSOState.Budget.Value < Holding.Price)
+                            ParentControl.ActiveEntity != null && ParentControl.Budget < Holding.Price)
                             Holding.CanPlace = VMPlacementError.InsufficientFunds;
                         if (Holding.CanPlace != VMPlacementError.Success)
                         {
@@ -546,8 +549,17 @@ namespace FSO.Client.UI.Panels
                 else
                 {
                     var scaled = GetScaledPoint(state.MouseState.Position);
-                    var tilePos = World.EstTileAtPosWithScroll3D(new Vector2(scaled.X, scaled.Y) / FSOEnvironment.DPIScaleFactor + Holding.MousePosOffset);
-                    MoveSelected(new Vector2(tilePos.X, tilePos.Y), (sbyte)tilePos.Z); // + Holding.TilePosOffset
+                    if ((Holding.Group.BaseObject.GetValue(VMStackObjectVariable.PlacementFlags) & (short)VMPlacementFlags.InAir) > 0)
+                    {
+                        //if this object can be placed in air, only consider the current level.
+                        var tilePos = World.EstTileAtPosWithScroll(new Vector2(scaled.X, scaled.Y) / FSOEnvironment.DPIScaleFactor + Holding.MousePosOffset);
+                        MoveSelected(new Vector2(tilePos.X, tilePos.Y), World.State.Level);
+                    } else
+                    {
+                        //can place on any level below
+                        var tilePos = World.EstTileAtPosWithScroll3D(new Vector2(scaled.X, scaled.Y) / FSOEnvironment.DPIScaleFactor + Holding.MousePosOffset);
+                        MoveSelected(new Vector2(tilePos.X, tilePos.Y), (sbyte)tilePos.Z); // + Holding.TilePosOffset
+                    }
                 }
             }
             else if (MouseClicked)

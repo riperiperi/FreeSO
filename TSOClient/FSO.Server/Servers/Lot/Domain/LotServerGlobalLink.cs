@@ -304,7 +304,8 @@ namespace FSO.Server.Servers.Lot.Domain
             var objid = obj.ObjectID;
             uint guid = obj.Object.OBJ.GUID;
             if (obj.MasterDefinition != null) guid = obj.MasterDefinition.GUID;
-            uint? owner = ((VMTSOObjectState)obj.TSOState).OwnerID;
+            var state = ((VMTSOObjectState)obj.TSOState);
+            uint? owner = state.OwnerID;
             if (owner == 0) owner = null;
             DbObject dbo = new DbObject()
             {
@@ -315,7 +316,8 @@ namespace FSO.Server.Servers.Lot.Domain
                 budget = 0,
                 graphic = (ushort)obj.GetValue(VMStackObjectVariable.Graphic),
                 type = guid,
-                value = (uint)obj.MultitileGroup.Price
+                value = (uint)obj.MultitileGroup.Price,
+                upgrade_level = state.UpgradeLevel
             };
 
             Host.InBackground(() =>
@@ -335,7 +337,8 @@ namespace FSO.Server.Servers.Lot.Domain
         private DbObject GenerateObjectPersist(VMMultitileGroup obj)
         {
             var bobj = obj.BaseObject;
-            uint? owner = ((VMTSOObjectState)obj.BaseObject.TSOState).OwnerID;
+            var state = ((VMTSOObjectState)obj.BaseObject.TSOState);
+            uint? owner = state.OwnerID;
             if (owner == 0) owner = null;
             return new DbObject()
             {
@@ -348,6 +351,7 @@ namespace FSO.Server.Servers.Lot.Domain
                 dyn_flags_1 = bobj.DynamicSpriteFlags,
                 dyn_flags_2 = bobj.DynamicSpriteFlags2,
                 //type and shard id never need to be updated.
+                upgrade_level = state.UpgradeLevel
             };
         }
 
@@ -556,7 +560,36 @@ namespace FSO.Server.Servers.Lot.Domain
             //TODO: maybe a ring backup system for this too? may be more difficult
             Host.InBackground(() =>
             {
-                if (objectPID == 0) callback(0, null);
+                var result = new VMInventoryRestoreObject();
+                if (objectPID == 0)
+                {
+                    callback(result);
+                    return;
+                }
+
+                //put object on this lot
+
+                using (var db = DAFactory.Get())
+                {
+                    var obj = db.Objects.Get(objectPID);
+                    if (obj == null || obj.owner_id != ownerPID) callback(result); //object does not exist or request is for wrong owner.
+                    result.GUID = obj.type;
+                    result.UpgradeLevel = (byte)obj.upgrade_level;
+                    result.Wear = 0;
+                    if (setOnLot) //if we should set this object as on this lot. false means we're getting the info for trade
+                    {
+                        if (!db.Objects.SetInLot(objectPID, (uint)Context.DbId)) {
+                            callback(new VMInventoryRestoreObject()); //object is already on a lot. we cannot load it!
+                            return;
+                        }
+                    }
+                    else if (obj.lot_id != null)
+                    {
+                        callback(new VMInventoryRestoreObject()); //object is already on a lot, don't load it for trading.
+                        return;
+                    }
+                }
+
                 byte[] dat = null;
                 try
                 {
@@ -578,22 +611,9 @@ namespace FSO.Server.Servers.Lot.Domain
                 }
 
                 if (dat != null && dat.Length == 0) dat = null; //treat empty files as if no state were available.
-                //put object on this lot
-                using (var db = DAFactory.Get())
-                {
-                    var obj = db.Objects.Get(objectPID);
-                    if (obj == null || obj.owner_id != ownerPID) callback(0, null); //object does not exist or request is for wrong owner.
-                    if (setOnLot)
-                    {
-                        if (db.Objects.SetInLot(objectPID, (uint)Context.DbId))
-                            callback(obj.type, dat); //load the object with its data, if available.
-                        else
-                            callback(0, null); //object is already on a lot. we cannot load it!
-                    } else if (obj.lot_id == null)
-                    {
-                        callback(obj.type, dat); //load the object with its data, if available. (for trade) 
-                    }
-                }
+
+                result.Data = dat;
+                callback(result);
             });
         }
 

@@ -10,12 +10,21 @@ namespace FSO.Files.Formats
 {
     public static class PiffEncoder
     {
-        public static IffFile GeneratePiff(IffFile iff, HashSet<Type> allowedTypes, HashSet<Type> disallowedTypes)
+        private static string FindComment(IffChunk chunk, PIFF oldPIFF)
+        {
+            var oldEntry = oldPIFF?.Entries?.FirstOrDefault(entry =>
+                entry.Type == chunk.ChunkType &&
+                ((chunk.AddedByPatch) ? chunk.ChunkID : chunk.OriginalID) == entry.ChunkID);
+            return oldEntry?.Comment ?? "";
+        }
+
+        public static IffFile GeneratePiff(IffFile iff, HashSet<Type> allowedTypes, HashSet<Type> disallowedTypes, PIFF oldPIFF)
         {
             var piffFile = new IffFile();
 
             var piff = new PIFF();
             piff.SourceIff = iff.Filename;
+            if (oldPIFF != null) piff.Comment = oldPIFF.Comment;
             var entries = new List<PIFFEntry>();
             var chunks = iff.ListAll();
             
@@ -28,8 +37,8 @@ namespace FSO.Files.Formats
                         && (disallowedTypes == null || !disallowedTypes.Contains(c.GetType())))
                     {
                         entries.Add(new PIFFEntry {
-                            Type = c.ChunkType, ChunkID = c.OriginalID, Delete = true,
-                            ChunkLabel = c.ChunkLabel, ChunkFlags = c.ChunkFlags
+                            Type = c.ChunkType, ChunkID = c.OriginalID, EntryType = PIFFEntryType.Remove,
+                            ChunkLabel = c.ChunkLabel, ChunkFlags = c.ChunkFlags, Comment = FindComment(c, oldPIFF)
                         });
                     }
                 }
@@ -38,6 +47,7 @@ namespace FSO.Files.Formats
             bool anyAdded = false;
             foreach (var c in chunks)
             {
+                //find a comment for this chunk
                 lock (c)
                 {
                     if ((allowedTypes == null || allowedTypes.Contains(c.GetType()))
@@ -50,12 +60,25 @@ namespace FSO.Files.Formats
                             anyAdded = true;
                             piffFile.AddChunk(c);
                             c.ChunkParent = oldParent;
+
+                            //make an entry for it!
+                            entries.Add(new PIFFEntry()
+                            {
+                                ChunkID = c.ChunkID,
+                                ChunkLabel = c.ChunkLabel,
+                                ChunkFlags = c.ChunkFlags,
+                                EntryType = PIFFEntryType.Add,
+                                NewDataSize = (uint)(c.ChunkData?.Length ?? 0),
+                                Type = c.ChunkType,
+                                Comment = FindComment(c, oldPIFF)
+                            });
                         }
                         else if ((c.RuntimeInfo == ChunkRuntimeState.Modified || c.RuntimeInfo == ChunkRuntimeState.Patched))
                         {
                             var chunkD = MakeChunkDiff(c);
                             if (chunkD != null && (chunkD.Patches.Length > 0 || c.OriginalLabel != c.ChunkLabel || c.OriginalID != c.ChunkID))
                             {
+                                chunkD.Comment = FindComment(c, oldPIFF);
                                 entries.Add(chunkD);
                             }
                             c.RuntimeInfo = ChunkRuntimeState.Patched;
@@ -70,7 +93,7 @@ namespace FSO.Files.Formats
             piff.ChunkProcessed = true;
 
             piffFile.AddChunk(piff);
-            piffFile.Filename = piff.SourceIff.Substring(0, piff.SourceIff.Length - 4)+".piff";
+            piffFile.Filename = (oldPIFF != null) ? oldPIFF.ChunkParent.Filename : null; // (piff.SourceIff.Substring(0, piff.SourceIff.Length - 4)+".piff")
             return piffFile;
         }
 
@@ -79,7 +102,7 @@ namespace FSO.Files.Formats
             var e = new PIFFEntry { Type = chk.ChunkType, ChunkID = chk.OriginalID, NewChunkID = chk.ChunkID };
             if (chk == null)
             {
-                e.Delete = true;
+                e.EntryType = PIFFEntryType.Remove;
                 return e;
             }
 

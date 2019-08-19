@@ -19,7 +19,7 @@ namespace FSO.IDE.Common
         {
             var bmps = GetPixelAlpha(frame, frame.Width, frame.Height, new Vector2());
 
-            var quantpx = (Bitmap)ImageBuffer.QuantizeImage(bmps[0], new DistinctSelectionQuantizer(), null, 255, 4);
+            var quantpx = (Bitmap)ImageBuffer.QuantizeImage(bmps[0], new SimplePaletteQuantizer.Quantizers.Popularity.PopularityQuantizer(), null, 255, 1);
             var palt = quantpx.Palette.Entries;
 
             var data = quantpx.LockBits(new System.Drawing.Rectangle(0, 0, quantpx.Width, quantpx.Height), ImageLockMode.ReadOnly, PixelFormat.Format8bppIndexed);

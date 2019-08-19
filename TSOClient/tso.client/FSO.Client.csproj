@@ -159,6 +159,10 @@
     <Compile Include="Rendering\City\Plugins\MapPainterPlugin.cs" />
     <Compile Include="Rendering\City\Plugins\NeighbourhoodEditPlugin.cs" />
     <Compile Include="Rendering\City\TLayerVertex.cs" />
+    <Compile Include="UI\Panels\UIAbstractCatalogMode.cs" />
+    <Compile Include="UI\Panels\Upgrades\UIUpgradeItem.cs" />
+    <Compile Include="UI\Panels\Upgrades\UIUpgradeList.cs" />
+    <Compile Include="UI\Panels\Upgrades\UIUpgradeThermo.cs" />
     <Compile Include="UI\Profile\UIJobInfo.cs" />
     <Compile Include="UI\Controls\UIRatingDisplay.cs" />
     <Compile Include="UI\Controls\UISlotsImage.cs" />

@@ -3,6 +3,7 @@ using FSO.Common.Enum;
 using FSO.Server.Common;
 using FSO.Server.Database.DA.Roommates;
 using FSO.Server.Database.DA.Shards;
+using FSO.Server.Database.DA.Utils;
 using System;
 using System.Collections.Generic;
 using System.Data.SqlClient;
@@ -19,6 +20,20 @@ namespace FSO.Server.Database.DA.Lots
 
         public DbLot Get(int id){
             return Context.Connection.Query<DbLot>("SELECT * FROM fso_lots WHERE lot_id = @id", new { id = id }).FirstOrDefault();
+        }
+        public List<DbLot> GetMultiple(int[] id)
+        {
+            String inClause = "IN (";
+            for (int i = 0; i < id.Length; i++)
+            {
+                inClause = inClause + "'" + id.ElementAt(i) + "'" + ",";
+            }
+            inClause = inClause.Substring(0, inClause.Length - 1);
+            inClause = inClause + ")";
+
+            return Context.Connection.Query<DbLot>(
+                "SELECT * FROM fso_lots WHERE lot_id " + inClause
+            ).ToList();
         }
 
         public List<DbLot> Get(IEnumerable<int> ids)
@@ -98,6 +113,12 @@ namespace FSO.Server.Database.DA.Lots
         {
             return Context.Connection.Query<DbLot>("SELECT * FROM fso_lots WHERE shard_id = @shard_id", new { shard_id = shard_id });
         }
+        public PagedList<DbLot> AllByPage(int shard_id, int offset = 1, int limit = 100, string orderBy = "lot_id")
+        {
+            var total = Context.Connection.Query<int>("SELECT COUNT(*) FROM fso_lots WHERE shard_id = @shard_id", new { shard_id = shard_id }).FirstOrDefault();
+            var results = Context.Connection.Query<DbLot>("SELECT * FROM fso_lots WHERE shard_id = @shard_id ORDER BY @order DESC LIMIT @offset, @limit", new { shard_id = shard_id, order = orderBy, offset = offset, limit = limit });
+            return new PagedList<DbLot>(results, offset, total);
+        }
 
         public List<DbLot> AllLocations(int shard_id)
         {
@@ -128,7 +149,7 @@ namespace FSO.Server.Database.DA.Lots
         {
             return Context.Connection.Query<DbLot>("SELECT * FROM fso_lots WHERE location = @location AND shard_id = @shard_id", new { location = location, shard_id = shard_id }).FirstOrDefault();
         }
-
+ 
         public List<DbLot> GetAdjToLocation(int shard_id, uint location)
         {
             return Context.Connection.Query<DbLot>("SELECT * FROM fso_lots WHERE "

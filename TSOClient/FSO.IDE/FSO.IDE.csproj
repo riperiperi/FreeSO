@@ -100,6 +100,9 @@
     <Reference Include="MonoGame.Framework, Version=3.6.0.1625, Culture=neutral, processorArchitecture=MSIL">
       <HintPath>..\packages\MonoGame.Framework.Portable.3.6.0.1625\lib\portable-net45+win8+wpa81\MonoGame.Framework.dll</HintPath>
     </Reference>
+    <Reference Include="Newtonsoft.Json, Version=11.0.0.0, Culture=neutral, PublicKeyToken=30ad4fe6b2a6aeed, processorArchitecture=MSIL">
+      <HintPath>..\packages\Newtonsoft.Json.11.0.2\lib\net45\Newtonsoft.Json.dll</HintPath>
+    </Reference>
     <Reference Include="System" />
     <Reference Include="System.Core" />
     <Reference Include="System.Xml.Linq" />
@@ -405,6 +408,18 @@
     <Compile Include="ResourceBrowser\ResourceEditors\OTFResourceControl.Designer.cs">
       <DependentUpon>OTFResourceControl.cs</DependentUpon>
     </Compile>
+    <Compile Include="ResourceBrowser\PIFFEditor.cs">
+      <SubType>UserControl</SubType>
+    </Compile>
+    <Compile Include="ResourceBrowser\PIFFEditor.Designer.cs">
+      <DependentUpon>PIFFEditor.cs</DependentUpon>
+    </Compile>
+    <Compile Include="ResourceBrowser\UpgradeEditor.cs">
+      <SubType>UserControl</SubType>
+    </Compile>
+    <Compile Include="ResourceBrowser\UpgradeEditor.Designer.cs">
+      <DependentUpon>UpgradeEditor.cs</DependentUpon>
+    </Compile>
     <Compile Include="ResourceBrowser\XMLEntryEditor.cs">
       <SubType>UserControl</SubType>
     </Compile>
@@ -484,6 +499,7 @@
     <Compile Include="ResourceBrowser\SelectTreeDialog.Designer.cs">
       <DependentUpon>SelectTreeDialog.cs</DependentUpon>
     </Compile>
+    <Compile Include="Utils\FormsUtils.cs" />
     <EmbeddedResource Include="AboutWindow.resx">
       <DependentUpon>AboutWindow.cs</DependentUpon>
     </EmbeddedResource>
@@ -584,8 +600,14 @@
     <EmbeddedResource Include="ResourceBrowser\IffResourceViewer.resx">
       <DependentUpon>IffResourceViewer.cs</DependentUpon>
     </EmbeddedResource>
+    <EmbeddedResource Include="ResourceBrowser\PIFFEditor.resx">
+      <DependentUpon>PIFFEditor.cs</DependentUpon>
+    </EmbeddedResource>
     <EmbeddedResource Include="ResourceBrowser\ResourceEditors\OTFResourceControl.resx">
       <DependentUpon>OTFResourceControl.cs</DependentUpon>
+    </EmbeddedResource>
+    <EmbeddedResource Include="ResourceBrowser\UpgradeEditor.resx">
+      <DependentUpon>UpgradeEditor.cs</DependentUpon>
     </EmbeddedResource>
     <EmbeddedResource Include="ResourceBrowser\XMLEntryEditor.resx">
       <DependentUpon>XMLEntryEditor.cs</DependentUpon>

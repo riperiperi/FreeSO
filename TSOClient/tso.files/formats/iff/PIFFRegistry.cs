@@ -36,6 +36,11 @@ namespace FSO.Files.Formats.IFF
                     continue;
                 }
 
+                if (piff.Version < 2)
+                {
+                    piff.AppendAddedChunks(piffFile);
+                }
+
                 if (IsPIFFUser.ContainsKey(piff.SourceIff))
                 {
                     var old = IsPIFFUser[piff.SourceIff];

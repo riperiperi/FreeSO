@@ -39,8 +39,8 @@ namespace FSO.Client.Controllers
         public void SendIM(string body){
             var cref = Network.MyCharacterRef;
             var color = GlobalSettings.Default.ChatColor;
-            if (GlobalSettings.Default.ChatOnlyEmoji)
-                body = GameFacade.Emojis.EmojiOnly(body);
+            if (GlobalSettings.Default.ChatOnlyEmoji > 0)
+                body = GameFacade.Emojis.EmojiOnly(body, GlobalSettings.Default.ChatOnlyEmoji);
             View.AddMessage(cref, body, color, IMEntryType.MESSAGE_OUT);
 
             if (View.MyUser.Value == null)

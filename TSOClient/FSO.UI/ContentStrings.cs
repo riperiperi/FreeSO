@@ -103,19 +103,18 @@ namespace FSO.Client.GameContent
 
                 for (int i = 0; i < ArgsStr.Length; i++)
                 {
-                    string CurrentArg = ArgsStr.Substring(i, 1);
-
-                    if (CurrentArg.Contains("%"))
+                    var c = ArgsStr[i];
+                    if (c == '%' && i < ArgsStr.Length-1 && (ArgsStr[i+1] == 's' || ArgsStr[i+1] == 'd'))
                     {
                         if (ArgsCounter < args.Length)
                         {
-                            SBuilder.Append(CurrentArg.Replace("%", args[ArgsCounter]));
+                            SBuilder.Append(args[ArgsCounter]);
                             ArgsCounter++;
-                            i++; //Next, CurrentArg will be either s or d - skip it!
+                            i++; //skip the argument specifier
                         }
                     }
                     else
-                        SBuilder.Append(CurrentArg);
+                        SBuilder.Append(c);
                 }
 
                 return SBuilder.ToString();

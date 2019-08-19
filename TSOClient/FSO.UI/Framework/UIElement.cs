@@ -452,6 +452,7 @@ namespace FSO.Client.UI.Framework
 
         public void Invalidate()
         {
+            if (InvalidationParent?.GetType()?.Name == "UIUpgradeItem") { }
             if (InvalidationParent != null) InvalidationParent.Invalidated = true;
         }
 
@@ -481,7 +482,6 @@ namespace FSO.Client.UI.Framework
         public void InvalidateOpacity()
         {
             _OpacityDirty = true;
-            Invalidate();
         }
 
         /// <summary>
@@ -933,7 +933,7 @@ namespace FSO.Client.UI.Framework
             //{
             DPISwitch(ref texture, ref scale, ref from);
             batch.Draw(texture, FlooredLocalPoint(to), from, new Color(_BlendColor.ToVector4() * blend.ToVector4()), 0.0f,
-                        new Vector2(0.0f, 0.0f), _Scale * scale, SprEffects, 0.0f);
+                        new Vector2(0.0f, 0.0f), _Scale * scale, _SpriteEffects, 0.0f);
             //}
         }
 
@@ -969,7 +969,7 @@ namespace FSO.Client.UI.Framework
         {
             DPISwitch(ref texture, ref scale, ref from);
             batch.Draw(texture, FlooredLocalPoint(to), from, color, rotation,
-                        origin, _Scale * scale, SprEffects, 0.0f);
+                        origin, _Scale * scale, _SpriteEffects, 0.0f);
         }
 
         protected SpriteEffects SprEffects = SpriteEffects.None;
