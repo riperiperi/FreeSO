@@ -1,4 +1,5 @@
-﻿using FSO.SimAntics.Engine.TSOTransaction;
+﻿using FSO.Common.Utils;
+using FSO.SimAntics.Engine.TSOTransaction;
 using FSO.SimAntics.Marshals;
 using FSO.SimAntics.Model.TSOPlatform;
 using FSO.SimAntics.NetPlay.Model;
@@ -41,6 +42,9 @@ namespace FSO.SimAntics.NetPlay.Model.Commands
             if (ID != 0)
             {
                 VMEntity obj = vm.GetObjectById(ID);
+                Console.WriteLine($"INVENTORY STATE (new): {DebugUtils.LogObject(State)}");
+                if (obj != null && obj.Thread.BlockingState != null) Console.WriteLine($"INVENTORY STATE (old): {DebugUtils.LogObject(obj.Thread.BlockingState)}");
+                else Console.WriteLine("OLD INVENTORY STATE NOT PRESENT!");
                 //we can only update an object's blocking state if it exists and is of the same type exactly.
                 if (obj == null || obj.Thread.BlockingState == null || obj.Thread.BlockingState.GetType() != type) return false;
                 obj.Thread.BlockingState = State;

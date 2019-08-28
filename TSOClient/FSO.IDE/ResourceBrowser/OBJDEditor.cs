@@ -75,6 +75,8 @@ namespace FSO.IDE.ResourceBrowser
                 { FootprintEast, "FootprintEast" },
                 { FootprintSouth, "FootprintSouth" },
                 { FootprintWest, "FootprintWest" },
+
+                { InteractionGroup, "InteractionGroupID" },
             };
 
             OBJDFlagEntries = new Dictionary<CheckBox, PropFlagCombo>()

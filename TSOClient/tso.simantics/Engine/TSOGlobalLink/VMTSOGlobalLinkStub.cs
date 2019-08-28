@@ -232,6 +232,12 @@ namespace FSO.SimAntics.Engine.TSOTransaction
             //todo: nice stub for this using database?
         }
 
+        public void RetrieveFromInventoryByType(VM vm, uint ownerPID, uint guid, int index, bool setOnLot, VMAsyncInventoryRetrieveCallback callback)
+        {
+            //todo: nice stub for this using database?
+            callback(new VMInventoryRestoreObject(0, 0, 0));
+        }
+
         public void RetrieveFromInventory(VM vm, uint objectPID, uint ownerPID, bool setOnLot, VMAsyncInventoryRetrieveCallback callback)
         {
             //todo: nice stub for this using database?
@@ -251,6 +257,7 @@ namespace FSO.SimAntics.Engine.TSOTransaction
         public void ConsumeInventory(VM vm, uint ownerPID, uint guid, int mode, short num, VMAsyncInventoryConsumeCallback callback)
         {
             //todo: nice stub for this using database?
+            callback(true, 0);
         }
 
         public void SetSpotlightStatus(VM vm, bool on)

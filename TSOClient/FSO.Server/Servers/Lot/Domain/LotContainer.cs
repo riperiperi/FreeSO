@@ -112,12 +112,19 @@ namespace FSO.Server.Servers.Lot.Domain
 
             0x5157DDF2, //cat carrier
             0x3278BD34, //dog carrier
+
+            0x699704D3, //fso vehicle controller
+
+            0x865A6812, //car portal 1
+            0xD564C66B //car portal 2
         };
 
         private static HashSet<uint> RequiredGUIDs = new HashSet<uint>()
         {
             0x37EB32F3, //skill controller
             0x534564D5, //skill degrade
+
+            0x699704D3, //fso vehicle controller
         };
 
         private static HashSet<uint> InvalidGUIDs = new HashSet<uint>()

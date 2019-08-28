@@ -28,6 +28,7 @@ namespace FSO.IDE.Common.Debug
     public class UI3DDGRP : UIInteractiveDGRP
     {
         public List<Debug3DDGRPComponent> Comp3D;
+        public Debug3DDGRPComponent TargetComp3D;
 
         public _3DScene Scene;
         public BasicCamera Camera;
@@ -104,6 +105,7 @@ namespace FSO.IDE.Common.Debug
                     var vp = obj.VisualPosition;
                     c.Position = new Vector3(-(vp.X-0.5f), vp.Z, -(vp.Y-0.5f));
                     c.Initialize();
+                    if (obj == TargetTile) TargetComp3D = c;
                     Comp3D.Add(c);
                 }
                 //try get our dgrp;

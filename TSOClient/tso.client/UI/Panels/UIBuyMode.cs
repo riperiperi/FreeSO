@@ -247,7 +247,7 @@ namespace FSO.Client.UI.Panels
             base.Catalog_OnSelectionChange(selection);
             if (CurrentCategory == CurrentInventory)
             {
-                if (selection < LastInventory.Count)
+                if (selection < LastInventory.Count && Holder.Holding != null)
                 {
                     Holder.Holding.InventoryPID = LastInventory[selection].ObjectPID;
                     Holder.Holding.Price = 0;
@@ -325,7 +325,7 @@ namespace FSO.Client.UI.Panels
         public void SetMode(int mode)
         {
             if (!Roommate) mode = 2;
-            QueryPanel.InInventory = mode == 2;
+            QueryPanel.InInventory = (mode == 2) ? 1 : 0;
             CatBg.Visible = (mode == 1);
             ProductCatalogSlider.Visible = (mode == 1);
             ProductCatalogNextPageButton.Visible = (mode == 1);

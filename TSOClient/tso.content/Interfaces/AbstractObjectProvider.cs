@@ -5,6 +5,7 @@ using FSO.Files.Formats.IFF.Chunks;
 using FSO.Files.Formats.OTF;
 using System;
 using System.Collections.Generic;
+using System.IO;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
@@ -196,7 +197,7 @@ namespace FSO.Content.Interfaces
             ulong guid = 0;
             lock (Entries)
             {
-                var result = Entries.Values.FirstOrDefault(x => x.FileName == name);
+                var result = Entries.Values.FirstOrDefault(x => Path.GetFileNameWithoutExtension(x.FileName) == name);
                 if (result != null)
                 {
                     guid = result.ID;

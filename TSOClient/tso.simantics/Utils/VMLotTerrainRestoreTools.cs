@@ -772,7 +772,12 @@ namespace FSO.SimAntics.Utils
                 var ent = EntityByGUID(vm, pos.GUID);
                 if (ent != null)
                 {
-                    ent.MultitileGroup.BaseObject.SetPosition(LotTilePos.FromBigTile((short)rpos.X, (short)rpos.Y, 1), (Direction)(1 << ((lotDir*2 + pos.DirOff) % 8)), vm.Context);
+                    var result = ent.MultitileGroup.BaseObject.SetPosition(LotTilePos.FromBigTile((short)rpos.X, (short)rpos.Y, 1), (Direction)(1 << ((lotDir*2 + pos.DirOff) % 8)), vm.Context);
+                    if (result.Status != VMPlacementError.Success)
+                    {
+                        // if we can't place the object, put it oow.
+                        ent.MultitileGroup.BaseObject.SetPosition(LotTilePos.OUT_OF_WORLD, (Direction)(1 << ((lotDir * 2 + pos.DirOff) % 8)), vm.Context);
+                    }
                 }
             }
 

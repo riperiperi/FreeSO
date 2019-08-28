@@ -75,6 +75,7 @@
             this.TypeCombo = new System.Windows.Forms.ComboBox();
             this.TypeLabel = new System.Windows.Forms.Label();
             this.CatalogBox = new System.Windows.Forms.GroupBox();
+            this.CatCommunity = new System.Windows.Forms.CheckBox();
             this.CatResidence = new System.Windows.Forms.CheckBox();
             this.CatEntertainment = new System.Windows.Forms.CheckBox();
             this.CatGames = new System.Windows.Forms.CheckBox();
@@ -123,7 +124,8 @@
             this.NameLabel = new System.Windows.Forms.Label();
             this.NameEntry = new System.Windows.Forms.TextBox();
             this.GUIDButton = new System.Windows.Forms.Button();
-            this.CatCommunity = new System.Windows.Forms.CheckBox();
+            this.InteractionGroup = new System.Windows.Forms.NumericUpDown();
+            this.InteractionGroupLabel = new System.Windows.Forms.Label();
             this.ThumbnailBox.SuspendLayout();
             ((System.ComponentModel.ISupportInitialize)(this.ThumbnailPic)).BeginInit();
             this.VisualBox.SuspendLayout();
@@ -153,6 +155,7 @@
             ((System.ComponentModel.ISupportInitialize)(this.XOffset)).BeginInit();
             ((System.ComponentModel.ISupportInitialize)(this.LevelOffset)).BeginInit();
             ((System.ComponentModel.ISupportInitialize)(this.YOffset)).BeginInit();
+            ((System.ComponentModel.ISupportInitialize)(this.InteractionGroup)).BeginInit();
             this.SuspendLayout();
             // 
             // ThumbnailBox
@@ -691,6 +694,16 @@
             this.CatalogBox.TabStop = false;
             this.CatalogBox.Text = "Catalog";
             // 
+            // CatCommunity
+            // 
+            this.CatCommunity.AutoSize = true;
+            this.CatCommunity.Location = new System.Drawing.Point(94, 107);
+            this.CatCommunity.Name = "CatCommunity";
+            this.CatCommunity.Size = new System.Drawing.Size(134, 17);
+            this.CatCommunity.TabIndex = 47;
+            this.CatCommunity.Text = "Community (Town Hall)";
+            this.CatCommunity.UseVisualStyleBackColor = true;
+            // 
             // CatResidence
             // 
             this.CatResidence.AutoSize = true;
@@ -1021,6 +1034,8 @@
             // 
             // MultitileBox
             // 
+            this.MultitileBox.Controls.Add(this.InteractionGroupLabel);
+            this.MultitileBox.Controls.Add(this.InteractionGroup);
             this.MultitileBox.Controls.Add(this.button4);
             this.MultitileBox.Controls.Add(this.button3);
             this.MultitileBox.Controls.Add(this.NewMultitile);
@@ -1042,7 +1057,7 @@
             // 
             // button4
             // 
-            this.button4.Location = new System.Drawing.Point(8, 249);
+            this.button4.Location = new System.Drawing.Point(8, 248);
             this.button4.Name = "button4";
             this.button4.Size = new System.Drawing.Size(89, 23);
             this.button4.TabIndex = 31;
@@ -1051,7 +1066,7 @@
             // 
             // button3
             // 
-            this.button3.Location = new System.Drawing.Point(109, 249);
+            this.button3.Location = new System.Drawing.Point(109, 248);
             this.button3.Name = "button3";
             this.button3.Size = new System.Drawing.Size(89, 23);
             this.button3.TabIndex = 30;
@@ -1080,7 +1095,7 @@
             // label3
             // 
             this.label3.AutoSize = true;
-            this.label3.Location = new System.Drawing.Point(8, 90);
+            this.label3.Location = new System.Drawing.Point(8, 111);
             this.label3.Name = "label3";
             this.label3.Size = new System.Drawing.Size(43, 13);
             this.label3.TabIndex = 27;
@@ -1091,9 +1106,9 @@
             this.MultitileList.DrawMode = System.Windows.Forms.DrawMode.OwnerDrawFixed;
             this.MultitileList.FormattingEnabled = true;
             this.MultitileList.IntegralHeight = false;
-            this.MultitileList.Location = new System.Drawing.Point(8, 106);
+            this.MultitileList.Location = new System.Drawing.Point(8, 126);
             this.MultitileList.Name = "MultitileList";
-            this.MultitileList.Size = new System.Drawing.Size(190, 137);
+            this.MultitileList.Size = new System.Drawing.Size(190, 118);
             this.MultitileList.TabIndex = 15;
             // 
             // XOffset
@@ -1198,15 +1213,31 @@
             this.GUIDButton.UseVisualStyleBackColor = true;
             this.GUIDButton.MouseDown += new System.Windows.Forms.MouseEventHandler(this.GUIDButton_MouseDown);
             // 
-            // CatCommunity
+            // InteractionGroup
             // 
-            this.CatCommunity.AutoSize = true;
-            this.CatCommunity.Location = new System.Drawing.Point(94, 107);
-            this.CatCommunity.Name = "CatCommunity";
-            this.CatCommunity.Size = new System.Drawing.Size(134, 17);
-            this.CatCommunity.TabIndex = 47;
-            this.CatCommunity.Text = "Community (Town Hall)";
-            this.CatCommunity.UseVisualStyleBackColor = true;
+            this.InteractionGroup.Location = new System.Drawing.Point(103, 88);
+            this.InteractionGroup.Maximum = new decimal(new int[] {
+            32767,
+            0,
+            0,
+            0});
+            this.InteractionGroup.Minimum = new decimal(new int[] {
+            32768,
+            0,
+            0,
+            -2147483648});
+            this.InteractionGroup.Name = "InteractionGroup";
+            this.InteractionGroup.Size = new System.Drawing.Size(95, 20);
+            this.InteractionGroup.TabIndex = 32;
+            // 
+            // InteractionGroupLabel
+            // 
+            this.InteractionGroupLabel.AutoSize = true;
+            this.InteractionGroupLabel.Location = new System.Drawing.Point(8, 90);
+            this.InteractionGroupLabel.Name = "InteractionGroupLabel";
+            this.InteractionGroupLabel.Size = new System.Drawing.Size(92, 13);
+            this.InteractionGroupLabel.TabIndex = 33;
+            this.InteractionGroupLabel.Text = "Interaction Group:";
             // 
             // OBJDEditor
             // 
@@ -1264,6 +1295,7 @@
             ((System.ComponentModel.ISupportInitialize)(this.XOffset)).EndInit();
             ((System.ComponentModel.ISupportInitialize)(this.LevelOffset)).EndInit();
             ((System.ComponentModel.ISupportInitialize)(this.YOffset)).EndInit();
+            ((System.ComponentModel.ISupportInitialize)(this.InteractionGroup)).EndInit();
             this.ResumeLayout(false);
             this.PerformLayout();
 
@@ -1367,5 +1399,7 @@
         private System.Windows.Forms.Button GUIDButton;
         private System.Windows.Forms.Button ThumbSave;
         private System.Windows.Forms.CheckBox CatCommunity;
+        private System.Windows.Forms.NumericUpDown InteractionGroup;
+        private System.Windows.Forms.Label InteractionGroupLabel;
     }
 }

@@ -21,7 +21,7 @@ namespace FSO.IDE.Common
         {
             get
             {
-                return Renderer.Comp3D[0].Mesh;
+                return Renderer.TargetComp3D.Mesh;
             }
         }
 

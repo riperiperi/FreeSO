@@ -225,6 +225,7 @@
     <Compile Include="Utils\Callback.cs" />
     <Compile Include="Utils\CollectionUtils.cs" />
     <Compile Include="Utils\CurLoader.cs" />
+    <Compile Include="Utils\DebugUtils.cs" />
     <Compile Include="Utils\DirectionUtils.cs" />
     <Compile Include="Utils\DotPath.cs" />
     <Compile Include="Utils\FeatureLevelTest.cs" />

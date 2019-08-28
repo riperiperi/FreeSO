@@ -283,6 +283,7 @@
     <Compile Include="EditorComponent\Primitives\RelationshipDescriptor.cs" />
     <Compile Include="EditorComponent\Primitives\SleepDescriptor.cs" />
     <Compile Include="EditorComponent\Primitives\TransferFundsDescriptor.cs" />
+    <Compile Include="EditorComponent\Primitives\TSOInventoryOperationsDescriptor.cs" />
     <Compile Include="EditorComponent\UI\UIBHAVEditor.cs" />
     <Compile Include="EditorComponent\VarSoundSelect.cs">
       <SubType>Form</SubType>

@@ -42,6 +42,12 @@ namespace FSO.Server.Database.DA.Objects
             return Context.Connection.Query<DbObject>("SELECT * FROM fso_objects WHERE owner_id = @avatar_id AND lot_id IS NULL", new { avatar_id = avatar_id }).ToList();
         }
 
+        public List<DbObject> ObjOfTypeForAvatar(uint avatar_id, uint guid)
+        {
+            return Context.Connection.Query<DbObject>("SELECT * FROM fso_objects WHERE owner_id = @avatar_id AND type = @guid",
+                new { avatar_id = avatar_id, guid = guid }).ToList();
+        }
+
         public List<DbObject> ObjOfTypeInAvatarInventory(uint avatar_id, uint guid)
         {
             return Context.Connection.Query<DbObject>("SELECT * FROM fso_objects WHERE owner_id = @avatar_id AND lot_id IS NULL AND type = @guid", 

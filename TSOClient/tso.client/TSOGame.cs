@@ -309,8 +309,10 @@ namespace FSO.Client
                 GameFacade.EdithFont.AddSize(12, Content.Load<SpriteFont>("Fonts/Trebuchet_12px"));
                 GameFacade.EdithFont.AddSize(14, Content.Load<SpriteFont>("Fonts/Trebuchet_14px"));
                 */
-
+                
                 GameFacade.VectorFont = new MSDFFont(Content.Load<FieldFont>("../Fonts/simdialogue"));
+                GameFacade.VectorFont.AddFallback(Content.Load<FieldFont>("../Fonts/Fallbacks/thai"), "thai", 0.75f);
+
                 GameFacade.EdithVectorFont = new MSDFFont(Content.Load<FieldFont>("../Fonts/trebuchet"));
                 GameFacade.EdithVectorFont.VectorScale = 0.366f;
                 GameFacade.EdithVectorFont.Height = 15;

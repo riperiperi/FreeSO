@@ -257,7 +257,8 @@ namespace FSO.Client.UI.Panels
                 {
                     price = UpgradeBuyItem(item.Item.GUID, upgradeLevel);
                 }
-                Holder.SetSelected(BuyItem);
+                // token objects should not be placable.
+                if (item.Item.DisableLevel < 3) Holder.SetSelected(BuyItem);
                 QueryPanel.SetInfo(LotController.vm, BuyItem.Objects[0], false);
                 QueryPanel.Mode = 1;
                 QueryPanel.Tab = 0;
