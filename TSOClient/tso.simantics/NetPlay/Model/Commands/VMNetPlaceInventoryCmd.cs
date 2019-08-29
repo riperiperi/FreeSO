@@ -56,6 +56,7 @@ namespace FSO.SimAntics.NetPlay.Model.Commands
                 //oops, we can't place this object or some other issue occured. move it back to inventory.
                 if (CreatedGroup != null)
                 {
+                    vm.Context.ObjectQueries.RemoveMultitilePersist(vm, ObjectPID);
                     foreach (var o in CreatedGroup.Objects) o.PersistID = 0; //no longer representative of the object in db.
                     CreatedGroup.Delete(vm.Context);
                 }

@@ -456,6 +456,7 @@ namespace FSO.Server.Servers.Lot.Domain
                 if (ent.PersistID >= 16777216 && ent is VMGameObject)
                 {
                     if (LotPersist.admit_mode == 5) {
+                        Lot.Context.ObjectQueries.RemoveMultitilePersist(Lot, ent.PersistID);
                         ent.PersistID = 0;
                         ((VMTSOObjectState)ent.TSOState).OwnerID = 0;
                         ((VMGameObject)ent).Disabled = 0;

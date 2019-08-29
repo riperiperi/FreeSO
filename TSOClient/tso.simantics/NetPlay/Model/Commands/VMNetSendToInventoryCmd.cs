@@ -1,4 +1,5 @@
 ﻿using FSO.SimAntics.Model;
+using FSO.SimAntics.Model.Platform;
 using FSO.SimAntics.Model.TSOPlatform;
 using System;
 using System.Collections.Generic;
@@ -64,6 +65,8 @@ namespace FSO.SimAntics.NetPlay.Model.Commands
                 caller.AvatarState.Permissions < VMTSOAvatarPermissions.Roommate
                 || targObj.PersistID == 0 || targObj is VMAvatar || targObj.IsUserMovable(vm.Context, true) != VMPlacementError.Success))
                 return false;
+
+            if (vm.PlatformState.Validator.GetDeleteMode(DeleteMode.Sendback, caller, targObj) != DeleteMode.Sendback) return false;
 
             if ((((VMGameObject)targObj).Disabled & VMGameObjectDisableFlags.TransactionIncomplete) > 0) return false;
             VMNetLockCmd.LockObj(vm, targObj);

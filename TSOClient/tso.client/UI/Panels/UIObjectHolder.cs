@@ -338,6 +338,9 @@ namespace FSO.Client.UI.Panels
             if (Holding == null) return;
             if (Holding.IsBought)
             {
+                var validator = vm.TSOState.Validator;
+                var sendbackMode = validator.GetDeleteMode(DeleteMode.Sendback, (VMAvatar)ParentControl.ActiveEntity, Holding.RealEnt);
+                if (sendbackMode != DeleteMode.Sendback) return;
                 if (Holding.CanDelete)
                 {
                     var obj = vm.GetObjectById(Holding.MoveTarget);

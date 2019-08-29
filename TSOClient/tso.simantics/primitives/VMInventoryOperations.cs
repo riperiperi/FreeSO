@@ -36,6 +36,7 @@ namespace FSO.SimAntics.Primitives
                         if (persistObj != null && operand.Mode == VMInventoryOpMode.FSOCopyObjectOfTypeOOW)
                         {
                             //make sure when this object is deleted, it does not delete the original. (it's a copy)
+                            context.VM.Context.ObjectQueries.RemoveMultitilePersist(context.VM, state.ObjectPersistID);
                             foreach (var obj in persistObj.MultitileGroup.Objects)
                             {
                                 obj.PersistID = 0;
