@@ -38,7 +38,7 @@ namespace FSO.Vitaboy
         /// <summary>
         /// Total number of frames in this animation.
         /// </summary>
-        public int NumFrames { get; internal set; }
+        public int NumFrames { get; set; }
 
         /// <summary>
         /// Reads an animation from a stream.
@@ -153,6 +153,11 @@ namespace FSO.Vitaboy
 
                 Motions[i] = motion;
             }
+            UpdateFPS();
+        }
+
+        public void UpdateFPS()
+        {
             FramesPerSecond = (int)Math.Round(NumFrames / (Duration / 1000));
         }
 

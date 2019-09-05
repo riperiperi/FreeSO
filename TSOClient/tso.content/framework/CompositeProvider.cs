@@ -9,9 +9,19 @@ namespace FSO.Content.Framework
 {
     public class CompositeProvider<T> : IContentProvider<T>
     {
-        private IEnumerable<IContentProvider<T>> Providers;
+        protected IEnumerable<IContentProvider<T>> Providers;
+
+        public CompositeProvider()
+        {
+
+        }
 
         public CompositeProvider(IEnumerable<IContentProvider<T>> providers)
+        {
+            SetProviders(providers);
+        }
+
+        public void SetProviders(IEnumerable<IContentProvider<T>> providers)
         {
             Providers = providers;
         }

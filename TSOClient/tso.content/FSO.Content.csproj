@@ -418,6 +418,7 @@
     <Compile Include="Framework\PackingslipProvider.cs" />
     <Compile Include="Content.cs" />
     <Compile Include="AvatarMeshProvider.cs" />
+    <Compile Include="Framework\RuntimeProvider.cs" />
     <Compile Include="Framework\TS1Provider.cs" />
     <Compile Include="HandgroupProvider.cs" />
     <Compile Include="IniProvider.cs" />

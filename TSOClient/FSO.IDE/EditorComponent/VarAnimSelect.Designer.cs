@@ -41,6 +41,7 @@
             this.MyList = new System.Windows.Forms.ListBox();
             this.RemoveButton = new System.Windows.Forms.Button();
             this.FBXButton = new System.Windows.Forms.Button();
+            this.glTFImportButton = new System.Windows.Forms.Button();
             ((System.ComponentModel.ISupportInitialize)(this.pictureBox1)).BeginInit();
             this.SuspendLayout();
             // 
@@ -148,19 +149,30 @@
             // 
             // FBXButton
             // 
-            this.FBXButton.Location = new System.Drawing.Point(133, 2);
+            this.FBXButton.Location = new System.Drawing.Point(93, 2);
             this.FBXButton.Name = "FBXButton";
             this.FBXButton.Size = new System.Drawing.Size(75, 23);
             this.FBXButton.TabIndex = 12;
-            this.FBXButton.Text = "FBX Test";
+            this.FBXButton.Text = "glTF Export";
             this.FBXButton.UseVisualStyleBackColor = true;
             this.FBXButton.Click += new System.EventHandler(this.FBXButton_Click);
+            // 
+            // glTFImportButton
+            // 
+            this.glTFImportButton.Location = new System.Drawing.Point(174, 2);
+            this.glTFImportButton.Name = "glTFImportButton";
+            this.glTFImportButton.Size = new System.Drawing.Size(34, 23);
+            this.glTFImportButton.TabIndex = 13;
+            this.glTFImportButton.Text = "In";
+            this.glTFImportButton.UseVisualStyleBackColor = true;
+            this.glTFImportButton.Click += new System.EventHandler(this.glTFImportButton_Click);
             // 
             // VarAnimSelect
             // 
             this.AutoScaleDimensions = new System.Drawing.SizeF(6F, 13F);
             this.AutoScaleMode = System.Windows.Forms.AutoScaleMode.Font;
             this.ClientSize = new System.Drawing.Size(584, 461);
+            this.Controls.Add(this.glTFImportButton);
             this.Controls.Add(this.FBXButton);
             this.Controls.Add(this.RemoveButton);
             this.Controls.Add(this.MyList);
@@ -196,5 +208,6 @@
         private System.Windows.Forms.ListBox MyList;
         private System.Windows.Forms.Button RemoveButton;
         private System.Windows.Forms.Button FBXButton;
+        private System.Windows.Forms.Button glTFImportButton;
     }
 }
