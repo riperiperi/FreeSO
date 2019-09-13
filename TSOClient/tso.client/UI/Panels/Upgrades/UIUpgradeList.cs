@@ -25,6 +25,8 @@ namespace FSO.Client.UI.Panels.Upgrades
         public VMEntity ActiveEntity;
         public UILotControl LotParent;
 
+        public bool ReadOnly;
+
         public int CurrentUpgrade;
         public int TotalUpgrades;
         public bool Shown;
@@ -115,6 +117,7 @@ namespace FSO.Client.UI.Panels.Upgrades
 
         public void Hover(int level)
         {
+            if (ReadOnly) return;
             Thermometer.SetHighlightLevel(level);
             for (int i=0; i<Items.Count; i++)
             {
@@ -124,6 +127,7 @@ namespace FSO.Client.UI.Panels.Upgrades
 
         public void Click(int level)
         {
+            if (ReadOnly) return;
             HITVM.Get().PlaySoundEvent(UISounds.Click);
             if (level == CurrentUpgrade || level < 0 || level >= Items.Count)
             {

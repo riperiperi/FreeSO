@@ -14,6 +14,7 @@ namespace FSO.Server.Database.DA.Objects
         bool Delete(uint id);
         IEnumerable<DbObject> All(int shard_id);
         List<DbObject> GetAvatarInventory(uint avatar_id);
+        List<DbObject> ObjOfTypeForAvatar(uint avatar_id, uint guid);
         List<DbObject> ObjOfTypeInAvatarInventory(uint avatar_id, uint guid);
         List<DbObject> GetObjectOwners(IEnumerable<uint> object_ids);
         int ReturnLostObjects(uint lot_id, IEnumerable<uint> object_ids);

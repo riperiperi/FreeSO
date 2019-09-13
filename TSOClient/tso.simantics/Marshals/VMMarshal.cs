@@ -25,7 +25,8 @@ namespace FSO.SimAntics.Marshals
         // 32 - Bezier Routing
         // 33 - NhoodID and Location
         // 34 - Upgrade Level
-        public static readonly int LATEST_VERSION = 34;
+        // 35 - FSO Inventory Retrieve
+        public static readonly int LATEST_VERSION = 35;
 
         public int Version = LATEST_VERSION;
         public bool Compressed = true;

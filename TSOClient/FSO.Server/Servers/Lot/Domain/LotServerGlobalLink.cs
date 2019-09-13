@@ -550,7 +550,84 @@ namespace FSO.Server.Servers.Lot.Domain
                                 UpdateInventoryFor(vm, ownerPID);
                             }
                             return;
+                        case 2:
+                            callback(true, db.Objects.ObjOfTypeForAvatar(ownerPID, guid).Count);
+                            return;
                     }
+                }
+            });
+        }
+
+        private void RetrieveDbObject(VM vm, IDA db, DbObject obj, uint ownerID, bool setOnLot, VMAsyncInventoryRetrieveCallback callback)
+        {
+            var objectPID = obj.object_id;
+            var result = new VMInventoryRestoreObject();
+            result.PersistID = obj.object_id;
+            result.GUID = obj.type;
+            result.UpgradeLevel = (byte)obj.upgrade_level;
+            result.Wear = 0;
+            if (setOnLot) //if we should set this object as on this lot. false means we're getting the info for trade
+            {
+                if (!db.Objects.SetInLot(objectPID, (uint)Context.DbId))
+                {
+                    callback(new VMInventoryRestoreObject()); //object is already on a lot. we cannot load it!
+                    return;
+                }
+            }
+            else if (obj.lot_id != null)
+            {
+                callback(new VMInventoryRestoreObject()); //object is already on a lot, don't load it for trading.
+                return;
+            }
+
+            byte[] dat = null;
+            try
+            {
+                var objStr = objectPID.ToString("x8");
+                var path = Path.Combine(Config.SimNFS, "Objects/" + objStr + "/inventoryState.fsoo");
+
+                //if path does not exist, will throw FileNotFoundException
+                using (var file = File.Open(path, FileMode.Open))
+                {
+                    dat = new byte[file.Length];
+                    file.Read(dat, 0, dat.Length);
+                }
+            }
+            catch (Exception e)
+            {
+                //todo: specific types of exception that can be thrown here? instead of just catching em all
+                if (!(e is FileNotFoundException))
+                    LOG.Error(e, "Failed to load inventory state for object " + objectPID.ToString("x8") + "!");
+            }
+
+            if (dat != null && dat.Length == 0) dat = null; //treat empty files as if no state were available.
+
+            result.Data = dat;
+            callback(result);
+        }
+        
+        public void RetrieveFromInventoryByType(VM vm, uint ownerPID, uint guid, int index, bool setOnLot, VMAsyncInventoryRetrieveCallback callback)
+        {
+            Host.InBackground(() =>
+            {
+
+                using (var db = DAFactory.Get())
+                {
+                    var candidates = db.Objects.ObjOfTypeInAvatarInventory(ownerPID, guid);
+                    if (candidates.Count == 0)
+                    {
+                        callback(new VMInventoryRestoreObject());
+                        return;
+                    }
+                    if (index < 0)
+                    {
+                        //relative to end
+                        index = candidates.Count + index;
+                    }
+                    index = Math.Min(Math.Max(0, index), candidates.Count-1);
+
+                    var obj = candidates[index];
+                    RetrieveDbObject(vm, db, obj, ownerPID, setOnLot, callback);
                 }
             });
         }
@@ -561,6 +638,7 @@ namespace FSO.Server.Servers.Lot.Domain
             Host.InBackground(() =>
             {
                 var result = new VMInventoryRestoreObject();
+                result.PersistID = objectPID;
                 if (objectPID == 0)
                 {
                     callback(result);
@@ -573,47 +651,8 @@ namespace FSO.Server.Servers.Lot.Domain
                 {
                     var obj = db.Objects.Get(objectPID);
                     if (obj == null || obj.owner_id != ownerPID) callback(result); //object does not exist or request is for wrong owner.
-                    result.GUID = obj.type;
-                    result.UpgradeLevel = (byte)obj.upgrade_level;
-                    result.Wear = 0;
-                    if (setOnLot) //if we should set this object as on this lot. false means we're getting the info for trade
-                    {
-                        if (!db.Objects.SetInLot(objectPID, (uint)Context.DbId)) {
-                            callback(new VMInventoryRestoreObject()); //object is already on a lot. we cannot load it!
-                            return;
-                        }
-                    }
-                    else if (obj.lot_id != null)
-                    {
-                        callback(new VMInventoryRestoreObject()); //object is already on a lot, don't load it for trading.
-                        return;
-                    }
+                    RetrieveDbObject(vm, db, obj, ownerPID, setOnLot, callback);
                 }
-
-                byte[] dat = null;
-                try
-                {
-                    var objStr = objectPID.ToString("x8");
-                    var path = Path.Combine(Config.SimNFS, "Objects/" + objStr + "/inventoryState.fsoo");
-
-                    //if path does not exist, will throw FileNotFoundException
-                    using (var file = File.Open(path, FileMode.Open))
-                    {
-                        dat = new byte[file.Length];
-                        file.Read(dat, 0, dat.Length);
-                    }
-                }
-                catch (Exception e)
-                {
-                    //todo: specific types of exception that can be thrown here? instead of just catching em all
-                    if (!(e is FileNotFoundException))
-                        LOG.Error(e, "Failed to load inventory state for object " + objectPID.ToString("x8") + "!");
-                }
-
-                if (dat != null && dat.Length == 0) dat = null; //treat empty files as if no state were available.
-
-                result.Data = dat;
-                callback(result);
             });
         }
 

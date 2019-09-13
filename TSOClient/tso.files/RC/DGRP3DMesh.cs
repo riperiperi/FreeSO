@@ -614,7 +614,7 @@ namespace FSO.Files.RC
             using (var io = IoWriter.FromStream(stream, ByteOrder.LITTLE_ENDIAN))
             {
                 io.WriteCString("FSOm", 4);
-                io.WriteInt32(Version);
+                io.WriteInt32(CURRENT_VERSION);
                 io.WriteInt32(ReconstructVersion);
                 io.WritePascalString(Name);
 

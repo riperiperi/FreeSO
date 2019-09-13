@@ -216,10 +216,10 @@ namespace FSO.Client.UI.Panels.Upgrades
 
                 
                 Price = Content.Content.Get().Upgrades.GetUpgradePrice(filename, guid, Level) ?? Entity.MultitileGroup.InitialPrice;
+                var item = Content.Content.Get().WorldCatalog.GetItemByGUID(guid);
 
                 if (Level == 0)
                 {
-                    var item = Content.Content.Get().WorldCatalog.GetItemByGUID(guid);
                     if (item != null)
                         Price = (int)item.Value.Price;
                     else

@@ -47,7 +47,7 @@ namespace FSO.IDE.ResourceBrowser
         {
             ActiveObj = obj;
             ActiveRes = obj.Resource;
-            ActiveUpgrades = Content.Content.Get().Upgrades.GetFile(ActiveRes.MainIff.Filename);
+            ActiveUpgrades = Content.Content.Get().Upgrades?.GetFile(ActiveRes.MainIff.Filename);
             IffSpecificBox.Text = ActiveRes.MainIff.Filename;
 
             Render();
@@ -55,7 +55,7 @@ namespace FSO.IDE.ResourceBrowser
 
         public void Render()
         {
-            if (Content.Content.Get().Upgrades.Editable)
+            if (Content.Content.Get().Upgrades?.Editable == true)
             {
                 if (ActiveUpgrades == null)
                 {

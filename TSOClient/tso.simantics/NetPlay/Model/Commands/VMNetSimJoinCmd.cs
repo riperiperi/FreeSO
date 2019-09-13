@@ -139,6 +139,15 @@ namespace FSO.SimAntics.NetPlay.Model.Commands
 
             vm.SignalChatEvent(new VMChatEvent(avatar, VMChatEventType.Join, avatar.Name));
 
+            var oow = vm.Context.ObjectQueries.GetObjectsAt(LotTilePos.OUT_OF_WORLD);
+            if (oow != null)
+            {
+                foreach (var obj in oow)
+                {
+                    obj.ExecuteNamedEntryPoint("CT - FSO Player Joined", vm.Context, true, obj, new short[] { avatar.ObjectID, 0, 0, 0 });
+                }
+            }
+
             return true;
         }
 

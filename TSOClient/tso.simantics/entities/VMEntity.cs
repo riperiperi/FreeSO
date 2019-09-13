@@ -140,10 +140,11 @@ namespace FSO.SimAntics
                     if (Container is VMAvatar) return true;
                     return Container.MovesOften;
                 }
-                if (Slots == null) return false;
-                if (!Slots.Slots.ContainsKey(3)) return false;
-                var slots = Slots.Slots[3];
-                if (slots.Count > 20) return true;
+                if (Slots != null && Slots.Slots.ContainsKey(3))
+                {
+                    var slots = Slots.Slots[3];
+                    if (slots.Count > 20) return true;
+                }
                 return MovedSelf;
             }
         }
@@ -551,26 +552,11 @@ namespace FSO.SimAntics
             return ExecuteEntryPoint(entry, context, runImmediately, stackOBJ, null);
         }
 
-        public bool ExecuteEntryPoint(int entry, VMContext context, bool runImmediately, VMEntity stackOBJ, short[] args)
+        public bool ExecuteGenericEntryPoint(OBJfFunctionEntry entry, VMContext context, bool runImmediately, VMEntity stackOBJ, short[] args)
         {
-            if (args == null) args = new short[4];
-            if (entry == 11)
+            if (entry.ActionFunction > 255)
             {
-                //user placement, hack to do auto floor removal/placement for stairs
-                if (Object.OBJ.LevelOffset > 0 && Position != LotTilePos.OUT_OF_WORLD)
-                {
-                    var floor = context.Architecture.GetFloor(Position.TileX, Position.TileY, Position.Level);
-                    var placeFlags = (VMPlacementFlags)ObjectData[(int)VMStackObjectVariable.PlacementFlags];
-                    if ((placeFlags & VMPlacementFlags.InAir) > 0)
-                        context.Architecture.SetFloor(Position.TileX, Position.TileY, Position.Level, new FloorTile(), true);
-                    if ((placeFlags & VMPlacementFlags.OnFloor) > 0 && (floor.Pattern == 0))
-                        context.Architecture.SetFloor(Position.TileX, Position.TileY, Position.Level, new FloorTile { Pattern = 1 } , true);
-                }
-            }
-
-            bool result = false;
-            if (entry < EntryPoints.Length && EntryPoints[entry].ActionFunction > 255)
-            {
+                bool result = false;
                 VMSandboxRestoreState SandboxState = null;
                 if (GhostImage && runImmediately)
                 {
@@ -582,7 +568,7 @@ namespace FSO.SimAntics
                     }
                 }
 
-                ushort ActionID = EntryPoints[entry].ActionFunction;
+                ushort ActionID = entry.ActionFunction;
                 var tree = GetRoutineWithOwner(ActionID, context);
 
                 if (tree != null)
@@ -615,10 +601,49 @@ namespace FSO.SimAntics
                     context.VM.SandboxRestore(SandboxState);
                 }
                 return result;
+            }
+            else
+            {
+                return false;
+            }
+        }
+
+        public bool ExecuteEntryPoint(int entry, VMContext context, bool runImmediately, VMEntity stackOBJ, short[] args)
+        {
+            if (args == null) args = new short[4];
+            if (entry == 11)
+            {
+                //user placement, hack to do auto floor removal/placement for stairs
+                if (Object.OBJ.LevelOffset > 0 && Position != LotTilePos.OUT_OF_WORLD)
+                {
+                    var floor = context.Architecture.GetFloor(Position.TileX, Position.TileY, Position.Level);
+                    var placeFlags = (VMPlacementFlags)ObjectData[(int)VMStackObjectVariable.PlacementFlags];
+                    if ((placeFlags & VMPlacementFlags.InAir) > 0)
+                        context.Architecture.SetFloor(Position.TileX, Position.TileY, Position.Level, new FloorTile(), true);
+                    if ((placeFlags & VMPlacementFlags.OnFloor) > 0 && (floor.Pattern == 0))
+                        context.Architecture.SetFloor(Position.TileX, Position.TileY, Position.Level, new FloorTile { Pattern = 1 } , true);
+                }
+            }
+
+            bool result = false;
+            if (entry < EntryPoints.Length)
+            {
+                return ExecuteGenericEntryPoint(EntryPoints[entry], context, runImmediately, stackOBJ, args);
             } else
             {
                 return false;
             }
+        }
+
+        public bool ExecuteNamedEntryPoint(string name, VMContext context, bool runImmediately, VMEntity stackOBJ, short[] args)
+        {
+            VMTreeByNameTableEntry tree;
+            if (TreeByName.TryGetValue(name, out tree))
+            {
+                var routine = (VMRoutine)tree.bhav;
+                return ExecuteGenericEntryPoint(new OBJfFunctionEntry() { ActionFunction = routine.ID }, context, runImmediately, stackOBJ, args);
+            }
+            return false;
         }
 
         public VMBHAVOwnerPair GetRoutineWithOwner(ushort ActionID, VMContext context)

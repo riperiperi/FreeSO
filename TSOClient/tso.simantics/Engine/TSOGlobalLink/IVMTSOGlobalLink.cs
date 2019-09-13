@@ -27,6 +27,7 @@ namespace FSO.SimAntics.Engine.TSOTransaction
         void ForceInInventory(VM vm, uint objectPID, VMAsyncInventorySaveCallback callback);
         void UpdateObjectPersist(VM vm, VMMultitileGroup obj, VMAsyncInventorySaveCallback callback);
         void PurchaseFromOwner(VM vm, VMMultitileGroup obj, uint purchaserPID, VMAsyncInventorySaveCallback callback, VMAsyncTransactionCallback tcallback);
+        void RetrieveFromInventoryByType(VM vm, uint ownerPID, uint guid, int index, bool setOnLot, VMAsyncInventoryRetrieveCallback callback);
         void RetrieveFromInventory(VM vm, uint objectPID, uint ownerPID, bool setOnLot, VMAsyncInventoryRetrieveCallback callback);
         void ConsumeInventory(VM vm, uint ownerPID, uint guid, int mode, short num, VMAsyncInventoryConsumeCallback callback);
         void DeleteObject(VM vm, uint objectPID, VMAsyncDeleteObjectCallback callback);
