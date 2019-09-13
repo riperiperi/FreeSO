@@ -861,6 +861,7 @@
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </Content>
     <Content Include="Content\UI\uitext\english.dir\_f121_bulletinprotocolstrings.cst">
+    </Content>
     <Content Include="Content\UI\uitext\english.dir\_f124_bandtwostrings.cst">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </Content>
