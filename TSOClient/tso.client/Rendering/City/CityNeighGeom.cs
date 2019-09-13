@@ -476,7 +476,6 @@ namespace FSO.Client.Rendering.City
                 if (City.HandleMouse)
                 {
                     HoverNHood = NhoodNearest(pos);
-                    Console.WriteLine(HoverNHood);
                     if (HoverNHood > -1 && !HoverPct.ContainsKey(HoverNHood))
                         HoverPct.Add(HoverNHood, 0f);
                 } else

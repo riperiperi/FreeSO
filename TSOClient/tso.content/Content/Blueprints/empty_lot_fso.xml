@@ -1294,5 +1294,6 @@
     <object guid="0x865A6812" level="1" x="33" y="58" dir="2" group="0" />
     <object guid="0xD564C66B" level="1" x="28" y="58" dir="2" group="0" />
     <object guid="0x70F69082" level="0" x="-2048" y="-2048" dir="-2147483648" group="0" />
+    <object guid="0x699704D3" level="0" x="-2048" y="-2048" dir="0" group="0" />
   </objects>
 </house>

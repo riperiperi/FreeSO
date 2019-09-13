@@ -29,7 +29,7 @@ namespace FSO.Client.UI.Framework
         private bool DoRedraw = true;
 
         public MouseState mouse;
-        public bool HasFocus;
+        public bool HasFocus = true;
         public bool HasUpdated;
         public int NeedFrames = 5;
 

@@ -23,7 +23,12 @@ namespace FSO.SimAntics.NetPlay.Model.Commands
             state.ChatColor = Col;
             return true;
         }
-        
+
+        public override bool Verify(VM vm, VMAvatar caller)
+        {
+            return caller != null;
+        }
+
         public override void Deserialize(BinaryReader reader)
         {
             base.Deserialize(reader);

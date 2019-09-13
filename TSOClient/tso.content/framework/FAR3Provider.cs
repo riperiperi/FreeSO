@@ -25,7 +25,7 @@ namespace FSO.Content.Framework
     {
         protected Content ContentManager;
         protected Dictionary<ulong, Far3ProviderEntry<T>> EntriesById;
-        protected Dictionary<string, Far3ProviderEntry<T>> EntriesByName;
+        public Dictionary<string, Far3ProviderEntry<T>> EntriesByName;
 
         protected IContentCodec<T> Codec;
         protected TimedReferenceCache<ulong, T> Cache;

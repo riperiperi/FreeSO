@@ -90,13 +90,14 @@ namespace FSO.SimAntics.Marshals.Threads
             LastStackExitCode = (VMPrimitiveExitCode)reader.ReadByte();
 
             if (reader.ReadBoolean()) BlockingState = VMAsyncState.DeserializeGeneric(reader, Version);
+            else BlockingState = null;
             if (Version > 2 && reader.ReadBoolean())
             {
                 EODConnection = new VMEODPluginThreadState();
                 EODConnection.Version = Version;
                 EODConnection.Deserialize(reader);
             }
-            else BlockingState = null;
+            
             Interrupt = reader.ReadBoolean();
 
             ActionUID = reader.ReadUInt16();

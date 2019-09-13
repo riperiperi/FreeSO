@@ -300,6 +300,7 @@ namespace FSO.IDE.ResourceBrowser
             else
                 chunk.ChunkParent = ActiveIff.MainIff;
             chunk.ChunkProcessed = true;
+            chunk.ChunkType = IffFile.CHUNK_TYPES.FirstOrDefault(x => x.Value == type).Key ?? "";
             var dialog = new IffNameDialog(chunk, true);
             dialog.ShowDialog();
             /*chunk.ChunkLabel = "New Chunk";
