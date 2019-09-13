@@ -532,8 +532,22 @@ namespace FSO.Client.UI.Screens
                 vm.TSOState.PropertyCategory = 255; //11 is community
                 vm.TSOState.ActivateValidator(vm);
                 vm.Context.Clock.Hours = 0;
-                vm.TSOState.Size = (10) | (3 << 8);
+                vm.TSOState.Size &= unchecked((int)0xFFFF0000);
+                vm.TSOState.Size |= (10) | (3 << 8);
                 vm.Context.UpdateTSOBuildableArea();
+
+                if (vm.GetGlobalValue(11) > -1)
+                {
+                    for (int y = 0; y < 3; y++)
+                    {
+                        for (int x = 0; x < 3; x++)
+                        {
+                            vm.TSOState.Terrain.Roads[x, y] = 0xF; //crossroads everywhere
+                        }
+                    }
+                    VMLotTerrainRestoreTools.RestoreTerrain(vm);
+                }
+
                 var myClient = new VMNetClient
                 {
                     PersistID = myState.PersistID,
@@ -579,9 +593,18 @@ namespace FSO.Client.UI.Screens
                 var isIff = path.EndsWith(".iff");
                 short jobLevel = -1;
 
-                try { 
+                try {
                     if (isIff) jobLevel = short.Parse(path.Substring(path.Length - 6, 2));
-                    else jobLevel = short.Parse(path.Substring(path.IndexOf('0'), 2));
+                    else
+                    {
+                        jobLevel = short.Parse(path.Substring(path.IndexOf('0'), 2));
+                        if (jobLevel != -1)
+                        {
+                            floorClip = new Rectangle(8, 8, 56 - 8, 56 - 8);
+                            offset = new Point(7, 14);
+                            targetSize = 77;
+                        }
+                    }
                 }
                 catch { }
 

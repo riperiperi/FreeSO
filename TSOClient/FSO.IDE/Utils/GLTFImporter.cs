@@ -1,5 +1,6 @@
 ﻿using SharpGLTF.Scenes;
 using SharpGLTF.Schema2;
+using SharpGLTF.Transforms;
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -11,28 +12,32 @@ namespace FSO.IDE.Utils
 {
     public class GLTFImporter
     {
-        private Quaternion RotateQ = Quaternion.Inverse(Quaternion.CreateFromAxisAngle(new Vector3(1, 0, 0), (float)Math.PI / -2f));
+        private Quaternion RotateQ = Quaternion.Inverse(GLTFExporter.RotateQ);
         private Matrix4x4 RotateM;
-        private Microsoft.Xna.Framework.Matrix RotateMX = Microsoft.Xna.Framework.Matrix.Invert(Microsoft.Xna.Framework.Matrix.CreateFromAxisAngle(new Microsoft.Xna.Framework.Vector3(0, 0, 1), (float)Math.PI / 2f));
+        private Microsoft.Xna.Framework.Matrix RotateMX = Microsoft.Xna.Framework.Matrix.Invert(GLTFExporter.RotateMX);
+
+        public List<FSO.Vitaboy.Animation> Animations;
+        public List<FSO.Vitaboy.Mesh> Meshes;
+        public FSO.Vitaboy.Skeleton Skeleton;
+        //todo: textures
 
         public GLTFImporter()
         {
-            Matrix4x4.Invert(Matrix4x4.CreateFromAxisAngle(new Vector3(1, 0, 0), (float)Math.PI / -2f), out RotateM);
+            Matrix4x4.Invert(GLTFExporter.RotateM, out RotateM);
         }
 
 
         //the reverse of the functions in GLTFExporter
         private Microsoft.Xna.Framework.Quaternion QuatConvert(Quaternion quat)
         {
-            return new Microsoft.Xna.Framework.Quaternion(quat.Y, -quat.Z, -quat.X, quat.W);
-            //return new Quaternion(-quat.Z, quat.X, -quat.Y, quat.W);
-
+            return new Microsoft.Xna.Framework.Quaternion(-quat.Y, quat.Z, -quat.X, quat.W);
+            //return new Microsoft.Xna.Framework.Quaternion(quat.Y, -quat.Z, -quat.X, quat.W);
         }
 
         private Microsoft.Xna.Framework.Vector3 Vec3Convert(Vector3 vec)
         {
-            return new Microsoft.Xna.Framework.Vector3(-vec.Y, vec.Z, vec.X);
-            //return new Vector3(vec.Z, -vec.X, vec.Y);
+            return new Microsoft.Xna.Framework.Vector3(-vec.Y, vec.Z, -vec.X) / GLTFExporter.MeshScale;
+            //return new Microsoft.Xna.Framework.Vector3(-vec.Y, vec.Z, vec.X);
         }
 
         private float RecursiveScale(Node elem)
@@ -49,10 +54,11 @@ namespace FSO.IDE.Utils
             else return name;
         }
 
-        public List<FSO.Vitaboy.Animation> Animations;
-        public List<FSO.Vitaboy.Mesh> Meshes;
-        public FSO.Vitaboy.Skeleton Skeleton;
-        //todo: textures
+        private List<ParsedTimeProp> GetTimeProps(Dictionary<string, object> props, string animName)
+        {
+            return props.Select(x => ParsedTimeProp.Parse(x.Key, Convert.ToSingle(x.Value)))
+                .Where(x => x != null && (x.AnimName == animName || x.AnimName == "timeprop")).ToList();
+        }
 
         public void Process(string filename)
         {
@@ -64,6 +70,7 @@ namespace FSO.IDE.Utils
             float invFPS = 1f / fps;
 
             var nodes = root.LogicalNodes;
+            var sceneExtras = root.TryUseExtrasAsDictionary(false);
 
             foreach (var animation in root.LogicalAnimations)
             {
@@ -80,6 +87,21 @@ namespace FSO.IDE.Utils
                 vitaAnim.NumFrames = (int)frameDuration;
                 vitaAnim.UpdateFPS();
                 var motions = new List<Vitaboy.AnimationMotion>();
+
+                //find the first node above the root bone
+                var transform = AffineTransform.Identity;
+                var worldMat = Matrix4x4.Identity;
+                var animNode = nodes.FirstOrDefault(x => animation.FindRotationSampler(x) != null || animation.FindTranslationSampler(x) != null);
+                while (animNode != null && animNode.Name != "ROOT")
+                {
+                    animNode = animNode.VisualParent;
+                }
+                if (animNode != null) animNode = animNode.VisualParent;
+                if (animNode != null)
+                {
+                    worldMat = animNode.WorldMatrix;
+                    transform = AffineTransform.WorldToLocal(Matrix4x4.Identity, worldMat);
+                }
 
                 //check all nodes in the skeleton for matching samplers (rotation, translation).
                 //if a sampler exists, add it to the animation
@@ -100,7 +122,39 @@ namespace FSO.IDE.Utils
                         motion.FrameCount = frameDuration;
                         motion.Duration = animation.Duration;
                         motion.Properties = new Vitaboy.PropertyList[0];
-                        motion.TimeProperties = new Vitaboy.TimePropertyList[0]; //todo
+                       
+                        if (sceneExtras != null) //node.Extras != null)
+                        {
+                            //timeprops for this node
+                            var timeprops = GetTimeProps(sceneExtras, vitaAnim.Name);
+                            var list = new Vitaboy.TimePropertyList();
+
+                            var propDict = new Dictionary<int, Vitaboy.TimePropertyListItem>();
+                            foreach (var tp in timeprops)
+                            {
+                                Vitaboy.TimePropertyListItem item;
+                                if (!propDict.TryGetValue(tp.ID, out item))
+                                {
+                                    item = new Vitaboy.TimePropertyListItem();
+                                    item.ID = tp.ID;
+                                    item.Properties = new Vitaboy.PropertyList();
+                                    item.Properties.Items = new Vitaboy.PropertyListItem[0];
+                                    propDict[tp.ID] = item;
+                                }
+
+                                Array.Resize(ref item.Properties.Items, item.Properties.Items.Length + 1);
+
+                                var entry = new Vitaboy.PropertyListItem();
+                                item.Properties.Items[item.Properties.Items.Length - 1] = entry;
+                                entry.KeyPairs.Add(new KeyValuePair<string, string>(tp.Event, tp.Value));
+                            }
+                            list.Items = propDict.Values.ToArray();
+                            motion.TimeProperties = new Vitaboy.TimePropertyList[] { list };
+                        }
+                        else
+                        {
+                            motion.TimeProperties = new Vitaboy.TimePropertyList[0];
+                        }
                         
                         if (motion.HasRotation)
                         {
@@ -109,7 +163,7 @@ namespace FSO.IDE.Utils
                             for (int i=0; i<frameDuration; i++)
                             {
                                 var baseQuat = rotSampler.GetPoint(i * invFPS);
-                                if (isroot) baseQuat = RotateQ * baseQuat;
+                                if (isroot) baseQuat = RotateQ * transform.Rotation * baseQuat;
                                 vitaRot.Add(QuatConvert(baseQuat));
                             }
                         }
@@ -124,7 +178,10 @@ namespace FSO.IDE.Utils
                             for (int i = 0; i < frameDuration; i++)
                             {
                                 var baseTrans = transSampler.GetPoint(i * invFPS);
-                                if (isroot) baseTrans = Vector3.Transform(baseTrans, RotateM);
+                                if (isroot)
+                                {
+                                    baseTrans = Vector3.Transform(baseTrans, worldMat * RotateM);
+                                }
                                 baseTrans *= recursiveScale;
                                 vitaTrans.Add(Vec3Convert(baseTrans));
                             }
@@ -144,6 +201,42 @@ namespace FSO.IDE.Utils
 
                 vitaAnim.IsMoving = (byte)((motions.Count > 0) ? 1 : 0);
             }
+        }
+    }
+
+    public class ParsedTimeProp
+    {
+        public string AnimName;
+        public int ID;
+        public string Event;
+        public string Value;
+
+        public static ParsedTimeProp Parse(string key, float value)
+        {
+            var split = key.Split('/');
+            if (split.Length != 3) return null;
+            var result = new ParsedTimeProp();
+            result.AnimName = split[0];
+            if (!int.TryParse(split[1], out result.ID)) return null;
+
+            var keySplit = split[2].Split('=');
+            if (keySplit.Length == 1)
+            {
+                //just a key, use number value
+                result.Event = split[2];
+                result.Value = ((short)value).ToString();
+            }
+            else if (keySplit.Length == 2)
+            {
+                //key value, ignore number
+                result.Event = keySplit[0];
+                result.Value = keySplit[1];
+            }
+            else
+            {
+                return null; //invalid
+            }
+            return result;
         }
     }
 }

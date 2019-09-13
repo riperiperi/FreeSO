@@ -149,6 +149,60 @@ namespace FSO.Vitaboy
             return bone;
         }
 
+        public void Write(BCFWriteProxy io, bool bcf)
+        {
+            if (!bcf)
+            {
+                io.WriteUInt32(1); //version
+            }
+            io.WritePascalString(Name);
+
+            io.WriteInt16((short)Bones.Length);
+
+            foreach (var bone in Bones)
+            {
+                WriteBone(bone, io, bcf);
+            }
+        }
+
+        private void WriteBone(Bone bone, BCFWriteProxy io, bool bcf)
+        {
+            if (!bcf) io.WriteInt32(bone.Unknown);
+            io.WritePascalString(bone.Name);
+            io.WritePascalString(bone.ParentName);
+            if (!bcf) io.WriteByte(1); //has props
+
+            io.WriteInt32(bone.Properties.Count);
+
+            foreach (var property in bone.Properties)
+            {
+                io.WriteInt32(property.KeyPairs.Count);
+                foreach (var pair in property.KeyPairs)
+                {
+                    io.WritePascalString(pair.Key);
+                    io.WritePascalString(pair.Value);
+                }
+            }
+
+            io.SetGrouping(3);
+            io.WriteFloat(-bone.Translation.X);
+            io.WriteFloat(bone.Translation.Y);
+            io.WriteFloat(bone.Translation.Z);
+
+            io.SetGrouping(4);
+            io.WriteFloat(bone.Rotation.X);
+            io.WriteFloat(-bone.Rotation.Y);
+            io.WriteFloat(-bone.Rotation.Z);
+            io.WriteFloat(-bone.Rotation.W);
+
+            io.SetGrouping(1);
+            io.WriteInt32(bone.CanTranslate);
+            io.WriteInt32(bone.CanRotate);
+            io.WriteInt32(bone.CanBlend);
+            io.WriteFloat(bone.WiggleValue);
+            io.WriteFloat(bone.WigglePower);
+        }
+
         /// <summary>
         /// Computes the absolute position for all the bones in this skeleton.
         /// </summary>

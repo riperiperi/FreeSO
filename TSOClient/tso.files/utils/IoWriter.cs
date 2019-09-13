@@ -17,10 +17,11 @@ namespace FSO.Files.Utils
     /// <summary>
     /// IOBuffer is a very basic wrapper over System.BinaryReader that inherits from IDisposable.
     /// </summary>
-    public class IoWriter : IDisposable
+    public class IoWriter : IDisposable, BCFWriteProxy
     {
         private Stream Stream;
         private BinaryWriter Writer;
+        private bool FloatSwap = false;
         public ByteOrder ByteOrder = ByteOrder.BIG_ENDIAN;
 
         /// <summary>
@@ -220,7 +221,7 @@ namespace FSO.Files.Utils
         {
             var bytes = BitConverter.GetBytes(value);
 
-            if (ByteOrder == ByteOrder.BIG_ENDIAN)
+            if (ByteOrder == ByteOrder.BIG_ENDIAN && FloatSwap)
             {
                 Array.Reverse(bytes);
             }
@@ -278,6 +279,15 @@ namespace FSO.Files.Utils
         public static IoWriter FromBytes(byte[] bytes, ByteOrder order)
         {
             return FromStream(new MemoryStream(bytes), order);
+        }
+        
+        /// <summary>
+        /// Used by BCFWriteProxy's string mode, but does not do anything here.
+        /// </summary>
+        /// <param name="groupSize">The size of value groups</param>
+        public void SetGrouping(int groupSize)
+        {
+
         }
     }
 }

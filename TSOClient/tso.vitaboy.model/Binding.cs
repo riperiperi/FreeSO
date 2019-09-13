@@ -27,6 +27,9 @@ namespace FSO.Vitaboy
         public string MeshName; //bmd
         public string TextureName;
 
+        public int CensorFlagBits;
+        public int Zero;
+
         public uint TextureGroupID;
         public uint TextureFileID;
         public uint TextureTypeID;

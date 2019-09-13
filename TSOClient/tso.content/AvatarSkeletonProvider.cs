@@ -18,10 +18,11 @@ namespace FSO.Content
     /// <summary>
     /// Provides access to skeleton (*.skel) data in FAR3 archives.
     /// </summary>
-    public class AvatarSkeletonProvider : FAR3Provider<Skeleton>
+    public class AvatarSkeletonProvider : TSOAvatarContentProvider<Skeleton>
     {
-        public AvatarSkeletonProvider(Content contentManager)
-            : base(contentManager, new SkeletonCodec(), new Regex(".*/skeletons/.*\\.dat"))
+        public AvatarSkeletonProvider(Content contentManager) : base(contentManager, new SkeletonCodec(),
+            new Regex(".*/skeletons/.*\\.dat"),
+            new Regex("Avatar/Skeletons/.*\\.skel"))
         {
         }
     }

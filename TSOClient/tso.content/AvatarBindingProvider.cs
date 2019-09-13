@@ -18,10 +18,11 @@ namespace FSO.Content
     /// <summary>
     /// Provides access to binding (*.bnd) data in FAR3 archives.
     /// </summary>
-    public class AvatarBindingProvider : FAR3Provider<Binding>
+    public class AvatarBindingProvider : TSOAvatarContentProvider<Binding>
     {
-        public AvatarBindingProvider(Content contentManager)
-            : base(contentManager, new BindingCodec(), new Regex(".*/bindings/.*\\.dat"))
+        public AvatarBindingProvider(Content contentManager) : base(contentManager, new BindingCodec(),
+            new Regex(".*/bindings/.*\\.dat"),
+            new Regex("Avatar/Bindings/.*\\.bnd"))
         {
         }
     }

@@ -51,6 +51,17 @@ namespace FSO.Content.Framework
             EntriesByName[name] = obj;
             EntriesByID[id] = obj;
         }
+
+        public void Remove(string name)
+        {
+            T obj;
+            if (EntriesByName.TryGetValue(name, out obj))
+            {
+                var id = EntriesByID.FirstOrDefault(x => x.Value.Equals(obj)).Key;
+                EntriesByID.Remove(id);
+            }
+            EntriesByName.Remove(name);
+        }
     }
 
     public class RuntimeReference<T> : IContentReference<T>

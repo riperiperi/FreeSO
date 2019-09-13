@@ -188,6 +188,12 @@
     <Compile Include="ContentEditors\AOTGenerator.Designer.cs">
       <DependentUpon>AOTGenerator.cs</DependentUpon>
     </Compile>
+    <Compile Include="ContentEditors\AvatarTool.cs">
+      <SubType>Form</SubType>
+    </Compile>
+    <Compile Include="ContentEditors\AvatarTool.Designer.cs">
+      <DependentUpon>AvatarTool.cs</DependentUpon>
+    </Compile>
     <Compile Include="ContentEditors\TSODataDefinitionEditor.cs">
       <SubType>Form</SubType>
     </Compile>
@@ -533,6 +539,9 @@
     </EmbeddedResource>
     <EmbeddedResource Include="ContentEditors\AOTGenerator.resx">
       <DependentUpon>AOTGenerator.cs</DependentUpon>
+    </EmbeddedResource>
+    <EmbeddedResource Include="ContentEditors\AvatarTool.resx">
+      <DependentUpon>AvatarTool.cs</DependentUpon>
     </EmbeddedResource>
     <EmbeddedResource Include="ContentEditors\TSODataDefinitionEditor.resx">
       <DependentUpon>TSODataDefinitionEditor.cs</DependentUpon>
