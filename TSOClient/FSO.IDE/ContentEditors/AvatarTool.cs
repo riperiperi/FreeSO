@@ -32,6 +32,8 @@ namespace FSO.IDE.ContentEditors
 
         private Outfit SelectedOutfit;
         private List<AvatarToolAnimation> SceneAnimations = new List<AvatarToolAnimation>();
+        private List<AvatarToolRuntimeMesh> SceneMeshes = new List<AvatarToolRuntimeMesh>();
+        private List<AvatarToolRuntimeMesh> BoundRuntimeMeshes = new List<AvatarToolRuntimeMesh>();
         private bool ImportMode;
 
         public AvatarTool()
@@ -42,6 +44,14 @@ namespace FSO.IDE.ContentEditors
             RefreshAnimList();
             RefreshOutfitList();
             RefreshAccessoryList();
+
+            TestAllMesh();
+        }
+
+        private void TestAllMesh()
+        {
+            var meshes = Content.Content.Get().AvatarMeshes.List();
+            var real = meshes.Select(x => x.Get()).ToList();
         }
         
         private string SearchString(string str)
@@ -74,7 +84,7 @@ namespace FSO.IDE.ContentEditors
 
             ImportMeshButton.Enabled = import;
             ImportSkeletonButton.Enabled = import;
-            MeshList.Enabled = import;
+            MeshImportBox.Enabled = import;
             ExportGLTFButton.Enabled = !import;
             AnimationAdd.Enabled = !import;
             /*
@@ -96,6 +106,8 @@ namespace FSO.IDE.ContentEditors
 
         public void ClearScene()
         {
+            UnbindRuntimeMesh();
+
             foreach (var anim in SceneAnimations)
             {
                 if (anim.Runtime)
@@ -110,7 +122,32 @@ namespace FSO.IDE.ContentEditors
                 }
             }
             SceneAnimations.Clear();
+
+            foreach (var mesh in SceneMeshes)
+            {
+                if (mesh.IsOutfit)
+                {
+                    var outfits = Content.Content.Get().AvatarOutfits;
+                    var tso = outfits as Content.Framework.TSOAvatarContentProvider<Outfit>;
+                    if (tso != null)
+                    {
+                        tso.Runtime.Remove(mesh.Name + ".oft");
+                    }
+                }
+                else
+                {
+                    var appearances = Content.Content.Get().AvatarAppearances;
+                    var tso = appearances as Content.Framework.TSOAvatarContentProvider<Vitaboy.Appearance>;
+                    if (tso != null)
+                    {
+                        tso.Runtime.Remove(mesh.Name + ".apr");
+                    }
+                }
+            }
+            SceneMeshes.Clear();
+
             AnimationImportBox.Items.Clear();
+            MeshImportBox.Items.Clear();
         }
 
         public void AddList(ListBox list, List<string> items, Regex search)
@@ -126,6 +163,15 @@ namespace FSO.IDE.ContentEditors
                     if (search.IsMatch(name)) list.Items.Add(name); //keys are names
                 }
             }
+        }
+
+        public void UnbindRuntimeMesh()
+        {
+            foreach (var mesh in BoundRuntimeMeshes)
+            {
+                Animator.RemoveAccessory(mesh.Name);
+            }
+            BoundRuntimeMeshes.Clear();
         }
 
         public void RefreshSkeletonCombo()
@@ -187,6 +233,15 @@ namespace FSO.IDE.ContentEditors
             foreach (var anim in SceneAnimations)
             {
                 AnimationImportBox.Items.Add(anim);
+            }
+        }
+
+        public void RefreshSceneMeshes()
+        {
+            MeshImportBox.Items.Clear();
+            foreach (var mesh in SceneMeshes)
+            {
+                MeshImportBox.Items.Add(mesh);
             }
         }
 
@@ -331,6 +386,7 @@ namespace FSO.IDE.ContentEditors
                 var ava = (VMAvatar)interactive.TargetOBJ.BaseObject;
 
                 var exp = new GLTFExporter();
+                ava.Avatar.ReloadSkeleton();
                 var scn = exp.SceneGroup(ava.Avatar.Bindings.Select(x => x.Mesh).ToList(),
                     SceneAnimations.Select(x => x.Anim).ToList(),
                     ava.Avatar.Bindings.Select(x => x.Texture?.Get(GameFacade.GraphicsDevice)).ToList(),
@@ -368,8 +424,16 @@ namespace FSO.IDE.ContentEditors
                 SceneAnimations.Add(new AvatarToolAnimation(anim, anim.Name + "-runtime"));
             }
 
+            var generator = new AppearanceGenerator();
+            foreach (var mesh in importer.Meshes)
+            {
+                generator.GenerateAppearanceTSO(new List<ImportMeshGroup>() { mesh }, mesh.Name + "-runtime", true);
+                SceneMeshes.Add(new AvatarToolRuntimeMesh(false, mesh.Name + "-runtime", mesh));
+            }
+
             SetImportMode(true, Path.GetFileName(dialog.FileName));
             RefreshSceneAnims();
+            RefreshSceneMeshes();
         }
 
         private void AnimationImportBox_ItemCheck(object sender, ItemCheckEventArgs e)
@@ -386,9 +450,15 @@ namespace FSO.IDE.ContentEditors
             }
         }
 
-        private void listBox1_SelectedIndexChanged(object sender, EventArgs e)
+        private void MeshImportBox_SelectedIndexChanged(object sender, EventArgs e)
         {
-
+            UnbindRuntimeMesh();
+            var items = MeshImportBox.SelectedItems.Cast<AvatarToolRuntimeMesh>();
+            foreach (var item in items)
+            {
+                Animator.AddAccessory(item.Name);
+                BoundRuntimeMeshes.Add(item);
+            }
         }
 
         private void ImportAnimButton_Click(object sender, EventArgs e)
@@ -419,7 +489,7 @@ namespace FSO.IDE.ContentEditors
                         using (var writer = IoWriter.FromStream(mem, ByteOrder.BIG_ENDIAN))
                         {
                             anim.Anim.Write(writer, false);
-                            provider.CreateFile(anim.ToString() + ".anim", anim.Anim, mem.ToArray());
+                            provider.CreateFile(anim.ToString() + ".anim", anim.Anim, mem.ToArray(), false);
                         }
                     }
                     
@@ -450,6 +520,11 @@ namespace FSO.IDE.ContentEditors
         {
 
         }
+
+        private void AvatarTool_FormClosing(object sender, FormClosingEventArgs e)
+        {
+            ClearScene();
+        }
     }
 
     class AvatarToolAnimation
@@ -474,6 +549,24 @@ namespace FSO.IDE.ContentEditors
         public override string ToString()
         {
             return Anim.Name ?? Anim.XSkillName ?? "a2o-unnamed";
+        }
+    }
+
+    class AvatarToolRuntimeMesh
+    {
+        public bool IsOutfit;
+        public string Name; //appearance or outfit name for the runtime instance
+        public ImportMeshGroup Mesh;
+
+        public AvatarToolRuntimeMesh(bool isOutfit, string name, ImportMeshGroup mesh) {
+            IsOutfit = isOutfit;
+            Name = name;
+            Mesh = mesh;
+        }
+
+        public override string ToString()
+        {
+            return Mesh.Name;
         }
     }
 }

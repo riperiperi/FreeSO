@@ -28,7 +28,7 @@ namespace FSO.Content.Framework
 
         public T Get(uint type, uint fileID)
         {
-            var id = ((ulong)type << 32) | fileID;
+            var id = ((ulong)fileID << 32) | type;
             T entry;
             if (EntriesByID.TryGetValue(id, out entry)) return entry;
             return default(T);

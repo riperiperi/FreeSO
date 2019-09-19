@@ -109,6 +109,23 @@ namespace FSO.Vitaboy
                 }
             }
         }
+
+        public void Write(Stream stream)
+        {
+            using (var io = IoWriter.FromStream(stream))
+            {
+                io.WriteUInt32(1);
+                io.WriteUInt32(ThumbnailFileID);
+                io.WriteUInt32(ThumbnailTypeID);
+
+                io.WriteUInt32((uint)Bindings.Length);
+                foreach (var binding in Bindings)
+                {
+                    io.WriteUInt32(binding.FileID);
+                    io.WriteUInt32(binding.TypeID);
+                }
+            }
+        }
     }
 
     /// <summary>

@@ -63,12 +63,29 @@ namespace FSO.Vitaboy
                 }
 
                 var textureType = io.ReadUInt32();
-                if(textureType == 8)
+                if (textureType == 8)
                 {
                     this.TextureGroupID = io.ReadUInt32();
                     this.TextureFileID = io.ReadUInt32();
                     this.TextureTypeID = io.ReadUInt32();
                 }
+            }
+        }
+
+        public void Write(Stream stream)
+        {
+            using (var io = IoWriter.FromStream(stream))
+            {
+                io.WriteUInt32(1);
+                io.WritePascalString(Bone);
+                io.WriteUInt32(8);
+                io.WriteUInt32(MeshGroupID);
+                io.WriteUInt32(MeshFileID);
+                io.WriteUInt32(MeshTypeID);
+                io.WriteUInt32(8);
+                io.WriteUInt32(TextureGroupID);
+                io.WriteUInt32(TextureFileID);
+                io.WriteUInt32(TextureTypeID);
             }
         }
     }

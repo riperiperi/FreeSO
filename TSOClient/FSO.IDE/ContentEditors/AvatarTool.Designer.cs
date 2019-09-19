@@ -32,7 +32,7 @@
             this.Animator = new FSO.IDE.Common.AvatarAnimatorControl();
             this.AnimationImportBox = new System.Windows.Forms.CheckedListBox();
             this.ImportAnimButton = new System.Windows.Forms.Button();
-            this.MeshList = new System.Windows.Forms.ListBox();
+            this.MeshImportBox = new System.Windows.Forms.ListBox();
             this.ImportGLTFButton = new System.Windows.Forms.Button();
             this.NewSceneButton = new System.Windows.Forms.Button();
             this.ImportMeshButton = new System.Windows.Forms.Button();
@@ -97,15 +97,16 @@
             this.ImportAnimButton.UseVisualStyleBackColor = true;
             this.ImportAnimButton.Click += new System.EventHandler(this.ImportAnimButton_Click);
             // 
-            // MeshList
+            // MeshImportBox
             // 
-            this.MeshList.Anchor = ((System.Windows.Forms.AnchorStyles)((System.Windows.Forms.AnchorStyles.Bottom | System.Windows.Forms.AnchorStyles.Right)));
-            this.MeshList.FormattingEnabled = true;
-            this.MeshList.Location = new System.Drawing.Point(460, 280);
-            this.MeshList.Name = "MeshList";
-            this.MeshList.Size = new System.Drawing.Size(198, 95);
-            this.MeshList.TabIndex = 3;
-            this.MeshList.SelectedIndexChanged += new System.EventHandler(this.listBox1_SelectedIndexChanged);
+            this.MeshImportBox.Anchor = ((System.Windows.Forms.AnchorStyles)((System.Windows.Forms.AnchorStyles.Bottom | System.Windows.Forms.AnchorStyles.Right)));
+            this.MeshImportBox.FormattingEnabled = true;
+            this.MeshImportBox.Location = new System.Drawing.Point(460, 280);
+            this.MeshImportBox.Name = "MeshImportBox";
+            this.MeshImportBox.SelectionMode = System.Windows.Forms.SelectionMode.MultiSimple;
+            this.MeshImportBox.Size = new System.Drawing.Size(198, 95);
+            this.MeshImportBox.TabIndex = 3;
+            this.MeshImportBox.SelectedIndexChanged += new System.EventHandler(this.MeshImportBox_SelectedIndexChanged);
             // 
             // ImportGLTFButton
             // 
@@ -137,7 +138,7 @@
             this.ImportMeshButton.Name = "ImportMeshButton";
             this.ImportMeshButton.Size = new System.Drawing.Size(198, 23);
             this.ImportMeshButton.TabIndex = 6;
-            this.ImportMeshButton.Text = "Import Selected Mesh";
+            this.ImportMeshButton.Text = "Import Selected Meshes...";
             this.ImportMeshButton.UseVisualStyleBackColor = true;
             this.ImportMeshButton.Click += new System.EventHandler(this.ImportMeshButton_Click);
             // 
@@ -391,7 +392,7 @@
             this.Controls.Add(this.ImportMeshButton);
             this.Controls.Add(this.NewSceneButton);
             this.Controls.Add(this.ImportGLTFButton);
-            this.Controls.Add(this.MeshList);
+            this.Controls.Add(this.MeshImportBox);
             this.Controls.Add(this.ImportAnimButton);
             this.Controls.Add(this.AnimationImportBox);
             this.Controls.Add(this.Animator);
@@ -399,6 +400,7 @@
             this.MinimumSize = new System.Drawing.Size(686, 489);
             this.Name = "AvatarTool";
             this.Text = "Avatar Tool";
+            this.FormClosing += new System.Windows.Forms.FormClosingEventHandler(this.AvatarTool_FormClosing);
             this.BrowserTabs.ResumeLayout(false);
             this.AnimationsPage.ResumeLayout(false);
             this.AnimationsPage.PerformLayout();
@@ -416,7 +418,7 @@
         private Common.AvatarAnimatorControl Animator;
         private System.Windows.Forms.CheckedListBox AnimationImportBox;
         private System.Windows.Forms.Button ImportAnimButton;
-        private System.Windows.Forms.ListBox MeshList;
+        private System.Windows.Forms.ListBox MeshImportBox;
         private System.Windows.Forms.Button ImportGLTFButton;
         private System.Windows.Forms.Button NewSceneButton;
         private System.Windows.Forms.Button ImportMeshButton;

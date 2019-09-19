@@ -22,17 +22,19 @@ namespace FSO.Vitaboy.Model
         public Vector3 BvPosition; //blend vert
         public Vector3 Parameters;
         public Vector3 Normal;
+        public Vector3 BvNormal;
 
-        public VitaboyVertex(Vector3 position, Vector2 textureCoords, Vector3 bvPosition, Vector3 parameters, Vector3 normal)
+        public VitaboyVertex(Vector3 position, Vector2 textureCoords, Vector3 bvPosition, Vector3 parameters, Vector3 normal, Vector3 bvNormal)
         {
             this.Position = position;
             this.TextureCoordinate = textureCoords;
             this.BvPosition = bvPosition;
             this.Parameters = parameters;
             this.Normal = normal;
+            this.BvNormal = bvNormal;
         }
 
-        public static int SizeInBytes = sizeof(float) * 14;
+        public static int SizeInBytes = sizeof(float) * 17;
 
         public static VertexDeclaration VertexElements = new VertexDeclaration
         (
@@ -40,7 +42,8 @@ namespace FSO.Vitaboy.Model
              new VertexElement(sizeof(float) * 3, VertexElementFormat.Vector2, VertexElementUsage.TextureCoordinate, 0),
              new VertexElement(sizeof(float) * 5, VertexElementFormat.Vector3, VertexElementUsage.TextureCoordinate, 1),
              new VertexElement(sizeof(float) * 8, VertexElementFormat.Vector3, VertexElementUsage.TextureCoordinate, 2),
-             new VertexElement( sizeof(float) * 11, VertexElementFormat.Vector3, VertexElementUsage.Normal, 0 )
+             new VertexElement(sizeof(float) * 11, VertexElementFormat.Vector3, VertexElementUsage.Normal, 0),
+             new VertexElement(sizeof(float) * 14, VertexElementFormat.Vector3, VertexElementUsage.TextureCoordinate, 3)
         );
 
         VertexDeclaration IVertexType.VertexDeclaration

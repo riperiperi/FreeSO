@@ -17,7 +17,7 @@ namespace FSO.IDE.Utils
         private Microsoft.Xna.Framework.Matrix RotateMX = Microsoft.Xna.Framework.Matrix.Invert(GLTFExporter.RotateMX);
 
         public List<FSO.Vitaboy.Animation> Animations;
-        public List<FSO.Vitaboy.Mesh> Meshes;
+        public List<ImportMeshGroup> Meshes;
         public FSO.Vitaboy.Skeleton Skeleton;
         //todo: textures
 
@@ -60,14 +60,276 @@ namespace FSO.IDE.Utils
                 .Where(x => x != null && (x.AnimName == animName || x.AnimName == "timeprop")).ToList();
         }
 
+        public Vitaboy.Bone NodeToBone(Node bone, Matrix4x4 worldMat)
+        {
+            AffineTransform worldTransform = AffineTransform.WorldToLocal(Matrix4x4.Identity, worldMat);
+            var vbone = new Vitaboy.Bone();
+            vbone.Name = bone.Name;
+            var isroot = bone.Name == "ROOT";
+            if (bone.VisualParent == null || isroot)
+            {
+                vbone.ParentName = "NULL";
+            }
+            else
+            {
+                vbone.ParentName = bone.VisualParent.Name;
+            }
+            vbone.HasProps = false;
+            vbone.Properties = new List<Vitaboy.PropertyListItem>();
+            vbone.CanBlend = 1;
+            vbone.CanRotate = 1;
+            vbone.CanTranslate = 1;
+            var recursiveScale = RecursiveScale(bone.VisualParent);
+
+            var transform = bone.LocalTransform;
+            var baseQuat = transform.Rotation;
+            if (isroot) baseQuat = RotateQ * baseQuat; //worldTransform.Rotation * baseQuat;
+            vbone.Rotation = QuatConvert(baseQuat);
+
+            var baseTrans = transform.Translation;
+            if (isroot)
+            {
+                baseTrans = Vector3.Transform(baseTrans, RotateM); //worldMat * RotateM);
+            }
+            baseTrans *= recursiveScale;
+            vbone.Translation = Vec3Convert(baseTrans);
+            return vbone;
+        }
+
+        private bool IsChildOf(Node child, Node parent)
+        {
+            return child != null && (child.VisualParent == parent || IsChildOf(child.VisualParent, parent));
+        }
+
         public void Process(string filename)
         {
             var root = ModelRoot.Load(filename);
             Animations = new List<Vitaboy.Animation>();
-            Meshes = new List<Vitaboy.Mesh>();
+            Meshes = new List<ImportMeshGroup>();
 
             int fps = 36;
             float invFPS = 1f / fps;
+
+            //var rootNode = root.LogicalNodes.FirstOrDefault(node => node.Name == "ROOT");
+            var skin = root.LogicalSkins.FirstOrDefault();
+            if (skin != null)
+            {
+                Skeleton = new Vitaboy.Skeleton();
+                Skeleton.Name = "custom";
+
+                var orderedNodes = Enumerable.Range(0, skin.JointsCount).Select(i => skin.GetJoint(i).Item1).ToList();
+                var rootNode = orderedNodes.FirstOrDefault(x => x.Name == "ROOT");
+
+                var worldMat = Matrix4x4.Identity;
+                //find the first node above the root bone
+                var animNode = rootNode.VisualParent;
+                if (animNode != null)
+                {
+                    worldMat = animNode.WorldMatrix;
+                }
+
+                if (rootNode != null)
+                {
+                    //var orderedNodes = root.LogicalNodes.Where(x => x == rootNode || IsChildOf(x, rootNode));
+                    var bones = new List<Vitaboy.Bone>();
+                    var boneI = 0;
+                    foreach (var node in orderedNodes)
+                    {
+                        var bone = NodeToBone(node, worldMat);
+                        bone.Index = boneI++;
+                        bones.Add(bone);
+                    }
+                    Skeleton.RootBone = bones.FirstOrDefault(x => x.ParentName == "NULL");
+                    foreach (var bone in bones)
+                    {
+                        bone.Children = bones.Where(x => x.ParentName == bone.Name).ToArray();
+                    }
+                    Skeleton.Bones = bones.ToArray();
+                    Skeleton.ComputeBonePositions(Skeleton.RootBone, Microsoft.Xna.Framework.Matrix.Identity);
+                }
+            }
+
+            var models = root.LogicalMeshes;
+            foreach (var model in models)
+            {
+                foreach (var prim in model.Primitives)
+                {
+                    var mat = prim.Material;
+                    if (mat == null) continue; // must have a material
+
+                    var mesh = new Vitaboy.Mesh();
+                    mesh.SkinName = mat.Name;
+
+                    var tris = prim.GetTriangleIndices();
+                    var indices = new List<int>();
+                    foreach (var tri in tris)
+                    {
+                        indices.Add(tri.Item3);
+                        indices.Add(tri.Item2);
+                        indices.Add(tri.Item1);
+                    }
+                    var indBuffer = indices.ToArray();
+
+                    var positions = prim.VertexAccessors["POSITION"].AsVector3Array();
+                    var uvs = prim.VertexAccessors["TEXCOORD_0"].AsVector2Array();
+                    var normals = prim.VertexAccessors["NORMAL"].AsVector3Array();
+                    var joints = prim.VertexAccessors["JOINTS_0"].AsVector4Array();
+                    var weights = prim.VertexAccessors["WEIGHTS_0"].AsVector4Array();
+
+                    //we actually need to remap vertices.
+
+                    var verts = new List<MeshVert>();
+
+                    for (int i = 0; i < positions.Count; i++)
+                    {
+                        var pos = positions[i];
+                        var uv = uvs[i];
+                        var normal = normals[i];
+                        var joint = joints[i];
+                        var weight = weights[i];
+
+                        verts.Add(new MeshVert(i, pos, uv, normal, joint, weight));
+                    }
+
+                    // order by bone bindings, as bones and blend verts are bound using regions
+                    // sorts by blend bone first, then real bone. Result looks like:
+                    // (bone 0, no blend), (bone 1, blend 2), (bone 1, blend 3), (bone 2, no blend), ... 
+                    verts = verts.OrderBy(x => x.Joints.X).ToList(); //(x => (x.Weights.Y == 0) ? -1 : x.Joints.Y).ThenBy
+
+                    // remap indices to point where the vertices are after sorting
+                    for (int i = 0; i < indBuffer.Length; i++)
+                    {
+                        indBuffer[i] = verts.FindIndex(vert => vert.SourceIndex == indBuffer[i]);
+                    }
+
+                    mesh.IndexBuffer = indBuffer;
+                    mesh.NumPrimitives = indBuffer.Length / 3;
+                    mesh.VertexBuffer = verts.Select(vert => {
+                        var pos = Vec3Convert(vert.Position);
+                        var normal = Vec3Convert(vert.Normal);
+                        // position is already transformed. we need to invert the bind bone transform to get back to origin
+                        // (do not scale)
+
+                        //find main bone
+                        var mainInd = (int)vert.Joints.X;
+                        var main = (mainInd < 0 || mainInd >= Skeleton.Bones.Length) ? null : Skeleton.Bones[mainInd];
+
+                        //find blend bone
+                        var blendInd = (int)vert.Joints.Y;
+                        var blend = (vert.Weights.Y == 0 || blendInd < 0 || blendInd >= Skeleton.Bones.Length) ? null : Skeleton.Bones[blendInd];
+
+                        var bpos = pos;
+                        var bnorm = normal;
+
+                        if (main != null)
+                        {
+                            var bonemat = RotateMX * Microsoft.Xna.Framework.Matrix.Invert(main.AbsoluteMatrix);
+                            pos = Microsoft.Xna.Framework.Vector3.Transform(pos, bonemat);
+                            normal = Microsoft.Xna.Framework.Vector3.TransformNormal(normal, bonemat);
+                        }
+
+                        if (blend != null)
+                        {
+                            var bonemat = RotateMX * Microsoft.Xna.Framework.Matrix.Invert(blend.AbsoluteMatrix);
+                            bpos = Microsoft.Xna.Framework.Vector3.Transform(bpos, bonemat);
+                            bnorm = Microsoft.Xna.Framework.Vector3.TransformNormal(bnorm, bonemat);
+                        } else
+                        {
+                            bpos = pos;
+                            bnorm = normal;
+                        }
+
+                        // only two weights are supported (one "real" and one "blend", so we will have to remove the smallest
+                        // assume XYZW is sorted highest to lowest weight
+                        var weight = vert.Weights;
+                        var multiplier = (weight.X + weight.Y + weight.Z + weight.W) / (weight.X + weight.Y);
+
+                        return new Vitaboy.Model.VitaboyVertex(
+                            pos,
+                            new Microsoft.Xna.Framework.Vector2(vert.UV.X, vert.UV.Y),
+                            bpos,
+                            new Microsoft.Xna.Framework.Vector3(vert.Joints.X, vert.Joints.Y, weight.Y * multiplier), //bone ind, blend ind, intensity
+                            normal,
+                            bnorm
+                            );
+                    }).ToArray();
+
+                    //create bindings
+                    var bindings = new List<Vitaboy.BoneBinding>();
+                    var blendData = new List<Vitaboy.BlendData>();
+                    var blendVerts = new List<Microsoft.Xna.Framework.Vector3>();
+                    var blendNormals = new List<Microsoft.Xna.Framework.Vector3>();
+                    Vitaboy.BoneBinding current = null;
+                    var vertI = 0;
+                    var vcount = 0;
+
+                    //real verts first
+                    foreach (var vert in mesh.VertexBuffer)
+                    {
+                        if (current == null || current.BoneIndex != (int)vert.Parameters.X)
+                        {
+                            if (current != null)
+                            {
+                                current.RealVertexCount = vcount;
+                                current.BlendVertexCount = 0;
+                            }
+                            current = new Vitaboy.BoneBinding();
+                            bindings.Add(current);
+                            current.FirstRealVertex = vertI;
+                            current.FirstBlendVertex = -1;
+                            current.BoneIndex = (int)vert.Parameters.X;
+                            current.BoneName = (current.BoneIndex < 0 || current.BoneIndex >= Skeleton.Bones.Length) ? "NULL" : Skeleton.Bones[current.BoneIndex].Name;
+                            vcount = 0;
+                        }
+                        vcount++;
+                        vertI++;
+                    }
+                    if (current != null)
+                    {
+                        current.RealVertexCount = vcount;
+                        current.BlendVertexCount = 0;
+                    }
+
+                    // blend verts
+                    // for each bone, find the verts blend affects
+                    // then add them to the blend verts list, and update the binding
+                    // O(n*m) but this is an import so whatever!
+                    foreach (var binding in bindings)
+                    {
+                        var id = binding.BoneIndex;
+                        var startBlend = blendVerts.Count;
+                        var blends = mesh.VertexBuffer.Where(x => (int)x.Parameters.Y == id && x.Parameters.Z > 0).ToList();
+
+                        vertI = 0;
+                        foreach (var vert in mesh.VertexBuffer)
+                        {
+                            if ((int)vert.Parameters.Y == id && vert.Parameters.Z > 0)
+                            {
+                                blendData.Add(new Vitaboy.BlendData() { OtherVertex = vertI, Weight = vert.Parameters.Z });
+                                blendVerts.Add(vert.BvPosition);
+                                blendNormals.Add(vert.BvNormal);
+                            }
+                            vertI++;
+                        }
+                        if (blendVerts.Count != startBlend)
+                        {
+                            binding.FirstBlendVertex = startBlend;
+                            binding.BlendVertexCount = blendVerts.Count - startBlend;
+                        }
+                    }
+
+                    mesh.BlendData = blendData.ToArray();
+                    mesh.BlendVerts = blendVerts.ToArray();
+                    mesh.BlendNormals = blendNormals.ToArray();
+                    mesh.BoneBindings = bindings.ToArray();
+                    mesh.BlendVertBoneIndices = new int[mesh.BlendData.Length];
+
+                    var tex = mat.FindChannel("BaseColor");
+                    var texData = tex?.Texture?.PrimaryImage?.GetImageContent();
+
+                    Meshes.Add(new ImportMeshGroup() { Name = mat.Name, Mesh = mesh, TextureData = texData });
+                }
+            }
 
             var nodes = root.LogicalNodes;
             var sceneExtras = root.TryUseExtrasAsDictionary(false);
@@ -201,6 +463,26 @@ namespace FSO.IDE.Utils
 
                 vitaAnim.IsMoving = (byte)((motions.Count > 0) ? 1 : 0);
             }
+        }
+    }
+
+    public class MeshVert
+    {
+        public int SourceIndex;
+        public Vector3 Position;
+        public Vector2 UV;
+        public Vector3 Normal;
+        public Vector4 Joints;
+        public Vector4 Weights;
+
+        public MeshVert(int ind, Vector3 pos, Vector2 uv, Vector3 normal, Vector4 joints, Vector4 weights)
+        {
+            SourceIndex = ind;
+            Position = pos;
+            UV = uv;
+            Normal = normal;
+            Joints = joints;
+            Weights = weights;
         }
     }
 

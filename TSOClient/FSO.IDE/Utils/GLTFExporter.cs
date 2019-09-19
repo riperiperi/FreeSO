@@ -188,14 +188,18 @@ namespace FSO.IDE.Utils
                 }
             }
 
-            var outMesh = new MeshBuilder<VertexPositionNormal, VertexTexture1, VertexJoints8x4>("sim");
+            var resultMeshes = new List<MeshBuilder<VertexPositionNormal, VertexTexture1, VertexJoints8x4>>();
+
+            var orderedBones = skel.Bones.Select(x => nodes[x]).ToArray();
+            var world = Matrix4x4.Identity; //Matrix4x4.CreateFromAxisAngle(new Vector3(0, 1, 0), (float)Math.PI / 2f);
+            var outMesh = new MeshBuilder<VertexPositionNormal, VertexTexture1, VertexJoints8x4>("Avatar");
 
             var meshi = 0;
             foreach (var mesh in meshes) {
                 var tex = textures[meshi++];
                 var data = TextureToPng(tex);
 
-                var material = new MaterialBuilder(mesh.SkinName);
+                var material = new MaterialBuilder(mesh.SkinName ?? ("mesh_" + meshi));
                 material.UseChannel(KnownChannels.BaseColor).UseTexture().WithPrimaryImage(new ArraySegment<byte>(data));
                 var prim = outMesh.UsePrimitive(material, 3);
 
@@ -216,7 +220,9 @@ namespace FSO.IDE.Utils
                             Vector3.Lerp(Vec3Convert(Microsoft.Xna.Framework.Vector3.Transform(vert.Position, mat)),
                                 Vec3Convert(Microsoft.Xna.Framework.Vector3.Transform(vert.BvPosition, bmat)),
                                 vert.Parameters.Z),
-                            Vec3Convert(Microsoft.Xna.Framework.Vector3.TransformNormal(vert.Normal, mat))
+                            Vector3.Lerp(Vec3Convert(Microsoft.Xna.Framework.Vector3.TransformNormal(vert.Normal, mat)),
+                                Vec3Convert(Microsoft.Xna.Framework.Vector3.TransformNormal(vert.BvNormal, bmat)),
+                                vert.Parameters.Z)
                             ),
                          new VertexTexture1(texc),
                          new VertexJoints8x4(new SharpGLTF.Transforms.SparseWeight8(new Vector4(boneInd, blendInd, 0, 0), new Vector4(1-vert.Parameters.Z, vert.Parameters.Z, 0, 0)))
@@ -231,13 +237,10 @@ namespace FSO.IDE.Utils
                         previous.Add(nvert);
                     }
                 }
+                
             }
-
-            var orderedBones = skel.Bones.Select(x => nodes[x]);
-
-            var world = Matrix4x4.Identity; //Matrix4x4.CreateFromAxisAngle(new Vector3(0, 1, 0), (float)Math.PI / 2f);
-            var test = builder.AddSkinnedMesh(outMesh, world, orderedBones.ToArray());
-
+            var skin = builder.AddSkinnedMesh(outMesh, world, orderedBones);
+            skin.Name = "Skeleton";
             var schema = builder.ToSchema2();
 
             /*

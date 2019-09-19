@@ -34,6 +34,7 @@ namespace FSO.Content.Framework
             FAR = new FAR3Provider<T>(contentManager, codec, farRegex);
             Files = new FileProvider<T>(contentManager, codec, fileRegex);
             Files.UseContent = true;
+            Files.FAR3IDs = true;
             Runtime = new RuntimeProvider<T>();
 
             var fileFolder = fileRegex.ToString();
@@ -51,16 +52,46 @@ namespace FSO.Content.Framework
             });
         }
 
-        public void CreateFile(string name, T obj, byte[] data)
+        private ulong GenerateId()
         {
-            Runtime.Add(name, 0, obj);
-            //write the file
-            var folder = Path.Combine(FileFolder, "User/");
-            Directory.CreateDirectory(folder);
-            using (var file = File.Open(Path.Combine(folder, name), FileMode.Create, FileAccess.ReadWrite, FileShare.None))
+            // firstly, find the typeid that files in this FAR typically use
+            var type = FAR.EstimateTypeId();
+            var random = new Random(FAR.EntriesByName.Count);
+
+            var tryD = (uint)random.Next();
+            tryD |= (uint)random.Next(2) << 31;
+
+            while (Get(type, tryD) != null)
             {
-                file.Write(data, 0, data.Length);
+                tryD = (uint)random.Next();
+                tryD |= (uint)random.Next(2) << 31;
             }
+
+            return (ulong)type | ((ulong)tryD << 32);
+        }
+
+        public ulong CreateFile(string name, T obj, byte[] data, bool runtime)
+        {
+            var id = GenerateId();
+            Runtime.Add(name, id, obj);
+
+            if (!runtime)
+            {
+                //splice in the id to the filename
+                var strID = id.ToString("x16");
+                var split = name.Split('.').ToList();
+                split.Insert(Math.Max(1, split.Count - 1), strID);
+                name = string.Join(".", split);
+
+                //write the file
+                var folder = Path.Combine(FileFolder, "User/");
+                Directory.CreateDirectory(folder);
+                using (var file = File.Open(Path.Combine(folder, name), FileMode.Create, FileAccess.ReadWrite, FileShare.None))
+                {
+                    file.Write(data, 0, data.Length);
+                }
+            }
+            return id;
         }
 
         public string GetNameByID(ulong ID)

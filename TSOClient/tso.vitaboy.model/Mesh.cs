@@ -26,12 +26,12 @@ namespace FSO.Vitaboy
         /** 3D Data **/
         public VitaboyVertex[] VertexBuffer;
         
-        private int[] BlendVertBoneIndices;
+        public int[] BlendVertBoneIndices;
         public Vector3[] BlendVerts;
         public Vector3[] BlendNormals;
 
-        public short[] IndexBuffer;
-        protected int NumPrimitives;
+        public int[] IndexBuffer;
+        public int NumPrimitives;
         public BoneBinding[] BoneBindings;
         public BlendData[] BlendData;
 
@@ -79,8 +79,9 @@ namespace FSO.Vitaboy
         //to be changed to support binds to multiple SKEL bases.
         {
             if (Prepared) return;
-            var binding = BoneBindings.FirstOrDefault(x => x.BoneName.Equals(bone.Name, StringComparison.InvariantCultureIgnoreCase));
-            if (binding != null)
+            var bindings = BoneBindings.Where(x => x.BoneName.Equals(bone.Name, StringComparison.InvariantCultureIgnoreCase));
+            if (bindings.Count(x => x.RealVertexCount == 0) > 1) { }
+            foreach (var binding in bindings)
             {
                 for (var i = 0; i < binding.RealVertexCount; i++)
                 {
@@ -92,7 +93,6 @@ namespace FSO.Vitaboy
                 {
                     var blendVertexIndex = binding.FirstBlendVertex + i;
                     BlendVertBoneIndices[blendVertexIndex] = bone.Index;
-
                 }
             }
 
@@ -111,6 +111,7 @@ namespace FSO.Vitaboy
                     VertexBuffer[data.OtherVertex].Parameters.Y = BlendVertBoneIndices[i];
                     VertexBuffer[data.OtherVertex].Parameters.Z = data.Weight;
                     VertexBuffer[data.OtherVertex].BvPosition = BlendVerts[i];
+                    VertexBuffer[data.OtherVertex].BvNormal = BlendNormals[i];
                 }
 
                 InvalidateMesh();
@@ -124,7 +125,7 @@ namespace FSO.Vitaboy
             GPUVertexBuffer = new DynamicVertexBuffer(device, typeof(VitaboyVertex), VertexBuffer.Length, BufferUsage.None);
             GPUVertexBuffer.SetData(VertexBuffer);
             
-            GPUIndexBuffer = new IndexBuffer(device, IndexElementSize.SixteenBits, IndexBuffer.Length, BufferUsage.None);
+            GPUIndexBuffer = new IndexBuffer(device, IndexElementSize.ThirtyTwoBits, IndexBuffer.Length, BufferUsage.None);
             GPUIndexBuffer.SetData(IndexBuffer);
         }
 
@@ -144,6 +145,7 @@ namespace FSO.Vitaboy
                 gd.SetVertexBuffer(GPUVertexBuffer);
                 gd.DrawIndexedPrimitives(PrimitiveType.TriangleList, 0, 0, VertexBuffer.Length, 0, NumPrimitives);
             }else{
+                //legacy path, shouldn't get here
                 gd.DrawUserIndexedPrimitives(PrimitiveType.TriangleList, VertexBuffer, 0, VertexBuffer.Length, IndexBuffer, 0, NumPrimitives);
             }
         }
@@ -186,13 +188,13 @@ namespace FSO.Vitaboy
             var faceCount = io.ReadInt32();
             NumPrimitives = faceCount;
 
-            IndexBuffer = new short[faceCount * 3];
+            IndexBuffer = new int[faceCount * 3];
             int offset = 0;
             for (var i = 0; i < faceCount; i++)
             {
-                IndexBuffer[offset++] = (short)io.ReadInt32();
-                IndexBuffer[offset++] = (short)io.ReadInt32();
-                IndexBuffer[offset++] = (short)io.ReadInt32();
+                IndexBuffer[offset++] = io.ReadInt32();
+                IndexBuffer[offset++] = io.ReadInt32();
+                IndexBuffer[offset++] = io.ReadInt32();
             }
 
             /** Bone bindings **/

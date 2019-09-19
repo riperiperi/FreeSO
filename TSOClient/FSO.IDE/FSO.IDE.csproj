@@ -141,6 +141,12 @@
     <Compile Include="AboutWindow.Designer.cs">
       <DependentUpon>AboutWindow.cs</DependentUpon>
     </Compile>
+    <Compile Include="AvatarUtils\AddAppearanceWindow.cs">
+      <SubType>Form</SubType>
+    </Compile>
+    <Compile Include="AvatarUtils\AddAppearanceWindow.Designer.cs">
+      <DependentUpon>AddAppearanceWindow.cs</DependentUpon>
+    </Compile>
     <Compile Include="Common\Debug\UI3DDGRP.cs" />
     <Compile Include="Common\ExternalWorld.cs" />
     <Compile Include="Common\AvatarAnimatorControl.cs">
@@ -525,11 +531,16 @@
     <Compile Include="ResourceBrowser\SelectTreeDialog.Designer.cs">
       <DependentUpon>SelectTreeDialog.cs</DependentUpon>
     </Compile>
+    <Compile Include="Utils\AppearanceGenerator.cs" />
     <Compile Include="Utils\FormsUtils.cs" />
     <Compile Include="Utils\GLTFExporter.cs" />
     <Compile Include="Utils\GLTFImporter.cs" />
+    <Compile Include="Utils\ImportMeshGroup.cs" />
     <EmbeddedResource Include="AboutWindow.resx">
       <DependentUpon>AboutWindow.cs</DependentUpon>
+    </EmbeddedResource>
+    <EmbeddedResource Include="AvatarUtils\AddAppearanceWindow.resx">
+      <DependentUpon>AddAppearanceWindow.cs</DependentUpon>
     </EmbeddedResource>
     <EmbeddedResource Include="Common\NewIffDialog.resx">
       <DependentUpon>NewIffDialog.cs</DependentUpon>
