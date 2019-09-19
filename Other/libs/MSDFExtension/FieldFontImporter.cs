@@ -18,7 +18,7 @@ namespace MSDFExtension
         private static FontDescription Parse(string filename)
         {            
             var parser = new FileIniDataParser();
-            var data = parser.ReadFile(filename);
+            var data = parser.ReadFile(filename, System.Text.Encoding.UTF8);
 
             var fontSection = data.Sections["font"];
             var path = fontSection["path"];

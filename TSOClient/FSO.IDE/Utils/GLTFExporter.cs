@@ -200,7 +200,7 @@ namespace FSO.IDE.Utils
                 var data = TextureToPng(tex);
 
                 var material = new MaterialBuilder(mesh.SkinName ?? ("mesh_" + meshi));
-                material.UseChannel(KnownChannels.BaseColor).UseTexture().WithPrimaryImage(new ArraySegment<byte>(data));
+                var mtex = material.UseChannel(KnownChannels.BaseColor).UseTexture().WithPrimaryImage(new ArraySegment<byte>(data));
                 var prim = outMesh.UsePrimitive(material, 3);
 
                 //todo: blend verts
