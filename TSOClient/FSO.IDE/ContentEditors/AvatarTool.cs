@@ -103,6 +103,14 @@ namespace FSO.IDE.ContentEditors
         public void ClearScene()
         {
             UnbindRuntimeMesh();
+            
+            //wait for the animator to clear
+            for (int i = 0; i < 2; i++)
+            {
+                Content.Content.Get().Changes.BlockingResMod(new ResAction(() =>
+                {
+                }));
+            }
 
             foreach (var anim in SceneAnimations)
             {
@@ -426,6 +434,7 @@ namespace FSO.IDE.ContentEditors
 
             // add to runtime
             ClearScene();
+
             var animC = Content.Content.Get().AvatarAnimations as AvatarAnimationProvider;
             foreach (var anim in anims)
             {

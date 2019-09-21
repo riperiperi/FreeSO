@@ -378,8 +378,10 @@ namespace FSO.IDE.Utils
                 //if a sampler exists, add it to the animation
                 foreach (var node in nodes) {
                     var recursiveScale = RecursiveScale(node.VisualParent);
-                    var rotSampler = animation.FindRotationSampler(node)?.CreateCurveSampler();
-                    var transSampler = animation.FindTranslationSampler(node)?.CreateCurveSampler();
+                    var rotS = animation.FindRotationSampler(node);
+                    var transS = animation.FindTranslationSampler(node);
+                    var rotSampler = rotS?.CreateCurveSampler();
+                    var transSampler = transS?.CreateCurveSampler();
                     var isroot = node.Name == "ROOT";
 
                     if (rotSampler != null || transSampler != null)
@@ -430,10 +432,15 @@ namespace FSO.IDE.Utils
                         if (motion.HasRotation)
                         {
                             motion.FirstRotationIndex = (uint)vitaRot.Count;
+                            float rotDuration;
+                            if (rotS.InterpolationMode == AnimationInterpolationMode.CUBICSPLINE)
+                                rotDuration = rotS.GetCubicKeys().LastOrDefault().Item1;
+                            else
+                                rotDuration = rotS.GetLinearKeys().LastOrDefault().Item1;
 
                             for (int i=0; i<frameDuration; i++)
                             {
-                                var baseQuat = rotSampler.GetPoint(i * invFPS);
+                                var baseQuat = rotSampler.GetPoint(Math.Min(rotDuration, i * invFPS));
                                 if (isroot) baseQuat = RotateQ * transform.Rotation * baseQuat;
                                 vitaRot.Add(QuatConvert(baseQuat));
                             }
@@ -446,9 +453,14 @@ namespace FSO.IDE.Utils
                         if (motion.HasTranslation)
                         {
                             motion.FirstTranslationIndex = (uint)vitaTrans.Count;
+                            float transDuration;
+                            if (transS.InterpolationMode == AnimationInterpolationMode.CUBICSPLINE)
+                                transDuration = transS.GetCubicKeys().LastOrDefault().Item1;
+                            else
+                                transDuration = transS.GetLinearKeys().LastOrDefault().Item1;
                             for (int i = 0; i < frameDuration; i++)
                             {
-                                var baseTrans = transSampler.GetPoint(i * invFPS);
+                                var baseTrans = transSampler.GetPoint(Math.Min(transDuration, i * invFPS));
                                 if (isroot)
                                 {
                                     baseTrans = Vector3.Transform(baseTrans, worldMat * RotateM);

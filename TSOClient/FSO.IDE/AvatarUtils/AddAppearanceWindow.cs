@@ -54,7 +54,9 @@ namespace FSO.IDE.AvatarUtils
                 if (end) break;
             }
 
-            return baseName.Substring(0, i).TrimEnd('-', '_', ' ');
+            var guess = baseName.Substring(0, i).TrimEnd('-', '_', ' ');
+            if (guess.Length == 0) return "mesh";
+            return guess;
         }
 
         private void EvaluateImportPossibilities()
@@ -86,6 +88,11 @@ namespace FSO.IDE.AvatarUtils
             Close();
         }
 
+        private void UpdateSummary()
+        {
+            SummaryText.Text = NameEntry.Text + ".apr\r\n" + String.Join("\r\n", Meshes.Select(x => "  " + x.Name));
+        }
+
         private void SetMode(AddAppearanceImportMode mode)
         {
             InternalChange = true;
@@ -97,6 +104,8 @@ namespace FSO.IDE.AvatarUtils
 
             HandgroupLabel.Visible = mode == AddAppearanceImportMode.Outfit;
             HandgroupCombo.Visible = mode == AddAppearanceImportMode.Outfit;
+
+            UpdateSummary();
 
             InternalChange = false;
         }
@@ -119,6 +128,11 @@ namespace FSO.IDE.AvatarUtils
         private void HeadRadio_CheckedChanged(object sender, EventArgs e)
         {
             if (!InternalChange) SetMode(AddAppearanceImportMode.Head);
+        }
+
+        private void NameEntry_TextChanged(object sender, EventArgs e)
+        {
+            UpdateSummary();
         }
     }
 

@@ -66,6 +66,7 @@
             this.NameEntry.Name = "NameEntry";
             this.NameEntry.Size = new System.Drawing.Size(213, 20);
             this.NameEntry.TabIndex = 2;
+            this.NameEntry.TextChanged += new System.EventHandler(this.NameEntry_TextChanged);
             // 
             // AppearanceRadio
             // 
