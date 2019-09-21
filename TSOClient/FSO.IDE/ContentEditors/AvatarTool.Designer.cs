@@ -334,6 +334,7 @@
             this.SkeletonCombo.Size = new System.Drawing.Size(62, 21);
             this.SkeletonCombo.TabIndex = 12;
             this.SkeletonCombo.Text = "adult";
+            this.SkeletonCombo.SelectedIndexChanged += new System.EventHandler(this.SkeletonCombo_SelectedIndexChanged);
             // 
             // AllAnimsCheck
             // 

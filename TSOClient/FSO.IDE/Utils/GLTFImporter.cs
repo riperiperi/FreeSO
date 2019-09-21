@@ -83,13 +83,13 @@ namespace FSO.IDE.Utils
 
             var transform = bone.LocalTransform;
             var baseQuat = transform.Rotation;
-            if (isroot) baseQuat = RotateQ * baseQuat; //worldTransform.Rotation * baseQuat;
+            if (isroot) baseQuat = RotateQ * worldTransform.Rotation * baseQuat; //worldTransform.Rotation * baseQuat;
             vbone.Rotation = QuatConvert(baseQuat);
 
             var baseTrans = transform.Translation;
             if (isroot)
             {
-                baseTrans = Vector3.Transform(baseTrans, RotateM); //worldMat * RotateM);
+                baseTrans = Vector3.Transform(baseTrans, worldMat * RotateM); //worldMat * RotateM);
             }
             baseTrans *= recursiveScale;
             vbone.Translation = Vec3Convert(baseTrans);
@@ -116,8 +116,17 @@ namespace FSO.IDE.Utils
             {
                 Skeleton = new Vitaboy.Skeleton();
                 Skeleton.Name = "custom";
+                var invBind = skin.GetInverseBindMatricesAccessor().AsMatrix4x4Array();
 
-                var orderedNodes = Enumerable.Range(0, skin.JointsCount).Select(i => skin.GetJoint(i).Item1).ToList();
+                var orderedNodes = Enumerable.Range(0, skin.JointsCount).Select(i => {
+                    var node = skin.GetJoint(i).Item1;
+                    Matrix4x4 mat;
+                    if (Matrix4x4.Invert(invBind[i], out mat))
+                    {
+                        node.WorldMatrix = mat;
+                    }
+                    return node;
+                    }).ToList();
                 var rootNode = orderedNodes.FirstOrDefault(x => x.Name == "ROOT");
 
                 var worldMat = Matrix4x4.Identity;
@@ -345,7 +354,7 @@ namespace FSO.IDE.Utils
                 vitaAnim.Duration = animation.Duration;
                 vitaAnim.XSkillName = vitaAnim.Name;
 
-                uint frameDuration = (uint)Math.Ceiling(animation.Duration * fps);
+                uint frameDuration = (uint)Math.Max(1, Math.Ceiling(animation.Duration * fps));
                 vitaAnim.NumFrames = (int)frameDuration;
                 vitaAnim.UpdateFPS();
                 var motions = new List<Vitaboy.AnimationMotion>();

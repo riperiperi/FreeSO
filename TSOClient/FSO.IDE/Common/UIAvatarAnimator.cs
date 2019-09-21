@@ -47,21 +47,21 @@ namespace FSO.IDE.Common
                                 switch (anim[0])
                                 {
                                     case 'a':
-                                        ava.Avatar.Skeleton = skels.Get("adult.skel");
+                                        ava.Avatar.Skeleton = skels.Get("adult.skel").Clone();
                                         ava.Avatar.Head = FSO.Content.Content.Get().AvatarOutfits.Get(0x000003a00000000D);
                                         ava.Avatar.Body = ofts.Get("mab002_slob.oft");
                                         ava.Avatar.Handgroup = ava.Avatar.Body;
                                         break;
                                     case 'c':
-                                        ava.Avatar.Skeleton = skels.Get("child.skel");
+                                        ava.Avatar.Skeleton = skels.Get("child.skel").Clone();
                                         break;
                                     case 'd':
-                                        ava.Avatar.Skeleton = skels.Get("dog.skel");
+                                        ava.Avatar.Skeleton = skels.Get("dog.skel").Clone();
                                         ava.Avatar.Body = ofts.Get("uaa012dog_scottish.oft");
 
                                         break;
                                     case 'k':
-                                        ava.Avatar.Skeleton = skels.Get("cat.skel");
+                                        ava.Avatar.Skeleton = skels.Get("cat.skel").Clone();
                                         ava.Avatar.Body = ofts.Get("uaa002cat_calico.oft");
                                         break;
                                 }

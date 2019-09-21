@@ -54,7 +54,7 @@ namespace FSO.IDE.AvatarUtils
                 if (end) break;
             }
 
-            return baseName.Substring(0, i);
+            return baseName.Substring(0, i).TrimEnd('-', '_', ' ');
         }
 
         private void EvaluateImportPossibilities()
@@ -69,6 +69,8 @@ namespace FSO.IDE.AvatarUtils
             });
             */
 
+            OutfitRadio.Enabled = false;
+            HeadRadio.Enabled = false;
             HandgroupRadio.Enabled = false;
         }
 

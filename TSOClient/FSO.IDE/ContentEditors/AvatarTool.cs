@@ -41,6 +41,7 @@ namespace FSO.IDE.ContentEditors
             InitializeComponent();
             SetImportMode(false, null);
             Animator.ShowAnim("a2o-standing-loop");
+            RefreshSkeletonCombo();
             RefreshAnimList();
             RefreshOutfitList();
             RefreshAccessoryList();
@@ -83,16 +84,11 @@ namespace FSO.IDE.ContentEditors
             }
 
             ImportMeshButton.Enabled = import;
-            ImportSkeletonButton.Enabled = import;
+            ImportSkeletonButton.Enabled = false; //import;
             MeshImportBox.Enabled = import;
             ExportGLTFButton.Enabled = !import;
             AnimationAdd.Enabled = !import;
-            /*
-            AccessoryAdd.Enabled = !import;
-            AccessoryRemove.Enabled = !import;
-            AccessoryClear.Enabled = !import;
-            OutfitSet.Enabled = !import;
-            */
+
             if (import)
             {
                 ImportAnimButton.Text = "Import Selected Animations";
@@ -167,6 +163,7 @@ namespace FSO.IDE.ContentEditors
 
         public void UnbindRuntimeMesh()
         {
+            ImportMeshButton.Enabled = false;
             foreach (var mesh in BoundRuntimeMeshes)
             {
                 Animator.RemoveAccessory(mesh.Name);
@@ -186,11 +183,21 @@ namespace FSO.IDE.ContentEditors
 
         public void RefreshAnimList()
         {
-            RefreshSkeletonCombo();
             var searchString = SearchString(AnimationSearch.Text.ToLowerInvariant());
             var anims = (Content.Content.Get().AvatarAnimations as AvatarAnimationProvider)?.Names;
             if (anims == null)
                 anims = (Content.Content.Get().AvatarAnimations as Content.TS1.TS1BCFAnimationProvider)?.BaseProvider.ListAllAnimations();
+
+            if (!AllAnimsCheck.Checked)
+            {
+                string starts;
+                var skel = (SkeletonCombo.SelectedItem as string) ?? "adult";
+                var skelExtInd = skel.LastIndexOf('.');
+                if (skelExtInd != -1) skel = skel.Substring(0, skelExtInd);
+                if (SkeletonToPrefix.TryGetValue(skel, out starts)) {
+                    searchString = StartsWithRegex(searchString, starts);
+                }
+            }
 
             AddList(AnimationList, anims, new Regex(searchString));
         }
@@ -360,6 +367,7 @@ namespace FSO.IDE.ContentEditors
         private void AllAnimsCheck_CheckedChanged(object sender, EventArgs e)
         {
             RefreshAnimList();
+            RefreshOutfitList();
         }
 
         private void NewSceneButton_Click(object sender, EventArgs e)
@@ -386,6 +394,7 @@ namespace FSO.IDE.ContentEditors
                 var ava = (VMAvatar)interactive.TargetOBJ.BaseObject;
 
                 var exp = new GLTFExporter();
+                ava.Avatar.Skeleton = ava.Avatar.BaseSkeleton.Clone();
                 ava.Avatar.ReloadSkeleton();
                 var scn = exp.SceneGroup(ava.Avatar.Bindings.Select(x => x.Mesh).ToList(),
                     SceneAnimations.Select(x => x.Anim).ToList(),
@@ -459,6 +468,7 @@ namespace FSO.IDE.ContentEditors
                 Animator.AddAccessory(item.Name);
                 BoundRuntimeMeshes.Add(item);
             }
+            if (items.Count() > 0) ImportMeshButton.Enabled = true;
         }
 
         private void ImportAnimButton_Click(object sender, EventArgs e)
@@ -513,7 +523,8 @@ namespace FSO.IDE.ContentEditors
 
         private void ImportMeshButton_Click(object sender, EventArgs e)
         {
-
+            var importDialog = new AvatarUtils.AddAppearanceWindow(BoundRuntimeMeshes.Select(x => x.Mesh).ToList(), new List<ImportMeshGroup>());
+            importDialog.ShowDialog();
         }
 
         private void ImportSkeletonButton_Click(object sender, EventArgs e)
@@ -524,6 +535,12 @@ namespace FSO.IDE.ContentEditors
         private void AvatarTool_FormClosing(object sender, FormClosingEventArgs e)
         {
             ClearScene();
+        }
+
+        private void SkeletonCombo_SelectedIndexChanged(object sender, EventArgs e)
+        {
+            RefreshAnimList();
+            RefreshOutfitList();
         }
     }
 
