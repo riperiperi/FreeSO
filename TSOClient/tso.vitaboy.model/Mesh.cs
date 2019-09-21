@@ -25,12 +25,13 @@ namespace FSO.Vitaboy
     {
         /** 3D Data **/
         public VitaboyVertex[] VertexBuffer;
-
-        private int[] BlendVertBoneIndices;
+        
+        public int[] BlendVertBoneIndices;
         public Vector3[] BlendVerts;
+        public Vector3[] BlendNormals;
 
-        public short[] IndexBuffer;
-        protected int NumPrimitives;
+        public int[] IndexBuffer;
+        public int NumPrimitives;
         public BoneBinding[] BoneBindings;
         public BlendData[] BlendData;
 
@@ -78,8 +79,9 @@ namespace FSO.Vitaboy
         //to be changed to support binds to multiple SKEL bases.
         {
             if (Prepared) return;
-            var binding = BoneBindings.FirstOrDefault(x => x.BoneName.Equals(bone.Name, StringComparison.InvariantCultureIgnoreCase));
-            if (binding != null)
+            var bindings = BoneBindings.Where(x => x.BoneName.Equals(bone.Name, StringComparison.InvariantCultureIgnoreCase));
+            if (bindings.Count(x => x.RealVertexCount == 0) > 1) { }
+            foreach (var binding in bindings)
             {
                 for (var i = 0; i < binding.RealVertexCount; i++)
                 {
@@ -91,7 +93,6 @@ namespace FSO.Vitaboy
                 {
                     var blendVertexIndex = binding.FirstBlendVertex + i;
                     BlendVertBoneIndices[blendVertexIndex] = bone.Index;
-
                 }
             }
 
@@ -110,6 +111,7 @@ namespace FSO.Vitaboy
                     VertexBuffer[data.OtherVertex].Parameters.Y = BlendVertBoneIndices[i];
                     VertexBuffer[data.OtherVertex].Parameters.Z = data.Weight;
                     VertexBuffer[data.OtherVertex].BvPosition = BlendVerts[i];
+                    VertexBuffer[data.OtherVertex].BvNormal = BlendNormals[i];
                 }
 
                 InvalidateMesh();
@@ -123,7 +125,7 @@ namespace FSO.Vitaboy
             GPUVertexBuffer = new DynamicVertexBuffer(device, typeof(VitaboyVertex), VertexBuffer.Length, BufferUsage.None);
             GPUVertexBuffer.SetData(VertexBuffer);
             
-            GPUIndexBuffer = new IndexBuffer(device, IndexElementSize.SixteenBits, IndexBuffer.Length, BufferUsage.None);
+            GPUIndexBuffer = new IndexBuffer(device, IndexElementSize.ThirtyTwoBits, IndexBuffer.Length, BufferUsage.None);
             GPUIndexBuffer.SetData(IndexBuffer);
         }
 
@@ -143,6 +145,7 @@ namespace FSO.Vitaboy
                 gd.SetVertexBuffer(GPUVertexBuffer);
                 gd.DrawIndexedPrimitives(PrimitiveType.TriangleList, 0, 0, VertexBuffer.Length, 0, NumPrimitives);
             }else{
+                //legacy path, shouldn't get here
                 gd.DrawUserIndexedPrimitives(PrimitiveType.TriangleList, VertexBuffer, 0, VertexBuffer.Length, IndexBuffer, 0, NumPrimitives);
             }
         }
@@ -185,13 +188,13 @@ namespace FSO.Vitaboy
             var faceCount = io.ReadInt32();
             NumPrimitives = faceCount;
 
-            IndexBuffer = new short[faceCount * 3];
+            IndexBuffer = new int[faceCount * 3];
             int offset = 0;
             for (var i = 0; i < faceCount; i++)
             {
-                IndexBuffer[offset++] = (short)io.ReadInt32();
-                IndexBuffer[offset++] = (short)io.ReadInt32();
-                IndexBuffer[offset++] = (short)io.ReadInt32();
+                IndexBuffer[offset++] = io.ReadInt32();
+                IndexBuffer[offset++] = io.ReadInt32();
+                IndexBuffer[offset++] = io.ReadInt32();
             }
 
             /** Bone bindings **/
@@ -263,6 +266,7 @@ namespace FSO.Vitaboy
             }
 
             BlendVerts = new Vector3[blendVertexCount];
+            BlendNormals = new Vector3[blendVertexCount];
 
             for (int i = 0; i < blendVertexCount; i++)
             {
@@ -272,14 +276,106 @@ namespace FSO.Vitaboy
                     io.ReadFloat()
                 );
 
-                var normal = new Vector3(
+                BlendNormals[i] = new Vector3(
                     -io.ReadFloat(),
                     io.ReadFloat(),
                     io.ReadFloat()
-                ); //todo: read this in somewhere and use it for lighting.
+                ); //todo: use it for lighting.
             }
 
             BlendVertBoneIndices = new int[blendVertexCount];
+        }
+
+        public void Write(BCFWriteProxy io, bool bmf)
+        {
+            if (bmf)
+            {
+                io.WritePascalString(SkinName);
+                io.WritePascalString(TextureName);
+            }
+            else
+            {
+                io.WriteInt32(2); //version
+            }
+
+            var boneNames = new HashSet<string>(BoneBindings.Select(x => x.BoneName)).ToList();
+            io.WriteInt32(boneNames.Count);
+            foreach (var name in boneNames)
+            {
+                io.WritePascalString(name);
+            }
+
+            io.WriteInt32(NumPrimitives);
+
+            foreach (var index in IndexBuffer)
+            {
+                io.WriteInt32(index);
+            }
+
+            io.WriteInt32(BoneBindings.Length);
+            foreach (var binding in BoneBindings)
+            {
+                io.WriteInt32(boneNames.IndexOf(binding.BoneName));
+                io.WriteInt32(binding.FirstRealVertex);
+                io.WriteInt32(binding.RealVertexCount);
+                io.WriteInt32(binding.FirstBlendVertex);
+                io.WriteInt32(binding.BlendVertexCount);
+            }
+
+            io.WriteInt32(VertexBuffer.Length);
+            io.SetGrouping(2);
+            foreach (var vert in VertexBuffer)
+            {
+                io.WriteFloat(vert.TextureCoordinate.X);
+                io.WriteFloat(vert.TextureCoordinate.Y);
+            }
+            io.SetGrouping(1);
+
+            /** Blend data **/
+            io.WriteInt32(BlendVerts.Length);
+            foreach (var bv in BlendData)
+            {
+                var binary = true;
+                if (binary)
+                {
+                    io.WriteInt32((int)(bv.Weight * 0x8000));
+                    io.WriteInt32(bv.OtherVertex);
+                }
+                else
+                {
+                    io.WriteInt32(bv.OtherVertex);
+                    io.WriteInt32((int)(bv.Weight * 0x8000));
+                }
+            }
+
+            io.WriteInt32(VertexBuffer.Length); //realVertexCount2
+
+            io.SetGrouping(3);
+            foreach (var vert in VertexBuffer)
+            {
+                io.WriteFloat(-vert.Position.X);
+                io.WriteFloat(vert.Position.Y);
+                io.WriteFloat(vert.Position.Z);
+
+                io.WriteFloat(-vert.Normal.X);
+                io.WriteFloat(vert.Normal.Y);
+                io.WriteFloat(vert.Normal.Z);
+            }
+
+            var i = 0;
+            foreach (var bv in BlendVerts)
+            {
+                io.WriteFloat(-bv.X);
+                io.WriteFloat(bv.Y);
+                io.WriteFloat(bv.Z);
+                
+                var norm = BlendNormals[i++];
+                io.WriteFloat(-norm.X);
+                io.WriteFloat(norm.Y);
+                io.WriteFloat(norm.Z);
+            }
+
+            io.SetGrouping(1);
         }
     }
 }

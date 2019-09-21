@@ -1,4 +1,5 @@
 ﻿using FSO.Common.Enum;
+using FSO.Server.Database.DA.Utils;
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -10,6 +11,7 @@ namespace FSO.Server.Database.DA.Lots
     public interface ILots
     {
         IEnumerable<DbLot> All(int shard_id);
+        PagedList<DbLot> AllByPage(int shard_id, int offset, int limit, string orderBy);
         List<uint> GetLocationsInNhood(uint nhood_id);
         List<uint> GetCommunityLocations(int shard_id);
         List<DbLot> AllLocations(int shard_id);
@@ -18,6 +20,7 @@ namespace FSO.Server.Database.DA.Lots
         List<DbLot> GetAdjToLocation(int shard_id, uint location);
         DbLot GetByOwner(uint owner_id);
         DbLot Get(int id);
+        List<DbLot> GetMultiple(int[] ids);
         List<DbLot> Get(IEnumerable<int> ids);
         uint Create(DbLot lot);
         bool Delete(int id);

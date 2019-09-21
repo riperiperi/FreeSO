@@ -71,6 +71,8 @@ namespace FSO.SimAntics.Engine.Scopes
         StackObjectMasterDef = 53,
         FeatureEnableLevel = 54,
         //if we ever get exceptions from accesses to 55-58 we should check over them...
-        MyAvatarID = 59
+        MyAvatarID = 59,
+
+        INVALID = 255
     }
 }

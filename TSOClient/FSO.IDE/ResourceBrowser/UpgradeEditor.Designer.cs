@@ -29,6 +29,11 @@
         private void InitializeComponent()
         {
             System.ComponentModel.ComponentResourceManager resources = new System.ComponentModel.ComponentResourceManager(typeof(UpgradeEditor));
+            System.Windows.Forms.TreeNode treeNode1 = new System.Windows.Forms.TreeNode("Max Fun Cheap (4096:0 - 50)");
+            System.Windows.Forms.TreeNode treeNode2 = new System.Windows.Forms.TreeNode("Max Fun Exp (4096:1 - 70)");
+            System.Windows.Forms.TreeNode treeNode3 = new System.Windows.Forms.TreeNode("Max Fun (default: 50)", new System.Windows.Forms.TreeNode[] {
+            treeNode1,
+            treeNode2});
             this.ObjectSpecificBox = new System.Windows.Forms.GroupBox();
             this.UpgradeArrowLabel = new System.Windows.Forms.Label();
             this.FlagOriginal = new System.Windows.Forms.CheckBox();
@@ -53,6 +58,12 @@
             this.LevelsTabControl = new System.Windows.Forms.TabControl();
             this.ConstantPage = new System.Windows.Forms.TabPage();
             this.ConstantSubList = new System.Windows.Forms.ListBox();
+            this.GroupPage = new System.Windows.Forms.TabPage();
+            this.GroupAdd = new System.Windows.Forms.Button();
+            this.GroupRemove = new System.Windows.Forms.Button();
+            this.GroupNameBox = new System.Windows.Forms.TextBox();
+            this.GroupNameLabel = new System.Windows.Forms.Label();
+            this.GroupTree = new System.Windows.Forms.TreeView();
             this.TemplateUpgradePage = new System.Windows.Forms.TabPage();
             this.UpgradeContainer = new System.Windows.Forms.SplitContainer();
             this.DescriptionText = new System.Windows.Forms.TextBox();
@@ -81,6 +92,7 @@
             ((System.ComponentModel.ISupportInitialize)(this.SubTargetValue)).BeginInit();
             this.LevelsTabControl.SuspendLayout();
             this.ConstantPage.SuspendLayout();
+            this.GroupPage.SuspendLayout();
             this.TemplateUpgradePage.SuspendLayout();
             ((System.ComponentModel.ISupportInitialize)(this.UpgradeContainer)).BeginInit();
             this.UpgradeContainer.Panel1.SuspendLayout();
@@ -326,6 +338,7 @@
             // LevelsTabControl
             // 
             this.LevelsTabControl.Controls.Add(this.ConstantPage);
+            this.LevelsTabControl.Controls.Add(this.GroupPage);
             this.LevelsTabControl.Controls.Add(this.TemplateUpgradePage);
             this.LevelsTabControl.Location = new System.Drawing.Point(6, 19);
             this.LevelsTabControl.Name = "LevelsTabControl";
@@ -357,6 +370,81 @@
             this.ConstantSubList.ScrollAlwaysVisible = true;
             this.ConstantSubList.Size = new System.Drawing.Size(466, 252);
             this.ConstantSubList.TabIndex = 0;
+            // 
+            // GroupPage
+            // 
+            this.GroupPage.Controls.Add(this.GroupAdd);
+            this.GroupPage.Controls.Add(this.GroupRemove);
+            this.GroupPage.Controls.Add(this.GroupNameBox);
+            this.GroupPage.Controls.Add(this.GroupNameLabel);
+            this.GroupPage.Controls.Add(this.GroupTree);
+            this.GroupPage.Location = new System.Drawing.Point(4, 22);
+            this.GroupPage.Name = "GroupPage";
+            this.GroupPage.Padding = new System.Windows.Forms.Padding(3);
+            this.GroupPage.Size = new System.Drawing.Size(472, 258);
+            this.GroupPage.TabIndex = 2;
+            this.GroupPage.Text = "Groups";
+            this.GroupPage.UseVisualStyleBackColor = true;
+            // 
+            // GroupAdd
+            // 
+            this.GroupAdd.Location = new System.Drawing.Point(298, 19);
+            this.GroupAdd.Name = "GroupAdd";
+            this.GroupAdd.Size = new System.Drawing.Size(75, 23);
+            this.GroupAdd.TabIndex = 4;
+            this.GroupAdd.Text = "Add Group";
+            this.GroupAdd.UseVisualStyleBackColor = true;
+            this.GroupAdd.Click += new System.EventHandler(this.GroupAdd_Click);
+            // 
+            // GroupRemove
+            // 
+            this.GroupRemove.Location = new System.Drawing.Point(379, 19);
+            this.GroupRemove.Name = "GroupRemove";
+            this.GroupRemove.Size = new System.Drawing.Size(89, 23);
+            this.GroupRemove.TabIndex = 3;
+            this.GroupRemove.Text = "Remove Group";
+            this.GroupRemove.UseVisualStyleBackColor = true;
+            this.GroupRemove.Click += new System.EventHandler(this.GroupRemove_Click);
+            // 
+            // GroupNameBox
+            // 
+            this.GroupNameBox.Location = new System.Drawing.Point(4, 20);
+            this.GroupNameBox.Name = "GroupNameBox";
+            this.GroupNameBox.Size = new System.Drawing.Size(165, 20);
+            this.GroupNameBox.TabIndex = 2;
+            this.GroupNameBox.TextChanged += new System.EventHandler(this.GroupNameBox_TextChanged);
+            // 
+            // GroupNameLabel
+            // 
+            this.GroupNameLabel.AutoSize = true;
+            this.GroupNameLabel.Location = new System.Drawing.Point(0, 4);
+            this.GroupNameLabel.Name = "GroupNameLabel";
+            this.GroupNameLabel.Size = new System.Drawing.Size(67, 13);
+            this.GroupNameLabel.TabIndex = 1;
+            this.GroupNameLabel.Text = "Group Name";
+            // 
+            // GroupTree
+            // 
+            this.GroupTree.Anchor = ((System.Windows.Forms.AnchorStyles)((((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Bottom) 
+            | System.Windows.Forms.AnchorStyles.Left) 
+            | System.Windows.Forms.AnchorStyles.Right)));
+            this.GroupTree.FullRowSelect = true;
+            this.GroupTree.HideSelection = false;
+            this.GroupTree.Location = new System.Drawing.Point(3, 45);
+            this.GroupTree.Name = "GroupTree";
+            treeNode1.Name = "Node1";
+            treeNode1.Text = "Max Fun Cheap (4096:0 - 50)";
+            treeNode2.Name = "Node2";
+            treeNode2.Text = "Max Fun Exp (4096:1 - 70)";
+            treeNode3.Checked = true;
+            treeNode3.Name = "Node0";
+            treeNode3.Text = "Max Fun (default: 50)";
+            this.GroupTree.Nodes.AddRange(new System.Windows.Forms.TreeNode[] {
+            treeNode3});
+            this.GroupTree.ShowRootLines = false;
+            this.GroupTree.Size = new System.Drawing.Size(466, 210);
+            this.GroupTree.TabIndex = 0;
+            this.GroupTree.AfterSelect += new System.Windows.Forms.TreeViewEventHandler(this.GroupTree_AfterSelect);
             // 
             // TemplateUpgradePage
             // 
@@ -598,21 +686,21 @@
             // 
             // CopyButton
             // 
-            this.CopyButton.Location = new System.Drawing.Point(392, 3);
+            this.CopyButton.Location = new System.Drawing.Point(383, 3);
             this.CopyButton.Name = "CopyButton";
             this.CopyButton.Size = new System.Drawing.Size(75, 23);
             this.CopyButton.TabIndex = 5;
-            this.CopyButton.Text = "Copy Subs";
+            this.CopyButton.Text = "Copy Levels";
             this.CopyButton.UseVisualStyleBackColor = true;
             this.CopyButton.Click += new System.EventHandler(this.CopyButton_Click);
             // 
             // PasteButton
             // 
-            this.PasteButton.Location = new System.Drawing.Point(473, 3);
+            this.PasteButton.Location = new System.Drawing.Point(464, 3);
             this.PasteButton.Name = "PasteButton";
-            this.PasteButton.Size = new System.Drawing.Size(75, 23);
+            this.PasteButton.Size = new System.Drawing.Size(84, 23);
             this.PasteButton.TabIndex = 6;
-            this.PasteButton.Text = "Paste Subs";
+            this.PasteButton.Text = "Paste Levels";
             this.PasteButton.UseVisualStyleBackColor = true;
             this.PasteButton.Click += new System.EventHandler(this.PasteButton_Click);
             // 
@@ -637,6 +725,8 @@
             ((System.ComponentModel.ISupportInitialize)(this.SubTargetValue)).EndInit();
             this.LevelsTabControl.ResumeLayout(false);
             this.ConstantPage.ResumeLayout(false);
+            this.GroupPage.ResumeLayout(false);
+            this.GroupPage.PerformLayout();
             this.TemplateUpgradePage.ResumeLayout(false);
             this.UpgradeContainer.Panel1.ResumeLayout(false);
             this.UpgradeContainer.Panel1.PerformLayout();
@@ -697,5 +787,11 @@
         private System.Windows.Forms.Button CopyButton;
         private System.Windows.Forms.Button PasteButton;
         private System.Windows.Forms.Button RemoveUpgradeButton;
+        private System.Windows.Forms.TabPage GroupPage;
+        private System.Windows.Forms.Button GroupAdd;
+        private System.Windows.Forms.Button GroupRemove;
+        private System.Windows.Forms.TextBox GroupNameBox;
+        private System.Windows.Forms.Label GroupNameLabel;
+        private System.Windows.Forms.TreeView GroupTree;
     }
 }

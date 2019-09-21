@@ -140,7 +140,7 @@ namespace FSO.Client.UI.Panels.Neighborhoods
             var scale = Vector2.One;
             if (Flip)
             {
-                SprEffects = SpriteEffects.FlipVertically;
+                _SpriteEffects = SpriteEffects.FlipVertically;
             }
             DrawGlobalTexture(batch, tex, new Rectangle(0, 0, slice, height), loc, scale, tint);
             var mWidth = twidth - slice * 2;
@@ -150,7 +150,7 @@ namespace FSO.Client.UI.Panels.Neighborhoods
 
             if (Flip)
             {
-                SprEffects = SpriteEffects.None;
+                _SpriteEffects = SpriteEffects.None;
             }
         }
 

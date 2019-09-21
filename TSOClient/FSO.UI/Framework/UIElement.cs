@@ -48,7 +48,7 @@ namespace FSO.Client.UI.Framework
         /// parent component.
         /// </summary>
         protected float _X;
-        
+
         /// <summary>
         /// Y position of this UIComponent. This coordinate is relative to this UIElement's
         /// parent component.
@@ -69,6 +69,17 @@ namespace FSO.Client.UI.Framework
         /// Scale Factor of the Y Axis.
         /// </summary>
         protected float _ScaleY = 1.0f;
+
+        /// <summary>
+        /// A rotation of this UIElement, in radians.
+        /// </summary>
+        protected float _Rotation = 0f;
+
+        /// <summary>
+        /// Center of the rotation to be applied to the matrix which represents this objects position
+        /// in screen space, most likely the object's center. This origin is NOT supplied to DrawLocalTexture.
+        /// </summary>
+        protected Vector2 _MtxRotOrigin = Vector2.Zero;
 
         /// <summary>
         /// Transparency value for this UIElement. Can be between 0.0 and 1.0
@@ -95,6 +106,11 @@ namespace FSO.Client.UI.Framework
         protected bool _HasOpacity = false;
 
         /// <summary>
+        /// SpriteEffect of this Element, applied during batch drawing.
+        /// </summary>
+        protected SpriteEffects _SpriteEffects = SpriteEffects.None;
+
+        /// <summary>
         /// The container which this element is a child of. Can be null if top level UI object.
         /// UIContainer sets this in its Add method. Helps describe the UI Tree.
         /// </summary>
@@ -111,12 +127,12 @@ namespace FSO.Client.UI.Framework
         /// its immediate invalidation parent recieves the call, and should be redrawn next frame.
         /// </summary>
         public UICachedContainer InvalidationParent;
-        
+
         /// <summary>
-        /// Matrix object which represents the position & scale of this UIElement.
+        /// Matrix object which represents the position, rotation & scale of this UIElement.
         /// 
-        /// Whenever X, Y, ScaleX, ScaleY, Parent (or any of these values on my parent) change
-        /// We recalculate this matrix.
+        /// Whenever X, Y, ScaleX, ScaleY, Rotation, Rotation Origin, Parent (or any of these values on
+        /// my parent) change we recalculate this matrix.
         /// 
         /// It is used to convert local coordinates into absolute screen coordinates for drawing.
         /// </summary>
@@ -145,6 +161,13 @@ namespace FSO.Client.UI.Framework
         /// its dirty.
         /// </summary>
         protected bool _MtxDirty;
+
+        /// <summary>
+        /// Indicates if the rotation has changed to make the Matrix invalid. Only called when Rotation
+        /// is changed from the default 0f or from its previous value. This the rotation is only considered
+        /// on an invalid matrix when a new non-default rotation has been specified.
+        /// </summary>
+        protected bool _MtxApplyRot;
 
         /// <summary>
         /// Indicates if the component is visible or not. If false the UIElement
@@ -218,11 +241,52 @@ namespace FSO.Client.UI.Framework
         }
 
         /// <summary>
+        /// Rotation of this compoment, in radians.
+        /// </summary>
+        public virtual float Rotation
+        {
+            get { return _Rotation; }
+            set
+            {
+                _Rotation = value;
+                _MtxApplyRot = true;
+                _MtxDirty = true;
+            }
+        }
+
+        /// <summary>
+        /// Should rotation be considered for this element. This allows extended classes to determine
+        /// which DrawLocalTexture to use.
+        /// </summary>
+        public bool ApplyRotation
+        {
+            get { return _MtxApplyRot; }
+        }
+
+        /// <summary>
+        /// Center of the rotation of this UIElement.
+        /// </summary>
+        public virtual Vector2 Origin
+        {
+            get { return _MtxRotOrigin; }
+            set
+            {
+                _MtxRotOrigin = value;
+                if (_Rotation != 0f)
+                {
+                    _MtxApplyRot = true;
+                    _MtxDirty = true;
+                }
+            }
+        }
+
+        /// <summary>
         /// Transparency value of this UIElement. Value must be between 0.0 and 1.0
         /// </summary>
         public float Opacity
         {
-            get {
+            get
+            {
                 return _Opacity;
             }
             set
@@ -254,6 +318,16 @@ namespace FSO.Client.UI.Framework
             }
         }
 
+        public SpriteEffects SpriteEffect
+        {
+            get { return _SpriteEffects; }
+            set
+            {
+                if (Enum.IsDefined(typeof(SpriteEffects), value))
+                    _SpriteEffects = value;
+            }
+        }
+
         /// <summary>
         /// Returns the size of the UIElement. By default this is not implemented as not all UIElements
         /// have size or a bounding box.
@@ -267,7 +341,7 @@ namespace FSO.Client.UI.Framework
 
             set
             {
-                
+
             }
         }
 
@@ -287,7 +361,7 @@ namespace FSO.Client.UI.Framework
                 CalculateMatrix();
             }
         }
-        
+
         /// <summary>
         /// Matrix object which represents the position & scale of this UIElement.
         /// 
@@ -354,6 +428,17 @@ namespace FSO.Client.UI.Framework
             //Scale by our scaleX and scaleY values
             _Mtx.Scale(_ScaleX, _ScaleY);
 
+            //Rotate by rotation angle from provided origin
+            if (_MtxApplyRot)
+            {
+                bool useCustomOrigin = _MtxRotOrigin != Vector2.Zero;
+                if (useCustomOrigin)
+                    _Mtx.Translate(Origin.X, Origin.Y);
+                _Mtx.Rotate(Rotation);
+                if (useCustomOrigin)
+                    _Mtx.Translate(Origin.X * -1, Origin.Y * -1);
+            }
+
             //Work out the absolute scale factor for this UIElement
             _Scale = _Mtx.ExtractScaleVector();
 
@@ -361,17 +446,25 @@ namespace FSO.Client.UI.Framework
             //Make this null so that next time its requested it gets recalculated
             _InvertedMtx = null;
 
-            //Matrix is no longer dirty :)
+            //Matrix is no longer dirty :) U+1F913
             _MtxDirty = false;
-
-            //We cache mouse target positions, because our coordinates have changed these are no longer valid.
-            _HitTestCache.Clear();
         }
 
         public void Invalidate()
         {
             if (InvalidationParent?.GetType()?.Name == "UIUpgradeItem") { }
             if (InvalidationParent != null) InvalidationParent.Invalidated = true;
+        }
+
+        /// <summary>
+        /// Do not consider the rotation for this element's matrix any longer
+        /// </summary>
+        public void ClearRotation()
+        {
+            _MtxApplyRot = false;
+            _Rotation = 0f;
+            _MtxRotOrigin = Vector2.Zero;
+            InvalidateMatrix();
         }
 
         /// <summary>
@@ -472,7 +565,8 @@ namespace FSO.Client.UI.Framework
         {
             UIElement elem = this;
             if (!elem.Visible) return false;
-            while (elem.Parent != null) {
+            while (elem.Parent != null)
+            {
                 elem = elem.Parent;
                 if (!elem.Visible) return false;
             }
@@ -693,7 +787,7 @@ namespace FSO.Client.UI.Framework
             }
 
             /** Work out how big the text will be so we can align it **/
-            var size = (align == 0)? Vector2.Zero : style.MeasureString(text);
+            var size = (align == 0) ? Vector2.Zero : style.MeasureString(text);
 
             /** Apply margins **/
             if (margin != Rectangle.Empty)
@@ -708,7 +802,7 @@ namespace FSO.Client.UI.Framework
             var pos = to;
             pos.X += bounds.X;
             pos.Y += bounds.Y;
-            
+
             if ((align & TextAlignment.Right) == TextAlignment.Right)
             {
                 pos.X += (bounds.Width - size.X);
@@ -743,12 +837,13 @@ namespace FSO.Client.UI.Framework
                 if (style.Shadow)
                     style.VFont.Draw(batch.GraphicsDevice, text, pos + new Vector2(FSOEnvironment.DPIScaleFactor), Color.Black, scale, mat);
                 style.VFont.Draw(batch.GraphicsDevice, text, pos, style.GetColor(state) * Opacity, scale, mat);
-                
+
                 if (mat != null)
                     batch.Begin(transformMatrix: mat, rasterizerState: RasterizerState.CullNone);
                 else
                     batch.Begin(rasterizerState: RasterizerState.CullNone);
-            } else
+            }
+            else
             {
                 if (style.Shadow) batch.DrawString(style.SpriteFont, text, pos + new Vector2(FSOEnvironment.DPIScaleFactor), Color.Black, 0, Vector2.Zero, scale, SpriteEffects.None, 0);
                 batch.DrawString(style.SpriteFont, text, pos, style.GetColor(state) * Opacity, 0, Vector2.Zero, scale, SpriteEffects.None, 0);
@@ -780,11 +875,10 @@ namespace FSO.Client.UI.Framework
         /// <param name="to"></param>
         public void DrawLocalTexture(SpriteBatch batch, Texture2D texture, Vector2 to)
         {
-            DrawLocalTexture(batch, texture, null, to, Vector2.One);
             //if (!m_IsInvalidated)
             //{
-            //batch.Draw(DPISwitch(texture), FlooredLocalPoint(to), null, _BlendColor, 0.0f,
-            //            new Vector2(0.0f, 0.0f), TexScale(texture, _Scale), SprEffects, 0.0f);
+            batch.Draw(texture, FlooredLocalPoint(to), null, _BlendColor, 0.0f,
+                        new Vector2(0.0f, 0.0f), _Scale, _SpriteEffects, 0.0f);
             //}
         }
 
@@ -798,11 +892,10 @@ namespace FSO.Client.UI.Framework
         /// <param name="to"></param>
         public void DrawLocalTexture(SpriteBatch batch, Texture2D texture, Rectangle from, Vector2 to)
         {
-            DrawLocalTexture(batch, texture, from, to, Vector2.One);
             //if (!m_IsInvalidated)
             //{
-            //batch.Draw(DPISwitch(texture), FlooredLocalPoint(to), RectScale(texture, from), _BlendColor, 0.0f,
-            //            new Vector2(0.0f, 0.0f), TexScale(texture, _Scale), SprEffects, 0.0f);
+            batch.Draw(texture, FlooredLocalPoint(to), from, _BlendColor, 0.0f,
+                        new Vector2(0.0f, 0.0f), _Scale, _SpriteEffects, 0.0f);
             //}
         }
 
@@ -819,9 +912,8 @@ namespace FSO.Client.UI.Framework
         {
             //if (!m_IsInvalidated)
             //{
-            DPISwitch(ref texture, ref scale, ref from);
             batch.Draw(texture, FlooredLocalPoint(to), from, _BlendColor, 0.0f,
-                        new Vector2(0.0f, 0.0f), _Scale * scale, SprEffects, 0.0f);
+                        new Vector2(0.0f, 0.0f), _Scale * scale, _SpriteEffects, 0.0f);
             //}
         }
 
@@ -841,7 +933,7 @@ namespace FSO.Client.UI.Framework
             //{
             DPISwitch(ref texture, ref scale, ref from);
             batch.Draw(texture, FlooredLocalPoint(to), from, new Color(_BlendColor.ToVector4() * blend.ToVector4()), 0.0f,
-                        new Vector2(0.0f, 0.0f), _Scale * scale, SprEffects, 0.0f);
+                        new Vector2(0.0f, 0.0f), _Scale * scale, _SpriteEffects, 0.0f);
             //}
         }
 
@@ -877,7 +969,7 @@ namespace FSO.Client.UI.Framework
         {
             DPISwitch(ref texture, ref scale, ref from);
             batch.Draw(texture, FlooredLocalPoint(to), from, color, rotation,
-                        origin, _Scale * scale, SprEffects, 0.0f);
+                        origin, _Scale * scale, _SpriteEffects, 0.0f);
         }
 
         protected SpriteEffects SprEffects = SpriteEffects.None;
@@ -887,17 +979,17 @@ namespace FSO.Client.UI.Framework
         {
             //if (!m_IsInvalidated)
             //{
-            
+
             var col = new Color(_BlendColor.ToVector4() * blend.ToVector4());
-            for (int x = 0; x < dest.Width; x+=texture.Width)
+            for (int x = 0; x < dest.Width; x += texture.Width)
             {
-                for (int y= 0; y<dest.Height; y += texture.Height)
+                for (int y = 0; y < dest.Height; y += texture.Height)
                 {
                     var scale = _Scale;
                     var tex = texture;
                     Rectangle? from = new Rectangle(0, 0, Math.Min(texture.Width, dest.Width - x), Math.Min(texture.Height, dest.Height - y));
                     DPISwitch(ref tex, ref scale, ref from);
-                    batch.Draw(texture, FlooredLocalPoint(new Vector2(dest.X+x, dest.Y+y)), from, col, 0.0f,
+                    batch.Draw(texture, FlooredLocalPoint(new Vector2(dest.X + x, dest.Y + y)), from, col, 0.0f,
                         new Vector2(0.0f, 0.0f), scale, SpriteEffects.None, 0.0f);
                 }
             }
@@ -915,50 +1007,7 @@ namespace FSO.Client.UI.Framework
         public bool HitTestArea(MouseState state, Rectangle area, bool cache)
         {
             if (!Visible) { return false; }
-
             return area.Contains(GlobalPoint(state.Position.ToVector2()));
-
-            var globalLeft = 0.0f;
-            var globalTop = 0.0f;
-            var globalRight = 0.0f;
-            var globalBottom = 0.0f;
-
-            if (_HitTestCache.ContainsKey(area))
-            {
-                var positions = _HitTestCache[area];
-                globalLeft = positions.X;
-                globalTop = positions.Y;
-                globalRight = positions.Z;
-                globalBottom = positions.W;
-            }
-            else
-            {
-                var globalPosition = LocalRect(area.X, area.Y, area.Width, area.Height);
-                globalLeft = globalPosition.X;
-                globalTop = globalPosition.Y;
-                globalRight = globalPosition.Right;
-                globalBottom = globalPosition.Bottom;
-
-                if (cache)
-                {
-                    globalLeft = globalPosition.X;
-                    globalTop = globalPosition.Y;
-                    globalRight = globalPosition.Right;
-                    globalBottom = globalPosition.Bottom;
-                    _HitTestCache.Add(area, new Vector4(globalPosition.X, globalPosition.Y, globalPosition.Right, globalPosition.Bottom));
-                }
-            }
-
-            var mx = state.X;
-            var my = state.Y;
-
-            if (mx >= globalLeft && mx <= globalRight &&
-                my >= globalTop && my <= globalBottom)
-            {
-                return true;
-            }
-
-            return false;
         }
 
         private List<UIMouseEventRef> m_MouseRefs;
@@ -1016,7 +1065,7 @@ namespace FSO.Client.UI.Framework
         {
             return GetTexture(id.Shift());
         }
-        
+
         private static List<ulong> UI_TEMP_CACHE = new List<ulong>();
         public static Texture2D GetTexture(ulong id)
         {
@@ -1144,7 +1193,7 @@ namespace FSO.Client.UI.Framework
         }
 
         public delegate void AsyncHandler();
-        
+
         public object Controller { get; set; }
 
         public void SetController(object controller)
@@ -1155,16 +1204,17 @@ namespace FSO.Client.UI.Framework
         public T FindController<T>()
         {
             var target = this;
-            while(target != null)
+            while (target != null)
             {
-                if(target.Controller is T)
+                if (target.Controller is T)
                 {
                     return (T)target.Controller;
                 }
                 target = target.Parent;
             }
 
-            if(LogicalParent != null){
+            if (LogicalParent != null)
+            {
                 return LogicalParent.FindController<T>();
             }
             return default(T);
@@ -1201,7 +1251,8 @@ namespace FSO.Client.UI.Framework
         {
             if (_Debounces == null) { _Debounces = new Dictionary<string, UIDebounce>(); }
 
-            if (!_Debounces.ContainsKey(id)){
+            if (!_Debounces.ContainsKey(id))
+            {
                 _Debounces.Add(id, new UIDebounce(timeout));
             }
 

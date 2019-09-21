@@ -367,6 +367,12 @@ namespace FSO.IDE
         {
 
         }
+
+        private void avatarToolToolStripMenuItem_Click(object sender, EventArgs e)
+        {
+            var avatarTool = new AvatarTool();
+            avatarTool.Show();
+        }
     }
 
     public class ResChangeNode : TreeNode

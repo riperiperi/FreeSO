@@ -24,12 +24,14 @@ namespace FSO.Content.Framework
     {
         protected Content ContentManager;
         protected Dictionary<string, string> EntriesByName;
+        protected Dictionary<ulong, string> EntryNamesById;
         protected IContentCodec<T> Codec;
         protected Dictionary<string, T> Cache;
         protected List<FileContentReference<T>> Items;
         private Regex FilePattern;
         public bool UseContent;
         public bool UseTS1;
+        public bool FAR3IDs;
 
         /// <summary>
         /// Creates a new instance of FileProvider.
@@ -52,6 +54,7 @@ namespace FSO.Content.Framework
             this.Items = new List<FileContentReference<T>>();
             this.Cache = new Dictionary<string, T>();
             this.EntriesByName = new Dictionary<string, string>();
+            this.EntryNamesById = new Dictionary<ulong, string>();
 
             lock (Cache)
             {
@@ -68,6 +71,29 @@ namespace FSO.Content.Framework
                 foreach (var file in matchedFiles)
                 {
                     var name = Path.GetFileName(file).ToLowerInvariant();
+                    if (FAR3IDs)
+                    {
+                        // there may be a uint64 id attached to this file
+                        // an extra ., then 16 char hex, then real extension
+                        // format: "test-file-name.a0b1c2d3e4f50617.anim"
+
+                        var idsplit = name.Split('.');
+                        if (idsplit.Length > 2)
+                        {
+                            var stringID = idsplit[idsplit.Length - 2];
+                            ulong id;
+                            if (ulong.TryParse(stringID, System.Globalization.NumberStyles.HexNumber, null, out id))
+                            {
+                                // this filename has an id
+                                // remove id from name and rejoin it
+                                var newSplit = idsplit.ToList();
+                                newSplit.RemoveAt(idsplit.Length - 2);
+                                name = string.Join(".", newSplit);
+
+                                EntryNamesById[id] = name;
+                            }
+                        }
+                    }
                     EntriesByName[name] = file;
                     Items.Add(new FileContentReference<T>(name, Path.Combine(basePath, file), this));
                 }
@@ -128,16 +154,27 @@ namespace FSO.Content.Framework
             return result;
         }
 
+        protected virtual T ResolveById(ulong id)
+        {
+            string entry = null;
+            if (EntryNamesById.TryGetValue(id, out entry))
+            {
+                return Get(entry);
+            }
+            return default(T);
+        }
+
         #region IContentProvider<T> Members
 
         public T Get(ulong id)
         {
-            throw new NotImplementedException();
+            return ResolveById(id);
         }
 
         public T Get(uint type, uint fileID)
         {
-            throw new NotImplementedException();
+            var fileIDLong = ((ulong)fileID) << 32;
+            return Get(fileIDLong | type);
         }
 
         public List<IContentReference<T>> List()
@@ -147,7 +184,9 @@ namespace FSO.Content.Framework
 
         public T Get(ContentID id)
         {
-            throw new NotImplementedException();
+            if (id == null) return default(T);
+            if (id.FileName != null) return Get(id.FileName);
+            return Get(id.TypeID, id.FileID);
         }
 
         #endregion
@@ -161,6 +200,7 @@ namespace FSO.Content.Framework
     {
         public string Name;
         public string Filename;
+        public ulong ID;
         private FileProvider<T> Provider;
 
         public FileContentReference(string name, string filename, FileProvider<T> provider){

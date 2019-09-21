@@ -11,6 +11,8 @@ using FSO.Content;
 using FSO.Content.Upgrades.Model;
 using FSO.Files.Formats.IFF.Chunks;
 using FSO.Files.Formats.OTF;
+using Newtonsoft.Json;
+using FSO.IDE.Utils;
 
 namespace FSO.IDE.ResourceBrowser
 {
@@ -21,9 +23,17 @@ namespace FSO.IDE.ResourceBrowser
         public UpgradeIff ActiveUpgrades;
         public UpgradeLevel ActiveLevel;
         public UpgradeSubstitution ActiveSub;
+        public UpgradeGroup ActiveGroup;
+        public int ActiveGroupInd;
         public ObjectUpgradeConfig ActiveConfig;
 
+        public TreeNode ActiveGroupNode => GroupTree.SelectedNode?.Parent ?? GroupTree.SelectedNode;
+        public TreeNode ActiveGroupIndNode => (GroupTree.SelectedNode?.Parent == null) ? null : GroupTree.SelectedNode;
+
+        public bool GroupsTabActive => LevelsTabControl.SelectedTab == GroupPage;
+
         public List<TuningEntry> TuningEntries;
+        public int LevelTabStart = 2;
 
         private bool InternalChange;
 
@@ -37,7 +47,7 @@ namespace FSO.IDE.ResourceBrowser
         {
             ActiveObj = obj;
             ActiveRes = obj.Resource;
-            ActiveUpgrades = Content.Content.Get().Upgrades.GetFile(ActiveRes.MainIff.Filename);
+            ActiveUpgrades = Content.Content.Get().Upgrades?.GetFile(ActiveRes.MainIff.Filename);
             IffSpecificBox.Text = ActiveRes.MainIff.Filename;
 
             Render();
@@ -45,7 +55,7 @@ namespace FSO.IDE.ResourceBrowser
 
         public void Render()
         {
-            if (Content.Content.Get().Upgrades.Editable)
+            if (Content.Content.Get().Upgrades?.Editable == true)
             {
                 if (ActiveUpgrades == null)
                 {
@@ -91,6 +101,7 @@ namespace FSO.IDE.ResourceBrowser
             var pages = LevelsTabControl.TabPages;
             pages.Clear();
             pages.Add(ConstantPage);
+            pages.Add(GroupPage);
             int i = 0;
             foreach (var level in ActiveUpgrades.Upgrades)
             {
@@ -186,9 +197,20 @@ namespace FSO.IDE.ResourceBrowser
             TuningEntries.Add(entry);
         }
 
-        public void UpdateTuningEntries(bool withReplacement)
+        public void UpdateTuningEntries(bool withReplacement, bool withGroups)
         {
             TuningEntries = new List<TuningEntry>();
+            if (withGroups)
+            {
+                TuningEntries.AddRange(ActiveUpgrades.Groups.Select(x =>
+                    new TuningEntry()
+                    {
+                        Label = "Group '" + x.Name + "'",
+                        Identifier = "G" + ActiveUpgrades.Groups.IndexOf(x),
+                        Value = 0
+                    }));
+            }
+
             foreach (var tuning in ActiveRes.TuningCache)
                 AddTuningEntry(tuning, withReplacement);
 
@@ -202,9 +224,21 @@ namespace FSO.IDE.ResourceBrowser
                 AddTuningEntry(tuning, withReplacement);
 
             SubFromTuning.Items.Clear();
+            if (withGroups)
+            {
+                /*
+                var groups = 
+                SubFromTuning.Items.AddRange(ActiveUpgrades.Groups.Select(x =>
+                    new TuningEntry()
+                    {
+                        Label = "Group '" + x.Name + "'",
+                        Identifier = "G" + ActiveUpgrades.Groups.IndexOf(x),
+                        Value = 0
+                    }).ToArray());*/
+            }
             SubFromTuning.Items.AddRange(TuningEntries.ToArray());
             SubTargetTuning.Items.Clear();
-            SubTargetTuning.Items.AddRange(TuningEntries.ToArray());
+            SubTargetTuning.Items.AddRange(TuningEntries.Where(x => x.Identifier.Length < 1 || x.Identifier[0] != 'G').ToArray());
         }
 
         public void UpdateObjectProperties()
@@ -244,11 +278,29 @@ namespace FSO.IDE.ResourceBrowser
             if (InternalChange) return;
             if (ActiveSub == null)
             {
-                SubSpecificBox.Enabled = false;
+                if (ActiveGroup != null && ActiveGroupInd != -1)
+                {
+                    //group target
+                    SubSpecificBox.Enabled = true;
+                    SubTargetValueRadio.Enabled = false;
+                    SubTargetTuningRadio.Enabled = false;
+                    SubTargetValue.Enabled = false;
+                    SubTargetTuning.Enabled = false;
+                    UpdateTuningEntries(false, false);
+
+                    var tuningInd = TuningEntries.FindIndex(x => x.Identifier == ActiveGroup.Tuning[ActiveGroupInd]);
+                    SubFromTuning.SelectedIndex = tuningInd;
+                }
+                else
+                {
+                    SubSpecificBox.Enabled = false;
+                }
                 return;
             }
             SubSpecificBox.Enabled = true;
-            UpdateTuningEntries(ActiveLevel != null);
+            SubTargetValueRadio.Enabled = true;
+            SubTargetTuningRadio.Enabled = true;
+            UpdateTuningEntries(ActiveLevel != null, true);
 
             SubFromTuning.SelectedIndex = TuningEntries.FindIndex(x => x.Identifier == ActiveSub.Old);
 
@@ -429,38 +481,78 @@ namespace FSO.IDE.ResourceBrowser
 
         private void AddSubButton_Click(object sender, EventArgs e)
         {
-            var newSub = new UpgradeSubstitution();
-            if (ActiveLevel == null)
+            if (GroupsTabActive)
             {
-                ActiveUpgrades.Subs.Add(newSub);
+                if (ActiveGroup != null)
+                {
+                    ActiveGroup.Tuning.Add("0:0");
+                    RenderGroups();
+                }
             }
             else
             {
-                ActiveLevel.Subs.Add(newSub);
+                var newSub = new UpgradeSubstitution();
+                if (ActiveLevel == null)
+                {
+                    ActiveUpgrades.Subs.Add(newSub);
+                }
+                else
+                {
+                    ActiveLevel.Subs.Add(newSub);
+                }
+                UpdateSubsList();
             }
-            UpdateSubsList();
             UpdateFile();
         }
 
         private void RemoveSubButton_Click(object sender, EventArgs e)
         {
-            if (ActiveSub == null) return;
-            if (ActiveLevel == null)
+            if (GroupsTabActive)
             {
-                ActiveUpgrades.Subs.Remove(ActiveSub);
-            } else
-            {
-                ActiveLevel.Subs.Remove(ActiveSub);
+                if (ActiveGroup != null)
+                {
+                    if (ActiveGroupInd != -1)
+                    {
+                        ActiveGroup.Tuning.RemoveAt(ActiveGroupInd);
+                        ActiveGroupInd = -1;
+                    }
+                    RenderGroups();
+                }
             }
-            UpdateSubsList();
+            else
+            {
+                if (ActiveSub == null) return;
+                if (ActiveLevel == null)
+                {
+                    ActiveUpgrades.Subs.Remove(ActiveSub);
+                }
+                else
+                {
+                    ActiveLevel.Subs.Remove(ActiveSub);
+                }
+                UpdateSubsList();
+            }
             UpdateFile();
         }
 
         private void SubFromTuning_SelectedIndexChanged(object sender, EventArgs e)
         {
-            if (ActiveSub == null) return;
             var item = SubFromTuning.SelectedItem as TuningEntry;
             if (item == null) return;
+            if (ActiveSub == null)
+            {
+                if (ActiveGroup != null && ActiveGroupInd != -1)
+                {
+                    ActiveGroup.Tuning[ActiveGroupInd] = item.Identifier;
+                    var node = ActiveGroupIndNode;
+                    if (node != null)
+                    {
+                        node.Text = item.ToString();
+                    }
+                    UpdateFile();
+                }
+                return;
+            }
             ActiveSub.Old = item.Identifier;
             UpdateFile();
         }
@@ -521,12 +613,40 @@ namespace FSO.IDE.ResourceBrowser
 
         private void CopyButton_Click(object sender, EventArgs e)
         {
-
+            var levels = ActiveUpgrades.Upgrades;
+            var text = JsonConvert.SerializeObject(levels, Formatting.Indented);
+            FormsUtils.StaExecute(() =>
+            {
+                Clipboard.SetText(text);
+            });
         }
 
         private void PasteButton_Click(object sender, EventArgs e)
         {
+            try
+            {
+                var oldLevels = ActiveUpgrades.Upgrades;
+                string text = null;
+                FormsUtils.StaExecute(() =>
+                {
+                    text = Clipboard.GetText();
+                });
+                var levels = JsonConvert.DeserializeObject<List<UpgradeLevel>>(text);
 
+                if (oldLevels.Count > 0)
+                {
+                    var result = MessageBox.Show("This operation will overwrite existing upgrade levels. Continue?", "Warning", MessageBoxButtons.YesNo);
+                    if (result == DialogResult.No) return;
+                }
+
+                ActiveUpgrades.Upgrades = levels;
+                UpdateFile();
+                Render();
+            }
+            catch
+            {
+                MessageBox.Show("The clipboard did not contain valid upgrade data. Try paste it somewhere else and make sure it's at least valid JSON.", "Hey!");
+            }
         }
 
         private void SaveButton_Click(object sender, EventArgs e)
@@ -547,12 +667,22 @@ namespace FSO.IDE.ResourceBrowser
         {
             var ind = LevelsTabControl.SelectedIndex;
             if (ind == -1) return;
-            if (ind == 0)
+            ActiveGroup = null;
+            ActiveGroupInd = -1;
+            ActiveSub = null;
+            if (ind < LevelTabStart)
+            {
                 ActiveLevel = null;
-            else if (ind == LevelsTabControl.TabPages.Count - 1 && LevelsTabControl.TabPages.Count > 1)
+                if (LevelsTabControl.SelectedTab == GroupPage)
+                {
+                    UpdateTuningEntries(false, false);
+                    RenderGroups();
+                }
+            }
+            else if (ind == LevelsTabControl.TabPages.Count - 1 && LevelsTabControl.TabPages.Count > LevelTabStart)
                 AddUpgrade();
             else
-                ActiveLevel = ActiveUpgrades.Upgrades[ind - 1];
+                ActiveLevel = ActiveUpgrades.Upgrades[ind - LevelTabStart];
             UpdateSubsList();
         }
 
@@ -571,6 +701,93 @@ namespace FSO.IDE.ResourceBrowser
             ActiveUpgrades.Upgrades.Remove(ActiveLevel);
             PrepareTabs();
             UpdateFile();
+        }
+
+        private void RenderGroups()
+        {
+            GroupTree.Nodes.Clear();
+            foreach (var group in ActiveUpgrades.Groups)
+            {
+                var node = new TreeNode(group.Name);
+                foreach (var target in group.Tuning)
+                {
+                    var child = new TreeNode(TuningEntries.FirstOrDefault(x => x.Identifier == target)?.ToString() ?? target);
+                    node.Nodes.Add(child);
+                }
+                GroupTree.Nodes.Add(node);
+            }
+            GroupTree.ExpandAll();
+        }
+
+        private void UpdateSelectedGroupItem()
+        {
+            GroupNameBox.Text = ActiveGroup?.Name ?? "";
+            RenderSub();
+        }
+
+        private void GroupTree_AfterSelect(object sender, TreeViewEventArgs e)
+        {
+            //select a group, optionally an index
+            var node = GroupTree.SelectedNode;
+            if (node == null)
+            {
+                ActiveGroup = null;
+                ActiveGroupInd = -1;
+            }
+            else
+            {
+                var parent = node.Parent;
+                if (parent == null)
+                {
+                    //group only
+                    var groupInd = GroupTree.Nodes.IndexOf(node);
+                    if (groupInd < ActiveUpgrades.Groups.Count)
+                    {
+                        ActiveGroup = ActiveUpgrades.Groups[groupInd];
+                        ActiveGroupInd = -1;
+                    }
+                }
+                else
+                {
+                    var tuningInd = parent.Nodes.IndexOf(node);
+                    var groupInd = GroupTree.Nodes.IndexOf(parent);
+                    if (groupInd < ActiveUpgrades.Groups.Count)
+                    {
+                        ActiveGroup = ActiveUpgrades.Groups[groupInd];
+                        ActiveGroupInd = tuningInd;
+                    }
+                }
+            }
+            UpdateSelectedGroupItem();
+        }
+
+        private void GroupAdd_Click(object sender, EventArgs e)
+        {
+            ActiveUpgrades.Groups.Add(new UpgradeGroup() { Name = "New Group" });
+            RenderGroups();
+            GroupTree.SelectedNode = GroupTree.Nodes[GroupTree.Nodes.Count - 1];
+            UpdateFile();
+        }
+
+        private void GroupRemove_Click(object sender, EventArgs e)
+        {
+            if (ActiveGroup == null) return;
+            ActiveUpgrades.Groups.Remove(ActiveGroup);
+            ActiveGroup = null;
+            ActiveGroupInd = -1;
+            RenderGroups();
+            UpdateFile();
+        }
+
+        private void GroupNameBox_TextChanged(object sender, EventArgs e)
+        {
+            if (ActiveGroup == null) return;
+            ActiveGroup.Name = GroupNameBox.Text;
+            var node = ActiveGroupNode;
+            if (node != null)
+            {
+                node.Text = GroupNameBox.Text;
+            }
         }
     }
 
@@ -592,16 +809,28 @@ namespace FSO.IDE.ResourceBrowser
 
         public override string ToString()
         {
-            //parse old
-            var oldSplit = Sub.Old.Split(':');
-            if (oldSplit.Length != 2) throw new Exception("Tuning to substitute invalid: " + Sub.Old);
-            uint table;
-            uint index;
+            string target = null;
+            if (Sub.Old.Length > 1 && Sub.Old[0] == 'G')
+            {
+                //parse group
+                int grpID = 0;
+                int.TryParse(Sub.Old.Substring(1), out grpID);
 
-            uint.TryParse(oldSplit[0], out table);
-            uint.TryParse(oldSplit[1], out index);
+                var groups = Owner.ActiveUpgrades.Groups;
+                if (grpID < 0 || grpID >= groups.Count) target = "Group " + grpID;
+                else target = "Group '"+groups[grpID].Name+"'";
+            } else {
+                //parse old
+                var oldSplit = Sub.Old.Split(':');
+                if (oldSplit.Length != 2) throw new Exception("Tuning to substitute invalid: " + Sub.Old);
+                uint table;
+                uint index;
 
-            string target = Owner.GetTuningVariableLabel(table, index);
+                uint.TryParse(oldSplit[0], out table);
+                uint.TryParse(oldSplit[1], out index);
+
+                target = Owner.GetTuningVariableLabel(table, index);
+            }
 
             //parse new
             if (Sub.New.Length == 0) throw new Exception("Substitution value cannot be empty.");

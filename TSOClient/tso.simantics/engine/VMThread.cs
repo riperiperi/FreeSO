@@ -151,6 +151,7 @@ namespace FSO.SimAntics.Engine
                 //bhav was invalid/empty
             }
             var frame = Stack[Stack.Count - 1];
+            frame.Callee = stackObj;
             frame.StackObject = stackObj;
 
             try

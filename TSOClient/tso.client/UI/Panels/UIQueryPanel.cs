@@ -112,7 +112,7 @@ namespace FSO.Client.UI.Panels
         public UIImage Thumbnail;
         public UI3DThumb Thumb3D;
         public bool Roommate = true;
-        public bool InInventory = false;
+        public int InInventory = 0;
 
         private VMEntity ActiveEntity;
         private int LastSalePrice;
@@ -705,7 +705,7 @@ namespace FSO.Client.UI.Panels
         
         private void SetHasUpgrades(bool? hasUpgrades, bool bought)
         {
-            if (hasUpgrades == null || (InInventory && !bought))
+            if (hasUpgrades == null || (InInventory == 1 && !bought))
             {
                 UpgradeBack.Visible = false;
                 UpgradeButton.Visible = false;
@@ -715,6 +715,7 @@ namespace FSO.Client.UI.Panels
                 UpgradeButton.Visible = true;
                 UpgradeButton.Disabled = !hasUpgrades.Value;
             }
+            UpgradeList.ReadOnly = InInventory == 2;
             SetUpgradeListVisible(false);
         }
 

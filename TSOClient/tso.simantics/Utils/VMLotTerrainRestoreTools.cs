@@ -666,10 +666,12 @@ namespace FSO.SimAntics.Utils
                 new float[] { (15f / 180f) * (float)Math.PI, (-15f / 180f) * (float)Math.PI });
 
             RestoreRoad(vm, roads);
-
-            //set road dir. should only really do this FIRST EVER time, then road dir changes after are manual and rotate the contents of the lot.
-            vm.TSOState.Size &= 0xFFFF;
-            vm.TSOState.Size |= PickRoadDir(roads) << 16;
+            if (vm.GetGlobalValue(11) == -1)
+            {
+                //set road dir. should only really do this FIRST EVER time, then road dir changes after are manual and rotate the contents of the lot.
+                vm.TSOState.Size &= 0xFFFF;
+                vm.TSOState.Size |= PickRoadDir(roads) << 16;
+            }
 
             PositionLandmarkObjects(vm);
 
@@ -772,7 +774,12 @@ namespace FSO.SimAntics.Utils
                 var ent = EntityByGUID(vm, pos.GUID);
                 if (ent != null)
                 {
-                    ent.MultitileGroup.BaseObject.SetPosition(LotTilePos.FromBigTile((short)rpos.X, (short)rpos.Y, 1), (Direction)(1 << ((lotDir*2 + pos.DirOff) % 8)), vm.Context);
+                    var result = ent.MultitileGroup.BaseObject.SetPosition(LotTilePos.FromBigTile((short)rpos.X, (short)rpos.Y, 1), (Direction)(1 << ((lotDir*2 + pos.DirOff) % 8)), vm.Context);
+                    if (result.Status != VMPlacementError.Success)
+                    {
+                        // if we can't place the object, put it oow.
+                        ent.MultitileGroup.BaseObject.SetPosition(LotTilePos.OUT_OF_WORLD, (Direction)(1 << ((lotDir * 2 + pos.DirOff) % 8)), vm.Context);
+                    }
                 }
             }
 

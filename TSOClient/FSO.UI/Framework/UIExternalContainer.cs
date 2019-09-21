@@ -29,7 +29,7 @@ namespace FSO.Client.UI.Framework
         private bool DoRedraw = true;
 
         public MouseState mouse;
-        public bool HasFocus;
+        public bool HasFocus = true;
         public bool HasUpdated;
         public int NeedFrames = 5;
 
@@ -162,6 +162,7 @@ namespace FSO.Client.UI.Framework
         /// <param name="time"></param>
         public override void Update(UpdateState state)
         {
+            if (!HasFocus && HasUpdated) return;
             HasUpdated = true;
             State.Time = (state != null)?state.Time:new GameTime();
             State.PreviousKeyboardState = State.KeyboardState;

@@ -122,6 +122,7 @@ namespace FSO.Vitaboy
         protected AvatarAppearanceInstance AddAppearance(Appearance appearance, string texOverride)
         {
             var result = new AvatarAppearanceInstance();
+            result.Original = appearance;
             result.Bindings = new List<AvatarBindingInstance>();
 
             int i = 0;
@@ -408,6 +409,7 @@ namespace FSO.Vitaboy
     /// </summary>
     public class AvatarAppearanceInstance
     {
+        public Appearance Original;
         public List<AvatarBindingInstance> Bindings;
     }
 

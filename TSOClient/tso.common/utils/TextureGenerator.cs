@@ -39,7 +39,7 @@ namespace FSO.Common.Utils
 
         public static Texture2D GetDefaultAdv(GraphicsDevice gd)
         {
-            if (DefaultAdvLight == null) DefaultAdvLight = TextureUtils.TextureFromColor(gd, new Color(0, 255, 0, 255)); //outdoors color max
+            if (DefaultAdvLight == null) DefaultAdvLight = TextureUtils.TextureFromColor(gd, new Color(128, 0, 0, 255)); //outdoors color max
             return DefaultAdvLight;
         }
 

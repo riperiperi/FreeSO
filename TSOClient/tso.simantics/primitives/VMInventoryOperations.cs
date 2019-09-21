@@ -1,6 +1,9 @@
 ﻿using FSO.Files.Utils;
+using FSO.LotView.Model;
 using FSO.SimAntics.Engine;
 using FSO.SimAntics.Engine.Scopes;
+using FSO.SimAntics.Engine.Utils;
+using FSO.SimAntics.Model.Platform;
 using FSO.SimAntics.Model.TSOPlatform;
 using FSO.SimAntics.NetPlay.Model.Commands;
 using System;
@@ -26,7 +29,21 @@ namespace FSO.SimAntics.Primitives
                 if (state.Responded)
                 {
                     context.Thread.BlockingState = null;
-                    if (state.WriteTemp0) context.Thread.TempRegisters[0] = state.Temp0Value;
+                    if (state.ObjectPersistID > 0)
+                    {
+                        var persistObj = context.VM.GetObjectByPersist(state.ObjectPersistID);
+                        state.Temp0Value = persistObj?.ObjectID ?? 0;
+                        if (persistObj != null && operand.Mode == VMInventoryOpMode.FSOCopyObjectOfTypeOOW)
+                        {
+                            //make sure when this object is deleted, it does not delete the original. (it's a copy)
+                            context.VM.Context.ObjectQueries.RemoveMultitilePersist(context.VM, state.ObjectPersistID);
+                            foreach (var obj in persistObj.MultitileGroup.Objects)
+                            {
+                                obj.PersistID = 0;
+                            }
+                        }
+                    }
+                    if (state.WriteResult) VMMemory.SetVariable(context, state.WriteScope, state.WriteData, state.Temp0Value);
                     return (state.Success) ? VMPrimitiveExitCode.GOTO_TRUE : VMPrimitiveExitCode.GOTO_FALSE;
                 }
                 else return VMPrimitiveExitCode.CONTINUE_NEXT_TICK;
@@ -37,6 +54,7 @@ namespace FSO.SimAntics.Primitives
                 case VMInventoryOpMode.GetRemainingCapacity:
                     context.Thread.TempRegisters[0] = 255; //TODO: hard object limit imposed by db.
                     break;
+                case VMInventoryOpMode.FSOSaveStackObj:
                 case VMInventoryOpMode.AddStackObjToInventory:
                     // vm initiated inventory transfer. 
                     // TODO: should this force owner? Crafting Bench uses separate command to change owner before doing this.
@@ -54,7 +72,7 @@ namespace FSO.SimAntics.Primitives
                             {
                                 Responded = true,
                                 Success = success,
-                                WriteTemp0 = false
+                                WriteResult = false
                             }));
                             if (success)
                             {
@@ -67,13 +85,16 @@ namespace FSO.SimAntics.Primitives
                                         PersistID = pid
                                     });
                                 }
-                                vm.ForwardCommand(new VMNetSendToInventoryCmd()
+                                if (operand.Mode != VMInventoryOpMode.FSOSaveStackObj)
                                 {
-                                    Verified = true,
-                                    Success = true,
-                                    ObjectPID = pid,
-                                    ActorUID = mypid
-                                });
+                                    vm.ForwardCommand(new VMNetSendToInventoryCmd()
+                                    {
+                                        Verified = true,
+                                        Success = true,
+                                        ObjectPID = pid,
+                                        ActorUID = mypid
+                                    });
+                                }
                             }
                         });
                     }
@@ -96,28 +117,70 @@ namespace FSO.SimAntics.Primitives
                                 {
                                     Responded = true,
                                     Success = success,
-                                    WriteTemp0 = false
+                                    WriteResult = false
                                 }));
                             });
                     }
                     return VMPrimitiveExitCode.CONTINUE_NEXT_TICK;
                 case VMInventoryOpMode.CountObjectsOfType:
+                case VMInventoryOpMode.FSOCountAllObjectsOfType:
                     context.Thread.BlockingState = new VMInventoryOpState();
                     if (context.VM.GlobalLink != null)
                     {
                         //get id and vm now to avoid race conditions
                         var id = context.Caller.ObjectID; //this thread's object id.
                         var vm = context.VM;
-                        context.VM.GlobalLink.ConsumeInventory(context.VM, context.Caller.PersistID, operand.GUID, 0, 0, 
+                        var all = operand.Mode == VMInventoryOpMode.FSOCountAllObjectsOfType;
+                        context.VM.GlobalLink.ConsumeInventory(context.VM, context.Caller.PersistID, operand.GUID, all?2:0, 0, 
                             (bool success, int count) =>
                         {
                             vm.SendCommand(new VMNetAsyncResponseCmd(id, new VMInventoryOpState
                             {
                                 Responded = true,
                                 Success = success,
-                                WriteTemp0 = true,
+                                WriteResult = true,
+                                WriteScope = VMVariableScope.Temps,
                                 Temp0Value = (short)count
                             }));
+                        });
+                    }
+                    return VMPrimitiveExitCode.CONTINUE_NEXT_TICK;
+                case VMInventoryOpMode.FSOCreateObjectOfTypeOOW:
+                case VMInventoryOpMode.FSOCopyObjectOfTypeOOW:
+                    context.Thread.BlockingState = new VMInventoryOpState();
+                    if (context.VM.GlobalLink != null)
+                    {
+                        var id = context.Caller.ObjectID; //this thread's object id.
+                        var reserve = operand.Mode == VMInventoryOpMode.FSOCreateObjectOfTypeOOW;
+                        var index = VMMemory.GetBigVariable(context, operand.FSOScope, operand.FSOData);
+                        context.VM.GlobalLink.RetrieveFromInventoryByType(context.VM, context.Caller.PersistID, operand.GUID, index, reserve, (data) =>
+                        {
+                            context.VM.SendCommand(new VMNetAsyncResponseCmd(id, new VMInventoryOpState
+                            {
+                                Responded = true,
+                                Success = data.GUID != 0,
+                                ObjectPersistID = data?.PersistID ?? 0,
+                                WriteResult = data.GUID != 0,
+                                WriteScope = VMVariableScope.StackObjectID,
+                                WriteData = 0
+                            }));
+
+                            if (data.GUID != 0)
+                            {
+                                data.RestoreType = reserve ? VMInventoryRestoreType.CreateOOW : VMInventoryRestoreType.CopyOOW;
+                                var inventoryCmd = new VMNetPlaceInventoryCmd()
+                                {
+                                    ObjectPID = data.PersistID,
+                                    Verified = true,
+                                    dir = Direction.NORTH,
+                                    level = 1,
+                                    x = -32768,
+                                    y = -32768,
+                                    Info = data,
+                                    Mode = PurchaseMode.Normal
+                                };
+                                context.VM.ForwardCommand(inventoryCmd);
+                            }
                         });
                     }
                     return VMPrimitiveExitCode.CONTINUE_NEXT_TICK;
@@ -128,8 +191,10 @@ namespace FSO.SimAntics.Primitives
 
     public class VMInventoryOperationsOperand : VMPrimitiveOperand
     {
-        public uint GUID;
-        public VMInventoryOpMode Mode;
+        public uint GUID { get; set; }
+        public VMInventoryOpMode Mode { get; set; }
+        public VMVariableScope FSOScope { get; set; }
+        public short FSOData { get; set; }
 
         #region VMPrimitiveOperand Members
         public void Read(byte[] bytes)
@@ -138,6 +203,8 @@ namespace FSO.SimAntics.Primitives
             {
                 GUID = io.ReadUInt32();
                 Mode = (VMInventoryOpMode)io.ReadByte();
+                FSOScope = (VMVariableScope)io.ReadByte();
+                FSOData = io.ReadInt16();
             }
         }
 
@@ -147,6 +214,8 @@ namespace FSO.SimAntics.Primitives
             {
                 io.Write(GUID);
                 io.Write((byte)Mode);
+                io.Write((byte)FSOScope);
+                io.Write(FSOData);
             }
         }
         #endregion
@@ -158,28 +227,64 @@ namespace FSO.SimAntics.Primitives
         AddStackObjToInventory = 1, //true/false. Original game doesn't expect false?
         RemoveTemp0ObjOfTypeFromInventory = 2, //true/false. Original game doesnt expect false?
         CountObjectsOfType = 3, //result in temp 0
+
+        //these create an inventory object out of world.
+        FSOCreateObjectOfTypeOOW = 4, // scope/data is index to access. if index is out of range, goes to last object. if no object, returns false. id in temp 0
+        FSOCopyObjectOfTypeOOW = 5, // same as above, but does not claim the object. id in temp 0.
+        FSOSaveStackObj = 6, //same as add, but does not delete the object afterwards
+        FSOCountAllObjectsOfType = 7, //includes placed objects
+
+        //tokens not implemented yet
+        //return false if the object does not behave like a token.
+
+        FSOTokenEnsureStackObjExists = 32, //ensure one object with this guid exists. if it doesn't, create it similar to AddStackObjToInventory
+        //access token attribute[temp 0] for the zeroth object of this type. Value to read or set is in scope/data.
+        FSOTokenGetAttributeTemp0 = 33,
+        FSOTokenSetAttributeTemp0 = 34,
+        FSOTokenModifyAttributeTemp0 = 35,
     }
 
     public class VMInventoryOpState : VMAsyncState
     {
         public bool Success;
-        public bool WriteTemp0;
+        public bool WriteResult;
         public short Temp0Value;
+        public uint ObjectPersistID;
+        public VMVariableScope WriteScope = VMVariableScope.INVALID;
+        public short WriteData;
 
         public override void Deserialize(BinaryReader reader)
         {
             base.Deserialize(reader);
             Success = reader.ReadBoolean();
-            WriteTemp0 = reader.ReadBoolean();
+            WriteResult = reader.ReadBoolean();
             Temp0Value = reader.ReadInt16();
+            if (Version > 34)
+            {
+                ObjectPersistID = reader.ReadUInt32();
+                WriteScope = (VMVariableScope)reader.ReadByte();
+                WriteData = reader.ReadInt16();
+            }
+            else
+            {
+                if (WriteResult)
+                {
+                    WriteScope = VMVariableScope.Temps;
+                    WriteData = 0;
+                }
+            }
         }
 
         public override void SerializeInto(BinaryWriter writer)
         {
             base.SerializeInto(writer);
             writer.Write(Success);
-            writer.Write(WriteTemp0);
+            writer.Write(WriteResult);
             writer.Write(Temp0Value);
+
+            writer.Write(ObjectPersistID);
+            writer.Write((byte)WriteScope);
+            writer.Write(WriteData);
         }
     }
 }

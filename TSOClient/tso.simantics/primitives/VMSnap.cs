@@ -33,13 +33,19 @@ namespace FSO.SimAntics.Primitives
             var obj = context.StackObject;
             if (obj == context.Caller)
             {
-                obj.MovedSelf = true;
+                foreach (var objSub in obj.MultitileGroup.Objects) objSub.MovedSelf = true;
                 if (obj is VMGameObject)
                 {
                     if (VM.UseWorld)
                     {
+                        // the object moving this object may not be the caller...
+                        // for instance, we can be moved with a call tree.
+                        // we want to use the idle timings for that thread rather than our own.
+                        var idleObjID = context.VM.Scheduler.CurrentObjectID;
+                        var idleObj = context.VM.GetObjectById(idleObjID) ?? obj;
+                        
                         foreach (var obj2 in obj.MultitileGroup.Objects)
-                            obj2.WorldUI.PrepareSnapInterpolation(obj.WorldUI);
+                            obj2.WorldUI.PrepareSnapInterpolation(idleObj.WorldUI);
                     }
                 }
             }

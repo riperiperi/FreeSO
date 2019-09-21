@@ -9,7 +9,7 @@ namespace FSO.Content.Upgrades.Model
 {
     public class UpgradesFile
     {
-        public int Version = 1;
+        public int Version = 2;
         public List<UpgradeIff> Files = new List<UpgradeIff>();
 
         public void Load(BinaryReader reader)

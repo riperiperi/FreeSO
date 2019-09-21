@@ -69,6 +69,7 @@ namespace FSO.SimAntics.NetPlay.Model.Commands
 
             if (price == null) return false;
 
+            price -= obj.MultitileGroup.Price;
             AddedValue = Math.Max(price.Value - (obj.MultitileGroup.InitialPrice - obj.MultitileGroup.Price), 0);
 
             //perform the transaction. If it succeeds, requeue the command

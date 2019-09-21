@@ -50,7 +50,9 @@ namespace FSO.IDE.EditorComponent
             {49, typeof(NotifyOutOfIdleDescriptor) },
             {50, typeof(ChangeActionStringDescriptor) },
             {51, typeof(TS1InventoryOperationsDescriptor) },
-            {62, typeof(InvokePluginDescriptor) }
+            {62, typeof(InvokePluginDescriptor) },
+
+            {67, typeof(TSOInventoryOperationsDescriptor) }
         };
 
         public static Dictionary<PrimitiveGroup, List<byte>> PrimitiveGroups = new Dictionary<PrimitiveGroup, List<byte>>

@@ -79,6 +79,7 @@
             this.Browser = new FSO.IDE.ObjectBrowser();
             this.InspectorTab = new System.Windows.Forms.TabPage();
             this.entityInspector1 = new FSO.IDE.EntityInspector();
+            this.avatarToolToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
             this.menuStrip1.SuspendLayout();
             this.UtilityTabs.SuspendLayout();
             this.OverviewTab.SuspendLayout();
@@ -164,6 +165,7 @@
             this.toolsToolStripMenuItem.DropDownItems.AddRange(new System.Windows.Forms.ToolStripItem[] {
             this.dataServiceEditorToolStripMenuItem,
             this.simAnticsAOTToolStripMenuItem,
+            this.avatarToolToolStripMenuItem,
             this.openExternalIffToolStripMenuItem});
             this.toolsToolStripMenuItem.Name = "toolsToolStripMenuItem";
             this.toolsToolStripMenuItem.Size = new System.Drawing.Size(47, 20);
@@ -475,6 +477,13 @@
             this.entityInspector1.Size = new System.Drawing.Size(724, 452);
             this.entityInspector1.TabIndex = 0;
             // 
+            // avatarToolToolStripMenuItem
+            // 
+            this.avatarToolToolStripMenuItem.Name = "avatarToolToolStripMenuItem";
+            this.avatarToolToolStripMenuItem.Size = new System.Drawing.Size(180, 22);
+            this.avatarToolToolStripMenuItem.Text = "Avatar Tool";
+            this.avatarToolToolStripMenuItem.Click += new System.EventHandler(this.avatarToolToolStripMenuItem_Click);
+            // 
             // MainWindow
             // 
             this.AutoScaleDimensions = new System.Drawing.SizeF(6F, 13F);
@@ -538,6 +547,7 @@
         private System.Windows.Forms.ToolStripMenuItem dataServiceEditorToolStripMenuItem;
         private System.Windows.Forms.ToolStripMenuItem simAnticsAOTToolStripMenuItem;
         private System.Windows.Forms.ToolStripMenuItem saveGlobalscsToolStripMenuItem;
+        private System.Windows.Forms.ToolStripMenuItem avatarToolToolStripMenuItem;
         private System.Windows.Forms.ToolStripMenuItem openExternalIffToolStripMenuItem;
     }
 }

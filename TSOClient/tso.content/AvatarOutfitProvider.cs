@@ -18,10 +18,11 @@ namespace FSO.Content
     /// <summary>
     /// Provides access to outfit (*.oft) data in FAR3 archives.
     /// </summary>
-    public class AvatarOutfitProvider : FAR3Provider<Outfit>
+    public class AvatarOutfitProvider : TSOAvatarContentProvider<Outfit>
     {
-        public AvatarOutfitProvider(Content contentManager)
-            : base(contentManager, new OutfitCodec(), new Regex(".*/outfits/.*\\.dat"))
+        public AvatarOutfitProvider(Content contentManager) : base(contentManager, new OutfitCodec(),
+            new Regex(".*/outfits/.*\\.dat"),
+            new Regex("Avatar/Outfits/.*\\.oft"))
         {
         }
     }

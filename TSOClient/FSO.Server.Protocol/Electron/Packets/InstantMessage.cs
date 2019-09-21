@@ -26,7 +26,8 @@ namespace FSO.Server.Protocol.Electron.Packets
             From = input.GetUInt32();
             To = input.GetUInt32();
             Type = input.GetEnum<InstantMessageType>();
-            Message = input.GetPascalVLCString();
+            Message = input.GetString(Encoding.UTF8); //support unicode characters
+            //Message = input.GetPascalVLCString();
             AckID = input.GetPascalVLCString();
             Reason = input.GetEnum<InstantMessageFailureReason>();
             Color = input.GetUInt32();
@@ -43,7 +44,8 @@ namespace FSO.Server.Protocol.Electron.Packets
             output.PutUInt32(From);
             output.PutUInt32(To);
             output.PutEnum(Type);
-            output.PutPascalVLCString(Message);
+            output.PutString(Message); //support unicode characters
+            //output.PutPascalVLCString(Message);
             output.PutPascalVLCString(AckID);
             output.PutEnum(Reason);
             output.PutUInt32(Color);

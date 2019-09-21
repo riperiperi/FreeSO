@@ -25,7 +25,7 @@ namespace FSO.Content.Framework
     {
         protected Content ContentManager;
         protected Dictionary<ulong, Far3ProviderEntry<T>> EntriesById;
-        protected Dictionary<string, Far3ProviderEntry<T>> EntriesByName;
+        public Dictionary<string, Far3ProviderEntry<T>> EntriesByName;
 
         protected IContentCodec<T> Codec;
         protected TimedReferenceCache<ulong, T> Cache;
@@ -100,6 +100,13 @@ namespace FSO.Content.Framework
                 return entry.ToString();
             }
             return "unnamed";
+        }
+
+        public uint EstimateTypeId()
+        {
+            // assuming only one type is present in the far3 (avatar content), the first type id in the file should be a good estimate.
+            var id = EntriesById.FirstOrDefault().Key;
+            return (uint)id; // low part is ID 
         }
 
         protected virtual T ResolveById(ulong id)

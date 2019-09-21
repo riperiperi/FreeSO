@@ -68,7 +68,7 @@ namespace FSO.SimAntics.Primitives
                 if (curDialog.Responded || curDialog.WaitTime > DIALOG_MAX_WAITTIME)
                 {
                     context.Thread.BlockingState = null;
-                    context.VM.SignalDialog(null);
+                    if (context.VM.MyUID == context.Caller.PersistID) context.VM.SignalDialog(null);
                     switch (curDialog.Type)
                     {
                         default:

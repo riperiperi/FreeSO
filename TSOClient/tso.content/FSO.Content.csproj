@@ -94,8 +94,8 @@
       <HintPath>..\packages\MonoGame.Framework.Portable.3.6.0.1625\lib\portable-net45+win8+wpa81\MonoGame.Framework.dll</HintPath>
       <Private>False</Private>
     </Reference>
-    <Reference Include="Newtonsoft.Json, Version=11.0.0.0, Culture=neutral, PublicKeyToken=30ad4fe6b2a6aeed, processorArchitecture=MSIL">
-      <HintPath>..\packages\Newtonsoft.Json.11.0.2\lib\net45\Newtonsoft.Json.dll</HintPath>
+    <Reference Include="Newtonsoft.Json, Version=12.0.0.0, Culture=neutral, PublicKeyToken=30ad4fe6b2a6aeed, processorArchitecture=MSIL">
+      <HintPath>..\packages\Newtonsoft.Json.12.0.2\lib\net45\Newtonsoft.Json.dll</HintPath>
     </Reference>
     <Reference Include="System" />
     <Reference Include="System.Core">
@@ -160,6 +160,18 @@
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </Content>
     <Content Include="ContentSrc\Effects\VitaboyiOS.fx" />
+    <Content Include="Content\Textures\EOD\Band\bandmetronomeback.png">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </Content>
+    <Content Include="Content\Textures\EOD\Band\bandmetronomecase.png">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </Content>
+    <Content Include="Content\Textures\EOD\Band\bandmetronomeslider.png">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </Content>
+    <Content Include="Content\Textures\EOD\Band\bandskilllevels.png">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </Content>
     <Content Include="Content\Textures\lot\tile_dashed.png">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </Content>
@@ -406,7 +418,9 @@
     <Compile Include="Framework\PackingslipProvider.cs" />
     <Compile Include="Content.cs" />
     <Compile Include="AvatarMeshProvider.cs" />
+    <Compile Include="Framework\RuntimeProvider.cs" />
     <Compile Include="Framework\TS1Provider.cs" />
+    <Compile Include="Framework\TSOAvatarContentProvider.cs" />
     <Compile Include="HandgroupProvider.cs" />
     <Compile Include="IniProvider.cs" />
     <Compile Include="CityMapsProvider.cs" />
@@ -437,7 +451,9 @@
     <Compile Include="TS1\TS1NeighbourProvider.cs" />
     <Compile Include="TS1\TS1ObjectProvider.cs" />
     <Compile Include="Upgrades\Model\ObjectUpgradeConfig.cs" />
+    <Compile Include="Upgrades\Model\Runtime\RuntimeTuningGroup.cs" />
     <Compile Include="Upgrades\Model\Runtime\RuntimeUpgradeFile.cs" />
+    <Compile Include="Upgrades\Model\UpgradeGroup.cs" />
     <Compile Include="Upgrades\Model\UpgradeIff.cs" />
     <Compile Include="Upgrades\Model\UpgradeLevel.cs" />
     <Compile Include="Upgrades\Model\UpgradesFile.cs" />
@@ -734,6 +750,9 @@
     <Content Include="Content\DX\Effects\SpriteEffects.xnb">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </Content>
+    <Content Include="Content\Fonts\Fallbacks\thai.xnb">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </Content>
     <None Include="Content\FSODataDefinition.dat">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </None>
@@ -784,6 +803,12 @@
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </Content>
     <Content Include="Content\OGL\Effects\SpriteEffects.xnb">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </Content>
+    <Content Include="Content\Patch\jobobjband.piff">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </Content>
+    <Content Include="Content\Patch\jobobjband.str.piff">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </Content>
     <None Include="Content\UI\uiscripts\fsoneighpage.uis">
@@ -841,6 +866,9 @@
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </Content>
     <Content Include="Content\UI\uitext\english.dir\_f121_bulletinprotocolstrings.cst">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </Content>
+    <Content Include="Content\UI\uitext\english.dir\_f126_bandtwostrings.cst">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </Content>
     <Content Include="Content\UI\uitext\english.dir\_f124_defaultupgrades.cst">

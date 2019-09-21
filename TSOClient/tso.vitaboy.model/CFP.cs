@@ -18,7 +18,7 @@ namespace FSO.Vitaboy
     /// </summary>
     public class CFP
     {
-        public static float[] Delta = Enumerable.Range(0, 256).Select(x => (float)(3.9676e-10 * (Math.Pow((double)x - 126, 3) * Math.Abs(x - 126)))).ToArray();
+        public static float[] Delta = Enumerable.Range(0, 0xFD).Select(x => (float)(3.9676e-10 * (Math.Pow((double)x - 126, 3) * Math.Abs(x - 126)))).ToArray();
 
         public byte[] Data;
 
@@ -31,6 +31,27 @@ namespace FSO.Vitaboy
             }
         }
 
+        public byte FindBestDelta(float diff)
+        {
+            byte closestDelta = 0;
+            float closestDeltaDiff = float.PositiveInfinity;
+            for (int i=0; i<256; i++)
+            {
+                var dd = Math.Abs(Delta[i] - diff);
+                if (dd < closestDeltaDiff)
+                {
+                    closestDeltaDiff = dd;
+                    closestDelta = (byte)i;
+                }
+            }
+            return closestDelta;
+        }
+
+        /// <summary>
+        /// Inject this CFP's translation and rotation data into the target animation. 
+        /// It should contain a reference for how many translations and rotations it expects.
+        /// </summary>
+        /// <param name="anim">The animation to enrich.</param>
         public void EnrichAnim(Animation anim)
         {
             using (var stream = new MemoryStream(Data))
@@ -53,6 +74,72 @@ namespace FSO.Vitaboy
                 }
             }
             //Data = null;
+        }
+
+        /// <summary>
+        /// Builds data for the given animation.
+        /// </summary>
+        /// <param name="anim"></param>
+        public void CompressAnim(Animation anim)
+        {
+            using (var stream = new MemoryStream())
+            {
+                using (var io = IoWriter.FromStream(stream, ByteOrder.LITTLE_ENDIAN))
+                {
+                    var values = new List<float>();
+                    values.AddRange(anim.Translations.Select(trans => -trans.X));
+                    values.AddRange(anim.Translations.Select(trans => trans.Y));
+                    values.AddRange(anim.Translations.Select(trans => trans.Z));
+
+                    values.AddRange(anim.Rotations.Select(trans => trans.X));
+                    values.AddRange(anim.Rotations.Select(trans => -trans.Y));
+                    values.AddRange(anim.Rotations.Select(trans => -trans.Z));
+                    values.AddRange(anim.Rotations.Select(trans => -trans.W));
+
+                    float lastValue = 0;
+                    int repeatCount = 0;
+                    foreach (var value in values)
+                    {
+                        var diff = value - lastValue;
+                        var bestMatch = FindBestDelta(diff);
+                        var delta = Delta[bestMatch];
+                        var error = Math.Abs(diff - delta);
+
+                        if (bestMatch == 126 && repeatCount != 65535)
+                        {
+                            repeatCount++;
+                        }
+                        else
+                        {
+                            if (repeatCount > 0)
+                            {
+                                io.WriteByte(0xFE);
+                                io.WriteUInt16((ushort)repeatCount);
+                            }
+
+                            if (error > 0.0032126708614f / 2)
+                            {
+                                //encode as literal float
+                                io.WriteByte(0xFF);
+                                io.WriteFloat(value);
+                                lastValue = value;
+                            }
+                            else
+                            {
+                                //encode using delta
+                                io.WriteByte(bestMatch);
+                                lastValue += delta;
+                            }
+                        }
+                    }
+                    if (repeatCount > 0)
+                    {
+                        io.WriteByte(0xFE);
+                        io.WriteUInt16((ushort)repeatCount);
+                    }
+                }
+                Data = stream.ToArray();
+            }
         }
 
         public static void ReadNFloats(IoBuffer io, int floats, Action<int, float> output)

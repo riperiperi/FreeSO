@@ -74,7 +74,8 @@ namespace FSO.Common.Rendering.Framework.IO
             result.ShiftDown = PressedKeys.Contains(Keys.LeftShift) || PressedKeys.Contains(Keys.RightShift);
 			result.CapsDown = state.KeyboardState.CapsLock;
 			result.NumLockDown = state.KeyboardState.NumLock;
-            result.CtrlDown = PressedKeys.Contains(Keys.LeftControl) || PressedKeys.Contains(Keys.RightControl);
+            // Right alt aka AltGr is treated as Ctrl+Alt. It is used to type accented letters and other unusual characters so pressing that key cannot cause special actions.
+            result.CtrlDown = (PressedKeys.Contains(Keys.LeftControl) && !PressedKeys.Contains(Keys.RightAlt)) || PressedKeys.Contains(Keys.RightControl);
 
             for (int j = 0; j < state.NewKeys.Count + charCount; j++)
             {

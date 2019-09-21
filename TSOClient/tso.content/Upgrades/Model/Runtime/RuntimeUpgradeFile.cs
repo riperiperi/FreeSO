@@ -49,18 +49,61 @@ namespace FSO.Content.Upgrades.Model.Runtime
 
             var res = obj.Resource;
 
-            DefaultReplacement = LoadSubs(File.Subs, res);
+            DefaultReplacement = LoadSubs(File.Subs, File.Groups, res);
 
             foreach (var level in File.Upgrades)
             {
-                var runtime = new RuntimeUpgradeLevel(level, res, content);
+                var runtime = new RuntimeUpgradeLevel(File, level, res, content);
                 Levels.Add(runtime);
             }
             Loaded = true;
         }
 
-        public static Dictionary<int, Dictionary<int, short>> LoadSubs(List<UpgradeSubstitution> subs, GameObjectResource res)
+        public static List<UpgradeSubstitution> GroupsIntoSubs(List<UpgradeGroup> groups, List<UpgradeSubstitution> subs)
         {
+            var groupSubs = subs.Where(x => x.Old.Length > 0 && x.Old[0] == 'G');
+            var defaultGroups = groups.Where(x => x.DefaultValue != null);
+            if (groupSubs.Count() == 0 && defaultGroups.Count() == 0) return subs;
+            var result = subs.Where(x => x.Old.Length == 0 || x.Old[0] != 'G').ToList();
+            //add defaults at beginning
+            var defaultInd = 0;
+            foreach (var group in defaultGroups)
+            {
+                foreach (var target in group.Tuning) {
+                    var sub = new UpgradeSubstitution()
+                    {
+                        Old = target,
+                        New = group.DefaultValue
+                    };
+                    result.Insert(defaultInd++, sub);
+                }
+            }
+            //add group targeted upgrade subs at end (overwrite defaults when building into a table)
+            foreach (var entry in groupSubs)
+            {
+                int groupID;
+                if (!int.TryParse(entry.Old.Substring(1), out groupID) || groupID < 0 || groupID >= groups.Count)
+                {
+                    //invalid group - just ignore for now
+                    continue;
+                }
+                var group = groups[groupID];
+                //create subs for each entry in the group
+                foreach (var target in group.Tuning)
+                {
+                    result.Add(new UpgradeSubstitution()
+                    {
+                        Old = target,
+                        New = entry.New
+                    });
+                }
+            }
+            return result;
+        }
+
+        public static Dictionary<int, Dictionary<int, short>> LoadSubs(List<UpgradeSubstitution> subs, List<UpgradeGroup> groups, GameObjectResource res)
+        {
+            subs = GroupsIntoSubs(groups, subs);
             var result = new Dictionary<int, Dictionary<int, short>>();
             foreach (var sub in subs)
             {
@@ -164,7 +207,7 @@ namespace FSO.Content.Upgrades.Model.Runtime
 
         public Dictionary<int, Dictionary<int, short>> Subs;
 
-        public RuntimeUpgradeLevel(UpgradeLevel level, GameObjectResource res, Content content)
+        public RuntimeUpgradeLevel(UpgradeIff file, UpgradeLevel level, GameObjectResource res, Content content)
         {
             Level = level;
             if (Level.Price.Length == 0) throw new Exception("Missing price.");
@@ -186,7 +229,7 @@ namespace FSO.Content.Upgrades.Model.Runtime
 
             Ads = Level.Ad.Split(';');
 
-            Subs = RuntimeUpgradeFile.LoadSubs(Level.Subs, res);
+            Subs = RuntimeUpgradeFile.LoadSubs(Level.Subs, file.Groups, res);
         }
     }
 }
