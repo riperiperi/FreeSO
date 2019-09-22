@@ -54,7 +54,7 @@ namespace FSO.Common.Rendering.Framework.IO
         /// <param name="keys"></param>
         public KeyboardInputResult ApplyKeyboardInput(StringBuilder m_SBuilder, UpdateState state, int cursorIndex, int cursorEndIndex, bool allowInput)
         {
-            if (state.WindowFocused) { return null; }
+            if (!state.WindowFocused) { return null; }
             
             var PressedKeys = state.KeyboardState.GetPressedKeys();
             int charCount = 0;
