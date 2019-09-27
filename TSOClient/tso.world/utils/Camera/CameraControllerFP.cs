@@ -19,8 +19,11 @@ namespace FSO.LotView.Utils.Camera
         public bool LastFP;
         public float SavedYRot;
 
+        private GraphicsDevice GD;
+
         public CameraControllerFP(GraphicsDevice gd, WorldState state) : base(gd, state)
         {
+            GD = gd;
         }
 
         public override void InvalidateCamera(WorldState state)
@@ -88,22 +91,34 @@ namespace FSO.LotView.Utils.Camera
 
         public override void SetActive(ICameraController previous, World world)
         {
+            if (previous is CameraController2D)
+            {
+                //convert to 3d then to fp
+                var c3d = new CameraController3D(GD, world.State);
+                c3d.InvalidateCamera(world.State);
+                c3d.SetActive(previous, world);
+                previous = c3d;
+                /*
+                base.SetActive(previous, world);
+                previous = this;*/
+            }
             if (previous is CameraController3D)
             {
                 var c3d = previous as CameraController3D;
+                _RotationX = c3d.RotationX;
+                _RotationY = c3d.RotationY;
+                _Zoom3D = c3d.Zoom3D;
+                InvalidateCamera(world.State);
                 var relative = ComputeCenterRelative();
+
                 SavedYRot = c3d.RotationY;
                 var relNorm = relative;
                 relNorm.Normalize();
                 var rotY = (float)Math.Acos(Vector3.Dot(new Vector3(0, 1, 0), -relNorm));
                 //var rotY = (float)((1 - Math.Cos(_RotationY)) * Math.PI * 0.245f);
-                c3d.RotationY = rotY;// - (float)Math.PI/2;
+                RotationY = rotY;// - (float)Math.PI/2;
                 world.State.CenterTile += new Vector2(relative.X / WorldSpace.WorldUnitsPerTile, relative.Z / WorldSpace.WorldUnitsPerTile);
                 FPCamHeight = relative.Y;
-            }
-            else if (previous is CameraController2D)
-            {
-                //guess from 2d... that might be hard actually
             }
 
             LastFP = false;

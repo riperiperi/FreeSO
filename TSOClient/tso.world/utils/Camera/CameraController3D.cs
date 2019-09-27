@@ -99,7 +99,10 @@ namespace FSO.LotView.Utils.Camera
             if (previous is CameraControllerFP)
             {
                 var fp = (CameraControllerFP)previous;
+                _RotationX = fp.RotationX;
                 _RotationY = fp.SavedYRot;
+                _Zoom3D = fp.Zoom3D;
+                InvalidateCamera(world.State);
                 var relative = ComputeCenterRelative();
                 world.State.CenterTile -= new Vector2(relative.X / WorldSpace.WorldUnitsPerTile, relative.Z / WorldSpace.WorldUnitsPerTile);
 

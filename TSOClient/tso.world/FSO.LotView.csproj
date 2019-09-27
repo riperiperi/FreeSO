@@ -131,6 +131,7 @@
     <Compile Include="Platform\IWorldPlatform.cs" />
     <Compile Include="Platform\WorldPlatform2D.cs" />
     <Compile Include="Platform\WorldPlatform3D.cs" />
+    <Compile Include="Platform\WorldPlatformNull.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
     <Compile Include="RC\IRCSurroundings.cs" />
     <Compile Include="RC\WallComponentRC.cs" />
@@ -144,6 +145,7 @@
     <Compile Include="Utils\DGRPRenderer.cs" />
     <Compile Include="Utils\IsometricTileIterator.cs" />
     <Compile Include="Utils\ParticleVertex.cs" />
+    <Compile Include="Utils\RenderState.cs" />
     <Compile Include="Utils\SSAADownsample.cs" />
     <Compile Include="Utils\TerrainParallaxVertex.cs" />
     <Compile Include="Utils\TerrainVertex.cs" />

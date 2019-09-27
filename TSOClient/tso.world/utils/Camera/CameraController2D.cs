@@ -18,8 +18,11 @@ namespace FSO.LotView.Utils.Camera
         public bool UseZoomHold => false;
         public bool UseRotateHold => false;
 
+        private GraphicsDevice GD;
+
         public CameraController2D(GraphicsDevice gd)
         {
+            GD = gd;
             Camera = new WorldCamera(gd);
         }
 
@@ -54,7 +57,13 @@ namespace FSO.LotView.Utils.Camera
 
         public void SetActive(ICameraController previous, World world)
         {
-            //from 3d??
+            if (previous is CameraControllerFP)
+            {
+                //convert to 3d then to 2d.
+                var c3d = new CameraController3D(GD, world.State);
+                c3d.SetActive(previous, world);
+                previous = c3d;
+            }
             if (previous is CameraController3D)
             {
                 //set rotation based on 3d camera

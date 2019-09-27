@@ -45,6 +45,7 @@ namespace FSO.LotView.Components
              * state settings for the world and helper functions
              */
             State = new WorldState(device, device.Viewport.Width, device.Viewport.Height, this);
+            State.SetCameraType(this, LotView.Utils.Camera.CameraControllerType._2D);
             GameThread.InUpdate(() =>
             {
                 State.AmbientLight = new Texture2D(device, 256, 256);
@@ -69,10 +70,14 @@ namespace FSO.LotView.Components
             blueprint.Changes.SetFlag(BlueprintGlobalChanges.OUTDOORS_LIGHTING_CHANGED);
             Architecture = new WorldArchitecture(blueprint);
             Entities = new WorldEntities(blueprint);
-            Platform = new WorldPlatform3D(blueprint);
+            Platform = new WorldPlatformNull(blueprint);
             State.Platform = Platform;
             State.Changes = blueprint.Changes;
             blueprint.Changes.Subworld = true;
+        }
+
+        public override void InitDefaultGraphicsMode()
+        {
         }
 
         public void CalculateFloorsUsed()

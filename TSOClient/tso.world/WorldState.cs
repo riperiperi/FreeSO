@@ -60,8 +60,6 @@ namespace FSO.LotView
             this.World = world;
             this.FramePerDraw = 30f/FSOEnvironment.RefreshRate;
             this.Cameras = new CameraControllers(device, this);
-            Cameras.SetCameraType(world, CameraControllerType._3D);
-            CameraMode = CameraRenderMode._3D;
             Rooms = new GPURoomMaps(device);
             WorldSpace = new WorldSpace(worldPxWidth, worldPxHeight, this);
             SetDimensions(new Vector2(worldPxWidth, worldPxHeight));
@@ -70,16 +68,18 @@ namespace FSO.LotView
             Level = 1;
         }
 
-        public void SetCameraType(World world, CameraControllerType type)
+        public void SetCameraType(World world, CameraControllerType type, float transitionTime = -1)
         {
             CameraMode = (type == CameraControllerType._2D) ? CameraRenderMode._2D : CameraRenderMode._3D;
-            Cameras.SetCameraType(world, type);
+            Cameras.SetCameraType(world, type, transitionTime);
+            InvalidateCamera();
         }
 
         public void ForceCamera(CameraControllerType type)
         {
             CameraMode = (type == CameraControllerType._2D) ? CameraRenderMode._2D : CameraRenderMode._3D;
             Cameras.ForceCamera(this, type);
+            InvalidateCamera();
         }
 
         public void UpdateInterpolation()

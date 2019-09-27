@@ -848,9 +848,9 @@ namespace FSO.Client.UI.Panels
             if (!vm.Ready || vm.Context.Architecture == null) return;
 
             //handling smooth scaled zoom
-            var _3d = World.State.CameraMode == CameraRenderMode._3D;
-            Touch._3D = _3d;
-            if (_3d)
+            var camType = World.State.Cameras.ActiveType;
+            Touch._3D = camType != LotView.Utils.Camera.CameraControllerType._2D;
+            if (World.State.Cameras.ActiveType == LotView.Utils.Camera.CameraControllerType._3D)
             {
                 if (World.BackbufferScale != 1) World.BackbufferScale = 1;
                 var s3d = World.State.Cameras.Camera3D; //((WorldStateRC)World.State);
@@ -868,7 +868,7 @@ namespace FSO.Client.UI.Panels
                 s3d.Zoom3D += ((9.75f - (TargetZoom - 0.25f) * 5.7f) - s3d.Zoom3D) / 10;
 
             }
-            else
+            else if (World.State.Cameras.ActiveType == LotView.Utils.Camera.CameraControllerType._2D)
             {
                 if (World.State.Zoom != LastZoom)
                 {

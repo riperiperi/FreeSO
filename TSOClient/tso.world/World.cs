@@ -22,6 +22,7 @@ using FSO.LotView.RC;
 using System.Diagnostics;
 using FSO.LotView.Platform;
 using FSO.LotView.Utils;
+using FSO.LotView.Utils.Camera;
 
 namespace FSO.LotView
 {
@@ -97,7 +98,7 @@ namespace FSO.LotView
              * state settings for the world and helper functions
              */
             State = new WorldState(layer.Device, layer.Device.Viewport.Width, layer.Device.Viewport.Height, this);
-            
+
             State._2D = new _2DWorldBatch(layer.Device, _2DWorldBatch.NUM_2D_BUFFERS,
                 _2DWorldBatch.BUFFER_SURFACE_FORMATS, _2DWorldBatch.FORMAT_ALWAYS_DEPTHSTENCIL, _2DWorldBatch.SCROLL_BUFFER);
 
@@ -126,17 +127,21 @@ namespace FSO.LotView
             Blueprint?.Changes?.SetFlag(BlueprintGlobalChanges.ZOOM);
         }
 
+        public virtual void InitDefaultGraphicsMode()
+        {
+            SetGraphicsMode(WorldConfig.Current.Mode);
+        }
+
         public virtual void InitBlueprint(Blueprint blueprint)
         {
             this.Blueprint = blueprint;
             Platform?.Dispose();
-
-            Platform = new WorldPlatform3D(blueprint);
+            InitDefaultGraphicsMode();
+            
             Entities = new WorldEntities(blueprint);
             Architecture = new WorldArchitecture(blueprint);
             Static?.InitBlueprint(blueprint);
-
-            State.Platform = Platform;
+            
             State.Changes = blueprint.Changes;
             GameThread.InUpdate(() =>
             {
@@ -346,19 +351,18 @@ namespace FSO.LotView
             Scroll(dir, true);
         }
 
-        public void SetGraphicsMode(GlobalGraphicsMode mode)
+        public void SetGraphicsMode(GlobalGraphicsMode mode, bool instant = false)
         {
+            var transTime = instant ? 0 : -1;
             switch (mode)
             {
                 case GlobalGraphicsMode.Full2D:
                 case GlobalGraphicsMode.Hybrid2D:
-                    State.CameraMode = CameraRenderMode._2D;
-                    State.Cameras.SetCameraType(this, Utils.Camera.CameraControllerType._2D);
+                    State.SetCameraType(this, Utils.Camera.CameraControllerType._2D, transTime);
                     Platform = new WorldPlatform2D(Blueprint);
                     break;
                 case GlobalGraphicsMode.Full3D:
-                    State.CameraMode = CameraRenderMode._3D;
-                    State.Cameras.SetCameraType(this, Utils.Camera.CameraControllerType._3D);
+                    State.SetCameraType(this, Utils.Camera.CameraControllerType._3D, transTime);
                     Platform = new WorldPlatform3D(Blueprint);
                     break;
             }
@@ -378,8 +382,9 @@ namespace FSO.LotView
         {
             if (State.CameraMode == CameraRenderMode._3D)
             {
-                var mat = Matrix.CreateRotationZ(-State.Cameras.Camera3D.RotationX);
-                var z = multiplied ? ((1 + (float)Math.Sqrt(State.Cameras.Camera3D.Zoom3D)) / 2) : 1;
+                var cam = State.Cameras.ActiveCamera as CameraController3D;
+                var mat = Matrix.CreateRotationZ(-(cam?.RotationX ?? 0));
+                var z = multiplied ? ((1 + (float)Math.Sqrt(cam?.Zoom3D ?? 1)) / 2) : 1;
                 return new Vector2[] {
                     Vector2.Transform(new Vector2(0, -1), mat) * z,
                     Vector2.Transform(new Vector2(1, 0), mat) * z
@@ -499,9 +504,24 @@ namespace FSO.LotView
                 }
             }
 
-            if (state.WindowFocused && Visible && state.NewKeys.Contains(Microsoft.Xna.Framework.Input.Keys.Tab))
+            if (state.WindowFocused && Visible)
             {
-                SetGraphicsMode((State.CameraMode == CameraRenderMode._3D) ? GlobalGraphicsMode.Hybrid2D : GlobalGraphicsMode.Full3D);
+                if (state.NewKeys.Contains(Microsoft.Xna.Framework.Input.Keys.F12))
+                {
+                    WorldConfig.Current.Mode = (State.CameraMode == CameraRenderMode._3D) ? GlobalGraphicsMode.Hybrid2D : GlobalGraphicsMode.Full3D;
+                    SetGraphicsMode(WorldConfig.Current.Mode);
+                }
+                if (state.NewKeys.Contains(Microsoft.Xna.Framework.Input.Keys.Tab))
+                {
+                    if (State.Cameras.ActiveType == Utils.Camera.CameraControllerType.FirstPerson)
+                    {
+                        SetGraphicsMode(WorldConfig.Current.Mode, false);
+                    }
+                    else
+                    {
+                        State.SetCameraType(this, Utils.Camera.CameraControllerType.FirstPerson, 0);
+                    }
+                }
             }
         }
 

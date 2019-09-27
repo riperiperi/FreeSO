@@ -102,6 +102,7 @@ namespace FSO.LotView.Utils.Camera
 
         public List<ICameraController> Cameras;
         public ICameraController ActiveCamera;
+        public CameraControllerType ActiveType;
         private WorldState State;
 
         public CameraControllers(GraphicsDevice gd, WorldState state)
@@ -114,12 +115,13 @@ namespace FSO.LotView.Utils.Camera
             Cameras = new List<ICameraController>() { Camera2D, Camera3D, CameraFirstPerson };
         }
 
-        public void SetCameraType(World world, CameraControllerType type)
+        public void SetCameraType(World world, CameraControllerType type, float transitionTime = -1)
         {
+            if (transitionTime < 0) transitionTime = TransitionTime;
             if (ActiveCamera != null)
             {
                 //start transitioning the last camera
-                TransitionWeights.Add(new CameraTransition(ActiveCamera, 1f, TransitionTime, type == CameraControllerType._3D ? (1/50f) : 5f));
+                TransitionWeights.Add(new CameraTransition(ActiveCamera, 1f, transitionTime, type == CameraControllerType._3D ? (1/50f) : 5f));
             }
             ICameraController target;
             switch (type)
@@ -140,11 +142,13 @@ namespace FSO.LotView.Utils.Camera
 
             if (target != null)
             {
-                target.SetActive(ActiveCamera, world);
                 TransitionWeights.RemoveAll(x => x.Camera == target);
+                var prev = ActiveCamera;
                 ActiveCamera = target;
+                target.SetActive(prev, world);
                 InvalidateCamera(world.State);
             }
+            ActiveType = type;
         }
 
         public void ForceCamera(WorldState state, CameraControllerType type)
@@ -177,7 +181,7 @@ namespace FSO.LotView.Utils.Camera
 
         public void InvalidateCamera(WorldState state)
         {
-            ActiveCamera.InvalidateCamera(state);
+            ActiveCamera?.InvalidateCamera(state);
         }
 
         public void SetDimensions(Vector2 dim)

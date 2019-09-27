@@ -1,4 +1,5 @@
 ﻿using FSO.Common;
+using FSO.LotView.Model;
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -41,6 +42,8 @@ namespace FSO.LotView
         public int AA = 0;
         public bool Directional = true;
         public bool Complex = false;
+
+        public GlobalGraphicsMode Mode = GlobalGraphicsMode.Hybrid2D;
 
         public int PassOffset
         {

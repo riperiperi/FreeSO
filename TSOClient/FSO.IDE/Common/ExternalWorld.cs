@@ -2,6 +2,7 @@
 using FSO.Common.Rendering.Framework;
 using FSO.Common.Utils;
 using FSO.LotView;
+using FSO.LotView.Platform;
 using FSO.LotView.Utils;
 using Microsoft.Xna.Framework.Graphics;
 using System;
@@ -19,6 +20,11 @@ namespace FSO.IDE.Common
         {
         }
 
+        public override void InitDefaultGraphicsMode()
+        {
+            SetGraphicsMode(LotView.Model.GlobalGraphicsMode.Full2D, true);
+        }
+
         public override void Initialize(_3DLayer layer)
         {
             /**
@@ -27,6 +33,7 @@ namespace FSO.IDE.Common
              * state settings for the world and helper functions
              */
             State = new WorldState(layer.Device, layer.Device.Viewport.Width / FSOEnvironment.DPIScaleFactor, layer.Device.Viewport.Height / FSOEnvironment.DPIScaleFactor, this);
+            State.SetCameraType(this, LotView.Utils.Camera.CameraControllerType._2D);
             State.AmbientLight = new Texture2D(layer.Device, 256, 256);
             State.OutsidePx = new Texture2D(layer.Device, 1, 1);
             State._2D = new FSO.LotView.Utils._2DWorldBatch(layer.Device, 2, new SurfaceFormat[] {

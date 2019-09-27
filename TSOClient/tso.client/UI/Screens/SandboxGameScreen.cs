@@ -295,7 +295,7 @@ namespace FSO.Client.UI.Screens
             if (World != null)
             {
                 //stub smooth zoom?
-                if (state.NewKeys.Contains(Keys.F12))
+                if (state.NewKeys.Contains(Keys.F11))
                 {
                     //render lot thumbnail test
                     var thumb = World.GetLotThumb(GameFacade.GraphicsDevice, null);
