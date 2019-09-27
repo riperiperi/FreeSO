@@ -187,16 +187,17 @@ namespace FSO.Common.Serialization
             } while (
                 (lengthByte >> 7) == 1
             );
+            
+
 
             if (length > 0)
             {
-                StringBuilder str = new StringBuilder();
+                var data = new List<byte>();
                 for (int i = 0; i < length; i++)
                 {
-                    str.Append((char)buffer.Get());
+                    data.Add(buffer.Get());
                 }
-                return str.ToString();
-
+                return Encoding.UTF8.GetString(data.ToArray());
             }
             else
             {
@@ -226,10 +227,12 @@ namespace FSO.Common.Serialization
 
         public static void PutPascalVLCString(this IoBuffer buffer, String value)
         {
+            byte[] encode = null;
             long strlen = 0;
             if (value != null)
             {
-                strlen = value.Length;
+                encode = Encoding.UTF8.GetBytes(value);
+                strlen = encode.Length;
             }
 
             bool write = strlen > 0;
@@ -243,10 +246,7 @@ namespace FSO.Common.Serialization
 
             if (write)
             {
-                foreach (char ch in value.ToCharArray())
-                {
-                    buffer.Put((byte)ch);
-                }
+                buffer.Put(encode);
             }
         }
 
