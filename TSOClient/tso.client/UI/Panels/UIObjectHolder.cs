@@ -472,29 +472,26 @@ namespace FSO.Client.UI.Panels
             if (Locked) return;
 
             CursorType cur = CursorType.SimsMove;
-            if (Holding != null)
+            if (Holding != null && state.WindowFocused)
             {
-                if (Roommate) cur = CursorType.SimsPlace;
-                if (state.KeyboardState.IsKeyDown(Keys.Delete))
-                {
-                    if (state.InputManager.GetFocus() == null)
-                    {
-                        SellBack(null);
-                    }
-                } else if (state.KeyboardState.IsKeyDown(Keys.Escape))
+                if (state.KeyboardState.IsKeyDown(Keys.Escape))
                 {
                     OnDelete(Holding, null);
                     ClearSelected();
-                } else if (state.KeyboardState.IsKeyDown(Keys.I))
+                } else if (state.InputManager.GetFocus() == null)
                 {
-                    if (state.InputManager.GetFocus() == null)
+                    if (state.KeyboardState.IsKeyDown(Keys.I))
                     {
                         MoveToInventory(null);
+                    } else if (state.KeyboardState.IsKeyDown(Keys.Delete))
+                    {
+                        SellBack(null);
                     }
                 }
             }
             if (Holding != null && Roommate)
             {
+                cur = CursorType.SimsPlace;
                 if (MouseClicked) Holding.Clicked = true;
                 if (MouseIsDown && Holding.Clicked)
                 {

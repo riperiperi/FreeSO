@@ -993,12 +993,10 @@ namespace FSO.Client.UI.Panels
                 }
                 var nofocus = state.InputManager.GetFocus() == null;
                 var keyst = state.KeyboardState;
-                if (nofocus && (keyst.IsKeyDown(Keys.Up) || keyst.IsKeyDown(Keys.Left) || keyst.IsKeyDown(Keys.Down) || keyst.IsKeyDown(Keys.Right) ||
-                    (keyst.IsKeyDown(Keys.W) || keyst.IsKeyDown(Keys.A) || keyst.IsKeyDown(Keys.S) || keyst.IsKeyDown(Keys.D))))
-                    KBScroll = true;
-                else
-                    KBScroll = false;
-                    if (MouseIsOn)
+                KBScroll = state.WindowFocused && nofocus &&
+                    (keyst.IsKeyDown(Keys.Up) || keyst.IsKeyDown(Keys.Left) || keyst.IsKeyDown(Keys.Down) || keyst.IsKeyDown(Keys.Right) ||
+                    keyst.IsKeyDown(Keys.W) || keyst.IsKeyDown(Keys.A) || keyst.IsKeyDown(Keys.S) || keyst.IsKeyDown(Keys.D));
+                if (MouseIsOn)
                 {
                     if (state.MouseState.RightButton == ButtonState.Pressed)
                     {
@@ -1031,16 +1029,18 @@ namespace FSO.Client.UI.Panels
 
                 //set cutaway around mouse
                 UpdateCutaway(state);
-
-                if (state.NewKeys.Contains(Keys.S) && state.KeyboardState.IsKeyDown(Keys.LeftControl))
+                if(state.WindowFocused && nofocus)
                 {
-                    //save lot
-                    if (LotSaveDialog == null) SaveLot();
-                }
-                else if (state.NewKeys.Contains(Keys.F) && state.KeyboardState.IsKeyDown(Keys.LeftControl))
-                {
-                    //save facade
-                    if (LotSaveDialog == null) SaveFacade(state.KeyboardState.IsKeyDown(Keys.LeftAlt));
+                    if (state.NewKeys.Contains(Keys.S) && state.KeyboardState.IsKeyDown(Keys.LeftControl) && !state.KeyboardState.IsKeyDown(Keys.RightAlt))
+                    {
+                        //save lot
+                        if (LotSaveDialog == null) SaveLot();
+                    }
+                    else if (state.NewKeys.Contains(Keys.F) && state.KeyboardState.IsKeyDown(Keys.LeftControl) && !state.KeyboardState.IsKeyDown(Keys.RightAlt))
+                    {
+                        //save facade
+                        if (LotSaveDialog == null) SaveFacade(state.KeyboardState.IsKeyDown(Keys.LeftAlt));
+                    }
                 }
             }
         }

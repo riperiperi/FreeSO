@@ -446,7 +446,7 @@ namespace FSO.Client.UI.Panels
             var keys = state.NewKeys;
             var nofocus = state.InputManager.GetFocus() == null;
             base.Update(state);
-            if (Game.InLot)
+            if (Game.InLot && state.WindowFocused)
             {
                 if (keys.Contains(Keys.F1) && !state.CtrlDown) SetPanel(1); // Live Mode Panel
                 if (keys.Contains(Keys.F2)) SetPanel(2); // Buy Mode Panel

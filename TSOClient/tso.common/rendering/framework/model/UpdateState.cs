@@ -39,9 +39,13 @@ namespace FSO.Common.Rendering.Framework.Model
         {
             get { return KeyboardState.IsKeyDown(Keys.LeftShift) || KeyboardState.IsKeyDown(Keys.RightShift); }
         }
+        /// <summary>
+        /// Right alt is treated as LeftCtrl+RightAlt so while right Alt is down, you cannot predict if left Ctrl is also down.
+        /// For that reason, this variable is false when left Ctrl and right Alt are down, and right Ctrl is not down.
+        /// </summary>
         public bool CtrlDown
         {
-            get { return KeyboardState.IsKeyDown(Keys.LeftControl) || KeyboardState.IsKeyDown(Keys.RightControl); }
+            get { return (KeyboardState.IsKeyDown(Keys.LeftControl) && !KeyboardState.IsKeyDown(Keys.RightAlt)) || KeyboardState.IsKeyDown(Keys.RightControl); }
         }
         public bool AltDown
         {
