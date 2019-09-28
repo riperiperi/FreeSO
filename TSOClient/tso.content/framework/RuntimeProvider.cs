@@ -36,9 +36,9 @@ namespace FSO.Content.Framework
 
         public T Get(ContentID id)
         {
-            T entry;
-            if (EntriesByName.TryGetValue(id.FileName, out entry)) return entry;
-            return default(T);
+            if (id == null) return default(T);
+            if (id.FileName != null) return Get(id.FileName);
+            return Get(id.TypeID, id.FileID);
         }
 
         public List<IContentReference<T>> List()
