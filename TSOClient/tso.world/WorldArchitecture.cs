@@ -133,6 +133,7 @@ namespace FSO.LotView
         {
             if (Blueprint.WallCache2D == null || state.CameraMode > CameraRenderMode._2D) return;
             var _2d = state._2D;
+            state.PrepareLighting();
             _2d.SetScroll(pxOffset);
             _2d.RenderCache(Blueprint.WallCache2D);
             _2d.Pause();

@@ -17,6 +17,9 @@ float GrassFadeMul;
 float2 TexOffset;
 float4 TexMatrix;
 
+float2 ScreenRotCenter;
+float4 ScreenMatrix;
+
 bool ScreenAlignUV;
 float2 TexSize;
 
@@ -257,7 +260,11 @@ GrassPSVTX GrassVS(GrassVTX input)
 		output.GrassInfo.yz = (output.GrassInfo.yz - output.ScreenPos.xy) / TexSize; //reverse operation
 	}
 
-    if (output.GrassInfo.x == -1.2 && output.GrassInfo.y == -1.2 && output.GrassInfo.z == -1.2 && output.GrassInfo.w < -1.0 && output.ScreenPos.x < -200 && output.ScreenPos.y < -300) output.Color *= 0.5; 
+	output.ScreenPos.xy -= ScreenRotCenter;
+	output.ScreenPos.xy = output.ScreenPos.xy*ScreenMatrix.xw + output.ScreenPos.yx*ScreenMatrix.zy;
+	output.ScreenPos.xy += ScreenRotCenter;
+
+    //if (output.GrassInfo.x == -1.2 && output.GrassInfo.y == -1.2 && output.GrassInfo.z == -1.2 && output.GrassInfo.w < -1.0 && output.ScreenPos.x < -200 && output.ScreenPos.y < -300) output.Color *= 0.5; 
 
     return output;
 }

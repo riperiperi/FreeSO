@@ -474,9 +474,16 @@ namespace FSO.LotView.Components
             Effect.RoomMap = world.Rooms.RoomMaps[0];
             Effect.RoomLight = world.AmbientLight;
             Effect.Alpha = Alpha;
-            //Effect.depthOutMode = DepthMode && (!FSOEnvironment.UseMRT));
 
             var offset = -world.WorldSpace.GetScreenOffset();
+            var rot =( world.Cameras.Camera2D.Camera.RotateOff / 180) * Math.PI;
+            var smat = new Vector4((float)Math.Cos(rot), (float)Math.Sin(rot) * 0.5f, -(float)Math.Sin(rot) / 0.5f, (float)Math.Cos(rot));
+            var sr = Math.Abs(smat.Y);
+                //smat.Y *= 0.5f;//sc;
+                //smat.Z /= 0.5f;//sc;
+            Effect.ScreenMatrix = smat;
+            Effect.ScreenRotCenter = new Vector2(world.WorldSpace.WorldPxWidth, world.WorldSpace.WorldPxHeight) / 2;// new Vector2();
+            //Effect.depthOutMode = DepthMode && (!FSOEnvironment.UseMRT));
 
             Effect.Projection = world.Projection;
             var view = world.View;

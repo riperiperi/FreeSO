@@ -366,6 +366,11 @@ namespace FSO.LotView
         public Vector2 GetWallOffset()
         {
             if (ZeroWallOffset) return Vector2.Zero;
+            if (CameraMode == CameraRenderMode._2D)
+            {
+                var fd = Camera2D.FrontDirection();
+                return new Vector2(fd.X, fd.Z) / -6;
+            }
             var vd = View;
             vd.M41 = 0; vd.M42 = 0; vd.M43 = 0;
 
@@ -390,18 +395,18 @@ namespace FSO.LotView
                 effect.AdvancedDirection = advDir;
             }
             WorldContent._2DWorldBatchEffect.ambientLight = amb;
-
             //var frontDir = WorldCamera.FrontDirection();
             Vector2 lightOffset;
             if (Light != null)
             {
-                lightOffset = -GetWallOffset() * 6 / (6 * (Light.Blueprint.Width - 2)); //new Vector2(frontDir.X / (6 * (Light.Blueprint.Width - 2)), frontDir.Z / (6 * (Light.Blueprint.Width - 2)));
+                
+                lightOffset = -GetWallOffset() * 6 / (6f * (Light.Blueprint.Width - 2)); //new Vector2(frontDir.X / (6 * (Light.Blueprint.Width - 2)), frontDir.Z / (6 * (Light.Blueprint.Width - 2)));
                 lightOffset *= Light.InvMapLayout;
                 Light.SetMapLayout(3, 2);
             }
             else
             {
-                lightOffset = -GetWallOffset() * 6 / (6 * 75); //new Vector2(frontDir.X / (6 * 75), frontDir.Z / (6 * 75));
+                lightOffset = -GetWallOffset() * 6 / (6f * 75); //new Vector2(frontDir.X / (6 * 75), frontDir.Z / (6 * 75));
             }
 
             foreach (var effect in WorldContent.LightEffects)

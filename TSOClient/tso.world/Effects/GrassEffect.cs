@@ -32,6 +32,9 @@ namespace FSO.LotView.Effects
         private EffectParameter pTexOffset;
         private EffectParameter pTexMatrix;
 
+        private EffectParameter pScreenRotCenter;
+        private EffectParameter pScreenMatrix;
+
         private EffectParameter pScreenAlignUV;
         private EffectParameter pTexSize;
 
@@ -162,6 +165,22 @@ namespace FSO.LotView.Effects
             set
             {
                 pTexMatrix.SetValue(value);
+            }
+        }
+
+        public Vector2 ScreenRotCenter
+        {
+            set
+            {
+                pScreenRotCenter.SetValue(value);
+            }
+        }
+    
+        public Vector4 ScreenMatrix
+        {
+            set
+            {
+                pScreenMatrix.SetValue(value);
             }
         }
 
@@ -393,6 +412,9 @@ namespace FSO.LotView.Effects
 
             pTexOffset = Parameters["TexOffset"];
             pTexMatrix = Parameters["TexMatrix"];
+
+            pScreenRotCenter = Parameters["ScreenRotCenter"];
+            pScreenMatrix = Parameters["ScreenMatrix"];
 
             pScreenAlignUV = Parameters["ScreenAlignUV"];
             pTexSize = Parameters["TexSize"];
