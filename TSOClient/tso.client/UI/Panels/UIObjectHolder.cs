@@ -492,7 +492,6 @@ namespace FSO.Client.UI.Panels
             if (Holding != null && Roommate)
             {
                 cur = CursorType.SimsPlace;
-            {
                 if (MouseClicked) Holding.Clicked = true;
                 if (MouseIsDown && Holding.Clicked)
                 {
