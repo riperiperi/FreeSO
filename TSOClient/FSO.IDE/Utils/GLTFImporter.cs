@@ -341,7 +341,7 @@ namespace FSO.IDE.Utils
             }
 
             var nodes = root.LogicalNodes;
-            var sceneExtras = root.TryUseExtrasAsDictionary(false);
+            var sceneExtras = root.LogicalScenes.FirstOrDefault().TryUseExtrasAsDictionary(false);
 
             foreach (var animation in root.LogicalAnimations)
             {
