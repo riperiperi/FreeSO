@@ -203,7 +203,7 @@ namespace FSO.LotView.Platform
             Promise<Texture2D> bufferTexture = null;
             Promise<Texture2D> depthTexture = null;
             state._2D.OBJIDMode = false;
-            Rectangle bounds = new Rectangle();
+            Rectangle? bounds = null;
             state.ClearLighting(false);
 
             //Blueprint.SetLightColor(WorldContent._2DWorldBatchEffect, Color.White, Color.White);
@@ -248,8 +248,8 @@ namespace FSO.LotView.Platform
 
                             if (offBound.Location.X != int.MaxValue)
                             {
-                                if (i == 0) bounds = offBound;
-                                else bounds = Rectangle.Union(offBound, bounds);
+                                if (bounds == null) bounds = offBound;
+                                else bounds = Rectangle.Union(offBound, bounds.Value);
                             }
                         }
 
@@ -266,13 +266,14 @@ namespace FSO.LotView.Platform
                     _2d.EndImmediate();
                 }
             }
-            
-            bounds.Inflate(1, 1);
+
+            var b = bounds ?? new Rectangle();
+            b.Inflate(1, 1);
             //bounds = new Rectangle(0, 0, 1024, 1024);
-            bounds.X = Math.Max(0, Math.Min(1023, bounds.X));
-            bounds.Y = Math.Max(0, Math.Min(1023, bounds.Y));
-            if (bounds.Width + bounds.X > 1024) bounds.Width = 1024 - bounds.X;
-            if (bounds.Height + bounds.Y > 1024) bounds.Height = 1024 - bounds.Y;
+            b.X = Math.Max(0, Math.Min(1023, b.X));
+            b.Y = Math.Max(0, Math.Min(1023, b.Y));
+            if (b.Width + b.X > 1024) b.Width = 1024 - b.X;
+            if (b.Height + b.Y > 1024) b.Height = 1024 - b.Y;
 
             //return things to normal
             state.DrawOOB = false;
@@ -284,7 +285,7 @@ namespace FSO.LotView.Platform
             gd.DepthStencilState = oldDS;
 
             var tex = bufferTexture.Get();
-            return TextureUtils.Clip(gd, tex, bounds);
+            return TextureUtils.Clip(gd, tex, b);
         }
 
         public void RecacheWalls(GraphicsDevice gd, WorldState state, bool cutawayOnly)
