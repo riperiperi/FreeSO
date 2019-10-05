@@ -63,7 +63,6 @@ namespace FSO.LotView.Platform
             state.CenterTile = bp.GetThumbCenterTile(state);
             state.CenterTile -= state.WorldSpace.GetTileFromScreen(new Vector2((size - state.WorldSpace.WorldPxWidth) / state.PreciseZoom, (size - state.WorldSpace.WorldPxHeight) / state.PreciseZoom) / 2);
             var pxOffset = -state.WorldSpace.GetScreenOffset();
-            state.TempDraw = true;
             bp.Cutaway = new bool[bp.Cutaway.Length];
 
 
@@ -139,7 +138,6 @@ namespace FSO.LotView.Platform
             state.WorldSpace.Invalidate();
             state.InvalidateCamera();
             wCam.ViewDimensions = oldViewDimensions;
-            state.TempDraw = false;
             state.CenterTile = oldCenter;
 
             state.Zoom = oldZoom;
@@ -214,7 +212,6 @@ namespace FSO.LotView.Platform
             cam.Position = cam.Target + new Vector3(-9, 6, -9);
 
             state.DrawOOB = true;
-            state.TempDraw = true;
 
             var _2d = state._2D;
 
@@ -289,7 +286,6 @@ namespace FSO.LotView.Platform
 
             //return things to normal
             state.DrawOOB = false;
-            state.TempDraw = false;
 
             state.ViewProjection = oldVp;
 

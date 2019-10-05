@@ -55,6 +55,7 @@ namespace FSO.LotView
         public float Opacity = 1f;
         public float BackbufferScale = 1f;
         public bool ForceAdvLight;
+        public bool LimitScroll = true;
         public IRCSurroundings Surroundings;
 
         public float SmoothZoomTimer = -1;
@@ -137,7 +138,8 @@ namespace FSO.LotView
             this.Blueprint = blueprint;
             Platform?.Dispose();
             InitDefaultGraphicsMode();
-            
+            State.ProjectTilePos = EstTileAtPosWithScrollHeight;
+
             Entities = new WorldEntities(blueprint);
             Architecture = new WorldArchitecture(blueprint);
             Static?.InitBlueprint(blueprint);
@@ -364,6 +366,7 @@ namespace FSO.LotView
                 case GlobalGraphicsMode.Full3D:
                     State.SetCameraType(this, Utils.Camera.CameraControllerType._3D, transTime);
                     Platform = new WorldPlatform3D(Blueprint);
+                    State.Zoom = WorldZoom.Near;
                     break;
             }
             State.Platform = Platform;
@@ -447,11 +450,18 @@ namespace FSO.LotView
             {
                 pelvisCenter = comp.Position;
             }
-            State.CenterTile = new Vector2(pelvisCenter.X, pelvisCenter.Y);
-            if (State.Level != comp.Level) State.Level = comp.Level;
-            
-            // State.CenterTile -= (pelvisCenter.Z/2.95f) * State.WorldSpace.GetTileFromScreen(new Vector2(0, 230)) / (1 << (3 - (int)State.Zoom));
 
+            if (State.CameraMode < CameraRenderMode._3D)
+            {
+                State.Cameras.WithTransitionsDisabled(() =>
+                {
+                    State.CenterTile = State.Project2DCenterTile(pelvisCenter);
+                    State.Camera2D.RotationAnchor = pelvisCenter;
+                });
+            } else {
+                State.CenterTile = new Vector2(pelvisCenter.X, pelvisCenter.Y);
+            }
+            if (State.Level != comp.Level) State.Level = comp.Level;
         }
 
         public void RestoreTerrainToCenterTile()
@@ -488,7 +498,6 @@ namespace FSO.LotView
             }
 
             State.Cameras.Update(state, this);
-            //State.Update();
             if (SmoothZoomTimer > -1)
             {
                 SmoothZoomTimer += 60f / FSOEnvironment.RefreshRate;
@@ -527,6 +536,7 @@ namespace FSO.LotView
 
         protected void BoundView()
         {
+            if (!LimitScroll) return;
             //bound the scroll so we can't see gray space.
             float boundfactor = 0.5f;
             switch (State.Zoom)
@@ -572,17 +582,6 @@ namespace FSO.LotView
             Blueprint.Changes.PreDraw(device, State);
             Static?.PreDraw(device, State);
 
-            /*
-            State._2D.Begin(this.State.Camera);
-            _2DWorld.PreDraw(device, State);
-            device.SetRenderTarget(null);
-            State._2D.End();
-
-            State._3D.Begin(device);
-            _3DWorld.PreDraw(device, State);
-            State._3D.End();
-            */
-
             if (UseBackbuffer)
             {
                 PPXDepthEngine.SetPPXTarget(null, null, true);
@@ -608,7 +607,10 @@ namespace FSO.LotView
             if (!UseBackbuffer)
                 InternalDraw(device);
             else
+            {
+                PPXDepthEngine.WithOpacity = State.CameraMode < CameraRenderMode._3D;
                 PPXDepthEngine.DrawBackbuffer(Opacity, BackbufferScale);
+            }
             return;
         }
 
@@ -631,33 +633,12 @@ namespace FSO.LotView
             Entities.DrawAvatars(device, State);
             Entities.Draw(device, State);
 
-            /*
-            _3DWorld.DrawBefore2D(device, State);
-
-            _2DWorld.Draw(device, State);
-
-            State._2D.Pause();
-            State._2D.Resume();
-
-            _3DWorld.DrawAfter2D(device, State);
-            State._2D.SetScroll(pxOffset);
-            State._2D.End();
-            State._3D.End();
-
-            foreach (var particle in Blueprint.Particles)
-            {
-                particle.Draw(device, State);
-            }
-            */
-
             State._2D.OutputDepth = false;
         }
 
         public void Force2DPredraw(GraphicsDevice device)
         {
             Static.PreDraw(device, State);
-            //if (_2DWorld is World2DRC) ((World2DRC)_2DWorld).Drawn = true;
-            //_2DWorld.PreDraw(device, State);
         }
 
         public float? BoxRC2(Ray ray, float tileSize)
@@ -732,9 +713,6 @@ namespace FSO.LotView
                 }
                 if (tMinZ < 0 || (ray.Direction.Z >= 0 && tMinZ == 0)) tMinZ = tMaxZ;
 
-                //if ((tMin.HasValue && tMin > tMaxZ) || (tMax.HasValue && tMinZ > tMax))
-                //    return null;
-
                 if (!tMin.HasValue || tMin > tMinZ) tMin = tMinZ;
                 if (!tMax.HasValue || tMaxZ > tMax) tMax = tMaxZ;
             }
@@ -749,17 +727,7 @@ namespace FSO.LotView
         public Vector2 EstTileAtPosWithScroll(Vector2 pos, sbyte level = -1)
         {
             if (level == -1) level = State.Level;
-            pos *= new Vector2(FSOEnvironment.DPIScaleFactor);
-            var sPos = new Vector3(pos, 0);
-
-            var p1 = State.Device.Viewport.Unproject(sPos, State.Projection, State.View, Matrix.Identity);
-            sPos.Z = 1;
-            var p2 = State.Device.Viewport.Unproject(sPos, State.Projection, State.View, Matrix.Identity);
-            var dir = p2 - p1;
-            dir.Normalize();
-            var ray = new Ray(p1, p2 - p1);
-            ray.Direction.Normalize();
-            ray.Position -= new Vector3(0, (level - 1) * 2.95f * 3, 0);
+            var ray = State.CameraRayAtScreenPos(pos, level);
 
             var baseBox = new BoundingBox(new Vector3(0, -5000, 0), new Vector3(Blueprint.Width * 3, 5000, Blueprint.Height * 3));
             if (baseBox.Contains(ray.Position) != ContainmentType.Contains)
@@ -778,8 +746,10 @@ namespace FSO.LotView
             var px = (ray.Direction.X > 0);
             var py = (ray.Direction.Z > 0);
 
+            var canProj = Blueprint?.Altitude != null;
+
             int iteration = 0;
-            while (mx >= 0 && mx < Blueprint.Width && my >= 0 && my < Blueprint.Width)
+            while (mx >= 0 && mx < Blueprint.Width && my >= 0 && my < Blueprint.Width && canProj)
             {
                 //test triangle 1. (centre of tile down xz, we lean towards positive x)
                 var plane = new Plane(
@@ -856,6 +826,13 @@ namespace FSO.LotView
                 }
             }
             return new Vector3(EstTileAtPosWithScroll(pos), State.Level);
+        }
+
+        public Vector3 EstTileAtPosWithScrollHeight(Vector2 pos, sbyte startFloor = -1)
+        {
+            var result = EstTileAtPosWithScroll3D(pos, startFloor);
+            result.Z = Blueprint.InterpAltitude(result) + (result.Z-1) * 2.95f;
+            return result;
         }
 
         /// <summary>
@@ -947,12 +924,25 @@ namespace FSO.LotView
                 }
             }
 
-            if (!FSOEnvironment.Enable3D)
+            var lastm = PPXDepthEngine.MSAA;
+            var lasts = PPXDepthEngine.SSAA;
+            PPXDepthEngine.SSAAFunc = SSAADownsample.Draw;
+            switch (WorldConfig.Current.AA)
             {
-                var last = PPXDepthEngine.MSAA;
-                PPXDepthEngine.MSAA = ((WorldConfig.Current.AA>0) ? 4 : 0);
-                if (last != PPXDepthEngine.MSAA) PPXDepthEngine.InitScreenTargets();
+                case 0:
+                    PPXDepthEngine.MSAA = 0;
+                    PPXDepthEngine.SSAA = 1;
+                    break;
+                case 1:
+                    PPXDepthEngine.MSAA = 4;
+                    PPXDepthEngine.SSAA = 1;
+                    break;
+                case 2:
+                    PPXDepthEngine.MSAA = 0;
+                    PPXDepthEngine.SSAA = 2;
+                    break;
             }
+            if (lastm != PPXDepthEngine.MSAA || lasts != PPXDepthEngine.SSAA) PPXDepthEngine.InitScreenTargets();
         }
 
         public virtual ObjectComponent MakeObjectComponent(Content.GameObject obj)

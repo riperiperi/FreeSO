@@ -35,6 +35,7 @@ using FSO.Files.RC;
 using FSO.Common.Rendering.Framework.IO;
 using FSO.Client.UI.Panels;
 using FSO.Common.Rendering;
+using FSO.LotView.Utils.Camera;
 
 namespace FSO.Client.Rendering.City
 {
@@ -1575,26 +1576,27 @@ namespace FSO.Client.Rendering.City
             float HB = m_ScrWidth * IsoScale;
             float VB = m_ScrHeight * IsoScale;
             Matrix? ViewMatrixN = null;
-            if (camera is WorldCamera3D)
+            if (camera is CameraControllers)
             {
-                var wc = (WorldCamera3D)camera;
+                var controllers = (CameraControllers)camera;
+                var trans = controllers.GetExternalTransition();
+                var dummy = trans.Camera as DummyCamera;
+                trans.Percent = 1 - m_LotZoomProgress;
 
                 Matrix ProjectionMatrix = Camera.Projection;
-
                 Matrix ViewMatrix = Camera.View;
 
                 ViewMatrix = Matrix.Invert(world) * ViewMatrix;
 
-                wc.FromProjection = ProjectionMatrix;
-                wc.FromView = ViewMatrix;
-                ViewMatrixN = Matrix.CreateScale(new Vector3(1, 1/3f, 1)) * wc.FromView;
-                wc.FromIntensity = 1 - m_LotZoomProgress;
+                dummy.Projection = ProjectionMatrix;
+                dummy.View = Matrix.CreateScale(new Vector3(1, 1 / 3f, 1)) * ViewMatrix;
+                //ViewMatrixN =  Matrix.CreateScale(new Vector3(1, 1/3f, 1)) * dummy.View;
             }
 
             var v = camera.View;
             var p = camera.Projection;
 
-            if (camera is WorldCamera3D) ((WorldCamera3D)camera).FromView = ViewMatrixN.Value;
+            //if (camera is WorldCamera3D) ((WorldCamera3D)camera).FromView = ViewMatrixN.Value;
 
             ShadowRes = GlobalSettings.Default.ShadowQuality;
             ShadowsEnabled = GlobalSettings.Default.CityShadows;

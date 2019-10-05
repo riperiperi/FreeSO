@@ -2,6 +2,7 @@
 <Project ToolsVersion="14.0" DefaultTargets="Build" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
   <Import Project="$(MSBuildExtensionsPath)\$(MSBuildToolsVersion)\Microsoft.Common.props" Condition="Exists('$(MSBuildExtensionsPath)\$(MSBuildToolsVersion)\Microsoft.Common.props')" />
   <PropertyGroup>
+    <RestoreProjectStyle>PackageReference</RestoreProjectStyle>
     <Configuration Condition=" '$(Configuration)' == '' ">Debug</Configuration>
     <Platform Condition=" '$(Platform)' == '' ">AnyCPU</Platform>
     <ProjectGuid>{5DEB20EB-1EB7-48F9-922C-463ABAE56E63}</ProjectGuid>
@@ -727,6 +728,11 @@
     <ProjectReference Include="..\FSO.Patcher\FSO.Patcher.csproj">
       <Project>{4e43ce64-343f-4c53-a055-bbf0f4986a16}</Project>
       <Name>FSO.Patcher</Name>
+    </ProjectReference>
+    <ProjectReference Include="..\FSO.SimAntics.JIT.Roslyn\FSO.SimAntics.JIT.Roslyn.csproj">
+      <Project>{b3de74c1-b7a1-4773-bd36-993988b23527}</Project>
+      <Name>FSO.SimAntics.JIT.Roslyn</Name>
+      <EmbedInteropTypes>False</EmbedInteropTypes>
     </ProjectReference>
     <ProjectReference Include="..\FSO.SimAntics.JIT\FSO.SimAntics.JIT.csproj">
       <Project>{b8ab3711-7b4f-4126-9bf3-4ddde9475b74}</Project>

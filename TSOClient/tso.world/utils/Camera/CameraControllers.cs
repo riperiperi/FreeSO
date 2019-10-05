@@ -28,7 +28,7 @@ namespace FSO.LotView.Utils.Camera
                 if (TransitionWeights.Count > 0 && !DisableTransitions)
                 {
                     //blend together cameras
-                    result = GetTransitionMtx(cam => cam.BaseCamera.View, DecompLerp); //
+                    result = GetTransitionMtx(cam => cam.View, DecompLerp); //
                 } else
                 {
                     result = ActiveCamera.BaseCamera.View;
@@ -45,15 +45,15 @@ namespace FSO.LotView.Utils.Camera
                 if (TransitionWeights.Count > 0 && !DisableTransitions)
                 {
                     //blend together cameras
-                    return GetTransitionMtx(cam => cam.BaseCamera.Projection, LerpProj);
+                    return GetTransitionMtx(cam => cam.Projection, LerpProj);
                 }
                 return ActiveCamera.BaseCamera.Projection;
             }
         }
 
-        private Matrix GetTransitionMtx(Func<ICameraController, Matrix> matrixProvider, Func<Matrix, Matrix, float, Matrix> blendFunc)
+        private Matrix GetTransitionMtx(Func<ICamera, Matrix> matrixProvider, Func<Matrix, Matrix, float, Matrix> blendFunc)
         {
-            Matrix baseMtx = matrixProvider(ActiveCamera);
+            Matrix baseMtx = matrixProvider(ActiveCamera.BaseCamera);
             foreach (var mtx in TransitionWeights)
             {
                 var pct = mtx.Percent;
@@ -101,9 +101,12 @@ namespace FSO.LotView.Utils.Camera
         public CameraControllerFP CameraFirstPerson;
 
         public List<ICameraController> Cameras;
-        public ICameraController ActiveCamera;
+        private ICameraController _ActiveCamera;
+        public ICameraController ActiveCamera => _ActiveCamera ?? Camera2D;
         public CameraControllerType ActiveType;
         private WorldState State;
+
+        private CameraTransition _ExternalTransition;
 
         public CameraControllers(GraphicsDevice gd, WorldState state)
         {
@@ -115,13 +118,40 @@ namespace FSO.LotView.Utils.Camera
             Cameras = new List<ICameraController>() { Camera2D, Camera3D, CameraFirstPerson };
         }
 
+        public void WithTransitionsDisabled(Action action)
+        {
+            var old = DisableTransitions;
+            var oldRot = Camera2D.Camera.RotateOff;
+            Camera2D.Camera.RotateOff = 0;
+            DisableTransitions = true;
+            action();
+            DisableTransitions = old;
+            Camera2D.Camera.RotateOff = oldRot;
+        }
+
+        public CameraTransition GetExternalTransition()
+        {
+            if (_ExternalTransition == null)
+            {
+                
+                _ExternalTransition = new CameraTransition(new DummyCamera(), 0, 0, 1);
+                TransitionWeights.Add(_ExternalTransition);
+            }
+            return _ExternalTransition;
+        }
+
+        public void ClearExternalTransition()
+        {
+            _ExternalTransition = null;
+        }
+
         public void SetCameraType(World world, CameraControllerType type, float transitionTime = -1)
         {
             if (transitionTime < 0) transitionTime = TransitionTime;
-            if (ActiveCamera != null)
+            if (_ActiveCamera != null)
             {
                 //start transitioning the last camera
-                TransitionWeights.Add(new CameraTransition(ActiveCamera, 1f, transitionTime, type == CameraControllerType._3D ? (1/50f) : 5f));
+                TransitionWeights.Add(new CameraTransition(_ActiveCamera.BaseCamera, 1f, transitionTime, type == CameraControllerType._3D ? (1/50f) : 5f));
             }
             ICameraController target;
             switch (type)
@@ -143,8 +173,8 @@ namespace FSO.LotView.Utils.Camera
             if (target != null)
             {
                 TransitionWeights.RemoveAll(x => x.Camera == target);
-                var prev = ActiveCamera;
-                ActiveCamera = target;
+                var prev = _ActiveCamera;
+                _ActiveCamera = target;
                 target.SetActive(prev, world);
                 InvalidateCamera(world.State);
             }
@@ -154,6 +184,7 @@ namespace FSO.LotView.Utils.Camera
         public void ForceCamera(WorldState state, CameraControllerType type)
         {
             TransitionWeights.Clear();
+            _ExternalTransition = null;
             ICameraController target;
             switch (type)
             {
@@ -174,7 +205,7 @@ namespace FSO.LotView.Utils.Camera
             
             if (target != null)
             {
-                ActiveCamera = target;
+                _ActiveCamera = target;
                 InvalidateCamera(state);
             }
         }
@@ -197,8 +228,15 @@ namespace FSO.LotView.Utils.Camera
             for (int i = TransitionWeights.Count - 1; i >= 0; i--)
             {
                 var trans = TransitionWeights[i];
-                trans.Percent -= (1 / trans.Duration) / FSOEnvironment.RefreshRate;
-                if (trans.Percent < 0f) TransitionWeights.RemoveAt(i);
+                if (trans.Duration > 0)
+                {
+                    trans.Percent -= (1 / trans.Duration) / FSOEnvironment.RefreshRate;
+                }
+                if (trans.Percent <= 0f)
+                {
+                    if (trans == _ExternalTransition) _ExternalTransition = null;
+                    TransitionWeights.RemoveAt(i);
+                }
             }
             ActiveCamera.Update(state, world);
         }
@@ -210,12 +248,12 @@ namespace FSO.LotView.Utils.Camera
 
     public class CameraTransition
     {
-        public ICameraController Camera;
+        public ICamera Camera;
         public float Percent;
         public float Duration;
         public float Power = 1f;
 
-        public CameraTransition(ICameraController camera, float percent, float duration, float power)
+        public CameraTransition(ICamera camera, float percent, float duration, float power)
         {
             Camera = camera;
             Percent = percent;

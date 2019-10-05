@@ -54,7 +54,6 @@ namespace FSO.LotView.Platform
             state.CenterTile = bp.GetThumbCenterTile(state);
             state.CenterTile -= state.WorldSpace.GetTileFromScreen(new Vector2((576 - state.WorldSpace.WorldPxWidth)*4, (576 - state.WorldSpace.WorldPxHeight)*4) / 2);
             var pxOffset = -state.WorldSpace.GetScreenOffset();
-            state.TempDraw = true;
             bp.Cutaway = new bool[bp.Cutaway.Length];
 
             var _2d = state._2D;
@@ -103,7 +102,6 @@ namespace FSO.LotView.Platform
             state.WorldSpace.Invalidate();
             state.InvalidateCamera();
             wCam.ViewDimensions = oldViewDimensions;
-            state.TempDraw = false;
             state.CenterTile = oldCenter;
 
             state.Zoom = oldZoom;
@@ -127,9 +125,7 @@ namespace FSO.LotView.Platform
             Promise<Texture2D> bufferTexture = null;
 
             state.WorldRectangle = new Rectangle((-pxOffset).ToPoint(), new Point(1, 1));
-
-            state.TempDraw = true;
-            state.ObjectIDMode = true;
+            
             state._2D.OBJIDMode = true;
             using (var buffer = _2d.WithBuffer(_2DWorldBatch.BUFFER_OBJID, ref bufferTexture))
             {
@@ -162,9 +158,7 @@ namespace FSO.LotView.Platform
                 }
 
             }
-            state.ObjectIDMode = false;
             state._2D.OBJIDMode = false;
-            state.TempDraw = false;
             state.CenterTile = oldCenter;
 
             var tex = bufferTexture.Get();
@@ -196,7 +190,6 @@ namespace FSO.LotView.Platform
             state.WorldSpace.Invalidate();
             state.InvalidateCamera();
             state.DrawOOB = true;
-            state.TempDraw = true;
             var pxOffset = new Vector2(442, 275) - state.WorldSpace.GetScreenFromTile(average);
 
             var _2d = state._2D;
@@ -280,7 +273,6 @@ namespace FSO.LotView.Platform
             state.SilentPreciseZoom = oldPreciseZoom;
             state.WorldSpace.Invalidate();
             state.InvalidateCamera();
-            state.TempDraw = false;
             state.RenderingThumbnail = false;
             gd.DepthStencilState = oldDS;
 

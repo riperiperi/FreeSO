@@ -83,7 +83,7 @@ namespace FSO.Client.UI.Panels.LotControls
         {
             ushort pattern = (Modifiers.HasFlag(UILotControlModifiers.CTRL)) ? (ushort)0 : Pattern;
 
-            var tilePos = World.EstTileAtPosWithScroll(new Vector2(MousePosition.X, MousePosition.Y) / FSOEnvironment.DPIScaleFactor);
+            var tilePos = World.EstTileAtPosWithScroll(new Vector2(MousePosition.X, MousePosition.Y));
             Point cursor = new Point((int)tilePos.X, (int)tilePos.Y);
 
             /*if (!Drawing && Commands.Count > 0)

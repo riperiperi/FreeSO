@@ -33,8 +33,21 @@ namespace FSO.LotView
         public BlueprintChanges Changes; //also in Blueprint, but mirrored here for easy access
         public IWorldPlatform Platform;
         public CameraRenderMode CameraMode = CameraRenderMode._2D;
+        public delegate Vector3 ProjectDelegate(Vector2 pos, sbyte floor = -1);
+        public ProjectDelegate ProjectTilePos;
         public float FramePerDraw;
         public int FramesSinceLastDraw;
+
+        private bool _DisableSmoothRotation;
+        public bool DisableSmoothRotation
+        {
+            get => _DisableSmoothRotation || RenderingThumbnail;
+            set
+            {
+                Cameras.DisableTransitions = value;
+                _DisableSmoothRotation = value;
+            }
+        }
 
         private bool _RenderingThumbnail;
         public bool RenderingThumbnail
@@ -64,7 +77,9 @@ namespace FSO.LotView
             WorldSpace = new WorldSpace(worldPxWidth, worldPxHeight, this);
             SetDimensions(new Vector2(worldPxWidth, worldPxHeight));
             Zoom = WorldZoom.Near;
+            DisableSmoothRotation = true;
             Rotation = WorldRotation.TopLeft;
+            DisableSmoothRotation = false;
             Level = 1;
         }
 
@@ -144,7 +159,6 @@ namespace FSO.LotView
         public Matrix View => Cameras.View;
         public Matrix Projection => Cameras.Projection;
 
-        public bool TempDraw; //set for OBJID mode and thumbs
         public bool ObjectIDMode;
         public WorldSpace WorldSpace;
         public _2DWorldBatch _2D;
@@ -161,7 +175,7 @@ namespace FSO.LotView
         public WorldArchitecture Architecture;
         public WorldEntities Entities;
 
-        public bool ThisFrameImmediate;
+        public bool ForceImmediate;
 
         public AvatarComponent ScrollAnchor;
 
@@ -264,7 +278,7 @@ namespace FSO.LotView
         }
 
         public virtual WorldRotation CutRotation {
-            get { return _Rotation; }
+            get { return Cameras.ActiveCamera.CutRotation; }
         }
 
         /// <summary>
@@ -279,15 +293,6 @@ namespace FSO.LotView
         private void SetRotation(WorldRotation rot)
         {
             Cameras.Camera2D.SetRotation(this, rot);
-            /*
-            var old = _Rotation;
-            _Rotation = rot;
-
-            RotationOffFrom = ((rot - old) * 90) + WorldCamera.RotateOff;
-            RotationOffFrom = ((RotationOffFrom + 540) % 360) - 180;
-            WorldCamera.RotateOff = RotationOffFrom;
-            RotationOffPct = 0;
-            */
         }
 
         /// <summary>
@@ -348,18 +353,37 @@ namespace FSO.LotView
         public virtual void InvalidateCamera()
         {
             Cameras.InvalidateCamera(this);
-            /*
-            var ctr = WorldSpace.GetScreenFromTile(CenterTile);
-            ctr.X = (float)Math.Round(ctr.X);
-            ctr.Y = (float)Math.Round(ctr.Y);
-            var test = new Vector2(-0.5f, 0);   
-            test *= 1 << (3 - (int)Zoom);
-            var back = WorldSpace.GetTileFromScreen(ctr + test);
-            WorldCamera.CenterTile = new Vector3(back, 0);
-            WorldCamera.Zoom = Zoom;
-            WorldCamera.Rotation = Rotation;
-            WorldCamera.PreciseZoom = PreciseZoom;
-            */
+        }
+
+        public Ray CameraRayAtScreenPos(Vector2 pos, sbyte level = -1)
+        {
+            if (level == -1) level = Level;
+            //pos *= new Vector2(FSOEnvironment.DPIScaleFactor);
+            var sPos = new Vector3(pos, 0);
+
+            var p1 = Device.Viewport.Unproject(sPos, Projection, View, Matrix.Identity);
+            sPos.Z = 1;
+            var p2 = Device.Viewport.Unproject(sPos, Projection, View, Matrix.Identity);
+            var dir = p2 - p1;
+            dir.Normalize();
+            var ray = new Ray(p1, p2 - p1);
+            ray.Direction.Normalize();
+            ray.Position -= new Vector3(0, (level - 1) * 2.95f * 3, 0);
+            return ray;
+        }
+
+        public Vector2 Project2DCenterTile(Vector3 pos)
+        {
+            var ray = CameraRayAtScreenPos(WorldSpace.WorldPx / 2);
+            ray.Position = new Vector3(pos.X, pos.Z, pos.Y);
+            var groundPlane = new Plane(new Vector3(0, 1, 0), 0);
+            var t = ray.Intersects(groundPlane);
+            if (t == null) return new Vector2(pos.X, pos.Y);
+            else
+            {
+                var result = ray.Position + ray.Direction * t.Value;
+                return new Vector2(result.X, result.Z);
+            }
         }
 
         public bool ZeroWallOffset = false;
@@ -411,7 +435,8 @@ namespace FSO.LotView
 
             foreach (var effect in WorldContent.LightEffects)
             {
-                effect.LightOffset = lightOffset;
+                if (effect is Effects.GrassEffect) effect.LightOffset = new Vector2();
+                else effect.LightOffset = lightOffset;
                 effect.LightingAdjust = LightingAdjust;
             }
 
@@ -463,6 +488,7 @@ namespace FSO.LotView
         /// </summary>
         public float WorldPxWidth;
         public float WorldPxHeight;
+        public Vector2 WorldPx => new Vector2(WorldPxWidth, WorldPxHeight);
         public float OneUnitDistance;
 
         private WorldState State;

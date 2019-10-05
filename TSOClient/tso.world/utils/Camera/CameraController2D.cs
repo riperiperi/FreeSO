@@ -17,6 +17,7 @@ namespace FSO.LotView.Utils.Camera
         public ICamera BaseCamera => Camera;
         public bool UseZoomHold => false;
         public bool UseRotateHold => false;
+        public WorldRotation CutRotation => Camera.Rotation;
 
         private GraphicsDevice GD;
 
@@ -34,6 +35,7 @@ namespace FSO.LotView.Utils.Camera
             var test = new Vector2(-0.5f, 0);
             test *= 1 << (3 - (int)state.Zoom);
             var back = state.WorldSpace.GetTileFromScreen(ctr + test);
+            //Camera.RotationAnchor = null;
             Camera.CenterTile = new Vector3(back, 0);
             Camera.Zoom = state.Zoom;
             Camera.Rotation = state.Rotation;
@@ -69,6 +71,8 @@ namespace FSO.LotView.Utils.Camera
                 //set rotation based on 3d camera
                 var cam3d = (CameraController3D)previous;
                 //(float)Math.PI * (((int)cam.Rotation) / 2f - 0.25f);
+                var target = cam3d.Camera.Target / WorldSpace.WorldUnitsPerTile;
+                world.State.CenterTile = world.State.Project2DCenterTile(new Vector3(target.X, target.Z, target.Y));
                 var rot = Math.Round((Common.Utils.DirectionUtils.PosMod(cam3d.RotationX, Math.PI * 2) / Math.PI + 0.25f) * 2) % 4;
                 world.State.Rotation = (WorldRotation)rot;
                 Camera.RotateOff = 0;
@@ -79,9 +83,27 @@ namespace FSO.LotView.Utils.Camera
         public void SetRotation(WorldState state, WorldRotation rot)
         {
             var old = state.Rotation;
-            state.SilentRotation = rot;
+            var oldRot = Camera.RotateOff;
+            Camera.RotateOff = 0;
 
-            if (state.RenderingThumbnail)
+            //reproject into new 2d space
+            var center = new Vector3(state.CenterTile, 0);
+            state.Cameras.WithTransitionsDisabled(() =>
+            {
+                if (state.ProjectTilePos != null) center = state.ProjectTilePos(state.WorldSpace.WorldPx / 2);
+            });
+            Camera.RotationAnchor = center;
+
+            state.SilentRotation = rot;
+            InvalidateCamera(state);
+
+            state.Cameras.WithTransitionsDisabled(() =>
+            {
+                //project 3d back into 2d center tile
+                state.CenterTile = state.Project2DCenterTile(center);
+            });
+
+            if (state.DisableSmoothRotation)
             {
                 RotationOffFrom = 0;
                 RotationOffPct = 0;
@@ -89,7 +111,7 @@ namespace FSO.LotView.Utils.Camera
             }
             else
             {
-                RotationOffFrom = ((rot - old) * 90) + Camera.RotateOff;
+                RotationOffFrom = ((rot - old) * 90) + oldRot;
                 RotationOffFrom = ((RotationOffFrom + 540) % 360) - 180;
                 Camera.RotateOff = RotationOffFrom;
                 RotationOffPct = 0;

@@ -454,7 +454,7 @@ namespace FSO.Client.UI.Panels
 
         private short GetFloorBlockableHover(Point pt)
         {
-            var tilePos = World.EstTileAtPosWithScroll3D(new Vector2(pt.X, pt.Y) / FSOEnvironment.DPIScaleFactor);
+            var tilePos = World.EstTileAtPosWithScroll3D(new Vector2(pt.X, pt.Y));
             var newHover = World.GetObjectIDAtScreenPos(pt.X,
                     pt.Y,
                     GameFacade.GraphicsDevice);
@@ -501,8 +501,8 @@ namespace FSO.Client.UI.Panels
                     cur = CursorType.SimsRotate;
                     if (Math.Sqrt(xDiff * xDiff + yDiff * yDiff) > 64)
                     {
-                        var from = World.EstTileAtPosWithScroll(new Vector2(MouseDownX, MouseDownY), Holding.Level);
-                        var target = World.EstTileAtPosWithScroll(state.MouseState.Position.ToVector2(), Holding.Level);
+                        var from = World.EstTileAtPosWithScroll(new Vector2(MouseDownX, MouseDownY) * FSOEnvironment.DPIScaleFactor, Holding.Level);
+                        var target = World.EstTileAtPosWithScroll(state.MouseState.Position.ToVector2() * FSOEnvironment.DPIScaleFactor, Holding.Level);
 
                         var vec = target - from;
                         var dir = Math.Atan2(vec.Y, vec.X);
@@ -552,12 +552,12 @@ namespace FSO.Client.UI.Panels
                     if ((Holding.Group.BaseObject.GetValue(VMStackObjectVariable.PlacementFlags) & (short)VMPlacementFlags.InAir) > 0)
                     {
                         //if this object can be placed in air, only consider the current level.
-                        var tilePos = World.EstTileAtPosWithScroll(new Vector2(scaled.X, scaled.Y) / FSOEnvironment.DPIScaleFactor + Holding.MousePosOffset);
+                        var tilePos = World.EstTileAtPosWithScroll(new Vector2(scaled.X, scaled.Y) + Holding.MousePosOffset * FSOEnvironment.DPIScaleFactor);
                         MoveSelected(new Vector2(tilePos.X, tilePos.Y), World.State.Level);
                     } else
                     {
                         //can place on any level below
-                        var tilePos = World.EstTileAtPosWithScroll3D(new Vector2(scaled.X, scaled.Y) / FSOEnvironment.DPIScaleFactor + Holding.MousePosOffset);
+                        var tilePos = World.EstTileAtPosWithScroll3D(new Vector2(scaled.X, scaled.Y) + Holding.MousePosOffset * FSOEnvironment.DPIScaleFactor);
                         MoveSelected(new Vector2(tilePos.X, tilePos.Y), (sbyte)tilePos.Z); // + Holding.TilePosOffset
                     }
                 }
@@ -589,7 +589,7 @@ namespace FSO.Client.UI.Panels
                         Holding.DeleteError = canDelete ? VMPlacementError.CannotDeleteObject : VMPlacementError.ObjectNotOwnedByYou;
                         Holding.MoveTarget = newHover;
                         Holding.MousePosOffset = (objGroup.BaseObject.WorldUI.GetScreenPos(World.State) - GetScaledPoint(state.MouseState.Position).ToVector2()) / FSOEnvironment.DPIScaleFactor;
-                        Holding.TilePosOffset = new Vector2(objBasePos.x / 16f, objBasePos.y / 16f) - World.EstTileAtPosWithScroll(GetScaledPoint(state.MouseState.Position).ToVector2() / FSOEnvironment.DPIScaleFactor);
+                        Holding.TilePosOffset = new Vector2(objBasePos.x / 16f, objBasePos.y / 16f) - World.EstTileAtPosWithScroll(GetScaledPoint(state.MouseState.Position).ToVector2());
                         if (OnPickup != null) OnPickup(Holding, state);
                         //ExecuteEntryPoint(12); //User Pickup
                     }

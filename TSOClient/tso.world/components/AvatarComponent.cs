@@ -42,7 +42,7 @@ namespace FSO.LotView.Components
         public Vector3 GetPelvisPosition()
         {
             var pelvis = Avatar.Skeleton.GetBone("PELVIS").AbsolutePosition / 3.0f;
-            return Vector3.Transform(new Vector3(pelvis.X, pelvis.Z, pelvis.Y), Matrix.CreateRotationZ((float)(RadianDirection + Math.PI))) + this.Position - new Vector3(0.5f, 0.5f, 0f);
+            return Vector3.Transform(new Vector3(pelvis.X, pelvis.Z, pelvis.Y), Matrix.CreateRotationZ((float)(RadianDirection + Math.PI))) + this.Position;// - new Vector3(0.5f, 0.5f, 0f);
         }
 
         public double RadianDirection;
@@ -168,7 +168,7 @@ namespace FSO.LotView.Components
             var room = (Room > 65530 || Room == 0) ? Room : blueprint.Rooms[Room].Base;
             foreach (var pass in technique.Passes)
             {
-                if (state.ObjectIDMode) effect.Parameters["ObjectID"].SetValue(ObjectID / 65535f);
+                effect.Parameters["ObjectID"].SetValue(ObjectID / 65535f);
                 effect.Parameters["Level"].SetValue(ALevel + 0.0001f);
                 var roomLights = blueprint?.RoomColors;
                 if (roomLights != null)

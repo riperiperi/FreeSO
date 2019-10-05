@@ -57,6 +57,14 @@ namespace FSO.LotView.Utils
             set { _CenterTile = value; m_ViewDirty = true; }
         }
 
+        private Vector3? _RotationAnchor;
+        public Vector3? RotationAnchor
+        {
+            get { return _RotationAnchor; }
+            set { _RotationAnchor = value; m_ViewDirty = true; }
+        }
+
+
         private WorldRotation _Rotation;
 
         /// <summary>
@@ -189,7 +197,7 @@ namespace FSO.LotView.Utils
             m_Projection = Matrix.CreateOrthographicOffCenter(-hb2, -hb2+(hb*2), vb2 - (vb * 2), vb2, -(150.0f+depthRange-64), depthRange);
         }
 
-        public Matrix GetRotationMatrix()
+        public Matrix GetInnerRotationMatrix(bool withOff = false)
         {
             var rotationY = 0.0f;
             switch (_Rotation)
@@ -207,12 +215,14 @@ namespace FSO.LotView.Utils
                     rotationY = 45.0f;
                     break;
             }
-            rotationY += _RotateOff;
+            if (withOff) rotationY += _RotateOff;
+            return Matrix.CreateRotationY(MathHelper.ToRadians(rotationY));
+        }
 
-            var view = Matrix.Identity;
-            view *= Matrix.CreateRotationY(MathHelper.ToRadians(rotationY));
+        public Matrix GetRotationMatrix()
+        {
+            var view = GetInnerRotationMatrix();
             view *= Matrix.CreateRotationX(MathHelper.ToRadians(30.0f));
-
             return view;
         }
 
@@ -226,8 +236,23 @@ namespace FSO.LotView.Utils
             var offset = new Vector3(-centerX, -CenterTile.Z*WorldSpace.WorldUnitsPerTile, -centerY);
             var view = Matrix.Identity;
 
-            view *= Matrix.CreateTranslation(offset.X, offset.Y, offset.Z);
-            view *= GetRotationMatrix();
+            if (_RotationAnchor != null)
+            {
+                var anchor = _RotationAnchor.Value;
+                anchor = new Vector3(anchor.X, anchor.Z, anchor.Y) * -WorldSpace.WorldUnitsPerTile;
+                var diff = anchor - offset;
+                view *= Matrix.CreateTranslation(anchor);
+                view *= Matrix.CreateRotationY(MathHelper.ToRadians(_RotateOff));
+                view *= Matrix.CreateTranslation(-anchor);
+                view *= Matrix.CreateTranslation(offset);
+                view *= GetRotationMatrix();
+                //view *= Matrix.CreateRotationX(MathHelper.ToRadians(30.0f));
+            }
+            else
+            {
+                view *= Matrix.CreateTranslation(offset.X, offset.Y, offset.Z);
+                view *= GetRotationMatrix();
+            }
             m_View = view;
             
         }

@@ -236,7 +236,7 @@ namespace FSO.Content
         }
         public GameGlobalResource SemiGlobal;
 
-        public static Func<BHAV, object> BHAVAssembler;
+        public static Func<BHAV, GameIffResource, object> BHAVAssembler;
 
         public virtual void Recache()
         {
@@ -246,7 +246,7 @@ namespace FSO.Content
             {
                 foreach (var bhav in bhavs)
                 {
-                    RoutineCache[bhav.ChunkID] = BHAVAssembler(bhav);
+                    RoutineCache[bhav.ChunkID] = BHAVAssembler(bhav, this);
                 }
             }
 

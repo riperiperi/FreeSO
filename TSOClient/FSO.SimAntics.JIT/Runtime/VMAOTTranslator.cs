@@ -1,4 +1,5 @@
-﻿using FSO.Files.Formats.IFF.Chunks;
+﻿using FSO.Content;
+using FSO.Files.Formats.IFF.Chunks;
 using FSO.SimAntics.Engine;
 using System;
 using System.Collections.Generic;
@@ -16,7 +17,7 @@ namespace FSO.SimAntics.JIT.Runtime
             Assemblies = assemblies;
         }
 
-        public override VMRoutine Assemble(BHAV bhav)
+        public override VMRoutine Assemble(BHAV bhav, GameIffResource res)
         {
             VMRoutine routine;
             var assembly = Assemblies.GetModuleFor(bhav.ChunkParent);

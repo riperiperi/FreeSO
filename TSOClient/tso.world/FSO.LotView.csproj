@@ -141,6 +141,7 @@
     <Compile Include="Utils\Camera\CameraController3D.cs" />
     <Compile Include="Utils\Camera\CameraControllerFP.cs" />
     <Compile Include="Utils\Camera\CameraControllers.cs" />
+    <Compile Include="Utils\Camera\DummyCamera.cs" />
     <Compile Include="Utils\Camera\ICameraController.cs" />
     <Compile Include="Utils\DGRPRenderer.cs" />
     <Compile Include="Utils\IsometricTileIterator.cs" />

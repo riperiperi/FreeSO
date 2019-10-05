@@ -14,6 +14,7 @@ namespace FSO.LotView.Utils.Camera
         ICamera BaseCamera { get; }
         bool UseZoomHold { get; }
         bool UseRotateHold { get; }
+        WorldRotation CutRotation { get; }
 
         void ZoomPress(float intensity);
 

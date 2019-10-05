@@ -24,6 +24,7 @@ namespace FSO.LotView.Utils.Camera
 
         public bool UseZoomHold => true;
         public bool UseRotateHold => true;
+        public WorldRotation CutRotation => (WorldRotation)(DirectionUtils.PosMod(Math.Round(RotationX / (float)(Math.PI / 2) + 0.5f), 4));
         public ICamera BaseCamera => Camera;
 
         protected float _RotationX = -(float)(Math.PI / 4);
@@ -131,6 +132,11 @@ namespace FSO.LotView.Utils.Camera
 
             RotationX = (float)Math.PI * (((int)cam.Rotation) / 2f - 0.25f);
             RotationY = 0;
+
+            if (world.State.ProjectTilePos != null) {
+                var pos = world.State.ProjectTilePos(world.State.WorldSpace.WorldPx / 2);
+                world.State.CenterTile = new Vector2(pos.X, pos.Y);
+            }
         }
 
         protected float CorrectCameraHeight(World world)

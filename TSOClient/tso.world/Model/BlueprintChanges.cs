@@ -49,7 +49,7 @@ namespace FSO.LotView
 
         public void PreDraw(GraphicsDevice gd, WorldState state)
         {
-            DrawImmediate = false;
+            DrawImmediate = state.ForceImmediate;
             if (state.CameraMode < CameraRenderMode._3D)
             {
                 state.CameraMode = (state.Cameras.Safe2D) ? CameraRenderMode._2D : CameraRenderMode._2DRotate;

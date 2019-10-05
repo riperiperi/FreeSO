@@ -127,7 +127,7 @@ namespace FSO.IDE.Common
                 TempVM = new VM(context, new VMServerDriver(new VMTSOGlobalLinkStub()), new VMNullHeadlineProvider());
                 TempVM.Init();
 
-                var blueprint = new Blueprint(32, 32);
+                var blueprint = new Blueprint(1, 1);
                 blueprint.Light = new RoomLighting[]
                 {
                     new RoomLighting() { OutsideLight = 100 },
@@ -216,6 +216,7 @@ namespace FSO.IDE.Common
 
             var world = TempVM.Context.World;
             world.State.SetDimensions(new Vector2(viewport.Width, viewport.Height));
+            world.PreDraw(GameFacade.GraphicsDevice);
             world.Draw(GameFacade.GraphicsDevice);
             GameFacade.GraphicsDevice.DepthStencilState = DepthStencilState.DepthRead;
             batch.Resume();

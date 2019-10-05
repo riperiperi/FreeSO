@@ -18,6 +18,7 @@ namespace FSO.IDE.Common
         public ExternalWorld(GraphicsDevice Device)
             : base(Device)
         {
+            LimitScroll = false;
         }
 
         public override void InitDefaultGraphicsMode()
@@ -33,7 +34,9 @@ namespace FSO.IDE.Common
              * state settings for the world and helper functions
              */
             State = new WorldState(layer.Device, layer.Device.Viewport.Width / FSOEnvironment.DPIScaleFactor, layer.Device.Viewport.Height / FSOEnvironment.DPIScaleFactor, this);
-            State.SetCameraType(this, LotView.Utils.Camera.CameraControllerType._2D);
+            State.DisableSmoothRotation = true;
+            State.ForceImmediate = true;
+            //State.SetCameraType(this, LotView.Utils.Camera.CameraControllerType._2D);
             State.AmbientLight = new Texture2D(layer.Device, 256, 256);
             State.OutsidePx = new Texture2D(layer.Device, 1, 1);
             State._2D = new FSO.LotView.Utils._2DWorldBatch(layer.Device, 2, new SurfaceFormat[] {

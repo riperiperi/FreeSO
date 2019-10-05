@@ -476,14 +476,20 @@ namespace FSO.LotView.Components
             Effect.Alpha = Alpha;
 
             var offset = -world.WorldSpace.GetScreenOffset();
+            var cam2d = world.Cameras.Camera2D.Camera;
             var rot =( world.Cameras.Camera2D.Camera.RotateOff / 180) * Math.PI;
             var smat = new Vector4((float)Math.Cos(rot), (float)Math.Sin(rot) * 0.5f, -(float)Math.Sin(rot) / 0.5f, (float)Math.Cos(rot));
             var sr = Math.Abs(smat.Y);
-                //smat.Y *= 0.5f;//sc;
-                //smat.Z /= 0.5f;//sc;
             Effect.ScreenMatrix = smat;
-            Effect.ScreenRotCenter = new Vector2(world.WorldSpace.WorldPxWidth, world.WorldSpace.WorldPxHeight) / 2;// new Vector2();
-            //Effect.depthOutMode = DepthMode && (!FSOEnvironment.UseMRT));
+            var anchor = cam2d.RotationAnchor;
+            var ctr = new Vector2();
+            if (anchor != null)
+            {
+                ctr = world.WorldSpace.GetScreenFromTile(new Vector2(anchor.Value.X, anchor.Value.Y));
+                ctr -= world.WorldSpace.GetScreenFromTile(new Vector2(cam2d.CenterTile.X, cam2d.CenterTile.Y));
+            }
+            ctr += world.WorldSpace.WorldPx / 2;
+            Effect.ScreenRotCenter = ctr;
 
             Effect.Projection = world.Projection;
             var view = world.View;
@@ -517,7 +523,6 @@ namespace FSO.LotView.Components
             Effect.GrassShininess = 0.02f;// (float)0.25);
 
             pass.Apply();
-            //device.DrawIndexedPrimitives(PrimitiveType.TriangleList, 0, 0, NumPrimitives);
 
             float grassScale;
             float grassDensity;
@@ -536,8 +541,6 @@ namespace FSO.LotView.Components
                     grassDensity = 0.43f;
                     break;
             }
-
-            //    grassScale = 0;
 
             grassDensity *= GrassDensityScale;
             var primitives = Bp.FloorGeom.SetGrassIndices(device, Effect, world);
@@ -566,7 +569,7 @@ namespace FSO.LotView.Components
                 }
                 var depth = device.DepthStencilState;
                 device.DepthStencilState = DepthStencilState.DepthRead;
-                
+                    
                 if (parallax) { 
                     grassScale *= grassNum;
                     grassNum = 1;
