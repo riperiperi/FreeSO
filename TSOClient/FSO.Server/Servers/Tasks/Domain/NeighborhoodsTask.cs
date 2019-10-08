@@ -10,7 +10,7 @@ using System.Threading.Tasks;
 
 namespace FSO.Server.Servers.Tasks.Domain
 {
-    class NeighborhoodsTask : ITask
+    public class NeighborhoodsTask : ITask
     {
         private IDAFactory DAFactory;
         private IGluonHostPool HostPool;

@@ -93,8 +93,8 @@ namespace FSO.Server.Framework.Aries
                 call_sign = Config.Call_Sign,
                 status = Database.DA.Hosts.DbHostStatus.up,
                 time_boot = DateTime.UtcNow,
-                internal_host = Config.Public_Host,
-                public_host = Config.Internal_Host
+                internal_host = Config.Internal_Host,
+                public_host = Config.Public_Host
             };
         }
 
