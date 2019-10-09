@@ -10,6 +10,7 @@ using FSO.Server.Database.DA.DbEvents;
 using FSO.Server.Database.DA.Tasks;
 using FSO.Server.Domain;
 using FSO.Server.Protocol.Gluon.Packets;
+using NLog;
 
 namespace FSO.Server.Servers.Tasks.Domain
 {
@@ -18,6 +19,7 @@ namespace FSO.Server.Servers.Tasks.Domain
         private IDAFactory DAFactory;
         private TaskTuning Tuning;
         private IGluonHostPool HostPool;
+        private static Logger LOG = LogManager.GetCurrentClassLogger();
 
         public BirthdayGiftTask(IDAFactory DAFactory, TaskTuning tuning, IGluonHostPool hostPool)
         {
@@ -66,6 +68,7 @@ namespace FSO.Server.Servers.Tasks.Domain
                     {
                         if (da.Events.GenericAvaTryParticipate(new DbGenericAvatarParticipation() { participation_name = eventName, participation_avatar = avatar.avatar_id}))
                         {
+                            LOG.Info($"Sending {item.age} day birthday gift to {avatar.name}.");
                             //award the object
                             da.Objects.Create(new Database.DA.Objects.DbObject()
                             {

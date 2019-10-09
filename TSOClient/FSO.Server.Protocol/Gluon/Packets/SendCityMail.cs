@@ -32,6 +32,7 @@ namespace FSO.Server.Protocol.Gluon.Packets
                 {
                     var message = new MessageItem();
                     message.Read(mem);
+                    Items.Add(message);
                 }
             }
         }
