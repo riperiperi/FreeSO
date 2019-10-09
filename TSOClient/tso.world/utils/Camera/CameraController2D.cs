@@ -57,13 +57,13 @@ namespace FSO.LotView.Utils.Camera
             throw new NotImplementedException();
         }
 
-        public void SetActive(ICameraController previous, World world)
+        public virtual void BeforeActive(ICameraController previous, World world)
         {
             if (previous is CameraControllerFP)
             {
                 //convert to 3d then to 2d.
                 var c3d = new CameraController3D(GD, world.State);
-                c3d.SetActive(previous, world);
+                c3d.BeforeActive(previous, world);
                 previous = c3d;
             }
             if (previous is CameraController3D)
@@ -80,6 +80,22 @@ namespace FSO.LotView.Utils.Camera
             }
         }
 
+        public void OnActive(ICameraController previous, World world)
+        {
+
+        }
+
+        private Vector3 ReprojectCenterTile(WorldState state)
+        {
+            var center = new Vector3(state.CenterTile, 0);
+            state.Cameras.WithTransitionsDisabled(() =>
+            {
+                if (state.ProjectTilePos != null) center = state.ProjectTilePos(state.WorldSpace.WorldPx / 2);
+            });
+            Camera.RotationAnchor = center;
+            return center;
+        }
+
         public void SetRotation(WorldState state, WorldRotation rot)
         {
             var old = state.Rotation;
@@ -87,12 +103,7 @@ namespace FSO.LotView.Utils.Camera
             Camera.RotateOff = 0;
 
             //reproject into new 2d space
-            var center = new Vector3(state.CenterTile, 0);
-            state.Cameras.WithTransitionsDisabled(() =>
-            {
-                if (state.ProjectTilePos != null) center = state.ProjectTilePos(state.WorldSpace.WorldPx / 2);
-            });
-            Camera.RotationAnchor = center;
+            var center = ReprojectCenterTile(state);
 
             state.SilentRotation = rot;
             InvalidateCamera(state);
@@ -120,20 +131,52 @@ namespace FSO.LotView.Utils.Camera
 
         private float RotationOffFrom;
         private float RotationOffPct;
+        private bool MouseWasDown;
+        private Vector2? LastScrollPos;
+        private Point LastMouse;
 
         public void Update(UpdateState state, World world)
         {
-            if (RotationOffFrom != 0)
-            {
-                RotationOffPct += 3f / FSOEnvironment.RefreshRate;
-                if (RotationOffPct > 1)
-                {
-                    RotationOffFrom = 0;
-                    RotationOffPct = 0;
-                }
+            var wstate = world.State;
+            var md = state.MouseState.MiddleButton == Microsoft.Xna.Framework.Input.ButtonState.Pressed;
 
-                Camera.RotateOff = RotationOffFrom * (float)(Math.Cos((RotationOffPct) * Math.PI) + 1) / 2;
+            if (md)
+            {
+                var mpos = state.MouseState.Position;
+                if (LastScrollPos != wstate.CenterTile)
+                {
+                    ReprojectCenterTile(wstate);
+                }
+                if (MouseWasDown)
+                {
+                    //rotate relative to last mouse position
+                    Camera.RotateOff += ((mpos.X - LastMouse.X) / 250f) * 180 / (float)Math.PI;
+                }
+                LastScrollPos = wstate.CenterTile;
+                LastMouse = mpos;
             }
+            else
+            {
+                if (MouseWasDown)
+                {
+                    //end middle mouse scroll. decide which rotation to settle on
+                    var targRot = (int)Common.Utils.DirectionUtils.PosMod(((int)Camera.Rotation - (int)Math.Round(Camera.RotateOff / 90)), 4);
+                    world.State.Rotation = (WorldRotation)targRot;
+                    LastScrollPos = null;
+                }
+                if (RotationOffFrom != 0)
+                {
+                    RotationOffPct += 3f / FSOEnvironment.RefreshRate;
+                    if (RotationOffPct > 1)
+                    {
+                        RotationOffFrom = 0;
+                        RotationOffPct = 0;
+                    }
+
+                    Camera.RotateOff = RotationOffFrom * (float)(Math.Cos((RotationOffPct) * Math.PI) + 1) / 2;
+                }
+            }
+            MouseWasDown = md;
         }
 
         public void ZoomHold(float intensity)

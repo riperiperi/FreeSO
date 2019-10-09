@@ -174,8 +174,10 @@ namespace FSO.LotView.Utils.Camera
             {
                 TransitionWeights.RemoveAll(x => x.Camera == target);
                 var prev = _ActiveCamera;
+               
                 _ActiveCamera = target;
-                target.SetActive(prev, world);
+                target.BeforeActive(prev, world);
+                target.OnActive(prev, world);
                 InvalidateCamera(world.State);
             }
             ActiveType = type;

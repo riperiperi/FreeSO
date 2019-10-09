@@ -89,19 +89,27 @@ namespace FSO.LotView.Utils.Camera
                 FPCamVelocity *= 0.9f;
         }
 
-        public override void SetActive(ICameraController previous, World world)
+        private ICameraController Previous;
+
+        public override void BeforeActive(ICameraController previous, World world)
         {
             if (previous is CameraController2D)
             {
                 //convert to 3d then to fp
                 var c3d = new CameraController3D(GD, world.State);
                 c3d.InvalidateCamera(world.State);
-                c3d.SetActive(previous, world);
+                c3d.BeforeActive(previous, world);
                 previous = c3d;
                 /*
                 base.SetActive(previous, world);
                 previous = this;*/
             }
+            Previous = previous;
+        }
+
+        public override void OnActive(ICameraController previous, World world)
+        {
+            previous = Previous;
             if (previous is CameraController3D)
             {
                 var c3d = previous as CameraController3D;

@@ -26,7 +26,9 @@ namespace FSO.LotView.Utils.Camera
 
         void Update(UpdateState state, World world);
 
-        void SetActive(ICameraController previous, World world);
+        void BeforeActive(ICameraController previous, World world);
+
+        void OnActive(ICameraController previous, World world);
 
         void InvalidateCamera(WorldState state);
 

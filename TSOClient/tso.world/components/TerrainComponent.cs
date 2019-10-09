@@ -583,7 +583,7 @@ namespace FSO.LotView.Components
                     else
                         Effect.GrassProb = grassDensity * ((4 - (2 / (2f * 4))) / (float)4);
                     Effect.ParallaxHeight = grassScale * (20 / 522f) * (100/512f) / 4;
-                    offset += new Vector2(0, 1);
+                    offset += new Vector2(smat.Z, smat.W);
                         
                     var off2 = new Vector2(world.WorldSpace.WorldPxWidth, world.WorldSpace.WorldPxHeight);
                     off2 = (off2 / world.PreciseZoom - off2) / 2;

@@ -395,6 +395,20 @@ namespace FSO.LotView
             }
             else
             {
+                var cam = State.Cameras.ActiveCamera as CameraController2D;
+                var rcam = cam.Camera;
+                var rot = (float)DirectionUtils.PosMod((-0.5 + (int)rcam.Rotation - rcam.RotateOff / 90) * (-Math.PI / 2), Math.PI * 2);
+
+                var mat = Matrix.CreateRotationZ(rot);
+                int z = (multiplied) ? (((1 << (3 - (int)State.Zoom)) * 3) / 2) : 1;
+                return new Vector2[] {
+                    Vector2.Transform(new Vector2(0, -1), mat) * z,
+                    Vector2.Transform(new Vector2(1, 0), mat) * z
+                };
+            }
+            /*
+            else
+            {
                 Vector2[] output = new Vector2[2];
                 switch (State.Rotation)
                 {
@@ -423,6 +437,7 @@ namespace FSO.LotView
                 }
                 return output;
             }
+            */
         }
 
         public void InitiateSmoothZoom(WorldZoom zoom)

@@ -95,7 +95,7 @@ namespace FSO.LotView.Utils.Camera
             throw new NotImplementedException();
         }
 
-        public virtual void SetActive(ICameraController previous, World world)
+        public virtual void BeforeActive(ICameraController previous, World world)
         {
             if (previous is CameraControllerFP)
             {
@@ -117,6 +117,11 @@ namespace FSO.LotView.Utils.Camera
             }
         }
 
+        public virtual void OnActive(ICameraController previous, World world)
+        {
+
+        }
+
         public void Inherit2D(CameraController2D controller, World world)
         {
             var cam = controller.Camera;
@@ -134,8 +139,11 @@ namespace FSO.LotView.Utils.Camera
             RotationY = 0;
 
             if (world.State.ProjectTilePos != null) {
-                var pos = world.State.ProjectTilePos(world.State.WorldSpace.WorldPx / 2);
-                world.State.CenterTile = new Vector2(pos.X, pos.Y);
+                world.State.Cameras.WithTransitionsDisabled(() =>
+                {
+                    var pos = world.State.ProjectTilePos(world.State.WorldSpace.WorldPx / 2);
+                    world.State.CenterTile = new Vector2(pos.X, pos.Y);
+                });
             }
         }
 
