@@ -32,6 +32,7 @@ using FSO.UI.Framework;
 using MSDFData;
 using FSO.Common.Audio;
 using System.Linq;
+using FSO.LotView.Model;
 
 namespace FSO.Client
 {
@@ -143,6 +144,18 @@ namespace FSO.Client
                 settings.Save();
             }
 
+            var initialMode = (GlobalGraphicsMode)settings.GlobalGraphicsMode;
+            if (FSOEnvironment.Enable3D)
+            {
+                if (initialMode == GlobalGraphicsMode.Full2D) initialMode = GlobalGraphicsMode.Full3D;
+            }
+            else
+            {
+                initialMode = GlobalGraphicsMode.Full2D;
+            }
+            GraphicsModeControl.ChangeMode(initialMode);
+            GraphicsModeControl.ModeChanged += SaveGraphicsModePreference;
+
             FeatureLevelTest.UpdateFeatureLevel(GraphicsDevice);
             if (!FSOEnvironment.MSAASupport)
                 settings.AntiAlias = 0;
@@ -248,6 +261,12 @@ namespace FSO.Client
             if (GameFacade.Linux) MP3Player.NewMode = false;
 
             //(new Utils.PalMapper()).DoIt();
+        }
+
+        private void SaveGraphicsModePreference(GlobalGraphicsMode obj)
+        {
+            GlobalSettings.Default.GlobalGraphicsMode = (int)obj;
+            GlobalSettings.Default.Save();
         }
 
         /// <summary>

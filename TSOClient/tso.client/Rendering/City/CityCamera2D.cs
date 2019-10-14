@@ -173,12 +173,15 @@ namespace FSO.Client.Rendering.City
         {
             get
             {
-                throw new NotImplementedException();
+                var r = CalculateR();
+                return new Vector3(r.X, 0, r.Y);
             }
 
             set
             {
-                throw new NotImplementedException();
+                Vector3 scrollPos = Vector3.Transform(new Vector3(value.X, value.Y, value.Z), View);
+                m_TargVOffX += (scrollPos.X - m_TargVOffX);
+                m_TargVOffY += (scrollPos.Y - m_TargVOffY);
             }
         }
 
@@ -280,7 +283,7 @@ namespace FSO.Client.Rendering.City
             return CalculateR();
         }
 
-        public void InheritPosition(Terrain parent, World lotWorld, CoreGameScreenController controller)
+        public void InheritPosition(Terrain parent, World lotWorld, CoreGameScreenController controller, bool instant)
         {
             if (controller != null)
             {
@@ -317,8 +320,9 @@ namespace FSO.Client.Rendering.City
                     parent.LotPosition = new Vector3((float)(x + 1), elev / 12.0f, (float)(y + 0));
 
                     Vector3 scrollPos = Vector3.Transform(new Vector3((float)(x + 1) - tile.Y, elev / 12.0f, (float)(y + 0) + tile.X), View);
-                    m_TargVOffX += (scrollPos.X - m_TargVOffX) / 3;
-                    m_TargVOffY += (scrollPos.Y - m_TargVOffY) / 3;
+                    var divisor = instant ? 1 : 3;
+                    m_TargVOffX += (scrollPos.X - m_TargVOffX) / divisor;
+                    m_TargVOffY += (scrollPos.Y - m_TargVOffY) / divisor;
                 }
             }
         }

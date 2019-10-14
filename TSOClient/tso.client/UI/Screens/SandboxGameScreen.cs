@@ -11,6 +11,7 @@ using FSO.Common.Utils;
 using FSO.Files.Formats.IFF.Chunks;
 using FSO.HIT;
 using FSO.LotView;
+using FSO.LotView.Model;
 using FSO.SimAntics;
 using FSO.SimAntics.Engine.TSOTransaction;
 using FSO.SimAntics.NetPlay;
@@ -324,6 +325,11 @@ namespace FSO.Client.UI.Screens
                 SwitchLot = -1;
             }
             if (vm != null) vm.Update();
+
+            if (state.NewKeys.Contains(Microsoft.Xna.Framework.Input.Keys.F12) && GraphicsModeControl.Mode != GlobalGraphicsMode.Full2D)
+            {
+                GraphicsModeControl.ChangeMode((GraphicsModeControl.Mode == GlobalGraphicsMode.Full3D) ? GlobalGraphicsMode.Hybrid2D : GlobalGraphicsMode.Full3D);
+            }
         }
 
         public override void PreDraw(UISpriteBatch batch)

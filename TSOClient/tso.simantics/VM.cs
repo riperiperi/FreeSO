@@ -247,7 +247,7 @@ namespace FSO.SimAntics
                 forward.X *= -1f;
                 forward.Normalize();
                 listener.Forward = forward;
-                Context.World.State.SimSpeed = SpeedMultiplier;
+                Context.World.State.SimSpeed = Math.Max(0, SpeedMultiplier);
             }
 
             if (LastFrameSpeed != SpeedMultiplier)

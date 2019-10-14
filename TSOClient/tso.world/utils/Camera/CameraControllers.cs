@@ -142,13 +142,14 @@ namespace FSO.LotView.Utils.Camera
 
         public void ClearExternalTransition()
         {
+            TransitionWeights.Remove(_ExternalTransition);
             _ExternalTransition = null;
         }
 
         public void SetCameraType(World world, CameraControllerType type, float transitionTime = -1)
         {
             if (transitionTime < 0) transitionTime = TransitionTime;
-            if (_ActiveCamera != null)
+            if (_ActiveCamera != null && transitionTime > 0)
             {
                 //start transitioning the last camera
                 TransitionWeights.Add(new CameraTransition(_ActiveCamera.BaseCamera, 1f, transitionTime, type == CameraControllerType._3D ? (1/50f) : 5f));
@@ -172,11 +173,11 @@ namespace FSO.LotView.Utils.Camera
 
             if (target != null)
             {
-                TransitionWeights.RemoveAll(x => x.Camera == target);
+                TransitionWeights.RemoveAll(x => x.Camera == target.BaseCamera);
                 var prev = _ActiveCamera;
-               
+
+                prev = target.BeforeActive(prev, world);
                 _ActiveCamera = target;
-                target.BeforeActive(prev, world);
                 target.OnActive(prev, world);
                 InvalidateCamera(world.State);
             }

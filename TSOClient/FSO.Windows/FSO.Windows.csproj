@@ -74,7 +74,6 @@
   <ItemGroup>
     <Reference Include="MonoGame.Framework, Version=3.6.0.1625, Culture=neutral, processorArchitecture=MSIL">
       <HintPath>..\packages\MonoGame.Framework.Portable.3.6.0.1625\lib\portable-net45+win8+wpa81\MonoGame.Framework.dll</HintPath>
-      <Private>False</Private>
     </Reference>
     <Reference Include="System" />
     <Reference Include="System.Core" />
@@ -121,7 +120,6 @@
     </None>
   </ItemGroup>
   <ItemGroup>
-
     <ProjectReference Include="..\tso.client\FSO.Client.csproj">
       <Project>{635e68fa-3905-4943-b4f5-d463a8c02e87}</Project>
       <Name>FSO.Client</Name>

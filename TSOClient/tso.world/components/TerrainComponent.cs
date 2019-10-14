@@ -493,7 +493,7 @@ namespace FSO.LotView.Components
 
             Effect.Projection = world.Projection;
             var view = world.View;
-            if (!_3d) view = view * Matrix.CreateTranslation(0, 0, -0.25f);
+            //if (!_3d) view = view * Matrix.CreateTranslation(0, 0, -0.25f);
             Effect.View = view;
             //world._3D.ApplyCamera(Effect);
             var translation = ((world.Zoom == WorldZoom.Far) ? -7 : ((world.Zoom == WorldZoom.Medium) ? -5 : -3)) * (20 / 522f);

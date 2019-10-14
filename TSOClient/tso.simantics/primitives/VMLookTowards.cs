@@ -7,6 +7,7 @@ using FSO.Files.Utils;
 using FSO.LotView.Model;
 using FSO.Files.Formats.IFF.Chunks;
 using System.IO;
+using FSO.SimAntics.Model;
 
 namespace FSO.SimAntics.Primitives
 {
@@ -28,6 +29,12 @@ namespace FSO.SimAntics.Primitives
             switch (operand.Mode)
             {
                 case VMLookTowardsMode.HeadTowardsObject:
+                    //set default state
+                    sim.SetPersonData(VMPersonDataVariable.HeadSeekObject, context.StackObjectID);
+                    sim.SetPersonData(VMPersonDataVariable.HeadSeekState, 1); //in progress flag only
+                    sim.SetPersonData(VMPersonDataVariable.HeadSeekLimitAction, 1); //look back on limit?
+                    sim.SetPersonData(VMPersonDataVariable.HeadSeekFinishAction, 0); //unknown
+                    sim.SetPersonData(VMPersonDataVariable.HeadSeekTimeout, 0); //forever
                     return VMPrimitiveExitCode.GOTO_TRUE; //TODO: turning head towards things, with head seek timeout
                 case VMLookTowardsMode.BodyTowardsCamera:
                     return VMPrimitiveExitCode.GOTO_TRUE; //does not work in TSO

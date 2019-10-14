@@ -220,6 +220,7 @@ namespace FSO.Common.Utils
 
         public static Texture2D[] GetWallZBuffer(GraphicsDevice gd)
         {
+            float bias = 0f;
             if (WallZBuffer == null)
             {
                 var count = WallZBufferConfig.Length;
@@ -240,7 +241,7 @@ namespace FSO.Common.Utils
                         float xInt = yInt;
                         for (int x = 0; x < width; x++)
                         {
-                            byte zCol = (byte)Math.Round(Math.Min(255, xInt));
+                            byte zCol = (byte)Math.Round(Math.Min(255, xInt + bias));
                             data[offset++] = new Color(zCol, zCol, zCol, zCol);
                             xInt += config[3];
                         }

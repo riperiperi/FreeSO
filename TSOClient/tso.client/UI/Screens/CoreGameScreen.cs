@@ -416,7 +416,7 @@ namespace FSO.Client.UI.Screens
                             GlobalSettings.Default.Save();
                         }
                         else
-                            CityRenderer.InheritPosition(World, FindController<CoreGameScreenController>());
+                            CityRenderer.InheritPosition(World, FindController<CoreGameScreenController>(), false);
                     }
                     if (CityRenderer.m_LotZoomProgress > 0f && CityRenderer.m_LotZoomProgress < 1f)
                     {
@@ -494,6 +494,11 @@ namespace FSO.Client.UI.Screens
                 }
 
                 DiscordRpcEngine.Secret = null;
+            }
+
+            if (state.NewKeys.Contains(Microsoft.Xna.Framework.Input.Keys.F12) && GraphicsModeControl.Mode != GlobalGraphicsMode.Full2D)
+            {
+                GraphicsModeControl.ChangeMode((GraphicsModeControl.Mode == GlobalGraphicsMode.Full3D) ? GlobalGraphicsMode.Hybrid2D : GlobalGraphicsMode.Full3D);
             }
         }
 

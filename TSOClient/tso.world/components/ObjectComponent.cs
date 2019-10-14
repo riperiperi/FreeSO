@@ -352,7 +352,7 @@ namespace FSO.LotView.Components
             {
                 result |= world.Frustum.Intersects(GetBounds());
             }
-            return result;
+            return result || true;
         }
 
         public void ValidateSprite(WorldState world)
@@ -540,7 +540,9 @@ namespace FSO.LotView.Components
         public virtual BoundingBox GetParticleBounds()
         {
             //make an estimation based off of the sprite height
-            if (Mode.HasFlag(ComponentRenderMode._3D)) return dgrp.GetBounds() ?? new BoundingBox();
+            var bounds = dgrp.GetBounds();
+            if (bounds != null) return bounds.Value;
+            //if (world.CameraMode == CameraRenderMode._2D || Mode.HasFlag(ComponentRenderMode._3D)) return  ?? new BoundingBox();
             if (DGRP == null) return new BoundingBox(new Vector3(-0.4f, 0.1f, -0.4f), new Vector3(0.4f, 0.9f, 0.4f));
             else
             {

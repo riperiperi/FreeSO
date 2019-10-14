@@ -4,6 +4,7 @@
  * http://mozilla.org/MPL/2.0/. 
  */
 
+using Microsoft.Xna.Framework;
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -72,6 +73,12 @@ namespace FSO.Common.Utils
             value |= value >> 8;
             value |= value >> 16;
             return tab32[(uint)(value * 0x07C4ACDD) >> 27];
+        }
+
+        public static float QuaternionDistance(Quaternion q1, Quaternion q2)
+        {
+            var inner = q1.X * q2.X + q1.Y * q2.Y + q1.Z * q2.Z + q1.W * q2.W;
+            return (float)Math.Acos(2 * (inner * inner) - 1);
         }
     }
 }

@@ -545,16 +545,17 @@ namespace FSO.LotView.Utils
 
         private Vector4 BackOffForRot(WorldRotation rot)
         {
+            const float bias = 0.15f; //all 2d graphics are slightly offset forwards
             switch (rot)
             {
                 case WorldRotation.TopLeft:
-                    return new Vector4(0, 0, 0, 0);
+                    return new Vector4(bias, 0, bias, 0);
                 case WorldRotation.TopRight:
-                    return new Vector4(0, 0, 3, 0);
+                    return new Vector4(bias, 0, 3-bias, 0);
                 case WorldRotation.BottomRight:
-                    return new Vector4(3, 0, 3, 0);
+                    return new Vector4(3-bias, 0, 3-bias, 0);
                 case WorldRotation.BottomLeft:
-                    return new Vector4(3, 0, 0, 0);
+                    return new Vector4(3-bias, 0, bias, 0);
             }
             return new Vector4(0, 0, 0, 0);
         }

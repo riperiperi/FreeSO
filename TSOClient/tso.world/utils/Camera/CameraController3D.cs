@@ -20,7 +20,7 @@ namespace FSO.LotView.Utils.Camera
         private bool MouseWasDown;
         private Point LastMouse;
         private WorldState State;
-        protected float CamHeight;
+        public float CamHeight;
 
         public bool UseZoomHold => true;
         public bool UseRotateHold => true;
@@ -95,7 +95,7 @@ namespace FSO.LotView.Utils.Camera
             throw new NotImplementedException();
         }
 
-        public virtual void BeforeActive(ICameraController previous, World world)
+        public virtual ICameraController BeforeActive(ICameraController previous, World world)
         {
             if (previous is CameraControllerFP)
             {
@@ -105,7 +105,7 @@ namespace FSO.LotView.Utils.Camera
                 _Zoom3D = fp.Zoom3D;
                 InvalidateCamera(world.State);
                 var relative = ComputeCenterRelative();
-                world.State.CenterTile -= new Vector2(relative.X / WorldSpace.WorldUnitsPerTile, relative.Z / WorldSpace.WorldUnitsPerTile);
+                SwitchCenter = world.State.CenterTile - new Vector2(relative.X / WorldSpace.WorldUnitsPerTile, relative.Z / WorldSpace.WorldUnitsPerTile);
 
                 CamHeight = fp.CamHeight;
                 CamHeight -= relative.Y - fp.FPCamHeight;
@@ -115,11 +115,14 @@ namespace FSO.LotView.Utils.Camera
                 //just guess camera zoom and rotation?
                 Inherit2D((CameraController2D)previous, world);
             }
+            return previous;
         }
+
+        public Vector2 SwitchCenter;
 
         public virtual void OnActive(ICameraController previous, World world)
         {
-
+            world.State.CenterTile = SwitchCenter;
         }
 
         public void Inherit2D(CameraController2D controller, World world)
@@ -142,7 +145,7 @@ namespace FSO.LotView.Utils.Camera
                 world.State.Cameras.WithTransitionsDisabled(() =>
                 {
                     var pos = world.State.ProjectTilePos(world.State.WorldSpace.WorldPx / 2);
-                    world.State.CenterTile = new Vector2(pos.X, pos.Y);
+                    SwitchCenter = new Vector2(pos.X, pos.Y);
                 });
             }
         }

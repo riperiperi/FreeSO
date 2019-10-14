@@ -637,7 +637,7 @@ void BasePS(GrassPSVTX input, out float4 color:COLOR0, out float4 depthB : COLOR
         color = float4(1,1,1,1);//*DiffuseColor;
 		if (IgnoreColor == false) color *= input.Color;
 		if (UseTexture == true) {
-			color *= tex2D(TexSampler, LoopUV(input.GrassInfo.yz));
+			color *= tex2Dbias(TexSampler, float4(LoopUV(input.GrassInfo.yz), 0, -999));
 			if (color.a < 0.5) discard;
 		}
 		color = gammaMul(color, lightProcessRoof(input.ModelPos) * LightDot(input.Normal));

@@ -744,7 +744,7 @@ namespace FSO.LotView.Components
             device.RasterizerState = RasterizerState.CullClockwise;
             for (int i = 0; i < Drawgroups.Length; i++)
             {
-                if (i > world.Level - 1) return;
+                if (i > world.Level - 1) break;
                 Effect.Level = (float)i + 1.0001f;
                 if (Drawgroups[i] != null)
                 {

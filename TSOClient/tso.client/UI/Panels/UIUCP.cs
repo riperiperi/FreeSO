@@ -30,6 +30,7 @@ using FSO.Client.UI.Hints;
 using FSO.HIT;
 using FSO.Client.UI.Model;
 using FSO.LotView.Utils.Camera;
+using FSO.LotView.Model;
 
 namespace FSO.Client.UI.Panels
 {
@@ -765,7 +766,7 @@ namespace FSO.Client.UI.Panels
             NeighborhoodButton.Selected = (Game.ZoomLevel == 4);
             WorldButton.Selected = (Game.ZoomLevel == 5);
 
-            var _3d = GlobalSettings.Default.GlobalGraphicsMode > 1;
+            var _3d = GraphicsModeControl.Mode == GlobalGraphicsMode.Full3D;
 
             if (Game is SandboxGameScreen)
             {

@@ -91,7 +91,7 @@ namespace FSO.LotView.Utils.Camera
 
         private ICameraController Previous;
 
-        public override void BeforeActive(ICameraController previous, World world)
+        public override ICameraController BeforeActive(ICameraController previous, World world)
         {
             if (previous is CameraController2D)
             {
@@ -104,18 +104,18 @@ namespace FSO.LotView.Utils.Camera
                 base.SetActive(previous, world);
                 previous = this;*/
             }
-            Previous = previous;
+            return previous;
         }
 
         public override void OnActive(ICameraController previous, World world)
         {
-            previous = Previous;
             if (previous is CameraController3D)
             {
                 var c3d = previous as CameraController3D;
                 _RotationX = c3d.RotationX;
                 _RotationY = c3d.RotationY;
                 _Zoom3D = c3d.Zoom3D;
+                CamHeight = c3d.CamHeight;
                 InvalidateCamera(world.State);
                 var relative = ComputeCenterRelative();
 

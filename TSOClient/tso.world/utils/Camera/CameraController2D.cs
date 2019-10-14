@@ -57,7 +57,9 @@ namespace FSO.LotView.Utils.Camera
             throw new NotImplementedException();
         }
 
-        public virtual void BeforeActive(ICameraController previous, World world)
+        public Vector2 SwitchCenter;
+
+        public virtual ICameraController BeforeActive(ICameraController previous, World world)
         {
             if (previous is CameraControllerFP)
             {
@@ -70,19 +72,26 @@ namespace FSO.LotView.Utils.Camera
             {
                 //set rotation based on 3d camera
                 var cam3d = (CameraController3D)previous;
-                //(float)Math.PI * (((int)cam.Rotation) / 2f - 0.25f);
                 var target = cam3d.Camera.Target / WorldSpace.WorldUnitsPerTile;
-                world.State.CenterTile = world.State.Project2DCenterTile(new Vector3(target.X, target.Z, target.Y));
+                SwitchCenter = world.State.Project2DCenterTile(new Vector3(target.X, target.Z, target.Y));
+            }
+            return previous;
+        }
+
+        public void OnActive(ICameraController previous, World world)
+        {
+            
+            if (previous is CameraController3D)
+            {
+                //set rotation based on 3d camera
+                var cam3d = (CameraController3D)previous;
+                var target = cam3d.Camera.Target / WorldSpace.WorldUnitsPerTile;
+                world.State.CenterTile = SwitchCenter;
                 var rot = Math.Round((Common.Utils.DirectionUtils.PosMod(cam3d.RotationX, Math.PI * 2) / Math.PI + 0.25f) * 2) % 4;
                 world.State.Rotation = (WorldRotation)rot;
                 Camera.RotateOff = 0;
                 RotationOffFrom = 0;
             }
-        }
-
-        public void OnActive(ICameraController previous, World world)
-        {
-
         }
 
         private Vector3 ReprojectCenterTile(WorldState state)
@@ -103,7 +112,7 @@ namespace FSO.LotView.Utils.Camera
             Camera.RotateOff = 0;
 
             //reproject into new 2d space
-            var center = ReprojectCenterTile(state);
+            var center = (state.ScrollAnchor != null) ? (Camera.RotationAnchor ?? ReprojectCenterTile(state)) : ReprojectCenterTile(state);
 
             state.SilentRotation = rot;
             InvalidateCamera(state);
@@ -143,7 +152,7 @@ namespace FSO.LotView.Utils.Camera
             if (md)
             {
                 var mpos = state.MouseState.Position;
-                if (LastScrollPos != wstate.CenterTile)
+                if (wstate.ScrollAnchor == null && LastScrollPos != wstate.CenterTile)
                 {
                     ReprojectCenterTile(wstate);
                 }

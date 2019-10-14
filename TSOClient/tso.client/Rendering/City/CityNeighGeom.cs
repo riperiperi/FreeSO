@@ -291,7 +291,7 @@ namespace FSO.Client.Rendering.City
         {
             var screenCtr = City.transformSpr4(new Vector3(cell.Center.X, City.InterpElevationAt(cell.Center) + 5f, cell.Center.Y));
 
-            if (screenCtr.Z > 0)
+            if (!float.IsNaN(screenCtr.X) && screenCtr.Z > 0)
             {
                 var banner = Banners.FirstOrDefault(x => x.DataID == cell.Ind);
                 if (banner != null && banner.Parent == null)

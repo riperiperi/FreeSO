@@ -116,6 +116,7 @@ namespace FSO.LotView
 
             HasInitGPU = true;
             HasInit = HasInitGPU & HasInitBlueprint;
+            GraphicsModeControl.ModeChanged += SetGraphicsMode;
         }
 
         public void GameResized()
@@ -130,7 +131,7 @@ namespace FSO.LotView
 
         public virtual void InitDefaultGraphicsMode()
         {
-            SetGraphicsMode(WorldConfig.Current.Mode);
+            SetGraphicsMode(GraphicsModeControl.Mode);
         }
 
         public virtual void InitBlueprint(Blueprint blueprint)
@@ -353,7 +354,12 @@ namespace FSO.LotView
             Scroll(dir, true);
         }
 
-        public void SetGraphicsMode(GlobalGraphicsMode mode, bool instant = false)
+        public void SetGraphicsMode(GlobalGraphicsMode mode)
+        {
+            SetGraphicsMode(mode, false);
+        }
+
+        public void SetGraphicsMode(GlobalGraphicsMode mode, bool instant)
         {
             var transTime = instant ? 0 : -1;
             switch (mode)
@@ -530,11 +536,6 @@ namespace FSO.LotView
 
             if (state.WindowFocused && Visible)
             {
-                if (state.NewKeys.Contains(Microsoft.Xna.Framework.Input.Keys.F12))
-                {
-                    WorldConfig.Current.Mode = (State.CameraMode == CameraRenderMode._3D) ? GlobalGraphicsMode.Hybrid2D : GlobalGraphicsMode.Full3D;
-                    SetGraphicsMode(WorldConfig.Current.Mode);
-                }
                 if (state.NewKeys.Contains(Microsoft.Xna.Framework.Input.Keys.Tab))
                 {
                     if (State.Cameras.ActiveType == Utils.Camera.CameraControllerType.FirstPerson)
@@ -1083,6 +1084,7 @@ namespace FSO.LotView
                 Blueprint.Terrain?.Dispose();
                 Blueprint.RoofComp?.Dispose();
             }
+            GraphicsModeControl.ModeChanged -= SetGraphicsMode;
         }
     }
 }

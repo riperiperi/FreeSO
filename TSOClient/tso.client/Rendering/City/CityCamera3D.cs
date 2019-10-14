@@ -97,7 +97,7 @@ namespace FSO.Client.Rendering.City
         {
             get
             {
-                return 0f;
+                return (Zoomed > TerrainZoomMode.Far) ? 1 : 0;
             }
             set
             {
@@ -111,6 +111,7 @@ namespace FSO.Client.Rendering.City
             Touch = new UILotControlTouchHelper(this);
             Touch.MinZoom = 0.25f;
             Touch.MaxZoom = 2.5f;
+            InvalidateCamera();
         }
 
         public Vector2 CalculateR()
@@ -130,7 +131,7 @@ namespace FSO.Client.Rendering.City
 
         private float TargRX;
         private float TargRY;
-        public void InheritPosition(Terrain parent, World lotWorld, CoreGameScreenController controller)
+        public void InheritPosition(Terrain parent, World lotWorld, CoreGameScreenController controller, bool instant)
         {
             if (controller != null)
             {
@@ -153,7 +154,14 @@ namespace FSO.Client.Rendering.City
 
                     parent.LotPosition = new Vector3((float)(x + 1), elev / 12.0f, (float)(y + 0));
 
-                    CenterTile += (new Vector2((float)(x + 1) - tile.Y, (float)(y + 0) + tile.X) - CenterTile) * (1f - (float)Math.Pow(0.975f, 60f / FSOEnvironment.RefreshRate));
+                    if (instant)
+                    {
+                        CenterTile = new Vector2((float)(x + 1) - tile.Y, (float)(y + 0) + tile.X);
+                    }
+                    else
+                    {
+                        CenterTile += (new Vector2((float)(x + 1) - tile.Y, (float)(y + 0) + tile.X) - CenterTile) * (1f - (float)Math.Pow(0.975f, 60f / FSOEnvironment.RefreshRate));
+                    }
                     TargRX = lotWorld.State.Cameras.Camera3D.RotationX - (float)Math.PI / 2;
                     TargRY = lotWorld.State.Cameras.Camera3D.RotationY;
 
@@ -236,7 +244,7 @@ namespace FSO.Client.Rendering.City
                     if ((new Vector2(x, y) - new Vector2(Target.X, Target.Z)).Length() < 4f)
                     {
                         screen.ZoomLevel = 3;
-                        city.InheritPosition(screen.vm.Context.World, controller);
+                        city.InheritPosition(screen.vm.Context.World, controller, false);
                     }
                 }
             }

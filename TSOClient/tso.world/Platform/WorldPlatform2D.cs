@@ -124,6 +124,9 @@ namespace FSO.LotView.Platform
             var _2d = state._2D;
             Promise<Texture2D> bufferTexture = null;
 
+            var oldDS = gd.DepthStencilState;
+            gd.DepthStencilState = DepthStencilState.Default;
+
             state.WorldRectangle = new Rectangle((-pxOffset).ToPoint(), new Point(1, 1));
             
             state._2D.OBJIDMode = true;
@@ -165,6 +168,8 @@ namespace FSO.LotView.Platform
             Color[] data = new Color[1];
             tex.GetData<Color>(data);
             var f = Vector3.Dot(new Vector3(data[0].R / 255.0f, data[0].G / 255.0f, data[0].B / 255.0f), new Vector3(1.0f, 1 / 255.0f, 1 / 65025.0f));
+
+            gd.DepthStencilState = oldDS;
             return (short)Math.Round(f * 65535f);
         }
 
@@ -228,7 +233,7 @@ namespace FSO.LotView.Platform
                         state.SilentZoom = WorldZoom.Near;
                         state.SilentRotation = WorldRotation.BottomRight;
                         var thumbOffset = state.WorldSpace.GetScreenFromTile(tileOff);
-                        _2d.SetShaderOffsets(pxOffset + thumbOffset, tileOff); //offset object into rotated position
+                        _2d.SetShaderOffsets(pxOffset + thumbOffset, WorldSpace.GetWorldFromTile(tileOff)); //offset object into rotated position
                         obj.OnRotationChanged(state);
                         obj.OnZoomChanged(state);
 
