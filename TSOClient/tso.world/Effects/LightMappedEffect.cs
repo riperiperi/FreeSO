@@ -33,7 +33,7 @@ namespace FSO.LotView.Effects
         {
             set
             {
-                pMinAvg.SetValue(value);
+                pMinAvg?.SetValue(value);
             }
         }
         public Vector3 WorldToLightFactor

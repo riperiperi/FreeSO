@@ -257,6 +257,7 @@ namespace FSO.LotView.Components
             Matrix? lightWorld = null, WorldState state = null, int minFloor = 0, bool screenAlignUV = false)
         {
             var parallax = WorldConfig.Current.Complex;
+            var buggedTex = WorldConfig.Current.AdvancedLighting ? 1 : 0;
             //assumes the effect and all its parameters have been set up already
             //we just need to get the right texture and offset
             var flrContent = Content.Content.Get().WorldFloors;
@@ -437,10 +438,9 @@ namespace FSO.LotView.Components
                     {
                         //opengl bug workaround. For some reason, the texture is set to clamp mode by some outside force on first draw. 
                         //Monogame then thinks the texture is wrapping.
-                        gd.SamplerStates[1] = CustomWrap;
+                        gd.SamplerStates[buggedTex] = CustomWrap;
                     }
                     gd.DrawIndexedPrimitives(PrimitiveType.TriangleList, 0, 0, type.Value.GeomForOffset.Count * 2);
-                    //gd.SamplerStates[1] = SamplerState.LinearWrap;
 
                     if (id == 0)
                     {

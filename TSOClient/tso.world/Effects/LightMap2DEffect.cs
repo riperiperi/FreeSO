@@ -134,7 +134,7 @@ namespace FSO.LotView.Effects
         {
             set
             {
-                pLightIntensity.SetValue(value);
+                pLightIntensity?.SetValue(value);
             }
         }
         public float TargetRoom
@@ -207,7 +207,7 @@ namespace FSO.LotView.Effects
         {
             set
             {
-                pIsOutdoors.SetValue(value);
+                pIsOutdoors?.SetValue(value);
             }
         }
 
