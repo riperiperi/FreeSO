@@ -173,6 +173,7 @@ namespace FSO.Client.UI
             this.AddProcess(Tween);
 
             inputManager = new InputManager();
+            inputManager.RequireWindowFocus = true;
             mainUI = new UIContainer();
             dialogContainer = new UIContainer();
             mainUI.Add(dialogContainer);
