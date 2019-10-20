@@ -25,15 +25,9 @@ namespace FSO.SimAntics.NetPlay.EODs.Handlers
         private static readonly Object CooldownDBQueryLock = new Object();
         private static readonly Object GetAccountIDLock = new Object();
 
-        // event specific cooldowns
-        private readonly TimeSpan Halloween2019Cooldown = new TimeSpan(0, 10, 0); // 10 minutes
-
         public VMEODCooldownEventPlugin(VMEODServer server) : base(server)
         {
             OBJGUID = Server.Object.Object.OBJ.GUID;
-
-            // todo remove
-            CooldownLength = Halloween2019Cooldown;
         }
 
         public override void OnConnection(VMEODClient client)
@@ -123,9 +117,8 @@ namespace FSO.SimAntics.NetPlay.EODs.Handlers
                                         if (currentTime < timeStamp)
                                         {
                                             // the specified cooldown has not passed yet
-                                            DebugFailure(timeStamp);
                                             SimanticsResponse((LimitByUserAccount) ? VMEODCooldownEventPluginEvents.LocalFailureForAccount
-                                                : VMEODCooldownEventPluginEvents.LocalFailureForAvatar, 0);
+                                                : VMEODCooldownEventPluginEvents.LocalFailureForAvatar, GetRemainingTime(timeStamp - currentTime));
                                             return;
                                         }
                                         // the cooldown has passed - go to success below
@@ -136,9 +129,8 @@ namespace FSO.SimAntics.NetPlay.EODs.Handlers
                                 // my persist ID wasn't found or there was no data loaded from the DB or the cooldown passed
                                 Data.AvatarIDUserIDTimeStamps.Add(new Tuple<uint, uint, long>(client.Avatar.PersistID, userID, currentTime.Ticks + CooldownLength.Ticks));
                                 Server.vm.GlobalLink.SavePluginPersist(Server.vm, Server.Object.PersistID, Server.PluginID, Data.Save());
-                                DebugSuccess(currentTime);
                                 SimanticsResponse((LimitByUserAccount) ? VMEODCooldownEventPluginEvents.LocalSuccessForAccount
-                                                : VMEODCooldownEventPluginEvents.LocalSuccessForAvatar, 0);
+                                                : VMEODCooldownEventPluginEvents.LocalSuccessForAvatar, GetRemainingTime(CooldownLength));
                             }
                         });
                     };
@@ -157,23 +149,21 @@ namespace FSO.SimAntics.NetPlay.EODs.Handlers
                                         SimanticsResponse(VMEODCooldownEventPluginEvents.DatabaseError, 0);
                                     else if ((bool)cooldownHasPassed)
                                     {
-                                        DebugSuccess(cooldownExpiry);
                                         if (LimitByUserAccount)
                                             SimanticsResponse((ConsiderLotCategory) ? VMEODCooldownEventPluginEvents.CategorySuccessForAccount
-                                                : VMEODCooldownEventPluginEvents.GlobalSuccessForAccount, 0);
+                                                : VMEODCooldownEventPluginEvents.GlobalSuccessForAccount, GetRemainingTime(CooldownLength));
                                         else
                                             SimanticsResponse((ConsiderLotCategory) ? VMEODCooldownEventPluginEvents.CategorySuccessForAvatar
-                                                : VMEODCooldownEventPluginEvents.GlobalSuccessForAvatar, 0);
+                                                : VMEODCooldownEventPluginEvents.GlobalSuccessForAvatar, GetRemainingTime(CooldownLength));
                                     }
                                     else
                                     {
-                                        DebugFailure(cooldownExpiry);
                                         if (LimitByUserAccount)
                                             SimanticsResponse((ConsiderLotCategory) ? VMEODCooldownEventPluginEvents.CategoryFailureForAccount
-                                                : VMEODCooldownEventPluginEvents.GlobalFailureForAccount, 0);
+                                                : VMEODCooldownEventPluginEvents.GlobalFailureForAccount, GetRemainingTime(cooldownExpiry - currentTime));
                                         else
                                             SimanticsResponse((ConsiderLotCategory) ? VMEODCooldownEventPluginEvents.CategoryFailureForAvatar
-                                                : VMEODCooldownEventPluginEvents.GlobalFailureForAvatar, 0);
+                                                : VMEODCooldownEventPluginEvents.GlobalFailureForAvatar, GetRemainingTime(cooldownExpiry - currentTime));
                                     }
                                 });
                         }
@@ -194,21 +184,13 @@ namespace FSO.SimAntics.NetPlay.EODs.Handlers
         {
             User.SendOBJEvent(new Model.VMEODEvent((short)type, args));
         }
-
-        private void DebugFailure(DateTime targetTimeStamp)
+        private short[] GetRemainingTime(TimeSpan remaining)
         {
-            // send failure message
-            User.Send("failure", targetTimeStamp.ToString("f"));
-        }
-
-        private void DebugSuccess(DateTime targetTimeStamp)
-        {
-            /*
-             * todo: award item here
-             */
-            // send success message
-
-            User.Send("success", targetTimeStamp.ToString("f"));
+            var days = remaining.Days;
+            var hours = remaining.Hours;
+            var minutes = (short)remaining.Minutes;
+            var seconds = (short)remaining.Seconds;
+            return new short[] { (short)(days * 24 + hours), minutes, seconds };
         }
     }
     internal class VMEODCooldownEventPluginCommunityData : VMSerializable
@@ -288,27 +270,27 @@ namespace FSO.SimAntics.NetPlay.EODs.Handlers
     }
     public enum VMEODCooldownEventPluginEvents: short
     {
-        WaitingForServer = 0,
+        Idle = 0,
         // Data errors
-        DatabaseError = -7,
-        PluginPersistDataError = -8,
+        DatabaseError = 7,
+        PluginPersistDataError = 8,
         // failures, Global meaning for this object type on any and all lots
-        GlobalFailureForAvatar = -5,
-        GlobalFailureForAccount = -6,
+        GlobalFailureForAvatar = 5,
+        GlobalFailureForAccount = 6,
         // failures, Category meaning this lot category
-        CategoryFailureForAvatar = -3,
-        CategoryFailureForAccount = -4,
+        CategoryFailureForAvatar = 3,
+        CategoryFailureForAccount = 4,
         // failures, Local meaning this lot only
-        LocalFailureForAvatar = -1,
-        LocalFailureForAccount = -2,
+        LocalFailureForAvatar = 1,
+        LocalFailureForAccount = 2,
         // successes, Local meaning this lot only
-        LocalSuccessForAvatar = 1,
-        LocalSuccessForAccount = 2,
+        LocalSuccessForAvatar = 101,
+        LocalSuccessForAccount = 102,
         // successes, Category meaning this lot category
-        CategorySuccessForAvatar = 3,
-        CategorySuccessForAccount = 4,
+        CategorySuccessForAvatar = 103,
+        CategorySuccessForAccount = 104,
         // successes, Global meaning for this object type on any and all lots
-        GlobalSuccessForAvatar = 5,
-        GlobalSuccessForAccount = 6
+        GlobalSuccessForAvatar = 105,
+        GlobalSuccessForAccount = 106
     }
 }

@@ -1045,9 +1045,9 @@ namespace FSO.Server.Servers.Lot.Domain
 
         public void GetObjectGlobalCooldown(VM vm, uint objectGUID, uint avatarID, uint userID, TimeSpan cooldownLength, bool byAccount, bool byCategory, VMAsyncGetObjectCooldownCallback callback)
         {
+            var serverTime = vm.Context.Clock.UTCNow;
             Host.InBackground(() =>
             {
-                var serverTime = vm.Context.Clock.UTCNow;
                 bool? cooldownPassed = null;
                 DbGlobalCooldowns cooldowns = null;
                 using (var db = DAFactory.Get())
