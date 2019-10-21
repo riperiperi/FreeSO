@@ -25,6 +25,7 @@ namespace FSO.Server.Protocol.Gluon
         CityNotify,
 
         TuningChanged,
+        CitySendMail,
 
         Unknown
     }
@@ -63,6 +64,8 @@ namespace FSO.Server.Protocol.Gluon
                     return GluonPacketType.CityNotify;
                 case 0x0014:
                     return GluonPacketType.TuningChanged;
+                case 0x0015:
+                    return GluonPacketType.CitySendMail;
                 default:
                     return GluonPacketType.Unknown;
             }
@@ -100,6 +103,8 @@ namespace FSO.Server.Protocol.Gluon
                     return 0x0013;
                 case GluonPacketType.TuningChanged:
                     return 0x0014;
+                case GluonPacketType.CitySendMail:
+                    return 0x0015;
             }
 
             return 0xFFFF;

@@ -353,5 +353,15 @@ namespace FSO.SimAntics.Engine.TSOTransaction
         {
             callback(true, attributeData);
         }
+        
+        public void GetObjectGlobalCooldown(VM vm, uint objectGUID, uint avatarID, uint userID, TimeSpan cooldownLength, bool considerAccount, bool considerCategory, VMAsyncGetObjectCooldownCallback callback)
+        {
+
+        }
+
+        public void GetAccountIDFromAvatar(uint avatarID, VMAsyncAccountUserIDFromAvatarCallback callback)
+        {
+
+        }
     }
 }

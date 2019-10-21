@@ -32,6 +32,7 @@ namespace FSO.Server.Servers.Tasks
             Engine.AddTask(DbTaskType.shutdown.ToString(), typeof(ShutdownTask));
             Engine.AddTask(DbTaskType.job_balance.ToString(), typeof(JobBalanceTask));
             Engine.AddTask(DbTaskType.neighborhood_tick.ToString(), typeof(NeighborhoodsTask));
+            Engine.AddTask(DbTaskType.birthday_gift.ToString(), typeof(BirthdayGiftTask));
         }
 
         public override void Start()
@@ -81,5 +82,6 @@ namespace FSO.Server.Servers.Tasks
         public BonusTaskTuning Bonus { get; set; }
         public ShutdownTaskTuning Shutdown { get; set; }
         public JobBalanceTuning JobBalance { get; set; }
+        public BirthdayGiftTaskTuning BirthdayGift { get; set; }
     }
 }

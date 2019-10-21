@@ -11,6 +11,7 @@ using FSO.SimAntics.NetPlay.Model;
 using FSO.SimAntics.Primitives;
 using System.IO;
 using NLog;
+using FSO.Common.Enum;
 using FSO.Server.Database.DA.Objects;
 using FSO.SimAntics.Model.TSOPlatform;
 using FSO.SimAntics.Model;
@@ -18,6 +19,7 @@ using FSO.SimAntics.Entities;
 using FSO.SimAntics.Marshals;
 using FSO.Server.Database.DA.Lots;
 using FSO.Server.Database.DA.Roommates;
+using FSO.Server.Database.DA.GlobalCooldowns;
 using FSO.SimAntics.Engine.TSOGlobalLink.Model;
 using FSO.SimAntics.Engine.Scopes;
 using FSO.Server.Database.DA.Avatars;
@@ -1222,6 +1224,62 @@ namespace FSO.Server.Servers.Lot.Domain
                     var objects = db.Objects.GetByAvatarIdLot(persistID, (uint)lot.lot_id);
 
                     p((uint)lot.lot_id, objects.Count, objects.Sum(x => x.value), lot.name);
+                }
+            });
+        }
+
+        public void GetObjectGlobalCooldown(VM vm, uint objectGUID, uint avatarID, uint userID, TimeSpan cooldownLength, bool byAccount, bool byCategory, VMAsyncGetObjectCooldownCallback callback)
+        {
+            var serverTime = vm.Context.Clock.UTCNow;
+            Host.InBackground(() =>
+            {
+                bool? cooldownPassed = null;
+                DbGlobalCooldowns cooldowns = null;
+                using (var db = DAFactory.Get())
+                {
+                    // if category doesn't matter becuase it's a global cooldown, use 255 from recent
+                    int category = (byCategory) ? vm.TSOState.PropertyCategory : (int)LotCategory.recent;
+                    if (Enum.IsDefined(typeof(LotCategory), category))
+                    {
+                        cooldowns = db.GlobalCooldowns.Get(objectGUID, avatarID, byAccount, (uint)category);
+                        if (cooldowns != null)
+                        {
+                            // found the entry, check for expiration
+                            cooldownPassed = cooldowns.expiry <= serverTime;
+                            if (cooldownPassed ?? false)
+                            {
+                                // cooldown has successfully passed, so update expiry to new cooldown
+                                cooldowns.expiry = serverTime + cooldownLength;
+                                if (!db.GlobalCooldowns.Update(cooldowns))
+                                    cooldownPassed = null; // failed to update in db, so do not return success
+                            }
+                        }
+                        else
+                        {
+                            // there is no entry for this avatar or user, object, and property category so create an entry now
+                            cooldowns = new DbGlobalCooldowns
+                            {
+                                object_guid = objectGUID,
+                                avatar_id = avatarID,
+                                user_id = userID,
+                                category = (uint)category,
+                                expiry = serverTime + cooldownLength
+                            };
+                            if (db.GlobalCooldowns.Create(cooldowns)) // must have success in creation to return true
+                                cooldownPassed = true;
+                        }
+                    }
+                    callback(cooldownPassed, (cooldowns != null) ? cooldowns.expiry : serverTime);
+                }
+            });
+        }
+        public void GetAccountIDFromAvatar(uint avatarID, VMAsyncAccountUserIDFromAvatarCallback callback)
+        {
+            Host.InBackground(() =>
+            {
+                using (var db = DAFactory.Get())
+                {
+                    callback(db.Avatars.Get(avatarID)?.user_id ?? 0);
                 }
             });
         }
