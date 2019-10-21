@@ -49,6 +49,11 @@ namespace FSO.SimAntics.Engine.TSOTransaction
         //FSO Bulletin
         void GetBulletinState(VM vm, VMAsyncBulletinCallback callback);
 
+        //FSO Global (event object) Cooldowns
+        void GetObjectGlobalCooldown(VM vm, uint objectGUID, uint avatarID, uint userID, TimeSpan cooldownLength, bool considerAccount, bool considerCategory, VMAsyncGetObjectCooldownCallback callback);
+        void GetAccountIDFromAvatar(uint avatarID, VMAsyncAccountUserIDFromAvatarCallback callback);
+
+
         void Tick(VM vm);
         void FindLotAndValue(VM vm, uint persistID, VMAsyncFindLotCallback p);
     }
@@ -73,4 +78,7 @@ namespace FSO.SimAntics.Engine.TSOTransaction
     public delegate void VMAsyncBulletinCallback(uint lastID, int activity);
     public delegate void VMAsyncSecureTradeCallback(VMEODSecureTradeError result);
     public delegate void VMAsyncFindLotCallback(uint lotID, int objectCount, long objectValue, string lotName);
+
+    public delegate void VMAsyncGetObjectCooldownCallback(bool? cooldownPassed, DateTime cooldownBegin);
+    public delegate void VMAsyncAccountUserIDFromAvatarCallback(uint userID);
 }

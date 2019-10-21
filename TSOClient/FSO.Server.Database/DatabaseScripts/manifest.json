@@ -268,6 +268,14 @@
       "requires": [
         "bec36bbc-1774-44cb-a7c5-03f4a00e801c"
       ]
+    },
+    {
+      "id": "1235b96c-5a75-2159-b49d-909cb3198cda",
+      "script": "changes/0031_global_cooldowns.sql",
+      "idempotent": false,
+      "requires": [
+        "bec36bbc-1774-44cb-a7c5-03f4a00e801c"
+      ]
     }
   ]
 }

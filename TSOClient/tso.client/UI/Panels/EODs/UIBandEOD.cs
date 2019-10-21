@@ -153,9 +153,9 @@ namespace FSO.Client.UI.Panels.EODs
             LevelTimer.Elapsed += SkillLevelHandler;
 
             // get the buttons and put into array in order to recover their references when the client connects
-            NoteButtonArray = new UIButton[] { BUZZ, DOH, RE, MI, FA, SO, LA, TI, DOH2}; // matches order of VMEODBandPlugin.VMEODBandNoteTypes
+            NoteButtonArray = new UIButton[] { BUZZ, DOH, RE, MI, FA, SO, LA, TI, DOH2 }; // matches order of VMEODBandPlugin.VMEODBandNoteTypes
             MiscButtonArray = new UIButton[] { CASHOUT, CONTINUE };
-            
+
             // make the waiting for players images
             WaitPlayer1 = Script.Create<UIImage>("WaitPlayer1");
             WaitPlayer1.Texture = PlayerImage;
@@ -176,7 +176,7 @@ namespace FSO.Client.UI.Panels.EODs
             Player2Wait.Alignment = TextAlignment.Left;
             Player3Wait.Alignment = TextAlignment.Left;
             Player4Wait.Alignment = TextAlignment.Left;
-            
+
             /*foreach (var player in WaitPlayers)
                 player.Position += TallTallOffset;
             Player1Wait.Position += TallTallOffset;
@@ -271,7 +271,7 @@ namespace FSO.Client.UI.Panels.EODs
             CloseInteraction();
             base.OnClose();
         }
-        
+
         private void PlayerRosterHandler(string evt, string msg)
         {
             Lobby.UpdatePlayers(evt, msg);
@@ -324,10 +324,11 @@ namespace FSO.Client.UI.Panels.EODs
         private void NoteSyncHandler(string evt, byte[] noteArray)
         {
             var note = noteArray[0];
-            if (Enum.IsDefined(typeof(UIBANDEODSoundNames),note))
+            if (Enum.IsDefined(typeof(UIBANDEODSoundNames), note))
             {
                 // if this note does not belong to my 1st or 2nd button
-                if (!NoteButtonArray[note].Equals(MyFirstButton) && !NoteButtonArray[note].Equals(MySecondButton)) {
+                if (!NoteButtonArray[note].Equals(MyFirstButton) && !NoteButtonArray[note].Equals(MySecondButton))
+                {
                     SyncButton = NoteButtonArray[note];
                     ForceNoteButtonState(SyncButton, (int)UIElementState.Highlighted);
                     PlaySound(note);
@@ -589,7 +590,7 @@ namespace FSO.Client.UI.Panels.EODs
             foreach (var btnn in MiscButtonArray)
                 btnn.Position += TallTallOffset;
             ButtonBack.Position += TallTallOffset;
-            
+
             Add(DOH);
             Add(RE);
             Add(MI);
@@ -1177,7 +1178,7 @@ namespace FSO.Client.UI.Panels.EODs
         }
     }
     [Flags]
-    public enum UIBANDEODSoundNames: byte
+    public enum UIBANDEODSoundNames : byte
     {
         band_note_buzz = 0,
         band_note_a = 1,

@@ -239,6 +239,7 @@
     <Compile Include="NetPlay\EODs\Archetypes\VMBasicEOD.cs" />
     <Compile Include="NetPlay\EODs\Handlers\VMEODBandPlugin.cs" />
     <Compile Include="NetPlay\EODs\Handlers\VMEODBulletinPlugin.cs" />
+    <Compile Include="NetPlay\EODs\Handlers\VMEODCooldownEventPlugin.cs" />
     <Compile Include="NetPlay\EODs\Handlers\VMEODDancePlatformPlugin.cs" />
     <Compile Include="NetPlay\EODs\Handlers\VMEODDJStationPlugin.cs" />
     <Compile Include="NetPlay\EODs\Handlers\VMEODHoldEmCasinoPlugin.cs" />
