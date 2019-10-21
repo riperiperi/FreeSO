@@ -391,6 +391,8 @@ namespace FSO.Client.UI.Controls.Catalog
         public ObjectCatalogItem Item;
         public int CalcPrice;
         public UISpecialCatalogElement Special;
+        public int? Count;
+        public List<int> Attributes;
         public object Tag;
     }
 

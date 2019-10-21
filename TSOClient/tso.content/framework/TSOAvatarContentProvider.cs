@@ -56,8 +56,8 @@ namespace FSO.Content.Framework
         {
             // firstly, find the typeid that files in this FAR typically use
             var type = FAR.EstimateTypeId();
-            var random = new Random(FAR.EntriesByName.Count);
-
+            var random = new Random((int)DateTime.Now.Ticks + FAR.EntriesByName.Count);
+            
             var tryD = (uint)random.Next();
             tryD |= (uint)random.Next(2) << 31;
 

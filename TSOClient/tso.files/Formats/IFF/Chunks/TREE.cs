@@ -65,7 +65,7 @@ namespace FSO.Files.Formats.IFF.Chunks
             {
                 var zero = io.ReadInt32();
                 var version = io.ReadInt32();
-                if (version != 1) throw new Exception("Unexpected TREE version: " + version);
+                if (version > 1) throw new Exception("Unexpected TREE version: " + version);
                 string magic = io.ReadCString(4); //HBGN
                 if (magic != "EERT") throw new Exception("Magic number should be 'EERT', got " + magic);
                 var entryCount = io.ReadInt32();
@@ -73,7 +73,7 @@ namespace FSO.Files.Formats.IFF.Chunks
                 for (int i=0; i<entryCount; i++)
                 {
                     var box = new TREEBox(this);
-                    box.Read(io);
+                    box.Read(io, version);
                     box.InternalID = (short)i;
                     Entries.Add(box);
                 }
@@ -291,7 +291,7 @@ namespace FSO.Files.Formats.IFF.Chunks
             Parent = parent;
         }
 
-        public void Read(IoBuffer io)
+        public void Read(IoBuffer io, int version)
         {
             Type = (TREEBoxType)io.ReadUInt16();
             Unknown = io.ReadUInt16();
@@ -305,7 +305,7 @@ namespace FSO.Files.Formats.IFF.Chunks
             FalsePointer = io.ReadInt32();
             Comment = io.ReadNullTerminatedString();
             if (Comment.Length % 2 == 0) io.ReadByte(); //padding to 2 byte align
-            TrailingZero = io.ReadInt32();
+            if (version > 0) TrailingZero = io.ReadInt32();
 
             if (!Enum.IsDefined(typeof(TREEBoxType), Type)) throw new Exception("Unexpected TREE box type: " + Type.ToString());
             if (Special < -1 || Special > 0) throw new Exception("Unexpected TREE special: " + Special);

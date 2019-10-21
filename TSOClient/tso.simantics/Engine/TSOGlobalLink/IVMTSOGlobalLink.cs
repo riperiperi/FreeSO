@@ -49,6 +49,9 @@ namespace FSO.SimAntics.Engine.TSOTransaction
         //FSO Bulletin
         void GetBulletinState(VM vm, VMAsyncBulletinCallback callback);
 
+        //FSO Token
+        void TokenRequest(VM vm, uint avatarID, uint guid, VMTokenRequestMode mode, List<int> attributeData, VMAsyncTokenCallback callback);
+
         void Tick(VM vm);
         void FindLotAndValue(VM vm, uint persistID, VMAsyncFindLotCallback p);
     }
@@ -73,4 +76,18 @@ namespace FSO.SimAntics.Engine.TSOTransaction
     public delegate void VMAsyncBulletinCallback(uint lastID, int activity);
     public delegate void VMAsyncSecureTradeCallback(VMEODSecureTradeError result);
     public delegate void VMAsyncFindLotCallback(uint lotID, int objectCount, long objectValue, string lotName);
+
+    public delegate void VMAsyncTokenCallback(bool success, List<int> results);
+
+    public enum VMTokenRequestMode
+    {
+        //attributes request contains default values, response contains actual values
+        GetOrCreate,
+        Replace,
+        //attributes request/response contains 0: target attribute, 1: data value
+        GetAttribute,
+        SetAttribute,
+        ModifyAttribute,
+        TransactionAttribute
+    }
 }

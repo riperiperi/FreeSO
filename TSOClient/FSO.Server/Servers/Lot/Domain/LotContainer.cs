@@ -1126,7 +1126,7 @@ namespace FSO.Server.Servers.Lot.Domain
                 var avatar = da.Avatars.Get(session.AvatarId);
                 var rels = da.Relationships.GetOutgoing(session.AvatarId);
                 var jobinfo = da.Avatars.GetJobLevels(session.AvatarId);
-                var inventory = da.Objects.GetAvatarInventory(session.AvatarId);
+                var inventory = da.Objects.GetAvatarInventoryWithAttrs(session.AvatarId);
                 var myRoomieLots = da.Roommates.GetAvatarsLots(session.AvatarId); //might want to use other entries to update the roomies table entirely.
                 var myIgnored = da.Bookmarks.GetAvatarIgnore(session.AvatarId);
                 var user = da.Users.GetById(avatar.user_id);
@@ -1189,7 +1189,10 @@ namespace FSO.Server.Servers.Lot.Domain
                 Value = obj.value,
                 DynFlags1 = obj.dyn_flags_1,
                 DynFlags2 = obj.dyn_flags_2,
-                Graphic = obj.graphic
+                Graphic = obj.graphic,
+
+                AttributeMode = obj.has_db_attributes,
+                Attributes = obj.AugmentedAttributes ?? new List<int>()
             };
         }
         

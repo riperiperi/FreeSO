@@ -91,6 +91,7 @@ namespace FSO.Content
                 IffFile iffFile = new IffFile(entry);
 
                 var objs = iffFile.List<OBJD>();
+                if (objs == null) continue;
                 foreach (var obj in objs)
                 {
                     Entries.Add(obj.GUID, new GameObjectReference(this)

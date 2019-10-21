@@ -26,7 +26,8 @@ namespace FSO.SimAntics.Marshals
         // 33 - NhoodID and Location
         // 34 - Upgrade Level
         // 35 - FSO Inventory Retrieve
-        public static readonly int LATEST_VERSION = 35;
+        // 36 - FSO Inventory Token (inventory ops async state has temp list)
+        public static readonly int LATEST_VERSION = 36;
 
         public int Version = LATEST_VERSION;
         public bool Compressed = true;

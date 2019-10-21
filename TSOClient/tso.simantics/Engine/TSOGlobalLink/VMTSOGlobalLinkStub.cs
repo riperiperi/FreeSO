@@ -348,5 +348,10 @@ namespace FSO.SimAntics.Engine.TSOTransaction
         {
             callback(0, 7);
         }
+
+        public void TokenRequest(VM vm, uint avatarID, uint guid, VMTokenRequestMode mode, List<int> attributeData, VMAsyncTokenCallback callback)
+        {
+            callback(true, attributeData);
+        }
     }
 }

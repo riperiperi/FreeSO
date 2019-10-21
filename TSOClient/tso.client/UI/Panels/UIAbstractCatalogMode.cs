@@ -250,6 +250,12 @@ namespace FSO.Client.UI.Panels
             else
             {
                 BuyItem = LotController.vm.Context.CreateObjectInstance(item.Item.GUID, LotTilePos.OUT_OF_WORLD, Direction.NORTH, true);
+                if (item.Attributes != null)
+                {
+                    for (int i = 0; i < item.Attributes.Count; i++) {
+                        BuyItem.BaseObject.SetAttribute(i, (short)item.Attributes[i]);
+                    }
+                }
                 byte upgradeLevel = 0;
 
                 float? price = null;
@@ -259,7 +265,7 @@ namespace FSO.Client.UI.Panels
                 }
                 // token objects should not be placable.
                 if (item.Item.DisableLevel < 3) Holder.SetSelected(BuyItem);
-                QueryPanel.SetInfo(LotController.vm, BuyItem.Objects[0], false);
+                QueryPanel.SetInfo(LotController.vm, BuyItem.BaseObject, false);
                 QueryPanel.Mode = 1;
                 QueryPanel.Tab = 0;
                 QueryPanel.Active = true;
