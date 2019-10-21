@@ -248,7 +248,9 @@
     <Content Include="DatabaseScripts\changes\0028_upgradelevel.sql">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </Content>
-    <Content Include="DatabaseScripts\changes\0029_global_cooldowns.sql">
+    <Content Include="DatabaseScripts\changes\0031_global_cooldowns.sql">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </Content>
     <Content Include="DatabaseScripts\changes\0029_generic_participation.sql">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </Content>
