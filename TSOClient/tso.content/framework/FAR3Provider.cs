@@ -102,6 +102,13 @@ namespace FSO.Content.Framework
             return "unnamed";
         }
 
+        public uint EstimateTypeId()
+        {
+            // assuming only one type is present in the far3 (avatar content), the first type id in the file should be a good estimate.
+            var id = EntriesById.FirstOrDefault().Key;
+            return (uint)id; // low part is ID 
+        }
+
         protected virtual T ResolveById(ulong id)
         {
             Far3ProviderEntry<T> entry = null;

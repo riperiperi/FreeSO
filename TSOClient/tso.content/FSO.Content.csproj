@@ -420,6 +420,7 @@
     <Compile Include="AvatarMeshProvider.cs" />
     <Compile Include="Framework\RuntimeProvider.cs" />
     <Compile Include="Framework\TS1Provider.cs" />
+    <Compile Include="Framework\TSOAvatarContentProvider.cs" />
     <Compile Include="HandgroupProvider.cs" />
     <Compile Include="IniProvider.cs" />
     <Compile Include="CityMapsProvider.cs" />

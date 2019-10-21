@@ -47,7 +47,7 @@ namespace FSO.IDE.EditorComponent
                 var searchString = new Regex(".*" + SearchBox.Text.ToLowerInvariant() + ".*");
 
                 AllList.Items.Clear();
-                var anims = (Content.Content.Get().AvatarAnimations as AvatarAnimationProvider)?.AnimationsByName;
+                var anims = (Content.Content.Get().AvatarAnimations as AvatarAnimationProvider)?.Names;
                 if (anims == null)
                     anims = (Content.Content.Get().AvatarAnimations as Content.TS1.TS1BCFAnimationProvider)?.BaseProvider.ListAllAnimations();
                 if (anims != null)
@@ -181,6 +181,7 @@ namespace FSO.IDE.EditorComponent
             {
                 dialog.ShowDialog();
             });
+            if (dialog.FileName == null) return;
             var importer = new GLTFImporter();
             importer.Process(dialog.FileName);
             var anims = importer.Animations;

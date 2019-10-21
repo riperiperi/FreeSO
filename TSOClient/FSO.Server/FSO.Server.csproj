@@ -200,6 +200,7 @@
     <Compile Include="Servers\City\Handlers\MatchmakerNotifyHandler.cs" />
     <Compile Include="Servers\City\Handlers\ModerationHandler.cs" />
     <Compile Include="Servers\City\Handlers\AvatarRetireHandler.cs" />
+    <Compile Include="Servers\Tasks\Domain\BirthdayGiftTask.cs" />
     <Compile Include="Servers\Tasks\Domain\JobBalanceTask.cs" />
     <Compile Include="Servers\Tasks\Domain\NeighborhoodsTask.cs" />
     <Compile Include="Servers\Tasks\Domain\PruneDatabaseTask.cs" />

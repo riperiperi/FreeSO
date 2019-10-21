@@ -67,5 +67,31 @@ namespace FSO.Server.Database.DA.DbEvents
                 return false;
             }
         }
+
+        public bool GenericAvaTryParticipate(DbGenericAvatarParticipation p)
+        {
+            try
+            {
+                return (Context.Connection.Execute("INSERT INTO fso_generic_avatar_participation (participation_name, participation_avatar) " +
+                    "VALUES (@participation_name, @participation_avatar)", p) > 0);
+            }
+            catch
+            {
+                //already exists, or foreign key fails
+                return false;
+            }
+        }
+
+        public bool GenericAvaParticipated(DbGenericAvatarParticipation p)
+        {
+            return Context.Connection.Query<int>("SELECT count(*) FROM fso_generic_avatar_participation " +
+                "WHERE participation_name = @participation_name AND participation_avatar = @participation_avatar", p).First() > 0;
+        }
+
+        public List<uint> GetGenericParticipatingAvatars(string genericName)
+        {
+            return Context.Connection.Query<uint>("SELECT participation_avatar FROM fso_generic_avatar_participation " +
+                "WHERE participation_name = @participation_name", new { participation_name = genericName }).ToList();
+        }
     }
 }

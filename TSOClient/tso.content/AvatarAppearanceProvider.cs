@@ -18,10 +18,11 @@ namespace FSO.Content
     /// <summary>
     /// Provides access to appearance (*.apr) data in FAR3 archives.
     /// </summary>
-    public class AvatarAppearanceProvider : FAR3Provider<Appearance>
+    public class AvatarAppearanceProvider : TSOAvatarContentProvider<Appearance>
     {
-        public AvatarAppearanceProvider(Content contentManager)
-            : base(contentManager, new AppearanceCodec(), new Regex(".*/appearances/.*\\.dat"))
+        public AvatarAppearanceProvider(Content contentManager) : base(contentManager, new AppearanceCodec(),
+            new Regex(".*/appearances/.*\\.dat"),
+            new Regex("Avatar/Appearances/.*\\.apr"))
         {
         }
     }

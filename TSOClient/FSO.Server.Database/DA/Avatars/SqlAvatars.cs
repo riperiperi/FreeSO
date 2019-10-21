@@ -20,6 +20,11 @@ namespace FSO.Server.Database.DA.Avatars
             return new PagedList<DbAvatar>(results, offset, total);
         }
 
+        public IEnumerable<DbAvatar> All()
+        {
+            return Context.Connection.Query<DbAvatar>("SELECT * FROM fso_avatars");
+        }
+
         public IEnumerable<DbAvatar> All(int shard_id){
             return Context.Connection.Query<DbAvatar>("SELECT * FROM fso_avatars WHERE shard_id = @shard_id", new { shard_id = shard_id });
         }

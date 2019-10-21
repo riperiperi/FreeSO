@@ -28,7 +28,7 @@ namespace FSO.Content.Framework
 
         public T Get(uint type, uint fileID)
         {
-            var id = ((ulong)type << 32) | fileID;
+            var id = ((ulong)fileID << 32) | type;
             T entry;
             if (EntriesByID.TryGetValue(id, out entry)) return entry;
             return default(T);
@@ -36,9 +36,9 @@ namespace FSO.Content.Framework
 
         public T Get(ContentID id)
         {
-            T entry;
-            if (EntriesByName.TryGetValue(id.FileName, out entry)) return entry;
-            return default(T);
+            if (id == null) return default(T);
+            if (id.FileName != null) return Get(id.FileName);
+            return Get(id.TypeID, id.FileID);
         }
 
         public List<IContentReference<T>> List()
@@ -50,6 +50,17 @@ namespace FSO.Content.Framework
         {
             EntriesByName[name] = obj;
             EntriesByID[id] = obj;
+        }
+
+        public void Remove(string name)
+        {
+            T obj;
+            if (EntriesByName.TryGetValue(name, out obj))
+            {
+                var id = EntriesByID.FirstOrDefault(x => x.Value.Equals(obj)).Key;
+                EntriesByID.Remove(id);
+            }
+            EntriesByName.Remove(name);
         }
     }
 

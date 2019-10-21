@@ -666,10 +666,12 @@ namespace FSO.SimAntics.Utils
                 new float[] { (15f / 180f) * (float)Math.PI, (-15f / 180f) * (float)Math.PI });
 
             RestoreRoad(vm, roads);
-
-            //set road dir. should only really do this FIRST EVER time, then road dir changes after are manual and rotate the contents of the lot.
-            vm.TSOState.Size &= 0xFFFF;
-            vm.TSOState.Size |= PickRoadDir(roads) << 16;
+            if (vm.GetGlobalValue(11) == -1)
+            {
+                //set road dir. should only really do this FIRST EVER time, then road dir changes after are manual and rotate the contents of the lot.
+                vm.TSOState.Size &= 0xFFFF;
+                vm.TSOState.Size |= PickRoadDir(roads) << 16;
+            }
 
             PositionLandmarkObjects(vm);
 

@@ -31,6 +31,14 @@ namespace FSO.SimAntics.Utils
         public Point Offset;
         public int TargetSize;
 
+        public Point[] DirOffsets = new Point[]
+        {
+            new Point(7, 14),
+            new Point(-2, 7),
+            new Point(7, -1),
+            new Point(14, 7)
+        };
+
         public VMWorldActivator(VM vm, LotView.World world){
             this.VM = vm;
             this.World = world;
@@ -52,6 +60,18 @@ namespace FSO.SimAntics.Utils
             VM.Context.Blueprint = Blueprint;
             VM.Context.Architecture = new VMArchitecture(size, size, Blueprint, VM.Context);
 
+            var phone = model.Objects.FirstOrDefault(x => x.GUIDInt == 0x313D2F9A);
+            if (phone != null && TargetSize != 0)
+            {
+                //determine lot alignment
+                var dirDiff = new Point(phone.X, phone.Y) - new Point(model.Size / 2);
+                // (atan result) 1 is default, 2 is 90 clockwise
+                var dir = (int)(Math.Round(Math.Atan2(dirDiff.Y, dirDiff.X) / (Math.PI / 2)) + 3) % 4;
+
+                Offset = DirOffsets[dir];
+                VM.TSOState.Size = ((10) | (3 << 8)) | (dir << 16);
+            }
+
             var arch = VM.Context.Architecture;
 
             foreach (var floor in model.World.Floors){
@@ -64,8 +84,8 @@ namespace FSO.SimAntics.Utils
                 arch.SetFloor((short)(pool.X + Offset.X), (short)(pool.Y + Offset.Y), 1, new FloorTile { Pattern = 65535 }, true);
             }
 
-            foreach (var wall in model.World.Walls)
             {
+            foreach (var wall in model.World.Walls)
                 arch.SetWall((short)(wall.X+Offset.X), (short)(wall.Y+Offset.Y), (sbyte)(wall.Level+1), new WallTile() //todo: these should read out in their intended formats - a cast shouldn't be necessary
                 {
                     Segments = wall.Segments,

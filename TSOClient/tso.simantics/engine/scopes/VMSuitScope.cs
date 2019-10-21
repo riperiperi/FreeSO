@@ -51,7 +51,9 @@ namespace FSO.SimAntics.Engine.Scopes
         DynamicSwimwear = 23,
         DynamicSleepwear = 24,
         DynamicCostume = 25,
-        signnotepad = 26
+        signnotepad = 26,
+
+        Head = 65535 //internal
     }
 
     public class VMPersonSuitsUtils

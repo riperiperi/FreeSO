@@ -262,8 +262,16 @@
       ]
     },
     {
+      "id": "992dfad3-9e31-4db9-8cd7-7d964951e5b5",
+      "script": "changes/0029_generic_participation.sql",
+      "idempotent": false,
+      "requires": [
+        "bec36bbc-1774-44cb-a7c5-03f4a00e801c"
+      ]
+    },
+    {
       "id": "1235b96c-5a75-2159-b49d-909cb3198cda",
-      "script": "changes/0029_global_cooldowns.sql",
+      "script": "changes/0031_global_cooldowns.sql",
       "idempotent": false,
       "requires": [
         "bec36bbc-1774-44cb-a7c5-03f4a00e801c"
