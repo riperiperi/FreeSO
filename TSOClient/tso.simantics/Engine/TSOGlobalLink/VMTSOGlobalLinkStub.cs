@@ -351,17 +351,23 @@ namespace FSO.SimAntics.Engine.TSOTransaction
 
         public void TokenRequest(VM vm, uint avatarID, uint guid, VMTokenRequestMode mode, List<int> attributeData, VMAsyncTokenCallback callback)
         {
+            if (mode == VMTokenRequestMode.GetAttribute) attributeData[1] = 100;
             callback(true, attributeData);
         }
         
         public void GetObjectGlobalCooldown(VM vm, uint objectGUID, uint avatarID, uint userID, TimeSpan cooldownLength, bool considerAccount, bool considerCategory, VMAsyncGetObjectCooldownCallback callback)
         {
-
+            var time = vm.Context.Clock.UTCNow;
+            new System.Threading.Thread(() =>
+            {
+                System.Threading.Thread.Sleep(100);
+                callback(false, time + new TimeSpan(0, 3, 25));
+            }).Start();
         }
 
         public void GetAccountIDFromAvatar(uint avatarID, VMAsyncAccountUserIDFromAvatarCallback callback)
         {
-
+            callback(1);
         }
     }
 }

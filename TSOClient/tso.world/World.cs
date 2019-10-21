@@ -361,6 +361,7 @@ namespace FSO.LotView
 
         public void SetGraphicsMode(GlobalGraphicsMode mode, bool instant)
         {
+            BackbufferScale = 1;
             var transTime = instant ? 0 : -1;
             switch (mode)
             {
@@ -536,14 +537,15 @@ namespace FSO.LotView
 
             if (state.WindowFocused && Visible)
             {
-                if (state.NewKeys.Contains(Microsoft.Xna.Framework.Input.Keys.Tab))
+                if (state.NewKeys.Contains(Microsoft.Xna.Framework.Input.Keys.Tab) && FSOEnvironment.Enable3D)
                 {
                     if (State.Cameras.ActiveType == Utils.Camera.CameraControllerType.FirstPerson)
                     {
-                        SetGraphicsMode(WorldConfig.Current.Mode, false);
+                        SetGraphicsMode(GraphicsModeControl.Mode, false);
                     }
                     else
                     {
+                        BackbufferScale = 1;
                         State.SetCameraType(this, Utils.Camera.CameraControllerType.FirstPerson, 0);
                     }
                 }
