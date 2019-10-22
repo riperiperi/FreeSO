@@ -149,40 +149,43 @@ namespace FSO.LotView.Utils.Camera
             var wstate = world.State;
             var md = state.MouseState.MiddleButton == Microsoft.Xna.Framework.Input.ButtonState.Pressed;
 
-            if (md)
+            if (!wstate.DisableSmoothRotation)
             {
-                var mpos = state.MouseState.Position;
-                if (wstate.ScrollAnchor == null && LastScrollPos != wstate.CenterTile)
+                if (md)
                 {
-                    ReprojectCenterTile(wstate);
-                }
-                if (MouseWasDown)
-                {
-                    //rotate relative to last mouse position
-                    Camera.RotateOff += ((mpos.X - LastMouse.X) / 250f) * 180 / (float)Math.PI;
-                }
-                LastScrollPos = wstate.CenterTile;
-                LastMouse = mpos;
-            }
-            else
-            {
-                if (MouseWasDown)
-                {
-                    //end middle mouse scroll. decide which rotation to settle on
-                    var targRot = (int)Common.Utils.DirectionUtils.PosMod(((int)Camera.Rotation - (int)Math.Round(Camera.RotateOff / 90)), 4);
-                    world.State.Rotation = (WorldRotation)targRot;
-                    LastScrollPos = null;
-                }
-                if (RotationOffFrom != 0)
-                {
-                    RotationOffPct += 3f / FSOEnvironment.RefreshRate;
-                    if (RotationOffPct > 1)
+                    var mpos = state.MouseState.Position;
+                    if (wstate.ScrollAnchor == null && LastScrollPos != wstate.CenterTile)
                     {
-                        RotationOffFrom = 0;
-                        RotationOffPct = 0;
+                        ReprojectCenterTile(wstate);
                     }
+                    if (MouseWasDown)
+                    {
+                        //rotate relative to last mouse position
+                        Camera.RotateOff += ((mpos.X - LastMouse.X) / 250f) * 180 / (float)Math.PI;
+                    }
+                    LastScrollPos = wstate.CenterTile;
+                    LastMouse = mpos;
+                }
+                else
+                {
+                    if (MouseWasDown)
+                    {
+                        //end middle mouse scroll. decide which rotation to settle on
+                        var targRot = (int)Common.Utils.DirectionUtils.PosMod(((int)Camera.Rotation - (int)Math.Round(Camera.RotateOff / 90)), 4);
+                        world.State.Rotation = (WorldRotation)targRot;
+                        LastScrollPos = null;
+                    }
+                    if (RotationOffFrom != 0)
+                    {
+                        RotationOffPct += 3f / FSOEnvironment.RefreshRate;
+                        if (RotationOffPct > 1)
+                        {
+                            RotationOffFrom = 0;
+                            RotationOffPct = 0;
+                        }
 
-                    Camera.RotateOff = RotationOffFrom * (float)(Math.Cos((RotationOffPct) * Math.PI) + 1) / 2;
+                        Camera.RotateOff = RotationOffFrom * (float)(Math.Cos((RotationOffPct) * Math.PI) + 1) / 2;
+                    }
                 }
             }
             MouseWasDown = md;

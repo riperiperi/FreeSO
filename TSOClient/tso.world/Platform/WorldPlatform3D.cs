@@ -181,7 +181,7 @@ namespace FSO.LotView.Platform
             {
                 if (!sim.Visible) continue;
                 var pos = sim.GetPelvisPosition() * 3;
-                pos = new Vector3(pos.X, pos.Z, pos.Y) + new Vector3(1.5f, 0, 1.5f);
+                pos = new Vector3(pos.X, pos.Z, pos.Y);
                 var box = new BoundingBox(pos - new Vector3(0.5f, 2, 0.5f), pos + new Vector3(0.5f, 2, 0.5f));
                 var intr = box.Intersects(ray);
                 if (intr != null) intr = intr.Value - 1.5f;

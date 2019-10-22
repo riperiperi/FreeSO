@@ -587,7 +587,8 @@ namespace FSO.Client.UI.Panels
                 AA = settings.AntiAlias,
                 Weather = settings.Weather,
                 Directional = settings.DirectionalLight3D,
-                Complex = settings.ComplexShaders
+                Complex = settings.ComplexShaders,
+                EnableTransitions = settings.EnableTransitions
             };
 
             var vm = ((IGameScreen)GameFacade.Screens.CurrentUIScreen)?.vm;

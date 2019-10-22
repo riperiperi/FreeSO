@@ -274,7 +274,7 @@ namespace FSO.Client.UI.Panels
         {
             var settings = GlobalSettings.Default;
             if (button == AntiAliasCheckButton) settings.AntiAlias = settings.AntiAlias ^ 1;
-            else if (button == ShadowsCheckButton) settings.SmoothZoom = !(settings.SmoothZoom);
+            else if (button == ShadowsCheckButton) settings.EnableTransitions = !(settings.EnableTransitions);
             else if (button == LightingCheckButton) settings.Weather = !(settings.Weather);
             else if (button == UIEffectsCheckButton) settings.CityShadows = !(settings.CityShadows);
             else if (button == EdgeScrollingCheckButton) settings.EdgeScroll = !(settings.EdgeScroll);
@@ -327,7 +327,7 @@ namespace FSO.Client.UI.Panels
         {
             var settings = GlobalSettings.Default;
             AntiAliasCheckButton.Selected = settings.AntiAlias > 0; //antialias for render targets
-            ShadowsCheckButton.Selected = settings.SmoothZoom;
+            ShadowsCheckButton.Selected = settings.EnableTransitions;
             LightingCheckButton.Selected = settings.Weather;
             UIEffectsCheckButton.Selected = settings.CityShadows; //instead of being able to disable UI transparency, you can toggle City Shadows.
             EdgeScrollingCheckButton.Selected = settings.EdgeScroll;
@@ -365,7 +365,8 @@ namespace FSO.Client.UI.Panels
                 AA = settings.AntiAlias,
                 Weather = settings.Weather,
                 Directional = settings.DirectionalLight3D,
-                Complex = settings.ComplexShaders
+                Complex = settings.ComplexShaders,
+                EnableTransitions = settings.EnableTransitions
             };
 
             var vm = ((IGameScreen)GameFacade.Screens.CurrentUIScreen)?.vm;

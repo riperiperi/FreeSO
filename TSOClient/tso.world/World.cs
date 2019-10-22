@@ -894,6 +894,7 @@ namespace FSO.LotView
             {
                 config.LightingMode = Math.Max(config.LightingMode, 1);
             }
+            State.DisableSmoothRotation = !config.EnableTransitions;
 
             if (config.AdvancedLighting)
             {

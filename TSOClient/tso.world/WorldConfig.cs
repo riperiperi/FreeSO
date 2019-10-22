@@ -38,10 +38,33 @@ namespace FSO.LotView
         }
         public bool Weather = true;
         public int SurroundingLots = 0;
-        public bool SmoothZoom = false;
+        public bool SmoothZoom
+        {
+            get
+            {
+                return _EnableTransitions;
+            }
+            set
+            {
+
+            }
+        }
         public int AA = 0;
         public bool Directional = true;
         public bool Complex = false;
+
+        private bool _EnableTransitions = false;
+        public bool EnableTransitions
+        {
+            get
+            {
+                return _EnableTransitions;
+            }
+            set
+            {
+                _EnableTransitions = FSOEnvironment.Enable3D && value;
+            }
+        }
 
         public GlobalGraphicsMode Mode = GlobalGraphicsMode.Hybrid2D;
 

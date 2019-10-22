@@ -168,7 +168,8 @@ namespace FSO.Client
                 AA = settings.AntiAlias,
                 Weather = settings.Weather,
                 Directional = settings.DirectionalLight3D,
-                Complex = settings.ComplexShaders
+                Complex = settings.ComplexShaders,
+                EnableTransitions = settings.EnableTransitions
             };
 
             if (!FSOEnvironment.TexCompressSupport) settings.TexCompression = 0;

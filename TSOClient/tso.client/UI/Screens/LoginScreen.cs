@@ -151,7 +151,8 @@ namespace FSO.Client.UI.Screens
                         AA = settings.AntiAlias,
                         Weather = settings.Weather,
                         Directional = settings.DirectionalLight3D,
-                        Complex = settings.ComplexShaders
+                        Complex = settings.ComplexShaders,
+                        EnableTransitions = settings.EnableTransitions
                     };
                 });
             }
