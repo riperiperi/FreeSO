@@ -1241,7 +1241,7 @@ namespace FSO.Server.Servers.Lot.Domain
                     int category = (byCategory) ? vm.TSOState.PropertyCategory : (int)LotCategory.recent;
                     if (Enum.IsDefined(typeof(LotCategory), category))
                     {
-                        cooldowns = db.GlobalCooldowns.Get(objectGUID, avatarID, byAccount, (uint)category);
+                        cooldowns = db.GlobalCooldowns.Get(objectGUID, (byAccount)?userID:avatarID, byAccount, (uint)category);
                         if (cooldowns != null)
                         {
                             // found the entry, check for expiration

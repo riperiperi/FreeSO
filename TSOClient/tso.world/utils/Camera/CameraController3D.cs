@@ -118,11 +118,11 @@ namespace FSO.LotView.Utils.Camera
             return previous;
         }
 
-        public Vector2 SwitchCenter;
+        public Vector2? SwitchCenter;
 
         public virtual void OnActive(ICameraController previous, World world)
         {
-            world.State.CenterTile = SwitchCenter;
+            if (SwitchCenter != null) world.State.CenterTile = SwitchCenter.Value;
         }
 
         public void Inherit2D(CameraController2D controller, World world)

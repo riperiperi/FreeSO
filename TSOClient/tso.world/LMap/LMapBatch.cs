@@ -23,7 +23,7 @@ namespace FSO.LotView.LMap
 {
     public class LMapBatch : IDisposable
     {
-        int targetResPerTile = 16;
+        public int targetResPerTile = 16;
         int resPerTile = 16;
         int borderSize = 1;
 

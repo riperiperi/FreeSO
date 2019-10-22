@@ -58,7 +58,8 @@ namespace FSO.LotView.Utils.Camera
             {
                 var pct = mtx.Percent;
                 if (blendFunc == LerpProj) pct = (float)Math.Pow(pct, mtx.Power);
-                baseMtx = blendFunc(baseMtx, matrixProvider(mtx.Camera), pct);
+                if (mtx.IsLinear) baseMtx = Matrix.Lerp(baseMtx, matrixProvider(mtx.Camera), pct);
+                else baseMtx = blendFunc(baseMtx, matrixProvider(mtx.Camera), pct);
             }
             return baseMtx;
         }
@@ -228,6 +229,7 @@ namespace FSO.LotView.Utils.Camera
 
         public void Update(UpdateState state, World world)
         {
+            if (ActiveType == CameraControllerType._2D) ClearExternalTransition();
             for (int i = TransitionWeights.Count - 1; i >= 0; i--)
             {
                 var trans = TransitionWeights[i];
@@ -255,6 +257,7 @@ namespace FSO.LotView.Utils.Camera
         public float Percent;
         public float Duration;
         public float Power = 1f;
+        public bool IsLinear;
 
         public CameraTransition(ICamera camera, float percent, float duration, float power)
         {

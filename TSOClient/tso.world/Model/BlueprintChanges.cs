@@ -25,7 +25,7 @@ namespace FSO.LotView
         public object WallChanges;
         public BlueprintGlobalChanges Dirty;
         public int TicksSinceLight;
-        public int LastSubLightUpdate;
+        public int LastSubLightUpdate = -1;
 
         public ScrollBuffer StaticSurface; //copied in from parent - reference is for checking pxOffset
 
@@ -122,6 +122,12 @@ namespace FSO.LotView
                                 LastSubLightUpdate = (LastSubLightUpdate + 1) % Blueprint.SubWorlds.Count;
                             }
                         }
+                    }
+
+                    if (LastSubLightUpdate == -1)
+                    {
+                        foreach (var sub in Blueprint.SubWorlds) sub.RefreshLighting();
+                        LastSubLightUpdate = 0;
                     }
 
                     TicksSinceLight = 0;

@@ -407,8 +407,9 @@ namespace FSO.LotView
             return xz;
         }
 
-        public virtual void PrepareLighting()
+        public virtual void PrepareLighting(WorldState wallOffsetProvider = null)
         {
+            if (wallOffsetProvider == null) wallOffsetProvider = this;
             var adv = (Light?.LightMap) ?? OutsidePx;
             var advDir = (Light?.LightMapDirection) ?? TextureGenerator.GetDefaultAdv(Device);
             var amb = AmbientLight ?? TextureGenerator.GetPxWhite(Device);
@@ -423,14 +424,14 @@ namespace FSO.LotView
             Vector2 lightOffset;
             if (Light != null)
             {
-                
-                lightOffset = -GetWallOffset() * 6 / (6f * (Light.Blueprint.Width - 2)); //new Vector2(frontDir.X / (6 * (Light.Blueprint.Width - 2)), frontDir.Z / (6 * (Light.Blueprint.Width - 2)));
+
+                lightOffset = -wallOffsetProvider.GetWallOffset() * 6 / (6f * (Light.Blueprint.Width - 2)); //new Vector2(frontDir.X / (6 * (Light.Blueprint.Width - 2)), frontDir.Z / (6 * (Light.Blueprint.Width - 2)));
                 lightOffset *= Light.InvMapLayout;
                 Light.SetMapLayout(3, 2);
             }
             else
             {
-                lightOffset = -GetWallOffset() * 6 / (6f * 75); //new Vector2(frontDir.X / (6 * 75), frontDir.Z / (6 * 75));
+                lightOffset = -wallOffsetProvider.GetWallOffset() * 6 / (6f * 75); //new Vector2(frontDir.X / (6 * 75), frontDir.Z / (6 * 75));
             }
 
             foreach (var effect in WorldContent.LightEffects)

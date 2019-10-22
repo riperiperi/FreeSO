@@ -1609,6 +1609,7 @@ namespace FSO.Client.Rendering.City
                 else
                 {
                     var trans = controllers.GetExternalTransition();
+                    trans.IsLinear = true;
                     var dummy = trans.Camera as DummyCamera;
                     trans.Percent = 1 - m_LotZoomProgress;
 
@@ -1616,14 +1617,22 @@ namespace FSO.Client.Rendering.City
                     Matrix ViewMatrix = Camera.View;
 
                     ViewMatrix = Matrix.Invert(world) * ViewMatrix;
-
+                    
                     dummy.Projection = ProjectionMatrix;
-                    dummy.View = Matrix.CreateScale(new Vector3(1, 1 / 3f, 1)) * ViewMatrix;
+                    dummy.View = ViewMatrix;
+                    ViewMatrixN = Matrix.CreateScale(new Vector3(1, 1/3f, 1)) * ViewMatrix;
+                    
                 }
             }
 
             var v = camera.View;
             var p = camera.Projection;
+
+            if (ViewMatrixN != null)
+            {
+                var dummy = ((camera as CameraControllers)?.GetExternalTransition()?.Camera as DummyCamera);
+                if (dummy != null) dummy.View = ViewMatrixN.Value;
+            }
 
             ShadowRes = GlobalSettings.Default.ShadowQuality;
             ShadowsEnabled = GlobalSettings.Default.CityShadows;

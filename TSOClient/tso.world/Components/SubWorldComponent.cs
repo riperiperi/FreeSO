@@ -258,7 +258,7 @@ namespace FSO.LotView.Components
 
             if (State.Light != null)
             {
-                State.PrepareLighting();
+                State.PrepareLighting(parentState);
             }
             else
             {
@@ -318,7 +318,7 @@ namespace FSO.LotView.Components
 
             if (State.Light != null)
             {
-                State.PrepareLighting();
+                State.PrepareLighting(parentState);
             }
             else
             {
@@ -350,7 +350,7 @@ namespace FSO.LotView.Components
 
             if (State.Light != null)
             {
-                State.PrepareLighting();
+                State.PrepareLighting(parentState);
             }
             else
             {

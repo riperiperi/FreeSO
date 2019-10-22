@@ -76,9 +76,24 @@ namespace FSO.LotView
                 sub.SubDraw(gd, state, (pxOffsetSub) =>
                 {
                     sub.Architecture.StaticDraw(gd, state, pxOffsetSub);
+                    sub.Architecture.DrawDynamic(gd, state, true);
                     sub.Entities.StaticDraw(gd, state, pxOffsetSub);
                 });
             }
+            state.PrepareCulling(pxOffset);
+        }
+
+        public void DrawDynamic(GraphicsDevice gd, WorldState state, bool roofs)
+        {
+            if (state.CameraMode > CameraRenderMode._2D)
+            {
+                var effect = WorldContent.RCObject;
+                gd.BlendState = BlendState.NonPremultiplied;
+                effect.ViewProjection = state.ViewProjection;
+
+                if (Blueprint.WCRC != null) Blueprint.WCRC.Draw(gd, state);
+            }
+            if (roofs) Blueprint.RoofComp.Draw(gd, state);
         }
 
         public void StaticDraw(GraphicsDevice gd, WorldState state, Vector2 pxOffset)
@@ -107,16 +122,7 @@ namespace FSO.LotView
                 //foreach (var sub in Blueprint.SubWorlds) sub.SubDraw(gd, state, (pxOffsetSub) => { sub.Architecture.StaticDraw(gd, state, pxOffsetSub); });
             }
 
-            if (state.CameraMode > CameraRenderMode._2D) { 
-                var effect = WorldContent.RCObject;
-                gd.BlendState = BlendState.NonPremultiplied;
-                var view = state.View;
-                var vp = view * state.Projection;
-                effect.ViewProjection = vp;
-
-                if (Blueprint.WCRC != null) Blueprint.WCRC.Draw(gd, state);
-            }
-            if (state.DrawRoofs) Blueprint.RoofComp.Draw(gd, state);
+            DrawDynamic(gd, state, state.DrawRoofs);
         }
 
         private void DrawFloorBuf(GraphicsDevice gd, WorldState state)
@@ -133,7 +139,6 @@ namespace FSO.LotView
         {
             if (Blueprint.WallCache2D == null || state.CameraMode > CameraRenderMode._2D) return;
             var _2d = state._2D;
-            state.PrepareLighting();
             _2d.SetScroll(pxOffset);
             _2d.RenderCache(Blueprint.WallCache2D);
             _2d.Pause();
