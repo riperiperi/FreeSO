@@ -95,14 +95,19 @@ namespace FSO.SimAntics.Model.TSOPlatform
                 var prob = 100 + ((Wear - (50 * 4)) * 75) / 40;
                 if (rand < prob && owner.MultitileGroup.BaseObject == owner)
                 {
-                    //break the object
-                    QtrDaysSinceLastRepair = 255;
-                    //apply the broken object particle to all parts
-                    foreach (var item in owner.MultitileGroup.Objects)
-                    {
-                        ((VMGameObject)item).EnableParticle(256);
-                    }
+                    Break(owner);
                 }
+            }
+        }
+
+        public void Break(VMEntity owner)
+        {
+            //break the object
+            QtrDaysSinceLastRepair = 255;
+            //apply the broken object particle to all parts
+            foreach (var item in owner.MultitileGroup.Objects)
+            {
+                ((VMGameObject)item).EnableParticle(256);
             }
         }
 

@@ -199,7 +199,40 @@ namespace FSO.IDE.ResourceBrowser
             CTSSIDLabel.Text = "(CTSS #" + ActiveObj.OBJ.CatalogStringsID + ")";
 
             //set up multitile box
+            UpdateMultitileGroup();
 
+            TypeCombo.Items.Clear();
+            foreach (var num in Enum.GetValues(typeof(OBJDType)))
+            {
+                TypeCombo.Items.Add(new NameValueCombo(num.ToString(), Convert.ToInt16(num), true));
+            }
+
+            foreach (var combo in OBJDComboEntry)
+            {
+                var targetValue = ActiveObj.OBJ.GetPropertyByName<ushort>(combo.Value);
+                foreach (NameValueCombo item in combo.Key.Items)
+                {
+                    if (item.Value == targetValue) combo.Key.SelectedItem = item;
+                }
+            }
+
+            var thumb = ActiveObj.Resource.Get<BMP>(ActiveObj.OBJ.CatalogStringsID);
+            ThumbSave.Enabled = false;
+            if (thumb != null)
+            {
+                var mem = new MemoryStream(thumb.data);
+                ThumbnailPic.Image = Image.FromStream(mem);
+                ThumbSave.Enabled = true;
+            }
+
+            OwnChange = false;
+        }
+
+        public void UpdateMultitileGroup()
+        {
+            bool isMaster = (ActiveObj.OBJ.MasterID == 0 || ActiveObj.OBJ.SubIndex == -1);
+            var own = OwnChange;
+            OwnChange = true;
             MultiGroupCombo.Items.Clear();
             MultiGroupCombo.Items.Add(new NameValueCombo("Single-Tile", 0, true));
             MultiGroupCombo.SelectedIndex = 0;
@@ -212,12 +245,6 @@ namespace FSO.IDE.ResourceBrowser
                     if (obj.MasterID == ActiveObj.OBJ.MasterID) MultiGroupCombo.SelectedIndex = i;
                     i++;
                 }
-            }
-
-            TypeCombo.Items.Clear();
-            foreach (var num in Enum.GetValues(typeof(OBJDType)))
-            {
-                TypeCombo.Items.Add(new NameValueCombo(num.ToString(), Convert.ToInt16(num), true));
             }
 
             MultitileList.Items.Clear();
@@ -243,25 +270,7 @@ namespace FSO.IDE.ResourceBrowser
             YOffset.Enabled = !isMaster;
             LevelOffset.Enabled = !isMaster;
 
-            foreach (var combo in OBJDComboEntry)
-            {
-                var targetValue = ActiveObj.OBJ.GetPropertyByName<ushort>(combo.Value);
-                foreach (NameValueCombo item in combo.Key.Items)
-                {
-                    if (item.Value == targetValue) combo.Key.SelectedItem = item;
-                }
-            }
-
-            var thumb = ActiveObj.Resource.Get<BMP>(ActiveObj.OBJ.CatalogStringsID);
-            ThumbSave.Enabled = false;
-            if (thumb != null)
-            {
-                var mem = new MemoryStream(thumb.data);
-                ThumbnailPic.Image = Image.FromStream(mem);
-                ThumbSave.Enabled = true;
-            }
-
-            OwnChange = false;
+            OwnChange = own;
         }
 
         private void CTSSButton_Click(object sender, EventArgs e)
@@ -317,6 +326,11 @@ namespace FSO.IDE.ResourceBrowser
             {
                 ActiveObj.OBJ.SetPropertyByName(prop, item.Value);
             }, ActiveObj.OBJ));
+
+            if (combo == MultiGroupCombo)
+            {
+                UpdateMultitileGroup();
+            }
         }
 
         private void XOffset_ValueChanged(object sender, EventArgs e)
@@ -373,6 +387,7 @@ namespace FSO.IDE.ResourceBrowser
                 ActiveObj.OBJ.MasterID = newGroup;
                 ActiveObj.OBJ.SubIndex = -1;
             }, ActiveObj.OBJ));
+            UpdateMultitileGroup();
         }
         private void OBJDCheck_CheckedChanged(object sender, EventArgs e)
         {
@@ -522,6 +537,11 @@ namespace FSO.IDE.ResourceBrowser
                 WinFormsClipboard clipboard = new WinFormsClipboard();
                 clipboard.Set((sender as Button).Text);
             }
+        }
+
+        private void LeadMultitile_Click(object sender, EventArgs e)
+        {
+
         }
     }
     public class NameValueCombo

@@ -148,6 +148,7 @@ namespace FSO.Common.Utils
         }
 
         public static Action<GraphicsDevice, RenderTarget2D> SSAAFunc;
+        public static bool WithOpacity = true;
 
         public static void DrawBackbuffer(float opacity, float scale)
         {
@@ -158,7 +159,7 @@ namespace FSO.Common.Utils
             }
             else
             {
-                if (FSOEnvironment.Enable3D)
+                if (!WithOpacity)
                 {
                     SB.Begin(blendState: BlendState.Opaque);
                     opacity = 1;

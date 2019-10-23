@@ -15,6 +15,7 @@ using FSO.Files.Utils;
 using FSO.Common.Rendering.Framework.Camera;
 using FSO.LotView.Model;
 using FSO.Common;
+using FSO.LotView.Effects;
 
 namespace FSO.LotView.Utils
 {
@@ -24,13 +25,55 @@ namespace FSO.LotView.Utils
     /// </summary>
     public class _2DWorldBatch : IDisposable
     {
+        public static SurfaceFormat[] BUFFER_SURFACE_FORMATS = new SurfaceFormat[] {
+            /** Static Buffers **/
+            SurfaceFormat.Color,
+            SurfaceFormat.Color, //depth, using a 24-bit packed format
+
+            /** Object ID buffer **/
+            SurfaceFormat.Color,
+
+            /** Obj thumbnail buffers **/
+            SurfaceFormat.Color,
+            SurfaceFormat.Color, //depth, using a 24-bit packed format
+
+            /** Lot Thumbnail Buffer **/
+            SurfaceFormat.Color
+        };
+
+        public static bool[] FORMAT_ALWAYS_DEPTHSTENCIL = new bool[] {
+            /** Static Object Buffers **/
+            true,
+            false, //depth, using a 24-bit packed format
+
+            /** Object ID buffer **/
+            true,
+
+            //Thumbnail depth
+            true,
+            false,
+
+            //lot thumb
+            true,
+        };
+
+        public static readonly int NUM_2D_BUFFERS = 6;
+        public static readonly int BUFFER_STATIC = 0;
+        public static readonly int BUFFER_STATIC_DEPTH = 1;
+        public static readonly int BUFFER_OBJID = 2;
+        public static readonly int BUFFER_THUMB = 3; //used for drawing thumbnails
+        public static readonly int BUFFER_THUMB_DEPTH = 4; //used for drawing thumbnails
+        public static readonly int BUFFER_LOTTHUMB = 5;
+
+        public static readonly int SCROLL_BUFFER = 512; //resolution to add to render size for scroll reasons
+
         protected Matrix World;
         protected Matrix View;
         protected Matrix Projection;
         protected Matrix ViewProjection;
 
         public GraphicsDevice Device;
-        protected Effect Effect;
+        protected WorldBatchEffect Effect;
 
         protected List<_2DSpriteGroup> Sprites = new List<_2DSpriteGroup>();
         private List<_2DSprite> SpritePool = new List<_2DSprite>();
@@ -38,7 +81,7 @@ namespace FSO.LotView.Utils
 
         protected int DrawOrder;
 
-        protected ICamera WorldCamera;
+        protected WorldCamera WorldCamera;
 
         private Vector2 PxOffset;
         private Vector3 WorldOffset;
@@ -49,10 +92,11 @@ namespace FSO.LotView.Utils
         public bool OBJIDMode = false;
         public Texture2D AmbientLight;
         public Texture2D AdvLight;
+        public IndexBuffer SpriteIndices;
 
         private Vector2 Scroll;
-        private int LastWidth;
-        private int LastHeight;
+        public int LastWidth;
+        public int LastHeight;
         private int ScrollBuffer;
 
         public float PreciseZoom;
@@ -90,8 +134,8 @@ namespace FSO.LotView.Utils
         {
             this.Device = device;
             this.Effect = WorldContent._2DWorldBatchEffect;
-            Effect.Parameters["OutsideDark"].SetValue(new Vector4(0.5f, 0.5f, 0.5f, 1.0f));
-            Effect.Parameters["WorldToLightFactor"].SetValue(new Vector3(1f / (3 * 75), 1f / (3 * 2.95f), 1f / (3 * 75)));
+            Effect.OutsideDark = new Vector4(0.5f, 0.5f, 0.5f, 1.0f);
+            Effect.WorldToLightFactor = new Vector3(1f / (3 * 75), 1f / (3 * 2.95f), 1f / (3 * 75));
             //TODO: World size
             Sprites = new List<_2DSpriteGroup>();
 
@@ -101,6 +145,8 @@ namespace FSO.LotView.Utils
             AlwaysDS = alwaysDS;
 
             GenBuffers(device.Viewport.Width, device.Viewport.Height);
+            SpriteIndices = new IndexBuffer(device, IndexElementSize.ThirtyTwoBits, 6, BufferUsage.None);
+            SpriteIndices.SetData(_2DStandaloneSprite.indices);
         }
 
         public void GenBuffers(int bwidth, int bheight)
@@ -174,7 +220,6 @@ namespace FSO.LotView.Utils
 
             sprite.AbsoluteDestRect = new Rectangle((int)(x + PxOffset.X), (int)(y + PxOffset.Y), width, height);
             sprite.AbsoluteWorldPosition = sprite.WorldPosition + WorldOffset;
-            sprite.AbsoluteTilePosition = sprite.TilePosition + TileOffset; 
             if (sprite.ObjectID == 0) sprite.ObjectID = ObjectID;
             sprite.DrawOrder = DrawOrder;
 
@@ -219,10 +264,10 @@ namespace FSO.LotView.Utils
         /// <summary>
         /// Reset for a draw loop
         /// </summary>
-        public void Begin(ICamera worldCamera)
+        public void Begin(WorldCamera camera2D)
         {
-            this.WorldCamera = worldCamera;
-            (worldCamera as WorldCamera)?.ProjectionDirty();
+            this.WorldCamera = camera2D;
+            camera2D.ProjectionDirty();
 
             this.Sprites.Clear();
             SpriteIndex = 0;
@@ -278,6 +323,64 @@ namespace FSO.LotView.Utils
             );
         }
 
+        public void PrepareImmediate(WorldBatchTechniques technique)
+        {
+            var effect = this.Effect;
+            Device.BlendState = BlendState.AlphaBlend;
+            //  set the only parameter this effect takes.
+            var frontDir = FrontDirForRot(((FSO.LotView.Utils.WorldCamera)WorldCamera).Rotation);
+            effect.dirToFront = frontDir;
+            effect.offToBack = BackOffForRot(((FSO.LotView.Utils.WorldCamera)WorldCamera).Rotation);
+            //frontDir /= 3;
+            //WorldContent._2DWorldBatchEffect.Parameters["LightOffset"].SetValue(new Vector2(frontDir.X / (6 * 75), frontDir.Z / (6 * 75)));
+            var mat = this.WorldCamera.View * this.WorldCamera.Projection;
+            effect.worldViewProjection = mat;
+            var inv = Matrix.Invert(mat);
+            effect.iWVP = inv;
+            effect.rotProjection = ((WorldCamera)this.WorldCamera).GetRotationMatrix() * this.WorldCamera.Projection;
+
+            effect.PxOffset = new Vector2();
+            effect.WorldOffset = new Vector4();
+
+            effect.SetTechnique(technique);
+            Device.Indices = SpriteIndices;
+        }
+
+        public void SetShaderOffsets(Vector2 pxOffset, Vector3 worldOffset)
+        {
+            var effect = this.Effect;
+            effect.PxOffset = pxOffset;
+            effect.WorldOffset = new Vector4(worldOffset, 0);
+        }
+
+        public void DrawImmediate(_2DStandaloneSprite sprite)
+        {
+            var effect = this.Effect;
+            PPXDepthEngine.RenderPPXDepth(effect, false, (depth) =>
+            {
+                effect.pixelTexture = sprite.Pixel;
+                if (sprite.Depth != null) effect.depthTexture = sprite.Depth;
+                if (sprite.Mask != null) effect.maskTexture = sprite.Mask;
+                
+                EffectPassCollection passes = effect.CurrentTechnique.Passes;
+
+                EffectPass pass = passes[Math.Min(passes.Count - 1, WorldConfig.Current.DirPassOffset)];
+                pass.Apply();
+                if (sprite.GPUVertices != null)
+                {
+                    Device.SetVertexBuffer(sprite.GPUVertices);
+                    Device.DrawIndexedPrimitives(PrimitiveType.TriangleList, 0, 0, 2);
+                }
+            });
+        }
+
+        public void EndImmediate()
+        {
+            var effect = this.Effect;
+            effect.PxOffset = new Vector2();
+            effect.WorldOffset = new Vector4();
+        }
+
         public void End() { End(null, true); }
         /// <summary>
         /// Processes the accumulated draw commands and paints the screen. Optionally outputs to a vertex cache.
@@ -291,15 +394,15 @@ namespace FSO.LotView.Utils
                 Device.BlendState = BlendState.AlphaBlend;
                 //  set the only parameter this effect takes.
                 var frontDir = FrontDirForRot(((FSO.LotView.Utils.WorldCamera)WorldCamera).Rotation);
-                effect.Parameters["dirToFront"].SetValue(frontDir);
-                effect.Parameters["offToBack"].SetValue(BackOffForRot(((FSO.LotView.Utils.WorldCamera)WorldCamera).Rotation));
+                effect.dirToFront = frontDir;
+                effect.offToBack = BackOffForRot(((FSO.LotView.Utils.WorldCamera)WorldCamera).Rotation);
                 //frontDir /= 3;
                 //WorldContent._2DWorldBatchEffect.Parameters["LightOffset"].SetValue(new Vector2(frontDir.X / (6 * 75), frontDir.Z / (6 * 75)));
                 var mat = this.WorldCamera.View * this.WorldCamera.Projection;
-                effect.Parameters["worldViewProjection"].SetValue(mat);
+                effect.worldViewProjection = mat;
                 var inv = Matrix.Invert(mat);
-                effect.Parameters["iWVP"].SetValue(inv);
-                effect.Parameters["rotProjection"].SetValue(((WorldCamera)this.WorldCamera).GetRotationMatrix() * this.WorldCamera.Projection);
+                effect.iWVP = inv;
+                effect.rotProjection = ((WorldCamera)this.WorldCamera).GetRotationMatrix() * this.WorldCamera.Projection;
                 //effect.Parameters["depthOutMode"].SetValue(outputDepth && (!FSOEnvironment.UseMRT));
             }
 
@@ -334,19 +437,20 @@ namespace FSO.LotView.Utils
             if (outputDepth)
             {
                 var spritesWithNoDepth = sprites.Sprites[_2DBatchRenderMode.NO_DEPTH];
-                RenderSpriteList(spritesWithNoDepth, effect, effect.Techniques["drawSimple"], cache);
+                
+                RenderSpriteList(spritesWithNoDepth, effect, WorldBatchTechniques.drawSimple, cache);
 
                 var spritesWithDepth = sprites.Sprites[_2DBatchRenderMode.Z_BUFFER];
-                RenderSpriteList(spritesWithDepth, effect, effect.Techniques["drawZSpriteDepthChannel"], cache);
+                RenderSpriteList(spritesWithDepth, effect, WorldBatchTechniques.drawZSpriteDepthChannel, cache);
 
                 var floors = sprites.Sprites[_2DBatchRenderMode.FLOOR];
-                RenderSpriteList(floors, effect, effect.Techniques["drawZSpriteDepthChannel"], cache);
+                RenderSpriteList(floors, effect, WorldBatchTechniques.drawZSpriteDepthChannel, cache);
 
                 var walls = sprites.Sprites[_2DBatchRenderMode.WALL];
-                RenderSpriteList(walls, effect, effect.Techniques["drawZWallDepthChannel"], cache);
+                RenderSpriteList(walls, effect, WorldBatchTechniques.drawZWallDepthChannel, cache);
 
                 var spritesWithRestoreDepth = sprites.Sprites[_2DBatchRenderMode.RESTORE_DEPTH];
-                RenderSpriteList(spritesWithRestoreDepth, effect, effect.Techniques["drawSimpleRestoreDepth"], cache);
+                RenderSpriteList(spritesWithRestoreDepth, effect, WorldBatchTechniques.drawSimpleRestoreDepth, cache);
             }
             else
             {
@@ -354,20 +458,20 @@ namespace FSO.LotView.Utils
                  * Render the no depth items first
                  */
                 var spritesWithNoDepth = sprites.Sprites[_2DBatchRenderMode.NO_DEPTH];
-                RenderSpriteList(spritesWithNoDepth, effect, effect.Techniques[(OBJIDMode) ? "drawSimpleID" : "drawSimple"], cache); //todo: no depth sprites have fixed depth relative to their position
+                RenderSpriteList(spritesWithNoDepth, effect, (OBJIDMode) ? WorldBatchTechniques.drawSimpleID : WorldBatchTechniques.drawSimple, cache); //todo: no depth sprites have fixed depth relative to their position
                 //the flies object and sim balloons/skill gauges/relationship plusses use this mode
 
                 var spritesWithDepth = sprites.Sprites[_2DBatchRenderMode.Z_BUFFER];
-                RenderSpriteList(spritesWithDepth, effect, effect.Techniques[(OBJIDMode) ? "drawZSpriteOBJID" : "drawZSprite"], cache);
+                RenderSpriteList(spritesWithDepth, effect, (OBJIDMode) ? WorldBatchTechniques.drawZSpriteOBJID : WorldBatchTechniques.drawZSprite, cache);
 
                 var floors = sprites.Sprites[_2DBatchRenderMode.FLOOR];
-                RenderSpriteList(floors, effect, effect.Techniques["drawZSpriteDepthChannel"], cache);
+                RenderSpriteList(floors, effect, WorldBatchTechniques.drawZSpriteDepthChannel, cache);
 
                 var walls = sprites.Sprites[_2DBatchRenderMode.WALL];
-                RenderSpriteList(walls, effect, effect.Techniques[(OBJIDMode) ? "drawZSpriteOBJID" : "drawZWall"], cache);
+                RenderSpriteList(walls, effect, (OBJIDMode) ? WorldBatchTechniques.drawZSpriteOBJID : WorldBatchTechniques.drawZWall, cache);
 
                 var spritesWithRestoreDepth = sprites.Sprites[_2DBatchRenderMode.RESTORE_DEPTH];
-                RenderSpriteList(spritesWithRestoreDepth, effect, effect.Techniques["drawSimpleRestoreDepth"], cache);
+                RenderSpriteList(spritesWithRestoreDepth, effect, WorldBatchTechniques.drawSimpleRestoreDepth, cache);
             }
         }
 
@@ -377,13 +481,13 @@ namespace FSO.LotView.Utils
             Device.BlendState = BlendState.AlphaBlend;
             //  set the only parameter this effect takes.
             var frontDir = FrontDirForRot(((FSO.LotView.Utils.WorldCamera)WorldCamera).Rotation);
-            effect.Parameters["dirToFront"].SetValue(frontDir);
-            effect.Parameters["offToBack"].SetValue(BackOffForRot(((FSO.LotView.Utils.WorldCamera)WorldCamera).Rotation));
+            effect.dirToFront = frontDir;
+            effect.offToBack = BackOffForRot(((FSO.LotView.Utils.WorldCamera)WorldCamera).Rotation);
             //frontDir /= 3;
             //WorldContent._2DWorldBatchEffect.Parameters["LightOffset"].SetValue(new Vector2(frontDir.X / (6 * 75), frontDir.Z / (6 * 75)));
             var mat = this.WorldCamera.View * this.WorldCamera.Projection;
-            effect.Parameters["worldViewProjection"].SetValue(mat);
-            effect.Parameters["iWVP"].SetValue(Matrix.Invert(mat));
+            effect.worldViewProjection = mat;
+            effect.iWVP = Matrix.Invert(mat);
             //effect.Parameters["depthOutMode"].SetValue(OutputDepth && (!FSOEnvironment.UseMRT));
 
             foreach (var buffer in cache)
@@ -441,16 +545,17 @@ namespace FSO.LotView.Utils
 
         private Vector4 BackOffForRot(WorldRotation rot)
         {
+            const float bias = 0.15f; //all 2d graphics are slightly offset forwards
             switch (rot)
             {
                 case WorldRotation.TopLeft:
-                    return new Vector4(0, 0, 0, 0);
+                    return new Vector4(bias, 0, bias, 0);
                 case WorldRotation.TopRight:
-                    return new Vector4(0, 0, 3, 0);
+                    return new Vector4(bias, 0, 3-bias, 0);
                 case WorldRotation.BottomRight:
-                    return new Vector4(3, 0, 3, 0);
+                    return new Vector4(3-bias, 0, 3-bias, 0);
                 case WorldRotation.BottomLeft:
-                    return new Vector4(3, 0, 0, 0);
+                    return new Vector4(3-bias, 0, bias, 0);
             }
             return new Vector4(0, 0, 0, 0);
         }
@@ -487,12 +592,12 @@ namespace FSO.LotView.Utils
         private void RenderDrawGroup(_2DDrawGroup group)
         {
             var effect = this.Effect;
-            effect.Parameters["pixelTexture"].SetValue(group.Pixel);
-            if (group.Depth != null) effect.Parameters["depthTexture"].SetValue(group.Depth);
-            if (group.Mask != null) effect.Parameters["maskTexture"].SetValue(group.Mask);
+            effect.pixelTexture = group.Pixel;
+            if (group.Depth != null) effect.depthTexture = group.Depth;
+            if (group.Mask != null) effect.maskTexture = group.Mask;
 
-            effect.CurrentTechnique = group.Technique;
-            EffectPassCollection passes = group.Technique.Passes;
+            effect.SetTechnique(group.Technique);
+            EffectPassCollection passes = effect.CurrentTechnique.Passes;
             
             EffectPass pass = passes[Math.Min(passes.Count - 1, WorldConfig.Current.DirPassOffset)];
             pass.Apply();
@@ -510,7 +615,7 @@ namespace FSO.LotView.Utils
             }
         }
 
-        private void RenderSpriteList(List<_2DSprite> sprites, Effect effect, EffectTechnique technique, List<_2DDrawGroup> cache){
+        private void RenderSpriteList(List<_2DSprite> sprites, WorldBatchEffect effect, WorldBatchTechniques technique, List<_2DDrawGroup> cache){
             if (sprites.Count == 0) { return; }
             bool floors = sprites.First().RenderMode == _2DBatchRenderMode.FLOOR;
             /** Group by texture **/
@@ -637,7 +742,7 @@ namespace FSO.LotView.Utils
             //offset pixels by a little bit so that the center of them lies on the sample area. Avoids graphical bugs.
 
             ViewProjection = View * Projection;
-            Effect.Parameters["viewProjection"].SetValue(this.View * this.Projection);
+            Effect.viewProjection = this.View * this.Projection;
         }
 
         private Dictionary<ITextureProvider, Texture2D> _TextureCache = new Dictionary<ITextureProvider, Texture2D>();
@@ -679,6 +784,7 @@ namespace FSO.LotView.Utils
 
         public void Dispose()
         {
+            SpriteIndices.Dispose();
             foreach (var buf in Buffers)
             {
                 buf.Dispose();
@@ -818,12 +924,5 @@ namespace FSO.LotView.Utils
         public Texture2D Depth;
         public Texture2D Mask;
         public List<_2DSprite> Sprites = new List<_2DSprite>();
-    }
-
-    public struct Tuple<T1, T2> //used for texture groups
-    {
-        public readonly T1 Item1;
-        public readonly T2 Item2;
-        public Tuple(T1 item1, T2 item2) { Item1 = item1; Item2 = item2; }
     }
 }

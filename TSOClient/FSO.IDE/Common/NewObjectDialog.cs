@@ -77,7 +77,7 @@ namespace FSO.IDE.Common
                         ChunkProcessed = true,
                         ChunkType = "OBJD",
                         ChunkParent = TargetIff,
-                        AnimationTableID = 128,
+                        AnimationTableID = 129,
                         AddedByPatch = true
                     };
 
@@ -106,7 +106,7 @@ namespace FSO.IDE.Common
                         var anim = new STR()
                         {
                             ChunkLabel = name,
-                            ChunkID = 128,
+                            ChunkID = 129,
                             ChunkProcessed = true,
                             ChunkType = "STR#",
                             ChunkParent = TargetIff,

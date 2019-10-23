@@ -41,14 +41,6 @@ namespace FSO.LotView.Components
             new Point(-1, -1),
         };
 
-        public override float PreferredDrawOrder
-        {
-            get
-            {
-                return 801.0f;
-            }
-        }
-
         public override void Draw(GraphicsDevice device, WorldState world)
         {
             if (ArchZBuffers == null) ArchZBuffers = TextureGenerator.GetWallZBuffer(device);

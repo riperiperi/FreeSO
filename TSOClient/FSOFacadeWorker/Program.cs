@@ -274,7 +274,7 @@ namespace FSOFacadeWorker
                 marshal.Deserialize(new BinaryReader(mem));
             }
 
-            var world = new FSO.LotView.RC.WorldRC(gd);
+            var world = new World(gd);
             world.Opacity = 1;
             Layer.Add(world);
 

@@ -10,6 +10,7 @@ using System.Text;
 using System.Threading.Tasks;
 using FSO.Common.Rendering.Framework.Model;
 using FSO.Common.Utils;
+using FSO.LotView;
 
 namespace FSO.Client.UI.Panels
 {
@@ -36,6 +37,8 @@ namespace FSO.Client.UI.Panels
         public UIButton AALowButton { get; set; }
         public UIButton AAMedButton { get; set; }
         public UIButton AAHighButton { get; set; }
+
+        public UIButton SwitchModeButton { get; set; }
 
         public UILabel UIEffectsLabel { get; set; }
         public UILabel AntiAliasLabel { get; set; }
@@ -112,8 +115,6 @@ namespace FSO.Client.UI.Panels
 
             var clone = CloneCheckbox();
             Wall3DButton = clone.Item1; Wall3DLabel = clone.Item2;
-            Wall3DButton.Visible = FSOEnvironment.Enable3D;
-            Wall3DLabel.Visible = FSOEnvironment.Enable3D;
             Wall3DLabel.Caption = GameFacade.Strings.GetString("f103", "12");
 
             clone = CloneCheckbox();
@@ -180,6 +181,14 @@ namespace FSO.Client.UI.Panels
             DPIButton.OnButtonClick += DPIButton_OnButtonClick;
             Add(DPIButton);
 
+            SwitchModeButton = new UIButton();
+            SwitchModeButton.Size = new Vector2(175, 35);
+            SwitchModeButton.Caption = GameFacade.Strings.GetString("f103", "41");
+            SwitchModeButton.Tooltip = GameFacade.Strings.GetString("f103", "40");
+            SwitchModeButton.Position = new Vector2(210, 250);
+            SwitchModeButton.OnButtonClick += SwitchModeButton_OnButtonClick;
+            Add(SwitchModeButton);
+
             var style = TextStyle.DefaultTitle.Clone();
             style.Size = 12;
 
@@ -225,6 +234,20 @@ namespace FSO.Client.UI.Panels
             {
                 UIScreen.RemoveDialog(this);
             };
+
+            GraphicsModeControl.ModeChanged += UpdateModeText;
+        }
+
+        private void SwitchModeButton_OnButtonClick(UIElement button)
+        {
+            if (GraphicsModeControl.Mode == LotView.Model.GlobalGraphicsMode.Hybrid2D)
+            {
+                GraphicsModeControl.ChangeMode(LotView.Model.GlobalGraphicsMode.Full3D);
+            }
+            else if (GraphicsModeControl.Mode == LotView.Model.GlobalGraphicsMode.Full3D)
+            {
+                GraphicsModeControl.ChangeMode(LotView.Model.GlobalGraphicsMode.Hybrid2D);
+            }
         }
 
         private void DPIButton_OnButtonClick(UIElement button)
@@ -276,7 +299,7 @@ namespace FSO.Client.UI.Panels
         {
             var settings = GlobalSettings.Default;
             if (button == AntiAliasCheckButton) settings.AntiAlias = settings.AntiAlias ^ 1;
-            else if (button == ShadowsCheckButton) settings.SmoothZoom = !(settings.SmoothZoom);
+            else if (button == ShadowsCheckButton) settings.EnableTransitions = !(settings.EnableTransitions);
             else if (button == LightingCheckButton) settings.Weather = !(settings.Weather);
             else if (button == UIEffectsCheckButton) settings.CityShadows = !(settings.CityShadows);
             else if (button == EdgeScrollingCheckButton) settings.EdgeScroll = !(settings.EdgeScroll);
@@ -289,8 +312,7 @@ namespace FSO.Client.UI.Panels
             }
             else if (button == Wall3DButton)
             {
-                if (FSOEnvironment.Enable3D) settings.CitySkybox = !settings.CitySkybox;
-                else settings.Shadows3D = !settings.Shadows3D;
+                settings.CitySkybox = !settings.CitySkybox;
             }
             GlobalSettings.Default.Save();
             SettingsChanged();
@@ -326,11 +348,30 @@ namespace FSO.Client.UI.Panels
             SettingsChanged();
         }
 
+        private void UpdateModeText(LotView.Model.GlobalGraphicsMode mode)
+        {
+            switch (mode)
+            {
+                case LotView.Model.GlobalGraphicsMode.Full2D:
+                    SwitchModeButton.Visible = false;
+                    break;
+                case LotView.Model.GlobalGraphicsMode.Full3D:
+                    SwitchModeButton.Visible = true;
+                    SwitchModeButton.Caption = GameFacade.Strings.GetString("f103", "42");
+                    break;
+                case LotView.Model.GlobalGraphicsMode.Hybrid2D:
+                    SwitchModeButton.Visible = true;
+                    SwitchModeButton.Caption = GameFacade.Strings.GetString("f103", "41");
+                    break;
+            }
+            Invalidate();
+        }
+
         private void SettingsChanged()
         {
             var settings = GlobalSettings.Default;
             AntiAliasCheckButton.Selected = settings.AntiAlias > 0; //antialias for render targets
-            ShadowsCheckButton.Selected = settings.SmoothZoom;
+            ShadowsCheckButton.Selected = settings.EnableTransitions;
             LightingCheckButton.Selected = settings.Weather;
             UIEffectsCheckButton.Selected = settings.CityShadows; //instead of being able to disable UI transparency, you can toggle City Shadows.
             EdgeScrollingCheckButton.Selected = settings.EdgeScroll;
@@ -355,9 +396,11 @@ namespace FSO.Client.UI.Panels
             LightingSlider.Value = settings.LightingMode;
             InternalChange = false;
 
-            Wall3DButton.Selected = (FSOEnvironment.Enable3D) ? settings.CitySkybox : settings.Shadows3D;
+            Wall3DButton.Selected = settings.CitySkybox;
             FSOEnvironment.TexCompress = (settings.TexCompression & 1) > 0;
             CompressionButton.Selected = FSOEnvironment.TexCompress;
+
+            UpdateModeText(GraphicsModeControl.Mode);
 
             var oldSurrounding = LotView.WorldConfig.Current.SurroundingLots;
             LotView.WorldConfig.Current = new LotView.WorldConfig()
@@ -368,7 +411,8 @@ namespace FSO.Client.UI.Panels
                 AA = settings.AntiAlias,
                 Weather = settings.Weather,
                 Directional = settings.DirectionalLight3D,
-                Complex = settings.ComplexShaders
+                Complex = settings.ComplexShaders,
+                EnableTransitions = settings.EnableTransitions
             };
 
             var vm = ((IGameScreen)GameFacade.Screens.CurrentUIScreen)?.vm;
@@ -382,6 +426,11 @@ namespace FSO.Client.UI.Panels
             }
         }
 
+        public override void Removed()
+        {
+            base.Removed();
+            GraphicsModeControl.ModeChanged -= UpdateModeText;
+        }
     }
 
     public class UIDPIScaleDialog : UIDialog

@@ -108,8 +108,10 @@
             this.TileWidthLabel = new System.Windows.Forms.Label();
             this.FootprintEast = new System.Windows.Forms.NumericUpDown();
             this.MultitileBox = new System.Windows.Forms.GroupBox();
-            this.button4 = new System.Windows.Forms.Button();
-            this.button3 = new System.Windows.Forms.Button();
+            this.InteractionGroupLabel = new System.Windows.Forms.Label();
+            this.InteractionGroup = new System.Windows.Forms.NumericUpDown();
+            this.MasterMultitile = new System.Windows.Forms.Button();
+            this.LeadMultitile = new System.Windows.Forms.Button();
             this.NewMultitile = new System.Windows.Forms.Button();
             this.MultiGroupCombo = new System.Windows.Forms.ComboBox();
             this.label3 = new System.Windows.Forms.Label();
@@ -124,8 +126,6 @@
             this.NameLabel = new System.Windows.Forms.Label();
             this.NameEntry = new System.Windows.Forms.TextBox();
             this.GUIDButton = new System.Windows.Forms.Button();
-            this.InteractionGroup = new System.Windows.Forms.NumericUpDown();
-            this.InteractionGroupLabel = new System.Windows.Forms.Label();
             this.ThumbnailBox.SuspendLayout();
             ((System.ComponentModel.ISupportInitialize)(this.ThumbnailPic)).BeginInit();
             this.VisualBox.SuspendLayout();
@@ -152,10 +152,10 @@
             ((System.ComponentModel.ISupportInitialize)(this.TileWidth)).BeginInit();
             ((System.ComponentModel.ISupportInitialize)(this.FootprintEast)).BeginInit();
             this.MultitileBox.SuspendLayout();
+            ((System.ComponentModel.ISupportInitialize)(this.InteractionGroup)).BeginInit();
             ((System.ComponentModel.ISupportInitialize)(this.XOffset)).BeginInit();
             ((System.ComponentModel.ISupportInitialize)(this.LevelOffset)).BeginInit();
             ((System.ComponentModel.ISupportInitialize)(this.YOffset)).BeginInit();
-            ((System.ComponentModel.ISupportInitialize)(this.InteractionGroup)).BeginInit();
             this.SuspendLayout();
             // 
             // ThumbnailBox
@@ -1036,8 +1036,8 @@
             // 
             this.MultitileBox.Controls.Add(this.InteractionGroupLabel);
             this.MultitileBox.Controls.Add(this.InteractionGroup);
-            this.MultitileBox.Controls.Add(this.button4);
-            this.MultitileBox.Controls.Add(this.button3);
+            this.MultitileBox.Controls.Add(this.MasterMultitile);
+            this.MultitileBox.Controls.Add(this.LeadMultitile);
             this.MultitileBox.Controls.Add(this.NewMultitile);
             this.MultitileBox.Controls.Add(this.MultiGroupCombo);
             this.MultitileBox.Controls.Add(this.label3);
@@ -1055,23 +1055,50 @@
             this.MultitileBox.TabStop = false;
             this.MultitileBox.Text = "Multitile";
             // 
-            // button4
+            // InteractionGroupLabel
             // 
-            this.button4.Location = new System.Drawing.Point(8, 248);
-            this.button4.Name = "button4";
-            this.button4.Size = new System.Drawing.Size(89, 23);
-            this.button4.TabIndex = 31;
-            this.button4.Text = "Make Master";
-            this.button4.UseVisualStyleBackColor = true;
+            this.InteractionGroupLabel.AutoSize = true;
+            this.InteractionGroupLabel.Location = new System.Drawing.Point(8, 90);
+            this.InteractionGroupLabel.Name = "InteractionGroupLabel";
+            this.InteractionGroupLabel.Size = new System.Drawing.Size(92, 13);
+            this.InteractionGroupLabel.TabIndex = 33;
+            this.InteractionGroupLabel.Text = "Interaction Group:";
             // 
-            // button3
+            // InteractionGroup
             // 
-            this.button3.Location = new System.Drawing.Point(109, 248);
-            this.button3.Name = "button3";
-            this.button3.Size = new System.Drawing.Size(89, 23);
-            this.button3.TabIndex = 30;
-            this.button3.Text = "Make Lead";
-            this.button3.UseVisualStyleBackColor = true;
+            this.InteractionGroup.Location = new System.Drawing.Point(103, 88);
+            this.InteractionGroup.Maximum = new decimal(new int[] {
+            32767,
+            0,
+            0,
+            0});
+            this.InteractionGroup.Minimum = new decimal(new int[] {
+            32768,
+            0,
+            0,
+            -2147483648});
+            this.InteractionGroup.Name = "InteractionGroup";
+            this.InteractionGroup.Size = new System.Drawing.Size(95, 20);
+            this.InteractionGroup.TabIndex = 32;
+            // 
+            // MasterMultitile
+            // 
+            this.MasterMultitile.Location = new System.Drawing.Point(8, 248);
+            this.MasterMultitile.Name = "MasterMultitile";
+            this.MasterMultitile.Size = new System.Drawing.Size(89, 23);
+            this.MasterMultitile.TabIndex = 31;
+            this.MasterMultitile.Text = "Make Master";
+            this.MasterMultitile.UseVisualStyleBackColor = true;
+            // 
+            // LeadMultitile
+            // 
+            this.LeadMultitile.Location = new System.Drawing.Point(109, 248);
+            this.LeadMultitile.Name = "LeadMultitile";
+            this.LeadMultitile.Size = new System.Drawing.Size(89, 23);
+            this.LeadMultitile.TabIndex = 30;
+            this.LeadMultitile.Text = "Make Lead";
+            this.LeadMultitile.UseVisualStyleBackColor = true;
+            this.LeadMultitile.Click += new System.EventHandler(this.LeadMultitile_Click);
             // 
             // NewMultitile
             // 
@@ -1213,32 +1240,6 @@
             this.GUIDButton.UseVisualStyleBackColor = true;
             this.GUIDButton.MouseDown += new System.Windows.Forms.MouseEventHandler(this.GUIDButton_MouseDown);
             // 
-            // InteractionGroup
-            // 
-            this.InteractionGroup.Location = new System.Drawing.Point(103, 88);
-            this.InteractionGroup.Maximum = new decimal(new int[] {
-            32767,
-            0,
-            0,
-            0});
-            this.InteractionGroup.Minimum = new decimal(new int[] {
-            32768,
-            0,
-            0,
-            -2147483648});
-            this.InteractionGroup.Name = "InteractionGroup";
-            this.InteractionGroup.Size = new System.Drawing.Size(95, 20);
-            this.InteractionGroup.TabIndex = 32;
-            // 
-            // InteractionGroupLabel
-            // 
-            this.InteractionGroupLabel.AutoSize = true;
-            this.InteractionGroupLabel.Location = new System.Drawing.Point(8, 90);
-            this.InteractionGroupLabel.Name = "InteractionGroupLabel";
-            this.InteractionGroupLabel.Size = new System.Drawing.Size(92, 13);
-            this.InteractionGroupLabel.TabIndex = 33;
-            this.InteractionGroupLabel.Text = "Interaction Group:";
-            // 
             // OBJDEditor
             // 
             this.AutoScaleDimensions = new System.Drawing.SizeF(6F, 13F);
@@ -1292,10 +1293,10 @@
             ((System.ComponentModel.ISupportInitialize)(this.FootprintEast)).EndInit();
             this.MultitileBox.ResumeLayout(false);
             this.MultitileBox.PerformLayout();
+            ((System.ComponentModel.ISupportInitialize)(this.InteractionGroup)).EndInit();
             ((System.ComponentModel.ISupportInitialize)(this.XOffset)).EndInit();
             ((System.ComponentModel.ISupportInitialize)(this.LevelOffset)).EndInit();
             ((System.ComponentModel.ISupportInitialize)(this.YOffset)).EndInit();
-            ((System.ComponentModel.ISupportInitialize)(this.InteractionGroup)).EndInit();
             this.ResumeLayout(false);
             this.PerformLayout();
 
@@ -1381,8 +1382,8 @@
         private System.Windows.Forms.Label TileWidthLabel;
         private System.Windows.Forms.NumericUpDown FootprintEast;
         private System.Windows.Forms.GroupBox MultitileBox;
-        private System.Windows.Forms.Button button4;
-        private System.Windows.Forms.Button button3;
+        private System.Windows.Forms.Button MasterMultitile;
+        private System.Windows.Forms.Button LeadMultitile;
         private System.Windows.Forms.Button NewMultitile;
         private System.Windows.Forms.ComboBox MultiGroupCombo;
         private System.Windows.Forms.Label label3;

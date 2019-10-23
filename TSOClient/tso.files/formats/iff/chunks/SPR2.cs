@@ -127,15 +127,43 @@ namespace FSO.Files.Formats.IFF.Chunks
         {
             using (var io = IoWriter.FromStream(stream, ByteOrder.LITTLE_ENDIAN))
             {
-                io.WriteUInt32(1001);
-                io.WriteUInt32(DefaultPaletteID);
-                if (Frames == null) io.WriteUInt32(0);
+                if (IffFile.TargetTS1)
+                {
+                    io.WriteUInt32(1000);
+                    uint length = 0;
+                    if (Frames != null) length = (uint)Frames.Length;
+                    io.WriteUInt32(length);
+                    DefaultPaletteID = Frames?.FirstOrDefault()?.PaletteID ?? DefaultPaletteID;
+                    io.WriteUInt32(DefaultPaletteID);
+                    // begin offset table
+                    var offTableStart = stream.Position;
+                    for (int i = 0; i < length; i++) io.WriteUInt32(0); //filled in later
+                    var offsets = new uint[length];
+                    int offInd = 0;
+                    if (Frames != null)
+                    {
+                        foreach (var frame in Frames)
+                        {
+                            offsets[offInd++] = (uint)stream.Position;
+                            frame.Write(io, true);
+                        }
+                    }
+                    io.Seek(SeekOrigin.Begin, offTableStart);
+                    foreach (var off in offsets) io.WriteUInt32(off);
+                    io.Seek(SeekOrigin.End, 0);
+                }
                 else
                 {
-                    io.WriteUInt32((uint)Frames.Length);
-                    foreach (var frame in Frames)
+                    io.WriteUInt32(1001);
+                    io.WriteUInt32(DefaultPaletteID);
+                    if (Frames == null) io.WriteUInt32(0);
+                    else
                     {
-                        frame.Write(io);
+                        io.WriteUInt32((uint)Frames.Length);
+                        foreach (var frame in Frames)
+                        {
+                            frame.Write(io, false);
+                        }
                     }
                 }
                 return true;
@@ -255,7 +283,7 @@ namespace FSO.Files.Formats.IFF.Chunks
             }
         }
 
-        public void Write(IoWriter io)
+        public void Write(IoWriter io, bool ts1)
         {
             using (var sprStream = new MemoryStream())
             {
@@ -270,8 +298,11 @@ namespace FSO.Files.Formats.IFF.Chunks
                 SPR2FrameEncoder.WriteFrame(this, sprIO);
 
                 var data = sprStream.ToArray();
-                io.WriteUInt32(1001);
-                io.WriteUInt32((uint)data.Length);
+                if (!ts1)
+                {
+                    io.WriteUInt32(1001);
+                    io.WriteUInt32((uint)data.Length);
+                }
                 io.WriteBytes(data);
             }
         }

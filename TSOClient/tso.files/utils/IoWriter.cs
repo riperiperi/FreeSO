@@ -193,7 +193,7 @@ namespace FSO.Files.Utils
         /// </summary>
         public void WriteNullTerminatedString(string value)
         {
-            WriteBytes(Encoding.ASCII.GetBytes(value));
+            if (value != null) WriteBytes(Encoding.ASCII.GetBytes(value));
             WriteByte(0);
         }
 

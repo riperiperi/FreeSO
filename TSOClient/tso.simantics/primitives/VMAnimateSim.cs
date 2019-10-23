@@ -38,6 +38,7 @@ namespace FSO.SimAntics.Engine.Primitives
                     avatar.CarryAnimationState = null;
                     return VMPrimitiveExitCode.GOTO_TRUE;
                 }
+                if (avatar.GetPersonData(VMPersonDataVariable.HeadSeekState) == 1) avatar.SetPersonData(VMPersonDataVariable.HeadSeekState, 4);
                 avatar.Animations.Clear();
                 var posture = avatar.GetPersonData(VMPersonDataVariable.Posture);
 

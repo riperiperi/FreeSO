@@ -270,6 +270,15 @@
       ]
     },
     {
+      "id": "6768dc20-7731-4bee-85c6-d2cd9b818a03",
+      "script": "changes/0030_tokens.sql",
+      "idempotent": false,
+      "requires": [
+        "52795d47-a25e-418f-a618-fb89300aab02",
+        "500dbdd2-7d4d-4d68-a3a6-b6abbbe1f1e8"
+      ]
+    },
+    {
       "id": "1235b96c-5a75-2159-b49d-909cb3198cda",
       "script": "changes/0031_global_cooldowns.sql",
       "idempotent": false,

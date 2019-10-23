@@ -19,12 +19,13 @@ using FSO.LotView.RC;
 
 namespace FSO.LotView.Components
 {
-    public class AvatarComponent : EntityComponent
+    public class AvatarComponent : EntityComponent, IDisposable
     {
         public Avatar Avatar;
         public bool IsPet;
         public float Scale = 1;
         public int ALevel = 0;
+        public _2DStandaloneSprite HeadlineSprite;
 
         private static Vector2[] PosCenterOffsets = new Vector2[]{
             new Vector2(2+16, 79+8),
@@ -41,7 +42,7 @@ namespace FSO.LotView.Components
         public Vector3 GetPelvisPosition()
         {
             var pelvis = Avatar.Skeleton.GetBone("PELVIS").AbsolutePosition / 3.0f;
-            return Vector3.Transform(new Vector3(pelvis.X, pelvis.Z, pelvis.Y), Matrix.CreateRotationZ((float)(RadianDirection + Math.PI))) + this.Position - new Vector3(0.5f, 0.5f, 0f);
+            return Vector3.Transform(new Vector3(pelvis.X, pelvis.Z, pelvis.Y), Matrix.CreateRotationZ((float)(RadianDirection + Math.PI))) + this.Position;// - new Vector3(0.5f, 0.5f, 0f);
         }
 
         public double RadianDirection;
@@ -105,11 +106,6 @@ namespace FSO.LotView.Components
             get { return _Position; }
         }
 
-        public override float PreferredDrawOrder
-        {
-            get { return 5000.0f;  }
-        }
-
         public override void Initialize(GraphicsDevice device, WorldState world)
         {
             base.Initialize(device, world);
@@ -119,11 +115,9 @@ namespace FSO.LotView.Components
         public override Vector2 GetScreenPos(WorldState world)
         {
             var headpos = Avatar.Skeleton.GetBone("HEAD").AbsolutePosition;
-            var projected = Vector4.Transform(new Vector4(headpos, 1), Matrix.CreateRotationY((float)(Math.PI - RadianDirection)) * this.World * world.Camera.View * world.Camera.Projection);
-            if (world.Camera is WorldCamera) projected.Z = 1;
+            var projected = Vector4.Transform(new Vector4(headpos, 1), Matrix.CreateRotationY((float)(Math.PI - RadianDirection)) * this.World * world.View * world.Projection);
+            if (world.CameraMode < CameraRenderMode._3D) projected.Z = 1;
             var res1 = new Vector2(projected.X / projected.Z, -projected.Y / projected.Z);
-            //res1.X /= PPXDepthEngine.SSAA;
-            //res1.Y /= PPXDepthEngine.SSAA;
             var size = PPXDepthEngine.GetWidthHeight();
             return new Vector2((size.X / PPXDepthEngine.SSAA) * 0.5f * (res1.X + 1f), (size.Y / PPXDepthEngine.SSAA) * 0.5f * (res1.Y + 1f)); //world.WorldSpace.GetScreenFromTile(transhead) + world.WorldSpace.GetScreenOffset() + PosCenterOffsets[(int)world.Zoom - 1];
         }
@@ -158,13 +152,45 @@ namespace FSO.LotView.Components
             return Vector3.Transform(new Vector3(headpos.X, headpos.Z, headpos.Y), Matrix.CreateRotationZ((float)(RadianDirection + Math.PI)));
         }
 
+        private Vector4 PowColorVec(Vector4 vec, float pow)
+        {
+            vec.X = (float)Math.Pow(vec.X, pow);
+            vec.Y = (float)Math.Pow(vec.Y, pow);
+            vec.Z = (float)Math.Pow(vec.Z, pow);
+
+            return vec;
+        }
+
+        public void DrawAvatarMesh(GraphicsDevice device, WorldState state, Matrix world, Color baseCol)
+        {
+            var effect = WorldContent.AvatarEffect;
+            var technique = effect.CurrentTechnique;
+            var room = (Room > 65530 || Room == 0) ? Room : blueprint.Rooms[Room].Base;
+            foreach (var pass in technique.Passes)
+            {
+                effect.Parameters["ObjectID"].SetValue(ObjectID / 65535f);
+                effect.Parameters["Level"].SetValue(ALevel + 0.0001f);
+                var roomLights = blueprint?.RoomColors;
+                if (roomLights != null)
+                {
+                    var col = ((WorldConfig.Current.AdvancedLighting) ? new Vector4(1) : PowColorVec(roomLights[room].ToVector4(), 1 / 2.2f)) * baseCol.ToVector4();
+                    effect.Parameters["AmbientLight"].SetValue(col);
+                }
+                effect.Parameters["World"].SetValue(world);
+                pass.Apply();
+
+                Avatar.DrawGeometry(device, effect);
+            }
+        }
+
         public override void Draw(GraphicsDevice device, WorldState world)
         {
-            Avatar.Position = WorldSpace.GetWorldFromTile(Position);
+            var pos = Position;
+            Avatar.Position = WorldSpace.GetWorldFromTile(pos);
             if (Avatar.Skeleton == null) return;
             var headpos = Avatar.Skeleton.GetBone("HEAD").AbsolutePosition / 3.0f;
             var tHead1 = Vector3.Transform(new Vector3(headpos.X, headpos.Z, headpos.Y), Matrix.CreateRotationZ((float)(RadianDirection + Math.PI)));
-            var transhead = tHead1 + this.Position - new Vector3(0.5f, 0.5f, 0f);
+            var transhead = tHead1 + pos - new Vector3(0.5f, 0.5f, 0f);
 
             if (!Visible) return;
 
@@ -177,39 +203,57 @@ namespace FSO.LotView.Components
                 Avatar.LightPositions = (WorldConfig.Current.AdvancedLighting)?CloseLightPositions(Position):null;
                 var newWorld = Matrix.CreateRotationY((float)(Math.PI - RadianDirection)) * this.World;
                 if (Scale != 1f) newWorld = Matrix.CreateScale(Scale) * newWorld;
-                world._3D.DrawMesh(newWorld, Avatar, (short)ObjectID, (Room>65530 || Room == 0)?Room:blueprint.Rooms[Room].Base, col, ALevel); 
+                DrawAvatarMesh(device, world, newWorld, col);
+                //world._3D.DrawMesh(newWorld, Avatar, (short)ObjectID, (Room>65530 || Room == 0)?Room:blueprint.Rooms[Room].Base, col, ALevel); 
             }
 
             if (Headline != null && !Headline.IsDisposed)
             {
+                var lastCull = device.RasterizerState;
+                var lastBlend = device.BlendState;
+                device.RasterizerState = RasterizerState.CullNone;
+                device.BlendState = BlendState.NonPremultiplied;
                 var headOff = (transhead-Position) + new Vector3(0,0,0.66f);
-                if (world is WorldStateRC)
+                if (!world.Cameras.Safe2D)
                 {
-                    //this is done in world2DRC, after everything else.
+                    DrawHeadline3D(device, world);
                 }
                 else
                 {
                     var headPx = world.WorldSpace.GetScreenFromTile(headOff);
 
-                    var item = world._2D.NewSprite(_2DBatchRenderMode.Z_BUFFER);
-                    item.Pixel = Headline;
-                    item.Depth = TextureGenerator.GetWallZBuffer(device)[30];
+                    if (HeadlineSprite == null) HeadlineSprite = new _2DStandaloneSprite();
+                    HeadlineSprite.Pixel = Headline;
+                    HeadlineSprite.Depth = TextureGenerator.GetWallZBuffer(device)[30];
 
-                    item.SrcRect = new Rectangle(0, 0, Headline.Width, Headline.Height);
-                    item.WorldPosition = headOff;
+                    HeadlineSprite.SrcRect = new Rectangle(0, 0, Headline.Width, Headline.Height);
+                    HeadlineSprite.WorldPosition = headOff;
                     var off = PosCenterOffsets[(int)world.Zoom - 1];
-                    item.DestRect = new Rectangle(
+                    HeadlineSprite.DestRect = new Rectangle(
                         ((int)headPx.X - Headline.Width / 2) + (int)off.X,
                         ((int)headPx.Y - Headline.Height / 2) + (int)off.Y, Headline.Width, Headline.Height);
-                    item.Room = Room;
-                    world._2D.Draw(item);
+
+                    HeadlineSprite.AbsoluteDestRect = HeadlineSprite.DestRect;
+                    HeadlineSprite.AbsoluteDestRect.Offset(world.WorldSpace.GetScreenFromTile(pos));
+                    HeadlineSprite.AbsoluteWorldPosition = HeadlineSprite.WorldPosition + WorldSpace.GetWorldFromTile(pos);
+
+                    HeadlineSprite.Room = Room;
+                    HeadlineSprite.PrepareVertices(device);
+                    world._2D.DrawImmediate(HeadlineSprite);
                 }
+                device.RasterizerState = lastCull;
+                device.BlendState = lastBlend;
             }
         }
 
         public override void Preload(GraphicsDevice device, WorldState world)
         {
             //nothing important to do here
+        }
+
+        public void Dispose()
+        {
+            HeadlineSprite?.Dispose();
         }
     }
 }

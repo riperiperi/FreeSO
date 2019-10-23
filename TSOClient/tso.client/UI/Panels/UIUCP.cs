@@ -29,6 +29,8 @@ using FSO.LotView.RC;
 using FSO.Client.UI.Hints;
 using FSO.HIT;
 using FSO.Client.UI.Model;
+using FSO.LotView.Utils.Camera;
+using FSO.LotView.Model;
 
 namespace FSO.Client.UI.Panels
 {
@@ -303,9 +305,15 @@ namespace FSO.Client.UI.Panels
             FirstFloorButton.Selected = (Game.Level == 1);
         }
 
+        private ICameraController GetActiveCamera()
+        {
+            //my god, why have you foresaken me?
+            return Game.vm?.Context?.World?.State?.Cameras?.ActiveCamera;
+        }
+
         private void RotateCounterClockwise(UIElement button)
         {
-            if (FSOEnvironment.Enable3D && Game.InLot) return;
+            if (GetActiveCamera()?.UseRotateHold != false && Game.InLot) return;
             var newRot = (Game.Rotation - 1);
             if (newRot < 0) newRot = 3;
             Game.Rotation = newRot;
@@ -313,7 +321,7 @@ namespace FSO.Client.UI.Panels
 
         private void RotateClockwise(UIElement button)
         {
-            if (FSOEnvironment.Enable3D && Game.InLot) return;
+            if (GetActiveCamera()?.UseRotateHold != false && Game.InLot) return;
             Game.Rotation = (Game.Rotation+1)%4;
         }
 
@@ -448,11 +456,23 @@ namespace FSO.Client.UI.Panels
 
                 if (nofocus)
                 {
-                    if (FSOEnvironment.Enable3D)
+                    var world = Game.vm.Context.World;
+                    var cameras = world.State.Cameras;
+                    var activeCamera = cameras.ActiveCamera;
+                    if (activeCamera.UseRotateHold)
                     {
                         //if the zoom or rotation buttons are down, gradually change their values.
-                        if (RotateClockwiseButton.IsDown || state.KeyboardState.IsKeyDown(Keys.OemPeriod)) ((WorldStateRC)Game.vm.Context.World.State).RotationX += 2f / FSOEnvironment.RefreshRate;
-                        if (RotateCounterClockwiseButton.IsDown || state.KeyboardState.IsKeyDown(Keys.OemComma)) ((WorldStateRC)Game.vm.Context.World.State).RotationX -= 2f / FSOEnvironment.RefreshRate;
+                        var cam = Game.vm.Context.World.State.Cameras.Camera3D;
+                        if (RotateClockwiseButton.IsDown || state.KeyboardState.IsKeyDown(Keys.OemPeriod)) cam.RotationX += 2f / FSOEnvironment.RefreshRate;
+                        if (RotateCounterClockwiseButton.IsDown || state.KeyboardState.IsKeyDown(Keys.OemComma)) cam.RotationX -= 2f / FSOEnvironment.RefreshRate;
+                    }
+                    else
+                    {
+                        if (keys.Contains(Keys.OemComma)) RotateCounterClockwise(null);
+                        if (keys.Contains(Keys.OemPeriod)) RotateClockwise(null);
+                    }
+                    if (activeCamera.UseZoomHold)
+                    {
                         if (ZoomInButton.IsDown || (state.KeyboardState.IsKeyDown(Keys.OemPlus) && !state.CtrlDown)) Game.LotControl.TargetZoom = Math.Max(0.25f, Math.Min(Game.LotControl.TargetZoom + 1f / FSOEnvironment.RefreshRate, 2));
                         if (ZoomOutButton.IsDown || (state.KeyboardState.IsKeyDown(Keys.OemMinus) && !state.CtrlDown)) Game.LotControl.TargetZoom = Math.Max(0.25f, Math.Min(Game.LotControl.TargetZoom - 1f / FSOEnvironment.RefreshRate, 2));
                     }
@@ -460,8 +480,6 @@ namespace FSO.Client.UI.Panels
                     {
                         if (keys.Contains(Keys.OemPlus) && !state.CtrlDown && !ZoomInButton.Disabled) { Game.ZoomLevel -= 1; UpdateZoomButton(); }
                         if (keys.Contains(Keys.OemMinus) && !state.CtrlDown && !ZoomOutButton.Disabled) { Game.ZoomLevel += 1; UpdateZoomButton(); }
-                        if (keys.Contains(Keys.OemComma)) RotateCounterClockwise(null);
-                        if (keys.Contains(Keys.OemPeriod)) RotateClockwise(null);
                     }
                     if (keys.Contains(Keys.PageDown)) FirstFloor(null);
                     if (keys.Contains(Keys.PageUp)) SecondFloor(null);
@@ -514,7 +532,7 @@ namespace FSO.Client.UI.Panels
 
         private void ZoomControl(UIElement button)
         {
-            if (FSOEnvironment.Enable3D && Game.InLot) return;
+            if (GetActiveCamera()?.UseZoomHold != false && Game.InLot) return;
             Game.ZoomLevel = (Game.ZoomLevel + ((button == ZoomInButton) ? -1 : 1));
             /*if(Game.ZoomLevel >= 4) SetPanel(0);    // Make the panels disappear when zoomed out to far mode   -  Causes crashes for unknown reasons*/
                 }
@@ -748,14 +766,16 @@ namespace FSO.Client.UI.Panels
             NeighborhoodButton.Selected = (Game.ZoomLevel == 4);
             WorldButton.Selected = (Game.ZoomLevel == 5);
 
+            var _3d = GraphicsModeControl.Mode == GlobalGraphicsMode.Full3D;
+
             if (Game is SandboxGameScreen)
             {
-                ZoomInButton.Disabled = (!Game.InLot) || (!FSOEnvironment.Enable3D && (Game.ZoomLevel == 1));
-                ZoomOutButton.Disabled = (!FSOEnvironment.Enable3D && (Game.ZoomLevel == 3));
+                ZoomInButton.Disabled = (!Game.InLot) || (!_3d && (Game.ZoomLevel == 1));
+                ZoomOutButton.Disabled = (!_3d && (Game.ZoomLevel == 3));
             }
             else
             {
-                ZoomInButton.Disabled = (!Game.InLot) ? (Game.ZoomLevel == 4) : (!FSOEnvironment.Enable3D && (Game.ZoomLevel == 1));
+                ZoomInButton.Disabled = (!Game.InLot) ? (Game.ZoomLevel == 4) : (!_3d && (Game.ZoomLevel == 1));
                 ZoomOutButton.Disabled = (Game.ZoomLevel == 5);
             }
             LastZoom = Game.ZoomLevel;

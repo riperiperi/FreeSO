@@ -44,12 +44,12 @@
   </ItemGroup>
 
   <ItemGroup>
-    <PackageReference Include="AWSSDK.Core" Version="3.3.100.5" />
-    <PackageReference Include="AWSSDK.S3" Version="3.3.101.3" />
-    <PackageReference Include="Microsoft.AspNetCore.All" Version="2.2.3" />
+    <PackageReference Include="AWSSDK.Core" Version="3.3.103.48" />
+    <PackageReference Include="AWSSDK.S3" Version="3.3.104.36" />
+    <PackageReference Include="Microsoft.AspNetCore.All" Version="2.2.7" />
     <PackageReference Include="Microsoft.AspNetCore.App" />
     <PackageReference Include="Microsoft.AspNetCore.Cors" Version="2.2.0" />
-    <PackageReference Include="Octokit" Version="0.32.0" />
+    <PackageReference Include="Octokit" Version="0.36.0" />
     <PackageReference Include="System.Security.Cryptography.Algorithms" Version="4.3.1" />
   </ItemGroup>
 

@@ -161,6 +161,7 @@ namespace FSO.Client.UI.Controls
             {
                 m_MouseEvent.Region = new Rectangle(0, 0, (int)m_Width, (int)m_Height);
             }
+            Invalidate();
         }
 
         /// <summary>
@@ -200,7 +201,6 @@ namespace FSO.Client.UI.Controls
         {
             base.Update(statex);
         }
-
 
         public override Rectangle GetBounds()
         {

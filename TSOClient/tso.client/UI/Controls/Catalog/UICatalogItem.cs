@@ -21,6 +21,8 @@ namespace FSO.Client.UI.Controls.Catalog
 {
     public class UICatalogItem : UIElement
     {
+        public static TextStyle CountStyle = TextStyle.Create(Color.White, 11, true);
+        
         public Texture2D Icon;
         private UITooltipHandler m_TooltipHandler;
         private bool Active;
@@ -97,6 +99,12 @@ namespace FSO.Client.UI.Controls.Catalog
             } else
             {
                 DrawLocalTexture(batch, Background, new Vector2(0, 0));
+            }
+
+            if (Info.Count != null)
+            {
+                //draw the count on top of the icon
+                DrawLocalString(batch, "x"+Info.Count.Value.ToString(), new Vector2(0, 22 + 9), CountStyle, new Rectangle(0, 0, 39, 1), TextAlignment.Right | TextAlignment.Middle);
             }
         }
 

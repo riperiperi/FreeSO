@@ -18,19 +18,17 @@ namespace FSO.Common.Utils
                 FSOEnvironment.EnableNPOTMip = false;
                 return true;
             }
-            if (FSOEnvironment.Enable3D)
+            try
             {
-                try
+                using (var mipTest = new Texture2D(gd, 11, 11, true, SurfaceFormat.Color))
                 {
-                    using (var mipTest = new Texture2D(gd, 11, 11, true, SurfaceFormat.Color))
-                    {
-                        var data = new Color[11 * 11];
-                        TextureUtils.UploadWithMips(mipTest, gd, data);
-                    }
-                } catch (Exception e)
-                {
-                    FSOEnvironment.EnableNPOTMip = false;
+                    var data = new Color[11 * 11];
+                    TextureUtils.UploadWithMips(mipTest, gd, data);
                 }
+            }
+            catch (Exception e)
+            {
+                FSOEnvironment.EnableNPOTMip = false;
             }
 
             try

@@ -35,6 +35,7 @@ namespace FSO.SimAntics.Primitives
 
         public static VMPrimitiveExitCode ExecuteGeneric(VMStackFrame context, VMPrimitiveOperand args, STR table)
         {
+            //TODO: indexed dialog icons from ID 5000-5255 (inclusive)
             var operand = (VMDialogOperand)args;
             var curDialog = context.Thread.BlockingState as VMDialogResult;
             if (curDialog == null)

@@ -18,7 +18,7 @@ using FSO.Common.Utils;
 
 namespace FSO.LotView.Components
 {
-    public class ObjectComponent : EntityComponent
+    public class ObjectComponent : EntityComponent, IDisposable
     {
         private static Vector2[] PosCenterOffsets = new Vector2[]{
             new Vector2(2+16, 79+8),
@@ -27,13 +27,18 @@ namespace FSO.LotView.Components
         };
 
         public GameObject Obj;
+        // the modes that this object renders with. most objects are 2d only (with 3d drop ins) but objects can also force 3d components in 2d
+        public ComponentRenderMode Mode = ComponentRenderMode._2D;
 
         protected DGRP DrawGroup;
         protected DGRPRenderer dgrp;
-        public WorldObjectRenderInfo renderInfo;
-        public int DynamicCounter; //how long this sprite has been dynamic without changing sprite
+        public WorldObjectRenderInfo RenderInfo;
+        public int DynamicCounter; //REMOVE
         public List<SLOTItem> ContainerSlots;
         public List<ParticleComponent> Particles = new List<ParticleComponent>();
+        public _2DStandaloneSprite HeadlineSprite;
+        public bool Dead;
+        protected float ZOrder;
 
         public bool HideForCutaway;
         public WallSegments AdjacentWall;
@@ -42,18 +47,76 @@ namespace FSO.LotView.Components
         private ObjectComponent ShadowComponent;
         public static Func<GameObject, ObjectComponent> MakeShadowComponent;
 
+        protected bool _BoundsDirty = true;
+
         public new bool Visible {
             get { return _Visible; }
             set {
                 if (_Visible != value)
                 {
                     _Visible = value;
-                    if (blueprint != null) blueprint.Damage.Add(new BlueprintDamage(BlueprintDamageType.OBJECT_GRAPHIC_CHANGE, TileX, TileY, Level, this));
+                    if (blueprint != null) blueprint.Changes.RegisterObjectChange(this);
                 }
             }
         }
 
-        public Rectangle Bounding { get { return dgrp.Bounding; } }
+        #region 3D Members
+
+        private BoundingBox _Bounds;
+        private Matrix _World3D;
+        private bool _World3DDirty;
+
+        protected override bool _WorldDirty {
+            get => base._WorldDirty;
+            set {
+                base._WorldDirty = value;
+                if (value) _World3DDirty = true;
+            }
+        }
+
+        public Matrix World3D
+        {
+            get
+            {
+                if (_World3DDirty || (Container != null))
+                {
+                    _BoundsDirty = true;
+                    var worldPosition = WorldSpace.GetWorldFromTile(Position);
+                    _World3D = Matrix.CreateTranslation(new Vector3(1.5f, 0.1f, 1.5f)) * Matrix.CreateTranslation(worldPosition);
+                    if (GroundAlign != null) _World = GroundAlign.Value * _World;
+                    _World3D = Matrix.CreateScale(3f) * Matrix.CreateRotationY(-RadianDirection) * _World3D;
+                    _World3DDirty = false;
+                }
+                return _World3D;
+            }
+        }
+
+        public BoundingBox GetBounds()
+        {
+            if (_BoundsDirty || _WorldDirty)
+            {
+                var bounds = dgrp.GetBounds();
+                if (bounds == null) return new BoundingBox(); //don't cache
+                _Bounds = BoundingBox.CreateFromPoints(bounds.Value.GetCorners().Select(x => Vector3.Transform(x, World3D)));
+                _BoundsDirty = false;
+            }
+            return _Bounds;
+        }
+
+        public float? IntersectsBounds(Ray ray)
+        {
+            return GetBounds().Intersects(ray);
+        }
+
+        #endregion
+
+        public Rectangle Bounding { get { return dgrp.Bounding ?? new Rectangle(); } }
+
+        public override sbyte Level
+        {
+            get { return _Level; }
+            set { _Level = value; dgrp.Level = value; }
+        }
 
         public override ushort Room
         {
@@ -66,6 +129,14 @@ namespace FSO.LotView.Components
                 if (blueprint == null) return;
                 dgrp.Room = (value> blueprint.Rooms.Count|| value == 0)?value:blueprint.Rooms[value].Base;
                 dgrp.Level = Level;
+            }
+        }
+
+        public override short ObjectID {
+            get => base.ObjectID;
+            set {
+                dgrp.ObjectID = value;
+                base.ObjectID = value;
             }
         }
 
@@ -84,19 +155,19 @@ namespace FSO.LotView.Components
 
         public ObjectComponent(GameObject obj) {
             this.Obj = obj;
-            renderInfo = new WorldObjectRenderInfo();
+            RenderInfo = new WorldObjectRenderInfo();
             if (obj.OBJ.BaseGraphicID > 0)
             {
                 var gid = obj.OBJ.BaseGraphicID;
                 this.DrawGroup = obj.Resource.Get<DGRP>(gid);
             }
-            dgrp = new DGRPRenderer(this.DrawGroup);
+            dgrp = new DGRPRenderer(this.DrawGroup, obj.OBJ);
             dgrp.DynamicSpriteBaseID = obj.OBJ.DynamicSpriteBaseId;
             dgrp.NumDynamicSprites = obj.OBJ.NumDynamicSprites;
             InterpolationOwner = this;
         }
 
-        public virtual DGRP DGRP
+        public DGRP DGRP
         {
             get
             {
@@ -104,11 +175,11 @@ namespace FSO.LotView.Components
             }
             set
             {
+                _BoundsDirty = true;
                 DrawGroup = value;
                 if (blueprint != null && dgrp.DGRP != value)
                 {
-                    blueprint.Damage.Add(new BlueprintDamage(BlueprintDamageType.OBJECT_GRAPHIC_CHANGE, TileX, TileY, Level, this));
-                    DynamicCounter = 0;
+                    blueprint.Changes.RegisterObjectChange(this);
                 }
                 dgrp.DGRP = value;
             }
@@ -124,10 +195,9 @@ namespace FSO.LotView.Components
             }
             set
             {
-                if (blueprint != null && _CutawayHidden != value && renderInfo.Layer == WorldObjectRenderLayer.STATIC)
+                if (blueprint != null && _CutawayHidden != value && RenderInfo.Layer == WorldObjectRenderLayer.STATIC)
                 {
-                    blueprint.Damage.Add(new BlueprintDamage(BlueprintDamageType.OBJECT_GRAPHIC_CHANGE, TileX, TileY, Level, this));
-                    DynamicCounter = 0;
+                    blueprint.Changes.RegisterObjectChange(this);
                 }
                 _CutawayHidden = value;
             }
@@ -140,14 +210,14 @@ namespace FSO.LotView.Components
         {
             get
             {
-                return (_ForceDynamic || Headline != null);
+                return _ForceDynamic || Headline != null || Mode.HasFlag(ComponentRenderMode._3D);
             }
             set
             {
                 if (blueprint != null && _ForceDynamic != value)
                 {
-                    if (value) blueprint.Damage.Add(new BlueprintDamage(BlueprintDamageType.OBJECT_GRAPHIC_CHANGE, TileX, TileY, Level, this));
-                    else blueprint.Damage.Add(new BlueprintDamage(BlueprintDamageType.OBJECT_RETURN_TO_STATIC, TileX, TileY, Level, this));
+                    if (value) blueprint.Changes.RegisterObjectChange(this);
+                    else blueprint.Changes.RegisterObjectChange(this);
                 }
                 _ForceDynamic = value;
             }
@@ -164,8 +234,7 @@ namespace FSO.LotView.Components
 
                 if (dgrp != null && _DynamicSpriteFlags != value) {
                     dgrp.DynamicSpriteFlags = value;
-                    if (blueprint != null) blueprint.Damage.Add(new BlueprintDamage(BlueprintDamageType.OBJECT_GRAPHIC_CHANGE, TileX, TileY, Level, this));
-                    DynamicCounter = 0;
+                    if (blueprint != null) blueprint.Changes.RegisterObjectChange(this);
                 }
                 _DynamicSpriteFlags = value;
             }
@@ -183,17 +252,9 @@ namespace FSO.LotView.Components
                 if (dgrp != null && _DynamicSpriteFlags2 != value)
                 {
                     dgrp.DynamicSpriteFlags2 = value;
-                    if (blueprint != null) blueprint.Damage.Add(new BlueprintDamage(BlueprintDamageType.OBJECT_GRAPHIC_CHANGE, TileX, TileY, Level, this));
-                    DynamicCounter = 0;
+                    if (blueprint != null) blueprint.Changes.RegisterObjectChange(this);
                 }
                 _DynamicSpriteFlags2 = value;
-            }
-        }
-
-        public override float PreferredDrawOrder
-        {
-            get {
-                return 2000.0f + (this.Position.X + this.Position.Y);
             }
         }
 
@@ -238,7 +299,8 @@ namespace FSO.LotView.Components
         public override void OnRotationChanged(WorldState world)
         {
             base.OnRotationChanged(world);
-            if (dgrp != null) {
+            if (dgrp != null)
+            {
                 dgrp.InvalidateRotation();
             }
         }
@@ -251,12 +313,46 @@ namespace FSO.LotView.Components
             }
         }
 
-        public override void OnScrollChanged(WorldState world)
+        public override void OnPositionChanged()
         {
-            base.OnScrollChanged(world);
-            if (dgrp != null) {
-                dgrp.InvalidateScroll();
+            dgrp.Position = Position;
+        }
+
+        public void UpdateDrawOrder(WorldState world)
+        {
+            if (world.CameraMode > CameraRenderMode._2DRotate)
+            {
+                if (!Visible) DrawOrder = 0;
+                var w = World3D;
+                var ctr = w.Translation;
+                var forward = world.ViewProjection.Forward;
+                forward.Z *= -1;
+                if (forward.Z < 0) forward.Y = -forward.Y;
+                DrawOrder = Vector3.Dot(ctr, forward);
             }
+            else
+            {
+                DrawOrder = world.WorldSpace.GetDepthFromTile(Position);
+            }
+        }
+
+        public bool DoDraw(WorldState world)
+        {
+            if (!Visible || (Room == 0 && !world.DrawOOB)) return false;
+            bool result = false;
+            if (world.CameraMode == CameraRenderMode._2D && Mode.HasFlag(ComponentRenderMode._2D))
+            {
+                ValidateSprite(world);
+                if (dgrp.Bounding != null) result |= world.WorldRectangle.Intersects(dgrp.Bounding.Value);
+                if (Mode.HasFlag(ComponentRenderMode._3D))
+                {
+                    result |= world.Frustum.Intersects(GetBounds());
+                }
+            } else 
+            {
+                result |= world.Frustum.Intersects(GetBounds());
+            }
+            return result || true;
         }
 
         public void ValidateSprite(WorldState world)
@@ -266,7 +362,11 @@ namespace FSO.LotView.Components
 
         public override Vector2 GetScreenPos(WorldState world)
         {
-            return world.WorldSpace.GetScreenFromTile(Position) + world.WorldSpace.GetScreenOffset() + PosCenterOffsets[(int)world.Zoom - 1];
+            var projected = Vector4.Transform(new Vector4(1.5f, 0, 1.5f, 1f), this.World * world.View * world.Projection);
+            if (world.CameraMode < CameraRenderMode._3D) projected.Z = 1;
+            var res1 = new Vector2(projected.X / projected.Z, -projected.Y / projected.Z);
+            var size = PPXDepthEngine.GetWidthHeight();
+            return new Vector2((size.X / PPXDepthEngine.SSAA) * 0.5f * (res1.X + 1f), (size.Y / PPXDepthEngine.SSAA) * 0.5f * (res1.Y + 1f));
         }
 
         public static Dictionary<WallSegments, Point> CutawayTests = new Dictionary<WallSegments, Point>
@@ -291,8 +391,8 @@ namespace FSO.LotView.Components
         {
             if (Headline != null)
             {
-                if (blueprint != null && renderInfo.Layer == WorldObjectRenderLayer.STATIC) blueprint.Damage.Add(new BlueprintDamage(BlueprintDamageType.OBJECT_GRAPHIC_CHANGE, TileX, TileY, Level, this));
-                DynamicCounter = 0; //keep windows and doors on the top floor on the dynamic layer.
+                //todo: this and hideForCutaway should be part of the ForceDynamic bool (accessed by the static layer manager)
+                if (blueprint != null && RenderInfo.Layer == WorldObjectRenderLayer.STATIC) blueprint.Changes.RegisterObjectChange(this);
             }
 
             var idleFrames = InterpolationOwner.IdleFrames;
@@ -302,6 +402,7 @@ namespace FSO.LotView.Components
                 {
                     _IdleFramesPct -= world.FramePerDraw / idleFrames;
                     _WorldDirty = true;
+                    dgrp.Position = Position;
                 }
             }
             else _IdleFramesPct = 0;
@@ -310,8 +411,7 @@ namespace FSO.LotView.Components
             {
                 if (!(world.BuildMode > 1) && world.DynamicCutaway && Level == world.Level)
                 {
-                    if (blueprint != null && renderInfo.Layer == WorldObjectRenderLayer.STATIC) blueprint.Damage.Add(new BlueprintDamage(BlueprintDamageType.OBJECT_GRAPHIC_CHANGE, TileX, TileY, Level, this));
-                    DynamicCounter = 0; //keep windows and doors on the top floor on the dynamic layer.
+                    if (blueprint != null && RenderInfo.Layer == WorldObjectRenderLayer.STATIC) blueprint.Changes.RegisterObjectChange(this);
                 }
 
                 if (Level != world.Level || world.BuildMode > 1) CutawayHidden = false;
@@ -341,17 +441,6 @@ namespace FSO.LotView.Components
                     }
                 }
             }
-
-            bool forceDynamic = ForceDynamic;
-            if (Container != null && Container is ObjectComponent)
-            {
-                forceDynamic = ((ObjectComponent)Container).ForceDynamic;
-                if (forceDynamic && renderInfo.Layer == WorldObjectRenderLayer.STATIC) blueprint.Damage.Add(new BlueprintDamage(BlueprintDamageType.OBJECT_GRAPHIC_CHANGE, TileX, TileY, Level, this));
-            }
-            if (renderInfo.Layer == WorldObjectRenderLayer.DYNAMIC && !forceDynamic && DynamicCounter++ > 120 && blueprint != null)
-            {
-                blueprint.Damage.Add(new BlueprintDamage(BlueprintDamageType.OBJECT_RETURN_TO_STATIC, TileX, TileY, Level, this));
-            }
         }
 
         public override float GetHeadlineScale()
@@ -366,18 +455,33 @@ namespace FSO.LotView.Components
 
         public override void Draw(GraphicsDevice device, WorldState world)
         {
-            //#if !DEBUG 
             if (!Visible || (!world.DrawOOB && (Position.X < -2043 && Position.Y < -2043))) return;
             //#endif
             if (CutawayHidden) return;
-            if (this.DrawGroup != null) dgrp.Draw(world);
+            var pos = Position;
 
-            if (Headline != null && !Headline.IsDisposed)
+            if (world.CameraMode > CameraRenderMode._2D || Mode.HasFlag(ComponentRenderMode._3D)) //)
             {
+                var mworld = World3D;
+                dgrp.World = mworld;
+                if (this.DrawGroup != null) dgrp.Draw3D(world);
+            }
+            if (world.CameraMode == CameraRenderMode._2D && Mode.HasFlag(ComponentRenderMode._2D))
+            {
+                if (this.DrawGroup != null)
+                {
+                    if (Container != null) dgrp.Position = pos;
+                    dgrp.DrawImmediate(world);
+                }
+            }
+
+            if (Headline != null && !Headline.IsDisposed && world.CameraMode == CameraRenderMode._2D)
+            {
+                if (HeadlineSprite == null) HeadlineSprite = new _2DStandaloneSprite();
                 var headOff = new Vector3(0, 0, 0.66f);
                 var headPx = world.WorldSpace.GetScreenFromTile(headOff);
 
-                var item = world._2D.NewSprite(_2DBatchRenderMode.Z_BUFFER);
+                var item = HeadlineSprite;
                 item.Pixel = Headline;
                 item.Depth = TextureGenerator.GetWallZBuffer(device)[30];
 
@@ -387,9 +491,14 @@ namespace FSO.LotView.Components
                 item.DestRect = new Rectangle(
                     ((int)headPx.X - Headline.Width / 2) + (int)off.X,
                     ((int)headPx.Y - Headline.Height / 2) + (int)off.Y, Headline.Width, Headline.Height);
-                world._2D.Draw(item);
+
+                item.AbsoluteDestRect = item.DestRect;
+                item.AbsoluteDestRect.Offset(world.WorldSpace.GetScreenFromTile(pos));
+                item.AbsoluteWorldPosition = item.WorldPosition + WorldSpace.GetWorldFromTile(pos);
+                HeadlineSprite.PrepareVertices(device);
+                world._2D.DrawImmediate(item);
             }
-            
+
             for (int i = 0; i < Particles.Count; i++)
             {
                 var part = Particles[i];
@@ -411,9 +520,29 @@ namespace FSO.LotView.Components
             }
         }
 
+        public void DrawLMap(GraphicsDevice device, sbyte level)
+        {
+            //#if !DEBUG 
+            if (!Visible || (Position.X < -2043 && Position.Y < -2043) || Level < 1) return;
+            //#endif
+            dgrp.World = World3D;
+            if (this.DrawGroup != null)
+            {
+                float yOff = 0;
+                if (this.Container != null)
+                {
+                    yOff = this.Position.Z - this.Container.Position.Z;
+                }
+                dgrp.DrawLMap(device, level, yOff);
+            }
+        }
+
         public virtual BoundingBox GetParticleBounds()
         {
             //make an estimation based off of the sprite height
+            var bounds = dgrp.GetBounds();
+            if (bounds != null) return bounds.Value;
+            //if (world.CameraMode == CameraRenderMode._2D || Mode.HasFlag(ComponentRenderMode._3D)) return  ?? new BoundingBox();
             if (DGRP == null) return new BoundingBox(new Vector3(-0.4f, 0.1f, -0.4f), new Vector3(0.4f, 0.9f, 0.4f));
             else
             {
@@ -445,9 +574,10 @@ namespace FSO.LotView.Components
 
         public override void Preload(GraphicsDevice device, WorldState world)
         {
-            if (this.DrawGroup != null) dgrp.Preload(world);
+            if (this.DrawGroup != null) dgrp.Preload(world, Mode);
         }
 
+        /*
         public virtual void DrawLMap(GraphicsDevice device, sbyte level)
         {
             if (ShadowComponent == null) ShadowComponent = new RC.ObjectComponentRC(Obj);
@@ -461,6 +591,13 @@ namespace FSO.LotView.Components
             if (ShadowComponent.DynamicSpriteFlags2 != DynamicSpriteFlags2) ShadowComponent.DynamicSpriteFlags2 = DynamicSpriteFlags2;
             if (ShadowComponent.Level != Level) ShadowComponent.Level = Level;
             ShadowComponent.DrawLMap(device, level);
+        }
+        */
+
+        public void Dispose()
+        {
+            dgrp.Dispose();
+            HeadlineSprite?.Dispose();
         }
     }
 }

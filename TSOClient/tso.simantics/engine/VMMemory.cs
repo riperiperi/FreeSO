@@ -868,6 +868,7 @@ namespace FSO.SimAntics.Engine.Utils
 
             STR animTable = null;
             bool child = ((VMAvatar)context.Caller).GetPersonData(VMPersonDataVariable.PersonsAge) < 18 && context.VM.TS1;
+            //a2o, c2o, a2c, c2a
 
             switch (scope){
                 case VMAnimationScope.Object:

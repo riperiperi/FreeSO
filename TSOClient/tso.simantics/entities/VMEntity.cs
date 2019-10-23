@@ -29,6 +29,7 @@ using FSO.SimAntics.Primitives;
 using FSO.LotView.Utils;
 using FSO.LotView.RC;
 using System.Linq;
+using FSO.LotView.Utils.Camera;
 
 namespace FSO.SimAntics
 {
@@ -369,7 +370,8 @@ namespace FSO.SimAntics
 
 
                     float volume = 1f;
-                    var rcs = (worldState as WorldStateRC);
+                    
+                    var rcs = worldState.Cameras.ActiveCamera as CameraController3D;
                     if (rcs != null)
                     {
                         var vp = VisualPosition * 3f;
@@ -395,11 +397,14 @@ namespace FSO.SimAntics
                     if (sound.SetVolume(volume, pan, ObjectID))
                     {
                         if (this is VMAvatar && sound is HITThread) this.SubmitHITVars((HITThread)sound);
+                        /*
+                         * TODO: 3d sound
                         if (Thread.Context.World is LotView.RC.WorldRC)
                         {
                             //3d sound
                             //sound.Set3D(new Vector3(VisualPosition.X, VisualPosition.Z, VisualPosition.Y) * 3f);
                         }
+                        */
                     }
                 }
             }

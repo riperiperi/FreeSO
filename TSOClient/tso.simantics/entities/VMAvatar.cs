@@ -587,6 +587,7 @@ namespace FSO.SimAntics
                         state.EndReached = true;
                 }
             }
+            UpdateHeadSeek();
 
             if (avatar.CarryAnimationState != null)
             {
@@ -640,6 +641,69 @@ namespace FSO.SimAntics
             if (KillTimeout == -1) KillTimeout = 0;
         }
 
+        private void UpdateHeadSeek()
+        {
+            //seeking towards an object?
+            var seek = PersonData[(int)VMPersonDataVariable.HeadSeekState];
+            if (seek > 0 && seek < 8 && Thread != null)
+            {
+                var targ = Thread.Context.VM.GetObjectById(PersonData[(int)VMPersonDataVariable.HeadSeekObject]);
+                
+                switch (seek)
+                {
+                    case 1:
+                        if (targ == null) goto case 4;
+                        //keep seeking to target
+                        var diff = targ.Position - Position;
+                        var height = ((targ.WorldUI as ObjectComponent)?.GetParticleBounds().Max.Y ?? 2f) - 0.5f;
+                        var hseekdiff = new Vector3(diff.x / 5.333f, (diff.Level * 2.95f + height) * 3f, diff.y / 5.333f);
+
+                        Avatar.HeadSeekTarget = Animator.CalculateHeadSeek(Avatar, hseekdiff, RadianDirection);
+                        if (Avatar.HeadSeekWeight == 0)
+                        {
+                            Avatar.HeadSeek = Avatar.HeadSeekTarget;
+                        } else
+                        {
+                            Avatar.SlideHeadToTarget(1 - Avatar.LastSeekFraction);
+                            Avatar.LastSeekFraction = 0;
+                        }
+                        Avatar.HeadSeekWeight = Math.Min(SimAvatar.HEAD_SEEK_LENGTH, Avatar.HeadSeekWeight + 1);
+
+                        if (PersonData[(int)VMPersonDataVariable.HeadSeekTimeout] > 0)
+                        {
+                            if (--PersonData[(int)VMPersonDataVariable.HeadSeekTimeout] == 0)
+                            {
+                                //seek ended, time it out bud
+                                PersonData[(int)VMPersonDataVariable.HeadSeekState] = 4;
+                            }
+                        }
+                        break;
+                    case 4:
+                        //seeking back to idle
+                        Avatar.SlideHeadToTarget(1 - Avatar.LastSeekFraction);
+                        Avatar.LastSeekFraction = 0;
+                        Avatar.HeadSeekWeight--;
+                        if (Avatar.HeadSeekWeight <= 0)
+                        {
+                            Avatar.HeadSeekWeight = 0;
+                            PersonData[(int)VMPersonDataVariable.HeadSeekState] = 8;
+                        }
+                        break;
+                }
+            }
+        }
+
+        private void ApplyHeadSeek(float fraction)
+        {
+            if (Avatar.HeadSeekWeight > 0)
+            {
+                Avatar.SlideHeadToTarget(fraction - Avatar.LastSeekFraction);
+                Avatar.LastSeekFraction = fraction;
+                var fracEffect = PersonData[(int)VMPersonDataVariable.HeadSeekState] == 4 ? -fraction : fraction;
+                Animator.ApplyHeadSeek(Avatar, Avatar.HeadSeek, Math.Min(1, (Avatar.HeadSeekWeight + fracEffect) / SimAvatar.HEAD_SEEK_LENGTH));
+            }
+        }
+
         public void FractionalAnim(float fraction)
         {
             var avatar = (VMAvatar)this;
@@ -657,6 +721,7 @@ namespace FSO.SimAntics
                 }
             }
             if (avatar.CarryAnimationState != null) Animator.RenderFrame(avatar.Avatar, avatar.CarryAnimationState.Anim, (int)avatar.CarryAnimationState.CurrentFrame, 0.0f, 1f);
+            ApplyHeadSeek(fraction);
 
             //TODO: if this gets changed to run at variable framerate need to "remember" visual position
             avatar.Avatar.ReloadSkeleton();
@@ -843,6 +908,12 @@ namespace FSO.SimAntics
                     break;
                 case VMPersonDataVariable.CurrentOutfit:
                     if (Thread.Context.VM.TS1) BodyOutfit = VMSuitProvider.GetPersonSuitTS1(this, (ushort)value);
+                    else
+                    {
+                        var suit = VMSuitProvider.GetSuit(Thread.Stack.LastOrDefault(), Engine.Scopes.VMSuitScope.Person, (ushort)value);
+                        if (suit is VMOutfitReference) BodyOutfit = suit as VMOutfitReference;
+                        if (suit is ulong) BodyOutfit = new VMOutfitReference((ulong)suit);
+                    }
                     break;
             }
             PersonData[(ushort)variable] = value;

@@ -23,7 +23,6 @@ namespace FSO.LotView.Utils
         public Texture2D Pixel;
         public Texture2D Depth;
         public Texture2D Mask;
-        public Vector3 TilePosition;
         public Vector3 WorldPosition;
         public Single ObjectID; //used for mouse hit test render mode
         public ushort Room = 0xFFFF; //room to use for ambient light
@@ -33,13 +32,12 @@ namespace FSO.LotView.Utils
         public Rectangle DestRect;
 
         //For internal use, do not set this
-        public int DrawOrder;
+        public int DrawOrder; //unused?
         public bool FlipHorizontally;
         public bool FlipVertically;
 
         public Rectangle AbsoluteDestRect;
-        public Vector3 AbsoluteWorldPosition;
-        public Vector3 AbsoluteTilePosition;
+        public Vector3 AbsoluteWorldPosition; //used for z buffer calculation
 
         public void Repurpose()
         {
@@ -47,7 +45,6 @@ namespace FSO.LotView.Utils
             Depth = null;
             Mask = null;
             WorldPosition = new Vector3();
-            TilePosition = new Vector3();
             ObjectID = 0;
             Room = 0xFFFF;
 

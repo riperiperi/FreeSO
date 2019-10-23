@@ -19,28 +19,18 @@ namespace FSO.LotView
         /** Instance ID **/
         public long ID;
 
-        public abstract float PreferredDrawOrder { get; }
+        public float DrawOrder;
 
-        public virtual void Initialize(GraphicsDevice device, WorldState world){
-            OnWorldChanged(world);
+        public virtual void Initialize(GraphicsDevice device, WorldState world) {
         }
 
         public abstract void Draw(GraphicsDevice device, WorldState world);
         public virtual void Update(GraphicsDevice device, WorldState world) { }
 
-        public virtual void OnRotationChanged(WorldState world){
-            OnWorldChanged(world);
+        public virtual void OnRotationChanged(WorldState world) {
         }
 
-        public virtual void OnZoomChanged(WorldState world){
-            OnWorldChanged(world);
-        }
-
-        public virtual void OnScrollChanged(WorldState world){
-            OnWorldChanged(world);
-        }
-
-        public virtual void OnWorldChanged(WorldState world){
+        public virtual void OnZoomChanged(WorldState world) {
         }
 
         public virtual void OnPositionChanged() { }
@@ -60,10 +50,10 @@ namespace FSO.LotView
         /// </summary>
         protected Vector3 _Position = new Vector3(0.0f, 0.0f, 0.0f);
         public virtual Vector3 Position {
-            get{
+            get {
                 return _Position;
             }
-            set{
+            set {
                 _Position = value;
                 OnPositionChanged();
                 _WorldDirty = true;
@@ -85,8 +75,8 @@ namespace FSO.LotView
                 Level = (sbyte)Math.Round(value.Z);
             }
         }
-
-        protected bool _WorldDirty = true;
+        
+        protected virtual bool _WorldDirty { get; set; }
         protected Matrix _World;
         public virtual Matrix World
         {

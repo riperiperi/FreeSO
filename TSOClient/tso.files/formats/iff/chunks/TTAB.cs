@@ -45,7 +45,7 @@ namespace FSO.Files.Formats.IFF.Chunks
                 if (Interactions.Length == 0) return; //no interactions, don't bother reading remainder.
                 var version = io.ReadUInt16();
                 IOProxy iop;
-                if (version != 9 && version != 10) iop = new TTABNormal(io);
+                if (version < 9 || (version > 10 && !iff.TSBO)) iop = new TTABNormal(io);
                 else
                 {
                     var compressionCode = io.ReadByte();
@@ -72,7 +72,7 @@ namespace FSO.Files.Formats.IFF.Chunks
                         if (version > 6) motive.PersonalityModifier = iop.ReadUInt16();
                         result.MotiveEntries[j] = motive;
                     }
-                    if (version > 9)
+                    if (version > 9 && !iff.TSBO)
                     {
                         result.Flags2 = (TSOFlags)iop.ReadUInt32();
                     }
@@ -87,9 +87,9 @@ namespace FSO.Files.Formats.IFF.Chunks
             using (var io = IoWriter.FromStream(stream, ByteOrder.LITTLE_ENDIAN))
             {
                 io.WriteUInt16((ushort)Interactions.Length);
-                io.WriteUInt16(10); //version. we save version 10 which uses the IO proxy
+                io.WriteUInt16((ushort)((IffFile.TargetTS1) ? 8 : 10)); //version. we save version 10 which uses the IO proxy
                 //...but we can't write out to that yet so write with compression code 0
-                io.WriteByte(0);
+                if (!IffFile.TargetTS1) io.WriteByte(0);
                 for (int i = 0; i < Interactions.Length; i++)
                 {
                     var action = Interactions[i];
@@ -109,7 +109,7 @@ namespace FSO.Files.Formats.IFF.Chunks
                         io.WriteInt16(mot.EffectRangeMaximum);
                         io.WriteUInt16(mot.PersonalityModifier);
                     }
-                    io.WriteUInt32((uint)action.Flags2);
+                    if (!IffFile.TargetTS1) io.WriteUInt32((uint)action.Flags2);
                 }
             }
             return true;

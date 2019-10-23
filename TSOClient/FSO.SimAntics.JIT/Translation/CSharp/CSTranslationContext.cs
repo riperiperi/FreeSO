@@ -29,6 +29,10 @@ namespace FSO.SimAntics.JIT.Translation.CSharp
             "using FSO.SimAntics.Model.TS1Platform;",
             "using FSO.SimAntics.Model.TSOPlatform;",
         };
+        public HashSet<string> RequiredModules = new HashSet<string>()
+        {
+
+        };
 
         public string Filename;
         public string ModuleName;

@@ -27,7 +27,7 @@ namespace FSO.SimAntics.JIT.Translation.CSharp.Primitives
             {
                 //global
                 module = ctx.GlobalModule;
-                ctx2 = (CSTranslationContext)ctx.GlobalContext;
+                ctx2 = ctx.GlobalContext as CSTranslationContext;
             }
             else if (call < 8192)
             {
@@ -39,7 +39,7 @@ namespace FSO.SimAntics.JIT.Translation.CSharp.Primitives
             {
                 //semiglobal
                 module = ctx.SemiGlobalModule;
-                ctx2 = (CSTranslationContext)ctx.SemiGlobalContext;
+                ctx2 = ctx.SemiGlobalContext as CSTranslationContext;
             }
             
             if (ctx2 != null)
@@ -139,6 +139,7 @@ namespace FSO.SimAntics.JIT.Translation.CSharp.Primitives
                 else
                 {
                     csContext.Includes.Add($"using {FuncFile};");
+                    csContext.RequiredModules.Add(FuncFile);
                     return Line($"{FuncFile.Substring(FuncFile.LastIndexOf('.') + 1)}Module._{FuncClass}.ExecuteExternal(context, {args})");
                 }
                 return Line($"true");

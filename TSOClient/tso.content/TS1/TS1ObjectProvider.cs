@@ -39,6 +39,19 @@ namespace FSO.Content.TS1
             foreach (var iff in allIffs)
             {
                 var file = (IffFile)iff.GetThrowawayGeneric();
+                var source = GameObjectSource.Far;
+                string filename = Path.GetFileName(iff.ToString().Replace('\\', '/'));
+                if (iff is FileContentReference<object>)
+                {
+                    //if we're in downloads, remember the real filename and set as standalone
+                    //for easy editing in volcanic (not patching)
+                    var fileIff = iff as FileContentReference<object>;
+                    if (fileIff.Filename.Contains("Downloads"))
+                    {
+                        filename = fileIff.Filename;
+                        source = GameObjectSource.Standalone;
+                    }
+                }
                 file.MarkThrowaway();
                 var objects = file.List<OBJD>();
                 var slots = file.List<SLOT>();
@@ -48,10 +61,10 @@ namespace FSO.Content.TS1
                     {
                         Entries[obj.GUID] = new GameObjectReference(this)
                         {
-                            FileName = Path.GetFileName(iff.ToString().Replace('\\', '/')),
+                            FileName = filename,
                             ID = obj.GUID,
                             Name = obj.ChunkLabel,
-                            Source = GameObjectSource.Far,
+                            Source = source,
                             Group = (short)obj.MasterID,
                             SubIndex = obj.SubIndex,
                             GlobalSimObject = obj.ObjectType == OBJDType.SimType && obj.Global == 1

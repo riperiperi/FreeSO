@@ -25,6 +25,7 @@ using FSO.SimAntics.Model;
 using FSO.UI.Panels;
 using FSO.SimAntics.Model.Platform;
 using FSO.Client.UI.Panels.Upgrades;
+using FSO.SimAntics.Engine;
 
 namespace FSO.Client.UI.Panels
 {
@@ -484,7 +485,23 @@ namespace FSO.Client.UI.Panels
             if (Visible && Thumb3D != null) Invalidate();
         }
 
-        public Tuple<string, string> GetObjName(VMEntity entity)
+        private string DescProcess(VM vm, VMEntity ent, string desc, STR source)
+        {
+            var frame = new VMStackFrame()
+            {
+                Caller = ent,
+                Callee = ent,
+                CodeOwner = ent.Object,
+                StackObject = ent,
+                Routine = null,
+                Args = new short[4],
+                Thread = ent.Thread,
+            };
+
+            return VMDialogHandler.ParseDialogString(frame, desc, source);
+        }
+
+        public Tuple<string, string> GetObjName(VM vm, VMEntity entity)
         {
             string name = null;
             if (entity.Object.GUID == 0x3278BD34 || entity.Object.GUID == 0x5157DDF2)
@@ -529,6 +546,7 @@ namespace FSO.Client.UI.Panels
                     name += '★';
                 }
             }
+            desc = DescProcess(vm, entity, desc, catString);
             return new Tuple<string, string>(name, desc);
         }
 
@@ -542,7 +560,7 @@ namespace FSO.Client.UI.Panels
 
             var item = Content.Content.Get().WorldCatalog.GetItemByGUID(def.GUID);
 
-            var ndesc = GetObjName(entity);
+            var ndesc = GetObjName(vm, entity);
 
             DescriptionText.CurrentText = ndesc.Item1 + "\r\n" + ndesc.Item2;
             ObjectNameText.Caption = ndesc.Item1;
@@ -658,7 +676,7 @@ namespace FSO.Client.UI.Panels
                 if (Thumbnail.Texture != null) Thumbnail.Texture.Dispose();
                 if (Thumb3D != null) Thumb3D.Dispose();
                 Thumb3D = null; Thumbnail.Texture = null;
-                if (FSOEnvironment.Enable3D)
+                if (World.State.CameraMode == LotView.Model.CameraRenderMode._3D)
                 {
                     Thumb3D = new UI3DThumb(entity);
                 }

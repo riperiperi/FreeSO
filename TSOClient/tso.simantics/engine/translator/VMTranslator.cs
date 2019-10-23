@@ -8,6 +8,7 @@ using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Text;
+using FSO.Content;
 using FSO.Files.Formats.IFF.Chunks;
 using FSO.SimAntics.Primitives;
 
@@ -29,7 +30,7 @@ namespace FSO.SimAntics.Engine
             }
         }
 
-        public virtual VMRoutine Assemble(BHAV bhav){
+        public virtual VMRoutine Assemble(BHAV bhav, GameIffResource res){
             var routine = new VMRoutine();
             PopulateRoutineFields(bhav, routine);
             return routine;

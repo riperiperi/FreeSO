@@ -27,6 +27,8 @@ namespace FSO.Files.Formats.IFF
         /// Should really only be set when the user wants to use the IDE, as it uses a lot more memory.
         /// </summary>
         public static bool RETAIN_CHUNK_DATA = false;
+        public static bool TargetTS1 = false;
+        public bool TSBO = false;
         public bool RetainChunkData = RETAIN_CHUNK_DATA;
         public object CachedJITModule; //for JIT and AOT modes
         public uint ExecutableHash; //hash of BHAV and BCON chunks
@@ -71,6 +73,8 @@ namespace FSO.Files.Formats.IFF
             {"TATT", typeof(TATT) },
             {"HOUS", typeof(HOUS) },
             //todo: FAMh (family motives ("family house"?)) field encoded.
+
+            {"TREE", typeof(TREE) },
 
             {"FSOR", typeof(FSOR) },
             {"FSOM", typeof(FSOM) },
@@ -278,6 +282,7 @@ namespace FSO.Files.Formats.IFF
 
             io.WriteUInt32((uint)data.Length + 76);
             io.WriteUInt16(c.ChunkID);
+            if (c.ChunkFlags == 0) c.ChunkFlags = 0x10;
             io.WriteUInt16(c.ChunkFlags);
             io.WriteCString(c.ChunkLabel, 64);
             io.WriteBytes(data);

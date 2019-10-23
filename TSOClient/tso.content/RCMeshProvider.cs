@@ -181,7 +181,7 @@ namespace FSO.Content
                             var data = new Color[result.Width * result.Height];
                             result.GetData(data);
                             var n = new Texture2D(GD, result.Width, result.Height, true, SurfaceFormat.Color);
-                            TextureUtils.UploadWithMips(n, GD, data);
+                            TextureUtils.UploadWithAvgMips(n, GD, data);
                             result.Dispose();
                             result = n;
                         }

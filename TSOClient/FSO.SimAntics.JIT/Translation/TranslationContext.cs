@@ -10,7 +10,7 @@ using System.Threading.Tasks;
 
 namespace FSO.SimAntics.JIT.Translation
 {
-    public class TranslationContext
+    public class TranslationContext : IBHAVInfo
     {
         public bool TS1 = true;
         public AbstractTranslationPrimitives Primitives;
@@ -29,5 +29,19 @@ namespace FSO.SimAntics.JIT.Translation
 
         public IffFile CurrentFile;
         public BHAV CurrentBHAV;
+
+        public bool BHAVYields(ushort id)
+        {
+            //in previously compiled context
+            StructuredBHAV newBHAV;
+            if (BHAVInfo.TryGetValue(id, out newBHAV))
+            {
+                return newBHAV.Yields;
+            }
+            else
+            {
+                return true; //if we don't know if it yields, err on the side of caution.
+            }
+        }
     }
 }

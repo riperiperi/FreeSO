@@ -16,6 +16,7 @@ using FSO.Vitaboy;
 using FSO.LotView.LMap;
 using FSO.LotView.RC;
 using FSO.Common;
+using FSO.LotView.Effects;
 
 namespace FSO.LotView.Model
 {
@@ -31,6 +32,8 @@ namespace FSO.LotView.Model
         public int Height;
         public sbyte Stories = 5;
 
+        public BlueprintChanges Changes; // changes for the renderer to track, to invalidate components, lighting and scroll buffers.
+
         /// <summary>
         /// Only read these arrays, do not modify them!
         /// </summary>
@@ -41,7 +44,9 @@ namespace FSO.LotView.Model
         public FloorTile[][] Floors;
         public FloorComponent FloorComp;
         public _3DFloorGeometry FloorGeom;
+
         public WallComponentRC WCRC;
+        public List<_2DDrawBuffer> WallCache2D = new List<_2DDrawBuffer>(); //temporary: to replace with a smarter wall component with caching
 
         public RoofComponent RoofComp;
 
@@ -153,6 +158,7 @@ namespace FSO.LotView.Model
             this.Cutaway = new bool[numTiles];
             this.Weather = new WeatherController(this);
 
+            this.Changes = new BlueprintChanges(this);
         }
 
         public float GetAltitude(int x, int y)
@@ -190,14 +196,14 @@ namespace FSO.LotView.Model
             return yLerp * xl2 + (1 - yLerp) * xl1 - BaseAlt * TerrainFactor;
         }
 
-        public static void SetLightColor(Effect effect, Color outside, Color minOut)
+        public static void SetLightColor(LightMappedEffect effect, Color outside, Color minOut)
         {
             //return;
-            effect.Parameters["OutsideDark"]?.SetValue(minOut.ToVector4());
+            effect.OutsideDark = minOut.ToVector4();
             var avg = (minOut.R + minOut.G + minOut.B) / (255 * 3f);
             var minAvg = new Vector2(avg, 1 / (1 - avg));
             if (float.IsInfinity(minAvg.Y)) minAvg.Y = 1;
-            effect.Parameters["MinAvg"]?.SetValue(minAvg);
+            effect.MinAvg = minAvg;
         }
 
         public sbyte GetFloorsUsed()
@@ -235,11 +241,10 @@ namespace FSO.LotView.Model
             var minOut = MinOut;
             minOut.A = 255;
 
-            SetLightColor(WorldContent._2DWorldBatchEffect, OutsideColor, minOut);
-            SetLightColor(WorldContent.GrassEffect, OutsideColor, minOut);
-            SetLightColor(Avatar.Effect, OutsideColor, minOut);
-            SetLightColor(WorldContent.RCObject, OutsideColor, minOut);
-            SetLightColor(WorldContent.ParticleEffect, OutsideColor, minOut);
+            foreach (var effect in WorldContent.LightEffects)
+            {
+                SetLightColor(effect, OutsideColor, minOut);
+            }
 
             for (int i=0; i<Light.Length; i++)
             {
@@ -271,21 +276,21 @@ namespace FSO.LotView.Model
 
         public void SignalWallChange()
         {
-            Damage.Add(new BlueprintDamage(BlueprintDamageType.WALL_CHANGED, 0, 0, 1)); 
+            Changes.SetFlag(BlueprintGlobalChanges.WALL_CHANGED);
             //todo: should this even have a position? we're rerendering the whole thing atm
             //should eventually consider level
         }
 
         public void SignalRoomChange()
         {
-            Damage.Add(new BlueprintDamage(BlueprintDamageType.ROOM_CHANGED, 0, 0, 1));
+            Changes.SetFlag(BlueprintGlobalChanges.ROOM_CHANGED);
             //todo: should this even have a position? we're rerendering the whole thing atm
             //should eventually consider level
         }
 
         public void SignalFloorChange()
         {
-            Damage.Add(new BlueprintDamage(BlueprintDamageType.FLOOR_CHANGED, 0, 0, 1));
+            Changes.SetFlag(BlueprintGlobalChanges.FLOOR_CHANGED);
         }
 
         public WallTile GetWall(short tileX, short tileY, sbyte level)
@@ -310,7 +315,7 @@ namespace FSO.LotView.Model
             short tileY = (pos.y < 0) ? (short)0 : pos.TileY;
             sbyte level = pos.Level;
 
-            Damage.Add(new BlueprintDamage(BlueprintDamageType.OBJECT_MOVE, tileX, tileY, level) { Component = component });
+            Changes.RegisterObjectChange(component);
 
             component.blueprint = this;
             component.TileX = tileX;
@@ -320,14 +325,16 @@ namespace FSO.LotView.Model
 
         public void AddObject(ObjectComponent component)
         {
+            Changes.RegisterObject(component);
             Objects.Add(component);
         }
 
         public void RemoveObject(ObjectComponent component)
         {
-            Damage.Add(new BlueprintDamage(BlueprintDamageType.OBJECT_MOVE, component.TileX, component.TileY, component.Level) { Component = component });
+            Changes.UnregisterObject(component);
             Objects.Remove(component);
             HeadlineObjects.Remove(component);
+            component.Dead = true;
             //remove all of this object's particles, and make sure we dispose their vertex buffers.
             foreach (var part in component.Particles)
             {
@@ -508,7 +515,6 @@ namespace FSO.LotView.Model
         OUTDOORS_LIGHTING_CHANGED,
         ROOM_CHANGED,
         ROOF_STYLE_CHANGED,
-        ROOM_MAP_CHANGED,
         OPENGL_SECOND_DRAW
     }
 

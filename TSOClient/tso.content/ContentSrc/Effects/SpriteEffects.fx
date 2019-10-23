@@ -25,6 +25,16 @@ void VSMain(
     position = mul(position, MatrixTransform);
 }
 
+// from shadertoy: https://www.shadertoy.com/view/4djSRW
+// this function is used instead of a noise texture as directx does not like binding 2 textures for sprite effect.
+
+float hash12(float2 p)
+{
+	float3 p3 = frac(float3(p.xyx) * .1031);
+	p3 += dot(p3, p3.yzx + 33.33);
+	return frac((p3.x + p3.y) * p3.z);
+}
+
 float2 GaussianStep;
 
 static const float GaussianWeights[5] = {0.2270270270, 0.1945945946, 0.1216216216, 0.0540540541, 0.0162162162};
@@ -171,6 +181,7 @@ static const float2 Offsets[37] = {
 float2 blurAmount;
 float2 heightMultiplier;
 float2 hardenBias;
+
 texture noiseTexture : Diffuse;
 
 sampler NoiseSampler : register(s1) = sampler_state {
@@ -178,7 +189,6 @@ sampler NoiseSampler : register(s1) = sampler_state {
 	AddressU = WRAP; AddressV = WRAP; AddressW = WRAP;
 	MIPFILTER = POINT; MINFILTER = POINT; MAGFILTER = POINT;
 };
-
 
 float4 OutdoorsPCFBlit(float4 position : SV_Position, float4 color : COLOR0, float2 uv : TEXCOORD0) : COLOR0
 {
@@ -446,5 +456,92 @@ technique StickyEffect
 	pass Pass4
 	{
 		PixelShader = compile PS_SHADERMODEL StickyEffectPS();
+	}
+}
+
+// dissolve effect
+
+float DissolvePercent;
+float2 TexSize;
+float4 dissolve(float4 position : SV_Position, float4 color : COLOR0, float2 texCoord : TEXCOORD0) : COLOR0
+{
+	float noiseValue = hash12(texCoord * TexSize); //tex2D(NoiseSampler, texCoord * TexSizeByNoiseSize).r;
+	if (noiseValue < DissolvePercent) discard;
+	return tex2D(TextureSampler, texCoord) * color;
+}
+
+technique Dissolve
+{
+	pass OneDir
+	{
+		PixelShader = compile PS_SHADERMODEL dissolve();
+	}
+}
+
+// maze 2 grid effect
+
+float MazeHorizon = 0.5;
+float MazeVanishing = 0.55;
+float MazeGridScale = 1.9;
+float3 MazeColor1 = float3(0.9058823529411765, 0.7294117647058823, 0.5764705882352941);
+float3 MazeColor2 = float3(0.9058823529411765, 0.5333333333333333, 0.4196078431372549);
+
+float2 MazeGridOffset;
+float MazeRotation;
+bool MazeUseTexture = false;
+
+float mod(float x, float y)
+{
+	return x - y * floor(x / y);
+}
+
+float2 mod2(float2 x, float y)
+{
+	return float2(mod(x.x, y), mod(x.y, y));
+}
+
+float4 maze2Grid(float4 position : SV_Position, float4 color : COLOR0, float2 texCoord : TEXCOORD0) : COLOR0
+{
+	float3 col;
+	float2 uv = float2(texCoord.x, 1.0 - texCoord.y);
+	if (uv.y > MazeHorizon) {
+		discard; // only the most efficient shaders draw half of the output as discard
+	}
+	else {
+		// for this pixel, calculate the xy position on the ground that we are looking at.
+		// we can use that calculated position for texture mapping or a grid pattern.
+		float yFactor = (uv.y - MazeVanishing) / (1.0 - MazeVanishing);
+		float2 pos = float2((uv.x - 0.5) / yFactor, 1.0 / yFactor);
+
+		// apply rotation
+		float c = cos(MazeRotation);
+		float s = sin(MazeRotation);
+		float2 xr = float2(c, s);
+		float2 yr = float2(-s, c);
+
+		pos = float2(dot(pos, xr), dot(pos, yr)) * MazeGridScale + MazeGridOffset;
+
+		// pos now contains the final ground position.
+		if (MazeUseTexture == true) {
+			col.rgb = tex2D(TextureSampler, mod2(pos, 1.0)).rgb;
+		}
+		else {
+			// basic grid shader.
+			bool altX = mod(pos.x, 2.0) > 1.0;
+			bool altY = mod(pos.y, 2.0) > 1.0;
+
+			if (altX == altY) col.rgb = MazeColor1;
+			else col.rgb = MazeColor2;
+		}
+	}
+
+	return float4(col, 1.0);
+}
+
+technique Maze2Grid
+{
+	pass OneDir
+	{
+		PixelShader = compile PS_SHADERMODEL maze2Grid();
 	}
 }

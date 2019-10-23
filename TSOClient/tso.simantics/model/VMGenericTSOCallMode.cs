@@ -86,6 +86,8 @@ namespace FSO.SimAntics.Model
         FSOAbortAllInteractions = 129,
         FSOClearStackObjRelationships = 130,
         FSOMarkDonated = 131,
-        FSOAccurateDirectionInTemp0 = 132
+        FSOAccurateDirectionInTemp0 = 132,
+        FSOCanBreak = 133,
+        FSOBreakObject = 134
     }
 }

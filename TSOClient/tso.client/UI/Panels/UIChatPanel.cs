@@ -216,7 +216,7 @@ namespace FSO.Client.UI.Panels
 
             InvalidAreas[3] = botRect;
 
-            var avatars = vm.Entities.Where(x => (x is VMAvatar)).ToList();
+            var avatars = vm.Context.ObjectQueries.Avatars;
             while (avatars.Count < Labels.Count)
             {
                 Remove(Labels[Labels.Count - 1]);

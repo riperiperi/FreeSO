@@ -104,14 +104,6 @@ namespace FSO.LotView.Components
             Primitives = indices.Count / 3;
         }
 
-        public override float PreferredDrawOrder
-        {
-            get
-            {
-                return float.MaxValue;
-            }
-        }
-
         public float Time;
         public float TimeRate;
         public float StopTime = float.PositiveInfinity;
@@ -158,17 +150,18 @@ namespace FSO.LotView.Components
 
         public override void Draw(GraphicsDevice device, WorldState world)
         {
-            var scale2d = (1 << (3 - (int)world.Zoom));
+            int scale2d = 1;
             var weather = (Mode < ParticleType.GENERIC_BOX);
             if (Vertices == null || (LastZoom != world.Zoom && weather))
             {
                 LastZoom = world.Zoom;
                 if (weather)
                 {
-                    if (FSOEnvironment.Enable3D)
+                    if (world.CameraMode == CameraRenderMode._3D)
                         Volume = new BoundingBox(new Vector3(-50, -50, -50), new Vector3(50, 50, 50));
                     else
                     {
+                        scale2d = (1 << (3 - (int)world.Zoom));
                         Volume = new BoundingBox(new Vector3(-100, 0, -100) * scale2d, new Vector3(100 * scale2d, 2.95f * 3 * 5 * 2, 100 * scale2d));
                     }
                     if (Indoors == null)
@@ -202,7 +195,7 @@ namespace FSO.LotView.Components
                 }
             }
 
-            var rot = world.Camera.View;
+            var rot = world.View;
             rot.Translation = Vector3.Zero;
             var inv = Matrix.Invert(rot);
 
@@ -210,13 +203,14 @@ namespace FSO.LotView.Components
             var effect = WorldContent.ParticleEffect;
             Matrix trans;
             var basealt = Bp.InterpAltitude(new Vector3(world.CenterTile, 0));
-            var pos = Vector3.Transform(Vector3.Zero, Matrix.Invert(world.Camera.View));
+            var pos = Vector3.Transform(Vector3.Zero, Matrix.Invert(world.View));
             Vector3 transp;
 
             float opacity = 1;
+            var cam3d = world.CameraMode == CameraRenderMode._3D;
             if (weather)
             {
-                if (FSOEnvironment.Enable3D)
+                if (cam3d)
                 {
                     transp = (pos + forward * -20f + new Vector3(Volume.Max.X, 0, Volume.Max.Z)) * 2;
                 }
@@ -227,7 +221,7 @@ namespace FSO.LotView.Components
                 trans = Matrix.CreateTranslation(transp);
                 effect.Parameters["World"].SetValue(trans);
 
-                var velocity = (FSOEnvironment.Enable3D) ? transp - LastPosition : new Vector3();
+                var velocity = (world.CameraMode == CameraRenderMode._3D) ? transp - LastPosition : new Vector3();
                 effect.Parameters["CameraVelocity"].SetValue(velocity);
                 opacity = Math.Min(1, (3f / velocity.Length() + 0.001f));
                 opacity /= (float)Math.Sqrt(Math.Max(1, TimeRate));
@@ -239,8 +233,8 @@ namespace FSO.LotView.Components
                 effect.Parameters["Level"].SetValue(Level-0.999f);
             }
 
-            effect.Parameters["View"].SetValue(world.Camera.View);
-            effect.Parameters["Projection"].SetValue(world.Camera.Projection);
+            effect.Parameters["View"].SetValue(world.View);
+            effect.Parameters["Projection"].SetValue(world.Projection);
             effect.Parameters["InvRotation"].SetValue(inv * Matrix.CreateScale(0.5f));
             
             Tint = Color.White * opacity;
@@ -249,18 +243,18 @@ namespace FSO.LotView.Components
                 //rot.Up = new Vector3(0, 1, 0);
                 //rot.Backward = new Vector3(0, 0, 1);
                 rot.Up = new Vector3(0, 1, 0);
-                var invxz = (FSOEnvironment.Enable3D)?Matrix.Invert(rot): Matrix.Identity;
+                var invxz = (cam3d)?Matrix.Invert(rot): Matrix.Identity;
                 effect.Parameters["InvXZRotation"].SetValue(invxz * Matrix.CreateScale(0.5f));
                 effect.Parameters["SubColor"].SetValue(Bp.OutsideColor.ToVector4() * 0.6f * opacity);
             } else
             {
                 effect.Parameters["SubColor"].SetValue(Vector4.Zero);
             }
-            effect.Parameters["ClipLevel"].SetValue(FSOEnvironment.Enable3D ? float.MaxValue : world.Level);
+            effect.Parameters["ClipLevel"].SetValue(cam3d ? float.MaxValue : world.Level);
             effect.Parameters["BaseAlt"].SetValue(basealt * 3);
             effect.Parameters["BpSize"].SetValue(new Vector2(Bp.Width * 3, Bp.Height * 3));
             effect.Parameters["Stories"].SetValue((float)(Bp.Stories + 1));
-            InternalDraw(device, effect, scale2d, true);
+            InternalDraw(device, effect, scale2d, true, cam3d);
         }
 
         private Vector3 LastPosition;
@@ -309,11 +303,11 @@ namespace FSO.LotView.Components
             effect.Parameters["BaseAlt"].SetValue(basealt * 3);
             effect.Parameters["BpSize"].SetValue(new Vector2(3, 3));
             effect.Parameters["Stories"].SetValue(6f);
-            InternalDraw(device, effect, 1, useDepth);
+            InternalDraw(device, effect, 1, useDepth, true);
             LastPosition = transp;
         }
 
-        private void InternalDraw(GraphicsDevice device, Effect effect, int scale, bool useDepth)
+        private void InternalDraw(GraphicsDevice device, Effect effect, int scale, bool useDepth, bool cam3d)
         {
             effect.Parameters["BaseTex"].SetValue(Tex);
             effect.Parameters["IndoorsTex"].SetValue(Indoors);
@@ -334,7 +328,7 @@ namespace FSO.LotView.Components
                     break;
                 case ParticleType.RAIN:
                     effect.Parameters["Parameters1"].SetValue(new Vector4(Volume.Min.Y, Volume.Max.Y - Volume.Min.Y, 0.20f, 0.01f)); //0.1f
-                    effect.Parameters["Parameters2"].SetValue(new Vector4(30f, 10f, 10f, ((FSOEnvironment.Enable3D || Indoors == null)? 0.3f:1f)));
+                    effect.Parameters["Parameters2"].SetValue(new Vector4(30f, 10f, 10f, ((cam3d || Indoors == null)? 0.3f:1f)));
                     effect.Parameters["Parameters3"].SetValue(new Vector4(Volume.Min.X, Volume.Max.X - Volume.Min.X, Volume.Min.Z, Volume.Max.Z - Volume.Min.Z));
                     break;
                 //(deltax, deltay, deltaz, gravity)

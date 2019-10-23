@@ -209,7 +209,11 @@ namespace FSO.Client.UI.Panels
                         obj.Name = (item.Name == "")?obj.Name:item.Name;
                         obj.Price = 0;
                         //todo: make icon for correct graphic.
-                        CurrentInventory.Add(new UICatalogElement { Item = obj });
+                        CurrentInventory.Add(new UICatalogElement {
+                            Item = obj,
+                            Attributes = item.Attributes ?? new List<int>(),
+                            Count = (item.AttributeMode == 2 && (item.Attributes?.Count ?? 0) > 0) ? item.Attributes[0] : (int?)null
+                        });
                     }
                     if (Mode == 2)
                     {

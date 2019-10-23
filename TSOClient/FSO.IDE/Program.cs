@@ -3,6 +3,7 @@
 using FSO.Client;
 using FSO.Common.Utils;
 using FSO.IDE.Common;
+using FSO.SimAntics.JIT.Roslyn;
 using FSO.UI;
 using System;
 using System.Collections.Generic;
@@ -55,19 +56,19 @@ namespace FSO.IDE
             }
 
             if (!FSOProgram.InitWithArguments(args)) return;
-            (new VolcanicStartProxy()).Start();
+            (new VolcanicStartProxy()).Start(args);
         }
     }
 
     public class VolcanicStartProxy
     {
-        public void Start()
+        public void Start(string[] args)
         {
-            InitVolcanic();
+            InitVolcanic(args);
             Program.StartProxy.Start(Program.FSOProgram.UseDX);
         }
 
-        public void InitVolcanic()
+        public void InitVolcanic(string[] args)
         {
             Application.EnableVisualStyles();
             Application.SetCompatibleTextRenderingDefault(false);
@@ -75,6 +76,27 @@ namespace FSO.IDE
             FSO.Files.Formats.IFF.IffFile.RETAIN_CHUNK_DATA = true;
             FSO.SimAntics.VM.SignalBreaks = true;
             FSO.Client.Debug.IDEHook.SetIDE(new IDETester());
+
+            //requires reference to FSO.SimAntics.JIT.Roslyn
+            foreach (var arg in args)
+            {
+                switch (arg)
+                {
+                    case "-jit":
+                        {
+                            var roslyn = new RoslynSimanticsJIT();
+                            FSO.SimAntics.Engine.VMTranslator.INSTANCE = new VMRoslynTranslator(roslyn);
+                            break;
+                        }
+                    case "-jitdebug":
+                        {
+                            var roslyn = new RoslynSimanticsJIT();
+                            roslyn.Context.Debug = true;
+                            FSO.SimAntics.Engine.VMTranslator.INSTANCE = new VMRoslynTranslator(roslyn);
+                            break;
+                        }
+                }
+            }
         }
     }
 }

@@ -10,6 +10,7 @@ using FSO.LotView.Utils;
 using FSO.Common.Utils;
 using FSO.LotView.LMap;
 using System.IO;
+using FSO.LotView.Effects;
 
 namespace FSO.LotView.Components
 {
@@ -18,7 +19,7 @@ namespace FSO.LotView.Components
         public Blueprint blueprint;
         private List<RoofRect>[] RoofRects;
         private RoofDrawGroup[] Drawgroups;
-        private Effect Effect;
+        private GrassEffect Effect;
         public Texture2D Texture;
         public Texture2D ParallaxTexture;
         public Texture2D NormalMap;
@@ -36,7 +37,7 @@ namespace FSO.LotView.Components
         {
             RoofStyle = style;
             RoofPitch = pitch;
-            blueprint.Damage.Add(new BlueprintDamage(BlueprintDamageType.ROOF_STYLE_CHANGED, 0, 0, 1));
+            blueprint.Changes.SetFlag(BlueprintGlobalChanges.ROOF_STYLE_CHANGED);
         }
 
         public RoofComponent(Blueprint bp)
@@ -497,14 +498,6 @@ namespace FSO.LotView.Components
             2, 3, 1, -1
         };
 
-        public override float PreferredDrawOrder
-        {
-            get
-            {
-                return 0f;
-            }
-        }
-
         private void RoofSpread(LotTilePos start, bool[] evaluated, int width, int height, sbyte level, List<RoofRect> result)
         {
             var rect = new RoofRect(start.x, start.y, start.x + 8, start.y + 8);
@@ -751,36 +744,39 @@ namespace FSO.LotView.Components
             device.RasterizerState = RasterizerState.CullClockwise;
             for (int i = 0; i < Drawgroups.Length; i++)
             {
-                if (i > world.Level - 1) return;
-                Effect.Parameters["Level"].SetValue((float)i + 1.0001f);
+                if (i > world.Level - 1) break;
+                Effect.Level = (float)i + 1.0001f;
                 if (Drawgroups[i] != null)
                 {
                     var dg = Drawgroups[i];
                     if (dg.NumPrimitives == 0) continue;
                     PPXDepthEngine.RenderPPXDepth(Effect, true, (depthMode) =>
                     {
-                        world._3D.ApplyCamera(Effect);
-                        Effect.Parameters["World"].SetValue(Matrix.Identity);
-                        Effect.Parameters["DiffuseColor"].SetValue(new Vector4(world.OutsideColor.R / 255f, world.OutsideColor.G / 255f, world.OutsideColor.B / 255f, 1.0f));
-                        Effect.Parameters["UseTexture"].SetValue(true);
-                        Effect.Parameters["BaseTex"].SetValue(Texture);
-                        Effect.Parameters["Alpha"].SetValue(1f);
-                        Effect.Parameters["IgnoreColor"].SetValue(false);
-                        Effect.Parameters["TexOffset"].SetValue(Vector2.Zero);
-                        Effect.Parameters["TexMatrix"].SetValue(new Vector4(1, 0, 0, 1));
-                        Effect.Parameters["ParallaxUVTexMat"]?.SetValue(new Vector4(1, 0, 1, 0));
-                        Effect.Parameters["ParallaxHeight"]?.SetValue(0.2f * TexRescale);
-                        Effect.Parameters["ParallaxTex"]?.SetValue(ParallaxTexture);
-                        Effect.Parameters["NormalMapTex"]?.SetValue(NormalMap);
-                        Effect.Parameters["GrassShininess"].SetValue(0.01f);//005f);
+                        Effect.View = world.View;
+                        Effect.Projection = world.Projection;
+                        Effect.World = Matrix.Identity;
+                        Effect.DiffuseColor = new Vector4(world.OutsideColor.R / 255f, world.OutsideColor.G / 255f, world.OutsideColor.B / 255f, 1.0f);
+                        Effect.UseTexture = true;
+                        Effect.BaseTex = Texture;
+                        Effect.Alpha = 1f;
+                        Effect.IgnoreColor = false;
+                        Effect.TexOffset = Vector2.Zero;
+                        Effect.TexMatrix = new Vector4(1, 0, 0, 1);
+
+                        Effect.ParallaxUVTexMat = new Vector4(1, 0, 1, 0);
+                        Effect.ParallaxHeight = 0.2f * TexRescale;
+                        Effect.ParallaxTex = ParallaxTexture;
+                        Effect.NormalMapTex = NormalMap;
+
+                        Effect.GrassShininess = 0.01f;//005f);
 
                         var baseShad = (enableParallax) ? 3 : 2;
 
                         device.SetVertexBuffer(dg.VertexBuffer);
                         device.Indices = dg.IndexBuffer;
 
-                        Effect.CurrentTechnique = Effect.Techniques["DrawBase"];
-                        var pass = Effect.CurrentTechnique.Passes[(Common.FSOEnvironment.Enable3D && (world as RC.WorldStateRC)?.Use2DCam == false)?baseShad:WorldConfig.Current.PassOffset];
+                        Effect.SetTechnique(GrassTechniques.DrawBase);
+                        var pass = Effect.CurrentTechnique.Passes[(world.CameraMode == CameraRenderMode._3D)?baseShad:WorldConfig.Current.PassOffset];
                         pass.Apply();
                         device.DrawIndexedPrimitives(PrimitiveType.TriangleList, 0, 0, dg.NumPrimitives);
 
@@ -788,9 +784,9 @@ namespace FSO.LotView.Components
                         {
                             device.SetVertexBuffer(dg.AdvVertexBuffer);
                             device.Indices = dg.AdvIndexBuffer;
-                            Effect.Parameters["BaseTex"].SetValue(EdgeTexture);
-                            Effect.Parameters["GrassShininess"].SetValue(0.003f);
-                            pass = Effect.CurrentTechnique.Passes[(Common.FSOEnvironment.Enable3D && (world as RC.WorldStateRC)?.Use2DCam == false) ? 2 : WorldConfig.Current.PassOffset];
+                            Effect.BaseTex = EdgeTexture;
+                            Effect.GrassShininess = 0.003f;
+                            pass = Effect.CurrentTechnique.Passes[(world.CameraMode == CameraRenderMode._3D) ? 2 : WorldConfig.Current.PassOffset];
                             pass.Apply();
                             device.DrawIndexedPrimitives(PrimitiveType.TriangleList, 0, 0, dg.AdvNumPrimitives);
                         }
@@ -815,29 +811,29 @@ namespace FSO.LotView.Components
                 StyleDirty = false;
             }
             if (i > world.Level - 1) return;
-            Effect.Parameters["Level"].SetValue((float)i + 1.0001f);
+            Effect.Level = (float)i + 1.0001f;
             if (Drawgroups[i] != null)
             {
                 var dg = Drawgroups[i];
                 if (dg.NumPrimitives == 0) return;
-                Effect.Parameters["View"].SetValue(view);
-                Effect.Parameters["Projection"].SetValue(projection);
-                Effect.Parameters["World"].SetValue(Matrix.Identity);
-                Effect.Parameters["DiffuseColor"].SetValue(new Vector4(world.OutsideColor.R / 255f, world.OutsideColor.G / 255f, world.OutsideColor.B / 255f, 1.0f));
-                Effect.Parameters["UseTexture"].SetValue(true);
-                Effect.Parameters["BaseTex"].SetValue(Texture);
-                Effect.Parameters["Alpha"].SetValue(1f);
-                Effect.Parameters["IgnoreColor"].SetValue(false);
-                Effect.Parameters["TexOffset"].SetValue(Vector2.Zero);
-                Effect.Parameters["TexMatrix"].SetValue(new Vector4(1, 0, 0, 1));
+                Effect.View = view;
+                Effect.Projection = projection;
+                Effect.World = Matrix.Identity;
+                Effect.DiffuseColor = new Vector4(world.OutsideColor.R / 255f, world.OutsideColor.G / 255f, world.OutsideColor.B / 255f, 1.0f);
+                Effect.UseTexture = true;
+                Effect.BaseTex = Texture;
+                Effect.Alpha = 1f;
+                Effect.IgnoreColor = false;
+                Effect.TexOffset = Vector2.Zero;
+                Effect.TexMatrix = new Vector4(1, 0, 0, 1);
 
-                Effect.Parameters["FadeRectangle"].SetValue(new Vector4(-1000, -1000, 2000, 2000));
-                Effect.Parameters["FadeWidth"].SetValue(35f * 3);
+                Effect.FadeRectangle = new Vector4(-1000, -1000, 2000, 2000);
+                Effect.FadeWidth = 35f * 3;
 
                 device.SetVertexBuffer(dg.VertexBuffer);
                 device.Indices = dg.IndexBuffer;
 
-                Effect.CurrentTechnique = Effect.Techniques["DrawBase"];
+                Effect.SetTechnique(GrassTechniques.DrawBase);
                 var pass = Effect.CurrentTechnique.Passes[2];
                 pass.Apply();
                 device.DrawIndexedPrimitives(PrimitiveType.TriangleList, 0, 0, dg.NumPrimitives);
@@ -846,8 +842,8 @@ namespace FSO.LotView.Components
                 {
                     device.SetVertexBuffer(dg.AdvVertexBuffer);
                     device.Indices = dg.AdvIndexBuffer;
-                    Effect.Parameters["BaseTex"].SetValue(EdgeTexture);
-                    Effect.Parameters["GrassShininess"].SetValue(0.003f);
+                    Effect.BaseTex = EdgeTexture;
+                    Effect.GrassShininess = 0.003f;
                     pass = Effect.CurrentTechnique.Passes[2];
                     pass.Apply();
                     device.DrawIndexedPrimitives(PrimitiveType.TriangleList, 0, 0, dg.AdvNumPrimitives);
@@ -877,26 +873,26 @@ namespace FSO.LotView.Components
 
             for (int i = light.Level; i < Drawgroups.Length; i++)
             {
-                Effect.Parameters["Level"].SetValue((float)i + 1);
+                Effect.Level = (float)i + 1;
                 if (Drawgroups[i] != null)
                 {
                     var dg = Drawgroups[i];
                     if (dg.NumPrimitives == 0) continue;
 
-                    Effect.Parameters["UseTexture"].SetValue(false);
-                    Effect.Parameters["Projection"].SetValue(projection);
+                    Effect.UseTexture = false;
+                    Effect.Projection = projection;
                     var view = Matrix.Identity;
-                    Effect.Parameters["View"].SetValue(view);
+                    Effect.View = view;
 
                     var worldmat = Matrix.CreateScale(1 / 3f, 0, 1 / 3f) * Matrix.CreateTranslation(0, 1f * (i - (light.Level-1)), 0) * s * lightTransform;
 
-                    Effect.Parameters["World"].SetValue(worldmat);
-                    Effect.Parameters["DiffuseColor"].SetValue(new Vector4(1, 1, 1, 1) * (float)(4 - (i - (light.Level))) / 5f);
+                    Effect.World = worldmat;
+                    Effect.DiffuseColor = new Vector4(1, 1, 1, 1) * (float)(4 - (i - (light.Level))) / 5f;
 
                     gd.SetVertexBuffer(dg.VertexBuffer);
                     gd.Indices = dg.IndexBuffer;
 
-                    Effect.CurrentTechnique = Effect.Techniques["DrawLMap"];
+                    Effect.SetTechnique(GrassTechniques.DrawLMap);
                     foreach (var pass in Effect.CurrentTechnique.Passes)
                     {
                         pass.Apply();

@@ -27,7 +27,7 @@ namespace FSO.Client.Controllers
 {
     public class TerrainController : IDisposable
     {
-        private CoreGameScreenController Parent;
+        public CoreGameScreenController Parent;
         private Terrain View;
         private IClientDataService DataService;
         private IShardRealestateDomain Realestate;

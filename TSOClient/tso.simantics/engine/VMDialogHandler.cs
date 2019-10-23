@@ -172,7 +172,7 @@ namespace FSO.SimAntics.Engine
                                 case "$":
                                     output.Append("$"); i--; break;
                                 case "Attribute:":
-                                    output.Append(VMMemory.GetBigVariable(context, Scopes.VMVariableScope.MyObjectAttributes, values[0]).ToString()); break;
+                                    output.Append(VMMemory.GetBigVariable(context, Scopes.VMVariableScope.StackObjectAttributes, values[0]).ToString()); break;
                                 case "DynamicStringLocal:":
                                     STR res = null;
                                     if (values[2] != -1 && values[1] != -1)
@@ -273,7 +273,7 @@ namespace FSO.SimAntics.Engine
                     }
                 }
             }
-            output.Replace("\r\n", "\r\n\r\n");
+            if (context.Thread != null) output.Replace("\r\n", "\r\n\r\n");
             return output.ToString();
         }
     }

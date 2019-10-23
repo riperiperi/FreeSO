@@ -55,5 +55,10 @@ namespace FSO.Files.Formats.IFF.Chunks
             if (Name.Length%2 == 0) io.ReadByte(); //pad to short width
             if (version > 2) io.ReadInt32();
         }
+
+        public override string ToString()
+        {
+            return $"{Name} ({GUID.ToString("x8")})";
+        }
     }
 }

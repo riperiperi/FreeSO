@@ -16,6 +16,7 @@ using FSO.SimAntics.Model.TSOPlatform;
 using FSO.SimAntics.NetPlay.Drivers;
 using Microsoft.Xna.Framework;
 using FSO.SimAntics.NetPlay.Model.Commands;
+using FSO.Files.Formats.IFF.Chunks;
 
 namespace FSO.SimAntics.Primitives
 {
@@ -389,6 +390,12 @@ namespace FSO.SimAntics.Primitives
                 case VMGenericTSOCallMode.FSOAccurateDirectionInTemp0:
                     var dir = (short)((context.StackObject.RadianDirection / Math.PI) * 32767);
                     context.Thread.TempRegisters[0] = dir;
+                    return VMPrimitiveExitCode.GOTO_TRUE;
+                case VMGenericTSOCallMode.FSOCanBreak:
+                    return (context.StackObject.TreeTable?.Interactions?.Any(x => (x.Flags & TTABFlags.TSOIsRepair) > 0) == true) ? 
+                        VMPrimitiveExitCode.GOTO_TRUE : VMPrimitiveExitCode.GOTO_FALSE;
+                case VMGenericTSOCallMode.FSOBreakObject:
+                    (context.StackObject.TSOState as VMTSOObjectState)?.Break(context.StackObject);
                     return VMPrimitiveExitCode.GOTO_TRUE;
                 default:
                     return VMPrimitiveExitCode.GOTO_TRUE;

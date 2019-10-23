@@ -23,14 +23,6 @@ namespace FSO.LotView.Components
     public class WallComponent : WorldComponent
     {
 
-        public override float PreferredDrawOrder
-        {
-            get
-            {
-                return 800.0f;
-            }
-        }
-
         public Blueprint blueprint;
         private JunctionFlags[] UpJunctions;
         private JunctionFlags[] DownJunctions;

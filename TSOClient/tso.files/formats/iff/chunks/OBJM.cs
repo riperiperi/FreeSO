@@ -124,7 +124,7 @@ namespace FSO.Files.Formats.IFF.Chunks
             var offsets = new List<int>();
             for (int i=0; i<data.Count-3; i++)
             {
-                if ((data[i] == 1997 || data[i] == (1997-36)) && (data[i + 1] > 0 && data[i+1] < 13) && (data[i + 2] > 0 && data[i + 2] < 32)) {
+                if ((data[i] == 1997 || data[i] == 1998 || data[i] == (1997-36)) && (data[i + 1] > 0 && data[i+1] < 13) && (data[i + 2] > 0 && data[i + 2] < 32)) {
                     offsets.Add(i - 45);
                 }
             }

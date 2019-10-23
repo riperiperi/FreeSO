@@ -17,18 +17,34 @@ float GrassFadeMul;
 float2 TexOffset;
 float4 TexMatrix;
 
+float2 ScreenRotCenter;
+float4 ScreenMatrix;
+
+bool ScreenAlignUV;
+float2 TexSize;
+
 float2 TileSize;
 
 bool depthOutMode;
+bool Water;
 float3 CamPos;
 float3 LightVec;
 float Alpha;
 float GrassShininess;
 bool UseTexture;
 bool IgnoreColor;
+
+float ParallaxHeight = 1.0;
+float4 ParallaxUVTexMat;
+
 texture BaseTex;
 texture ParallaxTex;
 texture NormalMapTex;
+texture RoomMap : Diffuse;
+texture RoomLight : Diffuse;
+texture TerrainNoise : Diffuse;
+texture TerrainNoiseMip : Diffuse;
+
 sampler TexSampler = sampler_state {
 	texture = <BaseTex>;
 	AddressU = Wrap;
@@ -63,21 +79,19 @@ sampler AnisoTexSampler = sampler_state {
 };
 #endif
 
-texture RoomMap : Diffuse;
 sampler RoomMapSampler = sampler_state {
 	texture = <RoomMap>;
 	AddressU = WRAP; AddressV = WRAP; AddressW = WRAP;
 	MIPFILTER = POINT; MINFILTER = POINT; MAGFILTER = POINT;
 };
 
-texture RoomLight : Diffuse;
+
 sampler RoomLightSampler = sampler_state {
 	texture = <RoomLight>;
 	AddressU = WRAP; AddressV = WRAP; AddressW = WRAP;
 	MIPFILTER = POINT; MINFILTER = POINT; MAGFILTER = POINT;
 };
 
-texture TerrainNoise : Diffuse;
 sampler TerrainNoiseSampler = sampler_state {
 	texture = <TerrainNoise>;
 	AddressU = WRAP; AddressV = WRAP; AddressW = WRAP;
@@ -85,7 +99,6 @@ sampler TerrainNoiseSampler = sampler_state {
 	MaxLOD = 0;
 };
 
-texture TerrainNoiseMip : Diffuse;
 sampler TerrainNoiseMipSampler = sampler_state {
 	texture = <TerrainNoiseMip>;
 	AddressU = WRAP; AddressV = WRAP; AddressW = WRAP;
@@ -120,8 +133,6 @@ struct GrassPSVTX {
 	float4 ModelPos : TEXCOORD2;
 	float3 Normal : TEXCOORD3;
 };
-
-bool Water;
 
 float2 LoopUV(float2 uv) {
 	if (Water == false) return uv;
@@ -233,6 +244,7 @@ GrassPSVTX GrassVS(GrassVTX input)
     output.Color = input.Color;
     output.GrassInfo = input.GrassInfo;
 	output.GrassInfo.yz = output.GrassInfo.yz*TexMatrix.xw + output.GrassInfo.zy*TexMatrix.zy + TexOffset;
+
     output.GrassInfo.w = position.z / position.w;
 	output.Normal = input.Normal;
 
@@ -240,7 +252,19 @@ GrassPSVTX GrassVS(GrassVTX input)
 	output.ScreenPos.xy = ((position2.xy*float2(0.5, -0.5)) + float2(0.5, 0.5)) * ScreenSize;
 	output.ScreenPos.z = position.z;
 
-    if (output.GrassInfo.x == -1.2 && output.GrassInfo.y == -1.2 && output.GrassInfo.z == -1.2 && output.GrassInfo.w < -1.0 && output.ScreenPos.x < -200 && output.ScreenPos.y < -300) output.Color *= 0.5; 
+	if (ScreenAlignUV == true) {
+		// results in sharper textures for flat surfaces in 2d mode. may slightly distort sloped surfaces.
+		// otherwise, even flat surfaces would not identically match their flat sprites as there would be a subpixel offset 
+		// (and we use linear blend, so it mushes together).
+		output.GrassInfo.yz = round((output.GrassInfo.yz * TexSize) + output.ScreenPos.xy);
+		output.GrassInfo.yz = (output.GrassInfo.yz - output.ScreenPos.xy) / TexSize; //reverse operation
+	}
+
+	output.ScreenPos.xy -= ScreenRotCenter;
+	output.ScreenPos.xy = output.ScreenPos.xy*ScreenMatrix.xw + output.ScreenPos.yx*ScreenMatrix.zy;
+	output.ScreenPos.xy += ScreenRotCenter;
+
+    //if (output.GrassInfo.x == -1.2 && output.GrassInfo.y == -1.2 && output.GrassInfo.z == -1.2 && output.GrassInfo.w < -1.0 && output.ScreenPos.x < -200 && output.ScreenPos.y < -300) output.Color *= 0.5; 
 
     return output;
 }
@@ -390,8 +414,6 @@ GrassParallaxPSVTX GrassParallaxVS(GrassParallaxVTX input)
 	return output;
 }
 
-float ParallaxHeight = 1.0;
-
 float2 GrassParallaxMapping(float2 texCoords, float3 viewDir, float probability)
 {
 	const float minLayers = 4.0;
@@ -456,7 +478,6 @@ void BladesParallaxPS3D(GrassParallaxPSVTX input, out float4 color:COLOR0)
 
 //roof parallax
 
-float4 ParallaxUVTexMat;
 float2 ParallaxMapping(float2 texCoords, float3 viewDir)
 {
 	const float minLayers = 4.0; 
@@ -616,7 +637,7 @@ void BasePS(GrassPSVTX input, out float4 color:COLOR0, out float4 depthB : COLOR
         color = float4(1,1,1,1);//*DiffuseColor;
 		if (IgnoreColor == false) color *= input.Color;
 		if (UseTexture == true) {
-			color *= tex2D(TexSampler, LoopUV(input.GrassInfo.yz));
+			color *= tex2Dbias(TexSampler, float4(LoopUV(input.GrassInfo.yz), 0, -999));
 			if (color.a < 0.5) discard;
 		}
 		color = gammaMul(color, lightProcessRoof(input.ModelPos) * LightDot(input.Normal));

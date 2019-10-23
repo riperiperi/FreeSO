@@ -13,6 +13,7 @@ using FSO.Client.UI.Model;
 using FSO.LotView.RC;
 using FSO.Common.Utils;
 using FSO.Client.UI.Screens;
+using FSO.LotView.Model;
 
 namespace FSO.Client.UI.Panels
 {
@@ -74,12 +75,14 @@ namespace FSO.Client.UI.Panels
         private bool ScrollWheelInvalid = true;
         private int ZoomFreezeTime;
 
-        public float MinZoom = FSOEnvironment.Enable3D?-0.75f: 0.25f;
+        public float MinZoom = -0.75f;
         public float MaxZoom = 2f;
+        public bool _3D;
 
         public override void Update(UpdateState state)
         {
-            var _3d = FSOEnvironment.Enable3D;
+            var _3d = _3D;
+            MinZoom = _3d ? -0.75f : 0.25f;
             base.Update(state);
             bool rotated = false;
 

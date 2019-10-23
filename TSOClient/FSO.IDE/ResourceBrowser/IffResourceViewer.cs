@@ -15,7 +15,6 @@ namespace FSO.IDE.ResourceBrowser
 {
     public partial class IffResourceViewer : Form, IffResWindow
     {
-
         private GameIffResource Iff;
 
         public IffResourceViewer()

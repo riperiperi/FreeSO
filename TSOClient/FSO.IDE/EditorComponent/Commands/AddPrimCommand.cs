@@ -19,8 +19,15 @@ namespace FSO.IDE.EditorComponent.Commands
 
         public override void Execute(BHAV bhav, UIBHAVEditor editor)
         {
-            if (NewPrimitive.Type != PrimBoxType.Primitive)
+            var tree = editor.GetSavableTree();
+            if (NewPrimitive.Type != TREEBoxType.Primitive)
             {
+                var ptr = NewPrimitive.TreeBox.TruePointer; //if this is a goto, this will contain the label id
+                var comment = NewPrimitive.TreeBox.Comment;
+                NewPrimitive.SetTreeBox(tree.MakeNewSpecialBox(NewPrimitive.Type));
+                NewPrimitive.TreeBox.TruePointer = ptr;
+                NewPrimitive.TreeBox.Comment = comment;
+                NewPrimitive.CopyPosToTree();
                 editor.BHAVView.Primitives.Add(NewPrimitive);
                 editor.BHAVView.Add(NewPrimitive);
             }
@@ -32,7 +39,8 @@ namespace FSO.IDE.EditorComponent.Commands
                     newInst[i] = bhav.Instructions[i];
                 }
                 newInst[newInst.Length - 1] = NewPrimitive.Instruction;
-                NewPrimitive.InstPtr = (byte)(newInst.Length - 1);
+                NewPrimitive.SetTreeBox(tree.MakeNewPrimitiveBox(TREEBoxType.Primitive));
+                NewPrimitive.CopyPosToTree();
 
                 bhav.Instructions = newInst;
                 editor.BHAVView.AddPrimitive(NewPrimitive);
@@ -42,12 +50,18 @@ namespace FSO.IDE.EditorComponent.Commands
 
                 FSO.SimAntics.VM.BHAVChanged(bhav);
             }
+            Content.Content.Get().Changes.ChunkChanged(tree);
         }
 
         public override void Undo(BHAV bhav, UIBHAVEditor editor)
         {
-            if (NewPrimitive.Type != PrimBoxType.Primitive)
+            var tree = editor.GetSavableTree();
+            if (NewPrimitive.Type != TREEBoxType.Primitive)
             {
+                if (NewPrimitive.TreeBox.InternalID != -1)
+                {
+                    tree.DeleteBox(NewPrimitive.TreeBox);
+                }
                 editor.BHAVView.Primitives.Remove(NewPrimitive);
                 editor.BHAVView.Remove(NewPrimitive);
             }
@@ -65,6 +79,7 @@ namespace FSO.IDE.EditorComponent.Commands
                 Content.Content.Get().Changes.ChunkChanged(bhav);
                 FSO.SimAntics.VM.BHAVChanged(bhav);
             }
+            Content.Content.Get().Changes.ChunkChanged(tree);
         }
     }
 }

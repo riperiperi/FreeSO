@@ -33,6 +33,15 @@ namespace FSO.Client.UI.Framework
         public bool HasUpdated;
         public int NeedFrames = 5;
 
+        public Dictionary<char, Keys> NonPrintingKeys = new Dictionary<char, Keys>()
+        {
+            { '\b', Keys.Back },
+            { '\n', Keys.Enter },
+
+        };
+
+        public List<char> KeysPressed = new List<char>();
+
         public int Width
         {
             get
@@ -64,6 +73,7 @@ namespace FSO.Client.UI.Framework
             Size = new Vector2(width, height);
             inputManager = new InputManager();
             State = new UpdateState();
+            State.InputManager = inputManager;
             mouse = new MouseState();
             ClearColor = Color.White;
 
@@ -172,12 +182,31 @@ namespace FSO.Client.UI.Framework
 
             State.SharedData.Add("ExternalDraw", false);
             State.SharedData["ExternalDraw"] = false;
-
+            lock (KeysPressed)
+            {
+                State.FrameTextInput = KeysPressed.ToList();
+                State.NewKeys = State.FrameTextInput.Where(x => NonPrintingKeys.ContainsKey(x)).Select(x => NonPrintingKeys[x]).ToList();
+                KeysPressed.Clear();
+            }
             inputManager.HandleMouseEvents(State);
             State.MouseEvents.Clear();
             base.Update(State);
 
             if ((bool)State.SharedData["ExternalDraw"]) Invalidate();// DoRedraw = true;
+        }
+
+        public void SubmitKey(char c)
+        {
+            lock (KeysPressed)
+            {
+                KeysPressed.Add(c);
+            }
+        }
+
+        public void CleanupFocus(UpdateState state)
+        {
+            inputManager.SetFocus(null);
+            Update(state);
         }
     }
 

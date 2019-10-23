@@ -110,7 +110,7 @@ namespace FSO.SimAntics.Utils
                 foreach (var obj in model.Sounds)
                 {
                     VM.Context.Ambience.SetAmbience(VM.Context.Ambience.GetAmbienceFromGUID(obj.ID), (obj.On == 1));
-                    World.State.WorldSize = size;
+                    
                     
                 }
                 Blueprint.Terrain = CreateTerrain(model);
@@ -118,6 +118,7 @@ namespace FSO.SimAntics.Utils
 
             arch.SignalTerrainRedraw();
             VM.Context.World?.InitBlueprint(Blueprint);
+            World.State.WorldSize = size;
             arch.Tick();
             return this.Blueprint;
         }

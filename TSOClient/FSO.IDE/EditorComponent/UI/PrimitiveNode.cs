@@ -75,7 +75,11 @@ namespace FSO.IDE.EditorComponent.UI
                     MouseDrag = false;
 
                     var box = (PrimitiveBox)Parent;
-                    box.Master.Editor.QueueCommand(new ChangePointerCommand(box, box.Master.HoverPrim, (Type != NodeType.False)));
+                    var target = box.Master.HoverPrim;
+                    if (target == null || !target.Untargetable)
+                    {
+                        box.Master.Editor.QueueCommand(new ChangePointerCommand(box, target, (Type != NodeType.False)));
+                    }
                 }
             }
             base.Update(state);
