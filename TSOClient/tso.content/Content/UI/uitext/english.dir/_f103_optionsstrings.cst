@@ -49,4 +49,7 @@
 38 ^Graphical quality will be diminished ingame when switching from strict 2D to 3D, as mipmaps are not loaded. Please restart the game to correct any issues.^
 
 39 ^Graphics Modes:^
-40 ^3D and the hybrid graphics modes can be toggled while the game is running, useful if you want to quickly snap a picture in 3D. Press F12 or click the cube icon to switch modes.^
+40 ^3D and the hybrid graphics modes can be toggled while the game is running, useful if you want to quickly snap a picture in 3D. Press F12 or click this button to switch modes. Switching modes at runtime can use more VRAM - so if you have trouble, enable texture compression.^
+
+41 ^Switch to 3D Mode^
+42 ^Switch to Hybrid 2D^

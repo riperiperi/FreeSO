@@ -10,6 +10,7 @@ using System.Text;
 using System.Threading.Tasks;
 using FSO.Common.Rendering.Framework.Model;
 using FSO.Common.Utils;
+using FSO.LotView;
 
 namespace FSO.Client.UI.Panels
 {
@@ -36,6 +37,8 @@ namespace FSO.Client.UI.Panels
         public UIButton AALowButton { get; set; }
         public UIButton AAMedButton { get; set; }
         public UIButton AAHighButton { get; set; }
+
+        public UIButton SwitchModeButton { get; set; }
 
         public UILabel UIEffectsLabel { get; set; }
         public UILabel AntiAliasLabel { get; set; }
@@ -178,6 +181,14 @@ namespace FSO.Client.UI.Panels
             DPIButton.OnButtonClick += DPIButton_OnButtonClick;
             Add(DPIButton);
 
+            SwitchModeButton = new UIButton();
+            SwitchModeButton.Size = new Vector2(175, 35);
+            SwitchModeButton.Caption = GameFacade.Strings.GetString("f103", "41");
+            SwitchModeButton.Tooltip = GameFacade.Strings.GetString("f103", "40");
+            SwitchModeButton.Position = new Vector2(210, 250);
+            SwitchModeButton.OnButtonClick += SwitchModeButton_OnButtonClick;
+            Add(SwitchModeButton);
+
             var style = TextStyle.DefaultTitle.Clone();
             style.Size = 12;
 
@@ -223,6 +234,20 @@ namespace FSO.Client.UI.Panels
             {
                 UIScreen.RemoveDialog(this);
             };
+
+            GraphicsModeControl.ModeChanged += UpdateModeText;
+        }
+
+        private void SwitchModeButton_OnButtonClick(UIElement button)
+        {
+            if (GraphicsModeControl.Mode == LotView.Model.GlobalGraphicsMode.Hybrid2D)
+            {
+                GraphicsModeControl.ChangeMode(LotView.Model.GlobalGraphicsMode.Full3D);
+            }
+            else if (GraphicsModeControl.Mode == LotView.Model.GlobalGraphicsMode.Full3D)
+            {
+                GraphicsModeControl.ChangeMode(LotView.Model.GlobalGraphicsMode.Hybrid2D);
+            }
         }
 
         private void DPIButton_OnButtonClick(UIElement button)
@@ -323,6 +348,25 @@ namespace FSO.Client.UI.Panels
             SettingsChanged();
         }
 
+        private void UpdateModeText(LotView.Model.GlobalGraphicsMode mode)
+        {
+            switch (mode)
+            {
+                case LotView.Model.GlobalGraphicsMode.Full2D:
+                    SwitchModeButton.Visible = false;
+                    break;
+                case LotView.Model.GlobalGraphicsMode.Full3D:
+                    SwitchModeButton.Visible = true;
+                    SwitchModeButton.Caption = GameFacade.Strings.GetString("f103", "42");
+                    break;
+                case LotView.Model.GlobalGraphicsMode.Hybrid2D:
+                    SwitchModeButton.Visible = true;
+                    SwitchModeButton.Caption = GameFacade.Strings.GetString("f103", "41");
+                    break;
+            }
+            Invalidate();
+        }
+
         private void SettingsChanged()
         {
             var settings = GlobalSettings.Default;
@@ -356,6 +400,8 @@ namespace FSO.Client.UI.Panels
             FSOEnvironment.TexCompress = (settings.TexCompression & 1) > 0;
             CompressionButton.Selected = FSOEnvironment.TexCompress;
 
+            UpdateModeText(GraphicsModeControl.Mode);
+
             var oldSurrounding = LotView.WorldConfig.Current.SurroundingLots;
             LotView.WorldConfig.Current = new LotView.WorldConfig()
             {
@@ -380,6 +426,11 @@ namespace FSO.Client.UI.Panels
             }
         }
 
+        public override void Removed()
+        {
+            base.Removed();
+            GraphicsModeControl.ModeChanged -= UpdateModeText;
+        }
     }
 
     public class UIDPIScaleDialog : UIDialog
