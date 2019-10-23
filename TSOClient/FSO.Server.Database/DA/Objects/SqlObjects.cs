@@ -169,7 +169,7 @@ namespace FSO.Server.Database.DA.Objects
                 + "value = @value, "
                 + "dyn_flags_1 = @dyn_flags_1, "
                 + "dyn_flags_2 = @dyn_flags_2, "
-                + "upgrade_level = @upgrade_level "
+                + "upgrade_level = @upgrade_level, "
                 + "has_db_attributes = @has_db_attributes "
                 + "WHERE object_id = @object_id AND (@lot_id IS NULL OR lot_id = @lot_id);", obj) > 0;
         }

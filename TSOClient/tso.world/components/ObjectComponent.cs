@@ -352,7 +352,7 @@ namespace FSO.LotView.Components
             {
                 result |= world.Frustum.Intersects(GetBounds());
             }
-            return result || true;
+            return result;
         }
 
         public void ValidateSprite(WorldState world)

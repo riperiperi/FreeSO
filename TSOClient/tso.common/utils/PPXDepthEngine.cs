@@ -31,6 +31,7 @@ namespace FSO.Common.Utils
         {
             if (GD == null) return;
             if (BackbufferDepth != null) BackbufferDepth.Dispose();
+            BackbufferDepth = null;
             if (Backbuffer != null) Backbuffer.Dispose();
             var scale = 1;//FSOEnvironment.DPIScaleFactor;
             if (!FSOEnvironment.Enable3D)

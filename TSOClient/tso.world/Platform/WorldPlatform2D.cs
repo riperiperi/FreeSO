@@ -140,7 +140,7 @@ namespace FSO.LotView.Platform
                     foreach (var obj in bp.Objects)
                     {
                         var tilePosition = obj.Position;
-                        if (obj.Level != state.Level || !obj.DoDraw(state)) continue;
+                        if (obj.Level > state.Level || !obj.DoDraw(state)) continue;
                         obj.Draw(gd, state);
                     }
                     _2d.EndImmediate();
@@ -153,6 +153,7 @@ namespace FSO.LotView.Platform
 
                     foreach (var avatar in bp.Avatars)
                     {
+                        if (avatar.Level > state.Level) continue;
                         _2d.OffsetPixel(state.WorldSpace.GetScreenFromTile(avatar.Position));
                         _2d.OffsetTile(avatar.Position);
                         avatar.Draw(gd, state);

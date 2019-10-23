@@ -167,7 +167,7 @@ namespace FSO.LotView.Platform
             float bestDistance = float.MaxValue;
             foreach (var obj in bp.Objects)
             {
-                if (obj.Level != state.Level || !obj.Visible || obj.CutawayHidden) continue;
+                if (obj.Level > state.Level || !obj.Visible || obj.CutawayHidden) continue;
                 var intr = obj.IntersectsBounds(ray);
                 if (obj.Container != null && intr != null) intr = intr.Value - 1.5f;
                 if (intr != null && intr.Value < bestDistance)

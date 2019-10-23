@@ -170,6 +170,11 @@ namespace FSO.Client.UI.Screens
             base.Update(state);
             if (state.NewKeys.Contains(Microsoft.Xna.Framework.Input.Keys.F1))
                 FSOFacade.Controller.ToggleDebugMenu();
+            if (state.ShiftDown && state.NewKeys.Contains(Microsoft.Xna.Framework.Input.Keys.F10))
+            {
+                GlobalSettings.Default.ClientVersion = "bad/version-23";
+                UIAlert.Alert("Update Force", "Holding shift and pressing F10 will force the next login to re-update. Useful for fixing weird issues! Try log in now.", true);
+            }
         }
 
         public override void GameResized()

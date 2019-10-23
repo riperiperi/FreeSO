@@ -72,7 +72,7 @@ namespace FSO.LotView
             gd.DepthStencilState = DepthStencilState.Default;
             gd.BlendState = BlendState.AlphaBlend;
             gd.RasterizerState = RasterizerState.CullCounterClockwise;
-            
+
             var advDir = (WorldConfig.Current.Directional && WorldConfig.Current.AdvancedLighting);
             var pass = advDir ? 5 : WorldConfig.Current.PassOffset * 2;
 
@@ -95,8 +95,19 @@ namespace FSO.LotView
             {
                 if (avatar.Level <= state.Level) avatar.Draw(gd, state);
             }
-            
+
             gd.RasterizerState = RasterizerState.CullNone;
+        }
+
+        public void DrawAvatarTransparency(GraphicsDevice gd, WorldState state)
+        {
+            if (!state.Cameras.Safe2D)
+            {
+                foreach (var avatar in Blueprint.Avatars)
+                {
+                    if (avatar.Level <= state.Level) avatar.DrawHeadline3D(gd, state);
+                }
+            }
         }
 
         public void Draw(GraphicsDevice gd, WorldState state)

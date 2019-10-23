@@ -652,6 +652,7 @@ namespace FSO.LotView
             State.PrepareCamera();
             Entities.DrawAvatars(device, State);
             Entities.Draw(device, State);
+            Entities.DrawAvatarTransparency(device, State);
 
             State._2D.OutputDepth = false;
         }
@@ -1077,7 +1078,7 @@ namespace FSO.LotView
             Light?.Dispose();
             Platform?.Dispose();
             State.Rooms.Dispose();
-            if (State._2D != null) State._2D.Dispose();
+            if (State._2D != null && !(this is SubWorldComponent)) State._2D.Dispose();
             if (Blueprint != null)
             {
                 foreach (var world in Blueprint.SubWorlds)

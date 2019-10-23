@@ -216,7 +216,7 @@ namespace FSO.LotView.Components
                 var headOff = (transhead-Position) + new Vector3(0,0,0.66f);
                 if (!world.Cameras.Safe2D)
                 {
-                    DrawHeadline3D(device, world);
+                    //DrawHeadline3D(device, world);
                 }
                 else
                 {

@@ -191,7 +191,7 @@ namespace FSO.LotView
             }
             set {
                 _WorldSize = value;
-                Camera2D.WorldSize = value;
+                if (Camera2D != null) Camera2D.WorldSize = value;
                 InvalidateWorldSize();
             }
         }

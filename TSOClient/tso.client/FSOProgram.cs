@@ -32,7 +32,7 @@ namespace FSO.Client
             Directory.SetCurrentDirectory(baseDir);
             AppDomain.CurrentDomain.AssemblyResolve += OnAssemblyResolve;
             AppDomain.CurrentDomain.UnhandledException += new UnhandledExceptionEventHandler(CurrentDomain_UnhandledException);
-            AppDomain.CurrentDomain.SetDynamicBase(Path.Combine(AppDomain.CurrentDomain.BaseDirectory, "Content/JITCache/"));
+            //AppDomain.CurrentDomain.SetDynamicBase(Path.Combine(AppDomain.CurrentDomain.BaseDirectory, "Content/JITCache/"));
 
             OperatingSystem os = Environment.OSVersion;
             PlatformID pid = os.Platform;
