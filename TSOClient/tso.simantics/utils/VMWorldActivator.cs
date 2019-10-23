@@ -118,7 +118,7 @@ namespace FSO.SimAntics.Utils
 
             arch.SignalTerrainRedraw();
             VM.Context.World?.InitBlueprint(Blueprint);
-            World.State.WorldSize = size;
+            if (VM.UseWorld) World.State.WorldSize = size;
             arch.Tick();
             return this.Blueprint;
         }
