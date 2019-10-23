@@ -10,7 +10,7 @@ namespace FSO.LotView
 {
     public static class GraphicsModeControl
     {
-        private static GlobalGraphicsMode _Mode = GlobalGraphicsMode.Hybrid2D;
+        private static GlobalGraphicsMode _Mode = GlobalGraphicsMode.Full2D;
         public static event Action<GlobalGraphicsMode> ModeChanged;
         public static GlobalGraphicsMode Mode => _Mode;
         public static bool GlobalTransitionsEnabled => TransitionsEnabled(Mode);
