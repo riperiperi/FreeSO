@@ -130,6 +130,12 @@ namespace FSO.LotView.Utils.Camera
             Camera2D.Camera.RotateOff = oldRot;
         }
 
+        public bool ExternalTransitionActive()
+        {
+            if (_ExternalTransition == null) return false;
+            else return _ExternalTransition.Percent > 0;
+        }
+
         public CameraTransition GetExternalTransition()
         {
             if (_ExternalTransition == null)

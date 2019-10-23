@@ -1451,7 +1451,8 @@ namespace FSO.Client.Rendering.City
                     Vector2 pos = Camera.CalculateRShadow();
                     Vector3 LightOff = Vector3.Transform(new Vector3(pos.X, 0, pos.Y), LightView); //finds position in light space of approximate center of camera (to be used for only shadowing near the camera in near view)
 
-                    float size = (1 - m_ZoomProgress) * 262 + (m_ZoomProgress * 40); //size of draw window to use for shadowing. 40 is good for near view, it could be less but that wouldn't work correctly on higher ground.
+                    var shadZoom = Camera is CityCamera3D ? 0f : m_ZoomProgress;
+                    float size = (1 - shadZoom) * 262 + (shadZoom * 40); //size of draw window to use for shadowing. 40 is good for near view, it could be less but that wouldn't work correctly on higher ground.
                     Matrix LightProject = Matrix.CreateOrthographicOffCenter(-size + LightOff.X, size + LightOff.X, -size + LightOff.Y, size + LightOff.Y, 0.1f, 524); //create light projection using offsets + size.
 
                     m_LightMatrix = (WorldMatrix * LightView) * LightProject;

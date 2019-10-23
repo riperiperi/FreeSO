@@ -376,6 +376,7 @@ namespace FSO.LotView
                     State.Zoom = WorldZoom.Near;
                     break;
             }
+            ChangeAAMode(m_Device);
             State.Platform = Platform;
         }
 
@@ -547,6 +548,7 @@ namespace FSO.LotView
                     {
                         BackbufferScale = 1;
                         State.SetCameraType(this, Utils.Camera.CameraControllerType.FirstPerson, 0);
+                        ChangeAAMode(m_Device);
                     }
                 }
             }
@@ -885,6 +887,35 @@ namespace FSO.LotView
             return Platform.GetLotThumb(gd, State, rooflessCallback);
         }
 
+        public void ChangeAAMode(GraphicsDevice gd)
+        {
+            var lastm = PPXDepthEngine.MSAA;
+            var lasts = PPXDepthEngine.SSAA;
+            PPXDepthEngine.SSAAFunc = SSAADownsample.Draw;
+            switch (WorldConfig.Current.AA)
+            {
+                case 0:
+                    PPXDepthEngine.MSAA = 0;
+                    PPXDepthEngine.SSAA = 1;
+                    break;
+                case 1:
+                    PPXDepthEngine.MSAA = 4;
+                    PPXDepthEngine.SSAA = 1;
+                    break;
+                case 2:
+                    PPXDepthEngine.MSAA = 0;
+                    PPXDepthEngine.SSAA = 2;
+                    break;
+            }
+
+            if (PPXDepthEngine.SSAA > 1 && State.CameraMode < CameraRenderMode._3D)
+            {
+                PPXDepthEngine.MSAA = 8;
+                PPXDepthEngine.SSAA = 1;
+            }
+            if (lastm != PPXDepthEngine.MSAA || lasts != PPXDepthEngine.SSAA) PPXDepthEngine.InitScreenTargets();
+        }
+
         public virtual void ChangedWorldConfig(GraphicsDevice gd)
         {
             //destroy any features that are no longer enabled.
@@ -942,26 +973,7 @@ namespace FSO.LotView
                     Blueprint.Changes.SetFlag(BlueprintGlobalChanges.OUTDOORS_LIGHTING_CHANGED);
                 }
             }
-
-            var lastm = PPXDepthEngine.MSAA;
-            var lasts = PPXDepthEngine.SSAA;
-            PPXDepthEngine.SSAAFunc = SSAADownsample.Draw;
-            switch (WorldConfig.Current.AA)
-            {
-                case 0:
-                    PPXDepthEngine.MSAA = 0;
-                    PPXDepthEngine.SSAA = 1;
-                    break;
-                case 1:
-                    PPXDepthEngine.MSAA = 4;
-                    PPXDepthEngine.SSAA = 1;
-                    break;
-                case 2:
-                    PPXDepthEngine.MSAA = 0;
-                    PPXDepthEngine.SSAA = 2;
-                    break;
-            }
-            if (lastm != PPXDepthEngine.MSAA || lasts != PPXDepthEngine.SSAA) PPXDepthEngine.InitScreenTargets();
+            ChangeAAMode(gd);
         }
 
         public virtual ObjectComponent MakeObjectComponent(Content.GameObject obj)
