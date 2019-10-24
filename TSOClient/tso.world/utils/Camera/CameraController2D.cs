@@ -161,7 +161,7 @@ namespace FSO.LotView.Utils.Camera
                     if (MouseWasDown)
                     {
                         //rotate relative to last mouse position
-                        Camera.RotateOff += ((mpos.X - LastMouse.X) / 250f) * 180 / (float)Math.PI;
+                        Camera.RotateOff -= ((mpos.X - LastMouse.X) / 250f) * 180 / (float)Math.PI;
                     }
                     LastScrollPos = wstate.CenterTile;
                     LastMouse = mpos;

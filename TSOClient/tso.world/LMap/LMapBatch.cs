@@ -407,6 +407,7 @@ namespace FSO.LotView.LMap
         {
             var size = Blueprint.Width - borderSize;
             //TODO: set floor shadow map here to stop surrounding light issues
+            LightEffect.floorShadowMap = ObjShadowTarg;
             LightEffect.TargetRoom = (float)room.RoomID; 
             var bigBounds = new Rectangle(lighting.Bounds.X * resPerTile, lighting.Bounds.Y * resPerTile, lighting.Bounds.Width * resPerTile, lighting.Bounds.Height * resPerTile);
             bigBounds = Rectangle.Intersect(bigBounds, new Rectangle(0, 0, size * resPerTile, size * resPerTile));

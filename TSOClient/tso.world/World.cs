@@ -123,8 +123,9 @@ namespace FSO.LotView
         {
             PPXDepthEngine.InitScreenTargets();
             var newSize = PPXDepthEngine.GetWidthHeight();
-            State._2D.GenBuffers(newSize.X, newSize.Y);
-            State.SetDimensions(newSize.ToVector2());
+            var ssaa = new Point(newSize.X / PPXDepthEngine.SSAA, newSize.Y / PPXDepthEngine.SSAA);
+            State._2D.GenBuffers(ssaa.X, ssaa.Y);
+            State.SetDimensions(ssaa.ToVector2());
 
             Blueprint?.Changes?.SetFlag(BlueprintGlobalChanges.ZOOM);
         }
@@ -411,7 +412,7 @@ namespace FSO.LotView
                 int z = (multiplied) ? (((1 << (3 - (int)State.Zoom)) * 3) / 2) : 1;
                 return new Vector2[] {
                     Vector2.Transform(new Vector2(0, -1), mat) * z,
-                    Vector2.Transform(new Vector2(1, 0), mat) * z
+                    Vector2.Transform(new Vector2(1, 0), mat) * z * 2
                 };
             }
             /*
