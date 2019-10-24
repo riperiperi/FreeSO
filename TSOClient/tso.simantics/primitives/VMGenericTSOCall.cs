@@ -395,7 +395,10 @@ namespace FSO.SimAntics.Primitives
                     return (context.StackObject.TreeTable?.Interactions?.Any(x => (x.Flags & TTABFlags.TSOIsRepair) > 0) == true) ? 
                         VMPrimitiveExitCode.GOTO_TRUE : VMPrimitiveExitCode.GOTO_FALSE;
                 case VMGenericTSOCallMode.FSOBreakObject:
-                    (context.StackObject.TSOState as VMTSOObjectState)?.Break(context.StackObject);
+                    {
+                        var fobj = context.StackObject.MultitileGroup.BaseObject;
+                        (fobj.TSOState as VMTSOObjectState)?.Break(fobj);
+                    }
                     return VMPrimitiveExitCode.GOTO_TRUE;
                 default:
                     return VMPrimitiveExitCode.GOTO_TRUE;
