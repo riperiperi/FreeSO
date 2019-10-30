@@ -438,12 +438,12 @@ namespace FSO.SimAntics.Utils
             }
         }
 
-        public static void RestoreTerrain(VM vm)
+        public static void RestoreTerrain(VM vm, bool withHeight = true)
         {
             //take center of lotstate
             RestoreTerrain(vm, vm.TSOState.Terrain.BlendN[1, 1], vm.TSOState.Terrain.Roads[1, 1]);
 
-            RestoreHeight(vm, vm.TSOState.Terrain, 1, 1);
+            if (withHeight) RestoreHeight(vm, vm.TSOState.Terrain, 1, 1);
         }
 
         public static int GetBaseLevel(VM vm, VMTSOSurroundingTerrain terrain, int x, int y)
@@ -721,6 +721,20 @@ namespace FSO.SimAntics.Utils
             new GUIDToPosition(0xD564C66B, -5, 3, 2), //car portal 2
         };
 
+        public static void EnsureCoreObjects(VM vm)
+        {
+            var fail = MovePositions.Where(x =>
+            {
+                //find an object of this type
+                var ent = EntityByGUID(vm, x.GUID);
+                return ent == null || ent.Position == LotTilePos.OUT_OF_WORLD;
+            });
+            if (fail.Count() > 0)
+            {
+                PositionLandmarkObjects(vm);
+            }
+        }
+
         /// <summary>
         /// Positions the Landmark objects depending on the lot direction. (npc/car portals, bin, mailbox, phone)
         /// </summary>
@@ -772,9 +786,13 @@ namespace FSO.SimAntics.Utils
             {
                 var rpos = ctr + (pos.X * xperp) + (pos.Y * yperp);
                 var ent = EntityByGUID(vm, pos.GUID);
+                if (ent == null)
+                {
+                    ent = vm.Context.CreateObjectInstance(pos.GUID, LotTilePos.OUT_OF_WORLD, Direction.NORTH).BaseObject;
+                }
                 if (ent != null)
                 {
-                    var result = ent.MultitileGroup.BaseObject.SetPosition(LotTilePos.FromBigTile((short)rpos.X, (short)rpos.Y, 1), (Direction)(1 << ((lotDir*2 + pos.DirOff) % 8)), vm.Context);
+                    var result = ent.MultitileGroup.BaseObject.SetPosition(LotTilePos.FromBigTile((short)rpos.X, (short)rpos.Y, 1), (Direction)(1 << ((lotDir*2 + pos.DirOff) % 8)), vm.Context, VMPlaceRequestFlags.AllowIntersection);
                     if (result.Status != VMPlacementError.Success)
                     {
                         // if we can't place the object, put it oow.

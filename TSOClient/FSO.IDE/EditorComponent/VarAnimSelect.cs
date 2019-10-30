@@ -74,7 +74,7 @@ namespace FSO.IDE.EditorComponent
             {
                 for (int i = 0; i < AnimTable.Length; i++)
                 {
-                    MyList.Items.Add((i == 0) ? "Stop Animation" : AnimTable.GetString(i, STRLangCode.EnglishUS));
+                    MyList.Items.Add((i == 0) ? "Stop Animation" : AnimTable.GetString(i, STRLangCode.EnglishUS) ?? "");
                 }
 
                 MyList.SelectedItem = SelectedAnim;

@@ -239,6 +239,7 @@ namespace FSO.LotView.Components
 
                     HeadlineSprite.Room = Room;
                     HeadlineSprite.PrepareVertices(device);
+                    world._2D.EnsureIndices();
                     world._2D.DrawImmediate(HeadlineSprite);
                 }
                 device.RasterizerState = lastCull;

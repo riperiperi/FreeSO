@@ -620,14 +620,17 @@ namespace FSO.Client.UI.Panels
                         {
                             if (obj is VMAvatar)
                             {
-                                state.UIState.TooltipProperties.Show = true;
-                                state.UIState.TooltipProperties.Color = Color.Black;
-                                state.UIState.TooltipProperties.Opacity = 1;
-                                state.UIState.TooltipProperties.Position = new Vector2(state.MouseState.X,
-                                    state.MouseState.Y);
-                                state.UIState.Tooltip = GetAvatarString(obj as VMAvatar);
-                                state.UIState.TooltipProperties.UpdateDead = false;
-                                ShowTooltip = true;
+                                if (((VMAvatar)obj).GetPersonData(VMPersonDataVariable.PersonType) != 255)
+                                {
+                                    state.UIState.TooltipProperties.Show = true;
+                                    state.UIState.TooltipProperties.Color = Color.Black;
+                                    state.UIState.TooltipProperties.Opacity = 1;
+                                    state.UIState.TooltipProperties.Position = new Vector2(state.MouseState.X,
+                                        state.MouseState.Y);
+                                    state.UIState.Tooltip = GetAvatarString(obj as VMAvatar);
+                                    state.UIState.TooltipProperties.UpdateDead = false;
+                                    ShowTooltip = true;
+                                }
                             }
                             else if (((VMGameObject)obj).Disabled > 0)
                             {
@@ -675,7 +678,10 @@ namespace FSO.Client.UI.Panels
                         if (InteractionsAvailable)
                         {
                             var obj = vm.GetObjectById(ObjectHover);
-                            if (obj is VMAvatar) cursor = CursorType.LivePerson;
+                            if (obj is VMAvatar)
+                            {
+                                cursor = (((VMAvatar)obj).GetPersonData(VMPersonDataVariable.PersonType) != 255) ? CursorType.LivePerson : CursorType.LiveObjectAvail;
+                            }
                             else
                             {
                                 var tsoState = obj?.PlatformState as VMTSOObjectState;

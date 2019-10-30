@@ -346,6 +346,14 @@ namespace FSO.LotView.Utils
             Device.Indices = SpriteIndices;
         }
 
+        public void EnsureIndices()
+        {
+            if (Device.Indices != SpriteIndices)
+            {
+                Device.Indices = SpriteIndices;
+            }
+        }
+
         public void SetShaderOffsets(Vector2 pxOffset, Vector3 worldOffset)
         {
             var effect = this.Effect;
@@ -356,6 +364,11 @@ namespace FSO.LotView.Utils
         public void DrawImmediate(_2DStandaloneSprite sprite)
         {
             var effect = this.Effect;
+            if (!FSOEnvironment.DirectX)
+            {
+                Device.Indices = null; //monogame why
+                Device.Indices = SpriteIndices;
+            }
             PPXDepthEngine.RenderPPXDepth(effect, false, (depth) =>
             {
                 effect.pixelTexture = sprite.Pixel;

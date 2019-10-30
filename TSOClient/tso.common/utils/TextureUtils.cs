@@ -838,7 +838,7 @@ namespace FSO.Common.Utils
                 int find = fyind;
                 for (int x = 0; x < nw; x++)
                 {
-                    var xb = x * 2 == h || liney;
+                    var xb = x * 2 == w || liney;
                     var c1 = old[find];
                     var c2 = (xb) ? Color.Transparent : old[find + 1];
                     var c3 = (yb) ? Color.Transparent : old[find + w];

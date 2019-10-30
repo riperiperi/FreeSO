@@ -727,6 +727,7 @@ namespace FSO.Server.Servers.Lot.Domain
             if (!JobLot) ReturnOOWObjects();
 
             if (isMoved || isNew) VMLotTerrainRestoreTools.RestoreTerrain(Lot);
+            VMLotTerrainRestoreTools.EnsureCoreObjects(Lot);
             if (isNew) VMLotTerrainRestoreTools.PopulateBlankTerrain(Lot);
 
             Lot.ForwardCommand(new VMNetSetTimeCmd()

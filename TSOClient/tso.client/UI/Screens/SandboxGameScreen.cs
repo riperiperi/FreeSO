@@ -592,6 +592,11 @@ namespace FSO.Client.UI.Screens
 
                     vm.Load(marshal);
                     vm.Reset();
+                    var ents = vm.Entities.ToList();
+                    foreach (var ent in ents)
+                    {
+                        ent.ExecuteEntryPoint(2, vm.Context, true);
+                    }
                 }
             }
             catch (Exception)

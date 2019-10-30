@@ -72,6 +72,7 @@ namespace FSOFacadeWorker
             bool useDX = true;
 
             FSOEnvironment.Enable3D = true;
+            GraphicsModeControl.ChangeMode(FSO.LotView.Model.GlobalGraphicsMode.Full3D);
             GameThread.NoGame = true;
             GameThread.UpdateExecuting = true;
 
