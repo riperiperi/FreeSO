@@ -114,11 +114,13 @@ namespace FSO.LotView
         {
             var pxOffset = -state.WorldSpace.GetScreenOffset();
             var changes = Blueprint.Changes;
+            state.PrepareCulling(pxOffset);
             if (changes.DrawImmediate)
             {
+                DrawSub(gd, state, pxOffset);
                 DrawFloorBuf(gd, state);
                 DrawWallBuf(gd, state, pxOffset);
-                DrawSub(gd, state, pxOffset);
+                
                 //foreach (var sub in Blueprint.SubWorlds) sub.SubDraw(gd, state, (pxOffsetSub) => { sub.Architecture.StaticDraw(gd, state, pxOffsetSub); });
             }
 

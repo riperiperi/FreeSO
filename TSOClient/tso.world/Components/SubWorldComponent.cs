@@ -271,9 +271,11 @@ namespace FSO.LotView.Components
             
             parentState.SilentLevel = oldLevel;
 
-            parentState.CenterTile = parentScroll;
+
             if (parentState.CameraMode > CameraRenderMode._2D)
                 parentState.Cameras.ModelTranslation = Vector3.Zero;
+            else
+                parentState.CenterTile = parentScroll;
             parentState.PrepareLighting();
         }
 

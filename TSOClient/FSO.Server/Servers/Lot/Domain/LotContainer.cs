@@ -679,8 +679,9 @@ namespace FSO.Server.Servers.Lot.Domain
             Lot.TSOState.LotID = LotPersist.location;
             Lot.TSOState.SkillMode = LotPersist.skill_mode;
             Lot.TSOState.PropertyCategory = (byte)LotPersist.category;
+            var isCommunity = LotPersist.category == LotCategory.community;
 
-            if (LotPersist.category == LotCategory.community)
+            if (isCommunity)
             {
                 var owner = LotPersist.owner_id ?? 0;
                 if (Lot.TSOState.OwnerID != owner)
@@ -726,8 +727,9 @@ namespace FSO.Server.Servers.Lot.Domain
             ReturnInvalidObjects();
             if (!JobLot) ReturnOOWObjects();
 
-            if (isMoved || isNew) VMLotTerrainRestoreTools.RestoreTerrain(Lot);
-            VMLotTerrainRestoreTools.EnsureCoreObjects(Lot);
+            var restoreType = isCommunity ? RestoreLotType.Community : RestoreLotType.Normal;
+            if (isMoved || isNew) VMLotTerrainRestoreTools.RestoreTerrain(Lot, restoreType);
+            VMLotTerrainRestoreTools.EnsureCoreObjects(Lot, restoreType);
             if (isNew) VMLotTerrainRestoreTools.PopulateBlankTerrain(Lot);
 
             Lot.ForwardCommand(new VMNetSetTimeCmd()
