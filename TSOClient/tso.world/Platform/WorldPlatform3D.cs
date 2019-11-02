@@ -38,6 +38,7 @@ namespace FSO.LotView.Platform
             var oldRotation = state.Rotation;
             var oldLevel = state.Level;
             var oldCutaway = bp.Cutaway;
+            var oldCenter = state.CenterTile;
             //TODO: switch to 2D cam
             var lastCamera = (state.CameraMode == CameraRenderMode._3D) ? CameraControllerType._3D : CameraControllerType._2D;
             state.ForceCamera(CameraControllerType._2D);
@@ -58,8 +59,7 @@ namespace FSO.LotView.Platform
             state._2D.PreciseZoom = state.PreciseZoom;
             state.WorldSpace.Invalidate();
             state.InvalidateCamera();
-
-            var oldCenter = state.CenterTile;
+            
             state.CenterTile = bp.GetThumbCenterTile(state);
             state.CenterTile -= state.WorldSpace.GetTileFromScreen(new Vector2((size - state.WorldSpace.WorldPxWidth) / state.PreciseZoom, (size - state.WorldSpace.WorldPxHeight) / state.PreciseZoom) / 2);
             var pxOffset = -state.WorldSpace.GetScreenOffset();
@@ -138,18 +138,18 @@ namespace FSO.LotView.Platform
             state.WorldSpace.Invalidate();
             state.InvalidateCamera();
             wCam.ViewDimensions = oldViewDimensions;
-            state.CenterTile = oldCenter;
 
             state.Zoom = oldZoom;
             state.Rotation = oldRotation;
             state.Level = oldLevel;
+            state.CenterTile = oldCenter; //must be set after rotation.
             bp.Cutaway = oldCutaway;
             state.RenderingThumbnail = false;
 
             state.ForceCamera(lastCamera);
 
             var tex = LotThumbTarget;
-            return tex; //TextureUtils.Clip(gd, tex, bounds);
+            return tex;
         }
 
         public short GetObjectIDAtScreenPos(int x, int y, GraphicsDevice gd, WorldState state)

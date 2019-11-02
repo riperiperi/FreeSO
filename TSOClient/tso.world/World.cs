@@ -660,7 +660,7 @@ namespace FSO.LotView
 
         public void Force2DPredraw(GraphicsDevice device)
         {
-            Static.PreDraw(device, State);
+            Blueprint.Changes.PreDraw(device, State);
         }
 
         public float? BoxRC2(Ray ray, float tileSize)

@@ -733,7 +733,7 @@ namespace FSO.SimAntics.Utils
             {
                 //find an object of this type
                 var ent = EntityByGUID(vm, x.GUID);
-                return x.Type == type && (ent == null || ent.Position == LotTilePos.OUT_OF_WORLD);
+                return (x.Type == type || x.Type == RestoreLotType.Generic) && (ent == null || ent.Position == LotTilePos.OUT_OF_WORLD);
             });
             if (fail.Count() > 0)
             {
@@ -1049,6 +1049,10 @@ namespace FSO.SimAntics.Utils
                         } catch (Exception)
                         {
                             hollow = null;
+                            hollowAdj[y * 3 + x] = null;
+                            subworld.Dispose();
+                            x--;
+                            continue; //try this surrounding lot again, but as an empty one.
                         }
                     }
 

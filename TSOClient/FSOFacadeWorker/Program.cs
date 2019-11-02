@@ -18,6 +18,8 @@ using FSO.SimAntics.NetPlay.Drivers;
 using Microsoft.Xna.Framework;
 using Microsoft.Xna.Framework.Content;
 using Microsoft.Xna.Framework.Graphics;
+using SixLabors.ImageSharp;
+using SixLabors.ImageSharp.PixelFormats;
 using System;
 using System.Collections.Generic;
 using System.IO;
@@ -34,6 +36,7 @@ namespace FSOFacadeWorker
         private static GraphicsDevice GD;
 
         private static FacadeConfig Config;
+        private static uint DebugLot;
 
         static void Main(string[] args)
         {
@@ -84,6 +87,7 @@ namespace FSOFacadeWorker
                 FSOEnvironment.GFXContentDir = "Content/" + (useDX ? "DX/" : "OGL/");
                 FSOEnvironment.Linux = linux;
                 FSOEnvironment.DirectX = useDX;
+                FSOEnvironment.TexCompress = FSOEnvironment.TexCompressSupport;
                 FSOEnvironment.GameThread = Thread.CurrentThread;
 
                 FSO.HIT.HITVM.Init();
@@ -124,6 +128,10 @@ namespace FSOFacadeWorker
             Layer.Initialize(gd);
             GD = gd;
 
+            if (args.FirstOrDefault() == "debug")
+            {
+                DebugLot = uint.Parse(args[1]);
+            }
             Console.WriteLine("Starting Worker Loop!");
             WorkerLoop();
 
@@ -151,9 +159,15 @@ namespace FSOFacadeWorker
                 }
                 else
                 {
-                    api.GetLotList(1, (lots) =>
+                    if (DebugLot != 0)
                     {
-                        Console.WriteLine("Got a lot list for full thumbnail rebake.");
+                        RenderStandaloneDebug(1, DebugLot);
+                    }
+                    else
+                    {
+                        api.GetLotList(1, (lots) =>
+                        {
+                            Console.WriteLine("Got a lot list for full thumbnail rebake.");
                         //LotQueue.AddRange(lots);
                         //TotalLotNum += lots.Length;
                         //for (int i = 0; i < 4000; i++)
@@ -161,18 +175,68 @@ namespace FSOFacadeWorker
                         //    LotQueue.RemoveAt(0);
                         //}
                         RenderLot();
-                        RenderLot();
-                    });
+                            RenderLot();
+                        });
+                    }
                 }
 
             });
         }
 
-        
+        private static void SaveRawImage(byte[] data, int width, int height, string path)
+        {
+            for (int i = 0; i < data.Length; i += 4)
+            {
+                var temp = data[i];
+                data[i] = data[i + 2];
+                data[i + 2] = temp;
+            }
+
+            var image = Image.LoadPixelData<Rgba32>(data, width, height);
+            using (var stream = File.Open(path, FileMode.Create, FileAccess.Write, FileShare.None)) {
+                image.SaveAsPng(stream);
+            }
+        }
+
+        private static void RenderStandaloneDebug(uint shard, uint location)
+        {
+            Console.WriteLine("===== Trying standalone render for " + location + "! =====");
+            api.GetFSOV((uint)shard, location, (bt) =>
+            {
+                try
+                {
+                    if (bt == null)
+                    {
+                        Console.WriteLine("===== Could not find lot " + location + "! =====");
+                    }
+                    else
+                    {
+                        var fsof = RenderFSOF(bt, GD, false);
+                        Directory.CreateDirectory("test/");
+                        using (var mem = new MemoryStream())
+                        {
+                            fsof.Save(mem);
+                            File.WriteAllBytes("test/" + location + ".fsof", mem.ToArray());
+                        }
+                        //save the images
+                        SaveRawImage(fsof.FloorTextureData, fsof.FloorWidth, fsof.FloorHeight, "test/" + location + "_floor.png");
+                        SaveRawImage(fsof.WallTextureData, fsof.WallWidth, fsof.WallHeight, "test/" + location + "_wall.png");
+                        SaveRawImage(fsof.NightFloorTextureData, fsof.FloorWidth, fsof.FloorHeight, "test/" + location + "_nfloor.png");
+                        SaveRawImage(fsof.NightWallTextureData, fsof.WallWidth, fsof.WallHeight, "test/" + location + "n_wall.png");
+                        Console.WriteLine("===== Done! =====");
+                    }
+                }
+                catch (IOException e)
+                {
+                    Console.WriteLine("===== Could not render lot " + location + "! =====");
+                    Console.WriteLine(e.ToString());
+                }
+            });
+        }
 
         private static void RenderLot()
         {
-
+            GD.Present();
             Console.WriteLine("Requesting work...");
 
             api.GetWork((shard, location) =>
@@ -213,7 +277,7 @@ namespace FSOFacadeWorker
                         else
                         {
                             Console.WriteLine("Rendering lot " + location + "...");
-                            var fsof = RenderFSOF(bt, GD);
+                            var fsof = RenderFSOF(bt, GD, true);
                             using (var mem = new MemoryStream())
                             {
                                 fsof.Save(mem);
@@ -267,7 +331,7 @@ namespace FSOFacadeWorker
             
         }
 
-        public static FSOF RenderFSOF(byte[] fsov, GraphicsDevice gd)
+        public static FSOF RenderFSOF(byte[] fsov, GraphicsDevice gd, bool compressed)
         {
             var marshal = new VMMarshal();
             using (var mem = new MemoryStream(fsov))
@@ -296,7 +360,7 @@ namespace FSOFacadeWorker
 
             SetAllLights(vm, world, 0.5f, 0);
 
-            var result = facade.GetFSOF(gd, world, vm.Context.Blueprint, () => { SetAllLights(vm, world, 0.0f, 100); }, true);
+            var result = facade.GetFSOF(gd, world, vm.Context.Blueprint, () => { SetAllLights(vm, world, 0.0f, 100); }, compressed);
 
             Layer.Remove(world);
             world.Dispose();

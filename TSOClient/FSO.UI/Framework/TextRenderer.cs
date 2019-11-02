@@ -330,6 +330,7 @@ namespace FSO.Client.UI.Framework
                             currentLineNum++;
                             currentLine = new StringBuilder();
                             currentLineWidth = 0;
+                            if (word.Length == 0) wordWritten = true;
                         }
                         else if (currentLineWidth + wordSize.X < allowedWidth)
                         {

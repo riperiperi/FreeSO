@@ -439,6 +439,7 @@ namespace FSO.LotView.Components
         /// <param name="world"></param>
         public override void Draw(GraphicsDevice device, WorldState world){
             var _3d = world.CameraMode == CameraRenderMode._3D;
+            var nonIso = world.CameraMode != CameraRenderMode._2D;
             if (TerrainDirty || VertexBuffer == null || GridAsTexture != _3d)
             {
                 GridAsTexture = _3d;
@@ -502,7 +503,7 @@ namespace FSO.LotView.Components
             var altOff = Bp.BaseAlt * Bp.TerrainFactor * 3;
             var worldmat = Matrix.Identity * Matrix.CreateTranslation(0, translation - altOff, 0);
             Effect.World = worldmat;
-            if (_3d) Effect.CamPos = world.Camera.Position + (world.Cameras.ModelTranslation ?? new Vector3());
+            if (nonIso) Effect.CamPos = world.Camera.Position + (world.Cameras.ModelTranslation ?? new Vector3());
             else
             {
                 Effect.CamPos = new Vector3(10000, 7071.0678118654752440084436210485f, 10000);
@@ -519,7 +520,7 @@ namespace FSO.LotView.Components
             var floors = new HashSet<sbyte>();
             for (sbyte f = 0; f < world.Level; f++) floors.Add(f);
             var pass = Effect.CurrentTechnique.Passes[(_3d) ? 2 : WorldConfig.Current.PassOffset];
-            Bp.FloorGeom.DrawFloor(device, Effect, world.Zoom, world.Rotation, world.Rooms.RoomMaps, floors, pass, state: world, screenAlignUV: !_3d);
+            Bp.FloorGeom.DrawFloor(device, Effect, world.Zoom, world.Rotation, world.Rooms.RoomMaps, floors, pass, state: world, screenAlignUV: !nonIso);
             Effect.GrassShininess = 0.02f;// (float)0.25);
 
             pass.Apply();
@@ -727,7 +728,6 @@ namespace FSO.LotView.Components
                 Effect.RoomMap = world.Rooms.RoomMaps[0];
 
                 var _3d = _3D;
-                if (!_3d) view = view * Matrix.CreateTranslation(0, 0, -0.25f);
                 Effect.View = view;
                 //world._3D.ApplyCamera(Effect);
                 var translation = (0 * (20 / 522f));

@@ -36,8 +36,8 @@ namespace FSO.LotView.Platform
             var oldCutaway = bp.Cutaway;
             var wCam = state.Camera2D;
             var oldViewDimensions = wCam.ViewDimensions;
-            //wCam.ViewDimensions = new Vector2(-1, -1);
             var oldPreciseZoom = state.PreciseZoom;
+            var oldCenter = state.CenterTile;
             state.ForceCamera(Utils.Camera.CameraControllerType._2D);
 
             //full invalidation because we must recalculate all object sprites. slow but necessary!
@@ -50,7 +50,6 @@ namespace FSO.LotView.Platform
             state.WorldSpace.Invalidate();
             state.InvalidateCamera();
 
-            var oldCenter = state.CenterTile;
             state.CenterTile = bp.GetThumbCenterTile(state);
             state.CenterTile -= state.WorldSpace.GetTileFromScreen(new Vector2((576 - state.WorldSpace.WorldPxWidth)*4, (576 - state.WorldSpace.WorldPxHeight)*4) / 2);
             var pxOffset = -state.WorldSpace.GetScreenOffset();
@@ -72,8 +71,11 @@ namespace FSO.LotView.Platform
                     _2d.Resume(); 
                     bp.FloorGeom.SliceReset(gd, new Rectangle(6, 6, bp.Width - 13, bp.Height - 13));
                     //Blueprint.SetLightColor(WorldContent.GrassEffect, Color.White, Color.White);
+                    var build = state.SilentBuildMode;
+                    state.SilentBuildMode = 0;
                     bp.Terrain.Draw(gd, state);
                     bp.Terrain.DrawMask(gd, state, state.View, state.Projection);
+                    state.SilentBuildMode = build;
                     bp.WallComp.Draw(gd, state);
                     _2d.Pause();
                     _2d.Resume();
@@ -102,16 +104,16 @@ namespace FSO.LotView.Platform
             state.WorldSpace.Invalidate();
             state.InvalidateCamera();
             wCam.ViewDimensions = oldViewDimensions;
-            state.CenterTile = oldCenter;
-
+            
             state.Zoom = oldZoom;
             state.Rotation = oldRotation;
             state.Level = oldLevel;
+            state.CenterTile = oldCenter; //must be restored after rotation.
             state.RenderingThumbnail = false;
             bp.Cutaway = oldCutaway;
 
             var tex = bufferTexture.Get();
-            return tex; //TextureUtils.Clip(gd, tex, bounds);
+            return tex;
         }
 
         public short GetObjectIDAtScreenPos(int x, int y, GraphicsDevice gd, WorldState state)

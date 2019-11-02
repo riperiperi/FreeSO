@@ -1,4 +1,5 @@
-﻿using Microsoft.Xna.Framework.Graphics;
+﻿using Microsoft.Xna.Framework;
+using Microsoft.Xna.Framework.Graphics;
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -17,7 +18,7 @@ namespace FSOFacadeWorker
         {
             HiddenForm = new Form()
             {
-                Visible = false,
+                Visible = true,
                 ShowInTaskbar = false
             };
 
@@ -31,6 +32,7 @@ namespace FSOFacadeWorker
             };
 
             _GraphicsDevice = new GraphicsDevice(GraphicsAdapter.DefaultAdapter, GraphicsProfile.Reach, Parameters);
+            _GraphicsDevice.Present();
         }
 
         public GraphicsDevice GraphicsDevice

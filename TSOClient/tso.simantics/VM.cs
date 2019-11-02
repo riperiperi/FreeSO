@@ -962,6 +962,7 @@ namespace FSO.SimAntics
             input.Context.Architecture.FloorsDirty = true;
             Context.Architecture.WallDirtyState(input.Context.Architecture);
             Context.Architecture.Tick();
+            ObjectId = NextObjID();
         }
 
         internal void BreakpointHit(VMEntity entity)

@@ -65,6 +65,7 @@
     <DebugSymbols>False</DebugSymbols>
     <AndroidSupportedAbis>armeabi-v7a,x86,arm64-v8a</AndroidSupportedAbis>
     <AndroidLinkSkip>MonoGame.Framework;FSO.Files;FSO.SimAntics;FSO.Content;Ninject;FSO.Client;FSO.Server.Protocol;FSO.Common.Domain;FSO.Common.DatabaseService;FSO.Common.DataService;FSO.UI;System.Collections.Immutable;</AndroidLinkSkip>
+    <UseVSHostingProcess>true</UseVSHostingProcess>
   </PropertyGroup>
   <ItemGroup>
     <Reference Include="Common.Logging, Version=3.4.1.0, Culture=neutral, PublicKeyToken=af08829b84f0328e, processorArchitecture=MSIL">

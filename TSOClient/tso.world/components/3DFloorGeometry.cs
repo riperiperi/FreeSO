@@ -266,6 +266,7 @@ namespace FSO.LotView.Components
             var tmat = TexMat[rot];
             e.TexMatrix = tmat;
             e.ScreenAlignUV = screenAlignUV;
+            var baseRS = gd.RasterizerState;
 
             var f = 0;
             foreach (var floor in Floors)
