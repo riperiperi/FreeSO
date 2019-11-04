@@ -326,7 +326,7 @@ namespace FSO.LotView.Components
                 var w = World3D;
                 var ctr = w.Translation;
                 var forward = world.ViewProjection.Forward;
-                forward.Z *= -1;
+                forward.Z *= 1;
                 if (forward.Z < 0) forward.Y = -forward.Y;
                 DrawOrder = Vector3.Dot(ctr, forward);
             }

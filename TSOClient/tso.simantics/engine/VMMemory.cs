@@ -270,7 +270,7 @@ namespace FSO.SimAntics.Engine.Utils
                     };
                     break;
 
-                case VMVariableScope.MyList: //46 (man if only i knew what this meant)
+                case VMVariableScope.MyList: //46
                     switch (data)
                     {
                         case 0: return context.Caller.MyList.First.Value; //is this allowed?

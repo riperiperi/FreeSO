@@ -185,15 +185,20 @@ namespace FSO.LotView.Model
             var nextY = (int)Math.Max(1, Math.Min(Height - 1, Math.Ceiling(Position.Y)));
             var xLerp = Position.X % 1f;
             var yLerp = Position.Y % 1f;
-            float h00 = Altitude[((baseY % Height) * Width + (baseX % Width))] * TerrainFactor;
-            float h01 = Altitude[((nextY % Height) * Width + (baseX % Width))] * TerrainFactor;
-            float h10 = Altitude[((baseY % Height) * Width + (nextX % Width))] * TerrainFactor;
-            float h11 = Altitude[((nextY % Height) * Width + (nextX % Width))] * TerrainFactor;
+
+            var by = (baseY % Height) * Width;
+            var bx = (baseX % Width);
+            var ny = (nextY % Height) * Width;
+            var nx = (nextX % Width);
+            float h00 = Altitude[(by + bx)];
+            float h01 = Altitude[(ny + bx)];
+            float h10 = Altitude[(by + nx)];
+            float h11 = Altitude[(ny + nx)];
 
             float xl1 = xLerp * h10 + (1 - xLerp) * h00;
             float xl2 = xLerp * h11 + (1 - xLerp) * h01;
 
-            return yLerp * xl2 + (1 - yLerp) * xl1 - BaseAlt * TerrainFactor;
+            return (yLerp * xl2 + (1 - yLerp) * xl1 - BaseAlt) * TerrainFactor;
         }
 
         public static void SetLightColor(LightMappedEffect effect, Color outside, Color minOut)

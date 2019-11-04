@@ -33,6 +33,7 @@ float Alpha;
 float GrassShininess;
 bool UseTexture;
 bool IgnoreColor;
+float Bias = -999;
 
 float ParallaxHeight = 1.0;
 float4 ParallaxUVTexMat;
@@ -637,7 +638,7 @@ void BasePS(GrassPSVTX input, out float4 color:COLOR0, out float4 depthB : COLOR
         color = float4(1,1,1,1);//*DiffuseColor;
 		if (IgnoreColor == false) color *= input.Color;
 		if (UseTexture == true) {
-			color *= tex2Dbias(TexSampler, float4(LoopUV(input.GrassInfo.yz), 0, -999));
+			color *= tex2Dbias(TexSampler, float4(LoopUV(input.GrassInfo.yz), 0, Bias));
 			if (color.a < 0.5) discard;
 		}
 		color = gammaMul(color, lightProcessRoof(input.ModelPos) * LightDot(input.Normal));

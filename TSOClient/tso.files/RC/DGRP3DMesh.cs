@@ -2,6 +2,7 @@
 using FSO.Common.Rendering;
 using FSO.Common.Utils;
 using FSO.Files.Formats.IFF.Chunks;
+using FSO.Files.RC.Utils;
 using FSO.Files.Utils;
 using Microsoft.Xna.Framework;
 using Microsoft.Xna.Framework.Graphics;
@@ -253,7 +254,31 @@ namespace FSO.Files.RC
                     geom.PixelSPR = (ushort)(curSpr++);
                     totalSpr++;
 
-                    var depth = sprite.GetDepth();
+                    var depthB = sprite.GetDepth();
+
+                    var useDequantize = false;
+                    float[] depth;
+                    int iterations;
+                    int triDivisor = 100;
+                    float aggressiveness;
+                    if (useDequantize)
+                    {
+                        var dtex = new Texture2D(gd, ((TextureInfo)tex.Tag).Size.X, ((TextureInfo)tex.Tag).Size.Y, false, SurfaceFormat.Color);
+                        dtex.SetData(depthB.Select(x => new Color(x, x, x, x)).ToArray());
+                        depth = DepthTreatment.DequantizeDepth(gd, dtex);
+                        dtex.Dispose();
+
+                        iterations = 500;
+                        aggressiveness = 2.5f;
+                        MaxAllowedSq = 0.05f * 0.05f;
+                    }
+                    else
+                    {
+                        depth = depthB.Select(x => x / 255f).ToArray();
+                        iterations = 125;
+                        aggressiveness = 3.5f;
+                    }
+
                     if (depth == null) continue;
 
                     QueueWork(() =>
@@ -271,7 +296,7 @@ namespace FSO.Files.RC
 
                         var xInc = (tr - tl) / w;
                         var yInc = (bl - tl) / h;
-                        var dFactor = (tlFront - tl) / (255 * factor);
+                        var dFactor = (tlFront - tl) / (factor);
 
                         if (sprite.Flip)
                         {
@@ -294,9 +319,9 @@ namespace FSO.Files.RC
                             for (int x = 0; x < w; x++)
                             {
                                 var d = depth[i++];
-                                if (d != 255)
+                                if (d < 0.999f)
                                 {
-                                    lastPt = vpos + (255 - d) * dFactor;
+                                    lastPt = vpos + (1f - d) * dFactor;
                                     if (first) { boundPts.Add(lastPt); first = false; }
                                     var vert = new VertexPositionTexture(lastPt, new Vector2((float)x / w, (float)y / h));
                                     verts.Add(vert);
@@ -469,7 +494,7 @@ namespace FSO.Files.RC
                                     v = new int[] { indices[t], indices[t + 1], indices[t + 2] }
                                 });
                             }
-                            simple.simplify_mesh(simple.triangles.Count / 100, agressiveness: 3.5, iterations: 125);
+                            simple.simplify_mesh(simple.triangles.Count / triDivisor, agressiveness: aggressiveness, iterations: iterations);
 
                             verts = simple.vertices.Select(x =>
                             {

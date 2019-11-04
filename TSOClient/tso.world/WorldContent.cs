@@ -44,6 +44,8 @@ namespace FSO.LotView
             ParticleEffect = new LightMappedEffect(ContentManager.Load<Effect>("Effects/ParticleShader"));
             AvatarEffect = new LightMappedEffect(ContentManager.Load<Effect>("Effects/Vitaboy" + EffectSuffix));
 
+            Files.RC.Utils.DepthTreatment.SpriteEffect = SpriteEffect;
+
             LightEffects = new List<LightMappedEffect>()
             {
                 _2DWorldBatchEffect,

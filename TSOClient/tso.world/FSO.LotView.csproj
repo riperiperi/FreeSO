@@ -87,6 +87,9 @@
     <Compile Include="Components\DebugLinesComponent.cs" />
     <Compile Include="Components\EntityComponent.cs" />
     <Compile Include="Components\FloorComponent.cs" />
+    <Compile Include="Components\Geometry\Modelled3DFloor.cs" />
+    <Compile Include="Components\Geometry\Modelled3DFloorTile.cs" />
+    <Compile Include="Components\Geometry\Modelled3DPool.cs" />
     <Compile Include="Components\ObjectComponent.cs" />
     <Compile Include="Components\ParticleComponent.cs" />
     <Compile Include="Components\RoofComponent.cs" />

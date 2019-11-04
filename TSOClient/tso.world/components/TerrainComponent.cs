@@ -38,7 +38,7 @@ namespace FSO.LotView.Components
         private IndexBuffer BladeIndexBuffer;
         private IndexBuffer GridIndexBuffer;
         private IndexBuffer TGridIndexBuffer;
-        private VertexBuffer VertexBuffer;
+        public VertexBuffer VertexBuffer;
         public float Alpha = 1f;
 
         private TerrainType LightType = TerrainType.GRASS;

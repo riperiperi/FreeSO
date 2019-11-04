@@ -203,6 +203,7 @@
     <Compile Include="RC\FSOF.cs" />
     <Compile Include="RC\NBHm.cs" />
     <Compile Include="RC\OBJReader.cs" />
+    <Compile Include="RC\Utils\DepthTreatment.cs" />
     <Compile Include="Tuning.cs" />
     <Compile Include="Utils\BCFReadProxy.cs" />
     <Compile Include="Utils\CurLoader.cs" />

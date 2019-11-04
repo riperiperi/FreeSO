@@ -1,5 +1,6 @@
 ﻿using FSO.Common;
 using FSO.Common.Utils;
+using FSO.LotView.Components.Geometry;
 using FSO.LotView.Effects;
 using FSO.LotView.Model;
 using Microsoft.Xna.Framework;
@@ -44,7 +45,7 @@ namespace FSO.LotView.Components
             Floors = new FloorLevel[bp.Stories];
             for (int i=0; i<bp.Stories; i++)
             {
-                Floors[i] = new FloorLevel();
+                Floors[i] = new FloorLevel(bp);
             }
         }
 
@@ -198,7 +199,7 @@ namespace FSO.LotView.Components
                 }
                 else return 0;
             }
-            else if (pattern < 65534) return pattern;
+            else if (pattern < 65534 || pattern == 65535) return pattern;
             else
             {
                 //pool tile... check adjacent tiles
@@ -288,6 +289,31 @@ namespace FSO.LotView.Components
                 foreach (var type in floor.GroupForTileType)
                 {
                     bool water = false;
+                    if (type.Value is Modelled3DFloor && lightWorld == null)
+                    {
+                        //we generated a special model for this tile type
+                        var mdl = type.Value as Modelled3DFloor;
+                        e.TexMatrix = new Vector4(1, 0, 0, 1);
+                        e.ScreenAlignUV = false;
+                        e.GrassShininess = 0.02f;
+                        e.Bias = -0.5f;
+
+                        gd.Indices = mdl.GPUData;
+                        gd.SetVertexBuffer(mdl.VertGPUData);
+                        var tex = mdl.GetTexture(gd);
+                        e.BaseTex = tex;
+                        if (tex != null) e.TexSize = new Vector2(tex.Width, tex.Height);
+                        //e.CurrentTechnique.Passes[2].Apply();
+                        pass.Apply();
+                        gd.SamplerStates[0] = CustomWrap;
+                        gd.DrawIndexedPrimitives(PrimitiveType.TriangleList, 0, 0, mdl.PrimitiveCount);
+                        gd.SetVertexBuffer(Bp.Terrain.VertexBuffer);
+
+                        e.TexMatrix = tmat;
+                        e.ScreenAlignUV = screenAlignUV;
+                        e.Bias = -999;
+                        continue;
+                    }
                     var dat = type.Value.GPUData;
                     if (dat == null) continue;
                     gd.Indices = dat;
@@ -539,14 +565,36 @@ namespace FSO.LotView.Components
     {
         public Dictionary<ushort, FloorTileGroup> GroupForTileType = new Dictionary<ushort, FloorTileGroup>();
         public ushort[] Tiles;
+        private Blueprint Bp;
+
+        public FloorLevel(Blueprint bp)
+        {
+            Bp = bp;
+        }
+
+        public FloorTileGroup AddGroup(ushort tileID)
+        {
+            FloorTileGroup group;
+
+            if (tileID == 65535)
+            {
+                //pool tile group
+                group = new Modelled3DPool(Bp);
+            }
+            else
+            {
+                group = new FloorTileGroup();
+            }
+            GroupForTileType[tileID] = group;
+            return group;
+        }
 
         public void AddTile(ushort tileID, ushort offset)
         {
             FloorTileGroup group;
             if (!GroupForTileType.TryGetValue(tileID, out group))
             {
-                group = new FloorTileGroup();
-                GroupForTileType[tileID] = group;
+                group = AddGroup(tileID);
             }
             group.AddIndex(offset);
         }
@@ -556,7 +604,7 @@ namespace FSO.LotView.Components
             FloorTileGroup group;
             if (!GroupForTileType.TryGetValue(tileID, out group))
             {
-                group = new FloorTileGroup();
+                group = AddGroup(tileID);
                 GroupForTileType[tileID] = group;
             }
             group.AddDiagIndex(offset, side, vertical);
@@ -595,7 +643,7 @@ namespace FSO.LotView.Components
         public Dictionary<ushort, List<int>> GeomForOffset = new Dictionary<ushort, List<int>>();
         public IndexBuffer GPUData;
 
-        public void PrepareGPU(GraphicsDevice gd)
+        public virtual void PrepareGPU(GraphicsDevice gd)
         {
             if (GPUData != null) GPUData.Dispose();
             var dat = BuildIndexData();
@@ -603,7 +651,7 @@ namespace FSO.LotView.Components
             GPUData.SetData(dat);
         }
 
-        public int[] BuildIndexData()
+        private int[] BuildIndexData()
         {
             var result = new int[GeomForOffset.Count * 6];
             int i = 0;
@@ -649,7 +697,7 @@ namespace FSO.LotView.Components
             return GeomForOffset.Count > 0;
         }
 
-        public void Dispose()
+        public virtual void Dispose()
         {
             GPUData?.Dispose();
         }

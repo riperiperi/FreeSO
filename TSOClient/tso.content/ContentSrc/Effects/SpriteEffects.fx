@@ -446,9 +446,9 @@ float stickyOffset;
 float stickyPersp;
 float4 StickyEffectPS(float4 position : SV_Position, float4 color : COLOR0, float2 texCoord : TEXCOORD0) : COLOR0
 {
-	float2 z = float2(easeInSine(pow(texCoord.y, 1.2)), 0);
-	z.x = z.x * stickyOffset + (texCoord.x - 0.5) * z.x * stickyPersp;
-	return tex2D(TextureSampler, texCoord + z) * color;
+float2 z = float2(easeInSine(pow(texCoord.y, 1.2)), 0);
+z.x = z.x * stickyOffset + (texCoord.x - 0.5) * z.x * stickyPersp;
+return tex2D(TextureSampler, texCoord + z) * color;
 }
 
 technique StickyEffect
@@ -543,5 +543,146 @@ technique Maze2Grid
 	pass OneDir
 	{
 		PixelShader = compile PS_SHADERMODEL maze2Grid();
+	}
+}
+
+static const float kernel9[81] = {
+	0.000000, 0.000001, 0.000014, 0.000055, 0.000088, 0.000055, 0.000014, 0.000001, 0.000000,
+	0.000001, 0.000036, 0.000362, 0.001445, 0.002289, 0.001445, 0.000362, 0.000036, 0.000001,
+	0.000014, 0.000362, 0.003672, 0.014648, 0.023205, 0.014648, 0.003672, 0.000362, 0.000014,
+	0.000055, 0.001445, 0.014648, 0.058434, 0.092566, 0.058434, 0.014648, 0.001445, 0.000055,
+	0.000088, 0.002289, 0.023205, 0.092566, 0.146634, 0.092566, 0.023205, 0.002289, 0.000088,
+	0.000055, 0.001445, 0.014648, 0.058434, 0.092566, 0.058434, 0.014648, 0.001445, 0.000055,
+	0.000014, 0.000362, 0.003672, 0.014648, 0.023205, 0.014648, 0.003672, 0.000362, 0.000014,
+	0.000001, 0.000036, 0.000362, 0.001445, 0.002289, 0.001445, 0.000362, 0.000036, 0.000001,
+	0.000000, 0.000001, 0.000014, 0.000055, 0.000088, 0.000055, 0.000014, 0.000001, 0.000000
+};
+
+
+static const float kernel9trim[45] = {
+	          0.000362, 0.001445, 0.002289, 0.001445, 0.000362,
+	0.000362, 0.003672, 0.014648, 0.023205, 0.014648, 0.003672, 0.000362,
+	0.001445, 0.014648, 0.058434, 0.092566, 0.058434, 0.014648, 0.001445,
+	0.002289, 0.023205, 0.092566, 0.146634, 0.092566, 0.023205, 0.002289,
+	0.001445, 0.014648, 0.058434, 0.092566, 0.058434, 0.014648, 0.001445,
+	0.000362, 0.003672, 0.014648, 0.023205, 0.014648, 0.003672, 0.000362,
+	          0.000362, 0.001445, 0.002289, 0.001445, 0.000362
+};
+
+static const float2 k9Off[45] = {
+	                float2(-2, -3), float2(-1, -3), float2(0, -3), float2(1, -3), float2(2, -3),
+	float2(-3, -2), float2(-2, -2), float2(-1, -2), float2(0, -2), float2(1, -2), float2(2, -2), float2(3, -2),
+	float2(-3, -1), float2(-2, -1), float2(-1, -1), float2(0, -1), float2(1, -1), float2(2, -1), float2(3, -1),
+	float2(-3, 0),  float2(-2, 0),  float2(-1, 0),  float2(0, 0),  float2(1, 0),  float2(2, 0),  float2(3, 0),
+	float2(-3, 1),  float2(-2, 1),  float2(-1, 1),  float2(0, 1),  float2(1, 1),  float2(2, 1),  float2(3, 1),
+	float2(-3, -2), float2(-2, 2),  float2(-1, 2),  float2(0, 2),  float2(1, 2),  float2(2, 2),  float2(3, 2),
+	                float2(-2, 3),  float2(-1, 3),  float2(0, 3),  float2(1, 3),  float2(2, 3),
+};
+
+
+static const int FILTER_SIZE = 4;
+static const float VARIANCE = 0.0039215686274509803921568627451 * 2;
+static const float DISC_DIFF = 0.02;
+
+float2 pixelSize = float2(0.00735294117647058823529411764706, 0.00260416666666666666666666666667);
+
+float4 derivativeDepth(float4 position : SV_Position, float4 color : COLOR0, float2 uv : TEXCOORD0) : COLOR0
+{
+	float depth = tex2D(TextureSampler, uv).r;
+	float4 d = float4(0,0,0,0);
+
+	float dxp = tex2D(TextureSampler, uv + pixelSize * float2(1, 0)).r - depth;
+	float dxm = depth - tex2D(TextureSampler, uv + pixelSize * float2(-1, 0)).r;
+
+	if (abs(dxp) < DISC_DIFF) d.xz += float2(dxp, 1);
+	if (abs(dxm) < DISC_DIFF) d.xz += float2(dxm, 1);
+
+	float dyp = tex2D(TextureSampler, uv + pixelSize * float2(0, 1)).r - depth;
+	float dym = depth - tex2D(TextureSampler, uv + pixelSize * float2(0, -1)).r;
+	if (abs(dyp) < DISC_DIFF) d.yw += float2(dyp, 1);
+	if (abs(dym) < DISC_DIFF) d.yw += float2(dym, 1);
+
+	d.xy /= d.zw;
+	return float4(depth, d.xy, 1.0);
+}
+
+float4 dequantizeDepth(float4 position : SV_Position, float4 color : COLOR0, float2 uv : TEXCOORD0) : COLOR0 
+{
+	float4 tex = tex2D(TextureSampler, uv);
+	float depth = tex.r;
+/*
+
+	float4 d = float4(0,0,0,0);
+
+	float dxp = tex2D(TextureSampler, uv + pixelSize * float2(1, 0)).r - depth;
+	float dxm = depth - tex2D(TextureSampler, uv + pixelSize * float2(-1, 0)).r;
+
+	if (abs(dxp) < DISC_DIFF) d.xz += float2(dxp, 1);
+	if (abs(dxm) < DISC_DIFF) d.xz += float2(dxm, 1);
+
+	float dyp = tex2D(TextureSampler, uv + pixelSize * float2(0, 1)).r - depth;
+	float dym = depth - tex2D(TextureSampler, uv + pixelSize * float2(0, -1)).r;
+	if (abs(dyp) < DISC_DIFF) d.yw += float2(dyp, 1);
+	if (abs(dym) < DISC_DIFF) d.yw += float2(dym, 1);
+
+	d.xy /= d.zw;
+	*/
+	float2 d = tex.gb;
+
+	//let's pretend that's accurate enough for now
+
+	float sumK = 0.0;
+	float sumD = 0.0;
+	float2 sumDerivative = float2(0, 0);
+	
+	[unroll(45)] for (int i = 0; i <= 45; i++) {
+		float kValue = kernel9trim[i];
+		float2 pos = k9Off[i];
+		float kDepth = tex2D(TextureSampler, uv + pixelSize * pos).r;
+		float globalD = (kDepth - depth);
+		float2 variance = abs(d.xy - globalD / pos);
+		if ((pos.x == 0 || variance.x < VARIANCE) && (pos.y == 0 || variance.y < VARIANCE)) {
+			sumK += kValue;
+			sumD += kDepth * kValue;
+			sumDerivative -= sign(pos) * globalD * kValue;
+		}
+	}
+	/*
+	[unroll(9)] for (int x = -FILTER_SIZE; x <= FILTER_SIZE; x++) {
+		[unroll(9)] for (int y = -FILTER_SIZE; y <= FILTER_SIZE; y++) {
+			float kValue = kernel9[(x + 4) + (y + 4) * 9];
+			float2 pos = float2(x, y);
+			float kDepth = tex2D(TextureSampler, uv + pixelSize * pos).r;
+			float globalD = (kDepth - depth);
+			float2 variance = abs(d.xy - globalD / pos);
+			if ((x == 0 || variance.x < VARIANCE) && (y == 0 || variance.y < VARIANCE)) {
+				sumK += kValue;
+				sumD += kDepth * kValue;
+				sumDerivative -= sign(pos) * globalD * kValue;
+			}
+		}
+	}
+	*/
+	sumD /= sumK;
+	sumDerivative /= sumK;
+
+	//estimate new depth
+	float estDepth = sumD - (sumDerivative.x + sumDerivative.y);
+	return float4(estDepth, 0, 0, 1);
+}
+
+technique DerivativeDepth
+{
+	pass All
+	{
+		PixelShader = compile PS_SHADERMODEL3 derivativeDepth();
+	}
+}
+
+technique DequantizeDepth
+{
+	pass All
+	{
+		PixelShader = compile PS_SHADERMODEL3 dequantizeDepth();
 	}
 }
