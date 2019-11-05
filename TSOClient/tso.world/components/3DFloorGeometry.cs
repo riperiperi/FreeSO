@@ -289,7 +289,7 @@ namespace FSO.LotView.Components
                 foreach (var type in floor.GroupForTileType)
                 {
                     bool water = false;
-                    if (type.Value is Modelled3DFloor && lightWorld == null)
+                    if (type.Value is Modelled3DFloor)
                     {
                         //we generated a special model for this tile type
                         var mdl = type.Value as Modelled3DFloor;
