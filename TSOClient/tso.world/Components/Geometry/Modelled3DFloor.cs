@@ -86,7 +86,6 @@ namespace FSO.LotView.Components.Geometry
             float h01 = Altitude[(ny + bx)];
             float h10 = Altitude[(by + nx)];
             float h11 = Altitude[(ny + nx)];
-            var baseAlt = Bp.BaseAlt;
             var tFactor = Bp.TerrainFactor;
 
             var srcVerts = tile.Vertices;
@@ -99,7 +98,7 @@ namespace FSO.LotView.Components.Geometry
                 float xl1 = xLerp * h10 + (1 - xLerp) * h00;
                 float xl2 = xLerp * h11 + (1 - xLerp) * h01;
 
-                var yOff = (yLerp * xl2 + (1 - yLerp) * xl1 - baseAlt) * tFactor;
+                var yOff = (yLerp * xl2 + (1 - yLerp) * xl1) * tFactor;
 
                 vert.Position = (vert.Position + new Microsoft.Xna.Framework.Vector3(tileBaseX, yOff, tileBaseY)) * 3f;
                 verts.Add(vert);

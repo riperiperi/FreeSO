@@ -257,10 +257,10 @@ namespace FSO.Files.RC
                     var depthB = sprite.GetDepth();
 
                     var useDequantize = false;
-                    float[] depth;
-                    int iterations;
+                    float[] depth = null;
+                    int iterations = 125;
                     int triDivisor = 100;
-                    float aggressiveness;
+                    float aggressiveness = 3.5f;
                     if (useDequantize)
                     {
                         var dtex = new Texture2D(gd, ((TextureInfo)tex.Tag).Size.X, ((TextureInfo)tex.Tag).Size.Y, false, SurfaceFormat.Color);
@@ -272,7 +272,7 @@ namespace FSO.Files.RC
                         aggressiveness = 2.5f;
                         MaxAllowedSq = 0.05f * 0.05f;
                     }
-                    else
+                    else if (depthB != null)
                     {
                         depth = depthB.Select(x => x / 255f).ToArray();
                         iterations = 125;
