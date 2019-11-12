@@ -67,12 +67,25 @@ namespace FSO.SimAntics.Engine.Primitives
             if (operand.IDFromParam && source == VMAnimationScope.Object) source = VMAnimationScope.StackObject; //fixes MM rollercoaster
             if (!operand.IDFromParam) {
                 var owner = (source == VMAnimationScope.Object) ? context.CodeOwner : ((source == VMAnimationScope.StackObject)? context.StackObject.Object : operand.AnimationSource);
-                if (operand.AnimationCache == null || owner != operand.AnimationSource)
+                bool child = ((VMAvatar)context.Caller).GetPersonData(VMPersonDataVariable.PersonsAge) < 18 && context.VM.TS1;
+                if (child)
                 {
-                    operand.AnimationSource = owner;
-                    operand.AnimationCache = VMMemory.GetAnimation(context, source, id);
+                    if (operand.ChildAnimationCache == null || owner != operand.ChildAnimationSource)
+                    {
+                        operand.ChildAnimationSource = owner;
+                        operand.ChildAnimationCache = VMMemory.GetAnimation(context, source, id);
+                    }
+                    animation = operand.ChildAnimationCache;
+                } else
+                {
+                    if (operand.AnimationCache == null || owner != operand.AnimationSource)
+                    {
+                        operand.AnimationSource = owner;
+                        operand.AnimationCache = VMMemory.GetAnimation(context, source, id);
+                    }
+                    animation = operand.AnimationCache;
                 }
-                animation = operand.AnimationCache;
+
             } else
             {
                 animation = VMMemory.GetAnimation(context, source, id);
@@ -169,6 +182,7 @@ namespace FSO.SimAntics.Engine.Primitives
             {
                 _AnimationID = value;
                 AnimationCache = null;
+                ChildAnimationCache = null;
             }
         }
         public byte LocalEventNumber { get; set; }
@@ -179,6 +193,9 @@ namespace FSO.SimAntics.Engine.Primitives
 
         public Animation AnimationCache;
         public GameObject AnimationSource;
+
+        public Animation ChildAnimationCache;
+        public GameObject ChildAnimationSource;
 
         #region VMPrimitiveOperand Members
 

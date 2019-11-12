@@ -25,7 +25,8 @@ namespace FSO.SimAntics.JIT.Translation.Primitives
             SharedPrimitives.TSOInventoryOperations,
             SharedPrimitives.Reach,
             SharedPrimitives.TSOTransferFunds,
-            SharedPrimitives.TS1GosubFoundAction
+            SharedPrimitives.TS1GosubFoundAction,
+            SharedPrimitives.RemoveObjectInstance
         };
 
         private static Dictionary<SharedPrimitives, PrimitiveReturnType> ReturnTypeMap = new Dictionary<SharedPrimitives, PrimitiveReturnType>()

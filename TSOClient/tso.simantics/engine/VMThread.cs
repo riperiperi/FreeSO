@@ -42,6 +42,7 @@ namespace FSO.SimAntics.Engine
         //check tree only vars
         public bool IsCheck;
         public List<VMPieMenuInteraction> ActionStrings;
+        public Dictionary<int, short> MotiveAdChanges;
 
         public List<VMStackFrame> Stack;
         private bool ContinueExecution;
@@ -108,11 +109,23 @@ namespace FSO.SimAntics.Engine
             temp.IsCheck = true;
             temp.ActionStrings = actionStrings; //generate and place action strings in here
             temp.Push(initFrame);
-            if (action != null) temp.Queue.Add(action); //this check runs an action. We may need its interaction number, etc.
+            if (action != null)
+            {
+                temp.Queue.Add(action); //this check runs an action. We may need its interaction number, etc.
+                temp.ActiveQueueBlock = 0;
+            }
             while (temp.Stack.Count > 0 && temp.DialogCooldown == 0 && !temp.Entity.Dead) //keep going till we're done! idling is for losers!
             {
                 temp.Tick();
                 temp.ThreadBreak = VMThreadBreakMode.Active; //cannot breakpoint in check trees
+            }
+            if (actionStrings != null && actionStrings.Count == 0)
+            {
+                //add an action string containing any modified ads
+                actionStrings.Add(new VMPieMenuInteraction()
+                {
+                    MotiveAdChanges = temp.MotiveAdChanges
+                });
             }
             if (context.VM.Aborting) return VMPrimitiveExitCode.ERROR;
             return (temp.DialogCooldown > 0) ? VMPrimitiveExitCode.RETURN_FALSE : temp.LastStackExitCode;
@@ -191,14 +204,14 @@ namespace FSO.SimAntics.Engine
         /// </summary>
         public bool AttemptPush()
         {
-            int priorityCompare = int.MinValue;
-            if (ActiveQueueBlock > -1) priorityCompare = this.Queue[ActiveQueueBlock].Priority;
+            int priorityCompare = ((VMAvatar)Entity).GetPersonData(VMPersonDataVariable.Priority);
+            if (priorityCompare <= 2) priorityCompare -= 1; //autonomous interactions fall through to other ones
             QueueDirty = true;
             while (Queue.Count > ActiveQueueBlock+1)
             {
                 var item = Queue[ActiveQueueBlock+1];
                 if (item.Priority <= priorityCompare) return false;
-                if (item.Cancelled) Entity.SetFlag(VMEntityFlags.InteractionCanceled, item.Cancelled);
+                if (item.NotifyIdle) Entity.SetFlag(VMEntityFlags.InteractionCanceled, item.NotifyIdle);
                 if (IsCheck || ((item.Mode != VMQueueMode.ParentIdle || !Entity.GetFlag(VMEntityFlags.InteractionCanceled)) && CheckAction(item) != null))
                 {
                     Entity.SetFlag(VMEntityFlags.InteractionCanceled, false);
@@ -259,7 +272,9 @@ namespace FSO.SimAntics.Engine
             }
             ContinueExecution = true; //continue where the Allow Push idle left off
             ActiveQueueBlock--;
-            if (ActiveQueueBlock > -1) Queue[ActiveQueueBlock].Cancelled = interaction.Cancelled;
+            //update priority with the priority of the interaction we are going back to (or 0)
+            ((VMAvatar)Entity).SetPersonData(VMPersonDataVariable.Priority, (ActiveQueueBlock > -1) ? Queue[ActiveQueueBlock].Priority : (short)0);
+            EvaluateQueuePriorities();
         }
 
         public void AbortCurrentInteraction()
@@ -400,8 +415,14 @@ namespace FSO.SimAntics.Engine
         private void EvaluateQueuePriorities()
         {
             if (ActiveQueueBlock == -1 || ActiveQueueBlock >= Queue.Count) return;
-            int CurrentPriority = (int)Queue[ActiveQueueBlock].Priority;
-            var mode = Queue[ActiveQueueBlock].Mode;
+            var active = Queue[ActiveQueueBlock];
+            int CurrentPriority = (int)((VMAvatar)Entity).GetPersonData(VMPersonDataVariable.Priority); 
+            if (CurrentPriority == (int)VMQueuePriority.Autonomous) CurrentPriority -= 1; // allow other auto actions to interrupt us
+            var mode = active.Mode;
+            // HACK: TS1 pushes a "Cancel Interaction" action onto the tree to interrupt itself, as well as setting current interaction to prio 0.
+            // We're simulating that by notifiying idle if priority hits 0. (implied cancel interaction queued)
+            // Make sure this interaction is not *meant* to be priority 0, like tso's idle.
+            active.NotifyIdle = active.Priority != 0 && CurrentPriority == 0; 
             for (int i = ActiveQueueBlock + 1; i < Queue.Count; i++)
             {
                 if (Queue[i].Callee == null || Queue[i].Callee.Dead)
@@ -411,7 +432,7 @@ namespace FSO.SimAntics.Engine
                 }
                 if ((int)Queue[i].Priority > CurrentPriority)// && mode != VMQueueMode.ParentIdle)
                 {
-                    Queue[ActiveQueueBlock].Cancelled = true;
+                    active.NotifyIdle = true;
                     Entity.SetFlag(VMEntityFlags.InteractionCanceled, true);
                 }
             }
@@ -725,7 +746,7 @@ namespace FSO.SimAntics.Engine
                 // this doesnt ""run immediately"", but is good enough.
 
                 invocation.Mode = VMQueueMode.Idle; //hide
-                invocation.Priority = short.MinValue;
+                //invocation.Priority = short.MinValue;
                 this.Queue.Add(invocation);
                 return;
             }
@@ -758,6 +779,16 @@ namespace FSO.SimAntics.Engine
                     if (hitParentEnd && (invocation.Priority <= Queue[i].Priority || Queue[i].Mode == VMQueueMode.ParentExit)) //skip until we find a parent exit or something with the same or higher priority.
                     {
                         this.Queue.Insert(i + 1, invocation);
+                        if (Context.VM.TS1 && invocation.Priority <= Queue[i].Priority)
+                        {
+                            // queue skip all items with a lower priority (after this interaction)
+                            // i've verified this happens in ts1, but I don't know if it does in TSO so i've locked it for now.
+                            i += 2;
+                            while (i < this.Queue.Count)
+                            {
+                                CancelAction(this.Queue[i].UID);
+                            }
+                        }
                         EvaluateQueuePriorities();
                         return;
                     }
@@ -775,7 +806,7 @@ namespace FSO.SimAntics.Engine
             {
                 if (Entity is VMAvatar && interaction == Queue[0] && Context.VM.EODHost != null) Context.VM.EODHost.ForceDisconnect((VMAvatar)Entity);
                 QueueDirty = true;
-                interaction.Cancelled = true;
+                interaction.NotifyIdle = true;
                 //cancel any idle parents after this interaction
                 var index = Queue.IndexOf(interaction);
 
@@ -788,13 +819,13 @@ namespace FSO.SimAntics.Engine
                             if (interaction.Mode == Engine.VMQueueMode.ParentIdle) Queue.RemoveAt(i--);
                             else
                             {
-                                Queue[i].Cancelled = true;
+                                Queue[i].NotifyIdle = true;
                                 Queue[i].Priority = 0;
                             }
                         }
                         else if (Queue[i].Mode == Engine.VMQueueMode.ParentExit)
                         {
-                            Queue[i].Cancelled = true;
+                            Queue[i].NotifyIdle = true;
                             Queue[i].Priority = 0;
                         }
                         //parent exit needs to "appear" like it is cancelled.
@@ -806,18 +837,20 @@ namespace FSO.SimAntics.Engine
                 if (canQueueSkip && (index > ActiveQueueBlock || Stack.LastOrDefault()?.ActionTree == false) && interaction.Mode == Engine.VMQueueMode.Normal)
                 {
                     Queue.Remove(interaction);
-                    if (Context.VM.TS1) interaction.Callee.ExecuteEntryPoint(4, Context, true); //queue skipped
+                    if (Context.VM.TS1) interaction.Callee.ExecuteEntryPoint(4, Context, true, Entity); //queue skipped
                 }
                 else
                 {
                     Entity.SetFlag(VMEntityFlags.InteractionCanceled, true);
-                    interaction.Priority = 0;
+                    ((VMAvatar)Entity).SetPersonData(VMPersonDataVariable.Priority, 0);
                 }
             }
         }
 
         private bool ExecuteAction(VMQueuedAction action)
         {
+            //set the new interaction's priority
+            ((VMAvatar)Entity).SetPersonData(VMPersonDataVariable.Priority, action.Priority);
             var frame = action.ToStackFrame(Entity);
             frame.DiscardResult = true;
             return Push(frame);
@@ -841,7 +874,7 @@ namespace FSO.SimAntics.Engine
                 }
                 else if (avatar.IsPet) return null; //not allowed
 
-                var isVisitor = avatar.GetPersonData(VMPersonDataVariable.PersonType) == 1 && avatar.GetPersonData(VMPersonDataVariable.TS1FamilyNumber) != Context.VM.TS1State.CurrentFamily?.ChunkID;
+                var isVisitor = avatar.GetPersonData(VMPersonDataVariable.PersonType) == 1;
                 //avatar.ObjectID != Context.VM.GetGlobalValue(3);
                 var debugTrees = false;
 

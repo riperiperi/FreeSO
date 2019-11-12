@@ -31,8 +31,9 @@ namespace FSO.LotView.Utils.Camera
         {
             var ctr = state.WorldSpace.GetScreenFromTile(state.CenterTile);
             ctr.X = (float)Math.Round(ctr.X);
+            ctr.Y += 0.5f; //correction for 2d sprite alignment
             ctr.Y = (float)Math.Round(ctr.Y);
-            var test = new Vector2(-0.5f, 0);
+            var test = new Vector2(-0.5f, 0f);
             test *= 1 << (3 - (int)state.Zoom);
             var back = state.WorldSpace.GetTileFromScreen(ctr + test);
             //Camera.RotationAnchor = null;

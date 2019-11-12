@@ -25,12 +25,15 @@ namespace FSO.SimAntics.Engine.Primitives
             if (operand.Target == 0) obj = context.Caller;
             else obj = context.StackObject;
 
-            //operand.CleanupAll;
+            //TODO: what do CleanupAll and ReturnImmediately do?
+            //cleanup all likely resets all avatars using the object, though that should really happen regardless?
+            //return immediately is an actual mystery
             obj?.Delete(true, context.VM.Context);
 
             //if (obj == context.StackObject) context.StackObject = null;
 
-            return VMPrimitiveExitCode.GOTO_TRUE;
+            // yield if we are going to delete
+            return (obj == context.Caller) ? VMPrimitiveExitCode.GOTO_TRUE_NEXT_TICK : VMPrimitiveExitCode.GOTO_TRUE;
         }
     }
 

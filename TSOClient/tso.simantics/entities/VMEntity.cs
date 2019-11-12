@@ -323,10 +323,10 @@ namespace FSO.SimAntics
             }
             if (Headline != null)
             {
-                var over = HeadlineRenderer.Update();
+                var over = HeadlineRenderer?.Update() ?? true;
                 if (over)
                 {
-                    HeadlineRenderer.Dispose();
+                    HeadlineRenderer?.Dispose();
                     Headline = null;
                     HeadlineRenderer = null;
                 }
@@ -929,6 +929,7 @@ namespace FSO.SimAntics
                 {
                     foreach (var actionS in actionStrings)
                     {
+                        if (actionS.Name != null) actionS.Name = ttas?.GetString((int)id) ?? "***MISSING***";
                         actionS.ID = (byte)id;
                         actionS.Entry = ia;
                         actionS.Global = global;
@@ -991,6 +992,7 @@ namespace FSO.SimAntics
                     {
                         foreach (var actionS in actionStrings)
                         {
+                            if (actionS.Name == null) actionS.Name = ttas?.GetString((int)id) ?? "***MISSING***";
                             actionS.ID = (byte)id;
                             actionS.Entry = ia;
                             actionS.Global = global;
@@ -1038,7 +1040,8 @@ namespace FSO.SimAntics
             if (checkID != 0)
             {
                 var cTree = GetRoutineWithOwner(checkID, context);
-                if (cTree != null) cRoutine = cTree.routine;
+                if (cTree == null) return null; // VERIFIED: TS1 ignores interactions with non-zero missing check trees. Fixes downtown clerk.
+                cRoutine = cTree.routine;
             }
 
             if (global) interaction |= unchecked((int)0x80000000);
@@ -1114,33 +1117,21 @@ namespace FSO.SimAntics
                 foreach (var ava in context.ObjectQueries.Avatars)
                 {
                     bool found = false;
-                    foreach (var item in ava.Thread.Stack)
+                    for (int i = 0; i <= ava.Thread.ActiveQueueBlock; i++)
                     {
-                        if (item.Callee == this) {
+                        var item = ava.Thread.Queue[i];
+                        if (item.Callee == this)
+                        {
                             found = true;
                             break;
                         }
                     }
 
-                    //TS1 wants queued items that are inactive to count in "use count"...
-                    //...but tso doesn't. selectively disable for now.
-
-                    // TSO expects the use count of the 2 sim interaction object to be zero until both sims are actively using it.
+                    // TSO/TS1 expects the use count of the 2 sim interaction object to be zero until both sims are actively using it.
                     // if it detects the use count is greater than zero before this point, then it will attempt to update the "person count"
                     // since neither sim has started the interaction, the relationships to them do not exist, and the person count is set to zero
-                    // this causes interactions to early exit most of the time...
+                    // this causes interactions to early exit most of the time... so only count active actions. 
 
-                    if (!found && context.VM.TS1)
-                    {
-                        foreach (var item in ava.Thread.Queue)
-                        {
-                            if (item.Callee == this)
-                            {
-                                found = true;
-                                break;
-                            }
-                        }
-                    }
                     if (found) users.Add(ava);
                 }
             }
@@ -1817,6 +1808,13 @@ namespace FSO.SimAntics
         public int Score;
         public VMEntity Callee;
         public bool Global;
+
+        public Dictionary<int, short> MotiveAdChanges;
+
+        public override string ToString()
+        {
+            return (Name ?? "??") + ":" + Score;
+        }
     }
 
 

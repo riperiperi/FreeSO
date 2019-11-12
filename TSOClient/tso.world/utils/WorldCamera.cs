@@ -236,7 +236,7 @@ namespace FSO.LotView.Utils
             var offset = new Vector3(-centerX, -CenterTile.Z*WorldSpace.WorldUnitsPerTile, -centerY);
             var view = Matrix.Identity;
 
-            if (_RotationAnchor != null)
+            if (_RotationAnchor != null && RotateOff != 0)
             {
                 var anchor = _RotationAnchor.Value;
                 anchor = new Vector3(anchor.X, anchor.Z, anchor.Y) * -WorldSpace.WorldUnitsPerTile;

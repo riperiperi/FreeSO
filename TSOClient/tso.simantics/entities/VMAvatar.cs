@@ -751,8 +751,6 @@ namespace FSO.SimAntics
                     if (((VMTSOAvatarState)TSOState).JobInfo.TryGetValue(GetPersonData(VMPersonDataVariable.OnlineJobID), out jobInfo))
                         return jobInfo.Experience;
                     return 0;
-                case VMPersonDataVariable.Priority:
-                    return (Thread.Queue.Count == 0) ? (short)0 : Thread.Queue[0].Priority;
                 case VMPersonDataVariable.IsHousemate:
                     var level = AvatarState.Permissions;
                     return (short)((level >= VMTSOAvatarPermissions.BuildBuyRoommate) ? 2 : ((level >= VMTSOAvatarPermissions.Roommate) ? 1 : 0));
@@ -867,12 +865,8 @@ namespace FSO.SimAntics
                     }
                     return true;
                 case VMPersonDataVariable.Priority:
-                    if (Thread.Queue.Count != 0 && Thread.Stack.LastOrDefault().ActionTree)
-                    {
-                        Thread.Queue[0].Priority = value;
-                        Thread.QueueDirty = true;
-                    }
-                    return true;
+                    Thread.QueueDirty = true;
+                    break;
                 case VMPersonDataVariable.MoneyAmmountOverHead:
                     if (value != -32768) ShowMoneyHeadline(value);
                     break;
@@ -1118,20 +1112,25 @@ namespace FSO.SimAntics
         {
             if (Avatar.Head == null && Avatar.Body == null) return null;
             var content = FSO.Content.Content.Get();
-            if (content.TS1) return null;
-            Outfit ThumbOutfit = (Avatar.Head == null) ? Avatar.Body : Avatar.Head;
-            var AppearanceID = ThumbOutfit.GetAppearance(Avatar.Appearance);
-            var Appearance = content.AvatarAppearances.Get(AppearanceID);
+            Texture2D ico = null;
+            if (!content.TS1)
+            {
+                Outfit ThumbOutfit = (Avatar.Head == null) ? Avatar.Body : Avatar.Head;
+                var AppearanceID = ThumbOutfit.GetAppearance(Avatar.Appearance);
+                var Appearance = content.AvatarAppearances.Get(AppearanceID);
 
-            if (Appearance == null) return null;
-            var ico = FSO.Content.Content.Get().AvatarThumbnails.Get(Appearance.ThumbnailTypeID, Appearance.ThumbnailFileID)?.Get(gd);
+                if (Appearance == null) return null;
+                ico = FSO.Content.Content.Get().AvatarThumbnails.Get(Appearance.ThumbnailTypeID, Appearance.ThumbnailFileID)?.Get(gd);
+            }
 
             //todo: better dispose handling for these icons
+            var decimateMul = 1;
             if (ico == null)
             {
                 ico = MissingIconProvider(this);
+                if (content.TS1) decimateMul = 2;
             }
-            return (store > 0 && ico != null)?TextureUtils.Decimate(ico, gd, 1<<(2-store), false):ico;
+            return (store > 0 && ico != null)?TextureUtils.Decimate(ico, gd, (1<<(2-store)) * decimateMul, false):ico;
         }
 
         #region VM Marshalling Functions

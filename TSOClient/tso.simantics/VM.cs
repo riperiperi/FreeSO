@@ -235,6 +235,12 @@ namespace FSO.SimAntics
         private int LastFrameSpeed = 1;
         private float Fraction;
         public VMEntity GlobalBlockingDialog;
+
+        public void ResetTickAlign()
+        {
+            GameTickNum = GameTickRate-1;
+        }
+
         public void Update()
         {
             if (UseWorld)

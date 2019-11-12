@@ -33,6 +33,8 @@ namespace FSO.Files.Formats.IFF.Chunks
         PrizeToken = 10,
         //Temporary location for drop or shoo
         Internal = 11,
+        //these are mysteriously set as global sometimes. 
+        GiftToken = 12,
         Food = 34
     }
 

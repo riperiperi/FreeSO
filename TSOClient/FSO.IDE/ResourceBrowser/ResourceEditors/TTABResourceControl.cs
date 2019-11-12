@@ -157,6 +157,11 @@ namespace FSO.IDE.ResourceBrowser.ResourceEditors
             return Strings.GetString((int)index, ActiveLanguage);
         }
 
+        private string MissingID(ushort id)
+        {
+            return (id == 0) ? "---" : ("(#"+id+")");
+        }
+
         public void UpdateListing()
         {
             InteractionList.Items.Clear();
@@ -168,8 +173,8 @@ namespace FSO.IDE.ResourceBrowser.ResourceEditors
                 BHAV action = GetBHAV(entry.ActionFunction);
                 InteractionList.Items.Add(
                     new ListViewItem(new string[] { entry.TTAIndex.ToString(),
-                        (test == null)?"---":test.ChunkLabel,
-                        (action == null)?"---":action.ChunkLabel
+                        (test == null)?MissingID(entry.TestFunction):test.ChunkLabel,
+                        (action == null)?MissingID(entry.ActionFunction):action.ChunkLabel
                     }));
                 TTAToListIndex.Add((int)entry.TTAIndex, i++);
             }
@@ -188,8 +193,8 @@ namespace FSO.IDE.ResourceBrowser.ResourceEditors
                 var name = GetTTA(entry.TTAIndex);
                 var split = name.Split('/');
                 var node = new TreeNode(split[split.Length - 1] + " (" + entry.TTAIndex.ToString() + " / " +
-                        ((test == null) ? "---" : test.ChunkLabel) + " / " +
-                        ((action == null) ? "---" : action.ChunkLabel) + ")");
+                        ((test == null) ? MissingID(entry.TestFunction) : test.ChunkLabel) + " / " +
+                        ((action == null) ? MissingID(entry.ActionFunction) : action.ChunkLabel) + ")");
                 PieToInteraction.Add(node, (int)entry.TTAIndex);
 
                 while (split.Length - 1 < prevDepth || (prevDepth > 0 && category != split[prevDepth - 1]))
@@ -327,9 +332,9 @@ namespace FSO.IDE.ResourceBrowser.ResourceEditors
             for (int i = 0; i < Selected.MotiveEntries.Length; i++)
             {
                 var item = Selected.MotiveEntries[i];
-                bool hasEffect = (item.EffectRangeMinimum > 0 || item.EffectRangeMaximum > 0);
+                bool hasEffect = (item.EffectRangeMinimum > 0 || item.EffectRangeDelta > 0);
                 string vary = (item.PersonalityModifier == 0) ? "" : (", " + VaryNames[Math.Min(VaryNames.Length - 1, item.PersonalityModifier)]);
-                MotiveList.Items.Add(MotiveNames[i] + (hasEffect ? (item.EffectRangeMinimum + ".." + item.EffectRangeMaximum + vary) : "N/A"));
+                MotiveList.Items.Add(MotiveNames[i] + (hasEffect ? (item.EffectRangeMinimum + ".." + (item.EffectRangeMinimum + item.EffectRangeDelta) + vary) : "N/A"));
             }
             MotiveList.SelectedIndex = oldInd;
 
@@ -342,7 +347,7 @@ namespace FSO.IDE.ResourceBrowser.ResourceEditors
 
             var ind = MotiveList.SelectedIndex;
             MinMotive.Value = Selected.MotiveEntries[ind].EffectRangeMinimum;
-            MaxMotive.Value = Selected.MotiveEntries[ind].EffectRangeMaximum;
+            MaxMotive.Value = Selected.MotiveEntries[ind].EffectRangeDelta + Selected.MotiveEntries[ind].EffectRangeMinimum;
             MotivePersonality.SelectedIndex = Selected.MotiveEntries[ind].PersonalityModifier;
         }
 
@@ -369,7 +374,7 @@ namespace FSO.IDE.ResourceBrowser.ResourceEditors
             var value = (short)MaxMotive.Value;
             Content.Content.Get().Changes.BlockingResMod(new ResAction(() =>
             {
-                sel.MotiveEntries[ind].EffectRangeMaximum = value;
+                sel.MotiveEntries[ind].EffectRangeDelta = (short)(value - Selected.MotiveEntries[ind].EffectRangeMinimum);
             }, ActiveTTAB));
             UpdateMotiveList();
         }

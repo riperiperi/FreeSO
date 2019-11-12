@@ -18,7 +18,7 @@ namespace FSO.SimAntics.Entities
             var iffname = owner.Object.Resource.MainIff.Filename;
             if (owner.PlatformState is VMTSOObjectState)
             {
-                var upgrades = Content.Content.Get().Upgrades.GetUpgrade(iffname, (owner.MasterDefinition ?? owner.Object.OBJ).GUID, ((VMTSOObjectState)owner.PlatformState).UpgradeLevel);
+                var upgrades = Content.Content.Get().Upgrades?.GetUpgrade(iffname, (owner.MasterDefinition ?? owner.Object.OBJ).GUID, ((VMTSOObjectState)owner.PlatformState).UpgradeLevel);
                 if (upgrades != null)
                 {
                     AppendTable(upgrades);

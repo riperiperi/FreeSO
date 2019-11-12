@@ -99,10 +99,12 @@ namespace FSO.SimAntics.Primitives
                 // 16. Change Normal Outfit
                 case VMGenericTS1CallMode.ChangeToLotInTemp0: //17
                     //-1 is this family's home lot
+                    var switchLotId = (uint)context.Thread.TempRegisters[0];
+                    var vacation = switchLotId >= 40 && switchLotId < 50;
                     var crossData = Content.Content.Get().Neighborhood.GameState;
                     crossData.ActiveFamily = context.VM.TS1State.CurrentFamily;
                     crossData.DowntownSimGUID = context.Caller.Object.OBJ.GUID;
-                    crossData.LotTransitInfo = context.VM.GetGlobalValue(34);
+                    crossData.LotTransitInfo = (vacation) ? (short)1 : context.VM.GetGlobalValue(34);
                     var people = new List<VMAvatar>();
 
                     people.Add((VMAvatar)context.Caller);
@@ -143,7 +145,7 @@ namespace FSO.SimAntics.Primitives
                     //this is called "inventory sim data effects"
 
 
-                    context.VM.SignalLotSwitch((uint)context.Thread.TempRegisters[0]);
+                    context.VM.SignalLotSwitch(switchLotId);
                     return VMPrimitiveExitCode.GOTO_TRUE_NEXT_TICK;
                 case VMGenericTS1CallMode.BuildTheDowntownSimAndPlaceObjIDInTemp0: //18
                     //spawn downtown sim out of world
@@ -204,7 +206,7 @@ namespace FSO.SimAntics.Primitives
                     //7 and 8, time, were used to start the lot. they arent really used on return
                     //9 is not used by fso
 
-                    eInv.RemoveAll(x => x.Type == 2);
+                    eInv.RemoveAll(x => x.Type == 2 && x.GUID < 7 && x.GUID >= 0);
                     return VMPrimitiveExitCode.GOTO_TRUE;
                 case VMGenericTS1CallMode.SelectDowntownLot: //22
                     //TODO: this is a pre-unleashed system I believe. likely need to add this if we want to support older TS1 versions (need testers)

@@ -90,9 +90,12 @@ namespace FSO.SimAntics.Utils
             VM.GlobalState[20] = 255; //Game Edition. Basically, what "expansion packs" are running. Let's just say all of them.
             VM.GlobalState[25] = 4; //as seen in EA-Land edith's simulator globals, this needs to be set for people to do their idle interactions.
             VM.GlobalState[17] = 4; //Runtime Code Version, is this in EA-Land.
+            VM.SetGlobalValue(3, 0); //Selected Sim ID. Default to 0.
+            VM.SetGlobalValue(9, 0); //Active Family ID. Default to 0.
 
             VM.SetGlobalValue(10, HouseNumber); //set house number
             VM.SetGlobalValue(32, 0); //simless build mode
+            VM.SetGlobalValue(33, 2); //machine level
             VM.Context.Clock.Hours = VM.GlobalState[0];
             VM.Context.Clock.DayOfMonth = VM.GlobalState[1];
             VM.Context.Clock.Minutes = VM.GlobalState[5];
@@ -172,9 +175,9 @@ namespace FSO.SimAntics.Utils
             arch.RegenRoomMap();
             VM.Context.RegeneratePortalInfo();
 
-            var objm = iff.Get<OBJM>(1);
-
             var objt = iff.Get<OBJT>(0);
+            var objm = iff.Get<OBJM>(1);
+            
             int j = 0;
 
             for (int i = 0; i < objm.IDToOBJT.Length; i += 2)
@@ -222,8 +225,9 @@ namespace FSO.SimAntics.Utils
             {
                 if (ControllerObjects.Contains(obj.GUID)) continue;
                 var res = content.WorldObjects.Get(obj.GUID);
-                if (res == null) continue; //failed to load this object
+                if (res == null) continue; // failed to load this object
                 var objd = res.OBJ;
+                if (objd.ObjectType == OBJDType.Person) continue; // skip loading people - REMOVE when loading includes state! (we do this to reset ts1 lots)
                 if (res.OBJ.MasterID != 0)
                 {
                     var allObjs = res.Resource.List<OBJD>().Where(x => x.MasterID == res.OBJ.MasterID);

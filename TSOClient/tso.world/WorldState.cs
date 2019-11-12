@@ -130,6 +130,12 @@ namespace FSO.LotView
             var mainBd = WorldSpace.GetScreenFromTile(CenterTile);
             var diff = pxOffset - mainBd;
             WorldRectangle = new Rectangle((pxOffset).ToPoint(), size.ToPoint());
+            if (PreciseZoom != 1)
+            {
+                var newSize = WorldRectangle.Size.ToVector2() / PreciseZoom;
+                WorldRectangle.Location -= ((newSize - WorldRectangle.Size.ToVector2()) / 2f).ToPoint();
+                WorldRectangle.Size = newSize.ToPoint();
+            }
 
             var view = View;
             ViewProjection = view * Projection;

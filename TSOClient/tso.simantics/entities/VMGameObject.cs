@@ -392,7 +392,7 @@ namespace FSO.SimAntics
             {
                 if (Contained[i] != null)
                 {
-                    context.UnregisterObjectPos(Contained[i], roomChange);
+                    if (!Contained[i].GhostImage) context.UnregisterObjectPos(Contained[i], roomChange);
                     Contained[i].Position = Position;
                     Contained[i].PositionChange(context, noEntryPoint, roomChange); //recursive
                 }

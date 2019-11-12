@@ -26,9 +26,17 @@ namespace FSO.Files.Formats.IFF.Chunks
         public static float[] AttenuationValues = {
             0, //custom
             0, //none
-            0.002f, //low
+            0.1f, //low
+            0.3f, //medium
+            0.6f, //high 
+            };
+
+        public static float[] VisitorAttenuationValues = {
+            0, //custom
+            0, //none
+            0.01f, //low
             0.02f, //medium
-            0.1f, //high (falloff entirely in 10 tiles)
+            0.03f, //high
             };
 
         /// <summary>
@@ -68,7 +76,7 @@ namespace FSO.Files.Formats.IFF.Chunks
                     {
                         var motive = new TTABMotiveEntry();
                         if (version > 6) motive.EffectRangeMinimum = iop.ReadInt16();
-                        motive.EffectRangeMaximum = iop.ReadInt16();
+                        motive.EffectRangeDelta = iop.ReadInt16();
                         if (version > 6) motive.PersonalityModifier = iop.ReadUInt16();
                         result.MotiveEntries[j] = motive;
                     }
@@ -106,7 +114,7 @@ namespace FSO.Files.Formats.IFF.Chunks
                     {
                         var mot = action.MotiveEntries[j];
                         io.WriteInt16(mot.EffectRangeMinimum);
-                        io.WriteInt16(mot.EffectRangeMaximum);
+                        io.WriteInt16(mot.EffectRangeDelta);
                         io.WriteUInt16(mot.PersonalityModifier);
                     }
                     if (!IffFile.TargetTS1) io.WriteUInt32((uint)action.Flags2);
@@ -303,7 +311,7 @@ namespace FSO.Files.Formats.IFF.Chunks
     public struct TTABMotiveEntry
     {
         public short EffectRangeMinimum;
-        public short EffectRangeMaximum;
+        public short EffectRangeDelta;
         public ushort PersonalityModifier;
     }
 

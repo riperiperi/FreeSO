@@ -39,7 +39,6 @@ namespace FSO.Files.Formats.IFF.Chunks
         public uint Unknown2;
         public ushort Unknown3;
         public ushort Unknown4;
-        public int Unknown5;
         public string Name;
         public OBJTEntry(IoBuffer io, int version)
         {
@@ -48,17 +47,17 @@ namespace FSO.Files.Formats.IFF.Chunks
             if (GUID == 0) return;
             Unknown1 = io.ReadUInt32(); //7 a lot
             Unknown2 = io.ReadUInt32(); //131074 a lot
-            Unknown3 = io.ReadUInt16(); //increases by one each time, but sometimes skips one. ID?
+            Unknown3 = io.ReadUInt16(); //increases by one each time, but sometimes skips one. Object ID?
             Unknown4 = io.ReadUInt16(); //mostly 4, sometimes 8, sometimes 7 (dollhouse). catalog category? 
             //then the name, null terminated
             Name = io.ReadNullTerminatedString();
             if (Name.Length%2 == 0) io.ReadByte(); //pad to short width
-            if (version > 2) io.ReadInt32();
+            if (version > 2) io.ReadInt32(); //not sure what this is
         }
 
         public override string ToString()
         {
-            return $"{Name} ({GUID.ToString("x8")})";
+            return $"{Name} ({GUID.ToString("x8")}): [{Unknown1}, {Unknown2}, {Unknown3}, {Unknown4}]";
         }
     }
 }

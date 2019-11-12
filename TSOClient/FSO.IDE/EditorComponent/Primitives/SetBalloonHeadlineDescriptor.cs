@@ -24,16 +24,17 @@ namespace FSO.IDE.EditorComponent.Primitives
 
         private static int[] GroupOffsets =
         {
-            0x000,
-            0x064,
-            0x190,
-            0x0C8,
-            0x12C,
-            0x1F4,
-            0x258,
+            0,
+            100,
+            400,
+            200,
+            300,
+            500,
+            600,
             0x000, //algorithmic
-            0x2BC,
-            0x320
+            700,
+            800,
+            900 //magic
         };
 
         private static IffFile Sprites;
@@ -107,7 +108,7 @@ namespace FSO.IDE.EditorComponent.Primitives
                     .Where(x => x.Value != null)
                     .ToDictionary(x => x.Key, x => x.Value)
                 )));
-            panel.Controls.Add(new OpValueControl(master, escope, Operand, "Duration", "Duration", new OpStaticValueBoundsProvider(0, 65535)));
+            panel.Controls.Add(new OpValueControl(master, escope, Operand, "Duration", "Duration", new OpStaticValueBoundsProvider(-32768, 32767)));
             panel.Controls.Add(new OpValueControl(master, escope, Operand, "Algorithmic", "Algorithmic", new OpStaticValueBoundsProvider(0, 0x7FFF)));
 
             panel.Controls.Add(new OpFlagsControl(master, escope, Operand, "Flags:", new OpFlag[] {

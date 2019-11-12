@@ -57,7 +57,7 @@ namespace FSO.SimAntics.Primitives
                     {
                         context.VM.GlobalBlockingDialog = context.Caller;
                         context.VM.LastSpeedMultiplier = context.VM.SpeedMultiplier;
-                        context.VM.SpeedMultiplier = 0;
+                        context.VM.SpeedMultiplier = -1;
                     }
                     return VMPrimitiveExitCode.CONTINUE_NEXT_TICK;
                 }

@@ -40,7 +40,7 @@ namespace FSO.SimAntics.Engine
         public int InteractionNumber = -1; //this interaction's number... This is needed for create object callbacks 
                                            //for This Interaction but entry point functions don't have this...
                                            //suggests init and main don't use action queue.
-        public bool Cancelled;
+        public bool NotifyIdle; //internal value: should this queue item notify idle for input? (happens if priority is 0 or less than followups)
 
         public short Priority = (short)VMQueuePriority.Idle;
         public VMQueueMode Mode = VMQueueMode.Normal;
@@ -84,7 +84,7 @@ namespace FSO.SimAntics.Engine
                 Name = Name,
                 Args = (short[])Args?.Clone(),
                 InteractionNumber = InteractionNumber,
-                Cancelled = Cancelled,
+                NotifyIdle = NotifyIdle,
                 Priority = Priority,
                 Mode = Mode,
                 Flags = Flags,
@@ -117,7 +117,7 @@ namespace FSO.SimAntics.Engine
             Name = input.Name;
             Args = input.Args;
             InteractionNumber = input.InteractionNumber;
-            Cancelled = input.Cancelled;
+            NotifyIdle = input.NotifyIdle;
             Priority = input.Priority;
             Mode = input.Mode;
             Flags = input.Flags;

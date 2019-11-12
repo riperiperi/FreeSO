@@ -34,7 +34,7 @@ namespace FSO.SimAntics.Engine.Primitives
             {
                 case VMPushPriority.Inherited:
                     short oldPrio = 1;
-                    if (context.ActionTree) oldPrio = context.Thread.ActiveAction.Priority;
+                    if (context.ActionTree) oldPrio = (context.Caller as VMAvatar)?.GetPersonData(Model.VMPersonDataVariable.Priority) ?? 1;
                     priority = Math.Max((short)1, oldPrio); break;
                 case VMPushPriority.Maximum:
                     priority = (short)VMQueuePriority.Maximum; break;

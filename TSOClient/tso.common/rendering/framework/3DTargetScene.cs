@@ -38,5 +38,11 @@ namespace FSO.Common.Rendering.Framework
             base.Draw(device);
             device.SetRenderTargets(oldTargets);
         }
+
+        public override void Dispose()
+        {
+            base.Dispose();
+            Target.Dispose();
+        }
     }
 }

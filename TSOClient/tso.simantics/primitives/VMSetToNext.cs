@@ -97,7 +97,7 @@ namespace FSO.SimAntics.Primitives
                 }
                 if (entities == null) return VMPrimitiveExitCode.GOTO_FALSE;
 
-                bool loop = (operand.SearchType == VMSetToNextSearchType.ObjectOnSameTile);
+                bool loop = (operand.SearchType == VMSetToNextSearchType.ObjectOnSameTile) || (operand.SearchType == VMSetToNextSearchType.FamilyMember);
 
                 var ind = VM.FindNextIndexInObjList(entities, targetValue);
                 for (int i=ind; i<entities.Count; i++) //generic search through all objects
@@ -115,7 +115,9 @@ namespace FSO.SimAntics.Primitives
                                 return VMPrimitiveExitCode.GOTO_FALSE;
                                 throw new VMSimanticsException("Not implemented!", context);
                             case VMSetToNextSearchType.FamilyMember:
-                                found = context.VM.TS1State.CurrentFamily?.FamilyGUIDs?.Contains(((VMAvatar)temp).Object.OBJ.GUID) ?? false;
+                                found = ((VMAvatar)temp).GetPersonData(Model.VMPersonDataVariable.TS1FamilyNumber) ==
+                                        ((VMAvatar)Pointer).GetPersonData(Model.VMPersonDataVariable.TS1FamilyNumber);
+                                // context.VM.TS1State.CurrentFamily?.FamilyGUIDs?.Contains(((VMAvatar)temp).Object.OBJ.GUID) ?? false;
                                 break;
                             default:
                                 //set to next object, or cached search.
@@ -139,6 +141,11 @@ namespace FSO.SimAntics.Primitives
                 if (loop)
                 {
                     VMEntity first = entities.FirstOrDefault();
+                    if (operand.SearchType == VMSetToNextSearchType.FamilyMember)
+                    {
+                        first = entities.FirstOrDefault(x => ((VMAvatar)x).GetPersonData(Model.VMPersonDataVariable.TS1FamilyNumber) ==
+                                                             ((VMAvatar)Pointer).GetPersonData(Model.VMPersonDataVariable.TS1FamilyNumber));
+                    }
                     if (first == null || !entities.Contains(Pointer)) return VMPrimitiveExitCode.GOTO_FALSE; //no elements of this kind at all.
                     else
                     {

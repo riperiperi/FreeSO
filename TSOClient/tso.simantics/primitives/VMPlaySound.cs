@@ -72,7 +72,7 @@ namespace FSO.SimAntics.Primitives
     public class VMPlaySoundOperand : VMPrimitiveOperand {
 
         public ushort EventID { get; set; }
-        public ushort Pad;
+        public ushort SampleRate; // 8.8 fixed point, though i've yet to see something use this
         public byte Flags { get; set; }
         public byte Volume { get; set; }
 
@@ -82,7 +82,7 @@ namespace FSO.SimAntics.Primitives
             using (var io = IoBuffer.FromBytes(bytes, ByteOrder.LITTLE_ENDIAN))
             {
                 EventID = io.ReadUInt16();
-                Pad = io.ReadUInt16();
+                SampleRate = io.ReadUInt16();
                 Flags = io.ReadByte();
                 Volume = io.ReadByte();
             }
@@ -92,13 +92,32 @@ namespace FSO.SimAntics.Primitives
             using (var io = new BinaryWriter(new MemoryStream(bytes)))
             {
                 io.Write(EventID);
-                io.Write(Pad);
+                io.Write(SampleRate);
                 io.Write(Flags);
                 io.Write(Volume);
             }
         }
 
         #endregion
+        public bool SimSpeedAffects
+        {
+            get { return (Flags & 32) == 32; }
+            set
+            {
+                if (value) Flags |= 32;
+                else Flags &= unchecked((byte)~32);
+            }
+        }
+
+        public bool AutoVary
+        {
+            get { return (Flags & 16) == 16; }
+            set
+            {
+                if (value) Flags |= 16;
+                else Flags &= unchecked((byte)~16);
+            }
+        }
 
         public bool NoPan {
             get { return (Flags&8) == 8; }
