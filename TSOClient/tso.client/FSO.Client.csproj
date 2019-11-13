@@ -292,7 +292,7 @@
     <Compile Include="Utils\PalMapper.cs" />
     <Compile Include="Utils\TestFunctions\ProjectionTest.cs" />
     <Compile Include="Utils\ThreeDMesh.cs" />
-    <Content Include="..\..\Other\libs\FSOMonoGame\MonoGame.Framework\obj\Linux\AnyCPU\Release\MonoGame.Framework.dll">
+    <Content Include="..\..\Other\libs\FSOMonoGame\MonoGame.Framework\obj\Linux\AnyCPU\Release\MonoGame.Framework.dll" Condition="Exists('..\..\Other\libs\FSOMonoGame\MonoGame.Framework\obj\Linux\AnyCPU\Release\MonoGame.Framework.dll')">
       <Link>Monogame\Linux\MonoGame.Framework.dll</Link>
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </Content>
