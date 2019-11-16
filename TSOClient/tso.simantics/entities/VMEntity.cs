@@ -880,6 +880,21 @@ namespace FSO.SimAntics
             PositionChange(context, noEntryPoint);
         }
 
+        public void RecurseSlotFunc(Action<VMEntity> func)
+        {
+            func(this);
+            var count = TotalSlots();
+
+            for (int i = 0; i < count; i++)
+            {
+                var item = GetSlot(i);
+                if (item != null)
+                {
+                    item.RecurseSlotFunc(func);
+                }
+            }
+        }
+
         public bool WillLoopSlot(VMEntity test)
         {
             if (test == this) return true;

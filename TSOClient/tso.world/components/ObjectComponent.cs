@@ -210,7 +210,8 @@ namespace FSO.LotView.Components
         {
             get
             {
-                return _ForceDynamic || Headline != null || Mode.HasFlag(ComponentRenderMode._3D);
+                var bottomMost = GetBottomContainer();
+                return _ForceDynamic || Headline != null || Mode.HasFlag(ComponentRenderMode._3D) || bottomMost is AvatarComponent;
             }
             set
             {
@@ -221,7 +222,6 @@ namespace FSO.LotView.Components
                 }
                 _ForceDynamic = value;
             }
-
         }
 
         private ulong _DynamicSpriteFlags = 0x00000000;

@@ -264,7 +264,7 @@ namespace FSO.SimAntics
                     allSounds.AddRange(ent.SoundThreads.Select(x => x.Sound));
                 }
 
-                if (SpeedMultiplier < 1 && LastFrameSpeed >= 1) allSounds.ForEach((x) => x.Pause()); 
+                if (SpeedMultiplier < 1 && SpeedMultiplier > -2 && LastFrameSpeed >= 1) allSounds.ForEach((x) => x.Pause()); 
                 else if (SpeedMultiplier >= 1 && LastFrameSpeed < 1) allSounds.ForEach((x) => x.Resume());
                 LastFrameSpeed = SpeedMultiplier;
             }

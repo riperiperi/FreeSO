@@ -27,6 +27,8 @@ namespace FSO.Vitaboy
         public Bone[] Bones;
         public Bone RootBone;
 
+        public BCF ParentBCF;
+
         /// <summary>
         /// Gets a bone from this Skeleton instance.
         /// </summary>
