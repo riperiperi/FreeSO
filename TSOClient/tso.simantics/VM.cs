@@ -198,6 +198,35 @@ namespace FSO.SimAntics
             return result;
         }
 
+        public string GetActiveTrace()
+        {
+            List<VMStackFrame> ActiveStack = null;
+            if (!Scheduler.RunningNow)
+            {
+                var cmd = Driver.Executing;
+                if (cmd != null)
+                    return "Running Command of type: " + cmd.ToString();
+                return "Not running object tick or command.";
+            }
+            var objID = Scheduler.CurrentObjectID;
+
+            var obj = GetObjectById(objID);
+            if (obj == null) return "Not running object tick or command.";
+            ActiveStack = new List<VMStackFrame>(obj.Thread.Stack);
+            return obj.ToString() + " Running: \r\n\r\n" + VMSimanticsException.GetStackTrace(ActiveStack);
+        }
+
+        public void SignalTraceLog(string description, bool withCSStack)
+        {
+            var trace = GetActiveTrace();
+            var cs = "";
+            if (withCSStack)
+            {
+                cs = new System.Diagnostics.StackTrace().ToString();
+            }
+            SignalChatEvent(new VMChatEvent(null, VMChatEventType.Debug, $"{description}\n{trace}\n--------\n{cs}"));
+        }
+
         /// <summary>
         /// Initializes this Virtual Machine.
         /// </summary>

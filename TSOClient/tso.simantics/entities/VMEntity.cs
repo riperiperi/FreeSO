@@ -30,6 +30,7 @@ using FSO.LotView.Utils;
 using FSO.LotView.RC;
 using System.Linq;
 using FSO.LotView.Utils.Camera;
+using FSO.SimAntics.NetPlay.Model;
 
 namespace FSO.SimAntics
 {
@@ -1344,6 +1345,17 @@ namespace FSO.SimAntics
             else
             {
                 if (Dead) return;
+                
+                //DEBUG
+                if (Object.OBJ.GUID == 0x5157DDF2 || Object.OBJ.GUID == 0x3278BD34)
+                {
+                    if (context.VM.Scheduler.PendingDeletion.Count == 0 || context.VM.Scheduler.RunningNow)
+                    {
+                        context.VM.SignalTraceLog("=== PET OBJECT DELETED ===", true);
+                    }
+                }
+                //END DEBUG
+
                 if (context.VM.Scheduler.RunningNow)
                 {
                     //queue this object to be deleted at the end of the frame
