@@ -169,7 +169,7 @@ namespace FSO.SimAntics.Engine
             if (Routine != null && input.Locals != null && Routine.Locals > input.Locals.Length)
             {
                 Locals = new short[Routine.Locals];
-                Array.Copy(input.Locals, Locals, Routine.Locals);
+                Array.Copy(input.Locals, Locals, input.Locals.Length);
             }
             else
             {
