@@ -769,7 +769,7 @@ namespace FSO.SimAntics
                 if (objDefinition == null)
                 {
                     LoadErrors.Add(new VMLoadError(VMLoadErrorCode.MISSING_OBJECT, 
-                        ent.GUID.ToString("x8") + " " + input.MultitileGroups.FirstOrDefault()?.Name ?? "(unknown name)", (ushort)ent.ObjectID));
+                        "0x" + ent.GUID.ToString("X8") + " " + input.MultitileGroups.FirstOrDefault(x => x.Objects.Contains(ent.ObjectID))?.Name ?? "(unknown name)", (ushort)ent.ObjectID));
                     ent.LoadFailed = true;
                     continue;
                 }
@@ -801,6 +801,7 @@ namespace FSO.SimAntics
             }
 
             int i = 0;
+            int j = 0;
             foreach (var ent in input.Entities)
             {
                 if (ent.LoadFailed)
@@ -809,7 +810,8 @@ namespace FSO.SimAntics
                     continue;
                 }
                 var threadMarsh = input.Threads[i];
-                var realEnt = Entities[i++];
+                var realEnt = Entities[j++];
+                i++;
 
                 realEnt.Thread = new VMThread(threadMarsh, Context, realEnt);
                 Scheduler.ScheduleTickIn(realEnt, 1);
@@ -831,7 +833,7 @@ namespace FSO.SimAntics
                     {
                         avgPos += obj.Position;
                     }
-                    avgPos /= grp.Objects.Count;
+                    avgPos /= Math.Max(grp.Objects.Count, 1);
 
                     foreach (var obj in grp.Objects)
                     {

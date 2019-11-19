@@ -166,7 +166,15 @@ namespace FSO.SimAntics.Engine
             Caller = context.VM.GetObjectById(input.Caller);
             Callee = context.VM.GetObjectById(input.Callee);
             StackObjectID = input.StackObject;
-            Locals = input.Locals;
+            if (Routine != null && input.Locals != null && Routine.Locals > input.Locals.Length)
+            {
+                Locals = new short[Routine.Locals];
+                Array.Copy(input.Locals, Locals, Routine.Locals);
+            }
+            else
+            {
+                Locals = input.Locals;
+            }
             Args = input.Args;
             DiscardResult = input.DiscardResult;
             ActionTree = input.ActionTree;

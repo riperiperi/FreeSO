@@ -781,8 +781,21 @@ namespace FSO.Client.UI.Screens
         private void VMRefreshed()
         {
             if (vm == null) return;
-            LotControl.ActiveEntity = null;
-            LotControl.RefreshCut();
+            GameThread.InUpdate(() =>
+            {
+                if (vm.LoadErrors.Count > 0) HandleLoadErrors();
+                LotControl.ActiveEntity = null;
+                LotControl.RefreshCut();
+            });
+        }
+
+        private void HandleLoadErrors()
+        {
+            UIAlert.Alert("Lot Load Error", $"An error occurred loading lot state. It is not recommended that you continue, as you will desync from the server repeatedly. \n\n" +
+                $"Errors: \n{String.Join("\n", vm.LoadErrors.Select(x => x.ToString()))}\n\n" +
+                $"Your best bet is reinstalling FreeSO or The Sims Online. If this appears repeatedly, you definitely have an issue. You should also post this message on discord.",
+                true);
+            vm.LoadErrors.Clear();
         }
 
         private void VMDebug_OnButtonClick(UIElement button)
