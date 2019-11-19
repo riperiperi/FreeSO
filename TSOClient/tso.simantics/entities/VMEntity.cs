@@ -1351,7 +1351,7 @@ namespace FSO.SimAntics
                 {
                     if (context.VM.Scheduler.PendingDeletion.Count == 0 || context.VM.Scheduler.RunningNow)
                     {
-                        context.VM.SignalTraceLog("=== PET OBJECT DELETED ===", true);
+                        context.VM.SignalTraceLog($"=== PET OBJECT DELETED ({ToString()} - pid: {PersistID}, owner: {(PlatformState as VMTSOObjectState)?.OwnerID ?? 0}) ===", true);
                     }
                 }
                 //END DEBUG
