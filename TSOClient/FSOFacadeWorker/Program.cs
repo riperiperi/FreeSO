@@ -136,8 +136,7 @@ namespace FSOFacadeWorker
             WorkerLoop();
 
             Console.WriteLine("Exiting.");
-            GameThread.Killed = true;
-            GameThread.OnKilled.Set();
+            GameThread.SetKilled();
             gds.Release();
         }
 

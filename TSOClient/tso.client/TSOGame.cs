@@ -305,8 +305,7 @@ namespace FSO.Client
                 kernel.Get<LotConnectionRegulator>()?.Disconnect();
                 kernel.Get<CityConnectionRegulator>()?.Disconnect();
             }
-            GameThread.Killed = true;
-            GameThread.OnKilled.Set();
+            GameThread.SetKilled();
         }
 
         /// <summary>
