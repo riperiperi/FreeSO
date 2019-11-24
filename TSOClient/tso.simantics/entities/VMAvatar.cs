@@ -1057,11 +1057,13 @@ namespace FSO.SimAntics
             {
                 obj.WorldUI.Container = this.WorldUI;
                 obj.WorldUI.ContainerSlot = slot;
-                if (obj.WorldUI is ObjectComponent)
+                HandObject.RecurseSlotFunc(contained =>
                 {
-                    var objC = (ObjectComponent)obj.WorldUI;
-                    objC.ForceDynamic = true;
-                }
+                    if (contained is VMGameObject)
+                    {
+                        ((ObjectComponent)contained.WorldUI).ForceDynamic = true;
+                    }
+                });
             }
             obj.Position = Position; //TODO: is physical position the same as the slot offset position?
             if (cleanOld) obj.PositionChange(context, false);
@@ -1090,11 +1092,13 @@ namespace FSO.SimAntics
                 HandObject.WorldUI.Container = null;
                 HandObject.WorldUI.ContainerSlot = 0;
 
-                if (HandObject.WorldUI is ObjectComponent)
+                HandObject.RecurseSlotFunc(contained =>
                 {
-                    var objC = (ObjectComponent)HandObject.WorldUI;
-                    objC.ForceDynamic = false;
-                }
+                    if (contained is VMGameObject)
+                    {
+                        ((ObjectComponent)contained.WorldUI).ForceDynamic = false;
+                    }
+                });
             }
 
             HandObject = null;

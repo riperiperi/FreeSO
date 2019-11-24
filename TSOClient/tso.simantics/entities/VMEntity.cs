@@ -30,6 +30,7 @@ using FSO.LotView.Utils;
 using FSO.LotView.RC;
 using System.Linq;
 using FSO.LotView.Utils.Camera;
+using FSO.SimAntics.NetPlay.Model;
 
 namespace FSO.SimAntics
 {
@@ -880,6 +881,21 @@ namespace FSO.SimAntics
             PositionChange(context, noEntryPoint);
         }
 
+        public void RecurseSlotFunc(Action<VMEntity> func)
+        {
+            func(this);
+            var count = TotalSlots();
+
+            for (int i = 0; i < count; i++)
+            {
+                var item = GetSlot(i);
+                if (item != null)
+                {
+                    item.RecurseSlotFunc(func);
+                }
+            }
+        }
+
         public bool WillLoopSlot(VMEntity test)
         {
             if (test == this) return true;
@@ -1331,6 +1347,17 @@ namespace FSO.SimAntics
             else
             {
                 if (Dead) return;
+                
+                //DEBUG
+                if (Object.OBJ.GUID == 0x5157DDF2 || Object.OBJ.GUID == 0x3278BD34)
+                {
+                    if (context.VM.Scheduler.PendingDeletion.Count == 0 || context.VM.Scheduler.RunningNow)
+                    {
+                        context.VM.SignalTraceLog($"=== PET OBJECT DELETED ({ToString()} - pid: {PersistID}, owner: {(PlatformState as VMTSOObjectState)?.OwnerID ?? 0}) ===", true);
+                    }
+                }
+                //END DEBUG
+
                 if (context.VM.Scheduler.RunningNow)
                 {
                     //queue this object to be deleted at the end of the frame
