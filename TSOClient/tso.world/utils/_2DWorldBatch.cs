@@ -323,6 +323,16 @@ namespace FSO.LotView.Utils
             );
         }
 
+        public void ResizeBuffer(int bufferIndex, int width, int height)
+        {
+            var buffer = Buffers[bufferIndex];
+            if (buffer.Width != width || buffer.Height != height)
+            {
+                Buffers[bufferIndex] = PPXDepthEngine.CreateRenderTarget(Device, 1, 0, buffer.Format, width, height, buffer.DepthStencilFormat);
+                buffer.Dispose();
+            }
+        }
+
         public void PrepareImmediate(WorldBatchTechniques technique)
         {
             var effect = this.Effect;

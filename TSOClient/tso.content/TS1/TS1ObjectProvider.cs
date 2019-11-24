@@ -72,7 +72,8 @@ namespace FSO.Content.TS1
                         if (obj.ObjectType == OBJDType.Person) PersonGUIDs.Add(obj.GUID);
 
                         //does this object appear in the catalog?
-                        if ((obj.FunctionFlags > 0 || obj.BuildModeType > 0) && obj.Disabled == 0 && (obj.MasterID == 0 || obj.SubIndex == -1))
+                        if ((obj.FunctionFlags > 0 || obj.BuildModeType > 0) && obj.Disabled == 0 && 
+                            (obj.IsMultiTile || obj.NumGraphics > 0) && (obj.MasterID == 0 || obj.SubIndex == -1))
                         {
                             //todo: more than one of these set? no normal game objects do this
                             //todo: room sort
@@ -81,6 +82,7 @@ namespace FSO.Content.TS1
                             var item = new ObjectCatalogItem()
                             {
                                 Category = (sbyte)(cat), //0-7 buy categories. 8-15 build mode categories
+                                RoomSort = (byte)obj.RoomFlags,
                                 GUID = obj.GUID,
                                 DisableLevel = 0,
                                 Price = obj.Price,

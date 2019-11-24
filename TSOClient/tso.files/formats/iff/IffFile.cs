@@ -75,6 +75,7 @@ namespace FSO.Files.Formats.IFF
             //todo: FAMh (family motives ("family house"?)) field encoded.
 
             {"TREE", typeof(TREE) },
+            {"FCNS", typeof(FCNS) },
 
             {"FSOR", typeof(FSOR) },
             {"FSOM", typeof(FSOM) },

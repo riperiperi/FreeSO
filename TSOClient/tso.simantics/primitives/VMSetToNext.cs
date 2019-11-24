@@ -83,7 +83,7 @@ namespace FSO.SimAntics.Primitives
                 switch (operand.SearchType)
                 {
                     case VMSetToNextSearchType.ObjectOnSameTile:
-                        if (Pointer == null) Pointer = context.Caller;
+                        if (Pointer == null) return VMPrimitiveExitCode.GOTO_FALSE; // verified in ts1
                         entities = context.VM.Context.ObjectQueries.GetObjectsAt(Pointer.Position); break;
                     case VMSetToNextSearchType.Person:
                     case VMSetToNextSearchType.FamilyMember:

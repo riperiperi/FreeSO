@@ -933,7 +933,6 @@ namespace FSO.SimAntics
             var action = GetAction((int)id, caller, vm.Context, global);
 
             caller.ObjectData[(int)VMStackObjectVariable.HideInteraction] = 0;
-            if (action != null) action.Flags &= ~TTABFlags.MustRun;
             var actionStrings = caller.Thread.CheckAction(action);
             if ((caller.ObjectData[(int)VMStackObjectVariable.Hidden] == 1 ||
                 caller.ObjectData[(int)VMStackObjectVariable.HideInteraction] == 1 ||
@@ -996,7 +995,6 @@ namespace FSO.SimAntics
                 var action = GetAction((int)id, caller, vm.Context, global);
 
                 caller.ObjectData[(int)VMStackObjectVariable.HideInteraction] = 0;
-                if (action != null) action.Flags &= ~TTABFlags.MustRun;
                 var actionStrings = caller.Thread.CheckAction(action);
                 if ((caller.ObjectData[(int)VMStackObjectVariable.Hidden] == 1 ||
                     caller.ObjectData[(int)VMStackObjectVariable.HideInteraction] == 1 ||
@@ -1132,6 +1130,7 @@ namespace FSO.SimAntics
             {
                 foreach (var ava in context.ObjectQueries.Avatars)
                 {
+                    if (ava == this) continue;
                     bool found = false;
                     for (int i = 0; i <= ava.Thread.ActiveQueueBlock; i++)
                     {
@@ -1832,7 +1831,7 @@ namespace FSO.SimAntics
         public byte ID;
         public TTABInteraction Entry;
 
-        public int Score;
+        public float Score;
         public VMEntity Callee;
         public bool Global;
 

@@ -347,7 +347,11 @@ namespace FSO.SimAntics.Engine
                         ContinueExecution = true;
                         while (ContinueExecution)
                         {
-                            if (TicksThisFrame++ > MAX_LOOP_COUNT) throw new Exception("Thread entered infinite loop! ( >" + MAX_LOOP_COUNT + " primitives)");
+                            if (TicksThisFrame++ > MAX_LOOP_COUNT)
+                            {
+                                TicksThisFrame = 0;
+                                throw new Exception("Thread entered infinite loop! ( >" + MAX_LOOP_COUNT + " primitives)");
+                            }
                             ContinueExecution = false;
                             NextInstruction();
                         }
@@ -750,13 +754,14 @@ namespace FSO.SimAntics.Engine
                 this.Queue.Add(invocation);
                 return;
             }
+            var leapfrog = Context.VM.TS1 ? (TTABFlags)0: TTABFlags.Leapfrog;
 
             if (Queue.Count == 0) //if empty, just queue right at the front 
                 this.Queue.Add(invocation);
             else if ((invocation.Flags & TTABFlags.FSOPushHead) > 0)
                 //place right after active interaction, ignoring all priorities.
                 this.Queue.Insert(ActiveQueueBlock + 1, invocation);
-            else if (((invocation.Flags & TTABFlags.FSOPushTail) | (invocation.Flags & TTABFlags.Leapfrog)) > 0 && invocation.Mode != VMQueueMode.ParentExit)
+            else if (((invocation.Flags & TTABFlags.FSOPushTail) | leapfrog) > 0 && invocation.Mode != VMQueueMode.ParentExit)
             {
                 //this one's weird. start at the left til there's a lower priority. (eg. parent exit or idle)
                 bool hitParentEnd = (invocation.Mode != VMQueueMode.ParentIdle);
@@ -856,7 +861,7 @@ namespace FSO.SimAntics.Engine
             return Push(frame);
         }
 
-        public List<VMPieMenuInteraction> CheckTS1Action(VMQueuedAction action)
+        public List<VMPieMenuInteraction> CheckTS1Action(VMQueuedAction action, bool auto)
         {
             var result = new List<VMPieMenuInteraction>();
 
@@ -874,7 +879,7 @@ namespace FSO.SimAntics.Engine
                 }
                 else if (avatar.IsPet) return null; //not allowed
 
-                var isVisitor = avatar.GetPersonData(VMPersonDataVariable.PersonType) == 1;
+                var isVisitor = avatar.GetPersonData(VMPersonDataVariable.PersonType) == 1 && avatar.GetPersonData(VMPersonDataVariable.GreetStatus) < 2;
                 //avatar.ObjectID != Context.VM.GetGlobalValue(3);
                 var debugTrees = false;
 
@@ -902,21 +907,27 @@ namespace FSO.SimAntics.Engine
                 var negatedFlags = (~ts1Compare) & negMask;
                 if ((negatedFlags & ts1State) > 0) return null; //we are disallowed
             }
-            if (action.CheckRoutine != null && EvaluateCheck(Context, Entity, new VMStackFrame()
+            if (action.CheckRoutine != null)
+            {
+                var args = new short[4];
+                if (auto) args[0] = 1;
+                if (EvaluateCheck(Context, Entity, new VMStackFrame()
                 {
                     Caller = Entity,
                     Callee = action.Callee,
                     CodeOwner = action.CodeOwner,
                     StackObject = action.StackObject,
                     Routine = action.CheckRoutine,
-                    Args = new short[4]
+                    Args = args
                 }, null, result) != VMPrimitiveExitCode.RETURN_TRUE)
-                return null;
-
+                {
+                    return null;
+                }
+            }
             return result;
         }
 
-        public List<VMPieMenuInteraction> CheckAction(VMQueuedAction action)
+        public List<VMPieMenuInteraction> CheckAction(VMQueuedAction action, bool auto = false)
         {
             // 1. check action flags for permissions (if we are avatar)
             // 2. run check tree
@@ -931,7 +942,7 @@ namespace FSO.SimAntics.Engine
             // Allow CSRs:positive effect.
 
             if (action == null) return null;
-            if (Context.VM.TS1) return CheckTS1Action(action);
+            if (Context.VM.TS1) return CheckTS1Action(action, auto);
             var result = new List<VMPieMenuInteraction>();
             
             if (!action.Flags.HasFlag(TTABFlags.FSOSkipPermissions) && Entity is VMAvatar) //just let everyone use the CSR interactions
@@ -998,17 +1009,23 @@ namespace FSO.SimAntics.Engine
                 }
             }
             if ((!action.Flags.HasFlag(TTABFlags.FSOSkipPermissions) || ((action.Flags & TTABFlags.TSORunCheckAlways) > 0))
-                && action.CheckRoutine != null && EvaluateCheck(Context, Entity, new VMStackFrame()
+                && action.CheckRoutine != null)
+            {
+                var args = new short[4];
+                if (auto) args[0] = 1;
+                if (EvaluateCheck(Context, Entity, new VMStackFrame()
                 {
                     Caller = Entity,
                     Callee = action.Callee,
                     CodeOwner = action.CodeOwner,
                     StackObject = action.StackObject,
                     Routine = action.CheckRoutine,
-                    Args = new short[4]
+                    Args = args
                 }, null, result) != VMPrimitiveExitCode.RETURN_TRUE)
-                return null;
-
+                {
+                    return null;
+                }
+            }
             return result;
         }
 

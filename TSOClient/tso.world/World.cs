@@ -466,6 +466,7 @@ namespace FSO.LotView
 
         public void CenterTo(EntityComponent comp)
         {
+            if (comp.Room == 0 || comp.Room == 65531) return; //don't center if the target is out of bounds
             Vector3 pelvisCenter;
             if (comp is AvatarComponent)
             {

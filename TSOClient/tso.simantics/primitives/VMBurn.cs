@@ -66,6 +66,7 @@ namespace FSO.SimAntics.Primitives
                     break;
 
             }
+            if (pos == LotTilePos.OUT_OF_WORLD) return VMPrimitiveExitCode.GOTO_FALSE;
 
             bool first = true;
             bool madeAFire = false;
@@ -75,13 +76,14 @@ namespace FSO.SimAntics.Primitives
             while (spread.Count > 0)
             {
                 var item = spread.Dequeue();
+                if (item == LotTilePos.OUT_OF_WORLD) continue;
 
                 var objat = query.GetObjectsAt(item) ?? new List<VMEntity>();
 
                 if (first && !(objat?.Any(x => x.Object.OBJ.GUID == FIRE_GUID) ?? false))
                 {
                     madeAFire = true;
-                    context.VM.Context.CreateObjectInstance(FIRE_GUID, LotTilePos.FromBigTile(pos.TileX, pos.TileY, pos.Level), Direction.NORTH);
+                    var fire = context.VM.Context.CreateObjectInstance(FIRE_GUID, LotTilePos.FromBigTile(pos.TileX, pos.TileY, pos.Level), Direction.NORTH);
                 }
                 first = false;
 
@@ -111,7 +113,7 @@ namespace FSO.SimAntics.Primitives
                             spread.Enqueue(fpos);
 
                             madeAFire = true;
-                            context.VM.Context.CreateObjectInstance(FIRE_GUID, LotTilePos.FromBigTile(fpos.TileX, fpos.TileY, fpos.Level), Direction.NORTH);
+                            var fire = context.VM.Context.CreateObjectInstance(FIRE_GUID, LotTilePos.FromBigTile(fpos.TileX, fpos.TileY, fpos.Level), Direction.NORTH);
                             fires[index] = true;
                         }
                     }

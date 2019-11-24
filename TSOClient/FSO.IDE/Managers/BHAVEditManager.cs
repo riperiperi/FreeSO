@@ -65,5 +65,14 @@ namespace FSO.IDE.Managers
         {
             Tracers.Remove(entity);
         }
+
+        public void CloseAllTracers()
+        {
+            var tracers = Tracers.ToList();
+            foreach (var tracer in tracers)
+            {
+                tracer.Value.Close();
+            }
+        }
     }
 }

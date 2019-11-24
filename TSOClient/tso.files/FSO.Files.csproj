@@ -118,6 +118,7 @@
   </ItemGroup>
   <ItemGroup>
     <Compile Include="Formats\IFF\Chunks\ARRY.cs" />
+    <Compile Include="Formats\IFF\Chunks\FCNS.cs" />
     <Compile Include="Formats\IFF\Chunks\HOUS.cs" />
     <Compile Include="Formats\IFF\Chunks\PART.cs" />
     <Compile Include="Formats\IFF\Chunks\PNG.cs" />

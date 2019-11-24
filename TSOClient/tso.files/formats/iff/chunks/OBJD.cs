@@ -260,13 +260,13 @@ namespace FSO.Files.Formats.IFF.Chunks
         public ushort BHAV_Repair { get; set; }
 
         public ushort WallStyleSpriteID { get; set; }
-        public ushort RatingHunger { get; set; }
-        public ushort RatingComfort { get; set; }
-        public ushort RatingHygiene { get; set; }
-        public ushort RatingBladder { get; set; }
-        public ushort RatingEnergy { get; set; }
-        public ushort RatingFun { get; set; }
-        public ushort RatingRoom { get; set; }
+        public short RatingHunger { get; set; }
+        public short RatingComfort { get; set; }
+        public short RatingHygiene { get; set; }
+        public short RatingBladder { get; set; }
+        public short RatingEnergy { get; set; }
+        public short RatingFun { get; set; }
+        public short RatingRoom { get; set; }
         public ushort RatingSkillFlags { get; set; }
 
         public ushort[] RawData;
@@ -356,7 +356,7 @@ namespace FSO.Files.Formats.IFF.Chunks
         {
             get
             {
-                return !IsMultiTile;
+                return SubIndex == -1;
             }
         }
 
@@ -519,13 +519,13 @@ namespace FSO.Files.Formats.IFF.Chunks
                 {
                     this.BHAV_Repair = io.ReadUInt16();
                     this.WallStyleSpriteID = io.ReadUInt16();
-                    this.RatingHunger = io.ReadUInt16();
-                    this.RatingComfort = io.ReadUInt16();
-                    this.RatingHygiene = io.ReadUInt16();
-                    this.RatingBladder = io.ReadUInt16();
-                    this.RatingEnergy = io.ReadUInt16();
-                    this.RatingFun = io.ReadUInt16();
-                    this.RatingRoom = io.ReadUInt16();
+                    this.RatingHunger = io.ReadInt16();
+                    this.RatingComfort = io.ReadInt16();
+                    this.RatingHygiene = io.ReadInt16();
+                    this.RatingBladder = io.ReadInt16();
+                    this.RatingEnergy = io.ReadInt16();
+                    this.RatingFun = io.ReadInt16();
+                    this.RatingRoom = io.ReadInt16();
                     this.RatingSkillFlags = io.ReadUInt16();
                     if (numFields > 90)
                     {

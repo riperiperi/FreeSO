@@ -203,6 +203,7 @@ namespace FSO.Content
                 Upgrades.Init();
                 if (Mode == ContentMode.SERVER) Upgrades.LoadJSONTuning();
             }
+            WorldObjectGlobals.InitCurves();
             WorldRoofs.Init();
             LoadProgress = ContentLoadingProgress.Done;
         }
