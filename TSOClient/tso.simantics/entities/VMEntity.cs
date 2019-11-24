@@ -1094,6 +1094,8 @@ namespace FSO.SimAntics
 
         public VMPlacementError IsUserMovable(VMContext context, bool deleting)
         {
+            if (context?.TS1_EnableMod ?? false) // for ts1 moveobjects cheat
+                return VMPlacementError.Success;
             foreach (var obj in MultitileGroup.Objects)
             {
                 var result = obj.IndividualUserMovable(context, deleting);

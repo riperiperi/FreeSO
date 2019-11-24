@@ -189,29 +189,36 @@ namespace FSO.Content.Framework
                 }
                 FarFiles = farFiles.ToArray();
             }
-
+            
             foreach (var farPath in FarFiles){
                 var archive = new FAR1Archive((TS1)?Path.Combine(ContentManager.TS1BasePath, farPath):ContentManager.GetPath(farPath), !TS1);
                 var entries = archive.GetAllFarEntries();
 
                 foreach (var entry in entries)
                 {
-                    var referenceItem = new Far1ProviderEntry<T>(this)
+                    try
                     {
-                        Archive = archive,
-                        FarEntry = entry
-                    };
-                    if (entry.Filename != null)
-                    {
-                        EntriesByName[entry.Filename] = referenceItem;
-                        var ext = Path.GetExtension(entry.Filename).ToLowerInvariant();
-                        List<Far1ProviderEntry<T>> group = null;
-                        if (!EntriesOfType.TryGetValue(ext, out group))
+                        var referenceItem = new Far1ProviderEntry<T>(this)
                         {
-                            group = new List<Far1ProviderEntry<T>>();
-                            EntriesOfType[ext] = group;
+                            Archive = archive,
+                            FarEntry = entry
+                        };
+                        if (entry.Filename != null)
+                        {
+                            EntriesByName[entry.Filename] = referenceItem;
+                            var ext = Path.GetExtension(entry.Filename).ToLowerInvariant();
+                            List<Far1ProviderEntry<T>> group = null;
+                            if (!EntriesOfType.TryGetValue(ext, out group))
+                            {
+                                group = new List<Far1ProviderEntry<T>>();
+                                EntriesOfType[ext] = group;
+                            }
+                            group.Add(referenceItem);
                         }
-                        group.Add(referenceItem);
+                    }
+                    catch (Exception exception)
+                    {
+                        throw new Exception($"The FAR archive at: {archive} adding entry: {entry.Filename} threw the following exception: ", exception);
                     }
                 }
             }
