@@ -18,6 +18,7 @@ using FSO.Files.Formats.IFF;
 using FSO.Files.Formats.IFF.Chunks;
 using FSO.Files.Formats.OTF;
 using FSO.Files.FAR1;
+using FSO.Common.TS1;
 
 namespace FSO.Content
 {
@@ -29,6 +30,12 @@ namespace FSO.Content
         private Dictionary<string, GameGlobal> Cache; //indexed by lowercase filename, minus directory and extension.
         private Content ContentManager;
         private FAR1Archive TS1Provider;
+
+        public TS1Curve[] HappyWeight;
+        public TS1Curve[] HappyWeightChild;
+        public TS1Curve[] InteractionScore;
+        public TS1Curve[] InteractionScoreChild;
+        public TS1Curve[] HouseScore;
 
         public WorldGlobalProvider(Content contentManager)
         {
@@ -45,6 +52,118 @@ namespace FSO.Content
             {
                 TS1Provider = new FAR1Archive(Path.Combine(ContentManager.TS1BasePath, "GameData/Global/Global.far"), false);
             }
+        }
+
+        public void InitCurves()
+        {
+            var global = Get("global");
+            InteractionScore = CurveFromSTR(global.Resource.Get<STR>(501), true);
+            HappyWeight = CurveFromSTR(global.Resource.Get<STR>(502), true);
+            InteractionScoreChild = CurveFromSTR(global.Resource.Get<STR>(503), true);
+            HappyWeightChild = CurveFromSTR(global.Resource.Get<STR>(504), true);
+            HouseScore = CurveFromSTR(global.Resource.Get<STR>(505), false);
+
+            /*
+            PermutationTest(HappyWeight, new float[] { 98.5f, 97.92f, 98.325f, 99.32f, 98.674f, 80.268f, 99.479f, 99f }, 30f);
+            PermutationTest(HappyWeight, new float[] { -50.375f, -45.52f, -40.126f, -30.17f, -20.3f, -100f, -10.13f, -0.25f }, 9.42593f);
+            PermutationTest(HappyWeight, new float[] { 46.5f, 72.081f, 48.027f, 53.71f, 49.2f, -100f, 95.442f, 50.75f }, 37.593f);
+            */
+        }
+
+        private void PermutationTest(TS1Curve[] weights, float[] values, float expected)
+        {
+            //first transform the motives because i'm done with my life
+            var original = new float[values.Length];
+            Array.Copy(values, original, values.Length);
+            for (int v=0; v<values.Length; v++)
+            {
+                values[v] = InteractionScore[(v > 4) ? v + 1 : v].GetPoint(values[v]);
+            }
+
+            int[] bestPermutation = null;
+            float bestDistance = float.PositiveInfinity;
+
+            //left side: values
+            //right side: weights
+            //permute all combinations of value -> weight assignments, and find the closest to the target value
+
+            var n = values.Length;
+            var wList = weights.ToList();
+            while (wList.Count < n)
+            {
+                wList.Add(new TS1Curve("(-100;1) (100;1)"));
+            }
+            weights = wList.ToArray();
+            var assignments = Enumerable.Range(0, n).ToArray();
+            var evals = 0;
+
+            Action processAssignment = () =>
+            {
+                evals++;
+                float sumMotive = 0;
+                float sumWeight = 0;
+                for (int j=0; j<n; j++)
+                {
+                    var motive = values[j];
+                    var oMotive = original[j];
+                    var myWCurve = weights[assignments[j]];
+
+                    var weight = myWCurve.GetPoint((float)Math.Round(oMotive));
+                    sumMotive += motive * weight;
+                    sumWeight += weight;
+                }
+                var finalScore = sumMotive / sumWeight;
+                var dist = Math.Abs(finalScore - expected);
+                if (dist < bestDistance)
+                {
+                    bestDistance = dist;
+                    bestPermutation = assignments.ToArray();
+                }
+            };
+
+            Action<int, int> swap = (int ind1, int ind2) =>
+            {
+                var temp = assignments[ind1];
+                assignments[ind1] = assignments[ind2];
+                assignments[ind2] = temp;
+            };
+
+            var c = new int[values.Length]; //algorithm depth state
+
+            processAssignment();
+
+            int i = 0;
+            while (i < n)
+            {
+                if (c[i] < i)
+                {
+                    if (i % 2 == 0) swap(0, 1);
+                    else swap(c[i], i);
+                    processAssignment();
+                    c[i]++;
+                    i = 0;
+                }
+                else
+                {
+                    c[i] = 0;
+                    i++;
+                }
+            }
+        }
+
+        private TS1Curve[] CurveFromSTR(STR str, bool cache)
+        {
+            var length = str.Length;
+            var result = new TS1Curve[length];
+            for (int i=0; i<length; i++)
+            {
+                result[i] = new TS1Curve(str.GetString(i));
+                if (cache)
+                {
+                    result[i].BuildCache(-100, 100);
+                }
+            }
+            return result;
         }
 
         /// <summary>

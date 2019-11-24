@@ -231,6 +231,7 @@ namespace FSO.IDE.ResourceBrowser.ResourceEditors
             catch (Exception) {
 
                 Selected = new TTABInteraction() { TTAIndex = 0, MotiveEntries = new TTABMotiveEntry[MotiveNames.Length] };
+                Selected.InitMotiveEntries();
                 enabled = false;
                 //disable everything and set Selected to a dummy.
             }
@@ -361,6 +362,7 @@ namespace FSO.IDE.ResourceBrowser.ResourceEditors
             Content.Content.Get().Changes.BlockingResMod(new ResAction(() =>
             {
                 sel.MotiveEntries[ind].EffectRangeMinimum = value;
+                ActiveTTAB.InitAutoInteractions();
             }, ActiveTTAB));
             UpdateMotiveList();
         }
@@ -375,6 +377,7 @@ namespace FSO.IDE.ResourceBrowser.ResourceEditors
             Content.Content.Get().Changes.BlockingResMod(new ResAction(() =>
             {
                 sel.MotiveEntries[ind].EffectRangeDelta = (short)(value - Selected.MotiveEntries[ind].EffectRangeMinimum);
+                ActiveTTAB.InitAutoInteractions();
             }, ActiveTTAB));
             UpdateMotiveList();
         }
@@ -389,6 +392,7 @@ namespace FSO.IDE.ResourceBrowser.ResourceEditors
             Content.Content.Get().Changes.BlockingResMod(new ResAction(() =>
             {
                 sel.MotiveEntries[ind].PersonalityModifier = value;
+                ActiveTTAB.InitAutoInteractions();
             }, ActiveTTAB));
             UpdateMotiveList();
         }
@@ -443,6 +447,7 @@ namespace FSO.IDE.ResourceBrowser.ResourceEditors
             Content.Content.Get().Changes.BlockingResMod(new ResAction(() =>
             {
                 var action = new TTABInteraction() { TTAIndex = (uint)TTAIndex, MotiveEntries = new TTABMotiveEntry[MotiveNames.Length] };
+                action.InitMotiveEntries();
                 ActiveTTAB.InsertInteraction(action, 
                     (sel == null)?ActiveTTAB.Interactions.Length:(Array.IndexOf(ActiveTTAB.Interactions, sel)+1));
             }, ActiveTTAB));

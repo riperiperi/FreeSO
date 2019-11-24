@@ -22,6 +22,7 @@ namespace FSO.Files.Formats.IFF.Chunks
     {
         public TTABInteraction[] Interactions = new TTABInteraction[0];
         public Dictionary<uint, TTABInteraction> InteractionByIndex = new Dictionary<uint, TTABInteraction>();
+        public TTABInteraction[] AutoInteractions = new TTABInteraction[0];
 
         public static float[] AttenuationValues = {
             0, //custom
@@ -53,6 +54,12 @@ namespace FSO.Files.Formats.IFF.Chunks
                 if (Interactions.Length == 0) return; //no interactions, don't bother reading remainder.
                 var version = io.ReadUInt16();
                 IOProxy iop;
+                if (version <= 3)
+                {
+                    // DO NOT LOAD THIS TTAB TYPE
+                    Interactions = new TTABInteraction[0];
+                    return;
+                }
                 if (version < 9 || (version > 10 && !iff.TSBO)) iop = new TTABNormal(io);
                 else
                 {
@@ -75,6 +82,7 @@ namespace FSO.Files.Formats.IFF.Chunks
                     for (int j = 0; j < result.MotiveEntries.Length; j++)
                     {
                         var motive = new TTABMotiveEntry();
+                        motive.MotiveIndex = j;
                         if (version > 6) motive.EffectRangeMinimum = iop.ReadInt16();
                         motive.EffectRangeDelta = iop.ReadInt16();
                         if (version > 6) motive.PersonalityModifier = iop.ReadUInt16();
@@ -88,6 +96,7 @@ namespace FSO.Files.Formats.IFF.Chunks
                     InteractionByIndex.Add(result.TTAIndex, result);
                 }
             }
+            InitAutoInteractions();
         }
 
         public override bool Write(IffFile iff, Stream stream)
@@ -133,6 +142,7 @@ namespace FSO.Files.Formats.IFF.Chunks
             Interactions = newInt;
 
             if (!InteractionByIndex.ContainsKey(action.TTAIndex)) InteractionByIndex.Add(action.TTAIndex, action);
+            InitAutoInteractions();
         }
 
         public void DeleteInteraction(int index)
@@ -145,6 +155,16 @@ namespace FSO.Files.Formats.IFF.Chunks
             Interactions = newInt;
 
             if (InteractionByIndex.ContainsKey(action.TTAIndex)) InteractionByIndex.Remove(action.TTAIndex);
+            InitAutoInteractions();
+        }
+
+        public void InitAutoInteractions()
+        {
+            foreach (var interaction in Interactions)
+            {
+                interaction.ActiveMotiveEntries = interaction.MotiveEntries.Where(x => x.EffectRangeDelta != 0).ToArray();
+            }
+            AutoInteractions = Interactions.Where(interaction => interaction.ActiveMotiveEntries.Length > 0).ToArray();
         }
     }
 
@@ -189,6 +209,8 @@ namespace FSO.Files.Formats.IFF.Chunks
         public uint AutonomyThreshold;
         public int JoiningIndex;
         public TSOFlags Flags2 = (TSOFlags)0x1e; //allow a lot of things
+
+        public TTABMotiveEntry[] ActiveMotiveEntries; //populated when asking for auto interactions.
 
         public InteractionMaskFlags MaskFlags {
             get {
@@ -239,6 +261,7 @@ namespace FSO.Files.Formats.IFF.Chunks
             get { return (Flags2 & TSOFlags.AllowGhost) > 0; }
             set { Flags2 &= ~(TSOFlags.AllowGhost); if (value) Flags2 |= TSOFlags.AllowGhost; }
         }
+
         public bool AllowCats
         {
             get { return (Flags & TTABFlags.AllowCats) > 0; }
@@ -248,6 +271,17 @@ namespace FSO.Files.Formats.IFF.Chunks
         {
             get { return (Flags & TTABFlags.AllowDogs) > 0; }
             set { Flags &= ~(TTABFlags.AllowDogs); if (value) Flags |= TTABFlags.AllowDogs; }
+        }
+
+        public bool TS1AllowCats
+        {
+            get { return (Flags & TTABFlags.TS1AllowCats) > 0; }
+            set { Flags &= ~(TTABFlags.TS1AllowCats); if (value) Flags |= TTABFlags.TS1AllowCats; }
+        }
+        public bool TS1AllowDogs
+        {
+            get { return (Flags & TTABFlags.TS1AllowDogs) > 0; }
+            set { Flags &= ~(TTABFlags.TS1AllowDogs); if (value) Flags |= TTABFlags.TS1AllowDogs; }
         }
 
         //FLAGS
@@ -303,6 +337,14 @@ namespace FSO.Files.Formats.IFF.Chunks
             get { return (MaskFlags & InteractionMaskFlags.AvailableWhenDead) > 0; }
             set { MaskFlags &= ~(InteractionMaskFlags.AvailableWhenDead); if (value) MaskFlags |= InteractionMaskFlags.AvailableWhenDead; }
         }
+
+        public void InitMotiveEntries()
+        {
+            for (int i=0; i<MotiveEntries.Length; i++)
+            {
+                MotiveEntries[i].MotiveIndex = i;
+            }
+        }
     }
 
     /// <summary>
@@ -310,6 +352,8 @@ namespace FSO.Files.Formats.IFF.Chunks
     /// </summary>
     public struct TTABMotiveEntry
     {
+        public int MotiveIndex; // don't save this
+
         public short EffectRangeMinimum;
         public short EffectRangeDelta;
         public ushort PersonalityModifier;

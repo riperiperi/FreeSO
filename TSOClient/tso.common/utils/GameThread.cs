@@ -105,11 +105,19 @@ namespace FSO.Common.Utils
         public static bool Killed;
         public static bool NoGame;
         public static EventWaitHandle OnKilled = new EventWaitHandle(false, EventResetMode.ManualReset);
+        public static event Action KilledEvent;
         public static Thread Game;
         public static bool UpdateExecuting;
         private static List<UpdateHook> _UpdateHooks = new List<UpdateHook>();
         private static Queue<Callback<UpdateState>> _UpdateCallbacks = new Queue<Callback<UpdateState>>();
         public static AutoResetEvent OnWork = new AutoResetEvent(false);
+
+        public static void SetKilled()
+        {
+            Killed = true;
+            OnKilled.Set();
+            KilledEvent?.Invoke();
+        }
 
         public static GameThreadTimeout SetTimeout(Callback callback, long delay)
         {

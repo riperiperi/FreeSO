@@ -45,13 +45,17 @@ namespace FSO.LotView.Platform
             state.Zoom = WorldZoom.Far;
             state.Rotation = WorldRotation.TopLeft;
             state.Level = bp.Stories;
-            state.PreciseZoom = 1/4f;
+            var ts1 = Content.Content.Get().TS1;
+            state.PreciseZoom = ts1 ? (1 / 2f) : (1 / 4f);
+            var size = ts1 ? (bp.Width * 16) : (576);
             state._2D.PreciseZoom = state.PreciseZoom;
             state.WorldSpace.Invalidate();
             state.InvalidateCamera();
 
+            state._2D.ResizeBuffer(_2DWorldBatch.BUFFER_LOTTHUMB, size, size);
+
             state.CenterTile = bp.GetThumbCenterTile(state);
-            state.CenterTile -= state.WorldSpace.GetTileFromScreen(new Vector2((576 - state.WorldSpace.WorldPxWidth)*4, (576 - state.WorldSpace.WorldPxHeight)*4) / 2);
+            state.CenterTile -= state.WorldSpace.GetTileFromScreen(new Vector2((size - state.WorldSpace.WorldPxWidth) / state.PreciseZoom, (size - state.WorldSpace.WorldPxHeight) / state.PreciseZoom) / 2);
             var pxOffset = -state.WorldSpace.GetScreenOffset();
             bp.Cutaway = new bool[bp.Cutaway.Length];
 
@@ -68,8 +72,9 @@ namespace FSO.LotView.Platform
                 while (buffer.NextPass())
                 {
                     _2d.Pause();
-                    _2d.Resume(); 
-                    bp.FloorGeom.SliceReset(gd, new Rectangle(6, 6, bp.Width - 13, bp.Height - 13));
+                    _2d.Resume();
+                    if (bp.FineArea != null) bp.FloorGeom.BuildableReset(gd, bp.FineArea);
+                    else bp.FloorGeom.SliceReset(gd, new Rectangle(6, 6, bp.Width - 13, bp.Height - 13));
                     //Blueprint.SetLightColor(WorldContent.GrassEffect, Color.White, Color.White);
                     var build = state.SilentBuildMode;
                     state.SilentBuildMode = 0;
@@ -89,7 +94,7 @@ namespace FSO.LotView.Platform
                     }
                     _2d.Pause();
                     _2d.Resume();
-                    rooflessCallback?.Invoke(bufferTexture.Get());
+                    rooflessCallback?.Invoke(gd.GetRenderTargets()[0].RenderTarget as RenderTarget2D);
                     bp.RoofComp.Draw(gd, state);
                 }
 

@@ -221,6 +221,14 @@ namespace FSO.SimAntics
             }
         }
 
+        public bool IsChild
+        {
+            get {
+                var age = GetPersonData(VMPersonDataVariable.PersonsAge);
+                return age < 18;
+            }
+        }
+
         public VMAvatar(GameObject obj)
             : base(obj)
         {
@@ -413,6 +421,7 @@ namespace FSO.SimAntics
         public override void Reset(VMContext context)
         {
             base.Reset(context);
+            SetPersonData(VMPersonDataVariable.Priority, 0);
             if (Animations != null) Animations.Clear();
             if (Headline != null)
             {

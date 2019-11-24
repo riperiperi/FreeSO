@@ -216,6 +216,7 @@
     <Compile Include="Serialization\TypeSerializers\cTSOValueUInt16.cs" />
     <Compile Include="Serialization\TypeSerializers\cTSOValueUInt32.cs" />
     <Compile Include="Serialization\TypeSerializers\cTSOValueUInt64.cs" />
+    <Compile Include="TS1\TS1Curve.cs" />
     <Compile Include="Utils\AssemblyUtils.cs" />
     <Compile Include="Utils\Base64JsonConverter.cs" />
     <Compile Include="Utils\BBCodeParser.cs" />

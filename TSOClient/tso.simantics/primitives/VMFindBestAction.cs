@@ -23,21 +23,32 @@ namespace FSO.SimAntics.Primitives
     // 
     // Each interaction has "motive advertisements" which determine how many autonomy points are given for each interaction.
     //
-    // Advertisements show the Minimum and Maximum points that should be awarded for each motive. 
-    // Zero motives are ignored. Interactions with ALL-ZERO attenuation are never considered for autonomy.
-    // The Maximum is awarded when the motive is at -100. The Minimum is awarded when the motive is at 100 (full)
-    // "Vary By Personality" controls how the autonomy score varies with the sim personality. Likely a 0-1 multiplication based on the personality percent out of max?
-    // Attenuation subtracts from the score multiplied by distance, but the object can still be used with negative score.
-    // 
-    // Each interaction has an "autonomy threshold", which determines when the action becomes much more important to perform.
-    // If one or more actions are above their autonomy threshold, they are ordered by how much above the threshold they are and a random one from the top 4 is chosen.
-    // If an interaction has "Auto first-select" active, then it is instantly chosen if it is the top of the list, with no random component.
+    // First, each motive is converted into an "effective motive" using the interaction contribution curves.
+    // These curves generally make motive changes more evident at lower values, and cap them at a specific value.
+    // This prevents people from considering sleeping at 50% energy, but also allows other motives like fun to use a much higher cap.
+    // "Happy" is calculated as an average of all "effective motive"s, including mood.
+    // (In Hot Date and onwards this may be weighted by the Happy Weight curves)
     //
-    // Autonomy threshold is not a strict cap - if the autonomy score is below it, using the object will now happen less frequently. 
-    // (TS1 v1.0 seems to skip one or two automony, with a regular kind of period. what does complete collection do?)
-    // I'm not sure how this exactly works - it may pick more than the top 4, but it is definitely a different category from being above the threshold.
-
-
+    // For each interaction, we only evaluate it if it has the following properties:
+    // - non-zero motive range for any advertisement
+    // - object is not "occupied"
+    // - object has use count of 0 (this will be really slow in freeso so we will skip it for now, TODO)
+    // - if any advertisements have a non-zero minimum, they are only considered if the motive is below that minimum (TODO: VERIFY)
+    // Interaction check trees are evaluated to see if they are usable. "Auto" is passed to the tree as 1 in param 0, indicating this is an autonomous check.
+    // When evaluating an interaction's check tree, it may change the motive ad range and minimum.
+    // I don't know if anything changes from 0, but if it does then that would really suck for performance.
+    //
+    // For each interaction a new Happy score is calculated based on the motive deltas applied to the sim's current motives.
+    // Motive delta is divided by 1000 for some reason. I don't really agree with this, but it matches numbers with TS 1.0. May be different in HD+.
+    // Personality is applied by **some factor** based on your personality, if present. Likely 0-1 multiplier for personality, 0-2 for skill.
+    // Remember to re-apply the interaction curves to the new motives here.Room for optimisation to only update the motives that changed.
+    //
+    // Attenuation is very simple: Score / (1 + (Attenuation* Distance)). It is applied to the *distance from base happy*, which results in the final score.
+    // Individual motive scores can be negative to discourage use of interactions at high motives.These are combined with positives from other motives.
+    //
+    // Final scores below certain values are ignored:
+    // 1E-07 for visitors and family, 1E-06 for sims who are sitting. These constants are in FCNS 2 in global.iff.
+    // That means negative scores are ignored. Motive ads when you're in the flat part of the curve are ignored.
     // 
 
     public class VMFindBestAction : VMPrimitiveHandler
@@ -71,20 +82,58 @@ namespace FSO.SimAntics.Primitives
             VMPersonDataVariable.LogicSkill // logic skill
         };
 
+        public static VMMotive[] WeightMotives = new VMMotive[]
+        {
+            VMMotive.Energy,
+            VMMotive.Comfort,
+            VMMotive.Hunger,
+            VMMotive.Hygiene,
+            VMMotive.Bladder,
+            VMMotive.Mood,
+            VMMotive.Room,
+            VMMotive.Social,
+            VMMotive.Fun
+        };
+
+        public static int[] MotiveToWeight = Enumerable.Range(0, 16).Select(motive => Array.IndexOf(WeightMotives, (VMMotive)motive)).ToArray();
+
         public override VMPrimitiveExitCode Execute(VMStackFrame context, VMPrimitiveOperand args)
         {
             //if we already have some action, do nothing.
-            if (context.Caller.Thread.Queue.Any(x => x.Mode != VMQueueMode.Idle)) return VMPrimitiveExitCode.GOTO_TRUE;
+            if (context.Caller.Thread.Queue.Any(x => x.Priority > (context.Caller as VMAvatar).GetPersonData(VMPersonDataVariable.Priority))) return VMPrimitiveExitCode.GOTO_TRUE;
 
             var ents = new List<VMEntity>(context.VM.Entities);
             var processed = new HashSet<short>();
             var caller = (VMAvatar)context.Caller;
             var pos1 = caller.Position;
 
-            var attenTable = (caller.GetPersonData(VMPersonDataVariable.PersonType) == 1) ? TTAB.VisitorAttenuationValues : TTAB.AttenuationValues;
+            var visitor = (caller.GetPersonData(VMPersonDataVariable.PersonType) == 1);
+            var child = (caller.IsChild && context.VM.TS1);
+            var attenTable = visitor ? TTAB.VisitorAttenuationValues : TTAB.AttenuationValues;
+            var global = Content.Content.Get().WorldObjectGlobals;
+            var interactionCurve = child ? global.InteractionScoreChild : global.InteractionScore;
+            var happyCurve = child ? global.HappyWeightChild : global.HappyWeight;
+
+            var canUseIndoors = !caller.IsPet || !context.VM.TS1 || caller.GetPersonData(VMPersonDataVariable.GreetStatus) > 0 || caller.GetPersonData(VMPersonDataVariable.PersonType) != 1;
+
+            // === HAPPY CALCULATION ===
+
+            var newStyle = false;
+            // TODO: new style
+            var weights = newStyle ? new float[9] : new float[9] { 1, 1, 1, 1, 1, 1, 1, 1, 1 }; //TODO: weights from curves for new
+            var totalWeight = weights.Sum();
+            for (int i = 0; i < 9; i++) weights[i] /= totalWeight;
+            var minScore = (caller.GetPersonData(VMPersonDataVariable.Posture) > 0) ? 1e-6 : 1e-7;
+
+            var motives = WeightMotives.Select(x => caller.GetMotiveData(x));
+            var happyParts = motives
+                .Zip(interactionCurve, (motive, curve) => curve.GetPoint(motive))
+                .Zip(weights, (motive, weight) => motive * weight)
+                .ToArray();
+
+            float baseHappy = happyParts.Sum();
 
             List<VMPieMenuInteraction> validActions = new List<VMPieMenuInteraction>();
-            List<VMPieMenuInteraction> betterActions = new List<VMPieMenuInteraction>();
             foreach (var iobj in ents)
             {
                 if (iobj.Position == LotTilePos.OUT_OF_WORLD) continue;
@@ -92,22 +141,31 @@ namespace FSO.SimAntics.Primitives
                 if (processed.Contains(obj.ObjectID) || (obj is VMGameObject && ((VMGameObject)obj).Disabled > 0)) continue;
                 processed.Add(obj.ObjectID);
 
+                if (!canUseIndoors)
+                {
+                    //determine if the object is indoors
+                    var roomID = context.VM.Context.GetObjectRoom(obj);
+                    roomID = (ushort)Math.Max(0, Math.Min(context.VM.Context.RoomInfo.Length - 1, roomID));
+                    var room = context.VM.Context.RoomInfo[roomID];
+                    if (!room.Room.IsOutside) continue;
+                }
                 var pos2 = obj.Position;
-                var distance = (short)Math.Floor(Math.Sqrt(Math.Pow(pos1.x - pos2.x, 2) + Math.Pow(pos1.y - pos2.y, 2) + Math.Pow((pos1.Level - pos2.Level) * 320, 2.0)) / 16.0);
+                var distance = (float)Math.Sqrt(Math.Pow(pos1.x - pos2.x, 2) + Math.Pow(pos1.y - pos2.y, 2) + Math.Pow((pos1.Level - pos2.Level) * 320, 2.0)) / 16.0f;
+                var inUse = obj.GetFlag(VMEntityFlags.Occupied);
 
                 if (obj.TreeTable == null) continue;
-                foreach (var entry in obj.TreeTable.Interactions)
+                foreach (var entry in obj.TreeTable.AutoInteractions)
                 {
-                    var advertisements = entry.MotiveEntries.Where(x => x.EffectRangeDelta + x.EffectRangeMinimum > 0).ToList(); //TODO: cache this
-                    if (advertisements.Count == 0) continue; //no ads on this object.
-
                     var id = entry.TTAIndex;
+                    if (inUse && !obj.TreeTable.Interactions.Any(x => x.JoiningIndex == id)) continue;
+                    var advertisements = entry.ActiveMotiveEntries; //TODO: cache this
+                    if (advertisements.Length == 0) continue; //no ads on this object.
+
                     var action = obj.GetAction((int)id, caller, context.VM.Context, false);
                     TTAs ttas = obj.TreeTableStrings;
 
                     caller.ObjectData[(int)VMStackObjectVariable.HideInteraction] = 0;
-                    if (action != null) action.Flags &= ~TTABFlags.MustRun;
-                    var actionStrings = caller.Thread.CheckAction(action);
+                    var actionStrings = caller.Thread.CheckAction(action, true);
 
                     var pie = new List<VMPieMenuInteraction>();
                     if (actionStrings != null)
@@ -140,19 +198,21 @@ namespace FSO.SimAntics.Primitives
                     var first = pie.FirstOrDefault();
                     if (first != null)
                     {
-                        //calculate score for this tree
-                        int score = 0;
-                        for (int i = 0; i < entry.MotiveEntries.Length; i++)
+                        // calculate score for this tree.
+                        // start with the base happy value, and modify it for each motive changed.
+                        float score = baseHappy;
+                        for (int i = 0; i < advertisements.Length; i++)
                         {
-                            var motiveScore = entry.MotiveEntries[i];
+                            var motiveI = advertisements[i].MotiveIndex;
+                            var motiveScore = entry.MotiveEntries[motiveI];
                             short min = motiveScore.EffectRangeMinimum;
                             short max = motiveScore.EffectRangeDelta;
                             short personality = (short)motiveScore.PersonalityModifier;
                             if (first.MotiveAdChanges != null)
                             {
-                                first.MotiveAdChanges.TryGetValue((0 << 16) | i, out min);
-                                first.MotiveAdChanges.TryGetValue((1 << 16) | i, out max);
-                                first.MotiveAdChanges.TryGetValue((2 << 16) | i, out personality);
+                                first.MotiveAdChanges.TryGetValue((0 << 16) | motiveI, out min);
+                                first.MotiveAdChanges.TryGetValue((1 << 16) | motiveI, out max);
+                                first.MotiveAdChanges.TryGetValue((2 << 16) | motiveI, out personality);
                             }
 
                             if (max == 0 && min > 0)
@@ -161,42 +221,53 @@ namespace FSO.SimAntics.Primitives
                                 max = min;
                                 min = 0;
                             }
-
                             max += min; //it's a delta, add min to it
-                            if (max <= 0) continue;
-                            //LINEAR INTERPOLATE MIN SCORE TO MAX, using motive data of caller
-                            //MAX is when motive is the lowest.
-                            //can be in reverse too!
-                            var myMotive = caller.GetMotiveData((VMMotive)i);
-                            int personalityMul = 1000;
-                            if (personality != 0)
+
+                            var myMotive = caller.GetMotiveData((VMMotive)motiveI);
+                            if (min != 0 && myMotive > min) continue;
+
+                            // subtract the base contribution for this motive from happy
+                            var weightInd = MotiveToWeight[motiveI];
+                            if (weightInd == -1) continue;
+                            score -= happyParts[weightInd];
+
+                            float personalityMul = 1;
+                            if (personality > 0 && personality < VaryByTypes.Length)
                             {
-                                if (personality >= 0 && personality < VaryByTypes.Length)
+                                personalityMul = caller.GetPersonData(VaryByTypes[personality]);
+                                personalityMul /= 1000f;
+                                if (personality < 13)
                                 {
-                                    personalityMul = caller.GetPersonData(VaryByTypes[personality]);
-                                    if (personality < 13 && (personality & 1) == 0)
+                                    if ((personality & 1) == 0)
                                     {
-                                        personalityMul = 1000 - personalityMul;
+                                        personalityMul = 1 - personalityMul;
                                     }
+                                } else
+                                {
+                                    personalityMul *= 2;
                                 }
                             }
 
-                            int motivePct = (myMotive + 100) / 2;
-                            int interpScore = ((motivePct * min + (100 - motivePct) * max) * personalityMul) / (1000 * 100);
-                            score += interpScore;
+                            // then add the new contribution for this motive.
+                            score += interactionCurve[weightInd].GetPoint(myMotive + (max * personalityMul) / 1000f) * weights[weightInd];
                         }
 
+                        // score relative to base
+                        score -= baseHappy;
                         // modify score using attenuation
-                        float atten = (entry.AttenuationCode == 0 || entry.AttenuationCode >= attenTable.Length) ? 
+                        float atten = (entry.AttenuationCode == 0 || entry.AttenuationCode >= attenTable.Length) ?
                             entry.AttenuationValue : attenTable[entry.AttenuationCode];
-                        score = (int)Math.Max(0, score - (distance * atten));
 
-                        foreach (var item in pie)
+                        score = score / (1 + atten * distance);
+
+                        if (score > minScore)
                         {
-                            item.Score = score;
-                            item.Callee = obj;
-                            if (score > entry.AutonomyThreshold) betterActions.Add(first);
-                            validActions.Add(first);
+                            foreach (var item in pie)
+                            {
+                                item.Score = score;
+                                item.Callee = obj;
+                                validActions.Add(first);
+                            }
                         }
                     }
                     //if (attenScore != 0) attenScore += (int)context.VM.Context.NextRandom(31) - 15;
@@ -205,19 +276,28 @@ namespace FSO.SimAntics.Primitives
                     //TODO: special logic for socials?
                 }
             }
-
-            if (betterActions.Count != 0) validActions = betterActions;
-            var sorted = validActions.OrderByDescending(x => x.Score).ToList();
+            List<VMPieMenuInteraction> sorted = validActions.OrderByDescending(x => x.Score).ToList();
+            sorted = TakeTopActions(sorted, 4);
             var selection = sorted.FirstOrDefault();
             if (selection == null) return VMPrimitiveExitCode.GOTO_FALSE;
-            if (!selection.Entry.AutoFirst || validActions != betterActions)
+            if (!selection.Entry.AutoFirst)
             {
-                if (selection.Score > 0 && sorted[Math.Min(4, sorted.Count) - 1].Score == 0)
+                // weighted random selection
+                //var slice = sorted.Take(Math.Min(4, sorted.Count)).ToList();
+                var totalScore = sorted.Sum(x => x.Score);
+                var random = context.VM.Context.NextRandom(10000);
+
+                float randomTotal = 0;
+                for (int i=0; i < sorted.Count; i++)
                 {
-                    //prefer a non-zero score.
-                    sorted = sorted.Where(x => x.Score > 0).ToList();
+                    var action = sorted[i];
+                    randomTotal += (sorted[i].Score / totalScore) * 10000;
+                    if (random <= randomTotal)
+                    {
+                        selection = action;
+                        break;
+                    }
                 }
-                selection = sorted[(int)context.VM.Context.NextRandom((ulong)Math.Min(4, sorted.Count))];
             }
 
             var qaction = selection.Callee.GetAction(selection.ID, context.Caller, context.VM.Context, false, new short[] { selection.Param0, 0, 0, 0 });
@@ -227,6 +307,21 @@ namespace FSO.SimAntics.Primitives
                 context.Caller.Thread.EnqueueAction(qaction);
             }
             return VMPrimitiveExitCode.GOTO_TRUE;
+        }
+
+        private List<VMPieMenuInteraction> TakeTopActions(List<VMPieMenuInteraction> list, int count)
+        {
+            var result = new List<VMPieMenuInteraction>();
+            foreach (var action in list)
+            {
+                var users = action.Callee.GetValue(VMStackObjectVariable.UseCount);
+                if (users == 0 || action.Callee.TreeTable.Interactions.Any(x => x.JoiningIndex == action.ID))
+                {
+                    result.Add(action);
+                    if (result.Count >= count) break;
+                }
+            }
+            return result;
         }
     }
 

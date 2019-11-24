@@ -54,6 +54,7 @@
             this.dataServiceEditorToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
             this.simAnticsAOTToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
             this.saveGlobalscsToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
+            this.avatarToolToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
             this.openExternalIffToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
             this.windowToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
             this.hideAllToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
@@ -79,7 +80,6 @@
             this.Browser = new FSO.IDE.ObjectBrowser();
             this.InspectorTab = new System.Windows.Forms.TabPage();
             this.entityInspector1 = new FSO.IDE.EntityInspector();
-            this.avatarToolToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
             this.menuStrip1.SuspendLayout();
             this.UtilityTabs.SuspendLayout();
             this.OverviewTab.SuspendLayout();
@@ -149,14 +149,14 @@
             // objectToolStripMenuItem
             // 
             this.objectToolStripMenuItem.Name = "objectToolStripMenuItem";
-            this.objectToolStripMenuItem.Size = new System.Drawing.Size(180, 22);
+            this.objectToolStripMenuItem.Size = new System.Drawing.Size(139, 22);
             this.objectToolStripMenuItem.Text = "Object";
             this.objectToolStripMenuItem.Click += new System.EventHandler(this.NewOBJButton_Click);
             // 
             // semiGlobalToolStripMenuItem
             // 
             this.semiGlobalToolStripMenuItem.Name = "semiGlobalToolStripMenuItem";
-            this.semiGlobalToolStripMenuItem.Size = new System.Drawing.Size(180, 22);
+            this.semiGlobalToolStripMenuItem.Size = new System.Drawing.Size(139, 22);
             this.semiGlobalToolStripMenuItem.Text = "Semi-Global";
             this.semiGlobalToolStripMenuItem.Click += new System.EventHandler(this.semiGlobalToolStripMenuItem_Click);
             // 
@@ -168,13 +168,13 @@
             this.avatarToolToolStripMenuItem,
             this.openExternalIffToolStripMenuItem});
             this.toolsToolStripMenuItem.Name = "toolsToolStripMenuItem";
-            this.toolsToolStripMenuItem.Size = new System.Drawing.Size(47, 20);
+            this.toolsToolStripMenuItem.Size = new System.Drawing.Size(46, 20);
             this.toolsToolStripMenuItem.Text = "Tools";
             // 
             // dataServiceEditorToolStripMenuItem
             // 
             this.dataServiceEditorToolStripMenuItem.Name = "dataServiceEditorToolStripMenuItem";
-            this.dataServiceEditorToolStripMenuItem.Size = new System.Drawing.Size(180, 22);
+            this.dataServiceEditorToolStripMenuItem.Size = new System.Drawing.Size(172, 22);
             this.dataServiceEditorToolStripMenuItem.Text = "Data Service Editor";
             this.dataServiceEditorToolStripMenuItem.Click += new System.EventHandler(this.dataServiceEditorToolStripMenuItem_Click);
             // 
@@ -183,20 +183,27 @@
             this.simAnticsAOTToolStripMenuItem.DropDownItems.AddRange(new System.Windows.Forms.ToolStripItem[] {
             this.saveGlobalscsToolStripMenuItem});
             this.simAnticsAOTToolStripMenuItem.Name = "simAnticsAOTToolStripMenuItem";
-            this.simAnticsAOTToolStripMenuItem.Size = new System.Drawing.Size(180, 22);
+            this.simAnticsAOTToolStripMenuItem.Size = new System.Drawing.Size(172, 22);
             this.simAnticsAOTToolStripMenuItem.Text = "SimAntics AOT";
             // 
             // saveGlobalscsToolStripMenuItem
             // 
             this.saveGlobalscsToolStripMenuItem.Name = "saveGlobalscsToolStripMenuItem";
-            this.saveGlobalscsToolStripMenuItem.Size = new System.Drawing.Size(216, 22);
+            this.saveGlobalscsToolStripMenuItem.Size = new System.Drawing.Size(215, 22);
             this.saveGlobalscsToolStripMenuItem.Text = "Generate AOT Sources (.cs)";
             this.saveGlobalscsToolStripMenuItem.Click += new System.EventHandler(this.saveGlobalscsToolStripMenuItem_Click);
+            // 
+            // avatarToolToolStripMenuItem
+            // 
+            this.avatarToolToolStripMenuItem.Name = "avatarToolToolStripMenuItem";
+            this.avatarToolToolStripMenuItem.Size = new System.Drawing.Size(172, 22);
+            this.avatarToolToolStripMenuItem.Text = "Avatar Tool";
+            this.avatarToolToolStripMenuItem.Click += new System.EventHandler(this.avatarToolToolStripMenuItem_Click);
             // 
             // openExternalIffToolStripMenuItem
             // 
             this.openExternalIffToolStripMenuItem.Name = "openExternalIffToolStripMenuItem";
-            this.openExternalIffToolStripMenuItem.Size = new System.Drawing.Size(180, 22);
+            this.openExternalIffToolStripMenuItem.Size = new System.Drawing.Size(172, 22);
             this.openExternalIffToolStripMenuItem.Text = "Open External Iff...";
             this.openExternalIffToolStripMenuItem.Click += new System.EventHandler(this.openExternalIffToolStripMenuItem_Click);
             // 
@@ -477,13 +484,6 @@
             this.entityInspector1.Size = new System.Drawing.Size(724, 452);
             this.entityInspector1.TabIndex = 0;
             // 
-            // avatarToolToolStripMenuItem
-            // 
-            this.avatarToolToolStripMenuItem.Name = "avatarToolToolStripMenuItem";
-            this.avatarToolToolStripMenuItem.Size = new System.Drawing.Size(180, 22);
-            this.avatarToolToolStripMenuItem.Text = "Avatar Tool";
-            this.avatarToolToolStripMenuItem.Click += new System.EventHandler(this.avatarToolToolStripMenuItem_Click);
-            // 
             // MainWindow
             // 
             this.AutoScaleDimensions = new System.Drawing.SizeF(6F, 13F);
@@ -496,6 +496,7 @@
             this.Name = "MainWindow";
             this.Text = "Volcanic";
             this.Activated += new System.EventHandler(this.MainWindow_Activated);
+            this.FormClosed += new System.Windows.Forms.FormClosedEventHandler(this.MainWindow_FormClosed);
             this.menuStrip1.ResumeLayout(false);
             this.menuStrip1.PerformLayout();
             this.UtilityTabs.ResumeLayout(false);

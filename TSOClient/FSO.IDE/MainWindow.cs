@@ -25,6 +25,7 @@ namespace FSO.IDE
     {
         public static MainWindow Instance;
 
+        public static bool Inited;
         public VM HookedVM;
         public IffEditManager IffManager = new IffEditManager();
         public BHAVEditManager BHAVManager = new BHAVEditManager();
@@ -33,10 +34,25 @@ namespace FSO.IDE
         {
             Instance = this;
             InitializeComponent();
+            FSO.Common.Utils.GameThread.KilledEvent += GameClosed;
         }
-        public void Test(VM vm)
+
+        private void GameClosed()
         {
-            ObjectRegistry.Init();
+            BeginInvoke(new Action(() =>
+            {
+                Close();
+            }));
+        }
+
+        public void SwitchVM(VM vm)
+        {
+            if (!Inited)
+            {
+                ObjectRegistry.Init();
+                Inited = true;
+            }
+            BHAVManager.CloseAllTracers();
             this.HookedVM = vm;
             entityInspector1.ChangeVM(vm);
             Browser.RefreshTree();
@@ -372,6 +388,12 @@ namespace FSO.IDE
         {
             var avatarTool = new AvatarTool();
             avatarTool.Show();
+        }
+
+        private void MainWindow_FormClosed(object sender, FormClosedEventArgs e)
+        {
+            FSO.Common.Utils.GameThread.KilledEvent -= GameClosed;
+            Instance = null;
         }
     }
 
