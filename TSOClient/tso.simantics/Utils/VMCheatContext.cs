@@ -11,6 +11,8 @@ namespace FSO.SimAntics.Utils
     /// </summary>
     public class VMCheatContext
     {
+        public static VMCheatState CheatState = new VMCheatState();
+
         delegate void ExecuteHandler(VM vm, VMAvatar caller, VMCheatContext context, out bool result);
         private static Dictionary<VMCheatType, ExecuteHandler> predefinedBehavior = new Dictionary<VMCheatType, ExecuteHandler>()
             {
@@ -90,8 +92,13 @@ namespace FSO.SimAntics.Utils
 
         private static void ExecuteMoveObjects(VM vm, VMAvatar caller, VMCheatContext context, out bool result)
         {
-            vm.Context.TS1_EnableMod = context.Modifier;
+            CheatState.TS1_MoveObjects = context.Modifier;
             result = true;
         }
+    }
+
+    public class VMCheatState
+    {
+        public bool TS1_MoveObjects;
     }
 }

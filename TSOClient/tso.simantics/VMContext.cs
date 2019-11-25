@@ -54,21 +54,6 @@ namespace FSO.SimAntics
         public VMAmbientSound Ambience;
         public ulong RandomSeed;
 
-        /// <summary>
-        /// A simple work around for TS1 moveobjects cheat
-        /// </summary>
-        public bool TS1_EnableMod //to clean up changes see VMNetDeleteObjectCmd Verify and VMEntity IsUserMovable
-        {
-            get
-            {
-                if(VM?.TS1 ?? false) // must be in TS1
-                    return _ts1EnableMod;
-                return false;
-            }
-            set => _ts1EnableMod = value;
-        }
-        private bool _ts1EnableMod = false;
-
         public GameGlobal Globals;
         public TTAB GlobalTreeTable;
         public TTAs GlobalTTAs;

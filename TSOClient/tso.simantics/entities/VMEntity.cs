@@ -1108,7 +1108,7 @@ namespace FSO.SimAntics
 
         public VMPlacementError IsUserMovable(VMContext context, bool deleting)
         {
-            if (context?.TS1_EnableMod ?? false) // for ts1 moveobjects cheat
+            if (Utils.VMCheatContext.CheatState.TS1_MoveObjects) // for ts1 moveobjects cheat
                 return VMPlacementError.Success;
             foreach (var obj in MultitileGroup.Objects)
             {

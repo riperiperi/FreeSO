@@ -112,7 +112,7 @@ namespace FSO.SimAntics.NetPlay.Model.Commands
                     return true; //admins can always deete
                 }
             }
-            else if (vm.Context.TS1_EnableMod) //for ts1 moveobjects cheat
+            else if (Utils.VMCheatContext.CheatState.TS1_MoveObjects) //for ts1 moveobjects cheat
                 return true;
             if (obj == null || (obj is VMAvatar) || obj.IsUserMovable(vm.Context, true) != VMPlacementError.Success) return false;
             if ((((VMGameObject)obj).Disabled & VMGameObjectDisableFlags.TransactionIncomplete) > 0) return false; //can't delete objects mid trasaction...

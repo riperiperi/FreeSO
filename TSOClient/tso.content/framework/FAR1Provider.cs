@@ -196,29 +196,22 @@ namespace FSO.Content.Framework
 
                 foreach (var entry in entries)
                 {
-                    try
+                    var referenceItem = new Far1ProviderEntry<T>(this)
                     {
-                        var referenceItem = new Far1ProviderEntry<T>(this)
+                        Archive = archive,
+                        FarEntry = entry
+                    };
+                    if (entry.Filename != null)
+                    {
+                        EntriesByName[entry.Filename] = referenceItem;
+                        var ext = Path.GetExtension(entry.Filename).ToLowerInvariant();
+                        List<Far1ProviderEntry<T>> group = null;
+                        if (!EntriesOfType.TryGetValue(ext, out group))
                         {
-                            Archive = archive,
-                            FarEntry = entry
-                        };
-                        if (entry.Filename != null)
-                        {
-                            EntriesByName[entry.Filename] = referenceItem;
-                            var ext = Path.GetExtension(entry.Filename).ToLowerInvariant();
-                            List<Far1ProviderEntry<T>> group = null;
-                            if (!EntriesOfType.TryGetValue(ext, out group))
-                            {
-                                group = new List<Far1ProviderEntry<T>>();
-                                EntriesOfType[ext] = group;
-                            }
-                            group.Add(referenceItem);
+                            group = new List<Far1ProviderEntry<T>>();
+                            EntriesOfType[ext] = group;
                         }
-                    }
-                    catch (Exception exception)
-                    {
-                        throw new Exception($"The FAR archive at: {archive} adding entry: {entry.Filename} threw the following exception: ", exception);
+                        group.Add(referenceItem);
                     }
                 }
             }
