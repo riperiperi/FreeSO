@@ -273,6 +273,8 @@ namespace FSO.Files.Formats.IFF.Chunks
             set { Flags &= ~(TTABFlags.AllowDogs); if (value) Flags |= TTABFlags.AllowDogs; }
         }
 
+        //TS1
+
         public bool TS1AllowCats
         {
             get { return (Flags & TTABFlags.TS1AllowCats) > 0; }
@@ -282,6 +284,30 @@ namespace FSO.Files.Formats.IFF.Chunks
         {
             get { return (Flags & TTABFlags.TS1AllowDogs) > 0; }
             set { Flags &= ~(TTABFlags.TS1AllowDogs); if (value) Flags |= TTABFlags.TS1AllowDogs; }
+        }
+
+        public bool TS1AllowAdults
+        {
+            get { return (Flags & TTABFlags.TS1NoAdult) == 0; }
+            set { Flags &= ~(TTABFlags.TS1NoAdult); if (!value) Flags |= TTABFlags.TS1NoAdult; }
+        }
+
+        public bool TS1AllowChild
+        {
+            get { return (Flags & TTABFlags.TS1NoChild) == 0; }
+            set { Flags &= ~(TTABFlags.TS1NoChild); if (!value) Flags |= TTABFlags.TS1NoChild; }
+        }
+
+        public bool TS1AllowDemoChild
+        {
+            get { return (Flags & TTABFlags.TS1NoDemoChild) == 0; }
+            set { Flags &= ~(TTABFlags.TS1NoDemoChild); if (!value) Flags |= TTABFlags.TS1NoDemoChild; }
+        }
+
+        public bool Joinable
+        {
+            get { return (Flags & TTABFlags.Joinable) > 0; }
+            set { Flags &= ~(TTABFlags.Joinable); if (value) Flags |= TTABFlags.Joinable; }
         }
 
         //FLAGS
@@ -371,13 +397,13 @@ namespace FSO.Files.Formats.IFF.Chunks
         TS1NoAdult = 1 << 6,
 
         Debug = 1 << 7, //COVERED: only available to roomies for now
-        AutoFirstSelect = 1 << 8, //TODO (autonomus first select?)
+        AutoFirstSelect = 1 << 8, //COVERED
 
         TS1AllowCats = 1 << 9,
         TS1AllowDogs = 1 << 10,
 
         Leapfrog = 1 << 9, //COVERED
-        MustRun = 1 << 10, //TODO (where would this NOT run?)
+        MustRun = 1 << 10, //COVERED
         AllowDogs = 1 << 11, //COVERED
         AllowCats = 1 << 12, //COVERED
 
