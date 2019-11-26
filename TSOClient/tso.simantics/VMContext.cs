@@ -32,7 +32,7 @@ namespace FSO.SimAntics
         public static bool UseWorld = true;
         public Blueprint Blueprint;
         public VMClock Clock { get; internal set; }
-
+        public VMCheatState Cheats { get; internal set; }
         private VMArchitecture _Arch;
         public VMArchitecture Architecture
         {
@@ -71,6 +71,7 @@ namespace FSO.SimAntics
             //oldContext is passed in case we need to inherit certain things, like the ambient sound player
             this.World = world;
             this.Clock = new VMClock();
+            this.Cheats = new VMCheatState();
             this.ObjectQueries = new VMObjectQueries(this);
 
             if (oldContext == null)

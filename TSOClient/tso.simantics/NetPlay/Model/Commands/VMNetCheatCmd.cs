@@ -1,6 +1,7 @@
 ﻿using FSO.SimAntics.Utils;
 using System;
 using System.Collections.Generic;
+using System.IO;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
@@ -10,9 +11,9 @@ namespace FSO.SimAntics.NetPlay.Model.Commands
     /// <summary>
     /// A command submitting a cheat with a typed parameter T
     /// </summary>
-    public class VMBudgetCheatCmd : VMNetCommandBodyAbstract
+    public class VMNetCheatCmd : VMNetCommandBodyAbstract
     {                
-        public override bool AcceptFromClient => false; //if a client wants to cheat that should be ignored.
+        public override bool AcceptFromClient => true; //if a client wants to cheat that should be ignored.
 
         public VMCheatContext Context;
 
@@ -30,5 +31,20 @@ namespace FSO.SimAntics.NetPlay.Model.Commands
             //TODO: add Verify() to cheat context to allow cheats to verify themself based off their intended behavior
             return true;
         }
+
+        #region VMSerializeable Members
+        public override void SerializeInto(BinaryWriter writer)
+        {
+            base.SerializeInto(writer);            
+            Context.SerializeInto(writer);
+        }
+
+        public override void Deserialize(BinaryReader reader)
+        {
+            base.Deserialize(reader);
+            Context = new VMCheatContext();
+            Context.Deserialize(reader);
+        }
+        #endregion
     }
 }

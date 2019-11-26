@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.IO;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
@@ -11,8 +12,6 @@ namespace FSO.SimAntics.Utils
     /// </summary>
     public class VMCheatContext
     {
-        public static VMCheatState CheatState = new VMCheatState();
-
         delegate void ExecuteHandler(VM vm, VMAvatar caller, VMCheatContext context, out bool result);
         private static Dictionary<VMCheatType, ExecuteHandler> predefinedBehavior = new Dictionary<VMCheatType, ExecuteHandler>()
             {
@@ -26,7 +25,7 @@ namespace FSO.SimAntics.Utils
             INT = 1,
             BOOL = 2
         }
-        public enum BudgetCheatPresetAmount : uint
+        public enum BudgetCheatPresetAmount : int
         {
             /// <summary>
             /// Has no value and will not affect the budget of the family
@@ -44,7 +43,7 @@ namespace FSO.SimAntics.Utils
         /// <summary>
         /// Defines the behavior of the cheat
         /// </summary>
-        public enum VMCheatType
+        public enum VMCheatType : byte
         {
             InvalidCheat = 0,
             /// <summary>
@@ -61,7 +60,7 @@ namespace FSO.SimAntics.Utils
         /// The numeric parameter submitted with the cheat
         /// </summary>
         public int Amount; // used by budget cheats
-        public int Repetitions; // defined by how many ";!"s there are
+        public byte Repetitions; // defined by how many ";!"s there are
         /// <summary>
         /// The boolean value submitted with the cheat
         /// </summary>
@@ -92,13 +91,26 @@ namespace FSO.SimAntics.Utils
 
         private static void ExecuteMoveObjects(VM vm, VMAvatar caller, VMCheatContext context, out bool result)
         {
-            CheatState.TS1_MoveObjects = context.Modifier;
+            vm.Context.Cheats.MoveObjects = context.Modifier;
             result = true;
         }
-    }
 
-    public class VMCheatState
-    {
-        public bool TS1_MoveObjects;
+        #region VMSerializable Members
+        public void SerializeInto(BinaryWriter writer)
+        {
+            writer.Write((byte)CheatBehavior);
+            writer.Write(Amount);
+            writer.Write(Modifier);
+            writer.Write(Repetitions);           
+        }
+
+        public void Deserialize(BinaryReader reader)
+        {
+            CheatBehavior = (VMCheatType)reader.ReadByte();
+            Amount = reader.ReadInt32();
+            Modifier = reader.ReadBoolean();
+            Repetitions = reader.ReadByte();
+        }
+        #endregion
     }
 }
