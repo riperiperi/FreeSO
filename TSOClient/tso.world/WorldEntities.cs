@@ -151,10 +151,18 @@ namespace FSO.LotView
             _2d.EndImmediate();
 
             //object particles are always dynamic
-            foreach (var op in Blueprint.ObjectParticles)
+            if (!state.TransitioningToCity)
             {
-                if (op.Level <= state.Level && op.Owner.Visible && (op.Owner.Position.X > -2043 || op.Owner.Position.Y > -2043))
-                    op.Draw(gd, state);
+                foreach (var op in Blueprint.ObjectParticles)
+                {
+                    if (op.Level <= state.Level && op.Owner.Visible && (op.Owner.Position.X > -2043 || op.Owner.Position.Y > -2043))
+                        op.Draw(gd, state);
+                }
+
+                foreach (var p in Blueprint.Particles)
+                {
+                    p.Draw(gd, state);
+                }
             }
 
             //foreach (var sub in Blueprint.SubWorlds) sub.SubDraw(gd, state, (pxOffsetSub) => sub.Entities.StaticDraw(gd, state, pxOffsetSub));

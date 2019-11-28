@@ -639,6 +639,7 @@ namespace FSO.LotView
         protected virtual void InternalDraw(GraphicsDevice device)
         {
             device.RasterizerState = RasterizerState.CullNone;
+            if (State.CameraMode == CameraRenderMode._3D) device.Clear(State.OutsideColor);
             State.PrepareLighting();
             State._2D.OutputDepth = true;
             

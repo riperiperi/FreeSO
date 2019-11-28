@@ -101,10 +101,10 @@ namespace FSO.SimAntics.Engine.Primitives
                     if (ScoreVar[operand.Function] != VMStackObjectVariable.Invalid)
                     {
                         score = ent.GetValue(funcVar);
-                        if (score <= 0) continue; // lots of invalid functions with 0 score. just ignore them.
                         short threshold;
                         if (context.VM.TS1 || funcVar != VMStackObjectVariable.RepairState)
                         {
+                            if (score <= 0) continue; // lots of invalid functions with 0 score. just ignore them.
                             if (Thresholds.TryGetValue(funcVar, out threshold) && score < threshold) continue;
                         }
                         else if (ent is VMAvatar || !((VMTSOObjectState)ent.MultitileGroup.BaseObject.TSOState).Broken) continue;
