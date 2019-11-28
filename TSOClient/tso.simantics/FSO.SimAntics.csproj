@@ -273,6 +273,7 @@
     <Compile Include="NetPlay\EODs\Utils\EODLobby.cs" />
     <Compile Include="NetPlay\EODs\Utils\EODPersist.cs" />
     <Compile Include="NetPlay\EODs\Handlers\VMEODTrunkPlugin.cs" />
+    <Compile Include="NetPlay\Model\Commands\VMNetCheatCmd.cs" />
     <Compile Include="NetPlay\Model\Commands\VMNetAdjHollowSyncCmd.cs" />
     <Compile Include="NetPlay\Model\Commands\VMNetAsyncPriceCmd.cs" />
     <Compile Include="NetPlay\Model\Commands\VMNetAsyncSaleCmd.cs" />
@@ -393,6 +394,7 @@
     <Compile Include="Utils\TimePropertyListItemSorter.cs" />
     <Compile Include="Utils\VMArchitectureStats.cs" />
     <Compile Include="Utils\VMArchitectureTools.cs" />
+    <Compile Include="Utils\VMCheatContext.cs" />
     <Compile Include="Utils\VMLotRotate.cs" />
     <Compile Include="Utils\VMLotTerrainRestoreTools.cs" />
     <Compile Include="Utils\VMTS1Activator.cs" />
@@ -403,6 +405,7 @@
     <Compile Include="Properties\AssemblyInfo.cs" />
     <Compile Include="Entities\VMAvatar.cs" />
     <Compile Include="VMArchitecture.cs" />
+    <Compile Include="VMCheatState.cs" />
     <Compile Include="VMClock.cs" />
     <Compile Include="VMContext.cs" />
     <Compile Include="Entities\VMEntity.cs" />

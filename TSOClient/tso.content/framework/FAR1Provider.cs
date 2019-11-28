@@ -189,7 +189,7 @@ namespace FSO.Content.Framework
                 }
                 FarFiles = farFiles.ToArray();
             }
-
+            
             foreach (var farPath in FarFiles){
                 var archive = new FAR1Archive((TS1)?Path.Combine(ContentManager.TS1BasePath, farPath):ContentManager.GetPath(farPath), !TS1);
                 var entries = archive.GetAllFarEntries();

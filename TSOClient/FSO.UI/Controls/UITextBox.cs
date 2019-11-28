@@ -28,7 +28,7 @@ namespace FSO.Client.UI.Controls
     public class UITextBox : UITextEdit
     {
         public static ITextureRef StandardBackground;
-
+        public bool HasText => !string.IsNullOrWhiteSpace(CurrentText);
         static UITextBox()
         {
             var tex = UIElement.GetTexture((ulong)FileIDs.UIFileIDs.dialog_textboxbackground);

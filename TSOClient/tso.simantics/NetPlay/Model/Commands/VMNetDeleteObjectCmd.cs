@@ -101,8 +101,8 @@ namespace FSO.SimAntics.NetPlay.Model.Commands
             if (Verified) return true;
             ObjectPID = 0;
             VMEntity obj = vm.GetObjectById(ObjectID);
-            
-            if (!vm.TS1) 
+
+            if (!vm.TS1)
             {
                 Mode = vm.PlatformState.Validator.GetDeleteMode(Mode, caller, obj);
                 if (Mode == DeleteMode.Disallowed) return false;
@@ -112,6 +112,8 @@ namespace FSO.SimAntics.NetPlay.Model.Commands
                     return true; //admins can always deete
                 }
             }
+            else if (vm.Context.Cheats.MoveObjects) //for ts1 moveobjects cheat
+                return true;
             if (obj == null || (obj is VMAvatar) || obj.IsUserMovable(vm.Context, true) != VMPlacementError.Success) return false;
             if ((((VMGameObject)obj).Disabled & VMGameObjectDisableFlags.TransactionIncomplete) > 0) return false; //can't delete objects mid trasaction...
             VMNetLockCmd.LockObj(vm, obj);
