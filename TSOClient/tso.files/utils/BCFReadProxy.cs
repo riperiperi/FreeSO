@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Globalization;
 using System.IO;
 using System.Linq;
 using System.Text;
@@ -68,7 +69,7 @@ namespace FSO.Files.Utils
         public short ReadInt16() { return short.Parse(ReadNum()); }
         public int ReadInt32() { return int.Parse(ReadNum()); }
         public uint ReadUInt32() { return uint.Parse(ReadNum()); }
-        public float ReadFloat() { return float.Parse(ReadNum()); }
+        public float ReadFloat() { return float.Parse(ReadNum(), CultureInfo.InvariantCulture); }
         public string ReadPascalString() { return Reader.ReadLine(); }
         public string ReadLongPascalString() { return Reader.ReadLine(); }
 
@@ -118,7 +119,7 @@ namespace FSO.Files.Utils
         public void WriteInt16(short data) { WriteNum(data.ToString()); }
         public void WriteInt32(int data) { WriteNum(data.ToString()); }
         public void WriteUInt32(uint data) { WriteNum(data.ToString()); }
-        public void WriteFloat(float data) { WriteNum(data.ToString()); }
+        public void WriteFloat(float data) { WriteNum(data.ToString(CultureInfo.InvariantCulture)); }
         public void WritePascalString(string data) { WriteNum(data); }
         public void WriteLongPascalString(string data) { WriteNum(data); }
 

@@ -84,7 +84,7 @@ namespace FSO.LotView.Effects
         {
             set
             {
-                pLightingAdjust.SetValue(value);
+                pLightingAdjust?.SetValue(value);
             }
         }
 

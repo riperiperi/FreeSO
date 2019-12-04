@@ -18,6 +18,7 @@ namespace FSO.Files.Formats.IFF.Chunks
         private bool odd = false;
         public byte[] widths = { 5, 8, 13, 16 };
         public byte[] widths2 = { 6, 11, 21, 32 };
+        public bool StreamEnd;
 
         public void setBytePos(int n)
         {
@@ -64,7 +65,33 @@ namespace FSO.Files.Formats.IFF.Chunks
             return value;
         }
 
-        private uint ReadBits(int n)
+        public Tuple<long, int> DebugReadField(bool big)
+        {
+            if (ReadBit() == 0) return new Tuple<long, int>(0, 0);
+
+            uint code = ReadBits(2);
+            byte width = (big) ? widths2[code] : widths[code];
+            long value = ReadBits(width);
+            value |= -(value & (1 << (width - 1)));
+
+            return new Tuple<long, int>(value, width);
+        }
+        
+        public Tuple<byte, byte, bool, long> MarkStream()
+        {
+            return new Tuple<byte, byte, bool, long>(bitPos, curByte, odd, io.Position);
+        }
+
+        public void RevertToMark(Tuple<byte, byte, bool, long> mark)
+        {
+            StreamEnd = false;
+            bitPos = mark.Item1;
+            curByte = mark.Item2;
+            odd = mark.Item3;
+            io.Seek(SeekOrigin.Begin, mark.Item4);
+        }
+
+        public uint ReadBits(int n)
         {
             uint total = 0;
             for (int i = 0; i < n; i++)
@@ -88,6 +115,8 @@ namespace FSO.Files.Formats.IFF.Chunks
                 catch (Exception)
                 {
                     curByte = 0; //no more data, read 0
+                    odd = !odd;
+                    StreamEnd = true;
                 }
             }
             return result;

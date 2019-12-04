@@ -99,8 +99,12 @@ namespace FSO.SimAntics.Primitives
 
         public override VMPrimitiveExitCode Execute(VMStackFrame context, VMPrimitiveOperand args)
         {
-            //if we already have some action, do nothing.
-            if (context.Caller.Thread.Queue.Any(x => x.Priority > (context.Caller as VMAvatar).GetPersonData(VMPersonDataVariable.Priority))) return VMPrimitiveExitCode.GOTO_TRUE;
+            //if we already have some action, do nothing
+            var better = context.Caller.Thread.Queue.FirstOrDefault(x => x.Priority > (context.Caller as VMAvatar).GetPersonData(VMPersonDataVariable.Priority));
+            if (better != null) {
+                context.StackObject = better.Callee;
+                return VMPrimitiveExitCode.GOTO_TRUE;
+            }
 
             var ents = new List<VMEntity>(context.VM.Context.ObjectQueries.WithAutonomy);
             var processed = new HashSet<short>();
@@ -307,8 +311,13 @@ namespace FSO.SimAntics.Primitives
             {
                 qaction.Priority = (short)VMQueuePriority.Autonomous;
                 context.Caller.Thread.EnqueueAction(qaction);
+                context.StackObject = selection.Callee;
+                return VMPrimitiveExitCode.GOTO_TRUE;
+            } else
+            {
+                return VMPrimitiveExitCode.GOTO_FALSE;
             }
-            return VMPrimitiveExitCode.GOTO_TRUE;
+            
         }
 
         private List<VMPieMenuInteraction> TakeTopActions(List<VMPieMenuInteraction> list, int count)

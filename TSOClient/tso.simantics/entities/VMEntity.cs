@@ -912,7 +912,7 @@ namespace FSO.SimAntics
 
         public virtual void SetRoom(ushort room)
         {
-            SetValue(VMStackObjectVariable.Room, (short)room);
+            SetValue(VMStackObjectVariable.Room, (short)(room - 1));
         }
 
         public List<VMPieMenuInteraction> GetPieMenuForInteraction(VM vm, VMEntity caller, int index, bool global, bool includeHidden)

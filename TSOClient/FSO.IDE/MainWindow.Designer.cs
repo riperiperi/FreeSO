@@ -80,6 +80,7 @@
             this.Browser = new FSO.IDE.ObjectBrowser();
             this.InspectorTab = new System.Windows.Forms.TabPage();
             this.entityInspector1 = new FSO.IDE.EntityInspector();
+            this.fieldEncodingReverserToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
             this.menuStrip1.SuspendLayout();
             this.UtilityTabs.SuspendLayout();
             this.OverviewTab.SuspendLayout();
@@ -166,7 +167,8 @@
             this.dataServiceEditorToolStripMenuItem,
             this.simAnticsAOTToolStripMenuItem,
             this.avatarToolToolStripMenuItem,
-            this.openExternalIffToolStripMenuItem});
+            this.openExternalIffToolStripMenuItem,
+            this.fieldEncodingReverserToolStripMenuItem});
             this.toolsToolStripMenuItem.Name = "toolsToolStripMenuItem";
             this.toolsToolStripMenuItem.Size = new System.Drawing.Size(46, 20);
             this.toolsToolStripMenuItem.Text = "Tools";
@@ -174,7 +176,7 @@
             // dataServiceEditorToolStripMenuItem
             // 
             this.dataServiceEditorToolStripMenuItem.Name = "dataServiceEditorToolStripMenuItem";
-            this.dataServiceEditorToolStripMenuItem.Size = new System.Drawing.Size(172, 22);
+            this.dataServiceEditorToolStripMenuItem.Size = new System.Drawing.Size(199, 22);
             this.dataServiceEditorToolStripMenuItem.Text = "Data Service Editor";
             this.dataServiceEditorToolStripMenuItem.Click += new System.EventHandler(this.dataServiceEditorToolStripMenuItem_Click);
             // 
@@ -183,7 +185,7 @@
             this.simAnticsAOTToolStripMenuItem.DropDownItems.AddRange(new System.Windows.Forms.ToolStripItem[] {
             this.saveGlobalscsToolStripMenuItem});
             this.simAnticsAOTToolStripMenuItem.Name = "simAnticsAOTToolStripMenuItem";
-            this.simAnticsAOTToolStripMenuItem.Size = new System.Drawing.Size(172, 22);
+            this.simAnticsAOTToolStripMenuItem.Size = new System.Drawing.Size(199, 22);
             this.simAnticsAOTToolStripMenuItem.Text = "SimAntics AOT";
             // 
             // saveGlobalscsToolStripMenuItem
@@ -196,14 +198,14 @@
             // avatarToolToolStripMenuItem
             // 
             this.avatarToolToolStripMenuItem.Name = "avatarToolToolStripMenuItem";
-            this.avatarToolToolStripMenuItem.Size = new System.Drawing.Size(172, 22);
+            this.avatarToolToolStripMenuItem.Size = new System.Drawing.Size(199, 22);
             this.avatarToolToolStripMenuItem.Text = "Avatar Tool";
             this.avatarToolToolStripMenuItem.Click += new System.EventHandler(this.avatarToolToolStripMenuItem_Click);
             // 
             // openExternalIffToolStripMenuItem
             // 
             this.openExternalIffToolStripMenuItem.Name = "openExternalIffToolStripMenuItem";
-            this.openExternalIffToolStripMenuItem.Size = new System.Drawing.Size(172, 22);
+            this.openExternalIffToolStripMenuItem.Size = new System.Drawing.Size(199, 22);
             this.openExternalIffToolStripMenuItem.Text = "Open External Iff...";
             this.openExternalIffToolStripMenuItem.Click += new System.EventHandler(this.openExternalIffToolStripMenuItem_Click);
             // 
@@ -484,6 +486,13 @@
             this.entityInspector1.Size = new System.Drawing.Size(724, 452);
             this.entityInspector1.TabIndex = 0;
             // 
+            // fieldEncodingReverserToolStripMenuItem
+            // 
+            this.fieldEncodingReverserToolStripMenuItem.Name = "fieldEncodingReverserToolStripMenuItem";
+            this.fieldEncodingReverserToolStripMenuItem.Size = new System.Drawing.Size(199, 22);
+            this.fieldEncodingReverserToolStripMenuItem.Text = "Field Encoding Reverser";
+            this.fieldEncodingReverserToolStripMenuItem.Click += new System.EventHandler(this.fieldEncodingReverserToolStripMenuItem_Click);
+            // 
             // MainWindow
             // 
             this.AutoScaleDimensions = new System.Drawing.SizeF(6F, 13F);
@@ -550,5 +559,6 @@
         private System.Windows.Forms.ToolStripMenuItem saveGlobalscsToolStripMenuItem;
         private System.Windows.Forms.ToolStripMenuItem avatarToolToolStripMenuItem;
         private System.Windows.Forms.ToolStripMenuItem openExternalIffToolStripMenuItem;
+        private System.Windows.Forms.ToolStripMenuItem fieldEncodingReverserToolStripMenuItem;
     }
 }

@@ -38,13 +38,12 @@ namespace FSO.SimAntics.Primitives
             var obj = context.StackObject;
             var flags = VMPlaceRequestFlags.AcceptSlots;
             if (operand.UserEditableTilesOnly) flags |= VMPlaceRequestFlags.UserBuildableLimit;
-            if (operand.AllowIntersection && operand.Mode != 4 && operand.Mode != 3) flags |= VMPlaceRequestFlags.AllowIntersection;
 
             switch (operand.Mode)
             {
                 case 0:
                     //default
-                    if (FindLocationFor(obj, refObj, context.VM.Context, flags)) return VMPrimitiveExitCode.GOTO_TRUE;
+                    if (FindLocationFor(obj, refObj, context.VM.Context, flags, operand.PreferNonEmpty)) return VMPrimitiveExitCode.GOTO_TRUE;
                     else return VMPrimitiveExitCode.GOTO_FALSE;
                 case 1:
                     //out of world
@@ -63,7 +62,7 @@ namespace FSO.SimAntics.Primitives
                     //along object vector
                     var intDir = (int)Math.Round(Math.Log((double)refObj.Direction, 2));
                     if (operand.Mode == 4) intDir = (intDir + 2) % 8; //lateral to object vector
-                    if (FindLocationVector(obj, refObj, context.VM.Context, intDir, flags)) return VMPrimitiveExitCode.GOTO_TRUE;
+                    if (FindLocationVector(obj, refObj, context.VM.Context, intDir, flags, operand.PreferNonEmpty)) return VMPrimitiveExitCode.GOTO_TRUE;
                     else return VMPrimitiveExitCode.GOTO_FALSE;
                 case 5:
                     //random
@@ -80,34 +79,72 @@ namespace FSO.SimAntics.Primitives
             return VMPrimitiveExitCode.GOTO_FALSE;
         }
 
-        public static bool FindLocationVector(VMEntity obj, VMEntity refObj, VMContext context, int dir, VMPlaceRequestFlags flags)
+        private static bool TileOccupied(VMContext context, LotTilePos pos)
+        {
+            return (context.ObjectQueries.GetObjectsAt(pos)?.Count ?? 0) > 0;
+        }
+
+        public static bool FindLocationVector(VMEntity obj, VMEntity refObj, VMContext context, int dir, VMPlaceRequestFlags flags, bool preferNonEmpty = false)
         {
             LotTilePos step = DirectionVectors[dir];
+            var dirf = (Direction)(1 << (dir));
+            var deferred = new List<LotTilePos>();
+
+            Func<LotTilePos, bool> evaluate = (LotTilePos pos) =>
+            {
+                if (preferNonEmpty && TileOccupied(context, pos))
+                {
+                    deferred.Add(pos);
+                    return false;
+                }
+                else
+                {
+                    return obj.SetPosition(pos, dirf, context, flags).Status == VMPlacementError.Success;
+                }
+            };
+
             for (int i = 0; i < 32; i++)
             {
-                if (obj.SetPosition(new LotTilePos(refObj.Position) + step * (i/2),
-                    (Direction)(1 << (dir)), context, flags).Status == VMPlacementError.Success)
-                    return true;
+                if (evaluate(new LotTilePos(refObj.Position) + step * (i / 2))) return true;
                 if (i%2 != 0)
                 {
-                    if (obj.SetPosition(new LotTilePos(refObj.Position) - step * (i/2),
-                        (Direction)(1 << (dir)), context, flags).Status == VMPlacementError.Success)
-                        return true;
+                    if (evaluate(new LotTilePos(refObj.Position) - step * (i / 2))) return true;
                 }
+            }
+
+            foreach (var tile in deferred)
+            {
+                if (obj.SetPosition(tile, dirf, context, flags).Status == VMPlacementError.Success) return true;
             }
             return false;
         }
 
-        public static bool FindLocationFor(VMEntity obj, VMEntity refObj, VMContext context, VMPlaceRequestFlags flags)
+        public static bool FindLocationFor(VMEntity obj, VMEntity refObj, VMContext context, VMPlaceRequestFlags flags, bool preferNonEmpty = false)
         {
+            var deferred = new List<Tuple<LotTilePos, Direction>>();
+
+            Func<LotTilePos, Direction, bool> evaluate = (LotTilePos pos, Direction dir) =>
+            {
+                if (preferNonEmpty && TileOccupied(context, pos))
+                {
+                    deferred.Add(new Tuple<LotTilePos, Direction>(pos, dir));
+                    return false;
+                }
+                else
+                {
+                    return obj.SetPosition(pos, dir, context, flags).Status == VMPlacementError.Success;
+                }
+            };
+
             for (int i = 0; i < 10; i++)
             {
                 if (i == 0)
                 {
+                    var pos = new LotTilePos(refObj.Position);
                     for (int j = 0; j < 4; j++)
                     {
-                        if (obj.SetPosition(new LotTilePos(refObj.Position), (Direction)(1 << (j * 2)), context, flags).Status == VMPlacementError.Success)
-                            return true;
+                        var dir = (Direction)(1 << (j * 2));
+                        if (evaluate(pos, dir)) return true;
                     }
                 }
                 else
@@ -117,9 +154,9 @@ namespace FSO.SimAntics.Primitives
                     {
                         for (int j = 0; j < 8; j++)
                         {
-                            if (obj.SetPosition(LotTilePos.FromBigTile((short)(bPos.TileX + x), (short)(bPos.TileY + ((j % 2) * 2 - 1) * i), bPos.Level),
-                                (Direction)(1 << ((j / 2) * 2)), context, flags).Status == VMPlacementError.Success)
-                                return true;
+                            var pos = LotTilePos.FromBigTile((short)(bPos.TileX + x), (short)(bPos.TileY + ((j % 2) * 2 - 1) * i), bPos.Level);
+                            var dir = (Direction)(1 << ((j / 2) * 2));
+                            if (evaluate(pos, dir)) return true;
                         }
                     }
 
@@ -127,12 +164,17 @@ namespace FSO.SimAntics.Primitives
                     {
                         for (int j = 0; j < 8; j++)
                         {
-                            if (obj.SetPosition(LotTilePos.FromBigTile((short)(bPos.TileX + ((j % 2) * 2 - 1) * i), (short)(bPos.TileY + y), bPos.Level),
-                                (Direction)(1 << ((j / 2) * 2)), context, flags).Status == VMPlacementError.Success)
-                                return true;
+                            var pos = LotTilePos.FromBigTile((short)(bPos.TileX + ((j % 2) * 2 - 1) * i), (short)(bPos.TileY + y), bPos.Level);
+                            var dir = (Direction)(1 << ((j / 2) * 2));
+                            if (evaluate(pos, dir)) return true;
                         }
                     }
                 }
+            }
+
+            foreach (var tile in deferred)
+            {
+                if (obj.SetPosition(tile.Item1, tile.Item2, context, flags).Status == VMPlacementError.Success) return true;
             }
             return false;
         }
@@ -178,15 +220,15 @@ namespace FSO.SimAntics.Primitives
             }
         }
 
-        public bool AllowIntersection
+        public bool PreferNonEmpty
         {
             get
             {
-                return (Flags & 2) == 2;
+                return (Flags & 2) == 0;
             }
             set
             {
-                if (value) Flags |= 2;
+                if (!value) Flags |= 2;
                 else Flags &= unchecked((byte)~2);
             }
         }

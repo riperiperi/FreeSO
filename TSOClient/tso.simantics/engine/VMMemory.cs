@@ -100,7 +100,7 @@ namespace FSO.SimAntics.Engine.Utils
 
                 case VMVariableScope.RoomByTemp0: //23
                     //returns information on the selected room. Right now we don't have a room system, so always return the same values. (everywhere is indoors, not a pool)
-                    var roomID = Math.Max(0, Math.Min(context.VM.Context.RoomInfo.Length-1, context.Thread.TempRegisters[0]));
+                    var roomID = Math.Max(0, Math.Min(context.VM.Context.RoomInfo.Length-1, context.Thread.TempRegisters[0] + 1));
                     var room = context.VM.Context.RoomInfo[roomID];
                     var baseroom = context.VM.Context.RoomInfo[room.Room.LightBaseRoom];
 

@@ -278,14 +278,14 @@ namespace FSO.LotView.Effects
         {
             set
             {
-                pParallaxHeight.SetValue(value);
+                pParallaxHeight?.SetValue(value);
             }
         }
         public Vector4 ParallaxUVTexMat
         {
             set
             {
-                pParallaxUVTexMat.SetValue(value);
+                pParallaxUVTexMat?.SetValue(value);
             }
         }
 
@@ -341,7 +341,7 @@ namespace FSO.LotView.Effects
         {
             set
             {
-                pParallaxTex.SetValue(value);
+                pParallaxTex?.SetValue(value);
             }
         }
         public Texture2D NormalMapTex

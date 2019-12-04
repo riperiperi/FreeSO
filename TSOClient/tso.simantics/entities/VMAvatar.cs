@@ -1118,7 +1118,7 @@ namespace FSO.SimAntics
         public override void SetRoom(ushort room)
         {
             base.SetRoom(room);
-            if (VM.UseWorld) WorldUI.Room = (ushort)GetValue(VMStackObjectVariable.Room);
+            if (VM.UseWorld) WorldUI.Room = (ushort)(GetValue(VMStackObjectVariable.Room) + 1);
         }
 
         public override Texture2D GetIcon(GraphicsDevice gd, int store)

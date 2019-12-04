@@ -4,6 +4,7 @@ using FSO.Files.Formats.IFF.Chunks;
 using FSO.IDE.Common;
 using FSO.IDE.ContentEditors;
 using FSO.IDE.Managers;
+using FSO.IDE.Utils.FormatReverse;
 using FSO.SimAntics;
 using FSO.SimAntics.JIT.Translation.CSharp;
 using FSO.SimAntics.NetPlay.Model.Commands;
@@ -394,6 +395,13 @@ namespace FSO.IDE
         {
             FSO.Common.Utils.GameThread.KilledEvent -= GameClosed;
             Instance = null;
+        }
+
+        private void fieldEncodingReverserToolStripMenuItem_Click(object sender, EventArgs e)
+        {
+            var fe = new FieldEncodingFormatTracker();
+            fe.Show();
+            fe.StartWithOBJM();
         }
     }
 

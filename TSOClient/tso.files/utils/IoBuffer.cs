@@ -71,6 +71,8 @@ namespace FSO.Files.Utils
             Reader.BaseStream.Seek(offset, origin);
         }
 
+        public long Position => Stream.Position;
+
         /// <summary>
         /// Reads a variable length unsigned integer from the current stream.
         /// </summary>

@@ -135,7 +135,7 @@ namespace FSO.LotView.Effects
         {
             set
             {
-                pPxOffset.SetValue(value);
+                pPxOffset?.SetValue(value);
             }
         }
 
@@ -143,7 +143,7 @@ namespace FSO.LotView.Effects
         {
             set
             {
-                pWorldOffset.SetValue(value);
+                pWorldOffset?.SetValue(value);
             }
         }
 

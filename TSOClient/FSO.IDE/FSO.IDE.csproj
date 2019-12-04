@@ -524,6 +524,12 @@
       <DependentUpon>SelectTreeDialog.cs</DependentUpon>
     </Compile>
     <Compile Include="Utils\AppearanceGenerator.cs" />
+    <Compile Include="Utils\FormatReverse\FieldEncodingFormatTracker.cs">
+      <SubType>Form</SubType>
+    </Compile>
+    <Compile Include="Utils\FormatReverse\FieldEncodingFormatTracker.Designer.cs">
+      <DependentUpon>FieldEncodingFormatTracker.cs</DependentUpon>
+    </Compile>
     <Compile Include="Utils\FormsUtils.cs" />
     <Compile Include="Utils\GLTFExporter.cs" />
     <Compile Include="Utils\GLTFImporter.cs" />
@@ -684,6 +690,9 @@
     </EmbeddedResource>
     <EmbeddedResource Include="ResourceBrowser\SelectTreeDialog.resx">
       <DependentUpon>SelectTreeDialog.cs</DependentUpon>
+    </EmbeddedResource>
+    <EmbeddedResource Include="Utils\FormatReverse\FieldEncodingFormatTracker.resx">
+      <DependentUpon>FieldEncodingFormatTracker.cs</DependentUpon>
     </EmbeddedResource>
     <None Include="ClassDiagram1.cd" />
     <None Include="Properties\Settings.settings">

@@ -111,7 +111,7 @@ namespace FSO.SimAntics
                     WorldUI.Room = ((flags & VMEntityFlags2.GeneratesLight) > 0 &&
                         GetValue(VMStackObjectVariable.LightingContribution) > 0 &&
                         (flags & (VMEntityFlags2.ArchitectualWindow | VMEntityFlags2.ArchitectualDoor)) == 0)
-                        ? (ushort)65535 : (ushort)ObjectData[(int)VMStackObjectVariable.Room];
+                        ? (ushort)65535 : (ushort)(ObjectData[(int)VMStackObjectVariable.Room] + 1);
                 }
             }
         }
