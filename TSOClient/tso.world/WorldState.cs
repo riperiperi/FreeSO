@@ -60,6 +60,8 @@ namespace FSO.LotView
             }
         }
 
+        public bool TransitioningToCity => (CameraMode == CameraRenderMode._3D && Cameras.ExternalTransitionActive() && Cameras.GetExternalTransition().Percent > 0.5f);
+
         /// <summary>
         /// Creates a new WorldState instance.
         /// </summary>

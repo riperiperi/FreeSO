@@ -27,19 +27,19 @@ namespace FSO.IDE.ResourceBrowser.ResourceEditors
 
         private static string[] MotiveNames =
         {
-            "HappyLife: ",
-            "HappyWeek: ",
-            "HappyDay: ",
+            "*HappyLife: ",
+            "*HappyWeek: ",
+            "*HappyDay: ",
             "Mood: ",
-            "(UNUSED) Physical: ",
+            "*(UNUSED) Physical: ",
             "Energy: ",
             "Comfort: ",
             "Hunger: ",
             "Hygiene: ",
             "Bladder: ",
-            "(UNUSED) Mental: ",
-            "Sleep State: ",
-            "(UNUSED) Stress: ",
+            "*(UNUSED) Mental: ",
+            "*Sleep State: ",
+            "*(UNUSED) Stress: ",
             "Room: ",
             "Social: ",
             "Fun: ",
@@ -79,6 +79,7 @@ namespace FSO.IDE.ResourceBrowser.ResourceEditors
 
         private Dictionary<TreeNode, int> PieToInteraction;
         private Dictionary<int, int> TTAToListIndex;
+        private List<int> AdViewToMotiveInd;
 
         public TTABResourceControl()
         {
@@ -92,29 +93,64 @@ namespace FSO.IDE.ResourceBrowser.ResourceEditors
             MotivePersonality.Items.AddRange(VaryNames);
 
             FlagNames = new Dictionary<CheckBox, string>();
-            FlagNames.Add(AllowVisitors, "AllowVisitors");
-            FlagNames.Add(AllowFriends, "AllowFriends");
-            FlagNames.Add(AllowRoomies, "AllowRoommates");
-            FlagNames.Add(AllowOwner, "AllowObjectOwner");
-            FlagNames.Add(AllowCSRs, "AllowCSRs");
-            FlagNames.Add(AllowGhosts, "AllowGhosts");
-            FlagNames.Add(AllowCats, "AllowCats");
-            FlagNames.Add(AllowDogs, "AllowDogs");
+            if (Content.Content.Get().TS1)
+            {
+                FlagNames.Add(AllowVisitors, "AllowVisitors");
+                FlagNames.Add(AllowFriends, "TS1AllowAdults");
+                AllowFriends.Text = "Adult";
+                FlagNames.Add(AllowRoomies, "TS1AllowChild");
+                AllowRoomies.Text = "Child";
+                FlagNames.Add(AllowOwner, "TS1AllowDemoChild");
+                AllowOwner.Text = "Demo Child";
 
-            //FLAGS
-            FlagNames.Add(FlagDebug, "Debug");
+                AllowCSRs.Hide();
+                AllowGhosts.Hide();
 
-            FlagNames.Add(FlagLeapfrog, "Leapfrog");
-            FlagNames.Add(FlagMustRun, "MustRun");
-            FlagNames.Add(FlagAutoFirst, "AutoFirst");
-            FlagNames.Add(FlagRunImmediately, "RunImmediately");
-            FlagNames.Add(FlagConsecutive, "AllowConsecutive");
+                FlagNames.Add(AllowCats, "TS1AllowCats");
+                FlagNames.Add(AllowDogs, "TS1AllowDogs");
+
+                FlagNames.Add(FlagDebug, "Debug");
+
+                FlagLeapfrog.Hide();
+                FlagNames.Add(FlagMustRun, "Joinable");
+                FlagMustRun.Text = "Joinable";
+
+                FlagNames.Add(FlagAutoFirst, "AutoFirst");
+                FlagNames.Add(FlagRunImmediately, "RunImmediately");
+                FlagNames.Add(FlagConsecutive, "AllowConsecutive");
+
+                InteractionFlagsLabel.Hide();
+                FlagCarrying.Hide();
+                FlagRepair.Hide();
+                FlagCheck.Hide();
+                FlagDead.Hide();
+            }
+            else
+            {
+                FlagNames.Add(AllowVisitors, "AllowVisitors");
+                FlagNames.Add(AllowFriends, "AllowFriends");
+                FlagNames.Add(AllowRoomies, "AllowRoommates");
+                FlagNames.Add(AllowOwner, "AllowObjectOwner");
+                FlagNames.Add(AllowCSRs, "AllowCSRs");
+                FlagNames.Add(AllowGhosts, "AllowGhosts");
+                FlagNames.Add(AllowCats, "AllowCats");
+                FlagNames.Add(AllowDogs, "AllowDogs");
+
+                //FLAGS
+                FlagNames.Add(FlagDebug, "Debug");
+
+                FlagNames.Add(FlagLeapfrog, "Leapfrog");
+                FlagNames.Add(FlagMustRun, "MustRun");
+                FlagNames.Add(FlagAutoFirst, "AutoFirst");
+                FlagNames.Add(FlagRunImmediately, "RunImmediately");
+                FlagNames.Add(FlagConsecutive, "AllowConsecutive");
 
 
-            FlagNames.Add(FlagCarrying, "Carrying");
-            FlagNames.Add(FlagRepair, "Repair");
-            FlagNames.Add(FlagCheck, "AlwaysCheck");
-            FlagNames.Add(FlagDead, "WhenDead");
+                FlagNames.Add(FlagCarrying, "Carrying");
+                FlagNames.Add(FlagRepair, "Repair");
+                FlagNames.Add(FlagCheck, "AlwaysCheck");
+                FlagNames.Add(FlagDead, "WhenDead");
+            }
         }
 
         public void SetActiveObject(GameObject obj)
@@ -245,7 +281,15 @@ namespace FSO.IDE.ResourceBrowser.ResourceEditors
 
             InteractionPathName.Text = GetTTA(Selected.TTAIndex);
             AutonomyInput.Value = Selected.AutonomyThreshold;
-            AttenuationCombo.Text = Selected.AttenuationValue.ToString();
+            if (Selected.AttenuationCode == 0 || Selected.AttenuationCode >= AttenuationCombo.Items.Count)
+            {
+                AttenuationCombo.Text = Selected.AttenuationValue.ToString();
+            }
+            else
+            {
+                AttenuationCombo.SelectedIndex = -1;
+                AttenuationCombo.SelectedIndex = (int)Selected.AttenuationCode;
+            }
             JoinInput.Value = Math.Max(-1, Selected.JoiningIndex);
 
             UpdateMotiveList();
@@ -329,13 +373,20 @@ namespace FSO.IDE.ResourceBrowser.ResourceEditors
             InternalChange = true;
 
             var oldInd = MotiveList.SelectedIndex;
+            AdViewToMotiveInd = new List<int>();
             MotiveList.Items.Clear();
             for (int i = 0; i < Selected.MotiveEntries.Length; i++)
             {
                 var item = Selected.MotiveEntries[i];
+                var name = MotiveNames[i];
                 bool hasEffect = (item.EffectRangeMinimum > 0 || item.EffectRangeDelta > 0);
                 string vary = (item.PersonalityModifier == 0) ? "" : (", " + VaryNames[Math.Min(VaryNames.Length - 1, item.PersonalityModifier)]);
-                MotiveList.Items.Add(MotiveNames[i] + (hasEffect ? (item.EffectRangeMinimum + ".." + (item.EffectRangeMinimum + item.EffectRangeDelta) + vary) : "N/A"));
+                if (name.StartsWith("*") && !hasEffect)
+                {
+                    continue;
+                }
+                AdViewToMotiveInd.Add(i);
+                MotiveList.Items.Add(name + (hasEffect ? (item.EffectRangeMinimum + ".." + (item.EffectRangeMinimum + item.EffectRangeDelta) + vary) : "N/A"));
             }
             MotiveList.SelectedIndex = oldInd;
 
@@ -346,7 +397,7 @@ namespace FSO.IDE.ResourceBrowser.ResourceEditors
         {
             if (InternalChange || MotiveList.SelectedIndex == -1) return;
 
-            var ind = MotiveList.SelectedIndex;
+            var ind = AdViewToMotiveInd[MotiveList.SelectedIndex];
             MinMotive.Value = Selected.MotiveEntries[ind].EffectRangeMinimum;
             MaxMotive.Value = Selected.MotiveEntries[ind].EffectRangeDelta + Selected.MotiveEntries[ind].EffectRangeMinimum;
             MotivePersonality.SelectedIndex = Selected.MotiveEntries[ind].PersonalityModifier;
@@ -356,7 +407,7 @@ namespace FSO.IDE.ResourceBrowser.ResourceEditors
         {
             if (InternalChange || MotiveList.SelectedIndex == -1) return;
 
-            var ind = MotiveList.SelectedIndex;
+            var ind = AdViewToMotiveInd[MotiveList.SelectedIndex];
             var sel = Selected;
             var value = (short)MinMotive.Value;
             Content.Content.Get().Changes.BlockingResMod(new ResAction(() =>
@@ -364,6 +415,9 @@ namespace FSO.IDE.ResourceBrowser.ResourceEditors
                 sel.MotiveEntries[ind].EffectRangeMinimum = value;
                 ActiveTTAB.InitAutoInteractions();
             }, ActiveTTAB));
+            InternalChange = true;
+            MaxMotive.Value = Selected.MotiveEntries[ind].EffectRangeDelta + Selected.MotiveEntries[ind].EffectRangeMinimum;
+            InternalChange = false;
             UpdateMotiveList();
         }
 
@@ -371,7 +425,7 @@ namespace FSO.IDE.ResourceBrowser.ResourceEditors
         {
             if (InternalChange || MotiveList.SelectedIndex == -1) return;
 
-            var ind = MotiveList.SelectedIndex;
+            var ind = AdViewToMotiveInd[MotiveList.SelectedIndex];
             var sel = Selected;
             var value = (short)MaxMotive.Value;
             Content.Content.Get().Changes.BlockingResMod(new ResAction(() =>
@@ -386,7 +440,7 @@ namespace FSO.IDE.ResourceBrowser.ResourceEditors
         {
             if (InternalChange || MotiveList.SelectedIndex == -1) return;
 
-            var ind = MotiveList.SelectedIndex;
+            var ind = AdViewToMotiveInd[MotiveList.SelectedIndex];
             var sel = Selected;
             var value = (ushort)Math.Max(0,MotivePersonality.SelectedIndex);
             Content.Content.Get().Changes.BlockingResMod(new ResAction(() =>
@@ -540,6 +594,36 @@ namespace FSO.IDE.ResourceBrowser.ResourceEditors
         private void SearchBox_TextChanged(object sender, EventArgs e)
         {
 
+        }
+
+        private void AttenuationCombo_SelectedIndexChanged(object sender, EventArgs e)
+        {
+            if (!InternalChange)
+            {
+                var sel = Selected;
+                var ind = (uint)Math.Max(AttenuationCombo.SelectedIndex, 0);
+                Content.Content.Get().Changes.BlockingResMod(new ResAction(() =>
+                {
+                    sel.AttenuationCode = ind;
+                }, ActiveTTAB));
+            }
+        }
+
+        private void AttenuationCombo_TextChanged(object sender, EventArgs e)
+        {
+            if (!InternalChange)
+            {
+                float number;
+                if (float.TryParse(AttenuationCombo.Text, out number))
+                {
+                    var sel = Selected;
+                    Content.Content.Get().Changes.BlockingResMod(new ResAction(() =>
+                    {
+                        sel.AttenuationCode = 0;
+                        sel.AttenuationValue = number;
+                    }, ActiveTTAB));
+                }
+            }
         }
     }
 }

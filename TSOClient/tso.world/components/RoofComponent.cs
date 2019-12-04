@@ -232,7 +232,7 @@ namespace FSO.LotView.Components
                 //   /      \
                 //  /________\  Draw 4 segments like this. two segments will have the top middle section so short it will not appear.
 
-                var heightMod = height / 400f;
+                var heightMod = 0;// height / 400f;
                 var pitch = RoofPitch;
                 var tl = ToWorldPos(rect.x1, rect.y1, 0, level, pitch) + new Vector3(0, heightMod, 0);
                 var tr = ToWorldPos(rect.x2, rect.y1, 0, level, pitch) + new Vector3(0, heightMod, 0);
@@ -742,6 +742,7 @@ namespace FSO.LotView.Components
             }
 
             device.RasterizerState = RasterizerState.CullClockwise;
+            device.BlendState = BlendState.AlphaBlend;
             for (int i = 0; i < Drawgroups.Length; i++)
             {
                 if (i > world.Level - 1) break;
@@ -770,13 +771,14 @@ namespace FSO.LotView.Components
 
                         Effect.GrassShininess = 0.01f;//005f);
 
-                        var baseShad = (enableParallax) ? 3 : 2;
+                        var pass3d = (enableParallax) ? 3 : 2;
+                        var pass2d = (enableParallax && WorldConfig.Current.AdvancedLighting) ? 3 : WorldConfig.Current.PassOffset;
 
                         device.SetVertexBuffer(dg.VertexBuffer);
                         device.Indices = dg.IndexBuffer;
 
                         Effect.SetTechnique(GrassTechniques.DrawBase);
-                        var pass = Effect.CurrentTechnique.Passes[(world.CameraMode == CameraRenderMode._3D)?baseShad:WorldConfig.Current.PassOffset];
+                        var pass = Effect.CurrentTechnique.Passes[(world.CameraMode == CameraRenderMode._3D)?pass3d:pass2d];
                         pass.Apply();
                         device.DrawIndexedPrimitives(PrimitiveType.TriangleList, 0, 0, dg.NumPrimitives);
 
@@ -793,6 +795,7 @@ namespace FSO.LotView.Components
                     });
                 }
             }
+            device.BlendState = BlendState.Opaque;
             device.RasterizerState = RasterizerState.CullNone;
         }
 

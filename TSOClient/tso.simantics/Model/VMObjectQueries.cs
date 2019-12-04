@@ -18,6 +18,7 @@ namespace FSO.SimAntics.Model
         public List<VMEntity> Avatars = new List<VMEntity>();
         public Dictionary<uint, VMAvatar> AvatarsByPersist = new Dictionary<uint, VMAvatar>();
         public Dictionary<uint, VMMultitileGroup> MultitileByPersist = new Dictionary<uint, VMMultitileGroup>();
+        public List<VMEntity> WithAutonomy = new List<VMEntity>();
 
         public int NumUserObjects
         {
@@ -161,6 +162,11 @@ namespace FSO.SimAntics.Model
                 VM.AddToObjList(Avatars, obj);
                 if (obj.PersistID != 0) AvatarsByPersist[obj.PersistID] = (VMAvatar)obj;
             }
+
+            if (obj.TreeTable != null && obj.TreeTable.AutoInteractions.Length > 0)
+            {
+                VM.AddToObjList(WithAutonomy, obj);
+            }
         }
 
         public void RemoveObject(VMEntity obj)
@@ -187,6 +193,11 @@ namespace FSO.SimAntics.Model
                     var vm = obj.Thread.Context.VM;
                     if (vm.PlatformState.LimitExceeded) VMBuildableAreaInfo.UpdateOverbudgetObjects(vm);
                 }
+            }
+
+            if (obj.TreeTable != null && obj.TreeTable.AutoInteractions.Length > 0)
+            {
+                WithAutonomy.Remove(obj);
             }
         }
 

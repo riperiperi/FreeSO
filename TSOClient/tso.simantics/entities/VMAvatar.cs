@@ -1066,7 +1066,7 @@ namespace FSO.SimAntics
             {
                 obj.WorldUI.Container = this.WorldUI;
                 obj.WorldUI.ContainerSlot = slot;
-                HandObject.RecurseSlotFunc(contained =>
+                obj.RecurseSlotFunc(contained =>
                 {
                     if (contained is VMGameObject)
                     {

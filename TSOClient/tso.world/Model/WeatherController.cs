@@ -135,12 +135,23 @@ namespace FSO.LotView.Model
             var distance = time - new DateTime(2019, 1, 26);
             var halfDay = (int)distance.TotalHours;
 
-            var rand = new Random(389457023);
-            for (int i=0; i<halfDay; i++)
+            var rand = new Random(halfDay);
+            var weather = Math.Max(0, rand.Next(6) - 3);
+
+            var forceSnow = Common.Model.DynamicTuning.Global?.GetTuning("city", 0, 0);
+            if (forceSnow == null)
             {
-                rand.Next();
+                weather += 3; //rains
             }
-            return Math.Max(3, rand.Next(7) - 4); //make 10 instead of 7 to reenable rain (probably)
+            if (forceSnow > 0)
+            {
+                weather = 3 + Math.Max(0, weather - 1); //rains rarely, never heavy
+            }
+
+            var disableWeather = Common.Model.DynamicTuning.Global?.GetTuning("city", 0, 1) == 1;
+            if (disableWeather) return 0;
+
+            return weather;
         }
         
     }

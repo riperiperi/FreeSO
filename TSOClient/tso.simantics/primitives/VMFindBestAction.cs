@@ -102,7 +102,7 @@ namespace FSO.SimAntics.Primitives
             //if we already have some action, do nothing.
             if (context.Caller.Thread.Queue.Any(x => x.Priority > (context.Caller as VMAvatar).GetPersonData(VMPersonDataVariable.Priority))) return VMPrimitiveExitCode.GOTO_TRUE;
 
-            var ents = new List<VMEntity>(context.VM.Entities);
+            var ents = new List<VMEntity>(context.VM.Context.ObjectQueries.WithAutonomy);
             var processed = new HashSet<short>();
             var caller = (VMAvatar)context.Caller;
             var pos1 = caller.Position;
@@ -114,7 +114,7 @@ namespace FSO.SimAntics.Primitives
             var interactionCurve = child ? global.InteractionScoreChild : global.InteractionScore;
             var happyCurve = child ? global.HappyWeightChild : global.HappyWeight;
 
-            var canUseIndoors = !caller.IsPet || !context.VM.TS1 || caller.GetPersonData(VMPersonDataVariable.GreetStatus) > 0 || caller.GetPersonData(VMPersonDataVariable.PersonType) != 1;
+            var isStray = caller.IsPet && context.VM.TS1 && caller.GetPersonData(VMPersonDataVariable.GreetStatus) == 0 && caller.GetPersonData(VMPersonDataVariable.PersonType) == 1;
 
             // === HAPPY CALCULATION ===
 
@@ -141,13 +141,15 @@ namespace FSO.SimAntics.Primitives
                 if (processed.Contains(obj.ObjectID) || (obj is VMGameObject && ((VMGameObject)obj).Disabled > 0)) continue;
                 processed.Add(obj.ObjectID);
 
-                if (!canUseIndoors)
+                if (isStray)
                 {
+                    if (obj is VMGameObject) continue;
                     //determine if the object is indoors
                     var roomID = context.VM.Context.GetObjectRoom(obj);
                     roomID = (ushort)Math.Max(0, Math.Min(context.VM.Context.RoomInfo.Length - 1, roomID));
                     var room = context.VM.Context.RoomInfo[roomID];
-                    if (!room.Room.IsOutside) continue;
+                    var outside = room.Room.IsOutside;
+                    if (!outside) continue;
                 }
                 var pos2 = obj.Position;
                 var distance = (float)Math.Sqrt(Math.Pow(pos1.x - pos2.x, 2) + Math.Pow(pos1.y - pos2.y, 2) + Math.Pow((pos1.Level - pos2.Level) * 320, 2.0)) / 16.0f;

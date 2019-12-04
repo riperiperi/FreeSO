@@ -147,14 +147,17 @@ namespace FSO.LotView.Components
         }
 
         public WorldZoom LastZoom;
+        public CameraRenderMode LastMode;
 
         public override void Draw(GraphicsDevice device, WorldState world)
         {
             int scale2d = 1;
             var weather = (Mode < ParticleType.GENERIC_BOX);
-            if (Vertices == null || (LastZoom != world.Zoom && weather))
+            var mode = world.CameraMode;
+            if (Vertices == null || ((LastZoom != world.Zoom || LastMode != mode) && weather))
             {
                 LastZoom = world.Zoom;
+                LastMode = mode;
                 if (weather)
                 {
                     if (world.CameraMode == CameraRenderMode._3D)
@@ -223,8 +226,11 @@ namespace FSO.LotView.Components
 
                 var velocity = (world.CameraMode == CameraRenderMode._3D) ? transp - LastPosition : new Vector3();
                 effect.Parameters["CameraVelocity"].SetValue(velocity);
-                opacity = Math.Min(1, (3f / velocity.Length() + 0.001f));
-                opacity /= (float)Math.Sqrt(Math.Max(1, TimeRate));
+                if (Mode == ParticleType.RAIN)
+                {
+                    opacity = Math.Min(1, (3f / velocity.Length() + 0.001f));
+                    opacity /= (float)Math.Sqrt(Math.Max(1, TimeRate));
+                }
                 LastPosition = transp;
                 effect.Parameters["Level"].SetValue((float)(Math.Min((world.Level + 1), Bp.Stories) - 0.999f));
             } else

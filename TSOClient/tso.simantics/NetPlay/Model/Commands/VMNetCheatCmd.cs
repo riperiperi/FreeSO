@@ -13,7 +13,7 @@ namespace FSO.SimAntics.NetPlay.Model.Commands
     /// </summary>
     public class VMNetCheatCmd : VMNetCommandBodyAbstract
     {                
-        public override bool AcceptFromClient => true; //if a client wants to cheat that should be ignored.
+        public override bool AcceptFromClient => false; //if a client wants to cheat that should be ignored.
 
         public VMCheatContext Context;
 

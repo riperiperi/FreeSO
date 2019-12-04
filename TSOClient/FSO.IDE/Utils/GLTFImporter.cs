@@ -154,6 +154,7 @@ namespace FSO.IDE.Utils
                         bone.Children = bones.Where(x => x.ParentName == bone.Name).ToArray();
                     }
                     Skeleton.Bones = bones.ToArray();
+                    Skeleton.BuildBoneDictionary();
                     Skeleton.ComputeBonePositions(Skeleton.RootBone, Microsoft.Xna.Framework.Matrix.Identity);
                 }
             }
