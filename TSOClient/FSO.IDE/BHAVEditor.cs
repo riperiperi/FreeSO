@@ -15,6 +15,7 @@ using System.Collections.Generic;
 using System.ComponentModel;
 using System.Data;
 using System.Drawing;
+using System.IO;
 using System.Linq;
 using System.Text;
 using System.Text.RegularExpressions;
@@ -362,6 +363,56 @@ namespace FSO.IDE
             {
                 Editor.UndoRedoDir--;
             }
+        }
+
+        private void copyToolStripMenuItem_Click(object sender, EventArgs e)
+        {
+            lock (EditorLock)
+            {
+                if (Editor.BHAVView.Selected.Count == 0)
+                    return;
+                var target = Editor.BHAVView.Selected.First();
+                if (target.Type == TREEBoxType.Primitive) // only supports primitives for now
+                {
+                    DataObject dobject = new DataObject();
+                    var operand = target.Instruction.Operand;
+                    using (var stream = new MemoryStream()) {
+                        stream.Write(operand, 0, operand.Length);
+                        dobject.SetData("rawbinary", false, stream);
+                        dobject.SetData("primid", false, target.Descriptor.PrimID);
+                        Utils.FormsUtils.StaExecute(() => //༼ つ ◕_◕ ༽つ
+                        {
+                            Clipboard.SetDataObject(dobject, true);
+                        });
+                    }
+                }
+            }
+        }
+
+        private void pasteToolStripMenuItem_Click(object sender, EventArgs e)
+        {
+            lock (EditorLock)
+            {
+                if (Editor.IsPlacing)
+                    return; //even though AddPrimCommand should not call, avoid pasting if already placing a primitive
+                ushort? placeID = null;
+                byte[] operand = null;
+                Utils.FormsUtils.StaExecute(() => // impeach sta thread
+                {
+                    DataObject obj = (DataObject)Clipboard.GetDataObject();
+                    if (obj == null || !obj.GetDataPresent("rawbinary"))
+                        return;
+                    placeID = obj.GetData("primid") as ushort?;
+                    var stream = obj.GetData("rawbinary") as MemoryStream;
+                    operand = new byte[stream.Length];
+                    stream.Seek(0, SeekOrigin.Begin);
+                    stream.Read(operand, 0, operand.Length);
+                });
+                if (placeID != null)
+                {
+                    Editor.SetPlacement(placeID.Value, operand); // when multiselect is implemented, place all copied objects at once in a group?
+                }
+            }        
         }
 
         private void StackView_SelectedIndexChanged(object sender, EventArgs e)

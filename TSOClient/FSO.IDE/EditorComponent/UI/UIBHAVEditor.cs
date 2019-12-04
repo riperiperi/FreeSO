@@ -30,6 +30,7 @@ namespace FSO.IDE.EditorComponent.UI
         private Stack<BHAVCommand> RedoStack = new Stack<BHAVCommand>();
 
         private PrimitiveBox Placement;
+        public bool IsPlacing => Placement != null;
 
         public int UndoRedoDir;
         public bool Refocused;
@@ -455,7 +456,7 @@ namespace FSO.IDE.EditorComponent.UI
             Placement.Parent = this;
         }
 
-        public void SetPlacement(ushort primType)
+        public void SetPlacement(ushort primType, byte[] operand = null)
         {
             PlacingName.Visible = true;
             PlacingDesc.Visible = true;
@@ -474,7 +475,7 @@ namespace FSO.IDE.EditorComponent.UI
                     TruePointer = 253,
                     FalsePointer = 253,
                     Opcode = primType,
-                    Operand = new byte[8]
+                    Operand = operand == null ? new byte[8] : operand
                 }, BHAVView);
                 PlacingName.Caption = "Placing " + Placement.TitleText;
             }
