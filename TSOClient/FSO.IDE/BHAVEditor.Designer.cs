@@ -32,7 +32,7 @@ namespace FSO.IDE
         private void InitializeComponent()
         {
             System.ComponentModel.ComponentResourceManager resources = new System.ComponentModel.ComponentResourceManager(typeof(BHAVEditor));
-            System.Windows.Forms.ListViewItem listViewItem6 = new System.Windows.Forms.ListViewItem("CT - Notify Current Object Social Occurred");
+            System.Windows.Forms.ListViewItem listViewItem1 = new System.Windows.Forms.ListViewItem("CT - Notify Current Object Social Occurred");
             this.menuStrip1 = new System.Windows.Forms.MenuStrip();
             this.fileToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
             this.saveToFilebhavToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
@@ -47,6 +47,8 @@ namespace FSO.IDE
             this.insertToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
             this.trueToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
             this.falseToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
+            this.labelToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
+            this.commentToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
             this.MainTable = new System.Windows.Forms.TableLayoutPanel();
             this.splitContainer1 = new System.Windows.Forms.SplitContainer();
             this.PrimitivesGroup = new System.Windows.Forms.GroupBox();
@@ -74,8 +76,9 @@ namespace FSO.IDE
             this.StackView = new System.Windows.Forms.ListView();
             this.StackTreeNameCol = ((System.Windows.Forms.ColumnHeader)(new System.Windows.Forms.ColumnHeader()));
             this.StackSourceCol = ((System.Windows.Forms.ColumnHeader)(new System.Windows.Forms.ColumnHeader()));
-            this.commentToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
-            this.labelToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
+            this.toolStripSeparator2 = new System.Windows.Forms.ToolStripSeparator();
+            this.copyToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
+            this.pasteStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
             this.menuStrip1.SuspendLayout();
             this.MainTable.SuspendLayout();
             ((System.ComponentModel.ISupportInitialize)(this.splitContainer1)).BeginInit();
@@ -140,6 +143,9 @@ namespace FSO.IDE
             this.undoToolStripMenuItem,
             this.redoToolStripMenuItem,
             this.toolStripSeparator1,
+            this.copyToolStripMenuItem,
+            this.pasteStripMenuItem,
+            this.toolStripSeparator2,
             this.removeToolStripMenuItem,
             this.setFirstToolStripMenuItem});
             this.editToolStripMenuItem.Name = "editToolStripMenuItem";
@@ -209,6 +215,23 @@ namespace FSO.IDE
             this.falseToolStripMenuItem.Size = new System.Drawing.Size(180, 22);
             this.falseToolStripMenuItem.Text = "False";
             this.falseToolStripMenuItem.Click += new System.EventHandler(this.falseToolStripMenuItem_Click);
+            // 
+            // labelToolStripMenuItem
+            // 
+            this.labelToolStripMenuItem.Name = "labelToolStripMenuItem";
+            this.labelToolStripMenuItem.ShortcutKeys = ((System.Windows.Forms.Keys)((System.Windows.Forms.Keys.Control | System.Windows.Forms.Keys.L)));
+            this.labelToolStripMenuItem.Size = new System.Drawing.Size(180, 22);
+            this.labelToolStripMenuItem.Text = "Label";
+            this.labelToolStripMenuItem.Click += new System.EventHandler(this.labelToolStripMenuItem_Click);
+            // 
+            // commentToolStripMenuItem
+            // 
+            this.commentToolStripMenuItem.Name = "commentToolStripMenuItem";
+            this.commentToolStripMenuItem.ShortcutKeys = ((System.Windows.Forms.Keys)((System.Windows.Forms.Keys.Control | System.Windows.Forms.Keys.OemQuestion)));
+            this.commentToolStripMenuItem.ShowShortcutKeys = false;
+            this.commentToolStripMenuItem.Size = new System.Drawing.Size(180, 22);
+            this.commentToolStripMenuItem.Text = "Comment         Ctrl+/";
+            this.commentToolStripMenuItem.Click += new System.EventHandler(this.commentToolStripMenuItem_Click);
             // 
             // MainTable
             // 
@@ -584,7 +607,7 @@ namespace FSO.IDE
             this.StackView.Dock = System.Windows.Forms.DockStyle.Fill;
             this.StackView.HideSelection = false;
             this.StackView.Items.AddRange(new System.Windows.Forms.ListViewItem[] {
-            listViewItem6});
+            listViewItem1});
             this.StackView.Location = new System.Drawing.Point(3, 16);
             this.StackView.Margin = new System.Windows.Forms.Padding(6);
             this.StackView.MultiSelect = false;
@@ -605,22 +628,26 @@ namespace FSO.IDE
             this.StackSourceCol.Text = "Source";
             this.StackSourceCol.Width = 88;
             // 
-            // commentToolStripMenuItem
+            // toolStripSeparator2
             // 
-            this.commentToolStripMenuItem.Name = "commentToolStripMenuItem";
-            this.commentToolStripMenuItem.ShortcutKeys = ((System.Windows.Forms.Keys)((System.Windows.Forms.Keys.Control | System.Windows.Forms.Keys.OemQuestion)));
-            this.commentToolStripMenuItem.ShowShortcutKeys = false;
-            this.commentToolStripMenuItem.Size = new System.Drawing.Size(180, 22);
-            this.commentToolStripMenuItem.Text = "Comment         Ctrl+/";
-            this.commentToolStripMenuItem.Click += new System.EventHandler(this.commentToolStripMenuItem_Click);
+            this.toolStripSeparator2.Name = "toolStripSeparator2";
+            this.toolStripSeparator2.Size = new System.Drawing.Size(177, 6);
             // 
-            // labelToolStripMenuItem
+            // copyToolStripMenuItem
             // 
-            this.labelToolStripMenuItem.Name = "labelToolStripMenuItem";
-            this.labelToolStripMenuItem.ShortcutKeys = ((System.Windows.Forms.Keys)((System.Windows.Forms.Keys.Control | System.Windows.Forms.Keys.L)));
-            this.labelToolStripMenuItem.Size = new System.Drawing.Size(180, 22);
-            this.labelToolStripMenuItem.Text = "Label";
-            this.labelToolStripMenuItem.Click += new System.EventHandler(this.labelToolStripMenuItem_Click);
+            this.copyToolStripMenuItem.Name = "copyToolStripMenuItem";
+            this.copyToolStripMenuItem.ShortcutKeys = ((System.Windows.Forms.Keys)((System.Windows.Forms.Keys.Control | System.Windows.Forms.Keys.C)));
+            this.copyToolStripMenuItem.Size = new System.Drawing.Size(180, 22);
+            this.copyToolStripMenuItem.Text = "Copy";
+            this.copyToolStripMenuItem.Click += this.copyToolStripMenuItem_Click;
+            // 
+            // pasteStripMenuItem
+            // 
+            this.pasteStripMenuItem.Name = "pasteStripMenuItem";
+            this.pasteStripMenuItem.ShortcutKeys = ((System.Windows.Forms.Keys)((System.Windows.Forms.Keys.Control | System.Windows.Forms.Keys.V)));
+            this.pasteStripMenuItem.Size = new System.Drawing.Size(180, 22);
+            this.pasteStripMenuItem.Text = "Paste";
+            this.pasteStripMenuItem.Click += this.pasteToolStripMenuItem_Click;
             // 
             // BHAVEditor
             // 
@@ -658,7 +685,7 @@ namespace FSO.IDE
             this.ResumeLayout(false);
             this.PerformLayout();
 
-        }
+        }        
 
         #endregion
         private System.Windows.Forms.MenuStrip menuStrip1;
@@ -704,6 +731,9 @@ namespace FSO.IDE
         private System.Windows.Forms.ToolStripMenuItem setFirstToolStripMenuItem;
         private System.Windows.Forms.ToolStripMenuItem commentToolStripMenuItem;
         private System.Windows.Forms.ToolStripMenuItem labelToolStripMenuItem;
+        private System.Windows.Forms.ToolStripMenuItem copyToolStripMenuItem;
+        private System.Windows.Forms.ToolStripMenuItem pasteStripMenuItem;
+        private System.Windows.Forms.ToolStripSeparator toolStripSeparator2;
     }
 }
 
