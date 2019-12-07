@@ -29,6 +29,7 @@ namespace FSO.IDE.EditorComponent
             {18, typeof(RemoveObjectInstanceDescriptor) },
             {20, typeof(RunFunctionalTreeDescriptor) },
             {22, typeof(LookTowardsDescriptor) },
+            {21, typeof(ShowStringDescriptor) },
             {23, typeof(PlaySoundEventDescriptor) },
             {24, typeof(OldRelationshipDescriptor) },
             {25, typeof(TransferFundsDescriptor) },

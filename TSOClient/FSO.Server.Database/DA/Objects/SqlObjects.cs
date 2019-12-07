@@ -205,5 +205,12 @@ namespace FSO.Server.Database.DA.Objects
         {
             Context.Connection.ExecuteBufferedInsert("INSERT INTO fso_object_attributes (object_id, `index`, value) VALUES (@object_id, @index, @value) ON DUPLICATE KEY UPDATE value = @value", attrs, 100);
         }
+
+        public int TotalObjectAttributes(uint guid, int index)
+        {
+            return Context.Connection.Query<int>("SELECT SUM(a.value) " +
+                "FROM fso_object_attributes a JOIN fso_objects o ON a.object_id = o.object_id " +
+                "WHERE `type` = @guid AND `index` = @index", new { guid, index }).FirstOrDefault();
+        }
     }
 }

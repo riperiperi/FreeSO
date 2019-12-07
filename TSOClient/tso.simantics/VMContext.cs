@@ -227,7 +227,14 @@ namespace FSO.SimAntics
                 OperandModel = typeof(VMRunFunctionalTreeOperand)
             });
 
-            //Show string: may be used but no functional result.
+            //Show string: hijacked by freeso
+
+            AddPrimitive(new VMPrimitiveRegistration(new VMShowString())
+            {
+                Opcode = 21,
+                Name = "show_string",
+                OperandModel = typeof(VMShowStringOperand)
+            });
 
             AddPrimitive(new VMPrimitiveRegistration(new VMLookTowards())
             {

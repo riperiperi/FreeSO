@@ -1063,6 +1063,13 @@ namespace FSO.Server.Servers.Lot.Domain
             });
         }
 
+        private void TokenTotal(IDA db, uint guid, List<int> attributeData, VMAsyncTokenCallback callback)
+        {
+            var index = attributeData[0];
+            int total = db.Objects.TotalObjectAttributes(guid, index);
+            callback(true, new List<int>() { index, total });
+        }
+
         public void TokenRequest(VM vm, uint avatarID, uint guid, VMTokenRequestMode mode, List<int> attributeData, VMAsyncTokenCallback callback)
         {
             var setAll = mode == VMTokenRequestMode.GetOrCreate || mode == VMTokenRequestMode.Replace;
@@ -1079,6 +1086,11 @@ namespace FSO.Server.Servers.Lot.Domain
                     }
                     using (var db = DAFactory.Get())
                     {
+                        if (mode == VMTokenRequestMode.TotalAttribute)
+                        {
+                            TokenTotal(db, guid, attributeData, callback);
+                            return;
+                        }
                         var obj = db.Objects.ObjOfTypeInAvatarInventory(avatarID, guid).FirstOrDefault();
                         if (obj == null)
                         {

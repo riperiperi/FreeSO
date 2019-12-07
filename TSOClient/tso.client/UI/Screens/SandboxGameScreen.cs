@@ -6,6 +6,7 @@ using FSO.Client.UI.Model;
 using FSO.Client.UI.Panels;
 using FSO.Client.UI.Panels.WorldUI;
 using FSO.Common;
+using FSO.Common.Model;
 using FSO.Common.Rendering.Framework;
 using FSO.Common.Utils;
 using FSO.Files.Formats.IFF.Chunks;
@@ -201,6 +202,15 @@ namespace FSO.Client.UI.Screens
 
         public void Initialize(string propertyName, bool external)
         {
+            DynamicTuning.Global = new DynamicTuning(new DynTuningEntry[] {
+                new DynTuningEntry()
+                {
+                   tuning_type = "city",
+                   tuning_index = 0,
+                   tuning_table = 0,
+                   value = -1
+                }
+            });
             Title.SetTitle(propertyName);
             GameFacade.CurrentCityName = propertyName;
             ZoomLevel = 1; //screen always starts at near zoom

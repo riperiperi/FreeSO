@@ -65,6 +65,7 @@ namespace FSO.SimAntics.NetPlay.Model.Commands
                     nobj.ExecuteEntryPoint(2, vm.Context, true);
                 }
                 vm.TS1State.VerifyFamily(vm);
+
             }
             else
             {

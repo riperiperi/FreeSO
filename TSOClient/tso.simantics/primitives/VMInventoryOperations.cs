@@ -55,7 +55,7 @@ namespace FSO.SimAntics.Primitives
                             }
                         }
                     }
-                    if (state.WriteResult) VMMemory.SetVariable(context, state.WriteScope, state.WriteData, state.Temp0Value);
+                    if (state.WriteResult) VMMemory.SetBigVariable(context, state.WriteScope, state.WriteData, state.Temp0Value);
                     if (state.TempWrite.Count > 0)
                     {
                         var length = Math.Min(context.Thread.TempRegisters.Length, state.TempWrite.Count);
@@ -270,7 +270,7 @@ namespace FSO.SimAntics.Primitives
             }
             else
             {
-                var value = (short)((result.Count > 1) ? result[1] : 0);
+                var value = ((result.Count > 1) ? result[1] : 0);
                 vm.SendCommand(new VMNetAsyncResponseCmd(threadID, new VMInventoryOpState
                 {
                     Responded = true,
@@ -365,13 +365,14 @@ namespace FSO.SimAntics.Primitives
         FSOTokenSetAttributeTemp0 = 35,
         FSOTokenModifyAttributeTemp0 = 36,
         FSOTokenTransactionAttributeTemp0 = 37, //same as above but can fail if value goes below 0
+        FSOTokenTotalAttributeTemp0 = 38, //total all instances of an attribute (guid, attribute) and return value (can be int size)
     }
 
     public class VMInventoryOpState : VMAsyncState
     {
         public bool Success;
         public bool WriteResult;
-        public short Temp0Value;
+        public int Temp0Value;
         public uint ObjectPersistID;
         public VMVariableScope WriteScope = VMVariableScope.INVALID;
         public short WriteData;
@@ -382,7 +383,8 @@ namespace FSO.SimAntics.Primitives
             base.Deserialize(reader);
             Success = reader.ReadBoolean();
             WriteResult = reader.ReadBoolean();
-            Temp0Value = reader.ReadInt16();
+            Temp0Value = (Version > 36) ? reader.ReadInt32() : reader.ReadInt16();
+
             if (Version > 34)
             {
                 ObjectPersistID = reader.ReadUInt32();

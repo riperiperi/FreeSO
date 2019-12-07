@@ -373,6 +373,7 @@
     <Compile Include="Primitives\VMSetBalloonHeadline.cs" />
     <Compile Include="Primitives\VMSetMotiveChange.cs" />
     <Compile Include="Primitives\VMSetToNext.cs" />
+    <Compile Include="Primitives\VMShowString.cs" />
     <Compile Include="Primitives\VMSnap.cs" />
     <Compile Include="Primitives\VMSpecialEffect.cs" />
     <Compile Include="Primitives\VMStopAllSounds.cs" />

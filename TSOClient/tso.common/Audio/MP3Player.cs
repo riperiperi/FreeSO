@@ -158,7 +158,7 @@ namespace FSO.Common.Audio
                 Inst?.Dispose();
                 Stream?.Dispose();
 
-                Active = true;
+                Active = false;
                 DecodeNext.Set(); //end the mp3 thread immediately
 
                 EndOfStream = true;

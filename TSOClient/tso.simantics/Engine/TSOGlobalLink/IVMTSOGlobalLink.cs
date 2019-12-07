@@ -95,6 +95,7 @@ namespace FSO.SimAntics.Engine.TSOTransaction
         GetAttribute,
         SetAttribute,
         ModifyAttribute,
-        TransactionAttribute
+        TransactionAttribute,
+        TotalAttribute
     }
 }

@@ -299,6 +299,7 @@ namespace FSO.SimAntics.Utils
                 nobj.ExecuteEntryPoint(11, VM.Context, true);
             }
 
+            VM.TS1State.VerifyFamily(VM);
             arch.SignalTerrainRedraw();
             VM.Context.World?.InitBlueprint(Blueprint);
             arch.Tick();
