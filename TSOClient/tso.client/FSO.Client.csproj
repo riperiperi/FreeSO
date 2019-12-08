@@ -640,7 +640,7 @@
       <Link>OpenTK.dll.config</Link>
       <CopyToOutputDirectory>Always</CopyToOutputDirectory>
     </None>
-    <None Include="App.config">
+    <None Include="app.config">
       <SubType>Designer</SubType>
     </None>
     <Content Include="Monogame\MacOS\OpenTK.dll.config">
