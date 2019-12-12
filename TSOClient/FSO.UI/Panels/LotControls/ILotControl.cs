@@ -1,4 +1,5 @@
 ﻿using FSO.LotView;
+using FSO.LotView.Model;
 using FSO.SimAntics;
 using System;
 using System.Collections.Generic;
@@ -13,5 +14,6 @@ namespace FSO.UI.Panels.LotControls
         VMEntity ActiveEntity { get; }
         World World { get; }
         int Budget { get; }
+        I3DRotate Rotate { get; }
     }
 }

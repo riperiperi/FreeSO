@@ -30,6 +30,7 @@ namespace FSO.SimAntics.Engine
 
         public void ScheduleTick(VMEntity ent, uint tick)
         {
+            if (ent.Dead) return;
             List<VMEntity> targEnts;
             if (!TickSchedule.TryGetValue(tick, out targEnts))
             {

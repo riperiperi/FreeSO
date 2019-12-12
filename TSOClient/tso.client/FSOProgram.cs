@@ -32,6 +32,7 @@ namespace FSO.Client
             Directory.SetCurrentDirectory(baseDir);
             AppDomain.CurrentDomain.AssemblyResolve += OnAssemblyResolve;
             AppDomain.CurrentDomain.UnhandledException += new UnhandledExceptionEventHandler(CurrentDomain_UnhandledException);
+            //AppDomain.CurrentDomain.SetDynamicBase(Path.Combine(AppDomain.CurrentDomain.BaseDirectory, "Content/JITCache/"));
 
             OperatingSystem os = Environment.OSVersion;
             PlatformID pid = os.Platform;
@@ -152,9 +153,17 @@ namespace FSO.Client
         {
             try
             {
-                var assemblyPath = Path.Combine(MonogameLinker.AssemblyDir, args.Name.Substring(0, args.Name.IndexOf(',')) + ".dll");
-                var assembly = Assembly.LoadFrom(assemblyPath);
-                return assembly;
+                var name = args.Name;
+                if (name.StartsWith("FSO.Scripts"))
+                {
+                    return AppDomain.CurrentDomain.GetAssemblies().FirstOrDefault(x => x.FullName == name);
+                }
+                else
+                {
+                    var assemblyPath = Path.Combine(MonogameLinker.AssemblyDir, args.Name.Substring(0, name.IndexOf(',')) + ".dll");
+                    var assembly = Assembly.LoadFrom(assemblyPath);
+                    return assembly;
+                }
             }
             catch (Exception e)
             {

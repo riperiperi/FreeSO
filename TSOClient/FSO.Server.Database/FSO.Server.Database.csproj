@@ -30,6 +30,7 @@
     <DefineConstants>TRACE</DefineConstants>
     <ErrorReport>prompt</ErrorReport>
     <WarningLevel>4</WarningLevel>
+    <UseVSHostingProcess>true</UseVSHostingProcess>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)' == 'ServerRelease|AnyCPU'">
     <OutputPath>bin\ServerRelease\</OutputPath>
@@ -136,6 +137,9 @@
     <Compile Include="DA\EmailConfirmations\EmailConfirmation.cs" />
     <Compile Include="DA\EmailConfirmations\IEmailConfirmations.cs" />
     <Compile Include="DA\EmailConfirmations\SqlEmailConfirmations.cs" />
+    <Compile Include="DA\GlobalCooldowns\DbGlobalCooldowns.cs" />
+    <Compile Include="DA\GlobalCooldowns\IGlobalCooldowns.cs" />
+    <Compile Include="DA\GlobalCooldowns\SqlGlobalCooldowns.cs" />
     <Compile Include="DA\Hosts\DbHost.cs" />
     <Compile Include="DA\Hosts\IHosts.cs" />
     <Compile Include="DA\Hosts\SqlHosts.cs" />
@@ -171,6 +175,7 @@
     <Compile Include="DA\Neighborhoods\INeighborhoods.cs" />
     <Compile Include="DA\Neighborhoods\SqlNeighborhoods.cs" />
     <Compile Include="DA\Objects\DbObject.cs" />
+    <Compile Include="DA\Objects\DbObjectAttribute.cs" />
     <Compile Include="DA\Objects\IObjects.cs" />
     <Compile Include="DA\Objects\SqlObjects.cs" />
     <Compile Include="DA\Outfits\DbOutfit.cs" />
@@ -243,6 +248,12 @@
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </Content>
     <Content Include="DatabaseScripts\changes\0028_upgradelevel.sql">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </Content>
+    <Content Include="DatabaseScripts\changes\0031_global_cooldowns.sql">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </Content>
+    <Content Include="DatabaseScripts\changes\0030_tokens.sql">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </Content>
     <Content Include="DatabaseScripts\changes\0029_generic_participation.sql">

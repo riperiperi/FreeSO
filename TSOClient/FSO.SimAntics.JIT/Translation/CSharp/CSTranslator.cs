@@ -15,6 +15,7 @@ namespace FSO.SimAntics.JIT.Translation.CSharp
     public class CSTranslator
     {
         public CSTranslationContext Context;
+        public static uint JITVersion = 1;
         public CSTranslator()
         {
             Context = new CSTranslationContext();
@@ -455,6 +456,16 @@ namespace FSO.SimAntics.JIT.Translation.CSharp
             WriteLine("{");
 
             IndentLevel++;
+
+            // write compilation info
+            // first is hashes for the source files. If any of these change, this file should be recompiled.
+            WriteLine($"public override uint SourceHash => {Context.ObjectRes.MainIff.ExecutableHash};");
+            if (Context.SemiGlobalRes != null) WriteLine($"public override uint SourceSemiglobalHash => {Context.SemiGlobalRes.MainIff.ExecutableHash};");
+            if (Context.GlobalRes != null) WriteLine($"public override uint SourceGlobalHash => {Context.GlobalRes.MainIff.ExecutableHash};");
+
+            // second is the JIT version - this should be incremented when anything in the JIT compiler is changed.
+            WriteLine($"public override uint JITVersion => {JITVersion};");
+
             foreach (var cls in Context.AllClasses)
             {
                 WriteLine($"public static {cls.Interface} _{cls.ClassName} = new {cls.ClassName}();");
@@ -480,13 +491,13 @@ namespace FSO.SimAntics.JIT.Translation.CSharp
             foreach (var call in bhav.Calls)
             {
                 SimAnticsModule module;
-                CSTranslationContext ctx2;
+                IBHAVInfo ctx2;
                 //find the bhav.
                 if (call < 4096)
                 {
                     //global
                     module = Context.GlobalModule;
-                    ctx2 = (CSTranslationContext)Context.GlobalContext;
+                    ctx2 = Context.GlobalContext;
                 }
                 else if (call < 8192)
                 {
@@ -498,26 +509,12 @@ namespace FSO.SimAntics.JIT.Translation.CSharp
                 {
                     //semiglobal
                     module = Context.SemiGlobalModule;
-                    ctx2 = (CSTranslationContext)Context.SemiGlobalContext;
+                    ctx2 = Context.SemiGlobalContext;
                 }
 
                 if (ctx2 != null)
                 {
-                    //in previously compiled context
-                    StructuredBHAV newBHAV;
-                    if (ctx2.BHAVInfo.TryGetValue(call, out newBHAV))
-                    {
-                        if (newBHAV.Yields)
-                        {
-                            yields = true;
-                            break;
-                        }
-                    }
-                    else
-                    {
-                        yields = true; //if we don't know if it yields, err on the side of caution.
-                        break;
-                    }
+                    yields = ctx2.BHAVYields(call);
                 }
                 else if (module != null)
                 {

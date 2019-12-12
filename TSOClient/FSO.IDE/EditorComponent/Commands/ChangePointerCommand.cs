@@ -25,36 +25,48 @@ namespace FSO.IDE.EditorComponent.Commands
 
         public override void Execute(BHAV bhav, UIBHAVEditor editor)
         {
+            var tree = editor.GetSavableTree();
             if (TrueBranch)
             {
-                InstUI.Instruction.TruePointer = (DestUI == null)?(byte)253:DestUI.InstPtr;
+                if (InstUI.Instruction != null) InstUI.Instruction.TruePointer = (DestUI == null)?(byte)253:DestUI.InstPtr;
                 InstUI.TrueUI = DestUI;
+                InstUI.TreeBox.TruePointer = (DestUI == null) ? (short)-1 : DestUI.TreeBox.InternalID;
             }
             else
             {
-                InstUI.Instruction.FalsePointer = (DestUI == null) ? (byte)253 : DestUI.InstPtr;
+                if (InstUI.Instruction != null) InstUI.Instruction.FalsePointer = (DestUI == null) ? (byte)253 : DestUI.InstPtr;
                 InstUI.FalseUI = DestUI;
+                InstUI.TreeBox.FalsePointer = (DestUI == null) ? (short)-1 : DestUI.TreeBox.InternalID;
             }
+
+            if (InstUI.Type == TREEBoxType.Label) editor.BHAVView.UpdateLabelPointers(InstUI.TreeBox.InternalID);
 
             Content.Content.Get().Changes.ChunkChanged(bhav);
             FSO.SimAntics.VM.BHAVChanged(bhav);
+            Content.Content.Get().Changes.ChunkChanged(tree);
         }
 
         public override void Undo(BHAV bhav, UIBHAVEditor editor)
         {
+            var tree = editor.GetSavableTree();
             if (TrueBranch)
             {
-                InstUI.Instruction.TruePointer = (OldDestUI == null) ? (byte)253 : OldDestUI.InstPtr;
+                if (InstUI.Instruction != null) InstUI.Instruction.TruePointer = (OldDestUI == null) ? (byte)253 : OldDestUI.InstPtr;
                 InstUI.TrueUI = OldDestUI;
+                InstUI.TreeBox.TruePointer = (OldDestUI == null) ? (short)-1 : OldDestUI.TreeBox.InternalID;
             }
             else
             {
-                InstUI.Instruction.FalsePointer = (OldDestUI == null) ? (byte)253 : OldDestUI.InstPtr;
+                if (InstUI.Instruction != null) InstUI.Instruction.FalsePointer = (OldDestUI == null) ? (byte)253 : OldDestUI.InstPtr;
                 InstUI.FalseUI = OldDestUI;
+                InstUI.TreeBox.FalsePointer = (OldDestUI == null) ? (short)-1 : OldDestUI.TreeBox.InternalID;
             }
+
+            if (InstUI.Type == TREEBoxType.Label) editor.BHAVView.UpdateLabelPointers(InstUI.TreeBox.InternalID);
 
             Content.Content.Get().Changes.ChunkChanged(bhav);
             FSO.SimAntics.VM.BHAVChanged(bhav);
+            Content.Content.Get().Changes.ChunkChanged(tree);
         }
     }
 }

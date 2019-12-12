@@ -30,18 +30,21 @@ namespace FSO.Vitaboy
                 {
                     Skeletons[i] = new Skeleton();
                     Skeletons[i].Read(io, true);
+                    Skeletons[i].ParentBCF = this;
                 }
                 Appearances = new Appearance[io.ReadInt32()];
                 for (int i = 0; i < Appearances.Length; i++)
                 {
                     Appearances[i] = new Appearance();
                     Appearances[i].ReadBCF(io);
+                    Appearances[i].ParentBCF = this;
                 }
                 Animations = new Animation[io.ReadInt32()];
                 for (int i = 0; i < Animations.Length; i++)
                 {
                     Animations[i] = new Animation();
                     Animations[i].Read(io, true);
+                    Animations[i].ParentBCF = this;
                 }
             }
         }

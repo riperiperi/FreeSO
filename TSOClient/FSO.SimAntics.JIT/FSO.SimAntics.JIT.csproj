@@ -55,6 +55,7 @@
     <Compile Include="Translation\CSharp\Primitives\CSGenericSimsCallPrimitive.cs" />
     <Compile Include="Translation\CSharp\Primitives\CSSetToNextPrimitive.cs" />
     <Compile Include="Translation\CSharp\Primitives\CSSubroutinePrimitive.cs" />
+    <Compile Include="Translation\IBHAVInfo.cs" />
     <Compile Include="Translation\StructuredBHAV.cs" />
     <Compile Include="Translation\CSharp\CSTranslationContext.cs" />
     <Compile Include="Translation\CSharp\CSTranslationPrimitives.cs" />

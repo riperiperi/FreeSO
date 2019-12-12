@@ -75,7 +75,7 @@ namespace FSO.Client.UI.Controls
         }
 
 
-        protected override void CalculateMatrix()
+        public override void CalculateMatrix()
         {
             base.CalculateMatrix();
             m_LayoutCache.Invalidate();

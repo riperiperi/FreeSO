@@ -183,8 +183,8 @@ namespace FSO.IDE.ResourceBrowser
             var builder = new StringBuilder();
             if (from is BHAV)
             {
-                var froutine = SimAntics.Engine.VMTranslator.INSTANCE.Assemble(from as BHAV);
-                var troutine = SimAntics.Engine.VMTranslator.INSTANCE.Assemble(to as BHAV);
+                var froutine = SimAntics.Engine.VMTranslator.INSTANCE.Assemble(from as BHAV, null);
+                var troutine = SimAntics.Engine.VMTranslator.INSTANCE.Assemble(to as BHAV, null);
                 CompareObject("", froutine, troutine, builder);
             } else
             {

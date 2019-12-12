@@ -74,6 +74,7 @@
     <PlatformTarget>AnyCPU</PlatformTarget>
     <ErrorReport>prompt</ErrorReport>
     <CodeAnalysisRuleSet>MinimumRecommendedRules.ruleset</CodeAnalysisRuleSet>
+    <UseVSHostingProcess>true</UseVSHostingProcess>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)' == 'ServerRelease|x86'">
     <OutputPath>bin\x86\ServerRelease\</OutputPath>
@@ -117,6 +118,7 @@
   </ItemGroup>
   <ItemGroup>
     <Compile Include="Formats\IFF\Chunks\ARRY.cs" />
+    <Compile Include="Formats\IFF\Chunks\FCNS.cs" />
     <Compile Include="Formats\IFF\Chunks\HOUS.cs" />
     <Compile Include="Formats\IFF\Chunks\PART.cs" />
     <Compile Include="Formats\IFF\Chunks\PNG.cs" />
@@ -135,6 +137,7 @@
     <Compile Include="Formats\IFF\Chunks\SIMI.cs" />
     <Compile Include="Formats\IFF\Chunks\THMB.cs" />
     <Compile Include="Formats\IFF\Chunks\TRCN.cs" />
+    <Compile Include="Formats\IFF\Chunks\TREE.cs" />
     <Compile Include="Formats\IFF\Chunks\TTAT.cs" />
     <Compile Include="Formats\IFF\Chunks\WALm.cs" />
     <Compile Include="Formats\tsodata\BulletinItem.cs" />
@@ -201,6 +204,7 @@
     <Compile Include="RC\FSOF.cs" />
     <Compile Include="RC\NBHm.cs" />
     <Compile Include="RC\OBJReader.cs" />
+    <Compile Include="RC\Utils\DepthTreatment.cs" />
     <Compile Include="Tuning.cs" />
     <Compile Include="Utils\BCFReadProxy.cs" />
     <Compile Include="Utils\CurLoader.cs" />

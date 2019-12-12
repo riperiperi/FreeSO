@@ -1,8 +1,10 @@
 ﻿using FSO.Content;
 using FSO.Files.Formats.IFF;
+using FSO.Files.Formats.IFF.Chunks;
 using FSO.IDE.Common;
 using FSO.IDE.ContentEditors;
 using FSO.IDE.Managers;
+using FSO.IDE.Utils.FormatReverse;
 using FSO.SimAntics;
 using FSO.SimAntics.JIT.Translation.CSharp;
 using FSO.SimAntics.NetPlay.Model.Commands;
@@ -11,8 +13,10 @@ using System.Collections.Generic;
 using System.ComponentModel;
 using System.Data;
 using System.Drawing;
+using System.IO;
 using System.Linq;
 using System.Text;
+using System.Threading;
 using System.Threading.Tasks;
 using System.Windows.Forms;
 
@@ -22,6 +26,7 @@ namespace FSO.IDE
     {
         public static MainWindow Instance;
 
+        public static bool Inited;
         public VM HookedVM;
         public IffEditManager IffManager = new IffEditManager();
         public BHAVEditManager BHAVManager = new BHAVEditManager();
@@ -30,10 +35,25 @@ namespace FSO.IDE
         {
             Instance = this;
             InitializeComponent();
+            FSO.Common.Utils.GameThread.KilledEvent += GameClosed;
         }
-        public void Test(VM vm)
+
+        private void GameClosed()
         {
-            ObjectRegistry.Init();
+            BeginInvoke(new Action(() =>
+            {
+                Close();
+            }));
+        }
+
+        public void SwitchVM(VM vm)
+        {
+            if (!Inited)
+            {
+                ObjectRegistry.Init();
+                Inited = true;
+            }
+            BHAVManager.CloseAllTracers();
             this.HookedVM = vm;
             entityInspector1.ChangeVM(vm);
             Browser.RefreshTree();
@@ -318,85 +338,70 @@ namespace FSO.IDE
         {
             var trans = new AOTGenerator();
             trans.Show();
+        }
 
-            /*
-            var translator = new CSTranslator();
-            var globalRes = Content.Content.Get().WorldObjectGlobals.Get("global").Resource;
+        private void SaveFile(FileDialog dialog)
+        {
+            // ༼ つ ◕_◕ ༽つ IMPEACH STAThread ༼ つ ◕_◕ ༽つ
+            var wait = new AutoResetEvent(false);
+            var thread = new Thread(() => {
+                dialog.ShowDialog();
+                wait.Set();
+            });
+            thread.SetApartmentState(ApartmentState.STA);
+            thread.Start();
+            wait.WaitOne();
+            return;
+        }
 
-            var iff = globalRes.MainIff;
-            iff.Filename = "global.iff";
-            translator.Context.GlobalRes = globalRes;
-            var globalText = translator.TranslateIff(iff);
-            using (var file = System.IO.File.Open(@"C:\Users\Rhys\Desktop\AOT\global.cs", System.IO.FileMode.Create))
+        private void openExternalIffToolStripMenuItem_Click(object sender, EventArgs e)
+        {
+            var dialog = new OpenFileDialog();
+            dialog.Title = "Select an iff file. (iff)";
+            SaveFile(dialog);
+            try
             {
-                using (var writer = new System.IO.StreamWriter(file))
-                {
-                    writer.Write(globalText);
-                }
+                var iff = new IffFile(dialog.FileName);
+                iff.TSBO = true;
+                var obj = new GameObject();
+                obj.OBJ = iff.List<OBJD>()?.FirstOrDefault() ?? new OBJD();
+                obj.GUID = obj.OBJ.GUID;
+
+                //var res = new GameObjectResource(iff, null, null, "what", Content.Content.Get());
+                var res = new GameObjectResource(iff, null, null, "what", Content.Content.Get());
+                var res2 = new GameGlobalResource(iff, null);
+                obj.Resource = res;
+
+                IffManager.OpenResourceWindow(res2, obj);
             }
-
-            var globalContext = (CSTranslationContext)translator.Context;
-
-            var compiledSG = new Dictionary<GameGlobalResource, CSTranslationContext>();
-            var objs = Content.Content.Get().WorldObjects.Entries.ToList();
-            var fileComplete = new HashSet<string>();
-            foreach (var obj in objs)
+            catch
             {
-                var r = obj.Value;
-                if (!fileComplete.Contains(r.FileName))
-                {
-                    fileComplete.Add(r.FileName);
-                    var objRes = r.Get();
 
-                    CSTranslationContext sg = null;
-                    if (objRes.Resource.SemiGlobal != null)
-                    {
-                        if (!compiledSG.TryGetValue(objRes.Resource.SemiGlobal, out sg))
-                        {
-                            //compile semiglobals
-                            translator = new CSTranslator();
-                            var sgIff = objRes.Resource.SemiGlobal.MainIff;
-                            translator.Context.ObjectRes = objRes.Resource; //pass this in as occasionally *local* tuning constants are used in *semiglobal* functions.
-                            translator.Context.GlobalRes = globalRes;
-                            translator.Context.SemiGlobalRes = objRes.Resource.SemiGlobal;
-                            translator.Context.GlobalContext = globalContext;
-                            var semiglobalText = translator.TranslateIff(sgIff);
-                            using (var file = System.IO.File.Open(@"C:\Users\Rhys\Desktop\AOT\" + sgIff.Filename.ToString().Replace(".iff", ".cs"), System.IO.FileMode.Create))
-                            {
-                                using (var writer = new System.IO.StreamWriter(file))
-                                {
-                                    writer.Write(semiglobalText);
-                                }
-                            }
-                            sg = (CSTranslationContext)translator.Context;
-                            compiledSG[objRes.Resource.SemiGlobal] = sg;
-                        }
-                    }
-
-                    translator = new CSTranslator();
-                    var objIff = objRes.Resource.MainIff;
-                    translator.Context.GlobalRes = globalRes;
-                    translator.Context.SemiGlobalRes = objRes.Resource.SemiGlobal;
-                    translator.Context.ObjectRes = objRes.Resource;
-                    translator.Context.GlobalContext = globalContext;
-                    translator.Context.SemiGlobalContext = sg;
-                    var objText = translator.TranslateIff(objIff);
-                    using (var file = System.IO.File.Open(@"C:\Users\Rhys\Desktop\AOT\" + objIff.Filename.ToString().Replace(".iff", ".cs"), System.IO.FileMode.Create))
-                    {
-                        using (var writer = new System.IO.StreamWriter(file))
-                        {
-                            writer.Write(objText);
-                        }
-                    }
-                }
             }
-            */
+        }
+
+        private void semiGlobalToolStripMenuItem_Click(object sender, EventArgs e)
+        {
+
         }
 
         private void avatarToolToolStripMenuItem_Click(object sender, EventArgs e)
         {
             var avatarTool = new AvatarTool();
             avatarTool.Show();
+        }
+
+        private void MainWindow_FormClosed(object sender, FormClosedEventArgs e)
+        {
+            FSO.Common.Utils.GameThread.KilledEvent -= GameClosed;
+            Instance = null;
+        }
+
+        private void fieldEncodingReverserToolStripMenuItem_Click(object sender, EventArgs e)
+        {
+            var fe = new FieldEncodingFormatTracker();
+            fe.Show();
+            fe.StartWithOBJM();
         }
     }
 

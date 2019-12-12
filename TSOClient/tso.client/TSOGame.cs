@@ -32,6 +32,7 @@ using FSO.UI.Framework;
 using MSDFData;
 using FSO.Common.Audio;
 using System.Linq;
+using FSO.LotView.Model;
 
 namespace FSO.Client
 {
@@ -143,6 +144,18 @@ namespace FSO.Client
                 settings.Save();
             }
 
+            var initialMode = (GlobalGraphicsMode)settings.GlobalGraphicsMode;
+            if (FSOEnvironment.Enable3D)
+            {
+                if (initialMode == GlobalGraphicsMode.Full2D) initialMode = GlobalGraphicsMode.Full3D;
+            }
+            else
+            {
+                initialMode = GlobalGraphicsMode.Full2D;
+            }
+            GraphicsModeControl.ChangeMode(initialMode);
+            GraphicsModeControl.ModeChanged += SaveGraphicsModePreference;
+
             FeatureLevelTest.UpdateFeatureLevel(GraphicsDevice);
             if (!FSOEnvironment.MSAASupport)
                 settings.AntiAlias = 0;
@@ -155,7 +168,8 @@ namespace FSO.Client
                 AA = settings.AntiAlias,
                 Weather = settings.Weather,
                 Directional = settings.DirectionalLight3D,
-                Complex = settings.ComplexShaders
+                Complex = settings.ComplexShaders,
+                EnableTransitions = settings.EnableTransitions
             };
 
             if (!FSOEnvironment.TexCompressSupport) settings.TexCompression = 0;
@@ -250,6 +264,12 @@ namespace FSO.Client
             //(new Utils.PalMapper()).DoIt();
         }
 
+        private void SaveGraphicsModePreference(GlobalGraphicsMode obj)
+        {
+            GlobalSettings.Default.GlobalGraphicsMode = (int)obj;
+            GlobalSettings.Default.Save();
+        }
+
         /// <summary>
         /// Run this instance with GameRunBehavior forced as Synchronous.
         /// </summary>
@@ -285,8 +305,7 @@ namespace FSO.Client
                 kernel.Get<LotConnectionRegulator>()?.Disconnect();
                 kernel.Get<CityConnectionRegulator>()?.Disconnect();
             }
-            GameThread.Killed = true;
-            GameThread.OnKilled.Set();
+            GameThread.SetKilled();
         }
 
         /// <summary>

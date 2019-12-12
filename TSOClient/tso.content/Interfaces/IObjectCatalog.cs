@@ -21,6 +21,7 @@ namespace FSO.Content.Interfaces
         public string Name;
         public byte DisableLevel; //1 = only shopping, 2 = rare (unsellable?)
 
+        public byte RoomSort;
         public byte Subsort;
         public byte DowntownSort;
         public byte VacationSort;

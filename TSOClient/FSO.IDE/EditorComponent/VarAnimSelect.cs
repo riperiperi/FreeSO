@@ -54,7 +54,8 @@ namespace FSO.IDE.EditorComponent
                 {
                     foreach (var anim in anims)
                     {
-                        var name = anim.Substring(0, anim.Length - 5).ToLowerInvariant();
+                        string name = anim.Substring(0, anim.Length - 5);
+                        if (!Content.Content.Get().TS1) name = name.ToLowerInvariant();
                         if (searchString.IsMatch(name)) AllList.Items.Add(name); //keys are names
                     }
                 }
@@ -73,7 +74,7 @@ namespace FSO.IDE.EditorComponent
             {
                 for (int i = 0; i < AnimTable.Length; i++)
                 {
-                    MyList.Items.Add((i == 0) ? "Stop Animation" : AnimTable.GetString(i, STRLangCode.EnglishUS));
+                    MyList.Items.Add((i == 0) ? "Stop Animation" : AnimTable.GetString(i, STRLangCode.EnglishUS) ?? "");
                 }
 
                 MyList.SelectedItem = SelectedAnim;

@@ -34,6 +34,7 @@ namespace FSO.IDE.ResourceBrowser
             { typeof(SPR2), typeof(SPR2ResourceControl) },
             { typeof(BCON), typeof(BCONResourceControl) },
             { typeof(SLOT), typeof(SLOTResourceControl) },
+            { typeof(FCNS), typeof(STRResourceControl) },
             { typeof(OTFFile), typeof(OTFResourceControl) }
         };
 
@@ -46,6 +47,7 @@ namespace FSO.IDE.ResourceBrowser
             typeof(SLOT),
             typeof(CTSS),
             typeof(SPR2),
+            typeof(FCNS),
             typeof(OTFFile)
         };
         public string[] TypeNames = new string[]
@@ -57,6 +59,7 @@ namespace FSO.IDE.ResourceBrowser
             "SLOTs",
             "Catalog Strings",
             "Sprites",
+            "Simulator Constants",
             "Tuning (OTF)"
         };
         public OBJDSelector[][] OBJDSelectors = new OBJDSelector[][]
@@ -71,6 +74,7 @@ namespace FSO.IDE.ResourceBrowser
             new OBJDSelector[] { },
             new OBJDSelector[] { new OBJDSelector("My SLOTs", "SlotID") },
             new OBJDSelector[] { new OBJDSelector("My Catalog Strings", "CatalogStringsID") },
+            new OBJDSelector[] { },
             new OBJDSelector[] { },
             new OBJDSelector[] { }
         };

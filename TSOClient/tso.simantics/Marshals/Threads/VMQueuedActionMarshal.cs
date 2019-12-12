@@ -22,7 +22,7 @@ namespace FSO.SimAntics.Marshals.Threads
         public short[] Args; //NULLable
 
         public int InteractionNumber = -1; 
-        public bool Cancelled;
+        public bool NotifyIdle;
 
         public short Priority;
         public VMQueueMode Mode;
@@ -55,7 +55,7 @@ namespace FSO.SimAntics.Marshals.Threads
             if (Args != null) foreach (var item in Args) { writer.Write(item); }
 
             writer.Write(InteractionNumber);
-            writer.Write(Cancelled);
+            writer.Write(NotifyIdle);
 
             writer.Write((short)Priority);
             writer.Write((byte)Mode);
@@ -90,7 +90,7 @@ namespace FSO.SimAntics.Marshals.Threads
             }
 
             InteractionNumber = reader.ReadInt32();
-            Cancelled = reader.ReadBoolean();
+            NotifyIdle = reader.ReadBoolean();
 
             Priority = reader.ReadInt16();
             Mode = (VMQueueMode)reader.ReadByte();

@@ -3,7 +3,7 @@
 3 ^FSO Lighting^
 4 ^Shadow Detail^
 5 ^Force Z-Order^
-6 ^Smooth Zoom^	
+6 ^2D Transitions^	
 7 ^Object Shadows^
 
 8 ^No surrounding lots. Gray void is drawn outside the lot.^
@@ -33,4 +33,23 @@
 26 ^Complex Shaders^
 27 ^Enables several complex effects for high end GPUs.
 - Parallax+Normal mapping for Roofs and Grass
-- Any future compex shaders added to the game^
+- Any future complex shaders added to the game^
+
+28 ^Strict 2D Mode^
+29 ^The same as the original game. The game is always rendered with 2D sprites from the 4 fixed cameras.^
+30 ^2D Hybrid^
+31 ^Renders using isometric sprites normally, with rotation transitions that use 3D models. Uses considerably more VRAM, and allows free switching to 3D mode.^
+32 ^3D Hybrid^
+33 ^Always renders using 3D models but from an isometric point of view. Allows sharp graphics when zooming in, allows free switch to 3D, but not recommended without many remeshes.^
+34 ^3D Mode^
+35 ^Uses generated and user created 3D models to render the game in full 3D with free camera control, similar to later games. Free switching to 2D/3D hybrid.^
+
+36 ^Restart Required^
+37 ^3D-only resources will still be loaded until you restart the game, so memory usage may be higher than usual. If you are switching to 2D often, it is suggested to use 2D Hybrid without transitions.^
+38 ^Graphical quality will be diminished ingame when switching from strict 2D to 3D, as mipmaps are not loaded. Please restart the game to correct any issues.^
+
+39 ^Graphics Modes:^
+40 ^3D and the hybrid graphics modes can be toggled while the game is running, useful if you want to quickly snap a picture in 3D. Press F12 or click this button to switch modes. Switching modes at runtime can use more VRAM - so if you have trouble, enable texture compression.^
+
+41 ^Switch to 3D Mode^
+42 ^Switch to Hybrid 2D^

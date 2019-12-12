@@ -114,6 +114,11 @@ namespace FSO.Vitaboy
             }
         }
 
+        private string UniformName(string name)
+        {
+            return name.ToLowerInvariant().Replace("lgt", "").Replace("med", "").Replace("drk", "");
+        }
+
         /// <summary>
         /// Adds an Appearance instance to this avatar.
         /// </summary>
@@ -134,14 +139,11 @@ namespace FSO.Vitaboy
             {
                 foreach (var binding in realBindings)
                 {
-                    if (binding == null) { continue; }
+                    if (binding == null) { i++; continue; }
                     var mesh = Content.Content.Get().AvatarMeshes.Get(binding.MeshName);
                     if (texOverride != null &&
-                            mesh.TextureName.ToLowerInvariant() == texOverride.ToLowerInvariant()
-                            .Replace("lgt", "")
-                            .Replace("med", "")
-                            .Replace("drk", "")
-                            || mesh.TextureName.ToLowerInvariant() == "x")
+                            (UniformName(mesh.TextureName.ToLowerInvariant()).EndsWith(UniformName(texOverride.ToLowerInvariant()))
+                            || mesh.TextureName.ToLowerInvariant() == "x"))
                     {
                         replaced = i;
                     }
@@ -345,7 +347,7 @@ namespace FSO.Vitaboy
                 //effect.Parameters["FloorHeight"].SetValue((float)(Math.Floor(Position.Y/2.95)*2.95 + 0.05));
                 effect.Parameters["LightPosition"].SetValue(light);
                 var oldTech = effect.CurrentTechnique;
-                effect.CurrentTechnique = Avatar.Effect.Techniques[4];
+                effect.CurrentTechnique = effect.Techniques[4];
                 effect.CurrentTechnique.Passes[0].Apply();
                 device.DepthStencilState = DepthStencilState.DepthRead;
                 device.SetVertexBuffer(ShadBuf);
@@ -367,7 +369,7 @@ namespace FSO.Vitaboy
             var headObj = HeadObject;
             if (headObj == null) return;
             var oldTech = effect.CurrentTechnique;
-            effect.CurrentTechnique = Avatar.Effect.Techniques[6];
+            effect.CurrentTechnique = effect.Techniques[6];
             device.RasterizerState = RasterizerState.CullClockwise;
 
             var trans = Matrix.Invert(effect.Parameters["View"].GetValueMatrix()).Translation;

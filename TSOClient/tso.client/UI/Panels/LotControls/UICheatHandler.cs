@@ -50,7 +50,7 @@ namespace FSO.Client.UI.Panels.LotControls
             //DebugTexture = vm.Context.World.State.Light.LightMapDirection;
             return;
 
-            var tilePos = vm.Context.World.EstTileAtPosWithScroll(new Vector2(LastState.MouseState.X, LastState.MouseState.Y) / FSOEnvironment.DPIScaleFactor);
+            var tilePos = vm.Context.World.EstTileAtPosWithScroll(new Vector2(LastState.MouseState.X, LastState.MouseState.Y));
             LotTilePos targetrPos = new LotTilePos((short)(tilePos.X * 16), (short)(tilePos.Y * 16), vm.Context.World.State.Level);
             var room = vm.Context.GetRoomAt(targetrPos);
 
@@ -133,7 +133,7 @@ namespace FSO.Client.UI.Panels.LotControls
             var cmd = msg.Substring(1, spaceIndex - 1);
             var args = msg.Substring(Math.Min(msg.Length, spaceIndex + 1), Math.Max(0, msg.Length - (spaceIndex + 1)));
             string response = "("+msg+") ";
-            var tilePos = vm.Context.World.EstTileAtPosWithScroll(Control.GetScaledPoint(state.MouseState.Position).ToVector2() / FSOEnvironment.DPIScaleFactor);
+            var tilePos = vm.Context.World.EstTileAtPosWithScroll(Control.GetScaledPoint(state.MouseState.Position).ToVector2());
             try {
                 switch (cmd.ToLowerInvariant())
                 {

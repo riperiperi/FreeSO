@@ -6,6 +6,7 @@ float4x4 ViewProjection;
 float ObjectID;
 float2 UVScale;
 float4 AmbientLight;
+float SideMask;
 
 texture MeshTex;
 sampler TexSampler = sampler_state {
@@ -37,8 +38,6 @@ sampler MaskSampler = sampler_state {
 	AddressU = Clamp;
 	AddressV = Clamp;
 };
-
-float SideMask;
 
 struct VertexIn
 {

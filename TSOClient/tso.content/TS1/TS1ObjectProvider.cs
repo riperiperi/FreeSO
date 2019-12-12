@@ -39,6 +39,19 @@ namespace FSO.Content.TS1
             foreach (var iff in allIffs)
             {
                 var file = (IffFile)iff.GetThrowawayGeneric();
+                var source = GameObjectSource.Far;
+                string filename = Path.GetFileName(iff.ToString().Replace('\\', '/'));
+                if (iff is FileContentReference<object>)
+                {
+                    //if we're in downloads, remember the real filename and set as standalone
+                    //for easy editing in volcanic (not patching)
+                    var fileIff = iff as FileContentReference<object>;
+                    if (fileIff.Filename.Contains("Downloads"))
+                    {
+                        filename = fileIff.Filename;
+                        source = GameObjectSource.Standalone;
+                    }
+                }
                 file.MarkThrowaway();
                 var objects = file.List<OBJD>();
                 var slots = file.List<SLOT>();
@@ -48,18 +61,19 @@ namespace FSO.Content.TS1
                     {
                         Entries[obj.GUID] = new GameObjectReference(this)
                         {
-                            FileName = Path.GetFileName(iff.ToString().Replace('\\', '/')),
+                            FileName = filename,
                             ID = obj.GUID,
                             Name = obj.ChunkLabel,
-                            Source = GameObjectSource.Far,
+                            Source = source,
                             Group = (short)obj.MasterID,
                             SubIndex = obj.SubIndex,
-                            GlobalSimObject = obj.ObjectType == OBJDType.SimType && obj.Global == 1
+                            GlobalSimObject = obj.Global == 1 && obj.ObjectType != OBJDType.GiftToken
                         };
                         if (obj.ObjectType == OBJDType.Person) PersonGUIDs.Add(obj.GUID);
 
                         //does this object appear in the catalog?
-                        if ((obj.FunctionFlags > 0 || obj.BuildModeType > 0) && obj.Disabled == 0 && (obj.MasterID == 0 || obj.SubIndex == -1))
+                        if ((obj.FunctionFlags > 0 || obj.BuildModeType > 0) && obj.Disabled == 0 && 
+                            (obj.IsMultiTile || obj.NumGraphics > 0) && (obj.MasterID == 0 || obj.SubIndex == -1))
                         {
                             //todo: more than one of these set? no normal game objects do this
                             //todo: room sort
@@ -68,6 +82,7 @@ namespace FSO.Content.TS1
                             var item = new ObjectCatalogItem()
                             {
                                 Category = (sbyte)(cat), //0-7 buy categories. 8-15 build mode categories
+                                RoomSort = (byte)obj.RoomFlags,
                                 GUID = obj.GUID,
                                 DisableLevel = 0,
                                 Price = obj.Price,

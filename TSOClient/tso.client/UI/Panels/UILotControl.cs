@@ -120,7 +120,7 @@ namespace FSO.Client.UI.Panels
         public float TargetZoom { get; set; } = 1;
 
         public float BBScale { get { return World.BackbufferScale; } }
-        public I3DRotate Rotate { get { return (I3DRotate)World.State; } }
+        public I3DRotate Rotate { get { return World.State.Cameras.Camera3D; } } //(I3DRotate)World.State; } }
         public bool TVisible { get { return Visible; } }
         public bool UserModZoom { get; set; }
 
@@ -432,7 +432,7 @@ namespace FSO.Client.UI.Panels
 
         private short GetFloorBlockableHover(Point pt)
         {
-            var tilePos = World.EstTileAtPosWithScroll3D(new Vector2(pt.X, pt.Y) / FSOEnvironment.DPIScaleFactor);
+            var tilePos = World.EstTileAtPosWithScroll3D(new Vector2(pt.X, pt.Y));
             var newHover = World.GetObjectIDAtScreenPos(pt.X,
                     pt.Y,
                     GameFacade.GraphicsDevice);
@@ -454,7 +454,7 @@ namespace FSO.Client.UI.Panels
             {
                 VMEntity obj;
                 //get new pie menu, make new pie menu panel for it
-                var tilePos = World.EstTileAtPosWithScroll3D(new Vector2(pt.X, pt.Y) / FSOEnvironment.DPIScaleFactor);
+                var tilePos = World.EstTileAtPosWithScroll3D(new Vector2(pt.X, pt.Y));
 
                 LotTilePos targetPos = LotTilePos.FromBigTile((short)tilePos.X, (short)tilePos.Y, (sbyte)tilePos.Z);
                 if (vm.Context.SolidToAvatars(targetPos).Solid) targetPos = LotTilePos.OUT_OF_WORLD;
@@ -620,14 +620,17 @@ namespace FSO.Client.UI.Panels
                         {
                             if (obj is VMAvatar)
                             {
-                                state.UIState.TooltipProperties.Show = true;
-                                state.UIState.TooltipProperties.Color = Color.Black;
-                                state.UIState.TooltipProperties.Opacity = 1;
-                                state.UIState.TooltipProperties.Position = new Vector2(state.MouseState.X,
-                                    state.MouseState.Y);
-                                state.UIState.Tooltip = GetAvatarString(obj as VMAvatar);
-                                state.UIState.TooltipProperties.UpdateDead = false;
-                                ShowTooltip = true;
+                                if (((VMAvatar)obj).GetPersonData(VMPersonDataVariable.PersonType) != 255)
+                                {
+                                    state.UIState.TooltipProperties.Show = true;
+                                    state.UIState.TooltipProperties.Color = Color.Black;
+                                    state.UIState.TooltipProperties.Opacity = 1;
+                                    state.UIState.TooltipProperties.Position = new Vector2(state.MouseState.X,
+                                        state.MouseState.Y);
+                                    state.UIState.Tooltip = GetAvatarString(obj as VMAvatar);
+                                    state.UIState.TooltipProperties.UpdateDead = false;
+                                    ShowTooltip = true;
+                                }
                             }
                             else if (((VMGameObject)obj).Disabled > 0)
                             {
@@ -675,7 +678,10 @@ namespace FSO.Client.UI.Panels
                         if (InteractionsAvailable)
                         {
                             var obj = vm.GetObjectById(ObjectHover);
-                            if (obj is VMAvatar) cursor = CursorType.LivePerson;
+                            if (obj is VMAvatar)
+                            {
+                                cursor = (((VMAvatar)obj).GetPersonData(VMPersonDataVariable.PersonType) != 255) ? CursorType.LivePerson : CursorType.LiveObjectAvail;
+                            }
                             else
                             {
                                 var tsoState = obj?.PlatformState as VMTSOObjectState;
@@ -811,7 +817,7 @@ namespace FSO.Client.UI.Panels
             if (vm.Context.Blueprint != null && LastCuts != null)
             {
                 vm.Context.Blueprint.Cutaway = LastCuts;
-                vm.Context.Blueprint.Damage.Add(new FSO.LotView.Model.BlueprintDamage(FSO.LotView.Model.BlueprintDamageType.WALL_CUT_CHANGED));
+                vm.Context.Blueprint.Changes.SetFlag(BlueprintGlobalChanges.WALL_CUT_CHANGED);
             }
 
             //MouseCutRect = new Rectangle(0,0,0,0);
@@ -848,9 +854,12 @@ namespace FSO.Client.UI.Panels
             if (!vm.Ready || vm.Context.Architecture == null) return;
 
             //handling smooth scaled zoom
-            if (FSOEnvironment.Enable3D)
+            var camType = World.State.Cameras.ActiveType;
+            Touch._3D = camType != LotView.Utils.Camera.CameraControllerType._2D;
+            if (World.State.Cameras.ActiveType == LotView.Utils.Camera.CameraControllerType._3D)
             {
-                var s3d = ((WorldStateRC)World.State);
+                if (World.BackbufferScale != 1) World.BackbufferScale = 1;
+                var s3d = World.State.Cameras.Camera3D; //((WorldStateRC)World.State);
                 if (TargetZoom < -0.65f)
                 {
                     //switch to city
@@ -865,7 +874,7 @@ namespace FSO.Client.UI.Panels
                 s3d.Zoom3D += ((9.75f - (TargetZoom - 0.25f) * 5.7f) - s3d.Zoom3D) / 10;
 
             }
-            else
+            else if (World.State.Cameras.ActiveType == LotView.Utils.Camera.CameraControllerType._2D)
             {
                 if (World.State.Zoom != LastZoom)
                 {
@@ -1143,7 +1152,7 @@ namespace FSO.Client.UI.Panels
                                     facade.RoofOnFloor = true;
                                 }
                                 facade.RoofOnFloor = true;
-                                facade.Generate(GameFacade.GraphicsDevice, (WorldRC)World, vm.Context.Blueprint);
+                                facade.Generate(GameFacade.GraphicsDevice, World, vm.Context.Blueprint);
                                 facade.SaveToPath(path);
                                 UIScreen.GlobalShowAlert(new UIAlertOptions { Message = "Save successful!" }, true);
                             }
@@ -1172,7 +1181,7 @@ namespace FSO.Client.UI.Panels
             {
                 World.State.DynamicCutaway = (WallsMode == 1);
                 //first we need to cycle the rooms that are being cutaway. Keep this up even if we're in all-cut mode.
-                var mouseTilePos = World.EstTileAtPosWithScroll(GetScaledPoint(state.MouseState.Position).ToVector2() / FSOEnvironment.DPIScaleFactor);
+                var mouseTilePos = World.EstTileAtPosWithScroll(GetScaledPoint(state.MouseState.Position).ToVector2());
                 var roomHover = vm.Context.GetRoomAt(LotTilePos.FromBigTile((short)(mouseTilePos.X), (short)(mouseTilePos.Y), World.State.Level));
                 var outside = (vm.Context.RoomInfo[roomHover].Room.IsOutside);
                 if (!outside && !CutRooms.Contains(roomHover))
@@ -1185,7 +1194,7 @@ namespace FSO.Client.UI.Panels
                     {
                         LastCuts = new bool[vm.Context.Architecture.Width * vm.Context.Architecture.Height];
                         vm.Context.Blueprint.Cutaway = LastCuts;
-                        vm.Context.Blueprint.Damage.Add(new FSO.LotView.Model.BlueprintDamage(FSO.LotView.Model.BlueprintDamageType.WALL_CUT_CHANGED));
+                        vm.Context.Blueprint.Changes.SetFlag(BlueprintGlobalChanges.WALL_CUT_CHANGED);
                         for (int i = 0; i < LastCuts.Length; i++) LastCuts[i] = true;
                     }
                     else if (WallsMode == 1)
@@ -1197,7 +1206,7 @@ namespace FSO.Client.UI.Panels
                     {
                         LastCuts = new bool[vm.Context.Architecture.Width * vm.Context.Architecture.Height];
                         vm.Context.Blueprint.Cutaway = LastCuts;
-                        vm.Context.Blueprint.Damage.Add(new FSO.LotView.Model.BlueprintDamage(FSO.LotView.Model.BlueprintDamageType.WALL_CUT_CHANGED));
+                        vm.Context.Blueprint.Changes.SetFlag(BlueprintGlobalChanges.WALL_CUT_CHANGED);
                     }
                     LastWallMode = WallsMode;
                 }
@@ -1234,7 +1243,7 @@ namespace FSO.Client.UI.Panels
                         if (recut > 1 || notableChange || LastRectCutNotable)
                         {
                             vm.Context.Blueprint.Cutaway = finalCut;
-                            vm.Context.Blueprint.Damage.Add(new FSO.LotView.Model.BlueprintDamage(FSO.LotView.Model.BlueprintDamageType.WALL_CUT_CHANGED));
+                            vm.Context.Blueprint.Changes.SetFlag(BlueprintGlobalChanges.WALL_CUT_CHANGED);
                         }
                         LastRectCutNotable = notableChange;
                     }

@@ -18,6 +18,9 @@ namespace FSO.SimAntics.Model
         public ulong DynFlags1;
         public ulong DynFlags2;
 
+        public byte AttributeMode;
+        public List<int> Attributes = new List<int>();
+
         public void SerializeInto(BinaryWriter writer)
         {
             writer.Write(ObjectPID);
@@ -27,6 +30,13 @@ namespace FSO.SimAntics.Model
             writer.Write(Value);
             writer.Write(DynFlags1);
             writer.Write(DynFlags2);
+
+            writer.Write(AttributeMode);
+            writer.Write(Attributes.Count);
+            foreach (var attribute in Attributes)
+            {
+                writer.Write(attribute);
+            }
         }
 
         public void Deserialize(BinaryReader reader)
@@ -38,6 +48,13 @@ namespace FSO.SimAntics.Model
             Value = reader.ReadUInt32();
             DynFlags1 = reader.ReadUInt64();
             DynFlags2 = reader.ReadUInt64();
+
+            AttributeMode = reader.ReadByte();
+            var attrCount = reader.ReadInt32();
+            for (int i=0; i<attrCount; i++)
+            {
+                Attributes.Add(reader.ReadInt32());
+            }
         }
     }
 }

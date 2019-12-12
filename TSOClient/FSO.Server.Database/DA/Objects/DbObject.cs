@@ -27,10 +27,10 @@ namespace FSO.Server.Database.DA.Objects
         public uint upgrade_level { get; set; }
 
         //token system
-        //token objects cannot be traded or placed on a lot, but you can still see them in your inventory. 
-        //they are managed by object scripts.
-        public bool isToken { get; set; } 
-        public int tokenCount { get; set; } //how many of this token there are in this stack
-        public uint tokenType { get; set; } //a GUID this token points to. used by tokens that point to other object types, such as car keys
+        //if >0, attributes are stored on db rather than in state.
+        //if 2, we're a value token. (attr 0 contains number that should be displayed in UI)
+        public byte has_db_attributes { get; set; }
+
+        public List<int> AugmentedAttributes;
     }
 }

@@ -40,6 +40,8 @@ namespace FSO.Vitaboy
         /// </summary>
         public int NumFrames { get; set; }
 
+        public BCF ParentBCF;
+
         /// <summary>
         /// Reads an animation from a stream.
         /// </summary>

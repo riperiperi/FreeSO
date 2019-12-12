@@ -28,6 +28,7 @@ using FSO.Server.Database.DA.Neighborhoods;
 using FSO.Server.Database.DA.Elections;
 using FSO.Server.Database.DA.Bulletin;
 using FSO.Server.Database.DA.Updates;
+using FSO.Server.Database.DA.GlobalCooldowns;
 
 namespace FSO.Server.Database.DA
 {
@@ -406,6 +407,19 @@ namespace FSO.Server.Database.DA
                     _Confirmations = new SqlEmailConfirmations(Context);
                 }
                 return _Confirmations;
+            }
+        }
+
+        private IGlobalCooldowns _Cooldowns;
+        public IGlobalCooldowns GlobalCooldowns
+        {
+            get
+            {
+                if (_Cooldowns == null)
+                {
+                    _Cooldowns = new SqlGlobalCooldowns(Context);
+                }
+                return _Cooldowns;
             }
         }
 

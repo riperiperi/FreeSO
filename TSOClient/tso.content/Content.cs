@@ -116,6 +116,7 @@ namespace FSO.Content
             {
                 RCMeshes = new RCMeshProvider(device);
                 UIGraphics = new UIGraphicsProvider(this);
+                IffFile.TargetTS1 = TS1;
                 if (TS1)
                 {
                     TS1Global = new TS1Provider(this);
@@ -202,6 +203,7 @@ namespace FSO.Content
                 Upgrades.Init();
                 if (Mode == ContentMode.SERVER) Upgrades.LoadJSONTuning();
             }
+            WorldObjectGlobals.InitCurves();
             WorldRoofs.Init();
             LoadProgress = ContentLoadingProgress.Done;
         }

@@ -28,21 +28,21 @@
         /// </summary>
         private void InitializeComponent()
         {
-            System.Windows.Forms.ListViewItem listViewItem2 = new System.Windows.Forms.ListViewItem(new string[] {
+            System.Windows.Forms.ListViewItem listViewItem5 = new System.Windows.Forms.ListViewItem(new string[] {
             "0",
             "---",
             "Interaction - Boring Interaction"}, -1);
-            System.Windows.Forms.TreeNode treeNode7 = new System.Windows.Forms.TreeNode("Boring Interaction (0 / --- / Interaction - Boring Interaction)");
-            System.Windows.Forms.TreeNode treeNode8 = new System.Windows.Forms.TreeNode("Alright Interaction (1 / Helper - Is Alright? / Interaction - Alright Interaction" +
+            System.Windows.Forms.TreeNode treeNode25 = new System.Windows.Forms.TreeNode("Boring Interaction (0 / --- / Interaction - Boring Interaction)");
+            System.Windows.Forms.TreeNode treeNode26 = new System.Windows.Forms.TreeNode("Alright Interaction (1 / Helper - Is Alright? / Interaction - Alright Interaction" +
         ")");
-            System.Windows.Forms.TreeNode treeNode9 = new System.Windows.Forms.TreeNode("Just Kidding (2 / Interaction - Just Kidding TEST / Interaction - Just Kidding)");
-            System.Windows.Forms.TreeNode treeNode10 = new System.Windows.Forms.TreeNode("Exciting Stuff...", new System.Windows.Forms.TreeNode[] {
-            treeNode9});
-            System.Windows.Forms.TreeNode treeNode11 = new System.Windows.Forms.TreeNode("Test...", new System.Windows.Forms.TreeNode[] {
-            treeNode7,
-            treeNode8,
-            treeNode10});
-            System.Windows.Forms.TreeNode treeNode12 = new System.Windows.Forms.TreeNode("Repair (3 / --- / Interaction - Repair)");
+            System.Windows.Forms.TreeNode treeNode27 = new System.Windows.Forms.TreeNode("Just Kidding (2 / Interaction - Just Kidding TEST / Interaction - Just Kidding)");
+            System.Windows.Forms.TreeNode treeNode28 = new System.Windows.Forms.TreeNode("Exciting Stuff...", new System.Windows.Forms.TreeNode[] {
+            treeNode27});
+            System.Windows.Forms.TreeNode treeNode29 = new System.Windows.Forms.TreeNode("Test...", new System.Windows.Forms.TreeNode[] {
+            treeNode25,
+            treeNode26,
+            treeNode28});
+            System.Windows.Forms.TreeNode treeNode30 = new System.Windows.Forms.TreeNode("Repair (3 / --- / Interaction - Repair)");
             this.InteractionList = new System.Windows.Forms.ListView();
             this.IDHeader = ((System.Windows.Forms.ColumnHeader)(new System.Windows.Forms.ColumnHeader()));
             this.CheckHeader = ((System.Windows.Forms.ColumnHeader)(new System.Windows.Forms.ColumnHeader()));
@@ -128,7 +128,7 @@
             this.InteractionList.FullRowSelect = true;
             this.InteractionList.HideSelection = false;
             this.InteractionList.Items.AddRange(new System.Windows.Forms.ListViewItem[] {
-            listViewItem2});
+            listViewItem5});
             this.InteractionList.Location = new System.Drawing.Point(0, 0);
             this.InteractionList.MultiSelect = false;
             this.InteractionList.Name = "InteractionList";
@@ -389,23 +389,31 @@
             // 
             // AutonomyInput
             // 
-            this.AutonomyInput.Location = new System.Drawing.Point(105, 84);
+            this.AutonomyInput.Location = new System.Drawing.Point(123, 84);
             this.AutonomyInput.Name = "AutonomyInput";
-            this.AutonomyInput.Size = new System.Drawing.Size(104, 20);
+            this.AutonomyInput.Size = new System.Drawing.Size(86, 20);
             this.AutonomyInput.TabIndex = 7;
             // 
             // AttenuationCombo
             // 
             this.AttenuationCombo.FormattingEnabled = true;
+            this.AttenuationCombo.Items.AddRange(new object[] {
+            "Custom",
+            "None (0)",
+            "Low (0.1)",
+            "Medium (0.3)",
+            "High (0.6)"});
             this.AttenuationCombo.Location = new System.Drawing.Point(6, 83);
             this.AttenuationCombo.Name = "AttenuationCombo";
-            this.AttenuationCombo.Size = new System.Drawing.Size(90, 21);
+            this.AttenuationCombo.Size = new System.Drawing.Size(111, 21);
             this.AttenuationCombo.TabIndex = 6;
+            this.AttenuationCombo.SelectedIndexChanged += new System.EventHandler(this.AttenuationCombo_SelectedIndexChanged);
+            this.AttenuationCombo.TextChanged += new System.EventHandler(this.AttenuationCombo_TextChanged);
             // 
             // AutonomyLabel
             // 
             this.AutonomyLabel.AutoSize = true;
-            this.AutonomyLabel.Location = new System.Drawing.Point(102, 67);
+            this.AutonomyLabel.Location = new System.Drawing.Point(120, 68);
             this.AutonomyLabel.Name = "AutonomyLabel";
             this.AutonomyLabel.Size = new System.Drawing.Size(107, 13);
             this.AutonomyLabel.TabIndex = 5;
@@ -673,22 +681,22 @@
             this.PieView.Location = new System.Drawing.Point(0, 0);
             this.PieView.Margin = new System.Windows.Forms.Padding(0);
             this.PieView.Name = "PieView";
-            treeNode7.Name = "Node1";
-            treeNode7.Text = "Boring Interaction (0 / --- / Interaction - Boring Interaction)";
-            treeNode8.Name = "Node2";
-            treeNode8.Text = "Alright Interaction (1 / Helper - Is Alright? / Interaction - Alright Interaction" +
+            treeNode25.Name = "Node1";
+            treeNode25.Text = "Boring Interaction (0 / --- / Interaction - Boring Interaction)";
+            treeNode26.Name = "Node2";
+            treeNode26.Text = "Alright Interaction (1 / Helper - Is Alright? / Interaction - Alright Interaction" +
     ")";
-            treeNode9.Name = "Node4";
-            treeNode9.Text = "Just Kidding (2 / Interaction - Just Kidding TEST / Interaction - Just Kidding)";
-            treeNode10.Name = "Node3";
-            treeNode10.Text = "Exciting Stuff...";
-            treeNode11.Name = "Node0";
-            treeNode11.Text = "Test...";
-            treeNode12.Name = "Node5";
-            treeNode12.Text = "Repair (3 / --- / Interaction - Repair)";
+            treeNode27.Name = "Node4";
+            treeNode27.Text = "Just Kidding (2 / Interaction - Just Kidding TEST / Interaction - Just Kidding)";
+            treeNode28.Name = "Node3";
+            treeNode28.Text = "Exciting Stuff...";
+            treeNode29.Name = "Node0";
+            treeNode29.Text = "Test...";
+            treeNode30.Name = "Node5";
+            treeNode30.Text = "Repair (3 / --- / Interaction - Repair)";
             this.PieView.Nodes.AddRange(new System.Windows.Forms.TreeNode[] {
-            treeNode11,
-            treeNode12});
+            treeNode29,
+            treeNode30});
             this.PieView.Size = new System.Drawing.Size(454, 122);
             this.PieView.TabIndex = 0;
             this.PieView.AfterSelect += new System.Windows.Forms.TreeViewEventHandler(this.PieView_AfterSelect);

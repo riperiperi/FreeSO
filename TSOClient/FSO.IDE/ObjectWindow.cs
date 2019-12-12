@@ -115,7 +115,14 @@ namespace FSO.IDE
             FSOMEdit.SetActiveObject(ActiveObj);
             XMLEdit.SetActiveObject(ActiveObj);
             PIFFEditor.SetActiveObject(ActiveObj);
-            UpgradeEditor.SetActiveObject(ActiveObj);
+            if (Content.Content.Get().Upgrades == null)
+            {
+                objPages.Controls.Remove(UpgradeTab);
+            }
+            else
+            {
+                UpgradeEditor.SetActiveObject(ActiveObj);
+            }
 
             //update top var
 

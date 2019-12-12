@@ -37,7 +37,7 @@ namespace FSO.IDE.EditorComponent.Primitives
                 flagStr.Append(" as reference");
                 prepend = ",\r\n";
             }
-            if (op.AllowIntersection) { flagStr.Append(prepend + "Allow Intersection"); prepend = ",\r\n"; }
+            if (op.PreferNonEmpty) { flagStr.Append(prepend + "Prefer non-empty"); prepend = ",\r\n"; }
             if (op.UserEditableTilesOnly) { flagStr.Append(prepend + "User Editable tiles only"); prepend = ",\r\n"; }
 
             if (flagStr.Length != 0)
@@ -56,7 +56,7 @@ namespace FSO.IDE.EditorComponent.Primitives
 
             panel.Controls.Add(new OpFlagsControl(master, escope, Operand, "Flags:", new OpFlag[] {
                 new OpFlag("Use Local As Ref", "UseLocalAsRef"),
-                new OpFlag("Allow Intersection", "AllowIntersection"),
+                new OpFlag("Prefer Non-Empty", "PreferNonEmpty"),
                 new OpFlag("User Editable Tiles Only", "UserEditableTilesOnly"),
                 }));
             panel.Controls.Add(new OpLabelControl(master, escope, Operand, new OpStaticTextProvider("If 'Use Local As Ref' is set, the object with ID specified in the local is used as the starting position instead of the caller.")));

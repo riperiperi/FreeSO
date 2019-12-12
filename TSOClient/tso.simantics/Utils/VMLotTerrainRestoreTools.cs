@@ -438,10 +438,10 @@ namespace FSO.SimAntics.Utils
             }
         }
 
-        public static void RestoreTerrain(VM vm)
+        public static void RestoreTerrain(VM vm, RestoreLotType type = RestoreLotType.Normal)
         {
             //take center of lotstate
-            RestoreTerrain(vm, vm.TSOState.Terrain.BlendN[1, 1], vm.TSOState.Terrain.Roads[1, 1]);
+            RestoreTerrain(vm, vm.TSOState.Terrain.BlendN[1, 1], vm.TSOState.Terrain.Roads[1, 1], type);
 
             RestoreHeight(vm, vm.TSOState.Terrain, 1, 1);
         }
@@ -581,7 +581,7 @@ namespace FSO.SimAntics.Utils
             */
         }
 
-        public static void RestoreTerrain(VM vm, TerrainBlend blend, byte roads)
+        public static void RestoreTerrain(VM vm, TerrainBlend blend, byte roads, RestoreLotType type)
         {
             var arch = vm.Context.Architecture;
             arch.DisableClip = true;
@@ -673,7 +673,7 @@ namespace FSO.SimAntics.Utils
                 vm.TSOState.Size |= PickRoadDir(roads) << 16;
             }
 
-            PositionLandmarkObjects(vm);
+            PositionLandmarkObjects(vm, type);
 
             arch.SignalTerrainRedraw();
             arch.DisableClip = false;
@@ -697,9 +697,10 @@ namespace FSO.SimAntics.Utils
             public short X;
             public short Y;
             public int DirOff; //in 8th directions, like blueprint
-            public GUIDToPosition(uint guid, short x, short y, int dirOff)
+            public RestoreLotType Type;
+            public GUIDToPosition(uint guid, short x, short y, int dirOff, RestoreLotType type = RestoreLotType.Generic)
             {
-                GUID = guid; X = x; Y = y; DirOff = dirOff;
+                GUID = guid; X = x; Y = y; DirOff = dirOff; Type = type;
             }
         }
 
@@ -715,17 +716,36 @@ namespace FSO.SimAntics.Utils
             //center relative (vertical line above)
             new GUIDToPosition(0x39CCF441, -1, 0, 0), //mailbox (2tile)
             new GUIDToPosition(0xA4258067, 1, 1, 0), //bin
-            new GUIDToPosition(0x313D2F9A, 4, 1, 0), //phone
-            new GUIDToPosition(0x303CD603, 4, 1, 0), //phone (nhood)
+            new GUIDToPosition(0x313D2F9A, 4, 1, 0, RestoreLotType.Normal), //phone
+            new GUIDToPosition(0x303CD603, 4, 1, 0, RestoreLotType.Community), //phone (nhood)
             new GUIDToPosition(0x865A6812, 0, 3, 2), //car portal 1
             new GUIDToPosition(0xD564C66B, -5, 3, 2), //car portal 2
         };
+
+        public static void EnsureCoreObjects(VM vm, RestoreLotType type)
+        {
+            var del = MovePositions.Where(x => x.Type != RestoreLotType.Generic && x.Type != type).Select(x => EntityByGUID(vm, x.GUID)).Where(x => x != null).ToList();
+            foreach (var ent in del)
+            {
+                ent.Delete(true, vm.Context);
+            }
+            var fail = MovePositions.Where(x =>
+            {
+                //find an object of this type
+                var ent = EntityByGUID(vm, x.GUID);
+                return (x.Type == type || x.Type == RestoreLotType.Generic) && (ent == null || ent.Position == LotTilePos.OUT_OF_WORLD);
+            });
+            if (fail.Count() > 0)
+            {
+                PositionLandmarkObjects(vm, type);
+            }
+        }
 
         /// <summary>
         /// Positions the Landmark objects depending on the lot direction. (npc/car portals, bin, mailbox, phone)
         /// </summary>
         /// <param name="vm">The VM.</param>
-        public static void PositionLandmarkObjects(VM vm)
+        public static void PositionLandmarkObjects(VM vm, RestoreLotType type)
         {
             var arch = vm.Context.Architecture;
             var lotSInfo = vm.TSOState.Size;
@@ -772,9 +792,13 @@ namespace FSO.SimAntics.Utils
             {
                 var rpos = ctr + (pos.X * xperp) + (pos.Y * yperp);
                 var ent = EntityByGUID(vm, pos.GUID);
+                if (type != RestoreLotType.Blank && ent == null && (pos.Type == type || pos.Type == RestoreLotType.Generic))
+                {
+                    ent = vm.Context.CreateObjectInstance(pos.GUID, LotTilePos.OUT_OF_WORLD, Direction.NORTH).BaseObject;
+                }
                 if (ent != null)
                 {
-                    var result = ent.MultitileGroup.BaseObject.SetPosition(LotTilePos.FromBigTile((short)rpos.X, (short)rpos.Y, 1), (Direction)(1 << ((lotDir*2 + pos.DirOff) % 8)), vm.Context);
+                    var result = ent.MultitileGroup.BaseObject.SetPosition(LotTilePos.FromBigTile((short)rpos.X, (short)rpos.Y, 1), (Direction)(1 << ((lotDir*2 + pos.DirOff) % 8)), vm.Context, VMPlaceRequestFlags.AllowIntersection);
                     if (result.Status != VMPlacementError.Success)
                     {
                         // if we can't place the object, put it oow.
@@ -1009,7 +1033,7 @@ namespace FSO.SimAntics.Utils
                                 hollow.Deserialize(reader);
                             }
                             tempVM.HollowLoad(hollow);
-                            RestoreTerrain(tempVM, terrain.BlendN[x, y], terrain.Roads[x, y]);
+                            RestoreTerrain(tempVM, terrain.BlendN[x, y], terrain.Roads[x, y], RestoreLotType.Normal);
                             if (hollow.Version < 19)
                                 height = RestoreHeight(tempVM, terrain, x, y);
                             else
@@ -1025,6 +1049,10 @@ namespace FSO.SimAntics.Utils
                         } catch (Exception)
                         {
                             hollow = null;
+                            hollowAdj[y * 3 + x] = null;
+                            subworld.Dispose();
+                            x--;
+                            continue; //try this surrounding lot again, but as an empty one.
                         }
                     }
 
@@ -1043,7 +1071,7 @@ namespace FSO.SimAntics.Utils
                         blueprint.Terrain = terrainC;
 
                         tempVM.Context.Architecture.Terrain.LowQualityGrassState = true;
-                        RestoreTerrain(tempVM, terrain.BlendN[x, y], terrain.Roads[x, y]);
+                        RestoreTerrain(tempVM, terrain.BlendN[x, y], terrain.Roads[x, y], RestoreLotType.Blank);
                         height = RestoreHeight(tempVM, terrain, x, y);
                         tempVM.Context.Blueprint.BaseAlt = (int)((baseHeight - height));
 
@@ -1064,5 +1092,13 @@ namespace FSO.SimAntics.Utils
             }
             vm.Context.World.InitSubWorlds();
         }
+    }
+
+    public enum RestoreLotType
+    {
+        Generic = -1,
+        Normal = 0,
+        Community = 1,
+        Blank = 2
     }
 }

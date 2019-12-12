@@ -95,7 +95,7 @@ namespace FSO.IDE.EditorComponent.Primitives
                 case VMSnapSlotScope.Literal:
                     var slotNs = scope.GetResource<STR>(257, ScopeSource.Private);
                     var slotRes = scope.GetResource<SLOT>(scope.GetOBJD().SlotID, ScopeSource.Private);
-                    if (slotRes == null) return map;
+                    if (slotRes == null || !slotRes.Slots.ContainsKey(3)) return map;
                     var slots = slotRes.Slots[3];
                     for (int i = 0; i < slots.Count; i++)
                         map.Add(i, (slotNs != null && slotNs.GetString(i) != null)?slotNs.GetString(i):"slot "+i);

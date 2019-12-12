@@ -1,0 +1,20 @@
+<Project Sdk="Microsoft.NET.Sdk">
+
+  <PropertyGroup>
+    <TargetFramework>netstandard2.0</TargetFramework>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <PackageReference Include="Microsoft.CodeAnalysis.CSharp" Version="3.4.0-beta1-final" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <ProjectReference Include="..\FSO.SimAntics.JIT\FSO.SimAntics.JIT.csproj" />
+    <ProjectReference Include="..\tso.common\FSO.Common.csproj" />
+    <ProjectReference Include="..\tso.content\FSO.Content.csproj" />
+    <ProjectReference Include="..\tso.files\FSO.Files.csproj" />
+    <ProjectReference Include="..\tso.simantics\FSO.SimAntics.csproj" />
+    <ProjectReference Include="..\tso.world\FSO.LotView.csproj" />
+  </ItemGroup>
+
+</Project>

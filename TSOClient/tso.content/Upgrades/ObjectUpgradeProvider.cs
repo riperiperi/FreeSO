@@ -54,13 +54,19 @@ namespace FSO.Content.Upgrades
         public void LoadNetTuning(byte[] data)
         {
             Editable = false;
-            using (var mem = new MemoryStream(data))
+            if (data.Length > 0)
             {
-                using (var reader = new BinaryReader(mem))
+                using (var mem = new MemoryStream(data))
                 {
-                    ActiveFile = new UpgradesFile();
-                    ActiveFile.Load(reader);
+                    using (var reader = new BinaryReader(mem))
+                    {
+                        ActiveFile = new UpgradesFile();
+                        ActiveFile.Load(reader);
+                    }
                 }
+            } else
+            {
+                ActiveFile = new UpgradesFile();
             }
             PrepareRuntime(false);
         }

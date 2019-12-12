@@ -21,6 +21,7 @@ namespace FSO.IDE.ResourceBrowser.ResourceEditors
 
         private STRLangCode ActiveLanguage = STRLangCode.EnglishUS;
         private string OldStr;
+        private string OldComment;
         private int SelectedStringInd
         {
             get
@@ -71,21 +72,30 @@ namespace FSO.IDE.ResourceBrowser.ResourceEditors
             bool enableMod = (ind != -1);
 
             StringBox.Enabled = enableMod;
+            CommentBox.Enabled = enableMod;
             RemoveButton.Enabled = enableMod;
             UpButton.Enabled = enableMod;
             DownButton.Enabled = enableMod;
             SaveButton.Enabled = enableMod;
 
             if (ind == -1)
+            {
                 StringBox.Text = "";
+                CommentBox.Text = "";
+            }
             else
+            {
                 StringBox.Text = ActiveString.GetString(ind, ActiveLanguage);
+                CommentBox.Text = ActiveString.GetComment(ind, ActiveLanguage);
+            }
+                
             OldStr = StringBox.Text;
+            OldComment = CommentBox.Text;
         }
 
         private void StringBox_TextChanged(object sender, EventArgs e)
         {
-            if (!OldStr.Equals(StringBox.Text))
+            if (!OldStr.Equals(StringBox.Text) || !OldComment.Equals(CommentBox.Text))
             {
                 SaveButton.Enabled = true;
             }
@@ -94,10 +104,12 @@ namespace FSO.IDE.ResourceBrowser.ResourceEditors
         private void SaveButton_Click(object sender, EventArgs e)
         {
             OldStr = StringBox.Text;
+            OldComment = CommentBox.Text;
             var ind = SelectedStringInd;
             Content.Content.Get().Changes.BlockingResMod(new ResAction(() =>
             {
                 ActiveString.SetString(ind, OldStr, ActiveLanguage);
+                //todo: set comment
             }, ActiveString));
             UpdateStrings();
             SelectedStringInd = ind;

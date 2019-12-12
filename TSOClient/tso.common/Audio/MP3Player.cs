@@ -39,6 +39,8 @@ namespace FSO.Common.Audio
         private string Path;
         public int SendExtra = 2;
 
+        private static byte[] Blank = new byte[65536];
+
         public MP3Player(string path)
         {
             Path = path;
@@ -55,10 +57,11 @@ namespace FSO.Common.Audio
         {
             Stream = new Mp3Stream(Path);
             Stream.DecodeFrames(1);
+            var freq = Stream.Frequency;
             lock (ControlLock)
             {
                 if (Disposed) return;
-                Inst = new DynamicSoundEffectInstance(Stream.Frequency, AudioChannels.Stereo);
+                Inst = new DynamicSoundEffectInstance(freq, AudioChannels.Stereo);
                 Inst.IsLooped = false;
                 Inst.BufferNeeded += SubmitBufferAsync;
                 if (_State == SoundState.Playing) Inst.Play();
@@ -108,6 +111,7 @@ namespace FSO.Common.Audio
                 catch (Exception e) { }
             });
             DecoderThread.Start();
+            DecodeNext.Set();
         }
 
         public void Play()
@@ -154,7 +158,7 @@ namespace FSO.Common.Audio
                 Inst?.Dispose();
                 Stream?.Dispose();
 
-                Active = true;
+                Active = false;
                 DecodeNext.Set(); //end the mp3 thread immediately
 
                 EndOfStream = true;
@@ -240,11 +244,13 @@ namespace FSO.Common.Audio
             while (true)
             {
                 if (EndOfStream) return;
+                var gotData = false;
                 lock (this)
                 {
                     if (NextBuffers.Count > 0)
                     {
                         if (NextSizes[0] > 0) Inst.SubmitBuffer(NextBuffers[0], 0, NextSizes[0]);
+                        gotData = true;
                         NextBuffers.RemoveAt(0);
                         NextSizes.RemoveAt(0);
                         Requests++;
@@ -255,12 +261,17 @@ namespace FSO.Common.Audio
                             continue;
                         }
                         return;
-                    } else
-                    {
-                        if (NewMode) BufferDone.WaitOne(128);
                     }
 
                     if (EndOfStream) return;
+                }
+                if (!gotData)
+                {
+                    Inst.SubmitBuffer(Blank, 0, Blank.Length);
+                    Requests++;
+                    DecodeNext.Set();
+                    return;
+                    //if (NewMode) BufferDone.WaitOne(128);
                 }
             }
         }

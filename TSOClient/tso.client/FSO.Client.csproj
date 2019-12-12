@@ -52,6 +52,7 @@
     <WarningLevel>4</WarningLevel>
     <CodeAnalysisRuleSet>AllRules.ruleset</CodeAnalysisRuleSet>
     <Prefer32Bit>false</Prefer32Bit>
+    <UseVSHostingProcess>true</UseVSHostingProcess>
   </PropertyGroup>
   <PropertyGroup>
     <ApplicationIcon>fso.ico</ApplicationIcon>
@@ -159,6 +160,7 @@
     <Compile Include="Rendering\City\Plugins\MapPainterPlugin.cs" />
     <Compile Include="Rendering\City\Plugins\NeighbourhoodEditPlugin.cs" />
     <Compile Include="Rendering\City\TLayerVertex.cs" />
+    <Compile Include="UI\Panels\EODs\UICooldownEventEOD.cs" />
     <Compile Include="UI\Panels\UIAbstractCatalogMode.cs" />
     <Compile Include="UI\Panels\Upgrades\UIUpgradeItem.cs" />
     <Compile Include="UI\Panels\Upgrades\UIUpgradeList.cs" />
@@ -290,7 +292,7 @@
     <Compile Include="Utils\PalMapper.cs" />
     <Compile Include="Utils\TestFunctions\ProjectionTest.cs" />
     <Compile Include="Utils\ThreeDMesh.cs" />
-    <Content Include="..\..\Other\libs\FSOMonoGame\MonoGame.Framework\obj\Linux\AnyCPU\Release\MonoGame.Framework.dll">
+    <Content Include="..\..\Other\libs\FSOMonoGame\MonoGame.Framework\obj\Linux\AnyCPU\Release\MonoGame.Framework.dll" Condition="Exists('..\..\Other\libs\FSOMonoGame\MonoGame.Framework\obj\Linux\AnyCPU\Release\MonoGame.Framework.dll')">
       <Link>Monogame\Linux\MonoGame.Framework.dll</Link>
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </Content>

@@ -56,7 +56,7 @@ namespace FSO.Files.FAR1
 
             if ((Header != "FAR!byAZ") || (Version != 1))
             {
-                throw(new Exception("Archive wasn't a valid FAR V.1 archive!"));
+                throw (new Exception("Archive wasn't a valid FAR V.1 archive!"));
             }
 
             //File table offset - A 4-byte unsigned integer specifying the offset to the file table 
@@ -65,18 +65,20 @@ namespace FSO.Files.FAR1
             m_Reader.BaseStream.Seek(m_ManifestOffset, SeekOrigin.Begin);
 
             m_NumFiles = m_Reader.ReadUInt32();
-            
+
+
             for (int i = 0; i < m_NumFiles; i++)
             {
+
                 FarEntry Entry = new FarEntry();
                 Entry.DataLength = m_Reader.ReadInt32();
                 Entry.DataLength2 = m_Reader.ReadInt32();
                 Entry.DataOffset = m_Reader.ReadInt32();
-                Entry.FilenameLength = (v1b)?m_Reader.ReadInt16():(short)m_Reader.ReadInt32();
+                Entry.FilenameLength = (v1b) ? m_Reader.ReadInt16() : (short)m_Reader.ReadInt32();
                 Entry.Filename = Encoding.ASCII.GetString(m_Reader.ReadBytes(Entry.FilenameLength));
 
                 m_Entries.Add(Entry);
-            }
+            }                  
         }
 
         /// <summary>

@@ -136,10 +136,7 @@ namespace FSO.Client.UI.Screens
                             ucp.SetMode(UIUCP.UCPMode.LotMode);
                         } else
                         {
-                            if (!FSOEnvironment.Enable3D)
-                            {
-                                if (m_ZoomLevel != value) vm.Context.World.InitiateSmoothZoom(targ);
-                            }
+                            if (m_ZoomLevel != value) vm.Context.World.InitiateSmoothZoom(targ);
                         }
 
                         m_ZoomLevel = value;
@@ -388,7 +385,7 @@ namespace FSO.Client.UI.Screens
         {
             //GameFacade.Game.IsFixedTimeStep = (vm == null || vm.Ready);
 
-            Visible = ((World?.Visible == false || (World?.State as FSO.LotView.RC.WorldStateRC)?.CameraMode != true) && !CityRenderer.Camera.HideUI);
+            Visible = ((World?.Visible == false || World?.State.Cameras.HideUI != true) && !CityRenderer.Camera.HideUI);
             GameFacade.Game.IsMouseVisible = Visible;
 
             base.Update(state);
@@ -419,7 +416,7 @@ namespace FSO.Client.UI.Screens
                             GlobalSettings.Default.Save();
                         }
                         else
-                            CityRenderer.InheritPosition(World, FindController<CoreGameScreenController>());
+                            CityRenderer.InheritPosition(World, FindController<CoreGameScreenController>(), false);
                     }
                     if (CityRenderer.m_LotZoomProgress > 0f && CityRenderer.m_LotZoomProgress < 1f)
                     {
@@ -497,6 +494,11 @@ namespace FSO.Client.UI.Screens
                 }
 
                 DiscordRpcEngine.Secret = null;
+            }
+
+            if (state.NewKeys.Contains(Microsoft.Xna.Framework.Input.Keys.F12) && GraphicsModeControl.Mode != GlobalGraphicsMode.Full2D)
+            {
+                GraphicsModeControl.ChangeMode((GraphicsModeControl.Mode == GlobalGraphicsMode.Full3D) ? GlobalGraphicsMode.Hybrid2D : GlobalGraphicsMode.Full3D);
             }
         }
 
@@ -677,13 +679,16 @@ namespace FSO.Client.UI.Screens
         {
             CleanupLastWorld();
 
+            /*
             if (FSOEnvironment.Enable3D)
             {
                 var rc = new LotView.RC.WorldRC(GameFacade.GraphicsDevice);
                 rc.SetSurroundingWorld(CityRenderer);
                 World = rc;
             }
-            else World = new World(GameFacade.GraphicsDevice);
+            else */
+            World = new World(GameFacade.GraphicsDevice);
+            World.Surroundings = CityRenderer;
 
             WorldLoaded = false;
             World.Opacity = 0;
@@ -776,8 +781,21 @@ namespace FSO.Client.UI.Screens
         private void VMRefreshed()
         {
             if (vm == null) return;
-            LotControl.ActiveEntity = null;
-            LotControl.RefreshCut();
+            GameThread.InUpdate(() =>
+            {
+                if (vm.LoadErrors.Count > 0) HandleLoadErrors();
+                LotControl.ActiveEntity = null;
+                LotControl.RefreshCut();
+            });
+        }
+
+        private void HandleLoadErrors()
+        {
+            UIAlert.Alert("Lot Load Error", $"An error occurred loading lot state. It is not recommended that you continue, as you will desync from the server repeatedly. \n\n" +
+                $"Errors: \n{String.Join("\n", vm.LoadErrors.Select(x => x.ToString()))}\n\n" +
+                $"Your best bet is reinstalling FreeSO or The Sims Online. If this appears repeatedly, you definitely have an issue. You should also post this message on discord.",
+                true);
+            vm.LoadErrors.Clear();
         }
 
         private void VMDebug_OnButtonClick(UIElement button)
@@ -839,10 +857,8 @@ namespace FSO.Client.UI.Screens
         {
             //zooming back to city using mouse wheel.
             ZoomLevel = 4;
-            if (FSOEnvironment.Enable3D)
-            {
-                ((CityCamera3D)CityRenderer.Camera).TargetZoom = 2.2f;
-            }
+            var cam3d = CityRenderer.Camera as CityCamera3D;
+            if (cam3d != null) cam3d.TargetZoom = 2.2f;
         }
     }
 

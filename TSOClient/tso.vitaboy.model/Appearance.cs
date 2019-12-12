@@ -30,6 +30,8 @@ namespace FSO.Vitaboy
         public int Type;
         public int Zero;
 
+        public BCF ParentBCF;
+
         /// <summary>
         /// Gets the ContentID instance for this appearance.
         /// </summary>

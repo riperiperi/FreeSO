@@ -1,0 +1,901 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<Project ToolsVersion="14.0" DefaultTargets="Build" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
+  <Import Project="$(MSBuildExtensionsPath)\$(MSBuildToolsVersion)\Microsoft.Common.props" Condition="Exists('$(MSBuildExtensionsPath)\$(MSBuildToolsVersion)\Microsoft.Common.props')" />
+  <PropertyGroup>
+    <Configuration Condition=" '$(Configuration)' == '' ">Debug</Configuration>
+    <Platform Condition=" '$(Platform)' == '' ">AnyCPU</Platform>
+    <ProjectGuid>{5DEB20EB-1EB7-48F9-922C-463ABAE56E63}</ProjectGuid>
+    <OutputType>WinExe</OutputType>
+    <AppDesignerFolder>Properties</AppDesignerFolder>
+    <RootNamespace>FSO.IDE</RootNamespace>
+    <AssemblyName>Volcanic</AssemblyName>
+    <TargetFrameworkVersion>v4.6.1</TargetFrameworkVersion>
+    <FileAlignment>512</FileAlignment>
+    <AutoGenerateBindingRedirects>true</AutoGenerateBindingRedirects>
+    <TargetFrameworkProfile>
+    </TargetFrameworkProfile>
+    <PublishUrl>publish\</PublishUrl>
+    <Install>true</Install>
+    <InstallFrom>Disk</InstallFrom>
+    <UpdateEnabled>false</UpdateEnabled>
+    <UpdateMode>Foreground</UpdateMode>
+    <UpdateInterval>7</UpdateInterval>
+    <UpdateIntervalUnits>Days</UpdateIntervalUnits>
+    <UpdatePeriodically>false</UpdatePeriodically>
+    <UpdateRequired>false</UpdateRequired>
+    <MapFileExtensions>true</MapFileExtensions>
+    <ApplicationRevision>0</ApplicationRevision>
+    <ApplicationVersion>1.0.0.%2a</ApplicationVersion>
+    <IsWebBootstrapper>false</IsWebBootstrapper>
+    <UseApplicationTrust>false</UseApplicationTrust>
+    <BootstrapperEnabled>true</BootstrapperEnabled>
+    <NuGetPackageImportStamp>
+    </NuGetPackageImportStamp>
+  </PropertyGroup>
+  <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Debug|AnyCPU' ">
+    <PlatformTarget>AnyCPU</PlatformTarget>
+    <DebugSymbols>true</DebugSymbols>
+    <DebugType>full</DebugType>
+    <Optimize>false</Optimize>
+    <OutputPath>bin\Debug\</OutputPath>
+    <DefineConstants>TRACE;DEBUG</DefineConstants>
+    <ErrorReport>prompt</ErrorReport>
+    <WarningLevel>4</WarningLevel>
+    <Prefer32Bit>false</Prefer32Bit>
+  </PropertyGroup>
+  <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Release|AnyCPU' ">
+    <PlatformTarget>AnyCPU</PlatformTarget>
+    <DebugType>pdbonly</DebugType>
+    <Optimize>true</Optimize>
+    <OutputPath>bin\Release\</OutputPath>
+    <DefineConstants>TRACE</DefineConstants>
+    <ErrorReport>prompt</ErrorReport>
+    <WarningLevel>4</WarningLevel>
+    <Prefer32Bit>false</Prefer32Bit>
+  </PropertyGroup>
+  <PropertyGroup Condition="'$(Configuration)|$(Platform)' == 'Debug|x86'">
+    <DebugSymbols>true</DebugSymbols>
+    <OutputPath>bin\x86\Debug\</OutputPath>
+    <DefineConstants>DEBUG;TRACE</DefineConstants>
+    <DebugType>full</DebugType>
+    <PlatformTarget>x86</PlatformTarget>
+    <ErrorReport>prompt</ErrorReport>
+    <CodeAnalysisRuleSet>MinimumRecommendedRules.ruleset</CodeAnalysisRuleSet>
+    <WarningLevel>3</WarningLevel>
+    <Prefer32Bit>false</Prefer32Bit>
+    <UseVSHostingProcess>true</UseVSHostingProcess>
+  </PropertyGroup>
+  <PropertyGroup Condition="'$(Configuration)|$(Platform)' == 'Release|x86'">
+    <OutputPath>bin\x86\Release\</OutputPath>
+    <DefineConstants>TRACE</DefineConstants>
+    <Optimize>true</Optimize>
+    <DebugType>pdbonly</DebugType>
+    <PlatformTarget>x86</PlatformTarget>
+    <ErrorReport>prompt</ErrorReport>
+    <CodeAnalysisRuleSet>MinimumRecommendedRules.ruleset</CodeAnalysisRuleSet>
+    <Prefer32Bit>false</Prefer32Bit>
+  </PropertyGroup>
+  <PropertyGroup>
+    <ApplicationIcon>IDE.ico</ApplicationIcon>
+  </PropertyGroup>
+  <PropertyGroup Condition="'$(Configuration)|$(Platform)' == 'ServerRelease|AnyCPU'">
+    <OutputPath>bin\ServerRelease\</OutputPath>
+    <DefineConstants>TRACE</DefineConstants>
+    <Optimize>true</Optimize>
+    <DebugType>pdbonly</DebugType>
+    <PlatformTarget>AnyCPU</PlatformTarget>
+    <ErrorReport>prompt</ErrorReport>
+    <CodeAnalysisRuleSet>MinimumRecommendedRules.ruleset</CodeAnalysisRuleSet>
+  </PropertyGroup>
+  <PropertyGroup Condition="'$(Configuration)|$(Platform)' == 'ServerRelease|x86'">
+    <OutputPath>bin\x86\ServerRelease\</OutputPath>
+    <DefineConstants>TRACE</DefineConstants>
+    <Optimize>true</Optimize>
+    <DebugType>pdbonly</DebugType>
+    <PlatformTarget>x86</PlatformTarget>
+    <ErrorReport>prompt</ErrorReport>
+    <CodeAnalysisRuleSet>MinimumRecommendedRules.ruleset</CodeAnalysisRuleSet>
+  </PropertyGroup>
+  <ItemGroup>
+    <Reference Include="MonoGame.Framework, Version=3.6.0.1625, Culture=neutral, processorArchitecture=MSIL">
+      <HintPath>..\packages\MonoGame.Framework.Portable.3.6.0.1625\lib\portable-net45+win8+wpa81\MonoGame.Framework.dll</HintPath>
+    </Reference>
+    <Reference Include="Newtonsoft.Json, Version=12.0.0.0, Culture=neutral, PublicKeyToken=30ad4fe6b2a6aeed, processorArchitecture=MSIL">
+      <HintPath>..\packages\Newtonsoft.Json.12.0.2\lib\net45\Newtonsoft.Json.dll</HintPath>
+    </Reference>
+    <Reference Include="SharpGLTF.Core, Version=1.0.0.0, Culture=neutral, processorArchitecture=MSIL">
+      <HintPath>..\packages\SharpGLTF.Core.1.0.0-alpha0011\lib\netstandard2.0\SharpGLTF.Core.dll</HintPath>
+    </Reference>
+    <Reference Include="SharpGLTF.Toolkit, Version=1.0.0.0, Culture=neutral, processorArchitecture=MSIL">
+      <HintPath>..\packages\SharpGLTF.Toolkit.1.0.0-alpha0011\lib\netstandard2.0\SharpGLTF.Toolkit.dll</HintPath>
+    </Reference>
+    <Reference Include="System" />
+    <Reference Include="System.Buffers, Version=4.0.2.0, Culture=neutral, PublicKeyToken=cc7b13ffcd2ddd51, processorArchitecture=MSIL">
+      <HintPath>..\packages\System.Buffers.4.4.0\lib\netstandard2.0\System.Buffers.dll</HintPath>
+    </Reference>
+    <Reference Include="System.Core" />
+    <Reference Include="System.Memory, Version=4.0.1.1, Culture=neutral, PublicKeyToken=cc7b13ffcd2ddd51, processorArchitecture=MSIL">
+      <HintPath>..\packages\System.Memory.4.5.3\lib\netstandard2.0\System.Memory.dll</HintPath>
+    </Reference>
+    <Reference Include="System.Numerics" />
+    <Reference Include="System.Numerics.Vectors, Version=4.1.3.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a, processorArchitecture=MSIL">
+      <HintPath>..\packages\System.Numerics.Vectors.4.4.0\lib\net46\System.Numerics.Vectors.dll</HintPath>
+    </Reference>
+    <Reference Include="System.Runtime.CompilerServices.Unsafe, Version=4.0.4.1, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a, processorArchitecture=MSIL">
+      <HintPath>..\packages\System.Runtime.CompilerServices.Unsafe.4.5.2\lib\netstandard2.0\System.Runtime.CompilerServices.Unsafe.dll</HintPath>
+    </Reference>
+    <Reference Include="System.Xml.Linq" />
+    <Reference Include="System.Data.DataSetExtensions" />
+    <Reference Include="Microsoft.CSharp" />
+    <Reference Include="System.Data" />
+    <Reference Include="System.Deployment" />
+    <Reference Include="System.Drawing" />
+    <Reference Include="System.Net.Http" />
+    <Reference Include="System.Windows.Forms" />
+    <Reference Include="System.Xml" />
+  </ItemGroup>
+  <ItemGroup>
+    <Compile Include="AboutWindow.cs">
+      <SubType>Form</SubType>
+    </Compile>
+    <Compile Include="AboutWindow.Designer.cs">
+      <DependentUpon>AboutWindow.cs</DependentUpon>
+    </Compile>
+    <Compile Include="AvatarUtils\AddAppearanceWindow.cs">
+      <SubType>Form</SubType>
+    </Compile>
+    <Compile Include="AvatarUtils\AddAppearanceWindow.Designer.cs">
+      <DependentUpon>AddAppearanceWindow.cs</DependentUpon>
+    </Compile>
+    <Compile Include="Common\Debug\UI3DDGRP.cs" />
+    <Compile Include="Common\ExternalWorld.cs" />
+    <Compile Include="Common\AvatarAnimatorControl.cs">
+      <SubType>UserControl</SubType>
+    </Compile>
+    <Compile Include="Common\AvatarAnimatorControl.Designer.cs">
+      <DependentUpon>AvatarAnimatorControl.cs</DependentUpon>
+    </Compile>
+    <Compile Include="Common\InteractiveDGRPControl.cs">
+      <SubType>UserControl</SubType>
+    </Compile>
+    <Compile Include="Common\InteractiveDGRPControl.Designer.cs">
+      <DependentUpon>InteractiveDGRPControl.cs</DependentUpon>
+    </Compile>
+    <Compile Include="Common\MeshExporter.cs" />
+    <Compile Include="Common\NewIffDialog.cs">
+      <SubType>Form</SubType>
+    </Compile>
+    <Compile Include="Common\NewIffDialog.Designer.cs">
+      <DependentUpon>NewIffDialog.cs</DependentUpon>
+    </Compile>
+    <Compile Include="Common\NewObjectDialog.cs">
+      <SubType>Form</SubType>
+    </Compile>
+    <Compile Include="Common\NewObjectDialog.Designer.cs">
+      <DependentUpon>NewObjectDialog.cs</DependentUpon>
+    </Compile>
+    <Compile Include="Common\ObjectRegistry.cs" />
+    <Compile Include="Common\ObjThumbnailControl.cs">
+      <SubType>UserControl</SubType>
+    </Compile>
+    <Compile Include="Common\SpriteEncoderUtils.cs" />
+    <Compile Include="Common\UIAvatarAnimator.cs" />
+    <Compile Include="Common\UIInteractiveDGRP.cs" />
+    <Compile Include="Common\UIThumbnailRenderer.cs" />
+    <Compile Include="Common\Debug3DControl.cs">
+      <SubType>UserControl</SubType>
+    </Compile>
+    <Compile Include="Common\Debug3DControl.Designer.cs">
+      <DependentUpon>Debug3DControl.cs</DependentUpon>
+    </Compile>
+    <Compile Include="ContentEditors\AOTGenerator.cs">
+      <SubType>Form</SubType>
+    </Compile>
+    <Compile Include="ContentEditors\AOTGenerator.Designer.cs">
+      <DependentUpon>AOTGenerator.cs</DependentUpon>
+    </Compile>
+    <Compile Include="ContentEditors\AvatarTool.cs">
+      <SubType>Form</SubType>
+    </Compile>
+    <Compile Include="ContentEditors\AvatarTool.Designer.cs">
+      <DependentUpon>AvatarTool.cs</DependentUpon>
+    </Compile>
+    <Compile Include="ContentEditors\TSODataDefinitionEditor.cs">
+      <SubType>Form</SubType>
+    </Compile>
+    <Compile Include="ContentEditors\TSODataDefinitionEditor.Designer.cs">
+      <DependentUpon>TSODataDefinitionEditor.cs</DependentUpon>
+    </Compile>
+    <Compile Include="ContentEditors\TSODataObjects.cs" />
+    <Compile Include="EditorComponent\BHAVViewControl.cs">
+      <SubType>UserControl</SubType>
+    </Compile>
+    <Compile Include="EditorComponent\Commands\AddPrimCommand.cs" />
+    <Compile Include="EditorComponent\Commands\BHAVCommand.cs" />
+    <Compile Include="EditorComponent\Commands\ChangeBHAVCommand.cs" />
+    <Compile Include="EditorComponent\Commands\CommentModifyCommand.cs" />
+    <Compile Include="EditorComponent\Commands\UpdateBoxPosCommand.cs" />
+    <Compile Include="EditorComponent\Commands\SetFirstCommand.cs" />
+    <Compile Include="EditorComponent\Commands\ToggleBreakpointCommand.cs" />
+    <Compile Include="EditorComponent\Commands\ChangePointerCommand.cs" />
+    <Compile Include="EditorComponent\Commands\OpModifyCommand.cs" />
+    <Compile Include="EditorComponent\Commands\RemovePrimCommand.cs" />
+    <Compile Include="EditorComponent\DataView\PropGridVMData.cs" />
+    <Compile Include="EditorComponent\DataView\VMDataPropertyDescriptor.cs" />
+    <Compile Include="EditorComponent\DataView\VMExtDataType.cs" />
+    <Compile Include="EditorComponent\DataView\VMModifyDataCommand.cs" />
+    <Compile Include="EditorComponent\Model\InstructionIDNamePair.cs" />
+    <Compile Include="EditorComponent\OperandForms\DataProviders\OpDataProvider.cs" />
+    <Compile Include="EditorComponent\OperandForms\DataProviders\OpNamedPropertyProvider.cs" />
+    <Compile Include="EditorComponent\OperandForms\DataProviders\OpTextProvider.cs" />
+    <Compile Include="EditorComponent\OperandForms\DataProviders\OpValueBoundsProvider.cs" />
+    <Compile Include="EditorComponent\OperandForms\IOpControl.cs" />
+    <Compile Include="EditorComponent\OperandForms\OpSoundControl.cs">
+      <SubType>UserControl</SubType>
+    </Compile>
+    <Compile Include="EditorComponent\OperandForms\OpSoundControl.Designer.cs">
+      <DependentUpon>OpSoundControl.cs</DependentUpon>
+    </Compile>
+    <Compile Include="EditorComponent\OperandForms\OpAnimControl.cs">
+      <SubType>UserControl</SubType>
+    </Compile>
+    <Compile Include="EditorComponent\OperandForms\OpAnimControl.Designer.cs">
+      <DependentUpon>OpAnimControl.cs</DependentUpon>
+    </Compile>
+    <Compile Include="EditorComponent\OperandForms\OpScopeControl.cs">
+      <SubType>UserControl</SubType>
+    </Compile>
+    <Compile Include="EditorComponent\OperandForms\OpScopeControl.Designer.cs">
+      <DependentUpon>OpScopeControl.cs</DependentUpon>
+    </Compile>
+    <Compile Include="EditorComponent\OperandForms\OpObjectControl.cs">
+      <SubType>UserControl</SubType>
+    </Compile>
+    <Compile Include="EditorComponent\OperandForms\OpObjectControl.Designer.cs">
+      <DependentUpon>OpObjectControl.cs</DependentUpon>
+    </Compile>
+    <Compile Include="EditorComponent\OperandForms\OpFlagsControl.cs">
+      <SubType>Component</SubType>
+    </Compile>
+    <Compile Include="EditorComponent\OperandForms\OpFlagsControl.Designer.cs">
+      <DependentUpon>OpFlagsControl.cs</DependentUpon>
+    </Compile>
+    <Compile Include="EditorComponent\OperandForms\OpLabelControl.cs">
+      <SubType>Component</SubType>
+    </Compile>
+    <Compile Include="EditorComponent\OperandForms\OpUtils.cs" />
+    <Compile Include="EditorComponent\OperandForms\OpValueControl.cs">
+      <SubType>UserControl</SubType>
+    </Compile>
+    <Compile Include="EditorComponent\OperandForms\OpValueControl.Designer.cs">
+      <DependentUpon>OpValueControl.cs</DependentUpon>
+    </Compile>
+    <Compile Include="EditorComponent\OperandForms\OpComboControl.cs">
+      <SubType>UserControl</SubType>
+    </Compile>
+    <Compile Include="EditorComponent\OperandForms\OpComboControl.Designer.cs">
+      <DependentUpon>OpComboControl.cs</DependentUpon>
+    </Compile>
+    <Compile Include="EditorComponent\OperandForms\OpUnknownControl.cs">
+      <SubType>UserControl</SubType>
+    </Compile>
+    <Compile Include="EditorComponent\OperandForms\OpUnknownControl.Designer.cs">
+      <DependentUpon>OpUnknownControl.cs</DependentUpon>
+    </Compile>
+    <Compile Include="EditorComponent\Primitives\ChangeActionStringDescriptor.cs" />
+    <Compile Include="EditorComponent\Primitives\ChangeSuitDescriptor.cs" />
+    <Compile Include="EditorComponent\Primitives\BreakpointDescriptor.cs" />
+    <Compile Include="EditorComponent\Primitives\DialogDescriptors.cs" />
+    <Compile Include="EditorComponent\Primitives\GenericTSOCallDescriptor.cs" />
+    <Compile Include="EditorComponent\Primitives\SetBalloonHeadlineDescriptor.cs" />
+    <Compile Include="EditorComponent\Primitives\TS1InventoryOperationsDescriptor.cs" />
+    <Compile Include="EditorComponent\Primitives\InvokePluginDescriptor.cs" />
+    <Compile Include="EditorComponent\Primitives\PushInteractionDescriptor.cs" />
+    <Compile Include="EditorComponent\Primitives\RunTreeByNameDescriptor.cs" />
+    <Compile Include="EditorComponent\Primitives\SnapDescriptor.cs" />
+    <Compile Include="EditorComponent\Primitives\TestObjectTypeDescriptor.cs" />
+    <Compile Include="EditorComponent\Primitives\NotifyOutOfIdleDescriptor.cs" />
+    <Compile Include="EditorComponent\Primitives\LookTowardsDescriptor.cs" />
+    <Compile Include="EditorComponent\Primitives\GotoRoutingSlotDescriptor.cs" />
+    <Compile Include="EditorComponent\Primitives\CreateObjectInstanceDescriptor.cs" />
+    <Compile Include="EditorComponent\Primitives\SetMotiveChangeDescriptor.cs" />
+    <Compile Include="EditorComponent\Primitives\RemoveObjectInstanceDescriptor.cs" />
+    <Compile Include="EditorComponent\Primitives\GetDistanceToDescriptor.cs" />
+    <Compile Include="EditorComponent\Primitives\GetDirectionToDescriptor.cs" />
+    <Compile Include="EditorComponent\Primitives\DropDescriptor.cs" />
+    <Compile Include="EditorComponent\Primitives\FindLocationForDescriptor.cs" />
+    <Compile Include="EditorComponent\Primitives\RandomNumberDescriptor.cs" />
+    <Compile Include="EditorComponent\Primitives\GotoRelativePositionDescriptor.cs" />
+    <Compile Include="EditorComponent\Primitives\RunFunctionalTreeDescriptor.cs" />
+    <Compile Include="EditorComponent\Primitives\FindBestObjectForFunctionDescriptor.cs" />
+    <Compile Include="EditorComponent\Primitives\DropOntoDescriptor.cs" />
+    <Compile Include="EditorComponent\Primitives\SetToNextDescriptor.cs" />
+    <Compile Include="EditorComponent\Primitives\GrabDescriptor.cs" />
+    <Compile Include="EditorComponent\Primitives\RefreshDescriptor.cs" />
+    <Compile Include="EditorComponent\Primitives\IdleForInputDescriptor.cs" />
+    <Compile Include="EditorComponent\Primitives\RelationshipDescriptor.cs" />
+    <Compile Include="EditorComponent\Primitives\SleepDescriptor.cs" />
+    <Compile Include="EditorComponent\Primitives\TransferFundsDescriptor.cs" />
+    <Compile Include="EditorComponent\UI\CommentContainer.cs" />
+    <Compile Include="EditorComponent\Primitives\TSOInventoryOperationsDescriptor.cs" />
+    <Compile Include="EditorComponent\UI\UIBHAVEditor.cs" />
+    <Compile Include="EditorComponent\VarSoundSelect.cs">
+      <SubType>Form</SubType>
+    </Compile>
+    <Compile Include="EditorComponent\VarSoundSelect.Designer.cs">
+      <DependentUpon>VarSoundSelect.cs</DependentUpon>
+    </Compile>
+    <Compile Include="EditorComponent\VarAnimSelect.cs">
+      <SubType>Form</SubType>
+    </Compile>
+    <Compile Include="EditorComponent\VarAnimSelect.Designer.cs">
+      <DependentUpon>VarAnimSelect.cs</DependentUpon>
+    </Compile>
+    <Compile Include="EditorComponent\VarObjectSelect.cs">
+      <SubType>Form</SubType>
+    </Compile>
+    <Compile Include="EditorComponent\VarObjectSelect.Designer.cs">
+      <DependentUpon>VarObjectSelect.cs</DependentUpon>
+    </Compile>
+    <Compile Include="EditorComponent\VarScopeSelect.cs">
+      <SubType>Form</SubType>
+    </Compile>
+    <Compile Include="EditorComponent\VarScopeSelect.Designer.cs">
+      <DependentUpon>VarScopeSelect.cs</DependentUpon>
+    </Compile>
+    <Compile Include="EntityInspector.cs">
+      <SubType>UserControl</SubType>
+    </Compile>
+    <Compile Include="EntityInspector.Designer.cs">
+      <DependentUpon>EntityInspector.cs</DependentUpon>
+    </Compile>
+    <Compile Include="FSOUIControl.cs">
+      <SubType>UserControl</SubType>
+    </Compile>
+    <Compile Include="EditorComponent\EditorResource.cs" />
+    <Compile Include="EditorComponent\EditorScope.cs" />
+    <Compile Include="EditorComponent\Model\PrimitiveDescriptor.cs" />
+    <Compile Include="EditorComponent\Model\PGroupStyles.cs" />
+    <Compile Include="EditorComponent\Model\PrimitiveGroup.cs" />
+    <Compile Include="EditorComponent\PrimitiveRegistry.cs" />
+    <Compile Include="EditorComponent\Primitives\ExpressionDescriptor.cs" />
+    <Compile Include="EditorComponent\Primitives\UnknownPrimitiveDescriptor.cs" />
+    <Compile Include="EditorComponent\Primitives\PlaySoundEventDescriptor.cs" />
+    <Compile Include="EditorComponent\Primitives\SubroutineDescriptor.cs" />
+    <Compile Include="EditorComponent\Primitives\AnimateSimDescriptor.cs" />
+    <Compile Include="EditorComponent\UI\BHAVContainer.cs" />
+    <Compile Include="EditorComponent\UI\PrimitiveBox.cs" />
+    <Compile Include="EditorComponent\UI\PrimitiveNode.cs" />
+    <Compile Include="IDETester.cs" />
+    <Compile Include="BHAVEditor.cs">
+      <SubType>Form</SubType>
+    </Compile>
+    <Compile Include="BHAVEditor.Designer.cs">
+      <DependentUpon>BHAVEditor.cs</DependentUpon>
+    </Compile>
+    <Compile Include="MainWindow.cs">
+      <SubType>Form</SubType>
+    </Compile>
+    <Compile Include="MainWindow.Designer.cs">
+      <DependentUpon>MainWindow.cs</DependentUpon>
+    </Compile>
+    <Compile Include="Managers\BHAVEditManager.cs" />
+    <Compile Include="Managers\IffEditManager.cs" />
+    <Compile Include="ObjectBrowser.cs">
+      <SubType>UserControl</SubType>
+    </Compile>
+    <Compile Include="ObjectBrowser.Designer.cs">
+      <DependentUpon>ObjectBrowser.cs</DependentUpon>
+    </Compile>
+    <Compile Include="ObjectWindow.cs">
+      <SubType>Form</SubType>
+    </Compile>
+    <Compile Include="ObjectWindow.Designer.cs">
+      <DependentUpon>ObjectWindow.cs</DependentUpon>
+    </Compile>
+    <Compile Include="Program.cs" />
+    <Compile Include="Properties\AssemblyInfo.cs" />
+    <Compile Include="ResourceBrowser\DGRPEditor.cs">
+      <SubType>UserControl</SubType>
+    </Compile>
+    <Compile Include="ResourceBrowser\DGRPEditor.Designer.cs">
+      <DependentUpon>DGRPEditor.cs</DependentUpon>
+    </Compile>
+    <Compile Include="ResourceBrowser\FSOMEditor.cs">
+      <SubType>UserControl</SubType>
+    </Compile>
+    <Compile Include="ResourceBrowser\FSOMEditor.Designer.cs">
+      <DependentUpon>FSOMEditor.cs</DependentUpon>
+    </Compile>
+    <Compile Include="ResourceBrowser\GenericTextInput.cs">
+      <SubType>Form</SubType>
+    </Compile>
+    <Compile Include="ResourceBrowser\GenericTextInput.Designer.cs">
+      <DependentUpon>GenericTextInput.cs</DependentUpon>
+    </Compile>
+    <Compile Include="ResourceBrowser\GUIDChange.cs">
+      <SubType>Form</SubType>
+    </Compile>
+    <Compile Include="ResourceBrowser\GUIDChange.Designer.cs">
+      <DependentUpon>GUIDChange.cs</DependentUpon>
+    </Compile>
+    <Compile Include="ResourceBrowser\IffNameDialog.cs">
+      <SubType>Form</SubType>
+    </Compile>
+    <Compile Include="ResourceBrowser\IffNameDialog.Designer.cs">
+      <DependentUpon>IffNameDialog.cs</DependentUpon>
+    </Compile>
+    <Compile Include="ResourceBrowser\IffResourceViewer.cs">
+      <SubType>Form</SubType>
+    </Compile>
+    <Compile Include="ResourceBrowser\IffResourceViewer.Designer.cs">
+      <DependentUpon>IffResourceViewer.cs</DependentUpon>
+    </Compile>
+    <Compile Include="ResourceBrowser\IFFResComponent.cs">
+      <SubType>UserControl</SubType>
+    </Compile>
+    <Compile Include="ResourceBrowser\IFFResComponent.Designer.cs">
+      <DependentUpon>IFFResComponent.cs</DependentUpon>
+    </Compile>
+    <Compile Include="ResourceBrowser\ResourceEditors\OTFResourceControl.cs">
+      <SubType>UserControl</SubType>
+    </Compile>
+    <Compile Include="ResourceBrowser\ResourceEditors\OTFResourceControl.Designer.cs">
+      <DependentUpon>OTFResourceControl.cs</DependentUpon>
+    </Compile>
+    <Compile Include="ResourceBrowser\PIFFEditor.cs">
+      <SubType>UserControl</SubType>
+    </Compile>
+    <Compile Include="ResourceBrowser\PIFFEditor.Designer.cs">
+      <DependentUpon>PIFFEditor.cs</DependentUpon>
+    </Compile>
+    <Compile Include="ResourceBrowser\UpgradeEditor.cs">
+      <SubType>UserControl</SubType>
+    </Compile>
+    <Compile Include="ResourceBrowser\UpgradeEditor.Designer.cs">
+      <DependentUpon>UpgradeEditor.cs</DependentUpon>
+    </Compile>
+    <Compile Include="ResourceBrowser\XMLEntryEditor.cs">
+      <SubType>UserControl</SubType>
+    </Compile>
+    <Compile Include="ResourceBrowser\XMLEntryEditor.Designer.cs">
+      <DependentUpon>XMLEntryEditor.cs</DependentUpon>
+    </Compile>
+    <Compile Include="ResourceBrowser\OBJDEditor.cs">
+      <SubType>UserControl</SubType>
+    </Compile>
+    <Compile Include="ResourceBrowser\OBJDEditor.Designer.cs">
+      <DependentUpon>OBJDEditor.cs</DependentUpon>
+    </Compile>
+    <Compile Include="ResourceBrowser\OBJDSelectorControl.cs">
+      <SubType>UserControl</SubType>
+    </Compile>
+    <Compile Include="ResourceBrowser\OBJDSelectorControl.Designer.cs">
+      <DependentUpon>OBJDSelectorControl.cs</DependentUpon>
+    </Compile>
+    <Compile Include="ResourceBrowser\OBJfEditor.cs">
+      <SubType>UserControl</SubType>
+    </Compile>
+    <Compile Include="ResourceBrowser\OBJfEditor.Designer.cs">
+      <DependentUpon>OBJfEditor.cs</DependentUpon>
+    </Compile>
+    <Compile Include="ResourceBrowser\ResourceEditors\BHAVResourceControl.cs">
+      <SubType>UserControl</SubType>
+    </Compile>
+    <Compile Include="ResourceBrowser\ResourceEditors\BHAVResourceControl.Designer.cs">
+      <DependentUpon>BHAVResourceControl.cs</DependentUpon>
+    </Compile>
+    <Compile Include="ResourceBrowser\ResourceEditors\IResourceControl.cs" />
+    <Compile Include="ResourceBrowser\ResourceEditors\SLOTResourceControl.cs">
+      <SubType>UserControl</SubType>
+    </Compile>
+    <Compile Include="ResourceBrowser\ResourceEditors\SLOTResourceControl.Designer.cs">
+      <DependentUpon>SLOTResourceControl.cs</DependentUpon>
+    </Compile>
+    <Compile Include="ResourceBrowser\ResourceEditors\SPR2ResourceControl.cs">
+      <SubType>UserControl</SubType>
+    </Compile>
+    <Compile Include="ResourceBrowser\ResourceEditors\SPR2ResourceControl.Designer.cs">
+      <DependentUpon>SPR2ResourceControl.cs</DependentUpon>
+    </Compile>
+    <Compile Include="ResourceBrowser\ResourceEditors\BCONResourceControl.cs">
+      <SubType>UserControl</SubType>
+    </Compile>
+    <Compile Include="ResourceBrowser\ResourceEditors\BCONResourceControl.Designer.cs">
+      <DependentUpon>BCONResourceControl.cs</DependentUpon>
+    </Compile>
+    <Compile Include="ResourceBrowser\ResourceEditors\TTABResourceControl.cs">
+      <SubType>UserControl</SubType>
+    </Compile>
+    <Compile Include="ResourceBrowser\ResourceEditors\TTABResourceControl.Designer.cs">
+      <DependentUpon>TTABResourceControl.cs</DependentUpon>
+    </Compile>
+    <Compile Include="ResourceBrowser\ResourceEditors\STRResourceControl.cs">
+      <SubType>UserControl</SubType>
+    </Compile>
+    <Compile Include="ResourceBrowser\ResourceEditors\STRResourceControl.Designer.cs">
+      <DependentUpon>STRResourceControl.cs</DependentUpon>
+    </Compile>
+    <Compile Include="ResourceBrowser\ResourceEditors\UnknownResourceControl.cs">
+      <SubType>UserControl</SubType>
+    </Compile>
+    <Compile Include="ResourceBrowser\ResourceEditors\UnknownResourceControl.Designer.cs">
+      <DependentUpon>UnknownResourceControl.cs</DependentUpon>
+    </Compile>
+    <Compile Include="ResourceBrowser\SelectorDialogs\SPR2SelectorDialog.cs">
+      <SubType>Form</SubType>
+    </Compile>
+    <Compile Include="ResourceBrowser\SelectorDialogs\SPR2SelectorDialog.Designer.cs">
+      <DependentUpon>SPR2SelectorDialog.cs</DependentUpon>
+    </Compile>
+    <Compile Include="ResourceBrowser\SelectTreeDialog.cs">
+      <SubType>Form</SubType>
+    </Compile>
+    <Compile Include="ResourceBrowser\SelectTreeDialog.Designer.cs">
+      <DependentUpon>SelectTreeDialog.cs</DependentUpon>
+    </Compile>
+    <Compile Include="Utils\AppearanceGenerator.cs" />
+    <Compile Include="Utils\FormsUtils.cs" />
+    <Compile Include="Utils\GLTFExporter.cs" />
+    <Compile Include="Utils\GLTFImporter.cs" />
+    <Compile Include="Utils\ImportMeshGroup.cs" />
+    <EmbeddedResource Include="AboutWindow.resx">
+      <DependentUpon>AboutWindow.cs</DependentUpon>
+    </EmbeddedResource>
+    <EmbeddedResource Include="AvatarUtils\AddAppearanceWindow.resx">
+      <DependentUpon>AddAppearanceWindow.cs</DependentUpon>
+    </EmbeddedResource>
+    <EmbeddedResource Include="Common\NewIffDialog.resx">
+      <DependentUpon>NewIffDialog.cs</DependentUpon>
+    </EmbeddedResource>
+    <EmbeddedResource Include="Common\NewObjectDialog.resx">
+      <DependentUpon>NewObjectDialog.cs</DependentUpon>
+    </EmbeddedResource>
+    <EmbeddedResource Include="ContentEditors\AOTGenerator.resx">
+      <DependentUpon>AOTGenerator.cs</DependentUpon>
+    </EmbeddedResource>
+    <EmbeddedResource Include="ContentEditors\AvatarTool.resx">
+      <DependentUpon>AvatarTool.cs</DependentUpon>
+    </EmbeddedResource>
+    <EmbeddedResource Include="ContentEditors\TSODataDefinitionEditor.resx">
+      <DependentUpon>TSODataDefinitionEditor.cs</DependentUpon>
+    </EmbeddedResource>
+    <EmbeddedResource Include="EditorComponent\BHAVViewControl.resx">
+      <DependentUpon>BHAVViewControl.cs</DependentUpon>
+    </EmbeddedResource>
+    <EmbeddedResource Include="EditorComponent\OperandForms\OpSoundControl.resx">
+      <DependentUpon>OpSoundControl.cs</DependentUpon>
+    </EmbeddedResource>
+    <EmbeddedResource Include="EditorComponent\OperandForms\OpAnimControl.resx">
+      <DependentUpon>OpAnimControl.cs</DependentUpon>
+    </EmbeddedResource>
+    <EmbeddedResource Include="EditorComponent\OperandForms\OpScopeControl.resx">
+      <DependentUpon>OpScopeControl.cs</DependentUpon>
+    </EmbeddedResource>
+    <EmbeddedResource Include="EditorComponent\OperandForms\OpObjectControl.resx">
+      <DependentUpon>OpObjectControl.cs</DependentUpon>
+    </EmbeddedResource>
+    <EmbeddedResource Include="EditorComponent\OperandForms\OpFlagsControl.resx">
+      <DependentUpon>OpFlagsControl.cs</DependentUpon>
+    </EmbeddedResource>
+    <EmbeddedResource Include="EditorComponent\OperandForms\OpValueControl.resx">
+      <DependentUpon>OpValueControl.cs</DependentUpon>
+    </EmbeddedResource>
+    <EmbeddedResource Include="EditorComponent\OperandForms\OpComboControl.resx">
+      <DependentUpon>OpComboControl.cs</DependentUpon>
+    </EmbeddedResource>
+    <EmbeddedResource Include="EditorComponent\OperandForms\OpUnknownControl.resx">
+      <DependentUpon>OpUnknownControl.cs</DependentUpon>
+    </EmbeddedResource>
+    <EmbeddedResource Include="EditorComponent\VarSoundSelect.resx">
+      <DependentUpon>VarSoundSelect.cs</DependentUpon>
+    </EmbeddedResource>
+    <EmbeddedResource Include="EditorComponent\VarAnimSelect.resx">
+      <DependentUpon>VarAnimSelect.cs</DependentUpon>
+    </EmbeddedResource>
+    <EmbeddedResource Include="EditorComponent\VarObjectSelect.resx">
+      <DependentUpon>VarObjectSelect.cs</DependentUpon>
+    </EmbeddedResource>
+    <EmbeddedResource Include="EditorComponent\VarScopeSelect.resx">
+      <DependentUpon>VarScopeSelect.cs</DependentUpon>
+    </EmbeddedResource>
+    <EmbeddedResource Include="EntityInspector.resx">
+      <DependentUpon>EntityInspector.cs</DependentUpon>
+    </EmbeddedResource>
+    <EmbeddedResource Include="FSOUIControl.resx">
+      <DependentUpon>FSOUIControl.cs</DependentUpon>
+    </EmbeddedResource>
+    <EmbeddedResource Include="MainWindow.resx">
+      <DependentUpon>MainWindow.cs</DependentUpon>
+    </EmbeddedResource>
+    <EmbeddedResource Include="ObjectBrowser.resx">
+      <DependentUpon>ObjectBrowser.cs</DependentUpon>
+    </EmbeddedResource>
+    <EmbeddedResource Include="ObjectWindow.resx">
+      <DependentUpon>ObjectWindow.cs</DependentUpon>
+    </EmbeddedResource>
+    <EmbeddedResource Include="Properties\Resources.resx">
+      <Generator>ResXFileCodeGenerator</Generator>
+      <LastGenOutput>Resources.Designer.cs</LastGenOutput>
+      <SubType>Designer</SubType>
+    </EmbeddedResource>
+    <Compile Include="Properties\Resources.Designer.cs">
+      <AutoGen>True</AutoGen>
+      <DependentUpon>Resources.resx</DependentUpon>
+      <DesignTime>True</DesignTime>
+    </Compile>
+    <EmbeddedResource Include="BHAVEditor.resx">
+      <DependentUpon>BHAVEditor.cs</DependentUpon>
+    </EmbeddedResource>
+    <EmbeddedResource Include="ResourceBrowser\DGRPEditor.resx">
+      <DependentUpon>DGRPEditor.cs</DependentUpon>
+    </EmbeddedResource>
+    <EmbeddedResource Include="ResourceBrowser\FSOMEditor.resx">
+      <DependentUpon>FSOMEditor.cs</DependentUpon>
+    </EmbeddedResource>
+    <EmbeddedResource Include="ResourceBrowser\GenericTextInput.resx">
+      <DependentUpon>GenericTextInput.cs</DependentUpon>
+    </EmbeddedResource>
+    <EmbeddedResource Include="ResourceBrowser\GUIDChange.resx">
+      <DependentUpon>GUIDChange.cs</DependentUpon>
+    </EmbeddedResource>
+    <EmbeddedResource Include="ResourceBrowser\IffNameDialog.resx">
+      <DependentUpon>IffNameDialog.cs</DependentUpon>
+    </EmbeddedResource>
+    <EmbeddedResource Include="ResourceBrowser\IFFResComponent.resx">
+      <DependentUpon>IFFResComponent.cs</DependentUpon>
+    </EmbeddedResource>
+    <EmbeddedResource Include="ResourceBrowser\IffResourceViewer.resx">
+      <DependentUpon>IffResourceViewer.cs</DependentUpon>
+    </EmbeddedResource>
+    <EmbeddedResource Include="ResourceBrowser\PIFFEditor.resx">
+      <DependentUpon>PIFFEditor.cs</DependentUpon>
+    </EmbeddedResource>
+    <EmbeddedResource Include="ResourceBrowser\ResourceEditors\OTFResourceControl.resx">
+      <DependentUpon>OTFResourceControl.cs</DependentUpon>
+    </EmbeddedResource>
+    <EmbeddedResource Include="ResourceBrowser\UpgradeEditor.resx">
+      <DependentUpon>UpgradeEditor.cs</DependentUpon>
+    </EmbeddedResource>
+    <EmbeddedResource Include="ResourceBrowser\XMLEntryEditor.resx">
+      <DependentUpon>XMLEntryEditor.cs</DependentUpon>
+    </EmbeddedResource>
+    <EmbeddedResource Include="ResourceBrowser\OBJDEditor.resx">
+      <DependentUpon>OBJDEditor.cs</DependentUpon>
+    </EmbeddedResource>
+    <EmbeddedResource Include="ResourceBrowser\OBJDSelectorControl.resx">
+      <DependentUpon>OBJDSelectorControl.cs</DependentUpon>
+    </EmbeddedResource>
+    <EmbeddedResource Include="ResourceBrowser\OBJfEditor.resx">
+      <DependentUpon>OBJfEditor.cs</DependentUpon>
+    </EmbeddedResource>
+    <EmbeddedResource Include="ResourceBrowser\ResourceEditors\BHAVResourceControl.resx">
+      <DependentUpon>BHAVResourceControl.cs</DependentUpon>
+    </EmbeddedResource>
+    <EmbeddedResource Include="ResourceBrowser\ResourceEditors\SLOTResourceControl.resx">
+      <DependentUpon>SLOTResourceControl.cs</DependentUpon>
+    </EmbeddedResource>
+    <EmbeddedResource Include="ResourceBrowser\ResourceEditors\SPR2ResourceControl.resx">
+      <DependentUpon>SPR2ResourceControl.cs</DependentUpon>
+    </EmbeddedResource>
+    <EmbeddedResource Include="ResourceBrowser\ResourceEditors\BCONResourceControl.resx">
+      <DependentUpon>BCONResourceControl.cs</DependentUpon>
+    </EmbeddedResource>
+    <EmbeddedResource Include="ResourceBrowser\ResourceEditors\TTABResourceControl.resx">
+      <DependentUpon>TTABResourceControl.cs</DependentUpon>
+    </EmbeddedResource>
+    <EmbeddedResource Include="ResourceBrowser\ResourceEditors\STRResourceControl.resx">
+      <DependentUpon>STRResourceControl.cs</DependentUpon>
+    </EmbeddedResource>
+    <EmbeddedResource Include="ResourceBrowser\ResourceEditors\UnknownResourceControl.resx">
+      <DependentUpon>UnknownResourceControl.cs</DependentUpon>
+    </EmbeddedResource>
+    <EmbeddedResource Include="ResourceBrowser\SelectorDialogs\SPR2SelectorDialog.resx">
+      <DependentUpon>SPR2SelectorDialog.cs</DependentUpon>
+    </EmbeddedResource>
+    <EmbeddedResource Include="ResourceBrowser\SelectTreeDialog.resx">
+      <DependentUpon>SelectTreeDialog.cs</DependentUpon>
+    </EmbeddedResource>
+    <None Include="ClassDiagram1.cd" />
+    <None Include="packages.config" />
+    <None Include="Properties\Settings.settings">
+      <Generator>SettingsSingleFileGenerator</Generator>
+      <LastGenOutput>Settings.Designer.cs</LastGenOutput>
+    </None>
+    <Compile Include="Properties\Settings.Designer.cs">
+      <AutoGen>True</AutoGen>
+      <DependentUpon>Settings.settings</DependentUpon>
+      <DesignTimeSharedInput>True</DesignTimeSharedInput>
+    </Compile>
+  </ItemGroup>
+  <ItemGroup>
+    <None Include="App.config" />
+  </ItemGroup>
+  <ItemGroup>
+    <ProjectReference Include="..\..\Other\libs\ColorQuantizer\SimplePaletteQuantizer\SimplePaletteQuantizer.csproj">
+      <Project>{37812a22-91f3-4220-891e-5c26da64a975}</Project>
+      <Name>SimplePaletteQuantizer</Name>
+    </ProjectReference>
+    <ProjectReference Include="..\..\Other\libs\mp3sharp\mp3sharp\Mp3Sharp.csproj">
+      <Project>{834cab58-648d-47cc-ac6f-d01c08c809a4}</Project>
+      <Name>Mp3Sharp</Name>
+    </ProjectReference>
+    <ProjectReference Include="..\..\Other\libs\TargaImage\TargaImage.csproj">
+      <Project>{56f4bd87-2404-4263-80d5-6fa2161eb0a4}</Project>
+      <Name>TargaImage</Name>
+    </ProjectReference>
+    <ProjectReference Include="..\FSO.Patcher\FSO.Patcher.csproj">
+      <Project>{4e43ce64-343f-4c53-a055-bbf0f4986a16}</Project>
+      <Name>FSO.Patcher</Name>
+    </ProjectReference>
+    <ProjectReference Include="..\FSO.SimAntics.JIT.Roslyn\FSO.SimAntics.JIT.Roslyn.csproj">
+      <Project>{b3de74c1-b7a1-4773-bd36-993988b23527}</Project>
+      <Name>FSO.SimAntics.JIT.Roslyn</Name>
+      <EmbedInteropTypes>False</EmbedInteropTypes>
+    </ProjectReference>
+    <ProjectReference Include="..\FSO.SimAntics.JIT\FSO.SimAntics.JIT.csproj">
+      <Project>{b8ab3711-7b4f-4126-9bf3-4ddde9475b74}</Project>
+      <Name>FSO.SimAntics.JIT</Name>
+    </ProjectReference>
+    <ProjectReference Include="..\FSO.UI\FSO.UI.csproj">
+      <Project>{73e2ad5b-720b-4ef3-9b7c-55931d0ec693}</Project>
+      <Name>FSO.UI</Name>
+    </ProjectReference>
+    <ProjectReference Include="..\FSO.Windows\FSO.Windows.csproj">
+      <Project>{39201960-f96f-4039-84b1-1331d5dde3c2}</Project>
+      <Name>FSO.Windows</Name>
+    </ProjectReference>
+    <ProjectReference Include="..\tso.client\FSO.Client.csproj">
+      <Project>{635e68fa-3905-4943-b4f5-d463a8c02e87}</Project>
+      <Name>FSO.Client</Name>
+    </ProjectReference>
+    <ProjectReference Include="..\tso.common\FSO.Common.csproj">
+      <Project>{c42962a1-8796-4f47-9dcd-79ed5904d8ca}</Project>
+      <Name>FSO.Common</Name>
+    </ProjectReference>
+    <ProjectReference Include="..\tso.content\FSO.Content.csproj">
+      <Project>{c0068df7-f2e8-4399-846d-556bf9a35c00}</Project>
+      <Name>FSO.Content</Name>
+    </ProjectReference>
+    <ProjectReference Include="..\tso.files\FSO.Files.csproj">
+      <Project>{18583453-a970-4ac5-83b1-2d6bfdf94c24}</Project>
+      <Name>FSO.Files</Name>
+    </ProjectReference>
+    <ProjectReference Include="..\tso.simantics\FSO.SimAntics.csproj">
+      <Project>{5eddefd2-c850-49c1-812d-ddeff09125ef}</Project>
+      <Name>FSO.SimAntics</Name>
+    </ProjectReference>
+    <ProjectReference Include="..\tso.sound\FSO.HIT.csproj">
+      <Project>{072781d8-51ec-4143-9cae-daf50177d3ad}</Project>
+      <Name>FSO.HIT</Name>
+    </ProjectReference>
+    <ProjectReference Include="..\tso.vitaboy.engine\FSO.Vitaboy.Engine.csproj">
+      <Project>{fd7957f7-a1e0-4d00-8f6c-3fa555eaa163}</Project>
+      <Name>FSO.Vitaboy.Engine</Name>
+    </ProjectReference>
+    <ProjectReference Include="..\tso.vitaboy.model\FSO.Vitaboy.csproj">
+      <Project>{9d9558a9-755e-43f9-8bb6-b26f365f5042}</Project>
+      <Name>FSO.Vitaboy</Name>
+    </ProjectReference>
+    <ProjectReference Include="..\tso.world\FSO.LotView.csproj">
+      <Project>{b1a6e4c2-e080-4c34-a604-d11b5296a9b8}</Project>
+      <Name>FSO.LotView</Name>
+    </ProjectReference>
+  </ItemGroup>
+  <ItemGroup>
+    <BootstrapperPackage Include=".NETFramework,Version=v4.0">
+      <Visible>False</Visible>
+      <ProductName>Microsoft .NET Framework 4 %28x86 and x64%29</ProductName>
+      <Install>true</Install>
+    </BootstrapperPackage>
+    <BootstrapperPackage Include="Microsoft.Net.Framework.3.5.SP1">
+      <Visible>False</Visible>
+      <ProductName>.NET Framework 3.5 SP1</ProductName>
+      <Install>false</Install>
+    </BootstrapperPackage>
+    <BootstrapperPackage Include="Microsoft.Windows.Installer.4.5">
+      <Visible>False</Visible>
+      <ProductName>Windows Installer 4.5</ProductName>
+      <Install>true</Install>
+    </BootstrapperPackage>
+  </ItemGroup>
+  <ItemGroup>
+    <EmbeddedResource Include="Icon.bmp" />
+    <Content Include="assimp-vc140-mt.dll">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </Content>
+    <Content Include="Assimp32.dll" />
+    <Content Include="Assimp64.dll" />
+    <Content Include="IDE.ico" />
+    <Content Include="IDERes\arrowBG.png">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </Content>
+    <Content Include="IDERes\arrowFG.png">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </Content>
+    <Content Include="IDERes\bg.png">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </Content>
+    <Content Include="IDERes\breakpoint.png">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </Content>
+    <Content Include="IDERes\btns\pause.png">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </Content>
+    <Content Include="IDERes\btns\play.png">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </Content>
+    <Content Include="IDERes\btns\reset.png">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </Content>
+    <Content Include="IDERes\btns\returnfalse.png">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </Content>
+    <Content Include="IDERes\btns\returntrue.png">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </Content>
+    <Content Include="IDERes\btns\stepin.png">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </Content>
+    <Content Include="IDERes\btns\stepout.png">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </Content>
+    <Content Include="IDERes\btns\stepover.png">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </Content>
+    <Content Include="IDERes\current.png">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </Content>
+    <Content Include="IDERes\diagbg.png">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </Content>
+    <Content Include="IDERes\tree\comment_box.png">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </Content>
+    <Content Include="IDERes\tree\comment_bubble.png">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </Content>
+    <Content Include="IDERes\tree\goto_box.png">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </Content>
+    <Content Include="IDERes\tree\label_box.png">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </Content>
+    <Content Include="IDERes\viewBG.png">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </Content>
+    <Content Include="IDERes\VolcanicLogo.png" />
+    <None Include="IDERes\diagbg10.png" />
+    <None Include="IDERes\diagbg20.png" />
+    <Content Include="IDERes\done.png">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </Content>
+    <Content Include="IDERes\false.png">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </Content>
+    <Content Include="IDERes\falseReturn.png">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </Content>
+    <Content Include="IDERes\nodeBG.png">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </Content>
+    <Content Include="IDERes\nodeFG.png">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </Content>
+    <None Include="IDERes\search.png" />
+    <Content Include="IDERes\true.png">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </Content>
+    <Content Include="IDERes\trueReturn.png">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </Content>
+  </ItemGroup>
+  <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
+  <!-- To modify your build process, add your task inside one of the targets below and uncomment it. 
+       Other similar extension points exist, see Microsoft.Common.targets.
+  <Target Name="BeforeBuild">
+  </Target>
+  <Target Name="AfterBuild">
+  </Target>
+  -->
+</Project>

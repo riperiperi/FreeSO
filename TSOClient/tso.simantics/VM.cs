@@ -198,6 +198,35 @@ namespace FSO.SimAntics
             return result;
         }
 
+        public string GetActiveTrace()
+        {
+            List<VMStackFrame> ActiveStack = null;
+            if (!Scheduler.RunningNow)
+            {
+                var cmd = Driver.Executing;
+                if (cmd != null)
+                    return "Running Command of type: " + cmd.ToString();
+                return "Not running object tick or command.";
+            }
+            var objID = Scheduler.CurrentObjectID;
+
+            var obj = GetObjectById(objID);
+            if (obj == null) return "Not running object tick or command.";
+            ActiveStack = new List<VMStackFrame>(obj.Thread.Stack);
+            return obj.ToString() + " Running: \r\n\r\n" + VMSimanticsException.GetStackTrace(ActiveStack);
+        }
+
+        public void SignalTraceLog(string description, bool withCSStack)
+        {
+            var trace = GetActiveTrace();
+            var cs = "";
+            if (withCSStack)
+            {
+                cs = new System.Diagnostics.StackTrace().ToString();
+            }
+            SignalChatEvent(new VMChatEvent(null, VMChatEventType.Debug, $"{description}\n{trace}\n--------\n{cs}"));
+        }
+
         /// <summary>
         /// Initializes this Virtual Machine.
         /// </summary>
@@ -235,6 +264,12 @@ namespace FSO.SimAntics
         private int LastFrameSpeed = 1;
         private float Fraction;
         public VMEntity GlobalBlockingDialog;
+
+        public void ResetTickAlign()
+        {
+            GameTickNum = GameTickRate-1;
+        }
+
         public void Update()
         {
             if (UseWorld)
@@ -247,7 +282,7 @@ namespace FSO.SimAntics
                 forward.X *= -1f;
                 forward.Normalize();
                 listener.Forward = forward;
-                Context.World.State.SimSpeed = SpeedMultiplier;
+                Context.World.State.SimSpeed = Math.Max(0, SpeedMultiplier);
             }
 
             if (LastFrameSpeed != SpeedMultiplier)
@@ -258,7 +293,7 @@ namespace FSO.SimAntics
                     allSounds.AddRange(ent.SoundThreads.Select(x => x.Sound));
                 }
 
-                if (SpeedMultiplier < 1 && LastFrameSpeed >= 1) allSounds.ForEach((x) => x.Pause()); 
+                if (SpeedMultiplier < 1 && SpeedMultiplier > -2 && LastFrameSpeed >= 1) allSounds.ForEach((x) => x.Pause()); 
                 else if (SpeedMultiplier >= 1 && LastFrameSpeed < 1) allSounds.ForEach((x) => x.Resume());
                 LastFrameSpeed = SpeedMultiplier;
             }
@@ -763,7 +798,7 @@ namespace FSO.SimAntics
                 if (objDefinition == null)
                 {
                     LoadErrors.Add(new VMLoadError(VMLoadErrorCode.MISSING_OBJECT, 
-                        ent.GUID.ToString("x8") + " " + input.MultitileGroups.FirstOrDefault()?.Name ?? "(unknown name)", (ushort)ent.ObjectID));
+                        "0x" + ent.GUID.ToString("X8") + " " + input.MultitileGroups.FirstOrDefault(x => x.Objects.Contains(ent.ObjectID))?.Name ?? "(unknown name)", (ushort)ent.ObjectID));
                     ent.LoadFailed = true;
                     continue;
                 }
@@ -795,6 +830,7 @@ namespace FSO.SimAntics
             }
 
             int i = 0;
+            int j = 0;
             foreach (var ent in input.Entities)
             {
                 if (ent.LoadFailed)
@@ -803,7 +839,8 @@ namespace FSO.SimAntics
                     continue;
                 }
                 var threadMarsh = input.Threads[i];
-                var realEnt = Entities[i++];
+                var realEnt = Entities[j++];
+                i++;
 
                 realEnt.Thread = new VMThread(threadMarsh, Context, realEnt);
                 Scheduler.ScheduleTickIn(realEnt, 1);
@@ -825,7 +862,7 @@ namespace FSO.SimAntics
                     {
                         avgPos += obj.Position;
                     }
-                    avgPos /= grp.Objects.Count;
+                    avgPos /= Math.Max(grp.Objects.Count, 1);
 
                     foreach (var obj in grp.Objects)
                     {
@@ -962,6 +999,7 @@ namespace FSO.SimAntics
             input.Context.Architecture.FloorsDirty = true;
             Context.Architecture.WallDirtyState(input.Context.Architecture);
             Context.Architecture.Tick();
+            ObjectId = NextObjID();
         }
 
         internal void BreakpointHit(VMEntity entity)

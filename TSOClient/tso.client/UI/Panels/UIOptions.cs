@@ -479,12 +479,10 @@ namespace FSO.Client.UI.Panels
             Wall3DButton.OnButtonClick += new ButtonClickDelegate(FlipSetting);
             Add(Wall3DButton);
             Wall3DLabel = new UILabel();
-            Wall3DLabel.Caption = GameFacade.Strings.GetString("f103", (FSOEnvironment.Enable3D)?"12":"11");
+            Wall3DLabel.Caption = GameFacade.Strings.GetString("f103", "12");
             Wall3DLabel.CaptionStyle = UIEffectsLabel.CaptionStyle;
             Wall3DLabel.Position = AntiAliasCheckButton.Position + new Microsoft.Xna.Framework.Vector2(134, 0);
             Add(Wall3DLabel);
-            Wall3DButton.Visible = FSOEnvironment.Enable3D;
-            Wall3DLabel.Visible = FSOEnvironment.Enable3D;
 
             //switch lighting and uieffects label. replace lighting check with a slider
 
@@ -529,8 +527,7 @@ namespace FSO.Client.UI.Panels
             else if (button == EdgeScrollingCheckButton) settings.EdgeScroll = !(settings.EdgeScroll);
             else if (button == Wall3DButton)
             {
-                if (FSOEnvironment.Enable3D) settings.CitySkybox = !settings.CitySkybox;
-                else settings.Shadows3D = !settings.Shadows3D;
+                settings.CitySkybox = !settings.CitySkybox;
             }
             GlobalSettings.Default.Save();
             SettingsChanged();
@@ -579,7 +576,7 @@ namespace FSO.Client.UI.Panels
             LightingSlider.Value = settings.LightingMode;
             InternalChange = false;
 
-            Wall3DButton.Selected = (FSOEnvironment.Enable3D)?settings.CitySkybox:settings.Shadows3D;
+            Wall3DButton.Selected = settings.CitySkybox;
 
             var oldSurrounding = LotView.WorldConfig.Current.SurroundingLots;
             LotView.WorldConfig.Current = new LotView.WorldConfig()
@@ -590,7 +587,8 @@ namespace FSO.Client.UI.Panels
                 AA = settings.AntiAlias,
                 Weather = settings.Weather,
                 Directional = settings.DirectionalLight3D,
-                Complex = settings.ComplexShaders
+                Complex = settings.ComplexShaders,
+                EnableTransitions = settings.EnableTransitions
             };
 
             var vm = ((IGameScreen)GameFacade.Screens.CurrentUIScreen)?.vm;

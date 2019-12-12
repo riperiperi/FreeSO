@@ -1,6 +1,7 @@
 ﻿using FSO.Common.MeshSimplify;
 using FSO.Common.Utils;
 using FSO.Files.RC;
+using FSO.LotView.Effects;
 using FSO.LotView.Model;
 using FSO.LotView.RC;
 using Microsoft.Xna.Framework;
@@ -57,7 +58,7 @@ namespace FSO.LotView.Facade
         public bool RoofOnFloor;
         public sbyte FloorsUsed;
 
-        public void GenerateWalls(GraphicsDevice gd, WorldRC world, Blueprint bp, bool justTexture)
+        public void GenerateWalls(GraphicsDevice gd, World world, Blueprint bp, bool justTexture)
         {
             //generate wall geometry and texture.
             if (!justTexture)
@@ -84,10 +85,11 @@ namespace FSO.LotView.Facade
             gd.DepthStencilState = DepthStencilState.Default;
             gd.Clear(Color.TransparentBlack);
             //ace, let's draw each wall
+            var state = world.State;
 
             var oldLevel = world.State.Level;
-            world.State.SilentLevel = bp.Stories;
-            world.State.ZeroWallOffset = true;
+            state.SilentLevel = bp.Stories;
+            state.ZeroWallOffset = true;
             var cuts = bp.Cutaway;
             bp.Cutaway = new bool[cuts.Length];
             bp.WCRC?.Generate(gd, world.State, false);
@@ -145,14 +147,16 @@ namespace FSO.LotView.Facade
                     var effect = WorldContent.RCObject;
                     gd.BlendState = BlendState.NonPremultiplied;
                     var vp = lookat * ortho;
-                    effect.Parameters["ViewProjection"].SetValue(vp);
+                    effect.ViewProjection = vp;
+                    state.ViewProjection = vp;
+                    state.Frustum = frustrum;
 
                     bp.WCRC?.Draw(gd, world.State);
 
-                    effect.CurrentTechnique = effect.Techniques["Draw"];
+                    effect.SetTechnique(RCObjectTechniques.Draw);
 
-                    var objs = bp.Objects.Where(x => x.Level >= wall.Room.Floor - 5 && frustrum.Intersects(((ObjectComponentRC)x).GetBounds()))
-                        .OrderBy(x => ((ObjectComponentRC)x).SortDepth(lookat));
+                    var objs = bp.Objects.Where(x => x.Level >= wall.Room.Floor - 5 && frustrum.Intersects(x.GetBounds()))
+                        .OrderBy(x => { x.UpdateDrawOrder(state); return x.DrawOrder; });
                     foreach (var obj in objs)
                     {
                         obj.Draw(gd, world.State);
@@ -232,7 +236,7 @@ namespace FSO.LotView.Facade
             }
         }
 
-        public void GenerateRoof(GraphicsDevice gd, WorldRC world, Blueprint bp)
+        public void GenerateRoof(GraphicsDevice gd, World world, Blueprint bp)
         {
             RoofTexture = bp.RoofComp.Texture;
             int baseIndex = 0;
@@ -258,9 +262,10 @@ namespace FSO.LotView.Facade
             RoofIndices = inds.ToArray();
         }
 
-        public void GenerateFloor(GraphicsDevice gd, WorldRC world, Blueprint bp, bool justTexture, sbyte floorsNum)
+        public void GenerateFloor(GraphicsDevice gd, World world, Blueprint bp, bool justTexture, sbyte floorsNum)
         {
             FloorsUsed = floorsNum;
+            var state = world.State;
             var dim = FLOOR_RES_PER_TILE * FLOOR_TILES;
             var tex = new RenderTarget2D(gd, dim * 3, dim * 2, false, SurfaceFormat.Color, DepthFormat.Depth24);
             gd.SetRenderTarget(tex);
@@ -268,7 +273,7 @@ namespace FSO.LotView.Facade
             var lookat = Matrix.CreateLookAt(new Vector3(bp.Width * 1.5f, 200, bp.Height * 1.5f), new Vector3(bp.Width * 1.5f, 0, bp.Height * 1.5f), new Vector3(0, 0, 1));
             var baseO = Matrix.CreateOrthographic(FLOOR_TILES * 3f, FLOOR_TILES * 3f, 0, 400);
 
-            var oldLevel = world.State.SilentLevel;
+            var oldLevel = state.SilentLevel;
             for (int i = 0; i < floorsNum + 1; i++) {
                 world.State.SilentLevel = (sbyte)(i + 1);
                 var x = i % 3;
@@ -283,12 +288,15 @@ namespace FSO.LotView.Facade
                     var effect = WorldContent.RCObject;
                     gd.BlendState = BlendState.NonPremultiplied;
                     var vp = lookat * baseO * offMat;
-                    effect.Parameters["ViewProjection"].SetValue(vp);
+                    effect.ViewProjection = vp;
                     var frustrum = new BoundingFrustum(lookat * baseO);
+                    state.ViewProjection = vp;
+                    state.Frustum = frustrum;
 
-                    effect.CurrentTechnique = effect.Techniques["Draw"];
+                    effect.SetTechnique(RCObjectTechniques.Draw);
 
-                    var objs = bp.Objects.Where(o => o.Level == 1 && frustrum.Intersects(((ObjectComponentRC)o).GetBounds())).OrderBy(o => ((ObjectComponentRC)o).SortDepth(lookat));
+                    var objs = bp.Objects.Where(o => o.Level == 1 && frustrum.Intersects(o.GetBounds()))
+                        .OrderBy(o => { o.UpdateDrawOrder(state); return o.DrawOrder; });
                     foreach (var obj in objs)
                     {
                         obj.Draw(gd, world.State);
@@ -305,12 +313,15 @@ namespace FSO.LotView.Facade
                     var effect = WorldContent.RCObject;
                     gd.BlendState = BlendState.NonPremultiplied;
                     var vp = lookat * baseO * offMat;
-                    effect.Parameters["ViewProjection"].SetValue(vp);
+                    effect.ViewProjection = vp;
                     var frustrum = new BoundingFrustum(lookat * baseO);
+                    state.ViewProjection = vp;
+                    state.Frustum = frustrum;
 
-                    effect.CurrentTechnique = effect.Techniques["Draw"];
-
-                    var objs = bp.Objects.Where(o => o.Level == i+1 && frustrum.Intersects(((ObjectComponentRC)o).GetBounds())).OrderBy(o => ((ObjectComponentRC)o).SortDepth(lookat));
+                    effect.SetTechnique(RCObjectTechniques.Draw);
+                    
+                    var objs = bp.Objects.Where(o => o.Level == i + 1 && frustrum.Intersects(o.GetBounds()))
+                        .OrderBy(o => { o.UpdateDrawOrder(state); return o.DrawOrder; });
                     foreach (var obj in objs)
                     {
                         obj.Draw(gd, world.State);
@@ -451,7 +462,7 @@ namespace FSO.LotView.Facade
             FloorIndices = indices.ToArray();
         }
 
-        public FSOF GetFSOF(GraphicsDevice gd, WorldRC world, Blueprint bp, Action onNight, bool compressed)
+        public FSOF GetFSOF(GraphicsDevice gd, World world, Blueprint bp, Action onNight, bool compressed)
         {
             var result = new FSOF();
             RoofOnFloor = true;
@@ -521,7 +532,7 @@ namespace FSO.LotView.Facade
             return result;
         }
 
-        public void Generate(GraphicsDevice gd, WorldRC world, Blueprint bp)
+        public void Generate(GraphicsDevice gd, World world, Blueprint bp)
         {
             GenerateWalls(gd, world, bp, false);
             //GROUND_SUBDIV = 64;

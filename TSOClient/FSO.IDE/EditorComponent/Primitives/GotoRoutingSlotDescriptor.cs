@@ -71,6 +71,7 @@ namespace FSO.IDE.EditorComponent.Primitives
             {
                 case VMSlotScope.Global:
                     var gslots = scope.GetResource<STR>(257, ScopeSource.Global);
+                    if (gslots == null) return map;
                     for (int i = 0; i < gslots.Length; i++)
                         map.Add(i, gslots.GetString(i));
                     return map;

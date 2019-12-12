@@ -26,6 +26,9 @@ namespace FSO.Vitaboy
         public string Name;
         public Bone[] Bones;
         public Bone RootBone;
+        private Dictionary<string, Bone> BonesByName;
+
+        public BCF ParentBCF;
 
         /// <summary>
         /// Gets a bone from this Skeleton instance.
@@ -34,7 +37,14 @@ namespace FSO.Vitaboy
         /// <returns>A Bone instance corresponding to the supplied name.</returns>
         public Bone GetBone(string name)
         {
-            return Bones.FirstOrDefault(x => x.Name == name);
+            Bone result;
+            if (BonesByName.TryGetValue(name, out result)) return result;
+            return null;
+        }
+
+        public void BuildBoneDictionary()
+        {
+            BonesByName = Bones.ToDictionary(x => x.Name);
         }
 
         /// <summary>
@@ -50,6 +60,7 @@ namespace FSO.Vitaboy
             for (int i = 0; i < Bones.Length; i++){
                 result.Bones[i] = Bones[i].Clone();
             }
+            result.BuildBoneDictionary();
 
             /** Construct tree **/
             foreach (var bone in result.Bones)
@@ -87,6 +98,7 @@ namespace FSO.Vitaboy
                 bone.Index = i;
                 Bones[i] = bone;
             }
+            BuildBoneDictionary();
 
             /** Construct tree **/
             foreach (var bone in Bones)

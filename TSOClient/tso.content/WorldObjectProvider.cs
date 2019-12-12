@@ -91,6 +91,7 @@ namespace FSO.Content
                 IffFile iffFile = new IffFile(entry);
 
                 var objs = iffFile.List<OBJD>();
+                if (objs == null) continue;
                 foreach (var obj in objs)
                 {
                     Entries.Add(obj.GUID, new GameObjectReference(this)
@@ -236,7 +237,7 @@ namespace FSO.Content
         }
         public GameGlobalResource SemiGlobal;
 
-        public static Func<BHAV, object> BHAVAssembler;
+        public static Func<BHAV, GameIffResource, object> BHAVAssembler;
 
         public virtual void Recache()
         {
@@ -246,7 +247,7 @@ namespace FSO.Content
             {
                 foreach (var bhav in bhavs)
                 {
-                    RoutineCache[bhav.ChunkID] = BHAVAssembler(bhav);
+                    RoutineCache[bhav.ChunkID] = BHAVAssembler(bhav, this);
                 }
             }
 
@@ -305,7 +306,14 @@ namespace FSO.Content
             var GLOBChunks = iff.List<GLOB>();
             if (GLOBChunks != null && GLOBChunks[0].Name != "")
             {
-                var sg = content.WorldObjectGlobals.Get(GLOBChunks[0].Name);
+                GameGlobal sg = null;
+                try
+                {
+                    sg = content.WorldObjectGlobals.Get(GLOBChunks[0].Name);
+                } catch (Exception)
+                {
+
+                }
                 if (sg != null) SemiGlobal = sg.Resource; //used for tuning constant fetching.
             }
 

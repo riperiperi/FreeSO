@@ -76,11 +76,12 @@ namespace FSO.Client.UI.Panels
             BgEdge.X = Background.X - 64;
             BgEdge.SetSize(Background.Width + 64 * 2, ScreenHeight + 2);
         }
-
+        
         public override void Draw(UISpriteBatch batch)
         {
             var ScreenWidth = GlobalSettings.Default.GraphicsWidth;
             var ScreenHeight = GlobalSettings.Default.GraphicsHeight;
+
             DrawLocalTexture(batch, TextureGenerator.GetPxWhite(batch.GraphicsDevice), null, Vector2.Zero, new Vector2(ScreenWidth, ScreenHeight), new Color(0x09, 0x18, 0x2F), 0f);
             base.Draw(batch);
         }

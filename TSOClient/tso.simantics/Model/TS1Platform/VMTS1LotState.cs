@@ -32,7 +32,12 @@ namespace FSO.SimAntics.Model.TS1Platform
         /// </summary>
         public void VerifyFamily(VM vm)
         {
-            if (CurrentFamily == null) return;
+            if (CurrentFamily == null)
+            {
+                vm.SetGlobalValue(32, 1);
+                return;
+            }
+            vm.SetGlobalValue(32, 0);
             vm.SetGlobalValue(9, (short)CurrentFamily.ChunkID);
             var missingMembers = new HashSet<uint>(CurrentFamily.RuntimeSubset);
             foreach (var avatar in vm.Context.ObjectQueries.Avatars)
@@ -47,6 +52,8 @@ namespace FSO.SimAntics.Model.TS1Platform
                 var mailbox = vm.Entities.FirstOrDefault(x => (x.Object.OBJ.GUID == 0xEF121974 || x.Object.OBJ.GUID == 0x1D95C9B0));
                 if (mailbox != null) VMFindLocationFor.FindLocationFor(sim, mailbox, vm.Context, VMPlaceRequestFlags.Default);
                 ((VMAvatar)sim).AvatarState.Permissions = Model.TSOPlatform.VMTSOAvatarPermissions.Owner;
+
+                vm.Scheduler.RescheduleInterrupt(sim);
             }
 
         }

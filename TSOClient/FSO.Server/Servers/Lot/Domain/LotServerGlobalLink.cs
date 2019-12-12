@@ -11,6 +11,7 @@ using FSO.SimAntics.NetPlay.Model;
 using FSO.SimAntics.Primitives;
 using System.IO;
 using NLog;
+using FSO.Common.Enum;
 using FSO.Server.Database.DA.Objects;
 using FSO.SimAntics.Model.TSOPlatform;
 using FSO.SimAntics.Model;
@@ -18,6 +19,7 @@ using FSO.SimAntics.Entities;
 using FSO.SimAntics.Marshals;
 using FSO.Server.Database.DA.Lots;
 using FSO.Server.Database.DA.Roommates;
+using FSO.Server.Database.DA.GlobalCooldowns;
 using FSO.SimAntics.Engine.TSOGlobalLink.Model;
 using FSO.SimAntics.Engine.Scopes;
 using FSO.Server.Database.DA.Avatars;
@@ -299,6 +301,11 @@ namespace FSO.Server.Servers.Lot.Domain
 
         public void RegisterNewObject(VM vm, VMEntity obj, VMAsyncPersistIDCallback callback)
         {
+            RegisterNewObject(vm, obj, 0, callback);
+        }
+
+        public void RegisterNewObject(VM vm, VMEntity obj, byte dbAttrMode, VMAsyncPersistIDCallback callback)
+        {
             if (obj is VMAvatar) return; //???
 
             var objid = obj.ObjectID;
@@ -317,7 +324,8 @@ namespace FSO.Server.Servers.Lot.Domain
                 graphic = (ushort)obj.GetValue(VMStackObjectVariable.Graphic),
                 type = guid,
                 value = (uint)obj.MultitileGroup.Price,
-                upgrade_level = state.UpgradeLevel
+                upgrade_level = state.UpgradeLevel,
+                has_db_attributes = dbAttrMode
             };
 
             Host.InBackground(() =>
@@ -331,6 +339,36 @@ namespace FSO.Server.Servers.Lot.Domain
                     }
                 }
                 catch (Exception) { callback(objid, 0); }
+            });
+        }
+
+        public void RegisterTokenObject(VM vm, uint guid, uint owner, byte dbAttrMode, VMAsyncPersistIDCallback callback)
+        {
+            DbObject dbo = new DbObject()
+            {
+                owner_id = owner,
+                lot_id = null,
+                shard_id = Context.ShardId,
+                dyn_obj_name = "",
+                budget = 0,
+                graphic = 0,
+                type = guid,
+                value = 0,
+                upgrade_level = 0,
+                has_db_attributes = dbAttrMode
+            };
+
+            Host.InBackground(() =>
+            {
+                try
+                {
+                    using (var db = DAFactory.Get())
+                    {
+                        var id = db.Objects.Create(dbo);
+                        if (callback != null) callback(0, id);
+                    }
+                }
+                catch (Exception) { callback(0, 0); }
             });
         }
 
@@ -660,7 +698,7 @@ namespace FSO.Server.Servers.Lot.Domain
         {
             using (var da = DAFactory.Get())
             {
-                var inventory = da.Objects.GetAvatarInventory(targetPID);
+                var inventory = da.Objects.GetAvatarInventoryWithAttrs(targetPID);
                 var vmInventory = new List<VMInventoryItem>();
                 foreach (var item in inventory)
                 {
@@ -1025,6 +1063,167 @@ namespace FSO.Server.Servers.Lot.Domain
             });
         }
 
+        private void TokenTotal(IDA db, uint guid, List<int> attributeData, VMAsyncTokenCallback callback)
+        {
+            var index = attributeData[0];
+            int total = db.Objects.TotalObjectAttributes(guid, index);
+            callback(true, new List<int>() { index, total });
+        }
+
+        public void TokenRequest(VM vm, uint avatarID, uint guid, VMTokenRequestMode mode, List<int> attributeData, VMAsyncTokenCallback callback)
+        {
+            var setAll = mode == VMTokenRequestMode.GetOrCreate || mode == VMTokenRequestMode.Replace;
+
+            Host.InBackground(() =>
+            {
+                try
+                {
+                    if (!setAll && attributeData.Count < 2)
+                    {
+                        //need two entries for individual access modes: index and value
+                        callback(false, new List<int>());
+                        return;
+                    }
+                    using (var db = DAFactory.Get())
+                    {
+                        if (mode == VMTokenRequestMode.TotalAttribute)
+                        {
+                            TokenTotal(db, guid, attributeData, callback);
+                            return;
+                        }
+                        var obj = db.Objects.ObjOfTypeInAvatarInventory(avatarID, guid).FirstOrDefault();
+                        if (obj == null)
+                        {
+                            //fails for any mode other than create/set/modify (get will return false)
+                            if (mode != VMTokenRequestMode.GetAttribute && mode != VMTokenRequestMode.TransactionAttribute)
+                            {
+                                //create the object and its attributes.
+
+                                RegisterTokenObject(vm, guid, avatarID, 2, (objID, pid) =>
+                                {
+                                    if (pid == 0) callback(false, new List<int>());
+                                    else
+                                    {
+                                        if (setAll)
+                                        {
+                                        //created. set all attributes
+                                        var attrs = new List<DbObjectAttribute>();
+                                            for (int i = 0; i < attributeData.Count; i++)
+                                            {
+                                                attrs.Add(new DbObjectAttribute()
+                                                {
+                                                    object_id = pid,
+                                                    index = i,
+                                                    value = attributeData[i]
+                                                });
+                                            }
+                                            db.Objects.SetObjectAttributes(attrs);
+                                            UpdateInventoryFor(vm, avatarID);
+                                            callback(true, attributeData);
+                                        }
+                                        else
+                                        {
+                                        //set only the attribute we've got
+                                        db.Objects.SetObjectAttributes(new List<DbObjectAttribute>() {
+                                            new DbObjectAttribute()
+                                            {
+                                                object_id = pid,
+                                                index = attributeData[0],
+                                                value = attributeData[1]
+                                            }
+                                            });
+                                            UpdateInventoryFor(vm, avatarID);
+                                            callback(true, attributeData);
+                                        }
+                                    }
+                                });
+                            }
+                            else
+                            {
+                                //object does not exist.
+                                callback(false, new List<int>());
+                            }
+                            return;
+                        }
+                        //object exists, we need to do stuff with the attributes.
+                        switch (mode)
+                        {
+                            case VMTokenRequestMode.GetOrCreate:
+                                //get all attributes
+                                var attrs = db.Objects.GetObjectAttributes(new List<uint>() { obj.object_id });
+                                var targList = new List<int>();
+                                foreach (var attr in attrs)
+                                {
+                                    while (targList.Count <= attr.index) targList.Add(0);
+                                    targList[attr.index] = attr.value;
+                                }
+                                callback(true, targList);
+                                return;
+                            case VMTokenRequestMode.Replace:
+                                //replace all attributes
+                                var replAttrs = new List<DbObjectAttribute>();
+                                for (int i = 0; i < attributeData.Count; i++)
+                                {
+                                    replAttrs.Add(new DbObjectAttribute()
+                                    {
+                                        object_id = obj.object_id,
+                                        index = i,
+                                        value = attributeData[i]
+                                    });
+                                }
+                                db.Objects.SetObjectAttributes(replAttrs);
+                                callback(true, attributeData);
+                                return;
+                            default:
+                                //todo: sql transaction?
+                                var index = attributeData[0];
+                                var value = attributeData[1];
+
+                                if (mode == VMTokenRequestMode.ModifyAttribute || mode == VMTokenRequestMode.TransactionAttribute)
+                                {
+                                    //get the previous value and modify it. ideally do inside sql transaction
+                                    var attr = db.Objects.GetSpecificObjectAttribute(obj.object_id, index);
+                                    if (mode == VMTokenRequestMode.TransactionAttribute) value = -value;
+                                    value += attr;
+                                    if (mode == VMTokenRequestMode.TransactionAttribute && value < 0)
+                                    {
+                                        callback(false, new List<int>());
+                                        return;
+                                    }
+                                    //then we'll go on to set the new value below.
+                                }
+
+                                switch (mode)
+                                {
+                                    case VMTokenRequestMode.GetAttribute:
+                                        var attr = db.Objects.GetSpecificObjectAttribute(obj.object_id, index);
+                                        callback(true, new List<int>() { index, attr });
+                                        break;
+                                    case VMTokenRequestMode.SetAttribute:
+                                    case VMTokenRequestMode.ModifyAttribute:
+                                    case VMTokenRequestMode.TransactionAttribute:
+                                        db.Objects.SetObjectAttributes(new List<DbObjectAttribute>() {
+                                        new DbObjectAttribute()
+                                        {
+                                            object_id = obj.object_id,
+                                            index = index,
+                                            value = value
+                                        }
+                                    });
+                                        callback(true, new List<int>() { index, value });
+                                        break;
+                                }
+                                return;
+                        }
+                    }
+                }
+                catch (Exception)
+                {
+                    callback(false, new List<int>());
+                }
+            });
+        }
+
         public void FindLotAndValue(VM vm, uint persistID, VMAsyncFindLotCallback p)
         {
             Host.InBackground(() =>
@@ -1037,6 +1236,62 @@ namespace FSO.Server.Servers.Lot.Domain
                     var objects = db.Objects.GetByAvatarIdLot(persistID, (uint)lot.lot_id);
 
                     p((uint)lot.lot_id, objects.Count, objects.Sum(x => x.value), lot.name);
+                }
+            });
+        }
+
+        public void GetObjectGlobalCooldown(VM vm, uint objectGUID, uint avatarID, uint userID, TimeSpan cooldownLength, bool byAccount, bool byCategory, VMAsyncGetObjectCooldownCallback callback)
+        {
+            var serverTime = vm.Context.Clock.UTCNow;
+            Host.InBackground(() =>
+            {
+                bool? cooldownPassed = null;
+                DbGlobalCooldowns cooldowns = null;
+                using (var db = DAFactory.Get())
+                {
+                    // if category doesn't matter becuase it's a global cooldown, use 255 from recent
+                    int category = (byCategory) ? vm.TSOState.PropertyCategory : (int)LotCategory.recent;
+                    if (Enum.IsDefined(typeof(LotCategory), category))
+                    {
+                        cooldowns = db.GlobalCooldowns.Get(objectGUID, (byAccount)?userID:avatarID, byAccount, (uint)category);
+                        if (cooldowns != null)
+                        {
+                            // found the entry, check for expiration
+                            cooldownPassed = cooldowns.expiry <= serverTime;
+                            if (cooldownPassed ?? false)
+                            {
+                                // cooldown has successfully passed, so update expiry to new cooldown
+                                cooldowns.expiry = serverTime + cooldownLength;
+                                if (!db.GlobalCooldowns.Update(cooldowns))
+                                    cooldownPassed = null; // failed to update in db, so do not return success
+                            }
+                        }
+                        else
+                        {
+                            // there is no entry for this avatar or user, object, and property category so create an entry now
+                            cooldowns = new DbGlobalCooldowns
+                            {
+                                object_guid = objectGUID,
+                                avatar_id = avatarID,
+                                user_id = userID,
+                                category = (uint)category,
+                                expiry = serverTime + cooldownLength
+                            };
+                            if (db.GlobalCooldowns.Create(cooldowns)) // must have success in creation to return true
+                                cooldownPassed = true;
+                        }
+                    }
+                    callback(cooldownPassed, (cooldowns != null) ? cooldowns.expiry : serverTime);
+                }
+            });
+        }
+        public void GetAccountIDFromAvatar(uint avatarID, VMAsyncAccountUserIDFromAvatarCallback callback)
+        {
+            Host.InBackground(() =>
+            {
+                using (var db = DAFactory.Get())
+                {
+                    callback(db.Avatars.Get(avatarID)?.user_id ?? 0);
                 }
             });
         }
