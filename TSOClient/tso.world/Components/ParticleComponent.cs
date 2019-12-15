@@ -328,9 +328,10 @@ namespace FSO.LotView.Components
             //minx, xrange, minz, zrange
             switch (Mode) {
                 case ParticleType.SNOW:
-                    effect.Parameters["Parameters1"].SetValue(new Vector4(Volume.Min.Y, Volume.Max.Y - Volume.Min.Y, 1f, 0.2f));
-                    effect.Parameters["Parameters2"].SetValue(new Vector4(30f, 10f, 10f, 100f));
+                    effect.Parameters["Parameters1"].SetValue(new Vector4(Volume.Min.Y, Volume.Max.Y - Volume.Min.Y, 1.33f, 0.2f));
+                    effect.Parameters["Parameters2"].SetValue(new Vector4(30f, 10f, 12.5f, 100f));
                     effect.Parameters["Parameters3"].SetValue(new Vector4(Volume.Min.X, Volume.Max.X - Volume.Min.X, Volume.Min.Z, Volume.Max.Z - Volume.Min.Z));
+                    effect.Parameters["Parameters4"].SetValue(new Vector4((cam3d)?0.66f:0.8f, 0f, 0f, 0f));
                     break;
                 case ParticleType.RAIN:
                     effect.Parameters["Parameters1"].SetValue(new Vector4(Volume.Min.Y, Volume.Max.Y - Volume.Min.Y, 0.20f, 0.01f)); //0.1f
