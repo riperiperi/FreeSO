@@ -31,6 +31,10 @@ namespace FSO.IDE.EditorComponent.UI
 
         private PrimitiveBox Placement;
         public bool IsPlacing => Placement != null;
+        public bool SnapPrims
+        {
+            get; set;
+        }
 
         public int UndoRedoDir;
         public bool Refocused;

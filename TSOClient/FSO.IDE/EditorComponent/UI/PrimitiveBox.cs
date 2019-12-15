@@ -34,6 +34,16 @@ namespace FSO.IDE.EditorComponent.UI
             set { _Height = value; }
         }
 
+        public double CenX
+        {
+            get => X + (Width / 2);                    
+        }
+
+        public double CenY
+        {
+            get => Y + (Height / 2);
+        }
+
         public override Vector2 Size
         {
             get
@@ -544,6 +554,8 @@ namespace FSO.IDE.EditorComponent.UI
                         FSO.Client.Debug.IDEHook.IDE.IDEOpenBHAV(Master.Scope.GetBHAV(subD.PrimID), Master.Scope.Object);
                     }
                     DoubleClickTime = 25;
+
+
                     m_doDrag = true;
                     var position = this.GetMousePosition(state.MouseState);
                     m_doResize = Resizable && position.X > Width - 10 && position.Y > Height - 10;
@@ -590,9 +602,16 @@ namespace FSO.IDE.EditorComponent.UI
                 }
                 else
                 {
-                    
-                    this.X = position.X - m_dragOffsetX;
-                    this.Y = position.Y - m_dragOffsetY;
+                    float X = position.X - m_dragOffsetX, 
+                        Y = position.Y - m_dragOffsetY;
+                    if (Master.Editor.SnapPrims)
+                    {
+                        var snapPos = SnapToNearbyPrims(state, X, Y);
+                        X = snapPos.X;
+                        Y = snapPos.Y;
+                    }
+                    this.X = X;
+                    this.Y = Y;
                 }
                 state.SharedData["ExternalDraw"] = true;
             } else if (Master.HoverPrim == this)
@@ -605,6 +624,70 @@ namespace FSO.IDE.EditorComponent.UI
             }
             base.Update(state);
             if (InvalidationParent?.Invalidated == true) UpdateNodePos(state);
+        }
+
+        private Vector2 SnapToNearbyPrims(UpdateState state, float X, float Y)
+        {
+            PrimitiveBox closestPrim = null;
+            double hitboxMarginX = 150, hitboxMarginY = 90;
+            var mousePos = Parent.GetMousePosition(state.MouseState);
+            foreach (var prim in Master.Primitives)
+            {
+                if (prim == this)
+                    continue;
+                Rectangle r = new Rectangle((int)(prim.X - hitboxMarginX),
+                                            (int)(prim.Y - hitboxMarginY),
+                                            (int)(prim.Width + hitboxMarginX * 2),
+                                            (int)(prim.Height + hitboxMarginY * 2));
+                if (r.Contains(mousePos))
+                {
+                    closestPrim = prim;
+                    break;
+                }
+            }
+            if (closestPrim == null)
+                return new Vector2(X, Y);
+            bool above = mousePos.Y < closestPrim.CenY;
+            double newX = 0,
+                   newY = 0,
+                   margin = 90;
+            var relMousePos = mousePos - closestPrim.Position;
+            if (mousePos.X > closestPrim.X && mousePos.X < closestPrim.X + closestPrim.Width) // x-axis snap
+            {
+                if (closestPrim.Width < Width) // if this prim is bigger than the prim to snap to, just default to snapping to the middle
+                {
+                    newX = (closestPrim.Width / 2) - (Width / 2);
+                    newY = (above) ? -margin : margin;
+                }
+                else
+                {
+                    if (relMousePos.X < closestPrim.Width / 3) // mouse in first third of closest prim         
+                    {
+                        newX = 0;
+                        newY = (above) ? -margin : margin;
+                    }
+                    else if (relMousePos.X < 2 * (closestPrim.Width / 3))
+                    {
+                        newX = (closestPrim.Width / 2) - (Width / 2);
+                        newY = (above) ? -margin : margin;
+                    }
+                    else if (relMousePos.X < closestPrim.Width)
+                    {
+                        newX = closestPrim.Width - Width;
+                        newY = (above) ? -margin : margin;
+                    }
+                }
+            }
+            else if (mousePos.Y > closestPrim.Y && mousePos.Y < closestPrim.Y + closestPrim.Height) // y-axis snap
+            {
+                if (mousePos.X < closestPrim.CenX)
+                    newX = -Width - margin;
+                else
+                    newX = closestPrim.Width + margin;
+            }
+            else
+                return new Vector2(X, Y);
+            return new Vector2((float)(closestPrim.X + newX), (float)(closestPrim.Y + newY));
         }
 
         public void UpdateNodePos(UpdateState state)

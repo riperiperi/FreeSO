@@ -32,7 +32,7 @@ namespace FSO.IDE
         private void InitializeComponent()
         {
             System.ComponentModel.ComponentResourceManager resources = new System.ComponentModel.ComponentResourceManager(typeof(BHAVEditor));
-            System.Windows.Forms.ListViewItem listViewItem1 = new System.Windows.Forms.ListViewItem("CT - Notify Current Object Social Occurred");
+            System.Windows.Forms.ListViewItem listViewItem3 = new System.Windows.Forms.ListViewItem("CT - Notify Current Object Social Occurred");
             this.menuStrip1 = new System.Windows.Forms.MenuStrip();
             this.fileToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
             this.saveToFilebhavToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
@@ -42,8 +42,13 @@ namespace FSO.IDE
             this.undoToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
             this.redoToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
             this.toolStripSeparator1 = new System.Windows.Forms.ToolStripSeparator();
+            this.copyToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
+            this.pasteStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
+            this.toolStripSeparator2 = new System.Windows.Forms.ToolStripSeparator();
             this.removeToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
             this.setFirstToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
+            this.viewToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
+            this.snapPrimitivesToGridToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
             this.insertToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
             this.trueToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
             this.falseToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
@@ -76,9 +81,6 @@ namespace FSO.IDE
             this.StackView = new System.Windows.Forms.ListView();
             this.StackTreeNameCol = ((System.Windows.Forms.ColumnHeader)(new System.Windows.Forms.ColumnHeader()));
             this.StackSourceCol = ((System.Windows.Forms.ColumnHeader)(new System.Windows.Forms.ColumnHeader()));
-            this.toolStripSeparator2 = new System.Windows.Forms.ToolStripSeparator();
-            this.copyToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
-            this.pasteStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
             this.menuStrip1.SuspendLayout();
             this.MainTable.SuspendLayout();
             ((System.ComponentModel.ISupportInitialize)(this.splitContainer1)).BeginInit();
@@ -99,6 +101,7 @@ namespace FSO.IDE
             this.menuStrip1.Items.AddRange(new System.Windows.Forms.ToolStripItem[] {
             this.fileToolStripMenuItem,
             this.editToolStripMenuItem,
+            this.viewToolStripMenuItem,
             this.insertToolStripMenuItem});
             this.menuStrip1.Location = new System.Drawing.Point(0, 0);
             this.menuStrip1.Name = "menuStrip1";
@@ -173,6 +176,25 @@ namespace FSO.IDE
             this.toolStripSeparator1.Name = "toolStripSeparator1";
             this.toolStripSeparator1.Size = new System.Drawing.Size(177, 6);
             // 
+            // copyToolStripMenuItem
+            // 
+            this.copyToolStripMenuItem.Name = "copyToolStripMenuItem";
+            this.copyToolStripMenuItem.ShortcutKeys = ((System.Windows.Forms.Keys)((System.Windows.Forms.Keys.Control | System.Windows.Forms.Keys.C)));
+            this.copyToolStripMenuItem.Size = new System.Drawing.Size(180, 22);
+            this.copyToolStripMenuItem.Text = "Copy";
+            // 
+            // pasteStripMenuItem
+            // 
+            this.pasteStripMenuItem.Name = "pasteStripMenuItem";
+            this.pasteStripMenuItem.ShortcutKeys = ((System.Windows.Forms.Keys)((System.Windows.Forms.Keys.Control | System.Windows.Forms.Keys.V)));
+            this.pasteStripMenuItem.Size = new System.Drawing.Size(180, 22);
+            this.pasteStripMenuItem.Text = "Paste";
+            // 
+            // toolStripSeparator2
+            // 
+            this.toolStripSeparator2.Name = "toolStripSeparator2";
+            this.toolStripSeparator2.Size = new System.Drawing.Size(177, 6);
+            // 
             // removeToolStripMenuItem
             // 
             this.removeToolStripMenuItem.Name = "removeToolStripMenuItem";
@@ -188,6 +210,22 @@ namespace FSO.IDE
             this.setFirstToolStripMenuItem.Size = new System.Drawing.Size(180, 22);
             this.setFirstToolStripMenuItem.Text = "Set as First";
             this.setFirstToolStripMenuItem.Click += new System.EventHandler(this.setFirstToolStripMenuItem_Click);
+            // 
+            // viewToolStripMenuItem
+            // 
+            this.viewToolStripMenuItem.DropDownItems.AddRange(new System.Windows.Forms.ToolStripItem[] {
+            this.snapPrimitivesToGridToolStripMenuItem});
+            this.viewToolStripMenuItem.Name = "viewToolStripMenuItem";
+            this.viewToolStripMenuItem.Size = new System.Drawing.Size(44, 20);
+            this.viewToolStripMenuItem.Text = "View";
+            // 
+            // snapPrimitivesToGridToolStripMenuItem
+            // 
+            this.snapPrimitivesToGridToolStripMenuItem.Name = "snapPrimitivesToGridToolStripMenuItem";
+            this.snapPrimitivesToGridToolStripMenuItem.ShowShortcutKeys = false;
+            this.snapPrimitivesToGridToolStripMenuItem.Size = new System.Drawing.Size(188, 22);
+            this.snapPrimitivesToGridToolStripMenuItem.Text = "Snap Primitives To Grid";
+            this.snapPrimitivesToGridToolStripMenuItem.Click += new System.EventHandler(this.SnapPrimitivesToGridToolStripMenuItem_Click);
             // 
             // insertToolStripMenuItem
             // 
@@ -607,7 +645,7 @@ namespace FSO.IDE
             this.StackView.Dock = System.Windows.Forms.DockStyle.Fill;
             this.StackView.HideSelection = false;
             this.StackView.Items.AddRange(new System.Windows.Forms.ListViewItem[] {
-            listViewItem1});
+            listViewItem3});
             this.StackView.Location = new System.Drawing.Point(3, 16);
             this.StackView.Margin = new System.Windows.Forms.Padding(6);
             this.StackView.MultiSelect = false;
@@ -627,27 +665,6 @@ namespace FSO.IDE
             // 
             this.StackSourceCol.Text = "Source";
             this.StackSourceCol.Width = 88;
-            // 
-            // toolStripSeparator2
-            // 
-            this.toolStripSeparator2.Name = "toolStripSeparator2";
-            this.toolStripSeparator2.Size = new System.Drawing.Size(177, 6);
-            // 
-            // copyToolStripMenuItem
-            // 
-            this.copyToolStripMenuItem.Name = "copyToolStripMenuItem";
-            this.copyToolStripMenuItem.ShortcutKeys = ((System.Windows.Forms.Keys)((System.Windows.Forms.Keys.Control | System.Windows.Forms.Keys.C)));
-            this.copyToolStripMenuItem.Size = new System.Drawing.Size(180, 22);
-            this.copyToolStripMenuItem.Text = "Copy";
-            this.copyToolStripMenuItem.Click += this.copyToolStripMenuItem_Click;
-            // 
-            // pasteStripMenuItem
-            // 
-            this.pasteStripMenuItem.Name = "pasteStripMenuItem";
-            this.pasteStripMenuItem.ShortcutKeys = ((System.Windows.Forms.Keys)((System.Windows.Forms.Keys.Control | System.Windows.Forms.Keys.V)));
-            this.pasteStripMenuItem.Size = new System.Drawing.Size(180, 22);
-            this.pasteStripMenuItem.Text = "Paste";
-            this.pasteStripMenuItem.Click += this.pasteToolStripMenuItem_Click;
             // 
             // BHAVEditor
             // 
@@ -734,6 +751,8 @@ namespace FSO.IDE
         private System.Windows.Forms.ToolStripMenuItem copyToolStripMenuItem;
         private System.Windows.Forms.ToolStripMenuItem pasteStripMenuItem;
         private System.Windows.Forms.ToolStripSeparator toolStripSeparator2;
+        private System.Windows.Forms.ToolStripMenuItem viewToolStripMenuItem;
+        private System.Windows.Forms.ToolStripMenuItem snapPrimitivesToGridToolStripMenuItem;
     }
 }
 
