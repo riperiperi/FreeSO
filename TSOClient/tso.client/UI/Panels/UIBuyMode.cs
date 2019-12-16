@@ -121,7 +121,7 @@ namespace FSO.Client.UI.Panels
             InventoryCatalogVisitorSlider.OnChange += PageSlider;
 
             SetMode(0);
-            SetRoomCategories(true);
+            SetRoomCategories(false);
         }
 
         public override void InitCategoryMap()
@@ -389,8 +389,7 @@ namespace FSO.Client.UI.Panels
             KitchenButton.Visible = active;
             BathRoomButton.Visible = active;
             OutsideButton.Visible = active;
-            MiscRoomButton.Visible = active;
-            InventoryButton.Visible = active;
+            MiscRoomButton.Visible = active;            
 
             RoomCategories = value;
         }

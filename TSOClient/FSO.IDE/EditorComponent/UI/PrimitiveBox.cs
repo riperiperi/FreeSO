@@ -705,7 +705,7 @@ namespace FSO.IDE.EditorComponent.UI
                     newX = -Width - margin;
                 else // (right)
                     newX = closestPrim.Width + margin;
-                newY = Math.Max(closestPrim.Height, Height) / 2 - (Math.Min(closestPrim.Height, Height) / 2);
+                newY = closestPrim.Height / 2 - (Height / 2);
             }
             else // ignore potentially accidental snaps
             {
