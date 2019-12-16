@@ -604,9 +604,10 @@ namespace FSO.IDE.EditorComponent.UI
                 {
                     float X = position.X - m_dragOffsetX, 
                         Y = position.Y - m_dragOffsetY;
-                    if (Master.Editor.SnapPrims)
+                    bool shouldSnap = Master.Editor.SnapPrims;
+                    if (shouldSnap)
                     {
-                        var snapPos = SnapToNearbyPrims(state, X, Y);
+                        var snapPos = SnapToNearbyPrims(state, new Vector2(X,Y), Parent.GetMousePosition(state.MouseState), out _);
                         X = snapPos.X;
                         Y = snapPos.Y;
                     }
@@ -614,7 +615,8 @@ namespace FSO.IDE.EditorComponent.UI
                     this.Y = Y;
                 }
                 state.SharedData["ExternalDraw"] = true;
-            } else if (Master.HoverPrim == this)
+            }
+            else if (Master.HoverPrim == this)
             {
                 if (Type == TREEBoxType.Label && state.MouseState.RightButton == ButtonState.Pressed)
                 {
@@ -626,11 +628,23 @@ namespace FSO.IDE.EditorComponent.UI
             if (InvalidationParent?.Invalidated == true) UpdateNodePos(state);
         }
 
-        private Vector2 SnapToNearbyPrims(UpdateState state, float X, float Y)
+        /// <summary>
+        /// Gets a position that snaps the primitive to the closest primitive to the mouse cursor.
+        /// </summary>
+        /// <param name="state">The current UpdateState</param>
+        /// <param name="defaultPosition">The position to return if no primitive was snapped to</param>
+        /// <param name="mousePosition">The position of the mouse relative to the primitives to snap to</param>
+        /// <param name="snapped">Represents if a primitive was able to be snapped to.</param>
+        /// <returns>The calculated position snapped to a primitive in the BHAVContainer </returns>
+        public Vector2 SnapToNearbyPrims(UpdateState state, Vector2 defaultPosition, Vector2 mousePosition, out bool snapped)
         {
+            snapped = false;
+            if (Master == null) // if this primitive doesn't belong to a container it can't snap anywhere.
+                return defaultPosition;            
             PrimitiveBox closestPrim = null;
-            double hitboxMarginX = 150, hitboxMarginY = 90;
-            var mousePos = Parent.GetMousePosition(state.MouseState);
+            double hitboxMarginX = 150, hitboxMarginY = 90; // margins that apply only to the hitbox
+            var mousePos = mousePosition;
+            var potentials = new List<Tuple<PrimitiveBox, double>>(); // when multiple boxes are close to each other, pick the one closest to the mouse to snap to.
             foreach (var prim in Master.Primitives)
             {
                 if (prim == this)
@@ -638,55 +652,66 @@ namespace FSO.IDE.EditorComponent.UI
                 Rectangle r = new Rectangle((int)(prim.X - hitboxMarginX),
                                             (int)(prim.Y - hitboxMarginY),
                                             (int)(prim.Width + hitboxMarginX * 2),
-                                            (int)(prim.Height + hitboxMarginY * 2));
-                if (r.Contains(mousePos))
-                {
-                    closestPrim = prim;
-                    break;
-                }
+                                            (int)(prim.Height + hitboxMarginY * 2)); // create a hitbox around the prim to test if the mouse is inside it
+                double a = prim.CenX - mousePos.X;
+                double b = prim.CenY - mousePos.Y;
+                var dist = Math.Sqrt(a * a + b * b); // distance from the prim to the mouse
+
+                if (r.Contains(mousePos))                
+                    potentials.Add(Tuple.Create(prim, dist));                
             }
-            if (closestPrim == null)
-                return new Vector2(X, Y);
+            if (!potentials.Any())
+                return defaultPosition;
+            if (potentials.Count == 1)
+                closestPrim = potentials.First().Item1;
+            else
+                closestPrim = potentials.Where(x => x.Item2 == potentials.Select(y => y.Item2).Min()).FirstOrDefault()?.Item1; // compare the distances from the mouse for each prim and return the closest
+            if (closestPrim == null) // should never be the case
+                return defaultPosition;
             bool above = mousePos.Y < closestPrim.CenY;
-            double newX = 0,
+            double newX = 0, // new X and Y coords relative to the snapping target
                    newY = 0,
-                   margin = 90;
+                   margin = 45; // margin between this prim and the one being snapped to
             var relMousePos = mousePos - closestPrim.Position;
             if (mousePos.X > closestPrim.X && mousePos.X < closestPrim.X + closestPrim.Width) // x-axis snap
             {
                 if (closestPrim.Width < Width) // if this prim is bigger than the prim to snap to, just default to snapping to the middle
                 {
                     newX = (closestPrim.Width / 2) - (Width / 2);
-                    newY = (above) ? -margin : margin;
+                    newY = (above) ? -margin - Height : margin + closestPrim.Height;
                 }
                 else
                 {
-                    if (relMousePos.X < closestPrim.Width / 3) // mouse in first third of closest prim         
+                    if (relMousePos.X < closestPrim.Width / 3) // mouse in first third of closest prim (left)         
                     {
                         newX = 0;
-                        newY = (above) ? -margin : margin;
+                        newY = (above) ? -margin - Height : margin + closestPrim.Height;
                     }
-                    else if (relMousePos.X < 2 * (closestPrim.Width / 3))
+                    else if (relMousePos.X < 2 * (closestPrim.Width / 3)) // mouse in second third (center)
                     {
                         newX = (closestPrim.Width / 2) - (Width / 2);
-                        newY = (above) ? -margin : margin;
+                        newY = (above) ? -margin - Height : margin + closestPrim.Height;
                     }
-                    else if (relMousePos.X < closestPrim.Width)
+                    else if (relMousePos.X < closestPrim.Width) // (right)
                     {
                         newX = closestPrim.Width - Width;
-                        newY = (above) ? -margin : margin;
+                        newY = (above) ? -margin - Height : margin + closestPrim.Height;
                     }
                 }
             }
             else if (mousePos.Y > closestPrim.Y && mousePos.Y < closestPrim.Y + closestPrim.Height) // y-axis snap
             {
-                if (mousePos.X < closestPrim.CenX)
+                if (mousePos.X < closestPrim.CenX) // (left)
                     newX = -Width - margin;
-                else
+                else // (right)
                     newX = closestPrim.Width + margin;
+                newY = Math.Max(closestPrim.Height, Height) / 2 - (Math.Min(closestPrim.Height, Height) / 2);
             }
-            else
-                return new Vector2(X, Y);
+            else // ignore potentially accidental snaps
+            {
+                return defaultPosition;
+            }
+            snapped = true;
             return new Vector2((float)(closestPrim.X + newX), (float)(closestPrim.Y + newY));
         }
 

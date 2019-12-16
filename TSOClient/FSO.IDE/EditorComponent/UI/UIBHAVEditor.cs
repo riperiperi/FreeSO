@@ -381,7 +381,14 @@ namespace FSO.IDE.EditorComponent.UI
 
             if (Placement != null)
             {
-                Placement.Position = GlobalPoint(new Vector2(state.MouseState.X, state.MouseState.Y)) - (new Vector2(Placement.Width, Placement.Height) / 2);
+                var desiredPos = new Vector2(state.MouseState.X, state.MouseState.Y) - (new Vector2(Placement.Width, Placement.Height) / 2); // the mouse-placement position
+                if (SnapPrims)
+                {
+                    var snappedPos = BHAVView.LocalPoint(Placement.SnapToNearbyPrims(state, new Vector2(), BHAVView.GetMousePosition(state.MouseState), out bool result)); // snapped position
+                    if (result)
+                        desiredPos = snappedPos;
+                }
+                Placement.Position = GlobalPoint(desiredPos);
                 Placement.Style = PGroupStyles.ByType[PrimitiveGroup.Placement];
                 state.SharedData["ExternalDraw"] = true;
                 Placement.Update(state);

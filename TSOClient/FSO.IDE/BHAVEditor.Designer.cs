@@ -32,7 +32,7 @@ namespace FSO.IDE
         private void InitializeComponent()
         {
             System.ComponentModel.ComponentResourceManager resources = new System.ComponentModel.ComponentResourceManager(typeof(BHAVEditor));
-            System.Windows.Forms.ListViewItem listViewItem3 = new System.Windows.Forms.ListViewItem("CT - Notify Current Object Social Occurred");
+            System.Windows.Forms.ListViewItem listViewItem1 = new System.Windows.Forms.ListViewItem("CT - Notify Current Object Social Occurred");
             this.menuStrip1 = new System.Windows.Forms.MenuStrip();
             this.fileToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
             this.saveToFilebhavToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
@@ -222,8 +222,8 @@ namespace FSO.IDE
             // snapPrimitivesToGridToolStripMenuItem
             // 
             this.snapPrimitivesToGridToolStripMenuItem.Name = "snapPrimitivesToGridToolStripMenuItem";
-            this.snapPrimitivesToGridToolStripMenuItem.ShowShortcutKeys = false;
-            this.snapPrimitivesToGridToolStripMenuItem.Size = new System.Drawing.Size(188, 22);
+            this.snapPrimitivesToGridToolStripMenuItem.ShortcutKeys = ((System.Windows.Forms.Keys)((System.Windows.Forms.Keys.Control | System.Windows.Forms.Keys.S)));
+            this.snapPrimitivesToGridToolStripMenuItem.Size = new System.Drawing.Size(235, 22);
             this.snapPrimitivesToGridToolStripMenuItem.Text = "Snap Primitives To Grid";
             this.snapPrimitivesToGridToolStripMenuItem.Click += new System.EventHandler(this.SnapPrimitivesToGridToolStripMenuItem_Click);
             // 
@@ -645,7 +645,7 @@ namespace FSO.IDE
             this.StackView.Dock = System.Windows.Forms.DockStyle.Fill;
             this.StackView.HideSelection = false;
             this.StackView.Items.AddRange(new System.Windows.Forms.ListViewItem[] {
-            listViewItem3});
+            listViewItem1});
             this.StackView.Location = new System.Drawing.Point(3, 16);
             this.StackView.Margin = new System.Windows.Forms.Padding(6);
             this.StackView.MultiSelect = false;
