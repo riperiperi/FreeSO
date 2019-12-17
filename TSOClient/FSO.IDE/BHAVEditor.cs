@@ -530,5 +530,11 @@ namespace FSO.IDE
                 ui.CleanupFocus(state);
             });
         }
+
+        private void SnapPrimitivesToGridToolStripMenuItem_Click(object sender, EventArgs e)
+        {
+            (sender as ToolStripMenuItem).Checked = !(sender as ToolStripMenuItem).Checked;
+            Editor.SnapPrims = (sender as ToolStripMenuItem).Checked;
+        }
     }
 }

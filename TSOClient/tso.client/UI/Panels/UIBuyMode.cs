@@ -389,7 +389,7 @@ namespace FSO.Client.UI.Panels
             KitchenButton.Visible = active;
             BathRoomButton.Visible = active;
             OutsideButton.Visible = active;
-            MiscRoomButton.Visible = active;
+            MiscRoomButton.Visible = active;            
 
             RoomCategories = value;
         }
