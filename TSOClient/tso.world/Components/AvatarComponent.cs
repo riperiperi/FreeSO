@@ -33,9 +33,16 @@ namespace FSO.LotView.Components
             new Vector2(5+64, 316+32)
         };
 
+        private static string[] SlotBones = new string[]
+        {
+            "R_FINGER0",
+            "HEAD",
+            "PELVIS"
+        };
+
         public override Vector3 GetSLOTPosition(int slot, bool avatar)
         {
-            var handpos = Avatar.Skeleton.GetBone("R_FINGER0").AbsolutePosition / 3.0f * Scale;
+            var handpos = Avatar.Skeleton.GetBone(SlotBones[slot]).AbsolutePosition / 3.0f * Scale;
             return Vector3.Transform(new Vector3(handpos.X, handpos.Z, handpos.Y), Matrix.CreateRotationZ((float)(RadianDirection+Math.PI))) + this.Position - new Vector3(0.5f, 0.5f, 0f);
         }
 

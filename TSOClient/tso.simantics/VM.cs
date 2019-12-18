@@ -932,6 +932,10 @@ namespace FSO.SimAntics
         public void LoadComplete()
         {
             FSOVAsyncLoading = false;
+            if (!TS1 && VM.UseWorld)
+            {
+                Context.Blueprint.Weather?.SetWeather(GetGlobalValue(18));
+            }
             Context.RefreshAllLighting(); //height of some objects not loaded during async load - must regenerate lighting for the rooms.
             if (FSOVClientJoin)
             {

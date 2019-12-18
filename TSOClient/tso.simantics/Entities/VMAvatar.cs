@@ -72,7 +72,6 @@ namespace FSO.SimAntics
         private VMIMotiveDecay MotiveDecay;
         private short[] PersonData = new short[101];
         private short[] MotiveData = new short[16];
-        private VMEntity HandObject;
         private float _RadianDirection;
 
         public int KillTimeout = -1;
@@ -395,6 +394,7 @@ namespace FSO.SimAntics
 
         public override void Init(VMContext context)
         {
+            Contained = new VMEntity[3];
             if (UseWorld)
             {
                 WorldUI.ObjectID = ObjectID;
@@ -1003,11 +1003,14 @@ namespace FSO.SimAntics
             var room = context.GetObjectRoom(this);
             SetRoom(room);
 
-            if (HandObject != null)
+            foreach (var obj in Contained)
             {
-                context.UnregisterObjectPos(HandObject, roomChange);
-                HandObject.Position = Position;
-                HandObject.PositionChange(context, noEntryPoint, roomChange);
+                if (obj != null)
+                {
+                    context.UnregisterObjectPos(obj, roomChange);
+                    obj.Position = Position;
+                    obj.PositionChange(context, noEntryPoint, roomChange);
+                }
             }
             
             Footprint = GetObstacle(Position, Direction, false);
@@ -1044,7 +1047,7 @@ namespace FSO.SimAntics
 
         public override int TotalSlots()
         {
-            return 1;
+            return 3; //hand, head, pelvis
         }
 
         public override bool PlaceInSlot(VMEntity obj, int slot, bool cleanOld, VMContext context)
@@ -1055,9 +1058,13 @@ namespace FSO.SimAntics
 
             if (!obj.GhostImage)
             {
-                HandObject = obj;
+                Contained[slot] = obj;
 
-                CarryAnimationState = new VMAnimationState(FSO.Content.Content.Get().AvatarAnimations.Get("a2o-rarm-carry-loop.anim"), false); //set default carry animation
+                if (slot == 0)
+                {
+                    //set default carry animation
+                    CarryAnimationState = new VMAnimationState(FSO.Content.Content.Get().AvatarAnimations.Get("a2o-rarm-carry-loop.anim"), false);
+                }
 
                 obj.Container = this;
                 obj.ContainerSlot = (short)slot;
@@ -1087,21 +1094,21 @@ namespace FSO.SimAntics
 
         public override VMEntity GetSlot(int slot)
         {
-            return HandObject;
+            return Contained[slot];
         }
 
         public override void ClearSlot(int slot)
         {
-            HandObject.Container = null;
-            HandObject.ContainerSlot = -1;
+            Contained[slot].Container = null;
+            Contained[slot].ContainerSlot = -1;
             CarryAnimationState = null;
 
             if (UseWorld)
             {
-                HandObject.WorldUI.Container = null;
-                HandObject.WorldUI.ContainerSlot = 0;
+                Contained[slot].WorldUI.Container = null;
+                Contained[slot].WorldUI.ContainerSlot = 0;
 
-                HandObject.RecurseSlotFunc(contained =>
+                Contained[slot].RecurseSlotFunc(contained =>
                 {
                     if (contained is VMGameObject)
                     {
@@ -1110,7 +1117,7 @@ namespace FSO.SimAntics
                 });
             }
 
-            HandObject = null;
+            Contained[slot] = null;
         }
 
         // End Container SLOTs interface
@@ -1165,7 +1172,7 @@ namespace FSO.SimAntics
                 MotiveDecay = MotiveDecay,
                 PersonData = (short[])PersonData.Clone(),
                 MotiveData = (short[])MotiveData.Clone(),
-                HandObject = (HandObject == null) ? (short)0 : HandObject.ObjectID,
+                HandObjectOld = (Contained[0] == null) ? (short)0 : Contained[0].ObjectID,
                 RadianDirection = RadianDirection,
                 KillTimeout = KillTimeout,
                 DefaultSuits = DefaultSuits,
@@ -1232,9 +1239,16 @@ namespace FSO.SimAntics
 
         public virtual void LoadCrossRef(VMAvatarMarshal input, VMContext context)
         {
+            if (input.Contained.Length == 0)
+            {
+                input.Contained = new short[3];
+                input.Contained[0] = input.HandObjectOld;
+            }
             base.LoadCrossRef(input, context);
-            HandObject = context.VM.GetObjectById(input.HandObject);
-            if (HandObject != null && HandObject is VMGameObject) ((ObjectComponent)HandObject.WorldUI).ForceDynamic = true;
+            foreach (var obj in Contained)
+            {
+                if (obj != null && obj is VMGameObject) ((ObjectComponent)obj.WorldUI).ForceDynamic = true;
+            }
             //we need to fix the gender, since InitBodyData resets it.
             var gender = GetPersonData(VMPersonDataVariable.Gender);
             InitBodyData(context);

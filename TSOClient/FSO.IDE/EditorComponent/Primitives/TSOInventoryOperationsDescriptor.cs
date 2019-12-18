@@ -31,6 +31,7 @@ namespace FSO.IDE.EditorComponent.Primitives
                 result.Append("Object: ");
                 result.Append((obj == null) ? ("0x" + Convert.ToString(op.GUID.ToString("x8"))) : obj.OBJ.ChunkLabel);
             }
+            if (op.ForStackObject) result.Append("\r\n(For Stack Object)");
 
             return result.ToString();
         }
@@ -43,6 +44,7 @@ namespace FSO.IDE.EditorComponent.Primitives
             panel.Controls.Add(new OpObjectControl(master, escope, Operand, "Object Type:", "GUID"));
             panel.Controls.Add(new OpComboControl(master, escope, Operand, "Mode:", "Mode", new OpStaticNamedPropertyProvider(typeof(VMInventoryOpMode))));
             panel.Controls.Add(new OpScopeControl(master, escope, Operand, "Target Variable", "FSOScope", "FSOData"));
+            panel.Controls.Add(new OpFlagsControl(master, escope, Operand, "Flags", new OpFlag[] { new OpFlag("For Stack Object", "ForStackObject") }));
         }
     }
 }

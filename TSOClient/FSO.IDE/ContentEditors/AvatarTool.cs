@@ -45,8 +45,6 @@ namespace FSO.IDE.ContentEditors
             RefreshAnimList();
             RefreshOutfitList();
             RefreshAccessoryList();
-
-            TestAllMesh();
         }
 
         private void TestAllMesh()

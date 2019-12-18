@@ -109,6 +109,8 @@ namespace FSO.Server.Servers.Lot.Domain
             0x3161BB5B, //job controller
 
             0x475CC813, //water balloon controller
+            0x2D583771, //winter weather controller
+            0x7A78195C, //snowball controller
 
             0x5157DDF2, //cat carrier
             0x3278BD34, //dog carrier
@@ -125,6 +127,7 @@ namespace FSO.Server.Servers.Lot.Domain
             0x534564D5, //skill degrade
 
             0x699704D3, //fso vehicle controller
+            0x2D583771, //winter weather controller
         };
 
         private static HashSet<uint> InvalidGUIDs = new HashSet<uint>()

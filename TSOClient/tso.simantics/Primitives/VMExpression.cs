@@ -132,7 +132,7 @@ namespace FSO.SimAntics.Engine.Primitives
                     lhsValue = VMMemory.GetBigVariable(context, operand.LhsOwner, operand.LhsData);
                     rhsValue = VMMemory.GetBigVariable(context, operand.RhsOwner, operand.RhsData);
                     var clearBitval = ~(1 << (rhsValue - 1));
-                    lhsValue &= (short)clearBitval;
+                    lhsValue &= clearBitval;
                     if (VMMemory.SetBigVariable(context, operand.LhsOwner, operand.LhsData, lhsValue))
                     {
                         return VMPrimitiveExitCode.GOTO_TRUE;

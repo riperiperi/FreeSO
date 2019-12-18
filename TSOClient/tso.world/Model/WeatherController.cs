@@ -21,6 +21,13 @@ namespace FSO.LotView.Model
         public Color OutsideWeatherTint;
         public float Darken;
 
+        public short WeatherData;
+        private short LastWeatherData = 0;
+
+        public bool IsManual => (WeatherData & (1 << 8)) > 0;
+        public WeatherType WeatherType => (WeatherType)((WeatherData >> 9) & 3);
+        public bool IsThunder => (WeatherData & (1 << 11)) > 0;
+
         public float[] ModeToIntensity = new float[]
         {
             0f, 0.25f, 1f, //snow
@@ -82,16 +89,43 @@ namespace FSO.LotView.Model
             FogColor.W = (wint) * (15 * 75f) + (1 - wint) * (300f * 75f);
             var enabled = WorldConfig.Current.Weather;
 
-            if (LastI == i && LastHour == now.Hour && (Current?.Time ?? 0) < 100 && enabled == LastEnabled) return;
+            ParticleType ptype;
 
-            var curInt = GetWeatherIntensity(now);
-            var lastInt = GetWeatherIntensity(now - new TimeSpan(1, 0, 0));
-            LastI = i;
-            LastHour = now.Hour;
-            LastEnabled = enabled;
+            if (IsManual)
+            {
+                if (WeatherData == LastWeatherData && enabled == LastEnabled) return;
+                LastWeatherData = WeatherData;
+                LastEnabled = enabled;
 
-            WeatherIntensity = ModeToIntensity[curInt] * i + ModeToIntensity[lastInt] * (1 - i);
-            Darken = ModeToDarken[curInt] * i + ModeToDarken[lastInt] * (1 - i);
+                var type = WeatherType;
+                WeatherIntensity = (WeatherData & 0xFF) / 100f;
+                Darken = (type == WeatherType.Rain) ? WeatherIntensity : 0;
+
+                switch (type)
+                {
+                    case WeatherType.Snow:
+                        ptype = ParticleType.SNOW;
+                        break;
+                    default:
+                        ptype = ParticleType.RAIN;
+                        break;
+                }
+            }
+            else
+            {
+                if (LastI == i && LastHour == now.Hour && (Current?.Time ?? 0) < 100 && enabled == LastEnabled) return;
+
+                var curInt = GetAutoWeatherIntensity(now);
+                var lastInt = GetAutoWeatherIntensity(now - new TimeSpan(1, 0, 0));
+                LastI = i;
+                LastHour = now.Hour;
+                LastEnabled = enabled;
+
+                WeatherIntensity = ModeToIntensity[curInt] * i + ModeToIntensity[lastInt] * (1 - i);
+                Darken = ModeToDarken[curInt] * i + ModeToDarken[lastInt] * (1 - i);
+
+                ptype = (ParticleType)(curInt / 3);
+            }
 
             OutsideWeatherTint = Color.Lerp(Color.White, new Color(159, 164, 181), Darken);
 
@@ -114,7 +148,7 @@ namespace FSO.LotView.Model
                 if (Current == null)
                 {
                     Current = new ParticleComponent(Bp, Particles);
-                    Current.Mode = (ParticleType)(curInt/3);
+                    Current.Mode = ptype;
                     Current.FadeProgress = isFaded ? (float?)-1 : null;
                     Current.WeatherIntensity = WeatherIntensity;
                     Particles.Add(Current);
@@ -130,7 +164,11 @@ namespace FSO.LotView.Model
             }
         }
 
-        private int GetWeatherIntensity(DateTime time)
+        public void SetWeather(short data) {
+            WeatherData = data;
+        }
+
+        private int GetAutoWeatherIntensity(DateTime time)
         {
             var distance = time - new DateTime(2019, 1, 26);
             var halfDay = (int)distance.TotalHours;
@@ -154,5 +192,12 @@ namespace FSO.LotView.Model
             return weather;
         }
         
+    }
+
+    public enum WeatherType
+    {
+        Rain = 0,
+        Snow = 1,
+        Hail = 2
     }
 }

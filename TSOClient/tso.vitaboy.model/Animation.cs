@@ -109,8 +109,8 @@ namespace FSO.Vitaboy
                 motion.Duration = io.ReadFloat();
                 motion.HasTranslation = (((bcf) ? io.ReadInt32() : io.ReadByte()) == 1);
                 motion.HasRotation = (((bcf) ? io.ReadInt32() : io.ReadByte()) == 1);
-                motion.FirstTranslationIndex = io.ReadUInt32();
-                motion.FirstRotationIndex = io.ReadUInt32();
+                motion.FirstTranslationIndex = io.ReadInt32();
+                motion.FirstRotationIndex = io.ReadInt32();
 
                 var hasPropsList = bcf || io.ReadByte() == 1;
                 if (hasPropsList)
@@ -222,8 +222,8 @@ namespace FSO.Vitaboy
                     io.WriteByte((byte)(motion.HasTranslation ? 1 : 0));
                     io.WriteByte((byte)(motion.HasRotation ? 1 : 0));
                 }
-                io.WriteUInt32(motion.FirstTranslationIndex);
-                io.WriteUInt32(motion.FirstRotationIndex);
+                io.WriteInt32(motion.FirstTranslationIndex);
+                io.WriteInt32(motion.FirstRotationIndex);
 
                 if (!bcf)
                 {
@@ -313,8 +313,8 @@ namespace FSO.Vitaboy
         public float Duration;
         public bool HasTranslation;
         public bool HasRotation;
-        public uint FirstTranslationIndex;
-        public uint FirstRotationIndex;
+        public int FirstTranslationIndex;
+        public int FirstRotationIndex;
 
         public PropertyList[] Properties;
         public TimePropertyList[] TimeProperties;

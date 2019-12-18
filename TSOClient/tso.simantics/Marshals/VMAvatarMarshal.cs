@@ -23,7 +23,7 @@ namespace FSO.SimAntics.Marshals
         public VMIMotiveDecay MotiveDecay;
         public short[] PersonData = new short[101];
         public short[] MotiveData = new short[16];
-        public short HandObject;
+        public short HandObjectOld;
         public float RadianDirection;
         public int KillTimeout = -1; //version 2
 
@@ -71,7 +71,7 @@ namespace FSO.SimAntics.Marshals
             MotiveData = new short[mdats];
             for (int i = 0; i < mdats; i++) MotiveData[i] = reader.ReadInt16();
 
-            HandObject = reader.ReadInt16();
+            HandObjectOld = reader.ReadInt16();
             RadianDirection = reader.ReadSingle();
 
             if (Version > 1) KillTimeout = reader.ReadInt32();
@@ -118,7 +118,7 @@ namespace FSO.SimAntics.Marshals
             writer.Write(MotiveData.Length);
             writer.Write(VMSerializableUtils.ToByteArray(MotiveData));
             //foreach (var item in MotiveData) { writer.Write(item); }
-            writer.Write(HandObject);
+            writer.Write(HandObjectOld);
             writer.Write(RadianDirection);
 
             writer.Write(KillTimeout);

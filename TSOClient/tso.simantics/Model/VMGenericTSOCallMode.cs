@@ -88,6 +88,8 @@ namespace FSO.SimAntics.Model
         FSOMarkDonated = 131,
         FSOAccurateDirectionInTemp0 = 132,
         FSOCanBreak = 133,
-        FSOBreakObject = 134
+        FSOBreakObject = 134,
+        FSOSetWeatherTemp0 = 135,
+        FSOReturnNeighborhoodID = 136
     }
 }

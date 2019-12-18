@@ -34,6 +34,8 @@ namespace FSO.SimAntics.Primitives
         {
             var operand = (VMInventoryOperationsOperand)args;
 
+            var target = operand.ForStackObject ? context.StackObject : context.Caller;
+
             //first of all... are we in an async wait state?
             if (context.Thread.BlockingState != null && context.Thread.BlockingState is VMInventoryOpState)
             {
@@ -64,7 +66,7 @@ namespace FSO.SimAntics.Primitives
                             context.Thread.TempRegisters[i] = state.TempWrite[i];
                         }
                     }
-                    if (operand.Mode >= VMInventoryOpMode.FSOTokenEnsureGUIDExists && context.Caller.PersistID == context.VM.MyUID)
+                    if (operand.Mode >= VMInventoryOpMode.FSOTokenEnsureGUIDExists && target.PersistID == context.VM.MyUID)
                     {
                         UpdateInventoryToken(context, operand, state);
                     }
@@ -90,7 +92,7 @@ namespace FSO.SimAntics.Primitives
                         // vm initiated inventory transfer. 
                         // TODO: should this force owner? Crafting Bench uses separate command to change owner before doing this.
                         {
-                            var mypid = context.Caller.PersistID;
+                            var mypid = target.PersistID;
                             var opid = context.StackObject.PersistID;
                             var oid = context.StackObject.ObjectID;
                             vm.GlobalLink.MoveToInventory(vm, context.StackObject.MultitileGroup, (bool success, uint pid) =>
@@ -125,14 +127,14 @@ namespace FSO.SimAntics.Primitives
                                 }
                             });
                         }
-                        return VMPrimitiveExitCode.CONTINUE_NEXT_TICK;
+                        break;
                     case VMInventoryOpMode.RemoveTemp0ObjOfTypeFromInventory:
                         //needs a rather complex db operation.
                         //must first select x objects. must then delete them all.
                         //if deleted# != selected#, reverse transaction and declare it failed.
                         //same for selected# being < x.
                         {
-                            vm.GlobalLink.ConsumeInventory(vm, context.Caller.PersistID, operand.GUID, 1, context.Thread.TempRegisters[0],
+                            vm.GlobalLink.ConsumeInventory(vm, target.PersistID, operand.GUID, 1, context.Thread.TempRegisters[0],
                                 (bool success, int count) =>
                                 {
                                     vm.SendCommand(new VMNetAsyncResponseCmd(id, new VMInventoryOpState
@@ -143,13 +145,13 @@ namespace FSO.SimAntics.Primitives
                                     }));
                                 });
                         }
-                        return VMPrimitiveExitCode.CONTINUE_NEXT_TICK;
+                        break;
                     case VMInventoryOpMode.CountObjectsOfType:
                     case VMInventoryOpMode.FSOCountAllObjectsOfType:
                         {
                             //get id and vm now to avoid race conditions
                             var all = operand.Mode == VMInventoryOpMode.FSOCountAllObjectsOfType;
-                            vm.GlobalLink.ConsumeInventory(vm, context.Caller.PersistID, operand.GUID, all ? 2 : 0, 0,
+                            vm.GlobalLink.ConsumeInventory(vm, target.PersistID, operand.GUID, all ? 2 : 0, 0,
                                 (bool success, int count) =>
                             {
                                 vm.SendCommand(new VMNetAsyncResponseCmd(id, new VMInventoryOpState
@@ -162,13 +164,13 @@ namespace FSO.SimAntics.Primitives
                                 }));
                             });
                         }
-                        return VMPrimitiveExitCode.CONTINUE_NEXT_TICK;
+                        break;
                     case VMInventoryOpMode.FSOCreateObjectOfTypeOOW:
                     case VMInventoryOpMode.FSOCopyObjectOfTypeOOW:
                         {
                             var reserve = operand.Mode == VMInventoryOpMode.FSOCreateObjectOfTypeOOW;
                             var index = VMMemory.GetBigVariable(context, operand.FSOScope, operand.FSOData);
-                            vm.GlobalLink.RetrieveFromInventoryByType(vm, context.Caller.PersistID, operand.GUID, index, reserve, (data) =>
+                            vm.GlobalLink.RetrieveFromInventoryByType(vm, target.PersistID, operand.GUID, index, reserve, (data) =>
                             {
                                 vm.SendCommand(new VMNetAsyncResponseCmd(id, new VMInventoryOpState
                                 {
@@ -198,7 +200,7 @@ namespace FSO.SimAntics.Primitives
                                 }
                             });
                         }
-                        return VMPrimitiveExitCode.CONTINUE_NEXT_TICK;
+                        break;
 
                     //token
                     case VMInventoryOpMode.FSOTokenEnsureGUIDExists:
@@ -212,7 +214,7 @@ namespace FSO.SimAntics.Primitives
                         //returns false if it didn't exist before. temp 0 contains -1 if it STILL doesn't exist (creation failed)
                         //this will also force the object to have db_attribute type >0
                         {
-                            var mypid = context.Caller.PersistID;
+                            var mypid = target.PersistID;
                             var data = new List<int>();
                             var temps = context.Thread.TempRegisters;
                             var attrCount = Math.Min(temps[0], temps.Length - 1);
@@ -225,7 +227,7 @@ namespace FSO.SimAntics.Primitives
                                 TokenResponse(vm, operand, id, success, result);
                             });
                         }
-                        return VMPrimitiveExitCode.CONTINUE_NEXT_TICK;
+                        break;
                     case VMInventoryOpMode.FSOTokenGetAttributeTemp0:
                     case VMInventoryOpMode.FSOTokenSetAttributeTemp0: //same as above but sets instead.
                     case VMInventoryOpMode.FSOTokenModifyAttributeTemp0: //same as above but a relative modification. Slightly faster than get -> set
@@ -233,7 +235,7 @@ namespace FSO.SimAntics.Primitives
                         //access token attribute[temp 0] for the zeroth object of this type. Value to read or set is in scope/data.
                         {
                             {
-                                var mypid = context.Caller.PersistID;
+                                var mypid = target.PersistID;
                                 var data = new List<int>();
                                 data.Add(context.Thread.TempRegisters[0]); //index
 
@@ -248,10 +250,30 @@ namespace FSO.SimAntics.Primitives
                                 });
                             }
                         }
-                        return VMPrimitiveExitCode.CONTINUE_NEXT_TICK;
+                        break;
+
+                    case VMInventoryOpMode.FSOGetUserID:
+                        {
+                            {
+                                var mypid = target.PersistID;
+                                vm.GlobalLink.GetAccountIDFromAvatar(mypid, (userID) =>
+                                {
+                                    vm.SendCommand(new VMNetAsyncResponseCmd(id, new VMInventoryOpState
+                                    {
+                                        Responded = true,
+                                        Success = true,
+                                        WriteResult = true,
+                                        WriteScope = operand.FSOScope,
+                                        WriteData = operand.FSOData,
+                                        Temp0Value = (int)userID,
+                                    }));
+                                });
+                            }
+                        }
+                        break;
                 }
             }
-            return VMPrimitiveExitCode.CONTINUE_NEXT_TICK;
+            return (context.Thread.IsCheck) ? VMPrimitiveExitCode.GOTO_TRUE : VMPrimitiveExitCode.CONTINUE_NEXT_TICK;
         }
 
         private void TokenResponse(VM vm, VMInventoryOperationsOperand op, short threadID, bool success, List<int> result)
@@ -316,6 +338,7 @@ namespace FSO.SimAntics.Primitives
         public VMInventoryOpMode Mode { get; set; }
         public VMVariableScope FSOScope { get; set; }
         public short FSOData { get; set; }
+        public bool ForStackObject { get; set; }
 
         #region VMPrimitiveOperand Members
         public void Read(byte[] bytes)
@@ -323,9 +346,11 @@ namespace FSO.SimAntics.Primitives
             using (var io = IoBuffer.FromBytes(bytes, ByteOrder.LITTLE_ENDIAN))
             {
                 GUID = io.ReadUInt32();
-                Mode = (VMInventoryOpMode)io.ReadByte();
+                var modeStack = io.ReadByte();
+                Mode = (VMInventoryOpMode)(modeStack & 0x7F);
                 FSOScope = (VMVariableScope)io.ReadByte();
                 FSOData = io.ReadInt16();
+                ForStackObject = (modeStack & 0x80) > 0;
             }
         }
 
@@ -334,7 +359,7 @@ namespace FSO.SimAntics.Primitives
             using (var io = new BinaryWriter(new MemoryStream(bytes)))
             {
                 io.Write(GUID);
-                io.Write((byte)Mode);
+                io.Write((byte)((byte)Mode | (ForStackObject?0x80:0)));
                 io.Write((byte)FSOScope);
                 io.Write(FSOData);
             }
@@ -366,6 +391,10 @@ namespace FSO.SimAntics.Primitives
         FSOTokenModifyAttributeTemp0 = 36,
         FSOTokenTransactionAttributeTemp0 = 37, //same as above but can fail if value goes below 0
         FSOTokenTotalAttributeTemp0 = 38, //total all instances of an attribute (guid, attribute) and return value (can be int size)
+
+
+
+        FSOGetUserID = 127 // returns user id in specified data area. 32-bit, so ideally should be tempxl.
     }
 
     public class VMInventoryOpState : VMAsyncState

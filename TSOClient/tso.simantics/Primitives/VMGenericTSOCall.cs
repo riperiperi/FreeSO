@@ -4,19 +4,18 @@
  * http://mozilla.org/MPL/2.0/. 
  */
 
-using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using FSO.SimAntics.Engine;
+using FSO.Files.Formats.IFF.Chunks;
 using FSO.Files.Utils;
+using FSO.SimAntics.Engine;
 using FSO.SimAntics.Model;
-using System.IO;
 using FSO.SimAntics.Model.TSOPlatform;
 using FSO.SimAntics.NetPlay.Drivers;
-using Microsoft.Xna.Framework;
 using FSO.SimAntics.NetPlay.Model.Commands;
-using FSO.Files.Formats.IFF.Chunks;
+using Microsoft.Xna.Framework;
+using System;
+using System.Collections.Generic;
+using System.IO;
+using System.Linq;
 
 namespace FSO.SimAntics.Primitives
 {
@@ -400,6 +399,28 @@ namespace FSO.SimAntics.Primitives
                         (fobj.TSOState as VMTSOObjectState)?.Break(fobj);
                     }
                     return VMPrimitiveExitCode.GOTO_TRUE;
+                case VMGenericTSOCallMode.FSOSetWeatherTemp0:
+                    {
+                        // TSO only function that sets the active weather particle effect.
+                        // low byte: intensity in percent (0-255, 100% is "full blast")
+                        // high byte: weather flags. in order of lo to high
+                        // 9: manual. if not set and intensity is 0, weather is in "auto" mode.
+                        // 10/11: (rain, snow, hail?, ...)
+                        // 12: thunder (not impl yet)
+                        var data = context.Thread.TempRegisters[0];
+                        context.VM.SetGlobalValue(18, data);
+
+                        if (VM.UseWorld)
+                        {
+                            context.VM.Context.Blueprint.Weather?.SetWeather(data);
+                        }
+                        return VMPrimitiveExitCode.GOTO_TRUE;
+                    }
+                case VMGenericTSOCallMode.FSOReturnNeighborhoodID:
+                    {
+                        context.Thread.TempRegisters[0] = (short)context.VM.TSOState.NhoodID;
+                        return VMPrimitiveExitCode.GOTO_TRUE;
+                    }
                 default:
                     return VMPrimitiveExitCode.GOTO_TRUE;
             }

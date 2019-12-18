@@ -28,7 +28,7 @@ namespace FSO.SimAntics.Primitives
 
                 var channelID = 0;
 
-                vm.SignalChatEvent(new VMChatEvent(avatar, VMChatEventType.Message, (byte)(channelID & 0x7f), avatar.Name, message));
+                if (!operand.NoHistory) vm.SignalChatEvent(new VMChatEvent(avatar, VMChatEventType.Message, (byte)(channelID & 0x7f), avatar.Name, message));
                 if ((channelID & 0x80) == 0) avatar.Message = message;
             }
 
@@ -36,10 +36,30 @@ namespace FSO.SimAntics.Primitives
         }
     }
 
+    [Flags]
+    public enum VMFSOShowStringFlags : byte
+    {
+        NoHistory = 1
+    }
+
     public class VMShowStringOperand : VMPrimitiveOperand
     {
         public ushort StringTable { get; set; } = 300;
         public ushort StringID { get; set; }
+        public VMFSOShowStringFlags Flags { get; set; }
+
+        public bool NoHistory
+        {
+            get
+            {
+                return (Flags & VMFSOShowStringFlags.NoHistory) == VMFSOShowStringFlags.NoHistory;
+            }
+            set
+            {
+                if (value) Flags |= VMFSOShowStringFlags.NoHistory;
+                else Flags &= ~VMFSOShowStringFlags.NoHistory;
+            }
+        }
 
         #region VMPrimitiveOperand Members
         public void Read(byte[] bytes)
@@ -48,6 +68,7 @@ namespace FSO.SimAntics.Primitives
             {
                 StringTable = io.ReadUInt16();
                 StringID = io.ReadUInt16();
+                Flags = (VMFSOShowStringFlags)io.ReadByte();
             }
         }
 
@@ -57,6 +78,7 @@ namespace FSO.SimAntics.Primitives
             {
                 io.Write(StringTable);
                 io.Write(StringID);
+                io.Write((byte)Flags);
             }
         }
         #endregion

@@ -214,5 +214,12 @@ namespace FSO.Content.TS1
 
         //"fa", "ma", "cat", "dog", etc.
         public Dictionary<string, List<string>> ClothesByAvatarType = new Dictionary<string, List<string>>();
+
+        public List<string> GeneralAvatarType(string general)
+        {
+            var allTypes = ClothesByAvatarType.Where(x => x.Key.StartsWith(general));
+            var result = allTypes.SelectMany(x => x.Value).ToList();
+            return result;
+        }
     }
 }

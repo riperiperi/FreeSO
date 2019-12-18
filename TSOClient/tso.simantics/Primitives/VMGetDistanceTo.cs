@@ -33,7 +33,15 @@ namespace FSO.SimAntics.Primitives
             var result = (short)Math.Floor(Math.Sqrt(Math.Pow(pos1.x - pos2.x, 2) + Math.Pow(pos1.y - pos2.y, 2))/16.0);
             var levelDiff = Math.Abs(pos2.Level - pos1.Level);
 
-            context.Thread.TempRegisters[operand.TempNum] = (short)Math.Max(20 * levelDiff, result + 5 * levelDiff);        
+            if (context.VM.TS1)
+            {
+                context.Thread.TempRegisters[operand.TempNum] = (short)Math.Max(20 * levelDiff, result + 5 * levelDiff);
+            } 
+            else
+            {
+                context.Thread.TempRegisters[operand.TempNum] = (short)(result + 20 * levelDiff); //FreeSO behaviour. consistently allows us to remove the level factor.
+            }
+                 
             return VMPrimitiveExitCode.GOTO_TRUE;
         }
     }
