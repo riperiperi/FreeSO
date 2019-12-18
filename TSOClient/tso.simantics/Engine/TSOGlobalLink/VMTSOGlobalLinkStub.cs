@@ -352,6 +352,7 @@ namespace FSO.SimAntics.Engine.TSOTransaction
         public void TokenRequest(VM vm, uint avatarID, uint guid, VMTokenRequestMode mode, List<int> attributeData, VMAsyncTokenCallback callback)
         {
             if (mode == VMTokenRequestMode.GetAttribute) attributeData[1] = 100;
+            if (mode == VMTokenRequestMode.TotalAttribute) attributeData[1] = (int)(guid % (uint)100);
             callback(true, attributeData);
         }
         

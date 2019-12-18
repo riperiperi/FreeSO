@@ -35,6 +35,7 @@ namespace FSO.SimAntics.Primitives
             var operand = (VMInventoryOperationsOperand)args;
 
             var target = operand.ForStackObject ? context.StackObject : context.Caller;
+            var oldState = context.Thread.BlockingState;
 
             //first of all... are we in an async wait state?
             if (context.Thread.BlockingState != null && context.Thread.BlockingState is VMInventoryOpState)
@@ -252,6 +253,20 @@ namespace FSO.SimAntics.Primitives
                         }
                         break;
 
+                    case VMInventoryOpMode.FSOTokenTotalAttributeTemp0:
+                        //total all instances of an attribute (guid, attribute) and return value (can be int size)
+                        {
+                            var mypid = target.PersistID;
+                            var data = new List<int>();
+                            data.Add(context.Thread.TempRegisters[0]); //index
+                            data.Add(0);
+                            vm.GlobalLink.TokenRequest(vm, mypid, operand.GUID, VMTokenRequestMode.TotalAttribute, data, (success, result) =>
+                            {
+                                TokenResponse(vm, operand, id, success, result);
+                            });
+                        }
+                        break;
+
                     case VMInventoryOpMode.FSOGetUserID:
                         {
                             {
@@ -273,6 +288,7 @@ namespace FSO.SimAntics.Primitives
                         break;
                 }
             }
+            if (context.Thread.IsCheck) context.Thread.BlockingState = oldState;
             return (context.Thread.IsCheck) ? VMPrimitiveExitCode.GOTO_TRUE : VMPrimitiveExitCode.CONTINUE_NEXT_TICK;
         }
 

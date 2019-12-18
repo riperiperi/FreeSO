@@ -319,6 +319,7 @@ namespace FSO.LotView.Components
             effect.Parameters["IndoorsTex"].SetValue(Indoors);
 
             var fade = FadeProgress ?? 0f;
+            if (fade < 0) fade = fade * fade; //give a bias to weather fading in
             effect.Parameters["Color"].SetValue(Tint.ToVector4() * (1 - Math.Abs(fade)));
             effect.Parameters["TimeRate"].SetValue(Math.Max(1,TimeRate)*0.001f/ FSOEnvironment.RefreshRate);
 
