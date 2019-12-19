@@ -1393,8 +1393,8 @@ namespace FSO.Client.Rendering.City
 
             float HB = m_ScrWidth * IsoScale;
             float VB = m_ScrHeight * IsoScale;
-
-            if (Camera is CityCamera3D && m_LotZoomProgress > 0.0001f) return;
+            
+            if ((Camera is CityCamera3D && m_Zoomed == TerrainZoomMode.Lot) || (Camera is CityCamera2D && m_LotZoomProgress == 1f)) return;
 
             Matrix ProjectionMatrix = Camera.Projection;
 
@@ -1879,13 +1879,14 @@ namespace FSO.Client.Rendering.City
             }
 
             int drawCount = 0;
+            int houseRange = (GlobalSettings.Default.SurroundingLotMode == 0) ? 0 : 1;
             if (useLocked)
             {
                 foreach (var house in NearFacades.Entries)
                 {
                     var x = (int)house.Location.X;
                     var y = (int)house.Location.Y;
-                    if (LotPosition.X >= x && LotPosition.X <= x + 2 && LotPosition.Z >= y - 1 && LotPosition.Z <= y + 1) continue;
+                    if (LotPosition.X >= (x - houseRange) + 1 && LotPosition.X <= x + houseRange + 1 && LotPosition.Z >= y - houseRange && LotPosition.Z <= y + houseRange) continue;
 
                     if (house.Bounds.Intersects(frustum))
                     {
