@@ -84,7 +84,7 @@ namespace FSO.LotView.Model
             var ocolor = TintColor ?? Bp.OutsideColor.ToVector4();
             var color = SRGBToLinear(LinearToSRGB(ocolor) - new Vector4(0.35f) * 1.5f + new Vector4(0.35f));
             color.W = 1;
-            var wint = WeatherIntensity;
+            var wint = Math.Min(1f, WeatherIntensity);
             FogColor = (color * new Color(0x80, 0xC0, 0xFF, 0xFF).ToVector4()) * (1 - wint * 0.75f) + LinearToSRGB(ocolor) * (wint * 0.75f);
             FogColor.W = (wint) * (15 * 75f) + (1 - wint) * (300f * 75f);
             var enabled = WorldConfig.Current.Weather;

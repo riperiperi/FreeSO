@@ -44,7 +44,7 @@ namespace FSO.SimAntics.Primitives
                 if (state.Responded)
                 {
                     context.Thread.BlockingState = null;
-                    if (state.ObjectPersistID > 0)
+                    if (state.ObjectPersistID > 0 && (operand.Mode == VMInventoryOpMode.FSOCopyObjectOfTypeOOW || operand.Mode == VMInventoryOpMode.FSOCreateObjectOfTypeOOW))
                     {
                         var persistObj = context.VM.GetObjectByPersist(state.ObjectPersistID);
                         state.Temp0Value = persistObj?.ObjectID ?? 0;
@@ -80,12 +80,14 @@ namespace FSO.SimAntics.Primitives
                 context.Thread.TempRegisters[0] = 255; //TODO: hard object limit imposed by db.
                 return VMPrimitiveExitCode.GOTO_TRUE;
             }
+            var check = context.Thread.IsCheck;
 
             context.Thread.BlockingState = new VMInventoryOpState();
             if (context.VM.GlobalLink != null)
             {
-                var id = context.Caller.ObjectID; //this thread's object id.
+                var id = (check) ? (short)0 : context.Caller.ObjectID; //this thread's object id.
                 var vm = context.VM;
+                var targetPID = target.PersistID;
                 switch (operand.Mode)
                 {
                     case VMInventoryOpMode.FSOSaveStackObj:
@@ -93,7 +95,7 @@ namespace FSO.SimAntics.Primitives
                         // vm initiated inventory transfer. 
                         // TODO: should this force owner? Crafting Bench uses separate command to change owner before doing this.
                         {
-                            var mypid = target.PersistID;
+                            var mypid = targetPID;
                             var opid = context.StackObject.PersistID;
                             var oid = context.StackObject.ObjectID;
                             vm.GlobalLink.MoveToInventory(vm, context.StackObject.MultitileGroup, (bool success, uint pid) =>
@@ -135,7 +137,7 @@ namespace FSO.SimAntics.Primitives
                         //if deleted# != selected#, reverse transaction and declare it failed.
                         //same for selected# being < x.
                         {
-                            vm.GlobalLink.ConsumeInventory(vm, target.PersistID, operand.GUID, 1, context.Thread.TempRegisters[0],
+                            vm.GlobalLink.ConsumeInventory(vm, targetPID, operand.GUID, 1, context.Thread.TempRegisters[0],
                                 (bool success, int count) =>
                                 {
                                     vm.SendCommand(new VMNetAsyncResponseCmd(id, new VMInventoryOpState
@@ -152,7 +154,7 @@ namespace FSO.SimAntics.Primitives
                         {
                             //get id and vm now to avoid race conditions
                             var all = operand.Mode == VMInventoryOpMode.FSOCountAllObjectsOfType;
-                            vm.GlobalLink.ConsumeInventory(vm, target.PersistID, operand.GUID, all ? 2 : 0, 0,
+                            vm.GlobalLink.ConsumeInventory(vm, targetPID, operand.GUID, all ? 2 : 0, 0,
                                 (bool success, int count) =>
                             {
                                 vm.SendCommand(new VMNetAsyncResponseCmd(id, new VMInventoryOpState
@@ -171,7 +173,7 @@ namespace FSO.SimAntics.Primitives
                         {
                             var reserve = operand.Mode == VMInventoryOpMode.FSOCreateObjectOfTypeOOW;
                             var index = VMMemory.GetBigVariable(context, operand.FSOScope, operand.FSOData);
-                            vm.GlobalLink.RetrieveFromInventoryByType(vm, target.PersistID, operand.GUID, index, reserve, (data) =>
+                            vm.GlobalLink.RetrieveFromInventoryByType(vm, targetPID, operand.GUID, index, reserve, (data) =>
                             {
                                 vm.SendCommand(new VMNetAsyncResponseCmd(id, new VMInventoryOpState
                                 {
@@ -215,7 +217,7 @@ namespace FSO.SimAntics.Primitives
                         //returns false if it didn't exist before. temp 0 contains -1 if it STILL doesn't exist (creation failed)
                         //this will also force the object to have db_attribute type >0
                         {
-                            var mypid = target.PersistID;
+                            var mypid = targetPID;
                             var data = new List<int>();
                             var temps = context.Thread.TempRegisters;
                             var attrCount = Math.Min(temps[0], temps.Length - 1);
@@ -225,7 +227,7 @@ namespace FSO.SimAntics.Primitives
                             }
                             vm.GlobalLink.TokenRequest(vm, mypid, operand.GUID, InventoryToRequestMode[operand.Mode], data, (success, result) =>
                             {
-                                TokenResponse(vm, operand, id, success, result);
+                                TokenResponse(vm, operand, id, targetPID, success, result);
                             });
                         }
                         break;
@@ -236,7 +238,7 @@ namespace FSO.SimAntics.Primitives
                         //access token attribute[temp 0] for the zeroth object of this type. Value to read or set is in scope/data.
                         {
                             {
-                                var mypid = target.PersistID;
+                                var mypid = targetPID;
                                 var data = new List<int>();
                                 data.Add(context.Thread.TempRegisters[0]); //index
 
@@ -247,7 +249,7 @@ namespace FSO.SimAntics.Primitives
 
                                 vm.GlobalLink.TokenRequest(vm, mypid, operand.GUID, InventoryToRequestMode[operand.Mode], data, (success, result) =>
                                 {
-                                    TokenResponse(vm, operand, id, success, result);
+                                    TokenResponse(vm, operand, id, targetPID, success, result);
                                 });
                             }
                         }
@@ -256,13 +258,13 @@ namespace FSO.SimAntics.Primitives
                     case VMInventoryOpMode.FSOTokenTotalAttributeTemp0:
                         //total all instances of an attribute (guid, attribute) and return value (can be int size)
                         {
-                            var mypid = target.PersistID;
+                            var mypid = targetPID;
                             var data = new List<int>();
                             data.Add(context.Thread.TempRegisters[0]); //index
                             data.Add(0);
                             vm.GlobalLink.TokenRequest(vm, mypid, operand.GUID, VMTokenRequestMode.TotalAttribute, data, (success, result) =>
                             {
-                                TokenResponse(vm, operand, id, success, result);
+                                TokenResponse(vm, operand, id, targetPID, success, result);
                             });
                         }
                         break;
@@ -270,7 +272,7 @@ namespace FSO.SimAntics.Primitives
                     case VMInventoryOpMode.FSOGetUserID:
                         {
                             {
-                                var mypid = target.PersistID;
+                                var mypid = targetPID;
                                 vm.GlobalLink.GetAccountIDFromAvatar(mypid, (userID) =>
                                 {
                                     vm.SendCommand(new VMNetAsyncResponseCmd(id, new VMInventoryOpState
@@ -292,7 +294,7 @@ namespace FSO.SimAntics.Primitives
             return (context.Thread.IsCheck) ? VMPrimitiveExitCode.GOTO_TRUE : VMPrimitiveExitCode.CONTINUE_NEXT_TICK;
         }
 
-        private void TokenResponse(VM vm, VMInventoryOperationsOperand op, short threadID, bool success, List<int> result)
+        private void TokenResponse(VM vm, VMInventoryOperationsOperand op, short threadID, uint targetPID, bool success, List<int> result)
         {
             if (op.Mode == VMInventoryOpMode.FSOTokenEnsureGUIDExists || op.Mode == VMInventoryOpMode.FSOTokenReplaceGUIDAttributes)
             {
