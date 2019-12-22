@@ -10,6 +10,7 @@ namespace FSO.Server.Protocol.Electron.Model
     {
         IPBAN_USER,
         BAN_USER,
-        KICK_USER
+        KICK_USER,
+        CHANGE_MENTOR_STATUS
     }
 }

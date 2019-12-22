@@ -13,6 +13,8 @@ namespace FSO.Server.Database.DA.Users
         List<User> GetByRegisterIP(string ip);
         void UpdateConnectIP(uint id, string ip);
         void UpdateBanned(uint id, bool banned);
+        void SetMentorStatus(uint id, bool status);
+        bool GetMentorStatus(uint id);
         void UpdateClientID(uint id, string cid);
         User GetByUsername(string username);
         UserAuthenticate GetAuthenticationSettings(uint userId);

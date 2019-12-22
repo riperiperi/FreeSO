@@ -104,6 +104,19 @@ namespace FSO.Client.UI.Panels
                 });
             };
             Add(nhoodBanButton);
+            //*MENTORS
+            var changeMentorStatusButton = new UIButton();
+            changeMentorStatusButton.Caption = "Toggle Mentor Status";
+            changeMentorStatusButton.Position = new Microsoft.Xna.Framework.Vector2(40, 210);
+            changeMentorStatusButton.Width = 300;
+            changeMentorStatusButton.OnButtonClick += x =>
+            {
+                var controller = FindController<FSO.Client.Controllers.CoreGameScreenController>();
+                if (controller != null)
+                    controller.ModRequest(AvatarID, ModerationRequestType.CHANGE_MENTOR_STATUS);
+                UIScreen.RemoveDialog(this);
+            };
+            Add(changeMentorStatusButton);
 
             CloseButton.OnButtonClick += CloseButton_OnButtonClick;
         }

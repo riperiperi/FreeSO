@@ -55,10 +55,12 @@ namespace FSO.Client.Controllers
         public void Show(uint avatarId){
             View.TrySaveDescription();
             AvatarId = avatarId;
+            
             DataService.Get<Avatar>(avatarId).ContinueWith(x =>
             {
                 View.CurrentAvatar.Value = x.Result;
             });
+            DataService.Request(MaskedStruct.MyAvatar, avatarId);
 
             if (View.MyAvatar.Value == null)
             {
