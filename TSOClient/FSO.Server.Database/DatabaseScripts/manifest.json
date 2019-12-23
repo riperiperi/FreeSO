@@ -285,6 +285,14 @@
       "requires": [
         "bec36bbc-1774-44cb-a7c5-03f4a00e801c"
       ]
+    },
+    {	
+      "id": "49204f56-b4fa-4563-83e7-e8dd35e53c31",
+      "script": "changes/0032_fso_mentors.sql",
+      "idempotent": false,
+      "requires": [
+        "bec36bbc-1774-44cb-a7c5-03f4a00e801c"
+      ]
     }
   ]
 }
