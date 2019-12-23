@@ -90,7 +90,7 @@ namespace FSO.Client.UI.Panels
             TTSContext?.Speak(Message.Replace('_', ' '), Gender, ((VMTSOAvatarState)avatar.TSOState).ChatTTSPitch);
 
             if (((VMTSOAvatarState)avatar.TSOState).Permissions == VMTSOAvatarPermissions.Admin)            
-                BgColor = Color.Red; // admin red color            
+                BgColor = new Color(193, 31, 30); // admin red color            
             else
                 BgColor = new Color(8, 8, 128); // default blue color            
             Offscreen = false;
