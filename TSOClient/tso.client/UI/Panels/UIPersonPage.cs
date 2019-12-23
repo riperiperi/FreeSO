@@ -935,16 +935,19 @@ namespace FSO.Client.UI.Panels
                 isMe = FindController<CoreGameScreenController>().IsMe(CurrentAvatar.Value.Avatar_Id);
                 hasProperty = CurrentAvatar.Value.Avatar_LotGridXY != 0;
 
+                if (ProfileBadge.Texture != FounderButtonTexture)
+                    ProfileBadge.Texture.Dispose();
+
                 if (CurrentAvatar.Value.Avatar_IsMentor)
                 {
                     ProfileBadge.Tooltip = "Mentor";
-                    ProfileBadge.Texture = Content.Content.Get().CustomUI.Get("mentor_badge.png").Get(FounderButtonTexture.GraphicsDevice);
+                    ProfileBadge.Texture = Content.Content.Get().CustomUI.Get("mentor_badge.png").Get(GameFacade.GraphicsDevice);
                     ProfileBadge.ScaleX = .23f;
                     ProfileBadge.ScaleY = .23f;
                 }
                 else if (CurrentAvatar.Value.Avatar_ModerationStatus != 0)
                 {
-                    ProfileBadge.Texture = Content.Content.Get().CustomUI.Get("momi_badge.png").Get(FounderButtonTexture.GraphicsDevice);
+                    ProfileBadge.Texture = Content.Content.Get().CustomUI.Get("momi_badge.png").Get(GameFacade.GraphicsDevice);
                     ProfileBadge.ScaleX = .23f;
                     ProfileBadge.ScaleY = .23f;
                     ProfileBadge.Tooltip = "M.O.M.I.";
