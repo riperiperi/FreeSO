@@ -87,7 +87,7 @@ namespace FSO.Client.UI.Panels
             Message = avatar.Message;
             Gender = avatar.GetPersonData(SimAntics.Model.VMPersonDataVariable.Gender) > 0;
             TTSContext?.Speak(Message.Replace('_', ' '), Gender, ((VMTSOAvatarState)avatar.TSOState).ChatTTSPitch);
-
+            
             Offscreen = false;
             if (Message == "") Name = "";
             TextChanged();
@@ -107,7 +107,7 @@ namespace FSO.Client.UI.Panels
             }
             BodyText = ((Offscreen && Message != "") ? "\\[" + Name + "] " : "") + GameFacade.Emojis.EmojiToBB(SanitizeBB(BodyText));
 
-            var textW = Math.Max(130, Message.Length * 2);
+            var textW = Math.Max(130, Message.Length*2);
             BodyTextLabels = TextRenderer.ComputeText(BodyText, new TextRendererOptions
             {
                 BBCode = true,
@@ -155,7 +155,7 @@ namespace FSO.Client.UI.Panels
         public void UpdateDesiredPosition()
         {
             DesiredRectPos = new Point((int)(TargetPt.X - DisplayRect.Width / 2), (int)(TargetPt.Y - (DisplayRect.Height + 20)));
-            var dr = new Rectangle(DesiredRectPos, new Point(DisplayRect.Width, DisplayRect.Height));
+            var dr = new Rectangle(DesiredRectPos, new Point(DisplayRect.Width, DisplayRect.Height)); 
 
             bool changed = false;
             foreach (var area in Owner.GetInvalid(this))
@@ -170,12 +170,11 @@ namespace FSO.Client.UI.Panels
                     if (Math.Abs(xDist) > Math.Abs(yDist))
                     {
                         if (xDist < 0) dr.X = area.Right;
-                        else dr.X = area.Left - dr.Width;
-                    }
-                    else
+                        else dr.X = area.Left-dr.Width;
+                    } else
                     {
                         if (yDist < 0) dr.Y = area.Bottom;
-                        else dr.Y = area.Top - dr.Height;
+                        else dr.Y = area.Top-dr.Height;
                     }
                     changed = true;
                 }
@@ -233,11 +232,11 @@ namespace FSO.Client.UI.Panels
         {
             if (Alpha == 0) return;
             base.Draw(batch);
-            Color bgCol = new Color(8, 8, 128) * Alpha;
-
+            Color bgCol = new Color(8,8,128) * Alpha;
+            
             //draw corners
-            DrawLocalTexture(batch, BTiles, new Rectangle(0, 0, 40, 40), new Vector2(DisplayRect.Left - 20, DisplayRect.Top - 20), Vector2.One, bgCol);
-            DrawLocalTexture(batch, BTiles, new Rectangle(40, 0, 40, 40), new Vector2(DisplayRect.Right + 20, DisplayRect.Top - 20), new Vector2(-1, 1), bgCol);
+            DrawLocalTexture(batch, BTiles, new Rectangle(0, 0, 40, 40), new Vector2(DisplayRect.Left-20, DisplayRect.Top-20), Vector2.One, bgCol);
+            DrawLocalTexture(batch, BTiles, new Rectangle(40, 0, 40, 40), new Vector2(DisplayRect.Right + 20, DisplayRect.Top - 20), new Vector2(-1,1), bgCol);
             DrawLocalTexture(batch, BTiles, new Rectangle(80, 0, 40, 40), new Vector2(DisplayRect.Right + 20, DisplayRect.Bottom + 20), new Vector2(-1, -1), bgCol);
             DrawLocalTexture(batch, BTiles, new Rectangle(120, 0, 40, 40), new Vector2(DisplayRect.Left - 20, DisplayRect.Bottom + 20), new Vector2(1, -1), bgCol);
 
@@ -245,10 +244,10 @@ namespace FSO.Client.UI.Panels
             //if the pointer is on this edge, it needs to be split into 3... Before point, point and after point. 
 
             var vertH = DisplayRect.Height - 40;
-            var vertPt = Math.Max(DisplayRect.Top + 20, Math.Min(DisplayRect.Bottom - 60, TargetPt.Y - 20)) - (DisplayRect.Top + 20);
+            var vertPt = Math.Max(DisplayRect.Top + 20, Math.Min(DisplayRect.Bottom - 60, TargetPt.Y-20)) - (DisplayRect.Top + 20);
 
             var horizW = DisplayRect.Width - 40;
-            var horizPt = Math.Max(DisplayRect.Left + 20, Math.Min(DisplayRect.Right - 60, TargetPt.X - 20)) - (DisplayRect.Left + 20);
+            var horizPt = Math.Max(DisplayRect.Left + 20, Math.Min(DisplayRect.Right - 60, TargetPt.X-20)) - (DisplayRect.Left + 20);
 
             int ptSel = 0;
 
@@ -258,9 +257,9 @@ namespace FSO.Client.UI.Panels
                 ptSel = Math.Max(0, Math.Min(3, (int)Math.Floor((DisplayRect.Left - TargetPt.X) / 40f)));
                 DrawLocalTexture(batch, BTiles, new Rectangle(0, 40, 40, 40), new Vector2(DisplayRect.Left - 20, DisplayRect.Top + 20), new Vector2(1, vertPt / 40f), bgCol);
                 DrawLocalTexture(batch, BPointerSide, new Rectangle(0, ptSel * 40, 200, 40), new Vector2(DisplayRect.Left - 180, DisplayRect.Top + 20 + vertPt), Vector2.One, bgCol);
-                DrawLocalTexture(batch, BTiles, new Rectangle(0, 40, 40, 40), new Vector2(DisplayRect.Left - 20, DisplayRect.Top + 60 + vertPt), new Vector2(1, (vertH - (vertPt + 40)) / 40f), bgCol);
+                DrawLocalTexture(batch, BTiles, new Rectangle(0, 40, 40, 40), new Vector2(DisplayRect.Left - 20, DisplayRect.Top + 60 + vertPt), new Vector2(1, (vertH-(vertPt+40)) / 40f), bgCol);
             }
-            else DrawLocalTexture(batch, BTiles, new Rectangle(0, 40, 40, 40), new Vector2(DisplayRect.Left - 20, DisplayRect.Top + 20), new Vector2(1, (DisplayRect.Height - 40) / 40f), bgCol);
+            else DrawLocalTexture(batch, BTiles, new Rectangle(0, 40, 40, 40), new Vector2(DisplayRect.Left - 20, DisplayRect.Top + 20), new Vector2(1, (DisplayRect.Height-40)/40f), bgCol);
 
             //top
             if (ClosestDir == 1)
@@ -293,10 +292,10 @@ namespace FSO.Client.UI.Panels
             else DrawLocalTexture(batch, BTiles, new Rectangle(0, 120, 40, 40), new Vector2(DisplayRect.Left + 20, DisplayRect.Bottom - 20), new Vector2((DisplayRect.Width - 40) / 40f, 1), bgCol);
 
             //draw middle
-            DrawLocalTexture(batch, BTiles, new Rectangle(40, 120, 1, 1), new Vector2(DisplayRect.Left + 20, DisplayRect.Top + 20), new Vector2(DisplayRect.Width - 40, DisplayRect.Height - 40), bgCol);
+            DrawLocalTexture(batch, BTiles, new Rectangle(40, 120, 1, 1), new Vector2(DisplayRect.Left + 20, DisplayRect.Top + 20), new Vector2(DisplayRect.Width-40, DisplayRect.Height-40), bgCol);
 
-
-            Vector2 offpos = new Vector2(DisplayRect.X + 1, DisplayRect.Y + 1) * Scale;
+            
+            Vector2 offpos = new Vector2(DisplayRect.X + 1, DisplayRect.Y + 1)*Scale;
             int posi = 0;
             foreach (var cmd in BodyTextLabels.DrawingCommands)
             {
@@ -315,8 +314,7 @@ namespace FSO.Client.UI.Panels
             offpos = new Vector2(DisplayRect.X, DisplayRect.Y) * Scale;
             foreach (var cmd in BodyTextLabels.DrawingCommands)
             {
-                if (cmd is INormalTextCmd)
-                {
+                if (cmd is INormalTextCmd) {
                     ((INormalTextCmd)cmd).Style = BodyTextStyle;
                     ((INormalTextCmd)cmd).Position = BTOffsets[posi++] + offpos;
                 }
