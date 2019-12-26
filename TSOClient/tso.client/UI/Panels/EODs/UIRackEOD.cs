@@ -27,6 +27,31 @@ namespace FSO.Client.UI.Panels.EODs
             btnPurchase.OnButtonClick += BtnPurchase_OnButtonClick;
         }
 
+        protected override void InitEOD()
+        {
+            base.InitEOD();
+            BinaryHandlers["rack_buy_error"] = PurchaseErrorHandler;
+        }
+
+        private void PurchaseErrorHandler(string name, byte[] type)
+        {
+            // I already own this outfit
+            if (type[0] == 0)
+            {
+
+            }
+            else if (type[0] == 1)
+            // I already own 5 outfits of this type
+            {
+
+            }
+            // An unknown purchase error occured
+            else
+            {
+
+            }
+        }
+
         private void BtnPurchase_OnButtonClick(Framework.UIElement button)
         {
             var selectedOutfit = GetSelectedOutfit();
