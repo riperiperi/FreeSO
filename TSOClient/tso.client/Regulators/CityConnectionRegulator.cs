@@ -146,6 +146,7 @@ namespace FSO.Client.Regulators
 
             AddState("Reconnecting")
                 .OnData(typeof(HostOnlinePDU)).TransitionTo("Connected")
+                .OnData(typeof(ShardSelectorServletRequest)).TransitionTo("SelectCity")
                 .OnlyTransitionFrom("Reconnect");
 
             GameThread.SetInterval(() =>
@@ -359,6 +360,8 @@ namespace FSO.Client.Regulators
 
                 case "Disconnect":
                     ShardSelectResponse = null;
+                    ReestablishAttempt = 0;
+                    CanReestablish = false;
                     if (Client.IsConnected)
                     {
                         Client.Write(new ClientByePDU());
