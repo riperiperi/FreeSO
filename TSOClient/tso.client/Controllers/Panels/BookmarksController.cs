@@ -95,6 +95,7 @@ namespace FSO.Client.Controllers.Panels
 
         public void Show()
         {
+            RefreshResults();
             View.Parent.Add(View);
             View.Visible = true;
         }
