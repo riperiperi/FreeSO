@@ -663,9 +663,8 @@ namespace FSO.SimAntics
                     case 1:
                         if (targ == null) goto case 4;
                         //keep seeking to target
-                        var diff = targ.Position - Position;
-                        var height = ((targ.WorldUI as ObjectComponent)?.GetParticleBounds().Max.Y ?? 2f) - 0.5f;
-                        var hseekdiff = new Vector3(diff.x / 5.333f, (diff.Level * 2.95f + height) * 3f, diff.y / 5.333f);
+                        var hseekdiff = VM.UseWorld ? (targ.WorldUI.GetLookTarget() - new Vector3(VisualPosition.X, VisualPosition.Z, VisualPosition.Y)) * 3f : Vector3.Zero;
+                        hseekdiff.Y -= 1f;
 
                         Avatar.HeadSeekTarget = Animator.CalculateHeadSeek(Avatar, hseekdiff, RadianDirection);
                         if (Avatar.HeadSeekWeight == 0)
@@ -696,6 +695,7 @@ namespace FSO.SimAntics
                         {
                             Avatar.HeadSeekWeight = 0;
                             PersonData[(int)VMPersonDataVariable.HeadSeekState] = 8;
+                            PersonData[(int)VMPersonDataVariable.HeadSeekFinishAction] = 0; // FreeSO: clear flag saying we're looking at an important talker.
                         }
                         break;
                 }

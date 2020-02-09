@@ -453,6 +453,11 @@ namespace FSO.LotView.Components
             return new Vector3(0, 0, -0.33f);
         }
 
+        public override Vector3 GetLookTarget()
+        {
+            return new Vector3(Position.X, Position.Z + GetParticleBounds().Max.Y - 0.5f, Position.Y);
+        }
+
         public override void Draw(GraphicsDevice device, WorldState world)
         {
             if (!Visible || (!world.DrawOOB && (Position.X < -2043 && Position.Y < -2043))) return;

@@ -522,7 +522,6 @@ namespace FSO.IDE.Utils
             var result = new ParsedTimeProp();
             result.AnimName = split[0];
             if (!int.TryParse(split[1], out result.ID)) return null;
-            result.ID = result.ID;
 
             var keySplit = split[2].Split('=');
             if (keySplit.Length == 1)

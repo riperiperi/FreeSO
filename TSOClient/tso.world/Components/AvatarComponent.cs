@@ -159,6 +159,12 @@ namespace FSO.LotView.Components
             return Vector3.Transform(new Vector3(headpos.X, headpos.Z, headpos.Y), Matrix.CreateRotationZ((float)(RadianDirection + Math.PI)));
         }
 
+        public override Vector3 GetLookTarget()
+        {
+            var headpos = GetHeadlinePos();
+            return new Vector3(Position.X + headpos.X, Position.Z + headpos.Z, Position.Y + headpos.Y);
+        }
+
         private Vector4 PowColorVec(Vector4 vec, float pow)
         {
             vec.X = (float)Math.Pow(vec.X, pow);
