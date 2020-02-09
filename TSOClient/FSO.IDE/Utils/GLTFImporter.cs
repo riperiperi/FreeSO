@@ -400,7 +400,7 @@ namespace FSO.IDE.Utils
                         if (sceneExtras != null) //node.Extras != null)
                         {
                             //timeprops for this node
-                            var timeprops = GetTimeProps(sceneExtras, vitaAnim.Name);
+                            var timeprops = GetTimeProps(sceneExtras, vitaAnim.Name).OrderBy(x => x.ID);
                             var list = new Vitaboy.TimePropertyList();
 
                             var propDict = new Dictionary<int, Vitaboy.TimePropertyListItem>();
@@ -522,6 +522,7 @@ namespace FSO.IDE.Utils
             var result = new ParsedTimeProp();
             result.AnimName = split[0];
             if (!int.TryParse(split[1], out result.ID)) return null;
+            result.ID = result.ID;
 
             var keySplit = split[2].Split('=');
             if (keySplit.Length == 1)

@@ -531,7 +531,7 @@ namespace FSO.SimAntics
             if (Thread != null)
             {
                 MotiveDecay.Tick(this, Thread.Context);
-                if (Position == LotTilePos.OUT_OF_WORLD && (PersistID > 0 || IsPet) && !Content.Content.Get().TS1)
+                if (Position == LotTilePos.OUT_OF_WORLD && (PersistID > 0 || IsPet) && Container == null && !Content.Content.Get().TS1)
                 {
                     //uh oh!
                     var mailbox = Thread.Context.VM.Entities.FirstOrDefault(x => (x.Object.OBJ.GUID == 0xEF121974 || x.Object.OBJ.GUID == 0x1D95C9B0));
