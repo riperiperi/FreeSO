@@ -663,18 +663,23 @@ namespace FSO.SimAntics
                     case 1:
                         if (targ == null) goto case 4;
                         //keep seeking to target
-                        var hseekdiff = VM.UseWorld ? (targ.WorldUI.GetLookTarget() - new Vector3(VisualPosition.X, VisualPosition.Z, VisualPosition.Y)) * 3f : Vector3.Zero;
-                        hseekdiff.Y -= 1f;
+                        if (UseWorld)
+                        {
+                            var hseekdiff = (targ.WorldUI.GetLookTarget() - new Vector3(VisualPosition.X, VisualPosition.Z, VisualPosition.Y)) * 3f;
+                            hseekdiff.Y -= 1f;
 
-                        Avatar.HeadSeekTarget = Animator.CalculateHeadSeek(Avatar, hseekdiff, RadianDirection);
-                        if (Avatar.HeadSeekWeight == 0)
-                        {
-                            Avatar.HeadSeek = Avatar.HeadSeekTarget;
-                        } else
-                        {
-                            Avatar.SlideHeadToTarget(1 - Avatar.LastSeekFraction);
-                            Avatar.LastSeekFraction = 0;
+                            Avatar.HeadSeekTarget = Animator.CalculateHeadSeek(Avatar, hseekdiff, RadianDirection);
+                            if (Avatar.HeadSeekWeight == 0)
+                            {
+                                Avatar.HeadSeek = Avatar.HeadSeekTarget;
+                            }
+                            else
+                            {
+                                Avatar.SlideHeadToTarget(1 - Avatar.LastSeekFraction);
+                                Avatar.LastSeekFraction = 0;
+                            }
                         }
+
                         Avatar.HeadSeekWeight = Math.Min(SimAvatar.HEAD_SEEK_LENGTH, Avatar.HeadSeekWeight + 1);
 
                         if (PersonData[(int)VMPersonDataVariable.HeadSeekTimeout] > 0)
