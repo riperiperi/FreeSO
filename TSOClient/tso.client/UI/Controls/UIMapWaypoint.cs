@@ -167,9 +167,9 @@ namespace FSO.Client.UI.Controls
             {
                 if (other.Style == UIMapWaypointStyle.YouAreHere)
                 {                    
-                    Position = new Vector2(other.Position.X - 10 - SizeW, Position.Y); // try left
+                    Position = new Vector2(other.Position.X - 10 - SizeW, animNewLoc.Y); // try left
                     if (Position.X < 10)
-                        animNewLoc = new Vector2(other.Position.X + 10 + SizeW, Position.Y); // fallback on right
+                        Position = new Vector2(other.Position.X + 10 + SizeW, animNewLoc.Y); // fallback on right
                     completion = 1; // make sure the waypoint cannot animate back to its desired position!
                 }
             }
@@ -178,7 +178,7 @@ namespace FSO.Client.UI.Controls
         private void ensureOnScreen()
         {
             var gamescreen = ((CoreGameScreen)GameFacade.Screens.CurrentUIScreen);
-            if (animNewLoc.X + SizeW < 0) {
+            if (animNewLoc.X < 0) {
                 animNewLoc.X = 10;
                 completion = 0;
             }
@@ -187,7 +187,7 @@ namespace FSO.Client.UI.Controls
                 animNewLoc.X = gamescreen.GetBounds().Width - SizeW - 10;
                 completion = 0;
             }
-            if (animNewLoc.Y + SizeH < 0)
+            if (animNewLoc.Y < 0)
             { 
                 animNewLoc.Y = 10;
                 completion = 0;
@@ -271,8 +271,8 @@ namespace FSO.Client.UI.Controls
             if (attemptRedraw) // forces the position to updated
                 reposition();
             var desired = getDesiredLocation(); // refreshes the desired position of the marker
-            if (desired != Position)
-            { // using position makes the animation slow down as it nears the final value
+            if (desired != animNewLoc)
+            { 
                 animOldLoc = Position;
                 animNewLoc = desired;
                 completion = 0;
@@ -281,8 +281,8 @@ namespace FSO.Client.UI.Controls
             Avoid();
             if (completion < 1) // animate if needed
             {                
-                completion += .05f; // arbitrary speed, ideally using elapsed time since last frame but these markers are insignificant
-                Position = Vector2.Lerp(animOldLoc, animNewLoc, completion);
+                completion = 1f;
+                Position = animNewLoc; //interpolation: Vector2.Lerp(animOldLoc, animNewLoc, completion);
             }
             if (Is3D)
                 update3DZindex();
