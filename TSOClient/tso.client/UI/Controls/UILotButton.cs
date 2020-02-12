@@ -273,6 +273,8 @@ namespace FSO.Client.UI.Controls
                 var Size = new Vector2(80, 50);
                 Vector2 startVec = new Vector2(40, 25) + Position, end = UITerrainHighlight.GetEndpointFromLotId(terrain, startVec, (int)LotId);
                 Vector2 start = end;
+
+                // position line around border
                 float threshold = 5f;
                 if (start.X > Position.X + Size.X)
                     start.X = Position.X + Size.X - threshold;
@@ -286,6 +288,7 @@ namespace FSO.Client.UI.Controls
                     start.X = Size.X / 2 + Position.X;
                 if (Math.Abs(start.Y - end.Y) < 30)
                     start.Y = Size.Y / 2 + Position.Y;
+
                 UITerrainHighlight.DrawArrow(batch, terrain,
                     start * FSOEnvironment.DPIScaleFactor, (int)LotId, Target.Value.Lot_IsOnline ? default : new Color(80,80,80));
                 DrawLocalTexture(batch, (m_isOver && !m_isDown) ? HoverImg : BgImg, new Vector2());

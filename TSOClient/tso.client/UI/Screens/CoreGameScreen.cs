@@ -381,8 +381,8 @@ namespace FSO.Client.UI.Screens
             YouAreHere = new UIMapWaypoint(UIMapWaypoint.UIMapWaypointStyle.YouAreHere);
             YourHouseHere = new UIMapWaypoint(UIMapWaypoint.UIMapWaypointStyle.YourHouseHere);
             
-            AddAt(4, YouAreHere);
-            AddAt(4, YourHouseHere);
+            AddAt(2, YouAreHere);
+            AddAt(2, YourHouseHere);
         }
 
         private void InitializeMouse(){
