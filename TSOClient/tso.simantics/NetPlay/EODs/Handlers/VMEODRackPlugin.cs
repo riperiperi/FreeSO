@@ -49,6 +49,15 @@ namespace FSO.SimAntics.NetPlay.EODs.Handlers
                 {
                     if(avatarOutfits.FirstOrDefault(x => x.asset_id == outfit.asset_id) != null){
                         //I already have this outfit
+                        client.Send("rack_buy_error", new byte[] { 0 });
+                        return;
+                    }
+
+                    var outfitsInCategory = avatarOutfits.Where(x => x.outfit_type == (byte)outfit.outfit_type).ToList();
+                    if (outfitsInCategory.Count >= 5)
+                    {
+                        // I already own 5 outfits of this type
+                        client.Send("rack_buy_error", new byte[] { 1 });
                         return;
                     }
 
@@ -73,6 +82,11 @@ namespace FSO.SimAntics.NetPlay.EODs.Handlers
 
                                     BroadcastOutfits(VM, true);
                                 });
+                        }
+                        else
+                        {
+                            // purchase failed, did I not have enough money?
+                            client.Send("rack_buy_error", new byte[] { 2 });
                         }
                     });
 

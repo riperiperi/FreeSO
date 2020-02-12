@@ -531,7 +531,7 @@ namespace FSO.SimAntics
             if (Thread != null)
             {
                 MotiveDecay.Tick(this, Thread.Context);
-                if (Position == LotTilePos.OUT_OF_WORLD && (PersistID > 0 || IsPet) && !Content.Content.Get().TS1)
+                if (Position == LotTilePos.OUT_OF_WORLD && (PersistID > 0 || IsPet) && Container == null && !Content.Content.Get().TS1)
                 {
                     //uh oh!
                     var mailbox = Thread.Context.VM.Entities.FirstOrDefault(x => (x.Object.OBJ.GUID == 0xEF121974 || x.Object.OBJ.GUID == 0x1D95C9B0));
@@ -663,19 +663,23 @@ namespace FSO.SimAntics
                     case 1:
                         if (targ == null) goto case 4;
                         //keep seeking to target
-                        var diff = targ.Position - Position;
-                        var height = ((targ.WorldUI as ObjectComponent)?.GetParticleBounds().Max.Y ?? 2f) - 0.5f;
-                        var hseekdiff = new Vector3(diff.x / 5.333f, (diff.Level * 2.95f + height) * 3f, diff.y / 5.333f);
+                        if (UseWorld)
+                        {
+                            var hseekdiff = (targ.WorldUI.GetLookTarget() - new Vector3(VisualPosition.X, VisualPosition.Z, VisualPosition.Y)) * 3f;
+                            hseekdiff.Y -= 1f;
 
-                        Avatar.HeadSeekTarget = Animator.CalculateHeadSeek(Avatar, hseekdiff, RadianDirection);
-                        if (Avatar.HeadSeekWeight == 0)
-                        {
-                            Avatar.HeadSeek = Avatar.HeadSeekTarget;
-                        } else
-                        {
-                            Avatar.SlideHeadToTarget(1 - Avatar.LastSeekFraction);
-                            Avatar.LastSeekFraction = 0;
+                            Avatar.HeadSeekTarget = Animator.CalculateHeadSeek(Avatar, hseekdiff, RadianDirection);
+                            if (Avatar.HeadSeekWeight == 0)
+                            {
+                                Avatar.HeadSeek = Avatar.HeadSeekTarget;
+                            }
+                            else
+                            {
+                                Avatar.SlideHeadToTarget(1 - Avatar.LastSeekFraction);
+                                Avatar.LastSeekFraction = 0;
+                            }
                         }
+
                         Avatar.HeadSeekWeight = Math.Min(SimAvatar.HEAD_SEEK_LENGTH, Avatar.HeadSeekWeight + 1);
 
                         if (PersonData[(int)VMPersonDataVariable.HeadSeekTimeout] > 0)
@@ -696,6 +700,7 @@ namespace FSO.SimAntics
                         {
                             Avatar.HeadSeekWeight = 0;
                             PersonData[(int)VMPersonDataVariable.HeadSeekState] = 8;
+                            PersonData[(int)VMPersonDataVariable.HeadSeekFinishAction] = 0; // FreeSO: clear flag saying we're looking at an important talker.
                         }
                         break;
                 }

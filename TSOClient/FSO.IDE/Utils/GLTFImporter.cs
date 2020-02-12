@@ -400,7 +400,7 @@ namespace FSO.IDE.Utils
                         if (sceneExtras != null) //node.Extras != null)
                         {
                             //timeprops for this node
-                            var timeprops = GetTimeProps(sceneExtras, vitaAnim.Name);
+                            var timeprops = GetTimeProps(sceneExtras, vitaAnim.Name).OrderBy(x => x.ID);
                             var list = new Vitaboy.TimePropertyList();
 
                             var propDict = new Dictionary<int, Vitaboy.TimePropertyListItem>();
