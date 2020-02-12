@@ -65,14 +65,13 @@ namespace FSO.Client.UI.Controls
                 DataService.Get<Lot>(_LotId).ContinueWith(x =>
                 {
                     if (x.Result == null) { return; }
-                    Target.Value = x.Result;
+                    myLot.Value = x.Result;
                 });
                 DataService.Request(Server.DataService.Model.MaskedStruct.PropertyPage_LotInfo, _LotId);
                 reposition();
             }
         }
-        
-        public Binding<Lot> Target { get; internal set; }
+
         private Texture2D BgImg { get; set; }
         public UIMapWaypointStyle Style;
 
@@ -106,7 +105,6 @@ namespace FSO.Client.UI.Controls
                     });
                     break;
             }
-            Target = new Binding<Lot>();
             ClickHandler =
                 ListenForMouse(new Rectangle(0, 0, SizeW, SizeH), new UIMouseEvent(OnMouseEvent));
         }
