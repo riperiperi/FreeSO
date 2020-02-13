@@ -41,13 +41,7 @@ namespace FSO.Client.UI.Controls
         private Binding<Lot> MyLot;
 
         public float ZOrder;
-        protected bool Is3D
-        {
-            get
-            {
-                return FSOEnvironment.Enable3D;
-            }
-        }
+        protected bool Is3D => FSOEnvironment.Enable3D;
 
         public bool ForceHide { get; set; }
 
