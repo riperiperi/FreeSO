@@ -160,6 +160,7 @@
     <Compile Include="Rendering\City\Plugins\MapPainterPlugin.cs" />
     <Compile Include="Rendering\City\Plugins\NeighbourhoodEditPlugin.cs" />
     <Compile Include="Rendering\City\TLayerVertex.cs" />
+    <Compile Include="UI\Controls\UIMapWaypoint.cs" />
     <Compile Include="UI\Panels\EODs\UICooldownEventEOD.cs" />
     <Compile Include="UI\Panels\UIAbstractCatalogMode.cs" />
     <Compile Include="UI\Panels\Upgrades\UIUpgradeItem.cs" />

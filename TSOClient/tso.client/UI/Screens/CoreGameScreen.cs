@@ -57,6 +57,7 @@ namespace FSO.Client.UI.Screens
         public UINeighPage NeighPage;
         public UIBookmarks Bookmarks;
         public UIRelationshipDialog Relationships;
+        public UIMapWaypoint YouAreHere, YourHouseHere;
 
         private Queue<SimConnectStateChange> StateChanges;
 
@@ -376,6 +377,12 @@ namespace FSO.Client.UI.Screens
             CityTooltipHitArea.OnMouseExt = new UIMouseEvent(MouseHandler);
             CityTooltipHitArea.SetSize(ScreenWidth, ScreenHeight);
             AddAt(0, CityTooltipHitArea);
+
+            YouAreHere = new UIMapWaypoint(UIMapWaypoint.UIMapWaypointStyle.YouAreHere);
+            YourHouseHere = new UIMapWaypoint(UIMapWaypoint.UIMapWaypointStyle.YourHouseHere);
+            
+            AddAt(2, YouAreHere);
+            AddAt(2, YourHouseHere);
         }
 
         private void InitializeMouse(){
@@ -454,7 +461,7 @@ namespace FSO.Client.UI.Screens
                 }
 
                 if (InLot) //if we're in a lot, use the VM's more accurate time!
-                    CityRenderer.SetTimeOfDay((vm.Context.Clock.Hours / 24.0) + (vm.Context.Clock.Minutes / 1440.0) + (vm.Context.Clock.Seconds / 86400.0));
+                    CityRenderer.SetTimeOfDay((vm.Context.Clock.Hours / 24.0) + (vm.Context.Clock.Minutes / 1440.0) + (vm.Context.Clock.Seconds / 86400.0));                
                 else
                 {
                     var time = DateTime.UtcNow;
