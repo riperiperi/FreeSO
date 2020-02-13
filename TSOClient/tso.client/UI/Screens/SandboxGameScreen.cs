@@ -203,6 +203,7 @@ namespace FSO.Client.UI.Screens
         public void Initialize(string propertyName, bool external)
         {
             DynamicTuning.Global = new DynamicTuning(new DynTuningEntry[] {
+                /* snow
                 new DynTuningEntry()
                 {
                    tuning_type = "city",
@@ -210,6 +211,7 @@ namespace FSO.Client.UI.Screens
                    tuning_table = 0,
                    value = -1
                 }
+                */
             });
             Title.SetTitle(propertyName);
             GameFacade.CurrentCityName = propertyName;

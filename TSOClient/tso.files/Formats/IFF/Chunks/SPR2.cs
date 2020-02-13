@@ -272,7 +272,7 @@ namespace FSO.Files.Formats.IFF.Chunks
 
         public void DecodeIfRequired(bool z)
         {
-            if (ToDecode != null && ((this.Flags & 0x02) == 0x02 && z && ZBufferData == null) || (!z && PixelData == null))
+            if (ToDecode != null && (((this.Flags & 0x02) == 0x02 && z && ZBufferData == null) || (!z && PixelData == null)))
             {
                 using (IoBuffer buf = IoBuffer.FromStream(new MemoryStream(ToDecode), ByteOrder.LITTLE_ENDIAN))
                 {

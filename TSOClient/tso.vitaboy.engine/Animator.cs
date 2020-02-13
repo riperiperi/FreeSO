@@ -161,13 +161,10 @@ namespace FSO.Vitaboy
             var dirh = (float)Math.Atan2(-diff.Y, diff.Z);
             var dist = Math.Sqrt(diff.Z * diff.Z + diff.Y * diff.Y);
             var dirv = (float)Math.Atan(diff.X / dist);
-            //diff.Y = 0;
 
-            var rand = new Random();
             dirv = Math.Min((float)Math.PI / 4, Math.Max((float)Math.PI / -4, dirv));
             var hlimit = (float)Math.PI * (65f / 180f);
             dirh = Math.Min(hlimit, Math.Max(-hlimit, dirh));
-
 
             var mat = Matrix.CreateRotationY(dirv) * Matrix.CreateRotationX(dirh);
             var quat = Quaternion.CreateFromRotationMatrix(mat);

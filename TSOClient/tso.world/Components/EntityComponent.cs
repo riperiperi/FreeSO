@@ -175,6 +175,7 @@ namespace FSO.LotView.Components
 
         public abstract void Preload(GraphicsDevice device, WorldState world);
         public abstract Vector3 GetHeadlinePos();
+        public abstract Vector3 GetLookTarget();
 
         public virtual float GetHeadlineScale()
         {

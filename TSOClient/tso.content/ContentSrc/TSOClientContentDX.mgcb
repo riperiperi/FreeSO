@@ -128,12 +128,3 @@
 /processor:EffectProcessor
 /processorParam:DebugMode=Auto
 /build:Effects/GrassShader.fx
-
-#begin Fonts/Fallbacks/thai.ini
-/importer:FieldFontImporter
-/processor:FieldFontProcessor
-/processorParam:ExternalPath=msdfgen.exe
-/processorParam:Resolution=32
-/processorParam:Range=4
-/build:Fonts/Fallbacks/thai.ini
-

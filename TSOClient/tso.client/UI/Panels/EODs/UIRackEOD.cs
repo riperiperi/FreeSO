@@ -27,6 +27,44 @@ namespace FSO.Client.UI.Panels.EODs
             btnPurchase.OnButtonClick += BtnPurchase_OnButtonClick;
         }
 
+        protected override void InitEOD()
+        {
+            base.InitEOD();
+            BinaryHandlers["rack_buy_error"] = PurchaseErrorHandler;
+        }
+
+        private void PurchaseErrorHandler(string name, byte[] type)
+        {
+            string title = GameFacade.Strings.GetString("264", "5"); // "Purchase Item"
+            String message = "";
+            // I already own this outfit - should do a custom error message but that means a new .cst entry...
+            if (type[0] == 0)
+            {
+                message = GameFacade.Strings.GetString("264", "10"); // "You have no more room in your Backpack"
+            }
+            else if (type[0] == 1)
+            // I already own 5 outfits of this type
+            {
+                message = GameFacade.Strings.GetString("264", "10"); // "You have no more room in your Backpack"
+            }
+            // An unknown purchase error occured, probably not enough money suddenly
+            else
+            {
+                message = GameFacade.Strings.GetString("264", "9"); // "You can't afford that Item."
+            }
+            UIAlert alert = null;
+            alert = UIScreen.GlobalShowAlert(new UIAlertOptions()
+            {
+                Title = title,
+                Message = message,
+                Buttons = UIAlertButton.Ok((btn) =>
+                {
+                    UIScreen.RemoveDialog(alert);
+                }),
+                Alignment = TextAlignment.Center
+            }, true);
+        }
+
         private void BtnPurchase_OnButtonClick(Framework.UIElement button)
         {
             var selectedOutfit = GetSelectedOutfit();
