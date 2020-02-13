@@ -43,15 +43,7 @@ namespace FSO.Client.UI.Panels
             if (!terrain.Visible) return;
             if (tint == default) // use default baby blue color
                 tint = new Color(200, 225, 255);
-            var x = location >> 16;
-            var y = location & 0xFFFF;
-
-            if (x > 511 || y > 511) return;
-
-            var f1 = terrain.Get2DFromTile(x, y);
-            var f2 = terrain.Get2DFromTile(x+1, y+1);
-            if (f1.X == float.MaxValue || f2.X == float.MaxValue) return;
-            var to = (terrain.Get2DFromTile(x, y) + terrain.Get2DFromTile(x+1, y+1)) / 2;
+            var to = GetEndpointFromLotId(terrain, from, location);
 
             var vector = to - from;
             var norm = vector;

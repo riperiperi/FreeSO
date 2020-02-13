@@ -460,7 +460,7 @@ namespace FSO.Client.UI.Screens
                     }
                 }
 
-                if (InLot) //if we're in a lot, use the VM's more accurate time!                
+                if (InLot) //if we're in a lot, use the VM's more accurate time!
                     CityRenderer.SetTimeOfDay((vm.Context.Clock.Hours / 24.0) + (vm.Context.Clock.Minutes / 1440.0) + (vm.Context.Clock.Seconds / 86400.0));                
                 else
                 {

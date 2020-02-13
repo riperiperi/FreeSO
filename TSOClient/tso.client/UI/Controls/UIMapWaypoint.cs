@@ -32,14 +32,13 @@ namespace FSO.Client.UI.Controls
             YourHouseHere
         }
 
-        private bool attemptRedraw = false;
-        private int oldZoomLevel = 5;
+        private bool AttemptRedraw = false;
 
-        private float completion = 0;
-        private Vector2 animOldLoc, animNewLoc;
+        private float Completion = 0;
+        private Vector2 AnimOldLoc, AnimNewLoc;
 
-        private Binding<Avatar> myAvatar;
-        private Binding<Lot> myLot;
+        private Binding<Avatar> MyAvatar;
+        private Binding<Lot> MyLot;
 
         public float ZOrder;
         protected bool Is3D
@@ -50,10 +49,7 @@ namespace FSO.Client.UI.Controls
             }
         }
 
-        public bool ForceHide
-        {
-            get;set;
-        }
+        public bool ForceHide { get; set; }
 
         private uint _LotId;
         public uint LotId
@@ -65,12 +61,14 @@ namespace FSO.Client.UI.Controls
                 DataService.Get<Lot>(_LotId).ContinueWith(x =>
                 {
                     if (x.Result == null) { return; }
-                    myLot.Value = x.Result;
+                    MyLot.Value = x.Result;
                 });
                 DataService.Request(Server.DataService.Model.MaskedStruct.PropertyPage_LotInfo, _LotId);
-                reposition();
+                Reposition();
             }
         }
+        private bool m_isOver;
+        private bool m_isDown;
 
         private Texture2D BgImg { get; set; }
         public UIMapWaypointStyle Style;
@@ -82,9 +80,9 @@ namespace FSO.Client.UI.Controls
         {
             DataService = FSOFacade.Kernel.Get<IClientDataService>();
             Style = style;
-            var Network = FSOFacade.Kernel.Get<Network.Network>();
-            myAvatar = new Binding<Avatar>();
-            myLot = new Binding<Lot>();
+            var network = FSOFacade.Kernel.Get<Network.Network>();
+            MyAvatar = new Binding<Avatar>();
+            MyLot = new Binding<Lot>();
             switch (style)
             {
                 case UIMapWaypointStyle.YouAreHere: // pinkish backgound
@@ -92,14 +90,14 @@ namespace FSO.Client.UI.Controls
                     break;
                 case UIMapWaypointStyle.YourHouseHere:
                     BgImg = GetTexture((ulong)UIFileIDs.yourhousehereback);
-                    DataService.Get<Avatar>(Network.MyCharacter).ContinueWith(x =>
+                    DataService.Get<Avatar>(network.MyCharacter).ContinueWith(x =>
                     {
-                        myAvatar.Value = x.Result;
-                        if (x.Result != null && x.Result.Avatar_LotGridXY != 0 && (myLot.Value == null || myLot.Value.Lot_Location_Packed != x.Result.Avatar_LotGridXY))
+                        MyAvatar.Value = x.Result;
+                        if (x.Result != null && x.Result.Avatar_LotGridXY != 0 && (MyLot.Value == null || MyLot.Value.Lot_Location_Packed != x.Result.Avatar_LotGridXY))
                         {
                             DataService.Request(MaskedStruct.AdmitInfo_Lot, x.Result.Avatar_LotGridXY).ContinueWith(y =>
                             {
-                                myLot.Value = (Lot)y.Result;
+                                MyLot.Value = (Lot)y.Result;
                             });
                         }
                     });
@@ -107,10 +105,7 @@ namespace FSO.Client.UI.Controls
             }
             ClickHandler =
                 ListenForMouse(new Rectangle(0, 0, SizeW, SizeH), new UIMouseEvent(OnMouseEvent));
-        }
-
-        private bool m_isOver;
-        private bool m_isDown;
+        }        
 
         public void Dispose()
         {
@@ -158,7 +153,7 @@ namespace FSO.Client.UI.Controls
             }
             if (other == null || other.Visible == false)
                 return;
-            var dirVector = animNewLoc - animOldLoc; 
+            var dirVector = AnimNewLoc - AnimOldLoc; 
             if (dirVector.X < 30)
                 dirVector.X = 30; // guaranteed 15px border to check if other map waypoints are around
             if (dirVector.Y < 30)
@@ -167,59 +162,59 @@ namespace FSO.Client.UI.Controls
             {
                 if (other.Style == UIMapWaypointStyle.YouAreHere)
                 {                    
-                    Position = new Vector2(other.Position.X - 10 - SizeW, animNewLoc.Y); // try left
+                    Position = new Vector2(other.Position.X - 10 - SizeW, AnimNewLoc.Y); // try left
                     if (Position.X < 10)
-                        Position = new Vector2(other.Position.X + 10 + SizeW, animNewLoc.Y); // fallback on right
-                    completion = 1; // make sure the waypoint cannot animate back to its desired position!
+                        Position = new Vector2(other.Position.X + 10 + SizeW, AnimNewLoc.Y); // fallback on right
+                    Completion = 1; // make sure the waypoint cannot animate back to its desired position!
                 }
             }
         }
 
-        private void ensureOnScreen()
+        private void EnsureOnScreen()
         {
             var gamescreen = ((CoreGameScreen)GameFacade.Screens.CurrentUIScreen);
-            if (animNewLoc.X < 0) {
-                animNewLoc.X = 10;
-                completion = 0;
+            if (AnimNewLoc.X < 0) {
+                AnimNewLoc.X = 10;
+                Completion = 0;
             }
-            if (animNewLoc.X + SizeW > gamescreen.GetBounds().Width)
+            if (AnimNewLoc.X + SizeW > gamescreen.ScreenWidth)
             {
-                animNewLoc.X = gamescreen.GetBounds().Width - SizeW - 10;
-                completion = 0;
+                AnimNewLoc.X = gamescreen.ScreenWidth - SizeW - 10;
+                Completion = 0;
             }
-            if (animNewLoc.Y < 0)
+            if (AnimNewLoc.Y < 0)
             { 
-                animNewLoc.Y = 10;
-                completion = 0;
+                AnimNewLoc.Y = 10;
+                Completion = 0;
             }
-            if (animNewLoc.Y + SizeH > gamescreen.GetBounds().Height)
+            if (AnimNewLoc.Y + SizeH > gamescreen.ScreenHeight)
             {
-                animNewLoc.Y = gamescreen.GetBounds().Height - SizeH - 10;
-                completion = 0;
-            }
+                AnimNewLoc.Y = gamescreen.ScreenHeight - SizeH - 10;
+                Completion = 0;
+            } 
         }
 
-        private Vector2 getDesiredLocation()
+        private Vector2 GetDesiredLocation()
         {
             var xp = (int)_LotId >> 16;
             var yp = (int)_LotId & 0xFFFF;
 
             var terrain = ((CoreGameScreen)GameFacade.Screens.CurrentUIScreen).CityRenderer;
-            return ((terrain.GetFar2DFromTile(xp, yp) + terrain.GetFar2DFromTile(xp + 1, yp + 1)) / 2) - new Vector2(SizeW / 2,150 + SizeH);
+            return (((terrain.GetFar2DFromTile(xp, yp) + terrain.GetFar2DFromTile(xp + 1, yp + 1)) / 2) - new Vector2(SizeW / 2,150 + SizeH)) / FSOEnvironment.DPIScaleFactor;
         }
 
-        private void reposition()
+        private void Reposition()
         {
             if (!Is3D)
             {
-                var pos = getDesiredLocation();
+                var pos = GetDesiredLocation();
                 if (double.IsNaN(pos.X) || double.IsNaN(pos.Y))
                 {
-                    attemptRedraw = true;
+                    AttemptRedraw = true;
                     return;
                 }
-                attemptRedraw = false;
-                Position = pos - new Vector2(SizeW/2, 150 - SizeH); // this is on purpose: makes the marker sprout up to alert the user
+                AttemptRedraw = false;
+                Position = pos - new Vector2(SizeW/2, 150 - SizeH) * FSOEnvironment.DPIScaleFactor;
             }
         }       
 
@@ -233,7 +228,7 @@ namespace FSO.Client.UI.Controls
             return new Rectangle((int)Position.X,(int)Position.Y, SizeW, SizeH);
         }  
 
-        public void update3DZindex()
+        public void UpdateZindex()
         {
             var xp = (int)_LotId >> 16;
             var yp = (int)_LotId & 0xFFFF;
@@ -245,14 +240,14 @@ namespace FSO.Client.UI.Controls
         }
 
         public override void Update(UpdateState state)
-        {                        
-            base.Update(state);
+        {                                    
             uint lotId = 0;
             var gamescreen = ((CoreGameScreen)GameFacade.Screens.CurrentUIScreen);            
             ForceHide = gamescreen.ZoomLevel <= 3;
             if (ForceHide)
-            {
+            {                
                 Visible = false;
+                base.Update(state);
                 return;
             }
             switch (Style) {
@@ -260,7 +255,7 @@ namespace FSO.Client.UI.Controls
                     lotId = FindController<CoreGameScreenController>().GetCurrentLotID();                    
                     break;
                 case UIMapWaypointStyle.YourHouseHere:
-                    lotId = myLot.Value?.Id ?? 0;
+                    lotId = MyLot.Value?.Id ?? 0;
                     break;
             }
             Visible = lotId != 0; 
@@ -268,56 +263,53 @@ namespace FSO.Client.UI.Controls
                 return;
             if (LotId != lotId)
                 LotId = lotId;
-            if (attemptRedraw) // forces the position to updated
-                reposition();
-            var desired = getDesiredLocation(); // refreshes the desired position of the marker
-            if (desired != animNewLoc)
+            if (AttemptRedraw) // forces the position to updated immediately
+                Reposition();
+            var desired = GetDesiredLocation(); // refreshes the desired position of the marker
+            if (desired != AnimNewLoc)
             { 
-                animOldLoc = Position;
-                animNewLoc = desired;
-                completion = 0;
+                AnimOldLoc = Position;
+                AnimNewLoc = desired;
+                Completion = 0;
             }            
-            ensureOnScreen();
+            EnsureOnScreen();
             Avoid();
-            if (completion < 1) // animate if needed
+            if (Completion < 1) // animate if needed
             {                
-                completion = 1f;
-                Position = animNewLoc; //interpolation: Vector2.Lerp(animOldLoc, animNewLoc, completion);
+                Completion = 1f;
+                Position = AnimNewLoc; //interpolation: Vector2.Lerp(animOldLoc, animNewLoc, completion);
             }
             if (Is3D)
-                update3DZindex();
-            oldZoomLevel = gamescreen.ZoomLevel;
-        }              
+                UpdateZindex();
+            base.Update(state);
+        }
 
         public override void Draw(UISpriteBatch batch)
         {
             if (!Visible) return;
-            if (BgImg != null)
-            {
-                var terrain = ((CoreGameScreen)GameFacade.Screens.CurrentUIScreen).CityRenderer;
-                Vector2 startVec = new Vector2(60 / 2, 60 / 2) + Position, end = UITerrainHighlight.GetEndpointFromLotId(terrain, startVec, (int)LotId);
-                Vector2 start = end;
+            var terrain = ((CoreGameScreen)GameFacade.Screens.CurrentUIScreen).CityRenderer;
+            Vector2 startVec = (new Vector2(60 / 2, 60 / 2) + Position), end = UITerrainHighlight.GetEndpointFromLotId(terrain, startVec, (int)LotId) / FSOEnvironment.DPIScaleFactor;
+            Vector2 start = end;
 
-                //position line around border all pretty like
-                float threshold = 5f;
-                if (start.X > Position.X + SizeW)
-                    start.X = Position.X + SizeW - threshold;
-                else if (start.X < Position.X)
-                    start.X = Position.X + threshold;
-                if (start.Y > Position.Y + SizeH)
-                    start.Y = Position.Y + SizeH - threshold;
-                else if (start.Y < Position.Y)
-                    start.Y = Position.Y + threshold;
-                if (Math.Abs(start.X - end.X) < 30)
-                    start.X = SizeW / 2 + Position.X;
-                if (Math.Abs(start.Y - end.Y) < 30)
-                    start.Y = SizeH / 2 + Position.Y;
+            //position line around border all pretty like
+            float threshold = 5f;
+            if (start.X > Position.X + SizeW)
+                start.X = Position.X + SizeW - threshold;
+            else if (start.X < Position.X)
+                start.X = Position.X + threshold;
+            if (start.Y > Position.Y + SizeH)
+                start.Y = Position.Y + SizeH - threshold;
+            else if (start.Y < Position.Y)
+                start.Y = Position.Y + threshold;
+            if (Math.Abs(start.X - end.X) < 30)
+                start.X = SizeW / 2 + Position.X;
+            if (Math.Abs(start.Y - end.Y) < 30)
+                start.Y = SizeH / 2 + Position.Y;
 
-                UITerrainHighlight.DrawArrow(batch, terrain, 
-                    start * FSOEnvironment.DPIScaleFactor, (int)LotId, 
-                    (Style == UIMapWaypointStyle.YourHouseHere) ? new Color(70, 185, 142) : new Color(129,103,152));
-                DrawLocalTexture(batch, BgImg, null, new Vector2(), new Vector2(1), Color.White * (m_isOver ? .75f : 1f));
-            }
+            UITerrainHighlight.DrawArrow(batch, terrain,
+                start * FSOEnvironment.DPIScaleFactor, (int)LotId,
+                (Style == UIMapWaypointStyle.YourHouseHere) ? new Color(70, 185, 142) : new Color(129,103,152));
+            DrawLocalTexture(batch, BgImg, null, new Vector2(), new Vector2(1), Color.White * (m_isOver ? .75f : 1f));
         }
     }
 }
