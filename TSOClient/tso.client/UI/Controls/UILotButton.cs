@@ -290,7 +290,7 @@ namespace FSO.Client.UI.Controls
                     start.Y = Size.Y / 2 + Position.Y;
 
                 UITerrainHighlight.DrawArrow(batch, terrain,
-                    start * FSOEnvironment.DPIScaleFactor, (int)LotId, Target.Value.Lot_IsOnline ? default : new Color(80,80,80));
+                    start * FSOEnvironment.DPIScaleFactor, (int)LotId, Target.Value.Lot_IsOnline ? new Color(200, 225, 255) : new Color(80,80,80));
                 DrawLocalTexture(batch, (m_isOver && !m_isDown) ? HoverImg : BgImg, new Vector2());
 
                 var scale = new Vector2(0.25f, 0.25f);
