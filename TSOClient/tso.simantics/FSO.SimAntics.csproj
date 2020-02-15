@@ -243,6 +243,7 @@
     <Compile Include="NetPlay\EODs\Handlers\VMEODCooldownEventPlugin.cs" />
     <Compile Include="NetPlay\EODs\Handlers\VMEODDancePlatformPlugin.cs" />
     <Compile Include="NetPlay\EODs\Handlers\VMEODDJStationPlugin.cs" />
+    <Compile Include="NetPlay\EODs\Handlers\VMEODGameshowBuzzerPlugin.cs" />
     <Compile Include="NetPlay\EODs\Handlers\VMEODHoldEmCasinoPlugin.cs" />
     <Compile Include="NetPlay\EODs\Handlers\VMEODNCDanceFloorPlugin.cs" />
     <Compile Include="NetPlay\EODs\Handlers\VMEODBlackjackPlugin.cs" />
