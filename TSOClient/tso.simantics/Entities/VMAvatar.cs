@@ -665,7 +665,7 @@ namespace FSO.SimAntics
                         //keep seeking to target
                         if (UseWorld)
                         {
-                            var hseekdiff = (targ.WorldUI.GetLookTarget() - new Vector3(VisualPosition.X, VisualPosition.Z, VisualPosition.Y)) * 3f;
+                            var hseekdiff = (targ.WorldUI.GetLookTarget() - new Vector3(WorldUI.Position.X, WorldUI.Position.Z, WorldUI.Position.Y)) * 3f;
                             hseekdiff.Y -= 1f;
 
                             Avatar.HeadSeekTarget = Animator.CalculateHeadSeek(Avatar, hseekdiff, RadianDirection);
