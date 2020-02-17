@@ -736,7 +736,7 @@ namespace FSO.Client.Rendering.City
         public Vector2 Get2DFromTile(int x, int y)
         {
             float iScale = (float)(1/(m_LastIsoScale * 2));
-            if (x < 0 || y < 0) return new Vector2();
+            if (x < 0 || y < 0 || x >= 512 || y >= 512) return new Vector2();
             var transform = transformSpr3(new Vector3(x, MapData.ElevationData[(y * 512 + x)] / 12.0f, y));
             return (transform.Z > 0)?new Vector2(transform.X, transform.Y):new Vector2(float.MaxValue, 0);
         }
