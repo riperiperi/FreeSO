@@ -12,5 +12,10 @@ namespace FSO.SimAntics.NetPlay.EODs.Handlers
         {
             
         }
+        public override void OnConnection(VMEODClient client)
+        {
+            client.Send("Buzzer_Host_Show", new byte[] { 0 });
+            base.OnConnection(client);
+        }
     }
 }
