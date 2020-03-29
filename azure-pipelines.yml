@@ -1,0 +1,58 @@
+# .NET Desktop (+ core i guess)
+# Build and run tests for .NET Desktop or Windows classic desktop solutions.
+# Add steps that publish symbols, save build artifacts, and more:
+# https://docs.microsoft.com/azure/devops/pipelines/apps/windows/dot-net
+
+trigger:
+- master
+
+pool:
+  vmImage: 'windows-latest'
+
+variables:
+  solution: './TSOClient/FreeSO.sln'
+  buildPlatform: 'Any CPU'
+  buildConfiguration: 'Release'
+
+steps:
+- checkout: self
+  submodules: recursive
+  persistCredentials: true
+
+- powershell: cd ./Other/libs/FSOMonoGame/; ./protobuild.exe --generate; cd ../../../../
+  name: Protobuild
+  continueOnError: true
+
+- task: NuGetToolInstaller@1
+
+- task: NuGetCommand@2
+  inputs:
+    restoreSolution: '$(solution)'
+
+- powershell: cd ./TSOClient/FSO.SimAntics.JIT.Roslyn/; dotnet restore; cd ../../../
+  name: RestoreRoslyn
+  continueOnError: true
+
+- task: VSBuild@1
+  inputs:
+    solution: '$(solution)'
+    platform: '$(buildPlatform)'
+    msbuildArgs: '/t:FSO_IDE /p:Configuration=Release;OutDir=$(Build.ArtifactStagingDirectory)'
+
+- task: NuGetCommand@2
+  inputs:
+    command: 'restore'
+    restoreSolution: '$(solution)'
+    feedsToUse: 'select'
+    restoreDirectory: '$(System.DefaultWorkingDirectory)/packages'
+
+- task: VSTest@2
+  inputs:
+    platform: '$(buildPlatform)'
+    configuration: '$(buildConfiguration)'
+
+- task: PublishBuildArtifacts@1
+  inputs:
+    PathtoPublish: '$(Build.ArtifactStagingDirectory)'
+    ArtifactName: 'FreeSOWindows'
+    publishLocation: 'Container'
