@@ -29,13 +29,8 @@ steps:
   inputs:
     command: 'restore'
     restoreSolution: '$(solution)'
-    feedsToUse: 'select'
-    restoreDirectory: '$(System.DefaultWorkingDirectory)/packages'
 
-- task: NuGetCommand@2
-  inputs:
-    command: 'restore'
-    restoreSolution: '$(solution)'
+
 
 - powershell: cd ./TSOClient/FSO.SimAntics.JIT.Roslyn/; dotnet restore; cd ../../
   name: RestoreRoslyn
@@ -46,7 +41,7 @@ steps:
   inputs:
     solution: '$(solution)'
     platform: '$(buildPlatform)'
-    msbuildArgs: '/t:FSO_IDE /p:Configuration=Release;OutDir=$(Build.ArtifactStagingDirectory)/client'
+    msbuildArgs: '/restore /t:FSO_IDE /p:Configuration=Release;OutDir=$(Build.ArtifactStagingDirectory)/client'
 
 - task: VSBuild@1
   name: BuildServer
