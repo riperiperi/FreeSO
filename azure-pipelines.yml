@@ -1,0 +1,79 @@
+# .NET Desktop (+ core i guess)
+# Build and run tests for .NET Desktop or Windows classic desktop solutions.
+# Add steps that publish symbols, save build artifacts, and more:
+# https://docs.microsoft.com/azure/devops/pipelines/apps/windows/dot-net
+
+trigger:
+- master
+
+pool:
+  vmImage: 'windows-latest'
+
+variables:
+  solution: './TSOClient/FreeSO.sln'
+  buildPlatform: 'Any CPU'
+  buildConfiguration: 'Release'
+
+steps:
+- checkout: self
+  submodules: recursive
+  persistCredentials: true
+
+- powershell: cd ./Other/libs/FSOMonoGame/; ./protobuild.exe --generate; cd ../../../
+  name: Protobuild
+  continueOnError: true
+
+- task: NuGetToolInstaller@1
+
+- powershell: cd ./TSOClient/FSO.SimAntics.JIT.Roslyn/; dotnet restore; cd ../../
+  name: RestoreRoslyn
+  continueOnError: true
+
+- task: NuGetCommand@2
+  inputs:
+    command: 'restore'
+    restoreSolution: '$(solution)'
+
+- task: VSBuild@1
+  name: BuildClient
+  inputs:
+    solution: '$(solution)'
+    platform: '$(buildPlatform)'
+    msbuildArgs: '/restore /t:FSO_IDE /p:Configuration=Release;OutDir=$(Build.ArtifactStagingDirectory)/client'
+
+- task: VSBuild@1
+  name: BuildServer
+  inputs:
+    solution: '$(solution)'
+    platform: '$(buildPlatform)'
+    msbuildArgs: '/t:FSO_Server_Core:Publish /p:Configuration=Release;OutDir=$(Build.ArtifactStagingDirectory)/server'
+
+- task: VSTest@2
+  inputs:
+    platform: '$(buildPlatform)'
+    configuration: '$(buildConfiguration)'
+
+
+- task: ArchiveFiles@2
+  displayName: "Archive Client"
+  inputs:
+    rootFolderOrFile: "$(Build.ArtifactStagingDirectory)/client"
+    includeRootFolder: false
+    archiveFile: "$(System.DefaultWorkingDirectory)/FreeSOClient.zip"
+- task: PublishBuildArtifacts@1
+  inputs:
+    PathtoPublish: '$(System.DefaultWorkingDirectory)/FreeSOClient.zip'
+    ArtifactName: 'FreeSOClient'
+    publishLocation: 'Container'
+
+- task: ArchiveFiles@2
+  displayName: "Archive Server"
+  inputs:
+    rootFolderOrFile: "$(Build.ArtifactStagingDirectory)/server"
+    includeRootFolder: false
+    archiveFile: "$(System.DefaultWorkingDirectory)/FreeSOServer.zip"
+- task: PublishBuildArtifacts@1
+  inputs:
+    PathtoPublish: '$(System.DefaultWorkingDirectory)/FreeSOServer.zip'
+    ArtifactName: 'FreeSOServer'
+    publishLocation: 'Container'
