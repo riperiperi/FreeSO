@@ -77,6 +77,15 @@ namespace FSO.Server.Api.Core.Services
                 Exec($"chmod -R 777 {folder}");
         }
 
+        private string GetZipFolder(string path)
+        {
+            var directories = Directory.GetDirectories(path);
+            if (directories.Length != 1) return path;
+            var files = Directory.GetFiles(path);
+            if (files.Length != 0) return path;
+            return directories[0];
+        }
+
         public async Task BuildUpdate(UpdateGenerationStatus status)
         {
             var request = status.Request;
@@ -176,25 +185,27 @@ namespace FSO.Server.Api.Core.Services
                     //extract the artifact and then our artifact over it.
                     if (clientArti != null)
                     {
+                        var clientPath = updateDir + "client/";
                         status.UpdateStatus(UpdateGenerationStatusCode.EXTRACTING_CLIENT);
                         var clientZip = ZipFile.Open(clientArti, ZipArchiveMode.Read);
-                        clientZip.ExtractToDirectory(updateDir + "client/", true);
+                        clientZip.ExtractToDirectory(clientPath, true);
                         clientZip.Dispose();
                         File.Delete(clientArti);
+                        clientPath = GetZipFolder(clientPath);
 
                         if (clientAddon != null)
                         {
                             status.UpdateStatus(UpdateGenerationStatusCode.EXTRACTING_CLIENT_ADDON);
                             var addonZip = ZipFile.Open(clientAddon, ZipArchiveMode.Read);
-                            addonZip.ExtractToDirectory(updateDir + "client/", true);
+                            addonZip.ExtractToDirectory(clientPath, true);
                             addonZip.Dispose();
                             if (clientAddon != serverAddon) File.Delete(clientAddon);
                         }
                         //emit version number
-                        await System.IO.File.WriteAllTextAsync(updateDir + "client/version.txt", versionText);
+                        await System.IO.File.WriteAllTextAsync(Path.Combine(clientPath, "version.txt"), versionText);
                         if (request.catalog != null)
                         {
-                            await System.IO.File.WriteAllTextAsync(updateDir + "client/Content/Objects/catalog_downloads.xml", request.catalog);
+                            await System.IO.File.WriteAllTextAsync(Path.Combine(clientPath, "Content/Objects/catalog_downloads.xml"), request.catalog);
                         }
 
                         string diffZip = null;
@@ -212,7 +223,7 @@ namespace FSO.Server.Api.Core.Services
                             prevZip.Dispose();
                             File.Delete(updateDir + "prev.zip");
 
-                            var diffs = DiffGenerator.GetDiffs(Path.GetFullPath(updateDir + "prev/"), Path.GetFullPath(updateDir + "client/"));
+                            var diffs = DiffGenerator.GetDiffs(Path.GetFullPath(updateDir + "prev/"), Path.GetFullPath(clientPath));
 
                             status.UpdateStatus(UpdateGenerationStatusCode.BUILDING_INCREMENTAL_UPDATE);
                             var toZip = diffs.Where(x => x.DiffType == FileDiffType.Add || x.DiffType == FileDiffType.Modify);
@@ -223,7 +234,7 @@ namespace FSO.Server.Api.Core.Services
                             foreach (var diff in toZip)
                             {
                                 Directory.CreateDirectory(Path.GetDirectoryName(Path.Combine(updateDir + "diff/", diff.Path)));
-                                System.IO.File.Copy(Path.Combine(updateDir + "client/", diff.Path), Path.Combine(updateDir + "diff/", diff.Path));
+                                System.IO.File.Copy(Path.Combine(clientPath, diff.Path), Path.Combine(updateDir + "diff/", diff.Path));
                             }
                             diffZip = updateDir + "diffResult.zip";
                             ClearFolderPermissions(updateDir + "diff/");
@@ -245,8 +256,8 @@ namespace FSO.Server.Api.Core.Services
                         {
                             status.UpdateStatus(UpdateGenerationStatusCode.BUILDING_CLIENT);
                             var finalClientZip = updateDir + "clientResult.zip";
-                            ClearFolderPermissions(updateDir + "client/");
-                            ZipFile.CreateFromDirectory(updateDir + "client/", finalClientZip, CompressionLevel.Optimal, false);
+                            ClearFolderPermissions(clientPath);
+                            ZipFile.CreateFromDirectory(clientPath, finalClientZip, CompressionLevel.Optimal, false);
                             Directory.Delete(updateDir + "client/", true);
 
                             status.UpdateStatus(UpdateGenerationStatusCode.PUBLISHING_CLIENT);
@@ -263,30 +274,33 @@ namespace FSO.Server.Api.Core.Services
 
                     if (serverArti != null && !request.contentOnly)
                     {
+                        var serverPath = updateDir + "server/";
                         status.UpdateStatus(UpdateGenerationStatusCode.EXTRACTING_SERVER);
                         var serverZip = ZipFile.Open(serverArti, ZipArchiveMode.Read);
-                        serverZip.ExtractToDirectory(updateDir + "server/", true);
+                        serverZip.ExtractToDirectory(serverPath, true);
                         serverZip.Dispose();
                         File.Delete(serverArti);
+                        serverPath = GetZipFolder(serverPath);
+
                         if (serverAddon != null)
                         {
                             status.UpdateStatus(UpdateGenerationStatusCode.EXTRACTING_SERVER_ADDON);
                             var addonZip = ZipFile.Open(serverAddon, ZipArchiveMode.Read);
-                            addonZip.ExtractToDirectory(updateDir + "server/", true);
+                            addonZip.ExtractToDirectory(serverPath, true);
                             addonZip.Dispose();
                             File.Delete(serverAddon);
                         }
                         //emit version number
-                        await System.IO.File.WriteAllTextAsync(updateDir + "server/version.txt", versionText);
+                        await System.IO.File.WriteAllTextAsync(Path.Combine(serverPath, "version.txt"), versionText);
                         if (request.catalog != null)
                         {
-                            await System.IO.File.WriteAllTextAsync(updateDir + "client/Content/Objects/catalog_downloads.xml", request.catalog);
+                            await System.IO.File.WriteAllTextAsync(Path.Combine(serverPath, "Content/Objects/catalog_downloads.xml"), request.catalog);
                         }
 
                         status.UpdateStatus(UpdateGenerationStatusCode.BUILDING_SERVER);
                         var finalServerZip = updateDir + "serverResult.zip";
-                        ClearFolderPermissions(updateDir + "server/");
-                        ZipFile.CreateFromDirectory(updateDir + "server/", finalServerZip, CompressionLevel.Optimal, false);
+                        ClearFolderPermissions(serverPath);
+                        ZipFile.CreateFromDirectory(serverPath, finalServerZip, CompressionLevel.Optimal, false);
                         Directory.Delete(updateDir + "server/", true);
 
                         status.UpdateStatus(UpdateGenerationStatusCode.PUBLISHING_SERVER);
