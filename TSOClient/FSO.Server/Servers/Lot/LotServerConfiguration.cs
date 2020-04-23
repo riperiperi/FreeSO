@@ -14,6 +14,7 @@ namespace FSO.Server.Servers.Lot
         public string SimNFS;
         public int RingBufferSize = 10;
         public bool Timeout_No_Auth = true;
+        public bool LogJobLots = false;
 
         //Which cities to provide lot hosting for
         public LotServerConfigurationCity[] Cities;

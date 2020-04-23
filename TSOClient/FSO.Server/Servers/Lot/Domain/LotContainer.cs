@@ -166,6 +166,15 @@ namespace FSO.Server.Servers.Lot.Domain
                 LotAdj = new List<DbLot>();
                 LotRoommates = new List<DbRoommate>();
                 Terrain = new VMTSOSurroundingTerrain();
+                Tuning = new DynamicTuning(new DynTuningEntry[] {
+                    new DynTuningEntry()
+                    {
+                        tuning_type = "feature",
+                        tuning_table = 0,
+                        tuning_index = 1,
+                        value = 1
+                    }
+                });
 
                 for (int y = 0; y < 3; y++)
                 {
@@ -646,7 +655,7 @@ namespace FSO.Server.Servers.Lot.Domain
             VMDriver.OnDirectMessage += DirectMessage;
             VMDriver.OnDropClient += DropClient;
 
-            if (JobLot) {
+            if (JobLot && Config.LogJobLots) {
                 var jobPacked = Context.DbId - 0x200;
                 var jobLevel = (short)((jobPacked - 1) & 0xF);
                 var jobType = (short)((jobPacked - 1) / 0xF);
@@ -816,7 +825,7 @@ namespace FSO.Server.Servers.Lot.Domain
         public void UpdateTuning(IEnumerable<DynTuningEntry> tuning)
         {
             Tuning = new DynamicTuning(tuning);
-            if (Lot == null) return;
+            if (Lot == null || JobLot) return;
             if (Lot.Tuning == null || (Lot.Tuning.GetTuning("forcedTuning", 0, 0) ?? 0f) == 0f)
             {
                 Lot.ForwardCommand(new VMNetTuningCmd()
