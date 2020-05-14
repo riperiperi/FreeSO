@@ -1,6 +1,7 @@
 ﻿using Microsoft.Xna.Framework;
 using System;
 using System.Collections.Generic;
+using System.Globalization;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
@@ -69,7 +70,7 @@ namespace FSO.Common.WorldGeometry.Paths
                         case "m":
                         case "l":
                             //lineto
-                            pos += new Vector2(float.Parse(elems[i++]), float.Parse(elems[i++]));
+                            pos += new Vector2(float.Parse(elems[i++], CultureInfo.InvariantCulture), float.Parse(elems[i++], CultureInfo.InvariantCulture));
                             newPath.Add(new SVGPathSegment()
                             {
                                 Position = pos,
@@ -77,9 +78,9 @@ namespace FSO.Common.WorldGeometry.Paths
                             });
                             break;
                         case "c":
-                            var cp1 = new Vector2(float.Parse(elems[i++]), float.Parse(elems[i++])) + pos;
-                            var cp2 = new Vector2(float.Parse(elems[i++]), float.Parse(elems[i++])) + pos;
-                            pos += new Vector2(float.Parse(elems[i++]), float.Parse(elems[i++]));
+                            var cp1 = new Vector2(float.Parse(elems[i++], CultureInfo.InvariantCulture), float.Parse(elems[i++], CultureInfo.InvariantCulture)) + pos;
+                            var cp2 = new Vector2(float.Parse(elems[i++], CultureInfo.InvariantCulture), float.Parse(elems[i++], CultureInfo.InvariantCulture)) + pos;
+                            pos += new Vector2(float.Parse(elems[i++], CultureInfo.InvariantCulture), float.Parse(elems[i++], CultureInfo.InvariantCulture));
 
                             newPath.Add(new SVGPathSegment()
                             {
