@@ -746,6 +746,18 @@
     <Content Include="Content\OGL\Effects\SpriteEffects.xnb">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </Content>
+    <None Include="Content\Objects\killer_crypt.iff" />
+    <None Include="Content\Patch\gardener.str.piff" />
+    <None Include="Content\Patch\maid.str.piff" />
+    <None Include="Content\Patch\npc_fso_pizzaman.iff" />
+    <None Include="Content\Patch\oj-nc-npc-dancer.str.piff" />
+    <None Include="Content\Patch\oj-nc-npc-standins.str.piff" />
+    <None Include="Content\Patch\oj-rest-npc-busboy.str.piff" />
+    <None Include="Content\Patch\oj-rest-npc-chef.str.piff" />
+    <None Include="Content\Patch\oj-rest-patron.str.piff" />
+    <None Include="Content\Patch\repairman.str.piff" />
+    <None Include="Content\Patch\tent.piff" />
+    <None Include="Content\Patch\tent.str.piff" />
     <None Include="Content\UI\uiscripts\fsoneighpage.uis">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </None>
