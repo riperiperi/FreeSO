@@ -746,7 +746,6 @@
     <Content Include="Content\OGL\Effects\SpriteEffects.xnb">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </Content>
-    <None Include="Content\Objects\killer_crypt.iff" />
     <None Include="Content\Patch\gardener.str.piff" />
     <None Include="Content\Patch\maid.str.piff" />
     <None Include="Content\Patch\npc_fso_pizzaman.iff" />
