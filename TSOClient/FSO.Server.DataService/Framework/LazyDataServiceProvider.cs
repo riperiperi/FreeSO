@@ -44,8 +44,9 @@ namespace FSO.Common.DataService.Framework
                     TaskWrap<object> oldVal;
                     Values.TryRemove(castKey, out oldVal);
 
-                    var result = new TaskWrap<object>(ResolveMissingKey(castKey, (VALUE)oldVal.GetReady()));
-                    return Values.GetOrAdd(castKey, result).Get();
+                    return Values.GetOrAdd(castKey, x =>
+                        new TaskWrap<object>(ResolveMissingKey(castKey, (VALUE)oldVal.GetReady()))
+                        ).Get();
                 }
                 else if (Values.ContainsKey(castKey))
                 {
@@ -53,8 +54,9 @@ namespace FSO.Common.DataService.Framework
                 }
                 else
                 {
-                    var result = new TaskWrap<object>(ResolveMissingKey(castKey));
-                    return Values.GetOrAdd(castKey, result).Get();
+                    return Values.GetOrAdd(castKey, x =>
+                        new TaskWrap<object>(ResolveMissingKey(castKey))
+                        ).Get();
                 }
             }
         }

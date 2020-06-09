@@ -34,7 +34,7 @@ namespace FSO.IDE.EditorComponent.Primitives
         public override void PopulateOperandView(BHAVEditor master, EditorScope escope, TableLayoutPanel panel)
         {
             panel.Controls.Add(new OpLabelControl(master, escope, Operand, new OpStaticTextProvider("This primitive is not implemented, but its hexadecimal values may be edited directly.")));
-            var provider = new OpStaticValueBoundsProvider(-32767, 32768);
+            var provider = new OpStaticValueBoundsProvider(-32768, 32767);
             panel.Controls.Add(new OpValueControl(master, escope, Operand, "Argument 1:", "Arg0", provider, true));
             panel.Controls.Add(new OpValueControl(master, escope, Operand, "Argument 2:", "Arg1", provider, true));
             panel.Controls.Add(new OpValueControl(master, escope, Operand, "Argument 3:", "Arg2", provider, true));

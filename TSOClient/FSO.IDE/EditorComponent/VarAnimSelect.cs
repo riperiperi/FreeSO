@@ -2,6 +2,7 @@
 using FSO.Content;
 using FSO.Files.Formats.IFF.Chunks;
 using FSO.IDE.Common;
+using FSO.IDE.Utils;
 using FSO.SimAntics;
 using FSO.Vitaboy;
 using System;
@@ -46,14 +47,15 @@ namespace FSO.IDE.EditorComponent
                 var searchString = new Regex(".*" + SearchBox.Text.ToLowerInvariant() + ".*");
 
                 AllList.Items.Clear();
-                var anims = (Content.Content.Get().AvatarAnimations as AvatarAnimationProvider)?.AnimationsByName.Keys.ToList();
+                var anims = (Content.Content.Get().AvatarAnimations as AvatarAnimationProvider)?.Names;
                 if (anims == null)
                     anims = (Content.Content.Get().AvatarAnimations as Content.TS1.TS1BCFAnimationProvider)?.BaseProvider.ListAllAnimations();
                 if (anims != null)
                 {
                     foreach (var anim in anims)
                     {
-                        var name = anim.Substring(0, anim.Length - 5).ToLowerInvariant();
+                        string name = anim.Substring(0, anim.Length - 5);
+                        if (!Content.Content.Get().TS1) name = name.ToLowerInvariant();
                         if (searchString.IsMatch(name)) AllList.Items.Add(name); //keys are names
                     }
                 }
@@ -72,7 +74,7 @@ namespace FSO.IDE.EditorComponent
             {
                 for (int i = 0; i < AnimTable.Length; i++)
                 {
-                    MyList.Items.Add((i == 0) ? "Stop Animation" : AnimTable.GetString(i, STRLangCode.EnglishUS));
+                    MyList.Items.Add((i == 0) ? "Stop Animation" : AnimTable.GetString(i, STRLangCode.EnglishUS) ?? "");
                 }
 
                 MyList.SelectedItem = SelectedAnim;
@@ -150,6 +152,14 @@ namespace FSO.IDE.EditorComponent
                 var interactive = AnimDisplay.Renderer;
                 var ava = (VMAvatar)interactive.TargetOBJ.BaseObject;
 
+                var exp = new GLTFExporter();
+                var scn = exp.SceneGroup(ava.Avatar.Bindings.Select(x => x.Mesh).ToList(),
+                    new List<Animation> { ava.Animations[0].Anim },
+                    ava.Avatar.Bindings.Select(x => x.Texture?.Get(GameFacade.GraphicsDevice)).ToList(),
+                    ava.Avatar.BaseSkeleton);
+
+                scn.SaveGLTF("C:/Users/Rhys/Desktop/fsoexport/testsim.gltf");
+
                 /*
                 var scn = MeshExporter.SceneGroup(
                     ava.Avatar.Bindings.Select(x => x.Mesh).ToList(),
@@ -160,6 +170,28 @@ namespace FSO.IDE.EditorComponent
                 MeshExporter.ExportToFBX(scn, @"C:\Users\Rhys\Desktop\fsoexport\test.dae");
                 */
             }));
+        }
+
+        private static int RuntimeID;
+
+        private void glTFImportButton_Click(object sender, EventArgs e)
+        {
+            var dialog = new OpenFileDialog();
+            dialog.Title = "Select a glTF/glb file.";
+            FormsUtils.StaExecute(() =>
+            {
+                dialog.ShowDialog();
+            });
+            if (dialog.FileName == null) return;
+            var importer = new GLTFImporter();
+            importer.Process(dialog.FileName);
+            var anims = importer.Animations;
+
+            var animC = Content.Content.Get().AvatarAnimations as AvatarAnimationProvider;
+            foreach (var anim in anims) {
+                animC.Runtime.Add(anim.Name + "-runtime.anim", ulong.MaxValue - (ulong)(RuntimeID++), anim);
+            }
+            RefreshAllList();
         }
     }
 }

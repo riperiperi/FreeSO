@@ -10,10 +10,11 @@ using System.Text.RegularExpressions;
 
 namespace FSO.Content
 {
-    public class AvatarCollectionsProvider : FAR3Provider<Collection>
+    public class AvatarCollectionsProvider : TSOAvatarContentProvider<Collection>
     {
-        public AvatarCollectionsProvider(Content contentManager)
-            : base(contentManager, new CollectionCodec(), new Regex(".*/collections/.*\\.dat"))
+        public AvatarCollectionsProvider(Content contentManager) : base(contentManager, new CollectionCodec(),
+            new Regex(".*/collections/.*\\.dat"),
+            new Regex("Avatar/Collections/.*\\.co"))
         {
         }
     }

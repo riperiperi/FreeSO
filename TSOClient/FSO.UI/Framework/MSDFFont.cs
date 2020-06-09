@@ -15,6 +15,7 @@ namespace FSO.UI.Framework
         public float Height = 20;
         public float YOff = 20 * 0.8f;
         public float VectorScale = 1f;
+        public MSDFInfo Info;
         public char Fallback = '*';
 
         public int GlyphSize;
@@ -22,10 +23,21 @@ namespace FSO.UI.Framework
         private FieldFont Font;
         public static Effect MSDFEffect;
 
+        public List<MSDFFont> Fallbacks = new List<MSDFFont>();
+        public Dictionary<MSDFFont, MSDFInfo> ChildInfo = new Dictionary<MSDFFont, MSDFInfo>();
+
         public MSDFFont(FieldFont font)
         {
             Font = font;
             GlyphSize = font.Atlas.GlyphSize;
+            Info = new MSDFInfo(font);
+        }
+
+        public void AddFallback(FieldFont font, string name, float scale)
+        {
+            var msdf = new MSDFFont(font);
+            msdf.VectorScale = scale;
+            Fallbacks.Add(msdf);
         }
 
         public Texture2D GetAtlas(GraphicsDevice gd)
@@ -38,6 +50,25 @@ namespace FSO.UI.Framework
                 }
             }
             return Atlas;
+        }
+
+        private MSDFGlyph GetGlyph(char c)
+        {
+            var result = Font.GetGlyph(c);
+            if (result != null)
+            {
+                return new MSDFGlyph(result, this);
+            }
+            if (c == '\r') return null;
+            foreach (var fallback in Fallbacks)
+            {
+                result = fallback.Font.GetGlyph(c);
+                if (result != null)
+                {
+                    return new MSDFGlyph(result, fallback);
+                }
+            }
+            return new MSDFGlyph(Font.GetGlyph(Fallback), this);
         }
 
         public void Draw(GraphicsDevice gd, string text, Vector2 pos, Color color, Vector2 scale, Matrix? mat)
@@ -63,44 +94,40 @@ namespace FSO.UI.Framework
             var wvp = wv * Matrix.CreateOrthographicOffCenter(new Rectangle(0, 0, gd.Viewport.Width, gd.Viewport.Height), -0.1f, 1f);
             var effect = MSDFEffect;
 
-            var itemW = 1f / Font.Atlas.Width;
-            var itemH = 1f / Font.Atlas.Height;
+            var groups = new Dictionary<MSDFFont, MSDFRenderGroup>();
+            var activeFont = this;
 
-            var textureWidth = Font.Atlas.GlyphSize;
-            var textureHeight = Font.Atlas.GlyphSize;
+            var itemW = Info.itemW;
+            var itemH = Info.itemH;
 
-            var cutUX = itemW / textureWidth;
-            var cutUY = itemH / textureHeight;
+            var textureWidth = Info.textureWidth;
+            var textureHeight = Info.textureHeight;
 
-            var cut2UX = cutUX*2;
-            var cut2UY = cutUY*2;
+            var cutUX = Info.cutUX;
+            var cutUY = Info.cutUY;
 
-            var uW = itemW - 2 * cutUX;
-            var uH = itemH - 2 * cutUY;
+            var uW = Info.uW;
+            var uH = Info.uH;
 
-            var cutX = 1f / textureWidth;
-            var cutY = 1f / textureHeight;
+            var atlasWidth = Info.atlasWidth;
+            var pairs = Info.pairs;
+            var data = new MSDFRenderGroup(this);
+            groups[this] = data;
 
-            var atlasWidth = Font.Atlas.Width;
-            var pairs = Font.StringToPair;
+            var verts = data.Vertices;
+            var inds = data.Indices;
 
             effect.Parameters["WorldViewProjection"].SetValue(wvp);
-            effect.Parameters["PxRange"].SetValue(this.Font.PxRange);
-            effect.Parameters["TextureSize"].SetValue(new Vector2(Atlas.Width, Atlas.Height));
             effect.Parameters["Color"].SetValue(color.ToVector4());
-            effect.Parameters["GlyphTexture"].SetValue(Atlas);
 
             effect.CurrentTechnique = effect.Techniques[0];
+            var subScale = 1f;
 
-            var verts = new List<MSDFFontVert>();
-            var inds = new List<int>();
-
-            FieldGlyph next = null;
+            MSDFGlyph next = null;
             if (text.Length > 0)
             {
                 var c = text[0];
-                next = Font.GetGlyph(c);
-                if (next == null && c != '\r') next = Font.GetGlyph(Fallback);
+                next = GetGlyph(c);
             }
             for (int i = 0; i < text.Length; i++)
             {
@@ -109,54 +136,96 @@ namespace FSO.UI.Framework
                 {
                     if (i + 1 >= text.Length) break;
                     var c = text[i + 1];
-                    next = Font.GetGlyph(c);
-                    if (next == null && c != '\r') next = Font.GetGlyph(Fallback);
+                    next = GetGlyph(c);
                     continue;
                 }
 
-                var mscale = glyph.Metrics.Scale;
-                var glyphHeight = (textureHeight-2) / mscale;
-                var glyphWidth = (textureWidth-2) / mscale;
+                if (glyph.Font != activeFont)
+                {
+                    activeFont = glyph.Font;
+                    subScale = (activeFont != this) ? activeFont.VectorScale / VectorScale : 1f;
+
+                    var ainfo = activeFont.Info;
+                    itemW = ainfo.itemW;
+                    itemH = ainfo.itemH;
+
+                    textureWidth = ainfo.textureWidth;
+                    textureHeight = ainfo.textureHeight;
+
+                    cutUX = ainfo.cutUX;
+                    cutUY = ainfo.cutUY;
+
+                    uW = ainfo.uW;
+                    uH = ainfo.uH;
+
+                    atlasWidth = ainfo.atlasWidth;
+                    pairs = ainfo.pairs;
+                    MSDFRenderGroup mdata = null;
+                    if (!groups.TryGetValue(activeFont, out mdata))
+                    {
+                        mdata = new MSDFRenderGroup(activeFont);
+                        groups[activeFont] = mdata;
+                    }
+
+                    verts = mdata.Vertices;
+                    inds = mdata.Indices;
+                }
+
+                var fglyph = glyph.Glyph;
+                var mscale = fglyph.Metrics.Scale;
+
                 
-                var left = point.X - glyph.Metrics.Translation.X + 1/mscale;
-                var bottom = point.Y + glyph.Metrics.Translation.Y + YOff/VectorScale - 1 / mscale;
+                var left = point.X - (fglyph.Metrics.Translation.X - 1/mscale) * subScale;
+                var bottom = point.Y + (fglyph.Metrics.Translation.Y + activeFont.YOff/ activeFont.VectorScale - 1 / mscale) * subScale;
+
+                mscale /= subScale;
+                var glyphHeight = (textureHeight - 2) / mscale;
+                var glyphWidth = (textureWidth - 2) / mscale;
 
                 var right = left + glyphWidth;
                 var top = bottom - glyphHeight;
 
-                var tx = (glyph.AtlasIndex % atlasWidth) * itemW + cutUX;
-                var ty = (glyph.AtlasIndex / atlasWidth) * itemH + cutUY;
+                var tx = (fglyph.AtlasIndex % atlasWidth) * itemW + cutUX;
+                var ty = (fglyph.AtlasIndex / atlasWidth) * itemH + cutUY;
 
                 var derivative = (new Vector2(uW/(right - left), uH/ (bottom - top))/scale)/2;
 
-                if (!char.IsWhiteSpace(glyph.Character))
+                if (!char.IsWhiteSpace(fglyph.Character))
                 {
                     RenderQuad(inds, verts, new Vector2(left, bottom), new Vector2(right, top), new Vector2(tx, ty + uH), new Vector2(tx + uW, ty), derivative);
                 }
 
-                point.X += glyph.Metrics.Advance;
+                point.X += fglyph.Metrics.Advance * subScale;
 
                 if (i < text.Length - 1)
                 {
                     var c = text[i + 1];
-                    next = Font.GetGlyph(c);
-                    if (next == null && c != '\r') next = Font.GetGlyph(Fallback);
+                    next = GetGlyph(c);
 
                     if (next != null)
                     {
                         KerningPair pair;
-                        if (pairs.TryGetValue(new string(new char[] { glyph.Character, next.Character }), out pair))
+                        if (pairs.TryGetValue(new string(new char[] { fglyph.Character, next.Glyph.Character }), out pair))
                         {
-                            point.X += pair.Advance;
+                            point.X += pair.Advance * subScale;
                         }
                     }
                 }
             }
 
-            effect.CurrentTechnique.Passes[0].Apply();
-            if (verts.Count == 0) return;
+            foreach (var group in groups.Values)
+            {
+                effect.Parameters["PxRange"].SetValue(group.Font.Font.PxRange);
+                var groupAtlas = group.Font.GetAtlas(gd);
+                effect.Parameters["TextureSize"].SetValue(new Vector2(groupAtlas.Width, groupAtlas.Height));
+                effect.Parameters["GlyphTexture"].SetValue(groupAtlas);
+                effect.CurrentTechnique.Passes[0].Apply();
+                if (group.Vertices.Count == 0) continue;
 
-            gd.DrawUserIndexedPrimitives(PrimitiveType.TriangleList, verts.ToArray(), 0, verts.Count, inds.ToArray(), 0, inds.Count / 3);
+                gd.DrawUserIndexedPrimitives(PrimitiveType.TriangleList, 
+                    group.Vertices.ToArray(), 0, group.Vertices.Count,
+                    group.Indices.ToArray(), 0, group.Indices.Count / 3);
+            }
         }
 
         private void RenderQuad(List<int> indices, List<MSDFFontVert> vertices, Vector2 v1, Vector2 v2, Vector2 tc1, Vector2 tc2, Vector2 derivative)
@@ -179,17 +248,18 @@ namespace FSO.UI.Framework
         public Vector2 MeasureString(string text)
         {
             var pairs = Font.StringToPair;
+            var activeFont = this;
             if (string.IsNullOrEmpty(text))
                 return new Vector2(0, Height / VectorScale);
 
             var size = new Vector2(0, Height / VectorScale);
+            var subScale = 1f;
 
-            FieldGlyph next = null;
+            MSDFGlyph next = null;
             if (text.Length > 0)
             {
                 var c = text[0];
-                next = Font.GetGlyph(c);
-                if (next == null && c != '\r') next = Font.GetGlyph(Fallback);
+                next = GetGlyph(c);
             }
             for (int i = 0; i < text.Length; i++)
             {
@@ -198,25 +268,29 @@ namespace FSO.UI.Framework
                 {
                     if (i + 1 >= text.Length) break;
                     var c = text[i + 1];
-                    next = Font.GetGlyph(c);
-                    if (next == null && c != '\r') next = Font.GetGlyph(Fallback);
+                    next = GetGlyph(c);
                     continue;
                 }
-                
-                size.X += glyph.Metrics.Advance;
+                if (activeFont != next.Font)
+                {
+                    activeFont = next.Font;
+                    pairs = glyph.Font.Info.pairs;
+                    subScale = (activeFont != this) ? activeFont.VectorScale / VectorScale : 1f;
+                }
+
+                size.X += glyph.Glyph.Metrics.Advance * subScale;
 
                 if (i < text.Length - 1)
                 {
                     var c = text[i+1];
-                    next = Font.GetGlyph(c);
-                    if (next == null && c != '\r') next = Font.GetGlyph(Fallback);
+                    next = GetGlyph(c);
 
                     if (next != null)
                     {
                         KerningPair pair;
-                        if (pairs.TryGetValue(new string(new char[] { glyph.Character, next.Character }), out pair))
+                        if (pairs.TryGetValue(new string(new char[] { glyph.Glyph.Character, next.Glyph.Character }), out pair))
                         {
-                            size.X += pair.Advance;
+                            size.X += pair.Advance * subScale;
                         }
                     }
                 }
@@ -224,5 +298,79 @@ namespace FSO.UI.Framework
 
             return size;
         }
+    }
+
+    public class MSDFRenderGroup
+    {
+        public MSDFFont Font;
+        public List<int> Indices;
+        public List<MSDFFontVert> Vertices;
+
+        public MSDFRenderGroup(MSDFFont font)
+        {
+            Font = font;
+            Indices = new List<int>();
+            Vertices = new List<MSDFFontVert>();
+        }
+    }
+
+    public class MSDFGlyph
+    {
+        public FieldGlyph Glyph;
+        public MSDFFont Font;
+
+        public MSDFGlyph(FieldGlyph glyph, MSDFFont font)
+        {
+            Glyph = glyph;
+            Font = font;
+        }
+    }
+
+    public class MSDFInfo
+    {
+        public MSDFInfo(FieldFont Font)
+        {
+            itemW = 1f / Font.Atlas.Width;
+            itemH = 1f / Font.Atlas.Height;
+
+            textureWidth = Font.Atlas.GlyphSize;
+            textureHeight = Font.Atlas.GlyphSize;
+
+            cutUX = itemW / textureWidth;
+            cutUY = itemH / textureHeight;
+
+            cut2UX = cutUX * 2;
+            cut2UY = cutUY * 2;
+
+            uW = itemW - 2 * cutUX;
+            uH = itemH - 2 * cutUY;
+
+            cutX = 1f / textureWidth;
+            cutY = 1f / textureHeight;
+
+            atlasWidth = Font.Atlas.Width;
+            pairs = Font.StringToPair;
+        }
+
+        public float itemW;
+        public float itemH;
+
+        public float textureWidth;
+        public float textureHeight;
+
+        public float cutUX;
+        public float cutUY;
+
+        public float cut2UX;
+        public float cut2UY;
+
+        public float uW;
+        public float uH;
+
+        public float cutX;
+        public float cutY;
+
+        public int atlasWidth;
+        public Dictionary<string, KerningPair> pairs;
     }
 }

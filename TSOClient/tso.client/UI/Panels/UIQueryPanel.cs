@@ -24,6 +24,8 @@ using FSO.Common;
 using FSO.SimAntics.Model;
 using FSO.UI.Panels;
 using FSO.SimAntics.Model.Platform;
+using FSO.Client.UI.Panels.Upgrades;
+using FSO.SimAntics.Engine;
 
 namespace FSO.Client.UI.Panels
 {
@@ -94,6 +96,11 @@ namespace FSO.Client.UI.Panels
         public UIImage BuyerPriceBack;
         private List<UIImage> SpecificBtnBGs;
 
+        //upgrade additions
+        public UIImage UpgradeBack;
+        public UIButton UpgradeButton;
+        public UIUpgradeList UpgradeList;
+
         public event ButtonClickDelegate OnSellBackClicked;
         public event ButtonClickDelegate OnInventoryClicked;
         public event ButtonClickDelegate OnAsyncSaleClicked;
@@ -106,6 +113,7 @@ namespace FSO.Client.UI.Panels
         public UIImage Thumbnail;
         public UI3DThumb Thumb3D;
         public bool Roommate = true;
+        public int InInventory = 0;
 
         private VMEntity ActiveEntity;
         private int LastSalePrice;
@@ -250,7 +258,10 @@ namespace FSO.Client.UI.Panels
             }
         }
 
-        public UIQueryPanel(UILotControl parent, LotView.World world) {
+        public UIQueryPanel(UILotControl parent, LotView.World world)
+        {
+            var ui = Content.Content.Get().CustomUI;
+            var gd = GameFacade.GraphicsDevice;
             LotParent = parent;
             World = world;
             Active = false;
@@ -261,7 +272,7 @@ namespace FSO.Client.UI.Panels
             for (int i = 0; i < 14; i++)
             {
                 string str = GameFacade.Strings.GetString("206", (i + 4).ToString());
-                AdStrings[i] = ((i<7)?str.Substring(0,str.Length-2)+"{0}":str) + "\r\n";
+                AdStrings[i] = ((i < 7) ? str.Substring(0, str.Length - 2) + "{0}" : str) + "\r\n";
             }
 
             CategoryStrings = new string[11];
@@ -272,7 +283,7 @@ namespace FSO.Client.UI.Panels
             CategoryStrings[10] = GameFacade.Strings.GetString("f115", "98");
 
             var useSmall = (GlobalSettings.Default.GraphicsWidth < 1024) || FSOEnvironment.UIZoomFactor > 1f;
-            var script = this.RenderScript("querypanel"+(useSmall?"":"1024")+".uis");
+            var script = this.RenderScript("querypanel" + (useSmall ? "" : "1024") + ".uis");
 
             //NOTE: the background and position of this element changes with the context it is used in.
             //other elements that are only used for certain modes will be flagged as such with comments.
@@ -302,7 +313,7 @@ namespace FSO.Client.UI.Panels
             this.AddAt(3, DescriptionBackgroundImage);
 
             MotivesBackgroundImage = new UIImage(ImageMotivesBackground);
-            MotivesBackgroundImage.Position = new Microsoft.Xna.Framework.Vector2(useSmall ? 395:619, 7);
+            MotivesBackgroundImage.Position = new Microsoft.Xna.Framework.Vector2(useSmall ? 395 : 619, 7);
             this.AddAt(3, MotivesBackgroundImage);
 
             GeneralTabImage = new UIImage(ImageGeneralTab);
@@ -364,8 +375,44 @@ namespace FSO.Client.UI.Panels
             AddAt(3, progressBG);
             SpecificBtnBGs.Add(progressBG);
 
+            //upgrade button
+            UpgradeBack = new UIImage(ui.Get("up_button_seat.png").Get(gd));
+            UpgradeBack.Position = new Vector2(useSmall ? 582 : 806, 0);
+            Add(UpgradeBack);
+
+            UpgradeList = new UIUpgradeList(LotParent);
+            UpgradeList.Visible = false;
+            DynamicOverlay.Add(UpgradeList);
+
+            UpgradeButton = new UIButton(ui.Get("up_button.png").Get(gd));
+            UpgradeButton.OnButtonClick += UpgradeButton_OnButtonClick;
+            UpgradeButton.Tooltip = GameFacade.Strings.GetString("f125", "1");
+            UpgradeButton.Position = UpgradeBack.Position + new Vector2(6, 7);
+            DynamicOverlay.Add(UpgradeButton);
+            UpgradeList.Position = UpgradeButton.Position + new Vector2(-542, 11);
+
             Mode = 1;
             Tab = 0;
+        }
+
+        private void SetUpgradeListVisible(bool visible)
+        {
+            UpgradeButton.Selected = visible;
+            if (visible != UpgradeList.Shown)
+            {
+                if (!visible) UpgradeList.Hide();
+                else
+                {
+                    //if upgrades are available, show the list
+                    if (ActiveEntity == null) return;
+                    UpgradeList.Show(ActiveEntity);
+                }
+            }
+        }
+
+        private void UpgradeButton_OnButtonClick(UIElement button)
+        {
+            SetUpgradeListVisible(!UpgradeList.Shown);
         }
 
         private UIImage AddButtonBackground(UIElement button, Texture2D img)
@@ -396,6 +443,14 @@ namespace FSO.Client.UI.Panels
             Tab = 0;
         }
 
+        public void ReloadEntityInfo(bool bought)
+        {
+            if (ActiveEntity == null) return;
+            var lastTab = Tab;
+            SetInfo(LotParent.vm, ActiveEntity, bought);
+            Tab = lastTab;
+        }
+
         public override void Update(UpdateState state)
         {
             if (Active)
@@ -408,13 +463,13 @@ namespace FSO.Client.UI.Panels
                 }
                 if (ActiveEntity != null && LastSalePrice != ActiveEntity.MultitileGroup.SalePrice && ActiveEntity.Thread != null)
                 {
-                    var lastTab = Tab;
-                    SetInfo(ActiveEntity.Thread.Context.VM, ActiveEntity, true);
-                    Tab = lastTab;
+                    ReloadEntityInfo(true);
                 }
+                
             }
             else
             {
+                SetUpgradeListVisible(false);
                 if (Opacity > 0f) Opacity -= 1f / 20f;
                 else
                 {
@@ -424,10 +479,29 @@ namespace FSO.Client.UI.Panels
             }
             base.Update(state);
 
+            UpgradeButton.Opacity = Opacity;
+            UpgradeList.Opacity = Opacity;
+
             if (Visible && Thumb3D != null) Invalidate();
         }
 
-        public Tuple<string, string> GetObjName(VMEntity entity)
+        private string DescProcess(VM vm, VMEntity ent, string desc, STR source)
+        {
+            var frame = new VMStackFrame()
+            {
+                Caller = ent,
+                Callee = ent,
+                CodeOwner = ent.Object,
+                StackObject = ent,
+                Routine = null,
+                Args = new short[4],
+                Thread = ent.Thread,
+            };
+
+            return VMDialogHandler.ParseDialogString(frame, desc, source);
+        }
+
+        public Tuple<string, string> GetObjName(VM vm, VMEntity entity)
         {
             string name = null;
             if (entity.Object.GUID == 0x3278BD34 || entity.Object.GUID == 0x5157DDF2)
@@ -453,20 +527,32 @@ namespace FSO.Client.UI.Panels
             var item = Content.Content.Get().WorldCatalog.GetItemByGUID(def.GUID);
 
             CTSS catString = obj.Resource.Get<CTSS>(def.CatalogStringsID);
+            var desc = "";
             if (catString != null)
             {
                 if (name == null) name = catString.GetString(0);
-                return new Tuple<string, string>(name, catString.GetString(1));
+                desc = catString.GetString(1);
             }
             else
             {
                 if (name == null) name = entity.ToString();
-                return new Tuple<string, string>(name, "");
             }
+            var tsoState = entity.PlatformState as VMTSOObjectState;
+            if (tsoState != null && tsoState.UpgradeLevel > 0)
+            {
+                name += ' ';
+                for (int i=0; i<tsoState.UpgradeLevel; i++)
+                {
+                    name += '★';
+                }
+            }
+            desc = DescProcess(vm, entity, desc, catString);
+            return new Tuple<string, string>(name, desc);
         }
 
         public void SetInfo(VM vm, VMEntity entity, bool bought)
         {
+            var sameEntity = entity == ActiveEntity;
             ActiveEntity = entity;
             var obj = entity.Object;
             var def = entity.MasterDefinition;
@@ -474,7 +560,7 @@ namespace FSO.Client.UI.Panels
 
             var item = Content.Content.Get().WorldCatalog.GetItemByGUID(def.GUID);
 
-            var ndesc = GetObjName(entity);
+            var ndesc = GetObjName(vm, entity);
 
             DescriptionText.CurrentText = ndesc.Item1 + "\r\n" + ndesc.Item2;
             ObjectNameText.Caption = ndesc.Item1;
@@ -486,12 +572,17 @@ namespace FSO.Client.UI.Panels
                 vm.PlatformState.Validator.CanManageAsyncSale((VMAvatar)LotParent.ActiveEntity, ActiveEntity as VMGameObject)
                 && (item?.DisableLevel ?? 0) < 2;
 
+            var upgrades = Content.Content.Get().Upgrades.GetFile(entity.Object.Resource.MainIff.Filename);
+            if (!sameEntity) SetHasUpgrades(upgrades != null, bought);
+
+            var upgradeLevel = (entity.PlatformState as VMTSOObjectState)?.UpgradeLevel ?? 0;
             int price = def.Price;
             int finalPrice = price;
             int dcPercent = 0;
             if (item != null)
             {
                 price = (int)item.Value.Price;
+                if (upgradeLevel > 0) price = entity.MultitileGroup.InitialPrice;
                 dcPercent = VMBuildableAreaInfo.GetDiscountFor(item.Value, vm);
                 finalPrice = (price * (100-dcPercent)) / 100;
                 if (LotParent.ObjectHolder.DonateMode)
@@ -585,7 +676,7 @@ namespace FSO.Client.UI.Panels
                 if (Thumbnail.Texture != null) Thumbnail.Texture.Dispose();
                 if (Thumb3D != null) Thumb3D.Dispose();
                 Thumb3D = null; Thumbnail.Texture = null;
-                if (FSOEnvironment.Enable3D)
+                if (World.State.CameraMode == LotView.Model.CameraRenderMode._3D)
                 {
                     Thumb3D = new UI3DThumb(entity);
                 }
@@ -621,12 +712,29 @@ namespace FSO.Client.UI.Panels
 
             SpecificTabButton.Disabled = true;
             SellBackButton.Disabled = true;
+            SetHasUpgrades(null, false);
 
             if (Thumbnail.Texture != null) Thumbnail.Texture.Dispose();
             if (Thumb3D != null) Thumb3D.Dispose();
             Thumb3D = null;
             Thumbnail.Texture = thumb;
             UpdateImagePosition();
+        }
+        
+        private void SetHasUpgrades(bool? hasUpgrades, bool bought)
+        {
+            if (hasUpgrades == null || (InInventory == 1 && !bought))
+            {
+                UpgradeBack.Visible = false;
+                UpgradeButton.Visible = false;
+            } else
+            {
+                UpgradeBack.Visible = true;
+                UpgradeButton.Visible = true;
+                UpgradeButton.Disabled = !hasUpgrades.Value;
+            }
+            UpgradeList.ReadOnly = InInventory == 2;
+            SetUpgradeListVisible(false);
         }
 
         private void UpdateImagePosition() {

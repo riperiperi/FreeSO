@@ -28,7 +28,7 @@ namespace FSO.Client.Rendering.City
         float GetIsoScale();
         Vector2 CalculateR();
         Vector2 CalculateRShadow();
-        void InheritPosition(Terrain parent, World lotWorld, CoreGameScreenController controller);
+        void InheritPosition(Terrain parent, World lotWorld, CoreGameScreenController controller, bool instant);
 
         void CenterCamera(CityCameraCenter center);
         void ClearCenter();

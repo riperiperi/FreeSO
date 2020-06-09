@@ -37,7 +37,7 @@ namespace FSO.IDE.EditorComponent.Primitives
                 flagStr.Append(" as reference");
                 prepend = ",\r\n";
             }
-            if (op.AllowIntersection) { flagStr.Append(prepend + "Allow Intersection"); prepend = ",\r\n"; }
+            if (op.PreferNonEmpty) { flagStr.Append(prepend + "Prefer non-empty"); prepend = ",\r\n"; }
             if (op.UserEditableTilesOnly) { flagStr.Append(prepend + "User Editable tiles only"); prepend = ",\r\n"; }
 
             if (flagStr.Length != 0)
@@ -52,11 +52,13 @@ namespace FSO.IDE.EditorComponent.Primitives
         public override void PopulateOperandView(BHAVEditor master, EditorScope escope, TableLayoutPanel panel)
         {
             panel.Controls.Add(new OpLabelControl(master, escope, Operand, new OpStaticTextProvider("Finds a location to place the Stack Object, using a variety of modes and options.")));
-            panel.Controls.Add(new OpComboControl(master, escope, Operand, "Mode:", "Mode", new OpStaticNamedPropertyProvider(EditorScope.Behaviour.Get<STR>(239))));
+            var modes = new OpStaticNamedPropertyProvider(EditorScope.Behaviour.Get<STR>(239));
+            modes.EnsureProperty(5, "random");
+            panel.Controls.Add(new OpComboControl(master, escope, Operand, "Mode:", "Mode", modes));
 
             panel.Controls.Add(new OpFlagsControl(master, escope, Operand, "Flags:", new OpFlag[] {
                 new OpFlag("Use Local As Ref", "UseLocalAsRef"),
-                new OpFlag("Allow Intersection", "AllowIntersection"),
+                new OpFlag("Prefer Non-Empty", "PreferNonEmpty"),
                 new OpFlag("User Editable Tiles Only", "UserEditableTilesOnly"),
                 }));
             panel.Controls.Add(new OpLabelControl(master, escope, Operand, new OpStaticTextProvider("If 'Use Local As Ref' is set, the object with ID specified in the local is used as the starting position instead of the caller.")));

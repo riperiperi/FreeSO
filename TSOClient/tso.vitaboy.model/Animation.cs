@@ -38,7 +38,9 @@ namespace FSO.Vitaboy
         /// <summary>
         /// Total number of frames in this animation.
         /// </summary>
-        public int NumFrames { get; internal set; }
+        public int NumFrames { get; set; }
+
+        public BCF ParentBCF;
 
         /// <summary>
         /// Reads an animation from a stream.
@@ -46,11 +48,6 @@ namespace FSO.Vitaboy
         /// <param name="stream">The Stream instance to read from.</param>
         public void Read(BCFReadProxy io, bool bcf)
         {
-            if (!bcf)
-            {
-                var version = io.ReadUInt32();
-            }
-
             if (bcf)
             {
                 Name = io.ReadPascalString();
@@ -58,6 +55,7 @@ namespace FSO.Vitaboy
             }
             else
             {
+                var version = io.ReadUInt32();
                 Name = io.ReadLongPascalString();
             }
             Duration = io.ReadFloat();
@@ -111,8 +109,8 @@ namespace FSO.Vitaboy
                 motion.Duration = io.ReadFloat();
                 motion.HasTranslation = (((bcf) ? io.ReadInt32() : io.ReadByte()) == 1);
                 motion.HasRotation = (((bcf) ? io.ReadInt32() : io.ReadByte()) == 1);
-                motion.FirstTranslationIndex = io.ReadUInt32();
-                motion.FirstRotationIndex = io.ReadUInt32();
+                motion.FirstTranslationIndex = io.ReadInt32();
+                motion.FirstRotationIndex = io.ReadInt32();
 
                 var hasPropsList = bcf || io.ReadByte() == 1;
                 if (hasPropsList)
@@ -153,7 +151,110 @@ namespace FSO.Vitaboy
 
                 Motions[i] = motion;
             }
+            UpdateFPS();
+        }
+
+        public void UpdateFPS()
+        {
             FramesPerSecond = (int)Math.Round(NumFrames / (Duration / 1000));
+        }
+
+        public void Write(BCFWriteProxy io, bool bcf)
+        {
+            if (bcf)
+            {
+                io.WritePascalString(Name);
+                io.WritePascalString(XSkillName);
+            }
+            else
+            {
+                io.WriteUInt32(2);
+                io.WriteLongPascalString(Name);
+            }
+            io.WriteFloat(Duration);
+            io.WriteFloat(Distance);
+            if (bcf) io.WriteInt32(IsMoving);
+            else io.WriteByte(IsMoving);
+
+            io.WriteUInt32(TranslationCount);
+            io.SetGrouping(3);
+            if (!bcf)
+            {
+                for (var i = 0; i < TranslationCount; i++)
+                {
+                    var trans = Translations[i];
+                    io.WriteFloat(-trans.X);
+                    io.WriteFloat(trans.Y);
+                    io.WriteFloat(trans.Z);
+                }
+            }
+            io.SetGrouping(1);
+
+            io.WriteUInt32(RotationCount);
+            io.SetGrouping(4);
+            if (!bcf)
+            {
+                for (var i = 0; i < RotationCount; i++)
+                {
+                    var rot = Rotations[i];
+                    io.WriteFloat(rot.X);
+                    io.WriteFloat(-rot.Y);
+                    io.WriteFloat(-rot.Z);
+                    io.WriteFloat(-rot.W);
+                }
+            }
+            io.SetGrouping(1);
+
+            io.WriteUInt32((uint)Motions.Length);
+            foreach (var motion in Motions)
+            {
+                if (!bcf) io.WriteUInt32(0); //unknown
+                io.WritePascalString(motion.BoneName);
+                io.WriteUInt32(motion.FrameCount);
+                io.WriteFloat(motion.Duration);
+                if (bcf)
+                {
+                    io.WriteInt32(motion.HasTranslation ? 1 : 0);
+                    io.WriteInt32(motion.HasRotation ? 1 : 0);
+                }
+                else
+                {
+                    io.WriteByte((byte)(motion.HasTranslation ? 1 : 0));
+                    io.WriteByte((byte)(motion.HasRotation ? 1 : 0));
+                }
+                io.WriteInt32(motion.FirstTranslationIndex);
+                io.WriteInt32(motion.FirstRotationIndex);
+
+                if (!bcf)
+                {
+                    io.WriteByte(1); //has props
+                }
+                //write props list
+                var props = motion.Properties;
+                io.WriteUInt32((uint)props.Length);
+                foreach (var prop in props)
+                {
+                    //write property list
+                    WritePropertyList(prop, io, bcf);
+                }
+
+                if (!bcf)
+                {
+                    io.WriteByte(1); //has time props
+                }
+                //write time props list
+                var timePropsList = motion.TimeProperties;
+                io.WriteUInt32((uint)timePropsList.Length);
+                foreach (var list in timePropsList)
+                {
+                    io.WriteUInt32((uint)list.Items.Length);
+                    foreach (var item in list.Items)
+                    {
+                        io.WriteInt32(item.ID);
+                        WritePropertyList(item.Properties, io, bcf);
+                    }
+                }
+            }
         }
 
         /// <summary>
@@ -184,6 +285,20 @@ namespace FSO.Vitaboy
                 Items = result
             };
         }
+
+        private void WritePropertyList(PropertyList props, BCFWriteProxy io, bool shortPairs)
+        {
+            if (!shortPairs) io.WriteUInt32((uint)props.Items.Length);
+            foreach (var prop in props.Items)
+            {
+                io.WriteUInt32((uint)prop.KeyPairs.Count);
+                foreach (var pair in prop.KeyPairs)
+                {
+                    io.WritePascalString(pair.Key);
+                    io.WritePascalString(pair.Value);
+                }
+            }
+        }
     }
 
     /// <summary>
@@ -198,8 +313,8 @@ namespace FSO.Vitaboy
         public float Duration;
         public bool HasTranslation;
         public bool HasRotation;
-        public uint FirstTranslationIndex;
-        public uint FirstRotationIndex;
+        public int FirstTranslationIndex;
+        public int FirstRotationIndex;
 
         public PropertyList[] Properties;
         public TimePropertyList[] TimeProperties;

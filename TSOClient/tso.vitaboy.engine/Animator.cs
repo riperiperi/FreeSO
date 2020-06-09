@@ -148,6 +148,37 @@ namespace FSO.Vitaboy
             return AnimationStatus.IN_PROGRESS;
         }
 
+        public static Quaternion CalculateHeadSeek(Avatar avatar, Vector3 target, float radianDir)
+        {
+            var head = avatar.Skeleton.GetBone("HEAD");
+            var neck = avatar.Skeleton.GetBone(head.ParentName);
+
+            var absoluteNeck = neck.AbsoluteMatrix * Matrix.CreateRotationY((float)(Math.PI - radianDir));
+            var inv = Matrix.Invert(absoluteNeck);
+
+            var diff = Vector3.Transform(target, inv);
+
+            var dirh = (float)Math.Atan2(-diff.Y, diff.Z);
+            var dist = Math.Sqrt(diff.Z * diff.Z + diff.Y * diff.Y);
+            var dirv = (float)Math.Atan(diff.X / dist);
+
+            dirv = Math.Min((float)Math.PI / 4, Math.Max((float)Math.PI / -4, dirv));
+            var hlimit = (float)Math.PI * (65f / 180f);
+            dirh = Math.Min(hlimit, Math.Max(-hlimit, dirh));
+
+            var mat = Matrix.CreateRotationY(dirv) * Matrix.CreateRotationX(dirh);
+            var quat = Quaternion.CreateFromRotationMatrix(mat);
+            return quat;
+        }
+
+        public static void ApplyHeadSeek(SimAvatar avatar, Quaternion quat, float weight)
+        {
+            var head = avatar.Skeleton.GetBone("HEAD");
+
+            if (weight == 1) head.Rotation = quat;
+            else head.Rotation = Quaternion.Slerp(head.Rotation, quat, weight);
+        }
+
         public override void DeviceReset(Microsoft.Xna.Framework.Graphics.GraphicsDevice Device)
         {
         }

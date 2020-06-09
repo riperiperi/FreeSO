@@ -83,6 +83,7 @@ float3 RotateXY(float3 posIn, float angle) {
 //miny, yrange, fall speed, fall speed variation
 //wind x, wind z, wind variation, rotation variation
 //minx, xrange, minz, zrange
+//scale
 ParticleOutput SnowVS(in ParticleInput input)
 {
 	ParticleOutput output = (ParticleOutput)0;
@@ -104,7 +105,7 @@ ParticleOutput SnowVS(in ParticleInput input)
 	float2 xzbase = (Parameters3.xz + boxCtr.xz); //test
 	xz = ((xz - xzbase) % Parameters3.yw) + xzbase;
 
-	float flakeSize = sin(input.Position.y * 1000)*0.15 + 1;
+	float flakeSize = (sin(input.Position.y * 1000)*0.15 + 1) * Parameters4.x;
 	float4 realCtr = float4(xz.x, newY + boxCtr.y, xz.y, 1);
 	float4 realPos = Billboard(realCtr, float4(RotateXY(input.ModelPosition, rotSpeed*realTime) * flakeSize, 1));
 

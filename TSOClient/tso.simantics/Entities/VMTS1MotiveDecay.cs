@@ -50,10 +50,11 @@ namespace FSO.SimAntics.Entities
         {
             var roomScore = context.GetRoomScore(context.GetRoomAt(avatar.Position));
             avatar.SetMotiveData(VMMotive.Room, roomScore);
-            if (context.Clock.Minutes/2 == LastMinute || avatar.GetValue(VMStackObjectVariable.Hidden) > 0) return;
-            LastMinute = context.Clock.Minutes/2;
+            var minutes = context.Clock.Minutes;
+            if (minutes/2 == LastMinute || avatar.GetValue(VMStackObjectVariable.Hidden) > 0) return;
+            var hours = context.Clock.Hours;
+            LastMinute = minutes/2;
             var sleeping = (avatar.GetMotiveData(VMMotive.SleepState) != 0);
-
             int moodSum = 0;
 
             for (int i = 0; i < 7; i++)
@@ -81,14 +82,28 @@ namespace FSO.SimAntics.Entities
                     case 3:
                         frac = ToFixed1000(Constants[sleeping ? 13 : 12]) + FracMul(r_Hunger, ToFixed1000(Constants[4])); break;
                     case 4:
+                        //try to wake the sim up if they're asleep on the wake hour, and they're well rested.
+                        if (sleeping && hours == Constants[2] && motive >= Constants[0] - 100)
+                        {
+                            avatar.SetMotiveData(VMMotive.SleepState, 0);
+                        }
+
                         if (sleeping)
                         {
-                            frac = (context.Clock.Hours >= Constants[2]) ? ToFixed1000(Constants[3]) : 0;
+                            if (avatar.GetMotiveData(VMMotive.SleepState) == -1)
+                            {
+                                frac = -643 * 2; 
+                            }
+                            else
+                            {
+                                frac = (context.Clock.Hours >= Constants[2]) ? ToFixed1000(Constants[3]) : 0;
+                            }
                         } else
                         {
                             frac = (ToFixed1000(Constants[0]) / (30 * (int)Constants[1]));
                         }
                         //energy span over wake hours. small energy drift applied if asleep during the day.
+                       
                         break;
                     case 5:
                         frac = (sleeping)?0:ToFixed1000(Constants[8]);
@@ -105,6 +120,12 @@ namespace FSO.SimAntics.Entities
                     motive -= (short)(MotiveFractions[i] / 1000);
                     MotiveFractions[i] %= 1000;
                     if (motive < -100) motive = -100;
+                    avatar.SetMotiveData(DecrementMotives[i], motive);
+                }
+                if (MotiveFractions[i] < 0)
+                {
+                    motive += (short)(1 - MotiveFractions[i] / 1000);
+                    MotiveFractions[i] += (short)((1 - MotiveFractions[i]/1000) * 1000);
                     avatar.SetMotiveData(DecrementMotives[i], motive);
                 }
                 moodSum += motive;

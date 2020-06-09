@@ -33,12 +33,14 @@ namespace FSO.SimAntics.NetPlay.Model.Commands
             {
                 VMEntity obj = vm.GetObjectById(ObjectID);
                 if (obj == null || (!vm.TS1 && caller == null)) return false;
+                var value = (obj.PersistID != 0 || vm.TS1) ? obj.MultitileGroup.Price : 0;
                 obj.Delete(CleanupAll, vm.Context);
 
                 // If we're the server, tell the global link to give their money back.
                 if (vm.GlobalLink != null)
                 {
-                    vm.GlobalLink.PerformTransaction(vm, false, uint.MaxValue, caller?.PersistID ?? uint.MaxValue, (obj.PersistID != 0)?obj.MultitileGroup.Price:0,
+                    vm.GlobalLink.PerformTransaction(vm, false, uint.MaxValue, caller?.PersistID ?? uint.MaxValue,
+                        value,
                     (bool success, int transferAmount, uint uid1, uint budget1, uint uid2, uint budget2) =>
                     {
 
@@ -99,8 +101,8 @@ namespace FSO.SimAntics.NetPlay.Model.Commands
             if (Verified) return true;
             ObjectPID = 0;
             VMEntity obj = vm.GetObjectById(ObjectID);
-            
-            if (!vm.TS1) 
+
+            if (!vm.TS1)
             {
                 Mode = vm.PlatformState.Validator.GetDeleteMode(Mode, caller, obj);
                 if (Mode == DeleteMode.Disallowed) return false;
@@ -110,6 +112,8 @@ namespace FSO.SimAntics.NetPlay.Model.Commands
                     return true; //admins can always deete
                 }
             }
+            else if (vm.Context.Cheats.MoveObjects) //for ts1 moveobjects cheat
+                return true;
             if (obj == null || (obj is VMAvatar) || obj.IsUserMovable(vm.Context, true) != VMPlacementError.Success) return false;
             if ((((VMGameObject)obj).Disabled & VMGameObjectDisableFlags.TransactionIncomplete) > 0) return false; //can't delete objects mid trasaction...
             VMNetLockCmd.LockObj(vm, obj);

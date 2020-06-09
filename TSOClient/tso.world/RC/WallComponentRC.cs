@@ -1,4 +1,5 @@
 ﻿using FSO.Content.Model;
+using FSO.LotView.Effects;
 using FSO.LotView.LMap;
 using FSO.LotView.Model;
 using Microsoft.Xna.Framework;
@@ -306,18 +307,18 @@ namespace FSO.LotView.RC
         {
             var effect = WorldContent.RCObject;
 
-            effect.CurrentTechnique = effect.Techniques["WallDraw"];
+            effect.SetTechnique(RCObjectTechniques.WallDraw);
 
             var lastSideMask = false;
 
-            var xz = ((WorldStateRC)state).GetWallOffset() * 0.7f;
+            var xz = state.GetWallOffset() * 0.7f;
 
             gd.BlendState = BlendState.Opaque;
             if (!gd.RasterizerState.ScissorTestEnable) gd.RasterizerState = RasterizerState.CullCounterClockwise;
             var baseWorld = Matrix.CreateRotationX((float)Math.PI / 2) * Matrix.CreateScale(3f, -3f, 3f);
-            effect.Parameters["World"].SetValue(baseWorld);
-            effect.Parameters["SideMask"].SetValue(0f);
-            effect.Parameters["Level"].SetValue((float)(state.Level - 0.999f));
+            effect.World = baseWorld;
+            effect.SideMask = 0f;
+            effect.Level = (float)(state.Level - 0.999f);
             //effect.Parameters["CutawayTex"].SetValue(Cutaway);
             //effect.Parameters["CurrentLevel"].SetValue(state.Level - 1);
             if (GroupsByTexture.Count < state.Level) return;
@@ -328,16 +329,13 @@ namespace FSO.LotView.RC
                 foreach (var g in grp.Values)
                 {
                     if (g.PrimCount == 0) continue;
-                    if (effect.Parameters["AnisoTex"] != null)
-                        effect.Parameters["AnisoTex"].SetValue(g.Pixel);
-                    else
-                        effect.Parameters["MeshTex"].SetValue(g.Pixel);
-                    effect.Parameters["MaskTex"].SetValue(g.Mask);
+                    effect.AnisoTex = g.Pixel;
+                    effect.MaskTex = g.Mask;
 
                     if (lastSideMask != g.UseOffset)
                     {
-                        effect.Parameters["SideMask"].SetValue(g.UseOffset ? 1f : 0f);
-                        effect.Parameters["World"].SetValue((g.UseOffset) ? (Matrix.CreateTranslation(new Vector3(xz, 0)) * baseWorld) : baseWorld);
+                        effect.SideMask = g.UseOffset ? 1f : 0f;
+                        effect.World = (g.UseOffset) ? (Matrix.CreateTranslation(new Vector3(xz, 0)) * baseWorld) : baseWorld;
                         lastSideMask = g.UseOffset;
                     }
                     foreach (var pass in effect.CurrentTechnique.Passes)
@@ -372,7 +370,7 @@ namespace FSO.LotView.RC
         {
             var effect = WorldContent.RCObject;
 
-            effect.CurrentTechnique = effect.Techniques["WallLMap"];
+            effect.SetTechnique(RCObjectTechniques.WallLMap);
 
             var lastSideMask = false;
 
@@ -382,10 +380,10 @@ namespace FSO.LotView.RC
 
             //mat.M31 = 0; mat.M32 = 0; mat.M33 = 0; mat.M34 = 0f; //z is unimportant, so it is zero.
 
-            effect.Parameters["World"].SetValue(Matrix.CreateTranslation(0, 0, -light.Level+(0.07f / light.FalloffMultiplier)) * lightTransform);
-            effect.Parameters["Level"].SetValue((float)(light.Level));
-            effect.Parameters["SideMask"].SetValue(0f);
-            effect.Parameters["ViewProjection"].SetValue(projection);
+            effect.World = Matrix.CreateTranslation(0, 0, -light.Level+(0.07f / light.FalloffMultiplier)) * lightTransform;
+            effect.Level = (float)(light.Level);
+            effect.SideMask = 0f;
+            effect.ViewProjection = projection;
 
             //dont care about base texture or offset here.
             for (int i = light.Level; i < GroupsByTexture.Count; i++)
@@ -394,12 +392,12 @@ namespace FSO.LotView.RC
                 foreach (var g in grp.Values)
                 {
                     if (g.PrimCount == 0) continue;
-                    effect.Parameters["MaskTex"].SetValue(g.Mask);
+                    effect.MaskTex = g.Mask;
 
                     if (lastSideMask != g.UseOffset)
                     {
                         gd.BlendState = (g.UseOffset) ? MaxBlendRed : MaxBlendGreen;
-                        effect.Parameters["SideMask"].SetValue(g.UseOffset ? 1f : 0f);
+                        effect.SideMask = g.UseOffset ? 1f : 0f;
                         lastSideMask = g.UseOffset;
                     }
                     foreach (var pass in effect.CurrentTechnique.Passes)

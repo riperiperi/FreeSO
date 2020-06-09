@@ -25,11 +25,11 @@ namespace FSO.SimAntics.NetPlay.Model.Commands
         public PurchaseMode Mode = PurchaseMode.Normal;
 
         //data sent back to the client only
-        public uint GUID;
-        public byte[] Data;
+        public VMInventoryRestoreObject Info = new VMInventoryRestoreObject();
 
         //internal
         private VMMultitileGroup CreatedGroup;
+        public short CreatedBaseID => CreatedGroup?.BaseObject?.ObjectID ?? 0;
         public bool Verified;
 
         /// <summary>
@@ -41,10 +41,8 @@ namespace FSO.SimAntics.NetPlay.Model.Commands
         /// <returns></returns>
         public override bool Execute(VM vm, VMAvatar caller)
         {
-            if (caller == null) return false;
-
             //careful here! if the object can't be placed, we have to put their object back
-            if (!vm.Context.ObjectQueries.MultitileByPersist.ContainsKey(GUID) && TryPlace(vm, caller))
+            if (!vm.Context.ObjectQueries.MultitileByPersist.ContainsKey(Info.GUID) && TryPlace(vm, caller))
             {
                 if (CreatedGroup.BaseObject is VMGameObject)
                 {
@@ -58,6 +56,7 @@ namespace FSO.SimAntics.NetPlay.Model.Commands
                 //oops, we can't place this object or some other issue occured. move it back to inventory.
                 if (CreatedGroup != null)
                 {
+                    vm.Context.ObjectQueries.RemoveMultitilePersist(vm, ObjectPID);
                     foreach (var o in CreatedGroup.Objects) o.PersistID = 0; //no longer representative of the object in db.
                     CreatedGroup.Delete(vm.Context);
                 }
@@ -77,18 +76,28 @@ namespace FSO.SimAntics.NetPlay.Model.Commands
 
         private bool TryPlace(VM vm, VMAvatar caller)
         {
+            var internalMode = caller == null;
             if (Mode != PurchaseMode.Donate && !vm.PlatformState.CanPlaceNewUserObject(vm)) return false;
             if (Mode == PurchaseMode.Donate && !vm.PlatformState.CanPlaceNewDonatedObject(vm)) return false;
 
             VMStandaloneObjectMarshal state;
 
-            if ((Data?.Length ?? 0) == 0) state = null;
+            var catalog = Content.Content.Get().WorldCatalog;
+            var item = catalog.GetItemByGUID(Info.GUID);
+
+            if (caller != null && (item?.DisableLevel ?? 0) > 2)
+            {
+                //object cannot be placed (disable level 3)
+                return false;
+            }
+
+            if ((Info.Data?.Length ?? 0) == 0) state = null;
             else
             {
                 state = new VMStandaloneObjectMarshal();
                 try
                 {
-                    using (var reader = new BinaryReader(new MemoryStream(Data)))
+                    using (var reader = new BinaryReader(new MemoryStream(Info.Data)))
                     {
                         state.Deserialize(reader);
                     }
@@ -100,31 +109,27 @@ namespace FSO.SimAntics.NetPlay.Model.Commands
                     state = null;
                 }
             }
-
             
             if (state != null)
             {
                 CreatedGroup = state.CreateInstance(vm, false);
                 CreatedGroup.ChangePosition(new LotTilePos(x, y, level), dir, vm.Context, VMPlaceRequestFlags.UserPlacement);
                 if (CreatedGroup.Objects.Count == 0) return false;
-                if (CreatedGroup.BaseObject.Position == LotTilePos.OUT_OF_WORLD)
+                if (CreatedGroup.BaseObject.Position == LotTilePos.OUT_OF_WORLD && !internalMode)
                 {
                     return false;
                 }
             }
             else
             {
-                var catalog = Content.Content.Get().WorldCatalog;
-                var item = catalog.GetItemByGUID(GUID);
-
-                CreatedGroup = vm.Context.CreateObjectInstance(GUID, LotTilePos.OUT_OF_WORLD, dir);
+                CreatedGroup = vm.Context.CreateObjectInstance(Info.GUID, LotTilePos.OUT_OF_WORLD, dir);
                 if (CreatedGroup == null) return false;
                 CreatedGroup.ChangePosition(new LotTilePos(x, y, level), dir, vm.Context, VMPlaceRequestFlags.UserPlacement);
 
                 CreatedGroup.ExecuteEntryPoint(11, vm.Context); //User Placement
                 if (CreatedGroup.Objects.Count == 0) return false;
 
-                if (CreatedGroup.BaseObject.Position == LotTilePos.OUT_OF_WORLD)
+                if (CreatedGroup.BaseObject.Position == LotTilePos.OUT_OF_WORLD && !internalMode)
                 {
                     return false;
                 }
@@ -132,14 +137,25 @@ namespace FSO.SimAntics.NetPlay.Model.Commands
 
             foreach (var obj in CreatedGroup.Objects)
             {
-                if (obj is VMGameObject) ((VMTSOObjectState)obj.TSOState).OwnerID = caller.PersistID;
+                var tsostate = (obj.PlatformState as VMTSOObjectState);
+                if (tsostate != null) {
+                    if (caller != null) tsostate.OwnerID = caller.PersistID;
+                    bool reinitRequired = false;
+                    if (Info.UpgradeLevel > tsostate.UpgradeLevel)
+                    {
+                        tsostate.UpgradeLevel = Info.UpgradeLevel;
+                        reinitRequired = true;
+                    }
+                    obj.UpdateTuning(vm);
+                    if (reinitRequired) VMNetUpgradeCmd.TryReinit(obj, vm, tsostate.UpgradeLevel);
+                }
                 obj.PersistID = ObjectPID;
                 ((VMGameObject)obj).DisableIfTSOCategoryWrong(vm.Context);
             }
             vm.Context.ObjectQueries.RegisterMultitilePersist(CreatedGroup, ObjectPID);
 
             //is this my sim's object? try remove it from our local inventory representaton
-            if (((VMTSOObjectState)CreatedGroup.BaseObject.TSOState).OwnerID == vm.MyUID)
+            if (((VMTSOObjectState)CreatedGroup.BaseObject.TSOState).OwnerID == vm.MyUID && Info.RestoreType != VMInventoryRestoreType.CopyOOW)
             {
                 var index = vm.MyInventory.FindIndex(x => x.ObjectPID == ObjectPID);
                 if (index != -1) vm.MyInventory.RemoveAt(index);
@@ -151,11 +167,14 @@ namespace FSO.SimAntics.NetPlay.Model.Commands
                 (CreatedGroup.BaseObject.TSOState as VMTSOObjectState).Donate(vm, CreatedGroup.BaseObject);
             }
 
-            vm.SignalChatEvent(new VMChatEvent(caller, VMChatEventType.Arch,
-                caller.Name,
-                vm.GetUserIP(caller.PersistID),
-                "placed (from inventory) " + CreatedGroup.BaseObject.ToString() + " at (" + x / 16f + ", " + y / 16f + ", " + level + ")"
-            ));
+            if (caller != null)
+            {
+                vm.SignalChatEvent(new VMChatEvent(caller, VMChatEventType.Arch,
+                    caller.Name,
+                    vm.GetUserIP(caller.PersistID),
+                    "placed (from inventory) " + CreatedGroup.BaseObject.ToString() + " at (" + x / 16f + ", " + y / 16f + ", " + level + ")"
+                ));
+            }
             return true;
         }
 
@@ -175,11 +194,10 @@ namespace FSO.SimAntics.NetPlay.Model.Commands
                 !vm.TSOState.CanPlaceNewUserObject(vm))
                 return false;
 
-            vm.GlobalLink.RetrieveFromInventory(vm, ObjectPID, caller.PersistID, true, (uint guid, byte[] data) =>
+            vm.GlobalLink.RetrieveFromInventory(vm, ObjectPID, caller.PersistID, true, (info) =>
             {
-                if (guid == 0) return; //todo: error feedback?
-                GUID = guid;
-                Data = data;
+                if (info.GUID == 0) return; //todo: error feedback?
+                Info = info;
                 Verified = true;
                 vm.ForwardCommand(this);
             });
@@ -198,9 +216,7 @@ namespace FSO.SimAntics.NetPlay.Model.Commands
             writer.Write(level);
             writer.Write((byte)dir);
 
-            writer.Write(GUID);
-            writer.Write((Data?.Length)??0);
-            if (Data != null) writer.Write(Data);
+            Info.SerializeInto(writer);
 
             writer.Write((byte)Mode);
         }
@@ -214,14 +230,75 @@ namespace FSO.SimAntics.NetPlay.Model.Commands
             level = reader.ReadSByte();
             dir = (Direction)reader.ReadByte();
 
-            GUID = reader.ReadUInt32();
-            var length = reader.ReadInt32();
-            if (length > 4096) throw new Exception("Object data cannot be this large!");
-            Data = reader.ReadBytes(length);
+            Info.Deserialize(reader);
 
             Mode = (PurchaseMode)reader.ReadByte();
         }
 
         #endregion
+    }
+
+    public class VMInventoryRestoreObject
+    {
+        public uint PersistID = 0;
+        public uint GUID;
+        public VMInventoryRestoreType RestoreType = VMInventoryRestoreType.Normal;
+
+        //important state that is saved in the db for redundancy, in case inventory state is missing, outdated or corrupt
+        //only used if save state is missing
+        public byte UpgradeLevel; //prefer larger of restore data and this
+        public int Wear; //prefer larger of restore data and this
+        public List<short> Attributes = new List<short>();
+
+        public VMInventoryRestoreObject()
+        {
+
+        }
+
+        public VMInventoryRestoreObject(uint guid, byte upgradeLevel, int wear)
+        {
+            GUID = guid;
+            UpgradeLevel = upgradeLevel;
+            Wear = wear;
+        }
+
+        public byte[] Data;
+
+        public void SerializeInto(BinaryWriter writer)
+        {
+            writer.Write(PersistID);
+            writer.Write(GUID);
+            writer.Write((byte)RestoreType);
+            writer.Write(UpgradeLevel);
+            writer.Write(Wear);
+            writer.Write(Data?.Length ?? 0);
+            if (Data != null) writer.Write(Data);
+            writer.Write((byte)Attributes.Count);
+            foreach (var attribute in Attributes) writer.Write(attribute);
+        }
+
+        public void Deserialize(BinaryReader reader)
+        {
+            PersistID = reader.ReadUInt32();
+            GUID = reader.ReadUInt32();
+            RestoreType = (VMInventoryRestoreType)reader.ReadByte();
+            UpgradeLevel = reader.ReadByte();
+            Wear = reader.ReadInt32();
+            var length = reader.ReadInt32();
+            if (length > 4096) throw new Exception("Object data cannot be this large!");
+            Data = reader.ReadBytes(length);
+            var attrCount = reader.ReadByte();
+            Attributes.Clear();
+            for (int i = 0; i < attrCount; i++) {
+                Attributes.Add(reader.ReadInt16());
+            }
+        }
+    }
+
+    public enum VMInventoryRestoreType : byte
+    {
+        Normal,
+        CreateOOW,
+        CopyOOW
     }
 }

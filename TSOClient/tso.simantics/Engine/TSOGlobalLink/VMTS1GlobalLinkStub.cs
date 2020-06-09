@@ -245,10 +245,16 @@ namespace FSO.SimAntics.Engine.TSOTransaction
             //todo: nice stub for this using database?
         }
 
+        public void RetrieveFromInventoryByType(VM vm, uint ownerPID, uint guid, int index, bool setOnLot, VMAsyncInventoryRetrieveCallback callback)
+        {
+            //todo: nice stub for this using database?
+            callback(new VMInventoryRestoreObject(0, 0, 0));
+        }
+
         public void RetrieveFromInventory(VM vm, uint objectPID, uint ownerPID, bool setOnLot, VMAsyncInventoryRetrieveCallback callback)
         {
             //todo: nice stub for this using database?
-            callback(0, null);
+            callback(new VMInventoryRestoreObject(0, 0, 0));
         }
 
         public void ForceInInventory(VM vm, uint objectPID, VMAsyncInventorySaveCallback callback)
@@ -311,6 +317,21 @@ namespace FSO.SimAntics.Engine.TSOTransaction
         }
 
         public void GetBulletinState(VM vm, VMAsyncBulletinCallback callback)
+        {
+
+        }
+
+        public void TokenRequest(VM vm, uint avatarID, uint guid, VMTokenRequestMode mode, List<int> attributeData, VMAsyncTokenCallback callback)
+        {
+            callback(true, attributeData);
+        }
+
+        public void GetObjectGlobalCooldown(VM vm, uint objectGUID, uint avatarID, uint userID, TimeSpan cooldownLength, bool considerAccount, bool considerCategory, VMAsyncGetObjectCooldownCallback callback)
+        {
+
+        }
+
+        public void GetAccountIDFromAvatar(uint avatarID, VMAsyncAccountUserIDFromAvatarCallback callback)
         {
 
         }

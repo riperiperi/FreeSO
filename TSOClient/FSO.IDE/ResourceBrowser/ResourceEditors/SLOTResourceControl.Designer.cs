@@ -439,12 +439,12 @@
             131072});
             this.OffsetXEntry.Location = new System.Drawing.Point(311, 231);
             this.OffsetXEntry.Maximum = new decimal(new int[] {
-            10,
+            128,
             0,
             0,
             0});
             this.OffsetXEntry.Minimum = new decimal(new int[] {
-            10,
+            128,
             0,
             0,
             -2147483648});
@@ -462,12 +462,12 @@
             131072});
             this.OffsetYEntry.Location = new System.Drawing.Point(368, 231);
             this.OffsetYEntry.Maximum = new decimal(new int[] {
-            10,
+            128,
             0,
             0,
             0});
             this.OffsetYEntry.Minimum = new decimal(new int[] {
-            10,
+            128,
             0,
             0,
             -2147483648});

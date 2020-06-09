@@ -275,7 +275,7 @@ namespace FSO.Client.UI.Framework
 
                     currentLineWidth = 0;
                 }
-                else
+                else// if (word.Length > 0)
                 {
                     bool wordWritten = false;
                     while (!wordWritten) //repeat until the full word is written (as part of it can be written each pass if it is too long)
@@ -314,6 +314,7 @@ namespace FSO.Client.UI.Framework
                                     min = mid;
                                 mid = (max + min) / 2;
                             }
+                            //min = Math.Min(min, word.Length);
                             currentLine.Append(word.Substring(0, min));
                             currentLineWidth += width;
                             word = word.Substring(min);
@@ -329,6 +330,7 @@ namespace FSO.Client.UI.Framework
                             currentLineNum++;
                             currentLine = new StringBuilder();
                             currentLineWidth = 0;
+                            if (word.Length == 0) wordWritten = true;
                         }
                         else if (currentLineWidth + wordSize.X < allowedWidth)
                         {

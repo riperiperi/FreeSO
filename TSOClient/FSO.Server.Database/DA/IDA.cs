@@ -33,6 +33,7 @@ using FSO.Server.Database.DA.Neighborhoods;
 using FSO.Server.Database.DA.Elections;
 using FSO.Server.Database.DA.Bulletin;
 using FSO.Server.Database.DA.Updates;
+using FSO.Server.Database.DA.GlobalCooldowns;
 
 namespace FSO.Server.Database.DA
 {
@@ -70,7 +71,7 @@ namespace FSO.Server.Database.DA
         ITasks Tasks { get; }
         IEmailConfirmations EmailConfirmations { get; }
         IUpdates Updates { get; }
-
+        IGlobalCooldowns GlobalCooldowns { get; }
         void Flush();
     }
 }

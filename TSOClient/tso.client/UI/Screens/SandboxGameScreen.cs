@@ -1,15 +1,18 @@
 ﻿using FSO.Client.Debug;
 using FSO.Client.Network.Sandbox;
+using FSO.Client.UI.Controls;
 using FSO.Client.UI.Framework;
 using FSO.Client.UI.Model;
 using FSO.Client.UI.Panels;
 using FSO.Client.UI.Panels.WorldUI;
 using FSO.Common;
+using FSO.Common.Model;
 using FSO.Common.Rendering.Framework;
 using FSO.Common.Utils;
 using FSO.Files.Formats.IFF.Chunks;
 using FSO.HIT;
 using FSO.LotView;
+using FSO.LotView.Model;
 using FSO.SimAntics;
 using FSO.SimAntics.Engine.TSOTransaction;
 using FSO.SimAntics.NetPlay;
@@ -90,10 +93,7 @@ namespace FSO.Client.UI.Screens
                         World.Visible = true;
                         ucp.SetMode(UIUCP.UCPMode.LotMode);
                         LotControl.SetTargetZoom(targ);
-                        if (!FSOEnvironment.Enable3D)
-                        {
-                            if (m_ZoomLevel != value) vm.Context.World.InitiateSmoothZoom(targ);
-                        }
+                        if (m_ZoomLevel != value) vm.Context.World.InitiateSmoothZoom(targ);
                         m_ZoomLevel = value;
                     }
                 }
@@ -202,6 +202,17 @@ namespace FSO.Client.UI.Screens
 
         public void Initialize(string propertyName, bool external)
         {
+            DynamicTuning.Global = new DynamicTuning(new DynTuningEntry[] {
+                /* snow
+                new DynTuningEntry()
+                {
+                   tuning_type = "city",
+                   tuning_index = 0,
+                   tuning_table = 0,
+                   value = -1
+                }
+                */
+            });
             Title.SetTitle(propertyName);
             GameFacade.CurrentCityName = propertyName;
             ZoomLevel = 1; //screen always starts at near zoom
@@ -282,21 +293,33 @@ namespace FSO.Client.UI.Screens
         {
             GameFacade.Game.IsFixedTimeStep = (vm == null || vm.Ready);
 
-            Visible = World?.Visible == true && (World?.State as FSO.LotView.RC.WorldStateRC)?.CameraMode != true;
+            Visible = World?.Visible == true && World?.State.Cameras.HideUI == false;
             GameFacade.Game.IsMouseVisible = Visible;
 
-            if (state.NewKeys.Contains(Microsoft.Xna.Framework.Input.Keys.F1) && state.CtrlDown)
+            if (state.WindowFocused && state.NewKeys.Contains(Microsoft.Xna.Framework.Input.Keys.F1) && state.CtrlDown)
                 FSOFacade.Controller.ToggleDebugMenu();
 
             base.Update(state);
-            if (state.NewKeys.Contains(Keys.D1)) ChangeSpeedTo(1);
-            if (state.NewKeys.Contains(Keys.D2)) ChangeSpeedTo(2);
-            if (state.NewKeys.Contains(Keys.D3)) ChangeSpeedTo(3);
-            if (state.NewKeys.Contains(Keys.P)) ChangeSpeedTo(0);
+            
+            if (state.WindowFocused && state.InputManager.GetFocus() == null)
+            {
+                if (state.NewKeys.Contains(Keys.D1) || (state.KeyboardState.NumLock && state.NewKeys.Contains(Keys.NumPad1))) ChangeSpeedTo(1);
+                else if (state.NewKeys.Contains(Keys.D2) || (state.KeyboardState.NumLock && state.NewKeys.Contains(Keys.NumPad2))) ChangeSpeedTo(2);
+                else if (state.NewKeys.Contains(Keys.D3) || (state.KeyboardState.NumLock && state.NewKeys.Contains(Keys.NumPad3))) ChangeSpeedTo(3);
+                else if (state.NewKeys.Contains(Keys.P) || state.NewKeys.Contains(Keys.D0) || (state.KeyboardState.NumLock && state.NewKeys.Contains(Keys.NumPad0))) ChangeSpeedTo(0);
+            }
 
             if (World != null)
-            { 
+            {
                 //stub smooth zoom?
+                if (state.NewKeys.Contains(Keys.F11))
+                {
+                    //render lot thumbnail test
+                    var thumb = World.GetLotThumb(GameFacade.GraphicsDevice, null);
+                    var alert = UIAlert.Alert("Thumbnail Test", ".", false);
+                    alert.SetIcon(thumb, thumb.Width, thumb.Height);
+                    alert.SetSize(thumb.Width + 100, thumb.Height + 100);
+                }
             }
 
             lock (StateChanges)
@@ -315,6 +338,11 @@ namespace FSO.Client.UI.Screens
                 SwitchLot = -1;
             }
             if (vm != null) vm.Update();
+
+            if (state.NewKeys.Contains(Microsoft.Xna.Framework.Input.Keys.F12) && GraphicsModeControl.Mode != GlobalGraphicsMode.Full2D)
+            {
+                GraphicsModeControl.ChangeMode((GraphicsModeControl.Mode == GlobalGraphicsMode.Full3D) ? GlobalGraphicsMode.Hybrid2D : GlobalGraphicsMode.Full3D);
+            }
         }
 
         public override void PreDraw(UISpriteBatch batch)
@@ -411,12 +439,9 @@ namespace FSO.Client.UI.Screens
             var recording = lotName.ToLowerInvariant().EndsWith(".fsor");
             CleanupLastWorld();
 
-            if (FSOEnvironment.Enable3D)
-            {
-                var rc = new LotView.RC.WorldRC(GameFacade.GraphicsDevice);
-                World = rc;
-            }
-            else World = new World(GameFacade.GraphicsDevice);
+            Content.Content.Get().Upgrades.LoadJSONTuning();
+
+            World = new World(GameFacade.GraphicsDevice);
             World.Opacity = 1;
             GameFacade.Scenes.Add(World);
 
@@ -530,8 +555,22 @@ namespace FSO.Client.UI.Screens
                 vm.TSOState.PropertyCategory = 255; //11 is community
                 vm.TSOState.ActivateValidator(vm);
                 vm.Context.Clock.Hours = 0;
-                vm.TSOState.Size = (10) | (3 << 8);
+                vm.TSOState.Size &= unchecked((int)0xFFFF0000);
+                vm.TSOState.Size |= (10) | (3 << 8);
                 vm.Context.UpdateTSOBuildableArea();
+
+                if (vm.GetGlobalValue(11) > -1)
+                {
+                    for (int y = 0; y < 3; y++)
+                    {
+                        for (int x = 0; x < 3; x++)
+                        {
+                            vm.TSOState.Terrain.Roads[x, y] = 0xF; //crossroads everywhere
+                        }
+                    }
+                    VMLotTerrainRestoreTools.RestoreTerrain(vm);
+                }
+
                 var myClient = new VMNetClient
                 {
                     PersistID = myState.PersistID,
@@ -566,6 +605,11 @@ namespace FSO.Client.UI.Screens
 
                     vm.Load(marshal);
                     vm.Reset();
+                    var ents = vm.Entities.ToList();
+                    foreach (var ent in ents)
+                    {
+                        ent.ExecuteEntryPoint(2, vm.Context, true);
+                    }
                 }
             }
             catch (Exception)
@@ -577,9 +621,18 @@ namespace FSO.Client.UI.Screens
                 var isIff = path.EndsWith(".iff");
                 short jobLevel = -1;
 
-                try { 
+                try {
                     if (isIff) jobLevel = short.Parse(path.Substring(path.Length - 6, 2));
-                    else jobLevel = short.Parse(path.Substring(path.IndexOf('0'), 2));
+                    else
+                    {
+                        jobLevel = short.Parse(path.Substring(path.IndexOf('0'), 2));
+                        if (jobLevel != -1)
+                        {
+                            floorClip = new Rectangle(8, 8, 56 - 8, 56 - 8);
+                            offset = new Point(7, 14);
+                            targetSize = 77;
+                        }
+                    }
                 }
                 catch { }
 

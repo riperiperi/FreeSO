@@ -5,6 +5,7 @@ using FSO.Server.Protocol.Electron.Packets;
 using Microsoft.Xna.Framework;
 using System;
 using System.Collections.Generic;
+using System.Globalization;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
@@ -100,7 +101,7 @@ namespace FSO.Client.UI.Panels.Neighborhoods
             VoteButton.OnButtonClick += VoteButton_OnButtonClick;
 
             VoteImage = new UIImage(ui.Get("vote_icon.png").Get(gd));
-            VoteImage.Position = VoteButton.Position + new Vector2(float.Parse(GameFacade.Strings.GetString("f118", "22")), 12);
+            VoteImage.Position = VoteButton.Position + new Vector2(float.Parse(GameFacade.Strings.GetString("f118", "22"), CultureInfo.InvariantCulture), 12);
             VoteButton.Disabled = true;
             Add(VoteImage);
         }

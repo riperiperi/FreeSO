@@ -1,0 +1,375 @@
+﻿using System;
+using System.Collections.Generic;
+using System.ComponentModel;
+using System.Drawing;
+using System.Data;
+using System.Linq;
+using System.Text;
+using System.Threading.Tasks;
+using System.Windows.Forms;
+using FSO.Content;
+using FSO.Files.Formats.IFF;
+using FSO.Files.Formats.IFF.Chunks;
+using System.Reflection;
+using System.IO;
+using System.Collections;
+
+namespace FSO.IDE.ResourceBrowser
+{
+    public partial class PIFFEditor : UserControl
+    {
+        public static HashSet<string> IgnoreProps = new HashSet<string>
+        {
+            "RuntimeInfo",
+            "Function"
+        };
+        public GameObject ActiveObj;
+        public IffFile ActiveIff;
+
+        public int ActivePIFFIndex = -1;
+
+        public IffFile[] ActivePIFFs = new IffFile[]{
+            null, //PIFF
+            null, //SPF
+            null //STR
+        };
+
+        public IffFile ActivePIFF;
+        public PIFF ActivePIFFChunk;
+
+        public PIFFListItem ActiveItem;
+        public PIFFEditor()
+        {
+            InitializeComponent();
+        }
+
+        public void SetActiveObject(GameObject obj)
+        {
+            ActiveObj = obj;
+            ActiveIff = obj.Resource.MainIff;
+            var piffs = ActiveIff.RuntimeInfo.Patches;
+
+            ActivePIFF = piffs.FirstOrDefault();
+            ActivePIFFs[0] = obj.Resource.Iff.RuntimeInfo.Patches.FirstOrDefault(x => !x.Filename.EndsWith(".str.piff"));
+            ActivePIFFs[1] = obj.Resource.Sprites.RuntimeInfo.Patches.FirstOrDefault();
+            ActivePIFFs[2] = obj.Resource.Iff.RuntimeInfo.Patches.FirstOrDefault(x => !x.Filename.EndsWith(".piff"));
+
+            PIFFButton.Enabled = ActivePIFFs[0] != null;
+            PIFFButton.Enabled = ActivePIFFs[1] != null;
+            PIFFButton.Enabled = ActivePIFFs[2] != null;
+
+            SelectPIFF(Array.FindIndex(ActivePIFFs, x => x != null));
+
+            Render();
+            EntryList.SelectedItem = null;
+        }
+
+        public void SelectPIFF(int index)
+        {
+            if (index == -1)
+            {
+
+            }
+        }
+
+        public void RenderEmpty()
+        {
+            PIFFBox.Enabled = false;
+        }
+
+        public void Render()
+        {
+            EntryList.Items.Clear();
+
+            PIFFName.Enabled = ActivePIFF != null;
+            PIFFComment.Enabled = ActivePIFF != null;
+            if (ActivePIFF != null)
+            {
+                var piffs = ActivePIFF.List<PIFF>();
+                if ((piffs?.Count ?? 0) == 0) {
+                    RenderEmpty(); return;
+                }
+                var piff = piffs[0];
+                ActivePIFFChunk = piff;
+
+                PIFFName.Text = ActivePIFF.Filename;
+                PIFFComment.Text = piff.Comment;
+
+                PIFFBox.Enabled = true;
+
+                foreach (var entry in piff.Entries)
+                {
+                    EntryList.Items.Add(new PIFFListItem(entry, ActiveIff));
+                }
+            } else
+            {
+                PIFFName.Text = "None";
+                PIFFComment.Text = "Make changes and save then using the volcanic main window to view or edit the PIFF.";
+            }
+        }
+
+        private void EntryList_SelectedIndexChanged(object sender, EventArgs e)
+        {
+            ActiveItem = EntryList.SelectedItem as PIFFListItem;
+
+            if (ActiveItem == null)
+            {
+                EntryComment.Text = "";
+                EntrySummary.Text = "";
+                EntryComment.Enabled = false;
+            }
+            else
+            {
+                var entry = ActiveItem.Entry;
+                EntryComment.Text = entry.Comment;
+                EntrySummary.Text = GetEntrySummary();
+                EntryComment.Enabled = true;
+            }
+        }
+
+        private string GetEntrySummary()
+        {
+            var to = ActiveItem.Replaced;
+            if (to == null || to.OriginalData == null) return "Change summary not available.";
+
+            Type chunkClass = IffFile.CHUNK_TYPES[to.ChunkType];
+            IffChunk newChunk = (IffChunk)Activator.CreateInstance(chunkClass);
+            newChunk.ChunkLabel = to.OriginalLabel;
+            newChunk.ChunkID = to.OriginalID;
+            newChunk.OriginalID = to.OriginalID;
+            newChunk.OriginalData = to.OriginalData;
+            newChunk.OriginalLabel = to.OriginalLabel;
+            using (var str = new MemoryStream(to.OriginalData)) {
+                newChunk.Read(to.ChunkParent, str);
+            }
+            var from = newChunk;
+            //instruction mode - load original and new as Routine before we compare fields. (to get operands)
+
+            //default mode - load original and use reflection to compare fields.
+
+            var builder = new StringBuilder();
+            if (from is BHAV)
+            {
+                var froutine = SimAntics.Engine.VMTranslator.INSTANCE.Assemble(from as BHAV);
+                var troutine = SimAntics.Engine.VMTranslator.INSTANCE.Assemble(to as BHAV);
+                CompareObject("", froutine, troutine, builder);
+            } else
+            {
+                CompareObject("", from, to, builder);
+            }
+            
+            return builder.ToString();
+        }
+
+        private void PrintObject(object obj, StringBuilder builder)
+        {
+            if (builder == null) return;
+            var fromType = obj.GetType();
+            if (fromType.IsPrimitive || fromType.Equals(typeof(string)))
+            {
+                builder.Append(obj.ToString());
+                return;
+            }
+            var fromProps = fromType.GetProperties();
+            var fromMembers = fromType.GetFields();
+
+            builder.Append("{ ");
+
+            foreach (var prop in fromProps)
+            {
+                builder.Append(prop.Name + ": " + (prop.GetValue(obj)?.ToString() ?? "null") + ", ");
+            }
+
+            foreach (var prop in fromMembers)
+            {
+                builder.Append(prop.Name + ": " + (prop.GetValue(obj)?.ToString() ?? "null") + ", ");
+            }
+
+            builder.Append("}");
+        }
+
+        private bool CompareObject(string depth, object from, object to, StringBuilder builder)
+        {
+            return CompareObject(depth, from, to, builder, new HashSet<object>());
+        }
+
+        private bool CompareObject(string depth, object from, object to, StringBuilder builder, HashSet<object> visitedFrom)
+        {
+            var fromType = from.GetType();
+            if (fromType.IsPrimitive || fromType.Equals(typeof(string)))
+            {
+                if (!(from?.Equals(to) ?? false))
+                {
+                    builder?.Append($"{depth} set from ");
+                    PrintObject(from, builder);
+                    builder?.Append(" to ");
+                    PrintObject(to, builder);
+                    builder?.AppendLine();
+                    return true;
+                }
+                return false;
+            }
+            if (visitedFrom.Contains(from)) return false;
+            if (from is IList && to is IList)
+            {
+                return CompareList(depth, from as IList, to as IList, builder);
+            }
+            var fromProps = fromType.GetProperties();
+            var fromMembers = fromType.GetFields();
+
+            var combined = Enumerable.Concat<MemberInfo>(fromProps, fromMembers);
+            var changed = false;
+
+            foreach (var cprop in combined)
+            {
+                if (cprop.Name.StartsWith("Chunk")) continue;
+                if (IgnoreProps.Contains(cprop.Name)) continue;
+                object fromVal = (cprop as PropertyInfo)?.GetValue(from) ?? (cprop as FieldInfo)?.GetValue(from);
+                object toVal = (cprop as PropertyInfo)?.GetValue(to) ?? (cprop as FieldInfo)?.GetValue(to);
+                if (fromVal != null && toVal != null)
+                {
+                    if (fromVal.GetType() != toVal.GetType())
+                    {
+                        builder?.Append($"{depth} set from ");
+                        PrintObject(fromVal, builder);
+                        builder?.Append(" to ");
+                        PrintObject(toVal, builder);
+                        builder.AppendLine();
+                        changed = true;
+                    }
+                    else
+                    {
+                        //types are equal.
+                        if (from.Equals(to))
+                        {
+
+                        }
+                        else
+                        {
+                            CompareObject(depth + cprop.Name + ".", fromVal, toVal, builder, visitedFrom);
+                        }
+                    }
+                }
+                else if (fromVal != null)
+                {
+                    builder?.Append($"{depth} set to NULL from: ");
+                    PrintObject(fromVal, builder);
+                    builder?.AppendLine();
+                    changed = true;
+                }
+                else if (toVal != null)
+                {
+                    builder?.Append($"{depth} set from NULL: ");
+                    PrintObject(toVal, builder);
+                    builder?.AppendLine();
+                    changed = true;
+                }
+            }
+            return changed;
+        }
+
+        private bool CompareList(string depth, IList from, IList to, StringBuilder builder)
+        {
+            if (depth.Length > 0) depth = depth.Substring(0, depth.Length - 1);
+            var fromCount = from.Count;
+            var toCount = to.Count;
+
+            var changed = false;
+            var shared = Math.Min(fromCount, toCount);
+            var i = 0;
+            foreach (var item in from)
+            {
+                var toItem = to[i];
+                //compare items
+                if (CompareObject(depth + "[" + i + "].", item, toItem, builder))
+                {
+                    changed = true;
+                }
+                if (++i >= shared) break;
+            }
+
+            if (from.Count > to.Count)
+            {
+                //removed last in from
+                for (int j=shared; j<from.Count; j++)
+                {
+                    builder?.Append(depth + "[" + j + "] removed: ");
+                    PrintObject(from[j], builder);
+                    builder?.AppendLine();
+                }
+                changed = true;
+            }
+            else
+            {
+                //added last in to
+                for (int j = shared; j < to.Count; j++)
+                {
+                    builder?.Append(depth + "[" + j + "] added: ");
+                    PrintObject(to[j], builder);
+                    builder?.AppendLine();
+                }
+                changed = true;
+            }
+            return changed;
+        }
+
+        private void PIFFComment_TextChanged(object sender, EventArgs e)
+        {
+            if (ActivePIFFChunk == null) return;
+            ActivePIFFChunk.Comment = PIFFComment.Text;
+        }
+
+        private void EntryComment_TextChanged(object sender, EventArgs e)
+        {
+            if (ActiveItem == null) return;
+            ActiveItem.Entry.Comment = EntryComment.Text;
+        }
+
+        private void PIFFName_TextChanged(object sender, EventArgs e)
+        {
+            if (ActivePIFF == null) return;
+            ActivePIFF.Filename = PIFFName.Text;
+        }
+
+        private void PIFFButton_Click(object sender, EventArgs e)
+        {
+            SelectPIFF(0);
+        }
+
+        private void SPFButton_Click(object sender, EventArgs e)
+        {
+            SelectPIFF(1);
+        }
+
+        private void STRButton_Click(object sender, EventArgs e)
+        {
+            SelectPIFF(2);
+        }
+    }
+
+    public class PIFFListItem
+    {
+        public PIFFEntry Entry;
+        public IffChunk Replaced;
+        public string Name;
+
+        public PIFFListItem(PIFFEntry entry, IffFile target)
+        {
+            Entry = entry;
+            if (entry.ChunkLabel != "") Name = entry.ChunkLabel;
+            else
+            {
+                //try find the original to get name
+                var chunks = target.SilentListAll();
+                Replaced = chunks.FirstOrDefault(chunk => chunk.ChunkType == entry.Type && chunk.OriginalID == entry.ChunkID);
+                if (Replaced == null) Name = "UNKNOWN";
+                else Name = Replaced.OriginalLabel;
+            }
+        }
+
+        public override string ToString()
+        {
+            return $"({Entry.Type} {Entry.ChunkID}) {Name} - {Entry.EntryType.ToString()}";
+        }
+    }
+}

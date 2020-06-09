@@ -4,13 +4,16 @@ using FSO.Files.Formats.tsodata;
 using FSO.Server.Database.DA;
 using FSO.Server.Database.DA.Inbox;
 using FSO.Server.Framework.Aries;
+using FSO.Server.Framework.Gluon;
 using FSO.Server.Framework.Voltron;
 using FSO.Server.Protocol.Electron.Packets;
+using FSO.Server.Protocol.Gluon.Packets;
 using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
+using NLog;
 
 namespace FSO.Server.Servers.City.Handlers
 {
@@ -19,6 +22,7 @@ namespace FSO.Server.Servers.City.Handlers
         private ISessions Sessions;
         private IDataService DataService;
         private IDAFactory DA;
+        private static Logger LOG = LogManager.GetCurrentClassLogger();
 
         public MailHandler(ISessions sessions, IDataService dataService, IDAFactory da)
         {
@@ -154,6 +158,21 @@ namespace FSO.Server.Servers.City.Handlers
                 SenderName = ";default"
             };
             return SendEmail(item, true);
+        }
+
+        public void Handle(IGluonSession session, SendCityMail packet)
+        {
+            try
+            {
+                foreach (var mail in packet.Items)
+                {
+                    SendEmail(mail, true);
+                }
+            }
+            catch (Exception e)
+            {
+                LOG.Error("Failed to send an ingame email from another service: " + e.ToString());
+            }
         }
 
         public bool SendEmail(MessageItem item, bool sendToSession)

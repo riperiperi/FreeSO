@@ -40,7 +40,7 @@ namespace FSO.IDE.EditorComponent.Commands
 
         public override void Execute(BHAV bhav, UIBHAVEditor editor)
         {
-            if (Primitive.Type != PrimBoxType.Primitive)
+            if (Primitive.Type != TREEBoxType.Primitive)
             {
                 //do nothing.
             }
@@ -48,8 +48,9 @@ namespace FSO.IDE.EditorComponent.Commands
             {
                 bhav.Instructions[0] = Primitive.Instruction;
                 bhav.Instructions[OldPtr] = Old0.Instruction;
-                Primitive.InstPtr = 0;
-                Old0.InstPtr = OldPtr;
+                // TODO
+                //Primitive.InstPtr = 0;
+                //Old0.InstPtr = OldPtr;
                 foreach (var prim in FromTrue) prim.Instruction.TruePointer = 0;
                 foreach (var prim in FromFalse) prim.Instruction.FalsePointer = 0;
                 foreach (var prim in FromTrue0) prim.Instruction.TruePointer = OldPtr;
@@ -61,7 +62,7 @@ namespace FSO.IDE.EditorComponent.Commands
 
         public override void Undo(BHAV bhav, UIBHAVEditor editor)
         {
-            if (Primitive.Type != PrimBoxType.Primitive)
+            if (Primitive.Type != TREEBoxType.Primitive)
             {
                 //do nothing.
             }
@@ -69,8 +70,9 @@ namespace FSO.IDE.EditorComponent.Commands
             {
                 bhav.Instructions[0] = Old0.Instruction;
                 bhav.Instructions[OldPtr] = Primitive.Instruction;
-                Primitive.InstPtr = OldPtr;
-                Old0.InstPtr = 0;
+                // TODO
+                //Primitive.InstPtr = OldPtr;
+                //Old0.InstPtr = 0;
                 foreach (var prim in FromTrue) prim.Instruction.TruePointer = OldPtr;
                 foreach (var prim in FromFalse) prim.Instruction.FalsePointer = OldPtr;
                 foreach (var prim in FromTrue0) prim.Instruction.TruePointer = 0;

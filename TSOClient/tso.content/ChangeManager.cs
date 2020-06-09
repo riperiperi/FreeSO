@@ -104,6 +104,15 @@ namespace FSO.Content
             }
         }
 
+        public void DeletePatch(IffChunk chunk)
+        {
+            lock (this)
+            {
+                chunk.ChunkData = chunk.OriginalData;
+                DiscardChange(chunk);
+            }
+        }
+
         public void SaveChanges(IEnumerable<IffFile> files)
         {
             lock (this) foreach (var file in files) SaveChange(file);
@@ -137,25 +146,32 @@ namespace FSO.Content
 
                     var stringResources = new HashSet<Type> { typeof(STR), typeof(CTSS), typeof(TTAs) };
                     var sprites = (file.RuntimeInfo.UseCase == IffUseCase.ObjectSprites);
+                    var oldPatches = file.RuntimeInfo.Patches.ToList();
                     file.RuntimeInfo.Patches.Clear();
 
-                    var piff = FSO.Files.Formats.PiffEncoder.GeneratePiff(file, null, stringResources);
+                    //find the old piff. should be the piff that doesn't end in .str.piff
+                    var oldPIFF = oldPatches.FirstOrDefault(x => !x.Filename.EndsWith(".str.piff"))?.List<PIFF>()?.ElementAt(0);
+
+                    var piff = FSO.Files.Formats.PiffEncoder.GeneratePiff(file, null, stringResources, oldPIFF);
 
                     string name = file.Filename.Substring(0, file.Filename.Length - 4); //get without extension
 
                     if (piff != null)
                     {
-                        var filename = dest + name + (sprites ? ".spf" : "") + ".piff";
+                        if (piff.Filename == null) piff.Filename = name + (sprites ? ".spf" : "") + ".piff";
+                        var filename = dest + piff.Filename;
                         using (var stream = new FileStream(filename, FileMode.Create)) piff.Write(stream);
                         file.RuntimeInfo.Patches.Add(piff);
                     }
 
                     if (!sprites)
                     {
-                        piff = FSO.Files.Formats.PiffEncoder.GeneratePiff(file, stringResources, null);
+                        oldPIFF = oldPatches.FirstOrDefault(x => x.Filename.EndsWith(".str.piff"))?.List<PIFF>()?.ElementAt(0);
+                        piff = FSO.Files.Formats.PiffEncoder.GeneratePiff(file, stringResources, null, oldPIFF);
                         if (piff != null)
                         {
-                            var filename = dest + name + ".str.piff";
+                            if (piff.Filename == null) piff.Filename = name + ".str.piff";
+                            var filename = dest + piff.Filename;
                             using (var stream = new FileStream(filename, FileMode.Create)) piff.Write(stream);
                             file.RuntimeInfo.Patches.Add(piff);
                         }

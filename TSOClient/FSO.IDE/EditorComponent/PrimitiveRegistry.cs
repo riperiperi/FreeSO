@@ -29,6 +29,7 @@ namespace FSO.IDE.EditorComponent
             {18, typeof(RemoveObjectInstanceDescriptor) },
             {20, typeof(RunFunctionalTreeDescriptor) },
             {22, typeof(LookTowardsDescriptor) },
+            {21, typeof(ShowStringDescriptor) },
             {23, typeof(PlaySoundEventDescriptor) },
             {24, typeof(OldRelationshipDescriptor) },
             {25, typeof(TransferFundsDescriptor) },
@@ -50,7 +51,9 @@ namespace FSO.IDE.EditorComponent
             {49, typeof(NotifyOutOfIdleDescriptor) },
             {50, typeof(ChangeActionStringDescriptor) },
             {51, typeof(TS1InventoryOperationsDescriptor) },
-            {62, typeof(InvokePluginDescriptor) }
+            {62, typeof(InvokePluginDescriptor) },
+
+            {67, typeof(TSOInventoryOperationsDescriptor) }
         };
 
         public static Dictionary<PrimitiveGroup, List<byte>> PrimitiveGroups = new Dictionary<PrimitiveGroup, List<byte>>

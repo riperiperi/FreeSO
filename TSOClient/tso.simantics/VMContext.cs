@@ -32,7 +32,7 @@ namespace FSO.SimAntics
         public static bool UseWorld = true;
         public Blueprint Blueprint;
         public VMClock Clock { get; internal set; }
-
+        public VMCheatState Cheats { get; internal set; }
         private VMArchitecture _Arch;
         public VMArchitecture Architecture
         {
@@ -71,6 +71,7 @@ namespace FSO.SimAntics
             //oldContext is passed in case we need to inherit certain things, like the ambient sound player
             this.World = world;
             this.Clock = new VMClock();
+            this.Cheats = new VMCheatState();
             this.ObjectQueries = new VMObjectQueries(this);
 
             if (oldContext == null)
@@ -226,7 +227,14 @@ namespace FSO.SimAntics
                 OperandModel = typeof(VMRunFunctionalTreeOperand)
             });
 
-            //Show string: may be used but no functional result.
+            //Show string: hijacked by freeso
+
+            AddPrimitive(new VMPrimitiveRegistration(new VMShowString())
+            {
+                Opcode = 21,
+                Name = "show_string",
+                OperandModel = typeof(VMShowStringOperand)
+            });
 
             AddPrimitive(new VMPrimitiveRegistration(new VMLookTowards())
             {
@@ -709,23 +717,61 @@ namespace FSO.SimAntics
                     area += info.Room.Area;
                     foreach (var ent in info.Entities)
                     {
-                        if (ent.MultitileGroup.Objects.Count == 0) continue;
-                        var mainSource = ent == ent.MultitileGroup.Objects[0];
+                        var objs = ent.MultitileGroup.Objects;
+                        if (objs.Count == 0) continue;
+                        if (ent != objs[0]) continue;
                         if (((ent as VMGameObject)?.Disabled ?? 0) > 0) continue;
+                        
                         var flags2 = (VMEntityFlags2)ent.GetValue(VMStackObjectVariable.FlagField2);
-
-                        var cont = ent.GetValue(VMStackObjectVariable.LightingContribution);
-                        if (cont > 0)
+                        
+                        var mainSource = true;
+                        var lighted = objs.Count(x => x.GetValue(VMStackObjectVariable.LightingContribution) > 0);
+                        if (lighted > 0)
                         {
-                            if ((flags2 & (VMEntityFlags2.ArchitectualWindow | VMEntityFlags2.ArchitectualDoor)) > 0)
+                            //the world clearly needs me
+                            //two modes: separate and combined
+                            //we try to treat non-window multitile objects as one light source (average position)
+                            //...but some have individual tiles as lit. in this case (# of tiles lit != number of tiles) we want to treat them as separate.
+                            if ((flags2 & (VMEntityFlags2.ArchitectualWindow | VMEntityFlags2.ArchitectualDoor)) > 0) //definitely separate
                             {
-                                if (true) light.Lights.Add(new LotView.LMap.LightData(new Vector2(ent.Position.x, ent.Position.y), true, 160, room, info.Room.Floor, ent.LightColor, ent.WorldUI as ObjectComponent));
-                                outside += (ushort)cont;
+                                foreach (var subent in objs)
+                                {
+                                    light.Lights.Add(new LotView.LMap.LightData(
+                                        new Vector2(subent.Position.x, subent.Position.y), 
+                                        true, 160, room, info.Room.Floor, subent.LightColor, 
+                                        subent.WorldUI as ObjectComponent));
+                                    outside += (ushort)subent.GetValue(VMStackObjectVariable.LightingContribution);
+                                }
                             }
                             else
                             {
-                                if (mainSource) light.Lights.Add(new LotView.LMap.LightData(new Vector2(ent.Position.x, ent.Position.y), false, 160, room, info.Room.Floor, ent.LightColor, ent.WorldUI as ObjectComponent));
-                                inside += (ushort)cont;
+                                if (lighted == objs.Count)
+                                {
+                                    //combined
+                                    var avg = new Vector2();
+                                    foreach (var subent in objs)
+                                    {
+                                        avg += new Vector2(subent.Position.x, subent.Position.y);
+                                        inside += (ushort)subent.GetValue(VMStackObjectVariable.LightingContribution);
+                                    }
+                                    avg /= objs.Count;
+                                    light.Lights.Add(new LotView.LMap.LightData(avg, false, 160, room, info.Room.Floor, ent.LightColor, ent.WorldUI as ObjectComponent));
+                                }
+                                else
+                                {
+                                    foreach (var subent in objs)
+                                    {
+                                        var cont = (ushort)subent.GetValue(VMStackObjectVariable.LightingContribution);
+                                        if (cont > 0)
+                                        {
+                                            light.Lights.Add(new LotView.LMap.LightData(
+                                                new Vector2(subent.Position.x, subent.Position.y),
+                                                false, 160, room, info.Room.Floor, subent.LightColor, 
+                                                subent.WorldUI as ObjectComponent));
+                                            inside += cont;
+                                        }
+                                    }
+                                }
                             }
                         }
                         else if (useWorld && ent is VMGameObject && !ent.MovesOften)
@@ -735,9 +781,9 @@ namespace FSO.SimAntics
                                 var bound = ent.MultitileGroup.LightBounds();
                                 if (bound != null) light.ObjectFootprints.Add(bound.Value);
                             }
-                            light.Components.Add((ObjectComponent)ent.WorldUI);
+                            light.Components.AddRange(objs.Select(x => (ObjectComponent)x.WorldUI));
                         }
-                        var roomImpact = ent.GetValue(VMStackObjectVariable.RoomImpact);
+                        var roomImpact = objs.Sum(x => x.GetValue(VMStackObjectVariable.RoomImpact));
                         if (roomImpact != 0) roomScore += roomImpact;
                     }
 
@@ -774,10 +820,10 @@ namespace FSO.SimAntics
 
                 if (useWorld)
                 {
-                    Blueprint.Damage.Add(new BlueprintDamage(BlueprintDamageType.LIGHTING_CHANGED, (short)room, 0, 0));
+                    Blueprint.Changes.LightChange((short)room);
                     foreach (var a in affected)
                     {
-                        Blueprint.Damage.Add(new BlueprintDamage(BlueprintDamageType.LIGHTING_CHANGED, (short)a, 0, 0));
+                        Blueprint.Changes.LightChange((short)a);
                     }
                 }
             }

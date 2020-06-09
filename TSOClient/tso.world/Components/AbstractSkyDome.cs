@@ -156,7 +156,7 @@ namespace FSO.LotView.Components
 
             var color = ocolor - new Vector4(0.35f) * 1.5f + new Vector4(0.35f);
             color.W = 1;
-            var wint = weather.WeatherIntensity;
+            var wint = Math.Min(1f, weather.WeatherIntensity);
 
             effect.LightingEnabled = false;
             effect.Texture = GradTex;

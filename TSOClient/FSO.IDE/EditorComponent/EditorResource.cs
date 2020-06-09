@@ -1,4 +1,5 @@
 ﻿using FSO.Client;
+using FSO.Client.UI.Framework;
 using FSO.Common.Utils;
 using FSO.Files;
 using Microsoft.Xna.Framework;
@@ -41,6 +42,14 @@ namespace FSO.IDE.EditorComponent
         public Texture2D CurrentArrow;
 
         public Texture2D ViewBG;
+
+        public Texture2D CommentBox;
+        public Texture2D CommentBubble;
+        public Texture2D GotoBox;
+        public Texture2D LabelBox;
+
+        public TextStyle CommentStyle;
+        public TextStyle TitleStyle;
 
         public string[] IndexedLoad = new string[]
         {
@@ -87,6 +96,11 @@ namespace FSO.IDE.EditorComponent
 
             ViewBG = LoadFile(gd, "IDERes/viewBG.png");
 
+            CommentBox = LoadFile(gd, "IDERes/tree/comment_box.png");
+            CommentBubble = LoadFile(gd, "IDERes/tree/comment_bubble.png");
+            GotoBox = LoadFile(gd, "IDERes/tree/goto_box.png");
+            LabelBox = LoadFile(gd, "IDERes/tree/label_box.png");
+
             Indexed = new Texture2D[IndexedLoad.Length];
             for (int i=0; i<IndexedLoad.Length; i++)
             {
@@ -94,6 +108,27 @@ namespace FSO.IDE.EditorComponent
             }
 
             WhiteTex = TextureUtils.TextureFromColor(gd, Color.White);
+
+            //prepare fonts
+            var style = TextStyle.Create(new Color(70, 70, 55), 12);
+            style.Font = FSO.Client.GameFacade.EdithFont;
+            style.VFont = FSO.Client.GameFacade.EdithVectorFont;
+            style.Size = 12;
+            style.HighlightedColor = new Color(221, 221, 221);
+            style.SelectionBoxColor = style.HighlightedColor;
+            style.SelectedColor = style.Color;
+            style.CursorColor = style.Color;
+            CommentStyle = style;
+
+            style = style.Clone();
+            style.Color = Color.White;
+            style.HighlightedColor = new Color(102, 102, 102);
+            style.SelectionBoxColor = style.HighlightedColor;
+            style.SelectedColor = style.Color;
+            style.CursorColor = style.Color;
+            style.Size = 14;
+            TitleStyle = style;
+
             Ready = true;
         }
 

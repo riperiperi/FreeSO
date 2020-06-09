@@ -41,6 +41,8 @@
             this.UpButton = new System.Windows.Forms.Button();
             this.DownButton = new System.Windows.Forms.Button();
             this.Selector = new FSO.IDE.ResourceBrowser.OBJDSelectorControl();
+            this.CommentLabel = new System.Windows.Forms.Label();
+            this.CommentBox = new System.Windows.Forms.TextBox();
             this.SuspendLayout();
             // 
             // StringList
@@ -94,7 +96,7 @@
             this.StringBox.Multiline = true;
             this.StringBox.Name = "StringBox";
             this.StringBox.ScrollBars = System.Windows.Forms.ScrollBars.Vertical;
-            this.StringBox.Size = new System.Drawing.Size(240, 333);
+            this.StringBox.Size = new System.Drawing.Size(240, 222);
             this.StringBox.TabIndex = 3;
             this.StringBox.TextChanged += new System.EventHandler(this.StringBox_TextChanged);
             // 
@@ -164,10 +166,31 @@
             this.Selector.Size = new System.Drawing.Size(240, 38);
             this.Selector.TabIndex = 12;
             // 
+            // CommentLabel
+            // 
+            this.CommentLabel.AutoSize = true;
+            this.CommentLabel.Location = new System.Drawing.Point(259, 280);
+            this.CommentLabel.Name = "CommentLabel";
+            this.CommentLabel.Size = new System.Drawing.Size(54, 13);
+            this.CommentLabel.TabIndex = 13;
+            this.CommentLabel.Text = "Comment:";
+            // 
+            // CommentBox
+            // 
+            this.CommentBox.Location = new System.Drawing.Point(259, 296);
+            this.CommentBox.Multiline = true;
+            this.CommentBox.Name = "CommentBox";
+            this.CommentBox.ScrollBars = System.Windows.Forms.ScrollBars.Vertical;
+            this.CommentBox.Size = new System.Drawing.Size(240, 83);
+            this.CommentBox.TabIndex = 14;
+            this.CommentBox.TextChanged += new System.EventHandler(this.StringBox_TextChanged);
+            // 
             // STRResourceControl
             // 
             this.AutoScaleDimensions = new System.Drawing.SizeF(6F, 13F);
             this.AutoScaleMode = System.Windows.Forms.AutoScaleMode.Font;
+            this.Controls.Add(this.CommentBox);
+            this.Controls.Add(this.CommentLabel);
             this.Controls.Add(this.Selector);
             this.Controls.Add(this.DownButton);
             this.Controls.Add(this.UpButton);
@@ -202,5 +225,7 @@
         private System.Windows.Forms.Button UpButton;
         private System.Windows.Forms.Button DownButton;
         private OBJDSelectorControl Selector;
+        private System.Windows.Forms.Label CommentLabel;
+        private System.Windows.Forms.TextBox CommentBox;
     }
 }

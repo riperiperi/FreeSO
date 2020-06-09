@@ -70,6 +70,7 @@
     <PlatformTarget>AnyCPU</PlatformTarget>
     <ErrorReport>prompt</ErrorReport>
     <CodeAnalysisRuleSet>MinimumRecommendedRules.ruleset</CodeAnalysisRuleSet>
+    <UseVSHostingProcess>true</UseVSHostingProcess>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)' == 'ServerRelease|x86'">
     <OutputPath>bin\x86\ServerRelease\</OutputPath>
@@ -93,6 +94,9 @@
     <Reference Include="MonoGame.Framework, Version=3.6.0.1625, Culture=neutral, processorArchitecture=MSIL">
       <HintPath>..\packages\MonoGame.Framework.Portable.3.6.0.1625\lib\portable-net45+win8+wpa81\MonoGame.Framework.dll</HintPath>
       <Private>False</Private>
+    </Reference>
+    <Reference Include="Newtonsoft.Json, Version=12.0.0.0, Culture=neutral, PublicKeyToken=30ad4fe6b2a6aeed, processorArchitecture=MSIL">
+      <HintPath>..\packages\Newtonsoft.Json.12.0.2\lib\net45\Newtonsoft.Json.dll</HintPath>
     </Reference>
     <Reference Include="System" />
     <Reference Include="System.Core">
@@ -150,6 +154,9 @@
     <Content Include="ContentSrc\Effects\LightMap2D.fx">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </Content>
+    <Content Include="Content\3D\floor\pool.png">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </Content>
     <Content Include="Content\3D\smoke.png">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </Content>
@@ -157,6 +164,18 @@
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </Content>
     <Content Include="ContentSrc\Effects\VitaboyiOS.fx" />
+    <Content Include="Content\Textures\EOD\Band\bandmetronomeback.png">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </Content>
+    <Content Include="Content\Textures\EOD\Band\bandmetronomecase.png">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </Content>
+    <Content Include="Content\Textures\EOD\Band\bandmetronomeslider.png">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </Content>
+    <Content Include="Content\Textures\EOD\Band\bandskilllevels.png">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </Content>
     <Content Include="Content\Textures\lot\tile_dashed.png">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </Content>
@@ -325,6 +344,36 @@
     <Content Include="Content\uigraphics\neighp\neighp_tiletop.png">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </Content>
+    <Content Include="Content\uigraphics\upgrades\up_background.png">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </Content>
+    <Content Include="Content\uigraphics\upgrades\up_button.png">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </Content>
+    <Content Include="Content\uigraphics\upgrades\up_button_seat.png">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </Content>
+    <Content Include="Content\uigraphics\upgrades\up_item_panel.png">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </Content>
+    <Content Include="Content\uigraphics\upgrades\up_item_panel_alt.png">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </Content>
+    <Content Include="Content\uigraphics\upgrades\up_thermo_highlight.png">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </Content>
+    <Content Include="Content\uigraphics\upgrades\up_thermo_slice.png">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </Content>
+    <Content Include="Content\uigraphics\upgrades\up_thermo_slice_active.png">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </Content>
+    <Content Include="Content\uigraphics\upgrades\up_tick.png">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </Content>
+    <Content Include="Content\uigraphics\upgrade_star.png">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </Content>
     <Content Include="Content\uigraphics\vote\vote_ava_bg.png">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </Content>
@@ -373,7 +422,9 @@
     <Compile Include="Framework\PackingslipProvider.cs" />
     <Compile Include="Content.cs" />
     <Compile Include="AvatarMeshProvider.cs" />
+    <Compile Include="Framework\RuntimeProvider.cs" />
     <Compile Include="Framework\TS1Provider.cs" />
+    <Compile Include="Framework\TSOAvatarContentProvider.cs" />
     <Compile Include="HandgroupProvider.cs" />
     <Compile Include="IniProvider.cs" />
     <Compile Include="CityMapsProvider.cs" />
@@ -403,6 +454,15 @@
     <Compile Include="TS1\TS1JobProvider.cs" />
     <Compile Include="TS1\TS1NeighbourProvider.cs" />
     <Compile Include="TS1\TS1ObjectProvider.cs" />
+    <Compile Include="Upgrades\Model\ObjectUpgradeConfig.cs" />
+    <Compile Include="Upgrades\Model\Runtime\RuntimeTuningGroup.cs" />
+    <Compile Include="Upgrades\Model\Runtime\RuntimeUpgradeFile.cs" />
+    <Compile Include="Upgrades\Model\UpgradeGroup.cs" />
+    <Compile Include="Upgrades\Model\UpgradeIff.cs" />
+    <Compile Include="Upgrades\Model\UpgradeLevel.cs" />
+    <Compile Include="Upgrades\Model\UpgradesFile.cs" />
+    <Compile Include="Upgrades\Model\UpgradeSubstitution.cs" />
+    <Compile Include="Upgrades\ObjectUpgradeProvider.cs" />
     <Compile Include="WorldFloorProvider.cs" />
     <Compile Include="WorldGlobalProvider.cs" />
     <Compile Include="WorldObjectCatalog.cs" />
@@ -694,6 +754,66 @@
     <Content Include="Content\DX\Effects\SpriteEffects.xnb">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </Content>
+    <Content Include="Content\3D\floor\poolcorner_hq_0.obj">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </Content>
+    <Content Include="Content\3D\floor\poolcorner_hq_1.obj">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </Content>
+    <Content Include="Content\3D\floor\poolcorner_hq_2.obj">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </Content>
+    <Content Include="Content\3D\floor\poolcorner_hq_3.obj">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </Content>
+    <Content Include="Content\3D\floor\pool_hq_0.obj">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </Content>
+    <Content Include="Content\3D\floor\pool_hq_1.obj">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </Content>
+    <Content Include="Content\3D\floor\pool_hq_10.obj">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </Content>
+    <Content Include="Content\3D\floor\pool_hq_11.obj">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </Content>
+    <Content Include="Content\3D\floor\pool_hq_12.obj">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </Content>
+    <Content Include="Content\3D\floor\pool_hq_13.obj">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </Content>
+    <Content Include="Content\3D\floor\pool_hq_14.obj">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </Content>
+    <Content Include="Content\3D\floor\pool_hq_15.obj">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </Content>
+    <Content Include="Content\3D\floor\pool_hq_2.obj">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </Content>
+    <Content Include="Content\3D\floor\pool_hq_3.obj">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </Content>
+    <Content Include="Content\3D\floor\pool_hq_4.obj">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </Content>
+    <Content Include="Content\3D\floor\pool_hq_5.obj">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </Content>
+    <Content Include="Content\3D\floor\pool_hq_6.obj">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </Content>
+    <Content Include="Content\3D\floor\pool_hq_7.obj">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </Content>
+    <Content Include="Content\3D\floor\pool_hq_8.obj">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </Content>
+    <Content Include="Content\3D\floor\pool_hq_9.obj">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </Content>
     <None Include="Content\FSODataDefinition.dat">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </None>
@@ -746,17 +866,45 @@
     <Content Include="Content\OGL\Effects\SpriteEffects.xnb">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </Content>
-    <None Include="Content\Patch\gardener.str.piff" />
-    <None Include="Content\Patch\maid.str.piff" />
-    <None Include="Content\Patch\npc_fso_pizzaman.iff" />
-    <None Include="Content\Patch\oj-nc-npc-dancer.str.piff" />
-    <None Include="Content\Patch\oj-nc-npc-standins.str.piff" />
-    <None Include="Content\Patch\oj-rest-npc-busboy.str.piff" />
-    <None Include="Content\Patch\oj-rest-npc-chef.str.piff" />
-    <None Include="Content\Patch\oj-rest-patron.str.piff" />
-    <None Include="Content\Patch\repairman.str.piff" />
-    <None Include="Content\Patch\tent.piff" />
-    <None Include="Content\Patch\tent.str.piff" />
+    <Content Include="Content\Patch\gardener.str.piff">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </Content>
+    <Content Include="Content\Patch\npc_fso_pizzaman.iff">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </Content>
+    <Content Include="Content\Patch\maid.str.piff">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </Content>
+    <Content Include="Content\Patch\oj-nc-npc-dancer.str.piff">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </Content>
+    <Content Include="Content\Patch\oj-nc-npc-standins.str.piff">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </Content>
+    <Content Include="Content\Patch\oj-rest-npc-busboy.str.piff">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </Content>
+    <Content Include="Content\Patch\oj-rest-npc-chef.str.piff">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </Content>
+    <Content Include="Content\Patch\oj-rest-patron.str.piff">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </Content>
+    <Content Include="Content\Patch\repairman.str.piff">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </Content>
+    <Content Include="Content\Patch\oj-rest-npc-busboy.str.piff">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </Content>
+    <Content Include="Content\Patch\oj-rest-npc-busboy.str.piff">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </Content>
+    <Content Include="Content\Patch\jobobjband.piff">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </Content>
+    <Content Include="Content\Patch\jobobjband.str.piff">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </Content>
     <None Include="Content\UI\uiscripts\fsoneighpage.uis">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </None>
@@ -812,6 +960,15 @@
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </Content>
     <Content Include="Content\UI\uitext\english.dir\_f121_bulletinprotocolstrings.cst">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </Content>
+    <Content Include="Content\UI\uitext\english.dir\_f126_bandtwostrings.cst">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </Content>
+    <Content Include="Content\UI\uitext\english.dir\_f124_defaultupgrades.cst">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </Content>
+    <Content Include="Content\UI\uitext\english.dir\_f125_upgradepanel.cst">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </Content>
     <None Include="packages.config" />

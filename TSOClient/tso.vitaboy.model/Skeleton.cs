@@ -26,6 +26,9 @@ namespace FSO.Vitaboy
         public string Name;
         public Bone[] Bones;
         public Bone RootBone;
+        private Dictionary<string, Bone> BonesByName;
+
+        public BCF ParentBCF;
 
         /// <summary>
         /// Gets a bone from this Skeleton instance.
@@ -34,7 +37,14 @@ namespace FSO.Vitaboy
         /// <returns>A Bone instance corresponding to the supplied name.</returns>
         public Bone GetBone(string name)
         {
-            return Bones.FirstOrDefault(x => x.Name == name);
+            Bone result;
+            if (BonesByName.TryGetValue(name, out result)) return result;
+            return null;
+        }
+
+        public void BuildBoneDictionary()
+        {
+            BonesByName = Bones.ToDictionary(x => x.Name);
         }
 
         /// <summary>
@@ -50,6 +60,7 @@ namespace FSO.Vitaboy
             for (int i = 0; i < Bones.Length; i++){
                 result.Bones[i] = Bones[i].Clone();
             }
+            result.BuildBoneDictionary();
 
             /** Construct tree **/
             foreach (var bone in result.Bones)
@@ -87,6 +98,7 @@ namespace FSO.Vitaboy
                 bone.Index = i;
                 Bones[i] = bone;
             }
+            BuildBoneDictionary();
 
             /** Construct tree **/
             foreach (var bone in Bones)
@@ -147,6 +159,60 @@ namespace FSO.Vitaboy
             bone.WiggleValue = reader.ReadFloat();
             bone.WigglePower = reader.ReadFloat();
             return bone;
+        }
+
+        public void Write(BCFWriteProxy io, bool bcf)
+        {
+            if (!bcf)
+            {
+                io.WriteUInt32(1); //version
+            }
+            io.WritePascalString(Name);
+
+            io.WriteInt16((short)Bones.Length);
+
+            foreach (var bone in Bones)
+            {
+                WriteBone(bone, io, bcf);
+            }
+        }
+
+        private void WriteBone(Bone bone, BCFWriteProxy io, bool bcf)
+        {
+            if (!bcf) io.WriteInt32(bone.Unknown);
+            io.WritePascalString(bone.Name);
+            io.WritePascalString(bone.ParentName);
+            if (!bcf) io.WriteByte(1); //has props
+
+            io.WriteInt32(bone.Properties.Count);
+
+            foreach (var property in bone.Properties)
+            {
+                io.WriteInt32(property.KeyPairs.Count);
+                foreach (var pair in property.KeyPairs)
+                {
+                    io.WritePascalString(pair.Key);
+                    io.WritePascalString(pair.Value);
+                }
+            }
+
+            io.SetGrouping(3);
+            io.WriteFloat(-bone.Translation.X);
+            io.WriteFloat(bone.Translation.Y);
+            io.WriteFloat(bone.Translation.Z);
+
+            io.SetGrouping(4);
+            io.WriteFloat(bone.Rotation.X);
+            io.WriteFloat(-bone.Rotation.Y);
+            io.WriteFloat(-bone.Rotation.Z);
+            io.WriteFloat(-bone.Rotation.W);
+
+            io.SetGrouping(1);
+            io.WriteInt32(bone.CanTranslate);
+            io.WriteInt32(bone.CanRotate);
+            io.WriteInt32(bone.CanBlend);
+            io.WriteFloat(bone.WiggleValue);
+            io.WriteFloat(bone.WigglePower);
         }
 
         /// <summary>

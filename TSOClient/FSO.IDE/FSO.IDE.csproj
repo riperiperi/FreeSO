@@ -9,7 +9,7 @@
     <AppDesignerFolder>Properties</AppDesignerFolder>
     <RootNamespace>FSO.IDE</RootNamespace>
     <AssemblyName>Volcanic</AssemblyName>
-    <TargetFrameworkVersion>v4.5</TargetFrameworkVersion>
+    <TargetFrameworkVersion>v4.6.1</TargetFrameworkVersion>
     <FileAlignment>512</FileAlignment>
     <AutoGenerateBindingRedirects>true</AutoGenerateBindingRedirects>
     <TargetFrameworkProfile>
@@ -74,6 +74,7 @@
     <ErrorReport>prompt</ErrorReport>
     <CodeAnalysisRuleSet>MinimumRecommendedRules.ruleset</CodeAnalysisRuleSet>
     <Prefer32Bit>false</Prefer32Bit>
+    <UseVSHostingProcess>true</UseVSHostingProcess>
   </PropertyGroup>
   <PropertyGroup>
     <ApplicationIcon>IDE.ico</ApplicationIcon>
@@ -97,11 +98,21 @@
     <CodeAnalysisRuleSet>MinimumRecommendedRules.ruleset</CodeAnalysisRuleSet>
   </PropertyGroup>
   <ItemGroup>
-    <Reference Include="MonoGame.Framework, Version=3.6.0.1625, Culture=neutral, processorArchitecture=MSIL">
-      <HintPath>..\packages\MonoGame.Framework.Portable.3.6.0.1625\lib\portable-net45+win8+wpa81\MonoGame.Framework.dll</HintPath>
-    </Reference>
     <Reference Include="System" />
+    <Reference Include="System.Buffers, Version=4.0.2.0, Culture=neutral, PublicKeyToken=cc7b13ffcd2ddd51, processorArchitecture=MSIL">
+      <HintPath>..\packages\System.Buffers.4.4.0\lib\netstandard2.0\System.Buffers.dll</HintPath>
+    </Reference>
     <Reference Include="System.Core" />
+    <Reference Include="System.Memory, Version=4.0.1.1, Culture=neutral, PublicKeyToken=cc7b13ffcd2ddd51, processorArchitecture=MSIL">
+      <HintPath>..\packages\System.Memory.4.5.3\lib\netstandard2.0\System.Memory.dll</HintPath>
+    </Reference>
+    <Reference Include="System.Numerics" />
+    <Reference Include="System.Numerics.Vectors, Version=4.1.3.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a, processorArchitecture=MSIL">
+      <HintPath>..\packages\System.Numerics.Vectors.4.4.0\lib\net46\System.Numerics.Vectors.dll</HintPath>
+    </Reference>
+    <Reference Include="System.Runtime.CompilerServices.Unsafe, Version=4.0.4.1, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a, processorArchitecture=MSIL">
+      <HintPath>..\packages\System.Runtime.CompilerServices.Unsafe.4.5.2\lib\netstandard2.0\System.Runtime.CompilerServices.Unsafe.dll</HintPath>
+    </Reference>
     <Reference Include="System.Xml.Linq" />
     <Reference Include="System.Data.DataSetExtensions" />
     <Reference Include="Microsoft.CSharp" />
@@ -118,6 +129,12 @@
     </Compile>
     <Compile Include="AboutWindow.Designer.cs">
       <DependentUpon>AboutWindow.cs</DependentUpon>
+    </Compile>
+    <Compile Include="AvatarUtils\AddAppearanceWindow.cs">
+      <SubType>Form</SubType>
+    </Compile>
+    <Compile Include="AvatarUtils\AddAppearanceWindow.Designer.cs">
+      <DependentUpon>AddAppearanceWindow.cs</DependentUpon>
     </Compile>
     <Compile Include="Common\Debug\UI3DDGRP.cs" />
     <Compile Include="Common\ExternalWorld.cs" />
@@ -166,6 +183,12 @@
     <Compile Include="ContentEditors\AOTGenerator.Designer.cs">
       <DependentUpon>AOTGenerator.cs</DependentUpon>
     </Compile>
+    <Compile Include="ContentEditors\AvatarTool.cs">
+      <SubType>Form</SubType>
+    </Compile>
+    <Compile Include="ContentEditors\AvatarTool.Designer.cs">
+      <DependentUpon>AvatarTool.cs</DependentUpon>
+    </Compile>
     <Compile Include="ContentEditors\TSODataDefinitionEditor.cs">
       <SubType>Form</SubType>
     </Compile>
@@ -179,6 +202,8 @@
     <Compile Include="EditorComponent\Commands\AddPrimCommand.cs" />
     <Compile Include="EditorComponent\Commands\BHAVCommand.cs" />
     <Compile Include="EditorComponent\Commands\ChangeBHAVCommand.cs" />
+    <Compile Include="EditorComponent\Commands\CommentModifyCommand.cs" />
+    <Compile Include="EditorComponent\Commands\UpdateBoxPosCommand.cs" />
     <Compile Include="EditorComponent\Commands\SetFirstCommand.cs" />
     <Compile Include="EditorComponent\Commands\ToggleBreakpointCommand.cs" />
     <Compile Include="EditorComponent\Commands\ChangePointerCommand.cs" />
@@ -252,6 +277,7 @@
     <Compile Include="EditorComponent\Primitives\DialogDescriptors.cs" />
     <Compile Include="EditorComponent\Primitives\GenericTSOCallDescriptor.cs" />
     <Compile Include="EditorComponent\Primitives\SetBalloonHeadlineDescriptor.cs" />
+    <Compile Include="EditorComponent\Primitives\ShowStringDescriptor.cs" />
     <Compile Include="EditorComponent\Primitives\TS1InventoryOperationsDescriptor.cs" />
     <Compile Include="EditorComponent\Primitives\InvokePluginDescriptor.cs" />
     <Compile Include="EditorComponent\Primitives\PushInteractionDescriptor.cs" />
@@ -280,6 +306,8 @@
     <Compile Include="EditorComponent\Primitives\RelationshipDescriptor.cs" />
     <Compile Include="EditorComponent\Primitives\SleepDescriptor.cs" />
     <Compile Include="EditorComponent\Primitives\TransferFundsDescriptor.cs" />
+    <Compile Include="EditorComponent\UI\CommentContainer.cs" />
+    <Compile Include="EditorComponent\Primitives\TSOInventoryOperationsDescriptor.cs" />
     <Compile Include="EditorComponent\UI\UIBHAVEditor.cs" />
     <Compile Include="EditorComponent\VarSoundSelect.cs">
       <SubType>Form</SubType>
@@ -405,6 +433,18 @@
     <Compile Include="ResourceBrowser\ResourceEditors\OTFResourceControl.Designer.cs">
       <DependentUpon>OTFResourceControl.cs</DependentUpon>
     </Compile>
+    <Compile Include="ResourceBrowser\PIFFEditor.cs">
+      <SubType>UserControl</SubType>
+    </Compile>
+    <Compile Include="ResourceBrowser\PIFFEditor.Designer.cs">
+      <DependentUpon>PIFFEditor.cs</DependentUpon>
+    </Compile>
+    <Compile Include="ResourceBrowser\UpgradeEditor.cs">
+      <SubType>UserControl</SubType>
+    </Compile>
+    <Compile Include="ResourceBrowser\UpgradeEditor.Designer.cs">
+      <DependentUpon>UpgradeEditor.cs</DependentUpon>
+    </Compile>
     <Compile Include="ResourceBrowser\XMLEntryEditor.cs">
       <SubType>UserControl</SubType>
     </Compile>
@@ -484,8 +524,22 @@
     <Compile Include="ResourceBrowser\SelectTreeDialog.Designer.cs">
       <DependentUpon>SelectTreeDialog.cs</DependentUpon>
     </Compile>
+    <Compile Include="Utils\AppearanceGenerator.cs" />
+    <Compile Include="Utils\FormatReverse\FieldEncodingFormatTracker.cs">
+      <SubType>Form</SubType>
+    </Compile>
+    <Compile Include="Utils\FormatReverse\FieldEncodingFormatTracker.Designer.cs">
+      <DependentUpon>FieldEncodingFormatTracker.cs</DependentUpon>
+    </Compile>
+    <Compile Include="Utils\FormsUtils.cs" />
+    <Compile Include="Utils\GLTFExporter.cs" />
+    <Compile Include="Utils\GLTFImporter.cs" />
+    <Compile Include="Utils\ImportMeshGroup.cs" />
     <EmbeddedResource Include="AboutWindow.resx">
       <DependentUpon>AboutWindow.cs</DependentUpon>
+    </EmbeddedResource>
+    <EmbeddedResource Include="AvatarUtils\AddAppearanceWindow.resx">
+      <DependentUpon>AddAppearanceWindow.cs</DependentUpon>
     </EmbeddedResource>
     <EmbeddedResource Include="Common\NewIffDialog.resx">
       <DependentUpon>NewIffDialog.cs</DependentUpon>
@@ -495,6 +549,9 @@
     </EmbeddedResource>
     <EmbeddedResource Include="ContentEditors\AOTGenerator.resx">
       <DependentUpon>AOTGenerator.cs</DependentUpon>
+    </EmbeddedResource>
+    <EmbeddedResource Include="ContentEditors\AvatarTool.resx">
+      <DependentUpon>AvatarTool.cs</DependentUpon>
     </EmbeddedResource>
     <EmbeddedResource Include="ContentEditors\TSODataDefinitionEditor.resx">
       <DependentUpon>TSODataDefinitionEditor.cs</DependentUpon>
@@ -541,6 +598,9 @@
     <EmbeddedResource Include="EntityInspector.resx">
       <DependentUpon>EntityInspector.cs</DependentUpon>
     </EmbeddedResource>
+    <EmbeddedResource Include="FSOUIControl.resx">
+      <DependentUpon>FSOUIControl.cs</DependentUpon>
+    </EmbeddedResource>
     <EmbeddedResource Include="MainWindow.resx">
       <DependentUpon>MainWindow.cs</DependentUpon>
     </EmbeddedResource>
@@ -584,8 +644,14 @@
     <EmbeddedResource Include="ResourceBrowser\IffResourceViewer.resx">
       <DependentUpon>IffResourceViewer.cs</DependentUpon>
     </EmbeddedResource>
+    <EmbeddedResource Include="ResourceBrowser\PIFFEditor.resx">
+      <DependentUpon>PIFFEditor.cs</DependentUpon>
+    </EmbeddedResource>
     <EmbeddedResource Include="ResourceBrowser\ResourceEditors\OTFResourceControl.resx">
       <DependentUpon>OTFResourceControl.cs</DependentUpon>
+    </EmbeddedResource>
+    <EmbeddedResource Include="ResourceBrowser\UpgradeEditor.resx">
+      <DependentUpon>UpgradeEditor.cs</DependentUpon>
     </EmbeddedResource>
     <EmbeddedResource Include="ResourceBrowser\XMLEntryEditor.resx">
       <DependentUpon>XMLEntryEditor.cs</DependentUpon>
@@ -626,8 +692,10 @@
     <EmbeddedResource Include="ResourceBrowser\SelectTreeDialog.resx">
       <DependentUpon>SelectTreeDialog.cs</DependentUpon>
     </EmbeddedResource>
+    <EmbeddedResource Include="Utils\FormatReverse\FieldEncodingFormatTracker.resx">
+      <DependentUpon>FieldEncodingFormatTracker.cs</DependentUpon>
+    </EmbeddedResource>
     <None Include="ClassDiagram1.cd" />
-    <None Include="packages.config" />
     <None Include="Properties\Settings.settings">
       <Generator>SettingsSingleFileGenerator</Generator>
       <LastGenOutput>Settings.Designer.cs</LastGenOutput>
@@ -657,6 +725,11 @@
     <ProjectReference Include="..\FSO.Patcher\FSO.Patcher.csproj">
       <Project>{4e43ce64-343f-4c53-a055-bbf0f4986a16}</Project>
       <Name>FSO.Patcher</Name>
+    </ProjectReference>
+    <ProjectReference Include="..\FSO.SimAntics.JIT.Roslyn\FSO.SimAntics.JIT.Roslyn.csproj">
+      <Project>{b3de74c1-b7a1-4773-bd36-993988b23527}</Project>
+      <Name>FSO.SimAntics.JIT.Roslyn</Name>
+      <EmbedInteropTypes>False</EmbedInteropTypes>
     </ProjectReference>
     <ProjectReference Include="..\FSO.SimAntics.JIT\FSO.SimAntics.JIT.csproj">
       <Project>{b8ab3711-7b4f-4126-9bf3-4ddde9475b74}</Project>
@@ -774,6 +847,18 @@
     <Content Include="IDERes\diagbg.png">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </Content>
+    <Content Include="IDERes\tree\comment_box.png">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </Content>
+    <Content Include="IDERes\tree\comment_bubble.png">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </Content>
+    <Content Include="IDERes\tree\goto_box.png">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </Content>
+    <Content Include="IDERes\tree\label_box.png">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </Content>
     <Content Include="IDERes\viewBG.png">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </Content>
@@ -802,6 +887,17 @@
     <Content Include="IDERes\trueReturn.png">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </Content>
+  </ItemGroup>
+  <ItemGroup>
+    <PackageReference Include="MonoGame.Framework.Portable">
+      <Version>3.6.0.1625</Version>
+    </PackageReference>
+    <PackageReference Include="Newtonsoft.Json">
+      <Version>12.0.2</Version>
+    </PackageReference>
+    <PackageReference Include="SharpGLTF.Toolkit">
+      <Version>1.0.0-alpha0011</Version>
+    </PackageReference>
   </ItemGroup>
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
   <!-- To modify your build process, add your task inside one of the targets below and uncomment it. 

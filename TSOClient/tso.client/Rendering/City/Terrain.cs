@@ -35,6 +35,7 @@ using FSO.Files.RC;
 using FSO.Common.Rendering.Framework.IO;
 using FSO.Client.UI.Panels;
 using FSO.Common.Rendering;
+using FSO.LotView.Utils.Camera;
 
 namespace FSO.Client.Rendering.City
 {
@@ -94,7 +95,8 @@ namespace FSO.Client.Rendering.City
             new Color(0xFF, 0x01, 0xFF, 0xFF).PackedValue
         };
 
-        public ICityCamera Camera = (FSOEnvironment.Enable3D)?new CityCamera3D():(ICityCamera)new CityCamera2D();
+        //TODO: NEW 3D
+        public ICityCamera Camera = (GraphicsModeControl.Mode == GlobalGraphicsMode.Full3D)?new CityCamera3D():(ICityCamera)new CityCamera2D();
 
         public static float NEAR_ZOOM_SIZE = 288;
         public TerrainZoomMode m_Zoomed
@@ -234,6 +236,7 @@ namespace FSO.Client.Rendering.City
         public void Initialize(int mapId)
         {
             m_CityNumber = mapId;
+            GraphicsModeControl.ModeChanged += SwitchToMode;
         }
 
         public void populateCityLookup(LotTileEntry[] TileData)
@@ -270,10 +273,12 @@ namespace FSO.Client.Rendering.City
 
             foreach (var particle in Particles) particle.Dispose();
             Particles.Clear();
+            GraphicsModeControl.ModeChanged -= SwitchToMode;
         }
 
         public void DisposeOnLot()
         {
+            LastWorld = null;
             NearFacades?.Dispose();
             NearFacades = null;
         }
@@ -284,6 +289,23 @@ namespace FSO.Client.Rendering.City
             float direction = (float)Math.Atan2(End.Y - Start.Y, End.X - Start.X);
             Color tint = new Color(1f, 1f, 1f, 1f) * opacity;
             spriteBatch.Draw(Fill, new Rectangle((int)Start.X, (int)Start.Y-(int)(lineWidth/2), (int)length, lineWidth), null, tint, direction, new Vector2(0, 0.5f), SpriteEffects.None, 0); //
+        }
+
+        public void SwitchToMode(GlobalGraphicsMode mode)
+        {
+            var old = Camera;
+            Camera = (mode == GlobalGraphicsMode.Full3D) ? new CityCamera3D() : (ICityCamera)new CityCamera2D();
+            Camera.Zoomed = old.Zoomed;
+            Camera.LotZoomProgress = old.LotZoomProgress;
+            Camera.ZoomProgress = old.ZoomProgress;
+            Camera.CenterCam = old.CenterCam;
+            Camera.Target = old.Target;
+            if (Camera is CityCamera3D) ((CityCamera3D)Camera).CenterTile = new Vector2(old.Target.X, old.Target.Z);
+
+            if (Camera.Zoomed == TerrainZoomMode.Lot && LastWorld != null)
+            {
+                InheritPosition(LastWorld, FindController<TerrainController>()?.Parent, true);
+            }
         }
 
         public void GenerateCityMesh(GraphicsDevice gd, Rectangle? range)
@@ -714,7 +736,7 @@ namespace FSO.Client.Rendering.City
         public Vector2 Get2DFromTile(int x, int y)
         {
             float iScale = (float)(1/(m_LastIsoScale * 2));
-            if (x < 0 || y < 0) return new Vector2();
+            if (x < 0 || y < 0 || x >= 512 || y >= 512) return new Vector2();
             var transform = transformSpr3(new Vector3(x, MapData.ElevationData[(y * 512 + x)] / 12.0f, y));
             return (transform.Z > 0)?new Vector2(transform.X, transform.Y):new Vector2(float.MaxValue, 0);
         }
@@ -1101,6 +1123,7 @@ namespace FSO.Client.Rendering.City
                 if (Camera is CityCamera2D)
                 {
                     var c2d = (CityCamera2D)Camera;
+                    if (ParticleCamera is CityCamera3D) ParticleCamera = new BasicCamera(m_GraphicsDevice, Vector3.Zero, new Vector3(0, 0.5f, 0.86602540f), Vector3.Up);
                     ParticleCamera.Position = new Vector3(0, 0.5f, 0.86602540f) * scale * 10000 + new Vector3(c2d.m_ViewOffX * 4 + 2000, 0, (c2d.m_ViewOffY * -5 + 2000));
                     ParticleCamera.Target = ParticleCamera.Position - new Vector3(0, 0.5f, 0.86602540f);
                     ParticleCamera.ProjectionDirty();
@@ -1233,10 +1256,12 @@ namespace FSO.Client.Rendering.City
         }
 
         public Vector3 LotPosition;
+        private World LastWorld;
 
-        public void InheritPosition(World lotWorld, CoreGameScreenController controller)
+        public void InheritPosition(World lotWorld, CoreGameScreenController controller, bool instant)
         {
-            Camera.InheritPosition(this, lotWorld, controller);
+            LastWorld = lotWorld;
+            Camera.InheritPosition(this, lotWorld, controller, instant);
         }
 
         public float GetElevationVert(int x, int y)
@@ -1368,8 +1393,8 @@ namespace FSO.Client.Rendering.City
 
             float HB = m_ScrWidth * IsoScale;
             float VB = m_ScrHeight * IsoScale;
-
-            if (FSOEnvironment.Enable3D && m_LotZoomProgress > 0.0001f) return;
+            
+            if ((Camera is CityCamera3D && m_Zoomed == TerrainZoomMode.Lot) || (Camera is CityCamera2D && m_LotZoomProgress == 1f)) return;
 
             Matrix ProjectionMatrix = Camera.Projection;
 
@@ -1426,7 +1451,8 @@ namespace FSO.Client.Rendering.City
                     Vector2 pos = Camera.CalculateRShadow();
                     Vector3 LightOff = Vector3.Transform(new Vector3(pos.X, 0, pos.Y), LightView); //finds position in light space of approximate center of camera (to be used for only shadowing near the camera in near view)
 
-                    float size = (1 - m_ZoomProgress) * 262 + (m_ZoomProgress * 40); //size of draw window to use for shadowing. 40 is good for near view, it could be less but that wouldn't work correctly on higher ground.
+                    var shadZoom = Camera is CityCamera3D ? 0f : m_ZoomProgress;
+                    float size = (1 - shadZoom) * 262 + (shadZoom * 40); //size of draw window to use for shadowing. 40 is good for near view, it could be less but that wouldn't work correctly on higher ground.
                     Matrix LightProject = Matrix.CreateOrthographicOffCenter(-size + LightOff.X, size + LightOff.X, -size + LightOff.Y, size + LightOff.Y, 0.1f, 524); //create light projection using offsets + size.
 
                     m_LightMatrix = (WorldMatrix * LightView) * LightProject;
@@ -1557,10 +1583,10 @@ namespace FSO.Client.Rendering.City
         public void DrawSurrounding(GraphicsDevice gfx, ICamera camera, Vector4 fogColor, int surroundNumber) {
             if (!GlobalSettings.Default.CitySkybox)
             {
-                if (camera is WorldCamera3D)
+                if (camera is CameraControllers)
                 {
-                    var wc = (WorldCamera3D)camera;
-                    if (wc.FromIntensity != 0) wc.FromIntensity = 0;
+                    var controllers = (CameraControllers)camera;
+                    controllers.ClearExternalTransition();
                 }
                 return;
             }
@@ -1574,26 +1600,40 @@ namespace FSO.Client.Rendering.City
             float HB = m_ScrWidth * IsoScale;
             float VB = m_ScrHeight * IsoScale;
             Matrix? ViewMatrixN = null;
-            if (camera is WorldCamera3D)
+            if (camera is CameraControllers)
             {
-                var wc = (WorldCamera3D)camera;
+                var controllers = (CameraControllers)camera;
+                if (m_LotZoomProgress == 1)
+                {
+                    controllers.ClearExternalTransition();
+                }
+                else
+                {
+                    var trans = controllers.GetExternalTransition();
+                    trans.IsLinear = true;
+                    var dummy = trans.Camera as DummyCamera;
+                    trans.Percent = 1 - m_LotZoomProgress;
 
-                Matrix ProjectionMatrix = Camera.Projection;
+                    Matrix ProjectionMatrix = Camera.Projection;
+                    Matrix ViewMatrix = Camera.View;
 
-                Matrix ViewMatrix = Camera.View;
-
-                ViewMatrix = Matrix.Invert(world) * ViewMatrix;
-
-                wc.FromProjection = ProjectionMatrix;
-                wc.FromView = ViewMatrix;
-                ViewMatrixN = Matrix.CreateScale(new Vector3(1, 1/3f, 1)) * wc.FromView;
-                wc.FromIntensity = 1 - m_LotZoomProgress;
+                    ViewMatrix = Matrix.Invert(world) * ViewMatrix;
+                    
+                    dummy.Projection = ProjectionMatrix;
+                    dummy.View = ViewMatrix;
+                    ViewMatrixN = Matrix.CreateScale(new Vector3(1, 1/3f, 1)) * ViewMatrix;
+                    
+                }
             }
 
             var v = camera.View;
             var p = camera.Projection;
 
-            if (camera is WorldCamera3D) ((WorldCamera3D)camera).FromView = ViewMatrixN.Value;
+            if (ViewMatrixN != null)
+            {
+                var dummy = ((camera as CameraControllers)?.GetExternalTransition()?.Camera as DummyCamera);
+                if (dummy != null) dummy.View = ViewMatrixN.Value;
+            }
 
             ShadowRes = GlobalSettings.Default.ShadowQuality;
             ShadowsEnabled = GlobalSettings.Default.CityShadows;
@@ -1839,13 +1879,14 @@ namespace FSO.Client.Rendering.City
             }
 
             int drawCount = 0;
+            int houseRange = (GlobalSettings.Default.SurroundingLotMode == 0) ? 0 : 1;
             if (useLocked)
             {
                 foreach (var house in NearFacades.Entries)
                 {
                     var x = (int)house.Location.X;
                     var y = (int)house.Location.Y;
-                    if (LotPosition.X >= x && LotPosition.X <= x + 2 && LotPosition.Z >= y - 1 && LotPosition.Z <= y + 1) continue;
+                    if (LotPosition.X >= (x - houseRange) + 1 && LotPosition.X <= x + houseRange + 1 && LotPosition.Z >= y - houseRange && LotPosition.Z <= y + houseRange) continue;
 
                     if (house.Bounds.Intersects(frustum))
                     {

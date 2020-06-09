@@ -24,6 +24,7 @@ namespace FSO.SimAntics.Model.TSOPlatform
         }
 
         public VMTSOObjectFlags ObjectFlags;
+        public byte UpgradeLevel;
 
         public VMTSOObjectState() { }
 
@@ -44,6 +45,11 @@ namespace FSO.SimAntics.Model.TSOPlatform
             {
                 ObjectFlags = (VMTSOObjectFlags)reader.ReadByte();
             }
+
+            if (Version > 33)
+            {
+                UpgradeLevel = reader.ReadByte();
+            }
         }
 
         public override void SerializeInto(BinaryWriter writer)
@@ -55,6 +61,7 @@ namespace FSO.SimAntics.Model.TSOPlatform
             writer.Write(QtrDaysSinceLastRepair);
 
             writer.Write((byte)ObjectFlags);
+            writer.Write(UpgradeLevel);
         }
 
         public override void Tick(VM vm, object owner)
@@ -88,14 +95,19 @@ namespace FSO.SimAntics.Model.TSOPlatform
                 var prob = 100 + ((Wear - (50 * 4)) * 75) / 40;
                 if (rand < prob && owner.MultitileGroup.BaseObject == owner)
                 {
-                    //break the object
-                    QtrDaysSinceLastRepair = 255;
-                    //apply the broken object particle to all parts
-                    foreach (var item in owner.MultitileGroup.Objects)
-                    {
-                        ((VMGameObject)item).EnableParticle(256);
-                    }
+                    Break(owner);
                 }
+            }
+        }
+
+        public void Break(VMEntity owner)
+        {
+            //break the object
+            QtrDaysSinceLastRepair = 255;
+            //apply the broken object particle to all parts
+            foreach (var item in owner.MultitileGroup.Objects)
+            {
+                ((VMGameObject)item).EnableParticle(256);
             }
         }
 

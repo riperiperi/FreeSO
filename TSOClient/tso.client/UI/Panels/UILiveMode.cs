@@ -22,6 +22,7 @@ using FSO.LotView;
 using FSO.Common;
 using FSO.Content.Model;
 using FSO.SimAntics.Model.TSOPlatform;
+using FSO.Common.Model;
 
 namespace FSO.Client.UI.Panels
 {
@@ -34,6 +35,9 @@ namespace FSO.Client.UI.Panels
         public UIImage Divider;
         public UIVMPersonButton Thumb;
         public UIMotiveDisplay MotiveDisplay;
+
+        public Func<int, short, short> MotiveTransform;
+
         public Texture2D DividerImg { get; set; }
         public Texture2D PeopleListBackgroundImg { get; set; }
         public Texture2D PeopleListEODBackgroundImg { get; set; }
@@ -255,6 +259,16 @@ namespace FSO.Client.UI.Panels
             MsgWinTextEntry.Items.Add(new UIListBoxItem("", ""));
             
             SetInEOD(null, null);
+
+            InitSpecial();
+        }
+
+        private void InitSpecial()
+        {
+            if (DynamicTuning.Global?.GetTuning("aprilfools", 0, 2020) == 1)
+            {
+                MotiveTransform = InvertMotive;
+            }
         }
 
         private void EODExpandToggle(UIElement button)
@@ -649,6 +663,19 @@ namespace FSO.Client.UI.Panels
             MotiveDisplay.MotiveValues[5] = SelectedAvatar.GetMotiveData(VMMotive.Fun);
             MotiveDisplay.MotiveValues[6] = SelectedAvatar.GetMotiveData(VMMotive.Social);
             MotiveDisplay.MotiveValues[7] = SelectedAvatar.GetMotiveData(VMMotive.Room);
+
+            if (MotiveTransform != null)
+            {
+                for (int i = 0; i < 8; i++)
+                {
+                    MotiveDisplay.MotiveValues[i] = MotiveTransform(i, MotiveDisplay.MotiveValues[i]);
+                }
+            }
+        }
+
+        private short InvertMotive(int index, short motive)
+        {
+            return (short)(-motive);
         }
     }
 

@@ -129,11 +129,10 @@ namespace FSO.SimAntics.NetPlay.EODs.Handlers
                     else
                     {
                         client.vm.GlobalLink.RetrieveFromInventory(client.vm, itemID, client.Avatar.PersistID, false,
-                            (uint guid, byte[] odata) =>
+                            (info) =>
                         {
-                            if (guid != 0)
+                            if (info.GUID != 0)
                             {
-                                
                                 lock (this)
                                 {
                                     ResetTradeTime();
@@ -144,14 +143,14 @@ namespace FSO.SimAntics.NetPlay.EODs.Handlers
                                         BroadcastTradeData(false);
                                         return;
                                     }
-                                    var item = Content.Content.Get().WorldCatalog.GetItemByGUID(guid);
+                                    var item = Content.Content.Get().WorldCatalog.GetItemByGUID(info.GUID);
                                     if (item != null && item.Value.DisableLevel > 1 && client.Avatar.AvatarState.Permissions < VMTSOAvatarPermissions.Admin)
                                     {
                                         client.Send("trade_error", ((int)VMEODSecureTradeError.UNTRADABLE_OBJECT).ToString());
                                         BroadcastTradeData(false);
                                         return;
                                     }
-                                    myData.ObjectOffer[slotID] = new VMEODSecureTradeObject(guid, itemID, odata);
+                                    myData.ObjectOffer[slotID] = new VMEODSecureTradeObject(info.GUID, itemID, info.Data);
                                     BroadcastTradeData(true);
                                 }
                             }

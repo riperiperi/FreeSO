@@ -52,6 +52,7 @@
     <WarningLevel>4</WarningLevel>
     <CodeAnalysisRuleSet>AllRules.ruleset</CodeAnalysisRuleSet>
     <Prefer32Bit>false</Prefer32Bit>
+    <UseVSHostingProcess>true</UseVSHostingProcess>
   </PropertyGroup>
   <PropertyGroup>
     <ApplicationIcon>fso.ico</ApplicationIcon>
@@ -159,10 +160,17 @@
     <Compile Include="Rendering\City\Plugins\MapPainterPlugin.cs" />
     <Compile Include="Rendering\City\Plugins\NeighbourhoodEditPlugin.cs" />
     <Compile Include="Rendering\City\TLayerVertex.cs" />
+    <Compile Include="UI\Controls\UIMapWaypoint.cs" />
+    <Compile Include="UI\Panels\EODs\UICooldownEventEOD.cs" />
+    <Compile Include="UI\Panels\UIAbstractCatalogMode.cs" />
+    <Compile Include="UI\Panels\Upgrades\UIUpgradeItem.cs" />
+    <Compile Include="UI\Panels\Upgrades\UIUpgradeList.cs" />
+    <Compile Include="UI\Panels\Upgrades\UIUpgradeThermo.cs" />
     <Compile Include="UI\Profile\UIJobInfo.cs" />
     <Compile Include="UI\Controls\UIRatingDisplay.cs" />
     <Compile Include="UI\Controls\UISlotsImage.cs" />
     <Compile Include="UI\Controls\UIAvatarThumbnail.cs" />
+    <Compile Include="UI\Controls\UIInvisibleButton.cs" />
     <Compile Include="UI\Controls\UILotButton.cs" />
     <Compile Include="UI\Controls\UIPersonButton.cs" />
     <Compile Include="UI\Controls\UISkillBar.cs" />
@@ -285,7 +293,7 @@
     <Compile Include="Utils\PalMapper.cs" />
     <Compile Include="Utils\TestFunctions\ProjectionTest.cs" />
     <Compile Include="Utils\ThreeDMesh.cs" />
-    <Content Include="..\..\Other\libs\FSOMonoGame\MonoGame.Framework\obj\Linux\AnyCPU\Release\MonoGame.Framework.dll">
+    <Content Include="..\..\Other\libs\FSOMonoGame\MonoGame.Framework\obj\Linux\AnyCPU\Release\MonoGame.Framework.dll" Condition="Exists('..\..\Other\libs\FSOMonoGame\MonoGame.Framework\obj\Linux\AnyCPU\Release\MonoGame.Framework.dll')">
       <Link>Monogame\Linux\MonoGame.Framework.dll</Link>
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </Content>
@@ -563,8 +571,8 @@
     <Reference Include="Mina.NET, Version=2.0.11.0, Culture=neutral, PublicKeyToken=bc4dde96e5154fe5, processorArchitecture=MSIL">
       <HintPath>..\packages\Mina.2.0.11\lib\net40\Mina.NET.dll</HintPath>
     </Reference>
-    <Reference Include="Newtonsoft.Json, Version=11.0.0.0, Culture=neutral, PublicKeyToken=30ad4fe6b2a6aeed, processorArchitecture=MSIL">
-      <HintPath>..\packages\Newtonsoft.Json.11.0.2\lib\net45\Newtonsoft.Json.dll</HintPath>
+    <Reference Include="Newtonsoft.Json, Version=12.0.0.0, Culture=neutral, PublicKeyToken=30ad4fe6b2a6aeed, processorArchitecture=MSIL">
+      <HintPath>..\packages\Newtonsoft.Json.12.0.2\lib\net45\Newtonsoft.Json.dll</HintPath>
     </Reference>
     <Reference Include="Ninject, Version=3.0.0.0, Culture=neutral, PublicKeyToken=c7192dc5380945e7, processorArchitecture=MSIL">
       <HintPath>..\packages\Portable.Ninject.3.3.1\lib\net40-client\Ninject.dll</HintPath>
@@ -633,7 +641,7 @@
       <Link>OpenTK.dll.config</Link>
       <CopyToOutputDirectory>Always</CopyToOutputDirectory>
     </None>
-    <None Include="App.config">
+    <None Include="app.config">
       <SubType>Designer</SubType>
     </None>
     <Content Include="Monogame\MacOS\OpenTK.dll.config">

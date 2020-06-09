@@ -31,7 +31,7 @@ CHANGE COLUMN `expire_date` `expire_date` INT(11) UNSIGNED NOT NULL ;
 ALTER TABLE `fso_election_votes` 
 ADD COLUMN `value` INT NOT NULL DEFAULT 1 COMMENT 'The value of this vote. Some votes can be worth more than others (eg. free votes are worth less than normal ones)' AFTER `date`;
 
-CREATE TABLE `fso`.`fso_auth_attempts` (
+CREATE TABLE `fso_auth_attempts` (
   `attempt_id` INT UNSIGNED NOT NULL AUTO_INCREMENT,
   `ip` VARCHAR(100) NOT NULL,
   `user_id` INT UNSIGNED NOT NULL,
@@ -43,6 +43,6 @@ CREATE TABLE `fso`.`fso_auth_attempts` (
   INDEX `fk_user_attempt_idx` (`user_id` ASC),
   CONSTRAINT `fk_user_attempt`
     FOREIGN KEY (`user_id`)
-    REFERENCES `fso`.`fso_users` (`user_id`)
+    REFERENCES `fso_users` (`user_id`)
     ON DELETE CASCADE
     ON UPDATE CASCADE);

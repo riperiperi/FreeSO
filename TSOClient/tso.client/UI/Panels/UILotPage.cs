@@ -466,7 +466,7 @@ namespace FSO.Client.UI.Panels
             if (!Visible) return;
             if (CurrentLot.Value != null)
                 UITerrainHighlight.DrawArrow(batch, ((CoreGameScreen)GameFacade.Screens.CurrentUIScreen).CityRenderer, 
-                    (Position + (_Open? Size : BackgroundContractedImage.Size.ToVector2()) / 2)* Common.FSOEnvironment.DPIScaleFactor, (int)CurrentLot.Value.Id);
+                    (Position + (_Open? Size : BackgroundContractedImage.Size.ToVector2()) / 2)* Common.FSOEnvironment.DPIScaleFactor, (int)CurrentLot.Value.Id, new Color(200, 225, 255));
             base.Draw(batch);
         }
     }

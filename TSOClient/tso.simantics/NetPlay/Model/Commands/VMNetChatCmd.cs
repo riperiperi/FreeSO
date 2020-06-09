@@ -4,7 +4,9 @@
  * http://mozilla.org/MPL/2.0/. 
  */
 
+using FSO.LotView.Model;
 using FSO.SimAntics.Engine.TSOTransaction;
+using FSO.SimAntics.Model;
 using FSO.SimAntics.Model.TSOPlatform;
 using FSO.SimAntics.NetPlay.Drivers;
 using FSO.SimAntics.Test;
@@ -203,7 +205,50 @@ namespace FSO.SimAntics.NetPlay.Model.Commands
             {
                 vm.SignalChatEvent(new VMChatEvent(avatar, VMChatEventType.Message, (byte)(ChannelID & 0x7f), avatar.Name, Message));
                 if ((ChannelID & 0x80) == 0) avatar.Message = Message;
+                UpdateTalkingHeadSeek(vm, avatar);
                 return true;
+            }
+        }
+
+        private void UpdateTalkingHeadSeek(VM vm, VMAvatar talker)
+        {
+            // Update head seek of everyone else to attempt to look at the person talking.
+
+            var channel = vm.TSOState.ChatChannels.FirstOrDefault(x => x.ID == ChannelID);
+            if (ChannelID == 7) channel = VMTSOChatChannel.AdminChannel;
+
+            if (channel != null && channel.ViewPermMin != VMTSOAvatarPermissions.Visitor) return; // Cannot use look towards on private channels.
+
+            bool isImportantChannel = channel != null && channel.SendPermMin > VMTSOAvatarPermissions.Visitor && channel.Flags.HasFlag(VMTSOChatChannelFlags.EnableTTS);
+            int multiplier = isImportantChannel ? 2 : 1;
+            int talkerRoom = vm.Context.GetObjectRoom(talker);
+
+            foreach (VMAvatar avatar in vm.Context.ObjectQueries.Avatars)
+            {
+                if (avatar == talker) continue;
+
+                if (!isImportantChannel)
+                {
+                    // Check if the avatar is in the same room, and rather close by.
+                    int avatarRoom = vm.Context.GetObjectRoom(avatar);
+                    if (avatarRoom != talkerRoom || LotTilePos.Distance(avatar.Position, talker.Position) > 16 * 10)
+                    {
+                        continue; // Not close enough.
+                    }
+                }
+
+                var avatarHeadTarget = vm.GetObjectById(avatar.GetPersonData(VMPersonDataVariable.HeadSeekObject));
+                var avatarHeadFinish = avatar.GetPersonData(VMPersonDataVariable.HeadSeekFinishAction);
+                var avatarHeadState = avatar.GetPersonData(VMPersonDataVariable.HeadSeekState);
+                if (avatarHeadState == 8 || avatarHeadState == 0 || (avatarHeadTarget is VMAvatar && (avatarHeadFinish != -1 || isImportantChannel)))
+                {
+                    // We can look towards the talker. (important talkers have priority)
+                    avatar.SetPersonData(VMPersonDataVariable.HeadSeekObject, talker.ObjectID);
+                    avatar.SetPersonData(VMPersonDataVariable.HeadSeekState, 1); //in progress flag only
+                    avatar.SetPersonData(VMPersonDataVariable.HeadSeekLimitAction, 1); //look back on limit?
+                    avatar.SetPersonData(VMPersonDataVariable.HeadSeekFinishAction, (short)(isImportantChannel ? -1 : 0)); //use to store if the person was an important talker
+                    avatar.SetPersonData(VMPersonDataVariable.HeadSeekTimeout, (short)(talker.MessageTimeout * multiplier)); //while the message is present
+                }
             }
         }
 

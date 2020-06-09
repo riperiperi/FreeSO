@@ -154,6 +154,7 @@ namespace FSO.Client.UI.Panels.EODs
 
             if (BuyItem == null) return;
             if (item.LotID > 0) BuyItem.Name = elemItem.Item.Name;
+            QueryPanel.InInventory = 2;
             QueryPanel.SetInfo(LotController.vm, BuyItem.Objects[0], true);
             QueryPanel.Mode = 2;
             QueryPanel.Tab = 1;
@@ -235,6 +236,7 @@ namespace FSO.Client.UI.Panels.EODs
             if (BuyItem == null) return;
             if (item.LotID > 0) BuyItem.Name = elemItem.Item.Name;
 
+            QueryPanel.InInventory = 2;
             QueryPanel.SetInfo(LotController.vm, BuyItem.Objects[0], true);
             QueryPanel.Mode = 2;
             QueryPanel.Tab = 1;
@@ -264,6 +266,7 @@ namespace FSO.Client.UI.Panels.EODs
                 QueryPanel.Active = false;
                 return; //can't trade this
             }
+            QueryPanel.InInventory = 1;
             QueryPanel.SetInfo(LotController.vm, BuyItem.Objects[0], false);
             QueryPanel.Mode = 2;
             QueryPanel.Tab = 0;

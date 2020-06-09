@@ -1,5 +1,6 @@
 ﻿using FSO.Client;
 using FSO.Client.UI.Framework;
+using FSO.Common.Utils;
 using FSO.Files.Formats.IFF.Chunks;
 using FSO.IDE.EditorComponent;
 using FSO.IDE.EditorComponent.Commands;
@@ -14,6 +15,7 @@ using System.Collections.Generic;
 using System.ComponentModel;
 using System.Data;
 using System.Drawing;
+using System.IO;
 using System.Linq;
 using System.Text;
 using System.Text.RegularExpressions;
@@ -363,6 +365,56 @@ namespace FSO.IDE
             }
         }
 
+        private void copyToolStripMenuItem_Click(object sender, EventArgs e)
+        {
+            lock (EditorLock)
+            {
+                if (Editor.BHAVView.Selected.Count == 0)
+                    return;
+                var target = Editor.BHAVView.Selected.First();
+                if (target.Type == TREEBoxType.Primitive) // only supports primitives for now
+                {
+                    DataObject dobject = new DataObject();
+                    var operand = target.Instruction.Operand;
+                    using (var stream = new MemoryStream()) {
+                        stream.Write(operand, 0, operand.Length);
+                        dobject.SetData("rawbinary", false, stream);
+                        dobject.SetData("primid", false, target.Descriptor.PrimID);
+                        Utils.FormsUtils.StaExecute(() => //༼ つ ◕_◕ ༽つ
+                        {
+                            Clipboard.SetDataObject(dobject, true);
+                        });
+                    }
+                }
+            }
+        }
+
+        private void pasteToolStripMenuItem_Click(object sender, EventArgs e)
+        {
+            lock (EditorLock)
+            {
+                if (Editor.IsPlacing)
+                    return; //even though AddPrimCommand should not call, avoid pasting if already placing a primitive
+                ushort? placeID = null;
+                byte[] operand = null;
+                Utils.FormsUtils.StaExecute(() => // impeach sta thread
+                {
+                    DataObject obj = (DataObject)Clipboard.GetDataObject();
+                    if (obj == null || !obj.GetDataPresent("rawbinary"))
+                        return;
+                    placeID = obj.GetData("primid") as ushort?;
+                    var stream = obj.GetData("rawbinary") as MemoryStream;
+                    operand = new byte[stream.Length];
+                    stream.Seek(0, SeekOrigin.Begin);
+                    stream.Read(operand, 0, operand.Length);
+                });
+                if (placeID != null)
+                {
+                    Editor.SetPlacement(placeID.Value, operand); // when multiselect is implemented, place all copied objects at once in a group?
+                }
+            }        
+        }
+
         private void StackView_SelectedIndexChanged(object sender, EventArgs e)
         {
             if (StackView.SelectedItems.Count > 0 && StackView.SelectedItems[0].Tag == null) SelectStackFrame(-1);
@@ -395,9 +447,21 @@ namespace FSO.IDE
         {
             lock (EditorLock)
             {
-                foreach (var prim in Editor.BHAVView.Selected)
+                var selected = Editor.BHAVView.Selected;
+                foreach (var prim in selected)
                 {
-                    Editor.QueueCommand(new RemovePrimCommand(Editor.BHAVView.RealPrim, prim));
+                    if (prim.Type == TREEBoxType.Label)
+                    {
+                        //remove gotos pointing at this object
+                        foreach (var prim2 in Editor.BHAVView.Primitives)
+                        {
+                            if (prim2.Type == TREEBoxType.Goto && prim2.TreeBox.TruePointer == prim.TreeBox.InternalID && !selected.Contains(prim2))
+                            {
+                                Editor.QueueCommand(new RemovePrimCommand(Editor.BHAVView.Primitives, prim2));
+                            }
+                        }
+                    }
+                    Editor.QueueCommand(new RemovePrimCommand(Editor.BHAVView.Primitives, prim));
                 }
                 Editor.BHAVView.ClearSelection();
             }
@@ -426,6 +490,51 @@ namespace FSO.IDE
         private void openParentResourceToolStripMenuItem_Click(object sender, EventArgs e)
         {
             MainWindow.Instance.IffManager.OpenResourceWindow(Scope.Object);
+        }
+
+        private void BHAVEditor_KeyPress(object sender, KeyPressEventArgs e)
+        {
+            if (EditorControl.Focused)
+            {
+                var c = (e.KeyChar == '\r') ? '\n' : e.KeyChar;
+                EditorControl.FSOUI.SubmitKey(c);
+            }
+        }
+
+        private void labelToolStripMenuItem_Click(object sender, EventArgs e)
+        {
+            lock (EditorLock) Editor.SetPlacement(TREEBoxType.Label);
+        }
+
+        private void commentToolStripMenuItem_Click(object sender, EventArgs e)
+        {
+            lock (EditorLock) Editor.SetPlacement(TREEBoxType.Comment);
+        }
+
+        private void BHAVEditor_Activated(object sender, EventArgs e)
+        {
+            //if the tree has changed, it must be reloaded
+            lock (EditorLock)
+            {
+                Editor.Refocused = true;
+            }
+            
+        }
+
+        private void BHAVEditor_Deactivate(object sender, EventArgs e)
+        {
+            EditorControl.ClearMouseState();
+            var ui = EditorControl.FSOUI;
+            GameThread.NextUpdate(state =>
+            {
+                ui.CleanupFocus(state);
+            });
+        }
+
+        private void SnapPrimitivesToGridToolStripMenuItem_Click(object sender, EventArgs e)
+        {
+            (sender as ToolStripMenuItem).Checked = !(sender as ToolStripMenuItem).Checked;
+            Editor.SnapPrims = (sender as ToolStripMenuItem).Checked;
         }
     }
 }

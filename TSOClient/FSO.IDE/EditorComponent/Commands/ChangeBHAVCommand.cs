@@ -20,6 +20,7 @@ namespace FSO.IDE.EditorComponent.Commands
         VMStackFrame OldFrame;
 
         BHAVPrimSelect SelectCallback;
+        bool KeepScroll;
 
         public ChangeBHAVCommand(BHAV target, EditorScope scope, VMStackFrame frame, BHAVPrimSelect callback)
         {

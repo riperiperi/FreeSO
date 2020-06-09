@@ -17,6 +17,7 @@ namespace FSO.IDE.Managers
 
         public BHAVEditor OpenEditor(BHAV bhav, GameObject srcobj)
         {
+            if (bhav == null) return null;
             BHAVEditor window;
             if (Editors.ContainsKey(bhav))
             {
@@ -63,6 +64,15 @@ namespace FSO.IDE.Managers
         public void RemoveTracer(VMEntity entity)
         {
             Tracers.Remove(entity);
+        }
+
+        public void CloseAllTracers()
+        {
+            var tracers = Tracers.ToList();
+            foreach (var tracer in tracers)
+            {
+                tracer.Value.Close();
+            }
         }
     }
 }

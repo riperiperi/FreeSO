@@ -20,6 +20,9 @@ using FSO.Common;
 using FSO.LotView.LMap;
 using FSO.LotView.RC;
 using System.Diagnostics;
+using FSO.LotView.Platform;
+using FSO.LotView.Utils;
+using FSO.LotView.Utils.Camera;
 
 namespace FSO.LotView
 {
@@ -35,7 +38,7 @@ namespace FSO.LotView
         public World(GraphicsDevice Device)
             : base(Device)
         {
-            var e = WorldContent.Grad2DEffect;
+            Effect e = WorldContent.Grad2DEffect;
             e = WorldContent.GrassEffect;
             e = WorldContent.Light2DEffect;
             e = WorldContent.ParticleEffect;
@@ -52,6 +55,8 @@ namespace FSO.LotView
         public float Opacity = 1f;
         public float BackbufferScale = 1f;
         public bool ForceAdvLight;
+        public bool LimitScroll = true;
+        public IRCSurroundings Surroundings;
 
         public float SmoothZoomTimer = -1;
         public float SmoothZoomFrom = 1f;
@@ -61,9 +66,12 @@ namespace FSO.LotView
         protected bool HasInitGPU;
         protected bool HasInitBlueprint;
         protected bool HasInit;
+        
+        public WorldStatic Static;
+        public WorldArchitecture Architecture;
+        public WorldEntities Entities;
+        public IWorldPlatform Platform;
 
-        protected World2D _2DWorld = new World2D();
-        protected World3D _3DWorld = new World3D();
         protected LMapBatch Light;
         protected Blueprint Blueprint;
 
@@ -92,9 +100,10 @@ namespace FSO.LotView
              */
             State = new WorldState(layer.Device, layer.Device.Viewport.Width, layer.Device.Viewport.Height, this);
 
-            State._3D = new FSO.LotView.Utils._3DWorldBatch(State);
-            State._2D = new FSO.LotView.Utils._2DWorldBatch(layer.Device, World2D.NUM_2D_BUFFERS, 
-                World2D.BUFFER_SURFACE_FORMATS, World2D.FORMAT_ALWAYS_DEPTHSTENCIL, World2D.SCROLL_BUFFER);
+            State._2D = new _2DWorldBatch(layer.Device, _2DWorldBatch.NUM_2D_BUFFERS,
+                _2DWorldBatch.BUFFER_SURFACE_FORMATS, _2DWorldBatch.FORMAT_ALWAYS_DEPTHSTENCIL, _2DWorldBatch.SCROLL_BUFFER);
+
+            Static = new WorldStatic(this);
 
             State.OutsidePx = new Texture2D(layer.Device, 1, 1);
 
@@ -107,23 +116,37 @@ namespace FSO.LotView
 
             HasInitGPU = true;
             HasInit = HasInitGPU & HasInitBlueprint;
+            GraphicsModeControl.ModeChanged += SetGraphicsMode;
         }
 
         public void GameResized()
         {
             PPXDepthEngine.InitScreenTargets();
             var newSize = PPXDepthEngine.GetWidthHeight();
-            State._2D.GenBuffers(newSize.X, newSize.Y);
-            State.SetDimensions(newSize.ToVector2());
+            var ssaa = new Point(newSize.X / PPXDepthEngine.SSAA, newSize.Y / PPXDepthEngine.SSAA);
+            State._2D.GenBuffers(ssaa.X, ssaa.Y);
+            State.SetDimensions(ssaa.ToVector2());
 
-            Blueprint?.Damage.Add(new BlueprintDamage(BlueprintDamageType.ZOOM));
+            Blueprint?.Changes?.SetFlag(BlueprintGlobalChanges.ZOOM);
+        }
+
+        public virtual void InitDefaultGraphicsMode()
+        {
+            SetGraphicsMode(GraphicsModeControl.Mode);
         }
 
         public virtual void InitBlueprint(Blueprint blueprint)
         {
             this.Blueprint = blueprint;
-            _2DWorld.Init(blueprint);
-            _3DWorld.Init(blueprint);
+            Platform?.Dispose();
+            InitDefaultGraphicsMode();
+            State.ProjectTilePos = EstTileAtPosWithScrollHeight;
+
+            Entities = new WorldEntities(blueprint);
+            Architecture = new WorldArchitecture(blueprint);
+            Static?.InitBlueprint(blueprint);
+            
+            State.Changes = blueprint.Changes;
             GameThread.InUpdate(() =>
             {
                 Light?.Init(blueprint);
@@ -142,7 +165,7 @@ namespace FSO.LotView
                 item.OnZoomChanged(State);
             }
             foreach (var sub in Blueprint.SubWorlds) sub.State.Zoom = State.Zoom;
-            Blueprint.Damage.Add(new BlueprintDamage(BlueprintDamageType.ZOOM));
+            Blueprint.Changes.SetFlag(BlueprintGlobalChanges.ZOOM);
 
             State._2D?.ClearTextureCache();
         }
@@ -150,7 +173,7 @@ namespace FSO.LotView
         public void InvalidatePreciseZoom()
         {
             if (Blueprint == null) { return; }
-            Blueprint.Damage.Add(new BlueprintDamage(BlueprintDamageType.PRECISE_ZOOM));
+            Blueprint.Changes.SetFlag(BlueprintGlobalChanges.PRECISE_ZOOM);
         }
 
         public void InvalidateRotation()
@@ -162,7 +185,7 @@ namespace FSO.LotView
                 item.OnRotationChanged(State);
             }
             foreach (var sub in Blueprint.SubWorlds) sub.State.Rotation = State.Rotation;
-            Blueprint.Damage.Add(new BlueprintDamage(BlueprintDamageType.ROTATE));
+            Blueprint.Changes.SetFlag(BlueprintGlobalChanges.ROTATE);
 
             State._2D?.ClearTextureCache();
         }
@@ -170,17 +193,13 @@ namespace FSO.LotView
         public void InvalidateScroll()
         {
             if (Blueprint == null) { return; }
-
-            foreach (var item in Blueprint.Objects){
-                item.OnScrollChanged(State);
-            }
-            Blueprint.Damage.Add(new BlueprintDamage(BlueprintDamageType.SCROLL));
+            Blueprint.Changes.SetFlag(BlueprintGlobalChanges.SCROLL);
         }
 
         public void InvalidateFloor()
         {
             if (Blueprint == null) { return; }
-            Blueprint.Damage.Add(new BlueprintDamage(BlueprintDamageType.LEVEL_CHANGED));
+            Blueprint.Changes.SetFlag(BlueprintGlobalChanges.LEVEL_CHANGED);
         }
 
         public bool TestScroll(UpdateState state)
@@ -336,39 +355,103 @@ namespace FSO.LotView
             Scroll(dir, true);
         }
 
+        public void SetGraphicsMode(GlobalGraphicsMode mode)
+        {
+            SetGraphicsMode(mode, false);
+        }
+
+        public void SetGraphicsMode(GlobalGraphicsMode mode, bool instant)
+        {
+            BackbufferScale = 1;
+            var transTime = instant ? 0 : -1;
+            switch (mode)
+            {
+                case GlobalGraphicsMode.Full2D:
+                case GlobalGraphicsMode.Hybrid2D:
+                    State.SetCameraType(this, Utils.Camera.CameraControllerType._2D, transTime);
+                    Platform = new WorldPlatform2D(Blueprint);
+                    break;
+                case GlobalGraphicsMode.Full3D:
+                    State.SetCameraType(this, Utils.Camera.CameraControllerType._3D, transTime);
+                    Platform = new WorldPlatform3D(Blueprint);
+                    State.Zoom = WorldZoom.Near;
+                    break;
+            }
+            ChangeAAMode(m_Device);
+            State.Platform = Platform;
+        }
+
+        public Tuple<float, float> Get3DTTHeights()
+        {
+            if (Blueprint == null) { return new Tuple<float, float>(0, 0); }
+            var terrainHeight = (Blueprint.InterpAltitude(new Vector3(State.CenterTile, 0))) * 3;
+            var targHeight = terrainHeight + (State.Level - 1) * 2.95f * 3;
+            targHeight = Math.Max((Blueprint.InterpAltitude(new Vector3(State.Camera.Position.X, State.Camera.Position.Z, 0) / 3) + (State.Level - 1) * 2.95f) * 3, terrainHeight);
+            return new Tuple<float, float>(terrainHeight, targHeight);
+        }
+
         public virtual Vector2[] GetScrollBasis(bool multiplied)
         {
-            Vector2[] output = new Vector2[2];
-            switch (State.Rotation)
+            if (State.CameraMode == CameraRenderMode._3D)
             {
-                case WorldRotation.TopLeft:
-                    output[1] = new Vector2(2, 2);
-                    output[0] = new Vector2(1, -1);
-                    break;
-                case WorldRotation.TopRight:
-                    output[1] = new Vector2(2, -2);
-                    output[0] = new Vector2(-1, -1);
-                    break;
-                case WorldRotation.BottomRight:
-                    output[1] = new Vector2(-2, -2);
-                    output[0] = new Vector2(-1, 1);
-                    break;
-                case WorldRotation.BottomLeft:
-                    output[1] = new Vector2(-2, 2);
-                    output[0] = new Vector2(1, 1);
-                    break;
+                var cam = State.Cameras.ActiveCamera as CameraController3D;
+                var mat = Matrix.CreateRotationZ(-(cam?.RotationX ?? 0));
+                var z = multiplied ? ((1 + (float)Math.Sqrt(cam?.Zoom3D ?? 1)) / 2) : 1;
+                return new Vector2[] {
+                    Vector2.Transform(new Vector2(0, -1), mat) * z,
+                    Vector2.Transform(new Vector2(1, 0), mat) * z
+                };
             }
-            if (multiplied)
+            else
             {
-                int multiplier = ((1 << (3 - (int)State.Zoom)) * 3) / 2;
-                output[0] *= multiplier;
-                output[1] *= multiplier;
+                var cam = State.Cameras.ActiveCamera as CameraController2D;
+                var rcam = cam.Camera;
+                var rot = (float)DirectionUtils.PosMod((-0.5 + (int)rcam.Rotation - rcam.RotateOff / 90) * (-Math.PI / 2), Math.PI * 2);
+
+                var mat = Matrix.CreateRotationZ(rot);
+                int z = (multiplied) ? (((1 << (3 - (int)State.Zoom)) * 3) / 2) : 1;
+                return new Vector2[] {
+                    Vector2.Transform(new Vector2(0, -1), mat) * z,
+                    Vector2.Transform(new Vector2(1, 0), mat) * z * 2
+                };
             }
-            return output;
+            /*
+            else
+            {
+                Vector2[] output = new Vector2[2];
+                switch (State.Rotation)
+                {
+                    case WorldRotation.TopLeft:
+                        output[1] = new Vector2(2, 2);
+                        output[0] = new Vector2(1, -1);
+                        break;
+                    case WorldRotation.TopRight:
+                        output[1] = new Vector2(2, -2);
+                        output[0] = new Vector2(-1, -1);
+                        break;
+                    case WorldRotation.BottomRight:
+                        output[1] = new Vector2(-2, -2);
+                        output[0] = new Vector2(-1, 1);
+                        break;
+                    case WorldRotation.BottomLeft:
+                        output[1] = new Vector2(-2, 2);
+                        output[0] = new Vector2(1, 1);
+                        break;
+                }
+                if (multiplied)
+                {
+                    int multiplier = ((1 << (3 - (int)State.Zoom)) * 3) / 2;
+                    output[0] *= multiplier;
+                    output[1] *= multiplier;
+                }
+                return output;
+            }
+            */
         }
 
         public void InitiateSmoothZoom(WorldZoom zoom)
         {
+            //TODO: disable in 3d
             if (!WorldConfig.Current.SmoothZoom)
             {
                 return;
@@ -383,6 +466,7 @@ namespace FSO.LotView
 
         public void CenterTo(EntityComponent comp)
         {
+            if (comp.Room == 0 || comp.Room == 65531) return; //don't center if the target is out of bounds
             Vector3 pelvisCenter;
             if (comp is AvatarComponent)
             {
@@ -391,12 +475,18 @@ namespace FSO.LotView
             {
                 pelvisCenter = comp.Position;
             }
-            State.CenterTile = new Vector2(pelvisCenter.X, pelvisCenter.Y);
+
+            if (State.CameraMode < CameraRenderMode._3D)
+            {
+                State.Cameras.WithTransitionsDisabled(() =>
+                {
+                    State.CenterTile = State.Project2DCenterTile(pelvisCenter);
+                    State.Camera2D.RotationAnchor = pelvisCenter;
+                });
+            } else {
+                State.CenterTile = new Vector2(pelvisCenter.X, pelvisCenter.Y);
+            }
             if (State.Level != comp.Level) State.Level = comp.Level;
-
-            if (!(this is RC.WorldRC))
-                State.CenterTile -= (pelvisCenter.Z/2.95f) * State.WorldSpace.GetTileFromScreen(new Vector2(0, 230)) / (1 << (3 - (int)State.Zoom));
-
         }
 
         public void RestoreTerrainToCenterTile()
@@ -432,6 +522,7 @@ namespace FSO.LotView
                 CenterTo(State.ScrollAnchor);
             }
 
+            State.Cameras.Update(state, this);
             if (SmoothZoomTimer > -1)
             {
                 SmoothZoomTimer += 60f / FSOEnvironment.RefreshRate;
@@ -446,10 +537,28 @@ namespace FSO.LotView
                     State.PreciseZoom = (float)((p) + (1 - p) * SmoothZoomFrom);
                 }
             }
+
+            if (state.WindowFocused && Visible)
+            {
+                if (state.NewKeys.Contains(Microsoft.Xna.Framework.Input.Keys.Tab) && FSOEnvironment.Enable3D)
+                {
+                    if (State.Cameras.ActiveType == Utils.Camera.CameraControllerType.FirstPerson)
+                    {
+                        SetGraphicsMode(GraphicsModeControl.Mode, false);
+                    }
+                    else
+                    {
+                        BackbufferScale = 1;
+                        State.SetCameraType(this, Utils.Camera.CameraControllerType.FirstPerson, 0);
+                        ChangeAAMode(m_Device);
+                    }
+                }
+            }
         }
 
         protected void BoundView()
         {
+            if (!LimitScroll) return;
             //bound the scroll so we can't see gray space.
             float boundfactor = 0.5f;
             switch (State.Zoom)
@@ -491,14 +600,9 @@ namespace FSO.LotView
             //For all the tiles in the dirty list, re-render them
             //PPXDepthEngine.SetPPXTarget(null, null, true);
             State.PrepareLighting();
-            State._2D.Begin(this.State.Camera);
-            _2DWorld.PreDraw(device, State);
-            device.SetRenderTarget(null);
-            State._2D.End();
-
-            State._3D.Begin(device);
-            _3DWorld.PreDraw(device, State);
-            State._3D.End();
+            State._2D.Begin(this.State.Camera2D);
+            Blueprint.Changes.PreDraw(device, State);
+            Static?.PreDraw(device, State);
 
             if (UseBackbuffer)
             {
@@ -525,46 +629,40 @@ namespace FSO.LotView
             if (!UseBackbuffer)
                 InternalDraw(device);
             else
+            {
+                PPXDepthEngine.WithOpacity = State.CameraMode < CameraRenderMode._3D;
                 PPXDepthEngine.DrawBackbuffer(Opacity, BackbufferScale);
+            }
             return;
         }
 
         protected virtual void InternalDraw(GraphicsDevice device)
         {
             device.RasterizerState = RasterizerState.CullNone;
+            if (State.CameraMode == CameraRenderMode._3D) device.Clear(State.OutsideColor);
             State.PrepareLighting();
             State._2D.OutputDepth = true;
+            
+            State._2D.Begin(this.State.Camera2D);
 
-            State._3D.Begin(device);
-            State._2D.Begin(this.State.Camera);
-
-            var pxOffset = -State.WorldSpace.GetScreenOffset();
             //State._2D.PreciseZoom = State.PreciseZoom;
             State._2D.ResetMatrices(device.Viewport.Width, device.Viewport.Height);
-            _3DWorld.DrawBefore2D(device, State);
 
-            _2DWorld.Draw(device, State);
-
-            State._2D.Pause();
-            State._2D.Resume();
-
-            _3DWorld.DrawAfter2D(device, State);
-            State._2D.SetScroll(pxOffset);
-            State._2D.End();
-            State._3D.End();
-
-            foreach (var particle in Blueprint.Particles)
-            {
-                particle.Draw(device, State);
-            }
+            device.DepthStencilState = DepthStencilState.Default;
+            if (State.CameraMode == CameraRenderMode._3D) Static?.DrawBg(State.Device, State, SkyBounds, false);
+            Architecture.Draw2D(device, State);
+            Static?.Draw(State);
+            State.PrepareCamera();
+            Entities.DrawAvatars(device, State);
+            Entities.Draw(device, State);
+            Entities.DrawAvatarTransparency(device, State);
 
             State._2D.OutputDepth = false;
         }
 
         public void Force2DPredraw(GraphicsDevice device)
         {
-            if (_2DWorld is World2DRC) ((World2DRC)_2DWorld).Drawn = true;
-            _2DWorld.PreDraw(device, State);
+            Blueprint.Changes.PreDraw(device, State);
         }
 
         public float? BoxRC2(Ray ray, float tileSize)
@@ -639,9 +737,6 @@ namespace FSO.LotView
                 }
                 if (tMinZ < 0 || (ray.Direction.Z >= 0 && tMinZ == 0)) tMinZ = tMaxZ;
 
-                //if ((tMin.HasValue && tMin > tMaxZ) || (tMax.HasValue && tMinZ > tMax))
-                //    return null;
-
                 if (!tMin.HasValue || tMin > tMinZ) tMin = tMinZ;
                 if (!tMax.HasValue || tMaxZ > tMax) tMax = tMaxZ;
             }
@@ -656,17 +751,7 @@ namespace FSO.LotView
         public Vector2 EstTileAtPosWithScroll(Vector2 pos, sbyte level = -1)
         {
             if (level == -1) level = State.Level;
-            pos *= new Vector2(FSOEnvironment.DPIScaleFactor);
-            var sPos = new Vector3(pos, 0);
-
-            var p1 = State.Device.Viewport.Unproject(sPos, State.Camera.Projection, State.Camera.View, Matrix.Identity);
-            sPos.Z = 1;
-            var p2 = State.Device.Viewport.Unproject(sPos, State.Camera.Projection, State.Camera.View, Matrix.Identity);
-            var dir = p2 - p1;
-            dir.Normalize();
-            var ray = new Ray(p1, p2 - p1);
-            ray.Direction.Normalize();
-            ray.Position -= new Vector3(0, (level - 1) * 2.95f * 3, 0);
+            var ray = State.CameraRayAtScreenPos(pos, level);
 
             var baseBox = new BoundingBox(new Vector3(0, -5000, 0), new Vector3(Blueprint.Width * 3, 5000, Blueprint.Height * 3));
             if (baseBox.Contains(ray.Position) != ContainmentType.Contains)
@@ -685,8 +770,10 @@ namespace FSO.LotView
             var px = (ray.Direction.X > 0);
             var py = (ray.Direction.Z > 0);
 
+            var canProj = Blueprint?.Altitude != null;
+
             int iteration = 0;
-            while (mx >= 0 && mx < Blueprint.Width && my >= 0 && my < Blueprint.Width)
+            while (mx >= 0 && mx < Blueprint.Width && my >= 0 && my < Blueprint.Width && canProj)
             {
                 //test triangle 1. (centre of tile down xz, we lean towards positive x)
                 var plane = new Plane(
@@ -765,6 +852,13 @@ namespace FSO.LotView
             return new Vector3(EstTileAtPosWithScroll(pos), State.Level);
         }
 
+        public Vector3 EstTileAtPosWithScrollHeight(Vector2 pos, sbyte startFloor = -1)
+        {
+            var result = EstTileAtPosWithScroll3D(pos, startFloor);
+            result.Z = Blueprint.InterpAltitude(result) + (result.Z-1) * 2.95f;
+            return result;
+        }
+
         /// <summary>
         /// Gets the ID of the object at a given position.
         /// </summary>
@@ -774,8 +868,8 @@ namespace FSO.LotView
         /// <returns>ID of object at position if found.</returns>
         public short GetObjectIDAtScreenPos(int x, int y, GraphicsDevice gd)
         {
-            State._2D.Begin(this.State.Camera);
-            return _2DWorld.GetObjectIDAtScreenPos(x, y, gd, State);
+            State._2D.Begin(this.State.Camera2D);
+            return Platform.GetObjectIDAtScreenPos(x, y, gd, State);
         }
 
          /// <summary>
@@ -787,14 +881,43 @@ namespace FSO.LotView
         /// <returns>Object's ID if the object was found at the given position.</returns>
         public Texture2D GetObjectThumb(ObjectComponent[] objects, Vector3[] positions, GraphicsDevice gd)
         {
-            State._2D.Begin(this.State.Camera);
-            return _2DWorld.GetObjectThumb(objects, positions, gd, State);
+            State._2D.Begin(this.State.Camera2D);
+            return Platform.GetObjectThumb(objects, positions, gd, State);
         }
 
         public Texture2D GetLotThumb(GraphicsDevice gd, Action<Texture2D> rooflessCallback)
         {
-            State._2D.Begin(this.State.Camera);
-            return _2DWorld.GetLotThumb(gd, State, rooflessCallback);
+            State._2D.Begin(this.State.Camera2D);
+            return Platform.GetLotThumb(gd, State, rooflessCallback);
+        }
+
+        public void ChangeAAMode(GraphicsDevice gd)
+        {
+            var lastm = PPXDepthEngine.MSAA;
+            var lasts = PPXDepthEngine.SSAA;
+            PPXDepthEngine.SSAAFunc = SSAADownsample.Draw;
+            switch (WorldConfig.Current.AA)
+            {
+                case 0:
+                    PPXDepthEngine.MSAA = 0;
+                    PPXDepthEngine.SSAA = 1;
+                    break;
+                case 1:
+                    PPXDepthEngine.MSAA = 4;
+                    PPXDepthEngine.SSAA = 1;
+                    break;
+                case 2:
+                    PPXDepthEngine.MSAA = 0;
+                    PPXDepthEngine.SSAA = 2;
+                    break;
+            }
+
+            if (PPXDepthEngine.SSAA > 1 && State.CameraMode < CameraRenderMode._3D)
+            {
+                PPXDepthEngine.MSAA = 8;
+                PPXDepthEngine.SSAA = 1;
+            }
+            if (lastm != PPXDepthEngine.MSAA || lasts != PPXDepthEngine.SSAA) PPXDepthEngine.InitScreenTargets();
         }
 
         public virtual void ChangedWorldConfig(GraphicsDevice gd)
@@ -806,6 +929,7 @@ namespace FSO.LotView
             {
                 config.LightingMode = Math.Max(config.LightingMode, 1);
             }
+            State.DisableSmoothRotation = !config.EnableTransitions;
 
             if (config.AdvancedLighting)
             {
@@ -819,8 +943,8 @@ namespace FSO.LotView
                     if (Blueprint != null)
                     {
                         Light?.Init(Blueprint);
-                        Blueprint.Damage.Add(new BlueprintDamage(BlueprintDamageType.ROOM_CHANGED));
-                        Blueprint.Damage.Add(new BlueprintDamage(BlueprintDamageType.OUTDOORS_LIGHTING_CHANGED));
+                        Blueprint.Changes.SetFlag(BlueprintGlobalChanges.ROOM_CHANGED);
+                        Blueprint.Changes.SetFlag(BlueprintGlobalChanges.OUTDOORS_LIGHTING_CHANGED);
                     }
                     State.Light = Light;
                 }
@@ -831,7 +955,7 @@ namespace FSO.LotView
                 State.Light = null;
                 if (State.AmbientLight == null)
                     State.AmbientLight = new Texture2D(gd, 256, 256);
-                if (Blueprint != null) Blueprint.Damage.Add(new BlueprintDamage(BlueprintDamageType.OUTDOORS_LIGHTING_CHANGED));
+                if (Blueprint != null) Blueprint.Changes.SetFlag(BlueprintGlobalChanges.OUTDOORS_LIGHTING_CHANGED);
             }
 
             if (Blueprint != null && !FSOEnvironment.Enable3D)
@@ -850,16 +974,10 @@ namespace FSO.LotView
                         Blueprint.WCRC?.Dispose();
                         Blueprint.WCRC = null;
                     }
-                    Blueprint.Damage.Add(new BlueprintDamage(BlueprintDamageType.OUTDOORS_LIGHTING_CHANGED));
+                    Blueprint.Changes.SetFlag(BlueprintGlobalChanges.OUTDOORS_LIGHTING_CHANGED);
                 }
             }
-
-            if (!FSOEnvironment.Enable3D)
-            {
-                var last = PPXDepthEngine.MSAA;
-                PPXDepthEngine.MSAA = ((WorldConfig.Current.AA>0) ? 4 : 0);
-                if (last != PPXDepthEngine.MSAA) PPXDepthEngine.InitScreenTargets();
-            }
+            ChangeAAMode(gd);
         }
 
         public virtual ObjectComponent MakeObjectComponent(Content.GameObject obj)
@@ -872,9 +990,33 @@ namespace FSO.LotView
             return new SubWorldComponent(gd);
         }
 
+        public BoundingBox[] SkyBounds;
+
         public virtual void InitSubWorlds()
         {
+            float minAlt = 0;
+            foreach (var height in Blueprint.Altitude)
+            {
+                var alt = height * Blueprint.TerrainFactor - Blueprint.BaseAlt;
+                if (alt < minAlt)
+                {
+                    minAlt = alt;
+                }
+            }
 
+            BoundingBox overall = new BoundingBox(new Vector3(0, minAlt, 0), new Vector3(Blueprint.Width * 3, 1000, Blueprint.Height * 3));
+            foreach (var world in Blueprint.SubWorlds)
+            {
+                world.UpdateBounds();
+                overall = BoundingBox.CreateMerged(overall, world.Bounds);
+            }
+            //update sky bounding box edge
+
+            SkyBounds = new BoundingBox[4];
+            SkyBounds[0] = new BoundingBox(new Vector3(overall.Min.X - 1, overall.Min.Y, overall.Min.Z), new Vector3(overall.Min.X, overall.Max.Y, overall.Max.Z));
+            SkyBounds[1] = new BoundingBox(new Vector3(overall.Min.X, overall.Min.Y, overall.Min.Z - 1), new Vector3(overall.Max.X, overall.Max.Y, overall.Min.Z));
+            SkyBounds[2] = new BoundingBox(new Vector3(overall.Min.X, overall.Min.Y, overall.Max.Z), new Vector3(overall.Max.X, overall.Max.Y, overall.Max.Z + 1));
+            SkyBounds[3] = new BoundingBox(new Vector3(overall.Max.X, overall.Min.Y, overall.Min.Z), new Vector3(overall.Max.X + 1, overall.Max.Y, overall.Max.Z));
         }
 
         public int PreloadProgress;
@@ -937,14 +1079,18 @@ namespace FSO.LotView
             State.AmbientLight?.Dispose();
             State.OutsidePx.Dispose();
             Light?.Dispose();
+            Platform?.Dispose();
             State.Rooms.Dispose();
-            if (State._2D != null) State._2D.Dispose();
-            if (_2DWorld != null) _2DWorld.Dispose();
+            if (State._2D != null && !(this is SubWorldComponent)) State._2D.Dispose();
             if (Blueprint != null)
             {
                 foreach (var world in Blueprint.SubWorlds)
                 {
                     world.Dispose();
+                }
+                foreach (var obj in Blueprint.Objects)
+                {
+                    obj.Dispose();
                 }
                 foreach (var particle in Blueprint.Particles)
                 {
@@ -957,6 +1103,7 @@ namespace FSO.LotView
                 Blueprint.Terrain?.Dispose();
                 Blueprint.RoofComp?.Dispose();
             }
+            GraphicsModeControl.ModeChanged -= SetGraphicsMode;
         }
     }
 }

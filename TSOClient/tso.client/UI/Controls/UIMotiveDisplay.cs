@@ -57,7 +57,7 @@ namespace FSO.Client.UI.Controls
             if (inDynamic)
             {
                 var mdat = MotiveValues[motive] + 100;
-                double p = Math.Min(1, (mdat) / 200.0);
+                double p = Math.Max(0, Math.Min(1, (mdat) / 200.0));
                 Color barcol = new Color((byte)(57 * (1 - p)), (byte)(213 * p + 97 * (1 - p)), (byte)(49 * p + 90 * (1 - p)));
                 Color bgcol = new Color((byte)(57 * p + 214 * (1 - p)), (byte)(97 * p), (byte)(90 * p));
 
@@ -70,6 +70,16 @@ namespace FSO.Client.UI.Controls
                     var p2 = Math.Min(1, (mdat - 200) / 200.0);
                     batch.Draw(Filler, LocalRect(x, y, (int)(60 * p2), 5), Color.White);
                     batch.Draw(Filler, LocalRect(x + (int)(60 * p2), y, 1, 5), Color.Black);
+
+                    //MotiveStyle.Shadow = true;
+                    //DrawLocalString(batch, "+" + ((mdat-200) / 2f).ToString() + "%", new Vector2(x, y), MotiveStyle, new Rectangle(0, 0, 60, 5), TextAlignment.Center | TextAlignment.Middle);
+                }
+
+                if (mdat < 0)
+                {
+                    var p2 = Math.Min(1, (-mdat) / 200.0);
+                    batch.Draw(Filler, LocalRect(x + 60 - (int)(60 * p2), y, (int)(60 * p2), 5), Color.Black);
+                    batch.Draw(Filler, LocalRect(x + 60 - (int)(60 * p2), y, 1, 5), Color.White);
 
                     //MotiveStyle.Shadow = true;
                     //DrawLocalString(batch, "+" + ((mdat-200) / 2f).ToString() + "%", new Vector2(x, y), MotiveStyle, new Rectangle(0, 0, 60, 5), TextAlignment.Center | TextAlignment.Middle);

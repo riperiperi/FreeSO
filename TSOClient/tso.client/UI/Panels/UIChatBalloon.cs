@@ -32,6 +32,7 @@ namespace FSO.Client.UI.Panels
         private UIChatPanel Owner;
 
         public Color Color;
+        private Color BgColor = new Color(8,8,128); // default balloon color
 
         public string Name;
         public string Message;
@@ -87,7 +88,11 @@ namespace FSO.Client.UI.Panels
             Message = avatar.Message;
             Gender = avatar.GetPersonData(SimAntics.Model.VMPersonDataVariable.Gender) > 0;
             TTSContext?.Speak(Message.Replace('_', ' '), Gender, ((VMTSOAvatarState)avatar.TSOState).ChatTTSPitch);
-            
+
+            if (((VMTSOAvatarState)avatar.TSOState).Permissions == VMTSOAvatarPermissions.Admin)            
+                BgColor = new Color(180,0,0); // admin red color            
+            else
+                BgColor = new Color(8, 8, 128); // default blue color            
             Offscreen = false;
             if (Message == "") Name = "";
             TextChanged();
@@ -101,9 +106,9 @@ namespace FSO.Client.UI.Panels
         private void TextChanged()
         {
             BodyText = Message;
-            if (GlobalSettings.Default.ChatOnlyEmoji)
+            if (GlobalSettings.Default.ChatOnlyEmoji > 0)
             {
-                BodyText = GameFacade.Emojis.EmojiOnly(BodyText);
+                BodyText = GameFacade.Emojis.EmojiOnly(BodyText, GlobalSettings.Default.ChatOnlyEmoji);
             }
             BodyText = ((Offscreen && Message != "") ? "\\[" + Name + "] " : "") + GameFacade.Emojis.EmojiToBB(SanitizeBB(BodyText));
 
@@ -232,7 +237,7 @@ namespace FSO.Client.UI.Panels
         {
             if (Alpha == 0) return;
             base.Draw(batch);
-            Color bgCol = new Color(8,8,128) * Alpha;
+            Color bgCol = BgColor * Alpha;
             
             //draw corners
             DrawLocalTexture(batch, BTiles, new Rectangle(0, 0, 40, 40), new Vector2(DisplayRect.Left-20, DisplayRect.Top-20), Vector2.One, bgCol);
@@ -244,10 +249,10 @@ namespace FSO.Client.UI.Panels
             //if the pointer is on this edge, it needs to be split into 3... Before point, point and after point. 
 
             var vertH = DisplayRect.Height - 40;
-            var vertPt = Math.Max(DisplayRect.Top + 20, Math.Min(DisplayRect.Bottom - 60, TargetPt.Y-20)) - (DisplayRect.Top + 20);
+            var vertPt = (int)Math.Max(DisplayRect.Top + 20, Math.Min(DisplayRect.Bottom - 60, TargetPt.Y-20)) - (DisplayRect.Top + 20);
 
             var horizW = DisplayRect.Width - 40;
-            var horizPt = Math.Max(DisplayRect.Left + 20, Math.Min(DisplayRect.Right - 60, TargetPt.X-20)) - (DisplayRect.Left + 20);
+            var horizPt = (int)Math.Max(DisplayRect.Left + 20, Math.Min(DisplayRect.Right - 60, TargetPt.X-20)) - (DisplayRect.Left + 20);
 
             int ptSel = 0;
 

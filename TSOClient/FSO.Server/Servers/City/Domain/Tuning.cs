@@ -6,6 +6,7 @@ using FSO.Server.Protocol.Electron.Packets;
 using FSO.Server.Protocol.Gluon.Packets;
 using System;
 using System.Collections.Generic;
+using System.IO;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
@@ -16,6 +17,7 @@ namespace FSO.Server.Servers.City.Domain
     {
         private LotServerPicker LotServers;
         private DynamicTuning TuningCache;
+        private byte[] ObjectUpgradeData;
         private IDAFactory DAFactory;
 
         public Tuning(LotServerPicker LotServers, IDAFactory da)
@@ -32,13 +34,26 @@ namespace FSO.Server.Servers.City.Domain
                 {
                     TuningCache = new DynamicTuning(da.Tuning.All());
                 }
+
+                var upgrades = Content.Content.Get().Upgrades.ActiveFile;
+                if (upgrades == null) ObjectUpgradeData = new byte[0];
+                else {
+                    using (var mem = new MemoryStream())
+                    {
+                        using (var writer = new BinaryWriter(mem))
+                        {
+                            upgrades.Save(writer);
+                        }
+                        ObjectUpgradeData = mem.ToArray();
+                    }
+                }
             }
         }
 
         public void UserJoined(IVoltronSession session)
         {
             if (TuningCache == null) UpdateTuningCache();
-            session.Write(new GlobalTuningUpdate() { Tuning = TuningCache });
+            session.Write(new GlobalTuningUpdate() { Tuning = TuningCache, ObjectUpgrades = ObjectUpgradeData });
         }
 
         public void BroadcastTuningUpdate(bool updateImmediately)

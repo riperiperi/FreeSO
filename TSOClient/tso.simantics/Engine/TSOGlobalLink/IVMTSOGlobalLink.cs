@@ -27,6 +27,7 @@ namespace FSO.SimAntics.Engine.TSOTransaction
         void ForceInInventory(VM vm, uint objectPID, VMAsyncInventorySaveCallback callback);
         void UpdateObjectPersist(VM vm, VMMultitileGroup obj, VMAsyncInventorySaveCallback callback);
         void PurchaseFromOwner(VM vm, VMMultitileGroup obj, uint purchaserPID, VMAsyncInventorySaveCallback callback, VMAsyncTransactionCallback tcallback);
+        void RetrieveFromInventoryByType(VM vm, uint ownerPID, uint guid, int index, bool setOnLot, VMAsyncInventoryRetrieveCallback callback);
         void RetrieveFromInventory(VM vm, uint objectPID, uint ownerPID, bool setOnLot, VMAsyncInventoryRetrieveCallback callback);
         void ConsumeInventory(VM vm, uint ownerPID, uint guid, int mode, short num, VMAsyncInventoryConsumeCallback callback);
         void DeleteObject(VM vm, uint objectPID, VMAsyncDeleteObjectCallback callback);
@@ -48,6 +49,13 @@ namespace FSO.SimAntics.Engine.TSOTransaction
         //FSO Bulletin
         void GetBulletinState(VM vm, VMAsyncBulletinCallback callback);
 
+        //FSO Token
+        void TokenRequest(VM vm, uint avatarID, uint guid, VMTokenRequestMode mode, List<int> attributeData, VMAsyncTokenCallback callback);
+
+        //FSO Global (event object) Cooldowns
+        void GetObjectGlobalCooldown(VM vm, uint objectGUID, uint avatarID, uint userID, TimeSpan cooldownLength, bool considerAccount, bool considerCategory, VMAsyncGetObjectCooldownCallback callback);
+        void GetAccountIDFromAvatar(uint avatarID, VMAsyncAccountUserIDFromAvatarCallback callback);
+
         void Tick(VM vm);
         void FindLotAndValue(VM vm, uint persistID, VMAsyncFindLotCallback p);
     }
@@ -58,7 +66,7 @@ namespace FSO.SimAntics.Engine.TSOTransaction
     public delegate void VMAsyncPersistIDCallback(short objectID, uint persistID);
 
     public delegate void VMAsyncInventorySaveCallback(bool success, uint objid); //todo: failure reasons
-    public delegate void VMAsyncInventoryRetrieveCallback(uint guid, byte[] data);
+    public delegate void VMAsyncInventoryRetrieveCallback(VMInventoryRestoreObject obj);
     public delegate void VMAsyncInventoryConsumeCallback(bool success, int result); //todo: failure reasons
     public delegate void VMAsyncDeleteObjectCallback(bool success); //todo: failure reasons
 
@@ -72,4 +80,22 @@ namespace FSO.SimAntics.Engine.TSOTransaction
     public delegate void VMAsyncBulletinCallback(uint lastID, int activity);
     public delegate void VMAsyncSecureTradeCallback(VMEODSecureTradeError result);
     public delegate void VMAsyncFindLotCallback(uint lotID, int objectCount, long objectValue, string lotName);
+
+    public delegate void VMAsyncGetObjectCooldownCallback(bool? cooldownPassed, DateTime cooldownBegin);
+    public delegate void VMAsyncAccountUserIDFromAvatarCallback(uint userID);
+
+    public delegate void VMAsyncTokenCallback(bool success, List<int> results);
+
+    public enum VMTokenRequestMode
+    {
+        //attributes request contains default values, response contains actual values
+        GetOrCreate,
+        Replace,
+        //attributes request/response contains 0: target attribute, 1: data value
+        GetAttribute,
+        SetAttribute,
+        ModifyAttribute,
+        TransactionAttribute,
+        TotalAttribute
+    }
 }

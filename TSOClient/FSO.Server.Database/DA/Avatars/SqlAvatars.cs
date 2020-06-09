@@ -1,4 +1,5 @@
 ﻿using Dapper;
+using FSO.Server.Database.DA.Utils;
 using System;
 using System.Collections.Generic;
 using System.Data.SqlClient;
@@ -11,6 +12,17 @@ namespace FSO.Server.Database.DA.Avatars
     public class SqlAvatars : AbstractSqlDA, IAvatars
     {
         public SqlAvatars(ISqlContext context) : base(context){
+        }
+        public PagedList<DbAvatar> AllByPage(int shard_id,int offset = 1, int limit = 100, string orderBy = "avatar_id")
+        {
+            var total = Context.Connection.Query<int>("SELECT COUNT(*) FROM fso_avatars WHERE shard_id = @shard_id",new { shard_id = shard_id }).FirstOrDefault();
+            var results = Context.Connection.Query<DbAvatar>("SELECT * FROM fso_avatars WHERE shard_id = @shard_id ORDER BY @order DESC LIMIT @offset, @limit", new { shard_id = shard_id, order = orderBy, offset = offset, limit = limit });
+            return new PagedList<DbAvatar>(results, offset, total);
+        }
+
+        public IEnumerable<DbAvatar> All()
+        {
+            return Context.Connection.Query<DbAvatar>("SELECT * FROM fso_avatars");
         }
 
         public IEnumerable<DbAvatar> All(int shard_id){
@@ -84,6 +96,21 @@ namespace FSO.Server.Database.DA.Avatars
             return Context.Connection.Query<DbAvatar>(
                 "SELECT * FROM fso_avatars WHERE user_id = @user_id", 
                 new { user_id = user_id }
+            ).ToList();
+        }
+
+        public List<DbAvatar> GetMultiple(uint[] id)
+        {
+            String inClause = "IN (";
+            for (int i = 0; i < id.Length; i++)
+            {
+                inClause = inClause + "'" + id.ElementAt(i) + "'" + ",";
+            }
+            inClause = inClause.Substring(0, inClause.Length - 1);
+            inClause = inClause + ")";
+
+            return Context.Connection.Query<DbAvatar>(
+                "Select * from fso_avatars Where avatar_id "+ inClause
             ).ToList();
         }
 

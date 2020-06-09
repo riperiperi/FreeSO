@@ -232,10 +232,16 @@ namespace FSO.SimAntics.Engine.TSOTransaction
             //todo: nice stub for this using database?
         }
 
+        public void RetrieveFromInventoryByType(VM vm, uint ownerPID, uint guid, int index, bool setOnLot, VMAsyncInventoryRetrieveCallback callback)
+        {
+            //todo: nice stub for this using database?
+            callback(new VMInventoryRestoreObject(0, 0, 0));
+        }
+
         public void RetrieveFromInventory(VM vm, uint objectPID, uint ownerPID, bool setOnLot, VMAsyncInventoryRetrieveCallback callback)
         {
             //todo: nice stub for this using database?
-            callback(0, null); 
+            callback(new VMInventoryRestoreObject(0, 0, 0)); 
         }
 
         public void ForceInInventory(VM vm, uint objectPID, VMAsyncInventorySaveCallback callback)
@@ -251,6 +257,7 @@ namespace FSO.SimAntics.Engine.TSOTransaction
         public void ConsumeInventory(VM vm, uint ownerPID, uint guid, int mode, short num, VMAsyncInventoryConsumeCallback callback)
         {
             //todo: nice stub for this using database?
+            callback(true, 0);
         }
 
         public void SetSpotlightStatus(VM vm, bool on)
@@ -340,6 +347,28 @@ namespace FSO.SimAntics.Engine.TSOTransaction
         public void GetBulletinState(VM vm, VMAsyncBulletinCallback callback)
         {
             callback(0, 7);
+        }
+
+        public void TokenRequest(VM vm, uint avatarID, uint guid, VMTokenRequestMode mode, List<int> attributeData, VMAsyncTokenCallback callback)
+        {
+            if (mode == VMTokenRequestMode.GetAttribute) attributeData[1] = 100;
+            if (mode == VMTokenRequestMode.TotalAttribute) attributeData[1] = (int)(guid % (uint)100);
+            callback(true, attributeData);
+        }
+        
+        public void GetObjectGlobalCooldown(VM vm, uint objectGUID, uint avatarID, uint userID, TimeSpan cooldownLength, bool considerAccount, bool considerCategory, VMAsyncGetObjectCooldownCallback callback)
+        {
+            var time = vm.Context.Clock.UTCNow;
+            new System.Threading.Thread(() =>
+            {
+                System.Threading.Thread.Sleep(100);
+                callback(false, time + new TimeSpan(0, 3, 25));
+            }).Start();
+        }
+
+        public void GetAccountIDFromAvatar(uint avatarID, VMAsyncAccountUserIDFromAvatarCallback callback)
+        {
+            callback(1);
         }
     }
 }

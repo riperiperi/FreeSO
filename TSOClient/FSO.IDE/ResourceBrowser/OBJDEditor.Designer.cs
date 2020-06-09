@@ -75,6 +75,7 @@
             this.TypeCombo = new System.Windows.Forms.ComboBox();
             this.TypeLabel = new System.Windows.Forms.Label();
             this.CatalogBox = new System.Windows.Forms.GroupBox();
+            this.CatCommunity = new System.Windows.Forms.CheckBox();
             this.CatResidence = new System.Windows.Forms.CheckBox();
             this.CatEntertainment = new System.Windows.Forms.CheckBox();
             this.CatGames = new System.Windows.Forms.CheckBox();
@@ -107,8 +108,10 @@
             this.TileWidthLabel = new System.Windows.Forms.Label();
             this.FootprintEast = new System.Windows.Forms.NumericUpDown();
             this.MultitileBox = new System.Windows.Forms.GroupBox();
-            this.button4 = new System.Windows.Forms.Button();
-            this.button3 = new System.Windows.Forms.Button();
+            this.InteractionGroupLabel = new System.Windows.Forms.Label();
+            this.InteractionGroup = new System.Windows.Forms.NumericUpDown();
+            this.MasterMultitile = new System.Windows.Forms.Button();
+            this.LeadMultitile = new System.Windows.Forms.Button();
             this.NewMultitile = new System.Windows.Forms.Button();
             this.MultiGroupCombo = new System.Windows.Forms.ComboBox();
             this.label3 = new System.Windows.Forms.Label();
@@ -123,7 +126,6 @@
             this.NameLabel = new System.Windows.Forms.Label();
             this.NameEntry = new System.Windows.Forms.TextBox();
             this.GUIDButton = new System.Windows.Forms.Button();
-            this.CatCommunity = new System.Windows.Forms.CheckBox();
             this.ThumbnailBox.SuspendLayout();
             ((System.ComponentModel.ISupportInitialize)(this.ThumbnailPic)).BeginInit();
             this.VisualBox.SuspendLayout();
@@ -150,6 +152,7 @@
             ((System.ComponentModel.ISupportInitialize)(this.TileWidth)).BeginInit();
             ((System.ComponentModel.ISupportInitialize)(this.FootprintEast)).BeginInit();
             this.MultitileBox.SuspendLayout();
+            ((System.ComponentModel.ISupportInitialize)(this.InteractionGroup)).BeginInit();
             ((System.ComponentModel.ISupportInitialize)(this.XOffset)).BeginInit();
             ((System.ComponentModel.ISupportInitialize)(this.LevelOffset)).BeginInit();
             ((System.ComponentModel.ISupportInitialize)(this.YOffset)).BeginInit();
@@ -691,6 +694,16 @@
             this.CatalogBox.TabStop = false;
             this.CatalogBox.Text = "Catalog";
             // 
+            // CatCommunity
+            // 
+            this.CatCommunity.AutoSize = true;
+            this.CatCommunity.Location = new System.Drawing.Point(94, 107);
+            this.CatCommunity.Name = "CatCommunity";
+            this.CatCommunity.Size = new System.Drawing.Size(134, 17);
+            this.CatCommunity.TabIndex = 47;
+            this.CatCommunity.Text = "Community (Town Hall)";
+            this.CatCommunity.UseVisualStyleBackColor = true;
+            // 
             // CatResidence
             // 
             this.CatResidence.AutoSize = true;
@@ -1021,8 +1034,10 @@
             // 
             // MultitileBox
             // 
-            this.MultitileBox.Controls.Add(this.button4);
-            this.MultitileBox.Controls.Add(this.button3);
+            this.MultitileBox.Controls.Add(this.InteractionGroupLabel);
+            this.MultitileBox.Controls.Add(this.InteractionGroup);
+            this.MultitileBox.Controls.Add(this.MasterMultitile);
+            this.MultitileBox.Controls.Add(this.LeadMultitile);
             this.MultitileBox.Controls.Add(this.NewMultitile);
             this.MultitileBox.Controls.Add(this.MultiGroupCombo);
             this.MultitileBox.Controls.Add(this.label3);
@@ -1040,23 +1055,50 @@
             this.MultitileBox.TabStop = false;
             this.MultitileBox.Text = "Multitile";
             // 
-            // button4
+            // InteractionGroupLabel
             // 
-            this.button4.Location = new System.Drawing.Point(8, 249);
-            this.button4.Name = "button4";
-            this.button4.Size = new System.Drawing.Size(89, 23);
-            this.button4.TabIndex = 31;
-            this.button4.Text = "Make Master";
-            this.button4.UseVisualStyleBackColor = true;
+            this.InteractionGroupLabel.AutoSize = true;
+            this.InteractionGroupLabel.Location = new System.Drawing.Point(8, 90);
+            this.InteractionGroupLabel.Name = "InteractionGroupLabel";
+            this.InteractionGroupLabel.Size = new System.Drawing.Size(92, 13);
+            this.InteractionGroupLabel.TabIndex = 33;
+            this.InteractionGroupLabel.Text = "Interaction Group:";
             // 
-            // button3
+            // InteractionGroup
             // 
-            this.button3.Location = new System.Drawing.Point(109, 249);
-            this.button3.Name = "button3";
-            this.button3.Size = new System.Drawing.Size(89, 23);
-            this.button3.TabIndex = 30;
-            this.button3.Text = "Make Lead";
-            this.button3.UseVisualStyleBackColor = true;
+            this.InteractionGroup.Location = new System.Drawing.Point(103, 88);
+            this.InteractionGroup.Maximum = new decimal(new int[] {
+            32767,
+            0,
+            0,
+            0});
+            this.InteractionGroup.Minimum = new decimal(new int[] {
+            32768,
+            0,
+            0,
+            -2147483648});
+            this.InteractionGroup.Name = "InteractionGroup";
+            this.InteractionGroup.Size = new System.Drawing.Size(95, 20);
+            this.InteractionGroup.TabIndex = 32;
+            // 
+            // MasterMultitile
+            // 
+            this.MasterMultitile.Location = new System.Drawing.Point(8, 248);
+            this.MasterMultitile.Name = "MasterMultitile";
+            this.MasterMultitile.Size = new System.Drawing.Size(89, 23);
+            this.MasterMultitile.TabIndex = 31;
+            this.MasterMultitile.Text = "Make Master";
+            this.MasterMultitile.UseVisualStyleBackColor = true;
+            // 
+            // LeadMultitile
+            // 
+            this.LeadMultitile.Location = new System.Drawing.Point(109, 248);
+            this.LeadMultitile.Name = "LeadMultitile";
+            this.LeadMultitile.Size = new System.Drawing.Size(89, 23);
+            this.LeadMultitile.TabIndex = 30;
+            this.LeadMultitile.Text = "Make Lead";
+            this.LeadMultitile.UseVisualStyleBackColor = true;
+            this.LeadMultitile.Click += new System.EventHandler(this.LeadMultitile_Click);
             // 
             // NewMultitile
             // 
@@ -1080,7 +1122,7 @@
             // label3
             // 
             this.label3.AutoSize = true;
-            this.label3.Location = new System.Drawing.Point(8, 90);
+            this.label3.Location = new System.Drawing.Point(8, 111);
             this.label3.Name = "label3";
             this.label3.Size = new System.Drawing.Size(43, 13);
             this.label3.TabIndex = 27;
@@ -1091,9 +1133,9 @@
             this.MultitileList.DrawMode = System.Windows.Forms.DrawMode.OwnerDrawFixed;
             this.MultitileList.FormattingEnabled = true;
             this.MultitileList.IntegralHeight = false;
-            this.MultitileList.Location = new System.Drawing.Point(8, 106);
+            this.MultitileList.Location = new System.Drawing.Point(8, 126);
             this.MultitileList.Name = "MultitileList";
-            this.MultitileList.Size = new System.Drawing.Size(190, 137);
+            this.MultitileList.Size = new System.Drawing.Size(190, 118);
             this.MultitileList.TabIndex = 15;
             // 
             // XOffset
@@ -1198,16 +1240,6 @@
             this.GUIDButton.UseVisualStyleBackColor = true;
             this.GUIDButton.MouseDown += new System.Windows.Forms.MouseEventHandler(this.GUIDButton_MouseDown);
             // 
-            // CatCommunity
-            // 
-            this.CatCommunity.AutoSize = true;
-            this.CatCommunity.Location = new System.Drawing.Point(94, 107);
-            this.CatCommunity.Name = "CatCommunity";
-            this.CatCommunity.Size = new System.Drawing.Size(134, 17);
-            this.CatCommunity.TabIndex = 47;
-            this.CatCommunity.Text = "Community (Town Hall)";
-            this.CatCommunity.UseVisualStyleBackColor = true;
-            // 
             // OBJDEditor
             // 
             this.AutoScaleDimensions = new System.Drawing.SizeF(6F, 13F);
@@ -1261,6 +1293,7 @@
             ((System.ComponentModel.ISupportInitialize)(this.FootprintEast)).EndInit();
             this.MultitileBox.ResumeLayout(false);
             this.MultitileBox.PerformLayout();
+            ((System.ComponentModel.ISupportInitialize)(this.InteractionGroup)).EndInit();
             ((System.ComponentModel.ISupportInitialize)(this.XOffset)).EndInit();
             ((System.ComponentModel.ISupportInitialize)(this.LevelOffset)).EndInit();
             ((System.ComponentModel.ISupportInitialize)(this.YOffset)).EndInit();
@@ -1349,8 +1382,8 @@
         private System.Windows.Forms.Label TileWidthLabel;
         private System.Windows.Forms.NumericUpDown FootprintEast;
         private System.Windows.Forms.GroupBox MultitileBox;
-        private System.Windows.Forms.Button button4;
-        private System.Windows.Forms.Button button3;
+        private System.Windows.Forms.Button MasterMultitile;
+        private System.Windows.Forms.Button LeadMultitile;
         private System.Windows.Forms.Button NewMultitile;
         private System.Windows.Forms.ComboBox MultiGroupCombo;
         private System.Windows.Forms.Label label3;
@@ -1367,5 +1400,7 @@
         private System.Windows.Forms.Button GUIDButton;
         private System.Windows.Forms.Button ThumbSave;
         private System.Windows.Forms.CheckBox CatCommunity;
+        private System.Windows.Forms.NumericUpDown InteractionGroup;
+        private System.Windows.Forms.Label InteractionGroupLabel;
     }
 }

@@ -54,6 +54,7 @@
     <ErrorReport>prompt</ErrorReport>
     <WarningLevel>4</WarningLevel>
     <Prefer32Bit>false</Prefer32Bit>
+    <UseVSHostingProcess>true</UseVSHostingProcess>
   </PropertyGroup>
   <ItemGroup>
     <Reference Include="Common.Logging, Version=3.4.1.0, Culture=neutral, PublicKeyToken=af08829b84f0328e, processorArchitecture=MSIL">
@@ -109,8 +110,8 @@
       <HintPath>..\packages\MonoGame.Framework.Portable.3.6.0.1625\lib\portable-net45+win8+wpa81\MonoGame.Framework.dll</HintPath>
       <Private>False</Private>
     </Reference>
-    <Reference Include="Newtonsoft.Json, Version=11.0.0.0, Culture=neutral, PublicKeyToken=30ad4fe6b2a6aeed, processorArchitecture=MSIL">
-      <HintPath>..\packages\Newtonsoft.Json.11.0.2\lib\net45\Newtonsoft.Json.dll</HintPath>
+    <Reference Include="Newtonsoft.Json, Version=12.0.0.0, Culture=neutral, PublicKeyToken=30ad4fe6b2a6aeed, processorArchitecture=MSIL">
+      <HintPath>..\packages\Newtonsoft.Json.12.0.2\lib\net45\Newtonsoft.Json.dll</HintPath>
     </Reference>
     <Reference Include="Ninject, Version=3.0.0.0, Culture=neutral, PublicKeyToken=c7192dc5380945e7, processorArchitecture=MSIL">
       <HintPath>..\packages\Portable.Ninject.3.3.1\lib\net40-client\Ninject.dll</HintPath>
@@ -215,6 +216,7 @@
     <Compile Include="Serialization\TypeSerializers\cTSOValueUInt16.cs" />
     <Compile Include="Serialization\TypeSerializers\cTSOValueUInt32.cs" />
     <Compile Include="Serialization\TypeSerializers\cTSOValueUInt64.cs" />
+    <Compile Include="TS1\TS1Curve.cs" />
     <Compile Include="Utils\AssemblyUtils.cs" />
     <Compile Include="Utils\Base64JsonConverter.cs" />
     <Compile Include="Utils\BBCodeParser.cs" />
@@ -225,6 +227,7 @@
     <Compile Include="Utils\Callback.cs" />
     <Compile Include="Utils\CollectionUtils.cs" />
     <Compile Include="Utils\CurLoader.cs" />
+    <Compile Include="Utils\DebugUtils.cs" />
     <Compile Include="Utils\DirectionUtils.cs" />
     <Compile Include="Utils\DotPath.cs" />
     <Compile Include="Utils\FeatureLevelTest.cs" />

@@ -54,6 +54,7 @@ namespace FSO.IDE.ResourceBrowser
             var bhavs = GetAllResource<BHAV>(source);
             if (source == ScopeSource.SemiGlobal && Resource is GameGlobalResource) bhavs = Resource.List<BHAV>();
             var output = new List<InstructionIDNamePair>();
+            if (bhavs == null) return output;
             foreach (var bhav in bhavs)
             {
                 output.Add(new InstructionIDNamePair(bhav.ChunkLabel, bhav.ChunkID));

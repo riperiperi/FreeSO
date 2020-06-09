@@ -148,9 +148,9 @@ namespace FSO.Client.UI.Panels
 
         private void SendMessage(string message)
         {
-            if (GlobalSettings.Default.ChatOnlyEmoji && message != "")
+            if (GlobalSettings.Default.ChatOnlyEmoji > 0 && message != "")
             {
-                message = GameFacade.Emojis.EmojiOnly(message);
+                message = GameFacade.Emojis.EmojiOnly(message, GlobalSettings.Default.ChatOnlyEmoji);
                 if (message == "")
                 {
                     HistoryDialog.ReceiveEvent
@@ -216,7 +216,7 @@ namespace FSO.Client.UI.Panels
 
             InvalidAreas[3] = botRect;
 
-            var avatars = vm.Entities.Where(x => (x is VMAvatar)).ToList();
+            var avatars = vm.Context.ObjectQueries.Avatars;
             while (avatars.Count < Labels.Count)
             {
                 Remove(Labels[Labels.Count - 1]);

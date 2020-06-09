@@ -18,6 +18,9 @@ namespace FSO.SimAntics.JIT.Runtime
         public Dictionary<ushort, IInlineBHAV> Inline = new Dictionary<ushort, IInlineBHAV>();
 
         public virtual uint SourceHash => 0;
+        public virtual uint SourceSemiglobalHash => 0;
+        public virtual uint SourceGlobalHash => 0;
+
         public virtual uint JITVersion => 0;
 
         public ModuleSource Source;

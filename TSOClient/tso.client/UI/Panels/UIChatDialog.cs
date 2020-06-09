@@ -226,9 +226,9 @@ namespace FSO.Client.UI.Panels
 
             //play TTS for this event?
             if (evt.Type == VMChatEventType.Message || evt.Type == VMChatEventType.MessageMe) {
-                if (GlobalSettings.Default.ChatOnlyEmoji)
+                if (GlobalSettings.Default.ChatOnlyEmoji > 0)
                 {
-                    evt.Text[1] = GameFacade.Emojis.EmojiOnly(evt.Text[1]);
+                    evt.Text[1] = GameFacade.Emojis.EmojiOnly(evt.Text[1], GlobalSettings.Default.ChatOnlyEmoji);
                 }
 
                 var ttsmode = GlobalSettings.Default.TTSMode;
@@ -396,9 +396,11 @@ namespace FSO.Client.UI.Panels
                     return ((showTimestamp) ? SanitizeBB("[" + timestamp + "] ") : "") + colorBefore + GameFacade.Strings.GetString("261", "7").Replace("%", avatar) + colorAfter;
                 case VMChatEventType.Arch:
                     return ((showTimestamp) ? SanitizeBB("[" + timestamp + "] ") : "") + colorBefore + "<" + avatar + " (" + evt.Text[1] + ")" + "> " + evt.Text[2] + colorAfter;
-                case VMChatEventType.Generic:
                 case VMChatEventType.Debug:
-                    return ((showTimestamp) ? SanitizeBB("[" + timestamp + "] ") : "") + colorBefore + GameFacade.Emojis.EmojiToBB(evt.Text[0]) + colorAfter;
+                    if (GameFacade.EnableMod) goto case VMChatEventType.Generic;
+                    else return "";
+                case VMChatEventType.Generic:
+                    return ((showTimestamp) ? SanitizeBB("[" + timestamp + "] ") : "") + colorBefore + CleanUserMessage(evt.Text[0], evt) + colorAfter;
                 default:
                     return "";
             }

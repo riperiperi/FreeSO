@@ -13,6 +13,7 @@ using FSO.Server.Framework.Voltron;
 using FSO.Server.Protocol.Gluon.Packets;
 using FSO.Server.Servers.City.Handlers;
 using Ninject;
+using NLog;
 using System;
 using System.Collections.Generic;
 using System.IO;
@@ -28,6 +29,7 @@ namespace FSO.Server.Servers.City.Domain
         private CityServerContext Context;
         private IKernel Kernel;
         private ISessions Sessions;
+        private static Logger LOG = LogManager.GetCurrentClassLogger();
 
         public Neighborhoods(IDAFactory daFactory, CityServerContext context, IKernel kernel, ISessions sessions)
         {
@@ -216,6 +218,7 @@ namespace FSO.Server.Servers.City.Domain
 
         public async Task TickNeighborhoods(DateTime now)
         {
+            LOG.Info("Ticking Neighborhoods for time: " + now.ToString());
             var config = Context.Config.Neighborhoods;
             //process the neighbourhoods for this city
             var endDate = new DateTime(now.Year, now.Month, 1).AddMonths(1);
@@ -431,6 +434,7 @@ namespace FSO.Server.Servers.City.Domain
                     }
                 }
             }
+            LOG.Info("Finished ticking Neighborhoods.");
         }
 
         private bool VerifyCanBeMayor(IDA da, uint avatar_id, uint nhood_id, uint now, ref string name)

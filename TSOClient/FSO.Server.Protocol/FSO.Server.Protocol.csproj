@@ -30,6 +30,7 @@
     <DefineConstants>TRACE</DefineConstants>
     <ErrorReport>prompt</ErrorReport>
     <WarningLevel>4</WarningLevel>
+    <UseVSHostingProcess>true</UseVSHostingProcess>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)' == 'ServerRelease|AnyCPU'">
     <OutputPath>bin\ServerRelease\</OutputPath>
@@ -150,6 +151,7 @@
     <Compile Include="Gluon\Packets\RequestLotClientTermination.cs" />
     <Compile Include="Gluon\Packets\RequestTask.cs" />
     <Compile Include="Gluon\Packets\RequestTaskResponse.cs" />
+    <Compile Include="Gluon\Packets\SendCityMail.cs" />
     <Compile Include="Gluon\Packets\ShardShutdownCompleteResponse.cs" />
     <Compile Include="Gluon\Packets\ShardShutdownRequest.cs" />
     <Compile Include="Gluon\Packets\TransferClaim.cs" />

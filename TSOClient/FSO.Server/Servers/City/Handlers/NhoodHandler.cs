@@ -57,6 +57,7 @@ namespace FSO.Server.Servers.City.Handlers
         {
             try
             {
+                LOG.Info("Got a city notify packet for Nhood tick.");
                 await Nhoods.TickNeighborhoods();
             } catch (Exception e)
             {

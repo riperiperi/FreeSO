@@ -10,6 +10,8 @@ using System.Text;
 using FSO.Content;
 using FSO.Common.Rendering.Framework;
 using FSO.Vitaboy;
+using Microsoft.Xna.Framework;
+using FSO.Common.Utils;
 
 namespace FSO.Vitaboy
 {
@@ -18,6 +20,24 @@ namespace FSO.Vitaboy
     /// </summary>
     public class SimAvatar : Avatar
     {
+        public Quaternion HeadSeek = Quaternion.Identity;
+        public Quaternion HeadSeekTarget = Quaternion.Identity;
+        public float HeadSeekWeight;
+
+        public float LastSeekFraction;
+            
+        public static float HEAD_SEEK_LENGTH = 15; // in 30fps frames
+
+        public void SlideHeadToTarget(float frameCount)
+        {
+            if (HeadSeek == HeadSeekTarget) return;
+            const float quatSpeed = 0.2f; //tracking speed per 30fps frame;
+            var dist = DirectionUtils.QuaternionDistance(HeadSeek, HeadSeekTarget);
+            if (dist == 0 || float.IsNaN(dist)) return;
+            var stepSize = Math.Min((quatSpeed * frameCount) / dist, 1);
+            HeadSeek = Quaternion.Slerp(HeadSeek, HeadSeekTarget, stepSize);
+        }
+
         /// <summary>
         /// Creates a new instance of SimAvatar.
         /// </summary>

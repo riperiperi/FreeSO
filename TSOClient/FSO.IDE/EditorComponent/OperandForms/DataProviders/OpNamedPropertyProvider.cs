@@ -65,6 +65,14 @@ namespace FSO.IDE.EditorComponent.OperandForms.DataProviders
 
         public OpStaticNamedPropertyProvider(STR strRes) : this(strRes, 0) { }
 
+        public void EnsureProperty(int value, string name)
+        {
+            if (!Map.ContainsKey(value))
+            {
+                Map[value] = name;
+            }
+        }
+
         public override Dictionary<int, string> GetNamedProperties(EditorScope scope, VMPrimitiveOperand op)
         {
             return Map;

@@ -29,6 +29,7 @@
     <DefineConstants>TRACE</DefineConstants>
     <ErrorReport>prompt</ErrorReport>
     <WarningLevel>4</WarningLevel>
+    <UseVSHostingProcess>true</UseVSHostingProcess>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)' == 'ServerRelease|AnyCPU'">
     <OutputPath>bin\ServerRelease\</OutputPath>
@@ -108,6 +109,7 @@
     <Compile Include="Framework\UIDebounce.cs" />
     <Compile Include="Framework\UIElement.cs" />
     <Compile Include="Framework\UIExternalContainer.cs" />
+    <Compile Include="Framework\UIMaskedContainer.cs" />
     <Compile Include="Framework\UIScreen.cs" />
     <Compile Include="Framework\UISpriteBatch.cs" />
     <Compile Include="Framework\UITween.cs" />

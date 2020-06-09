@@ -66,7 +66,7 @@ namespace FSO.Client.UI.Controls
             }
         }
 
-        public static void Alert(string title, string message, bool modal)
+        public static UIAlert Alert(string title, string message, bool modal)
         {
             UIAlert alert = null;
             alert = UIScreen.GlobalShowAlert(new UIAlertOptions()
@@ -75,6 +75,7 @@ namespace FSO.Client.UI.Controls
                 Message = message,
                 Buttons = UIAlertButton.Ok((btn) => { UIScreen.RemoveDialog(alert); })
             }, modal);
+            return alert;
         }
 
         public static UIAlert YesNo(string title, string message, bool modal, Callback<bool> callback)
@@ -309,7 +310,7 @@ namespace FSO.Client.UI.Controls
         }
 
         private bool m_TextDirty = false;
-        protected override void CalculateMatrix()
+        public override void CalculateMatrix()
         {
             base.CalculateMatrix();
             m_TextDirty = true;

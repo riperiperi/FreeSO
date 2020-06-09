@@ -22,6 +22,7 @@ using FSO.Content.Interfaces;
 using FSO.Content.TS1;
 using FSO.Content.Framework;
 using FSO.Vitaboy;
+using FSO.Content.Upgrades;
 
 namespace FSO.Content
 {
@@ -115,6 +116,7 @@ namespace FSO.Content
             {
                 RCMeshes = new RCMeshProvider(device);
                 UIGraphics = new UIGraphicsProvider(this);
+                IffFile.TargetTS1 = TS1;
                 if (TS1)
                 {
                     TS1Global = new TS1Provider(this);
@@ -162,6 +164,8 @@ namespace FSO.Content
                 RackOutfits = new RackOutfitsProvider(this);
                 Ini = new IniProvider(this);
                 GlobalTuning = new Tuning(Path.Combine(basePath, "tuning.dat"));
+
+                Upgrades = new ObjectUpgradeProvider(this);
             }
             WorldFloors = new WorldFloorProvider(this);
             WorldWalls = new WorldWallProvider(this);
@@ -196,7 +200,10 @@ namespace FSO.Content
 
                 WorldWalls.Init();
                 WorldFloors.Init();
+                Upgrades.Init();
+                if (Mode == ContentMode.SERVER) Upgrades.LoadJSONTuning();
             }
+            WorldObjectGlobals.InitCurves();
             WorldRoofs.Init();
             LoadProgress = ContentLoadingProgress.Done;
         }
@@ -379,6 +386,8 @@ namespace FSO.Content
         public WorldWallProvider WorldWalls;
         public IObjectCatalog WorldCatalog;
         public WorldRoofProvider WorldRoofs;
+
+        public ObjectUpgradeProvider Upgrades;
 
         public UIGraphicsProvider UIGraphics;
         public CustomUIProvider CustomUI;

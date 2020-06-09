@@ -22,22 +22,34 @@ namespace FSO.IDE
 
         public void StartIDE(VM vm)
         {
-            EditorResource.Get().Init(GameFacade.GraphicsDevice);
-            var content = Content.Content.Get();
-            EditorScope.Behaviour = new Files.Formats.IFF.IffFile(
-                content.TS1?Path.Combine(content.TS1BasePath, "GameData/Behavior.iff"):content.GetPath("objectdata/globals/behavior.iff"));
-            EditorScope.Globals = content.WorldObjectGlobals.Get("global");
-            Program.MainThread = Thread.CurrentThread;
-
-            var t = new Thread(() =>
+            if (MainWindow.Instance == null)
             {
-                var editor = new MainWindow();
-                editor.Test(vm);
-                Application.Run(editor);
-            });
+                EditorResource.Get().Init(GameFacade.GraphicsDevice);
+                var content = Content.Content.Get();
+                EditorScope.Behaviour = new Files.Formats.IFF.IffFile(
+                    content.TS1 ? Path.Combine(content.TS1BasePath, "GameData/Behavior.iff") : content.GetPath("objectdata/globals/behavior.iff"));
+                EditorScope.Globals = content.WorldObjectGlobals.Get("global");
+                Program.MainThread = Thread.CurrentThread;
 
-            //t.SetApartmentState(ApartmentState.STA);
-            t.Start();
+                var t = new Thread(() =>
+                {
+                    var editor = new MainWindow();
+                    editor.SwitchVM(vm);
+                    Application.Run(editor);
+                });
+
+                //t.SetApartmentState(ApartmentState.STA);
+                t.Start();
+            }
+            else
+            {
+                var inst = MainWindow.Instance;
+                inst.BeginInvoke(new Action(() =>
+                {
+                    inst.SwitchVM(vm);
+                    inst.Show();
+                }));
+            }
         }
 
         public void IDEOpenBHAV(BHAV targetBhav, GameObject targetObj)

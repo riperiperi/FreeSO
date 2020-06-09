@@ -28,6 +28,8 @@ namespace FSO.Content
             DGRP3DGeometry.ReplTextureProvider = GetTex;
 
             var repldir = Path.Combine(FSOEnvironment.ContentDir, "MeshReplace/");
+            var userrepl = Path.Combine(FSOEnvironment.UserDir, "MeshReplace/");
+            if (Directory.Exists(userrepl)) repldir = userrepl;
             var dir = Path.Combine(FSOEnvironment.UserDir, "MeshCache/");
             try
             {
@@ -35,7 +37,6 @@ namespace FSO.Content
                 Directory.CreateDirectory(repldir);
             } catch
             {
-
             }
             CacheFiles = new HashSet<string>(Directory.GetFiles(dir).Select(x => Path.GetFileName(x).ToLowerInvariant()));
             ReplaceFiles = new HashSet<string>(Directory.GetFiles(repldir).Select(x => Path.GetFileName(x).ToLowerInvariant()));
@@ -181,7 +182,7 @@ namespace FSO.Content
                             var data = new Color[result.Width * result.Height];
                             result.GetData(data);
                             var n = new Texture2D(GD, result.Width, result.Height, true, SurfaceFormat.Color);
-                            TextureUtils.UploadWithMips(n, GD, data);
+                            TextureUtils.UploadWithAvgMips(n, GD, data);
                             result.Dispose();
                             result = n;
                         }

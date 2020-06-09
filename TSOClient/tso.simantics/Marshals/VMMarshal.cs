@@ -24,7 +24,11 @@ namespace FSO.SimAntics.Marshals
         // 31 - Object Flags (donated), Last Lot Owner ID (other mayor stuff)
         // 32 - Bezier Routing
         // 33 - NhoodID and Location
-        public static readonly int LATEST_VERSION = 33;
+        // 34 - Upgrade Level
+        // 35 - FSO Inventory Retrieve
+        // 36 - FSO Inventory Token (inventory ops async state has temp list)
+        // 37 - Inventory Token Total
+        public static readonly int LATEST_VERSION = 37;
 
         public int Version = LATEST_VERSION;
         public bool Compressed = true;

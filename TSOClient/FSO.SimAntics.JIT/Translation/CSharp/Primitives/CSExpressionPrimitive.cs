@@ -191,7 +191,7 @@ namespace FSO.SimAntics.JIT.Translation.CSharp.Primitives
                     }
             }
 
-            if (VM.GlobTS1)
+            if (!VM.GlobTS1)
             {
                 if (operand.Operator == VMExpressionOperator.Push)
                 {

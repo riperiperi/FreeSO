@@ -12,25 +12,18 @@ using FSO.Vitaboy;
 using FSO.Content.Framework;
 using System.Text.RegularExpressions;
 using FSO.Content.Codecs;
+using FSO.Common.Content;
 
 namespace FSO.Content
 {
     /// <summary>
     /// Provides access to animation (*.anim) data in FAR3 archives.
     /// </summary>
-    public class AvatarAnimationProvider : FAR3Provider<Animation>
+    public class AvatarAnimationProvider : TSOAvatarContentProvider<Animation>
     {
-        public Dictionary<string, Far3ProviderEntry<Animation>> AnimationsByName
-        {
-            get
-            {
-                return EntriesByName; //expose so we can list all animations, for now.
-                //todo: cleanup
-            }
-        }
-
-        public AvatarAnimationProvider(Content contentManager)
-            : base(contentManager, new AnimationCodec(), new Regex(".*/animations/.*\\.dat"))
+        public AvatarAnimationProvider(Content contentManager) : base(contentManager, new AnimationCodec(), 
+            new Regex(".*/animations/.*\\.dat"), 
+            new Regex("Avatar/Animations/.*\\.anim"))
         {
         }
     }

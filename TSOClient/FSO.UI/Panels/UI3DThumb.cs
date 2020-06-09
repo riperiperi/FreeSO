@@ -56,7 +56,11 @@ namespace FSO.UI.Panels
                 var dgrp = ((ObjectComponent)obj.WorldUI).DGRP;
                 c.Mesh = (dgrp == null) ? null : Content.Content.Get().RCMeshes.Get(dgrp, obj.Object.OBJ); //new DGRP3DMesh(((ObjectComponent)obj.WorldUI).DGRP, obj.Object.OBJ, GameFacade.GraphicsDevice, null);
                 Scene.Add(c);
-                if (c.Mesh == null) continue;
+                if (c.Mesh == null)
+                {
+                    i++;
+                    continue;
+                }
 
                 var vp = pos[i++];
                 c.Position = new Vector3((vp.X - 0.5f), vp.Z, (vp.Y - 0.5f));

@@ -26,7 +26,9 @@ namespace FSO.IDE
         {
             this.SetStyle(ControlStyles.OptimizedDoubleBuffer | ControlStyles.UserPaint | ControlStyles.AllPaintingInWmPaint, true);
             FrameLock = new object();
+            TabStop = true;
         }
+
 
         protected override void OnCreateControl()
         {
@@ -114,6 +116,7 @@ namespace FSO.IDE
         {
             base.OnMouseClick(e);
             SetMouseButtonState(e.Button, Microsoft.Xna.Framework.Input.ButtonState.Pressed);
+            Focus();
         }
 
         protected override void OnMouseUp(MouseEventArgs e)
@@ -142,6 +145,11 @@ namespace FSO.IDE
                     FSOUI.HasFocus = true;
                 }
             }
+        }
+
+        public void ClearMouseState()
+        {
+            mouse = new MouseState();
         }
 
         private void SetMouseButtonState(MouseButtons button, Microsoft.Xna.Framework.Input.ButtonState state)
@@ -199,6 +207,29 @@ namespace FSO.IDE
                     FSOUI.Height = Height;
                 }
             }
+        }
+
+        private void InitializeComponent()
+        {
+            this.SuspendLayout();
+            // 
+            // FSOUIControl
+            // 
+            this.Name = "FSOUIControl";
+            this.KeyPress += new System.Windows.Forms.KeyPressEventHandler(this.FSOUIControl_KeyPress);
+            this.MouseDown += new System.Windows.Forms.MouseEventHandler(this.FSOUIControl_MouseDown);
+            this.ResumeLayout(false);
+
+        }
+
+        private void FSOUIControl_KeyPress(object sender, KeyPressEventArgs e)
+        {
+            FSOUI.SubmitKey(e.KeyChar);
+        }
+
+        private void FSOUIControl_MouseDown(object sender, MouseEventArgs e)
+        {
+            Focus();
         }
     }
 }

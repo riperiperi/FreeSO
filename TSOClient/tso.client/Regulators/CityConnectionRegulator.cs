@@ -146,6 +146,7 @@ namespace FSO.Client.Regulators
 
             AddState("Reconnecting")
                 .OnData(typeof(HostOnlinePDU)).TransitionTo("Connected")
+                .OnData(typeof(ShardSelectorServletRequest)).TransitionTo("SelectCity")
                 .OnlyTransitionFrom("Reconnect");
 
             GameThread.SetInterval(() =>
@@ -359,6 +360,8 @@ namespace FSO.Client.Regulators
 
                 case "Disconnect":
                     ShardSelectResponse = null;
+                    ReestablishAttempt = 0;
+                    CanReestablish = false;
                     if (Client.IsConnected)
                     {
                         Client.Write(new ClientByePDU());
@@ -427,7 +430,9 @@ namespace FSO.Client.Regulators
             }
             else if (message is GlobalTuningUpdate)
             {
-                DynamicTuning.Global = (message as GlobalTuningUpdate).Tuning;
+                var msg = (message as GlobalTuningUpdate);
+                DynamicTuning.Global = msg.Tuning;
+                Content.Content.Get().Upgrades.LoadNetTuning(msg.ObjectUpgrades);
             }
             else if (message is ChangeRoommateResponse)
             {
