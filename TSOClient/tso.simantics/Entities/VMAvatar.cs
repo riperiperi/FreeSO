@@ -298,18 +298,23 @@ namespace FSO.SimAntics
         {
             if (data == null) return;
 
-            var skinTone = data.GetString(14);
-            if (skinTone.Equals("lgt", StringComparison.InvariantCultureIgnoreCase) || context.VM.TS1) SkinTone = AppearanceType.Light;
-            else if (skinTone.Equals("med", StringComparison.InvariantCultureIgnoreCase)) SkinTone = AppearanceType.Medium;
-            else if (skinTone.Equals("drk", StringComparison.InvariantCultureIgnoreCase)) SkinTone = AppearanceType.Dark;
-
             try
             {
                 if (context.VM.TS1) {
+                    SkinTone = AppearanceType.Light;
                     DefaultSuits.Daywear = new VMOutfitReference(data, false);
                     HeadOutfit = new VMOutfitReference(data, true);
                     BodyOutfit = DefaultSuits.Daywear;
-                } else { 
+                } else {
+
+                    var skinTone = data.GetString(14);
+                    var skinToneSpl = skinTone.Split(';').Where(x => !string.IsNullOrEmpty(x)).ToArray();
+                    var randSkinTone = skinToneSpl[context.NextRandom((ulong)skinToneSpl.Length)];
+
+                    if (randSkinTone.Equals("lgt", StringComparison.InvariantCultureIgnoreCase)) SkinTone = AppearanceType.Light;
+                    else if (randSkinTone.Equals("med", StringComparison.InvariantCultureIgnoreCase)) SkinTone = AppearanceType.Medium;
+                    else if (randSkinTone.Equals("drk", StringComparison.InvariantCultureIgnoreCase)) SkinTone = AppearanceType.Dark;
+
                     var body = data.GetString(1);
                     var randBody = data.GetString(10);
 
