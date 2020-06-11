@@ -1,11 +1,6 @@
 ﻿using Microsoft.Xna.Framework;
 using System;
-using System.Collections.Generic;
 using System.IO;
-using System.Linq;
-using System.Runtime.InteropServices;
-using System.Text;
-using System.Threading.Tasks;
 
 namespace FSO.Content.Model
 {
@@ -16,7 +11,7 @@ namespace FSO.Content.Model
         private static Color TERRAIN_SNOW = new Color(255, 255, 255);
         private static Color TERRAIN_ROCK = new Color(255, 0, 0);
         private static Color TERRAIN_SAND = new Color(255, 255, 0);
-        
+
         private string _Directory;
 
         public ITextureRef Elevation { get; internal set; }
@@ -39,7 +34,7 @@ namespace FSO.Content.Model
             {
                 ext = "png"; //fso maps use png
             }
-            Elevation = new FileTextureRef(Path.Combine(directory, "elevation."+ext));
+            Elevation = new FileTextureRef(Path.Combine(directory, "elevation." + ext));
             ForestDensity = new FileTextureRef(Path.Combine(directory, "forestdensity." + ext));
             ForestType = new FileTextureRef(Path.Combine(directory, "foresttype." + ext));
             RoadMap = new FileTextureRef(Path.Combine(directory, "roadmap." + ext));
@@ -49,18 +44,23 @@ namespace FSO.Content.Model
 
             _TerrainType = new TextureValueMap<Model.TerrainType>(TerrainTypeTex, x =>
             {
-                if(x == TERRAIN_GRASS){
+                if (x == TERRAIN_GRASS)
+                {
                     return Model.TerrainType.GRASS;
-                }else if(x == TERRAIN_WATER)
+                }
+                else if (x == TERRAIN_WATER)
                 {
                     return Model.TerrainType.WATER;
-                }else if(x == TERRAIN_SNOW)
+                }
+                else if (x == TERRAIN_SNOW)
                 {
                     return Model.TerrainType.SNOW;
-                }else if(x == TERRAIN_ROCK)
+                }
+                else if (x == TERRAIN_ROCK)
                 {
                     return Model.TerrainType.ROCK;
-                }else if(x == TERRAIN_SAND)
+                }
+                else if (x == TERRAIN_SAND)
                 {
                     return Model.TerrainType.SAND;
                 }
@@ -78,7 +78,7 @@ namespace FSO.Content.Model
 
         public byte GetRoad(int x, int y)
         {
-            return _RoadMap.Get(x, y);  
+            return _RoadMap.Get(x, y);
         }
 
         public byte GetElevation(int x, int y)
@@ -94,14 +94,14 @@ namespace FSO.Content.Model
             var edges = new TerrainType[] { TerrainType.NULL, TerrainType.NULL, TerrainType.NULL, TerrainType.NULL,
                 TerrainType.NULL, TerrainType.NULL, TerrainType.NULL, TerrainType.NULL};
             sample = GetTerrain(x, y);
-            
-            t = GetTerrain(x, y-1);
+
+            t = GetTerrain(x, y - 1);
             if ((y - 1 >= 0) && (t > sample)) edges[0] = t;
 
-            t = GetTerrain(x + 1, y-1);
+            t = GetTerrain(x + 1, y - 1);
             if ((y - 1 >= 0) && (x + 1 < 512) && (t > sample)) edges[1] = t;
 
-            t = GetTerrain(x+1, y);
+            t = GetTerrain(x + 1, y);
             if ((x + 1 < 512) && (t > sample)) edges[2] = t;
 
             t = GetTerrain(x + 1, y + 1);
@@ -110,17 +110,17 @@ namespace FSO.Content.Model
             t = GetTerrain(x, y + 1);
             if ((y + 1 < 512) && (t > sample)) edges[4] = t;
 
-            t = GetTerrain(x-1, y + 1);
+            t = GetTerrain(x - 1, y + 1);
             if ((y + 1 < 512) && (x - 1 >= 0) && (t > sample)) edges[5] = t;
 
-            t = t = GetTerrain(x-1, y);
+            t = GetTerrain(x - 1, y);
             if ((x - 1 >= 0) && (t > sample)) edges[6] = t;
 
-            t = t = GetTerrain(x - 1, y - 1);
+            t = GetTerrain(x - 1, y - 1);
             if ((y - 1 >= 0) && (x - 1 >= 0) && (t > sample)) edges[7] = t;
 
             int binary = 0;
-            for (int i=0; i<8; i++)
+            for (int i = 0; i < 8; i++)
                 binary |= ((edges[i] > TerrainType.NULL) ? (1 << i) : 0);
 
             int waterbinary = 0;
@@ -164,7 +164,7 @@ namespace FSO.Content.Model
         TS1Cloud = 7
     }
 
-    public class TextureValueMap <T>
+    public class TextureValueMap<T>
     {
         private T[,] Values;
 
@@ -180,8 +180,10 @@ namespace FSO.Content.Model
 
             var index = 0;
 
-            for(var y=0; y < 512; y++){
-                for(var x=0; x < 512; x++){
+            for (var y = 0; y < 512; y++)
+            {
+                for (var x = 0; x < 512; x++)
+                {
                     var a = pixelSize == 3 ? 255 : bytes[index + 3];
                     var r = bytes[index + 2];
                     var g = bytes[index + 1];
@@ -195,13 +197,14 @@ namespace FSO.Content.Model
                     Values[y, x] = value;
                 }
             }
-            
+
             //image.UnlockBits(data);
         }
 
         public T Get(int x, int y)
         {
-            if(x < 0 || y < 0 || x >= 512 || y >= 512){
+            if (x < 0 || y < 0 || x >= 512 || y >= 512)
+            {
                 return default(T);
             }
             return Values[y, x];
