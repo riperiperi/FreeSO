@@ -31,6 +31,7 @@ Volcanic is an extension of FreeSO that allows users to view, modify and save ga
 You can contribute to FreeSO by testing cutting edge features in the latest releases, filing bugs, and joining in the discussion on our forums!
 
 * [Getting Started](https://github.com/riperiperi/FreeSO/wiki)
+* [Project Structure](https://github.com/riperiperi/FreeSO/wiki/Project-structure)
 * [Coding Standards](https://github.com/riperiperi/FreeSO/wiki/Coding-standards)
 * [Pull Requests](https://github.com/riperiperi/FreeSO/pulls): [Open](https://github.com/riperiperi/FreeSO/pulls)/[Closed](https://github.com/riperiperi/FreeSO/issues?q=is%3Apr+is%3Aclosed)
 * [Translation](http://forum.freeso.org/forums/translations.32/)
@@ -40,12 +41,11 @@ You can contribute to FreeSO by testing cutting edge features in the latest rele
 
 Looking for something to do? Check out the issues tagged as [help wanted](https://github.com/riperiperi/FreeSO/labels/help%20wanted) to get started.
 
-Regarding translations, full object and UI translations should currently be released on the forums. An improved system for distribution and organisation will be set up in a month or two. Stay tuned!
+Regarding translations, full object and UI translations should currently be released on the forums. This is far from perfect and is due to be reworked. Stay tuned!
 
 ## Prerequisites
-* [Visual Studio 2015](https://www.visualstudio.com/en-us/downloads/visual-studio-2015-downloads-vs.aspx)
+* [Visual Studio 2019](https://visualstudio.microsoft.com/vs/)
 * [MonoGame](http://www.monogame.net): 3.5 for the iOS and Android VS2015 project types. (optional)
-* [Xamarin for Visual Studio](https://www.xamarin.com/visual-studio): For iOS and Android builds. (optional)
 
 # License
 > This Source Code Form is subject to the terms of the Mozilla Public License, v. 2.0.

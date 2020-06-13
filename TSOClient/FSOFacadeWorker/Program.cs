@@ -79,7 +79,7 @@ namespace FSOFacadeWorker
             GameThread.NoGame = true;
             GameThread.UpdateExecuting = true;
 
-            var path = gameLocator.FindTheSimsOnline();
+            var path = Config.Game_Path ?? gameLocator.FindTheSimsOnline();
 
             if (path != null)
             {
