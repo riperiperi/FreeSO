@@ -87,11 +87,21 @@ namespace FSO.Client.Rendering.City
             
             //special tuning from server
             var terrainTuning = DynamicTuning.Global?.GetTable("city", 0);
-            float forceSnow;
-            if (terrainTuning != null && terrainTuning.TryGetValue(0, out forceSnow)) ForceSnow(forceSnow > 0);
+            float forceSnow = 0f;
+            if (terrainTuning != null && terrainTuning.TryGetValue(0, out forceSnow)) ForceSnow(forceSnow);
+
+            var terrainpath = "Content/Textures/terrain/";
 
             //grass, sand, rock, snow, water
-            TerrainTextures[0] = RTToMip(LoadTex(gamepath + "gamedata/terrain/newformat/gr.tga"), gd);
+            if (true)//forceSnow == 2)
+            {
+                TerrainTextures[0] = RTToMip(LoadTex(terrainpath + "autumn.png"), gd);
+            } 
+            else
+            {
+                TerrainTextures[0] = RTToMip(LoadTex(gamepath + "gamedata/terrain/newformat/gr.tga"), gd);
+            }
+            
             TerrainTextures[1] = RTToMip(LoadTex(gamepath + "gamedata/terrain/newformat/sd.tga"), gd);
             TerrainTextures[2] = RTToMip(LoadTex(gamepath + "gamedata/terrain/newformat/rk.tga"), gd);
             TerrainTextures[3] = RTToMip(LoadTex(gamepath + "gamedata/terrain/newformat/sn.tga"), gd);
@@ -127,7 +137,6 @@ namespace FSO.Client.Rendering.City
                 TransB[x + 1] = LoadTex(gamepath + "gamedata/terrain/newformat/transb" + Num + "b.tga");
             }
 
-            var terrainpath = "Content/Textures/terrain/"; //gamepath + "gamedata/terrain/";
             //TODO: optionally load non-freeso textures
 
             Roads = new Texture2D[16];
@@ -169,7 +178,7 @@ namespace FSO.Client.Rendering.City
             for (int x = 0; x < 16; x++) RoadCorners[x].Dispose();
         }
 
-        public void ForceSnow(bool toGrass)
+        public void ForceSnow(float mode)
         {
             var dat = new Color[VertexColor.Width * VertexColor.Height];
             VertexColor.GetData(dat);
@@ -180,30 +189,30 @@ namespace FSO.Client.Rendering.City
             {
                 var old = dat[i];
                 var greater = Math.Max(old.R, old.G);
-                if (!toGrass)
-                {
-                    if (old.B < greater)
-                    {
-                        //make this pixel grayscale
-                        dat[i] = new Color(greater, greater, greater);
-                    }
-                }
                 var oldType = typeC[i];
-                if (toGrass) //change snow to grass
+
+                switch (mode)
                 {
-                    if (oldType == Color.White)
-                    {
-                        typeC[i] = new Color(0, 255, 0);
-                        type[i] = 0;
-                    }
-                }
-                else
-                {
-                    if (oldType == new Color(0, 255, 0) || oldType == Color.Yellow)
-                    {
-                        typeC[i] = Color.White;
-                        type[i] = 3;
-                    }
+                    case 0: // Snow
+                        if (old.B < greater)
+                        {
+                            //make this pixel grayscale
+                            dat[i] = new Color(greater, greater, greater);
+                        }
+
+                        if (oldType == new Color(0, 255, 0) || oldType == Color.Yellow)
+                        {
+                            typeC[i] = Color.White;
+                            type[i] = 3;
+                        }
+                        break;
+                    case 1: // Summer
+                        if (oldType == Color.White)
+                        {
+                            typeC[i] = new Color(0, 255, 0);
+                            type[i] = 0;
+                        }
+                        break;
                 }
             }
 

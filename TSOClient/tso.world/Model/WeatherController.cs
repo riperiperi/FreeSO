@@ -181,7 +181,7 @@ namespace FSO.LotView.Model
             {
                 weather += 3; //rains
             }
-            if (forceSnow > 0)
+            if (forceSnow == 1)
             {
                 weather = 3 + Math.Max(0, weather - 1); //rains rarely, never heavy
             }

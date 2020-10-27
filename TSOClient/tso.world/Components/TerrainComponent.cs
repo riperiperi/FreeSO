@@ -82,7 +82,7 @@ namespace FSO.LotView.Components
 
             //special tuning from server
             var forceSnow = DynamicTuning.Global?.GetTuning("city", 0, 0);
-            if (forceSnow != null) ForceSnow(forceSnow > 0);
+            if (forceSnow != null) ForceSnow(forceSnow.Value);
 
             GrassState = grass;
             GroundHeight = heights;
@@ -90,23 +90,34 @@ namespace FSO.LotView.Components
             TerrainDirty = true;
         }
 
-        public void ForceSnow(bool toGrass)
+        public void ForceSnow(float type)
         {
-            if (toGrass)
+            switch (type)
             {
-                if (LightType == TerrainType.SNOW)
-                {
-                    LightType = TerrainType.GRASS;
-                }
-                if (DarkType == TerrainType.SNOW)
-                {
-                    DarkType = TerrainType.GRASS;
-                }
-            }
-            else
-            {
-                if (LightType == TerrainType.GRASS || LightType == TerrainType.SAND) LightType = TerrainType.SNOW;
-                if (DarkType == TerrainType.SAND) DarkType = TerrainType.SNOW;
+                case 1f: // Summer
+                    if (LightType == TerrainType.SNOW)
+                    {
+                        LightType = TerrainType.GRASS;
+                    }
+                    if (DarkType == TerrainType.SNOW)
+                    {
+                        DarkType = TerrainType.GRASS;
+                    }
+                    break;
+                case 2f: // Autumn
+                    if (LightType == TerrainType.GRASS)
+                    {
+                        LightType = TerrainType.TS1AutumnGrass;
+                    }
+                    if (DarkType == TerrainType.GRASS)
+                    {
+                        DarkType = TerrainType.TS1AutumnGrass;
+                    }
+                    break;
+                default: // Winter
+                    if (LightType == TerrainType.GRASS || LightType == TerrainType.SAND) LightType = TerrainType.SNOW;
+                    if (DarkType == TerrainType.SAND) DarkType = TerrainType.SNOW;
+                    break;
             }
         }
 
