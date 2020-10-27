@@ -177,13 +177,17 @@ namespace FSO.LotView.Model
             var weather = Math.Max(0, rand.Next(6) - 3);
 
             var forceSnow = Common.Model.DynamicTuning.Global?.GetTuning("city", 0, 0);
-            if (forceSnow == null)
+            if (forceSnow == 0)
             {
-                weather += 3; //rains
+ 
             }
-            if (forceSnow == 1)
+            else if (forceSnow == 1)
             {
                 weather = 3 + Math.Max(0, weather - 1); //rains rarely, never heavy
+            }
+            else
+            {
+                weather += 3; //rains
             }
 
             var disableWeather = Common.Model.DynamicTuning.Global?.GetTuning("city", 0, 1) == 1;
