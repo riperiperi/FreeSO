@@ -14,6 +14,7 @@ using FSO.LotView.Components;
 using FSO.SimAntics.Model;
 using FSO.SimAntics.Marshals;
 using FSO.SimAntics.Model.TSOPlatform;
+using FSO.LotView.Components.Model;
 
 namespace FSO.SimAntics.Entities
 {
@@ -39,6 +40,7 @@ namespace FSO.SimAntics.Entities
         public int BeforeDCPrice;
         public List<VMEntity> Objects = new List<VMEntity>();
         public List<LotTilePos> Offsets = new List<LotTilePos>();
+        public MultitileObjectGroup WorldGroup = VM.UseWorld ? new MultitileObjectGroup() : null;
 
         public uint GUID
         {
@@ -88,6 +90,14 @@ namespace FSO.SimAntics.Entities
         {
             Objects.Add(obj);
             Offsets.Add(offset);
+
+            if (VM.UseWorld && obj is VMGameObject)
+            {
+                var component = (ObjectComponent)obj.WorldUI;
+
+                WorldGroup.Objects.Add(component);
+                component.MultitileGroup = WorldGroup;
+            }
         }
 
         public void RemoveObject(VMEntity obj)
@@ -97,6 +107,14 @@ namespace FSO.SimAntics.Entities
             {
                 Objects.RemoveAt(index);
                 Offsets.RemoveAt(index);
+
+                if (VM.UseWorld && obj is VMGameObject)
+                {
+                    var component = (ObjectComponent)obj.WorldUI;
+
+                    WorldGroup.Objects.Remove(component);
+                    component.MultitileGroup = null;
+                }
             }
         }
 

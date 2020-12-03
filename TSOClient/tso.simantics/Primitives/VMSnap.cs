@@ -33,7 +33,6 @@ namespace FSO.SimAntics.Primitives
             var obj = context.StackObject;
             if (obj == context.Caller)
             {
-                foreach (var objSub in obj.MultitileGroup.Objects) objSub.MovedSelf = true;
                 if (obj is VMGameObject)
                 {
                     if (VM.UseWorld)
@@ -89,6 +88,11 @@ namespace FSO.SimAntics.Primitives
                 {
                     if (locations.Count > 0)
                     {
+                        if (obj == context.Caller && locations[0].Position != context.Caller.Position)
+                        {
+                            foreach (var objSub in obj.MultitileGroup.Objects) objSub.MovedSelf = true;
+                        }
+
                         if (!SetPosition(avatar, locations[0].Position,
                             (dirSnap) ? locations[0].RadianDirection : avatar.RadianDirection,
                             operand.Shoo, context.VM.Context))
