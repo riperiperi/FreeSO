@@ -57,8 +57,8 @@ namespace FSO.SimAntics.Entities
         public short[] MotiveFractions = new short[7]; //in 1/1000ths
         public int LastMinute;
 
-        TuningEntry LotMotives = Content.Content.Get().GlobalTuning.EntriesByName["lotmotives"];
-        TuningEntry SimMotives = Content.Content.Get().GlobalTuning.EntriesByName["simmotives"];
+        TuningEntry LotMotives = Content.Content.Get()?.GlobalTuning.EntriesByName["lotmotives"] ?? TuningEntry.DEFAULT;
+        TuningEntry SimMotives = Content.Content.Get()?.GlobalTuning.EntriesByName["simmotives"] ?? TuningEntry.DEFAULT;
 
         public int LastCategory = -1;
         public int[] LotMuls;
@@ -66,6 +66,11 @@ namespace FSO.SimAntics.Entities
 
         public VMAvatarMotiveDecay()
         {
+            if (SimMotives.KeyValueCount == 0)
+            {
+                return;
+            }
+
             FlatSimMotives = new int[]
             {
                 ToFixed1000(SimMotives.GetNum("HungerDecrementRatio")), //0

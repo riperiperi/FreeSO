@@ -124,7 +124,7 @@ namespace FSO.SimAntics.Entities
             for (int i = 0; i < Objects.Count(); i++)
             {
                 ushort sub = (ushort)Objects[i].Object.OBJ.SubIndex;
-                positions[i] = new Vector3(Offsets[i].x/16, Offsets[i].y/16, 0);
+                positions[i] = new Vector3(Offsets[i].x/16, Offsets[i].y/16, Offsets[i].Level * 2.95f);
             }
             return positions;
         }
@@ -445,6 +445,15 @@ namespace FSO.SimAntics.Entities
                 if (obj == null) continue;
                 Objects.Add(obj);
                 Offsets.Add(input.Offsets[i]);
+
+                if (VM.UseWorld && obj is VMGameObject)
+                {
+                    var component = (ObjectComponent)obj.WorldUI;
+
+                    WorldGroup.Objects.Add(component);
+                    component.MultitileGroup = WorldGroup;
+                }
+
                 obj.MultitileGroup = this;
             }
 
@@ -468,6 +477,15 @@ namespace FSO.SimAntics.Entities
                 if (obj == null) continue;
                 Objects.Add(obj);
                 Offsets.Add(input.Offsets[i]);
+
+                if (VM.UseWorld && obj is VMGameObject)
+                {
+                    var component = (ObjectComponent)obj.WorldUI;
+
+                    WorldGroup.Objects.Add(component);
+                    component.MultitileGroup = WorldGroup;
+                }
+
                 obj.MultitileGroup = this;
             }
         }
