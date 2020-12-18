@@ -785,8 +785,11 @@ namespace FSO.Server.Servers.Lot.Domain
                         }
                         else
                         {
-                            ent.ResetData();
-                            ent.Init(Lot.Context); //objects should not be occupied when we join the lot...
+                            if (ent.Object.OBJ.GUID != 0x30A76C84 && ent.Object.OBJ.GUID != 0x130B5C88) //ignore these two for now
+                            {
+                                ent.ResetData();
+                                ent.Init(Lot.Context); //objects should not be occupied when we join the lot...
+                            }
                         }
                     }
                     {
