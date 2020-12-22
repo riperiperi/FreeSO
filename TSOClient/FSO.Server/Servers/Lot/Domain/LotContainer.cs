@@ -108,6 +108,8 @@ namespace FSO.Server.Servers.Lot.Domain
             0x475CC813, //water balloon controller
             0x2D583771, //winter weather controller
             0x7A78195C, //snowball controller
+            0x33AD8F84, //face mask controller
+            0x04AB1D1F, //zombie spawner controller
 
             0x5157DDF2, //cat carrier
             0x3278BD34, //dog carrier
