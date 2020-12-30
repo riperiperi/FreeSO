@@ -1,4 +1,5 @@
-﻿using FSO.LotView.Model;
+﻿using FSO.Content;
+using FSO.LotView.Model;
 using FSO.SimAntics.Entities;
 using FSO.SimAntics.Model.TSOPlatform;
 using System;
@@ -15,6 +16,7 @@ namespace FSO.SimAntics.Model
 
         private Dictionary<uint, List<VMEntity>> ObjectsByGUID = new Dictionary<uint, List<VMEntity>>();
         private Dictionary<short, List<VMEntity>> ObjectsByCategory = new Dictionary<short, List<VMEntity>>();
+        private Dictionary<GameGlobalResource, List<VMEntity>> ObjectsBySemiGlobal = new Dictionary<GameGlobalResource, List<VMEntity>>();
         public List<VMEntity> Avatars = new List<VMEntity>();
         public Dictionary<uint, VMAvatar> AvatarsByPersist = new Dictionary<uint, VMAvatar>();
         public Dictionary<uint, VMMultitileGroup> MultitileByPersist = new Dictionary<uint, VMMultitileGroup>();
@@ -144,6 +146,35 @@ namespace FSO.SimAntics.Model
             if (tile.Count == 0) ObjectsByCategory.Remove(category);
         }
 
+        public void RegisterSemiGlobal(VMEntity obj, GameGlobalResource semiGlobal)
+        {
+            List<VMEntity> tile = null;
+            if(semiGlobal != null)
+            {
+                ObjectsBySemiGlobal.TryGetValue(semiGlobal, out tile);
+                if (tile == null)
+                {
+                    tile = new List<VMEntity>();
+                    ObjectsBySemiGlobal.Add(semiGlobal, tile);
+                }
+                //debug check: use if things are going weird
+                //if (!tile.Contains(obj))
+                VM.AddToObjList(tile, obj);
+            }
+        }
+
+        public void RemoveSemiGlobal(VMEntity obj, GameGlobalResource semiGlobal)
+        {
+            List<VMEntity> tile = null;
+            if (semiGlobal != null)
+            {
+                ObjectsBySemiGlobal.TryGetValue(semiGlobal, out tile);
+                if (tile == null) return; //???
+                VM.DeleteFromObjList(tile, obj);
+                if (tile.Count == 0) ObjectsBySemiGlobal.Remove(semiGlobal);
+            }
+        }
+
         public void NewObject(VMEntity obj)
         {
             var guid = obj.Object.OBJ.GUID;
@@ -156,6 +187,7 @@ namespace FSO.SimAntics.Model
             }
             VM.AddToObjList(list, obj);
             RegisterCategory(obj, obj.GetValue(VMStackObjectVariable.Category));
+            RegisterSemiGlobal(obj, obj.SemiGlobal);
 
             if (obj is VMAvatar)
             {
@@ -180,6 +212,7 @@ namespace FSO.SimAntics.Model
                 if (list.Count == 0) ObjectsByGUID.Remove(guid);
             }
             RemoveCategory(obj, obj.GetValue(VMStackObjectVariable.Category));
+            RemoveSemiGlobal(obj, obj.SemiGlobal);
 
             if (obj is VMAvatar)
             {
@@ -220,6 +253,13 @@ namespace FSO.SimAntics.Model
         {
             List<VMEntity> tile = null;
             ObjectsByCategory.TryGetValue(category, out tile);
+            return tile;
+        }
+
+        public List<VMEntity> GetObjectsBySemiGlobal(GameGlobalResource semiGlobal)
+        {
+            List<VMEntity> tile = null;
+            ObjectsBySemiGlobal.TryGetValue(semiGlobal, out tile);
             return tile;
         }
     }

@@ -92,6 +92,9 @@ namespace FSO.SimAntics.Primitives
                         entities = context.VM.Context.ObjectQueries.GetObjectsByGUID(operand.GUID); break;
                     case VMSetToNextSearchType.ObjectWithCategoryEqualToSP0:
                         entities = context.VM.Context.ObjectQueries.GetObjectsByCategory(context.Args[0]); break;
+                    case VMSetToNextSearchType.ObjectOfSemiGlobal:
+                        var sg = FSO.Content.Content.Get().WorldObjects.Get(operand.GUID).Resource.SemiGlobal;
+                        entities = context.VM.Context.ObjectQueries.GetObjectsBySemiGlobal(sg); break;
                     default:
                         break;
                 }
@@ -295,5 +298,6 @@ namespace FSO.SimAntics.Primitives
         Career = 10,
         ClosestHouse = 11,
         FamilyMember = 12, //TS1.5 or higher
+        ObjectOfSemiGlobal = 13,
     }
 }

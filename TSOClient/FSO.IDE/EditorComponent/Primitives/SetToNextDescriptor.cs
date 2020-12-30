@@ -28,7 +28,7 @@ namespace FSO.IDE.EditorComponent.Primitives
             var nextObject = EditorScope.Behaviour.Get<STR>(164).GetString((int)op.SearchType);
             result.Append(nextObject);
 
-            if (op.SearchType == VMSetToNextSearchType.ObjectOfType) {
+            if (op.SearchType == VMSetToNextSearchType.ObjectOfType || op.SearchType == VMSetToNextSearchType.ObjectOfSemiGlobal) {
                 var obj = Content.Content.Get().WorldObjects.Get(op.GUID);
 
                 result.Append(" ");
@@ -52,7 +52,10 @@ namespace FSO.IDE.EditorComponent.Primitives
         public override void PopulateOperandView(BHAVEditor master, EditorScope escope, TableLayoutPanel panel)
         {
             panel.Controls.Add(new OpLabelControl(master, escope, Operand, new OpStaticTextProvider("Cycles the object with ID in the Target location to the next object of a specified type. Returns false when none or no more are available.")));
-            panel.Controls.Add(new OpComboControl(master, escope, Operand, "Search Type: ", "SearchType", new OpStaticNamedPropertyProvider(EditorScope.Behaviour.Get<STR>(164), 0)));
+            var types = new OpStaticNamedPropertyProvider(EditorScope.Behaviour.Get<STR>(164), 0);
+            types.EnsureProperty(13, "object under same semiglobal as");
+            panel.Controls.Add(new OpComboControl(master, escope, Operand, "Search Type:", "SearchType", types));
+
 
             panel.Controls.Add(new OpScopeControl(master, escope, Operand, "Target Scope: ", "TargetOwner", "TargetData"));
 
