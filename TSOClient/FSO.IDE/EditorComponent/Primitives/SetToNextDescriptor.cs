@@ -53,7 +53,7 @@ namespace FSO.IDE.EditorComponent.Primitives
         {
             panel.Controls.Add(new OpLabelControl(master, escope, Operand, new OpStaticTextProvider("Cycles the object with ID in the Target location to the next object of a specified type. Returns false when none or no more are available.")));
             var types = new OpStaticNamedPropertyProvider(EditorScope.Behaviour.Get<STR>(164), 0);
-            types.EnsureProperty(13, "object under same semiglobal as");
+            types.EnsureProperty(13, "obj with same semiglobal as");
             panel.Controls.Add(new OpComboControl(master, escope, Operand, "Search Type:", "SearchType", types));
 
 
