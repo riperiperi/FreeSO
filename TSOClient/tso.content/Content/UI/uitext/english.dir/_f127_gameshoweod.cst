@@ -1,0 +1,43 @@
+﻿1 ^Question Value^
+2 ^Player Score^
+3 ^Options^
+4 ^Disabled^
+5 ^Enabled^
+6 ^PLAYER BUZZERS^
+7 ^Allow?^
+8 ^Find new player^
+9 ^Correct^
+10 ^Incorrect^
+11 ^Player Score^
+12 ^MORE OPTIONS^
+13 ^Set Answer Time^
+14 ^Seconds to answer^
+15 ^Set Buzzer Time^
+16 ^Seconds to buzz^
+17 ^Deduct Points on Wrong Answer^
+18 ^Allow Negative Points^
+19 ^Disable Buzzer on Wrong Answer^
+20 ^Enable All Buzzers on Right Answer^
+21 ^Go back^
+22 ^You did not buzz first^
+23 ^You buzzed first!^
+24 ^Waiting for host^
+25 ^Buzzer ready^
+26 ^You answered correctly!!^
+27 ^You answered incorrectly^
+28 ^Another player^
+29 ^%s answered correctly!^
+30 ^%s answered incorrectly^
+31 ^There are no other available contestants.^
+32 ^You can't change this setting until you disable the master buzzer.^
+33 ^This option cannot be set lower than %d.^
+34 ^This option cannot be set higher than %d.^
+35 ^Declare Winner^
+36 ^%s is the winner!^
+37 ^Error^
+38 ^The timer has expired!^
+39 ^%s buzzed first!^
+40 ^Whom would you like to declare the winner?^
+41 ^Declare %s as the winner?^
+42 ^Please wait...^
+43 ^You must judge the buzzed player first.^

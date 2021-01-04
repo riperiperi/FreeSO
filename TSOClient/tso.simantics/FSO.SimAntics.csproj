@@ -238,12 +238,14 @@
     <Compile Include="NetPlay\EODs\Handlers\Data\VMEODRackData.cs" />
     <Compile Include="NetPlay\EODs\Handlers\Data\VMEODSignsData.cs" />
     <Compile Include="NetPlay\EODs\Archetypes\VMBasicEOD.cs" />
+    <Compile Include="NetPlay\EODs\Handlers\VMEODAbstractGameshowBuzzerPlugin.cs" />
+    <Compile Include="NetPlay\EODs\Handlers\VMEODGameshowBuzzerHostPlugin.cs" />
     <Compile Include="NetPlay\EODs\Handlers\VMEODBandPlugin.cs" />
     <Compile Include="NetPlay\EODs\Handlers\VMEODBulletinPlugin.cs" />
     <Compile Include="NetPlay\EODs\Handlers\VMEODCooldownEventPlugin.cs" />
     <Compile Include="NetPlay\EODs\Handlers\VMEODDancePlatformPlugin.cs" />
     <Compile Include="NetPlay\EODs\Handlers\VMEODDJStationPlugin.cs" />
-    <Compile Include="NetPlay\EODs\Handlers\VMEODGameshowBuzzerPlugin.cs" />
+    <Compile Include="NetPlay\EODs\Handlers\VMEODGameshowBuzzerPlayerPlugin.cs" />
     <Compile Include="NetPlay\EODs\Handlers\VMEODHoldEmCasinoPlugin.cs" />
     <Compile Include="NetPlay\EODs\Handlers\VMEODNCDanceFloorPlugin.cs" />
     <Compile Include="NetPlay\EODs\Handlers\VMEODBlackjackPlugin.cs" />

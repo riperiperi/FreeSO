@@ -369,7 +369,7 @@ namespace FSO.Client.UI.Panels
             {
                 DynamicOverlay.Add(ActiveEOD);
             }
-            
+
             /**
              * Position / style EOD specific UI
              */
@@ -381,7 +381,13 @@ namespace FSO.Client.UI.Panels
 
                 var buttons = new string[] { "None", "One", "Two", "Three" }; // three doesn't work, but at least for now it won't be out of bounds array
                 var buttonLayout = buttons[options.Buttons];
-                Script.ApplyControlProperties(EODButtonLayout, "EODButtonLayout" + buttonLayout + EODLayout.GetHeightSuffix(options.Height, true));
+                if (options.Buttons == 3 && options.Height.Equals(EODHeight.Tall))
+                {
+                    Script.ApplyControlProperties(EODButtonLayout, "EODButtonLayout" + "Two" + EODLayout.GetHeightSuffix(options.Height, true));
+                    EODButtonLayout.Texture = GetTexture(0xCBF00000001); // lpanel_eodlayoutthreetall
+                }
+                else
+                    Script.ApplyControlProperties(EODButtonLayout, "EODButtonLayout" + buttonLayout + EODLayout.GetHeightSuffix(options.Height, true));
                 Script.ApplyControlProperties(EODSub, "EODSub" + options.Length + "Length" + EODLayout.GetHeightSuffix(options.Height, true));
                 if (options.Length == EODLength.None) EODSub.Visible = false;
                 EODButtonLayout.Visible = EODSub.Visible;
