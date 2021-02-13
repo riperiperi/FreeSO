@@ -956,6 +956,9 @@
     <Content Include="Content\UI\uitext\english.dir\_f125_upgradepanel.cst">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </Content>
+    <Content Include="Content\UI\uitext\english.dir\_f127_gameshoweod.cst">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </Content>
     <None Include="packages.config" />
   </ItemGroup>
   <ItemGroup>
