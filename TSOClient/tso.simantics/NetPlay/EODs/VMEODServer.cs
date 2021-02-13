@@ -57,9 +57,10 @@ namespace FSO.SimAntics.NetPlay.EODs
             //freeso specific
             { 0x00001000, typeof(VMEODFNewspaperPlugin) },
             { 0x00001001, typeof(VMEODHoldEmCasinoPlugin) },
-
             { 0x00001003, typeof(VMEODBulletinPlugin) },
-            { 0x00001004, typeof(VMEODCooldownEventPlugin) }
+            { 0x00001004, typeof(VMEODCooldownEventPlugin) },
+            { 0x00001005, typeof(VMEODGameshowBuzzerPlayerPlugin) },
+            { 0x00001006, typeof(VMEODGameshowBuzzerHostPlugin) }
         };
 
         public List<VMEODClient> Clients;

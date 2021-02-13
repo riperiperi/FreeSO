@@ -176,6 +176,19 @@
     <Content Include="Content\Textures\EOD\Band\bandskilllevels.png">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </Content>
+    <Content Include="Content\Textures\EOD\Buzzer\eod_lightsframe1.png" />
+    <Content Include="Content\Textures\EOD\Buzzer\eod_lightsframe1h.png" />
+    <Content Include="Content\Textures\EOD\Buzzer\eod_lightsframe2.png" />
+    <Content Include="Content\Textures\EOD\Buzzer\eod_lightsframe2h.png" />
+    <Content Include="Content\Textures\EOD\Buzzer\eod_lightsframeback.png" />
+    <Content Include="Content\Textures\EOD\Buzzer\eod_lightsframebackh.png" />
+    <Content Include="Content\Textures\EOD\Buzzer\eod_lightsframeblue.png" />
+    <Content Include="Content\Textures\EOD\Buzzer\eod_lightsframeblueh.png" />
+    <Content Include="Content\Textures\EOD\Buzzer\eod_lightsframered.png" />
+    <Content Include="Content\Textures\EOD\Buzzer\eod_lightsframeredh.png" />
+    <Content Include="Content\Textures\EOD\lpanel_eodpanelextratallback.png">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </Content>
     <Content Include="Content\Textures\lot\tile_dashed.png">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </Content>
