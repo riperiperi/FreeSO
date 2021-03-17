@@ -172,7 +172,7 @@ namespace FSO.Client.UI.Panels.LotControls
 
             WallCursor.SetVisualPosition(new Vector3(cursor.X, cursor.Y, (World.State.Level - 1) * 2.95f), Direction.NORTH, vm.Context);
 
-            SetCursorGraphic(3);
+            SetCursorGraphic(2);
         }
 
         public override void Release()
