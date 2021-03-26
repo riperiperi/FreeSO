@@ -151,11 +151,11 @@ namespace FSO.SimAntics.Model
             List<VMEntity> tile = null;
             if(semiGlobal != null)
             {
-                ObjectsBySemiGlobal.TryGetValue(semiGlobal, out tile);
+                ObjectsBySemiGlobal.TryGetValue(semiGlobal.ToLowerInvariant(), out tile);
                 if (tile == null)
                 {
                     tile = new List<VMEntity>();
-                    ObjectsBySemiGlobal.Add(semiGlobal, tile);
+                    ObjectsBySemiGlobal.Add(semiGlobal.ToLowerInvariant(), tile);
                 }
                 //debug check: use if things are going weird
                 //if (!tile.Contains(obj))
@@ -223,7 +223,7 @@ namespace FSO.SimAntics.Model
             {
                 if (obj.SemiGlobal.Iff.Filename != null)    //sanity check
                 {
-                    RemoveSemiGlobal(obj, obj.SemiGlobal.Iff.Filename);
+                    RemoveSemiGlobal(obj, obj.SemiGlobal.Iff.Filename.ToLowerInvariant());
                 }
             }
             
@@ -273,7 +273,7 @@ namespace FSO.SimAntics.Model
         public List<VMEntity> GetObjectsBySemiGlobal(string semiGlobal)
         {
             List<VMEntity> tile = null;
-            ObjectsBySemiGlobal.TryGetValue(semiGlobal, out tile);
+            ObjectsBySemiGlobal.TryGetValue(semiGlobal.ToLowerInvariant(), out tile);
             return tile;
         }
     }
