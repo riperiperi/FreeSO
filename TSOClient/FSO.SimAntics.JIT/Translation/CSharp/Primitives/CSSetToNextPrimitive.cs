@@ -96,9 +96,13 @@ namespace FSO.SimAntics.JIT.Translation.CSharp.Primitives
                         csClass.UseParams = true;
                         codeResult.Add($"var entities = context.VM.Context.ObjectQueries.GetObjectsByCategory(args[0]);");
                         break;
-                    case VMSetToNextSearchType.ObjectOfSemiGlobal:
+                    case VMSetToNextSearchType.FSOObjectOfSemiGlobal:
                         codeResult.Add($"var semiglobal = FSO.Content.Content.Get().WorldObjects.Get(operand.GUID).Resource.SemiGlobal;");
-                        codeResult.Add($"var entities = context.VM.Context.ObjectQueries.GetObjectsBySemiGlobal(semiglobal);");
+                        codeResult.Add($"if(sg != null) {{ ");
+                        codeResult.Add($"string sg_name = sg.Iff.Filename;");
+                        codeResult.Add($"if(obj.SemiGlobal.Iff.Filename != null) entities = context.VM.Context.ObjectQueries.GetObjectsBySemiGlobal(sg_name);");
+                        codeResult.Add($"else entities = null; }}");
+                        codeResult.Add($"else entities = null;");
                         break;
                     default:
                         codeResult.Add($"var entities = context.VM.Entities;");
