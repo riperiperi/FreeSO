@@ -94,7 +94,18 @@ namespace FSO.SimAntics.Primitives
                         entities = context.VM.Context.ObjectQueries.GetObjectsByCategory(context.Args[0]); break;
                     case VMSetToNextSearchType.ObjectOfSemiGlobal:
                         var sg = FSO.Content.Content.Get().WorldObjects.Get(operand.GUID).Resource.SemiGlobal;
-                        entities = context.VM.Context.ObjectQueries.GetObjectsBySemiGlobal(sg); break;
+
+                        if (sg != null)
+                        {
+                            string sg_name = sg.Iff.Filename;
+                            if (sg_name != null)
+                            {
+                                entities = context.VM.Context.ObjectQueries.GetObjectsBySemiGlobal(sg_name);
+                            }
+                            else entities = null;
+                        }
+                        else entities = null;
+                        break;
                     default:
                         break;
                 }
