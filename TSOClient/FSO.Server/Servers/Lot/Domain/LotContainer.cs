@@ -111,6 +111,7 @@ namespace FSO.Server.Servers.Lot.Domain
             0x33AD8F84, //face mask controller
             0x04AB1D1F, //zombie spawner controller
             0x0DF8592E, //mini sims
+            0x48F32C7B, //au game controller
 
             0x5157DDF2, //cat carrier
             0x3278BD34, //dog carrier
@@ -128,6 +129,8 @@ namespace FSO.Server.Servers.Lot.Domain
 
             0x699704D3, //fso vehicle controller
             0x2D583771, //winter weather controller
+
+            0x48F32C7B, //au game controller
         };
 
         private static HashSet<uint> InvalidGUIDs = new HashSet<uint>()
