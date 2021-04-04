@@ -92,6 +92,20 @@ namespace FSO.SimAntics.Primitives
                         entities = context.VM.Context.ObjectQueries.GetObjectsByGUID(operand.GUID); break;
                     case VMSetToNextSearchType.ObjectWithCategoryEqualToSP0:
                         entities = context.VM.Context.ObjectQueries.GetObjectsByCategory(context.Args[0]); break;
+                    case VMSetToNextSearchType.FSOObjectOfSemiGlobal:
+                        var sg = FSO.Content.Content.Get().WorldObjects.Get(operand.GUID).Resource.SemiGlobal;
+
+                        if (sg != null)
+                        {
+                            string sg_name = sg.Iff.Filename; //retrieve semiglobal's iff filename
+                            if (sg_name != null) //sanity check
+                            {
+                                entities = context.VM.Context.ObjectQueries.GetObjectsBySemiGlobal(sg_name.ToLowerInvariant());
+                            }
+                            else entities = null;
+                        }
+                        else entities = null;
+                        break;
                     default:
                         break;
                 }
@@ -279,7 +293,7 @@ namespace FSO.SimAntics.Primitives
         #endregion
     }
 
-
+    //Max value is 127
     public enum VMSetToNextSearchType
     {
         Object = 0,
@@ -295,5 +309,8 @@ namespace FSO.SimAntics.Primitives
         Career = 10,
         ClosestHouse = 11,
         FamilyMember = 12, //TS1.5 or higher
+
+        //FSO
+        FSOObjectOfSemiGlobal = 100,
     }
 }
