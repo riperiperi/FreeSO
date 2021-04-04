@@ -149,7 +149,7 @@ namespace FSO.SimAntics.Model
         public void RegisterSemiGlobal(VMEntity obj, string semiGlobal)
         {
             List<VMEntity> tile = null;
-            if(semiGlobal != null)
+            if (semiGlobal != null)
             {
                 ObjectsBySemiGlobal.TryGetValue(semiGlobal.ToLowerInvariant(), out tile);
                 if (tile == null)
@@ -187,9 +187,9 @@ namespace FSO.SimAntics.Model
             }
             VM.AddToObjList(list, obj);
             RegisterCategory(obj, obj.GetValue(VMStackObjectVariable.Category));
-            if(obj.SemiGlobal != null)
+            if (obj.SemiGlobal != null)
             {
-                if(obj.SemiGlobal.Iff.Filename != null)   //sanity check
+                if (obj.SemiGlobal.Iff.Filename != null) //sanity check
                 {
                     RegisterSemiGlobal(obj, obj.SemiGlobal.Iff.Filename);
                 }
@@ -221,7 +221,7 @@ namespace FSO.SimAntics.Model
             RemoveCategory(obj, obj.GetValue(VMStackObjectVariable.Category));
             if (obj.SemiGlobal != null)
             {
-                if (obj.SemiGlobal.Iff.Filename != null)    //sanity check
+                if (obj.SemiGlobal.Iff.Filename != null) //sanity check
                 {
                     RemoveSemiGlobal(obj, obj.SemiGlobal.Iff.Filename.ToLowerInvariant());
                 }

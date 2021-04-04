@@ -97,7 +97,7 @@ namespace FSO.SimAntics.Primitives
 
                         if (sg != null)
                         {
-                            string sg_name = sg.Iff.Filename;   //retrieve semiglobal's iff filename
+                            string sg_name = sg.Iff.Filename; //retrieve semiglobal's iff filename
                             if (sg_name != null) //sanity check
                             {
                                 entities = context.VM.Context.ObjectQueries.GetObjectsBySemiGlobal(sg_name.ToLowerInvariant());
