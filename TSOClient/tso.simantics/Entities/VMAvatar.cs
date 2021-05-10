@@ -884,7 +884,10 @@ namespace FSO.SimAntics
                     }
                     return true;
                 case VMPersonDataVariable.Priority:
-                    Thread.QueueDirty = true;
+                    if (Thread != null)
+                    {
+                        Thread.QueueDirty = true;
+                    }
                     break;
                 case VMPersonDataVariable.MoneyAmmountOverHead:
                     if (value != -32768) ShowMoneyHeadline(value);

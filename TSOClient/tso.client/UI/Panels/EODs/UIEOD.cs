@@ -1,4 +1,5 @@
-﻿using FSO.Client.UI.Framework;
+﻿using FSO.Client.UI.Controls;
+using FSO.Client.UI.Framework;
 using FSO.Client.UI.Screens;
 using FSO.SimAntics.NetPlay.EODs.Handlers;
 using FSO.SimAntics.NetPlay.Model.Commands;
@@ -74,6 +75,29 @@ namespace FSO.Client.UI.Panels.EODs
                     });
                 }
             }
+        }
+
+        public void SimpleUIAlert(string title, string message)
+        {
+            SimpleUIAlert(title, message, null);
+        }
+
+        public void SimpleUIAlert(string title, string message, Action action)
+        {
+            UIAlert alert = null;
+            alert = UIScreen.GlobalShowAlert(new UIAlertOptions()
+            {
+                TextSize = 12,
+                Title = title,
+                Message = message,
+                Alignment = TextAlignment.Center,
+                TextEntry = false,
+                Buttons = UIAlertButton.Ok((btn) =>
+                {
+                    UIScreen.RemoveDialog(alert);
+                    action?.Invoke();
+                }),
+            }, true);
         }
 
         public void Send(string evt, string data)

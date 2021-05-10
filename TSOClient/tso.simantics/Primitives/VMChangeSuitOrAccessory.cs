@@ -149,6 +149,7 @@ namespace FSO.SimAntics.Primitives
                         case VMPersonSuits.SkeletonMinus:
                         case VMPersonSuits.SkeletonPlus:
                         case VMPersonSuits.TeleporterMishap:
+                        case VMPersonSuits.FSOInvisible:
                             return OutfitType.BODY;
 
                         default:

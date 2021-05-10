@@ -173,7 +173,10 @@ namespace FSO.Files.Formats.IFF.Chunks
         RandomScoring = 8192,
         AllowFailureTrees = 16385,
         AllowDifferentAlts = 32768,
-        UseAverageObjectLocation = 65536
+        UseAverageObjectLocation = 65536,
+
+        FSOEqualProximityScore = 1 << 29,
+        FSOSquare = 1 << 30
     }
 
     public enum SLOTFacing : int

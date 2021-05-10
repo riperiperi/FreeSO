@@ -54,6 +54,7 @@
   </ItemGroup>
 
   <ItemGroup>
+    <ProjectReference Include="..\FSO.Server.Common\FSO.Server.Common.csproj" />
     <ProjectReference Include="..\FSO.Server.Database\FSO.Server.Database.csproj" />
     <ProjectReference Include="..\FSO.Server.Domain\FSO.Server.Domain.csproj" />
     <ProjectReference Include="..\FSO.Server.Protocol\FSO.Server.Protocol.csproj" />

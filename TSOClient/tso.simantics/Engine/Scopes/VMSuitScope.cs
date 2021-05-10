@@ -53,6 +53,8 @@ namespace FSO.SimAntics.Engine.Scopes
         DynamicCostume = 25,
         signnotepad = 26,
 
+        FSOInvisible = 128,
+
         Head = 65535 //internal
     }
 

@@ -27,6 +27,7 @@
   <ItemGroup>
     <ProjectReference Include="..\FSO.Server.Api.Core\FSO.Server.Api.Core.csproj" />
     <ProjectReference Include="..\FSO.Server\FSO.Server.csproj" />
+    <ProjectReference Include="..\tso.content\FSO.Content.csproj" />
   </ItemGroup>
 
 </Project>
