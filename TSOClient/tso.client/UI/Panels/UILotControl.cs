@@ -721,7 +721,7 @@ namespace FSO.Client.UI.Panels
                         case VMTSOAvatarPermissions.Visitor: prefixNum = 3; break;
                         case VMTSOAvatarPermissions.Roommate: prefixSrc = "f114"; prefixNum = 11; break;
                         case VMTSOAvatarPermissions.BuildBuyRoommate: prefixSrc = "f114"; prefixNum = 10; break;
-                        case VMTSOAvatarPermissions.Admin:
+                        case VMTSOAvatarPermissions.Admin: prefixSrc = "f114"; prefixNum = 17; break;
                         case VMTSOAvatarPermissions.Owner: prefixNum = 1; break;
                     }
                 }
@@ -732,7 +732,7 @@ namespace FSO.Client.UI.Panels
                         case VMTSOAvatarPermissions.Visitor: prefixNum = 3; break;
                         case VMTSOAvatarPermissions.Roommate:
                         case VMTSOAvatarPermissions.BuildBuyRoommate: prefixNum = 2; break;
-                        case VMTSOAvatarPermissions.Admin:
+                        case VMTSOAvatarPermissions.Admin: prefixSrc = "f114"; prefixNum = 17; break;
                         case VMTSOAvatarPermissions.Owner: prefixNum = 1; break;
                     }
                 }
