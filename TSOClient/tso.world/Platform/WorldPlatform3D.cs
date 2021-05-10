@@ -172,7 +172,9 @@ namespace FSO.LotView.Platform
                 if (obj.Container != null && intr != null) intr = intr.Value - 1.5f;
                 if (intr != null && intr.Value < bestDistance)
                 {
-                    bestObj = obj.ObjectID;
+                    var hitObj = obj.MultitileGroup?.DetermineComponentAt3D(obj, ray.Position + ray.Direction * intr.Value) ?? obj;
+
+                    bestObj = hitObj.ObjectID;
                     bestDistance = intr.Value;
                 }
             }

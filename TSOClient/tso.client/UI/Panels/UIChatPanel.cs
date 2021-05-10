@@ -23,6 +23,7 @@ using FSO.SimAntics.NetPlay.Model;
 using FSO.Common;
 using FSO.SimAntics.Model.TSOPlatform;
 using FSO.Common.Rendering.Framework.IO;
+using FSO.SimAntics.Model;
 
 namespace FSO.Client.UI.Panels
 {
@@ -161,23 +162,30 @@ namespace FSO.Client.UI.Panels
             message = message.Replace("\n", "");
             if (message != "" && Owner.ActiveEntity != null)
             {
-                if (message[0] == '!')
+                if ((Owner.ActiveEntity.GetValue(VMStackObjectVariable.FlagField2) & (short)VMEntityFlags2.FSODisableChat) != 0)
                 {
-                    Owner.Cheats.SubmitCommand(message);
+                    HistoryDialog.ReceiveEvent(new VMChatEvent(null, VMChatEventType.Generic, "You can't speak right now."));
                 }
                 else
                 {
-                    if (message == "/trace")
+                    if (message[0] == '!')
                     {
-                        vm.UseSchedule = false;
-                        vm.Trace = new SimAntics.Engine.Debug.VMSyncTrace();
+                        Owner.Cheats.SubmitCommand(message);
                     }
-                    vm.SendCommand(new VMNetChatCmd
+                    else
                     {
-                        ActorUID = Owner.ActiveEntity.PersistID,
-                        Message = message,
-                        ChannelID = (byte)ActiveChannel
-                    });
+                        if (message == "/trace")
+                        {
+                            vm.UseSchedule = false;
+                            vm.Trace = new SimAntics.Engine.Debug.VMSyncTrace();
+                        }
+                        vm.SendCommand(new VMNetChatCmd
+                        {
+                            ActorUID = Owner.ActiveEntity.PersistID,
+                            Message = message,
+                            ChannelID = (byte)ActiveChannel
+                        });
+                    }
                 }
             }
         }

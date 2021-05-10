@@ -86,6 +86,8 @@
             this.NameBox = new System.Windows.Forms.TextBox();
             this.MaxSizeEntry = new System.Windows.Forms.NumericUpDown();
             this.MaxSizeLabel = new System.Windows.Forms.Label();
+            this.SquareCheck = new System.Windows.Forms.CheckBox();
+            this.EqualProximityScoreCheck = new System.Windows.Forms.CheckBox();
             ((System.ComponentModel.ISupportInitialize)(this.StandingEntry)).BeginInit();
             ((System.ComponentModel.ISupportInitialize)(this.SittingEntry)).BeginInit();
             ((System.ComponentModel.ISupportInitialize)(this.GroundEntry)).BeginInit();
@@ -500,6 +502,7 @@
             // 
             // groupBox1
             // 
+            this.groupBox1.Controls.Add(this.SquareCheck);
             this.groupBox1.Controls.Add(this.label13);
             this.groupBox1.Controls.Add(this.AltsCheck);
             this.groupBox1.Controls.Add(this.MultitileCheck);
@@ -660,10 +663,31 @@
             this.MaxSizeLabel.TabIndex = 65;
             this.MaxSizeLabel.Text = "Max Size:";
             // 
+            // SquareCheck
+            // 
+            this.SquareCheck.AutoSize = true;
+            this.SquareCheck.Location = new System.Drawing.Point(187, 14);
+            this.SquareCheck.Name = "SquareCheck";
+            this.SquareCheck.Size = new System.Drawing.Size(60, 17);
+            this.SquareCheck.TabIndex = 60;
+            this.SquareCheck.Text = "Square";
+            this.SquareCheck.UseVisualStyleBackColor = true;
+            // 
+            // EqualProximityScoreCheck
+            // 
+            this.EqualProximityScoreCheck.AutoSize = true;
+            this.EqualProximityScoreCheck.Location = new System.Drawing.Point(161, 432);
+            this.EqualProximityScoreCheck.Name = "EqualProximityScoreCheck";
+            this.EqualProximityScoreCheck.Size = new System.Drawing.Size(91, 17);
+            this.EqualProximityScoreCheck.TabIndex = 61;
+            this.EqualProximityScoreCheck.Text = "Basic Scoring";
+            this.EqualProximityScoreCheck.UseVisualStyleBackColor = true;
+            // 
             // SLOTResourceControl
             // 
             this.AutoScaleDimensions = new System.Drawing.SizeF(6F, 13F);
             this.AutoScaleMode = System.Windows.Forms.AutoScaleMode.Font;
+            this.Controls.Add(this.EqualProximityScoreCheck);
             this.Controls.Add(this.MaxSizeLabel);
             this.Controls.Add(this.MaxSizeEntry);
             this.Controls.Add(this.NameBox);
@@ -791,5 +815,7 @@
         private System.Windows.Forms.TextBox NameBox;
         private System.Windows.Forms.NumericUpDown MaxSizeEntry;
         private System.Windows.Forms.Label MaxSizeLabel;
+        private System.Windows.Forms.CheckBox SquareCheck;
+        private System.Windows.Forms.CheckBox EqualProximityScoreCheck;
     }
 }

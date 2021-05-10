@@ -114,6 +114,8 @@ namespace FSO.SimAntics.NetPlay.Model.Commands
             {
                 CreatedGroup = state.CreateInstance(vm, false);
                 CreatedGroup.ChangePosition(new LotTilePos(x, y, level), dir, vm.Context, VMPlaceRequestFlags.UserPlacement);
+
+                CreatedGroup.ExecuteEntryPoint(11, vm.Context); //User Placement
                 if (CreatedGroup.Objects.Count == 0) return false;
                 if (CreatedGroup.BaseObject.Position == LotTilePos.OUT_OF_WORLD && !internalMode)
                 {

@@ -1788,7 +1788,7 @@ namespace FSO.SimAntics
         GeneratesLight = 1 << 10,
         CanGetDirty = 1 << 11,
         ContributesToAsthetic = 1 << 12,
-        unused14 = 1 << 13,
+        FSODisableChat = 1 << 13,
         ArchitectualWindow = 1 << 14,
         ArchitectualDoor = 1 << 15
     }

@@ -109,6 +109,8 @@ namespace FSO.IDE.ResourceBrowser.ResourceEditors
                 { SnapDirCheck, new PropFlagCombo("Rsflags", 12) },
                 { FailureCheck, new PropFlagCombo("Rsflags", 14) },
                 { AltsCheck, new PropFlagCombo("Rsflags", 15) },
+                { EqualProximityScoreCheck, new PropFlagCombo("Rsflags", 29) },
+                { SquareCheck, new PropFlagCombo("Rsflags", 30) },
 
                 { Nc, new PropFlagCombo("Rsflags", 0) },
                 { NEc, new PropFlagCombo("Rsflags", 1) },
@@ -289,8 +291,8 @@ namespace FSO.IDE.ResourceBrowser.ResourceEditors
 
             Content.Content.Get().Changes.QueueResMod(new ResAction(() =>
             {
-                ushort value = GetPropertyByName<ushort>(ActiveItem, target.Property);
-                ushort flag = (ushort)(~(1 << target.Flag));
+                int value = GetPropertyByName<int>(ActiveItem, target.Property);
+                int flag = (~(1 << target.Flag));
 
                 SetPropertyByName(ActiveItem, target.Property, (value & flag) | (check ? (1 << target.Flag) : 0));
             }, ActiveSLOT));

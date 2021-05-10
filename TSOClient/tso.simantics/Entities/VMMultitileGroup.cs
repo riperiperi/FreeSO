@@ -14,6 +14,7 @@ using FSO.LotView.Components;
 using FSO.SimAntics.Model;
 using FSO.SimAntics.Marshals;
 using FSO.SimAntics.Model.TSOPlatform;
+using FSO.LotView.Components.Model;
 
 namespace FSO.SimAntics.Entities
 {
@@ -39,6 +40,7 @@ namespace FSO.SimAntics.Entities
         public int BeforeDCPrice;
         public List<VMEntity> Objects = new List<VMEntity>();
         public List<LotTilePos> Offsets = new List<LotTilePos>();
+        public MultitileObjectGroup WorldGroup = VM.UseWorld ? new MultitileObjectGroup() : null;
 
         public uint GUID
         {
@@ -88,6 +90,14 @@ namespace FSO.SimAntics.Entities
         {
             Objects.Add(obj);
             Offsets.Add(offset);
+
+            if (VM.UseWorld && obj is VMGameObject)
+            {
+                var component = (ObjectComponent)obj.WorldUI;
+
+                WorldGroup.Objects.Add(component);
+                component.MultitileGroup = WorldGroup;
+            }
         }
 
         public void RemoveObject(VMEntity obj)
@@ -97,6 +107,14 @@ namespace FSO.SimAntics.Entities
             {
                 Objects.RemoveAt(index);
                 Offsets.RemoveAt(index);
+
+                if (VM.UseWorld && obj is VMGameObject)
+                {
+                    var component = (ObjectComponent)obj.WorldUI;
+
+                    WorldGroup.Objects.Remove(component);
+                    component.MultitileGroup = null;
+                }
             }
         }
 
@@ -106,7 +124,7 @@ namespace FSO.SimAntics.Entities
             for (int i = 0; i < Objects.Count(); i++)
             {
                 ushort sub = (ushort)Objects[i].Object.OBJ.SubIndex;
-                positions[i] = new Vector3(Offsets[i].x/16, Offsets[i].y/16, 0);
+                positions[i] = new Vector3(Offsets[i].x/16, Offsets[i].y/16, Offsets[i].Level * 2.95f);
             }
             return positions;
         }
@@ -427,6 +445,15 @@ namespace FSO.SimAntics.Entities
                 if (obj == null) continue;
                 Objects.Add(obj);
                 Offsets.Add(input.Offsets[i]);
+
+                if (VM.UseWorld && obj is VMGameObject)
+                {
+                    var component = (ObjectComponent)obj.WorldUI;
+
+                    WorldGroup.Objects.Add(component);
+                    component.MultitileGroup = WorldGroup;
+                }
+
                 obj.MultitileGroup = this;
             }
 
@@ -450,6 +477,15 @@ namespace FSO.SimAntics.Entities
                 if (obj == null) continue;
                 Objects.Add(obj);
                 Offsets.Add(input.Offsets[i]);
+
+                if (VM.UseWorld && obj is VMGameObject)
+                {
+                    var component = (ObjectComponent)obj.WorldUI;
+
+                    WorldGroup.Objects.Add(component);
+                    component.MultitileGroup = WorldGroup;
+                }
+
                 obj.MultitileGroup = this;
             }
         }
