@@ -88,8 +88,9 @@ namespace FSO.Client.UI.Panels
             Message = avatar.Message;
             Gender = avatar.GetPersonData(SimAntics.Model.VMPersonDataVariable.Gender) > 0;
             TTSContext?.Speak(Message.Replace('_', ' '), Gender, ((VMTSOAvatarState)avatar.TSOState).ChatTTSPitch);
-
-            if (((VMTSOAvatarState)avatar.TSOState).Permissions == VMTSOAvatarPermissions.Admin)            
+            if (avatar.PersistID == 0)
+                BgColor = new Color(100, 100, 100); // NPC chat color  
+            else if (((VMTSOAvatarState)avatar.TSOState).Permissions == VMTSOAvatarPermissions.Admin)   
                 BgColor = new Color(180,0,0); // admin red color            
             else if(((VMTSOAvatarState)avatar.TSOState).Permissions == VMTSOAvatarPermissions.Visitor)
                 BgColor = new Color(30, 128, 30); // visitor green color
