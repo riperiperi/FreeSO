@@ -91,6 +91,8 @@ namespace FSO.Client.UI.Panels
 
             if (((VMTSOAvatarState)avatar.TSOState).Permissions == VMTSOAvatarPermissions.Admin)            
                 BgColor = new Color(180,0,0); // admin red color            
+            else if(((VMTSOAvatarState)avatar.TSOState).Permissions == VMTSOAvatarPermissions.Visitor)
+                BgColor = new Color(8, 100, 8); // visitor green color
             else
                 BgColor = new Color(8, 8, 128); // default blue color            
             Offscreen = false;
