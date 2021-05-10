@@ -94,7 +94,7 @@ namespace FSO.Client.UI.Controls
                 case VMTSOAvatarPermissions.Visitor: bgID = 0x25400000001; break; //personbuttontemplate_visitorlarge
                 case VMTSOAvatarPermissions.Roommate:
                 case VMTSOAvatarPermissions.BuildBuyRoommate: bgID = 0x25200000001; overlayID = 0xB7F00000001; break; //personbuttontemplate_roommatelarge, personbuttonoverlay_roommatelarge
-                case VMTSOAvatarPermissions.Admin: bgID = 0x25000000001; overlayID = 0x8B000000001; break;
+                case VMTSOAvatarPermissions.Admin: bgID = 0x25000000001; overlayID = 0x8B000000001; break; // personbuttontemplate_playerlarge
                 case VMTSOAvatarPermissions.Owner: bgID = 0x25200000001; overlayID = 0x7A000000001; break; //..., personbuttonoverlay_houseleaderlarge
             }
 
