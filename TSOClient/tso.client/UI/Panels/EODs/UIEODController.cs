@@ -40,7 +40,9 @@ namespace FSO.Client.UI.Panels.EODs
             { 0x00001000, typeof(UINewspaperEOD) },
             { 0x00001001, typeof(UIHoldEmCasinoEOD) },
             { 0x00001003, typeof(UIBulletinEOD) },
-            { 0x00001004, typeof(UICooldownEventEOD) }
+            { 0x00001004, typeof(UICooldownEventEOD) },
+            { 0x00001005, typeof(UIGameshowBuzzerPlayerEOD) },
+            { 0x00001006, typeof(UIGameshowBuzzerHostEOD) }
         };
 
         //this class is a container so that it can hold EODs without them being active in Live Mode.

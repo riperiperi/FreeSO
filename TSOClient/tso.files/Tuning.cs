@@ -14,11 +14,11 @@ using System.Globalization;
 
 namespace FSO.Files
 {
-	public struct TuningEntry
-	{
-		public string EntryName;
-		public uint KeyValueCount;
-		public Dictionary<string, string> KeyValues;
+    public struct TuningEntry
+    {
+        public string EntryName;
+        public uint KeyValueCount;
+        public Dictionary<string, string> KeyValues;
 
         public override string ToString()
         {
@@ -30,6 +30,13 @@ namespace FSO.Files
             CultureInfo floatParse = CultureInfo.InvariantCulture;
             return float.Parse(KeyValues[key], floatParse);
         }
+
+		public static TuningEntry DEFAULT = new TuningEntry
+		{
+			EntryName = "",
+			KeyValueCount = 0,
+			KeyValues = new Dictionary<string, string>()
+		};
     }
 
     //NOTE: important tuning variables:

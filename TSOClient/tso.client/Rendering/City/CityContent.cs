@@ -93,7 +93,7 @@ namespace FSO.Client.Rendering.City
             var terrainpath = "Content/Textures/terrain/";
 
             //grass, sand, rock, snow, water
-            if (true)//forceSnow == 2)
+            if (forceSnow == 2)
             {
                 TerrainTextures[0] = RTToMip(LoadTex(terrainpath + "autumn.png"), gd);
             } 

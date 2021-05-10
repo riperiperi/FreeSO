@@ -664,7 +664,10 @@ namespace FSO.Client.UI.Panels.EODs
                     try
                     {
                         numbersList = VectorToNumbersList(GetMousePosition(update.MouseState));
-                        allegedStackLocation = NumbersListToActualVector(numbersList);
+                        if (numbersList != null)
+                            allegedStackLocation = NumbersListToActualVector(numbersList);
+                        else
+                            return;
                     }
                     catch (Exception e)
                     {
@@ -692,7 +695,7 @@ namespace FSO.Client.UI.Panels.EODs
                                 }
                                 // send the bet to the server to be removed
                                 string typeString = "";
-                                if (VMEODRoulettePlugin.RouletteBetTypes.TryGetValue(stack.BetType, out typeString) && numbersList.Length > 0)
+                                if (VMEODRoulettePlugin.RouletteBetTypes.TryGetValue(stack.BetType, out typeString) && numbersList?.Length > 0)
                                 {
                                     string numbersString = "";
                                     foreach (var number in numbersList)

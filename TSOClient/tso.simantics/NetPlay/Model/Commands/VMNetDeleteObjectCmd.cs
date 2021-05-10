@@ -34,6 +34,8 @@ namespace FSO.SimAntics.NetPlay.Model.Commands
                 VMEntity obj = vm.GetObjectById(ObjectID);
                 if (obj == null || (!vm.TS1 && caller == null)) return false;
                 var value = (obj.PersistID != 0 || vm.TS1) ? obj.MultitileGroup.Price : 0;
+
+                obj.ExecuteEntryPoint(12, vm.Context, true);
                 obj.Delete(CleanupAll, vm.Context);
 
                 // If we're the server, tell the global link to give their money back.

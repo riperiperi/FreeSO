@@ -158,7 +158,19 @@ namespace FSO.SimAntics.Engine
                         var routeEntryFlags = (GetSearchDirection(circleCtr, pos, dir) & Flags); //the route needs to know what conditions it fulfilled
                         if (routeEntryFlags > 0) //within search location
                         {
-                            double baseScore = ((maxScore - Math.Abs(DesiredProximity - distance)) + context.VM.Context.NextRandom(1024) / 1024.0f);
+                            double baseScore;
+                            if ((Flags & SLOTFlags.FSOEqualProximityScore) != 0)
+                            {
+                                baseScore = maxScore;
+                            }
+                            else
+                            {
+                                baseScore = context.VM.Context.NextRandom(1024) / 1024.0f;
+                                if ((Flags & (SLOTFlags.RandomScoring)) == 0)
+                                {
+                                    baseScore += maxScore - Math.Abs(DesiredProximity - distance);
+                                }
+                            }
                             VerifyAndAddLocation(obj, pos, center, routeEntryFlags, baseScore, context, caller, float.NaN, level);
                         }
                     }
@@ -188,12 +200,13 @@ namespace FSO.SimAntics.Engine
             {
                 //range. use the resolution settings.
                 var resolutionBound = (MaxProximity / Slot.Resolution) * Slot.Resolution;
+                bool square = (Slot.Rsflags & SLOTFlags.FSOSquare) != 0;
 
                 for (int x = -resolutionBound; x <= resolutionBound; x += Slot.Resolution)
                 {
                     for (int y = -resolutionBound; y <= resolutionBound; y += Slot.Resolution)
                     {
-                        double distance = Math.Sqrt(x * x + y * y);
+                        double distance = square ? Math.Max(Math.Abs(x), Math.Abs(y)) : Math.Sqrt(x * x + y * y);
                         outputFunc(x, y, distance);
                     }
                 }
@@ -207,7 +220,10 @@ namespace FSO.SimAntics.Engine
 
             if (context.IsOutOfBounds(tpos)) return;
 
-            score -= LotTilePos.Distance(tpos, caller.Position)/3.0;
+            if ((Flags & SLOTFlags.RandomScoring) == 0)
+            {
+                score -= LotTilePos.Distance(tpos, caller.Position) / 3.0;
+            }
 
             if (Slot.SnapTargetSlot < 0 && context.Architecture.RaycastWall(new Point((int)pos.X, (int)pos.Y), new Point(obj.Position.TileX, obj.Position.TileY), level))
             {

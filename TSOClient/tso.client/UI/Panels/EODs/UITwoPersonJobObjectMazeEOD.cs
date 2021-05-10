@@ -232,7 +232,7 @@ namespace FSO.Client.UI.Panels.EODs
             VWall = Script.Create<UIImage>("VWall");
             HWall = Script.Create<UIImage>("HWall");
             
-            var gd = UIWaitBackground.Texture.GraphicsDevice;
+            var gd = GameFacade.GraphicsDevice;
             // try to get textures for Slot Machine #4 Slot stops
             try
             {
