@@ -31,7 +31,7 @@ namespace FSO.Client.UI.Panels
             /** Background image **/
             Texture2D setupTex;
             string[] splashes;
-            if (Directory.Exists("Content/SplashScreens") && (splashes = Directory.GetFiles("Content/SplashScreens")).Length > 0)
+            if (Directory.Exists("Content/SplashScreens") && (splashes = Directory.GetFiles("Content/SplashScreens", "*.png")).Length > 0)
             {
                 Random rng = new Random();
                 using (var logostrm = File.Open(splashes[rng.Next(splashes.Length)], FileMode.Open, FileAccess.Read, FileShare.Read))
