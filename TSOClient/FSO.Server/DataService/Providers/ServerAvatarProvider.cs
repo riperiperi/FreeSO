@@ -334,7 +334,7 @@ namespace FSO.Server.DataService.Providers
             };
             result.Avatar_PrivacyMode = dbAvatar.privacy_mode;
             result.Avatar_SkillsLockPoints = (ushort)(20 + result.Avatar_Age/7);
-            result.Avatar_ModerationStatus = dbAvatar.moderation_level;
+            result.Avatar_ModerationLevel = dbAvatar.moderation_level;
             result.Avatar_MayorNhood = (uint)(dbAvatar.mayor_nhood ?? 0);
 
             result.JobLevelProvider = JobLevelProvider;

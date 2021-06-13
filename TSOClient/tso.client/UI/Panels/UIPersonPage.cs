@@ -25,6 +25,8 @@ namespace FSO.Client.UI.Panels
         public UIImage BackgroundExpandedImage { get; set; }
         public UIImage BackgroundNameImage { get; set; }
         public UISim SimBox { get; set; }
+        public UIButton ProfileBadge { get; private set; } // FounderButton   
+        private Texture2D FounderButtonTexture;
 
         /** Auto wired **/
         public UIButton ExpandButton { get; set; }
@@ -276,6 +278,9 @@ namespace FSO.Client.UI.Panels
             Add(OptionsBackgroundImage);
 
             var ui = this.RenderScript("personpage.uis");
+            ProfileBadge = this.Children.Find(x => x.ID == "FounderButton") as UIButton;
+            FounderButtonTexture = ProfileBadge.Texture; // grab the original texture in case the badge has to be reset while a profile page is open
+
 
             MechanicalSkillBar = ui.Create<UISkillBar>("MechanicalSkillBarArea");
             CookingSkillBar = ui.Create<UISkillBar>("CookingSkillBarArea");
@@ -464,7 +469,7 @@ namespace FSO.Client.UI.Panels
                 .WithMultiBinding(x =>
                 {
                     Redraw();
-                }, "Avatar_Name", "Avatar_IsOnline", "Avatar_Description", "Avatar_PrivacyMode");
+                }, "Avatar_Name", "Avatar_IsOnline", "Avatar_Description", "Avatar_PrivacyMode", "Avatar_ModerationLevel");
 
             MyAvatar = new Binding<Avatar>()
                 .WithMultiBinding(x =>
@@ -930,6 +935,21 @@ namespace FSO.Client.UI.Panels
                 isOnline = CurrentAvatar.Value.Avatar_IsOnline;
                 isMe = FindController<CoreGameScreenController>().IsMe(CurrentAvatar.Value.Avatar_Id);
                 hasProperty = CurrentAvatar.Value.Avatar_LotGridXY != 0;
+
+                if (CurrentAvatar.Value.Avatar_ModerationLevel != 0)
+                {
+                    ProfileBadge.Texture = Content.Content.Get().CustomUI.Get("momi_badge.png").Get(GameFacade.GraphicsDevice);
+                    ProfileBadge.ScaleX = 1f;
+                    ProfileBadge.ScaleY = 1f;
+                    ProfileBadge.Tooltip = "Staff";
+                }
+                else
+                {
+                    ProfileBadge.Texture = FounderButtonTexture;
+                    ProfileBadge.Tooltip = "Founder";
+                    ProfileBadge.ScaleX = 1f;
+                    ProfileBadge.ScaleY = 1f;
+                }
 
                 if (OriginalDescription != CurrentAvatar.Value.Avatar_Description)
                 {
