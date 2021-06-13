@@ -208,11 +208,11 @@ namespace FSO.Common.DataService.Model
 
         #region FSO Data Service
 
-        private uint _Avatar_ModerationStatus;
-        public uint Avatar_ModerationStatus
+        private uint _Avatar_ModerationLevel;
+        public uint Avatar_ModerationLevel
         {
-            get { return _Avatar_ModerationStatus; }
-            set { _Avatar_ModerationStatus = value; NotifyPropertyChanged("Avatar_ModerationStatus"); }
+            get { return _Avatar_ModerationLevel; }
+            set { _Avatar_ModerationLevel = value; NotifyPropertyChanged("Avatar_ModerationLevel"); }
         }
 
         private uint _Avatar_MayorNhood;
