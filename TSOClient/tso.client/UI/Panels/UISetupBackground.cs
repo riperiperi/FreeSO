@@ -30,8 +30,36 @@ namespace FSO.Client.UI.Panels
 
             /** Background image **/
             Texture2D setupTex;
-            string[] splashes;
-            if (Directory.Exists("Content/SplashScreens") && (splashes = Directory.GetFiles("Content/SplashScreens", "*.png")).Length > 0)
+
+            string[] splashes = null;
+
+            try
+            {
+                splashes = File.ReadAllLines("Content/SplashScreens/list.txt");
+
+                // Validate that the listed splash screens exist.
+                for (int i = 0; i < splashes.Length; i++)
+                {
+                    string path = Path.Combine("Content/SplashScreens/", splashes[i]);
+
+                    if (File.Exists(path))
+                    {
+                        splashes[i] = path;
+                    }
+                    else
+                    {
+                        // The list is not valid.
+                        splashes = null;
+                        break;
+                    }
+                }
+            }
+            catch (FileNotFoundException)
+            {
+                // Just attempt to load the regular setup.png.
+            }
+            
+            if (splashes != null && splashes.Length > 0)
             {
                 Random rng = new Random();
                 using (var logostrm = File.Open(splashes[rng.Next(splashes.Length)], FileMode.Open, FileAccess.Read, FileShare.Read))
@@ -42,6 +70,7 @@ namespace FSO.Client.UI.Panels
                 using (var logostrm = File.Open("Content/setup.png", FileMode.Open, FileAccess.Read, FileShare.Read))
                     setupTex = ImageLoader.FromStream(GameFacade.GraphicsDevice, logostrm);
             }
+
             else setupTex = GetTexture((ulong)FileIDs.UIFileIDs.setup);
             Background = new UIImage(setupTex);
             var bgScale = 600f / setupTex.Height;

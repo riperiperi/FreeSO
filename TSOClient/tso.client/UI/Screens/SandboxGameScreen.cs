@@ -202,15 +202,7 @@ namespace FSO.Client.UI.Screens
 
         public void Initialize(string propertyName, bool external)
         {
-            DynamicTuning.Global = new DynamicTuning(new DynTuningEntry[] {
-                new DynTuningEntry()
-                {
-                   tuning_type = "city",
-                   tuning_index = 0,
-                   tuning_table = 0,
-                   value = 2
-                }
-            });
+            DynamicTuning.Global = new DynamicTuning(new DynTuningEntry[0]);
             Title.SetTitle(propertyName);
             GameFacade.CurrentCityName = propertyName;
             ZoomLevel = 1; //screen always starts at near zoom
