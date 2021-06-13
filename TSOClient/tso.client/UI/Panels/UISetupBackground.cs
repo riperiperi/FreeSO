@@ -30,7 +30,14 @@ namespace FSO.Client.UI.Panels
 
             /** Background image **/
             Texture2D setupTex;
-            if (File.Exists("Content/setup.png"))
+            string[] splashes;
+            if (Directory.Exists("Content/SplashScreens") && (splashes = Directory.GetFiles("Content/SplashScreens", "*.png")).Length > 0)
+            {
+                Random rng = new Random();
+                using (var logostrm = File.Open(splashes[rng.Next(splashes.Length)], FileMode.Open, FileAccess.Read, FileShare.Read))
+                    setupTex = ImageLoader.FromStream(GameFacade.GraphicsDevice, logostrm);
+            }
+            else if (File.Exists("Content/setup.png")) //Compatible with the previous version
             {
                 using (var logostrm = File.Open("Content/setup.png", FileMode.Open, FileAccess.Read, FileShare.Read))
                     setupTex = ImageLoader.FromStream(GameFacade.GraphicsDevice, logostrm);
