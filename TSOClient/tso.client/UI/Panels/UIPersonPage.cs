@@ -34,6 +34,8 @@ namespace FSO.Client.UI.Panels
 
         public UIButton FriendshipWebButton { get; set; }
         public UILabel NameText { get; set; }
+        public UIButton ProfileBadge { get; private set; } // FounderButton   
+        private Texture2D FounderButtonTexture;
 
         /** Tabs **/
         public UIButton DescriptionTabButton { get; set; }
@@ -276,6 +278,8 @@ namespace FSO.Client.UI.Panels
             Add(OptionsBackgroundImage);
 
             var ui = this.RenderScript("personpage.uis");
+            ProfileBadge = this.Children.Find(x => x.ID == "FounderButton") as UIButton;
+            FounderButtonTexture = ProfileBadge.Texture; // grab the original texture in case the badge has to be reset while a profile page is open
 
             MechanicalSkillBar = ui.Create<UISkillBar>("MechanicalSkillBarArea");
             CookingSkillBar = ui.Create<UISkillBar>("CookingSkillBarArea");
@@ -464,7 +468,7 @@ namespace FSO.Client.UI.Panels
                 .WithMultiBinding(x =>
                 {
                     Redraw();
-                }, "Avatar_Name", "Avatar_IsOnline", "Avatar_Description", "Avatar_PrivacyMode");
+                }, "Avatar_Name", "Avatar_IsOnline", "Avatar_Description", "Avatar_PrivacyMode", "Avatar_IsMentor", "Avatar_ModerationStatus");
 
             MyAvatar = new Binding<Avatar>()
                 .WithMultiBinding(x =>
@@ -930,6 +934,31 @@ namespace FSO.Client.UI.Panels
                 isOnline = CurrentAvatar.Value.Avatar_IsOnline;
                 isMe = FindController<CoreGameScreenController>().IsMe(CurrentAvatar.Value.Avatar_Id);
                 hasProperty = CurrentAvatar.Value.Avatar_LotGridXY != 0;
+
+                if (ProfileBadge.Texture != FounderButtonTexture)
+                    ProfileBadge.Texture.Dispose();
+
+                if (CurrentAvatar.Value.Avatar_IsMentor)
+                {
+                    ProfileBadge.Tooltip = "Mentor";
+                    ProfileBadge.Texture = Content.Content.Get().CustomUI.Get("mentor_badge.png").Get(GameFacade.GraphicsDevice);
+                    ProfileBadge.ScaleX = .23f;
+                    ProfileBadge.ScaleY = .23f;
+                }
+                else if (CurrentAvatar.Value.Avatar_ModerationStatus != 0)
+                {
+                    ProfileBadge.Texture = Content.Content.Get().CustomUI.Get("momi_badge.png").Get(GameFacade.GraphicsDevice);
+                    ProfileBadge.ScaleX = .23f;
+                    ProfileBadge.ScaleY = .23f;
+                    ProfileBadge.Tooltip = "M.O.M.I.";
+                }
+                else
+                {
+                    ProfileBadge.Texture = FounderButtonTexture;
+                    ProfileBadge.Tooltip = "Founder";
+                    ProfileBadge.ScaleX = 1f;
+                    ProfileBadge.ScaleY = 1f;
+                }
 
                 if (OriginalDescription != CurrentAvatar.Value.Avatar_Description)
                 {

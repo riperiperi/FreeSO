@@ -24,6 +24,13 @@ namespace FSO.Common.DataService.Model
             set { _Avatar_IsFounder = value; NotifyPropertyChanged("Avatar_IsFounder"); }
         }
 
+        private bool _Avatar_IsMentor;
+        public bool Avatar_IsMentor
+        {
+            get { return _Avatar_IsMentor; }
+            set { _Avatar_IsMentor = value; NotifyPropertyChanged("Avatar_IsMentor"); }
+        }
+
         private string _Avatar_Name;
         public string Avatar_Name
         {

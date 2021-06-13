@@ -333,6 +333,7 @@ namespace FSO.Server.DataService.Providers
                 AvatarSkills_LockLv_Mechanical = dbAvatar.lock_mechanical
             };
             result.Avatar_PrivacyMode = dbAvatar.privacy_mode;
+            result.Avatar_IsMentor = DAFactory.Get().Users.GetMentorStatus(dbAvatar.user_id);
             result.Avatar_SkillsLockPoints = (ushort)(20 + result.Avatar_Age/7);
             result.Avatar_ModerationStatus = dbAvatar.moderation_level;
             result.Avatar_MayorNhood = (uint)(dbAvatar.mayor_nhood ?? 0);

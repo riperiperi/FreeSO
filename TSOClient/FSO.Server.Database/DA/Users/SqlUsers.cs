@@ -54,6 +54,26 @@ namespace FSO.Server.Database.DA.Users
             Context.Connection.Execute("UPDATE fso_users SET is_banned = @ban WHERE user_id = @user_id", new { user_id = id, ban = banned });
         }
 
+        public void SetMentorStatus(uint id, bool mentorStatus)
+        {
+            Context.Connection.Execute("IF (SELECT COUNT(*) FROM fso_mentors WHERE user_id = @user_id) > 0 THEN " +
+                    "UPDATE fso_mentors SET mentor_status = @status WHERE user_id = @user_id; " +
+                    "ELSE INSERT INTO fso_mentors SET user_id = @user_id, mentor_status = @status; " + 
+                    "END IF; ", new { user_id = id, status = mentorStatus });
+        }
+
+        public bool GetMentorStatus(uint id)
+        {
+            try
+            {
+                var value = Context.Connection.Query<uint>("SELECT mentor_status FROM fso_mentors WHERE user_id = @user_id", new { user_id = id });
+                return value.FirstOrDefault() == 1;
+            } catch (Exception e)
+            {
+                return false;
+            }
+        }
+
         public void UpdateLastLogin(uint id, uint last_login)
         {
             Context.Connection.Execute("UPDATE fso_users SET last_login = @last_login WHERE user_id = @user_id", new { user_id = id, last_login = last_login });

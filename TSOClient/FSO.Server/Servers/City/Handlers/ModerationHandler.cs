@@ -56,7 +56,8 @@ namespace FSO.Server.Servers.City.Handlers
                                     {
                                         da.Bans.Add(theiruser.last_ip, theiruser.user_id, "Banned from ingame", 0, theiruser.client_id);
                                     }
-                                } else
+                                }
+                                else
                                 {
                                     return;
                                 }
@@ -65,6 +66,22 @@ namespace FSO.Server.Servers.City.Handlers
 
                         Sessions.GetByAvatarId(targetAvatar)?.Close();
 
+                        break;
+                    case ModerationRequestType.CHANGE_MENTOR_STATUS:
+                        {
+                            var tAvatar = packet.EntityId;
+                            var ava = da.Avatars.Get(packet.EntityId);
+                            if (ava != null)
+                            {
+                                var theiruser = da.Users.GetById(ava.user_id);
+
+                                if (theiruser != null) // should admins also be able to be mentors? right now there's no rule against it
+                                {
+                                    var newvalue = !da.Users.GetMentorStatus(ava.user_id);
+                                    da.Users.SetMentorStatus(theiruser.user_id, newvalue); // toggle the setting held for the current avatar
+                                }
+                            }
+                        }
                         break;
                 }
             }
