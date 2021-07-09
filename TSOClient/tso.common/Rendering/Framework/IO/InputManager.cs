@@ -283,7 +283,8 @@ namespace FSO.Common.Rendering.Framework.IO
                         cursorIndex = m_SBuilder.Length;
                         result.SelectionChanged = true;
                     }
-                    else {
+                    else 
+                    {
                         result.UnhandledKeys.Add(key);
                         processChar = true;
                     }
