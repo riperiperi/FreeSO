@@ -113,6 +113,8 @@ namespace FSO.Client.UI.Controls
                 AcceptButton.Selected = false;
                 DeclineButton.Selected = true;
                 AcceptButton.Opacity = 0.5f;
+                ParentEntry.Flashing = false;
+                Opacity = 1f;
             }
             else if (result == 2)
             {
@@ -121,6 +123,8 @@ namespace FSO.Client.UI.Controls
                 AcceptButton.Selected = true;
                 DeclineButton.Selected = false;
                 DeclineButton.Opacity = 0.5f;
+                ParentEntry.Flashing = false;
+                Opacity = 1f;
             }
             else
             {

@@ -96,9 +96,11 @@ namespace FSO.Client.UI.Panels
 
                         if (itemui.InteractionResult != elem.InteractionResult)
                         {
+                            itemui.Flashing = true;
                             itemui.InteractionResult = elem.InteractionResult;
                             itemui.UpdateInteractionResult();
                         }
+
                         break;
                     }
                     if ((elem.Mode != VMQueueMode.Idle && (j == 0 || elem.Mode != VMQueueMode.ParentExit) && (!skipParentIdle || elem.Mode != VMQueueMode.ParentIdle)) || DebugMode) position++;
@@ -232,6 +234,14 @@ namespace FSO.Client.UI.Panels
         public Vector2 SourcePos;
         public double MotionPerFrame = 1.0 / 25.0; //default to finishing in 25 frames
 
+        public bool Flashing;
+        public double FlashingProgress = 1;
+        public bool _FlashingForward = false;
+        public double _FlashPerFrame = 1.0 / 30;
+
+        private static double UpdateRate = 60.0 / FSOEnvironment.RefreshRate;
+
+
         public void TweenToPosition(int pos) {
             QueuePosition = pos;
             SourcePos = GetTweenPosition();
@@ -247,8 +257,28 @@ namespace FSO.Client.UI.Panels
         public void Update()
         {
             if (TweenProgress < 1) {
-                TweenProgress = Math.Min(TweenProgress + MotionPerFrame * (60.0/FSOEnvironment.RefreshRate), 1);
+                TweenProgress = Math.Min(TweenProgress + MotionPerFrame * UpdateRate, 1);
                 UI.Position = GetTweenPosition();
+            }
+            if (Flashing)
+            {
+                if (_FlashingForward)
+                {
+                    FlashingProgress = Math.Min(FlashingProgress + _FlashPerFrame * UpdateRate, 1);
+                    if (FlashingProgress == 1)
+                    {
+                        _FlashingForward = false;
+                    }
+                }
+                else
+                {
+                    FlashingProgress = Math.Max(0.5, FlashingProgress - _FlashPerFrame * UpdateRate);
+                    if (FlashingProgress == 0.5)
+                    {
+                        _FlashingForward = true;
+                    }
+                }
+                UI.Opacity = (float)FlashingProgress;
             }
         }
 
