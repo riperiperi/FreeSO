@@ -97,6 +97,7 @@ namespace FSO.Client.UI.Panels
                         if (itemui.InteractionResult != elem.InteractionResult)
                         {
                             itemui.Flashing = true;
+
                             itemui.InteractionResult = elem.InteractionResult;
                             itemui.UpdateInteractionResult();
                         }
@@ -137,6 +138,7 @@ namespace FSO.Client.UI.Panels
                     }
                     if (!found) //new interaction!!!
                     {
+                        var isIconOwnerAvatar = elem.IconOwner.GetType() == typeof(VMAvatar);
                         var itemui = new UIIQTrackEntry() {
                             Interaction = elem,
                             IconOwner = elem.IconOwner,
@@ -150,6 +152,8 @@ namespace FSO.Client.UI.Panels
                         itemui.UI.ParentEntry = itemui;
                         itemui.Name = elem.Name;
                         itemui.UI.Tooltip = itemui.Name;
+                        if (isIconOwnerAvatar)
+                            itemui.UI.Tooltip += "\n" + itemui.IconOwner.Name;
                         itemui.TweenToPosition(position);
                         itemui.UpdateInteractionIcon();
                         itemui.Update();
