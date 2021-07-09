@@ -198,6 +198,20 @@ namespace FSO.Common.Rendering.Framework.IO
                     {
                         result.TabPressed = true;
                     }
+                    else if (result.ShiftDown)
+                    {
+                        switch (key)
+                        {
+                            case Keys.Home:
+                                cursorEndIndex = 0;
+                                result.SelectionChanged = true;
+                                break;
+                            case Keys.End:
+                                cursorEndIndex = m_SBuilder.Length;
+                                result.SelectionChanged = true;
+                                break;
+                        }
+                    }
                     else if (result.CtrlDown)
                     {
                         switch (key)
