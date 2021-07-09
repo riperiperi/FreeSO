@@ -271,12 +271,23 @@ namespace FSO.Common.Rendering.Framework.IO
                                     didChange = true;
                                 }
                                 break;
-                            }
-                        } else {
-                            result.UnhandledKeys.Add(key);
-                            processChar = true;
                         }
+                    } 
+                    else if (key == Keys.Home)
+                    {
+                        cursorIndex = 0;
+                        result.SelectionChanged = true;
                     }
+                    else if (key == Keys.End)
+                    {
+                        cursorIndex = m_SBuilder.Length;
+                        result.SelectionChanged = true;
+                    }
+                    else {
+                        result.UnhandledKeys.Add(key);
+                        processChar = true;
+                    }
+                }
 
                 if (processChar)
                 {
