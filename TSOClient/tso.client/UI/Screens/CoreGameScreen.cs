@@ -746,6 +746,7 @@ namespace FSO.Client.UI.Screens
                     UIScreen.GlobalShowDialog(dialog, true);
                     var rnd = new Random();
                     dialog.Position = new Vector2(rnd.Next(Math.Max(0, ScreenWidth - 380)), rnd.Next(Math.Max(0, ScreenHeight - 180)));
+                    HITVM.Get().PlaySoundEvent(UISounds.CallQueueFull);
                     break;
             }
         }
