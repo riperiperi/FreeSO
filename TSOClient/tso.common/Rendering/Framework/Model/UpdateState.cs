@@ -76,7 +76,7 @@ namespace FSO.Common.Rendering.Framework.Model
         {
             get
             {
-                return WindowFocused && MouseOverWindow;
+                return MouseOverWindow;
             }
         }
 
