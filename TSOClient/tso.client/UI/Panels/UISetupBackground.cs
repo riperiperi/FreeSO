@@ -58,7 +58,11 @@ namespace FSO.Client.UI.Panels
             {
                 // Just attempt to load the regular setup.png.
             }
-            
+            catch (DirectoryNotFoundException)
+            {
+                // Just attempt to load the regular setup.png.
+            }
+
             if (splashes != null && splashes.Length > 0)
             {
                 Random rng = new Random();
