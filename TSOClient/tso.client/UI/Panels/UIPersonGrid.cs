@@ -30,6 +30,10 @@ namespace FSO.Client.UI.Panels
             UpdatePeople();
         }
 
+
+        public UIButton NextPageButton { get; set; }
+        public UIButton PreviousPageButton { get; set; }
+
         public void UpdatePeople()
         {
             bool change = false;
@@ -61,10 +65,23 @@ namespace FSO.Client.UI.Panels
             }
         }
 
+        private void UpdateButtons()
+        {
+            if (PreviousPageButton != null)
+            {
+                PreviousPageButton.Disabled = Page == 0;
+            }
+            if (NextPageButton != null)
+            {
+                NextPageButton.Disabled = Page == NumPages - 1;
+            }
+        }
+
         public override void Update(UpdateState state)
         {
             base.Update(state);
             UpdatePeople();
+            UpdateButtons();
         }
 
         public void DrawPage()
@@ -100,6 +117,14 @@ namespace FSO.Client.UI.Panels
         {
             Page--;
             DrawPage();
+        }
+
+        public int NumPages
+        {
+            get
+            {
+                return Math.Max(1, (int)Math.Ceiling((double)Display.Count / (double)(Columns * Rows)));
+            }
         }
     }
 }
