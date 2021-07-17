@@ -15,7 +15,7 @@
 
 DROP PROCEDURE IF EXISTS `fso_avatar_top_100_calc_most_famous`;
 
-DELIMITER //
+
 CREATE PROCEDURE `fso_avatar_top_100_calc_most_famous`(IN `p_shard_id` INT)
     SQL SECURITY INVOKER
 BEGIN
@@ -44,13 +44,13 @@ BEGIN
 						LIMIT 100
 					)
 	COMMIT;
-END//
-DELIMITER ;
+END;
+
 
 
 DROP PROCEDURE IF EXISTS `fso_avatar_top_100_calc_best_karma`;
 
-DELIMITER //
+
 CREATE PROCEDURE `fso_avatar_top_100_calc_best_karma`(IN `p_shard_id` INT)
     SQL SECURITY INVOKER
 BEGIN
@@ -79,12 +79,12 @@ BEGIN
 						LIMIT 100
 					)
 	COMMIT;
-END//
-DELIMITER ;
+END;
+
 
 DROP PROCEDURE IF EXISTS `fso_avatar_top_100_calc_friendliest`;
 
-DELIMITER //
+
 CREATE PROCEDURE `fso_avatar_top_100_calc_friendliest`(IN `p_shard_id` INT)
     SQL SECURITY INVOKER
 BEGIN
@@ -113,13 +113,13 @@ BEGIN
 						LIMIT 100
 					)
 	COMMIT;
-END//
-DELIMITER ;
+END;
+
 
 
 DROP PROCEDURE IF EXISTS `fso_avatar_top_100_calc_most_infamous`;
 
-DELIMITER //
+
 CREATE PROCEDURE `fso_avatar_top_100_calc_most_infamous`(IN `p_shard_id` INT)
     SQL SECURITY INVOKER
 BEGIN
@@ -148,13 +148,13 @@ BEGIN
 						LIMIT 100
 					)
 	COMMIT;
-END//
-DELIMITER ;
+END;
+
 
 
 DROP PROCEDURE IF EXISTS `fso_avatar_top_100_calc_meanest`;
 
-DELIMITER //
+
 CREATE PROCEDURE `fso_avatar_top_100_calc_meanest`(IN `p_shard_id` INT)
     SQL SECURITY INVOKER
 BEGIN
@@ -183,12 +183,12 @@ BEGIN
 						LIMIT 100
 					)
 	COMMIT;
-END//
-DELIMITER ;
+END;
+
 
 DROP PROCEDURE IF EXISTS `fso_avatar_top_100_calc_all`;
 
-DELIMITER //
+
 CREATE PROCEDURE `fso_avatar_top_100_calc_all`(IN `p_shard_id` INT)
     SQL SECURITY INVOKER
 BEGIN
@@ -197,5 +197,4 @@ BEGIN
 	CALL fso_avatar_top_100_calc_friendliest(p_shard_id);
 	CALL fso_avatar_top_100_calc_most_infamous(p_shard_id);
 	CALL fso_avatar_top_100_calc_meanest(p_shard_id);
-END//
-DELIMITER ;
+END;
