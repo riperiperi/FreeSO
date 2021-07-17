@@ -95,7 +95,7 @@ namespace FSO.Server.Servers.Tasks.Domain
                 }
 
                 var top100AvatarsCalculated = db.AvatarTop100.Calculate(context.ShardId.Value);
-                if (!top100Calculated)
+                if (!top100AvatarsCalculated)
                 {
                     throw new Exception("Unknown error while calculating top 100 avatars");
                 }
