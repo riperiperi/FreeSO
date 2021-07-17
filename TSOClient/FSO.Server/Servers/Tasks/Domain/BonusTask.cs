@@ -94,6 +94,12 @@ namespace FSO.Server.Servers.Tasks.Domain
                     throw new Exception("Unknown error while calculating top 100 lots");
                 }
 
+                var top100AvatarsCalculated = db.AvatarTop100.Calculate(context.ShardId.Value);
+                if (!top100Calculated)
+                {
+                    throw new Exception("Unknown error while calculating top 100 avatars");
+                }
+
                 var bonusMetrics = db.Bonus.GetMetrics(endDay, context.ShardId.Value).ToList(); //force this as a list. if we lazy evaluate it, an exception will be thrown.
 
                 db.Bonus.Insert(bonusMetrics.Select(x =>
