@@ -217,6 +217,12 @@
     <Compile Include="DA\Utils\PagedList.cs" />
     <Compile Include="Management\DbChangeTool.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
+    <Content Include="DatabaseScripts\changes\0032_fso_avatar_top100.sql">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </Content>
+    <Compile Include="DA\AvatarTop100\DbAvatarTop100.cs" />
+    <Compile Include="DA\AvatarTop100\IAvatarTop100.cs" />
+    <Compile Include="DA\AvatarTop100\SqlLotTop100.cs" />
   </ItemGroup>
   <ItemGroup>
     <None Include="app.config" />

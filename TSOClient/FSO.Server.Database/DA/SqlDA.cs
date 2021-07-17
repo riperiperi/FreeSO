@@ -423,6 +423,19 @@ namespace FSO.Server.Database.DA
             }
         }
 
+        private IAvatarTop100 _AvatarTop100;
+        public IAvatarTop100 AvatarTop100
+        {
+            get
+            {
+                if (_AvatarTop100 == null)
+                {
+                    _AvatarTop100 = new SqlAvatarTop100(Context);
+                }
+                return _AvatarTop100;
+            }
+        }
+
         public void Flush()
         {
             Context.Flush();

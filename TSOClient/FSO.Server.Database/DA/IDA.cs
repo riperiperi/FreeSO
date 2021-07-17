@@ -65,6 +65,7 @@ namespace FSO.Server.Database.DA
         ITuning Tuning { get; }
         IDynPayouts DynPayouts { get; }
         ITransactions Transactions { get; }
+        IAvatarTop100 AvatarTop100 { get; }
 
         //System tables
         IHosts Hosts { get; }

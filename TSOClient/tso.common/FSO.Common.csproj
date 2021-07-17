@@ -256,6 +256,7 @@
     <Compile Include="WorldGeometry\SimplifiedHeightmap.cs" />
     <Compile Include="WorldGeometry\TS1RoadTemplates.cs" />
     <Compile Include="WorldGeometry\Utils\TriangleSet.cs" />
+    <Compile Include="Enum\AvatarTop100Category.cs" />
   </ItemGroup>
   <ItemGroup>
     <ProjectReference Include="..\..\Other\libs\mp3sharp\mp3sharp\Mp3Sharp.csproj">
