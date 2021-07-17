@@ -7,7 +7,7 @@ using System.Text;
 using System.Threading.Tasks;
 
 namespace FSO.Server.Database.DA.LotTop100
-{≈
+{
     public class DbAvatarTop100
     {
         public AvatarTop100Category category { get; set; }

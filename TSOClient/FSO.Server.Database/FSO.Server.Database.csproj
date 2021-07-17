@@ -104,6 +104,7 @@
     <Compile Include="DA\Avatars\DbJobLevel.cs" />
     <Compile Include="DA\Avatars\IAvatars.cs" />
     <Compile Include="DA\Avatars\SqlAvatars.cs" />
+    <Compile Include="DA\AvatarTop100\SqlAvatarTop100.cs" />
     <Compile Include="DA\Bans\DbBan.cs" />
     <Compile Include="DA\Bans\IBans.cs" />
     <Compile Include="DA\Bans\SqlBans.cs" />
@@ -222,7 +223,6 @@
     </Content>
     <Compile Include="DA\AvatarTop100\DbAvatarTop100.cs" />
     <Compile Include="DA\AvatarTop100\IAvatarTop100.cs" />
-    <Compile Include="DA\AvatarTop100\SqlLotTop100.cs" />
   </ItemGroup>
   <ItemGroup>
     <None Include="app.config" />
