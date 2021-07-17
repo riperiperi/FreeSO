@@ -6,7 +6,7 @@ using System.Text;
 using System.Threading.Tasks;
 using FSO.Common.Enum;
 
-namespace FSO.Server.Database.DA.LotTop100
+namespace FSO.Server.Database.DA.AvatarTop100
 {
     public class SqlAvatarTop100 : AbstractSqlDA, IAvatarTop100
     {
