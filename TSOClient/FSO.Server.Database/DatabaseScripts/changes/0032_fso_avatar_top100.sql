@@ -42,7 +42,7 @@ BEGIN
 						GROUP BY avatar.avatar_id
 						ORDER BY COUNT(*) DESC
 						LIMIT 100
-					)
+					) AS top100;
 	COMMIT;
 END;
 
@@ -77,7 +77,7 @@ BEGIN
 						GROUP BY avatar.avatar_id
 						ORDER BY SUM(value) DESC
 						LIMIT 100
-					)
+					) AS top100;
 	COMMIT;
 END;
 
@@ -111,7 +111,7 @@ BEGIN
 						GROUP BY avatar.avatar_id
 						ORDER BY COUNT(*) DESC
 						LIMIT 100
-					)
+					) AS top100;
 	COMMIT;
 END;
 
@@ -146,7 +146,7 @@ BEGIN
 						GROUP BY avatar.avatar_id
 						ORDER BY COUNT(*) DESC
 						LIMIT 100
-					)
+					) AS top100;
 	COMMIT;
 END;
 
@@ -181,7 +181,7 @@ BEGIN
 						GROUP BY avatar.avatar_id
 						ORDER BY COUNT(*) DESC
 						LIMIT 100
-					)
+					) AS top100;
 	COMMIT;
 END;
 
