@@ -123,7 +123,7 @@ namespace FSO.Client.UI.Panels
         {
             get
             {
-                return Math.Max(1, (int)Math.Ceiling((double)Display.Count / (double)(Columns * Rows)));
+                return ((Display.Count - 1) / (Columns * Rows)) + 1;
             }
         }
     }
