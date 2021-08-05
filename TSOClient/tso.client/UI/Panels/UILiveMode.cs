@@ -163,6 +163,8 @@ namespace FSO.Client.UI.Panels
             DynamicOverlay.Add(MotiveDisplay);
 
             PersonGrid = new UIPersonGrid(LotController.vm);
+            PersonGrid.NextPageButton = NextPageButton;
+            PersonGrid.PreviousPageButton = PreviousPageButton;
             Add(PersonGrid);
             PersonGrid.Position = new Vector2(409, 51);
             if (Small800) {
