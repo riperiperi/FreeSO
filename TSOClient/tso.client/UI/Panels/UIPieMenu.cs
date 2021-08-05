@@ -77,7 +77,8 @@ namespace FSO.Client.UI.Panels
 
             lerpSpeed = 0.125f * (60.0f / FSOEnvironment.RefreshRate);
             m_Bg = new UIImage(TextureGenerator.GetPieBG(GameFacade.GraphicsDevice));
-            m_Bg.SetSize(0, 0); //is scaled up later
+            m_Bg.SetSize(2, 2); //is scaled up later
+            m_Bg.Position = new Vector2(-1, -1);
             this.AddAt(0, m_Bg);
 
             m_PieTree = new UIPieMenuItem()
