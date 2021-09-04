@@ -794,6 +794,9 @@ namespace FSO.Client.Rendering.City
 
                     short x = lots[i].x;
                     short y = lots[i].y;
+
+                    if (!MapData.IsInBounds(x, y)) continue;
+
                     var pos = new Vector3(x + 0.5f, MapData.ElevationData[(y * 512 + x)] / 12.0f, y + 0.5f);
                     verts.Add(new DGRP3DVert(pos, Vector3.Up, new Vector2()));
                     verts.Add(new DGRP3DVert(pos, Vector3.Up, new Vector2(1, 0)));

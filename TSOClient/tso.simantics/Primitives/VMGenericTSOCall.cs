@@ -421,6 +421,17 @@ namespace FSO.SimAntics.Primitives
                         context.Thread.TempRegisters[0] = (short)context.VM.TSOState.NhoodID;
                         return VMPrimitiveExitCode.GOTO_TRUE;
                     }
+                case VMGenericTSOCallMode.FSOGoToLotIDTemp01:
+                    {
+                        if (context.Caller.PersistID == context.VM.MyUID)
+                        {
+                            uint idLow = (uint)context.Thread.TempRegisters[0];
+                            uint idHigh = (uint)context.Thread.TempRegisters[1] << 16;
+                            context.VM.SignalLotSwitch(idLow | idHigh);
+                        }
+
+                        return VMPrimitiveExitCode.GOTO_TRUE;
+                    }
                 default:
                     return VMPrimitiveExitCode.GOTO_TRUE;
             }

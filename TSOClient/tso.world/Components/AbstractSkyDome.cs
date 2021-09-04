@@ -1,4 +1,5 @@
 ﻿using FSO.Common;
+using FSO.Common.Model;
 using FSO.Common.Utils;
 using FSO.Files;
 using FSO.LotView.Model;
@@ -24,7 +25,11 @@ namespace FSO.LotView.Components
 
         public AbstractSkyDome(GraphicsDevice GD, float time)
         {
-            using (var file = File.OpenRead(Path.Combine(FSOEnvironment.ContentDir, "Textures/skycol.png")))
+            float? customSky = DynamicTuning.Global?.GetTuning("city", 0, 2);
+
+            string skyCol = customSky.HasValue ? $"Textures/skycol_alt{(int)customSky}.png" : "Textures/skycol.png";
+
+            using (var file = File.OpenRead(Path.Combine(FSOEnvironment.ContentDir, skyCol)))
             {
                 GradTex = ImageLoader.FromStream(GD, file);
             };

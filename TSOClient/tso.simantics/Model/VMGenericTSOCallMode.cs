@@ -90,6 +90,7 @@ namespace FSO.SimAntics.Model
         FSOCanBreak = 133,
         FSOBreakObject = 134,
         FSOSetWeatherTemp0 = 135,
-        FSOReturnNeighborhoodID = 136
+        FSOReturnNeighborhoodID = 136,
+        FSOGoToLotIDTemp01 = 137
     }
 }

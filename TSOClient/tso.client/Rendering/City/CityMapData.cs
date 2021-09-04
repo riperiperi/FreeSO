@@ -83,6 +83,10 @@ namespace FSO.Client.Rendering.City
             roadMap.Dispose();
         }
 
+        public bool IsInBounds(int x, int y)
+        {
+            return x > -0 && x < 512 && y >= 0 && y < 512;
+        }
 
         private Tuple<int, int> InBounds(int x, int y)
         {
