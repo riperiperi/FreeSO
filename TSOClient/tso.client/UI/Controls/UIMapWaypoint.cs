@@ -282,7 +282,11 @@ namespace FSO.Client.UI.Controls
         {
             if (!Visible) return;
             var terrain = ((CoreGameScreen)GameFacade.Screens.CurrentUIScreen).CityRenderer;
-            Vector2 startVec = (new Vector2(60 / 2, 60 / 2) + Position), end = UITerrainHighlight.GetEndpointFromLotId(terrain, startVec, (int)LotId) / FSOEnvironment.DPIScaleFactor;
+            Vector2 startVec = (new Vector2(60 / 2, 60 / 2) + Position);
+            Vector2? dest = UITerrainHighlight.GetEndpointFromLotId(terrain, startVec, (int)LotId);
+            if (!dest.HasValue) return;
+
+            Vector2 end = dest.Value / FSOEnvironment.DPIScaleFactor;
             Vector2 start = end;
 
             //position line around border all pretty like

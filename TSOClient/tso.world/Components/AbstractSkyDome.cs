@@ -17,6 +17,8 @@ namespace FSO.LotView.Components
 {
     public class AbstractSkyDome : IDisposable
     {
+        private static string DefaultSkyCol = "Textures/skycol.png";
+
         private VertexBuffer Verts;
         private IndexBuffer Indices;
         private Texture2D GradTex;
@@ -27,14 +29,29 @@ namespace FSO.LotView.Components
         {
             float? customSky = DynamicTuning.Global?.GetTuning("city", 0, 2);
 
-            string skyCol = customSky.HasValue ? $"Textures/skycol_alt{(int)customSky}.png" : "Textures/skycol.png";
-
-            using (var file = File.OpenRead(Path.Combine(FSOEnvironment.ContentDir, skyCol)))
+            if (!customSky.HasValue || !TryLoadSkyColor(GD, $"Textures/skycol_alt{(int)customSky}.png"))
             {
-                GradTex = ImageLoader.FromStream(GD, file);
-            };
+                TryLoadSkyColor(GD, DefaultSkyCol);
+            }
             
             BuildSkyDome(GD, time);
+        }
+
+        private bool TryLoadSkyColor(GraphicsDevice GD, string path)
+        {
+            try
+            {
+                using (var file = File.OpenRead(Path.Combine(FSOEnvironment.ContentDir, path)))
+                {
+                    GradTex = ImageLoader.FromStream(GD, file);
+                };
+            }
+            catch
+            {
+                return false;
+            }
+
+            return true;
         }
 
         private float[] m_SkyColors = new float[]

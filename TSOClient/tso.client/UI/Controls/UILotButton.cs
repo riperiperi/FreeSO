@@ -271,7 +271,11 @@ namespace FSO.Client.UI.Controls
             {
                 var terrain = ((CoreGameScreen)GameFacade.Screens.CurrentUIScreen).CityRenderer;
                 var Size = new Vector2(80, 50);
-                Vector2 startVec = new Vector2(40, 25) + Position, end = UITerrainHighlight.GetEndpointFromLotId(terrain, startVec, (int)LotId);
+                Vector2 startVec = new Vector2(40, 25) + Position;
+                Vector2? dest = UITerrainHighlight.GetEndpointFromLotId(terrain, startVec, (int)LotId);
+                if (!dest.HasValue) return;
+
+                Vector2 end = dest.Value;
                 Vector2 start = end;
 
                 // position line around border

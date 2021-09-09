@@ -423,7 +423,8 @@ namespace FSO.Client.UI.Panels
                 }
             }
 
-            var canJoin = isMyProperty || isRoommate || isOnline || GameFacade.EnableMod || isCommunity;
+            bool inBounds = CurrentLot.Value == null || CurrentLot.Value.Lot_Location_Packed < 0x10200 || CurrentLot.Value.Lot_Location_Packed >= 0x20000;
+            var canJoin = isMyProperty || isRoommate || (inBounds && (isOnline || isCommunity)) || GameFacade.EnableMod;
 
             HouseNameButton.Disabled = !isMyProperty;
 

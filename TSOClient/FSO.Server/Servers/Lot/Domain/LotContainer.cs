@@ -202,13 +202,37 @@ namespace FSO.Server.Servers.Lot.Domain
         public void GenerateTerrain()
         {
             Terrain = new VMTSOSurroundingTerrain();
+
             var coords = MapCoordinates.Unpack(LotPersist.location);
             var map = Realestate.GetMap();
-            for (int y = 0; y < 3; y++)
+
+            if (LotPersist.location >= 0x10200 && LotPersist.location < 0x20000)
             {
-                for (int x = 0; x < 3; x++)
+                // Special off-world property. Currently these are all islands.
+                for (int y = 0; y < 3; y++)
                 {
-                    Terrain.BlendN[x, y] = map.GetBlend((coords.X-1)+x, (coords.Y-1)+y);
+                    for (int x = 0; x < 3; x++)
+                    {
+                        var baseType = (x == 1 && y == 1) ? Content.Model.TerrainType.SAND : Content.Model.TerrainType.WATER;
+
+                        Terrain.BlendN[x, y] = new Content.Model.TerrainBlend()
+                        {
+                            Base = baseType,
+                            Blend = baseType,
+                            AdjFlags = 0,
+                            WaterFlags = 0
+                        };
+                    }
+                }
+            }
+            else
+            {
+                for (int y = 0; y < 3; y++)
+                {
+                    for (int x = 0; x < 3; x++)
+                    {
+                        Terrain.BlendN[x, y] = map.GetBlend((coords.X - 1) + x, (coords.Y - 1) + y);
+                    }
                 }
             }
 
@@ -752,6 +776,7 @@ namespace FSO.Server.Servers.Lot.Domain
                 {
                     Tuning = Tuning
                 });
+                Lot.Tick();
             }
 
             Lot.Context.UpdateTSOBuildableArea();

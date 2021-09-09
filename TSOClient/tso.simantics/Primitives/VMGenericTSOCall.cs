@@ -427,7 +427,13 @@ namespace FSO.SimAntics.Primitives
                         {
                             uint idLow = (uint)context.Thread.TempRegisters[0];
                             uint idHigh = (uint)context.Thread.TempRegisters[1] << 16;
-                            context.VM.SignalLotSwitch(idLow | idHigh);
+
+                            uint id = idLow | idHigh;
+
+                            if (id != ((VMTSOLotState)context.VM.PlatformState).LotID)
+                            {
+                                context.VM.SignalLotSwitch(id);
+                            }
                         }
 
                         return VMPrimitiveExitCode.GOTO_TRUE;
