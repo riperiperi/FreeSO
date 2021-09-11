@@ -108,7 +108,7 @@ namespace FSO.Server.Servers.Lot.Domain
             0x475CC813, //water balloon controller
             0x2D583771, //winter weather controller
             0x7A78195C, //snowball controller
-            0x33AD8F84, //face mask controller
+            0x063F2ABE, //global accessory controller
             0x04AB1D1F, //zombie spawner controller
             0x0DF8592E, //mini sims
             0x48F32C7B, //au game controller
