@@ -464,7 +464,10 @@ namespace FSO.Server.Servers.Lot.Domain
         {
             //we can delete these without respecting slot rules because of how SLOTs work (deleting table under us will move us to OOW)
 
-            var ents = Lot.Entities.Where(x => x.Position == LotView.Model.LotTilePos.OUT_OF_WORLD && !ValidOOWGUIDs.Contains(x.Object.OBJ.GUID)).ToList();
+            var ents = Lot.Entities.Where(x => 
+                x.Position == LotView.Model.LotTilePos.OUT_OF_WORLD &&
+                (!(x is VMGameObject) || !((VMGameObject)x).Disabled.HasFlag(VMGameObjectDisableFlags.Transient)) &&
+                !ValidOOWGUIDs.Contains(x.Object.OBJ.GUID)).ToList();
             ents.AddRange(Lot.Entities.Where(x => x.MultitileGroup.Objects.Any(y => InvalidGUIDs.Contains(y.Object.OBJ.GUID))));
 
             foreach (var ent in ents)

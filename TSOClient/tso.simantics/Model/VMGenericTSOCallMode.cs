@@ -91,6 +91,8 @@ namespace FSO.SimAntics.Model
         FSOBreakObject = 134,
         FSOSetWeatherTemp0 = 135,
         FSOReturnNeighborhoodID = 136,
-        FSOGoToLotIDTemp01 = 137
+        FSOGoToLotIDTemp01 = 137,
+        FSOIsStackObjectTradable = 138,
+        FSOSetStackObjectTransient = 139
     }
 }

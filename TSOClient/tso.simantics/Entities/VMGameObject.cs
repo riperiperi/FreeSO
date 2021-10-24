@@ -613,6 +613,7 @@ namespace FSO.SimAntics
         LotCategoryWrong = 1 << 2,
         ObjectLimitExceeded = 1 << 3, //when too many objects are on a lot and the object lot is lowered, the last few objects are disabled.
         PendingRoommateDeletion = 1 << 4,
-        ObjectLimitThreadDisable = 1 << 5 //activated when object limit exceeded and object is no longer in use.
+        ObjectLimitThreadDisable = 1 << 5, //activated when object limit exceeded and object is no longer in use.
+        Transient = 1 << 6 // A tree disabled this object and sent it out of world. It essentially exists but is not intended for use.
     }
 }
