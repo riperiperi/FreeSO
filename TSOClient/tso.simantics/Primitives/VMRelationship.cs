@@ -54,7 +54,7 @@ namespace FSO.SimAntics.Primitives
             var myNID = (obj1 as VMAvatar)?.GetPersonData(Model.VMPersonDataVariable.NeighborId) ?? 0;
             var targNID = (obj2 as VMAvatar)?.GetPersonData(Model.VMPersonDataVariable.NeighborId) ?? 0;
 
-            if (!ts1 && (obj2.PersistID > 0))
+            if (!ts1 && obj2.PersistID > 0 && !operand.FSONeverPersist)
             {
                 //use persist matrix whenever possible.
                 //ignores use neighbour flag so we can use str/ltr.
@@ -263,6 +263,16 @@ namespace FSO.SimAntics.Primitives
             {
                 if (value) Flags |= 1;
                 else Flags &= unchecked((byte)~1);
+            }
+        }
+
+        public bool FSONeverPersist
+        {
+            get { return (Flags & 128) == 128; }
+            set
+            {
+                if (value) Flags |= 128;
+                else Flags &= unchecked((byte)~128);
             }
         }
 

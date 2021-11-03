@@ -54,6 +54,7 @@ namespace FSO.IDE.EditorComponent.Primitives
             string prepend = "";
             if (op.FailIfTooSmall) { flagStr.Append(prepend + "Fail if too small"); prepend = ","; }
             if (op.UseNeighbor) { flagStr.Append(prepend + "Use Neighbor"); prepend = ","; }
+            if (op.FSONeverPersist) { flagStr.Append(prepend + "Never Persist (FSO)"); prepend = ","; }
 
             if (flagStr.Length != 0)
             {
@@ -82,6 +83,7 @@ namespace FSO.IDE.EditorComponent.Primitives
             panel.Controls.Add(new OpFlagsControl(master, escope, Operand, "Flags:", new OpFlag[] {
                 new OpFlag("Fail if too small", "FailIfTooSmall"),
                 new OpFlag("Use Neighbor", "UseNeighbor"),
+                new OpFlag("Never Persist (FSO)", "FSONeverPersist")
                 }));
 
             if (!old) panel.Controls.Add(new OpComboControl(master, escope, Operand, "Object in Local:", "Local", new OpStaticNamedPropertyProvider(escope.GetVarScopeDataNames(VMVariableScope.Local))));

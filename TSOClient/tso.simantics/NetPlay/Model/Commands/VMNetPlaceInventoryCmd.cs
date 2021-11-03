@@ -101,7 +101,12 @@ namespace FSO.SimAntics.NetPlay.Model.Commands
                     {
                         state.Deserialize(reader);
                     }
-                    foreach (var e in state.Entities) ((VMGameObjectMarshal)e).Disabled = 0;
+                    foreach (var e in state.Entities)
+                    {
+                        // Undisable the object, and remove any non-persist relationships.
+                        ((VMGameObjectMarshal)e).Disabled = 0;
+                        e.MeToObject = new VMEntityRelationshipMarshal[0];
+                    }
                 }
                 catch (Exception)
                 {
