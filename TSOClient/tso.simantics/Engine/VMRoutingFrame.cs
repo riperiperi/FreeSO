@@ -1210,7 +1210,8 @@ namespace FSO.SimAntics.Engine
             MoveFrames = 0;
 
             MoveTotalFrames = CurrentPath.CalculateTotalFrames(); //((LotTilePos.Distance(CurrentWaypoint, Caller.Position) * 20) / 2);
-            if (((VMAvatar)Caller).IsPet || InPool) MoveTotalFrames *= 2;
+            var avatar = (VMAvatar)Caller;
+            if ((avatar.IsPet && avatar.GetPersonData(VMPersonDataVariable.PersonType) < 254) || InPool) MoveTotalFrames *= 2;
             MoveTotalFrames = Math.Max(1, MoveTotalFrames/((WalkStyle == 1) ? 3 : 1));
             CurrentPath.UpdateTotalFrames(MoveTotalFrames);
 

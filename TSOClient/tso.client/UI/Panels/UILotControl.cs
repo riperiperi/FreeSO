@@ -680,7 +680,7 @@ namespace FSO.Client.UI.Panels
                             var obj = vm.GetObjectById(ObjectHover);
                             if (obj is VMAvatar)
                             {
-                                cursor = (((VMAvatar)obj).GetPersonData(VMPersonDataVariable.PersonType) != 255) ? CursorType.LivePerson : CursorType.LiveObjectAvail;
+                                cursor = (((VMAvatar)obj).GetPersonData(VMPersonDataVariable.PersonType) < 254) ? CursorType.LivePerson : CursorType.LiveObjectAvail;
                             }
                             else
                             {
@@ -709,7 +709,10 @@ namespace FSO.Client.UI.Panels
         {
             int prefixNum = 3;
             string prefixSrc = "217";
-            if (ava.IsPet) prefixNum = 5;
+            var personType = ava.GetPersonData(VMPersonDataVariable.PersonType);
+
+            if (personType >= 254) return ava.ToString();
+            else if (ava.IsPet) prefixNum = 5;
             else if (ava.PersistID == 0) prefixNum = 4;
             else
             {
