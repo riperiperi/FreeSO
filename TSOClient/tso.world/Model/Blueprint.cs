@@ -201,6 +201,40 @@ namespace FSO.LotView.Model
             return (yLerp * xl2 + (1 - yLerp) * xl1 - BaseAlt) * TerrainFactor;
         }
 
+        public Vector3 InterpNormal(Vector3 Position)
+        {
+            if (Altitude == null) return Vector3.Backward;
+
+            var baseX = (int)Math.Max(1, Math.Min(Width - 1, Position.X));
+            var baseY = (int)Math.Max(1, Math.Min(Height - 1, Position.Y));
+            if (baseX < 0 || baseY < 0) return Vector3.Backward;
+            var nextX = (int)Math.Max(1, Math.Min(Width - 1, Math.Ceiling(Position.X)));
+            var nextY = (int)Math.Max(1, Math.Min(Height - 1, Math.Ceiling(Position.Y)));
+            var xLerp = Position.X % 1f;
+            var yLerp = Position.Y % 1f;
+
+            var by = (baseY % Height) * Width;
+            var bx = (baseX % Width);
+            var ny = (nextY % Height) * Width;
+            var nx = (nextX % Width);
+            float h00 = Altitude[(by + bx)];
+            float h01 = Altitude[(ny + bx)];
+            float h10 = Altitude[(by + nx)];
+            float h11 = Altitude[(ny + nx)];
+
+            float xl1 = xLerp * h10 + (1 - xLerp) * h00;
+            float xl2 = xLerp * h11 + (1 - xLerp) * h01;
+
+            // Reduced to a single line in the Y direction. 
+
+            float xDist1 = (h10 - h00) * TerrainFactor;
+            float xDist2 = (h11 - h01) * TerrainFactor;
+            float xChange = xLerp * xDist1 + (1 - xLerp) * xDist2;
+            float yChange = (xl2 - xl1) * TerrainFactor;
+
+            return - Vector3.Normalize(Vector3.Cross(new Vector3(1, xChange, 0), new Vector3(0, yChange, 1)));
+        }
+
         public static void SetLightColor(LightMappedEffect effect, Color outside, Color minOut)
         {
             //return;

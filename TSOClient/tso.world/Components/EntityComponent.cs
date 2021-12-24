@@ -35,6 +35,8 @@ namespace FSO.LotView.Components
         }
         public Blueprint blueprint;
         public Vector3 MTOffset;
+        public Vector3 VisualNormal = Vector3.Up;
+        public bool UseNormal;
         public Matrix? GroundAlign; //for realigning objects on sloped terrain (optional, for cars)
 
         protected short _ObjectID;
@@ -210,6 +212,33 @@ namespace FSO.LotView.Components
             gd.DrawPrimitives(PrimitiveType.TriangleStrip, 0, 2);
         }
 
+        private Vector3 Project(Vector3 u, Vector3 v)
+        {
+            return u * (Vector3.Dot(u, v) / Vector3.Dot(u, u));
+        }
+
+        private Matrix NormalToMatrix(Vector3 v1, Vector3 v2, Vector3 v3)
+        {
+            var u1 = v1;
+            var u2 = v2 - Project(u1, v2);
+            var u3 = (v3 - Project(u1, v3)) - Project(u2, v3);
+
+            u1.Normalize();
+            u2.Normalize();
+            u3.Normalize();
+
+            return new Matrix(
+                new Vector4(u3, 0),
+                new Vector4(u1, 0),
+                new Vector4(u2, 0),
+                new Vector4(0, 0, 0, 1));
+        }
+
+        private Matrix NormalToMatrix()
+        {
+            return NormalToMatrix(VisualNormal, Vector3.Backward, Vector3.Right);
+        }
+
         public override Matrix World
         {
             get
@@ -218,6 +247,10 @@ namespace FSO.LotView.Components
                 {
                     var worldPosition = WorldSpace.GetWorldFromTile(Position);
                     _World = Matrix.CreateTranslation(worldPosition);
+                    if (UseNormal)
+                    {
+                        _World = NormalToMatrix() * _World;
+                    }
                     _WorldDirty = false;
                 }
                 return _World;

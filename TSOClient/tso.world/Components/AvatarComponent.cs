@@ -86,6 +86,7 @@ namespace FSO.LotView.Components
         }
 
         private Vector3 AltitudeOff;
+        private Vector3 AltitudeNormal = Vector3.Up;
 
         public override Vector3 Position
         {
@@ -102,7 +103,11 @@ namespace FSO.LotView.Components
             {
                 _Position = value;
                 ALevel = (int)(value.Z / 2.94f);
-                if (blueprint != null) AltitudeOff = new Vector3(0, 0, blueprint.InterpAltitude(_Position));
+                if (blueprint != null)
+                {
+                    AltitudeNormal = blueprint.InterpNormal(_Position);
+                    AltitudeOff = new Vector3(0, 0, blueprint.InterpAltitude(_Position));
+                }
                 OnPositionChanged();
                 _WorldDirty = true;
             }
@@ -257,6 +262,13 @@ namespace FSO.LotView.Components
                 }
                 device.RasterizerState = lastCull;
                 device.BlendState = lastBlend;
+            }
+
+            if (UseNormal && world.FramePerDraw > 0 && VisualNormal != AltitudeNormal)
+            {
+                VisualNormal = Vector3.Lerp(VisualNormal, AltitudeNormal, 1 - (float)Math.Pow(0.80, world.FramePerDraw));
+                VisualNormal.Normalize();
+                _WorldDirty = true;
             }
         }
 

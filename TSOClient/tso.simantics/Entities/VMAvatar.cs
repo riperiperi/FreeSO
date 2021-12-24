@@ -893,7 +893,12 @@ namespace FSO.SimAntics
                     if (value != -32768) ShowMoneyHeadline(value);
                     break;
                 case VMPersonDataVariable.RenderDisplayFlags:
-                    if (WorldUI != null) ((AvatarComponent)WorldUI).DisplayFlags = (AvatarDisplayFlags)value;
+                    if (WorldUI != null)
+                    {
+                        var flags = (AvatarDisplayFlags)value;
+                        ((AvatarComponent)WorldUI).DisplayFlags = flags;
+                        WorldUI.UseNormal = flags.HasFlag(AvatarDisplayFlags.FSOGroundAlign);
+                    }
                     return true;
                 case VMPersonDataVariable.SkillLock:
                     return true;
