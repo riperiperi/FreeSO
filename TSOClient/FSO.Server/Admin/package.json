@@ -48,7 +48,7 @@
     "lodash": "^4.17.11",
     "main-bower-files": "~2.5.0",
     "merge-stream": "~0.1.7",
-    "node-sass": "^4.11.0",
+    "node-sass": "^7.0.0",
     "npm": "^6.13.4",
     "or": "^0.2.0",
     "protractor": "~1.7.0",
