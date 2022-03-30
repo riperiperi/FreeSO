@@ -11,7 +11,7 @@ namespace FSO.SimAntics.NetPlay.Model.Commands
     public class VMNetSkillLockCmd : VMNetCommandBodyAbstract
     {
         public byte SkillID;
-        public byte LockLevel;
+        public short LockLevel;
 
         private static VMPersonDataVariable[] LockToSkill =
         {
@@ -36,7 +36,7 @@ namespace FSO.SimAntics.NetPlay.Model.Commands
                 otherLocked += caller.GetPersonData((VMPersonDataVariable)((int)VMPersonDataVariable.SkillLockBase + i))/100;
             }
             if (otherLocked >= limit) return false; //cannot lock this skill at all
-            LockLevel = (byte)Math.Min(caller.GetPersonData(LockToSkill[SkillID])/100, Math.Min(LockLevel, (byte)(limit - otherLocked))); //can only lock up to the limit
+            LockLevel = (short)Math.Min(caller.GetPersonData(LockToSkill[SkillID])/100, Math.Min(LockLevel, (short)(limit - otherLocked))); //can only lock up to the limit
 
             caller.SetPersonData((VMPersonDataVariable)((int)VMPersonDataVariable.SkillLockBase + SkillID), (short)(LockLevel*100));
             return true;
@@ -46,7 +46,7 @@ namespace FSO.SimAntics.NetPlay.Model.Commands
         {
             base.Deserialize(reader);
             SkillID = reader.ReadByte();
-            LockLevel = reader.ReadByte();
+            LockLevel = reader.ReadInt16();
         }
 
         public override void SerializeInto(BinaryWriter writer)

@@ -328,7 +328,7 @@ namespace FSO.Client.UI.Panels
                         screen.vm.SendCommand(new VMNetSkillLockCmd()
                         {
                             SkillID = VMSkillMap[bar.SkillID],
-                            LockLevel = (byte)bar.LockLevel
+                            LockLevel = (short)bar.LockLevel
                         });
                     }
 
