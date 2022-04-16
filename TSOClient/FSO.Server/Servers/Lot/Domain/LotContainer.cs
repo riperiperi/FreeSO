@@ -1256,6 +1256,13 @@ namespace FSO.Server.Servers.Lot.Domain
                     vmInventory.Add(InventoryItemFromDB(item));
                 }
                 VMDriver.SendDirectCommand(client, new VMNetUpdateInventoryCmd { Items = vmInventory });
+
+                var sm64Data = SM64DataContainer.GetData();
+
+                if (sm64Data != null)
+                {
+                    VMDriver.SendDirectCommand(client, new VMNetSM64AnimDataCmd { AnimData = sm64Data });
+                }
             }
         }
 

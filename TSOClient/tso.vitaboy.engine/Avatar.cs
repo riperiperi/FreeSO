@@ -289,6 +289,44 @@ namespace FSO.Vitaboy
             DrawGeometry(device, Effect);
         }
 
+        public void DrawHeadOnly(Microsoft.Xna.Framework.Graphics.GraphicsDevice device, Effect effect, Matrix headMatrix)
+        {
+            //Effect.CurrentTechnique = Effect.Techniques[0];
+            if (SkelBones == null) ReloadSkeleton();
+            var matrixCopy = new Matrix[SkelBones.Length];
+            // Locate the head bone and inject the custom matrix.
+
+            for (int i = 0; i < Skeleton.Bones.Length; i++)
+            {
+                var bone = Skeleton.Bones[i];
+
+                if (bone.Name == "HEAD") matrixCopy[i] = headMatrix;
+            }
+
+            effect.Parameters["SkelBindings"].SetValue(matrixCopy);
+
+            lock (Bindings)
+            {
+                foreach (var pass in effect.CurrentTechnique.Passes)
+                {
+                    foreach (var binding in Bindings)
+                    {
+                        if (binding.Texture != null)
+                        {
+                            var tex = binding.Texture.Get(device);
+                            effect.Parameters["MeshTex"].SetValue(tex);
+                        }
+                        else
+                        {
+                            effect.Parameters["MeshTex"].SetValue((Texture2D)null);
+                        }
+                        pass.Apply();
+                        binding.Mesh.Draw(device);
+                    }
+                }
+            }
+        }
+
         public void DrawGeometry(Microsoft.Xna.Framework.Graphics.GraphicsDevice device, Effect effect)
         {
             //Effect.CurrentTechnique = Effect.Techniques[0];

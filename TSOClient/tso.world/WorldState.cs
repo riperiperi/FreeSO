@@ -415,6 +415,22 @@ namespace FSO.LotView
             return xz;
         }
 
+        public Vector2 GetFrontDirection()
+        {
+            if (CameraMode == CameraRenderMode._2D)
+            {
+                var fd = Camera2D.FrontDirection();
+                return new Vector2(fd.X, fd.Z);
+            }
+            var vd = View;
+            vd.M41 = 0; vd.M42 = 0; vd.M43 = 0;
+
+            var transform = Vector3.Transform(new Vector3(1, 0, 0), vd);
+            var xz = new Vector2(transform.Z, transform.X);
+            xz.Normalize();
+            return xz;
+        }
+
         public virtual void PrepareLighting(WorldState wallOffsetProvider = null)
         {
             if (wallOffsetProvider == null) wallOffsetProvider = this;

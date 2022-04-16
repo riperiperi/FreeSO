@@ -93,6 +93,16 @@ namespace FSO.LotView.Components
             }
         }
 
+        public BoundingBox? GetRawBounds()
+        {
+            var bounds = dgrp.GetBounds();
+            if (bounds != null)
+            {
+                Debug.BoundingBoxCache.AddToCacheIfMissing(Obj.OBJ.GUID, bounds.Value);
+            }
+            return bounds;
+        }
+
         public BoundingBox GetBounds()
         {
             if (_BoundsDirty || _WorldDirty)
@@ -549,6 +559,9 @@ namespace FSO.LotView.Components
             //make an estimation based off of the sprite height
             var bounds = dgrp.GetBounds();
             if (bounds != null) return bounds.Value;
+
+            if (Debug.BoundingBoxCache.TryGetValue(Obj.OBJ.GUID, out var bounds2)) return bounds2;
+
             //if (world.CameraMode == CameraRenderMode._2D || Mode.HasFlag(ComponentRenderMode._3D)) return  ?? new BoundingBox();
             if (DGRP == null) return new BoundingBox(new Vector3(-0.4f, 0.1f, -0.4f), new Vector3(0.4f, 0.9f, 0.4f));
             else

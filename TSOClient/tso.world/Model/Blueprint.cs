@@ -126,6 +126,9 @@ namespace FSO.LotView.Model
         public float TerrainFactor = 3 / 160f;
         public int BaseAlt;
 
+        // AF2022, obviously getting removed in a day
+        public SM64Component SM64;
+
         public Blueprint(int width, int height){
             this.Width = width;
             this.Height = height;
@@ -135,7 +138,7 @@ namespace FSO.LotView.Model
             WallComp.blueprint = this;
             this.RoofComp = new RoofComponent(this);
             this.FloorGeom = new _3DFloorGeometry(this);
-            if (WorldConfig.Current.Shadow3D || FSOEnvironment.Enable3D)
+            if (true || WorldConfig.Current.Shadow3D || FSOEnvironment.Enable3D)
             {
                 this.WCRC = new WallComponentRC();
                 WCRC.blueprint = this;
@@ -159,6 +162,8 @@ namespace FSO.LotView.Model
             this.Weather = new WeatherController(this);
 
             this.Changes = new BlueprintChanges(this);
+
+            this.SM64 = new SM64Component(this);
         }
 
         public float GetAltitude(int x, int y)
@@ -311,6 +316,8 @@ namespace FSO.LotView.Model
         {
             this.Avatars.Remove(avatar);
             HeadlineObjects.Remove(avatar);
+
+            SM64?.RemoveMario(avatar);
         }
 
         public void SignalWallChange()
@@ -380,6 +387,8 @@ namespace FSO.LotView.Model
                 part.Dispose();
                 ObjectParticles.Remove(part);
             }
+
+            SM64?.RemoveObject(component);
         }
 
         private ushort GetOffset(int tileX, int tileY){

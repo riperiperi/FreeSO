@@ -124,7 +124,7 @@ namespace FSO.LotView
                 //foreach (var sub in Blueprint.SubWorlds) sub.SubDraw(gd, state, (pxOffsetSub) => { sub.Architecture.StaticDraw(gd, state, pxOffsetSub); });
             }
 
-            DrawDynamic(gd, state, state.DrawRoofs);
+            DrawDynamic(gd, state, state.DrawRoofs || state.ScrollAnchor?.MyMario != null);
         }
 
         private void DrawFloorBuf(GraphicsDevice gd, WorldState state)
