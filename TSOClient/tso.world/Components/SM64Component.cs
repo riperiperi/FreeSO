@@ -468,6 +468,67 @@ namespace FSO.LotView.Components
                 CameraController(world);
             }
 
+            if (visible)
+            {
+                UpdateRemainderOther -= 1f / FSOEnvironment.RefreshRate;
+                while (UpdateRemainderOther <= 0)
+                {
+                    foreach (var other in OtherMarios.Values)
+                    {
+                        while (other.QueuedFrames.Count > 2) other.QueuedFrames.Dequeue(); // Too far ahead.
+
+                        if (other.QueuedFrames.Count > 0)
+                        {
+                            var state = other.QueuedFrames.Dequeue();
+
+                            var obj = other.MarioObj;
+                            var gfx = obj.Header.Gfx;
+
+                            gfx.Pos = new Vec3f(state.PosX, state.PosY, state.PosZ);
+                            gfx.Scale = new Vec3f(state.ScaleX, state.ScaleY, state.ScaleZ);
+                            gfx.Angle = new Vec3s(state.AngleX, state.AngleY, state.AngleZ);
+
+                            var animInfo = gfx.AnimInfo;
+
+                            other.Mario.Area.UpdateCounter = state.GlobalAnimTimer;
+
+                            animInfo.AnimID = state.AnimID;
+                            animInfo.AnimYTrans = state.AnimYTrans;
+                            animInfo.AnimFrame = state.AnimFrame;
+                            animInfo.AnimTimer = state.AnimTimer;
+                            animInfo.AnimFrameAccelAssist = state.AnimFrameAccelAssist;
+                            animInfo.AnimAccel = state.AnimAccel;
+
+                            // Load the animation
+
+                            other.Valid = false;
+
+                            try
+                            {
+                                Data.LoadMarioAnimation(ref other.Mario.Animation, (MarioAnimation)animInfo.AnimID);
+                                animInfo.CurAnim = other.Mario.Animation.TargetAnim;
+
+                                bool drawing = other.GeoEmit.Reset();
+                                Geo.SetGeoEmit(other.GeoEmit);
+                                Geo.EnableDisplayLists(drawing);
+                                Geo.SetAnimationGlobals(other.Mario, other.MarioObj.Header.Gfx.AnimInfo);
+                                Geo.mario_geo_body();
+                                other.GeoEmit.End(drawing);
+                            }
+                            catch
+                            {
+                                // No animation, or didn't work.
+                            }
+
+                            other.NewFrame = true;
+                            other.Valid = true;
+                        }
+                    }
+
+                    UpdateRemainderOther += 1 / 30f;
+                }
+            }
+
             if (!MarioActiveForMe)
             {
                 var gamepad = GamePad.GetState(0);
@@ -555,64 +616,6 @@ namespace FSO.LotView.Components
 
                     DidInitMario = true;
                 }
-            }
-
-            UpdateRemainderOther -= 1f / FSOEnvironment.RefreshRate;
-            while (UpdateRemainderOther <= 0)
-            {
-                foreach (var other in OtherMarios.Values)
-                {
-                    while (other.QueuedFrames.Count > 2) other.QueuedFrames.Dequeue(); // Too far ahead.
-
-                    if (other.QueuedFrames.Count > 0)
-                    {
-                        var state = other.QueuedFrames.Dequeue();
-
-                        var obj = other.MarioObj;
-                        var gfx = obj.Header.Gfx;
-
-                        gfx.Pos = new Vec3f(state.PosX, state.PosY, state.PosZ);
-                        gfx.Scale = new Vec3f(state.ScaleX, state.ScaleY, state.ScaleZ);
-                        gfx.Angle = new Vec3s(state.AngleX, state.AngleY, state.AngleZ);
-
-                        var animInfo = gfx.AnimInfo;
-
-                        other.Mario.Area.UpdateCounter = state.GlobalAnimTimer;
-
-                        animInfo.AnimID = state.AnimID;
-                        animInfo.AnimYTrans = state.AnimYTrans;
-                        animInfo.AnimFrame = state.AnimFrame;
-                        animInfo.AnimTimer = state.AnimTimer;
-                        animInfo.AnimFrameAccelAssist = state.AnimFrameAccelAssist;
-                        animInfo.AnimAccel = state.AnimAccel;
-
-                        // Load the animation
-
-                        other.Valid = false;
-
-                        try
-                        {
-                            Data.LoadMarioAnimation(ref other.Mario.Animation, (MarioAnimation)animInfo.AnimID);
-                            animInfo.CurAnim = other.Mario.Animation.TargetAnim;
-
-                            bool drawing = other.GeoEmit.Reset();
-                            Geo.SetGeoEmit(other.GeoEmit);
-                            Geo.EnableDisplayLists(drawing);
-                            Geo.SetAnimationGlobals(other.Mario, other.MarioObj.Header.Gfx.AnimInfo);
-                            Geo.mario_geo_body();
-                            other.GeoEmit.End(drawing);
-                        }
-                        catch
-                        {
-                            // No animation, or didn't work.
-                        }
-
-                        other.NewFrame = true;
-                        other.Valid = true;
-                    }
-                }
-
-                UpdateRemainderOther += 1 / 30f;
             }
         }
 
