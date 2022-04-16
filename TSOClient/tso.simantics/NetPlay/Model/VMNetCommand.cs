@@ -59,7 +59,11 @@ namespace FSO.SimAntics.NetPlay.Model
             { VMCommandType.ChatEditChan, typeof(VMNetChatEditChanCmd) },
             { VMCommandType.Ping, typeof(VMNetPingCmd) },
             { VMCommandType.Upgrade, typeof(VMNetUpgradeCmd) },
-            { VMCommandType.Cheat, typeof(VMNetCheatCmd) }
+            { VMCommandType.Cheat, typeof(VMNetCheatCmd) },
+            { VMCommandType.SM64Position, typeof(VMNetSM64PositionCmd) },
+            { VMCommandType.SM64Event, typeof(VMNetSM64EventCmd) },
+            { VMCommandType.SM64AnimData, typeof(VMNetSM64AnimDataCmd) },
+
         };
         public static Dictionary<Type, VMCommandType> ReverseMap = CmdMap.ToDictionary(x => x.Value, x => x.Key);
 
@@ -167,6 +171,10 @@ namespace FSO.SimAntics.NetPlay.Model
         Upgrade = 42,
 
         //ts1 cheat
-        Cheat = 43
+        Cheat = 43,
+
+        SM64Position = 44,
+        SM64Event = 45,
+        SM64AnimData = 46
     }
 }

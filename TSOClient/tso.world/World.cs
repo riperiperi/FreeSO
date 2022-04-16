@@ -468,9 +468,16 @@ namespace FSO.LotView
         {
             if (comp.Room == 0 || comp.Room == 65531) return; //don't center if the target is out of bounds
             Vector3 pelvisCenter;
+
+            sbyte level = comp.Level;
             if (comp is AvatarComponent)
             {
                 pelvisCenter = ((AvatarComponent)comp).GetPelvisPosition();
+
+                if (((AvatarComponent)comp).MyMario != null)
+                {
+                    level = ((AvatarComponent)comp).MyMario.DetermineLevel();
+                }
             } else
             {
                 pelvisCenter = comp.Position;
@@ -483,10 +490,13 @@ namespace FSO.LotView
                     State.CenterTile = State.Project2DCenterTile(pelvisCenter);
                     State.Camera2D.RotationAnchor = pelvisCenter;
                 });
-            } else {
+            }
+            else
+            {
                 State.CenterTile = new Vector2(pelvisCenter.X, pelvisCenter.Y);
             }
-            if (State.Level != comp.Level) State.Level = comp.Level;
+
+            if (State.Level != level) State.Level = level;
         }
 
         public void RestoreTerrainToCenterTile()
@@ -515,6 +525,8 @@ namespace FSO.LotView
                 {
                     particle.Update(null, State);
                 }
+
+                Blueprint.SM64?.Update(null, State, Visible);
             }
 
             if (State.ScrollAnchor != null)
@@ -656,6 +668,8 @@ namespace FSO.LotView
             Entities.DrawAvatars(device, State);
             Entities.Draw(device, State);
             Entities.DrawAvatarTransparency(device, State);
+
+            Blueprint?.SM64?.Draw(device, State);
 
             State._2D.OutputDepth = false;
         }
@@ -961,9 +975,9 @@ namespace FSO.LotView
             if (Blueprint != null && !FSOEnvironment.Enable3D)
             {
                 var shad3D = (Blueprint.WCRC != null);
-                if (config.Shadow3D != shad3D)
+                if (true != shad3D)
                 {
-                    if (config.AdvancedLighting && config.Shadow3D)
+                    if (true) //config.AdvancedLighting && config.Shadow3D)
                     {
                         Blueprint.WCRC = new RC.WallComponentRC();
                         Blueprint.WCRC.blueprint = Blueprint;
