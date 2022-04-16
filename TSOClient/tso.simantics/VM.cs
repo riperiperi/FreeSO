@@ -425,6 +425,28 @@ namespace FSO.SimAntics
 
             if (tickID % Math.Max(1, SpeedMultiplier) == 0) Context.ProcessLightingChanges();
             //Context.SetToNextCache.VerifyPositions(); use only for debug!
+
+            if (UseWorld && Context.Blueprint?.SM64 != null)
+            {
+                Context.Blueprint.SM64.MyID = GetAvatarByPersist(MyUID)?.ObjectID ?? 0;
+                var state = Context.Blueprint.SM64.MyVisualState;
+                if (state.Active)
+                {
+                    SendCommand(new VMNetSM64PositionCmd()
+                    {
+                        VisualState = state,
+                    });
+                }
+
+                while (Context.Blueprint.SM64.SoundQueue.Count > 0)
+                {
+                    SendCommand(new VMNetSM64EventCmd()
+                    {
+                        EventType = 0,
+                        EventValue = Context.Blueprint.SM64.SoundQueue.Dequeue()
+                    });
+                }
+            }
         }
 
         public void ProcessQTRDay()
@@ -928,6 +950,12 @@ namespace FSO.SimAntics
             Tuning = input.Tuning;
             UpdateTuning();
             if (OnFullRefresh != null) OnFullRefresh();
+
+            if (lastBp != null && UseWorld)
+            {
+                Context.Blueprint.SM64 = lastBp.SM64;
+                Context.Blueprint.SM64?.MigrateSM64(Context.World.State, Context.Blueprint);
+            }
         }
 
         public void LoadComplete()

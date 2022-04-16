@@ -16,7 +16,7 @@ namespace FSO.LotView.Components
     {
         public Blueprint blueprint;
         private List<RoofRect>[] RoofRects;
-        private RoofDrawGroup[] Drawgroups;
+        public RoofDrawGroup[] Drawgroups;
         private GrassEffect Effect;
         public Texture2D Texture;
         public Texture2D ParallaxTexture;
@@ -125,6 +125,8 @@ namespace FSO.LotView.Components
             {
                 RegenRoof((sbyte)(i + 1), device);
             }
+
+            blueprint.SM64?.UpdateRoof();
         }
 
         public void RemeshRoof(GraphicsDevice device)
@@ -425,7 +427,7 @@ namespace FSO.LotView.Components
                 Drawgroups[level - 2].AdvIndexBuffer?.Dispose();
             }
 
-            var result = new RoofDrawGroup();
+            var result = new RoofDrawGroup() { Data = data };
             if (data.NumPrimitives > 0)
             {
                 result.VertexBuffer = new VertexBuffer(device, typeof(TerrainParallaxVertex), data.Vertices.Length, BufferUsage.None);
@@ -741,9 +743,10 @@ namespace FSO.LotView.Components
 
             device.RasterizerState = RasterizerState.CullClockwise;
             device.BlendState = BlendState.AlphaBlend;
+            int maxLevel = world.ScrollAnchor?.MyMario != null ? world.Level - 2 : world.Level - 1;
             for (int i = 0; i < Drawgroups.Length; i++)
             {
-                if (i > world.Level - 1) break;
+                if (i > maxLevel) break;
                 Effect.Level = (float)i + 1.0001f;
                 if (Drawgroups[i] != null)
                 {
@@ -917,6 +920,8 @@ namespace FSO.LotView.Components
 
     public class RoofDrawGroup
     {
+        public RoofData Data;
+
         public IndexBuffer IndexBuffer;
         public VertexBuffer VertexBuffer;
         public int NumPrimitives;

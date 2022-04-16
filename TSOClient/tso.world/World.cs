@@ -481,14 +481,21 @@ namespace FSO.LotView
         {
             if (comp.Room == 0 || comp.Room == 65531) return; //don't center if the target is out of bounds
 
-            bool isFirstPerson = State.CameraMode == CameraRenderMode._3D;
+            bool isFirstPerson = State.CameraMode == CameraRenderMode._3D && State.Cameras.ActiveType == CameraControllerType.FirstPerson;
             sbyte level = comp.Level;
 
             Vector3 pelvisCenter;
+
             if (comp is AvatarComponent)
             {
                 pelvisCenter = isFirstPerson ? ((AvatarComponent)comp).GetHeadlinePos() + comp.Position : ((AvatarComponent)comp).GetPelvisPosition();
-            } else
+
+                if (((AvatarComponent)comp).MyMario != null)
+                {
+                    level = ((AvatarComponent)comp).MyMario.DetermineLevel();
+                }
+            }
+            else
             {
                 pelvisCenter = comp.Position;
             }
@@ -500,7 +507,9 @@ namespace FSO.LotView
                     State.CenterTile = State.Project2DCenterTile(pelvisCenter);
                     State.Camera2D.RotationAnchor = pelvisCenter;
                 });
-            } else {
+            }
+            else
+            {
                 State.CenterTile = new Vector2(pelvisCenter.X, pelvisCenter.Y);
 
                 State.Cameras.CameraDirect.FirstPersonAvatar = isFirstPerson ? comp as AvatarComponent : null;
@@ -563,6 +572,8 @@ namespace FSO.LotView
                 {
                     particle.Update(null, State);
                 }
+
+                Blueprint.SM64?.Update(null, State, Visible);
             }
 
             if (State.ScrollAnchor != null)
@@ -699,6 +710,8 @@ namespace FSO.LotView
             Entities.DrawAvatars(device, State);
             Entities.Draw(device, State);
             Entities.DrawAvatarTransparency(device, State);
+
+            Blueprint?.SM64?.Draw(device, State);
 
             State._2D.OutputDepth = false;
         }
@@ -1004,9 +1017,9 @@ namespace FSO.LotView
             if (Blueprint != null && !FSOEnvironment.Enable3D)
             {
                 var shad3D = (Blueprint.WCRC != null);
-                if (config.Shadow3D != shad3D)
+                if (true != shad3D)
                 {
-                    if (config.AdvancedLighting && config.Shadow3D)
+                    if (true) //config.AdvancedLighting && config.Shadow3D)
                     {
                         Blueprint.WCRC = new RC.WallComponentRC();
                         Blueprint.WCRC.blueprint = Blueprint;

@@ -48,6 +48,25 @@ namespace FSO.LotView.Components
             }
         } //set this any time it changes so that hit test works.
 
+        private bool _AvatarSolid = true;
+        public bool AvatarSolid
+        {
+            get
+            {
+                return _AvatarSolid;
+            }
+            set
+            {
+                bool oldValue = _AvatarSolid;
+                _AvatarSolid = value;
+
+                if (value != oldValue)
+                {
+                    blueprint?.SM64?.UpdateObject(this);
+                }
+            }
+        }
+
         public abstract Vector2 GetScreenPos(WorldState world);
 
         public abstract ushort Room { get; set; }
@@ -101,6 +120,8 @@ namespace FSO.LotView.Components
                 if (blueprint != null) _Position.Z += blueprint.InterpAltitude(new Vector3(0.5f, 0.5f, 0) + _Position - MTOffset / 16) + MTOffset.Z / 16f;
                 OnPositionChanged();
                 _WorldDirty = true;
+
+                blueprint?.SM64?.UpdateObject(this);
             }
         }
 

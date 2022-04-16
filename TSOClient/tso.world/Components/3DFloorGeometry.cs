@@ -662,6 +662,8 @@ namespace FSO.LotView.Components
             {
                 group.Value.PrepareGPU(gd);
             }
+
+            Bp.SM64?.UpdateFloors();
         }
 
         public void Clear()

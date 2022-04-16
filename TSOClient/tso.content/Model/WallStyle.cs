@@ -15,5 +15,7 @@ namespace FSO.Content.Model
         public SPR WallsDownNear;
         public SPR WallsDownMedium;
         public SPR WallsDownFar;
+
+        public bool IsDoor; // Set at runtime for dynamic wall styles.
     }
 }

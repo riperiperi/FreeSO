@@ -79,6 +79,8 @@ namespace FSO.LotView.Components
             GroundHeight = heights;
             UpdateLotType();
             TerrainDirty = true;
+
+            Bp.SM64?.UpdateTerrain();
         }
 
         public void ForceSnow(float type)
@@ -181,7 +183,7 @@ namespace FSO.LotView.Components
             return sum;
         }
 
-        private float GetElevationPoint(int x, int y)
+        public float GetElevationPoint(int x, int y)
         {
             if (x >= Size.Width || y >= Size.Height) return 0;
             return GroundHeight[((y) * (Size.Width) + (x))] * Bp.TerrainFactor * 3;
