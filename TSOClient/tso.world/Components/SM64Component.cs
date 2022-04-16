@@ -782,7 +782,7 @@ namespace FSO.LotView.Components
             var technique = aEffect.CurrentTechnique;
 
             aEffect.Parameters["Level"].SetValue((level - 1) + 0.0001f);
-            aEffect.Parameters["AmbientLight"].SetValue(state.OutsideColor.ToVector4());
+            aEffect.Parameters["AmbientLight"].SetValue(WorldConfig.Current.AdvancedLighting ? new Vector4(1) : state.OutsideColor.ToVector4());
             aEffect.Parameters["World"].SetValue(world);
             aEffect.Parameters["SkelBindings"].SetValue(newMatrices.ToArray());
             aEffect.Parameters["MeshTex"].SetValue(Texture);
