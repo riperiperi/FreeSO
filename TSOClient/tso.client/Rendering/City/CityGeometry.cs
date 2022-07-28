@@ -468,11 +468,14 @@ namespace FSO.Client.Rendering.City
 
             RoadIndices?.Dispose();
             RoadVertices?.Dispose();
-            RoadIndices = new IndexBuffer(gd, IndexElementSize.ThirtyTwoBits, roadIndices.Count, BufferUsage.None);
-            RoadIndices.SetData(roadIndices.ToArray());
-            RoadVertices = new VertexBuffer(gd, typeof(TLayerVertex), roadVertices.Count, BufferUsage.None);
-            RoadVertices.SetData(roadVertices.ToArray());
-            RoadPrims = roadIndices.Count / 3;
+            if (roadVertices.Count > 0)
+            {
+                RoadIndices = new IndexBuffer(gd, IndexElementSize.ThirtyTwoBits, roadIndices.Count, BufferUsage.None);
+                RoadIndices.SetData(roadIndices.ToArray());
+                RoadVertices = new VertexBuffer(gd, typeof(TLayerVertex), roadVertices.Count, BufferUsage.None);
+                RoadVertices.SetData(roadVertices.ToArray());
+                RoadPrims = roadIndices.Count / 3;
+            }
         }
 
         private int O(int x, int y, int minx, int maxx)
