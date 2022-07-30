@@ -81,7 +81,7 @@ namespace FSO.IDE.ResourceBrowser.ResourceEditors
 
         private void ParamRenameBtn_Click(object sender, EventArgs e)
         {
-            if (ParamList.SelectedIndex == -1/* || ActiveMeta == null*/) return;
+            if (ParamList.SelectedIndex == -1) return;
             int index = ParamList.SelectedIndex;
             var input = new GenericTextInput("Enter a new name for this Parameter.", ParamList.Items[index].ToString());
             input.ShowDialog();
@@ -99,7 +99,7 @@ namespace FSO.IDE.ResourceBrowser.ResourceEditors
 
         private void LocalRenameBtn_Click(object sender, EventArgs e)
         {
-            if (LocalList.SelectedIndex == -1/* || ActiveMeta == null*/) return;
+            if (LocalList.SelectedIndex == -1) return;
             int index = LocalList.SelectedIndex;
             var input = new GenericTextInput("Enter a new name for this Local.", LocalList.Items[index].ToString());
             input.ShowDialog();
@@ -251,7 +251,6 @@ namespace FSO.IDE.ResourceBrowser.ResourceEditors
                 newTPRP.ParamNames = newParams;
             }, newTPRP));
             ActiveMeta = newTPRP;
-            //RefreshDisplay();
         }
 
         private void TPRPButton_Click(object sender, EventArgs e)
@@ -265,7 +264,6 @@ namespace FSO.IDE.ResourceBrowser.ResourceEditors
             bool enableButtons = ParamList.SelectedIndex != -1;
             ParamRemoveBtn.Enabled = enableButtons;
             ParamRenameBtn.Enabled = enableButtons;
-            //ParamRenameBtn.Enabled = enableButtons && ActiveMeta != null;
         }
 
         private void LocalList_SelectedIndexChanged(object sender, EventArgs e)
@@ -273,7 +271,6 @@ namespace FSO.IDE.ResourceBrowser.ResourceEditors
             bool enableButtons = LocalList.SelectedIndex != -1;
             LocalRemoveBtn.Enabled = enableButtons;
             LocalRenameBtn.Enabled = enableButtons;
-            //LocalRenameBtn.Enabled = enableButtons && ActiveMeta != null;
         }
     }
 }

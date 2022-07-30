@@ -96,7 +96,7 @@ namespace FSO.IDE.ResourceBrowser.ResourceEditors
                     NameBox.Text = "";
             }
 
-            if (ind == -1/* || ActiveConstLabel == null*/)
+            if (ind == -1)
             {
                 
                 StringBox.Enabled = false;
@@ -229,15 +229,6 @@ namespace FSO.IDE.ResourceBrowser.ResourceEditors
             CheckDeleteLabels();
             UpdateStrings();
             SelectedStringInd = Math.Max(0, ind - 1);
-            /*
-            var ind = SelectedStringInd;
-            Content.Content.Get().Changes.BlockingResMod(new ResAction(() =>
-            {
-                ActiveConst.RemoveString(ind);
-            }, ActiveConst));
-            UpdateStrings();
-            SelectedStringInd = Math.Max(0, ind-1);
-            */
         }
 
         private void UpButton_Click(object sender, EventArgs e)
@@ -258,18 +249,6 @@ namespace FSO.IDE.ResourceBrowser.ResourceEditors
             }
             UpdateStrings();
             SelectedStringInd = ind - 1;
-            /*
-            var ind = SelectedStringInd;
-            if (ind == 0) return;
-
-            Content.Content.Get().Changes.BlockingResMod(new ResAction(() =>
-            {
-                var old = ActiveConst.GetStringEntry(ind - 1);
-                ActiveConst.SwapString(ind, ind - 1);
-            }, ActiveConst));
-            UpdateStrings();
-            SelectedStringInd = ind - 1;
-            */
         }
 
         private void DownButton_Click(object sender, EventArgs e)
@@ -290,18 +269,6 @@ namespace FSO.IDE.ResourceBrowser.ResourceEditors
             }
             UpdateStrings();
             SelectedStringInd = ind + 1;
-            /*
-            var ind = SelectedStringInd;
-            if (ind == StringList.Items.Count-1) return;
-            
-            Content.Content.Get().Changes.BlockingResMod(new ResAction(() =>
-            {
-                var old = ActiveConst.GetStringEntry(ind);
-                ActiveConst.SwapString(ind, ind + 1);
-            }, ActiveConst));
-            UpdateStrings();
-            SelectedStringInd = ind + 1;
-            */
         }
 
         public void SetOBJDAttrs(OBJDSelector[] selectors)
