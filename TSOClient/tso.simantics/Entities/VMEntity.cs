@@ -369,7 +369,6 @@ namespace FSO.SimAntics
                     float pan = (SoundThreads[i].Pan) ? Math.Max(-1.0f, Math.Min(1.0f, scrPos.X / worldSpace.WorldPxWidth)) : 0;
                     pan = pan * pan * ((pan > 0)?1:-1);
 
-
                     float volume = 1f;
                     
                     var rcs = worldState.Cameras.ActiveCamera as CameraController3D;
@@ -382,6 +381,29 @@ namespace FSO.SimAntics
                         volume = 1.5f - delta.Length() / 40f;
                         volume *= (10 / ((rcs.Zoom3D * rcs.Zoom3D) + 10));
                         volume *= worldState.PreciseZoom;
+
+                        //Calculate 3D sound
+                        if (SoundThreads[i].Pan)
+                        {
+                            //Calculate camera vectors and heading relative to sound source
+                            var sourcePos = new Vector3(vp.X, vp.Z, vp.Y);
+
+                            var lookAt = rcs.Camera.Target - rcs.Camera.Position;
+                            lookAt.Normalize();
+
+                            var lookUp = Vector3.Up;
+
+                            var lookSide = Vector3.Cross(lookAt, lookUp);
+                            lookSide.Normalize();
+
+                            var heading = sourcePos - rcs.Camera.Position;
+                            heading.Normalize();
+
+                            pan = Vector3.Dot(lookSide, heading);
+
+                            //Tweak exponent so that sounds don't go off one ear too soon
+                            pan = (float)Math.Pow(Math.Abs(pan), 2.25f) * Math.Sign(pan);
+                        }
                     }
                     else
                     {
