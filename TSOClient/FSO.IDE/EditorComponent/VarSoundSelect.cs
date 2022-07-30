@@ -112,6 +112,7 @@ namespace FSO.IDE.EditorComponent
             fwav.Name = name;
             fwav.ChunkParent = SourceIff;
             fwav.ChunkProcessed = true;
+            fwav.ChunkType = "FWAV";
 
             Content.Content.Get().Changes.BlockingResMod(new ResAction(() =>
             {
