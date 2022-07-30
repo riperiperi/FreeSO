@@ -126,7 +126,7 @@ namespace FSO.IDE.EditorComponent
                     }
                 }
                 fwav.ChunkID = resultID;
-                fwav.ChunkLabel = "";
+                fwav.ChunkLabel = name;
 
                 SourceIff.AddChunk(fwav);
                 fwav.AddedByPatch = true;
