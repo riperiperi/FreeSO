@@ -29,8 +29,19 @@ namespace FSO.IDE.ResourceBrowser
 
             if (chunk is BHAV && chunk.ChunkParent.RuntimeInfo.UseCase == IffUseCase.Object)
                 ChunkIDEntry.Minimum = 4096;
-
             ChunkIDEntry.Value = Math.Max(ChunkIDEntry.Minimum, Math.Min(ChunkIDEntry.Maximum, chunk.ChunkID));
+            for (var i= ChunkIDEntry.Minimum; i<ChunkIDEntry.Maximum;i++)
+            {
+                MethodInfo method = typeof(IffFile).GetMethod("Get");
+                MethodInfo generic = method.MakeGenericMethod(Chunk.GetType());
+                var iff = Chunk.ChunkParent;
+                var chnk = (IffChunk)generic.Invoke(iff, new object[] { (ushort)i });
+                if (chnk == null)
+                {
+                    ChunkIDEntry.Value = i;
+                    break;
+                }
+            }
         }
 
         private void OKButton_Click(object sender, EventArgs e)
