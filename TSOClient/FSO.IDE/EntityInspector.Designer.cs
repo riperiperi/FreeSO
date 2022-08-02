@@ -37,6 +37,7 @@
             this.RefreshButton = new System.Windows.Forms.Button();
             this.TracerButton = new System.Windows.Forms.Button();
             this.DeleteButton = new System.Windows.Forms.Button();
+            this.OpenResource = new System.Windows.Forms.Button();
             this.SuspendLayout();
             // 
             // EntityView
@@ -53,7 +54,6 @@
             this.EntityView.FullRowSelect = true;
             this.EntityView.HideSelection = false;
             this.EntityView.Location = new System.Drawing.Point(3, 3);
-            this.EntityView.MultiSelect = false;
             this.EntityView.Name = "EntityView";
             this.EntityView.Size = new System.Drawing.Size(615, 452);
             this.EntityView.TabIndex = 0;
@@ -109,7 +109,7 @@
             // DeleteButton
             // 
             this.DeleteButton.Anchor = ((System.Windows.Forms.AnchorStyles)((System.Windows.Forms.AnchorStyles.Bottom | System.Windows.Forms.AnchorStyles.Right)));
-            this.DeleteButton.Location = new System.Drawing.Point(624, 403);
+            this.DeleteButton.Location = new System.Drawing.Point(624, 374);
             this.DeleteButton.Name = "DeleteButton";
             this.DeleteButton.Size = new System.Drawing.Size(103, 23);
             this.DeleteButton.TabIndex = 3;
@@ -117,10 +117,22 @@
             this.DeleteButton.UseVisualStyleBackColor = true;
             this.DeleteButton.Click += new System.EventHandler(this.DeleteButton_Click);
             // 
+            // OpenResource
+            // 
+            this.OpenResource.Anchor = ((System.Windows.Forms.AnchorStyles)((System.Windows.Forms.AnchorStyles.Bottom | System.Windows.Forms.AnchorStyles.Right)));
+            this.OpenResource.Location = new System.Drawing.Point(624, 403);
+            this.OpenResource.Name = "OpenResource";
+            this.OpenResource.Size = new System.Drawing.Size(103, 23);
+            this.OpenResource.TabIndex = 4;
+            this.OpenResource.Text = "Open Resource";
+            this.OpenResource.UseVisualStyleBackColor = true;
+            this.OpenResource.Click += new System.EventHandler(this.OpenResource_Click);
+            // 
             // EntityInspector
             // 
             this.AutoScaleDimensions = new System.Drawing.SizeF(6F, 13F);
             this.AutoScaleMode = System.Windows.Forms.AutoScaleMode.Font;
+            this.Controls.Add(this.OpenResource);
             this.Controls.Add(this.DeleteButton);
             this.Controls.Add(this.TracerButton);
             this.Controls.Add(this.RefreshButton);
@@ -142,5 +154,6 @@
         private System.Windows.Forms.Button RefreshButton;
         private System.Windows.Forms.Button TracerButton;
         private System.Windows.Forms.Button DeleteButton;
+        private System.Windows.Forms.Button OpenResource;
     }
 }
