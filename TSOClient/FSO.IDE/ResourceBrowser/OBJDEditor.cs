@@ -467,7 +467,8 @@ namespace FSO.IDE.ResourceBrowser
                 existing.ChunkParent = ActiveObj.Resource.MainIff;
                 existing.ChunkProcessed = true;
                 existing.ChunkID = ActiveObj.OBJ.CatalogStringsID;
-                existing.ChunkLabel = "";
+                existing.ChunkType = "BMP#";
+                existing.ChunkLabel = "Catalog";
             }
 
             Content.Content.Get().Changes.BlockingResMod(new ResAction(() =>
