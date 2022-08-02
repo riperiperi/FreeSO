@@ -84,7 +84,10 @@ namespace FSO.IDE.ResourceBrowser
             }
             else
             {
-                UpgradeStatusLabel.Text = "Upgrade editing is not available when online.";
+                if (!(Client.UI.Framework.UIScreen.Current is Client.UI.Screens.SandboxGameScreen))
+                    UpgradeStatusLabel.Text = "Upgrade editing is not available when online.";
+                else
+                    UpgradeStatusLabel.Text = "No Content/upgrades.json file.";
                 IffSpecificBox.Enabled = false;
                 ObjectSpecificBox.Enabled = false;
                 CopyButton.Enabled = false;

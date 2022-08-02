@@ -24,7 +24,7 @@ namespace FSO.Client.UI.Panels
 
         public UIDebugMenu() : base(UIDialogStyle.Tall, true)
         {
-            SetSize(500, 300);
+            SetSize(500, 340);
             Caption = "Debug Tools";
 
             Position = new Microsoft.Xna.Framework.Vector2(
@@ -184,9 +184,32 @@ namespace FSO.Client.UI.Panels
             };
             Add(cityDCBtn);
 
+            var saveUpgradesBtn = new UIButton();
+            saveUpgradesBtn.Caption = "Export Upgrades";
+            saveUpgradesBtn.Position = new Microsoft.Xna.Framework.Vector2(160, 250);
+            saveUpgradesBtn.Width = 300;
+            saveUpgradesBtn.OnButtonClick += x =>
+            {
+                var content = Content.Content.Get();
+                if (content.Upgrades?.ActiveFile == null)
+                {
+                    UIScreen.GlobalShowAlert(new UIAlertOptions()
+                    {
+                        Message = "No Upgrades File available to export, try joining a server with upgrades."
+                    }, true);
+                    return;
+                }
+                content.Upgrades.SaveJSONTuning();
+                UIScreen.GlobalShowAlert(new UIAlertOptions()
+                {
+                    Message = "Upgrades File was exported to Content/upgrades.json."
+                }, true);
+            };
+            Add(saveUpgradesBtn);
+
             serverNameBox = new UITextBox();
             serverNameBox.X = 50;
-            serverNameBox.Y = 300 - 54;
+            serverNameBox.Y = 340 - 54;
             serverNameBox.SetSize(500 - 100, 25);
             serverNameBox.CurrentText = GlobalSettings.Default.GameEntryUrl;
 
