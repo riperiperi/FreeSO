@@ -97,16 +97,16 @@ namespace FSO.IDE
         private void DeleteButton_Click(object sender, EventArgs e)
         {
             if (EntityView.SelectedIndices == null || EntityView.SelectedIndices.Count == 0) return;
-            for(var i=0;i<EntityView.SelectedItems.Count;i++)
+            foreach (ListViewItem item in EntityView.SelectedItems)
             {
                 // Send a delete command in addition to deleting the object locally to allow deletion by admin clients.
                 HookedVM.SendCommand(new VMNetDeleteObjectCmd()
                 {
-                    ObjectID = ItemToEnt[EntityView.SelectedItems[i]].ID,
+                    ObjectID = ItemToEnt[item].ID,
                     CleanupAll = true
                 });
-                var item = ItemToEnt[EntityView.SelectedItems[i]];
-                Content.Content.Get().Changes.Invoke((Action<bool, VMContext>)item.Entity.Delete, true, item.Entity.Thread.Context);
+                var ent = ItemToEnt[item];
+                Content.Content.Get().Changes.Invoke((Action<bool, VMContext>)ent.Entity.Delete, true, ent.Entity.Thread.Context);
             }
             RefreshView();
         }
@@ -114,9 +114,9 @@ namespace FSO.IDE
         private void OpenResource_Click(object sender, EventArgs e)
         {
             if (EntityView.SelectedIndices == null || EntityView.SelectedIndices.Count == 0) return;
-            for (var i = 0; i < EntityView.SelectedItems.Count; i++)
+            foreach (ListViewItem item in EntityView.SelectedItems)
             {
-                MainWindow.Instance.IffManager.OpenResourceWindow(ItemToEnt[EntityView.SelectedItems[i]].Entity.Object);
+                MainWindow.Instance.IffManager.OpenResourceWindow(ItemToEnt[item].Entity.Object);
             }
         }
     }
