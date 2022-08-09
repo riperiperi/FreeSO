@@ -29,7 +29,7 @@ namespace FSO.IDE.ResourceBrowser
 
             if (chunk is BHAV || chunk is BCON)
             {
-                switch(chunk.ChunkParent.RuntimeInfo.UseCase)
+                switch (chunk.ChunkParent.RuntimeInfo.UseCase)
                 {
                     case IffUseCase.Object:
                         ChunkIDEntry.Minimum = 4096;
