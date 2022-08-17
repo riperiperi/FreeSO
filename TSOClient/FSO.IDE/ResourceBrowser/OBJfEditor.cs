@@ -10,6 +10,7 @@ using System.Windows.Forms;
 using FSO.Content;
 using FSO.Files.Formats.IFF.Chunks;
 using FSO.IDE.EditorComponent;
+using FSO.Files.Formats.IFF;
 
 namespace FSO.IDE.ResourceBrowser
 {
@@ -70,6 +71,40 @@ namespace FSO.IDE.ResourceBrowser
             IsOBJDFunc = (ActiveOBJf == null);
 
             TableCombo.SelectedIndex = (IsOBJDFunc) ? 0 : 1;
+            RefreshView();
+        }
+
+        public void CreateObjf()
+        {
+            if (ActiveOBJf != null)
+                return;
+            var newOBJf = new OBJf();
+            newOBJf.ChunkType = "OBJf";
+            newOBJf.ChunkProcessed = true;
+            newOBJf.ChunkParent = ActiveObject.OBJ.ChunkParent;
+            Content.Content.Get().Changes.BlockingResMod(new ResAction(() =>
+            {
+                newOBJf.ChunkID = ActiveObject.OBJ.ChunkID;
+                newOBJf.ChunkLabel = ActiveObject.OBJ.ChunkLabel;
+
+                ActiveObject.OBJ.ChunkParent.AddChunk(newOBJf);
+                newOBJf.AddedByPatch = true;
+                newOBJf.RuntimeInfo = ChunkRuntimeState.Modified;
+                var funcs = new OBJfFunctionEntry[FunctionOBJDNames.Length];
+                for (int i = 0; i < FunctionOBJDNames.Length; i++)
+                {
+                    if (FunctionOBJDNames[i] == "") continue;
+                    funcs[i] = new OBJfFunctionEntry
+                    {
+                        ActionFunction = ActiveObject.OBJ.GetPropertyByName<ushort>(FunctionOBJDNames[i])
+                    };
+                }
+                newOBJf.functions = funcs;
+                ActiveObject.OBJ.UsesFnTable = 1;
+            }, newOBJf));
+            ActiveOBJf = newOBJf;
+            IsOBJDFunc = false;
+            TableCombo.SelectedIndex = 1;
             RefreshView();
         }
 
@@ -139,16 +174,11 @@ namespace FSO.IDE.ResourceBrowser
         public void SetCheck(int function, ushort id)
         {
             if (IsOBJDFunc)
+                CreateObjf();
+            Content.Content.Get().Changes.BlockingResMod(new ResAction(() =>
             {
-                return;
-            }
-            else
-            {
-                Content.Content.Get().Changes.BlockingResMod(new ResAction(() =>
-                {
-                    ActiveOBJf.functions[function].ConditionFunction = id;
-                }, ActiveOBJf));
-            }
+                ActiveOBJf.functions[function].ConditionFunction = id;
+            }, ActiveOBJf));
             RefreshView();
         }
 
@@ -199,7 +229,7 @@ namespace FSO.IDE.ResourceBrowser
 
         private void FunctionList_SelectedIndexChanged(object sender, EventArgs e)
         {
-            CheckButton.Enabled = !IsOBJDFunc;
+            CheckButton.Enabled = true;
             DescLabel.Text = "No Description Available."; //todo
         }
 

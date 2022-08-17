@@ -46,11 +46,19 @@ namespace FSO.IDE.EditorComponent.Commands
             }
             else
             {
+                var old0View = editor.BHAVView.Primitives.First(prim => prim.InstPtr == 0);
+                var new0View = editor.BHAVView.Primitives.First(prim => prim.InstPtr == OldPtr);
+                var old0Box = old0View.TreeBox;
+                var new0Box = new0View.TreeBox;
+
+                old0View.TreeBox = new0Box;
+                new0View.TreeBox = old0Box;
+                old0View.CopyPosToTree();
+                new0View.CopyPosToTree();
+
                 bhav.Instructions[0] = Primitive.Instruction;
                 bhav.Instructions[OldPtr] = Old0.Instruction;
-                // TODO
-                //Primitive.InstPtr = 0;
-                //Old0.InstPtr = OldPtr;
+
                 foreach (var prim in FromTrue) prim.Instruction.TruePointer = 0;
                 foreach (var prim in FromFalse) prim.Instruction.FalsePointer = 0;
                 foreach (var prim in FromTrue0) prim.Instruction.TruePointer = OldPtr;
@@ -68,11 +76,19 @@ namespace FSO.IDE.EditorComponent.Commands
             }
             else
             {
+                var old0View = editor.BHAVView.Primitives.First(prim => prim.InstPtr == 0);
+                var new0View = editor.BHAVView.Primitives.First(prim => prim.InstPtr == OldPtr);
+                var old0Box = old0View.TreeBox;
+                var new0Box = new0View.TreeBox;
+
+                old0View.TreeBox = new0Box;
+                new0View.TreeBox = old0Box;
+                old0View.CopyPosToTree();
+                new0View.CopyPosToTree();
+
                 bhav.Instructions[0] = Old0.Instruction;
                 bhav.Instructions[OldPtr] = Primitive.Instruction;
-                // TODO
-                //Primitive.InstPtr = OldPtr;
-                //Old0.InstPtr = 0;
+
                 foreach (var prim in FromTrue) prim.Instruction.TruePointer = OldPtr;
                 foreach (var prim in FromFalse) prim.Instruction.FalsePointer = OldPtr;
                 foreach (var prim in FromTrue0) prim.Instruction.TruePointer = 0;

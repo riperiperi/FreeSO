@@ -84,7 +84,10 @@ namespace FSO.IDE.ResourceBrowser
             }
             else
             {
-                UpgradeStatusLabel.Text = "Upgrade editing is not available when online.";
+                if (Content.Content.Get().Upgrades?.ActiveFile != null)
+                    UpgradeStatusLabel.Text = "Upgrade editing is not available when online.";
+                else
+                    UpgradeStatusLabel.Text = "No Content/upgrades.json file.";
                 IffSpecificBox.Enabled = false;
                 ObjectSpecificBox.Enabled = false;
                 CopyButton.Enabled = false;

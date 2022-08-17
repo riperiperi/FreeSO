@@ -27,10 +27,37 @@ namespace FSO.IDE.ResourceBrowser
             ChunkLabelEntry.Text = chunk.ChunkLabel;
             NewChunk = newChunk;
 
-            if (chunk is BHAV && chunk.ChunkParent.RuntimeInfo.UseCase == IffUseCase.Object)
-                ChunkIDEntry.Minimum = 4096;
-
+            if (chunk is BHAV || chunk is BCON)
+            {
+                switch (chunk.ChunkParent.RuntimeInfo.UseCase)
+                {
+                    case IffUseCase.Object:
+                        ChunkIDEntry.Minimum = 4096;
+                        break;
+                    case IffUseCase.Global:
+                        if (chunk.ChunkParent.Filename == "global.iff")
+                            ChunkIDEntry.Minimum = 256;
+                        else
+                            ChunkIDEntry.Minimum = 8192;
+                        break;
+                }
+            }
             ChunkIDEntry.Value = Math.Max(ChunkIDEntry.Minimum, Math.Min(ChunkIDEntry.Maximum, chunk.ChunkID));
+            if (newChunk)
+            {
+                for (var i = ChunkIDEntry.Minimum; i < ChunkIDEntry.Maximum; i++)
+                {
+                    MethodInfo method = typeof(IffFile).GetMethod("Get");
+                    MethodInfo generic = method.MakeGenericMethod(Chunk.GetType());
+                    var iff = Chunk.ChunkParent;
+                    var chnk = (IffChunk)generic.Invoke(iff, new object[] { (ushort)i });
+                    if (chnk == null)
+                    {
+                        ChunkIDEntry.Value = i;
+                        break;
+                    }
+                }
+            }
         }
 
         private void OKButton_Click(object sender, EventArgs e)

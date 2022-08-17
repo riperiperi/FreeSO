@@ -81,11 +81,13 @@ namespace FSO.IDE.ResourceBrowser.ResourceEditors
 
         private void ParamRenameBtn_Click(object sender, EventArgs e)
         {
-            if (ParamList.SelectedIndex == -1 || ActiveMeta == null) return;
+            if (ParamList.SelectedIndex == -1) return;
             int index = ParamList.SelectedIndex;
             var input = new GenericTextInput("Enter a new name for this Parameter.", ParamList.Items[index].ToString());
             input.ShowDialog();
             if (input.DialogResult == DialogResult.OK) {
+                if (ActiveMeta == null)
+                    GenerateTPRP();
                 string name = input.StringResult;
                 Content.Content.Get().Changes.BlockingResMod(new ResAction(() =>
                 {
@@ -97,12 +99,14 @@ namespace FSO.IDE.ResourceBrowser.ResourceEditors
 
         private void LocalRenameBtn_Click(object sender, EventArgs e)
         {
-            if (LocalList.SelectedIndex == -1 || ActiveMeta == null) return;
+            if (LocalList.SelectedIndex == -1) return;
             int index = LocalList.SelectedIndex;
             var input = new GenericTextInput("Enter a new name for this Local.", LocalList.Items[index].ToString());
             input.ShowDialog();
             if (input.DialogResult == DialogResult.OK)
             {
+                if (ActiveMeta == null)
+                    GenerateTPRP();
                 string name = input.StringResult;
                 Content.Content.Get().Changes.BlockingResMod(new ResAction(() =>
                 {
@@ -152,7 +156,7 @@ namespace FSO.IDE.ResourceBrowser.ResourceEditors
                     ActiveMeta.LocalNames = newN;
                 }, ActiveMeta));
             }
-
+            CheckRemoveTPRP();
             RefreshDisplay();
         }
 
@@ -196,27 +200,77 @@ namespace FSO.IDE.ResourceBrowser.ResourceEditors
                     ActiveMeta.ParamNames = newN;
                 }, ActiveMeta));
             }
-
+            CheckRemoveTPRP();
             RefreshDisplay();
+        }
+
+        private void CheckRemoveTPRP()
+        {
+            //Delete the metadata chunk if there are no locals or parameters to label.
+            if (ActiveMeta == null)
+                return;
+            if (ActiveChunk.Locals <= 0 && ActiveChunk.Args <= 0)
+            {
+                Content.Content.Get().Changes.BlockingResMod(new ResAction(() =>
+                {
+                    ActiveMeta.ChunkParent.FullRemoveChunk(ActiveMeta);
+                    Content.Content.Get().Changes.ChunkChanged(ActiveMeta);
+                }));
+                ActiveMeta = null;
+            }
+        }
+
+        private void GenerateTPRP()
+        {
+            if (ActiveMeta != null) //Just in case? Shouldn't ever be possible though
+                return;
+            var newTPRP = new TPRP();
+            newTPRP.ChunkType = "TPRP";
+            newTPRP.ChunkProcessed = true;
+            newTPRP.ChunkParent = ActiveChunk.ChunkParent;
+            Content.Content.Get().Changes.BlockingResMod(new ResAction(() =>
+            {
+                newTPRP.ChunkID = ActiveChunk.ChunkID;
+                newTPRP.ChunkLabel = ActiveChunk.ChunkLabel;
+
+                ActiveChunk.ChunkParent.AddChunk(newTPRP);
+                newTPRP.AddedByPatch = true;
+                newTPRP.RuntimeInfo = ChunkRuntimeState.Modified;
+                var newLocals = new string[ActiveChunk.Locals];
+                //Go through all locals and params and add them with default labels
+                for (var i = 0; i < ActiveChunk.Locals; i++)
+                {
+                    newLocals[i] = "Local " + i;
+                }
+                newTPRP.LocalNames = newLocals;
+                var newParams = new string[ActiveChunk.Args];
+                for (var i = 0; i < ActiveChunk.Args; i++)
+                {
+                    newParams[i] = "Parameter " + i;
+                }
+                newTPRP.ParamNames = newParams;
+            }, newTPRP));
+            ActiveMeta = newTPRP;
         }
 
         private void TPRPButton_Click(object sender, EventArgs e)
         {
-
+            GenerateTPRP();
+            RefreshDisplay();
         }
 
         private void ParamList_SelectedIndexChanged(object sender, EventArgs e)
         {
             bool enableButtons = ParamList.SelectedIndex != -1;
             ParamRemoveBtn.Enabled = enableButtons;
-            ParamRenameBtn.Enabled = enableButtons && ActiveMeta != null;
+            ParamRenameBtn.Enabled = enableButtons;
         }
 
         private void LocalList_SelectedIndexChanged(object sender, EventArgs e)
         {
             bool enableButtons = LocalList.SelectedIndex != -1;
             LocalRemoveBtn.Enabled = enableButtons;
-            LocalRenameBtn.Enabled = enableButtons && ActiveMeta != null;
+            LocalRenameBtn.Enabled = enableButtons;
         }
     }
 }

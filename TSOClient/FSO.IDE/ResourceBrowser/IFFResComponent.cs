@@ -374,6 +374,7 @@ namespace FSO.IDE.ResourceBrowser
                 chunk.ChunkParent.FullRemoveChunk(chunk);
                 Content.Content.Get().Changes.ChunkChanged(chunk);
             }));
+            RefreshResList();
         }
 
         private void CopyRes_Click(object sender, EventArgs e)

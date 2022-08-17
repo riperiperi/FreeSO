@@ -56,6 +56,7 @@
             this.saveGlobalscsToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
             this.avatarToolToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
             this.openExternalIffToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
+            this.fieldEncodingReverserToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
             this.windowToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
             this.hideAllToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
             this.toolStripSeparator1 = new System.Windows.Forms.ToolStripSeparator();
@@ -77,10 +78,9 @@
             this.ChangesView = new System.Windows.Forms.TreeView();
             this.BrowserTab = new System.Windows.Forms.TabPage();
             this.NewOBJButton = new System.Windows.Forms.Button();
-            this.Browser = new FSO.IDE.ObjectBrowser();
             this.InspectorTab = new System.Windows.Forms.TabPage();
+            this.Browser = new FSO.IDE.ObjectBrowser();
             this.entityInspector1 = new FSO.IDE.EntityInspector();
-            this.fieldEncodingReverserToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
             this.menuStrip1.SuspendLayout();
             this.UtilityTabs.SuspendLayout();
             this.OverviewTab.SuspendLayout();
@@ -208,6 +208,13 @@
             this.openExternalIffToolStripMenuItem.Size = new System.Drawing.Size(199, 22);
             this.openExternalIffToolStripMenuItem.Text = "Open External Iff...";
             this.openExternalIffToolStripMenuItem.Click += new System.EventHandler(this.openExternalIffToolStripMenuItem_Click);
+            // 
+            // fieldEncodingReverserToolStripMenuItem
+            // 
+            this.fieldEncodingReverserToolStripMenuItem.Name = "fieldEncodingReverserToolStripMenuItem";
+            this.fieldEncodingReverserToolStripMenuItem.Size = new System.Drawing.Size(199, 22);
+            this.fieldEncodingReverserToolStripMenuItem.Text = "Field Encoding Reverser";
+            this.fieldEncodingReverserToolStripMenuItem.Click += new System.EventHandler(this.fieldEncodingReverserToolStripMenuItem_Click);
             // 
             // windowToolStripMenuItem
             // 
@@ -455,16 +462,6 @@
             this.NewOBJButton.UseVisualStyleBackColor = true;
             this.NewOBJButton.Click += new System.EventHandler(this.NewOBJButton_Click);
             // 
-            // Browser
-            // 
-            this.Browser.Anchor = ((System.Windows.Forms.AnchorStyles)((((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Bottom) 
-            | System.Windows.Forms.AnchorStyles.Left) 
-            | System.Windows.Forms.AnchorStyles.Right)));
-            this.Browser.Location = new System.Drawing.Point(3, 3);
-            this.Browser.Name = "Browser";
-            this.Browser.Size = new System.Drawing.Size(724, 452);
-            this.Browser.TabIndex = 0;
-            // 
             // InspectorTab
             // 
             this.InspectorTab.Controls.Add(this.entityInspector1);
@@ -476,6 +473,16 @@
             this.InspectorTab.Text = "VMEntity Inspector";
             this.InspectorTab.UseVisualStyleBackColor = true;
             // 
+            // Browser
+            // 
+            this.Browser.Anchor = ((System.Windows.Forms.AnchorStyles)((((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Bottom) 
+            | System.Windows.Forms.AnchorStyles.Left) 
+            | System.Windows.Forms.AnchorStyles.Right)));
+            this.Browser.Location = new System.Drawing.Point(3, 3);
+            this.Browser.Name = "Browser";
+            this.Browser.Size = new System.Drawing.Size(724, 452);
+            this.Browser.TabIndex = 0;
+            // 
             // entityInspector1
             // 
             this.entityInspector1.Anchor = ((System.Windows.Forms.AnchorStyles)((((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Bottom) 
@@ -485,13 +492,6 @@
             this.entityInspector1.Name = "entityInspector1";
             this.entityInspector1.Size = new System.Drawing.Size(724, 452);
             this.entityInspector1.TabIndex = 0;
-            // 
-            // fieldEncodingReverserToolStripMenuItem
-            // 
-            this.fieldEncodingReverserToolStripMenuItem.Name = "fieldEncodingReverserToolStripMenuItem";
-            this.fieldEncodingReverserToolStripMenuItem.Size = new System.Drawing.Size(199, 22);
-            this.fieldEncodingReverserToolStripMenuItem.Text = "Field Encoding Reverser";
-            this.fieldEncodingReverserToolStripMenuItem.Click += new System.EventHandler(this.fieldEncodingReverserToolStripMenuItem_Click);
             // 
             // MainWindow
             // 

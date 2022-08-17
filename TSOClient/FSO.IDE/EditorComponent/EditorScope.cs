@@ -261,10 +261,10 @@ namespace FSO.IDE.EditorComponent
             {
                 case 0: //local
                     bcon = Object.Resource.Get<BCON>((ushort)(tableID + 4096));
-                    if (bcon != null) return (short)bcon.Constants[keyID];
+                    if (bcon != null && keyID < bcon.Constants.Length) return (short)bcon.Constants[keyID];
 
                     tuning = Object.Resource.Get<OTFTable>((ushort)(tableID + 4096));
-                    if (tuning != null) return (short?)tuning.GetKey(keyID)?.Value ?? (short)0;
+                    if (tuning != null) return (short)(tuning.GetKey(keyID)?.Value ?? 0);
                     break;
                 case 1: //semi globals
                     ushort testTab = (ushort)(tableID + 8192);
@@ -272,7 +272,7 @@ namespace FSO.IDE.EditorComponent
                     if (bcon != null && keyID < bcon.Constants.Length) return (short)bcon.Constants[keyID];
 
                     tuning = Object.Resource.Get<OTFTable>(testTab);
-                    if (tuning != null) return (short)tuning.GetKey(keyID).Value;
+                    if (tuning != null) return (short)(tuning.GetKey(keyID)?.Value ?? 0);
 
                     if (SemiGlobal != null)
                     {
@@ -280,7 +280,7 @@ namespace FSO.IDE.EditorComponent
                         if (bcon != null && keyID < bcon.Constants.Length) return (short)bcon.Constants[keyID];
 
                         tuning = SemiGlobal.Get<OTFTable>(testTab);
-                        if (tuning != null) return (short)tuning.GetKey(keyID).Value;
+                        if (tuning != null) return (short)(tuning.GetKey(keyID)?.Value ?? 0);
                     }
                     break;
                 case 2: //global
@@ -309,12 +309,19 @@ namespace FSO.IDE.EditorComponent
             /** This could be in a BCON or an OTF **/
             BCON bcon;
             OTFTable tuning;
+            TRCN labels;
+
             switch (mode)
             {
                 case 0:
                     bcon = Object.Resource.Get<BCON>((ushort)(tableID + 4096));
+                    labels = Object.Resource.Get<TRCN>((ushort)(tableID + 4096));
                     if (bcon != null)
                     {
+                        if (labels != null && keyID < labels.Entries.Length)
+                        {
+                            return labels.Entries[keyID].Label + " #" + keyID;
+                        }
                         return bcon.ChunkLabel + " #" + keyID;
                     }
 
@@ -327,8 +334,13 @@ namespace FSO.IDE.EditorComponent
                 case 1:
                     if (SemiGlobal == null) break;
                     bcon = SemiGlobal.Get<BCON>((ushort)(tableID + 8192));
+                    labels = Object.Resource.Get<TRCN>((ushort)(tableID + 8192));
                     if (bcon != null)
                     {
+                        if (labels != null && keyID < labels.Entries.Length)
+                        {
+                            return labels.Entries[keyID].Label + " #" + keyID;
+                        }
                         return bcon.ChunkLabel + " #" + keyID;
                     }
 
@@ -340,8 +352,13 @@ namespace FSO.IDE.EditorComponent
                     break;
                 case 2:
                     bcon = Globals.Resource.Get<BCON>((ushort)(tableID + 256));
+                    labels = Object.Resource.Get<TRCN>((ushort)(tableID + 256));
                     if (bcon != null)
                     {
+                        if (labels != null && keyID < labels.Entries.Length)
+                        {
+                            return labels.Entries[keyID].Label + " #" + keyID;
+                        }
                         return bcon.ChunkLabel + " #" + keyID;
                     }
 

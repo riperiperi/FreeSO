@@ -11,6 +11,7 @@ using FSO.SimAntics;
 using FSO.Common.Utils;
 using System.Threading;
 using System.Diagnostics;
+using FSO.SimAntics.NetPlay.Model.Commands;
 
 namespace FSO.IDE
 {
@@ -96,9 +97,27 @@ namespace FSO.IDE
         private void DeleteButton_Click(object sender, EventArgs e)
         {
             if (EntityView.SelectedIndices == null || EntityView.SelectedIndices.Count == 0) return;
-            var item = ItemToEnt[EntityView.SelectedItems[0]];
-            Content.Content.Get().Changes.Invoke((Action<bool, VMContext>)item.Entity.Delete, true, item.Entity.Thread.Context);
+            foreach (ListViewItem item in EntityView.SelectedItems)
+            {
+                // Send a delete command in addition to deleting the object locally to allow deletion by admin clients.
+                HookedVM.SendCommand(new VMNetDeleteObjectCmd()
+                {
+                    ObjectID = ItemToEnt[item].ID,
+                    CleanupAll = true
+                });
+                var ent = ItemToEnt[item];
+                Content.Content.Get().Changes.Invoke((Action<bool, VMContext>)ent.Entity.Delete, true, ent.Entity.Thread.Context);
+            }
             RefreshView();
+        }
+
+        private void OpenResource_Click(object sender, EventArgs e)
+        {
+            if (EntityView.SelectedIndices == null || EntityView.SelectedIndices.Count == 0) return;
+            foreach (ListViewItem item in EntityView.SelectedItems)
+            {
+                MainWindow.Instance.IffManager.OpenResourceWindow(ItemToEnt[item].Entity.Object);
+            }
         }
     }
 
