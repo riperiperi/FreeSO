@@ -490,7 +490,7 @@ namespace FSO.SimAntics
                         Zoom = true,
                     };
                     owner.SoundThreads.Add(entry);
-                    owner.Thread.Context.VM.SoundEntities.Add(this);
+                    owner.Thread?.Context?.VM?.SoundEntities?.Add(this);
                     owner.TickSounds();
                 }
             }
