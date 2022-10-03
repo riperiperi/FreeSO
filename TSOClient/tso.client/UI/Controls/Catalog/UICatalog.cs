@@ -22,6 +22,7 @@ using FSO.SimAntics;
 using FSO.SimAntics.Model;
 using FSO.Content.Interfaces;
 using FSO.Client.UI.Panels;
+using System.Text.RegularExpressions;
 
 namespace FSO.Client.UI.Controls.Catalog
 {
@@ -125,7 +126,7 @@ namespace FSO.Client.UI.Controls.Catalog
             for (int i = 0; i < floors.Count; i++)
             {
                 var floor = (FloorReference)floors[i];
-                sbyte category = (sbyte)((floor.ID >= 65534)?5:9);
+                sbyte category = (sbyte)((floor.ID >= 65534) ? 5 : 9);
                 _Catalog[category].Insert(0, new UICatalogElement
                 {
                     Item = new ObjectCatalogItem()
@@ -276,8 +277,11 @@ namespace FSO.Client.UI.Controls.Catalog
 
         public int PageSize { get; set; }
         public List<UICatalogElement> Selected;
+        public List<UICatalogElement> Filtered;
         private UICatalogItem[] CatalogItems;
         private Dictionary<uint, Texture2D> IconCache;
+
+        private string SearchTerm;
 
         public UICatalog(int pageSize)
         {
@@ -292,13 +296,91 @@ namespace FSO.Client.UI.Controls.Catalog
 
         public void SetCategory(List<UICatalogElement> select) {
             Selected = select;
+            FilterSelected();
             SetPage(0);
+        }
+
+        private void AddMatchScore(string name, Regex search, ref int score)
+        {
+            if (name == null) return;
+
+            var allMatches = search.Matches(name);
+
+            foreach (Match match in allMatches)
+            {
+                int matchScore = 4;
+
+                if (match.Index == 0 || char.IsWhiteSpace(name[match.Index - 1]))
+                {
+                    matchScore *= 2;
+                }
+
+                if (match.Index + match.Value.Length == name.Length || char.IsWhiteSpace(name[match.Index + match.Value.Length]))
+                {
+                    matchScore *= 3;
+                }
+
+                score += matchScore;
+            }
+        }
+
+        private int GetScore(UICatalogElement elem)
+        {
+            ref var item = ref elem.Item;
+
+            string name = item.Name.ToLowerInvariant();
+            string catalogName = item.CatalogName?.ToLowerInvariant();
+            string tags = item.Tags?.ToLowerInvariant();
+
+            string[] termWords = SearchTerm.ToLowerInvariant().Split(' ');
+
+            int score = 0;
+
+            foreach (string word in termWords)
+            {
+                var search = new Regex(".*" + Regex.Escape(word) + ".*");
+
+                AddMatchScore(name, search, ref score);
+                AddMatchScore(catalogName, search, ref score);
+                AddMatchScore(tags, search, ref score);
+            }
+
+            return score;
+        }
+
+        public void FilterSelected()
+        {
+            if (SearchTerm != null && Selected != null)
+            {
+                Filtered = Selected
+                    .Select(elem => new Tuple<UICatalogElement, int>(elem, GetScore(elem)))
+                    .Where(tuple => tuple.Item2 > 0)
+                    .OrderByDescending(tuple => tuple.Item2)
+                    .Select(tuple => tuple.Item1)
+                    .ToList();
+            }
+            else
+            {
+                Filtered = Selected;
+            }
+        }
+
+        public void SetSearchTerm(string term)
+        {
+            if (term == "") term = null;
+
+            if (SearchTerm != term)
+            {
+                SearchTerm = term;
+                FilterSelected();
+                SetPage(0);
+            }
         }
 
         public int TotalPages()
         {
-            if (Selected == null) return 0;
-            return ((Selected.Count-1) / PageSize)+1;
+            if (Filtered == null) return 0;
+            return ((Filtered.Count - 1) / PageSize) + 1;
         }
 
         public int GetPage()
@@ -316,12 +398,13 @@ namespace FSO.Client.UI.Controls.Catalog
             }
 
             int index = page*PageSize;
-            if (Selected == null) return;
-            CatalogItems = new UICatalogItem[Math.Min(PageSize, Math.Max(Selected.Count-index, 0))];
+            if (Filtered == null) return;
+            CatalogItems = new UICatalogItem[Math.Min(PageSize, Math.Max(Filtered.Count - index, 0))];
             int halfPage = PageSize / 2;
             
-            for (int i=0; i<CatalogItems.Length; i++) {
-                var sel = Selected[index++];
+            for (int i=0; i<CatalogItems.Length; i++)
+            {
+                var sel = Filtered[index++];
                 var elem = new UICatalogItem(false);
                 if (sel.Item.GUID == uint.MaxValue) elem.Visible = false;
                 elem.Index = index-1;

@@ -37,6 +37,9 @@ namespace FSO.Client.UI.Panels
 
         protected Dictionary<uint, byte> UpgradeLevelMemory = new Dictionary<uint, byte>();
 
+        protected UIButton SearchButton;
+        protected UICatalogSearchPanel SearchPanel;
+
         protected bool UseSmall;
         public UIAbstractCatalogPanel(string mode, UILotControl lotController)
         {
@@ -83,8 +86,28 @@ namespace FSO.Client.UI.Panels
             ObjLimitLabel.Size = new Microsoft.Xna.Framework.Vector2(200, 0);
             ObjLimitLabel.Alignment = TextAlignment.Center;
             DynamicOverlay.Add(ObjLimitLabel);
+
+            var ui = Content.Content.Get().CustomUI;
+            var gd = GameFacade.GraphicsDevice;
+
+            SearchPanel = new UICatalogSearchPanel(this);
+            SearchPanel.XOffset = Background.Width - 259;
+            SearchPanel.OnUpdate += SearchUpdated;
+
+            SearchButton = new UIButton(ui.Get("cat_search.png").Get(gd));
+            SearchButton.Y = 8;
+            SearchButton.X = Background.Width - (6 + 13);
+            SearchButton.OnButtonClick += (UIElement btn) => { SearchButton.Selected = SearchPanel.Toggle(); };
+            this.Add(SearchButton);
         }
-        
+
+        private void SearchUpdated(string term)
+        {
+            Catalog.SetSearchTerm(term);
+            SetPage(0);
+            Invalidate();
+        }
+
         private void HolderBeforeRelease(UIObjectSelection holding, UpdateState state)
         {
             // remember the upgrade level between entering the catalog
@@ -143,6 +166,9 @@ namespace FSO.Client.UI.Panels
                 Holder.ClearSelected();
                 QueryPanel.Active = false;
             }
+
+            SearchPanel.Parent?.Remove(SearchPanel);
+
             base.Removed();
         }
 
@@ -217,7 +243,7 @@ namespace FSO.Client.UI.Panels
                 }
             }
             Holder.ClearSelected();
-            var item = CurrentCategory[selection];
+            var item = Catalog.Filtered[selection];
 
             if (LotController.ActiveEntity != null && item.CalcPrice > LotController.ActiveEntity.TSOState.Budget.Value)
             {
@@ -274,5 +300,14 @@ namespace FSO.Client.UI.Panels
             OldSelection = selection;
         }
 
+        public override void Update(UpdateState state)
+        {
+            if (SearchPanel.Parent == null)
+            {
+                SearchPanel.SetParent(this.Parent);
+            }
+
+            base.Update(state);
+        }
     }
 }

@@ -103,6 +103,19 @@ namespace FSO.Content
                         Group = (short)obj.MasterID,
                         SubIndex = obj.SubIndex
                     });
+
+                    // Try get catalog strings for the object with the current locale.
+                    // If they're present, record them so they can be sent to the catalog provider for search.
+
+                    CTSS catString = iffFile.Get<CTSS>(obj.CatalogStringsID);
+
+                    if (catString != null)
+                    {
+                        CatalogEnrich.Add(obj.GUID, new GameObjectCatalogEnrich()
+                        {
+                            CatalogName = catString.GetString(0)
+                        });
+                    }
                 }
             }
 
@@ -209,6 +222,11 @@ namespace FSO.Content
         PIFFClone,
         Standalone,
         User
+    }
+
+    public class GameObjectCatalogEnrich
+    {
+        public string CatalogName;
     }
 
     /// <summary>

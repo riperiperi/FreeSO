@@ -139,15 +139,18 @@ namespace FSO.Client.UI.Panels
 
         public override void SetPage(int page)
         {
+            int total = Catalog.TotalPages();
+
             bool noPrev = (page == 0);
             PreviousPageButton.Disabled = noPrev;
 
-            bool noNext = (page + 1 == Catalog.TotalPages());
+            bool noNext = (page + 1 == total);
             NextPageButton.Disabled = noNext;
 
             Catalog.SetPage(page);
             if (OldSelection != -1) Catalog.SetActive(OldSelection, true);
 
+            SubtoolsSlider.MaxValue = total - 1;
             SubtoolsSlider.Value = page;
         }
 

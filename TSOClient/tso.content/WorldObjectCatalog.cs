@@ -14,7 +14,7 @@ namespace FSO.Content
         private static List<ObjectCatalogItem>[] ItemsByCategory;
         private static Dictionary<uint, ObjectCatalogItem> ItemsByGUID;
 
-        public void Init(Content content)
+        public void Init(Content content, Dictionary<ulong, GameObjectCatalogEnrich> catalogEnrich)
         {
             //load and build catalog
             ItemsByGUID = new Dictionary<uint, ObjectCatalogItem>();
@@ -56,12 +56,16 @@ namespace FSO.Content
                     sbyte dCategory = Convert.ToSByte(objectInfo.Attributes["s"].Value);
                     uint dguid = Convert.ToUInt32(objectInfo.Attributes["g"].Value, 16);
                     if (dCategory < 0) continue;
+                    catalogEnrich.TryGetValue(dguid, out var enrich);
+
                     var ditem = new ObjectCatalogItem()
                     {
                         GUID = dguid,
                         Category = dCategory,
                         Price = Convert.ToUInt32(objectInfo.Attributes["p"].Value),
                         Name = objectInfo.Attributes["n"].Value,
+                        Tags = objectInfo.Attributes["t"]?.Value,
+                        CatalogName = enrich?.CatalogName,
                         DisableLevel = Convert.ToByte(objectInfo.Attributes["r"]?.Value ?? "0")
                     };
 
@@ -70,6 +74,8 @@ namespace FSO.Content
 
                 }
             }
+
+            catalogEnrich.Clear();
         }
 
         public List<ObjectCatalogItem> All()
@@ -94,7 +100,5 @@ namespace FSO.Content
                 return item;
             else return null;
         }
-
-
     }
 }

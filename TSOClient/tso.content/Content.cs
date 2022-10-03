@@ -195,7 +195,7 @@ namespace FSO.Content
             {
                 WorldObjectGlobals.Init();
                 ((WorldObjectProvider)WorldObjects).Init((Device != null));
-                ((WorldObjectCatalog)WorldCatalog).Init(this);
+                ((WorldObjectCatalog)WorldCatalog).Init(this, WorldObjects.CatalogEnrich);
                 LoadProgress = ContentLoadingProgress.InitArch;
 
                 WorldWalls.Init();

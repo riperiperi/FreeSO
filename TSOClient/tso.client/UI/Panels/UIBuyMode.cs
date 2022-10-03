@@ -261,18 +261,24 @@ namespace FSO.Client.UI.Panels
 
         public override void SetPage(int page)
         {
+            int total = Catalog.TotalPages();
+
             bool noPrev = (page == 0);
             ProductCatalogPreviousPageButton.Disabled = noPrev;
             InventoryCatalogRoommatePreviousPageButton.Disabled = noPrev;
             InventoryCatalogVisitorPreviousPageButton.Disabled = noPrev;
 
-            bool noNext = (page + 1 == Catalog.TotalPages());
+            bool noNext = (page + 1 == total);
             ProductCatalogNextPageButton.Disabled = noNext;
             InventoryCatalogRoommateNextPageButton.Disabled = noNext;
             InventoryCatalogVisitorNextPageButton.Disabled = noNext;
 
             Catalog.SetPage(page);
             if (OldSelection != -1) Catalog.SetActive(OldSelection, true);
+
+            ProductCatalogSlider.MaxValue = total - 1;
+            InventoryCatalogRoommateSlider.MaxValue = total - 1;
+            InventoryCatalogVisitorSlider.MaxValue = total - 1;
 
             ProductCatalogSlider.Value = page;
             InventoryCatalogRoommateSlider.Value = page;

@@ -19,6 +19,8 @@ namespace FSO.Content.Interfaces
         public sbyte Category;
         public uint Price;
         public string Name;
+        public string CatalogName;
+        public string Tags;
         public byte DisableLevel; //1 = only shopping, 2 = rare (unsellable?)
 
         public byte RoomSort;
