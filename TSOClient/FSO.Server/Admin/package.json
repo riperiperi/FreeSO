@@ -54,7 +54,7 @@
     "protractor": "~1.7.0",
     "require-dir": "~0.1.0",
     "uglify-save-license": "~0.4.1",
-    "wiredep": "~2.2.0",
+    "wiredep": "~4.0.0",
     "wrench": "~1.5.8"
   },
   "engines": {
