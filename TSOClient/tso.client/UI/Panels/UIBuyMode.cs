@@ -212,6 +212,7 @@ namespace FSO.Client.UI.Panels
                         CurrentInventory.Add(new UICatalogElement {
                             Item = obj,
                             Attributes = item.Attributes ?? new List<int>(),
+                            Tag = item.ObjectPID,
                             Count = (item.AttributeMode == 2 && (item.Attributes?.Count ?? 0) > 0) ? item.Attributes[0] : (int?)null
                         });
                     }
@@ -253,6 +254,12 @@ namespace FSO.Client.UI.Panels
             {
                 if (selection < LastInventory.Count && Holder.Holding != null)
                 {
+                    if (Catalog.Filtered != Catalog.Selected)
+                    {
+                        var selTag = Catalog.Filtered[selection].Tag;
+                        selection = Catalog.Selected.FindIndex(elem => elem.Tag == selTag);
+                    }
+
                     Holder.Holding.InventoryPID = LastInventory[selection].ObjectPID;
                     Holder.Holding.Price = 0;
                 }
