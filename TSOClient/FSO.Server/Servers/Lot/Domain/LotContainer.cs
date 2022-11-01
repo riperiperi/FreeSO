@@ -105,6 +105,7 @@ namespace FSO.Server.Servers.Lot.Domain
             0x50907E06, //flies - controller
             0x3161BB5B, //job controller
 
+            0x24841905, //candy controller
             0x475CC813, //water balloon controller
             0x2D583771, //winter weather controller
             0x7A78195C, //snowball controller
