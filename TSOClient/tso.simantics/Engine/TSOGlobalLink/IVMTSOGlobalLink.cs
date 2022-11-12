@@ -41,7 +41,7 @@ namespace FSO.SimAntics.Engine.TSOTransaction
         void PurchaseOutfit(VM vm, uint outfitPID, uint objectPID, uint avatarPID, VMAsyncPurchaseOutfitCallback callback);
 
         //Trading
-        void SecureTrade(VM vm, VMEODSecureTradePlayer p1, VMEODSecureTradePlayer p2, VMAsyncSecureTradeCallback callback);
+        void SecureTrade(VM vm, VMEODSecureTradePlayer p1, VMEODSecureTradePlayer p2, List<uint> untradableGUIDs, VMAsyncSecureTradeCallback callback);
 
         //FSO Newspaper
         void GetDynPayouts(VMAsyncNewspaperCallback callback);
@@ -57,7 +57,7 @@ namespace FSO.SimAntics.Engine.TSOTransaction
         void GetAccountIDFromAvatar(uint avatarID, VMAsyncAccountUserIDFromAvatarCallback callback);
 
         void Tick(VM vm);
-        void FindLotAndValue(VM vm, uint persistID, VMAsyncFindLotCallback p);
+        void FindLotAndValue(VM vm, uint persistID, List<uint> untradableGUIDs, VMAsyncFindLotCallback p);
     }
 
     public delegate void VMAsyncTransactionCallback(bool success, int transferAmount, uint uid1, uint budget1, uint uid2, uint budget2);

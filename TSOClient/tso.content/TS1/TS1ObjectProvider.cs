@@ -167,5 +167,10 @@ namespace FSO.Content.TS1
                 return item;
             else return null;
         }
+
+        public List<uint> GetUntradableGUIDs()
+        {
+            return new List<uint>();
+        }
     }
 }

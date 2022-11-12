@@ -13,12 +13,15 @@ namespace FSO.Content
     {
         private static List<ObjectCatalogItem>[] ItemsByCategory;
         private static Dictionary<uint, ObjectCatalogItem> ItemsByGUID;
+        private List<uint> UntradableGUIDs;
 
         public void Init(Content content, Dictionary<ulong, GameObjectCatalogEnrich> catalogEnrich)
         {
             //load and build catalog
             ItemsByGUID = new Dictionary<uint, ObjectCatalogItem>();
             ItemsByCategory = new List<ObjectCatalogItem>[30];
+            UntradableGUIDs = new List<uint>();
+
             for (int i = 0; i < 30; i++) ItemsByCategory[i] = new List<ObjectCatalogItem>();
 
             var packingslip = new XmlDocument();
@@ -69,6 +72,11 @@ namespace FSO.Content
                         DisableLevel = Convert.ToByte(objectInfo.Attributes["r"]?.Value ?? "0")
                     };
 
+                    if (ditem.DisableLevel > 1)
+                    {
+                        UntradableGUIDs.Add(dguid);
+                    }
+
                     ItemsByCategory[dCategory].Add(ditem);
                     ItemsByGUID[dguid] = ditem;
 
@@ -99,6 +107,11 @@ namespace FSO.Content
             if (ItemsByGUID.TryGetValue(guid, out item))
                 return item;
             else return null;
+        }
+
+        public List<uint> GetUntradableGUIDs()
+        {
+            return UntradableGUIDs;
         }
     }
 }

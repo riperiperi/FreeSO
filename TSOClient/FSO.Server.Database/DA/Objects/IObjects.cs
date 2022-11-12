@@ -22,7 +22,7 @@ namespace FSO.Server.Database.DA.Objects
         bool ConsumeObjsOfTypeInAvatarInventory(uint avatar_id, uint guid, int num);
         List<DbObject> GetByAvatarId(uint avatar_id);
         List<DbObject> GetByAvatarIdLot(uint avatar_id, uint lot_id);
-        int UpdateObjectOwnerLot(uint avatar_id, int lot_id, uint targ_avatar_id);
+        int UpdateObjectOwnerLot(uint avatar_id, int lot_id, uint targ_avatar_id, List<uint> untradableGUIDs);
 
         bool UpdatePersistState(uint id, DbObject obj);
         bool SetInLot(uint id, uint? lot_id);

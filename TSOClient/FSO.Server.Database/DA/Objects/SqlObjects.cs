@@ -148,9 +148,20 @@ namespace FSO.Server.Database.DA.Objects
             return Context.Connection.Query<DbObject>("SELECT * FROM fso_objects WHERE owner_id = @avatar_id AND lot_id = @lot_id", new { avatar_id = avatar_id, lot_id = lot_id }).ToList();
         }
 
-        public int UpdateObjectOwnerLot(uint avatar_id, int lot_id, uint targ_avatar_id)
+        public int UpdateObjectOwnerLot(uint avatar_id, int lot_id, uint targ_avatar_id, List<uint> untradableGUIDs)
         {
-            return Context.Connection.Execute("UPDATE fso_objects SET owner_id = @targ_avatar_id WHERE lot_id = @lot_id AND owner_id = @avatar_id",
+            var sCommand = new StringBuilder();
+            bool first = true;
+            foreach (var item in untradableGUIDs)
+            {
+                if (first) sCommand.Append("(");
+                else sCommand.Append(",");
+                sCommand.Append(item);
+                first = false;
+            }
+            sCommand.Append(")");
+
+            return Context.Connection.Execute("UPDATE fso_objects SET owner_id = @targ_avatar_id WHERE lot_id = @lot_id AND owner_id = @avatar_id AND type NOT IN " + sCommand.ToString(),
                 new { avatar_id = avatar_id, lot_id = lot_id, targ_avatar_id = targ_avatar_id });
         }
 

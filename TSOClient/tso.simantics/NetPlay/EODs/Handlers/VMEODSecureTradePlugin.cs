@@ -61,7 +61,7 @@ namespace FSO.SimAntics.NetPlay.EODs.Handlers
         {
             Locked = true;
             Lobby.Broadcast("trade_inprogress", "");
-            Server.vm.GlobalLink.SecureTrade(Server.vm, Lobby.GetSlotData(0), Lobby.GetSlotData(1), (result) =>
+            Server.vm.GlobalLink.SecureTrade(Server.vm, Lobby.GetSlotData(0), Lobby.GetSlotData(1), Content.Content.Get().WorldCatalog.GetUntradableGUIDs(), (result) =>
             {
                 switch (result)
                 {
@@ -210,7 +210,7 @@ namespace FSO.SimAntics.NetPlay.EODs.Handlers
                         return;
                     }
 
-                    client.vm.GlobalLink.FindLotAndValue(client.vm, client.Avatar.PersistID,
+                    client.vm.GlobalLink.FindLotAndValue(client.vm, client.Avatar.PersistID, Content.Content.Get().WorldCatalog.GetUntradableGUIDs(),
                     (uint lotID, int objectCount, long objectValue, string lotName) =>
                     {
                         if (lotID != 0)
