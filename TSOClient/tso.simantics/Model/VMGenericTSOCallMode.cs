@@ -93,6 +93,8 @@ namespace FSO.SimAntics.Model
         FSOReturnNeighborhoodID = 136,
         FSOGoToLotIDTemp01 = 137,
         FSOIsStackObjectTradable = 138,
-        FSOSetStackObjectTransient = 139
+        FSOSetStackObjectTransient = 139,
+        FSOIsStackObjectPendingRoommateDeletion = 140,
+        FSOIsStackObjectAllowedByLotCategory = 141
     }
 }

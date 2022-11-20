@@ -465,6 +465,16 @@ namespace FSO.SimAntics.Primitives
                         }
                         return VMPrimitiveExitCode.GOTO_FALSE;
                     }
+                case VMGenericTSOCallMode.FSOIsStackObjectPendingRoommateDeletion:
+                    {
+                        var gobj = context.StackObject as VMGameObject;
+                        return (gobj != null && gobj.Disabled.HasFlag(VMGameObjectDisableFlags.PendingRoommateDeletion)) ? VMPrimitiveExitCode.GOTO_TRUE : VMPrimitiveExitCode.GOTO_FALSE;
+                    }
+                case VMGenericTSOCallMode.FSOIsStackObjectAllowedByLotCategory:
+                    {
+                        var gobj = context.StackObject as VMGameObject;
+                        return (gobj != null && !gobj.Disabled.HasFlag(VMGameObjectDisableFlags.LotCategoryWrong)) ? VMPrimitiveExitCode.GOTO_TRUE : VMPrimitiveExitCode.GOTO_FALSE;
+                    }
                 default:
                     return VMPrimitiveExitCode.GOTO_TRUE;
             }
