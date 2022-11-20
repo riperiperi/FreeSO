@@ -23,7 +23,7 @@ namespace FSO.SimAntics.Engine
         private static string[] valid = {
             "Object", "Me", "TempXL:", "Temp:", "$", "Attribute:", "DynamicStringLocal:", "Local:", "TimeLocal:", "NameLocal:",
             "FixedLocal:", "DynamicObjectName", "MoneyXL:", "JobOffer:", "Job:", "JobDesc:", "Param:", "Neighbor", "\r\n", "ListObject",
-            "CatalogLocal:", "DateLocal:", "ObjectLocal:", "\\n"
+            "CatalogLocal:", "DateLocal:", "ObjectLocal:", "FSOCatalogName", "\\n"
         };
 
         public static void ShowDialog(VMStackFrame context, VMDialogOperand operand, STR source)
@@ -144,6 +144,11 @@ namespace FSO.SimAntics.Engine
                         {
                             switch (cmdString)
                             {
+                                case "FSOCatalogName":
+                                    var fsoCatObj = context.StackObject.MasterDefinition ?? context.StackObject.Object.OBJ;
+                                    var fsoCatName = context.StackObject.Object.Resource.Get<CTSS>(fsoCatObj.CatalogStringsID)?.GetString(0);
+                                    output.Append(fsoCatName ?? context.StackObject.ToString());
+                                    break;
                                 case "Object":
                                 case "DynamicObjectName":
                                     //hack: if stack object doesn't exist and should contain owner's id,
