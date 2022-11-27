@@ -158,7 +158,24 @@ namespace FSO.SimAntics.Engine
                                             ));
                                     } else
                                     {
-                                        output.Append(context.StackObject.ToString());
+                                        var stackObj = context.StackObject;
+                                        if (stackObj.MultitileGroup.Name != "")
+                                        {
+                                            output.Append(stackObj.MultitileGroup.Name);
+                                        }
+                                        else
+                                        {
+                                            var obj = stackObj.MasterDefinition ?? stackObj.Object.OBJ;
+                                            var strings = stackObj.Object.Resource.Get<CTSS>(obj.CatalogStringsID);
+                                            if (strings != null)
+                                            {
+                                                output.Append(strings.GetString(0));
+                                            }
+                                            else
+                                            {
+                                                output.Append(stackObj.ToString());
+                                            }
+                                        }
                                     }
                                     break;
                                 case "Me":

@@ -370,5 +370,15 @@ namespace FSO.SimAntics.Engine.TSOTransaction
         {
             callback(1);
         }
+
+        public void SecureTrade(VM vm, VMEODSecureTradePlayer p1, VMEODSecureTradePlayer p2, List<uint> untradableGUIDs, VMAsyncSecureTradeCallback callback)
+        {
+            //todo: nice stub for this using database?
+        }
+
+        public void FindLotAndValue(VM vm, uint persistID, List<uint> untradableGUIDs, VMAsyncFindLotCallback p)
+        {
+            //todo: nice stub for this using database?
+        }
     }
 }

@@ -11,6 +11,7 @@ namespace FSO.Content.Interfaces
         List<ObjectCatalogItem> All();
         List<ObjectCatalogItem> GetItemsByCategory(sbyte category);
         ObjectCatalogItem? GetItemByGUID(uint guid);
+        List<uint> GetUntradableGUIDs();
     }
 
     public struct ObjectCatalogItem

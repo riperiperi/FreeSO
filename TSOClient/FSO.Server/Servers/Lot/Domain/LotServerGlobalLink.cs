@@ -879,7 +879,7 @@ namespace FSO.Server.Servers.Lot.Domain
             });
         }
 
-        public void SecureTrade(VM vm, VMEODSecureTradePlayer p1, VMEODSecureTradePlayer p2, VMAsyncSecureTradeCallback callback)
+        public void SecureTrade(VM vm, VMEODSecureTradePlayer p1, VMEODSecureTradePlayer p2, List<uint> untradableGUIDs, VMAsyncSecureTradeCallback callback)
         {
             var moneyMove = p1.MoneyOffer - p2.MoneyOffer;
             Host.InBackground(() =>
@@ -1001,7 +1001,7 @@ namespace FSO.Server.Servers.Lot.Domain
                                 if (iLot.GUID == 2)
                                 {
                                     //give them our objects. be extra cautious here and don't transfer the lot if the object count differs.
-                                    var objectsTransferred = db.Objects.UpdateObjectOwnerLot(myP.PlayerPersist, lot.lot_id, otherP.PlayerPersist);
+                                    var objectsTransferred = db.Objects.UpdateObjectOwnerLot(myP.PlayerPersist, lot.lot_id, otherP.PlayerPersist, untradableGUIDs);
                                     if (objectsTransferred != iLot.ObjectCount)
                                     {
                                         failState = VMEODSecureTradeError.MISSING_OBJECT_LOT;
@@ -1224,7 +1224,7 @@ namespace FSO.Server.Servers.Lot.Domain
             });
         }
 
-        public void FindLotAndValue(VM vm, uint persistID, VMAsyncFindLotCallback p)
+        public void FindLotAndValue(VM vm, uint persistID, List<uint> untradableGUIDs, VMAsyncFindLotCallback p)
         {
             Host.InBackground(() =>
             {
@@ -1233,9 +1233,9 @@ namespace FSO.Server.Servers.Lot.Domain
                     var lot = db.Lots.GetByOwner(persistID);
                     if (lot == null) p(0, 0, 0, null);
 
-                    var objects = db.Objects.GetByAvatarIdLot(persistID, (uint)lot.lot_id);
+                    var objects = db.Objects.GetByAvatarIdLot(persistID, (uint)lot.lot_id).Where(x => !untradableGUIDs.Contains(x.type));
 
-                    p((uint)lot.lot_id, objects.Count, objects.Sum(x => x.value), lot.name);
+                    p((uint)lot.lot_id, objects.Count(), objects.Sum(x => x.value), lot.name);
                 }
             });
         }
