@@ -137,13 +137,13 @@ namespace FSO.SimAntics.Primitives
             else if (operand.SetMode == 1)
             {
                 var value = VMMemory.GetVariable(context, operand.VarScope, operand.VarData);
-                relToTarg[operand.RelVar] = Math.Max((short)-100, Math.Min((short)100, value));
+                relToTarg[operand.RelVar] = operand.FSONeverClamp ? value : Math.Max((short)-100, Math.Min((short)100, value));
             }
             else if (operand.SetMode == 2)
             {
                 var value = VMMemory.GetVariable(context, operand.VarScope, operand.VarData);
                 relToTarg[operand.RelVar] += (short)(value * diffMultiplier);
-                relToTarg[operand.RelVar] = Math.Max((short)-100, Math.Min((short)100, relToTarg[operand.RelVar]));
+                relToTarg[operand.RelVar] = operand.FSONeverClamp ? relToTarg[operand.RelVar] : Math.Max((short)-100, Math.Min((short)100, relToTarg[operand.RelVar]));
             }
 
             return VMPrimitiveExitCode.GOTO_TRUE;
@@ -273,6 +273,16 @@ namespace FSO.SimAntics.Primitives
             {
                 if (value) Flags |= 128;
                 else Flags &= unchecked((byte)~128);
+            }
+        }
+
+        public bool FSONeverClamp
+        {
+            get { return (Flags & 64) == 64; }
+            set
+            {
+                if (value) Flags |= 64;
+                else Flags &= unchecked((byte)~64);
             }
         }
 
