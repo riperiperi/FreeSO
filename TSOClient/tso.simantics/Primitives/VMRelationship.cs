@@ -275,6 +275,7 @@ namespace FSO.SimAntics.Primitives
                 else Flags &= unchecked((byte)~128);
             }
         }
+
         public bool FSONeverClamp
         {
             get { return (Flags & 64) == 64; }
