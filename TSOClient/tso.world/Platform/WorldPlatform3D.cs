@@ -192,6 +192,20 @@ namespace FSO.LotView.Platform
                     bestObj = sim.ObjectID;
                     bestDistance = intr.Value;
                 }
+
+                if (sim.MyMario != null)
+                {
+                    pos = sim.GetRealPelvisPosition() * 3;
+                    pos = new Vector3(pos.X, pos.Z, pos.Y);
+                    box = new BoundingBox(pos - new Vector3(0.5f, 2, 0.5f), pos + new Vector3(0.5f, 2, 0.5f));
+                    intr = box.Intersects(ray);
+                    if (intr != null) intr = intr.Value - 1.5f;
+                    if (intr != null && intr.Value < bestDistance)
+                    {
+                        bestObj = sim.ObjectID;
+                        bestDistance = intr.Value;
+                    }
+                }
             }
             return bestObj;
         }
@@ -299,6 +313,10 @@ namespace FSO.LotView.Platform
 
         public void RecacheWalls(GraphicsDevice gd, WorldState state, bool cutawayOnly)
         {
+            if (bp.SM64 != null && !cutawayOnly)
+            {
+                bp.WCRC?.Generate(gd, state, cutawayOnly, false);
+            }
             bp.WCRC?.Generate(gd, state, cutawayOnly);
         }
     }

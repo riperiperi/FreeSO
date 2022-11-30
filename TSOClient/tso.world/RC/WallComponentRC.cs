@@ -63,7 +63,7 @@ namespace FSO.LotView.RC
             return false;
         }
 
-        public void Generate(GraphicsDevice device, WorldState world, bool cutaway)
+        public void Generate(GraphicsDevice device, WorldState world, bool cutaway, bool allowCut = true)
         {
             var wallContent = Content.Content.Get().WorldWalls;
             var floorContent = Content.Content.Get().WorldFloors;
@@ -103,7 +103,7 @@ namespace FSO.LotView.RC
                     pos.X += xz.X; pos.Y += xz.Y;
                     var index = (int)pos.Y * blueprint.Width + (int)pos.X;
                     if (index < 0 || index > blueprint.Cutaway.Length) return 1;
-                    return blueprint.Cutaway[index] ? 0.12f : 1;
+                    return allowCut && blueprint.Cutaway[index] ? 0.12f : 1;
                 };
 
                 for (short y = 0; y < blueprint.Height; y++)
@@ -116,7 +116,7 @@ namespace FSO.LotView.RC
                             var tex = world._2D.GetTexture(GetPattern(pattern)?.Near?.Frames[2]);
                             var mask = world._2D.GetTexture(GetStyle(style)?.WallsUpNear?.Frames[(topMode != 4)?0:2]);
 
-                            var g = Fetch(tex, mask, grp);
+                            var g = Fetch(tex, mask, style, grp);
                             g.UseOffset = (topMode != 4);
 
                             var p1 = new Vector3(from.X + x, from.Y + y, 0);
@@ -142,7 +142,7 @@ namespace FSO.LotView.RC
 
                             if (topMode < 4)
                             {
-                                var g2 = Fetch(whitepx, whitepx, grp);
+                                var g2 = Fetch(whitepx, whitepx, 0, grp);
 
                                 baseI = g2.Verts.Count;
                                 Vector3 toBack = Vector3.Zero;
@@ -301,6 +301,11 @@ namespace FSO.LotView.RC
                 }
                 foreach (var g in grp.Values) g.Complete(device);
             }
+
+            if (!cutaway && !allowCut)
+            {
+                blueprint.SM64?.UpdateWalls();
+            }
         }
 
         public void Draw(GraphicsDevice gd, WorldState state)
@@ -413,13 +418,13 @@ namespace FSO.LotView.RC
             //gd.BlendState = BlendState.AlphaBlend;
         }
 
-        public WallGroupRC Fetch(Texture2D pixel, Texture2D mask, Dictionary<Tuple<Texture2D, Texture2D>, WallGroupRC> grp)
+        public WallGroupRC Fetch(Texture2D pixel, Texture2D mask, ushort maskId, Dictionary<Tuple<Texture2D, Texture2D>, WallGroupRC> grp)
         {
             WallGroupRC result;
             var t = new Tuple<Texture2D, Texture2D>(pixel, mask);
             if (!grp.TryGetValue(t, out result))
             {
-                result = new WallGroupRC() { Pixel = pixel, Mask = mask };
+                result = new WallGroupRC() { Pixel = pixel, Mask = mask, MaskId = maskId };
                 grp[t] = result;
             }
             return result;
@@ -442,6 +447,7 @@ namespace FSO.LotView.RC
     {
         public Texture2D Pixel;
         public Texture2D Mask;
+        public ushort MaskId;
         public bool UseOffset = true;
 
         public List<WallVertexRC> Verts = new List<WallVertexRC>();
@@ -451,6 +457,8 @@ namespace FSO.LotView.RC
         public IndexBuffer GIndices;
         public int PrimCount;
 
+        public bool ClearOnComplete;
+
         public void Complete(GraphicsDevice gd)
         {
             GVerts = new VertexBuffer(gd, typeof(WallVertexRC), Verts.Count, BufferUsage.None);
@@ -459,8 +467,12 @@ namespace FSO.LotView.RC
             GIndices.SetData(Indices.ToArray());
 
             PrimCount = Indices.Count / 3;
-            Verts = null;
-            Indices = null;
+
+            if (ClearOnComplete)
+            {
+                Verts = null;
+                Indices = null;
+            }
         }
 
         public void Dispose()

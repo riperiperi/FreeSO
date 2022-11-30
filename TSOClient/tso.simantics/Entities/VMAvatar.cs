@@ -937,6 +937,12 @@ namespace FSO.SimAntics
                         if (suit is ulong) BodyOutfit = new VMOutfitReference((ulong)suit);
                     }
                     break;
+                case VMPersonDataVariable.Gender:
+                    if (UseWorld)
+                    {
+                        ((AvatarComponent)WorldUI).Gender = value;
+                    }
+                    break;
             }
             PersonData[(ushort)variable] = value;
             return true;
