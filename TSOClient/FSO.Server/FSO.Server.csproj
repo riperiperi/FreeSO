@@ -85,6 +85,9 @@
     <Reference Include="JWT, Version=1.0.0.0, Culture=neutral, processorArchitecture=MSIL">
       <HintPath>..\packages\Portable.JWT.1.0.3\lib\4.5\JWT.dll</HintPath>
     </Reference>
+    <Reference Include="Mario">
+      <HintPath>..\tso.world\Mario.dll</HintPath>
+    </Reference>
     <Reference Include="Microsoft.Owin, Version=3.0.1.0, Culture=neutral, PublicKeyToken=31bf3856ad364e35, processorArchitecture=MSIL">
       <HintPath>..\packages\Microsoft.Owin.3.0.1\lib\net45\Microsoft.Owin.dll</HintPath>
     </Reference>
@@ -204,6 +207,7 @@
     <Compile Include="Servers\City\Handlers\MatchmakerNotifyHandler.cs" />
     <Compile Include="Servers\City\Handlers\ModerationHandler.cs" />
     <Compile Include="Servers\City\Handlers\AvatarRetireHandler.cs" />
+    <Compile Include="Servers\Lot\Domain\SM64DataContainer.cs" />
     <Compile Include="Servers\Tasks\Domain\BirthdayGiftTask.cs" />
     <Compile Include="Servers\Tasks\Domain\JobBalanceTask.cs" />
     <Compile Include="Servers\Tasks\Domain\NeighborhoodsTask.cs" />

@@ -316,6 +316,9 @@
     <Compile Include="NetPlay\Model\Commands\VMNetArchitectureCmd.cs" />
     <Compile Include="NetPlay\Model\Commands\VMNetSimLeaveCmd.cs" />
     <Compile Include="NetPlay\Model\Commands\VMNetSkillLockCmd.cs" />
+    <Compile Include="NetPlay\Model\Commands\VMNetSM64AnimDataCmd.cs" />
+    <Compile Include="NetPlay\Model\Commands\VMNetSM64EventCmd.cs" />
+    <Compile Include="NetPlay\Model\Commands\VMNetSM64PositionCmd.cs" />
     <Compile Include="NetPlay\Model\Commands\VMNetTimeoutNotifyCmd.cs" />
     <Compile Include="NetPlay\Model\Commands\VMNetTuningCmd.cs" />
     <Compile Include="NetPlay\Model\Commands\VMNetUpdateInventoryCmd.cs" />

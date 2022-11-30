@@ -123,6 +123,8 @@ namespace FSO.LotView.Platform
 
         public short GetObjectIDAtScreenPos(int x, int y, GraphicsDevice gd, WorldState state)
         {
+            var ray = state.CameraRayAtScreenPos(new Vector2(x, y));
+
             /** Draw all objects to a texture as their IDs **/
             var oldCenter = state.CenterTile;
             var tileOff = state.WorldSpace.GetTileFromScreen(new Vector2(x, y));
@@ -135,6 +137,8 @@ namespace FSO.LotView.Platform
             gd.DepthStencilState = DepthStencilState.Default;
 
             state.WorldRectangle = new Rectangle((-pxOffset).ToPoint(), new Point(1, 1));
+
+            short specialResult = 0;
             
             state._2D.OBJIDMode = true;
             using (var buffer = _2d.WithBuffer(_2DWorldBatch.BUFFER_OBJID, ref bufferTexture))
@@ -164,8 +168,20 @@ namespace FSO.LotView.Platform
                         _2d.OffsetPixel(state.WorldSpace.GetScreenFromTile(avatar.Position));
                         _2d.OffsetTile(avatar.Position);
                         avatar.Draw(gd, state);
+
+                        if (avatar.Visible && avatar.MyMario != null)
+                        {
+                            var pos = avatar.GetPelvisPosition() * 3;
+                            pos = new Vector3(pos.X, pos.Z, pos.Y);
+                            var box = new BoundingBox(pos - new Vector3(0.5f, 2, 0.5f), pos + new Vector3(0.5f, 2, 0.5f));
+                            var intr = box.Intersects(ray);
+                            if (intr != null)
+                            {
+                                specialResult = avatar.ObjectID;
+                            }
+                        }
+                        //state._3D.End();
                     }
-                    //state._3D.End();
                 }
 
             }
@@ -178,7 +194,8 @@ namespace FSO.LotView.Platform
             var f = Vector3.Dot(new Vector3(data[0].R / 255.0f, data[0].G / 255.0f, data[0].B / 255.0f), new Vector3(1.0f, 1 / 255.0f, 1 / 65025.0f));
 
             gd.DepthStencilState = oldDS;
-            return (short)Math.Round(f * 65535f);
+
+            return specialResult != 0 ? specialResult : (short)Math.Round(f * 65535f);
         }
 
         public Texture2D GetObjectThumb(ObjectComponent[] objects, Vector3[] positions, GraphicsDevice gd, WorldState state)
@@ -296,6 +313,10 @@ namespace FSO.LotView.Platform
         public void RecacheWalls(GraphicsDevice gd, WorldState state, bool cutawayOnly)
         {
             //in 2d, if we have 3d wall shadows enabled we also have to update the 3d wall geometry
+            if (bp.SM64 != null && !cutawayOnly)
+            {
+                bp.WCRC?.Generate(gd, state, cutawayOnly, false);
+            }
             bp.WCRC?.Generate(gd, state, cutawayOnly);
 
             var _2d = state._2D;
