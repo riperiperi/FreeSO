@@ -39,14 +39,14 @@ namespace FSO.SimAntics.Engine
 
                 new long[] { //dj
                     0x5900000000D,
-                    0x5920000000D,
                     0x5940000000D,
+                    0x5920000000D,
                 },
 
                 new long[] { //dancer
                     0x5910000000D,
-                    0x5930000000D,
                     0x5950000000D,
+                    0x5930000000D,
                 }
             },
             new long[][] { //female
@@ -70,14 +70,14 @@ namespace FSO.SimAntics.Engine
 
                 new long[] { //dj
                     0x5810000000D,
-                    0x5830000000D,
                     0x5850000000D,
+                    0x5830000000D,
                 },
 
                 new long[] { //dancer
                     0x5820000000D,
-                    0x5840000000D,
                     0x5860000000D,
+                    0x5840000000D,
                 }
             }
         };
@@ -222,7 +222,7 @@ namespace FSO.SimAntics.Engine
                             if (context.VM.TS1) return null;
                             var job = avatar.GetPersonData(VMPersonDataVariable.OnlineJobID);
                             if (job < 1 || job > 5) return null;
-                            var level = Math.Max(0, Math.Min(3, (avatar.GetPersonData(VMPersonDataVariable.OnlineJobGrade) - 1) / 4));
+                            var level = Math.Max(0, Math.Min(2, Math.Round((avatar.GetPersonData(VMPersonDataVariable.OnlineJobGrade) - 1) / 4.0)));
                             return (ulong)(JobOutfits[male?0:1][job-1][level]);
                         case VMPersonSuits.DefaultSleepwear:
                             return avatar.DefaultSuits.Sleepwear.ID;
