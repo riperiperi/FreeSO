@@ -8,7 +8,7 @@ FreeSO currently depends on the original game files (objects, avatars, ui) to fu
 
 # The Sims 1 via Simitone
 
-FreeSO is additionally a base project for an ongoing re-implementation of The Sims 1's engine, [Simitone](https://github.com/riperiperi/Simitone), targetted mainly at mobile devices. 
+FreeSO is additionally a base project for an ongoing re-implementation of The Sims 1's engine, [Simitone](https://github.com/riperiperi/Simitone), targeted mainly at mobile devices. 
 
 The content system, HIT VM and SimAntics VM included within this repo support both TSO and TS1 game files - meaning that TS1 will still run in a limited sense under TSO's UI frontend within FreeSO. [Simitone](https://github.com/riperiperi/Simitone) fully restores TS1 gameplay by tying the neighbourhood and game systems together with a suitable UI frontend.
 
