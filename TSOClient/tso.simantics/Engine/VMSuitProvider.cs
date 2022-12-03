@@ -222,7 +222,7 @@ namespace FSO.SimAntics.Engine
                             if (context.VM.TS1) return null;
                             var job = avatar.GetPersonData(VMPersonDataVariable.OnlineJobID);
                             if (job < 1 || job > 5) return null;
-                            var level = Math.Max(0, Math.Min(2, Math.Round((avatar.GetPersonData(VMPersonDataVariable.OnlineJobGrade) - 1) / 4.0)));
+                            var level = Math.Max(0, Math.Min(2, Convert.ToInt32(Math.Round((avatar.GetPersonData(VMPersonDataVariable.OnlineJobGrade) - 1) / 4d))));
                             return (ulong)(JobOutfits[male?0:1][job-1][level]);
                         case VMPersonSuits.DefaultSleepwear:
                             return avatar.DefaultSuits.Sleepwear.ID;
