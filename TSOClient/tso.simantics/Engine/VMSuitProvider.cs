@@ -52,8 +52,8 @@ namespace FSO.SimAntics.Engine
             new long[][] { //female
                 new long[] { //robot
                     0x5780000000D,
+                    0x57A0000000D,
                     0x5790000000D,
-                    0x57A0000000D
                 },
 
                 new long[] { //waiter
