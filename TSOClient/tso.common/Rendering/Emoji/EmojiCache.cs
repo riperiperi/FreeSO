@@ -14,7 +14,7 @@ namespace FSO.Common.Rendering.Emoji
 {
     public class EmojiCache
     {
-        public string Source = "http://twemoji.maxcdn.com/2/72x72/";
+        public string Source = "https://cdnjs.cloudflare.com/ajax/libs/twemoji/14.0.2/72x72/";
         public int DefaultRes = 24;
         public int Width = 32;
         
