@@ -43,5 +43,15 @@
     "keywords": [ "jams", "joy", "wtf", "lool" ],
     "url": "http://freeso.org/emoji/joyfuljams.png",
     "category": "custom"
+  },
+  "uwot": {
+    "keywords": [ "wtf", "huh", "wot", "what", "eh" ],
+    "url": "http://freeso.org/emoji/uwot.png",
+    "category": "custom"
+  },
+  "forcefire": {
+    "keywords": [ "fire", "burn", "death", "rip" ],
+    "url": "http://freeso.org/emoji/forcefire.png",
+    "category": "custom"
   }
 }
