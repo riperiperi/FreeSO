@@ -64,15 +64,19 @@ namespace FSO.UI.Model
             DiscordRpc.UpdatePresence(ref presence);
         }
         // Standard DiscordRpc presence method
-        public static void SendFSOPresence(string activeSim, string lotName, int lotID, int players, int maxSize, int catID, bool isPrivate = false)
+        public static void SendFSOPresence(string activeSim, string lotName, int lotID, int players, int maxSize, int catID, string cdnUrl, bool isPrivate = false)
         {
             if (!Active) return;
             var presence = new DiscordRpc.RichPresence();
+
+            bool isJob = false;
 
             if (!isPrivate)
             {
                 if (lotName?.StartsWith("{job:") == true)
                 {
+                    isJob = true;
+
                     var jobStr = "";
                     var split = lotName.Split(':');
                     if (split.Length > 2)
@@ -133,8 +137,19 @@ namespace FSO.UI.Model
                 presence.partySize = players;
                 presence.partyId = lotID.ToString();
 
-                presence.largeImageKey = "cat_" + catID;
-                presence.largeImageText = CapFirstWord(((LotCategory)catID).ToString());
+                if (cdnUrl != null && !isJob)
+                {
+                    presence.smallImageKey = "cat_" + catID;
+                    presence.smallImageText = CapFirstWord(((LotCategory)catID).ToString());
+
+                    presence.largeImageKey = $"{cdnUrl}/userapi/city/1/{lotID}.png";
+                    presence.largeImageText = presence.state;
+                }
+                else
+                {
+                    presence.largeImageKey = "cat_" + catID;
+                    presence.largeImageText = CapFirstWord(((LotCategory)catID).ToString());
+                }
             }
 
             DiscordRpc.UpdatePresence(ref presence);

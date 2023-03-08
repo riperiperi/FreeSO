@@ -40,6 +40,7 @@ using FSO.Common;
 using FSO.Common.Utils;
 using FSO.UI.Model;
 using FSO.Client.UI.Panels.Neighborhoods;
+using FSO.Server.Clients;
 
 namespace FSO.Client.UI.Screens
 {
@@ -555,7 +556,7 @@ namespace FSO.Client.UI.Screens
             if (vm == null) return;
 
             //clear our cache too, if the setting lets us do that
-            DiscordRpcEngine.SendFSOPresence(gizmo.CurrentAvatar.Value.Avatar_Name, null, 0, 0, 0, 0, gizmo.CurrentAvatar.Value.Avatar_PrivacyMode > 0);
+            DiscordRpcEngine.SendFSOPresence(gizmo.CurrentAvatar.Value.Avatar_Name, null, 0, 0, 0, 0, null, gizmo.CurrentAvatar.Value.Avatar_PrivacyMode > 0);
             TimedReferenceController.Clear();
             TimedReferenceController.Clear();
 
@@ -779,6 +780,7 @@ namespace FSO.Client.UI.Screens
                     vm.Entities.Count(x => x is VMAvatar && x.PersistID != 0),
                     vm.LotName.StartsWith("{job:") ? 4 : 24,
                     vm.TSOState.PropertyCategory,
+                    ApiClient.CDNUrl,
                     isPrivate
                     );
                 lastLotTitle = title;

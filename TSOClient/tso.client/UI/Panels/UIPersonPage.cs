@@ -16,6 +16,7 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
+using FSO.Server.Clients;
 
 namespace FSO.Client.UI.Panels
 {
@@ -697,9 +698,10 @@ namespace FSO.Client.UI.Panels
                     vm.Entities.Count(x => x is SimAntics.VMAvatar && x.PersistID != 0),
                     vm.LotName.StartsWith("{job:") ? 4 : 24,
                     vm.TSOState.PropertyCategory,
+                    ApiClient.CDNUrl,
                     enabled);
             }
-            else DiscordRpcEngine.SendFSOPresence(avatarName, null, 0, 0, 0, 0, enabled);
+            else DiscordRpcEngine.SendFSOPresence(avatarName, null, 0, 0, 0, 0, null, enabled);
         }
 
         private void ShowJobInfo(UIElement button)
