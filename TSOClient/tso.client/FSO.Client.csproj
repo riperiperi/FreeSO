@@ -167,6 +167,7 @@
     <Compile Include="UI\Panels\EODs\UIGameshowBuzzerEOD.cs" />
     <Compile Include="UI\Panels\UIAbstractCatalogMode.cs" />
     <Compile Include="UI\Panels\UICatalogSearchPanel.cs" />
+    <Compile Include="UI\Panels\UIMotiveTooltip.cs" />
     <Compile Include="UI\Panels\Upgrades\UIUpgradeItem.cs" />
     <Compile Include="UI\Panels\Upgrades\UIUpgradeList.cs" />
     <Compile Include="UI\Panels\Upgrades\UIUpgradeThermo.cs" />

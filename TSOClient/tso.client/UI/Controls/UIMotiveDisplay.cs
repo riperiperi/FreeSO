@@ -6,16 +6,13 @@ http://mozilla.org/MPL/2.0/.
 
 using System;
 using System.Collections.Generic;
-using System.Text;
 using Microsoft.Xna.Framework;
 using Microsoft.Xna.Framework.Graphics;
 using FSO.Client.UI.Framework;
-using FSO.Client.UI.Framework.Parser;
-using FSO.Client.UI.Model;
 using FSO.Common.Rendering.Framework.Model;
-using FSO.Common.Rendering.Framework.IO;
-using FSO.Client.Utils;
 using FSO.Common.Utils;
+using FSO.SimAntics.Model;
+using FSO.SimAntics;
 
 namespace FSO.Client.UI.Controls
 {
@@ -24,8 +21,8 @@ namespace FSO.Client.UI.Controls
     /// </summary>
     public class UIMotiveDisplay : UIElement
     {
-        public short[] MotiveValues;
-        public string[] MotiveNames;
+        private short[] MotiveValues;
+        private string[] MotiveNames;
         private Texture2D Filler;
 
         private int[] OldMotives = new int[8];
@@ -34,6 +31,8 @@ namespace FSO.Client.UI.Controls
         private int[] TargetArrowStates = new int[8];
         private bool FirstFrame = true;
         private TextStyle MotiveStyle;
+
+        public bool DynamicMode { get; set; }
 
         public UIMotiveDisplay()
         {
@@ -54,7 +53,7 @@ namespace FSO.Client.UI.Controls
 
         private void DrawMotive(UISpriteBatch batch, int x, int y, int motive, bool inDynamic)
         {
-            if (inDynamic)
+            if (DynamicMode || inDynamic)
             {
                 var mdat = MotiveValues[motive] + 100;
                 double p = Math.Max(0, Math.Min(1, (mdat) / 200.0));
@@ -99,7 +98,8 @@ namespace FSO.Client.UI.Controls
                         DrawLocalTexture(batch, arrow, new Rectangle(0, 0, 3, 5), new Vector2(x - 4 - i * 4, y), new Vector2(1, 1), new Color(0xD6, 0x00, 0x00) * Math.Min(1f, arrowState / 60f - i));
                 }
             }
-            else
+            
+            if (DynamicMode || !inDynamic)
             {
                 var style = MotiveStyle;
 
@@ -109,6 +109,35 @@ namespace FSO.Client.UI.Controls
 
                 style.Color = temp;
                 DrawLocalString(batch, MotiveNames[motive], new Vector2(x, y - 15), style, new Rectangle(0, 0, 60, 12), TextAlignment.Center);
+            }
+        }
+
+        public void UpdateMotives(VMAvatar avatar, Func<int, short, short> transform, bool clearChange = false)
+        {
+            MotiveValues[0] = avatar.GetMotiveData(VMMotive.Hunger);
+            MotiveValues[1] = avatar.GetMotiveData(VMMotive.Comfort);
+            MotiveValues[2] = avatar.GetMotiveData(VMMotive.Hygiene);
+            MotiveValues[3] = avatar.GetMotiveData(VMMotive.Bladder);
+            MotiveValues[4] = avatar.GetMotiveData(VMMotive.Energy);
+            MotiveValues[5] = avatar.GetMotiveData(VMMotive.Fun);
+            MotiveValues[6] = avatar.GetMotiveData(VMMotive.Social);
+            MotiveValues[7] = avatar.GetMotiveData(VMMotive.Room);
+
+            if (transform != null)
+            {
+                for (int i = 0; i < 8; i++)
+                {
+                    MotiveValues[i] = transform(i, MotiveValues[i]);
+                }
+            }
+
+            if (clearChange)
+            {
+                for (int i = 0; i < 8; i++)
+                {
+                    OldMotives[i] = MotiveValues[i];
+                    ChangeBuffer[i].Clear();
+                }
             }
         }
 

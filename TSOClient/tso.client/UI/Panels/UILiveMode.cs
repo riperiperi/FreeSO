@@ -35,6 +35,7 @@ namespace FSO.Client.UI.Panels
         public UIImage Divider;
         public UIVMPersonButton Thumb;
         public UIMotiveDisplay MotiveDisplay;
+        private UIMotiveTooltip MotiveTooltip;
 
         public Func<int, short, short> MotiveTransform;
 
@@ -162,9 +163,13 @@ namespace FSO.Client.UI.Panels
             this.Add(MotiveDisplay);
             DynamicOverlay.Add(MotiveDisplay);
 
+            MotiveTooltip = new UIMotiveTooltip();
+            DynamicOverlay.Add(MotiveTooltip);
+
             PersonGrid = new UIPersonGrid(LotController.vm);
             PersonGrid.NextPageButton = NextPageButton;
             PersonGrid.PreviousPageButton = PreviousPageButton;
+            PersonGrid.OnAvatarHover += AvatarIconHover;
             Add(PersonGrid);
             PersonGrid.Position = new Vector2(409, 51);
             if (Small800) {
@@ -263,6 +268,23 @@ namespace FSO.Client.UI.Panels
             SetInEOD(null, null);
 
             InitSpecial();
+        }
+
+        private void AvatarIconHover(VMAvatar avatar, Vector2 position)
+        {
+            if (avatar?.IsPet == false)
+            {
+                avatar = null;
+            }
+
+            position += PersonGrid.Position;
+
+            if (avatar != null)
+            {
+                MotiveTooltip.Position = new Vector2(Math.Min(Background.Size.X - 198, position.X - 4), -120 + Background.Y);
+            }
+
+            MotiveTooltip.SetActiveAvatar(avatar);
         }
 
         private void InitSpecial()
@@ -577,7 +599,7 @@ namespace FSO.Client.UI.Panels
                     LastSelected = SelectedAvatar;
                 }
 
-                UpdateMotives();
+                MotiveDisplay.UpdateMotives(SelectedAvatar, MotiveTransform);
             }
             base.Update(state);
 
@@ -661,33 +683,11 @@ namespace FSO.Client.UI.Panels
             }
         }
 
-        private void UpdateMotives()
-        {
-            MotiveDisplay.MotiveValues[0] = SelectedAvatar.GetMotiveData(VMMotive.Hunger);
-            MotiveDisplay.MotiveValues[1] = SelectedAvatar.GetMotiveData(VMMotive.Comfort);
-            MotiveDisplay.MotiveValues[2] = SelectedAvatar.GetMotiveData(VMMotive.Hygiene);
-            MotiveDisplay.MotiveValues[3] = SelectedAvatar.GetMotiveData(VMMotive.Bladder);
-            MotiveDisplay.MotiveValues[4] = SelectedAvatar.GetMotiveData(VMMotive.Energy);
-            MotiveDisplay.MotiveValues[5] = SelectedAvatar.GetMotiveData(VMMotive.Fun);
-            MotiveDisplay.MotiveValues[6] = SelectedAvatar.GetMotiveData(VMMotive.Social);
-            MotiveDisplay.MotiveValues[7] = SelectedAvatar.GetMotiveData(VMMotive.Room);
-
-            if (MotiveTransform != null)
-            {
-                for (int i = 0; i < 8; i++)
-                {
-                    MotiveDisplay.MotiveValues[i] = MotiveTransform(i, MotiveDisplay.MotiveValues[i]);
-                }
-            }
-        }
-
         private short InvertMotive(int index, short motive)
         {
             return (short)(-motive);
         }
     }
-
-
 
     public class UIEODLayout
     {

@@ -28,6 +28,7 @@ namespace FSO.Client.UI.Controls
         private Texture2D Target;
         private Texture2D MayorIcon;
         private bool RMB;
+        private bool NeedsReload = false;
 
         public UIVMPersonButton(VMAvatar ava, VM vm, bool small)
         {
@@ -66,7 +67,7 @@ namespace FSO.Client.UI.Controls
         {
             base.Update(state);
             var perm = ((VMTSOAvatarState)Avatar.TSOState).Permissions;
-            if (perm != LastPermissions)
+            if (perm != LastPermissions || NeedsReload)
             {
                 UpdateAvatarState(perm);
             }
@@ -110,12 +111,15 @@ namespace FSO.Client.UI.Controls
             }
 
             Texture = GetTexture(bgID);
-            Icon = Avatar.GetIcon(GameFacade.GraphicsDevice, 0);
+            NeedsReload = Avatar.BodyOutfit?.ID == 0x0000024c0000000d;
+            Icon = NeedsReload ? null : Avatar.GetIcon(GameFacade.GraphicsDevice, 0);
             if (Icon == null) Icon = GetTexture(0x79500000001); //personbuttontemplate_defaultthumbnail
             Overlay = (overlayID == 0)?null:GetTexture(overlayID);
             Target = GetTexture(0x25700000001);
 
             Tooltip = GetAvatarString(Avatar);
+
+            Invalidate();
         }
 
         private string GetAvatarString(VMAvatar ava)

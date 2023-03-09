@@ -34,6 +34,8 @@ namespace FSO.Client.UI.Panels
         public UIButton NextPageButton { get; set; }
         public UIButton PreviousPageButton { get; set; }
 
+        public event Action<VMAvatar, Vector2> OnAvatarHover;
+
         public void UpdatePeople()
         {
             bool change = false;
@@ -99,11 +101,26 @@ namespace FSO.Client.UI.Panels
                     var ind = startInd + x + Columns * y;
                     if (ind < Display.Count) {
                         var icon = new UIVMPersonButton(Display.ElementAt(ind), vm, false);
+                        icon.OnButtonHover += PersonButtonHover;
+                        icon.OnButtonExit += PersonButtonExit;
                         CurrentIcons.Add(icon);
                         Add(icon);
                         icon.Position = new Vector2(x*(34+12), y*(34+11));
                     }
                 }
+            }
+        }
+
+        private void PersonButtonExit(UIElement button)
+        {
+            OnAvatarHover?.Invoke(null, Vector2.Zero);
+        }
+
+        private void PersonButtonHover(UIElement button)
+        {
+            if (button is UIVMPersonButton personButton)
+            {
+                OnAvatarHover?.Invoke(personButton.Avatar, personButton.Position);
             }
         }
 
