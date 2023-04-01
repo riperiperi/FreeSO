@@ -109,6 +109,11 @@ namespace FSO.LotView.Utils.Camera
 
                 CamHeight = fp.CamHeight;
                 CamHeight -= relative.Y - fp.FPCamHeight;
+
+                if (fp.FirstPersonAvatar != null)
+                {
+                    fp.FirstPersonAvatar.Avatar.HideHead = false;
+                }
             }
             else if (previous is CameraController2D)
             {

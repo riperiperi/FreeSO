@@ -179,12 +179,15 @@ namespace FSO.LotView.Platform
                 }
             }
 
+            var fpAvatar = state.Cameras.CameraFirstPerson?.FirstPersonAvatar;
+
             foreach (var sim in bp.Avatars)
             {
                 if (!sim.Visible) continue;
                 var pos = sim.GetPelvisPosition() * 3;
                 pos = new Vector3(pos.X, pos.Z, pos.Y);
-                var box = new BoundingBox(pos - new Vector3(0.5f, 2, 0.5f), pos + new Vector3(0.5f, 2, 0.5f));
+                float height = sim == fpAvatar ? 0.5f : 2f;
+                var box = new BoundingBox(pos - new Vector3(0.5f, height, 0.5f), pos + new Vector3(0.5f, height, 0.5f));
                 var intr = box.Intersects(ray);
                 if (intr != null) intr = intr.Value - 1.5f;
                 if (intr != null && intr.Value < bestDistance)

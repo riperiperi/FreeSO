@@ -32,7 +32,9 @@ namespace FSO.IDE.EditorComponent.Primitives
         {
             panel.Controls.Add(new OpLabelControl(master, escope, Operand, 
                 new OpStaticTextProvider("Turns either the Avatar's body or head towards/away from either the Stack Object or the camera.")));
-            panel.Controls.Add(new OpComboControl(master, escope, Operand, "Mode:", "Mode", new OpStaticNamedPropertyProvider(EditorScope.Behaviour.Get<STR>(216))));
+            var modes = new OpStaticNamedPropertyProvider(EditorScope.Behaviour.Get<STR>(216));
+            modes.EnsureProperty(255, "FSO Direct Control");
+            panel.Controls.Add(new OpComboControl(master, escope, Operand, "Mode:", "Mode", modes));
         }
     }
 }

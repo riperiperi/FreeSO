@@ -48,13 +48,15 @@ using FSO.Client.UI.Panels.Neighborhoods;
 using FSO.UI.Controls;
 using FSO.Client.UI.Panels.Profile;
 using FSO.SimAntics.Model;
+using FSO.Common.Utils;
+using FSO.SimAntics.Engine;
 
 namespace FSO.Client.UI.Panels
 {
     /// <summary>
     /// Generates pie menus when the player clicks on objects.
     /// </summary>
-    public class UILotControl : UIContainer, IDisposable, ITouchable
+    public class UILotControl : UIContainer, IDisposable, ITouchable, IFocusableUI
     {
         private UIMouseEventRef MouseEvt;
         public bool MouseIsOn;
@@ -112,6 +114,11 @@ namespace FSO.Client.UI.Panels
         private int RMBScrollX;
         private int RMBScrollY;
 
+        private bool LastFirstPerson;
+        private bool FirstPerson = true;
+        private int FirstPersonID = 0;
+        private float FirstPersonSinceUpdate = 0f;
+
         public UICheatHandler Cheats;
         public UIAvatarDataServiceUpdater AvatarDS;
 
@@ -133,6 +140,7 @@ namespace FSO.Client.UI.Panels
         // and that the code actually blocks further dialogs from appearing while waiting for a response.
         // If we are to implement controlling multiple sims, this must be changed.
         private UIAlert BlockingDialog;
+        private UIAlert DialogTakeFocus;
         private UINeighborhoodSelectionPanel TS1NeighSelector;
         private ulong LastDialogID;
 
@@ -347,6 +355,8 @@ namespace FSO.Client.UI.Panels
                 BlockingDialog = alert;
                 LastDialogID = info.DialogID;
             }
+
+            DialogTakeFocus = alert;
 
             var entity = info.Icon;
             if (entity is VMGameObject)
@@ -942,16 +952,61 @@ namespace FSO.Client.UI.Panels
                 }
             }
 
+            if (DialogTakeFocus != null)
+            {
+                // Right now just steal it from the game. In future it should be given to the OK button.
+                state.InputManager.SetFocus(this);
+                DialogTakeFocus = null;
+            }
+
             if (Visible)
             {
                 if (!HasLanded) Landed();
                 UpdateChatTitle();
                 if (ShowTooltip) state.UIState.TooltipProperties.UpdateDead = false;
 
+                var nofocus = state.InputManager.GetFocus() == null;
+
                 bool scrolled = false;
-                if (KBScroll)
+                float firstPersonTuning = vm?.Tuning?.GetTuning("aprilfools", 0, 2023) ?? 0;
+                FirstPerson = firstPersonTuning != 0 && World.State.Cameras.ActiveType == LotView.Utils.Camera.CameraControllerType.FirstPerson;
+
+                if (firstPersonTuning == 2 && !FirstPerson)
                 {
-                    World.State.ScrollAnchor = null;
+                    if (!FSOEnvironment.Enable3D)
+                    {
+                        vm.SendCommand(new VMNetDirectControlToggleCommand
+                        {
+                            Enable = false
+                        });
+                    }
+                    else
+                    {
+                        World.State.SetCameraType(World, LotView.Utils.Camera.CameraControllerType.FirstPerson, 0);
+                        FirstPerson = true;
+                    }
+                }
+
+                if (FirstPerson != LastFirstPerson)
+                {
+                    nofocus = true;
+                    World.CanSwitchCameras = firstPersonTuning != 2;
+                    World.State.DrawRoofs = FirstPerson;
+                    WallsMode = FirstPerson ? 3 : 1;
+                    vm.SendCommand(new VMNetDirectControlToggleCommand
+                    {
+                        Enable = FirstPerson
+                    });
+
+                    LastFirstPerson = FirstPerson;
+                }
+
+                bool firstPersonControls = FirstPerson && state.WindowFocused && nofocus && PieMenu == null;
+
+                World.State.Cameras.CameraFirstPerson.CaptureMouse = FirstPerson ? firstPersonControls : true;
+
+                if (KBScroll || firstPersonControls)
+                {
                     int KeyboardAxisX = 0;
                     int KeyboardAxisY = 0;
                     Vector2 scrollBy = new Vector2();
@@ -960,8 +1015,92 @@ namespace FSO.Client.UI.Panels
                     if (state.KeyboardState.IsKeyDown(Keys.Down) || state.KeyboardState.IsKeyDown(Keys.S)) KeyboardAxisY += 1;
                     if (state.KeyboardState.IsKeyDown(Keys.Right) || state.KeyboardState.IsKeyDown(Keys.D)) KeyboardAxisX += 1;
                     scrollBy = new Vector2(KeyboardAxisX, KeyboardAxisY);
-                    scrollBy *= 0.05f;
-                    World.Scroll(scrollBy * (60f / FSOEnvironment.RefreshRate));
+
+                    if (FirstPerson && ActiveEntity != null)
+                    {
+                        if (state.KeyboardState.IsKeyDown(Keys.Escape)) state.InputManager.SetFocus(this);
+                        if (state.KeyboardState.IsKeyDown(Keys.Back))
+                        {
+                            if (ActiveEntity.Thread.ActiveQueueBlock != -1)
+                            {
+                                var action = ActiveEntity.Thread.Queue[ActiveEntity.Thread.ActiveQueueBlock];
+                                if (action.Mode == VMQueueMode.Normal || action.Mode == VMQueueMode.ParentIdle)
+                                {
+                                    HIT.HITVM.Get().PlaySoundEvent(UISounds.QueueDelete);
+                                    vm.SendCommand(new VMNetInteractionCancelCmd() { ActionUID = action.UID });
+                                }
+                            }
+                        } 
+
+                        World.State.ScrollAnchor = ActiveEntity.WorldUI as AvatarComponent;
+
+                        var facingVec = World.Transform(new Vector2(0, -1));
+
+                        int intensity = 0;
+                        short direction = 0;
+
+                        if (scrollBy != Vector2.Zero)
+                        {
+                            var moveVec = World.Transform(scrollBy);
+                            moveVec.Normalize();
+
+                            direction = (short)((Math.Atan2(moveVec.X, -moveVec.Y) / Math.PI) * 0x7FFF);
+                            intensity = 100;
+                        }
+
+                        short faceDir = (short)((Math.Atan2(facingVec.X, -facingVec.Y) / Math.PI) * 0x7FFF);
+                        bool sprint = state.KeyboardState.IsKeyDown(Keys.LeftShift) || state.KeyboardState.IsKeyDown(Keys.RightShift);
+
+                        var lastStack = ActiveEntity.Thread.Stack.LastOrDefault();
+
+                        var dir = World.Camera.Target - World.Camera.Position;
+
+                        FirstPersonSinceUpdate += 1f / FSOEnvironment.RefreshRate;
+
+                        if (lastStack is VMDirectControlFrame frame)
+                        {
+                            frame.SendUserControls(new VMDirectControlInput()
+                            {
+                                ID = FirstPersonID++,
+                                Direction = direction,
+                                InputIntensity = intensity,
+                                LookDirectionInt = faceDir,
+                                LookDirectionReal = dir,
+                                Sprint = sprint
+                            });
+                        }
+                        else
+                        {
+                            if (FirstPersonSinceUpdate > 1/30f)
+                            {
+                                vm.SendCommand(new VMNetDirectControlCommand()
+                                {
+                                    Partial = true,
+                                    Input = new VMDirectControlInput()
+                                    {
+                                        LookDirectionReal = dir
+                                    }
+                                });
+
+                                FirstPersonSinceUpdate = FirstPersonSinceUpdate % (1 / 30f);
+                            }
+                        }
+                    }
+                    else
+                    {
+                        World.State.ScrollAnchor = null;
+
+                        var currentFpAva = World.State.Cameras.CameraFirstPerson.FirstPersonAvatar;
+                        if (currentFpAva != null)
+                        {
+                            currentFpAva.Avatar.HideHead = false;
+                            World.State.Cameras.CameraFirstPerson.FirstPersonAvatar = null;
+                        }
+
+                        scrollBy *= 0.05f;
+
+                        World.Scroll(scrollBy * (60f / FSOEnvironment.RefreshRate));
+                    }
                 }
                 if (RMBScroll)
                 {
@@ -1000,7 +1139,6 @@ namespace FSO.Client.UI.Panels
                     World.Scroll(scrollBy * (60f / FSOEnvironment.RefreshRate));
                     scrolled = true;
                 }
-                var nofocus = state.InputManager.GetFocus() == null;
                 var keyst = state.KeyboardState;
                 KBScroll = state.WindowFocused && nofocus &&
                     (keyst.IsKeyDown(Keys.Up) || keyst.IsKeyDown(Keys.Left) || keyst.IsKeyDown(Keys.Down) || keyst.IsKeyDown(Keys.Right) ||
@@ -1261,6 +1399,11 @@ namespace FSO.Client.UI.Panels
 
         public void ClearCenter()
         {
+        }
+
+        public void OnFocusChanged(FocusEvent newFocus)
+        {
+
         }
     }
 }

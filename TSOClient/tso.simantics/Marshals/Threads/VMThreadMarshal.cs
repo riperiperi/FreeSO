@@ -39,7 +39,18 @@ namespace FSO.SimAntics.Marshals.Threads
             writer.Write(Stack.Length);
             foreach (var item in Stack)
             {
-                writer.Write((byte)((item is VMRoutingFrameMarshal) ? 1 : 0)); //mode, 1 for routing frame
+                byte frameType = 0;
+
+                if (item is VMRoutingFrameMarshal)
+                {
+                    frameType = 1;
+                }
+                else if (item is VMDirectControlFrameMarshal)
+                {
+                    frameType = 2;
+                }
+
+                writer.Write(frameType);
                 item.SerializeInto(writer);
             }
 
@@ -70,7 +81,17 @@ namespace FSO.SimAntics.Marshals.Threads
             for (int i = 0; i < stackN; i++)
             {
                 var type = reader.ReadByte();
-                Stack[i] = (type == 1) ? new VMRoutingFrameMarshal(Version) : new VMStackFrameMarshal(Version);
+
+                VMStackFrameMarshal frame;
+                switch (type)
+                {
+                    case 0: frame = new VMStackFrameMarshal(Version); break;
+                    case 1: frame = new VMRoutingFrameMarshal(Version); break;
+                    case 2: frame = new VMDirectControlFrameMarshal(Version); break;
+                    default: throw new Exception($"Unsupported stack frame type {i}.");
+                }
+
+                Stack[i] = frame;
                 Stack[i].Deserialize(reader);
             }
 

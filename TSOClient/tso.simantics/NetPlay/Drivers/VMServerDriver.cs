@@ -417,6 +417,15 @@ namespace FSO.SimAntics.NetPlay.Drivers
             }
         }
 
+        public void SendGenericMessage(uint id, string title, string msg)
+        {
+            lock (Clients)
+            {
+                VMNetClient client = null;
+                if (Clients.TryGetValue(id, out client)) SendGenericMessage(client, title, msg);
+            }
+        }
+
         private void SendGenericMessage(VMNetClient client, string title, string msg)
         {
             SendDirectCommand(client, new VMGenericDialogCommand

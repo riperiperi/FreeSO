@@ -61,8 +61,17 @@ namespace FSO.SimAntics.Primitives
             }
 
             if (context.Thread.IsCheck) return VMPrimitiveExitCode.GOTO_FALSE;
-            var pathFinder = context.Thread.PushNewRoutingFrame(context, false); //use the path finder to do the turn animation.
-            pathFinder.InitRoutes(new List<VMFindLocationResult>() { result });
+
+            if (operand.Mode == VMLookTowardsMode.FSODirectControl)
+            {
+                var directControl = context.Thread.PushNewDirectControlFrame(context);
+                directControl.Init();
+            }
+            else
+            {
+                var pathFinder = context.Thread.PushNewRoutingFrame(context, false); //use the path finder to do the turn animation.
+                pathFinder.InitRoutes(new List<VMFindLocationResult>() { result });
+            }
 
             return VMPrimitiveExitCode.CONTINUE;
         }
@@ -107,6 +116,8 @@ namespace FSO.SimAntics.Primitives
         BodyTowardsStackObj = 2,
         BodyAwayFromStackObj = 3,
         BodyTowardsAverageStackObj = 4,
-        BodyAwayFromAverageStackObj = 5
+        BodyAwayFromAverageStackObj = 5,
+
+        FSODirectControl = 255
     }
 }

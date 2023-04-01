@@ -94,6 +94,17 @@ float4 lightProcessRoof(float4 inPosition) {
 	return lightColorFloor(lTex);
 }
 
+float4 lightProcessRoofCeiling(float4 inPosition) {
+	if (Level >= 6) inPosition.xz = float2(0.001, 0.001); //hack: outdoor color is likely at this offset.
+	else {
+		inPosition.xyz *= WorldToLightFactor;
+		inPosition.xz += LightOffset;
+		inPosition.xz += 1 / MapLayout * floor(float2((Level - 1) % MapLayout.x, (Level - 1) / MapLayout.x));
+	}
+	float4 lTex = tex2D(advLightSampler, inPosition.xz);
+	return lightColor(lTex);
+}
+
 float4 lightInterp(float4 inPosition, float lightBleed) {
 	inPosition.xyz *= WorldToLightFactor;
 	inPosition.xz += LightOffset;

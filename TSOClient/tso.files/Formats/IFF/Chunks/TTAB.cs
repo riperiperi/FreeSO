@@ -414,7 +414,8 @@ namespace FSO.Files.Formats.IFF.Chunks
 
         FSOPushTail = 1<<30,
         FSOPushHead = 1<<29,
-        FSOSkipPermissions = 1<<28
+        FSOSkipPermissions = 1<<28,
+        FSODirectControl = 1<<27
     }
 
     public enum TSOFlags

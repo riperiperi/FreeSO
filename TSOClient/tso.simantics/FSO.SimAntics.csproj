@@ -141,6 +141,7 @@
     <Compile Include="Engine\Scopes\VMSlotScope.cs" />
     <Compile Include="Engine\Scopes\VMSuitScope.cs" />
     <Compile Include="Engine\VMAmbientSound.cs" />
+    <Compile Include="Engine\VMDirectControlFrame.cs" />
     <Compile Include="Engine\VMMemory.cs" />
     <Compile Include="Engine\VMRoutingFrame.cs" />
     <Compile Include="Engine\VMPrimitiveExitCode.cs" />
@@ -158,6 +159,7 @@
     <Compile Include="Entities\VMTS1MotiveDecay.cs" />
     <Compile Include="Marshals\Hollow\VMHollowGameObjectMarshal.cs" />
     <Compile Include="Marshals\Hollow\VMHollowMarshal.cs" />
+    <Compile Include="Marshals\Threads\VMDirectControlFrameMarshal.cs" />
     <Compile Include="Marshals\Threads\VMQueuedActionMarshal.cs" />
     <Compile Include="Marshals\Threads\VMRoutingFrameMarshal.cs" />
     <Compile Include="Marshals\VMResourceIDMarshal.cs" />
@@ -286,6 +288,8 @@
     <Compile Include="NetPlay\Model\Commands\VMNetChangeLotSizeCmd.cs" />
     <Compile Include="NetPlay\Model\Commands\VMNetChatEditChanCmd.cs" />
     <Compile Include="NetPlay\Model\Commands\VMNetChatParamCmd.cs" />
+    <Compile Include="NetPlay\Model\Commands\VMNetDirectControlCommand.cs" />
+    <Compile Include="NetPlay\Model\Commands\VMNetDirectControlToggleCmd.cs" />
     <Compile Include="NetPlay\Model\Commands\VMNetEODMessageCmd.cs" />
     <Compile Include="NetPlay\EODs\Model\VMEODPluginThreadState.cs" />
     <Compile Include="NetPlay\EODs\VMEODHost.cs" />

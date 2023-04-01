@@ -32,6 +32,7 @@ namespace FSO.Vitaboy
         public DGRP3DMesh HeadObject;
         public float HeadObjectRotation;
         public float HeadObjectSpeedyVel;
+        public bool HideHead;
         protected Matrix[] SkelBones;
 
         public static void setVitaboyEffect(Effect e) {
@@ -301,6 +302,11 @@ namespace FSO.Vitaboy
                 {
                     foreach (var binding in Bindings)
                     {
+                        if (HideHead && binding.Mesh.BoneBindings.Any(meshBind => meshBind.BoneName == "HEAD"))
+                        {
+                            continue;
+                        }
+
                         if (binding.Texture != null)
                         {
                             var tex = binding.Texture.Get(device);

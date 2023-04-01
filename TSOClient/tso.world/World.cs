@@ -23,6 +23,7 @@ using System.Diagnostics;
 using FSO.LotView.Platform;
 using FSO.LotView.Utils;
 using FSO.LotView.Utils.Camera;
+using FSO.Common.Model;
 
 namespace FSO.LotView
 {
@@ -71,6 +72,8 @@ namespace FSO.LotView
         public WorldArchitecture Architecture;
         public WorldEntities Entities;
         public IWorldPlatform Platform;
+
+        public bool CanSwitchCameras = true;
 
         protected LMapBatch Light;
         protected Blueprint Blueprint;
@@ -132,7 +135,7 @@ namespace FSO.LotView
 
         public virtual void InitDefaultGraphicsMode()
         {
-            SetGraphicsMode(GraphicsModeControl.Mode);
+            SetGraphicsMode(GraphicsModeControl.Mode, true);
         }
 
         public virtual void InitBlueprint(Blueprint blueprint)
@@ -350,6 +353,12 @@ namespace FSO.LotView
             State.CenterTile += dir.X*basis[0] + dir.Y*basis[1];
         }
 
+        public Vector2 Transform(Vector2 dir)
+        {
+            var basis = GetScrollBasis(false);
+            return dir.X * basis[0] + dir.Y * basis[1];
+        }
+
         public void Scroll(Vector2 dir)
         {
             Scroll(dir, true);
@@ -364,15 +373,24 @@ namespace FSO.LotView
         {
             BackbufferScale = 1;
             var transTime = instant ? 0 : -1;
+
+            var fpTuning = DynamicTuning.Global?.GetTuning("aprilfools", 0, 2023) ?? 0;
+            bool forceFp = (Platform == null && fpTuning > 0) || (State.Cameras.ActiveType == CameraControllerType.FirstPerson && instant);
+
+            if (forceFp && mode == GlobalGraphicsMode.Hybrid2D)
+            {
+                mode = GlobalGraphicsMode.Full3D;
+            }
+
             switch (mode)
             {
                 case GlobalGraphicsMode.Full2D:
                 case GlobalGraphicsMode.Hybrid2D:
-                    State.SetCameraType(this, Utils.Camera.CameraControllerType._2D, transTime);
+                    State.SetCameraType(this, CameraControllerType._2D, transTime);
                     Platform = new WorldPlatform2D(Blueprint);
                     break;
                 case GlobalGraphicsMode.Full3D:
-                    State.SetCameraType(this, Utils.Camera.CameraControllerType._3D, transTime);
+                    State.SetCameraType(this, forceFp ? CameraControllerType.FirstPerson : CameraControllerType._3D, transTime);
                     Platform = new WorldPlatform3D(Blueprint);
                     State.Zoom = WorldZoom.Near;
                     break;
@@ -467,10 +485,14 @@ namespace FSO.LotView
         public void CenterTo(EntityComponent comp)
         {
             if (comp.Room == 0 || comp.Room == 65531) return; //don't center if the target is out of bounds
+
+            bool isFirstPerson = State.CameraMode == CameraRenderMode._3D;
+            sbyte level = comp.Level;
+
             Vector3 pelvisCenter;
             if (comp is AvatarComponent)
             {
-                pelvisCenter = ((AvatarComponent)comp).GetPelvisPosition();
+                pelvisCenter = isFirstPerson ? ((AvatarComponent)comp).GetHeadlinePos() + comp.Position : ((AvatarComponent)comp).GetPelvisPosition();
             } else
             {
                 pelvisCenter = comp.Position;
@@ -485,8 +507,16 @@ namespace FSO.LotView
                 });
             } else {
                 State.CenterTile = new Vector2(pelvisCenter.X, pelvisCenter.Y);
+
+                State.Cameras.CameraFirstPerson.FirstPersonAvatar = isFirstPerson ? comp as AvatarComponent : null;
+                if (isFirstPerson && State.Cameras.ActiveType == CameraControllerType.FirstPerson)
+                {
+                    level = 5;
+                    State.DrawRoofs = true;
+                }
             }
-            if (State.Level != comp.Level) State.Level = comp.Level;
+
+            if (State.Level != level) State.Level = level;
         }
 
         public void RestoreTerrainToCenterTile()
@@ -540,7 +570,7 @@ namespace FSO.LotView
 
             if (state.WindowFocused && Visible)
             {
-                if (state.NewKeys.Contains(Microsoft.Xna.Framework.Input.Keys.Tab) && FSOEnvironment.Enable3D)
+                if (state.NewKeys.Contains(Microsoft.Xna.Framework.Input.Keys.Tab) && FSOEnvironment.Enable3D && CanSwitchCameras)
                 {
                     if (State.Cameras.ActiveType == Utils.Camera.CameraControllerType.FirstPerson)
                     {
@@ -786,7 +816,7 @@ namespace FSO.LotView
                 var t1 = ray.Intersects(plane);
                 var t2 = BoxRC2(ray, 3);
                 //var t2 = BoxRC(ray, tBounds);
-                if (plane.DotCoordinate(ray.Position) > 0) t1 = 0;
+                //if (plane.DotCoordinate(ray.Position) > 0) t1 = 0;
                 if (t1 != null && t2 != null && t1.Value < t2.Value)
                 {
                     //hit the ground...

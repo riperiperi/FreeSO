@@ -93,7 +93,7 @@ namespace FSO.LotView.Utils.Camera
         public float FarPlane { get => ActiveCamera.BaseCamera.FarPlane; set => ActiveCamera.BaseCamera.FarPlane = value; }
         public float Zoom { get => ActiveCamera.BaseCamera.Zoom; set => ActiveCamera.BaseCamera.Zoom = value; }
         public float AspectRatioMultiplier { get => ActiveCamera.BaseCamera.AspectRatioMultiplier; set => ActiveCamera.BaseCamera.AspectRatioMultiplier = value; }
-        public bool HideUI => ActiveCamera == CameraFirstPerson;
+        public bool HideUI => ActiveCamera == CameraFirstPerson && CameraFirstPerson.FirstPersonAvatar == null;
 
         public List<CameraTransition> TransitionWeights = new List<CameraTransition>();
 

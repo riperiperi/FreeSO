@@ -6,6 +6,7 @@ using System.Threading.Tasks;
 using FSO.Common;
 using FSO.Common.Rendering.Framework.Model;
 using FSO.Common.Utils;
+using FSO.LotView.Components;
 using Microsoft.Xna.Framework;
 using Microsoft.Xna.Framework.Graphics;
 using Microsoft.Xna.Framework.Input;
@@ -19,6 +20,8 @@ namespace FSO.LotView.Utils.Camera
         public bool LastFP;
         public float SavedYRot;
         public bool FixedCam;
+        public bool CaptureMouse;
+        public AvatarComponent FirstPersonAvatar;
 
         private GraphicsDevice GD;
 
@@ -29,8 +32,8 @@ namespace FSO.LotView.Utils.Camera
 
         public override void InvalidateCamera(WorldState state)
         {
-            var baseHeight = CamHeight;
-            Camera.Position = new Vector3(state.CenterTile.X * WorldSpace.WorldUnitsPerTile, baseHeight + 3 + FPCamHeight, state.CenterTile.Y * WorldSpace.WorldUnitsPerTile);
+            var baseHeight = FirstPersonAvatar == null ? CamHeight + 3 : 0;
+            Camera.Position = new Vector3(state.CenterTile.X * WorldSpace.WorldUnitsPerTile, baseHeight + FPCamHeight, state.CenterTile.Y * WorldSpace.WorldUnitsPerTile);
 
             var mat = Matrix.CreateRotationZ((_RotationY - (float)Math.PI / 2) * 0.99f) * Matrix.CreateRotationY(_RotationX);
             Camera.Target = Camera.Position + Vector3.Transform(new Vector3(-10, 0, 0), mat);
@@ -38,7 +41,19 @@ namespace FSO.LotView.Utils.Camera
 
         public override void Update(UpdateState state, World world)
         {
-            if (!FixedCam)
+            float nearPlane = FirstPersonAvatar != null ? 0.5f : 1f;
+
+            if (Camera.NearPlane != nearPlane)
+            {
+                Camera.NearPlane = nearPlane;
+                Camera.ProjectionDirty();
+            }
+
+            if (!CaptureMouse)
+            {
+                LastFP = false;
+            }
+            else if (!FixedCam)
             {
                 var worldState = world.State;
                 var terrainHeight = CorrectCameraHeight(world);
@@ -50,35 +65,43 @@ namespace FSO.LotView.Utils.Camera
 
                     var mpos = state.MouseState.Position;
                     var camera = Camera;
-                    if (LastFP)
+                    if (LastFP && !(mpos.X == 0 && mpos.Y == 0))
                     {
                         RotationX -= ((mpos.X - mx) / 500f) * camera.FOV;
                         RotationY += ((mpos.Y - my) / 500f) * camera.FOV;
                     }
                     Mouse.SetPosition(mx, my);
 
-                    var speed = (state.KeyboardState.IsKeyDown(Keys.LeftShift)) ? 1.5f : 0.5f;
+                    if (FirstPersonAvatar == null)
+                    {
+                        var speed = (state.KeyboardState.IsKeyDown(Keys.LeftShift)) ? 1.5f : 0.5f;
 
-                    if (camera.FOV < Math.PI * 0.6f)
-                        if (state.KeyboardState.IsKeyDown(Keys.Z))
-                            camera.FOV += 1f / hz;
+                        if (camera.FOV < Math.PI * 0.6f)
+                            if (state.KeyboardState.IsKeyDown(Keys.Z))
+                                camera.FOV += 1f / hz;
 
-                    if (camera.FOV > Math.PI * 0.025f)
-                        if (state.KeyboardState.IsKeyDown(Keys.X))
-                            camera.FOV -= 1f / hz;
+                        if (camera.FOV > Math.PI * 0.025f)
+                            if (state.KeyboardState.IsKeyDown(Keys.X))
+                                camera.FOV -= 1f / hz;
 
-                    if (state.KeyboardState.IsKeyDown(Keys.W))
-                        FPCamVelocity.Z -= speed;
-                    if (state.KeyboardState.IsKeyDown(Keys.S))
-                        FPCamVelocity.Z += speed;
-                    if (state.KeyboardState.IsKeyDown(Keys.A))
-                        FPCamVelocity.X -= speed;
-                    if (state.KeyboardState.IsKeyDown(Keys.D))
-                        FPCamVelocity.X += speed;
-                    if (state.KeyboardState.IsKeyDown(Keys.Q))
-                        FPCamVelocity.Y -= speed;
-                    if (state.KeyboardState.IsKeyDown(Keys.E))
-                        FPCamVelocity.Y += speed;
+                        if (state.KeyboardState.IsKeyDown(Keys.W))
+                            FPCamVelocity.Z -= speed;
+                        if (state.KeyboardState.IsKeyDown(Keys.S))
+                            FPCamVelocity.Z += speed;
+                        if (state.KeyboardState.IsKeyDown(Keys.A))
+                            FPCamVelocity.X -= speed;
+                        if (state.KeyboardState.IsKeyDown(Keys.D))
+                            FPCamVelocity.X += speed;
+                        if (state.KeyboardState.IsKeyDown(Keys.Q))
+                            FPCamVelocity.Y -= speed;
+                        if (state.KeyboardState.IsKeyDown(Keys.E))
+                            FPCamVelocity.Y += speed;
+                    }
+                    else
+                    {
+                        FirstPersonAvatar.Avatar.HideHead = true;
+                    }
+
                     LastFP = true;
                 }
                 else
@@ -86,10 +109,21 @@ namespace FSO.LotView.Utils.Camera
                     LastFP = false;
                 }
 
-                world.Scroll(new Vector2(FPCamVelocity.X / FSOEnvironment.RefreshRate, FPCamVelocity.Z / FSOEnvironment.RefreshRate));
-                FPCamHeight = Math.Max((terrainHeight - CamHeight) - 2, FPCamHeight + (FPCamVelocity.Y * 3) / FSOEnvironment.RefreshRate);
-                for (int i = 0; i < FSOEnvironment.RefreshRate / 60; i++)
-                    FPCamVelocity *= 0.9f;
+                if (FirstPersonAvatar == null)
+                {
+                    world.Scroll(new Vector2(FPCamVelocity.X / FSOEnvironment.RefreshRate, FPCamVelocity.Z / FSOEnvironment.RefreshRate));
+                    FPCamHeight = Math.Max((terrainHeight - CamHeight) - 2, FPCamHeight + (FPCamVelocity.Y * 3) / FSOEnvironment.RefreshRate);
+                    for (int i = 0; i < FSOEnvironment.RefreshRate / 60; i++)
+                        FPCamVelocity *= 0.9f;
+                }
+            }
+
+            if (FirstPersonAvatar != null)
+            {
+                if (Camera.FOV != 0.9f) Camera.FOV = 0.9f;
+                var headPos = FirstPersonAvatar.GetHeadlinePos() * FirstPersonAvatar.Scale + FirstPersonAvatar.Position;
+                world.State.CenterTile = new Vector2(headPos.X, headPos.Y);
+                FPCamHeight = headPos.Z * 3 + 0.25f * FirstPersonAvatar.Scale;
             }
         }
 

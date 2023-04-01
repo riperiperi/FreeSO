@@ -418,6 +418,7 @@ namespace FSO.SimAntics.Engine
 
         private void EvaluateQueuePriorities()
         {
+            EnsureDirectControlAction();
             if (ActiveQueueBlock == -1 || ActiveQueueBlock >= Queue.Count) return;
             var active = Queue[ActiveQueueBlock];
             int CurrentPriority = (int)((VMAvatar)Entity).GetPersonData(VMPersonDataVariable.Priority); 
@@ -449,6 +450,7 @@ namespace FSO.SimAntics.Engine
             if (currentFrame == null) return;
 
             if (currentFrame is VMRoutingFrame) HandleResult(currentFrame, null, ((VMRoutingFrame)currentFrame).Tick());
+            else if (currentFrame is VMDirectControlFrame) HandleResult(currentFrame, null, ((VMDirectControlFrame)currentFrame).Tick());
             else
             {
                 VMInstruction instruction;
@@ -468,6 +470,23 @@ namespace FSO.SimAntics.Engine
                 StackObject = frame.StackObject,
                 Thread = this,
                 CallFailureTrees = failureTrees,
+                ActionTree = frame.ActionTree
+            };
+
+            Stack.Add(childFrame);
+            return childFrame;
+        }
+
+        public VMDirectControlFrame PushNewDirectControlFrame(VMStackFrame frame)
+        {
+            var childFrame = new VMDirectControlFrame
+            {
+                Routine = frame.Routine,
+                Caller = frame.Caller,
+                Callee = frame.Callee,
+                CodeOwner = frame.CodeOwner,
+                StackObject = frame.StackObject,
+                Thread = this,
                 ActionTree = frame.ActionTree
             };
 
@@ -839,7 +858,7 @@ namespace FSO.SimAntics.Engine
 
                 var canQueueSkip = !interaction.Flags.HasFlag(TTABFlags.MustRun);
 
-                if (canQueueSkip && (index > ActiveQueueBlock || Stack.LastOrDefault()?.ActionTree == false) && interaction.Mode == Engine.VMQueueMode.Normal)
+                if (canQueueSkip && (index > ActiveQueueBlock || Stack.LastOrDefault()?.ActionTree == false) && (interaction.Mode == Engine.VMQueueMode.Normal || interaction.Flags.HasFlag(TTABFlags.FSODirectControl)))
                 {
                     Queue.Remove(interaction);
                     if (Context.VM.TS1) interaction.Callee.ExecuteEntryPoint(4, Context, true, Entity); //queue skipped
@@ -1029,6 +1048,36 @@ namespace FSO.SimAntics.Engine
             return result;
         }
 
+        public void EnsureDirectControlAction()
+        {
+            if (!(Entity is VMAvatar ava) ||
+                VM.GlobTS1 ||
+                ava.GetPersonData(VMPersonDataVariable.UnusedAndDoNotUse2) != 32767 ||
+                ava.GetPersonData(VMPersonDataVariable.Posture) != 0 ||
+                Queue.Any(entry => entry.Flags.HasFlag(TTABFlags.FSODirectControl)))
+            {
+                return;
+            }
+
+            var routine = Entity.GetRoutineWithOwner(9001, Context);
+            if (routine == null || routine.routine == null) return;
+
+            EnqueueAction(
+                new VMQueuedAction
+                {
+                    Callee = Entity,
+                    CodeOwner = routine.owner,
+                    ActionRoutine = routine.routine,
+                    Name = "Direct Control",
+                    StackObject = Entity,
+                    Args = new short[4],
+                    Priority = (short)VMQueuePriority.Idle + 1,
+                    Flags = TTABFlags.FSOSkipPermissions | TTABFlags.FSODirectControl,
+                    Mode = VMQueueMode.Idle
+                }
+            );
+        }
+
         #region VM Marshalling Functions
         public virtual VMThreadMarshal Save()
         {
@@ -1065,7 +1114,18 @@ namespace FSO.SimAntics.Engine
             Stack = new List<VMStackFrame>();
             foreach (var item in input.Stack)
             {
-                Stack.Add((item is VMRoutingFrameMarshal) ? new VMRoutingFrame(item, context, this) : new VMStackFrame(item, context, this));
+                if (item is VMRoutingFrameMarshal)
+                {
+                    Stack.Add(new VMRoutingFrame(item, context, this));
+                }
+                else if (item is VMDirectControlFrameMarshal)
+                {
+                    Stack.Add(new VMDirectControlFrame(item, context, this));
+                }
+                else
+                {
+                    Stack.Add(new VMStackFrame(item, context, this));
+                }
             }
             Queue = new List<VMQueuedAction>();
             QueueDirty = true;

@@ -6,9 +6,6 @@
 
 using Microsoft.Xna.Framework;
 using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
 
 namespace FSO.SimAntics.Model.Routing
 {
@@ -50,6 +47,11 @@ namespace FSO.SimAntics.Model.Routing
             return (pt.X > x1 && pt.X < x2) && (pt.Y > y1 && pt.Y < y2);
         }
 
+        public bool HardContainsHiP(Point pt)
+        {
+            return (pt.X > x1 * 0x8000 && pt.X < x2 * 0x8000) && (pt.Y > y1 * 0x8000 && pt.Y < y2 * 0x8000);
+        }
+
         public Point Closest(int x, int y)
         {
             return new Point(Math.Max(Math.Min(x2, x), x1), Math.Max(Math.Min(y2, y), y1));
@@ -58,6 +60,68 @@ namespace FSO.SimAntics.Model.Routing
         public Point ClosestHiP(int x, int y)
         {
             return new Point(Math.Max(Math.Min(x2 * 0x8000, x), x1 * 0x8000), Math.Max(Math.Min(y2 * 0x8000, y), y1 * 0x8000));
+        }
+
+        public Point ClosestEdgeContained(int x, int y)
+        {
+            int xDist = Math.Abs(x1 - x);
+            int closestX = x1;
+            if (Math.Abs(x2 - x) < xDist)
+            {
+                xDist = Math.Abs(x2 - x);
+                closestX = x2;
+            }
+
+            int yDist = Math.Abs(y1 - y);
+            int closestY = y1;
+            if (Math.Abs(y2 - y) < yDist)
+            {
+                yDist = Math.Abs(y2 - y);
+                closestY = y2;
+            }
+
+            if (xDist < yDist)
+            {
+                return new Point(closestX, y);
+            }
+            else
+            {
+                return new Point(x, closestY);
+            }
+        }
+
+        public Point ClosestEdgeContainedHiP(int x, int y)
+        {
+            int hx1 = x1 * 0x8000;
+            int hx2 = x2 * 0x8000;
+            int hy1 = y1 * 0x8000;
+            int hy2 = y2 * 0x8000;
+
+            int xDist = Math.Abs(hx1 - x);
+            int closestX = hx1;
+            if (Math.Abs(hx2 - x) < xDist)
+            {
+                xDist = Math.Abs(hx2 - x);
+                closestX = hx2;
+            }
+
+            int yDist = Math.Abs(hy1 - y);
+            int closestY = hy1;
+            if (Math.Abs(hy2 - y) < yDist)
+            {
+                yDist = Math.Abs(hy2 - y);
+                closestY = hy2;
+            }
+
+            if (xDist < yDist)
+            {
+                return new Point(closestX, y);
+            }
+            else
+            {
+
+                return new Point(x, closestY);
+            }
         }
 
         public bool Intersects(VMObstacle other)
