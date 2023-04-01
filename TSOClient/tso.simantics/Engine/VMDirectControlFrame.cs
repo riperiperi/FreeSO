@@ -58,6 +58,9 @@ namespace FSO.SimAntics.Engine
         private VMDirectControlState State;
         private VMDirectControlInput UserInput;
 
+        private int HasDelayedInputs;
+        private VMDirectControlInput DelayedInput;
+
         private List<VMDirectControlInput> ClientInputs = new List<VMDirectControlInput>();
 
         // Animations for mixing:
@@ -113,12 +116,46 @@ namespace FSO.SimAntics.Engine
 
         public void SendControls(VMDirectControlInput input)
         {
-            State.Input = input;
+            if (VM.IsServer)
+            {
+                if (HasDelayedInputs == 0)
+                {
+                    State.Input = input;
+                    HasDelayedInputs++;
+                }
+                else if (HasDelayedInputs == 1)
+                {
+                    DelayedInput = input;
+                    HasDelayedInputs++;
+                }
+                else
+                {
+                    // Skip
+                }
+            }
+            else
+            {
+
+                State.Input = input;
+            }
         }
 
         public void SendUserControls(VMDirectControlInput input)
         {
             UserInput = input;
+        }
+
+        public void TakeDelayedInput()
+        {
+            if (HasDelayedInputs == 2)
+            {
+                State.Input = DelayedInput;
+            }
+
+            if (HasDelayedInputs > 0)
+            {
+                HasDelayedInputs--;
+            }
         }
 
         private VMAnimationState PlayAnim(string name, VMAvatar avatar)
@@ -402,6 +439,7 @@ namespace FSO.SimAntics.Engine
             {
                 VMDirectControlState dupeState = State;
                 int lookaheads = 0;
+                int removed = 0;
 
                 for (int i = 0; i < ClientInputs.Count; i++)
                 {
@@ -410,6 +448,7 @@ namespace FSO.SimAntics.Engine
                     if (State.Input.ID - input.ID >= 0)
                     {
                         ClientInputs.RemoveAt(i--);
+                        removed++;
                         continue;
                     }
 
@@ -430,9 +469,10 @@ namespace FSO.SimAntics.Engine
                     TryMove(obstacles, ref dupeState, lookaheads + i + 1);
                 }
 
-                if (lookaheads > LastLookaheads || lookaheads == 0)
+                if (lookaheads >= LastLookaheads || lookaheads == 0)
                 {
                     LastLookaheads = lookaheads;
+                    TickN = 0;
                 }
                 else
                 {
@@ -543,6 +583,11 @@ namespace FSO.SimAntics.Engine
 
         public VMPrimitiveExitCode Tick()
         {
+            if (VM.IsServer)
+            {
+                TakeDelayedInput();
+            }
+
             VM.Context.NextRandom(1); //rng cycle - for desync detect
             var avatar = (VMAvatar)Caller;
 

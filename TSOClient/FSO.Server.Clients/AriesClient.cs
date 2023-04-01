@@ -138,7 +138,9 @@ namespace FSO.Server.Clients
                 //if we tried to dispose it, we'd get random disposed object exceptions because mina doesn't expect you to cancel that early.
                 Disconnect(); //if we have already established a connection, make sure it is closed.
             }
-            Connector = new AsyncSocketConnector();
+            var socketConnector = new AsyncSocketConnector();
+            socketConnector.SessionConfig.NoDelay = true;
+            Connector = socketConnector;
             var connector = Connector;
             Connector.ConnectTimeoutInMillis = 10000;
             //Connector.FilterChain.AddLast("logging", new LoggingFilter());

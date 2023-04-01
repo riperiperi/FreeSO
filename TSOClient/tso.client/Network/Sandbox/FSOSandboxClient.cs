@@ -38,7 +38,9 @@ namespace FSO.Client.Network.Sandbox
 
         public void Connect(IPEndPoint target)
         {
-            Connector = new AsyncSocketConnector();
+            var socketConnector = new AsyncSocketConnector();
+            socketConnector.SessionConfig.NoDelay = true;
+            Connector = socketConnector;
             Connector.ConnectTimeoutInMillis = 10000;
 
             Connector.Handler = this;
