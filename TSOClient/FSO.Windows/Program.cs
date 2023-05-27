@@ -18,6 +18,7 @@ using FSO.Client;
 using FSO.Client.UI.Panels;
 using System.Windows.Forms;
 using System.Text.RegularExpressions;
+using System.Diagnostics;
 
 namespace FSO.Windows
 {
@@ -46,12 +47,43 @@ namespace FSO.Windows
 
             OperatingSystem os = Environment.OSVersion;
             PlatformID pid = os.Platform;
-            bool linux = pid == PlatformID.MacOSX || pid == PlatformID.Unix;
-            if (!linux) ITTSContext.Provider = UITTSContext.PlatformProvider;
+
+            if (IsRunningOnMac())
+            {
+                ITTSContext.Provider = MacTTSContext.PlatformProvider;
+            }
+            else if (pid != PlatformID.Unix)
+            {
+                ITTSContext.Provider = UITTSContext.PlatformProvider;
+            }
 
             AppDomain.CurrentDomain.UnhandledException += CurrentDomain_UnhandledException;
             FSOProgram.ShowDialog = ShowDialog;
 
+        }
+
+        private static bool IsRunningOnMac()
+        {
+            // Check for Unix first because Mac is also Unix and would pass both checks
+            if (Environment.OSVersion.Platform != PlatformID.Unix) return false;
+
+            // Distinguish Linux from MacOS
+            return GetKernelName().ToLower() == "darwin";
+        }
+
+
+        private static string GetKernelName()
+        {
+            var startInfo = new ProcessStartInfo("uname", "-s")
+            {
+                UseShellExecute = false,
+                RedirectStandardOutput = true,
+                CreateNoWindow = true
+            };
+            using (var process = Process.Start(startInfo))
+            {
+                return process.StandardOutput.ReadLine().Trim();
+            }
         }
 
         public static void ShowDialog(string text)
