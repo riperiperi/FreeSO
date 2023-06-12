@@ -236,10 +236,10 @@ namespace FSO.SimAntics.JIT.Translation.CSharp.Engine
                     return Exp($"context.StackObject.MultitileGroup.BaseObject.GetAttribute({(ushort)data})");
 
                 case VMVariableScope.MyLeadTile: //51
-                    return $"context.Caller.MultitileGroup.BaseObject.GetValue({EnumValueName((VMStackObjectVariable)data)})";
+                    return $"context.Caller.MultitileGroup.BaseObject.ObjectID";
 
                 case VMVariableScope.StackObjectLeadTile: //52
-                    return $"context.StackObject.MultitileGroup.BaseObject.GetValue({EnumValueName((VMStackObjectVariable)data)})";
+                    return $"context.StackObject.MultitileGroup.BaseObject.ObjectID";
                     //throw new Exception("Not implemented...");
 
                 case VMVariableScope.StackObjectMasterDef: //53
@@ -459,10 +459,10 @@ namespace FSO.SimAntics.JIT.Translation.CSharp.Engine
                         return $"context.StackObject.MultitileGroup.BaseObject.SetAttribute({(ushort)data}, {value});";
 
                     case VMVariableScope.MyLeadTile: //51
-                        return $"context.Caller.MultitileGroup.BaseObject.SetValue({EnumValueName((VMStackObjectVariable)data)}, {value});";
+                        return $""; //you can't set this!
 
                     case VMVariableScope.StackObjectLeadTile: //52
-                        return $"context.StackObject.MultitileGroup.BaseObject.SetValue({EnumValueName((VMStackObjectVariable)data)}, {value});";
+                        return $""; //you can't set this!
 
                     case VMVariableScope.StackObjectMasterDef: //53
                         return $"";

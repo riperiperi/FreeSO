@@ -459,7 +459,8 @@ namespace FSO.SimAntics.JIT.Translation.CSharp
 
             // write compilation info
             // first is hashes for the source files. If any of these change, this file should be recompiled.
-            WriteLine($"public override uint SourceHash => {Context.ObjectRes.MainIff.ExecutableHash};");
+            var myRes = (Context.ObjectRes ?? Context.SemiGlobalRes ?? Context.GlobalRes);
+            WriteLine($"public override uint SourceHash => {myRes.MainIff.ExecutableHash};");
             if (Context.SemiGlobalRes != null) WriteLine($"public override uint SourceSemiglobalHash => {Context.SemiGlobalRes.MainIff.ExecutableHash};");
             if (Context.GlobalRes != null) WriteLine($"public override uint SourceGlobalHash => {Context.GlobalRes.MainIff.ExecutableHash};");
 

@@ -298,10 +298,10 @@ namespace FSO.SimAntics.Engine.Utils
                     return context.StackObject.MultitileGroup.BaseObject.GetAttribute((ushort)data);
 
                 case VMVariableScope.MyLeadTile: //51
-                    return context.Caller.MultitileGroup.BaseObject.GetValue((VMStackObjectVariable)data);
+                    return context.Caller.MultitileGroup.BaseObject.ObjectID;
 
                 case VMVariableScope.StackObjectLeadTile: //52
-                    return context.StackObject.MultitileGroup.BaseObject.GetValue((VMStackObjectVariable)data);
+                    return context.StackObject.MultitileGroup.BaseObject.ObjectID;
 
                 case VMVariableScope.StackObjectMasterDef: //53
                     //gets definition of the master tile of a multi tile object in the stack object.
@@ -633,11 +633,9 @@ namespace FSO.SimAntics.Engine.Utils
                     return true;
 
                 case VMVariableScope.MyLeadTile: //51
-                    context.Caller.MultitileGroup.BaseObject.SetValue((VMStackObjectVariable)data, value);
-                    return true;
+                    return false; //can't set object ID.
                 case VMVariableScope.StackObjectLeadTile: //52
-                    context.StackObject.MultitileGroup.BaseObject.SetValue((VMStackObjectVariable)data, value);
-                    return true;
+                    return false; //can't set object ID.
                 case VMVariableScope.StackObjectMasterDef: //53
                     return false;
 
