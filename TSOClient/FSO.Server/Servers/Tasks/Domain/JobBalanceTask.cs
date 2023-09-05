@@ -32,17 +32,17 @@ namespace FSO.Server.Servers.Tasks.Domain
         };
         private static Dictionary<int, int> TypeToTransaction = TransactionToType.ToDictionary(x => x.Value, x => x.Key);
 
-        private float BaseCompletionTime = 270f;
+        private float BaseCompletionTime = 228.96f;
         private static float[] TypeCompletionTimes = new float[]
         {
-            292.21f, //typewriter
-            289.23f, //easel
-            207.73f, //boards
-            299.1f, //jam
-            324.41f, //potion
-            290.47f, //gnome
-            290.6f, //pinata
-            288.13f //telemarketing
+            245f, //typewriter
+            245f, //easel
+            205f, //boards
+            250f, //jam
+            255f, //potion
+            245f, //gnome
+            245f, //pinata
+            245f //telemarketing
         };
 
         private static int[] ToTuningIndex = new int[] //see skillobjects.otf
