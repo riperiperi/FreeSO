@@ -77,7 +77,7 @@ namespace FSO.SimAntics.Primitives
                         case VMDialogType.YesNo:
                             return (curDialog.ResponseCode == 0) ? VMPrimitiveExitCode.GOTO_TRUE : VMPrimitiveExitCode.GOTO_FALSE;
                         case VMDialogType.YesNoCancel:
-                            if (curDialog.ResponseCode > 1)
+                            if (curDialog.ResponseCode > 0)
                             {
                                 context.Thread.TempRegisters[((operand.Flags & VMDialogFlags.UseTemp1) > 0) ? 1 : 0] = (short)((curDialog.ResponseCode - 1) % 2);
                                 return VMPrimitiveExitCode.GOTO_FALSE;
