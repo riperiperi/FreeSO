@@ -980,7 +980,11 @@ namespace FSO.SimAntics.Engine
                 }
                 else if (avatar.IsPet && avatar.AvatarState.Permissions < VMTSOAvatarPermissions.Admin) return null; //not allowed
 
-                if ((action.Flags & TTABFlags.TSOIsRepair) > 0 != ((action.Callee.MultitileGroup.BaseObject?.TSOState as VMTSOObjectState)?.Broken ?? false)) return null;
+                bool isActionGlobal = action.ActionRoutine.ID < 4096; // Ignore global actions for disabling interactions due to repair.
+                bool isRepair = (action.Flags & TTABFlags.TSOIsRepair) > 0;
+
+                if ((!isActionGlobal || isRepair) && 
+                    (isRepair != ((action.Callee.MultitileGroup.BaseObject?.TSOState as VMTSOObjectState)?.Broken ?? false))) return null;
 
                 uint ownerID = 0;
                 if (action.Callee is VMGameObject) {
