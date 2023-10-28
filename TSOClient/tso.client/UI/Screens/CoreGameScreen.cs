@@ -822,21 +822,6 @@ namespace FSO.Client.UI.Screens
 
         }
 
-        private void SaveHouseButton_OnButtonClick(UIElement button)
-        {
-            if (vm == null) return;
-            
-            var exporter = new VMWorldExporter();
-            exporter.SaveHouse(vm, GameFacade.GameFilePath("housedata/blueprints/house_00.xml"));
-            var marshal = vm.Save();
-            Directory.CreateDirectory(Path.Combine(FSOEnvironment.UserDir, "LocalHouse/"));
-            using (var output = new FileStream(Path.Combine(FSOEnvironment.UserDir, "LocalHouse/house_00.fsov"), FileMode.Create))
-            {
-                marshal.SerializeInto(new BinaryWriter(output));
-            }
-            if (vm.GlobalLink != null) ((VMTSOGlobalLinkStub)vm.GlobalLink).Database.Save();
-        }
-
         public void CloseInbox()
         {
             Inbox.Visible = false;

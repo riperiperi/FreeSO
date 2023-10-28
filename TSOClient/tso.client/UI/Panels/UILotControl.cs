@@ -1233,7 +1233,7 @@ namespace FSO.Client.UI.Panels
                         try {
                             var exporter = new VMWorldExporter();
                             exporter.SaveHouse(vm, Path.Combine(FSOEnvironment.UserDir, ("Blueprints/"+LotSaveDialog.ResponseText+".xml")));
-                            var marshal = vm.Save();
+                            var marshal = vm.Save(!(UIScreen.Current is SandboxGameScreen));
                             Directory.CreateDirectory(Path.Combine(FSOEnvironment.UserDir, "LocalHouse/"));
                             using (var output = new FileStream(Path.Combine(FSOEnvironment.UserDir, "LocalHouse/"+LotSaveDialog.ResponseText+".fsov"), FileMode.Create))
                             {

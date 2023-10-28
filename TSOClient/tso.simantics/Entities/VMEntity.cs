@@ -1822,7 +1822,8 @@ namespace FSO.SimAntics
         PlayersCanMove = 1 << 1,
         SelfPropelled = 1 << 2, //unused
         PlayersCanDelete = 1 << 3,
-        StaysAfterEvict = 1 << 4
+        StaysAfterEvict = 1 << 4,
+        FSOExcludeUserSave = 1 << 8
     }
 
     [Flags]

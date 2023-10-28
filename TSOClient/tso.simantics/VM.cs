@@ -664,7 +664,7 @@ namespace FSO.SimAntics
         }
 
 #region VM Marshalling Functions
-        public VMMarshal Save()
+        public VMMarshal Save(bool user = false)
         {
             var ents = new VMEntityMarshal[Entities.Count];
             var threads = new VMThreadMarshal[Entities.Count];
@@ -673,6 +673,11 @@ namespace FSO.SimAntics
             int i = 0;
             foreach (var ent in Entities)
             {
+                if (user && ((VMMovementFlags)ent.GetValue(VMStackObjectVariable.MovementFlags)).HasFlag(VMMovementFlags.FSOExcludeUserSave))
+                {
+                    continue;
+                }
+
                 if (ent is VMAvatar)
                 {
                     ents[i] = ((VMAvatar)ent).Save();
@@ -686,6 +691,12 @@ namespace FSO.SimAntics
                 {
                     mult.Add(ent.MultitileGroup.Save());
                 }
+            }
+
+            if (i != ents.Length)
+            {
+                Array.Resize(ref ents, i);
+                Array.Resize(ref threads, i);
             }
 
             return new VMMarshal
