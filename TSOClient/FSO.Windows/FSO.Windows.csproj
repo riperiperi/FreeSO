@@ -93,6 +93,7 @@
   <ItemGroup>
     <Compile Include="Program.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
+    <Compile Include="MacTTSContext.cs" />
     <Compile Include="UITTSContext.cs" />
     <Compile Include="WinFormsClipboard.cs" />
     <EmbeddedResource Include="Properties\Resources.resx">
