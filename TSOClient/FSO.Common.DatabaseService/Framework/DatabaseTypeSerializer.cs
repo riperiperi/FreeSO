@@ -1,10 +1,5 @@
-﻿using FSO.Common.Serialization;
-using FSO.Common.Serialization.TypeSerializers;
+﻿using FSO.Common.Serialization.TypeSerializers;
 using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
 using System.Reflection;
 using FSO.Common.DatabaseService.Model;
 

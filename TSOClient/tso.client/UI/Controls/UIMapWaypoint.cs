@@ -15,10 +15,7 @@ using Microsoft.Xna.Framework;
 using Microsoft.Xna.Framework.Graphics;
 using Ninject;
 using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
+
 using static FSO.Client.GameContent.FileIDs;
 
 namespace FSO.Client.UI.Controls

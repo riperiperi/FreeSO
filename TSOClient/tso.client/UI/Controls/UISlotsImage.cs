@@ -1,16 +1,7 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
-using Microsoft.Xna.Framework;
+﻿using Microsoft.Xna.Framework;
 using Microsoft.Xna.Framework.Graphics;
 using FSO.Common.Utils;
 using FSO.Client.UI.Framework;
-using FSO.Client.UI.Framework.Parser;
-using FSO.Client.UI.Model;
-using FSO.Common.Rendering.Framework.Model;
-using FSO.Common.Rendering.Framework.IO;
 
 namespace FSO.Client.UI.Controls
 {

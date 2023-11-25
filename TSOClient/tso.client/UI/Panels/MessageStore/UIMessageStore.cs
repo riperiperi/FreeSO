@@ -1,11 +1,8 @@
 ﻿using FSO.Common;
 using FSO.Files.Formats.tsodata;
-using System;
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
 
 namespace FSO.Client.UI.Panels.MessageStore
 {

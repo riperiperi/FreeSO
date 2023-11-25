@@ -2,13 +2,10 @@
 using FSO.Common.Rendering.Framework.IO;
 using FSO.Common.Rendering.Framework.Model;
 using FSO.Files.Formats.IFF.Chunks;
-using FSO.IDE.EditorComponent.Commands;
-using FSO.IDE.EditorComponent.Model;
 using Microsoft.Xna.Framework;
 using System;
 using System.Collections.Generic;
 using System.Linq;
-using System.Text;
 
 namespace FSO.IDE.EditorComponent.UI
 {

@@ -1,12 +1,4 @@
-﻿using FSO.Client.Regulators;
-using FSO.Client.UI.Controls;
-using FSO.Client.UI.Framework;
-using FSO.Server.Protocol.Electron.Model;
-using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
+﻿using FSO.Client.UI.Controls;
 using FSO.Common.Rendering.Framework.Model;
 using FSO.Common.Rendering.Framework;
 

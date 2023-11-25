@@ -1,13 +1,8 @@
 ﻿using FSO.Server.Api.Core.Utils;
 using FSO.Server.Common;
-using FSO.Server.Protocol.Gluon.Model;
 using Microsoft.AspNetCore.Cors;
 using Microsoft.AspNetCore.Mvc;
-using System;
 using System.Net;
-using System.Net.Http;
-using System.Web;
-using System.Web.Http;
 
 namespace FSO.Server.Api.Core.Controllers.Admin
 {

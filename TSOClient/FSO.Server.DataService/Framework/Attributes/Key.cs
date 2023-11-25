@@ -1,8 +1,4 @@
 ﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
 
 namespace FSO.Common.DataService.Framework.Attributes
 {
@@ -14,8 +10,8 @@ namespace FSO.Common.DataService.Framework.Attributes
     /// 
     /// If this decoration is on an attribute and the value is set to null (0) the parent object is deleted (removed from arrays)
     /// </summary>
-    [System.AttributeUsage(System.AttributeTargets.Property, Inherited = true)]
-    public class Key : System.Attribute
+    [AttributeUsage(AttributeTargets.Property, Inherited = true)]
+    public class Key : Attribute
     {
         public Key()
         {

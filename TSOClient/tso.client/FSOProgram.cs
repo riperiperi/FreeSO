@@ -1,17 +1,12 @@
 ﻿using FSO.Client.Utils;
 using FSO.Client.Utils.GameLocator;
 using FSO.Common;
-using FSO.Common.Rendering.Framework.IO;
 using FSO.UI;
 using System;
-using System.Collections.Generic;
 using System.IO;
 using System.Linq;
 using System.Reflection;
-using System.Text;
 using System.Threading;
-using System.Threading.Tasks;
-//using System.Windows.Forms;
 
 namespace FSO.Client
 {

@@ -1,16 +1,9 @@
 ﻿using System;
-using System.Collections.Generic;
-using System.ComponentModel;
-using System.Drawing;
-using System.Data;
 using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
 using System.Windows.Forms;
 using FSO.Content;
 using FSO.Files.Formats.IFF;
 using FSO.Files.Formats.IFF.Chunks;
-using System.Threading;
 
 namespace FSO.IDE.ResourceBrowser.ResourceEditors
 {

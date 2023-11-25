@@ -2,11 +2,8 @@
 using FSO.Client.UI.Framework;
 using FSO.SimAntics;
 using FSO.SimAntics.Model.TSOPlatform;
-using System;
 using System.Collections.Generic;
 using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
 using FSO.Common.Rendering.Framework.Model;
 using FSO.SimAntics.NetPlay.Model.Commands;
 

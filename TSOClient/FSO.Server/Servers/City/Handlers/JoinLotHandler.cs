@@ -1,7 +1,6 @@
 ﻿using FSO.Server.Common;
 using FSO.Server.Database.DA;
 using FSO.Server.Database.DA.Lots;
-using FSO.Server.Database.DA.Shards;
 using FSO.Server.Framework.Gluon;
 using FSO.Server.Framework.Voltron;
 using FSO.Server.Protocol.Electron.Packets;
@@ -9,10 +8,6 @@ using FSO.Server.Protocol.Gluon.Packets;
 using FSO.Server.Servers.City.Domain;
 using NLog;
 using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
 
 namespace FSO.Server.Servers.City.Handlers
 {

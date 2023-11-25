@@ -1,14 +1,6 @@
-﻿/*
-This Source Code Form is subject to the terms of the Mozilla Public License, v. 2.0.
-If a copy of the MPL was not distributed with this file, You can obtain one at
-http://mozilla.org/MPL/2.0/.
-*/
-
-using System;
+﻿using System;
 using System.Collections.Generic;
 using System.Linq;
-using System.Text;
-using System.Diagnostics;
 using FSO.Client.UI.Framework;
 using FSO.Client.UI.Panels;
 using FSO.Client.UI.Model;
@@ -18,25 +10,18 @@ using FSO.Client.Utils;
 using FSO.Common.Rendering.Framework.Model;
 using FSO.Common.Rendering.Framework.IO;
 using FSO.Common.Rendering.Framework;
-using FSO.Client.Network;
 using FSO.LotView;
 using FSO.LotView.Model;
 using FSO.SimAntics;
-using FSO.SimAntics.Utils;
-using FSO.Debug;
-using FSO.SimAntics.Primitives;
 using FSO.HIT;
 using FSO.SimAntics.NetPlay.Drivers;
 using FSO.SimAntics.NetPlay.Model.Commands;
-using System.IO;
 using FSO.SimAntics.NetPlay;
 using FSO.Client.UI.Controls;
 using FSO.Client.Controllers;
 using FSO.Client.Controllers.Panels;
 using FSO.Client.Debug;
 using FSO.Client.UI.Panels.WorldUI;
-using FSO.SimAntics.Engine.TSOTransaction;
-using FSO.Common;
 using FSO.Common.Utils;
 using FSO.UI.Model;
 using FSO.Client.UI.Panels.Neighborhoods;

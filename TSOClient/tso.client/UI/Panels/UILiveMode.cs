@@ -1,13 +1,5 @@
-﻿/*
-This Source Code Form is subject to the terms of the Mozilla Public License, v. 2.0.
-If a copy of the MPL was not distributed with this file, You can obtain one at
-http://mozilla.org/MPL/2.0/.
-*/
-
-using System;
-using System.Collections.Generic;
+﻿using System;
 using System.Linq;
-using System.Text;
 using FSO.Client.UI.Framework;
 using Microsoft.Xna.Framework.Graphics;
 using FSO.Client.UI.Controls;
@@ -16,9 +8,7 @@ using FSO.SimAntics;
 using FSO.SimAntics.Model;
 using FSO.Client.UI.Panels.EODs;
 using FSO.Client.UI.Framework.Parser;
-using FSO.SimAntics.NetPlay.EODs.Model;
 using FSO.LotView.Components;
-using FSO.LotView;
 using FSO.Common;
 using FSO.Content.Model;
 using FSO.SimAntics.Model.TSOPlatform;

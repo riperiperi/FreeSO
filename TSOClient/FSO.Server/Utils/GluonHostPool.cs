@@ -1,7 +1,6 @@
 ﻿using FSO.Server.Clients;
 using FSO.Server.Database.DA;
 using FSO.Server.Framework.Aries;
-using FSO.Server.Framework.Gluon;
 using Ninject;
 using System;
 using System.Collections.Generic;

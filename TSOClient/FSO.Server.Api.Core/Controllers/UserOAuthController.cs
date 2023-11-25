@@ -1,15 +1,9 @@
 ﻿using FSO.Server.Api.Core.Utils;
 using FSO.Server.Common;
 using FSO.Server.Servers.Api.JsonWebToken;
-using Microsoft.AspNetCore.Cors;
 using Microsoft.AspNetCore.Mvc;
 using System;
 using System.Collections.Generic;
-using System.IO;
-using System.Net.Http;
-using System.Net.Http.Headers;
-using System.Web;
-using System.Web.Http;
 
 namespace FSO.Server.Api.Core.Controllers
 {

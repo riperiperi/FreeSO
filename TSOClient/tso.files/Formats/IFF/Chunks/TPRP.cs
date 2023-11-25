@@ -1,8 +1,4 @@
 ﻿using FSO.Files.Utils;
-using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
 using System.IO;
 
 namespace FSO.Files.Formats.IFF.Chunks

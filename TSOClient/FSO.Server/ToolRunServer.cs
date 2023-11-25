@@ -1,15 +1,11 @@
 ﻿using FSO.Common.DataService.Framework;
-using FSO.Common.Domain;
 using FSO.Common.Utils;
 using FSO.Server.Common;
-using FSO.Server.Database.DA;
 using FSO.Server.DataService;
 using FSO.Server.Domain;
 using FSO.Server.Protocol.Electron.Packets;
 using FSO.Server.Servers;
-using FSO.Server.Servers.Api;
 using FSO.Server.Servers.City;
-using FSO.Server.Servers.City.Handlers;
 using FSO.Server.Servers.Lot;
 using FSO.Server.Servers.Tasks;
 using FSO.Server.Servers.UserApi;
@@ -22,9 +18,7 @@ using NLog;
 using System;
 using System.Collections.Generic;
 using System.IO;
-using System.Linq;
 using System.Runtime.Caching;
-using System.Text;
 using System.Threading;
 using System.Threading.Tasks;
 

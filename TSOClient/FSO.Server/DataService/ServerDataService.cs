@@ -1,12 +1,6 @@
-﻿
-using FSO.Common.Serialization;
+﻿using FSO.Common.Serialization;
 using FSO.Server.DataService.Providers;
 using Ninject;
-using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
 
 namespace FSO.Server.DataService
 {

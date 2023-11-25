@@ -2,15 +2,11 @@
 using System;
 using System.Collections.Generic;
 using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
 using FSO.Common.Rendering.Framework.Model;
 using Microsoft.Xna.Framework;
-using FSO.Client;
 using FSO.Common;
 using FSO.HIT;
 using FSO.Client.UI.Model;
-using FSO.LotView.RC;
 using FSO.Common.Utils;
 using FSO.Client.UI.Screens;
 using FSO.LotView.Model;

@@ -1,10 +1,4 @@
-﻿/*
-This Source Code Form is subject to the terms of the Mozilla Public License, v. 2.0.
-If a copy of the MPL was not distributed with this file, You can obtain one at
-http://mozilla.org/MPL/2.0/.
-*/
-
-using System;
+﻿using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.IO;
@@ -15,18 +9,15 @@ using FSO.Client.UI.Panels;
 using FSO.Client.UI.Framework.Parser;
 using Microsoft.Xna.Framework;
 using FSO.Files;
-using FSO.Client.Network;
 using FSO.Common.Utils;
 using FSO.Server.Protocol.CitySelector;
 using FSO.Vitaboy;
 using FSO.Client.Regulators;
-using Ninject;
 using FSO.Client.Controllers;
 using FSO.HIT;
 using FSO.Client.UI.Model;
 using FSO.Common;
 using FSO.Common.Utils.Cache;
-using FSO.Common.Domain.Shards;
 using FSO.Server.Clients;
 
 namespace FSO.Client.UI.Screens

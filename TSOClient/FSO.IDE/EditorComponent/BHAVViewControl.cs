@@ -5,10 +5,6 @@ using FSO.IDE.EditorComponent.Commands;
 using FSO.IDE.EditorComponent.UI;
 using FSO.SimAntics;
 using FSO.SimAntics.Engine;
-using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
 
 namespace FSO.IDE.EditorComponent
 {

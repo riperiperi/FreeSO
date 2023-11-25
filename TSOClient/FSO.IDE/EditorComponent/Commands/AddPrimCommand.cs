@@ -1,9 +1,4 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
-using FSO.Files.Formats.IFF.Chunks;
+﻿using FSO.Files.Formats.IFF.Chunks;
 using FSO.IDE.EditorComponent.UI;
 
 namespace FSO.IDE.EditorComponent.Commands

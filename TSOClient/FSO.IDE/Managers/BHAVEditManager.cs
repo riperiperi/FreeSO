@@ -1,11 +1,8 @@
 ﻿using FSO.Content;
 using FSO.Files.Formats.IFF.Chunks;
 using FSO.SimAntics;
-using System;
 using System.Collections.Generic;
 using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
 using System.Windows.Forms;
 
 namespace FSO.IDE.Managers

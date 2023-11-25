@@ -1,9 +1,6 @@
 ﻿using Dapper;
-using System;
 using System.Collections.Generic;
 using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
 using FSO.Server.Database.DA.Tuning;
 using FSO.Server.Database.DA.Utils;
 using System.Data.SqlClient;

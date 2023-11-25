@@ -1,14 +1,7 @@
-﻿using FSO.Server.Framework.Aries;
-using FSO.Server.Framework.Gluon;
+﻿using FSO.Server.Framework.Gluon;
 using FSO.Server.Protocol.Aries.Packets;
 using FSO.Server.Protocol.Utils;
 using FSO.Server.Servers.Lot.Lifecycle;
-using Ninject;
-using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
 
 namespace FSO.Server.Servers.Lot.Handlers
 {

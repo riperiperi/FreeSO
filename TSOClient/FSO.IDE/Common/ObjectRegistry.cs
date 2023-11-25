@@ -1,11 +1,6 @@
-﻿using FSO.Client.GameContent;
-using FSO.Content;
-using System;
+﻿using FSO.Content;
 using System.Collections.Generic;
 using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
-using System.Xml;
 
 namespace FSO.IDE.Common
 {

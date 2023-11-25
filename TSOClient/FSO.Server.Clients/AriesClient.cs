@@ -1,22 +1,15 @@
 ﻿using FSO.Server.Common;
 using FSO.Server.Protocol.Aries;
-using FSO.Server.Protocol.Utils;
 using FSO.Server.Protocol.Voltron.Packets;
 using Mina.Core.Future;
 using Mina.Core.Service;
 using Mina.Core.Session;
 using Mina.Filter.Codec;
-using Mina.Filter.Logging;
-using Mina.Filter.Ssl;
 using Mina.Transport.Socket;
 using Ninject;
-using NLog;
 using System;
 using System.Collections.Generic;
-using System.Linq;
 using System.Net;
-using System.Security.Cryptography.X509Certificates;
-using System.Text;
 using System.Threading.Tasks;
 
 namespace FSO.Server.Clients

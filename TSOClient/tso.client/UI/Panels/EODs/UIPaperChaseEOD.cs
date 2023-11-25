@@ -2,15 +2,9 @@
 using FSO.Client.UI.Framework;
 using FSO.Client.UI.Framework.Parser;
 using FSO.Client.UI.Panels.EODs.Utils;
-using FSO.SimAntics;
 using FSO.SimAntics.NetPlay.EODs.Handlers;
-using FSO.SimAntics.NetPlay.EODs.Utils;
 using Microsoft.Xna.Framework.Graphics;
 using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
 
 namespace FSO.Client.UI.Panels.EODs
 {

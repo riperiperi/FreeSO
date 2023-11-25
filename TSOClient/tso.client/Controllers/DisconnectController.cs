@@ -1,11 +1,6 @@
 ﻿using FSO.Client.Regulators;
 using FSO.Client.UI.Screens;
-using FSO.Common.Utils;
 using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
 
 namespace FSO.Client.Controllers
 {

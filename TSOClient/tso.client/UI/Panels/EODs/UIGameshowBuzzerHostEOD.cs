@@ -1,12 +1,8 @@
 ﻿using System;
 using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
 using FSO.Client.UI.Controls;
 using FSO.Client.UI.Model;
 using FSO.Client.UI.Framework;
-using FSO.Client.UI.Panels.EODs.Utils;
 using FSO.Common.Utils;
 using FSO.Content.Model;
 using FSO.SimAntics.NetPlay.EODs.Handlers;
@@ -14,8 +10,6 @@ using FSO.SimAntics.NetPlay.EODs.Handlers.Data;
 using FSO.SimAntics;
 using Microsoft.Xna.Framework.Graphics;
 using Microsoft.Xna.Framework;
-using OpenTK.Graphics.OpenGL;
-using FSO.Files.HIT;
 
 namespace FSO.Client.UI.Panels.EODs
 {

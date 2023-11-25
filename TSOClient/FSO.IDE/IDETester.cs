@@ -1,12 +1,8 @@
 ﻿using FSO.Client.Debug;
 using System;
 using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using FSO.Client.UI.Framework;
 using FSO.SimAntics;
 using FSO.Files.Formats.IFF.Chunks;
-using FSO.IDE.EditorComponent.UI;
 using FSO.IDE.EditorComponent;
 using FSO.Client;
 using FSO.Content;

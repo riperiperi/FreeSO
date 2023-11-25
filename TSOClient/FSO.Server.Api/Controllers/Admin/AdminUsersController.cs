@@ -1,13 +1,10 @@
-﻿using FSO.Server.Api;
-using FSO.Server.Api.Utils;
+﻿using FSO.Server.Api.Utils;
 using FSO.Server.Common;
 using FSO.Server.Database.DA.Inbox;
 using FSO.Server.Database.DA.Users;
 using System;
-using System.Collections.Generic;
 using System.Net;
 using System.Net.Http;
-using System.Web;
 using System.Web.Http;
 
 namespace FSO.Server.Api.Controllers.Admin

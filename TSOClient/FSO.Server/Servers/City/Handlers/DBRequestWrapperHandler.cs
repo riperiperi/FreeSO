@@ -2,14 +2,11 @@
 using FSO.Common.Serialization.Primitives;
 using FSO.Server.Database.DA;
 using FSO.Server.Domain;
-using FSO.Server.Framework.Aries;
 using FSO.Server.Framework.Voltron;
 using FSO.Server.Protocol.Voltron.Packets;
 using System;
 using System.Collections.Generic;
 using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
 
 namespace FSO.Server.Servers.City.Handlers
 {

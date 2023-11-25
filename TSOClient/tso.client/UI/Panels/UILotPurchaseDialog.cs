@@ -1,15 +1,9 @@
 ﻿using FSO.Client.Controllers;
-using FSO.Client.GameContent;
 using FSO.Client.UI.Controls;
 using FSO.Client.UI.Framework;
 using FSO.Common.Utils;
 using Microsoft.Xna.Framework;
-using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
 using System.Text.RegularExpressions;
-using System.Threading.Tasks;
 
 namespace FSO.Client.UI.Panels
 {

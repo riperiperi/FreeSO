@@ -1,12 +1,5 @@
-﻿/*
-This Source Code Form is subject to the terms of the Mozilla Public License, v. 2.0.
-If a copy of the MPL was not distributed with this file, You can obtain one at
-http://mozilla.org/MPL/2.0/.
-*/
-
-using FSO.Client.UI.Controls;
+﻿using FSO.Client.UI.Controls;
 using FSO.Client.UI.Framework;
-using FSO.Common;
 using FSO.Common.Utils;
 using FSO.SimAntics.Model;
 using Microsoft.Xna.Framework;
@@ -15,7 +8,6 @@ using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Text;
-using System.Threading.Tasks;
 using FSO.Common.Rendering.Framework.Model;
 using FSO.SimAntics.NetPlay.Model.Commands;
 using FSO.HIT;

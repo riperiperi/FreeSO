@@ -2,13 +2,7 @@
 using FSO.Client.Utils;
 using FSO.Common.DataService.Model;
 using FSO.Common.Utils;
-using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
 using Microsoft.Xna.Framework;
-using Microsoft.Xna.Framework.Graphics;
 using FSO.Client.Model;
 using FSO.Content.Model;
 using FSO.Client.Controllers;

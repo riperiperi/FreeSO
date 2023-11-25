@@ -4,10 +4,7 @@ using FSO.Server.Protocol.Gluon.Packets;
 using Newtonsoft.Json;
 using System;
 using System.Net;
-using System.Net.Http;
-using System.Web;
 using System.Linq;
-using System.Web.Http;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Cors;
 

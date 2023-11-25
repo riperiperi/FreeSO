@@ -1,10 +1,5 @@
-﻿using FSO.Common.Serialization.TypeSerializers;
-using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
+﻿using System.Collections.Generic;
 using Mina.Core.Buffer;
-using System.Collections;
 
 namespace FSO.Common.Serialization.Primitives
 {

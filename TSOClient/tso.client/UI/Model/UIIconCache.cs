@@ -1,17 +1,11 @@
-﻿using FSO.Client;
-using FSO.Common.Rendering.Framework;
+﻿using FSO.Common.Rendering.Framework;
 using FSO.Common.Rendering.Framework.Camera;
-using FSO.Content;
 using FSO.SimAntics;
-using FSO.SimAntics.Model;
 using FSO.Vitaboy;
 using Microsoft.Xna.Framework;
 using Microsoft.Xna.Framework.Graphics;
 using System;
 using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
 
 namespace FSO.Client.UI.Model
 {

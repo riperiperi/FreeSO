@@ -1,6 +1,5 @@
 ﻿using FSO.Client.UI.Controls;
 using FSO.Client.UI.Framework;
-using FSO.Common.Utils;
 using FSO.Files.Formats.IFF.Chunks;
 using FSO.IDE.EditorComponent.Model;
 using Microsoft.Xna.Framework;
@@ -8,7 +7,6 @@ using Microsoft.Xna.Framework.Graphics;
 using System;
 using System.Collections.Generic;
 using System.Linq;
-using System.Text;
 using FSO.Common.Rendering.Framework.Model;
 using FSO.Common.Rendering.Framework.IO;
 using FSO.SimAntics.Engine;

@@ -2,14 +2,8 @@
 using FSO.Common.Rendering.Framework;
 using FSO.Common.Utils;
 using FSO.LotView;
-using FSO.LotView.Platform;
 using FSO.LotView.Utils;
 using Microsoft.Xna.Framework.Graphics;
-using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
 
 namespace FSO.IDE.Common
 {

@@ -4,10 +4,7 @@ using FSO.IDE.EditorComponent.OperandForms;
 using FSO.IDE.EditorComponent.OperandForms.DataProviders;
 using FSO.SimAntics.Engine.Primitives;
 using System;
-using System.Collections.Generic;
-using System.Linq;
 using System.Text;
-using System.Threading.Tasks;
 using System.Windows.Forms;
 
 namespace FSO.IDE.EditorComponent.Primitives

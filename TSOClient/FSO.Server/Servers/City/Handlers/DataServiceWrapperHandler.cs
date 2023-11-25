@@ -1,18 +1,12 @@
 ﻿using FSO.Common.DataService;
 using FSO.Common.Serialization.Primitives;
 using FSO.Server.DataService.Model;
-using FSO.Server.Framework.Aries;
 using FSO.Server.Framework.Gluon;
 using FSO.Server.Framework.Voltron;
-using FSO.Server.Protocol.Voltron;
 using FSO.Server.Protocol.Voltron.Packets;
 using NLog;
 using System;
 using System.Collections.Generic;
-using System.Linq;
-using System.Security;
-using System.Text;
-using System.Threading.Tasks;
 
 namespace FSO.Server.Servers.City.Handlers
 {

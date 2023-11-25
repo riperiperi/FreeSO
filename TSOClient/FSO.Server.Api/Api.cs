@@ -2,17 +2,12 @@
 using FSO.Server.Common;
 using FSO.Server.Database.DA;
 using FSO.Server.Domain;
-using FSO.Server.Protocol.Gluon.Model;
 using FSO.Server.Servers.Api.JsonWebToken;
 using System;
-using System.Collections.Generic;
 using System.Collections.Specialized;
 using System.Linq;
 using System.Net.Http;
 using System.Security;
-using System.Threading.Tasks;
-using System.Web;
-using System.Web.Configuration;
 
 namespace FSO.Server.Api
 {

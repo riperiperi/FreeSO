@@ -5,9 +5,6 @@ using FSO.SimAntics.Engine.Scopes;
 using System;
 using System.Collections.Generic;
 using System.ComponentModel;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
 
 namespace FSO.IDE.EditorComponent.DataView
 {

@@ -1,11 +1,6 @@
-﻿using FSO.Common.Content;
-using FSO.Content.Codecs;
+﻿using FSO.Content.Codecs;
 using FSO.Content.Framework;
 using FSO.Vitaboy;
-using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
 using System.Text.RegularExpressions;
 
 namespace FSO.Content

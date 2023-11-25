@@ -1,8 +1,5 @@
 ﻿using FSO.SimAntics.Engine;
 using FSO.SimAntics.JIT.Runtime;
-using System;
-using System.Collections.Generic;
-using System.Text;
 
 namespace FSO.SimAntics.JIT.Roslyn
 {

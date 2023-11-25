@@ -3,25 +3,14 @@ using FSO.Client.UI.Framework;
 using FSO.Common.Rendering.Framework;
 using FSO.Common.Rendering.Framework.Camera;
 using FSO.Common.Rendering.Framework.Model;
-using FSO.Files.Formats.IFF.Chunks;
 using FSO.LotView.Components;
-using FSO.LotView.Model;
-using FSO.SimAntics;
-using FSO.SimAntics.Engine.TSOTransaction;
-using FSO.SimAntics.Entities;
 using FSO.SimAntics.Model;
-using FSO.SimAntics.NetPlay.Drivers;
 using Microsoft.Xna.Framework;
 using Microsoft.Xna.Framework.Graphics;
-using System;
 using System.Collections.Generic;
 using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
 using FSO.Common.Rendering.Framework.Shapes;
 using FSO.LotView.Debug;
-using FSO.LotView.Utils;
-using FSO.Files.RC;
 
 namespace FSO.IDE.Common.Debug
 {
@@ -59,7 +48,7 @@ namespace FSO.IDE.Common.Debug
         public override void Update(UpdateState state)
         {
             Scene.Update(state);
-            //ChangeGraphic(128+5);
+
             Invalidate();
 
             if (Comp3D != null)

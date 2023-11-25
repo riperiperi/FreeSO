@@ -3,10 +3,7 @@ using FSO.Client.Regulators;
 using FSO.Common.Domain.Shards;
 using FSO.Server.Clients;
 using FSO.Server.Protocol.CitySelector;
-using System;
-using System.Collections.Generic;
 using System.Linq;
-using System.Text;
 
 namespace FSO.Client.Network
 {

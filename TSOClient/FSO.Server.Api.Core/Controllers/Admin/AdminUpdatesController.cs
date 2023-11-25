@@ -1,11 +1,8 @@
 ﻿using System;
-using System.Collections.Generic;
 using System.IO;
-using System.IO.Compression;
 using System.Linq;
 using System.Net;
 using System.Threading.Tasks;
-using FSO.Files.Utils;
 using FSO.Server.Api.Core.Models;
 using FSO.Server.Api.Core.Services;
 using FSO.Server.Api.Core.Utils;
@@ -13,7 +10,6 @@ using FSO.Server.Database.DA.Updates;
 using Microsoft.AspNetCore.Cors;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
-using Newtonsoft.Json;
 
 // For more information on enabling Web API for empty projects, visit https://go.microsoft.com/fwlink/?LinkID=397860
 

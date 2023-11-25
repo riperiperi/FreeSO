@@ -1,11 +1,7 @@
-﻿using FSO.Files.Formats.IFF.Chunks;
-using FSO.IDE.EditorComponent.Model;
+﻿using FSO.IDE.EditorComponent.Model;
 using FSO.IDE.EditorComponent.OperandForms;
 using FSO.IDE.EditorComponent.OperandForms.DataProviders;
-using FSO.SimAntics.Engine;
 using FSO.SimAntics.Engine.Primitives;
-using FSO.SimAntics.Engine.Scopes;
-using FSO.SimAntics.Primitives;
 using System;
 using System.Collections.Generic;
 using System.Linq;

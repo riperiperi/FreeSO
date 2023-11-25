@@ -10,10 +10,7 @@ using FSO.Server.Servers.City.Domain;
 using Ninject;
 using NLog;
 using System;
-using System.Collections.Generic;
 using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
 
 namespace FSO.Server.Servers.City.Handlers
 {

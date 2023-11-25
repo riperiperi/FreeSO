@@ -1,17 +1,6 @@
 ﻿using System;
-using System.Collections.Generic;
-using System.ComponentModel;
-using System.Drawing;
-using System.Data;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
 using System.Windows.Forms;
 using FSO.SimAntics.Engine;
-using FSO.IDE.EditorComponent.OperandForms.DataProviders;
-using FSO.SimAntics.Engine.Scopes;
-using FSO.SimAntics.Engine.Primitives;
-using FSO.IDE.EditorComponent.Primitives;
 using FSO.SimAntics.Primitives;
 using FSO.Files.Formats.IFF.Chunks;
 

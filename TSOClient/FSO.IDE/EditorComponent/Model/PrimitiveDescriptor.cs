@@ -2,9 +2,6 @@
 using FSO.IDE.EditorComponent.OperandForms;
 using FSO.SimAntics.Engine;
 using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
 using System.Windows.Forms;
 
 namespace FSO.IDE.EditorComponent.Model

@@ -1,12 +1,7 @@
-﻿using FSO.Files.Formats.IFF.Chunks;
-using FSO.Files.Formats.OTF;
-using FSO.SimAntics.Engine.Scopes;
+﻿using FSO.SimAntics.Engine.Scopes;
 using FSO.SimAntics.Model;
 using System;
 using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
 
 namespace FSO.SimAntics.JIT.Translation.CSharp.Engine
 {

@@ -1,7 +1,6 @@
 ﻿using FSO.Client.Model;
 using FSO.Client.UI.Controls;
 using FSO.Client.UI.Framework;
-using FSO.Client.Utils;
 using FSO.Common.DatabaseService;
 using FSO.Common.DatabaseService.Model;
 using FSO.Common.DataService;
@@ -14,14 +13,10 @@ using FSO.Server.DataService.Model;
 using FSO.Server.Protocol.Aries.Packets;
 using FSO.Server.Protocol.CitySelector;
 using FSO.Server.Protocol.Electron.Packets;
-using FSO.Server.Protocol.Voltron.DataService;
 using FSO.Server.Protocol.Voltron.Packets;
 using Ninject;
 using System;
 using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
 
 namespace FSO.Client.Regulators
 {

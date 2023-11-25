@@ -1,16 +1,11 @@
-﻿using FSO.Client;
-using FSO.Content.Framework;
+﻿using FSO.Content.Framework;
 using FSO.Content.Model;
-using FSO.Files;
 using FSO.Files.Utils;
 using FSO.Vitaboy;
-using Microsoft.Xna.Framework.Graphics;
 using System;
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
 
 namespace FSO.IDE.Utils
 {

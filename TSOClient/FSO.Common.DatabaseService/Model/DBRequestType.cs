@@ -1,9 +1,4 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-
-namespace FSO.Common.DatabaseService.Model
+﻿namespace FSO.Common.DatabaseService.Model
 {
     public enum DBRequestType
     {

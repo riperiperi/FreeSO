@@ -1,6 +1,5 @@
 ﻿using Mina.Core.Buffer;
 using FSO.Common.Serialization;
-using FSO.Common.Serialization.TypeSerializers;
 using FSO.Common.DatabaseService.Framework;
 
 namespace FSO.Common.DatabaseService.Model

@@ -1,11 +1,8 @@
-﻿using FSO.Content;
-using FSO.Files.Formats.IFF;
+﻿using FSO.Files.Formats.IFF;
 using FSO.SimAntics.JIT.Translation.CSharp;
 using System;
 using System.Collections.Generic;
 using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
 
 namespace FSO.SimAntics.JIT.Runtime
 {

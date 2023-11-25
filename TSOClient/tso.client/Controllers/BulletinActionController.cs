@@ -7,9 +7,6 @@ using FSO.Files.Formats.tsodata;
 using FSO.Server.Protocol.Electron.Packets;
 using System;
 using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
 
 namespace FSO.Client.Controllers
 {

@@ -2,8 +2,6 @@
 using Dapper;
 using System.Collections.Generic;
 using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
 using FSO.Server.Database.DA.Utils;
 
 namespace FSO.Server.Database.DA.DbEvents

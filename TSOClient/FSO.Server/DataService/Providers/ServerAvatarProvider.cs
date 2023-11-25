@@ -8,7 +8,6 @@ using FSO.Server.Database.DA.Avatars;
 using FSO.Server.Database.DA.Bookmarks;
 using FSO.Server.Database.DA.Lots;
 using FSO.Server.Database.DA.Relationships;
-using FSO.Server.Database.DA.Shards;
 using Ninject;
 using NLog;
 using System;
@@ -16,8 +15,6 @@ using System.Collections.Generic;
 using System.Collections.Immutable;
 using System.Linq;
 using System.Security;
-using System.Text;
-using System.Threading.Tasks;
 
 namespace FSO.Server.DataService.Providers
 {

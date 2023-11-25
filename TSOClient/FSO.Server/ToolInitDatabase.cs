@@ -1,12 +1,7 @@
-﻿using FSO.Server.Common;
-using FSO.Server.Database.DA;
+﻿using FSO.Server.Database.DA;
 using FSO.Server.Database.Management;
 using NLog;
 using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
 
 namespace FSO.Server
 {

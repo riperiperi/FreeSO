@@ -2,14 +2,9 @@
 using FSO.Files;
 using Microsoft.Xna.Framework.Graphics;
 using System;
-using System.Collections.Generic;
 using System.IO;
-using System.Linq;
-using System.Text;
 using System.Threading;
-using System.Threading.Tasks;
 using FSO.Common;
-using FSO.Common.Rendering;
 using Microsoft.Xna.Framework;
 
 namespace FSO.Content.Model

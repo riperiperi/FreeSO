@@ -4,10 +4,6 @@ using FSO.Common;
 using FSO.Files.Formats.tsodata;
 using Microsoft.Xna.Framework;
 using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
 
 namespace FSO.Client.UI.Panels.Neighborhoods
 {

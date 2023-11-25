@@ -6,18 +6,11 @@ using FSO.IDE.ContentEditors;
 using FSO.IDE.Managers;
 using FSO.IDE.Utils.FormatReverse;
 using FSO.SimAntics;
-using FSO.SimAntics.JIT.Translation.CSharp;
 using FSO.SimAntics.NetPlay.Model.Commands;
 using System;
 using System.Collections.Generic;
-using System.ComponentModel;
-using System.Data;
-using System.Drawing;
-using System.IO;
 using System.Linq;
-using System.Text;
 using System.Threading;
-using System.Threading.Tasks;
 using System.Windows.Forms;
 
 namespace FSO.IDE

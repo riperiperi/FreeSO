@@ -1,13 +1,8 @@
 ﻿using FSO.Server.Database.DA;
-using FSO.Server.Database.DA.Shards;
-using FSO.Server.Framework.Aries;
 using FSO.Server.Protocol.Voltron.Packets;
 using System;
 using System.Collections.Generic;
 using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
-using FSO.Content;
 using FSO.Vitaboy;
 using System.Text.RegularExpressions;
 using FSO.Server.Database.DA.Avatars;

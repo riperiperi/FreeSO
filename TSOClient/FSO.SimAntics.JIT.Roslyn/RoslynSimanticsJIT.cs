@@ -1,8 +1,5 @@
 ﻿using FSO.Content;
-using FSO.Files.Formats.IFF;
-using FSO.SimAntics.JIT.Runtime;
 using FSO.SimAntics.JIT.Translation.CSharp;
-using System;
 using System.Collections.Generic;
 
 namespace FSO.SimAntics.JIT.Roslyn

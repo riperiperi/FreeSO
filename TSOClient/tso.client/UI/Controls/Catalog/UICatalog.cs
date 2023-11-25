@@ -1,23 +1,11 @@
-﻿/*
-This Source Code Form is subject to the terms of the Mozilla Public License, v. 2.0.
-If a copy of the MPL was not distributed with this file, You can obtain one at
-http://mozilla.org/MPL/2.0/.
-*/
-
-using System;
+﻿using System;
 using System.Collections.Generic;
 using System.Linq;
-using System.Text;
 using FSO.Client.UI.Framework;
-using System.Xml;
-using System.IO;
 using FSO.Content;
 using Microsoft.Xna.Framework.Graphics;
 using FSO.Files.Formats.IFF.Chunks;
-using FSO.Client.UI.Controls;
 using FSO.Client.UI.Panels.LotControls;
-using static FSO.Content.WorldObjectCatalog;
-using FSO.Common;
 using FSO.SimAntics;
 using FSO.SimAntics.Model;
 using FSO.Content.Interfaces;

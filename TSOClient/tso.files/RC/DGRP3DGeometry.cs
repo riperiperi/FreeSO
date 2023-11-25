@@ -1,5 +1,4 @@
-﻿using FSO.Common;
-using FSO.Files.Formats.IFF;
+﻿using FSO.Files.Formats.IFF;
 using FSO.Files.Formats.IFF.Chunks;
 using FSO.Files.Utils;
 using Microsoft.Xna.Framework;
@@ -10,8 +9,6 @@ using System.Globalization;
 using System.IO;
 using System.Linq;
 using System.Runtime.InteropServices;
-using System.Text;
-using System.Threading.Tasks;
 
 namespace FSO.Files.RC
 {

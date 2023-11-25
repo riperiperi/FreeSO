@@ -1,5 +1,4 @@
 ﻿using FSO.Common;
-using FSO.Common.Content;
 using FSO.Common.Utils;
 using FSO.Files;
 using FSO.Files.Formats.IFF.Chunks;
@@ -9,10 +8,7 @@ using Microsoft.Xna.Framework.Graphics;
 using System;
 using System.Collections.Generic;
 using System.IO;
-using System.IO.Compression;
 using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
 
 namespace FSO.Content
 {

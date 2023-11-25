@@ -1,5 +1,4 @@
-﻿using FSO.Client.Regulators;
-using FSO.Common.DatabaseService;
+﻿using FSO.Common.DatabaseService;
 using FSO.Common.DatabaseService.Framework;
 using FSO.Common.DataService;
 using FSO.Common.DataService.Framework;
@@ -9,9 +8,6 @@ using FSO.Server.Protocol.Voltron.DataService;
 using Ninject.Activation;
 using Ninject.Modules;
 using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
 
 namespace FSO.Client.Network
 {

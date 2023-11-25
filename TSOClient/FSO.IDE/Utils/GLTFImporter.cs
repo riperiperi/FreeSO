@@ -1,12 +1,9 @@
-﻿using SharpGLTF.Scenes;
-using SharpGLTF.Schema2;
+﻿using SharpGLTF.Schema2;
 using SharpGLTF.Transforms;
 using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Numerics;
-using System.Text;
-using System.Threading.Tasks;
 
 namespace FSO.IDE.Utils
 {

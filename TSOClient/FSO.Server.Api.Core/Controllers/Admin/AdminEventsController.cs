@@ -1,8 +1,6 @@
 ﻿using System;
-using System.Collections.Generic;
 using System.Linq;
 using System.Net;
-using System.Threading.Tasks;
 using FSO.Server.Api.Core.Models;
 using FSO.Server.Api.Core.Utils;
 using FSO.Server.Database.DA.DbEvents;

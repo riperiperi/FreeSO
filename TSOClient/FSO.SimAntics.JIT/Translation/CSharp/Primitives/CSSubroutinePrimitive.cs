@@ -1,5 +1,4 @@
 ﻿using FSO.Files.Formats.IFF.Chunks;
-using FSO.SimAntics.Engine;
 using FSO.SimAntics.JIT.Runtime;
 using FSO.SimAntics.JIT.Translation.Model;
 using FSO.SimAntics.JIT.Translation.Primitives;
@@ -7,8 +6,6 @@ using FSO.SimAntics.Primitives;
 using System;
 using System.Collections.Generic;
 using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
 
 namespace FSO.SimAntics.JIT.Translation.CSharp.Primitives
 {

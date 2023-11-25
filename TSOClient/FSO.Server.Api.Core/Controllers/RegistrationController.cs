@@ -5,9 +5,7 @@ using Microsoft.AspNetCore.Cors;
 using Microsoft.AspNetCore.Mvc;
 using System.Linq;
 using System.Net;
-using System.Net.Http;
 using System.Text.RegularExpressions;
-using System.Web.Http;
 
 namespace FSO.Server.Api.Core.Controllers
 {

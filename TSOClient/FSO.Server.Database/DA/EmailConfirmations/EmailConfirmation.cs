@@ -1,10 +1,4 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
-
-namespace FSO.Server.Database.DA.EmailConfirmation
+﻿namespace FSO.Server.Database.DA.EmailConfirmation
 {
     /// <summary>
     /// EmailConfirmation model

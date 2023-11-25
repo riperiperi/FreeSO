@@ -1,15 +1,10 @@
 ﻿using FSO.Server.Api.Core.Utils;
 using FSO.Server.Common;
-using FSO.Server.Database.DA;
 using FSO.Server.Database.DA.AuthTickets;
 using Microsoft.AspNetCore.Mvc;
 using System;
-using System.Collections.Generic;
-using System.Linq;
 using System.Net;
-using System.Net.Http;
 using System.Text;
-using System.Web.Http;
 
 namespace FSO.Server.Api.Core.Controllers
 {

@@ -1,21 +1,14 @@
 ﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
 using FSO.Server.Common;
 using Microsoft.Owin.Hosting;
-using System.Net.Http;
 using FSO.Server.Api;
 using System.Web.Http;
 using Owin;
 using System.Collections.Specialized;
-using FSO.Server.Servers.Api;
-using static FSO.Server.Api.Api;
 using Ninject;
-using FSO.Server.Utils;
 using FSO.Server.Domain;
-using System.Threading;
+
+using static FSO.Server.Api.Api;
 using static FSO.Server.Common.ApiAbstract;
 
 namespace FSO.Server.Servers.UserApi

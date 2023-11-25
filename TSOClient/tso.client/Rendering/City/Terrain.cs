@@ -1,34 +1,21 @@
-﻿/*
-This Source Code Form is subject to the terms of the Mozilla Public License, v. 2.0.
-If a copy of the MPL was not distributed with this file, You can obtain one at
-http://mozilla.org/MPL/2.0/.
-*/
-
-using System;
+﻿using System;
 using System.Collections.Generic;
 using System.Collections;
 using System.IO;
-using System.Timers;
-using System.Text;
 using Microsoft.Xna.Framework;
 using Microsoft.Xna.Framework.Graphics;
 using Microsoft.Xna.Framework.Input;
-using Microsoft.Xna.Framework.Content;
 using FSO.Client.UI.Screens;
 using FSO.Common.Rendering.Framework;
 using FSO.Common.Rendering.Framework.Model;
 using FSO.Files;
-using FSO.Client.Utils;
-using FSO.Client.UI.Controls;
 using FSO.Client.UI.Framework;
-using FSO.Common.Utils;
 using FSO.Client.Controllers;
 using FSO.LotView;
 using FSO.Client.Rendering.City.Plugins;
 using FSO.Common;
 using FSO.LotView.RC;
 using FSO.Common.Rendering.Framework.Camera;
-using FSO.LotView.Utils;
 using FSO.LotView.Components;
 using FSO.LotView.Model;
 using FSO.Files.RC;

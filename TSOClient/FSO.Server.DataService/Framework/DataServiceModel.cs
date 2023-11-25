@@ -1,14 +1,9 @@
-﻿using FSO.Common.Serialization.TypeSerializers;
-using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
+﻿using System;
 
 namespace FSO.Common.DataService.Framework
 {
-    [System.AttributeUsage(System.AttributeTargets.Class, Inherited = true)]
-    public class DataServiceModel : System.Attribute
+    [AttributeUsage(AttributeTargets.Class, Inherited = true)]
+    public class DataServiceModel : Attribute
     {
         public DataServiceModel()
         {

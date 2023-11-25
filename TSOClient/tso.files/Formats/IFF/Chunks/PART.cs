@@ -1,11 +1,6 @@
 ﻿using FSO.Files.Utils;
 using Microsoft.Xna.Framework;
-using System;
-using System.Collections.Generic;
 using System.IO;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
 
 namespace FSO.Files.Formats.IFF.Chunks
 {

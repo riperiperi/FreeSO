@@ -4,17 +4,11 @@ using FSO.Client.UI.Controls;
 using FSO.Client.UI.Framework;
 using FSO.Client.UI.Framework.Parser;
 using FSO.Client.Utils;
-using FSO.Common.DataService.Model;
 using FSO.Common.Utils;
 using FSO.Content.Model;
-using FSO.Vitaboy;
 using Microsoft.Xna.Framework;
 using Microsoft.Xna.Framework.Graphics;
-using System;
 using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
 using FSO.Common.Rendering.Framework.Model;
 
 namespace FSO.Client.UI.Panels

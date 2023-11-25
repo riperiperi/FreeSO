@@ -1,11 +1,6 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
+﻿using System.Collections.Generic;
 using Mina.Core.Buffer;
 using FSO.Common.Serialization;
-using FSO.Common.Serialization.TypeSerializers;
 using FSO.Common.DatabaseService.Framework;
 
 namespace FSO.Common.DatabaseService.Model

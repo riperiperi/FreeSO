@@ -1,10 +1,4 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
-
-namespace FSO.Common.Serialization.Primitives
+﻿namespace FSO.Common.Serialization.Primitives
 {
     public class cTSOGenericData
     {

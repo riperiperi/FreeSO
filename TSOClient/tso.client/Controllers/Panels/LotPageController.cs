@@ -1,14 +1,9 @@
 ﻿using FSO.Client.Network;
-using FSO.Client.UI.Controls;
 using FSO.Client.UI.Panels;
 using FSO.Common.DataService;
 using FSO.Common.DataService.Model;
 using FSO.Server.DataService.Model;
-using System;
 using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
 
 namespace FSO.Client.Controllers.Panels
 {

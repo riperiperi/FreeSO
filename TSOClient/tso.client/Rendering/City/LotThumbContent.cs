@@ -1,5 +1,4 @@
-﻿using FSO.Common;
-using FSO.Common.Utils;
+﻿using FSO.Common.Utils;
 using FSO.Files;
 using FSO.Files.RC;
 using FSO.Server.Clients;
@@ -8,8 +7,6 @@ using System;
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
 
 namespace FSO.Client.Rendering.City
 {

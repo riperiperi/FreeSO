@@ -4,8 +4,6 @@ using Microsoft.Xna.Framework;
 using System;
 using System.Collections.Generic;
 using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
 using FSO.Common.Rendering.Framework.Model;
 using FSO.IDE.EditorComponent.Model;
 using Microsoft.Xna.Framework.Graphics;

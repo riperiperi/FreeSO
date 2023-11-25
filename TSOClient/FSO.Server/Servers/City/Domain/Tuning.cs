@@ -1,15 +1,9 @@
 ﻿using FSO.Common.Model;
 using FSO.Server.Database.DA;
-using FSO.Server.Database.DA.Tuning;
 using FSO.Server.Framework.Voltron;
 using FSO.Server.Protocol.Electron.Packets;
 using FSO.Server.Protocol.Gluon.Packets;
-using System;
-using System.Collections.Generic;
 using System.IO;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
 
 namespace FSO.Server.Servers.City.Domain
 {

@@ -1,12 +1,8 @@
 ﻿using FSO.Common.Content;
-using FSO.Content.Codecs;
 using System;
 using System.Collections.Generic;
 using System.IO;
-using System.Linq;
-using System.Text;
 using System.Text.RegularExpressions;
-using System.Threading.Tasks;
 
 namespace FSO.Content.Framework
 {

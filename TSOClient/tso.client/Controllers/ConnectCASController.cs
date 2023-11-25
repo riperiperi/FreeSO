@@ -3,10 +3,6 @@ using FSO.Client.UI.Screens;
 using FSO.Common.Utils;
 using FSO.Server.Protocol.CitySelector;
 using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
 
 namespace FSO.Client.Controllers
 {

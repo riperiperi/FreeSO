@@ -4,9 +4,7 @@ using Amazon.S3;
 using Amazon.S3.Model;
 using FSO.Server.Common.Config;
 using System;
-using System.Collections.Generic;
 using System.IO;
-using System.Linq;
 using System.Threading.Tasks;
 
 namespace FSO.Server.Api.Core.Services

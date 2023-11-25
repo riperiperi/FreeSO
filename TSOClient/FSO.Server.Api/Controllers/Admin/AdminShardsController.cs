@@ -1,10 +1,7 @@
 ﻿using FSO.Server.Api.Utils;
 using FSO.Server.Common;
-using FSO.Server.Protocol.Gluon.Model;
-using System;
 using System.Net;
 using System.Net.Http;
-using System.Web;
 using System.Web.Http;
 
 namespace FSO.Server.Api.Controllers.Admin

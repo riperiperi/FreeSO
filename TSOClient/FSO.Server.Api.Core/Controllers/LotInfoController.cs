@@ -4,17 +4,12 @@ using System.Collections.Generic;
 using System.IO;
 using System.Linq;
 using System.Net;
-using System.Net.Http;
-using System.Net.Http.Headers;
-using System.Text;
-using System.Web.Http;
 using FSO.Server.Api.Core.Utils;
 using FSO.Common.Enum;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.Extensions.Caching.Memory;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Cors;
-using FSO.Server.Database.DA.LotClaims;
 
 namespace FSO.Server.Api.Core.Controllers
 {

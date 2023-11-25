@@ -1,12 +1,8 @@
 ﻿using FSO.Client.Utils;
 using FSO.Common.Content;
-using FSO.Content.Model;
 using Microsoft.Xna.Framework.Graphics;
 using System;
 using System.Collections.Generic;
-using System.Collections.ObjectModel;
-using System.Linq;
-using System.Text;
 using System.Threading;
 
 namespace FSO.Content

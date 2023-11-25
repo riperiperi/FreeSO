@@ -1,6 +1,7 @@
 ﻿using FSO.Client.UI.Framework;
 using Ninject.Parameters;
 using Ninject;
+
 namespace FSO.Client.Utils
 {
     public static class ControllerUtils

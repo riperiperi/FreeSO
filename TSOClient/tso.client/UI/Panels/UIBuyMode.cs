@@ -1,26 +1,13 @@
-﻿/*
-This Source Code Form is subject to the terms of the Mozilla Public License, v. 2.0.
-If a copy of the MPL was not distributed with this file, You can obtain one at
-http://mozilla.org/MPL/2.0/.
-*/
-
-using System;
+﻿using System;
 using System.Collections.Generic;
-using System.Linq;
-using System.Text;
 using FSO.Client.UI.Framework;
 using FSO.Client.UI.Controls;
 using Microsoft.Xna.Framework.Graphics;
 using FSO.SimAntics;
 using FSO.Client.UI.Controls.Catalog;
-using FSO.LotView.Model;
-using FSO.SimAntics.Entities;
 using FSO.Common.Rendering.Framework.Model;
-using Microsoft.Xna.Framework.Input;
 using FSO.SimAntics.Model;
-using FSO.Common;
 using Microsoft.Xna.Framework;
-using FSO.Content;
 using FSO.Content.Interfaces;
 
 namespace FSO.Client.UI.Panels

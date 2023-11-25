@@ -1,11 +1,6 @@
 ﻿using FSO.Content.Framework;
 using FSO.Files.Utils;
 using FSO.Vitaboy;
-using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
 
 namespace FSO.Content.Codecs
 {
@@ -22,7 +17,7 @@ namespace FSO.Content.Codecs
             var mesh = new Mesh();
             using (var io = new BCFReadString(stream, false))
             {
-                mesh.Read((BCFReadProxy)io, true);
+                mesh.Read(io, true);
             }
             return mesh;
         }

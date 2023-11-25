@@ -2,11 +2,6 @@
 using FSO.Server.Protocol.Gluon.Packets;
 using FSO.Server.Servers.Lot.Domain;
 using NLog;
-using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
 
 namespace FSO.Server.Servers.Lot.Handlers
 {

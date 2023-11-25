@@ -4,13 +4,8 @@ using FSO.Client.Utils;
 using FSO.Common.DataService;
 using FSO.Common.DataService.Model;
 using FSO.Server.DataService.Model;
-using Ninject.Parameters;
 using Ninject;
-using System;
 using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
 using FSO.Client.UI.Controls;
 
 namespace FSO.Client.Controllers.Panels

@@ -1,6 +1,4 @@
-﻿using FSO.Client.UI.Panels.WorldUI;
-using FSO.Client.Utils;
-using FSO.Client.Utils.GameLocator;
+﻿using FSO.Client.Utils.GameLocator;
 using FSO.Common;
 using FSO.Common.Rendering.Framework;
 using FSO.Common.Utils;
@@ -24,9 +22,7 @@ using System;
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
-using System.Text;
 using System.Threading;
-using System.Threading.Tasks;
 
 namespace FSOFacadeWorker
 {

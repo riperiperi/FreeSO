@@ -1,15 +1,5 @@
-﻿/*
-This Source Code Form is subject to the terms of the Mozilla Public License, v. 2.0.
-If a copy of the MPL was not distributed with this file, You can obtain one at
-http://mozilla.org/MPL/2.0/.
-*/
-
-using System;
+﻿using System;
 using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.IO;
-using System.Globalization;
 using Microsoft.Xna.Framework.Graphics;
 using FSO.Client.UI.Framework;
 using FSO.Client.UI.Controls;
@@ -17,10 +7,8 @@ using FSO.Client.UI.Framework.Parser;
 using Microsoft.Xna.Framework;
 using FSO.Common.Utils;
 using FSO.Vitaboy;
-using FSO.Content;
 using FSO.Client.Controllers;
 using System.Text.RegularExpressions;
-using FSO.Client.GameContent;
 using FSO.Client.UI.Model;
 using FSO.Common;
 using FSO.Client.UI.Panels;

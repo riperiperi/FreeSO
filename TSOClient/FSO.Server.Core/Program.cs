@@ -1,18 +1,8 @@
-﻿using FSO.Server;
-using FSO.Server.Api.Core.Services;
+﻿using FSO.Server.Api.Core.Services;
 using FSO.Server.Common;
-using FSO.Server.Common.Config;
 using FSO.Server.Servers.UserApi;
-using Microsoft.AspNetCore;
-using Microsoft.AspNetCore.Builder;
-using Microsoft.AspNetCore.Hosting;
-using Microsoft.Extensions.Configuration;
-using Microsoft.Extensions.Primitives;
-using System;
-using System.Collections.Generic;
 using System.Collections.Specialized;
 using System.Text;
-using System.Threading;
 
 namespace FSO.Server.Core
 {

@@ -1,20 +1,6 @@
-﻿/*
-This Source Code Form is subject to the terms of the Mozilla Public License, v. 2.0.
-If a copy of the MPL was not distributed with this file, You can obtain one at
-http://mozilla.org/MPL/2.0/.
-*/
-
-using System;
-using System.Collections.Generic;
-using System.Text;
-using System.Net.Sockets;
-using FSO.Client.UI.Framework;
+﻿using FSO.Client.UI.Framework;
 using FSO.Client.UI.Controls;
 using FSO.Client.UI.Panels;
-using FSO.Client.GameContent;
-using FSO.Server.Protocol.CitySelector;
-using FSO.Client.Controllers;
-using FSO.Client.Regulators;
 
 namespace FSO.Client.UI.Screens
 {

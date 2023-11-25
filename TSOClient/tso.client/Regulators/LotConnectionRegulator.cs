@@ -4,15 +4,10 @@ using FSO.Common.Utils;
 using FSO.Server.Clients;
 using FSO.Server.Clients.Framework;
 using FSO.Server.Protocol.Aries.Packets;
-using FSO.Server.Protocol.CitySelector;
 using FSO.Server.Protocol.Electron.Packets;
 using FSO.Server.Protocol.Voltron.Packets;
 using Ninject;
 using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
 
 namespace FSO.Client.Regulators
 {

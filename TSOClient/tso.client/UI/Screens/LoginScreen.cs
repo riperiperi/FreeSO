@@ -1,23 +1,14 @@
-﻿/*
-This Source Code Form is subject to the terms of the Mozilla Public License, v. 2.0.
-If a copy of the MPL was not distributed with this file, You can obtain one at
-http://mozilla.org/MPL/2.0/.
-*/
-
-using System;
+﻿using System;
 using System.IO;
 using FSO.Client.UI.Framework;
 using FSO.Client.UI.Controls;
 using FSO.Client.UI.Panels;
-using FSO.Client.GameContent;
 using FSO.Server.Protocol.Authorization;
 using FSO.Files;
 using FSO.Client.Utils;
 using FSO.Client.Regulators;
 using FSO.Client.UI.Model;
 using FSO.HIT;
-using FSO.Files.Utils;
-using Microsoft.Xna.Framework.Graphics;
 using FSO.Common;
 using FSO.Server.Clients;
 using Ninject;

@@ -1,5 +1,4 @@
 ﻿using FSO.Content;
-using FSO.Files.Formats.IFF;
 using FSO.SimAntics.JIT.Runtime;
 using FSO.SimAntics.JIT.Translation.CSharp;
 using Microsoft.CodeAnalysis;
@@ -10,7 +9,6 @@ using System.IO;
 using System.Linq;
 using System.Reflection;
 using System.Text;
-using System.Threading;
 using System.Threading.Tasks;
 
 namespace FSO.SimAntics.JIT.Roslyn

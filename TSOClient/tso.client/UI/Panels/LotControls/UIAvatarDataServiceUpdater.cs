@@ -3,12 +3,9 @@ using FSO.Common.DataService.Model;
 using FSO.SimAntics;
 using FSO.SimAntics.Model;
 using FSO.SimAntics.Model.TSOPlatform;
-using System;
 using System.Collections.Generic;
 using System.Collections.Immutable;
 using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
 
 namespace FSO.Client.UI.Panels.LotControls
 {

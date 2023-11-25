@@ -1,9 +1,7 @@
 ﻿using FSO.Client.Controllers.Panels;
 using FSO.Client.Model;
 using FSO.Client.Regulators;
-using FSO.Client.UI.Controls;
 using FSO.Client.UI.Framework;
-using FSO.Client.UI.Panels;
 using FSO.Client.UI.Screens;
 using FSO.Common.DataService;
 using FSO.Common.DataService.Model;
@@ -18,12 +16,9 @@ using Microsoft.Xna.Framework;
 using Ninject;
 using Ninject.Parameters;
 using System;
-using System.Collections.Generic;
 using System.ComponentModel;
 using System.IO;
 using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
 
 namespace FSO.Client.Controllers
 {

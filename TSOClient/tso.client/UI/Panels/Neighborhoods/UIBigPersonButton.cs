@@ -1,8 +1,6 @@
 ﻿using FSO.Client.Controllers;
-using FSO.Client.Model;
 using FSO.Client.UI.Controls;
 using FSO.Client.UI.Framework;
-using FSO.Client.Utils;
 using FSO.Common.DataService;
 using FSO.Common.DataService.Model;
 using FSO.Common.Rendering.Framework.Model;
@@ -11,10 +9,6 @@ using Microsoft.Xna.Framework;
 using Microsoft.Xna.Framework.Graphics;
 using Ninject;
 using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
 
 namespace FSO.Client.UI.Panels.Neighborhoods
 {

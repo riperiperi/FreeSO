@@ -2,11 +2,6 @@
 using FSO.Server.Database.DA.Tasks;
 using FSO.Server.Domain;
 using FSO.Server.Protocol.Gluon.Packets;
-using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
 
 namespace FSO.Server.Servers.Tasks.Domain
 {

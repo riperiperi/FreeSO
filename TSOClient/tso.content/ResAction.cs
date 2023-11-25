@@ -1,8 +1,5 @@
 ﻿using FSO.Files.Formats.IFF;
 using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
 using System.Threading;
 
 namespace FSO.Content

@@ -1,23 +1,12 @@
-﻿/*
-This Source Code Form is subject to the terms of the Mozilla Public License, v. 2.0.
-If a copy of the MPL was not distributed with this file, You can obtain one at
-http://mozilla.org/MPL/2.0/.
-*/
-
-using System;
+﻿using System;
 using System.Collections.Generic;
-using System.Linq;
-using System.Text;
 using FSO.Client.UI.Framework;
 using Microsoft.Xna.Framework.Graphics;
 using Microsoft.Xna.Framework.Input;
 using FSO.Client.UI.Controls;
 using FSO.Client.UI.Screens;
-using FSO.Client.Rendering.City;
 using FSO.SimAntics;
-using FSO.SimAntics.Model;
 using FSO.LotView;
-using FSO.Client.Network;
 using Microsoft.Xna.Framework;
 using FSO.SimAntics.Model.TSOPlatform;
 using FSO.Client.Controllers;
@@ -25,7 +14,6 @@ using FSO.Common;
 using FSO.Common.Rendering.Framework.IO;
 using FSO.Common.Utils;
 using FSO.Common.Rendering.Framework;
-using FSO.LotView.RC;
 using FSO.Client.UI.Hints;
 using FSO.HIT;
 using FSO.Client.UI.Model;

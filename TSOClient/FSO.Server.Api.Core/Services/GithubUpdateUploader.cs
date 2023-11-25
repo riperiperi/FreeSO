@@ -2,9 +2,7 @@
 using Octokit;
 using Octokit.Internal;
 using System;
-using System.Collections.Generic;
 using System.IO;
-using System.Linq;
 using System.Threading.Tasks;
 
 namespace FSO.Server.Api.Core.Services

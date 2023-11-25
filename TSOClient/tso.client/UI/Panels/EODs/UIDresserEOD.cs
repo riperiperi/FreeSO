@@ -1,8 +1,5 @@
-﻿using System;
-using System.Collections.Generic;
+﻿using System.Collections.Generic;
 using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
 using FSO.Client.UI.Controls;
 using FSO.Client.UI.Framework.Parser;
 using Microsoft.Xna.Framework.Graphics;

@@ -1,19 +1,14 @@
 ﻿using FSO.Client;
 using FSO.Content;
 using FSO.Files.Formats.IFF.Chunks;
-using FSO.IDE.Common;
 using FSO.IDE.Utils;
 using FSO.SimAntics;
 using FSO.Vitaboy;
 using System;
 using System.Collections.Generic;
-using System.ComponentModel;
 using System.Data;
-using System.Drawing;
 using System.Linq;
-using System.Text;
 using System.Text.RegularExpressions;
-using System.Threading.Tasks;
 using System.Windows.Forms;
 
 namespace FSO.IDE.EditorComponent

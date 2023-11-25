@@ -1,17 +1,13 @@
 ﻿#define IDE_COMPAT
 
-using FSO.Client;
 using FSO.Common.Utils;
 using FSO.IDE.Common;
 using FSO.SimAntics.JIT.Roslyn;
 using FSO.UI;
 using System;
-using System.Collections.Generic;
 using System.IO;
-using System.Linq;
 using System.Reflection;
 using System.Threading;
-using System.Threading.Tasks;
 using System.Windows.Forms;
 
 namespace FSO.IDE

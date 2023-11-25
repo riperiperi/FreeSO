@@ -4,13 +4,11 @@ using FSO.Client.UI;
 using FSO.Client.UI.Controls;
 using FSO.Client.UI.Framework;
 using FSO.Client.UI.Panels;
-using FSO.Client.UI.Screens;
 using FSO.Common.DataService;
 using FSO.Common.DataService.Model;
 using FSO.Common.Domain.Realestate;
 using FSO.Common.Domain.RealestateDomain;
 using FSO.Common.Utils;
-using FSO.Files;
 using FSO.Files.RC;
 using FSO.Server.DataService.Model;
 using FSO.Server.Protocol.Electron.Packets;
@@ -19,9 +17,7 @@ using Microsoft.Xna.Framework.Graphics;
 using Newtonsoft.Json;
 using System;
 using System.Collections.Generic;
-using System.IO;
 using System.Linq;
-using System.Text;
 
 namespace FSO.Client.Controllers
 {

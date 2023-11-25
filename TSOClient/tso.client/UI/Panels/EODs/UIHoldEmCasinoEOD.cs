@@ -2,13 +2,9 @@
 using System.Collections.Generic;
 using System.Linq;
 using System.Timers;
-using System.Text;
-using System.Threading.Tasks;
 using FSO.Client.UI.Controls;
 using FSO.Client.UI.Framework;
-using FSO.Client.UI.Framework.Parser;
 using FSO.Client.UI.Panels.EODs.Utils;
-using FSO.Client.UI.Panels.EODs.Archetypes;
 using FSO.SimAntics.NetPlay.EODs.Handlers;
 using FSO.SimAntics.NetPlay.EODs.Handlers.Data;
 using Microsoft.Xna.Framework.Graphics;

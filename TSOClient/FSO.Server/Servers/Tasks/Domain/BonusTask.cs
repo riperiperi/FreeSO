@@ -1,10 +1,6 @@
 ﻿using FSO.Common.Enum;
-using FSO.Common.Utils;
-using FSO.Server.Common;
 using FSO.Server.Database.DA;
 using FSO.Server.Database.DA.Bonus;
-using FSO.Server.Database.DA.Lots;
-using FSO.Server.Database.DA.LotTop100;
 using FSO.Server.Database.DA.LotVisits;
 using FSO.Server.Database.DA.LotVisitTotals;
 using FSO.Server.Database.DA.Tasks;
@@ -12,8 +8,6 @@ using FSO.Server.Database.DA.Tuning;
 using System;
 using System.Collections.Generic;
 using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
 
 namespace FSO.Server.Servers.Tasks.Domain
 {
