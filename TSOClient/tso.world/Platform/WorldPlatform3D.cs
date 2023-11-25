@@ -1,13 +1,10 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
 using FSO.Common.Utils;
 using FSO.LotView.Components;
 using FSO.LotView.Effects;
 using FSO.LotView.Model;
-using FSO.LotView.RC;
 using FSO.LotView.Utils;
 using FSO.LotView.Utils.Camera;
 using Microsoft.Xna.Framework;

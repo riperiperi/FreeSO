@@ -1,23 +1,14 @@
-﻿/*
- * This Source Code Form is subject to the terms of the Mozilla Public License, v. 2.0.
- * If a copy of the MPL was not distributed with this file, You can obtain one at
- * http://mozilla.org/MPL/2.0/. 
- */
-
-using FSO.Common;
+﻿using FSO.Common;
 using FSO.Common.Utils;
 using FSO.LotView.Components;
 using FSO.LotView.Effects;
 using FSO.LotView.Model;
 using FSO.LotView.RC;
-using FSO.Vitaboy;
 using Microsoft.Xna.Framework;
 using Microsoft.Xna.Framework.Graphics;
 using System;
 using System.Collections.Generic;
 using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
 
 namespace FSO.LotView.LMap
 {

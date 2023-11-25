@@ -1,10 +1,7 @@
-﻿using FSO.Common.Model;
-using FSO.LotView.Effects;
+﻿using FSO.LotView.Effects;
 using Microsoft.Xna.Framework.Graphics;
 using System;
 using System.Collections.Generic;
-using System.Linq;
-using System.Text;
 
 namespace FSO.LotView.Utils
 {

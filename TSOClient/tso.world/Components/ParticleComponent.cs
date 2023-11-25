@@ -1,8 +1,5 @@
 ﻿using System;
 using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
 using Microsoft.Xna.Framework.Graphics;
 using Microsoft.Xna.Framework;
 using FSO.LotView.Utils;
@@ -10,7 +7,6 @@ using FSO.Common;
 using FSO.Files;
 using System.IO;
 using FSO.LotView.Model;
-using FSO.Common.Utils;
 using FSO.Files.Formats.IFF.Chunks;
 
 namespace FSO.LotView.Components

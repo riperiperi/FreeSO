@@ -3,7 +3,6 @@ using FSO.Common.Utils;
 using FSO.Files.RC;
 using FSO.LotView.Effects;
 using FSO.LotView.Model;
-using FSO.LotView.RC;
 using Microsoft.Xna.Framework;
 using Microsoft.Xna.Framework.Graphics;
 using System;
@@ -12,8 +11,6 @@ using System.Globalization;
 using System.IO;
 using System.Linq;
 using System.Runtime.InteropServices;
-using System.Text;
-using System.Threading.Tasks;
 
 namespace FSO.LotView.Facade
 {

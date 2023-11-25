@@ -1,12 +1,7 @@
 ﻿using FSO.Common.Rendering.Framework;
-using System;
-using System.Collections.Generic;
 using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
 using FSO.Common.Rendering.Framework.Model;
 using Microsoft.Xna.Framework.Graphics;
-using FSO.LotView.Utils;
 using FSO.Files.RC;
 
 namespace FSO.LotView.Debug

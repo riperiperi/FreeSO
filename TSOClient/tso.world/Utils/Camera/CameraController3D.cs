@@ -1,14 +1,9 @@
 ﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
 using FSO.Common;
 using FSO.Common.Rendering.Framework.Camera;
 using FSO.Common.Rendering.Framework.Model;
 using FSO.Common.Utils;
 using FSO.LotView.Model;
-using FSO.LotView.RC;
 using Microsoft.Xna.Framework;
 using Microsoft.Xna.Framework.Graphics;
 

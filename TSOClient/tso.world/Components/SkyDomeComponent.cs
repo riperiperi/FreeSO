@@ -1,18 +1,10 @@
-﻿using FSO.Common;
-using FSO.Common.Rendering.Framework.Camera;
-using FSO.Common.Utils;
-using FSO.Files;
+﻿using FSO.Common.Rendering.Framework.Camera;
 using FSO.LotView.Model;
 using FSO.LotView.Utils;
 using FSO.LotView.Utils.Camera;
 using Microsoft.Xna.Framework;
 using Microsoft.Xna.Framework.Graphics;
-using System;
-using System.Collections.Generic;
-using System.IO;
 using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
 
 namespace FSO.LotView.Components
 {

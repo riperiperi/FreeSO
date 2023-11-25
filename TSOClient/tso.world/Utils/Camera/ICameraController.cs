@@ -1,11 +1,6 @@
 ﻿using FSO.Common.Rendering.Framework.Camera;
 using FSO.Common.Rendering.Framework.Model;
 using Microsoft.Xna.Framework;
-using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
 
 namespace FSO.LotView.Utils.Camera
 {
