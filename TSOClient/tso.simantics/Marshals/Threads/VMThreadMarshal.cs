@@ -1,10 +1,6 @@
 ﻿using FSO.SimAntics.Engine;
 using FSO.SimAntics.NetPlay.Model;
-using FSO.SimAntics.Primitives;
 using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
 using System.IO;
 using FSO.SimAntics.Model.TSOPlatform;
 using FSO.SimAntics.NetPlay.EODs.Model;

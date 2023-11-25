@@ -1,9 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
-using FSO.Content;
 using FSO.Content.TS1;
 using FSO.Files.Formats.IFF.Chunks;
 

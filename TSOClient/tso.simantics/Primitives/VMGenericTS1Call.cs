@@ -6,12 +6,9 @@ using FSO.SimAntics.Engine;
 using FSO.SimAntics.Model;
 using FSO.SimAntics.NetPlay.Model.Commands;
 using FSO.SimAntics.Utils;
-using System;
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
 
 namespace FSO.SimAntics.Primitives
 {

@@ -3,10 +3,7 @@ using FSO.SimAntics.Model;
 using FSO.SimAntics.NetPlay.Model;
 using FSO.Vitaboy;
 using System;
-using System.Collections.Generic;
 using System.IO;
-using System.Linq;
-using System.Text;
 
 namespace FSO.SimAntics.Marshals
 {

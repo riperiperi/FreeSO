@@ -5,8 +5,6 @@ using FSO.SimAntics.NetPlay.EODs.Handlers;
 using FSO.SimAntics.NetPlay.Model.Commands;
 using System;
 using System.Collections.Generic;
-using System.Linq;
-using System.Text;
 
 namespace FSO.SimAntics.Engine.TSOTransaction
 {

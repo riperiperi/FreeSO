@@ -9,11 +9,8 @@ using FSO.SimAntics.Model.TSOPlatform;
 using FSO.SimAntics.NetPlay.Drivers;
 using Microsoft.Xna.Framework;
 using System;
-using System.Collections.Generic;
 using System.IO;
 using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
 
 namespace FSO.SimAntics.Utils
 {

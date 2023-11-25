@@ -1,15 +1,9 @@
 ﻿using FSO.SimAntics.Engine.Scopes;
 using FSO.SimAntics.Model;
-using FSO.SimAntics.NetPlay.EODs.Handlers;
 using FSO.SimAntics.NetPlay.EODs.Model;
-using FSO.SimAntics.NetPlay.Model;
 using FSO.SimAntics.NetPlay.Model.Commands;
 using FSO.Vitaboy;
 using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
 
 namespace FSO.SimAntics.NetPlay.EODs.Handlers
 {

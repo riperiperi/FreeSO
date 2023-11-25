@@ -1,12 +1,9 @@
 ﻿using System;
 using System.Collections.Generic;
-using System.Linq;
-using System.Text;
 using FSO.SimAntics.NetPlay.Model.Commands;
 using FSO.SimAntics.Primitives;
 using FSO.SimAntics.NetPlay.Model;
 using FSO.SimAntics.NetPlay;
-using FSO.SimAntics.Engine.TSOGlobalLink;
 using FSO.SimAntics.Model.TSOPlatform;
 using FSO.SimAntics.Entities;
 using FSO.SimAntics.Engine.TSOGlobalLink.Model;

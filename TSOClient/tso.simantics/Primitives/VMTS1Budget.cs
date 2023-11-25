@@ -1,10 +1,5 @@
 ﻿using FSO.SimAntics.Engine;
 using FSO.SimAntics.Engine.Utils;
-using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
 
 namespace FSO.SimAntics.Primitives
 {

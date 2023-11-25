@@ -1,10 +1,5 @@
-﻿using FSO.SimAntics.NetPlay.Model;
-using FSO.SimAntics.Primitives;
-using System;
-using System.Collections.Generic;
+﻿using FSO.SimAntics.Primitives;
 using System.IO;
-using System.Linq;
-using System.Text;
 
 namespace FSO.SimAntics.NetPlay.Model.Commands
 {

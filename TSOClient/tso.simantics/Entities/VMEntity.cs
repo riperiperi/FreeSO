@@ -1,36 +1,23 @@
-﻿/*
- * This Source Code Form is subject to the terms of the Mozilla Public License, v. 2.0.
- * If a copy of the MPL was not distributed with this file, You can obtain one at
- * http://mozilla.org/MPL/2.0/. 
- */
-
-using System;
+﻿using System;
 using System.Collections.Generic;
-using System.Diagnostics;
 using Microsoft.Xna.Framework;
 using Microsoft.Xna.Framework.Graphics;
-using FSO.LotView;
 using FSO.LotView.Components;
 using FSO.LotView.Model;
 using FSO.Content;
-using FSO.Content.Model;
 using FSO.Files.Formats.IFF.Chunks;
 using FSO.HIT;
 using FSO.SimAntics.Engine;
 using FSO.SimAntics.Entities;
 using FSO.SimAntics.Model;
 using FSO.SimAntics.Model.Routing;
-using FSO.SimAntics.Marshals.Threads;
 using FSO.SimAntics.Marshals;
 using FSO.Common.Utils;
 using FSO.SimAntics.Model.TSOPlatform;
 using FSO.SimAntics.Model.Sound;
 using FSO.SimAntics.Primitives;
-using FSO.LotView.Utils;
-using FSO.LotView.RC;
 using System.Linq;
 using FSO.LotView.Utils.Camera;
-using FSO.SimAntics.NetPlay.Model;
 
 namespace FSO.SimAntics
 {

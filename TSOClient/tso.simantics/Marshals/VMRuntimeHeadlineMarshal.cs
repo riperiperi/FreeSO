@@ -1,9 +1,5 @@
 ﻿using FSO.SimAntics.NetPlay.Model;
 using FSO.SimAntics.Primitives;
-using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
 using System.IO;
 
 namespace FSO.SimAntics.Marshals

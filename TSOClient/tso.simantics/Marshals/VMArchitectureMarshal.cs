@@ -1,8 +1,5 @@
 ﻿using FSO.SimAntics.NetPlay.Model;
-using System;
-using System.Collections.Generic;
 using System.Linq;
-using System.Text;
 using System.IO;
 using FSO.LotView.Model;
 using FSO.SimAntics.Model;

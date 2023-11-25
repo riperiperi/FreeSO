@@ -1,14 +1,9 @@
 ﻿using FSO.SimAntics.Model.TSOPlatform;
 using FSO.Vitaboy;
-using System;
 using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
 using System.IO;
 using FSO.SimAntics.Model;
 using FSO.SimAntics.Marshals;
-using FSO.SimAntics.Engine;
 
 namespace FSO.SimAntics.NetPlay.Model
 {

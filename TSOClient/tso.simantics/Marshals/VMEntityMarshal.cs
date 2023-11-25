@@ -1,14 +1,8 @@
 ﻿using FSO.SimAntics.NetPlay.Model;
-using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
 using System.IO;
 using FSO.LotView.Model;
-using FSO.LotView;
 using FSO.SimAntics.Model;
 using FSO.SimAntics.Model.TSOPlatform;
-using System.Runtime.InteropServices;
 using Microsoft.Xna.Framework;
 using FSO.SimAntics.Model.TS1Platform;
 using FSO.SimAntics.Model.Platform;

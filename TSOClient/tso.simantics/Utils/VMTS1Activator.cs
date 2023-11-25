@@ -9,8 +9,7 @@ using Microsoft.Xna.Framework;
 using System;
 using System.Collections.Generic;
 using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
+
 using static FSO.Files.Formats.IFF.Chunks.OBJM;
 
 namespace FSO.SimAntics.Utils

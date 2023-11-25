@@ -1,9 +1,6 @@
 ﻿using FSO.SimAntics.Model.TSOPlatform;
 using Microsoft.Xna.Framework;
 using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
 
 namespace FSO.SimAntics.NetPlay.Model
 {

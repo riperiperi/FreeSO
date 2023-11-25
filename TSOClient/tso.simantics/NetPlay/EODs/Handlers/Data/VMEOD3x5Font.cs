@@ -1,12 +1,6 @@
 ﻿// Used under MIT licence. A 3x5 pixel font for the dance floor controller.
 // https://hackaday.io/project/6309-vga-graphics-over-spi-and-serial-vgatonic/log/20759-a-tiny-4x6-pixel-font-that-will-fit-on-almost-any-microcontroller-license-mit
 
-using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
-
 namespace FSO.SimAntics.NetPlay.EODs.Handlers.Data
 {
     public static class VMEOD3x5Font

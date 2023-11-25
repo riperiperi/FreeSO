@@ -1,10 +1,5 @@
 ﻿using FSO.SimAntics.Model;
-using FSO.SimAntics.Model.TSOPlatform;
-using System;
 using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
 using System.IO;
 
 namespace FSO.SimAntics.NetPlay.Model.Commands

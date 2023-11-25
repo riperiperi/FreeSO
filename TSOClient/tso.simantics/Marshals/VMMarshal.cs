@@ -1,11 +1,6 @@
 ﻿using FSO.SimAntics.NetPlay.Model;
-using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
 using System.IO;
 using FSO.SimAntics.Marshals.Threads;
-using FSO.SimAntics.Model;
 using FSO.SimAntics.Model.TSOPlatform;
 using System.IO.Compression;
 using FSO.Common.Model;

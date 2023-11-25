@@ -1,12 +1,9 @@
 ﻿using FSO.Files.Formats.IFF.Chunks;
 using FSO.Files.Utils;
 using FSO.SimAntics.Engine;
-using System;
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
 
 namespace FSO.SimAntics.Primitives
 {

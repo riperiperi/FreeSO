@@ -1,9 +1,5 @@
 ﻿using FSO.SimAntics.Model.Platform;
-using System;
-using System.Collections.Generic;
 using System.IO;
-using System.Linq;
-using System.Text;
 
 namespace FSO.SimAntics.Model.TSOPlatform
 {

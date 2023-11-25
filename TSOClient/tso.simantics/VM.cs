@@ -3,22 +3,12 @@
 using System;
 using System.Collections.Generic;
 using System.Linq;
-using System.Text;
 using FSO.Files.Formats.IFF.Chunks;
 using FSO.SimAntics.Engine;
-/*
- * This Source Code Form is subject to the terms of the Mozilla Public License, v. 2.0.
- * If a copy of the MPL was not distributed with this file, You can obtain one at
- * http://mozilla.org/MPL/2.0/. 
- */
-
 using Microsoft.Xna.Framework;
-using FSO.Content;
-using FSO.Vitaboy;
 using FSO.SimAntics.Model;
 using FSO.SimAntics.NetPlay;
 using FSO.SimAntics.NetPlay.Model;
-using System.Collections.Concurrent;
 using FSO.SimAntics.Marshals;
 using FSO.LotView.Components;
 using FSO.SimAntics.Marshals.Threads;
@@ -32,7 +22,6 @@ using FSO.SimAntics.NetPlay.Model.Commands;
 using FSO.SimAntics.Marshals.Hollow;
 using FSO.SimAntics.Engine.Debug;
 using FSO.Common;
-using FSO.SimAntics.Primitives;
 using FSO.LotView.Model;
 using FSO.HIT;
 using FSO.Common.Model;

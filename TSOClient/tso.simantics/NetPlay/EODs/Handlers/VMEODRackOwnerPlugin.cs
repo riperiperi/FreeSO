@@ -1,21 +1,8 @@
-﻿using FSO.Common.Serialization;
-using FSO.Content.Model;
-using FSO.SimAntics.NetPlay.EODs.Model;
-using FSO.SimAntics.NetPlay.EODs.Utils;
-using FSO.SimAntics.NetPlay.Model.Commands;
-using FSO.SimAntics.Primitives;
-using System;
-using System.Collections.Generic;
+﻿using FSO.SimAntics.NetPlay.EODs.Model;
 using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
-using Mina.Core.Buffer;
 using FSO.SimAntics.Engine.TSOGlobalLink.Model;
-using FSO.SimAntics.Engine.TSOTransaction;
-using FSO.SimAntics.Engine.Utils;
 using FSO.SimAntics.Model.TSOPlatform;
 using System.Text.RegularExpressions;
-using FSO.SimAntics.Engine.Scopes;
 
 namespace FSO.SimAntics.NetPlay.EODs.Handlers
 {

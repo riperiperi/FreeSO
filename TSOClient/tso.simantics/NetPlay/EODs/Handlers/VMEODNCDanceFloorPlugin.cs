@@ -1,12 +1,9 @@
 ﻿using FSO.SimAntics.NetPlay.EODs.Handlers.Data;
-using FSO.SimAntics.NetPlay.EODs.Model;
 using FSO.SimAntics.NetPlay.Model.Commands;
 using Microsoft.Xna.Framework;
 using System;
 using System.Collections.Generic;
 using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
 
 namespace FSO.SimAntics.NetPlay.EODs.Handlers
 {

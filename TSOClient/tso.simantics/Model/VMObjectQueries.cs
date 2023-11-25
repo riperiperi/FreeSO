@@ -1,11 +1,9 @@
-﻿using FSO.Content;
-using FSO.LotView.Model;
+﻿using FSO.LotView.Model;
 using FSO.SimAntics.Entities;
 using FSO.SimAntics.Model.TSOPlatform;
 using System;
 using System.Collections.Generic;
 using System.Linq;
-using System.Text;
 
 namespace FSO.SimAntics.Model
 {

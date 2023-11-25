@@ -1,10 +1,4 @@
-﻿using FSO.Files;
-using FSO.SimAntics.Model;
-using FSO.SimAntics.NetPlay.Model;
-using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
+﻿using FSO.SimAntics.Model;
 using System.IO;
 
 namespace FSO.SimAntics.Entities

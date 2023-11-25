@@ -3,11 +3,7 @@ using FSO.Files.Utils;
 using FSO.SimAntics.Engine;
 using FSO.SimAntics.NetPlay.Model;
 using System;
-using System.Collections.Generic;
 using System.IO;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
 
 namespace FSO.SimAntics.Primitives
 {

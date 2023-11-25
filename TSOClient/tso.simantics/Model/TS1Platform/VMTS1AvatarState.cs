@@ -1,10 +1,5 @@
 ﻿using FSO.SimAntics.Model.Platform;
-using System;
-using System.Collections.Generic;
 using System.IO;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
 using FSO.SimAntics.Model.TSOPlatform;
 
 namespace FSO.SimAntics.Model.TS1Platform

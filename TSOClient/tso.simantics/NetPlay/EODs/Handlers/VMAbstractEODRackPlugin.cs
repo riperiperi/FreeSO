@@ -9,10 +9,7 @@ using FSO.SimAntics.NetPlay.EODs.Utils;
 using FSO.SimAntics.Model.TSOPlatform;
 using Mina.Core.Buffer;
 using System;
-using System.Collections.Generic;
 using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
 
 namespace FSO.SimAntics.NetPlay.EODs.Handlers
 {

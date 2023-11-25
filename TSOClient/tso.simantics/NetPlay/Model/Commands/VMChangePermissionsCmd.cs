@@ -1,11 +1,7 @@
-﻿using FSO.SimAntics.Engine.TSOTransaction;
-using FSO.SimAntics.Model;
+﻿using FSO.SimAntics.Model;
 using FSO.SimAntics.Model.TSOPlatform;
-using System;
 using System.Collections.Generic;
 using System.IO;
-using System.Linq;
-using System.Text;
 
 namespace FSO.SimAntics.NetPlay.Model.Commands
 {

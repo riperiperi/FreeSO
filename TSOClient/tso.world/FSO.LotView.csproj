@@ -118,7 +118,6 @@
     <Compile Include="Model\Direction.cs" />
     <Compile Include="Model\FloorTile.cs" />
     <Compile Include="Model\GraphicsModes.cs" />
-    <Compile Include="Model\GroupedGeometry.cs" />
     <Compile Include="Model\I3DRotate.cs" />
     <Compile Include="Model\LotTilePos.cs" />
     <Compile Include="Model\LotTypes.cs" />
@@ -142,7 +141,6 @@
     <Compile Include="RC\WallComponentRC.cs" />
     <Compile Include="RC\WallVertexRC.cs" />
     <Compile Include="GraphicsModeControl.cs" />
-    <Compile Include="Utils\Camera\CombinedCamera.cs" />
     <Compile Include="Utils\Camera\CameraController2D.cs" />
     <Compile Include="Utils\Camera\CameraController3D.cs" />
     <Compile Include="Utils\Camera\CameraControllerFP.cs" />
@@ -152,7 +150,6 @@
     <Compile Include="Utils\DGRPRenderer.cs" />
     <Compile Include="Utils\IsometricTileIterator.cs" />
     <Compile Include="Utils\ParticleVertex.cs" />
-    <Compile Include="Utils\RenderState.cs" />
     <Compile Include="Utils\SSAADownsample.cs" />
     <Compile Include="Utils\TerrainParallaxVertex.cs" />
     <Compile Include="Utils\TerrainVertex.cs" />

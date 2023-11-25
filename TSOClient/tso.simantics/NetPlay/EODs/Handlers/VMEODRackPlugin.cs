@@ -1,15 +1,7 @@
-﻿using FSO.Common.Utils;
-using FSO.Content.Model;
-using FSO.SimAntics.Engine.Scopes;
-using FSO.SimAntics.Engine.TSOGlobalLink.Model;
+﻿using FSO.SimAntics.Engine.TSOGlobalLink.Model;
 using FSO.SimAntics.NetPlay.EODs.Model;
 using FSO.SimAntics.NetPlay.Model.Commands;
-using FSO.SimAntics.Primitives;
-using System;
-using System.Collections.Generic;
 using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
 
 namespace FSO.SimAntics.NetPlay.EODs.Handlers
 {

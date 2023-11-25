@@ -1,9 +1,6 @@
 ﻿using FSO.SimAntics.NetPlay.Model;
 using System;
-using System.Collections.Generic;
 using System.IO;
-using System.Linq;
-using System.Text;
 using System.Threading.Tasks;
 
 namespace FSO.SimAntics.NetPlay.EODs.Utils
@@ -13,7 +10,6 @@ namespace FSO.SimAntics.NetPlay.EODs.Utils
         private VMEODServer Server;
         private T CurrentData;
         private TaskCompletionSource<T> CurrentDataTask;
-        
 
         public EODPersist(VMEODServer server)
         {
