@@ -1,7 +1,6 @@
 //from https://gist.github.com/Vaikesh/471eb223d0a5ee37944a, for simplicity
 
 using System;
-using Android.Util;
 using Java.IO;
 using Java.Util.Zip;
 using System.IO;

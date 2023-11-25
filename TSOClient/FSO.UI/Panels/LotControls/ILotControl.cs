@@ -1,11 +1,6 @@
 ﻿using FSO.LotView;
 using FSO.LotView.Model;
 using FSO.SimAntics;
-using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
 
 namespace FSO.UI.Panels.LotControls
 {

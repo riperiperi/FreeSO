@@ -274,7 +274,7 @@ namespace FSODroid
             set.CurrentLang = "english";
             set.Lighting = true;
             set.SmoothZoom = true;
-            set.AntiAlias = false;
+            set.AntiAlias = 0;
             set.LightingMode = 3;
             set.AmbienceVolume = 10;
             set.FXVolume = 10;

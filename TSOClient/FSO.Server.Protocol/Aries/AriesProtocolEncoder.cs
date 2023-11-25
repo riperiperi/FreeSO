@@ -5,12 +5,7 @@ using FSO.Server.Protocol.Voltron;
 using Mina.Core.Buffer;
 using Mina.Core.Session;
 using Mina.Filter.Codec;
-using NLog;
 using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
 
 namespace FSO.Server.Protocol.Aries
 {

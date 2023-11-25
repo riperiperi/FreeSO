@@ -1,13 +1,9 @@
 ﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
 
 namespace FSO.Server.Protocol.Voltron
 {
-    [System.AttributeUsage(System.AttributeTargets.Class, AllowMultiple = true)]
-    public class cTSONetMessageParameter : System.Attribute
+    [AttributeUsage(AttributeTargets.Class, AllowMultiple = true)]
+    public class cTSONetMessageParameter : Attribute
     {
         public object Value;
 

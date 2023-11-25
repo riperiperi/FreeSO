@@ -10,7 +10,6 @@ using System.Windows.Forms;
 
 namespace FSO.Windows
 {
-
     public static class Program
     {
 

@@ -1,9 +1,6 @@
 ﻿using FSO.Common.Enum;
 using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
+
 using static FSO.UI.Model.DiscordRpc;
 
 namespace FSO.UI.Model

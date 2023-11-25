@@ -1,7 +1,6 @@
 ﻿using FSO.Client;
 using FSO.Common.Rendering.Framework;
 using FSO.Common.Rendering.Framework.Camera;
-using FSO.Content;
 using FSO.LotView.Components;
 using FSO.LotView.Debug;
 using FSO.SimAntics;
@@ -9,9 +8,6 @@ using Microsoft.Xna.Framework;
 using Microsoft.Xna.Framework.Graphics;
 using System;
 using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
 
 namespace FSO.UI.Panels
 {

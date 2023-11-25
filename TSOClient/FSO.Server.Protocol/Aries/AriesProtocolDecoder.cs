@@ -1,14 +1,8 @@
 ﻿using Mina.Filter.Codec;
 using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
 using Mina.Core.Buffer;
 using Mina.Core.Session;
-using NLog;
 using FSO.Server.Protocol.Voltron;
-using FSO.Server.Protocol.Aries.Packets;
 using FSO.Server.Protocol.Electron;
 using FSO.Common.Serialization;
 using FSO.Server.Protocol.Utils;
