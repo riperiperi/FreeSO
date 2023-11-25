@@ -154,7 +154,7 @@ namespace FSO.SimAntics.NetPlay.EODs.Handlers
 
         public void P_DanceButton(string evt, string text, VMEODClient client)
         {
-            byte num = 0;
+            byte num;
             if (!byte.TryParse(text, out num)) return;
             if (ControllerClient != null) ControllerClient.SendOBJEvent(new VMEODEvent((short)(num), client.Avatar.ObjectID));
         }

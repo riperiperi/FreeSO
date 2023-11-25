@@ -274,8 +274,8 @@ namespace FSO.SimAntics.Utils
             for (int i=46; i<56; i++)
             {
                 var pers = rand.Next(10);
-                bool good = false;
-                int nindex = 0;
+
+                int nindex;
                 if (pers == 0)
                     nindex = 0;
                 else if (pers < 4)
@@ -285,7 +285,7 @@ namespace FSO.SimAntics.Utils
                 else
                     nindex = 3;
 
-                good = need[nindex] > 0;
+                bool good = need[nindex] > 0;
                 if (!good) i--; //try again
                 else
                 {

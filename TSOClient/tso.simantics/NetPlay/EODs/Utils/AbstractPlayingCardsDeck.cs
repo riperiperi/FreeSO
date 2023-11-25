@@ -268,16 +268,19 @@ namespace FSO.SimAntics.NetPlay.EODs.Utils
             if (TotalCards > 1)
             {
                 var cardsArray = RemoveAllCards();
-                PlayingCard tempCard = null;
-                for (int index = cardsArray.Length - 1; index > 0; index--) {
+
+                for (int index = cardsArray.Length - 1; index > 0; index--)
+                {
                     int random = Random.Next(0, index + 1);
+
                     if (index != random)
                     {
-                        tempCard = cardsArray[index];
+                        PlayingCard tempCard = cardsArray[index];
                         cardsArray[index] = cardsArray[random];
                         cardsArray[random] = tempCard;
                     }
                 }
+
                 foreach (var card in cardsArray)
                     Enqueue(card);
             }

@@ -104,6 +104,8 @@ namespace FSO.SimAntics.Primitives
                             var holding = context.Caller.GetSlot(0);
                             var slotNum = context.Args[operand.SlotParam];
 
+                            // TODO: do anything special on failure?
+
                             if (holding == null)
                             { //grab
                                 var item = context.StackObject.GetSlot(slotNum);

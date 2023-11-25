@@ -182,14 +182,13 @@ namespace FSO.SimAntics
 
         public VMAvatar GetAvatarByPersist(uint id)
         {
-            VMAvatar result = null;
+            VMAvatar result;
             Context.ObjectQueries.AvatarsByPersist.TryGetValue(id, out result);
             return result;
         }
 
         public string GetActiveTrace()
         {
-            List<VMStackFrame> ActiveStack = null;
             if (!Scheduler.RunningNow)
             {
                 var cmd = Driver.Executing;
@@ -197,12 +196,14 @@ namespace FSO.SimAntics
                     return "Running Command of type: " + cmd.ToString();
                 return "Not running object tick or command.";
             }
+
             var objID = Scheduler.CurrentObjectID;
 
             var obj = GetObjectById(objID);
             if (obj == null) return "Not running object tick or command.";
-            ActiveStack = new List<VMStackFrame>(obj.Thread.Stack);
-            return obj.ToString() + " Running: \r\n\r\n" + VMSimanticsException.GetStackTrace(ActiveStack);
+
+            List<VMStackFrame> activeStack = new List<VMStackFrame>(obj.Thread.Stack);
+            return obj.ToString() + " Running: \r\n\r\n" + VMSimanticsException.GetStackTrace(activeStack);
         }
 
         public void SignalTraceLog(string description, bool withCSStack)
@@ -949,8 +950,6 @@ namespace FSO.SimAntics
 
         public void HollowLoad(VMHollowMarshal input)
         {
-            var clientJoin = (Context.Architecture == null);
-            var oldWorld = Context.World;
             input.Context.Ambience.ActiveBits = 0;
             Context = new VMContext(input.Context, Context);
             Context.VM = this;

@@ -116,7 +116,6 @@ namespace FSO.SimAntics.Entities
             Vector3[] positions = new Vector3[Objects.Count];
             for (int i = 0; i < Objects.Count(); i++)
             {
-                ushort sub = (ushort)Objects[i].Object.OBJ.SubIndex;
                 positions[i] = new Vector3(Offsets[i].x/16, Offsets[i].y/16, Offsets[i].Level * 2.95f);
             }
             return positions;
@@ -189,7 +188,6 @@ namespace FSO.SimAntics.Entities
             Matrix rotMat = Matrix.CreateRotationZ((float)(Dir * Math.PI / 4.0));
             VMPlacementResult[] places = new VMPlacementResult[count];
 
-            var bObj = BaseObject;
             var bOff = Offsets[Objects.IndexOf(BaseObject)];
             var leadOff = new Vector3(bOff.x, bOff.y, 0);
             var offTotal = new Vector3();
@@ -300,7 +298,6 @@ namespace FSO.SimAntics.Entities
             if (groundAlign != null)
             {
                 //retarget floor
-                var ctr = new Vector3(Offsets[0].x, Offsets[0].y, 0) - leadOff - offTotal;
                 for (int i = 0; i < count; i++)
                 {
                     var sub = Objects[i];
@@ -333,7 +330,7 @@ namespace FSO.SimAntics.Entities
             }
 
             Matrix rotMat = Matrix.CreateRotationZ((float)(Dir * Math.PI / 4.0));
-            var bObj = BaseObject;
+
             var bOff = Offsets[Objects.IndexOf(BaseObject)];
             var leadOff = new Vector3(bOff.x/16f, bOff.y/16f, 0);
 

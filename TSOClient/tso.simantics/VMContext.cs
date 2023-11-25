@@ -964,8 +964,6 @@ namespace FSO.SimAntics
 
         public void UnregisterObjectPos(VMEntity obj, bool roomChange)
         {
-            var pos = obj.Position;
-
             //remove object from room
 
             if (roomChange)
@@ -983,6 +981,7 @@ namespace FSO.SimAntics
                 }
                 else if (obj.Window)
                     RemoveWindowPortal(obj, room);
+
                 if (obj.GetValue(VMStackObjectVariable.LightingContribution) > 0 || !obj.MovesOften)
                     DeferredLightingRefresh.Add(room); //RefreshLighting(room, true, new HashSet<ushort>())
                 else if (obj.GetValue(VMStackObjectVariable.RoomImpact) > 0)
@@ -1125,7 +1124,6 @@ namespace FSO.SimAntics
             //note: sync on this DOES matter as the OOB check performs on some primitives, and objects are double checked before placement.
 
             var lotSize = lotSInfo & 255;
-            var lotFloors = ((lotSInfo >> 8)&255)+2;
             var lotDir = (lotSInfo >> 16);
 
             var dim = VMBuildableAreaInfo.BuildableSizes[lotSize];
@@ -1376,7 +1374,6 @@ namespace FSO.SimAntics
 
         public VMMultitileGroup CreateObjectInstance(UInt32 GUID, LotTilePos pos, Direction direction, short MainStackOBJ, short MainParam, bool ghostImage)
         {
-
             VMMultitileGroup group = new VMMultitileGroup();
             var objDefinition = FSO.Content.Content.Get().WorldObjects.Get(GUID);
             if (objDefinition == null)
@@ -1426,7 +1423,10 @@ namespace FSO.SimAntics
                 }
 
                 group.Init(this);
-                VMPlacementError couldPlace = group.ChangePosition(pos, direction, this, VMPlaceRequestFlags.Default).Status;
+
+                // Placement failure leaves the object OOW.
+                group.ChangePosition(pos, direction, this, VMPlaceRequestFlags.Default);
+
                 SetBirthTime(group);
                 return group;
             }
@@ -1479,7 +1479,10 @@ namespace FSO.SimAntics
                     vmObject.MainStackOBJ = MainStackOBJ;
 
                     group.Init(this);
-                    var result = vmObject.SetPosition(pos, direction, this);
+
+                    // Placement failure leaves the object OOW.
+                    vmObject.SetPosition(pos, direction, this);
+
                     SetBirthTime(group);
                     
                     return group;

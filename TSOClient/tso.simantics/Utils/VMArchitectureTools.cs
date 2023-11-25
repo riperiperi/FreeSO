@@ -679,6 +679,7 @@ namespace FSO.SimAntics.Utils
                     considered.Add(p, height);
                     var ht = tr.Heights[p.Y * tr.Width + p.X];
                     var ignoreSlope = !(x == 0 || x == pos.Width || y == 0 || y == pos.Height);
+
                     if (ht != height && !(target.DisableClip || ignoreSlope || target.Context.SlopeVertexCheck(p.X, p.Y)))
                     {
                         target.LastFailReason = 1;
@@ -687,7 +688,6 @@ namespace FSO.SimAntics.Utils
                 }
             }
             
-            var firstDiff = tr.Heights[pos.Y * tr.Width + pos.X] - height;
 
             while (stack.Count > 0)
             {
@@ -961,13 +961,13 @@ namespace FSO.SimAntics.Utils
 
         private static WallReference GetPatternRef(ushort id)
         {
-            WallReference result = null;
+            WallReference result;
             Walls.Entries.TryGetValue(id, out result);
             return result;
         }
         private static FloorReference GetFloorRef(ushort id)
         {
-            FloorReference result = null;
+            FloorReference result;
             Floors.Entries.TryGetValue(id, out result);
             return result;
         }

@@ -836,7 +836,7 @@ namespace FSO.SimAntics
         public virtual bool SetPersonData(VMPersonDataVariable variable, short value)
         {
             if ((ushort)variable > 100) throw new Exception("Person Data out of bounds!");
-            VMTSOJobInfo jobInfo = null;
+            VMTSOJobInfo jobInfo;
             switch (variable)
             {
                 case VMPersonDataVariable.JobPerformance:
@@ -873,7 +873,6 @@ namespace FSO.SimAntics
                 case VMPersonDataVariable.OnlineJobXP:
                     if (((VMTSOAvatarState)TSOState).JobInfo.TryGetValue(GetPersonData(VMPersonDataVariable.OnlineJobID), out jobInfo))
                     {
-                        var diff = value - jobInfo.Experience;
                         jobInfo.Experience = value;
                     }
                     return true;

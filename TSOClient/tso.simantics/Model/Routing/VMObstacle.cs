@@ -174,7 +174,7 @@ namespace FSO.SimAntics.Model.Routing
                     //bingo - we hit the y leaving line.
                     if (t < best)
                     {
-                        best = t;
+                        // best = t;
                         leaves = new Point(xHit, yOut);
                     }
                 }
@@ -226,7 +226,7 @@ namespace FSO.SimAntics.Model.Routing
                     //bingo - we hit the y leaving line.
                     if (t < best)
                     {
-                        best = t;
+                        // best = t;
                         leaves = new Point(xHit, yOut);
                     }
                 }

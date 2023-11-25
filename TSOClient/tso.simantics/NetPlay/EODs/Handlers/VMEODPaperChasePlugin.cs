@@ -157,8 +157,8 @@ namespace FSO.SimAntics.NetPlay.EODs.Handlers
             if (Controller == null) { return; }
 
             //If we don't recognise the letter, ignore the request
-            var letter = (short)VMEODPaperChaseLetters.A;
-            if(!short.TryParse(body, out letter) || letter < VMEODPaperChaseLetters.A || letter > VMEODPaperChaseLetters.C)
+            short letter;
+            if (!short.TryParse(body, out letter) || letter < VMEODPaperChaseLetters.A || letter > VMEODPaperChaseLetters.C)
             {
                 return;
             }

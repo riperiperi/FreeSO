@@ -25,10 +25,8 @@ namespace FSO.SimAntics.NetPlay.EODs.Archetypes
 
         public override void OnConnection(VMEODClient client)
         {
-            var param = client.Invoker.Thread.TempRegisters;
             if (client.Avatar != null)
             {
-                var slot = param[0];
                 if (Lobby.Join(client, 0))
                 {
                     OnConnected(client);

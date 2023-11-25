@@ -41,7 +41,7 @@ namespace FSO.SimAntics.NetPlay.EODs
         {
             if (InvokerToEOD.ContainsKey(invoker.ObjectID)) return; //uh, what?
 
-            VMEODServer server = null;
+            VMEODServer server;
             if (avatar != null && AvatarToEOD.ContainsKey(avatar.ObjectID))
             {
                 //avatar already using an EOD... quickly abort this attempt with the stub EOD.

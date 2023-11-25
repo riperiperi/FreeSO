@@ -60,9 +60,9 @@ namespace FSO.SimAntics.Engine.Primitives
         {
             var operand = (VMExpressionOperand)args;
 
-            int rhsValue = 0;
+            int rhsValue;
             int lhsValue = 0;
-            bool setResult = false;
+            bool setResult;
 
             switch (operand.Operator){
                 /** Modifiers **/
@@ -70,13 +70,7 @@ namespace FSO.SimAntics.Engine.Primitives
                     rhsValue = VMMemory.GetBigVariable(context, operand.RhsOwner, operand.RhsData);
                     setResult = VMMemory.SetBigVariable(context, operand.LhsOwner, operand.LhsData, rhsValue);
 
-                    
-                    if (setResult)
-                    {
-                        return VMPrimitiveExitCode.GOTO_TRUE;
-                    }else{
-                        return VMPrimitiveExitCode.GOTO_FALSE;
-                    }
+                    return setResult.AsGotoExitCode();
 
                 /** ++ and < **/
                 case VMExpressionOperator.IncAndLessThan:
@@ -85,11 +79,7 @@ namespace FSO.SimAntics.Engine.Primitives
                     VMMemory.SetBigVariable(context, operand.LhsOwner, operand.LhsData, lhsValue);
                     rhsValue = VMMemory.GetBigVariable(context, operand.RhsOwner, operand.RhsData);
 
-                    if (lhsValue < rhsValue){
-                        return VMPrimitiveExitCode.GOTO_TRUE;
-                    }else{
-                        return VMPrimitiveExitCode.GOTO_FALSE;
-                    }
+                    return (lhsValue < rhsValue).AsGotoExitCode();
 
                 /** -- and > **/
                 case VMExpressionOperator.DecAndGreaterThan:
@@ -98,38 +88,23 @@ namespace FSO.SimAntics.Engine.Primitives
                     VMMemory.SetBigVariable(context, operand.LhsOwner, operand.LhsData, lhsValue);
                     rhsValue = VMMemory.GetBigVariable(context, operand.RhsOwner, operand.RhsData);
 
-                    if (lhsValue > rhsValue)
-                    {
-                        return VMPrimitiveExitCode.GOTO_TRUE;
-                    }
-                    else
-                    {
-                        return VMPrimitiveExitCode.GOTO_FALSE;
-                    }
+                    return (lhsValue > rhsValue).AsGotoExitCode();
 
                 case VMExpressionOperator.SetFlag:
                     lhsValue = VMMemory.GetBigVariable(context, operand.LhsOwner, operand.LhsData);
                     rhsValue = VMMemory.GetBigVariable(context, operand.RhsOwner, operand.RhsData);
                     var bitval = 1 << (rhsValue - 1);
                     lhsValue |= bitval;
-                    if (VMMemory.SetBigVariable(context, operand.LhsOwner, operand.LhsData, lhsValue))
-                    {
-                        return VMPrimitiveExitCode.GOTO_TRUE;
-                    }else{
-                        return VMPrimitiveExitCode.GOTO_FALSE;
-                    }
+
+                    return VMMemory.SetBigVariable(context, operand.LhsOwner, operand.LhsData, lhsValue).AsGotoExitCode();
 
                 case VMExpressionOperator.ClearFlag:
                     lhsValue = VMMemory.GetBigVariable(context, operand.LhsOwner, operand.LhsData);
                     rhsValue = VMMemory.GetBigVariable(context, operand.RhsOwner, operand.RhsData);
                     var clearBitval = ~(1 << (rhsValue - 1));
                     lhsValue &= clearBitval;
-                    if (VMMemory.SetBigVariable(context, operand.LhsOwner, operand.LhsData, lhsValue))
-                    {
-                        return VMPrimitiveExitCode.GOTO_TRUE;
-                    }else{
-                        return VMPrimitiveExitCode.GOTO_FALSE;
-                    }
+
+                    return VMMemory.SetBigVariable(context, operand.LhsOwner, operand.LhsData, lhsValue).AsGotoExitCode();
 
                 /** %= **/
                 case VMExpressionOperator.PlusEquals:
@@ -212,11 +187,7 @@ namespace FSO.SimAntics.Engine.Primitives
                             break;
                     }
 
-                    if (result){
-                        return VMPrimitiveExitCode.GOTO_TRUE;
-                    } else {
-                        return VMPrimitiveExitCode.GOTO_FALSE;
-                    }
+                    return result.AsGotoExitCode();
 
                 case VMExpressionOperator.Push:
                     if (context.VM.TS1)
@@ -277,10 +248,12 @@ namespace FSO.SimAntics.Engine.Primitives
                         VMMemory.SetBigVariable(context, operand.LhsOwner, operand.LhsData, lhsValue);
                     }
                     return VMPrimitiveExitCode.GOTO_TRUE;
+
                 case VMExpressionOperator.TS1AssignSqrtRHS:
                     rhsValue = VMMemory.GetBigVariable(context, operand.RhsOwner, operand.RhsData);
                     setResult = VMMemory.SetBigVariable(context, operand.LhsOwner, operand.LhsData, (short)Math.Sqrt(rhsValue));
-                    return VMPrimitiveExitCode.GOTO_TRUE;
+                    return setResult.AsGotoExitCode();
+
                 default:
                     throw new VMSimanticsException("Unknown expression type", context);
             }

@@ -88,7 +88,8 @@ namespace FSO.SimAntics.NetPlay.EODs.Handlers
         public void P_SetState(string evt, string data, VMEODClient client)
         {
             if (Mode != VMEODPermissionDoorMode.Edit) return;
-            ushort code = 0;
+
+            ushort code;
             if (!ushort.TryParse(data, out code) || code > 2) return;
 
             foreach (var cli in Server.Clients)
@@ -98,7 +99,8 @@ namespace FSO.SimAntics.NetPlay.EODs.Handlers
         public void P_SetFee(string evt, string data, VMEODClient client)
         {
             if (Mode != VMEODPermissionDoorMode.Edit) return;
-            ushort code = 0;
+
+            ushort code;
             if (!ushort.TryParse(data, out code) || code > MaxFee) return;
 
             foreach (var cli in Server.Clients)
@@ -108,7 +110,8 @@ namespace FSO.SimAntics.NetPlay.EODs.Handlers
         public void P_SetFlags(string evt, string data, VMEODClient client)
         {
             if (Mode != VMEODPermissionDoorMode.Edit) return;
-            ushort flags = 0;
+
+            ushort flags;
             if (!ushort.TryParse(data, out flags)) return;
 
             flags &= (ushort)VMEODPermissionDoorFlags.All;

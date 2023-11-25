@@ -416,7 +416,7 @@ namespace FSO.SimAntics.Engine
             var active = Queue[ActiveQueueBlock];
             int CurrentPriority = (int)((VMAvatar)Entity).GetPersonData(VMPersonDataVariable.Priority); 
             if (CurrentPriority == (int)VMQueuePriority.Autonomous) CurrentPriority -= 1; // allow other auto actions to interrupt us
-            var mode = active.Mode;
+
             // HACK: TS1 pushes a "Cancel Interaction" action onto the tree to interrupt itself, as well as setting current interaction to prio 0.
             // We're simulating that by notifiying idle if priority hits 0. (implied cancel interaction queued)
             // Make sure this interaction is not *meant* to be priority 0, like tso's idle.

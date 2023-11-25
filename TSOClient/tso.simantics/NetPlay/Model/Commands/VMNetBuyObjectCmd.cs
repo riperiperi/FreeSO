@@ -85,9 +85,6 @@ namespace FSO.SimAntics.NetPlay.Model.Commands
             if (Mode != PurchaseMode.Donate && !vm.PlatformState.CanPlaceNewUserObject(vm)) return false;
             if (Mode == PurchaseMode.Donate && !vm.PlatformState.CanPlaceNewDonatedObject(vm)) return false;
 
-            var catalog = Content.Content.Get().WorldCatalog;
-            var item = catalog.GetItemByGUID(GUID);
-
             var group = vm.Context.CreateObjectInstance(GUID, LotTilePos.OUT_OF_WORLD, dir);
             if (group == null) return false;
             group.ChangePosition(new LotTilePos(x, y, level), dir, vm.Context, VMPlaceRequestFlags.UserPlacement);

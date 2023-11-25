@@ -110,7 +110,6 @@ namespace FSO.SimAntics.Model
                     var wallObs = new List<VMObstacle>();
                     var wallLines = (VM.UseWorld)?new VMWallLineBuilder():null;
                     var fenceLines = (VM.UseWorld) ? new VMWallLineBuilder() : null;
-                    var wallDict = new Dictionary<uint, Vector2[]>();
                     var adjRooms = new HashSet<ushort>();
                     ushort area = 0;
                     while (spread.Count > 0)

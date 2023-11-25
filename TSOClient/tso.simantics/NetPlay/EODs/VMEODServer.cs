@@ -72,11 +72,13 @@ namespace FSO.SimAntics.NetPlay.EODs
         {
             PluginID = UID;
             Clients = new List<VMEODClient>();
-            Type handleType = null;
+
+            Type handleType;
             if (!IDToHandler.TryGetValue(UID, out handleType))
             {
                 handleType = typeof(VMEODStubPlugin);
             }
+
             Object = obj;
             Joinable = joinable;
             this.vm = vm;
@@ -92,14 +94,15 @@ namespace FSO.SimAntics.NetPlay.EODs
         {
             if (msg.Binary)
             {
-                EODBinaryEventHandler handle = null; 
+                EODBinaryEventHandler handle; 
                 if (Handler.BinaryHandlers.TryGetValue(msg.EventName, out handle))
                 {
                     handle(msg.EventName, msg.BinData, client);
                 }
-            } else
+            }
+            else
             {
-                EODPlaintextEventHandler handle = null;
+                EODPlaintextEventHandler handle;
                 if (Handler.PlaintextHandlers.TryGetValue(msg.EventName, out handle))
                 {
                     handle(msg.EventName, msg.TextData, client);
@@ -109,7 +112,7 @@ namespace FSO.SimAntics.NetPlay.EODs
 
         public void SimanticsDeliver(short evt, VMEODClient client)
         {
-            EODSimanticsEventHandler handle = null;
+            EODSimanticsEventHandler handle;
             if (Handler.SimanticsHandlers.TryGetValue(evt, out handle))
             {
                 handle(evt, client);

@@ -15,7 +15,7 @@ namespace FSO.SimAntics.Engine.Primitives
             var operand = (VMAnimateSimOperand)args;
             var avatar = (VMAvatar)context.Caller;
 
-            Animation animation = null;
+            Animation animation;
             var id = (operand.IDFromParam) ? (ushort)(context.Args[operand.AnimationID]) : operand.AnimationID;
 
             var newMode = true; // (context.VM.Tuning?.GetTuning("feature", 0, 0) ?? 0) != 0; //might need to disable this suddenly - too many things to test
@@ -27,7 +27,10 @@ namespace FSO.SimAntics.Engine.Primitives
                     avatar.CarryAnimationState = null;
                     return VMPrimitiveExitCode.GOTO_TRUE;
                 }
-                if (avatar.GetPersonData(VMPersonDataVariable.HeadSeekState) == 1) avatar.SetPersonData(VMPersonDataVariable.HeadSeekState, 4);
+
+                if (avatar.GetPersonData(VMPersonDataVariable.HeadSeekState) == 1)
+                    avatar.SetPersonData(VMPersonDataVariable.HeadSeekState, 4);
+
                 avatar.Animations.Clear();
                 var posture = avatar.GetPersonData(VMPersonDataVariable.Posture);
 
@@ -35,10 +38,15 @@ namespace FSO.SimAntics.Engine.Primitives
                 //todo: swimming??
 
                 animation = FSO.Content.Content.Get().AvatarAnimations.Get(avatar.WalkAnimations[posture] + ".anim");
-                if (animation == null) return VMPrimitiveExitCode.GOTO_TRUE;
+
+                if (animation == null)
+                    return VMPrimitiveExitCode.GOTO_TRUE;
+
                 var state = new VMAnimationState(animation, operand.PlayBackwards);
+
                 if (context.VM.TS1 || newMode)
                     state.Speed = 30 / 25f;
+
                 state.Loop = true;
                 avatar.Animations.Add(state);
                 avatar.Avatar.LeftHandGesture = SimHandGesture.Idle;
@@ -49,14 +57,24 @@ namespace FSO.SimAntics.Engine.Primitives
                     if (avatar.CarryAnimationState == null)
                         avatar.CarryAnimationState = new VMAnimationState(FSO.Content.Content.Get().AvatarAnimations.Get("a2o-rarm-carry-loop.anim"), false);
                 }
-                else avatar.CarryAnimationState = null;
+                else
+                {
+                    avatar.CarryAnimationState = null;
+                }
+
                 return VMPrimitiveExitCode.GOTO_TRUE;
             }
+
             var source = operand.Source;
             if (operand.IDFromParam && source == VMAnimationScope.Object) source = VMAnimationScope.StackObject; //fixes MM rollercoaster
-            if (!operand.IDFromParam) {
-                var owner = (source == VMAnimationScope.Object) ? context.CodeOwner : ((source == VMAnimationScope.StackObject)? context.StackObject.Object : operand.AnimationSource);
+            if (!operand.IDFromParam)
+            {
+                var owner = (source == VMAnimationScope.Object) ?
+                    context.CodeOwner :
+                    ((source == VMAnimationScope.StackObject) ? context.StackObject.Object : operand.AnimationSource);
+
                 bool child = ((VMAvatar)context.Caller).GetPersonData(VMPersonDataVariable.PersonsAge) < 18 && context.VM.TS1;
+
                 if (child)
                 {
                     if (operand.ChildAnimationCache == null || owner != operand.ChildAnimationSource)
@@ -65,7 +83,8 @@ namespace FSO.SimAntics.Engine.Primitives
                         operand.ChildAnimationCache = VMMemory.GetAnimation(context, source, id);
                     }
                     animation = operand.ChildAnimationCache;
-                } else
+                }
+                else
                 {
                     if (operand.AnimationCache == null || owner != operand.AnimationSource)
                     {
@@ -74,13 +93,14 @@ namespace FSO.SimAntics.Engine.Primitives
                     }
                     animation = operand.AnimationCache;
                 }
-
-            } else
+            }
+            else
             {
                 animation = VMMemory.GetAnimation(context, source, id);
             }
 
-            if (animation == null){
+            if (animation == null)
+            {
                 return VMPrimitiveExitCode.GOTO_TRUE_NEXT_TICK;
             }
 

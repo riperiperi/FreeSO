@@ -550,7 +550,7 @@ namespace FSO.SimAntics.NetPlay.EODs.Handlers
 
         private void NewMinimumBetHandler(string evt, string newMinString, VMEODClient client)
         {
-            string failureReason = "";
+            string failureReason;
             short newMinBet;
             var result = Int16.TryParse(newMinString.Trim(), out newMinBet);
             bool isOwner = (((VMTSOObjectState)Server.Object.TSOState).OwnerID == client.Avatar.PersistID);
@@ -592,7 +592,7 @@ namespace FSO.SimAntics.NetPlay.EODs.Handlers
 
         private void NewMaximumBetHandler(string evt, string newMaxString, VMEODClient client)
         {
-            string failureReason = "";
+            string failureReason;
             short newMaxBet;
             var result = Int16.TryParse(newMaxString.Trim(), out newMaxBet);
             bool isOwner = (((VMTSOObjectState)Server.Object.TSOState).OwnerID == client.Avatar.PersistID);
@@ -1170,17 +1170,15 @@ namespace FSO.SimAntics.NetPlay.EODs.Handlers
             if (Client != null)
             {
                 // number of bets % bet amount % bet Type string % bet % number0 % number1... % bet amount % bet Type string % bet % number0 % number1... etc.
-                int totalUniqueBets = 0;
                 int grandTotalOfBets = 0;
-                string betDataString;
                 string allBetsDataString = "";
-                string betTypeString = "";
-                List<int> betDenoms = new List<int>();
-                for (totalUniqueBets = 0; totalUniqueBets < _AllBets.Count; totalUniqueBets++)
+
+                for (int totalUniqueBets = 0; totalUniqueBets < _AllBets.Count; totalUniqueBets++)
                 {
-                    betDataString = "";
-                    betTypeString = VMEODRoulettePlugin.RouletteBetTypes[_AllBets[totalUniqueBets].Type];
-                    betDenoms = _AllBets[totalUniqueBets].BetDenominations;
+                    string betDataString = "";
+                    string betTypeString = VMEODRoulettePlugin.RouletteBetTypes[_AllBets[totalUniqueBets].Type];
+                    List<int> betDenoms = _AllBets[totalUniqueBets].BetDenominations;
+
                     foreach (int chip in betDenoms)
                     {
                         betDataString += "%" + chip + "%" + betTypeString;
@@ -1188,10 +1186,13 @@ namespace FSO.SimAntics.NetPlay.EODs.Handlers
                             betDataString += "%" + number;
                         grandTotalOfBets++;
                     }
+
                     allBetsDataString += betDataString;
                 }
+
                 if (allBetsDataString.Length == 0)
                     allBetsDataString = "%0";
+
                 // remove the very first % when sending
                 Client.Send("roulette_sync_mine", grandTotalOfBets + "%" + allBetsDataString.Remove(0, 1));
             }
@@ -1201,17 +1202,15 @@ namespace FSO.SimAntics.NetPlay.EODs.Handlers
             if (Client != null)
             {
                 // number of bets % bet amount % bet Type string % bet % number0 % number1... % bet amount % bet Type string % bet % number0 % number1... etc.
-                int totalUniqueBets = 0;
                 int grandTotalOfBets = 0;
-                string betDataString;
                 string allBetsDataString = "";
-                string betTypeString = "";
-                List<int> betDenoms = new List<int>();
-                for (totalUniqueBets = 0; totalUniqueBets < neighborBets.Count; totalUniqueBets++)
+
+                for (int totalUniqueBets = 0; totalUniqueBets < neighborBets.Count; totalUniqueBets++)
                 {
-                    betDataString = "";
-                    betTypeString = VMEODRoulettePlugin.RouletteBetTypes[neighborBets[totalUniqueBets].Type];
-                    betDenoms = neighborBets[totalUniqueBets].BetDenominations;
+                    string betDataString = "";
+                    string betTypeString = VMEODRoulettePlugin.RouletteBetTypes[neighborBets[totalUniqueBets].Type];
+                    List<int> betDenoms = neighborBets[totalUniqueBets].BetDenominations;
+
                     foreach (int chip in betDenoms)
                     {
                         betDataString += "%" + chip + "%" + betTypeString;
@@ -1219,8 +1218,10 @@ namespace FSO.SimAntics.NetPlay.EODs.Handlers
                             betDataString += "%" + number;
                         grandTotalOfBets++;
                     }
+
                     allBetsDataString += betDataString;
                 }
+
                 // remove the very first % when sending
                 Client.Send("roulette_sync_neighbor", grandTotalOfBets + "%" + allBetsDataString.Remove(0, 1));
             }

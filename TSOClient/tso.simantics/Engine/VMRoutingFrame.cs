@@ -1022,9 +1022,6 @@ namespace FSO.SimAntics.Engine
 
         public void WalkInterrupt(int waitTime)
         {
-            
-            var avatar = (VMAvatar)Caller;
-
             if (State == VMRoutingFrameState.WALKING)
             {
                 //only wait if we're walking

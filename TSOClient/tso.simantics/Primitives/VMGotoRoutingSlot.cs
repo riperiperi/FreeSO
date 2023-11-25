@@ -14,15 +14,15 @@ namespace FSO.SimAntics.Engine.Primitives
 
             var slot = VMMemory.GetSlot(context, operand.Type, operand.Data);
             if (slot == null) return VMPrimitiveExitCode.GOTO_FALSE;
+
             var obj = context.StackObject;
             if (obj == null) return VMPrimitiveExitCode.GOTO_FALSE;
-            var avatar = context.Caller;
 
             //Routing slots must be type 3.
             if (slot.Type == 3)
             {
                 var pathFinder = context.Thread.PushNewRoutingFrame(context, !operand.NoFailureTrees);
-                var success = pathFinder.InitRoutes(slot, context.StackObject);
+                pathFinder.InitRoutes(slot, context.StackObject);
 
                 return VMPrimitiveExitCode.CONTINUE;
             }

@@ -225,7 +225,6 @@ namespace FSO.SimAntics.NetPlay.EODs.Handlers
         public void DrawImage(int x, int y, string[] image, byte color)
         {
             var w = image[0].Length;
-            var h = image.Length;
 
             var xorig = x;
             for (int yo=0; yo<w; yo++)
@@ -377,7 +376,6 @@ namespace FSO.SimAntics.NetPlay.EODs.Handlers
                     break;
                 default:
                     //random
-                    var controller = Server.vm.EODHost.GetFirstHandler<VMEODNightclubControllerPlugin>();
                     var rand = new Random();
                     if (frame % (10*6) == 0)
                     {
@@ -490,7 +488,6 @@ namespace FSO.SimAntics.NetPlay.EODs.Handlers
                             for (int x = 0; x < ScreenWidth; x++)
                             {
                                 var fallFreq = ScreenHeight + ((PatternMemory[x % 6] + x) % 9) - 4;
-                                var fallDelta = (PatternMemory[x % 6] + x) % ScreenHeight;
                                 var fallPosition = (((frame % fallFreq) * fallDist)/fallFreq) % fallDist;
                                 var color = (byte)((x % 5) * 2 + 1);
                                 for (int y = 0; y < ScreenHeight; y++)

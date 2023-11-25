@@ -30,14 +30,16 @@ namespace FSO.SimAntics.NetPlay.Model.Commands
             if (Verified == true) return true; //temporary... forward messages through tick broadcast
             //only run by server. Forward message to this avatar's connected EOD.
             if (caller == null) return false;
+
             try
             {
                 vm.EODHost.Deliver(this, caller);
             }
-            catch (Exception e)
+            catch (Exception)
             {
                 // some future NLog statement
             }
+
             return false;
         }
 

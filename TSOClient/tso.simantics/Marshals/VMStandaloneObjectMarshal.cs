@@ -23,9 +23,8 @@ namespace FSO.SimAntics.Marshals
             Version = reader.ReadInt32();
             Compressed = reader.ReadBoolean();
 
-            var uReader = reader;
-            MemoryStream cStream = null;
-            GZipStream zipStream = null;
+            MemoryStream cStream;
+            GZipStream zipStream;
             if (Compressed)
             {
                 var length = reader.ReadInt32();

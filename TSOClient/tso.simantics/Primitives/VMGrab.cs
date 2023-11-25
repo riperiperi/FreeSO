@@ -7,8 +7,6 @@ namespace FSO.SimAntics.Primitives
     {
         public override VMPrimitiveExitCode Execute(VMStackFrame context, VMPrimitiveOperand args)
         {
-            var operand = (VMGrabOperand)args;
-
             return (context.Caller.PlaceInSlot(context.StackObject, 0, true, context.VM.Context)) ? VMPrimitiveExitCode.GOTO_TRUE : VMPrimitiveExitCode.GOTO_FALSE;
 
             return VMPrimitiveExitCode.GOTO_TRUE;

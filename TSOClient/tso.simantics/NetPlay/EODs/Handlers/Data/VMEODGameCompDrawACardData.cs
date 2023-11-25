@@ -71,7 +71,7 @@ namespace FSO.SimAntics.NetPlay.EODs.Handlers.Data
 
         public static byte[] SerializeStrings(params string[] strings)
         {
-            byte[] returnArray = null;
+            byte[] returnArray;
             if (strings == null) return null;
             using (var stream = new MemoryStream())
             {
@@ -91,7 +91,8 @@ namespace FSO.SimAntics.NetPlay.EODs.Handlers.Data
         {
             if (byteArray == null) return null;
             List<String> stringList = new List<string>();
-            string deserializedString = null;
+
+            string deserializedString;
             using (var reader = new BinaryReader(new MemoryStream(byteArray)))
             {
                 while (reader.BaseStream.Position < reader.BaseStream.Length)
@@ -103,6 +104,7 @@ namespace FSO.SimAntics.NetPlay.EODs.Handlers.Data
                 reader.BaseStream.Dispose();
                 reader.Dispose();
             }
+
             return stringList.ToArray();
         }
     }

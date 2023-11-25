@@ -228,9 +228,7 @@ namespace FSO.SimAntics
                 if (OBJfChunk != null) EntryPoints = OBJfChunk.functions;
             }
 
-            if (obj.GUID == 0xa9bb3a76) EntryPoints[17] = new OBJfFunctionEntry(); 
-
-            var test = obj.Resource.List<OBJf>();
+            if (obj.GUID == 0xa9bb3a76) EntryPoints[17] = new OBJfFunctionEntry();
 
             SemiGlobal = obj.Resource.SemiGlobal;
 
@@ -254,7 +252,6 @@ namespace FSO.SimAntics
                 TreeTable = SemiGlobal.Get<TTAB>(obj.OBJ.TreeTableID); //tree not in local, try semiglobal
                 TreeTableStrings = SemiGlobal.Get<TTAs>(obj.OBJ.TreeTableID);
             }
-            //TODO: global interactions like salvage
 
             this.Attributes = new List<short>(numAttributes);
             SetFlag(VMEntityFlags.ChairFacing, true);
@@ -356,7 +353,7 @@ namespace FSO.SimAntics
                     float pan = (SoundThreads[i].Pan) ? Math.Max(-1.0f, Math.Min(1.0f, scrPos.X / worldSpace.WorldPxWidth)) : 0;
                     pan = pan * pan * ((pan > 0)?1:-1);
 
-                    float volume = 1f;
+                    float volume;
                     
                     var rcs = worldState.Cameras.ActiveCamera as CameraController3D;
                     if (rcs != null)
@@ -640,11 +637,11 @@ namespace FSO.SimAntics
                 }
             }
 
-            bool result = false;
             if (entry < EntryPoints.Length)
             {
                 return ExecuteGenericEntryPoint(EntryPoints[entry], context, runImmediately, stackOBJ, args);
-            } else
+            }
+            else
             {
                 return false;
             }

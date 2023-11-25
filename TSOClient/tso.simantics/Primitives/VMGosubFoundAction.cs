@@ -8,8 +8,6 @@ namespace FSO.SimAntics.Primitives
     {
         public override VMPrimitiveExitCode Execute(VMStackFrame context, VMPrimitiveOperand args) //TODO: Behaviour for being notified out of idle and interaction canceling
         {
-            var operand = (VMGosubFoundActionOperand)args;
-
             if (context.Thread.ActiveAction != null) context.StackObject = context.Thread.ActiveAction.Callee;
             //if we're main, attempt to run a queued interaction. We just idle if this fails.
             if (!context.ActionTree && context.Thread.AttemptPush())

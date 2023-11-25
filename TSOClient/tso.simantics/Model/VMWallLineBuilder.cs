@@ -22,8 +22,8 @@ namespace FSO.SimAntics.Model
             uint myID = (uint)(obsX | (obsY << 12) | (type << 24));
             if (LinesByLocation.ContainsKey(myID)) return;
 
-            Vector2[] prev = null;
-            Vector2[] post = null;
+            Vector2[] prev;
+            Vector2[] post;
             Vector2[] line = null;
             switch (type)
             {

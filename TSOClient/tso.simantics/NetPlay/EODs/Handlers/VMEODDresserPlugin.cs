@@ -70,8 +70,8 @@ namespace FSO.SimAntics.NetPlay.EODs.Handlers
         private void SetDefault(string evt, string data, VMEODClient client)
         {
             var split = data.Split(',');
-            short categoryId = 0;
-            uint outfitId = 0;
+            short categoryId;
+            uint outfitId;
 
             if(!short.TryParse(split[0], out categoryId) ||
                 !uint.TryParse(split[1], out outfitId)){
@@ -185,7 +185,6 @@ namespace FSO.SimAntics.NetPlay.EODs.Handlers
 
         public override void OnConnection(VMEODClient client)
         {
-            var param = client.Invoker.Thread.TempRegisters;
             if (client.Avatar != null)
             {
                 Lobby.Join(client, 0);

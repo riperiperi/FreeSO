@@ -48,7 +48,6 @@ namespace FSO.SimAntics.Marshals
             Version = reader.ReadInt32();
             Compressed = reader.ReadBoolean();
 
-            var uReader = reader;
             if (Compressed)
             {
                 var length = reader.ReadInt32();

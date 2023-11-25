@@ -533,7 +533,6 @@ namespace FSO.SimAntics.NetPlay.EODs.Handlers
             {
                 if (client != null)
                 {
-                    var avatar = client.Avatar;
                     var slot = Lobby.GetSlotData(client);
                     slot.SkillAmount = GetAvatarsCurrentSkill(client);
                 }

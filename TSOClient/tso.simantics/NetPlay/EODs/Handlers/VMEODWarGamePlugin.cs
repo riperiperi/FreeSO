@@ -83,7 +83,7 @@ namespace FSO.SimAntics.NetPlay.EODs.Handlers
         private void PieceSelectionHandler(string evt, Byte[] chosenPieceNum, VMEODClient playerClient)
         {
             // is this an active player client?
-            short playerNum = -1;
+            short playerNum;
             if (BluePlayerClient.Equals(playerClient))
                 playerNum = (short)VMEODWarGamePlayers.Blue;
             else if (RedPlayerClient.Equals(playerClient))

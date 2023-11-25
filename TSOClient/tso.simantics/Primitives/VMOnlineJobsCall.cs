@@ -59,7 +59,7 @@ namespace FSO.SimAntics.Primitives
                     break;
                 case VMOnlineJobsCallMode.RemoveStatusMessage:
                     //remove status message at index temp 0. (that doesnt seem to work so we're just removing the 1st one we can find)
-                    var index = context.Thread.TempRegisters[0];
+                    // var index = context.Thread.TempRegisters[0];
                     jobui.MessageText.Clear();
                     /*
                     if (index > 0 && index < jobui.MessageText.Count)

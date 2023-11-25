@@ -420,7 +420,6 @@ namespace FSO.SimAntics
                 }
             }
 
-            var clock = Context.Clock;
             SetTimeOfDay();
 
             FloorsDirty = false;
@@ -648,7 +647,7 @@ namespace FSO.SimAntics
 
         private WallReference GetPatternRef(ushort id)
         {
-            WallReference result = null;
+            WallReference result;
             var wallEntries = Content.Content.Get().WorldWalls.Entries;
             wallEntries.TryGetValue(id, out result);
             return result;
@@ -657,7 +656,7 @@ namespace FSO.SimAntics
 
         private FloorReference GetFloorRef(ushort id)
         {
-            FloorReference result = null;
+            FloorReference result;
             Content.Content.Get().WorldFloors.Entries.TryGetValue(id, out result);
             return result;
         }

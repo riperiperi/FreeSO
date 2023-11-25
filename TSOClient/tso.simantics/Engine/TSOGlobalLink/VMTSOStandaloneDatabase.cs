@@ -53,17 +53,19 @@ namespace FSO.SimAntics.Engine.TSOGlobalLink
             {
                 File.Copy(Path.Combine(FSOEnvironment.UserDir, "stubdb.fsodb"), Path.Combine(FSOEnvironment.UserDir, "stubdb_backup.fsodb"), true);
             }
-            catch (Exception e) { }
+            catch (Exception) { }
             using (var writer = new BinaryWriter(File.Open(Path.Combine(FSOEnvironment.UserDir, "stubdb.fsodb"), FileMode.Create))) SerializeInto(writer);
         }
 
         public uint FindOrAddAvatar(string idString)
         {
-            uint result = 0;
+            uint result;
+
             if (IpNameToPersist.TryGetValue(idString, out result))
             {
                 return result;
-            } else
+            }
+            else
             {
                 var rand = new Random();
                 uint ID = ((uint)rand.Next())+65536;
@@ -79,7 +81,8 @@ namespace FSO.SimAntics.Engine.TSOGlobalLink
 
         public void SavePluginPersist(uint obj, uint plugin, byte[] data)
         {
-            Dictionary<uint, byte[]> objDat = null;
+            Dictionary<uint, byte[]> objDat;
+
             if (!PluginStorage.TryGetValue(obj, out objDat))
             {
                 objDat = new Dictionary<uint, byte[]>();
@@ -87,17 +90,20 @@ namespace FSO.SimAntics.Engine.TSOGlobalLink
                 objDat.Add(plugin, data);
                 return;
             }
+
             objDat[plugin] = data;
         }
 
         public byte[] LoadPluginPersist(uint obj, uint plugin)
         {
-            Dictionary<uint, byte[]> objDat = null;
+            Dictionary<uint, byte[]> objDat;
+
             if (!PluginStorage.TryGetValue(obj, out objDat))
             {
                 return null;
             }
-            byte[] dat = null;
+
+            byte[] dat;
             objDat.TryGetValue(plugin, out dat);
             return dat;
         }

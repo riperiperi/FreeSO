@@ -18,7 +18,6 @@ namespace FSO.SimAntics.Primitives
 
             var obj = context.StackObject;
             if (obj == null) return VMPrimitiveExitCode.GOTO_FALSE;
-            var avatar = (VMAvatar)context.Caller;
 
             if (obj.Position == LotTilePos.OUT_OF_WORLD) return VMPrimitiveExitCode.GOTO_FALSE;
 
@@ -38,14 +37,13 @@ namespace FSO.SimAntics.Primitives
                     slot.MaxProximity = 24;
                     slot.Rsflags |= (SLOTFlags)(1 << (((int)operand.Location) % 8));
                 }
-
             }
 
             if (operand.Direction == VMGotoRelativeDirection.AnyDirection) slot.Facing = SLOTFacing.FaceAnywhere; //TODO: verify. not sure where this came from?
             else slot.Facing = (SLOTFacing)operand.Direction;
 
             var pathFinder = context.Thread.PushNewRoutingFrame(context, !operand.NoFailureTrees);
-            var success = pathFinder.InitRoutes(slot, context.StackObject);
+            pathFinder.InitRoutes(slot, context.StackObject);
 
             return VMPrimitiveExitCode.CONTINUE;
         }

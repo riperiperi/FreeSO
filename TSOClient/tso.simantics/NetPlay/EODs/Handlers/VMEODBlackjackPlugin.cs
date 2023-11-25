@@ -715,7 +715,7 @@ namespace FSO.SimAntics.NetPlay.EODs.Handlers
          */
         private void NewMinimumBetHandler(string evt, string newMinString, VMEODClient client)
         {
-            string failureReason = "";
+            string failureReason;
             short newMinBet;
             var result = Int16.TryParse(newMinString.Trim(), out newMinBet);
             bool isOwner = (((VMTSOObjectState)Server.Object.TSOState).OwnerID == client.Avatar.PersistID);
@@ -761,7 +761,7 @@ namespace FSO.SimAntics.NetPlay.EODs.Handlers
          */
         private void NewMaximumBetHandler(string evt, string newMaxString, VMEODClient client)
         {
-            string failureReason = "";
+            string failureReason;
             short newMaxBet;
             var result = Int16.TryParse(newMaxString.Trim(), out newMaxBet);
             bool isOwner = (((VMTSOObjectState)Server.Object.TSOState).OwnerID == client.Avatar.PersistID);
@@ -1132,7 +1132,7 @@ namespace FSO.SimAntics.NetPlay.EODs.Handlers
                         GameState = newState;
                         // find the winners and pay them, send winning/losing animations
                         int dealerHandTotal = DealerPlayer.CurrentHandTotal;
-                        short playerObjectID = 0;
+                        short playerObjectID;
 
                         for (int index = 0; index < 4; index++)
                         {
@@ -1362,10 +1362,11 @@ namespace FSO.SimAntics.NetPlay.EODs.Handlers
                 if (player != null)
                 {
                     var slot = Lobby.GetSlotData(player);
+
                     // failsafe disallow betting event
                     slot.Client.Send("blackjack_disable_hand_buttons", new byte[] { 0 });
-                    var cardsList = slot.GetCurrentCards();
                     slot.Stand();
+
                     // broadcast this player's action
                     Lobby.Broadcast("blackjack_stand_broadcast", new byte[] { (byte)slot.PlayerIndex });
                     Controller.SendOBJEvent(new VMEODEvent((short)VMEODBlackjackEvents.Player_Stand_Sequence, slot.Client.Avatar.ObjectID));

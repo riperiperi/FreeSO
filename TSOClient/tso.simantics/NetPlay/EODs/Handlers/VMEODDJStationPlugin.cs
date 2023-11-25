@@ -124,11 +124,11 @@ namespace FSO.SimAntics.NetPlay.EODs.Handlers
         public void P_DJButton(string evt, string text, VMEODClient client)
         {
             if (text.Length < 3) return;
-            byte category = 0;
+            byte category;
             if (!byte.TryParse(text[0].ToString(), out category) || category > 3) return;
-            byte ind1 = 0;
+            byte ind1;
             if (!byte.TryParse(text[1].ToString(), out ind1) || ind1 > 3) return; // (abc), (most sig digit), (least sig digit)
-            byte ind2 = 0;
+            byte ind2;
             if (!byte.TryParse(text[2].ToString(), out ind2) || ind2 > 3) return; //number
 
             PatternDirty[category] = true;

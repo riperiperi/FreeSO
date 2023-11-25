@@ -14,8 +14,7 @@ namespace FSO.SimAntics.NetPlay.Model.Commands
         public bool Verified;
         public override bool Execute(VM vm)
         {
-            var obj = vm.GetAvatarByPersist(TargetUID);
-            var roomieChange = false;
+            bool roomieChange;
             if (Mode == VMChangePermissionsMode.OBJECTS_ONLY)
             {
                 roomieChange = true;

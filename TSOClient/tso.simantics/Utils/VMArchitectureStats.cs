@@ -113,13 +113,13 @@ namespace FSO.SimAntics.Utils
 
         private static WallReference GetPatternRef(ushort id)
         {
-            WallReference result = null;
+            WallReference result;
             Walls.Entries.TryGetValue(id, out result);
             return result;
         }
         private static FloorReference GetFloorRef(ushort id)
         {
-            FloorReference result = null;
+            FloorReference result;
             Floors.Entries.TryGetValue(id, out result);
             return result;
         }

@@ -208,7 +208,8 @@ namespace FSO.SimAntics.Engine.Routing
                         }
                         testTo = !testTo;
                     }
-                } else
+                }
+                else
                 {
                     var fromDiff = (fromSeg.D - fromSeg.A).ToVector2();
                     var toDiff = (toSegI.Destination - toSegI.Source).ToVector2();
@@ -223,7 +224,8 @@ namespace FSO.SimAntics.Engine.Routing
                     fromSeg.C = fromSeg.D - (toDiff * fromLength / 3).ToPoint();
                     fromSeg.C = fromSlice.Closest(fromSeg.C.X, fromSeg.C.Y);
                 }
-            } else if (toSegI is VMPathBezierSegment)
+            }
+            else if (toSegI is VMPathBezierSegment)
             {
                 var toSeg = (VMPathBezierSegment)toSegI;
                 var fromDiff = (fromSegI.Destination - fromSegI.Source).ToVector2();

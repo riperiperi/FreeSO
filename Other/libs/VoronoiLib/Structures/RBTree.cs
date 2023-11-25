@@ -144,7 +144,6 @@ namespace VoronoiLib.Structures
                 node.Previous.Next = node.Next;
 
             //replace the node
-            var original = node;
             var parent = node.Parent;
             var left = node.Left;
             var right = node.Right;
@@ -226,11 +225,12 @@ namespace VoronoiLib.Structures
             // fair warning this code gets nasty
 
             //how do we guarantee sibling is not null
-            RBTreeNode<T> sibling = null;
+            RBTreeNode<T> sibling;
             do
             {
                 if (node == Root)
                     break;
+
                 if (node == parent.Left)
                 {
                     sibling = parent.Right;
@@ -241,6 +241,7 @@ namespace VoronoiLib.Structures
                         RotateLeft(parent);
                         sibling = parent.Right;
                     }
+
                     if ((sibling.Left != null && sibling.Left.Red) || (sibling.Right != null && sibling.Right.Red))
                     {
                         //pretty sure this can be sibling.Left!= null && sibling.Left.Red
@@ -268,6 +269,7 @@ namespace VoronoiLib.Structures
                         RotateRight(parent);
                         sibling = parent.Left;
                     }
+
                     if ((sibling.Left != null && sibling.Left.Red) || (sibling.Right != null && sibling.Right.Red))
                     {
                         if (sibling.Left == null || !sibling.Left.Red)
@@ -287,11 +289,11 @@ namespace VoronoiLib.Structures
                 sibling.Red = true;
                 node = parent;
                 parent = parent.Parent;
-            } while (!node.Red);
+            }
+            while (!node.Red);
 
             if (node != null)
                 node.Red = false;
-
         }
 
         public static RBTreeNode<T> GetFirst(RBTreeNode<T> node)

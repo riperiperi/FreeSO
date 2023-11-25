@@ -309,11 +309,10 @@ namespace FSO.SimAntics.NetPlay.EODs.Utils
 
                 // process the solution, check its length for kill depth
                 var parentCell = currentCell;
-                int parentCellIndex = -1;
                 while (!parentCell.Equals(origin))
                 {
                     solutionPath.Insert(0, parentCell);
-                    parentCellIndex = ProcessedCellsList.IndexOf(parentCell);
+                    int parentCellIndex = ProcessedCellsList.IndexOf(parentCell);
                     parentCell = ProcessedCellsOriginsList[parentCellIndex];
                 }
 

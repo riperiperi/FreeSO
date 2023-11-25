@@ -423,7 +423,7 @@ namespace FSO.SimAntics.NetPlay.EODs.Handlers
          */
         private void NewMinimumAnteBetHandler(string evt, string newMinString, VMEODClient client)
         {
-            string failureReason = "";
+            string failureReason;
             short newMinBet;
             var result = Int16.TryParse(newMinString.Trim(), out newMinBet);
             bool isOwner = (((VMTSOObjectState)Server.Object.TSOState).OwnerID == client.Avatar.PersistID);
@@ -464,7 +464,7 @@ namespace FSO.SimAntics.NetPlay.EODs.Handlers
         }
         private void NewMaximumAnteBetHandler(string evt, string newMaxString, VMEODClient client)
         {
-            string failureReason = "";
+            string failureReason;
             short newMaxBet;
             var result = Int16.TryParse(newMaxString.Trim(), out newMaxBet);
             bool isOwner = (((VMTSOObjectState)Server.Object.TSOState).OwnerID == client.Avatar.PersistID);
@@ -505,7 +505,7 @@ namespace FSO.SimAntics.NetPlay.EODs.Handlers
         }
         private void NewMaximumSideBetHandler(string evt, string newMaxString, VMEODClient client)
         {
-            string failureReason = "";
+            string failureReason;
             short newMaxBet;
             var result = Int16.TryParse(newMaxString.Trim(), out newMaxBet);
             bool isOwner = (((VMTSOObjectState)Server.Object.TSOState).OwnerID == client.Avatar.PersistID);
@@ -716,8 +716,9 @@ namespace FSO.SimAntics.NetPlay.EODs.Handlers
                 if (slot != null & newBetsSerialized != null)
                 {
                     string[] betStrings = VMEODGameCompDrawACardData.DeserializeStrings(newBetsSerialized);
-                    int newAnteBet = 0;
-                    int newSideBet = 0;
+                    int newAnteBet;
+                    int newSideBet;
+
                     if (betStrings != null && betStrings.Length == 2 && Int32.TryParse(betStrings[0], out newAnteBet) &&
                         Int32.TryParse(betStrings[1], out newSideBet))
                     {
@@ -1133,7 +1134,7 @@ namespace FSO.SimAntics.NetPlay.EODs.Handlers
                         if (AllHandsEvaluated())
                         {
                             // find the winners and pay them, send winning/losing animations
-                            short playerObjectID = 0;
+                            short playerObjectID;
 
                             for (int index = 0; index < 4; index++)
                             {
@@ -1149,7 +1150,7 @@ namespace FSO.SimAntics.NetPlay.EODs.Handlers
                                             short winnings = slot.CalculateFinalPayout(DealerPlayer);
 
                                             // get the hand type, add winnings before
-                                            List<string> dataStringList = null;
+                                            List<string> dataStringList;
 
                                             if (winnings > 0)
                                             {
@@ -1496,11 +1497,13 @@ namespace FSO.SimAntics.NetPlay.EODs.Handlers
                 }
             }
             // add the dealer's cards
-            List<string> dealersCards = new List<String>();
+            List<string> dealersCards;
+
             if (showDealerCards)
                 dealersCards = DealerPlayer.GetCurrentCards();
             else
                 dealersCards = new List<String>() { "Back", "Back" };
+
             allCardsInPlay.AddRange(dealersCards);
 
             return allCardsInPlay;
@@ -2093,7 +2096,7 @@ namespace FSO.SimAntics.NetPlay.EODs.Handlers
         {
             int antePayoutRatio = 0;
             int CallBetPayoutRatio = 0;
-            int callBet = AnteBetAmount * 2;
+
             // if dealer doesn't qualify, ante bet is payout chart but call bet is returned
             if (!dealer.HandQualified)
             {

@@ -358,7 +358,6 @@ namespace FSO.SimAntics.Utils
         public static void StampTilemap(VMArchitecture arch, short[] tilemap, short x, short y, sbyte level, bool skipZero)
         {
             var width = tilemap[0];
-            var height = tilemap[1];
 
             for (int i=2; i<tilemap.Length; i++)
             {
@@ -417,7 +416,6 @@ namespace FSO.SimAntics.Utils
         public static void StampTerrainmap(VMArchitecture arch, byte[] tilemap, short x, short y, Vector2 xInc, Vector2 yInc)
         {
             var width = tilemap[0];
-            var height = tilemap[1];
 
             for (int i = 2; i < tilemap.Length; i++)
             {
@@ -746,11 +744,7 @@ namespace FSO.SimAntics.Utils
         {
             var arch = vm.Context.Architecture;
             var lotSInfo = vm.TSOState.Size;
-            var lotSize = lotSInfo & 255;
-            var lotFloors = ((lotSInfo >> 8) & 255) + 2;
             var lotDir = (lotSInfo >> 16);
-
-            var dim = VMBuildableAreaInfo.BuildableSizes[lotSize];
 
             //need to rotate the lot dir towards the road. bit weird cos we're rotating a rectangle
 
@@ -1019,22 +1013,26 @@ namespace FSO.SimAntics.Utils
                     var state = (hollowAdj == null)? null : hollowAdj[y * 3 + x];
                     if (lotsMode == 1) state = null;
 
-                    float height = 0;
+                    float height;
                     VMHollowMarshal hollow = null;
                     if (state != null)
                     {
                         try
                         {
                             hollow = new VMHollowMarshal();
-                            using (var reader = new BinaryReader(new MemoryStream(state))) {
+                            using (var reader = new BinaryReader(new MemoryStream(state)))
+                            {
                                 hollow.Deserialize(reader);
                             }
+
                             tempVM.HollowLoad(hollow);
                             RestoreTerrain(tempVM, terrain.BlendN[x, y], terrain.Roads[x, y], RestoreLotType.Normal);
+
                             if (hollow.Version < 19)
                                 height = RestoreHeight(tempVM, terrain, x, y);
                             else
                                 height = GetBaseLevel(tempVM, terrain, x, y);
+
                             tempVM.Context.Blueprint.BaseAlt = (int)((baseHeight - height));
                             foreach (var obj in tempVM.Entities)
                             {
@@ -1043,9 +1041,9 @@ namespace FSO.SimAntics.Utils
 
                             tempVM.Tick();
                             subworld.CalculateFloorsUsed();
-                        } catch (Exception)
+                        }
+                        catch (Exception)
                         {
-                            hollow = null;
                             hollowAdj[y * 3 + x] = null;
                             subworld.Dispose();
                             x--;

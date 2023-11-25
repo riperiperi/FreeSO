@@ -34,11 +34,14 @@ namespace FSO.SimAntics.NetPlay.Model.Commands
             if (IffData)
             {
                 var iff = new IffFile();
+
                 using (var stream = new MemoryStream(XMLData))
                 {
                     iff.Read(stream);
                 }
+
                 var fsov = iff.List<FSOV>()?.FirstOrDefault();
+
                 if (fsov != null)
                 {
                     var marshal = new VMMarshal();
@@ -49,15 +52,17 @@ namespace FSO.SimAntics.NetPlay.Model.Commands
                 else
                 {
                     var activator = new VMTS1Activator(vm, vm.Context.World, JobLevel);
-                    var blueprint = activator.LoadFromIff(iff);
+                    activator.LoadFromIff(iff);
                 }
+
                 var entClone = new List<VMEntity>(vm.Entities);
+
                 foreach (var nobj in entClone)
                 {
                     nobj.ExecuteEntryPoint(2, vm.Context, true);
                 }
-                vm.TS1State.VerifyFamily(vm);
 
+                vm.TS1State.VerifyFamily(vm);
             }
             else
             {
@@ -71,14 +76,8 @@ namespace FSO.SimAntics.NetPlay.Model.Commands
                 activator.FloorClip = new Microsoft.Xna.Framework.Rectangle(FloorClipX, FloorClipY, FloorClipWidth, FloorClipHeight);
                 activator.Offset = new Microsoft.Xna.Framework.Point(OffsetX, OffsetY);
                 activator.TargetSize = TargetSize;
-                var blueprint = activator.LoadFromXML(lotInfo);
+                activator.LoadFromXML(lotInfo);
             }
-
-                /*if (VM.UseWorld)
-                {
-                    vm.Context.World.InitBlueprint(blueprint);
-                    vm.Context.Blueprint = blueprint;
-                }*/
 
             return true;
         }
