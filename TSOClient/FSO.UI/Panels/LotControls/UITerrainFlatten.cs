@@ -86,7 +86,7 @@ namespace FSO.Client.UI.Panels.LotControls
                 var bigX = Math.Max(StartPosition.X, cursor.X);
                 var bigY = Math.Max(StartPosition.Y, cursor.Y);
 
-                if (smallX != bigX || bigY != smallY || (Modifiers.HasFlag(UILotControlModifiers.CTRL)))
+                if (smallX != bigX || bigY != smallY || (Modifiers.IsSet(UILotControlModifiers.CTRL)))
                 {
                     cmds.Add(new VMArchitectureCommand
                     {
@@ -96,7 +96,7 @@ namespace FSO.Client.UI.Panels.LotControls
                         x2 = bigX - smallX,
                         y2 = bigY - smallY,
                         style = (ushort)StartTerrainHeight,
-                        pattern = (ushort)((Modifiers.HasFlag(UILotControlModifiers.CTRL)) ? 1 : 0)
+                        pattern = (ushort)((Modifiers.IsSet(UILotControlModifiers.CTRL)) ? 1 : 0)
                     });
                 }
 
@@ -137,7 +137,7 @@ namespace FSO.Client.UI.Panels.LotControls
                     x2 = bigX-smallX,
                     y2 = bigY-smallY,
                     style = (ushort)StartTerrainHeight,
-                    pattern = (ushort)((Modifiers.HasFlag(UILotControlModifiers.CTRL)) ? 1 : 0)
+                    pattern = (ushort)((Modifiers.IsSet(UILotControlModifiers.CTRL)) ? 1 : 0)
                 });
                 WallCursor2.SetVisualPosition(new Vector3(StartPosition.X, StartPosition.Y, (World.State.Level - 1) * 2.95f), Direction.NORTH, vm.Context);
             } else

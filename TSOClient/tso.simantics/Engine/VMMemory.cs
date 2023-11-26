@@ -107,54 +107,7 @@ namespace FSO.SimAntics.Engine.Utils
                     //throw new VMSimanticsException("Not implemented...");
 
                 case VMVariableScope.NeighborInStackObject: //24
-                    if (!context.VM.TS1) throw new VMSimanticsException("Only valid in TS1.", context);
-                    var neighbor = Content.Content.Get().Neighborhood.GetNeighborByID(context.StackObjectID);
-                    var fam = neighbor?.PersonData?.ElementAt((int)VMPersonDataVariable.TS1FamilyNumber);
-
-                    FAMI fami = null;
-                    if (fam != null)
-                        fami = Content.Content.Get().Neighborhood.GetFamily((ushort)fam.Value);
-                    if (neighbor == null) return 0;
-                    switch (data)
-                    {
-                        case 0: //instance id
-                            //find neighbour in the lot
-                            return context.VM.Context.ObjectQueries.Avatars.FirstOrDefault(x => x.Object.GUID == neighbor.GUID)?.ObjectID ?? 0;
-                        case 1: //belongs in house
-                            return (short)((context.VM.TS1State.CurrentFamily == fami) ? 1:0); //uh, okay.
-                        case 2: //person age
-                            return neighbor.PersonData?.ElementAt((int)VMPersonDataVariable.PersonsAge) ?? 0;
-                        case 3: //relationship raw score
-                                //to this person or from? what
-                            return 0; //unused in favor of primitive?
-                        case 4: //relationship score
-                            return 0; //unused in favor of primitive?
-                        case 5: //friend count
-                            return (short)neighbor.Relationships.Count(n => {
-                                if (n.Value[0] >= 50)
-                                {
-                                    var othern = Content.Content.Get().Neighborhood.GetNeighborByID((short)n.Key);
-                                    if (othern != null)
-                                    {
-                                        List<short> orels;
-                                        if (othern.Relationships.TryGetValue(context.StackObjectID, out orels))
-                                        {
-                                            return orels[0] >= 50;
-                                        }
-                                    }
-                                }
-                                return false;
-                                }); //interaction - nag friends TEST
-                        case 6: //house number
-                            return (short)(fami?.HouseNumber ?? 0);
-                        case 7: //has telephone
-                            return 1;
-                        case 8: //has baby
-                            return 0;
-                        case 9: //family friend count
-                            return (short)(fami?.FamilyFriends ?? 0);
-                    }
-                    throw new VMSimanticsException("Neighbor data out of bounds.", context);
+                    return GetNeighborInStackObject(context, data);
                 case VMVariableScope.Local: //25
                     return (short)context.Locals[data];
 
@@ -346,6 +299,60 @@ namespace FSO.SimAntics.Engine.Utils
                 default:
                     return GetVariable(context, scope, data); //return a normal var
             }
+        }
+
+        private static short GetNeighborInStackObject(VMStackFrame context, short data)
+        {
+            if (!context.VM.TS1) throw new VMSimanticsException("Only valid in TS1.", context);
+            var neighbor = Content.Content.Get().Neighborhood.GetNeighborByID(context.StackObjectID);
+            var fam = neighbor?.PersonData?.ElementAt((int)VMPersonDataVariable.TS1FamilyNumber);
+
+            FAMI fami = null;
+            if (fam != null)
+                fami = Content.Content.Get().Neighborhood.GetFamily((ushort)fam.Value);
+            if (neighbor == null) return 0;
+            switch (data)
+            {
+                case 0: //instance id
+                        //find neighbour in the lot
+                    return context.VM.Context.ObjectQueries.Avatars.FirstOrDefault(x => x.Object.GUID == neighbor.GUID)?.ObjectID ?? 0;
+                case 1: //belongs in house
+                    return (short)((context.VM.TS1State.CurrentFamily == fami) ? 1 : 0); //uh, okay.
+                case 2: //person age
+                    return neighbor.PersonData?.ElementAt((int)VMPersonDataVariable.PersonsAge) ?? 0;
+                case 3: //relationship raw score
+                        //to this person or from? what
+                    return 0; //unused in favor of primitive?
+                case 4: //relationship score
+                    return 0; //unused in favor of primitive?
+                case 5: //friend count
+                    return (short)neighbor.Relationships.Count(n =>
+                    {
+                        if (n.Value[0] >= 50)
+                        {
+                            var othern = Content.Content.Get().Neighborhood.GetNeighborByID((short)n.Key);
+                            if (othern != null)
+                            {
+                                List<short> orels;
+                                if (othern.Relationships.TryGetValue(context.StackObjectID, out orels))
+                                {
+                                    return orels[0] >= 50;
+                                }
+                            }
+                        }
+                        return false;
+                    }); //interaction - nag friends TEST
+                case 6: //house number
+                    return (short)(fami?.HouseNumber ?? 0);
+                case 7: //has telephone
+                    return 1;
+                case 8: //has baby
+                    return 0;
+                case 9: //family friend count
+                    return (short)(fami?.FamilyFriends ?? 0);
+            }
+
+            throw new VMSimanticsException("Neighbor data out of bounds.", context);
         }
 
         private static ushort[] TableIDOffsets = new ushort[]{

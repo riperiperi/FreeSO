@@ -136,7 +136,7 @@ namespace FSO.LotView.Utils
 
         public BoundingBox? GetBounds()
         {
-            if (_Dirty.HasFlag(ComponentRenderMode._3D) && DrawGroup != null)
+            if (_Dirty.IsSet(ComponentRenderMode._3D) && DrawGroup != null)
             {
                 Mesh = Content.Content.Get().RCMeshes.Get(DrawGroup, Source);
                 _Dirty &= ~ComponentRenderMode._3D;
@@ -147,7 +147,7 @@ namespace FSO.LotView.Utils
         public virtual void ValidateSprite(WorldState world)
         {
             if (DrawGroup == null) return;
-            if (_Dirty.HasFlag(ComponentRenderMode._2D))
+            if (_Dirty.IsSet(ComponentRenderMode._2D))
             {
                 if (_TextureDirty)
                 {
@@ -268,7 +268,7 @@ namespace FSO.LotView.Utils
         public void Draw3D(WorldState world)
         {
             if (DrawGroup == null) return;
-            if (_Dirty.HasFlag(ComponentRenderMode._3D) || Mesh == null)
+            if (_Dirty.IsSet(ComponentRenderMode._3D) || Mesh == null)
             {
                 Mesh = Content.Content.Get().RCMeshes.Get(DrawGroup, Source);
                 _Dirty &= ~ComponentRenderMode._3D;
@@ -366,7 +366,7 @@ namespace FSO.LotView.Utils
         public void DrawLMap(GraphicsDevice device, sbyte level, float yOff)
         {
             if (DrawGroup == null) return;
-            if (_Dirty.HasFlag(ComponentRenderMode._3D))
+            if (_Dirty.IsSet(ComponentRenderMode._3D))
             {
                 Mesh = Content.Content.Get().RCMeshes.Get(DrawGroup, Source);
                 _Dirty &= ~ComponentRenderMode._3D;
@@ -406,11 +406,12 @@ namespace FSO.LotView.Utils
 
         public virtual void Preload(WorldState world, ComponentRenderMode mode)
         {
-            if (mode.HasFlag(ComponentRenderMode._2D))
+            if (mode.IsSet(ComponentRenderMode._2D))
                 ValidateSprite(world);
-            if (mode.HasFlag(ComponentRenderMode._3D))
+
+            if (mode.IsSet(ComponentRenderMode._3D))
             {
-                if (_Dirty.HasFlag(ComponentRenderMode._3D))
+                if (_Dirty.IsSet(ComponentRenderMode._3D))
                 {
                     Mesh = Content.Content.Get().RCMeshes.Get(DrawGroup, Source);
                     _Dirty &= ~ComponentRenderMode._3D;

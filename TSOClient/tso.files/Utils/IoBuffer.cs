@@ -281,11 +281,7 @@ namespace FSO.Files.Utils
         [System.Security.SecuritySafeCritical]  // auto-generated
         public virtual unsafe float ReadFloat()
         {
-            var m_buffer = Reader.ReadBytes(4);
-            uint tmpBuffer = (uint)(m_buffer[0] | m_buffer[1] << 8 | m_buffer[2] << 16 | m_buffer[3] << 24);
-
-            var result = *((float*)&tmpBuffer);
-            return result;
+            return Reader.ReadSingle();
         }
 
         /// <summary>

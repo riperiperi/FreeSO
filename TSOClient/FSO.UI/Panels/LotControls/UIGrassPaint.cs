@@ -104,8 +104,8 @@ namespace FSO.Client.UI.Panels.LotControls
                     };
                 }
 
-                var mod = (!Modifiers.HasFlag(UILotControlModifiers.SHIFT)) ? 128 : 32;
-                if (!Modifiers.HasFlag(UILotControlModifiers.CTRL)) mod *= -1;
+                var mod = (!Modifiers.IsSet(UILotControlModifiers.SHIFT)) ? 128 : 32;
+                if (!Modifiers.IsSet(UILotControlModifiers.CTRL)) mod *= -1;
 
                 cmd.pattern = (ushort)(Math.Min(255, Math.Max(-255, ((short)cmd.pattern) + mod)));
                 LastPosition = cursor;

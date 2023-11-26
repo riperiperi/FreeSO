@@ -43,6 +43,7 @@ namespace FSO.LotView.Components
         public static Func<GameObject, ObjectComponent> MakeShadowComponent;
 
         protected bool _BoundsDirty = true;
+        private Vector3[] BoundsCalcScratch = new Vector3[8];
 
         public new bool Visible {
             get { return _Visible; }
@@ -86,14 +87,37 @@ namespace FSO.LotView.Components
             }
         }
 
+        private BoundingBox GetTransformedBounds(BoundingBox bounds)
+        {
+            Matrix mat = World3D;
+            Vector3[] points = BoundsCalcScratch;
+
+            bounds.GetCorners(points);
+
+            for (int i = 0; i < 8; i++)
+            {
+                points[i] = Vector3.Transform(points[i], mat);
+            }
+
+            return BoundingBox.CreateFromPoints(points);
+        }
+
         public BoundingBox GetBounds()
         {
-            if (_BoundsDirty || _WorldDirty)
+            if (_BoundsDirty || _World3DDirty || Container != null)
             {
                 var bounds = dgrp.GetBounds();
-                if (bounds == null) return new BoundingBox(); //don't cache
-                _Bounds = BoundingBox.CreateFromPoints(bounds.Value.GetCorners().Select(x => Vector3.Transform(x, World3D)));
-                _BoundsDirty = false;
+
+                if (bounds == null)
+                {
+                    _BoundsDirty = false;
+                    return new BoundingBox(); //don't cache
+                }
+                else
+                {
+                    _Bounds = GetTransformedBounds(bounds.Value);
+                    _BoundsDirty = false;
+                }
             }
             return _Bounds;
         }
@@ -170,8 +194,12 @@ namespace FSO.LotView.Components
             }
             set
             {
-                _BoundsDirty = true;
-                DrawGroup = value;
+                if (DrawGroup != value)
+                {
+                    _BoundsDirty = true;
+                    DrawGroup = value;
+                }
+
                 if (blueprint != null && dgrp.DGRP != value)
                 {
                     blueprint.Changes.RegisterObjectChange(this);
@@ -206,7 +234,7 @@ namespace FSO.LotView.Components
             get
             {
                 var bottomMost = GetBottomContainer();
-                return _ForceDynamic || Headline != null || Mode.HasFlag(ComponentRenderMode._3D) || bottomMost is AvatarComponent;
+                return _ForceDynamic || Headline != null || Mode.IsSet(ComponentRenderMode._3D) || bottomMost is AvatarComponent;
             }
             set
             {
@@ -335,11 +363,11 @@ namespace FSO.LotView.Components
         {
             if (!Visible || (Room == 0 && !world.DrawOOB)) return false;
             bool result = false;
-            if (world.CameraMode == CameraRenderMode._2D && Mode.HasFlag(ComponentRenderMode._2D))
+            if (world.CameraMode == CameraRenderMode._2D && Mode.IsSet(ComponentRenderMode._2D))
             {
                 ValidateSprite(world);
                 if (dgrp.Bounding != null) result |= world.WorldRectangle.Intersects(dgrp.Bounding.Value);
-                if (Mode.HasFlag(ComponentRenderMode._3D))
+                if (Mode.IsSet(ComponentRenderMode._3D))
                 {
                     result |= world.Frustum.Intersects(GetBounds());
                 }
@@ -460,13 +488,13 @@ namespace FSO.LotView.Components
             if (CutawayHidden) return;
             var pos = Position;
 
-            if (world.CameraMode > CameraRenderMode._2D || Mode.HasFlag(ComponentRenderMode._3D)) //)
+            if (world.CameraMode > CameraRenderMode._2D || Mode.IsSet(ComponentRenderMode._3D)) //)
             {
                 var mworld = World3D;
                 dgrp.World = mworld;
                 if (this.DrawGroup != null) dgrp.Draw3D(world);
             }
-            if (world.CameraMode == CameraRenderMode._2D && Mode.HasFlag(ComponentRenderMode._2D))
+            if (world.CameraMode == CameraRenderMode._2D && Mode.IsSet(ComponentRenderMode._2D))
             {
                 if (this.DrawGroup != null)
                 {

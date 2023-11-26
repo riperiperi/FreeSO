@@ -59,8 +59,10 @@ namespace FSO.Files.FAR3
                 {
                     Far3Entry Entry = new Far3Entry();
                     Entry.DecompressedFileSize = m_Reader.ReadUInt32();
-                    byte[] Dummy = m_Reader.ReadBytes(3);
-                    Entry.CompressedFileSize = (uint)((Dummy[0] << 0) | (Dummy[1] << 8) | (Dummy[2]) << 16);
+                    byte dummy0 = m_Reader.ReadByte();
+                    byte dummy1 = m_Reader.ReadByte();
+                    byte dummy2 = m_Reader.ReadByte();
+                    Entry.CompressedFileSize = (uint)((dummy0 << 0) | (dummy1 << 8) | (dummy2) << 16);
                     Entry.DataType = m_Reader.ReadByte();
                     Entry.DataOffset = m_Reader.ReadUInt32();
                     //Entry.HasFilename = m_Reader.ReadUInt16();
@@ -99,14 +101,16 @@ namespace FSO.Files.FAR3
 
                 if (Entry.IsCompressed == 0x01)
                 {
-                    m_Reader.ReadBytes(9);
+                    m_Reader.BaseStream.Seek(9, SeekOrigin.Current);
                     uint Filesize = m_Reader.ReadUInt32();
                     ushort CompressionID = m_Reader.ReadUInt16();
 
                     if (CompressionID == 0xFB10)
                     {
-                        byte[] Dummy = m_Reader.ReadBytes(3);
-                        uint DecompressedSize = (uint)((Dummy[0] << 0x10) | (Dummy[1] << 0x08) | +Dummy[2]);
+                        byte dummy0 = m_Reader.ReadByte();
+                        byte dummy1 = m_Reader.ReadByte();
+                        byte dummy2 = m_Reader.ReadByte();
+                        uint DecompressedSize = (uint)((dummy0 << 0x10) | (dummy1 << 0x08) | +dummy2);
 
                         Decompresser Dec = new Decompresser();
                         Dec.CompressedSize = Filesize;

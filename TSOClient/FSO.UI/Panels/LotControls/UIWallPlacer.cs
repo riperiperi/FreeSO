@@ -98,7 +98,7 @@ namespace FSO.Client.UI.Panels.LotControls
             {
                 var cmds = new List<VMArchitectureCommand>();
 
-                if (Modifiers.HasFlag(UILotControlModifiers.SHIFT))
+                if (Modifiers.IsSet(UILotControlModifiers.SHIFT))
                 {
                     if (StartPosition != EndPosition)
                     {
@@ -123,7 +123,7 @@ namespace FSO.Client.UI.Panels.LotControls
                 else
                 {
                     if (DrawLength > 0) cmds.Add(new VMArchitectureCommand {
-                        Type = (Modifiers.HasFlag(UILotControlModifiers.CTRL)) ?
+                        Type = (Modifiers.IsSet(UILotControlModifiers.CTRL)) ?
                             VMArchitectureCommandType.WALL_DELETE:VMArchitectureCommandType.WALL_LINE,
                         level = World.State.Level, pattern = Pattern, style = Style, x = StartPosition.X, y = StartPosition.Y, x2 = DrawLength, y2 = DrawDir });
                 }
@@ -155,7 +155,7 @@ namespace FSO.Client.UI.Panels.LotControls
                 DrawDir = (int)DirectionUtils.PosMod(Math.Round(Math.Atan2(diff.Y, diff.X) / (Math.PI / 4)), 8);
                 
 
-                if (Modifiers.HasFlag(UILotControlModifiers.SHIFT))
+                if (Modifiers.IsSet(UILotControlModifiers.SHIFT))
                 {
                     EndPosition = cursor;
                     int smallX = Math.Min(StartPosition.X, EndPosition.X);
@@ -170,7 +170,7 @@ namespace FSO.Client.UI.Panels.LotControls
                 else
                 {
                     cursor = StartPosition + new Point(DirUnits[DrawDir].X * DrawLength, DirUnits[DrawDir].Y * DrawLength);
-                    cmds.Add(new VMArchitectureCommand { Type = (Modifiers.HasFlag(UILotControlModifiers.CTRL)) ?
+                    cmds.Add(new VMArchitectureCommand { Type = (Modifiers.IsSet(UILotControlModifiers.CTRL)) ?
                             VMArchitectureCommandType.WALL_DELETE : VMArchitectureCommandType.WALL_LINE,
                         level = World.State.Level, pattern = DrawPattern, style = DrawStyle, x = StartPosition.X, y = StartPosition.Y, x2 = DrawLength, y2 = DrawDir });
                 }
@@ -218,8 +218,8 @@ namespace FSO.Client.UI.Panels.LotControls
 
             WallCursor.SetVisualPosition(new Vector3(cursor.X, cursor.Y, (World.State.Level-1)*2.95f), Direction.NORTH, vm.Context);
 
-            if (Modifiers.HasFlag(UILotControlModifiers.SHIFT)) SetCursorGraphic(3);
-            else if (Modifiers.HasFlag(UILotControlModifiers.CTRL)) SetCursorGraphic(1);
+            if (Modifiers.IsSet(UILotControlModifiers.SHIFT)) SetCursorGraphic(3);
+            else if (Modifiers.IsSet(UILotControlModifiers.CTRL)) SetCursorGraphic(1);
             else SetCursorGraphic(0);
         }
 

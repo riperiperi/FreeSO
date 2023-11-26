@@ -14,6 +14,12 @@ namespace FSO.Client.UI.Framework
         /// </summary>
         protected List<UIElement> Children { get; set; }
 
+        /// <summary>
+        /// Array for copying child elements into for safe iteration.
+        /// Only exists when the element has children. Resizes to match the number of children.
+        /// </summary>
+        private UIElement[] ChildCopy;
+
         public UIContainer()
         {
             Children = new List<UIElement>();
@@ -266,10 +272,8 @@ namespace FSO.Client.UI.Framework
             base.Update(state);
             lock (Children)
             {
-                var chCopy = new List<UIElement>(Children);
                 //todo: why are all these locks here, and what kind of problems might that cause
-                //also find a cleaner way to allow modification of an element's children by its own children.
-                foreach (var child in chCopy)
+                foreach (var child in GetChildrenSafe())
                     child.Update(state);
             }
         }
@@ -279,14 +283,26 @@ namespace FSO.Client.UI.Framework
             base.Update(state);
         }
 
+        protected UIElement[] GetChildrenSafe()
+        {
+            if (ChildCopy == null || ChildCopy.Length != Children.Count)
+            {
+                ChildCopy = Children.ToArray();
+            }
+            else if (Children.Count > 0)
+            {
+                Children.CopyTo(ChildCopy);
+            }
+
+            return ChildCopy;
+        }
+
         public override void GameResized()
         {
             base.GameResized();
             lock (Children)
             {
-                var chCopy = new List<UIElement>(Children);
-                //
-                foreach (var child in chCopy)
+                foreach (var child in GetChildrenSafe())
                     child.GameResized();
             }
         }

@@ -78,7 +78,7 @@ namespace FSO.Client.UI.Panels.LotControls
 
         public override void Update(UpdateState state, bool scrolled)
         {
-            ushort pattern = (Modifiers.HasFlag(UILotControlModifiers.CTRL)) ? (ushort)0 : Pattern;
+            ushort pattern = (Modifiers.IsSet(UILotControlModifiers.CTRL)) ? (ushort)0 : Pattern;
 
             var tilePos = World.EstTileAtPosWithScroll(new Vector2(MousePosition.X, MousePosition.Y));
             Point cursor = new Point((int)tilePos.X, (int)tilePos.Y);
@@ -88,7 +88,7 @@ namespace FSO.Client.UI.Panels.LotControls
                 vm.Context.Architecture.SignalRedraw();
                 Commands.Clear();
             }
-            if (Modifiers.HasFlag(UILotControlModifiers.SHIFT))
+            if (Modifiers.IsSet(UILotControlModifiers.SHIFT))
             {
                 if (Commands.Count == 0 || Commands[0].Type != VMArchitectureCommandType.PATTERN_FILL)
                 {

@@ -22,4 +22,12 @@ namespace FSO.Client.UI.Panels.LotControls
         SHIFT = 1,
         CTRL = 2
     }
+
+    public static class UILotControlModifierExtensions
+    {
+        public static bool IsSet(this UILotControlModifiers mode, UILotControlModifiers flag)
+        {
+            return (mode & flag) == flag;
+        }
+    }
 }

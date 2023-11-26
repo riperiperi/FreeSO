@@ -23,4 +23,12 @@ namespace FSO.LotView.Model
         Hybrid2D, // load 2d and 3d objects, use 3d arch
         Full3D // do not load 2d dgrp
     }
+
+    public static class ComponentRenderModeExtensions
+    {
+        public static bool IsSet(this ComponentRenderMode mode, ComponentRenderMode flag)
+        {
+            return (mode & flag) == flag;
+        }
+    }
 }
