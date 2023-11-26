@@ -24,6 +24,8 @@ namespace FSO.LotView.LMap
         int resPerTile = 16;
         int borderSize = 1;
 
+        private ShadowGeometry ShadowGeo = new ShadowGeometry();
+
         public RenderTarget2D ShadowTarg;
         public RenderTarget2D ObjShadowTarg;
 
@@ -647,7 +649,7 @@ namespace FSO.LotView.LMap
             return new Rectangle((int)(src.X / factor), (int)(src.Y / factor), (int)(src.Width / factor), (int)(src.Height / factor));
         }
 
-        public void DrawShadows(Tuple<GradVertex[], int[]> geom, int pass, LightData light)
+        internal void DrawShadows(GradMesh geom, int pass, LightData light)
         {
             var pointLight = light.LightPos;
             var effect = this.GradEffect;
@@ -659,7 +661,7 @@ namespace FSO.LotView.LMap
             EffectPassCollection passes = effect.Techniques[0].Passes;
             passes[pass].Apply();
 
-            if (geom.Item1.Length > 0) GD.DrawUserIndexedPrimitives(PrimitiveType.TriangleList, geom.Item1, 0, geom.Item1.Length, geom.Item2, 0, geom.Item2.Length / 3);
+            if (geom.VertexCount > 0) GD.DrawUserIndexedPrimitives(PrimitiveType.TriangleList, geom.Vertices, 0, geom.VertexCount, geom.Indices, 0, geom.IndexCount / 3);
         }
 
         public Matrix GetSunlightMat(LightData pointLight)
@@ -894,7 +896,7 @@ namespace FSO.LotView.LMap
             else
             {
                 GD.SetRenderTarget(ShadowTarg);
-                var geom = ShadowGeometry.GenerateWallShadows(walls, pointLight);
+                var geom = ShadowGeo.GenerateWallShadows(walls, pointLight);
                 GD.BlendState = AddBlendRed;
                 DrawShadows(geom, (pointLight.LightType == LightType.OUTDOORS) ? 2 : 0, pointLight);
             }
@@ -909,15 +911,16 @@ namespace FSO.LotView.LMap
             }
             else
             {
-                Tuple<GradVertex[], int[]> geom;
+                GradMesh geom;
                 if (pointLight.LightType == LightType.ROOM)
                 {
-                    geom = ShadowGeometry.GenerateObjShadows(objects.Where(x => x.Intersects(pointLight.LightBounds)).ToList(), pointLight);
+                    geom = ShadowGeo.GenerateObjShadows(objects.Where(x => x.Intersects(pointLight.LightBounds)).ToList(), pointLight);
                 }
                 else
                 {
-                    geom = ShadowGeometry.GenerateObjShadows(objects, pointLight);
+                    geom = ShadowGeo.GenerateObjShadows(objects, pointLight);
                 }
+
                 GD.BlendState = MaxBlendGreen;
                 DrawShadows(geom, 1, pointLight);
             }
