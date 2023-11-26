@@ -55,7 +55,7 @@ namespace FSO.UI.Framework
             {
                 return new MSDFGlyph(result, this);
             }
-            if (c == '\r') return null;
+            if (c == '\r') return default;
             foreach (var fallback in Fallbacks)
             {
                 result = fallback.Font.GetGlyph(c);
@@ -107,7 +107,7 @@ namespace FSO.UI.Framework
 
             var atlasWidth = Info.atlasWidth;
             var pairs = Info.pairs;
-            var data = new MSDFRenderGroup(this);
+            var data = new MSDFRenderGroup(this, text.Length);
             groups[this] = data;
 
             var verts = data.Vertices;
@@ -119,7 +119,7 @@ namespace FSO.UI.Framework
             effect.CurrentTechnique = effect.Techniques[0];
             var subScale = 1f;
 
-            MSDFGlyph next = null;
+            MSDFGlyph next = default;
             if (text.Length > 0)
             {
                 var c = text[0];
@@ -128,7 +128,7 @@ namespace FSO.UI.Framework
             for (int i = 0; i < text.Length; i++)
             {
                 var glyph = next;
-                if (glyph == null)
+                if (glyph.Glyph == null)
                 {
                     if (i + 1 >= text.Length) break;
                     var c = text[i + 1];
@@ -156,10 +156,10 @@ namespace FSO.UI.Framework
 
                     atlasWidth = ainfo.atlasWidth;
                     pairs = ainfo.pairs;
-                    MSDFRenderGroup mdata = null;
+                    MSDFRenderGroup mdata;
                     if (!groups.TryGetValue(activeFont, out mdata))
                     {
-                        mdata = new MSDFRenderGroup(activeFont);
+                        mdata = new MSDFRenderGroup(activeFont, text.Length - i);
                         groups[activeFont] = mdata;
                     }
 
@@ -198,7 +198,7 @@ namespace FSO.UI.Framework
                     var c = text[i + 1];
                     next = GetGlyph(c);
 
-                    if (next != null)
+                    if (next.Glyph != null)
                     {
                         KerningPair pair;
                         if (pairs.TryGetValue(new string(new char[] { fglyph.Character, next.Glyph.Character }), out pair))
@@ -251,7 +251,7 @@ namespace FSO.UI.Framework
             var size = new Vector2(0, Height / VectorScale);
             var subScale = 1f;
 
-            MSDFGlyph next = null;
+            MSDFGlyph next = default;
             if (text.Length > 0)
             {
                 var c = text[0];
@@ -260,7 +260,7 @@ namespace FSO.UI.Framework
             for (int i = 0; i < text.Length; i++)
             {
                 var glyph = next;
-                if (next == null)
+                if (next.Glyph == null)
                 {
                     if (i + 1 >= text.Length) break;
                     var c = text[i + 1];
@@ -281,7 +281,7 @@ namespace FSO.UI.Framework
                     var c = text[i+1];
                     next = GetGlyph(c);
 
-                    if (next != null)
+                    if (next.Glyph != null)
                     {
                         KerningPair pair;
                         if (pairs.TryGetValue(new string(new char[] { glyph.Glyph.Character, next.Glyph.Character }), out pair))
@@ -296,21 +296,21 @@ namespace FSO.UI.Framework
         }
     }
 
-    public class MSDFRenderGroup
+    public struct MSDFRenderGroup
     {
         public MSDFFont Font;
         public List<int> Indices;
         public List<MSDFFontVert> Vertices;
 
-        public MSDFRenderGroup(MSDFFont font)
+        public MSDFRenderGroup(MSDFFont font, int length)
         {
             Font = font;
-            Indices = new List<int>();
-            Vertices = new List<MSDFFontVert>();
+            Indices = new List<int>(length * 6);
+            Vertices = new List<MSDFFontVert>(length * 4);
         }
     }
 
-    public class MSDFGlyph
+    public struct MSDFGlyph
     {
         public FieldGlyph Glyph;
         public MSDFFont Font;

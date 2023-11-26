@@ -107,7 +107,10 @@ namespace FSO.Common.Utils
         public static Thread Game;
         public static bool UpdateExecuting;
         private static List<UpdateHook> _UpdateHooks = new List<UpdateHook>();
+        private static UpdateHook[] _UpdateHooksCopy = new UpdateHook[0];
+        private static List<UpdateHook> _UpdateHooksRemove = new List<UpdateHook>();
         private static Queue<Callback<UpdateState>> _UpdateCallbacks = new Queue<Callback<UpdateState>>();
+        private static Queue<Callback<UpdateState>> _UpdateCallbacksSwap = new Queue<Callback<UpdateState>>();
         public static AutoResetEvent OnWork = new AutoResetEvent(false);
 
         public static void SetKilled()
@@ -208,23 +211,43 @@ namespace FSO.Common.Utils
         public static void DigestUpdate(UpdateState state)
         {
             Queue<Callback<UpdateState>> _callbacks;
+
             lock (_UpdateCallbacks)
             {
-                _callbacks = new Queue<Callback<UpdateState>>(_UpdateCallbacks);
-                _UpdateCallbacks.Clear();
+                // Swap the active callbacks queue with the second one, so we can
+                // process entries without fear of more being added.
+
+                _callbacks = _UpdateCallbacks;
+                _UpdateCallbacks = _UpdateCallbacksSwap;
+                _UpdateCallbacksSwap = _callbacks;
             }
+
             while (_callbacks.Count > 0)
             {
                 _callbacks.Dequeue()(state);
             }
 
-            List<UpdateHook> _hooks;
-            List<UpdateHook> toRemove = new List<UpdateHook>();
+            int hookCount;
+            UpdateHook[] _hooks;
+            List<UpdateHook> toRemove = _UpdateHooksRemove;
+
             lock (_UpdateHooks)
             {
-                _hooks = new List<UpdateHook>(_UpdateHooks);
+                hookCount = _UpdateHooks.Count;
+
+                if (_UpdateHooksCopy.Length < _UpdateHooks.Count)
+                {
+                    _UpdateHooksCopy = _UpdateHooks.ToArray();
+                }
+                else
+                {
+                    _UpdateHooks.CopyTo(_UpdateHooksCopy);
+                }
+
+                _hooks = _UpdateHooksCopy;
             }
-            for (int i = 0; i < _hooks.Count; i++)
+
+            for (int i = 0; i < hookCount; i++)
             {
                 var item = _hooks[i];
                 item.Callback(state);
@@ -233,9 +256,15 @@ namespace FSO.Common.Utils
                     toRemove.Add(item);
                 }
             }
-            lock (_UpdateHooks)
+
+            if (toRemove.Count > 0)
             {
-                foreach (var rem in toRemove) _UpdateHooks.Remove(rem);
+                lock (_UpdateHooks)
+                {
+                    foreach (var rem in toRemove) _UpdateHooks.Remove(rem);
+                }
+
+                toRemove.Clear();
             }
 
             //finally, check cache controller
