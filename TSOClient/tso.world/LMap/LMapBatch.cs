@@ -14,6 +14,12 @@ namespace FSO.LotView.LMap
 {
     public class LMapBatch : IDisposable
     {
+        private struct DirtyRoom
+        {
+            public ushort RoomID;
+            public int Priority;
+        }
+
         public int targetResPerTile = 16;
         int resPerTile = 16;
         int borderSize = 1;
@@ -51,7 +57,7 @@ namespace FSO.LotView.LMap
         public Vector2 MapLayout; //width * height floors. Ordered by width first. x = floor%width, y = (int)floot/width.
         public Vector2 InvMapLayout;
 
-        public HashSet<ushort> DirtyRooms = new HashSet<ushort>();
+        private List<DirtyRoom> DirtyRooms = new List<DirtyRoom>();
         public sbyte RedrawFloor;
         public Color LastOutsideColor;
 
@@ -199,6 +205,26 @@ namespace FSO.LotView.LMap
             return Math.Abs(col1.R - col2.R) + Math.Abs(col1.G - col2.G) + Math.Abs(col1.B - col2.B);
         }
 
+        private void AddDirtyRoom(ushort id, bool important)
+        {
+            for (int i = 0; i < DirtyRooms.Count; i++)
+            {
+                DirtyRoom room = DirtyRooms[i];
+
+                if (room.RoomID == id)
+                {
+                    room.Priority = (important || room.Priority == int.MaxValue)
+                        ? int.MaxValue : (room.Priority * 2);
+
+                    DirtyRooms[i] = room;
+
+                    return;
+                }
+            }
+
+            DirtyRooms.Add(new DirtyRoom { RoomID = id, Priority = important ? int.MaxValue : 1 });
+        }
+
         public void InvalidateOutdoors()
         {
             //if the outside color is too different from the last, we need to invalidate all instead.
@@ -216,31 +242,32 @@ namespace FSO.LotView.LMap
             {
                 var room = rooms[i];
                 if ((!room.IsOutside && (WallComp == null || !lightRooms[i].Lights.Any(x => x.OutdoorsColor))) || room.WallLines == null) continue;
-                DirtyRooms.Add((ushort)i);
+                AddDirtyRoom((ushort)i, false);
             }
         }
 
-        public void InvalidateRoom(ushort room)
+        public void InvalidateRoom(ushort room, bool important)
         {
             var rooms = Blueprint.Rooms;
-            var lightRooms = Blueprint.Light;
 
             if (room >= rooms.Count) return;
             var rep = rooms[room];
             if (rep.Floor > RedrawFloor) return;
 
-            DirtyRooms.Add(room);
+            AddDirtyRoom(room, important);
         }
 
         public void ParseInvalidated(sbyte floorLimit, WorldState state)
         {
             GD.BlendState = BlendState.AlphaBlend;
             SetMapLayout(3, 2);
+
             if (floorLimit > RedrawFloor)
             {
                 RedrawAll(state, 6);
                 RedrawFloor = 6;
             }
+
             if (DirtyRooms.Count == 0) return;
 
             //initialize lighteffect with default params
@@ -250,14 +277,18 @@ namespace FSO.LotView.LMap
             var rooms = Blueprint.Rooms;
             var lightRooms = Blueprint.Light;
 
-            var dirty = new List<ushort>(DirtyRooms);
-            var ordered = dirty.OrderBy(x => rooms[x].Floor);
-            var speed = Math.Max(1, (DirtyRooms.Count - 64 / 16)); //speed up quickly if we have a lot of rooms to get thru
-            int i = 0;
+            var ordered = DirtyRooms.OrderBy(x => rooms[x.RoomID].Floor);
+
+            int unimportantRoomsProcessed = 0;
+
             foreach (var rm in ordered)
             {
-                if (i >= speed) break;
-                var room = rooms[rm];
+                if (unimportantRoomsProcessed >= rm.Priority)
+                {
+                    continue;
+                }
+
+                var room = rooms[rm.RoomID];
                 if (room.WallLines == null || room.Floor > floorLimit)
                 {
                     DirtyRooms.Remove(rm);
@@ -268,11 +299,17 @@ namespace FSO.LotView.LMap
                     floor = room.Floor;
                     SetFloor(floor, state);
                 }
-                if (rm >= lightRooms.Length) break;
-                var light = lightRooms[rm];
+                if (rm.RoomID >= lightRooms.Length) break;
+                var light = lightRooms[rm.RoomID];
                 DrawRoom(room, light, true);
-                DirtyRooms.Remove(rm);
+                DirtyRooms.RemoveAll(x => x.RoomID == rm.RoomID);
+
+                if (rm.Priority != int.MaxValue)
+                {
+                    unimportantRoomsProcessed++;
+                }
             }
+
             GD.SetRenderTarget(null);
         }
 

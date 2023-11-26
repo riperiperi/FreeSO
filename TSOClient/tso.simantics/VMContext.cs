@@ -811,10 +811,10 @@ namespace FSO.SimAntics
 
                 if (useWorld)
                 {
-                    Blueprint.Changes.LightChange((short)room);
+                    Blueprint.Changes.LightChange((short)room, true);
                     foreach (var a in affected)
                     {
-                        Blueprint.Changes.LightChange((short)a);
+                        Blueprint.Changes.LightChange((short)a, false);
                     }
                 }
             }

@@ -16,7 +16,7 @@ namespace FSO.LotView
         public HashSet<ObjectComponent> StaticObjects => Layers.StaticObjects;
 
         public HashSet<ObjectComponent> ObjectMoved = new HashSet<ObjectComponent>();
-        public HashSet<short> RoomLightInvalid = new HashSet<short>();
+        public Dictionary<short, bool> RoomLightInvalid = new Dictionary<short, bool>();
 
         public object FloorChanges;
         public object WallChanges;
@@ -105,9 +105,11 @@ namespace FSO.LotView
                         if ((Dirty & BlueprintGlobalChanges.LIGHTING_CHANGED) > 0 && state.Light != null)
                         {
                             //pass invalidated rooms
-                            foreach (var room in RoomLightInvalid) {
-                                state.Light?.InvalidateRoom((ushort)room);
+                            foreach (var room in RoomLightInvalid)
+                            {
+                                state.Light?.InvalidateRoom((ushort)room.Key, room.Value);
                             }
+
                             RoomLightInvalid.Clear();
                         }
                         if ((Dirty & BlueprintGlobalChanges.OUTDOORS_LIGHTING_CHANGED) > 0)
@@ -199,10 +201,13 @@ namespace FSO.LotView
             }
         }
 
-        public void LightChange(short roomID)
+        public void LightChange(short roomID, bool important)
         {
             Dirty |= BlueprintGlobalChanges.LIGHTING_CHANGED;
-            RoomLightInvalid.Add(roomID);
+            if (!RoomLightInvalid.TryGetValue(roomID, out var existingImportant) || (!existingImportant && important))
+            {
+                RoomLightInvalid[roomID] = important;
+            }
         }
 
         public void RegisterObject(ObjectComponent item)
