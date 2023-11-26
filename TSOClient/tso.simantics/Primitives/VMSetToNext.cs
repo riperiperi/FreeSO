@@ -49,13 +49,15 @@ namespace FSO.SimAntics.Primitives
                     VMMemory.SetVariable(context, operand.TargetOwner, operand.TargetData, result.ObjectID);
                     return VMPrimitiveExitCode.GOTO_TRUE;
                 }
-            } else if (operand.SearchType == VMSetToNextSearchType.Career)
+            }
+            else if (operand.SearchType == VMSetToNextSearchType.Career)
             {
                 var next = Content.Content.Get().Jobs.SetToNext(targetValue);
                 if (next < 0) return VMPrimitiveExitCode.GOTO_FALSE;
                 VMMemory.SetVariable(context, operand.TargetOwner, operand.TargetData, next);
                 return VMPrimitiveExitCode.GOTO_TRUE;
-            } else if (operand.SearchType == VMSetToNextSearchType.NeighborId)
+            }
+            else if (operand.SearchType == VMSetToNextSearchType.NeighborId)
             {
                 var next = Content.Content.Get().Neighborhood.SetToNext(targetValue);
                 if (next < 0) return VMPrimitiveExitCode.GOTO_FALSE;
@@ -148,8 +150,15 @@ namespace FSO.SimAntics.Primitives
                     VMEntity first = entities.FirstOrDefault();
                     if (operand.SearchType == VMSetToNextSearchType.FamilyMember)
                     {
-                        first = entities.FirstOrDefault(x => ((VMAvatar)x).GetPersonData(Model.VMPersonDataVariable.TS1FamilyNumber) ==
-                                                             ((VMAvatar)Pointer).GetPersonData(Model.VMPersonDataVariable.TS1FamilyNumber));
+                        short familyNumber = ((VMAvatar)Pointer).GetPersonData(Model.VMPersonDataVariable.TS1FamilyNumber);
+                        foreach (VMEntity ent in entities)
+                        {
+                            if (((VMAvatar)ent).GetPersonData(Model.VMPersonDataVariable.TS1FamilyNumber) == familyNumber)
+                            {
+                                first = ent;
+                                break;
+                            }
+                        }
                     }
                     if (first == null || !entities.Contains(Pointer)) return VMPrimitiveExitCode.GOTO_FALSE; //no elements of this kind at all.
                     else

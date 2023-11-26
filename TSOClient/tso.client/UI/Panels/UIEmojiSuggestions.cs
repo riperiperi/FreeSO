@@ -64,8 +64,11 @@ namespace FSO.Client.UI.Panels
             if (!showSuggestions)
             {
                 //remove children if no suggestions
-                var childCopy = new List<UIElement>(Children);
-                foreach (var child in childCopy) Remove(child);
+                if (Children.Count > 0)
+                {
+                    var childCopy = new List<UIElement>(Children);
+                    foreach (var child in childCopy) Remove(child);
+                }
             }
         }
 
