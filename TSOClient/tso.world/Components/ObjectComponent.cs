@@ -94,12 +94,17 @@ namespace FSO.LotView.Components
 
             bounds.GetCorners(points);
 
+            Vector3 max = new Vector3(float.NegativeInfinity, float.NegativeInfinity, float.NegativeInfinity);
+            Vector3 min = new Vector3(float.PositiveInfinity, float.PositiveInfinity, float.PositiveInfinity);
+
             for (int i = 0; i < 8; i++)
             {
-                points[i] = Vector3.Transform(points[i], mat);
+                Vector3 point = Vector3.Transform(points[i], mat);
+                min = Vector3.Min(min, point);
+                max = Vector3.Max(max, point);
             }
 
-            return BoundingBox.CreateFromPoints(points);
+            return new BoundingBox(min, max);
         }
 
         public BoundingBox GetBounds()
