@@ -201,7 +201,7 @@ namespace FSO.UI.Framework
                     if (next.Glyph != null)
                     {
                         KerningPair pair;
-                        if (pairs.TryGetValue(new string(new char[] { fglyph.Character, next.Glyph.Character }), out pair))
+                        if (pairs.TryGetValue(fglyph.Character | (next.Glyph.Character << 16), out pair))
                         {
                             point.X += pair.Advance * subScale;
                         }
@@ -284,7 +284,7 @@ namespace FSO.UI.Framework
                     if (next.Glyph != null)
                     {
                         KerningPair pair;
-                        if (pairs.TryGetValue(new string(new char[] { glyph.Glyph.Character, next.Glyph.Character }), out pair))
+                        if (pairs.TryGetValue(glyph.Glyph.Character | (next.Glyph.Character << 16), out pair))
                         {
                             size.X += pair.Advance * subScale;
                         }
@@ -367,6 +367,6 @@ namespace FSO.UI.Framework
         public float cutY;
 
         public int atlasWidth;
-        public Dictionary<string, KerningPair> pairs;
+        public Dictionary<int, KerningPair> pairs;
     }
 }

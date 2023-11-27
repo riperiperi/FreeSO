@@ -21,6 +21,9 @@ namespace FSO.LotView.Components
         private int PrimCount;
         private float LastSkyPos;
 
+        private VertexPositionTexture[] VertexData;
+        private int[] IndexData;
+
         public AbstractSkyDome(GraphicsDevice GD, float time)
         {
             float? customSky = DynamicTuning.Global?.GetTuning("city", 0, 2);
@@ -29,7 +32,8 @@ namespace FSO.LotView.Components
             {
                 TryLoadSkyColor(GD, DefaultSkyCol);
             }
-            
+
+            InitArrays();
             BuildSkyDome(GD, time);
         }
 
@@ -94,12 +98,23 @@ namespace FSO.LotView.Components
             return night;
         }
 
+        private void InitArrays()
+        {
+            var subdivs = 65;
+
+            int vertCount = (subdivs - 1) * (subdivs + 1) + 1;
+            int indexCount = ((subdivs - 1) * (subdivs * 6 - 3)) - 3;
+
+            VertexData = new VertexPositionTexture[vertCount];
+            IndexData = new int[indexCount];
+        }
+
         public void BuildSkyDome(GraphicsDevice GD, float time)
         {
             //generate sky dome geometry
             var subdivs = 65;
-            List<VertexPositionTexture> verts = new List<VertexPositionTexture>();
-            var indices = new List<int>();
+            VertexPositionTexture[] verts = VertexData;
+            int[] indices = IndexData;
             var skyCol = new Color(0x00, 0x80, 0xFF, 0xFF);
 
             float skyPos = OutsideSkyP(time);
@@ -112,11 +127,14 @@ namespace FSO.LotView.Components
             var topRange = 0.9f * range;
             var btmRange = 0.1f * range;
 
-            verts.Add(new VertexPositionTexture(new Vector3(0, 1, 0), new Vector2(skyPos, yGap)));
+            int vi = 0;
+            int ii = 0;
+
+            verts[vi++] = new VertexPositionTexture(new Vector3(0, 1, 0), new Vector2(skyPos, yGap));
 
             for (int y = 1; y < subdivs; y++)
             {
-                int start = verts.Count;
+                int start = vi;
                 var angley = (float)Math.PI * y / ((float)subdivs - 1);
                 var radius = (float)Math.Sin(angley);
                 var height = Math.Cos(angley);
@@ -129,32 +147,32 @@ namespace FSO.LotView.Components
                 {
                     var anglex = (float)Math.PI * x * 2 / (float)subdivs;
                     var colLerp = Math.Min(1, Math.Abs(((y - 2) / (float)subdivs) - 0.60f) * 4);
-                    verts.Add(new VertexPositionTexture(new Vector3((float)Math.Sin(anglex) * radius, (float)height, (float)Math.Cos(anglex) * radius), new Vector2(skyPos, tpos)));
+                    verts[vi++] = new VertexPositionTexture(new Vector3((float)Math.Sin(anglex) * radius, (float)height, (float)Math.Cos(anglex) * radius), new Vector2(skyPos, tpos));
                     if (x < subdivs)
                     {
                         if (y != 1)
                         {
-                            indices.Add(vertLastStart + x % vertLastLength);
-                            indices.Add(vertLastStart + (x + 1) % vertLastLength);
-                            indices.Add(verts.Count - 1);
+                            indices[ii++] = vertLastStart + x % vertLastLength;
+                            indices[ii++] = vertLastStart + (x + 1) % vertLastLength;
+                            indices[ii++] = vi - 1;
                         }
 
-                        indices.Add(vertLastStart + (x + 1) % vertLastLength);
-                        indices.Add(verts.Count);
-                        indices.Add(verts.Count - 1);
+                        indices[ii++] = vertLastStart + (x + 1) % vertLastLength;
+                        indices[ii++] = vi;
+                        indices[ii++] = vi - 1;
                     }
                 }
                 vertLastStart = start;
                 vertLastLength = subdivs + 1;
             }
 
-            if (Verts == null) Verts = new VertexBuffer(GD, typeof(VertexPositionTexture), verts.Count, BufferUsage.None);
-            Verts.SetData(verts.ToArray());
+            if (Verts == null) Verts = new VertexBuffer(GD, typeof(VertexPositionTexture), vi, BufferUsage.None);
+            Verts.SetData(verts);
             if (Indices == null)
             {
-                Indices = new IndexBuffer(GD, IndexElementSize.ThirtyTwoBits, indices.Count, BufferUsage.None);
-                Indices.SetData(indices.ToArray());
-                PrimCount = indices.Count / 3;
+                Indices = new IndexBuffer(GD, IndexElementSize.ThirtyTwoBits, ii, BufferUsage.None);
+                Indices.SetData(indices);
+                PrimCount = ii / 3;
             }
         }
 

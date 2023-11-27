@@ -56,14 +56,16 @@ namespace MSDFData
         [ContentSerializerIgnore]
         public IEnumerable<char> SupportedCharacters => this.Glyphs.Keys;
 
-        private Dictionary<string, KerningPair> StringToPairBackend;
+        private Dictionary<int, KerningPair> StringToPairBackend;
         [ContentSerializerIgnore]
-        public Dictionary<string, KerningPair> StringToPair {
-            get {
+        public Dictionary<int, KerningPair> StringToPair {
+            get
+            {
                 if (StringToPairBackend == null)
                 {
-                    StringToPairBackend = KerningPairs.ToDictionary(x => new string(new char[] { x.Left, x.Right }));
+                    StringToPairBackend = KerningPairs.ToDictionary(x => x.Left | (x.Right << 16));
                 }
+
                 return StringToPairBackend;
             }
         }
