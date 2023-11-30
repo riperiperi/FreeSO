@@ -90,6 +90,11 @@ namespace FSO.LotView
                     DrawImmediate = true; 
                 }
 
+                if ((Dirty & BlueprintGlobalChanges.LIGHTING_UNIMPORTANT) > 0)
+                {
+                    StaticSurfaceDirty = true;
+                }
+
                 if ((Dirty & BlueprintGlobalChanges.LIGHTING_ANY) > 0)
                 {
                     UpdateColor = true;
@@ -180,7 +185,10 @@ namespace FSO.LotView
             }
             Dirty = 0;
 
-            state.Light?.ParseInvalidated((sbyte)(state.Level + ((state.DrawRoofs) ? 1 : 0)), state);
+            if (state.Light?.ParseInvalidated((sbyte)(state.Level + ((state.DrawRoofs) ? 1 : 0)), state) == true)
+            {
+                Dirty |= BlueprintGlobalChanges.LIGHTING_UNIMPORTANT;
+            }
 
             //for moved objects, regenerate depth and move them to dynamic if they aren't already there.
             foreach (var obj in ObjectMoved)
@@ -249,6 +257,7 @@ namespace FSO.LotView
         WALL_CHANGED = 1 << 10, //global invalidation of scroll buffer, but more specific invalidation for regions
         WALL_CUT_CHANGED = 1 << 11,  //global invalidation of scroll buffer, but more specific invalidation for regions
         ROOM_CHANGED = 1 << 12,
+        LIGHTING_UNIMPORTANT = 1 << 13, //unimportant lights still need to be updated
 
         VIEW_CHANGE_2D = ROTATE | ZOOM | LEVEL_CHANGED, //all of these invalidate the scroll buffers.
         ARCH_CHANGED = WALL_CHANGED | FLOOR_CHANGED | ROOM_CHANGED,

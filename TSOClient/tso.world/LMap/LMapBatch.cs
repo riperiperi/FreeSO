@@ -259,7 +259,13 @@ namespace FSO.LotView.LMap
             AddDirtyRoom(room, important);
         }
 
-        public void ParseInvalidated(sbyte floorLimit, WorldState state)
+        /// <summary>
+        /// Redraw any rooms flagged as dirty.
+        /// </summary>
+        /// <param name="floorLimit">Floor to render lighting up to</param>
+        /// <param name="state">World state</param>
+        /// <returns>True if there are still rooms in the unimportant lighting queue</returns>
+        public bool ParseInvalidated(sbyte floorLimit, WorldState state)
         {
             GD.BlendState = BlendState.AlphaBlend;
             SetMapLayout(3, 2);
@@ -270,7 +276,7 @@ namespace FSO.LotView.LMap
                 RedrawFloor = 6;
             }
 
-            if (DirtyRooms.Count == 0) return;
+            if (DirtyRooms.Count == 0) return false;
 
             //initialize lighteffect with default params
             sbyte floor = 0;
@@ -285,17 +291,18 @@ namespace FSO.LotView.LMap
 
             foreach (var rm in ordered)
             {
-                if (unimportantRoomsProcessed >= rm.Priority)
-                {
-                    continue;
-                }
-
                 var room = rooms[rm.RoomID];
                 if (room.WallLines == null || room.Floor > floorLimit)
                 {
                     DirtyRooms.Remove(rm);
                     continue;
                 }
+
+                if (unimportantRoomsProcessed >= rm.Priority)
+                {
+                    continue;
+                }
+
                 if (room.Floor != floor)
                 {
                     floor = room.Floor;
@@ -313,6 +320,8 @@ namespace FSO.LotView.LMap
             }
 
             GD.SetRenderTarget(null);
+
+            return DirtyRooms.Count > 0;
         }
 
         public void InvalidateAll()
