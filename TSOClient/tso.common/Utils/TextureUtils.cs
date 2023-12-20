@@ -802,7 +802,7 @@ namespace FSO.Common.Utils
 
 			// Alpha is determined in RGB565 representation
 			// If alpha, Color 1 is greater or equal to color 0
-            // If no alpha, Color 0 is greater or equal to color 1
+            // If no alpha, Color 0 is greater than color 1
 			if (hasAlpha0 != (leftBin < rightBin))
             {
 				// hasAlpha0 && (leftBin >= rightbin)
