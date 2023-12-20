@@ -540,7 +540,7 @@ namespace FSO.Common.Utils
 
 					//emit alpha data
 
-					result[blockI++] = minAlpha; // VERIFY: Check if this is reverted
+					result[blockI++] = minAlpha;
                     result[blockI++] = maxAlpha;
 
                     var alpha = GetAlphaIndices(block, minAlpha, maxAlpha);
@@ -611,6 +611,7 @@ namespace FSO.Common.Utils
                     GetExtremeColors(block, out color0, out colorBin0, out color1, out colorBin1);
 
                     //emit color data
+
                     result[blockI++] = (byte)(colorBin0 & 0xFF);
                     result[blockI++] = (byte)((colorBin0 >> 8) & 0xFF);
                     result[blockI++] = (byte)(colorBin1 & 0xFF);
@@ -761,8 +762,8 @@ namespace FSO.Common.Utils
                 ? new Color(0, 0, 0)
                 : new Color(r / t, g / t, b / t);
 
-			// Find color furthest from average
-			int leftDist = 0;
+            // Find color furthest from average
+            int leftDist = 0;
             int leftIdx = 0;
             for (int i = 0; i < 16; i++)
             {
@@ -797,17 +798,17 @@ namespace FSO.Common.Utils
 
             // RGB565 conversion
             ushort leftBin = (ushort)((leftCol.B >> 3) | ((leftCol.G >> 2) << 5) | ((leftCol.R >> 3) << 11));
-            ushort rightbin = (ushort)((rightCol.B >> 3) | ((rightCol.G >> 2) << 5) | ((rightCol.R >> 3) << 11));
+            ushort rightBin = (ushort)((rightCol.B >> 3) | ((rightCol.G >> 2) << 5) | ((rightCol.R >> 3) << 11));
 
 			// Alpha is determined in RGB565 representation
 			// If alpha, Color 1 is greater or equal to color 0
             // If no alpha, Color 0 is greater or equal to color 1
-			if (hasAlpha0 ^ (leftBin < rightbin))
+			if (hasAlpha0 != (leftBin < rightBin))
             {
 				// hasAlpha0 && (leftBin >= rightbin)
                 // !hasAlpha && (leftBin < rightbin)
 				color0 = rightCol;
-				colorBin0 = rightbin;
+				colorBin0 = rightBin;
 				color1 = leftCol;
 				colorBin1 = leftBin;
 			}
@@ -818,7 +819,7 @@ namespace FSO.Common.Utils
 				color0 = leftCol;
 				colorBin0 = leftBin;
 				color1 = rightCol;
-				colorBin1 = rightbin;
+				colorBin1 = rightBin;
 			}
 		}
 
