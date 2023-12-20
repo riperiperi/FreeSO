@@ -540,8 +540,9 @@ namespace FSO.Common.Utils
 
 					//emit alpha data
 
-					result[blockI++] = minAlpha;
-                    result[blockI++] = maxAlpha;
+                    // Always reversed to use 8-bit alpha block
+					result[blockI++] = maxAlpha;
+                    result[blockI++] = minAlpha;
 
                     var alpha = GetAlphaIndices(block, minAlpha, maxAlpha);
 
@@ -556,7 +557,7 @@ namespace FSO.Common.Utils
 
                     Color color0, color1;
                     ushort colorBin0, colorBin1;
-					GetExtremeColors(block, out color0, out colorBin0, out color1, out colorBin1);
+					GetExtremeColors(block, out color0, out colorBin0, out color1, out colorBin1, false);
 
                     result[blockI++] = (byte)(colorBin0 & 0xFF);
                     result[blockI++] = (byte)((colorBin0 >> 8) & 0xFF);
@@ -608,7 +609,7 @@ namespace FSO.Common.Utils
 
                     Color color0, color1;
                     ushort colorBin0, colorBin1;
-                    GetExtremeColors(block, out color0, out colorBin0, out color1, out colorBin1);
+                    GetExtremeColors(block, out color0, out colorBin0, out color1, out colorBin1, true);
 
                     //emit color data
 
@@ -644,7 +645,7 @@ namespace FSO.Common.Utils
         private static byte[] GetAlphaIndices(Color[] block, int minAlpha, int maxAlpha)
         {
             var result = new byte[16];
-            int alphaRange = minAlpha - maxAlpha;
+            int alphaRange = maxAlpha - minAlpha;
             if (alphaRange == 0) return result;
             int halfAlpha = alphaRange / 2;
             for (int ai = 0; ai < 16; ai++)
@@ -739,7 +740,7 @@ namespace FSO.Common.Utils
 			maxAlpha = maxA;
         }
 
-        private static void GetExtremeColors(Color[] block, out Color color0, out ushort colorBin0, out Color color1, out ushort colorBin1)
+        private static void GetExtremeColors(Color[] block, out Color color0, out ushort colorBin0, out Color color1, out ushort colorBin1, bool dxt1a)
         {
             // Calculate average of colors, skip all colors with Alpha equal to 0
             bool hasAlpha0 = false;
@@ -800,10 +801,10 @@ namespace FSO.Common.Utils
             ushort leftBin = (ushort)((leftCol.B >> 3) | ((leftCol.G >> 2) << 5) | ((leftCol.R >> 3) << 11));
             ushort rightBin = (ushort)((rightCol.B >> 3) | ((rightCol.G >> 2) << 5) | ((rightCol.R >> 3) << 11));
 
-			// Alpha is determined in RGB565 representation
-			// If alpha, Color 1 is greater or equal to color 0
+            // Alpha is determined in RGB565 representation
+            // If alpha, Color 1 is greater or equal to color 0
             // If no alpha, Color 0 is greater than color 1
-			if (hasAlpha0 != (leftBin < rightBin))
+            if ((hasAlpha0 && dxt1a) != (leftBin < rightBin))
             {
 				// hasAlpha0 && (leftBin >= rightbin)
                 // !hasAlpha && (leftBin < rightbin)
