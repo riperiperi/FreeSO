@@ -757,13 +757,18 @@ namespace FSO.Common.Utils
 					hasAlpha0 = true;
 				}
 			}
-            Color avg = new Color(r / t, g / t, b / t);
+            Color avg = (t == 0)
+                ? new Color(0, 0, 0)
+                : new Color(r / t, g / t, b / t);
 
 			// Find color furthest from average
 			int leftDist = 0;
             int leftIdx = 0;
             for (int i = 0; i < 16; i++)
             {
+                if (block[i].A == 0 && t != 0)
+                    continue;
+
 				int dist = ColorDistanceSq(block[i], avg);
 				if (dist > leftDist)
                 {
@@ -778,7 +783,10 @@ namespace FSO.Common.Utils
             int rightIdx = 0;
             for (int i = 0; i < 16; i++)
             {
-				int dist = ColorDistanceSq(block[i], leftCol);
+                if (block[i].A == 0 && t != 0)
+                    continue;
+
+                int dist = ColorDistanceSq(block[i], leftCol);
 				if (dist > rightDist)
                 {
 					rightDist = dist;
