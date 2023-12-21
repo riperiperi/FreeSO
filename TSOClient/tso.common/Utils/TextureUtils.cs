@@ -720,10 +720,10 @@ namespace FSO.Common.Utils
         private static int ColorDistanceSq(Color c0, Color c1)
         {
             // Vector distance
-            int r = c0.R - c1.R;
-            int g = c0.G - c1.G;
-            int b = c0.B - c1.B;
-            return (r * r) + (g * g) + (b * b);
+            int r = (c0.R - c1.R) * 5; // Weigh in BT.601 luma coefficients
+			int g = (c0.G - c1.G) * 9;
+            int b = (c0.B - c1.B) * 2;
+			return (r * r) + (g * g) + (b * b);
         }
 
         private static void GetMinMaxAlpha(Color[] block, out byte minAlpha, out byte maxAlpha)
