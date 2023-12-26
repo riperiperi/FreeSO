@@ -1,18 +1,10 @@
 ﻿using FSO.Files.Formats.IFF;
 using System;
-using System.Collections.Generic;
-using System.ComponentModel;
-using System.Data;
-using System.Drawing;
 using System.IO;
-using System.Linq;
-using System.Text;
 using System.Threading;
-using System.Threading.Tasks;
 using System.Windows.Forms;
-using static System.Windows.Forms.VisualStyles.VisualStyleElement.Window;
 
-namespace FSO.IDE.ResourceBrowser.SelectorDialogs
+namespace FSO.IDE.ResourceBrowser
 {
     public partial class ExternalIffSelectorDialog : Form
     {
@@ -55,28 +47,6 @@ namespace FSO.IDE.ResourceBrowser.SelectorDialogs
                 var iff = new IffFile(dialog.FileName);
                 iff.TSBO = true;
                 FilePath = dialog.FileName;
-#if false
-                //SHOW BMPS
-                var bmps = iff.List<BMP>();
-                if (bmps?.Any() ?? false)
-                {
-                    Invoke(new MethodInvoker(delegate
-                    {
-                        Form imgForm = new Form();
-                        var picBox = new PictureBox();
-                        imgForm.Controls.Add(picBox);
-                        foreach (var image in bmps)
-                        {
-                            using (var buffer = new MemoryStream(image.data.ToArray()))
-                            {
-                                Image mngImg = Image.FromStream(buffer);
-                                picBox.Image = mngImg;
-                            }
-                            imgForm.ShowDialog();
-                        }
-                    }));
-                }          
-#endif
                 return iff;
             }
             catch (Exception ex)
@@ -89,6 +59,7 @@ namespace FSO.IDE.ResourceBrowser.SelectorDialogs
         private void IffLinkLabel_LinkClicked(object sender, LinkLabelLinkClickedEventArgs e)
         {
             Iff = OpenExternalIff(out var fileName);
+            if (Iff == null) return; // User cancelled
             IffLinkLabel.Text = fileName;
             string spfFileName = fileName.Remove(fileName.Length - 3) + "spf";
             if (!File.Exists(spfFileName)) return;
@@ -103,9 +74,14 @@ namespace FSO.IDE.ResourceBrowser.SelectorDialogs
                 spf = OpenExternalIff(out SpfFileName, true);
             else
             {
-                spf = new IffFile(SpfFileName);
-                spf.TSBO = true;
+                try
+                {
+                    spf = new IffFile(SpfFileName);
+                    spf.TSBO = true;
+                }
+                catch (Exception e) { MessageBox.Show(e.Message); }
             }
+            if (spf == null) return;
             SPFLinkLabel.Text = SpfFileName;
             Spf = spf;
         }

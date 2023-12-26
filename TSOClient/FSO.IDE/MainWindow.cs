@@ -1,28 +1,18 @@
-﻿using FSO.Client;
-using FSO.Content;
+﻿using FSO.Content;
 using FSO.Files.Formats.IFF;
 using FSO.Files.Formats.IFF.Chunks;
-using FSO.Files.RC;
 using FSO.IDE.Common;
 using FSO.IDE.ContentEditors;
 using FSO.IDE.Managers;
-using FSO.IDE.ResourceBrowser.SelectorDialogs;
+using FSO.IDE.ResourceBrowser;
 using FSO.IDE.Utils.FormatReverse;
 using FSO.SimAntics;
-using FSO.SimAntics.JIT.Translation.CSharp;
 using FSO.SimAntics.NetPlay.Model.Commands;
 using System;
 using System.Collections.Generic;
-using System.ComponentModel;
-using System.Data;
-using System.Drawing;
-using System.IO;
 using System.Linq;
-using System.Text;
 using System.Threading;
-using System.Threading.Tasks;
 using System.Windows.Forms;
-using static System.Windows.Forms.VisualStyles.VisualStyleElement.Window;
 
 namespace FSO.IDE
 {
