@@ -1,5 +1,15 @@
-﻿using System;
+﻿/*
+ * This Source Code Form is subject to the terms of the Mozilla Public License, v. 2.0.
+ * If a copy of the MPL was not distributed with this file, You can obtain one at
+ * http://mozilla.org/MPL/2.0/. 
+ */
+
+#define DEF_PALT_GRAYSCALE
+
+using System;
 using System.Collections.Generic;
+using System.Linq;
+using System.Text;
 using System.IO;
 using FSO.Files.Utils;
 using Microsoft.Xna.Framework.Graphics;
@@ -92,6 +102,11 @@ namespace FSO.Files.Formats.IFF.Chunks
         private SPR Parent;
         private Texture2D PixelCache;
         private byte[] ToDecode;
+        private byte[] indices;
+        /// <summary>
+        /// A map of the color indices that make up the sprite
+        /// </summary>
+        public byte[] Indices => indices;
 
         /// <summary>
         /// Constructs a new SPRFrame instance.
@@ -156,9 +171,15 @@ namespace FSO.Files.Formats.IFF.Chunks
         private void Decode(IoBuffer io)
         {
             var palette = Parent.ChunkParent.Get<PALT>(Parent.PaletteID);
-            if (palette == null)
+            if (palette == null) // could not find palette or one does not exist in this IFF
             {
+#if DEF_PALT_GRAYSCALE
+                //greyscale palette                
+                palette = PALT.Greyscale;
+#else
+                // original implementation -- all black
                 palette = DEFAULT_PALT;
+#endif  
             }
 
             var y = 0;
@@ -197,6 +218,7 @@ namespace FSO.Files.Formats.IFF.Chunks
                                     var color = palette.Colors[index];
                                     for (var j=0; j < pxCount; j++){
                                         this.SetPixel(x, y, color);
+                                        indices[(y * Width) + x] = index; // keep track of indices for depth calculation
                                         x++;
                                     }
                                     break;
@@ -206,6 +228,7 @@ namespace FSO.Files.Formats.IFF.Chunks
                                         var index2 = io.ReadByte();
                                         var color2 = palette.Colors[index2];
                                         this.SetPixel(x, y, color2);
+                                        indices[(y * Width) + x] = index2; // keep track of indices for depth calculation
                                         x++;
                                     }
                                     bytes -= pxCount;
@@ -242,6 +265,7 @@ namespace FSO.Files.Formats.IFF.Chunks
             this.Width = width;
             this.Height = height;
             Data = new Color[Width * Height];
+            indices = new byte[Width * Height];
         }
 
         public Color GetPixel(int x, int y)

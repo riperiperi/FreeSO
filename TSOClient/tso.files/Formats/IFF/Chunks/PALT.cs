@@ -1,5 +1,16 @@
-﻿using System.IO;
+﻿/*
+ * This Source Code Form is subject to the terms of the Mozilla Public License, v. 2.0.
+ * If a copy of the MPL was not distributed with this file, You can obtain one at
+ * http://mozilla.org/MPL/2.0/. 
+ */
+
+using System;
+using System.Collections.Generic;
+using System.Linq;
+using System.Text;
+using System.IO;
 using FSO.Files.Utils;
+using Microsoft.Xna.Framework.Graphics;
 using Microsoft.Xna.Framework;
 
 namespace FSO.Files.Formats.IFF.Chunks
@@ -21,9 +32,39 @@ namespace FSO.Files.Formats.IFF.Chunks
                 Colors[i] = color;
             }
         }
+        /// <summary>
+        /// Makes a new <see cref="PALT"/> which is populated with <paramref name="Colors"/> 
+        /// in order, then filled with <paramref name="fillColor"/> to the end of the palette.
+        /// </summary>
+        /// <param name="fillColor"></param>
+        /// <param name="Colors"></param>
+        public PALT(Color fillColor, params Color[] Colors)
+        {
+            Colors = new Color[256];
+            for (int i = 0; i < 256; i++)
+            {
+                var color = i < Colors.Length ? Colors[i] : fillColor;
+                Colors[i] = color;
+            }
+        }
 
         public Color[] Colors;
         public int References = 0;
+
+        public static PALT Greyscale
+        {
+            get
+            {
+                PALT newPalt = new PALT();
+                newPalt.Colors = new Color[256];
+                ref var colors = ref newPalt.Colors;
+                for (int i = 0; i < 256; i++)
+                {
+                    colors[i] = new Color(i, i, i, 255);
+                }
+                return newPalt;
+            }
+        }
 
         /// <summary>
         /// Reads a PALT chunk from a stream.
