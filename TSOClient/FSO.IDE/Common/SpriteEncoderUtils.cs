@@ -151,7 +151,7 @@ namespace FSO.IDE.Common
 
                     if (x >= pos.X && x < pos.X + sprite.Width && y >= pos.Y && y < pos.Y + sprite.Height)
                     {
-                        //SPR frames use a grayscale palette                    
+                        //SPR depth frames use a grayscale palette                    
                         if (DepthMapFrame)
                         {
                             // Read this frame as grayscale
@@ -160,7 +160,7 @@ namespace FSO.IDE.Common
                             else col = grayScale.Colors[colorIndex];                            
                         }
                         else
-                        {
+                        { // not depth frame read colors from palette
                             col = sprite.GetPixel((int)(x - pos.X), (int)(y - pos.Y));
                             if (col.A == 0) col = new Microsoft.Xna.Framework.Color(0xFF, 0xFF, 0x00, 0x00);
                             // ** no alpha component!
@@ -183,7 +183,6 @@ namespace FSO.IDE.Common
 
                     index += 4;
                 }
-
             }
 
             for (int i = 0; i < 3; i++)

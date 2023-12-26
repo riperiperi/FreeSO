@@ -187,10 +187,9 @@ namespace FSO.Files.Formats.IFF
                 if (identifier.StartsWith("IFF FILE 1.0"))
                 {
                     FileVersion = IffFileVersion.v1;
-                    _ = io.ReadCString(4);
-                    goto iff1;
+                    _ = io.ReadCString(4);                    
                 }
-                if (identifier != "IFF FILE 2.5:TYPE FOLLOWED BY SIZE JAMIE DOORNBOS & MAXIS 1")
+                else if (identifier != "IFF FILE 2.5:TYPE FOLLOWED BY SIZE JAMIE DOORNBOS & MAXIS 1")
                 {
                     FileVersion = IffFileVersion.Unrecognized;
                     if (identifier != "IFF FILE 2.0:TYPE FOLLOWED BY SIZE JAMIE DOORNBOS & MAXIS 1") //house11.iff, seems to read fine
@@ -199,7 +198,7 @@ namespace FSO.Files.Formats.IFF
                 }
 
                 var rsmpOffset = io.ReadUInt32();
-            iff1:
+
                 while (io.HasMore)
                 {
                     var newChunk = AddChunk(stream, io, true);
@@ -249,7 +248,7 @@ namespace FSO.Files.Formats.IFF
                         ChunkSize = io.ReadUInt32();
                         ID = io.ReadUInt16();
                         _ = io.ReadUInt16();
-                        Flags = (ushort)io.ReadUInt32(); // truncate >.<
+                        Flags = (ushort)io.ReadUInt32();
                         int number = 1;
                         if (CHUNK_TYPES.TryGetValue(Type, out var type))
                         {

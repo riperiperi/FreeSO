@@ -38,12 +38,12 @@ namespace FSO.Files.Formats.IFF.Chunks
         /// </summary>
         /// <param name="fillColor"></param>
         /// <param name="Colors"></param>
-        public PALT(Color fillColor, params Color[] Colors)
+        public PALT(Color fillColor, params Color[] colors)
         {
             Colors = new Color[256];
             for (int i = 0; i < 256; i++)
             {
-                var color = i < Colors.Length ? Colors[i] : fillColor;
+                var color = i < colors.Length ? colors[i] : fillColor;
                 Colors[i] = color;
             }
         }
