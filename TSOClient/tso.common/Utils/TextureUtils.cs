@@ -535,15 +535,16 @@ namespace FSO.Common.Utils
                         }
                     }
 
-                    Color minCol, maxCol;
-                    GetMinMaxColor(block, out minCol, out maxCol);
+                    byte minAlpha, maxAlpha;
+                    GetMinMaxAlpha(block, out minAlpha, out maxAlpha);
 
                     //emit alpha data
 
-                    result[blockI++] = maxCol.A;
-                    result[blockI++] = minCol.A;
+                    // Always reversed to use 8-bit alpha block
+                    result[blockI++] = maxAlpha;
+                    result[blockI++] = minAlpha;
 
-                    var alpha = GetAlphaIndices(block, minCol, maxCol);
+                    var alpha = GetAlphaIndices(block, minAlpha, maxAlpha);
 
                     result[blockI++] = (byte)((alpha[0] >> 0) | (alpha[1] << 3) | (alpha[2] << 6));
                     result[blockI++] = (byte)((alpha[2] >> 2) | (alpha[3] << 1) | (alpha[4] << 4) | (alpha[5] << 7));
@@ -554,13 +555,17 @@ namespace FSO.Common.Utils
 
                     //emit color data
 
-                    result[blockI++] = (byte)((maxCol.B >> 3) | (((maxCol.G >> 2) << 5) & 0xFF));
-                    result[blockI++] = (byte)(((maxCol.R >> 3) << 3) | (maxCol.G >> 2) >> 3);
+                    Color color0, color1;
+                    ushort colorBin0, colorBin1;
+                    GetExtremeColors(block, out color0, out colorBin0, out color1, out colorBin1, false);
 
-                    result[blockI++] = (byte)((minCol.B >> 3) | (((minCol.G >> 2) << 5) & 0xFF));
-                    result[blockI++] = (byte)(((minCol.R >> 3) << 3) | (minCol.G >> 2) >> 3);
+                    result[blockI++] = (byte)(colorBin0 & 0xFF);
+                    result[blockI++] = (byte)((colorBin0 >> 8) & 0xFF);
 
-                    var indices = GetColorIndices(block, minCol, maxCol);
+                    result[blockI++] = (byte)(colorBin1 & 0xFF);
+                    result[blockI++] = (byte)((colorBin1 >> 8) & 0xFF);
+                       
+                    var indices = GetColorIndices(block, color0, color1);
                     result[blockI++] = (byte)indices;
                     result[blockI++] = (byte)(indices >> 8);
                     result[blockI++] = (byte)(indices >> 16);
@@ -602,31 +607,29 @@ namespace FSO.Common.Utils
                         }
                     }
 
-                    Color minCol, maxCol;
-                    GetMinMaxColor(block, out minCol, out maxCol);
+                    Color color0, color1;
+                    ushort colorBin0, colorBin1;
+                    GetExtremeColors(block, out color0, out colorBin0, out color1, out colorBin1, true);
 
                     //emit color data
 
+                    result[blockI++] = (byte)(colorBin0 & 0xFF);
+                    result[blockI++] = (byte)((colorBin0 >> 8) & 0xFF);
+                    result[blockI++] = (byte)(colorBin1 & 0xFF);
+                    result[blockI++] = (byte)((colorBin1 >> 8) & 0xFF);
+
                     uint indices;
                     //if this block contains a transparent colour, it should be stored in alpha 1bit format.
-                    //we invert the max and min color to tell the gpu.
-                    if (minCol.A == 0)
+                    //we invert the max and min color in GetExtremeColors to tell the gpu.
+                    if (colorBin0 > colorBin1)
                     {
-                        result[blockI++] = (byte)((minCol.B >> 3) | (((minCol.G >> 2) << 5) & 0xFF));
-                        result[blockI++] = (byte)(((minCol.R >> 3) << 3) | (minCol.G >> 2) >> 3);
-
-                        result[blockI++] = (byte)((maxCol.B >> 3) | (((maxCol.G >> 2) << 5) & 0xFF));
-                        result[blockI++] = (byte)(((maxCol.R >> 3) << 3) | (maxCol.G >> 2) >> 3);
-
-                        indices = GetA1ColorIndices(block, minCol, maxCol);
-                    } else {
-                        result[blockI++] = (byte)((maxCol.B >> 3) | (((maxCol.G >> 2) << 5) & 0xFF));
-                        result[blockI++] = (byte)(((maxCol.R >> 3) << 3) | (maxCol.G >> 2) >> 3);
-
-                        result[blockI++] = (byte)((minCol.B >> 3) | (((minCol.G >> 2) << 5) & 0xFF));
-                        result[blockI++] = (byte)(((minCol.R >> 3) << 3) | (minCol.G >> 2) >> 3);
-
-                        indices = GetColorIndices(block, minCol, maxCol);
+                        // Opaque
+                        indices = GetColorIndices(block, color0, color1);
+                    }
+                    else
+                    {
+                        // Transparent
+                        indices = GetA1ColorIndices(block, color0, color1);
                     }
                     
                     result[blockI++] = (byte)indices;
@@ -639,10 +642,10 @@ namespace FSO.Common.Utils
             return new Tuple<byte[], Point>(result, new Point(blockW * 4, blockH * 4));
         }
 
-        private static byte[] GetAlphaIndices(Color[] block, Color minCol, Color maxCol)
+        private static byte[] GetAlphaIndices(Color[] block, int minAlpha, int maxAlpha)
         {
             var result = new byte[16];
-            int alphaRange = maxCol.A - minCol.A;
+            int alphaRange = maxAlpha - minAlpha;
             if (alphaRange == 0) return result;
             int halfAlpha = alphaRange / 2;
             for (int ai = 0; ai < 16; ai++)
@@ -650,7 +653,7 @@ namespace FSO.Common.Utils
                 var a = block[ai].A;
                 //result alpha
                 //round point on line where the alpha is. 
-                var aindex = Math.Min(7, Math.Max(0, ((a - minCol.A) * 7 + halfAlpha) / alphaRange));
+                var aindex = Math.Min(7, Math.Max(0, ((a - minAlpha) * 7 + halfAlpha) / alphaRange));
                 if (aindex == 7) aindex = 0;
                 else if (aindex == 0) aindex = 1;
                 else aindex = (8 - aindex);
@@ -659,48 +662,36 @@ namespace FSO.Common.Utils
             return result;
         }
 
-        private static uint GetColorIndices(Color[] block, Color minCol, Color maxCol)
+        private static uint GetColorIndices(Color[] block, Color color0, Color color1)
         {
-            
-            var pal = new Color[]
-            {
-                maxCol,
-                minCol,
-                Color.Lerp(minCol, maxCol, 2/3f),
-                Color.Lerp(minCol, maxCol, 1/3f),
-            };
+            Color color2 = Color.Lerp(color0, color1, 1 / 3f); // Nearest to color0
+            Color color3 = Color.Lerp(color0, color1, 2 / 3f); // Nearest to color1
 
             uint result = 0;
 
             for (int i = 0; i < 16; i++)
             {
                 var c = block[i];
-                int best = 10000;
-                uint besti = 0;
-                for (uint j = 0; j < 4; j++)
-                {
-                    int d = Math.Abs(pal[j].R - c.R) + Math.Abs(pal[j].G - c.G) + Math.Abs(pal[j].B - c.B);
-                    if (d < best)
-                    {
-                        best = d;
-                        besti = j;
-                    }
-                }
+
+                int dist0 = ColorDistanceSq(c, color0);
+                int dist1 = ColorDistanceSq(c, color1);
+
+                // If we already know it's nearer to color0 or color1,
+                // we only need to check against the second nearest
+                uint besti = dist0 < dist1
+                    ? ((ColorDistanceSq(c, color2) < dist0) ? 2u : 0u)
+                    : ((ColorDistanceSq(c, color3) < dist1) ? 3u : 1u);
+
                 result |= besti << (i * 2);
             }
 
             return result;
         }
 
-        private static uint GetA1ColorIndices(Color[] block, Color minCol, Color maxCol)
+        private static uint GetA1ColorIndices(Color[] block, Color color0, Color color1)
         {
-
-            var pal = new Color[]
-            {
-                maxCol,
-                minCol,
-                Color.Lerp(minCol, maxCol, 1/2f),
-            };
+            // transparent = 3
+            Color color2 = Color.Lerp(color0, color1, .5f);
 
             uint result = 0;
 
@@ -708,20 +699,17 @@ namespace FSO.Common.Utils
             {
                 var c = block[i];
 
-                int best = 10000;
-                uint besti = 0;
+                uint besti;
                 if (c.A == 0) besti = 3;
                 else
                 {
-                    for (uint j = 0; j < 3; j++)
-                    {
-                        int d = Math.Abs(pal[j].R - c.R) + Math.Abs(pal[j].G - c.G) + Math.Abs(pal[j].B - c.B);
-                        if (d < best)
-                        {
-                            best = d;
-                            besti = j;
-                        }
-                    }
+                    int dist0 = ColorDistanceSq(c, color0);
+                    int dist1 = ColorDistanceSq(c, color1);
+                    int dist2 = ColorDistanceSq(c, color2);
+
+                    besti = dist0 < dist1
+                        ? ((dist2 < dist0) ? 2u : 0u)
+                        : ((dist2 < dist1) ? 2u : 1u);
                 }
                 result |= besti << (i * 2);
             }
@@ -729,41 +717,111 @@ namespace FSO.Common.Utils
             return result;
         }
 
-        private static void GetMinMaxColor(Color[] block, out Color minCol, out Color maxCol)
+        private static int ColorDistanceSq(Color c0, Color c1)
         {
-            const int INSET_SHIFT = 4;
-            maxCol = Color.TransparentBlack;
-            minCol = Color.White;
+            // Vector distance
+            int r = (c0.R - c1.R) * 5; // Weigh in BT.601 luma coefficients
+            int g = (c0.G - c1.G) * 9;
+            int b = (c0.B - c1.B) * 2;
+            return (r * r) + (g * g) + (b * b);
+        }
 
+        private static void GetMinMaxAlpha(Color[] block, out byte minAlpha, out byte maxAlpha)
+        {
+            byte minA = 255;
+            byte maxA = 0;
             for (int i = 0; i < 16; i++)
             {
-                var col = block[i];
-
-                if (col.A < minCol.A) minCol.A = col.A;
-                if (col.A > maxCol.A) maxCol.A = col.A;
-                if (col.A == 0) continue;
-
-                if (col.R < minCol.R) minCol.R = col.R;
-                if (col.G < minCol.G) minCol.G = col.G;
-                if (col.B < minCol.B) minCol.B = col.B;
-
-                if (col.R > maxCol.R) maxCol.R = col.R;
-                if (col.G > maxCol.G) maxCol.G = col.G;
-                if (col.B > maxCol.B) maxCol.B = col.B;
-
+                byte a = block[i].A;
+                if (a < minA) minA = a;
+                if (a > maxA) maxA = a;
             }
+            minAlpha = minA;
+            maxAlpha = maxA;
+        }
 
-            //important to note that these packed value calculations can never overflow from
-            //one byte into the next.
+        private static void GetExtremeColors(Color[] block, out Color color0, out ushort colorBin0, out Color color1, out ushort colorBin1, bool dxt1a)
+        {
+            // Calculate average of colors, skip all colors with Alpha equal to 0
+            bool hasAlpha0 = false;
+            int r = 0, g = 0, b = 0, t = 0;
+            for (int i = 0; i < 16; i++)
+            {
+                if (block[i].A > 0)
+                {
+                    r += block[i].R;
+                    g += block[i].G;
+                    b += block[i].B;
+                    ++t;
+                }
+                else
+                {
+                    hasAlpha0 = true;
+                }
+            }
+            Color avg = (t == 0)
+                ? new Color(0, 0, 0)
+                : new Color(r / t, g / t, b / t);
 
-            //var inset = new Color(maxCol.PackedValue - minCol.PackedValue);
-            //inset.R >>= INSET_SHIFT;
-            //inset.G >>= INSET_SHIFT;
-            //inset.B >>= INSET_SHIFT;
-            //inset.A >>= INSET_SHIFT;
+            // Find color furthest from average
+            int leftDist = 0;
+            int leftIdx = 0;
+            for (int i = 0; i < 16; i++)
+            {
+                if (block[i].A == 0 && t != 0)
+                    continue;
 
-            //minCol = new Color(minCol.PackedValue + inset.PackedValue);
-            //maxCol = new Color(maxCol.PackedValue - inset.PackedValue);
+                int dist = ColorDistanceSq(block[i], avg);
+                if (dist > leftDist)
+                {
+                    leftDist = dist;
+                    leftIdx = i;
+                }
+            }
+            Color leftCol = block[leftIdx];
+
+            // Find color furthest to furthest
+            int rightDist = 0;
+            int rightIdx = 0;
+            for (int i = 0; i < 16; i++)
+            {
+                if (block[i].A == 0 && t != 0)
+                    continue;
+
+                int dist = ColorDistanceSq(block[i], leftCol);
+                if (dist > rightDist)
+                {
+                    rightDist = dist;
+                    rightIdx = i;
+                }
+            }
+            Color rightCol = block[rightIdx];
+
+            // RGB565 conversion
+            ushort leftBin = (ushort)((leftCol.B >> 3) | ((leftCol.G >> 2) << 5) | ((leftCol.R >> 3) << 11));
+            ushort rightBin = (ushort)((rightCol.B >> 3) | ((rightCol.G >> 2) << 5) | ((rightCol.R >> 3) << 11));
+
+            // Alpha is determined in RGB565 representation
+            // If alpha, Color 1 is greater or equal to color 0
+            // If no alpha, Color 0 is greater than color 1
+            if ((hasAlpha0 && dxt1a) != (leftBin < rightBin))
+            {
+                // hasAlpha0 && (leftBin >= rightbin)
+                // !hasAlpha && (leftBin < rightbin)
+                color0 = rightCol;
+                colorBin0 = rightBin;
+                color1 = leftCol;
+                colorBin1 = leftBin;
+            }
+            else
+            {
+                // hasAlpha0 && (leftBin < rightbin)
+                // !hasAlpha && (leftBin >= rightbin)
+                color0 = leftCol;
+                colorBin0 = leftBin;
+                color1 = rightCol;
+                colorBin1 = rightBin;
+            }
         }
 
         public static Color[] Decimate(Color[] old, int w, int h)
