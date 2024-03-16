@@ -30,6 +30,7 @@ using FSO.Server.Database.DA.Elections;
 using FSO.Server.Database.DA.Bulletin;
 using FSO.Server.Database.DA.Updates;
 using FSO.Server.Database.DA.GlobalCooldowns;
+using FSO.Server.Database.DA.AvatarTop100;
 
 namespace FSO.Server.Database.DA
 {
@@ -61,6 +62,7 @@ namespace FSO.Server.Database.DA
         ITuning Tuning { get; }
         IDynPayouts DynPayouts { get; }
         ITransactions Transactions { get; }
+        IAvatarTop100 AvatarTop100 { get; }
 
         //System tables
         IHosts Hosts { get; }
