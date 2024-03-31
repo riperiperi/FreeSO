@@ -196,7 +196,7 @@ namespace FSO.LotView.Components
                 }
                 else return 0;
             }
-            else if (pattern < 65534 || pattern == 65535) return pattern;
+            else if (pattern < 65534 || (pattern == 65535 && !af2019)) return pattern;
             else
             {
                 //pool tile... check adjacent tiles
@@ -250,6 +250,29 @@ namespace FSO.LotView.Components
         };
 
         private bool Alt;
+
+        private Vector4 GetParallaxMatrix(WorldState state)
+        {
+            Vector4 mat;
+
+            switch (state.Rotation)
+            {
+                case WorldRotation.TopLeft:
+                    mat = new Vector4(0.7071f, -0.7071f, 0.7071f, 0.7071f);
+                    break;
+                case WorldRotation.TopRight:
+                    mat = new Vector4(0.7071f, 0.7071f, -0.7071f, 0.7071f);
+                    break;
+                case WorldRotation.BottomRight:
+                    mat = new Vector4(-0.7071f, 0.7071f, -0.7071f, -0.7071f);
+                    break;
+                default:
+                    mat = new Vector4(-0.7071f, -0.7071f, 0.7071f, -0.7071f);
+                    break;
+            }
+
+            return mat;
+        }
 
         public void DrawFloor(GraphicsDevice gd, GrassEffect e, WorldZoom zoom, WorldRotation rot, List<Texture2D> roommaps, HashSet<sbyte> floors, EffectPass pass, 
             Matrix? lightWorld = null, WorldState state = null, int minFloor = 0, bool screenAlignUV = false)
@@ -450,7 +473,7 @@ namespace FSO.LotView.Components
                     {
                         var parallaxPass = e.CurrentTechnique.Passes[4];
                         e.ParallaxTex = pSPR;
-                        e.ParallaxUVTexMat = new Vector4(0.7071f, -0.7071f, 0.7071f, 0.7071f);
+                        e.ParallaxUVTexMat = GetParallaxMatrix(state);
                         e.ParallaxHeight = 0.1f;
                         parallaxPass.Apply();
                     }
@@ -573,7 +596,7 @@ namespace FSO.LotView.Components
         {
             FloorTileGroup group;
 
-            if (tileID == 65535)
+            if (!_3DFloorGeometry.af2019 && tileID == 65535)
             {
                 //pool tile group
                 group = new Modelled3DPool(Bp);
