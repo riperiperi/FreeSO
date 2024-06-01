@@ -146,6 +146,13 @@ namespace FSO.Server.Servers.Lot.Domain
             0x5157DDF2
         };
 
+        private static HashSet<uint> NeverResetGUIDs = new HashSet<uint>()
+        {
+            0x3278BD34,
+            0x5157DDF2,
+            0x352A8ACE
+        };
+
         public LotContainer(IDAFactory da, LotContext context, ILotHost host, IKernel kernel, LotServerConfiguration config, IRealestateDomain realestate)
         {
             VM.UseWorld = false;
@@ -807,13 +814,13 @@ namespace FSO.Server.Servers.Lot.Domain
                     }
                     if (ent.GetFlag(VMEntityFlags.Occupied))
                     {
-                        if (PetCrateGUIDs.Contains(ent.Object.OBJ.GUID))
+                        if (NeverResetGUIDs.Contains(ent.Object.OBJ.GUID))
                         {
                             //typically pet crates or other things which should never have state deleted.
                             ent.SetFlag(VMEntityFlags.Occupied, false);
                             if (ent.Position == LotTilePos.OUT_OF_WORLD)
                             {
-                                //put it close to the mailbox
+                                //try put it close to the mailbox
                                 var mailbox = Lot.Entities.FirstOrDefault(x => (x.Object.OBJ.GUID == 0xEF121974 || x.Object.OBJ.GUID == 0x1D95C9B0));
                                 if (mailbox != null) SimAntics.Primitives.VMFindLocationFor.FindLocationFor(ent, mailbox, Lot.Context, VMPlaceRequestFlags.UserPlacement);
                             }
