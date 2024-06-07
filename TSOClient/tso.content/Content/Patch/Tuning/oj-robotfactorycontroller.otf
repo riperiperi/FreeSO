@@ -7,6 +7,10 @@
       (10/15/20/25/25/30/30/35/40/45/50)
     - increased roughly 2.5x, gradual scaling
       (30/40/50/60/70/80/90/100/110/120/130)
+
+   UPDATED CHANGES
+   - same baseline but higher pay raise per promotion to be a more viable alternative to restaurant job
+      (30/50/70/90/110/130/150/170/190/210/230)
    -->
 
    <T i="4096" n="Tuning - grade 0">
@@ -31,7 +35,7 @@
       <K i="5" l="StartRoundMaxUnitsBroken" v="1"></K>
       <K i="6" l="%ChanceUnitWillBreakPerCheck" v="5"></K>
       <K i="7" l="SecondsPerBreakCheck" v="115"></K>
-      <K i="8" l="RoundPayoutPerRobot" v="40"></K>
+      <K i="8" l="RoundPayoutPerRobot" v="50"></K>
       <K i="9" l="XPIncAtRoundEnd" v="2"></K>
    </T>
 
@@ -44,7 +48,7 @@
       <K i="5" l="StartRoundMaxUnitsBroken" v="1"></K>
       <K i="6" l="SecondsPerBreakCheck" v="110"></K>
       <K i="7" l="%ChanceUnitWillBreakPerCheck" v="5"></K>
-      <K i="8" l="RoundPayoutPerRobot" v="50"></K>
+      <K i="8" l="RoundPayoutPerRobot" v="70"></K>
       <K i="9" l="XPIncAtRoundEnd" v="2"></K>
    </T>
 
@@ -57,7 +61,7 @@
       <K i="5" l="StartRoundMaxUnitsBroken" v="1"></K>
       <K i="6" l="SecondsPerBreakCheck" v="100"></K>
       <K i="7" l="%ChanceUnitWillBreakPerCheck" v="5"></K>
-      <K i="8" l="RoundPayoutPerRobot" v="60"></K>
+      <K i="8" l="RoundPayoutPerRobot" v="90"></K>
       <K i="9" l="XPIncAtRoundEnd" v="2"></K>
    </T>
 
@@ -70,7 +74,7 @@
       <K i="5" l="StartRoundMaxUnitsBroken" v="1"></K>
       <K i="6" l="SecondsPerBreakCheck" v="95"></K>
       <K i="7" l="%ChanceUnitWillBreakPerCheck" v="5"></K>
-      <K i="8" l="RoundPayoutPerRobot" v="70"></K>
+      <K i="8" l="RoundPayoutPerRobot" v="110"></K>
       <K i="9" l="XPIncAtRoundEnd" v="2"></K>
    </T>
 
@@ -83,7 +87,7 @@
       <K i="5" l="StartRoundMaxUnitsBroken" v="1"></K>
       <K i="6" l="SecondsPerBreakCheck" v="90"></K>
       <K i="7" l="%ChanceUnitWillBreakPerCheck" v="5"></K>
-      <K i="8" l="RoundPayoutPerRobot" v="80"></K>
+      <K i="8" l="RoundPayoutPerRobot" v="130"></K>
       <K i="9" l="XPIncAtRoundEnd" v="2"></K>
    </T>
 
@@ -96,7 +100,7 @@
       <K i="5" l="StartRoundMaxUnitsBroken" v="1"></K>
       <K i="6" l="SecondsPerBreakCheck" v="85"></K>
       <K i="7" l="%ChanceUnitWillBreakPerCheck" v="5"></K>
-      <K i="8" l="RoundPayoutPerRobot" v="90"></K>
+      <K i="8" l="RoundPayoutPerRobot" v="150"></K>
       <K i="9" l="XPIncAtRoundEnd" v="2"></K>
    </T>
 
@@ -109,7 +113,7 @@
       <K i="5" l="StartRoundMaxUnitsBroken" v="1"></K>
       <K i="6" l="SecondsPerBreakCheck" v="80"></K>
       <K i="7" l="%ChanceUnitWillBreakPerCheck" v="5"></K>
-      <K i="8" l="RoundPayoutPerRobot" v="100"></K>
+      <K i="8" l="RoundPayoutPerRobot" v="170"></K>
       <K i="9" l="XPIncAtRoundEnd" v="2"></K>
    </T>
 
@@ -122,7 +126,7 @@
       <K i="5" l="StartRoundMaxUnitsBroken" v="1"></K>
       <K i="6" l="SecondsPerBreakCheck" v="75"></K>
       <K i="7" l="%ChanceUnitWillBreakPerCheck" v="5"></K>
-      <K i="8" l="RoundPayoutPerRobot" v="110"></K>
+      <K i="8" l="RoundPayoutPerRobot" v="190"></K>
       <K i="9" l="XPIncAtRoundEnd" v="2"></K>
    </T>
 
@@ -135,7 +139,7 @@
       <K i="5" l="StartRoundMaxUnitsBroken" v="1"></K>
       <K i="6" l="SecondsPerBreakCheck" v="70"></K>
       <K i="7" l="%ChanceUnitWillBreakPerCheck" v="5"></K>
-      <K i="8" l="RoundPayoutPerRobot" v="120"></K>
+      <K i="8" l="RoundPayoutPerRobot" v="210"></K>
       <K i="9" l="XPIncAtRoundEnd" v="2"></K>
    </T>
 
@@ -148,7 +152,7 @@
       <K i="5" l="StartRoundMaxUnitsBroken" v="1"></K>
       <K i="6" l="SecondsPerBreakCheck" v="60"></K>
       <K i="7" l="%ChanceUnitWillBreakPerCheck" v="5"></K>
-      <K i="8" l="RoundPayoutPerRobot" v="130"></K>
+      <K i="8" l="RoundPayoutPerRobot" v="230"></K>
       <K i="9" l="XPIncAtRoundEnd" v="2"></K>
    </T>
 
