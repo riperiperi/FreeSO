@@ -39,7 +39,10 @@ namespace FSO.Client.UI.Panels.EODs
             { 0x00001003, typeof(UIBulletinEOD) },
             { 0x00001004, typeof(UICooldownEventEOD) },
             { 0x00001005, typeof(UIGameshowBuzzerPlayerEOD) },
-            { 0x00001006, typeof(UIGameshowBuzzerHostEOD) }
+            { 0x00001006, typeof(UIGameshowBuzzerHostEOD) },
+
+            //for freeso-archive
+            { 0x00002000, typeof(UIPropertySelectEOD) },
         };
 
         //this class is a container so that it can hold EODs without them being active in Live Mode.

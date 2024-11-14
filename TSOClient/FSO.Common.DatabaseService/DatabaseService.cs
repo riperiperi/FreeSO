@@ -17,6 +17,8 @@ namespace FSO.Common.DatabaseService
 
         public static object Sync = new object();
 
+        public bool IsConnected => CityClient.IsConnected;
+
         private uint messageId;
         private AriesClient CityClient;
         private Dictionary<uint, PendingRequest> PendingRequests = new Dictionary<uint, PendingRequest>();
