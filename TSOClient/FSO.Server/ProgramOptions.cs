@@ -52,10 +52,10 @@ namespace FSO.Server
         [ValueOption(1)]
         public string RestoreFolder { get; set; }
 
-        [Option('l', "location", DefaultValue = 0, HelpText = "Override location to place the property.")]
+        [Option('l', "location", DefaultValue = 0u, HelpText = "Override location to place the property.")]
         public uint Location { get; set; }
 
-        [Option('t', "owner", DefaultValue = 0, HelpText = "Override avatar id to own the property.")]
+        [Option('t', "owner", DefaultValue = 0u, HelpText = "Override avatar id to own the property.")]
         public uint Owner { get; set; }
 
         [Option('c', "category", DefaultValue = -1, HelpText = "Override property category.")]
