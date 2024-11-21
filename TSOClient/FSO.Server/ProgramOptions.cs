@@ -52,6 +52,15 @@ namespace FSO.Server
         [ValueOption(1)]
         public string RestoreFolder { get; set; }
 
+        [Option('l', "location", DefaultValue = 0, HelpText = "Override location to place the property.")]
+        public uint Location { get; set; }
+
+        [Option('t', "owner", DefaultValue = 0, HelpText = "Override avatar id to own the property.")]
+        public uint Owner { get; set; }
+
+        [Option('c', "category", DefaultValue = -1, HelpText = "Override property category.")]
+        public int Category { get; set; }
+
         [Option('r', "report", DefaultValue = false, HelpText = "Report changes that would be made restoring the lot, " +
             "eg. add/remove/reown of objects, lot positon (and if we can restore it) ")]
         public bool Report { get; set; }
@@ -62,5 +71,8 @@ namespace FSO.Server
 
         [Option('s', "safe", DefaultValue = false, HelpText = "Do not return objects that have been placed, only ones in inventories.")]
         public bool Safe { get; set; }
+
+        [Option('d', "donate", DefaultValue = false, HelpText = "Convert all objects to donated so they don't have to belong to roommates.")]
+        public bool Donate { get; set; }
     }
 }

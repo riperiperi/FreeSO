@@ -143,11 +143,12 @@ namespace FSO.Server
 
                     var lot = new DbLot();
                     lot.name = state.Name;
-                    lot.location = state.LotID;
+                    lot.location = Options.Location != 0 ? Options.Location : state.LotID;
                     lot.description = "Restored from FSOV";
+                    if (Options.Category != -1) state.PropertyCategory = (byte)Options.Category;
                     if (state.PropertyCategory == 255) state.PropertyCategory = 11;
                     lot.category = (LotCategory)state.PropertyCategory;
-                    lot.owner_id = RemapAvatarID(da, state.OwnerID);
+                    lot.owner_id = RemapAvatarID(da, Options.Owner != 0 ? Options.Owner : state.OwnerID);
                     lot.neighborhood_id = state.NhoodID;
                     lot.ring_backup_num = 0;
                     lot.shard_id = Options.ShardId;
@@ -217,6 +218,15 @@ namespace FSO.Server
                         if (estate != null)
                         {
                             estate.OwnerID = RemapAvatarID(da, estate.OwnerID); //make sure the owners exist
+
+                            if (Options.Donate)
+                            {
+                                if (estate.OwnerID != 0)
+                                {
+                                    // Any object with an owner should become donated
+                                    estate.ObjectFlags |= VMTSOObjectFlags.FSODonated;
+                                }
+                            }
                         }
                     }
 
