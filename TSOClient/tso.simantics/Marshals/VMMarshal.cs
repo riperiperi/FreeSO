@@ -119,7 +119,7 @@ namespace FSO.SimAntics.Marshals
         public void SerializeInto(BinaryWriter writer)
         {
             writer.Write(new char[] { 'F', 'S', 'O', 'v' });
-            writer.Write(Version);
+            writer.Write(LATEST_VERSION);
             writer.Write(Compressed);
 
             var uWriter = writer;

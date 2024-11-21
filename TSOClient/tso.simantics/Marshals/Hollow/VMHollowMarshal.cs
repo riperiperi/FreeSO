@@ -54,7 +54,7 @@ namespace FSO.SimAntics.Marshals.Hollow
         public void SerializeInto(BinaryWriter writer)
         {
             writer.Write(new char[] { 'F', 'S', 'O', 'h' });
-            writer.Write(Version);
+            writer.Write(VMMarshal.LATEST_VERSION);
             writer.Write(Compressed);
 
             var uWriter = writer;

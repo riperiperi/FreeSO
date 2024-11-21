@@ -9,7 +9,6 @@ namespace FSO.SimAntics.Marshals
 {
     public class VMStandaloneObjectMarshal
     {
-
         public int Version = VMMarshal.LATEST_VERSION;
         public bool Compressed = true;
 
@@ -49,7 +48,7 @@ namespace FSO.SimAntics.Marshals
         public void SerializeInto(BinaryWriter writer)
         {
             writer.Write(new char[] { 'F', 'S', 'O', 'o' });
-            writer.Write(Version);
+            writer.Write(VMMarshal.LATEST_VERSION);
             writer.Write(Compressed);
 
             var uWriter = writer;
