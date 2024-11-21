@@ -253,7 +253,7 @@ namespace FSO.Server
                             {
                                 Console.Write("++");
                                 Console.Write(guid);
-                                Console.Write(": Does not exist in DB. Creating new entry...");
+                                Console.Write($": {obj.PersistID} Does not exist in DB. Creating new entry...");
                                 objectCreate++;
                                 CreateDbObject(da, obj, lot);
                                 Done();
@@ -263,8 +263,8 @@ namespace FSO.Server
                                 if (dbObj.lot_id != null)
                                 {
                                     Console.Write("!!");
-                                    Console.Write(dbObj.dyn_obj_name ?? dbObj.type.ToString());
-                                    Console.Write(": In another property! ");
+                                    Console.Write(string.IsNullOrEmpty(dbObj.dyn_obj_name) ? dbObj.type.ToString() : dbObj.dyn_obj_name);
+                                    Console.Write($": {obj.PersistID} In another property ({dbObj.lot_id} with owner {dbObj.owner_id})! ");
                                     if (Options.Safe || Options.Objects)
                                     {
                                         if (Options.Objects)
@@ -291,8 +291,8 @@ namespace FSO.Server
                                 else
                                 {
                                     Console.Write("~~");
-                                    Console.Write(dbObj.dyn_obj_name ?? dbObj.type.ToString());
-                                    Console.Write(": In a user's inventory. ");
+                                    Console.Write(string.IsNullOrEmpty(dbObj.dyn_obj_name) ? dbObj.type.ToString() : dbObj.dyn_obj_name);
+                                    Console.Write($": {obj.PersistID} In a user's inventory ({dbObj.owner_id}). ");
                                     if (dbObj.type != guid) Console.Write("(WRONG GUID - MAKING NEW OBJECT) ");
                                     if (Options.Objects || dbObj.type != guid)
                                     {
