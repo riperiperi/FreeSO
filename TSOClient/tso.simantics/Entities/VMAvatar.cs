@@ -643,8 +643,15 @@ namespace FSO.SimAntics
             var routine = tree.routine;
 
             var qaction = GetAction(LEAVE_LOT_ACTION, this, Thread.Context, false);
-            qaction.Flags |= TTABFlags.FSOSkipPermissions;
-            if (qaction != null) Thread.EnqueueAction(qaction);
+            if (qaction != null)
+            {
+                qaction.Flags |= TTABFlags.FSOSkipPermissions;
+                Thread.EnqueueAction(qaction);
+            }
+            else
+            {
+                KillTimeout = FORCE_DELETE_TIMEOUT;
+            }
 
             if (KillTimeout == -1) KillTimeout = 0;
         }
