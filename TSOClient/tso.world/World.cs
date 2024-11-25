@@ -398,8 +398,18 @@ namespace FSO.LotView
         {
             if (Blueprint == null) { return new Tuple<float, float>(0, 0); }
             var terrainHeight = (Blueprint.InterpAltitude(new Vector3(State.CenterTile, 0))) * 3;
-            var targHeight = terrainHeight + (State.Level - 1) * 2.95f * 3;
-            targHeight = Math.Max((Blueprint.InterpAltitude(new Vector3(State.Camera.Position.X, State.Camera.Position.Z, 0) / 3) + (State.Level - 1) * 2.95f) * 3, terrainHeight);
+
+            float targHeight;
+
+            if (State.ScrollAnchor?.MyMario != null)
+            {
+                targHeight = State.ScrollAnchor.MyMario.GetMarioPosition().Z * 3;
+            }
+            else
+            {
+                targHeight = Math.Max((Blueprint.InterpAltitude(new Vector3(State.Camera.Position.X, State.Camera.Position.Z, 0) / 3) + (State.Level - 1) * 2.95f) * 3, terrainHeight);
+            }
+
             return new Tuple<float, float>(terrainHeight, targHeight);
         }
 

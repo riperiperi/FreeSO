@@ -348,12 +348,29 @@ namespace FSO.LotView.Components
             return new Tuple<Vector3, Vector3>(pos, angle);
         }
 
+        public bool TileIndoors(int x, int y, int level)
+        {
+            if (x < 0 || y < 0 || level < 0 || x >= Bp.Width || y >= Bp.Height || level >= Bp.Stories)
+            {
+                return false;
+            }
+
+            var room = Bp.RoomMap[level - 1][x + y * Bp.Width];
+            var room1 = room & 0xFFFF;
+            var room2 = (room >> 16) & 0x7FFF;
+            if (room1 < Bp.Rooms.Count && !Bp.Rooms[(int)room1].IsOutside) return true;
+            if (room2 > 0 && room2 < Bp.Rooms.Count && !Bp.Rooms[(int)room2].IsOutside) return true;
+            return false;
+        }
+
         public sbyte DetermineLevel(Vector3 pos)
         {
             float elevation = Bp.InterpAltitude(pos);
             float height = pos.Z - elevation;
 
-            return (sbyte)(Math.Max(0, Math.Min(Bp.Stories - 1, Math.Floor((height + 0.5f) / 2.95f))) + 1);
+            sbyte level = (sbyte)(Math.Max(0, Math.Min(Bp.Stories - 1, Math.Floor((height + 0.5f) / 2.95f))) + 1);
+
+            return TileIndoors((int)pos.X, (int)pos.Y, level) ? level : (sbyte)(Bp.Stories - 1);
         }
 
         public void RemoveMario(AvatarComponent avatar)
