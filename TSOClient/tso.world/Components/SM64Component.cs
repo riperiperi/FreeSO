@@ -171,9 +171,9 @@ namespace FSO.LotView.Components
             return new Tuple<float, float>(volume, pan);
         }
 
-        public sbyte DetermineLevel()
+        public sbyte DetermineLevel(bool forLight)
         {
-            return Component.DetermineLevel(GetMarioPosition());
+            return Component.DetermineLevel(GetMarioPosition(), forLight);
         }
     }
 
@@ -363,14 +363,14 @@ namespace FSO.LotView.Components
             return false;
         }
 
-        public sbyte DetermineLevel(Vector3 pos)
+        public sbyte DetermineLevel(Vector3 pos, bool forLight)
         {
             float elevation = Bp.InterpAltitude(pos);
             float height = pos.Z - elevation;
 
             sbyte level = (sbyte)(Math.Max(0, Math.Min(Bp.Stories - 1, Math.Floor((height + 0.5f) / 2.95f))) + 1);
 
-            return TileIndoors((int)pos.X, (int)pos.Y, level) ? level : (sbyte)(Bp.Stories - 1);
+            return forLight || TileIndoors((int)pos.X, (int)pos.Y, level) ? level : (sbyte)(Bp.Stories - 1);
         }
 
         public void RemoveMario(AvatarComponent avatar)
@@ -770,7 +770,7 @@ namespace FSO.LotView.Components
             rotation = SmartLerp(visual.LastRotation, rotation, visual.InterpProgress, 0.4f);
             scale = Vector3.Lerp(visual.LastScale, scale, visual.InterpProgress);
 
-            sbyte level = visual.DetermineLevel();
+            sbyte level = visual.DetermineLevel(true);
 
             Matrix world = Matrix.CreateScale(scale) *
                 Matrix.CreateRotationZ(rotation.Z) *

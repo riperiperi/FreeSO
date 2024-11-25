@@ -38,6 +38,29 @@ namespace FSO.LotView.Components.Model
             }
         );
 
+        private static SM64ObjectGeometryObj GenStairsGeo(float baseHeight)
+        {
+            int steps = 6;
+            float stepSize = 1f / steps;
+
+            var entries = new SM64ObjectGeometry4C[steps];
+
+            for (int i = 0; i < steps; i++)
+            {
+                float step = i * stepSize;
+                float step1 = (i + 1) * stepSize;
+                float s0 = (baseHeight + 0.25f * step1) * 2.95f;
+                entries[i] = new SM64ObjectGeometry4C(new Vector3(0, s0, 1f - step), new Vector3(1, s0, 1f - step), new Vector3(1, s0, 1 - step1), new Vector3(0, s0, 1 - step1));
+            }
+
+            return new SM64ObjectGeometryObj(entries);
+        }
+
+        private static SM64ObjectGeometryObj StairLowAdv = GenStairsGeo(0f);
+        private static SM64ObjectGeometryObj StairMiddleLowAdv = GenStairsGeo(0.25f);
+        private static SM64ObjectGeometryObj StairMiddleHiAdv = GenStairsGeo(0.5f);
+        private static SM64ObjectGeometryObj StairHiAdv = GenStairsGeo(0.75f);
+
         private static SM64ObjectGeometryObj StairLow = new SM64ObjectGeometryObj(
             new SM64ObjectGeometry4C[] { 
                 new SM64ObjectGeometry4C(new Vector3(0, 0, 1), new Vector3(1, 0, 1), new Vector3(1, 2.95f * 0.25f, 0), new Vector3(0, 2.95f * 0.25f, 0))

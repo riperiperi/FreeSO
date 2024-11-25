@@ -502,7 +502,7 @@ namespace FSO.LotView
 
                 if (((AvatarComponent)comp).MyMario != null)
                 {
-                    level = ((AvatarComponent)comp).MyMario.DetermineLevel();
+                    level = ((AvatarComponent)comp).MyMario.DetermineLevel(false);
                 }
             }
             else
