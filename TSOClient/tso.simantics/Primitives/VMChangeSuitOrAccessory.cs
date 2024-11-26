@@ -164,6 +164,45 @@ namespace FSO.SimAntics.Primitives
         public VMSuitScope SuitScope { get; set; }
         public VMChangeSuitOrAccessoryFlags Flags { get; set; }
 
+        public bool Remove
+        {
+            get
+            {
+                return (Flags & VMChangeSuitOrAccessoryFlags.Remove) > 0;
+            }
+            set
+            {
+                if (value) Flags |= VMChangeSuitOrAccessoryFlags.Remove;
+                else Flags &= ~VMChangeSuitOrAccessoryFlags.Remove;
+            }
+        }
+
+        public bool UseTemp
+        {
+            get
+            {
+                return (Flags & VMChangeSuitOrAccessoryFlags.UseTemp) > 0;
+            }
+            set
+            {
+                if (value) Flags |= VMChangeSuitOrAccessoryFlags.UseTemp;
+                else Flags &= ~VMChangeSuitOrAccessoryFlags.UseTemp;
+            }
+        }
+
+        public bool Update
+        {
+            get
+            {
+                return (Flags & VMChangeSuitOrAccessoryFlags.Update) > 0;
+            }
+            set
+            {
+                if (value) Flags |= VMChangeSuitOrAccessoryFlags.Update;
+                else Flags &= ~VMChangeSuitOrAccessoryFlags.Update;
+            }
+        }
+
         #region VMPrimitiveOperand Members
         public void Read(byte[] bytes)
         {

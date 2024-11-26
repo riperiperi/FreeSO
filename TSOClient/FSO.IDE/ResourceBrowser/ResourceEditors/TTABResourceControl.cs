@@ -177,7 +177,7 @@ namespace FSO.IDE.ResourceBrowser.ResourceEditors
 
         public BHAV GetBHAV(ushort id)
         {
-            if (id >= 8192 && Object != null) return Object.Resource.SemiGlobal.Get<BHAV>(id); //semiglobal
+            if (id >= 8192 && Object != null) return Object.Resource.SemiGlobal?.Get<BHAV>(id); //semiglobal
             else if (id >= 4096) return Resource.Get<BHAV>(id); //private
             else return EditorScope.Globals.Resource.Get<BHAV>(id); //global
         }

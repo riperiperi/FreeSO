@@ -32,7 +32,11 @@ namespace FSO.IDE.EditorComponent.Primitives
             panel.Controls.Add(new OpLabelControl(master, escope, Operand, new OpStaticTextProvider("Changes the Caller's suit to the specified. Can change outfits and add accessories.")));
             panel.Controls.Add(new OpValueControl(master, escope, Operand, "Suit Data: ", "SuitData", new OpStaticValueBoundsProvider(0, 255)));
             panel.Controls.Add(new OpComboControl(master, escope, Operand, "Suit Scope:", "SuitScope", new OpStaticNamedPropertyProvider(EditorScope.Behaviour.Get<STR>(227))));
-            panel.Controls.Add(new OpComboControl(master, escope, Operand, "Suit Op:", "Flags", new OpStaticNamedPropertyProvider(EditorScope.Behaviour.Get<STR>(228))));
+            panel.Controls.Add(new OpFlagsControl(master, escope, Operand, "Suit Op:", new OpFlag[] {
+                new OpFlag("Remove Accessory", "Remove"),
+                new OpFlag("Use Temp", "UseTemp"),
+                new OpFlag("Update Outfit", "Update"),
+                }));
         }
     }
 }
