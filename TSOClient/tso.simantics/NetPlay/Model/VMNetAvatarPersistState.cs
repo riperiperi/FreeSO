@@ -251,7 +251,7 @@ namespace FSO.SimAntics.NetPlay.Model
             saveDaywear = saveDaywear || (bID == 0x24E0000000D || bID == 0x10000000D);
             BodyOutfit = (saveDaywear)?avatar.DefaultSuits.Daywear.ID : bID;
 
-            HeadOutfit = avatar.HeadOutfit.ID;
+            HeadOutfit = avatar.HeadOutfit?.ID ?? 0;
             Name = avatar.Name;
             Permissions = avatar.AvatarState.Permissions;
             AvatarFlags = ((VMTSOAvatarState)avatar.TSOState).Flags;
