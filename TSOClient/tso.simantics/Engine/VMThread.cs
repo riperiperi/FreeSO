@@ -971,7 +971,7 @@ namespace FSO.SimAntics.Engine
                     if (avatar.IsCat && (action.Flags & TTABFlags.AllowCats) == 0) return null;
                     if (avatar.IsDog && (action.Flags & TTABFlags.AllowDogs) == 0) return null;
                 }
-                else if (avatar.IsPet && avatar.AvatarState.Permissions < VMTSOAvatarPermissions.Admin) return null; //not allowed
+                else if (avatar.IsPet && (avatar.AvatarState.Permissions < VMTSOAvatarPermissions.Admin || auto)) return null; //not allowed
 
                 bool isActionGlobal = action.ActionRoutine.ID < 4096; // Ignore global actions for disabling interactions due to repair.
                 bool isRepair = (action.Flags & TTABFlags.TSOIsRepair) > 0;

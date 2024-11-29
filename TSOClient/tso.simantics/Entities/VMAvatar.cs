@@ -640,7 +640,6 @@ namespace FSO.SimAntics
             }
 
             var tree = GetRoutineWithOwner(LEAVE_LOT_TREE, Thread.Context);
-            var routine = tree.routine;
 
             var qaction = GetAction(LEAVE_LOT_ACTION, this, Thread.Context, false);
             if (qaction != null)
