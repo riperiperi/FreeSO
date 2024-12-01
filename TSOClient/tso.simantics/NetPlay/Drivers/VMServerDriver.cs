@@ -14,6 +14,7 @@ namespace FSO.SimAntics.NetPlay.Drivers
     public class VMServerDriver : VMNetDriver
     {
         private List<VMNetCommand> QueuedCmds;
+        private List<VMNetCommand> DeferredCmds;
 
         private const int TICKS_PER_PACKET = 4;
         private const int INACTIVITY_TICKS_WARN = 15 * 60 * 30;
@@ -69,6 +70,7 @@ namespace FSO.SimAntics.NetPlay.Drivers
             NewClients = new HashSet<VMNetClient>();
             ResyncClients = new HashSet<VMNetClient>();
             QueuedCmds = new List<VMNetCommand>();
+            DeferredCmds = new List<VMNetCommand>();
             TickBuffer = new List<VMNetTick>();
 
             SandboxBans = new BanList();
@@ -205,11 +207,57 @@ namespace FSO.SimAntics.NetPlay.Drivers
             //if neither of the above happen, we're waiting for the serialization to complete (in the task)
         }
 
+        /// <summary>
+        /// Potentially defer this command to be queued later if there would be a duplicate in this tick.
+        /// Useful for smoothing out commands that should be sent once per tick (30 times a second).
+        /// </summary>
+        /// <remarks>
+        /// Assumes the lock for QueuedCmds is held.
+        /// </remarks>
+        /// <param name="cmd">Command to queue</param>
+        /// <returns>True if the command was deferred, false otherwise.</returns>
+        private bool TryFlowControl(VMNetCommand cmd)
+        {
+            if (cmd.Command is VMNetDirectControlCommand dc)
+            {
+                bool hasMatch = false;
+                foreach (var otherCmd in QueuedCmds)
+                {
+                    if (otherCmd.Command is VMNetDirectControlCommand dc2)
+                    {
+                        if (dc2.ActorUID == dc.ActorUID)
+                        {
+                            hasMatch = true;
+                            break;
+                        }
+                    }
+                }
+
+                if (hasMatch)
+                {
+                    // Defer this command to queue in the tick afterwards.
+
+                    lock (DeferredCmds)
+                    {
+                        DeferredCmds.Add(cmd);
+                    }
+
+                    return true;
+                }
+            }
+
+            return false;
+        }
+
         public override void SendCommand(VMNetCommandBodyAbstract cmd)
         {
             lock (QueuedCmds)
             {
-                QueuedCmds.Add(new VMNetCommand(cmd));
+                var command = new VMNetCommand(cmd);
+                if (!TryFlowControl(command))
+                {
+                    QueuedCmds.Add(command);
+                }
             }
         }
 
@@ -223,6 +271,15 @@ namespace FSO.SimAntics.NetPlay.Drivers
             {
                 cmdQueue = new List<VMNetCommand>(QueuedCmds);
                 QueuedCmds.Clear();
+
+                lock (DeferredCmds)
+                {
+                    if (DeferredCmds.Count > 0)
+                    {
+                        QueuedCmds.AddRange(DeferredCmds);
+                        DeferredCmds.Clear();
+                    }
+                }
             }
 
             //verify the queued commands. Remove ones which fail (or defer til later)
