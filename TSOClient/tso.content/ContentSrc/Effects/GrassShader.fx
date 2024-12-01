@@ -33,6 +33,7 @@ float Alpha;
 float GrassShininess;
 bool UseTexture;
 bool IgnoreColor;
+bool Ceiling;
 float Bias = -999;
 
 float ParallaxHeight = 1.0;
@@ -717,7 +718,7 @@ void BasePS3D(GrassPSVTX input, out float4 color:COLOR0)
 	if (IgnoreColor == false) color *= input.Color;
 	if (UseTexture == true) {
 		// I cannot for the life of me find out why VFACE doesn't exist on ps4.0.
-		if (dot(input.Normal, normalize(CamPos - input.ModelPos.xyz)) > 0.0) {
+		if (Ceiling == false) {
 #if SIMPLE
 			color *= tex2D(TexSampler, LoopUV(input.GrassInfo.yz));
 #else

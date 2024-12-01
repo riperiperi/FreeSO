@@ -277,6 +277,7 @@ namespace FSO.LotView.Components
         public void DrawFloor(GraphicsDevice gd, GrassEffect e, WorldZoom zoom, WorldRotation rot, List<Texture2D> roommaps, HashSet<sbyte> floors, EffectPass pass, 
             Matrix? lightWorld = null, WorldState state = null, int minFloor = 0, bool screenAlignUV = false)
         {
+            bool is3D = state?.CameraMode == CameraRenderMode._3D;
             var parallax = WorldConfig.Current.Complex;
             var buggedTex = WorldConfig.Current.AdvancedLighting ? 1 : 0;
             //assumes the effect and all its parameters have been set up already
@@ -288,6 +289,11 @@ namespace FSO.LotView.Components
             e.TexMatrix = tmat;
             e.ScreenAlignUV = screenAlignUV;
             var baseRS = gd.RasterizerState;
+
+            if (lightWorld == null)
+            {
+                gd.RasterizerState = RasterizerState.CullCounterClockwise;
+            }
 
             var f = 0;
             foreach (var floor in Floors)
@@ -489,6 +495,19 @@ namespace FSO.LotView.Components
                     }
                     gd.DrawIndexedPrimitives(PrimitiveType.TriangleList, 0, 0, type.Value.GeomForOffset.Count * 2);
 
+                    if (f > 1 && is3D && lightWorld == null)
+                    {
+                        // Draw ceilings in 3D mode.
+                        gd.RasterizerState = RasterizerState.CullClockwise;
+                        e.Ceiling = true;
+                        pass.Apply();
+
+                        gd.DrawIndexedPrimitives(PrimitiveType.TriangleList, 0, 0, type.Value.GeomForOffset.Count * 2);
+
+                        gd.RasterizerState = RasterizerState.CullCounterClockwise;
+                        e.Ceiling = false;
+                    }
+
                     if (id == 0)
                     {
                         e.UseTexture = true;
@@ -505,6 +524,8 @@ namespace FSO.LotView.Components
             }
             e.Water = false;
             Alt = !Alt;
+
+            gd.RasterizerState = baseRS;
         }
 
         /*
