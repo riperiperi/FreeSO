@@ -1,20 +1,20 @@
-﻿using System;
-using System.Collections.Generic;
+﻿using FSO.Common;
+using FSO.Common.Model;
 using FSO.Common.Rendering.Framework;
-using Microsoft.Xna.Framework;
-using FSO.LotView.Model;
-using Microsoft.Xna.Framework.Graphics;
 using FSO.Common.Rendering.Framework.Model;
-using FSO.LotView.Components;
 using FSO.Common.Utils;
-using FSO.Common;
+using FSO.LotView.Components;
 using FSO.LotView.LMap;
-using FSO.LotView.RC;
-using System.Diagnostics;
+using FSO.LotView.Model;
 using FSO.LotView.Platform;
+using FSO.LotView.RC;
 using FSO.LotView.Utils;
 using FSO.LotView.Utils.Camera;
-using FSO.Common.Model;
+using Microsoft.Xna.Framework;
+using Microsoft.Xna.Framework.Graphics;
+using System;
+using System.Collections.Generic;
+using System.Diagnostics;
 
 namespace FSO.LotView
 {
@@ -366,12 +366,6 @@ namespace FSO.LotView
             var transTime = instant ? 0 : -1;
 
             var fpTuning = DynamicTuning.Global?.GetTuning("aprilfools", 0, 2023) ?? 0;
-            bool forceFp = (Platform == null && fpTuning > 0) || (State.Cameras.ActiveType == CameraControllerType.FirstPerson && instant);
-
-            if (forceFp && mode == GlobalGraphicsMode.Hybrid2D)
-            {
-                mode = GlobalGraphicsMode.Full3D;
-            }
 
             switch (mode)
             {
@@ -381,7 +375,7 @@ namespace FSO.LotView
                     Platform = new WorldPlatform2D(Blueprint);
                     break;
                 case GlobalGraphicsMode.Full3D:
-                    State.SetCameraType(this, forceFp ? CameraControllerType.FirstPerson : CameraControllerType._3D, transTime);
+                    State.SetCameraType(this, CameraControllerType._3D, transTime);
                     Platform = new WorldPlatform3D(Blueprint);
                     State.Zoom = WorldZoom.Near;
                     break;
@@ -499,8 +493,8 @@ namespace FSO.LotView
             } else {
                 State.CenterTile = new Vector2(pelvisCenter.X, pelvisCenter.Y);
 
-                State.Cameras.CameraFirstPerson.FirstPersonAvatar = isFirstPerson ? comp as AvatarComponent : null;
-                if (isFirstPerson && State.Cameras.ActiveType == CameraControllerType.FirstPerson)
+                State.Cameras.CameraDirect.FirstPersonAvatar = isFirstPerson ? comp as AvatarComponent : null;
+                if (isFirstPerson && State.Cameras.ActiveType == CameraControllerType.Direct)
                 {
                     level = 5;
                     State.DrawRoofs = true;
@@ -515,6 +509,29 @@ namespace FSO.LotView
             //center tiles center the lot on a tile at the base level of 0 elevation.
             var pos = Blueprint.InterpAltitude(new Vector3(State.CenterTile, 0)) + (State.Level - 1) * 2.95f;
             State.CenterTile -= (pos / 2.95f) * State.WorldSpace.GetTileFromScreen(new Vector2(0, 230)) / (1 << (3 - (int)State.Zoom));
+        }
+
+        public void ToggleFirstPerson(CameraControllerType type)
+        {
+            if (State.Cameras.ActiveType == type)
+            {
+                // If switching direct control mode, do that instead of switching back to the normal graphics mode.
+
+                SetGraphicsMode(GraphicsModeControl.Mode, false);
+            }
+            else
+            {
+                BackbufferScale = 1;
+
+                if (Platform is WorldPlatform2D)
+                {
+                    // In first person mode, always use the 3D world platform.
+                    SetGraphicsMode(GlobalGraphicsMode.Full3D, true);
+                }
+
+                State.SetCameraType(this, type, 0);
+                ChangeAAMode(m_Device);
+            }
         }
 
         public override void Update(UpdateState state)
@@ -561,17 +578,11 @@ namespace FSO.LotView
 
             if (state.WindowFocused && Visible)
             {
-                if (state.NewKeys.Contains(Microsoft.Xna.Framework.Input.Keys.Tab) && FSOEnvironment.Enable3D && CanSwitchCameras)
+                if (FSOEnvironment.Enable3D && CanSwitchCameras)
                 {
-                    if (State.Cameras.ActiveType == Utils.Camera.CameraControllerType.FirstPerson)
+                    if (state.NewKeys.Contains(Microsoft.Xna.Framework.Input.Keys.Tab))
                     {
-                        SetGraphicsMode(GraphicsModeControl.Mode, false);
-                    }
-                    else
-                    {
-                        BackbufferScale = 1;
-                        State.SetCameraType(this, Utils.Camera.CameraControllerType.FirstPerson, 0);
-                        ChangeAAMode(m_Device);
+                        ToggleFirstPerson(CameraControllerType.FirstPerson);
                     }
                 }
             }
@@ -604,6 +615,7 @@ namespace FSO.LotView
         {
             base.PreDraw(device);
             if (HasInit == false) { return; }
+            State.Cameras.PreDraw(this);
             BoundView();
             State._2D.PreciseZoom = State.PreciseZoom;
             State.OutsideColor = Blueprint.OutsideColor;

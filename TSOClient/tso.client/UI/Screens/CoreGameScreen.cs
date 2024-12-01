@@ -26,6 +26,7 @@ using FSO.Common.Utils;
 using FSO.UI.Model;
 using FSO.Client.UI.Panels.Neighborhoods;
 using FSO.Server.Clients;
+using FSO.LotView.Utils.Camera;
 
 namespace FSO.Client.UI.Screens
 {
@@ -379,7 +380,8 @@ namespace FSO.Client.UI.Screens
             //GameFacade.Game.IsFixedTimeStep = (vm == null || vm.Ready);
 
             Visible = ((World?.Visible == false || World?.State.Cameras.HideUI != true) && !CityRenderer.Camera.HideUI);
-            GameFacade.Game.IsMouseVisible = Visible;
+            bool directControl = (World?.State.Cameras.ActiveCamera as CameraControllerFP)?.CaptureMouse == true;
+            GameFacade.Game.IsMouseVisible = Visible && !directControl;
 
             base.Update(state);
 

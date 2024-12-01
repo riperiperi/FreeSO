@@ -65,8 +65,8 @@ namespace FSO.Client.UI.Framework
                 var mat = Microsoft.Xna.Framework.Matrix.CreateTranslation(-(pos.X), -(pos.Y), 0) *
                     Microsoft.Xna.Framework.Matrix.CreateScale(1f) *
                     Microsoft.Xna.Framework.Matrix.CreateTranslation(
-                        BackOffset.X / FSOEnvironment.DPIScaleFactor, 
-                        BackOffset.Y / FSOEnvironment.DPIScaleFactor, 0);
+                        BackOffset.X * FSOEnvironment.DPIScaleFactor, 
+                        BackOffset.Y * FSOEnvironment.DPIScaleFactor, 0);
 
                 batch.BatchMatrixStack.Push(mat);
 

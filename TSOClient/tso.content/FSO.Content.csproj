@@ -218,6 +218,9 @@
     <Content Include="Content\uigraphics\hcat_hidden.png">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </Content>
+    <Content Include="Content\uigraphics\live_directcontrolbtn.png">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </Content>
     <Content Include="Content\uigraphics\lotp\lotp_community_large.png">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </Content>

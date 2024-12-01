@@ -176,7 +176,7 @@ namespace FSO.LotView.Platform
                 }
             }
 
-            var fpAvatar = state.Cameras.CameraFirstPerson?.FirstPersonAvatar;
+            var fpAvatar = state.Cameras.CameraDirect?.FirstPersonAvatar;
 
             foreach (var sim in bp.Avatars)
             {

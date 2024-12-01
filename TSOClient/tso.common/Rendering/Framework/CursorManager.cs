@@ -49,14 +49,14 @@ namespace FSO.Common.Rendering.Framework
     {
         public static CursorManager INSTANCE;
 
-        private Dictionary<CursorType, MouseCursor> m_CursorMap;
+        private Dictionary<CursorType, CursorGroup> m_CursorMap;
         private GraphicsDevice GD;
         public CursorType CurrentCursor { get; internal set;} = CursorType.Normal;
 
         public CursorManager(GraphicsDevice gd)
         {
             INSTANCE = this;
-            m_CursorMap = new Dictionary<CursorType, MouseCursor>();
+            m_CursorMap = new Dictionary<CursorType, CursorGroup>();
             this.GD = gd;
         }
 
@@ -65,7 +65,7 @@ namespace FSO.Common.Rendering.Framework
             if (m_CursorMap.ContainsKey(type))
             {
                 CurrentCursor = type;
-                Mouse.SetCursor(m_CursorMap[type]);
+                Mouse.SetCursor(m_CursorMap[type].MouseCursor);
             }
         }
 
@@ -119,17 +119,27 @@ namespace FSO.Common.Rendering.Framework
                 m_CursorMap.Add(CursorType.LiveObject1Star + i, stars[i]);
             }
 
-            m_CursorMap.Add(CursorType.IBeam, MouseCursor.IBeam);
+            m_CursorMap.Add(CursorType.IBeam, new CursorGroup(MouseCursor.IBeam));
             //m_CursorMap.Add(CursorType.Hourglass, MouseCursor.Wait);
-            m_CursorMap.Add(CursorType.Normal, MouseCursor.Arrow);
+            m_CursorMap.Add(CursorType.Normal, new CursorGroup(MouseCursor.Arrow));
         }
 
-        private MouseCursor[] LoadUpgradeCursors(string path, int maxStars)
+        public CursorGroup GetCurrentGroup()
+        {
+            if (m_CursorMap.TryGetValue(CurrentCursor, out CursorGroup value))
+            {
+                return value;
+            }
+
+            return default;
+        }
+
+        private CursorGroup[] LoadUpgradeCursors(string path, int maxStars)
         {
             return CurLoader.LoadUpgradeCursors(GD, File.Open(path, FileMode.Open, FileAccess.Read, FileShare.Read), maxStars);
         }
 
-        private MouseCursor LoadCustomCursor(string path)
+        private CursorGroup LoadCustomCursor(string path)
         {
             return CurLoader.LoadMonoCursor(GD, File.Open(path, FileMode.Open, FileAccess.Read, FileShare.Read));
         }

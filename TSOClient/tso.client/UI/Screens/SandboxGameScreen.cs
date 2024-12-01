@@ -13,6 +13,7 @@ using FSO.Files.Formats.IFF.Chunks;
 using FSO.HIT;
 using FSO.LotView;
 using FSO.LotView.Model;
+using FSO.LotView.Utils.Camera;
 using FSO.SimAntics;
 using FSO.SimAntics.Engine.TSOTransaction;
 using FSO.SimAntics.NetPlay;
@@ -282,7 +283,8 @@ namespace FSO.Client.UI.Screens
             GameFacade.Game.IsFixedTimeStep = (vm == null || vm.Ready);
 
             Visible = World?.Visible == true && World?.State.Cameras.HideUI == false;
-            GameFacade.Game.IsMouseVisible = Visible;
+            bool directControl = (World?.State.Cameras.ActiveCamera as CameraControllerFP)?.CaptureMouse == true;
+            GameFacade.Game.IsMouseVisible = Visible && !directControl;
 
             if (state.WindowFocused && state.NewKeys.Contains(Microsoft.Xna.Framework.Input.Keys.F1) && state.CtrlDown)
                 FSOFacade.Controller.ToggleDebugMenu();

@@ -37,6 +37,9 @@ using FSO.UI.Controls;
 using FSO.Client.UI.Panels.Profile;
 using FSO.SimAntics.Model;
 using FSO.SimAntics.Engine;
+using FSO.Client.Utils;
+using FSO.Common.Model;
+using FSO.LotView.Utils.Camera;
 
 namespace FSO.Client.UI.Panels
 {
@@ -101,8 +104,9 @@ namespace FSO.Client.UI.Panels
         private int RMBScrollX;
         private int RMBScrollY;
 
+
+        public bool FirstPerson { get; private set; } = true;
         private bool LastFirstPerson;
-        private bool FirstPerson = true;
         private int FirstPersonID = 0;
         private float FirstPersonSinceUpdate = 0f;
 
@@ -827,8 +831,23 @@ namespace FSO.Client.UI.Panels
         {
             if (RMBScroll)
             {
-                DrawLocalTexture(batch, RMBCursor, new Vector2(RMBScrollX - RMBCursor.Width/2, RMBScrollY - RMBCursor.Height / 2));
+                float dpi = FSOEnvironment.DPIScaleFactor;
+                DrawLocalTexture(batch, RMBCursor, new Vector2(RMBScrollX / dpi - RMBCursor.Width/2, RMBScrollY / dpi - RMBCursor.Height / 2));
             }
+
+            if (!GameFacade.Game.IsMouseVisible && World != null && World.State.Cameras.ActiveType == CameraControllerType.Direct)
+            {
+                var cursor = GameFacade.Cursor.GetCurrentGroup();
+
+                if (cursor.Texture != null)
+                {
+                    UIScreen screen = GameFacade.Screens.CurrentUIScreen;
+
+                    DrawLocalTexture(batch, cursor.Texture, new Vector2(
+                        screen.ScreenWidth / 2 - cursor.Point.X, screen.ScreenHeight / 2 - cursor.Point.Y));
+                }
+            }
+
             base.Draw(batch);
         }
 
@@ -955,8 +974,18 @@ namespace FSO.Client.UI.Panels
                 var nofocus = state.InputManager.GetFocus() == null;
 
                 bool scrolled = false;
-                float firstPersonTuning = vm?.Tuning?.GetTuning("aprilfools", 0, 2023) ?? 0;
-                FirstPerson = firstPersonTuning != 0 && World.State.Cameras.ActiveType == LotView.Utils.Camera.CameraControllerType.FirstPerson;
+                float firstPersonTuning = FirstPersonHelper.GetTuning(vm);
+
+                if (state.NewKeys.Contains(Keys.F10))
+                {
+                    if (firstPersonTuning > 0 && FSOEnvironment.Enable3D)
+                    {
+                        World?.ToggleFirstPerson(CameraControllerType.Direct);
+                    }
+                }
+
+                // TODO: this isn't always true. Add some kind of switch between the first person camera and direct control.
+                FirstPerson = firstPersonTuning != 0 && World.State.Cameras.ActiveType == LotView.Utils.Camera.CameraControllerType.Direct;
 
                 if (firstPersonTuning == 2 && !FirstPerson)
                 {
@@ -969,7 +998,7 @@ namespace FSO.Client.UI.Panels
                     }
                     else
                     {
-                        World.State.SetCameraType(World, LotView.Utils.Camera.CameraControllerType.FirstPerson, 0);
+                        World.State.SetCameraType(World, LotView.Utils.Camera.CameraControllerType.Direct, 0);
                         FirstPerson = true;
                     }
                 }
@@ -990,7 +1019,8 @@ namespace FSO.Client.UI.Panels
 
                 bool firstPersonControls = FirstPerson && state.WindowFocused && nofocus && PieMenu == null;
 
-                World.State.Cameras.CameraFirstPerson.CaptureMouse = FirstPerson ? firstPersonControls : true;
+                World.State.Cameras.CameraFirstPerson.CaptureMouse = true;
+                World.State.Cameras.CameraDirect.CaptureMouse = firstPersonControls;
 
                 if (KBScroll || firstPersonControls)
                 {
@@ -1077,11 +1107,11 @@ namespace FSO.Client.UI.Panels
                     {
                         World.State.ScrollAnchor = null;
 
-                        var currentFpAva = World.State.Cameras.CameraFirstPerson.FirstPersonAvatar;
+                        var currentFpAva = World.State.Cameras.CameraDirect.FirstPersonAvatar;
                         if (currentFpAva != null)
                         {
                             currentFpAva.Avatar.HideHead = false;
-                            World.State.Cameras.CameraFirstPerson.FirstPersonAvatar = null;
+                            World.State.Cameras.CameraDirect.FirstPersonAvatar = null;
                         }
 
                         scrollBy *= 0.05f;

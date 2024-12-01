@@ -188,6 +188,11 @@ namespace FSO.LotView.Utils.Camera
             MouseWasDown = md;
         }
 
+        public void PreDraw(World world)
+        {
+
+        }
+
         public void ZoomHold(float intensity)
         {
             return;

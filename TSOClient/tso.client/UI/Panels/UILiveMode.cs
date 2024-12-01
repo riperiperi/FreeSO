@@ -13,6 +13,9 @@ using FSO.Common;
 using FSO.Content.Model;
 using FSO.SimAntics.Model.TSOPlatform;
 using FSO.Common.Model;
+using FSO.Client.Utils;
+using FSO.LotView.Utils.Camera;
+using FSO.LotView;
 
 namespace FSO.Client.UI.Panels
 {
@@ -114,6 +117,8 @@ namespace FSO.Client.UI.Panels
         private bool Small800;
         private bool ExtraTallInitialized;
 
+        public UIButton DirectControlButton;
+
         public UILiveMode (UILotControl lotController) {
             Small800 = (GlobalSettings.Default.GraphicsWidth < 1024) || FSOEnvironment.UIZoomFactor > 1f;
             var script = this.RenderScript("livepanel"+(Small800?"":"1024")+".uis");
@@ -147,6 +152,15 @@ namespace FSO.Client.UI.Panels
             MoodPanelButton.ImageStates = 4;
             MoodPanelButton.Position = new Vector2(31, 63);
             this.Add(MoodPanelButton);
+
+            var ui = Content.Content.Get().CustomUI;
+            var btnTex = ui.Get("live_directcontrolbtn.png").Get(GameFacade.GraphicsDevice);
+            DirectControlButton = new UIButton(btnTex);
+            DirectControlButton.ImageStates = 4;
+            DirectControlButton.Position = new Vector2(126, 126);
+            DirectControlButton.Tooltip = GameFacade.Strings.GetString("f100", "7");
+            DirectControlButton.OnButtonClick += DirectControlToggle;
+            this.Add(DirectControlButton);
 
             MotiveDisplay = new UIMotiveDisplay();
             MotiveDisplay.Position = new Vector2(165, 56);
@@ -258,6 +272,11 @@ namespace FSO.Client.UI.Panels
             SetInEOD(null, null);
 
             InitSpecial();
+        }
+
+        private void DirectControlToggle(UIElement button)
+        {
+            LotController.World?.ToggleFirstPerson(CameraControllerType.Direct);
         }
 
         private void AvatarIconHover(VMAvatar avatar, Vector2 position)
@@ -655,6 +674,17 @@ namespace FSO.Client.UI.Panels
             }
             if (LotController.EODs.EODTime != TimerTextEntry.CurrentText)
                 TimerTextEntry.CurrentText = LotController.EODs.EODTime;
+
+            bool directControlAvailable = FirstPersonHelper.IsEnabled(LotController.vm) && !EODButton.Selected;
+            if (directControlAvailable != DirectControlButton.Visible)
+            {
+                DirectControlButton.Visible = directControlAvailable;
+            }
+
+            if (LotController.FirstPerson != DirectControlButton.Selected)
+            {
+                DirectControlButton.Selected = LotController.FirstPerson;
+            }
         }
 
         public override void Draw(UISpriteBatch batch)

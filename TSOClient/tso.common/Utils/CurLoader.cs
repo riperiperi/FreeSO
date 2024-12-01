@@ -8,14 +8,13 @@ namespace FSO.Common.Utils
 {
     public static class CurLoader
     {
-
-        public static MouseCursor LoadMonoCursor(GraphicsDevice gd, Stream stream)
+        public static CursorGroup LoadMonoCursor(GraphicsDevice gd, Stream stream)
         {
             var cur = LoadCursor(gd, stream);
-            return MouseCursor.FromTexture2D(cur.Item1, cur.Item2.X, cur.Item2.Y);
+            return new CursorGroup(cur.Item1, cur.Item2);
         }
 
-        public static MouseCursor[] LoadUpgradeCursors(GraphicsDevice gd, Stream stream, int maxStars)
+        public static CursorGroup[] LoadUpgradeCursors(GraphicsDevice gd, Stream stream, int maxStars)
         {
             var cur = LoadCursor(gd, stream);
             Texture2D starTex;
@@ -25,7 +24,7 @@ namespace FSO.Common.Utils
             }
 
             var batch = new SpriteBatch(gd);
-            var results = new MouseCursor[maxStars];
+            var results = new CursorGroup[maxStars];
             for (int i = 0; i < maxStars; i++) {
                 var starPos = cur.Item1.Width - 12;
                 var width = Math.Max(starPos + 8 * i + 9, cur.Item1.Width);
@@ -41,7 +40,7 @@ namespace FSO.Common.Utils
                 }
                 batch.End();
                 gd.SetRenderTarget(null);
-                results[i] = MouseCursor.FromTexture2D(tex, cur.Item2.X, cur.Item2.Y);
+                results[i] = new CursorGroup(tex, cur.Item2);
             }
             starTex.Dispose();
 

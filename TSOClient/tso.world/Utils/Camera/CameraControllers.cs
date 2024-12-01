@@ -90,13 +90,14 @@ namespace FSO.LotView.Utils.Camera
         public float FarPlane { get => ActiveCamera.BaseCamera.FarPlane; set => ActiveCamera.BaseCamera.FarPlane = value; }
         public float Zoom { get => ActiveCamera.BaseCamera.Zoom; set => ActiveCamera.BaseCamera.Zoom = value; }
         public float AspectRatioMultiplier { get => ActiveCamera.BaseCamera.AspectRatioMultiplier; set => ActiveCamera.BaseCamera.AspectRatioMultiplier = value; }
-        public bool HideUI => ActiveCamera == CameraFirstPerson && CameraFirstPerson.FirstPersonAvatar == null;
+        public bool HideUI => ActiveCamera == CameraFirstPerson;
 
         public List<CameraTransition> TransitionWeights = new List<CameraTransition>();
 
         public CameraController2D Camera2D;
         public CameraController3D Camera3D;
         public CameraControllerFP CameraFirstPerson;
+        public CameraControllerDirect CameraDirect;
 
         public List<ICameraController> Cameras;
         private ICameraController _ActiveCamera;
@@ -112,8 +113,9 @@ namespace FSO.LotView.Utils.Camera
             Camera2D = new CameraController2D(gd);
             Camera3D = new CameraController3D(gd, state);
             CameraFirstPerson = new CameraControllerFP(gd, state);
+            CameraDirect = new CameraControllerDirect(gd, state);
 
-            Cameras = new List<ICameraController>() { Camera2D, Camera3D, CameraFirstPerson };
+            Cameras = new List<ICameraController>() { Camera2D, Camera3D, CameraFirstPerson, CameraDirect };
         }
 
         public void WithTransitionsDisabled(Action action)
@@ -170,6 +172,9 @@ namespace FSO.LotView.Utils.Camera
                 case CameraControllerType.FirstPerson:
                     target = CameraFirstPerson;
                     break;
+                case CameraControllerType.Direct:
+                    target = CameraDirect;
+                    break;
                 default:
                     target = null;
                     break;
@@ -203,6 +208,9 @@ namespace FSO.LotView.Utils.Camera
                     break;
                 case CameraControllerType.FirstPerson:
                     target = CameraFirstPerson;
+                    break;
+                case CameraControllerType.Direct:
+                    target = CameraDirect;
                     break;
                 default:
                     target = null;
@@ -249,6 +257,11 @@ namespace FSO.LotView.Utils.Camera
             ActiveCamera.Update(state, world);
         }
 
+        public void PreDraw(World world)
+        {
+            ActiveCamera.PreDraw(world);
+        }
+
         public void ProjectionDirty()
         {
         }
@@ -275,6 +288,7 @@ namespace FSO.LotView.Utils.Camera
     {
         _2D,
         _3D,
-        FirstPerson
+        FirstPerson,
+        Direct
     }
 }

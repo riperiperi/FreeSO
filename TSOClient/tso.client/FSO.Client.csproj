@@ -293,6 +293,7 @@
     <Compile Include="UI\UIRelationshipBar.cs" />
     <Compile Include="Utils\ControllerUtils.cs" />
     <Compile Include="Utils\Endian.cs" />
+    <Compile Include="Utils\FirstPersonHelper.cs" />
     <Compile Include="Utils\GameLocator\ILocator.cs" />
     <Compile Include="Utils\GameLocator\LinuxLocator.cs" />
     <Compile Include="Utils\GameLocator\WindowsLocator.cs" />
