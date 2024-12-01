@@ -126,7 +126,14 @@ namespace FSO.LotView
 
         public virtual void InitDefaultGraphicsMode()
         {
-            SetGraphicsMode(GraphicsModeControl.Mode, true);
+            if (Platform == null)
+            {
+                SetGraphicsMode(GraphicsModeControl.Mode, true);
+            }
+            else
+            {
+                ReinitGraphicsMode();
+            }
         }
 
         public virtual void InitBlueprint(Blueprint blueprint)
@@ -360,12 +367,15 @@ namespace FSO.LotView
             SetGraphicsMode(mode, false);
         }
 
+        public void ReinitGraphicsMode()
+        {
+            Platform.SwapBlueprint(Blueprint);
+        }
+
         public void SetGraphicsMode(GlobalGraphicsMode mode, bool instant)
         {
             BackbufferScale = 1;
             var transTime = instant ? 0 : -1;
-
-            var fpTuning = DynamicTuning.Global?.GetTuning("aprilfools", 0, 2023) ?? 0;
 
             switch (mode)
             {

@@ -29,6 +29,11 @@ namespace FSO.LotView.Platform
             ObjThumbTarget?.Dispose();
         }
 
+        public void SwapBlueprint(Blueprint bp)
+        {
+            this.bp = bp;
+        }
+
         public Texture2D GetLotThumb(GraphicsDevice gd, WorldState state, Action<Texture2D> rooflessCallback)
         {
             var oldZoom = state.Zoom;

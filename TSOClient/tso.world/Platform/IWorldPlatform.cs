@@ -1,4 +1,5 @@
 ﻿using FSO.LotView.Components;
+using FSO.LotView.Model;
 using Microsoft.Xna.Framework;
 using Microsoft.Xna.Framework.Graphics;
 using System;
@@ -43,6 +44,8 @@ namespace FSO.LotView.Platform
         Texture2D GetLotThumb(GraphicsDevice gd, WorldState state, Action<Texture2D> rooflessCallback);
 
         void RecacheWalls(GraphicsDevice gd, WorldState state, bool cutawayOnly);
+
+        void SwapBlueprint(Blueprint bp);
 
     }
 }

@@ -24,6 +24,11 @@ namespace FSO.LotView.Platform
             
         }
 
+        public void SwapBlueprint(Blueprint bp)
+        {
+            this.bp = bp;
+        }
+
         public Texture2D GetLotThumb(GraphicsDevice gd, WorldState state, Action<Texture2D> rooflessCallback)
         {
             //if (!(state.Camera is WorldCamera)) return new Texture2D(gd, 8, 8);
