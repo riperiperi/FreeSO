@@ -525,7 +525,7 @@ namespace FSO.LotView.Components
             var floors = new HashSet<sbyte>();
             for (sbyte f = 0; f < world.Level; f++) floors.Add(f);
             var pass = Effect.CurrentTechnique.Passes[(_3d) ? 2 : WorldConfig.Current.PassOffset];
-            Bp.FloorGeom.DrawFloor(device, Effect, world.Zoom, world.Rotation, world.Rooms.RoomMaps, floors, pass, state: world, screenAlignUV: !nonIso);
+            Bp.FloorGeom.DrawFloor(device, Effect, world.Zoom, world.Rotation, world.Rooms.RoomMaps, floors, pass, state: world, screenAlignUV: !nonIso, withCeilings: true);
             Effect.GrassShininess = 0.02f;// (float)0.25);
 
             pass.Apply();

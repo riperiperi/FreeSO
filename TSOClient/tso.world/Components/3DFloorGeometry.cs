@@ -275,7 +275,7 @@ namespace FSO.LotView.Components
         }
 
         public void DrawFloor(GraphicsDevice gd, GrassEffect e, WorldZoom zoom, WorldRotation rot, List<Texture2D> roommaps, HashSet<sbyte> floors, EffectPass pass, 
-            Matrix? lightWorld = null, WorldState state = null, int minFloor = 0, bool screenAlignUV = false)
+            Matrix? lightWorld = null, WorldState state = null, int minFloor = 0, bool screenAlignUV = false, bool withCeilings = false)
         {
             bool is3D = state?.CameraMode == CameraRenderMode._3D;
             var parallax = WorldConfig.Current.Complex;
@@ -290,7 +290,7 @@ namespace FSO.LotView.Components
             e.ScreenAlignUV = screenAlignUV;
             var baseRS = gd.RasterizerState;
 
-            if (lightWorld == null)
+            if (withCeilings)
             {
                 gd.RasterizerState = RasterizerState.CullCounterClockwise;
             }
@@ -495,7 +495,7 @@ namespace FSO.LotView.Components
                     }
                     gd.DrawIndexedPrimitives(PrimitiveType.TriangleList, 0, 0, type.Value.GeomForOffset.Count * 2);
 
-                    if (f > 1 && is3D && lightWorld == null)
+                    if (f > 1 && is3D && withCeilings)
                     {
                         // Draw ceilings in 3D mode.
                         gd.RasterizerState = RasterizerState.CullClockwise;

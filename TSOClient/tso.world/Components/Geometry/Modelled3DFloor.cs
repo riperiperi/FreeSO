@@ -63,9 +63,12 @@ namespace FSO.LotView.Components.Geometry
 
             var srcInds = tile.Indices;
             var indLength = srcInds.Length;
-            for (int i=0; i<indLength; i++)
+            for (int i=0; i<indLength; i+=3)
             {
+                // Flip the triangles to match the terrain geometry.
                 inds.Add(srcInds[i] + baseInd);
+                inds.Add(srcInds[i + 2] + baseInd);
+                inds.Add(srcInds[i + 1] + baseInd);
             }
 
             var baseX = (int)Math.Max(1, Math.Min(Bp.Width - 1, tileBaseX));
