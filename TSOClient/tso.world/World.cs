@@ -491,7 +491,7 @@ namespace FSO.LotView
         {
             if (comp.Room == 0 || comp.Room == 65531) return; //don't center if the target is out of bounds
 
-            bool isFirstPerson = State.CameraMode == CameraRenderMode._3D && State.Cameras.ActiveType == CameraControllerType.FirstPerson;
+            bool isFirstPerson = State.Cameras.ActiveType == CameraControllerType.Direct;
             sbyte level = comp.Level;
 
             Vector3 pelvisCenter;

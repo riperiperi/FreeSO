@@ -195,6 +195,8 @@ namespace FSO.LotView.Components
 
         private static AnimSource AnimData;
 
+        public static bool Allowed;
+
         private Blueprint Bp;
         internal WorldState State;
         private Collision Collision = new Collision();
@@ -370,7 +372,7 @@ namespace FSO.LotView.Components
 
             sbyte level = (sbyte)(Math.Max(0, Math.Min(Bp.Stories - 1, Math.Floor((height + 0.5f) / 2.95f))) + 1);
 
-            return forLight || TileIndoors((int)pos.X, (int)pos.Y, level) ? level : (sbyte)(Bp.Stories - 1);
+            return forLight || TileIndoors((int)pos.X, (int)pos.Y, level) ? level : Bp.Stories;
         }
 
         public void RemoveMario(AvatarComponent avatar)
@@ -564,12 +566,15 @@ namespace FSO.LotView.Components
 
             if (!MarioActiveForMe)
             {
-                var gamepad = GamePad.GetState(0);
-
-                if (gamepad.IsConnected && visible)
+                if (Allowed)
                 {
-                    MarioActiveForMe = true;
-                    InitCollision(world);
+                    var gamepad = GamePad.GetState(0);
+
+                    if (gamepad.IsConnected && visible)
+                    {
+                        MarioActiveForMe = true;
+                        InitCollision(world);
+                    }
                 }
 
                 return;
@@ -618,6 +623,12 @@ namespace FSO.LotView.Components
                             // TODO: update camera yaw
                             // TODO: displacement? (on top of interpolated movement objects? we only really have cars and ducks lol)
                             Mario.MarioUpdate();
+
+                            if (Mario.State.HurtCounter == 0 && Mario.State.Health < 2176 && Mario.State.Health > 0)
+                            {
+                                // Slowly heal over time (about 35 seconds for a full heal)
+                                Mario.State.Health += 2;
+                            }
 
                             if (Mario.Floor == null) return;
                             // TODO: update_mario_platform (also displacement related)
