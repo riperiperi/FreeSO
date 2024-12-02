@@ -124,6 +124,15 @@ namespace FSO.Client.Rendering.City.Plugins
             new Color(255, 255, 255), //snow
             new Color(255, 255, 0) //sand
         };
+
+        public byte[] TerrainTypeIndices = new byte[] {
+            0, //grass
+            4, //water
+            2, //rock
+            3, //snow
+            1 //sand
+        };
+
         public string[] TerrainTypeNames = new string[] {
             "Grass",
             "Water",
@@ -292,7 +301,11 @@ namespace FSO.Client.Rendering.City.Plugins
                         {
                             BrushFunc(BrushSize, (x, y, strength) =>
                             {
-                                if (strength > 0) City.MapData.TerrainTypeColorData[newPt.X+x + (newPt.Y+y) * 512] = TerrainTypes[SelectedModifier];
+                                if (strength > 0)
+                                {
+                                    City.MapData.TerrainTypeColorData[newPt.X + x + (newPt.Y + y) * 512] = TerrainTypes[SelectedModifier];
+                                    City.MapData.TerrainType[newPt.X + x + (newPt.Y + y) * 512] = TerrainTypeIndices[SelectedModifier];
+                                }
                             });
 
                             AddChange(new Rectangle(newPt.X - (1+BrushSize), newPt.Y - (1+BrushSize), 3+BrushSize*2, 3+BrushSize*2));

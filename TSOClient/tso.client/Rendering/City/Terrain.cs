@@ -300,7 +300,21 @@ namespace FSO.Client.Rendering.City
             Geometry.MapData = Content.MapData;
             SubdivGeometry.MapData = Content.MapData;
             Foliage.MapData = Content.MapData;
-            Geometry.RegenMeshVerts(gd, range);
+
+            if (range == null)
+            {
+                Geometry.RegenMeshVerts(gd, range);
+            }
+            else
+            {
+                var pos = Camera.CalculateR();
+                var slicex = Math.Max(0, Math.Min(30, (int)Math.Round(pos.X / 16f) - 1));
+                var slicey = Math.Max(0, Math.Min(30, (int)Math.Round(pos.Y / 16f) - 1));
+                var slice = slicex + slicey * 32;
+
+                //Geometry.RegenMeshVerts(gd, range);
+                SubdivGeometry.SubRegenMeshVerts(m_GraphicsDevice, new Rectangle(slicex * 16, slicey * 16, 32, 32), 4, slice);
+            }
         }
 
         private Vector3 GetNormalAt(int x, int y)
