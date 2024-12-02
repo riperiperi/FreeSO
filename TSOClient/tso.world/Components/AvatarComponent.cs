@@ -15,9 +15,12 @@ namespace FSO.LotView.Components
     {
         public Avatar Avatar;
         public bool IsPet;
+        public short Gender;
         public float Scale = 1;
         public int ALevel = 0;
         public _2DStandaloneSprite HeadlineSprite;
+
+        internal VisualMario MyMario;
 
         private static Vector2[] PosCenterOffsets = new Vector2[]{
             new Vector2(2+16, 79+8),
@@ -38,10 +41,15 @@ namespace FSO.LotView.Components
             return Vector3.Transform(new Vector3(handpos.X, handpos.Z, handpos.Y), Matrix.CreateRotationZ((float)(RadianDirection+Math.PI))) + this.Position - new Vector3(0.5f, 0.5f, 0f);
         }
 
-        public Vector3 GetPelvisPosition()
+        internal Vector3 GetRealPelvisPosition()
         {
             var pelvis = Avatar.Skeleton.GetBone("PELVIS").AbsolutePosition / 3.0f;
             return Vector3.Transform(new Vector3(pelvis.X, pelvis.Z, pelvis.Y), Matrix.CreateRotationZ((float)(RadianDirection + Math.PI))) + this.Position;// - new Vector3(0.5f, 0.5f, 0f);
+        }
+
+        public Vector3 GetPelvisPosition()
+        {
+            return MyMario == null ? GetRealPelvisPosition() : MyMario.GetMarioPosition();
         }
 
         public double RadianDirection;
@@ -119,7 +127,18 @@ namespace FSO.LotView.Components
         public override Vector2 GetScreenPos(WorldState world)
         {
             var headpos = Avatar.Skeleton.GetBone("HEAD").AbsolutePosition;
-            var projected = Vector4.Transform(new Vector4(headpos, 1), Matrix.CreateRotationY((float)(Math.PI - RadianDirection)) * this.World * world.View * world.Projection);
+            Vector4 projected;
+
+            if (MyMario != null)
+            {
+                var pos = MyMario.GetMarioPosition();
+                projected = Vector4.Transform(new Vector4(pos.X * 3, pos.Z * 3 + 1.5f, pos.Y * 3, 1), world.View * world.Projection);
+            }
+            else
+            {
+                projected = Vector4.Transform(new Vector4(headpos, 1), Matrix.CreateRotationY((float)(Math.PI - RadianDirection)) * this.World * world.View * world.Projection);
+            }
+
             if (world.CameraMode < CameraRenderMode._3D) projected.Z = 1;
             var res1 = new Vector2(projected.X / projected.Z, -projected.Y / projected.Z);
             var size = PPXDepthEngine.GetWidthHeight();

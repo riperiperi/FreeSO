@@ -828,6 +828,8 @@ namespace FSO.SimAntics
                         StaticFootprint = (value & (int)VMEntityFlags.FSODynamicFootprint) == 0;
                     if (this is VMAvatar && ((value ^ old) & (int)VMEntityFlags.Burning) > 0)
                         this.Reset(Thread.Context);
+
+                    if (UseWorld) WorldUI.AvatarSolid = ((value & (int)VMEntityFlags.DisallowPersonIntersection) != 0 || (value & (int)VMEntityFlags.AllowPersonIntersection) == 0) && (value & (int)VMEntityFlags.HasZeroExtent) == 0;
                     return true;
                 case VMStackObjectVariable.Direction:
                     value = (short)(((int)value + 65536) % 8);

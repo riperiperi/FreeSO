@@ -420,7 +420,8 @@ namespace FSO.SimAntics
                         WallsUpNear = sprs[2],
                         WallsDownFar = sprs[3],
                         WallsDownMedium = sprs[4],
-                        WallsDownNear = sprs[5]
+                        WallsDownNear = sprs[5],
+                        IsDoor = ((VMEntityFlags2)ObjectData[(int)VMStackObjectVariable.FlagField2] & VMEntityFlags2.ArchitectualDoor) > 0
                     };
                     Object.OBJ.WallStyle = FSO.Content.Content.Get().WorldWalls.AddDynamicWallStyle(style);
                 }

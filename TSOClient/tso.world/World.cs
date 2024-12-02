@@ -398,8 +398,18 @@ namespace FSO.LotView
         {
             if (Blueprint == null) { return new Tuple<float, float>(0, 0); }
             var terrainHeight = (Blueprint.InterpAltitude(new Vector3(State.CenterTile, 0))) * 3;
-            var targHeight = terrainHeight + (State.Level - 1) * 2.95f * 3;
-            targHeight = Math.Max((Blueprint.InterpAltitude(new Vector3(State.Camera.Position.X, State.Camera.Position.Z, 0) / 3) + (State.Level - 1) * 2.95f) * 3, terrainHeight);
+
+            float targHeight;
+
+            if (State.ScrollAnchor?.MyMario != null)
+            {
+                targHeight = State.ScrollAnchor.MyMario.GetMarioPosition().Z * 3;
+            }
+            else
+            {
+                targHeight = Math.Max((Blueprint.InterpAltitude(new Vector3(State.Camera.Position.X, State.Camera.Position.Z, 0) / 3) + (State.Level - 1) * 2.95f) * 3, terrainHeight);
+            }
+
             return new Tuple<float, float>(terrainHeight, targHeight);
         }
 
@@ -481,14 +491,21 @@ namespace FSO.LotView
         {
             if (comp.Room == 0 || comp.Room == 65531) return; //don't center if the target is out of bounds
 
-            bool isFirstPerson = State.CameraMode == CameraRenderMode._3D;
+            bool isFirstPerson = State.Cameras.ActiveType == CameraControllerType.Direct;
             sbyte level = comp.Level;
 
             Vector3 pelvisCenter;
+
             if (comp is AvatarComponent)
             {
                 pelvisCenter = isFirstPerson ? ((AvatarComponent)comp).GetHeadlinePos() + comp.Position : ((AvatarComponent)comp).GetPelvisPosition();
-            } else
+
+                if (((AvatarComponent)comp).MyMario != null)
+                {
+                    level = ((AvatarComponent)comp).MyMario.DetermineLevel(false);
+                }
+            }
+            else
             {
                 pelvisCenter = comp.Position;
             }
@@ -500,7 +517,9 @@ namespace FSO.LotView
                     State.CenterTile = State.Project2DCenterTile(pelvisCenter);
                     State.Camera2D.RotationAnchor = pelvisCenter;
                 });
-            } else {
+            }
+            else
+            {
                 State.CenterTile = new Vector2(pelvisCenter.X, pelvisCenter.Y);
 
                 State.Cameras.CameraDirect.FirstPersonAvatar = isFirstPerson ? comp as AvatarComponent : null;
@@ -563,6 +582,8 @@ namespace FSO.LotView
                 {
                     particle.Update(null, State);
                 }
+
+                Blueprint.SM64?.Update(null, State, Visible);
             }
 
             if (State.ScrollAnchor != null)
@@ -699,6 +720,8 @@ namespace FSO.LotView
             Entities.DrawAvatars(device, State);
             Entities.Draw(device, State);
             Entities.DrawAvatarTransparency(device, State);
+
+            Blueprint?.SM64?.Draw(device, State);
 
             State._2D.OutputDepth = false;
         }
@@ -1004,9 +1027,9 @@ namespace FSO.LotView
             if (Blueprint != null && !FSOEnvironment.Enable3D)
             {
                 var shad3D = (Blueprint.WCRC != null);
-                if (config.Shadow3D != shad3D)
+                if (true != shad3D)
                 {
-                    if (config.AdvancedLighting && config.Shadow3D)
+                    if (true) //config.AdvancedLighting && config.Shadow3D)
                     {
                         Blueprint.WCRC = new RC.WallComponentRC();
                         Blueprint.WCRC.blueprint = Blueprint;
