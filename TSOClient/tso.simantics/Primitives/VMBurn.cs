@@ -14,10 +14,12 @@ namespace FSO.SimAntics.Primitives
         public override VMPrimitiveExitCode Execute(VMStackFrame context, VMPrimitiveOperand args)
         {
             var operand = (VMBurnOperand)args;
-            if (!context.VM.TS1 && (context.VM.Tuning.GetTuning("special", 0, 0) != 1f || context.VM.TSOState.CommunityLot))
+            if (!context.VM.TS1 && (context.VM.Tuning.GetTuning("special", 0, 0) != 1f))
                 return VMPrimitiveExitCode.GOTO_FALSE; //fire disabled for now
 
-            if ((int)context.VM.Context.NextRandom(10000) >= context.VM.Context.Clock.FirePercent)
+            bool isSpread = operand.Type != VMBurnType.StackObject;
+
+            if (isSpread && (int)context.VM.Context.NextRandom(10000) >= context.VM.Context.Clock.FirePercent)
             {
                 return VMPrimitiveExitCode.GOTO_FALSE;
             }
@@ -26,7 +28,7 @@ namespace FSO.SimAntics.Primitives
             if (context.VM.Context.RoomInfo[myRoom].Room.IsPool) return VMPrimitiveExitCode.GOTO_FALSE;
 
             //as fires burn, the chance they can spread lowers dramatically.
-            context.VM.Context.Clock.FirePercent -= 500; // lower by 5% every spread. 40 spreads reaches 0.
+            if (isSpread) context.VM.Context.Clock.FirePercent -= 500; // lower by 5% every spread. 40 spreads reaches 0.
             if (context.VM.Context.Clock.FirePercent < 0) context.VM.Context.Clock.FirePercent = 0;
 
             //begin the burn setup. 
