@@ -1,4 +1,5 @@
 ﻿using FSO.Common;
+using FSO.Common.Rendering;
 using FSO.Common.Utils;
 using FSO.LotView.Components;
 using FSO.LotView.Effects;
@@ -374,6 +375,8 @@ namespace FSO.LotView.LMap
         {
             DayOffset = 0.25f;
             DayDuration = 0.60f;
+
+            tod = FinaleUtils.BiasSunTime(tod);
 
             bool night = false;
             double modTime;

@@ -162,6 +162,7 @@
     <Compile Include="Rendering\Emoji\EmojiCache.cs" />
     <Compile Include="Rendering\Emoji\EmojiDictionary.cs" />
     <Compile Include="Rendering\Emoji\EmojiProvider.cs" />
+    <Compile Include="Rendering\FinaleUtils.cs" />
     <Compile Include="Rendering\Framework\3DComponent.cs" />
     <Compile Include="Rendering\Framework\3DLayer.cs" />
     <Compile Include="Rendering\Framework\3DScene.cs" />

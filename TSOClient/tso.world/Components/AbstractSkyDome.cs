@@ -1,5 +1,6 @@
 ﻿using FSO.Common;
 using FSO.Common.Model;
+using FSO.Common.Rendering;
 using FSO.Common.Utils;
 using FSO.Files;
 using FSO.LotView.Model;
@@ -14,6 +15,7 @@ namespace FSO.LotView.Components
     public class AbstractSkyDome : IDisposable
     {
         private static string DefaultSkyCol = "Textures/skycol.png";
+        private static string FinalSkyCol = "Textures/skycolfinal.png";
 
         private VertexBuffer Verts;
         private IndexBuffer Indices;
@@ -24,6 +26,8 @@ namespace FSO.LotView.Components
         private VertexPositionTexture[] VertexData;
         private int[] IndexData;
 
+        private bool IsFinal;
+
         public AbstractSkyDome(GraphicsDevice GD, float time)
         {
             float? customSky = DynamicTuning.Global?.GetTuning("city", 0, 2);
@@ -33,8 +37,25 @@ namespace FSO.LotView.Components
                 TryLoadSkyColor(GD, DefaultSkyCol);
             }
 
+            LoadFinalIfNeeded(GD);
+
             InitArrays();
             BuildSkyDome(GD, time);
+        }
+
+        public void LoadFinalIfNeeded(GraphicsDevice GD)
+        {
+            bool needsFinal = FinaleUtils.IsFinale();
+
+            if (!IsFinal && needsFinal)
+            {
+                using (var file = File.OpenRead(Path.Combine(FSOEnvironment.ContentDir, FinalSkyCol)))
+                {
+                    GradTex = ImageLoader.FromStream(GD, file);
+                };
+
+                IsFinal = true;
+            }
         }
 
         private bool TryLoadSkyColor(GraphicsDevice GD, string path)
@@ -111,6 +132,8 @@ namespace FSO.LotView.Components
 
         public void BuildSkyDome(GraphicsDevice GD, float time)
         {
+            LoadFinalIfNeeded(GD);
+
             //generate sky dome geometry
             var subdivs = 65;
             VertexPositionTexture[] verts = VertexData;
@@ -224,7 +247,7 @@ namespace FSO.LotView.Components
             }
 
             gd.BlendState = BlendState.NonPremultiplied;
-            var night = Night(time);
+            var night = Night((float)FinaleUtils.BiasSunTime(time));
             //draw the sun or moon
             var pos = sunVector;
             var z = -pos.X;
@@ -241,7 +264,7 @@ namespace FSO.LotView.Components
             effect.VertexColorEnabled = false;
             effect.TextureEnabled = true;
             effect.Texture = (night) ? TextureGenerator.GetMoon(gd) : TextureGenerator.GetSun(gd);
-            effect.DiffuseColor = new Vector3(color.X, color.Y, color.Z) * ((night) ? 2f : 0.6f);
+            effect.DiffuseColor = FinaleUtils.BiasSunIntensity(new Vector3(color.X, color.Y, color.Z) * ((night) ? 2f : 0.6f), time);
             gd.BlendState = (night) ? BlendState.NonPremultiplied : BlendState.Additive;
 
             foreach (var pass in effect.CurrentTechnique.Passes)

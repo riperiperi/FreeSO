@@ -1,4 +1,5 @@
-﻿using FSO.LotView.Components;
+﻿using FSO.Common.Rendering;
+using FSO.LotView.Components;
 using Microsoft.Xna.Framework;
 using System;
 using System.Collections.Generic;
@@ -88,7 +89,7 @@ namespace FSO.LotView.Model
 
             ParticleType ptype;
 
-            if (IsManual)
+            if (IsManual && !FinaleUtils.IsFinale())
             {
                 if (WeatherData == LastWeatherData && enabled == LastEnabled) return;
                 LastWeatherData = WeatherData;
@@ -167,6 +168,11 @@ namespace FSO.LotView.Model
 
         private int GetAutoWeatherIntensity(DateTime time)
         {
+            if (FinaleUtils.IsFinale())
+            {
+                return 0;
+            }
+
             var distance = time - new DateTime(2019, 1, 26);
             var halfDay = (int)distance.TotalHours;
 
