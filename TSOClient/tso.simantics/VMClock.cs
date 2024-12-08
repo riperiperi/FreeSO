@@ -15,7 +15,7 @@ namespace FSO.SimAntics
         public int Month = 6;
         public int Year = 1997;
 
-        public int FirePercent;
+        public int FirePercent = 20000;
         public long UTCStart = DateTime.UtcNow.Ticks;
 
         public int TimeOfDay

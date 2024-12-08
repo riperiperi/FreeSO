@@ -35,14 +35,14 @@ float4 lightColorFloor(float4 intensities) {
 	float avg = (intensities.r + intensities.g + intensities.b) / 3;
 	//floor shadow is how much less than average the alpha component is
 
-	float fshad = intensities.a / avg;
+	float fshad = intensities.a / max(0.0001, avg);
 
 	return lerp(OutsideDark, float4(intensities.rgb * LightingAdjust, 1), (fshad - MinAvg.x) * MinAvg.y);
 }
 
 float4 lightColorIAvg(float4 intensities, float i, float avg) {
 
-	float fshad = intensities.a / avg;
+	float fshad = intensities.a / max(0.0001, avg);
 	fshad = lerp(fshad, 1, i);
 
 	return lerp(OutsideDark, float4(intensities.rgb * LightingAdjust, 1), (fshad - MinAvg.x) * MinAvg.y);
@@ -53,7 +53,7 @@ float4 lightColorI(float4 intensities, float i) {
 	float avg = (intensities.r + intensities.g + intensities.b) / 3;
 	//floor shadow is how much less than average the alpha component is
 
-	float fshad = intensities.a / avg;
+	float fshad = intensities.a / max(0.0001, avg);
 	fshad = lerp(fshad, 1, i);
 
 	return lerp(OutsideDark, float4(intensities.rgb * LightingAdjust, 1), (fshad - MinAvg.x) * MinAvg.y);

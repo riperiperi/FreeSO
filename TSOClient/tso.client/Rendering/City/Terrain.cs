@@ -1212,8 +1212,10 @@ namespace FSO.Client.Rendering.City
         public void SetTimeOfDay(double time) 
         {
             time = Math.Min(0.999999999, time);
-            Time = (float)time;
             m_TintColor = TimeOfDayConfig.ColorFromTime(time);
+
+            Time = (float)time;
+            time = FinaleUtils.BiasSunTime(time);
 
             if (Weather.Darken > 0)
             {
@@ -1239,6 +1241,8 @@ namespace FSO.Client.Rendering.City
             {
                 modTime = (time - DayOffset) * 0.5 / DayDuration;
             }
+
+            modTime = FinaleUtils.BiasSunTime(modTime);
 
             Transform *= Matrix.CreateRotationY((float)((modTime+0.5) * Math.PI * 2.0)); //Controls the rotation of the sun/moon around the city. 
             Transform *= Matrix.CreateRotationZ((float)(Math.PI*(45.0/180.0))); //Sun is at an angle of 45 degrees to horizon at it's peak. idk why, it's winter maybe? looks nice either way
@@ -1820,7 +1824,9 @@ namespace FSO.Client.Rendering.City
             
             VertexShader.CurrentTechnique = VertexShader.Techniques[1];
             VertexShader.CurrentTechnique.Passes[passIndex].Apply();
-            var night = Time < 0.25f || Time > 0.75f;
+
+            double biasTime = FinaleUtils.BiasSunTime(Time);
+            var night = biasTime < 0.25f || biasTime > 0.75f;
 
             if (!useLocked || NearFacades == null)
             {

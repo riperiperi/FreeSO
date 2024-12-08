@@ -275,7 +275,7 @@ namespace FSO.LotView.Platform
                 obj.OnRotationChanged(state);
                 obj.OnZoomChanged(state);
                 obj.Container = null;
-                obj.Position = tilePosition;
+                obj.UnmoddedPosition = tilePosition;
                 obj.Draw(gd, state);
 
                 var mat = obj.World * vp;

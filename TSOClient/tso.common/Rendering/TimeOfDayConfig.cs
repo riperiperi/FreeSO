@@ -54,14 +54,19 @@ namespace FSO.Common.Rendering
 
         public static Color ColorFromTime(double time)
         {
-            Color col1 = m_TimeColors[(int)Math.Floor(time * (m_TimeColors.Length - 1))]; //first colour
-            Color col2 = m_TimeColors[(int)Math.Floor(time * (m_TimeColors.Length - 1)) + 1]; //second colour
-            if (DarknessMultiplier != 1.0)
+            Color[] colors = FinaleUtils.SwapFinaleColors(m_TimeColors);
+
+            Color col1 = colors[(int)Math.Floor(time * (colors.Length - 1))]; //first colour
+            Color col2 = colors[(int)Math.Floor(time * (colors.Length - 1)) + 1]; //second colour
+
+            float darkness = FinaleUtils.GetDarkness();
+
+            if (darkness != 1.0)
             {
-                col1 = Color.Lerp(Color.White, col1, DarknessMultiplier);
-                col2 = Color.Lerp(Color.White, col2, DarknessMultiplier);
+                col1 = Color.Lerp(Color.White, col1, darkness);
+                col2 = Color.Lerp(Color.White, col2, darkness);
             }
-            double Progress = (time * (m_TimeColors.Length - 1)) % 1; //interpolation progress (mod 1)
+            double Progress = (time * (colors.Length - 1)) % 1; //interpolation progress (mod 1)
 
             return PowColor(Color.Lerp(col1, col2, (float)Progress), 2.2f); //linearly interpolate between the two colours for this specific time.
         }
