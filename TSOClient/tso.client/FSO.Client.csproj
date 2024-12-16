@@ -695,6 +695,10 @@
       <Project>{9848faf5-444a-48cc-a26a-8115d8c4fb52}</Project>
       <Name>FSO.Common.Domain</Name>
     </ProjectReference>
+    <ProjectReference Include="..\FSO.Content.TSO\FSO.Content.TSO.csproj">
+      <Project>{b5b2c04d-b8e4-47c7-9731-48e30fd5f70d}</Project>
+      <Name>FSO.Content.TSO</Name>
+    </ProjectReference>
     <ProjectReference Include="..\FSO.Patcher\FSO.Patcher.csproj">
       <Project>{4e43ce64-343f-4c53-a055-bbf0f4986a16}</Project>
       <Name>FSO.Patcher</Name>
