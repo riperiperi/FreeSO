@@ -161,6 +161,11 @@ namespace FSO.LotView
                 }
             }
 
+            foreach (DebugLinesComponent debug in Blueprint.DebugLines)
+            {
+                debug.Draw(gd, state);
+            }
+
             //foreach (var sub in Blueprint.SubWorlds) sub.SubDraw(gd, state, (pxOffsetSub) => sub.Entities.StaticDraw(gd, state, pxOffsetSub));
         }
 
