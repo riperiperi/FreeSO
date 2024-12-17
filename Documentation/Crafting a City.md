@@ -61,9 +61,9 @@ The city painter is a collection of tools that allows you to modify an existing 
 
 Saving and loading is an important part of editing a city, as there is no undo/redo feature. Keys F2 through F10 will access save states that you can use to save the city as you make progress, and potentially revert to a previous version if you're unhappy with your changes.
 
-- Shift + F_#_
+- Shift + F#
   - Save the current state of the city to `Content/CityPainterSave#/`, where # is replaced with the number of the F key you pressed.
-- F_#_
+- F#
   - Load the current state of the city from `Content/CityPainterSave#/`, where # is replaced with the number of the F key you pressed.
   - Reloading the game will always load the city that the server specifies, so you'll need to do this to continue editing if you close the game.
 

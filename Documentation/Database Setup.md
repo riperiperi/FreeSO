@@ -14,13 +14,15 @@ On linux, you should be able to find a package called `mariadb-server` (on apt) 
 
 You'll want to create a database for the game. Here's an example:
 
-```
+```sql
 CREATE DATABASE `fso`
 ```
 
 During the setup, you don't need to specify a password for the root account in your MySQL server - on Linux this can actually cause issues. You _do_ want to add an account that the game server will use to access the database, so run a query on the database to add a user for the server to use:
 
-`GRANT ALL ON fso.* TO 'fsoserver'@'localhost' IDENTIFIED BY 'password' WITH GRANT OPTION;`
+```sql
+GRANT ALL ON fso.* TO 'fsoserver'@'localhost' IDENTIFIED BY 'password' WITH GRANT OPTION;
+```
 
 Even though only localhost can access this account, you should change `password` to actually be something people can't guess. Run `FLUSH PRIVILEGES;` after this.
 
