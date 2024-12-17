@@ -1,6 +1,6 @@
 ![image](http://freeso.org/wp-content/uploads/2016/03/freeso-logo.png?1)
 
-A full reimplementation of The Sims Online, using Monogame. While FreeSO aims to be faithful to the original game, it includes many quality of life changes such as hardware rendering, custom dynamic lighting, hi-res output and >2 floor houses. If you simply wish to play, you can install FreeSO and the original TSO files using our installer on http://freeso.org, and it will connect to our official servers.
+A full reimplementation of The Sims Online, using Monogame. While FreeSO aims to be faithful to the original game, it includes many quality of life changes such as hardware rendering, custom dynamic lighting, hi-res output and >2 floor houses. While there used to be an official FreeSO server, FreeSO is now a technology base for other The Sims Online servers to build upon. Please see the https://freeso.org blog for more information. In the future, a client specifically suited to exploring the original FreeSO server alone or with friends will be made available in a different repository.
 
 FreeSO currently depends on the original game files (objects, avatars, ui) to function, which are available for download from EA servers. FreeSO is simply a game engine, and does not contain any copyrighted material in and of itself.
 
@@ -8,7 +8,7 @@ FreeSO currently depends on the original game files (objects, avatars, ui) to fu
 
 # The Sims 1 via Simitone
 
-FreeSO is additionally a base project for an ongoing re-implementation of The Sims 1's engine, [Simitone](https://github.com/riperiperi/Simitone), targetted mainly at mobile devices. 
+FreeSO is additionally a base project for an ongoing re-implementation of The Sims 1's engine, [Simitone](https://github.com/riperiperi/Simitone). This project is largely incomplete, but is in interesting novelty in itself.
 
 The content system, HIT VM and SimAntics VM included within this repo support both TSO and TS1 game files - meaning that TS1 will still run in a limited sense under TSO's UI frontend within FreeSO. [Simitone](https://github.com/riperiperi/Simitone) fully restores TS1 gameplay by tying the neighbourhood and game systems together with a suitable UI frontend.
 
@@ -16,7 +16,7 @@ The content system, HIT VM and SimAntics VM included within this repo support bo
 
 ![image](https://cdn.discordapp.com/attachments/355135351234494464/355396364349210625/unknown.png)
 
-The FreeSO engine additionally supports an experimental 3D mode, which allows you to see the game from a different perspective. 3D meshes are reconstructed at runtime from the z-buffers included with object sprites. FreeSO also generates 3D geometry for walls and floors at runtime, and switches to an alternate camera with different controls when the mode is enabled. 
+The FreeSO engine additionally supports a 3D mode, which allows you to see the game from a different perspective. 3D meshes are reconstructed at runtime from the z-buffers included with object sprites. FreeSO also generates 3D geometry for walls and floors at runtime, and switches to an alternate camera with different controls when the mode is enabled. 
 
 The mode can be enabled via the launch parameter `-3d`. See the blog for more information. (http://freeso.org/the-impossible/)
 
@@ -40,8 +40,6 @@ You can contribute to FreeSO by testing cutting edge features in the latest rele
 * [Official Discord](https://discordapp.com/invite/xveESFj)
 
 Looking for something to do? Check out the issues tagged as [help wanted](https://github.com/riperiperi/FreeSO/labels/help%20wanted) to get started.
-
-Regarding translations, full object and UI translations should currently be released on the forums. This is far from perfect and is due to be reworked. Stay tuned!
 
 ## Prerequisites
 * [Visual Studio 2019](https://visualstudio.microsoft.com/vs/)
