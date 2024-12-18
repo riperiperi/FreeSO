@@ -1,105 +1,139 @@
 ﻿{
-  "gameLocation": "C:\\Program Files\\Maxis\\The Sims Online\\TSOClient\\",
+  "gameLocation": "./game/",
   "secret": "38F7E3B816EF9F31BFAB8F4C9716C90D106BD85E9D6913FBB4D833C866F837B0",
-  "simNFS": "C:\\Files\\Temp\\fso",
+  "simNFS": "./nfs",
 
   "database": {
-    "connectionString": "server=127.0.0.1;uid=root;pwd=;database=fso2;"
+    "connectionString": "server=127.0.0.1;uid=fsoserver;pwd=password;database=fso;"
   },
 
   "services": {
-	"tasks":{
-		"enabled": true,
-		"call_sign": "callisto",
-        "binding": "0.0.0.0:35100",
-		"internal_host": "127.0.0.1:35",
-		"public_host": "127.0.0.1:35",
-		"certificate": "auth.east.ea.com.pfx",
-
-		"schedule":[
-			{
-				"cron":"0 3 * * *", 
-				"task":"prune_database", 
-				"timeout":3600,
-				"parameter":{
-				}
-			},
-			{
-				"cron":"0 4 * * *", 
-				"task":"bonus", 
-				"timeout":3600,
-				"shard_id": 1,
-				"parameter":{
-				}
-			}
-		],
-
-		"tuning":{
-			"bonus":{
-				"property_bonus":{
-					"per_unit": 10,
-					"overrides":{
-						"1": 1500,
-						"2": 1250,
-						"3": 1000
-					}
-				},
-				"visitor_bonus":{
-					"per_unit": 8
-				}
-			}
-		}
-	},
-
-    "api": {
+    "tasks": {
       "enabled": true,
-      "bindings": [ "https://auth.east.ea.com:443/", "http://localhost:80/" ],
-      "controllers": [ "auth", "citySelector" ]
+      "call_sign": "callisto",
+      "binding": "0.0.0.0:35100",
+      "internal_host": "127.0.0.1:35",
+      "public_host": "127.0.0.1:35",
+      // "certificate": "auth.east.ea.com.pfx",
+      "schedule": [
+        {
+          "cron": "0 3 * * *",
+          "task": "prune_database",
+          "timeout": 3600,
+          "parameter": {}
+        },
+        {
+          "cron": "0 4 * * *",
+          "task": "bonus",
+          "timeout": 3600,
+          "shard_id": 1,
+          "parameter": {}
+        },
+        {
+          "cron": "0 4 * * *",
+          "task": "job_balance",
+          "timeout": 3600,
+          "parameter": {}
+        },
+        {
+          "cron": "0 9 * * *",
+          "task": "shutdown",
+          "timeout": 3600,
+          "parameter": {}
+        },
+        {
+          "cron": "0 0 * * *",
+          "task": "neighborhood_tick",
+          "timeout": 3600,
+          "run_if_missed": true,
+          "parameter": {}
+        },
+        {
+          "cron": "0 0 * * *",
+          "task": "birthday_gift",
+          "timeout": 3600,
+          "run_if_missed": true,
+          "parameter": {}
+        }
+      ],
+      "tuning": {
+        "bonus": {
+          "property_bonus": {
+            "per_unit": 10,
+            "overrides": {
+              "1": 1500,
+              "2": 1250,
+              "3": 1000
+            }
+          },
+          "visitor_bonus": {
+            "per_unit": 8
+          }
+        },
+        "birthdayGift": {
+          "items": [
+            {
+              "age": 1000,
+              "guid": 1303919565,
+              "mail_subject": "1000 Days!",
+              "mail_message": "This is an example gift that shows how birthday gifts can be awarded by the server at different milestones - this one is for 1000 days. Please change this message. Or leave it the same, I don't mind.\n - Rhys",
+              "mail_sender_name": "FreeSO Developers"
+            }
+          ]
+        }
+      }
     },
-
     "userApi": {
       "enabled": true,
-      "bindings": [ "http://localhost:9000/" ],
-      "controllers": [ "auth", "citySelector" ],
-      "updateUrl": "http://some-url"
+      "bindings": [
+        "http://+:9000/"
+      ],
+      "controllers": [
+        "auth",
+        "citySelector"
+      ],
+      // "cdnUrl": "http://0.0.0.0:9000",
+      "regkey": "simpleKeyForRegistrationChangeMe",
+      "maintainance": false
     },
-
     "cities": [
       {
-		"call_sign": "ganymede",
+        "call_sign": "ganymede",
         "id": 1,
         "binding": "0.0.0.0:33100",
-		"internal_host": "127.0.0.1:33",
-		"public_host": "127.0.0.1:33",
-
-        "certificate": "auth.east.ea.com.pfx",
-
-		"maintenance":{
-			"cron":"0 4 * * *",
-			"timeout":3600,
-			"visits_retention_period":7,
-			"top100_average_period": 4
-		}
+        "internal_host": "127.0.0.1:33",
+        "public_host": "0.0.0.0:33",
+        // "certificate": "auth.east.ea.com.pfx",
+        "neighborhoods": {
+          "mayor_elegibility_limit": 4,
+          "mayor_elegibility_falloff": 4,
+          "min_nominations": 2,
+          "election_week_align": true,
+          "election_move_penalty": 14
+        },
+        "maintenance": {
+          "cron": "0 4 * * *",
+          "timeout": 3600,
+          "visits_retention_period": 7,
+          "top100_average_period": 4
+        }
       }
     ],
-
-	"lots": [
-		{
-			"call_sign": "europa",
-			"binding": "0.0.0.0:34100",
-			"internal_host": "127.0.0.1:34",
-			"public_host": "127.0.0.1:34",
-			"certificate": "auth.east.ea.com.pfx",
-
-			"max_lots": 5,
-
-			"cities": [
-				{
-					"id": 1,
-					"host":"127.0.0.1:33100"
-				}
-			]
-		}
-	]
+    "lots": [
+      {
+        "call_sign": "europa",
+        "binding": "0.0.0.0:34100",
+        "internal_host": "127.0.0.1:34",
+        "public_host": "0.0.0.0:34",
+        // "certificate": "auth.east.ea.com.pfx",
+        "max_lots": 25,
+        "cities": [
+          {
+            "id": 1,
+            "host": "127.0.0.1:33100"
+          }
+        ]
+      }
+    ]
   }
 }
