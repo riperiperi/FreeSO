@@ -47,7 +47,7 @@ With everything now in place, you need to initialize your `config.json` file. He
 3. Change `simNFS` to a relative path to a folder where you want to store lot and object saves, as well as lot thumbnails. If you have a distributed server setup, this should be on a network drive.
 4. Change the secret to something unique. If you don't do this, other people will be able to impersonate your city/lot servers and cause havoc.
   - This should be a random 64 character hex string. I'm sure you can find a generator.
-5. Configure database (see Database Manipulation)
+5. Configure database (see Database Setup)
   - The most important thing is setting your connection string to match your database setup.
 6. Configure servers (see Server Configuration)
   - The most important thing is changing the `public_host` fields for everything _except_ the task server to match your server's public IP. (the endpoint through which game clients will connect to your server)
