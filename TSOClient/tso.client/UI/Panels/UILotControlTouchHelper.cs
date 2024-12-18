@@ -125,6 +125,8 @@ namespace FSO.Client.UI.Panels
                 if (Mode == -1) Mode = 0;
             }
 
+            bool scrollOnHold = FSOEnvironment.SoftwareKeyboard;
+
             switch (Mode)
             {
                 case -1:
@@ -173,7 +175,7 @@ namespace FSO.Client.UI.Panels
                                 {
                                     Mode = 1; //become a scroll
                                 }
-                                else if (++MiceDownTimer > time)
+                                else if (scrollOnHold && ++MiceDownTimer > time)
                                 {
                                     Mode = 3;
                                     Master.Click(GetScaledPoint(TapPoint), state);
@@ -186,12 +188,22 @@ namespace FSO.Client.UI.Panels
                             {
                                 //release our scroll velocity
                                 Mode = -1;
+                                if (!scrollOnHold)
+                                {
+                                    Master.Click(GetScaledPoint(TapPoint), state);
+                                }
                             }
                             else
                             {
+
                                 var mouse = state.MouseStates.FirstOrDefault(x => x.ID == MiceDown.First());
                                 var newTap = new Point(mouse.MouseState.X, mouse.MouseState.Y);
-                                ScrollVelocity = (newTap - TapPoint).ToVector2();
+
+                                if (scrollOnHold)
+                                {
+                                    ScrollVelocity = (newTap - TapPoint).ToVector2();
+                                }
+
                                 TapPoint = newTap;
                             }
                         }

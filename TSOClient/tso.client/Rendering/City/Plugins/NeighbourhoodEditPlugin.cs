@@ -18,10 +18,12 @@ namespace FSO.Client.Rendering.City.Plugins
         public CityNeighbourhood Selected;
 
         private Texture2D PxBlack;
+        private Texture2D PxWhite;
 
         public NeighbourhoodEditPlugin(Terrain city) : base(city)
         {
             PxBlack = TextureUtils.TextureFromColor(GameFacade.GraphicsDevice, Color.Black);
+            PxWhite = TextureUtils.TextureFromColor(GameFacade.GraphicsDevice, Color.White);
             EditTarget = city.NeighGeom.Data;
         }
 
@@ -34,6 +36,7 @@ namespace FSO.Client.Rendering.City.Plugins
             {
                 var onScreen = City.Get2DFromTile(neigh.Location.X, neigh.Location.Y);
                 City.DrawLine(PxBlack, onScreen + new Vector2(0, -8), onScreen + new Vector2(0, 8), sb, 16, 100);
+                City.DrawLine(PxWhite, onScreen + new Vector2(0, -8), onScreen + new Vector2(0, 2), sb, 10, 100);
             }
 
             if (Selected != null)

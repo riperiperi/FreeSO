@@ -55,3 +55,9 @@ With everything now in place, you need to initialize your `config.json` file. He
 That should be the long and short of it. After this, your server can be started with the dotnet command:
 
 `dotnet exec FSO.Server.Core.dll`
+
+## Client Prep
+
+![](./media/debugurl.png)
+
+To connect to your custom server, press F1 on the login screen and change the URL in the text box to match your API server endpoint. This will update your client configuration to connect to this server every time. If you want to distribute a client made for a specific server, you should overwrite this URL in the default config.

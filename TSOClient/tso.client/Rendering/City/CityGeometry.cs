@@ -3,12 +3,16 @@ using Microsoft.Xna.Framework;
 using Microsoft.Xna.Framework.Graphics;
 using System;
 using System.Collections.Generic;
+using System.Runtime.CompilerServices;
 using System.Threading.Tasks;
 
 namespace FSO.Client.Rendering.City
 {
     public class CityGeometry
     {
+        private static Matrix RotToNormalXY = Matrix.CreateRotationZ((float)(Math.PI / 2));
+        private static Matrix RotToNormalZY = Matrix.CreateRotationX(-(float)(Math.PI / 2));
+
         //draw order:
         //grass, sand, rock, snow, water
         public CityMapData MapData;
@@ -25,9 +29,13 @@ namespace FSO.Client.Rendering.City
         public int Ready = -1;
         public int CurrentSlice = -1;
 
-        private float GetElevationPoint(int x, int y)
+        private bool MeshRegenInProgress;
+        private bool MeshDirty;
+
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
+        private static float GetElevationPoint(byte[] elevationData, int x, int y)
         {
-            return MapData.ElevationData[(y * 512 + x)] / 6.0f;
+            return elevationData[(y * 512 + x)] / 6.0f;
         }
 
         private Blend GetBlend(byte[] TerrainTypeData, int i, int j)
@@ -71,18 +79,16 @@ namespace FSO.Client.Rendering.City
             return ReturnBlend;
         }
 
-        private Vector3 GetNormalAt(int x, int y)
+        private Vector3 GetNormalAt(byte[] elevationData, int x, int y)
         {
             var sum = new Vector3();
-            var rotToNormalXY = Matrix.CreateRotationZ((float)(Math.PI / 2));
-            var rotToNormalZY = Matrix.CreateRotationX(-(float)(Math.PI / 2));
 
             if (x < 511)
             {
                 var vec = new Vector3();
                 vec.X = 1;
-                vec.Y = GetElevationPoint(x + 1, y) - GetElevationPoint(x, y);
-                vec = Vector3.Transform(vec, rotToNormalXY);
+                vec.Y = GetElevationPoint(elevationData, x + 1, y) - GetElevationPoint(elevationData, x, y);
+                vec = Vector3.Transform(vec, RotToNormalXY);
                 sum += vec;
             }
 
@@ -90,8 +96,8 @@ namespace FSO.Client.Rendering.City
             {
                 var vec = new Vector3();
                 vec.X = 1;
-                vec.Y = GetElevationPoint(x, y) - GetElevationPoint(x - 1, y);
-                vec = Vector3.Transform(vec, rotToNormalXY);
+                vec.Y = GetElevationPoint(elevationData, x, y) - GetElevationPoint(elevationData, x - 1, y);
+                vec = Vector3.Transform(vec, RotToNormalXY);
                 sum += vec;
             }
 
@@ -99,8 +105,8 @@ namespace FSO.Client.Rendering.City
             {
                 var vec = new Vector3();
                 vec.Z = 1;
-                vec.Y = GetElevationPoint(x, y + 1) - GetElevationPoint(x, y);
-                vec = Vector3.Transform(vec, rotToNormalZY);
+                vec.Y = GetElevationPoint(elevationData, x, y + 1) - GetElevationPoint(elevationData, x, y);
+                vec = Vector3.Transform(vec, RotToNormalZY);
                 sum += vec;
             }
 
@@ -108,8 +114,8 @@ namespace FSO.Client.Rendering.City
             {
                 var vec = new Vector3();
                 vec.Z = 1;
-                vec.Y = GetElevationPoint(x, y) - GetElevationPoint(x, y - 1);
-                vec = Vector3.Transform(vec, rotToNormalZY);
+                vec.Y = GetElevationPoint(elevationData, x, y) - GetElevationPoint(elevationData, x, y - 1);
+                vec = Vector3.Transform(vec, RotToNormalZY);
                 sum += vec;
             }
             if (sum != Vector3.Zero) sum.Normalize();
@@ -150,7 +156,7 @@ namespace FSO.Client.Rendering.City
             */
         }
 
-        public void RegenMeshVerts(GraphicsDevice gd, Rectangle? range)
+        public void RegenMeshVerts(GraphicsDevice gd, bool async)
         {
             var indices = new List<int>[5];
             var vertices = new List<TLayerVertex>[5];
@@ -160,12 +166,12 @@ namespace FSO.Client.Rendering.City
 
             for (int i = 0; i < 5; i++)
             {
-                indices[i] = new List<int>();
-                vertices[i] = new List<TLayerVertex>();
+                indices[i] = new List<int>(400000);
+                vertices[i] = new List<TLayerVertex>(300000);
             }
 
-            var roadIndices = new List<int>();
-            var roadVertices = new List<TLayerVertex>();
+            var roadIndices = new List<int>(150000);
+            var roadVertices = new List<TLayerVertex>(100000);
 
             int xStart, xEnd;
 
@@ -175,304 +181,355 @@ namespace FSO.Client.Rendering.City
 
             var chunkWidth = 512 / chunkSize;
             var chunkCount = chunkWidth * chunkWidth;
+
+            int[][] newLayerSubPrims = new int[LayerSubPrims.Length][];
             for (int i = 0; i < 5; i++)
-                LayerSubPrims[i] = new int[chunkCount];
-            RoadSubPrims = new int[chunkCount];
+                newLayerSubPrims[i] = new int[chunkCount];
+            int[] newRoadSubPrims = new int[chunkCount];
 
-            var ci = 0;
-            for (int cy = 0; cy < chunkWidth; cy++)
+            Action generate = () =>
             {
-                for (int cx = 0; cx < chunkWidth; cx++)
+                byte[] terrainType = MapData.TerrainType;
+                byte[] roadData = MapData.RoadData;
+                byte[] elevationData = MapData.ElevationData;
+
+                var ci = 0;
+                for (int cy = 0; cy < chunkWidth; cy++)
                 {
-                    yStart = cy * chunkSize;
-                    yEnd = (cy + 1) * chunkSize;
-                    var xLim = cx * chunkSize;
-                    var xLimEnd = (cx + 1) * chunkSize;
-
-                    for (int i = yStart; i < yEnd; i++)
+                    for (int cx = 0; cx < chunkWidth; cx++)
                     {
-                        if (i < 306) xStart = 306 - i;
-                        else xStart = i - 306;
-                        if (i < 205) xEnd = 307 + i;
-                        else xEnd = 512 - (i - 205);
-                        var rXE = xEnd;
-                        var rXS = xStart;
+                        yStart = cy * chunkSize;
+                        yEnd = (cy + 1) * chunkSize;
+                        var xLim = cx * chunkSize;
+                        var xLimEnd = (cx + 1) * chunkSize;
 
-                        int rXE2, rXS2;
-                        int i2 = i + 1;
-                        if (i2 < 306) rXS2 = 306 - i2;
-                        else rXS2 = i2 - 306;
-                        if (i2 < 205) rXE2 = 307 + i2;
-                        else rXE2 = 512 - (i2 - 205);
+                        for (int i = yStart; i < yEnd; i++)
+                        {
+                            if (i < 306) xStart = 306 - i;
+                            else xStart = i - 306;
+                            if (i < 205) xEnd = 307 + i;
+                            else xEnd = 512 - (i - 205);
+                            var rXE = xEnd;
+                            var rXS = xStart;
 
-                        var fadeRange = 10;
-                        var fR = 1 / 9f;
-                        xStart = Math.Max(xStart - fadeRange, xLim);
-                        xEnd = Math.Min(xLimEnd, xEnd + fadeRange);
+                            int rXE2, rXS2;
+                            int i2 = i + 1;
+                            if (i2 < 306) rXS2 = 306 - i2;
+                            else rXS2 = i2 - 306;
+                            if (i2 < 205) rXE2 = 307 + i2;
+                            else rXE2 = 512 - (i2 - 205);
 
-                        if (xEnd <= xStart) continue;
+                            var fadeRange = 10;
+                            var fR = 1 / 9f;
+                            xStart = Math.Max(xStart - fadeRange, xLim);
+                            xEnd = Math.Min(xLimEnd, xEnd + fadeRange);
 
-                        for (int j = xStart; j < xEnd; j++)
-                        { //where the magic happens
-                            var ex = Math.Min(Math.Max(rXS, j), rXE - 1);
-                            var blendData = GetBlend(MapData.TerrainType, i, ex); //gets information on what this tile blends into and what blend image to use for the alpha.
-                            var type = MapData.TerrainType[((i * 512) + ex)];
-                            byte roadByte = MapData.RoadData[(i * 512 + ex)];
+                            if (xEnd <= xStart) continue;
 
-                            //huge segment of code for generating triangles incoming
-                            var norm1 = GetNormalAt(Math.Min(rXE, Math.Max(rXS, j)), i);
-                            var norm2 = GetNormalAt(Math.Min(rXE, Math.Max(rXS, j + 1)), i);
-                            var norm3 = GetNormalAt(Math.Min(rXE2, Math.Max(rXS2, j + 1)), Math.Min(511, i + 1));
-                            var norm4 = GetNormalAt(Math.Min(rXE2, Math.Max(rXS2, j)), Math.Min(511, i + 1));
+                            for (int j = xStart; j < xEnd; j++)
+                            { //where the magic happens
+                                var ex = Math.Min(Math.Max(rXS, j), rXE - 1);
+                                var blendData = GetBlend(terrainType, i, ex); //gets information on what this tile blends into and what blend image to use for the alpha.
+                                var type = terrainType[((i * 512) + ex)];
+                                byte roadByte = roadData[(i * 512 + ex)];
 
-                            var pos1 = new Vector3(j, MapData.ElevationData[(i * 512 + Math.Min(rXE, Math.Max(rXS, j)))] / 12.0f, i);
-                            var pos2 = new Vector3(j + 1, MapData.ElevationData[(i * 512 + Math.Min(rXE, Math.Max(rXS, j + 1)))] / 12.0f, i);
-                            var pos3 = new Vector3(j + 1, MapData.ElevationData[(Math.Min(511, i + 1) * 512 + Math.Min(rXE2, Math.Max(rXS2, j + 1)))] / 12.0f, i + 1);
-                            var pos4 = new Vector3(j, MapData.ElevationData[(Math.Min(511, i + 1) * 512 + Math.Min(rXE2, Math.Max(rXS2, j)))] / 12.0f, i + 1);
+                                //huge segment of code for generating triangles incoming
+                                var norm1 = GetNormalAt(elevationData, Math.Min(rXE, Math.Max(rXS, j)), i);
+                                var norm2 = GetNormalAt(elevationData, Math.Min(rXE, Math.Max(rXS, j + 1)), i);
+                                var norm3 = GetNormalAt(elevationData, Math.Min(rXE2, Math.Max(rXS2, j + 1)), Math.Min(511, i + 1));
+                                var norm4 = GetNormalAt(elevationData, Math.Min(rXE2, Math.Max(rXS2, j)), Math.Min(511, i + 1));
 
-                            var trans1 = Math.Min(1, Math.Max(0, Math.Max(rXS - j, j - rXE) * fR));
-                            var trans2 = Math.Min(1, Math.Max(0, Math.Max(rXS - (j + 1), (j + 1) - rXE) * fR));
-                            var trans3 = Math.Min(1, Math.Max(0, Math.Max(rXS2 - (j + 1), (j + 1) - rXE2) * fR));
-                            var trans4 = Math.Min(1, Math.Max(0, Math.Max(rXS2 - j, j - rXE2) * fR));
+                                var pos1 = new Vector3(j, elevationData[(i * 512 + Math.Min(rXE, Math.Max(rXS, j)))] / 12.0f, i);
+                                var pos2 = new Vector3(j + 1, elevationData[(i * 512 + Math.Min(rXE, Math.Max(rXS, j + 1)))] / 12.0f, i);
+                                var pos3 = new Vector3(j + 1, elevationData[(Math.Min(511, i + 1) * 512 + Math.Min(rXE2, Math.Max(rXS2, j + 1)))] / 12.0f, i + 1);
+                                var pos4 = new Vector3(j, elevationData[(Math.Min(511, i + 1) * 512 + Math.Min(rXE2, Math.Max(rXS2, j)))] / 12.0f, i + 1);
 
-                            var baseInd = vertices[type].Count;
-                            vertices[type].Add(new TLayerVertex()
-                            {
-                                Position = pos1,
-                                Normal = norm1,
-                                Transparency = trans1,
-                                TextureCoord = new Vector2(j, i) / 4,
-                                MaskTextureCoord = new Vector2(-1, -1)
-                            });
+                                var trans1 = Math.Min(1, Math.Max(0, Math.Max(rXS - j, j - rXE) * fR));
+                                var trans2 = Math.Min(1, Math.Max(0, Math.Max(rXS - (j + 1), (j + 1) - rXE) * fR));
+                                var trans3 = Math.Min(1, Math.Max(0, Math.Max(rXS2 - (j + 1), (j + 1) - rXE2) * fR));
+                                var trans4 = Math.Min(1, Math.Max(0, Math.Max(rXS2 - j, j - rXE2) * fR));
 
-                            vertices[type].Add(new TLayerVertex()
-                            {
-                                Position = pos2,
-                                Normal = norm2,
-                                Transparency = trans2,
-                                TextureCoord = new Vector2(j + 1, i) / 4,
-                                MaskTextureCoord = new Vector2(-1, -1)
-                            });
-
-                            vertices[type].Add(new TLayerVertex()
-                            {
-                                Position = pos3,
-                                Normal = norm3,
-                                Transparency = trans3,
-                                TextureCoord = new Vector2(j + 1, i + 1) / 4,
-                                MaskTextureCoord = new Vector2(-1, -1)
-                            });
-
-                            vertices[type].Add(new TLayerVertex()
-                            {
-                                Position = pos4,
-                                Normal = norm4,
-                                Transparency = trans4,
-                                TextureCoord = new Vector2(j, i + 1) / 4,
-                                MaskTextureCoord = new Vector2(-1, -1)
-                            });
-
-                            indices[type].Add(baseInd);
-                            indices[type].Add(baseInd + 1);
-                            indices[type].Add(baseInd + 2);
-                            indices[type].Add(baseInd);
-                            indices[type].Add(baseInd + 2);
-                            indices[type].Add(baseInd + 3);
-
-                            if (j > rXS && j < rXE)
-                            {
-                                if (blendData.Binary < 15)
+                                var baseInd = vertices[type].Count;
+                                vertices[type].Add(new TLayerVertex()
                                 {
-                                    //add a blend face on top of this face (with a higher priority)
-                                    var bOff = blendData.AtlasPosition; //texture used for blend alpha
-                                    var blendT = blendData.MaxEdge;
+                                    Position = pos1,
+                                    Normal = norm1,
+                                    Transparency = trans1,
+                                    TextureCoord = new Vector2(j, i) / 4,
+                                    MaskTextureCoord = new Vector2(-1, -1)
+                                });
 
-                                    baseInd = vertices[blendT].Count;
-                                    vertices[blendT].Add(new TLayerVertex()
-                                    {
-                                        Position = pos1,
-                                        Normal = norm1,
-                                        TextureCoord = new Vector2(j, i) / 4,
-                                        Transparency = trans1,
-                                        MaskTextureCoord = bOff
-                                    });
-
-                                    vertices[blendT].Add(new TLayerVertex()
-                                    {
-                                        Position = pos2,
-                                        Normal = norm2,
-                                        TextureCoord = new Vector2(j + 1, i) / 4,
-                                        Transparency = trans2,
-                                        MaskTextureCoord = new Vector2(bOff.X + bDelta.X, bOff.Y)
-                                    });
-
-                                    vertices[blendT].Add(new TLayerVertex()
-                                    {
-                                        Position = pos3,
-                                        Normal = norm3,
-                                        TextureCoord = new Vector2(j + 1, i + 1) / 4,
-                                        Transparency = trans3,
-                                        MaskTextureCoord = new Vector2(bOff.X + bDelta.X, bOff.Y + bDelta.Y)
-                                    });
-
-                                    vertices[blendT].Add(new TLayerVertex()
-                                    {
-                                        Position = pos4,
-                                        Normal = norm4,
-                                        Transparency = trans4,
-                                        TextureCoord = new Vector2(j, i + 1) / 4,
-                                        MaskTextureCoord = new Vector2(bOff.X, bOff.Y + bDelta.Y)
-                                    });
-
-                                    indices[blendT].Add(baseInd);
-                                    indices[blendT].Add(baseInd + 1);
-                                    indices[blendT].Add(baseInd + 2);
-                                    indices[blendT].Add(baseInd);
-                                    indices[blendT].Add(baseInd + 2);
-                                    indices[blendT].Add(baseInd + 3);
-                                }
-
-                                var normalRoad = roadByte & 15;
-                                var cornerRoad = roadByte >> 4;
-                                if (normalRoad > 0)
+                                vertices[type].Add(new TLayerVertex()
                                 {
-                                    //add a road face on top of this face
-                                    var roadInd = CityContent.RoadLayout[normalRoad];
-                                    var roadOff = new Vector2(
-                                        (roadInd % CityContent.RoadWidth) / (float)CityContent.RoadWidth,
-                                        (roadInd / CityContent.RoadWidth) / (float)CityContent.RoadHeight
-                                        );
-                                    baseInd = roadVertices.Count;
-                                    roadVertices.Add(new TLayerVertex()
-                                    {
-                                        Position = pos1,
-                                        Normal = norm1,
-                                        TextureCoord = new Vector2(roadOff.X + rDelta.X, roadOff.Y),
-                                        MaskTextureCoord = new Vector2(-1, -1)
-                                    });
+                                    Position = pos2,
+                                    Normal = norm2,
+                                    Transparency = trans2,
+                                    TextureCoord = new Vector2(j + 1, i) / 4,
+                                    MaskTextureCoord = new Vector2(-1, -1)
+                                });
 
-                                    roadVertices.Add(new TLayerVertex()
-                                    {
-                                        Position = pos2,
-                                        Normal = norm2,
-                                        TextureCoord = roadOff,
-                                        MaskTextureCoord = new Vector2(-1, -1)
-                                    });
-
-                                    roadVertices.Add(new TLayerVertex()
-                                    {
-                                        Position = pos3,
-                                        Normal = norm3,
-                                        TextureCoord = new Vector2(roadOff.X, roadOff.Y + rDelta.Y),
-                                        MaskTextureCoord = new Vector2(-1, -1)
-                                    });
-
-                                    roadVertices.Add(new TLayerVertex()
-                                    {
-                                        Position = pos4,
-                                        Normal = norm4,
-                                        TextureCoord = new Vector2(roadOff.X + rDelta.X, roadOff.Y + rDelta.Y),
-                                        MaskTextureCoord = new Vector2(-1, -1)
-                                    });
-
-                                    roadIndices.Add(baseInd);
-                                    roadIndices.Add(baseInd + 1);
-                                    roadIndices.Add(baseInd + 2);
-                                    roadIndices.Add(baseInd);
-                                    roadIndices.Add(baseInd + 2);
-                                    roadIndices.Add(baseInd + 3);
-                                }
-
-                                if (cornerRoad > 0)
+                                vertices[type].Add(new TLayerVertex()
                                 {
-                                    //add a road face on top of this face
-                                    var roadInd = CityContent.RoadCLayout[cornerRoad];
-                                    var roadOff = new Vector2(
-                                        (roadInd % CityContent.RoadWidth) / (float)CityContent.RoadWidth,
-                                        (roadInd / CityContent.RoadWidth) / (float)CityContent.RoadHeight
-                                        );
-                                    baseInd = roadVertices.Count;
-                                    roadVertices.Add(new TLayerVertex()
-                                    {
-                                        Position = pos1,
-                                        Normal = norm1,
-                                        TextureCoord = new Vector2(roadOff.X + rDelta.X, roadOff.Y),
-                                        MaskTextureCoord = new Vector2(-1, -1)
-                                    });
+                                    Position = pos3,
+                                    Normal = norm3,
+                                    Transparency = trans3,
+                                    TextureCoord = new Vector2(j + 1, i + 1) / 4,
+                                    MaskTextureCoord = new Vector2(-1, -1)
+                                });
 
-                                    roadVertices.Add(new TLayerVertex()
-                                    {
-                                        Position = pos2,
-                                        Normal = norm2,
-                                        TextureCoord = roadOff,
-                                        MaskTextureCoord = new Vector2(-1, -1)
-                                    });
+                                vertices[type].Add(new TLayerVertex()
+                                {
+                                    Position = pos4,
+                                    Normal = norm4,
+                                    Transparency = trans4,
+                                    TextureCoord = new Vector2(j, i + 1) / 4,
+                                    MaskTextureCoord = new Vector2(-1, -1)
+                                });
 
-                                    roadVertices.Add(new TLayerVertex()
-                                    {
-                                        Position = pos3,
-                                        Normal = norm3,
-                                        TextureCoord = new Vector2(roadOff.X, roadOff.Y + rDelta.Y),
-                                        MaskTextureCoord = new Vector2(-1, -1)
-                                    });
+                                indices[type].Add(baseInd);
+                                indices[type].Add(baseInd + 1);
+                                indices[type].Add(baseInd + 2);
+                                indices[type].Add(baseInd);
+                                indices[type].Add(baseInd + 2);
+                                indices[type].Add(baseInd + 3);
 
-                                    roadVertices.Add(new TLayerVertex()
+                                if (j > rXS && j < rXE)
+                                {
+                                    if (blendData.Binary < 15)
                                     {
-                                        Position = pos4,
-                                        Normal = norm4,
-                                        TextureCoord = new Vector2(roadOff.X + rDelta.X, roadOff.Y + rDelta.Y),
-                                        MaskTextureCoord = new Vector2(-1, -1)
-                                    });
+                                        //add a blend face on top of this face (with a higher priority)
+                                        var bOff = blendData.AtlasPosition; //texture used for blend alpha
+                                        var blendT = blendData.MaxEdge;
 
-                                    roadIndices.Add(baseInd);
-                                    roadIndices.Add(baseInd + 1);
-                                    roadIndices.Add(baseInd + 2);
-                                    roadIndices.Add(baseInd);
-                                    roadIndices.Add(baseInd + 2);
-                                    roadIndices.Add(baseInd + 3);
+                                        baseInd = vertices[blendT].Count;
+                                        vertices[blendT].Add(new TLayerVertex()
+                                        {
+                                            Position = pos1,
+                                            Normal = norm1,
+                                            TextureCoord = new Vector2(j, i) / 4,
+                                            Transparency = trans1,
+                                            MaskTextureCoord = bOff
+                                        });
+
+                                        vertices[blendT].Add(new TLayerVertex()
+                                        {
+                                            Position = pos2,
+                                            Normal = norm2,
+                                            TextureCoord = new Vector2(j + 1, i) / 4,
+                                            Transparency = trans2,
+                                            MaskTextureCoord = new Vector2(bOff.X + bDelta.X, bOff.Y)
+                                        });
+
+                                        vertices[blendT].Add(new TLayerVertex()
+                                        {
+                                            Position = pos3,
+                                            Normal = norm3,
+                                            TextureCoord = new Vector2(j + 1, i + 1) / 4,
+                                            Transparency = trans3,
+                                            MaskTextureCoord = new Vector2(bOff.X + bDelta.X, bOff.Y + bDelta.Y)
+                                        });
+
+                                        vertices[blendT].Add(new TLayerVertex()
+                                        {
+                                            Position = pos4,
+                                            Normal = norm4,
+                                            Transparency = trans4,
+                                            TextureCoord = new Vector2(j, i + 1) / 4,
+                                            MaskTextureCoord = new Vector2(bOff.X, bOff.Y + bDelta.Y)
+                                        });
+
+                                        indices[blendT].Add(baseInd);
+                                        indices[blendT].Add(baseInd + 1);
+                                        indices[blendT].Add(baseInd + 2);
+                                        indices[blendT].Add(baseInd);
+                                        indices[blendT].Add(baseInd + 2);
+                                        indices[blendT].Add(baseInd + 3);
+                                    }
+
+                                    var normalRoad = roadByte & 15;
+                                    var cornerRoad = roadByte >> 4;
+                                    if (normalRoad > 0)
+                                    {
+                                        //add a road face on top of this face
+                                        var roadInd = CityContent.RoadLayout[normalRoad];
+                                        var roadOff = new Vector2(
+                                            (roadInd % CityContent.RoadWidth) / (float)CityContent.RoadWidth,
+                                            (roadInd / CityContent.RoadWidth) / (float)CityContent.RoadHeight
+                                            );
+                                        baseInd = roadVertices.Count;
+                                        roadVertices.Add(new TLayerVertex()
+                                        {
+                                            Position = pos1,
+                                            Normal = norm1,
+                                            TextureCoord = new Vector2(roadOff.X + rDelta.X, roadOff.Y),
+                                            MaskTextureCoord = new Vector2(-1, -1)
+                                        });
+
+                                        roadVertices.Add(new TLayerVertex()
+                                        {
+                                            Position = pos2,
+                                            Normal = norm2,
+                                            TextureCoord = roadOff,
+                                            MaskTextureCoord = new Vector2(-1, -1)
+                                        });
+
+                                        roadVertices.Add(new TLayerVertex()
+                                        {
+                                            Position = pos3,
+                                            Normal = norm3,
+                                            TextureCoord = new Vector2(roadOff.X, roadOff.Y + rDelta.Y),
+                                            MaskTextureCoord = new Vector2(-1, -1)
+                                        });
+
+                                        roadVertices.Add(new TLayerVertex()
+                                        {
+                                            Position = pos4,
+                                            Normal = norm4,
+                                            TextureCoord = new Vector2(roadOff.X + rDelta.X, roadOff.Y + rDelta.Y),
+                                            MaskTextureCoord = new Vector2(-1, -1)
+                                        });
+
+                                        roadIndices.Add(baseInd);
+                                        roadIndices.Add(baseInd + 1);
+                                        roadIndices.Add(baseInd + 2);
+                                        roadIndices.Add(baseInd);
+                                        roadIndices.Add(baseInd + 2);
+                                        roadIndices.Add(baseInd + 3);
+                                    }
+
+                                    if (cornerRoad > 0)
+                                    {
+                                        //add a road face on top of this face
+                                        var roadInd = CityContent.RoadCLayout[cornerRoad];
+                                        var roadOff = new Vector2(
+                                            (roadInd % CityContent.RoadWidth) / (float)CityContent.RoadWidth,
+                                            (roadInd / CityContent.RoadWidth) / (float)CityContent.RoadHeight
+                                            );
+                                        baseInd = roadVertices.Count;
+                                        roadVertices.Add(new TLayerVertex()
+                                        {
+                                            Position = pos1,
+                                            Normal = norm1,
+                                            TextureCoord = new Vector2(roadOff.X + rDelta.X, roadOff.Y),
+                                            MaskTextureCoord = new Vector2(-1, -1)
+                                        });
+
+                                        roadVertices.Add(new TLayerVertex()
+                                        {
+                                            Position = pos2,
+                                            Normal = norm2,
+                                            TextureCoord = roadOff,
+                                            MaskTextureCoord = new Vector2(-1, -1)
+                                        });
+
+                                        roadVertices.Add(new TLayerVertex()
+                                        {
+                                            Position = pos3,
+                                            Normal = norm3,
+                                            TextureCoord = new Vector2(roadOff.X, roadOff.Y + rDelta.Y),
+                                            MaskTextureCoord = new Vector2(-1, -1)
+                                        });
+
+                                        roadVertices.Add(new TLayerVertex()
+                                        {
+                                            Position = pos4,
+                                            Normal = norm4,
+                                            TextureCoord = new Vector2(roadOff.X + rDelta.X, roadOff.Y + rDelta.Y),
+                                            MaskTextureCoord = new Vector2(-1, -1)
+                                        });
+
+                                        roadIndices.Add(baseInd);
+                                        roadIndices.Add(baseInd + 1);
+                                        roadIndices.Add(baseInd + 2);
+                                        roadIndices.Add(baseInd);
+                                        roadIndices.Add(baseInd + 2);
+                                        roadIndices.Add(baseInd + 3);
+                                    }
                                 }
                             }
                         }
-                    }
 
-                    for (int i = 0; i < 5; i++)
-                    {
-                        LayerSubPrims[i][ci] = indices[i].Count;
+                        for (int i = 0; i < 5; i++)
+                        {
+                            newLayerSubPrims[i][ci] = indices[i].Count;
+                        }
+                        newRoadSubPrims[ci] = roadIndices.Count;
+                        ci++;
                     }
-                    RoadSubPrims[ci] = roadIndices.Count;
-                    ci++;
                 }
-            }
+            };
 
-            //upload to gpu
-            for (int i = 0; i < 5; i++)
+            Action upload = () =>
             {
-                LayerIndices[i]?.Dispose();
-                LayerVertices[i]?.Dispose();
-                if (vertices[i].Count == 0)
+                LayerSubPrims = newLayerSubPrims;
+                RoadSubPrims = newRoadSubPrims;
+
+                //upload to gpu
+                for (int i = 0; i < 5; i++)
                 {
-                    LayerIndices[i] = null;
-                    LayerVertices[i] = null;
+                    LayerIndices[i]?.Dispose();
+                    LayerVertices[i]?.Dispose();
+                    if (vertices[i].Count == 0)
+                    {
+                        LayerIndices[i] = null;
+                        LayerVertices[i] = null;
+                    }
+                    else
+                    {
+                        LayerIndices[i] = new IndexBuffer(gd, IndexElementSize.ThirtyTwoBits, indices[i].Count, BufferUsage.None);
+                        LayerIndices[i].SetData(indices[i].ToArray());
+                        LayerVertices[i] = new VertexBuffer(gd, typeof(TLayerVertex), vertices[i].Count, BufferUsage.None);
+                        LayerVertices[i].SetData(vertices[i].ToArray());
+                    }
+                    LayerPrims[i] = indices[i].Count / 3;
+                }
+
+                RoadIndices?.Dispose();
+                RoadVertices?.Dispose();
+                if (roadVertices.Count > 0)
+                {
+                    RoadIndices = new IndexBuffer(gd, IndexElementSize.ThirtyTwoBits, roadIndices.Count, BufferUsage.None);
+                    RoadIndices.SetData(roadIndices.ToArray());
+                    RoadVertices = new VertexBuffer(gd, typeof(TLayerVertex), roadVertices.Count, BufferUsage.None);
+                    RoadVertices.SetData(roadVertices.ToArray());
+                    RoadPrims = roadIndices.Count / 3;
+                }
+            };
+
+
+            if (async)
+            {
+                if (!MeshRegenInProgress)
+                {
+                    MeshDirty = false;
+                    MeshRegenInProgress = true;
+                    Task.Run(() =>
+                    {
+                        generate();
+                    }).ContinueWith((x) =>
+                    {
+                        GameThread.NextUpdate((state) =>
+                        {
+                            upload();
+
+                            MeshRegenInProgress = false;
+
+                            if (MeshDirty)
+                            {
+                                RegenMeshVerts(gd, true);
+                            }
+                        });
+                    });
                 }
                 else
                 {
-                    LayerIndices[i] = new IndexBuffer(gd, IndexElementSize.ThirtyTwoBits, indices[i].Count, BufferUsage.None);
-                    LayerIndices[i].SetData(indices[i].ToArray());
-                    LayerVertices[i] = new VertexBuffer(gd, typeof(TLayerVertex), vertices[i].Count, BufferUsage.None);
-                    LayerVertices[i].SetData(vertices[i].ToArray());
+                    MeshDirty = true;
                 }
-                LayerPrims[i] = indices[i].Count / 3;
             }
-
-            RoadIndices?.Dispose();
-            RoadVertices?.Dispose();
-            if (roadVertices.Count > 0)
+            else
             {
-                RoadIndices = new IndexBuffer(gd, IndexElementSize.ThirtyTwoBits, roadIndices.Count, BufferUsage.None);
-                RoadIndices.SetData(roadIndices.ToArray());
-                RoadVertices = new VertexBuffer(gd, typeof(TLayerVertex), roadVertices.Count, BufferUsage.None);
-                RoadVertices.SetData(roadVertices.ToArray());
-                RoadPrims = roadIndices.Count / 3;
+                generate();
+                upload();
             }
         }
 
@@ -492,12 +549,12 @@ namespace FSO.Client.Rendering.City
 
             for (int i = 0; i < 5; i++)
             {
-                indices[i] = new List<int>();
-                vertices[i] = new List<TLayerVertex>();
+                indices[i] = new List<int>(100000);
+                vertices[i] = new List<TLayerVertex>(20000);
             }
 
-            var roadIndices = new List<int>();
-            var roadVertices = new List<TLayerVertex>();
+            var roadIndices = new List<int>(50000);
+            var roadVertices = new List<TLayerVertex>(10000);
 
             int xStart, xEnd;
 
@@ -515,6 +572,10 @@ namespace FSO.Client.Rendering.City
 
             Task.Run(() =>
             {
+                byte[] terrainType = MapData.TerrainType;
+                byte[] roadData = MapData.RoadData;
+                byte[] elevationData = MapData.ElevationData;
+
                 for (int i = yStart; i < yEnd; i++)
                 {
                     if (i < 306)
@@ -551,22 +612,22 @@ namespace FSO.Client.Rendering.City
                     for (int j = xStart; j < xEnd; j++)
                     { //where the magic happens
                         var ex = Math.Min(Math.Max(rXS, j), rXE - 1);
-                        var blendData = GetBlend(MapData.TerrainType, i, ex); //gets information on what this tile blends into and what blend image to use for the alpha.
-                        var type = MapData.TerrainType[((i * 512) + ex)];
-                        byte roadByte = MapData.RoadData[(i * 512 + ex)];
+                        var blendData = GetBlend(terrainType, i, ex); //gets information on what this tile blends into and what blend image to use for the alpha.
+                        var type = terrainType[((i * 512) + ex)];
+                        byte roadByte = roadData[(i * 512 + ex)];
 
                         //huge segment of code for generating triangles incoming
-                        var norm1 = GetNormalAt(Math.Min(rXE, Math.Max(rXS, j)), i);
-                        var norm2 = GetNormalAt(Math.Min(rXE, Math.Max(rXS, j + 1)), i);
-                        var norm3 = GetNormalAt(Math.Min(rXE2, Math.Max(rXS2, j + 1)), Math.Min(511, i + 1));
-                        var norm4 = GetNormalAt(Math.Min(rXE2, Math.Max(rXS2, j)), Math.Min(511, i + 1));
+                        var norm1 = GetNormalAt(elevationData, Math.Min(rXE, Math.Max(rXS, j)), i);
+                        var norm2 = GetNormalAt(elevationData, Math.Min(rXE, Math.Max(rXS, j + 1)), i);
+                        var norm3 = GetNormalAt(elevationData, Math.Min(rXE2, Math.Max(rXS2, j + 1)), Math.Min(511, i + 1));
+                        var norm4 = GetNormalAt(elevationData, Math.Min(rXE2, Math.Max(rXS2, j)), Math.Min(511, i + 1));
 
                         var trans1 = Math.Min(1, Math.Max(0, Math.Max(rXS - j, j - rXE) * fR));
                         var trans2 = Math.Min(1, Math.Max(0, Math.Max(rXS - (j + 1), (j + 1) - rXE) * fR));
                         var trans3 = Math.Min(1, Math.Max(0, Math.Max(rXS2 - (j + 1), (j + 1) - rXE2) * fR));
                         var trans4 = Math.Min(1, Math.Max(0, Math.Max(rXS2 - j, j - rXE2) * fR));
 
-                        var md = MapData.ElevationData;
+                        var md = elevationData;
 
                         var bOff = blendData.AtlasPosition; //texture used for blend alpha
                         var blendT = blendData.MaxEdge;

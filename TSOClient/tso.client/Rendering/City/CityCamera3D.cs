@@ -398,7 +398,7 @@ namespace FSO.Client.Rendering.City
 
                 if (_Zoomed != TerrainZoomMode.Lot && UserModZoom)
                 {
-                    var zoom = (Zoom3D > 4.5f) ? TerrainZoomMode.Far : TerrainZoomMode.Near;
+                    var zoom = (city.Plugin?.ForceNear != true && Zoom3D > 4.5f) ? TerrainZoomMode.Far : TerrainZoomMode.Near;
                     if (_Zoomed != zoom)
                     {
                         _Zoomed = zoom;

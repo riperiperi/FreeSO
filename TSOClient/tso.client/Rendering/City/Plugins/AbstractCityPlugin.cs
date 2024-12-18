@@ -6,6 +6,8 @@ namespace FSO.Client.Rendering.City.Plugins
 {
     public abstract class AbstractCityPlugin
     {
+        public bool ForceNear { get; protected set; }
+
         protected Terrain City;
         public AbstractCityPlugin(Terrain city)
         {

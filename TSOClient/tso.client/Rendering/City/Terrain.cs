@@ -303,7 +303,7 @@ namespace FSO.Client.Rendering.City
 
             if (range == null)
             {
-                Geometry.RegenMeshVerts(gd, range);
+                Geometry.RegenMeshVerts(gd, false);
             }
             else
             {
@@ -312,7 +312,7 @@ namespace FSO.Client.Rendering.City
                 var slicey = Math.Max(0, Math.Min(30, (int)Math.Round(pos.Y / 16f) - 1));
                 var slice = slicex + slicey * 32;
 
-                //Geometry.RegenMeshVerts(gd, range);
+                Geometry.RegenMeshVerts(gd, true);
                 SubdivGeometry.SubRegenMeshVerts(m_GraphicsDevice, new Rectangle(slicex * 16, slicey * 16, 32, 32), 4, slice);
             }
         }
@@ -871,10 +871,23 @@ namespace FSO.Client.Rendering.City
         }
 
         internal void PathTile(int x, int y, float iScale, Color color) { //quick and dirty function to fill a tile with white using the 2DVerts system. Used in near view for online houses.
+            if (x < 0 || y < 0 || x >= 512 || y >= 512)
+            {
+                return;
+            }
+
             Vector4 vxy = transformSpr4(new Vector3(x + 0, MapData.ElevationData[(y * 512 + x)] / 12.0f, y + 0));
             Vector4 vxy2 = transformSpr4(new Vector3(x + 1, MapData.ElevationData[(y * 512 + Math.Min(x + 1, 511))] / 12.0f, y + 0));
             Vector4 vxy3 = transformSpr4(new Vector3(x + 1, MapData.ElevationData[(Math.Min(y + 1, 511) * 512 + Math.Min(x + 1, 511))] / 12.0f, y + 1));
             Vector4 vxy4 = transformSpr4(new Vector3(x + 0, MapData.ElevationData[(Math.Min(y + 1, 511) * 512 + x)] / 12.0f, y + 1));
+
+            if (Camera is CityCamera2D)
+            {
+                vxy.Z = 1;
+                vxy2.Z = 1;
+                vxy3.Z = 1;
+                vxy4.Z = 1;
+            }
 
             var zOff = -0.12f;
             var xy = new Vector3(vxy.X, vxy.Y, (vxy.Z+zOff/vxy.Z)/ vxy.W);
@@ -883,7 +896,8 @@ namespace FSO.Client.Rendering.City
             var xy4 = new Vector3(vxy4.X, vxy4.Y, (vxy4.Z + zOff / vxy4.Z) / vxy4.W);
 
             var minZ = Math.Min(xy.Z, Math.Min(xy2.Z, Math.Min(xy3.Z, xy4.Z)));
-            if (minZ > 0)
+            var maxZ = Math.Max(xy.Z, Math.Max(xy2.Z, Math.Max(xy3.Z, xy4.Z)));
+            if (minZ > 0 && maxZ <= 1)
             {
                 m_2DVerts.Add(new VertexPositionColor(xy, color));
                 m_2DVerts.Add(new VertexPositionColor(xy2, color));
