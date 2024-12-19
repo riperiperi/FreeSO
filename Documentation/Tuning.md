@@ -26,7 +26,7 @@ Dynamic job payouts update their own dedicated rows in the `fso_tuning` table. T
 
 ### `EVENT` tuning in `fso_tuning`
 
-Event tuning is temporary tuning added by events specified in `fso_events`. With event type `obj_tuning`, you can specify a "tuning preset" to activate using the `value` field.
+Event tuning is temporary tuning added by events specified in `fso_events`, where the tuning lasts for the duration of the event. With event type `obj_tuning`, you can specify a "tuning preset" to activate using the `value` field.
 
 ![](./media/presetexamples.png)
 
@@ -40,7 +40,7 @@ Actual tuning values for each preset are in the `fso_tuning_preset_items`, and h
 
 Any sim with admin rights can use the `/tuning` chat command to immediately set the tuning in any lot. The tuning will only apply to that property, making it useful to test tuning before applying it globally with an event or STATIC setup.
 
-In most cases, this tuning will be overwritten whenever the lot closes and reopens, or if an event begins/ends with tuning that needs it to updata cross lots. You can use `/tuning forcedTuning 0 0 1` to disable this behaviour, but remember to disable it if you ever want the tuning to sync with the server on that lot ever again.
+In most cases, this tuning will be overwritten whenever the lot closes and reopens, or if an event begins/ends with tuning that needs it to update across lots. You can use `/tuning forcedTuning 0 0 1` to disable this behaviour, but remember to disable it if you ever want the tuning to sync with the server on that lot ever again.
 
 ## Object Tuning
 
@@ -50,7 +50,7 @@ Tuning for ingame objects can be modified by any of these sources for tuning ove
 
 OTF is typically used for variables that should be tuned, so you're more likely to want to modify these values. These are also a popular target for creating Upgrades, which also perform object tuning overrides.
 
-Objects start at table index 4096, and Semi-Globals start at table index 8192. When you're setting these tuning constants using a dynamic override, the table id in the override is added onto this base _automatically_, so just remember that if your table index is 4098 on an object, you actually want to override table `2`.
+Objects start at table index 4096, and Semi-Globals start at table index 8192. When you're setting these tuning constants using a dynamic override, the table id in the override is added onto this base _automatically_, so just remember that if your table index is 4098 on an object, you actually want to override table `2` (4098 - 4096).
 
 Use the IFF filename _including_ the `.iff` extension as the owner name when making an override.
 
@@ -58,7 +58,7 @@ Use the IFF filename _including_ the `.iff` extension as the owner name when mak
 
 - `skillobjects.iff 15 <0-7>`
   - Tuning here is set automatically by the dynamic job payouts task. These overrides have a special type "DYNAMIC", so they can be easily replaced when new job payouts are calculated.
-  - `skillobjects.iff` is a semiglobal file. In resources, this table is actually ID 8207
+  - `skillobjects.iff` is a semiglobal file. In its object resources, this table is actually ID 8207.
 - `food.iff 3 25 50`
   - FSO server tuning: Pizza food points from 33 to 50.
   - See food.otf, table 4099. Good example of messing with existing object tuning.
