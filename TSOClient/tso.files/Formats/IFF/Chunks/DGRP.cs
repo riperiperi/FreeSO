@@ -293,11 +293,9 @@ namespace FSO.Files.Formats.IFF.Chunks
             var spr1 = iff.Get<SPR>((ushort)this.SpriteID);
             if (spr1 != null)
             {
-                var result = new WorldTexture();
-                result.Pixel = spr1.Frames[(int)this.SpriteFrameIndex].GetTexture(device);
-                return result;
+                return spr1.Frames[(int)this.SpriteFrameIndex].GetWorldTexture(device);
             }
-            return null;
+            return default;
         }
 
         public Point GetDimensions()

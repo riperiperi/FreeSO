@@ -46,6 +46,8 @@ namespace FSO.Client.UI.Panels
         //for 3D rotate
         private float? LastAngleX;
 
+        private bool ScrollOnHold;
+
         private float[] SnapZooms =
         {
             0.25f,
@@ -53,9 +55,10 @@ namespace FSO.Client.UI.Panels
             1f
         };
 
-        public UILotControlTouchHelper(ITouchable master)
+        public UILotControlTouchHelper(ITouchable master, bool alwaysScrollOnHold)
         {
             Master = master;
+            ScrollOnHold = FSOEnvironment.SoftwareKeyboard || alwaysScrollOnHold;
         }
 
         private Point GetScaledPoint(Point TapPoint)
@@ -125,8 +128,6 @@ namespace FSO.Client.UI.Panels
                 if (Mode == -1) Mode = 0;
             }
 
-            bool scrollOnHold = FSOEnvironment.SoftwareKeyboard;
-
             switch (Mode)
             {
                 case -1:
@@ -175,7 +176,7 @@ namespace FSO.Client.UI.Panels
                                 {
                                     Mode = 1; //become a scroll
                                 }
-                                else if (scrollOnHold && ++MiceDownTimer > time)
+                                else if (ScrollOnHold && ++MiceDownTimer > time)
                                 {
                                     Mode = 3;
                                     Master.Click(GetScaledPoint(TapPoint), state);
@@ -188,7 +189,7 @@ namespace FSO.Client.UI.Panels
                             {
                                 //release our scroll velocity
                                 Mode = -1;
-                                if (!scrollOnHold)
+                                if (!ScrollOnHold)
                                 {
                                     Master.Click(GetScaledPoint(TapPoint), state);
                                 }
@@ -199,7 +200,7 @@ namespace FSO.Client.UI.Panels
                                 var mouse = state.MouseStates.FirstOrDefault(x => x.ID == MiceDown.First());
                                 var newTap = new Point(mouse.MouseState.X, mouse.MouseState.Y);
 
-                                if (scrollOnHold)
+                                if (ScrollOnHold)
                                 {
                                     ScrollVelocity = (newTap - TapPoint).ToVector2();
                                 }

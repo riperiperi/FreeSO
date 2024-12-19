@@ -102,7 +102,7 @@ namespace FSO.Client.Rendering.City
         public CityCamera3D() : base(GameFacade.GraphicsDevice, new Vector3(256, 0, 256), new Vector3(256, 0, 256), Vector3.Up)
         {
             NearPlane = 0.25f;
-            Touch = new UILotControlTouchHelper(this);
+            Touch = new UILotControlTouchHelper(this, false);
             Touch.MinZoom = 0.25f;
             Touch.MaxZoom = 2.5f;
             InvalidateCamera();

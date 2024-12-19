@@ -7,6 +7,7 @@ using FSO.Common.Rendering;
 using Microsoft.Xna.Framework.Graphics;
 using FSO.Files.RC;
 using FSO.LotView.Effects;
+using FSO.Common.Utils;
 
 namespace FSO.LotView.Utils
 {
@@ -165,7 +166,7 @@ namespace FSO.LotView.Utils
                         {
                             if (dgrpSprite == null) continue;
                             var texture = world._2D.GetWorldTexture(dgrpSprite);
-                            if (texture == null || texture.ZBuffer == null) { continue; }
+                            if (texture.Pixel == null) { continue; }
 
                             var isDynamic = dgrpSprite.SpriteID >= DynamicSpriteBaseID && dgrpSprite.SpriteID < (DynamicSpriteBaseID + NumDynamicSprites);
                             if (isDynamic)

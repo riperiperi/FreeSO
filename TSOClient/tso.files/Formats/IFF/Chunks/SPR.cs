@@ -91,6 +91,7 @@ namespace FSO.Files.Formats.IFF.Chunks
         public uint Version;
         private SPR Parent;
         private Texture2D PixelCache;
+        private Texture2D ZCache;
         private byte[] ToDecode;
 
         /// <summary>
@@ -294,6 +295,46 @@ namespace FSO.Files.Formats.IFF.Chunks
                 if (!IffFile.RETAIN_CHUNK_DATA) Data = null;
             }
             return PixelCache;
+        }
+
+        public Texture2D GetZTexture(GraphicsDevice device)
+        {
+            if (ZCache == null)
+            {
+                var w = Math.Max(1, Width);
+                var h = Math.Max(1, Height);
+
+                byte[] data = new byte[w * h];
+                int i = 0;
+
+                for (int y = 0; y < h; y++)
+                {
+                    byte z = 128;
+                    for (int x = 0; x < w; x++)
+                    {
+                        data[i++] = z;
+                    }
+                }
+
+                Texture2D result = new Texture2D(device, w, h, false, SurfaceFormat.Alpha8);
+                result.SetData<byte>(data);
+
+                ZCache = result;
+                ZCache.Tag = new TextureInfo(ZCache, Width, Height);
+            }
+
+            return ZCache;
+        }
+
+        public WorldTexture GetWorldTexture(GraphicsDevice device)
+        {
+            var result = new WorldTexture
+            {
+                Pixel = this.GetTexture(device),
+                ZBuffer = this.GetZTexture(device)
+            };
+
+            return result;
         }
     }
 }
