@@ -75,15 +75,21 @@ namespace FSO.Client.Rendering.City
             Dispose();
 
             var pts = Data.Select(x => x.Location.ToVector2() + new Vector2(0.5f, 0.5f)).ToList();
-            pts.Add(new Vector2(-256, -256));
-            pts.Add(new Vector2(768, 768));
-            pts.Add(new Vector2(768, -256));
-            pts.Add(new Vector2(-256, 768));
 
-            pts.Add(new Vector2(256, -256));
-            pts.Add(new Vector2(256, 768));
-            pts.Add(new Vector2(768, 256));
-            pts.Add(new Vector2(-256, 256));
+            int mapSize = 512;
+            int halfMapSize = mapSize / 2;
+            int margin = 512;
+
+            pts.Add(new Vector2(halfMapSize, -margin));
+            pts.Add(new Vector2(-margin, halfMapSize));
+
+            pts.Add(new Vector2(mapSize + margin, halfMapSize));
+            pts.Add(new Vector2(halfMapSize, mapSize + margin));
+
+            pts.Add(new Vector2(-margin, -margin));
+            pts.Add(new Vector2(mapSize + margin, -margin));
+            pts.Add(new Vector2(-margin, mapSize + margin));
+            pts.Add(new Vector2(mapSize + margin, mapSize + margin));
 
             Cells = new VoronoiCellGraph(pts).Result;
             NHoodToCell.Clear();
