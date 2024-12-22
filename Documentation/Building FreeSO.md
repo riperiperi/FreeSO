@@ -28,7 +28,7 @@ First, make sure you have cloned FreeSO _with_ submodules. If the folder `./Othe
 
 ![Protobuild running in PowerShell](./media/protobuild.png)
 
-Next, you want to run `./protobuild.exe --generate` from the directory `./Other/libs/FSOMonoGame/`. This will generate the Monogame projects that FreeSO uses.
+Next, you want to run `.\Protobuild.exe --generate` from the directory `./Other/libs/FSOMonoGame/`. This will generate the Monogame projects that FreeSO uses.
 
 You can now open the FreeSO solution and build it in Visual Studio. Open `./TSOClient/FreeSO.sln`, and you should be ready to go.
 
