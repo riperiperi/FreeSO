@@ -43,7 +43,7 @@ There's also another version floating around with identifier `1.1239.1.0`. If yo
 With everything now in place, you need to initialize your `config.json` file. Here's a handy guide:
 
 1. Copy `config.sample.json` to `config.json`.
-2. Change `gameLocation` to a relative path to your TSO install. This folder contains the folder `TSOClient`, so if `./game/TSOClient/` exists, then you should put `./game` in this field.
+2. Change `gameLocation` to a relative path to your TSO install. This folder should have the contents of `TSOClient`, so if `./game/tuning.dat` exists, then you should put `./game/` in this field.
 3. Change `simNFS` to a relative path to a folder where you want to store lot and object saves, as well as lot thumbnails. If you have a distributed server setup, this should be on a network drive.
 4. Change the secret to something unique. If you don't do this, other people will be able to impersonate your city/lot servers and cause havoc.
   - This should be a random 64 character hex string. I'm sure you can find a generator.
