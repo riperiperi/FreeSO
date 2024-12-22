@@ -298,7 +298,21 @@ namespace FSO.Server.Api.Core.Controllers.Admin
                 userModel.register_date = Epoch.Now;
                 userModel.is_banned = false;
 
+                var ip = ApiUtils.GetIP(Request);
+                userModel.register_ip = ip;
+                userModel.last_ip = ip;
+                userModel.client_id = "0";
+                userModel.last_login = 0;
+
+                var passhash = PasswordHasher.Hash(user.password);
+                var authSettings = new UserAuthenticate();
+                authSettings.scheme_class = passhash.scheme;
+                authSettings.data = passhash.data;
+
                 var userId = da.Users.Create(userModel);
+
+                authSettings.user_id = userId;
+                da.Users.CreateAuth(authSettings);
 
                 userModel = da.Users.GetById(userId);
                 if (userModel == null) { throw new Exception("Unable to find user"); }
