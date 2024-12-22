@@ -233,6 +233,11 @@ namespace FSO.Client.Rendering.City
                                 var type = terrainType[((i * 512) + ex)];
                                 byte roadByte = roadData[(i * 512 + ex)];
 
+                                if (type == 255)
+                                {
+                                    continue;
+                                }
+
                                 //huge segment of code for generating triangles incoming
                                 var norm1 = GetNormalAt(elevationData, Math.Min(rXE, Math.Max(rXS, j)), i);
                                 var norm2 = GetNormalAt(elevationData, Math.Min(rXE, Math.Max(rXS, j + 1)), i);
@@ -615,6 +620,11 @@ namespace FSO.Client.Rendering.City
                         var blendData = GetBlend(terrainType, i, ex); //gets information on what this tile blends into and what blend image to use for the alpha.
                         var type = terrainType[((i * 512) + ex)];
                         byte roadByte = roadData[(i * 512 + ex)];
+
+                        if (type == 255)
+                        {
+                            continue;
+                        }
 
                         //huge segment of code for generating triangles incoming
                         var norm1 = GetNormalAt(elevationData, Math.Min(rXE, Math.Max(rXS, j)), i);
