@@ -22,6 +22,45 @@ namespace FSO.Client.Rendering.City
         private UILotControlTouchHelper Touch;
         public CityCameraCenter CenterCam { get; set; }
 
+        // Set a center delta, then tween to 0 to smootly move to a target location.
+
+        public Vector2 CenterDelta;
+        public float TweenDeltaX
+        {
+            get
+            {
+                return CenterDelta.X;
+            }
+
+            set
+            {
+                if (CenterDelta.X != 0)
+                {
+                    CenterTile.X -= value - CenterDelta.X;
+                }
+
+                CenterDelta.X = value;
+            }
+        }
+
+        public float TweenDeltaY
+        {
+            get
+            {
+                return CenterDelta.Y;
+            }
+
+            set
+            {
+                if (CenterDelta.Y != 0)
+                {
+                    CenterTile.Y -= value - CenterDelta.Y;
+                }
+
+                CenterDelta.Y = value;
+            }
+        }
+
         public float FarUIFade
         {
             get { return Math.Max(0, Math.Min(1, 6.5f - Zoom3D)); }

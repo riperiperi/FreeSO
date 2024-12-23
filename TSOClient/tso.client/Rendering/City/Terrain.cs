@@ -1102,9 +1102,18 @@ namespace FSO.Client.Rendering.City
 
                         //((CityCamera2D)Camera).m_TargVOffX = (float)(-hb + pt.X * isoScale * 2);
                         //((CityCamera2D)Camera).m_TargVOffY = (float)(vb - pt.Y * isoScale * 2); //zoom into approximate location of mouse cursor if not zoomed already
-                    } else
+                    }
+                    else
                     {
-                        if (currentTile != null) ((CityCamera3D)Camera).CenterTile = currentTile.Value;
+                        var camera = (CityCamera3D)Camera;
+                        if (currentTile != null)
+                        {
+                            camera.CenterDelta = currentTile.Value - camera.CenterTile;
+                            GameFacade.Screens.Tween.To(camera, 0.3f, new Dictionary<string, float>() {
+                                { "TweenDeltaX", 0f },
+                                { "TweenDeltaY", 0f },
+                            }, TweenQuad.EaseOut);
+                        }
                         ((CityCamera3D)Camera).TargetZoom = 1.7f;
                     }
                 }

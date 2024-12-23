@@ -80,6 +80,8 @@ namespace FSO.Client.Rendering.City
             int halfMapSize = mapSize / 2;
             int margin = 512;
 
+            // These points stop the neighbourhood geometry from going too far out of bounds, which would cause visual issues.
+
             pts.Add(new Vector2(halfMapSize, -margin));
             pts.Add(new Vector2(-margin, halfMapSize));
 
@@ -476,7 +478,8 @@ namespace FSO.Client.Rendering.City
                 //find the nhood we're hovering
                 var pos = City.EstTileAtPosWithScroll(state.MouseState.Position.ToVector2() / FSOEnvironment.DPIScaleFactor, null);
                 
-                if (City.HandleMouse)
+                // Neighbourhoods are only interactive if there's more than one.
+                if (City.HandleMouse && City.NeighGeom.Cells.Count > 1)
                 {
                     HoverNHood = NhoodNearest(pos);
                     if (HoverNHood > -1 && !HoverPct.ContainsKey(HoverNHood))

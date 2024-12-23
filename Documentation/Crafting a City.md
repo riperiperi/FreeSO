@@ -111,6 +111,8 @@ There are a few things you can do in the neighbourhood editor:
   - Move a neighbourhood's origin point to the mouse position. The neighbourhood visualization will update to show you what area of the city belongs to which neighbourhood.
 - Hold shift & Click
   - Create a new neighbourhood at the mouse position.
+- Hold ctrl & Click
+  - Delete the neighbourhood at the mouse position. Needs to be pretty close.
 - Press "R"
   - Rename the neighbourhood closest to the mouse position.
 - Press "C"
@@ -120,7 +122,7 @@ There are a few things you can do in the neighbourhood editor:
 - Press Shift + F10
   - Save the neighbourhood data to `Content/edit_neigh.json`.
 
-Similar to the City Painter, this tool is currently pretty user unfriendly, so improvements would definitely be welcome. For example, not being able to delete neighbourhoods is a bit silly, but you can always save to JSON, manually delete it with a text editor, then load it again.
+Similar to the City Painter, this tool is currently pretty user unfriendly, so improvements would definitely be welcome.
 
 Descriptions for neighbourhoods also can't be edited ingame. Add a `description` field to each object in the JSON to give your neighbourhoods a description that appears in their nhood page. You can also do this in the database after importing.
 
