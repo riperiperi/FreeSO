@@ -7,6 +7,8 @@ var $ = require('gulp-load-plugins')();
 
 var wiredep = require('wiredep').stream;
 
+var sass = require('gulp-sass')(require('sass'));
+
 module.exports = function(options) {
   gulp.task('styles', function () {
     var sassOptions = {
@@ -43,7 +45,7 @@ module.exports = function(options) {
       .pipe(wiredep(options.wiredep))
       .pipe(vendorFilter.restore())
       .pipe($.sourcemaps.init())
-      .pipe($.sass(sassOptions)).on('error', options.errorHandler('Sass'))
+      .pipe(sass(sassOptions)).on('error', options.errorHandler('Sass'))
       .pipe($.autoprefixer()).on('error', options.errorHandler('Autoprefixer'))
       .pipe($.sourcemaps.write())
       .pipe(gulp.dest(options.tmp + '/serve/app/'))
