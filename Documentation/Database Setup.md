@@ -55,13 +55,3 @@ When database scripts are run, they are registered in the `fso_db_changes` table
 **This means that the command can (and should) be rerun whenever there are any changes to the database made in the codebase**, so that the database remains compatible with the game.
 
 Database scripts are registered on the `manifest.json` file with unique ids, dependencies and associated script files. If you aim to modify the database structure, you should add your own scripts to this manifest file so that anyone using your codebase can update their database to work with your changes. Similarly, if you're using someone else's codebase, you'll need to be wary of database changes and rerun this command when they occur.
-
-## fso_shards correction
-
-![](./media/shards.png)
-
-When you initialize the database, `fso_shards` will already contain an entry for a city (in technical terms, a "shard")... but you will quickly find that it doesn't seem to work. This is because the internal and external host for the shard _must_ be set to match the city server hosting the shard - so it should match what you put in config.json in a later section. The game automatically adds `100` to the host provided, so `192.168.0.174:33` is actually telling the game to connect to `192.168.0.174:33100`. 
-
-This could be changed in the code to force the city to initialize the hosts from the configuration, as each city server has an associated shard id. It already uses this to update the shard's version, though it can have a delayed update...
-
-

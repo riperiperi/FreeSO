@@ -61,3 +61,7 @@ That should be the long and short of it. After this, your server can be started 
 ![](./media/debugurl.png)
 
 To connect to your custom server, press F1 on the login screen and change the URL in the text box to match your API server endpoint. This will update your client configuration to connect to this server every time. If you want to distribute a client made for a specific server, you should overwrite this URL in the default config.
+
+## Bogus Update Request
+
+If your client version string is different from the server, it will ask you to update. You can ignore this by holding shift and clicking "No" on the dialog. See the Updates documentation for more information on properly configuring updates.
