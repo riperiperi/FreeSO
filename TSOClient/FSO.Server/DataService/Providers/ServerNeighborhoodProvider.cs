@@ -15,6 +15,7 @@ using FSO.Server.Framework.Voltron;
 using Microsoft.Xna.Framework;
 using Newtonsoft.Json;
 using Ninject;
+using NLog;
 using System;
 using System.Collections.Generic;
 using System.Collections.Immutable;
@@ -32,6 +33,8 @@ namespace FSO.Server.DataService.Providers
         private IServerNFSProvider NFS;
 
         private ServerLotProvider Lots;
+
+        private static Logger LOG = LogManager.GetCurrentClassLogger();
 
         public ServerNeighborhoodProvider([Named("ShardId")] int shardId, IRealestateDomain realestate, IDAFactory daFactory, IServerNFSProvider nfs)
         {
@@ -58,6 +61,13 @@ namespace FSO.Server.DataService.Providers
             using (var db = DAFactory.Get())
             {
                 var nhoods = db.Neighborhoods.All(ShardId);
+
+                if (nhoods.Count == 0)
+                {
+                    AddFailsafeNhood(db, ShardId);
+
+                    nhoods = db.Neighborhoods.All(ShardId);
+                }
 
                 var midnight = LotVisitUtils.Midnight(); //gets this morning's midnight (basically current date, with day reset)
                 var activityBeginning = midnight - new TimeSpan(7, 0, 0, 0);
@@ -127,6 +137,21 @@ namespace FSO.Server.DataService.Providers
                     return HydrateOne(nhood, avatars, lots, townHall, cycle, null, null);
                 }
             }
+        }
+
+        private void AddFailsafeNhood(IDA db, int shardId)
+        {
+            LOG.Info($"Shard {shardId} does not have any neighborhoods. Creating a default one.");
+
+            db.Neighborhoods.AddNhood(new DbNeighborhood()
+            {
+                name = "Default",
+                description = "The default neighborhood.",
+                shard_id = ShardId,
+                location = (256 << 16) | 256,
+                color = 0,
+                guid = Guid.NewGuid().ToString()
+            });
         }
 
         private List<uint> SelectRandom(List<uint> input, int count, Random rand)
