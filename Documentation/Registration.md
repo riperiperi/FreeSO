@@ -10,7 +10,7 @@ It is highly recommended to set up an SMTP server for the game server to send em
 
 ## Endpoints
 
-All registration related requests come through the `RegistrationController` in `FSO.Server.Api.Core`, with `application/x-www-form-urlencoded` format for `POST` data and JSON response.
+All registration related requests come through the `RegistrationController` and `PasswordController` in `FSO.Server.Api.Core`, with `application/x-www-form-urlencoded` format for `POST` data and JSON response.
 
 Here's a list of endpoints:
 
