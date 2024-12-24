@@ -93,7 +93,6 @@
         "citySelector"
       ],
       // "cdnUrl": "http://0.0.0.0:9000",
-      "regkey": "simpleKeyForRegistrationChangeMe",
       "maintainance": false
     },
     "cities": [

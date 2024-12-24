@@ -47,7 +47,7 @@ namespace FSO.Server.Api.Core.Controllers
             user.username = user.username ?? "";
             user.username = user.username.ToLowerInvariant();
             user.email = user.email ?? "";
-            //user.key = user.key ?? "";
+            user.key = user.key ?? "";
 
             string failReason = null;
             if (user.username.Length < 3) failReason = "user_short";
@@ -73,7 +73,6 @@ namespace FSO.Server.Api.Core.Controllers
                 });
             }
 
-            /*
             if (!string.IsNullOrEmpty(api.Config.Regkey) && api.Config.Regkey != user.key)
             {
                 return ApiResponse.Json(HttpStatusCode.OK, new RegistrationError()
@@ -82,7 +81,6 @@ namespace FSO.Server.Api.Core.Controllers
                     error_description = failReason
                 });
             }
-            */
 
             using (var da = api.DAFactory.Get())
             {
@@ -133,7 +131,7 @@ namespace FSO.Server.Api.Core.Controllers
         /// <returns></returns>
         [HttpPost]
         [Route("userapi/registration/request")]
-        public IActionResult CreateToken(ConfirmationCreateTokenModel model)
+        public IActionResult CreateToken([FromForm] ConfirmationCreateTokenModel model)
         {
             Api api = Api.INSTANCE;
 
@@ -231,7 +229,7 @@ namespace FSO.Server.Api.Core.Controllers
         /// <returns></returns>
         [HttpPost]
         [Route("userapi/registration/confirm")]
-        public IActionResult CreateUserWithToken(RegistrationUseTokenModel user)
+        public IActionResult CreateUserWithToken([FromForm] RegistrationUseTokenModel user)
         {
             Api api = Api.INSTANCE;
 
@@ -261,7 +259,6 @@ namespace FSO.Server.Api.Core.Controllers
 
                 user.username = user.username ?? "";
                 user.username = user.username.ToLowerInvariant();
-                user.email = user.email ?? "";
                 user.key = user.key ?? "";
 
                 string failReason = null;
@@ -272,7 +269,7 @@ namespace FSO.Server.Api.Core.Controllers
 
                 try
                 {
-                    var addr = new System.Net.Mail.MailAddress(user.email);
+                    var addr = new System.Net.Mail.MailAddress(confirmation.email);
                 }
                 catch
                 {
@@ -321,7 +318,7 @@ namespace FSO.Server.Api.Core.Controllers
                 }
 
                 //create user in db
-                var userModel = api.CreateUser(user.username, user.email, user.password, ip);
+                var userModel = api.CreateUser(user.username, confirmation.email, user.password, ip);
 
                 if (userModel == null)
                 {
@@ -334,7 +331,7 @@ namespace FSO.Server.Api.Core.Controllers
                 else
                 {
                     //send OK email
-                    api.SendEmailConfirmationOKMail(user.username, user.email);
+                    api.SendEmailConfirmationOKMail(user.username, confirmation.email);
                     da.EmailConfirmations.Remove(user.token);
                     return ApiResponse.Json(HttpStatusCode.OK, userModel);
                 }
@@ -346,7 +343,7 @@ namespace FSO.Server.Api.Core.Controllers
         #region Password reset
         [HttpPost]
         [Route("userapi/password")]
-        public IActionResult ChangePassword(PasswordResetModel model)
+        public IActionResult ChangePassword([FromForm] PasswordResetModel model)
         {
             Api api = Api.INSTANCE;
 
@@ -415,7 +412,7 @@ namespace FSO.Server.Api.Core.Controllers
         /// <returns></returns>
         [HttpPost]
         [Route("userapi/password/confirm")]
-        public IActionResult ConfirmPwd(PasswordResetUseTokenModel model)
+        public IActionResult ConfirmPwd([FromForm] PasswordResetUseTokenModel model)
         {
             Api api = Api.INSTANCE;
 
@@ -461,9 +458,19 @@ namespace FSO.Server.Api.Core.Controllers
         /// <returns></returns>
         [HttpPost]
         [Route("userapi/password/request")]
-        public IActionResult CreatePwdToken(ConfirmationCreateTokenModel model)
+        public IActionResult CreatePwdToken([FromForm] ConfirmationCreateTokenModel model)
         {  
             Api api = Api.INSTANCE;
+
+            // smtp needs to be configured for this
+            if (!api.Config.SmtpEnabled)
+            {
+                return ApiResponse.Json(HttpStatusCode.OK, new RegistrationError()
+                {
+                    error = "registration_failed",
+                    error_description = "smtp_disabled"
+                });
+            }
 
             if (model.confirmation_url == null || model.email == null)
             {
@@ -539,7 +546,7 @@ namespace FSO.Server.Api.Core.Controllers
 
                 return ApiResponse.Json(HttpStatusCode.OK, new
                 {
-                    // success but email shitfaced
+                    // success, but failed to send the token email...
                     status = "email_failed"
                 });
             }
@@ -560,6 +567,7 @@ namespace FSO.Server.Api.Core.Controllers
         public string username { get; set; }
         public string email { get; set; }
         public string password { get; set; }
+        public string key { get; set; }
     }
 
     /// <summary>
@@ -588,10 +596,6 @@ namespace FSO.Server.Api.Core.Controllers
     public class RegistrationUseTokenModel
     {
         public string username { get; set; }
-        /// <summary>
-        /// User email.
-        /// </summary>
-        public string email { get; set; }
         /// <summary>
         /// User password.
         /// </summary>
