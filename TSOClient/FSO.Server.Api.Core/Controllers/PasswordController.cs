@@ -21,7 +21,6 @@ namespace FSO.Server.Api.Core.Controllers
 
         #region Password reset
         [HttpPost]
-        [Route("userapi/password")]
         public IActionResult ChangePassword([FromForm] PasswordResetModel model)
         {
             Api api = Api.INSTANCE;
@@ -90,7 +89,7 @@ namespace FSO.Server.Api.Core.Controllers
         /// <param name="model"></param>
         /// <returns></returns>
         [HttpPost]
-        [Route("userapi/password/confirm")]
+        [Route("confirm")]
         public IActionResult ConfirmPwd([FromForm] PasswordResetUseTokenModel model)
         {
             Api api = Api.INSTANCE;
@@ -136,7 +135,7 @@ namespace FSO.Server.Api.Core.Controllers
         /// <param name="model"></param>
         /// <returns></returns>
         [HttpPost]
-        [Route("userapi/password/request")]
+        [Route("request")]
         public IActionResult CreatePwdToken([FromForm] ConfirmationCreateTokenModel model)
         {
             Api api = Api.INSTANCE;

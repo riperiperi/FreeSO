@@ -130,7 +130,7 @@ namespace FSO.Server.Api.Core.Controllers
         /// <param name="email"></param>
         /// <returns></returns>
         [HttpPost]
-        [Route("userapi/registration/request")]
+        [Route("request")]
         public IActionResult CreateToken([FromForm] ConfirmationCreateTokenModel model)
         {
             Api api = Api.INSTANCE;
@@ -228,7 +228,7 @@ namespace FSO.Server.Api.Core.Controllers
         /// <param name="user"></param>
         /// <returns></returns>
         [HttpPost]
-        [Route("userapi/registration/confirm")]
+        [Route("confirm")]
         public IActionResult CreateUserWithToken([FromForm] RegistrationUseTokenModel user)
         {
             Api api = Api.INSTANCE;

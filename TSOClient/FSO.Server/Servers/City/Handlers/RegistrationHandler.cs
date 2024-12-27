@@ -150,7 +150,11 @@ namespace FSO.Server.Servers.City.Handlers
                 }
 
                 var user = db.Users.GetById(session.UserId);
-                if ((user?.is_moderator) ?? false) newAvatar.moderation_level = 1;
+                if ((user?.is_moderator) ?? false)
+                {
+                    newAvatar.budget = 100000;
+                    newAvatar.moderation_level = 1;
+                }
 
                 try
                 {

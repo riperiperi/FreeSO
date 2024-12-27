@@ -6,7 +6,7 @@ We recommend that you use MariaDB as your database server, as it has higher perf
 
 ## MariaDB setup
 
-The version of MariaDB used for the official server was MariaDB 10.5. It's likely that newer versions will work.
+The version of MariaDB used for the official server was MariaDB 10.5. Newer versions seem to be incompatible with the current version of MySQL.Data, which cannot be upgraded due to .NET Framework version requirements.
 
 On Windows Server, you can find an MSI installer at https://mariadb.org/download/ that installs a MariaDB service that runs automatically whenever a user is logged in.
 
@@ -18,7 +18,7 @@ You'll want to create a database for the game. Here's an example:
 CREATE DATABASE `fso`
 ```
 
-During the setup, you don't need to specify a password for the root account in your MySQL server - on Linux this can actually cause issues. You _do_ want to add an account that the game server will use to access the database, so run a query on the database to add a user for the server to use:
+During the setup, you don't need to specify a password for the root account in your MySQL server - on Linux this can actually cause issues. Say yes to using UTF8 as a default. You _do_ want to add an account that the game server will use to access the database, so run a query on the database to add a user for the server to use:
 
 ```sql
 GRANT ALL ON fso.* TO 'fsoserver'@'localhost' IDENTIFIED BY 'password' WITH GRANT OPTION;
