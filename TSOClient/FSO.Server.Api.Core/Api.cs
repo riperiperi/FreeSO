@@ -23,7 +23,7 @@ namespace FSO.Server.Api.Core
         public Shards Shards;
         public IGluonHostPool HostPool;
         public IUpdateUploader UpdateUploader;
-        public IUpdateUploader UpdateUploaderClient;
+        public IUpdateUploader AddonUploader;
         public GithubConfig Github;
 
         public Api()

@@ -86,6 +86,19 @@ namespace FSO.Server.Api.Core.Services
             return directories[0];
         }
 
+        private async Task CopyOrDownload(WebClient client, string srcPath, string destPath)
+        {
+            if (srcPath.StartsWith("file:///"))
+            {
+                File.Copy(srcPath.Substring("file:///".Length), destPath);
+                return;
+            }
+            else
+            {
+                await client.DownloadFileTaskAsync(new Uri(srcPath), destPath);
+            }
+        }
+
         public async Task BuildUpdate(UpdateGenerationStatus status)
         {
             var request = status.Request;
@@ -144,13 +157,13 @@ namespace FSO.Server.Api.Core.Services
                     if (branch.base_build_url != null)
                     {
                         status.UpdateStatus(UpdateGenerationStatusCode.DOWNLOADING_CLIENT);
-                        await client.DownloadFileTaskAsync(new Uri(branch.base_build_url), updateDir + "client.zip");
+                        await CopyOrDownload(client, branch.base_build_url, updateDir + "client.zip");
                         clientArti = updateDir + "client.zip";
                     }
                     if (branch.base_server_build_url != null)
                     {
                         status.UpdateStatus(UpdateGenerationStatusCode.DOWNLOADING_SERVER);
-                        await client.DownloadFileTaskAsync(new Uri(branch.base_server_build_url), updateDir + "server.zip");
+                        await CopyOrDownload(client, branch.base_server_build_url, updateDir + "server.zip");
                         serverArti = updateDir + "server.zip";
                     }
 
@@ -163,13 +176,13 @@ namespace FSO.Server.Api.Core.Services
                         if (addon.addon_zip_url != null)
                         {
                             status.UpdateStatus(UpdateGenerationStatusCode.DOWNLOADING_CLIENT_ADDON);
-                            await client.DownloadFileTaskAsync(new Uri(addon.addon_zip_url), updateDir + "clientAddon.zip");
+                            await CopyOrDownload(client, addon.addon_zip_url, updateDir + "clientAddon.zip");
                             clientAddon = updateDir + "clientAddon.zip";
                         }
                         if (addon.server_zip_url != null)
                         {
                             status.UpdateStatus(UpdateGenerationStatusCode.DOWNLOADING_SERVER_ADDON);
-                            await client.DownloadFileTaskAsync(new Uri(addon.addon_zip_url), updateDir + "serverAddon.zip");
+                            await CopyOrDownload(client, addon.addon_zip_url, updateDir + "serverAddon.zip");
                             serverAddon = updateDir + "serverAddon.zip";
                         }
                         else
@@ -217,7 +230,7 @@ namespace FSO.Server.Api.Core.Services
                             result.last_update_id = previousUpdate.update_id;
                             //calculate difference, generate an incremental update manifest + zip
                             var prevFile = updateDir + "prev.zip";
-                            await client.DownloadFileTaskAsync(new Uri(previousUpdate.full_zip), updateDir + "prev.zip");
+                            await CopyOrDownload(client, previousUpdate.full_zip, updateDir + "prev.zip");
                             var prevZip = ZipFile.Open(prevFile, ZipArchiveMode.Read);
                             prevZip.ExtractToDirectory(updateDir + "prev/", true);
                             prevZip.Dispose();
@@ -261,15 +274,15 @@ namespace FSO.Server.Api.Core.Services
                             Directory.Delete(updateDir + "client/", true);
 
                             status.UpdateStatus(UpdateGenerationStatusCode.PUBLISHING_CLIENT);
-                            result.full_zip = await Api.INSTANCE.UpdateUploaderClient.UploadFile($"{baseUpdateKey}client-{versionName}.zip", finalClientZip, versionName);
+                            result.full_zip = await Api.INSTANCE.UpdateUploader.UploadFile($"{baseUpdateKey}client-{versionName}.zip", finalClientZip, versionName);
                         }
                         status.UpdateStatus(UpdateGenerationStatusCode.PUBLISHING_CLIENT);
                         if (diffZip != null)
                         {
-                            result.incremental_zip = await Api.INSTANCE.UpdateUploaderClient.UploadFile($"{baseUpdateKey}incremental-{versionName}.zip", diffZip, versionName);
+                            result.incremental_zip = await Api.INSTANCE.UpdateUploader.UploadFile($"{baseUpdateKey}incremental-{versionName}.zip", diffZip, versionName);
                         }
                         await System.IO.File.WriteAllTextAsync(updateDir + "manifest.json", Newtonsoft.Json.JsonConvert.SerializeObject(manifest));
-                        result.manifest_url = await Api.INSTANCE.UpdateUploaderClient.UploadFile($"{baseUpdateKey}{versionName}.json", updateDir + "manifest.json", versionName);
+                        result.manifest_url = await Api.INSTANCE.UpdateUploader.UploadFile($"{baseUpdateKey}{versionName}.json", updateDir + "manifest.json", versionName);
                     }
 
                     if (serverArti != null && !request.contentOnly)

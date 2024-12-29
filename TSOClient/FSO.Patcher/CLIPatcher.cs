@@ -230,7 +230,7 @@ namespace FSO.Patcher
             if (Args.Contains("--client"))
             {
                 Console.WriteLine("FreeSO client requested. Downloading from servo.freeso.org.");
-                ToDownload.Add("http://servo.freeso.org/guestAuth/repository/download/FreeSO_TsoClient/.lastSuccessful/client-<>.zip?branch=master");
+                ToDownload.Add("https://fso-builds.riperiperi.workers.dev/");
             }
 
             if (Args.Contains("--extras"))

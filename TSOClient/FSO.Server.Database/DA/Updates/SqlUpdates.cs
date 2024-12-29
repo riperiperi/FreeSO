@@ -31,9 +31,20 @@ namespace FSO.Server.Database.DA.Updates
             try
             {
                 var result = Context.Connection.Execute("INSERT INTO fso_update_branch " +
-                    "(branch_name, version_format, last_version_number, current_dist_id, addon_id, base_build_url, base_server_build_url, build_mode, flags) "
-                    + "VALUES (@branch_name, @version_format, @last_version_number, @current_dist_id, @addon_id, @base_build_url, @base_server_build_url, @build_mode, @flags)", 
-                    branch);
+                    "(branch_name, version_format, last_version_number, minor_version_number, addon_id, base_build_url, base_server_build_url, build_mode, flags) "
+                    + "VALUES (@branch_name, @version_format, @last_version_number, @minor_version_number, @addon_id, @base_build_url, @base_server_build_url, @build_mode, @flags)", 
+                    new
+                    {
+                        branch.branch_name,
+                        branch.version_format,
+                        branch.last_version_number,
+                        branch.minor_version_number,
+                        branch.addon_id,
+                        branch.base_build_url,
+                        branch.base_server_build_url,
+                        build_mode = branch.build_mode.ToString(),
+                        branch.flags,
+                    });
                 return (result > 0);
             }
             catch (Exception)
@@ -135,8 +146,20 @@ namespace FSO.Server.Database.DA.Updates
                     "branch_name = @branch_name, version_format = @version_format, last_version_number = @last_version_number, " +
                     "minor_version_number = @minor_version_number, addon_id = @addon_id, base_build_url = @base_build_url, " +
                     "base_server_build_url = @base_server_build_url, build_mode = @build_mode, flags = @flags " +
-                    "WHERE branch_id = @branch_id"
-                    , branch);
+                    "WHERE branch_id = @branch_id",
+                    new
+                    {
+                        branch.branch_id,
+                        branch.branch_name,
+                        branch.version_format,
+                        branch.last_version_number,
+                        branch.minor_version_number,
+                        branch.addon_id,
+                        branch.base_build_url,
+                        branch.base_server_build_url,
+                        build_mode = branch.build_mode.ToString(),
+                        branch.flags,
+                    });
                 return (result > 0);
             }
             catch (Exception)

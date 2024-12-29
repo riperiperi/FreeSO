@@ -265,7 +265,7 @@ namespace FSO.Patcher
                     Task.Run(() => AdvanceExtract());
                 };
 
-                client.DownloadFileAsync(new Uri("http://servo.freeso.org/guestAuth/repository/download/FreeSO_TsoClient/.lastSuccessful/client-<>.zip?branch=master"), "PatchFiles/patch.zip");
+                client.DownloadFileAsync(new Uri("https://fso-builds.riperiperi.workers.dev/"), "PatchFiles/patch.zip");
             }
             else
             {

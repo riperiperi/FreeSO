@@ -46,6 +46,7 @@ namespace FSO.Server.Servers.UserApi
 
         public AWSConfig AwsConfig { get; set; }
         public GithubConfig GithubConfig { get; set; }
+        public FilesystemConfig FilesystemConfig { get; set; }
     }
 
     public enum ApiServerControllers

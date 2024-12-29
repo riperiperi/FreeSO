@@ -67,7 +67,7 @@ namespace FSO.Server.Api.Core.Controllers.Admin
 
         // POST create a branch.
         [HttpPost("branches")]
-        public IActionResult AddBranch(DbUpdateBranch branch)
+        public IActionResult AddBranch([FromBody] DbUpdateBranch branch)
         {
             var api = Api.INSTANCE;
             api.DemandAdmin(Request);
@@ -80,10 +80,12 @@ namespace FSO.Server.Api.Core.Controllers.Admin
 
         // POST update a branch.
         [HttpPost("branches/{id}")]
-        public IActionResult UpdateBranch(DbUpdateBranch branch)
+        public IActionResult UpdateBranch(int id, [FromBody] DbUpdateBranch branch)
         {
             var api = Api.INSTANCE;
             api.DemandAdmin(Request);
+
+            branch.branch_id = id;
             using (var da = api.DAFactory.Get())
             {
                 if (da.Updates.UpdateBranchInfo(branch)) return Ok();

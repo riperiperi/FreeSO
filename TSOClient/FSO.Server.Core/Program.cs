@@ -42,9 +42,25 @@ namespace FSO.Server.Core
 
             var api2 = new FSO.Server.Api.Core.Api();
             api2.Init(settings);
-            if (userApiConfig.AwsConfig != null) api2.UpdateUploader = new AWSUpdateUploader(userApiConfig.AwsConfig);
-            if (userApiConfig.GithubConfig != null) api2.UpdateUploaderClient = new GithubUpdateUploader(userApiConfig.GithubConfig);
-            else api2.UpdateUploaderClient = api2.UpdateUploader;
+
+            if (userApiConfig.AwsConfig != null)
+            {
+                api2.AddonUploader = new AWSUpdateUploader(userApiConfig.AwsConfig);
+            }
+            else
+            {
+                api2.AddonUploader = new FilesystemUpdateUploader(userApiConfig.FilesystemConfig ?? new Common.Config.FilesystemConfig());
+            }
+
+            if (userApiConfig.GithubConfig != null)
+            {
+                api2.UpdateUploader = new GithubUpdateUploader(userApiConfig.GithubConfig);
+            }
+            else
+            {
+                api2.UpdateUploader = api2.AddonUploader;
+            }
+
             api2.Github = userApiConfig.GithubConfig;
             api.SetupInstance(api2);
             api2.HostPool = api.GetGluonHostPool();
