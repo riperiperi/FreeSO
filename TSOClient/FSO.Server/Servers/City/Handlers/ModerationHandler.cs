@@ -44,7 +44,8 @@ namespace FSO.Server.Servers.City.Handlers
 
                                 if (theiruser != null && !(theiruser.is_admin || theiruser.is_moderator))
                                 {
-                                    FSO.Server.Api.Api.INSTANCE?.SendBanMail(theiruser.username, theiruser.email, 0); // Need to handle end_date in the future
+                                    // TODO: ask the core API server to send ban mail
+                                    // FSO.Server.Api.Api.INSTANCE?.SendBanMail(theiruser.username, theiruser.email, 0); // Need to handle end_date in the future
 
                                     da.Users.UpdateBanned(theiruser.user_id, true);
                                     if (packet.Type == ModerationRequestType.IPBAN_USER && theiruser.last_ip != "127.0.0.1" && theiruser.last_ip != "::1")

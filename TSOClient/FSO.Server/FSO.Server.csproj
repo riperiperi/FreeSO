@@ -310,10 +310,6 @@
       <Project>{b5b2c04d-b8e4-47c7-9731-48e30fd5f70d}</Project>
       <Name>FSO.Content.TSO</Name>
     </ProjectReference>
-    <ProjectReference Include="..\FSO.Server.Api\FSO.Server.Api.csproj">
-      <Project>{19a2e153-246d-4d38-a28e-1e4d36d7e28f}</Project>
-      <Name>FSO.Server.Api</Name>
-    </ProjectReference>
     <ProjectReference Include="..\FSO.Server.Clients\FSO.Server.Clients.csproj">
       <Project>{329e0aee-7871-40a7-b5af-8c0d0086ef71}</Project>
       <Name>FSO.Server.Clients</Name>

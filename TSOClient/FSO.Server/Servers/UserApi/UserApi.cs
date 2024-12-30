@@ -1,21 +1,21 @@
 ﻿using System;
 using FSO.Server.Common;
 using Microsoft.Owin.Hosting;
-using FSO.Server.Api;
 using System.Web.Http;
 using Owin;
 using System.Collections.Specialized;
 using Ninject;
 using FSO.Server.Domain;
 
-using static FSO.Server.Api.Api;
 using static FSO.Server.Common.ApiAbstract;
+using NLog;
 
 namespace FSO.Server.Servers.UserApi
 {
     public class UserApi : AbstractServer
     {
-        private IDisposable App;
+        private static Logger LOG = LogManager.GetCurrentClassLogger();
+
         public ServerConfiguration Config;
         private IKernel Kernel;
 
@@ -48,12 +48,7 @@ namespace FSO.Server.Servers.UserApi
             if (CustomStartup != null) APIThread = CustomStartup(this, Config.Services.UserApi.Bindings[0]);
             else
             {
-                App = WebApp.Start(Config.Services.UserApi.Bindings[0], x =>
-                {
-                    new UserApiStartup().Configuration(x, Config);
-                    SetupInstance(INSTANCE);
-                    ((FSO.Server.Api.Api)INSTANCE).HostPool = Kernel.Get<IGluonHostPool>();
-                });
+                LOG.Error("No startup function injected for UserApi, server not started!");
             }
         }
 
@@ -70,37 +65,6 @@ namespace FSO.Server.Servers.UserApi
             api.OnRequestMailNotify += (i, s, b, t) => { OnRequestMailNotify?.Invoke(i, s, b, t); };
             
             var config = Config;
-        }
-    }
-
-    public class UserApiStartup
-    {
-        public void Configuration(IAppBuilder builder, ServerConfiguration config)
-        {
-            HttpConfiguration http = new HttpConfiguration();
-            WebApiConfig.Register(http);
-
-            var userApiConfig = config.Services.UserApi;
-
-            var settings = new NameValueCollection();
-            settings.Add("maintainance", userApiConfig.Maintainance.ToString());
-            settings.Add("authTicketDuration", userApiConfig.AuthTicketDuration.ToString());
-            settings.Add("regkey", userApiConfig.Regkey);
-            settings.Add("secret", config.Secret);
-            settings.Add("updateUrl", userApiConfig.UpdateUrl);
-            settings.Add("cdnUrl", userApiConfig.CDNUrl);
-            settings.Add("connectionString", config.Database.ConnectionString);
-            settings.Add("NFSdir", config.SimNFS);
-            settings.Add("smtpHost", userApiConfig.SmtpHost);
-            settings.Add("smtpUser", userApiConfig.SmtpUser);
-            settings.Add("smtpPassword", userApiConfig.SmtpPassword);
-            settings.Add("smtpPort", userApiConfig.SmtpPort.ToString());
-            settings.Add("useProxy", userApiConfig.UseProxy.ToString());
-
-            var api = new FSO.Server.Api.Api();
-            api.Init(settings);
-
-            builder.UseWebApi(http);
         }
     }
 }
