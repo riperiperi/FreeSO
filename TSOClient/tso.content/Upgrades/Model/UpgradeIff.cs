@@ -18,7 +18,7 @@ namespace FSO.Content.Upgrades.Model
         /// <summary>
         /// A list of tuning groups for this file. Groups allow the developer to group together tuning values with the same target effect, but
         /// used by different objects, eg. "Cheap Max Fun", "Expensive Max Fun". With these groups set up, tuning values can be easily copied
-        /// between objects (as they point to the groups instead of object specific entries) for easier maintainance and rebalancing.
+        /// between objects (as they point to the groups instead of object specific entries) for easier maintenance and rebalancing.
         /// </summary>
         public List<UpgradeGroup> Groups = new List<UpgradeGroup>();
 

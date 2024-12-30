@@ -88,12 +88,8 @@
       "bindings": [
         "http://+:9000/"
       ],
-      "controllers": [
-        "auth",
-        "citySelector"
-      ],
       // "cdnUrl": "http://0.0.0.0:9000",
-      "maintainance": false
+      "maintenance": false
     },
     "cities": [
       {
@@ -109,12 +105,6 @@
           "min_nominations": 2,
           "election_week_align": true,
           "election_move_penalty": 14
-        },
-        "maintenance": {
-          "cron": "0 4 * * *",
-          "timeout": 3600,
-          "visits_retention_period": 7,
-          "top100_average_period": 4
         }
       }
     ],

@@ -24,7 +24,7 @@ namespace FSO.Server.Core
             var config = api.Config;
             var userApiConfig = config.Services.UserApi;
             var settings = new NameValueCollection();
-            settings.Add("maintainance", userApiConfig.Maintainance.ToString());
+            settings.Add("maintenance", userApiConfig.Maintenance.ToString());
             settings.Add("authTicketDuration", userApiConfig.AuthTicketDuration.ToString());
             settings.Add("regkey", userApiConfig.Regkey);
             settings.Add("secret", config.Secret);

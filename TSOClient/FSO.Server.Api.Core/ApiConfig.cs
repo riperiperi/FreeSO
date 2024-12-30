@@ -17,7 +17,7 @@ namespace FSO.Server.Api.Core
         /// <summary>
         /// If true, only authentication from moderators and admins will be accepted
         /// </summary>
-        public bool Maintainance { get; set; }
+        public bool Maintenance { get; set; }
 
         public string Secret { get; set; }
 

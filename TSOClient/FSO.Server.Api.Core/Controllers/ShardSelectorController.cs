@@ -16,7 +16,7 @@ namespace FSO.Server.Api.Core.Controllers
         private static Func<IActionResult> ERROR_AVATAR_NOT_FOUND = ApiResponse.XmlFuture(HttpStatusCode.OK, new XMLErrorMessage("504", "Avatar not found"));
         private static Func<IActionResult> ERROR_AVATAR_NOT_YOURS = ApiResponse.XmlFuture(HttpStatusCode.OK, new XMLErrorMessage("505", "You do not own this avatar!"));
         private static Func<IActionResult> ERROR_BANNED = ApiResponse.XmlFuture(HttpStatusCode.OK, new XMLErrorMessage("506", "Your account has been banned."));
-        private static Func<IActionResult> ERROR_MAINTAINANCE = ApiResponse.XmlFuture(HttpStatusCode.OK, new XMLErrorMessage("507", "The server is currently undergoing maintainance. Please try again later."));
+        private static Func<IActionResult> ERROR_MAINTENANCE = ApiResponse.XmlFuture(HttpStatusCode.OK, new XMLErrorMessage("507", "The server is currently undergoing maintainance. Please try again later."));
 
         public IActionResult Get(string shardName, string avatarId)
         {
@@ -58,9 +58,9 @@ namespace FSO.Server.Api.Core.Controllers
                         return ERROR_BANNED();
                     }
 
-                    if (api.Config.Maintainance && !(dbuser.is_admin || dbuser.is_moderator))
+                    if (api.Config.Maintenance && !(dbuser.is_admin || dbuser.is_moderator))
                     {
-                        return ERROR_MAINTAINANCE();
+                        return ERROR_MAINTENANCE();
                     }
 
                     /** Make an auth ticket **/

@@ -15,7 +15,7 @@ namespace FSO.Server.Api.Core.Controllers
         private static Func<IActionResult> ERROR_020 = printError("INV-020", "Please enter your member name and password.");
         private static Func<IActionResult> ERROR_110 = printError("INV-110", "The member name or password you have entered is incorrect. Please try again.");
         private static Func<IActionResult> ERROR_302 = printError("INV-302", "The game has experienced an internal error. Please try again.");
-        private static Func<IActionResult> ERROR_160 = printError("INV-160", "The server is currently down for maintainance. Please try again later.");
+        private static Func<IActionResult> ERROR_160 = printError("INV-160", "The server is currently down for maintenance. Please try again later.");
         private static Func<IActionResult> ERROR_150 = printError("INV-150", "We're sorry, but your account has been suspended or cancelled.");
         private static string LOCK_MESSAGE = "Your account has been locked due to too many incorrect login attempts. " +
             "If you cannot remember your password, it can be reset at https://beta.freeso.org/forgot. Locked for: ";
@@ -58,7 +58,7 @@ namespace FSO.Server.Api.Core.Controllers
                     return ERROR_150();
                 }
 
-                if (api.Config.Maintainance && !(user.is_admin || user.is_moderator))
+                if (api.Config.Maintenance && !(user.is_admin || user.is_moderator))
                 {
                     return ERROR_160();
                 }
