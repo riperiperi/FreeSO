@@ -23,6 +23,7 @@ namespace FSO.LotView.Components
         }
 
         public Vector2 GlobalPosition;
+        public bool UseFade = true;
 
         //should this be used now? may be faster for surround - but then again culling may be faster than both
         private List<_2DDrawBuffer> StaticObjectsCache = new List<_2DDrawBuffer>();
@@ -91,6 +92,7 @@ namespace FSO.LotView.Components
 
             if (Blueprint == null) return;
             Blueprint.Terrain.SubworldOff = GlobalPosition * 3;
+            Blueprint.Terrain.FadeDistance = UseFade ? 77 * 3f : 1000f;
             Blueprint.OutsideTime = state.Light?.Blueprint?.OutsideTime ?? 0.5f;
 
             var oldLevel = state.Level;

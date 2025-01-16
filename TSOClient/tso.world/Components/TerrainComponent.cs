@@ -45,6 +45,7 @@ namespace FSO.LotView.Components
         public bool DepthMode;
 
         public Vector2 SubworldOff = Vector2.Zero;
+        public float FadeDistance = 77 * 3f;
 
         private GrassEffect Effect;
         public bool DrawGrid = false;
@@ -472,7 +473,7 @@ namespace FSO.LotView.Components
             Effect.TerrainNoiseMip = TextureGenerator.GetTerrainNoise(device);
             Effect.GrassFadeMul = (float)Math.Sqrt(device.Viewport.Width/1920f);
 
-            Effect.FadeRectangle = new Vector4(77*3/2f + SubworldOff.X, 77*3/ 2f + SubworldOff.Y, 77*3, 77*3);
+            Effect.FadeRectangle = new Vector4(FadeDistance / 2f + SubworldOff.X, FadeDistance / 2f + SubworldOff.Y, FadeDistance, FadeDistance);
             Effect.FadeWidth = 35f*3;
 
             Effect.TileSize = new Vector2(1f / Bp.Width, 1f / Bp.Height);
@@ -800,7 +801,7 @@ namespace FSO.LotView.Components
             Effect.TerrainNoiseMip = TextureGenerator.GetTerrainNoise(device);
             Effect.GrassFadeMul = (float)Math.Sqrt(device.Viewport.Width / 1920f);
 
-            Effect.FadeRectangle = new Vector4(77 * 3 / 2f + SubworldOff.X, 77 * 3 / 2f + SubworldOff.Y, 77 * 3, 77 * 3);
+            Effect.FadeRectangle = new Vector4(FadeDistance / 2f + SubworldOff.X, FadeDistance / 2f + SubworldOff.Y, FadeDistance, FadeDistance);
             Effect.FadeWidth = 35f * 3;
 
             Effect.TileSize = new Vector2(1f / Bp.Width, 1f / Bp.Height);
