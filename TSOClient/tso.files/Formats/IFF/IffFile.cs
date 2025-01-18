@@ -1,9 +1,17 @@
-﻿using System;
+﻿/*
+ * This Source Code Form is subject to the terms of the Mozilla Public License, v. 2.0.
+ * If a copy of the MPL was not distributed with this file, You can obtain one at
+ * http://mozilla.org/MPL/2.0/. 
+ */
+
+using System;
 using System.Collections.Generic;
 using System.Linq;
+using System.Text;
 using System.IO;
 using FSO.Files.Formats.IFF.Chunks;
 using FSO.Files.Utils;
+using System.Reflection;
 using FSO.Common.Utils;
 
 namespace FSO.Files.Formats.IFF
@@ -14,6 +22,26 @@ namespace FSO.Files.Formats.IFF
     /// </summary>
     public class IffFile : IFileInfoUtilizer, ITimedCachable
     {
+        public enum IffFileVersion
+        {
+            Unrecognized,
+            /// <summary>
+            /// IFF FILE v2.0
+            /// </summary>
+            v2,
+            /// <summary>
+            /// IFF FILE v2.5
+            /// </summary>
+            v25,
+            /// <summary>
+            /// IFF FILE v1.0
+            /// </summary>
+            v1
+        }
+        /// <summary>
+        /// The version of IFF File being read
+        /// </summary>
+        public IffFileVersion FileVersion;
         /// <summary>
         /// Set to true to force the game to retain a copy of all chunk data at time of loading (used to generate piffs)
         /// Should really only be set when the user wants to use the IDE, as it uses a lot more memory.
@@ -152,18 +180,25 @@ namespace FSO.Files.Formats.IFF
         /// <param name="stream">The stream to read from.</param>
         public void Read(Stream stream)
         {
-
+            FileVersion = IffFileVersion.v25;
             using (var io = IoBuffer.FromStream(stream, ByteOrder.BIG_ENDIAN))
             {
                 var identifier = io.ReadCString(60, false).Replace("\0", "");
-                if (identifier != "IFF FILE 2.5:TYPE FOLLOWED BY SIZE JAMIE DOORNBOS & MAXIS 1")
+                if (identifier.StartsWith("IFF FILE 1.0"))
                 {
+                    FileVersion = IffFileVersion.v1;
+                    _ = io.ReadCString(4);                    
+                }
+                else if (identifier != "IFF FILE 2.5:TYPE FOLLOWED BY SIZE JAMIE DOORNBOS & MAXIS 1")
+                {
+                    FileVersion = IffFileVersion.Unrecognized;
                     if (identifier != "IFF FILE 2.0:TYPE FOLLOWED BY SIZE JAMIE DOORNBOS & MAXIS 1") //house11.iff, seems to read fine
                         throw new Exception("Invalid iff file!");
+                    FileVersion = IffFileVersion.v2;
                 }
 
                 var rsmpOffset = io.ReadUInt32();
-                
+
                 while (io.HasMore)
                 {
                     var newChunk = AddChunk(stream, io, true);
@@ -188,14 +223,49 @@ namespace FSO.Files.Formats.IFF
             }
         }
 
+        void ReadHeader(in IoBuffer io, out string Type, out UInt32 ChunkSize, out ushort ID, out ushort Flags, out string Label, out uint DataSize)
+        {
+            switch (FileVersion)
+            {
+                case IffFileVersion.Unrecognized:
+                    throw new Exception("Invalid Iff file header!");
+                default:
+                case IffFileVersion.v2:
+                case IffFileVersion.v25:
+                    {
+                        Type = io.ReadCString(4);
+                        ChunkSize = io.ReadUInt32();
+                        ID = io.ReadUInt16();
+                        Flags = io.ReadUInt16();
+                        Label = io.ReadCString(64).TrimEnd('\0');
+                        DataSize = ChunkSize - 76;
+                    }
+                    return;
+                case IffFileVersion.v1:
+                    {
+                        //TYPE (char[4]) SIZE (uint32) ID (uint16) UNK (uint15) FLAGS (uint32) [16 bytes] 
+                        Type = io.ReadCString(4);
+                        ChunkSize = io.ReadUInt32();
+                        ID = io.ReadUInt16();
+                        _ = io.ReadUInt16();
+                        Flags = (ushort)io.ReadUInt32();
+                        int number = 1;
+                        if (CHUNK_TYPES.TryGetValue(Type, out var type))
+                        {
+                            if (ByChunkType.TryGetValue(type, out var list))
+                                number = (ushort)(list.Count + 1);
+                        }
+                        Label = $"{Type}{number}";
+                        DataSize = ChunkSize - 16;
+                    }
+                    return;
+            }
+        }
+
         public IffChunk AddChunk(Stream stream, IoBuffer io, bool add)
         {
-            var chunkType = io.ReadCString(4);
-            var chunkSize = io.ReadUInt32();
-            var chunkID = io.ReadUInt16();
-            var chunkFlags = io.ReadUInt16();
-            var chunkLabel = io.ReadCString(64).TrimEnd('\0');
-            var chunkDataSize = chunkSize - 76;
+            ReadHeader(in io, out string chunkType, out uint chunkSize, 
+                out ushort chunkID, out ushort chunkFlags, out string chunkLabel, out uint chunkDataSize);
 
             /** Do we understand this chunk type? **/
             if (!CHUNK_TYPES.ContainsKey(chunkType))

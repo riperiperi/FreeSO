@@ -1,6 +1,13 @@
-﻿using System;
+﻿/*
+ * This Source Code Form is subject to the terms of the Mozilla Public License, v. 2.0.
+ * If a copy of the MPL was not distributed with this file, You can obtain one at
+ * http://mozilla.org/MPL/2.0/. 
+ */
+
+using System;
 using System.Collections.Generic;
 using System.Linq;
+using System.Text;
 using System.IO;
 using FSO.Files.Utils;
 
@@ -218,7 +225,23 @@ namespace FSO.Files.Formats.IFF.Chunks
                     for (int i = 0; i < 20; i++) LanguageSets[i] = new STRLanguageSet { Strings = new STRItem[0] };
                     return;
                 }
+                //Sims Steering Commitee STR# format *Bisquick
+                if (ChunkParent.FileVersion == IffFile.IffFileVersion.v1)
+                {
+                    var numStrings = 1; // only ever one string in these to my knowledge
+                    for (int i = 0; i < 20; i++) LanguageSets[i] = new STRLanguageSet { Strings = new STRItem[0] };
+                    LanguageSets[0].Strings = new STRItem[numStrings];
 
+                    _ = io.ReadUInt32(); // unknown
+                    var unknownCode = io.ReadUInt16();
+                    var unknownCode2 = io.ReadUInt16();                    
+                    //PASCAL
+                    LanguageSets[0].Strings[0] = new STRItem
+                    {
+                        Value = io.ReadPascalString()
+                    };
+                    return;
+                }
                 if (formatCode == 0)
                 {
                     var numStrings = io.ReadUInt16();

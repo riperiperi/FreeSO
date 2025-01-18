@@ -28,6 +28,7 @@ namespace FSO.IDE.ResourceBrowser
             { typeof(CTSS), typeof(STRResourceControl) },
             { typeof(TTAB), typeof(TTABResourceControl) },
             { typeof(SPR2), typeof(SPR2ResourceControl) },
+            { typeof(SPR), typeof(SPRResourceControl) },
             { typeof(BCON), typeof(BCONResourceControl) },
             { typeof(SLOT), typeof(SLOTResourceControl) },
             { typeof(FCNS), typeof(STRResourceControl) },
@@ -43,6 +44,7 @@ namespace FSO.IDE.ResourceBrowser
             typeof(SLOT),
             typeof(CTSS),
             typeof(SPR2),
+            typeof(SPR),
             typeof(FCNS),
             typeof(OTFFile)
         };
@@ -54,7 +56,8 @@ namespace FSO.IDE.ResourceBrowser
             "Constants",
             "SLOTs",
             "Catalog Strings",
-            "Sprites",
+            "Sprites (SPR2)",
+            "Sprites (SPR#)",
             "Simulator Constants",
             "Tuning (OTF)"
         };

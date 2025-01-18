@@ -4,6 +4,7 @@ using FSO.Files.Formats.IFF.Chunks;
 using FSO.IDE.Common;
 using FSO.IDE.ContentEditors;
 using FSO.IDE.Managers;
+using FSO.IDE.ResourceBrowser;
 using FSO.IDE.Utils.FormatReverse;
 using FSO.SimAntics;
 using FSO.SimAntics.NetPlay.Model.Commands;
@@ -347,30 +348,52 @@ namespace FSO.IDE
             return;
         }
 
+        void ShowExternalIff(IffFile Iff = null, IffFile Spf = null, bool OBJDMode = false)
+        {
+            void Combine()
+            {
+                if (Iff == null || Spf == null)
+                    return;
+                foreach (var chunk in Spf.ListAll())
+                    Iff.AddChunk(chunk);
+            }
+
+            if (Iff == null && Spf == null)
+                throw new Exception("There was no provided IffFile to ShowExternalIff");
+
+            Combine();
+
+            var obj = new GameObject();
+            obj.OBJ = (Iff ?? Spf).List<OBJD>()?.FirstOrDefault() ?? new OBJD();
+            obj.GUID = obj.OBJ.GUID;
+
+            //var res = new GameObjectResource(iff, null, null, "what", Content.Content.Get());
+            var res = new GameObjectResource(Iff, Spf, null, "what", Content.Content.Get());
+            var res2 = new GameGlobalResource(Iff ?? Spf, null);
+            obj.Resource = res;
+
+            IffManager.OpenResourceWindow(OBJDMode ? (GameIffResource)res : res2, obj);
+        }
+
         private void openExternalIffToolStripMenuItem_Click(object sender, EventArgs e)
         {
-            var dialog = new OpenFileDialog();
-            dialog.Title = "Select an iff file. (iff)";
-            SaveFile(dialog);
-            try
-            {
-                var iff = new IffFile(dialog.FileName);
-                iff.TSBO = true;
-                var obj = new GameObject();
-                obj.OBJ = iff.List<OBJD>()?.FirstOrDefault() ?? new OBJD();
-                obj.GUID = obj.OBJ.GUID;
-
-                //var res = new GameObjectResource(iff, null, null, "what", Content.Content.Get());
-                var res = new GameObjectResource(iff, null, null, "what", Content.Content.Get());
-                var res2 = new GameGlobalResource(iff, null);
-                obj.Resource = res;
-
-                IffManager.OpenResourceWindow(res2, obj);
-            }
-            catch
-            {
-
-            }
+            IffFile iff = ExternalIffSelectorDialog.OpenExternalIff(out _, false);
+            if (iff == null) return;
+            ShowExternalIff(iff);
+        }
+        private void sPFFileToolStripMenuItem_Click(object sender, EventArgs e)
+        {
+            IffFile spf = ExternalIffSelectorDialog.OpenExternalIff(out _,true);
+            if (spf == null) return;
+            ShowExternalIff(null, spf);
+        }
+        private void bothToolStripMenuItem_Click(object sender, EventArgs e)
+        {
+            ExternalIffSelectorDialog dialog = new ExternalIffSelectorDialog();
+            dialog.ShowDialog();
+            if (dialog.Selection < 1) return;
+            if (dialog.Spf == null && dialog.Iff == null) return;
+            ShowExternalIff(dialog.Iff, dialog.Spf, dialog.Selection == 1);
         }
 
         private void semiGlobalToolStripMenuItem_Click(object sender, EventArgs e)
@@ -395,7 +418,7 @@ namespace FSO.IDE
             var fe = new FieldEncodingFormatTracker();
             fe.Show();
             fe.StartWithOBJM();
-        }
+        }        
     }
 
     public class ResChangeNode : TreeNode

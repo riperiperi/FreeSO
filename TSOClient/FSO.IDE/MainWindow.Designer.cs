@@ -56,6 +56,8 @@
             this.saveGlobalscsToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
             this.avatarToolToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
             this.openExternalIffToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
+            this.iFFFileToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
+            this.sPFFileToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
             this.fieldEncodingReverserToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
             this.windowToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
             this.hideAllToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
@@ -78,9 +80,10 @@
             this.ChangesView = new System.Windows.Forms.TreeView();
             this.BrowserTab = new System.Windows.Forms.TabPage();
             this.NewOBJButton = new System.Windows.Forms.Button();
-            this.InspectorTab = new System.Windows.Forms.TabPage();
             this.Browser = new FSO.IDE.ObjectBrowser();
+            this.InspectorTab = new System.Windows.Forms.TabPage();
             this.entityInspector1 = new FSO.IDE.EntityInspector();
+            this.bothToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
             this.menuStrip1.SuspendLayout();
             this.UtilityTabs.SuspendLayout();
             this.OverviewTab.SuspendLayout();
@@ -170,7 +173,7 @@
             this.openExternalIffToolStripMenuItem,
             this.fieldEncodingReverserToolStripMenuItem});
             this.toolsToolStripMenuItem.Name = "toolsToolStripMenuItem";
-            this.toolsToolStripMenuItem.Size = new System.Drawing.Size(46, 20);
+            this.toolsToolStripMenuItem.Size = new System.Drawing.Size(47, 20);
             this.toolsToolStripMenuItem.Text = "Tools";
             // 
             // dataServiceEditorToolStripMenuItem
@@ -191,7 +194,7 @@
             // saveGlobalscsToolStripMenuItem
             // 
             this.saveGlobalscsToolStripMenuItem.Name = "saveGlobalscsToolStripMenuItem";
-            this.saveGlobalscsToolStripMenuItem.Size = new System.Drawing.Size(215, 22);
+            this.saveGlobalscsToolStripMenuItem.Size = new System.Drawing.Size(216, 22);
             this.saveGlobalscsToolStripMenuItem.Text = "Generate AOT Sources (.cs)";
             this.saveGlobalscsToolStripMenuItem.Click += new System.EventHandler(this.saveGlobalscsToolStripMenuItem_Click);
             // 
@@ -204,10 +207,27 @@
             // 
             // openExternalIffToolStripMenuItem
             // 
+            this.openExternalIffToolStripMenuItem.DropDownItems.AddRange(new System.Windows.Forms.ToolStripItem[] {
+            this.iFFFileToolStripMenuItem,
+            this.sPFFileToolStripMenuItem,
+            this.bothToolStripMenuItem});
             this.openExternalIffToolStripMenuItem.Name = "openExternalIffToolStripMenuItem";
             this.openExternalIffToolStripMenuItem.Size = new System.Drawing.Size(199, 22);
-            this.openExternalIffToolStripMenuItem.Text = "Open External Iff...";
-            this.openExternalIffToolStripMenuItem.Click += new System.EventHandler(this.openExternalIffToolStripMenuItem_Click);
+            this.openExternalIffToolStripMenuItem.Text = "Open External Iff/Spf...";
+            // 
+            // iFFFileToolStripMenuItem
+            // 
+            this.iFFFileToolStripMenuItem.Name = "iFFFileToolStripMenuItem";
+            this.iFFFileToolStripMenuItem.Size = new System.Drawing.Size(180, 22);
+            this.iFFFileToolStripMenuItem.Text = "Iff File...";
+            this.iFFFileToolStripMenuItem.Click += new System.EventHandler(this.openExternalIffToolStripMenuItem_Click);
+            // 
+            // sPFFileToolStripMenuItem
+            // 
+            this.sPFFileToolStripMenuItem.Name = "sPFFileToolStripMenuItem";
+            this.sPFFileToolStripMenuItem.Size = new System.Drawing.Size(180, 22);
+            this.sPFFileToolStripMenuItem.Text = "Spf File...";
+            this.sPFFileToolStripMenuItem.Click += new System.EventHandler(this.sPFFileToolStripMenuItem_Click);
             // 
             // fieldEncodingReverserToolStripMenuItem
             // 
@@ -229,14 +249,14 @@
             // hideAllToolStripMenuItem
             // 
             this.hideAllToolStripMenuItem.Name = "hideAllToolStripMenuItem";
-            this.hideAllToolStripMenuItem.Size = new System.Drawing.Size(116, 22);
+            this.hideAllToolStripMenuItem.Size = new System.Drawing.Size(180, 22);
             this.hideAllToolStripMenuItem.Text = "Hide All";
             this.hideAllToolStripMenuItem.Click += new System.EventHandler(this.hideAllToolStripMenuItem_Click);
             // 
             // toolStripSeparator1
             // 
             this.toolStripSeparator1.Name = "toolStripSeparator1";
-            this.toolStripSeparator1.Size = new System.Drawing.Size(113, 6);
+            this.toolStripSeparator1.Size = new System.Drawing.Size(177, 6);
             // 
             // helpToolStripMenuItem
             // 
@@ -462,6 +482,16 @@
             this.NewOBJButton.UseVisualStyleBackColor = true;
             this.NewOBJButton.Click += new System.EventHandler(this.NewOBJButton_Click);
             // 
+            // Browser
+            // 
+            this.Browser.Anchor = ((System.Windows.Forms.AnchorStyles)((((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Bottom) 
+            | System.Windows.Forms.AnchorStyles.Left) 
+            | System.Windows.Forms.AnchorStyles.Right)));
+            this.Browser.Location = new System.Drawing.Point(3, 3);
+            this.Browser.Name = "Browser";
+            this.Browser.Size = new System.Drawing.Size(724, 452);
+            this.Browser.TabIndex = 0;
+            // 
             // InspectorTab
             // 
             this.InspectorTab.Controls.Add(this.entityInspector1);
@@ -473,16 +503,6 @@
             this.InspectorTab.Text = "VMEntity Inspector";
             this.InspectorTab.UseVisualStyleBackColor = true;
             // 
-            // Browser
-            // 
-            this.Browser.Anchor = ((System.Windows.Forms.AnchorStyles)((((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Bottom) 
-            | System.Windows.Forms.AnchorStyles.Left) 
-            | System.Windows.Forms.AnchorStyles.Right)));
-            this.Browser.Location = new System.Drawing.Point(3, 3);
-            this.Browser.Name = "Browser";
-            this.Browser.Size = new System.Drawing.Size(724, 452);
-            this.Browser.TabIndex = 0;
-            // 
             // entityInspector1
             // 
             this.entityInspector1.Anchor = ((System.Windows.Forms.AnchorStyles)((((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Bottom) 
@@ -492,6 +512,13 @@
             this.entityInspector1.Name = "entityInspector1";
             this.entityInspector1.Size = new System.Drawing.Size(724, 452);
             this.entityInspector1.TabIndex = 0;
+            // 
+            // bothToolStripMenuItem
+            // 
+            this.bothToolStripMenuItem.Name = "bothToolStripMenuItem";
+            this.bothToolStripMenuItem.Size = new System.Drawing.Size(180, 22);
+            this.bothToolStripMenuItem.Text = "Both...";
+            this.bothToolStripMenuItem.Click += new System.EventHandler(this.bothToolStripMenuItem_Click);
             // 
             // MainWindow
             // 
@@ -560,5 +587,8 @@
         private System.Windows.Forms.ToolStripMenuItem avatarToolToolStripMenuItem;
         private System.Windows.Forms.ToolStripMenuItem openExternalIffToolStripMenuItem;
         private System.Windows.Forms.ToolStripMenuItem fieldEncodingReverserToolStripMenuItem;
+        private System.Windows.Forms.ToolStripMenuItem iFFFileToolStripMenuItem;
+        private System.Windows.Forms.ToolStripMenuItem sPFFileToolStripMenuItem;
+        private System.Windows.Forms.ToolStripMenuItem bothToolStripMenuItem;
     }
 }
