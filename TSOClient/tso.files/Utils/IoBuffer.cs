@@ -40,8 +40,13 @@ namespace FSO.Files.Utils
         {
             get
             {
-                return Stream.Position < Stream.Length - 1;
+                return Stream.Position < Stream.Length;
             }
+        }
+
+        public bool HasBytes(int count)
+        {
+            return Stream.Position < Stream.Length - (count - 1);
         }
 
         /// <summary>

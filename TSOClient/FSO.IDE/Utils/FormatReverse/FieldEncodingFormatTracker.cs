@@ -95,7 +95,7 @@ namespace FSO.IDE.Utils.FormatReverse
 
             Io.RevertToMark(save);
             var intResult = Io.DebugReadField(true);
-            intValid = !IsIncorrectCompressionChoice(intResult, Io.widths2);
+            intValid = !IsIncorrectCompressionChoice(intResult, Io.widths32);
             if (intValid)
             {
                 intValid = ScanFutureRecursive(allowedDepth - 1);
@@ -166,7 +166,7 @@ namespace FSO.IDE.Utils.FormatReverse
 
             Io.RevertToMark(save);
             var intResult = Io.DebugReadField(true);
-            var intValid = !IsIncorrectCompressionChoice(intResult, Io.widths2);
+            var intValid = !IsIncorrectCompressionChoice(intResult, Io.widths32);
             if (intValid)
             {
                 intValid = ScanFutureRecursive(remainingDepth - 1);
@@ -270,7 +270,7 @@ namespace FSO.IDE.Utils.FormatReverse
             entry.ReadValue = (int)result.Item1;
             entry.BitSize = result.Item2;
 
-            var bad = IsIncorrectCompressionChoice(result, big ? Io.widths2 : Io.widths);
+            var bad = IsIncorrectCompressionChoice(result, big ? Io.widths32 : Io.widths);
 
             DataList.Items.Add($"{ (bad ? "*" : "") }{ entry.FieldName ?? "?" }: { entry.FieldType.ToString() } = { entry.ReadValue } ({ entry.BitSize })");
         }

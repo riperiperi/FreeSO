@@ -176,19 +176,31 @@ namespace FSO.SimAntics.Utils
 
             var objt = iff.Get<OBJT>(0);
             var objm = iff.Get<OBJM>(1);
+
+            var content = Content.Content.Get();
+
+            objm.Prepare((ushort typeID) =>
+            {
+                var entry = objt.Entries[typeID - 1];
+                return new OBJMResource()
+                {
+                    OBJD = content.WorldObjects.Get(entry.GUID)?.OBJ,
+                    OBJT = entry
+                };
+            });
             
             int j = 0;
 
-            for (int i = 0; i < objm.IDToOBJT.Length; i += 2)
+            foreach (var pair in objm.IDToOBJT)
             {
-                if (objm.IDToOBJT[i] == 0) continue;
+                if (pair.Key == 0) continue;
+
                 MappedObject target;
-                if (!objm.ObjectData.TryGetValue(objm.IDToOBJT[i], out target)) continue;
-                var entry = objt.Entries[objm.IDToOBJT[i + 1] - 1];
+                if (!objm.ObjectData.TryGetValue(pair.Key, out target)) continue;
+
+                var entry = objt.Entries[pair.Value - 1];
                 target.Name = entry.Name;
                 target.GUID = entry.GUID;
-
-                //Console.WriteLine((objm.IDToOBJT[i]) + ": " + objt.Entries[objm.IDToOBJT[i + 1] - 1].Name);
             }
 
             var objFlrs = new ushort[][] { DecodeObjID(iff.Get<ARRY>(3)?.TransposeData), DecodeObjID(iff.Get<ARRY>(103)?.TransposeData) };
@@ -213,7 +225,6 @@ namespace FSO.SimAntics.Utils
                 }
             }
 
-            var content = Content.Content.Get();
             var ControllerObjects = content.WorldObjects.ControllerObjects.Select(x => (uint)x.ID);
             foreach (var controller in ControllerObjects)
             {

@@ -42,6 +42,7 @@
     <ErrorReport>prompt</ErrorReport>
     <WarningLevel>4</WarningLevel>
     <Prefer32Bit>false</Prefer32Bit>
+    <UseWinFormsOutOfProcDesigner>True</UseWinFormsOutOfProcDesigner>
   </PropertyGroup>
   <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Release|AnyCPU' ">
     <PlatformTarget>AnyCPU</PlatformTarget>
@@ -52,6 +53,7 @@
     <ErrorReport>prompt</ErrorReport>
     <WarningLevel>4</WarningLevel>
     <Prefer32Bit>false</Prefer32Bit>
+    <UseWinFormsOutOfProcDesigner>True</UseWinFormsOutOfProcDesigner>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)' == 'Debug|x86'">
     <DebugSymbols>true</DebugSymbols>
@@ -64,6 +66,7 @@
     <WarningLevel>3</WarningLevel>
     <Prefer32Bit>false</Prefer32Bit>
     <UseVSHostingProcess>true</UseVSHostingProcess>
+    <UseWinFormsOutOfProcDesigner>True</UseWinFormsOutOfProcDesigner>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)' == 'Release|x86'">
     <OutputPath>bin\x86\Release\</OutputPath>
@@ -75,6 +78,7 @@
     <CodeAnalysisRuleSet>MinimumRecommendedRules.ruleset</CodeAnalysisRuleSet>
     <Prefer32Bit>false</Prefer32Bit>
     <UseVSHostingProcess>true</UseVSHostingProcess>
+    <UseWinFormsOutOfProcDesigner>True</UseWinFormsOutOfProcDesigner>
   </PropertyGroup>
   <PropertyGroup>
     <ApplicationIcon>IDE.ico</ApplicationIcon>
@@ -87,6 +91,7 @@
     <PlatformTarget>AnyCPU</PlatformTarget>
     <ErrorReport>prompt</ErrorReport>
     <CodeAnalysisRuleSet>MinimumRecommendedRules.ruleset</CodeAnalysisRuleSet>
+    <UseWinFormsOutOfProcDesigner>True</UseWinFormsOutOfProcDesigner>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)' == 'ServerRelease|x86'">
     <OutputPath>bin\x86\ServerRelease\</OutputPath>
@@ -96,6 +101,7 @@
     <PlatformTarget>x86</PlatformTarget>
     <ErrorReport>prompt</ErrorReport>
     <CodeAnalysisRuleSet>MinimumRecommendedRules.ruleset</CodeAnalysisRuleSet>
+    <UseWinFormsOutOfProcDesigner>True</UseWinFormsOutOfProcDesigner>
   </PropertyGroup>
   <ItemGroup>
     <Reference Include="System" />

@@ -164,7 +164,7 @@ namespace FSO.Files.Formats.IFF
 
                 var rsmpOffset = io.ReadUInt32();
                 
-                while (io.HasMore)
+                while (io.HasBytes(2))
                 {
                     var newChunk = AddChunk(stream, io, true);
                 }

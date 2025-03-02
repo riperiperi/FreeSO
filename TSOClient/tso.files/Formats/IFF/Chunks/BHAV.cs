@@ -13,7 +13,7 @@ namespace FSO.Files.Formats.IFF.Chunks
         public byte Type;
         public byte Args;
         public ushort Locals;
-        public ushort Flags;
+        public ushort Version;
 
         public uint RuntimeVer;
 
@@ -26,35 +26,35 @@ namespace FSO.Files.Formats.IFF.Chunks
         {
             using (var io = IoBuffer.FromStream(stream, ByteOrder.LITTLE_ENDIAN))
             {
-                var version = io.ReadUInt16();
+                var filetypeVersion = io.ReadUInt16();
                 uint count = 0;
 
-                if (version == 0x8000)
+                if (filetypeVersion == 0x8000)
                 {
                     count = io.ReadUInt16();
                     io.Skip(8);
                 }
-                else if (version == 0x8001)
+                else if (filetypeVersion == 0x8001)
                 {
                     count = io.ReadUInt16();
                     var unknown = io.ReadBytes(8);
                 }
-                else if (version == 0x8002)
+                else if (filetypeVersion == 0x8002)
                 {
                     count = io.ReadUInt16();
                     this.Type = io.ReadByte();
                     this.Args = io.ReadByte();
                     this.Locals = io.ReadUInt16();
-                    this.Flags = io.ReadUInt16();
+                    this.Version = io.ReadUInt16();
                     io.Skip(2);
                 }
-                else if (version == 0x8003)
+                else if (filetypeVersion == 0x8003)
                 {
                     this.Type = io.ReadByte();
                     this.Args = io.ReadByte();
                     this.Locals = io.ReadByte();
                     io.Skip(2);
-                    this.Flags = io.ReadUInt16();
+                    this.Version = io.ReadUInt16();
                     count = io.ReadUInt32();
                 }
 
@@ -82,7 +82,7 @@ namespace FSO.Files.Formats.IFF.Chunks
                     io.WriteByte(Type);
                     io.WriteByte(Args);
                     io.WriteUInt16(Locals);
-                    io.WriteUInt16(Flags);
+                    io.WriteUInt16(Version);
                     io.WriteBytes(new byte[] { 0, 0 });
 
                     foreach (var inst in Instructions)
@@ -100,7 +100,7 @@ namespace FSO.Files.Formats.IFF.Chunks
                     io.WriteByte(Args);
                     io.WriteByte((byte)Locals);
                     io.WriteBytes(new byte[] { 0, 0 });
-                    io.WriteUInt16(Flags);
+                    io.WriteUInt16(Version);
                     io.WriteUInt32((ushort)Instructions.Length);
 
                     foreach (var inst in Instructions)

@@ -4,9 +4,12 @@ using System.IO;
 
 namespace FSO.Files.Formats.IFF.Chunks
 {
+    /**
+     * Object type information. Contains all object types used on the lot,
+     * along with some version information that resets objects of a type if it differs.
+     */
     public class OBJT : IffChunk
     {
-        //another sims 1 masterpiece. A list of object info.
         public List<OBJTEntry> Entries;
 
         public override void Read(IffFile iff, Stream stream)
@@ -32,9 +35,9 @@ namespace FSO.Files.Formats.IFF.Chunks
     {
         public uint GUID;
         public ushort Unknown1a;
-        public ushort Unknown1b;
+        public ushort InitTreeVersion;
         public ushort Unknown2a;
-        public ushort Unknown2b;
+        public ushort MainTreeVersion;
         public ushort TypeID;
         public OBJDType OBJDType;
         public string Name;
@@ -43,10 +46,10 @@ namespace FSO.Files.Formats.IFF.Chunks
             //16 bytes of data
             GUID = io.ReadUInt32();
             if (GUID == 0) return;
-            Unknown1a = io.ReadUInt16();
-            Unknown1b = io.ReadUInt16();
-            Unknown2a = io.ReadUInt16();
-            Unknown2b = io.ReadUInt16();
+            Unknown1a = io.ReadUInt16(); //likely number of attributes
+            InitTreeVersion = io.ReadUInt16();
+            Unknown2a = io.ReadUInt16(); //objd version?
+            MainTreeVersion = io.ReadUInt16();
             //increases by one each time, one based, essentially an ID for this loaded type. Mostly matches index in array, but I guess it can possibly be different.
             TypeID = io.ReadUInt16(); 
             OBJDType = (OBJDType)io.ReadUInt16();
@@ -58,7 +61,7 @@ namespace FSO.Files.Formats.IFF.Chunks
 
         public override string ToString()
         {
-            return $"{TypeID}: {Name} ({GUID.ToString("x8")}): [{Unknown1a}, {Unknown1b}, {Unknown2a}, {Unknown2b}, {OBJDType}]";
+            return $"{TypeID}: {Name} ({GUID.ToString("x8")}): [{Unknown1a}, {InitTreeVersion}, {Unknown2a}, {MainTreeVersion}, {OBJDType}]";
         }
     }
 }

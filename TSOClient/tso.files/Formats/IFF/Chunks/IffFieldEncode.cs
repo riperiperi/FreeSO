@@ -1,6 +1,7 @@
 ﻿using FSO.Files.Utils;
 using System;
 using System.IO;
+using System.Runtime.InteropServices;
 
 namespace FSO.Files.Formats.IFF.Chunks
 {
@@ -13,8 +14,31 @@ namespace FSO.Files.Formats.IFF.Chunks
         private byte curByte = 0;
         private bool odd = false;
         public byte[] widths = { 5, 8, 13, 16 };
-        public byte[] widths2 = { 6, 11, 21, 32 };
+        public byte[] widths32 = { 6, 11, 21, 32 };
+        public byte[] widthsUnknown = { 2, 13, 21, 32 }; // These appear in the binary, but I'm not sure they're used.
+        public byte[] widthsByte = { 2, 4, 6, 8 };
         public bool StreamEnd;
+
+        [StructLayout(LayoutKind.Explicit)]
+        private struct IntFloatAlias
+        {
+            [FieldOffset(0)]
+            public int Int;
+            [FieldOffset(0)]
+            public float Float;
+
+            public IntFloatAlias(int data)
+            {
+                Float = 0;
+                Int = data;
+            }
+
+            public IntFloatAlias(float data)
+            {
+                Int = 0;
+                Float = data;
+            }
+        }
 
         public void setBytePos(int n)
         {
@@ -23,42 +47,98 @@ namespace FSO.Files.Formats.IFF.Chunks
             bitPos = 0;
         }
 
+        public void Interrupt()
+        {
+            long targetPos = io.Position;
+
+            if (bitPos == 0)
+            {
+                targetPos--;
+            }
+
+            io.Seek(SeekOrigin.Begin, targetPos);
+        }
+
+        public byte ReadByte()
+        {
+            return (byte)ReadField(widthsByte);
+        }
+
         public override ushort ReadUInt16()
         {
-            return (ushort)ReadField(false);
+            return (ushort)ReadField(widths);
         }
 
         public override short ReadInt16()
         {
-            return (short)ReadField(false);
+            return (short)ReadField(widths);
         }
 
         public override int ReadInt32()
         {
-            return (int)ReadField(true);
+            return (int)ReadField(widths32);
         }
 
         public override uint ReadUInt32()
         {
-            return (uint)ReadField(true);
+            return (uint)ReadField(widths32);
         }
 
         public override float ReadFloat()
         {
-            return (float)ReadField(true);
-            //this is incredibly wrong
+            uint data = (uint)ReadField(widths32);
+
+            return new IntFloatAlias((int)data).Float;
         }
 
-        private long ReadField(bool big)
+        private long ReadField(byte[] widths)
         {
             if (ReadBit() == 0) return 0;
 
             uint code = ReadBits(2);
-            byte width = (big) ? widths2[code] : widths[code];
+            byte width = widths[code];
             long value = ReadBits(width);
             value |= -(value & (1 << (width - 1)));
 
+            if (value == 0)
+            {
+                // not valid
+            }
+
             return value;
+        }
+
+        public string BitDebug(int count)
+        {
+            string result = "";
+
+            for (int i = 0; i < count; i++)
+            {
+                var bit = ReadBit();
+
+                result += bit == 1 ? "1" : "0";
+
+                if (bitPos == 0)
+                {
+                    result += "|";
+                }
+            }
+
+            return result;
+        }
+
+        public string BitDebugTil(long skipPosition)
+        {
+            long currentPos = bitPos == 0 ? io.Position : io.Position - 1;
+
+            int diff = (int)(skipPosition - currentPos) * 8 - bitPos;
+
+            if (diff < 0)
+            {
+                return "oob";
+            }
+
+            return BitDebug(diff);
         }
 
         public Tuple<long, int> DebugReadField(bool big)
@@ -66,7 +146,7 @@ namespace FSO.Files.Formats.IFF.Chunks
             if (ReadBit() == 0) return new Tuple<long, int>(0, 0);
 
             uint code = ReadBits(2);
-            byte width = (big) ? widths2[code] : widths[code];
+            byte width = (big) ? widths32[code] : widths[code];
             long value = ReadBits(width);
             value |= -(value & (1 << (width - 1)));
 
@@ -103,12 +183,12 @@ namespace FSO.Files.Formats.IFF.Chunks
             if (++bitPos > 7)
             {
                 bitPos = 0;
-                try
+                if (io.HasMore)
                 {
                     curByte = io.ReadByte();
                     odd = !odd;
                 }
-                catch (Exception)
+                else
                 {
                     curByte = 0; //no more data, read 0
                     odd = !odd;
@@ -142,10 +222,10 @@ namespace FSO.Files.Formats.IFF.Chunks
             return str;
         }
 
-        public IffFieldEncode(IoBuffer io) : base(io)
+        public IffFieldEncode(IoBuffer io, bool oddOffset = false) : base(io)
         {
             curByte = io.ReadByte();
-            odd = !odd;
+            odd = !oddOffset;
             bitPos = 0;
         }
     }
