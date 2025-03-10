@@ -268,6 +268,15 @@ namespace FSO.Files.Formats.IFF.Chunks
 
         //TS1
 
+        public bool TS1AllowVisitors
+        {
+            get { return (Flags & TTABFlags.AllowVisitors) > 0; }
+            set
+            {
+                Flags &= ~(TTABFlags.AllowVisitors); if (value) Flags |= TTABFlags.AllowVisitors;
+            }
+        }
+
         public bool TS1AllowCats
         {
             get { return (Flags & TTABFlags.TS1AllowCats) > 0; }

@@ -715,6 +715,7 @@ namespace FSO.SimAntics
 
         public virtual void SetDynamicSpriteFlag(ushort index, bool set)
         {
+            // NOTE: in TS1, each flag gets a short value, even if it only really matters if it's non-zero.
             if (set) {
                 if (index > 63)
                 {

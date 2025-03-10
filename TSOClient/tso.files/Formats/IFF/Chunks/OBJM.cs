@@ -55,10 +55,111 @@ namespace FSO.Files.Formats.IFF.Chunks
         }
     }
 
+    public struct OBJMMotiveDelta
+    {
+        public int Motive;
+        public float TickDelta; // 30 ticks per minute, 60 ticks per hour
+        public float StopAt;
+
+        public OBJMMotiveDelta(IffFieldEncode iop)
+        {
+            Motive = iop.ReadInt32();
+            TickDelta = iop.ReadFloat();
+            StopAt = iop.ReadFloat();
+        }
+    }
+
+    public struct OBJMInteraction
+    {
+        public int UID;
+        public short CallerID;
+        public short TargetID;
+        public short Icon;
+        public int TTAIndex;
+        public short[] Args;
+        public int Priority;
+        public short ActionTreeID;
+        public float Attenuation;
+
+        // 1: unknown
+        // 2: appears on group meal continuation
+        // 4: user initiated? also appears for social interactions from other sim, but those use push interaction
+        // 8: seems to randomly disappear (not on mourn/go here, is on "sit")
+        // 16: appears on goto work, group meal continuation
+        // 32: appears when the interaction becomes a "last interaction"?
+        // 64: appears on goto work
+        // 256: manually interrupted (not just priority override)
+        public int Flags;
+
+        public OBJMInteraction(IffFieldEncode iop)
+        {
+            int unkZero = iop.ReadInt32();
+            if (unkZero != 0)
+            {
+                throw new Exception("Expected zero at start of interaction...");
+            }
+
+            UID = iop.ReadInt32();
+            CallerID = iop.ReadInt16();
+            TargetID = iop.ReadInt16();
+            Icon = iop.ReadInt16();
+            TTAIndex = iop.ReadInt32();
+
+            Args = new short[4];
+            for (int i = 0; i < 4; i++)
+            {
+                Args[i] = iop.ReadInt16();
+            }
+
+            Priority = iop.ReadInt32();
+            ActionTreeID = iop.ReadInt16();
+            Attenuation = iop.ReadFloat();
+            Flags = iop.ReadInt32();
+        }
+
+        public bool IsValid()
+        {
+            return TTAIndex != -1;
+        }
+    }
+
+    public struct OBJMAccessory
+    {
+        public string Name;
+        public string Binding;
+
+        public OBJMAccessory(IffFieldEncode iop)
+        {
+            Name = iop.ReadString(false);
+            Binding = iop.ReadString(false); // Assuming this is the binding - it's usually blank.
+        }
+    }
+
+    public struct OBJMObjectUse
+    {
+        public short TargetID;
+        public int StackLength; // If the stack length falls below this, then the object is no longer in use.
+        public byte Unknown2; // 1 when call functional tree?
+
+        public OBJMObjectUse(IffFieldEncode iop)
+        {
+            TargetID = iop.ReadInt16();
+            StackLength = iop.ReadInt32();
+            Unknown2 = iop.ReadByte();
+
+            if (Unknown2 != 0 && Unknown2 != 1)
+            {
+
+            }
+        }
+    }
+
     public struct OBJMPerson
     {
-        public int Unknown1;
-        public int Unknown2;
+        // Number of events fired during the current animation.
+        public int AnimEventCount;
+        // 0 when routing or waiting for notify (can be interrupted), 1 otherwise.
+        public int Engaged;
 
         public string Body; //b004mafit_01
         public string BodyTex; //BODY=b004mafitlgtrat
@@ -70,25 +171,32 @@ namespace FSO.Files.Formats.IFF.Chunks
         public string RightHandTex; //HAND=huaolgt
         public string Head; //c013ma_pompa
         public string HeadTex; //HEAD-HEAD=c013malgt_pompa
-        public string[] Pairs;
+        public OBJMAccessory[] Accessories;
         public string Animation; //
-        public string Unk3; //
+        public string CarryAnimation; //
         public string BaseAnimation; //a2o-standing-loop;-10;1000;70;1000;1;1;1
 
-        public int UnknownValue;
+        public int RoutingState;
         public float[] FirstFloats;
         public float[] MotiveDataOld;
         public float[] MotiveData;
         public short[] PersonData;
+        public int RoutingFrameCount;
+
+        public OBJMInteraction ActiveInteraction;
+        public OBJMInteraction LastInteraction;
+        public OBJMInteraction[] InteractionQueue;
+        public OBJMObjectUse[] ObjectUses;
+        public OBJMMotiveDelta[] MotiveDeltas;
 
         public OBJMPerson(uint version, IffFieldEncode iop)
         {
-            Unknown1 = iop.ReadInt32();
-            Unknown2 = iop.ReadInt32();
+            AnimEventCount = iop.ReadInt32();
+            Engaged = iop.ReadInt32();
 
-            if (Unknown1 != 0 || Unknown2 != 0)
+            if (Engaged != 0 && Engaged != 1)
             {
-                // Unknown 2 is frequently 1, not sure what that means.
+                // Seems to be on/off, not sure if other values can appear.
             }
 
             Body = iop.ReadString(false); //b004mafit_01
@@ -102,31 +210,26 @@ namespace FSO.Files.Formats.IFF.Chunks
             Head = iop.ReadString(false); //c013ma_pompa
             HeadTex = iop.ReadString(true); //HEAD-HEAD=c013malgt_pompa
 
-            var pairsCount = iop.ReadInt32();
-            Pairs = new string[pairsCount * 2];
-            for (int i = 0; i < pairsCount; i++)
+            var accessoryCount = iop.ReadInt32();
+            Accessories = new OBJMAccessory[accessoryCount];
+            for (int i = 0; i < accessoryCount; i++)
             {
-                var key = iop.ReadString(false);
-                var value = iop.ReadString(false);
-
-                if (key != "" || value != "")
-                {
-
-                }
-
-                Pairs[i * 2] = key;
-                Pairs[i * 2 + 1] = value;
+                Accessories[i] = new OBJMAccessory(iop);
             }
 
+            // name;priority;speed (1/1000ths);frame;weight? (1/1000ths);loop;unk;unk
+            // note: routing animation state is not saved
             Animation = iop.ReadString(false); //a2o-idle-neutral-lhips-look-1c;1;1000;240;1000;0;1;1
-            Unk3 = iop.ReadString(false); //
+            CarryAnimation = iop.ReadString(false); //a2o-rarm-carry-loop;10;0;1000;1000;0;1;1
             BaseAnimation = iop.ReadString(true); //a2o-standing-loop;-10;1000;525;1000;1;1;1
 
-            UnknownValue = iop.ReadInt32();
-            if (UnknownValue != 3)
-            {
-
-            }
+            RoutingState = iop.ReadInt32();
+            // Seems to be related to routing
+            // 9: actively moving to dest?
+            // 6: accelerating
+            // 4: turning?
+            // 3: stopped? this seems to linger when sims go to work
+            // 0: no movement (maybe resets when scripted animation starts)
 
             FirstFloats = new float[9];
 
@@ -162,7 +265,35 @@ namespace FSO.Files.Formats.IFF.Chunks
                 PersonData[i] = iop.ReadInt16();
             }
 
-            int routingFrameCount = iop.ReadInt32();
+            RoutingFrameCount = iop.ReadInt32();
+
+            ActiveInteraction = new OBJMInteraction(iop);
+            LastInteraction = new OBJMInteraction(iop);
+
+            var interactionQueueCount = iop.ReadInt32();
+
+            InteractionQueue = new OBJMInteraction[interactionQueueCount];
+
+            for (int i = 0; i < interactionQueueCount; i++)
+            {
+                InteractionQueue[i] = new OBJMInteraction(iop);
+            }
+
+            int useObjCount = iop.ReadInt32();
+
+            ObjectUses = new OBJMObjectUse[useObjCount];
+            for (int i = 0; i < useObjCount; i++)
+            {
+                ObjectUses[i] = new OBJMObjectUse(iop);
+            }
+
+            int motiveDeltas = iop.ReadInt32();
+            MotiveDeltas = new OBJMMotiveDelta[motiveDeltas];
+
+            for (int i = 0; i < motiveDeltas; i++)
+            {
+                MotiveDeltas[i] = new OBJMMotiveDelta(iop);
+            }
         }
     }
 
@@ -271,7 +402,7 @@ namespace FSO.Files.Formats.IFF.Chunks
             }
         }
     }
-    
+
     public struct OBJMInstance
     {
         public const int TempCount = 8;
@@ -311,7 +442,10 @@ namespace FSO.Files.Formats.IFF.Chunks
         /// </summary>
         public OBJMSlot[] Slots;
 
-        public bool[] DynamicSpriteFlags;
+        /// <summary>
+        /// While each flag is essentially a boolean, the game _does_ store a short value for each flag...
+        /// </summary>
+        public short[] DynamicSpriteFlags;
 
         /// <summary>
         /// Data present for multitile objects.
@@ -440,7 +574,7 @@ namespace FSO.Files.Formats.IFF.Chunks
                 }
                 else
                 {
-                    Slots[i-1] = new OBJMSlot(unk, objId);
+                    Slots[i - 1] = new OBJMSlot(unk, objId);
                 }
 
                 if (unk != 0)
@@ -449,23 +583,17 @@ namespace FSO.Files.Formats.IFF.Chunks
                 }
             }
 
-            DynamicSpriteFlags = new bool[iop.ReadInt16()];
+            DynamicSpriteFlags = new short[iop.ReadInt16()];
 
             for (int i = 0; i < DynamicSpriteFlags.Length; i++)
             {
-                short flag = iop.ReadInt16();
-
-                if (flag != 0 && flag != 1)
-                {
-                    throw new Exception($"Unexpected dynamic sprite flag {flag}");
-                }
-
-                DynamicSpriteFlags[i] = flag != 0;
+                DynamicSpriteFlags[i] = iop.ReadInt16();
             }
 
             MultitileData = null;
 
-            if (OBJD != null && OBJD.IsMultiTile)
+            // If we don't have the OBJD, assume the object is multitile if it has a blank name.
+            if (OBJD != null ? OBJD.IsMultiTile : OBJT.Name == "")
             {
                 MultitileData = new OBJMMultitile(iop);
             }
@@ -487,14 +615,13 @@ namespace FSO.Files.Formats.IFF.Chunks
                 //var test = iop.ReadString(true);
                 PersonData = new OBJMPerson(version, iop);
 
-                UnknownInt = 0;
+                UnknownInt = iop.ReadInt32();
             }
             else
             {
                 PersonData = null;
                 // "Placeholder" tends to go out of bounds here
                 UnknownInt = iop.ReadInt32();
-                //UnknownInt = 0;
             }
 
             UnhandledData = iop.BitDebugTil(skipPosition);
@@ -607,39 +734,6 @@ namespace FSO.Files.Formats.IFF.Chunks
                     ObjectData[mapped.ObjectID] = mapped;
                 }
             }
-        }
-
-        private void ExperimentalInteractionReader(IffFieldEncode iop)
-        {
-            int id = iop.ReadInt32();
-            short callerID = iop.ReadInt16();
-            short targetObjID = iop.ReadInt16();
-            short secondObjID = iop.ReadInt16(); //probably icon owner?
-            int ttabActionID = iop.ReadInt32();
-
-            var args = new short[4];
-
-            for (int i = 0; i < 4; i++)
-            {
-                args[i] = iop.ReadInt16();
-            }
-
-            int priority = iop.ReadInt32();
-            short actionTreeID = iop.ReadInt16();
-
-            float unkFloat = iop.ReadFloat(); //0.3, 0.02...
-
-            int unkInt = iop.ReadInt32();
-            int unkZero = iop.ReadInt32();
-
-            if (unkZero != 0)
-            {
-
-            }
-
-            /*
-            int unkID = iop.ReadInt32(); // Seems to increment each time, can be rather high. 129, 130
-            */
         }
 
         public class MappedObject

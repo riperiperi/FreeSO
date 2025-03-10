@@ -90,7 +90,7 @@ namespace FSO.IDE.ResourceBrowser.ResourceEditors
             FlagNames = new Dictionary<CheckBox, string>();
             if (Content.Content.Get().TS1)
             {
-                FlagNames.Add(AllowVisitors, "AllowVisitors");
+                FlagNames.Add(AllowVisitors, "TS1AllowVisitors");
                 FlagNames.Add(AllowFriends, "TS1AllowAdults");
                 AllowFriends.Text = "Adult";
                 FlagNames.Add(AllowRoomies, "TS1AllowChild");

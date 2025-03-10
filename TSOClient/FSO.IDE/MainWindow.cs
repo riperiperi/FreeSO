@@ -4,6 +4,7 @@ using FSO.Files.Formats.IFF.Chunks;
 using FSO.IDE.Common;
 using FSO.IDE.ContentEditors;
 using FSO.IDE.Managers;
+using FSO.IDE.Utils;
 using FSO.IDE.Utils.FormatReverse;
 using FSO.SimAntics;
 using FSO.SimAntics.NetPlay.Model.Commands;
@@ -145,6 +146,8 @@ namespace FSO.IDE
         public void RefreshResourceView()
         {
             //refresh resource view
+            ChangesView.BeginUpdate();
+
             ChangesView.Nodes.Clear();
             SelectedChunks.Clear();
             SelectedIffs.Clear();
@@ -174,6 +177,8 @@ namespace FSO.IDE
             }
 
             ChangesView.ExpandAll();
+
+            ChangesView.EndUpdate();
 
             if (changes.Count == 0) ChangesLabel.Text = "No changes detected.";
             else ChangesLabel.Text = "Changed " + chunkChange + " chunks across " + changes.Count + " files.";
@@ -395,6 +400,12 @@ namespace FSO.IDE
             var fe = new FieldEncodingFormatTracker();
             fe.Show();
             fe.StartWithOBJM();
+        }
+
+        private void houseSpyTS1ToolStripMenuItem_Click(object sender, EventArgs e)
+        {
+            var hs = new HouseSpy();
+            hs.Show();
         }
     }
 

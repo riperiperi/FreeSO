@@ -35,6 +35,8 @@ namespace FSO.IDE
                 return;
             }
             Content.Content.Get().Changes.Invoke((Action<List<InspectorEntityMeta>>)GetEntityList, EntityList);
+
+            EntityView.BeginUpdate();
             EntityView.Items.Clear();
 
             foreach (var ent in EntityList)
@@ -47,6 +49,7 @@ namespace FSO.IDE
                 ItemToEnt.Add(item, ent);
             }
 
+            EntityView.EndUpdate();
         }
 
         public void GetEntityList(List<InspectorEntityMeta> list)

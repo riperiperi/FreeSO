@@ -78,9 +78,10 @@
             this.ChangesView = new System.Windows.Forms.TreeView();
             this.BrowserTab = new System.Windows.Forms.TabPage();
             this.NewOBJButton = new System.Windows.Forms.Button();
-            this.InspectorTab = new System.Windows.Forms.TabPage();
             this.Browser = new FSO.IDE.ObjectBrowser();
+            this.InspectorTab = new System.Windows.Forms.TabPage();
             this.entityInspector1 = new FSO.IDE.EntityInspector();
+            this.houseSpyTS1ToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
             this.menuStrip1.SuspendLayout();
             this.UtilityTabs.SuspendLayout();
             this.OverviewTab.SuspendLayout();
@@ -168,7 +169,8 @@
             this.simAnticsAOTToolStripMenuItem,
             this.avatarToolToolStripMenuItem,
             this.openExternalIffToolStripMenuItem,
-            this.fieldEncodingReverserToolStripMenuItem});
+            this.fieldEncodingReverserToolStripMenuItem,
+            this.houseSpyTS1ToolStripMenuItem});
             this.toolsToolStripMenuItem.Name = "toolsToolStripMenuItem";
             this.toolsToolStripMenuItem.Size = new System.Drawing.Size(46, 20);
             this.toolsToolStripMenuItem.Text = "Tools";
@@ -462,6 +464,16 @@
             this.NewOBJButton.UseVisualStyleBackColor = true;
             this.NewOBJButton.Click += new System.EventHandler(this.NewOBJButton_Click);
             // 
+            // Browser
+            // 
+            this.Browser.Anchor = ((System.Windows.Forms.AnchorStyles)((((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Bottom) 
+            | System.Windows.Forms.AnchorStyles.Left) 
+            | System.Windows.Forms.AnchorStyles.Right)));
+            this.Browser.Location = new System.Drawing.Point(3, 3);
+            this.Browser.Name = "Browser";
+            this.Browser.Size = new System.Drawing.Size(724, 452);
+            this.Browser.TabIndex = 0;
+            // 
             // InspectorTab
             // 
             this.InspectorTab.Controls.Add(this.entityInspector1);
@@ -473,16 +485,6 @@
             this.InspectorTab.Text = "VMEntity Inspector";
             this.InspectorTab.UseVisualStyleBackColor = true;
             // 
-            // Browser
-            // 
-            this.Browser.Anchor = ((System.Windows.Forms.AnchorStyles)((((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Bottom) 
-            | System.Windows.Forms.AnchorStyles.Left) 
-            | System.Windows.Forms.AnchorStyles.Right)));
-            this.Browser.Location = new System.Drawing.Point(3, 3);
-            this.Browser.Name = "Browser";
-            this.Browser.Size = new System.Drawing.Size(724, 452);
-            this.Browser.TabIndex = 0;
-            // 
             // entityInspector1
             // 
             this.entityInspector1.Anchor = ((System.Windows.Forms.AnchorStyles)((((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Bottom) 
@@ -492,6 +494,13 @@
             this.entityInspector1.Name = "entityInspector1";
             this.entityInspector1.Size = new System.Drawing.Size(724, 452);
             this.entityInspector1.TabIndex = 0;
+            // 
+            // houseSpyTS1ToolStripMenuItem
+            // 
+            this.houseSpyTS1ToolStripMenuItem.Name = "houseSpyTS1ToolStripMenuItem";
+            this.houseSpyTS1ToolStripMenuItem.Size = new System.Drawing.Size(199, 22);
+            this.houseSpyTS1ToolStripMenuItem.Text = "House Spy (TS1)";
+            this.houseSpyTS1ToolStripMenuItem.Click += new System.EventHandler(this.houseSpyTS1ToolStripMenuItem_Click);
             // 
             // MainWindow
             // 
@@ -560,5 +569,6 @@
         private System.Windows.Forms.ToolStripMenuItem avatarToolToolStripMenuItem;
         private System.Windows.Forms.ToolStripMenuItem openExternalIffToolStripMenuItem;
         private System.Windows.Forms.ToolStripMenuItem fieldEncodingReverserToolStripMenuItem;
+        private System.Windows.Forms.ToolStripMenuItem houseSpyTS1ToolStripMenuItem;
     }
 }

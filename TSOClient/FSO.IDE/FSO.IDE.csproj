@@ -540,6 +540,12 @@
     <Compile Include="Utils\FormsUtils.cs" />
     <Compile Include="Utils\GLTFExporter.cs" />
     <Compile Include="Utils\GLTFImporter.cs" />
+    <Compile Include="Utils\HouseSpy.cs">
+      <SubType>Form</SubType>
+    </Compile>
+    <Compile Include="Utils\HouseSpy.Designer.cs">
+      <DependentUpon>HouseSpy.cs</DependentUpon>
+    </Compile>
     <Compile Include="Utils\ImportMeshGroup.cs" />
     <EmbeddedResource Include="AboutWindow.resx">
       <DependentUpon>AboutWindow.cs</DependentUpon>
@@ -700,6 +706,9 @@
     </EmbeddedResource>
     <EmbeddedResource Include="Utils\FormatReverse\FieldEncodingFormatTracker.resx">
       <DependentUpon>FieldEncodingFormatTracker.cs</DependentUpon>
+    </EmbeddedResource>
+    <EmbeddedResource Include="Utils\HouseSpy.resx">
+      <DependentUpon>HouseSpy.cs</DependentUpon>
     </EmbeddedResource>
     <None Include="ClassDiagram1.cd" />
     <None Include="Properties\Settings.settings">
