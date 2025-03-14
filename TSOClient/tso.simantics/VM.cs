@@ -394,7 +394,11 @@ namespace FSO.SimAntics
 
             Context.Architecture.Tick();
 
-            if (SpeedMultiplier < 0) return;
+            if (SpeedMultiplier < 0)
+            {
+                Context.ProcessLightingChanges();
+                return;
+            }
             if (!UseSchedule) { //scheduleless mode is still useful for desync debug.
                 var entCpy = Entities.ToArray();
                 foreach (var obj in entCpy)
@@ -566,6 +570,15 @@ namespace FSO.SimAntics
             for (short i = ObjectId; i > 0; i++)
                 if (!ObjectsById.ContainsKey(i)) return i;
             return 0;
+        }
+
+        /// <summary>
+        /// Updates the free object ID. Useful after unsafe modification of the objects list.
+        /// </summary>
+        public void UpdateFreeObjectID()
+        {
+            ObjectId = 1;
+            ObjectId = NextObjID();
         }
 
         /// <summary>

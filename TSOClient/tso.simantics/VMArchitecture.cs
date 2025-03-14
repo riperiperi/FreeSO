@@ -856,6 +856,11 @@ namespace FSO.SimAntics
 
         public WallTile GetWall(short tileX, short tileY, sbyte level)
         {
+            if (tileX < 0 || tileY < 0 || tileX >= Width || tileY >= Height)
+            {
+                return default;
+            }
+
             return Walls[level-1][GetOffset(tileX, tileY)];
         }
 

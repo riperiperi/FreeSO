@@ -62,7 +62,7 @@ namespace FSO.IDE
                     Entity = entity,
                     ID = entity.ObjectID,
                     Name = entity.ToString(),
-                    MultitileLead = entity.MultitileGroup.BaseObject.ObjectID,
+                    MultitileLead = entity.MultitileGroup.BaseObject?.ObjectID ?? 0,
                     Container = (entity.Container == null) ? (short)0 : entity.Container.ObjectID,
                     Slot = entity.ContainerSlot
                 });

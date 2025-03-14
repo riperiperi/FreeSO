@@ -15,6 +15,7 @@ namespace FSO.LotView.LMap
 {
     public class LMapBatch : IDisposable
     {
+        private const int BlurAllowance = 8;
         private struct DirtyRoom
         {
             public ushort RoomID;
@@ -450,9 +451,16 @@ namespace FSO.LotView.LMap
             var size = Blueprint.Width - borderSize;
             //TODO: set floor shadow map here to stop surrounding light issues
             LightEffect.floorShadowMap = ObjShadowTarg;
-            LightEffect.TargetRoom = (float)room.RoomID; 
-            var bigBounds = new Rectangle(lighting.Bounds.X * resPerTile, lighting.Bounds.Y * resPerTile, lighting.Bounds.Width * resPerTile, lighting.Bounds.Height * resPerTile);
+            LightEffect.TargetRoom = (float)room.RoomID;
+
+            var bigBounds = new Rectangle(
+                lighting.Bounds.X * resPerTile - BlurAllowance,
+                lighting.Bounds.Y * resPerTile - BlurAllowance,
+                lighting.Bounds.Width * resPerTile + BlurAllowance * 2,
+                lighting.Bounds.Height * resPerTile + BlurAllowance * 2
+            );
             bigBounds = Rectangle.Intersect(bigBounds, new Rectangle(0, 0, size * resPerTile, size * resPerTile));
+
             GD.RasterizerState = Scissor;
             if (clear)
             {
@@ -564,8 +572,9 @@ namespace FSO.LotView.LMap
                 {
                     var wroom = Blueprint.Light[Blueprint.Rooms[light.WindowRoom].Base];
                     light.LightIntensity = wroom.AmbientLight / 150f;
+
+                    if (light.LightIntensity < 0.2f) continue;
                 }
-                if (light.LightIntensity < 0.2f) continue;
 
                 DrawRect = new Rectangle((int)(light.LightBounds.X / factor), (int)(light.LightBounds.Y / factor), (int)(light.LightBounds.Width / factor), (int)(light.LightBounds.Height / factor));
                 DrawRect = Rectangle.Intersect(DrawRect, bigBounds);
@@ -588,9 +597,9 @@ namespace FSO.LotView.LMap
                 
                 if (light.OutdoorsColor) l = Vector4.Multiply(l, outFactor);
                 else l *= 0.70f;
-                LightEffect.LightColor = l;
+                LightEffect.LightColor = l * light.LightIntensity;
                 LightEffect.IsOutdoors = light.OutdoorsColor;
-                LightEffect.LightIntensity = light.LightIntensity;
+                LightEffect.LightIntensity = 1f;// light.LightIntensity;
 
                 var effect = LightEffect;
                 effect.CurrentTechnique = effect.Techniques[colorTech];
@@ -890,6 +899,7 @@ namespace FSO.LotView.LMap
                         ShadowTargBlit.Draw(tex, new Rectangle(0, 0, tex.Width, tex.Height), Color.White);
                         ShadowTargBlit.End();
                     }
+
                     /*
                     ShadowTargBlit.Begin(blendState: BlendState.Opaque, effect: seffect);
                     seffect.CurrentTechnique = seffect.Techniques["ShadowBlurBlit"];

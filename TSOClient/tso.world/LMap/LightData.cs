@@ -32,7 +32,7 @@ namespace FSO.LotView.LMap
         {
             LightPos = pos;
             LightType = LightType.ROOM;
-            if (outdoors) LightIntensity = 0.60f;
+            if (outdoors) LightIntensity = 0.8f;
             OutdoorsColor = outdoors;
             LightBounds = new Rectangle((int)pos.X-size, (int)pos.Y-size, size * 2, size * 2);
             LightSize = size;
@@ -47,12 +47,15 @@ namespace FSO.LotView.LMap
             if (comp != null && Common.Utils.GameThread.IsInGameThread())
             {
                 var bounds = comp.GetParticleBounds();
-                var mid = (bounds.Min + bounds.Max) / 2;
-                mid.X = Math.Min(0.35f, Math.Max(-0.35f, mid.X));
-                mid.Z = Math.Min(0.35f, Math.Max(-0.35f, mid.Z));
-                mid = Vector3.Transform(mid, Matrix.CreateRotationY(-comp.RadianDirection));
-                LightPos += new Vector2(mid.X, mid.Z) * 16;
-                Height = Math.Max(mid.Y, bounds.Max.Y - 0.25f) + comp.Position.Z - comp.GetBottomContainer().Position.Z;
+                if (bounds != default)
+                {
+                    var mid = (bounds.Min + bounds.Max) / 2;
+                    mid.X = Math.Min(0.35f, Math.Max(-0.35f, mid.X));
+                    mid.Z = Math.Min(0.35f, Math.Max(-0.35f, mid.Z));
+                    mid = Vector3.Transform(mid, Matrix.CreateRotationY(-comp.RadianDirection));
+                    LightPos += new Vector2(mid.X, mid.Z) * 16;
+                    Height = Math.Max(mid.Y, bounds.Max.Y - 0.25f) + comp.Position.Z - comp.GetBottomContainer().Position.Z;
+                }
             }
         }
 
@@ -75,7 +78,7 @@ namespace FSO.LotView.LMap
                         var newWeight = (l1.Weight + l2.Weight);
                         l1.LightPos = (l1.LightPos * (l1.Weight / newWeight)) + (l2.LightPos * (l2.Weight / newWeight));
                         l1.LightSize = (l1.LightSize + l2.LightSize) * 0.6f;
-                        l1.LightIntensity = Math.Min(1.25f, (l1.LightIntensity + l2.LightIntensity) * 0.66f);
+                        l1.LightIntensity = Math.Min(1.25f, (l1.LightIntensity + l2.LightIntensity) * 0.75f);
                         l1.LightColor = new Color(l1.LightColor.ToVector4()+ l2.LightColor.ToVector4());
 
                         l1.UpdateBounds();

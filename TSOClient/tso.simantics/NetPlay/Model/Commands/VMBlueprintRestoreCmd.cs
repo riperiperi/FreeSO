@@ -51,7 +51,8 @@ namespace FSO.SimAntics.NetPlay.Model.Commands
                 }
                 else
                 {
-                    var activator = new VMTS1Activator(vm, vm.Context.World, JobLevel);
+                    //var activator = new VMTS1Activator(vm, vm.Context.World, JobLevel);
+                    var activator = new VMTS1ActivatorNew(vm, JobLevel);
                     activator.LoadFromIff(iff);
                 }
 

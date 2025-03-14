@@ -16,16 +16,6 @@ namespace FSO.SimAntics.Utils
 {
     public class VMTS1Activator
     {
-        /*public static HashSet<uint> ControllerObjects = new HashSet<uint>()
-        {
-            0xAED879C5, //phone line
-            0xC61F8102, //go studio plugin
-            0xEAA79D86, //go neighbourhood
-            0xA6F31853, //go downtown
-            0xABA9DF4A, //go vacation
-            0x99197314, //go magictown
-        };*/
-
         public bool DeleteAvatars = true;
 
         public static Dictionary<int, TerrainType> HouseNumToType = new Dictionary<int, TerrainType>
@@ -121,24 +111,23 @@ namespace FSO.SimAntics.Utils
             if (advFloors != null)
             {
                 //advanced walls and floors from modern ts1. use 16 bit wall/floor data.
-                arch.Floors[0] = RemapFloors(DecodeAdvFloors(advFloors.TransposeData), floorDict, flags);
-                arch.Floors[1] = RemapFloors(DecodeAdvFloors(iff.Get<ARRY>(111).TransposeData), floorDict, flags);
+                arch.Floors[0] = RemapFloors(FlipRoad, DecodeAdvFloors(advFloors.TransposeData), floorDict, flags);
+                arch.Floors[1] = RemapFloors(FlipRoad, DecodeAdvFloors(iff.Get<ARRY>(111).TransposeData), floorDict, flags);
                 //objects as 3
-                arch.Walls[0] = RemapWalls(DecodeAdvWalls(iff.Get<ARRY>(12).TransposeData), wallDict, floorDict);
-                arch.Walls[1] = RemapWalls(DecodeAdvWalls(iff.Get<ARRY>(112).TransposeData), wallDict, floorDict);
+                arch.Walls[0] = RemapWalls(DecodeAdvWalls(iff.Get<ARRY>(12).TransposeData), wallDict, floorDict, arch.Floors[0]);
+                arch.Walls[1] = RemapWalls(DecodeAdvWalls(iff.Get<ARRY>(112).TransposeData), wallDict, floorDict, arch.Floors[1]);
             } else
             {
-                arch.Floors[0] = RemapFloors(DecodeFloors(iff.Get<ARRY>(1).TransposeData), floorDict, flags);
-                arch.Floors[1] = RemapFloors(DecodeFloors(iff.Get<ARRY>(101).TransposeData), floorDict, flags);
+                arch.Floors[0] = RemapFloors(FlipRoad, DecodeFloors(iff.Get<ARRY>(1).TransposeData), floorDict, flags);
+                arch.Floors[1] = RemapFloors(FlipRoad, DecodeFloors(iff.Get<ARRY>(101).TransposeData), floorDict, flags);
                 //objects as 3
-                arch.Walls[0] = RemapWalls(DecodeWalls(iff.Get<ARRY>(2).TransposeData), wallDict, floorDict);
-                arch.Walls[1] = RemapWalls(DecodeWalls(iff.Get<ARRY>(102).TransposeData), wallDict, floorDict);
+                arch.Walls[0] = RemapWalls(DecodeWalls(iff.Get<ARRY>(2).TransposeData), wallDict, floorDict, arch.Floors[0]);
+                arch.Walls[1] = RemapWalls(DecodeWalls(iff.Get<ARRY>(102).TransposeData), wallDict, floorDict, arch.Floors[1]);
             }
             //objects as 103
             arch.Terrain.GrassState = iff.Get<ARRY>(6).TransposeData.Select(x => (byte)(127 - x)).ToArray();
-            //arch.Terrain.DarkType = Content.Model.TerrainType.SAND;
-            //arch.Terrain.LightType = Content.Model.TerrainType.GRASS;
             arch.SignalTerrainRedraw();
+
             //targetgrass is 7
             //flags is 8/108
             var pools = iff.Get<ARRY>(9).TransposeData;
@@ -316,7 +305,7 @@ namespace FSO.SimAntics.Utils
             return this.Blueprint;
         }
 
-        private bool[] ResizeFlags(byte[] flags, int size)
+        public static bool[] ResizeFlags(byte[] flags, int size)
         {
             //flag 1 = not sloped
             //flag 2 = ? (tends to be active alongside 4)
@@ -339,7 +328,7 @@ namespace FSO.SimAntics.Utils
             return result;
         }
 
-        private FloorTile[] ResizeFloors(FloorTile[] floors, int size)
+        public static FloorTile[] ResizeFloors(FloorTile[] floors, int size)
         {
             if (size >= 64) return floors;
             var result = new FloorTile[size * size];
@@ -358,7 +347,7 @@ namespace FSO.SimAntics.Utils
             return result;
         }
 
-        private WallTile[] ResizeWalls(WallTile[] walls, int size)
+        public static WallTile[] ResizeWalls(WallTile[] walls, int size)
         {
             if (size >= 64) return walls;
             var result = new WallTile[size * size];
@@ -376,7 +365,7 @@ namespace FSO.SimAntics.Utils
             return result;
         }
 
-        private byte[] ResizeGrass(byte[] data, int size)
+        public static byte[] ResizeGrass(byte[] data, int size)
         {
             if (size >= 64) return data;
             var result = new byte[size * size];
@@ -394,7 +383,7 @@ namespace FSO.SimAntics.Utils
             return result;
         }
 
-        private byte[] DecodeHeights(byte[] heights)
+        public static byte[] DecodeHeights(byte[] heights)
         {
             var result = new byte[heights.Length / 4];
             int j = 0;
@@ -405,12 +394,12 @@ namespace FSO.SimAntics.Utils
             return result;
         }
 
-        private FloorTile[] RemapFloors(FloorTile[] floors, Dictionary<byte, ushort> dict, byte[] flags)
+        public static FloorTile[] RemapFloors(bool flipRoad, FloorTile[] floors, Dictionary<byte, ushort> dict, byte[] flags)
         {
             for (int i=0; i<floors.Length; i++)
             {
                 var floor = floors[i];
-                if (FlipRoad)
+                if (flipRoad)
                 {
                     if (floor.Pattern == 10)
                         floors[i].Pattern = 11;
@@ -429,7 +418,7 @@ namespace FSO.SimAntics.Utils
             return floors;
         }
 
-        private WallTile[] RemapWalls(WallTile[] walls, Dictionary<byte, ushort> dict, Dictionary<byte, ushort> floorDict)
+        public static WallTile[] RemapWalls(WallTile[] walls, Dictionary<byte, ushort> dict, Dictionary<byte, ushort> floorDict, FloorTile[] floors)
         {
             for (int i = 0; i < walls.Length; i++)
             {
@@ -448,15 +437,29 @@ namespace FSO.SimAntics.Utils
                 if ((wall.Segments & WallSegments.AnyDiag) > 0)
                 {
                     //diagonally split floors
-                    if (wall.TopLeftPattern != 0)
+                    if (wall.TopLeftPattern != 0 || wall.TopLeftStyle != 0)
                     {
-                        if (floorDict.TryGetValue((byte)wall.TopLeftPattern, out newID))
-                            walls[i].TopLeftPattern = newID;
+                        if (wall.TopLeftPattern != 0)
+                        {
+                            if (floorDict.TryGetValue((byte)wall.TopLeftPattern, out newID))
+                                walls[i].TopLeftPattern = newID;
+                        }
+                        if (wall.TopLeftStyle != 0)
+                        {
+                            if (floorDict.TryGetValue((byte)wall.TopLeftStyle, out newID))
+                                walls[i].TopLeftStyle = newID;
+                        }
                     }
-                    if (wall.TopLeftStyle != 0)
+                    else
                     {
-                        if (floorDict.TryGetValue((byte)wall.TopLeftStyle, out newID))
-                            walls[i].TopLeftStyle = newID;
+                        // In TS1, when the floor on both sides of the diagonal is the same, it's stored on the floors array.
+                        // In FreeSO, it's in the walls...
+                        // Convert into FreeSO format so that things still work.
+
+                        ushort diagID = floors[i].Pattern;
+
+                        walls[i].TopLeftPattern = diagID;
+                        walls[i].TopLeftStyle = diagID;
                     }
                 }
                 else
@@ -476,7 +479,7 @@ namespace FSO.SimAntics.Utils
             return walls;
         }
 
-        private Dictionary<byte, ushort> BuildFloorDict (List<WALmEntry> entries)
+        public static Dictionary<byte, ushort> BuildFloorDict (List<WALmEntry> entries)
         {
             var c = Content.Content.Get().WorldFloors.DynamicFloorFromID;
             var result = new Dictionary<byte, ushort>();
@@ -490,7 +493,7 @@ namespace FSO.SimAntics.Utils
             return result;
         }
 
-        private Dictionary<byte, ushort> BuildWallDict(List<WALmEntry> entries)
+        public static Dictionary<byte, ushort> BuildWallDict(List<WALmEntry> entries)
         {
             var c = Content.Content.Get().WorldWalls.DynamicWallFromID;
             var result = new Dictionary<byte, ushort>();
@@ -516,13 +519,12 @@ namespace FSO.SimAntics.Utils
             component.Initialize(this.World.State.Device, this.World.State);
         }
 
-        public FloorTile[] DecodeFloors(byte[] data)
+        public static FloorTile[] DecodeFloors(byte[] data)
         {
-            //todo: flrm map
             return data.Select(x => new FloorTile { Pattern = x }).ToArray();
         }
 
-        public FloorTile[] DecodeAdvFloors(byte[] data)
+        public static FloorTile[] DecodeAdvFloors(byte[] data)
         {
             int j = 0;
             var result = new FloorTile[data.Length / 2];
@@ -533,7 +535,7 @@ namespace FSO.SimAntics.Utils
             return result;
         }
 
-        public ushort[] DecodeObjID(byte[] data)
+        public static ushort[] DecodeObjID(byte[] data)
         {
             if (data == null) return null;
             int j = 0;
@@ -550,7 +552,7 @@ namespace FSO.SimAntics.Utils
             0x2, 0xc, 0xe, 0xd
         };
 
-        public WallTile[] DecodeWalls(byte[] data)
+        public static WallTile[] DecodeWalls(byte[] data)
         {
             int j = 0;
             var result = new WallTile[data.Length / 8];
@@ -578,7 +580,7 @@ namespace FSO.SimAntics.Utils
             return result;
         }
 
-        public WallTile[] DecodeAdvWalls(byte[] data)
+        public static WallTile[] DecodeAdvWalls(byte[] data)
         {
             int j = 0;
             var result = new WallTile[data.Length / 14];

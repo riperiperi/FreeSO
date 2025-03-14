@@ -4,6 +4,13 @@ using FSO.SimAntics.Marshals.Threads;
 
 namespace FSO.SimAntics.Engine
 {
+    public enum VMSpecialResult
+    {
+        Normal,
+        Interaction,
+        Retry
+    }
+
     /// <summary>
     /// Holds information about the execution of a routine
     /// </summary>
@@ -48,8 +55,11 @@ namespace FSO.SimAntics.Engine
         private VMEntity _StackObject;
         public short _StackObjectID;
 
-        /** If true, this stack frame is not a subroutine. Return with a continue. **/
-        public bool DiscardResult;
+        /** 
+         * Normally, returning true or false from a stack frame goes to the corresponding node on the parent frame.
+         * This works differently for interactions, and for TS1 loaded trees. (no routing frames, needs to rerun the route primitive)
+         */
+        public VMSpecialResult SpecialResult;
         
         /** Indicates that the current stack frame is part of an action tree.
          ** Set by "idle for input, allow push", when an interaction is selected.
@@ -137,7 +147,7 @@ namespace FSO.SimAntics.Engine
                 CodeOwnerGUID = CodeOwner.OBJ.GUID,
                 Locals = (short[])Locals?.Clone(),
                 Args = (short[])Args?.Clone(),
-                DiscardResult = DiscardResult,
+                SpecialResult = SpecialResult,
                 ActionTree = ActionTree,
             };
         }
@@ -165,7 +175,7 @@ namespace FSO.SimAntics.Engine
                 Locals = input.Locals;
             }
             Args = input.Args;
-            DiscardResult = input.DiscardResult;
+            SpecialResult = input.SpecialResult;
             ActionTree = input.ActionTree;
         }
 

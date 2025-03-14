@@ -236,7 +236,7 @@ namespace FSO.SimAntics.Engine
                     {
                         Queue.Insert(ActiveQueueBlock+1, temp);
                         var frame = temp.ToStackFrame(Entity);
-                        frame.DiscardResult = true;
+                        frame.SpecialResult = VMSpecialResult.Interaction;
                         Push(frame);
                         ActiveQueueBlock++; //both the run immediately interaction and the active interaction must be protected.
                         break;
@@ -273,7 +273,7 @@ namespace FSO.SimAntics.Engine
         public void AbortCurrentInteraction()
         {
             //go all the way back to the stack frame that Allow Push'd us.
-            var returnTo = Stack.FindLast(x => x.DiscardResult);
+            var returnTo = Stack.FindLast(x => x.SpecialResult == VMSpecialResult.Interaction);
             if (returnTo != null)
             {
                 var ind = Stack.IndexOf(returnTo);
@@ -704,17 +704,22 @@ namespace FSO.SimAntics.Engine
 
         public void Pop(VMPrimitiveExitCode result)
         {
-            var discardResult = Stack[Stack.Count - 1].DiscardResult;
+            var discardResult = Stack[Stack.Count - 1].SpecialResult;
             var contextSwitch = (Stack.Count > 1) && Stack.LastOrDefault().ActionTree != Stack[Stack.Count - 2].ActionTree;
             Stack.RemoveAt(Stack.Count - 1);
             LastStackExitCode = result;
 
-            if (discardResult) //interaction switching back to main (it cannot be the other way...)
+            if (discardResult == VMSpecialResult.Interaction) //interaction switching back to main (it cannot be the other way...)
             {
                 var interaction = Queue[ActiveQueueBlock];
                 EndCurrentInteraction();
                 result = (!interaction.Flags.HasFlag(TTABFlags.RunImmediately)) ? VMPrimitiveExitCode.CONTINUE_NEXT_TICK : VMPrimitiveExitCode.CONTINUE;
             }
+            else if (discardResult == VMSpecialResult.Retry)
+            {
+                result = VMPrimitiveExitCode.CONTINUE;
+            }
+
             if (Stack.Count > 0)
             {
                 if (result == VMPrimitiveExitCode.RETURN_TRUE)
@@ -869,7 +874,7 @@ namespace FSO.SimAntics.Engine
             //set the new interaction's priority
             ((VMAvatar)Entity).SetPersonData(VMPersonDataVariable.Priority, action.Priority);
             var frame = action.ToStackFrame(Entity);
-            frame.DiscardResult = true;
+            frame.SpecialResult = VMSpecialResult.Interaction;
             return Push(frame);
         }
 

@@ -184,7 +184,7 @@ namespace FSO.IDE.Utils
                     action.Priority.ToString(),
                     action.ActionTreeID.ToString(),
                     action.Attenuation.ToString(),
-                    action.Flags.ToString(),
+                    ((int)action.Flags).ToString(),
                 });
 
             if (type == "#")
@@ -267,7 +267,7 @@ namespace FSO.IDE.Utils
                 motiveChangeList.Items.Add(new ListViewItem(new string[]
                 {
                     ((VMMotive)delta.Motive).ToString(),
-                    (delta.TickDelta * 18000).ToString(),
+                    (delta.TickDelta * 1800).ToString(),
                     delta.StopAt.ToString()
                 }));
             }

@@ -1,4 +1,5 @@
-﻿using FSO.SimAntics.NetPlay.Model;
+﻿using FSO.SimAntics.Engine;
+using FSO.SimAntics.NetPlay.Model;
 using System.IO;
 
 namespace FSO.SimAntics.Marshals.Threads
@@ -13,7 +14,7 @@ namespace FSO.SimAntics.Marshals.Threads
         public uint CodeOwnerGUID;
         public short[] Locals;
         public short[] Args;
-        public bool DiscardResult;
+        public VMSpecialResult SpecialResult;
         public bool ActionTree;
 
         public int Version;
@@ -44,7 +45,7 @@ namespace FSO.SimAntics.Marshals.Threads
                 for (int i = 0; i < argsN; i++) Args[i] = reader.ReadInt16();
             }
 
-            if (Version > 3) DiscardResult = reader.ReadBoolean();
+            if (Version > 3) SpecialResult = (VMSpecialResult)reader.ReadByte();
             ActionTree = reader.ReadBoolean();
         }
 
@@ -60,7 +61,7 @@ namespace FSO.SimAntics.Marshals.Threads
             if (Locals != null) writer.Write(VMSerializableUtils.ToByteArray(Locals));
             writer.Write((Args == null) ? -1 : Args.Length);
             if (Args != null) writer.Write(VMSerializableUtils.ToByteArray(Args));
-            writer.Write(DiscardResult);
+            writer.Write((byte)SpecialResult);
             writer.Write(ActionTree);
         }
     }

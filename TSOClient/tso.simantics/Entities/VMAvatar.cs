@@ -958,6 +958,7 @@ namespace FSO.SimAntics
             else SetPersonData(VMPersonDataVariable.PersonType, lastPersonType);
             SetPersonData(VMPersonDataVariable.VisitorSchedule, sched);
             SetPersonData(VMPersonDataVariable.GreetStatus, 0);
+            SetPersonData(VMPersonDataVariable.IsGhost, GetPersonData(VMPersonDataVariable.IsGhost));
         }
 
         public virtual short GetMotiveData(VMMotive variable) //needs special conditions for ones like Mood.

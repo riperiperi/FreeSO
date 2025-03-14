@@ -686,6 +686,8 @@ namespace FSO.SimAntics
             var isoutside = info.Room.IsOutside;
             room = info.Room.LightBaseRoom;
             var useWorld = UseWorld;
+            var objs = new List<VMEntity>();
+
             if (!visited.Contains(room))
             {
                 visited.Add(room);
@@ -709,9 +711,19 @@ namespace FSO.SimAntics
                     area += info.Room.Area;
                     foreach (var ent in info.Entities)
                     {
-                        var objs = ent.MultitileGroup.Objects;
+                        // This roughly attempts to avoid allocations by using and clearing a list...
+                        objs.Clear();
+
+                        foreach (var subobj in ent.MultitileGroup.Objects)
+                        {
+                            if (subobj.GetValue(VMStackObjectVariable.Room) + 1 == rm)
+                            {
+                                objs.Add(subobj);
+                            }
+                        }
+
                         if (objs.Count == 0) continue;
-                        if (ent != objs[0]) continue;
+                        if (ent != objs.First()) continue;
                         if (((ent as VMGameObject)?.Disabled ?? 0) > 0) continue;
                         
                         var flags2 = (VMEntityFlags2)ent.GetValue(VMStackObjectVariable.FlagField2);
@@ -789,12 +801,24 @@ namespace FSO.SimAntics
                         affected.Add(bRoom);
                         light.Lights.Add(wlight);
                     }
-
                 }
 
                 float areaScale = Math.Max(1, area / 100f);
+                float outsideScale = outside / areaScale;
+
+                if (outside > 0)
+                {
+                    // When there are too many outside lights in a room, reduce their overall brightness to allow for a bit more nuance.
+                    float outsideMul = 1 / Math.Min(3, Math.Max(1, outsideScale / 200));
+
+                    foreach (var oLight in light.Lights)
+                    {
+                        if (oLight.OutdoorsColor) oLight.LightIntensity *= outsideMul;
+                    }
+                }
+
                 LightData.Cluster(light.Lights);
-                light.OutsideLight = Math.Min((ushort)100, (ushort)(outside / areaScale));
+                light.OutsideLight = Math.Min((ushort)100, (ushort)(outsideScale));
                 light.AmbientLight = Math.Min((ushort)100, (ushort)(inside / areaScale));
 
                 if (info.Room.IsOutside)

@@ -58,7 +58,7 @@ namespace FSO.Files.Formats.IFF.Chunks
     public struct OBJMMotiveDelta
     {
         public int Motive;
-        public float TickDelta; // 30 ticks per minute, 60 ticks per hour
+        public float TickDelta; // 30 ticks per minute, 60 minutes per hour
         public float StopAt;
 
         public OBJMMotiveDelta(IffFieldEncode iop)
@@ -67,6 +67,31 @@ namespace FSO.Files.Formats.IFF.Chunks
             TickDelta = iop.ReadFloat();
             StopAt = iop.ReadFloat();
         }
+    }
+
+    [Flags]
+    public enum OBJMInteractionFlags
+    {
+        AutoFirst = 1,
+        PushHeadContinuation = 2,
+        UserInitiated = 4, // Interaction is not autonomous. Can be 0 for primitive pushed interactions until they actually run.
+        CanBeAuto = 8, // check tree succeeds with param 0 == 1
+        // 16: appears on goto work, group meal (push interaction? inherited? custom icon? doesn't show on person to person...)
+        Unknown16 = 16, // Something to do with interaction push
+        Completed = 32,
+        CarryNameOver = 64,
+        // 128: unknown - when non-active chars get called to meals (or carpool) this flag is set
+        Unknown128 = 128, // Something to do with interaction push
+        UserInterrupted = 256 // When the interaction has the X over it.
+    }
+
+    public enum OBJMRoutingState
+    {
+        None = 0,
+        Stopped = 3,
+        Turning = 4,
+        Accelerating = 6,
+        Walking = 9
     }
 
     public struct OBJMInteraction
@@ -80,16 +105,13 @@ namespace FSO.Files.Formats.IFF.Chunks
         public int Priority;
         public short ActionTreeID;
         public float Attenuation;
+        public OBJMInteractionFlags Flags;
 
-        // 1: unknown
-        // 2: appears on group meal continuation
-        // 4: user initiated? also appears for social interactions from other sim, but those use push interaction
-        // 8: seems to randomly disappear (not on mourn/go here, is on "sit")
-        // 16: appears on goto work, group meal continuation
-        // 32: appears when the interaction becomes a "last interaction"?
-        // 64: appears on goto work
-        // 256: manually interrupted (not just priority override)
-        public int Flags;
+        // called to group meal (28, prio 50) 4 + 8 + 16
+        // picked up single meal (child) (30)
+        // picked up single meal (adult) (158)
+        // mama autos to group meal (129)
+        // mama picked up group meal (158)
 
         public OBJMInteraction(IffFieldEncode iop)
         {
@@ -114,7 +136,7 @@ namespace FSO.Files.Formats.IFF.Chunks
             Priority = iop.ReadInt32();
             ActionTreeID = iop.ReadInt16();
             Attenuation = iop.ReadFloat();
-            Flags = iop.ReadInt32();
+            Flags = (OBJMInteractionFlags)iop.ReadInt32();
         }
 
         public bool IsValid()
@@ -176,7 +198,7 @@ namespace FSO.Files.Formats.IFF.Chunks
         public string CarryAnimation; //
         public string BaseAnimation; //a2o-standing-loop;-10;1000;70;1000;1;1;1
 
-        public int RoutingState;
+        public OBJMRoutingState RoutingState;
         public float[] FirstFloats;
         public float[] MotiveDataOld;
         public float[] MotiveData;
@@ -223,13 +245,7 @@ namespace FSO.Files.Formats.IFF.Chunks
             CarryAnimation = iop.ReadString(false); //a2o-rarm-carry-loop;10;0;1000;1000;0;1;1
             BaseAnimation = iop.ReadString(true); //a2o-standing-loop;-10;1000;525;1000;1;1;1
 
-            RoutingState = iop.ReadInt32();
-            // Seems to be related to routing
-            // 9: actively moving to dest?
-            // 6: accelerating
-            // 4: turning?
-            // 3: stopped? this seems to linger when sims go to work
-            // 0: no movement (maybe resets when scripted animation starts)
+            RoutingState = (OBJMRoutingState)iop.ReadInt32();
 
             FirstFloats = new float[9];
 
