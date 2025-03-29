@@ -19,6 +19,8 @@ using System.Text;
 using FSO.Common.Utils;
 using FSO.Common.Rendering.Framework.Model;
 
+using FSO.Client.UI.Archive;
+
 namespace FSO.Client.UI.Screens
 {
     public class LoginScreen : GameScreen, IDisposable
@@ -83,6 +85,8 @@ namespace FSO.Client.UI.Screens
             LoginDialog.X = (ScreenWidth - LoginDialog.Width) / 2;
             LoginDialog.Y = (ScreenHeight - LoginDialog.Height) / 2;
             this.Add(LoginDialog);
+
+            Add(new UIArchiveJoinDialog());
 
             bool usernamePopulated = false;
 

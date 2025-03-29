@@ -174,7 +174,10 @@ namespace FSO.Client.UI.Controls
 
         public void AutoSize()
         {
-            this.Size = CaptionStyle.MeasureString(Caption);
+            if (this.Size == default)
+            {
+                this.Size = CaptionStyle.MeasureString(Caption);
+            }
         }
     }
 }

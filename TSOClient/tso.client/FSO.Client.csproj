@@ -161,6 +161,12 @@
     <Compile Include="Rendering\City\Plugins\MapPainterPlugin.cs" />
     <Compile Include="Rendering\City\Plugins\NeighbourhoodEditPlugin.cs" />
     <Compile Include="Rendering\City\TLayerVertex.cs" />
+    <Compile Include="UI\Archive\UIArchiveCharacterSelector.cs" />
+    <Compile Include="UI\Archive\UIArchiveCreateServer.cs" />
+    <Compile Include="UI\Archive\UIArchiveJoinDialog.cs" />
+    <Compile Include="UI\Archive\UIArchiveLandingDialog.cs" />
+    <Compile Include="UI\Archive\UIArchiveServerPorts.cs" />
+    <Compile Include="UI\Archive\UIArchiveUserList.cs" />
     <Compile Include="UI\Controls\UIMapWaypoint.cs" />
     <Compile Include="UI\Panels\EODs\UICooldownEventEOD.cs" />
     <Compile Include="UI\Panels\EODs\UIGameshowBuzzerHostEOD.cs" />
