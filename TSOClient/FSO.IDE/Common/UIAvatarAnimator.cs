@@ -46,21 +46,73 @@ namespace FSO.IDE.Common
                                 {
                                     case 'a':
                                         ava.Avatar.Skeleton = skels.Get("adult.skel").Clone();
-                                        ava.Avatar.Head = FSO.Content.Content.Get().AvatarOutfits.Get(0x000003a00000000D);
-                                        ava.Avatar.Body = ofts.Get("mab002_slob.oft");
+
+                                        if (ofts == null)
+                                        {
+                                            ava.Avatar.Head = new VMOutfitReference("c010ma_baldbeard,HEAD-HEAD=C010MAlgt_baldbeard01", true).GetContent();
+                                            ava.Avatar.Body = new VMOutfitReference("b002mafat_01,BODY=B002MAFatlgt_slob", false).GetContent();
+                                            ava.Avatar.Body.PrepareDefaultHandgroup();
+                                        }
+                                        else
+                                        {
+                                            ava.Avatar.Head = ofts.Get(0x000003a00000000D);
+                                            ava.Avatar.Body = ofts.Get("mab002_slob.oft");
+                                        }
+
                                         ava.Avatar.Handgroup = ava.Avatar.Body;
+
                                         break;
                                     case 'c':
                                         ava.Avatar.Skeleton = skels.Get("child.skel").Clone();
+
+                                        if (ofts == null)
+                                        {
+                                            ava.Avatar.Head = new VMOutfitReference("c001mc_ave,HEAD-HEAD=c001mclgt_ave", true).GetContent();
+                                            ava.Avatar.Body = new VMOutfitReference("b002mcchd_01,BODY=b002mcchdlgt_slob", false).GetContent();
+                                            ava.Avatar.Body.PrepareDefaultHandgroup("u");
+                                        }
+
+                                        ava.Avatar.Handgroup = ava.Avatar.Body;
+
                                         break;
                                     case 'd':
                                         ava.Avatar.Skeleton = skels.Get("dog.skel").Clone();
-                                        ava.Avatar.Body = ofts.Get("uaa012dog_scottish.oft");
+
+                                        if (ofts == null)
+                                        {
+                                            ava.Avatar.Body = new VMOutfitReference("b000dog_lab,BODY=b000dog_lab", false).GetContent();
+                                        }
+                                        else
+                                        {
+                                            ava.Avatar.Body = ofts.Get("uaa012dog_scottish.oft");
+                                        }
 
                                         break;
                                     case 'k':
-                                        ava.Avatar.Skeleton = skels.Get("cat.skel").Clone();
-                                        ava.Avatar.Body = ofts.Get("uaa002cat_calico.oft");
+                                        ava.Avatar.Skeleton = skels.Get("kat.skel").Clone();
+
+                                        if (ofts == null)
+                                        {
+                                            ava.Avatar.Body = new VMOutfitReference("b006cat_siamese,BODY=b006cat_siamese", false).GetContent();
+                                        }
+                                        else
+                                        {
+                                            ava.Avatar.Body = ofts.Get("uaa002cat_calico.oft");
+                                        }
+
+                                        break;
+                                    case 'e':
+                                        ava.Avatar.Skeleton = skels.Get("effects1.skel").Clone();
+                                        ava.Avatar.Body = null;
+                                        // starting at 15, has a bunch of effect accessory names in place of the hand groups:
+                                        // effects1-lightninga
+                                        // effects1-sparklea
+                                        // effects1-firea
+                                        // effects1-icea
+                                        // effects1-winda
+                                        // effects1-fireblue
+                                        // effects-suit-faerie
+                                        // effects1-fireblueb
                                         break;
                                 }
 

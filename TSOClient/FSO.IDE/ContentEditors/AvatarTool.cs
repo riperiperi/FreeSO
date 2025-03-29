@@ -1,5 +1,6 @@
 ﻿using FSO.Client;
 using FSO.Content;
+using FSO.Content.TS1;
 using FSO.Files.Utils;
 using FSO.IDE.Utils;
 using FSO.SimAntics;
@@ -21,9 +22,11 @@ namespace FSO.IDE.ContentEditors
         {
             { "adult", "a" },
             { "cat", "k" },
+            { "kat", "k" },
             { "dog", "d" },
             { "child", "c" },
-            { "object", "o" }
+            { "object", "o" },
+            { "effects1", "e" }
         };
 
         private Outfit SelectedOutfit;
@@ -150,7 +153,9 @@ namespace FSO.IDE.ContentEditors
 
         public void AddList(ListBox list, List<string> items, Regex search)
         {
+            list.BeginUpdate();
             list.Items.Clear();
+
             if (items != null)
             {
                 foreach (var item in items)
@@ -161,6 +166,7 @@ namespace FSO.IDE.ContentEditors
                     if (search.IsMatch(name)) list.Items.Add(name); //keys are names
                 }
             }
+            list.EndUpdate();
         }
 
         public void UnbindRuntimeMesh()
@@ -175,12 +181,30 @@ namespace FSO.IDE.ContentEditors
 
         public void RefreshSkeletonCombo()
         {
-            var skels = (Content.Content.Get().AvatarSkeletons as AvatarSkeletonProvider)?.Names;
-            SkeletonCombo.Items.Clear();
-            foreach (var skel in skels)
+            var provider = Content.Content.Get().AvatarSkeletons;
+
+            SkeletonCombo.BeginUpdate();
+
+            if (provider is AvatarSkeletonProvider avaSkel)
             {
-                SkeletonCombo.Items.Add(skel.Substring(0, skel.Length - 5));
+                var skels = avaSkel.Names;
+                SkeletonCombo.Items.Clear();
+                foreach (var skel in skels)
+                {
+                    SkeletonCombo.Items.Add(skel.Substring(0, skel.Length - 5));
+                }
             }
+            else if (provider is TS1BCFSkeletonProvider ts1Skel)
+            {
+                var skels = ts1Skel.BaseProvider.SkelHostBCF.Keys;
+                SkeletonCombo.Items.Clear();
+                foreach (var skel in skels)
+                {
+                    SkeletonCombo.Items.Add(skel);
+                }
+            }
+
+            SkeletonCombo.EndUpdate();
         }
 
         public void RefreshAnimList()
@@ -208,7 +232,21 @@ namespace FSO.IDE.ContentEditors
         {
             var accessories = Content.Content.Get().AvatarAppearances;
             var searchString = SearchString(AccessorySearch.Text.ToLowerInvariant());
-            var aprs = (accessories as AvatarAppearanceProvider)?.Names;
+
+            List<string> aprs;
+
+            if (accessories is AvatarAppearanceProvider aprProvider)
+            {
+                aprs = aprProvider?.Names;
+            }
+            else if (accessories is TS1BCFAppearanceProvider ts1Provider)
+            {
+                aprs = ts1Provider.BaseProvider.SkinHostBCF.Keys.ToList();
+            }
+            else
+            {
+                aprs = new List<string>();
+            }
 
             //exclude outfit accessories
             searchString = DoesNotStartWithRegex(searchString, new string[]
@@ -238,20 +276,28 @@ namespace FSO.IDE.ContentEditors
 
         public void RefreshSceneAnims()
         {
+            AnimationImportBox.BeginUpdate();
+
             AnimationImportBox.Items.Clear();
             foreach (var anim in SceneAnimations)
             {
                 AnimationImportBox.Items.Add(anim);
             }
+
+            AnimationImportBox.EndUpdate();
         }
 
         public void RefreshSceneMeshes()
         {
+            MeshImportBox.BeginUpdate();
+
             MeshImportBox.Items.Clear();
             foreach (var mesh in SceneMeshes)
             {
                 MeshImportBox.Items.Add(mesh);
             }
+
+            MeshImportBox.EndUpdate();
         }
 
         private VMPersonSuits GuessOutfitType(string name, Outfit oft)

@@ -156,6 +156,7 @@ namespace FSO.IDE.Common
             if (TempVM != null)
             {
                 var lcount = TempVM.Scheduler.CurrentTickID;
+                TempVM.Context.Clock.Hours = 12;
                 TempVM.Update();
                 var count = TempVM.Scheduler.CurrentTickID;
                 foreach (var ent in TempVM.Entities)

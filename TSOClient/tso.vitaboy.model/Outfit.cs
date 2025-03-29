@@ -117,6 +117,29 @@ namespace FSO.Vitaboy
             };
         }
 
+        public void PrepareDefaultHandgroup(string meshCode = "m")
+        {
+            LiteralHandgroup = new HandGroup()
+            {
+                TS1HandSet = true,
+                LightSkin = new HandSet()
+                {
+                    LeftHand = new Hand()
+                    {
+                        Idle = new Gesture() { Name = $"H{meshCode}LO.apr", TexName = "huaolgt" },
+                        Pointing = new Gesture() { Name = $"H{meshCode}LP.apr", TexName = "huaplgt" },
+                        Fist = new Gesture() { Name = $"H{meshCode}LC.apr", TexName = "huaclgt" }
+                    },
+                    RightHand = new Hand()
+                    {
+                        Idle = new Gesture() { Name = $"H{meshCode}RO.apr", TexName = "huaolgt" },
+                        Pointing = new Gesture() { Name = $"H{meshCode}RP.apr", TexName = "huaplgt" },
+                        Fist = new Gesture() { Name = $"H{meshCode}RC.apr", TexName = "huaclgt" }
+                    }
+                }
+            };
+        }
+
         public void Read(string dat)
         {
             var bodies = dat.Split(';');
