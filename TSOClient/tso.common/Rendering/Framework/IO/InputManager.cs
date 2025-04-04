@@ -191,6 +191,20 @@ namespace FSO.Common.Rendering.Framework.IO
                     {
                         result.TabPressed = true;
                     }
+                    else if (result.ShiftDown)
+                    {
+                        switch (key)
+                        {
+                            case Keys.Home:
+                                cursorEndIndex = 0;
+                                result.SelectionChanged = true;
+                                break;
+                            case Keys.End:
+                                cursorEndIndex = m_SBuilder.Length;
+                                result.SelectionChanged = true;
+                                break;
+                        }
+                    }
                     else if (result.CtrlDown)
                     {
                         switch (key)
@@ -250,12 +264,24 @@ namespace FSO.Common.Rendering.Framework.IO
                                     didChange = true;
                                 }
                                 break;
-                            }
-                        } else {
-                            result.UnhandledKeys.Add(key);
-                            processChar = true;
                         }
+                    } 
+                    else if (key == Keys.Home)
+                    {
+                        cursorIndex = 0;
+                        result.SelectionChanged = true;
                     }
+                    else if (key == Keys.End)
+                    {
+                        cursorIndex = m_SBuilder.Length;
+                        result.SelectionChanged = true;
+                    }
+                    else 
+                    {
+                        result.UnhandledKeys.Add(key);
+                        processChar = true;
+                    }
+                }
 
                 if (processChar)
                 {
