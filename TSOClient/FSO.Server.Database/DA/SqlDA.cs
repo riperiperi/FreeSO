@@ -29,6 +29,7 @@ using FSO.Server.Database.DA.Elections;
 using FSO.Server.Database.DA.Bulletin;
 using FSO.Server.Database.DA.Updates;
 using FSO.Server.Database.DA.GlobalCooldowns;
+using FSO.Server.Database.DA.AvatarTop100;
 
 namespace FSO.Server.Database.DA
 {
@@ -420,6 +421,19 @@ namespace FSO.Server.Database.DA
                     _Cooldowns = new SqlGlobalCooldowns(Context);
                 }
                 return _Cooldowns;
+            }
+        }
+
+        private IAvatarTop100 _AvatarTop100;
+        public IAvatarTop100 AvatarTop100
+        {
+            get
+            {
+                if (_AvatarTop100 == null)
+                {
+                    _AvatarTop100 = new SqlAvatarTop100(Context);
+                }
+                return _AvatarTop100;
             }
         }
 

@@ -49,14 +49,12 @@ namespace FSO.Server.Domain
                             TargetName = x.lot_name
                         }).ToList();
                     }else{
-                        //TODO:
-                        results = new List<Top100Entry>();
-                        for(var i=0; i < 100; i++)
+                        results = db.AvatarTop100.GetByCategory(Context.ShardId, category.ToAvatarCategory()).Select(x => new Top100Entry()
                         {
-                            results.Add(new Top100Entry {
-                                Rank = (byte)(i+1)
-                            });
-                        }
+                            Rank = x.rank,
+                            TargetId = (uint?)x.avatar_id,
+                            TargetName = x.avatar_name
+                        }).ToList();
                     }
 
                     Cache.Add(key, results, new CacheItemPolicy()

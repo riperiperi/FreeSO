@@ -104,6 +104,7 @@
     <Compile Include="DA\Avatars\DbJobLevel.cs" />
     <Compile Include="DA\Avatars\IAvatars.cs" />
     <Compile Include="DA\Avatars\SqlAvatars.cs" />
+    <Compile Include="DA\AvatarTop100\SqlAvatarTop100.cs" />
     <Compile Include="DA\Bans\DbBan.cs" />
     <Compile Include="DA\Bans\IBans.cs" />
     <Compile Include="DA\Bans\SqlBans.cs" />
@@ -217,6 +218,11 @@
     <Compile Include="DA\Utils\PagedList.cs" />
     <Compile Include="Management\DbChangeTool.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
+    <Content Include="DatabaseScripts\changes\0032_fso_avatar_top100.sql">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </Content>
+    <Compile Include="DA\AvatarTop100\DbAvatarTop100.cs" />
+    <Compile Include="DA\AvatarTop100\IAvatarTop100.cs" />
   </ItemGroup>
   <ItemGroup>
     <None Include="app.config" />

@@ -144,6 +144,7 @@
     <Compile Include="Content\ContentID.cs" />
     <Compile Include="Content\IContentProvider.cs" />
     <Compile Include="Content\IContentReference.cs" />
+    <Compile Include="Enum\AvatarTop100Category.cs" />
     <Compile Include="Enum\LotCategory.cs" />
     <Compile Include="Enum\Top100Category.cs" />
     <Compile Include="FSOEnvironment.cs" />

@@ -285,6 +285,13 @@
       "requires": [
         "bec36bbc-1774-44cb-a7c5-03f4a00e801c"
       ]
+    },
+    {
+      "id": "df6e2b1d-d55e-49a6-ab25-191fdbda9b41",
+      "script": "changes/0032_fso_avatar_top100.sql",
+      "idempotent": false,
+      "requires": [
+      ]
     }
   ]
 }
