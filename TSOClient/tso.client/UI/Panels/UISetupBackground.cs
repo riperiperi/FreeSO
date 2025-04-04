@@ -31,6 +31,9 @@ namespace FSO.Client.UI.Panels
 
             try
             {
+                if (!Directory.Exists("Content/SplashScreens"))
+                    throw new FileNotFoundException();
+
                 splashes = File.ReadAllLines("Content/SplashScreens/list.txt");
 
                 // Validate that the listed splash screens exist.
