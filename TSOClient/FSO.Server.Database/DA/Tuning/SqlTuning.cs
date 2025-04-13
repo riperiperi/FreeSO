@@ -50,16 +50,16 @@ namespace FSO.Server.Database.DA.Tuning
 
         public int CreatePreset(DbTuningPreset preset)
         {
-            var result = Context.Connection.Query<int>("INSERT INTO fso_tuning_presets (name, description, flags) "
-                + "VALUES (@name, @description, @flags); SELECT LAST_INSERT_ID();",
+            var result = Context.Connection.Query<int>(Context.CompatLayer("INSERT INTO fso_tuning_presets (name, description, flags) "
+                + "VALUES (@name, @description, @flags); SELECT LAST_INSERT_ID();"),
                 preset).FirstOrDefault();
             return result;
         }
 
         public int CreatePresetItem(DbTuningPresetItem item)
         {
-            var result = Context.Connection.Query<int>("INSERT INTO fso_tuning_preset_items (preset_id, tuning_type, tuning_table, tuning_index, value) "
-                + "VALUES (@preset_id, @tuning_type, @tuning_table, @tuning_index, @value); SELECT LAST_INSERT_ID();",
+            var result = Context.Connection.Query<int>(Context.CompatLayer("INSERT INTO fso_tuning_preset_items (preset_id, tuning_type, tuning_table, tuning_index, value) "
+                + "VALUES (@preset_id, @tuning_type, @tuning_table, @tuning_index, @value); SELECT LAST_INSERT_ID();"),
                 item).FirstOrDefault();
             return result;
         }

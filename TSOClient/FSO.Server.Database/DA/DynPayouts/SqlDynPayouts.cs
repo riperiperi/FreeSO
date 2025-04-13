@@ -28,7 +28,9 @@ namespace FSO.Server.Database.DA.DynPayouts
         {
             try
             {
-                Context.Connection.ExecuteBufferedInsert("INSERT INTO fso_dyn_payouts (day, skilltype, multiplier, flags) VALUES (@day, @skilltype, @multiplier, @flags) ON DUPLICATE KEY UPDATE multiplier = @multiplier", dynPayout, 100);
+                Context.Connection.ExecuteBufferedInsert(Context.CompatLayer(
+                    "INSERT INTO fso_dyn_payouts (day, skilltype, multiplier, flags) VALUES (@day, @skilltype, @multiplier, @flags) ON DUPLICATE KEY UPDATE multiplier = @multiplier",
+                    "`day`,`skilltype`"), dynPayout, 100);
             }
             catch (SqlException)
             {

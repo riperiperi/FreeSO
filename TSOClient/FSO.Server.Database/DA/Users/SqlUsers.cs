@@ -66,9 +66,9 @@ namespace FSO.Server.Database.DA.Users
 
         public uint Create(User user)
         {
-            return Context.Connection.Query<uint>(
+            return Context.Connection.Query<uint>(Context.CompatLayer(
                 "insert into fso_users set username = @username, email = @email, register_date = @register_date, register_ip = @register_ip, last_ip = @last_ip, " + 
-                "is_admin = @is_admin, is_moderator = @is_moderator, is_banned = @is_banned; select LAST_INSERT_ID();",
+                "is_admin = @is_admin, is_moderator = @is_moderator, is_banned = @is_banned; select LAST_INSERT_ID();"),
                 user
             ).First();
         }

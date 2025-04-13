@@ -269,15 +269,18 @@
     <Compile Include="Servers\Tasks\TaskServer.cs" />
     <Compile Include="Servers\UserApi\ApiServerConfiguration.cs" />
     <Compile Include="Servers\UserApi\UserApi.cs" />
+    <Compile Include="ToolDataTrim.cs" />
     <Compile Include="ToolImportNhood.cs" />
     <Compile Include="ToolInitDatabase.cs" />
     <Compile Include="ToolRestoreLots.cs" />
     <Compile Include="ToolRunServer.cs" />
     <Compile Include="Servers\AbstractServer.cs" />
+    <Compile Include="ToolSqliteImport.cs" />
     <Compile Include="Utils\AutoUpdateUtility.cs" />
     <Compile Include="Utils\CoreImageLoader.cs" />
     <Compile Include="Utils\GluonHostPool.cs" />
     <Compile Include="Servers\Tasks\TaskEngine.cs" />
+    <Compile Include="Utils\SqliteFunctions.cs" />
   </ItemGroup>
   <ItemGroup>
     <None Include="Admin\bower.json" />

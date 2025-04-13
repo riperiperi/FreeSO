@@ -55,10 +55,10 @@ namespace FSO.Server.Database.DA.Updates
 
         public int AddUpdate(DbUpdate update)
         {
-            var result = Context.Connection.Query<int>("INSERT INTO fso_updates " +
+            var result = Context.Connection.Query<int>(Context.CompatLayer("INSERT INTO fso_updates " +
                 "(version_name, addon_id, branch_id, full_zip, incremental_zip, manifest_url, server_zip, last_update_id, flags, publish_date, deploy_after) "
                 + "VALUES (@version_name, @addon_id, @branch_id, @full_zip, @incremental_zip, @manifest_url, @server_zip, @last_update_id, @flags, @publish_date, @deploy_after); " +
-                "SELECT LAST_INSERT_ID();",
+                "SELECT LAST_INSERT_ID();"),
                 update).FirstOrDefault();
             return result;
         }
@@ -105,10 +105,10 @@ namespace FSO.Server.Database.DA.Updates
 
         public IEnumerable<DbUpdate> GetRecentUpdatesForBranchByName(string branch_name, int limit)
         {
-            return Context.Connection.Query<DbUpdate>("SELECT * FROM fso_updates u JOIN fso_update_branch b ON u.branch_id = b.branch_id " +
+            return Context.Connection.Query<DbUpdate>(Context.CompatLayer("SELECT * FROM fso_updates u JOIN fso_update_branch b ON u.branch_id = b.branch_id " +
                 "WHERE b.branch_name = @branch_name AND publish_date IS NOT NULL AND deploy_after IS NOT NULL AND deploy_after < NOW() " +
                 "ORDER BY publish_date DESC " +
-                "LIMIT @limit", new { branch_name, limit });
+                "LIMIT @limit"), new { branch_name, limit });
         }
 
         public IEnumerable<DbUpdate> GetPublishableByBranchName(string branch_name)

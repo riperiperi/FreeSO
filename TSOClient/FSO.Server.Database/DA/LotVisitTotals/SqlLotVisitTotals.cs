@@ -14,7 +14,9 @@ namespace FSO.Server.Database.DA.LotVisitTotals
         public void Insert(IEnumerable<DbLotVisitTotal> input)
         {
             try {
-                Context.Connection.ExecuteBufferedInsert("INSERT INTO fso_lot_visit_totals (lot_id, date, minutes) VALUES (@lot_id, @date, @minutes) ON DUPLICATE KEY UPDATE minutes=VALUES(minutes)", input, 100);
+                Context.Connection.ExecuteBufferedInsert(Context.CompatLayer(
+                    "INSERT INTO fso_lot_visit_totals (lot_id, date, minutes) VALUES (@lot_id, @date, @minutes) ON DUPLICATE KEY UPDATE minutes=VALUES(minutes)",
+                    "`lot_id`,`date`"), input, 100);
             }catch(Exception ex)
             {
             }

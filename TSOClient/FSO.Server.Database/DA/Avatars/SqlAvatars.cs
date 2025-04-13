@@ -63,12 +63,12 @@ namespace FSO.Server.Database.DA.Avatars
 
         public uint Create(DbAvatar avatar)
         {
-            return (uint)Context.Connection.Query<int>("INSERT INTO fso_avatars (shard_id, user_id, name, " +
+            return (uint)Context.Connection.Query<int>(Context.CompatLayer("INSERT INTO fso_avatars (shard_id, user_id, name, " +
                                         "gender, date, skin_tone, head, body, description, budget, moderation_level, " +
                                         " body_swimwear, body_sleepwear) " +
                                         " VALUES (@shard_id, @user_id, @name, @gender, @date, " +
                                         " @skin_tone, @head, @body, @description, @budget, @moderation_level, "+
-                                        " @body_swimwear, @body_sleepwear); SELECT LAST_INSERT_ID();", new
+                                        " @body_swimwear, @body_sleepwear); SELECT LAST_INSERT_ID();"), new
                                         {
                                             shard_id = avatar.shard_id,
                                             user_id = avatar.user_id,
@@ -270,9 +270,11 @@ namespace FSO.Server.Database.DA.Avatars
 
             if (success && ((reason > 7 && reason != 9) || (source_id != uint.MaxValue && dest_id != uint.MaxValue))) {
                 var days = (DateTime.UtcNow - new DateTime(1970, 1, 1)).TotalDays;
-                Context.Connection.Execute("INSERT INTO fso_transactions (from_id, to_id, transaction_type, day, value, count) "+
+                Context.Connection.Execute(Context.CompatLayer(
+                    "INSERT INTO fso_transactions (from_id, to_id, transaction_type, day, value, count) "+
                     "VALUES (@from_id, @to_id, @transaction_type, @day, @value, @count) " +
-                    "ON DUPLICATE KEY UPDATE value = value + @value, count = count+1", new
+                    "ON DUPLICATE KEY UPDATE value = value + @value, count = count+1",
+                    "`from_id`,`to_id`,`transaction_type`,`day`"), new //duplicate key update not supported...
                 {
                     from_id = (amount>0)?source_id:dest_id,
                     to_id = (amount>0)?dest_id:source_id,
@@ -368,10 +370,11 @@ namespace FSO.Server.Database.DA.Avatars
 
         public void UpdateAvatarJobLevel(DbJobLevel jobLevel)
         {
-            Context.Connection.Query<DbJobLevel>("INSERT INTO fso_joblevels (avatar_id, job_type, job_experience, job_level, job_sickdays, job_statusflags) "
+            Context.Connection.Query<DbJobLevel>(Context.CompatLayer(
+                "INSERT INTO fso_joblevels (avatar_id, job_type, job_experience, job_level, job_sickdays, job_statusflags) "
                 + "VALUES (@avatar_id, @job_type, @job_experience, @job_level, @job_sickdays, @job_statusflags) "
                 + "ON DUPLICATE KEY UPDATE job_experience=VALUES(`job_experience`), job_level=VALUES(`job_level`), "
-                +" job_sickdays=VALUES(`job_sickdays`), job_statusflags=VALUES(`job_statusflags`); ", jobLevel);
+                +" job_sickdays=VALUES(`job_sickdays`), job_statusflags=VALUES(`job_statusflags`); ", "`avatar_id`,`job_type`"), jobLevel);
             return;
         }
 

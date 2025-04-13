@@ -14,8 +14,8 @@ namespace FSO.Server.Database.DA.Tasks
         public int Create(DbTask task)
         {
             return Context.Connection.Query<int>(
-                "INSERT INTO fso_tasks (task_type, task_status, shard_id) " + 
-                "VALUES (@task_type, @task_status, @shard_id); SELECT LAST_INSERT_ID();", new
+                Context.CompatLayer("INSERT INTO fso_tasks (task_type, task_status, shard_id) " + 
+                "VALUES (@task_type, @task_status, @shard_id); SELECT LAST_INSERT_ID();"), new
             {
                 task_type = task.task_type.ToString(),
                 task_status = task.task_status.ToString(),

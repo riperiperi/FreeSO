@@ -70,7 +70,7 @@ namespace FSO.Server.Database.DA.Relationships
                     sCommand.Append(" ON DUPLICATE KEY UPDATE value = VALUES(`value`); ");
 
                     cmd.CommandTimeout = 300;
-                    cmd.CommandText = sCommand.ToString();
+                    cmd.CommandText = Context.CompatLayer(sCommand.ToString(), "`from_id`,`to_id`,`index`");
                     rows = cmd.ExecuteNonQuery();
                 }
                 catch (Exception e)

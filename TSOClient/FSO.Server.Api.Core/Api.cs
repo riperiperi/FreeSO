@@ -6,6 +6,7 @@ using FSO.Server.Database.DA;
 using FSO.Server.Domain;
 using FSO.Server.Servers.Api.JsonWebToken;
 using Microsoft.AspNetCore.Http;
+using Microsoft.Data.Sqlite;
 using System;
 using System.Collections.Specialized;
 using System.Linq;
@@ -63,10 +64,22 @@ namespace FSO.Server.Api.Core
                 Key = System.Text.UTF8Encoding.UTF8.GetBytes(Config.Secret)
             });
 
-            DAFactory = new MySqlDAFactory(new Database.DatabaseConfiguration()
+            // TODO: also pass engine
+            var config = new Database.DatabaseConfiguration()
             {
+                Engine = "sqlite",
                 ConnectionString = appSettings["connectionString"]
-            });
+            };
+
+            switch (config.Engine)
+            {
+                case "mysql":
+                    DAFactory = new MySqlDAFactory(config);
+                    break;
+                case "sqlite":
+                    DAFactory = new SqliteDAFactory(config);
+                    break;
+            }
             
             Shards = new Shards(DAFactory);
             Shards.AutoUpdate();

@@ -29,5 +29,7 @@ namespace FSO.Server.Database.DA.Objects
         int GetSpecificObjectAttribute(uint objectID, int index);
         void SetObjectAttributes(List<DbObjectAttribute> attrs);
         int TotalObjectAttributes(uint guid, int index);
+
+        List<uint> ListIDs(bool onLot);
     }
 }

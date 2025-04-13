@@ -21,10 +21,10 @@ namespace FSO.Server.Database.DA.DbEvents
 
         public int Add(DbEvent evt)
         {
-            var result = Context.Connection.Query<int>("INSERT INTO fso_events (title, description, start_day, " +
+            var result = Context.Connection.Query<int>(Context.CompatLayer("INSERT INTO fso_events (title, description, start_day, " +
                          "end_day, type, value, value2, mail_subject, mail_message, mail_sender, mail_sender_name) " +
                          " VALUES (@title, @description, @start_day, @end_day, @type_str, @value, @value2, " +
-                         " @mail_subject, @mail_message, @mail_sender, @mail_sender_name); SELECT LAST_INSERT_ID();", evt).First();
+                         " @mail_subject, @mail_message, @mail_sender, @mail_sender_name); SELECT LAST_INSERT_ID();"), evt).First();
             return result;
         }
 

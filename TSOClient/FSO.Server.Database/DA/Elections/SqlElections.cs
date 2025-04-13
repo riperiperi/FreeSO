@@ -125,8 +125,8 @@ namespace FSO.Server.Database.DA.Elections
 
         public uint CreateCycle(DbElectionCycle cycle)
         {
-            var result = Context.Connection.Query<uint>("INSERT INTO fso_election_cycles (start_date, end_date, current_state, election_type) "
-                + "VALUES (@start_date, @end_date, @current_state, @election_type); SELECT LAST_INSERT_ID();", 
+            var result = Context.Connection.Query<uint>(Context.CompatLayer("INSERT INTO fso_election_cycles (start_date, end_date, current_state, election_type) "
+                + "VALUES (@start_date, @end_date, @current_state, @election_type); SELECT LAST_INSERT_ID();"), 
                 new { cycle.start_date, cycle.end_date,
                     current_state = cycle.current_state.ToString(),
                     election_type = cycle.election_type.ToString() }).FirstOrDefault();

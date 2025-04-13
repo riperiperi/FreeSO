@@ -88,7 +88,7 @@ namespace FSO.Server.Database.Management
                     }
                 }
 
-                connection.Execute("INSERT INTO fso_db_changes VALUES (@id, @filename, @date, @hash) ON DUPLICATE KEY UPDATE hash=@hash, date = @date, filename = @filename", new DbChange {
+                connection.Execute(Context.CompatLayer("INSERT INTO fso_db_changes VALUES (@id, @filename, @date, @hash) ON DUPLICATE KEY UPDATE hash=@hash, date = @date, filename = @filename", "`id`"), new DbChange {
                     id = change.ScriptID,
                     date = Epoch.Now,
                     filename = change.ScriptFilename,

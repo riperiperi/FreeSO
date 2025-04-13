@@ -29,6 +29,11 @@ namespace FSO.Server.Database.DA
             }
         }
 
+        public string CompatLayer(string sql, string updateKey = null)
+        {
+            return sql;
+        }
+
         public void Dispose()
         {
             if (_connection != null)

@@ -19,6 +19,14 @@ namespace FSO.Server
             HelpText = "Create lots in the database from FSOV saves in the specified folder. (with specified shard)")]
         public RestoreLotsOptions RestoreLotsVerb { get; set; }
 
+        [VerbOption("sqlite-import",
+            HelpText = "Imports a MariaDB export from a given directory into an sqlite database.")]
+        public SqliteImportOptions SqliteImportVerb { get; set; }
+
+        [VerbOption("data-trim",
+        HelpText = "Remove unimportant data, and optionally sensitive information from the database and NFS.")]
+        public DataTrimOptions DataTrimVerb { get; set; }
+
         [HelpVerbOption]
         public string GetUsage(string verb)
         {
@@ -29,12 +37,24 @@ namespace FSO.Server
     public class DatabaseInitOptions
     {
     }
-    
+
+    public class SqliteImportOptions
+    {
+        [ValueOption(0)]
+        public string ImportDir { get; set; }
+    }
+
 
     public class RunServerOptions
     {
         [Option('d', "debug", DefaultValue = false, HelpText = "Launches a network debug interface")]
         public bool Debug { get; set; }
+    }
+
+    public class DataTrimOptions
+    {
+        [Option('a', "anon", DefaultValue = false, HelpText = "Strips any private information from the database and NFS. Does leave users intact - convert to archive to remove them.")]
+        public bool Anon { get; set; }
     }
 
     public class ImportNhoodOptions

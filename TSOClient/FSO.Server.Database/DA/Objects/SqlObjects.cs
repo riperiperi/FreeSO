@@ -19,10 +19,10 @@ namespace FSO.Server.Database.DA.Objects
 
         public uint Create(DbObject obj)
         {
-            return (uint)Context.Connection.Query<int>("INSERT INTO fso_objects (shard_id, owner_id, lot_id, " +
+            return (uint)Context.Connection.Query<int>(Context.CompatLayer("INSERT INTO fso_objects (shard_id, owner_id, lot_id, " +
                                         "dyn_obj_name, type, graphic, value, budget, upgrade_level, has_db_attributes) " +
                                         " VALUES (@shard_id, @owner_id, @lot_id, @dyn_obj_name, @type," +
-                                        " @graphic, @value, @budget, @upgrade_level, @has_db_attributes); SELECT LAST_INSERT_ID();"
+                                        " @graphic, @value, @budget, @upgrade_level, @has_db_attributes); SELECT LAST_INSERT_ID();")
                                         , obj).First();
         }
 
@@ -212,7 +212,7 @@ namespace FSO.Server.Database.DA.Objects
 
         public void SetObjectAttributes(List<DbObjectAttribute> attrs)
         {
-            Context.Connection.ExecuteBufferedInsert("INSERT INTO fso_object_attributes (object_id, `index`, value) VALUES (@object_id, @index, @value) ON DUPLICATE KEY UPDATE value = @value", attrs, 100);
+            Context.Connection.ExecuteBufferedInsert(Context.CompatLayer("INSERT INTO fso_object_attributes (object_id, `index`, value) VALUES (@object_id, @index, @value) ON DUPLICATE KEY UPDATE value = @value", "`object_id`,`index`"), attrs, 100);
         }
 
         public int TotalObjectAttributes(uint guid, int index)
@@ -220,6 +220,18 @@ namespace FSO.Server.Database.DA.Objects
             return Context.Connection.Query<int>("SELECT SUM(a.value) " +
                 "FROM fso_object_attributes a JOIN fso_objects o ON a.object_id = o.object_id " +
                 "WHERE `type` = @guid AND `index` = @index", new { guid, index }).FirstOrDefault();
+        }
+
+        public List<uint> ListIDs(bool onLot)
+        {
+            if (onLot)
+            {
+                return Context.Connection.Query<uint>("SELECT object_id FROM fso_objects WHERE lot_id IS NOT NULL").ToList();
+            }
+            else
+            {
+                return Context.Connection.Query<uint>("SELECT object_id FROM fso_objects").ToList();
+            }
         }
     }
 }

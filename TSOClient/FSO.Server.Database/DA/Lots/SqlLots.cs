@@ -48,10 +48,10 @@ namespace FSO.Server.Database.DA.Lots
             var t = Context.Connection.BeginTransaction();
             try
             {
-                var result = (uint)Context.Connection.Query<int>("INSERT INTO fso_lots (shard_id, name, description, " +
+                var result = (uint)Context.Connection.Query<int>(Context.CompatLayer("INSERT INTO fso_lots (shard_id, name, description, " +
                                         "owner_id, location, neighborhood_id, created_date, category_change_date, category, buildable_area) " +
                                         " VALUES (@shard_id, @name, @description, @owner_id, @location, " +
-                                        " @neighborhood_id, @created_date, @category_change_date, @category, @buildable_area); SELECT LAST_INSERT_ID();", new
+                                        " @neighborhood_id, @created_date, @category_change_date, @category, @buildable_area); SELECT LAST_INSERT_ID();"), new
                                         {
                                             shard_id = lot.shard_id,
                                             name = lot.name,

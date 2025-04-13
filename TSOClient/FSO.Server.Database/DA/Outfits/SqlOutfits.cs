@@ -13,9 +13,9 @@ namespace FSO.Server.Database.DA.Outfits
         public uint Create(DbOutfit outfit)
         {
             try {
-                return (uint)Context.Connection.Query<int>("INSERT INTO fso_outfits (avatar_owner, object_owner, asset_id, sale_price, purchase_price, outfit_type, outfit_source) " +
+                return (uint)Context.Connection.Query<int>(Context.CompatLayer("INSERT INTO fso_outfits (avatar_owner, object_owner, asset_id, sale_price, purchase_price, outfit_type, outfit_source) " +
                                             " VALUES (@avatar_owner, @object_owner, @asset_id, @sale_price, @purchase_price, @outfit_type, @outfit_source); " +
-                                            " SELECT LAST_INSERT_ID();"
+                                            " SELECT LAST_INSERT_ID();")
                                             , new {
                                                 avatar_owner = outfit.avatar_owner,
                                                 object_owner = outfit.object_owner,

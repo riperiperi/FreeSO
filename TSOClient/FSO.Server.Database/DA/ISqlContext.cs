@@ -7,5 +7,6 @@ namespace FSO.Server.Database.DA
     {
         DbConnection Connection { get; }
         void Flush();
+        string CompatLayer(string sql, string updateKey = null);
     }
 }

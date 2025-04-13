@@ -12,10 +12,10 @@ namespace FSO.Server.Database.DA.Inbox
 
         public int CreateMessage(DbInboxMsg msg)
         {
-            var result = Context.Connection.Query<int>("INSERT INTO fso_inbox (sender_id, target_id, subject, " +
+            var result = Context.Connection.Query<int>(Context.CompatLayer("INSERT INTO fso_inbox (sender_id, target_id, subject, " +
                                     "body, sender_name, time, msg_type, msg_subtype, read_state) " +
                                     " VALUES (@sender_id, @target_id, @subject, @body, @sender_name, " +
-                                    " @time, @msg_type, @msg_subtype, @read_state); SELECT LAST_INSERT_ID();", msg).First();
+                                    " @time, @msg_type, @msg_subtype, @read_state); SELECT LAST_INSERT_ID();"), msg).First();
             return result;
         }
 

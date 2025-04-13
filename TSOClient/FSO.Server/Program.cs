@@ -39,6 +39,14 @@ namespace FSO.Server
                             toolType = typeof(ToolRestoreLots);
                             toolOptions = subOptions;
                             break;
+                        case "sqlite-import":
+                            toolType = typeof(ToolSqliteImport);
+                            toolOptions = subOptions;
+                            break;
+                        case "data-trim":
+                            toolType = typeof(ToolDataTrim);
+                            toolOptions = subOptions;
+                            break;
                         default:
                             Console.Write(options.GetUsage(verb));
                             break;

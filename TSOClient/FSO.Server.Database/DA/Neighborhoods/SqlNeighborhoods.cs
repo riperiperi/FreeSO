@@ -14,10 +14,10 @@ namespace FSO.Server.Database.DA.Neighborhoods
 
         public int AddNhood(DbNeighborhood hood)
         {
-            var result = Context.Connection.Query<int>("INSERT INTO fso_neighborhoods (name, description, " +
+            var result = Context.Connection.Query<int>(Context.CompatLayer("INSERT INTO fso_neighborhoods (name, description, " +
                         "shard_id, location, color, guid) " +
                         " VALUES (@name, @description, " +
-                        " @shard_id, @location, @color, @guid); SELECT LAST_INSERT_ID();", hood).First();
+                        " @shard_id, @location, @color, @guid); SELECT LAST_INSERT_ID();"), hood).First();
             return result;
         }
 
@@ -118,10 +118,10 @@ namespace FSO.Server.Database.DA.Neighborhoods
         
         public bool AddNhoodBan(DbNhoodBan ban)
         {
-            var result = Context.Connection.Query<int>("INSERT INTO fso_nhood_ban (user_id, ban_reason, end_date) " +
+            var result = Context.Connection.Query<int>(Context.CompatLayer("INSERT INTO fso_nhood_ban (user_id, ban_reason, end_date) " +
                         "VALUES (@user_id, @ban_reason, @end_date) " +
                         "ON DUPLICATE KEY UPDATE ban_reason = @ban_reason, end_date = @end_date; " +
-                        "SELECT LAST_INSERT_ID();", ban).First();
+                        "SELECT LAST_INSERT_ID();", "`user_id`"), ban).First();
             return result > 0;
         }
 

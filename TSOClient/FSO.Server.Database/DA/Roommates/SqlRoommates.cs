@@ -27,9 +27,9 @@ namespace FSO.Server.Database.DA.Roommates
         {
             try
             {
-                return (uint)Context.Connection.Execute("INSERT INTO fso_roommates (avatar_id, lot_id, permissions_level, is_pending) " +
+                return (uint)Context.Connection.Execute(Context.CompatLayer("INSERT INTO fso_roommates (avatar_id, lot_id, permissions_level, is_pending) " +
                                 "VALUES (@avatar_id, @lot_id, @permissions_level, @is_pending) " +
-                                "ON DUPLICATE KEY UPDATE permissions_level = @permissions_level, is_pending = 0", roomie) > 0;
+                                "ON DUPLICATE KEY UPDATE permissions_level = @permissions_level, is_pending = 0", "`avatar_id`,`lot_id`"), roomie) > 0;
             }
             catch (SqlException)
             {

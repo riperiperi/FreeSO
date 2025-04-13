@@ -12,8 +12,8 @@ namespace FSO.Server.Database.DA.Bulletin
 
         public uint Create(DbBulletinPost bulletin)
         {
-            return Context.Connection.Query<uint>("INSERT INTO fso_bulletin_posts (neighborhood_id, avatar_id, title, body, date, flags, lot_id, type) " +
-                                        " VALUES (@neighborhood_id, @avatar_id, @title, @body, @date, @flags, @lot_id, @string_type); SELECT LAST_INSERT_ID();"
+            return Context.Connection.Query<uint>(Context.CompatLayer("INSERT INTO fso_bulletin_posts (neighborhood_id, avatar_id, title, body, date, flags, lot_id, type) " +
+                                        " VALUES (@neighborhood_id, @avatar_id, @title, @body, @date, @flags, @lot_id, @string_type); SELECT LAST_INSERT_ID();")
                                         , bulletin).First();
         }
 

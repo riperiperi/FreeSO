@@ -53,8 +53,8 @@ namespace FSO.Server.Database.DA.LotClaims
         public uint? TryCreate(DbLotClaim claim){
 
             try {
-                return (uint)Context.Connection.Query<int>("INSERT INTO fso_lot_claims (shard_id, lot_id, owner) " +
-                    " VALUES (@shard_id, @lot_id, @owner); SELECT LAST_INSERT_ID();", claim).First();
+                return (uint)Context.Connection.Query<int>(Context.CompatLayer("INSERT INTO fso_lot_claims (shard_id, lot_id, owner) " +
+                    " VALUES (@shard_id, @lot_id, @owner); SELECT LAST_INSERT_ID();"), claim).First();
             }catch(MySqlException ex){
                 return null;
             }
