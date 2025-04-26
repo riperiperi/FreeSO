@@ -14,6 +14,8 @@ namespace FSO.Client.Controllers
         private PersonSelectionEdit View;
         private CreateASimRegulator CASRegulator;
 
+        public bool Archive;
+
         public PersonSelectionEditController(PersonSelectionEdit view, CreateASimRegulator casRegulator)
         {
             this.View = view;
@@ -55,7 +57,14 @@ namespace FSO.Client.Controllers
                     case "Success":
                         //Connect to the city with our new avatar
                         var response = (CreateASimResponse)data;
-                        FSOFacade.Controller.ConnectToCity(null, response.NewAvatarId, null);
+                        if (Archive)
+                        {
+                            FSOFacade.Controller.SelectFromCASArchive(response.NewAvatarId);
+                        }
+                        else
+                        {
+                            FSOFacade.Controller.ConnectToCity(null, response.NewAvatarId, null);
+                        }
                         break;
                 }
             });

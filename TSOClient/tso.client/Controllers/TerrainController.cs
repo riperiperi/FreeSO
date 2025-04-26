@@ -57,7 +57,7 @@ namespace FSO.Client.Controllers
 
             CurrentCity = new Binding<City>().WithMultiBinding(RefreshCity, "City_ReservedLotInfo", "City_SpotlightsVector");
 
-            LotThumbs = new LotThumbContent();
+            LotThumbs = new LotThumbContent(parent.CityResource);
         }
 
         private void PurchaseRegulator_OnPurchased(int newBudget)

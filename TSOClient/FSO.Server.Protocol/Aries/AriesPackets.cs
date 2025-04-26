@@ -13,7 +13,9 @@ namespace FSO.Server.Protocol.Aries
             typeof(RequestChallenge),
             typeof(RequestChallengeResponse),
             typeof(AnswerChallenge),
-            typeof(AnswerAccepted)
+            typeof(AnswerAccepted),
+
+            typeof(RequestClientSessionArchive),
         };
 
         static AriesPackets()

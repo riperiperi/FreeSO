@@ -146,7 +146,7 @@ namespace FSO.Client.UI.Panels
             MyUser = new Binding<UserReference>();
 
             User.ValueChanged += (x) => PersonButton.User.Value = x;
-            Size = Background.Size.ToVector2();
+            Size = Background.Size;
 
 
             this.Opacity = GlobalSettings.Default.ChatWindowsOpacity;

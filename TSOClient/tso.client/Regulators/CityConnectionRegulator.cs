@@ -17,13 +17,23 @@ using FSO.Server.Protocol.Voltron.Packets;
 using Ninject;
 using System;
 using System.Collections.Generic;
+using System.Security.Cryptography;
+using System.Text;
 
 namespace FSO.Client.Regulators
 {
+    public class ConnectArchiveRequest
+    {
+        public string DisplayName;
+        public string CityAddress;
+    }
+
     public class CityConnectionRegulator : AbstractRegulator, IAriesMessageSubscriber, IAriesEventSubscriber
     {
         public AriesClient Client { get; internal set; }
         public CityConnectionMode Mode { get; internal set; } = CityConnectionMode.NORMAL;
+
+        private ConnectArchiveRequest ArchiveSettings;
 
         private CityClient CityApi;
         private ShardSelectorServletResponse ShardSelectResponse;
@@ -59,7 +69,12 @@ namespace FSO.Client.Regulators
                 .Default()
                 .Transition()
                 .OnData(typeof(ShardSelectorServletRequest))
-                .TransitionTo("SelectCity");
+                .TransitionTo("SelectCity")
+                .OnData(typeof(ConnectArchiveRequest))
+                .TransitionTo("ArchiveConnect");
+
+            AddState("ArchiveConnect")
+                .OnlyTransitionFrom("Disconnected", "Reconnecting");
 
             AddState("SelectCity")
                 .OnlyTransitionFrom("Disconnected", "Reconnecting");
@@ -77,28 +92,47 @@ namespace FSO.Client.Regulators
             AddState("OpenSocket")
                 .OnData(typeof(AriesConnected)).TransitionTo("SocketOpen")
                 .OnData(typeof(AriesDisconnected)).TransitionTo("UnexpectedDisconnect")
-                .OnlyTransitionFrom("CitySelected");
+                .OnlyTransitionFrom("CitySelected", "ArchiveConnect");
 
             AddState("SocketOpen")
                 .OnData(typeof(RequestClientSession)).TransitionTo("RequestClientSession")
+                .OnData(typeof(RequestClientSessionArchive)).TransitionTo("RequestClientSessionArchive")
                 .OnData(typeof(AriesDisconnected)).TransitionTo("UnexpectedDisconnect")
                 .OnlyTransitionFrom("OpenSocket");
+
+            // Begin archive regulator states
+
+            AddState("RequestClientSessionArchive")
+                .OnData(typeof(HostOnlinePDU)).TransitionTo("HostOnline")
+                .OnData(typeof(AriesDisconnected)).TransitionTo("UnexpectedDisconnect")
+                .OnlyTransitionFrom("SocketOpen");
+
+            AddState("ArchiveSelectAvatar")
+                .OnData(typeof(ArchiveAvatarSelectResponse)).TransitionTo("ArchiveSelectedAvatar")
+                .OnData(typeof(AriesDisconnected)).TransitionTo("UnexpectedDisconnect")
+                .OnlyTransitionFrom("PartiallyConnected");
+
+            AddState("ArchiveSelectedAvatar")
+                .OnlyTransitionFrom("ArchiveSelectAvatar");
+
+            // End archive regulator states
 
             AddState("RequestClientSession")
                 .OnData(typeof(HostOnlinePDU)).TransitionTo("HostOnline")
                 .OnData(typeof(AriesDisconnected)).TransitionTo("UnexpectedDisconnect")
                 .OnlyTransitionFrom("SocketOpen");
 
-            AddState("HostOnline").OnlyTransitionFrom("RequestClientSession");
+            AddState("HostOnline").OnlyTransitionFrom("RequestClientSession", "RequestClientSessionArchive");
             AddState("PartiallyConnected")
                 .OnData(typeof(AriesDisconnected)).TransitionTo("UnexpectedDisconnect")
                 .OnData(typeof(ShardSelectorServletRequest)).TransitionTo("CompletePartialConnection")
-                .OnlyTransitionFrom("HostOnline");
+                .OnData(typeof(ArchiveAvatarSelectRequest)).TransitionTo("ArchiveSelectAvatar")
+                .OnlyTransitionFrom("HostOnline", "ArchiveSelectedAvatar");
 
             AddState("CompletePartialConnection").OnlyTransitionFrom("PartiallyConnected");
             AddState("AskForAvatarData")
                 .OnData(typeof(LoadAvatarByIDResponse)).TransitionTo("ReceivedAvatarData")
-                .OnlyTransitionFrom("PartiallyConnected", "CompletePartialConnection");
+                .OnlyTransitionFrom("PartiallyConnected", "CompletePartialConnection", "ArchiveSelectedAvatar");
             AddState("ReceivedAvatarData").OnlyTransitionFrom("AskForAvatarData");
             AddState("AskForCharacterData").OnlyTransitionFrom("ReceivedAvatarData");
             AddState("ReceivedCharacterData").OnlyTransitionFrom("AskForCharacterData");
@@ -153,6 +187,17 @@ namespace FSO.Client.Regulators
             }, 10000); //keep alive every 10 seconds. prevents disconnection by aggressive NAT.
         }
 
+        public string ArchiveHash(string client, string server)
+        {
+            HashAlgorithm algorithm = SHA1.Create();
+            StringBuilder sb = new StringBuilder();
+            var hash = algorithm.ComputeHash(Encoding.UTF8.GetBytes(client + server));
+            foreach (byte b in hash)
+                sb.Append(b.ToString("X2"));
+
+            return sb.ToString();
+        }
+
         public void Connect(CityConnectionMode mode, ShardSelectorServletRequest shard)
         {
             if(shard.ShardName == null && this.CurrentShard != null)
@@ -171,6 +216,21 @@ namespace FSO.Client.Regulators
             }
         }
 
+        public void ConnectArchive(ConnectArchiveRequest request)
+        {
+            Mode = CityConnectionMode.ARCHIVE;
+            if (CurrentState.Name != "Disconnected")
+            {
+                // TODO?
+                //CurrentShard = shard;
+                //AsyncTransition("Reconnect");
+            }
+            else
+            {
+                AsyncProcessMessage(request);
+            }
+        }
+
         public void Disconnect(){
             AsyncTransition("Disconnect");
         }
@@ -185,6 +245,16 @@ namespace FSO.Client.Regulators
         {
             switch (newState.Name)
             {
+                case "ArchiveConnect":
+                    var archiveOpt = data as ConnectArchiveRequest;
+                    ArchiveSettings = archiveOpt;
+                    this.AsyncTransition("OpenSocket", new ShardSelectorServletResponse()
+                    {
+                        Address = archiveOpt.CityAddress,
+                        ExplicitPort = true
+                    });
+                    break;
+
                 case "SelectCity":
                     //TODO: Do this on logout / disconnect rather than on connect
                     ResetGame();
@@ -217,7 +287,7 @@ namespace FSO.Client.Regulators
                     }else{
                         //101 is plain
                         LastSettings = settings;
-                        Client.Connect(settings.Address + "101");
+                        Client.Connect(settings.ExplicitPort ? settings.Address : (settings.Address + "101"));
                     }
                     break;
 
@@ -229,6 +299,40 @@ namespace FSO.Client.Regulators
                         Password = ShardSelectResponse.Ticket,
                         User = ShardSelectResponse.AvatarID.ToString()
                     });
+                    break;
+
+                case "RequestClientSessionArchive":
+                    var serverRequest = data as RequestClientSessionArchive;
+
+                    if (serverRequest.ServerKey.Length != 36 && ArchiveSettings == null)
+                    {
+                        Disconnect();
+                    }
+                    else
+                    {
+                        ((ClientShards)Shards).All = new List<ShardStatusItem>()
+                        {
+                            new ShardStatusItem()
+                            {
+                                Id = (int)serverRequest.ShardId,
+                                Name = serverRequest.ShardName,
+                                Status = ShardStatus.Up,
+                                Map = serverRequest.ShardMap,
+                                PublicHost = ArchiveSettings.CityAddress
+                            }
+                        };
+
+                        CurrentShard = new ShardSelectorServletRequest()
+                        {
+                            ShardName = serverRequest.ShardName,
+                        };
+
+                        Client.Write(new RequestClientSessionResponse
+                        {
+                            User = ArchiveSettings.DisplayName,
+                            Password = ArchiveHash(GlobalSettings.Default.ArchiveClientGUID, serverRequest.ServerKey),
+                        });
+                    }
                     break;
 
                 case "HostOnline":
@@ -253,9 +357,28 @@ namespace FSO.Client.Regulators
                     }
                     break;
 
+                case "ArchiveSelectAvatar":
+                    var avaSelectRequest = data as ArchiveAvatarSelectRequest;
+                    CurrentShard.AvatarID = avaSelectRequest.AvatarId.ToString();
+                    Client.Write(avaSelectRequest);
+                    break;
+
+                case "ArchiveSelectedAvatar":
+                    var avaSelectResponse = data as ArchiveAvatarSelectResponse;
+
+                    if (avaSelectResponse.Code == ArchiveAvatarSelectCode.Success)
+                    {
+                        AsyncTransition("AskForAvatarData");
+                    }
+                    else
+                    {
+                        AsyncTransition("PartiallyConnected");
+                    }
+                    break;
+
                 case "CompletePartialConnection":
                     var shardRequest = (ShardSelectorServletRequest)data;
-                    if (shardRequest.ShardName != CurrentShard.ShardName)
+                    if (Mode != CityConnectionMode.ARCHIVE && shardRequest.ShardName != CurrentShard.ShardName)
                     {
                         //Should never get into this state
                         throw new Exception("You cant complete a partial connection for a different city");
@@ -401,8 +524,8 @@ namespace FSO.Client.Regulators
         public void MessageReceived(AriesClient client, object message)
         {
 
-            if (message is RequestClientSession ||
-                message is HostOnlinePDU || message is ServerByePDU)
+            if (message is RequestClientSession || message is RequestClientSessionArchive ||
+                message is HostOnlinePDU || message is ServerByePDU || message is ArchiveAvatarSelectResponse)
             {
                 this.AsyncProcessMessage(message);
             }
@@ -464,7 +587,8 @@ namespace FSO.Client.Regulators
     public enum CityConnectionMode
     {
         CAS,
-        NORMAL
+        NORMAL,
+        ARCHIVE
     }
 
     class AriesConnected {

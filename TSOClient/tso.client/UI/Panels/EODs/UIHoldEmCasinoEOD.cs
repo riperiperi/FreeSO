@@ -1301,7 +1301,7 @@ namespace FSO.Client.UI.Panels.EODs
             {
                 X = AnteBetBack.X,
                 Y = AnteBetBack.Y + 3,
-                Size = AnteBetBack.Size.ToVector2(),
+                Size = AnteBetBack.Size,
                 Alignment = TextAlignment.Center,
                 CurrentText = "Ante",
                 Mode = UITextEditMode.ReadOnly,
@@ -1314,7 +1314,7 @@ namespace FSO.Client.UI.Panels.EODs
             {
                 X = SideBetBack.X,
                 Y = SideBetBack.Y + 3,
-                Size = SideBetBack.Size.ToVector2(),
+                Size = SideBetBack.Size,
                 Alignment = TextAlignment.Center,
                 CurrentText = "Side",
                 Mode = UITextEditMode.ReadOnly,
@@ -1688,7 +1688,7 @@ namespace FSO.Client.UI.Panels.EODs
             {
                 X = DealerBetBack.X - 10,
                 Y = DealerBetBack.Y + 1,
-                Size = DealerBetBack.Size.ToVector2(),
+                Size = DealerBetBack.Size,
                 CurrentText = "Dealer",
                 Alignment = TextAlignment.Center,
                 //TextStyle = captionStyle,

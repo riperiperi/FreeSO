@@ -47,6 +47,10 @@ namespace FSO.Server
                             toolType = typeof(ToolDataTrim);
                             toolOptions = subOptions;
                             break;
+                        case "archive-convert":
+                            toolType = typeof(ToolArchiveConvert);
+                            toolOptions = subOptions;
+                            break;
                         default:
                             Console.Write(options.GetUsage(verb));
                             break;

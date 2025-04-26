@@ -81,11 +81,20 @@ namespace FSO.Client
         /// </summary>
         public void ShowLogin()
         {
-            ChangeState<LoginScreen, LoginController>((view, controller) =>
-            {
+            bool archiveMode = true;
 
-                DiscordRpcEngine.SendFSOPresence("In Main Menu");
-            });
+            if (archiveMode)
+            {
+                InitializeArchive();
+            }
+            else
+            {
+                ChangeState<LoginScreen, LoginController>((view, controller) =>
+                {
+                    DiscordRpcEngine.SendFSOPresence("In Main Menu");
+                });
+            }
+
             /*
             var screen = Kernel.Get<LoginScreen>();
             GameFacade.Screens.RemoveCurrent();
@@ -223,6 +232,15 @@ namespace FSO.Client
             };
         }
 
+        public void InitializeArchive()
+        {
+            ChangeState<TransitionScreen, ConnectArchiveController>((view, controller) =>
+            {
+                controller.Initialize();
+                DiscordRpcEngine.SendFSOPresence("In Archive Mode");
+            });
+        }
+
 
         public void ConnectToCity(string cityName, uint avatarId, uint? lotId)
         {
@@ -230,6 +248,12 @@ namespace FSO.Client
             {
                 controller.Connect(cityName, avatarId, () => { GotoCity(controller.AvatarData, lotId); }, new Common.Utils.Callback(Disconnect));
             });
+        }
+
+        public void ConnectToArchive(string displayName, string address)
+        {
+            var controller = CurrentController as ConnectArchiveController;
+            controller.Connect(displayName, address, () => { GotoCity(controller.AvatarData, null); }, new Common.Utils.Callback(Disconnect));
         }
 
         public void RetireAvatar(string cityName, uint avatarId)
@@ -257,13 +281,23 @@ namespace FSO.Client
              */
             ChangeState<TransitionScreen, ConnectCASController>((view, controller) =>
             {
-                controller.Connect(cityName, new Common.Utils.Callback(GotoCAS), new Common.Utils.Callback(Disconnect));
+                controller.Connect(cityName, new Common.Utils.Callback(() => GotoCAS()), new Common.Utils.Callback(Disconnect));
             });
         }
 
-        public void GotoCAS(){
+        public void SelectFromCASArchive(uint avatarId)
+        {
+            // Change back to the archive transition screen and choose the new character.
+            ChangeState<TransitionScreen, ConnectArchiveController>((view, controller) =>
+            {
+                controller.SetCallbacks(() => { GotoCity(controller.AvatarData, null); }, new Common.Utils.Callback(Disconnect));
+                controller.SelectAvatar(avatarId);
+            });
+        }
+
+        public void GotoCAS(bool archive = false){
             ChangeState<PersonSelectionEdit, PersonSelectionEditController>((view, controller) => {
-                
+                controller.Archive = true;
             });
         }
 

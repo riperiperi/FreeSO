@@ -1,4 +1,5 @@
 ﻿using FSO.Common;
+using System;
 using System.Collections.Generic;
 using System.IO;
 
@@ -25,10 +26,25 @@ namespace FSO.Client
                         defaultInstance.CitySelectorUrl = "https://api.freeso.org";
                     }
 
+                    if (defaultInstance.ArchiveClientGUID == "")
+                    {
+                        defaultInstance.ArchiveClientGUID = GenerateGUID();
+                    }
+
+                    if (defaultInstance.ArchiveServerGUID == "")
+                    {
+                        defaultInstance.ArchiveServerGUID = GenerateGUID();
+                    }
                 }
                 return defaultInstance;
             }
         }
+
+        private static string GenerateGUID()
+        {
+            return Guid.NewGuid().ToString();
+        }
+
 
         public GlobalSettings(string path) : base(path) { }
 
@@ -97,8 +113,12 @@ namespace FSO.Client
 
             { "ComplexShaders", "false" },
             { "GlobalGraphicsMode", "0" }, //2d, 2d hybrid, 3d
-            { "EnableTransitions", "true" }
+            { "EnableTransitions", "true" },
+
+            { "ArchiveServerGUID", "" },
+            { "ArchiveClientGUID", "" },
         };
+
         public override Dictionary<string, string> DefaultValues
         {
             get { return _DefaultValues; }
@@ -166,6 +186,10 @@ namespace FSO.Client
         public bool ComplexShaders { get; set; }
         public int GlobalGraphicsMode { get; set; }
         public bool EnableTransitions { get; set; }
+
+
+        public string ArchiveServerGUID { get; set; }
+        public string ArchiveClientGUID { get; set; }
 
         public static int TARGET_COMPAT_STATE = 2;
     }

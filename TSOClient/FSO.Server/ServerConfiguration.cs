@@ -19,6 +19,8 @@ namespace FSO.Server
         public string SimNFS;
         public string UpdateBranch;
 
+        public string ArchiveGUID; // If this is present, the server is running in archive mode
+
         public DatabaseConfiguration Database;
         public ServerConfigurationservices Services;
         public DiscordConfiguration Discord;

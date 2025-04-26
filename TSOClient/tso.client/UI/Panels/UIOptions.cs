@@ -43,7 +43,7 @@ namespace FSO.Client.UI.Panels
             Background = new UIImage(GetTexture((FSOEnvironment.UIZoomFactor>1f || GlobalSettings.Default.GraphicsWidth < 1024) ? (ulong)0x000000D800000002 : (ulong)0x0000018300000002));
             this.AddAt(0, Background);
             Background.BlockInput();
-            Size = Background.Size.ToVector2();
+            Size = Background.Size;
 
             Divider = new UIImage(DividerImage);
             Divider.X = 227;

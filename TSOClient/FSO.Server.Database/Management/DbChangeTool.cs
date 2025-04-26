@@ -10,6 +10,7 @@ using System.Text.RegularExpressions;
 using FSO.Server.Database.DA.DbChanges;
 using FSO.Server.Common;
 using MySql.Data.MySqlClient;
+using System.Data.Common;
 
 namespace FSO.Server.Database.Management
 {
@@ -82,7 +83,7 @@ namespace FSO.Server.Database.Management
                     {
                         cmd.ExecuteNonQuery();
                     }
-                    catch (MySqlException e)
+                    catch (DbException e)
                     {
                         throw new DbMigrateException(e.ToString());
                     }

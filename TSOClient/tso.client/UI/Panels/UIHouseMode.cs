@@ -57,7 +57,7 @@ namespace FSO.Client.UI.Panels
             Background.BlockInput();
             this.AddAt(0, Background);
 
-            Size = Background.Size.ToVector2()+new Vector2(0, 9);
+            Size = Background.Size + new Vector2(0, 9);
 
             Divider = script.Create<UIImage>("Divider");
             Divider.Texture = DividerImage;

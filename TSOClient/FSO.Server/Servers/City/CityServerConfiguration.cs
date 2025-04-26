@@ -6,6 +6,7 @@ namespace FSO.Server.Servers.City
     {
         public int ID;
         public bool Timeout_No_Auth = true;
+        public string ArchiveGUID;
 
         public CityServerNhoodConfiguration Neighborhoods = new CityServerNhoodConfiguration();
         public CityServerMaintenanceConfiguration Maintenance;

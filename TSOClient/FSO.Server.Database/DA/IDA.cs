@@ -30,6 +30,7 @@ using FSO.Server.Database.DA.Elections;
 using FSO.Server.Database.DA.Bulletin;
 using FSO.Server.Database.DA.Updates;
 using FSO.Server.Database.DA.GlobalCooldowns;
+using FSO.Server.Database.DA.ArchiveUsers;
 
 namespace FSO.Server.Database.DA
 {
@@ -68,6 +69,7 @@ namespace FSO.Server.Database.DA
         IEmailConfirmations EmailConfirmations { get; }
         IUpdates Updates { get; }
         IGlobalCooldowns GlobalCooldowns { get; }
+        IArchiveUsers ArchiveUsers { get; }
         void Flush();
     }
 }

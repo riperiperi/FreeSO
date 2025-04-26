@@ -23,6 +23,12 @@ namespace FSO.Server.Servers.Lot.Handlers
             session.Write(new RequestChallenge() { CallSign = session.CallSign, PublicHost = session.PublicHost, InternalHost = session.InternalHost });
         }
 
+        public void Handle(IGluonSession session, RequestClientSessionArchive request)
+        {
+            //Same as above, don't really care about archive stuff for gluon auth
+            session.Write(new RequestChallenge() { CallSign = session.CallSign, PublicHost = session.PublicHost, InternalHost = session.InternalHost });
+        }
+
         public void Handle(IGluonSession session, RequestChallengeResponse challenge)
         {
             var rawSession = ((CityConnection)session);

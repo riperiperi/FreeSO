@@ -27,6 +27,10 @@ namespace FSO.Server
         HelpText = "Remove unimportant data, and optionally sensitive information from the database and NFS.")]
         public DataTrimOptions DataTrimVerb { get; set; }
 
+        [VerbOption("archive-convert",
+            HelpText = "Convert the database for use as an archive server.")]
+        public DataTrimOptions ArchiveConvertVerb { get; set; }
+
         [HelpVerbOption]
         public string GetUsage(string verb)
         {
@@ -55,6 +59,10 @@ namespace FSO.Server
     {
         [Option('a', "anon", DefaultValue = false, HelpText = "Strips any private information from the database and NFS. Does leave users intact - convert to archive to remove them.")]
         public bool Anon { get; set; }
+    }
+
+    public class ArchiveConvertOptions
+    {
     }
 
     public class ImportNhoodOptions

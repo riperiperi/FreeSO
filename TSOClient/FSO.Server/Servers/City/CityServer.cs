@@ -1,6 +1,7 @@
 ﻿using FSO.Common.Domain.Shards;
 using FSO.Server.Common;
 using FSO.Server.Database.DA;
+using FSO.Server.Database.DA.ArchiveUsers;
 using FSO.Server.Database.DA.AvatarClaims;
 using FSO.Server.Database.DA.Hosts;
 using FSO.Server.Domain;
@@ -16,6 +17,7 @@ using Ninject;
 using NLog;
 using System;
 using System.Linq;
+using System.Security.Claims;
 using System.Threading;
 using System.Threading.Tasks;
 
@@ -28,6 +30,17 @@ namespace FSO.Server.Servers.City
         private ISessionGroup VoltronSessions;
         private CityLivenessEngine Liveness;
         public bool ShuttingDown;
+
+        private string ShardName;
+        private string ShardMap;
+
+        protected override RequestClientSessionArchive ArchiveHandshake => new RequestClientSessionArchive()
+        {
+            ServerKey = Config.ArchiveGUID,
+            ShardId = (uint)Config.ID,
+            ShardName = ShardName,
+            ShardMap = ShardMap,
+        };
 
         public CityServer(CityServerConfiguration config, IKernel kernel) : base(config, kernel)
         {
@@ -54,11 +67,14 @@ namespace FSO.Server.Servers.City
                 throw new Exception("Unable to find a shard with id " + Config.ID + ", check it exists in the database");
             }
 
+            ShardName = shard.Name;
+            ShardMap = shard.Map;
             LOG.Info("City identified as " + shard.Name);
 
             var context = new CityServerContext();
             context.ShardId = shard.Id;
             context.Config = Config;
+            context.Sessions = Sessions;
             Kernel.Bind<EventSystem>().ToSelf().InSingletonScope();
             Kernel.Bind<CityLivenessEngine>().ToSelf().InSingletonScope();
             Kernel.Bind<CityServerContext>().ToConstant(context);
@@ -115,6 +131,99 @@ namespace FSO.Server.Servers.City
             return task.Result;
         }
 
+        private bool ValidDisplayName(string name)
+        {
+            return name != null && name.Length > 0 && name.Length < 100;
+        }
+
+        private void HandleArchiveAuth(AriesSession session, RequestClientSessionResponse packet)
+        {
+            using (var da = DAFactory.Get())
+            {
+                // Archive auth always starts as avatarless, but can be upgraded later
+
+                // Try and find by the provided ID (should be 32 chars)
+
+                if (packet.Password.Length != 32)
+                {
+                    // Must be 32 character hash
+                    session.Close();
+                }
+
+                // TODO: check IP ban
+
+                var user = da.ArchiveUsers.GetByClientHash(packet.Password);
+                var ip = session.IoSession.RemoteEndPoint.ToString();
+
+                if (user == null)
+                {
+                    // Try create a user for this hash
+
+                    var newUser = new ArchiveUser()
+                    {
+                        username = packet.Password,
+                        user_state = Database.DA.Users.UserState.email_confirm,
+                        email = "",
+                        is_admin = false,
+                        is_moderator = false,
+                        is_banned = false,
+                        client_id = "0",
+                        register_ip = ip,
+                        last_ip = ip,
+                        shared_user = false,
+                        is_verified = true, // TODO: verification mode
+                        display_name = "",
+                    };
+
+                    var id = da.ArchiveUsers.Create(newUser);
+
+                    newUser.user_id = id;
+
+                    user = newUser;
+                }
+                else
+                {
+                    da.Users.UpdateConnectIP(user.user_id, ip);
+                }
+
+                // Try and update the display name.
+
+                if (!ValidDisplayName(packet.User))
+                {
+                    session.Close();
+                }
+
+                if (packet.User != user.display_name)
+                {
+                    // Is it already taken?
+                    var otherUser = da.ArchiveUsers.GetByDisplayName(packet.User);
+
+                    if (otherUser != null)
+                    {
+                        // TODO: report username is taken
+                        session.Close();
+                    }
+
+                    da.ArchiveUsers.UpdateDisplayName(user.user_id, packet.User);
+
+                    user.display_name = packet.User;
+                }
+
+                // We're authenticated by this point. Upgrade the session to voltron.
+                // TODO: special mode where unverified users can stay connected but not access most endpoints
+
+                var newSession = Sessions.UpgradeSession<VoltronSession>(session, x => {
+                    x.UserId = user.user_id;
+                    x.AvatarId = 0;
+                    session.IsAuthenticated = true;
+                    x.Authenticate(packet.Password);
+                    x.AvatarClaimId = 0;
+                });
+
+                // TODO: verification mode
+            }
+        }
+
         protected override void HandleVoltronSessionResponse(IAriesSession session, object message)
         {
             var rawSession = (AriesSession)session;
@@ -131,6 +240,13 @@ namespace FSO.Server.Servers.City
                         rawSession.Write(new ServerByePDU() { }); //try and close the connection safely
                         rawSession.Close();
                     }
+                    return;
+                }
+
+                if (Config.ArchiveGUID != null)
+                {
+                    // Server is in archive mode, authenticate differently
+                    HandleArchiveAuth(rawSession, packet);
                     return;
                 }
 
@@ -255,7 +371,11 @@ namespace FSO.Server.Servers.City
                 typeof(MailHandler),
                 typeof(MatchmakerNotifyHandler),
                 typeof(NhoodHandler),
-                typeof(BulletinHandler)
+                typeof(BulletinHandler),
+                typeof(CityResourceHandler),
+
+                typeof(ArchiveAvatarsHandler),
+                typeof(ArchiveAvatarSelectHandler),
             };
         }
     }

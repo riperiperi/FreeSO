@@ -71,7 +71,7 @@ END;";
    WHEN (SELECT COUNT(*) from fso_election_votes v INNER JOIN fso_avatars va ON v.from_avatar_id = va.avatar_id
     WHERE v.election_cycle_id = NEW.election_cycle_id AND v.type = NEW.type AND va.user_id IN
      (SELECT user_id FROM fso_users WHERE last_ip =
-      (SELECT last_ip FROM fso_avatars a JOIN fso_users u on a.user_id = u.user_id WHERE avatar_id = NEW.avatar_id)
+      (SELECT last_ip FROM fso_avatars a JOIN fso_users u on a.user_id = u.user_id WHERE avatar_id = NEW.from_avatar_id)
      )) > 0 THEN
     RAISE (ABORT, 'A vote from this person or someone related already exists for this cycle.')
   END;

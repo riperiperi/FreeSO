@@ -234,12 +234,12 @@ namespace FSO.Client.UI.Panels
             {
                 if (value < 2)
                 {
-                    Size = QuerybackPanel.Size.ToVector2() + new Vector2(22, 42);
+                    Size = QuerybackPanel.Size + new Vector2(22, 42);
                     BackOffset = new Point(22, 0);
                 }
                 else
                 {
-                    Size = QuerybackTrade.Size.ToVector2() + new Vector2(22, 42);
+                    Size = QuerybackTrade.Size + new Vector2(22, 42);
                     BackOffset = new Point(40, 0);
                 }
                 this.Y = (value>0)?-114:0;
@@ -287,7 +287,7 @@ namespace FSO.Client.UI.Panels
 
             ListenForMouse(new Rectangle(0, 0, QuerybackPanel.Texture.Width, QuerybackPanel.Texture.Height), (t, s) => { });
 
-            Size = QuerybackPanel.Size.ToVector2() + new Vector2(22, 42);
+            Size = QuerybackPanel.Size + new Vector2(22, 42);
             BackOffset = new Point(40, 0);
 
             QuerybackCatalog = new UIImage(BackgroundImageCatalog);

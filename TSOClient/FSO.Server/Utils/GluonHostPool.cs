@@ -250,6 +250,10 @@ namespace FSO.Server.Utils
             {
                 session.Write(new RequestChallenge() { CallSign = CallSign, PublicHost = PublicHost, InternalHost = InternalHost });
             });
+            Router.On<RequestClientSessionArchive>((session, message) =>
+            {
+                session.Write(new RequestChallenge() { CallSign = CallSign, PublicHost = PublicHost, InternalHost = InternalHost });
+            });
             Router.On<RequestChallengeResponse>((session, message) =>
             {
                 var challenge = (RequestChallengeResponse)message;

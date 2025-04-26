@@ -1,4 +1,5 @@
-﻿using FSO.Common.Utils;
+﻿using FSO.Client.Controllers;
+using FSO.Common.Utils;
 using FSO.Files;
 using FSO.Files.RC;
 using FSO.Server.Clients;
@@ -23,9 +24,14 @@ namespace FSO.Client.Rendering.City
         public int LoadLimit = 100; //about 6mb of 256x256 thumbnails
         public int ExpiryTime = 10; //thumbs expire after about 10 seconds.
         private ApiClient Client;
+        private CityResourceController Resource;
 
-        public LotThumbContent()
+        private bool IsArchive = true;
+
+        public LotThumbContent(CityResourceController resource)
         {
+            Resource = resource;
+
             GameThread.SetInterval(Update, 1000);
             Client = new ApiClient(ApiClient.CDNUrl ?? GlobalSettings.Default.GameEntryUrl);
 
@@ -52,8 +58,8 @@ namespace FSO.Client.Rendering.City
                 if (facade)
                 {
                     result.LotFacade = DefaultFSOF;
-                    
-                    Client.GetFacadeAsync(shardID, location, (data) =>
+
+                    Action<byte[]> callback = (data) =>
                     {
                         if (data != null && !result.Dead && !result.Loaded)
                         {
@@ -72,13 +78,22 @@ namespace FSO.Client.Rendering.City
                                 }
                             }
                         }
-                    });
-                    
+                    };
+
+                    if (IsArchive)
+                    {
+                        Resource.GetFacadeAsync(shardID, location, callback);
+                    }
+                    else
+                    {
+                        Client.GetFacadeAsync(shardID, location, callback);
+                    }
                 }
                 else
                 {
                     result.LotTexture = DefaultThumb;
-                    Client.GetThumbnailAsync(shardID, location, (data) =>
+
+                    Action<byte[]> callback = (data) =>
                     {
                         if (data != null && !result.Dead && !result.Loaded)
                         {
@@ -95,7 +110,16 @@ namespace FSO.Client.Rendering.City
                                 }
                             }
                         }
-                    });
+                    };
+
+                    if (IsArchive)
+                    {
+                        Resource.GetThumbnailAsync(shardID, location, callback);
+                    }
+                    else
+                    {
+                        Client.GetThumbnailAsync(shardID, location, callback);
+                    }
                 }
                 entries[key] = result;
             }

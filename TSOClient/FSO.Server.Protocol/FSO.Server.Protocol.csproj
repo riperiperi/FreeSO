@@ -84,6 +84,7 @@
     <Compile Include="Aries\Packets\RequestChallenge.cs" />
     <Compile Include="Aries\Packets\RequestChallengeResponse.cs" />
     <Compile Include="Aries\Packets\RequestClientSession.cs" />
+    <Compile Include="Aries\Packets\RequestClientSessionArchive.cs" />
     <Compile Include="Aries\Packets\RequestClientSessionResponse.cs" />
     <Compile Include="Authorization\AuthRequest.cs" />
     <Compile Include="Authorization\AuthResult.cs" />
@@ -109,11 +110,18 @@
     <Compile Include="Electron\Model\IActionRequest.cs" />
     <Compile Include="Electron\Model\IActionResponse.cs" />
     <Compile Include="Electron\Model\ModerationRequestType.cs" />
+    <Compile Include="Electron\Packets\ArchiveAvatarSelectRequest.cs" />
+    <Compile Include="Electron\Packets\ArchiveAvatarSelectResponse.cs" />
+    <Compile Include="Electron\Packets\ArchiveAvatarsRequest.cs" />
+    <Compile Include="Electron\Packets\ArchiveAvatarsResponse.cs" />
+    <Compile Include="Electron\Packets\ArchiveClientList.cs" />
     <Compile Include="Electron\Packets\AvatarRetireRequest.cs" />
     <Compile Include="Electron\Packets\BulletinRequest.cs" />
     <Compile Include="Electron\Packets\BulletinResponse.cs" />
     <Compile Include="Electron\Packets\ChangeRoommateRequest.cs" />
     <Compile Include="Electron\Packets\ChangeRoommateResponse.cs" />
+    <Compile Include="Electron\Packets\CityResourceRequest.cs" />
+    <Compile Include="Electron\Packets\CityResourceResponse.cs" />
     <Compile Include="Electron\Packets\FSOVMProtocolMessage.cs" />
     <Compile Include="Electron\Packets\GlobalTuningUpdate.cs" />
     <Compile Include="Electron\Packets\MailRequest.cs" />

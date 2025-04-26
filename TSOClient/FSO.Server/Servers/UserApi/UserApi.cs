@@ -1,9 +1,5 @@
 ﻿using System;
 using FSO.Server.Common;
-using Microsoft.Owin.Hosting;
-using System.Web.Http;
-using Owin;
-using System.Collections.Specialized;
 using Ninject;
 using FSO.Server.Domain;
 

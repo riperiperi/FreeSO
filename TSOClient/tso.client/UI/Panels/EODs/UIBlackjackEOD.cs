@@ -1547,7 +1547,7 @@ namespace FSO.Client.UI.Panels.EODs
             {
                 X = DealerBetBack.X,
                 Y = DealerBetBack.Y + 4,
-                Size = DealerBetBack.Size.ToVector2(),
+                Size = DealerBetBack.Size,
                 CurrentText = "Dealer",
                 Alignment = TextAlignment.Center,
                 TextStyle = captionStyle,

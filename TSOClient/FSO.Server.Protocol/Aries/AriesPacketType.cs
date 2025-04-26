@@ -15,6 +15,8 @@ namespace FSO.Server.Protocol.Aries
         AnswerChallenge,
         AnswerAccepted,
 
+        RequestClientSessionArchive,
+
         Unknown
     }
 
@@ -42,6 +44,8 @@ namespace FSO.Server.Protocol.Aries
                     return AriesPacketType.RequestClientSession;
                 case 21:
                     return AriesPacketType.RequestClientSessionResponse;
+                case 2000:
+                    return AriesPacketType.RequestClientSessionArchive;
                 default:
                     return AriesPacketType.Unknown;
             }
@@ -69,6 +73,8 @@ namespace FSO.Server.Protocol.Aries
                     return 22;
                 case AriesPacketType.RequestClientSessionResponse:
                     return 21;
+                case AriesPacketType.RequestClientSessionArchive:
+                    return 2000;
                 default:
                     throw new Exception("Unknown aries packet type " + type.ToString());
             }

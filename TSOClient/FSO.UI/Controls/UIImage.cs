@@ -155,6 +155,18 @@ namespace FSO.Client.UI.Controls
             Invalidate();
         }
 
+        public override Vector2 Size
+        {
+            get
+            {
+                return new Vector2(m_Width, m_Height);
+            }
+            set
+            {
+                SetSize(value.X, value.Y);
+            }
+        }
+
         /// <summary>
         /// The source rectangle declares boundarys from the source texture of the UIElement, effectively
         /// masking it during draw calls. See SpiteBatch.Draw(sourceRectangle) and DrawLocalTexture() below.
@@ -176,7 +188,7 @@ namespace FSO.Client.UI.Controls
         }
 
         [UIAttribute("size")]
-        public new Point Size
+        public Point PointSize
         {
             get
             {

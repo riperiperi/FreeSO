@@ -487,7 +487,7 @@ namespace FSO.Client.UI.Panels
                 }, "Lot_LotAdmitInfo.LotAdmitInfo_AdmitList", "Lot_LotAdmitInfo.LotAdmitInfo_BanList");
 
             Redraw();
-            Size = BackgroundExpandedImage.Size.ToVector2();
+            Size = BackgroundExpandedImage.Size;
         }
 
         private void ModButton_OnButtonClick(UIElement button)

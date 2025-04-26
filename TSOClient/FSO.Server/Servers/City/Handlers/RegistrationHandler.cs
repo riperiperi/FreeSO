@@ -212,8 +212,12 @@ namespace FSO.Server.Servers.City.Handlers
                     return;
                 }
             }
-
-            ((VoltronSession)session).AvatarId = newId;
+            
+            if (Context.Config.ArchiveGUID == null)
+            {
+                // Archive still needs to select the avatar after making it.
+                ((VoltronSession)session).AvatarId = newId;
+            }
 
             session.Write(new CreateASimResponse {
                 Status = CreateASimStatus.SUCCESS,

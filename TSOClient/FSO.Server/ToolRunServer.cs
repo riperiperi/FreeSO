@@ -91,6 +91,11 @@ namespace FSO.Server
                 }
             }
 
+            if (Config.ArchiveGUID != null)
+            {
+                LOG.Info("=== RUNNING IN ARCHIVE MODE! Only archive authentication will work! ===");
+            }
+
             //TODO: Some content preloading
             LOG.Info("Scanning content");
             VMContext.InitVMConfig(false);
@@ -122,6 +127,8 @@ namespace FSO.Server
 
             foreach (var cityServer in Config.Services.Cities)
             {
+                if (cityServer.ArchiveGUID == null) cityServer.ArchiveGUID = Config.ArchiveGUID;
+
                 /**
                  * Need to create a kernel for each city server as there is some data they do not share
                  */

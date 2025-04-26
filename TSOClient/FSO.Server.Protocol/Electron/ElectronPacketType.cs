@@ -29,6 +29,13 @@ namespace FSO.Server.Protocol.Electron
         BulletinRequest,
         BulletinResponse,
         GlobalTuningUpdate,
+        CityResourceRequest,
+        CityResourceResponse,
+        ArchiveAvatarsRequest,
+        ArchiveAvatarsResponse,
+        ArchiveAvatarSelectRequest,
+        ArchiveAvatarSelectResponse,
+        ArchiveClientList,
         Unknown = 0xFFFF
     }
 

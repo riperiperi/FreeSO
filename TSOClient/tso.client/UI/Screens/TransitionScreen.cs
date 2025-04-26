@@ -60,5 +60,12 @@ namespace FSO.Client.UI.Screens
             m_LoginProgress.ProgressCaption = GameFacade.Strings.GetString("251", (stringIndex).ToString());
             m_LoginProgress.Progress = progress;
         }
+
+        public void SetProgressArchive(float progress, string message)
+        {
+            // TODO: localization
+            m_LoginProgress.ProgressCaption = message;
+            m_LoginProgress.Progress = progress;
+        }
     }
 }

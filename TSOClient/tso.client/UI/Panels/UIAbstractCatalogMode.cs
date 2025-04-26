@@ -52,7 +52,7 @@ namespace FSO.Client.UI.Panels
             Background.Y = 0;
             Background.BlockInput();
             this.AddAt(0, Background);
-            Size = Background.Size.ToVector2();
+            Size = Background.Size;
 
             Catalog = new UICatalog((mode == "buildpanel") ? (useSmall ? 10 : 20) : (useSmall ? 14 : 24));
             Catalog.LotControl = lotController;

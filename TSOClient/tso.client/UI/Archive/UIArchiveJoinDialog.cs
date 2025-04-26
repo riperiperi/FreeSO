@@ -1,4 +1,5 @@
-﻿using FSO.Client.UI.Controls;
+﻿using FSO.Client.Controllers;
+using FSO.Client.UI.Controls;
 using Microsoft.Xna.Framework;
 
 namespace FSO.Client.UI.Archive
@@ -60,6 +61,9 @@ namespace FSO.Client.UI.Archive
 
             Add(vbox);
 
+            NameInput.CurrentText = "riperiperi";
+            AddressInput.CurrentText = "127.0.0.1";
+
             NameInput.OnChange += ValidateInputs;
             AddressInput.OnChange += ValidateInputs;
 
@@ -68,7 +72,7 @@ namespace FSO.Client.UI.Archive
 
         private void Join(Framework.UIElement button)
         {
-            // TODO
+            FSOFacade.Controller.ConnectToArchive(NameInput.CurrentText, AddressInput.CurrentText);
         }
 
         private void ValidateInputs(Framework.UIElement element)

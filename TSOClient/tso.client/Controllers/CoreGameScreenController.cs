@@ -38,6 +38,7 @@ namespace FSO.Client.Controllers
         public TerrainController Terrain;
         public NeighborhoodActionController NeighborhoodProtocol;
         public BulletinActionController BulletinProtocol;
+        public CityResourceController CityResource;
 
         public CoreGameScreenController(CoreGameScreen view, Network.Network network, IClientDataService dataService, IKernel kernel, LotConnectionRegulator joinLotRegulator)
         {
@@ -45,6 +46,7 @@ namespace FSO.Client.Controllers
             this.Network = network;
             this.DataService = dataService;
             this.Chat = new MessagingController(this, view.MessageTray, network, dataService);
+            this.CityResource = new CityResourceController(network);
             this.JoinLotRegulator = joinLotRegulator;
             this.RoommateProtocol = new RoommateRequestController(this, network, dataService);
             this.NeighborhoodProtocol = kernel.Get<NeighborhoodActionController>();
@@ -400,6 +402,7 @@ namespace FSO.Client.Controllers
             GameFacade.Scenes.Clear();
             Terrain.Dispose();
             Chat.Dispose();
+            CityResource.Dispose();
             RoommateProtocol.Dispose();
             Screen.JoinLotProgress.FindController<JoinLotProgressController>()?.Dispose();
             ((PersonPageController)Screen.PersonPage.Controller)?.Dispose();

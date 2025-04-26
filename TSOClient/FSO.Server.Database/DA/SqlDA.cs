@@ -29,6 +29,7 @@ using FSO.Server.Database.DA.Elections;
 using FSO.Server.Database.DA.Bulletin;
 using FSO.Server.Database.DA.Updates;
 using FSO.Server.Database.DA.GlobalCooldowns;
+using FSO.Server.Database.DA.ArchiveUsers;
 
 namespace FSO.Server.Database.DA
 {
@@ -420,6 +421,19 @@ namespace FSO.Server.Database.DA
                     _Cooldowns = new SqlGlobalCooldowns(Context);
                 }
                 return _Cooldowns;
+            }
+        }
+
+        private IArchiveUsers _ArchiveUsers;
+        public IArchiveUsers ArchiveUsers
+        {
+            get
+            {
+                if (_ArchiveUsers == null)
+                {
+                    _ArchiveUsers = new SqlArchiveUsers(Context);
+                }
+                return _ArchiveUsers;
             }
         }
 

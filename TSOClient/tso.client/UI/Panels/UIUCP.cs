@@ -87,6 +87,7 @@ namespace FSO.Client.UI.Panels
         /// </summary>
         public UIButton BookmarkButton { get; set; }
         public UIButton FriendshipWebButton { get; set; }
+        public UIButton BudgetButton { get; set; }
 
         /// <summary>
         /// Labels
@@ -188,6 +189,17 @@ namespace FSO.Client.UI.Panels
             SetMode(UCPMode.CityMode);
             Focus = UCPFocusMode.UCP;
             SetFocus(UCPFocusMode.Game);
+
+            InitArchive();
+        }
+
+        private void InitArchive()
+        {
+            var ui = Content.Content.Get().CustomUI;
+            var gd = GameFacade.GraphicsDevice;
+
+            BudgetButton.Tooltip = "User List";
+            BudgetButton.Texture = ui.Get("archive_clientsbtn.png").Get(gd);
         }
 
         private void HelpButton_OnButtonClick(UIElement button)

@@ -373,8 +373,8 @@ namespace FSO.Server.Database.DA.Avatars
             Context.Connection.Query<DbJobLevel>(Context.CompatLayer(
                 "INSERT INTO fso_joblevels (avatar_id, job_type, job_experience, job_level, job_sickdays, job_statusflags) "
                 + "VALUES (@avatar_id, @job_type, @job_experience, @job_level, @job_sickdays, @job_statusflags) "
-                + "ON DUPLICATE KEY UPDATE job_experience=VALUES(`job_experience`), job_level=VALUES(`job_level`), "
-                +" job_sickdays=VALUES(`job_sickdays`), job_statusflags=VALUES(`job_statusflags`); ", "`avatar_id`,`job_type`"), jobLevel);
+                + "ON DUPLICATE KEY UPDATE job_experience=@job_experience, job_level=@job_level, "
+                +" job_sickdays=@job_sickdays, job_statusflags=@job_statusflags; ", "`avatar_id`,`job_type`"), jobLevel);
             return;
         }
 

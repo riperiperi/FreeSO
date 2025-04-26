@@ -10,6 +10,8 @@ namespace FSO.Server.Protocol.CitySelector
         public uint PlayerID;
         public string AvatarID;
 
+        public bool ExplicitPort;
+
         public bool PreAlpha = false;
 
         #region IXMLPrinter Members

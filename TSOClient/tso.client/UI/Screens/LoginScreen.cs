@@ -86,7 +86,7 @@ namespace FSO.Client.UI.Screens
             LoginDialog.Y = (ScreenHeight - LoginDialog.Height) / 2;
             this.Add(LoginDialog);
 
-            Add(new UIArchiveJoinDialog());
+            //Add(new UIArchiveJoinDialog());
 
             bool usernamePopulated = false;
 

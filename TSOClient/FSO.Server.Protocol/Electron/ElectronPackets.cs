@@ -32,7 +32,14 @@ namespace FSO.Server.Protocol.Electron
             typeof(NhoodCandidateList),
             typeof(BulletinRequest),
             typeof(BulletinResponse),
-            typeof(GlobalTuningUpdate)
+            typeof(CityResourceRequest),
+            typeof(CityResourceResponse),
+            typeof(GlobalTuningUpdate),
+            typeof(ArchiveAvatarSelectRequest),
+            typeof(ArchiveAvatarSelectResponse),
+            typeof(ArchiveAvatarsRequest),
+            typeof(ArchiveAvatarsResponse),
+            typeof(ArchiveClientList),
         };
 
         static ElectronPackets()
