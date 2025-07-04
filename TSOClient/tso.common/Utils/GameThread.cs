@@ -109,6 +109,7 @@ namespace FSO.Common.Utils
         private static List<UpdateHook> _UpdateHooks = new List<UpdateHook>();
         private static UpdateHook[] _UpdateHooksCopy = new UpdateHook[0];
         private static List<UpdateHook> _UpdateHooksRemove = new List<UpdateHook>();
+        private static object _CallbacksLock = new object();
         private static Queue<Callback<UpdateState>> _UpdateCallbacks = new Queue<Callback<UpdateState>>();
         private static Queue<Callback<UpdateState>> _UpdateCallbacksSwap = new Queue<Callback<UpdateState>>();
         public static AutoResetEvent OnWork = new AutoResetEvent(false);
@@ -151,7 +152,7 @@ namespace FSO.Common.Utils
 
         public static void NextUpdate(Callback<UpdateState> callback)
         {
-            lock (_UpdateCallbacks)
+            lock (_CallbacksLock)
             {
                 _UpdateCallbacks.Enqueue(callback);
             }
@@ -180,7 +181,7 @@ namespace FSO.Common.Utils
         public static Task<T> NextUpdate<T>(Func<UpdateState, T> callback)
         {
             TaskCompletionSource<T> task = new TaskCompletionSource<T>();
-            lock (_UpdateCallbacks)
+            lock (_CallbacksLock)
             {
                 _UpdateCallbacks.Enqueue(x =>
                 {
@@ -212,7 +213,7 @@ namespace FSO.Common.Utils
         {
             Queue<Callback<UpdateState>> _callbacks;
 
-            lock (_UpdateCallbacks)
+            lock (_CallbacksLock)
             {
                 // Swap the active callbacks queue with the second one, so we can
                 // process entries without fear of more being added.
