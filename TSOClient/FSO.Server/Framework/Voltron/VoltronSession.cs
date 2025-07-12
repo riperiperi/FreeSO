@@ -15,6 +15,11 @@ namespace FSO.Server.Framework.Voltron
         public uint AvatarId { get; set; }
         public int AvatarClaimId { get; set; }
 
+        // Archive specific state
+        public string DisplayName { get; set; }
+        public uint ModerationLevel { get; set; }
+        public uint SessionUID { get; set; }
+
         public bool IsAnonymous
         {
             get

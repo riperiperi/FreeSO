@@ -40,7 +40,7 @@ namespace FSO.Server.Database.DA.Bonus
         public void Insert(IEnumerable<DbBonus> bonus)
         {
             Context.Connection.ExecuteBufferedInsert(Context.CompatLayer(
-                "INSERT INTO fso_bonus (avatar_id, period, bonus_visitor, bonus_property, bonus_sim) VALUES (@avatar_id, @period, @bonus_visitor, @bonus_property, @bonus_sim) ON DUPLICATE KEY UPDATE fso_bonus.avatar_id = fso_bonus.avatar_id",
+                "INSERT INTO fso_bonus (avatar_id, period, bonus_visitor, bonus_property, bonus_sim) VALUES (@avatar_id, @period, @bonus_visitor, @bonus_property, @bonus_sim) ON DUPLICATE KEY UPDATE avatar_id = @avatar_id",
                 "`avatar_id`,`period`"), bonus, 100);
         }
 

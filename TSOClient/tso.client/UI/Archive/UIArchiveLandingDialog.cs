@@ -1,4 +1,5 @@
-﻿using FSO.Client.UI.Controls;
+﻿using FSO.Client.Controllers;
+using FSO.Client.UI.Controls;
 using Microsoft.Xna.Framework;
 using System;
 using System.Collections.Generic;
@@ -52,6 +53,25 @@ namespace FSO.Client.UI.Archive
             vbox.Position = new Vector2(20, 45);
 
             SetSize((int)vbox.Size.X + 40, (int)vbox.Size.Y + 70);
+
+            CreateButton.OnButtonClick += Create;
+            JoinButton.OnButtonClick += Join;
+            QuickStartButton.OnButtonClick += QuickStart;
+        }
+
+        private void QuickStart(Framework.UIElement button)
+        {
+            throw new NotImplementedException();
+        }
+
+        private void Join(Framework.UIElement button)
+        {
+            FindController<ConnectArchiveController>().SwitchMode(ConnectArchiveMode.Join);
+        }
+
+        private void Create(Framework.UIElement button)
+        {
+            FindController<ConnectArchiveController>().SwitchMode(ConnectArchiveMode.Create);
         }
     }
 }

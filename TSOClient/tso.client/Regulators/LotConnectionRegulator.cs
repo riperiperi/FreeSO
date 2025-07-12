@@ -111,6 +111,17 @@ namespace FSO.Client.Regulators
                 .TransitionTo("Disconnected");
         }
 
+        private string TransformLotAddress(string address)
+        {
+            if (address.StartsWith("0.0.0.0:"))
+            {
+                // Use the same address as the city server.
+                return City.RemoteEndPoint.Address.ToString() + address.Substring(7);
+            }
+
+            return address;
+        }
+
         protected override void OnAfterTransition(RegulatorState oldState, RegulatorState newState, object data)
         {
             switch (newState.Name)
@@ -132,7 +143,7 @@ namespace FSO.Client.Regulators
                     {
                         LotId = result.LotId;
                         FindLotResponse = result;
-                        AsyncTransition("OpenSocket", result.Address);
+                        AsyncTransition("OpenSocket", TransformLotAddress(result.Address));
                     }
                     else
                     {

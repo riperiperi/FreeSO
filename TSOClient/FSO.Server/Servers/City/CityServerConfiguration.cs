@@ -1,4 +1,5 @@
-﻿using FSO.Server.Framework.Aries;
+﻿using FSO.Common;
+using FSO.Server.Framework.Aries;
 
 namespace FSO.Server.Servers.City
 {
@@ -6,10 +7,11 @@ namespace FSO.Server.Servers.City
     {
         public int ID;
         public bool Timeout_No_Auth = true;
-        public string ArchiveGUID;
 
         public CityServerNhoodConfiguration Neighborhoods = new CityServerNhoodConfiguration();
         public CityServerMaintenanceConfiguration Maintenance;
+
+        public ArchiveConfiguration Archive;
     }
 
 

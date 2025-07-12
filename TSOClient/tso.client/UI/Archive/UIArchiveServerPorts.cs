@@ -1,6 +1,8 @@
 ﻿using FSO.Client.UI.Controls;
-using FSO.SimAntics.NetPlay.EODs.Handlers;
+using FSO.Client.UI.Framework;
+using FSO.Common;
 using Microsoft.Xna.Framework;
+using System;
 
 namespace FSO.Client.UI.Archive
 {
@@ -9,7 +11,7 @@ namespace FSO.Client.UI.Archive
         public UITextBox LotInput;
         public UITextBox CityInput;
 
-        public UIArchiveServerPorts() : base(UIDialogStyle.OK, true)
+        public UIArchiveServerPorts(ArchiveConfiguration config, Action onClose) : base(UIDialogStyle.OK, true)
         {
             Caption = "Custom Ports";
             var vbox = new UIVBoxContainer() { HorizontalAlignment = UIContainerHorizontalAlignment.Center };
@@ -24,17 +26,6 @@ namespace FSO.Client.UI.Archive
 
             desc.Size = new Vector2(300, 70);
 
-            var lotPortBox = new UIHBoxContainer() { VerticalAlignment = UIContainerVerticalAlignment.Middle };
-
-            lotPortBox.Add(new UILabel()
-            {
-                Caption = "Lot: "
-            });
-
-            lotPortBox.Add(LotInput = new UITextBox() { });
-
-            vbox.Add(lotPortBox);
-
             var cityPortBox = new UIHBoxContainer() { VerticalAlignment = UIContainerVerticalAlignment.Middle };
 
             cityPortBox.Add(new UILabel()
@@ -46,15 +37,45 @@ namespace FSO.Client.UI.Archive
 
             vbox.Add(cityPortBox);
 
+            var lotPortBox = new UIHBoxContainer() { VerticalAlignment = UIContainerVerticalAlignment.Middle };
+
+            lotPortBox.Add(new UILabel()
+            {
+                Caption = "Lot: "
+            });
+
+            lotPortBox.Add(LotInput = new UITextBox() { });
+
+            vbox.Add(lotPortBox);
+
             Add(vbox);
 
             LotInput.SetSize(100, 25);
             CityInput.SetSize(100, 25);
 
+            LotInput.CurrentText = config.LotPort.ToString();
+            CityInput.CurrentText = config.CityPort.ToString();
+
             vbox.AutoSize();
             vbox.Position = new Vector2(20, 35);
 
             SetSize((int)vbox.Size.X + 40, (int)vbox.Size.Y + 70);
+
+            OKButton.OnButtonClick += (elem) =>
+            {
+                onClose();
+                UIScreen.RemoveDialog(this);
+            };
+        }
+
+        public bool GetCityPort(out ushort port)
+        {
+            return ushort.TryParse(CityInput.CurrentText, out port);
+        }
+
+        public bool GetLotPort(out ushort port)
+        {
+            return ushort.TryParse(LotInput.CurrentText, out port);
         }
     }
 }

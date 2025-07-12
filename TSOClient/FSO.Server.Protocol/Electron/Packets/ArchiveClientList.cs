@@ -9,6 +9,7 @@ namespace FSO.Server.Protocol.Electron.Packets
         public string DisplayName;
         public uint AvatarId;
         public uint ModerationLevel;
+        public uint SessionUID;
 
         public static ArchiveClient Deserialize(IoBuffer input)
         {
@@ -18,6 +19,7 @@ namespace FSO.Server.Protocol.Electron.Packets
                 DisplayName = input.GetPascalVLCString(),
                 AvatarId = input.GetUInt32(),
                 ModerationLevel = input.GetUInt32(),
+                SessionUID = input.GetUInt32()
             };
         }
 
@@ -27,6 +29,7 @@ namespace FSO.Server.Protocol.Electron.Packets
             output.PutPascalVLCString(DisplayName);
             output.PutUInt32(AvatarId);
             output.PutUInt32(ModerationLevel);
+            output.PutUInt32(SessionUID);
         }
     }
 

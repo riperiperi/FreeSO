@@ -1,4 +1,5 @@
-﻿using FSO.Server.Database;
+﻿using FSO.Common;
+using FSO.Server.Database;
 using FSO.Server.Discord;
 using FSO.Server.Servers.Api.JsonWebToken;
 using FSO.Server.Servers.City;
@@ -19,7 +20,7 @@ namespace FSO.Server
         public string SimNFS;
         public string UpdateBranch;
 
-        public string ArchiveGUID; // If this is present, the server is running in archive mode
+        public ArchiveConfiguration Archive; // If this is present, the server is running in archive mode
 
         public DatabaseConfiguration Database;
         public ServerConfigurationservices Services;
@@ -50,8 +51,25 @@ namespace FSO.Server
 
     public class ServerConfigurationModule : NinjectModule
     {
+        private ServerConfiguration ExplicitConfig;
+
+        public ServerConfigurationModule()
+        {
+
+        }
+
+        public ServerConfigurationModule(ServerConfiguration config)
+        {
+            ExplicitConfig = config;
+        }
+
         private ServerConfiguration GetConfiguration(IContext context)
         {
+            if (ExplicitConfig != null)
+            {
+                return ExplicitConfig;
+            }
+
             //TODO: Allow config path to be overriden in a switch
             var configPath = "config.json";
             if (!File.Exists(configPath))

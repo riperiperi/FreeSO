@@ -233,5 +233,33 @@ namespace FSO.Server.Database.DA.Objects
                 return Context.Connection.Query<uint>("SELECT object_id FROM fso_objects").ToList();
             }
         }
+
+        public bool GetDbObjectState(uint id, out byte[] data)
+        {
+            data = null;
+            if (!Context.UseBlobInventory)
+            {
+                return false;
+            }
+
+            data = Context.Connection.Query<byte[]>("SELECT inventory_state " +
+                "FROM fso_objects WHERE object_id = @object_id", new { object_id = id }).FirstOrDefault();
+
+            return true;
+        }
+
+        public bool SetDbObjectState(uint id, byte[] data)
+        {
+            if (!Context.UseBlobInventory)
+            {
+                return false;
+            }
+
+            Context.Connection.Query<int>("UPDATE fso_objects SET "
+                + "inventory_state = @inventory_state "
+                + "WHERE object_id = @object_id", new { object_id = id, inventory_state = data });
+
+            return true;
+        }
     }
 }

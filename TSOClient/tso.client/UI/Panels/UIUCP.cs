@@ -200,6 +200,14 @@ namespace FSO.Client.UI.Panels
 
             BudgetButton.Tooltip = "User List";
             BudgetButton.Texture = ui.Get("archive_clientsbtn.png").Get(gd);
+
+            BudgetButton.OnButtonClick += UserListButtonClick;
+        }
+
+        private void UserListButtonClick(UIElement button)
+        {
+            var screen = (GameFacade.Screens.CurrentUIScreen as CoreGameScreen);
+            screen?.OpenUserList();
         }
 
         private void HelpButton_OnButtonClick(UIElement button)

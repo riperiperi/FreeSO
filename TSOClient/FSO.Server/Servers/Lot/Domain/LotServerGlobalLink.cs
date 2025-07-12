@@ -424,7 +424,6 @@ namespace FSO.Server.Servers.Lot.Domain
                 }
                 var objStr = objectPID.ToString("x8");
                 //make sure this exists
-                Directory.CreateDirectory(Path.Combine(Config.SimNFS, "Objects/" + objStr + "/"));
                 byte[] data;
                 using (var stream = new MemoryStream())
                 {
@@ -432,31 +431,42 @@ namespace FSO.Server.Servers.Lot.Domain
                     state.SerializeInto(writer);
                     data = stream.ToArray();
                 }
-                var file = File.Open(Path.Combine(Config.SimNFS, "Objects/" + objStr + "/inventoryState.fsoo"), FileMode.Create);
 
-                if (runSync)
+                using (var db = DAFactory.Get())
                 {
-                    file.Write(data, 0, data.Length);
-                    using (var db = DAFactory.Get())
+                    if (db.Objects.SetDbObjectState(objectPID, data))
                     {
-                        //todo: race where inventory object could potentially be placed on the lot before the old instance of it is deleted
-                        //probably just block objects with same persist id from being placed.
                         db.Objects.UpdatePersistState(objectPID, dbState);
                         callback(true, objectPID);
                     }
-                    file.Close();
-                }
-                else
-                {
-                    file.WriteAsync(data, 0, data.Length).ContinueWith((x) =>
+                    else
                     {
-                        using (var db = DAFactory.Get())
+                        Directory.CreateDirectory(Path.Combine(Config.SimNFS, "Objects/" + objStr + "/"));
+                        var file = File.Open(Path.Combine(Config.SimNFS, "Objects/" + objStr + "/inventoryState.fsoo"), FileMode.Create);
+
+                        if (runSync)
                         {
+                            file.Write(data, 0, data.Length);
+
+                            //todo: race where inventory object could potentially be placed on the lot before the old instance of it is deleted
+                            //probably just block objects with same persist id from being placed.
                             db.Objects.UpdatePersistState(objectPID, dbState);
                             callback(true, objectPID);
+                            file.Close();
                         }
-                        file.Close();
-                    });
+                        else
+                        {
+                            file.WriteAsync(data, 0, data.Length).ContinueWith((x) =>
+                            {
+                                using (var db2 = DAFactory.Get())
+                                {
+                                    db2.Objects.UpdatePersistState(objectPID, dbState);
+                                    callback(true, objectPID);
+                                }
+                                file.Close();
+                            });
+                        }
+                    }
                 }
             }
             catch (Exception e)
@@ -616,14 +626,17 @@ namespace FSO.Server.Servers.Lot.Domain
             byte[] dat = null;
             try
             {
-                var objStr = objectPID.ToString("x8");
-                var path = Path.Combine(Config.SimNFS, "Objects/" + objStr + "/inventoryState.fsoo");
-
-                //if path does not exist, will throw FileNotFoundException
-                using (var file = File.Open(path, FileMode.Open))
+                if (!db.Objects.GetDbObjectState(objectPID, out dat))
                 {
-                    dat = new byte[file.Length];
-                    file.Read(dat, 0, dat.Length);
+                    var objStr = objectPID.ToString("x8");
+                    var path = Path.Combine(Config.SimNFS, "Objects/" + objStr + "/inventoryState.fsoo");
+
+                    //if path does not exist, will throw FileNotFoundException
+                    using (var file = File.Open(path, FileMode.Open))
+                    {
+                        dat = new byte[file.Length];
+                        file.Read(dat, 0, dat.Length);
+                    }
                 }
             }
             catch (Exception e)

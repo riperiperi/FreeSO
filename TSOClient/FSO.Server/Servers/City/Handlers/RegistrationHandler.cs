@@ -213,7 +213,7 @@ namespace FSO.Server.Servers.City.Handlers
                 }
             }
             
-            if (Context.Config.ArchiveGUID == null)
+            if (Context.Config.Archive == null)
             {
                 // Archive still needs to select the avatar after making it.
                 ((VoltronSession)session).AvatarId = newId;

@@ -85,7 +85,8 @@ namespace FSO.Client.UI.Controls
 
         private void _Button_OnButtonClick(UIElement button)
         {
-            FindController<CoreGameScreenController>()?.ShowPersonPage(User.Value);
+            var parent = Parent ?? UIScreen.Current;
+            parent.FindController<CoreGameScreenController>()?.ShowPersonPage(User.Value);
         }
 
         private ITextureRef _FrameTexture;

@@ -3,6 +3,7 @@ using FSO.Server.Utils;
 using NLog;
 using System;
 using System.Collections.Generic;
+using System.Globalization;
 using System.IO;
 using System.Linq;
 using System.Text;
@@ -21,6 +22,7 @@ namespace FSO.Server
         private static Logger LOG = LogManager.GetCurrentClassLogger();
         private IDAFactory DAFactory;
         private SqliteImportOptions Options;
+        private ServerConfiguration Config;
 
         private Regex CreateRegex = new Regex("^CREATE TABLE (?<Identifier>[A-Za-z0-9_`]+) \\(");
         private Regex ColumnRegex = new Regex("^(?<Identifier>\\s*[A-Za-z0-9_`]+\\s)(?<Type>[a-z]+(\\([A-Za-z0-9_\\,']+\\))?)(?<Unsigned>\\sunsigned)?(?<Extras>(\\s.*))(?<Comma>,?)$");
@@ -31,6 +33,9 @@ namespace FSO.Server
 
         private Regex RemoveCountsRegex = new Regex("`\\([0-9]+\\)");
         private Regex CommentStartRegex = new Regex("/\\*![0-9]{5}");
+
+        private string InventoryStateColumn = @"ALTER TABLE `fso_objects`
+            ADD COLUMN `inventory_state` BLOB DEFAULT NULL;";
 
         public static string[] ImportOrder = new string[]
         {
@@ -135,10 +140,11 @@ namespace FSO.Server
             //"routines" //TODO... sqlite does not support stored procedures or functions, so these need to be moved to the da code
         };
 
-        public ToolSqliteImport(SqliteImportOptions options, IDAFactory factory)
+        public ToolSqliteImport(SqliteImportOptions options, IDAFactory factory, ServerConfiguration config)
         {
             DAFactory = factory;
             Options = options;
+            Config = config;
         }
 
         public string RemoveComments(string sql)
@@ -747,9 +753,97 @@ namespace FSO.Server
             return result;
         }
 
+        private bool DeleteIfEmpty(string dir)
+        {
+            if (Directory.GetFileSystemEntries(dir).Length == 0)
+            {
+                Directory.Delete(dir);
+
+                return true;
+            }
+
+            return false;
+        }
+
+        public void MigrateInventoryState()
+        {
+            // First, create the table in the database.
+            using (var da = (SqlDA)DAFactory.Get())
+            {
+                LOG.Info($"Adding inventory state column to database...");
+                try
+                {
+                    RunCommand(da, InventoryStateColumn);
+                }
+                catch (Exception)
+                {
+                    LOG.Info($"- Seems like it's already there... continuing.");
+                }
+
+                var objs = Directory.GetDirectories(Path.Combine(Config.SimNFS, "Objects/"));
+                LOG.Info($"Migrating inventory to database... ({objs.Length} entries)");
+
+                int migratedCount = 0;
+                int folderDeletionCount = 0;
+                int processedCount = 0;
+
+                foreach (var obj in objs)
+                {
+                    if (!uint.TryParse(Path.GetFileName(obj), NumberStyles.HexNumber, null, out uint id))
+                    {
+                        continue;
+                    }
+
+                    var statePath = Path.Combine(obj, "inventoryState.fsoo");
+                    if (File.Exists(statePath))
+                    {
+                        var data = File.ReadAllBytes(statePath);
+
+                        if (!da.Objects.SetDbObjectState(id, data))
+                        {
+                            LOG.Info($"Current database configuration does not support inventory in database.");
+                            return; // invalid?
+                        }
+
+                        File.Delete(statePath);
+
+                        migratedCount++;
+
+                        if (DeleteIfEmpty(obj))
+                        {
+                            folderDeletionCount++;
+                        }
+                    }
+
+                    if ((++processedCount % 1000) == 0)
+                    {
+                        LOG.Info($"- {processedCount}/{objs.Length}...");
+                    }
+                }
+
+                LOG.Info($"Finished migration: {migratedCount}/{objs.Length} objects migrated to db, {folderDeletionCount} folders deleted.");
+            }
+        }
+
+        private void Commit()
+        {
+            using (var da = (SqlDA)DAFactory.Get())
+            {
+                RunCommand(da, "PRAGMA wal_checkpoint(TRUNCATE)");
+                RunCommand(da, "vacuum");
+                RunCommand(da, "PRAGMA wal_checkpoint(TRUNCATE)");
+            }
+        }
+
         public int Run()
         {
             SetPragmas();
+
+            MigrateInventoryState();
+
+            Commit();
+
+            return 1;
 
             var files = ScanDumps();
 
@@ -761,6 +855,10 @@ namespace FSO.Server
             }
 
             CreateTriggers();
+
+            MigrateInventoryState();
+
+            Commit();
 
             return 1;
         }

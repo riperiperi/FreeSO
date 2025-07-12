@@ -21,6 +21,8 @@ using FSO.Common.DataService.Model;
 using FSO.Common.Serialization.Primitives;
 using FSO.UI.Model;
 using MSDFData;
+using FSO.Server.Embedded;
+using FSO.Client.UI.Archive;
 
 namespace FSO.Client
 {
@@ -33,6 +35,9 @@ namespace FSO.Client
         private UIScreen CurrentView;
         private IKernel Kernel;
         private static bool DummyLinker;
+
+        private EmbeddedServer Server;
+        private UIDialog ShutdownDialog;
 
         public GameController(IKernel kernel)
         {
@@ -250,10 +255,10 @@ namespace FSO.Client
             });
         }
 
-        public void ConnectToArchive(string displayName, string address)
+        public void ConnectToArchive(string displayName, string address, bool selfHost)
         {
             var controller = CurrentController as ConnectArchiveController;
-            controller.Connect(displayName, address, () => { GotoCity(controller.AvatarData, null); }, new Common.Utils.Callback(Disconnect));
+            controller.Connect(displayName, address, selfHost, () => { GotoCity(controller.AvatarData, null); }, new Common.Utils.Callback(Disconnect));
         }
 
         public void RetireAvatar(string cityName, uint avatarId)
@@ -352,6 +357,12 @@ namespace FSO.Client
         /// and then work to clean everything up
         /// </summary>
         public void FatalError(string errorTitle, string errorMessage){
+            if (ShutdownDialog != null)
+            {
+                // If the game is shutting down, don't show any errors.
+                return;
+            }
+
             var alert = UIScreen.GlobalShowAlert(new UI.Controls.UIAlertOptions {
                 Message = errorMessage,
                 Title = errorTitle,
@@ -424,6 +435,28 @@ namespace FSO.Client
             GameFacade.Screens.RemoveCurrent();
             GameFacade.Screens.AddScreen(screen);
             DiscordRpcEngine.SendFSOPresence("Viewing Credits");
+        }
+
+        public void RegisterServer(EmbeddedServer server)
+        {
+            Server = server;
+        }
+
+        public bool CloseAttempt()
+        {
+            if (Server != null)
+            {
+                if (ShutdownDialog == null)
+                {
+                    ShutdownDialog = new UIArchiveServerStatusDialog(false, Server, null);
+
+                    UIScreen.GlobalShowDialog(ShutdownDialog, true);
+                }
+
+                return false;
+            }
+
+            return true;
         }
 
         public void StartDebugTools()

@@ -1,4 +1,5 @@
 ﻿using Dapper;
+using FSO.Server.Database.DA.Tuning;
 using FSO.Server.Database.SqliteCompat;
 using System.Net.NetworkInformation;
 
@@ -22,6 +23,7 @@ namespace FSO.Server.Database.DA
             SqlMapper.AddTypeHandler(new Uint16Handler());
             SqlMapper.AddTypeHandler(new Uint32Handler());
             SqlMapper.AddTypeHandler(new Int32Handler());
+            SqlMapper.AddTypeHandler(new DbEnumHandler<DbTuningType>());
         }
 
         public IDA Get()

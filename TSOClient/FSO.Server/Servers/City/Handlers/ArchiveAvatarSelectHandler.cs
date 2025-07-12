@@ -38,7 +38,7 @@ namespace FSO.Server.Servers.City.Handlers
         {
             var config = Context.Config;
 
-            if (config.ArchiveGUID == null)
+            if (config.Archive == null)
                 return;
 
             if (session.UserId == 0 || session.AvatarId != 0)
@@ -146,6 +146,8 @@ namespace FSO.Server.Servers.City.Handlers
                         vSession.AvatarClaimId = claim.Value;
                     }
 
+                    Context.BroadcastUserList(false);
+
                     // TODO: Try and update the avatar's moderation level to match the user
 
                     session.Response(ArchiveAvatarSelectCode.Success);
@@ -156,7 +158,6 @@ namespace FSO.Server.Servers.City.Handlers
             {
 
             }
-
 
             session.Response(ArchiveAvatarSelectCode.UnknownError);
         }

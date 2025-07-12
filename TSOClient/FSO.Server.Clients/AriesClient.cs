@@ -184,6 +184,14 @@ namespace FSO.Server.Clients
             }
         }
 
+        public IPEndPoint RemoteEndPoint
+        {
+            get
+            {
+                return Session?.RemoteEndPoint as IPEndPoint;
+            }
+        }
+
         public void SessionCreated(IoSession session)
         {
             List<IAriesEventSubscriber> _subs;

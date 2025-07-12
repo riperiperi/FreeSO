@@ -9,6 +9,7 @@ using FSO.Server.Protocol.Electron.Packets;
 using FSO.Server.Protocol.Gluon.Model;
 using FSO.Server.Protocol.Gluon.Packets;
 using FSO.Server.Servers.Lot.Lifecycle;
+using FSO.SimAntics;
 using Ninject;
 using Ninject.Extensions.ChildKernel;
 using NLog;
@@ -498,6 +499,8 @@ namespace FSO.Server.Servers.Lot.Domain
         private bool BgKilled;
         private void _DigestBackground()
         {
+            VM.UseWorld = false;
+
             while (BgAlive)
             {
                 if (LastTaskRecv == 0) LastTaskRecv = Epoch.Now;

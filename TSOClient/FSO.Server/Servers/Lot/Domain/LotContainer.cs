@@ -969,6 +969,8 @@ namespace FSO.Server.Servers.Lot.Domain
         /// </summary>
         public void Run()
         {
+            VM.UseWorld = false;
+
             try
             {
                 try

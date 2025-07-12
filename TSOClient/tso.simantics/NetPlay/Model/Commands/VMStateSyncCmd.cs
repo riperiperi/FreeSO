@@ -31,6 +31,8 @@ namespace FSO.SimAntics.NetPlay.Model.Commands
                 vm.FSOVAsyncLoading = true;
                 Task.Run(() =>
                 {
+                    // If an async load is happening, we assume that it's in the game client instead of the server and force the thread's UseWorld to true.
+                    VM.UseWorld = true;
                     vm.FSOVClientJoin = (vm.Context.Architecture == null);
                     vm.LoadAsync(State);
                     if (VM.UseWorld && vm.Context.Blueprint.SubWorlds.Count == 0) VMLotTerrainRestoreTools.RestoreSurroundings(vm, vm.HollowAdj);

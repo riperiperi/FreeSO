@@ -7,6 +7,8 @@ namespace FSO.Server.Database.DA
 {
     public class MySqlContext : ISqlContext, IDisposable
     {
+        public bool SupportsFunctions => true;
+        public bool UseBlobInventory => false;
         private readonly string _connectionString;
         private DbConnection _connection;
 

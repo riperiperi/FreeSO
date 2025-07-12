@@ -4,7 +4,7 @@ namespace FSO.Server.Database.DA.Tuning
 {
     public class DbTuning : DynTuningEntry
     {
-        public DbTuningType owner_type { get; set; }
+        public DbUppercaseEnum<DbTuningType> owner_type { get; set; }
         public int owner_id { get; set; }
     }
 

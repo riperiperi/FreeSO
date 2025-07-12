@@ -31,5 +31,8 @@ namespace FSO.Server.Database.DA.Objects
         int TotalObjectAttributes(uint guid, int index);
 
         List<uint> ListIDs(bool onLot);
+
+        bool GetDbObjectState(uint id, out byte[] data);
+        bool SetDbObjectState(uint id, byte[] data);
     }
 }

@@ -7,7 +7,8 @@ namespace FSO.Common
 {
     public abstract class IniConfig
     {
-        private string ActivePath;
+        public abstract string HeadingComment { get; }
+        public string ActivePath { get; private set; }
 
         public abstract Dictionary<string, string> DefaultValues
         {
@@ -69,7 +70,7 @@ namespace FSO.Common
             {
                 using (var stream = new StreamWriter(File.Open(ActivePath, FileMode.Create, FileAccess.Write)))
                 {
-                    stream.WriteLine("# FreeSO Settings File. Properties are self explanatory.");
+                    stream.WriteLine($"# {HeadingComment}");
                     var props = this.GetType().GetProperties();
                     foreach (var prop in props)
                     {

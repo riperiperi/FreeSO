@@ -316,6 +316,14 @@ namespace FSO.Content
         /// <param name="fileList">The list of files to scan for.</param>
         private void _ScanFiles(string dir, List<string> fileList, string baseDir)
         {
+            var dirName = Path.GetFileName(dir);
+
+            // Hack... Don't scan archive data.
+            if (dirName == "ArchiveCities")
+            {
+                return;
+            }
+
             var fullPath = dir;
             var files = Directory.GetFiles(fullPath);
             foreach (var file in files)

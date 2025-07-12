@@ -444,7 +444,6 @@ namespace FSO.Client.UI.Framework
 
         public void Invalidate()
         {
-            if (InvalidationParent?.GetType()?.Name == "UIUpgradeItem") { }
             if (InvalidationParent != null) InvalidationParent.Invalidated = true;
         }
 

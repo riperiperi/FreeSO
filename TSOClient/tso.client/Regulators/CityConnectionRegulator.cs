@@ -26,14 +26,17 @@ namespace FSO.Client.Regulators
     {
         public string DisplayName;
         public string CityAddress;
+        public bool SelfHost;
     }
 
     public class CityConnectionRegulator : AbstractRegulator, IAriesMessageSubscriber, IAriesEventSubscriber
     {
         public AriesClient Client { get; internal set; }
         public CityConnectionMode Mode { get; internal set; } = CityConnectionMode.NORMAL;
+        public ArchiveClientList UserList { get; internal set; }
 
         private ConnectArchiveRequest ArchiveSettings;
+        private string ArchiveToken;
 
         private CityClient CityApi;
         private ShardSelectorServletResponse ShardSelectResponse;
@@ -91,7 +94,7 @@ namespace FSO.Client.Regulators
 
             AddState("OpenSocket")
                 .OnData(typeof(AriesConnected)).TransitionTo("SocketOpen")
-                .OnData(typeof(AriesDisconnected)).TransitionTo("UnexpectedDisconnect")
+                .OnData(typeof(AriesDisconnected)).TransitionTo("OpenSocketDisconnect")
                 .OnlyTransitionFrom("CitySelected", "ArchiveConnect");
 
             AddState("SocketOpen")
@@ -178,6 +181,8 @@ namespace FSO.Client.Regulators
                 .OnData(typeof(ShardSelectorServletRequest)).TransitionTo("SelectCity")
                 .OnlyTransitionFrom("Reconnect");
 
+            ClearUserList();
+
             GameThread.SetInterval(() =>
             {
                 if (Client.IsConnected)
@@ -198,8 +203,18 @@ namespace FSO.Client.Regulators
             return sb.ToString();
         }
 
+        private void ClearUserList()
+        {
+            UserList = new ArchiveClientList()
+            {
+                Clients = new ArchiveClient[0],
+                Pending = new ArchivePendingVerification[0],
+            };
+        }
+
         public void Connect(CityConnectionMode mode, ShardSelectorServletRequest shard)
         {
+            ArchiveSettings = null;
             if(shard.ShardName == null && this.CurrentShard != null)
             {
                 shard.ShardName = this.CurrentShard.ShardName;
@@ -218,6 +233,7 @@ namespace FSO.Client.Regulators
 
         public void ConnectArchive(ConnectArchiveRequest request)
         {
+            ArchiveSettings = null;
             Mode = CityConnectionMode.ARCHIVE;
             if (CurrentState.Name != "Disconnected")
             {
@@ -291,6 +307,17 @@ namespace FSO.Client.Regulators
                     }
                     break;
 
+                case "OpenSocketDisconnect":
+                    if (ArchiveSettings?.SelfHost == true)
+                    {
+                        GameThread.SetTimeout(() => AsyncTransition("OpenSocket", LastSettings), 100);
+                    }
+                    else
+                    {
+                        AsyncTransition("UnexpectedDisconnect");
+                    }
+                    break;
+
                 case "SocketOpen":
                     break;
 
@@ -327,10 +354,12 @@ namespace FSO.Client.Regulators
                             ShardName = serverRequest.ShardName,
                         };
 
+                        ArchiveToken = ArchiveHash(GlobalSettings.Default.ArchiveClientGUID, serverRequest.ServerKey);
+
                         Client.Write(new RequestClientSessionResponse
                         {
                             User = ArchiveSettings.DisplayName,
-                            Password = ArchiveHash(GlobalSettings.Default.ArchiveClientGUID, serverRequest.ServerKey),
+                            Password = ArchiveToken,
                         });
                     }
                     break;
@@ -441,16 +470,28 @@ namespace FSO.Client.Regulators
 
                 case "Reestablish":
                     ReestablishAttempt++;
-                    Client.Connect(LastSettings.Address + "101");
+                    Client.Connect(LastSettings.ExplicitPort ? LastSettings.Address : (LastSettings.Address + "101"));
                     break;
 
                 case "Reestablishing":
-                    Client.Write(new RequestClientSessionResponse
+                    if (ArchiveSettings != null)
                     {
-                        Password = ShardSelectResponse.Ticket,
-                        User = ShardSelectResponse.AvatarID,
-                        Unknown2 = 1
-                    });
+                        Client.Write(new RequestClientSessionResponse
+                        {
+                            User = CurrentShard.AvatarID,
+                            Password = ArchiveToken,
+                            Unknown2 = 1
+                        });
+                    }
+                    else
+                    {
+                        Client.Write(new RequestClientSessionResponse
+                        {
+                            Password = ShardSelectResponse.Ticket,
+                            User = ShardSelectResponse.AvatarID,
+                            Unknown2 = 1
+                        });
+                    }
                     break;
 
                 case "Reestablished":
@@ -511,6 +552,7 @@ namespace FSO.Client.Regulators
                     ((ClientShards)Shards).CurrentShard = null;
                     ReestablishAttempt = 0;
                     CanReestablish = false;
+                    ClearUserList();
                     break;
             }
         }
@@ -528,6 +570,14 @@ namespace FSO.Client.Regulators
                 message is HostOnlinePDU || message is ServerByePDU || message is ArchiveAvatarSelectResponse)
             {
                 this.AsyncProcessMessage(message);
+            }
+            else if (message is ArchiveClientList list)
+            {
+                GameThread.InUpdate(() =>
+                {
+                    UserList = list;
+                    // TODO: notify
+                });
             }
             else if (message is AnnouncementMsgPDU)
             {

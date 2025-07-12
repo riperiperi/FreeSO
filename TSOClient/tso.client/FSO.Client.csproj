@@ -28,6 +28,8 @@
     <ApplicationVersion>1.0.0.%2a</ApplicationVersion>
     <UseApplicationTrust>false</UseApplicationTrust>
     <BootstrapperEnabled>true</BootstrapperEnabled>
+    <NuGetPackageImportStamp>
+    </NuGetPackageImportStamp>
   </PropertyGroup>
   <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Debug|x86' ">
     <PlatformTarget>x86</PlatformTarget>
@@ -129,9 +131,11 @@
     <Compile Include="Controllers\RoommateRequestController.cs" />
     <Compile Include="Controllers\TerrainController.cs" />
     <Compile Include="Controllers\UpdateController.cs" />
+    <Compile Include="Controllers\UserListController.cs" />
     <Compile Include="FSOFacade.cs" />
     <Compile Include="FSOProgram.cs" />
     <Compile Include="GameStartProxy.cs" />
+    <Compile Include="Model\Archive\ArchiveManifest.cs" />
     <Compile Include="Model\UserReference.cs" />
     <Compile Include="GameContent\CacheModule.cs" />
     <Compile Include="Network\ClientDataService.cs" />
@@ -169,8 +173,10 @@
     <Compile Include="UI\Archive\UIArchiveJoinDialog.cs" />
     <Compile Include="UI\Archive\UIArchiveLandingDialog.cs" />
     <Compile Include="UI\Archive\UIArchiveServerPorts.cs" />
+    <Compile Include="UI\Archive\UIArchiveServerStatusDialog.cs" />
     <Compile Include="UI\Archive\UIArchiveUserList.cs" />
     <Compile Include="UI\Archive\UIArchivePersonButton.cs" />
+    <Compile Include="UI\Controls\UICombobox.cs" />
     <Compile Include="UI\Controls\UIMapWaypoint.cs" />
     <Compile Include="UI\Panels\EODs\UICooldownEventEOD.cs" />
     <Compile Include="UI\Panels\EODs\UIGameshowBuzzerHostEOD.cs" />
@@ -180,6 +186,7 @@
     <Compile Include="UI\Panels\UIAbstractCatalogMode.cs" />
     <Compile Include="UI\Panels\UICatalogSearchPanel.cs" />
     <Compile Include="UI\Panels\UIMotiveTooltip.cs" />
+    <Compile Include="UI\Panels\UIZipExtractDialog.cs" />
     <Compile Include="UI\Panels\Upgrades\UIUpgradeItem.cs" />
     <Compile Include="UI\Panels\Upgrades\UIUpgradeList.cs" />
     <Compile Include="UI\Panels\Upgrades\UIUpgradeThermo.cs" />
@@ -308,6 +315,8 @@
     <Compile Include="Utils\GameLocator\LinuxLocator.cs" />
     <Compile Include="Utils\GameLocator\WindowsLocator.cs" />
     <Compile Include="Utils\MonogameLinker.cs" />
+    <Compile Include="Utils\MultithreadedZipExtractor.cs" />
+    <Compile Include="Utils\NatPuncher.cs" />
     <Compile Include="Utils\PalMapper.cs" />
     <Compile Include="Utils\TestFunctions\ProjectionTest.cs" />
     <Compile Include="Utils\ThreeDMesh.cs" />
@@ -564,6 +573,9 @@
     <Content Include="Content\UI\hints\english.dir\ui_nhood_rules.json">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </Content>
+    <None Include="Content\ArchiveCities\FreeSO Archive\archive.ini">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </None>
     <None Include="packages.config" />
     <None Include="Resources\Icon.bmp" />
     <None Include="Resources\ico256.fw.png" />
@@ -592,11 +604,14 @@
     <Reference Include="Newtonsoft.Json, Version=12.0.0.0, Culture=neutral, PublicKeyToken=30ad4fe6b2a6aeed, processorArchitecture=MSIL">
       <HintPath>..\packages\Newtonsoft.Json.12.0.2\lib\net45\Newtonsoft.Json.dll</HintPath>
     </Reference>
-    <Reference Include="Ninject, Version=3.0.0.0, Culture=neutral, PublicKeyToken=c7192dc5380945e7, processorArchitecture=MSIL">
-      <HintPath>..\packages\Portable.Ninject.3.3.1\lib\net40-client\Ninject.dll</HintPath>
+    <Reference Include="Ninject, Version=3.3.4.0, Culture=neutral, PublicKeyToken=c7192dc5380945e7, processorArchitecture=MSIL">
+      <HintPath>..\packages\Ninject.3.3.4\lib\net45\Ninject.dll</HintPath>
     </Reference>
     <Reference Include="NLog, Version=4.0.0.0, Culture=neutral, PublicKeyToken=5120e14c03d0593c, processorArchitecture=MSIL">
       <HintPath>..\packages\NLog.4.5.7\lib\net45\NLog.dll</HintPath>
+    </Reference>
+    <Reference Include="Open.Nat, Version=1.0.0.0, Culture=neutral, PublicKeyToken=f22a6a4582336c76, processorArchitecture=MSIL">
+      <HintPath>..\packages\Open.NAT.2.1.0.0\lib\net45\Open.Nat.dll</HintPath>
     </Reference>
     <Reference Include="OpenTK, Version=1.1.0.0, Culture=neutral, PublicKeyToken=bad199fe84eb3df4, processorArchitecture=MSIL">
       <HintPath>..\packages\MonoGame.Framework.WindowsGL.3.4.0.459\lib\net40\OpenTK.dll</HintPath>
@@ -609,6 +624,7 @@
     <Reference Include="System.Data" />
     <Reference Include="System" />
     <Reference Include="System.IO.Compression" />
+    <Reference Include="System.IO.Compression.FileSystem" />
     <Reference Include="System.Runtime.Serialization" />
     <Reference Include="System.ServiceModel" />
     <Reference Include="System.Transactions" />
@@ -724,6 +740,10 @@
     <ProjectReference Include="..\FSO.Server.Protocol\FSO.Server.Protocol.csproj">
       <Project>{a08ade32-27e2-44f4-bc52-11a16c56baa8}</Project>
       <Name>FSO.Server.Protocol</Name>
+    </ProjectReference>
+    <ProjectReference Include="..\FSO.Server\FSO.Server.csproj">
+      <Project>{8f125201-fdf0-4a13-886f-19662707d34d}</Project>
+      <Name>FSO.Server</Name>
     </ProjectReference>
     <ProjectReference Include="..\FSO.UI\FSO.UI.csproj">
       <Project>{73e2ad5b-720b-4ef3-9b7c-55931d0ec693}</Project>

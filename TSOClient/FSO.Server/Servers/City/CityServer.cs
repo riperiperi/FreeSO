@@ -9,6 +9,7 @@ using FSO.Server.Framework;
 using FSO.Server.Framework.Aries;
 using FSO.Server.Framework.Voltron;
 using FSO.Server.Protocol.Aries.Packets;
+using FSO.Server.Protocol.Electron.Packets;
 using FSO.Server.Protocol.Voltron.Packets;
 using FSO.Server.Servers.City.Domain;
 using FSO.Server.Servers.City.Handlers;
@@ -16,6 +17,7 @@ using FSO.Server.Servers.Shared.Handlers;
 using Ninject;
 using NLog;
 using System;
+using System.Collections.Generic;
 using System.Linq;
 using System.Security.Claims;
 using System.Threading;
@@ -34,9 +36,11 @@ namespace FSO.Server.Servers.City
         private string ShardName;
         private string ShardMap;
 
+        private uint SessionUID;
+
         protected override RequestClientSessionArchive ArchiveHandshake => new RequestClientSessionArchive()
         {
-            ServerKey = Config.ArchiveGUID,
+            ServerKey = Config.Archive.ServerKey,
             ShardId = (uint)Config.ID,
             ShardName = ShardName,
             ShardMap = ShardMap,
@@ -75,6 +79,7 @@ namespace FSO.Server.Servers.City
             context.ShardId = shard.Id;
             context.Config = Config;
             context.Sessions = Sessions;
+            context.BroadcastUserList = BroadcastUserList;
             Kernel.Bind<EventSystem>().ToSelf().InSingletonScope();
             Kernel.Bind<CityLivenessEngine>().ToSelf().InSingletonScope();
             Kernel.Bind<CityServerContext>().ToConstant(context);
@@ -214,11 +219,16 @@ namespace FSO.Server.Servers.City
 
                 var newSession = Sessions.UpgradeSession<VoltronSession>(session, x => {
                     x.UserId = user.user_id;
+                    x.DisplayName = user.display_name;
+                    x.ModerationLevel = user.is_admin ? 2u : (user.is_moderator ? 1u : 0u);
+                    x.SessionUID = SessionUID++;
                     x.AvatarId = 0;
                     session.IsAuthenticated = true;
                     x.Authenticate(packet.Password);
                     x.AvatarClaimId = 0;
                 });
+
+                BroadcastUserList(false);
 
                 // TODO: verification mode
             }
@@ -243,7 +253,7 @@ namespace FSO.Server.Servers.City
                     return;
                 }
 
-                if (Config.ArchiveGUID != null)
+                if (Config.Archive != null)
                 {
                     // Server is in archive mode, authenticate differently
                     HandleArchiveAuth(rawSession, packet);
@@ -338,6 +348,67 @@ namespace FSO.Server.Servers.City
 
             //Failed authentication
             rawSession.Close();
+        }
+
+        public void BroadcastUserList(bool adminOnly)
+        {
+            Task.Run(() =>
+            {
+                var clients = new List<ArchiveClient>();
+                var pendingVerification = new List<ArchivePendingVerification>();
+
+                var clone = Sessions.Clone();
+                foreach (var session in clone)
+                {
+                    if (session is VoltronSession vSession)
+                    {
+                        if (vSession.UserId != 0)
+                        {
+                            clients.Add(new ArchiveClient()
+                            {
+                                DisplayName = vSession.DisplayName,
+                                ModerationLevel = vSession.ModerationLevel,
+                                AvatarId = vSession.AvatarId,
+                                UserId = vSession.UserId,
+                                SessionUID = vSession.SessionUID
+                            });
+                        }
+                    }
+                }
+
+                // TODO: verification
+
+                var clientPacket = new ArchiveClientList()
+                {
+                    Clients = clients.ToArray(),
+                    Pending = new ArchivePendingVerification[0]
+                };
+
+                var adminPacket = new ArchiveClientList()
+                {
+                    Clients = clientPacket.Clients,
+                    Pending = pendingVerification.ToArray()
+                };
+
+                foreach (var session in clone)
+                {
+                    if (session is VoltronSession vSession)
+                    {
+                        try
+                        {
+                            if (vSession.ModerationLevel > 0)
+                            {
+                                session.Write(adminPacket);
+                            }
+                            else if (!adminOnly)
+                            {
+                                session.Write(clientPacket);
+                            }
+                        }
+                        catch (Exception) { }
+                    }
+                }
+            });
         }
 
         protected override DbHost CreateHost()

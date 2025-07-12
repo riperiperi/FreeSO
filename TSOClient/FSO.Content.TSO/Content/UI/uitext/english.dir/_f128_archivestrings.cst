@@ -1,0 +1,18 @@
+﻿1 ^Download Required^
+2 ^The selected save "%s" has missing data that can be downloaded from %s. This download is approximately %s. Would you like to download the save data?^
+3 ^No Data^
+4 ^The selected save is missing its data, so the server cannot be started.^
+5 ^Downloading Archive Data^
+6 ^Corrupt Data^
+7 ^Extracting Data^
+8 ^The archive data is corrupted, so the server cannot be started.^
+9 ^Delete data^
+10 ^Download Failed^
+11 ^Unable to download the archive data. Check your internet connection and try again, or contact the provider of the archive data.^
+12 ^Extracting %s... (%s/%s)^
+13 ^Scanning %s... Might take some time. (%s files found)^
+14 ^UPnP^
+15 ^Attempting to forward ports with UPnP...^
+16 ^UPnP Failed^
+17 ^Failed to forward ports with UPnP! Either enable UPnP on your router, or disable the UPnP setting and set the server ports manually.^
+18 ^Disable UPnP to manually set ports.^

@@ -177,6 +177,8 @@
     <Compile Include="Discord\DiscordConfiguration.cs" />
     <Compile Include="Domain\ServerDomainModule.cs" />
     <Compile Include="Domain\ServerTop100Domain.cs" />
+    <Compile Include="Embedded\ArchiveConfigBuilder.cs" />
+    <Compile Include="Embedded\EmbeddedServer.cs" />
     <Compile Include="Mono.Options\Options.cs" />
     <Compile Include="Servers\City\CityLivenessHandler.cs" />
     <Compile Include="Servers\City\CityServerModule.cs" />

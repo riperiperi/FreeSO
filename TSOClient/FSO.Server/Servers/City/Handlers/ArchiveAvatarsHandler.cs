@@ -39,7 +39,7 @@ namespace FSO.Server.Servers.City.Handlers
 
         public async void Handle(IVoltronSession session, ArchiveAvatarsRequest _packet)
         {
-            if (Context.Config.ArchiveGUID == null)
+            if (Context.Config.Archive == null)
                 return;
 
             if (session.UserId == 0)

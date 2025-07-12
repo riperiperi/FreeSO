@@ -8,6 +8,8 @@ namespace FSO.Server.Database.DA
 {
     internal class SqliteContext : ISqlContext, IDisposable
     {
+        public bool SupportsFunctions => false;
+        public bool UseBlobInventory => true;
         private readonly string _connectionString;
         private DbConnection _connection;
         private SqliteConnectionPool _pool;
@@ -35,8 +37,7 @@ namespace FSO.Server.Database.DA
                     }
                     else
                     {
-                        _connection = new SQLiteConnection("Data Source=fsoarchive.db;Version=3;UTF8Encoding=True");
-                        //_connection = new MySqlConnection(_connectionString);
+                        _connection = new SQLiteConnection(_connectionString);
                     }
                 }
 

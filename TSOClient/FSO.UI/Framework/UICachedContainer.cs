@@ -56,7 +56,7 @@ namespace FSO.Client.UI.Framework
                     }
                 }
 
-                try { batch.End(); } catch { }
+                batch.End();
                 gd.SetRenderTarget(Target);
 
                 gd.Clear(ClearColor);
@@ -86,6 +86,7 @@ namespace FSO.Client.UI.Framework
                 batch.End();
                 gd.SetRenderTarget(null);
                 Invalidated = false;
+                batch.Resume();
             }
             DynamicOverlay.PreDraw(batch);
         }

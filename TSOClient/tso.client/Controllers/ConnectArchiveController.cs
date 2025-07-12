@@ -4,15 +4,23 @@ using FSO.Client.UI.Controls;
 using FSO.Client.UI.Framework;
 using FSO.Client.UI.Model;
 using FSO.Client.UI.Screens;
+using FSO.Common;
 using FSO.Common.DatabaseService.Model;
 using FSO.Common.Utils;
 using FSO.HIT;
-using FSO.Server.Protocol.CitySelector;
+using FSO.Server.Embedded;
 using FSO.Server.Protocol.Electron.Packets;
 using System;
 
 namespace FSO.Client.Controllers
 {
+    public enum ConnectArchiveMode
+    {
+        Landing,
+        Create,
+        Join
+    }
+
     public class ConnectArchiveController : IDisposable
     {
         private TransitionScreen View;
@@ -21,6 +29,8 @@ namespace FSO.Client.Controllers
         private Callback onError;
         private UIDialog Dialog;
         public LoadAvatarByIDResponse AvatarData;
+
+        private ConnectArchiveMode LastMode;
 
         public ConnectArchiveController(TransitionScreen view,
                                      CityConnectionRegulator cityConnectionRegulator)
@@ -34,7 +44,25 @@ namespace FSO.Client.Controllers
             View.SetProgress(0, 4);
         }
 
-        public void Connect(string displayName, string address, Callback onConnect, Callback onError)
+        public void SwitchMode(ConnectArchiveMode mode)
+        {
+            LastMode = mode;
+
+            switch (mode)
+            {
+                case ConnectArchiveMode.Join:
+                    ShowMainDialog(new UIArchiveJoinDialog());
+                    break;
+                case ConnectArchiveMode.Landing:
+                    ShowMainDialog(new UIArchiveLandingDialog());
+                    break;
+                case ConnectArchiveMode.Create:
+                    ShowMainDialog(new UIArchiveCreateServer());
+                    break;
+            }
+        }
+
+        public void Connect(string displayName, string address, bool selfHost, Callback onConnect, Callback onError)
         {
             this.onConnect = onConnect;
             this.onError = onError;
@@ -47,7 +75,8 @@ namespace FSO.Client.Controllers
             CityConnectionRegulator.ConnectArchive(new ConnectArchiveRequest
             {
                 CityAddress = address,
-                DisplayName = displayName
+                DisplayName = displayName,
+                SelfHost = selfHost
             });
         }
 
@@ -69,6 +98,22 @@ namespace FSO.Client.Controllers
             {
                 AvatarId = avatarId
             });
+        }
+
+        public void CreateServer(ArchiveConfiguration config)
+        {
+            var embedded = new EmbeddedServer(config);
+
+            embedded.Start();
+
+            FSOFacade.Controller.RegisterServer(embedded);
+
+            ShowMainDialog(new UIArchiveServerStatusDialog(true, embedded, () =>
+            {
+                // TODO: passthru display name, ports
+                ShowMainDialog(null);
+                FSOFacade.Controller.ConnectToArchive("riperiperi", "127.0.0.1", true);
+            }));
         }
 
         private void CityConnectionRegulator_OnError(object data)
@@ -99,7 +144,7 @@ namespace FSO.Client.Controllers
             HITVM.Get().PlaySoundEvent(UIMusic.None);
             GlobalSettings.Default.Save();
 
-            ShowMainDialog(new UIArchiveJoinDialog());
+            SwitchMode(LastMode);
             View.SetProgressArchive(0, "Awaiting user input");
         }
 

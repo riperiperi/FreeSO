@@ -109,7 +109,9 @@
     <Compile Include="DA\ArchiveUsers\ArchiveUser.cs" />
     <Compile Include="DA\ArchiveUsers\IArchiveUsers.cs" />
     <Compile Include="DA\ArchiveUsers\SqlArchiveUsers.cs" />
+    <Compile Include="DA\DbUppercaseEnum.cs" />
     <Compile Include="SqliteCompat\ByteHandler.cs" />
+    <Compile Include="SqliteCompat\DbEnumHandler.cs" />
     <Compile Include="SqliteCompat\SqliteConnectionPool.cs" />
     <Compile Include="SqliteCompat\Uint16Handler.cs" />
     <Compile Include="SqliteCompat\Int32Handler.cs" />

@@ -98,7 +98,7 @@ namespace FSO.Server.Servers.Tasks.Domain
 
                     float multiplier = 1;
                     DbTuning cattuning;
-                    if (vistorHourScale.TryGetValue((int)x.category, out cattuning))
+                    if (vistorHourScale.TryGetValue((int)(LotCategory)x.category, out cattuning))
                     {
                         multiplier = cattuning.value;
                     }

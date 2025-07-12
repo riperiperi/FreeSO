@@ -27,6 +27,7 @@ using FSO.UI.Model;
 using FSO.Client.UI.Panels.Neighborhoods;
 using FSO.Server.Clients;
 using FSO.LotView.Utils.Camera;
+using FSO.Client.UI.Archive;
 
 namespace FSO.Client.UI.Screens
 {
@@ -36,6 +37,7 @@ namespace FSO.Client.UI.Screens
         public UIGizmo gizmo;
         public UIInbox Inbox;
         public UIGameTitle Title;
+        public UIArchiveUserList UserList;
 
         public UISortedContainer CityFloatingContainer;
         public UIContainer WindowContainer;
@@ -299,6 +301,11 @@ namespace FSO.Client.UI.Screens
             Inbox.Visible = false;
             ControllerUtils.BindController<InboxController>(Inbox);
             WindowContainer.Add(Inbox);
+
+            UserList = new UIArchiveUserList();
+            UserList.Visible = false;
+            ControllerUtils.BindController<UserListController>(UserList);
+            WindowContainer.Add(UserList);
 
             var status = new UINetStatusTray();
             Add(status);
@@ -821,6 +828,19 @@ namespace FSO.Client.UI.Screens
             Inbox.Y = GlobalSettings.Default.GraphicsHeight / 2 - 184;
             WindowContainer.SendToFront(Inbox);
             ucp.FlashInbox(false);
+        }
+
+        public void CloseUserList()
+        {
+            UserList.Visible = false;
+        }
+
+        public void OpenUserList()
+        {
+            UserList.Visible = true;
+            UserList.X = (GlobalSettings.Default.GraphicsWidth - UserList.Width) / 2;
+            UserList.Y = (GlobalSettings.Default.GraphicsHeight - UserList.Height) / 2;
+            WindowContainer.SendToFront(UserList);
         }
 
         public void FlashInbox(bool flash)

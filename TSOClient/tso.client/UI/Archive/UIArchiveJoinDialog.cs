@@ -68,11 +68,17 @@ namespace FSO.Client.UI.Archive
             AddressInput.OnChange += ValidateInputs;
 
             JoinButton.OnButtonClick += Join;
+            CloseButton.OnButtonClick += Close;
+        }
+
+        private void Close(Framework.UIElement button)
+        {
+            FindController<ConnectArchiveController>().SwitchMode(ConnectArchiveMode.Landing);
         }
 
         private void Join(Framework.UIElement button)
         {
-            FSOFacade.Controller.ConnectToArchive(NameInput.CurrentText, AddressInput.CurrentText);
+            FSOFacade.Controller.ConnectToArchive(NameInput.CurrentText, AddressInput.CurrentText, false);
         }
 
         private void ValidateInputs(Framework.UIElement element)

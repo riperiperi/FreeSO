@@ -86,6 +86,7 @@
     <Compile Include="Controls\UIRadioButton.cs" />
     <Compile Include="Controls\UIRectangle.cs" />
     <Compile Include="Controls\UISlider.cs" />
+    <Compile Include="Controls\UISpacer.cs" />
     <Compile Include="Controls\UITextBox.cs" />
     <Compile Include="Controls\UITextEdit.cs" />
     <Compile Include="Debug\IDEHook.cs" />

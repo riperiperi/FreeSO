@@ -139,6 +139,7 @@
     <Reference Include="System.Xml" />
   </ItemGroup>
   <ItemGroup>
+    <Compile Include="ArchiveConfiguration.cs" />
     <Compile Include="Audio\MP3Player.cs" />
     <Compile Include="ClientEpoch.cs" />
     <Compile Include="Content\ContentID.cs" />

@@ -20,7 +20,7 @@ namespace FSO.SimAntics
 {
     public class VMContext
     {
-        public static bool UseWorld = true;
+        public static bool UseWorld => VM.UseWorld;
         public Blueprint Blueprint;
         public VMClock Clock { get; internal set; }
         public VMCheatState Cheats { get; internal set; }

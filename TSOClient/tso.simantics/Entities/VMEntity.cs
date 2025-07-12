@@ -32,7 +32,7 @@ namespace FSO.SimAntics
     public abstract class VMEntity
     {
         public static Func<VMEntity, Texture2D> MissingIconProvider;
-        public static bool UseWorld = true;
+        public static bool UseWorld => VM.UseWorld;
 
         public VMEntityRTTI RTTI;
         public bool GhostImage;

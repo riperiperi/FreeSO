@@ -13,12 +13,37 @@ namespace FSO.Server.Database.DA.LotVisitors
         public int? Visit(uint avatar_id, DbLotVisitorType visitor_type, int lot_id)
         {
             try {
-                //Stored procedure will handle erroring any active visits that should no longer be active
-                return Context.Connection.Query<int>("SELECT `fso_lot_visits_create`(@avatar_id, @lot_id, @type)", new {
+                if (Context.SupportsFunctions)
+                {
+                    //Stored procedure will handle erroring any active visits that should no longer be active
+                    return Context.Connection.Query<int>("SELECT `fso_lot_visits_create`(@avatar_id, @lot_id, @type)", new
+                    {
                         avatar_id = avatar_id,
                         lot_id = lot_id,
                         type = visitor_type.ToString()
                     }).First();
+                }
+                else
+                {
+                    /* 
+CREATE FUNCTION `fso_lot_visits_create`(`p_avatar_id` INT, `p_lot_id` INT, `p_visitor_type` VARCHAR(50)) RETURNS int(11)
+    READS SQL DATA
+BEGIN
+	#Error any open active visit, can only have one active
+	UPDATE fso_lot_visits SET `status` = 'failed', time_closed = current_timestamp WHERE avatar_id = p_avatar_id AND `status` = 'active';
+	#Record visit
+	INSERT INTO fso_lot_visits (avatar_id, lot_id, type, status) VALUES (p_avatar_id, p_lot_id, p_visitor_type, 'active'); 
+	RETURN LAST_INSERT_ID();
+END;*/
+                    return Context.Connection.Query<int>(Context.CompatLayer(@"UPDATE fso_lot_visits SET `status` = 'failed', time_closed = current_timestamp WHERE avatar_id = @avatar_id AND `status` = 'active';
+	INSERT INTO fso_lot_visits (avatar_id, lot_id, type, status) VALUES (@avatar_id, @lot_id, @type, 'active'); 
+	SELECT LAST_INSERT_ID();"), new {
+                        avatar_id = avatar_id,
+                        lot_id = lot_id,
+                        type = visitor_type.ToString()
+                    }).First();
+
+                }
             }catch(Exception ex){
                 return null;
             }

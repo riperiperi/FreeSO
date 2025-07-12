@@ -402,7 +402,7 @@ namespace FSO.Client.UI.Controls
                     Target?.Dispose();
                     Target = new RenderTarget2D(gd, (int)size.X, (int)size.Y, false, SurfaceFormat.Color, DepthFormat.None);
                 }
-                try { batch.End(); } catch { }
+                batch.End();
                 gd.SetRenderTarget(Target);
                 gd.Clear(Color.Transparent);
                 var pos = LocalPoint(0, 0);
@@ -416,6 +416,7 @@ namespace FSO.Client.UI.Controls
                 batch.End();
                 batch.BatchMatrixStack.Pop();
                 gd.SetRenderTarget(null);
+                batch.Resume();
             }
         }
 

@@ -37,16 +37,17 @@ namespace FSO.SimAntics
     public class VM
     {
         public bool UseSchedule = true;
-        private static bool _UseWorld = true;
         public static bool SignalBreaks = false;
+
+        [ThreadStatic]
+        private static bool _UseWorld = true;
+
         public static bool UseWorld
         {
             get { return _UseWorld; }
             set
             {
                 _UseWorld = value;
-                VMContext.UseWorld = value;
-                VMEntity.UseWorld = value;
             }
         }
 

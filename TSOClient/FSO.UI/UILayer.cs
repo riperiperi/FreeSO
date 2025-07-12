@@ -459,20 +459,25 @@ namespace FSO.Client.UI
         {
             lock (m_ExtContainers)
             {
-                foreach (var ext in m_ExtContainers)
+                if (m_ExtContainers.Count > 0)
                 {
-                    lock (ext)
+                    SpriteBatch.UIBegin(BlendState.AlphaBlend, SpriteSortMode.Immediate);
+                    foreach (var ext in m_ExtContainers)
                     {
-                        if (!ext.HasUpdated) ext.Update(null);
-                        ext.PreDraw(SpriteBatch);
-                        ext.Draw(SpriteBatch);
+                        lock (ext)
+                        {
+                            if (!ext.HasUpdated) ext.Update(null);
+                            ext.PreDraw(SpriteBatch);
+                            ext.Draw(SpriteBatch);
+                        }
                     }
+                    SpriteBatch.End();
                 }
             }
 
             SpriteBatch.UIBegin(BlendState.AlphaBlend, SpriteSortMode.Immediate);
             this.PreDraw(SpriteBatch);
-            try { SpriteBatch.End(); } catch { }
+            SpriteBatch.Pause();
         }
 
         public void Draw(GraphicsDevice device)

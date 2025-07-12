@@ -1,5 +1,6 @@
 ﻿using FSO.LotView;
 using FSO.UI;
+using System;
 
 namespace FSO.Client
 {
@@ -9,13 +10,23 @@ namespace FSO.Client
     /// </summary>
     public class GameStartProxy : IGameStartProxy
     {
+        public static Action<Func<bool>, IntPtr> BindClosingHandler;
+
         public void Start(bool useDX)
         {
             GameFacade.DirectX = useDX;
 			World.DirectX = useDX;
             TSOGame game = new TSOGame();
+
+            BindClosingHandler?.Invoke(HandleClosing, game.Window.Handle);
+
             game.Run();
             game.Dispose();
+        }
+
+        public bool HandleClosing()
+        {
+            return FSOFacade.Controller?.CloseAttempt() ?? true;
         }
 
 		public void SetPath(string path)

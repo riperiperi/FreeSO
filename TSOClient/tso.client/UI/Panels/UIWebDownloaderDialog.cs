@@ -18,6 +18,7 @@ namespace FSO.Client.UI.Panels
         {
             if (title != null) Caption = title;
             else Caption = GameFacade.Strings.GetString("f101", "9");
+            ProgressCaption = "";
             Items = items;
 
             DownloadClient = new WebClient();
@@ -41,10 +42,23 @@ namespace FSO.Client.UI.Panels
             });
         }
 
+        private void DeleteFiles()
+        {
+            foreach (var item in Items)
+            {
+                if (File.Exists(item.DestPath))
+                {
+                    File.Delete(item.DestPath);
+                }
+            }
+        }
+
         private void DownloadClient_DownloadFileCompleted(object sender, System.ComponentModel.AsyncCompletedEventArgs e)
         {
             if (e.Error != null || e.Cancelled)
             {
+                DeleteFiles();
+
                 GameThread.NextUpdate(x => OnComplete?.Invoke(false));
                 return;
             }

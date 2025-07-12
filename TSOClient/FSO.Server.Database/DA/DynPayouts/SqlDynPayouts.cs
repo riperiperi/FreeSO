@@ -20,7 +20,7 @@ namespace FSO.Server.Database.DA.DynPayouts
 
         public List<DbTransSummary> GetSummary(int limitDay)
         {
-            return Context.Connection.Query<DbTransSummary>("SELECT transaction_type, sum(value) AS value, sum(count) AS sum FROM fso.fso_transactions "
+            return Context.Connection.Query<DbTransSummary>("SELECT transaction_type, sum(value) AS value, sum(count) AS sum FROM fso_transactions "
                 +"WHERE transaction_type > 40 AND transaction_type < 51 AND day >= @limitDay GROUP BY transaction_type", new { limitDay = limitDay }).ToList();
         }
 

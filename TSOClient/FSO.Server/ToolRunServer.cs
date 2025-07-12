@@ -49,10 +49,9 @@ namespace FSO.Server
             this.HostPool = hostPool;
         }
 
-        public int Run()
+        public int RunEmbedded(Action<Action> onStarted)
         {
-            LOG.Info("Starting server");
-            TimedReferenceController.SetMode(CacheType.PERMANENT);
+            LOG.Info("Starting embedded server");
 
             if (Config.Services == null)
             {
@@ -60,46 +59,59 @@ namespace FSO.Server
                 return 1;
             }
 
-            if (!Directory.Exists(Config.GameLocation))
-            {
-                LOG.Fatal("The directory specified as gameLocation in config.json does not exist");
-                return 1;
-            }
-
             Directory.CreateDirectory(Config.SimNFS);
             Directory.CreateDirectory(Path.Combine(Config.SimNFS, "Lots/"));
             Directory.CreateDirectory(Path.Combine(Config.SimNFS, "Objects/"));
 
-            if (Content.Model.AbstractTextureRef.ImageFetchFunction == null)
-                Content.Model.AbstractTextureRef.ImageFetchFunction = Utils.CoreImageLoader.SoftImageFetch;
-
-            LOG.Info("Checking for scheduled updates...");
-            if (AutoUpdateUtility.QueueUpdateIfRequired(Kernel, Config.UpdateBranch))
+            if (Config.Archive == null)
             {
-                //update queued, restart
-                LOG.Info("An update was scheduled, and has been queued for the watchdog to apply. Restarting...");
-                return 4;
+                throw new Exception("Can only run archive server embedded. Check configuration.");
             }
 
-            //get server update ID if present in a file (from auto updater)
-            if (File.Exists("updateID.txt"))
+            Content.Content.Get().Upgrades.LoadJSONTuning();
+
+            CommonInit();
+
+            LOG.Info("Starting services");
+            foreach (AbstractServer server in Servers)
             {
-                var stringID = File.ReadAllText("updateID.txt");
-                int id;
-                if (int.TryParse(stringID, out id)) {
-                    Config.UpdateID = id;
+                LOG.Info("Starting " + server.GetType().ToString() + "...");
+                server.Start();
+            }
+
+            HostPool.Start();
+
+            onStarted(() =>
+            {
+                RequestedShutdown(0, ShutdownType.SHUTDOWN);
+            });
+
+            //Hacky reference to maek sure the assembly is included
+            FSO.Common.DatabaseService.Model.LoadAvatarByIDRequest x;
+
+            {
+                while (Running)
+                {
+                    Thread.Sleep(50);
+                    lock (Servers)
+                    {
+                        if (Servers.Count == 0)
+                        {
+                            LOG.Info("All servers shut down, shutting down pool...");
+
+                            Kernel.Get<IGluonHostPool>().Stop();
+
+                            return 2;
+                        }
+                    }
                 }
             }
 
-            if (Config.ArchiveGUID != null)
-            {
-                LOG.Info("=== RUNNING IN ARCHIVE MODE! Only archive authentication will work! ===");
-            }
+            return 1;
+        }
 
-            //TODO: Some content preloading
-            LOG.Info("Scanning content");
-            VMContext.InitVMConfig(false);
-            Content.Content.Init(Config.GameLocation, Content.ContentMode.SERVER);
+        private void CommonInit()
+        {
             Kernel.Bind<Content.Content>().ToConstant(Content.Content.Get());
             Kernel.Bind<MemoryCache>().ToConstant(new MemoryCache("fso_server"));
 
@@ -113,21 +125,28 @@ namespace FSO.Server
             if (Config.Services.UserApi != null &&
                 Config.Services.UserApi.Enabled)
             {
-                var childKernel = new ChildKernel(
-                    Kernel
-                );
-                var api = new UserApi(Config, childKernel);
-                ActiveUApiServer = api;
-                Servers.Add(api);
-                api.OnRequestShutdown += RequestedShutdown;
-                api.OnBroadcastMessage += BroadcastMessage;
-                api.OnRequestUserDisconnect += RequestedUserDisconnect;
-                api.OnRequestMailNotify += RequestedMailNotify;
+                if (Config.Archive == null)
+                {
+                    var childKernel = new ChildKernel(
+                        Kernel
+                    );
+                    var api = new UserApi(Config, childKernel);
+                    ActiveUApiServer = api;
+                    Servers.Add(api);
+                    api.OnRequestShutdown += RequestedShutdown;
+                    api.OnBroadcastMessage += BroadcastMessage;
+                    api.OnRequestUserDisconnect += RequestedUserDisconnect;
+                    api.OnRequestMailNotify += RequestedMailNotify;
+                }
+                else
+                {
+                    LOG.Info("Skipping User API for Archive Server (shouldn't be in the config...)");
+                }
             }
 
             foreach (var cityServer in Config.Services.Cities)
             {
-                if (cityServer.ArchiveGUID == null) cityServer.ArchiveGUID = Config.ArchiveGUID;
+                if (cityServer.Archive == null) cityServer.Archive = Config.Archive;
 
                 /**
                  * Need to create a kernel for each city server as there is some data they do not share
@@ -179,6 +198,60 @@ namespace FSO.Server
             }
 
             Running = true;
+        }
+
+        public int Run()
+        {
+            LOG.Info("Starting server");
+            TimedReferenceController.SetMode(CacheType.PERMANENT);
+
+            if (Config.Services == null)
+            {
+                LOG.Warn("No services found in the configuration file, exiting");
+                return 1;
+            }
+
+            if (!Directory.Exists(Config.GameLocation))
+            {
+                LOG.Fatal("The directory specified as gameLocation in config.json does not exist");
+                return 1;
+            }
+
+            Directory.CreateDirectory(Config.SimNFS);
+            Directory.CreateDirectory(Path.Combine(Config.SimNFS, "Lots/"));
+            Directory.CreateDirectory(Path.Combine(Config.SimNFS, "Objects/"));
+
+            if (Content.Model.AbstractTextureRef.ImageFetchFunction == null)
+                Content.Model.AbstractTextureRef.ImageFetchFunction = Utils.CoreImageLoader.SoftImageFetch;
+
+            LOG.Info("Checking for scheduled updates...");
+            if (AutoUpdateUtility.QueueUpdateIfRequired(Kernel, Config.UpdateBranch))
+            {
+                //update queued, restart
+                LOG.Info("An update was scheduled, and has been queued for the watchdog to apply. Restarting...");
+                return 4;
+            }
+
+            //get server update ID if present in a file (from auto updater)
+            if (File.Exists("updateID.txt"))
+            {
+                var stringID = File.ReadAllText("updateID.txt");
+                int id;
+                if (int.TryParse(stringID, out id)) {
+                    Config.UpdateID = id;
+                }
+            }
+
+            if (Config.Archive != null)
+            {
+                LOG.Info("=== RUNNING IN ARCHIVE MODE! Only archive authentication will work! ===");
+            }
+
+            //TODO: Some content preloading
+            LOG.Info("Scanning content");
+            VMContext.InitVMConfig(false);
+            Content.Content.Init(Config.GameLocation, Content.ContentMode.SERVER);
+            CommonInit();
 
             AppDomain.CurrentDomain.DomainUnload += CurrentDomain_DomainUnload;
             AppDomain.CurrentDomain.ProcessExit += CurrentDomain_ProcessExit;
