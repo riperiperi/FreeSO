@@ -155,6 +155,7 @@
     <ProjectReference Include="..\..\Other\libs\FSOMonoGame\MonoGame.Framework\MonoGame.Framework.Windows.csproj">
       <Project>{7de47032-a904-4c29-bd22-2d235e8d91ba}</Project>
       <Name>MonoGame.Framework.Windows</Name>
+      <Private>False</Private>
     </ProjectReference>
     <ProjectReference Include="..\..\Other\libs\MSDFData\MSDFData.csproj">
       <Project>{eabea510-3e53-4f19-9f0b-75c5ca9dfa3b}</Project>
