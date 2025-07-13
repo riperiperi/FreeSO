@@ -63,6 +63,8 @@ namespace FSO.Server
             Directory.CreateDirectory(Path.Combine(Config.SimNFS, "Lots/"));
             Directory.CreateDirectory(Path.Combine(Config.SimNFS, "Objects/"));
 
+            Content.Model.AbstractTextureRef.ImageFetchFallback = Utils.CoreImageLoader.SoftImageFetch;
+
             if (Config.Archive == null)
             {
                 throw new Exception("Can only run archive server embedded. Check configuration.");

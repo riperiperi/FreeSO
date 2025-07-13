@@ -42,11 +42,14 @@ namespace FSO.Client.Controllers
 
             View.ShowProgress = true;
             View.SetProgress(0, 4);
+
+            View.ShowSandboxMode();
         }
 
         public void SwitchMode(ConnectArchiveMode mode)
         {
             LastMode = mode;
+            bool sandboxVisible = false;
 
             switch (mode)
             {
@@ -54,12 +57,15 @@ namespace FSO.Client.Controllers
                     ShowMainDialog(new UIArchiveJoinDialog());
                     break;
                 case ConnectArchiveMode.Landing:
+                    sandboxVisible = true;
                     ShowMainDialog(new UIArchiveLandingDialog());
                     break;
                 case ConnectArchiveMode.Create:
                     ShowMainDialog(new UIArchiveCreateServer());
                     break;
             }
+
+            View.SetSandboxVisibility(sandboxVisible);
         }
 
         public void Connect(string displayName, string address, bool selfHost, Callback onConnect, Callback onError)
@@ -102,6 +108,8 @@ namespace FSO.Client.Controllers
 
         public void CreateServer(ArchiveConfiguration config)
         {
+            View.SetSandboxVisibility(false);
+
             var embedded = new EmbeddedServer(config);
 
             embedded.Start();
@@ -133,7 +141,7 @@ namespace FSO.Client.Controllers
 
             if (dialog != null)
             {
-                UIScreen.ShowDialog(dialog, true);
+                UIScreen.ShowDialog(dialog, false);
             }
         }
 
@@ -159,6 +167,7 @@ namespace FSO.Client.Controllers
                         break;
                     case "ArchiveConnect":
                         //4  ^Starting engines^                 # City is Selected...
+                        View.SetSandboxVisibility(false);
                         ShowMainDialog(null);
                         View.SetProgress((1.0f / 14.0f) * 100, 4);
                         break;

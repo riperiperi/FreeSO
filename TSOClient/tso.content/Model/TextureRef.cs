@@ -170,9 +170,16 @@ namespace FSO.Content.Model
             }
         }
 
+        public static Func<Stream, AbstractTextureRef, TexBitmap> ImageFetchFallback;
+
         public static GraphicsDevice FetchDevice;
         public static TexBitmap ImageFetchWithDevice(Stream stream, AbstractTextureRef texRef)
         {
+            if (ImageFetchFallback != null && !GameThread.IsInGameThread())
+            {
+                return ImageFetchFallback(stream, texRef);
+            }
+
             var tex = ImageLoader.FromStream(FetchDevice, stream);
             var data = new byte[tex.Width * tex.Height * 4];
             tex.GetData(data);

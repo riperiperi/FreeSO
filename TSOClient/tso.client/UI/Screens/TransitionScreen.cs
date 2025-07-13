@@ -8,6 +8,7 @@ namespace FSO.Client.UI.Screens
     {
         private UISetupBackground m_Background;
         private UILoginProgress m_LoginProgress;
+        private UIButton SandboxModeButton;
 
         /// <summary>
         /// Creates a new CityTransitionScreen.
@@ -54,7 +55,7 @@ namespace FSO.Client.UI.Screens
                 m_LoginProgress.Visible = value;
             }
         }
-        
+
         public void SetProgress(float progress, int stringIndex)
         {
             m_LoginProgress.ProgressCaption = GameFacade.Strings.GetString("251", (stringIndex).ToString());
@@ -66,6 +67,33 @@ namespace FSO.Client.UI.Screens
             // TODO: localization
             m_LoginProgress.ProgressCaption = message;
             m_LoginProgress.Progress = progress;
+        }
+
+        public void ShowSandboxMode()
+        {
+            SandboxModeButton = new UIButton()
+            {
+                Caption = "Sandbox Mode",
+                Y = 10,
+                Width = 125,
+                X = 10
+            };
+            this.Add(SandboxModeButton);
+            SandboxModeButton.OnButtonClick += new ButtonClickDelegate(gameplayButton_OnButtonClick);
+        }
+
+        void gameplayButton_OnButtonClick(UIElement button)
+        {
+            UIScreen.GlobalShowDialog(new UISandboxSelector(), true);
+            return;
+        }
+
+        public void SetSandboxVisibility(bool visible)
+        {
+            if (SandboxModeButton != null)
+            {
+                SandboxModeButton.Visible = visible;
+            }
         }
     }
 }
