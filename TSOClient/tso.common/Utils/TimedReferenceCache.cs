@@ -6,6 +6,8 @@ namespace FSO.Common.Utils
 {
     public static class TimedReferenceController
     {
+        private const int DerefThreshold = 100;
+
         private static int CurRingNum = 0;
         private static List<HashSet<object>> ReferenceRing;
         private static Dictionary<object, int> ObjectToRing;
@@ -13,6 +15,7 @@ namespace FSO.Common.Utils
         private static int TicksToNextCheck;
         private static CacheType Type;
         private static object InternalLock = new object { };
+        private static int DerefsSinceLastCollect = 0;
         public static CacheType CurrentType { get { return Type; } }
 
         static TimedReferenceController()
@@ -72,13 +75,18 @@ namespace FSO.Common.Utils
                 lock (InternalLock)
                 {
                     var toDereference = ReferenceRing[CurRingNum];
+                    DerefsSinceLastCollect += toDereference.Count;
                     foreach (var obj in toDereference) ObjectToRing.Remove(obj);
                     toDereference.Clear();
                     CurRingNum = (CurRingNum + 1) % ReferenceRing.Count;
                 }
                 TicksToNextCheck = CheckFreq;
                 //GC.Collect();
-                if (CurRingNum == 0) GC.Collect();
+                if (CurRingNum == 0 && DerefsSinceLastCollect >= DerefThreshold)
+                {
+                    GC.Collect();
+                    DerefsSinceLastCollect = 0;
+                }
             }
         }
 
