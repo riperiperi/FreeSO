@@ -487,9 +487,6 @@
     <EmbeddedResource Include="IconNormal.bmp" />
     <EmbeddedResource Include="Icon.bmp" />
     <Content Include="MIConvexHull.xml" />
-    <Content Include="soft_oal.dll">
-      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
-    </Content>
     <Content Include="Content\UI\hints\english.dir\land_money.json">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </Content>
