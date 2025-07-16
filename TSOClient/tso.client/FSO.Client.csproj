@@ -305,19 +305,19 @@
       <Link>Monogame\Linux\MonoGame.Framework.dll</Link>
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </Content>
-    <Content Include="..\..\Other\libs\FSOMonoGame\MonoGame.Framework\bin\Linux\AnyCPU\Release\x86\libSDL2-2.0.so.0">
+    <Content Include="..\..\Other\libs\FSOMonoGame\MonoGame.Framework\ThirdParty\Dependencies\SDL\Linux\x86\libSDL2-2.0.so.0">
       <Link>Monogame\Linux\x86\libSDL2-2.0.so.0</Link>
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </Content>
-    <Content Include="..\..\Other\libs\FSOMonoGame\MonoGame.Framework\bin\Linux\AnyCPU\Release\x64\libSDL2-2.0.so.0">
+    <Content Include="..\..\Other\libs\FSOMonoGame\MonoGame.Framework\ThirdParty\Dependencies\SDL\Linux\x64\libSDL2-2.0.so.0">
       <Link>Monogame\Linux\x64\libSDL2-2.0.so.0</Link>
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </Content>
-    <Content Include="..\..\Other\libs\FSOMonoGame\MonoGame.Framework\bin\Linux\AnyCPU\Release\x86\libopenal.so.1">
+    <Content Include="..\..\Other\libs\FSOMonoGame\MonoGame.Framework\ThirdParty\Dependencies\openal-soft\Linux\x86\libopenal.so.1">
       <Link>Monogame\Linux\x86\libopenal.so.1</Link>
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </Content>
-    <Content Include="..\..\Other\libs\FSOMonoGame\MonoGame.Framework\bin\Linux\AnyCPU\Release\x64\libopenal.so.1">
+    <Content Include="..\..\Other\libs\FSOMonoGame\MonoGame.Framework\ThirdParty\Dependencies\openal-soft\Linux\x64\libopenal.so.1">
       <Link>Monogame\Linux\x64\libopenal.so.1</Link>
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </Content>
@@ -325,19 +325,19 @@
       <Link>Monogame\WindowsGL\MonoGame.Framework.dll</Link>
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </Content>
-    <Content Include="..\..\Other\libs\FSOMonoGame\MonoGame.Framework\bin\WindowsGL\AnyCPU\Release\x86\SDL2.dll">
+    <Content Include="..\..\Other\libs\FSOMonoGame\MonoGame.Framework\ThirdParty\Dependencies\SDL\Windows\x86\SDL2.dll">
       <Link>Monogame\WindowsGL\x86\SDL2.dll</Link>
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </Content>
-    <Content Include="..\..\Other\libs\FSOMonoGame\MonoGame.Framework\bin\WindowsGL\AnyCPU\Release\x64\SDL2.dll">
+    <Content Include="..\..\Other\libs\FSOMonoGame\MonoGame.Framework\ThirdParty\Dependencies\SDL\Windows\x64\SDL2.dll">
       <Link>Monogame\WindowsGL\x64\SDL2.dll</Link>
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </Content>
-    <Content Include="..\..\Other\libs\FSOMonoGame\MonoGame.Framework\bin\WindowsGL\AnyCPU\Release\x86\soft_oal.dll">
+    <Content Include="..\..\Other\libs\FSOMonoGame\MonoGame.Framework\ThirdParty\Dependencies\openal-soft\Windows\x86\soft_oal.dll">
       <Link>Monogame\WindowsGL\x86\soft_oal.dll</Link>
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </Content>
-    <Content Include="..\..\Other\libs\FSOMonoGame\MonoGame.Framework\bin\WindowsGL\AnyCPU\Release\x64\soft_oal.dll">
+    <Content Include="..\..\Other\libs\FSOMonoGame\MonoGame.Framework\ThirdParty\Dependencies\openal-soft\Windows\x64\soft_oal.dll">
       <Link>Monogame\WindowsGL\x64\soft_oal.dll</Link>
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </Content>
