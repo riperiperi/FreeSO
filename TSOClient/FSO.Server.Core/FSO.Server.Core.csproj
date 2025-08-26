@@ -13,7 +13,7 @@
     <PackageReference Include="Microsoft.AspNetCore.Hosting" Version="2.2.7" />
     <PackageReference Include="Microsoft.AspNetCore.Owin" Version="2.2.0" />
     <PackageReference Include="MonoGame.Framework.DesktopGL.Core" Version="3.7.0.7" />
-    <PackageReference Include="Newtonsoft.Json" Version="12.0.2" />
+    <PackageReference Include="Newtonsoft.Json" Version="13.0.1" />
     <PackageReference Include="Ninject" Version="3.3.4" />
     <PackageReference Include="Portable.JWT" Version="1.0.5" />
     <PackageReference Include="SixLabors.ImageSharp" Version="1.0.0-beta0004" />
