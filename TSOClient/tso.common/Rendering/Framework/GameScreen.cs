@@ -100,16 +100,8 @@ namespace FSO.Common.Rendering.Framework
             else
             {
                 //single mouse state
-                if (hasFocus)
-                {
-                    State.MouseState = Mouse.GetState();
-                    State.KeyboardState = Keyboard.GetState();
-                }
-                else
-                {
-                    State.MouseState = new MouseState();
-                    State.KeyboardState = new KeyboardState();
-                }
+                State.KeyboardState = hasFocus ? Keyboard.GetState() : new KeyboardState();
+                State.MouseState = Mouse.GetState(); 
 
                 if (State.KeyboardState.IsKeyDown(Keys.LeftAlt) && State.MouseState.LeftButton == ButtonState.Pressed)
                 {
