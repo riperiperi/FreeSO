@@ -104,6 +104,24 @@ namespace FSO.Common.Enum
             }
             return LotCategory.none;
         }
+
+        public static FSO.Common.Enum.AvatarTop100Category ToAvatarCategory(this Top100Category category)
+        {
+            switch (category)
+            {
+                case Top100Category.avatar_most_famous:
+                    return AvatarTop100Category.most_famous;
+                case Top100Category.avatar_best_karma:
+                    return AvatarTop100Category.best_karma;
+                case Top100Category.avatar_friendliest:
+                    return AvatarTop100Category.friendliest;
+                case Top100Category.avatar_most_infamous:
+                    return AvatarTop100Category.most_infamous;
+                case Top100Category.avatar_meanest:
+                    return AvatarTop100Category.meanest;
+            }
+            throw new Exception("Category is not a valid avatar top 100 category");
+        }
     }
 
     public enum Top100CategoryType
