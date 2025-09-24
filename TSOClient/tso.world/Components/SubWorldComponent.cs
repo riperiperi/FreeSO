@@ -106,7 +106,7 @@ namespace FSO.LotView.Components
             {
                 State.OutsideColor = state.OutsideColor;
                 Blueprint.OutsideColor = state.OutsideColor;
-                State.Light.BuildOutdoorsLight(Blueprint.OutsideTime);
+                State.Light?.BuildOutdoorsLight(Blueprint.OutsideTime);
             }
 
             Blueprint.Changes.PreDraw(gd, State);
