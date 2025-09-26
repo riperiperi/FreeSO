@@ -1,7 +1,4 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
+﻿using System.Text;
 using Microsoft.Xna.Framework;
 using FSO.LotView.Model;
 using FSO.SimAntics.Model.Routing;
@@ -37,9 +34,12 @@ namespace FSO.SimAntics.Model
             bool remaining = true;
             bool outside = true;
             int i = 0;
+
+            var spread = new Stack<SpreadItem>(width + height);
+
             while (remaining)
             {
-                var spread = new Stack<SpreadItem>();
+                spread.Clear();
                 remaining = false;
                 while (i < Map.Length)
                 {
