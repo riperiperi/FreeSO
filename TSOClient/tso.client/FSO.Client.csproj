@@ -134,8 +134,8 @@
   </ItemGroup>
 
   <ItemGroup>
-    <PackageReference Include="MonoGame.Framework.DesktopGL" Version="3.8.4" />
-    <PackageReference Include="MonoGame.Framework.WindowsDX" Version="3.8.4" />
+    <PackageReference Include="MonoGame.Framework.DesktopGL" Version="3.8.4.1-riperiperi" />
+    <PackageReference Include="MonoGame.Framework.WindowsDX" Version="3.8.4.1-riperiperi" />
     <PackageReference Include="Newtonsoft.Json" Version="13.0.4" />
     <PackageReference Include="Ninject" Version="3.3.6" />
     <PackageReference Include="Open.Nat" Version="2.1.0" />

@@ -20,8 +20,8 @@
   </PropertyGroup>
 
   <ItemGroup>
-    <PackageReference Include="MonoGame.Framework.DesktopGL" Version="3.8.4" />
-    <PackageReference Include="MonoGame.Framework.WindowsDX" Version="3.8.4" />
+    <PackageReference Include="MonoGame.Framework.DesktopGL" Version="3.8.4.1-riperiperi" />
+    <PackageReference Include="MonoGame.Framework.WindowsDX" Version="3.8.4.1-riperiperi" />
     <PackageReference Include="SharpGLTF.Toolkit" Version="1.0.0-alpha0011" />
   </ItemGroup>
 
@@ -136,13 +136,13 @@
 
     <MakeDir Directories="$(OutputPath)Monogame\Windows" />
     <ItemGroup>
-      <MGWindowsDX Include="$(NuGetGlobalPackages)\monogame.framework.windowsdx\3.8.4\lib\**\MonoGame.Framework.dll" />
+      <MGWindowsDX Include="$(NuGetGlobalPackages)\monogame.framework.windowsdx\3.8.4.1-riperiperi\lib\**\MonoGame.Framework.dll" />
     </ItemGroup>
     <Copy SourceFiles="@(MGWindowsDX)" DestinationFolder="$(OutputPath)Monogame\Windows" SkipUnchangedFiles="true" />
 
     <MakeDir Directories="$(OutputPath)Monogame\WindowsGL" />
     <ItemGroup>
-      <MGDesktopGL Include="$(NuGetGlobalPackages)\monogame.framework.desktopgl\3.8.4\lib\**\MonoGame.Framework.dll" />
+      <MGDesktopGL Include="$(NuGetGlobalPackages)\monogame.framework.desktopgl\3.8.4.1-riperiperi\lib\**\MonoGame.Framework.dll" />
     </ItemGroup>
     <Copy SourceFiles="@(MGDesktopGL)" DestinationFolder="$(OutputPath)Monogame\WindowsGL" SkipUnchangedFiles="true" />
   </Target>

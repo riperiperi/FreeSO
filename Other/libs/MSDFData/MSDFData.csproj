@@ -12,7 +12,7 @@
   </PropertyGroup>
 
   <ItemGroup>
-    <PackageReference Include="MonoGame.Framework.DesktopGL" Version="3.8.4" />
+    <PackageReference Include="MonoGame.Framework.DesktopGL" Version="3.8.4.1-riperiperi" />
   </ItemGroup>
 
 </Project>
