@@ -1,4 +1,5 @@
-﻿using Microsoft.Xna.Framework;
+﻿using FSO.Common.Utils;
+using Microsoft.Xna.Framework;
 using Microsoft.Xna.Framework.Graphics;
 using System.Runtime.InteropServices;
 using System.Text;
@@ -126,6 +127,47 @@ namespace FSO.Files
         public static Func<GraphicsDevice, Stream, Func<Texture2D>> BaseNonUIFunction = WinNonUIFromStream;
         public static Func<GraphicsDevice, Stream, ImageDataOrTextureProducer?> BaseDataFunction = WinDataFromStream;
 
+        public static Texture2D FromStreamAvgMips(GraphicsDevice gd, Stream str)
+        {
+            var file = DataFromStream(gd, str);
+
+            if (file == null)
+            {
+                return null;
+            }
+
+            if (file.Value.Producer != null)
+            {
+                var nonMip = file.Value.Producer();
+                var data = new Color[nonMip.Width * nonMip.Height];
+                nonMip.GetData(data);
+                nonMip.Dispose();
+
+                var result = new Texture2D(gd, nonMip.Width, nonMip.Height, true, SurfaceFormat.Color);
+                TextureUtils.UploadWithAvgMips(result, gd, data);
+
+                return result;
+            }
+            else if (file.Value.Data != null)
+            {
+                var data = file.Value.Data.Value;
+
+                var result = new Texture2D(gd, data.Width, data.Height, true, SurfaceFormat.Color);
+                TextureUtils.UploadWithAvgMips(result, gd, data.Data);
+
+                return result;
+            }
+
+            return null;
+        }
+
+        public static Texture2D MipTextureFromFile(GraphicsDevice gd, string filePath)
+        {
+            using (var stream = new FileStream(filePath, FileMode.Open, FileAccess.Read, FileShare.Read))
+            {
+                return FromStreamAvgMips(gd, stream);
+            }
+        }
 
         public static Texture2D FromStream(GraphicsDevice gd, Stream str)
         {

@@ -103,75 +103,73 @@ namespace FSO.LotView.RC
                     return allowCut && blueprint.Cutaway[index] ? 0.12f : 1;
                 };
 
+                Action<int, int, Vector2, Vector2, ushort, ushort, int, float, float, float> addLineGeom = (int x, int y, Vector2 from, Vector2 to, ushort pattern, ushort style, int topMode, float starttc, float endtc, float aboveFloor) => {
+                    var tex = world._2D.GetTexture(GetPattern(pattern)?.Near?.Frames[2]);
+                    var mask = world._2D.GetTexture(GetStyle(style)?.WallsUpNear?.Frames[(topMode != 4) ? 0 : 2]);
+
+                    var g = Fetch(tex, mask, style, grp);
+                    g.UseOffset = (topMode != 4);
+
+                    var p1 = new Vector3(from.X + x, from.Y + y, 0);
+                    var a1 = blueprint.InterpAltitude(p1) + (level - 1) * 2.95f;
+                    p1.Z = a1;
+                    var p2 = new Vector3(to.X + x, to.Y + y, 0);
+                    var a2 = blueprint.InterpAltitude(p2) + (level - 1) * 2.95f;
+                    p2.Z = a2;
+
+                    //generate the geometry for this line
+                    var l = level - 1;
+                    var baseI = g.Verts.Count;
+                    var h1 = (topMode == 4) ? 0.98f : GetWallHeight(p1);
+                    var h2 = (topMode == 4) ? 0.98f : GetWallHeight(p2);
+                    var col = (from.X == to.X) ? darker : white;
+                    g.Verts.Add(new WallVertexRC(p1, col, new Vector3(starttc, l, aboveFloor)));
+                    g.Verts.Add(new WallVertexRC(p2, col, new Vector3(endtc, l, aboveFloor)));
+                    g.Verts.Add(new WallVertexRC(p1 + wallHeight * h1, col, new Vector3(starttc, h1 + l, aboveFloor)));
+                    g.Verts.Add(new WallVertexRC(p2 + wallHeight * h2, col, new Vector3(endtc, h2 + l, aboveFloor)));
+
+                    g.Indices.Add(baseI); g.Indices.Add(baseI + 2); g.Indices.Add(baseI + 1);
+                    g.Indices.Add(baseI + 2); g.Indices.Add(baseI + 3); g.Indices.Add(baseI + 1);
+
+                    if (topMode < 4)
+                    {
+                        var g2 = Fetch(whitepx, whitepx, 0, grp);
+
+                        baseI = g2.Verts.Count;
+                        Vector3 toBack = Vector3.Zero;
+
+                        switch (topMode)
+                        {
+                            case 0:
+                                toBack = new Vector3(-thickness * 2, 0, 0);
+                                break;
+                            case 1:
+                                toBack = new Vector3(0, -thickness * 2, 0);
+                                break;
+                            case 2:
+                                toBack = new Vector3(thickness * -2, thickness * -2, 0);
+                                break;
+                            case 3:
+                                toBack = new Vector3(thickness * 2, thickness * -2, 0);
+                                break;
+                        }
+
+                        var vec = new Vector2(0, 1 + l);
+                        h1 -= 0.001f; h2 -= 0.001f;
+                        g2.Verts.Add(new WallVertexRC(p1 + wallHeight * h1, wallTop, new Vector3(0, h1 + l, aboveFloor)));
+                        g2.Verts.Add(new WallVertexRC(p2 + wallHeight * h2, wallTop, new Vector3(0, h2 + l, aboveFloor)));
+                        g2.Verts.Add(new WallVertexRC(p1 + wallHeight * h1 + toBack, wallTop, new Vector3(0, h1 + l, aboveFloor)));
+                        g2.Verts.Add(new WallVertexRC(p2 + wallHeight * h2 + toBack, wallTop, new Vector3(0, h2 + l, aboveFloor)));
+
+                        g2.Indices.Add(baseI); g2.Indices.Add(baseI + 2); g2.Indices.Add(baseI + 1);
+                        g2.Indices.Add(baseI + 2); g2.Indices.Add(baseI + 3); g2.Indices.Add(baseI + 1);
+                    }
+                };
+
                 for (short y = 0; y < blueprint.Height; y++)
                 {
                     for (short x = 0; x < blueprint.Height; x++)
                     {
-
-
-                        Action<Vector2, Vector2, ushort, ushort, int, float, float, float> addLineGeom = (Vector2 from, Vector2 to, ushort pattern, ushort style, int topMode, float starttc, float endtc, float aboveFloor) => {
-                            var tex = world._2D.GetTexture(GetPattern(pattern)?.Near?.Frames[2]);
-                            var mask = world._2D.GetTexture(GetStyle(style)?.WallsUpNear?.Frames[(topMode != 4)?0:2]);
-
-                            var g = Fetch(tex, mask, style, grp);
-                            g.UseOffset = (topMode != 4);
-
-                            var p1 = new Vector3(from.X + x, from.Y + y, 0);
-                            var a1 = blueprint.InterpAltitude(p1) + (level-1)*2.95f;
-                            p1.Z = a1;
-                            var p2 = new Vector3(to.X + x, to.Y + y, 0);
-                            var a2 = blueprint.InterpAltitude(p2) + (level-1) * 2.95f;
-                            p2.Z = a2;
-
-                            //generate the geometry for this line
-                            var l = level - 1;
-                            var baseI = g.Verts.Count;
-                            var h1 = (topMode == 4) ? 0.98f : GetWallHeight(p1);
-                            var h2 = (topMode == 4) ? 0.98f : GetWallHeight(p2);
-                            var col = (from.X == to.X) ? darker : white;
-                            g.Verts.Add(new WallVertexRC(p1, col, new Vector3(starttc, l, aboveFloor)));
-                            g.Verts.Add(new WallVertexRC(p2, col, new Vector3(endtc, l, aboveFloor)));
-                            g.Verts.Add(new WallVertexRC(p1+ wallHeight*h1, col, new Vector3(starttc, h1 + l, aboveFloor)));
-                            g.Verts.Add(new WallVertexRC(p2+ wallHeight*h2, col, new Vector3(endtc, h2 + l, aboveFloor)));
-
-                            g.Indices.Add(baseI); g.Indices.Add(baseI + 2); g.Indices.Add(baseI + 1);
-                            g.Indices.Add(baseI + 2); g.Indices.Add(baseI+3); g.Indices.Add(baseI + 1);
-
-                            if (topMode < 4)
-                            {
-                                var g2 = Fetch(whitepx, whitepx, 0, grp);
-
-                                baseI = g2.Verts.Count;
-                                Vector3 toBack = Vector3.Zero;
-
-                                switch (topMode)
-                                {
-                                    case 0:
-                                        toBack = new Vector3(-thickness*2, 0, 0);
-                                        break;
-                                    case 1:
-                                        toBack = new Vector3(0, -thickness * 2, 0);
-                                        break;
-                                    case 2:
-                                        toBack = new Vector3(thickness * -2, thickness * -2, 0);
-                                        break;
-                                    case 3:
-                                        toBack = new Vector3(thickness * 2, thickness * -2, 0);
-                                        break;
-                                }
-
-                                var vec = new Vector2(0, 1 + l);
-                                h1 -= 0.001f; h2 -= 0.001f;
-                                g2.Verts.Add(new WallVertexRC(p1 + wallHeight*h1, wallTop, new Vector3(0, h1 + l, aboveFloor)));
-                                g2.Verts.Add(new WallVertexRC(p2 + wallHeight*h2, wallTop, new Vector3(0, h2 + l, aboveFloor)));
-                                g2.Verts.Add(new WallVertexRC(p1 + wallHeight*h1 + toBack, wallTop, new Vector3(0, h1 + l, aboveFloor)));
-                                g2.Verts.Add(new WallVertexRC(p2 + wallHeight*h2 + toBack, wallTop, new Vector3(0, h2 + l, aboveFloor)));
-
-                                g2.Indices.Add(baseI); g2.Indices.Add(baseI + 2); g2.Indices.Add(baseI + 1);
-                                g2.Indices.Add(baseI + 2); g2.Indices.Add(baseI + 3); g2.Indices.Add(baseI + 1);
-                            }
-                        };
-
                         var comp = blueprint.GetWall(x, y, level);
                         if (comp.Segments != 0)
                         {
@@ -187,22 +185,22 @@ namespace FSO.LotView.RC
                                     {
                                         extentBack = -thickness;
                                         //cap this end
-                                        addLineGeom(new Vector2(thickness, extentBack + 0.005f), new Vector2(-thickness, extentBack + 0.005f), comp.TopLeftPattern, 1, 5, 0, thickness * 2, bleedLight);
+                                        addLineGeom(x, y, new Vector2(thickness, extentBack + 0.005f), new Vector2(-thickness, extentBack + 0.005f), comp.TopLeftPattern, 1, 5, 0, thickness * 2, bleedLight);
                                     }
                                     if (y < blueprint.Height - 1 && !blueprint.GetWall(x, (short)(y + 1), level).TopLeftThick)
                                     {
                                         extentFront = thickness;
                                         //cap this end
-                                        addLineGeom(new Vector2(-thickness, 1 + extentFront - 0.005f), new Vector2(thickness, 1 + extentFront - 0.005f), comp.TopLeftPattern, 1, 5, 0, thickness * 2, bleedLight);
+                                        addLineGeom(x, y, new Vector2(-thickness, 1 + extentFront - 0.005f), new Vector2(thickness, 1 + extentFront - 0.005f), comp.TopLeftPattern, 1, 5, 0, thickness * 2, bleedLight);
                                     }
                                     if (x > 0)
-                                        addLineGeom(new Vector2(-thickness, extentBack), new Vector2(-thickness, 1 + extentFront), blueprint.GetWall((short)(x - 1), y, level).BottomRightPattern, (comp.ObjSetTLStyle == 0) ? comp.TopLeftStyle : comp.ObjSetTLStyle, 5, -(0 + extentBack), -(1 + extentFront), bleedLight2);
-                                    addLineGeom(new Vector2(thickness, 1+extentFront), new Vector2(thickness, extentBack), comp.TopLeftPattern, (comp.ObjSetTLStyle == 0) ? comp.TopLeftStyle : comp.ObjSetTLStyle, 0, 0-extentFront, 1-extentBack, bleedLight);
+                                        addLineGeom(x, y, new Vector2(-thickness, extentBack), new Vector2(-thickness, 1 + extentFront), blueprint.GetWall((short)(x - 1), y, level).BottomRightPattern, (comp.ObjSetTLStyle == 0) ? comp.TopLeftStyle : comp.ObjSetTLStyle, 5, -(0 + extentBack), -(1 + extentFront), bleedLight2);
+                                    addLineGeom(x, y, new Vector2(thickness, 1+extentFront), new Vector2(thickness, extentBack), comp.TopLeftPattern, (comp.ObjSetTLStyle == 0) ? comp.TopLeftStyle : comp.ObjSetTLStyle, 0, 0-extentFront, 1-extentBack, bleedLight);
                                 }
                                 else
                                 {
                                     //fence tl
-                                    addLineGeom(new Vector2(0, 1), new Vector2(0, 0), comp.TopLeftPattern, (comp.ObjSetTLStyle == 0) ? comp.TopLeftStyle : comp.ObjSetTLStyle, 4, 0, 1, bleedLight);
+                                    addLineGeom(x, y, new Vector2(0, 1), new Vector2(0, 0), comp.TopLeftPattern, (comp.ObjSetTLStyle == 0) ? comp.TopLeftStyle : comp.ObjSetTLStyle, 4, 0, 1, bleedLight);
                                 }
                             }
                             if ((comp.Segments & WallSegments.TopRight) > 0)
@@ -216,22 +214,22 @@ namespace FSO.LotView.RC
                                     {
                                         extentBack = -thickness;
                                         //cap this end
-                                        addLineGeom(new Vector2(extentBack+0.005f, -thickness), new Vector2(extentBack + 0.005f, thickness), comp.TopRightPattern, 1, 5, 0, thickness*2, bleedLight);
+                                        addLineGeom(x, y, new Vector2(extentBack+0.005f, -thickness), new Vector2(extentBack + 0.005f, thickness), comp.TopRightPattern, 1, 5, 0, thickness*2, bleedLight);
                                     }
                                     if (x < blueprint.Width - 1 && !blueprint.GetWall((short)(x + 1), y, level).TopRightThick)
                                     {
                                         extentFront = thickness;
                                         //cap this end
-                                        addLineGeom(new Vector2(1 + extentFront - 0.005f, thickness), new Vector2(1 + extentFront - 0.005f, -thickness), comp.TopRightPattern, 1, 5, 0, thickness * 2, bleedLight);
+                                        addLineGeom(x, y, new Vector2(1 + extentFront - 0.005f, thickness), new Vector2(1 + extentFront - 0.005f, -thickness), comp.TopRightPattern, 1, 5, 0, thickness * 2, bleedLight);
                                     }
                                     if (y > 0)
-                                        addLineGeom(new Vector2(1 + extentFront, -thickness), new Vector2(extentBack, -thickness), blueprint.GetWall(x, (short)(y - 1), level).BottomLeftPattern, (comp.ObjSetTRStyle == 0) ? comp.TopRightStyle : comp.ObjSetTRStyle, 5, extentFront, -(1 - extentBack), bleedLight2);
-                                    addLineGeom(new Vector2(extentBack, thickness), new Vector2(1+extentFront, thickness), comp.TopRightPattern, (comp.ObjSetTRStyle == 0) ? comp.TopRightStyle : comp.ObjSetTRStyle, 1, extentBack, 1+extentFront, bleedLight);
+                                        addLineGeom(x, y, new Vector2(1 + extentFront, -thickness), new Vector2(extentBack, -thickness), blueprint.GetWall(x, (short)(y - 1), level).BottomLeftPattern, (comp.ObjSetTRStyle == 0) ? comp.TopRightStyle : comp.ObjSetTRStyle, 5, extentFront, -(1 - extentBack), bleedLight2);
+                                    addLineGeom(x, y, new Vector2(extentBack, thickness), new Vector2(1+extentFront, thickness), comp.TopRightPattern, (comp.ObjSetTRStyle == 0) ? comp.TopRightStyle : comp.ObjSetTRStyle, 1, extentBack, 1+extentFront, bleedLight);
                                 }
                                 else
                                 {
                                     //fence tr
-                                    addLineGeom(new Vector2(0, 0), new Vector2(1, 0), comp.TopRightPattern, (comp.ObjSetTRStyle == 0) ? comp.TopRightStyle : comp.ObjSetTRStyle, 4, 0, 1, bleedLight);
+                                    addLineGeom(x, y, new Vector2(0, 0), new Vector2(1, 0), comp.TopRightPattern, (comp.ObjSetTRStyle == 0) ? comp.TopRightStyle : comp.ObjSetTRStyle, 4, 0, 1, bleedLight);
                                 }
                             }
 
@@ -240,7 +238,7 @@ namespace FSO.LotView.RC
                                 //fence bl
                                 var comp2 = blueprint.GetWall(x, (short)(y + 1), level);
                                 if (!comp2.TopRightThick)
-                                    addLineGeom(new Vector2(1, 1), new Vector2(0, 1), comp.BottomLeftPattern, (comp2.ObjSetTRStyle == 0) ? comp2.TopRightStyle : comp.ObjSetTRStyle, 4, 0, 1, bleedLight);
+                                    addLineGeom(x, y, new Vector2(1, 1), new Vector2(0, 1), comp.BottomLeftPattern, (comp2.ObjSetTRStyle == 0) ? comp2.TopRightStyle : comp.ObjSetTRStyle, 4, 0, 1, bleedLight);
                             }
                             if ((comp.Segments & WallSegments.BottomRight) > 0 && x < blueprint.Width)
                             {
@@ -248,7 +246,7 @@ namespace FSO.LotView.RC
 
                                 var comp2 = blueprint.GetWall((short)(x + 1), y, level);
                                 if (!comp2.TopLeftThick)
-                                    addLineGeom(new Vector2(1, 0), new Vector2(1, 1), comp.BottomRightPattern, (comp2.ObjSetTLStyle == 0) ? comp2.TopLeftStyle : comp2.ObjSetTLStyle, 4, 0, 1, bleedLight);
+                                    addLineGeom(x, y, new Vector2(1, 0), new Vector2(1, 1), comp.BottomRightPattern, (comp2.ObjSetTLStyle == 0) ? comp2.TopLeftStyle : comp2.ObjSetTLStyle, 4, 0, 1, bleedLight);
                             }
 
                             if ((comp.Segments & WallSegments.HorizontalDiag) > 0)
@@ -257,18 +255,18 @@ namespace FSO.LotView.RC
                                 var bl1 = (level == 1 || comp.TopLeftPattern != 0) ? 0 : 1;
                                 if (comp.TopRightStyle == 1 || comp.TopRightStyle == 255)
                                 {
-                                    addLineGeom(new Vector2(thickDiag, 1+thickDiag), new Vector2(1+thickDiag, thickDiag), comp.BottomRightPattern, (comp.ObjSetTRStyle == 0) ? comp.TopRightStyle : comp.ObjSetTRStyle, 2, 0, 1, bl1);
-                                    addLineGeom(new Vector2(1-thickDiag, -thickDiag), new Vector2(-thickDiag, 1 - thickDiag), comp.BottomLeftPattern, (comp.ObjSetTRStyle == 0) ? comp.TopRightStyle : comp.ObjSetTRStyle, 5, 0, 1, bl2);
+                                    addLineGeom(x, y, new Vector2(thickDiag, 1+thickDiag), new Vector2(1+thickDiag, thickDiag), comp.BottomRightPattern, (comp.ObjSetTRStyle == 0) ? comp.TopRightStyle : comp.ObjSetTRStyle, 2, 0, 1, bl1);
+                                    addLineGeom(x, y, new Vector2(1-thickDiag, -thickDiag), new Vector2(-thickDiag, 1 - thickDiag), comp.BottomLeftPattern, (comp.ObjSetTRStyle == 0) ? comp.TopRightStyle : comp.ObjSetTRStyle, 5, 0, 1, bl2);
 
                                     //caps
-                                    addLineGeom(new Vector2(-thickDiag, 1 - thickDiag), new Vector2(thickDiag, 1 + thickDiag), comp.BottomRightPattern, 1, 5, 0, thickDiag*2, Math.Min(bl1, bl2));
-                                    addLineGeom(new Vector2(1 + thickDiag, thickDiag), new Vector2(1 - thickDiag, -thickDiag), comp.BottomLeftPattern, 1, 5, 0, thickDiag * 2, Math.Min(bl1, bl2));
+                                    addLineGeom(x, y, new Vector2(-thickDiag, 1 - thickDiag), new Vector2(thickDiag, 1 + thickDiag), comp.BottomRightPattern, 1, 5, 0, thickDiag*2, Math.Min(bl1, bl2));
+                                    addLineGeom(x, y, new Vector2(1 + thickDiag, thickDiag), new Vector2(1 - thickDiag, -thickDiag), comp.BottomLeftPattern, 1, 5, 0, thickDiag * 2, Math.Min(bl1, bl2));
                                 }
                                 else
                                 {
                                     //fence horiz
-                                    addLineGeom(new Vector2(0, 1), new Vector2(1, 0), comp.BottomRightPattern, (comp.ObjSetTRStyle == 0) ? comp.TopRightStyle : comp.ObjSetTRStyle, 4, 0, 1, bl1);
-                                    addLineGeom(new Vector2(1, 0), new Vector2(0, 1), comp.BottomLeftPattern, (comp.ObjSetTRStyle == 0) ? comp.TopRightStyle : comp.ObjSetTRStyle, 4, 0, 1, bl2);
+                                    addLineGeom(x, y, new Vector2(0, 1), new Vector2(1, 0), comp.BottomRightPattern, (comp.ObjSetTRStyle == 0) ? comp.TopRightStyle : comp.ObjSetTRStyle, 4, 0, 1, bl1);
+                                    addLineGeom(x, y, new Vector2(1, 0), new Vector2(0, 1), comp.BottomLeftPattern, (comp.ObjSetTRStyle == 0) ? comp.TopRightStyle : comp.ObjSetTRStyle, 4, 0, 1, bl2);
                                 }
                             }
                             if ((comp.Segments & WallSegments.VerticalDiag) > 0)
@@ -277,19 +275,19 @@ namespace FSO.LotView.RC
                                 var bl2 = (level == 1 || comp.TopLeftPattern != 0) ? 0 : 1;
                                 if (comp.TopRightStyle == 1 || comp.TopRightStyle == 255)
                                 {
-                                    addLineGeom(new Vector2(-thickDiag, thickDiag), new Vector2(1- thickDiag, 1+thickDiag), comp.BottomLeftPattern, (comp.ObjSetTRStyle == 0) ? comp.TopRightStyle : comp.ObjSetTRStyle, 3, 0, 1, bl1);
-                                    addLineGeom(new Vector2(1+ thickDiag, 1- thickDiag), new Vector2(0 + thickDiag, -thickDiag), comp.BottomRightPattern, (comp.ObjSetTRStyle == 0) ? comp.TopRightStyle : comp.ObjSetTRStyle, 5, 0, 1, bl2);
+                                    addLineGeom(x, y, new Vector2(-thickDiag, thickDiag), new Vector2(1- thickDiag, 1+thickDiag), comp.BottomLeftPattern, (comp.ObjSetTRStyle == 0) ? comp.TopRightStyle : comp.ObjSetTRStyle, 3, 0, 1, bl1);
+                                    addLineGeom(x, y, new Vector2(1+ thickDiag, 1- thickDiag), new Vector2(0 + thickDiag, -thickDiag), comp.BottomRightPattern, (comp.ObjSetTRStyle == 0) ? comp.TopRightStyle : comp.ObjSetTRStyle, 5, 0, 1, bl2);
 
                                     //caps 
-                                    addLineGeom(new Vector2(0 + thickDiag, -thickDiag), new Vector2(-thickDiag, thickDiag), comp.BottomLeftPattern, 1, 5, 0, thickDiag*2, Math.Min(bl1, bl2));
-                                    addLineGeom(new Vector2(1 - thickDiag, 1 + thickDiag), new Vector2(1 + thickDiag, 1 - thickDiag), comp.BottomRightPattern, 1, 5, 0, thickDiag * 2, Math.Min(bl1, bl2));
+                                    addLineGeom(x, y, new Vector2(0 + thickDiag, -thickDiag), new Vector2(-thickDiag, thickDiag), comp.BottomLeftPattern, 1, 5, 0, thickDiag*2, Math.Min(bl1, bl2));
+                                    addLineGeom(x, y, new Vector2(1 - thickDiag, 1 + thickDiag), new Vector2(1 + thickDiag, 1 - thickDiag), comp.BottomRightPattern, 1, 5, 0, thickDiag * 2, Math.Min(bl1, bl2));
 
                                 }
                                 else
                                 {
                                     // fence vert
-                                    addLineGeom(new Vector2(0, 0), new Vector2(1, 1), comp.BottomLeftPattern, (comp.ObjSetTRStyle == 0) ? comp.TopRightStyle : comp.ObjSetTRStyle, 4, 0, 1, bl1);
-                                    addLineGeom(new Vector2(1, 1), new Vector2(0, 0), comp.BottomRightPattern, (comp.ObjSetTRStyle == 0) ? comp.TopRightStyle : comp.ObjSetTRStyle, 4, 0, 1, bl2);
+                                    addLineGeom(x, y, new Vector2(0, 0), new Vector2(1, 1), comp.BottomLeftPattern, (comp.ObjSetTRStyle == 0) ? comp.TopRightStyle : comp.ObjSetTRStyle, 4, 0, 1, bl1);
+                                    addLineGeom(x, y, new Vector2(1, 1), new Vector2(0, 0), comp.BottomRightPattern, (comp.ObjSetTRStyle == 0) ? comp.TopRightStyle : comp.ObjSetTRStyle, 4, 0, 1, bl2);
                                 }
 
                             }

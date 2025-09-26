@@ -1,4 +1,5 @@
 ﻿using FSO.Common.Utils;
+using FSO.Files;
 using FSO.LotView.Effects;
 using FSO.LotView.LMap;
 using FSO.LotView.Model;
@@ -94,13 +95,13 @@ namespace FSO.LotView.Components
                     ParallaxTexture = Texture2D.FromStream(device, strm);
                 }
 
-                NormalMap = TextureUtils.MipTextureFromFile(device, $"Content/Textures/roof/{searchName}_n.png");
+                NormalMap = ImageLoader.MipTextureFromFile(device, $"Content/Textures/roof/{searchName}_n.png");
             } catch (Exception)
             {
 
             }
 
-            EdgeTexture = TextureUtils.MipTextureFromFile(device, $"Content/Textures/roof/default_edge.png");
+            EdgeTexture = ImageLoader.MipTextureFromFile(device, $"Content/Textures/roof/default_edge.png");
 
             var color = new Vector4();
             var data = new Color[Texture.Width * Texture.Height];
@@ -131,9 +132,14 @@ namespace FSO.LotView.Components
 
         public void RegenRoof(GraphicsDevice device)
         {
+            var (indoorsMap, hasAnyIndoors) = BuildIndoorsMap();
+
             for (int i = 1; i <= blueprint.Stories; i++)
             {
-                RegenRoof((sbyte)(i + 1), device);
+                if (hasAnyIndoors[i - 1])
+                {
+                    RegenRoof((sbyte)(i + 1), device, indoorsMap);
+                }
             }
 
             blueprint.SM64?.UpdateRoof();
@@ -149,7 +155,7 @@ namespace FSO.LotView.Components
             }
         }
 
-        public void RegenRoof(sbyte level, GraphicsDevice device)
+        public void RegenRoof(sbyte level, GraphicsDevice device, bool[][] indoorsMap)
         {
             //algorithm overview:
             // 1. divide each tile into 4.
@@ -165,8 +171,6 @@ namespace FSO.LotView.Components
             var height = blueprint.Height * 2;
 
             var evaluated = new bool[width * height];
-
-            var indoorsMap = BuildIndoorsMap();
 
             var result = new List<RoofRect>();
             for (int y = 2; y < height; y++)
@@ -651,13 +655,15 @@ namespace FSO.LotView.Components
             return false;
         }
 
-        private bool[][] BuildIndoorsMap()
+        private (bool[][], bool[]) BuildIndoorsMap()
         {
             bool[] roomIndoors = blueprint.Rooms.Select(x => !x.IsOutside).ToArray();
             bool[][] indoors = new bool[blueprint.Stories][];
+            bool[] hasAnyIndoors = new bool[blueprint.Stories];
             
             for (int i = 0; i < blueprint.Stories; i++)
             {
+                bool anyIndoors = false;
                 var roomMap = blueprint.RoomMap[i];
                 var floorIndoors = new bool[blueprint.Width * blueprint.Height];
                 indoors[i] = floorIndoors;
@@ -674,10 +680,13 @@ namespace FSO.LotView.Components
                     if (room2 > 0 && room2 < roomIndoors.Length && roomIndoors[room2]) tileIndoors = true;
 
                     floorIndoors[j] = tileIndoors;
+                    anyIndoors |= tileIndoors;
                 }
+
+                hasAnyIndoors[i] = anyIndoors;
             }
 
-            return indoors;
+            return (indoors, hasAnyIndoors);
         }
 
         public bool IsRoofable(LotTilePos pos, bool[][] indoorsMap)

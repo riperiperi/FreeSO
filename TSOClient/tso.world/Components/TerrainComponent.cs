@@ -12,6 +12,8 @@ using FSO.LotView.LMap;
 using FSO.LotView.Effects;
 using FSO.Common.Model;
 using FSO.LotView.Utils.Camera;
+using System.Runtime.CompilerServices;
+using FSO.Files;
 
 namespace FSO.LotView.Components
 {
@@ -140,51 +142,55 @@ namespace FSO.LotView.Components
             GrassDensityScale = LotTypeGrassInfo.GrassDensity[index];
         }
 
-
         private Vector3 GetNormalAt(int x, int y)
         {
-            var sum = new Vector3();
             var limit = (Size.Width - 1);
+
+            float myElevation = GetElevationPoint(x, y);
+
+            // vec.x = 1, vec.y = difference
+            float xElevDifference = 0;
+            int xElevCount = 0;
 
             if (x < limit)
             {
-                var vec = new Vector3();
-                vec.X = 1;
-                vec.Y = GetElevationPoint(x + 1, y) - GetElevationPoint(x, y);
-                vec = Vector3.Transform(vec, RotToNormalXY);
-                sum += vec;
+                xElevDifference += GetElevationPoint(x + 1, y) - myElevation;
+                xElevCount++;
             }
 
             if (x > 1)
             {
-                var vec = new Vector3();
-                vec.X = 1;
-                vec.Y = GetElevationPoint(x, y) - GetElevationPoint(x - 1, y);
-                vec = Vector3.Transform(vec, RotToNormalXY);
-                sum += vec;
+                xElevDifference += myElevation - GetElevationPoint(x - 1, y);
+                xElevCount++;
             }
+
+            xElevDifference /= xElevCount;
+
+            // vec.z = 1, vec.z = difference;
+            float yElevDifference = 0;
+            int yElevCount = 0;
 
             if (y < limit)
             {
-                var vec = new Vector3();
-                vec.Z = 1;
-                vec.Y = GetElevationPoint(x, y + 1) - GetElevationPoint(x, y);
-                vec = Vector3.Transform(vec, RotToNormalZY);
-                sum += vec;
+                yElevDifference += GetElevationPoint(x, y + 1) - myElevation;
+                yElevCount++;
             }
 
             if (y > 1)
             {
-                var vec = new Vector3();
-                vec.Z = 1;
-                vec.Y = GetElevationPoint(x, y) - GetElevationPoint(x, y - 1);
-                vec = Vector3.Transform(vec, RotToNormalZY);
-                sum += vec;
+                yElevDifference += myElevation - GetElevationPoint(x, y - 1);
+                yElevCount++;
             }
-            if (sum != Vector3.Zero) sum.Normalize();
-            return sum;
+
+            yElevDifference /= yElevCount;
+
+            Vector3 cross = Vector3.Cross(new Vector3(0, yElevDifference, 3f), new Vector3(3f, xElevDifference, 0));
+
+            if (cross != Vector3.Zero) cross.Normalize();
+            return cross;
         }
 
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public float GetElevationPoint(int x, int y)
         {
             if (x >= Size.Width || y >= Size.Height) return 0;
@@ -290,21 +296,8 @@ namespace FSO.LotView.Components
 
             if (GridTex == null)
             {
-                using (var strm = File.Open($"Content/Textures/lot/tile_dashed.png", FileMode.Open, FileAccess.Read, FileShare.Read))
-                {
-                    GridTex = GenMips(device, Texture2D.FromStream(device, strm));
-                }
+                GridTex = ImageLoader.MipTextureFromFile(device, $"Content/Textures/lot/tile_dashed.png");
             }
-        }
-
-        private Texture2D GenMips(GraphicsDevice device, Texture2D texture)
-        {
-            var data = new Color[texture.Width * texture.Height];
-            texture.GetData(data);
-            texture.Dispose();
-            texture = new Texture2D(device, texture.Width, texture.Height, true, SurfaceFormat.Color);
-            TextureUtils.UploadWithAvgMips(texture, device, data);
-            return texture;
         }
 
         public TerrainParallaxVertex[] GetVertices(GraphicsDevice gd)

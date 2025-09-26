@@ -1,12 +1,11 @@
 ﻿using FSO.Common;
 using FSO.Common.Utils;
 using FSO.LotView.Components.Geometry;
+using FSO.LotView.Components.Model;
 using FSO.LotView.Effects;
 using FSO.LotView.Model;
 using Microsoft.Xna.Framework;
 using Microsoft.Xna.Framework.Graphics;
-using System;
-using System.Collections.Generic;
 
 namespace FSO.LotView.Components
 {
@@ -683,7 +682,7 @@ namespace FSO.LotView.Components
 
     public class FloorTileGroup : IDisposable
     {
-        public Dictionary<ushort, List<int>> GeomForOffset = new Dictionary<ushort, List<int>>();
+        public Dictionary<ushort, FloorTileIndices> GeomForOffset = new Dictionary<ushort, FloorTileIndices>();
         public IndexBuffer GPUData;
 
         public virtual void PrepareGPU(GraphicsDevice gd)
@@ -697,13 +696,14 @@ namespace FSO.LotView.Components
         private int[] BuildIndexData()
         {
             var result = new int[GeomForOffset.Count * 6];
+            var resultSpan = result.AsSpan();
             int i = 0;
             foreach (var geom in GeomForOffset.Values)
             {
-                foreach (var elem in geom)
-                {
-                    result[i++] = elem;
-                }
+                var geomCopy = geom;
+                int newI = i + geom.Length;
+                geomCopy.GetSpan().CopyTo(resultSpan[i..newI]);
+                i = newI;
             }
             return result;
         }
@@ -712,7 +712,7 @@ namespace FSO.LotView.Components
         {
             //
             var o2 = offset * 4;
-            var result = new List<int> { o2, o2 + 1, o2 + 2, o2 + 2, o2 + 3, o2 };
+            var result = new FloorTileIndices(o2, o2 + 1, o2 + 2, o2 + 2, o2 + 3, o2);
             GeomForOffset[offset] = result;
         }
 
@@ -720,15 +720,15 @@ namespace FSO.LotView.Components
         {
             //
             var o2 = offset * 4;
-            List<int> result;
+            FloorTileIndices result;
             if (vertical)
             {
-                if (side) result = new List<int> { o2, o2 + 1, o2 + 2 };
-                else result = new List<int> { o2 + 2, o2 + 3, o2 };
+                if (side) result = new FloorTileIndices(o2, o2 + 1, o2 + 2);
+                else result = new FloorTileIndices(o2 + 2, o2 + 3, o2);
             } else
             {
-                if (side) result = new List<int> { o2+1, o2 + 2, o2 + 3 };
-                else result = new List<int> { o2, o2 + 1, o2 + 3 };
+                if (side) result = new FloorTileIndices(o2 +1, o2 + 2, o2 + 3);
+                else result = new FloorTileIndices(o2, o2 + 1, o2 + 3);
             }
             GeomForOffset[(ushort)(offset + (side?32768:0))] = result;
         }

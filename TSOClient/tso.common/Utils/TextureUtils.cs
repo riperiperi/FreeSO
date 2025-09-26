@@ -27,17 +27,6 @@ namespace FSO.Common.Utils
             }
         }
 
-        public static Texture2D MipTextureFromFile(GraphicsDevice gd, string filePath)
-        {
-            var tex = TextureFromFile(gd, filePath);
-            var data = new Color[tex.Width * tex.Height];
-            tex.GetData(data);
-            var newTex = new Texture2D(gd, tex.Width, tex.Height, true, SurfaceFormat.Color);
-            UploadWithAvgMips(newTex, gd, data);
-            tex.Dispose();
-            return newTex;
-        }
-
         private static Dictionary<uint, Texture2D> _TextureColors = new Dictionary<uint, Texture2D>();
 
         public static Texture2D TextureFromColor(GraphicsDevice gd, Color color)

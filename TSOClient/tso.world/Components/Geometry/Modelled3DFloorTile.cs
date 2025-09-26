@@ -1,4 +1,5 @@
 ﻿using FSO.Common.Utils;
+using FSO.Files;
 using FSO.Files.RC;
 using FSO.LotView.Utils;
 using Microsoft.Xna.Framework;
@@ -57,7 +58,7 @@ namespace FSO.LotView.Components.Geometry
         public Texture2D GetTexture(GraphicsDevice gd)
         {
             if (Texture != null) return Texture;
-            Texture = TextureUtils.MipTextureFromFile(gd, $"Content/3D/floor/{TextureName}");
+            Texture = ImageLoader.MipTextureFromFile(gd, $"Content/3D/floor/{TextureName}");
             return Texture;
         }
     }

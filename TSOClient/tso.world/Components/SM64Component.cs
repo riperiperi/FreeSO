@@ -1062,14 +1062,17 @@ namespace FSO.LotView.Components
                         terrain = special.Item2;
                     }
 
-                    foreach (var tiletuple in tilegroup.GeomForOffset)
+                    foreach (var tiletuple in tilegroup.GeomForOffset.Values)
                     {
+                        var tiletupleCopy = tiletuple;
+                        var indices = tiletupleCopy.GetSpan();
+
                         if (floorType == 0)
                         {
                             // Just use the base terrain triangles.
                             // Select a tile by picking the first vertex, dividing by 4.
 
-                            int tileIndex = (tiletuple.Value[0] / 4);
+                            int tileIndex = (indices[0] / 4);
 
                             // Then select both triangles.
 
@@ -1082,7 +1085,7 @@ namespace FSO.LotView.Components
                             // They're all going to be on the same tile...
                             // Select it by picking the first vertex, dividing by 4.
 
-                            int tileIndex = (tiletuple.Value[0] / 4);
+                            int tileIndex = (indices[0] / 4);
                             int baseIndex = tileIndex * 4;
 
                             var tri1 = TerrainBase[tileIndex << 1];
@@ -1093,8 +1096,7 @@ namespace FSO.LotView.Components
                             tile[2] = ToVector3(tri1.Vertex1);
                             tile[3] = ToVector3(tri2.Vertex2);
 
-                            var indices = tiletuple.Value;
-                            for (int j = 0; j < indices.Count; j += 3)
+                            for (int j = 0; j < indices.Length; j += 3)
                             {
                                 var v1 = tile[indices[j + 2] - baseIndex] + heightOffset;
                                 var v2 = tile[indices[j + 1] - baseIndex] + heightOffset;

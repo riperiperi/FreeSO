@@ -669,7 +669,7 @@ namespace FSO.LotView
             Blueprint.Changes.PreDraw(device, State);
             Static?.PreDraw(device, State);
 
-            if (UseBackbuffer)
+            if (UseBackbuffer && Visible)
             {
                 PPXDepthEngine.SetPPXTarget(null, null, true);
                 InternalDraw(device);
