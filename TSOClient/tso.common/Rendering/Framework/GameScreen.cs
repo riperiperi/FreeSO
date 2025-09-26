@@ -1,10 +1,11 @@
-﻿using System.Collections.Generic;
-using System.Linq;
+﻿using FSO.Common.Rendering.Framework.Model;
+using FSO.Common.Utils;
 using Microsoft.Xna.Framework;
 using Microsoft.Xna.Framework.Graphics;
-using FSO.Common.Rendering.Framework.Model;
 using Microsoft.Xna.Framework.Input;
 using Microsoft.Xna.Framework.Input.Touch;
+using System.Collections.Generic;
+using System.Linq;
 
 namespace FSO.Common.Rendering.Framework
 {
@@ -129,6 +130,8 @@ namespace FSO.Common.Rendering.Framework
 
             State.SharedData.Clear();
             State.Update();
+
+            GameThread.DigestUpdate(State);
 
             foreach (var layer in Layers){
                 layer.Update(State);

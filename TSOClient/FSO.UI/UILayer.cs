@@ -277,8 +277,6 @@ namespace FSO.Client.UI
 
         public void Update(UpdateState state)
         {
-            GameThread.DigestUpdate(state);
-
             if (GameFacade.Game.Window == null) return;
 
             var mousePosition = state.MouseState.Position;
