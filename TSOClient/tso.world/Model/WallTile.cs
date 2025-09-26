@@ -1,5 +1,25 @@
-﻿namespace FSO.LotView.Model
+﻿using System.Runtime.InteropServices;
+
+namespace FSO.LotView.Model
 {
+    [StructLayout(LayoutKind.Sequential, Pack = 1)]
+    public struct WallTileSerialized
+    {
+        public WallSegments Segments;
+
+        //the patterns of each side of the tile's wall.
+        public ushort TopLeftPattern;
+        public ushort TopRightPattern;
+        public ushort BottomLeftPattern;
+        public ushort BottomRightPattern;
+
+        //the style of the wall at the top left and top right. bottom left and bottom right are to be obtained from the tiles in those directions.
+        //1 generally means "normal wall". Not sure how to deal with cutouts while keeping these as "normal wall".
+        public ushort TopLeftStyle;
+        public ushort TopRightStyle;
+    }
+
+    [StructLayout(LayoutKind.Sequential, Pack = 1)]
     public struct WallTile
     {
         public WallSegments Segments;

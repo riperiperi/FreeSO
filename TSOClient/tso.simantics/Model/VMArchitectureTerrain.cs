@@ -240,9 +240,8 @@ namespace FSO.SimAntics.Model
         {
             writer.Write((byte)LightType);
             writer.Write((byte)DarkType);
-            var ba = VMSerializableUtils.ToByteArray(Heights);
-            writer.Write(ba.Length);
-            writer.Write(ba);
+            writer.Write(Heights.Length * 2);
+            VMSerializableUtils.WriteArray(writer, Heights);
             writer.Write(GrassState.Length);
             writer.Write(GrassState);
         }
@@ -251,12 +250,14 @@ namespace FSO.SimAntics.Model
         {
             LightType = (TerrainType)reader.ReadByte();
             DarkType = (TerrainType)reader.ReadByte();
-            var dat = reader.ReadBytes(reader.ReadInt32());
+            int byteCount = reader.ReadInt32();
             if (Version > 18)
             {
-                Heights = VMSerializableUtils.ToTArray<short>(dat);
-            } else
+                Heights = VMSerializableUtils.ReadArray<short>(reader, byteCount / 2);
+            }
+            else
             {
+                var dat = reader.ReadBytes(byteCount);
                 Heights = Array.ConvertAll(dat, x => (short)x);
             }
             

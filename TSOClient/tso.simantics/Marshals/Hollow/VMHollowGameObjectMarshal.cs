@@ -43,11 +43,7 @@ namespace FSO.SimAntics.Marshals.Hollow
             DynamicSpriteFlags2 = reader.ReadUInt64();
 
             var contC = reader.ReadInt32();
-            Contained = new short[contC];
-            for (int i=0; i<contC; i++)
-            {
-                Contained[i] = reader.ReadInt16();
-            }
+            Contained = VMSerializableUtils.ReadArray<short>(reader, contC);
             Container = reader.ReadInt16();
             ContainerSlot = reader.ReadInt16();
 
@@ -69,7 +65,7 @@ namespace FSO.SimAntics.Marshals.Hollow
             writer.Write(DynamicSpriteFlags2);
 
             writer.Write(Contained.Length);
-            writer.Write(VMSerializableUtils.ToByteArray(Contained));
+            VMSerializableUtils.WriteArray(writer, Contained);
             writer.Write(Container);
             writer.Write(ContainerSlot);
 

@@ -66,7 +66,7 @@ namespace FSO.SimAntics.Marshals
 
             var mdats = reader.ReadInt32();
             MotiveData = new short[mdats];
-            for (int i = 0; i < mdats; i++) MotiveData[i] = reader.ReadInt16();
+            MotiveData = VMSerializableUtils.ReadArray<short>(reader, mdats);
 
             HandObjectOld = reader.ReadInt16();
             RadianDirection = reader.ReadSingle();
@@ -110,10 +110,10 @@ namespace FSO.SimAntics.Marshals
             foreach (var item in MotiveChanges) { item.SerializeInto(writer); }
             MotiveDecay.SerializeInto(writer);
             writer.Write(PersonData.Length);
-            writer.Write(VMSerializableUtils.ToByteArray(PersonData));
+            VMSerializableUtils.WriteArray(writer, PersonData);
             //foreach (var item in PersonData) { writer.Write(item); }
             writer.Write(MotiveData.Length);
-            writer.Write(VMSerializableUtils.ToByteArray(MotiveData));
+            VMSerializableUtils.WriteArray(writer, MotiveData);
             //foreach (var item in MotiveData) { writer.Write(item); }
             writer.Write(HandObjectOld);
             writer.Write(RadianDirection);

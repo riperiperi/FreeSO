@@ -20,14 +20,17 @@ namespace FSO.SimAntics.Marshals.Hollow
             Version = reader.ReadInt32();
             Compressed = reader.ReadBoolean();
 
-            MemoryStream cStream;
-            GZipStream zipStream;
             if (Compressed)
             {
                 var length = reader.ReadInt32();
-                cStream = new MemoryStream(reader.ReadBytes(length));
-                zipStream = new GZipStream(cStream, CompressionMode.Decompress);
-                reader = new BinaryReader(zipStream);
+                var cStream = new MemoryStream(reader.ReadBytes(length));
+                var zipStream = new GZipStream(cStream, CompressionMode.Decompress);
+                var decompStream = new MemoryStream();
+                zipStream.CopyTo(decompStream);
+                decompStream.Seek(0, SeekOrigin.Begin);
+                reader = new BinaryReader(decompStream);
+                cStream.Close();
+                zipStream.Close();
             }
 
             Context = new VMContextMarshal(Version);
@@ -49,6 +52,11 @@ namespace FSO.SimAntics.Marshals.Hollow
                 MultitileGroups[i] = new VMMultitileGroupMarshal(Version);
                 MultitileGroups[i].Deserialize(reader);
             }
+
+            if (Compressed)
+            {
+                reader.BaseStream.Close();
+            }
         }
 
         public void SerializeInto(BinaryWriter writer)
@@ -57,14 +65,13 @@ namespace FSO.SimAntics.Marshals.Hollow
             writer.Write(VMMarshal.LATEST_VERSION);
             writer.Write(Compressed);
 
+
             var uWriter = writer;
             MemoryStream cStream = null;
-            GZipStream zipStream = null;
             if (Compressed)
             {
                 cStream = new MemoryStream();
-                zipStream = new GZipStream(cStream, CompressionMode.Compress);
-                writer = new BinaryWriter(zipStream);
+                writer = new BinaryWriter(cStream);
             }
 
             var timer = new System.Diagnostics.Stopwatch();
@@ -84,10 +91,21 @@ namespace FSO.SimAntics.Marshals.Hollow
             if (Compressed)
             {
                 writer.Close();
-                zipStream.Close();
+                //zipStream.Close();
                 var data = cStream.ToArray();
-                uWriter.Write(data.Length);
-                uWriter.Write(data);
+
+                var zipMStream = new MemoryStream();
+                var zipStream = new GZipStream(zipMStream, CompressionMode.Compress);
+                zipStream.Write(data, 0, data.Length);
+                zipStream.Close();
+
+                var cData = zipMStream.ToArray();
+
+                uWriter.Write(cData.Length);
+                uWriter.Write(cData);
+
+                cStream.Close();
+                zipMStream.Close();
             }
         }
     }

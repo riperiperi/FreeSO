@@ -25,8 +25,7 @@ namespace FSO.SimAntics.Marshals
             if (Version > 12) SalePrice = reader.ReadInt32();
 
             var objs = reader.ReadInt32();
-            Objects = new short[objs];
-            for (int i=0; i<objs; i++) Objects[i] = reader.ReadInt16();
+            Objects = VMSerializableUtils.ReadArray<short>(reader, objs);
 
             Offsets = new LotTilePos[objs];
             for (int i = 0; i < objs; i++)
@@ -43,7 +42,7 @@ namespace FSO.SimAntics.Marshals
             writer.Write(Price);
             writer.Write(SalePrice);
             writer.Write(Objects.Length);
-            writer.Write(VMSerializableUtils.ToByteArray(Objects));
+            VMSerializableUtils.WriteArray(writer, Objects);
             foreach (var item in Offsets) item.SerializeInto(writer);
         }
     }

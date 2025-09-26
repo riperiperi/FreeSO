@@ -132,8 +132,8 @@ namespace FSO.SimAntics.NetPlay.Model
             writer.Write(IsWorker);
             writer.Write(CustomGUID);
 
-            writer.Write(VMSerializableUtils.ToByteArray(MotiveData));
-            writer.Write(VMSerializableUtils.ToByteArray(PersonData));
+            VMSerializableUtils.WriteArray(writer, MotiveData);
+            VMSerializableUtils.WriteArray(writer, PersonData);
 
             writer.Write(Relationships.Length);
             foreach (var rel in Relationships)

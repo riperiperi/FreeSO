@@ -60,12 +60,10 @@ namespace FSO.SimAntics.Marshals
             PlatformState.Deserialize(reader);
 
             var datas = reader.ReadInt32();
-            ObjectData = new short[datas];
-            for (int i = 0; i < datas; i++) ObjectData[i] = reader.ReadInt16();
+            ObjectData = VMSerializableUtils.ReadArray<short>(reader, datas);
 
             var listLen = reader.ReadInt32();
-            MyList = new short[listLen];
-            for (int i = 0; i < listLen; i++) MyList[i] = reader.ReadInt16();
+            MyList = VMSerializableUtils.ReadArray<short>(reader, listLen);
 
             if (reader.ReadBoolean())
             {
@@ -80,14 +78,12 @@ namespace FSO.SimAntics.Marshals
             MainStackOBJ = reader.ReadInt16();
 
             var contN = reader.ReadInt32();
-            Contained = new short[contN];
-            for (int i = 0; i < contN; i++) Contained[i] = reader.ReadInt16();
+            Contained = VMSerializableUtils.ReadArray<short>(reader, contN);
             Container = reader.ReadInt16();
             ContainerSlot = reader.ReadInt16();
 
             var attrN = reader.ReadInt32();
-            Attributes = new short[attrN];
-            for (int i = 0; i < attrN; i++) Attributes[i] = reader.ReadInt16();
+            Attributes = VMSerializableUtils.ReadArray<short>(reader, attrN);
 
             var relN = reader.ReadInt32();
             MeToObject = new VMEntityRelationshipMarshal[relN];
@@ -130,10 +126,10 @@ namespace FSO.SimAntics.Marshals
             writer.Write(PersistID);
             PlatformState.SerializeInto(writer);
             writer.Write(ObjectData.Length);
-            writer.Write(VMSerializableUtils.ToByteArray(ObjectData));
+            VMSerializableUtils.WriteArray(writer, ObjectData);
             //foreach (var item in ObjectData) writer.Write(item);
             writer.Write(MyList.Length);
-            writer.Write(VMSerializableUtils.ToByteArray(MyList));
+            VMSerializableUtils.WriteArray(writer, MyList);
             //foreach (var item in MyList) writer.Write(item);
 
             writer.Write(Headline != null);
@@ -146,13 +142,13 @@ namespace FSO.SimAntics.Marshals
             writer.Write(MainStackOBJ);
 
             writer.Write(Contained.Length); //object ids
-            writer.Write(VMSerializableUtils.ToByteArray(Contained));
+            VMSerializableUtils.WriteArray(writer, Contained);
             //foreach (var item in Contained) writer.Write(item);
             writer.Write(Container);
             writer.Write(ContainerSlot);
 
             writer.Write(Attributes.Length);
-            writer.Write(VMSerializableUtils.ToByteArray(Attributes));
+            VMSerializableUtils.WriteArray(writer, Attributes);
             //foreach (var item in Attributes) writer.Write(item);
             writer.Write(MeToObject.Length);
             foreach (var item in MeToObject) item.SerializeInto(writer);
@@ -188,7 +184,7 @@ namespace FSO.SimAntics.Marshals
         {
             writer.Write(Target);
             writer.Write(Values.Length);
-            writer.Write(VMSerializableUtils.ToByteArray(Values));
+            VMSerializableUtils.WriteArray(writer, Values);
         }
     }
 
@@ -212,7 +208,7 @@ namespace FSO.SimAntics.Marshals
         {
             writer.Write(Target);
             writer.Write(Values.Length);
-            writer.Write(VMSerializableUtils.ToByteArray(Values));
+            VMSerializableUtils.WriteArray(writer, Values);
         }
     }
 }

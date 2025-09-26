@@ -54,7 +54,7 @@ namespace FSO.SimAntics.Marshals.Threads
             foreach (var item in Queue) item.SerializeInto(writer);
             writer.Write(ActiveQueueBlock);
 
-            writer.Write(VMSerializableUtils.ToByteArray(TempRegisters));
+            VMSerializableUtils.WriteArray(writer, TempRegisters);
             foreach (var item in TempXL) writer.Write(item);
             writer.Write((byte)LastStackExitCode);
 
@@ -100,8 +100,7 @@ namespace FSO.SimAntics.Marshals.Threads
             }
             if (Version > 4) ActiveQueueBlock = reader.ReadSByte();
 
-            TempRegisters = new short[20];
-            for (int i = 0; i < 20; i++) TempRegisters[i] = reader.ReadInt16();
+            TempRegisters = VMSerializableUtils.ReadArray<short>(reader, 20);
             TempXL = new int[2];
             for (int i = 0; i < 2; i++) TempXL[i] = reader.ReadInt32();
             LastStackExitCode = (VMPrimitiveExitCode)reader.ReadByte();

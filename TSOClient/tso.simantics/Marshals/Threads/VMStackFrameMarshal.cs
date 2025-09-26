@@ -34,15 +34,13 @@ namespace FSO.SimAntics.Marshals.Threads
             var localN = reader.ReadInt32();
             if (localN > -1)
             {
-                Locals = new short[localN];
-                for (int i = 0; i < localN; i++) Locals[i] = reader.ReadInt16();
+                Locals = VMSerializableUtils.ReadArray<short>(reader, localN);
             }
 
             var argsN = reader.ReadInt32();
             if (argsN > -1)
             {
-                Args = new short[argsN];
-                for (int i = 0; i < argsN; i++) Args[i] = reader.ReadInt16();
+                Args = VMSerializableUtils.ReadArray<short>(reader, argsN);
             }
 
             if (Version > 3) SpecialResult = (VMSpecialResult)reader.ReadByte();
@@ -58,9 +56,9 @@ namespace FSO.SimAntics.Marshals.Threads
             writer.Write(StackObject);
             writer.Write(CodeOwnerGUID);
             writer.Write((Locals == null)?-1:Locals.Length);
-            if (Locals != null) writer.Write(VMSerializableUtils.ToByteArray(Locals));
+            if (Locals != null) VMSerializableUtils.WriteArray(writer, Locals);
             writer.Write((Args == null) ? -1 : Args.Length);
-            if (Args != null) writer.Write(VMSerializableUtils.ToByteArray(Args));
+            if (Args != null) VMSerializableUtils.WriteArray(writer, Args);
             writer.Write((byte)SpecialResult);
             writer.Write(ActionTree);
         }

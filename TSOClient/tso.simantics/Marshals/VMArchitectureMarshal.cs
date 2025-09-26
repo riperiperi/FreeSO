@@ -1,8 +1,8 @@
 ﻿using FSO.SimAntics.NetPlay.Model;
-using System.Linq;
-using System.IO;
 using FSO.LotView.Model;
 using FSO.SimAntics.Model;
+using System.Runtime.CompilerServices;
+using System.Runtime.InteropServices;
 
 namespace FSO.SimAntics.Marshals
 {
@@ -47,15 +47,16 @@ namespace FSO.SimAntics.Marshals
             Walls = new WallTile[Stories][];
             for (int l=0;l<Stories;l++)
             {
-                Walls[l] = new WallTile[size];
-                for (int i = 0; i < size; i++) Walls[l][i] = WallTileSerializer.Deserialize(reader);
+                var savedWalls = VMSerializableUtils.ReadArray<WallTileSerialized>(reader, size);
+                var level = new WallTile[size];
+                for (int i = 0; i < size; i++) WallTileSerializer.Deserialize(in savedWalls[i], ref level[i]);
+                Walls[l] = level;
             }
 
             Floors = new FloorTile[Stories][];
             for (int l = 0; l < Stories; l++)
             {
-                Floors[l] = new FloorTile[size];
-                for (int i = 0; i < size; i++) Floors[l][i] = new FloorTile { Pattern = reader.ReadUInt16() };
+                Floors[l] = VMSerializableUtils.ReadArray<FloorTile>(reader, size);
             }
 
             WallsDirty = reader.ReadBoolean();
@@ -102,18 +103,19 @@ namespace FSO.SimAntics.Marshals
 
             foreach (var level in Walls)
             {
-                foreach (var wall in level)
+                var savedWalls = new WallTileSerialized[level.Length];
+
+                for (int i = 0; i < level.Length; i++)
                 {
-                    WallTileSerializer.SerializeInto(wall, writer);
+                    WallTileSerializer.SerializeInto(in level[i], ref savedWalls[i]);
                 }
+
+                VMSerializableUtils.WriteArray(writer, savedWalls);
             }
 
             foreach (var level in Floors)
             {
-                foreach (var floor in level)
-                {
-                    writer.Write(floor.Pattern);
-                }
+                VMSerializableUtils.WriteArray(writer, level);
             }
 
             writer.Write(WallsDirty);
@@ -136,36 +138,38 @@ namespace FSO.SimAntics.Marshals
             using (var mem = new MemoryStream())
             {
                 using (var io = new BinaryWriter(mem))
+                {
                     SerializeInto(io);
-                Preserialized = mem.ToArray();
+                    Preserialized = mem.ToArray();
+                }
+            }
+
+            var test = new VMArchitectureMarshal();
+
+            using (var mem = new MemoryStream(Preserialized))
+            {
+                using var io = new BinaryReader(mem);
+                test.Deserialize(io);
             }
         }
     }
 
     public static class WallTileSerializer
     {
-        public static WallTile Deserialize(BinaryReader reader)
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
+        public static void Deserialize(in WallTileSerialized tile, ref WallTile output)
         {
-            var result = new WallTile();
-            result.Segments = (WallSegments)reader.ReadByte();
-            result.TopLeftPattern = reader.ReadUInt16();
-            result.TopRightPattern = reader.ReadUInt16();
-            result.BottomLeftPattern = reader.ReadUInt16();
-            result.BottomRightPattern = reader.ReadUInt16();
-            result.TopLeftStyle = reader.ReadUInt16();
-            result.TopRightStyle = reader.ReadUInt16();
-            return result;
+            Span<WallTileSerialized> resultTruncated = MemoryMarshal.Cast<WallTile, WallTileSerialized>(MemoryMarshal.CreateSpan(ref output, 1));
+
+            resultTruncated[0] = tile;
         }
 
-        public static void SerializeInto(WallTile wall, BinaryWriter writer)
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
+        public static void SerializeInto(in WallTile tile, ref WallTileSerialized output)
         {
-            writer.Write((byte)wall.Segments);
-            writer.Write(wall.TopLeftPattern);
-            writer.Write(wall.TopRightPattern);
-            writer.Write(wall.BottomLeftPattern);
-            writer.Write(wall.BottomRightPattern);
-            writer.Write(wall.TopLeftStyle);
-            writer.Write(wall.TopRightStyle);
+            ReadOnlySpan<WallTileSerialized> sourceTruncated = MemoryMarshal.Cast<WallTile, WallTileSerialized>(MemoryMarshal.CreateReadOnlySpan(in tile, 1));
+
+            output = sourceTruncated[0];
         }
     }
 }

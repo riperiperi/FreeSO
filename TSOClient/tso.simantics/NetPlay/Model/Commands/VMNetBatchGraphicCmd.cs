@@ -44,7 +44,7 @@ namespace FSO.SimAntics.NetPlay.Model.Commands
         {
             base.SerializeInto(writer);
             writer.Write(Objects.Length);
-            writer.Write(VMSerializableUtils.ToByteArray(Objects));
+            VMSerializableUtils.WriteArray(writer, Objects);
             writer.Write(Graphics);
 
         }
@@ -53,7 +53,7 @@ namespace FSO.SimAntics.NetPlay.Model.Commands
         {
             base.Deserialize(reader);
             var length = reader.ReadInt32();
-            Objects = VMSerializableUtils.ToTArray<short>(reader.ReadBytes(length * 2));
+            Objects = VMSerializableUtils.ReadArray<short>(reader, length);
             Graphics = reader.ReadBytes(length);
         }
 

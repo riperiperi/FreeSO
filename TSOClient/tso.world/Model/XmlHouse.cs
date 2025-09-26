@@ -196,7 +196,7 @@ namespace FSO.LotView.Model
     }
 
     [Flags]
-    public enum WallSegments
+    public enum WallSegments : byte
     {
         TopLeft = 1,
         TopRight = 2,
