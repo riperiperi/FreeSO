@@ -36,6 +36,8 @@ namespace FSO.SimAntics.NetPlay.Drivers
         //resyncing is a second class action - we will only provide state to resynced clients when there is a minimal amount of history.
         //this is to make sure they do not spend too long waiting for their game to catch up, and to avoid replaying sound effects.
         private HashSet<VMNetClient> ResyncClients;
+        // When sync is being sent to new clients, send every tick to reduce join latency.
+        private bool FastTick;
 
         //Sync and sync history
         private const int MAX_HISTORY = (30 * 30) / TICKS_PER_PACKET;
@@ -93,6 +95,7 @@ namespace FSO.SimAntics.NetPlay.Drivers
                 {
                     ClientsToSync.Add(client);
                     NewClients.Add(client); //note that the lock for clientstosync is valid for newclients too.
+                    FastTick = true;
                 }
             }
         }
@@ -113,6 +116,7 @@ namespace FSO.SimAntics.NetPlay.Drivers
                 {
                     ClientsToSync.Add(client);
                     NewClients.Add(client); //note that the lock for clientstosync is valid for newclients too.
+                    FastTick = true;
                 }
             }
         }
@@ -323,12 +327,17 @@ namespace FSO.SimAntics.NetPlay.Drivers
 
             TickBuffer.Add(tick);
 
-            if (TickBuffer.Count >= TICKS_PER_PACKET)
+            if (FastTick || TickBuffer.Count >= TICKS_PER_PACKET)
             {
                 lock (ClientsToSync)
                 {
                     SendTickBuffer();
                     SendState(vm);
+
+                    if (ClientsToSync.Count == 0)
+                    {
+                        FastTick = false;
+                    }
                 }
             }
 
