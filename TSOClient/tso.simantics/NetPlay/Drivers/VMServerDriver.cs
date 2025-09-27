@@ -141,6 +141,45 @@ namespace FSO.SimAntics.NetPlay.Drivers
             }
         }
 
+        public void PrepareSync(VM vm)
+        {
+            SyncSerializing = true;
+            TicksSinceSync = new List<byte[]>(); //start saving a history.
+
+            var state = vm.Save(); //must be saved on lot thread. we can serialize elsewhere tho.
+            var statecmd = new VMStateSyncCmd { State = state };
+            if (vm.Trace != null)
+                statecmd.Traces = vm.Trace.History;
+            var cmd = new VMNetCommand(statecmd);
+
+            //currently just hack this on the tick system. might switch later
+            var ticks = new VMNetTickList
+            {
+                Ticks = new List<VMNetTick> {
+                        new VMNetTick {
+                            Commands = new List<VMNetCommand> { cmd },
+                            RandomSeed = 0, //will be restored by client from cmd
+                            TickID = TickID
+                        }
+                    }
+            };
+
+            Task.Run(() =>
+            {
+                byte[] data;
+                using (var stream = new MemoryStream())
+                {
+                    using (var writer = new BinaryWriter(stream))
+                    {
+                        ticks.SerializeInto(writer);
+                    }
+                    data = stream.ToArray();
+                }
+                LastSync = data;
+                SyncSerializing = false;
+            });
+        }
+
         private void SendState(VM vm)
         {
             if (ResyncClients.Count != 0 && LastSync == null && !SyncSerializing)
@@ -160,41 +199,7 @@ namespace FSO.SimAntics.NetPlay.Drivers
 
             if (LastSync == null && !SyncSerializing)
             {
-                SyncSerializing = true;
-                TicksSinceSync = new List<byte[]>(); //start saving a history.
-
-                var state = vm.Save(); //must be saved on lot thread. we can serialize elsewhere tho.
-                var statecmd = new VMStateSyncCmd { State = state };
-                if (vm.Trace != null)
-                    statecmd.Traces = vm.Trace.History;
-                var cmd = new VMNetCommand(statecmd);
-
-                //currently just hack this on the tick system. might switch later
-                var ticks = new VMNetTickList
-                {
-                    Ticks = new List<VMNetTick> {
-                        new VMNetTick {
-                            Commands = new List<VMNetCommand> { cmd },
-                            RandomSeed = 0, //will be restored by client from cmd
-                            TickID = TickID
-                        }
-                    }
-                };
-
-                Task.Run(() =>
-                {
-                    byte[] data;
-                    using (var stream = new MemoryStream())
-                    {
-                        using (var writer = new BinaryWriter(stream))
-                        {
-                            ticks.SerializeInto(writer);
-                        }
-                        data = stream.ToArray();
-                    }
-                    LastSync = data;
-                    SyncSerializing = false;
-                });
+                PrepareSync(vm);
             }
             else if (LastSync != null)
             {

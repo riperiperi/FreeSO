@@ -1037,6 +1037,12 @@ namespace FSO.Server.Servers.Lot.Domain
                 long lastTick = 0;
                 long skippedTimeMs = 0;
 
+                if (Context.Action != ClaimAction.LOT_CLEANUP)
+                {
+                    // Someone will be joining us, so might as well get sync prepared now.
+                    VMDriver.PrepareSync(Lot);
+                }
+
                 LotSaveTicker = LOT_SAVE_PERIOD;
                 AvatarSaveTicker = AVATAR_SAVE_PERIOD;
                 while (true)
