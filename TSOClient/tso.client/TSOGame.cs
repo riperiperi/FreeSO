@@ -303,6 +303,8 @@ namespace FSO.Client
                 kernel.Get<CityConnectionRegulator>()?.Disconnect();
             }
             GameThread.SetKilled();
+
+            args.Cancel = !(FSOFacade.Controller?.CloseAttempt() ?? true);
         }
 
         /// <summary>

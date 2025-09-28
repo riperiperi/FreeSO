@@ -17,15 +17,8 @@ namespace FSO.Client
             World.DirectX = useDX;
             TSOGame game = new TSOGame();
 
-            BindClosingHandler?.Invoke(HandleClosing, game.Window.Handle);
-
             game.Run();
             game.Dispose();
-        }
-
-        public bool HandleClosing()
-        {
-            return FSOFacade.Controller?.CloseAttempt() ?? true;
         }
 
         public void SetPath(string path)

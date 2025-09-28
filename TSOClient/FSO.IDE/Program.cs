@@ -62,7 +62,6 @@ namespace FSO.IDE
         {
             InitVolcanic(args);
             Program.StartProxy.Start(Program.FSOProgram.UseDX);
-            Environment.Exit(0);
         }
 
         public void InitVolcanic(string[] args)

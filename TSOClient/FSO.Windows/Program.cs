@@ -18,22 +18,11 @@ namespace FSO.Windows
         {
             InitWindows();
 
-            GameStartProxy.BindClosingHandler = (Func<bool> handler, IntPtr windowHandle) =>
-            {
-                var form = (Form)Form.FromHandle(windowHandle);
-                if (form != null) form.FormClosing += (object sender, FormClosingEventArgs e) =>
-                {
-                    e.Cancel = !handler();
-                };
-            };
-
             if ((new FSOProgram()).InitWithArguments(args))
             {
                 var startProxy = new GameStartProxy();
                 startProxy.Start(UseDX);
             }
-
-            Environment.Exit(0);
         }
 
 
