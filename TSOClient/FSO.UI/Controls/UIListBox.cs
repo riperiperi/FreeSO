@@ -280,7 +280,7 @@ namespace FSO.Client.UI.Controls
             if (IsFocused)
             {
                 if (state.NewKeys.Contains(Keys.Up) && Items.Count > 0) 
-                    InternalSelect((m_SelectedRow - 1 + Items.Count) % Items.Count);
+                    InternalSelect((m_SelectedRow < 0 ? Items.Count - 1 : (m_SelectedRow - 1 + Items.Count) % Items.Count));
 
                 if (state.NewKeys.Contains(Keys.Down) && Items.Count > 0) 
                     InternalSelect((m_SelectedRow + 1) % Items.Count);
