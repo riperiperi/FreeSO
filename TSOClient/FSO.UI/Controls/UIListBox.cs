@@ -11,7 +11,7 @@ using Microsoft.Xna.Framework.Input;
 
 namespace FSO.Client.UI.Controls
 {
-    public class UIListBox : UIElement
+    public class UIListBox : UIElement, IFocusableUI
     {
         private UIMouseEventRef MouseHandler;
         public event ChangeDelegate OnChange;
@@ -22,11 +22,13 @@ namespace FSO.Client.UI.Controls
 
         public bool AllowDisabledSelection = false;
         public bool Mask = false;
+        private bool IsFocused;
 
         public UIListBox()
         {
             MouseHandler = this.ListenForMouse(new Rectangle(0, 0, 10, 10), OnMouseEvent);
             RowHeight = 16;
+            GameFacade.Screens.inputManager.SetFocus(this);
         }
 
 
@@ -275,7 +277,7 @@ namespace FSO.Client.UI.Controls
                 }
             }
 
-            if (m_MouseOver)
+            if (IsFocused)
             {
                 if (state.NewKeys.Contains(Keys.Up) && Items.Count > 0) 
                     InternalSelect((m_SelectedRow - 1 + Items.Count) % Items.Count);
@@ -285,7 +287,10 @@ namespace FSO.Client.UI.Controls
 
                 if (SelectedItem != null && state.NewKeys.Contains(Keys.Enter)) 
                     OnDoubleClick?.Invoke(this);
-                
+            }
+
+            if (m_MouseOver)
+            {
                 var overRow = GetRowUnderMouse(state);
                 m_HoverRow = overRow;
             }
@@ -323,6 +328,7 @@ namespace FSO.Client.UI.Controls
                         /** Cant deselect once selected **/
                         InternalSelect(row);
                     }
+                    GameFacade.Screens.inputManager.SetFocus(this);
                     break;
             }
         }
@@ -655,6 +661,10 @@ namespace FSO.Client.UI.Controls
             base.Removed();
         }
 
+        public void OnFocusChanged(FocusEvent newFocus)
+        {
+            IsFocused = newFocus == FocusEvent.FocusIn;
+        }
     }
 
     public class UIListBoxColumn
