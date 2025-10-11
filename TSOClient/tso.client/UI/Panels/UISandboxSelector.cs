@@ -106,9 +106,9 @@ namespace FSO.Client.UI.Panels
             casButton.Caption = "CAS";
             casButton.OnButtonClick += (btn) =>
             {
-                if (UIScreen.Current is SandboxGameScreen)
+                if (UIScreen.Current is SandboxGameScreen screen)
                 {
-                    ((SandboxGameScreen)UIScreen.Current).CleanupLastWorld();
+                    screen.CleanupLastWorld();
                 }
                 FSOFacade.Controller.ShowPersonCreation(null);
             };
@@ -118,6 +118,8 @@ namespace FSO.Client.UI.Panels
             Add(casButton);
 
             SetSize(300, 500);
+            
+            GameFacade.Screens.inputManager.SetFocus(BookmarkListBox);
         }
 
         public void LotSwitch(string location, bool external)

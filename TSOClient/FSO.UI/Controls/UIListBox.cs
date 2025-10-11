@@ -28,11 +28,7 @@ namespace FSO.Client.UI.Controls
         {
             MouseHandler = this.ListenForMouse(new Rectangle(0, 0, 10, 10), OnMouseEvent);
             RowHeight = 16;
-            GameFacade.Screens.inputManager.SetFocus(this);
         }
-
-
-
 
         #region Fields
 
