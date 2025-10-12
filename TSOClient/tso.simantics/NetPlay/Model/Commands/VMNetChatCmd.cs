@@ -141,6 +141,19 @@ namespace FSO.SimAntics.NetPlay.Model.Commands
                         vm.Context.Clock.Minutes = int.Parse(timesplit[1]);
                         vm.Context.Clock.MinuteFractions = 0;
                         break;
+                    case "tickrate":
+                        /* TS1 has 30 ticks per minute (1 minute per 1 irl second)
+                         * TSO has 150 ticks per minute (1 minute per 5 irl second)*/
+                        if (int.TryParse(args, out var tick) && tick >= 1) vm.Context.Clock.TicksPerMinute = tick;
+                        else tick = vm.Context.Clock.TicksPerMinute = 30 * 5;
+                        vm.SignalChatEvent(new VMChatEvent(null, VMChatEventType.Generic, $"Set tickrate to {tick} ticks per minute."));
+                        break;
+                    case "speed":
+                        /* By default, 0 = paused, normal = 1, medium = 3, fast = 10 */
+                        if (int.TryParse(args, out var speed) && speed is >= 0 and <= 999) vm.SpeedMultiplier = speed;
+                        else vm.SpeedMultiplier = speed = 1;
+                        vm.SignalChatEvent(new VMChatEvent(null, VMChatEventType.Generic, $"Set speed multiplier to {speed}."));
+                        break;
                     case "tuning":
                         var tuningsplit = args.Split(' ');
                         if (tuningsplit.Length < 4) return true;
