@@ -21,6 +21,7 @@ using FSO.SimAntics.NetPlay.Drivers;
 using FSO.SimAntics.NetPlay.Model;
 using FSO.SimAntics.NetPlay.Model.Commands;
 using FSO.SimAntics.Utils;
+using FSO.LotView;
 using Microsoft.Xna.Framework;
 using Microsoft.Xna.Framework.Input;
 using System;
@@ -588,6 +589,11 @@ namespace FSO.Client.UI.Screens
                 AssetStreaming.DigestStreamUpdate();
             }
             AssetStreaming.EndStreaming();
+            
+            if (LotView.WorldConfig.Current.SurroundingLots > 0)
+            {
+                SimAntics.Utils.VMLotTerrainRestoreTools.RestoreSurroundings(vm, vm.HollowAdj);
+            }
         }
 
         public void BlueprintReset(string path)
