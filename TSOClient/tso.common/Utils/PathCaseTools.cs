@@ -1,14 +1,73 @@
-﻿using System.IO;
+using System;
+using System.IO;
 using System.Linq;
 
 namespace FSO.Common.Utils
 {
     public static class PathCaseTools
     {
+        /// <summary>
+        /// Resolves a file path case-insensitively on Linux/macOS.
+        /// On Windows, simply checks if the file exists.
+        /// </summary>
         public static string Insensitive(string file)
         {
-            var dir = Directory.GetFiles(Path.GetDirectoryName(file));
-            return dir.FirstOrDefault(x => x.ToLowerInvariant().Replace('\\', '/') == file.ToLowerInvariant().Replace('\\', '/'));
+            if (string.IsNullOrEmpty(file))
+                return null;
+
+            // On Windows, file system is case-insensitive, just check existence
+            if (Environment.OSVersion.Platform == PlatformID.Win32NT)
+                return File.Exists(file) ? file : null;
+
+            // Normalize path separators for Unix
+            file = file.Replace('\\', '/');
+
+            // Split path into components
+            string[] parts;
+            string resolved;
+
+            if (file.StartsWith("/"))
+            {
+                // Absolute path
+                parts = file.Substring(1).Split('/');
+                resolved = "/";
+            }
+            else
+            {
+                // Relative path
+                parts = file.Split('/');
+                resolved = "";
+            }
+
+            // Resolve each path component case-insensitively
+            foreach (var part in parts)
+            {
+                if (string.IsNullOrEmpty(part))
+                    continue;
+
+                var searchPath = string.IsNullOrEmpty(resolved) ? "." : resolved;
+
+                if (!Directory.Exists(searchPath))
+                    return null;
+
+                try
+                {
+                    var entries = Directory.GetFileSystemEntries(searchPath);
+                    var match = entries.FirstOrDefault(e =>
+                        Path.GetFileName(e).Equals(part, StringComparison.OrdinalIgnoreCase));
+
+                    if (match == null)
+                        return null;
+
+                    resolved = match;
+                }
+                catch
+                {
+                    return null;
+                }
+            }
+
+            return File.Exists(resolved) ? resolved : null;
         }
     }
 }
