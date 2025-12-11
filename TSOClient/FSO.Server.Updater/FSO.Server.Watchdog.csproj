@@ -1,4 +1,4 @@
-﻿<Project Sdk="Microsoft.NET.Sdk">
+<Project Sdk="Microsoft.NET.Sdk">
 
   <PropertyGroup>
     <TargetFramework>net9.0</TargetFramework>
@@ -8,6 +8,8 @@
     <RootNamespace>FSO.Server.Watchdog</RootNamespace>
     <AssemblyName>watchdog</AssemblyName>
     <FileAlignment>512</FileAlignment>
+    <!-- disable apphost for self-contained builds to avoid conflicts when referenced as dependency -->
+    <UseAppHost Condition="'$(SelfContained)' != 'true'">false</UseAppHost>
   </PropertyGroup>
 
   <ItemGroup>
