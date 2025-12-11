@@ -1,10 +1,12 @@
-﻿<Project Sdk="Microsoft.NET.Sdk.Web">
+<Project Sdk="Microsoft.NET.Sdk.Web">
 
   <PropertyGroup>
     <TargetFramework>net9.0</TargetFramework>
     <TargetLatestRuntimePatch>true</TargetLatestRuntimePatch>
     <ErrorOnDuplicatePublishOutputFiles>false</ErrorOnDuplicatePublishOutputFiles>
     <IsAotCompatible>True</IsAotCompatible>
+    <!-- disable apphost for self-contained builds to avoid conflicts when referenced as dependency -->
+    <UseAppHost Condition="'$(SelfContained)' != 'true'">false</UseAppHost>
   </PropertyGroup>
 
   <ItemGroup>
