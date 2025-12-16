@@ -19,27 +19,22 @@ namespace FSO.Common.Utils
             if (Environment.OSVersion.Platform == PlatformID.Win32NT)
                 return File.Exists(file) ? file : null;
 
-            // Normalize path separators for Unix
             file = file.Replace('\\', '/');
 
-            // Split path into components
             string[] parts;
             string resolved;
 
             if (file.StartsWith("/"))
             {
-                // Absolute path
                 parts = file.Substring(1).Split('/');
                 resolved = "/";
             }
             else
             {
-                // Relative path
                 parts = file.Split('/');
                 resolved = "";
             }
 
-            // Resolve each path component case-insensitively
             foreach (var part in parts)
             {
                 if (string.IsNullOrEmpty(part))
