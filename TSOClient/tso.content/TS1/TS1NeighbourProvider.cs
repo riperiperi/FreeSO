@@ -60,24 +60,23 @@ namespace FSO.Content.TS1
             {
                 File.AppendAllText("simitone_debug.log", $"[TS1NeighbourProvider] UserData not found, need to copy\n");
                 
-                // Check for Steam's "Saved Games" location first (used by The Sims Legacy Collection)
-                var steamSavedGames = Path.Combine(
-                    Environment.GetFolderPath(Environment.SpecialFolder.UserProfile),
-                    "Saved Games", "Electronic Arts", "The Sims 25", udName + "/"
-                );
-                
                 string source;
-                if (Directory.Exists(steamSavedGames))
+                
+                // Check if user selected Steam install via Content.TS1SteamInstall flag
+                if (Content.TS1SteamInstall)
                 {
-                    // Copy from Steam's Saved Games to Simitone user data (first time only)
-                    source = steamSavedGames;
-                    File.AppendAllText("simitone_debug.log", $"[TS1NeighbourProvider] Found Steam saves at: {source}\n");
+                    // Use Steam's "Saved Games" location (used by The Sims Legacy Collection)
+                    source = Path.Combine(
+                        Environment.GetFolderPath(Environment.SpecialFolder.UserProfile),
+                        "Saved Games", "Electronic Arts", "The Sims 25", udName + "/"
+                    );
+                    File.AppendAllText("simitone_debug.log", $"[TS1NeighbourProvider] Using Steam saves at: {source}\n");
                 }
                 else
                 {
-                    // Copy from install directory to Simitone user data
+                    // Use install directory saves (non-Steam installs)
                     source = Path.Combine(ContentManager.TS1BasePath, udName + "/");
-                    File.AppendAllText("simitone_debug.log", $"[TS1NeighbourProvider] Using install directory: {source}\n");
+                    File.AppendAllText("simitone_debug.log", $"[TS1NeighbourProvider] Using non-Steam install directory: {source}\n");
                 }
                 
                 File.AppendAllText("simitone_debug.log", $"[TS1NeighbourProvider] Copying to: {userPath}\n");

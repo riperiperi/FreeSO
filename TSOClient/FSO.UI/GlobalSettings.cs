@@ -91,6 +91,8 @@ namespace FSO.Client
 
             { "TS1HybridPath", "D:/Games/The Sims/" },
             { "TS1HybridEnable", "false" },
+            { "TS1IsSteamInstall", "false" },
+            { "TS1InstallationConfigured", "false" },
 
             { "Shadows3D", "false" },
             { "CitySkybox", "true" },
@@ -162,6 +164,8 @@ namespace FSO.Client
 
         public string TS1HybridPath { get; set; }
         public bool TS1HybridEnable { get; set; }
+        public bool TS1IsSteamInstall { get; set; }
+        public bool TS1InstallationConfigured { get; set; }
 
         public bool Shadows3D { get; set; }
         public bool CitySkybox { get; set; }

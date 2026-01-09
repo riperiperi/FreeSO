@@ -69,6 +69,7 @@ namespace FSO.Content
         }
         public static FSOEngineMode Target;
         public static string TS1HybridBasePath = "D:/Games/The Sims/";
+        public static bool TS1SteamInstall = false;
 
         /**
          * Content Manager
