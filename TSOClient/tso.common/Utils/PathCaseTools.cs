@@ -16,7 +16,7 @@ namespace FSO.Common.Utils
                 return null;
 
             // On Windows, file system is case-insensitive, just check existence
-            if (Environment.OSVersion.Platform == PlatformID.Win32NT)
+            if (OperatingSystem.IsWindows())
                 return File.Exists(file) ? file : null;
 
             file = file.Replace('\\', '/');
