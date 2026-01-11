@@ -58,7 +58,6 @@ namespace FSO.Content.TS1
             
             if (!Directory.Exists(userPath))
             {
-                File.AppendAllText("simitone_debug.log", $"[TS1NeighbourProvider] UserData not found, need to copy\n");
                 
                 string source;
                 
@@ -70,16 +69,13 @@ namespace FSO.Content.TS1
                         Environment.GetFolderPath(Environment.SpecialFolder.UserProfile),
                         "Saved Games", "Electronic Arts", "The Sims 25", udName + "/"
                     );
-                    File.AppendAllText("simitone_debug.log", $"[TS1NeighbourProvider] Using Steam saves at: {source}\n");
                 }
                 else
                 {
                     // Use install directory saves (non-Steam installs)
                     source = Path.Combine(ContentManager.TS1BasePath, udName + "/");
-                    File.AppendAllText("simitone_debug.log", $"[TS1NeighbourProvider] Using non-Steam install directory: {source}\n");
                 }
                 
-                File.AppendAllText("simitone_debug.log", $"[TS1NeighbourProvider] Copying to: {userPath}\n");
                 
                 var destination = userPath;
 
@@ -87,23 +83,15 @@ namespace FSO.Content.TS1
                 var normalizedSource = source.TrimEnd('/', '\\');
                 var normalizedDest = destination.TrimEnd('/', '\\');
 
-                File.AppendAllText("simitone_debug.log", $"[TS1NeighbourProvider] Normalized source: {normalizedSource}\n");
-                File.AppendAllText("simitone_debug.log", $"[TS1NeighbourProvider] Normalized dest: {normalizedDest}\n");
-
                 // Create directory structure
-                File.AppendAllText("simitone_debug.log", $"[TS1NeighbourProvider] Creating directories...\n");
                 foreach (string dirPath in Directory.GetDirectories(source, "*", SearchOption.AllDirectories))
                 {
                     var relativePath = dirPath.Substring(normalizedSource.Length).TrimStart('\\', '/');
                     var destDir = Path.Combine(normalizedDest, relativePath);
-                    File.AppendAllText("simitone_debug.log", $"  dirPath: {dirPath}\n");
-                    File.AppendAllText("simitone_debug.log", $"  relativePath: {relativePath}\n");
-                    File.AppendAllText("simitone_debug.log", $"  destDir: {destDir}\n");
                     Directory.CreateDirectory(destDir);
                 }
 
                 // Copy files with error handling
-                File.AppendAllText("simitone_debug.log", $"[TS1NeighbourProvider] Copying files...\n");
                 foreach (string srcPath in Directory.GetFiles(source, "*.*", SearchOption.AllDirectories))
                 {
                     var relativePath = srcPath.Substring(normalizedSource.Length).TrimStart('\\', '/');
@@ -111,20 +99,13 @@ namespace FSO.Content.TS1
                     try
                     {
                         File.Copy(srcPath, destPath, true);
-                        File.AppendAllText("simitone_debug.log", $"  Copied: {Path.GetFileName(srcPath)}\n");
                     }
                     catch (IOException ex)
                     {
-                        File.AppendAllText("simitone_debug.log", $"  ERROR copying {Path.GetFileName(srcPath)}: {ex.Message}\n");
                         throw; // Re-throw to show error dialog
                     }
                 }
                 
-                File.AppendAllText("simitone_debug.log", $"[TS1NeighbourProvider] Copy complete!\n");
-            }
-            else
-            {
-                File.AppendAllText("simitone_debug.log", $"[TS1NeighbourProvider] Using existing UserData at: {userPath}\n");
             }
             
             UserPath = userPath;
