@@ -1,5 +1,4 @@
 ﻿using FSO.Content.Model;
-using FSO.Content.TS1;
 using FSO.Files.Formats.IFF.Chunks;
 using FSO.Files.Formats.IFF;
 using FSO.LotView.Model;
@@ -674,12 +673,6 @@ namespace FSO.SimAntics.Utils
             // If the lot was never opened in vanilla, they won't be in the save,
             // so we need to spawn them here.
             var controllerObjects = content.WorldObjects.ControllerObjects.Select(x => (uint)x.ID).ToList();
-
-            // If no controllers found via Global==1 flag (typical for TS1), use hardcoded list
-            if (controllerObjects.Count == 0)
-            {
-                controllerObjects = TS1ControllerObjects.AllEssentialControllers.ToList();
-            }
 
             foreach (var controller in controllerObjects)
             {
