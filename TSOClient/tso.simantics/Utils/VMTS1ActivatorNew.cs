@@ -680,13 +680,8 @@ namespace FSO.SimAntics.Utils
                 var exists = VM.Entities.Any(e => e.Object.OBJ.GUID == controller);
                 if (!exists)
                 {
-                    // Check if object exists in content before trying to spawn
-                    var obj = content.WorldObjects.Get(controller);
-                    if (obj != null)
-                    {
-                        // Spawn missing controller at OUT_OF_WORLD
-                        VM.Context.CreateObjectInstance(controller, LotTilePos.OUT_OF_WORLD, Direction.NORTH);
-                    }
+                    // Spawn missing controller at OUT_OF_WORLD
+                    VM.Context.CreateObjectInstance(controller, LotTilePos.OUT_OF_WORLD, Direction.NORTH);
                 }
             }
 
