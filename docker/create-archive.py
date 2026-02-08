@@ -6,14 +6,20 @@ Usage: ./create-archive.py [archive-name]
 Prerequisites:
   - Docker compose stack running (mariadb + freeso-server)
 
-Output in ./archive-output/:
-  - <name>/data/fsoarchive.db  (SQLite database)
-  - <name>/data/Lots/          (lot save files)
-  - <name>/archive.ini         (archive manifest)
-  - <name>.zip                 (distributable archive)
+Output:
+  - docker/archives/archive.zip                        (distributable archive)
+  - ArchiveCities/<name>/archive.ini                   (archive manifest)
 """
 
-import http.server, os, re, sys, shutil, sqlite3, subprocess, zipfile
+import functools
+import http.server
+import re
+import shutil
+import sqlite3
+import subprocess
+import sys
+import tempfile
+import zipfile
 from pathlib import Path
 
 SCRIPT_DIR = Path(__file__).resolve().parent
@@ -24,6 +30,32 @@ ARCHIVE_CITIES_DIR = REPO_DIR / "TSOClient" / "tso.client" / "Content" / "Archiv
 
 DB_USER, DB_PASS, DB_NAME = "fsoserver", "password", "fso"
 SERVE_PORT = 8080
+
+# True color (24-bit) ANSI
+BOLD, DIM, RESET = "\033[1m", "\033[2m", "\033[0m"
+MINT = "\033[38;2;102;217;178m"
+SKY = "\033[38;2;125;196;253m"
+LAVENDER = "\033[38;2;180;160;255m"
+CORAL = "\033[38;2;255;107;107m"
+AMBER = "\033[38;2;255;206;84m"
+SLATE = "\033[38;2;140;150;168m"
+WHITE = "\033[38;2;235;235;240m"
+
+
+def box(title, color=SKY):
+    w = len(title) + 4
+    print(f"  {color}\u256d{'\u2500' * w}\u256e{RESET}")
+    print(f"  {color}\u2502{RESET}  {WHITE}{BOLD}{title}{RESET}  {color}\u2502{RESET}")
+    print(f"  {color}\u2570{'\u2500' * w}\u256f{RESET}")
+
+
+def header(text):   print(f"  {LAVENDER}\u25b6{RESET} {BOLD}{text}{RESET}")
+def item(text, color=SLATE): print(f"  {SLATE}\u2502{RESET}   {color}{text}{RESET}")
+def success(text):  print(f"  {MINT}\u2714{RESET} {text}")
+def warning(text):  print(f"  {AMBER}\u26a0{RESET} {AMBER}{text}{RESET}")
+def fail_msg(text): print(f"  {CORAL}\u2718{RESET} {CORAL}{BOLD}{text}{RESET}")
+def info(label, value): print(f"  {SLATE}{label}:{RESET} {SKY}{value}{RESET}")
+def divider(): print(f"  {DIM}{'\u2500' * 36}{RESET}")
 
 # Table import order (respects foreign key dependencies)
 IMPORT_ORDER = [
@@ -126,25 +158,23 @@ VACUUM;
 """
 
 
-def docker_compose(*args):
+def docker_compose(*args, **kwargs):
     return subprocess.run(
         ["docker", "compose", "-f", str(COMPOSE_FILE), *args],
-        capture_output=True, text=True
+        capture_output=True, **kwargs
     )
 
 
 def mariadb_exec(sql):
     r = docker_compose("exec", "-T", "mariadb", "mariadb",
-                        f"-u{DB_USER}", f"-p{DB_PASS}", "-N", "-e", sql, DB_NAME)
+                        f"-u{DB_USER}", f"-p{DB_PASS}", "-N", "-e", sql, DB_NAME, text=True)
     return r.stdout.strip().split('\n') if r.stdout.strip() else []
 
 
 def mariadb_dump(table):
-    r = subprocess.run(
-        ["docker", "compose", "-f", str(COMPOSE_FILE), "exec", "-T", "mariadb",
-         "mariadb-dump", f"-u{DB_USER}", f"-p{DB_PASS}", "--skip-comments",
-         "--hex-blob", DB_NAME, table],
-        capture_output=True)
+    r = docker_compose("exec", "-T", "mariadb", "mariadb-dump",
+                        f"-u{DB_USER}", f"-p{DB_PASS}", "--skip-comments",
+                        "--hex-blob", DB_NAME, table)
     return r.stdout.decode('utf-8', errors='replace')
 
 
@@ -266,132 +296,206 @@ def mysql_to_sqlite(sql):
 
 
 def main():
-    name = sys.argv[1] if len(sys.argv) > 1 else "FreeSO Archive"
-    out_dir = SCRIPT_DIR / "archive-output"
-    data_dir = out_dir / name / "data"
-    db_path = data_dir / "fsoarchive.db"
+    args = sys.argv[1:]
+    if "-h" in args or "--help" in args:
+        print()
+        print(f"  {WHITE}{BOLD}Usage:{RESET}")
+        print(f"    ./create-archive.py {SLATE}[options] [name]{RESET}")
+        print()
+        print(f"  {WHITE}{BOLD}Arguments:{RESET}")
+        print(f"    {SKY}name{RESET}              {SLATE}Archive name (default: 'FreeSO Archive'){RESET}")
+        print()
+        print(f"  {WHITE}{BOLD}Options:{RESET}")
+        print(f"    {SKY}--no-serve{RESET}        {SLATE}Don't start HTTP server after building{RESET}")
+        print(f"    {SKY}--dry-run{RESET}         {SLATE}Show what would be done without making changes{RESET}")
+        print(f"    {SKY}-h, --help{RESET}        {SLATE}Show this help{RESET}")
+        print()
+        print(f"  {WHITE}{BOLD}Requires:{RESET}")
+        print(f"    Docker compose stack running {SLATE}(mariadb + freeso-server){RESET}")
+        print(f"    Start with: {MINT}docker compose -f docker/docker-compose.yml up -d{RESET}")
+        print()
+        print(f"  {WHITE}{BOLD}Note:{RESET}")
+        print(f"    This script places archive.ini in the ArchiveCities/ folder.")
+        print(f"    Rebuild the game so it gets included in the build output.")
+        print()
+        print(f"  {WHITE}{BOLD}Output:{RESET}")
+        print(f"    {SLATE}docker/archives/archive.zip{RESET}            {LAVENDER}Archive served to clients over HTTP{RESET}")
+        print(f"    {SLATE}ArchiveCities/<name>/archive.ini{RESET}   {LAVENDER}Manifest in ArchiveCities/ folder{RESET}")
+        print()
+        sys.exit(0)
 
-    print(f"=== FreeSO Archive Creator ===\n  Name: {name}\n")
+    no_serve = "--no-serve" in args
+    dry_run = "--dry-run" in args
+    name_args = [a for a in args if not a.startswith("--")]
+    name = name_args[0] if name_args else "FreeSO Archive"
+    out_dir = SCRIPT_DIR / "archives"
+    out_dir.mkdir(exist_ok=True)
+    zip_path = out_dir / "archive.zip"
+    install_dir = ARCHIVE_CITIES_DIR / name
+
+    print()
+    box("FreeSO Archive Creator")
+    info("Archive", name)
+    if dry_run:
+        print(f"  {AMBER}{BOLD}DRY RUN{RESET} {SLATE}\u2014 no changes will be made{RESET}")
+    print()
 
     # Check Docker
-    r = docker_compose("ps", "--status", "running")
+    r = docker_compose("ps", "--status", "running", text=True)
     if "mariadb" not in r.stdout:
-        sys.exit("ERROR: MariaDB container not running. Start with: docker compose up -d")
+        fail_msg("MariaDB container not running")
+        sys.exit(f"  {DIM}Start with: docker compose up -d{RESET}")
+    success("Docker stack running")
 
-    # Setup directories
-    if out_dir.exists():
-        shutil.rmtree(out_dir)
-    (data_dir / "Lots").mkdir(parents=True)
-    (data_dir / "Objects").mkdir(parents=True)
+    if dry_run:
+        tables = [t.strip() for t in mariadb_exec("SHOW TABLES") if t.strip()]
+        divider()
+        header(f"Would import {len(tables)} tables")
+        for t in IMPORT_ORDER:
+            if t in tables:
+                item(t)
+        divider()
+        success(f"Would add {len(SQLITE_TRIGGERS)} triggers")
+        success("Would convert to archive format")
+        divider()
+        header("Would copy NFS data")
+        for folder in ("Lots", "Objects"):
+            src = NFS_DIR / folder
+            if src.exists() and any(src.iterdir()):
+                item(f"{folder}/")
+        divider()
+        success(f"Would create {SKY}{zip_path}{RESET}")
+        success(f"Would install to {SKY}{install_dir}/{RESET}")
+        print()
+        print(f"  {MINT}{BOLD}\u2714 Dry run complete{RESET}")
+        print()
+        sys.exit(0)
 
-    # 1. Dump MariaDB and import into SQLite
-    tables = [t.strip() for t in mariadb_exec("SHOW TABLES") if t.strip()]
-    print(f"--- Importing {len(tables)} tables into SQLite ---")
+    divider()
 
-    conn = sqlite3.connect(str(db_path))
-    conn.execute("PRAGMA journal_mode=WAL")
-    conn.execute("PRAGMA foreign_keys=OFF")
+    # Build in a temp directory, output only zip + archive.ini
+    with tempfile.TemporaryDirectory() as tmp:
+        tmp_dir = Path(tmp)
+        (tmp_dir / "Lots").mkdir()
+        (tmp_dir / "Objects").mkdir()
+        db_path = tmp_dir / "fsoarchive.db"
 
-    dumps = {}
-    for t in tables:
-        dumps[t] = mariadb_dump(t)
+        # Dump MariaDB and import into SQLite
+        tables = [t.strip() for t in mariadb_exec("SHOW TABLES") if t.strip()]
+        header(f"Importing {len(tables)} tables")
 
-    ok, fail = 0, 0
-    for t in IMPORT_ORDER:
-        if t not in dumps:
-            continue
-        sql = mysql_to_sqlite(dumps[t])
-        if not sql.strip():
-            continue
+        conn = sqlite3.connect(str(db_path))
+        conn.execute("PRAGMA journal_mode=WAL")
+        conn.execute("PRAGMA foreign_keys=OFF")
+
+        dumps = {}
+        for t in tables:
+            dumps[t] = mariadb_dump(t)
+
+        ok, errors = 0, 0
+        for t in IMPORT_ORDER:
+            if t not in dumps:
+                continue
+            sql = mysql_to_sqlite(dumps[t])
+            if not sql.strip():
+                continue
+            try:
+                conn.executescript(sql)
+                ok += 1
+                item(t)
+            except Exception as e:
+                errors += 1
+                item(f"{t} \u2014 {e}", CORAL)
+                (out_dir / f"{t}.debug.sql").write_text(sql)
+
         try:
-            conn.executescript(sql)
-            ok += 1
-            print(f"  {t}")
-        except Exception as e:
-            fail += 1
-            print(f"  ERROR {t}: {e}")
-            (out_dir / f"{t}.debug.sql").write_text(sql)
+            conn.execute("ALTER TABLE fso_objects ADD COLUMN inventory_state BLOB DEFAULT NULL")
+        except sqlite3.OperationalError:
+            pass  # column already exists
 
-    # Add inventory_state column
-    try:
-        conn.execute("ALTER TABLE fso_objects ADD COLUMN inventory_state BLOB DEFAULT NULL")
-    except:
-        pass
+        if errors:
+            warning(f"{ok}/{ok+errors} tables ({errors} failed \u2014 see *.debug.sql)")
+        else:
+            success(f"{ok}/{ok+errors} tables imported")
+        divider()
 
-    print(f"  Imported {ok}/{ok+fail} tables")
-    if fail:
-        print(f"  {fail} errors - check *.debug.sql files")
+        # Add triggers
+        for trigger in SQLITE_TRIGGERS:
+            conn.execute(trigger)
+        success(f"{len(SQLITE_TRIGGERS)} triggers added")
 
-    # 2. Add triggers
-    print("\n--- Adding triggers ---")
-    for trigger in SQLITE_TRIGGERS:
-        conn.execute(trigger)
-    print(f"  Added {len(SQLITE_TRIGGERS)} triggers")
+        # Archive conversion
+        conn.execute("PRAGMA foreign_keys=OFF")
+        conn.executescript(ARCHIVE_SQL)
+        conn.execute("PRAGMA foreign_keys=ON")
+        conn.commit()
+        conn.close()
+        success("Converted to archive format")
+        divider()
 
-    # 3. Archive conversion
-    print("\n--- Converting to archive format ---")
-    conn.execute("PRAGMA foreign_keys=OFF")
-    conn.executescript(ARCHIVE_SQL)
-    conn.execute("PRAGMA foreign_keys=ON")
-    conn.commit()
-    conn.close()
-    print("  Done")
+        # Copy NFS data
+        header("Copying NFS data")
+        copied_any = False
+        for folder in ("Lots", "Objects"):
+            src = NFS_DIR / folder
+            if src.exists() and any(src.iterdir()):
+                shutil.copytree(src, tmp_dir / folder, dirs_exist_ok=True)
+                count = sum(1 for _ in (tmp_dir / folder).rglob('*') if _.is_file())
+                item(f"{folder}/ ({count} files)")
+                copied_any = True
+        if not copied_any:
+            item("(no NFS data found)")
+        divider()
 
-    # 4. Copy NFS
-    print("\n--- Copying NFS data ---")
-    lots_src = NFS_DIR / "Lots"
-    if lots_src.exists() and any(lots_src.iterdir()):
-        shutil.copytree(lots_src, data_dir / "Lots", dirs_exist_ok=True)
-        print(f"  Copied Lots/")
+        # Create archive.zip
+        with zipfile.ZipFile(zip_path, 'w', zipfile.ZIP_DEFLATED) as zf:
+            for f in tmp_dir.rglob('*'):
+                if f.is_file():
+                    zf.write(f, f.relative_to(tmp_dir))
+        zip_mb = zip_path.stat().st_size / (1024 * 1024)
+        success(f"Created archive.zip ({zip_mb:.1f} MB)")
 
-    obj_src = NFS_DIR / "Objects"
-    if obj_src.exists() and any(obj_src.iterdir()):
-        shutil.copytree(obj_src, data_dir / "Objects", dirs_exist_ok=True)
-        print(f"  Copied Objects/")
-
-    # 5. Create archive.zip (data/ contents only)
-    print("\n--- Creating archive.zip ---")
-    zip_path = out_dir / "archive.zip"
-    with zipfile.ZipFile(zip_path, 'w', zipfile.ZIP_DEFLATED) as zf:
-        for f in data_dir.rglob('*'):
+        # Write archive.ini to ArchiveCities
+        install_dir.mkdir(parents=True, exist_ok=True)
+        for f in (install_dir / "archive.ini", install_dir / "data"):
             if f.is_file():
-                zf.write(f, f.relative_to(data_dir))
+                f.unlink()
+            elif f.is_dir():
+                shutil.rmtree(f)
 
-    # 6. Install to ArchiveCities (preserve events.json)
-    print("\n--- Installing to ArchiveCities ---")
-    install_dir = ARCHIVE_CITIES_DIR / name
-    install_dir.mkdir(parents=True, exist_ok=True)
+        data_size = sum(f.stat().st_size for f in tmp_dir.rglob('*') if f.is_file())
+        zip_url = f"http://localhost:{SERVE_PORT}/archive.zip"
+        archive_ini = (
+            f"# Archive manifest\n[Default]\nName={name}\nDescription=Empty archive template for FreeSO\n"
+            f"Size={data_size}\nMap=0100\nZipLocation={zip_url}\nZipHash=\nLocalDir="
+        )
+        (install_dir / "archive.ini").write_text(archive_ini)
 
-    # Remove old generated files, keep events.json
-    for f in (install_dir / "archive.ini", install_dir / "data"):
-        if f.is_file():
-            f.unlink()
-        elif f.is_dir():
-            shutil.rmtree(f)
+    success(f"Installed to {SKY}{install_dir}/{RESET}")
+    divider()
 
-    data_size = sum(f.stat().st_size for f in data_dir.rglob('*') if f.is_file())
-    zip_url = f"http://localhost:{SERVE_PORT}/archive.zip"
-    archive_ini = (
-        f"# Archive manifest\n[Default]\nName={name}\nDescription=Empty archive template for FreeSO\n"
-        f"Size={data_size}\nMap=0100\nZipLocation={zip_url}\nZipHash=\nLocalDir="
-    )
-    (out_dir / name / "archive.ini").write_text(archive_ini)
-    (install_dir / "archive.ini").write_text(archive_ini)
-
-    zip_mb = zip_path.stat().st_size / (1024 * 1024)
-    print(f"\n=== Done ===")
-    print(f"  Installed: {install_dir}/")
-    print(f"  archive.zip: {zip_mb:.1f} MB")
-
-    if fail:
+    if errors:
+        print()
+        box("\u26a0 Completed with errors", color=AMBER)
+        print()
         sys.exit(1)
 
-    # 7. Serve archive.zip over HTTP
-    print(f"\n--- Serving archive.zip on http://localhost:{SERVE_PORT}/ ---")
-    print("  Press Ctrl+C to stop.\n")
-    handler = lambda *a: http.server.SimpleHTTPRequestHandler(*a, directory=str(out_dir))
+    print()
+    print(f"  {MINT}{BOLD}\u2714 Archive ready!{RESET}")
+    print()
+
+    if no_serve:
+        sys.exit(0)
+
+    # Serve archive.zip over HTTP
+    print(f"  {LAVENDER}\u25cf{RESET} Serving on {BOLD}http://localhost:{SERVE_PORT}/{RESET}")
+    print(f"  {SLATE}Press Ctrl+C to stop{RESET}\n")
+    handler = functools.partial(http.server.SimpleHTTPRequestHandler, directory=str(out_dir))
     with http.server.HTTPServer(("", SERVE_PORT), handler) as srv:
-        srv.serve_forever()
+        try:
+            srv.serve_forever()
+        except KeyboardInterrupt:
+            print(f"\n  {SLATE}Stopped.{RESET}")
 
 
 if __name__ == "__main__":

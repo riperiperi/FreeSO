@@ -90,6 +90,6 @@ TSOClient/.vs/config/applicationhost.config
 
 # Docker
 docker/nfs/
-docker/archive-output/
+docker/archives/
 
 TSOClient/Mario

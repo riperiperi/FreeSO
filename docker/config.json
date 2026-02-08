@@ -2,6 +2,7 @@
   "gameLocation": "/game/",
   "secret": "38F7E3B816EF9F31BFAB8F4C9716C90D106BD85E9D6913FBB4D833C866F837B0",
   "simNFS": "/nfs",
+  "allOpenable": true,
 
   "database": {
     "connectionString": "server=mariadb;uid=fsoserver;pwd=password;database=fso;"
