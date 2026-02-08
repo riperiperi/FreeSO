@@ -446,7 +446,8 @@ namespace FSO.Client.UI.Panels
             AdvanceFlashing(UserListFlashing, ref UserListFlashTime, BudgetButton);
 
             var keys = state.NewKeys;
-            var nofocus = state.InputManager.GetFocus() == null;
+            var focus = state.InputManager.GetFocus();
+            var nofocus = focus == null || focus is UIButton;
             base.Update(state);
             if (Game.InLot && state.WindowFocused)
             {
@@ -463,7 +464,7 @@ namespace FSO.Client.UI.Panels
                     if (activeCamera.UseRotateHold)
                     {
                         //if the zoom or rotation buttons are down, gradually change their values.
-                        var cam = Game.vm.Context.World.State.Cameras.Camera3D;
+                        var cam = cameras.Camera3D;
                         if (RotateClockwiseButton.IsDown || state.KeyboardState.IsKeyDown(Keys.OemPeriod)) cam.RotationX += 2f / FSOEnvironment.RefreshRate;
                         if (RotateCounterClockwiseButton.IsDown || state.KeyboardState.IsKeyDown(Keys.OemComma)) cam.RotationX -= 2f / FSOEnvironment.RefreshRate;
                     }

@@ -1,9 +1,12 @@
 ﻿using FSO.Client.Controllers;
 using FSO.Client.UI.Framework;
 using FSO.Client.UI.Framework.Parser;
+using FSO.Common.Rendering.Framework.IO;
+using FSO.Common.Rendering.Framework.Model;
 using FSO.Common.Utils;
 using Microsoft.Xna.Framework;
 using Microsoft.Xna.Framework.Graphics;
+using Microsoft.Xna.Framework.Input;
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -20,8 +23,11 @@ namespace FSO.Client.UI.Controls
     /// Kind of hacks the message inbox dropdown into a combobox.
     /// Can be resized horizontally.
     /// </summary>
-    public class UICombobox : UIContainer
+    public class UICombobox : UIContainer, IFocusableUI
     {
+        public bool IsFocused { get; set; }
+        public int TabIndex { get; set; }
+
         public object SelectedItem
         {
             get
@@ -177,6 +183,7 @@ namespace FSO.Client.UI.Controls
         void DropDownButton_OnButtonClick(UIElement button)
         {
             ToggleOpen();
+            GameFacade.Screens.inputManager.SetFocus(this);
         }
 
         public void ToggleOpen()
@@ -230,6 +237,34 @@ namespace FSO.Client.UI.Controls
             else
             {
                 MenuTextEdit.CurrentText = _items[selected].Name;
+            }
+        }
+
+        public void OnFocusChanged(FocusEvent newFocus)
+        {
+            if (newFocus == FocusEvent.FocusOut && open)
+                ToggleOpen();
+        }
+
+        public override void Update(UpdateState state)
+        {
+            base.Update(state);
+            if (!IsFocused) return;
+
+            if (state.ActivationKeyPressed)
+            {
+                if (!open) ToggleOpen();
+                else SelectComboboxElement(this);
+            }
+            if (state.NewKeys.Contains(Keys.Escape) && open)
+                ToggleOpen();
+            if (state.NewKeys.Contains(Keys.Up) && open && MenuListBox.SelectedIndex > 0)
+                MenuListBox.SelectedIndex--;
+            if (state.NewKeys.Contains(Keys.Down))
+            {
+                if (!open) ToggleOpen();
+                else if (MenuListBox.SelectedIndex < _items.Count - 1)
+                    MenuListBox.SelectedIndex++;
             }
         }
     }

@@ -6,6 +6,7 @@ using Microsoft.Xna.Framework;
 using FSO.Common.Rendering.Framework.Model;
 using FSO.Common.Rendering.Framework.IO;
 using FSO.Client.UI;
+using Microsoft.Xna.Framework.Input;
 
 namespace FSO.Client.Utils
 {
@@ -167,6 +168,13 @@ namespace FSO.Client.Utils
         {
             if (m_doDrag)
             {
+                if (state.MouseState.LeftButton == ButtonState.Released)
+                {
+                    m_doDrag = false;
+                    DragControl.RemoveUpdateHook(UpdateHook);
+                    return;
+                }
+
                 /** Drag the dialog box **/
                 var position = DragControl.Parent.GetMousePosition(state.MouseState);
                 DragControl.X = position.X - m_dragOffsetX;

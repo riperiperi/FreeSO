@@ -2,15 +2,21 @@
 using System.Collections.Generic;
 using FSO.Client.UI.Framework;
 using Microsoft.Xna.Framework;
+using Microsoft.Xna.Framework.Input;
 using FSO.Client.UI.Framework.Parser;
+using FSO.Common.Rendering.Framework.IO;
+using FSO.Common.Rendering.Framework.Model;
 using Microsoft.Xna.Framework.Graphics;
 
 namespace FSO.Client.UI.Controls
 {
-    public class UIGridViewer : UIContainer
+    public class UIGridViewer : UIContainer, IFocusableUI
     {
         public event ChangeDelegate OnChange;
         public event ChangeDelegate OnSelectedPageChanged;
+
+        public bool IsFocused { get; set; }
+        public int TabIndex { get; set; }
 
         /// <summary>
         /// Class to use as the item renderer for each cell in the grid
@@ -272,5 +278,51 @@ namespace FSO.Client.UI.Controls
             SelectedIndex = m_SelectedIndex;
         }
 
+        public override void Update(UpdateState state)
+        {
+            base.Update(state);
+            if (!IsFocused || m_DataProvider == null || m_DataProvider.Count == 0) return;
+
+            int index = m_SelectedIndex;
+            if (index < 0) index = 0;
+
+            foreach (var key in state.NewKeys)
+            {
+                int col = index % myColumns;
+                int newIndex;
+
+                switch (key)
+                {
+                    case Keys.Left:
+                        if (col == 0) continue;
+                        newIndex = index - 1;
+                        break;
+                    case Keys.Right:
+                        if (col >= myColumns - 1) continue;
+                        newIndex = index + 1;
+                        break;
+                    case Keys.Up:
+                        newIndex = index - myColumns;
+                        break;
+                    case Keys.Down:
+                        newIndex = index + myColumns;
+                        break;
+                    case Keys.Enter:
+                        if (OnChange != null) OnChange(this);
+                        continue;
+                    default: continue;
+                }
+
+                if (newIndex < 0 || newIndex >= m_DataProvider.Count) continue;
+
+                index = newIndex;
+
+                int targetPage = index / ItemsPerPage;
+                if (targetPage != m_SelectedPage)
+                    SelectedPage = targetPage;
+
+                SelectedIndex = index;
+            }
+        }
     }
 }
