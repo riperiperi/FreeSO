@@ -300,14 +300,16 @@ def main():
     if "-h" in args or "--help" in args:
         print()
         print(f"  {WHITE}{BOLD}Usage:{RESET}")
-        print(f"    ./create-archive.py {SLATE}[options] [name]{RESET}")
+        print(f"    ./create-archive.py {SLATE}[options] [name] [description]{RESET}")
         print()
         print(f"  {WHITE}{BOLD}Arguments:{RESET}")
         print(f"    {SKY}name{RESET}              {SLATE}Archive name (default: 'FreeSO Archive'){RESET}")
+        print(f"    {SKY}description{RESET}       {SLATE}Archive description (default: 'A FreeSO server archive'){RESET}")
         print()
         print(f"  {WHITE}{BOLD}Options:{RESET}")
         print(f"    {SKY}--no-serve{RESET}        {SLATE}Don't start HTTP server after building{RESET}")
         print(f"    {SKY}--dry-run{RESET}         {SLATE}Show what would be done without making changes{RESET}")
+        print(f"    {SKY}--verbose, -v{RESET}     {SLATE}Show all avatars and lots during migration{RESET}")
         print(f"    {SKY}-h, --help{RESET}        {SLATE}Show this help{RESET}")
         print()
         print(f"  {WHITE}{BOLD}Requires:{RESET}")
@@ -326,8 +328,10 @@ def main():
 
     no_serve = "--no-serve" in args
     dry_run = "--dry-run" in args
-    name_args = [a for a in args if not a.startswith("--")]
+    verbose = "--verbose" in args or "-v" in args
+    name_args = [a for a in args if not a.startswith("--") and a != "-v"]
     name = name_args[0] if name_args else "FreeSO Archive"
+    description = name_args[1] if len(name_args) > 1 else "A FreeSO server archive"
     out_dir = SCRIPT_DIR / "archives"
     out_dir.mkdir(exist_ok=True)
     zip_path = out_dir / "archive.zip"
@@ -417,6 +421,24 @@ def main():
             warning(f"{ok}/{ok+errors} tables ({errors} failed \u2014 see *.debug.sql)")
         else:
             success(f"{ok}/{ok+errors} tables imported")
+
+        if verbose:
+            divider()
+            avatars = conn.execute(
+                "SELECT name FROM fso_avatars ORDER BY name"
+            ).fetchall()
+            if avatars:
+                header(f"Avatars ({len(avatars)})")
+                for (aname,) in avatars:
+                    item(aname)
+            lots = conn.execute(
+                "SELECT name FROM fso_lots ORDER BY name"
+            ).fetchall()
+            if lots:
+                header(f"Lots ({len(lots)})")
+                for (lname,) in lots:
+                    item(lname)
+
         divider()
 
         # Add triggers
@@ -466,7 +488,7 @@ def main():
         data_size = sum(f.stat().st_size for f in tmp_dir.rglob('*') if f.is_file())
         zip_url = f"http://localhost:{SERVE_PORT}/archive.zip"
         archive_ini = (
-            f"# Archive manifest\n[Default]\nName={name}\nDescription=Empty archive template for FreeSO\n"
+            f"# Archive manifest\n[Default]\nName={name}\nDescription={description}\n"
             f"Size={data_size}\nMap=0100\nZipLocation={zip_url}\nZipHash=\nLocalDir="
         )
         (install_dir / "archive.ini").write_text(archive_ini)

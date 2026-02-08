@@ -2,6 +2,7 @@
 using FSO.Client.UI.Controls;
 using FSO.Client.UI.Framework;
 using FSO.Common;
+using FSO.Common.Rendering.Framework.Model;
 using FSO.Server.Clients;
 using Microsoft.Xna.Framework;
 using Ninject;

@@ -20,6 +20,9 @@ services:
     build:
       context: ..
       dockerfile: docker/Dockerfile
+    labels:
+      org.opencontainers.image.source: "https://github.com/riperiperi/FreeSO"
+      org.opencontainers.image.licenses: "MPL-2.0"
     depends_on:
       mariadb:
         condition: service_healthy
@@ -32,9 +35,9 @@ services:
       - "35100:35100"
       - "35101:35101"
     volumes:
-      - ~/Documents/Documents/The Sims Online/TSOClient:/game:ro
-      - ./nfs:/nfs
-      - ./config.json:/app/config.json:ro
+      - ~/Documents/The Sims Online/TSOClient:/game:ro
+      - ./nfs:/nfs:rw
+      - ./config.json:/app/config.json:cached
 
 volumes:
   mariadb_data:

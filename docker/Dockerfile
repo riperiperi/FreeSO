@@ -9,6 +9,11 @@ RUN dotnet publish TSOClient/FSO.Server.Core/FSO.Server.Core.csproj \
 
 # Stage 2: Runtime
 FROM mcr.microsoft.com/dotnet/aspnet:9.0
+
+LABEL org.opencontainers.image.title="FreeSO Server"
+LABEL org.opencontainers.image.source="https://github.com/riperiperi/FreeSO"
+LABEL org.opencontainers.image.licenses="MPL-2.0"
+
 WORKDIR /app
 COPY --from=build /app .
 COPY docker/entrypoint.sh /app/entrypoint.sh
