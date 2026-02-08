@@ -16,8 +16,7 @@ namespace FSO.Server.Database.DA
             this.Config = config;
 
             // TODO: pass config connection string
-            // _pool = new SqliteConnectionPool("Data Source=fsoarchive.db;Version=3;UTF8Encoding=True");
-            Environment.SetEnvironmentVariable("SQLite_NoPlugins", "true", EnvironmentVariableTarget.Process);
+            // _pool = new SqliteConnectionPool("Data Source=fsoarchive.db");
 
             SqlMapper.AddTypeHandler(new ByteHandler());
             SqlMapper.AddTypeHandler(new SbyteHandler());

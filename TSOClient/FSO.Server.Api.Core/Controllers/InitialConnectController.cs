@@ -80,7 +80,6 @@ namespace FSO.Server.Api.Core.Controllers
                 Response.Cookies.Append("fso", token.Token, new Microsoft.AspNetCore.Http.CookieOptions()
                 {
                     Expires = DateTimeOffset.Now.AddDays(1),
-                    Domain = Request.Host.Host,
                     Path = "/"
                 });
                 //HttpContext.Current.Response.SetCookie(new HttpCookie("fso", token.Token));

@@ -1,32 +1,32 @@
 ﻿using System.Collections.Generic;
-using System.Data.SQLite;
+using Microsoft.Data.Sqlite;
 
 namespace FSO.Server.Database.SqliteCompat
 {
     internal class SqliteConnectionPool
     {
         private string _connectionString;
-        private Stack<SQLiteConnection> _pool = new Stack<SQLiteConnection>();
+        private Stack<SqliteConnection> _pool = new Stack<SqliteConnection>();
 
         public SqliteConnectionPool(string connectionString)
         {
             _connectionString = connectionString;
         }
 
-        public SQLiteConnection Rent()
+        public SqliteConnection Rent()
         {
             lock (_pool)
             {
                 if (_pool.Count == 0)
                 {
-                    return new SQLiteConnection(_connectionString);
+                    return new SqliteConnection(_connectionString);
                 }
 
                 return _pool.Pop();
             }
         }
 
-        public void Return(SQLiteConnection conn)
+        public void Return(SqliteConnection conn)
         {
             lock (_pool)
             {

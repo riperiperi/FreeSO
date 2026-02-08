@@ -31,6 +31,7 @@ namespace FSO.Server.Core
             settings.Add("updateUrl", userApiConfig.UpdateUrl);
             settings.Add("cdnUrl", userApiConfig.CDNUrl);
             settings.Add("connectionString", config.Database.ConnectionString);
+            settings.Add("databaseEngine", config.Database.Engine ?? "mysql");
             settings.Add("NFSdir", config.SimNFS);
             settings.Add("smtpHost", userApiConfig.SmtpHost);
             settings.Add("smtpUser", userApiConfig.SmtpUser);

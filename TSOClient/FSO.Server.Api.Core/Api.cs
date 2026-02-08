@@ -64,10 +64,9 @@ namespace FSO.Server.Api.Core
                 Key = System.Text.UTF8Encoding.UTF8.GetBytes(Config.Secret)
             });
 
-            // TODO: also pass engine
             var config = new Database.DatabaseConfiguration()
             {
-                Engine = "sqlite",
+                Engine = appSettings["databaseEngine"] ?? "mysql",
                 ConnectionString = appSettings["connectionString"]
             };
 

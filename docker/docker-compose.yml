@@ -1,0 +1,40 @@
+name: freeso
+
+services:
+  mariadb:
+    image: mariadb:11
+    environment:
+      MARIADB_ROOT_PASSWORD: rootpassword
+      MARIADB_DATABASE: fso
+      MARIADB_USER: fsoserver
+      MARIADB_PASSWORD: password
+    volumes:
+      - mariadb_data:/var/lib/mysql
+    healthcheck:
+      test: ["CMD", "healthcheck.sh", "--connect", "--innodb_initialized"]
+      interval: 5s
+      timeout: 5s
+      retries: 10
+
+  freeso-server:
+    build:
+      context: ..
+      dockerfile: docker/Dockerfile
+    depends_on:
+      mariadb:
+        condition: service_healthy
+    ports:
+      - "9000:9000"
+      - "33100:33100"
+      - "33101:33101"
+      - "34100:34100"
+      - "34101:34101"
+      - "35100:35100"
+      - "35101:35101"
+    volumes:
+      - ~/Documents/Documents/The Sims Online/TSOClient:/game:ro
+      - ./nfs:/nfs
+      - ./config.json:/app/config.json:ro
+
+volumes:
+  mariadb_data:

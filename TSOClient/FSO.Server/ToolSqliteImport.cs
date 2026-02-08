@@ -839,12 +839,6 @@ namespace FSO.Server
         {
             SetPragmas();
 
-            MigrateInventoryState();
-
-            Commit();
-
-            return 1;
-
             var files = ScanDumps();
 
             foreach (var file in files)
