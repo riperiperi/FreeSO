@@ -904,8 +904,6 @@ namespace FSO.Server.Servers.Lot.Domain
                     }
                 }
             }
-            LotActive.Set();
-            ActiveYet = true;
 
             if (JobLot)
             {
@@ -917,7 +915,11 @@ namespace FSO.Server.Servers.Lot.Domain
                     State = Lot.Save(),
                     Run = false,
                 });
+                Lot.Tick();
             }
+
+            LotActive.Set();
+            ActiveYet = true;
         }
 
         private void Lot_OnGenericVMEvent(VMEventType type, object data)
