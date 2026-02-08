@@ -90,6 +90,8 @@ Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "FSO.SimAntics.JIT.Roslyn", 
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "FSO.Content.TSO", "FSO.Content.TSO\FSO.Content.TSO.csproj", "{B5B2C04D-B8E4-47C7-9731-48E30FD5F70D}"
 EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "FSO.Unix", "FSO.Unix\FSO.Unix.csproj", "{69DBDA50-1616-4B1B-9295-78E130C5119E}"
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Android|Any CPU = Android|Any CPU

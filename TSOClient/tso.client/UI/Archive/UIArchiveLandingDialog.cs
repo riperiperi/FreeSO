@@ -6,6 +6,11 @@ using FSO.Common;
 using FSO.Common.Rendering.Framework.Model;
 using Microsoft.Xna.Framework;
 using Microsoft.Xna.Framework.Graphics;
+using System;
+using System.Collections.Generic;
+using System.Linq;
+using System.Text;
+using System.Threading.Tasks;
 
 namespace FSO.Client.UI.Archive
 {
@@ -14,6 +19,7 @@ namespace FSO.Client.UI.Archive
         public UIButton CreateButton;
         public UIButton JoinButton;
         public UIButton QuickStartButton;
+
         public Texture2D FreeSOLogoImage;
         public Texture2D HostServerButtonImage;
         public Texture2D JoinServerButtonImage;
@@ -30,7 +36,7 @@ namespace FSO.Client.UI.Archive
         {
             var ui = Content.Content.Get().CustomUI;
 
-            SetSize(496, 293);
+            SetSize(496, 263);
 
             LargeButtonTextStyle = TextStyle.DefaultLabel.Clone();
 

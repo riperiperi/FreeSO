@@ -87,11 +87,15 @@ namespace MSDFExtension
         {
             var outputPath = GetOuputPath(objPath, font, c);
             var res = this.Resolution;
-            var startInfo = new ProcessStartInfo(msdfgen)
+            var msdfgenArgs = $"-font \"{font.Path}\" {(int)c} -o \"{outputPath}\" -size {res} {res} -pxrange {this.Range} -autoframe -printmetrics";
+
+            // On Linux/macOS, run .exe files through Wine
+            var isWindows = Environment.OSVersion.Platform == PlatformID.Win32NT;
+            var startInfo = new ProcessStartInfo(isWindows ? msdfgen : "wine")
             {
                 UseShellExecute = false,
                 RedirectStandardOutput = true,
-                Arguments = $"-font \"{font.Path}\" {(int)c} -o \"{outputPath}\" -size {res} {res} -pxrange {this.Range} -autoframe -printmetrics"
+                Arguments = isWindows ? msdfgenArgs : $"\"{msdfgen}\" {msdfgenArgs}"
             };
 
             var process = System.Diagnostics.Process.Start(startInfo);

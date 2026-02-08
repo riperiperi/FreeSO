@@ -3,7 +3,6 @@ using System.Collections.Generic;
 using System.Linq;
 using Microsoft.Xna.Framework;
 using Microsoft.Xna.Framework.Graphics;
-using Microsoft.Xna.Framework.Input;
 using FSO.Client.UI.Framework;
 using FSO.Client.UI.Controls;
 using FSO.Common.Rendering.Framework.Model;
@@ -327,9 +326,6 @@ namespace FSO.Client.UI
             }
 
             HandleFocusNavigation(state, mainUI);
-
-            if (state.NewKeys.Contains(Keys.Escape) && Dialogs.Count > 0)
-                RemoveDialog(Dialogs[Dialogs.Count - 1]);
 
             Tooltip = state.UIState.Tooltip;
             TooltipProperties = state.UIState.TooltipProperties;
