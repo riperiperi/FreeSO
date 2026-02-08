@@ -98,12 +98,22 @@ namespace FSO.SimAntics.Primitives
                 return VMPrimitiveExitCode.GOTO_TRUE;
             }
 
+            var caller = (VMAvatar)context.Caller;
+
+            // Check if free will is disabled for player family Sims
+            // Visitors (PersonType == 1) and pets should still have autonomy
+            var visitor = (caller.GetPersonData(VMPersonDataVariable.PersonType) == 1);
+            if (!VM.FreeWillEnabled && !visitor && !caller.IsPet)
+            {
+                // Free will is disabled and this is a player family Sim (not visitor, not pet)
+                // Return false to indicate no autonomous action was chosen
+                return VMPrimitiveExitCode.GOTO_FALSE;
+            }
+
             var ents = new List<VMEntity>(context.VM.Context.ObjectQueries.WithAutonomy);
             var processed = new HashSet<short>();
-            var caller = (VMAvatar)context.Caller;
             var pos1 = caller.Position;
 
-            var visitor = (caller.GetPersonData(VMPersonDataVariable.PersonType) == 1);
             var child = (caller.IsChild && context.VM.TS1);
             var attenTable = visitor ? TTAB.VisitorAttenuationValues : TTAB.AttenuationValues;
             var global = Content.Content.Get().WorldObjectGlobals;
