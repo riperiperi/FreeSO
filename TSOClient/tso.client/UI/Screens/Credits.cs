@@ -11,6 +11,7 @@ namespace FSO.Client.UI.Screens
         public Texture2D BackgroundImage { get; set; }
         public UIButton BackButton { get; set; }
         public UIButton OkButton { get; set; }
+        public UIButton ExitButton { get; set; }
         public UICreditsPanel CreditsArea;
 
         public Credits()
@@ -24,8 +25,14 @@ namespace FSO.Client.UI.Screens
 
             BackButton.OnButtonClick += new ButtonClickDelegate(BackButton_OnButtonClick);
             OkButton.OnButtonClick += new ButtonClickDelegate(BackButton_OnButtonClick);
+            ExitButton.OnButtonClick += ExitButton_OnButtonClick;
 
             GameResized();
+        }
+
+        private void ExitButton_OnButtonClick(UIElement button)
+        {
+            UIScreen.ShowDialog(new UIExitDialog(), true);
         }
 
         public override void GameResized()
