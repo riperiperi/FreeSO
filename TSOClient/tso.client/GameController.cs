@@ -490,9 +490,7 @@ namespace FSO.Client
         public void ShowCredits()
         {
             var screen = Kernel.Get<Credits>();
-            GameFacade.Screens.RemoveCurrent();
-            GameFacade.Screens.AddScreen(screen);
-            DiscordRpcEngine.SendFSOPresence("Viewing Credits");
+            UIScreen.GlobalShowDialog(screen, true);
         }
 
         public void RegisterServer(EmbeddedServer server)

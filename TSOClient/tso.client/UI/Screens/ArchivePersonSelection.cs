@@ -91,7 +91,6 @@ namespace FSO.Client.UI.Screens
 
             var numSlots = 1;
 
-            CreditsButton.Disabled = true;
             TitleLabel.Alignment = TextAlignment.Center | TextAlignment.Middle;
             TitleLabel.Size = new Vector2(620, 20); // For some reason, this changes to 525x20, so I need to change it back?
 
