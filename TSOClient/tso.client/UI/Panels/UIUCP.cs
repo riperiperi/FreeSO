@@ -10,9 +10,7 @@ using FSO.LotView;
 using Microsoft.Xna.Framework;
 using FSO.SimAntics.Model.TSOPlatform;
 using FSO.Client.Controllers;
-using FSO.Client.Regulators;
 using FSO.Common;
-using Ninject;
 using FSO.Common.Rendering.Framework.IO;
 using FSO.Common.Utils;
 using FSO.Common.Rendering.Framework;
@@ -196,15 +194,10 @@ namespace FSO.Client.UI.Panels
             SetMode(UCPMode.CityMode);
             Focus = UCPFocusMode.UCP;
             SetFocus(UCPFocusMode.Game);
-
-            InitArchive();
         }
 
-        private void InitArchive()
+        public void InitArchive()
         {
-            var regulator = FSOFacade.Kernel.Get<CityConnectionRegulator>();
-            if (regulator.Mode != CityConnectionMode.ARCHIVE) return;
-
             var ui = Content.Content.Get().CustomUI;
             var gd = GameFacade.GraphicsDevice;
 

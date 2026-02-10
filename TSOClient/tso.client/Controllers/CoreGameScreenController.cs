@@ -67,6 +67,9 @@ namespace FSO.Client.Controllers
             var shard = Network.MyShard;
             Terrain = kernel.Get<TerrainController>(new ConstructorArgument("parent", this));
             view.Initialize(shard.Name, int.Parse(shard.Map), Terrain);
+
+            if (Mode == CityConnectionMode.ARCHIVE)
+                view.ucp.InitArchive();
         }
 
         public void AddWindow(UIContainer window)
