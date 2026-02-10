@@ -37,6 +37,7 @@ namespace FSO.Server.Api.Core
         public int? UpdateID { get; set; }
 
         public string BranchName { get; set; } = "dev";
+        public bool SpectatorMode { get; set; }
         public IUpdateUploader UpdateUploader { get; set; }
     }
 }

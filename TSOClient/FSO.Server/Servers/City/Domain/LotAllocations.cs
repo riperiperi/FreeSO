@@ -13,6 +13,7 @@ using Ninject;
 using System;
 using System.Collections.Concurrent;
 using System.Collections.Generic;
+using System.Linq;
 using System.Threading;
 using System.Threading.Tasks;
 
@@ -196,6 +197,7 @@ namespace FSO.Server.Servers.City.Domain
                             var coords = MapCoordinates.Unpack(lotId);
 
                             DbLot lot = null;
+                            bool isRoommate = false;
                             using (var db = DAFactory.Get())
                             {
                                 //Convert the lot location into a lot db id
@@ -256,6 +258,12 @@ namespace FSO.Server.Servers.City.Domain
                                             });
                                         }
                                     }
+
+                                    if (avatarId != 0 && AllowGuestOpening && lot.lot_id != 0)
+                                    {
+                                        var roomies = db.Roommates.GetLotRoommates(lot.lot_id);
+                                        isRoommate = roomies.Any(r => r.is_pending == 0 && r.avatar_id == avatarId);
+                                    }
                                 }
                             }
 
@@ -267,8 +275,14 @@ namespace FSO.Server.Servers.City.Domain
                                     Status = FindLotResponseStatus.CLAIM_FAILED
                                 });
                             }
-                            allocation.SetLot(lot, (uint)Context.ShardId,
-                                (avatarId == 0) ? ClaimAction.LOT_CLEANUP : ClaimAction.LOT_HOST);
+                            ClaimAction openAction;
+                            if (avatarId == 0)
+                                openAction = ClaimAction.LOT_CLEANUP;
+                            else if (AllowGuestOpening && !isRoommate)
+                                openAction = ClaimAction.LOT_SPECTATOR;
+                            else
+                                openAction = ClaimAction.LOT_HOST;
+                            allocation.SetLot(lot, (uint)Context.ShardId, openAction);
                         }
                         else { 
                             allocation.SetLot(new DbLot() { lot_id = (int)lotId }, originalId,

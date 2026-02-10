@@ -103,6 +103,7 @@ namespace FSO.Server.Servers.Lot.Domain
         private HashSet<uint> FreeRoamLeaving = [];
 
         private bool AllowGuestOpening => Config.AllOpenable || (Config.Archive?.Flags.HasFlag(FSO.Common.ArchiveConfigFlags.AllOpenable) ?? false);
+        private bool IsSpectatorMode;
 
         private static HashSet<uint> ValidOOWGUIDs = new HashSet<uint>()
         {
@@ -440,7 +441,7 @@ namespace FSO.Server.Servers.Lot.Domain
 
         public bool SaveRing()
         {
-            if (TransientLot) return true; //transient lots never get saved.
+            if (TransientLot || IsSpectatorMode) return true; //transient/spectator lots never get saved.
             var newBackup = (sbyte)((LotPersist.ring_backup_num + 1) % Config.RingBufferSize);
             var lotStr = LotPersist.lot_id.ToString("x8");
             Directory.CreateDirectory(Path.Combine(Config.SimNFS, "Lots/" + lotStr + "/"));
@@ -737,6 +738,7 @@ namespace FSO.Server.Servers.Lot.Domain
         public void ResetVM()
         {
             LOG.Info("Resetting VM for lot with dbid = " + Context.DbId);
+            IsSpectatorMode = (Context.Action == ClaimAction.LOT_SPECTATOR);
             VMGlobalLink = Kernel.Get<LotServerGlobalLink>();
             if (AllowGuestOpening && !JobLot)
             {
@@ -1150,8 +1152,8 @@ namespace FSO.Server.Servers.Lot.Domain
                     //sometimes avatars can be killed immediately after their kill timer starts (this frame will run the leave lot interaction)
                     //this works around that possibility. 
                     var preTickAvatars = Lot.Context.ObjectQueries.AvatarsByPersist.Values.Select(x => x).ToList();
-                    var noRoomies = !(preTickAvatars.Any(x => ((VMTSOAvatarState)x.TSOState).Permissions > VMTSOAvatarPermissions.Visitor)) 
-                        && (LotPersist.admit_mode < 4 && LotPersist.category != LotCategory.community) && !AllowGuestOpening;
+                    var noRoomies = !(preTickAvatars.Any(x => ((VMTSOAvatarState)x.TSOState).Permissions > VMTSOAvatarPermissions.Visitor))
+                        && (LotPersist.admit_mode < 4 && LotPersist.category != LotCategory.community) && !AllowGuestOpening && !IsSpectatorMode;
 
                     try
                     {
@@ -1721,6 +1723,11 @@ namespace FSO.Server.Servers.Lot.Domain
 
         public void SaveAvatar(VMAvatar avatar, Action postSave = null)
         {
+            if (IsSpectatorMode)
+            {
+                if (postSave != null) Host.InBackground(() => postSave());
+                return;
+            }
             var statevm = new VMNetAvatarPersistState();
             statevm.Save(avatar);
             foreach (var relsID in avatar.ChangedRels)
