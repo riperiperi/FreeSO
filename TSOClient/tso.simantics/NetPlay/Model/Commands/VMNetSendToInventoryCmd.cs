@@ -52,6 +52,7 @@ namespace FSO.SimAntics.NetPlay.Model.Commands
 
         public override bool Verify(VM vm, VMAvatar caller)
         {
+            if (IsSpectator(caller)) return false;
             if (Verified) return true;
             if (ObjectPID == 0) return false;
             var targObj = vm.GetObjectByPersist(ObjectPID);

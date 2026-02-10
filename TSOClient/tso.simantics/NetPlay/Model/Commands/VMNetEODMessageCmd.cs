@@ -27,6 +27,7 @@ namespace FSO.SimAntics.NetPlay.Model.Commands
 
         public override bool Verify(VM vm, VMAvatar caller)
         {
+            if (IsSpectator(caller)) return false;
             if (Verified == true) return true; //temporary... forward messages through tick broadcast
             //only run by server. Forward message to this avatar's connected EOD.
             if (caller == null) return false;

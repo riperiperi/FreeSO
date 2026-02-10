@@ -191,6 +191,7 @@ namespace FSO.SimAntics.NetPlay.Model.Commands
         /// <returns></returns>
         public override bool Verify(VM vm, VMAvatar caller)
         {
+            if (IsSpectator(caller)) return false;
             if (Verified) return true; //set internally when transaction succeeds. trust that the verification happened.
             //typically null caller, non-roommate cause failure. some lot specific things may apply.
             Mode = vm.PlatformState.Validator.GetPurchaseMode(Mode, caller, 0, true);

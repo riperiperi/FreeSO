@@ -88,6 +88,7 @@ namespace FSO.SimAntics.NetPlay.Model.Commands
 
         public override bool Verify(VM vm, VMAvatar caller)
         {
+            if (IsSpectator(caller)) return false;
             if (Verified) return true;
             ObjectPID = 0;
             VMEntity obj = vm.GetObjectById(ObjectID);

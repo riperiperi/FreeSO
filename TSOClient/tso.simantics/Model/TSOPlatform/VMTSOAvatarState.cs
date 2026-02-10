@@ -108,5 +108,6 @@ namespace FSO.SimAntics.Model.TSOPlatform
         CanBeRoommate = 1, //TODO: update on becoming roomie of another lot, while on this lot.
         NewPlayer = 2, //under a week old
         Mayor = 4, //is mayor of this neighborhood
+        Spectator = 8, //read-only visitor in spectator mode
     }
 }

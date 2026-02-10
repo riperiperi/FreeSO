@@ -1628,11 +1628,13 @@ namespace FSO.Server.Servers.Lot.Domain
                 }
 
                 var visitorType = DbLotVisitorType.visitor;
+                bool isRoommate = false;
                 if (myRoomieLots.Count > 0)
                 {
                     var roomieStatus = myRoomieLots.FindAll(x => x.lot_id == Context.DbId).FirstOrDefault();
                     if (roomieStatus != null && roomieStatus.is_pending == 0)
                     {
+                        isRoommate = true;
                         switch (roomieStatus.permissions_level)
                         {
                             case 0:
@@ -1645,6 +1647,12 @@ namespace FSO.Server.Servers.Lot.Domain
                         }
                     }
                 }
+
+                if (IsSpectatorMode && !isRoommate)
+                {
+                    state.AvatarFlags |= VMTSOAvatarFlags.Spectator;
+                }
+
                 Host.RecordStartVisit(session, visitorType);
 
                 var hollowLoadMask = (transitionInfo?.GetSurroundingLotMask() ?? HOLLOW_LOAD_ALL);
