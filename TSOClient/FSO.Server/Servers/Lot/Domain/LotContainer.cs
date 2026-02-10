@@ -1334,6 +1334,58 @@ namespace FSO.Server.Servers.Lot.Domain
             evt.WaitOne();
         }
 
+        private void TransitionFromSpectatorMode()
+        {
+            LOG.Info("Transitioning lot " + Context.DbId + " from spectator mode to writable mode.");
+            IsSpectatorMode = false;
+
+            var avatars = Lot.Context.ObjectQueries.Avatars.Cast<VMAvatar>().ToList();
+            foreach (var ava in avatars)
+            {
+                var tsoState = ava.TSOState as VMTSOAvatarState;
+                if (tsoState == null || !tsoState.Flags.HasFlag(VMTSOAvatarFlags.Spectator)) continue;
+
+                // Clear spectator flag
+                tsoState.Flags &= ~VMTSOAvatarFlags.Spectator;
+
+                // Check admission rules - eject if not permitted
+                bool eject = false;
+                if (LotPersist.admit_mode == 1)
+                {
+                    // Admit list: eject if not on admit list
+                    using (var db = DAFactory.Get())
+                    {
+                        if (!db.LotAdmit.GetLotAdmitDeny(LotPersist.lot_id, 0).Contains(ava.PersistID))
+                            eject = true;
+                    }
+                }
+                else if (LotPersist.admit_mode == 2)
+                {
+                    // Ban list: eject if on ban list
+                    using (var db = DAFactory.Get())
+                    {
+                        if (db.LotAdmit.GetLotAdmitDeny(LotPersist.lot_id, 1).Contains(ava.PersistID))
+                            eject = true;
+                    }
+                }
+                else if (LotPersist.admit_mode == 3)
+                {
+                    // Ban all: eject all non-roommates
+                    eject = true;
+                }
+
+                if (eject)
+                {
+                    if (ava.KillTimeout == -1) ava.UserLeaveLot();
+                    VMDriver.DropAvatar(ava);
+                }
+            }
+
+            // Reset save tickers to start normal save cycle
+            LotSaveTicker = LOT_SAVE_PERIOD;
+            AvatarSaveTicker = AVATAR_SAVE_PERIOD;
+        }
+
         private bool TryBeginFreeRoam(uint persistID)
         {
             lock (FreeRoamLeaving)
@@ -1651,6 +1703,15 @@ namespace FSO.Server.Servers.Lot.Domain
                 if (IsSpectatorMode && !isRoommate)
                 {
                     state.AvatarFlags |= VMTSOAvatarFlags.Spectator;
+                }
+
+                // If a roommate joins during spectator mode, transition to writable mode
+                if (IsSpectatorMode && isRoommate)
+                {
+                    lock (LotThreadActions)
+                    {
+                        LotThreadActions.Enqueue(() => TransitionFromSpectatorMode());
+                    }
                 }
 
                 Host.RecordStartVisit(session, visitorType);
