@@ -512,7 +512,14 @@ namespace FSO.Client.UI.Panels
                             Queue.QueueOwner = ActiveEntity;
                             Queue.DebugMode = true;
                         }*/
-                        if (obj is VMGameObject && ((VMGameObject)obj).Disabled > 0)
+                        // Spectators can't interact with lot objects, but can use sim interactions, walk, and free roam
+                        if (objSelected && obj is VMGameObject && obj != GotoObject && obj != TransitionObject
+                            && ActiveEntity is VMAvatar specAva
+                            && ((VMTSOAvatarState)specAva.TSOState)?.Flags.HasFlag(VMTSOAvatarFlags.Spectator) == true)
+                        {
+                            ShowErrorTooltip(state, 0, true);
+                        }
+                        else if (obj is VMGameObject && ((VMGameObject)obj).Disabled > 0)
                         {
                             var flags = ((VMGameObject)obj).Disabled;
 
