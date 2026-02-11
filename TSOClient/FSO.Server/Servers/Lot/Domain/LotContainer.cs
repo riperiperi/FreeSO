@@ -1343,14 +1343,13 @@ namespace FSO.Server.Servers.Lot.Domain
             LOG.Info("Transitioning lot " + Context.DbId + " from spectator mode to writable mode.");
             IsSpectatorMode = false;
 
+            // Spectator flag clearing and chat event are handled by VMNetSimJoinCmd
+            // (which runs during the tick, before this method runs via LotThreadActions).
+            // Re-check admission rules for visitors who were spectators.
             var avatars = Lot.Context.ObjectQueries.Avatars.Cast<VMAvatar>().ToList();
             foreach (var ava in avatars)
             {
-                var tsoState = ava.TSOState as VMTSOAvatarState;
-                if (tsoState == null || !tsoState.Flags.HasFlag(VMTSOAvatarFlags.Spectator)) continue;
-
-                // Clear spectator flag
-                tsoState.Flags &= ~VMTSOAvatarFlags.Spectator;
+                if (ava.AvatarState.Permissions >= VMTSOAvatarPermissions.Roommate) continue;
 
                 // Check admission rules - eject if not permitted
                 bool eject = false;
@@ -1384,8 +1383,6 @@ namespace FSO.Server.Servers.Lot.Domain
                     VMDriver.DropAvatar(ava);
                 }
             }
-
-            Lot.SignalChatEvent(new VMChatEvent(null, VMChatEventType.Generic, "Lot transitioned from spectator mode."));
 
             // Reset save tickers to start normal save cycle
             LotSaveTicker = LOT_SAVE_PERIOD;

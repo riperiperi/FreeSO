@@ -159,6 +159,27 @@ namespace FSO.SimAntics.NetPlay.Model.Commands
                 avatar.SetPersonData(VMPersonDataVariable.IsGhost, 1); //oooooOOooooOo
             }
 
+            // If this avatar is not a spectator but existing avatars are,
+            // the lot is transitioning from spectator mode (a roommate/admin joined).
+            if (!((VMTSOAvatarState)avatar.TSOState).Flags.HasFlag(VMTSOAvatarFlags.Spectator))
+            {
+                bool hadSpectators = false;
+                foreach (VMAvatar ava in vm.Context.ObjectQueries.Avatars)
+                {
+                    if (ava == avatar) continue;
+                    var ts = (VMTSOAvatarState)ava.TSOState;
+                    if (ts.Flags.HasFlag(VMTSOAvatarFlags.Spectator))
+                    {
+                        ts.Flags &= ~VMTSOAvatarFlags.Spectator;
+                        hadSpectators = true;
+                    }
+                }
+                if (hadSpectators)
+                {
+                    vm.SignalChatEvent(new VMChatEvent(null, VMChatEventType.Generic, "Lot transitioned from spectator mode."));
+                }
+            }
+
             vm.SignalChatEvent(new VMChatEvent(avatar, VMChatEventType.Join, avatar.Name));
 
             if (toMailbox)
