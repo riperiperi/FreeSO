@@ -28,7 +28,8 @@ namespace FSO.Server.Servers.City.Domain
         private JobMatchmaker Matchmaker;
         private IShardRealestateDomain Realestate;
 
-        private bool AllowGuestOpening => Context.Config.AllOpenable || (Context.Config.Archive?.Flags.HasFlag(FSO.Common.ArchiveConfigFlags.AllOpenable) ?? false);
+        private bool AllowGuestOpening => Context.Config.AllOpenable || IsArchiveMode;
+        private bool IsArchiveMode => Context.Config.Archive?.Flags.HasFlag(FSO.Common.ArchiveConfigFlags.AllOpenable) ?? false;
 
         public LotAllocations(LotServerPicker PickingEngine, IDAFactory daFactory, CityServerContext context, IKernel kernel)
         {
@@ -263,6 +264,20 @@ namespace FSO.Server.Servers.City.Domain
                                     {
                                         var roomies = db.Roommates.GetLotRoommates(lot.lot_id);
                                         isRoommate = roomies.Any(r => r.is_pending == 0 && r.avatar_id == avatarId);
+
+                                        // Spectators still respect ban rules
+                                        if (!isRoommate)
+                                        {
+                                            if ((lot.admit_mode == 2 && db.LotAdmit.GetLotAdmitDeny(lot.lot_id, 1).Contains(avatarId))
+                                                || lot.admit_mode == 3)
+                                            {
+                                                Remove(lotId);
+                                                return Immediate(new TryFindLotResult
+                                                {
+                                                    Status = FindLotResponseStatus.NOT_PERMITTED_TO_OPEN
+                                                });
+                                            }
+                                        }
                                     }
                                 }
                             }
@@ -359,6 +374,18 @@ namespace FSO.Server.Servers.City.Domain
                                                     Status = FindLotResponseStatus.NO_ADMIT
                                                 });
                                             }
+                                        }
+                                    }
+                                    // Spectators (non-archive) still respect ban rules
+                                    else if (AllowGuestOpening && !IsArchiveMode)
+                                    {
+                                        if ((lot.admit_mode == 2 && db.LotAdmit.GetLotAdmitDeny(lot.lot_id, 1).Contains(avatarId))
+                                            || lot.admit_mode == 3)
+                                        {
+                                            return Immediate(new TryFindLotResult
+                                            {
+                                                Status = FindLotResponseStatus.NO_ADMIT
+                                            });
                                         }
                                     }
                                 }
