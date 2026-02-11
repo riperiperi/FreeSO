@@ -97,6 +97,8 @@ namespace FSO.Client.UI.Panels
         public UIEODController EODs;
 
         public int WallsMode = 1;
+        private bool IsSpectator => ActiveEntity is VMAvatar ava
+            && ((VMTSOAvatarState)ava.TSOState)?.Flags.HasFlag(VMTSOAvatarFlags.Spectator) == true;
 
         private int OldMX;
         private int OldMY;
@@ -514,8 +516,7 @@ namespace FSO.Client.UI.Panels
                         }*/
                         // Spectators can't interact with lot objects, but can use sim interactions, walk, and free roam
                         if (objSelected && obj is VMGameObject && obj != GotoObject && obj != TransitionObject
-                            && ActiveEntity is VMAvatar specAva
-                            && ((VMTSOAvatarState)specAva.TSOState)?.Flags.HasFlag(VMTSOAvatarFlags.Spectator) == true)
+                            && IsSpectator)
                         {
                             ShowErrorTooltip(state, 0, true);
                         }
@@ -1054,8 +1055,7 @@ namespace FSO.Client.UI.Panels
                     FoundMe = true;
 
                     // Force walls up with roof for spectators
-                    if (ActiveEntity is VMAvatar specAva
-                        && ((VMTSOAvatarState)specAva.TSOState)?.Flags.HasFlag(VMTSOAvatarFlags.Spectator) == true)
+                    if (IsSpectator)
                     {
                         WallsMode = 3;
                         World.State.DrawRoofs = true;
