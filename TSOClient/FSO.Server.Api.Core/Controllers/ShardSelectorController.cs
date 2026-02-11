@@ -86,6 +86,7 @@ namespace FSO.Server.Api.Core.Controllers
                     result.ConnectionID = ticket.ticket_id;
                     result.AvatarID = avatarId;
                     result.SpectatorMode = api.Config.SpectatorMode;
+                    result.IsAdmin = dbuser.is_admin || dbuser.is_moderator;
 
                     return ApiResponse.Xml(HttpStatusCode.OK, result);
                 }

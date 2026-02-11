@@ -1700,13 +1700,14 @@ namespace FSO.Server.Servers.Lot.Domain
                     }
                 }
 
-                if (IsSpectatorMode && !isRoommate)
+                bool isAdmin = avatar.moderation_level > 0;
+                if (IsSpectatorMode && !isRoommate && !isAdmin)
                 {
                     state.AvatarFlags |= VMTSOAvatarFlags.Spectator;
                 }
 
-                // If a roommate joins during spectator mode, transition to writable mode
-                if (IsSpectatorMode && isRoommate)
+                // If a roommate or admin joins during spectator mode, transition to writable mode
+                if (IsSpectatorMode && (isRoommate || isAdmin))
                 {
                     lock (LotThreadActions)
                     {
