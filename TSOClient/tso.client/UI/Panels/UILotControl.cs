@@ -1052,6 +1052,14 @@ namespace FSO.Client.UI.Panels
                     vm.Context.World.State.CenterTile = new Vector2(ActiveEntity.VisualPosition.X, ActiveEntity.VisualPosition.Y);
                     vm.Context.World.State.ScrollAnchor = null;
                     FoundMe = true;
+
+                    // Force walls up with roof for spectators
+                    if (ActiveEntity is VMAvatar specAva
+                        && ((VMTSOAvatarState)specAva.TSOState)?.Flags.HasFlag(VMTSOAvatarFlags.Spectator) == true)
+                    {
+                        WallsMode = 3;
+                        World.State.DrawRoofs = true;
+                    }
                 }
                 Queue.QueueOwner = ActiveEntity;
             }
