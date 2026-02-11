@@ -543,9 +543,12 @@ namespace FSO.Server.Servers.Lot.Domain
 
             var persists = Lot.Context.ObjectQueries.MultitileByPersist.Keys.ToList();
             Dictionary<uint, DbObject> ownerInfo;
+            var adminOwners = new HashSet<uint>();
             using (var da = DAFactory.Get())
             {
                 ownerInfo = da.Objects.GetObjectOwners(persists).ToDictionary(x => x.object_id);
+                foreach (var id in ownerInfo.Values.Select(x => x.owner_id ?? 0).Where(x => x != 0 && !Lot.TSOState.Roommates.Contains(x)).Distinct())
+                    if (da.Avatars.GetModerationLevel(id) > 0) adminOwners.Add(id);
             }
 
             var ents = new List<VMEntity>(Lot.Entities);
@@ -582,7 +585,8 @@ namespace FSO.Server.Servers.Lot.Domain
                         //or if the object is not donated and the owner is not a roomie
                         if (info.lot_id != Context.DbId)
                             deleteMode = 2;
-                        else if (removeAll || !(Lot.TSOState.Roommates.Contains(((VMTSOObjectState)ent.TSOState).OwnerID) 
+                        else if (removeAll || !(Lot.TSOState.Roommates.Contains(((VMTSOObjectState)ent.TSOState).OwnerID)
+                            || adminOwners.Contains(((VMTSOObjectState)ent.TSOState).OwnerID)
                             || ((VMTSOObjectState)ent.TSOState).ObjectFlags.HasFlag(VMTSOObjectFlags.FSODonated)))
                             deleteMode = 1;
                     }
