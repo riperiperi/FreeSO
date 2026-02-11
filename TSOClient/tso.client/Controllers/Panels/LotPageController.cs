@@ -16,10 +16,10 @@ namespace FSO.Client.Controllers.Panels
         private Network.Network Network;
         private uint LotId;
 
+        // TODO: also allow if admin/mod
         public bool CanOpenAnyLot =>
             (Network.Mode == Regulators.CityConnectionMode.ARCHIVE && Network.ArchiveConfig.HasFlag(ArchiveConfigFlags.AllOpenable))
-            || Network.SpectatorMode
-            || Network.IsAdmin;
+            || Network.SpectatorMode;
 
         public LotPageController(UILotPage view, IClientDataService dataService, Network.Network network)
         {
