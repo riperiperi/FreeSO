@@ -199,6 +199,7 @@ namespace FSO.Server.Servers.City.Domain
 
                             DbLot lot = null;
                             bool isRoommate = false;
+                            bool isAdmin = false;
                             using (var db = DAFactory.Get())
                             {
                                 //Convert the lot location into a lot db id
@@ -260,6 +261,11 @@ namespace FSO.Server.Servers.City.Domain
                                         }
                                     }
 
+                                    if (avatarId != 0 && AllowGuestOpening)
+                                    {
+                                        isAdmin = db.Avatars.GetModerationLevel(avatarId) > 0;
+                                    }
+
                                     if (avatarId != 0 && AllowGuestOpening && lot.lot_id != 0)
                                     {
                                         var roomies = db.Roommates.GetLotRoommates(lot.lot_id);
@@ -293,7 +299,7 @@ namespace FSO.Server.Servers.City.Domain
                             ClaimAction openAction;
                             if (avatarId == 0)
                                 openAction = ClaimAction.LOT_CLEANUP;
-                            else if (AllowGuestOpening && !isRoommate)
+                            else if (AllowGuestOpening && !isRoommate && !isAdmin)
                                 openAction = ClaimAction.LOT_SPECTATOR;
                             else
                                 openAction = ClaimAction.LOT_HOST;
