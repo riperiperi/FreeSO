@@ -1381,6 +1381,8 @@ namespace FSO.Server.Servers.Lot.Domain
                 }
             }
 
+            Lot.SignalChatEvent(new VMChatEvent(null, VMChatEventType.Generic, "Lot transitioned from spectator mode."));
+
             // Reset save tickers to start normal save cycle
             LotSaveTicker = LOT_SAVE_PERIOD;
             AvatarSaveTicker = AVATAR_SAVE_PERIOD;
