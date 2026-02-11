@@ -992,11 +992,6 @@ namespace FSO.SimAntics
             var pie = new List<VMPieMenuInteraction>();
             if (TreeTable == null) return pie;
 
-            // Spectators cannot interact with lot objects (but can interact with avatars, e.g. own sim dances)
-            if (this is VMGameObject && caller is VMAvatar ava
-                && ((VMTSOAvatarState)ava.TSOState)?.Flags.HasFlag(VMTSOAvatarFlags.Spectator) == true)
-                return pie;
-
             var myLength = TreeTable.Interactions.Length;
             var globalLength = vm.Context.GlobalTreeTable?.Interactions.Length ?? 0;
 
