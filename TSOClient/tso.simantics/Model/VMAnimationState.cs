@@ -33,6 +33,7 @@ namespace FSO.SimAntics.Model
         private void GetTimeProps()
         {
             var animation = Anim;
+            if (animation == null) return; // Animation failed to load, skip time properties
             foreach (var motion in animation.Motions)
             {
                 if (motion.TimeProperties == null) { continue; }
@@ -79,7 +80,11 @@ namespace FSO.SimAntics.Model
             Speed = input.Speed;
             Weight = input.Weight;
             Loop = input.Loop;
-            GetTimeProps();
+            // Only process time properties if animation was successfully loaded
+            if (Anim != null)
+            {
+                GetTimeProps();
+            }
 
             var currentFrame = CurrentFrame;
             var currentTime = (currentFrame * 1000) / 30;

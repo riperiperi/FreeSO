@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.IO;
 using Microsoft.Xna.Framework;
 using FSO.Files.Utils;
 
@@ -41,6 +42,11 @@ namespace FSO.Vitaboy
             if (bcf)
             {
                 Name = io.ReadPascalString();
+                // Validate: if name is empty or null, this might be a corrupted file
+                if (string.IsNullOrEmpty(Name))
+                {
+                    throw new InvalidDataException("Animation name is empty - file may be corrupted or in wrong format");
+                }
                 XSkillName = io.ReadPascalString();
             }
             else
@@ -53,6 +59,11 @@ namespace FSO.Vitaboy
             IsMoving = (bcf) ? ((byte)io.ReadInt32()) : io.ReadByte();
 
             TranslationCount = io.ReadUInt32();
+            // Sanity check: unreasonably high translation count suggests corrupted file
+            if (TranslationCount > 100000)
+            {
+                throw new InvalidDataException($"Translation count {TranslationCount} is unreasonably high - file may be corrupted");
+            }
             if (!bcf)
             {
                 Translations = new Vector3[TranslationCount];
@@ -68,6 +79,11 @@ namespace FSO.Vitaboy
             }
 
             RotationCount = io.ReadUInt32();
+            // Sanity check: unreasonably high rotation count suggests corrupted file
+            if (RotationCount > 100000)
+            {
+                throw new InvalidDataException($"Rotation count {RotationCount} is unreasonably high - file may be corrupted");
+            }
             if (!bcf)
             {
                 Rotations = new Quaternion[RotationCount];

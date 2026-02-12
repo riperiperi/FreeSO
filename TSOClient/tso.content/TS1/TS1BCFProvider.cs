@@ -23,6 +23,21 @@ namespace FSO.Content.TS1
         public Dictionary<string, string> SkelHostBCF = new Dictionary<string, string>();
         public Content ContentManager;
         public Dictionary<string, TS1ClothingCollection> CollectionsByName = new Dictionary<string, TS1ClothingCollection>();
+        
+        /// <summary>
+        /// List of files that failed to load with their error messages.
+        /// </summary>
+        public List<FailedFileInfo> FailedFiles { get; private set; } = new List<FailedFileInfo>();
+
+        /// <summary>
+        /// Information about a file that failed to load.
+        /// </summary>
+        public class FailedFileInfo
+        {
+            public string Filename { get; set; }
+            public string ErrorMessage { get; set; }
+            public string ErrorType { get; set; }
+        }
 
         public TS1BCFProvider(Content contentManager, TS1Provider provider)
         {
@@ -42,19 +57,78 @@ namespace FSO.Content.TS1
             var allBCFs = BCFProvider.ListGeneric();
             foreach (var bcf in allBCFs)
             {
-                var file = (BCF)bcf.GetThrowawayGeneric();
-                foreach (var anim in file.Animations)
+                try
                 {
-                    AnimHostBCF[anim.Name.ToLowerInvariant()] = Path.GetFileName(bcf.ToString().ToLowerInvariant().Replace('\\', '/'));
-                    AnimRealCase[anim.Name.ToLowerInvariant()] = anim.Name;
+                    var file = (BCF)bcf.GetThrowawayGeneric();
+                    if (file == null)
+                    {
+                        // Failed to decode the file (returned null)
+                        var filename = Path.GetFileName(bcf.ToString());
+                        FailedFiles.Add(new FailedFileInfo
+                        {
+                            Filename = filename,
+                            ErrorMessage = "File could not be decoded (unsupported or corrupted format)",
+                            ErrorType = "DecodeError"
+                        });
+                        continue;
+                    }
+                    
+                    foreach (var anim in file.Animations)
+                    {
+                        AnimHostBCF[anim.Name.ToLowerInvariant()] = Path.GetFileName(bcf.ToString().ToLowerInvariant().Replace('\\', '/'));
+                        AnimRealCase[anim.Name.ToLowerInvariant()] = anim.Name;
+                    }
+                    foreach (var skin in file.Appearances)
+                    {
+                        SkinHostBCF[skin.Name.ToLowerInvariant()] = Path.GetFileName(bcf.ToString().ToLowerInvariant().Replace('\\', '/'));
+                    }
+                    foreach (var skel in file.Skeletons)
+                    {
+                        SkelHostBCF.Add(skel.Name.ToLowerInvariant(), Path.GetFileName(bcf.ToString().ToLowerInvariant().Replace('\\', '/')));
+                    }
                 }
-                foreach (var skin in file.Appearances)
+                catch (System.IO.EndOfStreamException)
                 {
-                    SkinHostBCF[skin.Name.ToLowerInvariant()] = Path.GetFileName(bcf.ToString().ToLowerInvariant().Replace('\\', '/'));
+                    // Common error for truncated/corrupted animation files
+                    var filename = Path.GetFileName(bcf.ToString());
+                    FailedFiles.Add(new FailedFileInfo
+                    {
+                        Filename = filename,
+                        ErrorMessage = "File appears to be truncated or corrupted (unexpected end of file). Ensure the file is complete and not damaged.",
+                        ErrorType = "EndOfStream"
+                    });
                 }
-                foreach (var skel in file.Skeletons)
+                catch (System.IO.InvalidDataException ex)
                 {
-                    SkelHostBCF.Add(skel.Name.ToLowerInvariant(), Path.GetFileName(bcf.ToString().ToLowerInvariant().Replace('\\', '/')));
+                    // Validation error - file has invalid counts or data
+                    var filename = Path.GetFileName(bcf.ToString());
+                    FailedFiles.Add(new FailedFileInfo
+                    {
+                        Filename = filename,
+                        ErrorMessage = $"Invalid file format: {ex.Message}",
+                        ErrorType = "InvalidData"
+                    });
+                }
+                catch (System.IO.IOException ex)
+                {
+                    var filename = Path.GetFileName(bcf.ToString());
+                    FailedFiles.Add(new FailedFileInfo
+                    {
+                        Filename = filename,
+                        ErrorMessage = $"I/O error reading file: {ex.Message}",
+                        ErrorType = "IOException"
+                    });
+                }
+                catch (Exception ex)
+                {
+                    // Catch any other exceptions to prevent crashing
+                    var filename = Path.GetFileName(bcf.ToString());
+                    FailedFiles.Add(new FailedFileInfo
+                    {
+                        Filename = filename,
+                        ErrorMessage = $"Error loading file: {ex.Message}",
+                        ErrorType = ex.GetType().Name
+                    });
                 }
             }
             
