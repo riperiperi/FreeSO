@@ -497,7 +497,7 @@ namespace FSO.Client.UI.Controls
 
                 var selected = rowIndex == m_SelectedRow || ValuePointer.Get<Boolean>(row.UseSelectedStyleByDefault);
                 var hover = rowIndex == m_HoverRow;
-                if (selected)
+                if (selected && m_SelectionTexture != null)
                 {
                     /** Draw selection background **/
                     var fillColor = IsFocused ? m_SelectionFillColor : m_SelectionFillColor * 0.8f;
