@@ -104,8 +104,9 @@ namespace FSO.Server.Servers.Lot.Domain
 
         private bool AllowGuestOpening => Config.AllOpenable || (Config.Archive?.Flags.HasFlag(FSO.Common.ArchiveConfigFlags.AllOpenable) ?? false);
         private bool IsSpectatorMode;
-        private bool HasHadPrivilegedAvatar;
-        private bool ShouldTransitionToSpectator => AllowGuestOpening && !IsSpectatorMode && HasHadPrivilegedAvatar
+        private bool ShouldTransitionToSpectator => AllowGuestOpening && !IsSpectatorMode
+            && Lot.Context.ObjectQueries.Avatars.Cast<VMAvatar>()
+                .Any(x => x.KillTimeout == -1 && ((VMTSOAvatarState)x.TSOState).Permissions <= VMTSOAvatarPermissions.Visitor)
             && !Lot.Context.ObjectQueries.Avatars.Cast<VMAvatar>()
                 .Any(x => x.KillTimeout == -1 && ((VMTSOAvatarState)x.TSOState).Permissions > VMTSOAvatarPermissions.Visitor);
 
@@ -1720,8 +1721,6 @@ namespace FSO.Server.Servers.Lot.Domain
                 }
 
                 bool isAdmin = session.HasModerationLevel(1);
-                if (isRoommate || isAdmin)
-                    HasHadPrivilegedAvatar = true;
                 if (IsSpectatorMode)
                 {
                     if (isRoommate || isAdmin)
