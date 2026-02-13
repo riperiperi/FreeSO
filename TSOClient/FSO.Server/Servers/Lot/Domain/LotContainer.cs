@@ -104,6 +104,7 @@ namespace FSO.Server.Servers.Lot.Domain
 
         private bool AllowGuestOpening => Config.AllOpenable || (Config.Archive?.Flags.HasFlag(FSO.Common.ArchiveConfigFlags.AllOpenable) ?? false);
         private bool IsSpectatorMode;
+        private bool HasHadPrivilegedAvatar;
 
         private static HashSet<uint> ValidOOWGUIDs = new HashSet<uint>()
         {
@@ -1218,6 +1219,13 @@ namespace FSO.Server.Servers.Lot.Domain
                             }
                         }
                     }
+                    else if (AllowGuestOpening && !IsSpectatorMode && HasHadPrivilegedAvatar
+                        && !Lot.Context.ObjectQueries.Avatars.Cast<VMAvatar>()
+                            .Any(x => x.KillTimeout == -1 && ((VMTSOAvatarState)x.TSOState).Permissions > VMTSOAvatarPermissions.Visitor))
+                    {
+                        // No roommates/admins remain, transition back to spectator mode
+                        TransitionToSpectatorMode();
+                    }
                     else if (!noRoomies && TimeToShutdown != -1)
                         TimeToShutdown = -1;
 
@@ -1387,6 +1395,28 @@ namespace FSO.Server.Servers.Lot.Domain
             // Reset save tickers to start normal save cycle
             LotSaveTicker = LOT_SAVE_PERIOD;
             AvatarSaveTicker = AVATAR_SAVE_PERIOD;
+        }
+
+        private void TransitionToSpectatorMode()
+        {
+            LOG.Info("Transitioning lot " + Context.DbId + " to spectator mode.");
+            IsSpectatorMode = true;
+
+            // Set spectator flag on all remaining visitor avatars
+            var avatars = Lot.Context.ObjectQueries.Avatars.Cast<VMAvatar>().ToList();
+            foreach (var ava in avatars)
+            {
+                var tsoState = (VMTSOAvatarState)ava.TSOState;
+                if (tsoState.Permissions > VMTSOAvatarPermissions.Visitor) continue;
+                tsoState.Flags |= VMTSOAvatarFlags.Spectator;
+            }
+
+            // Self-resync reloads the VM and SyncAllClients pushes the updated state to all clients
+            VMDriver.SelfResync = true;
+            VMDriver.SyncAllClients();
+
+            Lot.SignalChatEvent(new VMChatEvent(null, VMChatEventType.Generic,
+                "Lot transitioned to spectator mode."));
         }
 
         private bool TryBeginFreeRoam(uint persistID)
@@ -1704,17 +1734,21 @@ namespace FSO.Server.Servers.Lot.Domain
                 }
 
                 bool isAdmin = session.HasModerationLevel(1);
-                if (IsSpectatorMode && !isRoommate && !isAdmin)
+                if (isRoommate || isAdmin)
+                    HasHadPrivilegedAvatar = true;
+                if (IsSpectatorMode)
                 {
-                    state.AvatarFlags |= VMTSOAvatarFlags.Spectator;
-                }
-
-                // If a roommate or admin joins during spectator mode, transition to writable mode
-                if (IsSpectatorMode && (isRoommate || isAdmin))
-                {
-                    lock (LotThreadActions)
+                    if (isRoommate || isAdmin)
                     {
-                        LotThreadActions.Enqueue(() => TransitionFromSpectatorMode());
+                        // Roommate or admin joining, transition to writable mode
+                        lock (LotThreadActions)
+                        {
+                            LotThreadActions.Enqueue(() => TransitionFromSpectatorMode());
+                        }
+                    }
+                    else
+                    {
+                        state.AvatarFlags |= VMTSOAvatarFlags.Spectator;
                     }
                 }
 

@@ -272,7 +272,7 @@ namespace FSO.Server.Servers.City.Domain
                                         isRoommate = roomies.Any(r => r.is_pending == 0 && r.avatar_id == avatarId);
 
                                         // Spectators still respect ban rules
-                                        if (!isRoommate)
+                                        if (!isRoommate && !isAdmin)
                                         {
                                             if ((lot.admit_mode == 2 && db.LotAdmit.GetLotAdmitDeny(lot.lot_id, 1).Contains(avatarId))
                                                 || lot.admit_mode == 3)
@@ -385,8 +385,13 @@ namespace FSO.Server.Servers.City.Domain
                                     // Spectators (non-archive) still respect ban rules
                                     else if (AllowGuestOpening && !IsArchiveMode)
                                     {
-                                        if ((lot.admit_mode == 2 && db.LotAdmit.GetLotAdmitDeny(lot.lot_id, 1).Contains(avatarId))
-                                            || lot.admit_mode == 3)
+                                        var roomies = db.Roommates.GetLotRoommates(lot.lot_id);
+                                        var isLotRoommate = roomies.Any(r => r.is_pending == 0 && r.avatar_id == avatarId);
+                                        var isLotAdmin = db.Avatars.GetModerationLevel(avatarId) > 0;
+
+                                        if (!isLotRoommate && !isLotAdmin
+                                            && ((lot.admit_mode == 2 && db.LotAdmit.GetLotAdmitDeny(lot.lot_id, 1).Contains(avatarId))
+                                            || lot.admit_mode == 3))
                                         {
                                             return Immediate(new TryFindLotResult
                                             {
