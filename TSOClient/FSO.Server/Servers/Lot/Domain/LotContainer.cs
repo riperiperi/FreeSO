@@ -105,6 +105,9 @@ namespace FSO.Server.Servers.Lot.Domain
         private bool AllowGuestOpening => Config.AllOpenable || (Config.Archive?.Flags.HasFlag(FSO.Common.ArchiveConfigFlags.AllOpenable) ?? false);
         private bool IsSpectatorMode;
         private bool HasHadPrivilegedAvatar;
+        private bool ShouldTransitionToSpectator => AllowGuestOpening && !IsSpectatorMode && HasHadPrivilegedAvatar
+            && !Lot.Context.ObjectQueries.Avatars.Cast<VMAvatar>()
+                .Any(x => x.KillTimeout == -1 && ((VMTSOAvatarState)x.TSOState).Permissions > VMTSOAvatarPermissions.Visitor);
 
         private static HashSet<uint> ValidOOWGUIDs = new HashSet<uint>()
         {
@@ -1219,13 +1222,6 @@ namespace FSO.Server.Servers.Lot.Domain
                             }
                         }
                     }
-                    else if (AllowGuestOpening && !IsSpectatorMode && HasHadPrivilegedAvatar
-                        && !Lot.Context.ObjectQueries.Avatars.Cast<VMAvatar>()
-                            .Any(x => x.KillTimeout == -1 && ((VMTSOAvatarState)x.TSOState).Permissions > VMTSOAvatarPermissions.Visitor))
-                    {
-                        // No roommates/admins remain, transition back to spectator mode
-                        TransitionToSpectatorMode();
-                    }
                     else if (!noRoomies && TimeToShutdown != -1)
                         TimeToShutdown = -1;
 
@@ -1288,6 +1284,11 @@ namespace FSO.Server.Servers.Lot.Domain
 
                     if (lotActions != null) {
                         while (lotActions.Count > 0) lotActions.Dequeue()();
+                    }
+
+                    if (ShouldTransitionToSpectator)
+                    {
+                        TransitionToSpectatorMode();
                     }
 
                     if (--KeepAliveTicker <= 0)
@@ -1355,40 +1356,25 @@ namespace FSO.Server.Servers.Lot.Domain
             // (which runs during the tick, before this method runs via LotThreadActions).
             // Re-check admission rules for visitors who were spectators.
             var avatars = Lot.Context.ObjectQueries.Avatars.Cast<VMAvatar>().ToList();
-            foreach (var ava in avatars)
+            using (var db = DAFactory.Get())
             {
-                if (ava.AvatarState.Permissions >= VMTSOAvatarPermissions.Roommate) continue;
+                foreach (var ava in avatars)
+                {
+                    if (ava.AvatarState.Permissions > VMTSOAvatarPermissions.Visitor) continue;
 
-                // Check admission rules - eject if not permitted
-                bool eject = false;
-                if (LotPersist.admit_mode == 1)
-                {
-                    // Admit list: eject if not on admit list
-                    using (var db = DAFactory.Get())
+                    bool eject = LotPersist.admit_mode switch
                     {
-                        if (!db.LotAdmit.GetLotAdmitDeny(LotPersist.lot_id, 0).Contains(ava.PersistID))
-                            eject = true;
-                    }
-                }
-                else if (LotPersist.admit_mode == 2)
-                {
-                    // Ban list: eject if on ban list
-                    using (var db = DAFactory.Get())
-                    {
-                        if (db.LotAdmit.GetLotAdmitDeny(LotPersist.lot_id, 1).Contains(ava.PersistID))
-                            eject = true;
-                    }
-                }
-                else if (LotPersist.admit_mode == 3)
-                {
-                    // Ban all: eject all non-roommates
-                    eject = true;
-                }
+                        1 => !db.LotAdmit.GetLotAdmitDeny(LotPersist.lot_id, 0).Contains(ava.PersistID),
+                        2 => db.LotAdmit.GetLotAdmitDeny(LotPersist.lot_id, 1).Contains(ava.PersistID),
+                        3 => true,
+                        _ => false
+                    };
 
-                if (eject)
-                {
-                    if (ava.KillTimeout == -1) ava.UserLeaveLot();
-                    VMDriver.DropAvatar(ava);
+                    if (eject)
+                    {
+                        if (ava.KillTimeout == -1) ava.UserLeaveLot();
+                        VMDriver.DropAvatar(ava);
+                    }
                 }
             }
 
