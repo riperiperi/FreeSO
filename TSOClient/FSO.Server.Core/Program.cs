@@ -40,7 +40,7 @@ namespace FSO.Server.Core
             settings.Add("useProxy", userApiConfig.UseProxy.ToString());
             settings.Add("updateID", config.UpdateID?.ToString() ?? "");
             settings.Add("branchName", config.UpdateBranch);
-            settings.Add("spectatorMode", config.AllOpenable.ToString());
+
 
             var api2 = new FSO.Server.Api.Core.Api();
             api2.Init(settings);
