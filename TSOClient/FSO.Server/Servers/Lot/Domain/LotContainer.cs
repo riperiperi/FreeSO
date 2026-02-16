@@ -102,9 +102,10 @@ namespace FSO.Server.Servers.Lot.Domain
         private LiveSurroundLotConnection SurroundConnection;
         private HashSet<uint> FreeRoamLeaving = [];
 
-        private bool AllowGuestOpening => Config.AllOpenable || (Config.Archive?.Flags.HasFlag(FSO.Common.ArchiveConfigFlags.AllOpenable) ?? false);
+        private bool AllowGuestOpening => Config.AllOpenable || IsArchiveMode;
+        private bool IsArchiveMode => Config.Archive?.Flags.HasFlag(FSO.Common.ArchiveConfigFlags.AllOpenable) ?? false;
         private bool IsSpectatorMode;
-        private bool ShouldTransitionToSpectator => AllowGuestOpening && !IsSpectatorMode
+        private bool ShouldTransitionToSpectator => AllowGuestOpening && !IsArchiveMode && !IsSpectatorMode
             && Lot.Context.ObjectQueries.Avatars.Cast<VMAvatar>()
                 .Any(x => x.KillTimeout == -1 && ((VMTSOAvatarState)x.TSOState).Permissions <= VMTSOAvatarPermissions.Visitor)
             && !Lot.Context.ObjectQueries.Avatars.Cast<VMAvatar>()

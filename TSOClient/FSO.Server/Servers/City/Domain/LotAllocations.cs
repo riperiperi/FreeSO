@@ -261,7 +261,7 @@ namespace FSO.Server.Servers.City.Domain
                                         }
                                     }
 
-                                    if (avatarId != 0 && AllowGuestOpening)
+                                    if (avatarId != 0 && AllowGuestOpening && !IsArchiveMode)
                                     {
                                         isAdmin = db.Avatars.GetModerationLevel(avatarId) > 0;
 
@@ -297,7 +297,7 @@ namespace FSO.Server.Servers.City.Domain
                             ClaimAction openAction;
                             if (avatarId == 0)
                                 openAction = ClaimAction.LOT_CLEANUP;
-                            else if (AllowGuestOpening && !isRoommate && !isAdmin)
+                            else if (AllowGuestOpening && !IsArchiveMode && !isRoommate && !isAdmin)
                                 openAction = ClaimAction.LOT_SPECTATOR;
                             else
                                 openAction = ClaimAction.LOT_HOST;
