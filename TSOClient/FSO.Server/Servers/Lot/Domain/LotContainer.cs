@@ -105,11 +105,23 @@ namespace FSO.Server.Servers.Lot.Domain
         private bool AllowGuestOpening => Config.AllOpenable || IsArchiveMode;
         private bool IsArchiveMode => Config.Archive?.Flags.HasFlag(FSO.Common.ArchiveConfigFlags.AllOpenable) ?? false;
         private bool IsSpectatorMode;
-        private bool ShouldTransitionToSpectator => AllowGuestOpening && !IsArchiveMode && !IsSpectatorMode
-            && Lot.Context.ObjectQueries.Avatars.Cast<VMAvatar>()
-                .Any(x => x.KillTimeout == -1 && ((VMTSOAvatarState)x.TSOState).Permissions <= VMTSOAvatarPermissions.Visitor)
-            && !Lot.Context.ObjectQueries.Avatars.Cast<VMAvatar>()
-                .Any(x => x.KillTimeout == -1 && ((VMTSOAvatarState)x.TSOState).Permissions > VMTSOAvatarPermissions.Visitor);
+        private bool ShouldTransitionToSpectator
+        {
+            get
+            {
+                if (!AllowGuestOpening || IsArchiveMode || IsSpectatorMode) return false;
+
+                bool hasVisitor = false;
+                foreach (VMAvatar ava in Lot.Context.ObjectQueries.Avatars)
+                {
+                    if (ava.KillTimeout != -1) continue;
+                    if (ava.AvatarState.Permissions > VMTSOAvatarPermissions.Visitor)
+                        return false; // privileged avatar still present
+                    hasVisitor = true;
+                }
+                return hasVisitor;
+            }
+        }
 
         private static HashSet<uint> ValidOOWGUIDs = new HashSet<uint>()
         {
@@ -1161,9 +1173,10 @@ namespace FSO.Server.Servers.Lot.Domain
                     lastTick++;
                     //sometimes avatars can be killed immediately after their kill timer starts (this frame will run the leave lot interaction)
                     //this works around that possibility. 
-                    var preTickAvatars = Lot.Context.ObjectQueries.AvatarsByPersist.Values.Select(x => x).ToList();
-                    var noRoomies = !(preTickAvatars.Any(x => ((VMTSOAvatarState)x.TSOState).Permissions > VMTSOAvatarPermissions.Visitor))
-                        && (LotPersist.admit_mode < 4 && LotPersist.category != LotCategory.community) && !AllowGuestOpening && !IsSpectatorMode;
+                    var preTickAvatars = Lot.Context.ObjectQueries.AvatarsByPersist.Values.ToList();
+                    var noRoomies = !AllowGuestOpening && !IsSpectatorMode
+                        && LotPersist.admit_mode < 4 && LotPersist.category != LotCategory.community
+                        && !preTickAvatars.Any(x => x.AvatarState.Permissions > VMTSOAvatarPermissions.Visitor);
 
                     try
                     {
@@ -1229,7 +1242,7 @@ namespace FSO.Server.Servers.Lot.Domain
 
                     if (--LotSaveTicker <= 0)
                     {
-                        SaveRing();
+                        if (!IsSpectatorMode) SaveRing();
                         LotSaveTicker = LOT_SAVE_PERIOD;
 
                         Host.UpdateActiveVisitRecords();
@@ -1242,18 +1255,21 @@ namespace FSO.Server.Servers.Lot.Domain
                         TickFreeRoam();
                     }
 
-                    var beingKilled = preTickAvatars.Where(x => x.KillTimeout == 1);
-                    if (beingKilled.Count() > 0)
+                    if (!IsSpectatorMode)
                     {
-                        //avatars that are being killed could die before their user disconnects. It's important to save them immediately.
-                        SaveAvatars(beingKilled, true);
-                    }
+                        var beingKilled = preTickAvatars.Where(x => x.KillTimeout == 1);
+                        if (beingKilled.Any())
+                        {
+                            //avatars that are being killed could die before their user disconnects. It's important to save them immediately.
+                            SaveAvatars(beingKilled, true);
+                        }
 
-                    if (--AvatarSaveTicker <= 0)
-                    {
-                        //save all avatars
-                        SaveAvatars(Lot.Context.ObjectQueries.Avatars.Cast<VMAvatar>(), false);
-                        AvatarSaveTicker = AVATAR_SAVE_PERIOD;
+                        if (--AvatarSaveTicker <= 0)
+                        {
+                            //save all avatars
+                            SaveAvatars(Lot.Context.ObjectQueries.Avatars.Cast<VMAvatar>(), false);
+                            AvatarSaveTicker = AVATAR_SAVE_PERIOD;
+                        }
                     }
 
                     List<IVoltronSession> toRelease = null;
@@ -1356,29 +1372,8 @@ namespace FSO.Server.Servers.Lot.Domain
 
             // Spectator flag clearing and chat event are handled by VMNetSimJoinCmd
             // (which runs during the tick, before this method runs via LotThreadActions).
-            // Re-check admission rules for visitors who were spectators.
-            var avatars = Lot.Context.ObjectQueries.Avatars.Cast<VMAvatar>().ToList();
-            using (var db = DAFactory.Get())
-            {
-                foreach (var ava in avatars)
-                {
-                    if (ava.AvatarState.Permissions > VMTSOAvatarPermissions.Visitor) continue;
-
-                    bool eject = LotPersist.admit_mode switch
-                    {
-                        1 => !db.LotAdmit.GetLotAdmitDeny(LotPersist.lot_id, 0).Contains(ava.PersistID),
-                        2 => db.LotAdmit.GetLotAdmitDeny(LotPersist.lot_id, 1).Contains(ava.PersistID),
-                        3 => true,
-                        _ => false
-                    };
-
-                    if (eject)
-                    {
-                        if (ava.KillTimeout == -1) ava.UserLeaveLot();
-                        VMDriver.DropAvatar(ava);
-                    }
-                }
-            }
+            // Admission was already validated by the city server at join time.
+            // The arriving roommate/admin can eject anyone if needed.
 
             // Reset save tickers to start normal save cycle
             LotSaveTicker = LOT_SAVE_PERIOD;
@@ -1391,12 +1386,10 @@ namespace FSO.Server.Servers.Lot.Domain
             IsSpectatorMode = true;
 
             // Set spectator flag on all remaining visitor avatars
-            var avatars = Lot.Context.ObjectQueries.Avatars.Cast<VMAvatar>().ToList();
-            foreach (var ava in avatars)
+            foreach (VMAvatar ava in Lot.Context.ObjectQueries.Avatars)
             {
-                var tsoState = (VMTSOAvatarState)ava.TSOState;
-                if (tsoState.Permissions > VMTSOAvatarPermissions.Visitor) continue;
-                tsoState.Flags |= VMTSOAvatarFlags.Spectator;
+                if (ava.AvatarState.Permissions > VMTSOAvatarPermissions.Visitor) continue;
+                ((VMTSOAvatarState)ava.TSOState).Flags |= VMTSOAvatarFlags.Spectator;
             }
 
             // Self-resync reloads the VM and SyncAllClients pushes the updated state to all clients

@@ -98,7 +98,7 @@ namespace FSO.Client.UI.Panels
 
         public int WallsMode = 1;
         private bool IsSpectator => ActiveEntity is VMAvatar ava
-            && ((VMTSOAvatarState)ava.TSOState)?.Flags.HasFlag(VMTSOAvatarFlags.Spectator) == true;
+            && ((VMTSOAvatarState)ava.TSOState)?.IsSpectator == true;
 
         private int OldMX;
         private int OldMY;

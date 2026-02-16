@@ -8,8 +8,7 @@ namespace FSO.SimAntics.NetPlay.Model
         protected static bool IsSpectator(VMAvatar caller)
         {
             if (caller == null) return false;
-            return ((VMTSOAvatarState)caller.TSOState)?.Flags
-                .HasFlag(VMTSOAvatarFlags.Spectator) ?? false;
+            return ((VMTSOAvatarState)caller.TSOState)?.IsSpectator ?? false;
         }
 
         public uint ActorUID;

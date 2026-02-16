@@ -12,6 +12,7 @@ namespace FSO.SimAntics.Model.TSOPlatform
         public HashSet<uint> IgnoredAvatars = new HashSet<uint>();
         public Dictionary<short, VMTSOJobInfo> JobInfo = new Dictionary<short, VMTSOJobInfo>();
         public VMTSOAvatarFlags Flags;
+        public bool IsSpectator => Flags.HasFlag(VMTSOAvatarFlags.Spectator);
         public Color ChatColor = Color.White;
         public sbyte ChatTTSPitch; //-100 to 100. 
         public byte ChatChannel = 255; //the chat channel this avatar is viewing. 255 = all.

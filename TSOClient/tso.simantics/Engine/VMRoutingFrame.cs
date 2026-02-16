@@ -238,8 +238,7 @@ namespace FSO.SimAntics.Engine
                 // Spectators cannot traverse between rooms (doors)
                 if (Caller is VMAvatar ava)
                 {
-                    var tsoState = ava.TSOState as VMTSOAvatarState;
-                    if (tsoState?.Flags.HasFlag(VMTSOAvatarFlags.Spectator) == true)
+                    if ((ava.TSOState as VMTSOAvatarState)?.IsSpectator == true)
                         return false;
                 }
 
