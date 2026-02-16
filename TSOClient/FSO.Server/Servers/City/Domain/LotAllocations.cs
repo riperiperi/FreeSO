@@ -28,8 +28,8 @@ namespace FSO.Server.Servers.City.Domain
         private JobMatchmaker Matchmaker;
         private IShardRealestateDomain Realestate;
 
-        private bool AllowGuestOpening => Context.Config.AllOpenable || IsArchiveMode;
-        private bool IsArchiveMode => Context.Config.Archive?.Flags.HasFlag(FSO.Common.ArchiveConfigFlags.AllOpenable) ?? false;
+        private bool AllowGuestOpening => Context.Config.AllOpenable || IsArchiveServer;
+        private bool IsArchiveServer => Context.Config.Archive?.Flags.HasFlag(FSO.Common.ArchiveConfigFlags.AllOpenable) ?? false;
 
         public LotAllocations(LotServerPicker PickingEngine, IDAFactory daFactory, CityServerContext context, IKernel kernel)
         {
@@ -261,7 +261,7 @@ namespace FSO.Server.Servers.City.Domain
                                         }
                                     }
 
-                                    if (avatarId != 0 && AllowGuestOpening && !IsArchiveMode)
+                                    if (avatarId != 0 && AllowGuestOpening && !IsArchiveServer)
                                     {
                                         isAdmin = db.Avatars.GetModerationLevel(avatarId) > 0;
 
@@ -297,7 +297,7 @@ namespace FSO.Server.Servers.City.Domain
                             ClaimAction openAction;
                             if (avatarId == 0)
                                 openAction = ClaimAction.LOT_CLEANUP;
-                            else if (AllowGuestOpening && !IsArchiveMode && !isRoommate && !isAdmin)
+                            else if (AllowGuestOpening && !IsArchiveServer && !isRoommate && !isAdmin)
                                 openAction = ClaimAction.LOT_SPECTATOR;
                             else
                                 openAction = ClaimAction.LOT_HOST;
@@ -381,7 +381,7 @@ namespace FSO.Server.Servers.City.Domain
                                         }
                                     }
                                     // Spectators (non-archive) still respect ban rules
-                                    else if (AllowGuestOpening && !IsArchiveMode)
+                                    else if (AllowGuestOpening && !IsArchiveServer)
                                     {
                                         var roomies = db.Roommates.GetLotRoommates(lot.lot_id);
                                         var isLotRoommate = roomies.Any(r => r.is_pending == 0 && r.avatar_id == avatarId);

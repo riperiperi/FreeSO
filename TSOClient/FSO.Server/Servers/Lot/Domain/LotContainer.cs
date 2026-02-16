@@ -102,14 +102,14 @@ namespace FSO.Server.Servers.Lot.Domain
         private LiveSurroundLotConnection SurroundConnection;
         private HashSet<uint> FreeRoamLeaving = [];
 
-        private bool AllowGuestOpening => Config.AllOpenable || IsArchiveMode;
-        private bool IsArchiveMode => Config.Archive?.Flags.HasFlag(FSO.Common.ArchiveConfigFlags.AllOpenable) ?? false;
+        private bool AllowGuestOpening => Config.AllOpenable || IsArchiveServer;
+        private bool IsArchiveServer => Config.Archive?.Flags.HasFlag(FSO.Common.ArchiveConfigFlags.AllOpenable) ?? false;
         private bool IsSpectatorMode;
         private bool ShouldTransitionToSpectator
         {
             get
             {
-                if (!AllowGuestOpening || IsArchiveMode || IsSpectatorMode) return false;
+                if (!AllowGuestOpening || IsArchiveServer || IsSpectatorMode) return false;
 
                 bool hasVisitor = false;
                 foreach (VMAvatar ava in Lot.Context.ObjectQueries.Avatars)

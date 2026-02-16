@@ -100,6 +100,9 @@ namespace FSO.Client.UI.Panels
         private bool IsSpectator => ActiveEntity is VMAvatar ava
             && ((VMTSOAvatarState)ava.TSOState)?.IsSpectator == true;
 
+        private bool IsBlockedForSpectator(VMEntity obj)
+            => IsSpectator && obj is VMGameObject && obj != GotoObject && obj != TransitionObject;
+
         private int OldMX;
         private int OldMY;
         private bool FoundMe; //if false and avatar changes, center. Should center on join lot.
@@ -516,9 +519,7 @@ namespace FSO.Client.UI.Panels
                             Queue.QueueOwner = ActiveEntity;
                             Queue.DebugMode = true;
                         }*/
-                        // Spectators can't interact with lot objects, but can use sim interactions, walk, and free roam
-                        if (objSelected && obj is VMGameObject && obj != GotoObject && obj != TransitionObject
-                            && IsSpectator)
+                        if (objSelected && IsBlockedForSpectator(obj))
                         {
                             ShowErrorTooltip(state, 0, true);
                         }
@@ -778,7 +779,11 @@ namespace FSO.Client.UI.Panels
                         if (InteractionsAvailable)
                         {
                             var obj = GetHoverById(ObjectHover);
-                            if (obj is VMAvatar)
+                            if (IsBlockedForSpectator(obj))
+                            {
+                                cursor = CursorType.LiveObjectUnavail;
+                            }
+                            else if (obj is VMAvatar)
                             {
                                 cursor = (((VMAvatar)obj).GetPersonData(VMPersonDataVariable.PersonType) < 254) ? CursorType.LivePerson : CursorType.LiveObjectAvail;
                             }
