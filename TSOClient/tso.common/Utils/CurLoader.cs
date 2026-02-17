@@ -77,7 +77,7 @@ namespace FSO.Common.Utils
                 outIO.Write(new char[] { 'B', 'M' });
                 outIO.Write(size + 14); //size, plus header
                 outIO.Write(0);
-                outIO.Write(14);
+                outIO.Write(62);
                 var data = new byte[size];
                 stream.Read(data, 0, size);
                 outIO.Write(data);
