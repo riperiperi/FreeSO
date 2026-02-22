@@ -1,4 +1,5 @@
 ﻿using FSO.SimAntics.Engine;
+using FSO.SimAntics.Utils;
 using FSO.Vitaboy;
 using Microsoft.Xna.Framework;
 using System.IO;
@@ -35,7 +36,7 @@ namespace FSO.SimAntics.NetPlay.Model.Commands
 
         public override bool Verify(VM vm, VMAvatar caller)
         {
-            return base.Verify(vm, caller) && (vm.Tuning.GetTuning("aprilfools", 0, 2023) ?? 0) != 0;
+            return base.Verify(vm, caller) && FirstPersonHelper.IsEnabled(vm);
         }
 
         #region VMSerializable Members

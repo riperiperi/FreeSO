@@ -1,13 +1,13 @@
 ﻿using FSO.Common;
-using FSO.SimAntics;
 
-namespace FSO.Client.Utils
+namespace FSO.SimAntics.Utils
 {
-    internal static class FirstPersonHelper
+    public static class FirstPersonHelper
     {
         public static float GetTuning(VM vm)
         {
-            return vm?.Tuning?.GetTuning("aprilfools", 0, 2023) ?? 0;
+            return 1;
+            //return vm?.Tuning?.GetTuning("aprilfools", 0, 2023) ?? 0;
         }
 
         public static bool IsEnabled(VM vm)

@@ -16,6 +16,7 @@ using FSO.Common.Model;
 using FSO.Client.Utils;
 using FSO.LotView.Utils.Camera;
 using FSO.LotView;
+using FSO.SimAntics.Utils;
 
 namespace FSO.Client.UI.Panels
 {
