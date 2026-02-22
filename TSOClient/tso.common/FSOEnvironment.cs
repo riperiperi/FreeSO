@@ -27,7 +27,8 @@ namespace FSO.Common
         /// True if 3D features are enabled (like smooth rotation + zoom). Loads some content with mipmaps and other things.
         /// Used to mean "3d camera" as well, though that has been moved to configuration and world state.
         /// </summary>
-        public static bool Enable3D;
+        public static bool Default3D = false;
+        public static bool Enable3D = true;
         public static bool EnableNPOTMip = true;
         public static bool TexCompress = true;
         public static bool TexCompressSupport = true;

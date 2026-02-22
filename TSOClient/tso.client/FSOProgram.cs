@@ -88,6 +88,11 @@ namespace FSO.Client
                                 break;
                             case "3d":
                                 FSOEnvironment.Enable3D = true;
+                                FSOEnvironment.Default3D = true;
+                                break;
+                            case "2d":
+                                FSOEnvironment.Enable3D = false;
+                                FSOEnvironment.Default3D = false;
                                 break;
                             case "touch":
                                 FSOEnvironment.SoftwareKeyboard = true;
