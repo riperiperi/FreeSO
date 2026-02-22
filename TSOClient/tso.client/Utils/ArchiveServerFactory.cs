@@ -205,6 +205,7 @@ namespace FSO.Client.Utils
                 if (!success)
                 {
                     onResult(false);
+                    return;
                 }
 
                 StartWithConfig(onResult);
