@@ -165,13 +165,14 @@ namespace FSO.Client.Utils
                         }
                         else
                         {
-                            onResult(true);
                             UIScreen.GlobalShowAlert(new UIAlertOptions
                             {
                                 Title = GameFacade.Strings.GetString("f128", "10"),
                                 Message = GameFacade.Strings.GetString("f128", "11"),
                                 Buttons = UIAlertButton.Ok()
                             }, true);
+
+                            onResult(false);
                         }
                     };
                     GameThread.NextUpdate(y => UIScreen.GlobalShowDialog(downloader, true));
