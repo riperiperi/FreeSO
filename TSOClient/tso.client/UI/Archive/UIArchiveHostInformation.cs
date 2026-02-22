@@ -313,9 +313,16 @@ namespace FSO.Client.UI.Archive
 
             vbox.AutoSize();
 
-            var showIPBase = vbox.Position + ShowIPButton.Position;
+            if (ShowIPButton != null)
+            {
+                var showIPBase = vbox.Position + ShowIPButton.Position;
 
-            DiscordButton.Position = new Vector2(vbox.Size.X - 22, showIPBase.Y + 4);
+                DiscordButton.Position = new Vector2(vbox.Size.X - 22, showIPBase.Y + 4);
+            }
+            else
+            {
+                DiscordButton.Visible = false;
+            }
 
             SetSize((int)vbox.Size.X + 40, (int)vbox.Size.Y + 70);
             PositionDialog();
