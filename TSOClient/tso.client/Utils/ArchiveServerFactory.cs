@@ -98,13 +98,21 @@ namespace FSO.Client.Utils
 
             extractor.OnComplete += (result) =>
             {
-                UIScreen.RemoveDialog(extractor);
+                if (result)
+                {
+                    UIScreen.RemoveDialog(extractor);
 
-                manifest.LocalDir = "data/";
-                manifest.Save();
+                    manifest.LocalDir = "data/";
+                    manifest.Save();
 
-                Config.ArchiveDataDirectory = extractPath;
-                onResult(true);
+                    Config.ArchiveDataDirectory = extractPath;
+                    onResult(true);
+                }
+                else
+                {
+                    UIScreen.RemoveDialog(extractor);
+                    onResult(false);
+                }
             };
 
             extractor.Start();
