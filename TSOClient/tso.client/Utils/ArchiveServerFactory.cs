@@ -100,7 +100,7 @@ namespace FSO.Client.Utils
             {
                 UIScreen.RemoveDialog(extractor);
 
-                manifest.LocalDir = extractPath;
+                manifest.LocalDir = "data/";
                 manifest.Save();
 
                 Config.ArchiveDataDirectory = extractPath;
