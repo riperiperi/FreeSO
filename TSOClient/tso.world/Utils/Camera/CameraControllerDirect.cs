@@ -64,8 +64,8 @@ namespace FSO.LotView.Utils.Camera
                     var camera = Camera;
                     if (LastFP && !(mpos.X == 0 && mpos.Y == 0))
                     {
-                        RotationX -= ((mpos.X - mx) / 500f) * camera.FOV;
-                        RotationY += ((mpos.Y - my) / 500f) * camera.FOV;
+                        RotationX -= ((mpos.X - mx) / 166f) * camera.FOV * power;
+                        RotationY += ((mpos.Y - my) / 166f) * camera.FOV * power;
                     }
                     Mouse.SetPosition(mx, my);
 
