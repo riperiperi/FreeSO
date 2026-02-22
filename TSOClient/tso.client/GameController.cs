@@ -1,29 +1,27 @@
-﻿using System;
-using System.Collections.Generic;
-using FSO.Client.UI.Screens;
-using FSO.Client.Network;
-using FSO.Client.UI.Framework;
-using FSO.Client.GameContent;
-using Ninject;
-using FSO.Server.Protocol.CitySelector;
-using FSO.Client.Controllers;
-using FSO.Common.Utils;
-using FSO.Client.UI.Controls;
-using FSO.Client.UI.Panels;
-using FSO.Client.UI;
-using FSO.Common.DatabaseService.Model;
-using FSO.Server.Protocol.Electron.Packets;
-using FSO.Client.Utils;
-using FSO.Server.Protocol.Voltron.Packets;
+﻿using FSO.Client.Controllers;
 using FSO.Client.Controllers.Panels;
-using System.Collections.Immutable;
+using FSO.Client.GameContent;
+using FSO.Client.Network;
+using FSO.Client.UI;
+using FSO.Client.UI.Archive;
+using FSO.Client.UI.Controls;
+using FSO.Client.UI.Framework;
+using FSO.Client.UI.Panels;
+using FSO.Client.UI.Screens;
+using FSO.Client.Utils;
+using FSO.Common;
+using FSO.Common.DatabaseService.Model;
 using FSO.Common.DataService.Model;
 using FSO.Common.Serialization.Primitives;
+using FSO.Common.Utils;
+using FSO.Server.Embedded;
+using FSO.Server.Protocol.CitySelector;
+using FSO.Server.Protocol.Electron.Packets;
+using FSO.Server.Protocol.Voltron.Packets;
 using FSO.UI.Model;
 using MSDFData;
-using FSO.Server.Embedded;
-using FSO.Client.UI.Archive;
-using FSO.Common;
+using Ninject;
+using System.Collections.Immutable;
 
 namespace FSO.Client
 {
@@ -72,6 +70,7 @@ namespace FSO.Client
         public void Start()
         {
             var version = Content.Content.Get().VersionString;
+            FSOProgram.RegisterDragCallback(GameFacade.Game.Window.Handle, DragDrop);
             if (version == "1.1097.1.0") StartLoading();
             else WrongVersion();
         }
@@ -569,6 +568,23 @@ namespace FSO.Client
             debugWindow.Show();
 			*/
             //debugWindow.PositionAroundGame(GameFacade.Game.Window);
+        }
+
+        private void DragDrop(string path)
+        {
+            var current = UIScreen.Current;
+            if (current is SandboxGameScreen || current is LoginScreen)
+            {
+                if (UIScreen.Current is SandboxGameScreen)
+                {
+                    var sand = (SandboxGameScreen)UIScreen.Current;
+                    sand.Initialize(path, false);
+                }
+                else
+                {
+                    FSOFacade.Controller.EnterSandboxMode(path, false);
+                }
+            }
         }
     }
 

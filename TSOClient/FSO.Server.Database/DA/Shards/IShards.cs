@@ -11,5 +11,6 @@ namespace FSO.Server.Database.DA.Shards
         ShardTicket GetTicket(string ticket_id);
         void PurgeTickets(uint time);
         void UpdateStatus(int shard_id, string internal_host, string public_host, string name, string number, int? update_id);
+        void UpdateInfo(int shard_id, string name, string map);
     }
 }

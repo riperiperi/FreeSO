@@ -328,13 +328,14 @@ namespace FSOFacadeWorker
             int loginAttempts = 0;
             while (true)
             {
+                GD.Present();
                 if (!LoginSent)
                 {
                     LoginSent = true;
                     Console.WriteLine("Attempting Login... (" + (loginAttempts++) + ")");
                     Login();
                 }
-                GameThread.OnWork.WaitOne(1000);
+                GameThread.OnWork.WaitOne(50);
                 GameThread.DigestUpdate(null);
             }
 

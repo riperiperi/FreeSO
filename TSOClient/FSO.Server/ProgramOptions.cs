@@ -106,5 +106,14 @@ namespace FSO.Server
     [Verb("plugin-anonymize", HelpText = "Tool for reviewing and stripping potentially sensitive plugin data")]
     public class PluginAnonymizeOptions
     {
+        [Value(0, Required = false)]
+        public string InputFile { get; set; }
+    }
+
+    [Verb("backup-selection", HelpText = "Tool for selecting backups with the least number of evicted roommates for more complete historical lot data")]
+    public class BackupSelectionOptions
+    {
+        [Option('v', "validate", Default = false, HelpText = "Print information about backup selection without actually doing it.")]
+        public bool DryRun { get; set; }
     }
 }

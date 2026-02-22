@@ -183,6 +183,7 @@ namespace FSO.LotView.Facade
             world.State.WallOffsetView = null;
             world.State.SilentLevel = oldLevel;
 
+            gd.SetRenderTarget(null);
             Texture2D result = tex;
 
             if (SUPERSAMPLE_COUNT > 1)

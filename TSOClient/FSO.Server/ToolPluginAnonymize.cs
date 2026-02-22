@@ -1,6 +1,4 @@
-﻿using FSO.Files.Formats.IFF.Chunks;
-using FSO.Files.RC;
-using FSO.LotView.Model;
+﻿using FSO.LotView.Model;
 using FSO.Server.Database.DA;
 using FSO.Server.Database.DA.Lots;
 using FSO.Server.Database.DA.Objects;
@@ -15,7 +13,6 @@ using FSO.SimAntics.NetPlay.Model.Commands;
 using FSO.SimAntics.Primitives;
 using Newtonsoft.Json;
 using NLog;
-using static Mysqlx.Notice.Warning.Types;
 
 namespace FSO.Server
 {
@@ -33,6 +30,27 @@ namespace FSO.Server
             DAFactory = daFactory;
         }
 
+        private struct ModifyCount
+        {
+            public int Attempt;
+            public int Success;
+
+            public void Add(bool success)
+            {
+                Attempt++;
+                
+                if (success)
+                {
+                    Success++;
+                }
+            }
+
+            public override string ToString()
+            {
+                return $"{Success}/{Attempt}";
+            }
+        }
+
         private class PluginJson
         {
             [JsonProperty("objectID")]
@@ -41,6 +59,8 @@ namespace FSO.Server
             public bool IsReachable { get; set; } = false;
             [JsonProperty("delete")]
             public bool Delete { get; set; } = false;
+            [JsonProperty("modified")]
+            public bool Modified { get; set; } = false;
         }
 
         private class SignPluginJson : PluginJson
@@ -61,6 +81,12 @@ namespace FSO.Server
             public string[] CardContents { get; set; }
         }
 
+        private class DoorPluginJson : PluginJson
+        {
+            [JsonProperty("code")]
+            public uint Code { get; set; }
+        }
+
         private class HouseJson
         {
             [JsonProperty("houseName")]
@@ -74,6 +100,8 @@ namespace FSO.Server
             public SignPluginJson[] Signs { get; set; }
             [JsonProperty("cards")]
             public CardPluginJson[] Cards { get; set; }
+            [JsonProperty("doors")]
+            public DoorPluginJson[] Doors { get; set; }
         }
 
         private class ReviewJson
@@ -120,7 +148,7 @@ namespace FSO.Server
         private const int TELEPORT_INTERACTION = 8;
         public static readonly int TICKRATE = 30;
 
-        private const string DOOR_GLOBALS = "DoorGlobals";
+        private const string DOOR_GLOBALS = "doorglobals";
         private const string TELEPORT_START_ANIM = "a20-teleporter-step-in";
         private const string TELEPORT_FAIL_ANIM = "a20-teleporter-check-self-insideout";
 
@@ -128,7 +156,7 @@ namespace FSO.Server
         // If the interaction finishes after this and the fail animation plays, then the teleporter is obstructed
         // If the interaction fihishes after this and the fail animation doesn't play, then the teleporter works.
 
-        private bool AdmitModePublic(int admitMode)
+        private static bool AdmitModePublic(int admitMode)
         {
             return !(admitMode == 1 || admitMode == 3); // admit list, ban all
         }
@@ -142,6 +170,21 @@ namespace FSO.Server
                 if (obj.lot_id.HasValue)
                 {
                     result.Add(obj.lot_id.Value);
+                }
+            }
+
+            return result;
+        }
+
+        private HashSet<uint> GetUniqueInventorySims(List<DbObject> objects)
+        {
+            var result = new HashSet<uint>();
+
+            foreach (var obj in objects)
+            {
+                if (!obj.lot_id.HasValue && obj.owner_id.HasValue)
+                {
+                    result.Add(obj.owner_id.Value);
                 }
             }
 
@@ -215,9 +258,6 @@ namespace FSO.Server
                         Lot.Reset();
                     }
 
-                    using (var db = DAFactory.Get())
-                        db.Lots.UpdateRingBackup(LotPersist.lot_id, LotPersist.ring_backup_num);
-
                     return (Lot, LotPersist);
                 }
                 catch (Exception e)
@@ -247,6 +287,11 @@ namespace FSO.Server
         private List<CardPluginJson> GetDrawCardPluginData(List<DbObject> objs)
         {
             return objs.Select(obj => ReadCards(obj.object_id)).Where(x => x != null).ToList();
+        }
+
+        private List<DoorPluginJson> GetDoorPluginData(List<DbObject> objs)
+        {
+            return objs.Select(obj => ReadDoor(obj.object_id)).Where(x => x != null).ToList();
         }
 
         private VMAvatar CreateAvatar(VM vm)
@@ -314,9 +359,12 @@ namespace FSO.Server
 
                 teleporterStarts = new List<VMEntity>();
 
-                foreach (var teleporter in teleporters)
+                if (teleporters != null)
                 {
+                    foreach (var teleporter in teleporters)
+                    {
 
+                    }
                 }
             }
 
@@ -397,14 +445,16 @@ namespace FSO.Server
             return false;
         }
 
-        private HouseJson ProcessLot(int lotId, List<DbObject> allSigns, List<DbObject> allCards)
+        private HouseJson ProcessLot(int lotId, List<DbObject> allSigns, List<DbObject> allCards, List<DbObject> allDoors)
         {
             // Could be a bit faster by building a dictionary for this before each iteration, but not too important
             var mySigns = allSigns.Where(x => x.lot_id == lotId).ToList();
             var myCards = allCards.Where(x => x.lot_id == lotId).ToList();
+            var myDoors = allDoors.Where(x => x.lot_id == lotId).ToList();
 
             var signData = GetSignPluginData(mySigns);
             var cardData = GetDrawCardPluginData(myCards);
+            var doorData = GetDoorPluginData(myDoors);
 
             if (signData.Count > 0 || cardData.Count > 0)
             {
@@ -456,7 +506,8 @@ namespace FSO.Server
                         HouseAdmitMode = dbLot.admit_mode,
                         HouseName = dbLot.name,
                         Signs = [.. signData],
-                        Cards = [.. cardData]
+                        Cards = [.. cardData],
+                        Doors = [.. doorData]
                     };
                 }
 
@@ -473,6 +524,160 @@ namespace FSO.Server
             return null;
         }
 
+        private static uint[] GetDoorTypes()
+        {
+            var builder = new List<uint>();
+            var worldObj = Content.Content.Get().WorldObjects;
+
+            var entries = worldObj.Entries.ToList();
+
+            foreach (var obj in entries)
+            {
+                var objRes = worldObj.Get(obj.Key);
+
+                if (objRes.Resource.SemiGlobal?.Iff?.Filename == DOOR_GLOBALS+".iff")
+                {
+                    builder.Add(objRes.OBJ.GUID);
+                }
+            }
+
+            return [.. builder];
+        }
+
+        private bool DeletePlugin(uint id, uint pluginID)
+        {
+            try
+            {
+                var path = PluginPersistPath(id, pluginID);
+
+                if (Path.Exists(path))
+                {
+                    File.Delete(path);
+
+                    var pluginDir = Path.GetDirectoryName(path);
+
+                    if (Directory.GetFiles(pluginDir).Length == 0)
+                    {
+                        Directory.Delete(pluginDir);
+
+                        var objectDir = Path.GetDirectoryName(pluginDir);
+
+                        if (Directory.GetFiles(objectDir).Length == 0)
+                        {
+                            Directory.Delete(objectDir);
+                        }
+                    }
+
+                    return true;
+                }
+            }
+            catch
+            {
+                // ...
+            }
+
+            return false;
+        }
+
+        private bool ModifySign(uint id, ushort flags, string message)
+        {
+            try
+            {
+                var path = PluginPersistPath(id, SIGN_PLUGIN);
+
+                if (Path.Exists(path))
+                {
+                    var data = new VMEODSignsData()
+                    {
+                        Flags = flags,
+                        Text = message
+                    };
+
+                    using var file = File.OpenWrite(path);
+                    using var writer = new BinaryWriter(file);
+
+                    data.SerializeInto(writer);
+
+                    return true;
+                }
+            }
+            catch
+            {
+                // ...
+            }
+
+            return false;
+        }
+
+        private void ApplyReview(HouseJson house, ref ModifyCount signDeleteCount, ref ModifyCount signUpdateCount, ref ModifyCount cardsDeleteCount, ref ModifyCount doorDeleteCount)
+        {
+            foreach (var sign in house.Signs)
+            {
+                if (sign.Delete)
+                {
+                    signDeleteCount.Add(DeletePlugin(sign.ObjectID, SIGN_PLUGIN));
+                }
+                else if (sign.Modified)
+                {
+                    signUpdateCount.Add(ModifySign(sign.ObjectID, (ushort)sign.SignFlags, sign.Message));
+                }
+            }
+
+            foreach (var card in house.Cards)
+            {
+                if (card.Delete)
+                {
+                    cardsDeleteCount.Add(DeletePlugin(card.ObjectID, DRAW_CARD_PLUGIN));
+                }
+            }
+
+            foreach (var door in house.Doors)
+            {
+                if (door.Delete)
+                {
+                    doorDeleteCount.Add(DeletePlugin(door.ObjectID, PERMISSION_DOOR_PLUGIN));
+                }
+            }
+        }
+
+        private void DeleteAll<T>(List<T> list) where T : PluginJson
+        {
+            foreach (var item in list)
+            {
+                item.Delete = true;
+            }
+        }
+
+        private HouseJson ProcessInventory(IDA da, uint sim, List<DbObject> allSigns, List<DbObject> allCards, List<DbObject> allDoors)
+        {
+            // Could be a bit faster by building a dictionary for this before each iteration, but not too important
+            var mySigns = allSigns.Where(x => !x.lot_id.HasValue && x.owner_id == sim).ToList();
+            var myCards = allCards.Where(x => !x.lot_id.HasValue && x.owner_id == sim).ToList();
+            var myDoors = allDoors.Where(x => !x.lot_id.HasValue && x.owner_id == sim).ToList();
+
+            var signData = GetSignPluginData(mySigns);
+            var cardData = GetDrawCardPluginData(myCards);
+            var doorData = GetDoorPluginData(myDoors);
+
+            if (signData.Count > 0 || cardData.Count > 0 || doorData.Count > 0)
+            {
+                DeleteAll(signData);
+                DeleteAll(cardData);
+                DeleteAll(doorData);
+
+                return new HouseJson()
+                {
+                    HouseId = sim,
+                    HouseName = da.Avatars.Get(sim)?.name ?? "unknown avatar",
+                    Signs = [.. signData],
+                    Cards = [.. cardData],
+                    Doors = [.. doorData]
+                };
+            }
+
+            return null;
+        }
+
         public int Run()
         {
             LOG.Info("Scanning content");
@@ -482,6 +687,10 @@ namespace FSO.Server
             var publicHouses = new List<HouseJson>();
             var privateHouses = new List<HouseJson>();
 
+            var doorTypes = GetDoorTypes();
+
+            LOG.Info("Scanning for objects... this might take a while");
+
             using (var da = (SqlDA)DAFactory.Get())
             {
                 var allSigns = new List<DbObject>();
@@ -490,36 +699,153 @@ namespace FSO.Server
                     allSigns.AddRange(da.Objects.GetByType(guid));
                 }
 
+                // This might be slightly insane, but I already wrote the code this way before I made it check doors.
+                var allDoors = new List<DbObject>();
+                foreach (uint guid in doorTypes)
+                {
+                    allDoors.AddRange(da.Objects.GetByType(guid));
+                }
+
                 var allDrawACard = da.Objects.GetByType(DRAW_A_CARD_TYPE);
 
                 var allPluginObjects = new List<DbObject>(allSigns);
                 allPluginObjects.AddRange(allDrawACard);
+                allPluginObjects.AddRange(allDoors);
 
-                var lots = GetUniqueLots(allPluginObjects);
-
-                foreach (var lot in lots)
+                if (Options.InputFile != null)
                 {
-                    var lotData = ProcessLot(lot, allSigns, allDrawACard);
+                    LOG.Info($"Loading input file {Options.InputFile}...");
 
-                    if (lotData != null)
+                    ReviewJson review;
+                    try
                     {
-                        if (AdmitModePublic(lotData.HouseAdmitMode))
-                            publicHouses.Add(lotData);
-                        else
-                            privateHouses.Add(lotData);
+                        string json = File.ReadAllText(Options.InputFile);
+                        review = JsonConvert.DeserializeObject<ReviewJson>(json);
                     }
+                    catch (Exception e)
+                    {
+                        LOG.Info($"Failed to load JSON: {e.Message}");
+                        return 1;
+                    }
+
+                    LOG.Info($"Applying public differences in review...");
+
+                    ModifyCount signDeleteCount = default, signUpdateCount = default, cardsDeleteCount = default, doorDeleteCount = default;
+
+                    foreach (var lot in review.PublicHouses)
+                    {
+                        ApplyReview(lot, ref signDeleteCount, ref signUpdateCount, ref cardsDeleteCount, ref doorDeleteCount);
+                    }
+
+                    LOG.Info($" - Signs deleted: {signDeleteCount.ToString()}, Signs updated: {signUpdateCount.ToString()}, Cards deleted: {cardsDeleteCount.ToString()}, Doors deleted: {doorDeleteCount.ToString()}");
+
+                    LOG.Info($"Applying private differences in review...");
+
+                    signDeleteCount = default; signUpdateCount = default; cardsDeleteCount = default; doorDeleteCount = default;
+
+                    foreach (var lot in review.PrivateHouses)
+                    {
+                        ApplyReview(lot, ref signDeleteCount, ref signUpdateCount, ref cardsDeleteCount, ref doorDeleteCount);
+                    }
+
+                    LOG.Info($" - Signs deleted: {signDeleteCount.ToString()}, Signs updated: {signUpdateCount.ToString()}, Cards deleted: {cardsDeleteCount.ToString()}, Doors deleted: {doorDeleteCount.ToString()}");
+
+                    LOG.Info($"Building inventory deletion records...");
+
+                    var objectsByUser = new List<HouseJson>();
+                    var sims = GetUniqueInventorySims(allPluginObjects);
+
+                    foreach (var sim in sims)
+                    {
+                        var simData = ProcessInventory(da, sim, allSigns, allDrawACard, allDoors);
+
+                        if (simData != null)
+                        {
+                            objectsByUser.Add(simData);
+                        }
+                    }
+
+                    // The review didn't have lots with only door codes, so add those too
+                    var unreviewedDoors = new Dictionary<uint, DbObject>(allDoors.Where(x => x.lot_id.HasValue).Select(x => new KeyValuePair<uint, DbObject>(x.object_id, x)));
+
+                    foreach (var lot in review.PublicHouses)
+                    {
+                        foreach (var door in lot.Doors)
+                        {
+                            unreviewedDoors.Remove(door.ObjectID);
+                        }
+                    }
+
+                    foreach (var lot in review.PrivateHouses)
+                    {
+                        foreach (var door in lot.Doors)
+                        {
+                            unreviewedDoors.Remove(door.ObjectID);
+                        }
+                    }
+
+                    var doorData = GetDoorPluginData([.. unreviewedDoors.Values]);
+
+                    DeleteAll(doorData);
+
+                    objectsByUser.Add(new HouseJson()
+                    {
+                        HouseId = 0,
+                        HouseName = "=== Door codes without signs or cards ===",
+                        Doors = doorData.ToArray(),
+                        Cards = [],
+                        Signs = [],
+                        HouseAdmitMode = 0,
+                    });
+
+                    var deletionJson = JsonConvert.SerializeObject(objectsByUser.ToArray(), Formatting.Indented);
+
+                    File.WriteAllText("inventoryPluginDeletion.json", deletionJson);
+
+                    LOG.Info($"Succesfully output at inventoryPluginDeletion.json - deleting the plugin data for real");
+
+                    LOG.Info($"Deleting inventory data, and leftover doors");
+
+                    foreach (var lot in objectsByUser)
+                    {
+                        ApplyReview(lot, ref signDeleteCount, ref signUpdateCount, ref cardsDeleteCount, ref doorDeleteCount);
+                    }
+
+                    LOG.Info($" - Signs deleted: {signDeleteCount.ToString()}, Signs updated: {signUpdateCount.ToString()}, Cards deleted: {cardsDeleteCount.ToString()}, Doors deleted: {doorDeleteCount.ToString()}");
                 }
+                else
+                {
+                    HashSet<int> lots = GetUniqueLots(allPluginObjects);
+
+                    LOG.Info("Scanning lots for plugin objects and building a report");
+
+                    foreach (var lot in lots)
+                    {
+                        var lotData = ProcessLot(lot, allSigns, allDrawACard, allDoors);
+
+                        if (lotData != null)
+                        {
+                            if (AdmitModePublic(lotData.HouseAdmitMode))
+                                publicHouses.Add(lotData);
+                            else
+                                privateHouses.Add(lotData);
+                        }
+                    }
+
+                    LOG.Info("Done - outputting pluginReview.json");
+
+                    var result = new ReviewJson()
+                    {
+                        PublicHouses = [.. publicHouses],
+                        PrivateHouses = [.. privateHouses]
+                    };
+
+                    var json = JsonConvert.SerializeObject(result, Formatting.Indented);
+
+                    File.WriteAllText("pluginReview.json", json);
+                }
+
             }
-
-            var result = new ReviewJson()
-            {
-                PublicHouses = [.. publicHouses],
-                PrivateHouses = [.. privateHouses]
-            };
-
-            var json = JsonConvert.SerializeObject(result, Formatting.Indented);
-
-            File.WriteAllText("pluginReview.json", json);
 
             // - Find all objects with the interesting plugins, and their owner lots.
             //  - Without a lot, the plugin data should be lost.
@@ -589,13 +915,44 @@ namespace FSO.Server
             return null;
         }
 
+        private DoorPluginJson ReadDoor(uint objectPID)
+        {
+            var data = LoadPluginPersist(objectPID, PERMISSION_DOOR_PLUGIN);
+
+            if (data != null)
+            {
+                uint result = 0;
+                if (uint.TryParse(System.Text.Encoding.UTF8.GetString(data), out result))
+                {
+                    return new DoorPluginJson()
+                    {
+                        ObjectID = objectPID,
+                        Code = result,
+                        Delete = true,
+                    };
+                }
+            }
+
+            return null;
+        }
+
+        private string PluginPersistPath(uint objectPID, uint pluginID)
+        {
+            var objStr = objectPID.ToString("x8");
+            return Path.Combine(Config.SimNFS, "Objects/" + objStr + "/Plugin/" + pluginID.ToString("x8") + ".dat");
+        }
+
         private byte[] LoadPluginPersist(uint objectPID, uint pluginID)
         {
             if (objectPID == 0) return null;
             try
             {
-                var objStr = objectPID.ToString("x8");
-                var path = Path.Combine(Config.SimNFS, "Objects/" + objStr + "/Plugin/" + pluginID.ToString("x8") + ".dat");
+                var path = PluginPersistPath(objectPID, pluginID);
+
+                if (!File.Exists(path))
+                {
+                    return null;
+                }
 
                 //if path does not exist, will throw FileNotFoundException
                 using (var file = File.Open(path, FileMode.Open))
@@ -608,9 +965,11 @@ namespace FSO.Server
             catch (Exception e)
             {
                 //todo: specific types of exception that can be thrown here? instead of just catching em all
+                /*
                 if (!(e is FileNotFoundException))
                     //LOG.Error(e, 
                     Console.WriteLine("Failed to load plugin persist for object " + objectPID.ToString("x8") + " plugin " + pluginID.ToString("x8") + "!");
+                */
                 return null;
             }
         }

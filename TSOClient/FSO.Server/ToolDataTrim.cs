@@ -23,6 +23,8 @@ namespace FSO.Server
         private DataTrimOptions Options;
         private IKernel Kernel;
 
+        private bool ObjectsInNFS;
+
         public ToolDataTrim(DataTrimOptions options, IDAFactory factory, ServerConfiguration config, IKernel kernel)
         {
             this.Options = options;
@@ -72,13 +74,16 @@ namespace FSO.Server
             var basepath = Path.Combine(Config.SimNFS, "Objects/");
             var result = new List<uint>();
 
-            foreach (var path in Directory.GetDirectories(basepath))
+            if (Directory.Exists(basepath))
             {
-                var idStr = Path.GetFileName(path);
-
-                if (uint.TryParse(idStr, NumberStyles.HexNumber, null, out uint id))
+                foreach (var path in Directory.GetDirectories(basepath))
                 {
-                    result.Add(id);
+                    var idStr = Path.GetFileName(path);
+
+                    if (uint.TryParse(idStr, NumberStyles.HexNumber, null, out uint id))
+                    {
+                        result.Add(id);
+                    }
                 }
             }
 
@@ -139,87 +144,141 @@ namespace FSO.Server
                 return true;
             }
 
-            // Find the newest backup that still works.
-
-            int newestBackup = lot.ring_backup_num;
-
-            for (int i = 0; i < backupCount; i++)
+            int newestBackup;
+            int oldestBackup;
+            if (lot.archive_flags == 1)
             {
-                try
-                {
-                    var path = Path.Combine(dir, $"state_{newestBackup}.fsov");
+                // Special mode: save the current backup, and the one with the latest modified date
+                oldestBackup = lot.ring_backup_num;
+                newestBackup = -1;
 
-                    if (!File.Exists(path))
+                int testBackup = lot.ring_backup_num;
+                DateTime bestDate = new DateTime(0);
+                for (int i = 0; i < backupCount; i++)
+                {
+                    try
                     {
+                        var path = Path.Combine(dir, $"state_{testBackup}.fsov");
+
+                        if (File.Exists(path))
+                        {
+                            DateTime modified = File.GetLastWriteTimeUtc(path);
+
+                            if (modified >= bestDate)
+                            {
+                                var fsov = LoadVM(path);
+
+                                bestDate = modified;
+                                newestBackup = testBackup;
+                            }
+                        }
+                    }
+                    catch (Exception e)
+                    {
+                        if (!(e is FileNotFoundException))
+                        {
+                            LOG.Warn($" * Failed to load backup {i} for lot {lot.lot_id}: {e.Message}. Continuing until there's a working one.");
+                        }
+                    }
+
+                    testBackup--;
+
+                    if (testBackup < 0)
+                    {
+                        testBackup += backupCount;
+                    }
+                }
+
+                if (newestBackup == -1)
+                {
+                    LOG.Error($" * Failed to load ALL backups for lot {lot.lot_id}. Leaving it as-is.");
+                    return false;
+                }
+            }
+            else
+            {
+                // Find the newest backup that still works.
+
+                newestBackup = lot.ring_backup_num;
+
+                for (int i = 0; i < backupCount; i++)
+                {
+                    try
+                    {
+                        var path = Path.Combine(dir, $"state_{newestBackup}.fsov");
+
+                        if (!File.Exists(path))
+                        {
+                            newestBackup--;
+
+                            if (newestBackup < 0)
+                            {
+                                newestBackup += backupCount;
+                            }
+
+                            continue;
+                        }
+
+                        var fsov = LoadVM(path);
+
+                        break;
+                    }
+                    catch (Exception e)
+                    {
+                        if (!(e is FileNotFoundException))
+                        {
+                            LOG.Warn($" * Failed to load backup {i} for lot {lot.lot_id}: {e.Message}. Continuing until there's a working one.");
+                        }
+
                         newestBackup--;
 
                         if (newestBackup < 0)
                         {
                             newestBackup += backupCount;
                         }
-
-                        continue;
                     }
 
-                    var fsov = LoadVM(path);
-
-                    break;
-                }
-                catch (Exception e)
-                {
-                    if (!(e is FileNotFoundException))
+                    if (i == 9)
                     {
-                        LOG.Warn($" * Failed to load backup {i} for lot {lot.lot_id}: {e.Message}. Continuing until there's a working one.");
-                    }
-
-                    newestBackup--;
-
-                    if (newestBackup < 0)
-                    {
-                        newestBackup += backupCount;
+                        LOG.Error($" * Failed to load ALL backups for lot {lot.lot_id}. Leaving it as-is.");
+                        return false;
                     }
                 }
 
-                if (i == 9)
+                oldestBackup = (lot.ring_backup_num + 1) % backupCount;
+
+                for (int i = 0; i < backupCount; i++)
                 {
-                    LOG.Error($" * Failed to load ALL backups for lot {lot.lot_id}. Leaving it as-is.");
-                    return false;
-                }
-            }
-
-            int oldestBackup = (lot.ring_backup_num + 1) % backupCount;
-
-            for (int i = 0; i < backupCount; i++)
-            {
-                try
-                {
-                    var path = Path.Combine(dir, $"state_{oldestBackup}.fsov");
-
-                    if (!File.Exists(path))
+                    try
                     {
+                        var path = Path.Combine(dir, $"state_{oldestBackup}.fsov");
+
+                        if (!File.Exists(path))
+                        {
+                            oldestBackup = (oldestBackup + 1) % backupCount;
+
+                            continue;
+                        }
+
+                        var fsov = LoadVM(path);
+
+                        break;
+                    }
+                    catch (Exception e)
+                    {
+                        if (!(e is FileNotFoundException))
+                        {
+                            LOG.Warn($" * Failed to load oldest backup {i} for lot {lot.lot_id}: {e.Message}. Continuing until there's a working one.");
+                        }
+
                         oldestBackup = (oldestBackup + 1) % backupCount;
-
-                        continue;
                     }
 
-                    var fsov = LoadVM(path);
-
-                    break;
-                }
-                catch (Exception e)
-                {
-                    if (!(e is FileNotFoundException))
+                    if (i == 9)
                     {
-                        LOG.Warn($" * Failed to load oldest backup {i} for lot {lot.lot_id}: {e.Message}. Continuing until there's a working one.");
+                        LOG.Error($" * Failed to load ALL backups for lot {lot.lot_id}. Leaving it as-is.");
+                        return false;
                     }
-
-                    oldestBackup = (oldestBackup + 1) % backupCount;
-                }
-
-                if (i == 9)
-                {
-                    LOG.Error($" * Failed to load ALL backups for lot {lot.lot_id}. Leaving it as-is.");
-                    return false;
                 }
             }
 
@@ -271,7 +330,6 @@ namespace FSO.Server
 
         public int Run()
         {
-            //TODO: Some content preloading
             LOG.Info("Scanning content");
             VMContext.InitVMConfig(false);
             Content.Content.Init(Config.GameLocation, Content.ContentMode.SERVER);
@@ -280,6 +338,8 @@ namespace FSO.Server
 
             using (var da = (SqlDA)DAFactory.Get())
             {
+                ObjectsInNFS = (da.Context is MySqlContext);
+
                 LOG.Info("Trimming relationships (invalid from)");
 
                 RunCommand(da, "DELETE FROM fso_relationships WHERE NOT EXISTS (SELECT 1 FROM fso_avatars a where from_id = a.avatar_id)");
@@ -315,30 +375,39 @@ namespace FSO.Server
                     Directory.Delete(dir, true);
                 }
 
-                LOG.Info("Trimming NFS objects (deleting state when object is on lot)");
+                LOG.Info("Trimming objects inventory state (deleting state when object is on lot)");
 
-                var deleteNfsOnLot = new List<uint>();
-
-                foreach (uint id in onLot)
+                if (ObjectsInNFS)
                 {
-                    if (existsInNfs.Contains(id))
+                    var deleteNfsOnLot = new List<uint>();
+
+                    foreach (uint id in onLot)
                     {
-                        deleteNfsOnLot.Add(id);
+                        if (existsInNfs.Contains(id))
+                        {
+                            deleteNfsOnLot.Add(id);
+                        }
                     }
+
+                    LOG.Info($" - Removing saved inventory state for {deleteNfsOnLot.Count} on-lot objects. (plugin state is kept)");
+
+                    int directoryDeleteCount = 0;
+                    foreach (uint id in deleteNfsOnLot)
+                    {
+                        if (DeleteInventoryState(id))
+                        {
+                            directoryDeleteCount++;
+                        }
+                    }
+
+                    LOG.Info($" - Deleted {directoryDeleteCount} directories (no remaining object state).");
                 }
-
-                LOG.Info($" - Removing saved inventory state for {deleteNfsOnLot.Count} on-lot objects. (plugin state is kept)");
-
-                int directoryDeleteCount = 0;
-                foreach (uint id in deleteNfsOnLot)
+                else
                 {
-                    if (DeleteInventoryState(id))
-                    {
-                        directoryDeleteCount++;
-                    }
-                }
+                    var deletedCount = da.Objects.PurgeStateOnLot();
 
-                LOG.Info($" - Deleted {directoryDeleteCount} directories (no remaining object state).");
+                    LOG.Info($" - Removed saved inventory state for {deletedCount} on-lot objects. (plugin state is kept)");
+                }
 
                 LOG.Info("Trimming NFS lots (keeping only oldest and newest backup, deleting invalid lot saves)");
 
@@ -400,22 +469,19 @@ namespace FSO.Server
                     DeleteAllRows(da, "fso_ip_ban");
                     LOG.Info("Anonymize: Clearing fso_lot_visits");
                     DeleteAllRows(da, "fso_lot_visits");
-                    LOG.Info("Anonymize: Removing from_user_id from fso_mayor_ratings");
-                    //TODO
+                    LOG.Info("Anonymize: Removing identifying info from fso_mayor_ratings");
+                    RunCommand(da, "UPDATE fso_mayor_ratings SET from_avatar_id = NULL WHERE anonymous = 1");
+                    RunCommand(da, "UPDATE fso_mayor_ratings SET to_user_id = 1 WHERE anonymous = 1");
                     LOG.Info("Anonymize: Clearing fso_nhood_ban");
                     DeleteAllRows(da, "fso_nhood_ban");
                 }
 
+                LOG.Info("Anonymize: Clearing fso_lot_admit");
+                DeleteAllRows(da, "fso_lot_admit");
+
                 RunCommand(da, "PRAGMA wal_checkpoint(TRUNCATE)");
                 RunCommand(da, "vacuum");
                 RunCommand(da, "PRAGMA wal_checkpoint(TRUNCATE)");
-
-                //LOG.Info("Anonymize: Clearing fso_lot_admit");
-                //LOG.Info("Anonymize: Clearing fso_update_addons (except currently used)");
-
-                // TODO: user + user authenticate anonymization. archive mode conversion actually changes the table for this, and detaches avatars from users.
-
-                // event participation?
 
                 return 1;
             }

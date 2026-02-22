@@ -602,7 +602,9 @@ namespace FSO.Client.UI.Screens
             string filename = Path.GetFileName(path);
             try
             {
-                using (var file = new BinaryReader(File.OpenRead(Path.Combine(FSOEnvironment.UserDir, "LocalHouse/") + filename.Substring(0, filename.Length - 4) + ".fsov")))
+                var fsovPath = filename.EndsWith(".fsov") ? path : Path.Combine(FSOEnvironment.UserDir, "LocalHouse/") + filename.Substring(0, filename.Length - 4) + ".fsov";
+
+                using (var file = new BinaryReader(File.OpenRead(fsovPath)))
                 {
                     var marshal = new SimAntics.Marshals.VMMarshal();
                     marshal.Deserialize(file);

@@ -47,5 +47,15 @@ namespace FSO.Server.Database.DA.Shards
                 shard_id
             });
         }
+
+        public void UpdateInfo(int shard_id, string name, string map)
+        {
+            Context.Connection.Query("UPDATE fso_shards SET name = @name, map = @map WHERE shard_id = @shard_id", new
+            {
+                name,
+                map,
+                shard_id
+            });
+        }
     }
 }

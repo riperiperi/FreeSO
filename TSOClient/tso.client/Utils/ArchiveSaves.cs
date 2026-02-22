@@ -5,7 +5,7 @@ namespace FSO.Client.Utils
 {
     internal static class ArchiveSaves
     {
-        public static List<ArchiveManifest> ListManifests()
+        public static List<ArchiveManifest> ListManifests(bool template = false)
         {
             string[] dirs = Directory.GetDirectories(Path.Combine(FSOEnvironment.ContentDir, "ArchiveCities"));
 
@@ -19,7 +19,7 @@ namespace FSO.Client.Utils
                     {
                         var manifest = new ArchiveManifest(Path.Combine(dir, "archive.ini"));
 
-                        if (manifest.LocalDir != "" || manifest.ZipLocation != "")
+                        if (manifest.Template == template && (manifest.LocalDir != "" || manifest.ZipLocation != ""))
                         {
                             manifests.Add(manifest);
                         }

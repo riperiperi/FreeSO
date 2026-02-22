@@ -236,7 +236,7 @@ namespace FSO.Client.UI.Archive
             UpdateSelectedSave(SaveCombo);
 
             SetSize((int)vbox.Size.X + 40, (int)vbox.Size.Y + 70);
-            Add(vbox);
+            DynamicOverlay.Add(vbox);
 
             NameInput.OnChange += ValidateInputs;
             CustomPortsButton.OnButtonClick += ChangePorts;
@@ -249,6 +249,34 @@ namespace FSO.Client.UI.Archive
             ValidateInputs(NameInput);
 
             UpdateButtons();
+        }
+
+        private void NewFromTemplate(ArchiveManifest template)
+        {
+            var cityPicker = new UIArchiveCitySelector(template);
+            cityPicker.OnResult += (ArchiveManifest manifest) =>
+            {
+                SaveCombo.SelectedIndex = -1;
+                PopulateSaves();
+
+                int index = -1;
+                if (manifest != null)
+                {
+                    index = SaveCombo.Items.FindIndex(x => ((ArchiveManifest)x.Value).ActivePath == manifest.ActivePath);
+                }
+
+                if (index == -1)
+                {
+                    var clientConfig = ClientArchiveConfiguration.Default;
+                    SelectSaveByName(clientConfig.SelectedArchiveName);
+                }
+                else
+                {
+                    SaveCombo.SelectedIndex = index;
+                }
+            };
+
+            UIScreen.ShowDialog(cityPicker, true);
         }
 
         private void UpdateSelectedSave(object obj)
@@ -270,6 +298,11 @@ namespace FSO.Client.UI.Archive
             }
 
             var selected = SaveCombo.SelectedItem as ArchiveManifest;
+
+            if (selected.Template)
+            {
+                NewFromTemplate(selected);
+            }
 
             // Load the city image.
 
@@ -362,8 +395,9 @@ namespace FSO.Client.UI.Archive
         private void PopulateSaves()
         {
             var manifests = ArchiveSaves.ListManifests();
+            var templates = ArchiveSaves.ListManifests(true);
 
-            SaveCombo.Items = manifests.Select(x => new UIComboboxItem() { Name = x.Name, Value = x }).ToList();
+            SaveCombo.Items = [.. manifests.Select(x => new UIComboboxItem() { Name = x.Name, Value = x }), .. templates.Select(x => new UIComboboxItem() { Name = x.Name, Value = x }),];
 
             SaveCombo.SelectedIndex = manifests.Count > 0 ? 0 : -1;
         }

@@ -435,12 +435,12 @@ namespace FSO.SimAntics.Utils
             }
         }
 
-        public static void RestoreTerrain(VM vm, RestoreLotType type = RestoreLotType.Normal)
+        public static void RestoreTerrain(VM vm, RestoreLotType type = RestoreLotType.Normal, bool canFlatten = true)
         {
             //take center of lotstate
             RestoreTerrain(vm, vm.TSOState.Terrain.BlendN[1, 1], vm.TSOState.Terrain.Roads[1, 1], type);
 
-            RestoreHeight(vm, vm.TSOState.Terrain, 1, 1, type != RestoreLotType.Blank);
+            RestoreHeight(vm, vm.TSOState.Terrain, 1, 1, type != RestoreLotType.Blank && canFlatten);
         }
 
         public static int GetBaseLevel(VM vm, VMTSOSurroundingTerrain terrain, int x, int y)
@@ -463,6 +463,38 @@ namespace FSO.SimAntics.Utils
         public static int GetBaseLevel(VM vm, int x, int y)
         {
             return GetBaseLevel(vm, vm.TSOState.Terrain, x, y);
+        }
+
+        public static (byte[], short[]) SnapshotTerrain(VM vm)
+        {
+            var terrain = vm.Context.Architecture.Terrain;
+            return ([.. terrain.GrassState], [.. terrain.Heights]);
+        }
+
+        public static void RestoreBuildableTerrain(VM vm, (byte[], short[]) data)
+        {
+            var (grass, heights) = data;
+            var target = vm.Context.Architecture.Terrain;
+
+            var lotSInfo = vm.TSOState.Size;
+            if (vm.TSOState.OwnerID == 0)
+            {
+                lotSInfo = 10;
+            }
+
+            var ret = vm.Context.GetTSOBuildableArea(lotSInfo);
+
+            ret.Inflate(-1, -1);
+
+            for (int oy = ret.Top; oy <= ret.Bottom; oy++)
+            {
+                for (int ox = ret.Left; ox <= ret.Right; ox++)
+                {
+                    int index = (oy) * target.Width + (ox);
+                    target.Heights[index] = heights[index];
+                    target.GrassState[index] = grass[index];
+                }
+            }
         }
 
         public static int RestoreHeight(VM vm, VMTSOSurroundingTerrain terrain, int x, int y, bool flatten = true)

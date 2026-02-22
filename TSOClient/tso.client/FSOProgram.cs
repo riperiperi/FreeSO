@@ -12,6 +12,8 @@ namespace FSO.Client
 
         public static Action<string> ShowDialog = DefaultShowDialog;
 
+        public static Action<nint, Action<string>> RegisterDragCallback = (window, func) => { };
+
         public static void DefaultShowDialog(string text)
         {
             Console.WriteLine(text);

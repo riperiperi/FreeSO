@@ -24,19 +24,24 @@ namespace FSO.Content
             DirCache = new Dictionary<int, string>();
             Cache = new ConcurrentDictionary<int, CityMap>();
 
-            var dir = Content.GetPath("cities");
+            var dir = Path.Combine(FSOEnvironment.ContentDir, "Cities/");
             foreach (var map in Directory.GetDirectories(dir))
             {
                 var id = int.Parse(Path.GetFileName(map).Replace("city_", ""));
                 DirCache.Add(id, map);
             }
 
-            dir = Path.Combine(FSOEnvironment.ContentDir, "Cities/");
+            dir = Content.GetPath("cities");
             foreach (var map in Directory.GetDirectories(dir))
             {
                 var id = int.Parse(Path.GetFileName(map).Replace("city_", ""));
                 DirCache.Add(id, map);
             }
+        }
+
+        public IEnumerable<int> ListIDs()
+        {
+            return DirCache.Keys;
         }
 
         public CityMap Get(string id)
@@ -54,6 +59,13 @@ namespace FSO.Content
             {
                 return Cache.GetOrAdd((int)id, new CityMap(DirCache[(int)id]));
             }
+        }
+
+        public string GetDir(int id)
+        {
+            DirCache.TryGetValue(id, out string value);
+
+            return value;
         }
 
         public CityMap Get(uint type, uint fileID)

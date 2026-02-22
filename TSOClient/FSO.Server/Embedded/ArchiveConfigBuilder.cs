@@ -104,6 +104,7 @@ namespace FSO.Server.Embedded
                             BirthdayGift = new Servers.Tasks.Domain.BirthdayGiftTaskTuning()
                             {
                                 items = new List<Servers.Tasks.Domain.BirthdayGiftItem>()
+                                /*
                                 {
                                     new Servers.Tasks.Domain.BirthdayGiftItem()
                                     {
@@ -114,6 +115,7 @@ namespace FSO.Server.Embedded
                                         mail_sender_name = "FreeSO Developers"
                                     }
                                 }
+                                */
                             }
                         }
                     },

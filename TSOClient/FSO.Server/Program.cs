@@ -26,7 +26,7 @@ namespace FSO.Server
             int result = Parser.Default.ParseArguments<
                 RunServerOptions, DatabaseInitOptions, ImportNhoodOptions, RestoreLotsOptions,
                 SqliteImportOptions, DataTrimOptions, ArchiveConvertOptions, ImportArchiveFeaturedOptions,
-                PluginAnonymizeOptions>(a2)
+                PluginAnonymizeOptions, BackupSelectionOptions>(a2)
                 .MapResult(
                 (RunServerOptions opts) =>
                 {
@@ -71,6 +71,11 @@ namespace FSO.Server
                 (PluginAnonymizeOptions opts) =>
                 {
                     toolInfo = new(typeof(ToolPluginAnonymize), opts);
+                    return 0;
+                },
+                (BackupSelectionOptions opts) =>
+                {
+                    toolInfo = new(typeof(ToolBackupSelection), opts);
                     return 0;
                 },
                 errs => 1

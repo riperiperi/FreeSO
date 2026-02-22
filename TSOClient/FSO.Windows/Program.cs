@@ -15,6 +15,7 @@ namespace FSO.Windows
         /// The main entry point for the application.
         /// </summary>
 
+        [STAThread]
         public static void Main(string[] args)
         {
             InitWindows();
@@ -54,6 +55,36 @@ namespace FSO.Windows
                 TimerControl = new WindowsMultimediaTimerResolution(1);
 
                 // On linux and macos, timers are a lot more precise.
+
+                FSOProgram.RegisterDragCallback = (window, callback) =>
+                {
+                    var bindThread = new Thread(x =>
+                    {
+                        var form = System.Windows.Forms.Form.FromHandle(window) as System.Windows.Forms.Form;
+                        form.BeginInvoke(() =>
+                        {
+                            form.AllowDrop = true;
+                            form.DragEnter += (sender, e) =>
+                            {
+                                if (e.Data.GetDataPresent(DataFormats.FileDrop))
+                                {
+                                    e.Effect = DragDropEffects.Copy;
+                                }
+                                else
+                                {
+                                    e.Effect = DragDropEffects.None;
+                                }
+                            };
+                            form.DragDrop += (sender, e) =>
+                            {
+                                var path = (e.Data.GetData(DataFormats.FileDrop) as string[])[0];
+                                callback(path);
+                            };
+                        });
+                    });
+                    bindThread.SetApartmentState(ApartmentState.STA);
+                    bindThread.Start();
+                };
             }
         }
 

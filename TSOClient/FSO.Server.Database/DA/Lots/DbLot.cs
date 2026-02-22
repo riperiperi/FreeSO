@@ -2,6 +2,54 @@
 
 namespace FSO.Server.Database.DA.Lots
 {
+    [Flags]
+    public enum LotMoveFlags
+    {
+        /// <summary>
+        /// This lot has moved.
+        /// Flatten the buildable area, regenerate the terrain.
+        /// </summary>
+        Moved = 1,
+
+        /// <summary>
+        /// This lot is new, or being reset as new.
+        /// The terrain will be fully reset, and unowned objects will be placed on it.
+        /// </summary>
+        New = 1 << 1,
+
+        /// <summary>
+        /// This lot is being deleted when the lot container shuts down.
+        /// Typically when a lot has this flag, it was opened to migrate all roomie objects into their inventories.
+        /// </summary>
+        PermanentDelete = 1 << 2,
+
+        /// <summary>
+        /// Similar to Moved, but doesn't flatten the buildable area.
+        /// Triggers when the city terrain is changed around this lot.
+        /// </summary>
+        TerrainRegen = 1 << 3,
+
+        ShouldClearObjects = New | PermanentDelete
+    }
+
+    [Flags]
+    public enum LotArchiveFlags
+    {
+        /// <summary>
+        /// Archive a property from an old save.
+        /// Objects unowned by roommates should be transformed into ownerless objects.
+        /// The terrain should be recalculated without damaging the buildable area.
+        /// After loading, the archive flags change to 2.
+        /// </summary>
+        ArchiveFromOldSave = 1,
+
+        /// <summary>
+        /// Some special rules for archive lots.
+        /// The object limit disable isn't active, similar to community lots.
+        /// </summary>
+        ArchiveRules = 1 << 1,
+    }
+
     public class DbLot
     {
         public int lot_id { get; set; }
@@ -23,6 +71,33 @@ namespace FSO.Server.Database.DA.Lots
 
         public byte thumb3d_dirty { get; set; }
         public uint thumb3d_time { get; set; }
+
+        // Added for archive
+        public byte archive_flags { get; set; }
+
+        public LotMoveFlags MoveFlags
+        {
+            get
+            {
+                return (LotMoveFlags)move_flags;
+            }
+            set
+            {
+                move_flags = (byte)value;
+            }
+        }
+
+        public LotArchiveFlags ArchiveFlags
+        {
+            get
+            {
+                return (LotArchiveFlags)archive_flags;
+            }
+            set
+            {
+                archive_flags = (byte)value;
+            }
+        }
     }
 
     /**Lot

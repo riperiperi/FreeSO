@@ -236,7 +236,7 @@ namespace FSO.Server.DataService.Providers
 
                 case "Lot_Facade":
                     {
-                        var imgpath = Path.Combine(NFS.GetBaseDirectory(), "Lots/" + lot.DbId.ToString("x8") + "/facade.fsov");
+                        var imgpath = Path.Combine(NFS.GetBaseDirectory(), "Lots/" + lot.DbId.ToString("x8") + "/thumb.fsof");
                         var data = (cTSOGenericData)value;
 
                         using (var db = DAFactory.Get())

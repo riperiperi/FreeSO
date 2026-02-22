@@ -36,5 +36,7 @@ namespace FSO.Server.Database.DA.Objects
         bool SetDbObjectState(uint id, byte[] data);
 
         List<DbObject> GetByType(uint guid);
+
+        int PurgeStateOnLot();
     }
 }

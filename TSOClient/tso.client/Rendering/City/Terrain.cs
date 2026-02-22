@@ -1669,7 +1669,7 @@ namespace FSO.Client.Rendering.City
             }
             m_GraphicsDevice = gfx;
 
-            var world = Matrix.CreateTranslation(-LotPosition + new Vector3(-1 / 75f, -0.011f, 1 / 75f)) * Matrix.CreateRotationY((float)Math.PI / 2) * Matrix.CreateScale(75f * 3, 75f * 3 / 3f, 75f * 3);
+            var world = Matrix.CreateTranslation(-LotPosition + new Vector3(-1 / 75f, -0.011f, 1 / 75f)) * Matrix.CreateRotationY((float)Math.PI / 2) * Matrix.CreateScale(75f * 3, 12 * 100 * Blueprint.TerrainFactorConst * 3, 75f * 3);
 
             float IsoScale = GetIsoScale();
             m_LastIsoScale = IsoScale;

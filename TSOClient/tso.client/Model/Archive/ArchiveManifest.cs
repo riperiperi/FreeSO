@@ -18,6 +18,7 @@ namespace FSO.Client.Model.Archive
             { "ZipLocation", ""},
             { "ZipHash", ""},
             { "LocalDir", ""},
+            { "Template", "False"},
         };
 
         public override Dictionary<string, string> DefaultValues
@@ -33,5 +34,6 @@ namespace FSO.Client.Model.Archive
         public string ZipLocation { get; set; }
         public string ZipHash { get; set; }
         public string LocalDir { get; set; }
+        public bool Template { get; set; }
     }
 }

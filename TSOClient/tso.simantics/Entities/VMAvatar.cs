@@ -304,7 +304,7 @@ namespace FSO.SimAntics
 
                     var skinTone = data.GetString(14);
                     var skinToneSpl = skinTone.Split(';').Where(x => !string.IsNullOrEmpty(x)).ToArray();
-                    var randSkinTone = skinToneSpl[context.NextRandom((ulong)skinToneSpl.Length)];
+                    var randSkinTone = skinToneSpl.Length > 1 ? skinToneSpl[context.NextRandom((ulong)skinToneSpl.Length)] : skinToneSpl[0];
 
                     if (randSkinTone.Equals("lgt", StringComparison.InvariantCultureIgnoreCase)) SkinTone = AppearanceType.Light;
                     else if (randSkinTone.Equals("med", StringComparison.InvariantCultureIgnoreCase)) SkinTone = AppearanceType.Medium;

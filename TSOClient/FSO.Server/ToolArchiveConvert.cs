@@ -42,6 +42,8 @@ CREATE INDEX fso_archive_featured_category_shard_idx ON fso_archive_featured (ca
 CREATE INDEX fso_archive_recents_user_idx ON fso_archive_recents (user_id);
 ";
 
+        private string ArchiveLotsFlags = @"ALTER TABLE `fso_lots`
+ADD COLUMN `archive_flags` tinyint(3) NOT NULL DEFAULT 0;";
 
         private string User1Update = "UPDATE `fso_users` SET username='archive', register_date=0, email='unused', register_ip='0', last_ip='0', client_id='0', last_login=0 WHERE user_id=1;";
 
@@ -83,6 +85,10 @@ CREATE INDEX fso_archive_recents_user_idx ON fso_archive_recents (user_id);
                 LOG.Info("Adding recent avatars table");
 
                 RunCommand(da, ArchiveRecentsCreate);
+
+                LOG.Info("Adding lot archive flags");
+
+                RunCommand(da, ArchiveLotsFlags);
 
                 LOG.Info("Removing avatar limit triggers");
 

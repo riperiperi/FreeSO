@@ -200,8 +200,8 @@ namespace FSO.Client.UI.Panels.LotControls
 
         public string ObjectSummary(VMEntity obj)
         {
-            return obj.ToString() + " | " + obj.ObjectID + " | " + "container: " + obj.Container 
-                + "owner: " + ((obj.TSOState as SimAntics.Model.TSOPlatform.VMTSOObjectState)?.OwnerID ?? 0);
+            var owner = (obj.TSOState as SimAntics.Model.TSOPlatform.VMTSOObjectState)?.OwnerID ?? 0;
+            return $"{obj.ToString()} | {obj.ObjectID} | db: {obj.PersistID:x8} | container: {obj.Container} owner: {owner}";
 
         }
     }

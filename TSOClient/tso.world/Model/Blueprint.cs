@@ -16,6 +16,7 @@ namespace FSO.LotView.Model
     /// </summary>
     public class Blueprint
     {
+        public const float TerrainFactorConst = 3 / 160f;
         public List<BlueprintDamage> Damage = new List<BlueprintDamage>();
 
         public int Width;
@@ -113,7 +114,7 @@ namespace FSO.LotView.Model
 
         public short[] Altitude;
         public short[] AltitudeCenters;
-        public float TerrainFactor = 3 / 160f;
+        public float TerrainFactor = TerrainFactorConst;
         public int BaseAlt;
 
         // AF2022, obviously getting removed in a day

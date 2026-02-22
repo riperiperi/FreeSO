@@ -780,7 +780,8 @@ namespace FSO.Server
                     LOG.Info($"- Seems like it's already there... continuing.");
                 }
 
-                var objs = Directory.GetDirectories(Path.Combine(Config.SimNFS, "Objects/"));
+                var objectDir = Path.Combine(Config.SimNFS, "Objects/");
+                var objs = Path.Exists(objectDir) ? Directory.GetDirectories(objectDir) : [];
                 LOG.Info($"Migrating inventory to database... ({objs.Length} entries)");
 
                 int migratedCount = 0;
@@ -838,12 +839,6 @@ namespace FSO.Server
         public int Run()
         {
             SetPragmas();
-
-            MigrateInventoryState();
-
-            Commit();
-
-            return 1;
 
             var files = ScanDumps();
 

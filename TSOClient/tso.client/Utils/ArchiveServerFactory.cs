@@ -45,7 +45,7 @@ namespace FSO.Client.Utils
             // Database should exist, Data directory should exist.
             // Doesn't validate that they make any sense right now...
 
-            var dataFolder = manifest.LocalDir;
+            var dataFolder = Path.Combine(Path.GetDirectoryName(manifest.ActivePath), manifest.LocalDir);
 
             dir = null;
 

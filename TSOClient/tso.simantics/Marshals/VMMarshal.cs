@@ -24,7 +24,8 @@ namespace FSO.SimAntics.Marshals
         // 36 - FSO Inventory Token (inventory ops async state has temp list)
         // 37 - Inventory Token Total
         // 38 - Direct Control Frame
-        public static readonly int LATEST_VERSION = 38;
+        // 39 - VMTSOLotState Flags
+        public static readonly int LATEST_VERSION = 39;
 
         public int Version = LATEST_VERSION;
         public bool Compressed = true;

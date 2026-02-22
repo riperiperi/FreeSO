@@ -217,6 +217,17 @@ namespace FSO.Server.Database.DA.Lots
                 new { ring_backup_num = ring_backup_num, id = lot_id });
         }
 
+        public void UpdateRingBackupSilent(int lot_id, sbyte ring_backup_num)
+        {
+            Context.Connection.Query("UPDATE fso_lots SET ring_backup_num = @ring_backup_num WHERE lot_id = @id",
+                new { ring_backup_num, id = lot_id });
+        }
+
+        public void UpdateArchiveFlags(int lot_id, sbyte archive_flags)
+        {
+            Context.Connection.Query("UPDATE fso_lots SET archive_flags = @archive_flags WHERE lot_id = @id",
+                new { archive_flags, id = lot_id });
+        }
 
         public void CreateLotServerTicket(DbLotServerTicket ticket)
         {

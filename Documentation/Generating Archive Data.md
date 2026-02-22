@@ -1,0 +1,43 @@
+Here's the full process used to generate the FreeSO archive data from server data exported using mariadb-dump on The Save Date.
+
+- Build and configure FSO.Server.Core to point to a non-existent sqlite database file, and a copy of the NFS that you want to migrate to archive. These operations are destructive, so make sure you copy the NFS if you want to keep the original.
+  - Add `"engine": "sqlite",` to the database object, and then use a connection string like this:
+  - `Data Source=fsoarchive.db;Version=3;UTF8Encoding=True`
+- `dotnet run sqlite-import <dumpDir>`
+  - This imports the database from an SQL dump made with MariaDB dump 10.19. There should be one file per table, with triggers and functions, and the first alphabetically should be `fso_fso_auth_attempts.sql`.
+- `dotnet run archive-convert`
+  - This converts the database into the archive format. This involved deleting all users, user related tables, authentication and adding tables/columns for archive features. All existing avatars are transferred to an "archive user" with ID 1.
+- `dotnet run backup-selection`
+  - This step scans all lot saves to find cases where a roommate has left and taken a large number of objects with them. If this is the case, then the entry for that lot is updated to load that backup instead.
+    - When possible, the lot will attempt to "steal" recovered objects from the owner's inventory if it's not on another lot.
+  - This is useful for restoring the state of "abandoned" properties, after players have left and become roommate somewhere else.
+- `dotnet run data-trim -a`
+  - This step trims excess data to reduce the filesize of the archive, and can remove any data that might be personally identifying such as inbox, bookmarks etc. (the -a flag)
+    - This is a destructive process. The following information will be lost:
+      - Relationships with an invalid source, or insignificant value (-5 to 5).
+      - Object inventory data for objects that are on a lot (as the lot has authority in this case)
+      - Object inventory and plugin data for objects that have been deleted
+      - Lot backups apart from the newest and the oldest (or whatever `backup-selection` picked)
+        - Usually there are 10, trimming down to 2 backups saves a lot of space.
+      - Lot data that doesn't have a database entry (likely deleted)
+      - All rows in server state tables:
+        - `fso_auth_attempts`, `fso_auth_tickets`, `fso_lot_server_tickets`, `fso_shard_tickets`, `fso_tasks`, `fso_transactions`
+      - If the `-a` flag is provided (anonymize), all rows in these tables:
+        - `fso_inbox`, `fso_bookmarks`, `fso_bulletin_posts (deleted=1)`, `fso_election_votes`, `fso_election_freevotes`, `fso_election_candidates`, `fso_ip_ban`, `fso_lot_visits`, `fso_nhood_ban`, `fso_lot_admit`
+        - `from_user_id` from `fso_mayor_ratings` gets cleared somehow
+- `dotnet run plugin-anonymize <input-file>`
+  - This step tries to find objects with specific plugin data (signs, draw a card) that could potentially contain private information.
+  - Any signs or card dispensers that are in a user's inventory have their plugin data deleted.
+  - If on a lot, the tool loads the lot and determines if the object is accessible to fresh visitors. If it isn't, the data is deleted.
+    - allow all or ban list, and you can route to the object from the mailbox with visitor status. There's some special logic that allows routing through teleporters.
+  - Without an input file, the tool will output a list of all data for the user to review in `pluginReview.json` local to the game executable, and the automated decisions it made based on routing.
+  - You can feed this data back in immediately with `dotnet run plugin-anonymize pluginReview.json`, though it's recommended to do a pass through the data for anything that might be offensive, or to manually allow data that doesn't appear to be private.
+- `dotnet run import-archive-featured <shardId> <json>`
+  - A tool for importing manually featured lots for the archive data. Just a JSON array containing objects with `name`, `lot_id`, `category`, `description`.
+- Manual Cleanup
+  - Feel free to perform manual cleanups on the database file with a tool like https://sqlitebrowser.org/ .
+    - If you want to make sure something is definitely deleted/committed before distribution, run:
+      - `PRAGMA wal_checkpoint(TRUNCATE)`
+      - `vacuum`
+      - `PRAGMA wal_checkpoint(TRUNCATE)`
+  - You can also load up the save with the archive client and make changes there. This was done with the FreeSO archive data to finish the final town hall, cleanup the event lots, import some special lot data, and add a few easter eggs.

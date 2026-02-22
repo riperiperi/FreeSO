@@ -393,7 +393,7 @@ namespace FSO.Server.Servers.Lot.Domain
                         var marshal = new VMMarshal();
                         marshal.Deserialize(file);
 
-                        if (LotPersist.move_flags > 0)
+                        if (LotPersist.MoveFlags > 0)
                         {
                             //must rotate lot to face its new road direction!
                             var oldDir = ((VMTSOLotState)marshal.PlatformState).Size >> 16;
@@ -468,7 +468,12 @@ namespace FSO.Server.Servers.Lot.Domain
                         using (var db = DAFactory.Get())
                         {
                             db.Lots.UpdateRingBackup(LotPersist.lot_id, newBackup);
-                            //db.Flush();
+
+                            if ((LotPersist.ArchiveFlags & LotArchiveFlags.ArchiveFromOldSave) != 0)
+                            {
+                                LotPersist.ArchiveFlags = LotArchiveFlags.ArchiveRules;
+                                db.Lots.UpdateArchiveFlags(LotPersist.lot_id, (sbyte)LotPersist.archive_flags);
+                            }
                         }
                     }
                     catch (Exception e)
@@ -549,7 +554,8 @@ namespace FSO.Server.Servers.Lot.Domain
 
             var ents = new List<VMEntity>(Lot.Entities);
             var needToCreate = new HashSet<uint>(RequiredGUIDs);
-            var removeAll = (LotPersist.move_flags & 6) > 0;
+            var removeAll = (LotPersist.MoveFlags & LotMoveFlags.ShouldClearObjects) > 0;
+            bool keepAsOwnerless = (LotPersist.ArchiveFlags & LotArchiveFlags.ArchiveFromOldSave) != 0;
             foreach (var ent in ents)
             {
                 needToCreate.Remove(ent.Object.OBJ.GUID);
@@ -601,7 +607,19 @@ namespace FSO.Server.Servers.Lot.Domain
                             {
                                 total++;
                                 //this is run synchro.
-                                if (deleteMode == 1)
+                                if (keepAsOwnerless)
+                                {
+                                    foreach (var obj in delE.MultitileGroup.Objects)
+                                    {
+                                        if (obj.TSOState is VMTSOObjectState tsoobj)
+                                        {
+                                            tsoobj.OwnerID = 0;
+                                        }
+
+                                        obj.PersistID = 0;
+                                    }
+                                }
+                                else if (deleteMode == 1)
                                 {
                                     //return to inventory, since the object is actually on this lot
                                     VMGlobalLink.MoveToInventory(Lot, delE.MultitileGroup, (success, objid) =>
@@ -638,10 +656,10 @@ namespace FSO.Server.Servers.Lot.Domain
                 Lot.Context.CreateObjectInstance(obj, LotTilePos.OUT_OF_WORLD, Direction.NORTH);
             }
 
-            if ((LotPersist.move_flags & 2) > 0)
+            if ((LotPersist.MoveFlags & LotMoveFlags.New) > 0)
             {
                 BlueprintReset();
-                LotPersist.move_flags = 0;
+                LotPersist.MoveFlags = 0;
             }
         }
 
@@ -769,7 +787,8 @@ namespace FSO.Server.Servers.Lot.Domain
             Lot.Init();
 
             bool isNew = false;
-            bool isMoved = (LotPersist.move_flags > 0);
+            bool archiveOldSave = LotPersist.ArchiveFlags.HasFlag(LotArchiveFlags.ArchiveFromOldSave);
+            bool isMoved = LotPersist.MoveFlags > 0 || archiveOldSave;
             HollowLots = Task.Run(LoadAdj);
             if (!TransientLot && LotPersist.ring_backup_num > -1 && AttemptLoadRing())
             {
@@ -793,6 +812,7 @@ namespace FSO.Server.Servers.Lot.Domain
             Lot.TSOState.LotID = LotPersist.location;
             Lot.TSOState.SkillMode = LotPersist.skill_mode;
             Lot.TSOState.PropertyCategory = (byte)LotPersist.category;
+            Lot.TSOState.Flags = LotPersist.ArchiveFlags != 0 ? VMTSOLotStateFlags.Archived : 0;
             var isCommunity = LotPersist.category == LotCategory.community;
 
             if (isCommunity)
@@ -834,14 +854,22 @@ namespace FSO.Server.Servers.Lot.Domain
             Lot.Context.UpdateTSOBuildableArea();
 
             Lot.MyUID = uint.MaxValue - 1;
-            if ((LotPersist.move_flags & 2) > 0) isNew = true;
+            if ((LotPersist.MoveFlags & LotMoveFlags.New) > 0) isNew = true;
             ReturnInvalidObjects();
             if (!JobLot) ReturnOOWObjects();
 
+            var keepHeights = LotPersist.MoveFlags.HasFlag(LotMoveFlags.TerrainRegen) || archiveOldSave;
+            (byte[], short[])? restoreData = keepHeights ? VMLotTerrainRestoreTools.SnapshotTerrain(Lot) : null;
+
             var restoreType = UnownedLot ? RestoreLotType.Blank : (isCommunity ? RestoreLotType.Community : RestoreLotType.Normal);
-            if (isMoved || isNew) VMLotTerrainRestoreTools.RestoreTerrain(Lot, restoreType);
+            if (isMoved || isNew) VMLotTerrainRestoreTools.RestoreTerrain(Lot, restoreType, !keepHeights);
             VMLotTerrainRestoreTools.EnsureCoreObjects(Lot, restoreType);
             if (isNew) VMLotTerrainRestoreTools.PopulateBlankTerrain(Lot);
+
+            if (restoreData != null)
+            {
+                VMLotTerrainRestoreTools.RestoreBuildableTerrain(Lot, restoreData.Value);
+            }
 
             ResyncTime();
 
@@ -2012,7 +2040,7 @@ namespace FSO.Server.Servers.Lot.Domain
 
             VMDriver.EndRecord();
             LOG.Info("Lot with dbid = " + Context.DbId + " shutting down.");
-            if ((LotPersist.move_flags & 4) > 0)
+            if ((LotPersist.MoveFlags & LotMoveFlags.PermanentDelete) > 0)
             {
                 //this lot is slated to be deleted from the database.
                 using (var da = DAFactory.Get())

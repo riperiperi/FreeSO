@@ -212,5 +212,13 @@ namespace FSO.Server.Embedded
                 return [.. users.Select(UserFromSummary)];
             }
         }
+
+        public void SetInfo(string name, string map)
+        {
+            using (var da = DAFactory.Get())
+            {
+                da.Shards.UpdateInfo(1, name, map);
+            }
+        }
     }
 }
