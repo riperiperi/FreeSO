@@ -55,7 +55,7 @@ namespace FSO.Common
         public void LoadEvents()
         {
             // Try and load associated event config
-            var eventPath = Path.Combine(Path.GetDirectoryName(ArchiveDataDirectory), "events.json");
+            var eventPath = Path.Combine(ArchiveDataDirectory, "events.json");
 
             try
             {
@@ -74,7 +74,7 @@ namespace FSO.Common
             }
 
             // Try and save associated event config
-            var eventPath = Path.Combine(Path.GetDirectoryName(ArchiveDataDirectory), "events.json");
+            var eventPath = Path.Combine(ArchiveDataDirectory, "events.json");
 
             try
             {
