@@ -15,7 +15,7 @@ namespace FSO.Server.Utils
 
             foreach (var modifier in config.modifiers)
             {
-                var (start, end) = GetNextRange(modifier.startDate, modifier.endDate);
+                var (start, end) = EventConfig.GetNextRange(modifier.startDate, modifier.endDate);
                 foreach (var option in modifier.options)
                 {
                     var optionStart = start;
@@ -23,7 +23,7 @@ namespace FSO.Server.Utils
 
                     if (option.startDate != null && option.endDate != null)
                     {
-                        (optionStart, optionEnd) = GetNextRange(option.startDate, option.endDate);
+                        (optionStart, optionEnd) = EventConfig.GetNextRange(option.startDate, option.endDate);
                     }
 
                     if (!config.timed)
@@ -184,52 +184,6 @@ namespace FSO.Server.Utils
             {
                 da.Tuning.DeletePreset(item.item_id);
             }
-        }
-
-        private static (DateTime, DateTime) GetNextRange(string start, string end)
-        {
-
-            var startDate = GetNextDayMonth(start);
-            var endDate = GetNextDayMonth(end);
-
-            var now = DateTime.UtcNow;
-
-            if (startDate > endDate)
-            {
-                // This implies the event carries through the end of the year into next year.
-                if (now > endDate)
-                {
-                    // Start date is this year, end date is next
-                    endDate = endDate.AddYears(1);
-                }
-                else
-                {
-                    // Start date was last year (event is currently active)
-                    startDate = startDate.AddYears(-1);
-                }
-            }
-            else if (now > endDate)
-            {
-                // If we're after the end date, move it to next year.
-                startDate = startDate.AddYears(1);
-                endDate = endDate.AddYears(1);
-            }
-
-            return (startDate, endDate);
-        }
-
-        private static DateTime GetNextDayMonth(string dayMonth)
-        {
-            var split = dayMonth.Split('-');
-
-            if (split.Length != 2 || !int.TryParse(split[0], out int day) || !int.TryParse(split[1], out int month))
-            {
-                throw new InvalidDataException("Event date not correctly formatted, should be day-month.");
-            }
-
-            var now = DateTime.UtcNow;
-
-            return new DateTime(now.Year, month, day);
         }
     }
 }

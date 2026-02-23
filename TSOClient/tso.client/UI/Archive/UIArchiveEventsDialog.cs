@@ -25,6 +25,8 @@ namespace FSO.Client.UI.Archive
         private UIButton ManualClearButton;
         private UIButton ManualTimedButton;
 
+        private UILabel TimedDuration;
+
         private List<Action> CheckUpdateCallbacks;
 
         private bool ManualMode = false;
@@ -110,7 +112,7 @@ namespace FSO.Client.UI.Archive
                 ModifierEditors[i] = GenerateModifier(i);
             }
 
-            modifierVBox.Add(new UISpacer(20));
+            modifierVBox.Add(new UISpacer(10));
 
             modifierVBox.AutoSize();
             vbox.Add(modifierVBox);
@@ -129,6 +131,13 @@ namespace FSO.Client.UI.Archive
             ManualTimedButton.OnButtonClick += SimulateTimed;
 
             ManualHBox = manualHbox;
+
+            TimedDuration = new UILabel();
+            TimedDuration.CaptionStyle = TimedDuration.CaptionStyle.Clone();
+            TimedDuration.CaptionStyle.Shadow = true;
+            TimedDuration.CaptionStyle.Color = Color.White;
+
+            vbox.Add(TimedDuration);
 
             UpdateModifierButtons();
 
@@ -228,10 +237,12 @@ namespace FSO.Client.UI.Archive
                 if (ManualMode)
                 {
                     RootVBox.Add(ManualHBox);
+                    RootVBox.Remove(TimedDuration);
                 }
                 else
                 {
                     RootVBox.Remove(ManualHBox);
+                    RootVBox.Add(TimedDuration);
                 }
             }
 
@@ -280,6 +291,11 @@ namespace FSO.Client.UI.Archive
             {
                 ModifierButtons[j].Selected = j == i;
             }
+
+            var modifier = Events.modifiers[i];
+            var (start, end) = EventConfig.GetNextRange(modifier.startDate, modifier.endDate);
+            TimedDuration.Caption = $"{start:d} - {end:d}";
+            TimedDuration.AutoSize();
 
             AutoSize();
         }
