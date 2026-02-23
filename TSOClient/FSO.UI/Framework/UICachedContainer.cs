@@ -17,6 +17,7 @@ namespace FSO.Client.UI.Framework
         public bool UseMip;
         public bool UseZ;
         public bool InternalBefore;
+        public Vector2 Overhang;
 
         public UICachedContainer()
         {
@@ -40,7 +41,7 @@ namespace FSO.Client.UI.Framework
             var gd = batch.GraphicsDevice;
             if (Invalidated)
             {
-                var size = Size * Scale;
+                var size = (Size + Overhang) * Scale;
                 if (Target == null || (int)size.X != Target.Width || (int)size.Y != Target.Height)
                 {
                     Target?.Dispose();
