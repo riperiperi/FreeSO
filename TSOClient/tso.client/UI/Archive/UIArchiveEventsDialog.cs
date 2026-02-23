@@ -15,6 +15,7 @@ namespace FSO.Client.UI.Archive
         private TextStyle GroupHeaderStyle;
 
         private UIVBoxContainer RootVBox;
+        private UIVBoxContainer ModifierVBox;
         private UIHBoxContainer TabHBox;
         private UIContainer ActiveModifierEditor;
         private UIButton[] ModifierButtons;
@@ -31,6 +32,10 @@ namespace FSO.Client.UI.Archive
 
         public UIArchiveEventsDialog(ArchiveConfiguration config) : base(UIDialogStyle.OK, true)
         {
+            var gd = GameFacade.GraphicsDevice;
+            var custom = Content.Content.Get().CustomUI;
+            var tabTex = custom.Get("archive_tab.png").Get(gd);
+
             Caption = "Events";
             Config = config;
 
@@ -67,7 +72,10 @@ namespace FSO.Client.UI.Archive
             vbox.Add(modeHbox);
             vbox.Add(new UISpacer(10));
 
-            var tabHbox = new UIHBoxContainer();
+            var modifierVBox = new UIVBoxContainer();
+            ModifierVBox = modifierVBox;
+
+            var tabHbox = new UIHBoxContainer() { Spacing = 0 };
 
             ModifierButtons = new UIButton[Events.modifiers.Length];
             ModifierEditors = new UIContainer[Events.modifiers.Length];
@@ -78,7 +86,9 @@ namespace FSO.Client.UI.Archive
 
                 var btn = new UIButton()
                 {
-                    Caption = modifier.label
+                    Texture = tabTex,
+                    Caption = modifier.label,
+                    AutoMargins = 32
                 };
 
                 int btnI = i;
@@ -92,7 +102,7 @@ namespace FSO.Client.UI.Archive
                 tabHbox.Add(btn);
             }
 
-            vbox.Add(tabHbox);
+            modifierVBox.Add(tabHbox);
             TabHBox = tabHbox;
 
             for (int i = 0; i < Events.modifiers.Length; i++)
@@ -100,7 +110,10 @@ namespace FSO.Client.UI.Archive
                 ModifierEditors[i] = GenerateModifier(i);
             }
 
-            vbox.Add(new UISpacer(20));
+            modifierVBox.Add(new UISpacer(20));
+
+            modifierVBox.AutoSize();
+            vbox.Add(modifierVBox);
 
             var manualHbox = new UIHBoxContainer();
             manualHbox.Add(ManualClearButton = new UIButton()
@@ -250,7 +263,7 @@ namespace FSO.Client.UI.Archive
 
         private void SetModifierEditor(int i)
         {
-            var vbox = RootVBox;
+            var vbox = ModifierVBox;
             var children = vbox.GetChildren();
             int insertIndex = children.IndexOf(TabHBox) + 1;
             if (ActiveModifierEditor != null)
@@ -436,6 +449,7 @@ namespace FSO.Client.UI.Archive
             for (int i = 0; i < optByCategory.Length; i += 2)
             {
                 var hbox = new UIHBoxContainer();
+                hbox.Add(new UISpacer(20));
 
                 var groupOne = optByCategory[i];
 
