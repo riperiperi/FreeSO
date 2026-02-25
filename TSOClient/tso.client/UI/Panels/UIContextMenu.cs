@@ -14,6 +14,8 @@ namespace FSO.Client.UI.Panels
 {
     public class UIContextMenu : UIContainer, IFocusableUI
     {
+        public bool IsFocused { get; set; }
+        public int TabIndex { get; set; } = -1;
         public UIElement Watching;
         public string LastSearch;
         private int Height;
