@@ -97,6 +97,12 @@ namespace FSO.Client.UI.Panels
         public UIEODController EODs;
 
         public int WallsMode = 1;
+        private bool IsSpectator => (ActiveEntity as VMAvatar ?? vm.GetAvatarByPersist(vm.MyUID))
+            is VMAvatar ava && ((VMTSOAvatarState)ava.TSOState)?.IsSpectator == true;
+
+        private bool IsBlockedForSpectator(VMEntity obj)
+            => IsSpectator && obj is VMGameObject && obj != GotoObject && obj != TransitionObject
+            && obj.Object.OBJ.GUID != PAYPHONE_GUID && obj.Object.OBJ.GUID != NHOOD_PAYPHONE_GUID;
 
         private int OldMX;
         private int OldMY;
@@ -146,6 +152,9 @@ namespace FSO.Client.UI.Panels
 
         private static uint TRANSITION_GUID = 0x746ED02B;
         public VMEntity TransitionObject;
+
+        private static uint PAYPHONE_GUID = 0x313D2F9A;
+        private static uint NHOOD_PAYPHONE_GUID = 0x303CD603;
 
         private Rectangle MouseCutRect = new Rectangle(-4, -4, 4, 4);
         private List<uint> CutRooms = new List<uint>();
@@ -267,7 +276,9 @@ namespace FSO.Client.UI.Panels
 
         public string GetLotTitle()
         {
-            return vm.LotName + " - " + vm.Entities.Count(x => x is VMAvatar && x.PersistID != 0);
+            var title = vm.LotName + " - " + vm.Entities.Count(x => x is VMAvatar && x.PersistID != 0);
+            if (IsSpectator) title += " (Spectator)";
+            return title;
         }
 
         void vm_OnDialog(FSO.SimAntics.Model.VMDialogInfo info)
@@ -512,7 +523,11 @@ namespace FSO.Client.UI.Panels
                             Queue.QueueOwner = ActiveEntity;
                             Queue.DebugMode = true;
                         }*/
-                        if (obj is VMGameObject && ((VMGameObject)obj).Disabled > 0)
+                        if (objSelected && IsBlockedForSpectator(obj))
+                        {
+                            ShowErrorTooltip(state, 0, true);
+                        }
+                        else if (obj is VMGameObject && ((VMGameObject)obj).Disabled > 0)
                         {
                             var flags = ((VMGameObject)obj).Disabled;
 
@@ -768,7 +783,11 @@ namespace FSO.Client.UI.Panels
                         if (InteractionsAvailable)
                         {
                             var obj = GetHoverById(ObjectHover);
-                            if (obj is VMAvatar)
+                            if (IsBlockedForSpectator(obj))
+                            {
+                                cursor = CursorType.LiveObjectUnavail;
+                            }
+                            else if (obj is VMAvatar)
                             {
                                 cursor = (((VMAvatar)obj).GetPersonData(VMPersonDataVariable.PersonType) < 254) ? CursorType.LivePerson : CursorType.LiveObjectAvail;
                             }
@@ -1045,6 +1064,13 @@ namespace FSO.Client.UI.Panels
                     vm.Context.World.State.CenterTile = new Vector2(ActiveEntity.VisualPosition.X, ActiveEntity.VisualPosition.Y);
                     vm.Context.World.State.ScrollAnchor = null;
                     FoundMe = true;
+
+                    // Force walls up with roof for spectators
+                    if (IsSpectator)
+                    {
+                        WallsMode = 3;
+                        World.State.DrawRoofs = true;
+                    }
                 }
                 Queue.QueueOwner = ActiveEntity;
             }

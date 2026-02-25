@@ -13,6 +13,7 @@ using Ninject;
 using System;
 using System.Collections.Concurrent;
 using System.Collections.Generic;
+using System.Linq;
 using System.Threading;
 using System.Threading.Tasks;
 
@@ -27,7 +28,8 @@ namespace FSO.Server.Servers.City.Domain
         private JobMatchmaker Matchmaker;
         private IShardRealestateDomain Realestate;
 
-        private bool AllowGuestOpening => Context.Config.AllOpenable || (Context.Config.Archive?.Flags.HasFlag(FSO.Common.ArchiveConfigFlags.AllOpenable) ?? false);
+        private bool AllowGuestOpening => Context.Config.AllOpenable || ArchiveFreeRoam;
+        private bool ArchiveFreeRoam => Context.Config.Archive?.Flags.HasFlag(FSO.Common.ArchiveConfigFlags.AllOpenable) ?? false;
 
         public LotAllocations(LotServerPicker PickingEngine, IDAFactory daFactory, CityServerContext context, IKernel kernel)
         {
@@ -196,6 +198,8 @@ namespace FSO.Server.Servers.City.Domain
                             var coords = MapCoordinates.Unpack(lotId);
 
                             DbLot lot = null;
+                            bool isRoommate = false;
+                            bool isAdmin = false;
                             using (var db = DAFactory.Get())
                             {
                                 //Convert the lot location into a lot db id
@@ -256,6 +260,30 @@ namespace FSO.Server.Servers.City.Domain
                                             });
                                         }
                                     }
+
+                                    if (avatarId != 0 && AllowGuestOpening && !ArchiveFreeRoam)
+                                    {
+                                        isAdmin = db.Avatars.GetModerationLevel(avatarId) > 0;
+
+                                        if (lot.lot_id != 0)
+                                        {
+                                            var roomies = db.Roommates.GetLotRoommates(lot.lot_id);
+                                            isRoommate = roomies.Any(r => r.is_pending == 0 && r.avatar_id == avatarId);
+
+                                            // Spectators still respect ban rules
+                                            if (!isRoommate && !isAdmin
+                                                && ((lot.admit_mode == 1 && !db.LotAdmit.GetLotAdmitDeny(lot.lot_id, 0).Contains(avatarId))
+                                                || (lot.admit_mode == 2 && db.LotAdmit.GetLotAdmitDeny(lot.lot_id, 1).Contains(avatarId))
+                                                || lot.admit_mode == 3))
+                                            {
+                                                Remove(lotId);
+                                                return Immediate(new TryFindLotResult
+                                                {
+                                                    Status = FindLotResponseStatus.NOT_PERMITTED_TO_OPEN
+                                                });
+                                            }
+                                        }
+                                    }
                                 }
                             }
 
@@ -267,8 +295,14 @@ namespace FSO.Server.Servers.City.Domain
                                     Status = FindLotResponseStatus.CLAIM_FAILED
                                 });
                             }
-                            allocation.SetLot(lot, (uint)Context.ShardId,
-                                (avatarId == 0) ? ClaimAction.LOT_CLEANUP : ClaimAction.LOT_HOST);
+                            ClaimAction openAction;
+                            if (avatarId == 0)
+                                openAction = ClaimAction.LOT_CLEANUP;
+                            else if (AllowGuestOpening && !ArchiveFreeRoam && !isRoommate && !isAdmin)
+                                openAction = ClaimAction.LOT_SPECTATOR;
+                            else
+                                openAction = ClaimAction.LOT_HOST;
+                            allocation.SetLot(lot, (uint)Context.ShardId, openAction);
                         }
                         else { 
                             allocation.SetLot(new DbLot() { lot_id = (int)lotId }, originalId,
@@ -345,6 +379,24 @@ namespace FSO.Server.Servers.City.Domain
                                                     Status = FindLotResponseStatus.NO_ADMIT
                                                 });
                                             }
+                                        }
+                                    }
+                                    // Spectators (non-archive) still respect ban rules
+                                    else if (AllowGuestOpening && !ArchiveFreeRoam)
+                                    {
+                                        var roomies = db.Roommates.GetLotRoommates(lot.lot_id);
+                                        var isLotRoommate = roomies.Any(r => r.is_pending == 0 && r.avatar_id == avatarId);
+                                        var isLotAdmin = db.Avatars.GetModerationLevel(avatarId) > 0;
+
+                                        if (!isLotRoommate && !isLotAdmin
+                                            && ((lot.admit_mode == 1 && !db.LotAdmit.GetLotAdmitDeny(lot.lot_id, 0).Contains(avatarId))
+                                            || (lot.admit_mode == 2 && db.LotAdmit.GetLotAdmitDeny(lot.lot_id, 1).Contains(avatarId))
+                                            || lot.admit_mode == 3))
+                                        {
+                                            return Immediate(new TryFindLotResult
+                                            {
+                                                Status = FindLotResponseStatus.NO_ADMIT
+                                            });
                                         }
                                     }
                                 }

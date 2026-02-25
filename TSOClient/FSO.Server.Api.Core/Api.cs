@@ -45,6 +45,8 @@ namespace FSO.Server.Api.Core
             Config.UseProxy = bool.Parse(appSettings["useProxy"]);
             Config.UpdateID = (appSettings["updateID"] == "") ? (int?)null : int.Parse(appSettings["updateID"]);
             Config.BranchName = appSettings["branchName"] ?? "beta";
+            Config.AllOpenable = bool.TryParse(appSettings["allOpenable"], out var allOpenable) && allOpenable;
+
 
             // new smtp config vars
             if (appSettings["smtpHost"]!=null&&

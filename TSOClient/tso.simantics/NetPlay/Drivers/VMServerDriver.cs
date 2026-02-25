@@ -1,4 +1,5 @@
-﻿using FSO.SimAntics.NetPlay.Model;
+﻿using FSO.SimAntics.Model.TSOPlatform;
+using FSO.SimAntics.NetPlay.Model;
 using FSO.SimAntics.NetPlay.Model.Commands;
 using FSO.SimAntics.NetPlay.SandboxMode;
 using FSO.SimAntics.Engine.TSOTransaction;
@@ -57,6 +58,7 @@ namespace FSO.SimAntics.NetPlay.Drivers
 
         public BanList SandboxBans;
         public bool SelfResync;
+        private volatile int _syncGeneration;
 
         private uint TickID = 1;
 
@@ -74,6 +76,31 @@ namespace FSO.SimAntics.NetPlay.Drivers
             TickBuffer = new List<VMNetTick>();
 
             SandboxBans = new BanList();
+        }
+
+        /// <summary>
+        /// Recreates all client avatars after a VM state reload and triggers a full resync.
+        /// </summary>
+        public void RejoinClients(VM vm)
+        {
+            foreach (var avatar in vm.Context.ObjectQueries.Avatars.ToList())
+                avatar.Delete(true, vm.Context);
+
+            lock (Clients)
+            {
+                foreach (var client in Clients.Values)
+                {
+                    client.HadAvatar = false;
+                    client.AvatarState.AvatarFlags &= ~VMTSOAvatarFlags.Spectator;
+                    new VMNetSimJoinCmd
+                    {
+                        ActorUID = client.PersistID,
+                        AvatarState = client.AvatarState,
+                    }.Execute(vm);
+                }
+            }
+
+            SyncAllClients(asNew: true);
         }
 
         public void ConnectClient(VMNetClient client)
@@ -168,6 +195,7 @@ namespace FSO.SimAntics.NetPlay.Drivers
                     }
             };
 
+            var gen = _syncGeneration;
             Task.Run(() =>
             {
                 byte[] data;
@@ -179,9 +207,28 @@ namespace FSO.SimAntics.NetPlay.Drivers
                     }
                     data = stream.ToArray();
                 }
-                LastSync = data;
+                if (gen == _syncGeneration)
+                    LastSync = data;
                 SyncSerializing = false;
             });
+        }
+
+        public void SyncAllClients(bool asNew = false)
+        {
+            lock (ClientsToSync)
+            {
+                lock (Clients)
+                {
+                    foreach (var client in Clients.Values)
+                    {
+                        ClientsToSync.Add(client);
+                        if (asNew) NewClients.Add(client);
+                    }
+                }
+                _syncGeneration++;
+                LastSync = null;
+                FastTick = true;
+            }
         }
 
         private void SendState(VM vm)

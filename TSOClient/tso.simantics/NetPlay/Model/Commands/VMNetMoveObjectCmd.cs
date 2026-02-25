@@ -13,6 +13,12 @@ namespace FSO.SimAntics.NetPlay.Model.Commands
         public sbyte level;
         public Direction dir;
 
+        public override bool Verify(VM vm, VMAvatar caller)
+        {
+            if (IsSpectator(caller)) return false;
+            return true;
+        }
+
         public override bool Execute(VM vm, VMAvatar caller)
         {
             VMEntity obj = vm.GetObjectById(ObjectID);

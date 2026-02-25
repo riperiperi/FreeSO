@@ -325,7 +325,6 @@ namespace FSO.Client.UI.Controls
             {
                 case UIMouseEventType.MouseOver:
                     m_MouseOver = true;
-                    update.InputManager.SetFocus(this);
                     break;
 
                 case UIMouseEventType.MouseOut:
@@ -334,6 +333,7 @@ namespace FSO.Client.UI.Controls
 
                 case UIMouseEventType.MouseUp:
                     /** Click **/
+                    update.InputManager.SetFocus(this);
                     var row = GetRowUnderMouse(update);
                     if (row != -1)
                     {
@@ -497,7 +497,7 @@ namespace FSO.Client.UI.Controls
 
                 var selected = rowIndex == m_SelectedRow || ValuePointer.Get<Boolean>(row.UseSelectedStyleByDefault);
                 var hover = rowIndex == m_HoverRow;
-                if (selected)
+                if (selected && m_SelectionTexture != null)
                 {
                     /** Draw selection background **/
                     var fillColor = IsFocused ? m_SelectionFillColor : m_SelectionFillColor * 0.8f;

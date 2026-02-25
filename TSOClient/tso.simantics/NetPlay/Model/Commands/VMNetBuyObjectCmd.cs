@@ -130,6 +130,7 @@ namespace FSO.SimAntics.NetPlay.Model.Commands
 
         public override bool Verify(VM vm, VMAvatar caller)
         {
+            if (IsSpectator(caller)) return false;
             if (Verified) return true; //set internally when transaction succeeds. trust that the verification happened.
             value = 0; //do not trust value from net
             if (!vm.TS1)

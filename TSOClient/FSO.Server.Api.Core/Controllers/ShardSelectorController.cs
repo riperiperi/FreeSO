@@ -85,6 +85,7 @@ namespace FSO.Server.Api.Core.Controllers
                     result.Ticket = ticket.ticket_id;
                     result.ConnectionID = ticket.ticket_id;
                     result.AvatarID = avatarId;
+                    result.SpectatorMode = api.Config.AllOpenable;
 
                     return ApiResponse.Xml(HttpStatusCode.OK, result);
                 }

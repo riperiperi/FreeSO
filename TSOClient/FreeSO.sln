@@ -1524,6 +1524,10 @@ Global
 		{B5B2C04D-B8E4-47C7-9731-48E30FD5F70D}.Windows|iPhone.Build.0 = Debug|Any CPU
 		{B5B2C04D-B8E4-47C7-9731-48E30FD5F70D}.Windows|iPhoneSimulator.ActiveCfg = Debug|Any CPU
 		{B5B2C04D-B8E4-47C7-9731-48E30FD5F70D}.Windows|iPhoneSimulator.Build.0 = Debug|Any CPU
+		{69DBDA50-1616-4B1B-9295-78E130C5119E}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{69DBDA50-1616-4B1B-9295-78E130C5119E}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{69DBDA50-1616-4B1B-9295-78E130C5119E}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{69DBDA50-1616-4B1B-9295-78E130C5119E}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE

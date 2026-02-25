@@ -9,7 +9,7 @@
         <ApplicationIcon>fso.ico</ApplicationIcon>
         <PublishReadyToRun>false</PublishReadyToRun>
         <TieredPGO>true</TieredPGO>
-        <_EnableMacOSCodeSign>false</_EnableMacOSCodeSign>
+        <_EnableMacOSCodeSign Condition="'$(PublishSingleFile)' == 'true'">false</_EnableMacOSCodeSign>
         <PublishAot>false</PublishAot>
         <PublishTrimmed>false</PublishTrimmed>
     </PropertyGroup>
