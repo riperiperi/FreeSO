@@ -27,7 +27,7 @@ namespace FSO.Server.Servers.City.Domain
         private JobMatchmaker Matchmaker;
         private IShardRealestateDomain Realestate;
 
-        private bool AllowGuestOpening => Context.Config.Archive != null && Context.Config.Archive.Flags.HasFlag(FSO.Common.ArchiveConfigFlags.AllOpenable);
+        private bool AllowGuestOpening => Context.Config.AllOpenable || (Context.Config.Archive?.Flags.HasFlag(FSO.Common.ArchiveConfigFlags.AllOpenable) ?? false);
 
         public LotAllocations(LotServerPicker PickingEngine, IDAFactory daFactory, CityServerContext context, IKernel kernel)
         {

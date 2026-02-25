@@ -183,6 +183,7 @@ namespace FSO.Server
             foreach (var cityServer in Config.Services.Cities)
             {
                 if (cityServer.Archive == null) cityServer.Archive = Config.Archive;
+                if (!cityServer.AllOpenable) cityServer.AllOpenable = Config.AllOpenable;
 
                 /**
                  * Need to create a kernel for each city server as there is some data they do not share
@@ -204,6 +205,7 @@ namespace FSO.Server
             foreach (var lotServer in Config.Services.Lots)
             {
                 if (lotServer.Archive == null) lotServer.Archive = Config.Archive;
+                if (!lotServer.AllOpenable) lotServer.AllOpenable = Config.AllOpenable;
 
                 if (lotServer.SimNFS == null) lotServer.SimNFS = Config.SimNFS;
                 var childKernel = new ChildKernel(

@@ -39,6 +39,8 @@ namespace FSO.Server.Servers.City
 
         protected override RequestClientSessionArchive ArchiveHandshake(IoSession session)
         {
+            if (Config.Archive == null) return null;
+
             var nonce = Convert.ToBase64String(RandomNumberGenerator.GetBytes(16));
 
             session.SetAttribute("ArchiveNonce", nonce);

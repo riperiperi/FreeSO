@@ -102,7 +102,7 @@ namespace FSO.Server.Servers.Lot.Domain
         private LiveSurroundLotConnection SurroundConnection;
         private HashSet<uint> FreeRoamLeaving = [];
 
-        private bool AllowGuestOpening => Config.Archive != null && Config.Archive.Flags.HasFlag(FSO.Common.ArchiveConfigFlags.AllOpenable);
+        private bool AllowGuestOpening => Config.AllOpenable || (Config.Archive?.Flags.HasFlag(FSO.Common.ArchiveConfigFlags.AllOpenable) ?? false);
 
         private static HashSet<uint> ValidOOWGUIDs = new HashSet<uint>()
         {

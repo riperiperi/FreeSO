@@ -1,7 +1,7 @@
 ﻿using System;
 using System.Data.Common;
 using System.Data;
-using System.Data.SQLite;
+using Microsoft.Data.Sqlite;
 using FSO.Server.Database.SqliteCompat;
 
 namespace FSO.Server.Database.DA
@@ -37,7 +37,7 @@ namespace FSO.Server.Database.DA
                     }
                     else
                     {
-                        _connection = new SQLiteConnection(_connectionString);
+                        _connection = new SqliteConnection(_connectionString);
                     }
                 }
 
@@ -54,7 +54,7 @@ namespace FSO.Server.Database.DA
             {
                 if (_pool != null)
                 {
-                    _pool.Return((SQLiteConnection)_connection);
+                    _pool.Return((SqliteConnection)_connection);
                 }
                 else
                 {
