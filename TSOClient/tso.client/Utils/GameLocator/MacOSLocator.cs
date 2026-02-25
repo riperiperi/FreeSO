@@ -10,7 +10,7 @@ namespace FSO.Client.Utils.GameLocator
             string localDir = @"../The Sims Online/TSOClient/";
             if (File.Exists(Path.Combine(localDir, "tuning.dat"))) return localDir;
             
-            return string.Format("{0}/Documents/The Sims Online/TSOClient/", Environment.GetFolderPath(Environment.SpecialFolder.MyDocuments));
+            return string.Format("{0}/The Sims Online/TSOClient/", Environment.GetFolderPath(Environment.SpecialFolder.MyDocuments));
         }
     }
 }
