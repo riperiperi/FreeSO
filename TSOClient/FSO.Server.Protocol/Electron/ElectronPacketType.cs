@@ -40,6 +40,8 @@ namespace FSO.Server.Protocol.Electron
         VerificationNotification,
         JoinLotWithTransitionRequest,
         FSOVMSurroundPuppets,
+        CityUpdateRequest,
+        CityUpdateResponse,
         Unknown = 0xFFFF
     }
 

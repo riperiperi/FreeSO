@@ -1,0 +1,34 @@
+1 ^Edit City^
+
+2 ^Elevation^
+3 ^Terrain Type^
+4 ^Roads^
+5 ^Trees^
+
+6 ^Undo^
+7 ^Redo^
+8 ^Update City Thumbnail^
+9 ^Lock Lot Terrain^
+10 ^Brush Size^
+11 ^Brush Intensity^
+12 ^Spray Brush^
+13 ^Invert brush (or hold ctrl)
+14 ^(inverted)^
+15 ^Close^
+
+20 ^Auto Terrain Type^
+21 ^Flatten^
+22 ^Natural Edge^
+
+30 ^Grass^
+31 ^Water^
+32 ^Rock^
+33 ^Snow^
+34 ^Sand^
+
+40 ^Heavy^
+41 ^Light^
+42 ^Cacti^
+43 ^Palm^
+
+50 ^Modified by %s^

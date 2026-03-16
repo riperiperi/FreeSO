@@ -350,6 +350,11 @@ namespace FSO.LotView.Components
             return new Tuple<Vector3, Vector3>(pos, angle);
         }
 
+        public ushort GetPreciseFloor(Vector3 tile)
+        {
+            return Bp.GetPreciseFloor(tile);
+        }
+
         public bool TileIndoors(int x, int y, int level)
         {
             if (x < 0 || y < 0 || level < 0 || x >= Bp.Width || y >= Bp.Height || level >= Bp.Stories)
@@ -424,6 +429,18 @@ namespace FSO.LotView.Components
             }
         }
 
+        private Vector2 BoostStick(Vector2 stick, float factor)
+        {
+            stick *= factor;
+
+            if (stick.LengthSquared() > 1)
+            {
+                stick.Normalize();
+            }
+
+            return stick;
+        }
+
         private ControllerState GenerateControllerState()
         {
             // Generate controller state from the first plugged in XNA controller.
@@ -443,11 +460,15 @@ namespace FSO.LotView.Components
             if (gamepad.Buttons.RightShoulder == ButtonState.Pressed) controllerState.ButtonDown |= Button.Z_TRIG;
             if (gamepad.Buttons.LeftShoulder == ButtonState.Pressed) controllerState.ButtonDown |= Button.Z_TRIG;
 
-            controllerState.StickX = gamepad.ThumbSticks.Left.X * 64;
-            controllerState.StickY = gamepad.ThumbSticks.Left.Y * 64;
+            var leftStick = BoostStick(gamepad.ThumbSticks.Left, 1.20f);
 
-            controllerState.RawStickX = (short)(gamepad.ThumbSticks.Left.X * 32767f);
-            controllerState.RawStickY = (short)(gamepad.ThumbSticks.Left.Y * 32767f);
+            Console.WriteLine($"{leftStick.Length()}");
+
+            controllerState.StickX = leftStick.X * 64;
+            controllerState.StickY = leftStick.Y * 64;
+
+            controllerState.RawStickX = (short)(leftStick.X * 32767f);
+            controllerState.RawStickY = (short)(leftStick.Y * 32767f);
 
             controllerState.ButtonPressed = controllerState.ButtonDown & (~LastState.ButtonDown);
 
@@ -1652,6 +1673,14 @@ namespace FSO.LotView.Components
             { 1, "sting_potion_funny" }
         };
 
+        private static readonly string[] FootstepSounds =
+            [
+                "footstep_soft",
+                "footstep_medium",
+                "footstep_hard",
+                "footstep_terrain",
+            ];
+
         public void SetSource(VisualMario visual)
         {
             Source = visual;
@@ -1661,7 +1690,29 @@ namespace FSO.LotView.Components
         {
             // TODO: play from mario location...
 
-            if (SoundBitsToHitEvt.TryGetValue(soundBits, out string evt))
+            const uint TerrainMask = 0xFFF0FFFF;
+
+            string evt = null;
+
+            if ((soundBits & TerrainMask) == Mario.Enum.Sound.SOUND_ACTION_TERRAIN_STEP)
+            {
+                int hardness = 2;
+                var visualPos = Component.MyMario.Position ?? default;
+                ushort floorTileId = Component.GetPreciseFloor(new Vector3(visualPos.X, visualPos.Z, visualPos.Y) / 3f);
+
+                if (floorTileId == 0)
+                {
+                    hardness = 3;
+                }
+                else if (Content.Content.Get().WorldFloors.Entries.TryGetValue(floorTileId, out var floor))
+                {
+                    hardness = floor.Hardness;
+                }
+
+                evt = FootstepSounds[hardness];
+            }
+
+            if (evt != null || SoundBitsToHitEvt.TryGetValue(soundBits, out evt))
             {
                 var hitvm = FSO.HIT.HITVM.Get();
 

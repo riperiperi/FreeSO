@@ -93,7 +93,7 @@ namespace FSO.Client.UI.Panels
             Blocks = BuildBlocks(MaxisCredits());
         }
 
-        private IEnumerable<string> MaxisCredits()
+        private IEnumerable<string> CSTCredits(string cst)
         {
             int index = 1;
             var strings = GameFacade.Strings;
@@ -101,7 +101,7 @@ namespace FSO.Client.UI.Panels
             bool hasValue = true;
             do
             {
-                string message = strings.GetString("242", index.ToString());
+                string message = strings.GetString(cst, index.ToString());
 
                 index++;
 
@@ -117,6 +117,16 @@ namespace FSO.Client.UI.Panels
             while (hasValue);
 
             yield break;
+        }
+
+        private IEnumerable<string> MaxisCredits()
+        {
+            return CSTCredits("242");
+        }
+
+        private IEnumerable<string> FreeSOCredits()
+        {
+            return CSTCredits("f200");
         }
 
         private List<CreditsBlock> BuildBlocks(IEnumerable<string> nextLine)
@@ -175,7 +185,7 @@ namespace FSO.Client.UI.Panels
 
             // Prepare drawing for any items that are onscreen
             float areaHeight = Size.Y;
-            float scrollHeight = lastBlock.Y + lastBlock.LineInfo.LineHeight + areaHeight * 2;
+            float scrollHeight = lastBlock.Y + lastBlock.LineInfo.LineHeight + areaHeight;
 
             if (ActiveScroll > scrollHeight)
             {

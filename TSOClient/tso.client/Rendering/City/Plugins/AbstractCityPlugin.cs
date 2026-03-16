@@ -8,7 +8,7 @@ namespace FSO.Client.Rendering.City.Plugins
     {
         public bool ForceNear { get; protected set; }
 
-        protected Terrain City;
+        public Terrain City { get; protected set; }
         public AbstractCityPlugin(Terrain city)
         {
             City = city;

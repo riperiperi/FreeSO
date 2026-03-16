@@ -34,6 +34,7 @@ namespace FSO.LotView
             SpriteEffect = new Effects.SpriteEffect(ContentManager.Load<Effect>("Effects/SpriteEffects" + EffectSuffix));
             ParticleEffect = new LightMappedEffect(ContentManager.Load<Effect>("Effects/ParticleShader"));
             AvatarEffect = new LightMappedEffect(ContentManager.Load<Effect>("Effects/Vitaboy" + EffectSuffix));
+            MapGenerationEffect = new MapGeneration(ContentManager.Load<Effect>("Effects/MapGeneration" + EffectSuffix));
 
             Files.RC.Utils.DepthTreatment.SpriteEffect = SpriteEffect;
 
@@ -71,6 +72,8 @@ namespace FSO.LotView
         public static LightMappedEffect ParticleEffect;
 
         public static LightMappedEffect AvatarEffect;
+
+        public static MapGeneration MapGenerationEffect;
 
         private static VertexBuffer _TextureVerts;
         public static VertexBuffer GetTextureVerts(GraphicsDevice gd) 

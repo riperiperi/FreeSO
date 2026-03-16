@@ -9,8 +9,11 @@ using FSO.Common.DataService.Model;
 using FSO.Common.Domain.Realestate;
 using FSO.Common.Domain.RealestateDomain;
 using FSO.Common.Utils;
+using FSO.Content.Model;
 using FSO.Files.RC;
+using FSO.Server.Clients;
 using FSO.Server.DataService.Model;
+using FSO.Server.Protocol.Electron.Model.CityEditCommands;
 using FSO.Server.Protocol.Electron.Packets;
 using Microsoft.Xna.Framework;
 using Microsoft.Xna.Framework.Graphics;
@@ -21,12 +24,13 @@ using System.Linq;
 
 namespace FSO.Client.Controllers
 {
-    public class TerrainController : IDisposable
+    public class TerrainController : IAriesMessageSubscriber, IDisposable
     {
         public CoreGameScreenController Parent;
+        public IShardRealestateDomain Realestate { get; }
+
         private Terrain View;
         private IClientDataService DataService;
-        private IShardRealestateDomain Realestate;
         private PurchaseLotRegulator PurchaseRegulator;
         private LotThumbContent LotThumbs;
         private uint ShardId;
@@ -60,6 +64,41 @@ namespace FSO.Client.Controllers
             CurrentCity = new Binding<City>().WithMultiBinding(RefreshCity, "City_ReservedLotInfo", "City_SpotlightsVector");
 
             LotThumbs = new LotThumbContent(parent.CityResource);
+
+            Realestate.OnMapChange += MapChange;
+
+            network.CityClient.AddSubscriber(this);
+        }
+
+        private void MapChange(Rectangle obj)
+        {
+            View.GenerateCityMesh(GameFacade.GraphicsDevice, obj);
+        }
+
+        public void CommitMapChange(CityEditBase cmd)
+        {
+            cmd.AvatarId = Network.MyCharacter;
+
+            // Send it over to the server.
+            // Make sure it's not temp (but don't overwrite it for the local copy)
+
+            var prevTemp = cmd.IsTemp;
+            cmd.IsTemp = false;
+            Network.CityClient.Write(new CityUpdateRequest() { Command = new(cmd) });
+            cmd.IsTemp = prevTemp;
+        }
+
+        public void UpdateTempMapChange(CityEditBase cmd)
+        {
+            if (cmd != null)
+            {
+                cmd.AvatarId = Network.MyCharacter;
+                cmd.IsTemp = true;
+
+                // TODO: submit temp to city?
+            }
+
+            Realestate.SetMyTempCommand(cmd);
         }
 
         private void PurchaseRegulator_OnPurchased(int newBudget)
@@ -73,6 +112,8 @@ namespace FSO.Client.Controllers
             PurchaseRegulator.OnTransition -= PurchaseRegulator_OnTransition;
             PurchaseRegulator.OnPurchased -= PurchaseRegulator_OnPurchased;
 
+            Network.CityClient.RemoveSubscriber(this);
+
             LotThumbs.Dispose();
         }
 
@@ -83,6 +124,11 @@ namespace FSO.Client.Controllers
         public void ZoomOut(){
             if (HoverTimeout != null) { HoverTimeout.Clear(); }
             CurrentHoverLot.Value = null;
+        }
+
+        public CityMap GetCityMap()
+        {
+            return Realestate.GetMap();
         }
 
         private void RefreshTooltip(BindingChange[] changes)
@@ -660,6 +706,20 @@ namespace FSO.Client.Controllers
                     UIScreen.RemoveDialog(_ProgressAlert);
                     _ProgressAlert = null;
                 }
+            }
+        }
+
+        public void MessageReceived(AriesClient client, object message)
+        {
+            if (message is CityUpdateResponse city)
+            {
+                GameThread.NextUpdate(x =>
+                {
+                    foreach (var cmd in city.Commands)
+                    {
+                        Realestate.AppendCommand(cmd.Command);
+                    }
+                });
             }
         }
     }

@@ -1,4 +1,5 @@
 ﻿using Microsoft.Xna.Framework;
+using System.Runtime.CompilerServices;
 
 namespace FSO.Common.Domain.Realestate
 {
@@ -18,10 +19,12 @@ namespace FSO.Common.Domain.Realestate
             return new MapCoordinate((ushort)(coord.X - offsetY), (ushort)(coord.Y + offsetX));
         }
 
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public static bool InBounds(ushort x, ushort y){
             return InBounds(x, y, 0);
         }
 
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public static bool InBounds(ushort x, ushort y, ushort padding)
         {
             if (y < padding) { return false; }

@@ -1,12 +1,8 @@
 ﻿using FSO.Common.Utils;
+using FSO.Content.Model;
 using FSO.Files.RC;
 using Microsoft.Xna.Framework;
 using Microsoft.Xna.Framework.Graphics;
-using System;
-using System.Collections.Generic;
-using System.IO;
-using System.Linq;
-using System.Threading.Tasks;
 
 namespace FSO.Client.Rendering.City
 {
@@ -18,7 +14,7 @@ namespace FSO.Client.Rendering.City
     public class CityFoliage : IDisposable
     {
         public int ChunkSize = 16;
-        public CityMapData MapData;
+        public CityMap MapData;
         public Dictionary<int, CityFoliageChunk> Chunks = new Dictionary<int, CityFoliageChunk>();
 
         public DGRP3DVert[][] TreeVerts;
@@ -88,15 +84,6 @@ namespace FSO.Client.Rendering.City
 
             return new Tuple<DGRP3DVert[], int[]>(outVerts.ToArray(), outInds.ToArray());
         }
-
-        private Dictionary<Color, int> ForestTypes = new Dictionary<Color, int>()
-        {
-            { new Color(0, 0x6A, 0x28), 0 },   //heavy forest
-            { new Color(0, 0xEB, 0x42), 1},   //light forest
-            { new Color(255, 0xFC, 0), 2 },   //palm
-            { new Color(255, 0, 0), 3},   //cacti
-            { new Color(0, 0, 0), -1}  //nothing; no forest
-        };
 
         public int[] TreeCounts = new int[] { 1, 4, 7, 15 };
 
@@ -194,10 +181,10 @@ namespace FSO.Client.Rendering.City
                     for (int ox = startx; ox < endx; ox++)
                     {
                         var ind = oy * 512 + ox;
-                        var forestType = ForestTypes[MapData.ForestTypeData[ind]];
-                        if (forestType != -1 && !noTrees.Contains(ind))
+                        var forestType = MapData.ForestTypeData[ind];
+                        if (forestType != ForestType.NULL && !noTrees.Contains(ind))
                         {
-                            if (forestType == 0 && MapData.TerrainType[ind] == 3) forestType = 4;
+                            if (forestType == 0 && MapData.TerrainType[ind] == TerrainType.SNOW) forestType = ForestType.SNOW;
                             var densityN = ((MapData.ForestDensityData[ind] * 4) / 255);
                             if (densityN == 0) continue;
                             var density = TreeCounts[densityN - 1];
@@ -227,11 +214,11 @@ namespace FSO.Client.Rendering.City
                                 rangesy += 0.15f;
                                 rangey -= 0.15f;
                             }
-                            var fBase = Math.Min(15, forestType * 4);
+                            var fBase = Math.Min(15, (int)forestType * 4);
 
                             for (int i = 0; i < density; i++)
                             {
-                                var subtype = rand.Next((forestType >= 3) ? 3 : 4);
+                                var subtype = rand.Next((forestType >= ForestType.PALM) ? 3 : 4);
                                 var sx = (float)rand.NextDouble() * rangex + rangesx;
                                 var sy = (float)rand.NextDouble() * rangey + rangesy;
 

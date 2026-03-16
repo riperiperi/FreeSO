@@ -1,7 +1,9 @@
 ﻿using FSO.Client.UI.Framework;
 using FSO.Common;
+using FSO.Common.Domain.Realestate;
 using FSO.Common.Model;
 using FSO.Common.Utils;
+using FSO.Content.Model;
 using FSO.Files;
 using Microsoft.Xna.Framework;
 using Microsoft.Xna.Framework.Graphics;
@@ -15,7 +17,7 @@ namespace FSO.Client.Rendering.City
     {
         public Texture2D[] TerrainTextures = new Texture2D[5]; //grass, sand, rock, snow, water
         public Texture2D VertexColor;
-        public CityMapData MapData;
+        public CityMap MapData;
 
         public Texture2D[] TransA; //moved into an atlas
         public Texture2D[] TransB; //moved into an atlas
@@ -56,9 +58,10 @@ namespace FSO.Client.Rendering.City
         public static int[] RoadLayout = new int[] { -1, 5, 12, 13, 7, 6, 15, 14, 28, 29, 20, 21, 31, 30, 23, 22 };
         public static int[] RoadCLayout = new int[] { -1, 8, 2, 26, 3, 17, 16, 10, 25, 24, 9, 18, 1, 27, 11, 19 };
 
-        public void LoadContent(GraphicsDevice gd, int cityNumber)
+        public void LoadContent(GraphicsDevice gd, CityMap map)
         {
             String gamepath = GameFacade.GameFilePath("");
+            /*
 
             string CityStr = "city_" + cityNumber.ToString("0000");
             string ext = "bmp";
@@ -74,10 +77,10 @@ namespace FSO.Client.Rendering.City
             {
                 CityStr = gamepath + "cities/" + CityStr;
             }
-            VertexColor = LoadTex(CityStr + "/vertexcolor." + ext);
+            */
 
-            MapData = new CityMapData();
-            MapData.Load(CityStr, LoadTex, ext);
+            MapData = map;
+            VertexColor = map.VertexColour.Get(gd);
 
             //special tuning from server
             var terrainTuning = DynamicTuning.Global?.GetTable("city", 0);
@@ -176,14 +179,13 @@ namespace FSO.Client.Rendering.City
         {
             var dat = new Color[VertexColor.Width * VertexColor.Height];
             VertexColor.GetData(dat);
-            var typeC = MapData.TerrainTypeColorData;
             var type = MapData.TerrainType;
 
             for (int i = 0; i < dat.Length; i++)
             {
                 var old = dat[i];
                 var greater = Math.Max(old.R, old.G);
-                var oldType = typeC[i];
+                var oldType = type[i];
 
                 switch (mode)
                 {
@@ -194,16 +196,14 @@ namespace FSO.Client.Rendering.City
                             dat[i] = new Color(greater, greater, greater);
                         }
 
-                        if (oldType == new Color(0, 255, 0) || oldType == Color.Yellow)
+                        if (oldType == TerrainType.GRASS || oldType == TerrainType.SAND)
                         {
-                            typeC[i] = Color.White;
-                            type[i] = 3;
+                            type[i] = TerrainType.SNOW;
                         }
                         break;
                     case 1: // Summer
-                        if (oldType == Color.White)
+                        if (oldType == TerrainType.SNOW)
                         {
-                            typeC[i] = new Color(0, 255, 0);
                             type[i] = 0;
                         }
                         break;

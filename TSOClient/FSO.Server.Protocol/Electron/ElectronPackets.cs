@@ -44,6 +44,8 @@ namespace FSO.Server.Protocol.Electron
             typeof(VerificationNotification),
             typeof(JoinLotWithTransitionRequest),
             typeof(FSOVMSurroundPuppets),
+            typeof(CityUpdateRequest),
+            typeof(CityUpdateResponse),
         };
 
         static ElectronPackets()

@@ -1,0 +1,313 @@
+// FreeSO Credits String Set (using an extension of the TSO credits)
+
+// Scroll speed - ( ~ 10 slow - 100 fast )
+
+^21^
+
+// Line format:
+// 
+// NewLine - starts a new line with the following arguments:
+//
+// |line height|font size|font color
+//
+// LineEntry - adds a text to be displayed on the line with arguments:
+//
+// |Center, Left, Right or integer to specify left offset|text|optional underline color
+//
+// Object - Adds an object credit.
+//
+// |Center, Left, Right or integer to specify left offset|GUID|optional custom name
+//
+// RemeshPackage - Automatically generates remesh package credits from the installed remesh pack. (no arguments)
+
+// ------------------------------- FreeSO ----------------------------------
+
+^NewLine|25|13|247,232,145^
+^LineEntry|Center|FreeSO|247,232,145^
+^NewLine|5|7|180,210,226^
+
+^NewLine|25|12|210,240,250^
+^LineEntry|Center|Project Lead|210,240,250^
+^NewLine|5|7|180,210,226^
+
+^NewLine|25|11|180,210,226^
+^LineEntry|Center|riperiperi^
+^NewLine|25|10|180,210,226^
+
+^NewLine|25|12|210,240,250^
+^LineEntry|Center|Client & Server Framework|210,240,250^
+^NewLine|5|7|180,210,226^
+
+^NewLine|25|11|180,210,226^
+^LineEntry|Center|ddfczm^
+^NewLine|25|10|180,210,226^
+
+^NewLine|25|12|210,240,250^
+^LineEntry|Center|Art|210,240,250^
+^NewLine|5|7|180,210,226^
+
+^NewLine|25|11|180,210,226^
+^LineEntry|Center|S1ndle^
+^NewLine|25|10|180,210,226^
+
+^NewLine|25|12|210,240,250^
+^LineEntry|Center|SimAntics Plugins|210,240,250^
+^NewLine|5|7|180,210,226^
+
+^NewLine|25|11|180,210,226^
+^LineEntry|Center|TheArchitectFreeSO^
+^NewLine|25|10|180,210,226^
+
+^NewLine|25|12|210,240,250^
+^LineEntry|Center|FreeSO Launcher|210,240,250^
+^NewLine|5|7|180,210,226^
+
+^NewLine|25|11|180,210,226^
+^LineEntry|Center|ItsSim^
+^NewLine|25|10|180,210,226^
+
+^NewLine|25|12|210,240,250^
+^LineEntry|Center|.NET 9 Port|210,240,250^
+^NewLine|5|7|180,210,226^
+
+^NewLine|25|11|180,210,226^
+^LineEntry|Center|SegerEnd^
+^NewLine|25|10|180,210,226^
+
+// -- code contributors from github --
+
+^NewLine|25|12|210,240,250^
+^LineEntry|Center|Code Contributors|210,240,250^
+^NewLine|5|7|180,210,226^
+
+^NewLine|25|10|180,210,226^
+^LineEntry|Left|Andrew Knoll^
+^LineEntry|Center|Cowplant-Simmer-Collin^
+^LineEntry|Right|thertzelle^
+
+^NewLine|25|10|180,210,226^
+^LineEntry|Left|LazyDuchess^
+^LineEntry|Center|JDrocks450^
+^LineEntry|Right|dotequals^
+
+^NewLine|25|10|180,210,226^
+^LineEntry|Left|alexjyong^
+^LineEntry|Center|francot514^
+^LineEntry|Right|fHachenberg^
+
+^NewLine|25|10|180,210,226^
+^LineEntry|Left|Cosmatevs^
+^LineEntry|Center|katemi^
+^LineEntry|Right|inb40^
+
+^NewLine|25|10|180,210,226^
+^LineEntry|Left|simptomo^
+^LineEntry|Center|AstroPsynapse^
+^LineEntry|Right|Bxil^
+
+^NewLine|25|10|180,210,226^
+^LineEntry|Left|Itja^
+^LineEntry|Center|Bengrs^
+
+^NewLine|10|10|180,210,226^
+
+// ------------------------------- Objects ----------------------------------
+
+^NewLine|25|10|180,210,226^
+
+^NewLine|25|13|247,232,145^
+^LineEntry|Center|OBJECTS|247,232,145^
+^NewLine|5|7|180,210,226^
+
+^NewLine|25|10|255,64,64^
+^LineEntry|Center|Object credits WIP^
+
+^NewLine|25|10|180,210,226^
+
+// ------------------------------- FreeSO Server ----------------------------------
+
+^NewLine|25|13|247,232,145^
+^LineEntry|Center|FreeSO SERVER|247,232,145^
+^NewLine|5|7|180,210,226^
+
+^NewLine|25|12|210,240,250^
+^LineEntry|Center|Community Manager|210,240,250^
+^NewLine|5|7|180,210,226^
+
+^NewLine|25|11|180,210,226^
+^LineEntry|Center|Vekas^
+^NewLine|25|10|180,210,226^
+
+^NewLine|25|12|210,240,250^
+^LineEntry|Center|Event Planning & Content|210,240,250^
+^NewLine|5|7|180,210,226^
+
+^NewLine|25|11|180,210,226^
+^LineEntry|Center|S1ndle^
+^NewLine|25|11|180,210,226^
+^LineEntry|Center|Amoreena^
+^NewLine|25|11|180,210,226^
+^LineEntry|Center|Hira^
+^NewLine|25|11|180,210,226^
+^LineEntry|Center|Fawn^
+^NewLine|25|11|180,210,226^
+^LineEntry|Center|Toddy^
+^NewLine|25|11|180,210,226^
+^LineEntry|Center|Andrew Knoll^
+^NewLine|25|11|180,210,226^
+^LineEntry|Center|Sassylas^
+^NewLine|25|10|180,210,226^
+
+^NewLine|25|12|210,240,250^
+^LineEntry|Center|SimAntics Guru|210,240,250^
+^NewLine|5|7|180,210,226^
+
+^NewLine|25|11|180,210,226^
+^LineEntry|Center|Raeven^
+^NewLine|25|10|180,210,226^
+
+^NewLine|25|12|210,240,250^
+^LineEntry|Center|Moderation Tooling|210,240,250^
+^NewLine|5|7|180,210,226^
+
+^NewLine|25|11|180,210,226^
+^LineEntry|Center|ItsSim^
+^NewLine|25|10|180,210,226^
+
+^NewLine|25|12|210,240,250^
+^LineEntry|Center|Moderation & Team Support|210,240,250^
+^NewLine|5|7|180,210,226^
+
+^NewLine|25|11|180,210,226^
+^LineEntry|Center|Nodster^
+^NewLine|25|11|180,210,226^
+^LineEntry|Center|tsomatt^
+^NewLine|25|11|180,210,226^
+^LineEntry|Center|Nahte^
+^NewLine|25|11|180,210,226^
+^LineEntry|Center|jwofles^
+^NewLine|25|11|180,210,226^
+^LineEntry|Center|JDRocks450^
+^NewLine|25|10|180,210,226^
+
+^NewLine|25|12|210,240,250^
+^LineEntry|Center|Hosting & Administration|210,240,250^
+^NewLine|5|7|180,210,226^
+
+^NewLine|25|11|180,210,226^
+^LineEntry|Center|Maria & ItsSim [2017, 2018]^
+^NewLine|25|11|180,210,226^
+^LineEntry|Center|Travis [2017, 2020-2021]^
+^NewLine|25|11|180,210,226^
+^LineEntry|Center|MrRobbles [2018-2020]^
+^NewLine|25|11|180,210,226^
+^LineEntry|Center|riperiperi [2021-2024]^
+^NewLine|25|10|180,210,226^
+
+// ------------------------------- Project Dollhouse ----------------------------------
+
+^NewLine|25|10|180,210,226^
+
+^NewLine|25|13|247,232,145^
+^LineEntry|Center|PROJECT DOLLHOUSE|247,232,145^
+^NewLine|5|7|180,210,226^
+
+^NewLine|25|12|210,240,250^
+^LineEntry|Center|Project Lead|210,240,250^
+^NewLine|5|7|180,210,226^
+
+^NewLine|25|11|180,210,226^
+^LineEntry|Center|Afr0^
+^NewLine|25|10|180,210,226^
+
+^NewLine|25|12|210,240,250^
+^LineEntry|Center|SimAntics & World|210,240,250^
+^NewLine|5|7|180,210,226^
+
+^NewLine|25|11|180,210,226^
+^LineEntry|Center|riperiperi^
+^NewLine|25|11|180,210,226^
+^LineEntry|Center|ddfczm^
+^NewLine|25|10|180,210,226^
+
+^NewLine|25|12|210,240,250^
+^LineEntry|Center|Code Contributors|210,240,250^
+^NewLine|5|7|180,210,226^
+
+^NewLine|25|10|180,210,226^
+^LineEntry|Left|Fatbag^
+^LineEntry|Center|tonytins^
+^LineEntry|Right|xezno^
+
+^NewLine|25|10|180,210,226^
+^LineEntry|Left|DarkKostas^
+^LineEntry|Center|HeyItsTigR^
+
+^NewLine|10|10|180,210,226^
+
+// ------------------------------- Special Thanks ----------------------------------
+
+^NewLine|25|10|180,210,226^
+
+^NewLine|25|13|247,232,145^
+^LineEntry|Center|SPECIAL THANKS FROM RHYS|247,232,145^
+^NewLine|5|7|180,210,226^
+
+^NewLine|13|9|255,255,255^
+^LineEntry|Center|The FreeSO Team (again!),^
+^NewLine|25|9|255,255,255^
+^LineEntry|Center|for putting up with everything that me and the community threw at you^
+
+^NewLine|25|9|255,255,255^
+^LineEntry|Center|Maria & Sim, for putting in a lot of administration effort & funding when I couldn't^
+
+^NewLine|25|9|255,255,255^
+^LineEntry|Center|MrRobbles, for providing awesome dedicated server hosting for a few years^
+
+^NewLine|13|9|255,255,255^
+^LineEntry|Center|All of the Maxis team, for taking risks on making games like The Sims,^
+^NewLine|25|9|255,255,255^
+^LineEntry|Center|and changing the course of my life^
+
+^NewLine|13|9|255,255,255^
+^LineEntry|Center|The Sims Online team, for making a game that's easy to become obsessed with^
+^NewLine|25|9|255,255,255^
+^LineEntry|Center|(check out their credits, too!)^
+
+^NewLine|25|9|255,255,255^
+^LineEntry|Center|SimTech, for their invaluable TS1 documentation^
+
+^NewLine|25|9|255,255,255^
+^LineEntry|Center|Fatbag, for a lot of TSO specific file format reversing that made FreeSO possible^
+
+^NewLine|13|9|255,255,255^
+^LineEntry|Center|Project Dollhouse & TSOR teams,^
+^NewLine|25|9|255,255,255^
+^LineEntry|Center|whose efforts and inspiration carried forward into FreeSO^
+
+^NewLine|13|9|255,255,255^
+^LineEntry|Center|FreeSO.ml staff and players (including the Maria Trio),^
+^NewLine|25|9|255,255,255^
+^LineEntry|Center|for giving me the motivation to continue development^
+
+^NewLine|13|9|255,255,255^
+^LineEntry|Center|Everyone else who spammed refresh on the FreeSO forums,^
+^NewLine|25|9|255,255,255^
+^LineEntry|Center|before Discord ruined everything^
+
+^NewLine|25|9|255,255,255^
+^NewLine|25|9|255,255,255^
+^LineEntry|Center|pisarz, for stealing my food^
+
+^NewLine|50|8|255,255,255^
+
+// ------------------------------- 3D Remesh Package ----------------------------------
+
+^NewLine|25|13|247,232,145^
+^LineEntry|Center|3D REMESH PACKAGE|247,232,145^
+^NewLine|5|7|180,210,226^
+
+^NewLine|25|10|255,64,64^
+^LineEntry|Center|Remesh Credits WIP^
+
+^NewLine|25|10|180,210,226^

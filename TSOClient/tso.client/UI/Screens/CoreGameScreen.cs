@@ -12,6 +12,7 @@ using FSO.Client.UI.Panels.Neighborhoods;
 using FSO.Client.UI.Panels.WorldUI;
 using FSO.Client.Utils;
 using FSO.Common.Domain.Realestate;
+using FSO.Common.Domain.RealestateDomain;
 using FSO.Common.Model;
 using FSO.Common.Rendering.Framework;
 using FSO.Common.Rendering.Framework.IO;
@@ -361,7 +362,7 @@ namespace FSO.Client.UI.Screens
 
             Title.SetTitle(cityName);
             GameFacade.CurrentCityName = cityName;
-            InitializeMap(cityMap);
+            InitializeMap(terrainController.Realestate);
             InitializeMouse();
             ZoomLevel = 5; //screen always starts at far zoom, city visible.
             CityRenderer.m_ZoomProgress = 0;
@@ -378,11 +379,11 @@ namespace FSO.Client.UI.Screens
             });
         }
 
-        private void InitializeMap(int cityMap)
+        private void InitializeMap(IShardRealestateDomain realestate)
         {
             CityRenderer = new Terrain(GameFacade.GraphicsDevice); //The Terrain class implements the ThreeDAbstract interface so that it can be treated as a scene but manage its own drawing and updates.
             CityRenderer.m_GraphicsDevice = GameFacade.GraphicsDevice;
-            CityRenderer.Initialize(cityMap);
+            CityRenderer.Initialize(realestate);
             CityRenderer.LoadContent(GameFacade.GraphicsDevice);
             CityRenderer.RegenData = true;
             CityRenderer.SetTimeOfDay(0.5);

@@ -10,6 +10,7 @@ using FSO.Server.Framework;
 using FSO.Server.Framework.Aries;
 using FSO.Server.Framework.Voltron;
 using FSO.Server.Protocol.Aries.Packets;
+using FSO.Server.Protocol.Electron;
 using FSO.Server.Protocol.Electron.Packets;
 using FSO.Server.Protocol.Voltron.Packets;
 using FSO.Server.Servers.City.Domain;
@@ -549,6 +550,7 @@ namespace FSO.Server.Servers.City
                 typeof(NhoodHandler),
                 typeof(BulletinHandler),
                 typeof(CityResourceHandler),
+                typeof(CityUpdateHandler),
 
                 typeof(ArchiveAvatarsHandler),
                 typeof(ArchiveAvatarSelectHandler),

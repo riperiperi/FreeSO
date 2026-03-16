@@ -2,6 +2,8 @@
 using FSO.Common.Domain.Shards;
 using FSO.Content.Model;
 using FSO.Server.Protocol.CitySelector;
+using FSO.Server.Protocol.Electron.Model.CityEditCommands;
+using Microsoft.Xna.Framework;
 using System.Text.RegularExpressions;
 
 namespace FSO.Common.Domain.Realestate
@@ -68,6 +70,17 @@ namespace FSO.Common.Domain.Realestate
     {
         private LotPricingStrategy _Pricing;
         private CityMap _Map;
+
+        public bool Dynamic => true;
+        private CityMap _BaseMap;
+        private CityMap _PreTempMap;
+        private Rectangle? _TempChangeBounds;
+
+        private List<CityEditBase> _Commands = [];
+        private CityEditBase _MyTempCommand;
+        private List<CityEditBase> _TempCommands = [];
+
+        public event Action<Rectangle> OnMapChange;
 
         public ShardRealestateDomain(ShardStatusItem shard, CityMap map)
         {
@@ -143,6 +156,126 @@ namespace FSO.Common.Domain.Realestate
         public CityMap GetMap()
         {
             return _Map;
+        }
+
+        public int AppendCommand(CityEditBase command)
+        {
+            if (_TempChangeBounds != null)
+            {
+                // Undo any temp changes so we can apply the command for real
+                _Map.Set(_PreTempMap);
+            }
+
+            // When a command appears for real, remove it from the temp command set.
+            _TempCommands.RemoveAll(x => x.AvatarId == command.AvatarId && x.UserModId == command.UserModId);
+
+            if (!CityMapUtils.ValidateCommand(_Map, command))
+            {
+                return -1;
+            }
+
+            int index = _Commands.Count;
+
+            _Commands.Add(command);
+
+            CityMapUtils.ApplyCommand(_Map, command);
+
+            if (OnMapChange != null)
+            {
+                var bound = CityMapUtils.GetBounds(_Map, command);
+
+                if (bound != null)
+                {
+                    _PreTempMap?.Set(_Map);
+                    ApplyTempCommands(bound);
+                }
+            }
+
+            return index;
+        }
+
+        /// <summary>
+        /// Set the temp command for this client (modifications the client is performing).
+        /// </summary>
+        /// <param name="command"></param>
+        public void SetMyTempCommand(CityEditBase command)
+        {
+            bool redraw = true;
+            if (command == null)
+            {
+                redraw = _TempCommands.Remove(_MyTempCommand);
+            }
+            else
+            {
+                var matching = _TempCommands.FindIndex(x => x.AvatarId == command.AvatarId && x.UserModId == command.UserModId);
+
+                if (matching != -1)
+                {
+                    _TempCommands[matching] = command;
+                }
+                else
+                {
+                    _TempCommands.Add(command);
+                }
+            }
+
+            _MyTempCommand = command;
+
+            if (redraw)
+            {
+                ApplyTempCommands();
+            }
+        }
+
+        private Rectangle? Union(Rectangle? first, Rectangle? second)
+        {
+            if (!first.HasValue)
+            {
+                return second;
+            }
+            else if (!second.HasValue)
+            {
+                return first;
+            }
+            else
+            {
+                return Rectangle.Union(first.Value, second.Value);
+            }
+        }
+
+        public void ApplyTempCommands(Rectangle? bounds = null)
+        {
+            // If we don't have a pre-temp copy, make it now.
+            if (_PreTempMap == null && _TempCommands.Count > 0)
+            {
+                _PreTempMap = new(_Map);
+            }
+
+            // If there were previous temp changes, roll them back so we can apply the new ones
+            if (_TempChangeBounds != null)
+            {
+                bounds = Union(bounds, _TempChangeBounds);
+                _Map.Set(_PreTempMap);
+            }
+
+            Rectangle? tempBounds = null;
+            foreach (var temp in _TempCommands)
+            {
+                if (CityMapUtils.ValidateCommand(_Map, temp) && CityMapUtils.ApplyCommand(_Map, temp))
+                {
+                    var modBounds = CityMapUtils.GetBounds(_Map, temp);
+
+                    tempBounds = Union(tempBounds, modBounds);
+                }
+            }
+
+            bounds = Union(tempBounds, bounds);
+            if (bounds != null)
+            {
+                OnMapChange?.Invoke(bounds.Value);
+            }
+
+            _TempChangeBounds = tempBounds;
         }
     }
 }

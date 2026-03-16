@@ -337,7 +337,7 @@ namespace FSO.Client.UI.Archive
                 Map = SelectedMap,
                 Template = false
             };
-            //newTemplate.LocalDir = "data/";
+            newTemplate.LocalDir = "data/";
 
             newTemplate.Save();
 

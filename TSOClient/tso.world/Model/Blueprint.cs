@@ -390,6 +390,38 @@ namespace FSO.LotView.Model
             return Floors[level-1][offset];
         }
 
+        public ushort GetPreciseFloor(Vector3 tile)
+        {
+            if (!TileInbounds(new Vector2(tile.X, tile.Y)))
+            {
+                return 0;
+            }
+
+            short tileX = (short)tile.X;
+            short tileY = (short)tile.Y;
+            float floorRelativeHeight = tile.Z - InterpAltitude(tile);
+
+            sbyte level = (sbyte)(Math.Max(0, Math.Min(Stories - 1, (int)(floorRelativeHeight / 2.95f))) + 1);
+
+            var wall = GetWall(tileX, tileY, level);
+            if ((wall.Segments & WallSegments.VerticalDiag) > 0)
+            {
+                if ((tile.X % 1) - (tile.Y % 1) > 0)
+                    return wall.TopLeftPattern;
+                else
+                    return wall.TopLeftStyle;
+            }
+            else if ((wall.Segments & WallSegments.HorizontalDiag) > 0)
+            {
+                if ((tile.X % 1) + (tile.Y % 1) > 15)
+                    return wall.TopLeftPattern;
+                else
+                    return wall.TopLeftStyle;
+            }
+
+            return GetFloor(tileX, tileY, level).Pattern;
+        }
+
         public bool TileInbounds(Vector2 tile)
         {
             return (tile.X >= 0 && tile.Y >= 0 && tile.X < Width && tile.Y < Height);

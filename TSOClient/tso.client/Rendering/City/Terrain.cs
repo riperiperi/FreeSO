@@ -4,11 +4,13 @@ using FSO.Client.UI.Framework;
 using FSO.Client.UI.Panels;
 using FSO.Client.UI.Screens;
 using FSO.Common;
+using FSO.Common.Domain.RealestateDomain;
 using FSO.Common.Rendering;
 using FSO.Common.Rendering.Framework;
 using FSO.Common.Rendering.Framework.Camera;
 using FSO.Common.Rendering.Framework.IO;
 using FSO.Common.Rendering.Framework.Model;
+using FSO.Content.Model;
 using FSO.Files;
 using FSO.Files.RC;
 using FSO.LotView;
@@ -55,7 +57,7 @@ namespace FSO.Client.Rendering.City
         public HashSet<int> OccupiedTiles = new HashSet<int>();
 
         public bool HandleMouse = false;
-        public CityMapData MapData { get
+        public CityMap MapData { get
             {
                 return Content.MapData;
             }
@@ -66,17 +68,8 @@ namespace FSO.Client.Rendering.City
         public Effect Shader2D, PixelShader, VertexShader;
         private Vector3 m_LightPosition;
 
-        private int m_CityNumber;
+        private IShardRealestateDomain Realestate;
         private ArrayList m_2DVerts;
-
-        private Dictionary<Color, int> ForestTypes = new Dictionary<Color, int>()
-        {
-            { new Color(0, 0x6A, 0x28), 0 },   //heavy forest
-            { new Color(0, 0xEB, 0x42), 1},   //light forest
-            { new Color(255, 0, 0), 2},   //cacti
-            { new Color(255, 0xFC, 0), 3 },   //palm
-            { new Color(0, 0, 0), -1}  //nothing; no forest
-        };
 
         public static uint[] MASK_COLORS = new uint[]{
             new Color(0xFF, 0x00, 0xFF, 0xFF).PackedValue,
@@ -167,6 +160,7 @@ namespace FSO.Client.Rendering.City
         public CityFoliage Foliage;
         public CityNeighGeom NeighGeom;
         public CityFacadeLock NearFacades;
+        private CityVertexColorGenerator VertexColorGenerator;
 
         private Texture2D LoadTex(string Path)
         {
@@ -192,12 +186,13 @@ namespace FSO.Client.Rendering.City
         public void LoadContent(GraphicsDevice GfxDevice)
         {
             Content = new CityContent();
-            Content.LoadContent(GfxDevice, m_CityNumber);
+            Content.LoadContent(GfxDevice, Realestate.GetMap());
             Geometry = new CityGeometry();
             SubdivGeometry = new CityGeometry();
             Foliage = new CityFoliage();
             NeighGeom = new CityNeighGeom(this);
             NeighGeom.Generate(GfxDevice);
+            VertexColorGenerator = new CityVertexColorGenerator(this);
 
             m_GraphicsDevice = GfxDevice;
             VertexShader = GameFacade.Game.Content.Load<Effect>("Effects/VerShader");
@@ -222,9 +217,9 @@ namespace FSO.Client.Rendering.City
             //RegenData = true;
         }
 
-        public void Initialize(int mapId)
+        public void Initialize(IShardRealestateDomain realestate)
         {
-            m_CityNumber = mapId;
+            Realestate = realestate;
             GraphicsModeControl.ModeChanged += SwitchToMode;
         }
 
@@ -262,6 +257,7 @@ namespace FSO.Client.Rendering.City
             Foliage.Dispose();
             NearFacades?.Dispose();
             NeighGeom?.Dispose();
+            VertexColorGenerator?.Dispose();
 
             foreach (var particle in Particles) particle.Dispose();
             Particles.Clear();
@@ -1017,7 +1013,7 @@ namespace FSO.Client.Rendering.City
                         }
                         else //if there is no house, draw the forest that's meant to be here.
                         {
-                            double fType = ForestTypes[MapData.ForestTypeData[(y * 512 + x)]];
+                            double fType = (int)MapData.ForestTypeData[(y * 512 + x)];
                             double fDens = Math.Round((double)(MapData.ForestDensityData[(y * 512 + x)] * 4 / 255));
                             if (!(fType == -1 || fDens == 0))
                             {
@@ -1169,6 +1165,8 @@ namespace FSO.Client.Rendering.City
 
             if (Visible)
             { //if we're not visible, do not update CityRenderer state...
+                VertexColorGenerator.Update(GameFacade.GraphicsDevice);
+                Content.VertexColor = VertexColorGenerator.GetVertexColor();
                 Weather.TintColor = m_TintColor.ToVector4();
                 Weather.Update();
 
@@ -1625,6 +1623,10 @@ namespace FSO.Client.Rendering.City
                 var tint = m_TintColor;
                 particle.GenericDraw(gfx, ParticleCamera, tint, false);
             }
+
+            m_Batch.Begin();
+            VertexColorGenerator.DebugDraw(m_Batch);
+            m_Batch.End();
 
             Plugin?.Draw(m_Batch);
         }

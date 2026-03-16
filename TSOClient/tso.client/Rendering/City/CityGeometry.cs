@@ -1,4 +1,5 @@
 ﻿using FSO.Common.Utils;
+using FSO.Content.Model;
 using Microsoft.Xna.Framework;
 using Microsoft.Xna.Framework.Graphics;
 using System;
@@ -15,7 +16,7 @@ namespace FSO.Client.Rendering.City
 
         //draw order:
         //grass, sand, rock, snow, water
-        public CityMapData MapData;
+        public CityMap MapData;
         public IndexBuffer[] LayerIndices = new IndexBuffer[5];
         public VertexBuffer[] LayerVertices = new VertexBuffer[5];
         public int[][] LayerSubPrims = new int[5][];
@@ -38,23 +39,23 @@ namespace FSO.Client.Rendering.City
             return elevationData[(y * 512 + x)] / 6.0f;
         }
 
-        private Blend GetBlend(byte[] TerrainTypeData, int i, int j)
+        private Blend GetBlend(TerrainType[] TerrainTypeData, int i, int j)
         {
             int[] edges;
             int sample;
             int t;
 
             edges = new int[] { -1, -1, -1, -1 };
-            sample = TerrainTypeData[i * 512 + j];
-            t = TerrainTypeData[Math.Abs((i - 1) * 512 + j)];
+            sample = (int)TerrainTypeData[i * 512 + j];
+            t = (int)TerrainTypeData[Math.Abs((i - 1) * 512 + j)];
 
-            if ((i - 1 >= 0) && (t > sample) && t != 255) edges[0] = t;
-            t = TerrainTypeData[i * 512 + j + 1];
-            if ((j + 1 < 512) && (t > sample) && t != 255) edges[1] = t;
-            t = TerrainTypeData[Math.Min((i + 1), 511) * 512 + j];
-            if ((i + 1 < 512) && (t > sample) && t != 255) edges[2] = t;
-            t = TerrainTypeData[i * 512 + j - 1];
-            if ((j - 1 >= 0) && (t > sample) && t != 255) edges[3] = t;
+            if ((i - 1 >= 0) && (t > sample) && t != -1) edges[0] = t;
+            t = (int)TerrainTypeData[i * 512 + j + 1];
+            if ((j + 1 < 512) && (t > sample) && t != -1) edges[1] = t;
+            t = (int)TerrainTypeData[Math.Min((i + 1), 511) * 512 + j];
+            if ((i + 1 < 512) && (t > sample) && t != -1) edges[2] = t;
+            t = (int)TerrainTypeData[i * 512 + j - 1];
+            if ((j - 1 >= 0) && (t > sample) && t != -1) edges[3] = t;
 
 
             int binary =
@@ -189,7 +190,7 @@ namespace FSO.Client.Rendering.City
 
             Action generate = () =>
             {
-                byte[] terrainType = MapData.TerrainType;
+                TerrainType[] terrainType = MapData.TerrainType;
                 byte[] roadData = MapData.RoadData;
                 byte[] elevationData = MapData.ElevationData;
 
@@ -230,7 +231,7 @@ namespace FSO.Client.Rendering.City
                             { //where the magic happens
                                 var ex = Math.Min(Math.Max(rXS, j), rXE - 1);
                                 var blendData = GetBlend(terrainType, i, ex); //gets information on what this tile blends into and what blend image to use for the alpha.
-                                var type = terrainType[((i * 512) + ex)];
+                                var type = (byte)terrainType[((i * 512) + ex)];
                                 byte roadByte = roadData[(i * 512 + ex)];
 
                                 if (type == 255)
@@ -577,7 +578,7 @@ namespace FSO.Client.Rendering.City
 
             Task.Run(() =>
             {
-                byte[] terrainType = MapData.TerrainType;
+                TerrainType[] terrainType = MapData.TerrainType;
                 byte[] roadData = MapData.RoadData;
                 byte[] elevationData = MapData.ElevationData;
 
@@ -618,7 +619,7 @@ namespace FSO.Client.Rendering.City
                     { //where the magic happens
                         var ex = Math.Min(Math.Max(rXS, j), rXE - 1);
                         var blendData = GetBlend(terrainType, i, ex); //gets information on what this tile blends into and what blend image to use for the alpha.
-                        var type = terrainType[((i * 512) + ex)];
+                        var type = (byte)terrainType[((i * 512) + ex)];
                         byte roadByte = roadData[(i * 512 + ex)];
 
                         if (type == 255)
