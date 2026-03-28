@@ -376,25 +376,26 @@ namespace FSO.Client.Rendering.City
                 }
                 else if (GlobalSettings.Default.EdgeScroll && state.ProcessMouseEvents) //edge scroll check - do this even if mouse events are blocked
                 {
-                    if (m_MouseState.X > screen.ScreenWidth - 32)
+                    float scale = 1f / FSOEnvironment.DPIScaleFactor;
+                    if (m_MouseState.X * scale > screen.ScreenWidth - 32)
                     {
                         Triggered = true;
                         m_TargVOffX += m_ScrollSpeed * rScale;
                         CursorManager.INSTANCE.SetCursor(CursorType.ArrowRight);
                     }
-                    if (m_MouseState.X < 32)
+                    if (m_MouseState.X * scale < 32)
                     {
                         Triggered = true;
                         m_TargVOffX -= m_ScrollSpeed * rScale;
                         CursorManager.INSTANCE.SetCursor(CursorType.ArrowLeft);
                     }
-                    if (m_MouseState.Y > screen.ScreenHeight - 32)
+                    if (m_MouseState.Y * scale > screen.ScreenHeight - 32)
                     {
                         Triggered = true;
                         m_TargVOffY -= m_ScrollSpeed * rScale;
                         CursorManager.INSTANCE.SetCursor(CursorType.ArrowDown);
                     }
-                    if (m_MouseState.Y < 32)
+                    if (m_MouseState.Y * scale < 32)
                     {
                         Triggered = true;
                         m_TargVOffY += m_ScrollSpeed * rScale;

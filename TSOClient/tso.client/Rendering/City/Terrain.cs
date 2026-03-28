@@ -1624,9 +1624,11 @@ namespace FSO.Client.Rendering.City
                 particle.GenericDraw(gfx, ParticleCamera, tint, false);
             }
 
+            /*
             m_Batch.Begin();
             VertexColorGenerator.DebugDraw(m_Batch);
             m_Batch.End();
+            */
 
             Plugin?.Draw(m_Batch);
         }

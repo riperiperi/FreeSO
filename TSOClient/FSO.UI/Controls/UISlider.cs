@@ -58,6 +58,11 @@ namespace FSO.Client.UI.Controls
         [UIAttribute("size")]
         public override Vector2 Size
         {
+            get
+            {
+                return new Vector2(m_Width, m_Height);
+            }
+
             set
             {
                 SetSize(value.X, value.Y);

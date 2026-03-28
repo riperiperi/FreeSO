@@ -373,6 +373,9 @@ namespace FSO.Client.UI.Screens
             terrainController.Init(CityRenderer);
             CityRenderer.SetController(terrainController);
 
+            var test = new UICityPainter(CityRenderer);
+            WindowContainer.Add(test);
+
             GameThread.NextUpdate(x =>
             {
                 FSOFacade.Hints.TriggerHint("screen:city");
