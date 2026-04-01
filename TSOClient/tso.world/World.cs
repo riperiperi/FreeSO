@@ -571,7 +571,7 @@ namespace FSO.LotView
 
             if (Blueprint != null)
             {
-                if (!Content.Content.Get().TS1) Blueprint.Weather?.Update();
+                Blueprint.Weather?.Update();
                 var partiCopy = new List<ParticleComponent>(Blueprint.Particles);
                 foreach (var particle in partiCopy)
                 {
