@@ -58,6 +58,8 @@ namespace FSO.SimAntics.NetPlay.Drivers
 
         public BanList SandboxBans;
         public bool SelfResync;
+        public bool Transitioning;
+
         private volatile int _syncGeneration;
 
         private uint TickID = 1;
@@ -99,7 +101,7 @@ namespace FSO.SimAntics.NetPlay.Drivers
                     }.Execute(vm);
                 }
             }
-
+            TickBuffer.Clear();
             SyncAllClients(asNew: true);
         }
 
@@ -383,7 +385,7 @@ namespace FSO.SimAntics.NetPlay.Drivers
 
             TickBuffer.Add(tick);
 
-            if (FastTick || TickBuffer.Count >= TicksPerPacket)
+            if (!Transitioning && (FastTick || TickBuffer.Count >= TicksPerPacket))
             {
                 BroadcastClients.Clear();
                 lock (Clients)
@@ -493,6 +495,7 @@ namespace FSO.SimAntics.NetPlay.Drivers
 
         private void HandleClients(VM vm)
         {
+            if (Transitioning) return;
             lock (Clients)
             {
                 ClientsToDC.Clear();

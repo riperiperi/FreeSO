@@ -788,6 +788,27 @@ namespace FSO.Server.Servers.Lot.Domain
                 BlueprintReset();
             }
 
+            RefreshLotState(isNew, isMoved);
+
+            if (JobLot)
+            {
+                //for recording. must resave lot to get appropriate state changes from terrain population
+                //(important for playback to sync)
+                Lot.Tick();
+                Lot.ForwardCommand(new VMStateSyncCmd()
+                {
+                    State = Lot.Save(),
+                    Run = false,
+                });
+                Lot.Tick();
+            }
+
+            LotActive.Set();
+            ActiveYet = true;
+        }
+
+        private void RefreshLotState(bool isNew, bool isMoved)
+        {
             if (UnownedLot)
             {
                 // Maximum size (for admin placement)
@@ -911,22 +932,6 @@ namespace FSO.Server.Servers.Lot.Domain
                     }
                 }
             }
-
-            if (JobLot)
-            {
-                //for recording. must resave lot to get appropriate state changes from terrain population 
-                //(important for playback to sync)
-                Lot.Tick();
-                Lot.ForwardCommand(new VMStateSyncCmd()
-                {
-                    State = Lot.Save(),
-                    Run = false,
-                });
-                Lot.Tick();
-            }
-
-            LotActive.Set();
-            ActiveYet = true;
         }
 
         private void Lot_OnGenericVMEvent(VMEventType type, object data)
@@ -1179,21 +1184,21 @@ namespace FSO.Server.Servers.Lot.Domain
                         return; //background thread has already released all our avatars and our claim. exit immediately.
                     }
 
-                    if (noRoomies && !noRemainingUsers)
+                    if (noRoomies && !noRemainingUsers && !ArchiveFreeRoam)
                     {
                         if (TimeToShutdown == -1)
                         {
                             if (Context.Action == ClaimAction.LOT_CLEANUP)
                                 TimeToShutdown = 1;
-                            else if (AllowGuestOpening && !ArchiveFreeRoam)
-                                TimeToShutdown = TICKRATE * 15; // shorter grace period before spectator transition
+                            else if (AllowGuestOpening)
+                                TimeToShutdown = TICKRATE * 15;
                             else
                                 TimeToShutdown = TICKRATE * 40;
                         }
 
                         if (--TimeToShutdown < TICKRATE * 10)
                         {
-                            if (AllowGuestOpening && !ArchiveFreeRoam)
+                            if (AllowGuestOpening)
                             {
                                 TransitionToSpectatorMode();
                             }
@@ -1356,8 +1361,11 @@ namespace FSO.Server.Servers.Lot.Domain
             LOG.Info("Transitioning lot " + Context.DbId + " from spectator mode to writable mode.");
             IsSpectatorMode = false;
 
+            bool loadedSave = false;
+
             if (LotPersist.ring_backup_num >= 0)
             {
+                VMDriver.Transitioning = true;
                 try
                 {
                     var path = Path.Combine(Config.SimNFS, $"Lots/{LotPersist.lot_id:x8}/state_{LotPersist.ring_backup_num}.fsov");
@@ -1365,16 +1373,34 @@ namespace FSO.Server.Servers.Lot.Domain
                     var marshal = new VMMarshal();
                     marshal.Deserialize(file);
 
+                    bool isMoved = (LotPersist.move_flags > 0);
+
+                    if (isMoved)
+                    {
+                        var oldDir = ((VMTSOLotState)marshal.PlatformState).Size >> 16;
+                        var newDir = VMLotTerrainRestoreTools.PickRoadDir(Terrain.Roads[1, 1]);
+                        var rotate = new VMLotRotate(marshal);
+                        rotate.Rotate(((newDir - oldDir) + 4) % 4);
+                    }
+
                     Lot.Load(marshal);
-                    ResyncTime();
-                    VMDriver.RejoinClients(Lot);
+                    CleanLot();
+                    Lot.Reset();
+                    RefreshLotState(isNew: false, isMoved: isMoved);
+                    loadedSave = true;
                 }
                 catch (Exception e)
                 {
                     LOG.Warn(e, "Failed to load lot save for spectator transition on lot " + Context.DbId);
-                    VMDriver.SyncAllClients();
+                }
+                finally
+                {
+                    VMDriver.Transitioning = false;
                 }
             }
+
+            if (loadedSave)
+                VMDriver.RejoinClients(Lot);
             else
                 VMDriver.SyncAllClients();
 
@@ -1388,21 +1414,9 @@ namespace FSO.Server.Servers.Lot.Domain
             SaveRing();
             IsSpectatorMode = true;
 
-            var mailbox = Lot.Entities.FirstOrDefault(x => x.Object.OBJ.GUID == 0xEF121974 || x.Object.OBJ.GUID == 0x1D95C9B0);
-
             foreach (VMAvatar ava in Lot.Context.ObjectQueries.Avatars)
             {
                 if (ava.KillTimeout != -1 || ava.AvatarState.Permissions > VMTSOAvatarPermissions.Visitor) continue;
-
-                foreach (var action in new List<VMQueuedAction>(ava.Thread.Queue))
-                    ava.Thread.CancelAction(action.UID);
-
-                if (mailbox != null && ava.Position != LotTilePos.OUT_OF_WORLD
-                    && !Lot.Context.RoomInfo[Lot.Context.GetRoomAt(ava.Position)].Room.IsOutside)
-                {
-                    SimAntics.Primitives.VMFindLocationFor.FindLocationFor(ava, mailbox, Lot.Context, VMPlaceRequestFlags.UserPlacement);
-                }
-
                 ((VMTSOAvatarState)ava.TSOState).Flags |= VMTSOAvatarFlags.Spectator;
             }
 

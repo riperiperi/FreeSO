@@ -34,9 +34,9 @@ namespace FSO.SimAntics.NetPlay.Model.Commands
 
         public override bool Verify(VM vm, VMAvatar caller)
         {
+            if (caller == null && FromNet) return false;
             if (IsSpectator(caller) && vm.GetObjectById(CalleeID) is VMGameObject obj
                 && obj.Object.OBJ.GUID != PAYPHONE_GUID && obj.Object.OBJ.GUID != NHOOD_PAYPHONE_GUID) return false;
-            if (caller == null && FromNet) return false;
 
             if (!FromNet) return true;
             VMEntity callee = vm.GetObjectById(CalleeID);
