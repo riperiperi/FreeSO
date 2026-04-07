@@ -111,8 +111,10 @@ namespace FSO.LotView
             var changes = Blueprint.Changes;
             var _2d = state._2D;
 
+            BlendState blend = state.CameraMode == CameraRenderMode._2D ? BlendState.AlphaBlend : BlendState.NonPremultiplied;
+
             var effect = WorldContent.RCObject;
-            gd.BlendState = BlendState.NonPremultiplied;
+            gd.BlendState = blend;
             effect.ViewProjection = state.ViewProjection;
             gd.RasterizerState = RasterizerState.CullNone;
 
@@ -130,7 +132,7 @@ namespace FSO.LotView
             if (changes.DrawImmediate) dyn = Blueprint.Objects;
             else dyn = changes.DynamicObjects;
 
-            gd.BlendState = BlendState.NonPremultiplied;
+            gd.BlendState = blend;
             dyn = dyn.Where(x => (x.Level <= state.Level) && x.DoDraw(state));
             if (state.CameraMode == CameraRenderMode._3D) //only use for full 3d - the draw order for 2d rotation is a completely different coordinate space.
             {
@@ -138,7 +140,7 @@ namespace FSO.LotView
             }
             dyn = dyn.OrderBy(x => x.DrawOrder);
 
-            gd.BlendState = BlendState.NonPremultiplied;
+            gd.BlendState = blend;
             foreach (var obj in dyn)
             {
                 obj.Draw(gd, state);
