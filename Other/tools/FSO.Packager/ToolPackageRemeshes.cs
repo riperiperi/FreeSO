@@ -317,10 +317,10 @@ namespace FSO.Packager
                                 if (chunkId >= split.DgrpFrom && chunkId < split.DgrpFrom + split.Range)
                                 {
                                     directoryName = split.To;
-                                    chunkId = (ushort)((chunkId - split.DgrpFrom) + split.DgrpTo);
 
                                     if (isMesh)
                                     {
+                                        chunkId = (ushort)((chunkId - split.DgrpFrom) + split.DgrpTo);
                                         legacyName = $"{directoryName}_{chunkId}.fsom";
                                     }
                                     else
