@@ -64,7 +64,7 @@ namespace FSO.Files.RC
         public ushort PixelDir;
 
         public ushort CustomTexture;
-        public static Func<string, DGRP3DTextureSource?> ReplTextureProvider;
+        public static Func<string, ushort, DGRP3DTextureSource?> ReplTextureProvider;
 
         public List<DGRP3DVert> SVerts; //simplified vertices
         public List<int> SIndices; //simplified indices
@@ -113,13 +113,12 @@ namespace FSO.Files.RC
                 if (source == null)
                 {
                     //temporary system for models without DGRP
-                    PixelSource = ReplTextureProvider("FSO_TEX_" + PixelSPR + ".png") ?? default;
+                    PixelSource = ReplTextureProvider("FSO", PixelSPR) ?? default;
                 }
                 else
                 {
                     var name = source.ChunkParent.Filename.Replace('.', '_').Replace("spf", "iff");
-                    name += "_TEX_" + PixelSPR + ".png";
-                    var pxSource = ReplTextureProvider(name) ?? DGRP3DTextureSource.WithDecoded(source.ChunkParent.Get<MTEX>(PixelSPR), gd);
+                    var pxSource = ReplTextureProvider(name, PixelSPR) ?? DGRP3DTextureSource.WithDecoded(source.ChunkParent.Get<MTEX>(PixelSPR), gd);
                     PixelSource = pxSource ?? default;
                 }
             }
@@ -206,8 +205,7 @@ namespace FSO.Files.RC
                 PixelDir = 65535;
 
                 var name = source.ChunkParent.Filename.Replace('.', '_').Replace("spf", "iff");
-                name += "_TEX_" + PixelSPR + ".png";
-                var pxSource = ReplTextureProvider(name);
+                var pxSource = ReplTextureProvider(name, PixelSPR);
                 if (pxSource == null)
                 {
                     pxSource = DGRP3DTextureSource.WithDecoded(source.ChunkParent.Get<MTEX>(PixelSPR), gd);

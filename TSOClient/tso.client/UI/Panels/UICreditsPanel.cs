@@ -3,6 +3,7 @@ using FSO.Client.UI.Framework.Parser;
 using FSO.Common;
 using FSO.Common.Rendering.Framework.Model;
 using FSO.Common.Utils;
+using FSO.Files.RC;
 using Microsoft.Xna.Framework;
 
 namespace FSO.Client.UI.Panels
@@ -83,14 +84,96 @@ namespace FSO.Client.UI.Panels
         public override Vector2 Size { get; set; }
 
         private readonly TextStyle BaseStyle;
-        private readonly List<CreditsBlock> Blocks;
+        private List<CreditsBlock> Blocks;
         private float ScrollSpeed = 21; //pixels per second
         private float ActiveScroll;
+        private FSO3DCredits[] RemeshCredits;
 
         public UICreditsPanel()
         {
+            RemeshCredits = Content.Content.Get().RCMeshes.Packages.GetCredits();
             BaseStyle = TextStyle.DefaultLabel.Clone();
-            Blocks = BuildBlocks(MaxisCredits());
+        }
+
+        public void Init(bool fso)
+        {
+            ScrollSpeed = 21;
+            ActiveScroll = 0;
+
+            Blocks = BuildBlocks(fso ? FreeSOCredits() : MaxisCredits());
+        }
+
+        private IEnumerable<string> RemeshPackageCredits()
+        {
+            TextStyle measure = BaseStyle.Clone();
+            measure.Size = 10;
+            var maxCreditWidth = 210;
+
+            var smallNames = new List<string>(2);
+            var largeNames = new List<string>(2);
+
+            foreach (var package in RemeshCredits)
+            {
+                yield return "NewLine|25|13|247,232,145";
+                yield return $"LineEntry|Center|{package.Metadata.Name.ToUpper()}|247,232,145";
+                yield return "NewLine|5|7|180,210,226";
+
+                foreach (var author in package.Authors)
+                {
+                    yield return "NewLine|25|12|210,240,250";
+                    yield return $"LineEntry|Center|{author.Metadata.Name}|210,240,250";
+                    yield return "NewLine|5|7|180,210,226";
+
+                    var groups = author.Groups;
+
+                    foreach (var group in author.Groups)
+                    {
+                        var name = group.Metadata.Name;
+                        var width = measure.MeasureString(name).X;
+
+                        if (width > maxCreditWidth)
+                        {
+                            largeNames.Add(name);
+                        }
+                        else
+                        {
+                            smallNames.Add(name);
+                        }
+
+                        if (smallNames.Count == 2)
+                        {
+                            yield return "NewLine|25|10|180,210,226";
+                            yield return $"LineEntry|Left|{smallNames[0]}";
+                            yield return $"LineEntry|Right|{smallNames[1]}";
+
+                            smallNames.Clear();
+
+                            foreach (var largeName in largeNames)
+                            {
+                                yield return "NewLine|25|10|180,210,226";
+                                yield return $"LineEntry|Center|{largeName}";
+                            }
+
+                            largeNames.Clear();
+                        }
+                    }
+
+                    largeNames.AddRange(smallNames);
+                    smallNames.Clear();
+
+                    foreach (var largeName in largeNames)
+                    {
+                        yield return "NewLine|25|10|180,210,226";
+                        yield return $"LineEntry|Center|{largeName}";
+                    }
+
+                    largeNames.Clear();
+
+                    yield return "NewLine|10|10|180,210,226";
+                }
+            }
+
+            yield break;
         }
 
         private IEnumerable<string> CSTCredits(string cst)
@@ -107,7 +190,17 @@ namespace FSO.Client.UI.Panels
 
                 if (!string.IsNullOrEmpty(message))
                 {
-                    yield return message;
+                    if (message == "RemeshPackage")
+                    {
+                        foreach (var line in RemeshPackageCredits())
+                        {
+                            yield return line;
+                        }
+                    }
+                    else
+                    {
+                        yield return message;
+                    } 
                 }
                 else
                 {

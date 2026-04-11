@@ -197,6 +197,10 @@ namespace FSO.Files.RC
                 {
                     LoadData(dgrp, source, gd);
                 }
+                catch (Exception e)
+                {
+
+                }
                 finally
                 {
                     source.Dispose();
@@ -263,7 +267,7 @@ namespace FSO.Files.RC
         private void CleanupFailedLoad(DGRP dgrp, GraphicsDevice gd, string filePath)
         {
             // TODO: force reconstruction to run
-            UnloadedGeoms.Clear();
+            UnloadedGeoms?.Clear();
             CompleteFSOMLoad(gd);
         }
 

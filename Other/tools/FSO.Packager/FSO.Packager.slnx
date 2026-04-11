@@ -1,0 +1,6 @@
+<Solution>
+  <Project Path="../../../TSOClient/tso.common/FSO.Common.csproj" />
+  <Project Path="../../../TSOClient/tso.content/FSO.Content.csproj" />
+  <Project Path="../../../TSOClient/tso.files/FSO.Files.csproj" />
+  <Project Path="FSO.Packager.csproj" />
+</Solution>

@@ -303,11 +303,6 @@
 
 // ------------------------------- 3D Remesh Package ----------------------------------
 
-^NewLine|25|13|247,232,145^
-^LineEntry|Center|3D REMESH PACKAGE|247,232,145^
-^NewLine|5|7|180,210,226^
-
-^NewLine|25|10|255,64,64^
-^LineEntry|Center|Remesh Credits WIP^
+^RemeshPackage^
 
 ^NewLine|25|10|180,210,226^

@@ -19,7 +19,9 @@
         HitLabTestSamples = 0x1d8a8b4f,
         HitLabTest = 0xbd6e5937,
         EP2 = 0xdde8f5c6,
-        EP5Samps = 0x8a6fcc30
+        EP5Samps = 0x8a6fcc30,
+
+        RemeshPackage = 0xF500_0001,
     }
 
     /// <summary>
@@ -33,7 +35,14 @@
         MP3 = 0x3cec2b47,
         TRK = 0x5D73A611,
         HIT = 0x7b1acfcd,
-        SoundFX = 0x2026960b, 
+        SoundFX = 0x2026960b,
+
+        // FreeSO specific
+        FSOM = 0xF500_0001,
+        MTEX = 0xF500_0002,
+        MTX2 = 0xF500_0003,
+        FSO3DDirectory = 0xF500_0004,
+        FSO3DCredits = 0xF500_0005,
     }
 
     /// <summary>

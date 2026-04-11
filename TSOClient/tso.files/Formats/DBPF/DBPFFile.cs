@@ -230,6 +230,17 @@ namespace FSO.Files.Formats.DBPF
         }
 
         /// <summary>
+        /// Gets an entry from its ID (TypeID + FileID).
+        /// </summary>
+        /// <param name="type">The type of the entry.</param>
+        /// <param name="fileId">The file ID of the entry.</param>
+        /// <returns>The entry's data.</returns>
+        public byte[] GetItemByID(DBPFTypeID type, uint fileId)
+        {
+            return GetItemByID(((ulong)fileId << 32) | (ulong)type);
+        }
+
+        /// <summary>
         /// Gets all entries of a specific type.
         /// </summary>
         /// <param name="Type">The Type of the entry.</param>
@@ -275,6 +286,11 @@ namespace FSO.Files.Formats.DBPF
 
             entry.GroupID = groupId;
             entry.Data = data;
+        }
+
+        public void AddOrReplace(uint id, DBPFTypeID type, DBPFGroupID groupId, byte[] data)
+        {
+            AddOrReplace(((ulong)id << 32) | (ulong)(type), groupId, data);
         }
 
         #region IDisposable Members

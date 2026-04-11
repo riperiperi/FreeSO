@@ -1,15 +1,8 @@
 ﻿using FSO.Common;
-using FSO.Common.Utils;
-using FSO.Files;
 using FSO.Files.Formats.IFF.Chunks;
 using FSO.Files.RC;
-using Microsoft.Xna.Framework;
 using Microsoft.Xna.Framework.Graphics;
-using System;
 using System.Collections.Concurrent;
-using System.Collections.Generic;
-using System.IO;
-using System.Linq;
 
 namespace FSO.Content
 {
@@ -35,13 +28,16 @@ namespace FSO.Content
             } catch
             {
             }
-            CacheFiles = new HashSet<string>(Directory.GetFiles(dir).Select(x => Path.GetFileName(x).ToLowerInvariant()));
-            ReplaceFiles = new HashSet<string>(Directory.GetFiles(repldir).Select(x => Path.GetFileName(x).ToLowerInvariant()));
+            CacheFiles = [.. Directory.GetFiles(dir).Select(x => Path.GetFileName(x).ToLowerInvariant())];
+            ReplaceFiles = [.. Directory.GetFiles(repldir).Select(x => Path.GetFileName(x).ToLowerInvariant())];
+            Packages = new RCDBPFContent(repldir);
         }
-        public Dictionary<DGRP, DGRP3DMesh> Cache = new Dictionary<DGRP, DGRP3DMesh>();
-        public HashSet<DGRP> IgnoreRCCache = new HashSet<DGRP>();
-        public ConcurrentDictionary<string, MTEX> ReplacementTex = new ConcurrentDictionary<string, MTEX>();
-        public Dictionary<string, DGRP3DMesh> NameCache = new Dictionary<string, DGRP3DMesh>();
+
+        public readonly Dictionary<DGRP, DGRP3DMesh> Cache = [];
+        public readonly HashSet<DGRP> IgnoreRCCache = [];
+        public readonly ConcurrentDictionary<string, IDGRP3DTextureHolder> ReplacementTex = new();
+        public readonly Dictionary<string, DGRP3DMesh> NameCache = [];
+        public readonly RCDBPFContent Packages;
 
         public DGRP3DMesh Get(DGRP dgrp, OBJD obj)
         {
@@ -50,8 +46,18 @@ namespace FSO.Content
             var dir = Path.Combine(FSOEnvironment.UserDir, "MeshCache/");
             if (!Cache.TryGetValue(dgrp, out result))
             {
+                // Does it exist in the loaded remesh packs?
+                string baseFile = obj.ChunkParent.Filename.Replace('.', '_').ToLowerInvariant();
+
+                if (Packages.TryGetRemesh(dgrp, GD, baseFile, dgrp.ChunkID, out result))
+                {
+                    Cache[dgrp] = result;
+
+                    return result;
+                }
+
                 //does it exist in replacements
-                var name = obj.ChunkParent.Filename.Replace('.', '_').ToLowerInvariant() + "_" + dgrp.ChunkID + ".fsom";
+                var name = baseFile + "_" + dgrp.ChunkID + ".fsom";
                 if (ReplaceFiles.Contains(name))
                 {
                     try
@@ -147,34 +153,46 @@ namespace FSO.Content
             Cache[dgrp] = mesh;
         }
 
-        public DGRP3DTextureSource? GetTex(string name)
+        public DGRP3DTextureSource? GetTex(string baseName, ushort pixelSPR)
         {
-            MTEX result = null;
+            IDGRP3DTextureHolder result = null;
+
+            string name = baseName;
+            if (pixelSPR != 65535)
+            {
+                name += "_TEX_" + pixelSPR + ".png";
+            }
+
             // TODO: Could have load the same texture multiple times due to a race condition?
             if (!ReplacementTex.TryGetValue(name, out result))
             {
-                string dir;
-                if (name.StartsWith("FSO_"))
+                string lookupName = name;
+                if (!Packages.TryGetRemeshTexture(baseName, pixelSPR, out result))
                 {
-                    dir = Path.Combine(FSOEnvironment.ContentDir, "3D/");
-                    name = name.Substring(4);
-                }
-                else dir = Path.Combine(FSOEnvironment.ContentDir, "MeshReplace/");
-                //load from meshreplace folder
-                try
-                {
-                    var path = Path.Combine(dir, name);
-
-                    if (File.Exists(path))
+                    string dir;
+                    if (name.StartsWith("FSO_"))
                     {
-                        result = new MTEX(File.OpenRead(path));
+                        dir = Path.Combine(FSOEnvironment.ContentDir, "3D/");
+                        name = name.Substring(4);
+                    }
+                    else dir = Path.Combine(FSOEnvironment.ContentDir, "MeshReplace/");
+                    //load from meshreplace folder
+                    try
+                    {
+                        var path = Path.Combine(dir, name);
+
+                        if (File.Exists(path))
+                        {
+                            result = new MTEX(File.OpenRead(path));
+                        }
+                    }
+                    catch (Exception)
+                    {
+                        result = null;
                     }
                 }
-                catch (Exception)
-                {
-                    result = null;
-                }
-                ReplacementTex[name] = result;
+
+                ReplacementTex[lookupName] = result;
             }
 
             return DGRP3DTextureSource.WithDecoded(result, GD);
