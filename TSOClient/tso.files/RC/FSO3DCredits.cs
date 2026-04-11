@@ -5,12 +5,14 @@ namespace FSO.Files.RC
     public class FSO3DPackageMetadata
     {
         public string Name;
+        public string ID;
         public string Description;
         public string Url;
 
         public void Read(IoBuffer io)
         {
             Name = io.ReadVariableLengthPascalString();
+            ID = io.ReadVariableLengthPascalString();
             Description = io.ReadVariableLengthPascalString();
             Url = io.ReadVariableLengthPascalString();
         }
@@ -18,6 +20,7 @@ namespace FSO.Files.RC
         public void Write(IoWriter io)
         {
             io.WriteVariableLengthPascalString(Name);
+            io.WriteVariableLengthPascalString(ID);
             io.WriteVariableLengthPascalString(Description);
             io.WriteVariableLengthPascalString(Url);
         }

@@ -117,7 +117,7 @@ namespace FSO.Files.RC
                 }
                 else
                 {
-                    var name = source.ChunkParent.Filename.Replace('.', '_').Replace("spf", "iff");
+                    var name = source.ChunkParent.Filename.Replace('.', '_').Replace("spf", "iff").ToLowerInvariant();
                     var pxSource = ReplTextureProvider(name, PixelSPR) ?? DGRP3DTextureSource.WithDecoded(source.ChunkParent.Get<MTEX>(PixelSPR), gd);
                     PixelSource = pxSource ?? default;
                 }
@@ -204,7 +204,7 @@ namespace FSO.Files.RC
                 CustomTexture = 1;
                 PixelDir = 65535;
 
-                var name = source.ChunkParent.Filename.Replace('.', '_').Replace("spf", "iff");
+                var name = source.ChunkParent.Filename.Replace('.', '_').Replace("spf", "iff").ToLowerInvariant();
                 var pxSource = ReplTextureProvider(name, PixelSPR);
                 if (pxSource == null)
                 {

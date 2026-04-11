@@ -45,16 +45,52 @@ namespace FSO.Packager
             public required int Priority { get; set; } = 0;
         }
 
+        private class RemeshAliasSplitJson
+        {
+            [JsonProperty("name")]
+            public string? Name { get; set; }
+
+            [JsonProperty("to")]
+            public required string To { get; set; }
+
+            [JsonProperty("dgrpFrom")]
+            public required int DgrpFrom { get; set; }
+
+            [JsonProperty("dgrpTo")]
+            public required int DgrpTo { get; set; }
+
+            [JsonProperty("range")]
+            public required int Range { get; set; }
+        }
+
+        private class RemeshAliasJson
+        {
+            [JsonProperty("from")]
+            public required string From { get; set; }
+
+            [JsonProperty("to")]
+            public string? To { get; set; }
+
+            [JsonProperty("split")]
+            public RemeshAliasSplitJson[]? Split { get; set; }
+        }
+
         private class PackageMetadataJson
         {
             [JsonProperty("name")]
             public required string Name { get; set; }
+
+            [JsonProperty("id")]
+            public required string ID { get; set; }
 
             [JsonProperty("description")]
             public string? Description { get; set; }
 
             [JsonProperty("url")]
             public string? Url { get; set; }
+
+            [JsonProperty("alias")]
+            public Dictionary<string, RemeshAliasJson[]>? Alias { get; set; }
         }
 
         private readonly PackageRemeshesOptions Options;
@@ -71,6 +107,8 @@ namespace FSO.Packager
         private readonly FSO3DCredits Credits;
 
         private ZipArchive? LegacyPackage;
+
+        private Dictionary<string, RemeshAliasJson> Aliases = [];
 
         public GamePackager(PackageRemeshesOptions options, string game)
         {
@@ -260,6 +298,40 @@ namespace FSO.Packager
                         directoryName = directoryName[..^4];
                     }
 
+                    directoryName = directoryName.ToLowerInvariant();
+
+                    string legacyName = Path.GetFileName(file);
+
+                    if (Aliases.TryGetValue(directoryName, out var alias))
+                    {
+                        if (alias.To != null)
+                        {
+                            directoryName = alias.To;
+
+                            legacyName = alias.To + legacyName.Substring(alias.From.Length);
+                        }
+                        else if (alias.Split != null)
+                        {
+                            foreach (var split in alias.Split)
+                            {
+                                if (chunkId >= split.DgrpFrom && chunkId < split.DgrpFrom + split.Range)
+                                {
+                                    directoryName = split.To;
+                                    chunkId = (ushort)((chunkId - split.DgrpFrom) + split.DgrpTo);
+
+                                    if (isMesh)
+                                    {
+                                        legacyName = $"{directoryName}_{chunkId}.fsom";
+                                    }
+                                    else
+                                    {
+                                        legacyName = $"{directoryName}_TEX_{chunkId}.png";
+                                    }
+                                }
+                            }
+                        }
+                    }
+
                     // Add resource
 
                     uint fileId = AddFile(CompressedPackage, CompressedIDs, cType, (stream) =>
@@ -296,7 +368,7 @@ namespace FSO.Packager
 
                     credits.Files.Add(ref3d);
 
-                    LegacyPackage?.CreateEntryFromFile(file, Path.GetFileName(file), CompressionLevel.SmallestSize);
+                    LegacyPackage?.CreateEntryFromFile(file, legacyName, CompressionLevel.SmallestSize);
                 }
             }
 
@@ -398,14 +470,26 @@ namespace FSO.Packager
                 LegacyPackage = ZipFile.Open(path, ZipArchiveMode.Create);
             }
 
-            var metadata = ReadMetadata<AuthorMetadataJson>(Path.Join(Options.SourceDirectory, "metadata.json"), "root package");
+            var metadata = ReadMetadata<PackageMetadataJson>(Path.Join(Options.SourceDirectory, "metadata.json"), "root package");
 
             Credits.Metadata = new FSO3DPackageMetadata()
             {
                 Name = metadata.Name,
                 Description = metadata.Description ?? "",
-                Url = metadata.Url ?? ""
+                Url = metadata.Url ?? "",
+                ID = metadata.ID,
             };
+
+            if (metadata.Alias != null && metadata.Alias.TryGetValue(Game, out var aliases))
+            {
+                if (aliases != null)
+                {
+                    foreach (var alias in aliases)
+                    {
+                        Aliases[alias.From] = alias;
+                    }
+                }
+            }
 
             // Rough DBPF File structure
 
