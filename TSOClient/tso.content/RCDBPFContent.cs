@@ -197,8 +197,6 @@ namespace FSO.Content
                     continue;
                 }
 
-                Console.WriteLine($"I'm so glad I found my {file} #{chunkId} ({ref3d.Value.ID} {ref3d.Value.FileID} {ref3d.Value.TypeID:x8})");
-
                 texture = collection.GetTexture(ref3d.Value);
                 return true;
             }
