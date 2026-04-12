@@ -26,6 +26,9 @@ namespace FSO.Server.Servers.City.Handlers
             if (!session.HasModerationLevel(1))
                 return;
 
+            if (!(Context.Config.Archive?.Flags.HasFlag(FSO.Common.ArchiveConfigFlags.CityEditor) ?? false))
+                return;
+
             var shard = Realestate.GetByShard(Context.ShardId);
 
             if (!shard.Dynamic)

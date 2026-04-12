@@ -55,6 +55,7 @@ namespace FSO.Client.UI.Archive
             new ServerFlag(ArchiveConfigFlags.AllowLotCreation, "Allow lot creation", true),
             new ServerFlag(ArchiveConfigFlags.AllowSimCreation, "Allow character creation", true),
             new ServerFlag(ArchiveConfigFlags.LockArchivedSims, "Lock archived characters", false, 1, ArchivedCharacterHelp),
+            new ServerFlag(ArchiveConfigFlags.CityEditor, "City editor", false, 0, CityEditorHelp),
         };
 
         private UIButton ExportButton;
@@ -501,6 +502,10 @@ namespace FSO.Client.UI.Archive
         public static void VerificationHelp()
         {
             UIAlert.Alert("User verification", "Without user verification, any user with the server IP can connect and join the city - authentication is automatic. Users can be banned by client and IP, but new users are always given the benefit of the doubt. \n\nWhen this option is enabled, new users will require verification from an admin or mod before they can interact with the game server. You can verify users from the User List ingame, which appears at the bottom left in the UCP. The button will start flashing if there are any pending verifications.", true);
+        }
+        public static void CityEditorHelp()
+        {
+            UIAlert.Alert("City editor", GameFacade.Strings.GetString("f128", "121"), true);
         }
     }
 }

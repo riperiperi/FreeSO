@@ -82,6 +82,10 @@ namespace FSO.Client.UI.Screens
         public World VisualWorld => TransitionWorld ?? World;
         public VisualSurroundPuppets SurroundPuppets { get; private set; }
 
+        public UIButton CityEditButton;
+        private UICityPainter CityPainter;
+        public bool AllowCityEditor;
+
         public bool InLot
         {
             get
@@ -238,25 +242,8 @@ namespace FSO.Client.UI.Screens
             */
             HITVM.Get().PlaySoundEvent(UIMusic.Map);
 
-            /*VMDebug = new UIButton()
-            {
-                Caption = "Simantics",
-                Y = 45,
-                Width = 100,
-                X = GlobalSettings.Default.GraphicsWidth - 110
-            };
-            VMDebug.OnButtonClick += new ButtonClickDelegate(VMDebug_OnButtonClick);
-            this.Add(VMDebug);*/
-
-            /*SaveHouseButton = new UIButton()
-            {
-                Caption = "Save House",
-                Y = 10,
-                Width = 100,
-                X = GlobalSettings.Default.GraphicsWidth - 110
-            };
-            SaveHouseButton.OnButtonClick += new ButtonClickDelegate(SaveHouseButton_OnButtonClick);
-            this.Add(SaveHouseButton);*/
+            var gd = GameFacade.GraphicsDevice;
+            var custom = Content.Content.Get().CustomUI;
 
             CityFloatingContainer = new UISortedContainer();
             Add(CityFloatingContainer);
@@ -332,6 +319,26 @@ namespace FSO.Client.UI.Screens
             Add(status);
 
             SurroundPuppets = new(this);
+
+            CityEditButton = new UIButton(custom.Get("cityedit_toggle.png").Get(gd))
+            {
+                Position = new Vector2(10, 10),
+                Tooltip = GameFacade.Strings.GetString("f130", "1")
+            };
+            CityEditButton.OnButtonClick += ToggleCityEdit;
+
+            Add(CityEditButton);
+        }
+
+        private void ToggleCityEdit(UIElement button)
+        {
+            if (CityPainter == null)
+            {
+                CityPainter = new UICityPainter(CityRenderer);
+                WindowContainer.Add(CityPainter);
+            }
+
+            CityPainter.SetActive(true);
         }
 
         public override void GameResized()
@@ -372,9 +379,6 @@ namespace FSO.Client.UI.Screens
 
             terrainController.Init(CityRenderer);
             CityRenderer.SetController(terrainController);
-
-            var test = new UICityPainter(CityRenderer);
-            WindowContainer.Add(test);
 
             GameThread.NextUpdate(x =>
             {
@@ -548,6 +552,8 @@ namespace FSO.Client.UI.Screens
             {
                 GraphicsModeControl.ChangeMode((GraphicsModeControl.Mode == GlobalGraphicsMode.Full3D) ? GlobalGraphicsMode.Hybrid2D : GlobalGraphicsMode.Full3D);
             }
+
+            CityEditButton.Visible = AllowCityEditor && ZoomLevel >= 4 && (CityPainter == null || !CityPainter.Visible);
         }
 
         public override void PreDraw(UISpriteBatch batch)
@@ -937,16 +943,10 @@ namespace FSO.Client.UI.Screens
         {
             CleanupLastWorld(false);
 
-            /*
-            if (FSOEnvironment.Enable3D)
+            World = new World(GameFacade.GraphicsDevice)
             {
-                var rc = new LotView.RC.WorldRC(GameFacade.GraphicsDevice);
-                rc.SetSurroundingWorld(CityRenderer);
-                World = rc;
-            }
-            else */
-            World = new World(GameFacade.GraphicsDevice);
-            World.Surroundings = CityRenderer;
+                Surroundings = CityRenderer
+            };
 
             WorldLoaded = false;
             World.Opacity = 0;
@@ -1062,21 +1062,6 @@ namespace FSO.Client.UI.Screens
                 $"Your best bet is reinstalling FreeSO or The Sims Online. If this appears repeatedly, you definitely have an issue. You should also post this message on discord.",
                 true);
             vm.LoadErrors.Clear();
-        }
-
-        private void VMDebug_OnButtonClick(UIElement button)
-        {
-            /*
-            if (vm == null) return;
-
-            var debugTools = new Simantics(vm);
-
-            var window = GameFacade.Game.Window;
-            debugTools.Show();
-            debugTools.Location = new System.Drawing.Point(window.ClientBounds.X + window.ClientBounds.Width, window.ClientBounds.Y);
-            debugTools.UpdateAQLocation();
-            */
-
         }
 
         public void CloseInbox()

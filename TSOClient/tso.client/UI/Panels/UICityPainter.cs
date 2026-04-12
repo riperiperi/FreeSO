@@ -575,20 +575,23 @@ namespace FSO.Client.UI.Panels
             }
         }
 
-        public MapPainterPlugin MapPainter;
-        private ModeUI[] Modes;
+        public readonly MapPainterPlugin MapPainter;
+        private readonly ModeUI[] Modes;
 
-        private UIButton PreviewBg;
-        private UIHBoxContainer RootBox;
-        private UIVBoxContainer SharedControlsBox;
-        private UIVBoxContainer ToolsBox;
+        private readonly UIButton PreviewBg;
+        private readonly UIHBoxContainer RootBox;
+        private readonly UIVBoxContainer SharedControlsBox;
+        private readonly UIVBoxContainer ToolsBox;
         private AbstractCityPainterPreview ActivePreview;
 
-        private UISlider BrushSizeSlider;
-        private UISlider BrushIntensitySlider;
+        private readonly UISlider BrushSizeSlider;
+        private readonly UISlider BrushIntensitySlider;
+
+        private readonly Terrain Terrain;
 
         public UICityPainter(Terrain terrain) : base(UIDialogStyle.Close, true)
         {
+            Terrain = terrain;
             MapPainter = new MapPainterPlugin(terrain);
 
             Modes = [
@@ -664,9 +667,28 @@ namespace FSO.Client.UI.Panels
 
             Add(RootBox);
 
-            SetMode(PainterMode.ROAD);
+            CloseButton.OnButtonClick += Close;
 
-            terrain.Plugin = MapPainter;
+            SetMode(PainterMode.ROAD);
+        }
+
+        private void Close(UIElement button)
+        {
+            SetActive(false);
+        }
+
+        public void SetActive(bool active)
+        {
+            if (active)
+            {
+                Visible = true;
+                Terrain.Plugin = MapPainter;
+            }
+            else
+            {
+                Visible = false;
+                Terrain.Plugin = null;
+            }
         }
 
         private void SetMode(PainterMode mode)

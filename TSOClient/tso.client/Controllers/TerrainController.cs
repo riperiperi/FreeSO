@@ -73,6 +73,7 @@ namespace FSO.Client.Controllers
         private void MapChange(Rectangle obj)
         {
             View.GenerateCityMesh(GameFacade.GraphicsDevice, obj);
+            View.RegenerateVertexColor();
         }
 
         public void CommitMapChange(CityEditBase cmd)

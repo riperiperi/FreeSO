@@ -160,7 +160,9 @@ namespace FSO.Client.Rendering.City
         public CityFoliage Foliage;
         public CityNeighGeom NeighGeom;
         public CityFacadeLock NearFacades;
+
         private CityVertexColorGenerator VertexColorGenerator;
+        private bool VertexColorDirty;
 
         private Texture2D LoadTex(string Path)
         {
@@ -294,6 +296,11 @@ namespace FSO.Client.Rendering.City
             {
                 InheritPosition(LastWorld, FindController<TerrainController>()?.Parent, true);
             }
+        }
+
+        public void RegenerateVertexColor()
+        {
+            VertexColorDirty = true;
         }
 
         public void GenerateCityMesh(GraphicsDevice gd, Rectangle? range)
@@ -1165,8 +1172,13 @@ namespace FSO.Client.Rendering.City
 
             if (Visible)
             { //if we're not visible, do not update CityRenderer state...
-                VertexColorGenerator.Update(GameFacade.GraphicsDevice);
-                Content.VertexColor = VertexColorGenerator.GetVertexColor();
+                if (VertexColorDirty || Content.VertexColor == null)
+                {
+                    VertexColorGenerator.Update(GameFacade.GraphicsDevice);
+                    Content.VertexColor = VertexColorGenerator.GetVertexColor();
+                    VertexColorDirty = false;
+                }
+
                 Weather.TintColor = m_TintColor.ToVector4();
                 Weather.Update();
 

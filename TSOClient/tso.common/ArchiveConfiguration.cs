@@ -20,6 +20,7 @@ namespace FSO.Common
         AllowSimCreation = 1 << 7,
         LockArchivedSims = 1 << 8,
         ReducedTickRate = 1 << 9,
+        CityEditor = 1 << 10,
 
         DedicatedServer = 1 << 16,
 

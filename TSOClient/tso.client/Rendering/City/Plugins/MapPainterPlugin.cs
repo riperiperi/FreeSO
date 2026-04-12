@@ -90,8 +90,6 @@ namespace FSO.Client.Rendering.City.Plugins
 
         public override void Draw(SpriteBatch sb)
         {
-            TextStyle.DefaultLabel.VFont.Draw(sb.GraphicsDevice, Mode.ToString(), new Vector2(10, 10), Color.White, new Vector2(TextStyle.DefaultLabel.Scale), null);
-
             sb.Begin();
 
             Tool?.Draw(sb);
