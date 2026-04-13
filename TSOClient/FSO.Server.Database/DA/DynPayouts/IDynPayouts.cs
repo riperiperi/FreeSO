@@ -7,7 +7,7 @@ namespace FSO.Server.Database.DA.DynPayouts
     {
         List<DbTransSummary> GetSummary(int limitDay);
         bool InsertDynRecord(List<DbDynPayout> dynPayout);
-        bool ReplaceDynTuning(List<DbTuning> dynTuning);
+        bool ReplaceDynTuning(List<DbTuning> dynTuning, int owner = 1);
 
         List<DbDynPayout> GetPayoutHistory(int limitDay);
         bool Purge(int limitDay);

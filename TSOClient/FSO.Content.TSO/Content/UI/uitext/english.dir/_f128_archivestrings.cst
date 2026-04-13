@@ -148,3 +148,18 @@ Enabling the city editor and starting the server will convert the save to use a 
 123 ^Switch to The Sims Online original credits^
 124 ^Switch to FreeSO credits^
 125 ^View FreeSO/The Sims Online Credits^
+
+126 ^FreeSO inherits The Sims Online's gameplay, which was a classic MMO with a glacial pace of progression intended to make it hard to reach "the end". Archive mode has a different focus - pop-up gameplay sessions with small groups of people with much quicker gameplay progression. Of course, you can still configure things back to the original tuning if you want to replicate the MMO experience, or you have a VERY large group of players (in this case, maybe a full scale server would be more appropriate). 
+
+- "Skill speed" affects how quickly skills are gained. This affects the base rate - the percentage will apperar the same. Note that skilling times still scale nonlinearly.
+
+- "Payout multiplier" affects simoleon payouts from single/group job objects, as well as payouts from the Restaurant, Robot Factory and Club jobs.
+
+- "Singleplayer penalty" affects how much slower skilling or making money by yourself is. TSO encouraged groups of at least 12 on skill/money lots by decreasing payouts and skill speeds below that. 100% is the full penalty that TSO applied, whereas 0% will make it equivalent to the player cap being reached. Note that penalties for being on the wrong lot type or not having many skilling stations still apply.^
+
+127 ^Help^
+128 ^Reset^
+
+129 ^Reset to the original TSO tuning, or recommended FreeSO Archive tuning?^
+130 ^The Sims Online^
+131 ^FreeSO Archive^

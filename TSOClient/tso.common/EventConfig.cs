@@ -46,6 +46,9 @@
         public bool timed;
         public EventCatalogEntry[] catalog;
         public EventModifier[] modifiers;
+        public float? skillSpeed;
+        public float? payoutScale;
+        public float? singleplayerPenalty;
 
         public static EventConfig FromJson(string json)
         {

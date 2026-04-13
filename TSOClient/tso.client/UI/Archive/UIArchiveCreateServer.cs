@@ -62,6 +62,7 @@ namespace FSO.Client.UI.Archive
         private UIButton UsersButton;
         private UIButton CustomPortsButton;
         private UIButton EventsButton;
+        private UIButton CheatsButton;
         private UIButton StartButton;
         private UITextBox NameInput;
         private ArchiveConfiguration Config;
@@ -205,6 +206,11 @@ namespace FSO.Client.UI.Archive
                 Tooltip = "Events"
             });
 
+            actionsHbox.Add(CheatsButton = new UIButton(custom.Get("archive_configcheats.png").Get(gd))
+            {
+                Tooltip = "Cheats"
+            });
+
             Add(StartButton = new UIButton()
             {
                 Caption = "Start"
@@ -242,6 +248,7 @@ namespace FSO.Client.UI.Archive
             NameInput.OnChange += ValidateInputs;
             CustomPortsButton.OnButtonClick += ChangePorts;
             EventsButton.OnButtonClick += EditEvents;
+            CheatsButton.OnButtonClick += Cheats;
             StartButton.OnButtonClick += Start;
             CloseButton.OnButtonClick += Close;
             ExportButton.OnButtonClick += Export;
@@ -250,6 +257,20 @@ namespace FSO.Client.UI.Archive
             ValidateInputs(NameInput);
 
             UpdateButtons();
+        }
+
+        private void Cheats(UIElement button)
+        {
+            var selected = SaveCombo.SelectedItem as ArchiveManifest;
+
+            var factory = new ArchiveServerFactory(Config, null);
+            factory.Prepare(selected, (success) =>
+            {
+                if (success)
+                {
+                    UIScreen.GlobalShowDialog(new UIArchiveGameplayScale(Config), true);
+                }
+            });
         }
 
         private void NewFromTemplate(ArchiveManifest template)

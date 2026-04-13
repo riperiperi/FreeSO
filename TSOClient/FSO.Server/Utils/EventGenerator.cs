@@ -10,6 +10,7 @@ namespace FSO.Server.Utils
         {
             using var da = daFactory.Get();
 
+            var tuning = da.Tuning.All();
             var presets = da.Tuning.GetAllPresets().ToList();
             var events = da.Events.All(limit: 9999);
 
@@ -137,6 +138,118 @@ namespace FSO.Server.Utils
                     }
                 }
             }
+
+            var dynTuning = new List<DbTuning>();
+            var semiglobal = Content.Content.Get().WorldObjectGlobals.Get("skillobjects");
+
+            float skillSpeed = config.skillSpeed ?? 1;
+            if (skillSpeed != 1)
+            {
+                // Modify the skill completion timings.
+
+                var originalTable = semiglobal.Resource.Tuning.GetTable(8200);
+
+                for (int i = 0; i < 11; i++)
+                {
+                    short scaledValue = (short)(originalTable.GetKey(i).Value / skillSpeed);
+
+                    dynTuning.Add(new DbTuning()
+                    {
+                        tuning_type = "skillobjects.iff",
+                        tuning_table = 8,
+                        tuning_index = i,
+                        value = scaledValue,
+                        owner_type = DbTuningType.DYNAMIC,
+                        owner_id = 2
+                    });
+                }
+
+                // Multiplier for skills above 10
+                dynTuning.Add(new DbTuning()
+                {
+                    tuning_type = "global.iff",
+                    tuning_table = 29,
+                    tuning_index = 1,
+                    value = (short)(800 / skillSpeed),
+                    owner_type = DbTuningType.DYNAMIC,
+                    owner_id = 2
+                });
+            }
+
+            float payoutScale = config.payoutScale ?? 1;
+            if (payoutScale != 1)
+            {
+                // Modify the payout multiplier.
+
+                dynTuning.Add(new DbTuning()
+                {
+                    tuning_type = "income_mul",
+                    tuning_table = 0,
+                    tuning_index = 0,
+                    value = payoutScale,
+                    owner_type = DbTuningType.DYNAMIC,
+                    owner_id = 2
+                });
+            }
+
+            float singleplayerPenalty = config.singleplayerPenalty ?? 1;
+            if (singleplayerPenalty != 1)
+            {
+                // Skills (% modifier)
+                // Move the bonus for >0 sims into the 0 sim bonus.
+                var skillTable = semiglobal.Resource.Tuning.GetTable(8198);
+
+                int bonusSkill = 0;
+                for (int i = 0; i < 6; i++)
+                {
+                    bonusSkill += skillTable.GetKey(i).Value;
+                }
+
+                float pctZero = 1 - singleplayerPenalty;
+
+                for (int i = 0; i < 6; i++)
+                {
+                    int existingValue = skillTable.GetKey(i).Value;
+
+                    dynTuning.Add(new DbTuning()
+                    {
+                        tuning_type = "skillobjects.iff",
+                        tuning_table = 6,
+                        tuning_index = i,
+                        value = i == 0 ? (short)(bonusSkill * pctZero) : (short)(existingValue * singleplayerPenalty),
+                        owner_type = DbTuningType.DYNAMIC,
+                        owner_id = 2
+                    });
+                }
+
+                // Money
+
+                var moneyTable = semiglobal.Resource.Tuning.GetTable(8196);
+                // Move the multiplier for the max group into the payout multiplier
+                int moneyMultiplier = moneyTable.GetKey(4).Value;
+
+                dynTuning.Add(new DbTuning()
+                {
+                    tuning_type = "skillobjects.iff",
+                    tuning_table = 4,
+                    tuning_index = 4,
+                    value = (short)(moneyMultiplier * singleplayerPenalty),
+                    owner_type = DbTuningType.DYNAMIC,
+                    owner_id = 2
+                });
+
+                dynTuning.Add(new DbTuning()
+                {
+                    tuning_type = "income_mul",
+                    tuning_table = 0,
+                    tuning_index = 1,
+                    value = 1 + ((moneyMultiplier - 10) / 10f) * pctZero,
+                    owner_type = DbTuningType.DYNAMIC,
+                    owner_id = 2
+                });
+            }
+
+            da.DynPayouts.ReplaceDynTuning(dynTuning, 2);
         }
 
         private static void EnsurePresetItems(IDA da, DbTuningPreset preset, Dictionary<string, float> tuning, bool isNew = false)

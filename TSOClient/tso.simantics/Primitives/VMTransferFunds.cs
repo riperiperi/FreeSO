@@ -11,37 +11,6 @@ namespace FSO.SimAntics.Primitives
 {
     public class VMTransferFunds : VMPrimitiveHandler
     {
-        public static Dictionary<VMTransferFundsExpenseType, float> ExpenseTuningMultiplier = new Dictionary<VMTransferFundsExpenseType, float>()
-        {
-            /*{ VMTransferFundsExpenseType.IncomeJob, 20f },
-            { VMTransferFundsExpenseType.IncomeClubJob, 20f },
-            { VMTransferFundsExpenseType.IncomeRestaurantJob, 20f },
-            { VMTransferFundsExpenseType.IncomeRobotJob, 20f },
-
-            //{ VMTransferFundsExpenseType.IncomeMisc, 20f },
-            { VMTransferFundsExpenseType.IncomeCanning, 20f },
-            { VMTransferFundsExpenseType.IncomeChalkboard, 20f },
-            { VMTransferFundsExpenseType.IncomeChemistry, 20f },
-
-            { VMTransferFundsExpenseType.IncomeEasel, 20f },
-            { VMTransferFundsExpenseType.IncomeEaselPlayers, 20f },
-            { VMTransferFundsExpenseType.IncomeFoodCounterPlayers, 20f },
-            { VMTransferFundsExpenseType.IncomeGGWorkbench, 20f },
-            { VMTransferFundsExpenseType.IncomeObjectsBlackjack, 20f },
-            { VMTransferFundsExpenseType.IncomeObjectsMaze, 20f },
-            { VMTransferFundsExpenseType.IncomeObjectsPaperC, 20f },
-            { VMTransferFundsExpenseType.IncomeObjectsPizza, 20f },
-            { VMTransferFundsExpenseType.IncomeObjectsPoker, 20f },
-            { VMTransferFundsExpenseType.IncomeObjectsRoulette, 20f },
-            { VMTransferFundsExpenseType.IncomeObjectsSkill, 20f },
-            { VMTransferFundsExpenseType.IncomeObjectsSlots, 20f },
-            { VMTransferFundsExpenseType.IncomePinata, 20f },
-            { VMTransferFundsExpenseType.IncomePinataPlayers, 20f },
-
-            { VMTransferFundsExpenseType.IncomeTelemarket, 20f },
-            { VMTransferFundsExpenseType.IncomeTypewriter, 20f },*/
-        };
-
         //income objects skill maps to these
         public static Dictionary<uint, VMTransferFundsExpenseType> SkillTypes = new Dictionary<uint, VMTransferFundsExpenseType>()
         {
@@ -54,6 +23,40 @@ namespace FSO.SimAntics.Primitives
             { 0x4DDF498C, VMTransferFundsExpenseType.IncomeGGWorkbench },
             { 0xF77D1200, VMTransferFundsExpenseType.IncomeTypewriter }
         };
+
+        // Job income can be scaled by tuning
+        private static HashSet<VMTransferFundsExpenseType> AllJobIncome =
+        [
+            // single skill
+            VMTransferFundsExpenseType.IncomeTypewriter,
+            VMTransferFundsExpenseType.IncomeEasel,
+            VMTransferFundsExpenseType.IncomeEaselPlayers,
+            VMTransferFundsExpenseType.IncomeChalkboard,
+            VMTransferFundsExpenseType.IncomeCanning,
+            VMTransferFundsExpenseType.IncomeChemistry,
+            VMTransferFundsExpenseType.IncomeGGWorkbench,
+            VMTransferFundsExpenseType.IncomePinata,
+            VMTransferFundsExpenseType.IncomePinataPlayers,
+            VMTransferFundsExpenseType.IncomeTelemarket,
+
+            // generic single skill
+            VMTransferFundsExpenseType.IncomePlayersSkill,
+            VMTransferFundsExpenseType.IncomeObjectsSkill,
+
+            // group skill
+            VMTransferFundsExpenseType.IncomePlayersPizza,
+            VMTransferFundsExpenseType.IncomeObjectsPizza,
+            VMTransferFundsExpenseType.IncomePlayersPaperC,
+            VMTransferFundsExpenseType.IncomeObjectsPaperC,
+            VMTransferFundsExpenseType.IncomePlayersMaze,
+            VMTransferFundsExpenseType.IncomeObjectsMaze,
+
+            // onlinejobs
+            VMTransferFundsExpenseType.IncomeJob,
+            VMTransferFundsExpenseType.IncomeRobotJob,
+            VMTransferFundsExpenseType.IncomeRestaurantJob,
+            VMTransferFundsExpenseType.IncomeClubJob,
+        ];
 
         public override VMPrimitiveExitCode Execute(VMStackFrame context, VMPrimitiveOperand args)
         {
@@ -81,10 +84,25 @@ namespace FSO.SimAntics.Primitives
             }
 
             var amount = VMMemory.GetBigVariable(context, operand.GetAmountOwner(), (short)operand.AmountData);
-            float scale = 1f;
-            if (ExpenseTuningMultiplier.TryGetValue(operand.ExpenseType, out scale))
+
+            if (AllJobIncome.Contains(operand.ExpenseType))
             {
-                amount = (int)(amount * scale);
+                var scale = context.VM.Tuning.GetTuning("income_mul", 0, 0);
+
+                if (scale != null)
+                {
+                    amount = (int)(amount * scale);
+                }
+
+                if (operand.ExpenseType == VMTransferFundsExpenseType.IncomeObjectsSkill)
+                {
+                    scale = context.VM.Tuning.GetTuning("income_mul", 0, 1);
+
+                    if (scale != null)
+                    {
+                        amount = (int)(amount * scale);
+                    }
+                }
             }
 
             uint source = uint.MaxValue;
