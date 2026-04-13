@@ -8,6 +8,8 @@ namespace FSO.Client.UI.Archive
 {
     internal class UIArchiveGameplayScale : UIDialog
     {
+        public UITextBox FundsInput;
+
         public UISlider SkillSlider;
         public UILabel SkillDisplay;
 
@@ -20,11 +22,13 @@ namespace FSO.Client.UI.Archive
         public UIButton HelpButton;
         public UIButton ResetButton;
 
+        private readonly ArchiveConfiguration Config;
         private EventConfig Events;
         private bool IsChanged;
 
         public UIArchiveGameplayScale(ArchiveConfiguration config) : base(UIDialogStyle.OK, true)
         {
+            Config = config;
             Caption = "Skill/Money Cheats";
             var vbox = new UIVBoxContainer() { HorizontalAlignment = UIContainerHorizontalAlignment.Center };
 
@@ -46,6 +50,35 @@ namespace FSO.Client.UI.Archive
             });
 
             desc.Size = new Vector2(320, 90);
+
+            var fundsBox = new UIVBoxContainer() { HorizontalAlignment = UIContainerHorizontalAlignment.Left, Spacing = 0 };
+
+            fundsBox.Add(new UILabel()
+            {
+                Caption = "Starting funds: "
+            });
+
+            fundsBox.Add(new UISpacer(250, 5));
+
+            var fundsBox2 = new UIHBoxContainer() { VerticalAlignment = UIContainerVerticalAlignment.Middle };
+
+            fundsBox2.Add(new UILabel() { Caption = "$" });
+
+            fundsBox2.Add(FundsInput = new UITextBox()
+            {
+                Size = new Vector2(100, 25),
+                CurrentText = config.InitialFunds.ToString()
+            });
+
+            fundsBox2.AutoSize();
+
+            fundsBox.Add(fundsBox2);
+
+            FundsInput.OnChange += FundsInput_OnChange;
+
+            vbox.Add(fundsBox);
+
+            vbox.Add(new UISpacer(10));
 
             var skillBox = new UIVBoxContainer() { HorizontalAlignment = UIContainerHorizontalAlignment.Left };
 
@@ -177,6 +210,18 @@ namespace FSO.Client.UI.Archive
 
                 UIScreen.RemoveDialog(this);
             };
+        }
+
+        private void FundsInput_OnChange(UIElement element)
+        {
+            if (int.TryParse(FundsInput.CurrentText, out int funds) && funds >= 0)
+            {
+                Config.InitialFunds = funds;
+            }
+            else
+            {
+                Config.InitialFunds = 0;
+            }
         }
 
         private void ResetButton_OnButtonClick(UIElement button)

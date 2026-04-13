@@ -49,6 +49,9 @@ namespace FSO.Common
         [JsonProperty("allowUserApi")]
         public bool AllowUserApi { get; set; }
 
+        [JsonProperty("initialFunds")]
+        public int InitialFunds { get; set; } = 20000;
+
         // Runtime
         public IDisposable[] Disposables;
         public EventConfig? Events;

@@ -10,6 +10,8 @@ namespace FSO.Server.Servers.City
         public int ID;
         [JsonProperty("timeout_no_auth")]
         public bool Timeout_No_Auth = true;
+        [JsonProperty("initial_funds")]
+        public int Initial_Funds = 0;
 
         [JsonProperty("neighborhoods")]
         public CityServerNhoodConfiguration Neighborhoods = new CityServerNhoodConfiguration();

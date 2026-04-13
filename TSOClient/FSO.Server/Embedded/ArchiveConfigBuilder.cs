@@ -28,7 +28,7 @@ namespace FSO.Server.Embedded
                     Engine = "sqlite",
                     ConnectionString = $"Data Source={dbPath};Version=3;UTF8Encoding=True",
                 },
-                
+
                 Services = new ServerConfigurationservices()
                 {
                     Tasks = new Servers.Tasks.TaskServerConfiguration()
@@ -129,7 +129,7 @@ namespace FSO.Server.Embedded
                             Internal_Host = $"127.0.0.1:{cityPort}",
                             Public_Host = $"{publicHost}:{cityPort}",
                             Use_SSL = false,
-                            
+
                             Neighborhoods = new Servers.City.CityServerNhoodConfiguration()
                             {
                                 Mayor_Elegibility_Limit = 4,
@@ -143,7 +143,9 @@ namespace FSO.Server.Embedded
                                 Cron = "0 4 * * *",
                                 Timeout = 3600,
                                 Visits_Retention_Period = 7,
-                            }
+                            },
+
+                            Initial_Funds = config.InitialFunds
                         }
                     },
                     Lots = new List<Servers.Lot.LotServerConfiguration>()
@@ -167,7 +169,7 @@ namespace FSO.Server.Embedded
                             }
                         }
                     }
-                } 
+                }
             };
         }
     }
