@@ -151,7 +151,7 @@ Enabling the city editor and starting the server will convert the save to use a 
 
 126 ^FreeSO inherits The Sims Online's gameplay, which was a classic MMO with a glacial pace of progression intended to make it hard to reach "the end". Archive mode has a different focus - pop-up gameplay sessions with small groups of people with much quicker gameplay progression. Of course, you can still configure things back to the original tuning if you want to replicate the MMO experience, or you have a VERY large group of players (in this case, maybe a full scale server would be more appropriate). 
 
-- "Skill speed" affects how quickly skills are gained. This affects the base rate - the percentage will apperar the same. Note that skilling times still scale nonlinearly.
+- "Skill speed" affects how quickly skills are gained. This affects the base rate - the percentage will appear the same. Note that skilling times still scale nonlinearly.
 
 - "Payout multiplier" affects simoleon payouts from single/group job objects, as well as payouts from the Restaurant, Robot Factory and Club jobs.
 
