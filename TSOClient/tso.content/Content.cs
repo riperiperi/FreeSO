@@ -34,6 +34,8 @@ namespace FSO.Content
                 if (!INSTANCE.Inited) INSTANCE.Init();
                 return;
             }
+            // Clear any previously recorded failed files
+            FailedContentFiles.Clear();
             INSTANCE = new Content(basepath, ContentMode.CLIENT, device, true);
         }
 
@@ -88,6 +90,12 @@ namespace FSO.Content
         public bool Inited = false;
 
         public ChangeManager Changes;
+        
+        /// <summary>
+        /// List of files that failed to load during content initialization.
+        /// Used to display warnings to users about problematic custom content.
+        /// </summary>
+        public static List<TS1BCFProvider.FailedFileInfo> FailedContentFiles { get; private set; } = new List<TS1BCFProvider.FailedFileInfo>();
 
         /// <summary>
         /// Creates a new instance of Content.
@@ -269,6 +277,12 @@ namespace FSO.Content
             TS1Global?.Init();
             LoadProgress = ContentLoadingProgress.InitBCF;
             BCFGlobal?.Init();
+            
+            // Collect any failed files from BCF loading
+            if (BCFGlobal?.FailedFiles?.Count > 0)
+            {
+                FailedContentFiles.AddRange(BCFGlobal.FailedFiles);
+            }
 
             if (!TS1) PIFFRegistry.Init(Path.Combine(FSOEnvironment.ContentDir, "Patch/"));
             else PIFFRegistry.Init(Path.Combine(FSOEnvironment.ContentDir, "TS1Patch/"));

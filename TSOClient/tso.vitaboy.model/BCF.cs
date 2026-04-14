@@ -20,21 +20,42 @@ namespace FSO.Vitaboy
         {
             using (var io = (cmx) ? new BCFReadString(stream, true) : (BCFReadProxy)IoBuffer.FromStream(stream, ByteOrder.LITTLE_ENDIAN))
             {
-                Skeletons = new Skeleton[io.ReadInt32()];
+                int skelCount = io.ReadInt32();
+                // Sanity checks for corrupted files
+                if (skelCount < 0 || skelCount > 1000)
+                {
+                    throw new InvalidDataException($"Invalid skeleton count: {skelCount}. File may be corrupted or in wrong format.");
+                }
+                
+                Skeletons = new Skeleton[skelCount];
                 for (int i = 0; i < Skeletons.Length; i++)
                 {
                     Skeletons[i] = new Skeleton();
                     Skeletons[i].Read(io, true);
                     Skeletons[i].ParentBCF = this;
                 }
-                Appearances = new Appearance[io.ReadInt32()];
+                
+                int appCount = io.ReadInt32();
+                if (appCount < 0 || appCount > 10000)
+                {
+                    throw new InvalidDataException($"Invalid appearance count: {appCount}. File may be corrupted or in wrong format.");
+                }
+                
+                Appearances = new Appearance[appCount];
                 for (int i = 0; i < Appearances.Length; i++)
                 {
                     Appearances[i] = new Appearance();
                     Appearances[i].ReadBCF(io);
                     Appearances[i].ParentBCF = this;
                 }
-                Animations = new Animation[io.ReadInt32()];
+                
+                int animCount = io.ReadInt32();
+                if (animCount < 0 || animCount > 10000)
+                {
+                    throw new InvalidDataException($"Invalid animation count: {animCount}. File may be corrupted or in wrong format.");
+                }
+                
+                Animations = new Animation[animCount];
                 for (int i = 0; i < Animations.Length; i++)
                 {
                     Animations[i] = new Animation();

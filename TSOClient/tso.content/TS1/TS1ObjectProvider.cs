@@ -36,7 +36,26 @@ namespace FSO.Content.TS1
             var allIffs = GameObjects.ListGeneric();
             foreach (var iff in allIffs)
             {
-                var file = (IffFile)iff.GetThrowawayGeneric();
+                IffFile file = null;
+                try
+                {
+                    file = (IffFile)iff.GetThrowawayGeneric();
+                }
+                catch (Exception ex)
+                {
+                    // Log failed object file loads
+                    string failedFilename = Path.GetFileName(iff.ToString().Replace('\\', '/'));
+                    Content.FailedContentFiles.Add(new TS1BCFProvider.FailedFileInfo
+                    {
+                        Filename = failedFilename,
+                        ErrorMessage = $"Failed to load object file: {ex.Message}",
+                        ErrorType = ex.GetType().Name
+                    });
+                    continue;
+                }
+                
+                if (file == null) continue;
+                
                 var source = GameObjectSource.Far;
                 string filename = Path.GetFileName(iff.ToString().Replace('\\', '/'));
                 if (iff is FileContentReference<object>)
@@ -70,31 +89,46 @@ namespace FSO.Content.TS1
                         if (obj.ObjectType == OBJDType.Person) PersonGUIDs.Add(obj.GUID);
 
                         //does this object appear in the catalog?
-                        if ((obj.FunctionFlags > 0 || obj.BuildModeType > 0) && obj.Disabled == 0 && 
-                            (obj.IsMultiTile || obj.NumGraphics > 0) && (obj.MasterID == 0 || obj.SubIndex == -1))
+                        bool passesCatalogCheck = (obj.FunctionFlags > 0 || obj.BuildModeType > 0) && obj.Disabled == 0 && 
+                            (obj.IsMultiTile || obj.NumGraphics > 0) && (obj.MasterID == 0 || obj.SubIndex == -1);
+                        
+                        if (passesCatalogCheck)
                         {
-                            //todo: more than one of these set? no normal game objects do this
-                            //todo: room sort
-                            var cat = (sbyte)Math.Log(obj.FunctionFlags, 2);
-                            if (obj.FunctionFlags == 0) cat = (sbyte)(obj.BuildModeType+7);
-                            var item = new ObjectCatalogItem()
+                            try
                             {
-                                Category = (sbyte)(cat), //0-7 buy categories. 8-15 build mode categories
-                                RoomSort = (byte)obj.RoomFlags,
-                                GUID = obj.GUID,
-                                DisableLevel = 0,
-                                Price = obj.Price,
-                                Name = obj.ChunkLabel,
+                                //todo: more than one of these set? no normal game objects do this
+                                //todo: room sort
+                                var cat = (sbyte)Math.Log(obj.FunctionFlags, 2);
+                                if (obj.FunctionFlags == 0) cat = (sbyte)(obj.BuildModeType+7);
+                                var item = new ObjectCatalogItem()
+                                {
+                                    Category = (sbyte)(cat), //0-7 buy categories. 8-15 build mode categories
+                                    RoomSort = (byte)obj.RoomFlags,
+                                    GUID = obj.GUID,
+                                    DisableLevel = 0,
+                                    Price = obj.Price,
+                                    Name = obj.ChunkLabel,
 
-                                Subsort = (byte)obj.FunctionSubsort,
-                                CommunitySort = (byte)obj.CommunitySubsort,
-                                DowntownSort = (byte)obj.DTSubsort,
-                                MagictownSort = (byte)obj.MTSubsort,
-                                StudiotownSort = (byte)obj.STSubsort,
-                                VacationSort = (byte)obj.VacationSubsort
-                            };
-                            ItemsByCategory[item.Category].Add(item);
-                            ItemsByGUID[item.GUID] = item;
+                                    Subsort = (byte)obj.FunctionSubsort,
+                                    CommunitySort = (byte)obj.CommunitySubsort,
+                                    DowntownSort = (byte)obj.DTSubsort,
+                                    MagictownSort = (byte)obj.MTSubsort,
+                                    StudiotownSort = (byte)obj.STSubsort,
+                                    VacationSort = (byte)obj.VacationSubsort
+                                };
+                                ItemsByCategory[item.Category].Add(item);
+                                ItemsByGUID[item.GUID] = item;
+                            }
+                            catch (Exception ex)
+                            {
+                                // Log catalog item creation failures
+                                Content.FailedContentFiles.Add(new TS1BCFProvider.FailedFileInfo
+                                {
+                                    Filename = filename,
+                                    ErrorMessage = $"Failed to add object '{obj.ChunkLabel}' to catalog: {ex.Message}",
+                                    ErrorType = "CatalogError"
+                                });
+                            }
                         }
                     }
                 }
