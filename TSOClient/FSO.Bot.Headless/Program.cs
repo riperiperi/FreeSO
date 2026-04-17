@@ -380,12 +380,20 @@ public class Program
             QueryHandlers.RegisterAll(dispatcher, vmHost, shardName);
             InteractionHandlers.RegisterAll(dispatcher, vmHost);
             SocialHandlers.RegisterAll(dispatcher, vmHost);
+            // IM family (freesoexperiment-7d8) — city-socket InstantMessage PDU. Distinct from
+            // speak (which is lot-socket VMNetChatCmd): IM rides cityAries directly, and the
+            // server's MessagingHandler either forwards to target or replies FAILURE_ACK.
+            IMHandlers.RegisterAll(dispatcher, cityAries, avatar.ID);
             // Wire chat events into the perception projector so speak's server-round-tripped
             // echo surfaces as a recent_events entry (kind=chat). Ground-source truth for the
             // verb-social integration test — a bare VMNetChatCmd ACK does not prove wire effect.
             if (projector != null) SocialHandlers.WireChatPerception(vmHost, projector);
+            // Wire inbound IM packets on city socket into recent_events (kind=im). Ground-source
+            // truth for verb-im: a self-IM round-trip proves the city-socket path works even in
+            // single-session tests (target = own avatar id ⇒ server echoes back).
+            if (projector != null) IMHandlers.WireIMPerception(cityListener, projector);
             dispatcher.Start();
-            Log($"ipc: command dispatcher started (stdin); ops registered: walk-to, cancel, queue-interaction, query-self, query-nearby, query-lot, query-relationships, query-inventory, interact-with, cancel-interaction, query-pie-menu, speak, be-friendly, tell-joke, flirt, be-mean, give-gift");
+            Log($"ipc: command dispatcher started (stdin); ops registered: walk-to, cancel, queue-interaction, query-self, query-nearby, query-lot, query-relationships, query-inventory, interact-with, cancel-interaction, query-pie-menu, speak, be-friendly, tell-joke, flirt, be-mean, give-gift, instant-message");
         }
 
         // 8. Tick loop. The real client ticks at FSOEnvironment.RefreshRate (60Hz). The driver
@@ -597,6 +605,15 @@ public class CityListener : IAriesMessageSubscriber, IAriesEventSubscriber
     public bool SendClientOnline = true;
     public int PacketCount;
 
+    /// <summary>
+    /// Observer for inbound <see cref="InstantMessage"/> packets on the city socket. The IM
+    /// verb family (freesoexperiment-7d8) subscribes here to push inbound IMs (including the
+    /// server's echo of a self-IM) into perception's <c>recent_events</c> stream. Kept as a
+    /// public event so additional consumers (e.g. a future IM-history cache) can chain without
+    /// touching CityListener internals.
+    /// </summary>
+    public event Action<AriesClient, InstantMessage> OnInstantMessage;
+
     private readonly TaskCompletionSource<bool> _clientOnlineAck =
         new(TaskCreationOptions.RunContinuationsAsynchronously);
 
@@ -634,6 +651,14 @@ public class CityListener : IAriesMessageSubscriber, IAriesEventSubscriber
         else if (m is ServerByePDU)
         {
             Program.Log("[city:recv] ServerByePDU");
+        }
+        else if (m is InstantMessage im)
+        {
+            // IM verb family (freesoexperiment-7d8). Fan out to any registered observer;
+            // IMHandlers.WireIMPerception is the canonical consumer that pushes the IM into
+            // recent_events for the agent to see.
+            try { OnInstantMessage?.Invoke(c, im); }
+            catch (Exception ex) { Program.Log($"[city:recv] OnInstantMessage handler threw: {ex.GetType().Name}: {ex.Message}"); }
         }
     }
 

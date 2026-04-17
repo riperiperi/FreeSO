@@ -168,6 +168,13 @@ func main() {
 			log.Fatalf("register social handlers: %v", err)
 		}
 		log.Printf("convention handlers: %d social-family ops serving", socialServers)
+
+		// IM family (freesoexperiment-7d8): instant-message. City-socket PDU (not lot). Single op.
+		imServers, err := RegisterIMHandlers(ctx, cf, ipc)
+		if err != nil {
+			log.Fatalf("register im handlers: %v", err)
+		}
+		log.Printf("convention handlers: %d im-family ops serving", imServers)
 	} else {
 		log.Printf("running in --no-bot mode (campfire-only)")
 
