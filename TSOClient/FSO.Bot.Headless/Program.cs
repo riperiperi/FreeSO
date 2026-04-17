@@ -38,9 +38,18 @@ namespace FSO.Bot.Headless;
 /// </summary>
 public class Program
 {
+    internal static bool LogToStderr = false;
+
     public static async Task<int> Main(string[] args)
     {
         bool verifyMode = args.Any(a => a == "--verify-lot-join");
+        bool emitPerception = args.Any(a => a == "--emit-perception");
+
+        // Critical: before *any* library code runs, reserve real stdout if we're going to emit
+        // NDJSON on it. Upstream FSO libraries make bare Console.WriteLine calls (e.g. the VM
+        // net driver logs "Jump to tick..." and "Tick wrong..."); those would pollute the
+        // perception stream. After ReserveStdout, those lines land on stderr instead.
+        if (emitPerception) PerceptionEmitter.ReserveStdout();
 
         var apiUrl = EnvOrDefault("FSO_API_URL", "http://workshop:9000/");
         var username = EnvOrDefault("FSO_USER", "baron");
@@ -55,8 +64,12 @@ public class Program
         var holdSecs = int.Parse(EnvOrDefault("FSO_HOLD_SECS", "75"));
         var gameLocation = EnvOrDefault("FSO_GAME_LOCATION", "/home/baron/projects/freeso-experiment/GameAssets/");
         var tickHz = int.Parse(EnvOrDefault("FSO_VM_TICK_HZ", "60"));
+        var perceptionHz = double.Parse(EnvOrDefault("FSO_PERCEPTION_HZ", "1"), System.Globalization.CultureInfo.InvariantCulture);
 
-        Log($"config api={apiUrl} user={username} shard={shardName} lot_location={(targetLotLocation == 0 ? "auto" : "0x" + targetLotLocation.ToString("X"))} hold={holdSecs}s verify={verifyMode}");
+        // In --emit-perception mode, stdout is reserved for NDJSON. Force all log writes to stderr.
+        LogToStderr = emitPerception;
+
+        Log($"config api={apiUrl} user={username} shard={shardName} lot_location={(targetLotLocation == 0 ? "auto" : "0x" + targetLotLocation.ToString("X"))} hold={holdSecs}s verify={verifyMode} emit-perception={emitPerception} perception_hz={perceptionHz}");
         Log($"config gameLocation={gameLocation} tickHz={tickHz}");
 
         // 1. Content init (headless/server mode — same path as FSO.Server).
@@ -226,12 +239,35 @@ public class Program
         verify.LotDbId = avatar.LotId ?? 0;
         Log("lot join: ok (command stream live)");
 
+        // 7b. If we're emitting perception, build the projector + wire it to VM.OnDialog now.
+        PerceptionProjector projector = null;
+        if (emitPerception)
+        {
+            projector = new PerceptionProjector(avatar.ID, shardName);
+            projector.AttachTo(vmHost.VM);
+            projector.OnDialogEvent += evt =>
+            {
+                try
+                {
+                    PerceptionEmitter.EmitLine(PerceptionEmitter.SerializeEvent(evt, "dialog"));
+                }
+                catch (Exception ex)
+                {
+                    Log($"[perception] dialog emit failed: {ex.GetType().Name}: {ex.Message}");
+                }
+            };
+            Log($"perception projector attached (hz={perceptionHz})");
+        }
+
         // 8. Tick loop. The real client ticks at FSOEnvironment.RefreshRate (60Hz). The driver
         // will throttle itself based on buffer size; we just need to call Tick frequently enough
         // that the buffered server ticks get drained before the session-uptime window expires.
         var sessionStart = DateTime.UtcNow;
         var deadline = sessionStart.AddSeconds(holdSecs);
         var tickInterval = TimeSpan.FromMilliseconds(1000.0 / Math.Max(1, tickHz));
+        var perceptionInterval = TimeSpan.FromMilliseconds(1000.0 / Math.Max(0.1, perceptionHz));
+        DateTime nextPerceptionTick = DateTime.UtcNow + perceptionInterval;
+        int perceptionTickCount = 0;
 
         int reportBroadcastThreshold = 10;
         bool reportedTickMilestone = false;
@@ -252,6 +288,25 @@ public class Program
             {
                 Log($"lot: socket went away in state {lotConn.State} — bailing out of hold loop");
                 break;
+            }
+
+            // Perception tick. Gated to not starve the VM tick; runs at FSO_PERCEPTION_HZ.
+            if (projector != null && DateTime.UtcNow >= nextPerceptionTick)
+            {
+                try
+                {
+                    var tick = projector.Build(vmHost.VM);
+                    if (tick != null)
+                    {
+                        PerceptionEmitter.EmitLine(PerceptionEmitter.Serialize(tick));
+                        perceptionTickCount++;
+                    }
+                }
+                catch (Exception ex)
+                {
+                    Log($"[perception] tick build failed: {ex.GetType().Name}: {ex.Message}");
+                }
+                nextPerceptionTick = DateTime.UtcNow + perceptionInterval;
             }
 
             var elapsed = DateTime.UtcNow - loopStart;
@@ -290,7 +345,7 @@ public class Program
         }
         else
         {
-            Log($"hold elapsed; tickBroadcasts={lotConn.VMTickBroadcastCount} entities={vmHost.EntityCount} uptime={uptime.TotalSeconds:F1}s");
+            Log($"hold elapsed; tickBroadcasts={lotConn.VMTickBroadcastCount} entities={vmHost.EntityCount} uptime={uptime.TotalSeconds:F1}s perceptionTicks={perceptionTickCount}");
             return 0;
         }
     }
@@ -325,8 +380,12 @@ public class Program
     static string EnvOrDefault(string key, string fallback) =>
         Environment.GetEnvironmentVariable(key) is { } v && v.Length > 0 ? v : fallback;
 
-    internal static void Log(string s) =>
-        Console.WriteLine($"[{DateTime.UtcNow:HH:mm:ss.fff}] {s}");
+    internal static void Log(string s)
+    {
+        var line = $"[{DateTime.UtcNow:HH:mm:ss.fff}] {s}";
+        if (LogToStderr) Console.Error.WriteLine(line);
+        else Console.WriteLine(line);
+    }
 
     private static void PrintVerifyReport(VerifyResult v)
     {
