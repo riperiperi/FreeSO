@@ -1,0 +1,16 @@
+{
+  "convention": "freeso-embodiment",
+  "version": "1.0",
+  "operation": "tell-joke",
+  "family": "social",
+  "description": "Tell a joke at another Sim. Prerequisite: target Sim is present on the lot and their current pie menu exposes a 'Tell Joke' (or joke-family) entry — resolved live by the bot against the target's VM-side TTAB check. Effect: queues the Tell Joke interaction on your action queue; on success produces laughter/reaction animations on both Sims and shifts the target's relationship-to-you along the fun/friendship axis (TTAB-driven; visible in nearby_sims.relationship). Cost: ~ a minute of in-sim time; queue slot consumed; may fail server-side Verify if the target disallows (e.g. sleeping, incompatible mood).",
+  "args": [
+    {"name": "target_sim_id", "type": "integer", "required": false, "description": "Persist ID of the target Sim."},
+    {"name": "target_object_id", "type": "integer", "required": false, "description": "Local ObjectID of the target Sim."}
+  ],
+  "produces_tags": [{"tag": "freeso:tell-joke", "cardinality": "exactly_one"}],
+  "antecedents": "none",
+  "signing": "member_key",
+  "rate_limit": {"max": 20, "per": "sender", "window": "1m"},
+  "response": "sync"
+}

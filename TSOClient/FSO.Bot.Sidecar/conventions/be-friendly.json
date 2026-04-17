@@ -1,0 +1,16 @@
+{
+  "convention": "freeso-embodiment",
+  "version": "1.0",
+  "operation": "be-friendly",
+  "family": "social",
+  "description": "Engage another Sim with a friendly interaction (greeting, hug, compliment, or similar — whichever variant the target's pie-menu currently offers). Prerequisite: target Sim is within pie-menu range and exposes a friendly-family entry (target must be known to our local VM; the interaction must currently pass the TTAB 'check' tree — e.g. not busy refusing, not sleeping, not in incompatible state). Effect: queues the resolved interaction on your action queue; the animated interaction runs against the target and on success nudges your mutual friendship/relationship axis upward (exact deltas are TTAB-driven; observable in nearby_sims.relationship and recent_events as interaction_start/end). Cost: interaction takes in-sim minutes and consumes a slot in your action queue; server refuses if the queue is full or the target is locked.",
+  "args": [
+    {"name": "target_sim_id", "type": "integer", "required": false, "description": "Persist ID of the target Sim. Preferred — stable across ObjectID re-shuffles."},
+    {"name": "target_object_id", "type": "integer", "required": false, "description": "Local ObjectID of the target Sim (short). Accepted when persist ID is unknown."}
+  ],
+  "produces_tags": [{"tag": "freeso:be-friendly", "cardinality": "exactly_one"}],
+  "antecedents": "none",
+  "signing": "member_key",
+  "rate_limit": {"max": 30, "per": "sender", "window": "1m"},
+  "response": "sync"
+}

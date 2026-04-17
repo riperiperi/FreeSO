@@ -1,0 +1,16 @@
+{
+  "convention": "freeso-embodiment",
+  "version": "1.0",
+  "operation": "be-mean",
+  "family": "social",
+  "description": "Insult, tease, or otherwise antagonise another Sim — whichever mean-family entry the target's pie menu currently offers. Prerequisite: target is within pie-menu range and exposes a mean-family entry; note the target can refuse the interaction via an incoming accept/reject dialog (respond-interaction). Effect: queues the resolved interaction; on completion the target's relationship to you drops on the friendship axis and their mood may deteriorate (TTAB-driven). Cost: in-sim minutes; queue slot; social consequences are durable — this is not a throwaway op.",
+  "args": [
+    {"name": "target_sim_id", "type": "integer", "required": false, "description": "Persist ID of the target Sim."},
+    {"name": "target_object_id", "type": "integer", "required": false, "description": "Local ObjectID of the target Sim."}
+  ],
+  "produces_tags": [{"tag": "freeso:be-mean", "cardinality": "exactly_one"}],
+  "antecedents": "none",
+  "signing": "member_key",
+  "rate_limit": {"max": 20, "per": "sender", "window": "1m"},
+  "response": "sync"
+}

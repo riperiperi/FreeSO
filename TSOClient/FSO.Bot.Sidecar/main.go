@@ -136,6 +136,12 @@ func main() {
 			log.Fatalf("register movement handlers: %v", err)
 		}
 		log.Printf("convention handlers: %d movement-family ops serving", servers)
+
+		socialServers, err := RegisterSocialHandlers(ctx, cf, ipc)
+		if err != nil {
+			log.Fatalf("register social handlers: %v", err)
+		}
+		log.Printf("convention handlers: %d social-family ops serving", socialServers)
 	} else {
 		log.Printf("running in --no-bot mode (campfire-only)")
 	}
