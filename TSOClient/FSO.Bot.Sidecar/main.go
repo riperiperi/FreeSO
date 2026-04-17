@@ -200,6 +200,16 @@ func main() {
 			log.Fatalf("register property handlers: %v", err)
 		}
 		log.Printf("convention handlers: %d property-family ops serving", propServers)
+
+		// Mail family (freesoexperiment-bd2): poll-inbox, send-mail, delete-mail. City-socket
+		// MailRequest/MailResponse PDUs. read-mail dropped (no wire PDU — fso_inbox.read_state
+		// is client-side-only on this fork). Single in-flight slot per response kind in the
+		// bot's MailHandlers.
+		mailServers, err := RegisterMailHandlers(ctx, cf, ipc)
+		if err != nil {
+			log.Fatalf("register mail handlers: %v", err)
+		}
+		log.Printf("convention handlers: %d mail-family ops serving", mailServers)
 	} else {
 		log.Printf("running in --no-bot mode (campfire-only)")
 

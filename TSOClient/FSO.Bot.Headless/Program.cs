@@ -396,6 +396,10 @@ public class Program
             // owner-gate via VMTSOLotState.OwnerID == MyAvatarPersistId under RunUnderTickLock.
             // pay-bills DROPPED (no player PDU).
             PropertyHandlers.RegisterAll(dispatcher, vmHost, cityAries, targetLotLocation);
+            // Mail family (freesoexperiment-bd2): poll-inbox, send-mail, delete-mail.
+            // City-socket MailRequest/MailResponse PDUs (distinct from MessagingHandler/IM).
+            // read-mail DROPPED — no server PDU to transition fso_inbox.read_state on this fork.
+            MailHandlers.RegisterAll(dispatcher, cityAries, avatar.ID);
             // Wire chat events into the perception projector so speak's server-round-tripped
             // echo surfaces as a recent_events entry (kind=chat). Ground-source truth for the
             // verb-social integration test — a bare VMNetChatCmd ACK does not prove wire effect.
@@ -404,8 +408,12 @@ public class Program
             // truth for verb-im: a self-IM round-trip proves the city-socket path works even in
             // single-session tests (target = own avatar id ⇒ server echoes back).
             if (projector != null) IMHandlers.WireIMPerception(cityListener, projector);
+            // Wire inbound NEW_MAIL MailResponse packets into recent_events (kind=mail,
+            // direction=in). Push path for mail delivered while the bot is online — poll/send
+            // responses are correlated RPC-style and stay off recent_events.
+            if (projector != null) MailHandlers.WireMailPerception(cityAries, projector);
             dispatcher.Start();
-            Log($"ipc: command dispatcher started (stdin); ops registered: walk-to, cancel, queue-interaction, query-self, query-nearby, query-lot, query-relationships, query-inventory, interact-with, cancel-interaction, query-pie-menu, speak, be-friendly, tell-joke, flirt, be-mean, give-gift, instant-message, change-outfit, change-description, go-home, visit-lot, find-avatar, add-roommate, evict-roommate, lock-lot, unlock-lot");
+            Log($"ipc: command dispatcher started (stdin); ops registered: walk-to, cancel, queue-interaction, query-self, query-nearby, query-lot, query-relationships, query-inventory, interact-with, cancel-interaction, query-pie-menu, speak, be-friendly, tell-joke, flirt, be-mean, give-gift, instant-message, change-outfit, change-description, go-home, visit-lot, find-avatar, add-roommate, evict-roommate, lock-lot, unlock-lot, poll-inbox, send-mail, delete-mail");
         }
 
         // 8. Tick loop. The real client ticks at FSOEnvironment.RefreshRate (60Hz). The driver

@@ -5,7 +5,7 @@
   "family": "navigation",
   "description": "Ask the city server which lot another avatar is currently on (or none). On the wire this is `FindAvatarRequest{AvatarId}` → `FindAvatarResponse{AvatarId, Status, LotId}` — note the server-side `LotId` field is actually the lot **location code** (populated from the avatar's `AvatarClaim.location`), NOT a DB lot_id (same OQ-3 aliasing as `FindLotRequest`). Prerequisite: you have a live city socket (you are logged in — which is true whenever this handler is reachable). Effect: none on the world — a pure directory query. If the target has privacy_mode set, the server returns `Status=PRIVACY_ENABLED` and `LotId=0`; if the target is logged out or not claimed, `Status=NOT_ON_LOT` and `LotId=0`; if found, `Status=FOUND` and `LotId=<location>`. Cost: one round-trip to the city server (milliseconds; 10s client-side timeout). Response payload: `target_avatar_id` (uint), `status` (\"FOUND\" | \"NOT_ON_LOT\" | \"PRIVACY_ENABLED\" | \"IGNORING_THEM\" | \"IGNORING_YOU\"), `on_lot` (bool; true iff status == FOUND), `lot_location` (hex `0x...` or null), `lot_location_raw` (uint; 0 when not found). Use this when you know an avatar by DB id (e.g. from `query-nearby`'s `persist_id` field or from your own memory) and want to know where to `visit-lot` to them.",
   "args": [
-    "target_avatar_id"
+    {"name": "target_avatar_id", "type": "integer", "required": true, "description": "Persist id (avatar id) of the avatar to locate. Must be > 0."}
   ],
   "produces_tags": [
     {

@@ -3,21 +3,15 @@
   "version": "1.0",
   "operation": "delete-mail",
   "family": "mail",
-  "description": "Remove a mail message from your inbox server-side. Sent-by-you mail is client-only deletion.",
-  "args": [],
+  "description": "Delete a specific mail message from your inbox server-side. Prerequisite: mail_id is a positive integer; the row in fso_inbox with target_id=<your_persist_id> exists (the server's DELETE is gated on (message_id=? AND target_id=?) so you cannot delete mail addressed to someone else). Effect: sends MailRequest{Type=DELETE, TimestampID=<mail_id>} on the city Aries socket. The field name 'TimestampID' is a serialisation overload — for DELETE it carries the fso_inbox.message_id, not a timestamp. The server executes `DELETE FROM fso_inbox WHERE message_id=? AND target_id=?`. There is NO wire-level response PDU on this path — the only observable effects are the DB row vanishing and subsequent POLL_INBOX responses no longer including it. Cost: zero. Client-side refuse: mail_id <= 0 → ok=false.",
+  "args": [
+    {"name": "mail_id", "type": "integer", "required": true, "description": "The fso_inbox.message_id of the mail to delete. Returned by poll-inbox as the `id` field of each MessageItem. Must be > 0. Server silently no-ops on mail_ids that don't exist or aren't addressed to you — use a follow-up poll-inbox to verify deletion."}
+  ],
   "produces_tags": [
-    {
-      "tag": "freeso:delete-mail",
-      "cardinality": "exactly_one"
-    }
+    {"tag": "freeso:delete-mail", "cardinality": "exactly_one"}
   ],
   "antecedents": "none",
   "signing": "member_key",
-  "rate_limit": {
-    "max": 30,
-    "per": "sender",
-    "window": "1m"
-  },
-  "response": "sync",
-  "status": "scaffold"
+  "rate_limit": {"max": 30, "per": "sender", "window": "1m"},
+  "response": "sync"
 }
