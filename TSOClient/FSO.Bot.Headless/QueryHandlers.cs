@@ -231,8 +231,13 @@ public static class QueryHandlers
                 lot_id = (long)(lotState?.LotID ?? 0u),
                 name = vm.LotName ?? lotState?.Name ?? "unknown",
                 shard = shardName,
-                owner_is_me = lotState != null && lotState.Roommates.Contains(vmHost.MyAvatarPersistId),
+                // owner_is_me: strictly OwnerID == me (freesoexperiment-9c5). Previously
+                // computed as Roommates.Contains(me), which returns true for any roommate.
+                // Property-family gates rely on a true owner signal so the handler refuses
+                // non-owners deterministically.
+                owner_is_me = lotState != null && lotState.OwnerID == vmHost.MyAvatarPersistId,
                 owner_id = (long)(lotState?.OwnerID ?? 0u),
+                is_roommate = lotState != null && lotState.Roommates.Contains(vmHost.MyAvatarPersistId),
                 roommates = lotState?.Roommates?.Select(u => (long)u).ToArray() ?? Array.Empty<long>(),
                 build_roommates = lotState?.BuildRoommates?.Select(u => (long)u).ToArray() ?? Array.Empty<long>(),
                 category_id = (int)category,

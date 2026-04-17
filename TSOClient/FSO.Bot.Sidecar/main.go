@@ -168,6 +168,16 @@ func main() {
 			log.Fatalf("register social handlers: %v", err)
 		}
 		log.Printf("convention handlers: %d social-family ops serving", socialServers)
+
+		// Property family (freesoexperiment-9c5): add-roommate, evict-roommate, lock-lot,
+		// unlock-lot. pay-bills dropped (catalog: no wire PDU). Ops emit on the CITY Aries
+		// socket in the C# bot; sidecar is a dumb forwarder. Owner gating is enforced in
+		// the bot handler (PropertyHandlers.cs CheckOwner) for a deterministic refuse path.
+		propServers, err := RegisterPropertyHandlers(ctx, cf, ipc)
+		if err != nil {
+			log.Fatalf("register property handlers: %v", err)
+		}
+		log.Printf("convention handlers: %d property-family ops serving", propServers)
 	} else {
 		log.Printf("running in --no-bot mode (campfire-only)")
 

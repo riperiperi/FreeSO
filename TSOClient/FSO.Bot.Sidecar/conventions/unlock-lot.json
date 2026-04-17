@@ -1,0 +1,23 @@
+{
+  "convention": "freeso-embodiment",
+  "version": "1.0",
+  "operation": "unlock-lot",
+  "family": "property",
+  "description": "Reopen your lot to all visitors (default public mode). Prerequisite: caller must be the current lot's owner (VMTSOLotState.OwnerID == self). Effect: sets Lot_LotAdmitInfo.LotAdmitInfo_AdmitMode = 0 (admit-all) on the city DataService; fso_lots.admit_mode in the DB flips to 0. Cost: free. Idempotent. This verb uses mode=0 specifically; bypass values 1 (admit-list-only) and 2 (ban-list-only) are reached via admit-ban-lot list management.",
+  "args": [],
+  "produces_tags": [
+    {
+      "tag": "freeso:unlock-lot",
+      "cardinality": "exactly_one"
+    }
+  ],
+  "antecedents": "none",
+  "signing": "member_key",
+  "rate_limit": {
+    "max": 10,
+    "per": "sender",
+    "window": "1m"
+  },
+  "response": "sync",
+  "status": "implemented"
+}
