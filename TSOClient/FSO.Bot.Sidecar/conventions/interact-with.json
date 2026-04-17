@@ -3,8 +3,13 @@
   "version": "1.0",
   "operation": "interact-with",
   "family": "interaction",
-  "description": "Invoke a specific named interaction on an object or another Sim. The interaction must appear in the object's pie menu (computed from its TTAB by `VMFindBestAction`); the server re-verifies this via `VMNetInteractionCmd.Verify`. Cost: the interaction takes in-sim minutes and may fail if the object is in use or locked.",
-  "args": [],
+  "description": "Invoke a specific named interaction on an object or Sim. Prerequisite: the target must appear in your lot's VM (use query-nearby / query-pie-menu to discover it), the interaction must appear in its pie-menu (server re-verifies via VMFindBestAction in VMNetInteractionCmd.Verify and rejects if param0 is not present), and your queue must have capacity (MAX_USER_ACTIONS = 8). Visitors/spectators are refused on every non-payphone object. Effect: the interaction is pushed onto your action queue; the engine runs it after the currently-running action completes — it plans a route, walks you to the target, runs the behaviour script, and applies motive effects. Cost: real seconds of session time while the interaction runs; motive deltas when it completes (e.g. Eat restores Hunger, Sleep restores Energy, Talk spends Social for both participants). Distinct from queue-interaction on the convention surface only — on the wire both emit VMNetInteractionCmd; the 'interact-with' framing tells the agent 'I want to do this', 'queue-interaction' emphasises 'append to my queue'. For 'run right now', pair with cancel (sweep current+queued) first.",
+  "args": [
+    {"name": "interaction", "type": "integer", "required": true, "description": "TTAB index of the interaction, taken from query-pie-menu .interactions[].id."},
+    {"name": "callee_id", "type": "integer", "required": true, "description": "Object ID of the target (from nearby_objects[].object_id, nearby_sims[].object_id, or query-pie-menu .target_object_id). PersistID is NOT accepted — the VM addresses entities by ObjectID."},
+    {"name": "param0", "type": "integer", "required": false, "default": 0, "description": "Interaction variant parameter — some interactions expose subvariants via param0 (e.g. Chat Topics). Consult the pie-menu entry's param0 field."},
+    {"name": "global", "type": "boolean", "required": false, "default": false, "description": "Set to true if the interaction is exposed by the callee's GLOBAL TTAB rather than its own TTAB (rare; check the pie-menu entry's 'global' field)."}
+  ],
   "produces_tags": [
     {
       "tag": "freeso:interact-with",
@@ -18,6 +23,5 @@
     "per": "sender",
     "window": "1m"
   },
-  "response": "sync",
-  "status": "scaffold"
+  "response": "sync"
 }

@@ -153,6 +153,14 @@ func main() {
 			log.Fatalf("register memory handlers: %v", err)
 		}
 		log.Printf("convention handlers: %d memory-family ops serving", memServers)
+
+		// Interaction family (freesoexperiment-2a8): interact-with, cancel-interaction,
+		// query-pie-menu — object/sim interaction dispatch + local pie-menu introspection.
+		iservers, err := RegisterInteractionHandlers(ctx, cf, ipc)
+		if err != nil {
+			log.Fatalf("register interaction handlers: %v", err)
+		}
+		log.Printf("convention handlers: %d interaction-family ops serving", iservers)
 	} else {
 		log.Printf("running in --no-bot mode (campfire-only)")
 
