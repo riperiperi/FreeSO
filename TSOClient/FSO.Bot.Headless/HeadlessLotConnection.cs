@@ -136,6 +136,16 @@ public class HeadlessLotConnection : IAriesMessageSubscriber, IAriesEventSubscri
             {
                 Program.Log($"[lot-connect] ClientByePDU write failed: {e.Message}");
             }
+            // Give Mina's IO thread time to drain the write queue to the TCP socket before we
+            // schedule the close. AriesClient.Disconnect() calls Session.Close(false) which
+            // SHOULD flush pending writes, but under tight shutdown pressure (SIGINT →
+            // EnsureCleanDisconnect → Environment.Exit) empirical observation shows the server
+            // logs SESSION-INTERRUPTED without this: the PDU is written to Mina's queue but
+            // process exit tears down before Mina's IO thread moves it to the TCP socket and
+            // the FIN arrives at the server ahead of the PDU bytes.
+            // 1s is generous; the happy path cost is bounded (this only runs at session end,
+            // not per packet).
+            Thread.Sleep(1000);
             Lot.Disconnect();
         }
         else

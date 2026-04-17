@@ -40,7 +40,89 @@ public class Program
 {
     internal static bool LogToStderr = false;
 
+    // Shutdown coordination. Every exit path routes through one of two mechanisms:
+    //
+    //   (a) Cooperative: SIGINT (Console.CancelKeyPress) cancels _shutdownCts, the hold loop
+    //       observes cancellation, exits naturally, and step 9 runs TryCleanDisconnect on the
+    //       main thread — same code path as normal hold-elapsed exit. This is the preferred
+    //       path; it gives Mina's IO thread the same runtime treatment as a clean exit.
+    //
+    //   (b) Last-resort: ProcessExit (runtime-initiated shutdown — SIGTERM on Linux, etc.) and
+    //       UnhandledException fire _disconnectCallback synchronously on the calling thread
+    //       with an outer time cap. These paths cannot fall back to cooperative cancellation
+    //       because the runtime is already tearing the AppDomain down.
+    //
+    // The Interlocked guard (_disconnectFired) makes (b) idempotent with step 9's own call so
+    // ClientByePDU is sent at most once.
+    private static readonly CancellationTokenSource _shutdownCts = new();
+    private static Func<Task> _disconnectCallback;
+    private static int _disconnectFired; // 0 = not yet, 1 = in progress / done
+
+    internal static CancellationToken ShutdownToken => _shutdownCts.Token;
+
+    private static void EnsureCleanDisconnect(string reason)
+    {
+        if (Interlocked.Exchange(ref _disconnectFired, 1) != 0) return;
+        var cb = Volatile.Read(ref _disconnectCallback);
+        if (cb == null) return; // session never reached the point where disconnect is meaningful
+        try
+        {
+            Log($"[shutdown] {reason} — sending ClientByePDU");
+            // Bound the outer wait to 8s — inside the runtime's ProcessExit grace window.
+            // Internally TryCleanDisconnect has a 10s WaitForDisconnected cap and the Mina write
+            // flush via HeadlessLotConnection.Disconnect has its own Thread.Sleep.
+            var task = cb();
+            task.Wait(TimeSpan.FromSeconds(8));
+        }
+        catch (Exception ex)
+        {
+            Log($"[shutdown] disconnect callback threw: {ex.GetType().Name}: {ex.Message}");
+        }
+    }
+
     public static async Task<int> Main(string[] args)
+    {
+        // Install shutdown hooks BEFORE any networked work. SIGINT (Ctrl-C / docker stop's SIGTERM
+        // equivalent reaching the console), AppDomain.ProcessExit (runtime-initiated shutdown,
+        // incl. SIGTERM on Linux .NET), and UnhandledException all route to EnsureCleanDisconnect.
+        // Each fires at most once due to the Interlocked guard; if the callback hasn't been wired
+        // yet (session never reached lot-command-stream), the call is a no-op.
+        Console.CancelKeyPress += (sender, e) =>
+        {
+            // Cancel the default "kill process now" behavior — we want the hold loop to exit
+            // cooperatively and flow through the normal step-9 disconnect path on the main
+            // thread. That path is identical to a clean hold-elapsed exit (Mina IO thread still
+            // fully healthy), so the server reliably logs SESSION-CLOSED.
+            e.Cancel = true;
+            if (_shutdownCts.IsCancellationRequested) return;
+            Log("[shutdown] SIGINT received — cancelling shutdown CTS; hold loop will exit cooperatively");
+            try { _shutdownCts.Cancel(); } catch (Exception ex) { Log($"[shutdown] CTS cancel threw: {ex.Message}"); }
+        };
+        AppDomain.CurrentDomain.ProcessExit += (sender, e) =>
+        {
+            EnsureCleanDisconnect("ProcessExit (runtime shutdown)");
+        };
+        AppDomain.CurrentDomain.UnhandledException += (sender, e) =>
+        {
+            var ex = e.ExceptionObject as Exception;
+            EnsureCleanDisconnect($"UnhandledException: {ex?.GetType().Name}: {ex?.Message}");
+        };
+
+        try
+        {
+            return await MainBody(args);
+        }
+        finally
+        {
+            // Defense-in-depth. If Main is returning normally, step 9's TryCleanDisconnect
+            // already fired and set _disconnectFired — this call is a no-op. If an exception
+            // bubbled out of MainBody past any inner handling, this flushes the PDU before the
+            // CLR starts tearing down the AppDomain (ProcessExit will then also no-op).
+            EnsureCleanDisconnect("Main try/finally (normal or exceptional exit)");
+        }
+    }
+
+    private static async Task<int> MainBody(string[] args)
     {
         bool verifyMode = args.Any(a => a == "--verify-lot-join");
         bool emitPerception = args.Any(a => a == "--emit-perception");
@@ -80,6 +162,7 @@ public class Program
 
         Log($"config api={apiUrl} user={username} shard={shardName} lot_location={(targetLotLocation == 0 ? "auto" : "0x" + targetLotLocation.ToString("X"))} hold={holdSecs}s verify={verifyMode} emit-perception={emitPerception} perception_hz={perceptionHz}");
         Log($"config gameLocation={gameLocation} tickHz={tickHz}");
+        Log($"shutdown-hooks installed: CancelKeyPress + ProcessExit + UnhandledException → EnsureCleanDisconnect");
 
         // 1. Content init (headless/server mode — same path as FSO.Server).
         try
@@ -183,6 +266,13 @@ public class Program
             }
         });
 
+        // 5b. Wire the shutdown hook now that lotConn + cityAries exist. Any failure after this
+        // point — normal exit, SIGINT, unhandled exception, runtime shutdown — routes through
+        // EnsureCleanDisconnect, which invokes TryCleanDisconnect. The Interlocked guard in
+        // EnsureCleanDisconnect makes it idempotent so the happy-path TryCleanDisconnect call
+        // at step 9 and any concurrent signal handler do not race.
+        Volatile.Write(ref _disconnectCallback, () => TryCleanDisconnect(lotConn, cityAries));
+
         // 6. Connect to city.
         Log($"aries(city) → {shardResp.Address}");
         cityAries.Connect(shardResp.Address);
@@ -234,6 +324,9 @@ public class Program
         if (!joinedStream)
         {
             Log($"lot join: failed after {maxJoinAttempts} attempts; final state {lotConn.State}");
+            // Same guard flip as step 9 — this is a deliberate clean shutdown, take ownership of
+            // the PDU send path so the finally/ProcessExit hooks don't double-fire.
+            Interlocked.Exchange(ref _disconnectFired, 1);
             await TryCleanDisconnect(lotConn, cityAries);
             verify.LotShard = shardName;
             verify.LotLocation = targetLotLocation;
@@ -283,6 +376,14 @@ public class Program
 
         while (DateTime.UtcNow < deadline)
         {
+            // Cooperative SIGINT path: when _shutdownCts is cancelled (by CancelKeyPress), exit
+            // the hold loop immediately and proceed to step 9's clean disconnect.
+            if (_shutdownCts.IsCancellationRequested)
+            {
+                Log($"lot: shutdown requested — exiting hold loop at uptime={(DateTime.UtcNow - sessionStart).TotalSeconds:F1}s");
+                break;
+            }
+
             var loopStart = DateTime.UtcNow;
             vmHost.Tick();
 
@@ -343,7 +444,11 @@ public class Program
             Log("avatar snapshot: no avatar found in local VM");
         }
 
-        // 9. Clean disconnect.
+        // 9. Clean disconnect (happy path). Flip the guard *before* the call so any concurrent
+        // signal handler (rare but possible — user hits Ctrl-C just as the hold loop ends) sees
+        // _disconnectFired=1 and becomes a no-op, and the finally/ProcessExit below are also
+        // no-ops. This single call owns the PDU send on the normal exit path.
+        Interlocked.Exchange(ref _disconnectFired, 1);
         verify.CleanDisconnect = await TryCleanDisconnect(lotConn, cityAries);
 
         // 10. Report.
@@ -355,7 +460,10 @@ public class Program
         else
         {
             Log($"hold elapsed; tickBroadcasts={lotConn.VMTickBroadcastCount} entities={vmHost.EntityCount} uptime={uptime.TotalSeconds:F1}s perceptionTicks={perceptionTickCount}");
-            return 0;
+            // If we exited because of SIGINT (cooperative), report exit code 130 (128 + SIGINT(2))
+            // per bash convention so wrapping scripts can distinguish. Disconnect succeeded on
+            // this path — the same clean-disconnect path as a normal hold-elapsed exit.
+            return _shutdownCts.IsCancellationRequested ? 130 : 0;
         }
     }
 
