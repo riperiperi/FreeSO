@@ -702,6 +702,17 @@ namespace FSO.Server.Servers.Lot.Domain
 
             short jobLevel = -1;
 
+            // Per-lot seed blueprint override: if <nfs>/Lots/<lotid>/seed.xml exists,
+            // use it for first-boot restoration. Lets admins pre-populate lots from
+            // community blueprints without modifying default_house.
+            var lotHexId = LotPersist.lot_id.ToString("x8");
+            var seedPath = Path.Combine(Config.SimNFS, "Lots/" + lotHexId + "/seed.xml");
+            if (!JobLot && File.Exists(seedPath))
+            {
+                path = seedPath;
+                LOG.Info("Using seed blueprint " + seedPath + " for lot " + LotPersist.lot_id);
+            }
+
             if (JobLot)
             {
                 //non-road tiles start at (8,8), end at (56,56)
