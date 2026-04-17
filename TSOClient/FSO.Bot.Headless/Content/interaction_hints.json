@@ -1,0 +1,89 @@
+{
+  "Bed": {
+    "Sleep":     { "Effects": ["+energy", "+comfort"], "Gates": [] },
+    "Make Bed":  { "Effects": [], "Gates": ["room is not owner"] },
+    "Nap":       { "Effects": ["+energy"], "Gates": [] }
+  },
+  "Fridge": {
+    "Have a Snack":     { "Effects": ["+hunger"], "Gates": [] },
+    "Have Lunch":       { "Effects": ["+hunger"], "Gates": [] },
+    "Prepare a Meal":   { "Effects": ["+hunger", "+cooking"], "Gates": [] }
+  },
+  "Toilet": {
+    "Use":        { "Effects": ["+bladder"], "Gates": [] },
+    "Clean":      { "Effects": ["+hygiene (target)", "-fun"], "Gates": [] },
+    "Unclog":     { "Effects": [], "Gates": ["not clogged"] }
+  },
+  "Shower": {
+    "Take a Shower": { "Effects": ["+hygiene"], "Gates": [] },
+    "Clean":         { "Effects": ["+hygiene (target)"], "Gates": [] }
+  },
+  "Exercise": {
+    "Work Out":   { "Effects": ["+body", "-comfort", "-hygiene"], "Gates": ["mood > 30"] }
+  },
+  "Mirror": {
+    "Practice Speech": { "Effects": ["+charisma"], "Gates": [] },
+    "Study Looks":     { "Effects": ["+fun"], "Gates": [] }
+  },
+  "TV": {
+    "Watch TV":   { "Effects": ["+fun"], "Gates": [] },
+    "Turn Off":   { "Effects": [], "Gates": [] },
+    "Change Channel": { "Effects": [], "Gates": [] }
+  },
+  "Radio": {
+    "Listen to Radio": { "Effects": ["+fun"], "Gates": [] },
+    "Turn Off":        { "Effects": [], "Gates": [] }
+  },
+  "Phone": {
+    "Call...":    { "Effects": ["+social"], "Gates": [] },
+    "Order Food": { "Effects": [], "Gates": ["balance > 0"] }
+  },
+  "Sink": {
+    "Wash Hands": { "Effects": ["+hygiene"], "Gates": [] },
+    "Get Drink":  { "Effects": ["+hunger (small)"], "Gates": [] },
+    "Clean":      { "Effects": ["+hygiene (target)"], "Gates": [] }
+  },
+  "Couch": {
+    "Sit":        { "Effects": ["+comfort"], "Gates": [] },
+    "Nap":        { "Effects": ["+energy", "+comfort"], "Gates": [] }
+  },
+  "Chair": {
+    "Sit":        { "Effects": ["+comfort"], "Gates": [] }
+  },
+  "Tub": {
+    "Take a Bath": { "Effects": ["+hygiene", "+comfort"], "Gates": [] }
+  },
+  "Computer": {
+    "Play":       { "Effects": ["+fun", "-energy"], "Gates": [] },
+    "Work from Home": { "Effects": ["+balance", "-fun"], "Gates": [] },
+    "Chat":       { "Effects": ["+social"], "Gates": [] }
+  },
+  "Bookshelf": {
+    "Read":       { "Effects": ["+fun"], "Gates": [] },
+    "Study Cooking":    { "Effects": ["+cooking"], "Gates": [] },
+    "Study Mechanical": { "Effects": ["+mechanical"], "Gates": [] }
+  },
+  "Door": {
+    "Open":       { "Effects": [], "Gates": [] },
+    "Close":      { "Effects": [], "Gates": [] },
+    "Knock":      { "Effects": [], "Gates": [] }
+  },
+  "Window": {
+    "Look Out":   { "Effects": ["+fun (small)"], "Gates": [] },
+    "Open":       { "Effects": [], "Gates": [] },
+    "Close":      { "Effects": [], "Gates": [] }
+  },
+  "Mailbox": {
+    "Get Mail":   { "Effects": [], "Gates": [] },
+    "Pay Bills":  { "Effects": ["-balance"], "Gates": ["has bills"] }
+  },
+  "Trash": {
+    "Empty":      { "Effects": ["-hygiene"], "Gates": ["has trash"] },
+    "Kick":       { "Effects": ["-hygiene", "+fun"], "Gates": [] }
+  },
+  "Pool": {
+    "Swim":       { "Effects": ["+fun", "+hygiene", "+body"], "Gates": [] },
+    "Get In":     { "Effects": [], "Gates": [] },
+    "Get Out":    { "Effects": [], "Gates": [] }
+  }
+}

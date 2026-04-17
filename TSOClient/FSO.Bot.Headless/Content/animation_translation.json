@@ -1,0 +1,22 @@
+[
+  { "pattern": "idle.*stand.*fidget",  "phrase": "standing idle, fidgeting" },
+  { "pattern": "idle.*stand",          "phrase": "standing idle" },
+  { "pattern": "idle.*sit",            "phrase": "sitting idle" },
+  { "pattern": "idle.*sleep",          "phrase": "sleeping" },
+  { "pattern": "walk.*run",            "phrase": "running" },
+  { "pattern": "walk",                 "phrase": "walking" },
+  { "pattern": "sit.*down",            "phrase": "sitting down" },
+  { "pattern": "stand.*up",            "phrase": "standing up" },
+  { "pattern": "eat",                  "phrase": "eating" },
+  { "pattern": "drink",                "phrase": "drinking" },
+  { "pattern": "sleep",                "phrase": "sleeping" },
+  { "pattern": "wake",                 "phrase": "waking up" },
+  { "pattern": "shower|bath",          "phrase": "bathing" },
+  { "pattern": "toilet|pee",           "phrase": "using toilet" },
+  { "pattern": "read",                 "phrase": "reading" },
+  { "pattern": "watch|tv",             "phrase": "watching TV" },
+  { "pattern": "talk|chat",            "phrase": "talking" },
+  { "pattern": "wave",                 "phrase": "waving" },
+  { "pattern": "cheer|applaud",        "phrase": "cheering" },
+  { "pattern": "cook",                 "phrase": "cooking" }
+]

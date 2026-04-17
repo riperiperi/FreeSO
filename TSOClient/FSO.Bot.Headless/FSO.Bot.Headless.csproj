@@ -21,4 +21,17 @@
     <ProjectReference Include="..\FSO.Content.TSO\FSO.Content.TSO.csproj" />
   </ItemGroup>
 
+  <ItemGroup>
+    <InternalsVisibleTo Include="FSO.Bot.Headless.Tests" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <None Include="Content\interaction_hints.json">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </None>
+    <None Include="Content\animation_translation.json">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </None>
+  </ItemGroup>
+
 </Project>
