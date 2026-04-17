@@ -2,10 +2,11 @@
   "convention": "freeso-embodiment",
   "version": "1.0",
   "operation": "speak",
-  "description": "Say a line in a chat channel on the current lot. The message is distributed by the server to all Sims in range/channel-permission; other bots observe it as a VMChatEvent. Costs nothing; prerequisite is being on the lot with send permission for the channel. Messages > 200 chars are truncated server-side; leading '/' is reserved for admin commands.",
+  "family": "social",
+  "description": "Say a line in a chat channel on the current lot. Prerequisite: you are present on the lot and have send-permission for the target channel (channel 0 = default lot channel, always visitor-send). Effect: the server distributes the line to every Sim whose view-permission matches, producing a VMChatEvent; your own line arrives back in your recent_events as kind=chat. Cost: none in sim-time or money; messages > 200 chars are truncated server-side. A leading '/' is reserved for admin chat commands and is rejected by the bot dispatcher so a non-admin agent cannot accidentally invoke one.",
   "args": [
-    {"name": "text", "type": "string", "required": true, "description": "The line to speak (will be truncated to 200 chars server-side)"},
-    {"name": "channel_id", "type": "integer", "required": false, "default": 0, "description": "Chat channel id (0 = default)"}
+    {"name": "text", "type": "string", "required": true, "description": "The line to speak. Truncated to 200 chars server-side. Leading '/' is rejected."},
+    {"name": "channel_id", "type": "integer", "required": false, "default": 0, "description": "Chat channel id (0 = default lot channel). Custom channels 1-6 editable per lot; channel 7 is admin-only."}
   ],
   "produces_tags": [{"tag": "freeso:speak", "cardinality": "exactly_one"}],
   "antecedents": "none",

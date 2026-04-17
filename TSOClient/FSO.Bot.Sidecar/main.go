@@ -161,6 +161,13 @@ func main() {
 			log.Fatalf("register interaction handlers: %v", err)
 		}
 		log.Printf("convention handlers: %d interaction-family ops serving", iservers)
+
+		// Social family (freesoexperiment-9ae): speak + be-friendly/tell-joke/flirt/be-mean/give-gift.
+		socialServers, err := RegisterSocialHandlers(ctx, cf, ipc)
+		if err != nil {
+			log.Fatalf("register social handlers: %v", err)
+		}
+		log.Printf("convention handlers: %d social-family ops serving", socialServers)
 	} else {
 		log.Printf("running in --no-bot mode (campfire-only)")
 

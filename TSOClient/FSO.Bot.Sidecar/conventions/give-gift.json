@@ -1,0 +1,16 @@
+{
+  "convention": "freeso-embodiment",
+  "version": "1.0",
+  "operation": "give-gift",
+  "family": "social",
+  "description": "Present a gift to another Sim via their pie menu's Give Gift / Gift entry. Prerequisite: target exposes a gift entry on the live pie menu (typically gated on having an appropriate inventory item; in TSO classic, gifts draw from the giver's inventory). Effect: queues the resolved interaction; on completion the gift object transfers from your inventory to the target and shifts their relationship to you upward on friendship (and sometimes romance if the gift is themed). Cost: in-sim minutes; queue slot; and the inventory item consumed by the gift — non-recoverable without an explicit return/take-back from the recipient.",
+  "args": [
+    {"name": "target_sim_id", "type": "integer", "required": false, "description": "Persist ID of the target Sim."},
+    {"name": "target_object_id", "type": "integer", "required": false, "description": "Local ObjectID of the target Sim."}
+  ],
+  "produces_tags": [{"tag": "freeso:give-gift", "cardinality": "exactly_one"}],
+  "antecedents": "none",
+  "signing": "member_key",
+  "rate_limit": {"max": 10, "per": "sender", "window": "1m"},
+  "response": "sync"
+}

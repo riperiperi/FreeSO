@@ -1,0 +1,16 @@
+{
+  "convention": "freeso-embodiment",
+  "version": "1.0",
+  "operation": "flirt",
+  "family": "social",
+  "description": "Flirt with another Sim (or kiss/cuddle when the pie menu's romantic branch exposes those — the bot picks the first romantic entry on the live pie menu). Prerequisite: target Sim's romantic pie-menu entry must be currently valid for you (TSO's base socials require a minimum friendship/relationship score before Flirt unlocks; if unlocked but target is out-of-range or busy, server Verify rejects). Effect: queues the resolved romantic interaction; on success shifts your relationship along the romance axis (deltas are TTAB-driven, visible via nearby_sims.relationship). Cost: in-sim minutes; queue slot; may be refused by the target (accept/reject prompts route through respond-interaction).",
+  "args": [
+    {"name": "target_sim_id", "type": "integer", "required": false, "description": "Persist ID of the target Sim."},
+    {"name": "target_object_id", "type": "integer", "required": false, "description": "Local ObjectID of the target Sim."}
+  ],
+  "produces_tags": [{"tag": "freeso:flirt", "cardinality": "exactly_one"}],
+  "antecedents": "none",
+  "signing": "member_key",
+  "rate_limit": {"max": 20, "per": "sender", "window": "1m"},
+  "response": "sync"
+}

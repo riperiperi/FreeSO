@@ -379,8 +379,13 @@ public class Program
             MovementHandlers.RegisterAll(dispatcher, vmHost);
             QueryHandlers.RegisterAll(dispatcher, vmHost, shardName);
             InteractionHandlers.RegisterAll(dispatcher, vmHost);
+            SocialHandlers.RegisterAll(dispatcher, vmHost);
+            // Wire chat events into the perception projector so speak's server-round-tripped
+            // echo surfaces as a recent_events entry (kind=chat). Ground-source truth for the
+            // verb-social integration test — a bare VMNetChatCmd ACK does not prove wire effect.
+            if (projector != null) SocialHandlers.WireChatPerception(vmHost, projector);
             dispatcher.Start();
-            Log($"ipc: command dispatcher started (stdin); ops registered: walk-to, cancel, queue-interaction, query-self, query-nearby, query-lot, query-relationships, query-inventory, interact-with, cancel-interaction, query-pie-menu");
+            Log($"ipc: command dispatcher started (stdin); ops registered: walk-to, cancel, queue-interaction, query-self, query-nearby, query-lot, query-relationships, query-inventory, interact-with, cancel-interaction, query-pie-menu, speak, be-friendly, tell-joke, flirt, be-mean, give-gift");
         }
 
         // 8. Tick loop. The real client ticks at FSOEnvironment.RefreshRate (60Hz). The driver
