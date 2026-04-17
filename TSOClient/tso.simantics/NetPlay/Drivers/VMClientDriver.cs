@@ -57,7 +57,14 @@ namespace FSO.SimAntics.NetPlay.Drivers
 
         public override void SendCommand(VMNetCommandBodyAbstract cmd)
         {
-            OutgoingCommands.Enqueue(cmd);
+            // freesoexperiment-a85: Queue<T> is not thread-safe and SendCommand is invoked from
+            // external dispatcher threads (CommandDispatcher handlers) while Tick() drains this
+            // queue on the VM tick thread. Lock on the collection instance (same pattern as
+            // ServerMessages below) — minimal upstream delta, no public API change.
+            lock (OutgoingCommands)
+            {
+                OutgoingCommands.Enqueue(cmd);
+            }
         }
 
         private void SendToServer(VMNetCommandBodyAbstract cmd)
@@ -83,9 +90,23 @@ namespace FSO.SimAntics.NetPlay.Drivers
             HandleNet(); //handle messages queued by external networking
             if (OnClientCommand != null)
             {
-                while (OutgoingCommands.Count > 0)
+                // freesoexperiment-a85: drain under the same lock used by SendCommand. We snapshot
+                // into a local batch to keep the lock hold time short (SendToServer does real work
+                // — serialization + OnClientCommand delegate invocation — and we don't want
+                // dispatcher threads blocking on it).
+                VMNetCommandBodyAbstract[] batch = null;
+                lock (OutgoingCommands)
                 {
-                    SendToServer(OutgoingCommands.Dequeue());
+                    int count = OutgoingCommands.Count;
+                    if (count > 0)
+                    {
+                        batch = new VMNetCommandBodyAbstract[count];
+                        for (int i = 0; i < count; i++) batch[i] = OutgoingCommands.Dequeue();
+                    }
+                }
+                if (batch != null)
+                {
+                    for (int i = 0; i < batch.Length; i++) SendToServer(batch[i]);
                 }
             }
 

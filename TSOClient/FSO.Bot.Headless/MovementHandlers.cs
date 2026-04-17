@@ -132,40 +132,52 @@ public static class MovementHandlers
     /// </summary>
     internal static CommandDispatcher.Response Cancel(HeadlessVMHost vmHost, JsonObject args)
     {
-        var caller = vmHost.VM?.GetAvatarByPersist(vmHost.MyAvatarPersistId);
-        if (caller == null) return CommandDispatcher.Response.Fail("no live avatar");
-
         var actionUidArg = (long?)args["action_uid"];
         int cancelled = 0;
 
         if (actionUidArg.HasValue)
         {
+            // No VM-thread-owned state accessed in this branch — safe to run off-thread.
+            var caller = vmHost.VM?.GetAvatarByPersist(vmHost.MyAvatarPersistId);
+            if (caller == null) return CommandDispatcher.Response.Fail("no live avatar");
             vmHost.Driver.SendCommand(new VMNetInteractionCancelCmd
             {
                 ActionUID = checked((ushort)actionUidArg.Value),
             });
             cancelled = 1;
+            return CommandDispatcher.Response.Success(new { cancelled });
         }
-        else
+
+        // Cancel-all path: we must snapshot caller.Thread.Queue, which the VM tick thread mutates
+        // without external locking. Route the snapshot through the VM tick lock
+        // (freesoexperiment-a85) — otherwise we race on List<VMQueuedAction>.ToArray() against
+        // the tick thread's concurrent Add/Remove, which can null-deref on internal arrays or
+        // skip entries.
+        var snapshot = vmHost.RunUnderTickLock(() =>
         {
-            // Cancel every queued action we can see locally. Engine ignores cancels for unknown
-            // UIDs, so this is safe. We snapshot the queue first to avoid iterating a mutating
-            // collection (same thread in practice, but defensive).
-            var queueSnapshot = caller.Thread?.Queue?.ToArray();
-            if (queueSnapshot != null)
+            var c = vmHost.VM?.GetAvatarByPersist(vmHost.MyAvatarPersistId);
+            if (c == null) return null;
+            // ToArray on a List<T> while holding the tick lock is a clean, consistent copy.
+            return c.Thread?.Queue?.ToArray();
+        });
+        if (snapshot == null && vmHost.VM?.GetAvatarByPersist(vmHost.MyAvatarPersistId) == null)
+        {
+            return CommandDispatcher.Response.Fail("no live avatar");
+        }
+
+        if (snapshot != null)
+        {
+            foreach (var action in snapshot)
             {
-                foreach (var action in queueSnapshot)
-                {
-                    vmHost.Driver.SendCommand(new VMNetInteractionCancelCmd { ActionUID = action.UID });
-                    cancelled++;
-                }
+                vmHost.Driver.SendCommand(new VMNetInteractionCancelCmd { ActionUID = action.UID });
+                cancelled++;
             }
-            if (cancelled == 0)
-            {
-                // Queue empty locally but caller explicitly asked for a cancel. Send a zero UID
-                // so the server sees the intent (no-op if queue is empty on its side too).
-                vmHost.Driver.SendCommand(new VMNetInteractionCancelCmd { ActionUID = 0 });
-            }
+        }
+        if (cancelled == 0)
+        {
+            // Queue empty locally but caller explicitly asked for a cancel. Send a zero UID
+            // so the server sees the intent (no-op if queue is empty on its side too).
+            vmHost.Driver.SendCommand(new VMNetInteractionCancelCmd { ActionUID = 0 });
         }
 
         return CommandDispatcher.Response.Success(new { cancelled });

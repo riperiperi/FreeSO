@@ -82,10 +82,21 @@ public sealed class CommandDispatcher
     public bool Has(string op) => _handlers.ContainsKey(op);
 
     /// <summary>
-    /// Start the stdin reader loop. Each inbound line is parsed, dispatched on a pooled task,
-    /// and the response is written to stdout via <see cref="PerceptionEmitter.EmitLine"/> so the
-    /// response interleaves cleanly with perception/dialog events (one NDJSON line at a time,
+    /// Start the stdin reader loop. Each inbound line is parsed, dispatched SERIALLY on the
+    /// reader task, and the response is written to stdout via <see cref="PerceptionEmitter.EmitLine"/>
+    /// so the response interleaves cleanly with perception/dialog events (one NDJSON line at a time,
     /// serialized by the emitter's internal lock).
+    ///
+    /// <para>
+    /// <b>Concurrency contract (freesoexperiment-a85):</b> dispatch is serial — one handler runs
+    /// at a time on the reader loop's task. The previous implementation fired each handler on
+    /// <c>Task.Run</c> which raced on the VMClientDriver's OutgoingCommands (plain <c>Queue&lt;T&gt;</c>)
+    /// against the VM tick thread's Dequeue. Serial dispatch eliminates concurrent Enqueue from
+    /// multiple dispatcher threads. The Enqueue→Dequeue handoff between dispatcher thread and VM
+    /// tick thread is separately synchronized via the lock added to VMClientDriver.SendCommand/Tick.
+    /// The bot fields a handful of commands per second at most — serial dispatch is not a
+    /// throughput concern.
+    /// </para>
     /// </summary>
     public void Start(TextReader stdin = null)
     {
@@ -117,7 +128,12 @@ public sealed class CommandDispatcher
             line = line.Trim();
             if (line.Length == 0) continue;
 
-            _ = Task.Run(() => HandleLineAsync(line, ct), ct);
+            // SERIAL dispatch (freesoexperiment-a85). Do NOT Task.Run: concurrent handlers
+            // racing on VMClientDriver.OutgoingCommands (non-thread-safe Queue<T>) corrupts the
+            // outbound command stream. We await here so at most one handler executes at a time;
+            // the VM tick thread's Dequeue is additionally synchronized by the lock added to
+            // VMClientDriver.cs.
+            await HandleLineAsync(line, ct);
         }
         Program.Log("[ipc] read loop exited");
     }
