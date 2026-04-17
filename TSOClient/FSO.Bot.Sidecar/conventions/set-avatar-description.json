@@ -1,0 +1,23 @@
+{
+  "convention": "freeso-embodiment",
+  "version": "1.0",
+  "operation": "set-avatar-description",
+  "family": "avatar",
+  "description": "Update the avatar's bio/description string. Syncs via the DataService, not a VMNet command.",
+  "args": [],
+  "produces_tags": [
+    {
+      "tag": "freeso:set-avatar-description",
+      "cardinality": "exactly_one"
+    }
+  ],
+  "antecedents": "none",
+  "signing": "member_key",
+  "rate_limit": {
+    "max": 30,
+    "per": "sender",
+    "window": "1m"
+  },
+  "response": "sync",
+  "status": "scaffold"
+}

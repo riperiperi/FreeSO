@@ -1,0 +1,23 @@
+{
+  "convention": "freeso-embodiment",
+  "version": "1.0",
+  "operation": "leave-build-buy",
+  "family": "build-buy-architecture",
+  "description": "Exit build or buy mode, commit thumbnail. Triggered when closing the catalog panel with pending changes.",
+  "args": [],
+  "produces_tags": [
+    {
+      "tag": "freeso:leave-build-buy",
+      "cardinality": "exactly_one"
+    }
+  ],
+  "antecedents": "none",
+  "signing": "member_key",
+  "rate_limit": {
+    "max": 30,
+    "per": "sender",
+    "window": "1m"
+  },
+  "response": "sync",
+  "status": "scaffold"
+}

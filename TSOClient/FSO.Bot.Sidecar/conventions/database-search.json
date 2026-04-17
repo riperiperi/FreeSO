@@ -1,0 +1,23 @@
+{
+  "convention": "freeso-embodiment",
+  "version": "1.0",
+  "operation": "database-search",
+  "family": "queries",
+  "description": "Free-text search for sims (and eventually lots) against the city database. Backs the Gizmo search box.",
+  "args": [],
+  "produces_tags": [
+    {
+      "tag": "freeso:database-search",
+      "cardinality": "exactly_one"
+    }
+  ],
+  "antecedents": "none",
+  "signing": "member_key",
+  "rate_limit": {
+    "max": 30,
+    "per": "sender",
+    "window": "1m"
+  },
+  "response": "sync",
+  "status": "scaffold"
+}

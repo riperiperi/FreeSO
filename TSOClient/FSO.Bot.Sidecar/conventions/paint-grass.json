@@ -1,0 +1,23 @@
+{
+  "convention": "freeso-embodiment",
+  "version": "1.0",
+  "operation": "paint-grass",
+  "family": "build-buy-architecture",
+  "description": "Paint grass tiles in the lot exterior.",
+  "args": [],
+  "produces_tags": [
+    {
+      "tag": "freeso:paint-grass",
+      "cardinality": "exactly_one"
+    }
+  ],
+  "antecedents": "none",
+  "signing": "member_key",
+  "rate_limit": {
+    "max": 30,
+    "per": "sender",
+    "window": "1m"
+  },
+  "response": "sync",
+  "status": "scaffold"
+}

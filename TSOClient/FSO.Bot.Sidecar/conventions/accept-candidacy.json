@@ -1,0 +1,23 @@
+{
+  "convention": "freeso-embodiment",
+  "version": "1.0",
+  "operation": "accept-candidacy",
+  "family": "city",
+  "description": "Accept or decline running as a mayoral candidate.",
+  "args": [],
+  "produces_tags": [
+    {
+      "tag": "freeso:accept-candidacy",
+      "cardinality": "exactly_one"
+    }
+  ],
+  "antecedents": "none",
+  "signing": "member_key",
+  "rate_limit": {
+    "max": 30,
+    "per": "sender",
+    "window": "1m"
+  },
+  "response": "sync",
+  "status": "scaffold"
+}

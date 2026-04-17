@@ -1,0 +1,23 @@
+{
+  "convention": "freeso-embodiment",
+  "version": "1.0",
+  "operation": "delete-object",
+  "family": "build-buy-catalog",
+  "description": "Remove an object from the lot permanently. Money is not refunded (use send-to-inventory or sell-back for refund paths).",
+  "args": [],
+  "produces_tags": [
+    {
+      "tag": "freeso:delete-object",
+      "cardinality": "exactly_one"
+    }
+  ],
+  "antecedents": "none",
+  "signing": "member_key",
+  "rate_limit": {
+    "max": 30,
+    "per": "sender",
+    "window": "1m"
+  },
+  "response": "sync",
+  "status": "scaffold"
+}

@@ -1,0 +1,23 @@
+{
+  "convention": "freeso-embodiment",
+  "version": "1.0",
+  "operation": "lot-set-skill-gamemode",
+  "family": "property",
+  "description": "Toggle the lot's Skill Gamemode flag (enables skill-multiplier gameplay bonuses). DataService field sync, not a VMNet command.",
+  "args": [],
+  "produces_tags": [
+    {
+      "tag": "freeso:lot-set-skill-gamemode",
+      "cardinality": "exactly_one"
+    }
+  ],
+  "antecedents": "none",
+  "signing": "member_key",
+  "rate_limit": {
+    "max": 30,
+    "per": "sender",
+    "window": "1m"
+  },
+  "response": "sync",
+  "status": "scaffold"
+}

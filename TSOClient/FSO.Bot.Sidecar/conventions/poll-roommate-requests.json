@@ -1,0 +1,23 @@
+{
+  "convention": "freeso-embodiment",
+  "version": "1.0",
+  "operation": "poll-roommate-requests",
+  "family": "property",
+  "description": "Pull any pending roommate invitations for you. Sent on connect.",
+  "args": [],
+  "produces_tags": [
+    {
+      "tag": "freeso:poll-roommate-requests",
+      "cardinality": "exactly_one"
+    }
+  ],
+  "antecedents": "none",
+  "signing": "member_key",
+  "rate_limit": {
+    "max": 30,
+    "per": "sender",
+    "window": "1m"
+  },
+  "response": "sync",
+  "status": "scaffold"
+}

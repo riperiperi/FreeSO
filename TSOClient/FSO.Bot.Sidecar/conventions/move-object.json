@@ -1,0 +1,23 @@
+{
+  "convention": "freeso-embodiment",
+  "version": "1.0",
+  "operation": "move-object",
+  "family": "build-buy-catalog",
+  "description": "Move an already-placed object to a new tile/level/rotation on the same lot.",
+  "args": [],
+  "produces_tags": [
+    {
+      "tag": "freeso:move-object",
+      "cardinality": "exactly_one"
+    }
+  ],
+  "antecedents": "none",
+  "signing": "member_key",
+  "rate_limit": {
+    "max": 30,
+    "per": "sender",
+    "window": "1m"
+  },
+  "response": "sync",
+  "status": "scaffold"
+}

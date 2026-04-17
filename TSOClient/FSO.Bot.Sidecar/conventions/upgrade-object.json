@@ -1,0 +1,23 @@
+{
+  "convention": "freeso-embodiment",
+  "version": "1.0",
+  "operation": "upgrade-object",
+  "family": "build-buy-catalog",
+  "description": "Buy a multi-level upgrade on an owned (or FSODonated) object, raising its upgrade level and resetting wear. Skill-gated on the server side via `VMNetUpgradeCmd.Verify` which calls `Content.Upgrades.GetUpgradePrice`; the upgrade transaction runs through `GlobalLink.PerformTransaction` against the caller's funds before the command is re-forwarded with `Verified=true`. Effect: object's `UpgradeLevel` advances, behavior/EP tuning may change, `VMEventType.TSOUpgraded` fires.",
+  "args": [],
+  "produces_tags": [
+    {
+      "tag": "freeso:upgrade-object",
+      "cardinality": "exactly_one"
+    }
+  ],
+  "antecedents": "none",
+  "signing": "member_key",
+  "rate_limit": {
+    "max": 30,
+    "per": "sender",
+    "window": "1m"
+  },
+  "response": "sync",
+  "status": "scaffold"
+}

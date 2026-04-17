@@ -1,0 +1,23 @@
+{
+  "convention": "freeso-embodiment",
+  "version": "1.0",
+  "operation": "invite-roommate",
+  "family": "property",
+  "description": "Invite another avatar to be roommate on your lot. Recipient gets a request they can `accept-roommate` / `decline-roommate`.",
+  "args": [],
+  "produces_tags": [
+    {
+      "tag": "freeso:invite-roommate",
+      "cardinality": "exactly_one"
+    }
+  ],
+  "antecedents": "none",
+  "signing": "member_key",
+  "rate_limit": {
+    "max": 30,
+    "per": "sender",
+    "window": "1m"
+  },
+  "response": "sync",
+  "status": "scaffold"
+}

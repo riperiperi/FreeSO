@@ -1,0 +1,23 @@
+{
+  "convention": "freeso-embodiment",
+  "version": "1.0",
+  "operation": "lock-skills",
+  "family": "avatar",
+  "description": "Lock or set the cap for an avatar's learned skill level.",
+  "args": [],
+  "produces_tags": [
+    {
+      "tag": "freeso:lock-skills",
+      "cardinality": "exactly_one"
+    }
+  ],
+  "antecedents": "none",
+  "signing": "member_key",
+  "rate_limit": {
+    "max": 30,
+    "per": "sender",
+    "window": "1m"
+  },
+  "response": "sync",
+  "status": "scaffold"
+}

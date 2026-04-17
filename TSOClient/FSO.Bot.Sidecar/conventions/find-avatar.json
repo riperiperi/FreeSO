@@ -1,0 +1,23 @@
+{
+  "convention": "freeso-embodiment",
+  "version": "1.0",
+  "operation": "find-avatar",
+  "family": "navigation",
+  "description": "Ask the city server which lot an avatar is currently on (or none). Used by the Gizmo / person page \"find on map\" button.",
+  "args": [],
+  "produces_tags": [
+    {
+      "tag": "freeso:find-avatar",
+      "cardinality": "exactly_one"
+    }
+  ],
+  "antecedents": "none",
+  "signing": "member_key",
+  "rate_limit": {
+    "max": 30,
+    "per": "sender",
+    "window": "1m"
+  },
+  "response": "sync",
+  "status": "scaffold"
+}

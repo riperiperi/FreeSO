@@ -1,0 +1,6 @@
+/bin/
+/freeso-sidecar
+/bot-data/
+/agents/
+.admit-info
+*.exe

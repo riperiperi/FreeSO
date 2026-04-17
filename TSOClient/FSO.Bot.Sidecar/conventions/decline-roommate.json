@@ -1,0 +1,23 @@
+{
+  "convention": "freeso-embodiment",
+  "version": "1.0",
+  "operation": "decline-roommate",
+  "family": "property",
+  "description": "Decline a pending roommate invitation.",
+  "args": [],
+  "produces_tags": [
+    {
+      "tag": "freeso:decline-roommate",
+      "cardinality": "exactly_one"
+    }
+  ],
+  "antecedents": "none",
+  "signing": "member_key",
+  "rate_limit": {
+    "max": 30,
+    "per": "sender",
+    "window": "1m"
+  },
+  "response": "sync",
+  "status": "scaffold"
+}

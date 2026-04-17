@@ -1,0 +1,23 @@
+{
+  "convention": "freeso-embodiment",
+  "version": "1.0",
+  "operation": "set-ignore",
+  "family": "social",
+  "description": "Add or remove another avatar from your server-side ignore list. An ignored avatar's IM and chat to you are suppressed server-side; the effect also shows up as a `DataServiceWrapperPDU` MyAvatar update.",
+  "args": [],
+  "produces_tags": [
+    {
+      "tag": "freeso:set-ignore",
+      "cardinality": "exactly_one"
+    }
+  ],
+  "antecedents": "none",
+  "signing": "member_key",
+  "rate_limit": {
+    "max": 30,
+    "per": "sender",
+    "window": "1m"
+  },
+  "response": "sync",
+  "status": "scaffold"
+}

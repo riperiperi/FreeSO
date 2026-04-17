@@ -1,0 +1,23 @@
+{
+  "convention": "freeso-embodiment",
+  "version": "1.0",
+  "operation": "poll-inbox",
+  "family": "mail",
+  "description": "Fetch pending mail items since a timestamp. Used on session start and on inbox open.",
+  "args": [],
+  "produces_tags": [
+    {
+      "tag": "freeso:poll-inbox",
+      "cardinality": "exactly_one"
+    }
+  ],
+  "antecedents": "none",
+  "signing": "member_key",
+  "rate_limit": {
+    "max": 30,
+    "per": "sender",
+    "window": "1m"
+  },
+  "response": "sync",
+  "status": "scaffold"
+}

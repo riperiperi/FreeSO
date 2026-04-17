@@ -1,0 +1,23 @@
+{
+  "convention": "freeso-embodiment",
+  "version": "1.0",
+  "operation": "lot-set-category",
+  "family": "property",
+  "description": "Change the lot's community category (Residential, Money, Services, Welcome, Games, Entertainment, Romance, Shopping, Skills, Offbeat). DataService field sync, not a VMNet command. Category affects bonus objects the lot may host and its eligibility for community-payout features.",
+  "args": [],
+  "produces_tags": [
+    {
+      "tag": "freeso:lot-set-category",
+      "cardinality": "exactly_one"
+    }
+  ],
+  "antecedents": "none",
+  "signing": "member_key",
+  "rate_limit": {
+    "max": 30,
+    "per": "sender",
+    "window": "1m"
+  },
+  "response": "sync",
+  "status": "scaffold"
+}

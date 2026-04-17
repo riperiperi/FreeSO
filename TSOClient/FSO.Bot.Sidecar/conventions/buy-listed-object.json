@@ -1,0 +1,23 @@
+{
+  "convention": "freeso-embodiment",
+  "version": "1.0",
+  "operation": "buy-listed-object",
+  "family": "build-buy-catalog",
+  "description": "Purchase an object another avatar listed for sale on the current lot.",
+  "args": [],
+  "produces_tags": [
+    {
+      "tag": "freeso:buy-listed-object",
+      "cardinality": "exactly_one"
+    }
+  ],
+  "antecedents": "none",
+  "signing": "member_key",
+  "rate_limit": {
+    "max": 30,
+    "per": "sender",
+    "window": "1m"
+  },
+  "response": "sync",
+  "status": "scaffold"
+}

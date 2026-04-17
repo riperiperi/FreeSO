@@ -1,0 +1,23 @@
+{
+  "convention": "freeso-embodiment",
+  "version": "1.0",
+  "operation": "walk-to-lot",
+  "family": "movement",
+  "description": "Queue a lot-transition walk: approach a `Transition Object` on the current lot, then the lot-switch handshake fires. Works as the in-world \"walk out the front door to another property\" path. Prerequisite: a Transition Object must be on the current lot and be your clicked target.",
+  "args": [],
+  "produces_tags": [
+    {
+      "tag": "freeso:walk-to-lot",
+      "cardinality": "exactly_one"
+    }
+  ],
+  "antecedents": "none",
+  "signing": "member_key",
+  "rate_limit": {
+    "max": 30,
+    "per": "sender",
+    "window": "1m"
+  },
+  "response": "sync",
+  "status": "scaffold"
+}

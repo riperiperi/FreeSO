@@ -1,0 +1,23 @@
+{
+  "convention": "freeso-embodiment",
+  "version": "1.0",
+  "operation": "place-from-inventory",
+  "family": "build-buy-catalog",
+  "description": "Place an object from your personal inventory into the lot. Different from buy-object because no transaction runs; the object's persist-id is preserved.",
+  "args": [],
+  "produces_tags": [
+    {
+      "tag": "freeso:place-from-inventory",
+      "cardinality": "exactly_one"
+    }
+  ],
+  "antecedents": "none",
+  "signing": "member_key",
+  "rate_limit": {
+    "max": 30,
+    "per": "sender",
+    "window": "1m"
+  },
+  "response": "sync",
+  "status": "scaffold"
+}

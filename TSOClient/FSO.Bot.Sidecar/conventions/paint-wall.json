@@ -1,0 +1,23 @@
+{
+  "convention": "freeso-embodiment",
+  "version": "1.0",
+  "operation": "paint-wall",
+  "family": "build-buy-architecture",
+  "description": "Apply a wallpaper pattern to wall segments at given positions. Sub-operation of architecture.",
+  "args": [],
+  "produces_tags": [
+    {
+      "tag": "freeso:paint-wall",
+      "cardinality": "exactly_one"
+    }
+  ],
+  "antecedents": "none",
+  "signing": "member_key",
+  "rate_limit": {
+    "max": 30,
+    "per": "sender",
+    "window": "1m"
+  },
+  "response": "sync",
+  "status": "scaffold"
+}

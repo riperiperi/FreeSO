@@ -1,0 +1,18 @@
+{
+  "convention": "freeso-embodiment",
+  "version": "1.0",
+  "operation": "walk-to",
+  "description": "Travel to a tile in the current lot. Prerequisite for interact-with on a distant object. Path is planned by the lot's authoritative VM; you may be blocked by walls, locked doors, or another Sim. On success you are at or within ~1 tile of the target; on failure a dialog may fire and you stop where blocked.",
+  "args": [
+    {"name": "x", "type": "integer", "required": false, "description": "Target x in 1/16 tile units (from nearby_objects[].position.x)"},
+    {"name": "y", "type": "integer", "required": false, "description": "Target y in 1/16 tile units"},
+    {"name": "level", "type": "integer", "required": false, "default": 1, "description": "Floor level"},
+    {"name": "target_object_id", "type": "integer", "required": false, "description": "ObjectID of a landmark to approach; takes precedence over x/y if set"},
+    {"name": "target_sim_id", "type": "integer", "required": false, "description": "PersistID of a nearby Sim to approach"}
+  ],
+  "produces_tags": [{"tag": "freeso:walk-to", "cardinality": "exactly_one"}],
+  "antecedents": "none",
+  "signing": "member_key",
+  "rate_limit": {"max": 30, "per": "sender", "window": "1m"},
+  "response": "sync"
+}

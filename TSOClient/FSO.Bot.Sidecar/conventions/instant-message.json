@@ -1,0 +1,23 @@
+{
+  "convention": "freeso-embodiment",
+  "version": "1.0",
+  "operation": "instant-message",
+  "family": "im",
+  "description": "Send a typed IM to another avatar anywhere on the city server (they need not be on your lot). Delivery is server-routed through `InstantMessageHandler`; your client-side ACK completion arrives as an `InstantMessage` with `Type=SUCCESS_ACK` or `Type=FAILURE_ACK` (with `Reason`). Costs nothing; fails if recipient is offline, ignoring you, or their message queue is full.",
+  "args": [],
+  "produces_tags": [
+    {
+      "tag": "freeso:instant-message",
+      "cardinality": "exactly_one"
+    }
+  ],
+  "antecedents": "none",
+  "signing": "member_key",
+  "rate_limit": {
+    "max": 30,
+    "per": "sender",
+    "window": "1m"
+  },
+  "response": "sync",
+  "status": "scaffold"
+}

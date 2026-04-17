@@ -1,0 +1,23 @@
+{
+  "convention": "freeso-embodiment",
+  "version": "1.0",
+  "operation": "send-to-inventory",
+  "family": "build-buy-catalog",
+  "description": "Move an owned object off the lot into your inventory. Refunds to inventory rather than money.",
+  "args": [],
+  "produces_tags": [
+    {
+      "tag": "freeso:send-to-inventory",
+      "cardinality": "exactly_one"
+    }
+  ],
+  "antecedents": "none",
+  "signing": "member_key",
+  "rate_limit": {
+    "max": 30,
+    "per": "sender",
+    "window": "1m"
+  },
+  "response": "sync",
+  "status": "scaffold"
+}

@@ -1,0 +1,23 @@
+{
+  "convention": "freeso-embodiment",
+  "version": "1.0",
+  "operation": "change-lot-size",
+  "family": "build-buy-architecture",
+  "description": "Resize the lot between supported dimensions. Build-mode only; may refund/charge based on size change.",
+  "args": [],
+  "produces_tags": [
+    {
+      "tag": "freeso:change-lot-size",
+      "cardinality": "exactly_one"
+    }
+  ],
+  "antecedents": "none",
+  "signing": "member_key",
+  "rate_limit": {
+    "max": 30,
+    "per": "sender",
+    "window": "1m"
+  },
+  "response": "sync",
+  "status": "scaffold"
+}

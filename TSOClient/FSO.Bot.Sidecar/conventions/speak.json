@@ -1,0 +1,15 @@
+{
+  "convention": "freeso-embodiment",
+  "version": "1.0",
+  "operation": "speak",
+  "description": "Say a line in a chat channel on the current lot. The message is distributed by the server to all Sims in range/channel-permission; other bots observe it as a VMChatEvent. Costs nothing; prerequisite is being on the lot with send permission for the channel. Messages > 200 chars are truncated server-side; leading '/' is reserved for admin commands.",
+  "args": [
+    {"name": "text", "type": "string", "required": true, "description": "The line to speak (will be truncated to 200 chars server-side)"},
+    {"name": "channel_id", "type": "integer", "required": false, "default": 0, "description": "Chat channel id (0 = default)"}
+  ],
+  "produces_tags": [{"tag": "freeso:speak", "cardinality": "exactly_one"}],
+  "antecedents": "none",
+  "signing": "member_key",
+  "rate_limit": {"max": 20, "per": "sender", "window": "1m"},
+  "response": "sync"
+}

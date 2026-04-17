@@ -1,0 +1,23 @@
+{
+  "convention": "freeso-embodiment",
+  "version": "1.0",
+  "operation": "visit-lot",
+  "family": "navigation",
+  "description": "Join a specific lot (leave the current lot if any). Triggers a disconnect from the current Lot socket and a new lot-join handshake on the city: `FindLotRequest` \u2192 `FindLotResponse` (ticket + host) \u2192 connect Aries \u2192 `RequestClientSessionResponse(ServiceIdent=\"JLT\")` \u2192 `JoinLotWithTransitionRequest`. The city socket is reused; only the lot socket is rebuilt. On success you arrive at `(AvatarLotTilePosX, AvatarLotTilePosY)` facing `AvatarDirection`.",
+  "args": [],
+  "produces_tags": [
+    {
+      "tag": "freeso:visit-lot",
+      "cardinality": "exactly_one"
+    }
+  ],
+  "antecedents": "none",
+  "signing": "member_key",
+  "rate_limit": {
+    "max": 30,
+    "per": "sender",
+    "window": "1m"
+  },
+  "response": "sync",
+  "status": "scaffold"
+}

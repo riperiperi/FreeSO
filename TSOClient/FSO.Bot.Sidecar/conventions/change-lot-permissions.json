@@ -1,0 +1,23 @@
+{
+  "convention": "freeso-embodiment",
+  "version": "1.0",
+  "operation": "change-lot-permissions",
+  "family": "property",
+  "description": "Change a target avatar's TSO permission level on the current lot. Covers two distinct UI flows: (1) the owner toggles a roommate's \"builder bit\" (Roommate \u2194 BuildBuyRoommate) from the house-mode roommate list; (2) the owner promotes a donator to full Roommate, or demotes a donator back to Visitor, from the donator-management dialog on a community lot. Server-side `Verify` requires caller to be Owner (`Permissions >= Owner`) and rejects owner self-changes; on non-community lots the level is bounded to Roommate..BuildBuyRoommate. Distinct from `admit-ban-lot` (DataService admit/ban list) \u2014 this command mutates the in-VM roommate/builder sets.",
+  "args": [],
+  "produces_tags": [
+    {
+      "tag": "freeso:change-lot-permissions",
+      "cardinality": "exactly_one"
+    }
+  ],
+  "antecedents": "none",
+  "signing": "member_key",
+  "rate_limit": {
+    "max": 30,
+    "per": "sender",
+    "window": "1m"
+  },
+  "response": "sync",
+  "status": "scaffold"
+}

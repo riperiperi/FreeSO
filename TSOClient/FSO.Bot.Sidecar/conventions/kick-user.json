@@ -1,0 +1,23 @@
+{
+  "convention": "freeso-embodiment",
+  "version": "1.0",
+  "operation": "kick-user",
+  "family": "admin",
+  "description": "Remove another user from the city server (not just a lot). Requires moderator bit on the caller's session.",
+  "args": [],
+  "produces_tags": [
+    {
+      "tag": "freeso:kick-user",
+      "cardinality": "exactly_one"
+    }
+  ],
+  "antecedents": "none",
+  "signing": "member_key",
+  "rate_limit": {
+    "max": 30,
+    "per": "sender",
+    "window": "1m"
+  },
+  "response": "sync",
+  "status": "scaffold"
+}

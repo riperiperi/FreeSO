@@ -1,0 +1,23 @@
+{
+  "convention": "freeso-embodiment",
+  "version": "1.0",
+  "operation": "cheat-command",
+  "family": "admin",
+  "description": "Developer cheat chat commands (`!del`, `!roomat`, `!objat`, `!debugroutes`, `!vc`, \u2026) dispatched from `UICheatHandler` when chat starts with `!`. Client-local + some emit `VMNetDeleteObjectCmd` / print to chat. Keep in the catalog for parity; in the agent context treat this family as `admin`-gated because several ops emit deletions.",
+  "args": [],
+  "produces_tags": [
+    {
+      "tag": "freeso:cheat-command",
+      "cardinality": "exactly_one"
+    }
+  ],
+  "antecedents": "none",
+  "signing": "member_key",
+  "rate_limit": {
+    "max": 30,
+    "per": "sender",
+    "window": "1m"
+  },
+  "response": "sync",
+  "status": "scaffold"
+}
