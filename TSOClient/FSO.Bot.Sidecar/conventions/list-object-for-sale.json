@@ -3,8 +3,11 @@
   "version": "1.0",
   "operation": "list-object-for-sale",
   "family": "build-buy-catalog",
-  "description": "Put a player-owned object up for async sale at a price. Another avatar visiting can then `buy-listed-object`.",
-  "args": [],
+  "description": "Put a player-owned object up for async sale at a price (or delist). Prerequisite: you are the owner of the target object (VMTSOObjectState.OwnerID == you; handler-side gate). Object must not be in use. Pass new_price >= 0 to list at that price, new_price = -1 to delist. Effect: the object flags toggle ForSale on the lot; visitors see it with a 'Buy' pie-menu interaction. Cost: none while listed; when a visitor buys, they pay new_price and you receive it via GlobalLink.PurchaseFromOwner. Wire: VMNetAsyncPriceCmd on the lot Aries socket.",
+  "args": [
+    {"name": "target_object_persist_id", "type": "uint64", "required": true},
+    {"name": "new_price", "type": "int64", "required": true}
+  ],
   "produces_tags": [
     {
       "tag": "freeso:list-object-for-sale",
@@ -19,5 +22,5 @@
     "window": "1m"
   },
   "response": "sync",
-  "status": "scaffold"
+  "status": "implemented"
 }

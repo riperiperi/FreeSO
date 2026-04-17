@@ -3,8 +3,16 @@
   "version": "1.0",
   "operation": "buy-object",
   "family": "build-buy-catalog",
-  "description": "Purchase a catalog item and place it at `(x,y,level)` facing `dir`. Transaction is verified server-side: price debited via `GlobalLink.PerformTransaction`, then `Verified=true`, then re-applied on the lot's VM. Cost: the catalog price (with build-mode discount) from the caller's budget; refunded if placement fails. Prerequisite: build-roommate+ on the target lot, lot not full, donate-mode only if allowed.",
-  "args": [],
+  "description": "Purchase a catalog item and place it at (x,y,level) facing dir. Transaction is verified server-side: price debited via GlobalLink.PerformTransaction, then Verified=true, then re-applied on the lot's VM. Prerequisite: you must be the lot owner (handler-side gate via VMTSOLotState.OwnerID; server-side gate via PlatformState.Validator.GetPurchaseMode returning >= BuildBuyRoommate). Lot must not be full. Cost: the catalog price (with build-mode discount applied by server) from your budget; refunded by the server if placement fails. Effect: a new object appears in nearby_objects at (x,y,level); your balance (query-self.balance) drops by the net price. Mode=Donate (visitor-placed donation) reduces net cost to 1/3 of Normal but requires CanPlaceNewDonatedObject permission. OQ-8 note: there is no 'enter build mode' PDU — gating is per-command inside VMNetBuyObjectCmd.Verify; if you lack permission the command is silently dropped (no error, no effect). Wire: VMNetBuyObjectCmd on the lot Aries socket.",
+  "args": [
+    {"name": "guid", "type": "uint64", "required": true},
+    {"name": "x", "type": "int64", "required": true},
+    {"name": "y", "type": "int64", "required": true},
+    {"name": "level", "type": "int64", "required": false},
+    {"name": "dir", "type": "int64", "required": false},
+    {"name": "mode", "type": "string", "required": false},
+    {"name": "target_upgrade_level", "type": "int64", "required": false}
+  ],
   "produces_tags": [
     {
       "tag": "freeso:buy-object",
@@ -19,5 +27,5 @@
     "window": "1m"
   },
   "response": "sync",
-  "status": "scaffold"
+  "status": "implemented"
 }

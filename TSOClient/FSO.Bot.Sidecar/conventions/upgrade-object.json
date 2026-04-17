@@ -3,8 +3,11 @@
   "version": "1.0",
   "operation": "upgrade-object",
   "family": "build-buy-catalog",
-  "description": "Buy a multi-level upgrade on an owned (or FSODonated) object, raising its upgrade level and resetting wear. Skill-gated on the server side via `VMNetUpgradeCmd.Verify` which calls `Content.Upgrades.GetUpgradePrice`; the upgrade transaction runs through `GlobalLink.PerformTransaction` against the caller's funds before the command is re-forwarded with `Verified=true`. Effect: object's `UpgradeLevel` advances, behavior/EP tuning may change, `VMEventType.TSOUpgraded` fires.",
-  "args": [],
+  "description": "Buy a multi-level upgrade on an owned (or FSODonated) object, raising its upgrade level and resetting wear. Prerequisite: you are the owner of the target object (handler-side VMTSOObjectState.OwnerID gate). target_upgrade_level must exceed the object's current UpgradeLevel (server rejects otherwise). Skill-gated on the server side via VMNetUpgradeCmd.Verify which calls Content.Upgrades.GetUpgradePrice; the upgrade transaction runs through GlobalLink.PerformTransaction against your funds before the command is re-forwarded with Verified=true. Effect: object's UpgradeLevel advances to target_upgrade_level, wear resets, VMEventType.TSOUpgraded fires, object's InitialPrice increases by AddedValue. Cost: the upgrade price from your budget (depends on object and level). Wire: VMNetUpgradeCmd on the lot Aries socket.",
+  "args": [
+    {"name": "target_object_persist_id", "type": "uint64", "required": true},
+    {"name": "target_upgrade_level", "type": "int64", "required": true}
+  ],
   "produces_tags": [
     {
       "tag": "freeso:upgrade-object",
@@ -19,5 +22,5 @@
     "window": "1m"
   },
   "response": "sync",
-  "status": "scaffold"
+  "status": "implemented"
 }

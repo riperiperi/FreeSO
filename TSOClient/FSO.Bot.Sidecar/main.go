@@ -200,6 +200,17 @@ func main() {
 			log.Fatalf("register property handlers: %v", err)
 		}
 		log.Printf("convention handlers: %d property-family ops serving", propServers)
+
+		// Build-buy-catalog family (freesoexperiment-304): buy-object, place-from-inventory,
+		// move-object, delete-object, send-to-inventory, list-object-for-sale, buy-listed-object,
+		// upgrade-object. All lot-socket VMNet*Cmd PDUs; owner/own-object gating in the bot
+		// handler (BuyModeHandlers.cs). OQ-8: no mode-entry PDU — server silently drops if
+		// PlatformState.Validator.GetPurchaseMode returns Disallowed.
+		buyServers, err := RegisterBuyModeHandlers(ctx, cf, ipc)
+		if err != nil {
+			log.Fatalf("register buy-mode handlers: %v", err)
+		}
+		log.Printf("convention handlers: %d build-buy-catalog-family ops serving", buyServers)
 	} else {
 		log.Printf("running in --no-bot mode (campfire-only)")
 

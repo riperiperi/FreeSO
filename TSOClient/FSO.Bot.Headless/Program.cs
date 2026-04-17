@@ -396,6 +396,12 @@ public class Program
             // owner-gate via VMTSOLotState.OwnerID == MyAvatarPersistId under RunUnderTickLock.
             // pay-bills DROPPED (no player PDU).
             PropertyHandlers.RegisterAll(dispatcher, vmHost, cityAries, targetLotLocation);
+            // Build-buy-catalog family (freesoexperiment-304): buy-object, place-from-inventory,
+            // move-object, delete-object, send-to-inventory, list-object-for-sale,
+            // buy-listed-object, upgrade-object. All lot-socket VMNet*Cmd PDUs. Handler-side
+            // owner gate (VMTSOLotState.OwnerID for lot mutations; VMTSOObjectState.OwnerID for
+            // own-object mutations). Plus find-cheap-catalog-guid test-support helper (no PDU).
+            BuyModeHandlers.RegisterAll(dispatcher, vmHost);
             // Wire chat events into the perception projector so speak's server-round-tripped
             // echo surfaces as a recent_events entry (kind=chat). Ground-source truth for the
             // verb-social integration test — a bare VMNetChatCmd ACK does not prove wire effect.
@@ -405,7 +411,7 @@ public class Program
             // single-session tests (target = own avatar id ⇒ server echoes back).
             if (projector != null) IMHandlers.WireIMPerception(cityListener, projector);
             dispatcher.Start();
-            Log($"ipc: command dispatcher started (stdin); ops registered: walk-to, cancel, queue-interaction, query-self, query-nearby, query-lot, query-relationships, query-inventory, interact-with, cancel-interaction, query-pie-menu, speak, be-friendly, tell-joke, flirt, be-mean, give-gift, instant-message, change-outfit, change-description, go-home, visit-lot, find-avatar, add-roommate, evict-roommate, lock-lot, unlock-lot");
+            Log($"ipc: command dispatcher started (stdin); ops registered: walk-to, cancel, queue-interaction, query-self, query-nearby, query-lot, query-relationships, query-inventory, interact-with, cancel-interaction, query-pie-menu, speak, be-friendly, tell-joke, flirt, be-mean, give-gift, instant-message, change-outfit, change-description, go-home, visit-lot, find-avatar, add-roommate, evict-roommate, lock-lot, unlock-lot, buy-object, place-from-inventory, move-object, delete-object, send-to-inventory, list-object-for-sale, buy-listed-object, upgrade-object, find-cheap-catalog-guid");
         }
 
         // 8. Tick loop. The real client ticks at FSOEnvironment.RefreshRate (60Hz). The driver
