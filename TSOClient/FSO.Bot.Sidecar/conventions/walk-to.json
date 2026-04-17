@@ -2,13 +2,16 @@
   "convention": "freeso-embodiment",
   "version": "1.0",
   "operation": "walk-to",
-  "description": "Travel to a tile in the current lot. Prerequisite for interact-with on a distant object. Path is planned by the lot's authoritative VM; you may be blocked by walls, locked doors, or another Sim. On success you are at or within ~1 tile of the target; on failure a dialog may fire and you stop where blocked.",
+  "family": "movement",
+  "description": "Walk or run to a destination on your current lot. Prerequisite: you are joined to the lot the target lies on; the destination tile is routable (no wall, locked door, or blocking object in the path the engine computes). Effect: the lot's authoritative VM plans a path and queues a goto-action on your action queue; you animate the movement over in-sim seconds proportional to distance. You arrive at or within ~1 tile of the target on success. On failure (pathfind-blocked, caller-interrupted, target moved), your Sim stops where blocked and a dialog may fire. Cost: real seconds of session time equal to the path length divided by tiles-per-second; no motive cost beyond the natural decay during movement. Specify destination exactly one of three ways — absolute (x,y,level), by target_object_id from your nearby_objects perception feed, or by target_sim_id for a nearby Sim. Target lookups resolve against your local VM at the moment of invocation; if the target has moved by the time the lot VM plans the path you may end up at their old position.",
   "args": [
-    {"name": "x", "type": "integer", "required": false, "description": "Target x in 1/16 tile units (from nearby_objects[].position.x)"},
-    {"name": "y", "type": "integer", "required": false, "description": "Target y in 1/16 tile units"},
-    {"name": "level", "type": "integer", "required": false, "default": 1, "description": "Floor level"},
-    {"name": "target_object_id", "type": "integer", "required": false, "description": "ObjectID of a landmark to approach; takes precedence over x/y if set"},
-    {"name": "target_sim_id", "type": "integer", "required": false, "description": "PersistID of a nearby Sim to approach"}
+    {"name": "x", "type": "integer", "required": false, "description": "Absolute target x in 1/16-tile units (range 0..32767). Ignored if target_object_id or target_sim_id is set."},
+    {"name": "y", "type": "integer", "required": false, "description": "Absolute target y in 1/16-tile units. Ignored if target_object_id or target_sim_id is set."},
+    {"name": "level", "type": "integer", "required": false, "default": 1, "description": "Floor level (1 = ground). Ignored if target_object_id or target_sim_id is set (resolved from target position)."},
+    {"name": "target_object_id", "type": "integer", "required": false, "description": "ObjectID of an object in your nearby_objects perception slice. Takes precedence over x/y. Level is inherited from the object's current position."},
+    {"name": "target_sim_id", "type": "integer", "required": false, "description": "PersistID of a nearby Sim to approach (from nearby_sims). Highest precedence."},
+    {"name": "interaction", "type": "integer", "required": false, "default": 4, "description": "Goto-object interaction index: 2=Walk Here, 4=Run Here. Default 4 matches the stock client's pie-menu Run Here."},
+    {"name": "param0", "type": "integer", "required": false, "default": 0, "description": "Optional goto-object param0, forwarded to VMNetGotoCmd."}
   ],
   "produces_tags": [{"tag": "freeso:walk-to", "cardinality": "exactly_one"}],
   "antecedents": "none",
