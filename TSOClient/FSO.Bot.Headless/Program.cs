@@ -391,6 +391,11 @@ public class Program
             // visit-lot returns deferred marker (cross-lot transition → -ca0). find-avatar is
             // a full FindAvatarRequest wire PDU on the city socket.
             NavigationHandlers.RegisterAll(dispatcher, vmHost, cityAries, targetLotLocation);
+            // Property family (freesoexperiment-9c5): add/evict roommate (ChangeRoommateRequest),
+            // lock/unlock lot (DataServiceWrapperPDU AdmitMode) on city socket. Client-side
+            // owner-gate via VMTSOLotState.OwnerID == MyAvatarPersistId under RunUnderTickLock.
+            // pay-bills DROPPED (no player PDU).
+            PropertyHandlers.RegisterAll(dispatcher, vmHost, cityAries, targetLotLocation);
             // Wire chat events into the perception projector so speak's server-round-tripped
             // echo surfaces as a recent_events entry (kind=chat). Ground-source truth for the
             // verb-social integration test — a bare VMNetChatCmd ACK does not prove wire effect.
@@ -400,7 +405,7 @@ public class Program
             // single-session tests (target = own avatar id ⇒ server echoes back).
             if (projector != null) IMHandlers.WireIMPerception(cityListener, projector);
             dispatcher.Start();
-            Log($"ipc: command dispatcher started (stdin); ops registered: walk-to, cancel, queue-interaction, query-self, query-nearby, query-lot, query-relationships, query-inventory, interact-with, cancel-interaction, query-pie-menu, speak, be-friendly, tell-joke, flirt, be-mean, give-gift, instant-message, change-outfit, change-description, go-home, visit-lot, find-avatar");
+            Log($"ipc: command dispatcher started (stdin); ops registered: walk-to, cancel, queue-interaction, query-self, query-nearby, query-lot, query-relationships, query-inventory, interact-with, cancel-interaction, query-pie-menu, speak, be-friendly, tell-joke, flirt, be-mean, give-gift, instant-message, change-outfit, change-description, go-home, visit-lot, find-avatar, add-roommate, evict-roommate, lock-lot, unlock-lot");
         }
 
         // 8. Tick loop. The real client ticks at FSOEnvironment.RefreshRate (60Hz). The driver

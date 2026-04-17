@@ -39,6 +39,13 @@ public class HeadlessLotConnection : IAriesMessageSubscriber, IAriesEventSubscri
     }
 
     private readonly AriesClient _city;
+    /// <summary>
+    /// City Aries socket — exposed so property-family handlers (add-roommate, evict-roommate,
+    /// lock-lot, unlock-lot — freesoexperiment-9c5) can emit ChangeRoommateRequest and
+    /// DataServiceWrapperPDU packets on the city socket. Lot-scoped handlers (walk-to, speak,
+    /// etc.) use <see cref="Lot"/> via the driver; city-scoped handlers need this accessor.
+    /// </summary>
+    public AriesClient City => _city;
     public AriesClient Lot { get; }
     private readonly Action<object> _onLotPacket;
 

@@ -1,0 +1,25 @@
+{
+  "convention": "freeso-embodiment",
+  "version": "1.0",
+  "operation": "add-roommate",
+  "family": "property",
+  "description": "Invite another avatar to be a roommate on your lot. Prerequisite: caller must be the current lot's owner (VMTSOLotState.OwnerID == self). Effect: creates a pending roommate invite; target's fso_roommates row appears with is_pending=1 until they accept or decline. Cost: one of your 8 roommate slots is reserved (including pending). Refuse path: ok=false if caller is not owner or target is already roommate-bound elsewhere. Wire: ChangeRoommateRequest{Type=INVITE,AvatarId,LotLocation} on the city Aries socket.",
+  "args": [
+    {"name": "target_persist_id", "type": "uint64", "required": true}
+  ],
+  "produces_tags": [
+    {
+      "tag": "freeso:add-roommate",
+      "cardinality": "exactly_one"
+    }
+  ],
+  "antecedents": "none",
+  "signing": "member_key",
+  "rate_limit": {
+    "max": 10,
+    "per": "sender",
+    "window": "1m"
+  },
+  "response": "sync",
+  "status": "implemented"
+}

@@ -1,0 +1,23 @@
+{
+  "convention": "freeso-embodiment",
+  "version": "1.0",
+  "operation": "lock-lot",
+  "family": "property",
+  "description": "Close your lot to all visitors (no one but roommates may enter). Prerequisite: caller must be the current lot's owner (VMTSOLotState.OwnerID == self). Effect: sets Lot_LotAdmitInfo.LotAdmitInfo_AdmitMode = 3 (ban-all) on the city DataService; fso_lots.admit_mode in the DB flips to 3. Non-roommates attempting to visit are rejected at the city allocation handler (LotAllocations.cs: admit_mode<4 && admit_mode==3 path). Cost: free — no money, no cooldown. Idempotent. Pair with `unlock-lot` to restore default public access.",
+  "args": [],
+  "produces_tags": [
+    {
+      "tag": "freeso:lock-lot",
+      "cardinality": "exactly_one"
+    }
+  ],
+  "antecedents": "none",
+  "signing": "member_key",
+  "rate_limit": {
+    "max": 10,
+    "per": "sender",
+    "window": "1m"
+  },
+  "response": "sync",
+  "status": "implemented"
+}

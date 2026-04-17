@@ -191,6 +191,15 @@ func main() {
 			log.Fatalf("register navigation handlers: %v", err)
 		}
 		log.Printf("convention handlers: %d navigation-family ops serving", navServers)
+
+		// Property family (freesoexperiment-9c5): add-roommate, evict-roommate, lock-lot,
+		// unlock-lot. pay-bills dropped (catalog: no wire PDU). Owner gating enforced in
+		// the bot handler (PropertyHandlers.cs CheckOwner) for a deterministic refuse path.
+		propServers, err := RegisterPropertyHandlers(ctx, cf, ipc)
+		if err != nil {
+			log.Fatalf("register property handlers: %v", err)
+		}
+		log.Printf("convention handlers: %d property-family ops serving", propServers)
 	} else {
 		log.Printf("running in --no-bot mode (campfire-only)")
 
