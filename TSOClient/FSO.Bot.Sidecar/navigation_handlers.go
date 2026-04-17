@@ -31,7 +31,7 @@ import (
 // `deferred:true` in the response payload when they cannot perform the real
 // wire effect. The integration test hard-asserts presence of the marker —
 // never "accept ok=true OR ok=false as evidence of success". A follow-up item
-// (freesoexperiment-a61-transition) tracks the lot-transition implementation.
+// (freesoexperiment-ca0) tracks the lot-transition implementation.
 //
 // Returns the count of opened servers.
 func RegisterNavigationHandlers(ctx context.Context, cf *Campfire, ipc *IPC) (int, error) {

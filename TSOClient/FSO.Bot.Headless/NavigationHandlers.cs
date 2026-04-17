@@ -22,7 +22,7 @@ namespace FSO.Bot.Headless;
 ///   "no reconnect logic (OQ-11 punted to a follow-up item)"). When the bot is NOT on its
 ///   home lot, this handler returns <c>{ok:true, already_home:false, deferred:true,
 ///   deferred_reason:"..."}</c> with the home location exposed so an agent can reason about
-///   it. Cross-lot transition tracked as freesoexperiment-a61-transition follow-up.</item>
+///   it. Cross-lot transition tracked as freesoexperiment-ca0 follow-up.</item>
 ///
 ///   <item><c>visit-lot</c> — same deferral. The wire PDU sequence (FindLotRequest → new
 ///   lot-Aries connection → JoinLotWithTransitionRequest) cannot run without discarding the
@@ -134,7 +134,7 @@ public static class NavigationHandlers
         {
             already_home = false,
             deferred = true,
-            deferred_reason = "cross-lot transition unimplemented in HeadlessLotConnection; tracked as freesoexperiment-a61-transition follow-up",
+            deferred_reason = "cross-lot transition unimplemented in HeadlessLotConnection; tracked as freesoexperiment-ca0 follow-up",
             current_lot_location = curHex,
             home_lot_location = homeHex,
         });
@@ -165,7 +165,7 @@ public static class NavigationHandlers
         return CommandDispatcher.Response.Success(new
         {
             deferred = true,
-            deferred_reason = "visit-lot requires teardown+rebuild of VMClientDriver + VM + perception projector and the JoinLotWithTransitionRequest handshake. HeadlessLotConnection has no reconnect primitive today. Tracked as freesoexperiment-a61-transition.",
+            deferred_reason = "visit-lot requires teardown+rebuild of VMClientDriver + VM + perception projector and the JoinLotWithTransitionRequest handshake. HeadlessLotConnection has no reconnect primitive today. Tracked as freesoexperiment-ca0.",
             target_lot_location = args["target_lot_location"].ToString(),
             bot_state_unchanged = true,
         });
