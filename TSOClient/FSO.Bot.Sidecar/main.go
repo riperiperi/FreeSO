@@ -136,8 +136,27 @@ func main() {
 			log.Fatalf("register movement handlers: %v", err)
 		}
 		log.Printf("convention handlers: %d movement-family ops serving", servers)
+
+		// Memory family (freesoexperiment-6a8): remember + recall. Sidecar-local
+		// state only — no IPC to the bot, no FSO wire PDU. The store is process-
+		// lifetime scoped; persistence is a follow-up item.
+		memStore := NewMemoryStore()
+		memServers, err := RegisterMemoryHandlers(ctx, cf, memStore)
+		if err != nil {
+			log.Fatalf("register memory handlers: %v", err)
+		}
+		log.Printf("convention handlers: %d memory-family ops serving", memServers)
 	} else {
 		log.Printf("running in --no-bot mode (campfire-only)")
+
+		// --no-bot mode still benefits from memory ops: they are sidecar-local
+		// and don't require a bot subprocess. Useful for campfire-only tests.
+		memStore := NewMemoryStore()
+		memServers, err := RegisterMemoryHandlers(ctx, cf, memStore)
+		if err != nil {
+			log.Fatalf("register memory handlers: %v", err)
+		}
+		log.Printf("convention handlers: %d memory-family ops serving (no-bot mode)", memServers)
 	}
 
 	// Signal handling for clean shutdown.

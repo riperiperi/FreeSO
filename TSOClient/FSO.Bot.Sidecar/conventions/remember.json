@@ -3,21 +3,14 @@
   "version": "1.0",
   "operation": "remember",
   "family": "memory",
-  "description": "Store an arbitrary key/value memory in the bot's private campfire. Not a FreeSO wire action \u2014 this is a sidecar-only op that writes a tagged message (`freeso:memory`, `sim:<avatar_id>`) and returns its ID. Included in the catalog so implementers do not mistake its absence from FSO source for a missing feature.",
-  "args": [],
-  "produces_tags": [
-    {
-      "tag": "freeso:remember",
-      "cardinality": "exactly_one"
-    }
+  "description": "Store a key/value pair in your private sidecar memory. Prerequisite: none — memory is agent-local, no world state or lot membership required. Effect: the sidecar keeps `value` under `key` in its in-memory map for the remainder of this sidecar process's lifetime; a subsequent recall(key) on the same sidecar returns the same value. A second remember on the same key overwrites the prior value (last-writer-wins). Cost: none in real seconds or motive. NOT persistent across bot or sidecar restart — this scope intentionally ships without disk persistence; when experiments show the lack bites, a follow-up item will add durable storage. NOT a FreeSO wire action — memory has no PDU, does not cross the lot socket, and is invisible to other Sims (use `speak` to publish to other Sims on the lot). Values are stored verbatim as JSON; recall returns the same shape the agent sent (object, array, string, number, bool, null).",
+  "args": [
+    {"name": "key", "type": "string", "required": true, "description": "Non-empty key to store under. Keys are per-sidecar, not namespaced — choose keys distinct enough to avoid collisions with other memories (e.g. 'friend:maria', 'goal:eat', not 'x')."},
+    {"name": "value", "type": "json", "required": true, "description": "The value to store. Any JSON value: string, number, boolean, null, object, or array — the sidecar stores the argument verbatim. Recall returns the same shape the agent sent. Must be present (even as null) — a missing value arg is rejected with ok=false."}
   ],
+  "produces_tags": [{"tag": "freeso:remember", "cardinality": "exactly_one"}],
   "antecedents": "none",
   "signing": "member_key",
-  "rate_limit": {
-    "max": 30,
-    "per": "sender",
-    "window": "1m"
-  },
-  "response": "sync",
-  "status": "scaffold"
+  "rate_limit": {"max": 60, "per": "sender", "window": "1m"},
+  "response": "sync"
 }
