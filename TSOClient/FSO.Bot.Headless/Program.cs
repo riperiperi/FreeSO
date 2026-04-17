@@ -384,6 +384,9 @@ public class Program
             // speak (which is lot-socket VMNetChatCmd): IM rides cityAries directly, and the
             // server's MessagingHandler either forwards to target or replies FAILURE_ACK.
             IMHandlers.RegisterAll(dispatcher, cityAries, avatar.ID);
+            // Avatar family (freesoexperiment-b88): change-outfit (lot socket VMNetSetOutfitCmd)
+            // + change-description (city socket DataServiceWrapperPDU).
+            AvatarHandlers.RegisterAll(dispatcher, vmHost, cityAries);
             // Wire chat events into the perception projector so speak's server-round-tripped
             // echo surfaces as a recent_events entry (kind=chat). Ground-source truth for the
             // verb-social integration test — a bare VMNetChatCmd ACK does not prove wire effect.
@@ -393,7 +396,7 @@ public class Program
             // single-session tests (target = own avatar id ⇒ server echoes back).
             if (projector != null) IMHandlers.WireIMPerception(cityListener, projector);
             dispatcher.Start();
-            Log($"ipc: command dispatcher started (stdin); ops registered: walk-to, cancel, queue-interaction, query-self, query-nearby, query-lot, query-relationships, query-inventory, interact-with, cancel-interaction, query-pie-menu, speak, be-friendly, tell-joke, flirt, be-mean, give-gift, instant-message");
+            Log($"ipc: command dispatcher started (stdin); ops registered: walk-to, cancel, queue-interaction, query-self, query-nearby, query-lot, query-relationships, query-inventory, interact-with, cancel-interaction, query-pie-menu, speak, be-friendly, tell-joke, flirt, be-mean, give-gift, instant-message, change-outfit, change-description");
         }
 
         // 8. Tick loop. The real client ticks at FSOEnvironment.RefreshRate (60Hz). The driver

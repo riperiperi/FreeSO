@@ -1,0 +1,18 @@
+{
+  "convention": "freeso-embodiment",
+  "version": "1.0",
+  "operation": "change-outfit",
+  "family": "avatar",
+  "description": "Change your avatar's outfit in a named wardrobe slot. Wire PDU: VMNetSetOutfitCmd (tso.simantics/NetPlay/Model/Commands/VMNetSetOutfitCmd.cs). Prerequisite: you are present on a lot with a live VM replica (no EOD is required — the stock client only exposes this through Dresser/Rack/Trunk, but the server-side Verify is unconditional so the primitive is callable directly). Effect: the targeted outfit slot on your VMAvatar is replaced with the new outfit_id. The new value is readable in subsequent query-self responses under the 'outfits' object. Decoration scopes (head/back/shoes/tail) mutate the Decoration struct, same roundtrip. The server does not validate the outfit_id against the avatar's owned-outfit set, so agents should source ids from query-self's current outfit fields or from an inventory read. Cost: none. Refuse: outfit_id=0, unknown scope string.",
+  "args": [
+    {"name": "outfit_id", "type": "integer", "required": true, "description": "64-bit outfit asset id. Must be non-zero. Sourced from query-self.outfits.* or a prior successful change-outfit."},
+    {"name": "scope", "type": "string", "required": false, "default": "dynamic-daywear", "description": "Which slot to replace. Accepted: dynamic-daywear, dynamic-sleepwear, dynamic-swimwear, dynamic-costume, default-daywear, default-sleepwear, default-swimwear, decoration-head, decoration-back, decoration-shoes, decoration-tail. dynamic-* overrides default-* at render time; use dynamic-daywear for a live-session wardrobe change."}
+  ],
+  "produces_tags": [
+    {"tag": "freeso:change-outfit", "cardinality": "exactly_one"}
+  ],
+  "antecedents": "none",
+  "signing": "member_key",
+  "rate_limit": {"max": 30, "per": "sender", "window": "1m"},
+  "response": "sync"
+}
