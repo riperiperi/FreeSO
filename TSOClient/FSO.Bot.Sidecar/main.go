@@ -168,6 +168,17 @@ func main() {
 			log.Fatalf("register social handlers: %v", err)
 		}
 		log.Printf("convention handlers: %d social-family ops serving", socialServers)
+
+		// Navigation family (freesoexperiment-a61): go-home, visit-lot, find-avatar.
+		// find-lot is explicitly DROPPED per verb-catalog.md (subsumed by visit-lot).
+		// go-home + visit-lot are deferred when a cross-lot transition is required
+		// (HeadlessLotConnection has no reconnect primitive — freesoexperiment-a61-
+		// transition follow-up); find-avatar is a full wire PDU on the city socket.
+		navServers, err := RegisterNavigationHandlers(ctx, cf, ipc)
+		if err != nil {
+			log.Fatalf("register navigation handlers: %v", err)
+		}
+		log.Printf("convention handlers: %d navigation-family ops serving", navServers)
 	} else {
 		log.Printf("running in --no-bot mode (campfire-only)")
 

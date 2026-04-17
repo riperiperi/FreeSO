@@ -380,12 +380,20 @@ public class Program
             QueryHandlers.RegisterAll(dispatcher, vmHost, shardName);
             InteractionHandlers.RegisterAll(dispatcher, vmHost);
             SocialHandlers.RegisterAll(dispatcher, vmHost);
+            // Navigation family (freesoexperiment-a61). go-home uses the already-home fast
+            // path; visit-lot returns a deferred marker (cross-lot transition unimplemented —
+            // HeadlessLotConnection has no reconnect primitive). find-avatar is a full wire
+            // PDU on the city socket (FindAvatarRequest → FindAvatarResponse). Handler needs
+            // the city AriesClient for outbound + the resolved home location for the
+            // already-home check (targetLotLocation is the home when FSO_LOT_LOCATION is
+            // unset/0, which is the default).
+            NavigationHandlers.RegisterAll(dispatcher, vmHost, cityAries, targetLotLocation);
             // Wire chat events into the perception projector so speak's server-round-tripped
             // echo surfaces as a recent_events entry (kind=chat). Ground-source truth for the
             // verb-social integration test — a bare VMNetChatCmd ACK does not prove wire effect.
             if (projector != null) SocialHandlers.WireChatPerception(vmHost, projector);
             dispatcher.Start();
-            Log($"ipc: command dispatcher started (stdin); ops registered: walk-to, cancel, queue-interaction, query-self, query-nearby, query-lot, query-relationships, query-inventory, interact-with, cancel-interaction, query-pie-menu, speak, be-friendly, tell-joke, flirt, be-mean, give-gift");
+            Log($"ipc: command dispatcher started (stdin); ops registered: walk-to, cancel, queue-interaction, query-self, query-nearby, query-lot, query-relationships, query-inventory, interact-with, cancel-interaction, query-pie-menu, speak, be-friendly, tell-joke, flirt, be-mean, give-gift, go-home, visit-lot, find-avatar");
         }
 
         // 8. Tick loop. The real client ticks at FSOEnvironment.RefreshRate (60Hz). The driver
