@@ -266,6 +266,12 @@ public class Program
             }
         });
 
+        // 5a. Wire the VMClientDriver's outbound command stream to the lot Aries socket. This
+        // replaces the read-only drop behaviour from d87-a so outbound VMNet*Cmd PDUs (walk-to,
+        // queue-interaction, cancel — freesoexperiment-b9c) reach the server. Must happen before
+        // the VM starts ticking.
+        MovementHandlers.WireOutboundVMCommands(vmHost, lotConn);
+
         // 5b. Wire the shutdown hook now that lotConn + cityAries exist. Any failure after this
         // point — normal exit, SIGINT, unhandled exception, runtime shutdown — routes through
         // EnsureCleanDisconnect, which invokes TryCleanDisconnect. The Interlocked guard in
@@ -361,6 +367,20 @@ public class Program
             Log($"perception projector attached (hz={perceptionHz})");
         }
 
+        // 7c. Start the IPC command dispatcher. Stdin is the inbound channel (NDJSON commands
+        // sidecar→bot). When --emit-perception is on, stdout is already reserved for NDJSON and
+        // responses flow back through PerceptionEmitter.EmitLine, interleaving cleanly with
+        // perception/dialog events. Load-bearing for freesoexperiment-b9c and all follow-on
+        // verb-family items (d87-d-*).
+        CommandDispatcher dispatcher = null;
+        if (emitPerception)
+        {
+            dispatcher = new CommandDispatcher();
+            MovementHandlers.RegisterAll(dispatcher, vmHost);
+            dispatcher.Start();
+            Log($"ipc: command dispatcher started (stdin); ops registered: walk-to, cancel, queue-interaction");
+        }
+
         // 8. Tick loop. The real client ticks at FSOEnvironment.RefreshRate (60Hz). The driver
         // will throttle itself based on buffer size; we just need to call Tick frequently enough
         // that the buffered server ticks get drained before the session-uptime window expires.
@@ -443,6 +463,9 @@ public class Program
         {
             Log("avatar snapshot: no avatar found in local VM");
         }
+
+        // 8b. Stop the IPC dispatcher (cancels the stdin read loop). Idempotent.
+        dispatcher?.Stop();
 
         // 9. Clean disconnect (happy path). Flip the guard *before* the call so any concurrent
         // signal handler (rare but possible — user hits Ctrl-C just as the hold loop ends) sees

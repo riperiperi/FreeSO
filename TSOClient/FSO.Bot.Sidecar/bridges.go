@@ -21,6 +21,7 @@ import (
 type Bridges struct {
 	cf  *Campfire
 	bot *BotProcess
+	ipc *IPC
 
 	// SimID is the avatar persist_id of this bot; populated from the first
 	// perception event that carries one, then stable. Used as the sim:<id>
@@ -30,8 +31,9 @@ type Bridges struct {
 
 // NewBridges constructs a Bridges value. Call Run(ctx) once to start the
 // fan-out; it returns when the bot stdout channel closes or ctx is cancelled.
-func NewBridges(cf *Campfire, bot *BotProcess) *Bridges {
-	return &Bridges{cf: cf, bot: bot}
+// ipc may be nil in tests that don't exercise the command channel.
+func NewBridges(cf *Campfire, bot *BotProcess, ipc *IPC) *Bridges {
+	return &Bridges{cf: cf, bot: bot, ipc: ipc}
 }
 
 // eventEnvelope is the loose shape we parse from bot stdout. We keep it a map
@@ -94,14 +96,23 @@ func (b *Bridges) handle(line []byte) {
 		}
 	}
 
+	// Response frames are IPC-internal — they correlate to a specific sidecar-
+	// issued command and MUST be routed through IPC.Deliver, not broadcast to
+	// the campfire. Convention handlers that invoked the command turn the
+	// response into a convention.Response fulfillment themselves.
+	if env.Kind == "response" {
+		if b.ipc != nil {
+			b.ipc.Deliver(line)
+		} else {
+			log.Printf("bridge: response frame received but no IPC wired (dropped)")
+		}
+		return
+	}
+
 	tag := env.Kind
 	switch env.Kind {
 	case "perception", "dialog", "system":
 		// ok
-	case "response":
-		// Response frames correlate to a specific command. Tag them distinctly
-		// so agents awaiting a fulfillment can filter cleanly.
-		tag = "response"
 	default:
 		log.Printf("bridge: unknown kind %q (broadcasting as freeso:%s)", env.Kind, env.Kind)
 	}

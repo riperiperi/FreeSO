@@ -83,6 +83,23 @@ public class HeadlessVMHost : IDisposable
         }
     }
 
+    /// <summary>
+    /// Run <paramref name="action"/> synchronized with the VM tick thread (freesoexperiment-a85).
+    /// IPC handlers that need to read or mutate VM-thread-owned state (VMThread.Queue,
+    /// VMAvatar.* fields) MUST route through this helper — the tick thread mutates those
+    /// structures without external locking, so concurrent reads from dispatcher threads race.
+    /// The lock is the same one <see cref="Tick"/> holds; during iteration the tick thread
+    /// will block, so keep the action short.
+    /// </summary>
+    public T RunUnderTickLock<T>(Func<T> action)
+    {
+        if (action == null) throw new ArgumentNullException(nameof(action));
+        lock (_tickLock)
+        {
+            return action();
+        }
+    }
+
     /// <summary>Snapshot of avatar + motive state for --verify-lot-join.</summary>
     public AvatarSnapshot SnapshotAvatar()
     {

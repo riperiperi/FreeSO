@@ -1,0 +1,15 @@
+{
+  "convention": "freeso-embodiment",
+  "version": "1.0",
+  "operation": "cancel",
+  "family": "movement",
+  "description": "Stop what you are doing. Prerequisite: you are on a lot with an active avatar (an action queue exists, possibly empty). Effect: by default, every queued and currently-running interaction is cancelled — the engine processes each cancel at the next safe animation break so your Sim may finish a sub-animation before coming to rest. With action_uid set, only that single queue entry is cancelled; useful when you want to abort a long-running interaction without clearing the queue behind it. Cost: whatever progress you made on an interrupted interaction is lost (e.g. Sleep cancelled mid-way does not credit full Energy gain); other Sims observing you see your action_queue clear within one perception tick. The wire cannot distinguish 'cancel current' from 'clear queue' in a single PDU — both are VMNetInteractionCancelCmd with an ActionUID, so clearing the queue requires one cancel per visible entry (what the stock UIInteractionQueue does). We do that locally as the default.",
+  "args": [
+    {"name": "action_uid", "type": "integer", "required": false, "description": "ushort UID of a specific queued interaction (from perception.avatar.action_queue[].uid). Omit to cancel every queued/running action the bot can see locally."}
+  ],
+  "produces_tags": [{"tag": "freeso:cancel", "cardinality": "exactly_one"}],
+  "antecedents": "none",
+  "signing": "member_key",
+  "rate_limit": {"max": 60, "per": "sender", "window": "1m"},
+  "response": "sync"
+}

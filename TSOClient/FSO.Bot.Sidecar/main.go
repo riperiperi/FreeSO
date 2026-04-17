@@ -119,9 +119,23 @@ func main() {
 		}
 		log.Printf("bot launched pid=%d", proc.Pid())
 
-		// 3. Start bridges.
-		bridges := NewBridges(cf, proc)
+		// 3. IPC command channel (freesoexperiment-b9c): correlates stdin commands
+		// sidecar→bot with response frames observed on bot stdout. Must be wired
+		// before bridges start so response frames are routed instead of dropped.
+		ipc := NewIPC(proc)
+
+		// 4. Start bridges.
+		bridges := NewBridges(cf, proc, ipc)
 		go bridges.Run(ctx)
+
+		// 5. Register convention handlers for verb-family ops. Each op opens one
+		// convention.Server on the campfire; Serve blocks in a goroutine until ctx
+		// is cancelled.
+		servers, err := RegisterMovementHandlers(ctx, cf, ipc)
+		if err != nil {
+			log.Fatalf("register movement handlers: %v", err)
+		}
+		log.Printf("convention handlers: %d movement-family ops serving", servers)
 	} else {
 		log.Printf("running in --no-bot mode (campfire-only)")
 	}

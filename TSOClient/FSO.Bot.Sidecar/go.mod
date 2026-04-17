@@ -2,14 +2,16 @@ module github.com/3dl-dev/freeso-sidecar
 
 go 1.25.0
 
-require github.com/campfire-net/campfire v0.19.2
+require (
+	github.com/campfire-net/campfire v0.19.2
+	github.com/google/uuid v1.6.0
+)
 
 require (
 	filippo.io/edwards25519 v1.0.0-rc.1 // indirect
 	github.com/BurntSushi/toml v1.6.0 // indirect
 	github.com/dustin/go-humanize v1.0.1 // indirect
 	github.com/fxamacker/cbor/v2 v2.9.0 // indirect
-	github.com/google/uuid v1.6.0 // indirect
 	github.com/mattn/go-isatty v0.0.20 // indirect
 	github.com/ncruces/go-strftime v1.0.0 // indirect
 	github.com/remyoudompheng/bigfft v0.0.0-20230129092748-24d4a6f8daec // indirect

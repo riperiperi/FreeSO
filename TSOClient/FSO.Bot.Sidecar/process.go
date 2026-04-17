@@ -32,11 +32,14 @@ type BotConfig struct {
 
 // BotProcess owns the bot subprocess. It exposes a stdout line channel for
 // bridges to consume, pipes stderr straight through with a prefix, and surfaces
-// exit status on ExitCh.
+// exit status on ExitCh. Stdin is owned by the IPC layer (see ipc.go) —
+// commands sidecar→bot travel here as NDJSON lines.
 type BotProcess struct {
 	cmd *exec.Cmd
 
 	stdoutLines chan []byte
+	stdin       io.WriteCloser
+	stdinMu     sync.Mutex
 	exitCh      chan error
 
 	stopOnce sync.Once
@@ -62,6 +65,10 @@ func LaunchBot(ctx context.Context, cfg BotConfig) (*BotProcess, error) {
 	if err != nil {
 		return nil, fmt.Errorf("stderr pipe: %w", err)
 	}
+	stdin, err := cmd.StdinPipe()
+	if err != nil {
+		return nil, fmt.Errorf("stdin pipe: %w", err)
+	}
 
 	if err := cmd.Start(); err != nil {
 		return nil, fmt.Errorf("start: %w", err)
@@ -70,6 +77,7 @@ func LaunchBot(ctx context.Context, cfg BotConfig) (*BotProcess, error) {
 	p := &BotProcess{
 		cmd:         cmd,
 		stdoutLines: make(chan []byte, 64),
+		stdin:       stdin,
 		exitCh:      make(chan error, 1),
 	}
 
@@ -123,12 +131,40 @@ func (p *BotProcess) Pid() int {
 // the bot (minus the trailing newline).
 func (p *BotProcess) Lines() <-chan []byte { return p.stdoutLines }
 
+// WriteStdin writes a single NDJSON line (with trailing newline) to the bot's
+// stdin. Serialized across callers so concurrent IPC commands don't interleave
+// bytes on the pipe. Returns io.ErrClosedPipe if Stop was called or the child
+// has exited.
+func (p *BotProcess) WriteStdin(line []byte) error {
+	if p == nil {
+		return fmt.Errorf("bot process is nil")
+	}
+	p.stdinMu.Lock()
+	defer p.stdinMu.Unlock()
+	if p.stdin == nil {
+		return io.ErrClosedPipe
+	}
+	if len(line) == 0 || line[len(line)-1] != '\n' {
+		line = append(line, '\n')
+	}
+	_, err := p.stdin.Write(line)
+	return err
+}
+
 // ExitCh returns the bot exit channel. Fires once with the Wait() error.
 func (p *BotProcess) ExitCh() <-chan error { return p.exitCh }
 
 // Stop best-effort terminates the bot. Idempotent.
 func (p *BotProcess) Stop() {
 	p.stopOnce.Do(func() {
+		// Close stdin first so the bot's IPC reader loop sees EOF and shuts
+		// down cleanly before SIGINT reaches the runtime.
+		p.stdinMu.Lock()
+		if p.stdin != nil {
+			_ = p.stdin.Close()
+			p.stdin = nil
+		}
+		p.stdinMu.Unlock()
 		if p.cmd == nil || p.cmd.Process == nil {
 			return
 		}
