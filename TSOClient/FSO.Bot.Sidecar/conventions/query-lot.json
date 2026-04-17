@@ -1,0 +1,13 @@
+{
+  "convention": "freeso-embodiment",
+  "version": "1.0",
+  "operation": "query-lot",
+  "family": "queries",
+  "description": "Return metadata about the lot you are currently on: lot_id, human name, shard, community category, size and floors, neighborhood id, owner persist_id, roommate set, build-roommate set, whether you are on the roommate list (owner_is_me), and the other-avatars count. Prerequisite: you are joined to a lot; the VMTSOLotState has been hydrated (arrives shortly after lot-join command stream is live). Effect: none — local-VM read from VM.TSOState, no outbound PDU. Cost: one VM-lock acquisition, trivially cheap. Use to answer 'where am I' and 'who else lives here' questions without waiting for the perception stream's next lot block. Category_id is the raw TSO byte (0=none, 1=residential, 2=money, 3=services, 4=welcome, 5=games, 6=entertainment, 7=romance, 8=shopping, 9=skills, 10=community, 11=offbeat); the string category field is a convenience name derived from it.",
+  "args": [],
+  "produces_tags": [{"tag": "freeso:query-lot", "cardinality": "exactly_one"}],
+  "antecedents": "none",
+  "signing": "member_key",
+  "rate_limit": {"max": 60, "per": "sender", "window": "1m"},
+  "response": "sync"
+}
