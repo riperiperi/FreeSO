@@ -182,6 +182,15 @@ func main() {
 			log.Fatalf("register avatar handlers: %v", err)
 		}
 		log.Printf("convention handlers: %d avatar-family ops serving", avatarServers)
+
+		// Navigation family (freesoexperiment-a61): go-home (already-home only), find-avatar.
+		// visit-lot ships with deferred:true marker — cross-lot transition needs -ca0.
+		// find-lot DROPPED per verb-catalog.md (subsumed by visit-lot).
+		navServers, err := RegisterNavigationHandlers(ctx, cf, ipc)
+		if err != nil {
+			log.Fatalf("register navigation handlers: %v", err)
+		}
+		log.Printf("convention handlers: %d navigation-family ops serving", navServers)
 	} else {
 		log.Printf("running in --no-bot mode (campfire-only)")
 

@@ -1,0 +1,22 @@
+{
+  "convention": "freeso-embodiment",
+  "version": "1.0",
+  "operation": "go-home",
+  "family": "navigation",
+  "description": "Return to your home lot — the one where your avatar is a roommate. Prerequisite: you are joined to a lot with a live VM (you have seen at least one perception tick). Effect: if you are ALREADY on your home lot (the common case after a clean session start — FSO_LOT_LOCATION defaults to the avatar's LotLocation, which IS the home lot), the handler returns immediately with `already_home:true` and does nothing on the wire. If you are on a DIFFERENT lot, a cross-lot transition is required; that path is unimplemented in the current bot (HeadlessLotConnection has no reconnect primitive — see OQ-11 and the freesoexperiment-ca0 follow-up) — the handler returns `already_home:false, deferred:true` with both `current_lot_location` and `home_lot_location` exposed so you can reason about the gap. Your state is unchanged in the deferred case; call `visit-lot` once that op ships, or wait for the reconnect primitive. Cost: one tick-locked VM read to pull TSOState.LotID for the comparison. Response payload fields: `already_home` (bool), `current_lot_location` (hex string `0x...`), `home_lot_location` (hex string `0x...`), and in the deferred case `deferred:true` + `deferred_reason`.",
+  "args": [],
+  "produces_tags": [
+    {
+      "tag": "freeso:go-home",
+      "cardinality": "exactly_one"
+    }
+  ],
+  "antecedents": "none",
+  "signing": "member_key",
+  "rate_limit": {
+    "max": 10,
+    "per": "sender",
+    "window": "1m"
+  },
+  "response": "sync"
+}
