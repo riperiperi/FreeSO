@@ -3,8 +3,15 @@
   "version": "1.0",
   "operation": "ban-user",
   "family": "admin",
-  "description": "Ban a user.",
-  "args": [],
+  "description": "Prerequisite: caller holds admin rights. Effect: sends ModerationRequest{BAN_USER, EntityId=target_persist_id} on the city socket. Server sets fso_users.is_banned=1 on the target's user row and closes their live session. Cost: none. Persistent DB mutation — target cannot log in again until unbanned. The server refuses to ban another admin/moderator. No response PDU. Non-admin callers refused deterministically in the bot handler.",
+  "args": [
+    {
+      "name": "target_persist_id",
+      "type": "uint",
+      "required": true,
+      "description": "avatar_id (Sim persist id) of the user to ban."
+    }
+  ],
   "produces_tags": [
     {
       "tag": "freeso:ban-user",
@@ -19,5 +26,5 @@
     "window": "1m"
   },
   "response": "sync",
-  "status": "scaffold"
+  "status": "stable"
 }

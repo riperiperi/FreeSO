@@ -200,6 +200,17 @@ func main() {
 			log.Fatalf("register property handlers: %v", err)
 		}
 		log.Printf("convention handlers: %d property-family ops serving", propServers)
+
+		// Admin family (freesoexperiment-3df): kick/ban/ipban-user (ModerationRequest
+		// city PDU), archive-approve/reject-user (ArchiveModerationRequest city PDU),
+		// admin-chat-command (VMNetChatCmd "/cmd args" lot PDU). All gated on admin
+		// bit in the bot handler (AdminHandlers.cs CheckAdmin reads in-VM
+		// VMTSOAvatarPermissions). cheat-command DROPPED — no wire path.
+		adminServers, err := RegisterAdminHandlers(ctx, cf, ipc)
+		if err != nil {
+			log.Fatalf("register admin handlers: %v", err)
+		}
+		log.Printf("convention handlers: %d admin-family ops serving", adminServers)
 	} else {
 		log.Printf("running in --no-bot mode (campfire-only)")
 

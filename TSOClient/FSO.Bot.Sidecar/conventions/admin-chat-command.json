@@ -3,8 +3,21 @@
   "version": "1.0",
   "operation": "admin-chat-command",
   "family": "admin",
-  "description": "Issue an in-VM admin chat command (`/ban`, `/banip`, `/unban`, `/banlist`, `/builder`, `/admin`, `/roomie`, `/visitor`, `/close`, `/qtrday`, `/setjob`, `/trace`, `/reload`, `/time`, `/tickrate`, `/speed`, `/tuning`, `/fixall`, `/testcollision`). Dispatched from `VMNetChatCmd.Execute` when `Message[0]=='/'`. Rich multi-verb op; recommend declaring one convention per command family in d87-d-admin rather than one mega-verb.",
-  "args": [],
+  "description": "Prerequisite: caller holds admin rights (in-VM VMTSOAvatarPermissions == Admin, set server-side when fso_avatars.moderation_level > 0). Effect: sends a VMNetChatCmd on the lot socket with Message=\"/<command> <args>\". VMNetChatCmd.Execute dispatches to one of 19 handlers (ban, banip, unban, banlist, builder, admin, roomie, visitor, close, qtrday, setjob, trace, reload, time, tickrate, speed, tuning, fixall, testcollision). Effects depend on the command: e.g. /banlist emits a Generic chat event listing IPs; /qtrday N runs N quarter-days; /speed N sets VM tick multiplier; /builder <simname> elevates Sim to BuildBuyRoommate via VMChangePermissionsCmd. Cost: none. No structured response — results surface as VMChatEvents the perception projector converts to recent_events entries (kind=chat). Non-admin callers refused in the bot handler. Single mega-op rather than per-command splits — lets agents learn via argv, same surface as the stock client.",
+  "args": [
+    {
+      "name": "command",
+      "type": "string",
+      "required": true,
+      "description": "Slash command name without the leading /. Must be one of: ban, banip, unban, banlist, builder, admin, roomie, visitor, close, qtrday, setjob, trace, reload, time, tickrate, speed, tuning, fixall, testcollision."
+    },
+    {
+      "name": "args",
+      "type": "string",
+      "required": false,
+      "description": "Command argument string (space-separated if the command takes multiple). E.g. for /qtrday: \"3\". For /time: \"12 30\" (hours minutes). Empty for arg-less commands like banlist, fixall. Total message length (including /command space args) must be <= 200 chars."
+    }
+  ],
   "produces_tags": [
     {
       "tag": "freeso:admin-chat-command",
@@ -19,5 +32,5 @@
     "window": "1m"
   },
   "response": "sync",
-  "status": "scaffold"
+  "status": "stable"
 }
