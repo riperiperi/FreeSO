@@ -1,4 +1,5 @@
 ﻿using FSO.Common.Domain.Shards;
+using FSO.Content.Model;
 using FSO.Server.Database.DA;
 using FSO.Server.Protocol.CitySelector;
 using System;
@@ -82,6 +83,18 @@ namespace FSO.Server.Domain
         public ShardStatusItem GetByName(string name)
         {
             return _Shards.FirstOrDefault(x => x.Name == name);
+        }
+
+        public CityMap GetMapForId(int id)
+        {
+            var shard = GetById(id);
+
+            if (shard.Map.StartsWith("dynamic"))
+            {
+                // TODO: Load map from NFS
+            }
+
+            return FSO.Content.Content.Get().CityMaps.Get(shard.Map);
         }
     }
 }

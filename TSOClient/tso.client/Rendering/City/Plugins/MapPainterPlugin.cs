@@ -76,6 +76,12 @@ namespace FSO.Client.Rendering.City.Plugins
         public int BrushSize;
         public PainterMode Mode;
 
+        public bool SprayBrush { get; set; }
+        public bool AutoTerrain { get; set; } = true;
+        public bool RoughTerrain { get; set; }
+        public bool LockProperties { get; set; } = true;
+        public bool Flatten { get; set; }
+
         private IMapPainterMode Tool;
 
         public MapPainterPlugin(Terrain city) : base(city)

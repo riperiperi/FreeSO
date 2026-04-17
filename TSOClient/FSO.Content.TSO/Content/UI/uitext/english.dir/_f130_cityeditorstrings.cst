@@ -10,11 +10,15 @@
 8 ^Update City Thumbnail^
 9 ^Lock Lot Terrain^
 10 ^Brush Size^
-11 ^Brush Intensity^
+11 ^Intensity^
 12 ^Spray Brush^
 13 ^Invert brush (or hold ctrl)^
 14 ^(inverted)^
 15 ^Close^
+16 ^City Editor^
+17 ^Click and drag to draw roads.^
+18 ^Unlock Lot Terrain^
+19 ^Close^
 
 20 ^Auto Terrain Type^
 21 ^Flatten^
@@ -26,8 +30,8 @@
 33 ^Snow^
 34 ^Sand^
 
-40 ^Heavy^
-41 ^Light^
+40 ^Heavy Forest^
+41 ^Light Forest^
 42 ^Cacti^
 43 ^Palm^
 

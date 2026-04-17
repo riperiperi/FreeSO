@@ -3,11 +3,12 @@ using FSO.Client.Rendering.City.Plugins;
 using FSO.Client.Rendering.City.Plugins.PainterModes;
 using FSO.Client.UI.Controls;
 using FSO.Client.UI.Framework;
+using FSO.Client.Utils;
 using FSO.Common.Rendering.Framework.Model;
 using FSO.Common.Utils;
+using FSO.HIT;
 using Microsoft.Xna.Framework;
 using Microsoft.Xna.Framework.Graphics;
-
 using XnaMatrix = Microsoft.Xna.Framework.Matrix;
 
 namespace FSO.Client.UI.Panels
@@ -174,14 +175,18 @@ namespace FSO.Client.UI.Panels
     internal abstract class AbstractCityPainterOptions : UIContainer
     {
         protected UICityPainter Painter { get; private set; }
-        private MapPainterPlugin MapPainter => Painter.MapPainter;
+        protected MapPainterPlugin MapPainter => Painter.MapPainter;
         public abstract PainterMode Mode { get; }
+        public abstract string Graphic { get; }
+        public abstract string PreviewText { get; }
 
         private UIHBoxContainer ModesHbox;
         private UIHBoxContainer TogglesHbox;
         private UIHBoxContainer RootHbox;
         private (UIButton, UICityPainterToolMode)[] Modes;
         private (UIButton, UICityPainterToolToggle)[] Toggles;
+
+        private int SelectedMode = 0;
 
         public AbstractCityPainterOptions()
         {
@@ -215,25 +220,67 @@ namespace FSO.Client.UI.Panels
             }
         }
 
+        private void UpdateToggles()
+        {
+            var toggles = Toggles;
+
+            if (toggles != null)
+            {
+                for (int i = 0; i < toggles.Length; i++)
+                {
+                    var toggle = toggles[i];
+
+                    toggle.Item1.Selected = toggle.Item2.Get();
+                }
+            }
+        }
+
+        public virtual void Selected()
+        {
+            MapPainter.SelectedModifier = SelectedMode;
+
+            UpdateSelectedMode();
+            UpdateToggles();
+        }
+
         protected void SetModes(ReadOnlySpan<UICityPainterToolMode> modes)
         {
             var result = new (UIButton, UICityPainterToolMode)[modes.Length];
 
+            var ui = Content.Content.Get().CustomUI;
+            var gd = GameFacade.GraphicsDevice;
             var strings = GameFacade.Strings;
+
+            var buttonSeat = ui.Get("neighp_btab_seat.png").Get(gd);
+            var position = new Vector2(14, 10);
+            var seatOff = new Vector2(3, 3);
 
             for (int i = 0; i < modes.Length; i++)
             {
                 var mode = modes[i];
 
-                var button = new UIButton() { Caption = strings.GetString("f130", mode.CaptionID.ToString()) };
+                var seat = new UIImage(buttonSeat)
+                {
+                    Position = position
+                };
+
+                var button = new UIButton()
+                {
+                    Texture = ui.Get($"cityedit_tool_{mode.Graphic}.png").Get(gd),
+                    Tooltip = strings.GetString("f130", mode.CaptionID.ToString()),
+                    Position = position + seatOff
+                };
                 button.OnButtonClick += (btn) =>
                 {
                     MapPainter.SelectedModifier = mode.ModeValue;
+                    SelectedMode = mode.ModeValue;
                     UpdateSelectedMode();
                 };
 
-                ModesHbox.Add(button);
+                Add(seat);
+                Add(button);
 
+                position.X += 33;
                 result[i] = (button, mode);
             }
 
@@ -248,13 +295,31 @@ namespace FSO.Client.UI.Panels
         {
             var result = new (UIButton, UICityPainterToolToggle)[toggles.Length];
 
+            var ui = Content.Content.Get().CustomUI;
+            var gd = GameFacade.GraphicsDevice;
             var strings = GameFacade.Strings;
+
+            var buttonSeat = ui.Get("neighp_btab_seat.png").Get(gd);
+            var position = new Vector2(204, 10);
+            var seatOff = new Vector2(3, 3);
 
             for (int i = 0; i < toggles.Length; i++)
             {
                 var toggle = toggles[i];
 
-                var button = new UIButton() { Caption = strings.GetString("f130", toggle.CaptionID.ToString()), Selected = toggle.Get() };
+                var seat = new UIImage(buttonSeat)
+                {
+                    Position = position
+                };
+
+                var button = new UIButton()
+                {
+                    Texture = ui.Get($"cityedit_tool_{toggle.Graphic}.png").Get(gd),
+                    Tooltip = strings.GetString("f130", toggle.CaptionID.ToString()),
+                    Selected = toggle.Get(),
+                    Position = position + seatOff
+                };
+
                 button.OnButtonClick += (btn) =>
                 {
                     var value = toggle.Get();
@@ -262,7 +327,10 @@ namespace FSO.Client.UI.Panels
                     button.Selected = !value;
                 };
 
-                TogglesHbox.Add(button);
+                Add(seat);
+                Add(button);
+
+                position.X -= 33;
 
                 result[i] = (button, toggle);
             }
@@ -332,15 +400,17 @@ namespace FSO.Client.UI.Panels
     internal class UICityPainterElevationOptions : AbstractCityPainterOptions
     {
         public override PainterMode Mode => PainterMode.ELEVATION_CIRCLE;
+        public override string Graphic => "elevation";
+        public override string PreviewText => GameFacade.Strings.GetString("f130", "2");
 
         public override void Init(UICityPainter painter)
         {
             base.Init(painter);
             SetModes([]);
             SetToggles([
-                new ("cedit_auto.png", 20, () => false, (value) => { }),
-                new ("cedit_flat.png", 21, () => false, (value) => { }),
-                new ("cedit_rough.png", 22, () => false, (value) => { })
+                new ("auto", 20, () => MapPainter.AutoTerrain, (value) => { MapPainter.AutoTerrain = value; }),
+                new ("flat", 21, () => MapPainter.Flatten, (value) => { MapPainter.Flatten = value; }),
+                new ("rough", 22, () => MapPainter.RoughTerrain, (value) => { MapPainter.RoughTerrain = value; })
             ]);
         }
     }
@@ -392,18 +462,22 @@ namespace FSO.Client.UI.Panels
     internal class UICityPainterTerrainTypeOptions : AbstractCityPainterOptions
     {
         public override PainterMode Mode => PainterMode.TERRAINTYPE;
+        public override string Graphic => "ttype";
+        public override string PreviewText => GameFacade.Strings.GetString("f130", (30 + MapPainter.SelectedModifier).ToString());
 
         public override void Init(UICityPainter painter)
         {
             base.Init(painter);
             SetModes([
-                new ("cedit_grass.png", 30, 0),
-                new ("cedit_water.png", 31, 1),
-                new ("cedit_rock.png", 32, 2),
-                new ("cedit_snow.png", 33, 3),
-                new ("cedit_sand.png", 34, 4)
+                new ("grass", 30, 0),
+                new ("water", 31, 1),
+                new ("rock", 32, 2),
+                new ("snow", 33, 3),
+                new ("sand", 34, 4)
             ]);
-            SetToggles([]);
+            SetToggles([
+                new ("spray", 12, () => MapPainter.SprayBrush, (value) => { MapPainter.SprayBrush = value; }),
+            ]);
         }
     }
 
@@ -467,10 +541,27 @@ namespace FSO.Client.UI.Panels
     internal class UICityPainterRoadsOptions : AbstractCityPainterOptions
     {
         public override PainterMode Mode => PainterMode.ROAD;
+        public override string Graphic => "road";
+
+        public UILabel RoadLabel;
+        public override string PreviewText => GameFacade.Strings.GetString("f130", "4");
 
         public override void Init(UICityPainter painter)
         {
             base.Init(painter);
+
+            var style = TextStyle.DefaultLabel.Clone();
+            style.Shadow = true;
+
+            RoadLabel = new UILabel
+            {
+                Caption = GameFacade.Strings.GetString("f130", "17"),
+                Size = new Vector2(248, 51),
+                Alignment = TextAlignment.Center | TextAlignment.Middle,
+                CaptionStyle = style
+            };
+            Add(RoadLabel);
+
             SetModes([]);
             SetToggles([]);
         }
@@ -545,51 +636,77 @@ namespace FSO.Client.UI.Panels
     internal class UICityPainterForestsOptions : AbstractCityPainterOptions
     {
         public override PainterMode Mode => PainterMode.FORESTTYPE;
+        public override string Graphic => "forests";
+        public override string PreviewText => GameFacade.Strings.GetString("f130", (40 + MapPainter.SelectedModifier).ToString());
 
         public override void Init(UICityPainter painter)
         {
             base.Init(painter);
             SetModes([
-                new ("cedit_heavy.png", 40, 0),
-                new ("cedit_light.png", 41, 1),
-                new ("cedit_cacti.png", 42, 2),
-                new ("cedit_palm.png", 43, 3),
+                new ("heavy", 40, 0),
+                new ("light", 41, 1),
+                new ("cacti", 42, 2),
+                new ("palm", 43, 3),
             ]);
-            SetToggles([]);
+            SetToggles([
+                new ("spray", 12, () => MapPainter.SprayBrush, (value) => { MapPainter.SprayBrush = value; }),
+            ]);
         }
     }
 
-    internal class UICityPainter : UIDialog
+    internal class UICityPainter : UIContainer
     {
         private struct ModeUI
         {
+            public readonly UIImage TabBackground;
             public readonly UIButton TabButton;
             public readonly AbstractCityPainterOptions Options;
             public readonly AbstractCityPainterPreview Preview;
 
-            public ModeUI(UIButton tabButton, AbstractCityPainterOptions options, AbstractCityPainterPreview preview)
+            public ModeUI(UIImage tabBackground, UIButton tabButton, AbstractCityPainterOptions options, AbstractCityPainterPreview preview)
             {
+                TabBackground = tabBackground;
                 TabButton = tabButton;
                 Options = options;
                 Preview = preview;
             }
         }
 
+        public UIImage BackgroundImage { get; set; }
+        public UIButton DialogNameButton { get; set; }
+        public UIButton CloseButton { get; set; }
+        public UIButton LockButton { get; set; }
+        public UIButton CameraButton { get; set; }
+
+        public UIButton UndoButton { get; set; }
+        public UIButton RedoButton { get; set; }
+
         public readonly MapPainterPlugin MapPainter;
         private readonly ModeUI[] Modes;
 
         private readonly UIButton PreviewBg;
-        private readonly UIHBoxContainer RootBox;
-        private readonly UIVBoxContainer SharedControlsBox;
-        private readonly UIVBoxContainer ToolsBox;
-        private AbstractCityPainterPreview ActivePreview;
+        private int ActiveIndex = -1;
 
+        private readonly UILabel BrushSizeLabel;
         private readonly UISlider BrushSizeSlider;
+
+        private readonly UILabel BrushIntensityLabel;
         private readonly UISlider BrushIntensitySlider;
+
+        private readonly Texture2D LockedGraphic;
+        private readonly Texture2D UnlockedGraphic;
+        private readonly UILabel PreviewLabel;
 
         private readonly Terrain Terrain;
 
-        public UICityPainter(Terrain terrain) : base(UIDialogStyle.Close, true)
+        private readonly Vector2[] TabBackgroundPositions = [
+            new Vector2(203, -5),
+            new Vector2(246, -5),
+            new Vector2(291, -5),
+            new Vector2(336, -5)
+        ];
+
+        public UICityPainter(Terrain terrain)
         {
             Terrain = terrain;
             MapPainter = new MapPainterPlugin(terrain);
@@ -601,75 +718,167 @@ namespace FSO.Client.UI.Panels
                 GenerateMode<UICityPainterForestsOptions, UICityPainterForestsPreview>(3),
             ];
 
-            PreviewBg = new UIButton(GetTexture(0x0000079300000001));
+            var ui = Content.Content.Get().CustomUI;
+            var gd = GameFacade.GraphicsDevice;
 
-            RootBox = new UIHBoxContainer()
-            {
-                VerticalAlignment = UIContainerVerticalAlignment.Middle
-            };
+            Add(BackgroundImage = new UIImage(ui.Get("cityedit_bg.png").Get(gd)));
 
-            SharedControlsBox = new UIVBoxContainer()
+            Add(DialogNameButton = new UIButton(GetTexture(0x00000AFE00000001))
             {
-                HorizontalAlignment = UIContainerHorizontalAlignment.Center
-            };
-
-            SharedControlsBox.Add(PreviewBg);
-            SharedControlsBox.Add(BrushSizeSlider = new UISlider()
-            {
-                Orientation = 0,
-                Texture = GetTexture(0x42500000001),
-                MinValue = 0f,
-                MaxValue = 25f,
-                Value = 0,
-                AllowDecimals = false,
+                Caption = GameFacade.Strings.GetString("f130", "16"),
+                Size = new Vector2(193, 18),
+                Position = new Vector2(11, 8)
             });
-            BrushSizeSlider.SetSize(140f, 12f);
+
+            UIUtils.MakeDraggable(BackgroundImage, this, true);
+
+            LockedGraphic = ui.Get("cityedit_locked.png").Get(gd);
+            UnlockedGraphic = ui.Get("cityedit_unlocked.png").Get(gd);
+
+            Add(CloseButton = new UIButton(ui.Get("neighp_closebtn.png").Get(gd))
+            {
+                Position = new Vector2(446, 26),
+                Tooltip = GameFacade.Strings.GetString("f130", "19")
+            });
+
+            Add(LockButton = new UIButton(LockedGraphic)
+            {
+                Position = new Vector2(9, 46),
+                Tooltip = GameFacade.Strings.GetString("f130", "18")
+            });
+
+            Add(CameraButton = new UIButton(ui.Get("cityedit_camera.png").Get(gd))
+            {
+                Position = new Vector2(12, 98),
+                Tooltip = GameFacade.Strings.GetString("f130", "8")
+            });
+
+            Add(UndoButton = new UIButton(ui.Get("cityedit_undo.png").Get(gd))
+            {
+                Position = new Vector2(44, 122),
+                Tooltip = GameFacade.Strings.GetString("f130", "6")
+            });
+
+            Add(RedoButton = new UIButton(ui.Get("cityedit_redo.png").Get(gd))
+            {
+                Position = new Vector2(176, 122),
+                Tooltip = GameFacade.Strings.GetString("f130", "7")
+            });
+
+            Add(PreviewBg = new UIButton(GetTexture(0x0000079300000001))
+            {
+                Position = new Vector2(55, 42)
+            });
+
+            var font = TextStyle.DefaultLabel.Clone();
+            font.Color = Color.White;
+            font.Size = 9;
+            font.Shadow = true;
+
+            Add(PreviewLabel = new UILabel()
+            {
+                Position = new Vector2(67, 135),
+                Size = new Vector2(109, 17),
+                Alignment = TextAlignment.Center | TextAlignment.Top,
+                CaptionStyle = font
+            });
+
+            (BrushSizeLabel, BrushSizeSlider) = CreateSlider(new Vector2(223, 87), 102, 10);
+            (BrushIntensityLabel, BrushIntensitySlider) = CreateSlider(new Vector2(340, 87), 102, 11);
+
+            BrushSizeSlider.Value = 0;
+            BrushSizeSlider.MinValue = 0;
+            BrushSizeSlider.MaxValue = 25;
+            BrushSizeSlider.AllowDecimals = false;
+
             BrushSizeSlider.OnChange += (slider) =>
             {
                 MapPainter.BrushSize = (int)BrushSizeSlider.Value;
             };
 
-            SharedControlsBox.Add(BrushIntensitySlider = new UISlider()
-            {
-                Orientation = 0,
-                Texture = GetTexture(0x42500000001),
-                MinValue = 0f,
-                MaxValue = 10f,
-                AllowDecimals = true,
-            });
-            BrushIntensitySlider.SetSize(140f, 12f);
+
+            BrushIntensitySlider.Value = 0;
+            BrushIntensitySlider.MinValue = 0;
+            BrushIntensitySlider.MaxValue = 10;
+            BrushIntensitySlider.AllowDecimals = true;
             BrushIntensitySlider.OnChange += (slider) =>
             {
                 // TODO
             };
 
-            SharedControlsBox.AutoSize();
-
-            RootBox.Add(SharedControlsBox);
-
-            ToolsBox = new UIVBoxContainer();
-
-            var modesBox = new UIHBoxContainer();
             foreach (var mode in Modes)
             {
-                modesBox.Add(mode.TabButton);
+                mode.TabBackground.Visible = false;
+                Add(mode.TabBackground);
             }
-            modesBox.AutoSize();
-            ToolsBox.Add(modesBox);
 
-            ToolsBox.AutoSize();
-            RootBox.Add(ToolsBox);
+            int i = 0;
+            foreach (var mode in Modes)
+            {
+                mode.TabButton.Position = new Vector2(226 + 45 * (i++), 8);
 
-            RootBox.AutoSize();
+                Add(mode.TabButton);
+            }
 
-            RootBox.Position = new Vector2(20, 35);
-            SetSize(600, (int)RootBox.Size.Y + 60);
-
-            Add(RootBox);
+            UpdateLockedGraphic();
+            LockButton.OnButtonClick += ToggleLock;
+            CameraButton.OnButtonClick += TakeScreenshot;
 
             CloseButton.OnButtonClick += Close;
 
             SetMode(PainterMode.ROAD);
+        }
+
+        private void UpdateLockedGraphic()
+        {
+            LockButton.Texture = MapPainter.LockProperties ? LockedGraphic : UnlockedGraphic;
+            LockButton.Tooltip = GameFacade.Strings.GetString("f130", MapPainter.LockProperties ? "18" : "9");
+        }
+
+        private void ToggleLock(UIElement button)
+        {
+            MapPainter.LockProperties = !MapPainter.LockProperties;
+            UpdateLockedGraphic();
+        }
+
+        private void TakeScreenshot(UIElement button)
+        {
+            var sound = HIT.HITVM.Get().PlaySoundEvent("ui_camera_photo");
+            (sound as HITThread).WriteVar(0x31, 1);
+            // TODO: render city view from fixed camera, generate a png and upload it
+        }
+
+        private (UILabel, UISlider) CreateSlider(Vector2 position, float width, int stringIndex)
+        {
+            var ui = Content.Content.Get().CustomUI;
+            var gd = GameFacade.GraphicsDevice;
+
+            var font = TextStyle.DefaultLabel.Clone();
+            font.Color = Color.White;
+            font.Size = 9;
+            font.Shadow = true;
+
+            var label = new UILabel()
+            {
+                Caption = GameFacade.Strings.GetString("f130", stringIndex.ToString()),
+                CaptionStyle = font,
+                Alignment = TextAlignment.Top | TextAlignment.Center,
+                Position = position,
+                Size = new Vector2(width, 1)
+            };
+
+            var slider = new UISlider()
+            {
+                Orientation = 0,
+                Texture = ui.Get("cityedit_slider.png").Get(gd),
+                Position = position + new Vector2(0, 16),
+                Size = new Vector2(width, 17),
+            };
+
+            Add(label);
+            Add(slider);
+
+            return (label, slider);
         }
 
         private void Close(UIElement button)
@@ -693,15 +902,13 @@ namespace FSO.Client.UI.Panels
 
         private void SetMode(PainterMode mode)
         {
-            var children = ToolsBox.GetChildren();
-            while (children.Count > 1)
+            if (ActiveIndex != -1)
             {
-                ToolsBox.Remove(children.Last());
-            }
+                ref var activeUi = ref Modes[ActiveIndex];
 
-            if (ActivePreview != null)
-            {
-                DynamicOverlay.Remove(ActivePreview);
+                Remove(activeUi.Options);
+                Remove(activeUi.Preview);
+                activeUi.TabBackground.Visible = false;
             }
 
             int index = Array.FindIndex(Modes, (ui) => ui.Options.Mode == mode);
@@ -720,34 +927,46 @@ namespace FSO.Client.UI.Panels
 
             // Put the options and preview in the UI.
 
-            ToolsBox.Add(ui.Options);
-            ToolsBox.AutoSize();
-            RootBox.AutoSize();
+            ui.TabBackground.Visible = true;
+
+            var options = ui.Options;
+            options.Position = new Vector2(209, 40);
+            options.Size = new Vector2(248, 90);
+            Add(options);
+
+            options.Selected();
 
             var preview = ui.Preview;
-            preview.Position = RootBox.Position + PreviewBg.Position;
+            preview.Position = PreviewBg.Position;
             preview.Size = PreviewBg.Size;
-            DynamicOverlay.Add(preview);
+            Add(preview);
 
-            ActivePreview = preview;
+            ActiveIndex = index;
 
             MapPainter.SwitchMode(mode);
         }
 
         private ModeUI GenerateMode<TOptions, TPreview>(int index) where TOptions : AbstractCityPainterOptions, new() where TPreview : AbstractCityPainterPreview, new()
         {
-            var button = new UIButton();
+            var ui = Content.Content.Get().CustomUI;
+            var gd = GameFacade.GraphicsDevice;
+
+            var background = new UIImage(ui.Get($"cityedit_tab{index+1}.png").Get(gd));
             var options = new TOptions();
             var preview = new TPreview();
+            var button = new UIButton(ui.Get($"cityedit_{options.Graphic}.png").Get(gd));
 
             var strings = GameFacade.Strings;
 
-            button.Caption = strings.GetString("f130", (index + 2).ToString());
+            background.Position = TabBackgroundPositions[index];
+
+            button.Tooltip = strings.GetString("f130", (index + 2).ToString());
             button.OnButtonClick += (btn) => SetMode(options.Mode);
 
             options.Init(this);
             preview.Init(this);
             return new ModeUI(
+                background,
                 button,
                 options,
                 preview
@@ -759,6 +978,17 @@ namespace FSO.Client.UI.Panels
             base.Update(state);
 
             BrushSizeSlider.Value = MapPainter.BrushSize;
+
+            if (ActiveIndex != -1)
+            {
+                ref var activeUi = ref Modes[ActiveIndex];
+
+                var label = activeUi.Options.PreviewText;
+                if (PreviewLabel.Caption != label)
+                {
+                    PreviewLabel.Caption = label;
+                }
+            }
         }
     }
 }

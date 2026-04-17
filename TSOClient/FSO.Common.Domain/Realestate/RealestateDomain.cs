@@ -44,7 +44,8 @@ namespace FSO.Common.Domain.Realestate
                 }
 
                 var shard = _Shards.GetById(shardId);
-                var item = new ShardRealestateDomain(shard, this._Content.CityMaps.Get(shard.Map));
+                var map = _Shards.GetMapForId(shardId);
+                var item = new ShardRealestateDomain(shard, map);
                 _ByShard.Add(shardId, item);
                 return item;
             }
