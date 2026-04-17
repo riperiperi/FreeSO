@@ -2,7 +2,7 @@ name: freeso
 
 services:
   mariadb:
-    image: mariadb:11
+    image: docker.io/library/mariadb:11
     environment:
       MARIADB_ROOT_PASSWORD: rootpassword
       MARIADB_DATABASE: fso
@@ -35,7 +35,7 @@ services:
       - "35100:35100"
       - "35101:35101"
     volumes:
-      - ~/Documents/The Sims Online/TSOClient:/game:ro
+      - /home/baron/projects/FreeSims/GameAssets/TSOClient:/game:ro
       - ./nfs:/nfs:rw
       - ./config.json:/app/config.json:cached
 

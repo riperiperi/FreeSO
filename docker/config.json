@@ -1,6 +1,6 @@
 {
   "gameLocation": "/game/",
-  "secret": "GENERATE",
+  "secret": "3a5cfddea671dd8633a001b692f1e98b62c34c577e4ed9be4771642fb3bf4106",
   "simNFS": "/nfs",
   "allOpenable": true,
 

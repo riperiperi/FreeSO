@@ -21,10 +21,13 @@ namespace FSO.Client
                         defaultInstance.DPIScaleFactor = 1; //sanity check
                     if (defaultInstance.ChatWindowsOpacity == 0 || defaultInstance.ChatWindowsOpacity > 1)
                         defaultInstance.ChatWindowsOpacity = 1; //sanity check
-                    if (defaultInstance.GameEntryUrl == "http://api.freeso.org")
+                    // Patched for local-server dev build: do not auto-upgrade stale api.freeso.org
+                    // configs to https — leave the localhost default (or user override) intact.
+                    if (defaultInstance.GameEntryUrl == "http://api.freeso.org"
+                        || defaultInstance.GameEntryUrl == "https://api.freeso.org")
                     {
-                        defaultInstance.GameEntryUrl = "https://api.freeso.org";
-                        defaultInstance.CitySelectorUrl = "https://api.freeso.org";
+                        defaultInstance.GameEntryUrl = "http://localhost:9000/";
+                        defaultInstance.CitySelectorUrl = "http://localhost:9000/";
                     }
 
                     if (defaultInstance.ArchiveClientGUID == "")
@@ -76,8 +79,8 @@ namespace FSO.Client
             { "SurroundingLotMode", "2" },
 
             { "UseCustomServer", "true" },
-            { "GameEntryUrl", "http://api.freeso.org" },
-            { "CitySelectorUrl", "http://api.freeso.org" },
+            { "GameEntryUrl", "http://localhost:9000/" },
+            { "CitySelectorUrl", "http://localhost:9000/" },
 
             { "TargetRefreshRate", "60" },
 
