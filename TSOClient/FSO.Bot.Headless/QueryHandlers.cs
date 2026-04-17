@@ -93,6 +93,26 @@ public static class QueryHandlers
 
             long balance = me.TSOState is VMTSOEntityState tso ? (long)tso.Budget.Value : 0L;
 
+            // Outfit bindings (freesoexperiment-b88). DefaultSuits / DynamicSuits / Decoration
+            // are VM-thread-owned VMAvatar fields — safe here because we're already inside the
+            // RunUnderTickLock block. Dynamic* values take precedence at render time when
+            // nonzero; agents inspecting the raw field set reason on the full snapshot.
+            var outfits = new
+            {
+                default_daywear   = (long)me.DefaultSuits.Daywear.ID,
+                default_sleepwear = (long)me.DefaultSuits.Sleepwear.ID,
+                default_swimwear  = (long)me.DefaultSuits.Swimwear.ID,
+                dynamic_daywear   = unchecked((long)me.DynamicSuits.Daywear),
+                dynamic_sleepwear = unchecked((long)me.DynamicSuits.Sleepwear),
+                dynamic_swimwear  = unchecked((long)me.DynamicSuits.Swimwear),
+                dynamic_costume   = unchecked((long)me.DynamicSuits.Costume),
+                decoration_head   = unchecked((long)me.Decoration.Head),
+                decoration_back   = unchecked((long)me.Decoration.Back),
+                decoration_shoes  = unchecked((long)me.Decoration.Shoes),
+                decoration_tail   = unchecked((long)me.Decoration.Tail),
+                body_outfit       = (long)(me.BodyOutfit?.ID ?? 0UL),
+            };
+
             return new
             {
                 persist_id = (long)me.PersistID,
@@ -110,6 +130,7 @@ public static class QueryHandlers
                 motives = motives,
                 skills = skills,
                 balance = balance,
+                outfits = outfits,
             };
         });
 

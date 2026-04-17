@@ -168,6 +168,13 @@ func main() {
 			log.Fatalf("register social handlers: %v", err)
 		}
 		log.Printf("convention handlers: %d social-family ops serving", socialServers)
+
+		// Avatar family (freesoexperiment-b88): change-outfit + change-description.
+		avatarServers, err := RegisterAvatarHandlers(ctx, cf, ipc)
+		if err != nil {
+			log.Fatalf("register avatar handlers: %v", err)
+		}
+		log.Printf("convention handlers: %d avatar-family ops serving", avatarServers)
 	} else {
 		log.Printf("running in --no-bot mode (campfire-only)")
 

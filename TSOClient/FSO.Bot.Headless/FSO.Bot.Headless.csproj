@@ -15,6 +15,7 @@
   <ItemGroup>
     <ProjectReference Include="..\FSO.Server.Clients\FSO.Server.Clients.csproj" />
     <ProjectReference Include="..\FSO.Server.Protocol\FSO.Server.Protocol.csproj" />
+    <ProjectReference Include="..\FSO.Server.DataService\FSO.Common.DataService.csproj" />
     <ProjectReference Include="..\tso.common\FSO.Common.csproj" />
     <ProjectReference Include="..\tso.content\FSO.Content.csproj" />
     <ProjectReference Include="..\tso.simantics\FSO.SimAntics.csproj" />
