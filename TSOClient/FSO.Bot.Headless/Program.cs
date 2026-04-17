@@ -24,10 +24,10 @@ namespace FSO.Bot.Headless;
 ///   --verify-lot-join — run the full acceptance sweep for freesoexperiment-8ff; exit 0 if all
 ///     seven conditions pass, non-zero otherwise.
 ///
-/// Env-driven config (all have defaults — see CLAUDE.md §Topology for workshop addresses):
+/// Env-driven config (see CLAUDE.md §Topology for workshop addresses):
 ///   FSO_API_URL        default http://workshop:9000/
-///   FSO_USER           default baron
-///   FSO_PASS           default test1234
+///   FSO_USER           REQUIRED — no default (freesoexperiment-bbc)
+///   FSO_PASS           REQUIRED — no default (freesoexperiment-bbc)
 ///   FSO_SHARD          default Alphaville
 ///   FSO_LOT_ID         default 2    (the 'Baron's House' test lot)
 ///   FSO_VERSION        default Version 1.1097.1.0
@@ -52,8 +52,17 @@ public class Program
         if (emitPerception) PerceptionEmitter.ReserveStdout();
 
         var apiUrl = EnvOrDefault("FSO_API_URL", "http://workshop:9000/");
-        var username = EnvOrDefault("FSO_USER", "baron");
-        var password = EnvOrDefault("FSO_PASS", "test1234");
+        // FSO_USER and FSO_PASS must be set explicitly — no defaults. The previous
+        // `"baron"` / `"test1234"` defaults (freesoexperiment-bbc) silently authenticated
+        // as the workshop admin when unset; worse, they reinforced a weak credential as
+        // the de-facto standard. Fail fast instead: operators and CI set both explicitly.
+        var username = Environment.GetEnvironmentVariable("FSO_USER");
+        var password = Environment.GetEnvironmentVariable("FSO_PASS");
+        if (string.IsNullOrEmpty(username) || string.IsNullOrEmpty(password))
+        {
+            Console.Error.WriteLine("ERROR: FSO_USER and FSO_PASS must be set (no defaults — freesoexperiment-bbc)");
+            return 11;
+        }
         var shardName = EnvOrDefault("FSO_SHARD", "Alphaville");
         // FSO_LOT_LOCATION accepts hex (0x...) or decimal. Default 0 means "use avatar's current
         // LotLocation". The FindLotRequest packet takes a *location code*, not a DB lot_id —
