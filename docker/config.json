@@ -79,7 +79,7 @@
         "id": 1,
         "binding": "0.0.0.0:33100",
         "internal_host": "127.0.0.1:33101",
-        "public_host": "localhost:33101",
+        "public_host": "workshop:33101",
         "neighborhoods": {
           "mayor_elegibility_limit": 4,
           "mayor_elegibility_falloff": 4,
@@ -94,7 +94,7 @@
         "call_sign": "europa",
         "binding": "0.0.0.0:34100",
         "internal_host": "127.0.0.1:34101",
-        "public_host": "localhost:34101",
+        "public_host": "workshop:34101",
         "max_lots": 25,
         "cities": [
           {
