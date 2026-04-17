@@ -1,0 +1,13 @@
+{
+  "convention": "freeso-embodiment",
+  "version": "1.0",
+  "operation": "query-relationships",
+  "family": "queries",
+  "description": "Return the full relationship map your avatar carries toward other Sims currently known to the local VM — the VMAvatar.MeToObject table projected into a simple list. Each entry includes with_persist_id, with_name, friendly (long-term feeling, range -100..100), and daily (today's interactions, range -100..100). Prerequisite: you are joined to a lot. Effect: none — local-VM read, no outbound PDU. Cost: O(known relationships) under VM lock; tiny. Relationships with Sims who are not currently in your VM (not on the same lot, or their entity not yet resolved) are omitted — you only see rels for Sims whose ObjectID is live. For persistent cross-session relationship data consult DataService queries (future verb). Use this for mid-turn social decisions: 'do I like this Sim enough to accept their dance request?'",
+  "args": [],
+  "produces_tags": [{"tag": "freeso:query-relationships", "cardinality": "exactly_one"}],
+  "antecedents": "none",
+  "signing": "member_key",
+  "rate_limit": {"max": 60, "per": "sender", "window": "1m"},
+  "response": "sync"
+}

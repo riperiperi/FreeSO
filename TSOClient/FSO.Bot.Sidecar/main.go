@@ -136,6 +136,13 @@ func main() {
 			log.Fatalf("register movement handlers: %v", err)
 		}
 		log.Printf("convention handlers: %d movement-family ops serving", servers)
+
+		// queries family (freesoexperiment-e9f) — local-VM introspection ops.
+		qs, qerr := RegisterQueryHandlers(ctx, cf, ipc)
+		if qerr != nil {
+			log.Fatalf("register query handlers: %v", qerr)
+		}
+		log.Printf("convention handlers: %d query-family ops serving", qs)
 	} else {
 		log.Printf("running in --no-bot mode (campfire-only)")
 	}
