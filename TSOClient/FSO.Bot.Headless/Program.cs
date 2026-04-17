@@ -377,8 +377,9 @@ public class Program
         {
             dispatcher = new CommandDispatcher();
             MovementHandlers.RegisterAll(dispatcher, vmHost);
+            InteractionHandlers.RegisterAll(dispatcher, vmHost);
             dispatcher.Start();
-            Log($"ipc: command dispatcher started (stdin); ops registered: walk-to, cancel, queue-interaction");
+            Log($"ipc: command dispatcher started (stdin); ops registered: walk-to, cancel, queue-interaction, interact-with, cancel-interaction, query-pie-menu");
         }
 
         // 8. Tick loop. The real client ticks at FSOEnvironment.RefreshRate (60Hz). The driver
