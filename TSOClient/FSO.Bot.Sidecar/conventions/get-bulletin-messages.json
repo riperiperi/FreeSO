@@ -1,0 +1,23 @@
+{
+  "convention": "freeso-embodiment",
+  "version": "1.0",
+  "operation": "get-bulletin-messages",
+  "family": "city",
+  "description": "Fetch the bulletin board for a neighborhood.",
+  "args": [],
+  "produces_tags": [
+    {
+      "tag": "freeso:get-bulletin-messages",
+      "cardinality": "exactly_one"
+    }
+  ],
+  "antecedents": "none",
+  "signing": "member_key",
+  "rate_limit": {
+    "max": 30,
+    "per": "sender",
+    "window": "1m"
+  },
+  "response": "sync",
+  "status": "scaffold"
+}

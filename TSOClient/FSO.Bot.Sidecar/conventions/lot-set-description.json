@@ -1,0 +1,23 @@
+{
+  "convention": "freeso-embodiment",
+  "version": "1.0",
+  "operation": "lot-set-description",
+  "family": "property",
+  "description": "Save the current lot's description/blurb string. Wire mechanism is a DataService field sync on the Lot struct \u2014 no dedicated VMNet command. Typically triggered when the owner closes the lot-page edit panel or presses Save. Persists server-side via the city DataService; propagates to `Lot_Description` readers on the next struct refresh.",
+  "args": [],
+  "produces_tags": [
+    {
+      "tag": "freeso:lot-set-description",
+      "cardinality": "exactly_one"
+    }
+  ],
+  "antecedents": "none",
+  "signing": "member_key",
+  "rate_limit": {
+    "max": 30,
+    "per": "sender",
+    "window": "1m"
+  },
+  "response": "sync",
+  "status": "scaffold"
+}

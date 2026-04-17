@@ -1,0 +1,23 @@
+{
+  "convention": "freeso-embodiment",
+  "version": "1.0",
+  "operation": "respond-interaction",
+  "family": "movement",
+  "description": "Answer yes/no on an incoming interaction request another Sim queued on you (e.g. \"Dance With?\"). Required to accept social interactions the engine routes through the queue as a prompt.",
+  "args": [],
+  "produces_tags": [
+    {
+      "tag": "freeso:respond-interaction",
+      "cardinality": "exactly_one"
+    }
+  ],
+  "antecedents": "none",
+  "signing": "member_key",
+  "rate_limit": {
+    "max": 30,
+    "per": "sender",
+    "window": "1m"
+  },
+  "response": "sync",
+  "status": "scaffold"
+}

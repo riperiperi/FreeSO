@@ -1,0 +1,23 @@
+{
+  "convention": "freeso-embodiment",
+  "version": "1.0",
+  "operation": "add-bookmark",
+  "family": "avatar",
+  "description": "Add an avatar/lot to your bookmarks list. Client-local plus DataService sync of `Avatar_BookmarksVec`.",
+  "args": [],
+  "produces_tags": [
+    {
+      "tag": "freeso:add-bookmark",
+      "cardinality": "exactly_one"
+    }
+  ],
+  "antecedents": "none",
+  "signing": "member_key",
+  "rate_limit": {
+    "max": 30,
+    "per": "sender",
+    "window": "1m"
+  },
+  "response": "sync",
+  "status": "scaffold"
+}

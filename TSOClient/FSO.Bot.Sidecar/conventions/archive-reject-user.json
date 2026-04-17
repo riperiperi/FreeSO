@@ -1,0 +1,23 @@
+{
+  "convention": "freeso-embodiment",
+  "version": "1.0",
+  "operation": "archive-reject-user",
+  "family": "admin",
+  "description": "Admin archive moderation: reject a pending user.",
+  "args": [],
+  "produces_tags": [
+    {
+      "tag": "freeso:archive-reject-user",
+      "cardinality": "exactly_one"
+    }
+  ],
+  "antecedents": "none",
+  "signing": "member_key",
+  "rate_limit": {
+    "max": 30,
+    "per": "sender",
+    "window": "1m"
+  },
+  "response": "sync",
+  "status": "scaffold"
+}

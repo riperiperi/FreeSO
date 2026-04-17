@@ -1,0 +1,23 @@
+{
+  "convention": "freeso-embodiment",
+  "version": "1.0",
+  "operation": "list-object-for-sale",
+  "family": "build-buy-catalog",
+  "description": "Put a player-owned object up for async sale at a price. Another avatar visiting can then `buy-listed-object`.",
+  "args": [],
+  "produces_tags": [
+    {
+      "tag": "freeso:list-object-for-sale",
+      "cardinality": "exactly_one"
+    }
+  ],
+  "antecedents": "none",
+  "signing": "member_key",
+  "rate_limit": {
+    "max": 30,
+    "per": "sender",
+    "window": "1m"
+  },
+  "response": "sync",
+  "status": "scaffold"
+}

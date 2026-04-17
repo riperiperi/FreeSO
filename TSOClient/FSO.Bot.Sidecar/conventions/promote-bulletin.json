@@ -1,0 +1,23 @@
+{
+  "convention": "freeso-embodiment",
+  "version": "1.0",
+  "operation": "promote-bulletin",
+  "family": "city",
+  "description": "Promote (pin) a bulletin message.",
+  "args": [],
+  "produces_tags": [
+    {
+      "tag": "freeso:promote-bulletin",
+      "cardinality": "exactly_one"
+    }
+  ],
+  "antecedents": "none",
+  "signing": "member_key",
+  "rate_limit": {
+    "max": 30,
+    "per": "sender",
+    "window": "1m"
+  },
+  "response": "sync",
+  "status": "scaffold"
+}

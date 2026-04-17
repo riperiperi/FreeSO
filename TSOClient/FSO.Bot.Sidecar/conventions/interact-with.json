@@ -1,0 +1,23 @@
+{
+  "convention": "freeso-embodiment",
+  "version": "1.0",
+  "operation": "interact-with",
+  "family": "interaction",
+  "description": "Invoke a specific named interaction on an object or another Sim. The interaction must appear in the object's pie menu (computed from its TTAB by `VMFindBestAction`); the server re-verifies this via `VMNetInteractionCmd.Verify`. Cost: the interaction takes in-sim minutes and may fail if the object is in use or locked.",
+  "args": [],
+  "produces_tags": [
+    {
+      "tag": "freeso:interact-with",
+      "cardinality": "exactly_one"
+    }
+  ],
+  "antecedents": "none",
+  "signing": "member_key",
+  "rate_limit": {
+    "max": 30,
+    "per": "sender",
+    "window": "1m"
+  },
+  "response": "sync",
+  "status": "scaffold"
+}

@@ -1,0 +1,23 @@
+{
+  "convention": "freeso-embodiment",
+  "version": "1.0",
+  "operation": "purchase-lot",
+  "family": "property",
+  "description": "Purchase an empty lot on the current shard's terrain.",
+  "args": [],
+  "produces_tags": [
+    {
+      "tag": "freeso:purchase-lot",
+      "cardinality": "exactly_one"
+    }
+  ],
+  "antecedents": "none",
+  "signing": "member_key",
+  "rate_limit": {
+    "max": 30,
+    "per": "sender",
+    "window": "1m"
+  },
+  "response": "sync",
+  "status": "scaffold"
+}

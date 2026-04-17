@@ -1,0 +1,23 @@
+{
+  "convention": "freeso-embodiment",
+  "version": "1.0",
+  "operation": "data-service-request",
+  "family": "queries",
+  "description": "Generic read of a DataService masked struct (MyAvatar, Lot, AdmitInfo_Lot, Messaging_Icon_Avatar, etc.). This is the wire mechanism behind most read-only UI panels; the bot uses it to refresh its local cache on demand.",
+  "args": [],
+  "produces_tags": [
+    {
+      "tag": "freeso:data-service-request",
+      "cardinality": "exactly_one"
+    }
+  ],
+  "antecedents": "none",
+  "signing": "member_key",
+  "rate_limit": {
+    "max": 30,
+    "per": "sender",
+    "window": "1m"
+  },
+  "response": "sync",
+  "status": "scaffold"
+}

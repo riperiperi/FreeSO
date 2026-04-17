@@ -1,0 +1,23 @@
+{
+  "convention": "freeso-embodiment",
+  "version": "1.0",
+  "operation": "query-pie-menu",
+  "family": "queries",
+  "description": "Compute the pie-menu for a target object or Sim from the caller's perspective. No outbound PDU \u2014 this is a local-VM query using `callee.GetPieMenuForInteraction(...)` in the bot's replica VM. Returns the same list of `VMPieMenuInteraction` the UI would show. Prerequisite: the bot must hold a live local VM (`d87-a`).",
+  "args": [],
+  "produces_tags": [
+    {
+      "tag": "freeso:query-pie-menu",
+      "cardinality": "exactly_one"
+    }
+  ],
+  "antecedents": "none",
+  "signing": "member_key",
+  "rate_limit": {
+    "max": 30,
+    "per": "sender",
+    "window": "1m"
+  },
+  "response": "sync",
+  "status": "scaffold"
+}

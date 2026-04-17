@@ -1,0 +1,23 @@
+{
+  "convention": "freeso-embodiment",
+  "version": "1.0",
+  "operation": "get-avatar-description",
+  "family": "queries",
+  "description": "Fetch an avatar's description blob from the city server (separate from the DataService because it's long).",
+  "args": [],
+  "produces_tags": [
+    {
+      "tag": "freeso:get-avatar-description",
+      "cardinality": "exactly_one"
+    }
+  ],
+  "antecedents": "none",
+  "signing": "member_key",
+  "rate_limit": {
+    "max": 30,
+    "per": "sender",
+    "window": "1m"
+  },
+  "response": "sync",
+  "status": "scaffold"
+}

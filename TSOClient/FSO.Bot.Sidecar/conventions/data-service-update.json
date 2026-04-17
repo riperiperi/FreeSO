@@ -1,0 +1,23 @@
+{
+  "convention": "freeso-embodiment",
+  "version": "1.0",
+  "operation": "data-service-update",
+  "family": "queries",
+  "description": "Generic write of a DataService field to the server (AddToArray / RemoveFromArray / Sync). Used by `set-avatar-description`, bookmarks, chat-channel flags, etc.",
+  "args": [],
+  "produces_tags": [
+    {
+      "tag": "freeso:data-service-update",
+      "cardinality": "exactly_one"
+    }
+  ],
+  "antecedents": "none",
+  "signing": "member_key",
+  "rate_limit": {
+    "max": 30,
+    "per": "sender",
+    "window": "1m"
+  },
+  "response": "sync",
+  "status": "scaffold"
+}

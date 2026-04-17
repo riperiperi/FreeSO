@@ -1,0 +1,23 @@
+{
+  "convention": "freeso-embodiment",
+  "version": "1.0",
+  "operation": "admin-chat-command",
+  "family": "admin",
+  "description": "Issue an in-VM admin chat command (`/ban`, `/banip`, `/unban`, `/banlist`, `/builder`, `/admin`, `/roomie`, `/visitor`, `/close`, `/qtrday`, `/setjob`, `/trace`, `/reload`, `/time`, `/tickrate`, `/speed`, `/tuning`, `/fixall`, `/testcollision`). Dispatched from `VMNetChatCmd.Execute` when `Message[0]=='/'`. Rich multi-verb op; recommend declaring one convention per command family in d87-d-admin rather than one mega-verb.",
+  "args": [],
+  "produces_tags": [
+    {
+      "tag": "freeso:admin-chat-command",
+      "cardinality": "exactly_one"
+    }
+  ],
+  "antecedents": "none",
+  "signing": "member_key",
+  "rate_limit": {
+    "max": 30,
+    "per": "sender",
+    "window": "1m"
+  },
+  "response": "sync",
+  "status": "scaffold"
+}

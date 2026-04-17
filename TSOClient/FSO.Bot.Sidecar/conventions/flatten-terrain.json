@@ -1,0 +1,23 @@
+{
+  "convention": "freeso-embodiment",
+  "version": "1.0",
+  "operation": "flatten-terrain",
+  "family": "build-buy-architecture",
+  "description": "Flatten terrain at a target height.",
+  "args": [],
+  "produces_tags": [
+    {
+      "tag": "freeso:flatten-terrain",
+      "cardinality": "exactly_one"
+    }
+  ],
+  "antecedents": "none",
+  "signing": "member_key",
+  "rate_limit": {
+    "max": 30,
+    "per": "sender",
+    "window": "1m"
+  },
+  "response": "sync",
+  "status": "scaffold"
+}

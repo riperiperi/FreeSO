@@ -1,0 +1,23 @@
+{
+  "convention": "freeso-embodiment",
+  "version": "1.0",
+  "operation": "remember",
+  "family": "memory",
+  "description": "Store an arbitrary key/value memory in the bot's private campfire. Not a FreeSO wire action \u2014 this is a sidecar-only op that writes a tagged message (`freeso:memory`, `sim:<avatar_id>`) and returns its ID. Included in the catalog so implementers do not mistake its absence from FSO source for a missing feature.",
+  "args": [],
+  "produces_tags": [
+    {
+      "tag": "freeso:remember",
+      "cardinality": "exactly_one"
+    }
+  ],
+  "antecedents": "none",
+  "signing": "member_key",
+  "rate_limit": {
+    "max": 30,
+    "per": "sender",
+    "window": "1m"
+  },
+  "response": "sync",
+  "status": "scaffold"
+}

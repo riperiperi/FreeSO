@@ -1,0 +1,23 @@
+{
+  "convention": "freeso-embodiment",
+  "version": "1.0",
+  "operation": "recall",
+  "family": "memory",
+  "description": "Retrieve memories by key or tag filter from the bot's private campfire. Sidecar-only, mirrors `remember`.",
+  "args": [],
+  "produces_tags": [
+    {
+      "tag": "freeso:recall",
+      "cardinality": "exactly_one"
+    }
+  ],
+  "antecedents": "none",
+  "signing": "member_key",
+  "rate_limit": {
+    "max": 30,
+    "per": "sender",
+    "window": "1m"
+  },
+  "response": "sync",
+  "status": "scaffold"
+}

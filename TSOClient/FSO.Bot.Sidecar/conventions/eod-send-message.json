@@ -1,0 +1,23 @@
+{
+  "convention": "freeso-embodiment",
+  "version": "1.0",
+  "operation": "eod-send-message",
+  "family": "interaction",
+  "description": "Send a typed message into the active Extended Object Dialog (EOD) session (e.g. DJ booth, blackjack, gameshow). Prerequisite: caller must be inside an interact-with on an EOD object that has opened a plugin. Effect: payload is routed to the server-side EOD plugin (`VMEOD*Plugin`) and may update the plugin state or the VM.",
+  "args": [],
+  "produces_tags": [
+    {
+      "tag": "freeso:eod-send-message",
+      "cardinality": "exactly_one"
+    }
+  ],
+  "antecedents": "none",
+  "signing": "member_key",
+  "rate_limit": {
+    "max": 30,
+    "per": "sender",
+    "window": "1m"
+  },
+  "response": "sync",
+  "status": "scaffold"
+}

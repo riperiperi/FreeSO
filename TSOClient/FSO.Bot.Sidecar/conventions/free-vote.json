@@ -1,0 +1,23 @@
+{
+  "convention": "freeso-embodiment",
+  "version": "1.0",
+  "operation": "free-vote",
+  "family": "city",
+  "description": "Cast a free vote (one-per-day) in a nhood election.",
+  "args": [],
+  "produces_tags": [
+    {
+      "tag": "freeso:free-vote",
+      "cardinality": "exactly_one"
+    }
+  ],
+  "antecedents": "none",
+  "signing": "member_key",
+  "rate_limit": {
+    "max": 30,
+    "per": "sender",
+    "window": "1m"
+  },
+  "response": "sync",
+  "status": "scaffold"
+}

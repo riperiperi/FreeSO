@@ -1,0 +1,23 @@
+{
+  "convention": "freeso-embodiment",
+  "version": "1.0",
+  "operation": "ipban-user",
+  "family": "admin",
+  "description": "IP-ban a user (blocks the current IP at the server edge).",
+  "args": [],
+  "produces_tags": [
+    {
+      "tag": "freeso:ipban-user",
+      "cardinality": "exactly_one"
+    }
+  ],
+  "antecedents": "none",
+  "signing": "member_key",
+  "rate_limit": {
+    "max": 30,
+    "per": "sender",
+    "window": "1m"
+  },
+  "response": "sync",
+  "status": "scaffold"
+}

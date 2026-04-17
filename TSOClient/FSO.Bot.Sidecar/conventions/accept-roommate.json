@@ -1,0 +1,23 @@
+{
+  "convention": "freeso-embodiment",
+  "version": "1.0",
+  "operation": "accept-roommate",
+  "family": "property",
+  "description": "Accept a pending roommate invitation addressed to you.",
+  "args": [],
+  "produces_tags": [
+    {
+      "tag": "freeso:accept-roommate",
+      "cardinality": "exactly_one"
+    }
+  ],
+  "antecedents": "none",
+  "signing": "member_key",
+  "rate_limit": {
+    "max": 30,
+    "per": "sender",
+    "window": "1m"
+  },
+  "response": "sync",
+  "status": "scaffold"
+}

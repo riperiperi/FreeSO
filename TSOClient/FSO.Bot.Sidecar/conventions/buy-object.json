@@ -1,0 +1,23 @@
+{
+  "convention": "freeso-embodiment",
+  "version": "1.0",
+  "operation": "buy-object",
+  "family": "build-buy-catalog",
+  "description": "Purchase a catalog item and place it at `(x,y,level)` facing `dir`. Transaction is verified server-side: price debited via `GlobalLink.PerformTransaction`, then `Verified=true`, then re-applied on the lot's VM. Cost: the catalog price (with build-mode discount) from the caller's budget; refunded if placement fails. Prerequisite: build-roommate+ on the target lot, lot not full, donate-mode only if allowed.",
+  "args": [],
+  "produces_tags": [
+    {
+      "tag": "freeso:buy-object",
+      "cardinality": "exactly_one"
+    }
+  ],
+  "antecedents": "none",
+  "signing": "member_key",
+  "rate_limit": {
+    "max": 30,
+    "per": "sender",
+    "window": "1m"
+  },
+  "response": "sync",
+  "status": "scaffold"
+}

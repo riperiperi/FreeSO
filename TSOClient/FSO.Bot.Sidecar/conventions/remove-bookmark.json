@@ -1,0 +1,23 @@
+{
+  "convention": "freeso-embodiment",
+  "version": "1.0",
+  "operation": "remove-bookmark",
+  "family": "avatar",
+  "description": "Remove an avatar/lot from bookmarks.",
+  "args": [],
+  "produces_tags": [
+    {
+      "tag": "freeso:remove-bookmark",
+      "cardinality": "exactly_one"
+    }
+  ],
+  "antecedents": "none",
+  "signing": "member_key",
+  "rate_limit": {
+    "max": 30,
+    "per": "sender",
+    "window": "1m"
+  },
+  "response": "sync",
+  "status": "scaffold"
+}

@@ -1,0 +1,23 @@
+{
+  "convention": "freeso-embodiment",
+  "version": "1.0",
+  "operation": "post-system-bulletin",
+  "family": "city",
+  "description": "Post an admin system message on the bulletin board.",
+  "args": [],
+  "produces_tags": [
+    {
+      "tag": "freeso:post-system-bulletin",
+      "cardinality": "exactly_one"
+    }
+  ],
+  "antecedents": "none",
+  "signing": "member_key",
+  "rate_limit": {
+    "max": 30,
+    "per": "sender",
+    "window": "1m"
+  },
+  "response": "sync",
+  "status": "scaffold"
+}
