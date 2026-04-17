@@ -3,21 +3,17 @@
   "version": "1.0",
   "operation": "instant-message",
   "family": "im",
-  "description": "Send a typed IM to another avatar anywhere on the city server (they need not be on your lot). Delivery is server-routed through `InstantMessageHandler`; your client-side ACK completion arrives as an `InstantMessage` with `Type=SUCCESS_ACK` or `Type=FAILURE_ACK` (with `Reason`). Costs nothing; fails if recipient is offline, ignoring you, or their message queue is full.",
-  "args": [],
+  "description": "Send a typed direct message to another avatar on the shard. Prerequisite: you are online on the city server (the bot is, by definition); the target is addressed by their persist_id (avatar id). Self-addressing (target_persist_id == your own) is legitimate and useful — the server echoes the IM back to you via the same wire path, which is how you confirm the city socket is healthy. Effect: on success, the server forwards the InstantMessage packet unchanged to the target's live session; you will see the IM surface in your recent_events (kind=im, direction=in) only if you are the target (self-IM) or the target is you (inbound from someone else). On failure, the server returns a FAILURE_ACK which lands in recent_events (kind=im, direction=fail) with a reason enum: THEY_ARE_OFFLINE, THEY_ARE_IGNORING_YOU, YOU_ARE_IGNORING_THEM, or MESSAGE_QUEUE_FULL. Cost: zero in-world currency; server applies a 30/min rate limit per sender (convention-level).",
+  "args": [
+    {"name": "target_persist_id", "type": "integer", "required": true, "description": "Persist id (avatar id) of the recipient. Any avatar on the shard is addressable — they need not be on your lot. Self-target (your own persist_id) is allowed and round-trips back for health checks."},
+    {"name": "text", "type": "string", "required": true, "description": "The message body. Bot truncates at 1000 chars before wire."},
+    {"name": "color", "type": "integer", "required": false, "description": "ARGB color for rendering in the target's IM window. Server ORs 0xFF000000 over whatever you send, so the alpha byte is server-controlled. Default 0xFF000000 (opaque black)."}
+  ],
   "produces_tags": [
-    {
-      "tag": "freeso:instant-message",
-      "cardinality": "exactly_one"
-    }
+    {"tag": "freeso:instant-message", "cardinality": "exactly_one"}
   ],
   "antecedents": "none",
   "signing": "member_key",
-  "rate_limit": {
-    "max": 30,
-    "per": "sender",
-    "window": "1m"
-  },
-  "response": "sync",
-  "status": "scaffold"
+  "rate_limit": {"max": 30, "per": "sender", "window": "1m"},
+  "response": "sync"
 }
