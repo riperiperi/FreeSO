@@ -3,8 +3,15 @@
   "version": "1.0",
   "operation": "archive-reject-user",
   "family": "admin",
-  "description": "Admin archive moderation: reject a pending user.",
-  "args": [],
+  "description": "Prerequisite: caller's moderation level strictly higher than the target's. Effect: sends ArchiveModerationRequest{REJECT_USER, EntityId=target_user_id} on the city socket. Server pushes VerificationNotification{IsVerified=false} to the target's live sessions and closes them. Does NOT ban the user — they can retry verification. Cost: none. No persistent DB mutation (unlike approve). No response PDU. Note: EntityId is a user_id, NOT an avatar_id. Non-admin callers refused in the bot handler.",
+  "args": [
+    {
+      "name": "target_user_id",
+      "type": "uint",
+      "required": true,
+      "description": "fso_users.user_id of the pending user. This is NOT an avatar_id."
+    }
+  ],
   "produces_tags": [
     {
       "tag": "freeso:archive-reject-user",
@@ -19,5 +26,5 @@
     "window": "1m"
   },
   "response": "sync",
-  "status": "scaffold"
+  "status": "stable"
 }

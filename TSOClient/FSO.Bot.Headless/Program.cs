@@ -396,6 +396,14 @@ public class Program
             // owner-gate via VMTSOLotState.OwnerID == MyAvatarPersistId under RunUnderTickLock.
             // pay-bills DROPPED (no player PDU).
             PropertyHandlers.RegisterAll(dispatcher, vmHost, cityAries, targetLotLocation);
+            // Admin family (freesoexperiment-3df): kick/ban/ipban-user (ModerationRequest on
+            // city socket; EntityId=avatar_id), archive-approve/reject-user
+            // (ArchiveModerationRequest on city socket; EntityId=user_id), admin-chat-command
+            // (VMNetChatCmd "/cmd args" on lot socket). All gated on the caller's in-VM
+            // VMTSOAvatarPermissions == Admin, read under tick lock. cheat-command DROPPED
+            // (no server-side ! dispatch; the client-side UICheatHandler doesn't exist in a
+            // headless bot).
+            AdminHandlers.RegisterAll(dispatcher, vmHost, cityAries);
             // Wire chat events into the perception projector so speak's server-round-tripped
             // echo surfaces as a recent_events entry (kind=chat). Ground-source truth for the
             // verb-social integration test — a bare VMNetChatCmd ACK does not prove wire effect.
@@ -405,7 +413,7 @@ public class Program
             // single-session tests (target = own avatar id ⇒ server echoes back).
             if (projector != null) IMHandlers.WireIMPerception(cityListener, projector);
             dispatcher.Start();
-            Log($"ipc: command dispatcher started (stdin); ops registered: walk-to, cancel, queue-interaction, query-self, query-nearby, query-lot, query-relationships, query-inventory, interact-with, cancel-interaction, query-pie-menu, speak, be-friendly, tell-joke, flirt, be-mean, give-gift, instant-message, change-outfit, change-description, go-home, visit-lot, find-avatar, add-roommate, evict-roommate, lock-lot, unlock-lot");
+            Log($"ipc: command dispatcher started (stdin); ops registered: walk-to, cancel, queue-interaction, query-self, query-nearby, query-lot, query-relationships, query-inventory, interact-with, cancel-interaction, query-pie-menu, speak, be-friendly, tell-joke, flirt, be-mean, give-gift, instant-message, change-outfit, change-description, go-home, visit-lot, find-avatar, add-roommate, evict-roommate, lock-lot, unlock-lot, kick-user, ban-user, ipban-user, archive-approve-user, archive-reject-user, admin-chat-command");
         }
 
         // 8. Tick loop. The real client ticks at FSOEnvironment.RefreshRate (60Hz). The driver

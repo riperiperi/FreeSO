@@ -3,7 +3,7 @@
   "version": "1.0",
   "operation": "cheat-command",
   "family": "admin",
-  "description": "Developer cheat chat commands (`!del`, `!roomat`, `!objat`, `!debugroutes`, `!vc`, \u2026) dispatched from `UICheatHandler` when chat starts with `!`. Client-local + some emit `VMNetDeleteObjectCmd` / print to chat. Keep in the catalog for parity; in the agent context treat this family as `admin`-gated because several ops emit deletions.",
+  "description": "DROPPED (freesoexperiment-3df): no wire path. The `!`-prefixed commands (`!del`, `!roomat`, `!objat`, `!debugroutes`, `!vc`, etc.) are dispatched entirely client-side by the stock client's UICheatHandler — the server's VMNetChatCmd.Execute has no `!` branch. The only cheat command that produces a wire PDU is `!del`, which emits VMNetDeleteObjectCmd — that's covered by the build-buy-catalog family's delete-object op (d87-d-buy/build). A headless bot has no UICheatHandler, so a literal `!foo` string over VMNetChatCmd would just appear as chat. Declaration is retained as a catalog marker (status=dropped) so a future sweep finds the trail; NO HANDLER is registered by AdminHandlers / admin_handlers.go.",
   "args": [],
   "produces_tags": [
     {
@@ -19,5 +19,5 @@
     "window": "1m"
   },
   "response": "sync",
-  "status": "scaffold"
+  "status": "dropped"
 }
