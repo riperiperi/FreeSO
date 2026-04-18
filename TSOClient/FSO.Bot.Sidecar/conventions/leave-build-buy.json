@@ -3,8 +3,10 @@
   "version": "1.0",
   "operation": "leave-build-buy",
   "family": "build-buy-architecture",
-  "description": "Exit build or buy mode, commit thumbnail. Triggered when closing the catalog panel with pending changes.",
-  "args": [],
+  "description": "Commit the exit from build (build=true) or buy (build=false) mode. Engine-side this signals the VMEventType.TSOUserLeaveBuildBuy event, which the server uses to snapshot a thumbnail. Prerequisite: you are the lot owner (handler-side; server-side Verify is permissive but the event is only meaningful for owner/builder flows). Effect: a lot thumbnail save is queued server-side — not directly observable via perception; may show in server logs. Cost: free. Wire: VMNetLeaveBuildBuyCmd { Build }. OQ-8: this is NOT a gate — skipping leave-build-buy has no functional consequence for the agent; architecture mutations take effect via their own VMNet*Cmd PDUs independent of this marker.",
+  "args": [
+    {"name": "build", "type": "bool", "required": false}
+  ],
   "produces_tags": [
     {
       "tag": "freeso:leave-build-buy",
@@ -19,5 +21,5 @@
     "window": "1m"
   },
   "response": "sync",
-  "status": "scaffold"
+  "status": "implemented"
 }

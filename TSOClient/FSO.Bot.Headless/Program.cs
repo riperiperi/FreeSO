@@ -407,6 +407,13 @@ public class Program
             // buy-listed-object, upgrade-object. Lot-socket VMNet*Cmd PDUs. Handler-side owner
             // gate (VMTSOLotState.OwnerID / VMTSOObjectState.OwnerID under RunUnderTickLock).
             BuyModeHandlers.RegisterAll(dispatcher, vmHost);
+            // Build-buy-architecture family (freesoexperiment-41d): place-wall, paint-wall,
+            // paint-floor, paint-grass, flatten-terrain, raise-terrain, set-roof,
+            // change-environment, change-lot-size, leave-build-buy. Six share VMNetArchitectureCmd;
+            // four have dedicated PDUs. All owner-gated at the handler (VMTSOLotState.OwnerID).
+            // Plus query-architecture (test helper) that reads vm.Context.Architecture wall/floor/
+            // roof/size state for before/after baselines — perception doesn't expose walls/floors.
+            BuildModeHandlers.RegisterAll(dispatcher, vmHost);
             // Wire chat events into the perception projector so speak's server-round-tripped
             // echo surfaces as a recent_events entry (kind=chat). Ground-source truth for the
             // verb-social integration test — a bare VMNetChatCmd ACK does not prove wire effect.
@@ -420,7 +427,7 @@ public class Program
             // responses are correlated RPC-style and stay off recent_events.
             if (projector != null) MailHandlers.WireMailPerception(cityAries, projector);
             dispatcher.Start();
-            Log($"ipc: command dispatcher started (stdin); ops registered: walk-to, cancel, queue-interaction, query-self, query-nearby, query-lot, query-relationships, query-inventory, interact-with, cancel-interaction, query-pie-menu, speak, be-friendly, tell-joke, flirt, be-mean, give-gift, instant-message, change-outfit, change-description, go-home, visit-lot, find-avatar, add-roommate, evict-roommate, lock-lot, unlock-lot, kick-user, ban-user, ipban-user, archive-approve-user, archive-reject-user, admin-chat-command, poll-inbox, send-mail, delete-mail, view-bulletin, post-bulletin, vote, nominate, view-neighborhood, buy-object, place-from-inventory, move-object, delete-object, send-to-inventory, list-object-for-sale, buy-listed-object, upgrade-object, find-cheap-catalog-guid");
+            Log($"ipc: command dispatcher started (stdin); ops registered: walk-to, cancel, queue-interaction, query-self, query-nearby, query-lot, query-relationships, query-inventory, interact-with, cancel-interaction, query-pie-menu, speak, be-friendly, tell-joke, flirt, be-mean, give-gift, instant-message, change-outfit, change-description, go-home, visit-lot, find-avatar, add-roommate, evict-roommate, lock-lot, unlock-lot, kick-user, ban-user, ipban-user, archive-approve-user, archive-reject-user, admin-chat-command, poll-inbox, send-mail, delete-mail, view-bulletin, post-bulletin, vote, nominate, view-neighborhood, buy-object, place-from-inventory, move-object, delete-object, send-to-inventory, list-object-for-sale, buy-listed-object, upgrade-object, find-cheap-catalog-guid, place-wall, paint-wall, paint-floor, paint-grass, flatten-terrain, raise-terrain, set-roof, change-environment, change-lot-size, leave-build-buy, query-architecture");
         }
 
         // 8. Tick loop. The real client ticks at FSOEnvironment.RefreshRate (60Hz). The driver

@@ -3,8 +3,16 @@
   "version": "1.0",
   "operation": "paint-floor",
   "family": "build-buy-architecture",
-  "description": "Apply a floor pattern to tiles.",
-  "args": [],
+  "description": "Apply a floor pattern to a width×height rectangle of tiles starting at (x,y) on `level`. If fill=true the server flood-fills connected same-pattern tiles instead of a fixed rectangle. Prerequisite: you are the lot owner (handler-side; server-side BuildBuyRoommate+ via Validator.CanBuildTool). Effect: floor.Pattern at the targeted tiles flips to `pattern` — observable via query-architecture. Cost: floor material price × area, debited from lot funds. Denial silent (OQ-8). Wire: VMNetArchitectureCmd { Commands: [{ Type: FLOOR_RECT | FLOOR_FILL, level, x, y, x2=width, y2=height, pattern }] }.",
+  "args": [
+    {"name": "x", "type": "int64", "required": true},
+    {"name": "y", "type": "int64", "required": true},
+    {"name": "pattern", "type": "int64", "required": true},
+    {"name": "level", "type": "int64", "required": false},
+    {"name": "width", "type": "int64", "required": false},
+    {"name": "height", "type": "int64", "required": false},
+    {"name": "fill", "type": "bool", "required": false}
+  ],
   "produces_tags": [
     {
       "tag": "freeso:paint-floor",
@@ -19,5 +27,5 @@
     "window": "1m"
   },
   "response": "sync",
-  "status": "scaffold"
+  "status": "implemented"
 }

@@ -3,8 +3,11 @@
   "version": "1.0",
   "operation": "set-roof",
   "family": "build-buy-architecture",
-  "description": "Change roof pattern.",
-  "args": [],
+  "description": "Set the whole-lot roof style (uint index into Content.WorldRoofs) and pitch (float, clamped server-side to [0, 1.25]). Prerequisite: you are the lot owner (handler-side; server-side Owner via VMTSOAvatarPermissions.Owner — stricter than BuildBuyRoommate). Effect: architecture.RoofStyle and architecture.RoofPitch update for the whole lot. Observable via query-architecture.roof. Cost: free. Wire: VMNetSetRoofCmd { Style, Pitch } on the lot Aries socket. If style >= WorldRoofs.Count the command is silently rejected by the server (Execute returns false).",
+  "args": [
+    {"name": "style", "type": "int64", "required": true},
+    {"name": "pitch", "type": "double", "required": false}
+  ],
   "produces_tags": [
     {
       "tag": "freeso:set-roof",
@@ -19,5 +22,5 @@
     "window": "1m"
   },
   "response": "sync",
-  "status": "scaffold"
+  "status": "implemented"
 }

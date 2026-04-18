@@ -3,8 +3,13 @@
   "version": "1.0",
   "operation": "paint-grass",
   "family": "build-buy-architecture",
-  "description": "Paint grass tiles in the lot exterior.",
-  "args": [],
+  "description": "Paint (or sculpt) a grass tile in the lot's exterior terrain at (x,y,level). `pattern` selects grass density/type. Prerequisite: you are the lot owner (handler-side; server-side BuildBuyRoommate+). Effect: grass tile pattern updates at that tile — observable via query-architecture (floor.pattern on exterior tiles). Cost: minimal. Denial silent (OQ-8). Wire: VMNetArchitectureCmd { Commands: [{ Type: GRASS_DOT, level, x, y, pattern }] }.",
+  "args": [
+    {"name": "x", "type": "int64", "required": true},
+    {"name": "y", "type": "int64", "required": true},
+    {"name": "level", "type": "int64", "required": false},
+    {"name": "pattern", "type": "int64", "required": false}
+  ],
   "produces_tags": [
     {
       "tag": "freeso:paint-grass",
@@ -19,5 +24,5 @@
     "window": "1m"
   },
   "response": "sync",
-  "status": "scaffold"
+  "status": "implemented"
 }

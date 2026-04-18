@@ -3,8 +3,13 @@
   "version": "1.0",
   "operation": "raise-terrain",
   "family": "build-buy-architecture",
-  "description": "Raise or lower terrain.",
-  "args": [],
+  "description": "Raise (delta > 0) or lower (delta < 0) terrain at (x,y,level) by the given delta. Prerequisite: you are the lot owner (handler-side; server-side BuildBuyRoommate+). Effect: heightmap at that tile shifts. Cost: minimal. Denial silent (OQ-8). Wire: VMNetArchitectureCmd { Commands: [{ Type: TERRAIN_RAISE, level, x, y, x2=delta }] }.",
+  "args": [
+    {"name": "x", "type": "int64", "required": true},
+    {"name": "y", "type": "int64", "required": true},
+    {"name": "level", "type": "int64", "required": false},
+    {"name": "delta", "type": "int64", "required": false}
+  ],
   "produces_tags": [
     {
       "tag": "freeso:raise-terrain",
@@ -19,5 +24,5 @@
     "window": "1m"
   },
   "response": "sync",
-  "status": "scaffold"
+  "status": "implemented"
 }

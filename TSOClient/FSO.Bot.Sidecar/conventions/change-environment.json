@@ -3,8 +3,11 @@
   "version": "1.0",
   "operation": "change-environment",
   "family": "build-buy-architecture",
-  "description": "Add or remove skins/environments on the lot (paywall/donor content).",
-  "args": [],
+  "description": "Add or remove ambient environment skins (skyboxes / weather / audio ambience) on the lot. guids_to_add and guids_to_clear are uint GUID arrays pointing into Content.Ambience.GetAmbienceFromGUID. Each list is server-capped at 40 entries. Prerequisite: you are the lot owner (handler-side; server-side BuildBuyRoommate+). Effect: vm.Context.Ambience user-ambience set mutates accordingly; visible via client skybox/weather changes (not currently exposed to perception — no observable field). Cost: free. Denial silent (OQ-8). Wire: VMNetChangeEnvironmentCmd { GUIDsToAdd, GUIDsToClear }.",
+  "args": [
+    {"name": "guids_to_add", "type": "list[int64]", "required": false},
+    {"name": "guids_to_clear", "type": "list[int64]", "required": false}
+  ],
   "produces_tags": [
     {
       "tag": "freeso:change-environment",
@@ -19,5 +22,5 @@
     "window": "1m"
   },
   "response": "sync",
-  "status": "scaffold"
+  "status": "implemented"
 }
