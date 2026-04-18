@@ -230,6 +230,17 @@ func main() {
 			log.Fatalf("register buy-mode handlers: %v", err)
 		}
 		log.Printf("convention handlers: %d build-buy-catalog-family ops serving", buyServers)
+
+		// Build-buy-architecture family (freesoexperiment-41d): place-wall, paint-wall,
+		// paint-floor, paint-grass, flatten-terrain, raise-terrain, set-roof, change-environment,
+		// change-lot-size, leave-build-buy. Lot-socket PDUs (six share VMNetArchitectureCmd,
+		// four have dedicated types). Owner gating in the bot handler (handler-side deterministic
+		// refuse; server silently drops unauthorized commands per OQ-8).
+		buildServers, err := RegisterBuildModeHandlers(ctx, cf, ipc)
+		if err != nil {
+			log.Fatalf("register build-mode handlers: %v", err)
+		}
+		log.Printf("convention handlers: %d build-buy-architecture-family ops serving", buildServers)
 	} else {
 		log.Printf("running in --no-bot mode (campfire-only)")
 

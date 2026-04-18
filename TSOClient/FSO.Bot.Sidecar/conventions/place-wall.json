@@ -3,8 +3,17 @@
   "version": "1.0",
   "operation": "place-wall",
   "family": "build-buy-architecture",
-  "description": "Add a wall segment.",
-  "args": [],
+  "description": "Add (or remove, if remove=true) a wall segment starting at (x,y) running in octant `direction` for `length` tiles on `level`. Prerequisite: you are the lot owner (handler-side gate via VMTSOLotState.OwnerID; server-side also refuses if < BuildBuyRoommate via Validator.CanBuildTool). Effect: wall appears (or disappears) — observable via query-architecture at the affected tiles; perception does not expose walls. Cost: wall materials are debited from lot funds by the server during Architecture.RunCommands (indirect — not a direct GlobalLink transaction). Denial is a silent drop with no error PDU back (OQ-8). Wire: VMNetArchitectureCmd { Commands: [{ Type: WALL_LINE | WALL_DELETE, level, x, y, x2=length, y2=direction, pattern, style }] } on the lot Aries socket.",
+  "args": [
+    {"name": "x", "type": "int64", "required": true},
+    {"name": "y", "type": "int64", "required": true},
+    {"name": "length", "type": "int64", "required": true},
+    {"name": "direction", "type": "int64", "required": true},
+    {"name": "level", "type": "int64", "required": false},
+    {"name": "pattern", "type": "int64", "required": false},
+    {"name": "style", "type": "int64", "required": false},
+    {"name": "remove", "type": "bool", "required": false}
+  ],
   "produces_tags": [
     {
       "tag": "freeso:place-wall",
@@ -19,5 +28,5 @@
     "window": "1m"
   },
   "response": "sync",
-  "status": "scaffold"
+  "status": "implemented"
 }

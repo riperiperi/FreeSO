@@ -3,8 +3,14 @@
   "version": "1.0",
   "operation": "paint-wall",
   "family": "build-buy-architecture",
-  "description": "Apply a wallpaper pattern to wall segments at given positions. Sub-operation of architecture.",
-  "args": [],
+  "description": "Apply a wallpaper pattern to a single wall side at (x,y,level). Side selects which wall face (0..5; 0-3 = the four cardinal segments on a square tile, 4-5 = the two diagonal sides). Prerequisite: you are the lot owner (handler-side gate; server-side also requires BuildBuyRoommate+ via Validator.CanBuildTool). Effect: wall TopLeftPattern / TopRightPattern at the targeted side flips to `pattern` — observable via query-architecture. Cost: wallpaper price per tile is debited from lot funds by Architecture.RunCommands. Denial silent (OQ-8). Wire: VMNetArchitectureCmd { Commands: [{ Type: PATTERN_DOT, level, x, y, x2=side, pattern }] }.",
+  "args": [
+    {"name": "x", "type": "int64", "required": true},
+    {"name": "y", "type": "int64", "required": true},
+    {"name": "side", "type": "int64", "required": true},
+    {"name": "pattern", "type": "int64", "required": true},
+    {"name": "level", "type": "int64", "required": false}
+  ],
   "produces_tags": [
     {
       "tag": "freeso:paint-wall",
@@ -19,5 +25,5 @@
     "window": "1m"
   },
   "response": "sync",
-  "status": "scaffold"
+  "status": "implemented"
 }
