@@ -23,6 +23,7 @@ services:
     labels:
       org.opencontainers.image.source: "https://github.com/riperiperi/FreeSO"
       org.opencontainers.image.licenses: "MPL-2.0"
+    stop_grace_period: 60s
     depends_on:
       mariadb:
         condition: service_healthy

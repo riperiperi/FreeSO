@@ -56,21 +56,21 @@ namespace FSO.SimAntics.Model
 
         public static int[] ObjectLimitPerPerson = new int[]
         {
-            75,
-            92,
-            109,
-            126,
-            143,
-            160,
-            177,
-            194,
+            300,
+            368,
+            436,
+            504,
+            572,
+            640,
+            708,
+            776,
 
-            211,
-            228,
-            245,
-            262,
-            279,
-            300
+            844,
+            912,
+            980,
+            1048,
+            1116,
+            1200
         };
 
         /// <summary>

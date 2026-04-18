@@ -86,7 +86,7 @@ namespace FSO.Server.Servers.Lot.Domain
         private DynamicTuning Tuning;
 
         public static readonly int TICKRATE = 30;
-        public static readonly int LOT_SAVE_PERIOD = TICKRATE * 60 * 10;
+        public static readonly int LOT_SAVE_PERIOD = TICKRATE * 60 * 2;
         public static readonly int AVATAR_SAVE_PERIOD = TICKRATE * 60 * 1;
         public static readonly int KEEP_ALIVE_PERIOD = TICKRATE * 3;
 
@@ -1455,6 +1455,7 @@ namespace FSO.Server.Servers.Lot.Domain
             foreach (var obj in Lot.Context.ObjectQueries.Avatars)
             {
                 var ava = obj as VMAvatar;
+                if (ava?.Thread == null) continue;
 
                 var lastStack = ava.Thread.Stack.LastOrDefault();
 

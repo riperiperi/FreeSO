@@ -133,19 +133,16 @@ namespace FSO.SimAntics.NetPlay.Model.Commands
                 }
             }
 
-            if (oldRoomCount != vm.TSOState.Roommates.Count)
+            //mark objects not owned by roommates for inventory transfer
+            foreach (var ent in vm.Entities)
             {
-                //mark objects not owned by roommates for inventory transfer
-                foreach (var ent in vm.Entities)
+                if (ent is VMGameObject && ent.PersistID > 0 && ((VMTSOObjectState)ent.TSOState).OwnerID == avatar.PersistID)
                 {
-                    if (ent is VMGameObject && ent.PersistID > 0 && ((VMTSOObjectState)ent.TSOState).OwnerID == avatar.PersistID)
-                    {
-                        var old = ((VMGameObject)ent).Disabled;
-                        if (AvatarState.Permissions < VMTSOAvatarPermissions.Roommate) ((VMGameObject)ent).Disabled |= VMGameObjectDisableFlags.PendingRoommateDeletion;
-                        else ((VMGameObject)ent).Disabled &= ~VMGameObjectDisableFlags.PendingRoommateDeletion;
-                        if (old != ((VMGameObject)ent).Disabled) vm.Scheduler.RescheduleInterrupt(ent);
-                        ((VMGameObject)ent).RefreshLight();
-                    }
+                    var old = ((VMGameObject)ent).Disabled;
+                    if (AvatarState.Permissions < VMTSOAvatarPermissions.Roommate) ((VMGameObject)ent).Disabled |= VMGameObjectDisableFlags.PendingRoommateDeletion;
+                    else ((VMGameObject)ent).Disabled &= ~VMGameObjectDisableFlags.PendingRoommateDeletion;
+                    if (old != ((VMGameObject)ent).Disabled) vm.Scheduler.RescheduleInterrupt(ent);
+                    ((VMGameObject)ent).RefreshLight();
                 }
             }
 
