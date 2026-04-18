@@ -3,21 +3,17 @@
   "version": "1.0",
   "operation": "send-mail",
   "family": "mail",
-  "description": "Send a `MessageItem` letter to another avatar. Persisted server-side; recipient receives via their next `poll-inbox` or real-time push.",
-  "args": [],
+  "description": "Send a mail letter to another avatar on the shard. Prerequisite: target_persist_id must resolve to a real avatar (the server looks them up via DataService.Get<Avatar>; a bad id causes the server to throw and reply SEND_FAILED); non-empty subject and body. Effect: the bot constructs a MessageItem{TargetID, Subject, Body, Type=0, Subtype=0}, wraps it in MailRequest{Type=SEND, Item=...}, and writes it on the city Aries socket. The server's MailHandler BB-sanitises the body, truncates it to 1500 chars, INSERTs a fso_inbox row with sender_id=your_persist_id, and if the target is online, pushes a MailResponse{Type=NEW_MAIL} to them immediately; otherwise they get it on their next POLL_INBOX. The sender receives MailResponse{Type=SEND_SUCCESS, Messages=[echo]} (or SEND_IGNORING_YOU / SEND_IGNORING_THEM / SEND_FAILED). Sending to yourself is legal — server creates a normal fso_inbox row. Cost: zero in-world currency. Client-side pre-wire refuse: missing target / empty subject / empty body / body > 1500 chars → ok=false with specific error.",
+  "args": [
+    {"name": "target_persist_id", "type": "integer", "required": true, "description": "Persist id (avatar id) of the recipient. Must be > 0 and typically not your own. Server does the existence check; a bogus id causes SEND_FAILED."},
+    {"name": "subject", "type": "string", "required": true, "description": "Subject line. Must be non-empty. Server stores up to 128 chars (MariaDB varchar(128)); bot truncates defensively at 128."},
+    {"name": "body", "type": "string", "required": true, "description": "Message body. Must be non-empty. Server BB-sanitises and caps at 1500 chars; bot refuses bodies > 1500 chars pre-wire to surface the constraint explicitly to the agent rather than silently truncate."}
+  ],
   "produces_tags": [
-    {
-      "tag": "freeso:send-mail",
-      "cardinality": "exactly_one"
-    }
+    {"tag": "freeso:send-mail", "cardinality": "exactly_one"}
   ],
   "antecedents": "none",
   "signing": "member_key",
-  "rate_limit": {
-    "max": 30,
-    "per": "sender",
-    "window": "1m"
-  },
-  "response": "sync",
-  "status": "scaffold"
+  "rate_limit": {"max": 30, "per": "sender", "window": "1m"},
+  "response": "sync"
 }

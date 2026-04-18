@@ -3,21 +3,15 @@
   "version": "1.0",
   "operation": "poll-inbox",
   "family": "mail",
-  "description": "Fetch pending mail items since a timestamp. Used on session start and on inbox open.",
-  "args": [],
+  "description": "Fetch mail messages received since a given timestamp. Prerequisite: you are online on the city server (always true for the live bot). Effect: sends a MailRequest{Type=POLL_INBOX, TimestampID=<100ns ticks>} on the city Aries socket; the server's MailHandler replies with MailResponse{Type=POLL_RESPONSE, Messages=[...]}. Each message carries id (db message_id), sender_persist_id, sender_name, subject, body, time (100ns ticks), type/subtype, read_state. The poll is strictly server-driven — read_state does not transition here (there is NO server PDU to mark-read on this fork; read_state is a DB column writable only on INSERT). Cost: zero in-world currency. Server caps subject to 128 chars and body to 1500 chars at INSERT time; stored bodies are BB-sanitised. Real-time inbound mail also surfaces via the same MailResponse path (Type=NEW_MAIL) pushed when the sender is online.",
+  "args": [
+    {"name": "since_ticks", "type": "integer", "required": false, "description": "Poll cut-off in .NET DateTime ticks (100-nanosecond intervals since 0001-01-01 UTC). Messages with time > since_ticks are returned. Default 0 → returns the full inbox. The InboxController's pattern is to pass the most-recently-received message's time on subsequent polls so you only get new mail; passing 0 always returns the full inbox and is fine for low-volume agent use."}
+  ],
   "produces_tags": [
-    {
-      "tag": "freeso:poll-inbox",
-      "cardinality": "exactly_one"
-    }
+    {"tag": "freeso:poll-inbox", "cardinality": "exactly_one"}
   ],
   "antecedents": "none",
   "signing": "member_key",
-  "rate_limit": {
-    "max": 30,
-    "per": "sender",
-    "window": "1m"
-  },
-  "response": "sync",
-  "status": "scaffold"
+  "rate_limit": {"max": 30, "per": "sender", "window": "1m"},
+  "response": "sync"
 }

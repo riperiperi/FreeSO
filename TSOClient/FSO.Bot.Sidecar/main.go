@@ -211,6 +211,14 @@ func main() {
 			log.Fatalf("register admin handlers: %v", err)
 		}
 		log.Printf("convention handlers: %d admin-family ops serving", adminServers)
+
+		// Mail family (freesoexperiment-bd2): poll-inbox, send-mail, delete-mail. City-socket
+		// MailRequest/MailResponse PDUs. read-mail dropped (no wire PDU on this fork).
+		mailServers, err := RegisterMailHandlers(ctx, cf, ipc)
+		if err != nil {
+			log.Fatalf("register mail handlers: %v", err)
+		}
+		log.Printf("convention handlers: %d mail-family ops serving", mailServers)
 	} else {
 		log.Printf("running in --no-bot mode (campfire-only)")
 
