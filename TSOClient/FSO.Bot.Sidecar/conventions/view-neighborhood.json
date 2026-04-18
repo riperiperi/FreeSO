@@ -1,0 +1,25 @@
+{
+  "convention": "freeso-embodiment",
+  "version": "1.0",
+  "operation": "view-neighborhood",
+  "family": "city",
+  "description": "Fetch neighborhood metadata (name, description, mayor_id, election_cycle, lot/avatar counts, activity rating, top lots/avatars). Read-only. Wire: DataServiceWrapperPDU carrying cTSONetMessageStandard GET on MaskedStruct.ServerNeighborhood (4236962517) with Parameter=neighborhood_id. The server streams a series of DataServiceWrapperPDU packets, each a cTSOTopicUpdateMessage delta filling a Neighborhood struct field; packets correlate back via SendingAvatarID. We collect deltas for a bounded window (2s) and return the observed fields projected by name plus the raw dotpath updates (for fields the projector doesn't know — arrays, nested election cycles). Default neighborhood_id=1. Cross-check source: fso_neighborhoods row.",
+  "args": [
+    {"name": "neighborhood_id", "type": "uint32", "required": false}
+  ],
+  "produces_tags": [
+    {
+      "tag": "freeso:view-neighborhood",
+      "cardinality": "exactly_one"
+    }
+  ],
+  "antecedents": "none",
+  "signing": "member_key",
+  "rate_limit": {
+    "max": 30,
+    "per": "sender",
+    "window": "1m"
+  },
+  "response": "sync",
+  "status": "implemented"
+}

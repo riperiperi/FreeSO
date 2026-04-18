@@ -3,8 +3,11 @@
   "version": "1.0",
   "operation": "nominate",
   "family": "city",
-  "description": "Nominate another avatar for mayor.",
-  "args": [],
+  "description": "Nominate another avatar for mayor. Prerequisite: active election_cycle in state='nomination'; caller must be a resident of the target neighborhood and not have moved in <30 days (Election_Move_Penalty; admins bypass). Target must be a resident of same neighborhood and also pass move-date check. Effect: fso_election_votes row INSERT (type='nomination'); if target reaches Min_Nominations (default 3), also creates an fso_election_candidates row in state='informed' and mails the candidate an AcceptNomination invite (see accept-candidacy op). Returns SUCCESS. Refuse paths: ELECTION_OVER, BAD_STATE (wrong cycle state), NOT_IN_NHOOD, CANDIDATE_NOT_IN_NHOOD, ALREADY_VOTED (already nominated once), YOU_MOVED_RECENTLY, CANDIDATE_MOVED_RECENTLY, INVALID_AVATAR. On workshop's current DB (no active cycle), nominate refuses deterministically with ELECTION_OVER — this is the test's expected wire-level effect. Wire: NhoodRequest{Type=NOMINATE, TargetAvatar, TargetNHood} on city Aries; resolves on the next NhoodResponse.",
+  "args": [
+    {"name": "target_persist_id", "type": "uint64", "required": true},
+    {"name": "neighborhood_id", "type": "uint32", "required": false}
+  ],
   "produces_tags": [
     {
       "tag": "freeso:nominate",
@@ -14,10 +17,10 @@
   "antecedents": "none",
   "signing": "member_key",
   "rate_limit": {
-    "max": 30,
+    "max": 5,
     "per": "sender",
     "window": "1m"
   },
   "response": "sync",
-  "status": "scaffold"
+  "status": "implemented"
 }

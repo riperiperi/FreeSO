@@ -1,0 +1,25 @@
+{
+  "convention": "freeso-embodiment",
+  "version": "1.0",
+  "operation": "view-bulletin",
+  "family": "city",
+  "description": "Fetch the bulletin board for a neighborhood. Prerequisite: the bot must be connected to the city server (any session state). Effect: returns the neighborhood's full bulletin list (subject, body, sender, timestamp, type: mayor/system/community, flags). Cost: none — read-only. Wire: BulletinRequest{Type=GET_MESSAGES, TargetNHood} on the city Aries socket; resolves on the next BulletinResponse{Type=MESSAGES, Messages[]}. Default neighborhood_id=1 (Alphaville default shard nhood).",
+  "args": [
+    {"name": "neighborhood_id", "type": "uint32", "required": false}
+  ],
+  "produces_tags": [
+    {
+      "tag": "freeso:view-bulletin",
+      "cardinality": "exactly_one"
+    }
+  ],
+  "antecedents": "none",
+  "signing": "member_key",
+  "rate_limit": {
+    "max": 30,
+    "per": "sender",
+    "window": "1m"
+  },
+  "response": "sync",
+  "status": "implemented"
+}

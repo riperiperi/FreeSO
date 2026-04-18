@@ -3,8 +3,13 @@
   "version": "1.0",
   "operation": "post-bulletin",
   "family": "city",
-  "description": "Post a new message to a neighborhood bulletin board. Two-stage: CAN_POST_MESSAGE \u2192 POST_MESSAGE.",
-  "args": [],
+  "description": "Post a new message to a neighborhood bulletin board. Prerequisite: caller must be a resident (fso_roommates row on a lot in target neighborhood) and not have moved in 7 days (unless admin: moderation_level > 0 bypasses the move penalty). Also gated by post-frequency: community posts at most once per Bulletin_Post_Frequency (default 3 days). Effect: fso_bulletin_posts row INSERT with type='community' (or 'mayor' if caller is the current mayor). Returns the created bulletin_id. Refuse paths: SEND_FAIL_NON_RESIDENT, SEND_FAIL_JUST_MOVED, SEND_FAIL_TOO_FREQUENT, SEND_FAIL_INVALID_TITLE (>64 chars), SEND_FAIL_INVALID_MESSAGE (>1000 chars), SEND_FAIL_GAMEPLAY_BAN. Wire: BulletinRequest{Type=POST_MESSAGE, TargetNHood, Title, Message, LotID=0} on city Aries; resolves on the next BulletinResponse (SEND_SUCCESS returns the BulletinItem).",
+  "args": [
+    {"name": "subject", "type": "string", "required": true},
+    {"name": "body", "type": "string", "required": true},
+    {"name": "neighborhood_id", "type": "uint32", "required": false},
+    {"name": "lot_id", "type": "uint32", "required": false}
+  ],
   "produces_tags": [
     {
       "tag": "freeso:post-bulletin",
@@ -14,10 +19,10 @@
   "antecedents": "none",
   "signing": "member_key",
   "rate_limit": {
-    "max": 30,
+    "max": 10,
     "per": "sender",
     "window": "1m"
   },
   "response": "sync",
-  "status": "scaffold"
+  "status": "implemented"
 }
