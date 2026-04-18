@@ -5,17 +5,88 @@
   "family": "movement",
   "description": "Walk or run to a destination on your current lot. Prerequisite: you are joined to the lot the target lies on; the destination tile is routable (no wall, locked door, or blocking object in the path the engine computes). Effect: the lot's authoritative VM plans a path and queues a goto-action on your action queue; you animate the movement over in-sim seconds proportional to distance. You arrive at or within ~1 tile of the target on success. On failure (pathfind-blocked, caller-interrupted, target moved), your Sim stops where blocked and a dialog may fire. Cost: real seconds of session time equal to the path length divided by tiles-per-second; no motive cost beyond the natural decay during movement. Specify destination exactly one of three ways — absolute (x,y,level), by target_object_id from your nearby_objects perception feed, or by target_sim_id for a nearby Sim. Target lookups resolve against your local VM at the moment of invocation; if the target has moved by the time the lot VM plans the path you may end up at their old position.",
   "args": [
-    {"name": "x", "type": "integer", "required": false, "description": "Absolute target x in 1/16-tile units (range 0..32767). Ignored if target_object_id or target_sim_id is set."},
-    {"name": "y", "type": "integer", "required": false, "description": "Absolute target y in 1/16-tile units. Ignored if target_object_id or target_sim_id is set."},
-    {"name": "level", "type": "integer", "required": false, "default": 1, "description": "Floor level (1 = ground). Ignored if target_object_id or target_sim_id is set (resolved from target position)."},
-    {"name": "target_object_id", "type": "integer", "required": false, "description": "ObjectID of an object in your nearby_objects perception slice. Takes precedence over x/y. Level is inherited from the object's current position."},
-    {"name": "target_sim_id", "type": "integer", "required": false, "description": "PersistID of a nearby Sim to approach (from nearby_sims). Highest precedence."},
-    {"name": "interaction", "type": "integer", "required": false, "default": 4, "description": "Goto-object interaction index: 2=Walk Here, 4=Run Here. Default 4 matches the stock client's pie-menu Run Here."},
-    {"name": "param0", "type": "integer", "required": false, "default": 0, "description": "Optional goto-object param0, forwarded to VMNetGotoCmd."}
+    {
+      "name": "x",
+      "type": "integer",
+      "required": false,
+      "description": "Absolute target x in 1/16-tile units (range 0..32767). Ignored if target_object_id or target_sim_id is set."
+    },
+    {
+      "name": "y",
+      "type": "integer",
+      "required": false,
+      "description": "Absolute target y in 1/16-tile units. Ignored if target_object_id or target_sim_id is set."
+    },
+    {
+      "name": "level",
+      "type": "integer",
+      "required": false,
+      "default": 1,
+      "description": "Floor level (1 = ground). Ignored if target_object_id or target_sim_id is set (resolved from target position)."
+    },
+    {
+      "name": "target_object_id",
+      "type": "integer",
+      "required": false,
+      "description": "ObjectID of an object in your nearby_objects perception slice. Takes precedence over x/y. Level is inherited from the object's current position."
+    },
+    {
+      "name": "target_sim_id",
+      "type": "integer",
+      "required": false,
+      "description": "PersistID of a nearby Sim to approach (from nearby_sims). Highest precedence."
+    },
+    {
+      "name": "interaction",
+      "type": "integer",
+      "required": false,
+      "default": 4,
+      "description": "Goto-object interaction index: 2=Walk Here, 4=Run Here. Default 4 matches the stock client's pie-menu Run Here."
+    },
+    {
+      "name": "param0",
+      "type": "integer",
+      "required": false,
+      "default": 0,
+      "description": "Optional goto-object param0, forwarded to VMNetGotoCmd."
+    }
   ],
-  "produces_tags": [{"tag": "freeso:walk-to", "cardinality": "exactly_one"}],
+  "produces_tags": [
+    {
+      "tag": "freeso:walk-to",
+      "cardinality": "exactly_one"
+    }
+  ],
   "antecedents": "none",
   "signing": "member_key",
-  "rate_limit": {"max": 30, "per": "sender", "window": "1m"},
-  "response": "sync"
+  "rate_limit": {
+    "max": 30,
+    "per": "sender",
+    "window": "1m"
+  },
+  "response": "sync",
+  "call_signatures": [
+    "cf $CF walk-to --target_object_id <nearby_objects[].object_id>               # preferred: walk to an object visible in perception.nearby_objects[]",
+    "cf $CF walk-to --target_sim_id <nearby_sims[].persist_id>                   # walk to another Sim (persist id, highest precedence)",
+    "cf $CF walk-to --x <tile*16> --y <tile*16> --level 1                         # absolute subtile coords (multiply tile coord by 16); level optional, default 1",
+    "cf $CF walk-to --target_object_id 352 --interaction 2                        # interaction 2 = Walk Here (default 4 = Run Here)"
+  ],
+  "common_mistakes": [
+    "Passing tile coords (44, 43) where the handler expects subtile/world coords (704, 688 = 44*16, 43*16).",
+    "Omitting --level when using --x/--y — defaults to 1 (ground); pass explicitly for upper floors.",
+    "Mixing --target_object_id with --x/--y — precedence is target_sim_id > target_object_id > x/y, so the coords are ignored.",
+    "Assuming interaction=4 'Run Here' works on every object — it does for goto-routable tiles but non-routable entities (walls, locked doors) refuse at pathfind time."
+  ],
+  "perception_hints": [
+    "Target IDs: perception.nearby_objects[].object_id and perception.nearby_sims[].persist_id",
+    "Your current position: perception.avatar.position.x, .y (tile coords); multiply by 16 for raw world coords",
+    "Your current level: perception.avatar.position.level",
+    "Current queue depth: perception.avatar.action_queue[] (MAX_USER_ACTIONS = 8)"
+  ],
+  "refuse_conditions": [
+    "no live avatar → returns ok:false with 'no live avatar'",
+    "missing x,y AND target_object_id AND target_sim_id → returns ok:false with 'requires x,y OR target_object_id OR target_sim_id'",
+    "target_sim_id not resolvable in local VM → returns ok:false with 'sim <id> not in local VM'",
+    "target_object_id not resolvable in local VM → returns ok:false with 'object <id> not in local VM'"
+  ]
 }

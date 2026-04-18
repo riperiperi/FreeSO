@@ -26,5 +26,23 @@
     "window": "1m"
   },
   "response": "sync",
-  "status": "stable"
+  "status": "stable",
+  "call_signatures": [
+    "cf $CF ban-user --target_persist_id <avatar_id>                                      # admin-only; fso_users.is_banned=1 and close session"
+  ],
+  "common_mistakes": [
+    "Calling as non-admin → ok:false.",
+    "target_persist_id is avatar_id (Sim persist id).",
+    "Ban is permanent until unban; no wire ACK — verify via fso_users.is_banned DB column."
+  ],
+  "perception_hints": [
+    "Target persist_id: perception.nearby_sims[].persist_id (for physically-present targets); other avatars need find-avatar or direct knowledge of avatar_id",
+    "Your own persist_id (to avoid self-target): perception.avatar.persist_id",
+    "Chat activity you may want to moderate: perception.recent_events[] kind=='chat'"
+  ],
+  "refuse_conditions": [
+    "caller not admin → ok:false",
+    "target_persist_id missing or <= 0 → ok:false",
+    "self-target → ok:false"
+  ]
 }

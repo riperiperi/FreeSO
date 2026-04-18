@@ -5,8 +5,16 @@
   "family": "city",
   "description": "Cast a vote for a mayoral candidate in an active neighborhood election. Prerequisite: caller must be a resident of the target neighborhood (fso_roommates on a lot in nhood), must not have moved in <30 days (Election_Move_Penalty; admins bypass), the neighborhood must have an active election_cycle in state='election', and the target must be a running candidate. Effect: fso_election_votes row INSERT (primary key election_cycle_id+from_avatar_id+type='vote' — vote is idempotent per cycle). Returns SUCCESS. Refuse paths: ELECTION_OVER (no active cycle), BAD_STATE (cycle in nomination phase not election), NOT_IN_NHOOD, ALREADY_VOTED, CANDIDATE_NOT_NOMINATED, YOU_MOVED_RECENTLY, CANDIDATE_MOVED_RECENTLY, INVALID_AVATAR. On workshop's current DB state, fso_neighborhoods has no election_cycle_id set, so vote deterministically refuses with ELECTION_OVER — this is the test's expected wire-level effect. Wire: NhoodRequest{Type=VOTE, TargetAvatar, TargetNHood} on city Aries; resolves on the next NhoodResponse.",
   "args": [
-    {"name": "target_persist_id", "type": "uint64", "required": true},
-    {"name": "neighborhood_id", "type": "uint32", "required": false}
+    {
+      "name": "target_persist_id",
+      "type": "uint64",
+      "required": true
+    },
+    {
+      "name": "neighborhood_id",
+      "type": "uint32",
+      "required": false
+    }
   ],
   "produces_tags": [
     {
@@ -22,5 +30,26 @@
     "window": "1m"
   },
   "response": "sync",
-  "status": "implemented"
+  "status": "implemented",
+  "call_signatures": [
+    "cf $CF vote --target_persist_id <candidate_persist_id>                                                          # defaults neighborhood_id=1; server refuses ELECTION_OVER on workshop (no active cycle)",
+    "cf $CF vote --target_persist_id <pid> --neighborhood_id <nhood>                                                 # explicit nhood"
+  ],
+  "common_mistakes": [
+    "target_persist_id = 0 or missing → ok:false.",
+    "Self-vote → ok:false ('cannot vote for yourself').",
+    "Server returns NHOOD_NO_ELECTION or ELECTION_OVER when no cycle active (workshop default state) → ok:false.",
+    "YOU_MOVED_RECENTLY if caller moved in last 30 days (non-admin)."
+  ],
+  "perception_hints": [
+    "Neighborhood id (defaults to 1 on workshop): perception.lot.lot_id is a lot id, not a nhood id — most ops default nhood_id to 1",
+    "Your own persist_id (to avoid self-vote/self-nominate): perception.avatar.persist_id",
+    "Your lot membership (residency gate): perception.lot.owner_is_me or check is_roommate via query-lot"
+  ],
+  "refuse_conditions": [
+    "missing target_persist_id or target_persist_id <= 0 → ok:false",
+    "target_persist_id == own avatar_id → ok:false with 'cannot vote for yourself'",
+    "server NHOOD_NO_ELECTION / ELECTION_OVER → ok:false with response code",
+    "10s timeout → ok:false"
+  ]
 }

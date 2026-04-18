@@ -5,7 +5,12 @@
   "family": "interaction",
   "description": "Abort ONE specific queued or running interaction by action_uid, preserving the rest of your queue. Prerequisite: you have a live avatar and the action_uid refers to an entry currently visible in perception.avatar.action_queue[].uid. Effect: emits VMNetInteractionCancelCmd scoped to that single uid; the engine cancels the targeted interaction at the next safe animation break (your Sim may finish a sub-animation before coming to rest) while leaving every other queued action untouched. The server re-verifies the uid against your queue; a stale uid is a no-op. Cost: whatever progress the cancelled interaction had made is lost (e.g. half-finished Sleep does not credit full Energy gain); other Sims observing you see that one action_queue entry disappear within one perception tick. This is the precision primitive — for the broad sweep 'cancel everything I'm doing' use the movement-family 'cancel' op (which fires one cancel-interaction per visible queue entry, matching stock UIInteractionQueue behaviour). Requiring action_uid here is a deliberate design fence: using this op forces the agent to cite which specific interaction it is aborting, which shows up in the audit log.",
   "args": [
-    {"name": "action_uid", "type": "integer", "required": true, "description": "ushort UID of a specific queued/running interaction, sourced from perception.avatar.action_queue[].uid. Zero is rejected — use the movement-family 'cancel' op (action_uid omitted) for the broad sweep."}
+    {
+      "name": "action_uid",
+      "type": "integer",
+      "required": true,
+      "description": "ushort UID of a specific queued/running interaction, sourced from perception.avatar.action_queue[].uid. Zero is rejected — use the movement-family 'cancel' op (action_uid omitted) for the broad sweep."
+    }
   ],
   "produces_tags": [
     {
@@ -20,5 +25,23 @@
     "per": "sender",
     "window": "1m"
   },
-  "response": "sync"
+  "response": "sync",
+  "call_signatures": [
+    "cf $CF cancel-interaction --action_uid <perception.avatar.action_queue[].interaction_id>         # cancel ONE specific queued/running interaction"
+  ],
+  "common_mistakes": [
+    "Passing --action_uid 0 or omitting it — use the 'cancel' op for broad sweep; cancel-interaction is the precision primitive.",
+    "Using the wrong UID (from a stale perception tick) — UIDs are assigned per-enqueue; requeuing after a prior cancel allocates new UIDs."
+  ],
+  "perception_hints": [
+    "Target object_id: perception.nearby_objects[].object_id (callee_id, NOT persist_id)",
+    "Available interactions by name: perception.nearby_objects[].interactions[].name / .id",
+    "Your own action queue + UIDs (for cancel-interaction): perception.avatar.action_queue[].interaction_id",
+    "Dialog prompts (for respond-dialog): perception.recent_events[] where kind=='dialog', look at .extras.dialog_id"
+  ],
+  "refuse_conditions": [
+    "no live avatar → ok:false with 'no live avatar'",
+    "missing action_uid → ok:false with \"requires action_uid (use 'cancel' for broad sweep)\"",
+    "action_uid == 0 → ok:false with 'requires non-zero action_uid'"
+  ]
 }

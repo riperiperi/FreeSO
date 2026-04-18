@@ -5,15 +5,58 @@
   "family": "im",
   "description": "Send a typed direct message to another avatar on the shard. Prerequisite: you are online on the city server (the bot is, by definition); the target is addressed by their persist_id (avatar id). Self-addressing (target_persist_id == your own) is legitimate and useful — the server echoes the IM back to you via the same wire path, which is how you confirm the city socket is healthy. Effect: on success, the server forwards the InstantMessage packet unchanged to the target's live session; you will see the IM surface in your recent_events (kind=im, direction=in) only if you are the target (self-IM) or the target is you (inbound from someone else). On failure, the server returns a FAILURE_ACK which lands in recent_events (kind=im, direction=fail) with a reason enum: THEY_ARE_OFFLINE, THEY_ARE_IGNORING_YOU, YOU_ARE_IGNORING_THEM, or MESSAGE_QUEUE_FULL. Cost: zero in-world currency; server applies a 30/min rate limit per sender (convention-level).",
   "args": [
-    {"name": "target_persist_id", "type": "integer", "required": true, "description": "Persist id (avatar id) of the recipient. Any avatar on the shard is addressable — they need not be on your lot. Self-target (your own persist_id) is allowed and round-trips back for health checks."},
-    {"name": "text", "type": "string", "required": true, "description": "The message body. Bot truncates at 1000 chars before wire."},
-    {"name": "color", "type": "integer", "required": false, "description": "ARGB color for rendering in the target's IM window. Server ORs 0xFF000000 over whatever you send, so the alpha byte is server-controlled. Default 0xFF000000 (opaque black)."}
+    {
+      "name": "target_persist_id",
+      "type": "integer",
+      "required": true,
+      "description": "Persist id (avatar id) of the recipient. Any avatar on the shard is addressable — they need not be on your lot. Self-target (your own persist_id) is allowed and round-trips back for health checks."
+    },
+    {
+      "name": "text",
+      "type": "string",
+      "required": true,
+      "description": "The message body. Bot truncates at 1000 chars before wire."
+    },
+    {
+      "name": "color",
+      "type": "integer",
+      "required": false,
+      "description": "ARGB color for rendering in the target's IM window. Server ORs 0xFF000000 over whatever you send, so the alpha byte is server-controlled. Default 0xFF000000 (opaque black)."
+    }
   ],
   "produces_tags": [
-    {"tag": "freeso:instant-message", "cardinality": "exactly_one"}
+    {
+      "tag": "freeso:instant-message",
+      "cardinality": "exactly_one"
+    }
   ],
   "antecedents": "none",
   "signing": "member_key",
-  "rate_limit": {"max": 30, "per": "sender", "window": "1m"},
-  "response": "sync"
+  "rate_limit": {
+    "max": 30,
+    "per": "sender",
+    "window": "1m"
+  },
+  "response": "sync",
+  "call_signatures": [
+    "cf $CF instant-message --target_persist_id <nearby_sims[].persist_id> --text 'hello'                   # send IM to another avatar",
+    "cf $CF instant-message --target_persist_id <perception.avatar.persist_id> --text 'self-check'           # self-IM for city-socket health check",
+    "cf $CF instant-message --target_persist_id <pid> --text '...' --color 4294901760                        # ARGB color (server ORs 0xFF000000)"
+  ],
+  "common_mistakes": [
+    "target_persist_id = 0 or missing → ok:false.",
+    "text empty → ok:false; over-length is truncated at 1000 chars pre-wire.",
+    "Expecting a success ACK — there is NONE. Only observable confirmations are perception events (kind=='im' direction=='in' for self-echo, or direction=='fail' for FAILURE_ACK).",
+    "Target offline/ignoring → FAILURE_ACK with a reason enum, surfaced via perception recent_events."
+  ],
+  "perception_hints": [
+    "Your own persist_id (self-IM is a legit health check): perception.avatar.persist_id",
+    "Target by nearby: perception.nearby_sims[].persist_id for Sims on your lot; for other shard avatars use find-avatar or memory",
+    "Inbound IMs surface in perception.recent_events[] with kind=='im', direction=='in'"
+  ],
+  "refuse_conditions": [
+    "missing target_persist_id → ok:false",
+    "target_persist_id == 0 → ok:false",
+    "empty text → ok:false"
+  ]
 }

@@ -19,5 +19,18 @@
     "window": "1m"
   },
   "response": "sync",
-  "status": "scaffold"
+  "status": "scaffold",
+  "call_signatures": [
+    "cf $CF eod-send-message   # SCAFFOLD op — not yet implemented; handler may return ok:false or a stub. Prefer a concrete sibling op if your goal is actionable."
+  ],
+  "common_mistakes": [
+    "This is a SCAFFOLD op — the convention is declared but the handler may be unimplemented or stubbed. Check the declaration's status field.",
+    "Relying on scaffold ops mid-run will either return a deferred marker or fail — prefer a concrete sibling op, and file an rd item if the missing behaviour blocks progress."
+  ],
+  "perception_hints": [
+    "Target object_id: perception.nearby_objects[].object_id (callee_id, NOT persist_id)",
+    "Available interactions by name: perception.nearby_objects[].interactions[].name / .id",
+    "Your own action queue + UIDs (for cancel-interaction): perception.avatar.action_queue[].interaction_id",
+    "Dialog prompts (for respond-dialog): perception.recent_events[] where kind=='dialog', look at .extras.dialog_id"
+  ]
 }

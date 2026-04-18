@@ -5,11 +5,36 @@
   "family": "memory",
   "description": "Retrieve a previously remembered value by key. Prerequisite: none. Effect: the sidecar looks up `key` in its in-memory store and returns `{found: true, value: <stored>}` if present or `{found: false}` if the key was never set (or was set before a sidecar restart — memory does not survive restart in this scope). Cost: none. Distinguishes 'stored null' from 'never set': a key stored with value=null returns `{found: true, value: null}`, while a never-stored key returns `{found: false}` with no value field. NOT a FreeSO wire action — agent-local only, no perception emission, no PDU. Sibling of `remember`. To observe what *other* Sims said or did, use perception feed + recall of your own notes.",
   "args": [
-    {"name": "key", "type": "string", "required": true, "description": "The key to look up. Must match a prior remember's key exactly (case-sensitive)."}
+    {
+      "name": "key",
+      "type": "string",
+      "required": true,
+      "description": "The key to look up. Must match a prior remember's key exactly (case-sensitive)."
+    }
   ],
-  "produces_tags": [{"tag": "freeso:recall", "cardinality": "exactly_one"}],
+  "produces_tags": [
+    {
+      "tag": "freeso:recall",
+      "cardinality": "exactly_one"
+    }
+  ],
   "antecedents": "none",
   "signing": "member_key",
-  "rate_limit": {"max": 100, "per": "sender", "window": "1m"},
-  "response": "sync"
+  "rate_limit": {
+    "max": 100,
+    "per": "sender",
+    "window": "1m"
+  },
+  "response": "sync",
+  "call_signatures": [
+    "cf $CF recall --key 'friend:maria'                                                   # returns {found, value}"
+  ],
+  "common_mistakes": [
+    "Checking --value presence without checking --found first — a key stored with null returns {found:true, value:null}; a never-stored key returns {found:false} with no value field.",
+    "Case-mismatched key → {found:false}. Keys are case-sensitive."
+  ],
+  "refuse_conditions": [
+    "missing or empty --key → ok:false with 'key is required'",
+    "key not stored → ok:true with found:false (NOT a refuse path; distinguish from ok:false)"
+  ]
 }

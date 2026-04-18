@@ -5,9 +5,29 @@
   "family": "queries",
   "description": "Return a fresh full snapshot of your own avatar state — motives, position, facing direction, current animation, action queue, skills, and money balance. Prerequisite: you are joined to a lot and your local VM has caught up (you will see at least one perception tick before this succeeds). Effect: none — this is a pure local-VM read, no outbound PDU, no wire traffic. The snapshot reflects your VM state at the moment the handler executes and may be 1-2 simulation ticks behind the authoritative server state; for most decisions that is indistinguishable from the perception stream's own freshness. Cost: negligible — one lock acquisition on the VM tick thread for the duration of the read (microseconds). Use when you want a value mid-turn and do not want to wait for the next perception tick. For motive delta-per-minute trends, read them from the perception stream — this op returns instantaneous motive values only.",
   "args": [],
-  "produces_tags": [{"tag": "freeso:query-self", "cardinality": "exactly_one"}],
+  "produces_tags": [
+    {
+      "tag": "freeso:query-self",
+      "cardinality": "exactly_one"
+    }
+  ],
   "antecedents": "none",
   "signing": "member_key",
-  "rate_limit": {"max": 60, "per": "sender", "window": "1m"},
-  "response": "sync"
+  "rate_limit": {
+    "max": 60,
+    "per": "sender",
+    "window": "1m"
+  },
+  "response": "sync",
+  "call_signatures": [
+    "cf $CF query-self                                                                    # no args; returns full self snapshot"
+  ],
+  "common_mistakes": [
+    "These are LOCAL VM reads — they reflect whatever your client-side replica VM shows, which may lag the authoritative state by 1-2 ticks.",
+    "Do not rely on query-inventory until freesoexperiment-1a9 closes — it returns deferred:true with items=[]."
+  ],
+  "perception_hints": [
+    "These ops return the same shape as the corresponding perception slice; use for fresh mid-turn snapshots",
+    "Perception already pushes this data at FSO_PERCEPTION_HZ — only call when you need data newer than the last tick"
+  ]
 }

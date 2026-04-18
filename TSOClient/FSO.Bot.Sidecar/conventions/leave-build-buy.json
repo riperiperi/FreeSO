@@ -5,7 +5,11 @@
   "family": "build-buy-architecture",
   "description": "Commit the exit from build (build=true) or buy (build=false) mode. Engine-side this signals the VMEventType.TSOUserLeaveBuildBuy event, which the server uses to snapshot a thumbnail. Prerequisite: you are the lot owner (handler-side; server-side Verify is permissive but the event is only meaningful for owner/builder flows). Effect: a lot thumbnail save is queued server-side — not directly observable via perception; may show in server logs. Cost: free. Wire: VMNetLeaveBuildBuyCmd { Build }. OQ-8: this is NOT a gate — skipping leave-build-buy has no functional consequence for the agent; architecture mutations take effect via their own VMNet*Cmd PDUs independent of this marker.",
   "args": [
-    {"name": "build", "type": "bool", "required": false}
+    {
+      "name": "build",
+      "type": "bool",
+      "required": false
+    }
   ],
   "produces_tags": [
     {
@@ -21,5 +25,24 @@
     "window": "1m"
   },
   "response": "sync",
-  "status": "implemented"
+  "status": "implemented",
+  "call_signatures": [
+    "cf $CF leave-build-buy                                                                                  # owner-only; build=true by default",
+    "cf $CF leave-build-buy --build false                                                                    # leaving buy mode instead of build"
+  ],
+  "common_mistakes": [
+    "Non-owner → ok:false (this is a consistency check — server itself returns true in Verify).",
+    "build=true is default (leaving build mode); pass build=false to commit leaving buy mode."
+  ],
+  "perception_hints": [
+    "Am I the owner? perception.lot.owner_is_me — architecture ops are owner-only",
+    "Your position (to anchor where to build): perception.avatar.position.x, .y (tile coords — arch ops accept tile coords directly, unlike walk-to)",
+    "Lot metadata: perception.lot.lot_id, perception.lot.name",
+    "Walls/floors are NOT exposed in perception — use query-architecture (test helper) if you need pre/post state"
+  ],
+  "refuse_conditions": [
+    "caller is not lot owner → returns ok:false with 'caller is not lot owner (owner_id=..., me=...)'",
+    "required tile coords (x, y) missing → returns ok:false with '<verb> requires x, y ...'",
+    "width/height/length <= 0 where specified → returns ok:false with specific bounds error"
+  ]
 }

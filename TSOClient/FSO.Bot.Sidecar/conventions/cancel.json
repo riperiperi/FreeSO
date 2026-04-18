@@ -5,11 +5,42 @@
   "family": "movement",
   "description": "Stop what you are doing. Prerequisite: you are on a lot with an active avatar (an action queue exists, possibly empty). Effect: by default, every queued and currently-running interaction is cancelled — the engine processes each cancel at the next safe animation break so your Sim may finish a sub-animation before coming to rest. With action_uid set, only that single queue entry is cancelled; useful when you want to abort a long-running interaction without clearing the queue behind it. Cost: whatever progress you made on an interrupted interaction is lost (e.g. Sleep cancelled mid-way does not credit full Energy gain); other Sims observing you see your action_queue clear within one perception tick. The wire cannot distinguish 'cancel current' from 'clear queue' in a single PDU — both are VMNetInteractionCancelCmd with an ActionUID, so clearing the queue requires one cancel per visible entry (what the stock UIInteractionQueue does). We do that locally as the default.",
   "args": [
-    {"name": "action_uid", "type": "integer", "required": false, "description": "ushort UID of a specific queued interaction (from perception.avatar.action_queue[].uid). Omit to cancel every queued/running action the bot can see locally."}
+    {
+      "name": "action_uid",
+      "type": "integer",
+      "required": false,
+      "description": "ushort UID of a specific queued interaction (from perception.avatar.action_queue[].uid). Omit to cancel every queued/running action the bot can see locally."
+    }
   ],
-  "produces_tags": [{"tag": "freeso:cancel", "cardinality": "exactly_one"}],
+  "produces_tags": [
+    {
+      "tag": "freeso:cancel",
+      "cardinality": "exactly_one"
+    }
+  ],
   "antecedents": "none",
   "signing": "member_key",
-  "rate_limit": {"max": 60, "per": "sender", "window": "1m"},
-  "response": "sync"
+  "rate_limit": {
+    "max": 60,
+    "per": "sender",
+    "window": "1m"
+  },
+  "response": "sync",
+  "call_signatures": [
+    "cf $CF cancel                                                                # no args: sweep everything in your locally-visible queue",
+    "cf $CF cancel --action_uid <perception.avatar.action_queue[].interaction_id> # cancel one specific queued/running interaction (precision path)"
+  ],
+  "common_mistakes": [
+    "Omitting --action_uid when you only meant to cancel the current action — default path is sweep-all (one cancel PDU per visible queue entry).",
+    "Expecting cancel to abort an already-completed action — the engine removes completed entries from the queue; cancel only affects queued/running UIDs."
+  ],
+  "perception_hints": [
+    "Target IDs: perception.nearby_objects[].object_id and perception.nearby_sims[].persist_id",
+    "Your current position: perception.avatar.position.x, .y (tile coords); multiply by 16 for raw world coords",
+    "Your current level: perception.avatar.position.level",
+    "Current queue depth: perception.avatar.action_queue[] (MAX_USER_ACTIONS = 8)"
+  ],
+  "refuse_conditions": [
+    "no live avatar → returns ok:false with 'no live avatar'"
+  ]
 }

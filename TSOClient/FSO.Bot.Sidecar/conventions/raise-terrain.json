@@ -5,10 +5,26 @@
   "family": "build-buy-architecture",
   "description": "Raise (delta > 0) or lower (delta < 0) terrain at (x,y,level) by the given delta. Prerequisite: you are the lot owner (handler-side; server-side BuildBuyRoommate+). Effect: heightmap at that tile shifts. Cost: minimal. Denial silent (OQ-8). Wire: VMNetArchitectureCmd { Commands: [{ Type: TERRAIN_RAISE, level, x, y, x2=delta }] }.",
   "args": [
-    {"name": "x", "type": "int64", "required": true},
-    {"name": "y", "type": "int64", "required": true},
-    {"name": "level", "type": "int64", "required": false},
-    {"name": "delta", "type": "int64", "required": false}
+    {
+      "name": "x",
+      "type": "int64",
+      "required": true
+    },
+    {
+      "name": "y",
+      "type": "int64",
+      "required": true
+    },
+    {
+      "name": "level",
+      "type": "int64",
+      "required": false
+    },
+    {
+      "name": "delta",
+      "type": "int64",
+      "required": false
+    }
   ],
   "produces_tags": [
     {
@@ -24,5 +40,25 @@
     "window": "1m"
   },
   "response": "sync",
-  "status": "implemented"
+  "status": "implemented",
+  "call_signatures": [
+    "cf $CF raise-terrain --x <tile_x> --y <tile_y> --delta 1                                               # raise by 1 unit (positive); delta must be non-zero",
+    "cf $CF raise-terrain --x <x> --y <y> --delta -1                                                         # lower by 1 unit"
+  ],
+  "common_mistakes": [
+    "Non-owner → ok:false.",
+    "delta == 0 → ok:false ('delta must be non-zero').",
+    "Each call is ±1 unit conventionally; extreme deltas can create unwalkable geometry."
+  ],
+  "perception_hints": [
+    "Am I the owner? perception.lot.owner_is_me — architecture ops are owner-only",
+    "Your position (to anchor where to build): perception.avatar.position.x, .y (tile coords — arch ops accept tile coords directly, unlike walk-to)",
+    "Lot metadata: perception.lot.lot_id, perception.lot.name",
+    "Walls/floors are NOT exposed in perception — use query-architecture (test helper) if you need pre/post state"
+  ],
+  "refuse_conditions": [
+    "caller is not lot owner → returns ok:false with 'caller is not lot owner (owner_id=..., me=...)'",
+    "required tile coords (x, y) missing → returns ok:false with '<verb> requires x, y ...'",
+    "width/height/length <= 0 where specified → returns ok:false with specific bounds error"
+  ]
 }

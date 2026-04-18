@@ -5,14 +5,65 @@
   "family": "movement",
   "description": "Push a named object interaction onto your action queue. Prerequisite: the target (an object or Sim currently in your lot VM) must expose the interaction — the server re-validates this by recomputing the pie-menu via VMFindBestAction and rejecting the command if param0 is not present. Your queue must have capacity (MAX_USER_ACTIONS = 8); visitors (spectators) are refused on every non-payphone object. Effect: the interaction is appended to your action queue behind the currently-running action; if the queue is empty at the server the action starts immediately. The engine picks the interaction's route, walks your Sim to the target, runs the behaviour script, and completes it — typically over several in-sim minutes with motive effects. Cost: real seconds of session time while the interaction runs; the interaction's own motive effects when it completes (e.g. Sleep restores Energy, Eat restores Hunger, Talk costs Social for both participants). This is the semantic 'queue without running immediately' variant of interact-with — on the wire it is the identical VMNetInteractionCmd, the 'queued' framing is a reminder that the engine always queues behind the current action (cancel first if you want to run right now).",
   "args": [
-    {"name": "interaction", "type": "integer", "required": true, "description": "TTAB index of the interaction, taken from query-pie-menu .interactions[].id or nearby_objects[].interactions[].id. Distinct from 'op' — each object exposes its own set."},
-    {"name": "callee_id", "type": "integer", "required": true, "description": "Object ID of the target (from nearby_objects[].object_id or nearby_sims[].object_id). PersistID is NOT accepted here — the VM addresses entities by ObjectID."},
-    {"name": "param0", "type": "integer", "required": false, "default": 0, "description": "Interaction variant parameter — some interactions expose subvariants via param0 (e.g. Chat Topics). Consult the pie-menu entry."},
-    {"name": "global", "type": "boolean", "required": false, "default": false, "description": "Set to true if the interaction is exposed by the callee's GLOBAL TTAB rather than its own TTAB (rare; check pie-menu entry)."}
+    {
+      "name": "interaction",
+      "type": "integer",
+      "required": true,
+      "description": "TTAB index of the interaction, taken from query-pie-menu .interactions[].id or nearby_objects[].interactions[].id. Distinct from 'op' — each object exposes its own set."
+    },
+    {
+      "name": "callee_id",
+      "type": "integer",
+      "required": true,
+      "description": "Object ID of the target (from nearby_objects[].object_id or nearby_sims[].object_id). PersistID is NOT accepted here — the VM addresses entities by ObjectID."
+    },
+    {
+      "name": "param0",
+      "type": "integer",
+      "required": false,
+      "default": 0,
+      "description": "Interaction variant parameter — some interactions expose subvariants via param0 (e.g. Chat Topics). Consult the pie-menu entry."
+    },
+    {
+      "name": "global",
+      "type": "boolean",
+      "required": false,
+      "default": false,
+      "description": "Set to true if the interaction is exposed by the callee's GLOBAL TTAB rather than its own TTAB (rare; check pie-menu entry)."
+    }
   ],
-  "produces_tags": [{"tag": "freeso:queue-interaction", "cardinality": "exactly_one"}],
+  "produces_tags": [
+    {
+      "tag": "freeso:queue-interaction",
+      "cardinality": "exactly_one"
+    }
+  ],
   "antecedents": "none",
   "signing": "member_key",
-  "rate_limit": {"max": 30, "per": "sender", "window": "1m"},
-  "response": "sync"
+  "rate_limit": {
+    "max": 30,
+    "per": "sender",
+    "window": "1m"
+  },
+  "response": "sync",
+  "call_signatures": [
+    "cf $CF queue-interaction --interaction <TTAB-id> --callee_id <object_id>                      # append interaction onto queue",
+    "cf $CF queue-interaction --interaction <TTAB-id> --callee_id <object_id> --param0 <variant>   # with subvariant param",
+    "cf $CF queue-interaction --interaction <TTAB-id> --callee_id <object_id> --global true        # use the GLOBAL TTAB of the callee (rare)"
+  ],
+  "common_mistakes": [
+    "Confusing queue-interaction with interact-with — the wire PDU is identical (VMNetInteractionCmd); the distinction is purely semantic framing for the agent.",
+    "callee_id is an ObjectID (short from nearby_objects[].object_id), not a persist_id.",
+    "Missing --interaction or --callee_id returns ok:false; both are mandatory."
+  ],
+  "perception_hints": [
+    "Target IDs: perception.nearby_objects[].object_id and perception.nearby_sims[].persist_id",
+    "Your current position: perception.avatar.position.x, .y (tile coords); multiply by 16 for raw world coords",
+    "Your current level: perception.avatar.position.level",
+    "Current queue depth: perception.avatar.action_queue[] (MAX_USER_ACTIONS = 8)"
+  ],
+  "refuse_conditions": [
+    "no live avatar → ok:false with 'no live avatar'",
+    "missing interaction or callee_id → ok:false with specific 'requires ... (TTAB index)' / 'requires callee_id'"
+  ]
 }

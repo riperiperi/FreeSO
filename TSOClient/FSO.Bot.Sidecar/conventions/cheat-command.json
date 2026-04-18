@@ -19,5 +19,23 @@
     "window": "1m"
   },
   "response": "sync",
-  "status": "dropped"
+  "status": "dropped",
+  "call_signatures": [
+    "cf $CF cheat-command                                                                      # no args"
+  ],
+  "common_mistakes": [
+    "Requires your VM permissions == Admin (moderation_level>=1 server-side). Non-admins fail deterministically with 'caller is not an admin (current_permissions=...)'.",
+    "ModerationRequest EntityId is an avatar_id; ArchiveModerationRequest EntityId is a user_id (NOT an avatar_id) — archive-approve-user/archive-reject-user target users, not Sims.",
+    "Self-targeting is refused by the handler."
+  ],
+  "perception_hints": [
+    "Target persist_id: perception.nearby_sims[].persist_id (for physically-present targets); other avatars need find-avatar or direct knowledge of avatar_id",
+    "Your own persist_id (to avoid self-target): perception.avatar.persist_id",
+    "Chat activity you may want to moderate: perception.recent_events[] kind=='chat'"
+  ],
+  "refuse_conditions": [
+    "caller is not admin (VM permissions != Admin) → returns ok:false with 'caller is not an admin (current_permissions=...)'",
+    "target_persist_id is 0 or missing → returns ok:false with 'requires target_persist_id (> 0)'",
+    "target_persist_id == caller's own avatar_id → returns ok:false with 'refusing to target self'"
+  ]
 }

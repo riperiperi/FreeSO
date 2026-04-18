@@ -18,5 +18,21 @@
     "per": "sender",
     "window": "1m"
   },
-  "response": "sync"
+  "response": "sync",
+  "call_signatures": [
+    "cf $CF go-home                                                                                             # returns already_home:true if on home lot; deferred:true otherwise"
+  ],
+  "common_mistakes": [
+    "Expecting the bot to move when already_home:true — no wire traffic happens in that case.",
+    "Expecting a transition when on another lot — the deferred path returns deferred:true with bot_state_unchanged (HeadlessLotConnection has no reconnect primitive, freesoexperiment-ca0)."
+  ],
+  "perception_hints": [
+    "Your current lot: perception.lot.lot_id and perception.lot.name",
+    "Your position: perception.avatar.position",
+    "Home detection: go-home returns already_home:true when perception.lot.lot_id matches your home lot location"
+  ],
+  "refuse_conditions": [
+    "no live lot (TSOState.LotID == 0) → ok:false",
+    "not already home → deferred:true (ok:true, bot state unchanged; cross-lot transition tracked as freesoexperiment-ca0)"
+  ]
 }

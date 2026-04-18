@@ -5,13 +5,42 @@
   "family": "mail",
   "description": "Delete a specific mail message from your inbox server-side. Prerequisite: mail_id is a positive integer; the row in fso_inbox with target_id=<your_persist_id> exists (the server's DELETE is gated on (message_id=? AND target_id=?) so you cannot delete mail addressed to someone else). Effect: sends MailRequest{Type=DELETE, TimestampID=<mail_id>} on the city Aries socket. The field name 'TimestampID' is a serialisation overload — for DELETE it carries the fso_inbox.message_id, not a timestamp. The server executes `DELETE FROM fso_inbox WHERE message_id=? AND target_id=?`. There is NO wire-level response PDU on this path — the only observable effects are the DB row vanishing and subsequent POLL_INBOX responses no longer including it. Cost: zero. Client-side refuse: mail_id <= 0 → ok=false.",
   "args": [
-    {"name": "mail_id", "type": "integer", "required": true, "description": "The fso_inbox.message_id of the mail to delete. Returned by poll-inbox as the `id` field of each MessageItem. Must be > 0. Server silently no-ops on mail_ids that don't exist or aren't addressed to you — use a follow-up poll-inbox to verify deletion."}
+    {
+      "name": "mail_id",
+      "type": "integer",
+      "required": true,
+      "description": "The fso_inbox.message_id of the mail to delete. Returned by poll-inbox as the `id` field of each MessageItem. Must be > 0. Server silently no-ops on mail_ids that don't exist or aren't addressed to you — use a follow-up poll-inbox to verify deletion."
+    }
   ],
   "produces_tags": [
-    {"tag": "freeso:delete-mail", "cardinality": "exactly_one"}
+    {
+      "tag": "freeso:delete-mail",
+      "cardinality": "exactly_one"
+    }
   ],
   "antecedents": "none",
   "signing": "member_key",
-  "rate_limit": {"max": 30, "per": "sender", "window": "1m"},
-  "response": "sync"
+  "rate_limit": {
+    "max": 30,
+    "per": "sender",
+    "window": "1m"
+  },
+  "response": "sync",
+  "call_signatures": [
+    "cf $CF delete-mail --mail_id <poll-inbox.messages[].id>                                                   # uses fso_inbox.message_id (NOT a timestamp)"
+  ],
+  "common_mistakes": [
+    "mail_id <= 0 or missing → ok:false.",
+    "mail_id is fso_inbox.message_id (from poll-inbox's .id), NOT a timestamp — despite the wire field being called TimestampID.",
+    "Deleting another user's mail silently no-ops server-side (WHERE target_id=? gate); use poll-inbox to verify."
+  ],
+  "perception_hints": [
+    "Your own persist_id (for self-send health check): perception.avatar.persist_id",
+    "Inbound NEW_MAIL pushes surface in perception.recent_events[] with kind=='mail', direction=='in' — the extras carry mail_id / sender_persist_id / subject",
+    "Target persist_id: perception.nearby_sims[].persist_id (on-lot) or from your remembered contacts"
+  ],
+  "refuse_conditions": [
+    "missing mail_id or mail_id <= 0 → ok:false",
+    "no wire-level response PDU — server silent-drops deletes of non-existent or wrong-target rows; verify via poll-inbox"
+  ]
 }

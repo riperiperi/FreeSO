@@ -5,7 +5,11 @@
   "family": "city",
   "description": "Fetch neighborhood metadata (name, description, mayor_id, election_cycle, lot/avatar counts, activity rating, top lots/avatars). Read-only. Wire: DataServiceWrapperPDU carrying cTSONetMessageStandard GET on MaskedStruct.ServerNeighborhood (4236962517) with Parameter=neighborhood_id. The server streams a series of DataServiceWrapperPDU packets, each a cTSOTopicUpdateMessage delta filling a Neighborhood struct field; packets correlate back via SendingAvatarID. We collect deltas for a bounded window (2s) and return the observed fields projected by name plus the raw dotpath updates (for fields the projector doesn't know — arrays, nested election cycles). Default neighborhood_id=1. Cross-check source: fso_neighborhoods row.",
   "args": [
-    {"name": "neighborhood_id", "type": "uint32", "required": false}
+    {
+      "name": "neighborhood_id",
+      "type": "uint32",
+      "required": false
+    }
   ],
   "produces_tags": [
     {
@@ -21,5 +25,18 @@
     "window": "1m"
   },
   "response": "sync",
-  "status": "implemented"
+  "status": "implemented",
+  "call_signatures": [
+    "cf $CF view-neighborhood                                                                                          # defaults neighborhood_id=1; 2s collection window",
+    "cf $CF view-neighborhood --neighborhood_id <nhood>                                                                # explicit nhood"
+  ],
+  "common_mistakes": [
+    "2-second collection window is baked in; response may be truncated if server hasn't finished streaming.",
+    "update_count=0 is possible for empty nhood or misconfigured provider id — check raw_dotpath_updates before trusting projected fields."
+  ],
+  "perception_hints": [
+    "Neighborhood id (defaults to 1 on workshop): perception.lot.lot_id is a lot id, not a nhood id — most ops default nhood_id to 1",
+    "Your own persist_id (to avoid self-vote/self-nominate): perception.avatar.persist_id",
+    "Your lot membership (residency gate): perception.lot.owner_is_me or check is_roommate via query-lot"
+  ]
 }

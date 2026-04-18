@@ -5,8 +5,16 @@
   "family": "build-buy-catalog",
   "description": "Buy a multi-level upgrade on an owned (or FSODonated) object, raising its upgrade level and resetting wear. Prerequisite: you are the owner of the target object (handler-side VMTSOObjectState.OwnerID gate). target_upgrade_level must exceed the object's current UpgradeLevel (server rejects otherwise). Skill-gated on the server side via VMNetUpgradeCmd.Verify which calls Content.Upgrades.GetUpgradePrice; the upgrade transaction runs through GlobalLink.PerformTransaction against your funds before the command is re-forwarded with Verified=true. Effect: object's UpgradeLevel advances to target_upgrade_level, wear resets, VMEventType.TSOUpgraded fires, object's InitialPrice increases by AddedValue. Cost: the upgrade price from your budget (depends on object and level). Wire: VMNetUpgradeCmd on the lot Aries socket.",
   "args": [
-    {"name": "target_object_persist_id", "type": "uint64", "required": true},
-    {"name": "target_upgrade_level", "type": "int64", "required": true}
+    {
+      "name": "target_object_persist_id",
+      "type": "uint64",
+      "required": true
+    },
+    {
+      "name": "target_upgrade_level",
+      "type": "int64",
+      "required": true
+    }
   ],
   "produces_tags": [
     {
@@ -22,5 +30,23 @@
     "window": "1m"
   },
   "response": "sync",
-  "status": "implemented"
+  "status": "implemented",
+  "call_signatures": [
+    "cf $CF upgrade-object --target_object_persist_id <pid> --target_upgrade_level <level>                 # object-owner only; level > 0"
+  ],
+  "common_mistakes": [
+    "Non-object-owner → ok:false.",
+    "target_upgrade_level <= 0 or missing → ok:false."
+  ],
+  "perception_hints": [
+    "Your balance (can you afford the object?): perception.balance",
+    "Am I the owner? perception.lot.owner_is_me — owner-only ops refuse otherwise",
+    "Existing object_id for move/delete/upgrade: perception.nearby_objects[].object_id",
+    "Free tile to place on: inspect perception.nearby_objects[] to find unoccupied tiles; positions are in tile coords, multiply by 16 for subtile x/y"
+  ],
+  "refuse_conditions": [
+    "missing target_object_persist_id → ok:false",
+    "target_upgrade_level <= 0 or missing → ok:false",
+    "caller is not the object owner → ok:false"
+  ]
 }

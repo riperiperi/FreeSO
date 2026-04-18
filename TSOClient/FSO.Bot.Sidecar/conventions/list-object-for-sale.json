@@ -5,8 +5,16 @@
   "family": "build-buy-catalog",
   "description": "Put a player-owned object up for async sale at a price (or delist). Prerequisite: you are the owner of the target object (VMTSOObjectState.OwnerID == you; handler-side gate). Object must not be in use. Pass new_price >= 0 to list at that price, new_price = -1 to delist. Effect: the object flags toggle ForSale on the lot; visitors see it with a 'Buy' pie-menu interaction. Cost: none while listed; when a visitor buys, they pay new_price and you receive it via GlobalLink.PurchaseFromOwner. Wire: VMNetAsyncPriceCmd on the lot Aries socket.",
   "args": [
-    {"name": "target_object_persist_id", "type": "uint64", "required": true},
-    {"name": "new_price", "type": "int64", "required": true}
+    {
+      "name": "target_object_persist_id",
+      "type": "uint64",
+      "required": true
+    },
+    {
+      "name": "new_price",
+      "type": "int64",
+      "required": true
+    }
   ],
   "produces_tags": [
     {
@@ -22,5 +30,24 @@
     "window": "1m"
   },
   "response": "sync",
-  "status": "implemented"
+  "status": "implemented",
+  "call_signatures": [
+    "cf $CF list-object-for-sale --target_object_persist_id <pid> --new_price <price>                      # object-owner; price >= 0 to list, -1 to delist",
+    "cf $CF list-object-for-sale --target_object_persist_id <pid> --new_price -1                           # delist"
+  ],
+  "common_mistakes": [
+    "Non-object-owner → ok:false.",
+    "new_price missing → ok:false; pass -1 explicitly to delist, or >= 0 to list at that price."
+  ],
+  "perception_hints": [
+    "Your balance (can you afford the object?): perception.balance",
+    "Am I the owner? perception.lot.owner_is_me — owner-only ops refuse otherwise",
+    "Existing object_id for move/delete/upgrade: perception.nearby_objects[].object_id",
+    "Free tile to place on: inspect perception.nearby_objects[] to find unoccupied tiles; positions are in tile coords, multiply by 16 for subtile x/y"
+  ],
+  "refuse_conditions": [
+    "missing target_object_persist_id → ok:false",
+    "missing new_price → ok:false",
+    "caller is not the object owner → ok:false"
+  ]
 }

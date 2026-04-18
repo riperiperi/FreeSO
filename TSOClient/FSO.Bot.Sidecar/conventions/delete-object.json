@@ -5,8 +5,16 @@
   "family": "build-buy-catalog",
   "description": "Delete an object from the lot by its in-world ObjectID. Source-of-truth note (catalog doc, verb-catalog.md:53, claimed 'no refund' — this is inaccurate): VMNetDeleteObjectCmd.Execute DOES call GlobalLink.PerformTransaction to refund obj.MultitileGroup.Price when Mode == DeleteMode.Delete (wire truth > catalog comment). If you want the object AND its money back into inventory instead, use send-to-inventory. Prerequisite: you are the lot owner (handler-side VMTSOLotState.OwnerID gate). Object must be user-movable (Sims cannot be deleted this way). Effect: the object disappears from nearby_objects; your balance increases by the object's current sale price. Cost: no money leaves (you get a refund); the object is gone. Wire: VMNetDeleteObjectCmd on the lot Aries socket.",
   "args": [
-    {"name": "target_object_id", "type": "int64", "required": true},
-    {"name": "cleanup_all", "type": "bool", "required": false}
+    {
+      "name": "target_object_id",
+      "type": "int64",
+      "required": true
+    },
+    {
+      "name": "cleanup_all",
+      "type": "bool",
+      "required": false
+    }
   ],
   "produces_tags": [
     {
@@ -22,5 +30,26 @@
     "window": "1m"
   },
   "response": "sync",
-  "status": "implemented"
+  "status": "implemented",
+  "call_signatures": [
+    "cf $CF delete-object --target_object_id <nearby_objects[].object_id>                                  # owner-only; refund applied server-side (VMNetDeleteObjectCmd.Execute)",
+    "cf $CF delete-object --target_object_id <id> --cleanup_all true                                       # cascade to all inventory instances"
+  ],
+  "common_mistakes": [
+    "Calling as non-owner → ok:false.",
+    "target_object_id = 0 or missing → ok:false.",
+    "target_object_id is ObjectID, not persist_id.",
+    "Money IS refunded (handler doc contradicts older verb-catalog note) — VMNetDeleteObjectCmd.Execute calls GlobalLink.PerformTransaction for refund."
+  ],
+  "perception_hints": [
+    "Your balance (can you afford the object?): perception.balance",
+    "Am I the owner? perception.lot.owner_is_me — owner-only ops refuse otherwise",
+    "Existing object_id for move/delete/upgrade: perception.nearby_objects[].object_id",
+    "Free tile to place on: inspect perception.nearby_objects[] to find unoccupied tiles; positions are in tile coords, multiply by 16 for subtile x/y"
+  ],
+  "refuse_conditions": [
+    "caller is not lot owner (for buy/move/delete/place-from-inventory) → returns ok:false with 'caller is not lot owner (owner_id=..., me=...)'",
+    "caller is not object owner (for send-to-inventory/list-for-sale/upgrade) → returns ok:false with 'caller is not the object owner (object_owner=..., me=...)'",
+    "required args missing (guid, x, y, target_object_id, target_object_persist_id) → returns ok:false with specific missing-arg error"
+  ]
 }

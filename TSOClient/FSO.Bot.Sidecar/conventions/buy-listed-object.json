@@ -5,7 +5,11 @@
   "family": "build-buy-catalog",
   "description": "Purchase an object another avatar listed for sale on the current lot. Prerequisite: you are NOT the owner of the target object (handler-side gate rejects own-object; own-object must use place-from-inventory or move-object instead). The object must be flagged ForSale and not in a pending transaction. Effect: money transfers from you to the owner; the object moves into your inventory (same path as send-to-inventory). Cost: the object's list price from your budget. Wire: VMNetAsyncSaleCmd on the lot Aries socket.",
   "args": [
-    {"name": "target_object_persist_id", "type": "uint64", "required": true}
+    {
+      "name": "target_object_persist_id",
+      "type": "uint64",
+      "required": true
+    }
   ],
   "produces_tags": [
     {
@@ -21,5 +25,23 @@
     "window": "1m"
   },
   "response": "sync",
-  "status": "implemented"
+  "status": "implemented",
+  "call_signatures": [
+    "cf $CF buy-listed-object --target_object_persist_id <pid>                                             # visitor path — fails if you OWN the object"
+  ],
+  "common_mistakes": [
+    "OWN the object → ok:false ('cannot buy their own object') — this is the visitor path; use place-from-inventory/move-object for your own stuff.",
+    "target_object_persist_id = 0 or missing → ok:false."
+  ],
+  "perception_hints": [
+    "Your balance (can you afford the object?): perception.balance",
+    "Am I the owner? perception.lot.owner_is_me — owner-only ops refuse otherwise",
+    "Existing object_id for move/delete/upgrade: perception.nearby_objects[].object_id",
+    "Free tile to place on: inspect perception.nearby_objects[] to find unoccupied tiles; positions are in tile coords, multiply by 16 for subtile x/y"
+  ],
+  "refuse_conditions": [
+    "missing target_object_persist_id → ok:false",
+    "object not found in local VM → ok:false",
+    "caller OWNS the object → ok:false with 'cannot buy their own object'"
+  ]
 }

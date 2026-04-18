@@ -5,12 +5,52 @@
   "family": "social",
   "description": "Tell a joke at another Sim. Prerequisite: target Sim is present on the lot and their current pie menu exposes a 'Tell Joke' (or joke-family) entry — resolved live by the bot against the target's VM-side TTAB check. Effect: queues the Tell Joke interaction on your action queue; on success produces laughter/reaction animations on both Sims and shifts the target's relationship-to-you along the fun/friendship axis (TTAB-driven; visible in nearby_sims.relationship). Cost: ~ a minute of in-sim time; queue slot consumed; may fail server-side Verify if the target disallows (e.g. sleeping, incompatible mood).",
   "args": [
-    {"name": "target_sim_id", "type": "integer", "required": false, "description": "Persist ID of the target Sim."},
-    {"name": "target_object_id", "type": "integer", "required": false, "description": "Local ObjectID of the target Sim."}
+    {
+      "name": "target_sim_id",
+      "type": "integer",
+      "required": false,
+      "description": "Persist ID of the target Sim."
+    },
+    {
+      "name": "target_object_id",
+      "type": "integer",
+      "required": false,
+      "description": "Local ObjectID of the target Sim."
+    }
   ],
-  "produces_tags": [{"tag": "freeso:tell-joke", "cardinality": "exactly_one"}],
+  "produces_tags": [
+    {
+      "tag": "freeso:tell-joke",
+      "cardinality": "exactly_one"
+    }
+  ],
   "antecedents": "none",
   "signing": "member_key",
-  "rate_limit": {"max": 20, "per": "sender", "window": "1m"},
-  "response": "sync"
+  "rate_limit": {
+    "max": 20,
+    "per": "sender",
+    "window": "1m"
+  },
+  "response": "sync",
+  "call_signatures": [
+    "cf $CF tell-joke --target_sim_id <nearby_sims[].persist_id>                         # preferred",
+    "cf $CF tell-joke --target_object_id <object_id>                                     # alternate; must resolve to a VMAvatar"
+  ],
+  "common_mistakes": [
+    "Directed socials (be-friendly/flirt/tell-joke/be-mean/give-gift) resolve target pie-menu by ALIAS substring; if the target's pie menu has no matching entry the handler returns ok=false with the list of available names — read the error to pick a different verb.",
+    "Passing --target_object_id for a non-avatar object silently fails these socials (they require VMAvatar target).",
+    "Speak rejects leading '/' — that prefix is reserved for admin chat commands; use admin-chat-command instead."
+  ],
+  "perception_hints": [
+    "Target persist_id: perception.nearby_sims[].persist_id",
+    "Target's current action (to judge if they're busy): perception.nearby_sims[].current_action",
+    "Your social motive (why this matters): perception.motives.social.value",
+    "Existing relationships: perception.relationships[].with_persist_id / .friendly / .daily"
+  ],
+  "refuse_conditions": [
+    "no live avatar → ok:false",
+    "no target_sim_id/target_object_id → ok:false",
+    "target not a Sim → ok:false",
+    "no matching pie-menu entry → ok:false with available-names list"
+  ]
 }

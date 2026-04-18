@@ -5,7 +5,11 @@
   "family": "city",
   "description": "Fetch the bulletin board for a neighborhood. Prerequisite: the bot must be connected to the city server (any session state). Effect: returns the neighborhood's full bulletin list (subject, body, sender, timestamp, type: mayor/system/community, flags). Cost: none — read-only. Wire: BulletinRequest{Type=GET_MESSAGES, TargetNHood} on the city Aries socket; resolves on the next BulletinResponse{Type=MESSAGES, Messages[]}. Default neighborhood_id=1 (Alphaville default shard nhood).",
   "args": [
-    {"name": "neighborhood_id", "type": "uint32", "required": false}
+    {
+      "name": "neighborhood_id",
+      "type": "uint32",
+      "required": false
+    }
   ],
   "produces_tags": [
     {
@@ -21,5 +25,22 @@
     "window": "1m"
   },
   "response": "sync",
-  "status": "implemented"
+  "status": "implemented",
+  "call_signatures": [
+    "cf $CF view-bulletin                                                                                          # defaults neighborhood_id=1",
+    "cf $CF view-bulletin --neighborhood_id <nhood_id>                                                             # explicit nhood"
+  ],
+  "common_mistakes": [
+    "neighborhood_id not found → server returns FAIL_NHOOD_NOT_FOUND, surfaced as ok:false.",
+    "10s timeout if server is wedged; retry policy is caller-side."
+  ],
+  "perception_hints": [
+    "Neighborhood id (defaults to 1 on workshop): perception.lot.lot_id is a lot id, not a nhood id — most ops default nhood_id to 1",
+    "Your own persist_id (to avoid self-vote/self-nominate): perception.avatar.persist_id",
+    "Your lot membership (residency gate): perception.lot.owner_is_me or check is_roommate via query-lot"
+  ],
+  "refuse_conditions": [
+    "server returns non-MESSAGES response type → ok:false with type name",
+    "10s timeout → ok:false"
+  ]
 }

@@ -5,8 +5,16 @@
   "family": "build-buy-architecture",
   "description": "Set the whole-lot roof style (uint index into Content.WorldRoofs) and pitch (float, clamped server-side to [0, 1.25]). Prerequisite: you are the lot owner (handler-side; server-side Owner via VMTSOAvatarPermissions.Owner — stricter than BuildBuyRoommate). Effect: architecture.RoofStyle and architecture.RoofPitch update for the whole lot. Observable via query-architecture.roof. Cost: free. Wire: VMNetSetRoofCmd { Style, Pitch } on the lot Aries socket. If style >= WorldRoofs.Count the command is silently rejected by the server (Execute returns false).",
   "args": [
-    {"name": "style", "type": "int64", "required": true},
-    {"name": "pitch", "type": "double", "required": false}
+    {
+      "name": "style",
+      "type": "int64",
+      "required": true
+    },
+    {
+      "name": "pitch",
+      "type": "double",
+      "required": false
+    }
   ],
   "produces_tags": [
     {
@@ -22,5 +30,25 @@
     "window": "1m"
   },
   "response": "sync",
-  "status": "implemented"
+  "status": "implemented",
+  "call_signatures": [
+    "cf $CF set-roof --style <roof_style_index>                                                              # owner-only; pitch defaults to 0.5",
+    "cf $CF set-roof --style <s> --pitch 1.0                                                                 # pitch clamped to [0, 1.25]"
+  ],
+  "common_mistakes": [
+    "Non-owner → ok:false.",
+    "style missing or < 0 → ok:false.",
+    "pitch is clamped to [0, 1.25] silently — out-of-range values are coerced, not rejected."
+  ],
+  "perception_hints": [
+    "Am I the owner? perception.lot.owner_is_me — architecture ops are owner-only",
+    "Your position (to anchor where to build): perception.avatar.position.x, .y (tile coords — arch ops accept tile coords directly, unlike walk-to)",
+    "Lot metadata: perception.lot.lot_id, perception.lot.name",
+    "Walls/floors are NOT exposed in perception — use query-architecture (test helper) if you need pre/post state"
+  ],
+  "refuse_conditions": [
+    "caller is not lot owner → returns ok:false with 'caller is not lot owner (owner_id=..., me=...)'",
+    "required tile coords (x, y) missing → returns ok:false with '<verb> requires x, y ...'",
+    "width/height/length <= 0 where specified → returns ok:false with specific bounds error"
+  ]
 }

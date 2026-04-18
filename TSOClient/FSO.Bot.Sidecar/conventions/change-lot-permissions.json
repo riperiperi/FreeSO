@@ -3,7 +3,7 @@
   "version": "1.0",
   "operation": "change-lot-permissions",
   "family": "property",
-  "description": "Change a target avatar's TSO permission level on the current lot. Covers two distinct UI flows: (1) the owner toggles a roommate's \"builder bit\" (Roommate \u2194 BuildBuyRoommate) from the house-mode roommate list; (2) the owner promotes a donator to full Roommate, or demotes a donator back to Visitor, from the donator-management dialog on a community lot. Server-side `Verify` requires caller to be Owner (`Permissions >= Owner`) and rejects owner self-changes; on non-community lots the level is bounded to Roommate..BuildBuyRoommate. Distinct from `admit-ban-lot` (DataService admit/ban list) \u2014 this command mutates the in-VM roommate/builder sets.",
+  "description": "Change a target avatar's TSO permission level on the current lot. Covers two distinct UI flows: (1) the owner toggles a roommate's \"builder bit\" (Roommate ↔ BuildBuyRoommate) from the house-mode roommate list; (2) the owner promotes a donator to full Roommate, or demotes a donator back to Visitor, from the donator-management dialog on a community lot. Server-side `Verify` requires caller to be Owner (`Permissions >= Owner`) and rejects owner self-changes; on non-community lots the level is bounded to Roommate..BuildBuyRoommate. Distinct from `admit-ban-lot` (DataService admit/ban list) — this command mutates the in-VM roommate/builder sets.",
   "args": [],
   "produces_tags": [
     {
@@ -19,5 +19,18 @@
     "window": "1m"
   },
   "response": "sync",
-  "status": "scaffold"
+  "status": "scaffold",
+  "call_signatures": [
+    "cf $CF change-lot-permissions   # SCAFFOLD op — not yet implemented; handler may return ok:false or a stub. Prefer a concrete sibling op if your goal is actionable."
+  ],
+  "common_mistakes": [
+    "This is a SCAFFOLD op — the convention is declared but the handler may be unimplemented or stubbed. Check the declaration's status field.",
+    "Relying on scaffold ops mid-run will either return a deferred marker or fail — prefer a concrete sibling op, and file an rd item if the missing behaviour blocks progress."
+  ],
+  "perception_hints": [
+    "Your own persist_id (to avoid self-targeting): perception.avatar.persist_id",
+    "Am I the owner? perception.lot.owner_is_me (true/false)",
+    "Target persist_id: perception.nearby_sims[].persist_id for Sims physically on the lot",
+    "Relationships for picking a roommate candidate: perception.relationships[]"
+  ]
 }

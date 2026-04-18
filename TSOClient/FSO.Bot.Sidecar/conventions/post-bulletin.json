@@ -5,10 +5,26 @@
   "family": "city",
   "description": "Post a new message to a neighborhood bulletin board. Prerequisite: caller must be a resident (fso_roommates row on a lot in target neighborhood) and not have moved in 7 days (unless admin: moderation_level > 0 bypasses the move penalty). Also gated by post-frequency: community posts at most once per Bulletin_Post_Frequency (default 3 days). Effect: fso_bulletin_posts row INSERT with type='community' (or 'mayor' if caller is the current mayor). Returns the created bulletin_id. Refuse paths: SEND_FAIL_NON_RESIDENT, SEND_FAIL_JUST_MOVED, SEND_FAIL_TOO_FREQUENT, SEND_FAIL_INVALID_TITLE (>64 chars), SEND_FAIL_INVALID_MESSAGE (>1000 chars), SEND_FAIL_GAMEPLAY_BAN. Wire: BulletinRequest{Type=POST_MESSAGE, TargetNHood, Title, Message, LotID=0} on city Aries; resolves on the next BulletinResponse (SEND_SUCCESS returns the BulletinItem).",
   "args": [
-    {"name": "subject", "type": "string", "required": true},
-    {"name": "body", "type": "string", "required": true},
-    {"name": "neighborhood_id", "type": "uint32", "required": false},
-    {"name": "lot_id", "type": "uint32", "required": false}
+    {
+      "name": "subject",
+      "type": "string",
+      "required": true
+    },
+    {
+      "name": "body",
+      "type": "string",
+      "required": true
+    },
+    {
+      "name": "neighborhood_id",
+      "type": "uint32",
+      "required": false
+    },
+    {
+      "name": "lot_id",
+      "type": "uint32",
+      "required": false
+    }
   ],
   "produces_tags": [
     {
@@ -24,5 +40,25 @@
     "window": "1m"
   },
   "response": "sync",
-  "status": "implemented"
+  "status": "implemented",
+  "call_signatures": [
+    "cf $CF post-bulletin --subject '...' --body '...'                                                              # defaults neighborhood_id=1; subject <= 64 chars, body <= 1000",
+    "cf $CF post-bulletin --subject '...' --body '...' --lot_id <lot_id>                                            # attach a lot reference",
+    "cf $CF post-bulletin --subject '...' --body '...' --neighborhood_id <nhood>                                    # post to different nhood"
+  ],
+  "common_mistakes": [
+    "subject empty or > 64 chars → ok:false.",
+    "body empty or > 1000 chars → ok:false.",
+    "SEND_FAIL_JUST_MOVED (non-admin within 7 days of move) or SEND_FAIL_TOO_FREQUENT (Bulletin_Post_Frequency=3 days) → ok:false with enum-named reason."
+  ],
+  "perception_hints": [
+    "Neighborhood id (defaults to 1 on workshop): perception.lot.lot_id is a lot id, not a nhood id — most ops default nhood_id to 1",
+    "Your own persist_id (to avoid self-vote/self-nominate): perception.avatar.persist_id",
+    "Your lot membership (residency gate): perception.lot.owner_is_me or check is_roommate via query-lot"
+  ],
+  "refuse_conditions": [
+    "empty subject or body → ok:false",
+    "subject > 64 chars or body > 1000 chars → ok:false",
+    "SEND_FAIL_JUST_MOVED / SEND_FAIL_TOO_FREQUENT / other SEND_FAIL_* → ok:false with enum reason"
+  ]
 }

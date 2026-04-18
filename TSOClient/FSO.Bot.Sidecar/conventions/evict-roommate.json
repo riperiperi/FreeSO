@@ -5,7 +5,11 @@
   "family": "property",
   "description": "Kick a roommate off your lot. Prerequisite: caller must be the current lot's owner (VMTSOLotState.OwnerID == self); target must be listed in fso_roommates for this lot. Effect: target's fso_roommates row is removed; if they are on the lot they are evicted next tick. Cost: frees a roommate slot. Refuse path: ok=false if caller is not owner or target is not currently a roommate. Wire: ChangeRoommateRequest{Type=KICK,AvatarId,LotLocation} on the city Aries socket.",
   "args": [
-    {"name": "target_persist_id", "type": "uint64", "required": true}
+    {
+      "name": "target_persist_id",
+      "type": "uint64",
+      "required": true
+    }
   ],
   "produces_tags": [
     {
@@ -21,5 +25,24 @@
     "window": "1m"
   },
   "response": "sync",
-  "status": "implemented"
+  "status": "implemented",
+  "call_signatures": [
+    "cf $CF evict-roommate --target_persist_id <current roommate's persist_id>            # owner-only; sends ChangeRoommateRequest KICK"
+  ],
+  "common_mistakes": [
+    "Calling as non-owner → ok:false.",
+    "Evicting yourself → ok:false ('cannot evict the owner (yourself)').",
+    "target was not actually a roommate — handler warns via target_was_roommate_in_vm:false but still sends (server has authoritative view)."
+  ],
+  "perception_hints": [
+    "Your own persist_id (to avoid self-targeting): perception.avatar.persist_id",
+    "Am I the owner? perception.lot.owner_is_me (true/false)",
+    "Target persist_id: perception.nearby_sims[].persist_id for Sims physically on the lot",
+    "Relationships for picking a roommate candidate: perception.relationships[]"
+  ],
+  "refuse_conditions": [
+    "caller is not lot owner → returns ok:false with 'caller is not lot owner (owner_id=..., me=...)'",
+    "target_persist_id is 0 or missing → returns ok:false with 'requires target_persist_id (> 0)'",
+    "target_persist_id == caller's own avatar_id → returns ok:false with 'cannot self-target' / 'cannot invite yourself'"
+  ]
 }

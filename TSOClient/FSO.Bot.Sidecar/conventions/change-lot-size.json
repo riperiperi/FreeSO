@@ -5,8 +5,16 @@
   "family": "build-buy-architecture",
   "description": "Grow the lot's buildable size (byte index into VMBuildableAreaInfo.BuildableSizes) and/or stories (0..3). Size-down and no-op are server-rejected. Prerequisite: you are the lot owner (handler-side; server-side Owner via VMTSOAvatarPermissions.Owner). A transaction is required: the server calls GlobalLink.PerformTransaction for baseCost + roomieCost; if funds are insufficient the resize is silently cancelled. Effect: vm.TSOState.Size packed field changes; visible via query-lot.size_tiles / floors. Cost: VMBuildableAreaInfo.CalculateBaseCost(oldTotal, newTotal) + CalculateRoomieCost per roommate. Wire: VMNetChangeLotSizeCmd { LotSize, LotStories }.",
   "args": [
-    {"name": "lot_size", "type": "int64", "required": true},
-    {"name": "lot_stories", "type": "int64", "required": true}
+    {
+      "name": "lot_size",
+      "type": "int64",
+      "required": true
+    },
+    {
+      "name": "lot_stories",
+      "type": "int64",
+      "required": true
+    }
   ],
   "produces_tags": [
     {
@@ -22,5 +30,24 @@
     "window": "1m"
   },
   "response": "sync",
-  "status": "implemented"
+  "status": "implemented",
+  "call_signatures": [
+    "cf $CF change-lot-size --lot_size <byte_0..255> --lot_stories <0..3>                                   # owner-only; lot_size indexes VMBuildableAreaInfo.BuildableSizes"
+  ],
+  "common_mistakes": [
+    "Non-owner → ok:false.",
+    "lot_size out of [0,255] or lot_stories out of [0,3] → ok:false.",
+    "lot_size is an INDEX into VMBuildableAreaInfo.BuildableSizes, not a tile count."
+  ],
+  "perception_hints": [
+    "Am I the owner? perception.lot.owner_is_me — architecture ops are owner-only",
+    "Your position (to anchor where to build): perception.avatar.position.x, .y (tile coords — arch ops accept tile coords directly, unlike walk-to)",
+    "Lot metadata: perception.lot.lot_id, perception.lot.name",
+    "Walls/floors are NOT exposed in perception — use query-architecture (test helper) if you need pre/post state"
+  ],
+  "refuse_conditions": [
+    "caller is not lot owner → returns ok:false with 'caller is not lot owner (owner_id=..., me=...)'",
+    "required tile coords (x, y) missing → returns ok:false with '<verb> requires x, y ...'",
+    "width/height/length <= 0 where specified → returns ok:false with specific bounds error"
+  ]
 }

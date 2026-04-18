@@ -5,7 +5,12 @@
   "family": "navigation",
   "description": "Ask the city server which lot another avatar is currently on (or none). On the wire this is `FindAvatarRequest{AvatarId}` → `FindAvatarResponse{AvatarId, Status, LotId}` — note the server-side `LotId` field is actually the lot **location code** (populated from the avatar's `AvatarClaim.location`), NOT a DB lot_id (same OQ-3 aliasing as `FindLotRequest`). Prerequisite: you have a live city socket (you are logged in — which is true whenever this handler is reachable). Effect: none on the world — a pure directory query. If the target has privacy_mode set, the server returns `Status=PRIVACY_ENABLED` and `LotId=0`; if the target is logged out or not claimed, `Status=NOT_ON_LOT` and `LotId=0`; if found, `Status=FOUND` and `LotId=<location>`. Cost: one round-trip to the city server (milliseconds; 10s client-side timeout). Response payload: `target_avatar_id` (uint), `status` (\"FOUND\" | \"NOT_ON_LOT\" | \"PRIVACY_ENABLED\" | \"IGNORING_THEM\" | \"IGNORING_YOU\"), `on_lot` (bool; true iff status == FOUND), `lot_location` (hex `0x...` or null), `lot_location_raw` (uint; 0 when not found). Use this when you know an avatar by DB id (e.g. from `query-nearby`'s `persist_id` field or from your own memory) and want to know where to `visit-lot` to them.",
   "args": [
-    {"name": "target_avatar_id", "type": "uint", "required": true, "description": "avatar_id (Sim persist id) of the target to locate."}
+    {
+      "name": "target_avatar_id",
+      "type": "uint",
+      "required": true,
+      "description": "avatar_id (Sim persist id) of the target to locate."
+    }
   ],
   "produces_tags": [
     {
@@ -20,5 +25,25 @@
     "per": "sender",
     "window": "1m"
   },
-  "response": "sync"
+  "response": "sync",
+  "call_signatures": [
+    "cf $CF find-avatar --target_avatar_id <avatar_id>                                                          # city-server directory query; 10s timeout"
+  ],
+  "common_mistakes": [
+    "target_avatar_id is a uint avatar persist_id — not a user_id, not an ObjectID.",
+    "target_avatar_id = 0 → ok:false.",
+    "LotId in the response is a LOCATION CODE, not a DB lot_id (OQ-3 aliasing).",
+    "Status=PRIVACY_ENABLED returns LotId=0; do not confuse with NOT_ON_LOT."
+  ],
+  "perception_hints": [
+    "Your current lot: perception.lot.lot_id and perception.lot.name",
+    "Your position: perception.avatar.position",
+    "Home detection: go-home returns already_home:true when perception.lot.lot_id matches your home lot location"
+  ],
+  "refuse_conditions": [
+    "missing target_avatar_id → ok:false",
+    "target_avatar_id not a valid uint → ok:false",
+    "target_avatar_id == 0 → ok:false",
+    "10s timeout with no FindAvatarResponse → ok:false"
+  ]
 }

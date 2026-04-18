@@ -5,14 +5,46 @@
   "family": "build-buy-architecture",
   "description": "Add (or remove, if remove=true) a wall segment starting at (x,y) running in octant `direction` for `length` tiles on `level`. Prerequisite: you are the lot owner (handler-side gate via VMTSOLotState.OwnerID; server-side also refuses if < BuildBuyRoommate via Validator.CanBuildTool). Effect: wall appears (or disappears) — observable via query-architecture at the affected tiles; perception does not expose walls. Cost: wall materials are debited from lot funds by the server during Architecture.RunCommands (indirect — not a direct GlobalLink transaction). Denial is a silent drop with no error PDU back (OQ-8). Wire: VMNetArchitectureCmd { Commands: [{ Type: WALL_LINE | WALL_DELETE, level, x, y, x2=length, y2=direction, pattern, style }] } on the lot Aries socket.",
   "args": [
-    {"name": "x", "type": "int64", "required": true},
-    {"name": "y", "type": "int64", "required": true},
-    {"name": "length", "type": "int64", "required": true},
-    {"name": "direction", "type": "int64", "required": true},
-    {"name": "level", "type": "int64", "required": false},
-    {"name": "pattern", "type": "int64", "required": false},
-    {"name": "style", "type": "int64", "required": false},
-    {"name": "remove", "type": "bool", "required": false}
+    {
+      "name": "x",
+      "type": "int64",
+      "required": true
+    },
+    {
+      "name": "y",
+      "type": "int64",
+      "required": true
+    },
+    {
+      "name": "length",
+      "type": "int64",
+      "required": true
+    },
+    {
+      "name": "direction",
+      "type": "int64",
+      "required": true
+    },
+    {
+      "name": "level",
+      "type": "int64",
+      "required": false
+    },
+    {
+      "name": "pattern",
+      "type": "int64",
+      "required": false
+    },
+    {
+      "name": "style",
+      "type": "int64",
+      "required": false
+    },
+    {
+      "name": "remove",
+      "type": "bool",
+      "required": false
+    }
   ],
   "produces_tags": [
     {
@@ -28,5 +60,27 @@
     "window": "1m"
   },
   "response": "sync",
-  "status": "implemented"
+  "status": "implemented",
+  "call_signatures": [
+    "cf $CF place-wall --x <tile_x> --y <tile_y> --length <tiles> --direction <0..7>                       # build a wall (tile coords, not subtile!)",
+    "cf $CF place-wall --x <x> --y <y> --length <n> --direction <d> --remove true                         # delete existing wall along same line",
+    "cf $CF place-wall --x <x> --y <y> --length <n> --direction <d> --pattern <p> --style <s> --level 2    # with wallpaper + upper floor"
+  ],
+  "common_mistakes": [
+    "Non-owner → ok:false.",
+    "x/y are TILE coords (not subtile!) for architecture ops — don't multiply by 16 here.",
+    "length <= 0 or direction/length missing → ok:false.",
+    "direction is an octant 0..7: 0=E, 2=S, 4=W, 6=N, odd values are diagonals."
+  ],
+  "perception_hints": [
+    "Am I the owner? perception.lot.owner_is_me — architecture ops are owner-only",
+    "Your position (to anchor where to build): perception.avatar.position.x, .y (tile coords — arch ops accept tile coords directly, unlike walk-to)",
+    "Lot metadata: perception.lot.lot_id, perception.lot.name",
+    "Walls/floors are NOT exposed in perception — use query-architecture (test helper) if you need pre/post state"
+  ],
+  "refuse_conditions": [
+    "caller is not lot owner → returns ok:false with 'caller is not lot owner (owner_id=..., me=...)'",
+    "required tile coords (x, y) missing → returns ok:false with '<verb> requires x, y ...'",
+    "width/height/length <= 0 where specified → returns ok:false with specific bounds error"
+  ]
 }

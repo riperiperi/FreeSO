@@ -5,11 +5,38 @@
   "family": "queries",
   "description": "Return nearby objects and nearby Sims within a radius — the same slice the perception stream emits on its nearby_objects + nearby_sims fields, on demand. Prerequisite: you are joined to a lot and the local VM has caught up. Effect: none — local-VM read, no outbound PDU. Results include everything within radius_tiles of your current tile; objects multi-tile-grouped are de-duplicated to the base tile so a bed counts once, not four times. Out-of-world entities are filtered. Cost: O(entities in lot) scan under the VM tick lock; for a fully populated TSO lot this is still microseconds. Use when you need a fresh nearby scan mid-turn (e.g., after moving) without waiting for the next perception tick. Default radius 20 tiles matches the perception stream's default; tighter radii surface fewer candidates for focused decisions.",
   "args": [
-    {"name": "radius_tiles", "type": "number", "required": false, "default": 20, "description": "Search radius in tiles (must be positive). Converted to engine-native 1/16-tile units internally. 20 tiles = a room plus adjacent rooms; matches what the perception stream uses."}
+    {
+      "name": "radius_tiles",
+      "type": "number",
+      "required": false,
+      "default": 20,
+      "description": "Search radius in tiles (must be positive). Converted to engine-native 1/16-tile units internally. 20 tiles = a room plus adjacent rooms; matches what the perception stream uses."
+    }
   ],
-  "produces_tags": [{"tag": "freeso:query-nearby", "cardinality": "exactly_one"}],
+  "produces_tags": [
+    {
+      "tag": "freeso:query-nearby",
+      "cardinality": "exactly_one"
+    }
+  ],
   "antecedents": "none",
   "signing": "member_key",
-  "rate_limit": {"max": 60, "per": "sender", "window": "1m"},
-  "response": "sync"
+  "rate_limit": {
+    "max": 60,
+    "per": "sender",
+    "window": "1m"
+  },
+  "response": "sync",
+  "call_signatures": [
+    "cf $CF query-nearby                                                                  # default radius 20 tiles (matches perception)",
+    "cf $CF query-nearby --radius_tiles 5                                                 # narrow radius to near-immediate neighbourhood"
+  ],
+  "common_mistakes": [
+    "These are LOCAL VM reads — they reflect whatever your client-side replica VM shows, which may lag the authoritative state by 1-2 ticks.",
+    "Do not rely on query-inventory until freesoexperiment-1a9 closes — it returns deferred:true with items=[]."
+  ],
+  "perception_hints": [
+    "These ops return the same shape as the corresponding perception slice; use for fresh mid-turn snapshots",
+    "Perception already pushes this data at FSO_PERCEPTION_HZ — only call when you need data newer than the last tick"
+  ]
 }

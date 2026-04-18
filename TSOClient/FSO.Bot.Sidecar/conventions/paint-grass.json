@@ -5,10 +5,26 @@
   "family": "build-buy-architecture",
   "description": "Paint (or sculpt) a grass tile in the lot's exterior terrain at (x,y,level). `pattern` selects grass density/type. Prerequisite: you are the lot owner (handler-side; server-side BuildBuyRoommate+). Effect: grass tile pattern updates at that tile — observable via query-architecture (floor.pattern on exterior tiles). Cost: minimal. Denial silent (OQ-8). Wire: VMNetArchitectureCmd { Commands: [{ Type: GRASS_DOT, level, x, y, pattern }] }.",
   "args": [
-    {"name": "x", "type": "int64", "required": true},
-    {"name": "y", "type": "int64", "required": true},
-    {"name": "level", "type": "int64", "required": false},
-    {"name": "pattern", "type": "int64", "required": false}
+    {
+      "name": "x",
+      "type": "int64",
+      "required": true
+    },
+    {
+      "name": "y",
+      "type": "int64",
+      "required": true
+    },
+    {
+      "name": "level",
+      "type": "int64",
+      "required": false
+    },
+    {
+      "name": "pattern",
+      "type": "int64",
+      "required": false
+    }
   ],
   "produces_tags": [
     {
@@ -24,5 +40,24 @@
     "window": "1m"
   },
   "response": "sync",
-  "status": "implemented"
+  "status": "implemented",
+  "call_signatures": [
+    "cf $CF paint-grass --x <tile_x> --y <tile_y> --pattern <0..255>                                       # grass density/type byte packed in ushort"
+  ],
+  "common_mistakes": [
+    "Non-owner → ok:false.",
+    "pattern is 0..255 (packed in ushort) — byte range, not arbitrary uint.",
+    "Tile coords, not subtile."
+  ],
+  "perception_hints": [
+    "Am I the owner? perception.lot.owner_is_me — architecture ops are owner-only",
+    "Your position (to anchor where to build): perception.avatar.position.x, .y (tile coords — arch ops accept tile coords directly, unlike walk-to)",
+    "Lot metadata: perception.lot.lot_id, perception.lot.name",
+    "Walls/floors are NOT exposed in perception — use query-architecture (test helper) if you need pre/post state"
+  ],
+  "refuse_conditions": [
+    "caller is not lot owner → returns ok:false with 'caller is not lot owner (owner_id=..., me=...)'",
+    "required tile coords (x, y) missing → returns ok:false with '<verb> requires x, y ...'",
+    "width/height/length <= 0 where specified → returns ok:false with specific bounds error"
+  ]
 }

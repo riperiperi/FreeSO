@@ -5,15 +5,57 @@
   "family": "mail",
   "description": "Send a mail letter to another avatar on the shard. Prerequisite: target_persist_id must resolve to a real avatar (the server looks them up via DataService.Get<Avatar>; a bad id causes the server to throw and reply SEND_FAILED); non-empty subject and body. Effect: the bot constructs a MessageItem{TargetID, Subject, Body, Type=0, Subtype=0}, wraps it in MailRequest{Type=SEND, Item=...}, and writes it on the city Aries socket. The server's MailHandler BB-sanitises the body, truncates it to 1500 chars, INSERTs a fso_inbox row with sender_id=your_persist_id, and if the target is online, pushes a MailResponse{Type=NEW_MAIL} to them immediately; otherwise they get it on their next POLL_INBOX. The sender receives MailResponse{Type=SEND_SUCCESS, Messages=[echo]} (or SEND_IGNORING_YOU / SEND_IGNORING_THEM / SEND_FAILED). Sending to yourself is legal — server creates a normal fso_inbox row. Cost: zero in-world currency. Client-side pre-wire refuse: missing target / empty subject / empty body / body > 1500 chars → ok=false with specific error.",
   "args": [
-    {"name": "target_persist_id", "type": "integer", "required": true, "description": "Persist id (avatar id) of the recipient. Must be > 0 and typically not your own. Server does the existence check; a bogus id causes SEND_FAILED."},
-    {"name": "subject", "type": "string", "required": true, "description": "Subject line. Must be non-empty. Server stores up to 128 chars (MariaDB varchar(128)); bot truncates defensively at 128."},
-    {"name": "body", "type": "string", "required": true, "description": "Message body. Must be non-empty. Server BB-sanitises and caps at 1500 chars; bot refuses bodies > 1500 chars pre-wire to surface the constraint explicitly to the agent rather than silently truncate."}
+    {
+      "name": "target_persist_id",
+      "type": "integer",
+      "required": true,
+      "description": "Persist id (avatar id) of the recipient. Must be > 0 and typically not your own. Server does the existence check; a bogus id causes SEND_FAILED."
+    },
+    {
+      "name": "subject",
+      "type": "string",
+      "required": true,
+      "description": "Subject line. Must be non-empty. Server stores up to 128 chars (MariaDB varchar(128)); bot truncates defensively at 128."
+    },
+    {
+      "name": "body",
+      "type": "string",
+      "required": true,
+      "description": "Message body. Must be non-empty. Server BB-sanitises and caps at 1500 chars; bot refuses bodies > 1500 chars pre-wire to surface the constraint explicitly to the agent rather than silently truncate."
+    }
   ],
   "produces_tags": [
-    {"tag": "freeso:send-mail", "cardinality": "exactly_one"}
+    {
+      "tag": "freeso:send-mail",
+      "cardinality": "exactly_one"
+    }
   ],
   "antecedents": "none",
   "signing": "member_key",
-  "rate_limit": {"max": 30, "per": "sender", "window": "1m"},
-  "response": "sync"
+  "rate_limit": {
+    "max": 30,
+    "per": "sender",
+    "window": "1m"
+  },
+  "response": "sync",
+  "call_signatures": [
+    "cf $CF send-mail --target_persist_id <pid> --subject '...' --body '...'                                  # subject <= 128 chars, body <= 1500"
+  ],
+  "common_mistakes": [
+    "Another send-mail already in flight → ok:false.",
+    "target_persist_id / subject / body missing or empty → ok:false.",
+    "subject > 128 chars or body > 1500 → ok:false (server caps mirror).",
+    "Server BB-sanitises body; angle brackets etc. may render differently at the target."
+  ],
+  "perception_hints": [
+    "Your own persist_id (for self-send health check): perception.avatar.persist_id",
+    "Inbound NEW_MAIL pushes surface in perception.recent_events[] with kind=='mail', direction=='in' — the extras carry mail_id / sender_persist_id / subject",
+    "Target persist_id: perception.nearby_sims[].persist_id (on-lot) or from your remembered contacts"
+  ],
+  "refuse_conditions": [
+    "missing target_persist_id, subject, or body → ok:false",
+    "subject > 128 chars or body > 1500 → ok:false",
+    "another send-mail in flight → ok:false",
+    "server FAILURE variants (SEND_FAILED / SEND_IGNORING_YOU / SEND_IGNORING_THEM / SEND_THROTTLED[_DAILY]) → ok:false with the enum-named reason"
+  ]
 }
