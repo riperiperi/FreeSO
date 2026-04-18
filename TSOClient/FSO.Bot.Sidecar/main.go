@@ -201,33 +201,35 @@ func main() {
 		}
 		log.Printf("convention handlers: %d property-family ops serving", propServers)
 
-		// Admin family (freesoexperiment-3df): kick/ban/ipban-user (ModerationRequest
-		// city PDU), archive-approve/reject-user (ArchiveModerationRequest city PDU),
-		// admin-chat-command (VMNetChatCmd "/cmd args" lot PDU). All gated on admin
-		// bit in the bot handler (AdminHandlers.cs CheckAdmin reads in-VM
-		// VMTSOAvatarPermissions). cheat-command DROPPED — no wire path.
+		// Admin family (freesoexperiment-3df).
 		adminServers, err := RegisterAdminHandlers(ctx, cf, ipc)
 		if err != nil {
 			log.Fatalf("register admin handlers: %v", err)
 		}
 		log.Printf("convention handlers: %d admin-family ops serving", adminServers)
 
-		// Mail family (freesoexperiment-bd2): poll-inbox, send-mail, delete-mail. City-socket
-		// MailRequest/MailResponse PDUs. read-mail dropped (no wire PDU on this fork).
+		// Mail family (freesoexperiment-bd2).
 		mailServers, err := RegisterMailHandlers(ctx, cf, ipc)
 		if err != nil {
 			log.Fatalf("register mail handlers: %v", err)
 		}
 		log.Printf("convention handlers: %d mail-family ops serving", mailServers)
 
-		// City family (freesoexperiment-ded): view-bulletin, post-bulletin, vote,
-		// nominate, view-neighborhood. All on city Aries socket. Election-gated ops
-		// refuse ELECTION_OVER on workshop's current DB (no active cycle).
+		// City family (freesoexperiment-ded).
 		cityServers, err := RegisterCityHandlers(ctx, cf, ipc)
 		if err != nil {
 			log.Fatalf("register city handlers: %v", err)
 		}
 		log.Printf("convention handlers: %d city-family ops serving", cityServers)
+
+		// Build-buy-catalog family (freesoexperiment-304): buy-object, place-from-inventory,
+		// move-object, delete-object, send-to-inventory, list-object-for-sale, buy-listed-object,
+		// upgrade-object. Lot-socket VMNet*Cmd PDUs; owner/own-object gating in the bot handler.
+		buyServers, err := RegisterBuyModeHandlers(ctx, cf, ipc)
+		if err != nil {
+			log.Fatalf("register buy-mode handlers: %v", err)
+		}
+		log.Printf("convention handlers: %d build-buy-catalog-family ops serving", buyServers)
 	} else {
 		log.Printf("running in --no-bot mode (campfire-only)")
 

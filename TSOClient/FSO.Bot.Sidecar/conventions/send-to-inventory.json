@@ -3,8 +3,10 @@
   "version": "1.0",
   "operation": "send-to-inventory",
   "family": "build-buy-catalog",
-  "description": "Move an owned object off the lot into your inventory. Refunds to inventory rather than money.",
-  "args": [],
+  "description": "Move an owned object off the lot into your inventory. Prerequisite: you are the owner of the target object (VMTSOObjectState.OwnerID == you; handler-side gate). Object must be user-movable. Effect: the object disappears from nearby_objects and appears in your inventory (query-inventory) with its current state preserved (upgrade level, wear, etc.). Cost: none (no money moves; this is the 'refund to inventory' path, distinct from delete-object's 'refund to money' path). Wire: VMNetSendToInventoryCmd on the lot Aries socket.",
+  "args": [
+    {"name": "target_object_persist_id", "type": "uint64", "required": true}
+  ],
   "produces_tags": [
     {
       "tag": "freeso:send-to-inventory",
@@ -19,5 +21,5 @@
     "window": "1m"
   },
   "response": "sync",
-  "status": "scaffold"
+  "status": "implemented"
 }

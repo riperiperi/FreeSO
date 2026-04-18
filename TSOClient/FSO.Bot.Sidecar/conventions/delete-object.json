@@ -3,8 +3,11 @@
   "version": "1.0",
   "operation": "delete-object",
   "family": "build-buy-catalog",
-  "description": "Remove an object from the lot permanently. Money is not refunded (use send-to-inventory or sell-back for refund paths).",
-  "args": [],
+  "description": "Delete an object from the lot by its in-world ObjectID. Source-of-truth note (catalog doc, verb-catalog.md:53, claimed 'no refund' — this is inaccurate): VMNetDeleteObjectCmd.Execute DOES call GlobalLink.PerformTransaction to refund obj.MultitileGroup.Price when Mode == DeleteMode.Delete (wire truth > catalog comment). If you want the object AND its money back into inventory instead, use send-to-inventory. Prerequisite: you are the lot owner (handler-side VMTSOLotState.OwnerID gate). Object must be user-movable (Sims cannot be deleted this way). Effect: the object disappears from nearby_objects; your balance increases by the object's current sale price. Cost: no money leaves (you get a refund); the object is gone. Wire: VMNetDeleteObjectCmd on the lot Aries socket.",
+  "args": [
+    {"name": "target_object_id", "type": "int64", "required": true},
+    {"name": "cleanup_all", "type": "bool", "required": false}
+  ],
   "produces_tags": [
     {
       "tag": "freeso:delete-object",
@@ -19,5 +22,5 @@
     "window": "1m"
   },
   "response": "sync",
-  "status": "scaffold"
+  "status": "implemented"
 }

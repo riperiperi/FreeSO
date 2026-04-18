@@ -396,25 +396,17 @@ public class Program
             // owner-gate via VMTSOLotState.OwnerID == MyAvatarPersistId under RunUnderTickLock.
             // pay-bills DROPPED (no player PDU).
             PropertyHandlers.RegisterAll(dispatcher, vmHost, cityAries, targetLotLocation);
-<<<<<<< HEAD
-            // Admin family (freesoexperiment-3df): kick/ban/ipban-user (ModerationRequest on
-            // city socket; EntityId=avatar_id), archive-approve/reject-user
-            // (ArchiveModerationRequest on city socket; EntityId=user_id), admin-chat-command
-            // (VMNetChatCmd "/cmd args" on lot socket). All gated on the caller's in-VM
-            // VMTSOAvatarPermissions == Admin, read under tick lock. cheat-command DROPPED
-            // (no server-side ! dispatch; the client-side UICheatHandler doesn't exist in a
-            // headless bot).
+            // Admin family (freesoexperiment-3df).
             AdminHandlers.RegisterAll(dispatcher, vmHost, cityAries);
-            // Mail family (freesoexperiment-bd2): poll-inbox, send-mail, delete-mail.
-            // City-socket MailRequest/MailResponse PDUs (distinct from MessagingHandler/IM).
-            // read-mail DROPPED — no server PDU to transition fso_inbox.read_state on this fork.
+            // Mail family (freesoexperiment-bd2).
             MailHandlers.RegisterAll(dispatcher, cityAries, avatar.ID);
-            // City family (freesoexperiment-ded): view-bulletin, post-bulletin, vote,
-            // nominate, view-neighborhood. City Aries socket. Bulletin + nhood responses
-            // correlate FIFO. view-neighborhood correlates via DataServiceWrapperPDU
-            // SendingAvatarID. Workshop has no active election_cycle → vote/nominate
-            // return ELECTION_OVER (deterministic refuse).
+            // City family (freesoexperiment-ded).
             CityHandlers.RegisterAll(dispatcher, cityAries, avatar.ID);
+            // Build-buy-catalog family (freesoexperiment-304): buy-object, place-from-inventory,
+            // move-object, delete-object, send-to-inventory, list-object-for-sale,
+            // buy-listed-object, upgrade-object. Lot-socket VMNet*Cmd PDUs. Handler-side owner
+            // gate (VMTSOLotState.OwnerID / VMTSOObjectState.OwnerID under RunUnderTickLock).
+            BuyModeHandlers.RegisterAll(dispatcher, vmHost);
             // Wire chat events into the perception projector so speak's server-round-tripped
             // echo surfaces as a recent_events entry (kind=chat). Ground-source truth for the
             // verb-social integration test — a bare VMNetChatCmd ACK does not prove wire effect.
@@ -428,7 +420,7 @@ public class Program
             // responses are correlated RPC-style and stay off recent_events.
             if (projector != null) MailHandlers.WireMailPerception(cityAries, projector);
             dispatcher.Start();
-            Log($"ipc: command dispatcher started (stdin); ops registered: walk-to, cancel, queue-interaction, query-self, query-nearby, query-lot, query-relationships, query-inventory, interact-with, cancel-interaction, query-pie-menu, speak, be-friendly, tell-joke, flirt, be-mean, give-gift, instant-message, change-outfit, change-description, go-home, visit-lot, find-avatar, add-roommate, evict-roommate, lock-lot, unlock-lot, kick-user, ban-user, ipban-user, archive-approve-user, archive-reject-user, admin-chat-command, poll-inbox, send-mail, delete-mail, view-bulletin, post-bulletin, vote, nominate, view-neighborhood");
+            Log($"ipc: command dispatcher started (stdin); ops registered: walk-to, cancel, queue-interaction, query-self, query-nearby, query-lot, query-relationships, query-inventory, interact-with, cancel-interaction, query-pie-menu, speak, be-friendly, tell-joke, flirt, be-mean, give-gift, instant-message, change-outfit, change-description, go-home, visit-lot, find-avatar, add-roommate, evict-roommate, lock-lot, unlock-lot, kick-user, ban-user, ipban-user, archive-approve-user, archive-reject-user, admin-chat-command, poll-inbox, send-mail, delete-mail, view-bulletin, post-bulletin, vote, nominate, view-neighborhood, buy-object, place-from-inventory, move-object, delete-object, send-to-inventory, list-object-for-sale, buy-listed-object, upgrade-object, find-cheap-catalog-guid");
         }
 
         // 8. Tick loop. The real client ticks at FSOEnvironment.RefreshRate (60Hz). The driver

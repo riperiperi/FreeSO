@@ -3,8 +3,15 @@
   "version": "1.0",
   "operation": "place-from-inventory",
   "family": "build-buy-catalog",
-  "description": "Place an object from your personal inventory into the lot. Different from buy-object because no transaction runs; the object's persist-id is preserved.",
-  "args": [],
+  "description": "Place an object from your personal inventory into the lot at (x,y,level) facing dir. Different from buy-object because no transaction runs; the object's persist-id is preserved. Prerequisite: you are the lot owner (handler-side VMTSOLotState.OwnerID gate). The referenced object must be present in your inventory. Effect: the object appears in nearby_objects; your inventory count decreases by 1. Cost: none (no money moves). Wire: VMNetPlaceInventoryCmd on the lot Aries socket.",
+  "args": [
+    {"name": "object_persist_id", "type": "uint64", "required": true},
+    {"name": "x", "type": "int64", "required": true},
+    {"name": "y", "type": "int64", "required": true},
+    {"name": "level", "type": "int64", "required": false},
+    {"name": "dir", "type": "int64", "required": false},
+    {"name": "mode", "type": "string", "required": false}
+  ],
   "produces_tags": [
     {
       "tag": "freeso:place-from-inventory",
@@ -19,5 +26,5 @@
     "window": "1m"
   },
   "response": "sync",
-  "status": "scaffold"
+  "status": "implemented"
 }

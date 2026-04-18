@@ -3,8 +3,14 @@
   "version": "1.0",
   "operation": "move-object",
   "family": "build-buy-catalog",
-  "description": "Move an already-placed object to a new tile/level/rotation on the same lot.",
-  "args": [],
+  "description": "Move an already-placed object to a new tile/level/rotation on the same lot. Same command handles pure rotation (pass the object's current x/y with a new dir). Prerequisite: you are the lot owner (handler-side VMTSOLotState.OwnerID gate) OR (for own-owned decor) VMTSOObjectState.OwnerID == you. Object must be present at target_object_id in the lot VM and must be user-movable (e.g. a Sim cannot be moved with this). Effect: the object's position/rotation updates in nearby_objects. Cost: none. Wire: VMNetMoveObjectCmd on the lot Aries socket.",
+  "args": [
+    {"name": "target_object_id", "type": "int64", "required": true},
+    {"name": "x", "type": "int64", "required": true},
+    {"name": "y", "type": "int64", "required": true},
+    {"name": "level", "type": "int64", "required": false},
+    {"name": "dir", "type": "int64", "required": false}
+  ],
   "produces_tags": [
     {
       "tag": "freeso:move-object",
@@ -19,5 +25,5 @@
     "window": "1m"
   },
   "response": "sync",
-  "status": "scaffold"
+  "status": "implemented"
 }
