@@ -200,6 +200,15 @@ func main() {
 			log.Fatalf("register property handlers: %v", err)
 		}
 		log.Printf("convention handlers: %d property-family ops serving", propServers)
+
+		// City family (freesoexperiment-ded): view-bulletin, post-bulletin, vote,
+		// nominate, view-neighborhood. All on city Aries socket. Election-gated ops
+		// refuse ELECTION_OVER on workshop's current DB (no active cycle).
+		cityServers, err := RegisterCityHandlers(ctx, cf, ipc)
+		if err != nil {
+			log.Fatalf("register city handlers: %v", err)
+		}
+		log.Printf("convention handlers: %d city-family ops serving", cityServers)
 	} else {
 		log.Printf("running in --no-bot mode (campfire-only)")
 

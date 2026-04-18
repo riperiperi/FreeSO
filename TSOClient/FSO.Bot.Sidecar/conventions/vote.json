@@ -1,0 +1,26 @@
+{
+  "convention": "freeso-embodiment",
+  "version": "1.0",
+  "operation": "vote",
+  "family": "city",
+  "description": "Cast a vote for a mayoral candidate in an active neighborhood election. Prerequisite: caller must be a resident of the target neighborhood (fso_roommates on a lot in nhood), must not have moved in <30 days (Election_Move_Penalty; admins bypass), the neighborhood must have an active election_cycle in state='election', and the target must be a running candidate. Effect: fso_election_votes row INSERT (primary key election_cycle_id+from_avatar_id+type='vote' — vote is idempotent per cycle). Returns SUCCESS. Refuse paths: ELECTION_OVER (no active cycle), BAD_STATE (cycle in nomination phase not election), NOT_IN_NHOOD, ALREADY_VOTED, CANDIDATE_NOT_NOMINATED, YOU_MOVED_RECENTLY, CANDIDATE_MOVED_RECENTLY, INVALID_AVATAR. On workshop's current DB state, fso_neighborhoods has no election_cycle_id set, so vote deterministically refuses with ELECTION_OVER — this is the test's expected wire-level effect. Wire: NhoodRequest{Type=VOTE, TargetAvatar, TargetNHood} on city Aries; resolves on the next NhoodResponse.",
+  "args": [
+    {"name": "target_persist_id", "type": "uint64", "required": true},
+    {"name": "neighborhood_id", "type": "uint32", "required": false}
+  ],
+  "produces_tags": [
+    {
+      "tag": "freeso:vote",
+      "cardinality": "exactly_one"
+    }
+  ],
+  "antecedents": "none",
+  "signing": "member_key",
+  "rate_limit": {
+    "max": 5,
+    "per": "sender",
+    "window": "1m"
+  },
+  "response": "sync",
+  "status": "implemented"
+}
