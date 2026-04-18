@@ -256,6 +256,41 @@ public class PerceptionProjectorTests
         Assert.Null(p.Build(null));
     }
 
+    [Fact]
+    public void ActionQueueItemBlock_SerializesModeField()
+    {
+        // The agent's queue-mode decision (preempt vs queue) hinges on distinguishing
+        // engine-pushed Idle from deliberate Normal-mode actions in perception.
+        var tick = new PerceptionTick
+        {
+            Kind = "perception",
+            T = 1700000000000L,
+            Avatar = new AvatarBlock
+            {
+                PersistId = 5, Name = "Botrous", Shard = "Alphaville",
+                Position = new PositionBlock { X = 35.5, Y = 70.5, Level = 1, Direction = "N" },
+                AnimationRaw = "a2o-idle", AnimationHuman = "standing idle",
+                ActionQueue = new List<ActionQueueItemBlock>
+                {
+                    new() { InteractionId = 1, Name = "Idle", TargetObjectId = 1336, Status = "running", Mode = "idle" },
+                    new() { InteractionId = 2, Name = "Read Newspaper", TargetObjectId = 9, Status = "queued", Mode = "normal" },
+                },
+            },
+            Motives = new Dictionary<string, MotiveBlock>(),
+            NearbyObjects = new List<NearbyObjectBlock>(),
+            NearbySims = new List<NearbySimBlock>(),
+            Skills = new Dictionary<string, int>(),
+            Relationships = new List<RelationshipBlock>(),
+            Inventory = new List<InventoryItemBlock>(),
+            Balance = 0,
+            RecentEvents = new List<PerceptionEvent>(),
+            Lot = new LotBlock { Name = "Main", LotId = 2, OwnerIsMe = false, OtherAvatars = 0, SimTime = "00:00", TimeOfDay = "night" },
+        };
+        var json = PerceptionEmitter.Serialize(tick);
+        Assert.Contains("\"mode\":\"idle\"", json);
+        Assert.Contains("\"mode\":\"normal\"", json);
+    }
+
     private static string FindContentFile(string fileName)
     {
         // Look in known locations: test output dir (CopyToOutput), build/Content, source tree.

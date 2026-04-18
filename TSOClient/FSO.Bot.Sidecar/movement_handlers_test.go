@@ -76,29 +76,29 @@ func TestCancelHandlerDispatchesIPC(t *testing.T) {
 	}
 }
 
-func TestQueueInteractionHandlerDispatchesIPC(t *testing.T) {
+func TestWalkToHandlerForwardsQueueMode(t *testing.T) {
 	fake := newFakeBotProcess()
 	ipc := NewIPC(fake.bot)
 	gotCmd := captureOneCommand(t, fake, ipc, map[string]any{
 		"kind": "response", "ok": true,
-		"payload": map[string]any{"queued": true},
+		"payload": map[string]any{"queued": true, "queue_mode": "preempt"},
 	})
 
-	handler := queueInteractionHandler(ipc)
+	handler := walkToHandler(ipc)
 	ctx, cancel := context.WithTimeout(context.Background(), 2*time.Second)
 	defer cancel()
 	_, err := handler(ctx, &convention.Request{
-		Args: map[string]any{"interaction": float64(1), "callee_id": float64(17)},
+		Args: map[string]any{"x": float64(512), "y": float64(640), "queue_mode": "preempt"},
 	})
 	if err != nil {
 		t.Fatalf("handler: %v", err)
 	}
 	cmd := <-gotCmd
-	if cmd.Op != "queue-interaction" {
-		t.Errorf("want op=queue-interaction got %q", cmd.Op)
+	if cmd.Op != "walk-to" {
+		t.Errorf("want op=walk-to got %q", cmd.Op)
 	}
-	if cmd.Args["interaction"] != float64(1) || cmd.Args["callee_id"] != float64(17) {
-		t.Errorf("args not forwarded: %v", cmd.Args)
+	if cmd.Args["queue_mode"] != "preempt" {
+		t.Errorf("queue_mode not forwarded: %v", cmd.Args)
 	}
 }
 

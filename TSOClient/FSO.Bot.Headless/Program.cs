@@ -268,7 +268,7 @@ public class Program
 
         // 5a. Wire the VMClientDriver's outbound command stream to the lot Aries socket. This
         // replaces the read-only drop behaviour from d87-a so outbound VMNet*Cmd PDUs (walk-to,
-        // queue-interaction, cancel — freesoexperiment-b9c) reach the server. Must happen before
+        // cancel — freesoexperiment-b9c) reach the server. Must happen before
         // the VM starts ticking.
         MovementHandlers.WireOutboundVMCommands(vmHost, lotConn);
 
@@ -427,7 +427,7 @@ public class Program
             // responses are correlated RPC-style and stay off recent_events.
             if (projector != null) MailHandlers.WireMailPerception(cityAries, projector);
             dispatcher.Start();
-            Log($"ipc: command dispatcher started (stdin); ops registered: walk-to, cancel, queue-interaction, query-self, query-nearby, query-lot, query-relationships, query-inventory, interact-with, cancel-interaction, query-pie-menu, speak, be-friendly, tell-joke, flirt, be-mean, give-gift, instant-message, change-outfit, change-description, go-home, visit-lot, find-avatar, add-roommate, evict-roommate, lock-lot, unlock-lot, kick-user, ban-user, ipban-user, archive-approve-user, archive-reject-user, admin-chat-command, poll-inbox, send-mail, delete-mail, view-bulletin, post-bulletin, vote, nominate, view-neighborhood, buy-object, place-from-inventory, move-object, delete-object, send-to-inventory, list-object-for-sale, buy-listed-object, upgrade-object, find-cheap-catalog-guid, place-wall, paint-wall, paint-floor, paint-grass, flatten-terrain, raise-terrain, set-roof, change-environment, change-lot-size, leave-build-buy, query-architecture");
+            Log($"ipc: command dispatcher started (stdin); ops registered: walk-to, cancel, query-self, query-nearby, query-lot, query-relationships, query-inventory, interact-with, cancel-interaction, query-pie-menu, speak, be-friendly, tell-joke, flirt, be-mean, give-gift, instant-message, change-outfit, change-description, go-home, visit-lot, find-avatar, add-roommate, evict-roommate, lock-lot, unlock-lot, kick-user, ban-user, ipban-user, archive-approve-user, archive-reject-user, admin-chat-command, poll-inbox, send-mail, delete-mail, view-bulletin, post-bulletin, vote, nominate, view-neighborhood, buy-object, place-from-inventory, move-object, delete-object, send-to-inventory, list-object-for-sale, buy-listed-object, upgrade-object, find-cheap-catalog-guid, place-wall, paint-wall, paint-floor, paint-grass, flatten-terrain, raise-terrain, set-roof, change-environment, change-lot-size, leave-build-buy, query-architecture");
         }
 
         // 8. Tick loop. The real client ticks at FSOEnvironment.RefreshRate (60Hz). The driver

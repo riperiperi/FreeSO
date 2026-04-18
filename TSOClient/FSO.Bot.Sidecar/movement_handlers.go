@@ -16,9 +16,9 @@ import (
 )
 
 // RegisterMovementHandlers loads the movement-family convention declarations
-// (walk-to, cancel, queue-interaction) and wires a convention.Server per op
-// that emits the corresponding IPC command to the bot and returns a
-// convention.Response fulfillment.
+// (walk-to, cancel) and wires a convention.Server per op that emits the
+// corresponding IPC command to the bot and returns a convention.Response
+// fulfillment.
 //
 // One Server per Declaration is the campfire framework's dispatch model
 // (server.go: handlers map[string]HandlerFunc is per-Server, but
@@ -30,9 +30,8 @@ import (
 // are a freesoexperiment-b9c deliverable and MUST be present).
 func RegisterMovementHandlers(ctx context.Context, cf *Campfire, ipc *IPC) (int, error) {
 	ops := map[string]convention.HandlerFunc{
-		"walk-to":           walkToHandler(ipc),
-		"cancel":            cancelHandler(ipc),
-		"queue-interaction": queueInteractionHandler(ipc),
+		"walk-to": walkToHandler(ipc),
+		"cancel":  cancelHandler(ipc),
 	}
 
 	decls, err := LoadDeclarations(conventionFiles)
@@ -74,7 +73,7 @@ func RegisterMovementHandlers(ctx context.Context, cf *Campfire, ipc *IPC) (int,
 //   interaction, param0 — optional PDU fields (default interaction=4 "Run Here")
 func walkToHandler(ipc *IPC) convention.HandlerFunc {
 	return func(ctx context.Context, req *convention.Request) (*convention.Response, error) {
-		args := pickArgs(req.Args, "x", "y", "level", "target_object_id", "target_sim_id", "interaction", "param0")
+		args := pickArgs(req.Args, "x", "y", "level", "target_object_id", "target_sim_id", "interaction", "param0", "queue_mode")
 		return forwardIPC(ctx, ipc, "walk-to", args)
 	}
 }
@@ -86,16 +85,6 @@ func cancelHandler(ipc *IPC) convention.HandlerFunc {
 	return func(ctx context.Context, req *convention.Request) (*convention.Response, error) {
 		args := pickArgs(req.Args, "action_uid")
 		return forwardIPC(ctx, ipc, "cancel", args)
-	}
-}
-
-// queueInteractionHandler pushes an interaction onto the avatar's action queue
-// via VMNetInteractionCmd. Required args: interaction (TTAB index) + callee_id
-// (target VMEntity ObjectID). Optional: param0, global.
-func queueInteractionHandler(ipc *IPC) convention.HandlerFunc {
-	return func(ctx context.Context, req *convention.Request) (*convention.Response, error) {
-		args := pickArgs(req.Args, "interaction", "callee_id", "param0", "global")
-		return forwardIPC(ctx, ipc, "queue-interaction", args)
 	}
 }
 

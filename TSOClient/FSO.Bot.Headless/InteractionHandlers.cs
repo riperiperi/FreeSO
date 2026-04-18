@@ -13,11 +13,10 @@ namespace FSO.Bot.Headless;
 ///
 /// <list type="bullet">
 ///   <item><c>interact-with</c> — invoke a named pie-menu interaction on an object or Sim.
-///   Wire-level PDU is <see cref="VMNetInteractionCmd"/>, identical to the <c>queue-interaction</c>
-///   movement-family sibling. The two are distinct CONVENTIONS (different names, different
-///   semantic framing to the agent) but one PDU on the wire — the engine always queues behind
-///   the currently-running action, so "run now" vs "queue behind current" is a semantic
-///   distinction the agent carries, not something the wire expresses.</item>
+///   Wire-level PDU is <see cref="VMNetInteractionCmd"/>. Accepts a <c>queue_mode</c> arg
+///   ("queue" default cancels engine-Mode-Idle entries before enqueueing; "preempt" cancels
+///   the entire queue first). The previously-separate <c>queue-interaction</c> verb has been
+///   removed — its semantics (append behind current action) are now <c>queue_mode: queue</c>.</item>
 ///
 ///   <item><c>cancel-interaction</c> — cancel ONE specific queued/running interaction by
 ///   <c>action_uid</c>. Wire-level PDU is <see cref="VMNetInteractionCancelCmd"/>. Distinct
@@ -32,7 +31,7 @@ namespace FSO.Bot.Headless;
 ///   freesoexperiment-66c). Returns the list of <see cref="VMPieMenuInteraction"/> the UI
 ///   would show: each entry's <c>id</c> (TTAB index), <c>param0</c>, <c>global</c>,
 ///   <c>name</c>. The agent uses this to discover valid <c>interaction</c> / <c>param0</c>
-///   values for <c>interact-with</c> / <c>queue-interaction</c>.</item>
+///   values for <c>interact-with</c>.</item>
 /// </list>
 ///
 /// Thread safety: <c>query-pie-menu</c> reads deep into VM state (callee.TreeTable,
@@ -62,11 +61,10 @@ public static class InteractionHandlers
     /// <summary>
     /// interact-with — push a named object interaction onto the caller's action queue.
     /// Args: interaction (ushort TTAB index, required), callee_id (short ObjectID, required),
-    /// param0 (short, default 0), global (bool, default false). Distinct from
-    /// queue-interaction on the convention surface only; the wire PDU is the same
-    /// <see cref="VMNetInteractionCmd"/> because the engine always queues behind the current
-    /// action. Agents wanting "run now" semantics must pair with a prior
-    /// <c>cancel-interaction</c>.
+    /// param0 (short, default 0), global (bool, default false), queue_mode (string, default
+    /// "queue"). queue_mode controls how the new interaction lands: "queue" cancels engine
+    /// autopilot (Mode.Idle) entries first so deliberate action outranks autopilot; "preempt"
+    /// cancels the entire queue. See <see cref="QueueModeHelper"/>.
     /// </summary>
     internal static CommandDispatcher.Response InteractWith(HeadlessVMHost vmHost, JsonObject args)
     {
@@ -79,6 +77,10 @@ public static class InteractionHandlers
             return CommandDispatcher.Response.Fail("interact-with requires interaction (TTAB index)");
         if (!calleeArg.HasValue || calleeArg.Value == 0)
             return CommandDispatcher.Response.Fail("interact-with requires callee_id");
+
+        var queueMode = QueueModeHelper.ReadQueueMode(args);
+        if (!QueueModeHelper.ApplyQueueMode(vmHost, queueMode, out var cancelled, out var qmErr))
+            return CommandDispatcher.Response.Fail(qmErr);
 
         var cmd = new VMNetInteractionCmd
         {
@@ -96,6 +98,8 @@ public static class InteractionHandlers
             callee_id = (int)cmd.CalleeID,
             param0 = (int)cmd.Param0,
             global = cmd.Global,
+            queue_mode = queueMode,
+            cancelled,
         });
     }
 

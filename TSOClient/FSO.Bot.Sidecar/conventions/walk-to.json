@@ -49,6 +49,14 @@
       "required": false,
       "default": 0,
       "description": "Optional goto-object param0, forwarded to VMNetGotoCmd."
+    },
+    {
+      "name": "queue_mode",
+      "type": "string",
+      "required": false,
+      "default": "queue",
+      "enum": ["queue", "preempt"],
+      "description": "How this walk lands on your action queue. 'queue' (default) cancels engine autopilot (Mode.Idle entries from spawn-objects and BHAVs) before enqueueing — your deliberate walk outranks autopilot but your own existing queue is preserved. 'preempt' cancels everything currently in your queue and runs this immediately. The lizard-brain/prefrontal model: 'queue' is 'add to my list', 'preempt' is 'drop everything I'm doing.'"
     }
   ],
   "produces_tags": [
@@ -69,7 +77,8 @@
     "cf $CF walk-to --target_object_id <nearby_objects[].object_id>               # preferred: walk to an object visible in perception.nearby_objects[]",
     "cf $CF walk-to --target_sim_id <nearby_sims[].persist_id>                   # walk to another Sim (persist id, highest precedence)",
     "cf $CF walk-to --x <tile*16> --y <tile*16> --level 1                         # absolute subtile coords (multiply tile coord by 16); level optional, default 1",
-    "cf $CF walk-to --target_object_id 352 --interaction 2                        # interaction 2 = Walk Here (default 4 = Run Here)"
+    "cf $CF walk-to --target_object_id 352 --interaction 2                        # interaction 2 = Walk Here (default 4 = Run Here)",
+    "cf $CF walk-to --target_object_id 322 --queue_mode preempt                    # drop whatever is running and walk now (e.g. break out of a spawn-object Idle pin)"
   ],
   "common_mistakes": [
     "Passing tile coords (44, 43) where the handler expects subtile/world coords (704, 688 = 44*16, 43*16).",
@@ -81,7 +90,7 @@
     "Target IDs: perception.nearby_objects[].object_id and perception.nearby_sims[].persist_id",
     "Your current position: perception.avatar.position.x, .y (tile coords); multiply by 16 for raw world coords",
     "Your current level: perception.avatar.position.level",
-    "Current queue depth: perception.avatar.action_queue[] (MAX_USER_ACTIONS = 8)"
+    "Current queue: perception.avatar.action_queue[]. Each entry has .mode ('normal' = deliberate, 'idle' = engine autopilot from spawn-objects/BHAVs). Default queue_mode='queue' clears 'idle' entries before enqueueing your walk — autopilot doesn't compete with deliberate action. Use queue_mode='preempt' to cancel everything (including your own self-queued normal actions) and walk now."
   ],
   "refuse_conditions": [
     "no live avatar → returns ok:false with 'no live avatar'",

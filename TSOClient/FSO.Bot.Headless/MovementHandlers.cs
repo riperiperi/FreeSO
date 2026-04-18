@@ -54,8 +54,6 @@ public static class MovementHandlers
 
         dispatcher.Register("walk-to", (args, ct) => Task.FromResult(WalkTo(vmHost, args)));
         dispatcher.Register("cancel", (args, ct) => Task.FromResult(Cancel(vmHost, args)));
-        dispatcher.Register("queue-interaction",
-            (args, ct) => Task.FromResult(QueueInteraction(vmHost, args)));
     }
 
     /// <summary>
@@ -109,6 +107,10 @@ public static class MovementHandlers
         var interaction = (ushort)((long?)args["interaction"] ?? 4);
         var param0 = (short)((long?)args["param0"] ?? 0);
 
+        var queueMode = QueueModeHelper.ReadQueueMode(args);
+        if (!QueueModeHelper.ApplyQueueMode(vmHost, queueMode, out var cancelled, out var qmErr))
+            return CommandDispatcher.Response.Fail(qmErr);
+
         var cmd = new VMNetGotoCmd
         {
             Interaction = interaction,
@@ -118,7 +120,15 @@ public static class MovementHandlers
             level = level,
         };
         vmHost.Driver.SendCommand(cmd);
-        return CommandDispatcher.Response.Success(new { queued = true, x = (int)tx, y = (int)ty, level = (int)level });
+        return CommandDispatcher.Response.Success(new
+        {
+            queued = true,
+            x = (int)tx,
+            y = (int)ty,
+            level = (int)level,
+            queue_mode = queueMode,
+            cancelled,
+        });
     }
 
     /// <summary>
@@ -183,37 +193,4 @@ public static class MovementHandlers
         return CommandDispatcher.Response.Success(new { cancelled });
     }
 
-    /// <summary>
-    /// queue-interaction — push an interaction onto the avatar's action queue. Maps to
-    /// <c>VMNetInteractionCmd</c>. Same PDU as <c>interact-with</c> (catalog row); the
-    /// distinction is semantic only — the server always queues behind the currently-running
-    /// action when the queue is non-empty. Callers wanting a distinct "run now" primitive must
-    /// cancel the current action first (see <see cref="Cancel"/>).
-    /// </summary>
-    internal static CommandDispatcher.Response QueueInteraction(HeadlessVMHost vmHost, JsonObject args)
-    {
-        var caller = vmHost.VM?.GetAvatarByPersist(vmHost.MyAvatarPersistId);
-        if (caller == null) return CommandDispatcher.Response.Fail("no live avatar");
-
-        var interactionArg = (long?)args["interaction"];
-        var calleeArg = (long?)args["callee_id"];
-        if (!interactionArg.HasValue) return CommandDispatcher.Response.Fail("queue-interaction requires interaction (TTAB index)");
-        if (!calleeArg.HasValue || calleeArg.Value == 0) return CommandDispatcher.Response.Fail("queue-interaction requires callee_id");
-
-        var cmd = new VMNetInteractionCmd
-        {
-            Interaction = checked((ushort)interactionArg.Value),
-            CalleeID = checked((short)calleeArg.Value),
-            Param0 = (short)((long?)args["param0"] ?? 0),
-            Global = (bool?)args["global"] ?? false,
-            CallerID = caller.ObjectID,
-        };
-        vmHost.Driver.SendCommand(cmd);
-        return CommandDispatcher.Response.Success(new
-        {
-            queued = true,
-            interaction = (int)cmd.Interaction,
-            callee_id = (int)cmd.CalleeID,
-        });
-    }
 }

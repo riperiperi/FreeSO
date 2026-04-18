@@ -232,6 +232,10 @@ public static class SocialHandlers
                 $"available=[{string.Join(", ", availableNames.Take(32))}]");
         }
 
+        var queueMode = QueueModeHelper.ReadQueueMode(args);
+        if (!QueueModeHelper.ApplyQueueMode(vmHost, queueMode, out var cancelled, out var qmErr))
+            return CommandDispatcher.Response.Fail(qmErr);
+
         var cmd = new VMNetInteractionCmd
         {
             Interaction = interactionId.Value,
@@ -250,6 +254,8 @@ public static class SocialHandlers
             matched_name = matchedName,
             callee_id = (int)target.ObjectID,
             target_sim_id = (long)target.PersistID,
+            queue_mode = queueMode,
+            cancelled,
         });
     }
 

@@ -81,7 +81,7 @@ func speakHandler(ipc *IPC) convention.HandlerFunc {
 // lives on the C# side (SocialHandlers.DirectedSocial).
 func directedSocialHandler(ipc *IPC, op string) convention.HandlerFunc {
 	return func(ctx context.Context, req *convention.Request) (*convention.Response, error) {
-		args := pickArgs(req.Args, "target_sim_id", "target_object_id")
+		args := pickArgs(req.Args, "target_sim_id", "target_object_id", "queue_mode")
 		return forwardIPC(ctx, ipc, op, args)
 	}
 }

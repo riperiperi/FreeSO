@@ -557,6 +557,14 @@ public class PerceptionProjector
                 Name = q.Name ?? string.Empty,
                 TargetObjectId = q.Callee?.ObjectID ?? 0,
                 Status = i == 0 ? "running" : "queued",
+                Mode = q.Mode switch
+                {
+                    VMQueueMode.Normal => "normal",
+                    VMQueueMode.Idle => "idle",
+                    VMQueueMode.ParentIdle => "parent-idle",
+                    VMQueueMode.ParentExit => "parent-exit",
+                    _ => q.Mode.ToString().ToLowerInvariant(),
+                },
             });
         }
         return list;
@@ -727,6 +735,7 @@ public class ActionQueueItemBlock
     public string Name { get; set; }
     public short TargetObjectId { get; set; }
     public string Status { get; set; }
+    public string Mode { get; set; }
 }
 
 public class MotiveBlock

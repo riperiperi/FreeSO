@@ -3,7 +3,7 @@
   "version": "1.0",
   "operation": "interact-with",
   "family": "interaction",
-  "description": "Invoke a specific named interaction on an object or Sim. Prerequisite: the target must appear in your lot's VM (use query-nearby / query-pie-menu to discover it), the interaction must appear in its pie-menu (server re-verifies via VMFindBestAction in VMNetInteractionCmd.Verify and rejects if param0 is not present), and your queue must have capacity (MAX_USER_ACTIONS = 8). Visitors/spectators are refused on every non-payphone object. Effect: the interaction is pushed onto your action queue; the engine runs it after the currently-running action completes — it plans a route, walks you to the target, runs the behaviour script, and applies motive effects. Cost: real seconds of session time while the interaction runs; motive deltas when it completes (e.g. Eat restores Hunger, Sleep restores Energy, Talk spends Social for both participants). Distinct from queue-interaction on the convention surface only — on the wire both emit VMNetInteractionCmd; the 'interact-with' framing tells the agent 'I want to do this', 'queue-interaction' emphasises 'append to my queue'. For 'run right now', pair with cancel (sweep current+queued) first.",
+  "description": "Invoke a specific named interaction on an object or Sim. Prerequisite: the target must appear in your lot's VM (use query-nearby / query-pie-menu to discover it), the interaction must appear in its pie-menu (server re-verifies via VMFindBestAction in VMNetInteractionCmd.Verify and rejects if param0 is not present), and your queue must have capacity (MAX_USER_ACTIONS = 8). Visitors/spectators are refused on every non-payphone object. Effect: the interaction is pushed onto your action queue; the engine runs it after the currently-running action completes — it plans a route, walks you to the target, runs the behaviour script, and applies motive effects. Cost: real seconds of session time while the interaction runs; motive deltas when it completes (e.g. Eat restores Hunger, Sleep restores Energy, Talk spends Social for both participants). queue_mode controls how the new interaction lands on your queue: 'queue' (default) cancels engine autopilot (Mode.Idle entries from spawn-objects and BHAV scripts) before enqueueing, so deliberate action outranks autopilot but your own existing queue is preserved; 'preempt' cancels the entire queue first.",
   "args": [
     {
       "name": "interaction",
@@ -30,6 +30,14 @@
       "required": false,
       "default": false,
       "description": "Set to true if the interaction is exposed by the callee's GLOBAL TTAB rather than its own TTAB (rare; check the pie-menu entry's 'global' field)."
+    },
+    {
+      "name": "queue_mode",
+      "type": "string",
+      "required": false,
+      "default": "queue",
+      "enum": ["queue", "preempt"],
+      "description": "How this interaction lands on your action queue. 'queue' (default) cancels engine autopilot (Mode.Idle entries from spawn-objects and BHAVs) before enqueueing — your deliberate interaction outranks autopilot but your existing self-queued actions are preserved. 'preempt' cancels everything currently in your queue and runs this immediately."
     }
   ],
   "produces_tags": [
@@ -54,18 +62,20 @@
   "common_mistakes": [
     "callee_id is an ObjectID (from perception.nearby_objects[].object_id or query-pie-menu.target_object_id), NOT a persist_id.",
     "Passing an interaction index from a DIFFERENT object's pie menu — indices are TTAB-slot-specific to that callee. Always query-pie-menu first on THIS target.",
-    "Expecting 'run now' — the engine always queues behind the currently-running action. Pair with cancel if you need pre-emption.",
+    "Expecting 'run now' from the default queue mode — 'queue' lands behind your existing self-queued actions (it only clears engine autopilot). For true 'run now', pass queue_mode='preempt'.",
     "Setting --global true for a non-GLOBAL interaction — check the pie-menu entry's .global field first."
   ],
   "perception_hints": [
     "Target object_id: perception.nearby_objects[].object_id (callee_id, NOT persist_id)",
     "Available interactions by name: perception.nearby_objects[].interactions[].name / .id",
     "Your own action queue + UIDs (for cancel-interaction): perception.avatar.action_queue[].interaction_id",
+    "Each queue entry's .mode tells you what's there: 'normal' = deliberate (yours or another Sim's social), 'idle' = engine autopilot (spawn-object Idle, BHAV scripts). queue_mode='queue' clears 'idle' entries; queue_mode='preempt' clears all.",
     "Dialog prompts (for respond-dialog): perception.recent_events[] where kind=='dialog', look at .extras.dialog_id"
   ],
   "refuse_conditions": [
     "no live avatar → ok:false with 'no live avatar'",
     "missing interaction (TTAB index) → ok:false with 'interact-with requires interaction (TTAB index)'",
-    "missing or zero callee_id → ok:false with 'interact-with requires callee_id'"
+    "missing or zero callee_id → ok:false with 'interact-with requires callee_id'",
+    "queue_mode neither 'queue' nor 'preempt' → ok:false with 'queue_mode must be queue or preempt'"
   ]
 }

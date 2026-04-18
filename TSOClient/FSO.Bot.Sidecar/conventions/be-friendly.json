@@ -3,19 +3,30 @@
   "version": "1.0",
   "operation": "be-friendly",
   "family": "social",
-  "description": "Engage another Sim with a friendly interaction (greeting, hug, compliment, or similar — whichever variant the target's pie-menu currently offers). Prerequisite: target Sim is within pie-menu range and exposes a friendly-family entry (target must be known to our local VM; the interaction must currently pass the TTAB 'check' tree — e.g. not busy refusing, not sleeping, not in incompatible state). Effect: queues the resolved interaction on your action queue; the animated interaction runs against the target and on success nudges your mutual friendship/relationship axis upward (exact deltas are TTAB-driven; observable in nearby_sims.relationship and recent_events as interaction_start/end). Cost: interaction takes in-sim minutes and consumes a slot in your action queue; server refuses if the queue is full or the target is locked.",
+  "description": "Engage another Sim with a friendly interaction (greeting, hug, compliment, or similar \u2014 whichever variant the target's pie-menu currently offers). Prerequisite: target Sim is within pie-menu range and exposes a friendly-family entry (target must be known to our local VM; the interaction must currently pass the TTAB 'check' tree \u2014 e.g. not busy refusing, not sleeping, not in incompatible state). Effect: queues the resolved interaction on your action queue; the animated interaction runs against the target and on success nudges your mutual friendship/relationship axis upward (exact deltas are TTAB-driven; observable in nearby_sims.relationship and recent_events as interaction_start/end). Cost: interaction takes in-sim minutes and consumes a slot in your action queue; server refuses if the queue is full or the target is locked.",
   "args": [
     {
       "name": "target_sim_id",
       "type": "integer",
       "required": false,
-      "description": "Persist ID of the target Sim. Preferred — stable across ObjectID re-shuffles."
+      "description": "Persist ID of the target Sim. Preferred \u2014 stable across ObjectID re-shuffles."
     },
     {
       "name": "target_object_id",
       "type": "integer",
       "required": false,
       "description": "Local ObjectID of the target Sim (short). Accepted when persist ID is unknown."
+    },
+    {
+      "name": "queue_mode",
+      "type": "string",
+      "required": false,
+      "default": "queue",
+      "enum": [
+        "queue",
+        "preempt"
+      ],
+      "description": "How this social interaction lands on your action queue. 'queue' (default) cancels engine autopilot (Mode.Idle entries from spawn-objects and BHAVs) before enqueueing. 'preempt' cancels everything currently in your queue and runs this immediately."
     }
   ],
   "produces_tags": [
@@ -33,24 +44,25 @@
   },
   "response": "sync",
   "call_signatures": [
-    "cf $CF be-friendly --target_sim_id <nearby_sims[].persist_id>                       # preferred — use nearby_sims persist_id",
-    "cf $CF be-friendly --target_object_id <nearby_sims[].object_id>                     # alternate — pass the Sim's VMAvatar ObjectID (rare)"
+    "cf $CF be-friendly --target_sim_id <nearby_sims[].persist_id>                       # preferred \u2014 use nearby_sims persist_id",
+    "cf $CF be-friendly --target_object_id <nearby_sims[].object_id>                     # alternate \u2014 pass the Sim's VMAvatar ObjectID (rare)"
   ],
   "common_mistakes": [
-    "Directed socials (be-friendly/flirt/tell-joke/be-mean/give-gift) resolve target pie-menu by ALIAS substring; if the target's pie menu has no matching entry the handler returns ok=false with the list of available names — read the error to pick a different verb.",
+    "Directed socials (be-friendly/flirt/tell-joke/be-mean/give-gift) resolve target pie-menu by ALIAS substring; if the target's pie menu has no matching entry the handler returns ok=false with the list of available names \u2014 read the error to pick a different verb.",
     "Passing --target_object_id for a non-avatar object silently fails these socials (they require VMAvatar target).",
-    "Speak rejects leading '/' — that prefix is reserved for admin chat commands; use admin-chat-command instead."
+    "Speak rejects leading '/' \u2014 that prefix is reserved for admin chat commands; use admin-chat-command instead."
   ],
   "perception_hints": [
     "Target persist_id: perception.nearby_sims[].persist_id",
     "Target's current action (to judge if they're busy): perception.nearby_sims[].current_action",
     "Your social motive (why this matters): perception.motives.social.value",
-    "Existing relationships: perception.relationships[].with_persist_id / .friendly / .daily"
+    "Existing relationships: perception.relationships[].with_persist_id / .friendly / .daily",
+    "Each queue entry's .mode tells you what's there: 'normal' = deliberate (yours or another Sim's social), 'idle' = engine autopilot. queue_mode='queue' clears 'idle' entries; queue_mode='preempt' clears all."
   ],
   "refuse_conditions": [
-    "no live avatar → ok:false",
-    "no target_sim_id and no target_object_id → ok:false with 'requires target_sim_id or target_object_id'",
-    "target_object_id not a Sim (VMAvatar) → ok:false with 'object <id> is not a Sim'",
-    "no matching pie-menu entry for verb aliases → ok:false with the list of available interaction names"
+    "no live avatar \u2192 ok:false",
+    "no target_sim_id and no target_object_id \u2192 ok:false with 'requires target_sim_id or target_object_id'",
+    "target_object_id not a Sim (VMAvatar) \u2192 ok:false with 'object <id> is not a Sim'",
+    "no matching pie-menu entry for verb aliases \u2192 ok:false with the list of available interaction names"
   ]
 }

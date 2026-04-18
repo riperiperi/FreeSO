@@ -3,7 +3,7 @@
   "version": "1.0",
   "operation": "give-gift",
   "family": "social",
-  "description": "Present a gift to another Sim via their pie menu's Give Gift / Gift entry. Prerequisite: target exposes a gift entry on the live pie menu (typically gated on having an appropriate inventory item; in TSO classic, gifts draw from the giver's inventory). Effect: queues the resolved interaction; on completion the gift object transfers from your inventory to the target and shifts their relationship to you upward on friendship (and sometimes romance if the gift is themed). Cost: in-sim minutes; queue slot; and the inventory item consumed by the gift — non-recoverable without an explicit return/take-back from the recipient.",
+  "description": "Present a gift to another Sim via their pie menu's Give Gift / Gift entry. Prerequisite: target exposes a gift entry on the live pie menu (typically gated on having an appropriate inventory item; in TSO classic, gifts draw from the giver's inventory). Effect: queues the resolved interaction; on completion the gift object transfers from your inventory to the target and shifts their relationship to you upward on friendship (and sometimes romance if the gift is themed). Cost: in-sim minutes; queue slot; and the inventory item consumed by the gift \u2014 non-recoverable without an explicit return/take-back from the recipient.",
   "args": [
     {
       "name": "target_sim_id",
@@ -16,6 +16,17 @@
       "type": "integer",
       "required": false,
       "description": "Local ObjectID of the target Sim."
+    },
+    {
+      "name": "queue_mode",
+      "type": "string",
+      "required": false,
+      "default": "queue",
+      "enum": [
+        "queue",
+        "preempt"
+      ],
+      "description": "How this social interaction lands on your action queue. 'queue' (default) cancels engine autopilot (Mode.Idle entries from spawn-objects and BHAVs) before enqueueing. 'preempt' cancels everything currently in your queue and runs this immediately."
     }
   ],
   "produces_tags": [
@@ -37,20 +48,21 @@
     "cf $CF give-gift --target_object_id <object_id>                                     # alternate; must resolve to a VMAvatar"
   ],
   "common_mistakes": [
-    "Directed socials (be-friendly/flirt/tell-joke/be-mean/give-gift) resolve target pie-menu by ALIAS substring; if the target's pie menu has no matching entry the handler returns ok=false with the list of available names — read the error to pick a different verb.",
+    "Directed socials (be-friendly/flirt/tell-joke/be-mean/give-gift) resolve target pie-menu by ALIAS substring; if the target's pie menu has no matching entry the handler returns ok=false with the list of available names \u2014 read the error to pick a different verb.",
     "Passing --target_object_id for a non-avatar object silently fails these socials (they require VMAvatar target).",
-    "Speak rejects leading '/' — that prefix is reserved for admin chat commands; use admin-chat-command instead."
+    "Speak rejects leading '/' \u2014 that prefix is reserved for admin chat commands; use admin-chat-command instead."
   ],
   "perception_hints": [
     "Target persist_id: perception.nearby_sims[].persist_id",
     "Target's current action (to judge if they're busy): perception.nearby_sims[].current_action",
     "Your social motive (why this matters): perception.motives.social.value",
-    "Existing relationships: perception.relationships[].with_persist_id / .friendly / .daily"
+    "Existing relationships: perception.relationships[].with_persist_id / .friendly / .daily",
+    "Each queue entry's .mode tells you what's there: 'normal' = deliberate (yours or another Sim's social), 'idle' = engine autopilot. queue_mode='queue' clears 'idle' entries; queue_mode='preempt' clears all."
   ],
   "refuse_conditions": [
-    "no live avatar → ok:false",
-    "no target_sim_id/target_object_id → ok:false",
-    "target not a Sim → ok:false",
-    "no matching pie-menu entry → ok:false with available-names list"
+    "no live avatar \u2192 ok:false",
+    "no target_sim_id/target_object_id \u2192 ok:false",
+    "target not a Sim \u2192 ok:false",
+    "no matching pie-menu entry \u2192 ok:false with available-names list"
   ]
 }

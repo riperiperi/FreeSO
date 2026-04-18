@@ -68,7 +68,7 @@ func RegisterInteractionHandlers(ctx context.Context, cf *Campfire, ipc *IPC) (i
 // Args: interaction (required), callee_id (required), param0, global.
 func interactWithHandler(ipc *IPC) convention.HandlerFunc {
 	return func(ctx context.Context, req *convention.Request) (*convention.Response, error) {
-		args := pickArgs(req.Args, "interaction", "callee_id", "param0", "global")
+		args := pickArgs(req.Args, "interaction", "callee_id", "param0", "global", "queue_mode")
 		return forwardIPC(ctx, ipc, "interact-with", args)
 	}
 }
