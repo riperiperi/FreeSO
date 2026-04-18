@@ -5,12 +5,52 @@
   "family": "social",
   "description": "Say a line in a chat channel on the current lot. Prerequisite: you are present on the lot and have send-permission for the target channel (channel 0 = default lot channel, always visitor-send). Effect: the server distributes the line to every Sim whose view-permission matches, producing a VMChatEvent; your own line arrives back in your recent_events as kind=chat. Cost: none in sim-time or money; messages > 200 chars are truncated server-side. A leading '/' is reserved for admin chat commands and is rejected by the bot dispatcher so a non-admin agent cannot accidentally invoke one.",
   "args": [
-    {"name": "text", "type": "string", "required": true, "description": "The line to speak. Truncated to 200 chars server-side. Leading '/' is rejected."},
-    {"name": "channel_id", "type": "integer", "required": false, "default": 0, "description": "Chat channel id (0 = default lot channel). Custom channels 1-6 editable per lot; channel 7 is admin-only."}
+    {
+      "name": "text",
+      "type": "string",
+      "required": true,
+      "description": "The line to speak. Truncated to 200 chars server-side. Leading '/' is rejected."
+    },
+    {
+      "name": "channel_id",
+      "type": "integer",
+      "required": false,
+      "default": 0,
+      "description": "Chat channel id (0 = default lot channel). Custom channels 1-6 editable per lot; channel 7 is admin-only."
+    }
   ],
-  "produces_tags": [{"tag": "freeso:speak", "cardinality": "exactly_one"}],
+  "produces_tags": [
+    {
+      "tag": "freeso:speak",
+      "cardinality": "exactly_one"
+    }
+  ],
   "antecedents": "none",
   "signing": "member_key",
-  "rate_limit": {"max": 20, "per": "sender", "window": "1m"},
-  "response": "sync"
+  "rate_limit": {
+    "max": 20,
+    "per": "sender",
+    "window": "1m"
+  },
+  "response": "sync",
+  "call_signatures": [
+    "cf $CF speak --text \"Hello lot\"                                                   # say in default channel (channel 0)",
+    "cf $CF speak --text \"...\" --channel_id 1                                          # speak in custom channel 1"
+  ],
+  "common_mistakes": [
+    "Passing a leading '/' in --text → rejected pre-wire ('reserved for admin chat commands'). Use admin-chat-command for /commands.",
+    "Text is server-truncated at 200 chars; bot truncates pre-echo too so the response shows the actual sent length.",
+    "Using non-default --channel_id without being permitted on that channel causes silent drops server-side."
+  ],
+  "perception_hints": [
+    "Target persist_id: perception.nearby_sims[].persist_id",
+    "Target's current action (to judge if they're busy): perception.nearby_sims[].current_action",
+    "Your social motive (why this matters): perception.motives.social.value",
+    "Existing relationships: perception.relationships[].with_persist_id / .friendly / .daily"
+  ],
+  "refuse_conditions": [
+    "no live avatar → ok:false with 'no live avatar'",
+    "empty text → ok:false with 'speak requires text'",
+    "leading '/' → ok:false with \"leading '/' is reserved for admin chat commands — use an explicit admin op\""
+  ]
 }

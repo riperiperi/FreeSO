@@ -32,5 +32,25 @@
     "window": "1m"
   },
   "response": "sync",
-  "status": "stable"
+  "status": "stable",
+  "call_signatures": [
+    "cf $CF admin-chat-command --command banlist                                          # admin-only; whitelist: ban banip unban banlist builder admin roomie visitor close qtrday setjob trace reload time tickrate speed tuning fixall testcollision",
+    "cf $CF admin-chat-command --command speed --args '2'                                 # pass extra args (combined as '/speed 2', capped 200 chars)"
+  ],
+  "common_mistakes": [
+    "Command not in the whitelist → ok:false with the allowed list. Whitelist: ban banip unban banlist builder admin roomie visitor close qtrday setjob trace reload time tickrate speed tuning fixall testcollision.",
+    "Leading '/' in --command is tolerated (stripped).",
+    "Built message '/cmd args' > 200 chars → ok:false ('message too long')."
+  ],
+  "perception_hints": [
+    "Target persist_id: perception.nearby_sims[].persist_id (for physically-present targets); other avatars need find-avatar or direct knowledge of avatar_id",
+    "Your own persist_id (to avoid self-target): perception.avatar.persist_id",
+    "Chat activity you may want to moderate: perception.recent_events[] kind=='chat'"
+  ],
+  "refuse_conditions": [
+    "caller not admin → ok:false",
+    "empty command → ok:false",
+    "command not in whitelist → ok:false with the allowed-list enumeration",
+    "built message '/cmd args' > 200 chars → ok:false ('message too long')"
+  ]
 }

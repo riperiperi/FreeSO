@@ -5,8 +5,16 @@
   "family": "build-buy-architecture",
   "description": "Add or remove ambient environment skins (skyboxes / weather / audio ambience) on the lot. guids_to_add and guids_to_clear are uint GUID arrays pointing into Content.Ambience.GetAmbienceFromGUID. Each list is server-capped at 40 entries. Prerequisite: you are the lot owner (handler-side; server-side BuildBuyRoommate+). Effect: vm.Context.Ambience user-ambience set mutates accordingly; visible via client skybox/weather changes (not currently exposed to perception — no observable field). Cost: free. Denial silent (OQ-8). Wire: VMNetChangeEnvironmentCmd { GUIDsToAdd, GUIDsToClear }.",
   "args": [
-    {"name": "guids_to_add", "type": "list[int64]", "required": false},
-    {"name": "guids_to_clear", "type": "list[int64]", "required": false}
+    {
+      "name": "guids_to_add",
+      "type": "list[int64]",
+      "required": false
+    },
+    {
+      "name": "guids_to_clear",
+      "type": "list[int64]",
+      "required": false
+    }
   ],
   "produces_tags": [
     {
@@ -22,5 +30,26 @@
     "window": "1m"
   },
   "response": "sync",
-  "status": "implemented"
+  "status": "implemented",
+  "call_signatures": [
+    "cf $CF change-environment --guids_to_add '[1234,5678]'                                                  # owner-only; up to 40 GUIDs",
+    "cf $CF change-environment --guids_to_clear '[1234]'                                                     # remove previously added",
+    "cf $CF change-environment --guids_to_add '[...]' --guids_to_clear '[...]'                               # both in one call"
+  ],
+  "common_mistakes": [
+    "Non-owner → ok:false.",
+    "Both guids_to_add and guids_to_clear empty → ok:false ('requires at least one').",
+    "Either array > 40 entries → ok:false (server-side hard cap)."
+  ],
+  "perception_hints": [
+    "Am I the owner? perception.lot.owner_is_me — architecture ops are owner-only",
+    "Your position (to anchor where to build): perception.avatar.position.x, .y (tile coords — arch ops accept tile coords directly, unlike walk-to)",
+    "Lot metadata: perception.lot.lot_id, perception.lot.name",
+    "Walls/floors are NOT exposed in perception — use query-architecture (test helper) if you need pre/post state"
+  ],
+  "refuse_conditions": [
+    "caller is not lot owner → returns ok:false with 'caller is not lot owner (owner_id=..., me=...)'",
+    "required tile coords (x, y) missing → returns ok:false with '<verb> requires x, y ...'",
+    "width/height/length <= 0 where specified → returns ok:false with specific bounds error"
+  ]
 }

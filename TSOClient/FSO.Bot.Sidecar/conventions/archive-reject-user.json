@@ -26,5 +26,21 @@
     "window": "1m"
   },
   "response": "sync",
-  "status": "stable"
+  "status": "stable",
+  "call_signatures": [
+    "cf $CF archive-reject-user --target_user_id <user_id>                                # admin-only; target is USER_ID not avatar_id; close session"
+  ],
+  "common_mistakes": [
+    "Same user_id trap — NOT an avatar_id.",
+    "Rejected user's session is closed with VerificationNotification{IsVerified=false}."
+  ],
+  "perception_hints": [
+    "Target persist_id: perception.nearby_sims[].persist_id (for physically-present targets); other avatars need find-avatar or direct knowledge of avatar_id",
+    "Your own persist_id (to avoid self-target): perception.avatar.persist_id",
+    "Chat activity you may want to moderate: perception.recent_events[] kind=='chat'"
+  ],
+  "refuse_conditions": [
+    "caller not admin → ok:false",
+    "target_user_id missing or <= 0 → ok:false (NOTE: user_id, not avatar_id)"
+  ]
 }

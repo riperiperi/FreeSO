@@ -26,5 +26,24 @@
     "window": "1m"
   },
   "response": "sync",
-  "status": "stable"
+  "status": "stable",
+  "call_signatures": [
+    "cf $CF kick-user --target_persist_id <avatar_id>                                     # admin-only; closes target session (no DB change)"
+  ],
+  "common_mistakes": [
+    "Calling as non-admin → ok:false ('caller is not an admin').",
+    "Kicking yourself → ok:false ('refusing to target self').",
+    "target_persist_id is an avatar_id (Sim persist id), not a user_id. Archive ops use user_id instead.",
+    "No wire ACK — kicked target's session just closes; verify via find-avatar or absence from nearby_sims."
+  ],
+  "perception_hints": [
+    "Target persist_id: perception.nearby_sims[].persist_id (for physically-present targets); other avatars need find-avatar or direct knowledge of avatar_id",
+    "Your own persist_id (to avoid self-target): perception.avatar.persist_id",
+    "Chat activity you may want to moderate: perception.recent_events[] kind=='chat'"
+  ],
+  "refuse_conditions": [
+    "caller not admin (VM permissions != Admin) → ok:false with 'caller is not an admin (current_permissions=...)'",
+    "target_persist_id missing or <= 0 → ok:false",
+    "target_persist_id == own avatar_id → ok:false with 'refusing to target self'"
+  ]
 }

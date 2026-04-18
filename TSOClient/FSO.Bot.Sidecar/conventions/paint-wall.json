@@ -5,11 +5,31 @@
   "family": "build-buy-architecture",
   "description": "Apply a wallpaper pattern to a single wall side at (x,y,level). Side selects which wall face (0..5; 0-3 = the four cardinal segments on a square tile, 4-5 = the two diagonal sides). Prerequisite: you are the lot owner (handler-side gate; server-side also requires BuildBuyRoommate+ via Validator.CanBuildTool). Effect: wall TopLeftPattern / TopRightPattern at the targeted side flips to `pattern` — observable via query-architecture. Cost: wallpaper price per tile is debited from lot funds by Architecture.RunCommands. Denial silent (OQ-8). Wire: VMNetArchitectureCmd { Commands: [{ Type: PATTERN_DOT, level, x, y, x2=side, pattern }] }.",
   "args": [
-    {"name": "x", "type": "int64", "required": true},
-    {"name": "y", "type": "int64", "required": true},
-    {"name": "side", "type": "int64", "required": true},
-    {"name": "pattern", "type": "int64", "required": true},
-    {"name": "level", "type": "int64", "required": false}
+    {
+      "name": "x",
+      "type": "int64",
+      "required": true
+    },
+    {
+      "name": "y",
+      "type": "int64",
+      "required": true
+    },
+    {
+      "name": "side",
+      "type": "int64",
+      "required": true
+    },
+    {
+      "name": "pattern",
+      "type": "int64",
+      "required": true
+    },
+    {
+      "name": "level",
+      "type": "int64",
+      "required": false
+    }
   ],
   "produces_tags": [
     {
@@ -25,5 +45,25 @@
     "window": "1m"
   },
   "response": "sync",
-  "status": "implemented"
+  "status": "implemented",
+  "call_signatures": [
+    "cf $CF paint-wall --x <tile_x> --y <tile_y> --side <0..5> --pattern <pattern_id>                      # 0-3 for normal walls, 4-5 for diagonal sides",
+    "cf $CF paint-wall --x <x> --y <y> --side <s> --pattern <p> --level 2                                  # on upper floor"
+  ],
+  "common_mistakes": [
+    "Non-owner → ok:false.",
+    "side 0-3 are normal wall sides; 4-5 are diagonal sides — passing a side out of range succeeds on the wire but paints nothing visible.",
+    "Tile coords, not subtile."
+  ],
+  "perception_hints": [
+    "Am I the owner? perception.lot.owner_is_me — architecture ops are owner-only",
+    "Your position (to anchor where to build): perception.avatar.position.x, .y (tile coords — arch ops accept tile coords directly, unlike walk-to)",
+    "Lot metadata: perception.lot.lot_id, perception.lot.name",
+    "Walls/floors are NOT exposed in perception — use query-architecture (test helper) if you need pre/post state"
+  ],
+  "refuse_conditions": [
+    "caller is not lot owner → returns ok:false with 'caller is not lot owner (owner_id=..., me=...)'",
+    "required tile coords (x, y) missing → returns ok:false with '<verb> requires x, y ...'",
+    "width/height/length <= 0 where specified → returns ok:false with specific bounds error"
+  ]
 }

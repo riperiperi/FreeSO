@@ -5,12 +5,52 @@
   "family": "social",
   "description": "Present a gift to another Sim via their pie menu's Give Gift / Gift entry. Prerequisite: target exposes a gift entry on the live pie menu (typically gated on having an appropriate inventory item; in TSO classic, gifts draw from the giver's inventory). Effect: queues the resolved interaction; on completion the gift object transfers from your inventory to the target and shifts their relationship to you upward on friendship (and sometimes romance if the gift is themed). Cost: in-sim minutes; queue slot; and the inventory item consumed by the gift — non-recoverable without an explicit return/take-back from the recipient.",
   "args": [
-    {"name": "target_sim_id", "type": "integer", "required": false, "description": "Persist ID of the target Sim."},
-    {"name": "target_object_id", "type": "integer", "required": false, "description": "Local ObjectID of the target Sim."}
+    {
+      "name": "target_sim_id",
+      "type": "integer",
+      "required": false,
+      "description": "Persist ID of the target Sim."
+    },
+    {
+      "name": "target_object_id",
+      "type": "integer",
+      "required": false,
+      "description": "Local ObjectID of the target Sim."
+    }
   ],
-  "produces_tags": [{"tag": "freeso:give-gift", "cardinality": "exactly_one"}],
+  "produces_tags": [
+    {
+      "tag": "freeso:give-gift",
+      "cardinality": "exactly_one"
+    }
+  ],
   "antecedents": "none",
   "signing": "member_key",
-  "rate_limit": {"max": 10, "per": "sender", "window": "1m"},
-  "response": "sync"
+  "rate_limit": {
+    "max": 10,
+    "per": "sender",
+    "window": "1m"
+  },
+  "response": "sync",
+  "call_signatures": [
+    "cf $CF give-gift --target_sim_id <nearby_sims[].persist_id>                         # preferred",
+    "cf $CF give-gift --target_object_id <object_id>                                     # alternate; must resolve to a VMAvatar"
+  ],
+  "common_mistakes": [
+    "Directed socials (be-friendly/flirt/tell-joke/be-mean/give-gift) resolve target pie-menu by ALIAS substring; if the target's pie menu has no matching entry the handler returns ok=false with the list of available names — read the error to pick a different verb.",
+    "Passing --target_object_id for a non-avatar object silently fails these socials (they require VMAvatar target).",
+    "Speak rejects leading '/' — that prefix is reserved for admin chat commands; use admin-chat-command instead."
+  ],
+  "perception_hints": [
+    "Target persist_id: perception.nearby_sims[].persist_id",
+    "Target's current action (to judge if they're busy): perception.nearby_sims[].current_action",
+    "Your social motive (why this matters): perception.motives.social.value",
+    "Existing relationships: perception.relationships[].with_persist_id / .friendly / .daily"
+  ],
+  "refuse_conditions": [
+    "no live avatar → ok:false",
+    "no target_sim_id/target_object_id → ok:false",
+    "target not a Sim → ok:false",
+    "no matching pie-menu entry → ok:false with available-names list"
+  ]
 }

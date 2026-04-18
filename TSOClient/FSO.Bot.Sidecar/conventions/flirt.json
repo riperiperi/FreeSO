@@ -5,12 +5,52 @@
   "family": "social",
   "description": "Flirt with another Sim (or kiss/cuddle when the pie menu's romantic branch exposes those — the bot picks the first romantic entry on the live pie menu). Prerequisite: target Sim's romantic pie-menu entry must be currently valid for you (TSO's base socials require a minimum friendship/relationship score before Flirt unlocks; if unlocked but target is out-of-range or busy, server Verify rejects). Effect: queues the resolved romantic interaction; on success shifts your relationship along the romance axis (deltas are TTAB-driven, visible via nearby_sims.relationship). Cost: in-sim minutes; queue slot; may be refused by the target (accept/reject prompts route through respond-interaction).",
   "args": [
-    {"name": "target_sim_id", "type": "integer", "required": false, "description": "Persist ID of the target Sim."},
-    {"name": "target_object_id", "type": "integer", "required": false, "description": "Local ObjectID of the target Sim."}
+    {
+      "name": "target_sim_id",
+      "type": "integer",
+      "required": false,
+      "description": "Persist ID of the target Sim."
+    },
+    {
+      "name": "target_object_id",
+      "type": "integer",
+      "required": false,
+      "description": "Local ObjectID of the target Sim."
+    }
   ],
-  "produces_tags": [{"tag": "freeso:flirt", "cardinality": "exactly_one"}],
+  "produces_tags": [
+    {
+      "tag": "freeso:flirt",
+      "cardinality": "exactly_one"
+    }
+  ],
   "antecedents": "none",
   "signing": "member_key",
-  "rate_limit": {"max": 20, "per": "sender", "window": "1m"},
-  "response": "sync"
+  "rate_limit": {
+    "max": 20,
+    "per": "sender",
+    "window": "1m"
+  },
+  "response": "sync",
+  "call_signatures": [
+    "cf $CF flirt --target_sim_id <nearby_sims[].persist_id>                             # preferred",
+    "cf $CF flirt --target_object_id <object_id>                                         # alternate; must resolve to a VMAvatar"
+  ],
+  "common_mistakes": [
+    "Directed socials (be-friendly/flirt/tell-joke/be-mean/give-gift) resolve target pie-menu by ALIAS substring; if the target's pie menu has no matching entry the handler returns ok=false with the list of available names — read the error to pick a different verb.",
+    "Passing --target_object_id for a non-avatar object silently fails these socials (they require VMAvatar target).",
+    "Speak rejects leading '/' — that prefix is reserved for admin chat commands; use admin-chat-command instead."
+  ],
+  "perception_hints": [
+    "Target persist_id: perception.nearby_sims[].persist_id",
+    "Target's current action (to judge if they're busy): perception.nearby_sims[].current_action",
+    "Your social motive (why this matters): perception.motives.social.value",
+    "Existing relationships: perception.relationships[].with_persist_id / .friendly / .daily"
+  ],
+  "refuse_conditions": [
+    "no live avatar → ok:false",
+    "no target_sim_id/target_object_id → ok:false",
+    "target not a Sim → ok:false",
+    "no matching pie-menu entry → ok:false with available-names list"
+  ]
 }

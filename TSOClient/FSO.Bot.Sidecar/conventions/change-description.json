@@ -5,13 +5,45 @@
   "family": "avatar",
   "description": "Set your avatar's public bio / description string. Wire mechanism: DataServiceWrapperPDU carrying a cTSOTopicUpdateMessage with DotPath [AvatarProviderId, AvatarId, Avatar_Description fieldId] — routed on the city Aries socket, not the lot. Prerequisite: you are signed into the city shard (city session live). Effect: ServerAvatarProvider.DemandMutation accepts on AvatarPermissions.WRITE (own avatar only) and rejects > 500 chars; PersistMutation UPDATEs fso_avatars.description synchronously in the same callback. The next DataService request for Avatar_Description (or any UI bound to it) will see the new value. Cost: none. Refuse: empty text, text > 500 chars, city session offline.",
   "args": [
-    {"name": "text", "type": "string", "required": true, "description": "The new description. 1-500 characters. Server-side cap is 500; the handler rejects longer strings before writing so the PDU is never discarded mid-flight with an exception in the server log."}
+    {
+      "name": "text",
+      "type": "string",
+      "required": true,
+      "description": "The new description. 1-500 characters. Server-side cap is 500; the handler rejects longer strings before writing so the PDU is never discarded mid-flight with an exception in the server log."
+    }
   ],
   "produces_tags": [
-    {"tag": "freeso:change-description", "cardinality": "exactly_one"}
+    {
+      "tag": "freeso:change-description",
+      "cardinality": "exactly_one"
+    }
   ],
   "antecedents": "none",
   "signing": "member_key",
-  "rate_limit": {"max": 30, "per": "sender", "window": "1m"},
-  "response": "sync"
+  "rate_limit": {
+    "max": 30,
+    "per": "sender",
+    "window": "1m"
+  },
+  "response": "sync",
+  "call_signatures": [
+    "cf $CF change-description --text 'My Sim bio — up to 500 chars'                                             # writes fso_avatars.description synchronously on city socket"
+  ],
+  "common_mistakes": [
+    "Empty --text → ok:false.",
+    "text > 500 chars → ok:false.",
+    "City socket not connected → ok:false; verify via query-lot before retrying.",
+    "Write is synchronous on the server (fso_avatars.description UPDATE inside mutation callback) — DB readback is authoritative."
+  ],
+  "perception_hints": [
+    "Your own persist_id: perception.avatar.persist_id",
+    "Your current name / shard: perception.avatar.name, perception.avatar.shard",
+    "Current outfit (via query-self, not perception): use query-self → .outfits"
+  ],
+  "refuse_conditions": [
+    "no live avatar → ok:false",
+    "empty text → ok:false",
+    "text > 500 chars → ok:false",
+    "city socket not connected → ok:false with 'city session not connected'"
+  ]
 }

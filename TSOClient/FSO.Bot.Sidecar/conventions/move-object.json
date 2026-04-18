@@ -5,11 +5,31 @@
   "family": "build-buy-catalog",
   "description": "Move an already-placed object to a new tile/level/rotation on the same lot. Same command handles pure rotation (pass the object's current x/y with a new dir). Prerequisite: you are the lot owner (handler-side VMTSOLotState.OwnerID gate) OR (for own-owned decor) VMTSOObjectState.OwnerID == you. Object must be present at target_object_id in the lot VM and must be user-movable (e.g. a Sim cannot be moved with this). Effect: the object's position/rotation updates in nearby_objects. Cost: none. Wire: VMNetMoveObjectCmd on the lot Aries socket.",
   "args": [
-    {"name": "target_object_id", "type": "int64", "required": true},
-    {"name": "x", "type": "int64", "required": true},
-    {"name": "y", "type": "int64", "required": true},
-    {"name": "level", "type": "int64", "required": false},
-    {"name": "dir", "type": "int64", "required": false}
+    {
+      "name": "target_object_id",
+      "type": "int64",
+      "required": true
+    },
+    {
+      "name": "x",
+      "type": "int64",
+      "required": true
+    },
+    {
+      "name": "y",
+      "type": "int64",
+      "required": true
+    },
+    {
+      "name": "level",
+      "type": "int64",
+      "required": false
+    },
+    {
+      "name": "dir",
+      "type": "int64",
+      "required": false
+    }
   ],
   "produces_tags": [
     {
@@ -25,5 +45,26 @@
     "window": "1m"
   },
   "response": "sync",
-  "status": "implemented"
+  "status": "implemented",
+  "call_signatures": [
+    "cf $CF move-object --target_object_id <nearby_objects[].object_id> --x <subtile_x> --y <subtile_y>   # owner-only; move to new subtile",
+    "cf $CF move-object --target_object_id <id> --x <x> --y <y> --level 2 --dir 64                        # with level + direction"
+  ],
+  "common_mistakes": [
+    "Calling as non-owner → ok:false.",
+    "target_object_id = 0 or missing → ok:false.",
+    "target_object_id is an ObjectID, not a persist_id.",
+    "x/y are SUBTILE coords."
+  ],
+  "perception_hints": [
+    "Your balance (can you afford the object?): perception.balance",
+    "Am I the owner? perception.lot.owner_is_me — owner-only ops refuse otherwise",
+    "Existing object_id for move/delete/upgrade: perception.nearby_objects[].object_id",
+    "Free tile to place on: inspect perception.nearby_objects[] to find unoccupied tiles; positions are in tile coords, multiply by 16 for subtile x/y"
+  ],
+  "refuse_conditions": [
+    "caller is not lot owner (for buy/move/delete/place-from-inventory) → returns ok:false with 'caller is not lot owner (owner_id=..., me=...)'",
+    "caller is not object owner (for send-to-inventory/list-for-sale/upgrade) → returns ok:false with 'caller is not the object owner (object_owner=..., me=...)'",
+    "required args missing (guid, x, y, target_object_id, target_object_persist_id) → returns ok:false with specific missing-arg error"
+  ]
 }

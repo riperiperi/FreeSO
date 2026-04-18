@@ -19,5 +19,23 @@
     "window": "1m"
   },
   "response": "sync",
-  "status": "implemented"
+  "status": "implemented",
+  "call_signatures": [
+    "cf $CF lock-lot                                                                      # owner-only; flips AdmitMode to 3 (ban-all)"
+  ],
+  "common_mistakes": [
+    "Calling as non-owner → ok:false.",
+    "Expecting existing visitors to be kicked — lock-lot only sets AdmitMode=3 (ban non-roommates from NEW joins); current occupants stay."
+  ],
+  "perception_hints": [
+    "Your own persist_id (to avoid self-targeting): perception.avatar.persist_id",
+    "Am I the owner? perception.lot.owner_is_me (true/false)",
+    "Target persist_id: perception.nearby_sims[].persist_id for Sims physically on the lot",
+    "Relationships for picking a roommate candidate: perception.relationships[]"
+  ],
+  "refuse_conditions": [
+    "caller is not lot owner → returns ok:false with 'caller is not lot owner (owner_id=..., me=...)'",
+    "target_persist_id is 0 or missing → returns ok:false with 'requires target_persist_id (> 0)'",
+    "target_persist_id == caller's own avatar_id → returns ok:false with 'cannot self-target' / 'cannot invite yourself'"
+  ]
 }

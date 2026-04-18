@@ -19,5 +19,17 @@
     "window": "1m"
   },
   "response": "sync",
-  "status": "scaffold"
+  "status": "scaffold",
+  "call_signatures": [
+    "cf $CF get-bulletin-messages   # SCAFFOLD op — not yet implemented; handler may return ok:false or a stub. Prefer a concrete sibling op if your goal is actionable."
+  ],
+  "common_mistakes": [
+    "This is a SCAFFOLD op — the convention is declared but the handler may be unimplemented or stubbed. Check the declaration's status field.",
+    "Relying on scaffold ops mid-run will either return a deferred marker or fail — prefer a concrete sibling op, and file an rd item if the missing behaviour blocks progress."
+  ],
+  "perception_hints": [
+    "Neighborhood id (defaults to 1 on workshop): perception.lot.lot_id is a lot id, not a nhood id — most ops default nhood_id to 1",
+    "Your own persist_id (to avoid self-vote/self-nominate): perception.avatar.persist_id",
+    "Your lot membership (residency gate): perception.lot.owner_is_me or check is_roommate via query-lot"
+  ]
 }

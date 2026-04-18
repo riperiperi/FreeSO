@@ -5,13 +5,41 @@
   "family": "build-buy-catalog",
   "description": "Purchase a catalog item and place it at (x,y,level) facing dir. Transaction is verified server-side: price debited via GlobalLink.PerformTransaction, then Verified=true, then re-applied on the lot's VM. Prerequisite: you must be the lot owner (handler-side gate via VMTSOLotState.OwnerID; server-side gate via PlatformState.Validator.GetPurchaseMode returning >= BuildBuyRoommate). Lot must not be full. Cost: the catalog price (with build-mode discount applied by server) from your budget; refunded by the server if placement fails. Effect: a new object appears in nearby_objects at (x,y,level); your balance (query-self.balance) drops by the net price. Mode=Donate (visitor-placed donation) reduces net cost to 1/3 of Normal but requires CanPlaceNewDonatedObject permission. OQ-8 note: there is no 'enter build mode' PDU — gating is per-command inside VMNetBuyObjectCmd.Verify; if you lack permission the command is silently dropped (no error, no effect). Wire: VMNetBuyObjectCmd on the lot Aries socket.",
   "args": [
-    {"name": "guid", "type": "uint64", "required": true},
-    {"name": "x", "type": "int64", "required": true},
-    {"name": "y", "type": "int64", "required": true},
-    {"name": "level", "type": "int64", "required": false},
-    {"name": "dir", "type": "int64", "required": false},
-    {"name": "mode", "type": "string", "required": false},
-    {"name": "target_upgrade_level", "type": "int64", "required": false}
+    {
+      "name": "guid",
+      "type": "uint64",
+      "required": true
+    },
+    {
+      "name": "x",
+      "type": "int64",
+      "required": true
+    },
+    {
+      "name": "y",
+      "type": "int64",
+      "required": true
+    },
+    {
+      "name": "level",
+      "type": "int64",
+      "required": false
+    },
+    {
+      "name": "dir",
+      "type": "int64",
+      "required": false
+    },
+    {
+      "name": "mode",
+      "type": "string",
+      "required": false
+    },
+    {
+      "name": "target_upgrade_level",
+      "type": "int64",
+      "required": false
+    }
   ],
   "produces_tags": [
     {
@@ -27,5 +55,26 @@
     "window": "1m"
   },
   "response": "sync",
-  "status": "implemented"
+  "status": "implemented",
+  "call_signatures": [
+    "cf $CF buy-object --guid <catalog_guid> --x <subtile_x> --y <subtile_y>              # owner-only; x/y in 1/16-tile units (tile*16)",
+    "cf $CF buy-object --guid <guid> --x <x> --y <y> --level 2 --dir 192 --mode Normal    # upper floor, NW-facing; mode=Normal|Donate"
+  ],
+  "common_mistakes": [
+    "Calling as non-owner → handler ok:false (server would also silently drop).",
+    "guid=0 or missing → ok:false; x/y missing → ok:false.",
+    "x/y are SUBTILE coords (1/16 tile units) — tile 10 is x=160. Easy off-by-16x bug.",
+    "Non-whitelisted category (only 12..20 allowed for roommate buyers per RoomieWhiteList) — server silently drops; use find-cheap-catalog-guid to pick safe items."
+  ],
+  "perception_hints": [
+    "Your balance (can you afford the object?): perception.balance",
+    "Am I the owner? perception.lot.owner_is_me — owner-only ops refuse otherwise",
+    "Existing object_id for move/delete/upgrade: perception.nearby_objects[].object_id",
+    "Free tile to place on: inspect perception.nearby_objects[] to find unoccupied tiles; positions are in tile coords, multiply by 16 for subtile x/y"
+  ],
+  "refuse_conditions": [
+    "caller is not lot owner (for buy/move/delete/place-from-inventory) → returns ok:false with 'caller is not lot owner (owner_id=..., me=...)'",
+    "caller is not object owner (for send-to-inventory/list-for-sale/upgrade) → returns ok:false with 'caller is not the object owner (object_owner=..., me=...)'",
+    "required args missing (guid, x, y, target_object_id, target_object_persist_id) → returns ok:false with specific missing-arg error"
+  ]
 }

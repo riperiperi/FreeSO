@@ -5,10 +5,32 @@
   "family": "interaction",
   "description": "Compute the pie-menu for a target object or Sim from your perspective. Prerequisite: you are in a lot with a live local VM (d87-a) and the target is present in that VM (visible in perception.nearby_objects or .nearby_sims). No outbound PDU — this is a local-VM query using VMEntity.GetPieMenu (the same call the perception emitter already exercises at 2048 pie-menus/64 ticks, freesoexperiment-66c); the result is what the UI pie-menu would show if you clicked that target. Effect: returns the list of interactions the engine will accept for interact-with / queue-interaction on this target; each entry carries the TTAB id, display name, param0 variant, and whether it comes from the callee's GLOBAL TTAB (rare). Cost: one tick-lock acquisition — the computation reads TTAB data and runs CheckAction scripts that the tick thread also mutates, so it is serialized with the tick. Keep queries sparse; for continuous surveillance use the perception stream instead.",
   "args": [
-    {"name": "target_object_id", "type": "integer", "required": false, "description": "ObjectID of the target (short). Required if target_sim_id is not set."},
-    {"name": "target_sim_id", "type": "integer", "required": false, "description": "PersistID of an avatar (uint). Resolves to that avatar's ObjectID in the local VM. Required if target_object_id is not set."},
-    {"name": "include_hidden", "type": "boolean", "required": false, "default": false, "description": "Include interactions flagged HideInteraction/Hidden (normally suppressed from the UI)."},
-    {"name": "include_global", "type": "boolean", "required": false, "default": true, "description": "Include interactions from the GLOBAL TTAB (applied to every object). Default true — matches stock client behaviour."}
+    {
+      "name": "target_object_id",
+      "type": "integer",
+      "required": false,
+      "description": "ObjectID of the target (short). Required if target_sim_id is not set."
+    },
+    {
+      "name": "target_sim_id",
+      "type": "integer",
+      "required": false,
+      "description": "PersistID of an avatar (uint). Resolves to that avatar's ObjectID in the local VM. Required if target_object_id is not set."
+    },
+    {
+      "name": "include_hidden",
+      "type": "boolean",
+      "required": false,
+      "default": false,
+      "description": "Include interactions flagged HideInteraction/Hidden (normally suppressed from the UI)."
+    },
+    {
+      "name": "include_global",
+      "type": "boolean",
+      "required": false,
+      "default": true,
+      "description": "Include interactions from the GLOBAL TTAB (applied to every object). Default true — matches stock client behaviour."
+    }
   ],
   "produces_tags": [
     {
@@ -23,5 +45,28 @@
     "per": "sender",
     "window": "1m"
   },
-  "response": "sync"
+  "response": "sync",
+  "call_signatures": [
+    "cf $CF query-pie-menu --target_object_id <object_id>                                 # discover interactions available on an object",
+    "cf $CF query-pie-menu --target_sim_id <persist_id>                                   # discover interactions on another Sim",
+    "cf $CF query-pie-menu --target_object_id <id> --include_hidden true                  # include hidden interactions (normally suppressed)",
+    "cf $CF query-pie-menu --target_object_id <id> --include_global false                 # exclude GLOBAL TTAB entries"
+  ],
+  "common_mistakes": [
+    "target_sim_id is a persist_id (resolves to that avatar's ObjectID); target_object_id is a direct ObjectID. Don't cross them up.",
+    "Expecting the result to mean 'what will succeed' — Verify() re-runs server-side; an interaction in the pie menu may still fail if server-side preconditions changed between tick and command.",
+    "Omitting both target_object_id and target_sim_id → ok:false."
+  ],
+  "perception_hints": [
+    "Target object_id: perception.nearby_objects[].object_id (callee_id, NOT persist_id)",
+    "Available interactions by name: perception.nearby_objects[].interactions[].name / .id",
+    "Your own action queue + UIDs (for cancel-interaction): perception.avatar.action_queue[].interaction_id",
+    "Dialog prompts (for respond-dialog): perception.recent_events[] where kind=='dialog', look at .extras.dialog_id"
+  ],
+  "refuse_conditions": [
+    "no VM / no live avatar → ok:false",
+    "missing both target_object_id and target_sim_id → ok:false with 'requires target_object_id or target_sim_id'",
+    "target_sim_id not in local VM → ok:false with 'sim <id> not in local VM'",
+    "target_object_id not in local VM → ok:false with 'object <id> not in local VM'"
+  ]
 }

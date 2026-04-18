@@ -5,13 +5,44 @@
   "family": "mail",
   "description": "Fetch mail messages received since a given timestamp. Prerequisite: you are online on the city server (always true for the live bot). Effect: sends a MailRequest{Type=POLL_INBOX, TimestampID=<100ns ticks>} on the city Aries socket; the server's MailHandler replies with MailResponse{Type=POLL_RESPONSE, Messages=[...]}. Each message carries id (db message_id), sender_persist_id, sender_name, subject, body, time (100ns ticks), type/subtype, read_state. The poll is strictly server-driven — read_state does not transition here (there is NO server PDU to mark-read on this fork; read_state is a DB column writable only on INSERT). Cost: zero in-world currency. Server caps subject to 128 chars and body to 1500 chars at INSERT time; stored bodies are BB-sanitised. Real-time inbound mail also surfaces via the same MailResponse path (Type=NEW_MAIL) pushed when the sender is online.",
   "args": [
-    {"name": "since_ticks", "type": "integer", "required": false, "description": "Poll cut-off in .NET DateTime ticks (100-nanosecond intervals since 0001-01-01 UTC). Messages with time > since_ticks are returned. Default 0 → returns the full inbox. The InboxController's pattern is to pass the most-recently-received message's time on subsequent polls so you only get new mail; passing 0 always returns the full inbox and is fine for low-volume agent use."}
+    {
+      "name": "since_ticks",
+      "type": "integer",
+      "required": false,
+      "description": "Poll cut-off in .NET DateTime ticks (100-nanosecond intervals since 0001-01-01 UTC). Messages with time > since_ticks are returned. Default 0 → returns the full inbox. The InboxController's pattern is to pass the most-recently-received message's time on subsequent polls so you only get new mail; passing 0 always returns the full inbox and is fine for low-volume agent use."
+    }
   ],
   "produces_tags": [
-    {"tag": "freeso:poll-inbox", "cardinality": "exactly_one"}
+    {
+      "tag": "freeso:poll-inbox",
+      "cardinality": "exactly_one"
+    }
   ],
   "antecedents": "none",
   "signing": "member_key",
-  "rate_limit": {"max": 30, "per": "sender", "window": "1m"},
-  "response": "sync"
+  "rate_limit": {
+    "max": 30,
+    "per": "sender",
+    "window": "1m"
+  },
+  "response": "sync",
+  "call_signatures": [
+    "cf $CF poll-inbox                                                                                        # since_ticks defaults to 0 → full inbox",
+    "cf $CF poll-inbox --since_ticks <last_message_time_ticks>                                                # only new messages since that .NET-ticks time"
+  ],
+  "common_mistakes": [
+    "Another poll-inbox already in flight → ok:false (single-slot correlator).",
+    "since_ticks < 0 → ok:false; 0 returns the full inbox.",
+    "since_ticks uses .NET DateTime ticks (100ns since 0001-01-01 UTC), not Unix seconds."
+  ],
+  "perception_hints": [
+    "Your own persist_id (for self-send health check): perception.avatar.persist_id",
+    "Inbound NEW_MAIL pushes surface in perception.recent_events[] with kind=='mail', direction=='in' — the extras carry mail_id / sender_persist_id / subject",
+    "Target persist_id: perception.nearby_sims[].persist_id (on-lot) or from your remembered contacts"
+  ],
+  "refuse_conditions": [
+    "since_ticks not an integer or < 0 → ok:false",
+    "another poll-inbox in flight → ok:false (single-slot correlator)",
+    "10s timeout with no POLL_RESPONSE → ok:false"
+  ]
 }

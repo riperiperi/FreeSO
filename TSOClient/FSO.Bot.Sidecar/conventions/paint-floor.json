@@ -5,13 +5,41 @@
   "family": "build-buy-architecture",
   "description": "Apply a floor pattern to a width×height rectangle of tiles starting at (x,y) on `level`. If fill=true the server flood-fills connected same-pattern tiles instead of a fixed rectangle. Prerequisite: you are the lot owner (handler-side; server-side BuildBuyRoommate+ via Validator.CanBuildTool). Effect: floor.Pattern at the targeted tiles flips to `pattern` — observable via query-architecture. Cost: floor material price × area, debited from lot funds. Denial silent (OQ-8). Wire: VMNetArchitectureCmd { Commands: [{ Type: FLOOR_RECT | FLOOR_FILL, level, x, y, x2=width, y2=height, pattern }] }.",
   "args": [
-    {"name": "x", "type": "int64", "required": true},
-    {"name": "y", "type": "int64", "required": true},
-    {"name": "pattern", "type": "int64", "required": true},
-    {"name": "level", "type": "int64", "required": false},
-    {"name": "width", "type": "int64", "required": false},
-    {"name": "height", "type": "int64", "required": false},
-    {"name": "fill", "type": "bool", "required": false}
+    {
+      "name": "x",
+      "type": "int64",
+      "required": true
+    },
+    {
+      "name": "y",
+      "type": "int64",
+      "required": true
+    },
+    {
+      "name": "pattern",
+      "type": "int64",
+      "required": true
+    },
+    {
+      "name": "level",
+      "type": "int64",
+      "required": false
+    },
+    {
+      "name": "width",
+      "type": "int64",
+      "required": false
+    },
+    {
+      "name": "height",
+      "type": "int64",
+      "required": false
+    },
+    {
+      "name": "fill",
+      "type": "bool",
+      "required": false
+    }
   ],
   "produces_tags": [
     {
@@ -27,5 +55,27 @@
     "window": "1m"
   },
   "response": "sync",
-  "status": "implemented"
+  "status": "implemented",
+  "call_signatures": [
+    "cf $CF paint-floor --x <tile_x> --y <tile_y> --pattern <pattern_id>                                   # single-tile paint (width/height default 1)",
+    "cf $CF paint-floor --x <x> --y <y> --pattern <p> --width 3 --height 3                                 # 3x3 rectangle",
+    "cf $CF paint-floor --x <x> --y <y> --pattern <p> --fill true                                          # flood-fill connected same-pattern tiles"
+  ],
+  "common_mistakes": [
+    "Non-owner → ok:false.",
+    "width/height < 1 → ok:false.",
+    "fill=true switches to flood-fill (FLOOR_FILL); otherwise rectangle (FLOOR_RECT).",
+    "Tile coords, not subtile."
+  ],
+  "perception_hints": [
+    "Am I the owner? perception.lot.owner_is_me — architecture ops are owner-only",
+    "Your position (to anchor where to build): perception.avatar.position.x, .y (tile coords — arch ops accept tile coords directly, unlike walk-to)",
+    "Lot metadata: perception.lot.lot_id, perception.lot.name",
+    "Walls/floors are NOT exposed in perception — use query-architecture (test helper) if you need pre/post state"
+  ],
+  "refuse_conditions": [
+    "caller is not lot owner → returns ok:false with 'caller is not lot owner (owner_id=..., me=...)'",
+    "required tile coords (x, y) missing → returns ok:false with '<verb> requires x, y ...'",
+    "width/height/length <= 0 where specified → returns ok:false with specific bounds error"
+  ]
 }

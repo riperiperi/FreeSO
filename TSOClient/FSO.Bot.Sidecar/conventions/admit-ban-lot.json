@@ -19,5 +19,17 @@
     "window": "1m"
   },
   "response": "sync",
-  "status": "scaffold"
+  "status": "scaffold",
+  "call_signatures": [
+    "cf $CF admit-ban-lot   # SCAFFOLD op — not yet implemented; handler may return ok:false or a stub. Prefer a concrete sibling op if your goal is actionable."
+  ],
+  "common_mistakes": [
+    "This is a SCAFFOLD op — the convention is declared but the handler may be unimplemented or stubbed. Check the declaration's status field.",
+    "Relying on scaffold ops mid-run will either return a deferred marker or fail — prefer a concrete sibling op, and file an rd item if the missing behaviour blocks progress."
+  ],
+  "perception_hints": [
+    "Your own persist_id: perception.avatar.persist_id",
+    "Your current name / shard: perception.avatar.name, perception.avatar.shard",
+    "Current outfit (via query-self, not perception): use query-self → .outfits"
+  ]
 }

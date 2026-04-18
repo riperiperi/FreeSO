@@ -26,5 +26,21 @@
     "window": "1m"
   },
   "response": "sync",
-  "status": "stable"
+  "status": "stable",
+  "call_signatures": [
+    "cf $CF archive-approve-user --target_user_id <user_id>                               # admin-only; target is USER_ID not avatar_id; fso_users.is_verified=1"
+  ],
+  "common_mistakes": [
+    "EntityId / --target_user_id is a USER_ID, not an avatar_id. Look up via fso_users.user_id, not fso_avatars.avatar_id.",
+    "Calling as non-admin → ok:false."
+  ],
+  "perception_hints": [
+    "Target persist_id: perception.nearby_sims[].persist_id (for physically-present targets); other avatars need find-avatar or direct knowledge of avatar_id",
+    "Your own persist_id (to avoid self-target): perception.avatar.persist_id",
+    "Chat activity you may want to moderate: perception.recent_events[] kind=='chat'"
+  ],
+  "refuse_conditions": [
+    "caller not admin → ok:false",
+    "target_user_id missing or <= 0 → ok:false (NOTE: this is user_id, not avatar_id)"
+  ]
 }

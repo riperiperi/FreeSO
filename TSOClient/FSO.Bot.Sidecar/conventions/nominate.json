@@ -5,8 +5,16 @@
   "family": "city",
   "description": "Nominate another avatar for mayor. Prerequisite: active election_cycle in state='nomination'; caller must be a resident of the target neighborhood and not have moved in <30 days (Election_Move_Penalty; admins bypass). Target must be a resident of same neighborhood and also pass move-date check. Effect: fso_election_votes row INSERT (type='nomination'); if target reaches Min_Nominations (default 3), also creates an fso_election_candidates row in state='informed' and mails the candidate an AcceptNomination invite (see accept-candidacy op). Returns SUCCESS. Refuse paths: ELECTION_OVER, BAD_STATE (wrong cycle state), NOT_IN_NHOOD, CANDIDATE_NOT_IN_NHOOD, ALREADY_VOTED (already nominated once), YOU_MOVED_RECENTLY, CANDIDATE_MOVED_RECENTLY, INVALID_AVATAR. On workshop's current DB (no active cycle), nominate refuses deterministically with ELECTION_OVER — this is the test's expected wire-level effect. Wire: NhoodRequest{Type=NOMINATE, TargetAvatar, TargetNHood} on city Aries; resolves on the next NhoodResponse.",
   "args": [
-    {"name": "target_persist_id", "type": "uint64", "required": true},
-    {"name": "neighborhood_id", "type": "uint32", "required": false}
+    {
+      "name": "target_persist_id",
+      "type": "uint64",
+      "required": true
+    },
+    {
+      "name": "neighborhood_id",
+      "type": "uint32",
+      "required": false
+    }
   ],
   "produces_tags": [
     {
@@ -22,5 +30,23 @@
     "window": "1m"
   },
   "response": "sync",
-  "status": "implemented"
+  "status": "implemented",
+  "call_signatures": [
+    "cf $CF nominate --target_persist_id <candidate_persist_id>                                                      # defaults neighborhood_id=1; same ELECTION_OVER refuse on workshop"
+  ],
+  "common_mistakes": [
+    "target_persist_id = 0 or missing → ok:false.",
+    "Self-nomination → ok:false ('cannot nominate yourself').",
+    "Same ELECTION_OVER / YOU_MOVED_RECENTLY server-side refuses as vote."
+  ],
+  "perception_hints": [
+    "Neighborhood id (defaults to 1 on workshop): perception.lot.lot_id is a lot id, not a nhood id — most ops default nhood_id to 1",
+    "Your own persist_id (to avoid self-vote/self-nominate): perception.avatar.persist_id",
+    "Your lot membership (residency gate): perception.lot.owner_is_me or check is_roommate via query-lot"
+  ],
+  "refuse_conditions": [
+    "missing target_persist_id → ok:false",
+    "self-nominate → ok:false",
+    "server NHOOD_NO_ELECTION / ELECTION_OVER / NOT_IN_NHOOD / YOU_MOVED_RECENTLY → ok:false with code"
+  ]
 }

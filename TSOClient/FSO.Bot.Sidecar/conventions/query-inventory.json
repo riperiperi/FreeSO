@@ -5,9 +5,29 @@
   "family": "queries",
   "description": "Return your personal inventory — the list of objects you own that are stashed off-lot. KNOWN LIMITATION (freesoexperiment-1a9): inventory data arrives via DataServiceWrapperPDU updates that FSO.Server.Clients does not currently surface in-process for the bot. Until the DataService feed is wired, this op returns items=[] together with deferred=true and a deferred_reason string naming the blocker. Agents should treat deferred=true as 'I have no inventory visibility right now' — not 'my inventory is empty'. Prerequisite: you are joined to a lot (so the response correlates with session state). Effect: none — local-VM read, no outbound PDU. Cost: negligible. The response shape (items[], deferred, deferred_reason) is stable: once -1a9 closes, items[] will populate with real entries and deferred becomes false; agents written against this contract will light up without changes.",
   "args": [],
-  "produces_tags": [{"tag": "freeso:query-inventory", "cardinality": "exactly_one"}],
+  "produces_tags": [
+    {
+      "tag": "freeso:query-inventory",
+      "cardinality": "exactly_one"
+    }
+  ],
   "antecedents": "none",
   "signing": "member_key",
-  "rate_limit": {"max": 60, "per": "sender", "window": "1m"},
-  "response": "sync"
+  "rate_limit": {
+    "max": 60,
+    "per": "sender",
+    "window": "1m"
+  },
+  "response": "sync",
+  "call_signatures": [
+    "cf $CF query-inventory                                                               # no args; currently returns deferred:true (freesoexperiment-1a9)"
+  ],
+  "common_mistakes": [
+    "These are LOCAL VM reads — they reflect whatever your client-side replica VM shows, which may lag the authoritative state by 1-2 ticks.",
+    "Do not rely on query-inventory until freesoexperiment-1a9 closes — it returns deferred:true with items=[]."
+  ],
+  "perception_hints": [
+    "These ops return the same shape as the corresponding perception slice; use for fresh mid-turn snapshots",
+    "Perception already pushes this data at FSO_PERCEPTION_HZ — only call when you need data newer than the last tick"
+  ]
 }
