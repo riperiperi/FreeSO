@@ -67,10 +67,11 @@ func RegisterMovementHandlers(ctx context.Context, cf *Campfire, ipc *IPC) (int,
 // returns the bot's response payload as the convention.Response.
 //
 // Args forwarded directly (validated again client-side by the bot dispatcher):
-//   x, y, level — absolute target
-//   target_object_id — in-VM object to approach
-//   target_sim_id — Sim persist_id to approach
-//   interaction, param0 — optional PDU fields (default interaction=4 "Run Here")
+//
+//	x, y, level — absolute target
+//	target_object_id — in-VM object to approach
+//	target_sim_id — Sim persist_id to approach
+//	interaction, param0 — optional PDU fields (default interaction=4 "Run Here")
 func walkToHandler(ipc *IPC) convention.HandlerFunc {
 	return func(ctx context.Context, req *convention.Request) (*convention.Response, error) {
 		args := pickArgs(req.Args, "x", "y", "level", "target_object_id", "target_sim_id", "interaction", "param0", "queue_mode")
@@ -97,7 +98,6 @@ func forwardIPC(ctx context.Context, ipc *IPC, op string, args map[string]any) (
 	if err != nil {
 		return &convention.Response{
 			Payload: map[string]any{"ok": false, "error": err.Error()},
-			Tags:    []string{"freeso:" + op},
 		}, nil
 	}
 	// Pass bot payload through intact for the agent to inspect.
@@ -113,7 +113,6 @@ func forwardIPC(ctx context.Context, ipc *IPC, op string, args map[string]any) (
 	}
 	return &convention.Response{
 		Payload: out,
-		Tags:    []string{"freeso:" + op},
 	}, nil
 }
 
@@ -129,4 +128,3 @@ func pickArgs(in map[string]any, keys ...string) map[string]any {
 	}
 	return out
 }
-

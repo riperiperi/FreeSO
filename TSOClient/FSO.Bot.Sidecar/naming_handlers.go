@@ -71,12 +71,13 @@ func RegisterNamingHandlers(ctx context.Context, cf *Campfire, store *MemoryStor
 // nameHandler: binds <as> → one of target_object_id | target_sim_id | location.
 //
 // Args:
-//   as (string, required)           — the agent's chosen name. Case-insensitive
-//                                     on lookup.
-//   target_object_id (int)          — ObjectID to bind the name to
-//   target_sim_id (int)             — Sim persist id to bind
-//   location (json {x,y,level})     — tile coords to bind
-//   note (string, optional)         — free-form note stored alongside
+//
+//	as (string, required)           — the agent's chosen name. Case-insensitive
+//	                                  on lookup.
+//	target_object_id (int)          — ObjectID to bind the name to
+//	target_sim_id (int)             — Sim persist id to bind
+//	location (json {x,y,level})     — tile coords to bind
+//	note (string, optional)         — free-form note stored alongside
 //
 // Exactly one of target_object_id, target_sim_id, or location must be present.
 // A name is overwritten if it already exists.
@@ -130,7 +131,6 @@ func nameHandler(store *MemoryStore) convention.HandlerFunc {
 		store.Store(namePrefix+strings.ToLower(as), encoded)
 		return &convention.Response{
 			Payload: map[string]any{"ok": true, "name": as, "entry": entry},
-			Tags:    []string{"freeso:name"},
 		}, nil
 	}
 }
@@ -153,13 +153,11 @@ func forgetHandler(store *MemoryStore) convention.HandlerFunc {
 		if !found || isTombstone(prior) {
 			return &convention.Response{
 				Payload: map[string]any{"ok": true, "found": false, "name": name},
-				Tags:    []string{"freeso:forget"},
 			}, nil
 		}
 		store.Store(key, json.RawMessage("{}"))
 		return &convention.Response{
 			Payload: map[string]any{"ok": true, "found": true, "name": name},
-			Tags:    []string{"freeso:forget"},
 		}, nil
 	}
 }
@@ -172,7 +170,6 @@ func listNamesHandler(store *MemoryStore) convention.HandlerFunc {
 		names := listNames(store)
 		return &convention.Response{
 			Payload: map[string]any{"ok": true, "count": len(names), "names": names},
-			Tags:    []string{"freeso:list-names"},
 		}, nil
 	}
 }
@@ -285,6 +282,5 @@ func coerceLocation(raw any) (locationArg, error) {
 func errResp(op, msg string) (*convention.Response, error) {
 	return &convention.Response{
 		Payload: map[string]any{"ok": false, "error": msg},
-		Tags:    []string{"freeso:" + op},
 	}, nil
 }

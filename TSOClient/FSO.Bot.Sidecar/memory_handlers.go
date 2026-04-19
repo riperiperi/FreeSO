@@ -106,9 +106,10 @@ func RegisterMemoryHandlers(ctx context.Context, cf *Campfire, store *MemoryStor
 
 // rememberHandler stores a key=value pair in the sidecar's in-memory store.
 // Args:
-//   key   (string, required) — the key to store under.
-//   value (any JSON value, required) — the value to store. Stored verbatim as
-//         raw JSON; recall returns exactly this shape.
+//
+//	key   (string, required) — the key to store under.
+//	value (any JSON value, required) — the value to store. Stored verbatim as
+//	      raw JSON; recall returns exactly this shape.
 //
 // Returns: {ok: true}.
 // Errors: missing/empty key → ok=false with error "key is required".
@@ -121,14 +122,12 @@ func rememberHandler(store *MemoryStore) convention.HandlerFunc {
 		if key == "" {
 			return &convention.Response{
 				Payload: map[string]any{"ok": false, "error": "key is required"},
-				Tags:    []string{"freeso:remember"},
 			}, nil
 		}
 		rawVal, ok := req.Args["value"]
 		if !ok {
 			return &convention.Response{
 				Payload: map[string]any{"ok": false, "error": "value is required"},
-				Tags:    []string{"freeso:remember"},
 			}, nil
 		}
 		// Convention arg type is `json`, which means the framework delivers the
@@ -143,7 +142,6 @@ func rememberHandler(store *MemoryStore) convention.HandlerFunc {
 			if !json.Valid([]byte(v)) {
 				return &convention.Response{
 					Payload: map[string]any{"ok": false, "error": "value is not valid JSON"},
-					Tags:    []string{"freeso:remember"},
 				}, nil
 			}
 			encoded = json.RawMessage(v)
@@ -152,7 +150,6 @@ func rememberHandler(store *MemoryStore) convention.HandlerFunc {
 			if err != nil {
 				return &convention.Response{
 					Payload: map[string]any{"ok": false, "error": "encode value: " + err.Error()},
-					Tags:    []string{"freeso:remember"},
 				}, nil
 			}
 			encoded = b
@@ -160,14 +157,14 @@ func rememberHandler(store *MemoryStore) convention.HandlerFunc {
 		store.Store(key, encoded)
 		return &convention.Response{
 			Payload: map[string]any{"ok": true, "key": key},
-			Tags:    []string{"freeso:remember"},
 		}, nil
 	}
 }
 
 // recallHandler fetches a previously-stored value by key.
 // Args:
-//   key (string, required) — the key to look up.
+//
+//	key (string, required) — the key to look up.
 //
 // Returns: {ok: true, found: bool, value: <whatever was stored> | null}.
 // Errors: missing/empty key → ok=false with error "key is required".
@@ -180,7 +177,6 @@ func recallHandler(store *MemoryStore) convention.HandlerFunc {
 		if key == "" {
 			return &convention.Response{
 				Payload: map[string]any{"ok": false, "error": "key is required"},
-				Tags:    []string{"freeso:recall"},
 			}, nil
 		}
 		raw, found := store.Load(key)
@@ -201,7 +197,6 @@ func recallHandler(store *MemoryStore) convention.HandlerFunc {
 		}
 		return &convention.Response{
 			Payload: out,
-			Tags:    []string{"freeso:recall"},
 		}, nil
 	}
 }

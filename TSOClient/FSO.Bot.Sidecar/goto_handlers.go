@@ -66,7 +66,6 @@ func goToHandler(ipc *IPC, store *MemoryStore) convention.HandlerFunc {
 						"ok":    false,
 						"error": fmt.Sprintf("name %q is not bound (use list-names to see current bindings or 'name --as %q --target_object_id <id>' to bind it)", myName, myName),
 					},
-					Tags: []string{"freeso:go-to"},
 				}, nil
 			}
 			kind, _ := entry["kind"].(string)
@@ -99,7 +98,6 @@ func goToHandler(ipc *IPC, store *MemoryStore) convention.HandlerFunc {
 						"ok":    false,
 						"error": fmt.Sprintf("name %q has unknown kind %q (store corruption?) — re-bind with the name verb", myName, kind),
 					},
-					Tags: []string{"freeso:go-to"},
 				}, nil
 			}
 		}
