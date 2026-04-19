@@ -377,6 +377,7 @@ public class Program
         {
             dispatcher = new CommandDispatcher();
             MovementHandlers.RegisterAll(dispatcher, vmHost);
+            GoToHandlers.RegisterAll(dispatcher, vmHost);
             QueryHandlers.RegisterAll(dispatcher, vmHost, shardName);
             InteractionHandlers.RegisterAll(dispatcher, vmHost);
             SocialHandlers.RegisterAll(dispatcher, vmHost);

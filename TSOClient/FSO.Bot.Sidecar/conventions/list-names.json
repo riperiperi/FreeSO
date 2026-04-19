@@ -1,0 +1,21 @@
+{
+  "convention": "freeso-embodiment",
+  "version": "1.0",
+  "operation": "list-names",
+  "family": "memory",
+  "description": "Return every name you've bound this session, as a list of entries. Each entry has the name you chose, the kind ('object', 'sim', or 'location'), the bound target (target_object_id / target_sim_id / x,y,level), and any note you attached. Useful to check your private map of the world and to decide whether a name still points somewhere meaningful. If you get no results on a go-to --my_name you expected to work, list-names is where you confirm what you actually have.",
+  "args": [],
+  "produces_tags": [{"tag": "freeso:list-names", "cardinality": "exactly_one"}],
+  "antecedents": "none",
+  "signing": "member_key",
+  "rate_limit": {"max": 60, "per": "sender", "window": "1m"},
+  "response": "sync",
+  "call_signatures": [
+    "cf $CF list-names     # list all current name bindings"
+  ],
+  "common_mistakes": [],
+  "perception_hints": [
+    "list-names is the source of truth for what your private name map contains; nothing else in perception mirrors it."
+  ],
+  "refuse_conditions": []
+}

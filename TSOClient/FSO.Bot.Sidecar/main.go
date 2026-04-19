@@ -154,6 +154,22 @@ func main() {
 		}
 		log.Printf("convention handlers: %d memory-family ops serving", memServers)
 
+		// Naming family (freesoexperiment-4fa): name, forget, list-names. Shares
+		// the memory store — names are a keyed subset ("name:<x>"). Sidecar-local.
+		namingServers, err := RegisterNamingHandlers(ctx, cf, memStore)
+		if err != nil {
+			log.Fatalf("register naming handlers: %v", err)
+		}
+		log.Printf("convention handlers: %d naming-family ops serving", namingServers)
+
+		// go-to: high-level verb; sidecar resolves --my_name via memStore, bot resolves
+		// object_name/target_*/location via local VM.
+		gotoServers, err := RegisterGoToHandler(ctx, cf, ipc, memStore)
+		if err != nil {
+			log.Fatalf("register go-to handler: %v", err)
+		}
+		log.Printf("convention handlers: %d go-to-family ops serving", gotoServers)
+
 		// Interaction family (freesoexperiment-2a8): interact-with, cancel-interaction,
 		// query-pie-menu — object/sim interaction dispatch + local pie-menu introspection.
 		iservers, err := RegisterInteractionHandlers(ctx, cf, ipc)

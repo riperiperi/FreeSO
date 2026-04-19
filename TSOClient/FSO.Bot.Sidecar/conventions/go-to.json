@@ -1,0 +1,101 @@
+{
+  "convention": "freeso-embodiment",
+  "version": "1.0",
+  "operation": "go-to",
+  "family": "movement",
+  "description": "High-level 'head somewhere' verb. Accepts a target by identity (target_object_id, target_sim_id, object_name substring match) or by tile coordinates (location with x/y in TILE units — the handler converts to the wire's 1/16-tile units for you). Picks the closest reachable candidate and either walks to it (no interaction) or walks-and-does (when --interaction is given, the pie-menu is searched for a matching entry and interact-with is dispatched under the hood). queue_mode controls how the resolved action lands on your queue: 'queue' (default) cancels engine-autopilot Mode.Idle entries first, 'preempt' cancels everything. Use this instead of walk-to whenever you can name your destination — it removes the 1/16-tile unit conversion and the separate walk+interact chain from your workflow. Prefer target_object_id > object_name > location in that order: ids are stable, names can match multiple objects (picker takes closest), raw tile coords are the escape hatch.",
+  "args": [
+    {
+      "name": "my_name",
+      "type": "string",
+      "required": false,
+      "description": "A name you've previously bound with the 'name' verb. Resolves via your private name map (sidecar-side) to the right selector. Highest-precedence selector — overrides everything else if set. Discover what you've named with list-names."
+    },
+    {
+      "name": "target_object_id",
+      "type": "integer",
+      "required": false,
+      "description": "ObjectID of a specific target. Next-highest precedence after my_name."
+    },
+    {
+      "name": "target_sim_id",
+      "type": "integer",
+      "required": false,
+      "description": "PersistID of a nearby Sim."
+    },
+    {
+      "name": "object_name",
+      "type": "string",
+      "required": false,
+      "description": "Case-insensitive substring match against entity names. Picker returns the closest match within max_distance_tiles. Example: object_name='Toilet' matches 'Hygeia-O-Matic Toilet'."
+    },
+    {
+      "name": "location",
+      "type": "json",
+      "required": false,
+      "description": "{\"x\": tile_x, \"y\": tile_y, \"level\": 1}. Tile-unit coordinates (handler converts to 1/16-tile internally). Use only when you need a specific tile and there is no object there."
+    },
+    {
+      "name": "interaction",
+      "type": "string",
+      "required": false,
+      "description": "Optional. When omitted: walk-only. When given: the target's pie-menu is searched for an entry whose name matches (exact-token first, then substring); interact-with is dispatched with the resolved TTAB id. Example: --object_name Toilet --interaction Use."
+    },
+    {
+      "name": "queue_mode",
+      "type": "string",
+      "required": false,
+      "default": "queue",
+      "enum": ["queue", "preempt"],
+      "description": "How the resolved action lands on your queue. 'queue' cancels engine-autopilot Idle entries; 'preempt' cancels everything."
+    },
+    {
+      "name": "max_distance_tiles",
+      "type": "integer",
+      "required": false,
+      "default": 50,
+      "description": "Reject matches further than this many tiles from the caller. Default 50 covers most lot distances. Lower it if you want a strictly-local pick."
+    }
+  ],
+  "produces_tags": [
+    {
+      "tag": "freeso:go-to",
+      "cardinality": "exactly_one"
+    }
+  ],
+  "antecedents": "none",
+  "signing": "member_key",
+  "rate_limit": {
+    "max": 30,
+    "per": "sender",
+    "window": "1m"
+  },
+  "response": "sync",
+  "call_signatures": [
+    "cf $CF go-to --my_name \"the toilet\" --interaction Use             # you named it once; now just go use it",
+    "cf $CF go-to --object_name Toilet                                # walk to the nearest object whose name contains 'Toilet'",
+    "cf $CF go-to --object_name Toilet --interaction Use              # walk to the nearest Toilet and use it",
+    "cf $CF go-to --object_name Newspaper --interaction Read          # walk to the nearest newspaper and read it",
+    "cf $CF go-to --target_object_id 322 --interaction Use             # you already know the id — just go do it",
+    "cf $CF go-to --object_name Sofa --interaction Sit --queue_mode preempt   # drop what I'm doing and go sit down",
+    "cf $CF go-to --location '{\"x\":42,\"y\":59,\"level\":1}'            # walk to tile (42,59) — tile units, NOT 1/16-tile"
+  ],
+  "common_mistakes": [
+    "Passing 1/16-tile units to --location. Unlike walk-to, this verb expects TILE units (multiply by 16 happens internally). Pass --location '{\"x\":42,\"y\":59}' to reach tile (42,59).",
+    "Specifying both --object_name and --target_object_id. Precedence is target_sim_id > target_object_id > location > object_name; the lower-precedence selector is ignored. Pick one.",
+    "Expecting --interaction to match a hint/description. It matches pie-menu entry NAMES only (e.g. 'Use', 'Sit', 'Read'). Discover names with query-pie-menu first if unsure.",
+    "Trying to go-to a deleted object id (e.g. furniture that got moved or sold). Returns ok=false; re-query nearby_objects for current state."
+  ],
+  "perception_hints": [
+    "Target candidates: perception.nearby_objects[].name / .object_id / .distance_tiles",
+    "What interactions a target exposes: perception.nearby_objects[].interactions[].name (use these as --interaction values)",
+    "Your queue state: perception.avatar.action_queue[]. go-to with default queue_mode clears engine-Idle entries; with --queue_mode preempt it clears your self-queued actions too."
+  ],
+  "refuse_conditions": [
+    "no selector passed → ok:false with 'requires one of target_object_id, target_sim_id, object_name, location'",
+    "object_name matches no entity within max_distance_tiles → ok:false with a sample of nearby entity names",
+    "target_object_id / target_sim_id not in local VM → ok:false",
+    "--interaction has no matching pie-menu entry on the picked target → ok:false with list of available interaction names",
+    "queue_mode not 'queue' or 'preempt' → ok:false"
+  ]
+}

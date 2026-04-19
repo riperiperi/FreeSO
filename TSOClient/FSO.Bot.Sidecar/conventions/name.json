@@ -1,0 +1,41 @@
+{
+  "convention": "freeso-embodiment",
+  "version": "1.0",
+  "operation": "name",
+  "family": "memory",
+  "description": "Bind a human-readable name to a target you want to remember by identity instead of id. The naming is YOURS — 'the toilet', 'the shrub-trap', 'Kelly's spot'. Once named, use it in go-to with --my_name. Exactly one target kind per call: target_object_id (a VMEntity), target_sim_id (a Sim persist id), or location (tile x,y,level — for naming a spot, not an object). Names are case-insensitive on lookup; the original case is preserved for display. Re-naming overwrites. Storage is sidecar-local and session-scoped (lost on bot restart — identity continuation across sessions is -38a). This verb removes the need to carry ObjectIDs in your working memory; your private vocabulary of the world is what lets you talk about it like a place instead of a data structure.",
+  "args": [
+    {"name": "as", "type": "string", "required": true, "description": "The name you are giving this target. Free-form. Case-insensitive on lookup."},
+    {"name": "target_object_id", "type": "integer", "required": false, "description": "ObjectID of the thing you're naming (e.g. a toilet, a sofa, a door)."},
+    {"name": "target_sim_id", "type": "integer", "required": false, "description": "Persist id of the Sim you're naming."},
+    {"name": "location", "type": "json", "required": false, "description": "{\"x\": tile_x, \"y\": tile_y, \"level\": 1}. Tile units. Use for naming a spot with no object there ('the shrub-trap', 'the corner I got stuck')."},
+    {"name": "note", "type": "string", "required": false, "description": "Optional free-form note stored with the name. Surfaces in list-names."}
+  ],
+  "produces_tags": [{"tag": "freeso:name", "cardinality": "exactly_one"}],
+  "antecedents": "none",
+  "signing": "member_key",
+  "rate_limit": {"max": 60, "per": "sender", "window": "1m"},
+  "response": "sync",
+  "call_signatures": [
+    "cf $CF name --as \"the toilet\" --target_object_id 322                               # name an object",
+    "cf $CF name --as Kelly --target_sim_id 4                                            # name a Sim",
+    "cf $CF name --as \"the shrub-trap\" --location '{\"x\":2,\"y\":6,\"level\":1}'           # name a spot",
+    "cf $CF name --as \"the toilet\" --target_object_id 322 --note \"upstairs, master bath\""
+  ],
+  "common_mistakes": [
+    "Passing both --target_object_id and --location: only one target kind per name.",
+    "Using tile-scale coords for location in 1/16-tile units (wire units). Location is TILE units — the coords you see in perception.avatar.position.",
+    "Relying on names across sessions today. Storage is session-scoped; persistent names across reboots await -38a."
+  ],
+  "perception_hints": [
+    "IDs to name: perception.nearby_objects[].object_id, perception.nearby_sims[].persist_id",
+    "Current position for location-type names: perception.avatar.position (tile units)",
+    "See what you've already named: list-names"
+  ],
+  "refuse_conditions": [
+    "missing or empty --as → ok:false",
+    "no target selector → ok:false with 'one of target_object_id, target_sim_id, or location is required'",
+    "more than one target selector → ok:false",
+    "location missing x or y → ok:false"
+  ]
+}
