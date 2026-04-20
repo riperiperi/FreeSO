@@ -7,6 +7,7 @@
 package main
 
 import (
+	"time"
 	"context"
 	"fmt"
 	"log"
@@ -34,12 +35,30 @@ func RegisterGoToHandler(ctx context.Context, cf *Campfire, ipc *IPC, store *Mem
 	if decl == nil {
 		return 0, fmt.Errorf("declaration for op \"go-to\" missing")
 	}
-	srv := convention.NewServer(cf.Client, decl)
+	srv := convention.NewServer(cf.Client, decl).WithErrorHandler(func(err error) {
+
+		log.Printf("handler[go-to]: errFn: %v", err)
+
+	}).WithPollInterval(10 * time.Second)
 	srv.RegisterHandler("go-to", goToHandler(ipc, store))
 	go func() {
 		log.Printf("handler[go-to]: serving")
-		if err := srv.Serve(ctx, cf.ID); err != nil && err != context.Canceled {
-			log.Printf("handler[go-to]: serve err: %v", err)
+		// retry-on-subscription-drop
+		for {
+			err := srv.Serve(ctx, cf.ID)
+			if ctx.Err() != nil {
+				break
+			}
+			if err != nil && err != context.Canceled {
+				log.Printf("handler[go-to]: serve err: %v (restarting)", err)
+			} else {
+				log.Printf("handler[go-to]: serve returned (restarting)")
+			}
+			select {
+			case <-ctx.Done():
+				return
+			case <-time.After(200 * time.Millisecond):
+			}
 		}
 		log.Printf("handler[go-to]: stopped")
 	}()

@@ -102,9 +102,12 @@ func StartCampfire(ctx context.Context, cfg CampfireConfig) (*Campfire, error) {
 		_, serr := client.Send(protocol.SendRequest{
 			CampfireID: id,
 			Payload:    data,
+			// convention:operation lets cf clients discover ops via `cf read --tag convention:operation`.
+			// We deliberately OMIT the per-op "freeso:<op>" tag here: convention handlers subscribe on
+			// that tag, so including it would make each handler re-ingest its own declaration as a
+			// phantom request. Discovery uses the broad tag; dispatch uses the narrow one.
 			Tags: []string{
 				"convention:operation",
-				"freeso:" + d.Operation,
 			},
 		})
 		if serr != nil {
