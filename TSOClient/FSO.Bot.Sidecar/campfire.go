@@ -35,6 +35,11 @@ type Campfire struct {
 	ID           string
 	PublicKeyHex string
 
+	// Router is the single Subscribe + dispatch loop for all registered
+	// convention handlers. Replaces the per-op convention.Server goroutines
+	// that were saturating SQLite under load. See dispatcher.go.
+	Router *Router
+
 	declCount int
 
 	// recorder, when non-nil, captures BroadcastEvent calls instead of sending
@@ -83,6 +88,7 @@ func StartCampfire(ctx context.Context, cfg CampfireConfig) (*Campfire, error) {
 		Client:       client,
 		ID:           id,
 		PublicKeyHex: pk,
+		Router:       NewRouter(),
 	}
 
 	// Publish declarations.

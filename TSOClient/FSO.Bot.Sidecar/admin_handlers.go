@@ -7,10 +7,8 @@
 package main
 
 import (
-	"time"
 	"context"
 	"fmt"
-	"log"
 
 	"github.com/campfire-net/campfire/pkg/convention"
 )
@@ -75,37 +73,7 @@ func RegisterAdminHandlers(ctx context.Context, cf *Campfire, ipc *IPC) (int, er
 		if !ok {
 			return started, fmt.Errorf("declaration for op %q missing (expected in conventions/%s.json)", op, op)
 		}
-		op := op // capture
-
-		srv := convention.NewServer(cf.Client, decl).WithErrorHandler(func(err error) {
-
-			log.Printf("handler[%s]: errFn: %v", op, err)
-
-		}).WithPollInterval(10 * time.Second)
-		srv.RegisterHandler(op, handler)
-		go func(op string, srv *convention.Server) {
-			log.Printf("handler[%s]: serving", op)
-			// retry-on-subscription-drop: Serve exits cleanly on sqlite BUSY or similar;
-			// keep restarting until ctx is cancelled.
-			for {
-				err := srv.Serve(ctx, cf.ID)
-				if ctx.Err() != nil {
-					break
-				}
-				if err != nil && err != context.Canceled {
-					log.Printf("handler[%s]: serve err: %v (restarting)", op, err)
-				} else {
-					log.Printf("handler[%s]: serve returned (restarting)", op)
-				}
-				// small backoff so we don't hot-spin on a persistent failure
-				select {
-				case <-ctx.Done():
-					return
-				case <-time.After(200 * time.Millisecond):
-				}
-			}
-			log.Printf("handler[%s]: stopped", op)
-		}(op, srv)
+		cf.Router.Register(decl, handler)
 		started++
 	}
 	return started, nil

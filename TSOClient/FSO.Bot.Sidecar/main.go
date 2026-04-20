@@ -257,6 +257,13 @@ func main() {
 			log.Fatalf("register build-mode handlers: %v", err)
 		}
 		log.Printf("convention handlers: %d build-buy-architecture-family ops serving", buildServers)
+
+		// Single-dispatcher: one Subscribe goroutine handles every registered op
+		// instead of one Subscribe per op. Replaces the convention.Server fleet
+		// (which saturated SQLite at 103 × 500ms polls + per-poll fs sync) with
+		// one TagPrefixes:["freeso:"] subscription. See dispatcher.go.
+		log.Printf("router: %d ops registered, starting single-dispatcher Serve", cf.Router.Count())
+		go cf.Router.Serve(ctx, cf)
 	} else {
 		log.Printf("running in --no-bot mode (campfire-only)")
 
@@ -268,6 +275,9 @@ func main() {
 			log.Fatalf("register memory handlers: %v", err)
 		}
 		log.Printf("convention handlers: %d memory-family ops serving (no-bot mode)", memServers)
+
+		log.Printf("router: %d ops registered, starting single-dispatcher Serve", cf.Router.Count())
+		go cf.Router.Serve(ctx, cf)
 	}
 
 	// Signal handling for clean shutdown.
