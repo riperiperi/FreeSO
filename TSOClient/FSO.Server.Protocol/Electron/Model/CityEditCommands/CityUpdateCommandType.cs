@@ -4,6 +4,7 @@
     {
         Altitude,
         Paint,
-        Road
+        Road,
+        Forest
     }
 }

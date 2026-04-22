@@ -31,10 +31,6 @@ using FSO.SimAntics.NetPlay.Model.Commands;
 using FSO.SimAntics.Utils;
 using FSO.UI.Model;
 using Microsoft.Xna.Framework;
-using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text.RegularExpressions;
 
 namespace FSO.Client.UI.Screens
 {
@@ -338,6 +334,7 @@ namespace FSO.Client.UI.Screens
                 WindowContainer.Add(CityPainter);
             }
 
+            CityPainter.Position = new Vector2(20, 20);
             CityPainter.SetActive(true);
         }
 

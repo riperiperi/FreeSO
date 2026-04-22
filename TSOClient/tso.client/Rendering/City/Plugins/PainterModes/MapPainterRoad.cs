@@ -1,4 +1,5 @@
-﻿using FSO.Common.Rendering.Framework.Model;
+﻿using FSO.Client.UI.Model;
+using FSO.Common.Rendering.Framework.Model;
 using FSO.Common.Utils;
 using FSO.Server.Protocol.Electron.Model.CityEditCommands;
 using Microsoft.Xna.Framework;
@@ -16,6 +17,14 @@ namespace FSO.Client.Rendering.City.Plugins.PainterModes
         private Point WallBase;
         private Point WallTarget;
         private Vector2 LastPos;
+
+        private static Point[] WLStep =
+        {
+            new Point(1, 0),
+            new Point(0, 1),
+            new Point(-1, 0),
+            new Point(0, -1),
+        };
 
         public MapPainterRoad(MapPainterPlugin painter)
         {
@@ -57,12 +66,16 @@ namespace FSO.Client.Rendering.City.Plugins.PainterModes
                 StartX = wallPos.X,
                 StartY = wallPos.Y,
             };
+
+            HIT.HITVM.Get().PlaySoundEvent(UISounds.BuildDragToolDown);
         }
 
         public void TileMouseUp(Vector2? tile)
         {
             if (Road != null)
             {
+                HIT.HITVM.Get().PlaySoundEvent(UISounds.BuildDragToolUp);
+
                 Painter.Commit(Road.Length > 0);
 
                 Road = null;
@@ -74,17 +87,41 @@ namespace FSO.Client.Rendering.City.Plugins.PainterModes
             
         }
 
+        private Point GetWallEnd()
+        {
+            var pos = new Point(Road.StartX, Road.StartY);
+            var step = WLStep[Road.Direction];
+
+            pos += new Point(step.X * Road.Length, step.Y * Road.Length);
+
+            return pos;
+        }
+
         public void Draw(SpriteBatch sb)
         {
+            float cursorScale = 8;
             if (Road != null)
             {
-                var onScreen2 = City.Get2DFromTile(WallBase.X, WallBase.Y);
-                City.DrawLine(TextureGenerator.GetPxWhite(sb.GraphicsDevice), onScreen2, onScreen2 + new Vector2(0, -50), sb, 5, 100);
+                var anchor = City.Content.PainterCursorAnchor;
+
+                City.DrawLocal3D(sb, anchor, WallBase.ToVector2(), new Vector2(-anchor.Width / 2f, -anchor.Height), cursorScale, Vector2.One, Color.White);
             }
 
-            var wallPos = new Point((int)Math.Round(LastPos.X), (int)Math.Round(LastPos.Y));
-            var onScreen = City.Get2DFromTile(wallPos.X, wallPos.Y);
-            City.DrawLine(TextureGenerator.GetPxWhite(sb.GraphicsDevice), onScreen, onScreen + new Vector2(0, -30), sb, 3, 100);
+            var wallPos = Road == null ? new Point((int)Math.Round(LastPos.X), (int)Math.Round(LastPos.Y)) : GetWallEnd();
+
+            var cursor = Road == null ? City.Content.PainterCursor : City.Content.PainterCursorActive;
+            City.DrawLocal3D(sb, cursor, wallPos.ToVector2(), new Vector2(-cursor.Width / 2f, -cursor.Height), cursorScale, Vector2.One, Color.White);
+
+            var iconColor = Road == null ? new Color(203, 231, 225, 255) : new Color(253, 246, 153, 255);
+            var scale = Road == null ? 1f : (62f / 58f);
+            var icon = Painter.Erasing ? City.Content.PainterRoadDel : City.Content.PainterRoadIcon;
+            City.DrawLocal3D(
+                sb,
+                icon,
+                wallPos.ToVector2(),
+                new Vector2(-(icon.Width * scale) / 2f, (-cursor.Height + cursor.Width / 2) - (icon.Height * scale) / 2f),
+                cursorScale,
+                new Vector2(scale), iconColor);
         }
     }
 }

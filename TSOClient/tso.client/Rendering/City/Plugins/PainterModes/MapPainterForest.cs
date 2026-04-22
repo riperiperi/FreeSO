@@ -7,8 +7,9 @@ using System.Runtime.InteropServices;
 
 namespace FSO.Client.Rendering.City.Plugins.PainterModes
 {
-    internal class MapPainterPaint<T> : IMapPainterMode where T : unmanaged
+    internal class MapPainterForest<T> : IMapPainterMode where T : unmanaged
     {
+        private readonly float MaxIntensity = 4;
         private readonly MapPainterPlugin Painter;
         private readonly Color[] ModifierToColor;
         private readonly T[] ModifierToValue;
@@ -16,23 +17,22 @@ namespace FSO.Client.Rendering.City.Plugins.PainterModes
 
         private Terrain City => Painter.City;
 
-        private CityEditPaint Paint;
-        private readonly MapPainterSpraypaint Spray;
-        public CityEditBase Command => Paint;
+        private CityEditForest Forest;
+        public CityEditBase Command => Forest;
+
         private Vector2 LastPos;
+        private Dictionary<Point, float> ForestMod;
+        private readonly MapPainterSpraypaint Spray;
+        private int SprayFrames;
 
         private bool AnySet;
 
-        private readonly Dictionary<Point, float> SprayIntensities = [];
-        private int SprayFrames;
-
-        public MapPainterPaint(MapPainterPlugin painter, Color[] modifierToColor, T[] modifierToValue, CityEditPaintType type)
+        public MapPainterForest(MapPainterPlugin painter, Color[] modifierToColor, T[] modifierToValue, CityEditPaintType type)
         {
             Painter = painter;
             ModifierToColor = modifierToColor;
             ModifierToValue = modifierToValue;
             Type = type;
-
             Spray = new MapPainterSpraypaint();
             Spray.NewSeed();
         }
@@ -58,12 +58,12 @@ namespace FSO.Client.Rendering.City.Plugins.PainterModes
                     if (ix >= 0 && iy >= 0 && ix < 512 && iy < 512)
                     {
                         var sprayIntensity = Spray.GetSpraypaint(iy * 512 + ix, strength);
-                        City.PathTile(ix, iy, iScale, new Color(selColor, Math.Min(0.5f, sprayIntensity * (intensity + 0.2f) * multiplier * 0.4f)));
+                        City.PathTile(ix, iy, iScale, new Color(selColor, Math.Min(0.3f, sprayIntensity * (intensity + 0.2f) * multiplier * 0.3f)));
                     }
                 }
                 else
                 {
-                    if (strength > 0) City.PathTile((int)LastPos.X + x, (int)LastPos.Y + y, iScale, new Color(selColor, 0.5f));
+                    if (strength > 0) City.PathTile((int)LastPos.X + x, (int)LastPos.Y + y, iScale, new Color(selColor, 0.15f + 0.10f * intensity));
                 }
             });
 
@@ -76,44 +76,64 @@ namespace FSO.Client.Rendering.City.Plugins.PainterModes
             SprayFrames = (int)(5 * frameMul);
         }
 
+        private void EnrichCommand()
+        {
+            if (Forest != null)
+            {
+                int width = City.MapData.Width;
+                int height = City.MapData.Height;
+
+                byte[] intensities = new byte[width * height];
+
+                foreach (var mod in ForestMod)
+                {
+                    if (mod.Key.X < 0 || mod.Key.Y < 0 || mod.Key.X >= width || mod.Key.Y >= height) continue;
+                    var index = mod.Key.X + mod.Key.Y * width;
+                    // bitmap.Set(mod.Key.X, mod.Key.Y);
+                    intensities[index] = (byte)Math.Clamp(Math.Round(mod.Value), 0, MaxIntensity);
+                }
+
+                Forest.Intensities = intensities;
+            }
+        }
+
         private void Submit()
         {
-            if (Paint != null)
+            if (Forest != null)
             {
-                Paint.Trim();
+                Forest.Trim();
+
                 Painter.Commit(AnySet);
 
-                Paint = null;
+                Forest = null;
             }
         }
 
         private void NewPaint()
         {
             Submit();
-            SprayIntensities.Clear();
-            if (Painter.SprayBrush)
-            {
-                Spray.NewSeed();
-            }
-            SprayFrames = 0;
+            Spray.NewSeed();
 
             var valueAsByte = MemoryMarshal.Cast<T, byte>(ModifierToValue);
 
-            Paint = new CityEditPaint()
+            Forest = new CityEditForest()
             {
-                Type = Type,
-                Value = valueAsByte[Painter.SelectedModifier],
+                Erasing = Painter.Erasing,
+                ForestType = valueAsByte[Painter.SelectedModifier],
                 Bitmap = new CityEditBitmap(City.MapData.Width, City.MapData.Height)
             };
 
             AnySet = false;
+            ForestMod = [];
         }
 
         private void ApplyBrush(Point newPt)
         {
             var frameMul = 60f / FSOEnvironment.RefreshRate;
             var spray = Painter.SprayBrush;
-            var intensity = Painter.BrushIntensity;
+            var multiplier = Painter.Accelerate ? 2f : 1f;
+            var intensity = Painter.BrushIntensity * multiplier;
+
             IMapPainterMode.BrushFunc(Painter.BrushSize, (x, y, strength) =>
             {
                 int targetX = newPt.X + x;
@@ -124,33 +144,32 @@ namespace FSO.Client.Rendering.City.Plugins.PainterModes
                     return;
                 }
 
-                if (spray)
+                if (strength > 0)
                 {
-                    var key = new Point(targetX, targetY);
-                    var sprayIntensity = Spray.GetSpraypaint(targetY * 512 + targetX, strength);
+                    Forest.Bitmap.Set(targetX, targetY);
 
-                    SprayIntensities.TryGetValue(key, out float acc);
-                    acc += sprayIntensity * frameMul * intensity;
-                    SprayIntensities[key] = acc;
+                    var loc = new Point(targetX, targetY);
 
-                    if (acc > 4)
+                    if (spray)
                     {
-                        Paint.Bitmap.Set(targetX, targetY);
-                        AnySet = true;
+                        var sprayIntensity = Spray.GetSpraypaint(targetY * 512 + targetX, strength);
+
+                        ForestMod.TryGetValue(loc, out float acc);
+                        acc += sprayIntensity * frameMul * intensity * 0.25f;
+                        ForestMod[loc] = acc;
                     }
-                }
-                else
-                {
-                    if (strength > 0)
+                    else
                     {
-                        Paint.Bitmap.Set(targetX, targetY);
-                        AnySet = true;
+                        ForestMod[loc] = intensity;
                     }
+
+                    AnySet = true;
                 }
             });
 
             if (!spray || --SprayFrames <= 0)
             {
+                EnrichCommand();
                 Painter.UpdateTemp();
                 ResetSprayFrames();
             }
@@ -158,7 +177,7 @@ namespace FSO.Client.Rendering.City.Plugins.PainterModes
 
         public void TileHover(Vector2? tile)
         {
-            if (Paint != null && tile != null)
+            if (Forest != null && tile != null)
             {
                 var newPt = tile.Value.ToPoint();
                 var spray = Painter.SprayBrush;
@@ -186,7 +205,10 @@ namespace FSO.Client.Rendering.City.Plugins.PainterModes
 
         public void Update(UpdateState state)
         {
-
+            if (Forest != null && Forest.Erasing != Painter.Erasing)
+            {
+                Submit();
+            }
         }
     }
 }

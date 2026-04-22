@@ -95,8 +95,43 @@ namespace FSO.Common.Domain.Realestate
             )
         ];
 
+        private const int RandomSeed = 123456789;
+
         [ThreadStatic]
         private static CityEditBitmap ReservedBitmap;
+        private readonly static byte[] Noise;
+
+        static CityMapUtils()
+        {
+            byte[] noise = new byte[512 * 512];
+
+            var rand = new Random(RandomSeed);
+
+            rand.NextBytes(noise);
+
+            Noise = noise;
+        }
+
+        public static byte[] GetRawNoise()
+        {
+            return Noise;
+        }
+
+        public static void GetSpraypaintNoise(byte[] target, uint seed)
+        {
+            var index = (int)(seed % Noise.Length);
+
+            if (index > 0)
+            {
+                var sliceSize = Noise.Length - index;
+                (Noise.AsSpan(index)).CopyTo(target.AsSpan(0, sliceSize));
+                (Noise.AsSpan(0, index)).CopyTo(target.AsSpan(sliceSize));
+            }
+            else
+            {
+                Noise.CopyTo(target, 0);
+            }
+        }
 
         private static CityEditBitmap GetReservedBitmapBase(CityMap map)
         {
@@ -196,6 +231,7 @@ namespace FSO.Common.Domain.Realestate
                 CityEditRoad road => ApplyRoad(map, road),
                 CityEditPaint paint => ApplyPaint(map, paint),
                 CityEditAltitude alt => ApplyAltitude(map, alt),
+                CityEditForest forest => ApplyForest(map, forest),
                 _ => false
             };
         }
@@ -207,6 +243,7 @@ namespace FSO.Common.Domain.Realestate
                 CityEditRoad road => GetRoadBounds(road, true),
                 CityEditPaint paint => GetBitmapBounds(map, paint.Bitmap),
                 CityEditAltitude alt => GetBitmapBounds(map, alt.Bitmap),
+                CityEditForest forest => GetBitmapBounds(map, forest.Bitmap),
                 _ => null
             };
         }
@@ -419,6 +456,10 @@ namespace FSO.Common.Domain.Realestate
             var value = paint.Value;
             Span<byte> aspect = GetPaintAspect(map, paint.Type);
 
+            bool isTerrainType = paint.Type == CityEditPaintType.TerrainType;
+            ForestType[] forestType = map.GetRawForestType();
+            byte[] forestDensity = map.GetRawForestDensity();
+
             foreach (var line in bitmap.GetSetLines())
             {
                 int x = line.x + bitmap.X;
@@ -429,6 +470,12 @@ namespace FSO.Common.Domain.Realestate
                 {
                     if (!reserved.IsSet(x++, y))
                     {
+                        if (isTerrainType && value == (byte)TerrainType.WATER)
+                        {
+                            forestType[mapIndex] = ForestType.NULL;
+                            forestDensity[mapIndex] = 0;
+                        }
+
                         aspect[mapIndex++] = value;
                     }
                 }
@@ -437,15 +484,96 @@ namespace FSO.Common.Domain.Realestate
             return true;
         }
 
+        public static bool ApplyForest(CityMap map, CityEditForest paint)
+        {
+            var reserved = GetReservedBitmap(map, paint);
+            var erasing = paint.Erasing;
+            var bitmap = paint.Bitmap;
+            var intensity = paint.Intensities;
+            var newType = (ForestType)paint.ForestType;
+
+            var forestType = map.ForestTypeData;
+            var forestDensity = map.ForestDensityData;
+            var terrainType = map.TerrainType;
+
+            byte maxDensity = 4;
+
+            foreach (var line in bitmap.GetSetLines())
+            {
+                int deltaIndex = (line.y * bitmap.Width) + line.x;
+
+                int x = line.x + bitmap.X;
+                int y = line.y + bitmap.Y;
+                int mapIndex = (y * map.Width) + x;
+
+                for (int i = 0; i < line.count; i++)
+                {
+                    if (!reserved.IsSet(x++, y))
+                    {
+                        ref var existingTerrain = ref terrainType[mapIndex];
+                        ref var existingType = ref forestType[mapIndex];
+                        ref var existingDensity = ref forestDensity[mapIndex++];
+                        var newDensity = (byte)Math.Min(Math.Min(maxDensity, intensity[deltaIndex++]) * 64, 255);
+
+                        if (erasing)
+                        {
+                            if (newDensity >= existingDensity)
+                            {
+                                existingDensity = 0;
+                                existingType = ForestType.NULL;
+                            }
+                            else
+                            {
+                                existingDensity -= newDensity;
+                            }
+                        }
+                        else
+                        {
+                            if (newDensity >= existingDensity && existingTerrain != TerrainType.WATER)
+                            {
+                                existingDensity = newDensity;
+                                existingType = newType;
+                            }
+                        }
+                    }
+                }
+            }
+
+            return true;
+        }
+
+        private static bool OverThreshold(int value, int min, int blend, int index)
+        {
+            if (value >= min)
+            {
+                if (value < min + blend)
+                {
+                    // Use the noise to determine if the threshold is met.
+                    var tileNoise = Noise[index];
+                    var pct = ((value - min) * 255) / blend;
+
+                    return pct > tileNoise;
+                }
+                else
+                {
+                    return true;
+                }
+            }
+
+            return false;
+        }
+
         public static bool ApplyAltitude(CityMap map, CityEditAltitude altEdit)
         {
             var reserved = GetReservedBitmapAlt(map, altEdit);
             var bitmap = altEdit.Bitmap;
             var deltas = altEdit.AltitudeDeltas;
+            var auto = altEdit.AutoTerrainType;
             byte[] altitudes = map.GetRawElevation();
 
             if (bitmap != null)
             {
+                int height = bitmap.Height;
                 foreach (var line in bitmap.GetSetLines())
                 {
                     int deltaIndex = (line.y * bitmap.Width) + line.x;
@@ -460,6 +588,97 @@ namespace FSO.Common.Domain.Realestate
                         {
                             ref var alt = ref altitudes[mapIndex++];
                             alt = (byte)Math.Clamp(alt + deltas[deltaIndex++], 0, 255);
+                        }
+                    }
+                }
+
+                if (auto)
+                {
+                    int AltScale = 4;
+
+                    // Any modified tile is changed to non-water.
+                    // Starting with sand, at each minimum height we start selecting another tile.
+                    int AutoGrassMin = 2 * AltScale - 2;
+                    int AutoRockMin = 100 * AltScale;
+                    int AutoSnowMin = 190 * AltScale;
+
+                    // The blend region introduces some dithering when transitioning between terrain type regions.
+                    // For example, after AutoRockMin we gradually introduce more rock until AutoRockMin + AutoRockBlend, where it becomes all rock.
+                    int AutoGrassBlend = 6;
+                    int AutoRockBlend = 50 * AltScale;
+                    int AutoSnowBlend = 20 * AltScale;
+
+                    // When a tile is too steep, it automatically becomes rock.
+                    int AutoRockSteepness = 8;
+                    int AutoRockSteepnessBlend = 2;
+
+                    TerrainType[] type = map.GetRawTerrain();
+
+                    foreach (var line in bitmap.GetSetLines())
+                    {
+                        int deltaIndex = (line.y * bitmap.Width) + line.x;
+
+                        int x = line.x + bitmap.X;
+                        int y = line.y + bitmap.Y;
+                        int mapIndex = (y * map.Width) + x;
+
+                        int lineX = line.x;
+                        int nextLineY = line.y + 1;
+                        bool hasNextLine = line.y + 1 < height;
+
+                        for (int i = 0; i < line.count; i++)
+                        {
+                            if (i < line.count - 1 && hasNextLine && bitmap.IsSet(lineX + 1, nextLineY) && !reserved.IsSet(x, y))
+                            {
+                                var alt1 = altitudes[mapIndex];
+                                var alt2 = altitudes[mapIndex + map.Width];
+                                var alt3 = altitudes[mapIndex + 1];
+                                var alt4 = altitudes[mapIndex + 1 + map.Width];
+
+                                var avg4 = alt1 + alt2 + alt3 + alt4;
+                                var min = Math.Min(alt1, Math.Min(alt2, Math.Min(alt3, alt4)));
+                                var max = Math.Max(alt1, Math.Max(alt2, Math.Max(alt3, alt4)));
+
+                                var delta = max - min;
+
+                                ref TerrainType tileType = ref type[mapIndex];
+
+                                if (OverThreshold(delta, AutoRockSteepness, AutoRockSteepnessBlend, mapIndex))
+                                {
+                                    tileType = TerrainType.ROCK;
+                                }
+                                else
+                                {
+                                    if (OverThreshold(avg4, AutoGrassMin, AutoGrassBlend, mapIndex))
+                                    {
+                                        avg4 += delta * 8;
+                                        if (OverThreshold(avg4, AutoRockMin, AutoRockBlend, mapIndex))
+                                        {
+                                            if (OverThreshold(avg4, AutoSnowMin, AutoSnowBlend, mapIndex))
+                                            {
+                                                tileType = TerrainType.SNOW;
+                                            }
+                                            else
+                                            {
+                                                tileType = TerrainType.ROCK;
+                                            }
+                                        }
+                                        else
+                                        {
+                                            tileType = TerrainType.GRASS;
+                                        }
+                                    }
+                                    else
+                                    {
+                                        tileType = TerrainType.SAND;
+                                    }
+                                }
+
+                                mapIndex++;
+                            }
+
+                            lineX++;
+                            x++;
                         }
                     }
                 }

@@ -1,6 +1,4 @@
-﻿using System;
-using System.Collections.Generic;
-using FSO.Client.UI.Framework;
+﻿using FSO.Client.UI.Framework;
 using FSO.Client.UI.Framework.Parser;
 using Microsoft.Xna.Framework;
 using Microsoft.Xna.Framework.Graphics;

@@ -15,6 +15,9 @@ namespace FSO.Server.Protocol.Electron.Model.CityEditCommands
             },
             {
                 typeof(CityEditRoad), CityUpdateCommandType.Road
+            },
+            {
+                typeof(CityEditForest), CityUpdateCommandType.Forest
             }
         };
 
@@ -39,6 +42,7 @@ namespace FSO.Server.Protocol.Electron.Model.CityEditCommands
                 CityUpdateCommandType.Altitude => new CityEditAltitude(),
                 CityUpdateCommandType.Paint => new CityEditPaint(),
                 CityUpdateCommandType.Road => new CityEditRoad(),
+                CityUpdateCommandType.Forest => new CityEditForest(),
                 _ => throw new NotSupportedException($"Unknown city command type: {eType}")
             };
 

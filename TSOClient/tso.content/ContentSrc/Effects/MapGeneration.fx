@@ -353,8 +353,8 @@ float4 forestOverlay(VertexOut v) : COLOR0
 {
 	float2 texCoord = v.texCoord;
 
-  float4 color = Color;
-  float a = tex2D(TextureSampler, texCoord).a * 0.75;
+  float4 color = float4(Color.rgb, 1.0);
+  float a = tex2D(TextureSampler, texCoord).a * 0.75 * Color.a;
 
 	float value = tex2D(TerrainSampler, texCoord).a;
 	int type = int(round(value * 255));
@@ -364,8 +364,8 @@ float4 forestOverlay(VertexOut v) : COLOR0
 		a = 0;
 	}
 
+	a = min(a, 0.80);
 	float4 result = color * a;
-	result.a = min(result.a, 0.75);
 
 	return result;
 }

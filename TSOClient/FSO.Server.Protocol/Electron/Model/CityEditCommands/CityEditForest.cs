@@ -1,49 +1,50 @@
 ﻿using FSO.Common.Serialization;
 using Mina.Core.Buffer;
-using System.Runtime.InteropServices;
 
 namespace FSO.Server.Protocol.Electron.Model.CityEditCommands
 {
-    public class CityEditAltitude : CityEditBase
+    public class CityEditForest : CityEditBase
     {
-        public bool AutoTerrainType;
+        public bool Erasing;
+        public byte ForestType;
         public CityEditBitmap Bitmap;
-        public short[] AltitudeDeltas;
+        public byte[] Intensities;
 
         public override void Deserialize(IoBuffer input, ISerializationContext context)
         {
             base.Deserialize(input, context);
-            AutoTerrainType = input.GetBool();
+            Erasing = input.GetBool();
+            ForestType = input.Get();
             Bitmap = new CityEditBitmap(input);
-            var altBytes = input.GetSlice(Bitmap.Width * Bitmap.Height * sizeof(ushort)).GetBytes();
-            AltitudeDeltas = MemoryMarshal.Cast<byte, short>(altBytes).ToArray();
+            Intensities = input.GetSlice(Bitmap.Width * Bitmap.Height).GetBytes();
         }
 
         public override void Serialize(IoBuffer output, ISerializationContext context)
         {
             base.Serialize(output, context);
 
-            output.PutBool(AutoTerrainType);
+            output.PutBool(Erasing);
+            output.Put(ForestType);
             Bitmap.Serialize(output);
-            output.Put(MemoryMarshal.Cast<short, byte>(AltitudeDeltas).ToArray());
+            output.Put(Intensities);
         }
 
         public void Trim()
         {
             var before = Bitmap;
-            var deltas = AltitudeDeltas;
+            var intensities = Intensities;
             var trimmed = Bitmap.Trim();
             Bitmap = trimmed;
 
             int width = before.Width;
             int twidth = trimmed?.Width ?? 0;
             int theight = trimmed?.Height ?? 0;
-            AltitudeDeltas = new short[twidth * theight];
+            Intensities = new byte[twidth * theight];
 
             foreach (var line in before.GetSetLines())
             {
-                var from = deltas.AsSpan(line.y * width + line.x, line.count);
-                var to = AltitudeDeltas.AsSpan((line.y - trimmed.Y) * twidth + line.x - trimmed.X, line.count);
+                var from = intensities.AsSpan(line.y * width + line.x, line.count);
+                var to = Intensities.AsSpan((line.y - trimmed.Y) * twidth + line.x - trimmed.X, line.count);
 
                 from.CopyTo(to);
             }

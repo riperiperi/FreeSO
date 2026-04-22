@@ -498,8 +498,8 @@ namespace FSO.Client.Rendering.City
                     RoadIndices.SetData(roadIndices.ToArray());
                     RoadVertices = new VertexBuffer(gd, typeof(TLayerVertex), roadVertices.Count, BufferUsage.None);
                     RoadVertices.SetData(roadVertices.ToArray());
-                    RoadPrims = roadIndices.Count / 3;
                 }
+                RoadPrims = roadIndices.Count / 3;
             };
 
 

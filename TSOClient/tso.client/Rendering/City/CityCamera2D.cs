@@ -14,7 +14,7 @@ namespace FSO.Client.Rendering.City
     public class CityCamera2D : ICityCamera
     {
         public static float NEAR_ZOOM_SIZE = 288;
-        public float m_WheelZoom;
+        public float m_WheelZoom = 0.5f;
         public float LotZoomProgress { get; set; } = 0;
         public float ZoomProgress { get; set; } //settable to avoid discontinuities
         public float m_LotZoomSize = 72 * 128; //near zoom, set by world
@@ -67,9 +67,9 @@ namespace FSO.Client.Rendering.City
         private Vector2 m_MouseStart;
         private bool WasRMBDown;
 
-        public float GetIsoScale()
+        public float GetIsoScale(int width, int height)
         {
-            float ResScale = 768.0f / UIScreen.Current.ScreenHeight; //scales up the vertical height to match that of the target resolution (for the far view)
+            float ResScale = 768.0f / height; //scales up the vertical height to match that of the target resolution (for the far view)
             float FisoScale = (float)(Math.Sqrt(0.5 * 0.5 * 2) / 5.10f) * ResScale; // is 5.10 on far zoom
             float ZisoScale = (float)Math.Sqrt(0.5 * 0.5 * 2) / (NEAR_ZOOM_SIZE * m_WheelZoom);  // currently set 144 to near zoom
             float LisoScale = (float)Math.Sqrt(0.5 * 0.5 * 2) / m_LotZoomSize;  // currently set 144 to near zoom
@@ -77,6 +77,12 @@ namespace FSO.Client.Rendering.City
             float IsoScale = (1 - ZoomProgress) * FisoScale + (ZoomProgress) * ZisoScale;
             //if (FSOEnvironment.Enable3D) return IsoScale;
             return (1 - LotZoomProgress) * IsoScale + LotZoomProgress * LisoScale;
+        }
+
+        public float GetIsoScale()
+        {
+            var screen = UIScreen.Current;
+            return GetIsoScale(screen.ScreenWidth, screen.ScreenHeight);
         }
 
         public void MouseEvent(UIMouseEventType type, UpdateState state)
@@ -245,10 +251,15 @@ namespace FSO.Client.Rendering.City
 
         public Matrix CalculateProjection()
         {
-            var isoScale = GetIsoScale();
             var screen = UIScreen.Current;
-            float HB = screen.ScreenWidth * isoScale;
-            float VB = screen.ScreenHeight * isoScale;
+            return CalculateProjection(screen.ScreenWidth, screen.ScreenHeight);
+        }
+
+        public Matrix CalculateProjection(int width, int height)
+        {
+            var isoScale = GetIsoScale(width, height);
+            float HB = width * isoScale;
+            float VB = height * isoScale;
 
             return Matrix.CreateOrthographicOffCenter(-HB + m_ViewOffX, HB + m_ViewOffX, -VB + m_ViewOffY, VB + m_ViewOffY, 0.1f, 524);
         }

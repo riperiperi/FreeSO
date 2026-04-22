@@ -15,7 +15,7 @@ namespace FSO.Client.Rendering.City
     /// </summary>
     public class CityContent
     {
-        public Texture2D[] TerrainTextures = new Texture2D[5]; //grass, sand, rock, snow, water
+        public readonly Texture2D[] TerrainTextures = new Texture2D[5]; //grass, sand, rock, snow, water
         public Texture2D VertexColor;
         public CityMap MapData;
 
@@ -25,7 +25,7 @@ namespace FSO.Client.Rendering.City
         public Texture2D[] Roads;  //moved into an atlas
         public Texture2D[] RoadCorners;  //moved into an atlas
 
-        public Texture2D[] TransAtlas = new Texture2D[4];
+        public readonly Texture2D[] TransAtlas = new Texture2D[4];
         public Texture2D RoadAtlas;
         public Texture2D Forest;
         public Texture2D WhiteLine;
@@ -39,7 +39,14 @@ namespace FSO.Client.Rendering.City
         public Texture2D SmallWNormal; //small water normal, for small scale normal map changes
         public Texture2D TreeTex;
 
-        public string[] NeighTexNames = new string[] { "circles.png", "triangles.png", "squares.png" };
+        public Texture2D PainterSpike;
+        public Texture2D PainterCursor;
+        public Texture2D PainterCursorActive;
+        public Texture2D PainterCursorAnchor;
+        public Texture2D PainterRoadIcon;
+        public Texture2D PainterRoadDel;
+
+        public readonly string[] NeighTexNames = ["circles.png", "triangles.png", "squares.png"];
         public Texture2D[] NeighTextures = new Texture2D[3];
 
         /// <summary>
@@ -48,36 +55,19 @@ namespace FSO.Client.Rendering.City
         /// 
         /// 7x3
         /// </summary>
-        public static int[] FlagLayout = new int[]
-        {
+        public static readonly int[] FlagLayout =
+        [
             11, 7, 15, 2, 9, 6, 0, 4, 1, 16, 20, 12, 14, 18, 10, 8
-        };
+        ];
 
-        public static int RoadWidth = 8;
-        public static int RoadHeight = 4;
-        public static int[] RoadLayout = new int[] { -1, 5, 12, 13, 7, 6, 15, 14, 28, 29, 20, 21, 31, 30, 23, 22 };
-        public static int[] RoadCLayout = new int[] { -1, 8, 2, 26, 3, 17, 16, 10, 25, 24, 9, 18, 1, 27, 11, 19 };
+        public static readonly int RoadWidth = 8;
+        public static readonly int RoadHeight = 4;
+        public static readonly int[] RoadLayout = [-1, 5, 12, 13, 7, 6, 15, 14, 28, 29, 20, 21, 31, 30, 23, 22];
+        public static readonly int[] RoadCLayout = [-1, 8, 2, 26, 3, 17, 16, 10, 25, 24, 9, 18, 1, 27, 11, 19];
 
         public void LoadContent(GraphicsDevice gd, CityMap map)
         {
             String gamepath = GameFacade.GameFilePath("");
-            /*
-
-            string CityStr = "city_" + cityNumber.ToString("0000");
-            string ext = "bmp";
-            if (cityNumber >= 100)
-            {
-                //start FSO cities
-                //the first few will be client included
-                //probably after 200 will be inherited from content packs, when they are implemented
-                ext = "png";
-                CityStr = Path.Combine(FSOEnvironment.ContentDir, "Cities/", CityStr);
-            }
-            else
-            {
-                CityStr = gamepath + "cities/" + CityStr;
-            }
-            */
 
             MapData = map;
             VertexColor = map.VertexColour.Get(gd);
@@ -159,6 +149,12 @@ namespace FSO.Client.Rendering.City
                     TreeTex = RTToMip(TreeTex, gd);
             }
 
+            PainterSpike = RTToMip(LoadTex("Content/uigraphics/cityedit/cityedit_spike.png"), gd);
+            PainterCursor = RTToMip(LoadTex("Content/uigraphics/cityedit/cityedit_cursor_base.png"), gd);
+            PainterCursorActive = RTToMip(LoadTex("Content/uigraphics/cityedit/cityedit_cursor_sel.png"), gd);
+            PainterCursorAnchor = RTToMip(LoadTex("Content/uigraphics/cityedit/cityedit_cursor_anchor.png"), gd);
+            PainterRoadIcon = RTToMip(LoadTex("Content/uigraphics/cityedit/cityedit_cursor_road.png"), gd);
+            PainterRoadDel = RTToMip(LoadTex("Content/uigraphics/cityedit/cityedit_cursor_roaddel.png"), gd);
 
             for (int i = 0; i < 3; i++)
             {

@@ -829,7 +829,7 @@ namespace FSO.Client.UI.Framework
                     mat = ui.BatchMatrixStack.Peek();
 
                 if (style.Shadow)
-                    style.VFont.Draw(batch.GraphicsDevice, text, pos + new Vector2(FSOEnvironment.DPIScaleFactor), Color.Black, scale, mat);
+                    style.VFont.Draw(batch.GraphicsDevice, text, pos + new Vector2(FSOEnvironment.DPIScaleFactor), Color.Black * Opacity, scale, mat);
                 style.VFont.Draw(batch.GraphicsDevice, text, pos, style.GetColor(state) * Opacity, scale, mat);
 
                 if (mat != null)
@@ -839,7 +839,7 @@ namespace FSO.Client.UI.Framework
             }
             else
             {
-                if (style.Shadow) batch.DrawString(style.SpriteFont, text, pos + new Vector2(FSOEnvironment.DPIScaleFactor), Color.Black, 0, Vector2.Zero, scale, SpriteEffects.None, 0);
+                if (style.Shadow) batch.DrawString(style.SpriteFont, text, pos + new Vector2(FSOEnvironment.DPIScaleFactor), Color.Black * Opacity, 0, Vector2.Zero, scale, SpriteEffects.None, 0);
                 batch.DrawString(style.SpriteFont, text, pos, style.GetColor(state) * Opacity, 0, Vector2.Zero, scale, SpriteEffects.None, 0);
             }
 

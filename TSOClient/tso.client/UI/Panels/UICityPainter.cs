@@ -3,7 +3,9 @@ using FSO.Client.Rendering.City.Plugins;
 using FSO.Client.Rendering.City.Plugins.PainterModes;
 using FSO.Client.UI.Controls;
 using FSO.Client.UI.Framework;
+using FSO.Client.UI.Model;
 using FSO.Client.Utils;
+using FSO.Common;
 using FSO.Common.Rendering.Framework.Model;
 using FSO.Common.Utils;
 using FSO.HIT;
@@ -40,6 +42,27 @@ namespace FSO.Client.UI.Panels
             CaptionID = captionId;
             Get = get;
             Set = set;
+        }
+    }
+
+    internal readonly struct UICityPainterIntensityConfig
+    {
+        public readonly bool Disable;
+        public readonly float Min;
+        public readonly float Max;
+        public readonly bool AllowDecimal;
+
+        public UICityPainterIntensityConfig()
+        {
+            Disable = true;
+        }
+
+        public UICityPainterIntensityConfig(float min, float max, bool allowDecimal)
+        {
+            Disable = false;
+            Min = min;
+            Max = max;
+            AllowDecimal = allowDecimal;
         }
     }
 
@@ -174,11 +197,15 @@ namespace FSO.Client.UI.Panels
 
     internal abstract class AbstractCityPainterOptions : UIContainer
     {
+        protected UICityPainterIntensityConfig DisabledIntensity = new UICityPainterIntensityConfig();
+        protected UICityPainterIntensityConfig DefaultIntensity = new UICityPainterIntensityConfig(0.1f, 1, true);
+
         protected UICityPainter Painter { get; private set; }
         protected MapPainterPlugin MapPainter => Painter.MapPainter;
         public abstract PainterMode Mode { get; }
         public abstract string Graphic { get; }
         public abstract string PreviewText { get; }
+        public abstract UICityPainterIntensityConfig IntensityConfig { get; }
 
         private UIHBoxContainer ModesHbox;
         private UIHBoxContainer TogglesHbox;
@@ -187,6 +214,7 @@ namespace FSO.Client.UI.Panels
         private (UIButton, UICityPainterToolToggle)[] Toggles;
 
         private int SelectedMode = 0;
+        protected float SelectedIntensity = 0.5f;
 
         public AbstractCityPainterOptions()
         {
@@ -238,6 +266,7 @@ namespace FSO.Client.UI.Panels
         public virtual void Selected()
         {
             MapPainter.SelectedModifier = SelectedMode;
+            MapPainter.BrushIntensity = SelectedIntensity;
 
             UpdateSelectedMode();
             UpdateToggles();
@@ -340,10 +369,26 @@ namespace FSO.Client.UI.Panels
 
             Toggles = result;
         }
+
+        public override void Update(UpdateState state)
+        {
+            base.Update(state);
+
+            SelectedIntensity = MapPainter.BrushIntensity;
+        }
     }
 
     internal class UICityPainterElevationPreview : AbstractCityPainterPreview
     {
+        public MapPainterSpraypaint Spray;
+
+        public override void Init(UICityPainter painter)
+        {
+            Spray = new MapPainterSpraypaint(true);
+
+            base.Init(painter);
+        }
+
         public override void Draw(UISpriteBatch batch)
         {
             // Draw a grid representing the elevation change
@@ -354,26 +399,71 @@ namespace FSO.Client.UI.Panels
 
             bool[] tileTouched = new bool[tileCount * tileCount];
             float[] vertices = new float[vertCount * vertCount];
+            float[] intensityVertices = vertices;
             int center = vertCount / 2;
 
             float baseSize = MapPainter.BrushSize + 0.5f;
-            var multiplier = MathF.Pow(baseSize, 0.8f) * ((MapPainter.Accelerate) ? 6 : 3);
+            var multiplier = MathF.Pow(baseSize, 0.8f) * ((MapPainter.Accelerate) ? 8 : 4);
 
-            if (MapPainter.Erasing)
+            var erasing = !MapPainter.Flatten && MapPainter.Erasing;
+
+            if (erasing)
             {
                 multiplier *= -1;
             }
 
-            IMapPainterMode.BrushFunc(MapPainter.BrushSize, (x, y, strength) =>
+            float intensity = 1;
+            if (MapPainter.Flatten)
             {
-                if (strength > 0)
+                int vi = 0;
+                for (int y = 0; y < vertCount; y++)
                 {
-                    vertices[(y + center) * vertCount + x + center] = strength * multiplier;
+                    for (int x = 0; x < vertCount; x++)
+                    {
+                        vertices[vi++] = (y - vertCount / 2f) * -0.5f;
+                    }
                 }
-            });
+
+                multiplier = 50;
+                intensityVertices = new float[vertCount * vertCount];
+                var centerElev = 0;
+
+                IMapPainterMode.BrushFunc(MapPainter.BrushSize, (x, y, strength) =>
+                {
+                        if (strength > 0)
+                        {
+                            int vertInd = (y + center) * vertCount + x + center;
+                            var elev = vertices[vertInd];
+
+                            var change = (centerElev - elev) / 50f * multiplier;
+                            if (change > 0) change = Math.Max(0.02f, change);
+                            else change = Math.Min(-0.02f, change);
+
+                            vertices[vertInd] += change;
+                            intensityVertices[vertInd] = Math.Max(Math.Abs(change), strength);
+                        }
+                });
+            }
+            else
+            {
+                intensity = MapPainter.BrushIntensity;
+                multiplier *= intensity;
+                IMapPainterMode.BrushFunc(MapPainter.BrushSize, (x, y, strength) =>
+                {
+                    if (strength > 0)
+                    {
+                        if (MapPainter.RoughTerrain)
+                        {
+                            strength = Spray.GetRoughEdge((256 + y) * 512 + 256 + x, strength, MapPainter.BrushSize);
+                        }
+
+                        vertices[(y + center) * vertCount + x + center] = strength * multiplier;
+                    }
+                });
+            }
 
             Vector3 offset = new Vector3(-baseSize, -baseSize, 0);
-            Color baseColor = MapPainter.Erasing ? Color.Red : Color.White;
+            Color baseColor = erasing ? Color.Red : Color.White;
 
             for (int y = 0; y < tileCount; y++)
             {
@@ -384,9 +474,14 @@ namespace FSO.Client.UI.Panels
                     Vector3 v3 = new Vector3(x, y + 1, vertices[(y + 1) * vertCount + x]) + offset;
                     Vector3 v4 = new Vector3(x + 1, y + 1, vertices[(y + 1) * vertCount + x + 1]) + offset;
 
-                    float mag = (v1.Z + v2.Z + v3.Z + v4.Z) / 4;
+                    float e1 = intensityVertices[y * vertCount + x];
+                    float e2 = intensityVertices[y * vertCount + x + 1];
+                    float e3 = intensityVertices[(y + 1) * vertCount + x];
+                    float e4 = intensityVertices[(y + 1) * vertCount + x + 1];
 
-                    Color color = baseColor * Math.Min(1f, Math.Abs(mag * 0.5f));
+                    float mag = (e1 + e2 + e3 + e4) / 4;
+
+                    Color color = baseColor * Math.Min(1f, Math.Abs(mag / multiplier));
 
                     DrawLine(batch, v1, v2, 2, color);
                     DrawLine(batch, v3, v4, 2, color);
@@ -402,6 +497,7 @@ namespace FSO.Client.UI.Panels
         public override PainterMode Mode => PainterMode.ELEVATION_CIRCLE;
         public override string Graphic => "elevation";
         public override string PreviewText => GameFacade.Strings.GetString("f130", "2");
+        public override UICityPainterIntensityConfig IntensityConfig => DefaultIntensity;
 
         public override void Init(UICityPainter painter)
         {
@@ -418,6 +514,7 @@ namespace FSO.Client.UI.Panels
     internal class UICityPainterTerrainTypePreview : AbstractCityPainterPreview
     {
         public Texture2D[] TerrainTextures;
+        public MapPainterSpraypaint Spray;
         public override void Init(UICityPainter painter)
         {
             base.Init(painter);
@@ -429,6 +526,8 @@ namespace FSO.Client.UI.Panels
                 "terrain/newformat/sn.tga",
                 "terrain/newformat/sd.tga",
                 ]);
+
+            Spray = new MapPainterSpraypaint(true);
         }
 
         private int PosMod(int x, int m)
@@ -444,11 +543,20 @@ namespace FSO.Client.UI.Panels
 
             var tex = TerrainTextures[MapPainter.SelectedModifier];
             var texSegment = new Point(tex.Width / 4, tex.Height / 4);
+            var spray = MapPainter.SprayBrush;
+            var intensity = MapPainter.BrushIntensity * 0.8f + 0.2f; // Small bias to assist the display.
 
             BeginTile(batch, new Point(size * 2 + 1));
             IMapPainterMode.BrushFunc(size, (x, y, strength) =>
             {
                 var multiplier = (MapPainter.Accelerate) ? 2 : 1;
+
+                if (spray)
+                {
+                    var brushIntensity = Spray.GetSpraypaint((256 + y) * 512 + 256 + x, strength) * intensity * multiplier;
+                    strength = brushIntensity - 0.3f;
+                }
+
                 if (strength > 0)
                 {
                     batch.Draw(tex, new Rectangle(x, y, 1, 1), new Rectangle(PosMod(x, 4) * texSegment.X, PosMod(y, 4) * texSegment.Y, texSegment.X, texSegment.Y), Color.White);
@@ -464,6 +572,7 @@ namespace FSO.Client.UI.Panels
         public override PainterMode Mode => PainterMode.TERRAINTYPE;
         public override string Graphic => "ttype";
         public override string PreviewText => GameFacade.Strings.GetString("f130", (30 + MapPainter.SelectedModifier).ToString());
+        public override UICityPainterIntensityConfig IntensityConfig => MapPainter.SprayBrush ? DefaultIntensity : DisabledIntensity;
 
         public override void Init(UICityPainter painter)
         {
@@ -476,7 +585,7 @@ namespace FSO.Client.UI.Panels
                 new ("sand", 34, 4)
             ]);
             SetToggles([
-                new ("spray", 12, () => MapPainter.SprayBrush, (value) => { MapPainter.SprayBrush = value; }),
+                new ("spray", 12, () => MapPainter.SprayBrush, (value) => { MapPainter.SprayBrush = value; MapPainter.BrushIntensity = 0.5f; }),
             ]);
         }
     }
@@ -545,6 +654,7 @@ namespace FSO.Client.UI.Panels
 
         public UILabel RoadLabel;
         public override string PreviewText => GameFacade.Strings.GetString("f130", "4");
+        public override UICityPainterIntensityConfig IntensityConfig => DisabledIntensity;
 
         public override void Init(UICityPainter painter)
         {
@@ -570,12 +680,14 @@ namespace FSO.Client.UI.Panels
     internal class UICityPainterForestsPreview : AbstractCityPainterPreview
     {
         private Texture2D Forests;
+        public MapPainterSpraypaint Spray;
 
         public override void Init(UICityPainter painter)
         {
             base.Init(painter);
 
             Forests = LoadTSOTex("farzoom/forest00a.tga");
+            Spray = new MapPainterSpraypaint(true);
         }
 
         public override void Draw(UISpriteBatch batch)
@@ -585,8 +697,9 @@ namespace FSO.Client.UI.Panels
 
             var fw = Forests.Width / 4;
             var fh = Forests.Height / 4;
-            float intensityF = 1f;
-            int intensity = Math.Clamp((int)MathF.Floor(intensityF * 4), 0, 3);
+            float intensityS = MapPainter.BrushIntensity;
+            float intensityF = MapPainter.BrushIntensity - 1;
+            int intensity = Math.Clamp((int)MathF.Round(intensityF), 0, 3);
             int type = MapPainter.SelectedModifier;
 
             var size = MapPainter.BrushSize;
@@ -619,15 +732,34 @@ namespace FSO.Client.UI.Panels
                 });
             }
 
+            var spray = MapPainter.SprayBrush;
+
             IMapPainterMode.BrushFunc(size, (x, y, strength) =>
             {
                 var multiplier = (MapPainter.Accelerate) ? 2 : 1;
-                if (strength > 0)
-                {
-                    var src = new Rectangle(intensity * fw, type * fh, fw, fh);
-                    var dst = GetTilePosition(x, y, fw, fh);
 
-                    DrawLocalTexture(batch, Forests, src, dst.Item1, dst.Item2, tint);
+                if (spray)
+                {
+                    var brushIntensity = Spray.GetSpraypaint((256 + y) * 512 + 256 + x, strength) * intensityS * multiplier;
+                    intensity = Math.Clamp((int)MathF.Round(brushIntensity * 8), 0, 4) - 1;
+
+                    if (intensity >= 0)
+                    {
+                        var src = new Rectangle(intensity * fw, type * fh, fw, fh);
+                        var dst = GetTilePosition(x, y, fw, fh);
+
+                        DrawLocalTexture(batch, Forests, src, dst.Item1, dst.Item2, tint);
+                    }
+                }
+                else
+                {
+                    if (strength > 0)
+                    {
+                        var src = new Rectangle(intensity * fw, type * fh, fw, fh);
+                        var dst = GetTilePosition(x, y, fw, fh);
+
+                        DrawLocalTexture(batch, Forests, src, dst.Item1, dst.Item2, tint);
+                    }
                 }
             });
         }
@@ -635,9 +767,11 @@ namespace FSO.Client.UI.Panels
 
     internal class UICityPainterForestsOptions : AbstractCityPainterOptions
     {
-        public override PainterMode Mode => PainterMode.FORESTTYPE;
+        private UICityPainterIntensityConfig NonSprayIntensity = new UICityPainterIntensityConfig(1, 4, false);
+        public override PainterMode Mode => PainterMode.FOREST;
         public override string Graphic => "forests";
         public override string PreviewText => GameFacade.Strings.GetString("f130", (40 + MapPainter.SelectedModifier).ToString());
+        public override UICityPainterIntensityConfig IntensityConfig => MapPainter.SprayBrush ? DefaultIntensity : NonSprayIntensity;
 
         public override void Init(UICityPainter painter)
         {
@@ -649,13 +783,21 @@ namespace FSO.Client.UI.Panels
                 new ("palm", 43, 3),
             ]);
             SetToggles([
-                new ("spray", 12, () => MapPainter.SprayBrush, (value) => { MapPainter.SprayBrush = value; }),
+                new ("spray", 12, () => MapPainter.SprayBrush, (value) =>
+                { 
+                    MapPainter.SprayBrush = value;
+
+                    MapPainter.BrushIntensity = value ? 4f : 0.5f;
+                }),
             ]);
         }
     }
 
     internal class UICityPainter : UIContainer
     {
+        private const float ThumbDisplayDuration = 3.5f;
+        private const float ThumbDisplayFade = 1;
+        private const float ThumbFlashDuration = 0.2f;
         private struct ModeUI
         {
             public readonly UIImage TabBackground;
@@ -705,6 +847,10 @@ namespace FSO.Client.UI.Panels
             new Vector2(291, -5),
             new Vector2(336, -5)
         ];
+
+        private RenderTarget2D CityThumbnailTarget;
+        private Texture2D CityThumbnailTexture;
+        private float CityThumbnailTimer;
 
         public UICityPainter(Terrain terrain)
         {
@@ -767,7 +913,8 @@ namespace FSO.Client.UI.Panels
 
             Add(PreviewBg = new UIButton(GetTexture(0x0000079300000001))
             {
-                Position = new Vector2(55, 42)
+                Position = new Vector2(55, 42),
+                Tooltip = GameFacade.Strings.GetString("f130", "13")
             });
 
             var font = TextStyle.DefaultLabel.Clone();
@@ -796,14 +943,13 @@ namespace FSO.Client.UI.Panels
                 MapPainter.BrushSize = (int)BrushSizeSlider.Value;
             };
 
-
             BrushIntensitySlider.Value = 0;
             BrushIntensitySlider.MinValue = 0;
             BrushIntensitySlider.MaxValue = 10;
             BrushIntensitySlider.AllowDecimals = true;
             BrushIntensitySlider.OnChange += (slider) =>
             {
-                // TODO
+                MapPainter.BrushIntensity = BrushIntensitySlider.Value;
             };
 
             foreach (var mode in Modes)
@@ -823,10 +969,16 @@ namespace FSO.Client.UI.Panels
             UpdateLockedGraphic();
             LockButton.OnButtonClick += ToggleLock;
             CameraButton.OnButtonClick += TakeScreenshot;
+            PreviewBg.OnButtonClick += InvertBrush;
 
             CloseButton.OnButtonClick += Close;
 
             SetMode(PainterMode.ROAD);
+        }
+
+        private void InvertBrush(UIElement button)
+        {
+            
         }
 
         private void UpdateLockedGraphic()
@@ -841,11 +993,31 @@ namespace FSO.Client.UI.Panels
             UpdateLockedGraphic();
         }
 
+        private void EnsureThumbnailTarget()
+        {
+            CityThumbnailTarget ??= new RenderTarget2D(GameFacade.GraphicsDevice, 720, 540, false, SurfaceFormat.Color, DepthFormat.Depth24);
+        }
+
         private void TakeScreenshot(UIElement button)
         {
-            var sound = HIT.HITVM.Get().PlaySoundEvent("ui_camera_photo");
+            var sound = HIT.HITVM.Get().PlaySoundEvent(UISounds.CameraPhoto);
             (sound as HITThread).WriteVar(0x31, 1);
-            // TODO: render city view from fixed camera, generate a png and upload it
+
+            var gd = GameFacade.GraphicsDevice;
+            EnsureThumbnailTarget();
+
+            Terrain.DrawThumbnail(gd, CityThumbnailTarget);
+
+            CityThumbnailTexture?.Dispose();
+            CityThumbnailTexture = TextureUtils.Decimate(CityThumbnailTarget, gd, 4, false);
+            CityThumbnailTimer = 0;
+
+            /*
+            using (var file = File.Create("sandrise.png"))
+            {
+                CityThumbnailTexture.SaveAsPng(file, CityThumbnailTexture.Width, CityThumbnailTexture.Height);
+            }
+            */
         }
 
         private (UILabel, UISlider) CreateSlider(Vector2 position, float width, int stringIndex)
@@ -973,11 +1145,23 @@ namespace FSO.Client.UI.Panels
                 );
         }
 
+        private void SetSliderEnabled(UISlider slider, UILabel label, bool enabled)
+        {
+            float opacity = enabled ? 1f : 0.5f;
+
+            if (slider.Opacity != opacity)
+            {
+                slider.Opacity = opacity;
+                label.Opacity = opacity;
+            }
+        }
+
         public override void Update(UpdateState state)
         {
             base.Update(state);
 
             BrushSizeSlider.Value = MapPainter.BrushSize;
+            BrushIntensitySlider.Value = MapPainter.BrushIntensity;
 
             if (ActiveIndex != -1)
             {
@@ -987,6 +1171,59 @@ namespace FSO.Client.UI.Panels
                 if (PreviewLabel.Caption != label)
                 {
                     PreviewLabel.Caption = label;
+                }
+
+                var intensity = activeUi.Options.IntensityConfig;
+
+                SetSliderEnabled(BrushSizeSlider, BrushSizeLabel, activeUi.Options.Mode != PainterMode.ROAD);
+                SetSliderEnabled(BrushIntensitySlider, BrushIntensityLabel, !intensity.Disable);
+
+                if (BrushIntensitySlider.MinValue != intensity.Min) BrushIntensitySlider.MinValue = intensity.Min;
+                if (BrushIntensitySlider.MaxValue != intensity.Max) BrushIntensitySlider.MaxValue = intensity.Max;
+                if (BrushIntensitySlider.AllowDecimals != intensity.AllowDecimal) BrushIntensitySlider.AllowDecimals = intensity.AllowDecimal;
+            }
+
+            CityThumbnailTimer += 1f / FSOEnvironment.RefreshRate;
+        }
+
+        public override void Draw(UISpriteBatch batch)
+        {
+            base.Draw(batch);
+
+            if (CityThumbnailTexture != null)
+            {
+                var white = TextureGenerator.GetPxWhite(batch.GraphicsDevice);
+
+                var whiteCol = Color.White;
+                var borderCol = Color.LightSlateGray;
+                var shadowCol = Color.Black * 0.3f;
+                var size = new Vector2(CityThumbnailTexture.Width, CityThumbnailTexture.Height);
+                var basePos = new Vector2(31, 168);
+                var shadowOffset = new Vector2(7, 7);
+                var borderOffset = new Vector2(4, 4);
+                var whiteOffset = new Vector2(3, 3);
+
+                float alpha = CityThumbnailTimer > ThumbDisplayDuration ? Math.Max(0, 1 - (CityThumbnailTimer - ThumbDisplayDuration) / ThumbDisplayFade) : 1;
+
+                if (alpha != 1)
+                {
+                    whiteCol *= alpha;
+                    borderCol *= alpha;
+                    shadowCol *= alpha;
+                }
+
+                if (alpha != 0)
+                {
+                    DrawLocalTexture(batch, white, null, basePos + shadowOffset - borderOffset, size + borderOffset * 2, shadowCol);
+                    DrawLocalTexture(batch, white, null, basePos - borderOffset, size + borderOffset * 2, borderCol);
+                    DrawLocalTexture(batch, white, null, basePos - whiteOffset, size + whiteOffset * 2, whiteCol);
+                    DrawLocalTexture(batch, CityThumbnailTexture, null, basePos, Vector2.One, Color.White * alpha);
+
+                    if (CityThumbnailTimer < ThumbFlashDuration)
+                    {
+                        float flashAlpha = Math.Max(0, 1 - CityThumbnailTimer / ThumbFlashDuration);
+                        DrawLocalTexture(batch, white, null, basePos, size, whiteCol * flashAlpha);
+                    }
                 }
             }
         }

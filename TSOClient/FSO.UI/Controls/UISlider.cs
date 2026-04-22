@@ -298,14 +298,21 @@ namespace FSO.Client.UI.Controls
 
             var layout = m_LayoutCache.Calculate("layout", x => CalculateLayout());
 
-            batch.Draw(m_Texture, layout.TrackStartTo, layout.TrackStartFrom, Color.White, 0, Vector2.Zero, _Scale, SpriteEffects.None, 0);
-            batch.Draw(m_Texture, layout.TrackMiddleTo, layout.TrackMiddleFrom, Color.White, 0, Vector2.Zero, layout.TrackMiddleScale, SpriteEffects.None, 0);
-            batch.Draw(m_Texture, layout.TrackEndTo, layout.TrackEndFrom, Color.White, 0, Vector2.Zero, _Scale, SpriteEffects.None, 0);
+            var color = Color.White;
+
+            if (Opacity < 1)
+            {
+                color *= Opacity;
+            }
+
+            batch.Draw(m_Texture, layout.TrackStartTo, layout.TrackStartFrom, color, 0, Vector2.Zero, _Scale, SpriteEffects.None, 0);
+            batch.Draw(m_Texture, layout.TrackMiddleTo, layout.TrackMiddleFrom, color, 0, Vector2.Zero, layout.TrackMiddleScale, SpriteEffects.None, 0);
+            batch.Draw(m_Texture, layout.TrackEndTo, layout.TrackEndFrom, color, 0, Vector2.Zero, _Scale, SpriteEffects.None, 0);
 
             if (m_MaxValue > m_MinValue)
             {
                 var buttonPosition = m_LayoutCache.Calculate("btn", x => CalculateButtonPosition(layout));
-                batch.Draw(m_Texture, buttonPosition, layout.ThumbFrom, Color.White, 0, Vector2.Zero, _Scale, SpriteEffects.None, 0);
+                batch.Draw(m_Texture, buttonPosition, layout.ThumbFrom, color, 0, Vector2.Zero, _Scale, SpriteEffects.None, 0);
             }
         }
 

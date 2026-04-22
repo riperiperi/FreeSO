@@ -36,8 +36,15 @@ namespace FSO.Client.Rendering.City.Plugins.PainterModes
                 elevations.Add(City.MapData.ElevationData[index]);
             });
 
+            if (elevations.Count == 0)
+            {
+                return;
+            }
+
             var sorted = elevations.OrderBy(x => x).ToList();
             var elevation = sorted[sorted.Count / 2]; //median
+            var intensity = Painter.BrushIntensity;
+            var pxWhite = TextureGenerator.GetPxWhite(sb.GraphicsDevice);
 
             IMapPainterMode.BrushFunc(Painter.BrushSize, (x, y, strength) =>
             {
@@ -52,8 +59,8 @@ namespace FSO.Client.Rendering.City.Plugins.PainterModes
                     if (change > 0) change = Math.Max(0.02f, change);
                     else change = Math.Min(-0.02f, change);
 
-                    var eOnScreen = City.Get2DFromTile(ePos.X + x, ePos.Y + y);
-                    City.DrawLine(TextureGenerator.GetPxWhite(sb.GraphicsDevice), eOnScreen, eOnScreen + new Vector2(0, -50) * change * multiplier, sb, 3, 100);
+                    var alpha = (change < 0 ? 0.2f : 0.75f) * Math.Min(1.1f, 0.2f + intensity * 0.6f * multiplier);
+                    City.DrawSpike(new Vector2(ePos.X + x, ePos.Y + y), change * 5, sb, 192, Color.White * alpha);
                 }
             });
         }
@@ -77,9 +84,10 @@ namespace FSO.Client.Rendering.City.Plugins.PainterModes
                 var sorted = elevations.OrderBy(x => x).ToList();
                 var elevation = sorted[sorted.Count / 2]; //median
 
+                var multiplier = Painter.BrushIntensity * (Painter.Accelerate ? 4f : 2f);
+
                 IMapPainterMode.BrushFunc(size, (x, y, strength) =>
                 {
-                    var multiplier = (Painter.Accelerate) ? 2 : 1;
                     if (strength > 0)
                     {
                         var index = wallPos.X + x + (wallPos.Y + y) * 512;
@@ -152,6 +160,7 @@ namespace FSO.Client.Rendering.City.Plugins.PainterModes
                 deltas[index] = (short)Math.Clamp(Math.Round(mod.Value), short.MinValue, short.MaxValue);
             }
 
+            alt.AutoTerrainType = Painter.AutoTerrain;
             alt.Bitmap = bitmap;
             alt.AltitudeDeltas = deltas;
             alt.Trim();
