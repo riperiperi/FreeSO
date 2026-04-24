@@ -46,6 +46,7 @@ namespace FSO.Server.Protocol.Electron
             typeof(FSOVMSurroundPuppets),
             typeof(CityUpdateRequest),
             typeof(CityUpdateResponse),
+            typeof(CityUpdateCommand),
         };
 
         static ElectronPackets()

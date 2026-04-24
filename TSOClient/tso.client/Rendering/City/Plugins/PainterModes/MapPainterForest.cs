@@ -1,4 +1,5 @@
-﻿using FSO.Common;
+﻿using FSO.Client.UI.Model;
+using FSO.Common;
 using FSO.Common.Rendering.Framework.Model;
 using FSO.Server.Protocol.Electron.Model.CityEditCommands;
 using Microsoft.Xna.Framework;
@@ -101,6 +102,7 @@ namespace FSO.Client.Rendering.City.Plugins.PainterModes
         {
             if (Forest != null)
             {
+                HIT.HITVM.Get().PlaySoundEvent(UISounds.BuildDragToolUp);
                 Forest.Trim();
 
                 Painter.Commit(AnySet);
@@ -193,6 +195,8 @@ namespace FSO.Client.Rendering.City.Plugins.PainterModes
 
         public void TileMouseDown(Vector2 tile)
         {
+            HIT.HITVM.Get().PlaySoundEvent(UISounds.BuildDragToolDown);
+
             NewPaint();
 
             ApplyBrush(tile.ToPoint());

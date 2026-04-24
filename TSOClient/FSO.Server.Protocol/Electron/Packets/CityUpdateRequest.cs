@@ -4,14 +4,6 @@ using Mina.Core.Buffer;
 
 namespace FSO.Server.Protocol.Electron.Packets
 {
-    public enum CityUpdateRequestType : byte
-    {
-        Command,
-        ClearTemp,
-        Undo,
-        Redo
-    }
-
     public class CityUpdateRequest : AbstractElectronPacket
     {
         public CityEditCommand Command;

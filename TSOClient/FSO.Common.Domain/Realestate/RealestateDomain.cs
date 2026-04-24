@@ -3,6 +3,7 @@ using FSO.Common.Domain.Shards;
 using FSO.Content.Model;
 using FSO.Server.Protocol.CitySelector;
 using FSO.Server.Protocol.Electron.Model.CityEditCommands;
+using FSO.Server.Protocol.Electron.Packets;
 using Microsoft.Xna.Framework;
 using System.Text.RegularExpressions;
 
@@ -73,6 +74,7 @@ namespace FSO.Common.Domain.Realestate
         private CityMap _Map;
 
         public bool Dynamic => true;
+        public CityUndoStack UndoStack { get; private set; } = new CityUndoStack();
         private CityMap _BaseMap;
         private CityMap _PreTempMap;
         private Rectangle? _TempChangeBounds;
@@ -86,6 +88,11 @@ namespace FSO.Common.Domain.Realestate
         public ShardRealestateDomain(ShardStatusItem shard, CityMap map)
         {
             _Map = map;
+            if (Dynamic)
+            {
+                _Map = new(map);
+                _BaseMap = new(map);
+            }
             //TODO: Hardcore
             _Pricing = new BasicLotPricingStrategy();
         }
@@ -161,6 +168,8 @@ namespace FSO.Common.Domain.Realestate
 
         public int AppendCommand(CityEditBase command)
         {
+            UndoStack.AddCommand(command);
+
             if (_TempChangeBounds != null)
             {
                 // Undo any temp changes so we can apply the command for real
@@ -228,6 +237,49 @@ namespace FSO.Common.Domain.Realestate
             }
         }
 
+        private void RedrawAll()
+        {
+            _Map.Set(_BaseMap);
+
+            Rectangle? tempBounds = null;
+            foreach (var cmd in _Commands)
+            {
+                if (CityMapUtils.ApplyCommand(_Map, cmd))
+                {
+                    var modBounds = CityMapUtils.GetBounds(_Map, cmd);
+
+                    tempBounds = Union(tempBounds, modBounds);
+                }
+            }
+
+            // TODO: combine all bounds before with all bounds now to get the range to invalidate.
+
+            _PreTempMap?.Set(_Map);
+            ApplyTempCommands(new Rectangle(0, 0, 512, 512));
+        }
+
+        public bool HandleUserCommand(CityUpdateCommand command)
+        {
+            switch (command.Mode)
+            {
+                case CityUpdateCommandMode.Undo:
+                    // Find the command with the given owner and ID, and undo it.
+                    var toUndo = _Commands.FindIndex(cmd => cmd.AvatarId == command.AvatarID && cmd.UserModId == command.TargetUID);
+
+                    if (toUndo != -1)
+                    {
+                        UndoStack.HandleUndo(_Commands[toUndo]);
+                        _Commands.RemoveAt(toUndo);
+
+                        RedrawAll();
+                        return true;
+                    }
+                    break;
+            }
+
+            return false;
+        }
+
         private Rectangle? Union(Rectangle? first, Rectangle? second)
         {
             if (!first.HasValue)
@@ -277,6 +329,11 @@ namespace FSO.Common.Domain.Realestate
             }
 
             _TempChangeBounds = tempBounds;
+        }
+
+        public void TrackUndo(uint avatarId)
+        {
+            UndoStack.WatchAvatar(avatarId, _Commands);
         }
     }
 }

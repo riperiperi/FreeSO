@@ -1451,6 +1451,7 @@ namespace FSO.Client.Rendering.City
 
             Shader2D.CurrentTechnique.Passes[0].Apply();
 
+            if (m_GraphicsDevice.Indices != null) m_GraphicsDevice.Indices = null;
             m_GraphicsDevice.DrawUserPrimitives<VertexPositionColor>(PrimitiveType.TriangleList, Vert2D, 0, Vert2D.Length/3); //draw 2d coloured triangle array (for spotlights etc)
 
             m_GraphicsDevice.DepthStencilState = DepthStencilState.Default;

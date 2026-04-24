@@ -8,6 +8,7 @@ using FSO.Client.UI.Controls;
 using FSO.Client.UI.Framework;
 using FSO.Client.UI.Model;
 using FSO.Client.UI.Panels;
+using FSO.Client.UI.Panels.CityPainter;
 using FSO.Client.UI.Panels.Neighborhoods;
 using FSO.Client.UI.Panels.WorldUI;
 using FSO.Client.Utils;

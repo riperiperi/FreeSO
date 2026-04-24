@@ -1,13 +1,14 @@
-﻿using Microsoft.Xna.Framework;
-using Microsoft.Xna.Framework.Graphics;
-using FSO.Common.Rendering.Framework.Model;
-using FSO.Client.UI.Framework;
-using Microsoft.Xna.Framework.Input;
-using FSO.Files;
-using FSO.Content.Model;
+﻿using FSO.Client.Controllers;
 using FSO.Client.Rendering.City.Plugins.PainterModes;
+using FSO.Client.UI.Framework;
+using FSO.Client.UI.Model;
+using FSO.Common.Rendering.Framework.Model;
+using FSO.Content.Model;
+using FSO.Files;
 using FSO.Server.Protocol.Electron.Model.CityEditCommands;
-using FSO.Client.Controllers;
+using Microsoft.Xna.Framework;
+using Microsoft.Xna.Framework.Graphics;
+using Microsoft.Xna.Framework.Input;
 
 namespace FSO.Client.Rendering.City.Plugins
 {

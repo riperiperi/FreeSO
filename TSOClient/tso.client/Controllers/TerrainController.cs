@@ -65,6 +65,7 @@ namespace FSO.Client.Controllers
 
             LotThumbs = new LotThumbContent(parent.CityResource);
 
+            Realestate.TrackUndo(network.MyCharacter);
             Realestate.OnMapChange += MapChange;
 
             network.CityClient.AddSubscriber(this);
@@ -87,6 +88,16 @@ namespace FSO.Client.Controllers
             cmd.IsTemp = false;
             Network.CityClient.Write(new CityUpdateRequest() { Command = new(cmd) });
             cmd.IsTemp = prevTemp;
+        }
+
+        public void SendCityCommand(CityUpdateCommandMode mode, int uid)
+        {
+            Network.CityClient.Write(new CityUpdateCommand()
+            {
+                AvatarID = Network.MyCharacter,
+                Mode = mode,
+                TargetUID = uid
+            });
         }
 
         public void UpdateTempMapChange(CityEditBase cmd)
@@ -720,6 +731,13 @@ namespace FSO.Client.Controllers
                     {
                         Realestate.AppendCommand(cmd.Command);
                     }
+                });
+            }
+            else if (message is CityUpdateCommand cmd)
+            {
+                GameThread.NextUpdate(x =>
+                {
+                    Realestate.HandleUserCommand(cmd);
                 });
             }
         }

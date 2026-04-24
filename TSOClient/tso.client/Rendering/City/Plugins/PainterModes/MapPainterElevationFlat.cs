@@ -1,4 +1,5 @@
-﻿using FSO.Common;
+﻿using FSO.Client.UI.Model;
+using FSO.Common;
 using FSO.Common.Rendering.Framework.Model;
 using FSO.Common.Utils;
 using FSO.Server.Protocol.Electron.Model.CityEditCommands;
@@ -120,6 +121,7 @@ namespace FSO.Client.Rendering.City.Plugins.PainterModes
         {
             if (ElevationMod != null)
             {
+                HIT.HITVM.Get().PlaySoundEvent(UISounds.BuildDragToolUp);
                 Painter.Commit(ElevationMod.Count != 0);
             }
 

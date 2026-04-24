@@ -42,6 +42,7 @@ namespace FSO.Server.Protocol.Electron
         FSOVMSurroundPuppets,
         CityUpdateRequest,
         CityUpdateResponse,
+        CityUpdateCommand,
         Unknown = 0xFFFF
     }
 

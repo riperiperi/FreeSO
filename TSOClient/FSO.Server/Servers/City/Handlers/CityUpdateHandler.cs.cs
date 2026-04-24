@@ -1,4 +1,5 @@
 ﻿using FSO.Common.Domain.Realestate;
+using FSO.Common.Domain.RealestateDomain;
 using FSO.Content.Model;
 using FSO.Server.Framework.Voltron;
 using FSO.Server.Protocol.Electron.Packets;
@@ -18,20 +19,44 @@ namespace FSO.Server.Servers.City.Handlers
             Realestate = realestate;
         }
 
-        public async void Handle(IVoltronSession session, CityUpdateRequest packet)
+        private IShardRealestateDomain GetShard(IVoltronSession session)
         {
             if (session.IsAnonymous)
-                return;
+                return null;
 
             if (!session.HasModerationLevel(1))
-                return;
+                return null;
 
             if (!(Context.Config.Archive?.Flags.HasFlag(FSO.Common.ArchiveConfigFlags.CityEditor) ?? false))
-                return;
+                return null;
 
             var shard = Realestate.GetByShard(Context.ShardId);
 
-            if (!shard.Dynamic)
+            return shard.Dynamic ? shard : null;
+        }
+
+        public async void Handle(IVoltronSession session, CityUpdateCommand packet)
+        {
+            var shard = GetShard(session);
+
+            if (shard == null)
+                return;
+
+            if (session.AvatarId != packet.AvatarID)
+                return;
+
+            // TODO: proper ordering, thread safety
+            if (shard.HandleUserCommand(packet))
+            {
+                Context.Broadcast(packet);
+            }
+        }
+
+        public async void Handle(IVoltronSession session, CityUpdateRequest packet)
+        {
+            var shard = GetShard(session);
+
+            if (shard == null)
                 return;
 
             var cmd = packet.Command.Command;
