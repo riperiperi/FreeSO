@@ -2,7 +2,7 @@ name: Build Server
 
 on:
   push:
-    branches: [ master ]
+    branches: [ master, dev ]
   workflow_dispatch:
 
 jobs:
@@ -16,7 +16,7 @@ jobs:
       - name: Setup .NET Core
         uses: actions/setup-dotnet@v4
         with:
-          dotnet-version: '2.2.x'
+          dotnet-version: '3.1.x'
 
       - name: Setup MSBuild
         uses: microsoft/setup-msbuild@v2
