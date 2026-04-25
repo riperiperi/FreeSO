@@ -3,5 +3,6 @@
     <TargetFramework>net45</TargetFramework>
     <AssemblyName>TargaImagePCL</AssemblyName>
     <RootNamespace>TargaImagePCL</RootNamespace>
+    <GenerateAssemblyInfo>false</GenerateAssemblyInfo>
   </PropertyGroup>
 </Project>
