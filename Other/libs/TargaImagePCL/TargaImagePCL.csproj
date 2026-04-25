@@ -1,6 +1,6 @@
 <Project Sdk="Microsoft.NET.Sdk">
   <PropertyGroup>
-    <TargetFramework>netstandard2.0</TargetFramework>
+    <TargetFramework>net45</TargetFramework>
     <AssemblyName>TargaImagePCL</AssemblyName>
     <RootNamespace>TargaImagePCL</RootNamespace>
   </PropertyGroup>
