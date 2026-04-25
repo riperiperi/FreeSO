@@ -1,0 +1,40 @@
+name: Build Server
+
+on:
+  push:
+    branches: [ master ]
+  workflow_dispatch:
+
+jobs:
+  build:
+    runs-on: windows-latest
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup .NET Core
+        uses: actions/setup-dotnet@v4
+        with:
+          dotnet-version: '2.2.x'
+
+      - name: Setup MSBuild
+        uses: microsoft/setup-msbuild@v2
+
+      - name: Restore NuGet packages
+        run: nuget restore TSOClient/FreeSO.sln
+
+      - name: Publish server
+        run: |
+          dotnet publish TSOClient/FSO.Server.Core/FSO.Server.Core.csproj `
+            -c Release `
+            -r linux-x64 `
+            --self-contained true `
+            -o publish/server
+
+      - name: Upload server artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: freeso-server-linux-x64
+          path: publish/server/
+          retention-days: 30
