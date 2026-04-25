@@ -13,16 +13,21 @@ jobs:
       - name: Checkout
         uses: actions/checkout@v4
 
-      - name: Setup .NET Core
+      - name: Setup .NET SDK
         uses: actions/setup-dotnet@v4
         with:
-          dotnet-version: '3.1.x'
+          dotnet-version: '8.0.x'
 
       - name: Setup MSBuild
         uses: microsoft/setup-msbuild@v2
 
-      - name: Restore NuGet packages
+      - name: Restore legacy NuGet packages
         run: nuget restore TSOClient/FreeSO.sln
+
+      - name: Restore SDK packages
+        run: |
+          dotnet restore TSOClient/FSO.Server.Core/FSO.Server.Core.csproj `
+            -r linux-x64
 
       - name: Publish server
         run: |
@@ -30,6 +35,7 @@ jobs:
             -c Release `
             -r linux-x64 `
             --self-contained true `
+            --no-restore `
             -o publish/server
 
       - name: Upload server artifact
