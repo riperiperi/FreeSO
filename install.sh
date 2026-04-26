@@ -11,12 +11,19 @@ SERVER_URL="https://fso.icarey.net"
 CLIENT_URL="https://github.com/TheGreatCodeholio/FreeSO/releases/latest/download/freeso-client-windows-ogl.zip"
 TSO_URL="https://archive.org/download/TheSimsOnline_201802/TSO.zip"
 REMESH_URL="https://github.com/ItsSim/fsolauncher/releases/download/1.12.1-prod.24/remeshes-1.0.0-1726774408.zip"
+MACEXTRAS_URL="https://github.com/TheGreatCodeholio/FreeSO/releases/latest/download/macextras.zip"
 # ─────────────────────────────────────────────────────────────────────────────
+
+# ── Platform detection ───────────────────────────────────────────────────────
+OS="linux"
+if [[ "$(uname)" == "Darwin" ]]; then
+    OS="macos"
+fi
 
 TEMPDIR="$HOME/.freeso_temp"
 GAMEDIR="none"
 
-printf "%s Installer for Linux\n" "$GAME_NAME"
+printf "%s Installer for %s\n" "$GAME_NAME" "$([ "$OS" = "macos" ] && echo "macOS" || echo "Linux")"
 printf "Based on the DramaSO installer by Tom\n\n"
 
 # ── Install directory prompt ─────────────────────────────────────────────────
@@ -43,27 +50,36 @@ printf "Game file location: %s\n" "$GAMEDIR"
 
 mkdir -p "$TEMPDIR" && cd "$TEMPDIR" || exit 1
 
-# ── Package manager detection ────────────────────────────────────────────────
-PACKAGEUPDATE="none"
-PACKAGEINSTALL="none"
-
-printf "\nDetermining package manager...\n"
-if which apt    > /dev/null 2>&1; then PACKAGEUPDATE="apt update -y";     PACKAGEINSTALL="apt install -y unzip cabextract curl mono-complete libgdiplus libsdl2-2.0-0 libopenal1"; fi
-if which pacman > /dev/null 2>&1; then PACKAGEUPDATE="pacman -Syy";        PACKAGEINSTALL="pacman -S --noconfirm unzip cabextract curl mono"; fi
-if which yum    > /dev/null 2>&1; then PACKAGEUPDATE="yum check-update";   PACKAGEINSTALL="yum install -y unzip cabextract curl mono-core mono-devel"; fi
-if which dnf    > /dev/null 2>&1; then PACKAGEUPDATE="dnf check-update";   PACKAGEINSTALL="dnf install -y unzip cabextract curl mono-core mono-devel"; fi
-if which zypper > /dev/null 2>&1; then PACKAGEUPDATE="zypper refresh";     PACKAGEINSTALL="zypper install -y unzip cabextract curl mono-core mono-devel"; fi
-
-if [ "$PACKAGEUPDATE" == "none" ]; then
-    printf "\nPackage manager not supported. Install unzip, cabextract, curl and mono manually, then re-run.\n"
-    exit 1
-fi
-
-printf "\nUpdating package sources...\n"
-sudo ${PACKAGEUPDATE}
-
+# ── Dependency installation ──────────────────────────────────────────────────
 printf "\nInstalling dependencies...\n"
-sudo ${PACKAGEINSTALL}
+
+if [ "$OS" = "macos" ]; then
+    if ! which brew > /dev/null 2>&1; then
+        printf "\nHomebrew is required but not installed.\n"
+        printf "Install it from https://brew.sh then re-run this script.\n"
+        exit 1
+    fi
+    brew update
+    brew install mono cabextract curl unzip
+else
+    PACKAGEUPDATE="none"
+    PACKAGEINSTALL="none"
+
+    printf "Determining package manager...\n"
+    if which apt    > /dev/null 2>&1; then PACKAGEUPDATE="apt update -y";   PACKAGEINSTALL="apt install -y unzip cabextract curl mono-complete libgdiplus libsdl2-2.0-0 libopenal1"; fi
+    if which pacman > /dev/null 2>&1; then PACKAGEUPDATE="pacman -Syy";      PACKAGEINSTALL="pacman -S --noconfirm unzip cabextract curl mono"; fi
+    if which yum    > /dev/null 2>&1; then PACKAGEUPDATE="yum check-update"; PACKAGEINSTALL="yum install -y unzip cabextract curl mono-core mono-devel"; fi
+    if which dnf    > /dev/null 2>&1; then PACKAGEUPDATE="dnf check-update"; PACKAGEINSTALL="dnf install -y unzip cabextract curl mono-core mono-devel"; fi
+    if which zypper > /dev/null 2>&1; then PACKAGEUPDATE="zypper refresh";   PACKAGEINSTALL="zypper install -y unzip cabextract curl mono-core mono-devel"; fi
+
+    if [ "$PACKAGEUPDATE" == "none" ]; then
+        printf "\nPackage manager not supported. Install unzip, cabextract, curl and mono manually, then re-run.\n"
+        exit 1
+    fi
+
+    sudo ${PACKAGEUPDATE}
+    sudo ${PACKAGEINSTALL}
+fi
 
 # ── Downloads ────────────────────────────────────────────────────────────────
 printf "\nDownloading: TSO game package\n"
@@ -74,6 +90,11 @@ curl -# -L -o "${TEMPDIR}/client.zip" "$CLIENT_URL"
 
 printf "\nDownloading: Remesh package\n"
 curl -# -L -o "${TEMPDIR}/RemeshPackage.zip" "$REMESH_URL"
+
+if [ "$OS" = "macos" ]; then
+    printf "\nDownloading: macOS native libraries\n"
+    curl -# -L -o "${TEMPDIR}/macextras.zip" "$MACEXTRAS_URL"
+fi
 
 # ── Extraction ───────────────────────────────────────────────────────────────
 printf "\nExtracting client...\n"
@@ -87,6 +108,11 @@ printf "\nExtracting remesh package...\n"
 mkdir -p "${GAMEDIR}/Content/MeshReplace"
 unzip -q -o "${TEMPDIR}/RemeshPackage.zip" -d "${GAMEDIR}/Content/MeshReplace"
 
+if [ "$OS" = "macos" ]; then
+    printf "\nExtracting macOS native libraries...\n"
+    unzip -q -o "${TEMPDIR}/macextras.zip" -d "$GAMEDIR"
+fi
+
 # ── Client configuration ─────────────────────────────────────────────────────
 printf "\nConfiguring client...\n"
 cat > "${GAMEDIR}/Content/config.ini" << EOL
@@ -98,11 +124,28 @@ GameEntryUrl=${SERVER_URL}
 CitySelectorUrl=${SERVER_URL}
 EOL
 
-# ── Desktop entries ──────────────────────────────────────────────────────────
-printf "\nCreating desktop launcher...\n"
-mkdir -p "${HOME}/.local/share/applications"
+# ── Launcher ─────────────────────────────────────────────────────────────────
+printf "\nCreating launcher...\n"
 
-cat > "${HOME}/.local/share/applications/${GAME_NAME}.desktop" << EOL
+if [ "$OS" = "macos" ]; then
+    # .command files open in Terminal on double-click on macOS
+    cat > "${GAMEDIR}/${GAME_NAME}.command" << EOL
+#!/bin/bash
+cd "\$(dirname "\$0")"
+mono FreeSO.exe
+EOL
+    cat > "${GAMEDIR}/${GAME_NAME} (3D).command" << EOL
+#!/bin/bash
+cd "\$(dirname "\$0")"
+mono FreeSO.exe -3d
+EOL
+    chmod +x "${GAMEDIR}/${GAME_NAME}.command" "${GAMEDIR}/${GAME_NAME} (3D).command"
+    printf "Launcher scripts created in %s\n" "$GAMEDIR"
+    printf "Double-click %s.command to launch.\n" "$GAME_NAME"
+else
+    mkdir -p "${HOME}/.local/share/applications"
+
+    cat > "${HOME}/.local/share/applications/${GAME_NAME}.desktop" << EOL
 [Desktop Entry]
 Version=1.0
 Type=Application
@@ -114,7 +157,7 @@ StartupNotify=false
 Categories=Game
 EOL
 
-cat > "${HOME}/.local/share/applications/${GAME_NAME}-3d.desktop" << EOL
+    cat > "${HOME}/.local/share/applications/${GAME_NAME}-3d.desktop" << EOL
 [Desktop Entry]
 Version=1.0
 Type=Application
@@ -125,12 +168,18 @@ Terminal=false
 StartupNotify=false
 Categories=Game
 EOL
+fi
 
 # ── Cleanup ──────────────────────────────────────────────────────────────────
 printf "\nCleaning up temporary files...\n"
 rm -rf "$TEMPDIR"
 
 printf "\nInstall complete!\n"
-printf "Run with:  mono %s/FreeSO.exe\n" "$GAMEDIR"
-printf "Or:        mono %s/FreeSO.exe -3d  (3D mode)\n" "$GAMEDIR"
-printf "Or launch from your applications menu (may need to log out and back in).\n"
+if [ "$OS" = "macos" ]; then
+    printf "Double-click %s/%s.command to launch.\n" "$GAMEDIR" "$GAME_NAME"
+    printf "Or run: mono %s/FreeSO.exe\n" "$GAMEDIR"
+else
+    printf "Run with:  mono %s/FreeSO.exe\n" "$GAMEDIR"
+    printf "Or:        mono %s/FreeSO.exe -3d  (3D mode)\n" "$GAMEDIR"
+    printf "Or launch from your applications menu (may need to log out and back in).\n"
+fi

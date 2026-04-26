@@ -50,6 +50,19 @@ jobs:
         if: github.ref == 'refs/heads/master'
         run: Compress-Archive -Path publish\client\* -DestinationPath publish\freeso-client-windows-ogl.zip
 
+      - name: Collect macOS native libraries (macextras)
+        if: github.ref == 'refs/heads/master'
+        run: |
+          $libs = Get-ChildItem -Recurse "Other\libs\FSOMonoGame" -Include "*.dylib" -ErrorAction SilentlyContinue
+          if ($libs) {
+            New-Item -ItemType Directory -Force -Path "publish\macextras" | Out-Null
+            $libs | Copy-Item -Destination "publish\macextras\"
+            Compress-Archive -Path "publish\macextras\*" -DestinationPath "publish\macextras.zip"
+            Write-Host "Packaged $($libs.Count) dylib file(s) into macextras.zip"
+          } else {
+            Write-Host "No .dylib files found in FSOMonoGame — skipping macextras"
+          }
+
       - name: Publish GitHub Release (master only)
         if: github.ref == 'refs/heads/master'
         uses: softprops/action-gh-release@v2
@@ -57,4 +70,6 @@ jobs:
           tag_name: latest-client
           name: Latest Client Build
           prerelease: true
-          files: publish/freeso-client-windows-ogl.zip
+          files: |
+            publish/freeso-client-windows-ogl.zip
+            publish/macextras.zip
