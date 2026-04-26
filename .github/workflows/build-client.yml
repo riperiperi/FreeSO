@@ -1,0 +1,45 @@
+name: Build Client
+
+on:
+  push:
+    branches: [ master, dev ]
+  workflow_dispatch:
+
+jobs:
+  build:
+    runs-on: windows-2019
+
+    steps:
+      - name: Checkout (with submodules)
+        uses: actions/checkout@v4
+        with:
+          submodules: recursive
+
+      - name: Setup MSBuild
+        uses: microsoft/setup-msbuild@v2
+
+      - name: Run Protobuild
+        working-directory: Other/libs/FSOMonoGame
+        run: .\protobuild.exe --generate
+        continue-on-error: true
+
+      - name: Setup NuGet
+        uses: NuGet/setup-nuget@v2
+
+      - name: Restore NuGet packages
+        run: nuget restore TSOClient/FreeSO.sln
+
+      - name: Build client (FSO.IDE)
+        run: |
+          msbuild TSOClient/FreeSO.sln `
+            /t:FSO_IDE `
+            /p:Configuration=Release `
+            /p:Platform="Any CPU" `
+            /p:OutDir="${{ github.workspace }}\publish\client"
+
+      - name: Upload client artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: freeso-client-windows-ogl
+          path: publish/client/
+          retention-days: 30
