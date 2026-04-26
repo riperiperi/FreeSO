@@ -43,3 +43,16 @@ jobs:
           name: freeso-client-windows-ogl
           path: publish/client/
           retention-days: 30
+
+      - name: Zip client for release
+        if: github.ref == 'refs/heads/master'
+        run: Compress-Archive -Path publish\client\* -DestinationPath publish\freeso-client-windows-ogl.zip
+
+      - name: Publish GitHub Release (master only)
+        if: github.ref == 'refs/heads/master'
+        uses: softprops/action-gh-release@v2
+        with:
+          tag_name: latest-client
+          name: Latest Client Build
+          prerelease: true
+          files: publish/freeso-client-windows-ogl.zip
