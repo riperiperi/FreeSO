@@ -36,6 +36,7 @@ jobs:
             -r linux-x64 `
             --self-contained true `
             --no-restore `
+            /p:Platform=AnyCPU `
             -o publish/server
 
       - name: Upload server artifact
