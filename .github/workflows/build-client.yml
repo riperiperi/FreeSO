@@ -8,6 +8,8 @@ on:
 jobs:
   build:
     runs-on: windows-2019
+    permissions:
+      contents: write
 
     steps:
       - name: Checkout (with submodules)
