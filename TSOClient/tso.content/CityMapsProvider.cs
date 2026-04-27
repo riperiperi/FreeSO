@@ -28,14 +28,17 @@ namespace FSO.Content
             foreach (var map in Directory.GetDirectories(dir))
             {
                 var id = int.Parse(Path.GetFileName(map).Replace("city_", ""));
-                DirCache.Add(id, map);
+                DirCache[id] = map;
             }
 
             dir = Path.Combine(FSOEnvironment.ContentDir, "Cities/");
-            foreach (var map in Directory.GetDirectories(dir))
+            if (Directory.Exists(dir))
             {
-                var id = int.Parse(Path.GetFileName(map).Replace("city_", ""));
-                DirCache.Add(id, map);
+                foreach (var map in Directory.GetDirectories(dir))
+                {
+                    var id = int.Parse(Path.GetFileName(map).Replace("city_", ""));
+                    DirCache[id] = map; // user content overrides game content
+                }
             }
         }
 
