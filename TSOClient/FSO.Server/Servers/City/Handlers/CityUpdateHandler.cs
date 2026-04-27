@@ -168,16 +168,19 @@ namespace FSO.Server.Servers.City.Handlers
             ActionReady.Set();
         }
 
-        private IShardRealestateDomain GetShard(IVoltronSession session)
+        private IShardRealestateDomain GetShard(IVoltronSession session, bool forEditor = true)
         {
             if (session.IsAnonymous)
                 return null;
 
-            if (!session.HasModerationLevel(1))
-                return null;
+            if (forEditor)
+            {
+                if (!session.HasModerationLevel(1))
+                    return null;
 
-            if (!(Context.Config.Archive?.Flags.HasFlag(FSO.Common.ArchiveConfigFlags.CityEditor) ?? false))
-                return null;
+                if (!(Context.Config.Archive?.Flags.HasFlag(FSO.Common.ArchiveConfigFlags.CityEditor) ?? false))
+                    return null;
+            }
 
             var shard = Realestate.GetByShard(Context.ShardId);
 
@@ -238,7 +241,7 @@ namespace FSO.Server.Servers.City.Handlers
 
         public async void Handle(IVoltronSession session, CityInitRequest packet)
         {
-            var shard = GetShard(session);
+            var shard = GetShard(session, false);
 
             if (shard == null)
                 return;

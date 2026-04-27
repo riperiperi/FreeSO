@@ -321,6 +321,15 @@ namespace FSO.Client.Controllers
                         //12 ^Metrics Purged^                   # Received Character data from DB...
                         View.SetProgress((9.0f / 14.0f) * 100, 12);
                         break;
+
+                    case "AskForCityData":
+                        View.SetProgress((10.0f / 14.0f) * 100, 8, "f100");
+                        break;
+
+                    case "ReceivedCityData":
+                        View.SetProgress((13.0f / 14.0f) * 100, 9, "f100");
+                        break;
+
                     case "Connected":
                         onConnect();
                         break;

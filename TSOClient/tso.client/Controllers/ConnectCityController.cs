@@ -104,6 +104,7 @@ namespace FSO.Client.Controllers
                     case "ReceivedCityData":
                         View.SetProgress((13.0f / 14.0f) * 100, 9, "f100");
                         break;
+
                     case "Connected":
                         onConnect();
                         break;
