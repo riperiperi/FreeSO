@@ -100,7 +100,7 @@ namespace FSO.Server.Servers.City
 
         public override void Shutdown()
         {
-            Shutdown(ShutdownType.SHUTDOWN).RunSynchronously();
+            Shutdown(ShutdownType.SHUTDOWN).GetAwaiter().GetResult();
         }
 
         public async Task<bool> Shutdown(ShutdownType type)
