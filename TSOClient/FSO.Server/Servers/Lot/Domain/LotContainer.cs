@@ -919,6 +919,17 @@ namespace FSO.Server.Servers.Lot.Domain
             {
                 LOG.Info("LOT " + Context.DbId + ": " + evt.Text[0]);
             }
+
+            if (evt.Type == VMChatEventType.Message && evt.ChannelID != 7)
+            {
+                var channel = Lot?.TSOState?.ChatChannels?.FirstOrDefault(x => x.ID == evt.ChannelID);
+                if (channel == null || channel.ViewPermMin == VMTSOAvatarPermissions.Visitor)
+                {
+                    var avatarName = evt.Text != null && evt.Text.Length > 0 ? evt.Text[0] : "";
+                    var message = evt.Text != null && evt.Text.Length > 1 ? evt.Text[1] : "";
+                    VMGlobalLink.BroadcastChatToCity(avatarName, message, evt.ChannelID, LotPersist?.name ?? "");
+                }
+            }
         }
 
         private void DropClient(VMNetClient target)

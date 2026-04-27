@@ -254,6 +254,7 @@ namespace FSO.Server.Servers.City
                 typeof(AvatarRetireHandler),
                 typeof(MailHandler),
                 typeof(MatchmakerNotifyHandler),
+                typeof(LotChatNotifyHandler),
                 typeof(NhoodHandler),
                 typeof(BulletinHandler)
             };

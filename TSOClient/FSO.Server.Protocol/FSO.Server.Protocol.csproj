@@ -143,6 +143,7 @@
     <Compile Include="Gluon\Model\ClaimType.cs" />
     <Compile Include="Gluon\Packets\AdvertiseCapacity.cs" />
     <Compile Include="Gluon\Packets\CityNotify.cs" />
+    <Compile Include="Gluon\Packets\LotChatNotify.cs" />
     <Compile Include="Gluon\Packets\HealthPing.cs" />
     <Compile Include="Gluon\Packets\HealthPingResponse.cs" />
     <Compile Include="Gluon\Packets\IGluonCall.cs" />

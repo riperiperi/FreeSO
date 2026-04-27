@@ -25,10 +25,13 @@ namespace FSO.Server.Api.Core
         public IUpdateUploader UpdateUploader;
         public IUpdateUploader AddonUploader;
         public GithubConfig Github;
+        public ChatBroadcast ChatBroadcast;
 
         public Api()
         {
             INSTANCE = this;
+            ChatBroadcast = new ChatBroadcast();
+            ChatBroadcast.Instance = ChatBroadcast;
         }
 
         public void Init(NameValueCollection appSettings)

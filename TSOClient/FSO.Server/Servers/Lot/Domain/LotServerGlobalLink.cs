@@ -1290,5 +1290,22 @@ namespace FSO.Server.Servers.Lot.Domain
                 }
             });
         }
+
+        public void BroadcastChatToCity(string avatarName, string message, byte channelId, string lotName)
+        {
+            var packet = new LotChatNotify
+            {
+                LotId = (uint)Context.DbId,
+                LotName = lotName ?? "",
+                AvatarName = avatarName ?? "",
+                Message = message ?? "",
+                ChannelId = channelId
+            };
+            try
+            {
+                City.GetByShardId(Context.ShardId)?.Write(packet);
+            }
+            catch { }
+        }
     }
 }

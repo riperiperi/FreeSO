@@ -50,6 +50,7 @@ namespace FSO.Server.Api.Core
                 app.UseHsts();
             }
             app.UseCors();
+            app.UseWebSockets();
             //app.UseHttpsRedirection();
             app.UseMvc();
             AppLifetime = appLifetime;
