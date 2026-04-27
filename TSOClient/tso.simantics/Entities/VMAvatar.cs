@@ -796,11 +796,24 @@ namespace FSO.SimAntics
         {
             if (ForceEnableSkill || PersistID == 0 || vm.TS1) return 1;
             var mode = vm.TSOState.SkillMode;
-            if (vm.TSOState.PropertyCategory == 7 && ((VMTSOAvatarState)TSOState).Flags.HasFlag(VMTSOAvatarFlags.NewPlayer)) return 2; //welcome category: 2x for visitors under a week old
-            else if (mode == 0) return 1;
+            var cat = vm.TSOState.PropertyCategory;
+            bool isNewPlayer = ((VMTSOAvatarState)TSOState).Flags.HasFlag(VMTSOAvatarFlags.NewPlayer);
+
+            int baseMul;
+            if (cat == 7 && isNewPlayer) baseMul = 2; //welcome category: 2x for visitors under a week old
+            else if (mode == 0) baseMul = 1;
             else if (mode == 1)
-                return (AvatarState.Permissions == VMTSOAvatarPermissions.Visitor) ? 0 : 1;
-            else return 0;
+                baseMul = (AvatarState.Permissions == VMTSOAvatarPermissions.Visitor) ? 0 : 1;
+            else baseMul = 0;
+            if (baseMul == 0) return 0;
+
+            // Portal event multiplier only boosts Skill lots (6) and Welcome lots for new players (7).
+            // Capped at 4 to prevent runaway stacking with IFF group bonuses.
+            bool eligibleForBoost = cat == 6 || (cat == 7 && isNewPlayer);
+            if (!eligibleForBoost) return baseMul;
+
+            var tuneMul = vm.Tuning?.GetTuning("skills", 0, 0) ?? 1f;
+            return Math.Min(4, Math.Max(0, (int)Math.Round(baseMul * tuneMul)));
         }
 
         public virtual void SetMotiveChange(VMMotive motive, short PerHourChange, short MaxValue)

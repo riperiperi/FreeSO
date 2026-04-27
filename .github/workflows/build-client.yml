@@ -7,7 +7,7 @@ on:
 
 jobs:
   build:
-    runs-on: windows-2019
+    runs-on: windows-2022
     permissions:
       contents: write
 
@@ -59,12 +59,14 @@ jobs:
             $libs | Copy-Item -Destination "publish\macextras\"
             Compress-Archive -Path "publish\macextras\*" -DestinationPath "publish\macextras.zip"
             Write-Host "Packaged $($libs.Count) dylib file(s) into macextras.zip"
+            echo "HAS_MACEXTRAS=true" >> $env:GITHUB_ENV
           } else {
             Write-Host "No .dylib files found in FSOMonoGame — skipping macextras"
+            echo "HAS_MACEXTRAS=false" >> $env:GITHUB_ENV
           }
 
-      - name: Publish GitHub Release (master only)
-        if: github.ref == 'refs/heads/master'
+      - name: Publish GitHub Release — with macextras (master only)
+        if: github.ref == 'refs/heads/master' && env.HAS_MACEXTRAS == 'true'
         uses: softprops/action-gh-release@v2
         with:
           tag_name: latest-client
@@ -73,3 +75,12 @@ jobs:
           files: |
             publish/freeso-client-windows-ogl.zip
             publish/macextras.zip
+
+      - name: Publish GitHub Release — no macextras (master only)
+        if: github.ref == 'refs/heads/master' && env.HAS_MACEXTRAS == 'false'
+        uses: softprops/action-gh-release@v2
+        with:
+          tag_name: latest-client
+          name: Latest Client Build
+          prerelease: true
+          files: publish/freeso-client-windows-ogl.zip

@@ -7,7 +7,9 @@ on:
 
 jobs:
   build:
-    runs-on: windows-latest
+    runs-on: windows-2022
+    permissions:
+      contents: write
 
     steps:
       - name: Checkout
@@ -18,10 +20,10 @@ jobs:
         with:
           dotnet-version: '8.0.x'
 
-      - name: Setup MSBuild
-        uses: microsoft/setup-msbuild@v2
+      - name: Setup NuGet
+        uses: NuGet/setup-nuget@v2
 
-      - name: Restore legacy NuGet packages
+      - name: Restore NuGet packages
         run: nuget restore TSOClient/FreeSO.sln
 
       - name: Restore SDK packages
@@ -44,4 +46,17 @@ jobs:
         with:
           name: freeso-server-linux-x64
           path: publish/server/
-          retention-days: 30
+          retention-days: 90
+
+      - name: Zip server for release
+        if: github.ref == 'refs/heads/master'
+        run: Compress-Archive -Path publish\server\* -DestinationPath publish\freeso-server-linux-x64.zip
+
+      - name: Publish GitHub Release (master only)
+        if: github.ref == 'refs/heads/master'
+        uses: softprops/action-gh-release@v2
+        with:
+          tag_name: latest-server
+          name: Latest Server Build
+          prerelease: true
+          files: publish/freeso-server-linux-x64.zip

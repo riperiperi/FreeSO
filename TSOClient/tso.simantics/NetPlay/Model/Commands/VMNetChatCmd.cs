@@ -189,6 +189,42 @@ namespace FSO.SimAntics.NetPlay.Model.Commands
                             vm.SignalChatEvent(new VMChatEvent(null, VMChatEventType.Debug, e.Message));
                         }
                         break;
+                    case "maxmotives":
+                        // /maxmotives           → max your own motives
+                        // /maxmotives all        → max motives for everyone on the lot
+                        // /maxmotives <name>     → max motives for a specific sim
+                        var maxMotiveList = new VMMotive[]
+                        {
+                            VMMotive.Energy, VMMotive.Comfort, VMMotive.Hunger,
+                            VMMotive.Hygiene, VMMotive.Bladder, VMMotive.Fun, VMMotive.Social
+                        };
+                        var trimmedArgs = args.Trim();
+                        if (trimmedArgs == "")
+                        {
+                            foreach (var m in maxMotiveList) avatar.SetMotiveData(m, vm.TuningCache.GetLimit(m));
+                            vm.SignalChatEvent(new VMChatEvent(null, VMChatEventType.Generic, "Maxed motives for " + avatar.Name + "."));
+                        }
+                        else if (trimmedArgs.ToLowerInvariant() == "all")
+                        {
+                            var lotAvatars = vm.Context.ObjectQueries.Avatars.ToList();
+                            foreach (VMAvatar lotAvatar in lotAvatars)
+                                foreach (var m in maxMotiveList) lotAvatar.SetMotiveData(m, vm.TuningCache.GetLimit(m));
+                            vm.SignalChatEvent(new VMChatEvent(null, VMChatEventType.Generic, "Maxed motives for all " + lotAvatars.Count + " sim(s) on lot."));
+                        }
+                        else
+                        {
+                            sim = vm.Entities.FirstOrDefault(x => x is VMAvatar && x.ToString().ToLowerInvariant().Trim() == trimmedArgs.ToLowerInvariant());
+                            if (sim != null)
+                            {
+                                foreach (var m in maxMotiveList) ((VMAvatar)sim).SetMotiveData(m, vm.TuningCache.GetLimit(m));
+                                vm.SignalChatEvent(new VMChatEvent(null, VMChatEventType.Generic, "Maxed motives for " + sim.Name + "."));
+                            }
+                            else
+                            {
+                                vm.SignalChatEvent(new VMChatEvent(null, VMChatEventType.Generic, "Avatar '" + trimmedArgs + "' not found on lot."));
+                            }
+                        }
+                        break;
                 }
                 return true;
             }

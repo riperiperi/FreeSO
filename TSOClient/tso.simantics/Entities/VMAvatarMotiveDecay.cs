@@ -107,6 +107,15 @@ namespace FSO.SimAntics.Entities
             if (avatar.GetPersonData(VMPersonDataVariable.Cheats) > 0) return;
             LastMinute = context.Clock.Minutes;
 
+            float decayMul = context.VM.Tuning?.GetTuning("motives", 0, 0) ?? 1f;
+            if (decayMul <= 0f)
+            {
+                int noDecayMood = 0;
+                for (int i = 0; i < 7; i++) noDecayMood += avatar.GetMotiveData(DecrementMotives[i]);
+                avatar.SetMotiveData(VMMotive.Mood, (short)((noDecayMood + roomScore) / 8));
+                return;
+            }
+
             UpdateCategory(context);
             int sleepState = (avatar.GetMotiveData(VMMotive.SleepState) == 0)?1:0;
 
@@ -128,20 +137,20 @@ namespace FSO.SimAntics.Entities
                     case 3:
                         frac = FracMul(FlatSimMotives[4+sleepState], lotMul) + FracMul(r_Hunger, FlatSimMotives[6]); break;
                     case 4:
-                        frac = (FlatSimMotives[7] / (60 * FlatSimMotives[8])); 
+                        frac = (FlatSimMotives[7] / (60 * FlatSimMotives[8]));
                         // TODO: wrong but appears to be close? need one which uses energy weight, which is about 2.4 on skills
                         break;
                     case 5:
                         frac = (sleepState == 0) ? 0 : FracMul(FlatSimMotives[9], lotMul);
                         break;
                     case 6:
-                        frac = FlatSimMotives[10] + 
+                        frac = FlatSimMotives[10] +
                             FracMul((FlatSimMotives[11] * (100+motive)), lotMul);
                         frac /= 2; //make this less harsh right now, til I can work out how multiplayer bonus is meant to work
                         break;
                 }
 
-                MotiveFractions[i] += (short)frac;
+                MotiveFractions[i] += (short)(frac * decayMul);
                 if (MotiveFractions[i] >= 1000)
                 {
                     motive -= (short)(MotiveFractions[i] / 1000);

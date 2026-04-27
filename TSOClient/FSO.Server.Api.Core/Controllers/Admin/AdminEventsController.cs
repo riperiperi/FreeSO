@@ -4,7 +4,9 @@ using System.Net;
 using FSO.Server.Api.Core.Models;
 using FSO.Server.Api.Core.Utils;
 using FSO.Server.Database.DA.DbEvents;
+using FSO.Server.Database.DA.Hosts;
 using FSO.Server.Database.DA.Tuning;
+using FSO.Server.Protocol.Gluon.Packets;
 using Microsoft.AspNetCore.Cors;
 using Microsoft.AspNetCore.Mvc;
 
@@ -151,6 +153,31 @@ namespace FSO.Server.Api.Core.Controllers.Admin
             }
 
             return Ok();
+        }
+
+        // POST admin/events/push_tuning
+        // Broadcasts a TuningChanged packet to all connected lot servers so they re-read
+        // fso_tuning from the DB and push updates to all active lots immediately.
+        [HttpPost("push_tuning")]
+        public IActionResult PushTuning()
+        {
+            var api = Api.INSTANCE;
+            api.DemandModerator(Request);
+
+            if (api.HostPool == null)
+                return new JsonResult(new { lot_servers_notified = 0, warning = "No host pool available." });
+
+            var packet = new TuningChanged() { UpdateInstantly = true };
+            int count = 0;
+            foreach (var host in api.HostPool.GetByRole(DbHostRole.lot))
+            {
+                if (host.Connected)
+                {
+                    host.Write(packet);
+                    count++;
+                }
+            }
+            return new JsonResult(new { lot_servers_notified = count });
         }
 
     }
