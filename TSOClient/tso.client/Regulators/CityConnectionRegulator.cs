@@ -5,9 +5,12 @@ using FSO.Common;
 using FSO.Common.DatabaseService;
 using FSO.Common.DatabaseService.Model;
 using FSO.Common.DataService;
+using FSO.Common.Domain.Realestate;
+using FSO.Common.Domain.RealestateDomain;
 using FSO.Common.Domain.Shards;
 using FSO.Common.Model;
 using FSO.Common.Utils;
+using FSO.Content.Model;
 using FSO.Server.Clients;
 using FSO.Server.Clients.Framework;
 using FSO.Server.DataService.Model;
@@ -49,7 +52,9 @@ namespace FSO.Client.Regulators
         private IDatabaseService DB;
         private IClientDataService DataService;
         private IShardsDomain Shards;
+        private IRealestateDomain Realestate;
         private int _ReestablishAttempt;
+        private IShardRealestateDomain ShardRealestate;
         private int ReestablishAttempt
         {
             get
@@ -64,7 +69,7 @@ namespace FSO.Client.Regulators
         }
         public bool CanReestablish;
 
-        public CityConnectionRegulator(CityClient cityApi, [Named("City")] AriesClient cityClient, IDatabaseService db, IClientDataService ds, IKernel kernel, IShardsDomain shards)
+        public CityConnectionRegulator(CityClient cityApi, [Named("City")] AriesClient cityClient, IDatabaseService db, IClientDataService ds, IKernel kernel, IShardsDomain shards, IRealestateDomain realestate)
         {
             this.CityApi = cityApi;
             this.Client = cityClient;
@@ -72,6 +77,7 @@ namespace FSO.Client.Regulators
             this.DB = db;
             this.DataService = ds;
             this.Shards = shards;
+            this.Realestate = realestate;
 
             AddState("Disconnected")
                 .Default()
@@ -145,10 +151,15 @@ namespace FSO.Client.Regulators
             AddState("AskForCharacterData").OnlyTransitionFrom("ReceivedAvatarData");
             AddState("ReceivedCharacterData").OnlyTransitionFrom("AskForCharacterData");
 
+            AddState("AskForCityData")
+                .OnData(typeof(CityInitResponse)).TransitionTo("ReceivedCityData")
+                .OnlyTransitionFrom("ReceivedCharacterData");
+            AddState("ReceivedCityData").OnlyTransitionFrom("AskForCityData");
+
             AddState("Connected")
                 .OnData(typeof(ServerByePDU)).TransitionTo("Disconnected")
                 .OnData(typeof(AriesDisconnected)).TransitionTo("UnexpectedDisconnect")
-                .OnlyTransitionFrom("ReceivedCharacterData", "Reestablished");
+                .OnlyTransitionFrom("ReceivedCharacterData", "ReceivedCityData", "Reestablished");
 
             AddState("UnexpectedDisconnect");
 
@@ -503,8 +514,54 @@ namespace FSO.Client.Regulators
                     break;
 
                 case "ReceivedCharacterData":
-                    //For now, we will call this connected
-                    AsyncTransition("Connected");
+                    // If the city map was reported as "dynamic", we need to load the map from the server.
+                    {
+                        var shards = (ClientShards)Shards;
+                        var shardItem = shards.GetById(shards.CurrentShard ?? 1);
+                        if (shardItem.Map == "dynamic")
+                        {
+                            // We need to ask the city for the city data.
+                            AsyncTransition("AskForCityData");
+                        }
+                        else
+                        {
+                            //For now, we will call this connected
+                            AsyncTransition("Connected");
+                        }
+                        break;
+                    }
+
+                case "AskForCityData":
+                    Client.Write(
+                        new CityInitRequest()
+                        {
+                        }
+                    );
+                    break;
+
+                case "ReceivedCityData":
+                    var cityInit = data as CityInitResponse;
+
+                    GameThread.InUpdate(() =>
+                    {
+                        var shards = (ClientShards)Shards;
+                        var shardId = shards.CurrentShard ?? 1;
+                        var marshal = new CityMapMarshal();
+                        marshal.Read(cityInit.CityData);
+
+                        shards.SetShardMapBase(shardId, marshal);
+
+                        // Initialize the realestate with the initial command list
+
+                        ShardRealestate = Realestate.GetByShard(shardId);
+                        foreach (var cmd in cityInit.Commands)
+                        {
+                            ShardRealestate.AppendCommand(cmd.Command);
+                        }
+
+                        AsyncTransition("Connected");
+                    });
+
                     break;
 
                 case "Connected":
@@ -626,7 +683,7 @@ namespace FSO.Client.Regulators
         {
 
             if (message is RequestClientSession || message is RequestClientSessionArchive ||
-                message is HostOnlinePDU || message is ServerByePDU || message is ArchiveAvatarSelectResponse)
+                message is HostOnlinePDU || message is ServerByePDU || message is ArchiveAvatarSelectResponse || message is CityInitResponse)
             {
                 this.AsyncProcessMessage(message);
             }
@@ -638,12 +695,10 @@ namespace FSO.Client.Regulators
                     // TODO: notify
                 });
             }
-            else if (message is AnnouncementMsgPDU)
+            else if (message is AnnouncementMsgPDU msg)
             {
                 GameThread.InUpdate(() =>
                 {
-                    var msg = (AnnouncementMsgPDU)message;
-
                     if (msg.Badge == 255)
                     {
                         // This message replaces the network error message when we disconnect.
@@ -664,15 +719,35 @@ namespace FSO.Client.Regulators
                     }
                 });
             }
-            else if (message is GlobalTuningUpdate)
+            else if (message is GlobalTuningUpdate tuning)
             {
-                var msg = (message as GlobalTuningUpdate);
-                DynamicTuning.Global = msg.Tuning;
-                Content.Content.Get().Upgrades.LoadNetTuning(msg.ObjectUpgrades);
+                DynamicTuning.Global = tuning.Tuning;
+                Content.Content.Get().Upgrades.LoadNetTuning(tuning.ObjectUpgrades);
             }
-            else if (message is ChangeRoommateResponse)
+            else if (message is CityUpdateResponse city)
             {
-
+                GameThread.NextUpdate(x =>
+                {
+                    foreach (var cmd in city.Commands)
+                    {
+                        ShardRealestate?.AppendCommand(cmd.Command);
+                    }
+                });
+            }
+            else if (message is CityUpdateCommand cmd)
+            {
+                GameThread.NextUpdate(x =>
+                {
+                    switch (cmd.Mode)
+                    {
+                        case CityUpdateCommandMode.Undo:
+                            ShardRealestate?.HandleUserCommand(cmd);
+                            break;
+                        case CityUpdateCommandMode.SetCityName:
+                            GameFacade.CurrentCityName = cmd.CityName;
+                            break;
+                    }
+                });
             }
         }
 

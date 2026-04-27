@@ -47,6 +47,8 @@ namespace FSO.Server.Protocol.Electron
             typeof(CityUpdateRequest),
             typeof(CityUpdateResponse),
             typeof(CityUpdateCommand),
+            typeof(CityInitRequest),
+            typeof(CityInitResponse),
         };
 
         static ElectronPackets()

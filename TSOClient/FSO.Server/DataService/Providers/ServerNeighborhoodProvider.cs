@@ -1,6 +1,7 @@
 ﻿using FSO.Client.Rendering.City.Model;
 using FSO.Common.DataService.Framework;
 using FSO.Common.DataService.Model;
+using FSO.Common.Domain;
 using FSO.Common.Domain.Realestate;
 using FSO.Common.Domain.RealestateDomain;
 using FSO.Common.Enum;

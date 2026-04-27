@@ -70,7 +70,7 @@ namespace FSO.Client.Rendering.City
             String gamepath = GameFacade.GameFilePath("");
 
             MapData = map;
-            VertexColor = map.VertexColour.Get(gd);
+            VertexColor = map.VertexColour?.Get(gd);
 
             //special tuning from server
             var terrainTuning = DynamicTuning.Global?.GetTable("city", 0);
@@ -173,6 +173,12 @@ namespace FSO.Client.Rendering.City
 
         public void ForceSnow(float mode)
         {
+            if (VertexColor == null)
+            {
+                // Should handle this differently when dynamic city is enabled...
+                return;
+            }
+
             var dat = new Color[VertexColor.Width * VertexColor.Height];
             VertexColor.GetData(dat);
             var type = MapData.TerrainType;
@@ -333,7 +339,7 @@ namespace FSO.Client.Rendering.City
         public void Dispose()
         {
             foreach (var tex in TerrainTextures) tex.Dispose();
-            VertexColor.Dispose();
+            VertexColor?.Dispose();
 
             foreach (var tex in TransAtlas) tex.Dispose();
             RoadAtlas.Dispose();

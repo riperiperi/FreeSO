@@ -1,4 +1,4 @@
-﻿using FSO.Common.DataService.Framework;
+﻿using FSO.Common.Domain;
 using FSO.Common.Utils;
 using FSO.Server.Common;
 using FSO.Server.Database.DA;

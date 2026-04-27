@@ -81,7 +81,7 @@ namespace FSO.Server.Api.Core
                     break;
             }
             
-            Shards = new Shards(DAFactory);
+            Shards = new Shards(DAFactory, null); // TODO: does this need nfs?
             Shards.AutoUpdate();
         }
 

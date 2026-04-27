@@ -90,6 +90,16 @@ namespace FSO.Client.Controllers
             cmd.IsTemp = prevTemp;
         }
 
+        public void UpdateThumbnail(byte[] data)
+        {
+            Network.CityClient.Write(new CityUpdateCommand() { Mode = CityUpdateCommandMode.SetThumbnail, Thumbnail = data });
+        }
+
+        public void UpdateCityName(string name)
+        {
+            Network.CityClient.Write(new CityUpdateCommand() { Mode = CityUpdateCommandMode.SetCityName, CityName = name });
+        }
+
         public void SendCityCommand(CityUpdateCommandMode mode, int uid)
         {
             Network.CityClient.Write(new CityUpdateCommand()
@@ -723,23 +733,6 @@ namespace FSO.Client.Controllers
 
         public void MessageReceived(AriesClient client, object message)
         {
-            if (message is CityUpdateResponse city)
-            {
-                GameThread.NextUpdate(x =>
-                {
-                    foreach (var cmd in city.Commands)
-                    {
-                        Realestate.AppendCommand(cmd.Command);
-                    }
-                });
-            }
-            else if (message is CityUpdateCommand cmd)
-            {
-                GameThread.NextUpdate(x =>
-                {
-                    Realestate.HandleUserCommand(cmd);
-                });
-            }
         }
     }
 }

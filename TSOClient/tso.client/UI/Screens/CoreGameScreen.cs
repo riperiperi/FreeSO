@@ -359,7 +359,7 @@ namespace FSO.Client.UI.Screens
             CityTooltipHitArea.SetSize(ScreenWidth, ScreenHeight);
         }
 
-        public void Initialize(string cityName, int cityMap, TerrainController terrainController)
+        public void Initialize(string cityName, TerrainController terrainController)
         {
             CalculateMatrix();
             CityFloatingContainer.ScaleX = 1f / Scale.X;

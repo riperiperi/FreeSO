@@ -66,7 +66,7 @@ namespace FSO.Client.Controllers
 
             var shard = Network.MyShard;
             Terrain = kernel.Get<TerrainController>(new ConstructorArgument("parent", this));
-            view.Initialize(shard.Name, int.Parse(shard.Map), Terrain);
+            view.Initialize(shard.Name, Terrain);
             view.AllowCityEditor = ArchiveConfig.HasFlag(ArchiveConfigFlags.CityEditor); // TODO: only if admin
         }
 

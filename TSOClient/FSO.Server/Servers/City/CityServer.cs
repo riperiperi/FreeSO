@@ -16,6 +16,7 @@ using FSO.Server.Protocol.Voltron.Packets;
 using FSO.Server.Servers.City.Domain;
 using FSO.Server.Servers.City.Handlers;
 using FSO.Server.Servers.Shared.Handlers;
+using FSO.Server.Utils;
 using Mina.Core.Session;
 using Ninject;
 using NLog;
@@ -78,6 +79,14 @@ namespace FSO.Server.Servers.City
             if (shard == null)
             {
                 throw new Exception("Unable to find a shard with id " + Config.ID + ", check it exists in the database");
+            }
+
+            if ((Config.Archive?.Flags ?? 0).HasFlag(FSO.Common.ArchiveConfigFlags.CityEditor) && shard.Map != "dynamic")
+            {
+                LOG.Warn("The map for city " + shard.Name + " is not dynamic, but the city editor is enabled. Converting city to dynamic...");
+                ((Shards)shards).MakeDynamic(Config.ID, CoreImageLoader.SavePNG);
+                shard = shards.GetById(Config.ID);
+                LOG.Warn("City " + shard.Name + " has been converted to dynamic.");
             }
 
             ShardName = shard.Name;

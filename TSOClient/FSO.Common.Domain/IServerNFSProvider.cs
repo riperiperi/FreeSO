@@ -1,7 +1,8 @@
-﻿namespace FSO.Common.DataService.Framework
+﻿namespace FSO.Common.Domain
 {
     public interface IServerNFSProvider
     {
         string GetBaseDirectory();
+        string GetShardMapDirectory(int shardId);
     }
 }

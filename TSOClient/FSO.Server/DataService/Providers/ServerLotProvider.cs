@@ -20,6 +20,7 @@ using FSO.Common.Enum;
 using FSO.Server.Common;
 using FSO.Server.Database.DA.Neighborhoods;
 using FSO.Files.RC;
+using FSO.Common.Domain;
 
 namespace FSO.Server.DataService.Providers
 {

@@ -28,6 +28,11 @@ namespace FSO.Client.Rendering.City.Plugins.PainterModes
             Spray.NewSeed();
         }
 
+        private static bool InBounds(Point loc)
+        {
+            return loc.X >= 0 && loc.Y >= 0 && loc.X < 512 && loc.Y < 512;
+        }
+
         public void Draw(SpriteBatch sb)
         {
             if (Painter.Flatten)
@@ -46,7 +51,7 @@ namespace FSO.Client.Rendering.City.Plugins.PainterModes
             {
                 var loc = new Point(ePos.X + x, ePos.Y + y);
 
-                if (loc.X >= 0 && loc.Y >= 0 && loc.X < 512 && loc.Y < 512)
+                if (InBounds(loc))
                 {
                     var multiplier = baseMul * (Painter.Accelerate ? 2f : 1f);
                     var eOnScreen = City.Get2DFromTile(ePos.X + x, ePos.Y + y);
@@ -91,7 +96,7 @@ namespace FSO.Client.Rendering.City.Plugins.PainterModes
                     {
                         var loc = new Point(wallPos.X + x, wallPos.Y + y);
 
-                        if (rough)
+                        if (rough && InBounds(loc))
                         {
                             strength = Spray.GetRoughEdge(loc.X * 512 + loc.Y, strength, Painter.BrushSize);
                         }

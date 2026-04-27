@@ -435,6 +435,8 @@ namespace FSO.Common.Domain.Realestate
                 cornerPos += step;
             }
 
+            map.SetDirty(CityMapAspects.Road);
+
             return true;
         }
 
@@ -449,6 +451,17 @@ namespace FSO.Common.Domain.Realestate
             };
         }
 
+        private static CityMapAspects GetPaintDirtyAspect(CityEditPaintType type)
+        {
+            return type switch
+            {
+                CityEditPaintType.TerrainType => CityMapAspects.TerrainType,
+                CityEditPaintType.ForestType => CityMapAspects.Forest,
+                CityEditPaintType.ForestDensity => CityMapAspects.Forest,
+                _ => CityMapAspects.None
+            };
+        }
+
         public static bool ApplyPaint(CityMap map, CityEditPaint paint)
         {
             var reserved = GetReservedBitmap(map, paint);
@@ -460,6 +473,7 @@ namespace FSO.Common.Domain.Realestate
             ForestType[] forestType = map.GetRawForestType();
             byte[] forestDensity = map.GetRawForestDensity();
 
+            bool anyChanged = false;
             foreach (var line in bitmap.GetSetLines())
             {
                 int x = line.x + bitmap.X;
@@ -470,6 +484,7 @@ namespace FSO.Common.Domain.Realestate
                 {
                     if (!reserved.IsSet(x++, y))
                     {
+                        anyChanged = true;
                         if (isTerrainType && value == (byte)TerrainType.WATER)
                         {
                             forestType[mapIndex] = ForestType.NULL;
@@ -479,6 +494,11 @@ namespace FSO.Common.Domain.Realestate
                         aspect[mapIndex++] = value;
                     }
                 }
+            }
+
+            if (anyChanged)
+            {
+                map.SetDirty(GetPaintDirtyAspect(paint.Type));
             }
 
             return true;
@@ -498,6 +518,7 @@ namespace FSO.Common.Domain.Realestate
 
             byte maxDensity = 4;
 
+            bool anyChanged = false;
             foreach (var line in bitmap.GetSetLines())
             {
                 int deltaIndex = (line.y * bitmap.Width) + line.x;
@@ -517,6 +538,7 @@ namespace FSO.Common.Domain.Realestate
 
                         if (erasing)
                         {
+                            anyChanged = true;
                             if (newDensity >= existingDensity)
                             {
                                 existingDensity = 0;
@@ -531,12 +553,18 @@ namespace FSO.Common.Domain.Realestate
                         {
                             if (newDensity >= existingDensity && existingTerrain != TerrainType.WATER)
                             {
+                                anyChanged = true;
                                 existingDensity = newDensity;
                                 existingType = newType;
                             }
                         }
                     }
                 }
+            }
+
+            if (anyChanged)
+            {
+                map.SetDirty(CityMapAspects.Forest);
             }
 
             return true;
@@ -573,6 +601,7 @@ namespace FSO.Common.Domain.Realestate
 
             if (bitmap != null)
             {
+                bool anyData = false;
                 int height = bitmap.Height;
                 foreach (var line in bitmap.GetSetLines())
                 {
@@ -586,10 +615,16 @@ namespace FSO.Common.Domain.Realestate
                     {
                         if (!reserved.IsSet(x++, y))
                         {
+                            anyData = true;
                             ref var alt = ref altitudes[mapIndex++];
                             alt = (byte)Math.Clamp(alt + deltas[deltaIndex++], 0, 255);
                         }
                     }
+                }
+
+                if (anyData)
+                {
+                    map.SetDirty(CityMapAspects.Elevation);
                 }
 
                 if (auto)
@@ -680,6 +715,11 @@ namespace FSO.Common.Domain.Realestate
                             lineX++;
                             x++;
                         }
+                    }
+
+                    if (anyData)
+                    {
+                        map.SetDirty(CityMapAspects.TerrainType);
                     }
                 }
             }

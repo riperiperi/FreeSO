@@ -56,9 +56,9 @@ namespace FSO.Client.UI.Screens
             }
         }
 
-        public void SetProgress(float progress, int stringIndex)
+        public void SetProgress(float progress, int stringIndex, string source = "251")
         {
-            m_LoginProgress.ProgressCaption = GameFacade.Strings.GetString("251", (stringIndex).ToString());
+            m_LoginProgress.ProgressCaption = GameFacade.Strings.GetString(source, (stringIndex).ToString());
             m_LoginProgress.Progress = progress;
         }
 

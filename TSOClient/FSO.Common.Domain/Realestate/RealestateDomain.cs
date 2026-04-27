@@ -73,6 +73,7 @@ namespace FSO.Common.Domain.Realestate
         private LotPricingStrategy _Pricing;
         private CityMap _Map;
 
+        public int ID { get; private set; }
         public bool Dynamic => true;
         public CityUndoStack UndoStack { get; private set; } = new CityUndoStack();
         private CityMap _BaseMap;
@@ -83,15 +84,20 @@ namespace FSO.Common.Domain.Realestate
         private CityEditBase _MyTempCommand;
         private List<CityEditBase> _TempCommands = [];
 
+        private Task<byte[]> CompressedBaseData;
+
         public event Action<Rectangle> OnMapChange;
 
         public ShardRealestateDomain(ShardStatusItem shard, CityMap map)
         {
             _Map = map;
+            ID = shard.Id;
             if (Dynamic)
             {
                 _Map = new(map);
                 _BaseMap = new(map);
+
+                CompressedBaseData = Task.Run(CompressMap);
             }
             //TODO: Hardcore
             _Pricing = new BasicLotPricingStrategy();
@@ -164,6 +170,25 @@ namespace FSO.Common.Domain.Realestate
         public CityMap GetMap()
         {
             return _Map;
+        }
+
+        private byte[] CompressMap()
+        {
+            return _BaseMap.Save().Write();
+        }
+
+        private byte[] GetCompressedBaseData()
+        {
+            return CompressedBaseData.Result;
+        }
+
+        public CityInitResponse GetInit()
+        {
+            return new CityInitResponse()
+            {
+                CityData = GetCompressedBaseData(),
+                Commands = [.. _Commands.Select(x => new CityEditCommand(x))]
+            };
         }
 
         public int AppendCommand(CityEditBase command)
@@ -271,6 +296,8 @@ namespace FSO.Common.Domain.Realestate
                         UndoStack.HandleUndo(_Commands[toUndo]);
                         _Commands.RemoveAt(toUndo);
 
+                        // TODO: undo needs to set changed aspects with more granularity
+                        _Map.SetDirty(CityMapAspects.All);
                         RedrawAll();
                         return true;
                     }

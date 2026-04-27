@@ -8,6 +8,7 @@ namespace FSO.Common.Domain.RealestateDomain
 {
     public interface IShardRealestateDomain
     {
+        int ID { get; }
         bool Dynamic { get; }
         CityUndoStack UndoStack { get; }
         event Action<Rectangle> OnMapChange;
@@ -16,6 +17,7 @@ namespace FSO.Common.Domain.RealestateDomain
         bool IsPurchasable(ushort x, ushort y);
         int GetSlope(ushort x, ushort y);
         CityMap GetMap();
+        CityInitResponse GetInit();
         int AppendCommand(CityEditBase command);
         void SetMyTempCommand(CityEditBase command);
         bool HandleUserCommand(CityUpdateCommand command);

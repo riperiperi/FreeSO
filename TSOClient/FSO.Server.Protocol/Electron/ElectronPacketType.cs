@@ -43,6 +43,8 @@ namespace FSO.Server.Protocol.Electron
         CityUpdateRequest,
         CityUpdateResponse,
         CityUpdateCommand,
+        CityInitRequest,
+        CityInitResponse,
         Unknown = 0xFFFF
     }
 

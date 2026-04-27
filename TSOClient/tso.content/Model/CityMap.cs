@@ -1,4 +1,5 @@
 ﻿using Microsoft.Xna.Framework;
+using System.Runtime.InteropServices;
 
 namespace FSO.Content.Model
 {
@@ -20,11 +21,6 @@ namespace FSO.Content.Model
 
         private string _Directory;
 
-        public ITextureRef Elevation { get; internal set; }
-        public ITextureRef ForestDensity { get; internal set; }
-        public ITextureRef ForestType { get; internal set; }
-        public ITextureRef RoadMap { get; internal set; }
-        public ITextureRef TerrainTypeTex { get; internal set; }
         public ITextureRef VertexColour { get; internal set; }
         public ITextureRef Thumbnail { get; internal set; }
 
@@ -41,8 +37,14 @@ namespace FSO.Content.Model
         public TerrainType[] TerrainType => _TerrainType.GetRaw();
         public ForestType[] ForestTypeData => _ForestType.GetRaw();
 
+
+        public Color[] ElevationColorData => _ElevationMap.GetColor();
+        public Color[] ForestDensityColorData => _ForestDensity.GetColor();
+        public Color[] RoadColorData => _RoadMap.GetColor();
         public Color[] TerrainTypeColorData => _TerrainType.GetColor();
         public Color[] ForestTypeColorData => _ForestType.GetColor();
+
+        private CityMapAspects _Dirty = CityMapAspects.All;
 
         private static byte Red(Color color)
         {
@@ -57,14 +59,7 @@ namespace FSO.Content.Model
         public CityMap(CityMap other)
         {
             _Directory = other._Directory;
-
-            Elevation = other.Elevation;
-            ForestDensity = other.ForestDensity;
-            ForestType = other.ForestType;
-            RoadMap = other.RoadMap;
-            TerrainTypeTex = other.TerrainTypeTex;
             VertexColour = other.VertexColour;
-            Thumbnail = other.Thumbnail;
 
             _TerrainType = new(other._TerrainType);
             _ElevationMap = new(other._ElevationMap);
@@ -72,6 +67,40 @@ namespace FSO.Content.Model
 
             _ForestDensity = new(other._ForestDensity);
             _ForestType = new(other._ForestType);
+        }
+        
+        public CityMap(CityMapMarshal marshal)
+        {
+            _TerrainType = new TextureValueMap<TerrainType>([.. MemoryMarshal.Cast<byte, TerrainType>(marshal.TerrainType)], TerrainTypeToColor);
+            _ElevationMap = new TextureValueMap<byte>(marshal.ElevationMap, ToGrayscale);
+            _RoadMap = new TextureValueMap<byte>(marshal.RoadMap, ToGrayscale);
+
+            _ForestDensity = new TextureValueMap<byte> (marshal.ForestDensity, ToGrayscale);
+            _ForestType = new TextureValueMap<ForestType>([.. MemoryMarshal.Cast<byte, ForestType>(marshal.TerrainType)], ForestTypeToColor);
+        }
+
+        private static Color TerrainTypeToColor(TerrainType type)
+        {
+            return type switch
+            {
+                Model.TerrainType.GRASS => TERRAIN_GRASS,
+                Model.TerrainType.WATER => TERRAIN_WATER,
+                Model.TerrainType.SNOW => TERRAIN_SNOW,
+                Model.TerrainType.ROCK => TERRAIN_ROCK,
+                Model.TerrainType.SAND => TERRAIN_SAND,
+                _ => Color.Black
+            };
+        }
+        private static Color ForestTypeToColor(ForestType type)
+        {
+            return type switch
+            {
+                Model.ForestType.HEAVY => FOREST_HEAVY,
+                Model.ForestType.LIGHT => FOREST_LIGHT,
+                Model.ForestType.CACTI => FOREST_CACTI,
+                Model.ForestType.PALM => FOREST_PALM,
+                _ => Color.Black
+            };
         }
 
         public CityMap(string directory)
@@ -82,13 +111,15 @@ namespace FSO.Content.Model
             {
                 ext = "png"; //fso maps use png
             }
-            Elevation = new FileTextureRef(Path.Combine(directory, "elevation." + ext));
-            ForestDensity = new FileTextureRef(Path.Combine(directory, "forestdensity." + ext));
-            ForestType = new FileTextureRef(Path.Combine(directory, "foresttype." + ext));
-            RoadMap = new FileTextureRef(Path.Combine(directory, "roadmap." + ext));
-            TerrainTypeTex = new FileTextureRef(Path.Combine(directory, "terraintype." + ext));
+
             VertexColour = new FileTextureRef(Path.Combine(directory, "vertexcolor." + ext));
             Thumbnail = new FileTextureRef(Path.Combine(directory, "thumbnail." + ext));
+
+            var Elevation = new FileTextureRef(Path.Combine(directory, "elevation." + ext));
+            var ForestDensity = new FileTextureRef(Path.Combine(directory, "forestdensity." + ext));
+            var ForestType = new FileTextureRef(Path.Combine(directory, "foresttype." + ext));
+            var RoadMap = new FileTextureRef(Path.Combine(directory, "roadmap." + ext));
+            var TerrainTypeTex = new FileTextureRef(Path.Combine(directory, "terraintype." + ext));
 
             // Load from the files
 
@@ -116,18 +147,7 @@ namespace FSO.Content.Model
                 }
 
                 return Model.TerrainType.NULL;
-            }, x =>
-            {
-                return x switch
-                {
-                    Model.TerrainType.GRASS => TERRAIN_GRASS,
-                    Model.TerrainType.WATER => TERRAIN_WATER,
-                    Model.TerrainType.SNOW => TERRAIN_SNOW,
-                    Model.TerrainType.ROCK => TERRAIN_ROCK,
-                    Model.TerrainType.SAND => TERRAIN_SAND,
-                    _ => Color.Black
-                };
-            });
+            }, TerrainTypeToColor);
 
             _ElevationMap = new TextureValueMap<byte>(Elevation, Red, ToGrayscale);
             _RoadMap = new TextureValueMap<byte>(RoadMap, Red, ToGrayscale);
@@ -152,19 +172,22 @@ namespace FSO.Content.Model
                 }
                 
                 return Model.ForestType.NULL;
-            }, x =>
-            {
-                return x switch
-                {
-                    Model.ForestType.HEAVY => FOREST_HEAVY,
-                    Model.ForestType.LIGHT => FOREST_LIGHT,
-                    Model.ForestType.CACTI => FOREST_CACTI,
-                    Model.ForestType.PALM => FOREST_PALM,
-                    _ => Color.Black
-                };
-            });
+            }, ForestTypeToColor);
 
             _ForestDensity = new TextureValueMap<byte>(ForestDensity, x => x.R, ToGrayscale);
+        }
+
+        public CityMapAspects ConsumeDirty()
+        {
+            var toConsume = _Dirty;
+            _Dirty = CityMapAspects.None;
+
+            return toConsume;
+        }
+
+        public void SetDirty(CityMapAspects flags)
+        {
+            _Dirty |= flags;
         }
 
         public void Set(CityMap other)
@@ -280,6 +303,19 @@ namespace FSO.Content.Model
         {
             return x >= 0 && y >= 0 && x < Width && y < Height;
         }
+
+        public CityMapMarshal Save()
+        {
+            return new CityMapMarshal()
+            {
+                TerrainType = [.. MemoryMarshal.Cast<TerrainType, byte>(_TerrainType.GetRaw())],
+                ElevationMap = [.. _ElevationMap.GetRaw()],
+                RoadMap = [.. _RoadMap.GetRaw()],
+
+                ForestDensity = [.. _ForestDensity.GetRaw()],
+                ForestType = [..MemoryMarshal.Cast<ForestType, byte>(_ForestType.GetRaw())],
+            };
+        }
     }
 
     public struct TerrainBlend
@@ -316,12 +352,30 @@ namespace FSO.Content.Model
         NULL = -1
     }
 
+    [Flags]
+    public enum CityMapAspects
+    {
+        None = 0,
+        Elevation = 1 << 0,
+        TerrainType = 1 << 1,
+        Forest = 1 << 2,
+        Road = 1 << 3,
+
+        All = Elevation | TerrainType | Forest | Road
+    }
+
     public class TextureValueMap<T>
     {
         private const int Width = 512;
         private const int Height = 512;
         private readonly T[] Values;
         private readonly Func<T, Color> ReverseConverter;
+
+        public TextureValueMap(T[] values, Func<T, Color> reverseConverter)
+        {
+            Values = values;
+            ReverseConverter = reverseConverter;
+        }
 
         public TextureValueMap(ITextureRef texture, Func<Color, T> converter, Func<T, Color> reverseConverter)
         {

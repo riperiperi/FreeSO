@@ -129,7 +129,7 @@ namespace FSO.Client.UI.Panels.CityPainter
 
             Add(DialogNameButton = new UIButton(GetTexture(0x00000AFE00000001))
             {
-                Caption = GameFacade.Strings.GetString("f130", "16"),
+                Caption = GameFacade.CurrentCityName,
                 Size = new Vector2(193, 18),
                 Position = new Vector2(11, 8)
             });
@@ -232,6 +232,8 @@ namespace FSO.Client.UI.Panels.CityPainter
             UndoButton.OnButtonClick += Undo;
             RedoButton.OnButtonClick += Redo;
 
+            DialogNameButton.OnButtonClick += ChangeName;
+
             CloseButton.OnButtonClick += Close;
 
             SetMode(PainterMode.ROAD);
@@ -239,6 +241,29 @@ namespace FSO.Client.UI.Panels.CityPainter
             UndoStack.UndoChanged += UndoChanged;
 
             UndoChanged();
+        }
+
+        private void ChangeName(UIElement button)
+        {
+            var dialog = new UILotPurchaseDialog()
+                .AsRenameDialog(
+                    GameFacade.CurrentCityName,
+                    GameFacade.Strings.GetString("f130", "51"),
+                    GameFacade.Strings.GetString("f130", "52"));
+
+            dialog.OnNameChosen += (name) =>
+            {
+                // TODO: set on server
+                TController.UpdateCityName(name);
+                UIScreen.RemoveDialog(dialog);
+            };
+
+            UIScreen.GlobalShowDialog(new DialogReference
+            {
+                Dialog = dialog,
+                Controller = this,
+                Modal = true,
+            });
         }
 
         private void Redo(UIElement button)
@@ -316,12 +341,15 @@ namespace FSO.Client.UI.Panels.CityPainter
             CityThumbnailTexture = TextureUtils.Decimate(CityThumbnailTarget, gd, 4, false);
             CityThumbnailTimer = 0;
 
-            /*
-            using (var file = File.Create("sandrise.png"))
+            byte[] data;
+            using (var mem = new MemoryStream())
             {
-                CityThumbnailTexture.SaveAsPng(file, CityThumbnailTexture.Width, CityThumbnailTexture.Height);
+                CityThumbnailTexture.SaveAsPng(mem, CityThumbnailTexture.Width, CityThumbnailTexture.Height);
+
+                data = mem.ToArray();
             }
-            */
+
+            TController.UpdateThumbnail(data);
         }
 
         private (UILabel, UISlider) CreateSlider(Vector2 position, float width, int stringIndex)
@@ -482,6 +510,11 @@ namespace FSO.Client.UI.Panels.CityPainter
                         Undo(UndoButton);
                     }
                 }
+            }
+
+            if (GameFacade.CurrentCityName != DialogNameButton.Caption)
+            {
+                DialogNameButton.Caption = GameFacade.CurrentCityName;
             }
 
             BrushSizeSlider.Value = MapPainter.BrushSize;
