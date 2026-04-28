@@ -83,8 +83,9 @@ jobs:
           dotnet restore TSOClient/FSO.SimAntics.JIT.Roslyn/FSO.SimAntics.JIT.Roslyn.csproj
           dotnet restore Other/libs/TargaImagePCL/TargaImagePCL.csproj
 
-      - name: Remove stale Mp3Sharp NuGet assets (generated transitively by dotnet restore)
-        run: Remove-Item -Path "Other\libs\mp3sharp\mp3sharp\obj\project.assets.json" -ErrorAction SilentlyContinue
+      - name: Remove stale NuGet assets generated transitively by dotnet restore for legacy projects
+        run: |
+          Get-ChildItem -Path "TSOClient", "Other\libs\mp3sharp" -Recurse -Filter "project.assets.json" | Remove-Item -ErrorAction SilentlyContinue
 
       - name: Build client (FSO.IDE)
         run: |
