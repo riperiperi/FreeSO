@@ -20,6 +20,7 @@ namespace FSO.Server.Database.DA.Lots
         public sbyte ring_backup_num { get; set; }
         public byte admit_mode { get; set; }
         public byte move_flags { get; set; }
+        public int object_limit_bonus { get; set; }
 
         public byte thumb3d_dirty { get; set; }
         public uint thumb3d_time { get; set; }

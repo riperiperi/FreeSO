@@ -730,6 +730,7 @@ namespace FSO.Server.Servers.Lot.Domain
             Lot.TSOState.LotID = LotPersist.location;
             Lot.TSOState.SkillMode = LotPersist.skill_mode;
             Lot.TSOState.PropertyCategory = (byte)LotPersist.category;
+            Lot.TSOState.ObjectLimitBonus = LotPersist.object_limit_bonus;
             var isCommunity = LotPersist.category == LotCategory.community;
 
             if (isCommunity)

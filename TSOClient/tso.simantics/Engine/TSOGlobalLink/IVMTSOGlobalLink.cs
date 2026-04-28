@@ -30,6 +30,7 @@ namespace FSO.SimAntics.Engine.TSOTransaction
         void ConsumeInventory(VM vm, uint ownerPID, uint guid, int mode, short num, VMAsyncInventoryConsumeCallback callback);
         void DeleteObject(VM vm, uint objectPID, VMAsyncDeleteObjectCallback callback);
         void SetSpotlightStatus(VM vm, bool on);
+        void SetObjectLimitBonus(VM vm, int bonus);
 
         //Outfits
         void StockOutfit(VM vm, VMGLOutfit outfit, VMAsyncStockOutfitCallback callback);

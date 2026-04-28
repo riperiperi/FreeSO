@@ -1,0 +1,38 @@
+# UI properties for ObjectLimitPanel - subpanel of the House Panel
+
+<Begin>
+
+	# Images ------------------------------------------------------------------------------------------------
+
+	<DefineImage "UpArrowButtonImage"			assetID="0x000004DF00000001">
+	<DefineImage "DownArrowButtonImage"			assetID="0x000004DD00000001">
+	<DefineImage "AcceptButtonImage"			assetID="0x0000045500000001">
+	<DefineImage "BuildableAreaBackgroundImage"	assetID="0x000004DE00000001">
+
+	# Background --------------------------------------------------------------------------------------------
+
+	<SetControlProperties "Background" image="BuildableAreaBackgroundImage" position=(38,21)>
+
+	# Buttons ------------------------------------------------------------------------------------------------
+
+	<Begin>
+
+		<AddButton "AcceptButton"		id=1	position=(136,114)	image="AcceptButtonImage">
+		<AddButton "LargerButton"		id=2	position=(173,55)	image="UpArrowButtonImage">
+		<AddButton "SmallerButton"		id=3	position=(173,72)	image="DownArrowButtonImage">
+
+	<End>
+
+	# Text Labels --------------------------------------------------------------------------------------------
+
+	<Begin><SetSharedProperties font=8 color=(255,249,157) alignment=1 highlighted=1 opaque=0>
+
+		<AddText "TitleLabel"			id=4	position=(123,15) font=9 size=(240,8) text="Object Limit Upgrade">
+		<AddText "CurrentLabel"			id=5	position=(123,30) font=9 size=(240,8) text="Current Bonus: +0/roommate">
+		<AddText "StepLabel"			id=6	position=(127,68) font=9 size=(40,8) text="+0">
+		<AddText "CostLabel"			id=7	position=(123,88) font=9 size=(240,8) text="Cost: $0">
+		<AddText "TotalLabel"			id=8	position=(123,102) font=9 size=(240,8) text="New limit: 0 objects">
+
+	<End>
+
+<End>

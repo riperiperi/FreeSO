@@ -255,6 +255,12 @@ namespace FSO.Server.Database.DA.Lots
                 new { id = lot_id, category = category.ToString(), time = Epoch.Now, skillMode = skillMode });
         }
 
+        public void UpdateObjectLimitBonus(int lot_id, int bonus)
+        {
+            Context.Connection.Query("UPDATE fso_lots SET object_limit_bonus = @bonus WHERE lot_id = @id",
+                new { id = lot_id, bonus = bonus });
+        }
+
         public void UpdateLotAdmitMode(int lot_id, byte admit_mode)
         {
             Context.Connection.Query("UPDATE fso_lots SET admit_mode = @admit_mode WHERE lot_id = @id", new { id = lot_id, admit_mode = admit_mode });

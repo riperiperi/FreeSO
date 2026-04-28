@@ -82,7 +82,6 @@ jobs:
         run: |
           dotnet restore TSOClient/FSO.SimAntics.JIT.Roslyn/FSO.SimAntics.JIT.Roslyn.csproj
           dotnet restore Other/libs/TargaImagePCL/TargaImagePCL.csproj
-          dotnet restore Other/libs/mp3sharp/mp3sharp/Mp3Sharp.csproj
 
       - name: Build client (FSO.IDE)
         run: |

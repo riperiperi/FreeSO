@@ -263,6 +263,10 @@ namespace FSO.SimAntics.Engine.TSOTransaction
 
         }
 
+        public void SetObjectLimitBonus(VM vm, int bonus)
+        {
+        }
+
         public void StockOutfit(VM vm, VMGLOutfit outfit, VMAsyncStockOutfitCallback callback)
         {
             //todo: local stub?

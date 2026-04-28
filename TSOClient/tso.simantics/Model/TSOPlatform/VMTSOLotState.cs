@@ -23,6 +23,7 @@ namespace FSO.SimAntics.Model.TSOPlatform
         public HashSet<uint> Roommates = new HashSet<uint>();
         public HashSet<uint> BuildRoommates = new HashSet<uint>();
         public int ObjectLimit;
+        public int ObjectLimitBonus; // extra objects per roommate purchased via upgrades; not persisted in marshal (DB authoritative)
         public override bool LimitExceeded { get; set; }
 
         public VMTSOJobUI JobUI;

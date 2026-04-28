@@ -107,8 +107,9 @@ namespace FSO.SimAntics
                 if (UseWorld)
                 {
                     Avatar.Head = value.GetContent();
-                    if (PersistID != 0 && PersistID == VM?.MyUID)
-                        VM.OnAvatarHeadOutfitChanged?.Invoke(this);
+                    var vm = Thread?.Context?.VM;
+                    if (vm != null && PersistID != 0 && PersistID == vm.MyUID)
+                        vm.OnAvatarHeadOutfitChanged?.Invoke(this);
                 }
             }
             get

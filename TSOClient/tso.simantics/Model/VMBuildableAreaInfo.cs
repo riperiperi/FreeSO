@@ -73,6 +73,46 @@ namespace FSO.SimAntics.Model
             300
         };
 
+        // 26 entries: index = step (0 = no bonus, 1 = +20/roomie, ... 25 = +500/roomie)
+        // Each entry is the cumulative simoleon cost to reach that step from 0.
+        public static int[] ObjectLimitBonusPrices = new int[]
+        {
+            0,
+            2000,
+            5000,
+            9000,
+            14000,
+            20000,
+            27000,
+            35000,
+            44000,
+            54000,
+            65000,
+            77000,
+            90000,
+            104000,
+            119000,
+            135000,
+            152000,
+            170000,
+            189000,
+            209000,
+            230000,
+            252000,
+            275000,
+            299000,
+            324000,
+            350000
+        };
+
+        public const int ObjectLimitBonusStep = 20;  // objects per step per roommate
+        public const int ObjectLimitBonusMax = 500;  // max extra objects per roommate
+
+        public static int CalculateObjectLimitBonusCost(int fromStep, int toStep)
+        {
+            return ObjectLimitBonusPrices[toStep] - ObjectLimitBonusPrices[fromStep];
+        }
+
         /// <summary>
         /// Note: levels above 8 do not require more than 8 roomies to have no penalty, as you can only have 8 roomies
         /// </summary>
@@ -108,7 +148,7 @@ namespace FSO.SimAntics.Model
             var lotInfo = vm.TSOState;
             var lotSize = lotInfo.Size & 255;
             var lotFloors = (lotInfo.Size >> 8) & 255;
-            var sizeMode = ObjectLimitPerPerson[lotSize + lotFloors];
+            var sizeMode = ObjectLimitPerPerson[lotSize + lotFloors] + lotInfo.ObjectLimitBonus;
             return sizeMode * Math.Max(1, lotInfo.Roommates.Count);
         }
 

@@ -33,6 +33,7 @@ namespace FSO.Server.Database.DA.Lots
         void UpdateLotCategory(int lot_id, LotCategory category, uint skillMode);
         void UpdateLotSkillMode(int lot_id, uint skillMode);
         void UpdateLotAdmitMode(int lot_id, byte admit_mode);
+        void UpdateObjectLimitBonus(int lot_id, int bonus);
         bool UpdateLocation(int lot_id, uint location, bool startFresh);
         void UpdateOwner(int lot_id, uint? avatar_id);
         void ReassignOwner(int lot_id);

@@ -1,8 +1,9 @@
-﻿using FSO.Common.Serialization;
+﻿using System;
+using System.IO;
+using FSO.Common.Serialization;
 using FSO.Files.Formats.tsodata;
 using FSO.Server.Protocol.Electron.Model;
 using Mina.Core.Buffer;
-using System.IO;
 
 namespace FSO.Server.Protocol.Electron.Packets
 {

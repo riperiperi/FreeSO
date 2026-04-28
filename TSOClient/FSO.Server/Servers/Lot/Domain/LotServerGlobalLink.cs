@@ -710,6 +710,18 @@ namespace FSO.Server.Servers.Lot.Domain
             Host.SetSpotlight(on);
         }
 
+        public void SetObjectLimitBonus(VM vm, int bonus)
+        {
+            var lotId = Context.DbId;
+            Host.InBackground(() =>
+            {
+                using (var db = DAFactory.Get())
+                {
+                    db.Lots.UpdateObjectLimitBonus(lotId, bonus);
+                }
+            });
+        }
+
         public void StockOutfit(VM vm, VMGLOutfit outfit, VMAsyncStockOutfitCallback callback)
         {
             Host.InBackground(() => {
