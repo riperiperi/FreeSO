@@ -44,16 +44,27 @@ jobs:
       - name: Setup MSBuild
         uses: microsoft/setup-msbuild@v2
 
-      - name: Install .NET Framework 4.5 targeting pack
-        run: choco install netfx-4.5-devpack -y --no-progress --ignore-checksums
+      - name: Setup NuGet (early — needed for reference assemblies)
+        uses: NuGet/setup-nuget@v2
+
+      - name: Install .NET Framework 4.5 reference assemblies
+        run: |
+          nuget install Microsoft.NETFramework.ReferenceAssemblies.net45 `
+            -Version 1.0.3 -OutputDirectory "$env:TEMP\refasm" `
+            -NonInteractive -Verbosity quiet
+          $pkg = Get-ChildItem "$env:TEMP\refasm" `
+            -Filter "Microsoft.NETFramework.ReferenceAssemblies.net45*" `
+            -Directory | Select-Object -First 1 -ExpandProperty FullName
+          $src = "$pkg\build\.NETFramework\v4.5"
+          $dst = "C:\Program Files (x86)\Reference Assemblies\Microsoft\Framework\.NETFramework\v4.5"
+          New-Item -ItemType Directory -Path $dst -Force | Out-Null
+          Copy-Item "$src\*" $dst -Recurse -Force
+          Write-Host "Installed .NET 4.5 reference assemblies to $dst"
 
       - name: Run Protobuild
         working-directory: Other/libs/FSOMonoGame
         run: .\protobuild.exe --generate
         continue-on-error: true
-
-      - name: Setup NuGet
-        uses: NuGet/setup-nuget@v2
 
       - name: Restore NuGet packages
         run: nuget restore TSOClient/FreeSO.sln
