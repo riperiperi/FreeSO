@@ -239,10 +239,17 @@ namespace FSO.Server.Api.Core.Controllers
         {
             var api = Api.INSTANCE;
             var path = Path.Combine(api.Config.NFSdir, "Avatars/" + avatarId.ToString("x8") + "/thumb.png");
+            if (!System.IO.File.Exists(path) && api.ThumbnailGenerator != null)
+            {
+                using (var da = api.DAFactory.Get())
+                {
+                    var avatar = da.Avatars.Get(avatarId);
+                    if (avatar != null) api.ThumbnailGenerator(avatar, api.Config.NFSdir);
+                }
+            }
             try
             {
-                var data = System.IO.File.ReadAllBytes(path);
-                return File(data, "image/png");
+                return File(System.IO.File.ReadAllBytes(path), "image/png");
             }
             catch
             {

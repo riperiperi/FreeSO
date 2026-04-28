@@ -6,10 +6,12 @@ using FSO.Client.UI.Screens;
 using FSO.Common.DataService;
 using FSO.Common.DataService.Model;
 using FSO.Common.Enum;
+using FSO.Common.Serialization.Primitives;
 using FSO.Common.Utils;
 using FSO.Files.Formats.tsodata;
 using FSO.Server.Protocol.Electron.Model;
 using FSO.Server.Protocol.Electron.Packets;
+using FSO.SimAntics;
 using FSO.SimAntics.NetPlay;
 using FSO.SimAntics.NetPlay.Model;
 using Microsoft.Xna.Framework;
@@ -101,6 +103,7 @@ namespace FSO.Client.Controllers
                     case "PartiallyConnected":
                         Screen.InitializeLot();
                         Screen.vm.MyUID = Network.MyCharacter;
+                        Screen.vm.OnAvatarHeadOutfitChanged = vmAva => UploadAvatarThumbnail(vmAva);
                         //initialize a lot
                         break;
                     case "LotCommandStream":
@@ -246,6 +249,34 @@ namespace FSO.Client.Controllers
                 if (lot == null) return; //uh, oops!
                 lot.Lot_Thumbnail = new Common.Serialization.Primitives.cTSOGenericData(data);
                 DataService.Sync(lot, new string[] { "Lot_Thumbnail" });
+            });
+        }
+
+        private DateTime _LastAvatarThumbUpload = DateTime.MinValue;
+
+        public void UploadAvatarThumbnail(VMAvatar vmAva)
+        {
+            // Debounce: suppress rapid re-fires (e.g. during initial lot load)
+            var now = DateTime.UtcNow;
+            if ((now - _LastAvatarThumbUpload).TotalSeconds < 5) return;
+            _LastAvatarThumbUpload = now;
+
+            var ico = vmAva.GetIcon(GameFacade.GraphicsDevice, 0);
+            if (ico == null) return;
+
+            byte[] data;
+            using (var stream = new MemoryStream())
+            {
+                ico.SaveAsPng(stream, ico.Width, ico.Height);
+                data = stream.ToArray();
+            }
+
+            DataService.Get<Avatar>(Network.MyCharacter).ContinueWith(x =>
+            {
+                var avatar = x.Result;
+                if (avatar == null) return;
+                avatar.Avatar_Thumbnail = new cTSOGenericData(data);
+                DataService.Sync(avatar, new string[] { "Avatar_Thumbnail" });
             });
         }
 

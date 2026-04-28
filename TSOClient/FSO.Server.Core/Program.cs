@@ -42,6 +42,7 @@ namespace FSO.Server.Core
 
             var api2 = new FSO.Server.Api.Core.Api();
             api2.Init(settings);
+            api2.ThumbnailGenerator = CoreImageLoader.GenerateAvatarThumbnail;
 
             if (userApiConfig.AwsConfig != null)
             {

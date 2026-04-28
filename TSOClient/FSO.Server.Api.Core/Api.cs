@@ -3,6 +3,7 @@ using FSO.Server.Api.Core.Utils;
 using FSO.Server.Common;
 using FSO.Server.Common.Config;
 using FSO.Server.Database.DA;
+using FSO.Server.Database.DA.Avatars;
 using FSO.Server.Domain;
 using FSO.Server.Servers.Api.JsonWebToken;
 using Microsoft.AspNetCore.Http;
@@ -27,6 +28,8 @@ namespace FSO.Server.Api.Core
         public GithubConfig Github;
         public ChatBroadcast ChatBroadcast;
         public InjectBroadcast InjectBroadcast;
+        // Wired by FSO.Server.Core to generate a thumb.png from game content when none exists yet.
+        public Action<DbAvatar, string> ThumbnailGenerator;
 
         public Api()
         {

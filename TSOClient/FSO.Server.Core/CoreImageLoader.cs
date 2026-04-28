@@ -1,4 +1,6 @@
 ﻿using FSO.Content.Model;
+using FSO.Server.Database.DA.Avatars;
+using FSO.Vitaboy;
 using SixLabors.ImageSharp;
 using SixLabors.ImageSharp.PixelFormats;
 using System;
@@ -8,6 +10,30 @@ namespace FSO.Server.Core
 {
     public class CoreImageLoader
     {
+        public static void GenerateAvatarThumbnail(DbAvatar avatar, string nfsDir)
+        {
+            try
+            {
+                var content = FSO.Content.Content.Get();
+                var outfit = content.AvatarOutfits.Get(avatar.head);
+                if (outfit == null) return;
+                var appId = outfit.GetAppearance((AppearanceType)avatar.skin_tone);
+                var appearance = content.AvatarAppearances.Get(appId);
+                if (appearance == null) return;
+                var texRef = content.AvatarThumbnails.Get(appearance.ThumbnailTypeID, appearance.ThumbnailFileID);
+                if (texRef == null) return;
+                var bitmap = texRef.GetImage();
+                if (bitmap == null || bitmap.Data == null || bitmap.Data.Length == 0) return;
+
+                var dir = Path.Combine(nfsDir, "Avatars/" + avatar.avatar_id.ToString("x8"));
+                Directory.CreateDirectory(dir);
+                var image = Image.LoadPixelData<Bgra32>(bitmap.Data, bitmap.Width, bitmap.Height);
+                using (var fs = File.Open(Path.Combine(dir, "thumb.png"), FileMode.Create))
+                    image.SaveAsPng(fs);
+            }
+            catch { }
+        }
+
         public static TexBitmap SoftImageFetch(Stream stream, AbstractTextureRef texRef)
         {
             Image<Rgba32> result = null;

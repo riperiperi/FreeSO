@@ -112,6 +112,8 @@ namespace FSO.SimAntics
         public List<VMLoadError> LoadErrors = new List<VMLoadError>();
         public List<VMInventoryItem> MyInventory = new List<VMInventoryItem>();
 
+        public Action<VMAvatar> OnAvatarHeadOutfitChanged;
+
         public event VMDialogHandler OnDialog;
         public event VMChatEventHandler OnChatEvent;
         public event VMRefreshHandler OnFullRefresh;
