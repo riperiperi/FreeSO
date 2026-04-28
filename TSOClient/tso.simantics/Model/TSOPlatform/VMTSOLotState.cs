@@ -97,6 +97,10 @@ namespace FSO.SimAntics.Model.TSOPlatform
             {
                 NhoodID = reader.ReadUInt32();
             }
+            if (Version > 38)
+            {
+                ObjectLimitBonus = reader.ReadInt32();
+            }
         }
 
         public override void SerializeInto(BinaryWriter writer)
@@ -123,6 +127,7 @@ namespace FSO.SimAntics.Model.TSOPlatform
                 channel.SerializeInto(writer);
             }
             writer.Write(NhoodID);
+            writer.Write(ObjectLimitBonus);
         }
 
         public override bool CanPlaceNewUserObject(VM vm)
