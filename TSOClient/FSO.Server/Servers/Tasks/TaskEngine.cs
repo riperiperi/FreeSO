@@ -46,7 +46,8 @@ namespace FSO.Server.Servers.Tasks
 
             Task.Delay(30000).ContinueWith(x =>
             {
-                RunMissedTasks();
+                try { RunMissedTasks(); }
+                catch (Exception e) { LOG.Error(e, "RunMissedTasks failed on startup"); }
             });
         }
 

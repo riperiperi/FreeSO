@@ -16,6 +16,8 @@ namespace FSO.Server.Protocol.Electron.Packets
             Type = input.GetEnum<MailRequestType>();
             if (Type == MailRequestType.SEND) { 
                 var length = input.GetInt32();
+                if (length < 0 || length > 64 * 1024)
+                    throw new Exception("MailRequest data too large: " + length);
                 var dat = new byte[length];
                 for (int i=0; i<length; i++)
                 {

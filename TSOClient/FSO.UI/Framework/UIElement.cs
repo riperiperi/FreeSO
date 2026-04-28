@@ -648,7 +648,7 @@ namespace FSO.Client.UI.Framework
         public Vector2 FlooredLocalPoint(Vector2 point)
         {
             var pos = LocalPoint(point);
-            return new Vector2((float)Math.Floor(pos.X), (float)Math.Floor(pos.Y));
+            return new Vector2((float)Math.Round(pos.X), (float)Math.Round(pos.Y));
         }
 
         /// <summary>
@@ -693,7 +693,7 @@ namespace FSO.Client.UI.Framework
             w *= _Scale.X;
             h *= _Scale.Y;
 
-            return new Rectangle((int)x, (int)y, (int)w, (int)h);
+            return new Rectangle((int)Math.Round(x), (int)Math.Round(y), (int)Math.Round(w), (int)Math.Round(h));
         }
 
         /// <summary>

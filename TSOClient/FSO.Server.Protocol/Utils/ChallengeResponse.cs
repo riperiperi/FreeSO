@@ -30,6 +30,7 @@ namespace FSO.Server.Protocol.Utils
             var parts = challenge.Split(',');
             foreach(var part in parts){
                 var subParts = part.Split(new char[] { '=' }, 2);
+                if (subParts.Length < 2) throw new Exception("Malformed challenge: missing '=' in component");
                 components.Add(subParts[0], subParts[1]);
             }
 

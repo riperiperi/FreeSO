@@ -312,16 +312,16 @@ namespace FSO.Client.UI.Controls
 
         public void CalculateScales(float width, float height)
         {
-            TC_Scale = new Vector2((width - (Left + Right)) / (TC.Width), 1);
+            TC_Scale = new Vector2((float)Math.Ceiling(width - (Left + Right)) / (TC.Width), 1);
             MC_Scale = new Vector2(
                             (float)Math.Ceiling(width - (Left + Right)) / (MC.Width),
                             (float)Math.Ceiling((height - (Top + Bottom))) / (MC.Height)
                        );
-            BC_Scale = new Vector2((width - (Left + Right)) / (BC.Width), 1);
+            BC_Scale = new Vector2((float)Math.Ceiling(width - (Left + Right)) / (BC.Width), 1);
 
 
-            ML_Scale = new Vector2(1, (height - (Top + Bottom)) / (ML.Height));
-            MR_Scale = new Vector2(1, (height - (Top + Bottom)) / (MR.Height));
+            ML_Scale = new Vector2(1, (float)Math.Ceiling(height - (Top + Bottom)) / (ML.Height));
+            MR_Scale = new Vector2(1, (float)Math.Ceiling(height - (Top + Bottom)) / (MR.Height));
         }
 
         public void DrawOnto(SpriteBatch SBatch, UIElement element, Texture2D m_Texture, float width, float height)

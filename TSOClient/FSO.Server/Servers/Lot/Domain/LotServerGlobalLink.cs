@@ -249,8 +249,8 @@ namespace FSO.Server.Servers.Lot.Domain
                     Directory.CreateDirectory(Path.Combine(Config.SimNFS, "Objects/" + objStr + "/"));
                     Directory.CreateDirectory(Path.Combine(Config.SimNFS, "Objects/" + objStr + "/Plugin"));
 
-                    var file = File.Open(Path.Combine(Config.SimNFS, "Objects/" + objStr + "/Plugin/" + pluginID.ToString("x8") + ".dat"), FileMode.Create);
-                    file.WriteAsync(data, 0, data.Length).ContinueWith(x => file.Close());
+                    using (var file = File.Open(Path.Combine(Config.SimNFS, "Objects/" + objStr + "/Plugin/" + pluginID.ToString("x8") + ".dat"), FileMode.Create))
+                        file.Write(data, 0, data.Length);
                 } catch (Exception e)
                 {
                     //todo: specific types of exception that can be thrown here? instead of just catching em all
@@ -432,31 +432,15 @@ namespace FSO.Server.Servers.Lot.Domain
                     state.SerializeInto(writer);
                     data = stream.ToArray();
                 }
-                var file = File.Open(Path.Combine(Config.SimNFS, "Objects/" + objStr + "/inventoryState.fsoo"), FileMode.Create);
-
-                if (runSync)
-                {
+                using (var file = File.Open(Path.Combine(Config.SimNFS, "Objects/" + objStr + "/inventoryState.fsoo"), FileMode.Create))
                     file.Write(data, 0, data.Length);
-                    using (var db = DAFactory.Get())
-                    {
-                        //todo: race where inventory object could potentially be placed on the lot before the old instance of it is deleted
-                        //probably just block objects with same persist id from being placed.
-                        db.Objects.UpdatePersistState(objectPID, dbState);
-                        callback(true, objectPID);
-                    }
-                    file.Close();
-                }
-                else
+
+                using (var db = DAFactory.Get())
                 {
-                    file.WriteAsync(data, 0, data.Length).ContinueWith((x) =>
-                    {
-                        using (var db = DAFactory.Get())
-                        {
-                            db.Objects.UpdatePersistState(objectPID, dbState);
-                            callback(true, objectPID);
-                        }
-                        file.Close();
-                    });
+                    //todo: race where inventory object could potentially be placed on the lot before the old instance of it is deleted
+                    //probably just block objects with same persist id from being placed.
+                    db.Objects.UpdatePersistState(objectPID, dbState);
+                    callback(true, objectPID);
                 }
             }
             catch (Exception e)

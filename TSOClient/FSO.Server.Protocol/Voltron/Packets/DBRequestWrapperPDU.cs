@@ -27,8 +27,12 @@ namespace FSO.Server.Protocol.Voltron.Packets
             var bodySize = input.GetUInt32();
             var bodyType = input.GetUInt32();
 
-            var bodyBytes = new byte[bodySize-4];
-            input.Get(bodyBytes, 0, (int)bodySize-4);
+            if (bodySize < 4)
+                throw new Exception("DBRequestWrapperPDU invalid body size: " + bodySize);
+            if (bodySize - 4 > 10 * 1024 * 1024)
+                throw new Exception("DBRequestWrapperPDU body too large: " + bodySize);
+            var bodyBytes = new byte[bodySize - 4];
+            input.Get(bodyBytes, 0, (int)bodySize - 4);
             var bodyBuffer = IoBuffer.Wrap(bodyBytes);
 
             this.Body = context.ModelSerializer.Deserialize(bodyType, bodyBuffer, context);

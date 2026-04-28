@@ -9,7 +9,9 @@ namespace FSO.Server.Protocol.Electron.Packets
 
         public override void Deserialize(IoBuffer input, ISerializationContext context)
         {
-            var dataLen = input.GetInt32(); //TODO: limits? 4MB is probably reasonable.
+            var dataLen = input.GetInt32();
+            if (dataLen < 0 || dataLen > 4 * 1024 * 1024)
+                throw new Exception("FSOVMDirectToClient data too large: " + dataLen);
             Data = new byte[dataLen];
             input.Get(Data, 0, dataLen);
         }

@@ -136,7 +136,11 @@ namespace FSO.Client.Controllers
         {
             if (FSOEnvironment.Linux)
             {
-                System.Diagnostics.Process.Start("mono", "update.exe "+FSOEnvironment.Args);
+                var psi = new ProcessStartInfo("mono", "update.exe " + FSOEnvironment.Args)
+                {
+                    UseShellExecute = false
+                };
+                Process.Start(psi);
             }
             else
             {
