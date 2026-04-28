@@ -258,6 +258,7 @@
     <Compile Include="Servers\Lot\Handlers\LotNegotiationHandler.cs" />
     <Compile Include="Servers\Lot\Domain\LotContainer.cs" />
     <Compile Include="Servers\Lot\Domain\LotContext.cs" />
+    <Compile Include="Servers\Lot\Handlers\LotChatInjectHandler.cs" />
     <Compile Include="Servers\Lot\Handlers\ShardShutdownHandler.cs" />
     <Compile Include="Servers\Lot\Handlers\VoltronConnectionLifecycleHandler.cs" />
     <Compile Include="Servers\Lot\Lifecycle\CityConnections.cs" />
