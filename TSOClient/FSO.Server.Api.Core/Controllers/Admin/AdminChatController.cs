@@ -39,7 +39,10 @@ namespace FSO.Server.Api.Core.Controllers.Admin
             }
 
             var ws = await HttpContext.WebSockets.AcceptWebSocketAsync();
-            var ct = HttpContext.RequestAborted;
+
+            // Use a linked token so either side closing tears down the other.
+            using var cts = CancellationTokenSource.CreateLinkedTokenSource(HttpContext.RequestAborted);
+            var ct = cts.Token;
 
             // Per-client bounded queue + semaphore for async drain.
             var queue = new ConcurrentQueue<string>();
@@ -50,6 +53,25 @@ namespace FSO.Server.Api.Core.Controllers.Admin
                 queue.Enqueue(json);
                 try { signal.Release(); } catch { }
             };
+
+            // Read task — drains incoming frames so ASP.NET Core can respond to
+            // WebSocket pings and process close frames. Without this, clients time
+            // out after one ping_interval + ping_timeout with "no close frame received".
+            var readTask = Task.Run(async () =>
+            {
+                var buf = new byte[256];
+                try
+                {
+                    while (ws.State == WebSocketState.Open)
+                    {
+                        var result = await ws.ReceiveAsync(new ArraySegment<byte>(buf), ct);
+                        if (result.MessageType == WebSocketMessageType.Close)
+                            break;
+                    }
+                }
+                catch { }
+                finally { cts.Cancel(); } // client disconnected — stop the write loop
+            });
 
             using (api.ChatBroadcast.Subscribe(onMessage))
             {
@@ -83,6 +105,8 @@ namespace FSO.Server.Api.Core.Controllers.Admin
                     }
                 }
             }
+
+            await readTask.ConfigureAwait(false);
 
             if (ws.State == WebSocketState.Open || ws.State == WebSocketState.CloseReceived)
             {
