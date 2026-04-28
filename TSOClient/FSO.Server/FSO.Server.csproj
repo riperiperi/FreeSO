@@ -187,6 +187,7 @@
     <Compile Include="DataService\Providers\ServerAvatarProvider.cs" />
     <Compile Include="DataService\Providers\ServerCityProvider.cs" />
     <Compile Include="DataService\Providers\ServerLotProvider.cs" />
+    <Compile Include="DataService\Providers\ThumbnailValidation.cs" />
     <Compile Include="DataService\Providers\ServerMayorRatingProvider.cs" />
     <Compile Include="DataService\Providers\ServerNeighborhoodProvider.cs" />
     <Compile Include="DataService\ServerDataService.cs" />

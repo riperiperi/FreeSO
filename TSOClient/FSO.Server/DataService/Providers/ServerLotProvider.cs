@@ -319,7 +319,7 @@ namespace FSO.Server.DataService.Providers
                 case "Lot_Thumbnail":
                     if (lot.Lot_Category == 11) context.DemandAvatar(lot.Lot_LeaderID, AvatarPermissions.WRITE);
                     else context.DemandAvatars(roomies, AvatarPermissions.WRITE);
-                    //TODO: needs to be generic data, png, size 288x288, less than 1MB
+                    ThumbnailValidation.Validate(value);
                     break;
                 case "Lot_IsOnline":
                 case "Lot_NumOccupants":

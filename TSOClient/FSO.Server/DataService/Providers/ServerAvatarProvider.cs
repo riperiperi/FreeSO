@@ -146,6 +146,7 @@ namespace FSO.Server.DataService.Providers
                     break;
                 case "Avatar_Thumbnail":
                     context.DemandAvatar(avatar.Avatar_Id, AvatarPermissions.WRITE);
+                    ThumbnailValidation.Validate(value);
                     break;
                 case "Avatar_Top100ListFilter.Top100ListFilter_Top100ListID":
                     context.DemandAvatar(avatar.Avatar_Id, AvatarPermissions.WRITE);
