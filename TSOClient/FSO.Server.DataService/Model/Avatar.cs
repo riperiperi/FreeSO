@@ -1,6 +1,7 @@
 ﻿
 using FSO.Common.DataService.Framework;
 using FSO.Common.DataService.Framework.Attributes;
+using FSO.Common.Serialization.Primitives;
 using System;
 using System.Collections.Immutable;
 
@@ -201,6 +202,11 @@ namespace FSO.Common.DataService.Model
         {
             get { return Avatar_Name == "Retrieving..."; }
         }
+
+        [Persist]
+        public cTSOGenericData Avatar_Thumbnail { get; set; }
+
+        public uint Avatar_ThumbnailCheckSum { get; set; }
 
         #region FSO Data Service
 

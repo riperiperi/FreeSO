@@ -3,6 +3,7 @@ using Microsoft.AspNetCore.Cors;
 using Microsoft.AspNetCore.Mvc;
 using System;
 using System.Collections.Generic;
+using System.IO;
 using System.Linq;
 using System.Net;
 using FSO.Server.Database.DA.Avatars;
@@ -36,7 +37,8 @@ namespace FSO.Server.Api.Core.Controllers
                         date = avatar.date,
                         description = avatar.description,
                         current_job = avatar.current_job,
-                        mayor_nhood = avatar.mayor_nhood
+                        mayor_nhood = avatar.mayor_nhood,
+                        thumbnail_url = JSONAvatar.ThumbnailUrl(avatar.avatar_id)
                     });
                 }
                 var avatarsJson = new JSONAvatars();
@@ -65,8 +67,8 @@ namespace FSO.Server.Api.Core.Controllers
                     date = avatar.date,
                     description = avatar.description,
                     current_job = avatar.current_job,
-                    mayor_nhood = avatar.mayor_nhood
-
+                    mayor_nhood = avatar.mayor_nhood,
+                    thumbnail_url = JSONAvatar.ThumbnailUrl(avatar.avatar_id)
                 };
 
                 return ApiResponse.Json(HttpStatusCode.OK, avatarJson);
@@ -95,7 +97,8 @@ namespace FSO.Server.Api.Core.Controllers
                             date = avatar.date,
                             description = avatar.description,
                             current_job = avatar.current_job,
-                            mayor_nhood = avatar.mayor_nhood
+                            mayor_nhood = avatar.mayor_nhood,
+                            thumbnail_url = JSONAvatar.ThumbnailUrl(avatar.avatar_id)
                         });
                     }
                     var avatarsJson = new JSONAvatars();
@@ -148,7 +151,8 @@ namespace FSO.Server.Api.Core.Controllers
                         date = avatar.date,
                         description = avatar.description,
                         current_job = avatar.current_job,
-                        mayor_nhood = avatar.mayor_nhood
+                        mayor_nhood = avatar.mayor_nhood,
+                        thumbnail_url = JSONAvatar.ThumbnailUrl(avatar.avatar_id)
                     });
 
                 }
@@ -181,7 +185,8 @@ namespace FSO.Server.Api.Core.Controllers
                     date = avatarById.date,
                     description = avatarById.description,
                     current_job = avatarById.current_job,
-                    mayor_nhood = avatarById.mayor_nhood
+                    mayor_nhood = avatarById.mayor_nhood,
+                    thumbnail_url = JSONAvatar.ThumbnailUrl(avatarById.avatar_id)
                 });
                 return ApiResponse.Json(HttpStatusCode.OK, avatarJson);
             }
@@ -216,17 +221,35 @@ namespace FSO.Server.Api.Core.Controllers
                                 date = avatar.date,
                                 description = avatar.description,
                                 current_job = avatar.current_job,
-                                mayor_nhood = avatar.mayor_nhood
+                                mayor_nhood = avatar.mayor_nhood,
+                                thumbnail_url = JSONAvatar.ThumbnailUrl(avatar.avatar_id)
                             });
                         }
                     }
-                    
+
                 }
                 var avatarsJson = new JSONAvatars();
                 avatarsJson.avatars = avatarJson;
                 return ApiResponse.Json(HttpStatusCode.OK, avatarsJson);
             }
         }
+        [HttpGet]
+        [Route("userapi/avatars/{avatarId}/thumbnail.png")]
+        public IActionResult GetThumbnail(uint avatarId)
+        {
+            var api = Api.INSTANCE;
+            var path = Path.Combine(api.Config.NFSdir, "Avatars/" + avatarId.ToString("x8") + "/thumb.png");
+            try
+            {
+                var data = System.IO.File.ReadAllBytes(path);
+                return File(data, "image/png");
+            }
+            catch
+            {
+                return NotFound();
+            }
+        }
+
         //get all online Avatars
         [HttpGet]
         [Route("userapi/avatars/online")]
@@ -317,5 +340,8 @@ namespace FSO.Server.Api.Core.Controllers
         public string description { get; set; }
         public ushort current_job { get; set; }
         public int? mayor_nhood { get; set; }
+        public string thumbnail_url { get; set; }
+
+        public static string ThumbnailUrl(uint id) => "/userapi/avatars/" + id + "/thumbnail.png";
     }
 }

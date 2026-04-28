@@ -2,6 +2,7 @@
 using FSO.Common.DataService.Model;
 using FSO.Common.Enum;
 using FSO.Common.Security;
+using FSO.Common.Serialization.Primitives;
 using FSO.Server.Common;
 using FSO.Server.Database.DA;
 using FSO.Server.Database.DA.Avatars;
@@ -13,6 +14,7 @@ using NLog;
 using System;
 using System.Collections.Generic;
 using System.Collections.Immutable;
+using System.IO;
 using System.Linq;
 using System.Security;
 
@@ -23,11 +25,13 @@ namespace FSO.Server.DataService.Providers
         private static Logger LOG = LogManager.GetCurrentClassLogger();
         private int ShardId;
         private IDAFactory DAFactory;
+        private IServerNFSProvider NFS;
 
-        public ServerAvatarProvider([Named("ShardId")] int shardId, IDAFactory factory)
+        public ServerAvatarProvider([Named("ShardId")] int shardId, IDAFactory factory, IServerNFSProvider nfs)
         {
             this.ShardId = shardId;
             this.DAFactory = factory;
+            this.NFS = nfs;
         }
 
         public override void PersistMutation(object entity, MutationType type, string path, object value)
@@ -44,6 +48,15 @@ namespace FSO.Server.DataService.Providers
                     case "Avatar_PrivacyMode":
                         db.Avatars.UpdatePrivacyMode(avatar.Avatar_Id, avatar.Avatar_PrivacyMode);
                         break;
+                    case "Avatar_Thumbnail":
+                        var imgPath = Path.Combine(NFS.GetBaseDirectory(), "Avatars/" + avatar.Avatar_Id.ToString("x8") + "/thumb.png");
+                        Directory.CreateDirectory(Path.GetDirectoryName(imgPath));
+                        var imgData = (cTSOGenericData)value;
+                        using (var fs = File.Open(imgPath, FileMode.Create, FileAccess.Write, FileShare.None))
+                            fs.Write(imgData.Data, 0, imgData.Data.Length);
+                        avatar.Avatar_Thumbnail = new cTSOGenericData(new byte[0]);
+                        avatar.Avatar_ThumbnailCheckSum = avatar.Avatar_Id;
+                        return;
                 }
             }
         }
@@ -130,6 +143,9 @@ namespace FSO.Server.DataService.Providers
                     context.DemandAvatar(avatar.Avatar_Id, AvatarPermissions.WRITE);
                     var mode = (byte)value;
                     if (mode > 1) throw new Exception("Invalid privacy mode!");
+                    break;
+                case "Avatar_Thumbnail":
+                    context.DemandAvatar(avatar.Avatar_Id, AvatarPermissions.WRITE);
                     break;
                 case "Avatar_Top100ListFilter.Top100ListFilter_Top100ListID":
                     context.DemandAvatar(avatar.Avatar_Id, AvatarPermissions.WRITE);
@@ -333,6 +349,8 @@ namespace FSO.Server.DataService.Providers
             result.Avatar_SkillsLockPoints = (ushort)(20 + result.Avatar_Age/7);
             result.Avatar_ModerationLevel = dbAvatar.moderation_level;
             result.Avatar_MayorNhood = (uint)(dbAvatar.mayor_nhood ?? 0);
+            result.Avatar_Thumbnail = new cTSOGenericData(new byte[0]);
+            result.Avatar_ThumbnailCheckSum = dbAvatar.avatar_id;
 
             result.JobLevelProvider = JobLevelProvider;
             result.RatingProvider = RatingProvider;
