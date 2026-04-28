@@ -287,6 +287,7 @@
     <Compile Include="NetPlay\Model\Commands\VMNetChangeControlCmd.cs" />
     <Compile Include="NetPlay\Model\Commands\VMNetChangeEnvironmentCmd.cs" />
     <Compile Include="NetPlay\Model\Commands\VMNetChangeLotSizeCmd.cs" />
+    <Compile Include="NetPlay\Model\Commands\VMNetChangeObjectLimitCmd.cs" />
     <Compile Include="NetPlay\Model\Commands\VMNetChatEditChanCmd.cs" />
     <Compile Include="NetPlay\Model\Commands\VMNetChatParamCmd.cs" />
     <Compile Include="NetPlay\Model\Commands\VMNetDirectControlCommand.cs" />
