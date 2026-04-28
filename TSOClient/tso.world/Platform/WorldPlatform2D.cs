@@ -330,6 +330,11 @@ namespace FSO.LotView.Platform
             _2d.End(bp.WallCache2D, true);
         }
 
+        public Texture2D GetAvatarThumb(AvatarComponent avatarComp, GraphicsDevice gd)
+        {
+            return null; // 3D Vitaboy render only available in 3D platform mode
+        }
+
         public void ClearDrawBuffer(List<_2DDrawBuffer> buf)
         {
             foreach (var b in buf) b.Dispose();

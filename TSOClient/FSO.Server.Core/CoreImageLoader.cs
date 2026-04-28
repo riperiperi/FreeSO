@@ -1,4 +1,5 @@
 ﻿using FSO.Content.Model;
+using FSO.Files.Formats.IFF.Chunks;
 using FSO.Server.Database.DA.Avatars;
 using FSO.Vitaboy;
 using SixLabors.ImageSharp;
@@ -30,6 +31,26 @@ namespace FSO.Server.Core
                 var image = Image.LoadPixelData<Bgra32>(bitmap.Data, bitmap.Width, bitmap.Height);
                 using (var fs = File.Open(Path.Combine(dir, "thumb.png"), FileMode.Create))
                     image.SaveAsPng(fs);
+            }
+            catch { }
+        }
+
+        public static void GenerateObjectThumbnail(uint guid, string nfsDir)
+        {
+            try
+            {
+                var content = FSO.Content.Content.Get();
+                var obj = content.WorldObjects.Get(guid);
+                if (obj == null) return;
+                var objd = obj.OBJ;
+                var bmp = obj.Resource.Get<BMP>((ushort)objd.CatalogStringsID);
+                if (bmp == null || bmp.data == null || bmp.data.Length == 0) return;
+
+                var dir = Path.Combine(nfsDir, "Objects/" + guid.ToString("x8"));
+                Directory.CreateDirectory(dir);
+                using (var img = Image.Load(new MemoryStream(bmp.data)))
+                using (var fs = File.Open(Path.Combine(dir, "thumb.png"), FileMode.Create))
+                    img.SaveAsPng(fs);
             }
             catch { }
         }

@@ -41,6 +41,11 @@ namespace FSO.LotView.Platform
             return null;
         }
 
+        public Texture2D GetAvatarThumb(AvatarComponent avatarComp, GraphicsDevice gd)
+        {
+            return null;
+        }
+
         public void ClearDrawBuffer(List<_2DDrawBuffer> buf)
         {
             foreach (var b in buf) b.Dispose();

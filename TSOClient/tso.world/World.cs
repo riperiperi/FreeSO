@@ -957,6 +957,11 @@ namespace FSO.LotView
             return Platform.GetLotThumb(gd, State, rooflessCallback);
         }
 
+        public Texture2D GetAvatarThumb(AvatarComponent avatarComp, GraphicsDevice gd)
+        {
+            return Platform.GetAvatarThumb(avatarComp, gd);
+        }
+
         public void ChangeAAMode(GraphicsDevice gd)
         {
             var lastm = PPXDepthEngine.MSAA;

@@ -17,6 +17,7 @@ namespace FSO.LotView.Platform
         public Blueprint bp;
         public RenderTarget2D LotThumbTarget;
         public RenderTarget2D ObjThumbTarget;
+        public RenderTarget2D AvatarThumbTarget;
 
         public WorldPlatform3D(Blueprint bp)
         {
@@ -27,9 +28,11 @@ namespace FSO.LotView.Platform
         {
             LotThumbTarget?.Dispose();
             ObjThumbTarget?.Dispose();
+            AvatarThumbTarget?.Dispose();
 
             LotThumbTarget = null;
             ObjThumbTarget = null;
+            AvatarThumbTarget = null;
         }
 
         public void SwapBlueprint(Blueprint bp)
@@ -231,9 +234,17 @@ namespace FSO.LotView.Platform
             }
             average /= positions.Length;
 
+            // Scale camera distance based on the span of all object positions so large multi-tile
+            // objects don't get clipped by the render target edges.
+            var posMin = positions[0];
+            var posMax = positions[0];
+            foreach (var pos in positions) { posMin = Vector3.Min(posMin, pos); posMax = Vector3.Max(posMax, pos); }
+            var span = (posMax - posMin).Length() + 3f; // +3 for one tile's width
+            var camScale = Math.Max(1f, span / 3f);
+
             cam.ProjectionOrigin = new Vector2(512, 512);
             cam.Target = average + new Vector3(0.5f, 0.5f, 0) * 3f;
-            cam.Position = cam.Target + new Vector3(-9, 6, -9);
+            cam.Position = cam.Target + new Vector3(-9, 6, -9) * camScale;
 
             state.DrawOOB = true;
 
@@ -278,18 +289,38 @@ namespace FSO.LotView.Platform
                 obj.UnmoddedPosition = tilePosition;
                 obj.Draw(gd, state);
 
-                var mat = obj.World * vp;
-                cpoints.AddRange(obj.GetBounds().GetCorners().Select(x =>
+                var rawBounds = obj.GetRawBounds();
+                if (rawBounds != null)
                 {
-                    var proj = Vector3.Transform(x, vp);
-                    proj.X /= proj.Z;
-                    proj.Y /= -proj.Z;
-                    proj.X += 1f;
-                    proj.X *= 512;
-                    proj.Y += 1f;
-                    proj.Y *= 512;
-                    return proj;
-                }));
+                    cpoints.AddRange(rawBounds.Value.GetCorners().Select(x =>
+                    {
+                        var proj = Vector3.Transform(x, vp);
+                        proj.X /= proj.Z;
+                        proj.Y /= -proj.Z;
+                        proj.X += 1f;
+                        proj.X *= 512;
+                        proj.Y += 1f;
+                        proj.Y *= 512;
+                        return proj;
+                    }));
+                }
+                else
+                {
+                    // No 3D bounds — project a 1-tile box around this object's tile position as a fallback.
+                    var tilePos = positions[Array.IndexOf(objects, obj)];
+                    var fallback = new BoundingBox(tilePos, tilePos + new Vector3(3f, 3f, 3f));
+                    cpoints.AddRange(fallback.GetCorners().Select(x =>
+                    {
+                        var proj = Vector3.Transform(x, vp);
+                        proj.X /= proj.Z;
+                        proj.Y /= -proj.Z;
+                        proj.X += 1f;
+                        proj.X *= 512;
+                        proj.Y += 1f;
+                        proj.Y *= 512;
+                        return proj;
+                    }));
+                }
 
                 //return everything to normal
                 obj.Direction = oldObjRot;
@@ -320,6 +351,59 @@ namespace FSO.LotView.Platform
             var clip = TextureUtils.Clip(gd, ObjThumbTarget, bounds);
             var dec = TextureUtils.Decimate(clip, gd, 3, true);
             return dec;
+        }
+
+        public Texture2D GetAvatarThumb(AvatarComponent avatarComp, GraphicsDevice gd)
+        {
+            if (avatarComp?.Avatar == null || avatarComp.Avatar.Skeleton == null) return null;
+
+            const int size = 512;
+            if (AvatarThumbTarget == null)
+                AvatarThumbTarget = new RenderTarget2D(gd, size, size, false, SurfaceFormat.Color, DepthFormat.Depth24Stencil8);
+
+            // HEAD bone AbsolutePosition.Y (bone units) / 3 = tile units; * 3 = world units → Y ≈ bone Y
+            var headBone = avatarComp.Avatar.Skeleton.GetBone("HEAD");
+            float headY = headBone != null ? headBone.AbsolutePosition.Y : 3f;
+
+            // Camera looks at mid-body from slightly above and in front.
+            // Avatar faces -Z at RadianDirection=0 with CreateRotationY(PI), so camera at +Z sees the front.
+            var camTarget = new Vector3(0f, headY * 0.5f, 0f);
+            var camPos = new Vector3(0f, headY * 0.6f, headY * 1.8f);
+
+            var view = Matrix.CreateLookAt(camPos, camTarget, Vector3.Up);
+            var proj = Matrix.CreatePerspectiveFieldOfView(MathHelper.ToRadians(45f), 1f, 0.1f, 100f);
+
+            var oldRts = gd.GetRenderTargets();
+            gd.SetRenderTarget(AvatarThumbTarget);
+            gd.Clear(Color.Transparent);
+
+            var oldBlend = gd.BlendState;
+            var oldDepth = gd.DepthStencilState;
+            var oldRaster = gd.RasterizerState;
+
+            gd.BlendState = BlendState.AlphaBlend;
+            gd.DepthStencilState = DepthStencilState.Default;
+            gd.RasterizerState = RasterizerState.CullCounterClockwise;
+
+            var effect = WorldContent.AvatarEffect;
+            effect.CurrentTechnique = effect.Techniques[0];
+            effect.Parameters["View"].SetValue(view);
+            effect.Parameters["Projection"].SetValue(proj);
+            effect.Parameters["ObjectID"].SetValue(0f);
+            effect.Parameters["Level"].SetValue(1f);
+            effect.Parameters["AmbientLight"].SetValue(Vector4.One);
+            // Face the avatar toward the camera (+Z direction)
+            effect.Parameters["World"].SetValue(Matrix.CreateRotationY((float)Math.PI));
+
+            avatarComp.Avatar.LightPositions = null; // suppress shadow pass during thumbnail
+            avatarComp.Avatar.DrawGeometry(gd, effect);
+
+            gd.SetRenderTargets(oldRts);
+            gd.BlendState = oldBlend;
+            gd.DepthStencilState = oldDepth;
+            gd.RasterizerState = oldRaster;
+
+            return AvatarThumbTarget;
         }
 
         public void RecacheWalls(GraphicsDevice gd, WorldState state, bool cutawayOnly)

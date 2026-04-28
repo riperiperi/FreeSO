@@ -261,7 +261,12 @@ namespace FSO.Client.Controllers
             if ((now - _LastAvatarThumbUpload).TotalSeconds < 5) return;
             _LastAvatarThumbUpload = now;
 
-            var ico = vmAva.GetIcon(GameFacade.GraphicsDevice, 0);
+            // Prefer a full 3D Vitaboy render; fall back to pre-baked FAR3 head sprite.
+            var avatarComp = vmAva.UseWorld ? vmAva.WorldUI as FSO.LotView.Components.AvatarComponent : null;
+            var ico = avatarComp != null
+                ? Screen.vm.Context.World.GetAvatarThumb(avatarComp, GameFacade.GraphicsDevice)
+                : vmAva.GetIcon(GameFacade.GraphicsDevice, 0);
+            if (ico == null) ico = vmAva.GetIcon(GameFacade.GraphicsDevice, 0);
             if (ico == null) return;
 
             byte[] data;

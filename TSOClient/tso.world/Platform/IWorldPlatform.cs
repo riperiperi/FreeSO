@@ -43,6 +43,12 @@ namespace FSO.LotView.Platform
         /// <returns>Object's ID if the object was found at the given position.</returns>
         Texture2D GetLotThumb(GraphicsDevice gd, WorldState state, Action<Texture2D> rooflessCallback);
 
+        /// <summary>
+        /// Renders the full 3D Vitaboy avatar to a texture using its current skeleton pose and equipped outfits.
+        /// Returns null on platforms that don't support 3D avatar rendering.
+        /// </summary>
+        Texture2D GetAvatarThumb(AvatarComponent avatarComp, GraphicsDevice gd);
+
         void RecacheWalls(GraphicsDevice gd, WorldState state, bool cutawayOnly);
 
         void SwapBlueprint(Blueprint bp);

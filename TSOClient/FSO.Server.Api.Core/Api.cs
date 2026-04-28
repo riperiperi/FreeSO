@@ -30,6 +30,10 @@ namespace FSO.Server.Api.Core
         public InjectBroadcast InjectBroadcast;
         // Wired by FSO.Server.Core to generate a thumb.png from game content when none exists yet.
         public Action<DbAvatar, string> ThumbnailGenerator;
+        // Wired by FSO.Server.Core to generate Objects/{guid}/thumb.png from the IFF catalog BMP.
+        public Action<uint, string> ObjectThumbnailGenerator;
+        // Wired by FSO.Server.Core to return the full object catalog list.
+        public System.Func<System.Collections.Generic.IEnumerable<Controllers.JSONCatalogItem>> GetCatalogItems;
 
         public Api()
         {
