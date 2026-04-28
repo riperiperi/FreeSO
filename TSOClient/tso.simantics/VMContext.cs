@@ -663,9 +663,12 @@ namespace FSO.SimAntics
 
         public void ProcessLightingChanges()
         {
-            for (int i = 0; i < DeferredLightingRefresh.Count; i++)
+            var visited = new HashSet<ushort>();
+            var count = DeferredLightingRefresh.Count;
+            var idx = 0;
+            foreach (var room in DeferredLightingRefresh)
             {
-                RefreshLighting(DeferredLightingRefresh.ElementAt(i), i == DeferredLightingRefresh.Count - 1, new HashSet<ushort>());
+                RefreshLighting(room, ++idx == count, visited);
             }
             DeferredLightingRefresh.Clear();
         }
@@ -729,7 +732,9 @@ namespace FSO.SimAntics
                         var flags2 = (VMEntityFlags2)ent.GetValue(VMStackObjectVariable.FlagField2);
                         
                         var mainSource = true;
-                        var lighted = objs.Count(x => x.GetValue(VMStackObjectVariable.LightingContribution) > 0);
+                        var lighted = 0;
+                        for (int oi = 0; oi < objs.Count; oi++)
+                            if (objs[oi].GetValue(VMStackObjectVariable.LightingContribution) > 0) lighted++;
                         if (lighted > 0)
                         {
                             //the world clearly needs me
@@ -785,9 +790,12 @@ namespace FSO.SimAntics
                                 var bound = ent.MultitileGroup.LightBounds();
                                 if (bound != null) light.ObjectFootprints.Add(bound.Value);
                             }
-                            light.Components.AddRange(objs.Select(x => (ObjectComponent)x.WorldUI));
+                            for (int oi = 0; oi < objs.Count; oi++)
+                                light.Components.Add((ObjectComponent)objs[oi].WorldUI);
                         }
-                        var roomImpact = objs.Sum(x => x.GetValue(VMStackObjectVariable.RoomImpact));
+                        var roomImpact = 0;
+                        for (int oi = 0; oi < objs.Count; oi++)
+                            roomImpact += objs[oi].GetValue(VMStackObjectVariable.RoomImpact);
                         if (roomImpact != 0) roomScore += roomImpact;
                     }
 

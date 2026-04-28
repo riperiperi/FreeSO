@@ -351,7 +351,8 @@ namespace FSO.LotView.Model
             short tileY = (pos.y < 0) ? (short)0 : pos.TileY;
             sbyte level = pos.Level;
 
-            Changes.RegisterObjectChange(component);
+            if (component.TileX != tileX || component.TileY != tileY || component.Level != level)
+                Changes.RegisterObjectChange(component);
 
             component.blueprint = this;
             component.TileX = tileX;

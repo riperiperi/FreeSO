@@ -22,6 +22,7 @@ namespace FSO.SimAntics.Model.Routing
         protected int PoolInd = 0;
         public int Root = -1;
         public int Count;
+        public VMObstacleSet BaseSet;
 
         public VMObstacleSet() {
             InitNodes(64);
@@ -168,11 +169,8 @@ namespace FSO.SimAntics.Model.Routing
 
         public bool SearchForIntersect(VMObstacle rect)
         {
-            if (Root == -1) return false;
-            else
-            {
-                return SearchForIntersect(ref Nodes[Root], rect);
-            }
+            if (Root != -1 && SearchForIntersect(ref Nodes[Root], rect)) return true;
+            return BaseSet?.SearchForIntersect(rect) ?? false;
         }
 
         public bool SearchForIntersect(ref VMObstacleSetNode node, VMObstacle rect)
@@ -199,13 +197,9 @@ namespace FSO.SimAntics.Model.Routing
 
         public List<VMObstacle> AllIntersect(VMObstacle rect)
         {
-            var result = new List<VMObstacle>();
-            if (Root == -1) return result;
-            else
-            {
-                AllIntersect(ref Nodes[Root], rect, result);
-                return result;
-            }
+            var result = BaseSet?.AllIntersect(rect) ?? new List<VMObstacle>();
+            if (Root != -1) AllIntersect(ref Nodes[Root], rect, result);
+            return result;
         }
 
         public void AllIntersect(ref VMObstacleSetNode node, VMObstacle rect, List<VMObstacle> result)
@@ -235,13 +229,9 @@ namespace FSO.SimAntics.Model.Routing
 
         public List<VMObstacle> OnEdge(VMObstacle rect)
         {
-            var result = new List<VMObstacle>();
-            if (Root == -1) return result;
-            else
-            {
-                OnEdge(ref Nodes[Root], rect, result);
-                return result;
-            }
+            var result = BaseSet?.OnEdge(rect) ?? new List<VMObstacle>();
+            if (Root != -1) OnEdge(ref Nodes[Root], rect, result);
+            return result;
         }
 
         public void OnEdge(ref VMObstacleSetNode node, VMObstacle rect, List<VMObstacle> result)

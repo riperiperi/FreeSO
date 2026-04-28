@@ -72,6 +72,7 @@ namespace FSO.SimAntics
 
         public List<VMEntity> Entities = new List<VMEntity>();
         public HashSet<VMEntity> SoundEntities = new HashSet<VMEntity>();
+        private List<VMEntity> _soundTickBuffer = new List<VMEntity>();
         public short[] GlobalState;
         public VMAbstractLotState PlatformState;
 
@@ -307,14 +308,12 @@ namespace FSO.SimAntics
         public void PreDraw()
         {
             if (SpeedMultiplier <= 0) Fraction = 0;
-            var snd = new List<VMEntity>(SoundEntities);
-            foreach (var sound in snd)
+            _soundTickBuffer.Clear();
+            _soundTickBuffer.AddRange(SoundEntities);
+            foreach (var sound in _soundTickBuffer)
                 sound.TickSounds();
-            //fractional animation for avatars
-            foreach (var obj in Entities)
-            {
-                (obj as VMAvatar)?.FractionalAnim(Fraction);
-            }
+            foreach (var avatar in Context.ObjectQueries.Avatars)
+                ((VMAvatar)avatar).FractionalAnim(Fraction);
         }
 
         public void SendCommand(VMNetCommandBodyAbstract cmd)

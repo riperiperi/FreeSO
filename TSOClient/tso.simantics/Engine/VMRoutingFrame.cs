@@ -234,7 +234,8 @@ namespace FSO.SimAntics.Engine
                 //find shortest room traversal to destination. Simple A* pathfind.
                 //Portals are considered nodes to allow multiple portals between rooms to be considered.
 
-                var openSet = new List<VMRoomPortal>(); //we use this like a queue, but we need certain functions for sorted queue that are only provided by list.
+                var openSet = new List<VMRoomPortal>();
+                var openSetLookup = new HashSet<VMRoomPortal>();
                 var closedSet = new HashSet<VMRoomPortal>();
 
                 var gScore = new Dictionary<VMRoomPortal, double>();
@@ -243,6 +244,7 @@ namespace FSO.SimAntics.Engine
 
                 var StartPortal = new VMRoomPortal(Caller.ObjectID, MyRoom); //consider the sim as a portal to this room (as a starting point)
                 openSet.Add(StartPortal);
+                openSetLookup.Add(StartPortal);
                 gScore[StartPortal] = 0;
                 fScore[StartPortal] = GetDist(Caller.Position, dest);
 
@@ -250,6 +252,7 @@ namespace FSO.SimAntics.Engine
                 {
                     var current = openSet[0];
                     openSet.RemoveAt(0);
+                    openSetLookup.Remove(current);
 
                     if (current.TargetRoom == DestRoom)
                     {
@@ -272,7 +275,7 @@ namespace FSO.SimAntics.Engine
 
                         var pos = VM.GetObjectById(portal.ObjectID).Position;
                         var gFromCurrent = gScore[current] + GetDist(VM.GetObjectById(current.ObjectID).Position, pos);
-                        var newcomer = !openSet.Contains(portal);
+                        var newcomer = !openSetLookup.Contains(portal);
 
                         if (newcomer || gFromCurrent < gScore[portal])
                         {
@@ -280,11 +283,12 @@ namespace FSO.SimAntics.Engine
                             gScore[portal] = gFromCurrent;
                             fScore[portal] = gFromCurrent + GetDist(pos, dest);
                             if (newcomer)
-                            { //add and move to relevant position
+                            {
                                 OpenSetSortedInsert(openSet, fScore, portal);
+                                openSetLookup.Add(portal);
                             }
                             else
-                            { //remove and reinsert to refresh sort
+                            {
                                 openSet.Remove(portal);
                                 OpenSetSortedInsert(openSet, fScore, portal);
                             }
@@ -348,7 +352,7 @@ namespace FSO.SimAntics.Engine
             int width = (roomInfo.Room.Bounds.Width+2) << 4;
             int height = (roomInfo.Room.Bounds.Height+2) << 4;
 
-            var obstacles = new VMObstacleSet(roomInfo.Room.RoutingObstacles);//new List<VMObstacle>();
+            var obstacles = new VMObstacleSet { BaseSet = roomInfo.Room.RoutingObstacles };
 
             obstacles.Add(new VMObstacle(bx-16, by-16, bx+width+16, by));
             obstacles.Add(new VMObstacle(bx-16, by+height, bx+width+16, by+height+16));

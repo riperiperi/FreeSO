@@ -37,6 +37,7 @@ namespace FSO.LotView.Components
 
         public bool HideForCutaway;
         public WallSegments AdjacentWall;
+        private bool _hadHeadline;
 
         //for ultra lighting in 2d. objects can have a shadow component which handles drawing in 3d.
         private ObjectComponent ShadowComponent;
@@ -427,10 +428,11 @@ namespace FSO.LotView.Components
 
         public override void Update(GraphicsDevice device, WorldState world)
         {
-            if (Headline != null)
+            var hasHeadline = Headline != null;
+            if (hasHeadline != _hadHeadline)
             {
-                //todo: this and hideForCutaway should be part of the ForceDynamic bool (accessed by the static layer manager)
-                if (blueprint != null && RenderInfo.Layer == WorldObjectRenderLayer.STATIC) blueprint.Changes.RegisterObjectChange(this);
+                _hadHeadline = hasHeadline;
+                if (blueprint != null) blueprint.Changes.RegisterObjectChange(this);
             }
 
             var idleFrames = InterpolationOwner.IdleFrames;

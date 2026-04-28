@@ -5,7 +5,6 @@ using FSO.LotView.Utils;
 using Microsoft.Xna.Framework;
 using Microsoft.Xna.Framework.Graphics;
 using System.Collections.Generic;
-using System.Linq;
 
 namespace FSO.LotView
 {
@@ -32,6 +31,8 @@ namespace FSO.LotView
 
         //2d rendering mode
         private List<_2DDrawBuffer> StaticObjectsCache = new List<_2DDrawBuffer>();
+        private readonly List<ObjectComponent> _dynDrawBuffer = new List<ObjectComponent>();
+        private readonly List<ObjectComponent> _staticDrawBuffer = new List<ObjectComponent>();
 
         public WorldEntities(Blueprint blueprint)
         {
@@ -126,20 +127,25 @@ namespace FSO.LotView
 
             //if we're not using static, draw all the objects here instead
             //TODO: in-place re-order the dynamic objects list to shorten sort time? might not matter for lists this short, and would make it harder to use a hashset
-            IEnumerable<ObjectComponent> dyn;
-            if (changes.DrawImmediate) dyn = Blueprint.Objects;
-            else dyn = changes.DynamicObjects;
+            IEnumerable<ObjectComponent> dynSrc;
+            if (changes.DrawImmediate) dynSrc = Blueprint.Objects;
+            else dynSrc = changes.DynamicObjects;
 
             gd.BlendState = BlendState.NonPremultiplied;
-            dyn = dyn.Where(x => (x.Level <= state.Level) && x.DoDraw(state));
-            if (state.CameraMode == CameraRenderMode._3D) //only use for full 3d - the draw order for 2d rotation is a completely different coordinate space.
+            _dynDrawBuffer.Clear();
+            foreach (var obj in dynSrc)
             {
-                foreach (var obj in dyn) obj.UpdateDrawOrder(state);
+                if (obj.Level <= state.Level && obj.DoDraw(state))
+                    _dynDrawBuffer.Add(obj);
             }
-            dyn = dyn.OrderBy(x => x.DrawOrder);
+            if (state.CameraMode == CameraRenderMode._3D)
+            {
+                foreach (var obj in _dynDrawBuffer) obj.UpdateDrawOrder(state);
+            }
+            _dynDrawBuffer.Sort((a, b) => a.DrawOrder.CompareTo(b.DrawOrder));
 
             gd.BlendState = BlendState.NonPremultiplied;
-            foreach (var obj in dyn)
+            foreach (var obj in _dynDrawBuffer)
             {
                 obj.Draw(gd, state);
             }
@@ -186,12 +192,19 @@ namespace FSO.LotView
             state.WorldRectangle = new Rectangle((pxOffset).ToPoint(), size.ToPoint());
             state.PrepareCulling(pxOffset);
 
-            IEnumerable<ObjectComponent> staticObj;
-            if (Blueprint.Changes.Subworld) staticObj = Blueprint.Objects;
-            else staticObj = Blueprint.Changes.StaticObjects;
-            staticObj = staticObj.Where(x => (x.Level <= state.Level) && x.DoDraw(state)).OrderBy(x => x.DrawOrder);
+            IEnumerable<ObjectComponent> staticSrc;
+            if (Blueprint.Changes.Subworld) staticSrc = Blueprint.Objects;
+            else staticSrc = Blueprint.Changes.StaticObjects;
 
-            foreach (var obj in staticObj)
+            _staticDrawBuffer.Clear();
+            foreach (var obj in staticSrc)
+            {
+                if (obj.Level <= state.Level && obj.DoDraw(state))
+                    _staticDrawBuffer.Add(obj);
+            }
+            _staticDrawBuffer.Sort((a, b) => a.DrawOrder.CompareTo(b.DrawOrder));
+
+            foreach (var obj in _staticDrawBuffer)
             {
                 obj.Draw(gd, state);
             }
