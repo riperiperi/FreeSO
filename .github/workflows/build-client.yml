@@ -20,6 +20,9 @@ jobs:
       - name: Setup MSBuild
         uses: microsoft/setup-msbuild@v2
 
+      - name: Install .NET Framework 4.5 targeting pack
+        run: choco install netfx-4.5-devpack -y --no-progress --ignore-checksums
+
       - name: Run Protobuild
         working-directory: Other/libs/FSOMonoGame
         run: .\protobuild.exe --generate
