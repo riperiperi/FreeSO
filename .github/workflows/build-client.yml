@@ -70,8 +70,18 @@ jobs:
         run: .\protobuild.exe --generate
         continue-on-error: true
 
+      - name: Setup .NET SDK (for SDK-style projects)
+        uses: actions/setup-dotnet@v4
+        with:
+          dotnet-version: '8.0.x'
+
       - name: Restore NuGet packages
         run: nuget restore TSOClient/FreeSO.sln
+
+      - name: Restore SDK packages
+        run: |
+          dotnet restore TSOClient/FSO.SimAntics.JIT.Roslyn/FSO.SimAntics.JIT.Roslyn.csproj
+          dotnet restore Other/libs/TargaImagePCL/TargaImagePCL.csproj
 
       - name: Build client (FSO.IDE)
         run: |

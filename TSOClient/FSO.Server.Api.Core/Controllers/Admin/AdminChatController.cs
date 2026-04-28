@@ -41,7 +41,8 @@ namespace FSO.Server.Api.Core.Controllers.Admin
             var ws = await HttpContext.WebSockets.AcceptWebSocketAsync();
 
             // Use a linked token so either side closing tears down the other.
-            using var cts = CancellationTokenSource.CreateLinkedTokenSource(HttpContext.RequestAborted);
+            using (var cts = CancellationTokenSource.CreateLinkedTokenSource(HttpContext.RequestAborted))
+            {
             var ct = cts.Token;
 
             // Per-client bounded queue + semaphore for async drain.
@@ -116,6 +117,7 @@ namespace FSO.Server.Api.Core.Controllers.Admin
                 }
                 catch { }
             }
+            } // end using cts
         }
 
         // POST admin/lot/{lot_id}/chat/inject — send a Discord message into in-game lot chat.
