@@ -3,6 +3,30 @@ name: Build Client
 on:
   push:
     branches: [ master, dev ]
+    paths:
+      # Client-only projects
+      - 'TSOClient/FSO.IDE/**'
+      - 'TSOClient/FSO.Windows/**'
+      - 'TSOClient/FSO.UI/**'
+      - 'TSOClient/FSO.SimAntics.JIT/**'
+      - 'TSOClient/FSO.SimAntics.JIT.Roslyn/**'
+      - 'TSOClient/FSO.Patcher/**'
+      - 'TSOClient/tso.client/**'
+      - 'TSOClient/tso.sound/**'
+      - 'TSOClient/tso.debug/**'
+      - 'Other/libs/FSOMonoGame/**'
+      # Shared projects (used by both builds)
+      - 'TSOClient/tso.common/**'
+      - 'TSOClient/tso.content/**'
+      - 'TSOClient/tso.files/**'
+      - 'TSOClient/tso.simantics/**'
+      - 'TSOClient/tso.vitaboy.model/**'
+      - 'TSOClient/tso.world/**'
+      - 'Other/libs/TargaImagePCL/**'
+      # Solution / build config
+      - 'TSOClient/FreeSO.sln'
+      - 'TSOClient/Directory.Build.props'
+      - '.github/workflows/build-client.yml'
   workflow_dispatch:
 
 jobs:

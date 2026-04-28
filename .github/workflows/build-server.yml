@@ -3,6 +3,24 @@ name: Build Server
 on:
   push:
     branches: [ master, dev ]
+    paths:
+      # Server-only projects
+      - 'TSOClient/FSO.Server*/**'
+      - 'TSOClient/FSO.Common.DatabaseService/**'
+      - 'TSOClient/FSO.Common.Domain/**'
+      - 'TSOClient/FSO.Content.TSO/**'
+      # Shared projects (used by both builds)
+      - 'TSOClient/tso.common/**'
+      - 'TSOClient/tso.content/**'
+      - 'TSOClient/tso.files/**'
+      - 'TSOClient/tso.simantics/**'
+      - 'TSOClient/tso.vitaboy.model/**'
+      - 'TSOClient/tso.world/**'
+      - 'Other/libs/TargaImagePCL/**'
+      # Solution / build config
+      - 'TSOClient/FreeSO.sln'
+      - 'TSOClient/Directory.Build.props'
+      - '.github/workflows/build-server.yml'
   workflow_dispatch:
 
 jobs:
