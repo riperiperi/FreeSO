@@ -92,6 +92,13 @@ jobs:
             } |
             Remove-Item -ErrorAction SilentlyContinue
 
+      - name: Restore FSO.IDE PackageReference packages
+        run: |
+          msbuild TSOClient/FSO.IDE/FSO.IDE.csproj `
+            /t:Restore `
+            /p:Configuration=Release `
+            /p:Platform="Any CPU"
+
       - name: Build client (FSO.IDE)
         run: |
           msbuild TSOClient/FreeSO.sln `
