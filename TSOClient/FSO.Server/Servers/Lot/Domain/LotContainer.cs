@@ -1194,6 +1194,17 @@ namespace FSO.Server.Servers.Lot.Domain
             evt.WaitOne();
         }
 
+        public void InjectDiscordMessage(string avatarName, string message)
+        {
+            if (!ActiveYet) return;
+            var displayText = $"[Discord] {avatarName}: {message}";
+            lock (LotThreadActions)
+            {
+                LotThreadActions.Enqueue(() =>
+                    Lot.SignalChatEvent(new VMChatEvent(null, VMChatEventType.Generic, displayText)));
+            }
+        }
+
         public bool IsAvatarOnLot(uint pid)
         {
             //we need to check if the avatar's sim is still on the lot. their data + claim might have left, but the avatar could still be here.

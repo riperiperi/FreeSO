@@ -22,6 +22,7 @@
         CitySendMail,
 
         LotChatNotify,
+        InjectLotChat,
 
         Unknown
     }
@@ -64,6 +65,8 @@
                     return GluonPacketType.CitySendMail;
                 case 0x0016:
                     return GluonPacketType.LotChatNotify;
+                case 0x0017:
+                    return GluonPacketType.InjectLotChat;
                 default:
                     return GluonPacketType.Unknown;
             }
@@ -105,6 +108,8 @@
                     return 0x0015;
                 case GluonPacketType.LotChatNotify:
                     return 0x0016;
+                case GluonPacketType.InjectLotChat:
+                    return 0x0017;
             }
 
             return 0xFFFF;

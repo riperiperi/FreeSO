@@ -203,7 +203,8 @@ namespace FSO.Server.Servers.Lot
                 typeof(LotNegotiationHandler),
                 typeof(VoltronConnectionLifecycleHandler),
                 typeof(ShardShutdownHandler),
-                typeof(GluonAuthenticationHandler)
+                typeof(GluonAuthenticationHandler),
+                typeof(LotChatInjectHandler)
             };
         }
 

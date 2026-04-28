@@ -200,6 +200,14 @@ namespace FSO.Server.Servers.Lot.Domain
             return true;
         }
 
+        public bool InjectDiscordMessage(int lot_id, string avatarName, string message)
+        {
+            var lot = GetLot(lot_id);
+            if (lot == null) return false;
+            lot.Container.InjectDiscordMessage(avatarName, message);
+            return true;
+        }
+
         public void UpdateTuning(bool immediately)
         {
             LOG.Info("Updating tuning on lot server " + Config.Call_Sign + "...");
