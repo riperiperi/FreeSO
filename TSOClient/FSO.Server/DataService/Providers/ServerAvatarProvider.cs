@@ -49,11 +49,14 @@ namespace FSO.Server.DataService.Providers
                         db.Avatars.UpdatePrivacyMode(avatar.Avatar_Id, avatar.Avatar_PrivacyMode);
                         break;
                     case "Avatar_Thumbnail":
-                        var imgPath = Path.Combine(NFS.GetBaseDirectory(), "Avatars/" + avatar.Avatar_Id.ToString("x8") + "/thumb.png");
-                        Directory.CreateDirectory(Path.GetDirectoryName(imgPath));
+                        var avatarDir = Path.Combine(NFS.GetBaseDirectory(), "Avatars/" + avatar.Avatar_Id.ToString("x8"));
+                        Directory.CreateDirectory(avatarDir);
+                        var imgPath = Path.Combine(avatarDir, "thumb.png");
                         var imgData = (cTSOGenericData)value;
                         using (var fs = File.Open(imgPath, FileMode.Create, FileAccess.Write, FileShare.None))
                             fs.Write(imgData.Data, 0, imgData.Data.Length);
+                        // Derive head.png from the uploaded portrait by cropping the top third.
+                        Utils.CoreImageLoader.GenerateHeadFromBodyThumbnail(imgData.Data, Path.Combine(avatarDir, "head.png"));
                         avatar.Avatar_Thumbnail = new cTSOGenericData(new byte[0]);
                         avatar.Avatar_ThumbnailCheckSum = avatar.Avatar_Id;
                         return;
