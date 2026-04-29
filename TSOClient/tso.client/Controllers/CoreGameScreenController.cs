@@ -105,6 +105,7 @@ namespace FSO.Client.Controllers
                         Screen.InitializeLot();
                         Screen.vm.MyUID = Network.MyCharacter;
                         Screen.vm.OnAvatarHeadOutfitChanged = vmAva => UploadAvatarThumbnail(vmAva);
+                        Screen.vm.OnAvatarReady = vmAva => UploadAvatarThumbnail(vmAva);
                         //initialize a lot
                         break;
                     case "LotCommandStream":

@@ -114,6 +114,7 @@ namespace FSO.SimAntics
         public List<VMInventoryItem> MyInventory = new List<VMInventoryItem>();
 
         public Action<VMAvatar> OnAvatarHeadOutfitChanged;
+        public Action<VMAvatar> OnAvatarReady; // fired once when the local avatar is first ready
 
         public event VMDialogHandler OnDialog;
         public event VMChatEventHandler OnChatEvent;
@@ -373,7 +374,11 @@ namespace FSO.SimAntics
             lock (Driver)
             {
                 if (Driver.Tick(this)) //returns true the first time we catch up to the state.
+                {
                     Ready = true;
+                    var localAvatar = GetAvatarByPersist(MyUID);
+                    if (localAvatar != null) OnAvatarReady?.Invoke(localAvatar);
+                }
             }
         }
 
