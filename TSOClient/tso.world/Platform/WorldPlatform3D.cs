@@ -357,21 +357,29 @@ namespace FSO.LotView.Platform
         {
             if (avatarComp?.Avatar == null || avatarComp.Avatar.Skeleton == null) return null;
 
-            const int size = 512;
+            const int thumbW = 400, thumbH = 600;
             if (AvatarThumbTarget == null)
-                AvatarThumbTarget = new RenderTarget2D(gd, size, size, false, SurfaceFormat.Color, DepthFormat.Depth24Stencil8);
+                AvatarThumbTarget = new RenderTarget2D(gd, thumbW, thumbH, false, SurfaceFormat.Color, DepthFormat.Depth24Stencil8);
 
-            // HEAD bone AbsolutePosition.Y (bone units) / 3 = tile units; * 3 = world units → Y ≈ bone Y
             var headBone = avatarComp.Avatar.Skeleton.GetBone("HEAD");
             float headY = headBone != null ? headBone.AbsolutePosition.Y : 3f;
 
-            // Camera looks at mid-body from slightly above and in front.
-            // Avatar faces -Z at RadianDirection=0 with CreateRotationY(PI), so camera at +Z sees the front.
-            var camTarget = new Vector3(0f, headY * 0.5f, 0f);
-            var camPos = new Vector3(0f, headY * 0.6f, headY * 1.8f);
+            // Isometric portrait: camera at 45° azimuth, 30° elevation, orthographic projection.
+            // Avatar faces +Z (World = CreateRotationY(PI) below), camera from +X+Z quadrant sees front-left.
+            float az = MathHelper.PiOver4;
+            float el = MathHelper.ToRadians(30f);
+            float dist = headY * 2.0f;
+            var camTarget = new Vector3(0f, headY * 0.4f, 0f);
+            var camPos = camTarget + new Vector3(
+                dist * (float)Math.Cos(el) * (float)Math.Sin(az),
+                dist * (float)Math.Sin(el),
+                dist * (float)Math.Cos(el) * (float)Math.Cos(az)
+            );
 
             var view = Matrix.CreateLookAt(camPos, camTarget, Vector3.Up);
-            var proj = Matrix.CreatePerspectiveFieldOfView(MathHelper.ToRadians(45f), 1f, 0.1f, 100f);
+            float orthoH = headY * 1.5f;
+            float orthoW = orthoH * thumbW / thumbH;
+            var proj = Matrix.CreateOrthographic(orthoW, orthoH, 0.1f, 100f);
 
             var oldRts = gd.GetRenderTargets();
             gd.SetRenderTarget(AvatarThumbTarget);

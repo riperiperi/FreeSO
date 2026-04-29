@@ -29,9 +29,17 @@ namespace FSO.Server.Core
 
                 var dir = Path.Combine(nfsDir, "Avatars/" + avatar.avatar_id.ToString("x8"));
                 Directory.CreateDirectory(dir);
-                var image = Image.LoadPixelData<Bgra32>(bitmap.Data, bitmap.Width, bitmap.Height);
-                using (var fs = File.Open(Path.Combine(dir, "thumb.png"), FileMode.Create))
-                    image.SaveAsPng(fs);
+                using (var image = Image.LoadPixelData<Bgra32>(bitmap.Data, bitmap.Width, bitmap.Height))
+                {
+                    image.Mutate(x => x.Resize(new ResizeOptions
+                    {
+                        Size = new Size(512, 512),
+                        Mode = ResizeMode.Max,
+                        Sampler = KnownResamplers.NearestNeighbor
+                    }));
+                    using (var fs = File.Open(Path.Combine(dir, "head.png"), FileMode.Create))
+                        image.SaveAsPng(fs);
+                }
             }
             catch { }
         }

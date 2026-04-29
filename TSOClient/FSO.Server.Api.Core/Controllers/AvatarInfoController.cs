@@ -38,7 +38,9 @@ namespace FSO.Server.Api.Core.Controllers
                         description = avatar.description,
                         current_job = avatar.current_job,
                         mayor_nhood = avatar.mayor_nhood,
-                        thumbnail_url = JSONAvatar.ThumbnailUrl(avatar.avatar_id)
+                        thumbnail_url = JSONAvatar.ThumbnailUrl(avatar.avatar_id),
+                        head_url = JSONAvatar.HeadUrl(avatar.avatar_id),
+                        body_url = JSONAvatar.BodyUrl(avatar.avatar_id)
                     });
                 }
                 var avatarsJson = new JSONAvatars();
@@ -68,7 +70,9 @@ namespace FSO.Server.Api.Core.Controllers
                     description = avatar.description,
                     current_job = avatar.current_job,
                     mayor_nhood = avatar.mayor_nhood,
-                    thumbnail_url = JSONAvatar.ThumbnailUrl(avatar.avatar_id)
+                    thumbnail_url = JSONAvatar.ThumbnailUrl(avatar.avatar_id),
+                    head_url = JSONAvatar.HeadUrl(avatar.avatar_id),
+                    body_url = JSONAvatar.BodyUrl(avatar.avatar_id)
                 };
 
                 return ApiResponse.Json(HttpStatusCode.OK, avatarJson);
@@ -98,7 +102,9 @@ namespace FSO.Server.Api.Core.Controllers
                             description = avatar.description,
                             current_job = avatar.current_job,
                             mayor_nhood = avatar.mayor_nhood,
-                            thumbnail_url = JSONAvatar.ThumbnailUrl(avatar.avatar_id)
+                            thumbnail_url = JSONAvatar.ThumbnailUrl(avatar.avatar_id),
+                            head_url = JSONAvatar.HeadUrl(avatar.avatar_id),
+                            body_url = JSONAvatar.BodyUrl(avatar.avatar_id)
                         });
                     }
                     var avatarsJson = new JSONAvatars();
@@ -152,7 +158,9 @@ namespace FSO.Server.Api.Core.Controllers
                         description = avatar.description,
                         current_job = avatar.current_job,
                         mayor_nhood = avatar.mayor_nhood,
-                        thumbnail_url = JSONAvatar.ThumbnailUrl(avatar.avatar_id)
+                        thumbnail_url = JSONAvatar.ThumbnailUrl(avatar.avatar_id),
+                        head_url = JSONAvatar.HeadUrl(avatar.avatar_id),
+                        body_url = JSONAvatar.BodyUrl(avatar.avatar_id)
                     });
 
                 }
@@ -186,7 +194,9 @@ namespace FSO.Server.Api.Core.Controllers
                     description = avatarById.description,
                     current_job = avatarById.current_job,
                     mayor_nhood = avatarById.mayor_nhood,
-                    thumbnail_url = JSONAvatar.ThumbnailUrl(avatarById.avatar_id)
+                    thumbnail_url = JSONAvatar.ThumbnailUrl(avatarById.avatar_id),
+                    head_url = JSONAvatar.HeadUrl(avatarById.avatar_id),
+                    body_url = JSONAvatar.BodyUrl(avatarById.avatar_id)
                 });
                 return ApiResponse.Json(HttpStatusCode.OK, avatarJson);
             }
@@ -222,7 +232,9 @@ namespace FSO.Server.Api.Core.Controllers
                                 description = avatar.description,
                                 current_job = avatar.current_job,
                                 mayor_nhood = avatar.mayor_nhood,
-                                thumbnail_url = JSONAvatar.ThumbnailUrl(avatar.avatar_id)
+                                thumbnail_url = JSONAvatar.ThumbnailUrl(avatar.avatar_id),
+                                head_url = JSONAvatar.HeadUrl(avatar.avatar_id),
+                                body_url = JSONAvatar.BodyUrl(avatar.avatar_id)
                             });
                         }
                     }
@@ -238,7 +250,35 @@ namespace FSO.Server.Api.Core.Controllers
         public IActionResult GetThumbnail(uint avatarId)
         {
             var api = Api.INSTANCE;
-            var path = Path.Combine(api.Config.NFSdir, "Avatars/" + avatarId.ToString("x8") + "/thumb.png");
+            var avatarDir = Path.Combine(api.Config.NFSdir, "Avatars/" + avatarId.ToString("x8"));
+            var thumbPath = Path.Combine(avatarDir, "thumb.png");
+            var headPath = Path.Combine(avatarDir, "head.png");
+            if (!System.IO.File.Exists(headPath) && api.ThumbnailGenerator != null)
+            {
+                using (var da = api.DAFactory.Get())
+                {
+                    var avatar = da.Avatars.Get(avatarId);
+                    if (avatar != null) api.ThumbnailGenerator(avatar, api.Config.NFSdir);
+                }
+            }
+            // Serve client-uploaded body render if available, else fall back to TSO head sprite.
+            var servePath = System.IO.File.Exists(thumbPath) ? thumbPath : headPath;
+            try
+            {
+                return File(System.IO.File.ReadAllBytes(servePath), "image/png");
+            }
+            catch
+            {
+                return NotFound();
+            }
+        }
+
+        [HttpGet]
+        [Route("userapi/avatars/{avatarId}/head.png")]
+        public IActionResult GetHead(uint avatarId)
+        {
+            var api = Api.INSTANCE;
+            var path = Path.Combine(api.Config.NFSdir, "Avatars/" + avatarId.ToString("x8") + "/head.png");
             if (!System.IO.File.Exists(path) && api.ThumbnailGenerator != null)
             {
                 using (var da = api.DAFactory.Get())
@@ -247,6 +287,22 @@ namespace FSO.Server.Api.Core.Controllers
                     if (avatar != null) api.ThumbnailGenerator(avatar, api.Config.NFSdir);
                 }
             }
+            try
+            {
+                return File(System.IO.File.ReadAllBytes(path), "image/png");
+            }
+            catch
+            {
+                return NotFound();
+            }
+        }
+
+        [HttpGet]
+        [Route("userapi/avatars/{avatarId}/body.png")]
+        public IActionResult GetBody(uint avatarId)
+        {
+            var api = Api.INSTANCE;
+            var path = Path.Combine(api.Config.NFSdir, "Avatars/" + avatarId.ToString("x8") + "/thumb.png");
             try
             {
                 return File(System.IO.File.ReadAllBytes(path), "image/png");
@@ -348,7 +404,11 @@ namespace FSO.Server.Api.Core.Controllers
         public ushort current_job { get; set; }
         public int? mayor_nhood { get; set; }
         public string thumbnail_url { get; set; }
+        public string head_url { get; set; }
+        public string body_url { get; set; }
 
         public static string ThumbnailUrl(uint id) => "/userapi/avatars/" + id + "/thumbnail.png";
+        public static string HeadUrl(uint id) => "/userapi/avatars/" + id + "/head.png";
+        public static string BodyUrl(uint id) => "/userapi/avatars/" + id + "/body.png";
     }
 }
