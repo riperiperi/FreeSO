@@ -1,4 +1,4 @@
-<Catalog>   
+﻿<Catalog>   
 <!-- SEASONAL CATALOG: SPRING -->
 
    <P g="0FE699E4" s="3" p="15" t="spring, toddy, fae, fairy, mushroom" n="Fly Agaric Fungi" />
@@ -658,8 +658,8 @@ These, along with the First and Second place trophies, have been made into four 
    <P g="2C51E0BE" s="5" p="420" n="The Wet and Twisted" />
 
 <!-- Content from dramso deployment -->
-   <P g="65327767" s="17" p="300" n="Sim 'n Crafts "Love & Joy in a Frame"" />
-   <P g="70EA4343" s="29" p="0" n=""Tonight Josephine!" Dresser" t="naked" />
+   <P g="65327767" s="17" p="300" n="Sim 'n Crafts &quot;Love &amp; Joy in a Frame&quot;" />
+   <P g="70EA4343" s="29" p="0" n="&quot;Tonight Josephine!&quot; Dresser" t="naked" />
    <P g="23B1B856" s="29" p="0" n="The Mystic Bomb" />
    <P g="14372A22" s="18" p="1000" n="Snowman" t="debug" />
    <P g="18D4C055" s="4" p="2000" n="Amazin Blazin Jumbo Fireplace" t="debug, fireplace, winter" />
@@ -677,21 +677,21 @@ These, along with the First and Second place trophies, have been made into four 
    <P g="084DB9D9" s="17" p="22350" n="Cursed Dragon Painting" t="dragon, painting, fire, heyty" />
    <P g="1EA4C129" s="18" p="600" n="Sweetheart's Tip Holder" t="tip, jar, heart, heyty" />
    <P g="044043DE" s="29" p="0" r="2" n="DBL Inc.'s All-In-One Power Inverter, Storage and Transmiter Unit" t="solar, panel, transformer, heyty" />
-   <P g="4FEAD2DE" s="17" p="350" n="Sim 'n Crafts "Daruma"" t="daruma, decor, japan, asia, heyty" />
+   <P g="4FEAD2DE" s="17" p="350" n="Sim 'n Crafts &quot;Daruma&quot;" t="daruma, decor, japan, asia, heyty" />
    <P g="30861A09" s="15" p="500" n="Saint Patience's Bingo Machine" t="bingo, patience, heyty" />
    <P g="5BF92F57" s="15" p="10" n="Saint Patience's Bingo Tiles" t="bingo, patience, tile, tiles, heyty" />
    <P g="47F1024B" s="12" p="1500" n="Comfy Cactus" t="cactus, chair, stool, heyty" />
    <P g="0D8FC56E" s="29" p="0" r="2" n="Computerized Money Furnace" t="aura, green, money, heyty" />
    <P g="78E28D41" s="13" p="800" n="Daylight Dining Table" t="umbrella, table, outdoor, heyty" />
    <P g="1EC22834" s="12" p="1500" n="Daylight Dining Chair" t="umbrella, outdoor, heyty" />
-   <P g="4602B432" s="17" p="410" n="Big "S" Small Stone" t="stone, landscape, rock, heyty" />
-   <P g="5ADAADBE" s="17" p="520" n="Big "S" Medium Stone" t="stone, landscape, rock, heyty" />
-   <P g="3EE162D0" s="17" p="670" n="Big "S" Large Stone" t="stone, landscape, rock, heyty" />
-   <P g="330DBFD7" s="18" p="600" n="Sim n' Craft "Piggy" Tip Jar" t="pig, jar, tip, heyty" />
-   <P g="7E33E607" s="29" p="0" r="2" n=""Ability to Read: A tale of skilling Sims"" t="book, skill, heyty" />
+   <P g="4602B432" s="17" p="410" n="Big &quot;S&quot; Small Stone" t="stone, landscape, rock, heyty" />
+   <P g="5ADAADBE" s="17" p="520" n="Big &quot;S&quot; Medium Stone" t="stone, landscape, rock, heyty" />
+   <P g="3EE162D0" s="17" p="670" n="Big &quot;S&quot; Large Stone" t="stone, landscape, rock, heyty" />
+   <P g="330DBFD7" s="18" p="600" n="Sim n' Craft &quot;Piggy&quot; Tip Jar" t="pig, jar, tip, heyty" />
+   <P g="7E33E607" s="29" p="0" r="2" n="&quot;Ability to Read: A tale of skilling Sims&quot;" t="book, skill, heyty" />
    <P g="60A87EAC" s="29" p="0" n="Lucky 'Gumball' Machine" t="gacha, spring, heyty" />
    <P g="60A87EAD" s="29" p="0" n="Lucky 'Gumball' Machine" t="gacha, winter, heyty" />
-   <P g="27D6E09A" s="18" p="600" n="Auntie Annie's "Leprechaum" Tip Jar" t="gold, pot, heyty" />
+   <P g="27D6E09A" s="18" p="600" n="Auntie Annie's &quot;Leprechaum&quot; Tip Jar" t="gold, pot, heyty" />
    <P g="52CE6CE9" s="29" p="0" n="DSO's Award" t="trophy, dso, admin, heyty" />
    <P g="330C2C40" s="29" p="0" r="2" n="2025 (Slightly) Haunted House Miniature" t="halloween, dso, trinket, prize, heyty" />
    <P g="537E350C" s="0" p="500" n="Anti-Green Door" t="door, heyty, control, offline" />
@@ -699,33 +699,33 @@ These, along with the First and Second place trophies, have been made into four 
    <P g="49CF774E" s="29" p="0" n="DSO Coin Booth" t="event, dso, rare, token, heyty" />
    <P g="2A5395D0" s="29" p="0" r="2" n="DBL Inc.'s DSO Coin Mining Mineral Deposit" t="event, dso, rare, token, heyty" />
    <P g="46B92464" s="17" p="50" n="Slip Sign" t="wet, floor, sign, slip, heyty" />
-   <P g="0E45C813" s="19" p="950" n="Vergille Inc. "Monster Disco Ball"" t="disco, ball, rea, light" />
-   <P g="33CFF002" s="18" p="250" n="REA Co. "Attention, Please!" Dinner Bell" t="bell, ring, rea" />
+   <P g="0E45C813" s="19" p="950" n="Vergille Inc. &quot;Monster Disco Ball&quot;" t="disco, ball, rea, light" />
+   <P g="33CFF002" s="18" p="250" n="REA Co. &quot;Attention, Please!&quot; Dinner Bell" t="bell, ring, rea" />
    <P g="12C1B812" s="17" p="100" n="REA Co. Primitive Wall" t="primitive, wall, block, quarter, rea" />
    <P g="23D1B789" s="17" p="200" n="REA Co. Primitive Cube" t="primitive, wall, block, quarter, rea" />
    <P g="45A28B65" s="17" p="50" n="REA Co. Primitive Quarter" t="primitive, wall, block, quarter, rea" />
    <P g="66E03D38" s="17" p="249" n="REA Co. End Grain Cutting Board" t="knife, cutting, board, rea" />
-   <P g="22DDA8A3" s="17" p="799" n="REA Co. "Heaven's Kitchen" Knife Block" t="knife, cutting, block, rea" />
+   <P g="22DDA8A3" s="17" p="799" n="REA Co. &quot;Heaven's Kitchen&quot; Knife Block" t="knife, cutting, block, rea" />
    <P g="3E513B08" s="17" p="199" n="REA Co. Kitchen Essentials" t="paper, bread, kitchen, essentials, rea" />
-   <P g="320213C6" s="14" p="200" n="REA Co. "Safety First" Burglar Alarm" t="alarm, burglar, safety, rea" />
-   <P g="3ECA1D87" s="14" p="600" n="REA Co. "Bottoms Up!" Bar Tap" t="bar, bottoms, up, tap, rea" />
+   <P g="320213C6" s="14" p="200" n="REA Co. &quot;Safety First&quot; Burglar Alarm" t="alarm, burglar, safety, rea" />
+   <P g="3ECA1D87" s="14" p="600" n="REA Co. &quot;Bottoms Up!&quot; Bar Tap" t="bar, bottoms, up, tap, rea" />
    <P g="2B18715C" s="15" p="3500" n="Refurbished Vintage Arcade Cabinet" t="arcade, vintage, cabinet, rea" />
    <P g="54DF758F" s="15" p="7500" n="Sul-Sul Revolution Dance Cabinet" t="dance, arcade, cabinet, rea" />
    <P g="69700CFA" s="29" p="1" n="placecontroller" t="place, controller, rea" />
    <P g="42C5CE12" s="29" p="1" n="REA Co. Event Cube" t="event, cube, rea" />
-   <P g="3C0BDAB5" s="17" p="150" n=""Island of Stability" Zen Garden" t="zen, garden, rake, rea" />
+   <P g="3C0BDAB5" s="17" p="150" n="&quot;Island of Stability&quot; Zen Garden" t="zen, garden, rake, rea" />
    <P g="01CF8AB3" s="16" p="1800" n="REA Co. Aerobics Training Machine" t="treadmill, machine, body, rea" />
    <P g="05CFBB6B" s="17" p="1150" n="Simbanez Wall-Mounted Electric Guitar" t="guitar, rea" />
-   <P g="40F989A1" s="15" p="250" n="Ye Olde "Knave's Fate" Pillory" t="pillory, bdsm, torture, rea" />
+   <P g="40F989A1" s="15" p="250" n="Ye Olde &quot;Knave's Fate&quot; Pillory" t="pillory, bdsm, torture, rea" />
    <P g="58D7B4A4" s="17" p="950" n="REA Co. Deep Pile Rug Collection #1" t="rug, tapestry, rea" />
-   <P g="243B985C" s="15" p="1200" n=""Lucky 7's" Lottery Ticket Dispenser" t="lottery, ticket, prize, rea" />
+   <P g="243B985C" s="15" p="1200" n="&quot;Lucky 7's&quot; Lottery Ticket Dispenser" t="lottery, ticket, prize, rea" />
    <P g="251F1362" s="15" p="3200" n="Mega Simillions Lottery Ticket Dispenser" t="lottery, ticket, prize, rea" />
-   <P g="11C2F4CA" s="13" p="550" n=""Hands Off" Merchandise Counter" t="merch, store, shop, takeout, rea" />
+   <P g="11C2F4CA" s="13" p="550" n="&quot;Hands Off&quot; Merchandise Counter" t="merch, store, shop, takeout, rea" />
    <P g="24D122F4" s="14" p="950" n="Modular Food Shelf" t="merch, store, shop, takeout, food, shelf, rea" />
-   <P g="76D85285" s="17" p="6100" n="Replica 40" Dynasty Symphonic Gong" />
+   <P g="76D85285" s="17" p="6100" n="Replica 40&quot; Dynasty Symphonic Gong" />
    <P g="27F195B7" s="17" p="20" n="DIY Paper Heart Garland" t="garland, heart, paper, rea" />
-   <P g="1522323D" s="17" p="50" n=""Airborne Love" Heart Balloon" t="baloon, heart, love, rea" />
-   <P g="2716B225" s="18" p="900" n=""Undressing" Room Divider" t="naked, undressing, divider, rea" />
+   <P g="1522323D" s="17" p="50" n="&quot;Airborne Love&quot; Heart Balloon" t="baloon, heart, love, rea" />
+   <P g="2716B225" s="18" p="900" n="&quot;Undressing&quot; Room Divider" t="naked, undressing, divider, rea" />
    <P g="2D0B4D7C" s="15" p="2100" n="Cabaret Club Burlesque Pole" t="pole, stripper, cabaret, rea" />
    <P g="17FDABF1" s="29" p="0" n="The Eggplant" t="eggplant, emoji, rea" />
    <P g="23ABFC73" s="14" p="3750" n="REA Co. All-In-One Washer-Dryer Unit" t="rea, washing, machine, washer" />
@@ -734,13 +734,13 @@ These, along with the First and Second place trophies, have been made into four 
    <P g="1DB6D6F6" s="17" p="500" n="DramaSO Place 2025 Final Canvas" t="place, painting, 2025, event" />
    <P g="7C218991" s="14" p="1950" n="400W Monocrystalline Solar Panel" t="rea, solar, panel, power" />
    <P g="43A8CA9C" s="17" p="35" n="Grounded 3-Prong Power Outlet" t="rea, power, outlet, wall" />
-   <P g="64B39D42" s="14" p="199" n=""Anyone Home?" Electronic Doorbell" t="rea, doorbell, wall, door, bell" />
+   <P g="64B39D42" s="14" p="199" n="&quot;Anyone Home?&quot; Electronic Doorbell" t="rea, doorbell, wall, door, bell" />
    <P g="16CE7EBF" s="17" p="45" n="Plastic-Plated Light Switch" t="rea, light, switch, wall" />
    <P g="6B1A0570" s="17" p="79" n="REA Co. Eazy-Breeze Floor Vent" t="vent, breeze, floor, rea" />
    <P g="6096756F" s="17" p="99" n="REA Co. Eazy-Breeze Wall Vent" t="rea, wall, vent, breeze" />
-   <P g="5346167F" s="17" p="320" n=""Silence" Sound Proofing Panels" t="rea, sound, proofing, panel, wall" />
+   <P g="5346167F" s="17" p="320" n="&quot;Silence&quot; Sound Proofing Panels" t="rea, sound, proofing, panel, wall" />
    <P g="1AF48702" s="17" p="650" n="Dubious Box of Spray Paint" t="rea, graffiti, wall, letter, art, painting" />
-   <P g="0A955394" s="14" p="14500" n=""Scalpel, Please!" Operating Table" t="rea, operating, table, medical, bed" />
+   <P g="0A955394" s="14" p="14500" n="&quot;Scalpel, Please!&quot; Operating Table" t="rea, operating, table, medical, bed" />
    <P g="12DEA12E" s="12" p="1000" n="IREA Modular Sofa Center Piece" t="rea, modular, sofa, couch, piece" />
    <P g="12AD3FF1" s="12" p="1000" n="IREA Modular Sofa Corner Piece" t="rea, modular, sofa, couch, piece" />
    <P g="160F575D" s="12" p="1000" n="IREA Modular Sofa End Piece" t="rea, modular, sofa, couch, piece" />
@@ -753,7 +753,7 @@ These, along with the First and Second place trophies, have been made into four 
    <P g="6C348505" s="14" p="55000" n="Green Goo Mortuary Table" t="goo, revive, table, bed, mortuary, bath, morgue" />
    <P g="32EF0AD1" s="18" p="10" n="Salvage Licence" t="salvage, licence, permit, hammer, morgue" />
    <P g="7FA3662D" s="15" p="2000" n="Non-Flammable Cigar Chest" t="cigar, accessory, humidor, box, chest, morgue" />
-   <P g="25E2C0F9" s="29" p="5000" n=""Fun"ereal chair" t="coffin, funeral, chair, casket, funereal, fun, morgue" />
+   <P g="25E2C0F9" s="29" p="5000" n="&quot;Fun&quot;ereal chair" t="coffin, funeral, chair, casket, funereal, fun, morgue" />
    <P g="3058BA3E" s="29" p="20000" n="Mummified Monk Arch" t="decorative, monk, mummy, simcillian, capuchin, arch, gothic, corpse, morgue" />
    <P g="47865B7C" s="29" p="0" n="The Peach" t="peach, emoji, morgue" />
    <P g="74721EFC" s="17" p="420" n="Mom its just a Vase" t="bong, flower, vase, zinxy" />
