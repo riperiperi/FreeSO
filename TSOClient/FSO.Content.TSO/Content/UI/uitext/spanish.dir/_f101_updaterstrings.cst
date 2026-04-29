@@ -1,0 +1,22 @@
+﻿1 ^Actualizando DramaSO^
+2 ^Descargando %s, (%s/%s, %s/%s archivo(s)) ^
+
+3 ^Actualización necesaria^
+4 ^El servidor al que te estás conectando necesita la versión %s de la rama %s (actualmente tienes la versión %s de la rama %s). El servidor ha proporcionado una localización donde descargarte esta versión. ¿Te gustaría descargar y instalar esta actualización?
+
+¡Recuerda que solo debes instalar actualizaciones y paquetes de contenido de servidores en los que confíes! Si no quieres instalar esta actualización, serás devuelto a la pantalla de inicio de sesión.^
+
+5 ^Paquetes de contenido necesarios^
+6 ^El servidor al que te has conectado necesita los siguientes paquetes de contenido: %s
+
+Estos pueden ser descargados desde el servidor. ¿Quieres continuar?
+¡Recuerda que solo debes instalar actualizaciones y paquetes de contenido de servidores en los que confíes! Si no quieres instalar esta actualización, serás devuelto a la pantalla de inicio de sesión.^
+
+7 ^Reinicio necesario^
+8 ^Te estás uniendo a un servidor con un paquete de contenidos diferente al último al que te uniste. El juego debe ser reiniciado para eliminar los datos del último servidor.^
+
+9 ^Descargando archivos...^
+10 ^Actualizar^
+11 ^Alerta de versión^
+12 ^Has elegido ignorar las diferencias de las versiones. Ten en cuenta que esto no afectará a la experiencia de juego en el servidor, pero puede causar más desincronizaciones, bloqueos en el cliente y entornos inesperados. ¡Solo debes hacer esto para propósitos de desarrollo!^
+13 ^El juego se reiniciará. Haz clic en OK para comenzar a actualizar.^
