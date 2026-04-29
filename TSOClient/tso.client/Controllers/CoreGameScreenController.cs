@@ -15,6 +15,7 @@ using FSO.SimAntics;
 using FSO.SimAntics.NetPlay;
 using FSO.SimAntics.NetPlay.Model;
 using Microsoft.Xna.Framework;
+using NLog;
 using Ninject;
 using Ninject.Parameters;
 using System;
@@ -26,6 +27,7 @@ namespace FSO.Client.Controllers
 {
     public class CoreGameScreenController : IDisposable
     {
+        private static readonly Logger LOG = LogManager.GetCurrentClassLogger();
         public CoreGameScreen Screen;
         private MessagingController Chat;
         private RoommateRequestController RoommateProtocol;
@@ -263,32 +265,57 @@ namespace FSO.Client.Controllers
             if ((now - _LastAvatarThumbUpload).TotalSeconds < 5) return;
             _LastAvatarThumbUpload = now;
 
+            LOG.Info("[AvatarThumb] UploadAvatarThumbnail called for avatar persistID={0} name={1}", vmAva.PersistID, vmAva.Name);
+
             // OpenGL calls (GetAvatarThumb, GetIcon, GraphicsDevice) must run on the
             // main/render thread. This method is invoked from VM.LoadAsync (thread pool)
             // so we marshal the work here to avoid a SIGSEGV in libGLdispatch.
             GameThread.NextUpdate(_ =>
             {
-                var avatarComp = VMEntity.UseWorld ? vmAva.WorldUI as FSO.LotView.Components.AvatarComponent : null;
-                var ico = avatarComp != null
-                    ? Screen.vm.Context.World.GetAvatarThumb(avatarComp, GameFacade.GraphicsDevice)
-                    : vmAva.GetIcon(GameFacade.GraphicsDevice, 0);
-                if (ico == null) ico = vmAva.GetIcon(GameFacade.GraphicsDevice, 0);
-                if (ico == null) return;
-
-                byte[] data;
-                using (var stream = new MemoryStream())
+                try
                 {
-                    ico.SaveAsPng(stream, ico.Width, ico.Height);
-                    data = stream.ToArray();
+                    var avatarComp = VMEntity.UseWorld ? vmAva.WorldUI as FSO.LotView.Components.AvatarComponent : null;
+                    LOG.Info("[AvatarThumb] NextUpdate: UseWorld={0} avatarComp={1}", VMEntity.UseWorld, avatarComp != null ? "set" : "null");
+
+                    var ico = avatarComp != null
+                        ? Screen.vm.Context.World.GetAvatarThumb(avatarComp, GameFacade.GraphicsDevice)
+                        : vmAva.GetIcon(GameFacade.GraphicsDevice, 0);
+                    LOG.Info("[AvatarThumb] GetAvatarThumb result: {0}", ico != null ? $"{ico.Width}x{ico.Height}" : "null");
+
+                    if (ico == null) ico = vmAva.GetIcon(GameFacade.GraphicsDevice, 0);
+                    LOG.Info("[AvatarThumb] GetIcon result: {0}", ico != null ? $"{ico.Width}x{ico.Height}" : "null");
+
+                    if (ico == null) { LOG.Warn("[AvatarThumb] No icon available — aborting upload"); return; }
+
+                    byte[] data;
+                    using (var stream = new MemoryStream())
+                    {
+                        ico.SaveAsPng(stream, ico.Width, ico.Height);
+                        data = stream.ToArray();
+                    }
+                    LOG.Info("[AvatarThumb] PNG encoded: {0} bytes", data.Length);
+
+                    DataService.Get<Avatar>(Network.MyCharacter).ContinueWith(x =>
+                    {
+                        try
+                        {
+                            var avatar = x.Result;
+                            if (avatar == null) { LOG.Warn("[AvatarThumb] DataService.Get returned null avatar"); return; }
+                            LOG.Info("[AvatarThumb] Syncing {0} bytes to city server for avatarId={1}", data.Length, Network.MyCharacter);
+                            avatar.Avatar_Thumbnail = new cTSOGenericData(data);
+                            DataService.Sync(avatar, new string[] { "Avatar_Thumbnail" });
+                            LOG.Info("[AvatarThumb] DataService.Sync called successfully");
+                        }
+                        catch (Exception ex)
+                        {
+                            LOG.Error(ex, "[AvatarThumb] Exception in DataService.Sync callback");
+                        }
+                    });
                 }
-
-                DataService.Get<Avatar>(Network.MyCharacter).ContinueWith(x =>
+                catch (Exception ex)
                 {
-                    var avatar = x.Result;
-                    if (avatar == null) return;
-                    avatar.Avatar_Thumbnail = new cTSOGenericData(data);
-                    DataService.Sync(avatar, new string[] { "Avatar_Thumbnail" });
-                });
+                    LOG.Error(ex, "[AvatarThumb] Exception in NextUpdate callback");
+                }
             });
         }
 
