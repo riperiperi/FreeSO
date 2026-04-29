@@ -375,9 +375,12 @@ namespace FSO.SimAntics
             {
                 if (Driver.Tick(this)) //returns true the first time we catch up to the state.
                 {
-                    Ready = true;
-                    var localAvatar = GetAvatarByPersist(MyUID);
-                    if (localAvatar != null) OnAvatarReady?.Invoke(localAvatar);
+                    if (!Ready)
+                    {
+                        Ready = true;
+                        var localAvatar = GetAvatarByPersist(MyUID);
+                        if (localAvatar != null) OnAvatarReady?.Invoke(localAvatar);
+                    }
                 }
             }
         }
