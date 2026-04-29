@@ -205,6 +205,7 @@
     <Compile Include="Servers\City\Handlers\BulletinHandler.cs" />
     <Compile Include="Servers\City\Handlers\NhoodHandler.cs" />
     <Compile Include="Servers\City\Handlers\MailHandler.cs" />
+    <Compile Include="Servers\City\Handlers\GlobalChatHandler.cs" />
     <Compile Include="Servers\City\Handlers\LotChatNotifyHandler.cs" />
     <Compile Include="Servers\City\Handlers\MatchmakerNotifyHandler.cs" />
     <Compile Include="Servers\City\Handlers\ModerationHandler.cs" />

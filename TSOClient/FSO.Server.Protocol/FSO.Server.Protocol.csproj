@@ -115,6 +115,7 @@
     <Compile Include="Electron\Packets\ChangeRoommateRequest.cs" />
     <Compile Include="Electron\Packets\ChangeRoommateResponse.cs" />
     <Compile Include="Electron\Packets\FSOVMProtocolMessage.cs" />
+    <Compile Include="Electron\Packets\GlobalChatMessage.cs" />
     <Compile Include="Electron\Packets\GlobalTuningUpdate.cs" />
     <Compile Include="Electron\Packets\MailRequest.cs" />
     <Compile Include="Electron\Packets\MailResponse.cs" />
