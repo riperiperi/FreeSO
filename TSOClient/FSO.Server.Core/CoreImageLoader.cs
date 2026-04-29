@@ -4,6 +4,7 @@ using FSO.Server.Database.DA.Avatars;
 using FSO.Vitaboy;
 using SixLabors.ImageSharp;
 using SixLabors.ImageSharp.PixelFormats;
+using SixLabors.ImageSharp.Processing;
 using System;
 using System.IO;
 
@@ -49,8 +50,16 @@ namespace FSO.Server.Core
                 var dir = Path.Combine(nfsDir, "Objects/" + guid.ToString("x8"));
                 Directory.CreateDirectory(dir);
                 using (var img = Image.Load(new MemoryStream(bmp.data)))
-                using (var fs = File.Open(Path.Combine(dir, "thumb.png"), FileMode.Create))
-                    img.SaveAsPng(fs);
+                {
+                    img.Mutate(x => x.Resize(new ResizeOptions
+                    {
+                        Size = new Size(128, 128),
+                        Mode = ResizeMode.Max,
+                        Sampler = KnownResamplers.NearestNeighbor
+                    }));
+                    using (var fs = File.Open(Path.Combine(dir, "thumb.png"), FileMode.Create))
+                        img.SaveAsPng(fs);
+                }
             }
             catch { }
         }
