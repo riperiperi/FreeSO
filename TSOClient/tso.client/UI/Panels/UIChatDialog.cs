@@ -333,11 +333,14 @@ namespace FSO.Client.UI.Panels
             {
                 if (evt.Type == VMChatEventType.Message || evt.Type == VMChatEventType.MessageMe)
                 {
-                    //can be filtered out if we're not viewing that channel
-                    if ((ShowChannels & (1 << evt.ChannelID)) == 0) continue;
-                    //else let's try pass our channel info
-                    if (evt.ChannelID == 7) evt.Channel = VMTSOChatChannel.AdminChannel;
-                    else if (evt.ChannelID > 0) evt.Channel = channels.FirstOrDefault(x => x.ID == evt.ChannelID);
+                    if (evt.ChannelID == 255) evt.Channel = VMTSOChatChannel.CityChannel; // city-wide: always visible
+                    else
+                    {
+                        //can be filtered out if we're not viewing that channel
+                        if ((ShowChannels & (1 << evt.ChannelID)) == 0) continue;
+                        if (evt.ChannelID == 7) evt.Channel = VMTSOChatChannel.AdminChannel;
+                        else if (evt.ChannelID > 0) evt.Channel = channels.FirstOrDefault(x => x.ID == evt.ChannelID);
+                    }
                 }
                 if (!first) txt.Append("\n");
                 first = false;

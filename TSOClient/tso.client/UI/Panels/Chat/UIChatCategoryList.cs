@@ -68,6 +68,7 @@ namespace FSO.Client.UI.Panels.Chat
             var btnTex = ui.Get("chat_cat.png").Get(GameFacade.GraphicsDevice);
 
             channels.Add(VMTSOChatChannel.MainChannel);
+            channels.Add(VMTSOChatChannel.CityChannel);
             channels.AddRange(Dialog.Owner.vm.TSOState.ChatChannels);
             if (perm == VMTSOAvatarPermissions.Admin)
                 channels.Add(VMTSOChatChannel.AdminChannel);
@@ -93,7 +94,8 @@ namespace FSO.Client.UI.Panels.Chat
                 if (!EditMode)
                 {
                     btn.Selected = (channel.ID == active);
-                    if ((Dialog.ShowChannels & (1 << channel.ID)) == 0) btn.ForceState = 3;
+                    // City channel (ID=255) is always visible — never grey it out with ForceState.
+                    if (channel.ID != 255 && (Dialog.ShowChannels & (1 << channel.ID)) == 0) btn.ForceState = 3;
                 }
                 if (EditMode && channel.ID == 0)
                 {
@@ -228,8 +230,23 @@ namespace FSO.Client.UI.Panels.Chat
             }
             else
             {
+                if (chan.ID == 255)
+                {
+                    // City channel is always visible — just switch active send target.
+                    Dialog.Owner.ChatPanel.ActiveChannel = 255;
+                    Dialog.RenderEvents();
+                    Populate();
+                    return;
+                }
+
                 var active = Dialog.Owner.ChatPanel.ActiveChannel;
-                if (chan.ID == active)
+                if (active == 255)
+                {
+                    // switching away from city channel — just move to the new channel without bitmask ops
+                    Dialog.ShowChannels |= (byte)(1 << chan.ID);
+                    Dialog.Owner.ChatPanel.ActiveChannel = chan.ID;
+                }
+                else if (chan.ID == active)
                 {
                     //they're toggling this chat to invisible
                     Dialog.ShowChannels &= (byte)(~(1<<chan.ID));

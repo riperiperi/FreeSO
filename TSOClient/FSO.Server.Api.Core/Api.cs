@@ -28,6 +28,7 @@ namespace FSO.Server.Api.Core
         public GithubConfig Github;
         public ChatBroadcast ChatBroadcast;
         public InjectBroadcast InjectBroadcast;
+        public GlobalChatInjectBroadcast GlobalChatInjectBroadcast;
         // Wired by FSO.Server.Core to generate a thumb.png from game content when none exists yet.
         public Action<DbAvatar, string> ThumbnailGenerator;
         // Wired by FSO.Server.Core to generate Objects/{guid}/thumb.png from the IFF catalog BMP.
@@ -42,6 +43,8 @@ namespace FSO.Server.Api.Core
             ChatBroadcast.Instance = ChatBroadcast;
             InjectBroadcast = new InjectBroadcast();
             InjectBroadcast.Instance = InjectBroadcast;
+            GlobalChatInjectBroadcast = new GlobalChatInjectBroadcast();
+            GlobalChatInjectBroadcast.Instance = GlobalChatInjectBroadcast;
         }
 
         public void Init(NameValueCollection appSettings)

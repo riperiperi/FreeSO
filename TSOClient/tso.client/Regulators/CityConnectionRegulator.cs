@@ -1,6 +1,8 @@
 ﻿using FSO.Client.Model;
 using FSO.Client.UI.Controls;
 using FSO.Client.UI.Framework;
+using FSO.Client.UI.Panels;
+using FSO.Client.UI.Screens;
 using FSO.Common.DatabaseService;
 using FSO.Common.DatabaseService.Model;
 using FSO.Common.DataService;
@@ -432,6 +434,15 @@ namespace FSO.Client.Regulators
             else if (message is ChangeRoommateResponse)
             {
 
+            }
+            else if (message is GlobalChatMessage)
+            {
+                var msg = (GlobalChatMessage)message;
+                GameThread.InUpdate(() =>
+                {
+                    var screen = GameFacade.Screens.CurrentUIScreen as CoreGameScreen;
+                    screen?.LotControl?.ChatPanel?.ReceiveGlobalChatEvent(msg);
+                });
             }
         }
 

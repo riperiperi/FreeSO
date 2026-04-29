@@ -12,11 +12,19 @@ using FSO.Common;
 using FSO.SimAntics.Model.TSOPlatform;
 using FSO.Common.Rendering.Framework.IO;
 using FSO.SimAntics.Model;
+using FSO.Server.Protocol.Electron.Packets;
+using System;
 
 namespace FSO.Client.UI.Panels
 {
     public class UIChatPanel : UIContainer
     {
+        public const int GLOBAL_CHANNEL_ID = 255;
+
+        // Set by CoreGameScreenController once the city connection is up.
+        // Receives a ready-to-send GlobalChatMessage; SenderUID/SenderName are filled server-side.
+        public static Action<GlobalChatMessage> GlobalChatSend;
+
         private VM vm;
         private TextStyle Style;
         private UITextBox TextBox;
@@ -148,7 +156,24 @@ namespace FSO.Client.UI.Panels
                 }
             }
             message = message.Replace("\n", "");
-            if (message != "" && Owner.ActiveEntity != null)
+            if (message == "") return;
+
+            // City-wide chat: send directly to city server (no lot entity needed).
+            if (ActiveChannel == GLOBAL_CHANNEL_ID)
+            {
+                var myAvatar = vm.GetAvatarByPersist(vm.MyUID);
+                var color = ((VMTSOAvatarState)myAvatar?.TSOState)?.ChatColor ?? Color.LightGray;
+                GlobalChatSend?.Invoke(new GlobalChatMessage
+                {
+                    SenderUID = 0,
+                    SenderName = "",
+                    Message = message,
+                    Color = color.PackedValue
+                });
+                return;
+            }
+
+            if (Owner.ActiveEntity != null)
             {
                 if ((Owner.ActiveEntity.GetValue(VMStackObjectVariable.FlagField2) & (short)VMEntityFlags2.FSODisableChat) != 0)
                 {
@@ -364,6 +389,18 @@ namespace FSO.Client.UI.Panels
                     HistoryDialog.ReceiveEvent(evt);
                 }
             }
+        }
+
+        public void ReceiveGlobalChatEvent(GlobalChatMessage msg)
+        {
+            var color = new Color(msg.Color);
+            var evt = new VMChatEvent(null, VMChatEventType.Message, (byte)GLOBAL_CHANNEL_ID, msg.SenderName, msg.Message)
+            {
+                SenderUID = msg.SenderUID,
+                Color = color,
+                Channel = VMTSOChatChannel.CityChannel
+            };
+            ReceiveEvent(evt);
         }
 
         public void SetLotName(string name)

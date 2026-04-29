@@ -29,6 +29,7 @@ namespace FSO.Server.Protocol.Electron
         BulletinRequest,
         BulletinResponse,
         GlobalTuningUpdate,
+        GlobalChatMessage,
         Unknown = 0xFFFF
     }
 

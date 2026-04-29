@@ -156,5 +156,39 @@ namespace FSO.Server.Api.Core.Controllers.Admin
             api.InjectBroadcast.Publish(json);
             return Ok();
         }
+
+        // POST admin/city/chat/inject — send a Discord message into city-wide chat for all connected clients.
+        // Requires moderator JWT. Body: {"avatar_name":"...", "message":"..."}
+        [HttpPost("city/chat/inject")]
+        public IActionResult InjectCity()
+        {
+            var api = Api.INSTANCE;
+            try { api.DemandModerator(Request); }
+            catch { return Unauthorized(); }
+
+            string body;
+            using (var reader = new System.IO.StreamReader(Request.Body))
+                body = reader.ReadToEndAsync().GetAwaiter().GetResult();
+
+            dynamic payload;
+            try { payload = JsonConvert.DeserializeObject<dynamic>(body); }
+            catch { return BadRequest("Invalid JSON"); }
+
+            string avatarName = (string)payload?.avatar_name ?? "";
+            string message    = (string)payload?.message    ?? "";
+
+            if (string.IsNullOrWhiteSpace(avatarName) || string.IsNullOrWhiteSpace(message))
+                return BadRequest("avatar_name and message are required");
+
+            if (message.Length > 200)
+                message = message.Substring(0, 200);
+
+            api.GlobalChatInjectBroadcast.Publish(JsonConvert.SerializeObject(new
+            {
+                avatar_name = avatarName,
+                message
+            }));
+            return Ok();
+        }
     }
 }

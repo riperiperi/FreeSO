@@ -199,6 +199,16 @@ namespace FSO.SimAntics.Model.TSOPlatform
             Flags = VMTSOChatChannelFlags.ShowByDefault
         };
 
+        public static VMTSOChatChannel CityChannel = new VMTSOChatChannel()
+        {
+            ID = 255,
+            ViewPermMin = VMTSOAvatarPermissions.Visitor,
+            SendPermMin = VMTSOAvatarPermissions.Visitor,
+            Name = "City",
+            Description = "City-wide Chat",
+            TextColor = new Color(152, 251, 152)
+        };
+
         public VMTSOChatChannel Clone()
         {
             return new VMTSOChatChannel()

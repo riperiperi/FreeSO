@@ -48,6 +48,7 @@ namespace FSO.Client.Controllers
             this.DataService = dataService;
             this.Chat = new MessagingController(this, view.MessageTray, network, dataService);
             this.JoinLotRegulator = joinLotRegulator;
+            UI.Panels.UIChatPanel.GlobalChatSend = (msg) => network.CityClient.Write(msg);
             this.RoommateProtocol = new RoommateRequestController(this, network, dataService);
             this.NeighborhoodProtocol = kernel.Get<NeighborhoodActionController>();
             this.BulletinProtocol = kernel.Get<BulletinActionController>();

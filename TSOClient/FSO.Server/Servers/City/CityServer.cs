@@ -31,6 +31,7 @@ namespace FSO.Server.Servers.City
         private CityLivenessEngine Liveness;
         public bool ShuttingDown;
         private IDisposable _injectSubscription;
+        private IDisposable _globalChatInjectSubscription;
 
         public CityServer(CityServerConfiguration config, IKernel kernel) : base(config, kernel)
         {
@@ -47,6 +48,7 @@ namespace FSO.Server.Servers.City
 
             Liveness.Start();
             _SubscribeInjectBroadcast();
+            _SubscribeGlobalChatInject();
         }
 
         private void _SubscribeInjectBroadcast()
@@ -85,6 +87,29 @@ namespace FSO.Server.Servers.City
                 catch (Exception ex)
                 {
                     LOG.Warn("Failed to route inject message: {0}", ex.Message);
+                }
+            });
+        }
+
+        private void _SubscribeGlobalChatInject()
+        {
+            var hub = GlobalChatInjectBroadcast.Instance;
+            if (hub == null) return;
+
+            _globalChatInjectSubscription = hub.Subscribe(json =>
+            {
+                try
+                {
+                    dynamic msg = JsonConvert.DeserializeObject<dynamic>(json);
+                    string avatarName = (string)msg.avatar_name ?? "";
+                    string message = (string)msg.message ?? "";
+
+                    var handler = Kernel.Get<GlobalChatHandler>();
+                    handler.BroadcastAndPublish(0, avatarName, message, 0xFFC8C8C8u);
+                }
+                catch (Exception ex)
+                {
+                    LOG.Warn("Failed to route global chat inject: {0}", ex.Message);
                 }
             });
         }
@@ -302,7 +327,8 @@ namespace FSO.Server.Servers.City
                 typeof(MatchmakerNotifyHandler),
                 typeof(LotChatNotifyHandler),
                 typeof(NhoodHandler),
-                typeof(BulletinHandler)
+                typeof(BulletinHandler),
+                typeof(GlobalChatHandler)
             };
         }
     }
