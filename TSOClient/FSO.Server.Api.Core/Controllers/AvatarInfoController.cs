@@ -251,7 +251,7 @@ namespace FSO.Server.Api.Core.Controllers
         {
             var api = Api.INSTANCE;
             var avatarDir = Path.Combine(api.Config.NFSdir, "Avatars/" + avatarId.ToString("x8"));
-            var thumbPath = Path.Combine(avatarDir, "thumb.png");
+            var thumbPath = Path.Combine(avatarDir, "body.png");
             var headPath = Path.Combine(avatarDir, "head.png");
             if (!System.IO.File.Exists(headPath) && api.ThumbnailGenerator != null)
             {
@@ -302,7 +302,7 @@ namespace FSO.Server.Api.Core.Controllers
         public IActionResult GetBody(uint avatarId)
         {
             var api = Api.INSTANCE;
-            var path = Path.Combine(api.Config.NFSdir, "Avatars/" + avatarId.ToString("x8") + "/thumb.png");
+            var path = Path.Combine(api.Config.NFSdir, "Avatars/" + avatarId.ToString("x8") + "/body.png");
             try
             {
                 return File(System.IO.File.ReadAllBytes(path), "image/png");

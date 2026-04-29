@@ -51,7 +51,7 @@ namespace FSO.Server.DataService.Providers
                     case "Avatar_Thumbnail":
                         var avatarDir = Path.Combine(NFS.GetBaseDirectory(), "Avatars/" + avatar.Avatar_Id.ToString("x8"));
                         Directory.CreateDirectory(avatarDir);
-                        var imgPath = Path.Combine(avatarDir, "thumb.png");
+                        var imgPath = Path.Combine(avatarDir, "body.png");
                         var imgData = (cTSOGenericData)value;
                         using (var fs = File.Open(imgPath, FileMode.Create, FileAccess.Write, FileShare.None))
                             fs.Write(imgData.Data, 0, imgData.Data.Length);
