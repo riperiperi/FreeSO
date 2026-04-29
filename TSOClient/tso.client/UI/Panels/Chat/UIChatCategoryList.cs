@@ -85,7 +85,7 @@ namespace FSO.Client.UI.Panels.Chat
             btnCaption.Size = 8;
             btnCaption.Shadow = true;
 
-            var active = Dialog.Owner.ChatPanel.ActiveChannel;
+            var active = Dialog.Owner.ChatPanel?.ActiveChannel ?? 0;
             var xPos = 0;
             foreach (var channel in channels)
             {
