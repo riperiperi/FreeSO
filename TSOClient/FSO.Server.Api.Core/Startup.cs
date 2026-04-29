@@ -1,9 +1,11 @@
 ﻿using FSO.Server.Common;
 using Microsoft.AspNetCore.Builder;
 using Microsoft.AspNetCore.Hosting;
+using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
+using System.Security;
 
 namespace FSO.Server.Api.Core
 {
@@ -52,6 +54,19 @@ namespace FSO.Server.Api.Core
             app.UseCors();
             app.UseWebSockets();
             //app.UseHttpsRedirection();
+            app.Use(async (context, next) =>
+            {
+                try
+                {
+                    await next();
+                }
+                catch (SecurityException ex)
+                {
+                    context.Response.StatusCode = 401;
+                    context.Response.ContentType = "application/json";
+                    await context.Response.WriteAsync("{\"error\":\"" + ex.Message.Replace("\"", "'") + "\"}");
+                }
+            });
             app.UseMvc();
             AppLifetime = appLifetime;
         }

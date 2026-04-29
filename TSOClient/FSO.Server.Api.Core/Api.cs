@@ -91,29 +91,37 @@ namespace FSO.Server.Api.Core
         public JWTUser RequireAuthentication(HttpRequest request)
         {
             JWTUser result;
-            
-            if (!string.IsNullOrEmpty(request.Headers["Authorization"]))
-            {
-                result = JWT.DecodeToken(GetAuthParam(request.Headers["Authorization"]));
-            }
-            else
-            {
-                var cookies = request.Cookies;
-                if (cookies == null)
-                    throw new SecurityException("Unable to find cookie");
 
-
-                var cookie = cookies["fso"];
-                if (string.IsNullOrEmpty(cookie))
+            try
+            {
+                if (!string.IsNullOrEmpty(request.Headers["Authorization"]))
                 {
-                    throw new SecurityException("Unable to find cookie");
+                    result = JWT.DecodeToken(GetAuthParam(request.Headers["Authorization"]));
                 }
-                result = JWT.DecodeToken(cookie);
+                else
+                {
+                    var cookies = request.Cookies;
+                    if (cookies == null)
+                        throw new SecurityException("Unable to find cookie");
+
+                    var cookie = cookies["fso"];
+                    if (string.IsNullOrEmpty(cookie))
+                        throw new SecurityException("Unable to find cookie");
+
+                    result = JWT.DecodeToken(cookie);
+                }
             }
-            if (result == null)
+            catch (SecurityException)
             {
-                throw new SecurityException("Invalid token");
+                throw;
             }
+            catch (Exception ex)
+            {
+                throw new SecurityException("Token invalid or expired: " + ex.Message);
+            }
+
+            if (result == null)
+                throw new SecurityException("Invalid token");
 
             return result;
         }
