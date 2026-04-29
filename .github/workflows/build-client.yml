@@ -23,6 +23,8 @@ on:
       - 'TSOClient/tso.vitaboy.model/**'
       - 'TSOClient/tso.world/**'
       - 'Other/libs/TargaImagePCL/**'
+      # Content/data projects used by the client
+      - 'TSOClient/FSO.Content.TSO/**'
       # Protocol/data projects referenced directly by the client
       - 'TSOClient/FSO.Server.Protocol/**'
       - 'TSOClient/FSO.Server.DataService/**'
