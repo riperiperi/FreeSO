@@ -23,6 +23,9 @@ on:
       - 'TSOClient/tso.vitaboy.model/**'
       - 'TSOClient/tso.world/**'
       - 'Other/libs/TargaImagePCL/**'
+      # Protocol/data projects referenced directly by the client
+      - 'TSOClient/FSO.Server.Protocol/**'
+      - 'TSOClient/FSO.Server.DataService/**'
       # Solution / build config
       - 'TSOClient/FreeSO.sln'
       - 'TSOClient/Directory.Build.props'
