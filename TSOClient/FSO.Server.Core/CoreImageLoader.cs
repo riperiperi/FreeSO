@@ -53,7 +53,7 @@ namespace FSO.Server.Core
                 {
                     img.Mutate(x => x.Resize(new ResizeOptions
                     {
-                        Size = new Size(128, 128),
+                        Size = new Size(1024, 1024),
                         Mode = ResizeMode.Max,
                         Sampler = KnownResamplers.NearestNeighbor
                     }));
