@@ -43,7 +43,7 @@ namespace FSO.Server.Core
                 var obj = content.WorldObjects.Get(guid);
                 if (obj == null) return;
                 var objd = obj.OBJ;
-                var bmp = obj.Resource.Get<BMP>((ushort)objd.CatalogStringsID);
+                var bmp = obj.Resource.Get<BMP>(objd.ThumbnailGraphic);
                 if (bmp == null || bmp.data == null || bmp.data.Length == 0) return;
 
                 var dir = Path.Combine(nfsDir, "Objects/" + guid.ToString("x8"));
