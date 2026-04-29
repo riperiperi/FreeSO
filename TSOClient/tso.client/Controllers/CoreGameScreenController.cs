@@ -257,32 +257,37 @@ namespace FSO.Client.Controllers
 
         public void UploadAvatarThumbnail(VMAvatar vmAva)
         {
-            // Debounce: suppress rapid re-fires (e.g. during initial lot load)
+            // Debounce before scheduling — avoids queuing many callbacks during lot load.
             var now = DateTime.UtcNow;
             if ((now - _LastAvatarThumbUpload).TotalSeconds < 5) return;
             _LastAvatarThumbUpload = now;
 
-            // Prefer a full 3D Vitaboy render; fall back to pre-baked FAR3 head sprite.
-            var avatarComp = VMEntity.UseWorld ? vmAva.WorldUI as FSO.LotView.Components.AvatarComponent : null;
-            var ico = avatarComp != null
-                ? Screen.vm.Context.World.GetAvatarThumb(avatarComp, GameFacade.GraphicsDevice)
-                : vmAva.GetIcon(GameFacade.GraphicsDevice, 0);
-            if (ico == null) ico = vmAva.GetIcon(GameFacade.GraphicsDevice, 0);
-            if (ico == null) return;
-
-            byte[] data;
-            using (var stream = new MemoryStream())
+            // OpenGL calls (GetAvatarThumb, GetIcon, GraphicsDevice) must run on the
+            // main/render thread. This method is invoked from VM.LoadAsync (thread pool)
+            // so we marshal the work here to avoid a SIGSEGV in libGLdispatch.
+            GameThread.NextUpdate(_ =>
             {
-                ico.SaveAsPng(stream, ico.Width, ico.Height);
-                data = stream.ToArray();
-            }
+                var avatarComp = VMEntity.UseWorld ? vmAva.WorldUI as FSO.LotView.Components.AvatarComponent : null;
+                var ico = avatarComp != null
+                    ? Screen.vm.Context.World.GetAvatarThumb(avatarComp, GameFacade.GraphicsDevice)
+                    : vmAva.GetIcon(GameFacade.GraphicsDevice, 0);
+                if (ico == null) ico = vmAva.GetIcon(GameFacade.GraphicsDevice, 0);
+                if (ico == null) return;
 
-            DataService.Get<Avatar>(Network.MyCharacter).ContinueWith(x =>
-            {
-                var avatar = x.Result;
-                if (avatar == null) return;
-                avatar.Avatar_Thumbnail = new cTSOGenericData(data);
-                DataService.Sync(avatar, new string[] { "Avatar_Thumbnail" });
+                byte[] data;
+                using (var stream = new MemoryStream())
+                {
+                    ico.SaveAsPng(stream, ico.Width, ico.Height);
+                    data = stream.ToArray();
+                }
+
+                DataService.Get<Avatar>(Network.MyCharacter).ContinueWith(x =>
+                {
+                    var avatar = x.Result;
+                    if (avatar == null) return;
+                    avatar.Avatar_Thumbnail = new cTSOGenericData(data);
+                    DataService.Sync(avatar, new string[] { "Avatar_Thumbnail" });
+                });
             });
         }
 
