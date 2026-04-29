@@ -29,6 +29,28 @@ namespace FSO.Content
         }
 
         private bool WithSprites;
+        private readonly object _spritesInitLock = new object();
+
+        /// <summary>
+        /// Returns the SPF IffFile for the given filename, lazily initializing the sprites
+        /// provider on first use (safe to call even when Init(withSprites: false) was used).
+        /// </summary>
+        public IffFile GetSpritesFile(string fileName)
+        {
+            if (Sprites == null)
+            {
+                lock (_spritesInitLock)
+                {
+                    if (Sprites == null)
+                    {
+                        var sp = new FAR1Provider<IffFile>(ContentManager, new IffCodec(), new Regex(".*/objspf.*\\.far"));
+                        sp.Init();
+                        Sprites = sp;
+                    }
+                }
+            }
+            return Sprites.Get(fileName);
+        }
 
         /// <summary>
         /// Initiates loading of world objects.
