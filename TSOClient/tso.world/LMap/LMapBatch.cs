@@ -62,6 +62,10 @@ namespace FSO.LotView.LMap
         public Vector2 InvMapLayout;
 
         private List<DirtyRoom> DirtyRooms = new List<DirtyRoom>();
+        // Reusable scratch list for the floor-sorted iteration of DirtyRooms in
+        // ParseInvalidated. Iterating DirtyRooms directly while removing entries from it
+        // is unsafe, so we copy → sort → iterate the copy. Reused to avoid per-call alloc.
+        private List<DirtyRoom> _dirtyRoomsScratch = new List<DirtyRoom>();
         public sbyte RedrawFloor;
         public Color LastOutsideColor;
 
@@ -287,11 +291,15 @@ namespace FSO.LotView.LMap
             var rooms = Blueprint.Rooms;
             var lightRooms = Blueprint.Light;
 
-            var ordered = DirtyRooms.OrderBy(x => rooms[x.RoomID].Floor);
+            // Snapshot DirtyRooms into a reusable scratch and sort it in place. Avoids
+            // OrderBy's allocation of an OrderedEnumerable + comparer closure every call.
+            _dirtyRoomsScratch.Clear();
+            _dirtyRoomsScratch.AddRange(DirtyRooms);
+            _dirtyRoomsScratch.Sort((a, b) => rooms[a.RoomID].Floor.CompareTo(rooms[b.RoomID].Floor));
 
             int unimportantRoomsProcessed = 0;
 
-            foreach (var rm in ordered)
+            foreach (var rm in _dirtyRoomsScratch)
             {
                 var room = rooms[rm.RoomID];
                 if (room.WallLines == null || room.Floor > floorLimit)
@@ -559,10 +567,14 @@ namespace FSO.LotView.LMap
                 LightEffect.shadowMap = ShadowTarg;
             }
 
-            var order = lighting.Lights.OrderBy(x => x.OutdoorsColor ? 0 : 1);
+            // Two passes — OutdoorsColor=true lights first, then non-outdoors. Equivalent
+            // to the previous OrderBy(x => x.OutdoorsColor ? 0 : 1) but with no
+            // OrderedEnumerable / closure allocation per DrawRoom call.
             var hasMulOutside = false;
-            foreach (var light in order)
+            for (int lightPass = 0; lightPass < 2; lightPass++)
+            foreach (var light in lighting.Lights)
             {
+                if ((light.OutdoorsColor ? 0 : 1) != lightPass) continue;
                 if (!light.OutdoorsColor && !hasMulOutside)
                 {
                     MultiplyOutdoors(bigBounds);
