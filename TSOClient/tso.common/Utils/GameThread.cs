@@ -1,4 +1,5 @@
 ﻿using FSO.Common.Rendering.Framework.Model;
+using NLog;
 using System;
 using System.Collections.Generic;
 using System.Threading;
@@ -100,6 +101,7 @@ namespace FSO.Common.Utils
 
     public class GameThread
     {
+        private static readonly Logger LOG = LogManager.GetCurrentClassLogger();
         public static bool Killed;
         public static bool NoGame;
         public static EventWaitHandle OnKilled = new EventWaitHandle(false, EventResetMode.ManualReset);
@@ -185,7 +187,16 @@ namespace FSO.Common.Utils
             {
                 _UpdateCallbacks.Enqueue(x =>
                 {
-                    task.SetResult(callback(x));
+                    // Surface the real exception to any awaiter rather than letting the
+                    // task hang until TimeoutAfter wraps it as a TimeoutException.
+                    try
+                    {
+                        task.SetResult(callback(x));
+                    }
+                    catch (Exception ex)
+                    {
+                        task.TrySetException(ex);
+                    }
                 });
             }
             return TimeoutAfter(task.Task, new TimeSpan(0, 0, 5));
@@ -223,9 +234,21 @@ namespace FSO.Common.Utils
                 _UpdateCallbacksSwap = _callbacks;
             }
 
+            // Drain queued NextUpdate callbacks. Each is wrapped in its own try/catch:
+            // a single throwing callback must not stop the rest of the queue from running.
+            // (Historically a throw here caused LoadComplete to never run after a faulty
+            // avatar-thumb callback, which left lot joins hung at 75%.)
             while (_callbacks.Count > 0)
             {
-                _callbacks.Dequeue()(state);
+                var cb = _callbacks.Dequeue();
+                try
+                {
+                    cb(state);
+                }
+                catch (Exception ex)
+                {
+                    LOG.Error(ex, "Exception in GameThread.NextUpdate callback");
+                }
             }
 
             int hookCount;
@@ -248,10 +271,20 @@ namespace FSO.Common.Utils
                 _hooks = _UpdateHooksCopy;
             }
 
+            // Run every-update hooks. Same isolation rule: a thrown hook should not
+            // stop the rest of this frame's hooks from running, and should not leak the
+            // exception out of DigestUpdate where it would crash the XNA Game.Update path.
             for (int i = 0; i < hookCount; i++)
             {
                 var item = _hooks[i];
-                item.Callback(state);
+                try
+                {
+                    item.Callback(state);
+                }
+                catch (Exception ex)
+                {
+                    LOG.Error(ex, "Exception in GameThread update hook");
+                }
                 if (item.RemoveNext)
                 {
                     toRemove.Add(item);
