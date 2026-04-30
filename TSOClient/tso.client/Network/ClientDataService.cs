@@ -2,6 +2,7 @@
 using FSO.Server.DataService.Providers.Client;
 using Ninject;
 using System;
+using System.Collections.Concurrent;
 using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
@@ -75,10 +76,35 @@ namespace FSO.Common.DataService
             return result.Task;
         }
 
+        // Reflection caches: GetDotPath / Sync / SetArrayItem / etc. previously called
+        // type.GetProperties() / GetCustomAttribute / GetProperty(name) on every invocation.
+        // Cache PropertyInfo lookups by (type, fieldName) and the [Key]-attributed property
+        // by type. Sync fires whenever any UI mutates a model (descriptions, bookmarks,
+        // thumbnails, etc.) so cumulative reflection cost is non-trivial.
+        private static readonly ConcurrentDictionary<Type, PropertyInfo> KeyFieldCache
+            = new ConcurrentDictionary<Type, PropertyInfo>();
+        private static readonly ConcurrentDictionary<TypeFieldKey, PropertyInfo> PropertyCache
+            = new ConcurrentDictionary<TypeFieldKey, PropertyInfo>();
+
+        private struct TypeFieldKey : IEquatable<TypeFieldKey>
+        {
+            public Type Type;
+            public string Name;
+            public TypeFieldKey(Type type, string name) { Type = type; Name = name; }
+            public bool Equals(TypeFieldKey other) => Type == other.Type && Name == other.Name;
+            public override bool Equals(object obj) => obj is TypeFieldKey k && Equals(k);
+            public override int GetHashCode() => (Type?.GetHashCode() ?? 0) ^ (Name?.GetHashCode() ?? 0);
+        }
+
         private PropertyInfo GetKeyField(Type type)
         {
-            var keyField = type.GetProperties().First(x => x.GetCustomAttribute<Key>() != null);
-            return keyField;
+            return KeyFieldCache.GetOrAdd(type,
+                t => t.GetProperties().First(x => x.GetCustomAttribute<Key>() != null));
+        }
+
+        private PropertyInfo GetCachedProperty(Type type, string name)
+        {
+            return PropertyCache.GetOrAdd(new TypeFieldKey(type, name), k => k.Type.GetProperty(k.Name));
         }
 
         private uint[] GetDotPath(object item, string fieldPath)
@@ -96,12 +122,12 @@ namespace FSO.Common.DataService
             dotPath[0] = topField.ParentID;
             dotPath[1] = id;
             dotPath[2] = topField.ID;
-            var curObj = item.GetType().GetProperty(path[0]).GetValue(item);
+            var curObj = GetCachedProperty(item.GetType(), path[0]).GetValue(item);
             for (int i=1; i<path.Length; i++)
             {
                 var curField = GetFieldByName(curObj.GetType(), path[i]);
                 dotPath[2 + i] = curField.ID;
-                curObj = curObj.GetType().GetProperty(path[i]).GetValue(curObj);
+                curObj = GetCachedProperty(curObj.GetType(), path[i]).GetValue(curObj);
             }
 
             return dotPath;
@@ -176,12 +202,12 @@ namespace FSO.Common.DataService
         private object GetFieldFromPath(object item, string fieldPath)
         {
             var path = fieldPath.Split('.');
-            var curObj = item.GetType().GetProperty(path[0]).GetValue(item);
+            var curObj = GetCachedProperty(item.GetType(), path[0]).GetValue(item);
 
             for (int i = 1; i < path.Length; i++)
             {
                 var curField = GetFieldByName(curObj.GetType(), path[i]);
-                curObj = curObj.GetType().GetProperty(path[i]).GetValue(curObj);
+                curObj = GetCachedProperty(curObj.GetType(), path[i]).GetValue(curObj);
             }
 
             return curObj;
@@ -194,13 +220,13 @@ namespace FSO.Common.DataService
             {
                 var path = fieldPath.Split('.');
                 var dotPath = GetDotPath(item, fieldPath);
-                var curObj = item.GetType().GetProperty(path[0]).GetValue(item);
+                var curObj = GetCachedProperty(item.GetType(), path[0]).GetValue(item);
 
                 for (int i = 1; i < path.Length; i++)
                 {
                     var curField = GetFieldByName(curObj.GetType(), path[i]);
                     dotPath[i + 2] = curField.ID;
-                    curObj = curObj.GetType().GetProperty(path[i]).GetValue(curObj);
+                    curObj = GetCachedProperty(curObj.GetType(), path[i]).GetValue(curObj);
                 }
 
                 updates.Add(SerializeUpdate(curObj, dotPath));
