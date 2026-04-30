@@ -400,8 +400,9 @@ namespace FSO.LotView.Platform
             effect.Parameters["ObjectID"].SetValue(0f);
             effect.Parameters["Level"].SetValue(1f);
             effect.Parameters["AmbientLight"].SetValue(Vector4.One);
-            // Face the avatar toward the camera (+Z direction)
-            effect.Parameters["World"].SetValue(Matrix.CreateRotationY((float)Math.PI));
+            // No rotation: face the avatar toward the camera. (A previous π rotation made
+            // them turn their back to the viewer.)
+            effect.Parameters["World"].SetValue(Matrix.Identity);
 
             avatarComp.Avatar.LightPositions = null; // suppress shadow pass during thumbnail
             avatarComp.Avatar.DrawGeometry(gd, effect);
