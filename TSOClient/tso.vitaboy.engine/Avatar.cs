@@ -1,4 +1,5 @@
-﻿using System.Collections.Generic;
+﻿using System;
+using System.Collections.Generic;
 using System.Linq;
 using FSO.Common.Rendering.Framework;
 using Microsoft.Xna.Framework.Graphics;
@@ -24,6 +25,11 @@ namespace FSO.Vitaboy
         public float HeadObjectSpeedyVel;
         public bool HideHead;
         protected Matrix[] SkelBones;
+        // Reusable scratch array for DrawHeadOnly so each call doesn't allocate a fresh
+        // Matrix[Skeleton.Bones.Length]. Cleared (all zeros) between uses, which is what
+        // the original code produced — only the HEAD slot is set, leaving all other bones
+        // as zero matrices so vertices weighted to them project to origin (invisible).
+        private Matrix[] _headOnlyScratch;
 
         public static void setVitaboyEffect(Effect e) {
             Effect = e;
@@ -284,17 +290,21 @@ namespace FSO.Vitaboy
         {
             //Effect.CurrentTechnique = Effect.Techniques[0];
             if (SkelBones == null) ReloadSkeleton();
-            var matrixCopy = new Matrix[SkelBones.Length];
+            // Reuse the scratch matrix array; (re)allocate only if the bone count changes.
+            if (_headOnlyScratch == null || _headOnlyScratch.Length != SkelBones.Length)
+                _headOnlyScratch = new Matrix[SkelBones.Length];
+            else
+                Array.Clear(_headOnlyScratch, 0, _headOnlyScratch.Length);
             // Locate the head bone and inject the custom matrix.
 
             for (int i = 0; i < Skeleton.Bones.Length; i++)
             {
                 var bone = Skeleton.Bones[i];
 
-                if (bone.Name == "HEAD") matrixCopy[i] = headMatrix;
+                if (bone.Name == "HEAD") _headOnlyScratch[i] = headMatrix;
             }
 
-            effect.Parameters["SkelBindings"].SetValue(matrixCopy);
+            effect.Parameters["SkelBindings"].SetValue(_headOnlyScratch);
 
             lock (Bindings)
             {
