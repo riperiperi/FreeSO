@@ -45,6 +45,60 @@ namespace FSO.Server.Utils
             catch { }
         }
 
+        /// <summary>
+        /// Splits the client-uploaded combined avatar PNG (400×1000: top 400×600 isometric
+        /// body + bottom 400×400 front-facing head) into separate body.png and head.png
+        /// files, each resized to 512px on the long edge. Falls back to the legacy
+        /// behaviour (treat the whole image as the body, derive head by cropping the top
+        /// third) if the image isn't the expected 400×1000 layout.
+        /// </summary>
+        public static void SplitCombinedAvatarThumbnail(byte[] combinedPngData, string bodyPath, string headPath)
+        {
+            try
+            {
+                using (var src = Image.Load(new MemoryStream(combinedPngData)))
+                {
+                    // Detect the new combined layout by aspect: body region (W×600) plus a
+                    // square head region (W×W) → height ≈ W * 2.5.
+                    bool isCombined = src.Width > 0 && src.Height > src.Width + src.Width / 2;
+                    if (isCombined)
+                    {
+                        int headSize = src.Width;
+                        int bodyHeight = src.Height - headSize;
+
+                        using (var body = src.Clone(x => x
+                            .Crop(new Rectangle(0, 0, src.Width, bodyHeight))
+                            .Resize(new ResizeOptions
+                            {
+                                Size = new Size(512, 512),
+                                Mode = ResizeMode.Max,
+                                Sampler = KnownResamplers.Lanczos3
+                            })))
+                        using (var fs = File.Open(bodyPath, FileMode.Create))
+                            body.SaveAsPng(fs);
+
+                        using (var head = src.Clone(x => x
+                            .Crop(new Rectangle(0, bodyHeight, src.Width, headSize))
+                            .Resize(new ResizeOptions
+                            {
+                                Size = new Size(512, 512),
+                                Mode = ResizeMode.Max,
+                                Sampler = KnownResamplers.Lanczos3
+                            })))
+                        using (var fs = File.Open(headPath, FileMode.Create))
+                            head.SaveAsPng(fs);
+                        return;
+                    }
+                }
+
+                // Legacy fallback: write the raw upload as body.png, derive head from it.
+                using (var fs = File.Open(bodyPath, FileMode.Create, FileAccess.Write, FileShare.None))
+                    fs.Write(combinedPngData, 0, combinedPngData.Length);
+                GenerateHeadFromBodyThumbnail(combinedPngData, headPath);
+            }
+            catch { }
+        }
+
         public static TexBitmap SoftImageFetch(Stream stream, AbstractTextureRef texRef)
         {
             Image<Rgba32> result = null;

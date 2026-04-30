@@ -51,13 +51,14 @@ namespace FSO.Server.DataService.Providers
                     case "Avatar_Thumbnail":
                         var avatarDir = Path.Combine(NFS.GetBaseDirectory(), "Avatars/" + avatar.Avatar_Id.ToString("x8"));
                         Directory.CreateDirectory(avatarDir);
-                        var imgPath = Path.Combine(avatarDir, "body.png");
                         var imgData = (cTSOGenericData)value;
-                        LOG.Info("[AvatarThumb] Received Avatar_Thumbnail for avatarId={0}: {1} bytes → {2}", avatar.Avatar_Id, imgData.Data.Length, imgPath);
-                        using (var fs = File.Open(imgPath, FileMode.Create, FileAccess.Write, FileShare.None))
-                            fs.Write(imgData.Data, 0, imgData.Data.Length);
-                        // Derive head.png from the uploaded portrait by cropping the top third.
-                        Utils.CoreImageLoader.GenerateHeadFromBodyThumbnail(imgData.Data, Path.Combine(avatarDir, "head.png"));
+                        LOG.Info("[AvatarThumb] Received Avatar_Thumbnail for avatarId={0}: {1} bytes", avatar.Avatar_Id, imgData.Data.Length);
+                        // The client uploads a 400×1000 combined PNG: top 400×600 isometric
+                        // body, bottom 400×400 front-facing head. Split it into two files.
+                        Utils.CoreImageLoader.SplitCombinedAvatarThumbnail(
+                            imgData.Data,
+                            Path.Combine(avatarDir, "body.png"),
+                            Path.Combine(avatarDir, "head.png"));
                         avatar.Avatar_Thumbnail = new cTSOGenericData(new byte[0]);
                         avatar.Avatar_ThumbnailCheckSum = avatar.Avatar_Id;
                         LOG.Info("[AvatarThumb] body.png and head.png written for avatarId={0}", avatar.Avatar_Id);

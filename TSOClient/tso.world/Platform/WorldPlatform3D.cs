@@ -355,42 +355,28 @@ namespace FSO.LotView.Platform
 
         public Texture2D GetAvatarThumb(AvatarComponent avatarComp, GraphicsDevice gd)
         {
+            // Render two views into a single 400×1000 target: isometric body in the top
+            // 400×600 region, front-facing head in the bottom 400×400 region. Server splits
+            // the resulting PNG into body.png and head.png. One render target → one
+            // SaveAsPng on the caller side.
             if (avatarComp?.Avatar == null || avatarComp.Avatar.Skeleton == null) return null;
 
-            const int thumbW = 400, thumbH = 600;
+            const int bodyW = 400, bodyH = 600, headSquare = 400;
+            const int totalH = bodyH + headSquare; // 1000
             if (AvatarThumbTarget == null)
-                AvatarThumbTarget = new RenderTarget2D(gd, thumbW, thumbH, false, SurfaceFormat.Color, DepthFormat.Depth24Stencil8);
+                AvatarThumbTarget = new RenderTarget2D(gd, bodyW, totalH, false, SurfaceFormat.Color, DepthFormat.Depth24Stencil8);
 
             var headBone = avatarComp.Avatar.Skeleton.GetBone("HEAD");
             float headY = headBone != null ? headBone.AbsolutePosition.Y : 3f;
 
-            // Isometric portrait: camera at 45° azimuth, 30° elevation, orthographic projection.
-            float az = MathHelper.PiOver4;
-            float el = MathHelper.ToRadians(30f);
-            float dist = headY * 2.0f;
-            // Look at the avatar's visual midpoint (feet at y=0, head at y=headY) so the
-            // body is vertically centered in the rendered portrait.
-            var camTarget = new Vector3(0f, headY * 0.5f, 0f);
-            var camPos = camTarget + new Vector3(
-                dist * (float)Math.Cos(el) * (float)Math.Sin(az),
-                dist * (float)Math.Sin(el),
-                dist * (float)Math.Cos(el) * (float)Math.Cos(az)
-            );
-
-            var view = Matrix.CreateLookAt(camPos, camTarget, Vector3.Up);
-            // Frame the avatar tightly: ortho height covers head + small padding above and
-            // below the feet. Width derives from the portrait aspect.
-            float orthoH = headY * 1.25f;
-            float orthoW = orthoH * thumbW / thumbH;
-            var proj = Matrix.CreateOrthographic(orthoW, orthoH, 0.1f, 100f);
-
             var oldRts = gd.GetRenderTargets();
-            gd.SetRenderTarget(AvatarThumbTarget);
-            gd.Clear(Color.Transparent);
-
+            var oldVp = gd.Viewport;
             var oldBlend = gd.BlendState;
             var oldDepth = gd.DepthStencilState;
             var oldRaster = gd.RasterizerState;
+
+            gd.SetRenderTarget(AvatarThumbTarget);
+            gd.Clear(Color.Transparent);
 
             gd.BlendState = BlendState.AlphaBlend;
             gd.DepthStencilState = DepthStencilState.Default;
@@ -398,18 +384,45 @@ namespace FSO.LotView.Platform
 
             var effect = WorldContent.AvatarEffect;
             effect.CurrentTechnique = effect.Techniques[0];
-            effect.Parameters["View"].SetValue(view);
-            effect.Parameters["Projection"].SetValue(proj);
             effect.Parameters["ObjectID"].SetValue(0f);
             effect.Parameters["Level"].SetValue(1f);
             effect.Parameters["AmbientLight"].SetValue(Vector4.One);
-            // No rotation: face the avatar toward the camera. (A previous π rotation made
-            // them turn their back to the viewer.)
             effect.Parameters["World"].SetValue(Matrix.Identity);
-
             avatarComp.Avatar.LightPositions = null; // suppress shadow pass during thumbnail
-            avatarComp.Avatar.DrawGeometry(gd, effect);
 
+            // ---- Body pass: isometric 45° azimuth + 30° elevation, top 400×600 ----
+            gd.Viewport = new Viewport(0, 0, bodyW, bodyH);
+            {
+                float az = MathHelper.PiOver4;
+                float el = MathHelper.ToRadians(30f);
+                float dist = headY * 2.0f;
+                var camTarget = new Vector3(0f, headY * 0.5f, 0f);
+                var camPos = camTarget + new Vector3(
+                    dist * (float)Math.Cos(el) * (float)Math.Sin(az),
+                    dist * (float)Math.Sin(el),
+                    dist * (float)Math.Cos(el) * (float)Math.Cos(az)
+                );
+                float orthoH = headY * 1.25f;
+                float orthoW = orthoH * bodyW / bodyH;
+                effect.Parameters["View"].SetValue(Matrix.CreateLookAt(camPos, camTarget, Vector3.Up));
+                effect.Parameters["Projection"].SetValue(Matrix.CreateOrthographic(orthoW, orthoH, 0.1f, 100f));
+                avatarComp.Avatar.DrawGeometry(gd, effect);
+            }
+
+            // ---- Head pass: front-facing, framed on the head + shoulders, bottom 400×400 ----
+            gd.Viewport = new Viewport(0, bodyH, headSquare, headSquare);
+            {
+                float dist = headY * 2.0f;
+                var camTarget = new Vector3(0f, headY * 0.92f, 0f);
+                var camPos = camTarget + new Vector3(0f, 0f, dist);
+                float orthoH = headY * 0.55f;
+                float orthoW = orthoH; // square head pane
+                effect.Parameters["View"].SetValue(Matrix.CreateLookAt(camPos, camTarget, Vector3.Up));
+                effect.Parameters["Projection"].SetValue(Matrix.CreateOrthographic(orthoW, orthoH, 0.1f, 100f));
+                avatarComp.Avatar.DrawGeometry(gd, effect);
+            }
+
+            gd.Viewport = oldVp;
             gd.SetRenderTargets(oldRts);
             gd.BlendState = oldBlend;
             gd.DepthStencilState = oldDepth;
