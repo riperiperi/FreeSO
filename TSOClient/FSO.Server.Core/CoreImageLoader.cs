@@ -22,6 +22,23 @@ namespace FSO.Server.Core
     {
         private static readonly Logger LOG = LogManager.GetCurrentClassLogger();
 
+        /// <summary>
+        /// Writes the destination file atomically: write to "<destPath>.tmp" first,
+        /// then rename over the destination. Prevents readers (the API) from seeing a
+        /// truncated file if the process dies mid-write.
+        /// </summary>
+        private static void AtomicWritePng(string destPath, Action<Stream> write)
+        {
+            var tempPath = destPath + ".tmp";
+            using (var fs = File.Open(tempPath, FileMode.Create, FileAccess.Write, FileShare.None))
+                write(fs);
+            // .NET Core 2.2 has no File.Move(src, dest, overwrite); fall back to Replace.
+            if (File.Exists(destPath))
+                File.Replace(tempPath, destPath, null);
+            else
+                File.Move(tempPath, destPath);
+        }
+
         public static void GenerateAvatarThumbnail(DbAvatar avatar, string nfsDir)
         {
             try
@@ -47,8 +64,7 @@ namespace FSO.Server.Core
                         Mode = ResizeMode.Max,
                         Sampler = KnownResamplers.NearestNeighbor
                     }));
-                    using (var fs = File.Open(Path.Combine(dir, "head.png"), FileMode.Create))
-                        image.SaveAsPng(fs);
+                    AtomicWritePng(Path.Combine(dir, "head.png"), fs => image.SaveAsPng(fs));
                 }
             }
             catch (Exception ex)
@@ -99,8 +115,7 @@ namespace FSO.Server.Core
                             Mode = ResizeMode.Max,
                             Sampler = KnownResamplers.Lanczos3
                         }));
-                        using (var fs = File.Open(thumbPath, FileMode.Create))
-                            img.SaveAsPng(fs);
+                        AtomicWritePng(thumbPath, fs => img.SaveAsPng(fs));
                     }
                 }
             }
@@ -276,8 +291,7 @@ namespace FSO.Server.Core
                     Mode = ResizeMode.Max,
                     Sampler = KnownResamplers.Lanczos3
                 }));
-                using (var fs = File.Open(thumbPath, FileMode.Create))
-                    canvas.SaveAsPng(fs);
+                AtomicWritePng(thumbPath, fs => canvas.SaveAsPng(fs));
             }
             return true;
         }

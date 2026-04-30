@@ -16,6 +16,23 @@ namespace FSO.Server.Utils
         private static readonly Logger LOG = LogManager.GetCurrentClassLogger();
 
         /// <summary>
+        /// Writes the destination file atomically: write to "<destPath>.tmp" first,
+        /// then rename over the destination. Prevents readers (the API) from seeing a
+        /// truncated file if the process dies mid-write.
+        /// </summary>
+        private static void AtomicWritePng(string destPath, Action<Stream> write)
+        {
+            var tempPath = destPath + ".tmp";
+            using (var fs = File.Open(tempPath, FileMode.Create, FileAccess.Write, FileShare.None))
+                write(fs);
+            // .NET Core 2.2 has no File.Move(src, dest, overwrite); fall back to Replace.
+            if (File.Exists(destPath))
+                File.Replace(tempPath, destPath, null);
+            else
+                File.Move(tempPath, destPath);
+        }
+
+        /// <summary>
         /// Derives a 512x512 head image by cropping the top third of a portrait PNG and saves it to headPath.
         /// Called automatically when a client uploads their avatar body portrait (Avatar_Thumbnail).
         /// </summary>
@@ -41,8 +58,7 @@ namespace FSO.Server.Utils
                         Mode = ResizeMode.Max,
                         Sampler = KnownResamplers.Lanczos3
                     }));
-                    using (var fs = File.Open(headPath, FileMode.Create))
-                        img.SaveAsPng(fs);
+                    AtomicWritePng(headPath, fs => img.SaveAsPng(fs));
                 }
             }
             catch (Exception ex)
@@ -80,8 +96,7 @@ namespace FSO.Server.Utils
                                 Mode = ResizeMode.Max,
                                 Sampler = KnownResamplers.Lanczos3
                             })))
-                        using (var fs = File.Open(bodyPath, FileMode.Create))
-                            body.SaveAsPng(fs);
+                            AtomicWritePng(bodyPath, fs => body.SaveAsPng(fs));
 
                         using (var head = src.Clone(x => x
                             .Crop(new Rectangle(0, bodyHeight, src.Width, headSize))
@@ -91,15 +106,13 @@ namespace FSO.Server.Utils
                                 Mode = ResizeMode.Max,
                                 Sampler = KnownResamplers.Lanczos3
                             })))
-                        using (var fs = File.Open(headPath, FileMode.Create))
-                            head.SaveAsPng(fs);
+                            AtomicWritePng(headPath, fs => head.SaveAsPng(fs));
                         return;
                     }
                 }
 
                 // Legacy fallback: write the raw upload as body.png, derive head from it.
-                using (var fs = File.Open(bodyPath, FileMode.Create, FileAccess.Write, FileShare.None))
-                    fs.Write(combinedPngData, 0, combinedPngData.Length);
+                AtomicWritePng(bodyPath, fs => fs.Write(combinedPngData, 0, combinedPngData.Length));
                 GenerateHeadFromBodyThumbnail(combinedPngData, headPath);
             }
             catch (Exception ex)
