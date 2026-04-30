@@ -22,18 +22,22 @@ namespace FSO.Server.Utils
             {
                 using (var img = Image.Load(new MemoryStream(bodyPngData)))
                 {
-                    // Crop the top third of the portrait (where the head is), centered horizontally, as a square.
-                    int cropH = img.Height / 3;
-                    int cropW = Math.Min(cropH, img.Width);
-                    int cropX = (img.Width - cropW) / 2;
-                    img.Mutate(x => x
-                        .Crop(new Rectangle(cropX, 0, cropW, cropH))
-                        .Resize(new ResizeOptions
-                        {
-                            Size = new Size(512, 512),
-                            Mode = ResizeMode.Stretch,
-                            Sampler = KnownResamplers.Lanczos3
-                        }));
+                    // 3D clients upload a portrait (~400x600). Crop the top third for the head.
+                    // 2D clients upload a square head sprite — use it directly, no crop needed.
+                    bool isPortrait = img.Height > img.Width * 1.2f;
+                    if (isPortrait)
+                    {
+                        int cropH = img.Height / 3;
+                        int cropW = Math.Min(cropH, img.Width);
+                        int cropX = (img.Width - cropW) / 2;
+                        img.Mutate(x => x.Crop(new Rectangle(cropX, 0, cropW, cropH)));
+                    }
+                    img.Mutate(x => x.Resize(new ResizeOptions
+                    {
+                        Size = new Size(512, 512),
+                        Mode = ResizeMode.Max,
+                        Sampler = KnownResamplers.Lanczos3
+                    }));
                     using (var fs = File.Open(headPath, FileMode.Create))
                         img.SaveAsPng(fs);
                 }
