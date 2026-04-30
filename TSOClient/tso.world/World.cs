@@ -563,6 +563,12 @@ namespace FSO.LotView
             }
         }
 
+        // Reused per-frame snapshot of Blueprint.Particles / Blueprint.ObjectParticles for
+        // safe iteration. A particle's Update can trigger Blueprint.RemoveObject which
+        // mutates ObjectParticles, so we can't iterate the live lists directly. Reuse a
+        // single scratch list each frame instead of allocating two new ones.
+        private List<ParticleComponent> _particleUpdateScratch = new List<ParticleComponent>();
+
         public override void Update(UpdateState state)
         {
             base.Update(state);
@@ -571,16 +577,19 @@ namespace FSO.LotView
             if (Blueprint != null)
             {
                 if (!Content.Content.Get().TS1) Blueprint.Weather?.Update();
-                var partiCopy = new List<ParticleComponent>(Blueprint.Particles);
-                foreach (var particle in partiCopy)
+
+                _particleUpdateScratch.Clear();
+                _particleUpdateScratch.AddRange(Blueprint.Particles);
+                for (int i = 0; i < _particleUpdateScratch.Count; i++)
                 {
-                    particle.Update(null, State);
+                    _particleUpdateScratch[i].Update(null, State);
                 }
 
-                partiCopy = new List<ParticleComponent>(Blueprint.ObjectParticles);
-                foreach (var particle in partiCopy)
+                _particleUpdateScratch.Clear();
+                _particleUpdateScratch.AddRange(Blueprint.ObjectParticles);
+                for (int i = 0; i < _particleUpdateScratch.Count; i++)
                 {
-                    particle.Update(null, State);
+                    _particleUpdateScratch[i].Update(null, State);
                 }
 
                 Blueprint.SM64?.Update(null, State, Visible);
