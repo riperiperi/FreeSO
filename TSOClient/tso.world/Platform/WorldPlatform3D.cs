@@ -365,11 +365,12 @@ namespace FSO.LotView.Platform
             float headY = headBone != null ? headBone.AbsolutePosition.Y : 3f;
 
             // Isometric portrait: camera at 45° azimuth, 30° elevation, orthographic projection.
-            // Avatar faces +Z (World = CreateRotationY(PI) below), camera from +X+Z quadrant sees front-left.
             float az = MathHelper.PiOver4;
             float el = MathHelper.ToRadians(30f);
             float dist = headY * 2.0f;
-            var camTarget = new Vector3(0f, headY * 0.4f, 0f);
+            // Look at the avatar's visual midpoint (feet at y=0, head at y=headY) so the
+            // body is vertically centered in the rendered portrait.
+            var camTarget = new Vector3(0f, headY * 0.5f, 0f);
             var camPos = camTarget + new Vector3(
                 dist * (float)Math.Cos(el) * (float)Math.Sin(az),
                 dist * (float)Math.Sin(el),
@@ -377,7 +378,9 @@ namespace FSO.LotView.Platform
             );
 
             var view = Matrix.CreateLookAt(camPos, camTarget, Vector3.Up);
-            float orthoH = headY * 1.5f;
+            // Frame the avatar tightly: ortho height covers head + small padding above and
+            // below the feet. Width derives from the portrait aspect.
+            float orthoH = headY * 1.25f;
             float orthoW = orthoH * thumbW / thumbH;
             var proj = Matrix.CreateOrthographic(orthoW, orthoH, 0.1f, 100f);
 
