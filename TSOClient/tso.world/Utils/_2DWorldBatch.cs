@@ -97,6 +97,13 @@ namespace FSO.LotView.Utils
 
         private List<RenderTarget2D> Buffers = new List<RenderTarget2D>();
 
+        // Reusable scratch buffers for the large-batch RenderSpriteList path. Sized to the
+        // largest seen batch and reused across frames to avoid per-frame _2DSpriteVertex[]
+        // and short[] allocations (the dominant Gen-0 source on the 2D world draw path).
+        // Single-threaded use — this method only runs on the game thread.
+        private _2DSpriteVertex[] _scratchVerts;
+        private short[] _scratchIndices;
+
         public void SetScroll(Vector2 scroll)
         {
             Scroll = scroll;
@@ -640,9 +647,40 @@ namespace FSO.LotView.Utils
                 var numSprites = group.Sprites.Count;
                 var texture = group.Pixel;
 
-                /** Build vertex data **/
-                var vertices = new _2DSpriteVertex[4 * numSprites];
-                var indices = new short[6 * numSprites];
+                // Decide upfront whether this batch will go to GPU buffers (large) or stay
+                // CPU-side as DrawUserIndexedPrimitives (small). Indices = 6 * numSprites,
+                // Primitives = indices/3 = 2 * numSprites; the legacy threshold was
+                // Primitives > 50 → numSprites > 25.
+                int vertexLen = 4 * numSprites;
+                int indexLen = 6 * numSprites;
+                int primitives = 2 * numSprites;
+                bool largeBatch = primitives > 50;
+
+                // Large batches: borrow grow-on-demand scratch buffers, build into them,
+                // upload to GPU buffers with explicit counts (so the slack past vertexLen/
+                // indexLen never reaches the GPU), then null the DrawGroup arrays so the
+                // scratch isn't pinned to the DrawGroup's lifetime.
+                // Small batches: keep allocating fresh arrays — they live on the DrawGroup
+                // until the cache flushes, and DrawUserIndexedPrimitives uses array.Length;
+                // sharing a scratch buffer there would require copy-trim or a count threaded
+                // through RenderDrawGroup. Not worth the touch radius.
+                _2DSpriteVertex[] vertices;
+                short[] indices;
+                if (largeBatch)
+                {
+                    if (_scratchVerts == null || _scratchVerts.Length < vertexLen)
+                        _scratchVerts = new _2DSpriteVertex[vertexLen];
+                    if (_scratchIndices == null || _scratchIndices.Length < indexLen)
+                        _scratchIndices = new short[indexLen];
+                    vertices = _scratchVerts;
+                    indices = _scratchIndices;
+                }
+                else
+                {
+                    vertices = new _2DSpriteVertex[vertexLen];
+                    indices = new short[indexLen];
+                }
+
                 var indexCount = 0;
                 var vertexCount = 0;
 
@@ -685,13 +723,14 @@ namespace FSO.LotView.Utils
                 VertexBuffer vb = null;
                 IndexBuffer ib = null;
 
-                var count = indices.Length / 3;
-                if (count > 50) //completely arbitrary number, but seems to keep things fast. dont gen if it isn't "worth it".
+                if (largeBatch)
                 {
-                    vb = new VertexBuffer(Device, typeof(_2DSpriteVertex), vertices.Length, BufferUsage.WriteOnly);
-                    vb.SetData(vertices);
-                    ib = new IndexBuffer(Device, IndexElementSize.SixteenBits, indices.Length, BufferUsage.WriteOnly);
-                    ib.SetData(indices);
+                    // Buffer sized to the actual data, not the scratch array's Length.
+                    vb = new VertexBuffer(Device, typeof(_2DSpriteVertex), vertexLen, BufferUsage.WriteOnly);
+                    vb.SetData(vertices, 0, vertexLen);
+                    ib = new IndexBuffer(Device, IndexElementSize.SixteenBits, indexLen, BufferUsage.WriteOnly);
+                    ib.SetData(indices, 0, indexLen);
+                    // Don't keep references on the DrawGroup — the next call reuses the scratch.
                     vertices = null;
                     indices = null;
                 }
@@ -706,7 +745,7 @@ namespace FSO.LotView.Utils
                     IndexBuf = ib,
                     Vertices = vertices,
                     Indices = indices,
-                    Primitives = count,
+                    Primitives = primitives,
                     Technique = technique,
                     Floors = floors
                 };
