@@ -166,6 +166,19 @@ namespace FSO.Files.Formats.tsodata
         /// <summary>
         /// FSO-only field additions that don't exist in the original TSO data definition.
         /// Both client and server run this on load so the wire IDs match.
+        ///
+        /// IMPORTANT — call ordering: this MUST run before <c>FSO.Common.DataService.DataService</c>
+        /// is constructed. The DataService snapshots <c>_struct.Fields.ToArray()</c> per struct
+        /// at init time; any field added afterwards is invisible to wire serialization in that
+        /// instance even though it appears in <c>StructsByName[...].Fields</c>. The current call
+        /// site (end of <c>Activate()</c>) satisfies this because Content.Init runs before any
+        /// Ninject-resolved DataService is built. If a future caller invokes <c>Read()</c> /
+        /// <c>Activate()</c> after a DataService already exists (the IDE definition editor is
+        /// the only known case), that DataService instance keeps shipping the pre-injection
+        /// snapshot — rebuild the DataService too.
+        ///
+        /// The body itself is idempotent: every injection is guarded by a "field already
+        /// present?" check, so repeated <c>Activate()</c> calls don't double-add.
         /// </summary>
         private void InjectFSOFields()
         {

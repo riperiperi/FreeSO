@@ -299,7 +299,23 @@ namespace FSO.Client.Controllers
                         data = stream.ToArray();
                     }
 
-                    DataService.Get<Avatar>(Network.MyCharacter).ContinueWith(x =>
+                    // Network.MyCharacter dereferences CityRegulator.CurrentShard. If the
+                    // user disconnects between OnAvatarReady firing and this callback
+                    // running (e.g. dropped socket while we were rendering), CurrentShard
+                    // can be null and the property throws NPE. Guard explicitly so the
+                    // failure is a clean log line, not a stack trace.
+                    uint myChar;
+                    try
+                    {
+                        myChar = Network.MyCharacter;
+                    }
+                    catch (Exception ex)
+                    {
+                        LOG.Warn(ex, "Avatar thumbnail upload aborted: Network.MyCharacter unavailable (disconnect?)");
+                        return;
+                    }
+
+                    DataService.Get<Avatar>(myChar).ContinueWith(x =>
                     {
                         try
                         {
