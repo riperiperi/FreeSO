@@ -66,6 +66,9 @@ namespace FSO.LotView.LMap
         // ParseInvalidated. Iterating DirtyRooms directly while removing entries from it
         // is unsafe, so we copy → sort → iterate the copy. Reused to avoid per-call alloc.
         private List<DirtyRoom> _dirtyRoomsScratch = new List<DirtyRoom>();
+        // Scratch list used by DrawObjShadows to filter object footprints by light bounds
+        // without allocating a fresh list per call. Cleared and refilled each invocation.
+        private List<Rectangle> _objShadowFilterScratch = new List<Rectangle>();
         public sbyte RedrawFloor;
         public Color LastOutsideColor;
 
@@ -948,7 +951,15 @@ namespace FSO.LotView.LMap
                 GradMesh geom;
                 if (pointLight.LightType == LightType.ROOM)
                 {
-                    geom = ShadowGeo.GenerateObjShadows(objects.Where(x => x.Intersects(pointLight.LightBounds)).ToList(), pointLight);
+                    // Manual filter into a reusable scratch list — same result as
+                    // objects.Where(...).ToList(), no per-call list / lambda allocation.
+                    _objShadowFilterScratch.Clear();
+                    var bounds = pointLight.LightBounds;
+                    for (int i = 0; i < objects.Count; i++)
+                    {
+                        if (objects[i].Intersects(bounds)) _objShadowFilterScratch.Add(objects[i]);
+                    }
+                    geom = ShadowGeo.GenerateObjShadows(_objShadowFilterScratch, pointLight);
                 }
                 else
                 {
