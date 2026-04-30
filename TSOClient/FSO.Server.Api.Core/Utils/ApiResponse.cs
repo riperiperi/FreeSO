@@ -2,7 +2,9 @@
 using FSO.Server.Database.DA.Utils;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
+using Microsoft.Net.Http.Headers;
 using System;
+using System.IO;
 using System.Net;
 using System.Xml;
 
@@ -73,6 +75,70 @@ namespace FSO.Server.Api.Core.Utils
                     ContentType = "text/xml"
                 };
             };
+        }
+
+        /// <summary>
+        /// Serves a file as a PNG with proper HTTP cache validation. Sends Last-Modified
+        /// and ETag headers so the browser/CDN can issue conditional requests; returns
+        /// 304 Not Modified when the client's cached copy is still current. Cache-Control
+        /// is "public, max-age=300, must-revalidate" — short freshness window, then
+        /// always revalidate.
+        ///
+        /// Returns null if the file doesn't exist (caller should fall back / 404).
+        /// </summary>
+        public static IActionResult FileWithCache(HttpRequest request, string path, string contentType = "image/png")
+        {
+            FileInfo info;
+            try
+            {
+                info = new FileInfo(path);
+                if (!info.Exists) return null;
+            }
+            catch
+            {
+                return null;
+            }
+
+            // Truncate to seconds — HTTP date headers don't carry sub-second precision
+            // and a mismatch would prevent 304s from ever firing.
+            var lastModified = new DateTimeOffset(info.LastWriteTimeUtc).AddTicks(
+                -(info.LastWriteTimeUtc.Ticks % TimeSpan.TicksPerSecond));
+            // ETag = mtime + size: stable across reads of the same file, changes on rewrite.
+            var etag = new EntityTagHeaderValue("\"" + info.LastWriteTimeUtc.Ticks.ToString("x")
+                + "-" + info.Length.ToString("x") + "\"");
+
+            var headers = request.GetTypedHeaders();
+            bool notModified = false;
+            if (headers.IfNoneMatch != null && headers.IfNoneMatch.Count > 0)
+            {
+                foreach (var tag in headers.IfNoneMatch)
+                {
+                    if (tag.Tag == etag.Tag) { notModified = true; break; }
+                }
+            }
+            else if (headers.IfModifiedSince.HasValue && headers.IfModifiedSince.Value >= lastModified)
+            {
+                notModified = true;
+            }
+
+            var response = request.HttpContext.Response;
+            response.Headers[HeaderNames.LastModified] = lastModified.ToString("R");
+            response.Headers[HeaderNames.ETag] = etag.ToString();
+            response.Headers[HeaderNames.CacheControl] = "public, max-age=300, must-revalidate";
+
+            if (notModified)
+            {
+                return new StatusCodeResult((int)HttpStatusCode.NotModified);
+            }
+
+            try
+            {
+                return new FileContentResult(File.ReadAllBytes(path), contentType);
+            }
+            catch
+            {
+                return null;
+            }
         }
     }
 }

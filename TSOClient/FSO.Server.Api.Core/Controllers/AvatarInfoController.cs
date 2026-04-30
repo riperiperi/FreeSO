@@ -263,14 +263,7 @@ namespace FSO.Server.Api.Core.Controllers
             }
             // Serve client-uploaded body render if available, else fall back to TSO head sprite.
             var servePath = System.IO.File.Exists(thumbPath) ? thumbPath : headPath;
-            try
-            {
-                return File(System.IO.File.ReadAllBytes(servePath), "image/png");
-            }
-            catch
-            {
-                return NotFound();
-            }
+            return ApiResponse.FileWithCache(Request, servePath) ?? (IActionResult)NotFound();
         }
 
         [HttpGet]
@@ -287,14 +280,7 @@ namespace FSO.Server.Api.Core.Controllers
                     if (avatar != null) api.ThumbnailGenerator(avatar, api.Config.NFSdir);
                 }
             }
-            try
-            {
-                return File(System.IO.File.ReadAllBytes(path), "image/png");
-            }
-            catch
-            {
-                return NotFound();
-            }
+            return ApiResponse.FileWithCache(Request, path) ?? (IActionResult)NotFound();
         }
 
         [HttpGet]
@@ -303,14 +289,7 @@ namespace FSO.Server.Api.Core.Controllers
         {
             var api = Api.INSTANCE;
             var path = Path.Combine(api.Config.NFSdir, "Avatars/" + avatarId.ToString("x8") + "/body.png");
-            try
-            {
-                return File(System.IO.File.ReadAllBytes(path), "image/png");
-            }
-            catch
-            {
-                return NotFound();
-            }
+            return ApiResponse.FileWithCache(Request, path) ?? (IActionResult)NotFound();
         }
 
         //get all online Avatars

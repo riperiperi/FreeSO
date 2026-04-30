@@ -31,8 +31,7 @@ namespace FSO.Server.Api.Core.Controllers
             if (!System.IO.File.Exists(path) && api.ObjectThumbnailGenerator != null)
                 api.ObjectThumbnailGenerator(guidInt, api.Config.NFSdir);
 
-            try { return File(System.IO.File.ReadAllBytes(path), "image/png"); }
-            catch { return NotFound(); }
+            return Utils.ApiResponse.FileWithCache(Request, path) ?? (IActionResult)NotFound();
         }
     }
 
