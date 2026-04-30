@@ -145,28 +145,68 @@ namespace FSO.LotView.Components
             return new Vector2((size.X / PPXDepthEngine.SSAA) * 0.5f * (res1.X + 1f), (size.Y / PPXDepthEngine.SSAA) * 0.5f * (res1.Y + 1f)); //world.WorldSpace.GetScreenFromTile(transhead) + world.WorldSpace.GetScreenOffset() + PosCenterOffsets[(int)world.Zoom - 1];
         }
 
+        // Reusable buffers for CloseLightPositions. Called per-avatar per-frame when
+        // AdvancedLighting is on; the previous LINQ chain allocated a list, N Tuples, an
+        // OrderedEnumerable, a Select enumerable, a Take enumerable, and a final result
+        // List on every call. Cache the top-4 distance buffer and the result list on the
+        // component so we only ever allocate them once per AvatarComponent.
+        private float[] _lightDist;          // length 4; sorted ascending; +inf = empty slot
+        private Vector2[] _lightPos;         // length 4; matches _lightDist by index
+        private List<Vector2> _lightResult;  // capacity 4; reused across calls
+
         private List<Vector2> CloseLightPositions(Vector3 Position)
         {
             if (blueprint == null || Room >= blueprint.Rooms.Count || Room == 0) return null;
             var room = blueprint.Rooms[Room].Base;
-            var lights = (room >= blueprint.Light.Length)?new List<LightData>():blueprint.Light[room].Lights;
+            var lights = (room >= blueprint.Light.Length) ? null : blueprint.Light[room].Lights;
             var xy = new Vector2(Position.X, Position.Y);
-            var result = new List<System.Tuple<float, Vector2>>();
 
-            foreach (var light in lights)
+            if (_lightDist == null) { _lightDist = new float[4]; _lightPos = new Vector2[4]; _lightResult = new List<Vector2>(4); }
+            for (int i = 0; i < 4; i++) _lightDist[i] = float.PositiveInfinity;
+
+            // Best-4 insertion: walk lights, keep the 4 smallest distances. O(N * 4) instead
+            // of O(N log N) of the previous OrderBy + closures + Tuple boxing.
+            if (lights != null)
             {
-                var dist = (xy * 16 - light.LightPos).Length();
-                if (light.LightIntensity > 0.2f && dist < light.LightSize)
+                foreach (var light in lights)
                 {
-                    result.Add(new System.Tuple<float, Vector2>(dist, (light.LightPos / 16f) * 3f));
+                    if (light.LightIntensity <= 0.2f) continue;
+                    var dist = (xy * 16 - light.LightPos).Length();
+                    if (dist >= light.LightSize) continue;
+                    InsertBestLight(dist, (light.LightPos / 16f) * 3f);
                 }
             }
 
             if (blueprint.Rooms[room].IsOutside && blueprint.OutdoorsLight != null)
             {
-                result.Add(new System.Tuple<float, Vector2>(0, new Vector2(Position.X*3, Position.Y*3)+(-blueprint.OutdoorsLight.LightDir*3f * blueprint.OutdoorsLight.FalloffMultiplier)));
+                InsertBestLight(0f,
+                    new Vector2(Position.X * 3, Position.Y * 3)
+                    + (-blueprint.OutdoorsLight.LightDir * 3f * blueprint.OutdoorsLight.FalloffMultiplier));
             }
-            return result.OrderBy(x => x.Item1).Select(x => x.Item2).Take(4).ToList();
+
+            _lightResult.Clear();
+            for (int i = 0; i < 4; i++)
+            {
+                if (float.IsPositiveInfinity(_lightDist[i])) break;
+                _lightResult.Add(_lightPos[i]);
+            }
+            return _lightResult;
+        }
+
+        // Insert a (dist, pos) entry into the top-4 buffer if it's closer than any current
+        // entry. Maintains _lightDist sorted ascending; _lightPos parallel.
+        private void InsertBestLight(float dist, Vector2 pos)
+        {
+            if (dist >= _lightDist[3]) return;
+            int i = 3;
+            while (i > 0 && _lightDist[i - 1] > dist)
+            {
+                _lightDist[i] = _lightDist[i - 1];
+                _lightPos[i] = _lightPos[i - 1];
+                i--;
+            }
+            _lightDist[i] = dist;
+            _lightPos[i] = pos;
         }
 
         public override Vector3 GetHeadlinePos()
