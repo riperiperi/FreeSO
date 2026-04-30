@@ -10,6 +10,7 @@ using SixLabors.ImageSharp.Processing;
 using SixLabors.ImageSharp.Processing.Transforms;
 using SixLabors.ImageSharp.Processing.Transforms.Resamplers;
 using SixLabors.Primitives;
+using NLog;
 using System;
 using System.Collections.Generic;
 using System.IO;
@@ -19,6 +20,8 @@ namespace FSO.Server.Core
 {
     public class CoreImageLoader
     {
+        private static readonly Logger LOG = LogManager.GetCurrentClassLogger();
+
         public static void GenerateAvatarThumbnail(DbAvatar avatar, string nfsDir)
         {
             try
@@ -48,7 +51,10 @@ namespace FSO.Server.Core
                         image.SaveAsPng(fs);
                 }
             }
-            catch { }
+            catch (Exception ex)
+            {
+                LOG.Warn(ex, "GenerateAvatarThumbnail failed for avatar_id={0}", avatar?.avatar_id);
+            }
         }
 
         public static void GenerateObjectThumbnail(uint guid, string nfsDir)
@@ -98,7 +104,10 @@ namespace FSO.Server.Core
                     }
                 }
             }
-            catch { }
+            catch (Exception ex)
+            {
+                LOG.Warn(ex, "GenerateObjectThumbnail failed for guid=0x{0:X8}", guid);
+            }
         }
 
         // Tile descriptor used by the multi-tile compositor.

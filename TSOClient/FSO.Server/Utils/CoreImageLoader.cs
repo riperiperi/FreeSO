@@ -1,4 +1,5 @@
 ﻿using FSO.Content.Model;
+using NLog;
 using SixLabors.ImageSharp;
 using SixLabors.ImageSharp.PixelFormats;
 using SixLabors.ImageSharp.Processing;
@@ -12,6 +13,8 @@ namespace FSO.Server.Utils
 {
     public class CoreImageLoader
     {
+        private static readonly Logger LOG = LogManager.GetCurrentClassLogger();
+
         /// <summary>
         /// Derives a 512x512 head image by cropping the top third of a portrait PNG and saves it to headPath.
         /// Called automatically when a client uploads their avatar body portrait (Avatar_Thumbnail).
@@ -42,7 +45,10 @@ namespace FSO.Server.Utils
                         img.SaveAsPng(fs);
                 }
             }
-            catch { }
+            catch (Exception ex)
+            {
+                LOG.Warn(ex, "GenerateHeadFromBodyThumbnail failed for {0} ({1} bytes)", headPath, bodyPngData?.Length ?? 0);
+            }
         }
 
         /// <summary>
@@ -96,7 +102,10 @@ namespace FSO.Server.Utils
                     fs.Write(combinedPngData, 0, combinedPngData.Length);
                 GenerateHeadFromBodyThumbnail(combinedPngData, headPath);
             }
-            catch { }
+            catch (Exception ex)
+            {
+                LOG.Warn(ex, "SplitCombinedAvatarThumbnail failed for {0} ({1} bytes)", bodyPath, combinedPngData?.Length ?? 0);
+            }
         }
 
         public static TexBitmap SoftImageFetch(Stream stream, AbstractTextureRef texRef)
