@@ -584,29 +584,28 @@ namespace FSO.LotView.Utils
 
         public Rectangle GetSpriteListBounds()
         {
-            List<_2DSprite> all = new List<_2DSprite>();
-            for (var i=0; i<Sprites.Count; i++) {
-                for (int j = 0; j < Sprites[i].Sprites.Count; j++)
-                {
-                    List<_2DSprite> list = Sprites[i].Sprites.Values.ElementAt(j);
-                    all.AddRange(list);
-                }
-            }
-            return GetSpriteListBounds(all);
-        }
-
-        private Rectangle GetSpriteListBounds(List<_2DSprite> sprites)
-        {
+            // Walk the dictionary values directly with foreach. The previous implementation
+            // used `.Values.ElementAt(j)` inside an indexed loop — ElementAt on a
+            // Dictionary.ValueCollection is O(j), so the outer loop made the whole thing
+            // O(N²) in the number of texture groups. Also drops the temp List<_2DSprite>
+            // that copied every sprite reference just to compute bounds.
             int smallX = int.MaxValue;
             int smallY = int.MaxValue;
             int bigX = int.MinValue;
             int bigY = int.MinValue;
-            foreach (var sprite in sprites) {
-                var rect = sprite.AbsoluteDestRect;
-                if (rect.X < smallX) smallX = rect.X;
-                if (rect.Y < smallY) smallY = rect.Y;
-                if (rect.X + rect.Width > bigX) bigX = rect.X + rect.Width;
-                if (rect.Y + rect.Height > bigY) bigY = rect.Y + rect.Height;
+            for (var i = 0; i < Sprites.Count; i++)
+            {
+                foreach (var list in Sprites[i].Sprites.Values)
+                {
+                    foreach (var sprite in list)
+                    {
+                        var rect = sprite.AbsoluteDestRect;
+                        if (rect.X < smallX) smallX = rect.X;
+                        if (rect.Y < smallY) smallY = rect.Y;
+                        if (rect.X + rect.Width > bigX) bigX = rect.X + rect.Width;
+                        if (rect.Y + rect.Height > bigY) bigY = rect.Y + rect.Height;
+                    }
+                }
             }
             return new Rectangle(smallX, smallY, bigX - smallX, bigY - smallY);
         }
