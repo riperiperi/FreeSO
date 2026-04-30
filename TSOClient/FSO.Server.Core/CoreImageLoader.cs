@@ -134,6 +134,34 @@ namespace FSO.Server.Core
             public int Level;
         }
 
+        // Per-zoom rendering geometry. Values mirror tso.world WorldState.WorldSpace.Invalidate
+        // and the OneUnitDistance / floor-stride math; see comments below for the source.
+        // Adding Medium/Far is a matter of constructing a new ZoomGeometry instance and using
+        // the matching DGRP zoom value (Far=1, Medium=2, Near=3).
+        private struct ZoomGeometry
+        {
+            public uint DgrpZoom;       // matches DGRP image Zoom field
+            public int AnchorX;         // CadgeWidth / 2
+            public int AnchorY;         // CadgeBaseLine
+            public int TileHalfW;       // TilePxWidth / 2
+            public int TileHalfH;       // TilePxHeight / 2
+            public float FloorPxHeight; // OneUnitDistance * cos(30°) * WorldUnitsPerTile
+        }
+
+        // Near zoom — what the in-game catalog uses. Sources from WorldSpace.Invalidate:
+        //   TilePxWidth=128, TilePxHeight=64, CadgeWidth=136, CadgeBaseLine=348
+        //   OneUnitDistance = sqrt(128^2 / 2) ≈ 90.51,  * cos(30°) ≈ 78.4
+        //   WorldUnitsPerTile = 3.0  →  per-floor stride ≈ 78.4 * 2.95 (game uses 2.95, not 3)
+        private static readonly ZoomGeometry NearZoom = new ZoomGeometry
+        {
+            DgrpZoom = 3,
+            AnchorX = 68,
+            AnchorY = 348,
+            TileHalfW = 64,
+            TileHalfH = 32,
+            FloorPxHeight = 78.4f * 2.95f,
+        };
+
         private static bool TryRenderDGRPGroup(GameObject obj, OBJD masterObjd, IffFile spriteIff, string dir, string thumbPath)
         {
             // Build the list of tiles to render. Multi-tile objects: master has SubIndex == -1
@@ -177,19 +205,12 @@ namespace FSO.Server.Core
             //   BottomRight tile→screen formula, so we MUST use that same formula when
             //   placing each tile or multi-tile objects (beds, sofas) end up scrambled.
             const uint dgrpDirection = 0x10;
-            const uint dgrpZoom = 3;          // Near
-            const uint dgrpRotation = 0;      // already-rotated direction supplied directly
+            const uint dgrpRotation = 0;  // already-rotated direction supplied directly
 
-            // Near-zoom rendering constants from WorldSpace.Invalidate:
-            //   TilePxWidth = 128, TilePxHeight = 64 → halves 64, 32
-            //   CadgeWidth = 136 → anchorX = 68
-            //   CadgeBaseLine = 348 → anchorY
-            //   OneUnitDistance = sqrt(128^2 / 2) ≈ 90.51, * cos(30°) ≈ 78.4 px per Z unit
-            const int anchorX = 68;
-            const int anchorY = 348;
-            const int tileHalfW = 64;
-            const int tileHalfH = 32;
-            const float floorPxHeight = 78.4f * 2.95f; // pixels per LevelOffset step
+            // Per-zoom geometry constants extracted into NearZoom so they're named, sourced
+            // back to WorldSpace.Invalidate, and trivially swappable if we ever render
+            // catalog thumbs at a non-Near zoom.
+            var z = NearZoom;
             const int pad = 16;
 
             // Resolve every tile's DGRPImage and per-tile screen offset, then sort
@@ -197,14 +218,14 @@ namespace FSO.Server.Core
             var resolved = new List<(DGRPImage Image, int OffsetX, int OffsetY, int Depth)>();
             foreach (var t in tiles)
             {
-                var image = t.DGRP.GetImage(dgrpDirection, dgrpZoom, dgrpRotation);
+                var image = t.DGRP.GetImage(dgrpDirection, z.DgrpZoom, dgrpRotation);
                 if (image == null)
                     image = t.DGRP.Images?.FirstOrDefault(i => i.Sprites?.Length > 0);
                 if (image == null || image.Sprites == null || image.Sprites.Length == 0) continue;
 
                 // BottomRight isometric tile→screen + level offset.
-                int sx = (-t.TileX + t.TileY) * tileHalfW;
-                int sy = (-t.TileX - t.TileY) * tileHalfH - (int)(t.Level * floorPxHeight);
+                int sx = (-t.TileX + t.TileY) * z.TileHalfW;
+                int sy = (-t.TileX - t.TileY) * z.TileHalfH - (int)(t.Level * z.FloorPxHeight);
                 // Depth: lower-right (front) tiles have larger depth and must draw last.
                 // Higher levels also draw later (in front of lower floors).
                 int depth = (-t.TileX - t.TileY) * 1000 + t.Level * 10000;
@@ -219,8 +240,8 @@ namespace FSO.Server.Core
             int maxX = int.MinValue, maxY = int.MinValue;
             foreach (var r in resolved)
             {
-                int tileAnchorX = anchorX + r.OffsetX;
-                int tileAnchorY = anchorY + r.OffsetY;
+                int tileAnchorX = z.AnchorX + r.OffsetX;
+                int tileAnchorY = z.AnchorY + r.OffsetY;
                 foreach (var spr in r.Image.Sprites)
                 {
                     var s2 = spriteIff.Get<SPR2>((ushort)spr.SpriteID);
@@ -246,8 +267,8 @@ namespace FSO.Server.Core
             // closer tiles overpaint farther ones (no Z-buffer in the CPU compositor).
             foreach (var r in resolved)
             {
-                int tileAnchorX = anchorX + r.OffsetX;
-                int tileAnchorY = anchorY + r.OffsetY;
+                int tileAnchorX = z.AnchorX + r.OffsetX;
+                int tileAnchorY = z.AnchorY + r.OffsetY;
                 foreach (var spr in r.Image.Sprites)
                 {
                     var s2 = spriteIff.Get<SPR2>((ushort)spr.SpriteID);
