@@ -17,6 +17,7 @@ using System.Collections.Immutable;
 using System.IO;
 using System.Linq;
 using System.Security;
+using System.Threading.Tasks;
 
 namespace FSO.Server.DataService.Providers
 {
@@ -49,19 +50,41 @@ namespace FSO.Server.DataService.Providers
                         db.Avatars.UpdatePrivacyMode(avatar.Avatar_Id, avatar.Avatar_PrivacyMode);
                         break;
                     case "Avatar_Thumbnail":
-                        var avatarDir = Path.Combine(NFS.GetBaseDirectory(), "Avatars/" + avatar.Avatar_Id.ToString("x8"));
-                        Directory.CreateDirectory(avatarDir);
                         var imgData = (cTSOGenericData)value;
                         LOG.Info("Received Avatar_Thumbnail upload for avatar_id={0}: {1} bytes", avatar.Avatar_Id, imgData.Data.Length);
-                        // The client uploads a 400×1000 combined PNG: top 400×600 isometric
-                        // body, bottom 400×400 front-facing head. Split it into two files.
-                        Utils.CoreImageLoader.SplitCombinedAvatarThumbnail(
-                            imgData.Data,
-                            Path.Combine(avatarDir, "body.png"),
-                            Path.Combine(avatarDir, "head.png"));
+
+                        // Clear the in-memory blob synchronously so concurrent reads of the
+                        // avatar model don't keep shipping the upload bytes back to clients,
+                        // and update the checksum so any consumer can detect the change.
                         avatar.Avatar_Thumbnail = new cTSOGenericData(new byte[0]);
                         avatar.Avatar_ThumbnailCheckSum = avatar.Avatar_Id;
-                        LOG.Info("Wrote body.png and head.png for avatar_id={0}", avatar.Avatar_Id);
+
+                        // Dispatch the heavy work (PNG decode + resize + 2 atomic file writes)
+                        // off the data-service handler thread. A slow NFS or large image must
+                        // not block the rest of the handler queue. Capture only what we need
+                        // by value — the avatar model may mutate before the task runs.
+                        var avatarId = avatar.Avatar_Id;
+                        var pngBytes = imgData.Data;
+                        var nfsBase = NFS.GetBaseDirectory();
+                        Task.Run(() =>
+                        {
+                            try
+                            {
+                                var avatarDir = Path.Combine(nfsBase, "Avatars/" + avatarId.ToString("x8"));
+                                Directory.CreateDirectory(avatarDir);
+                                // The client uploads a 400×1000 combined PNG: top 400×600 isometric
+                                // body, bottom 400×400 front-facing head. Split it into two files.
+                                Utils.CoreImageLoader.SplitCombinedAvatarThumbnail(
+                                    pngBytes,
+                                    Path.Combine(avatarDir, "body.png"),
+                                    Path.Combine(avatarDir, "head.png"));
+                                LOG.Info("Wrote body.png and head.png for avatar_id={0}", avatarId);
+                            }
+                            catch (Exception ex)
+                            {
+                                LOG.Warn(ex, "Background Avatar_Thumbnail write failed for avatar_id={0}", avatarId);
+                            }
+                        });
                         return;
                 }
             }
