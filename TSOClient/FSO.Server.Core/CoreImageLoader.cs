@@ -107,6 +107,7 @@ namespace FSO.Server.Core
             public DGRP DGRP;
             public int TileX;
             public int TileY;
+            public int Level;
         }
 
         private static bool TryRenderDGRPGroup(GameObject obj, OBJD masterObjd, IffFile spriteIff, string dir, string thumbPath)
@@ -129,7 +130,8 @@ namespace FSO.Server.Core
                         // SubIndex packs the tile offset: high byte = X, low byte = Y (signed).
                         int tx = (sbyte)((ushort)sub.SubIndex >> 8);
                         int ty = (sbyte)((ushort)sub.SubIndex & 0xFF);
-                        tiles.Add(new TileToRender { DGRP = subDgrp, TileX = tx, TileY = ty });
+                        int lvl = (sbyte)sub.LevelOffset;
+                        tiles.Add(new TileToRender { DGRP = subDgrp, TileX = tx, TileY = ty, Level = lvl });
                     }
                 }
             }
@@ -141,29 +143,34 @@ namespace FSO.Server.Core
                 if (dgrp == null)
                     dgrp = spriteIff.List<DGRP>()?.FirstOrDefault();
                 if (dgrp != null)
-                    tiles.Add(new TileToRender { DGRP = dgrp, TileX = 0, TileY = 0 });
+                    tiles.Add(new TileToRender { DGRP = dgrp, TileX = 0, TileY = 0, Level = 0 });
             }
             if (tiles.Count == 0) return false;
 
-            // View matches the in-game catalog: WorldRotation.BottomRight + Direction.NORTH
-            // resolves to DGRP direction 0x10 (LeftFront). Use worldRotation=0 with that
-            // direction so the tile->screen formula and the DGRP lookup stay consistent.
+            // Match the in-game 2D catalog renderer exactly:
+            //   WorldRotation.BottomRight (2) + Direction.NORTH (0x01) → DGRP direction 0x10
+            //   (LeftFront). The DGRP sprites for that direction are anchored assuming the
+            //   BottomRight tile→screen formula, so we MUST use that same formula when
+            //   placing each tile or multi-tile objects (beds, sofas) end up scrambled.
             const uint dgrpDirection = 0x10;
             const uint dgrpZoom = 3;          // Near
-            const uint dgrpRotation = 0;       // TopLeft
+            const uint dgrpRotation = 0;      // already-rotated direction supplied directly
 
             // Near-zoom rendering constants from WorldSpace.Invalidate:
             //   TilePxWidth = 128, TilePxHeight = 64 → halves 64, 32
             //   CadgeWidth = 136 → anchorX = 68
             //   CadgeBaseLine = 348 → anchorY
+            //   OneUnitDistance = sqrt(128^2 / 2) ≈ 90.51, * cos(30°) ≈ 78.4 px per Z unit
             const int anchorX = 68;
             const int anchorY = 348;
             const int tileHalfW = 64;
             const int tileHalfH = 32;
+            const float floorPxHeight = 78.4f * 2.95f; // pixels per LevelOffset step
             const int pad = 16;
 
-            // Resolve every tile's DGRPImage and per-tile screen offset.
-            var resolved = new List<(DGRPImage Image, int OffsetX, int OffsetY)>();
+            // Resolve every tile's DGRPImage and per-tile screen offset, then sort
+            // back-to-front so closer tiles overpaint farther ones (no Z-buffer here).
+            var resolved = new List<(DGRPImage Image, int OffsetX, int OffsetY, int Depth)>();
             foreach (var t in tiles)
             {
                 var image = t.DGRP.GetImage(dgrpDirection, dgrpZoom, dgrpRotation);
@@ -171,12 +178,17 @@ namespace FSO.Server.Core
                     image = t.DGRP.Images?.FirstOrDefault(i => i.Sprites?.Length > 0);
                 if (image == null || image.Sprites == null || image.Sprites.Length == 0) continue;
 
-                // Isometric tile→screen for TopLeft rotation (z=0).
-                int sx = (t.TileX - t.TileY) * tileHalfW;
-                int sy = (t.TileX + t.TileY) * tileHalfH;
-                resolved.Add((image, sx, sy));
+                // BottomRight isometric tile→screen + level offset.
+                int sx = (-t.TileX + t.TileY) * tileHalfW;
+                int sy = (-t.TileX - t.TileY) * tileHalfH - (int)(t.Level * floorPxHeight);
+                // Depth: lower-right (front) tiles have larger depth and must draw last.
+                // Higher levels also draw later (in front of lower floors).
+                int depth = (-t.TileX - t.TileY) * 1000 + t.Level * 10000;
+                // Negate so smaller "back" depth sorts first.
+                resolved.Add((image, sx, sy, -depth));
             }
             if (resolved.Count == 0) return false;
+            resolved.Sort((a, b) => a.Depth.CompareTo(b.Depth));
 
             // Pass 1 – bounding box across all tiles.
             int minX = int.MaxValue, minY = int.MaxValue;
@@ -206,8 +218,8 @@ namespace FSO.Server.Core
             int canvasH = maxY - minY + pad * 2;
             var canvasBytes = new byte[canvasW * canvasH * 4]; // RGBA, zeroed = transparent
 
-            // Pass 2 – composite back-to-front. Tiles are drawn in the order they appear in
-            // the OBJD list; for an isometric view that's correct because back tiles come first.
+            // Pass 2 – composite back-to-front using the depth-sorted order from above so
+            // closer tiles overpaint farther ones (no Z-buffer in the CPU compositor).
             foreach (var r in resolved)
             {
                 int tileAnchorX = anchorX + r.OffsetX;
