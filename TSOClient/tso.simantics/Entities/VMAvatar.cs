@@ -108,7 +108,12 @@ namespace FSO.SimAntics
                 {
                     Avatar.Head = value.GetContent();
                     var vm = Thread?.Context?.VM;
-                    if (vm != null && PersistID != 0 && PersistID == vm.MyUID)
+                    // Only fire for genuine in-game outfit changes (after the lot is fully
+                    // loaded and ready). Suppressing during load avoids running the
+                    // GetAvatarThumb render target work mid-LoadCrossRef on the background
+                    // thread, which otherwise hangs the join sequence at 75%. The initial
+                    // upload is handled by OnAvatarReady.
+                    if (vm != null && vm.Ready && PersistID != 0 && PersistID == vm.MyUID)
                         vm.OnAvatarHeadOutfitChanged?.Invoke(this);
                 }
             }
