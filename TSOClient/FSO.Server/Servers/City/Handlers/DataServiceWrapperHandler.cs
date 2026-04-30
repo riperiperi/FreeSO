@@ -7,7 +7,6 @@ using FSO.Server.Protocol.Voltron.Packets;
 using NLog;
 using System;
 using System.Collections.Generic;
-using System.Linq;
 
 namespace FSO.Server.Servers.City.Handlers
 {
@@ -116,8 +115,6 @@ namespace FSO.Server.Servers.City.Handlers
                 {
                     //Client wants to update a value in the data service
                     var update = packet.Body as cTSOTopicUpdateMessage;
-                    LOG.Info("[AvatarThumb] Voltron handler: cTSOTopicUpdateMessage received from avatar {0}, dotPath=[{1}]",
-                        session.AvatarId, string.Join(",", update.DotPath.Select(d => "0x" + d.ToString("X8"))));
                     DataService.ApplyUpdate(update, session);
 
                     List<uint> resultDotPath = new List<uint>();

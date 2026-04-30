@@ -113,10 +113,7 @@ namespace FSO.SimAntics
                     // GetAvatarThumb render target work mid-LoadCrossRef on the background
                     // thread, which otherwise hangs the join sequence at 75%. The initial
                     // upload is handled by OnAvatarReady.
-                    bool willFire = vm != null && vm.Ready && PersistID != 0 && PersistID == vm.MyUID;
-                    if (vm?.OnAvatarHeadOutfitChanged != null)
-                        Console.WriteLine($"[AvatarThumb] HeadOutfit setter: vm.Ready={vm.Ready}, PersistID={PersistID}, MyUID={vm.MyUID}, willFire={willFire}");
-                    if (willFire)
+                    if (vm != null && vm.Ready && PersistID != 0 && PersistID == vm.MyUID)
                         vm.OnAvatarHeadOutfitChanged?.Invoke(this);
                 }
             }

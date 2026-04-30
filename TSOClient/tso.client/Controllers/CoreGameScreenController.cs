@@ -260,19 +260,10 @@ namespace FSO.Client.Controllers
 
         public void UploadAvatarThumbnail(VMAvatar vmAva)
         {
-            Console.WriteLine($"[AvatarThumb] UploadAvatarThumbnail entered: persistID={vmAva.PersistID}, name={vmAva.Name}");
-
-            // Debounce before scheduling — avoids queuing many callbacks during lot load.
+            // Debounce — avoids queuing many callbacks during lot load.
             var now = DateTime.UtcNow;
-            var sinceLast = (now - _LastAvatarThumbUpload).TotalSeconds;
-            if (sinceLast < 5)
-            {
-                Console.WriteLine($"[AvatarThumb] Debounced (last upload {sinceLast:F1}s ago, need 5s)");
-                return;
-            }
+            if ((now - _LastAvatarThumbUpload).TotalSeconds < 5) return;
             _LastAvatarThumbUpload = now;
-
-            Console.WriteLine($"[AvatarThumb] Scheduling NextUpdate callback");
 
             // OpenGL calls (GetAvatarThumb, GetIcon, GraphicsDevice) must run on the
             // main/render thread. This method may be invoked from VM.LoadAsync (thread pool)
@@ -281,31 +272,25 @@ namespace FSO.Client.Controllers
             {
                 try
                 {
-                    Console.WriteLine($"[AvatarThumb] NextUpdate callback running on game thread");
                     var avatarComp = VMEntity.UseWorld ? vmAva.WorldUI as FSO.LotView.Components.AvatarComponent : null;
-                    Console.WriteLine($"[AvatarThumb] UseWorld={VMEntity.UseWorld}, avatarComp={(avatarComp != null ? "set" : "NULL")}, Avatar.Skeleton={(avatarComp?.Avatar?.Skeleton != null ? "set" : "NULL")}");
-
                     Microsoft.Xna.Framework.Graphics.Texture2D ico = null;
                     if (avatarComp != null)
                     {
                         try
                         {
                             ico = Screen.vm.Context.World.GetAvatarThumb(avatarComp, GameFacade.GraphicsDevice);
-                            Console.WriteLine($"[AvatarThumb] GetAvatarThumb returned: {(ico != null ? $"{ico.Width}x{ico.Height}" : "null")}");
                         }
                         catch (Exception ex)
                         {
-                            Console.WriteLine($"[AvatarThumb] GetAvatarThumb threw: {ex.GetType().Name}: {ex.Message}");
+                            LOG.Warn(ex, "GetAvatarThumb failed; falling back to GetIcon");
                         }
                     }
-
+                    if (ico == null) ico = vmAva.GetIcon(GameFacade.GraphicsDevice, 0);
                     if (ico == null)
                     {
-                        ico = vmAva.GetIcon(GameFacade.GraphicsDevice, 0);
-                        Console.WriteLine($"[AvatarThumb] Fallback GetIcon: {(ico != null ? $"{ico.Width}x{ico.Height}" : "null")}");
+                        LOG.Warn("Avatar thumbnail upload aborted: no icon available for persistID={0}", vmAva.PersistID);
+                        return;
                     }
-
-                    if (ico == null) { Console.WriteLine("[AvatarThumb] ABORT — no icon available"); return; }
 
                     byte[] data;
                     using (var stream = new MemoryStream())
@@ -313,36 +298,34 @@ namespace FSO.Client.Controllers
                         ico.SaveAsPng(stream, ico.Width, ico.Height);
                         data = stream.ToArray();
                     }
-                    Console.WriteLine($"[AvatarThumb] PNG encoded: {data.Length} bytes");
 
-                    var myChar = Network.MyCharacter;
-                    Console.WriteLine($"[AvatarThumb] DataService.Get<Avatar>({myChar}) — fetching avatar model");
-
-                    DataService.Get<Avatar>(myChar).ContinueWith(x =>
+                    DataService.Get<Avatar>(Network.MyCharacter).ContinueWith(x =>
                     {
                         try
                         {
                             if (x.IsFaulted)
                             {
-                                Console.WriteLine($"[AvatarThumb] DataService.Get FAULTED: {x.Exception?.GetBaseException().Message}");
+                                LOG.Warn(x.Exception?.GetBaseException(), "Avatar thumbnail upload: DataService.Get faulted");
                                 return;
                             }
                             var avatar = x.Result;
-                            if (avatar == null) { Console.WriteLine("[AvatarThumb] ABORT — DataService.Get returned null avatar"); return; }
-                            Console.WriteLine($"[AvatarThumb] Got avatar model, sending Sync ({data.Length} bytes) for Avatar_Id={avatar.Avatar_Id}");
+                            if (avatar == null)
+                            {
+                                LOG.Warn("Avatar thumbnail upload aborted: DataService.Get returned null avatar");
+                                return;
+                            }
                             avatar.Avatar_Thumbnail = new cTSOGenericData(data);
                             DataService.Sync(avatar, new string[] { "Avatar_Thumbnail" });
-                            Console.WriteLine("[AvatarThumb] DataService.Sync RETURNED");
                         }
                         catch (Exception ex)
                         {
-                            Console.WriteLine($"[AvatarThumb] Exception in Sync callback: {ex.GetType().Name}: {ex.Message}\n{ex.StackTrace}");
+                            LOG.Error(ex, "Avatar thumbnail upload failed during DataService.Sync");
                         }
                     });
                 }
                 catch (Exception ex)
                 {
-                    Console.WriteLine($"[AvatarThumb] Exception in NextUpdate callback: {ex.GetType().Name}: {ex.Message}\n{ex.StackTrace}");
+                    LOG.Error(ex, "Avatar thumbnail upload failed in render callback");
                 }
             });
         }

@@ -379,8 +379,6 @@ namespace FSO.SimAntics
                     {
                         Ready = true;
                         var localAvatar = GetAvatarByPersist(MyUID);
-                        if (OnAvatarReady != null)
-                            Console.WriteLine($"[AvatarThumb] VM.Tick: Ready=true, MyUID={MyUID}, localAvatar={(localAvatar != null ? "found persistID=" + localAvatar.PersistID : "NULL")}");
                         if (localAvatar != null) OnAvatarReady?.Invoke(localAvatar);
                     }
                 }
