@@ -82,12 +82,18 @@ namespace FSO.Files.FAR1
         /// <returns>A FarEntry or null if the entry wasn't found.</returns>
         public byte[] GetEntry(KeyValuePair<string, byte[]> Entry)
         {
+            // m_Reader wraps a single shared FileStream; concurrent Seek+ReadBytes from
+            // different threads would interleave and corrupt each other's reads. Mirror the
+            // synchronization FAR3Archive.GetEntry already uses.
             foreach (FarEntry Ent in m_Entries)
             {
                 if (Ent.Filename == Entry.Key)
                 {
-                    m_Reader.BaseStream.Seek(Ent.DataOffset, SeekOrigin.Begin);
-                    return m_Reader.ReadBytes(Ent.DataLength);
+                    lock (m_Reader)
+                    {
+                        m_Reader.BaseStream.Seek(Ent.DataOffset, SeekOrigin.Begin);
+                        return m_Reader.ReadBytes(Ent.DataLength);
+                    }
                 }
             }
 
@@ -101,12 +107,18 @@ namespace FSO.Files.FAR1
         /// <returns>The entry's data.</returns>
         public byte[] GetEntry(FarEntry Entry)
         {
+            // m_Reader wraps a single shared FileStream; concurrent Seek+ReadBytes from
+            // different threads would interleave and corrupt each other's reads. Mirror the
+            // synchronization FAR3Archive.GetEntry already uses.
             foreach (FarEntry Ent in m_Entries)
             {
                 if (Ent.Filename == Entry.Filename)
                 {
-                    m_Reader.BaseStream.Seek(Ent.DataOffset, SeekOrigin.Begin);
-                    return m_Reader.ReadBytes(Ent.DataLength);
+                    lock (m_Reader)
+                    {
+                        m_Reader.BaseStream.Seek(Ent.DataOffset, SeekOrigin.Begin);
+                        return m_Reader.ReadBytes(Ent.DataLength);
+                    }
                 }
             }
 
