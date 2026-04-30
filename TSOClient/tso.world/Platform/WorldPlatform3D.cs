@@ -355,6 +355,14 @@ namespace FSO.LotView.Platform
 
         public Texture2D GetAvatarThumb(AvatarComponent avatarComp, GraphicsDevice gd)
         {
+            // Thread-safety contract: must be called on the game thread.
+            // See WorldPlatform2D.GetAvatarThumb for the rationale (texref Get-from-non-game
+            // thread can deadlock against the lock(Bindings) that DrawGeometry holds).
+            if (!GameThread.IsInGameThread())
+                throw new InvalidOperationException(
+                    "WorldPlatform3D.GetAvatarThumb must be called on the game thread; "
+                    + "marshal via GameThread.NextUpdate first.");
+
             // Render two views into a single 400×1000 target: isometric body in the top
             // 400×600 region, front-facing head in the bottom 400×400 region. Server splits
             // the resulting PNG into body.png and head.png. One render target → one

@@ -334,6 +334,20 @@ namespace FSO.LotView.Platform
 
         public Texture2D GetAvatarThumb(AvatarComponent avatarComp, GraphicsDevice gd)
         {
+            // Thread-safety contract: must be called on the game thread.
+            //
+            // We hold lock(Avatar.Bindings) inside DrawGeometry while iterating bindings,
+            // and each binding.Texture.Get(device) takes lock(textureRef). On the game
+            // thread, AbstractTextureRef.Get does direct Process(); off the game thread
+            // it does GameThread.NextUpdate(...).Result — which blocks waiting for the
+            // game thread to drain its callback queue. If the game thread is parked
+            // waiting for a different lock we hold, that's a hard deadlock (broken only
+            // by NextUpdate's 5s timeout). Fail fast on misuse so the bug is obvious.
+            if (!GameThread.IsInGameThread())
+                throw new InvalidOperationException(
+                    "WorldPlatform2D.GetAvatarThumb must be called on the game thread; "
+                    + "marshal via GameThread.NextUpdate first.");
+
             // The avatar mesh is 3D Vitaboy geometry drawn with AvatarEffect regardless of
             // whether the world platform is 2D or 3D. Render two views into a single
             // 400×1000 target: isometric body in the top 400×600 region, front-facing head
