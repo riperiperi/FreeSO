@@ -277,16 +277,17 @@ namespace FSO.Client.Controllers
                     var avatarComp = VMEntity.UseWorld ? vmAva.WorldUI as FSO.LotView.Components.AvatarComponent : null;
                     LOG.Info("[AvatarThumb] NextUpdate: UseWorld={0} avatarComp={1}", VMEntity.UseWorld, avatarComp != null ? "set" : "null");
 
-                    // Only upload a client render when we can produce a full-body portrait (3D mode).
-                    // In 2D mode GetAvatarThumb returns null; GetIcon only has the small head sprite
-                    // which makes a poor body.png and a worse head.png after server-side cropping.
-                    // The server's GenerateAvatarThumbnail already handles the 2D case from content.
+                    // Prefer a full Vitaboy portrait (works in both 2D and 3D world modes since
+                    // the avatar mesh is always 3D geometry). Fall back to the content head sprite.
                     var ico = avatarComp != null
                         ? Screen.vm.Context.World.GetAvatarThumb(avatarComp, GameFacade.GraphicsDevice)
                         : null;
-                    LOG.Info("[AvatarThumb] GetAvatarThumb result: {0}", ico != null ? $"{ico.Width}x{ico.Height}" : "null (2D client — skipping upload)");
+                    LOG.Info("[AvatarThumb] GetAvatarThumb result: {0}", ico != null ? $"{ico.Width}x{ico.Height}" : "null");
 
-                    if (ico == null) { LOG.Info("[AvatarThumb] No 3D portrait available — server-side content thumbnail will be used"); return; }
+                    if (ico == null) ico = vmAva.GetIcon(GameFacade.GraphicsDevice, 0);
+                    LOG.Info("[AvatarThumb] Final icon: {0}", ico != null ? $"{ico.Width}x{ico.Height}" : "null");
+
+                    if (ico == null) { LOG.Warn("[AvatarThumb] No icon available — aborting upload"); return; }
 
                     byte[] data;
                     using (var stream = new MemoryStream())

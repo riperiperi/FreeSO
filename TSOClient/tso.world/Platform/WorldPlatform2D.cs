@@ -1,5 +1,6 @@
 ﻿using FSO.Common.Utils;
 using FSO.LotView.Components;
+using FSO.LotView.Effects;
 using FSO.LotView.Model;
 using FSO.LotView.Utils;
 using Microsoft.Xna.Framework;
@@ -13,6 +14,7 @@ namespace FSO.LotView.Platform
     {
         public Blueprint bp;
         private List<_2DDrawBuffer> StaticWallCache = new List<_2DDrawBuffer>();
+        private RenderTarget2D AvatarThumbTarget;
 
         public WorldPlatform2D(Blueprint bp)
         {
@@ -332,7 +334,63 @@ namespace FSO.LotView.Platform
 
         public Texture2D GetAvatarThumb(AvatarComponent avatarComp, GraphicsDevice gd)
         {
-            return null; // 3D Vitaboy render only available in 3D platform mode
+            // The avatar mesh is 3D Vitaboy geometry drawn with AvatarEffect regardless of
+            // whether the world platform is 2D or 3D.  Render it off-screen with the same
+            // isometric portrait setup used by WorldPlatform3D.
+            if (avatarComp?.Avatar == null || avatarComp.Avatar.Skeleton == null) return null;
+
+            const int thumbW = 400, thumbH = 600;
+            if (AvatarThumbTarget == null)
+                AvatarThumbTarget = new RenderTarget2D(gd, thumbW, thumbH, false, SurfaceFormat.Color, DepthFormat.Depth24Stencil8);
+
+            var headBone = avatarComp.Avatar.Skeleton.GetBone("HEAD");
+            float headY = headBone != null ? headBone.AbsolutePosition.Y : 3f;
+
+            float az = MathHelper.PiOver4;
+            float el = MathHelper.ToRadians(30f);
+            float dist = headY * 2.0f;
+            var camTarget = new Vector3(0f, headY * 0.4f, 0f);
+            var camPos = camTarget + new Vector3(
+                dist * (float)Math.Cos(el) * (float)Math.Sin(az),
+                dist * (float)Math.Sin(el),
+                dist * (float)Math.Cos(el) * (float)Math.Cos(az)
+            );
+
+            var view = Matrix.CreateLookAt(camPos, camTarget, Vector3.Up);
+            float orthoH = headY * 1.5f;
+            float orthoW = orthoH * thumbW / thumbH;
+            var proj = Matrix.CreateOrthographic(orthoW, orthoH, 0.1f, 100f);
+
+            var oldRts = gd.GetRenderTargets();
+            gd.SetRenderTarget(AvatarThumbTarget);
+            gd.Clear(Color.Transparent);
+
+            var oldBlend = gd.BlendState;
+            var oldDepth = gd.DepthStencilState;
+            var oldRaster = gd.RasterizerState;
+
+            gd.BlendState = BlendState.AlphaBlend;
+            gd.DepthStencilState = DepthStencilState.Default;
+            gd.RasterizerState = RasterizerState.CullCounterClockwise;
+
+            var effect = WorldContent.AvatarEffect;
+            effect.CurrentTechnique = effect.Techniques[0];
+            effect.Parameters["View"].SetValue(view);
+            effect.Parameters["Projection"].SetValue(proj);
+            effect.Parameters["ObjectID"].SetValue(0f);
+            effect.Parameters["Level"].SetValue(1f);
+            effect.Parameters["AmbientLight"].SetValue(Vector4.One);
+            effect.Parameters["World"].SetValue(Matrix.CreateRotationY((float)Math.PI));
+
+            avatarComp.Avatar.LightPositions = null;
+            avatarComp.Avatar.DrawGeometry(gd, effect);
+
+            gd.SetRenderTargets(oldRts);
+            gd.BlendState = oldBlend;
+            gd.DepthStencilState = oldDepth;
+            gd.RasterizerState = oldRaster;
+
+            return AvatarThumbTarget;
         }
 
         public void ClearDrawBuffer(List<_2DDrawBuffer> buf)
