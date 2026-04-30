@@ -114,7 +114,8 @@ namespace FSO.SimAntics
                     // thread, which otherwise hangs the join sequence at 75%. The initial
                     // upload is handled by OnAvatarReady.
                     bool willFire = vm != null && vm.Ready && PersistID != 0 && PersistID == vm.MyUID;
-                    Console.WriteLine($"[AvatarThumb] HeadOutfit setter: vm={(vm != null)}, vm.Ready={vm?.Ready}, PersistID={PersistID}, MyUID={vm?.MyUID}, willFire={willFire}");
+                    if (vm?.OnAvatarHeadOutfitChanged != null)
+                        Console.WriteLine($"[AvatarThumb] HeadOutfit setter: vm.Ready={vm.Ready}, PersistID={PersistID}, MyUID={vm.MyUID}, willFire={willFire}");
                     if (willFire)
                         vm.OnAvatarHeadOutfitChanged?.Invoke(this);
                 }
