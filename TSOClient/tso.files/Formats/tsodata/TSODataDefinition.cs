@@ -159,7 +159,39 @@ namespace FSO.Files.Formats.tsodata
             }
 
             //InjectStructs();
+            InjectFSOFields();
             Active = this;
+        }
+
+        /// <summary>
+        /// FSO-only field additions that don't exist in the original TSO data definition.
+        /// Both client and server run this on load so the wire IDs match.
+        /// </summary>
+        private void InjectFSOFields()
+        {
+            // Avatar_Thumbnail: cTSOGenericData blob the client uploads (full body portrait
+            // PNG) for the avatar. Mirrors Lot_Thumbnail's wire type so the existing
+            // cTSOValueGenericData serializer handles it.
+            if (StructsByName.TryGetValue("Avatar", out var avatarStruct)
+                && StructsByName.TryGetValue("Lot", out var lotStruct))
+            {
+                var lotThumb = lotStruct.Fields.FirstOrDefault(f => f.Name == "Lot_Thumbnail");
+                if (lotThumb != null
+                    && !avatarStruct.Fields.Any(f => f.Name == "Avatar_Thumbnail"))
+                {
+                    // FSO-injected ID — stable, picked from the 0xF50_ namespace to avoid
+                    // collisions with Maxis-assigned hashed IDs.
+                    const uint AvatarThumbnailID = 0xF5000001;
+                    avatarStruct.Fields.Add(new StructField
+                    {
+                        Name = "Avatar_Thumbnail",
+                        ID = AvatarThumbnailID,
+                        Classification = StructFieldClassification.SingleField,
+                        ParentID = avatarStruct.ID,
+                        TypeID = lotThumb.TypeID,
+                    });
+                }
+            }
         }
 
         private void InjectStructs()
