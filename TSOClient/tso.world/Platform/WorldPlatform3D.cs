@@ -364,13 +364,11 @@ namespace FSO.LotView.Platform
             const int bodyW = 400, bodyH = 600, headSquare = 400;
             const int totalH = bodyH + headSquare; // 1000
             if (AvatarThumbTarget == null)
-                AvatarThumbTarget = new RenderTarget2D(gd, bodyW, totalH, false, SurfaceFormat.Color, DepthFormat.Depth24Stencil8);
+                AvatarThumbTarget = new RenderTarget2D(gd, bodyW, totalH, false, SurfaceFormat.Color, DepthFormat.Depth24Stencil8, 0, RenderTargetUsage.PreserveContents);
 
             var headBone = avatarComp.Avatar.Skeleton.GetBone("HEAD");
             float headY = headBone != null ? headBone.AbsolutePosition.Y : 3f;
 
-            var oldRts = gd.GetRenderTargets();
-            var oldVp = gd.Viewport;
             var oldBlend = gd.BlendState;
             var oldDepth = gd.DepthStencilState;
             var oldRaster = gd.RasterizerState;
@@ -422,8 +420,12 @@ namespace FSO.LotView.Platform
                 avatarComp.Avatar.DrawGeometry(gd, effect);
             }
 
-            gd.Viewport = oldVp;
-            gd.SetRenderTargets(oldRts);
+            // Unbind to the back buffer rather than restoring previously-bound RTs.
+            // Round-tripping via GetRenderTargets/SetRenderTargets has been observed to
+            // poison MonoGame's internal resolve-framebuffer dictionary and crash the
+            // next frame's lightmap pass with KeyNotFoundException. The frame that draws
+            // after us will rebind whatever it needs anyway.
+            gd.SetRenderTarget(null);
             gd.BlendState = oldBlend;
             gd.DepthStencilState = oldDepth;
             gd.RasterizerState = oldRaster;
