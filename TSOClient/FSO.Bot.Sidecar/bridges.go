@@ -28,6 +28,10 @@ type Bridges struct {
 	// perception event that carries one, then stable. Used as the sim:<id>
 	// tag on broadcasts.
 	simID string
+
+	// habWatcher observes perception events to track I0-7 habitation flags.
+	// Nil disables habitation tracking (e.g. --no-bot mode).
+	habWatcher *HabitationWatcher
 }
 
 // NewBridges constructs a Bridges value. Call Run(ctx) once to start the
@@ -35,13 +39,13 @@ type Bridges struct {
 // ipc may be nil in tests that don't exercise the command channel.
 // botCmds may be nil when BotCmdPump is not in use (e.g. --no-bot mode).
 func NewBridges(cf *Campfire, bot *BotProcess, ipc *IPC) *Bridges {
-	return &Bridges{cf: cf, bot: bot, ipc: ipc}
+	return &Bridges{cf: cf, bot: bot, ipc: ipc, habWatcher: NewHabitationWatcher()}
 }
 
 // NewBridgesWithBotCmd constructs a Bridges value with the BotCmdPump wired.
 // Used by the main supervisor loop when probe-lot / bot-exit-request are in use.
 func NewBridgesWithBotCmd(cf *Campfire, bot *BotProcess, ipc *IPC, botCmds *BotCmdPump) *Bridges {
-	return &Bridges{cf: cf, bot: bot, ipc: ipc, botCmds: botCmds}
+	return &Bridges{cf: cf, bot: bot, ipc: ipc, botCmds: botCmds, habWatcher: NewHabitationWatcher()}
 }
 
 // eventEnvelope is the loose shape we parse from bot stdout. We keep it a map
@@ -135,6 +139,13 @@ func (b *Bridges) handle(line []byte) {
 		// ok
 	default:
 		log.Printf("bridge: unknown kind %q (broadcasting as freeso:%s)", env.Kind, env.Kind)
+	}
+
+	// Habitation watcher: observe every perception tick to track I0-7 flags.
+	// Non-perception kinds are passed through to ObservePerception which checks
+	// the kind field and returns immediately — no overhead.
+	if env.Kind == "perception" && b.habWatcher != nil {
+		b.habWatcher.ObservePerception(line)
 	}
 
 	if err := b.cf.BroadcastEvent(tag, line, b.simID); err != nil {
