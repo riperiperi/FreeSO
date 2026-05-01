@@ -870,6 +870,23 @@ namespace FSO.Server.Servers.Lot.Domain
             }
         }
 
+        /// <summary>
+        /// Push a new ObjectLimitBonus into the live VM. Called from LotHost when an
+        /// out-of-band system (the portal API) updates the bonus and broadcasts a
+        /// SetLotObjectLimitBonus Gluon packet. The DB and any avatar budget changes
+        /// were already applied by the API; we just forward a server-only command so
+        /// the value replicates to every connected client and updates the in-memory
+        /// TSOState. No-op for job lots (they're not persistent residential lots).
+        /// </summary>
+        public void UpdateObjectLimitBonus(int targetBonus)
+        {
+            if (Lot == null || JobLot) return;
+            Lot.ForwardCommand(new VMNetSetObjectLimitBonusCmd()
+            {
+                TargetBonus = targetBonus
+            });
+        }
+
         private void ResyncTime()
         {
             var time = DateTime.UtcNow;

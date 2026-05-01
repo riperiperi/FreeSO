@@ -79,5 +79,12 @@ namespace FSO.Server.Servers.Lot.Handlers
         {
             Lots.UpdateTuning(request.UpdateInstantly);
         }
+
+        public void Handle(IGluonSession session, SetLotObjectLimitBonus request)
+        {
+            // No-op for any lot this server isn't currently hosting; UpdateObjectLimitBonus
+            // returns false in that case. The DB write was already done by the API.
+            Lots.UpdateObjectLimitBonus((int)request.LotId, request.TargetBonus);
+        }
     }
 }

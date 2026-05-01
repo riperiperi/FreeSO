@@ -59,6 +59,7 @@ namespace FSO.SimAntics.NetPlay.Model
             { VMCommandType.SM64Event, typeof(VMNetSM64EventCmd) },
             { VMCommandType.SM64AnimData, typeof(VMNetSM64AnimDataCmd) },
             { VMCommandType.ChangeObjectLimit, typeof(VMNetChangeObjectLimitCmd) },
+            { VMCommandType.SetObjectLimitBonus, typeof(VMNetSetObjectLimitBonusCmd) },
         };
         public static Dictionary<Type, VMCommandType> ReverseMap = CmdMap.ToDictionary(x => x.Value, x => x.Key);
 
@@ -172,6 +173,7 @@ namespace FSO.SimAntics.NetPlay.Model
         SM64Position = 46,
         SM64Event = 47,
         SM64AnimData = 48,
-        ChangeObjectLimit = 49
+        ChangeObjectLimit = 49,
+        SetObjectLimitBonus = 50
     }
 }

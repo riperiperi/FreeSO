@@ -226,6 +226,24 @@ namespace FSO.Server.Servers.Lot.Domain
             }
         }
 
+        /// <summary>
+        /// Apply a new ObjectLimitBonus to the running VM of the given lot, if this server
+        /// happens to be hosting it. The DB is the source of truth and was already updated
+        /// by the API endpoint that initiated the change; this just brings the live VM in
+        /// sync so the player sees the new limit immediately. No-op when not hosted here.
+        /// </summary>
+        public bool UpdateObjectLimitBonus(int lot_id, int target_bonus)
+        {
+            var lot = GetLot(lot_id);
+            if (lot == null) return false;
+            var container = lot.Container;
+            lot.InBackground(() =>
+            {
+                container?.UpdateObjectLimitBonus(target_bonus);
+            });
+            return true;
+        }
+
         private LotHostEntry GetLot(IVoltronSession session)
         {
             var lotId = (int?)session.GetAttribute("currentLot");
