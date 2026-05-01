@@ -264,6 +264,12 @@ namespace FSO.Client.UI.Controls.Catalog
         };
 
         public int PageSize { get; set; }
+        // When true, an entry whose Item.GUID is uint.MaxValue (the "empty slot"
+        // sentinel) renders as a visible inactive well instead of being hidden.
+        // Used by the trade EOD so empty offer cells show their own well art —
+        // means the catalog no longer depends on the .uis background having
+        // wells baked in at fixed positions.
+        public bool ShowEmptyAsWell;
         public List<UICatalogElement> Selected;
         public List<UICatalogElement> Filtered;
         private UICatalogItem[] CatalogItems;
@@ -394,7 +400,7 @@ namespace FSO.Client.UI.Controls.Catalog
             {
                 var sel = Filtered[index++];
                 var elem = new UICatalogItem(false);
-                if (sel.Item.GUID == uint.MaxValue) elem.Visible = false;
+                if (sel.Item.GUID == uint.MaxValue && !ShowEmptyAsWell) elem.Visible = false;
                 elem.Index = index-1;
                 elem.Info = sel;
                 elem.Info.CalcPrice = (int)elem.Info.Item.Price;

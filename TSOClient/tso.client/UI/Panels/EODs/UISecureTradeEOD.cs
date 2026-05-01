@@ -26,6 +26,17 @@ namespace FSO.Client.UI.Panels.EODs
 {
     public class UISecureTradeEOD : UIEOD
     {
+        // 5 columns × 2 rows = 10 slots per player. Must match
+        // VMEODSecureTradePlayer.OFFER_SLOTS on the server side.
+        private const int OFFER_COLS = 5;
+        private const int OFFER_ROWS = 2;
+        private const int OFFER_SLOTS = OFFER_COLS * OFFER_ROWS;
+        private const int CELL_SIZE = 45;
+        // OtherOffer + companion controls (their portrait, money symbol/entry,
+        // accept button) are pushed down by exactly one row so MyOffer's new
+        // second row has clearance.
+        private const int OTHER_PUSH_DOWN = CELL_SIZE;
+
         public UIScript Script;
         public UICatalog Catalog;
         public UICatalog OfferCatalog;
@@ -87,15 +98,30 @@ namespace FSO.Client.UI.Panels.EODs
             Catalog.X -= 2;
             Add(Catalog);
 
-            OfferCatalog = new UICatalog(10); //only uses top row
+            // Both offer catalogs render a 5×2 grid for OFFER_SLOTS items.
+            // ShowEmptyAsWell makes empty slots draw their own inactive-well
+            // background — without it, the new row 2 would be invisible since
+            // the trade EOD .uis backdrop only has wells baked in for the old
+            // single-row layout.
+            OfferCatalog = new UICatalog(OFFER_SLOTS);
             OfferCatalog.LotControl = EODController.Lot;
             OfferCatalog.Position = Catalog.Position + new Vector2(41, 116);
+            OfferCatalog.ShowEmptyAsWell = true;
             Add(OfferCatalog);
 
-            OtherOfferCatalog = new UICatalog(10); //only uses top row
-            OtherOfferCatalog.Position = Catalog.Position + new Vector2(41, 166);
+            OtherOfferCatalog = new UICatalog(OFFER_SLOTS);
+            // Shift OtherOffer down by one row so MyOffer's second row has clearance.
+            OtherOfferCatalog.Position = Catalog.Position + new Vector2(41, 166 + OTHER_PUSH_DOWN);
             OtherOfferCatalog.LotControl = EODController.Lot;
+            OtherOfferCatalog.ShowEmptyAsWell = true;
             Add(OtherOfferCatalog);
+
+            // Companion controls for the OTHER player are .uis-positioned next
+            // to the original (single-row) OtherOffer location. Re-anchor them
+            // to follow the shifted OtherOffer row so the layout stays aligned.
+            OtherAvatarMoneySymbol.Y += OTHER_PUSH_DOWN;
+            OtherAvatarAmount.Y += OTHER_PUSH_DOWN;
+            OtherAcceptedButton.Y += OTHER_PUSH_DOWN;
 
             OurAvatarMoneySymbol.CurrentText = "$";
             OtherAvatarMoneySymbol.CurrentText = "$";
@@ -453,9 +479,17 @@ namespace FSO.Client.UI.Panels.EODs
                 DragItem.Position = GlobalPoint(state.MouseState.Position.ToVector2() - new Vector2(22, 22));
                 if (!mouseDown)
                 {
-                    //try place the item down
-                    var inventoryRect = LocalRect(Catalog.Position.X, Catalog.Position.Y, (Catalog.PageSize / 2) * 45, 80);
-                    var myOfferRect = LocalRect(OfferCatalog.Position.X, OfferCatalog.Position.Y, (OfferCatalog.PageSize / 2) * 45, 80);
+                    // Hit-rects with a few px of padding around the offer/inventory
+                    // grids, so a sloppy drop in the inter-cell gap still counts.
+                    const int HIT_PAD = 6;
+                    var inventoryRect = LocalRect(
+                        Catalog.Position.X - HIT_PAD, Catalog.Position.Y - HIT_PAD,
+                        (Catalog.PageSize / 2) * CELL_SIZE + HIT_PAD * 2,
+                        80 + HIT_PAD * 2);
+                    var myOfferRect = LocalRect(
+                        OfferCatalog.Position.X - HIT_PAD, OfferCatalog.Position.Y - HIT_PAD,
+                        OFFER_COLS * CELL_SIZE + HIT_PAD * 2,
+                        OFFER_ROWS * CELL_SIZE + HIT_PAD * 2);
 
                     if (inventoryRect.Contains(state.MouseState.Position))
                     {
@@ -473,8 +507,13 @@ namespace FSO.Client.UI.Panels.EODs
                         var index = Array.FindIndex(MyOffer.ObjectOffer, x => x != null && x.PID == DragUID);
                         if (index == -1)
                         {
-                            var targ = Math.Min(4, (state.MouseState.Position.X - myOfferRect.X) / 45);
-                            if (DragUID == 1 || DragUID == 2)
+                            var targ = PickDropSlot(state.MouseState.Position, myOfferRect);
+                            if (targ < 0)
+                            {
+                                // Offer is full — bail without notifying the server.
+                                HIT.HITVM.Get().PlaySoundEvent(UISounds.Error);
+                            }
+                            else if (DragUID == 1 || DragUID == 2)
                             {
                                 MyOffer.ObjectOffer[targ] =
                                     new VMEODSecureTradeObject(DragUID, 0, null);
@@ -566,7 +605,9 @@ namespace FSO.Client.UI.Panels.EODs
                 Remove(OtherPerson);
             }
             OtherPerson = new UIVMPersonButton((VMAvatar)LotController.vm.GetObjectByPersist(persist), LotController.vm, true);
-            OtherPerson.Position = new Vector2(43, 184);
+            // Original (43, 184) sat next to OtherOffer's single-row position; shift
+            // by OTHER_PUSH_DOWN so the portrait stays aligned with the new row.
+            OtherPerson.Position = new Vector2(43, 184 + OTHER_PUSH_DOWN);
             Add(OtherPerson);
         }
 
@@ -601,6 +642,39 @@ namespace FSO.Client.UI.Panels.EODs
             LockoutTimerLabel.Caption = "("+timeNum+")";
         }
 
+        // Picks the offer slot a drop should land in. Translates the mouse to a
+        // (col, row) pair against the offer grid, then snaps to the nearest empty
+        // slot if the directly-targeted cell is occupied (so dropping on top of an
+        // existing item still works instead of silently no-op'ing). Returns -1 if
+        // every slot is occupied.
+        private int PickDropSlot(Microsoft.Xna.Framework.Point mouseScreenPos, Rectangle offerRect)
+        {
+            // Clamp into [0, COLS-1] / [0, ROWS-1] — drops in the padding gutter
+            // get pulled to the nearest cell edge rather than rejected.
+            var localX = mouseScreenPos.X - offerRect.X;
+            var localY = mouseScreenPos.Y - offerRect.Y;
+            var col = MathHelper.Clamp(localX / CELL_SIZE, 0, OFFER_COLS - 1);
+            var row = MathHelper.Clamp(localY / CELL_SIZE, 0, OFFER_ROWS - 1);
+            var ideal = row * OFFER_COLS + col;
+
+            if (MyOffer.ObjectOffer[ideal] == null) return ideal;
+
+            // Targeted cell is busy — find the empty slot whose grid distance to
+            // the ideal cell is smallest. Manhattan distance keeps the snap
+            // predictable (prefers same row, then adjacent rows).
+            int best = -1;
+            int bestDist = int.MaxValue;
+            for (int i = 0; i < OFFER_SLOTS; i++)
+            {
+                if (MyOffer.ObjectOffer[i] != null) continue;
+                var c = i % OFFER_COLS;
+                var r = i / OFFER_COLS;
+                var dist = Math.Abs(c - col) + Math.Abs(r - row);
+                if (dist < bestDist) { bestDist = dist; best = i; }
+            }
+            return best;
+        }
+
         private void NotifyChange(VMEODSecureTradePlayer prev, VMEODSecureTradePlayer now, Vector2 position)
         {
             if (prev.MoneyOffer != now.MoneyOffer)
@@ -609,13 +683,18 @@ namespace FSO.Client.UI.Panels.EODs
                 NotifyRects.Add(new Tuple<Rectangle, float>(new Rectangle(position.ToPoint() + new Point((Small800)?229:453, 7), new Point(102, 29)), 1.0f));
             }
 
-            for (int i=0; i<5; i++)
+            for (int i = 0; i < OFFER_SLOTS; i++)
             {
                 var pobj = prev.ObjectOffer[i];
                 var nobj = now.ObjectOffer[i];
                 if (((nobj == null) != (pobj == null)) || (nobj != null && (nobj.GUID != pobj.GUID || nobj.PID != pobj.PID)))
                 {
-                    NotifyRects.Add(new Tuple<Rectangle, float>(new Rectangle(position.ToPoint() + new Point(i*45+1, 2), new Point(43, 43)), 1.0f));
+                    // 2D position for the changed cell — column-major within row, row-major down.
+                    var col = i % OFFER_COLS;
+                    var row = i / OFFER_COLS;
+                    NotifyRects.Add(new Tuple<Rectangle, float>(
+                        new Rectangle(position.ToPoint() + new Point(col * CELL_SIZE + 1, row * CELL_SIZE + 2), new Point(43, 43)),
+                        1.0f));
                 }
             }
         }

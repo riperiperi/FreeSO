@@ -110,7 +110,7 @@ namespace FSO.SimAntics.NetPlay.EODs.Handlers
                     uint itemID;
                     if (!uint.TryParse(inv[0], out itemID)) return;
                     int slotID;
-                    if (!int.TryParse(inv[1], out slotID) || slotID > 4) return;
+                    if (!int.TryParse(inv[1], out slotID) || slotID < 0 || slotID >= VMEODSecureTradePlayer.OFFER_SLOTS) return;
 
                     if (itemID == 0)
                     {
@@ -193,7 +193,7 @@ namespace FSO.SimAntics.NetPlay.EODs.Handlers
                     bool withObjects = data[1] == 'o';
 
                     int pSlotID;
-                    if (!int.TryParse(data.Substring(2), out pSlotID) || pSlotID < 0) return;
+                    if (!int.TryParse(data.Substring(2), out pSlotID) || pSlotID < 0 || pSlotID >= VMEODSecureTradePlayer.OFFER_SLOTS) return;
 
                     //if we're already offering a property and it's not in our slot, fail.
                     //will need to redo this after we find the property and count its objects
@@ -280,8 +280,14 @@ namespace FSO.SimAntics.NetPlay.EODs.Handlers
 
     public class VMEODSecureTradePlayer : VMSerializable
     {
+        // Slot count for the per-player object offer. Must match the client's
+        // OFFER_SLOTS in UISecureTradeEOD — both ends of the wire serialize this
+        // many cells in fixed order. Bumping requires a coordinated client+server
+        // deploy (older clients will misread the trailing MoneyOffer/Accepted).
+        public const int OFFER_SLOTS = 10;
+
         public uint PlayerPersist;
-        public VMEODSecureTradeObject[] ObjectOffer = new VMEODSecureTradeObject[5];
+        public VMEODSecureTradeObject[] ObjectOffer = new VMEODSecureTradeObject[OFFER_SLOTS];
         public int MoneyOffer;
         public bool Accepted;
 
@@ -298,7 +304,7 @@ namespace FSO.SimAntics.NetPlay.EODs.Handlers
         public void Deserialize(BinaryReader reader)
         {
             PlayerPersist = reader.ReadUInt32();
-            for (int i = 0; i < 5; i++)
+            for (int i = 0; i < OFFER_SLOTS; i++)
             {
                 if (reader.ReadBoolean())
                 {
@@ -313,7 +319,7 @@ namespace FSO.SimAntics.NetPlay.EODs.Handlers
         public void SerializeInto(BinaryWriter writer)
         {
             writer.Write(PlayerPersist);
-            for (int i = 0; i < 5; i++)
+            for (int i = 0; i < OFFER_SLOTS; i++)
             {
                 writer.Write(ObjectOffer[i] != null);
                 ObjectOffer[i]?.SerializeInto(writer);
