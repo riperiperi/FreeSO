@@ -103,6 +103,11 @@ namespace FSO.Server.Api.Core.Controllers.Admin
                     return StatusCode(500, new { error = "db_error" });
             }
 
+            // City-side: invalidate the cached Avatar model so the next client poll
+            // (PollTopics, ~5s cadence) re-loads from MySQL and the in-game UI reflects
+            // the new Avatar_SkillsLockPoints. No-op on lot/task hosts.
+            api.InvalidateAvatar(avatarId);
+
             // Live update: tell every lot server the new SkillLocks pool size for this
             // avatar. Each server walks its hosted lots; the one (zero or one) that has
             // the avatar pushes the change into the live VM via VMNetSetAvatarSkillLocksCmd.

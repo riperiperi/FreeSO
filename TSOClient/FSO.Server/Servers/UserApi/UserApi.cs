@@ -63,7 +63,25 @@ namespace FSO.Server.Servers.UserApi
             api.OnRequestShutdown += (t, st) => { OnRequestShutdown?.Invoke(t, st); };
             api.OnRequestUserDisconnect += (i) => { OnRequestUserDisconnect?.Invoke(i); };
             api.OnRequestMailNotify += (i, s, b, t) => { OnRequestMailNotify?.Invoke(i, s, b, t); };
-            
+
+            // Bridge API → city DataService so portal-driven Avatar writes invalidate the
+            // city's cached model. The next client PollTopics for that avatar then hits
+            // the lazy provider, which re-loads from MySQL with the new field values.
+            // Kernel.TryGet returns null on lot/task hosts (no DataService binding) —
+            // the lambda just no-ops in that case.
+            api.OnInvalidateAvatar += (avatarId) =>
+            {
+                try
+                {
+                    var ds = Kernel.TryGet<FSO.Common.DataService.IDataService>();
+                    ds?.Invalidate<FSO.Common.DataService.Model.Avatar>(avatarId);
+                }
+                catch (System.Exception ex)
+                {
+                    LOG.Warn(ex, "OnInvalidateAvatar({0}) failed", avatarId);
+                }
+            };
+
             var config = Config;
         }
     }
