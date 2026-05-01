@@ -71,12 +71,14 @@ namespace FSO.Client.UI.Panels
                 { LogButton, 3 },
                 { AdmitBanButton, 4 },
                 { EnvironmentButton, 5 },
-                { BillsButton, 6 },
                 { LotResizeButton, 7 }
             };
 
             StatisticsButton.Disabled = true;
             LogButton.Disabled = true;
+            // Object-limit purchase has moved to the freeso_webui project; keep the
+            // button visible but inert in-game.
+            BillsButton.Disabled = true;
 
             foreach (var btn in BtnToMode.Keys)
                 btn.OnButtonClick += SetMode;
@@ -135,9 +137,9 @@ namespace FSO.Client.UI.Panels
                         Panel.X = 232;
                         Panel.Y = 0;
                         break;
-                    case 6:
-                        Panel = new UIObjectLimitPanel(LotControl);
-                        break;
+                    // case 6 (BillsButton → object-limit purchase) removed; the purchase
+                    // flow now lives in the freeso_webui project. Backend command and
+                    // server handler are kept for the web UI to drive.
                     case 7:
                         Panel = new UIBuildableAreaPanel(LotControl);
                         break;
@@ -850,101 +852,9 @@ namespace FSO.Client.UI.Panels
         }
     }
 
-    /// <summary>
-    /// Lets the lot owner purchase extra object slots per roommate in increments of 20, up to +500.
-    /// Costs increase with each step. Mirrors UIBuildableAreaPanel but for object limit upgrades.
-    /// </summary>
-    public class UIObjectLimitPanel : UIContainer
-    {
-        private UIImage Background;
-
-        public UIButton LargerButton { get; set; }
-        public UIButton SmallerButton { get; set; }
-        public UIButton AcceptButton { get; set; }
-
-        public UILabel TitleLabel { get; set; }
-        public UILabel CurrentLabel { get; set; }
-        public UILabel StepLabel { get; set; }
-        public UILabel CostLabel { get; set; }
-        public UILabel TotalLabel { get; set; }
-
-        private UILotControl LotControl;
-        private int TargetStep;
-        private int CurrentStep;
-
-        public UIObjectLimitPanel(UILotControl lotController)
-        {
-            var script = this.RenderScript("objectlimitpanel.uis");
-            Background = script.Create<UIImage>("Background");
-            this.AddAt(0, Background);
-
-            foreach (var label in new UILabel[] { TitleLabel, CurrentLabel, StepLabel, CostLabel, TotalLabel })
-            {
-                if (label == null) continue;
-                label.CaptionStyle = label.CaptionStyle.Clone();
-                label.CaptionStyle.Shadow = true;
-            }
-
-            LotControl = lotController;
-            CurrentStep = lotController.vm.TSOState.ObjectLimitBonus / VMBuildableAreaInfo.ObjectLimitBonusStep;
-            TargetStep = CurrentStep;
-
-            LargerButton.OnButtonClick += (btn) => { TargetStep = Math.Min(TargetStep + 1, VMBuildableAreaInfo.ObjectLimitBonusPrices.Length - 1); UpdateDisplay(); };
-            SmallerButton.OnButtonClick += (btn) => { TargetStep = Math.Max(TargetStep - 1, CurrentStep); UpdateDisplay(); };
-            AcceptButton.OnButtonClick += PurchaseObjectLimit;
-
-            if (lotController.vm.TSOState.OwnerID != lotController.vm.MyUID)
-            {
-                LargerButton.Disabled = true;
-                SmallerButton.Disabled = true;
-                AcceptButton.Disabled = true;
-            }
-
-            UpdateDisplay();
-        }
-
-        private void PurchaseObjectLimit(UIElement button)
-        {
-            LotControl.vm.SendCommand(new VMNetChangeObjectLimitCmd
-            {
-                TargetBonus = TargetStep * VMBuildableAreaInfo.ObjectLimitBonusStep
-            });
-            HITVM.Get().PlaySoundEvent(UISounds.ObjectPlace);
-            AcceptButton.Disabled = true;
-        }
-
-        private void UpdateDisplay()
-        {
-            CurrentStep = LotControl.vm.TSOState.ObjectLimitBonus / VMBuildableAreaInfo.ObjectLimitBonusStep;
-            TargetStep = Math.Max(TargetStep, CurrentStep);
-
-            var currentBonus = CurrentStep * VMBuildableAreaInfo.ObjectLimitBonusStep;
-            var targetBonus = TargetStep * VMBuildableAreaInfo.ObjectLimitBonusStep;
-            var cost = VMBuildableAreaInfo.CalculateObjectLimitBonusCost(CurrentStep, TargetStep);
-            var roommates = Math.Max(1, LotControl.vm.TSOState.Roommates.Count);
-            var lotInfo = LotControl.vm.TSOState;
-            var lotSize = lotInfo.Size & 255;
-            var lotFloors = (lotInfo.Size >> 8) & 255;
-            var basePerRoomie = VMBuildableAreaInfo.ObjectLimitPerPerson[lotSize + lotFloors];
-            var newTotal = (basePerRoomie + targetBonus) * roommates;
-
-            CurrentLabel.Caption = "Current Bonus: +" + currentBonus + "/roommate";
-            StepLabel.Caption = "+" + targetBonus;
-            CostLabel.Caption = cost == 0 ? "No upgrade selected" : "Cost: $" + cost.ToString("N0");
-            TotalLabel.Caption = "New limit: " + newTotal + " objects";
-
-            var canAfford = cost <= (LotControl.ActiveEntity?.TSOState.Budget.Value ?? 0);
-            AcceptButton.Disabled = (TargetStep == CurrentStep) || !canAfford;
-            CostLabel.CaptionStyle.Color = (AcceptButton.Disabled && TargetStep != CurrentStep)
-                ? new Color(255, 125, 125)
-                : TextStyle.DefaultLabel.Color;
-        }
-
-        public override void Update(UpdateState state)
-        {
-            base.Update(state);
-            var newStep = LotControl.vm.TSOState.ObjectLimitBonus / VMBuildableAreaInfo.ObjectLimitBonusStep;
-            if (newStep != CurrentStep) UpdateDisplay();
-        }
-    }
+    // UIObjectLimitPanel was removed: the purchasable object-limit feature now lives
+    // in the freeso_webui project. The backend bits (VMNetChangeObjectLimitCmd, the
+    // LotServerGlobalLink.SetObjectLimitBonus persist path, and the
+    // VMTSOLotState.ObjectLimitBonus DB column) are kept so the web UI can drive the
+    // change. The objectlimitpanel.uis script file is now an unreferenced asset.
 }
