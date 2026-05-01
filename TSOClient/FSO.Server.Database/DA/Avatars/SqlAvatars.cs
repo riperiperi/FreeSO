@@ -200,6 +200,16 @@ namespace FSO.Server.Database.DA.Avatars
         /// race the bonus value. Caller computes the cost from the canonical pricing
         /// curve and just hands the precomputed value here.
         /// </summary>
+        // Typed projection for the SELECT inside PurchaseSkillLockBonus. Using a typed
+        // POCO instead of dynamic Dapper avoids RuntimeBinderException risk if the MySQL
+        // driver surfaces the unsigned column as a non-uint boxed type — Dapper coerces
+        // straight into the declared property types.
+        private class SkillLockPurchaseRow
+        {
+            public int budget { get; set; }
+            public uint skilllock_bonus { get; set; }
+        }
+
         public DbSkillLockBonusPurchase PurchaseSkillLockBonus(uint avatar_id, uint target_bonus, int cost)
         {
             var result = new DbSkillLockBonusPurchase();
@@ -207,7 +217,7 @@ namespace FSO.Server.Database.DA.Avatars
             {
                 try
                 {
-                    var row = Context.Connection.Query(
+                    var row = Context.Connection.Query<SkillLockPurchaseRow>(
                         "SELECT budget, skilllock_bonus FROM fso_avatars WHERE avatar_id = @id FOR UPDATE",
                         new { id = avatar_id }, transaction: t).FirstOrDefault();
                     if (row == null)
@@ -216,8 +226,8 @@ namespace FSO.Server.Database.DA.Avatars
                         t.Rollback();
                         return result;
                     }
-                    int budget = (int)row.budget;
-                    uint currentBonus = (uint)row.skilllock_bonus;
+                    int budget = row.budget;
+                    uint currentBonus = row.skilllock_bonus;
                     if (target_bonus <= currentBonus)
                     {
                         result.Status = SkillLockBonusPurchaseStatus.NotAnUpgrade;
