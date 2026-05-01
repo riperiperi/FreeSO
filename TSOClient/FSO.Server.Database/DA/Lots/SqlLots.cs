@@ -261,6 +261,85 @@ namespace FSO.Server.Database.DA.Lots
                 new { id = lot_id, bonus = bonus });
         }
 
+        /// <summary>
+        /// Atomically purchase an ObjectLimitBonus upgrade for a lot. All checks
+        /// (lot+avatar exist, avatar is the lot owner, target is a real upgrade,
+        /// avatar can afford the cost) are done inside a single SQL transaction with
+        /// SELECT ... FOR UPDATE row locks so two concurrent requests can't double-spend
+        /// the same simoleons or apply conflicting bonus values.
+        ///
+        /// Caller computes <paramref name="cost"/> from the canonical pricing table
+        /// (VMBuildableAreaInfo.ObjectLimitBonusPrices) — keeping the price logic in one
+        /// place. The DB just trusts and charges.
+        /// </summary>
+        public DbObjectLimitBonusPurchase PurchaseObjectLimitBonus(int lot_id, uint avatar_id, int target_bonus, int cost)
+        {
+            var result = new DbObjectLimitBonusPurchase();
+            using (var t = Context.Connection.BeginTransaction())
+            {
+                try
+                {
+                    var lot = Context.Connection.Query<DbLot>(
+                        "SELECT * FROM fso_lots WHERE lot_id = @id FOR UPDATE",
+                        new { id = lot_id }, transaction: t).FirstOrDefault();
+                    if (lot == null)
+                    {
+                        result.Status = ObjectLimitBonusPurchaseStatus.LotNotFound;
+                        t.Rollback();
+                        return result;
+                    }
+                    if (lot.owner_id != avatar_id)
+                    {
+                        result.Status = ObjectLimitBonusPurchaseStatus.NotLotOwner;
+                        t.Rollback();
+                        return result;
+                    }
+                    if (target_bonus <= lot.object_limit_bonus)
+                    {
+                        result.Status = ObjectLimitBonusPurchaseStatus.NotAnUpgrade;
+                        t.Rollback();
+                        return result;
+                    }
+
+                    var budget = Context.Connection.Query<int?>(
+                        "SELECT budget FROM fso_avatars WHERE avatar_id = @id FOR UPDATE",
+                        new { id = avatar_id }, transaction: t).FirstOrDefault();
+                    if (budget == null)
+                    {
+                        result.Status = ObjectLimitBonusPurchaseStatus.AvatarNotFound;
+                        t.Rollback();
+                        return result;
+                    }
+                    if (budget.Value < cost)
+                    {
+                        result.Status = ObjectLimitBonusPurchaseStatus.InsufficientFunds;
+                        t.Rollback();
+                        return result;
+                    }
+
+                    Context.Connection.Execute(
+                        "UPDATE fso_avatars SET budget = budget - @cost WHERE avatar_id = @id",
+                        new { id = avatar_id, cost = cost }, transaction: t);
+                    Context.Connection.Execute(
+                        "UPDATE fso_lots SET object_limit_bonus = @bonus WHERE lot_id = @id",
+                        new { id = lot_id, bonus = target_bonus }, transaction: t);
+
+                    t.Commit();
+                    result.Status = ObjectLimitBonusPurchaseStatus.Success;
+                    result.NewBudget = budget.Value - cost;
+                    result.NewBonus = target_bonus;
+                    result.CostCharged = cost;
+                    return result;
+                }
+                catch
+                {
+                    try { t.Rollback(); } catch { }
+                    result.Status = ObjectLimitBonusPurchaseStatus.DbError;
+                    return result;
+                }
+            }
+        }
+
         public void UpdateLotAdmitMode(int lot_id, byte admit_mode)
         {
             Context.Connection.Query("UPDATE fso_lots SET admit_mode = @admit_mode WHERE lot_id = @id", new { id = lot_id, admit_mode = admit_mode });

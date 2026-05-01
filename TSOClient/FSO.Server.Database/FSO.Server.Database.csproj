@@ -156,6 +156,7 @@
     <Compile Include="DA\LotClaims\SqlLotsClaims.cs" />
     <Compile Include="DA\Lots\DbLot.cs" />
     <Compile Include="DA\Lots\DbLotServerTicket.cs" />
+    <Compile Include="DA\Lots\DbObjectLimitBonusPurchase.cs" />
     <Compile Include="DA\Lots\ILots.cs" />
     <Compile Include="DA\Lots\SqlLots.cs" />
     <Compile Include="DA\LotTop100\ILotTop100.cs" />
