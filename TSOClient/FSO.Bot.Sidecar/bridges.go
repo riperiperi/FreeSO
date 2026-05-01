@@ -19,9 +19,10 @@ import (
 // reader fans events out to family bridges so the line order and sim-id
 // extraction stay in lockstep.
 type Bridges struct {
-	cf  *Campfire
-	bot *BotProcess
-	ipc *IPC
+	cf      *Campfire
+	bot     *BotProcess
+	ipc     *IPC
+	botCmds *BotCmdPump // freesoexperiment-0de: routes bot-cmd-reply frames
 
 	// SimID is the avatar persist_id of this bot; populated from the first
 	// perception event that carries one, then stable. Used as the sim:<id>
@@ -32,8 +33,15 @@ type Bridges struct {
 // NewBridges constructs a Bridges value. Call Run(ctx) once to start the
 // fan-out; it returns when the bot stdout channel closes or ctx is cancelled.
 // ipc may be nil in tests that don't exercise the command channel.
+// botCmds may be nil when BotCmdPump is not in use (e.g. --no-bot mode).
 func NewBridges(cf *Campfire, bot *BotProcess, ipc *IPC) *Bridges {
 	return &Bridges{cf: cf, bot: bot, ipc: ipc}
+}
+
+// NewBridgesWithBotCmd constructs a Bridges value with the BotCmdPump wired.
+// Used by the main supervisor loop when probe-lot / bot-exit-request are in use.
+func NewBridgesWithBotCmd(cf *Campfire, bot *BotProcess, ipc *IPC, botCmds *BotCmdPump) *Bridges {
+	return &Bridges{cf: cf, bot: bot, ipc: ipc, botCmds: botCmds}
 }
 
 // eventEnvelope is the loose shape we parse from bot stdout. We keep it a map
@@ -105,6 +113,18 @@ func (b *Bridges) handle(line []byte) {
 			b.ipc.Deliver(line)
 		} else {
 			log.Printf("bridge: response frame received but no IPC wired (dropped)")
+		}
+		return
+	}
+
+	// bot-cmd-reply frames (freesoexperiment-0de) are routed to the BotCmdPump.
+	// These carry correlation IDs for city-socket ops (probe-lot, bot-exit-request)
+	// that are distinct from the VM-command IPC envelope.
+	if env.Kind == "bot-cmd-reply" {
+		if b.botCmds != nil {
+			b.botCmds.Deliver(line)
+		} else {
+			log.Printf("bridge: bot-cmd-reply received but no BotCmdPump wired (dropped)")
 		}
 		return
 	}

@@ -58,6 +58,18 @@ public sealed class CommandDispatcher
 {
     public delegate Task<Response> HandlerFn(JsonObject args, CancellationToken ct);
 
+    /// <summary>
+    /// Optional pre-dispatch hook for the bot-cmd envelope (freesoexperiment-0de).
+    /// When set, <see cref="HandleLineAsync"/> checks for <c>kind=="bot-cmd"</c>
+    /// and forwards to this delegate before attempting normal op-dispatch. If the
+    /// delegate returns true, the line was fully handled; if false, fall through to
+    /// normal dispatch (e.g. the line had a different kind).
+    ///
+    /// The delegate is set by <see cref="BotCmdHandler"/> integration in Program.cs
+    /// after the city Aries socket is available. Null in test mode or before startup.
+    /// </summary>
+    public Func<JsonObject, CancellationToken, Task<bool>> BotCmdDispatch;
+
     public sealed class Response
     {
         public bool Ok;
@@ -150,6 +162,18 @@ public sealed class CommandDispatcher
                 Program.Log("[ipc] non-object line dropped");
                 return;
             }
+
+            // bot-cmd envelope (freesoexperiment-0de): lines with kind=="bot-cmd" are
+            // forwarded to BotCmdHandler via the BotCmdDispatch hook before normal dispatch.
+            // This keeps CommandDispatcher decoupled from cityAries — the hook closure
+            // captures cityAries at registration time.
+            var kind = (string)node["kind"];
+            if (!string.IsNullOrEmpty(kind) && BotCmdDispatch != null)
+            {
+                bool handled = await BotCmdDispatch(node, ct);
+                if (handled) return;
+            }
+
             id = (string)node["id"];
             op = (string)node["op"];
             if (string.IsNullOrEmpty(id) || string.IsNullOrEmpty(op))

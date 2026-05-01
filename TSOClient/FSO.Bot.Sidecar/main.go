@@ -110,6 +110,10 @@ func main() {
 	// ipc is declared at the outer scope so the supervisor loop can call
 	// ipc.UpdateBot when relaunching. Nil in --no-bot mode.
 	var ipc *IPC
+	// botCmds is the bot-cmd envelope pump (freesoexperiment-0de): probe-lot and
+	// bot-exit-request over the same stdin/stdout channel, but a different wire
+	// shape. Declared at outer scope so UpdateBot is available in the supervisor loop.
+	var botCmds *BotCmdPump
 	if !*noBot {
 		proc, err = LaunchBot(ctx, BotConfig{
 			Exec: botExec,
@@ -128,8 +132,13 @@ func main() {
 		// before bridges start so response frames are routed instead of dropped.
 		ipc = NewIPC(proc)
 
-		// 4. Start bridges.
-		bridges := NewBridges(cf, proc, ipc)
+		// 3b. BotCmdPump (freesoexperiment-0de): city-socket ops over the bot-cmd
+		// envelope. Shares the same stdin/stdout pipes but uses a different JSON
+		// shape (kind=bot-cmd / kind=bot-cmd-reply) so the two channels don't collide.
+		botCmds = NewBotCmdPump(proc)
+
+		// 4. Start bridges with BotCmdPump wired so bot-cmd-reply frames are routed.
+		bridges := NewBridgesWithBotCmd(cf, proc, ipc, botCmds)
 		go bridges.Run(ctx)
 
 		// 5. Register convention handlers for verb-family ops. Each op opens one
@@ -395,17 +404,21 @@ func main() {
 			}
 			log.Printf("supervisor: relaunched bot pid=%d", newProc.Pid())
 
-			// Step 5: hot-swap IPC bot reference so all registered handler
-			// closures route IPC.Send calls to the new process immediately.
-			// ipc is declared at the outer scope (above the if !*noBot block)
-			// so this assignment is visible to all handler closures.
+			// Step 5: hot-swap IPC and BotCmdPump bot references so all registered
+			// handler closures route to the new process immediately.
+			// Both are declared at the outer scope so this assignment is visible
+			// to all handler closures.
 			if ipc != nil {
 				ipc.UpdateBot(newProc)
 			}
+			if botCmds != nil {
+				botCmds.UpdateBot(newProc)
+			}
 			proc = newProc
 
-			// Start a new bridge goroutine over the new process stdout.
-			go NewBridges(cf, newProc, ipc).Run(ctx)
+			// Start a new bridge goroutine over the new process stdout, with the
+			// BotCmdPump wired so bot-cmd-reply frames are routed correctly.
+			go NewBridgesWithBotCmd(cf, newProc, ipc, botCmds).Run(ctx)
 		}
 	}
 }

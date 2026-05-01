@@ -60,6 +60,20 @@ public class Program
 
     internal static CancellationToken ShutdownToken => _shutdownCts.Token;
 
+    /// <summary>
+    /// Request cooperative shutdown from any thread (e.g., BotCmdHandler receiving
+    /// a bot-exit-request IPC command). Cancels the shared shutdown CTS so the hold
+    /// loop in MainBody exits on its next iteration, then flows through step 9's
+    /// TryCleanDisconnect (ClientByePDU + city disconnect). Idempotent.
+    /// </summary>
+    internal static void RequestShutdown(string reason)
+    {
+        if (_shutdownCts.IsCancellationRequested) return;
+        Log($"[shutdown] RequestShutdown: {reason}");
+        try { _shutdownCts.Cancel(); }
+        catch (Exception ex) { Log($"[shutdown] RequestShutdown CTS cancel threw: {ex.Message}"); }
+    }
+
     private static void EnsureCleanDisconnect(string reason)
     {
         if (Interlocked.Exchange(ref _disconnectFired, 1) != 0) return;
@@ -376,6 +390,12 @@ public class Program
         if (emitPerception)
         {
             dispatcher = new CommandDispatcher();
+
+            // bot-cmd envelope (freesoexperiment-0de): register the BotCmdHandler city subscriber
+            // and wire the pre-dispatch hook so kind=="bot-cmd" lines bypass normal op-dispatch.
+            BotCmdHandler.RegisterSubscriber(cityAries);
+            dispatcher.BotCmdDispatch = (node, ct) => BotCmdHandler.TryHandleAsync(node, cityAries, ct);
+
             MovementHandlers.RegisterAll(dispatcher, vmHost);
             GoToHandlers.RegisterAll(dispatcher, vmHost);
             QueryHandlers.RegisterAll(dispatcher, vmHost, shardName);
