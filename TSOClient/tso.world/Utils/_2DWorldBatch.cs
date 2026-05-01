@@ -104,6 +104,14 @@ namespace FSO.LotView.Utils
         private _2DSpriteVertex[] _scratchVerts;
         private short[] _scratchIndices;
 
+        // Reusable scratch + pool for GroupByTexture. The result list and the lookup
+        // dictionary get cleared and reused each call; the pool recycles texture-group
+        // objects so we don't allocate one per (Pixel, Mask) tuple on every frame.
+        private List<_2DSpriteTextureGroup> _groupByTextureResult = new List<_2DSpriteTextureGroup>();
+        private Dictionary<PixelMaskTuple, _2DSpriteTextureGroup> _groupByTextureMap
+            = new Dictionary<PixelMaskTuple, _2DSpriteTextureGroup>();
+        private Stack<_2DSpriteTextureGroup> _textureGroupPool = new Stack<_2DSpriteTextureGroup>();
+
         public void SetScroll(Vector2 scroll)
         {
             Scroll = scroll;
@@ -525,28 +533,42 @@ namespace FSO.LotView.Utils
 
         private List<_2DSpriteTextureGroup> GroupByTexture(List<_2DSprite> sprites)
         {
-            var result = new List<_2DSpriteTextureGroup>();
-            var map = new Dictionary<PixelMaskTuple, _2DSpriteTextureGroup>();
+            // Reuse the result list, the lookup dictionary, and the texture-group objects
+            // themselves (pulled from a per-instance free-list). Caller is responsible for
+            // releasing the groups back to the pool via ReleaseTextureGroups when done.
+            _groupByTextureResult.Clear();
+            _groupByTextureMap.Clear();
 
             foreach (var sprite in sprites)
             {
                 var tuple = new PixelMaskTuple(sprite.Pixel, sprite.Mask);
                 _2DSpriteTextureGroup grouping;
-                
-                if (!map.TryGetValue(tuple, out grouping))
+
+                if (!_groupByTextureMap.TryGetValue(tuple, out grouping))
                 {
-                    grouping = new _2DSpriteTextureGroup
-                    {
-                        Pixel = sprite.Pixel,
-                        Depth = sprite.Depth,
-                        Mask = sprite.Mask
-                    };
-                    map.Add(tuple, grouping);
-                    result.Add(grouping);
+                    grouping = (_textureGroupPool.Count > 0) ? _textureGroupPool.Pop() : new _2DSpriteTextureGroup();
+                    grouping.Pixel = sprite.Pixel;
+                    grouping.Depth = sprite.Depth;
+                    grouping.Mask = sprite.Mask;
+                    grouping.Sprites.Clear();
+                    _groupByTextureMap.Add(tuple, grouping);
+                    _groupByTextureResult.Add(grouping);
                 }
                 grouping.Sprites.Add(sprite);
             }
-            return result;
+            return _groupByTextureResult;
+        }
+
+        private void ReleaseTextureGroups(List<_2DSpriteTextureGroup> groups)
+        {
+            // Drop texture references so the groups in the pool don't keep large textures
+            // alive longer than necessary; sprite list is cleared by GroupByTexture next use.
+            for (int i = 0; i < groups.Count; i++)
+            {
+                var g = groups[i];
+                g.Pixel = null; g.Depth = null; g.Mask = null;
+                _textureGroupPool.Push(g);
+            }
         }
 
         private Vector3 FrontDirForRot(WorldRotation rot)
@@ -756,6 +778,9 @@ namespace FSO.LotView.Utils
                     dg.Dispose();
                 }
             }
+            // The texture groups are no longer referenced past this point — recycle them
+            // so the next GroupByTexture call can pop instead of new.
+            ReleaseTextureGroups(groupByTexture);
         }
 
         private Vector2 GetUV(Texture2D Texture, float x, float y)
