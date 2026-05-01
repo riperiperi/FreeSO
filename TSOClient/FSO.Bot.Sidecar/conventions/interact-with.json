@@ -6,10 +6,16 @@
   "description": "Invoke a specific named interaction on an object or Sim. Prerequisite: the target must appear in your lot's VM (use query-nearby / query-pie-menu to discover it), the interaction must appear in its pie-menu (server re-verifies via VMFindBestAction in VMNetInteractionCmd.Verify and rejects if param0 is not present), and your queue must have capacity (MAX_USER_ACTIONS = 8). Visitors/spectators are refused on every non-payphone object. Effect: the interaction is pushed onto your action queue; the engine runs it after the currently-running action completes — it plans a route, walks you to the target, runs the behaviour script, and applies motive effects. Cost: real seconds of session time while the interaction runs; motive deltas when it completes (e.g. Eat restores Hunger, Sleep restores Energy, Talk spends Social for both participants). queue_mode controls how the new interaction lands on your queue: 'queue' (default) cancels engine autopilot (Mode.Idle entries from spawn-objects and BHAV scripts) before enqueueing, so deliberate action outranks autopilot but your own existing queue is preserved; 'preempt' cancels the entire queue first.",
   "args": [
     {
+      "name": "object_type",
+      "type": "string",
+      "required": false,
+      "description": "When set to 'bulletin_board', bypasses the VM-interaction path and reads the bulletin board instead. Gate: requires FREESO_COMMUNITY_LOT_ID set (community lot affordance). Produces kind='bulletin_listing'. No interaction/callee_id needed."
+    },
+    {
       "name": "interaction",
       "type": "integer",
-      "required": true,
-      "description": "TTAB index of the interaction, taken from query-pie-menu .interactions[].id."
+      "required": false,
+      "description": "TTAB index of the interaction, taken from query-pie-menu .interactions[].id. Required when object_type is not set."
     },
     {
       "name": "callee_id",

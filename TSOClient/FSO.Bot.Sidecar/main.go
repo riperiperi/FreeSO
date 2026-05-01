@@ -184,9 +184,10 @@ func main() {
 		}
 		log.Printf("convention handlers: %d go-to-family ops serving", gotoServers)
 
-		// Interaction family (freesoexperiment-2a8): interact-with, cancel-interaction,
-		// query-pie-menu — object/sim interaction dispatch + local pie-menu introspection.
-		iservers, err := RegisterInteractionHandlers(ctx, cf, ipc)
+		// Interaction family (freesoexperiment-2a8 / freesoexperiment-2ac): interact-with,
+		// cancel-interaction, query-pie-menu — object/sim interaction dispatch + local
+		// pie-menu introspection. botCmds is wired for the bulletin_board special path.
+		iservers, err := RegisterInteractionHandlers(ctx, cf, ipc, botCmds)
 		if err != nil {
 			log.Fatalf("register interaction handlers: %v", err)
 		}
