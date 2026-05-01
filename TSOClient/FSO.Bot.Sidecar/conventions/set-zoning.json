@@ -1,0 +1,82 @@
+{
+  "convention": "freeso-embodiment",
+  "version": "1.0",
+  "operation": "set-zoning",
+  "family": "civic",
+  "description": "Define a zoning overlay region on the city map. Mayor-only. Updates /home/baron/projects/freeso-civic/zoning.json (shared across all sidecars). The purchase-lot handler checks this file: if the target tile falls within a zone, the purchased lot type must match the zone type or the purchase is refused with ZONING_VIOLATION. Zone types: residential, commercial, park.",
+  "args": [
+    {
+      "name": "zone_type",
+      "type": "string",
+      "required": true,
+      "description": "Zone type: 'residential', 'commercial', or 'park'. A purchase-lot call into a residential zone may only create residential lots; commercial only commercial lots; park prohibits all lot purchases."
+    },
+    {
+      "name": "x1",
+      "type": "uint32",
+      "required": true,
+      "description": "Left boundary of the zone bounding box (inclusive). X coordinate in city-tile units (same as lot X from MapCoordinates.Pack)."
+    },
+    {
+      "name": "y1",
+      "type": "uint32",
+      "required": true,
+      "description": "Top boundary of the zone bounding box (inclusive)."
+    },
+    {
+      "name": "x2",
+      "type": "uint32",
+      "required": true,
+      "description": "Right boundary of the zone bounding box (inclusive). Must be >= x1."
+    },
+    {
+      "name": "y2",
+      "type": "uint32",
+      "required": true,
+      "description": "Bottom boundary of the zone bounding box (inclusive). Must be >= y1."
+    },
+    {
+      "name": "zone_name",
+      "type": "string",
+      "required": false,
+      "description": "Optional human-readable name for this zone (e.g. 'Downtown District'). Informational only."
+    }
+  ],
+  "produces_tags": [
+    {
+      "tag": "freeso:set-zoning",
+      "cardinality": "exactly_one"
+    }
+  ],
+  "antecedents": "none",
+  "signing": "member_key",
+  "rate_limit": {
+    "max": 20,
+    "per": "sender",
+    "window": "1m"
+  },
+  "response": "sync",
+  "status": "implemented",
+  "call_signatures": [
+    "cf $CF set-zoning --zone_type residential --x1 200 --y1 300 --x2 260 --y2 400",
+    "cf $CF set-zoning --zone_type commercial --x1 100 --y1 100 --x2 150 --y2 150 --zone_name 'Market Row'",
+    "cf $CF set-zoning --zone_type park --x1 250 --y1 350 --x2 255 --y2 355 --zone_name 'Town Green'"
+  ],
+  "common_mistakes": [
+    "Only the mayor can set zoning — non-mayor gets NO_AUTH.",
+    "zone_type must be exactly 'residential', 'commercial', or 'park' — INVALID_ZONE_TYPE otherwise.",
+    "x2 must be >= x1 and y2 must be >= y1 — INVALID_BOUNDS otherwise.",
+    "Zones are additive — each set-zoning call adds a new region; it does not replace existing ones.",
+    "purchase-lot calls into a park zone are refused unconditionally (no lot type matches park).",
+    "The zoning file is written to /home/baron/projects/freeso-civic/zoning.json — all sidecars read it at startup and on each purchase-lot call."
+  ],
+  "refuse_conditions": [
+    "Caller is not the mayor → NO_AUTH",
+    "zone_type not in {residential, commercial, park} → INVALID_ZONE_TYPE",
+    "x2 < x1 or y2 < y1 → INVALID_BOUNDS"
+  ],
+  "perception_hints": [
+    "Your own mayor status: perception.avatar.mayor_nhood > 0",
+    "City coordinates: same X/Y as lot coordinates in MapCoordinates.Pack(x,y) = x<<16|y"
+  ]
+}

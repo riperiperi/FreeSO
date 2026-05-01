@@ -284,6 +284,27 @@ func main() {
 		}
 		log.Printf("convention handlers: %d build-buy-architecture-family ops serving", buildServers)
 
+		// Civic family (freesoexperiment-409): set-tax-rate, grant-community-access,
+		// set-zoning. Mayor-only felt powers — each produces an observable effect on a
+		// body (budget delta, lot access change, zoning rejection).
+		taxServers, err := RegisterTaxHandlers(ctx, cf, botCmds, ipc)
+		if err != nil {
+			log.Fatalf("register tax handlers: %v", err)
+		}
+		log.Printf("convention handlers: %d tax-family ops serving", taxServers)
+
+		civicAccessServers, err := RegisterCivicAccessHandlers(ctx, cf, botCmds)
+		if err != nil {
+			log.Fatalf("register civic-access handlers: %v", err)
+		}
+		log.Printf("convention handlers: %d civic-access-family ops serving", civicAccessServers)
+
+		zoningServers, err := RegisterZoningHandlers(ctx, cf, botCmds)
+		if err != nil {
+			log.Fatalf("register zoning handlers: %v", err)
+		}
+		log.Printf("convention handlers: %d zoning-family ops serving", zoningServers)
+
 		// Single-dispatcher: one Subscribe goroutine handles every registered op
 		// instead of one Subscribe per op. Replaces the convention.Server fleet
 		// (which saturated SQLite at 103 × 500ms polls + per-poll fs sync) with

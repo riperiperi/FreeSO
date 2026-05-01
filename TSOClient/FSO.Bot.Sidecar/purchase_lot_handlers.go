@@ -204,7 +204,25 @@ func purchaseLotHandler(botCmds *BotCmdPump) convention.HandlerFunc {
 			}, nil
 		}
 
-		// --- Step 6: bot-cmd:purchase-lot ---
+		// --- Step 6: zoning overlay pre-check (freesoexperiment-409) ---
+		// CheckZoningViolation reads /home/baron/projects/freeso-civic/zoning.json.
+		// If the file does not exist or is empty, the check is a no-op (fail-open).
+		// All player purchases default to "residential" lot type.
+		if violated, zoningReason := CheckZoningViolation(locX, locY, "residential"); violated {
+			return &convention.Response{
+				Payload: map[string]any{
+					"ok":     false,
+					"error":  "ZONING_VIOLATION",
+					"reason": "ZONING_VIOLATION",
+					"detail": zoningReason,
+					"x":      int(locX),
+					"y":      int(locY),
+					"hint":   "The target tile is within a zoning overlay that prohibits this lot type. Use query-lot to find an unrestricted tile.",
+				},
+			}, nil
+		}
+
+		// --- Step 7: bot-cmd:purchase-lot ---
 		purchaseReply, purchaseErr := botCmds.Send(ctx, "purchase-lot", map[string]any{
 			"location_x":  uint64(locX),
 			"location_y":  uint64(locY),
@@ -248,7 +266,7 @@ func purchaseLotHandler(botCmds *BotCmdPump) convention.HandlerFunc {
 			}, nil
 		}
 
-		// --- Step 7: update owned-lots.json (I0-7 habitation block) ---
+		// --- Step 8: update owned-lots.json (I0-7 habitation block) ---
 		locationHex := fmt.Sprintf("0x%08X", loc)
 		entry := OwnedLotEntry{
 			Name:        name,

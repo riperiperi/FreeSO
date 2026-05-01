@@ -1,0 +1,56 @@
+{
+  "convention": "freeso-embodiment",
+  "version": "1.0",
+  "operation": "set-tax-rate",
+  "family": "civic",
+  "description": "Set the neighborhood tax rate and collect taxes from all residents this cycle. Mayor-only. Each resident's budget is debited by (balance * tax_rate_percent / 100). A bulletin is posted announcing the tax. The response includes per-resident deltas so the calling agent can observe who was taxed and by how much.",
+  "args": [
+    {
+      "name": "tax_rate_percent",
+      "type": "float64",
+      "required": true,
+      "description": "Tax rate as a percentage of each resident's current balance (0.0–100.0). Values outside that range are refused with INVALID_TAX_RATE."
+    },
+    {
+      "name": "neighborhood_id",
+      "type": "uint32",
+      "required": false,
+      "description": "Target neighborhood (default 1 = Alphaville on workshop). Resident list is derived from fso_roommates rows in this neighborhood."
+    }
+  ],
+  "produces_tags": [
+    {
+      "tag": "freeso:set-tax-rate",
+      "cardinality": "exactly_one"
+    }
+  ],
+  "antecedents": "none",
+  "signing": "member_key",
+  "rate_limit": {
+    "max": 5,
+    "per": "sender",
+    "window": "10m"
+  },
+  "response": "sync",
+  "status": "implemented",
+  "call_signatures": [
+    "cf $CF set-tax-rate --tax_rate_percent 5.0                                    # 5% tax on all residents in nhood 1",
+    "cf $CF set-tax-rate --tax_rate_percent 10.0 --neighborhood_id 1               # explicit nhood"
+  ],
+  "common_mistakes": [
+    "Only the mayor (fso_avatars.mayor_nhood > 0) can call this op — non-mayor gets NO_AUTH.",
+    "tax_rate_percent must be 0.0–100.0 — INVALID_TAX_RATE is returned otherwise.",
+    "The tax is applied immediately (on-demand) — there is no automatic schedule.",
+    "Each resident's transaction appears as a negative budget delta on their next query-self."
+  ],
+  "refuse_conditions": [
+    "Caller is not the mayor of the target neighborhood → NO_AUTH",
+    "tax_rate_percent < 0 or > 100 → INVALID_TAX_RATE",
+    "Resident list is empty (no roommates in neighborhood) → ok:true with empty residents array"
+  ],
+  "perception_hints": [
+    "Your own mayor status: perception.avatar.mayor_nhood > 0 means you are mayor",
+    "Current balance: perception.avatar.balance (use query-self for fresh value)",
+    "After tax: residents' budgets are immediately reduced — their next query-self shows the delta"
+  ]
+}
