@@ -126,6 +126,21 @@ func (i *IPC) Send(ctx context.Context, op string, args map[string]any) (*Respon
 	}
 }
 
+// UpdateBot hot-swaps the underlying BotProcess. Called by the supervisor loop
+// after relaunching the bot so all registered handlers automatically route
+// subsequent IPC.Send calls to the new process without re-registration.
+// Any in-flight Send callers on the old bot will receive a write error
+// (stdin closed) and surface it as a convention response error — the agent
+// retries cleanly.
+func (i *IPC) UpdateBot(bot *BotProcess) {
+	if i == nil {
+		return
+	}
+	i.mu.Lock()
+	i.bot = bot
+	i.mu.Unlock()
+}
+
 // Deliver routes a raw stdout response frame to the pending caller, if any.
 // Unknown cmd_ids are dropped with a log — we don't crash on stragglers.
 func (i *IPC) Deliver(line []byte) {

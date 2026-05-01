@@ -13,6 +13,7 @@ import (
 	"os/exec"
 	"path/filepath"
 	"strings"
+	"syscall"
 	"testing"
 	"time"
 )
@@ -427,6 +428,234 @@ func TestIntegration_PersistentBodyCfIDSurvivesRestart(t *testing.T) {
 	} else {
 		t.Logf("PASS: campfire ID %s survived sidecar restart", id1)
 	}
+}
+
+// TestIntegration_SupervisorLoop_BotTermDoesNotKillSidecar is the veracity gate
+// for freesoexperiment-e5f. It exercises the supervisor loop added in main.go:
+// when the bot process exits, the sidecar PID must remain unchanged and the bot
+// must be relaunched within 15 seconds.
+//
+// Protocol:
+//  1. Build the freeso-sidecar binary in a temp dir.
+//  2. Write two stub bots:
+//     - first-bot.sh: emits system:ready, then blocks on SIGTERM. When it
+//       receives SIGTERM it exits 0 (clean exit). Writes its PID to a file.
+//     - second-bot.sh: emits system:ready and a "relaunched" marker event,
+//       then sleeps long enough for the test to observe it.
+//  3. Write a wrapper bot script that launches first-bot.sh on the first
+//     invocation and second-bot.sh on the second invocation, using a counter
+//     file in tmp to track which run this is.
+//  4. Launch the sidecar pointing at the wrapper bot.
+//  5. Wait for the sidecar to start (admission block on stdout).
+//  6. Record the sidecar PID.
+//  7. Read the first bot's PID from the pid-file and send SIGTERM to it.
+//  8. Assert: the sidecar PID is unchanged 3s after the SIGTERM.
+//  9. Assert: within 15s the second bot emits its "relaunched" marker event
+//     (observed via cf read, or equivalently via a marker file the second bot
+//     writes). This proves the supervisor loop launched a new bot.
+//
+// Skip conditions (same envelope as other integration tests):
+//   - FREESO_SKIP_INTEGRATION=1 → explicit opt-out.
+//   - `cf` binary not on PATH → skip.
+//   - `go` binary not on PATH → skip.
+func TestIntegration_SupervisorLoop_BotTermDoesNotKillSidecar(t *testing.T) {
+	if os.Getenv("FREESO_SKIP_INTEGRATION") == "1" {
+		t.Skip("FREESO_SKIP_INTEGRATION=1")
+	}
+	if _, err := exec.LookPath("cf"); err != nil {
+		t.Skipf("cf binary not on PATH: %v", err)
+	}
+	goBin, err := exec.LookPath("go")
+	if err != nil {
+		t.Skipf("go not on PATH: %v", err)
+	}
+
+	tmp := t.TempDir()
+	cfHome := filepath.Join(tmp, "cf-home")
+	if err := os.MkdirAll(cfHome, 0o700); err != nil {
+		t.Fatalf("mkdir cf-home: %v", err)
+	}
+
+	// 1. Build the sidecar binary.
+	sidecarBin := filepath.Join(tmp, "freeso-sidecar-supervisor-test")
+	build := exec.Command(goBin, "build", "-o", sidecarBin, ".")
+	build.Dir = mustSourceDir(t)
+	if out, err := build.CombinedOutput(); err != nil {
+		t.Fatalf("build sidecar: %v\n%s", err, out)
+	}
+
+	// 2. Write the first bot: emits ready, records PID, sleeps until SIGTERM.
+	// On SIGTERM it exits 0 (clean relaunch-eligible exit).
+	firstBotPidFile := filepath.Join(tmp, "first-bot.pid")
+	firstBot := filepath.Join(tmp, "first-bot.sh")
+	firstBotScript := fmt.Sprintf(`#!/bin/sh
+# Write our PID so the test can send SIGTERM.
+echo $$ > %s
+# Emit ready so bridges initialise.
+printf '{"kind":"system","payload":{"event":"ready"}}\n'
+# Block until SIGTERM.
+trap 'exit 0' TERM
+while true; do sleep 0.5; done
+`, firstBotPidFile)
+	if err := os.WriteFile(firstBot, []byte(firstBotScript), 0o700); err != nil {
+		t.Fatalf("write first-bot.sh: %v", err)
+	}
+
+	// 3. Write the second bot: emits ready + a "relaunched" marker, then sleeps.
+	// Writes a marker file the test polls so we don't need to parse campfire events.
+	relaunchedMarker := filepath.Join(tmp, "relaunched.marker")
+	secondBot := filepath.Join(tmp, "second-bot.sh")
+	secondBotScript := fmt.Sprintf(`#!/bin/sh
+# Signal the test that we were relaunched.
+touch %s
+printf '{"kind":"system","payload":{"event":"ready","relaunched":true}}\n'
+# Stay alive long enough for the test to observe.
+sleep 30
+`, relaunchedMarker)
+	if err := os.WriteFile(secondBot, []byte(secondBotScript), 0o700); err != nil {
+		t.Fatalf("write second-bot.sh: %v", err)
+	}
+
+	// 4. Write a wrapper bot that dispatches to first-bot on run 1, second-bot
+	// on run 2+. Uses a counter file in tmp.
+	runCountFile := filepath.Join(tmp, "run-count")
+	if err := os.WriteFile(runCountFile, []byte("0"), 0o600); err != nil {
+		t.Fatalf("write run-count: %v", err)
+	}
+	wrapperBot := filepath.Join(tmp, "wrapper-bot.sh")
+	wrapperScript := fmt.Sprintf(`#!/bin/sh
+set -e
+# Atomically increment the run counter.
+COUNT=$(cat %s 2>/dev/null || echo 0)
+NEW=$(( COUNT + 1 ))
+echo $NEW > %s
+
+if [ "$COUNT" -eq 0 ]; then
+    exec %s "$@"
+else
+    exec %s "$@"
+fi
+`, runCountFile, runCountFile, firstBot, secondBot)
+	if err := os.WriteFile(wrapperBot, []byte(wrapperScript), 0o700); err != nil {
+		t.Fatalf("write wrapper-bot.sh: %v", err)
+	}
+
+	// Use an isolated persona state dir so next-lot files don't bleed across tests.
+	xdgConfigHome := filepath.Join(tmp, "config")
+	if err := os.MkdirAll(xdgConfigHome, 0o700); err != nil {
+		t.Fatalf("mkdir xdg config: %v", err)
+	}
+
+	// 5. Launch sidecar.
+	ctx, cancel := context.WithTimeout(context.Background(), 60*time.Second)
+	defer cancel()
+
+	sidecarCmd := exec.CommandContext(ctx, sidecarBin,
+		"--bot", wrapperBot,
+		"--bot-args", "",
+		"--cf-home", cfHome,
+		"--description", "supervisor-integration-test",
+	)
+	// Isolate persona state.
+	sidecarEnv := os.Environ()
+	filtered := sidecarEnv[:0]
+	for _, e := range sidecarEnv {
+		if !strings.HasPrefix(e, "FSO_USER=") && !strings.HasPrefix(e, "XDG_CONFIG_HOME=") {
+			filtered = append(filtered, e)
+		}
+	}
+	sidecarCmd.Env = append(filtered,
+		"FSO_USER=supervisor-test-persona",
+		"XDG_CONFIG_HOME="+xdgConfigHome,
+	)
+
+	sidecarStdout, err := sidecarCmd.StdoutPipe()
+	if err != nil {
+		t.Fatalf("stdout pipe: %v", err)
+	}
+	sidecarStderr, err := sidecarCmd.StderrPipe()
+	if err != nil {
+		t.Fatalf("stderr pipe: %v", err)
+	}
+	if err := sidecarCmd.Start(); err != nil {
+		t.Fatalf("start sidecar: %v", err)
+	}
+	defer func() {
+		_ = sidecarCmd.Process.Signal(os.Interrupt)
+		_, _ = sidecarCmd.Process.Wait()
+	}()
+
+	// Drain stderr into test log.
+	go func() {
+		buf := make([]byte, 4096)
+		for {
+			n, readErr := sidecarStderr.Read(buf)
+			if n > 0 {
+				t.Logf("sidecar-stderr: %s", strings.TrimRight(string(buf[:n]), "\n"))
+			}
+			if readErr != nil {
+				return
+			}
+		}
+	}()
+
+	// 6. Wait for the sidecar admission block (proves sidecar is up and campfire
+	// is initialised) and capture the sidecar PID.
+	_ = waitForCampfireID(t, sidecarStdout, 20*time.Second)
+	sidecarPID := sidecarCmd.Process.Pid
+	t.Logf("sidecar PID: %d", sidecarPID)
+
+	// Wait for the first-bot to write its PID file (up to 5s).
+	var firstBotPID int
+	{
+		deadline := time.Now().Add(5 * time.Second)
+		for time.Now().Before(deadline) {
+			data, rErr := os.ReadFile(firstBotPidFile)
+			if rErr == nil {
+				if _, scanErr := fmt.Sscanf(strings.TrimSpace(string(data)), "%d", &firstBotPID); scanErr == nil && firstBotPID > 0 {
+					break
+				}
+			}
+			time.Sleep(100 * time.Millisecond)
+		}
+	}
+	if firstBotPID == 0 {
+		t.Fatalf("first-bot did not write its PID within 5s")
+	}
+	t.Logf("first-bot PID: %d", firstBotPID)
+
+	// 7. Send SIGTERM to the first bot.
+	firstBotProcess, err := os.FindProcess(firstBotPID)
+	if err != nil {
+		t.Fatalf("FindProcess first-bot %d: %v", firstBotPID, err)
+	}
+	if err := firstBotProcess.Signal(syscall.SIGTERM); err != nil {
+		t.Fatalf("SIGTERM first-bot: %v", err)
+	}
+	t.Logf("sent SIGTERM to first-bot PID %d", firstBotPID)
+
+	// 8. After 3s, assert the sidecar PID is still alive.
+	time.Sleep(3 * time.Second)
+	if err := sidecarCmd.Process.Signal(syscall.Signal(0)); err != nil {
+		t.Fatalf("sidecar PID %d is dead after bot SIGTERM — supervisor loop did not keep sidecar alive: %v",
+			sidecarPID, err)
+	}
+	t.Logf("PASS: sidecar PID %d still alive 3s after first-bot SIGTERM", sidecarPID)
+
+	// 9. Assert the second bot was launched within 15s (marker file appears).
+	relaunchedDeadline := time.Now().Add(15 * time.Second)
+	for time.Now().Before(relaunchedDeadline) {
+		if _, statErr := os.Stat(relaunchedMarker); statErr == nil {
+			t.Logf("PASS: second-bot relaunched marker appeared (sidecar PID still %d)", sidecarPID)
+			// Final check: sidecar PID still unchanged.
+			if err := sidecarCmd.Process.Signal(syscall.Signal(0)); err != nil {
+				t.Errorf("sidecar PID %d died before test end: %v", sidecarPID, err)
+			}
+			return
+		}
+		time.Sleep(250 * time.Millisecond)
+	}
+	t.Fatalf("second-bot was not relaunched within 15s after first-bot SIGTERM (marker %s not created)", relaunchedMarker)
 }
 
 // compile-time assertion we did not accidentally break formatter with fmt use:

@@ -48,6 +48,7 @@ import (
 	"os/signal"
 	"path/filepath"
 	"syscall"
+	"time"
 )
 
 //go:embed conventions/*.json
@@ -106,6 +107,9 @@ func main() {
 
 	// 2. Launch bot (unless --no-bot).
 	var proc *BotProcess
+	// ipc is declared at the outer scope so the supervisor loop can call
+	// ipc.UpdateBot when relaunching. Nil in --no-bot mode.
+	var ipc *IPC
 	if !*noBot {
 		proc, err = LaunchBot(ctx, BotConfig{
 			Exec: botExec,
@@ -122,7 +126,7 @@ func main() {
 		// 3. IPC command channel (freesoexperiment-b9c): correlates stdin commands
 		// sidecar→bot with response frames observed on bot stdout. Must be wired
 		// before bridges start so response frames are routed instead of dropped.
-		ipc := NewIPC(proc)
+		ipc = NewIPC(proc)
 
 		// 4. Start bridges.
 		bridges := NewBridges(cf, proc, ipc)
@@ -284,26 +288,126 @@ func main() {
 	sigCh := make(chan os.Signal, 1)
 	signal.Notify(sigCh, syscall.SIGINT, syscall.SIGTERM)
 
-	select {
-	case sig := <-sigCh:
-		log.Printf("caught %s — shutting down", sig)
-	case <-ctx.Done():
-		log.Printf("context cancelled")
-	case err := <-botExitCh(proc):
-		// Bridge already broadcasts bot-exited system event before this fires.
-		if err != nil {
-			log.Printf("bot exited: %v", err)
-		} else {
-			log.Printf("bot exited cleanly")
+	// Supervisor loop (freesoexperiment-e5f): when proc != nil (bot mode) the
+	// sidecar supervises the bot. Bot exit triggers a relaunch — the sidecar
+	// does NOT exit. Only an OS signal or ctx cancellation stops the sidecar.
+	//
+	// On each bot exit the supervisor:
+	//   1. Reads next-lot from persona state (written by the visit-lot handler
+	//      before it issues a bot-cmd:exit). If present, override FSO_LOT_LOCATION.
+	//   2. Clear next-lot so the subsequent launch uses the default location.
+	//   3. Launch a fresh BotProcess with the (possibly overridden) env.
+	//   4. Hot-swap IPC's bot reference (ipc.UpdateBot) so all registered
+	//      handlers route to the new process without re-registration.
+	//   5. Start a new Bridges goroutine over the new process stdout.
+	//
+	// Convention handlers and the campfire router run for the sidecar lifetime.
+	// Only IPC.bot and the bridge goroutine are replaced on each bot relaunch.
+	//
+	// --no-bot mode: botExitCh(nil) returns a nil channel, so the bot-exit case
+	// is never selected and the loop exits only on signal or ctx.
+	for {
+		select {
+		case sig := <-sigCh:
+			log.Printf("caught %s — shutting down", sig)
+			cancel()
+			if proc != nil {
+				proc.Stop()
+			}
+			// Allow the bridge a beat to flush the bot-exited event.
+			fmt.Fprintln(os.Stderr, "[sidecar] bye")
+			return
+		case <-ctx.Done():
+			log.Printf("context cancelled")
+			if proc != nil {
+				proc.Stop()
+			}
+			fmt.Fprintln(os.Stderr, "[sidecar] bye")
+			return
+		case exitErr := <-botExitCh(proc):
+			// proc is nil only in --no-bot mode; botExitCh returns nil for nil proc
+			// so this case is never selected in --no-bot mode.
+			if exitErr != nil {
+				log.Printf("bot exited with error: %v — supervising relaunch", exitErr)
+			} else {
+				log.Printf("bot exited cleanly — supervising relaunch")
+			}
+
+			// Step 1: read next-lot (cross-lot transition target, if any).
+			lotOverride := ""
+			if nextLot, rErr := ReadNextLot(); rErr != nil {
+				log.Printf("supervisor: read next-lot: %v (ignoring, using default lot)", rErr)
+			} else if nextLot != "" {
+				lotOverride = nextLot
+				log.Printf("supervisor: next-lot=%s — will launch bot at target lot", lotOverride)
+				// Step 2: clear next-lot so future launches don't reuse it.
+				if cErr := ClearNextLot(); cErr != nil {
+					log.Printf("supervisor: clear next-lot: %v (non-fatal)", cErr)
+				}
+			}
+
+			// Step 3: build env for relaunch, overriding FSO_LOT_LOCATION when
+			// a cross-lot transition was requested.
+			relaunchEnv := os.Environ()
+			if lotOverride != "" {
+				// Replace FSO_LOT_LOCATION with the transition target. Strip
+				// any existing value and append the new one.
+				filtered := make([]string, 0, len(relaunchEnv))
+				for _, e := range relaunchEnv {
+					if len(e) > len("FSO_LOT_LOCATION=") &&
+						e[:len("FSO_LOT_LOCATION=")] == "FSO_LOT_LOCATION=" {
+						continue
+					}
+					filtered = append(filtered, e)
+				}
+				relaunchEnv = append(filtered, "FSO_LOT_LOCATION="+lotOverride)
+			}
+
+			// Brief pause so downstream consumers (campfire, bridges) can
+			// flush the bot-exited event before the new bot connects. Also
+			// avoids a tight restart loop on a persistently-crashing bot.
+			time.Sleep(2 * time.Second)
+
+			// Step 4: launch the new bot process (with up to 3 attempts).
+			// proc's exitCh is already closed; set proc=nil while retrying so
+			// botExitCh(proc) returns nil and blocks rather than spinning.
+			proc = nil
+			launchCfg := BotConfig{
+				Exec: botExec,
+				Args: splitArgs(*botArgs),
+				Env:  relaunchEnv,
+			}
+			var newProc *BotProcess
+			for attempt := 1; attempt <= 3; attempt++ {
+				var lErr error
+				newProc, lErr = LaunchBot(ctx, launchCfg)
+				if lErr == nil {
+					break
+				}
+				log.Printf("supervisor: relaunch attempt %d/3 failed: %v", attempt, lErr)
+				if attempt < 3 {
+					time.Sleep(5 * time.Second)
+				}
+			}
+			if newProc == nil {
+				log.Printf("supervisor: all relaunch attempts failed — waiting for signal")
+				continue
+			}
+			log.Printf("supervisor: relaunched bot pid=%d", newProc.Pid())
+
+			// Step 5: hot-swap IPC bot reference so all registered handler
+			// closures route IPC.Send calls to the new process immediately.
+			// ipc is declared at the outer scope (above the if !*noBot block)
+			// so this assignment is visible to all handler closures.
+			if ipc != nil {
+				ipc.UpdateBot(newProc)
+			}
+			proc = newProc
+
+			// Start a new bridge goroutine over the new process stdout.
+			go NewBridges(cf, newProc, ipc).Run(ctx)
 		}
 	}
-
-	cancel()
-	if proc != nil {
-		proc.Stop()
-	}
-	// Allow the bridge a beat to flush the bot-exited event.
-	fmt.Fprintln(os.Stderr, "[sidecar] bye")
 }
 
 // botExitCh is a nil-safe helper: when proc is nil (--no-bot mode) it returns

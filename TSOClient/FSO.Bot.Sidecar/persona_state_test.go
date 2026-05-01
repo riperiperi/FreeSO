@@ -255,3 +255,119 @@ func TestReadBodyCfIDEmptyFile(t *testing.T) {
 		t.Fatalf("expected 'empty' in error, got: %v", err)
 	}
 }
+
+// --- next-lot tests (freesoexperiment-e5f) ---
+
+// TestReadNextLotMissing asserts ReadNextLot returns ("", nil) when the
+// file does not exist — the normal case (no pending cross-lot transition).
+func TestReadNextLotMissing(t *testing.T) {
+	tmp := t.TempDir()
+	withConfigHome(t, tmp)
+	withFSO_USER(t, "botrous")
+
+	loc, err := ReadNextLot()
+	if err != nil {
+		t.Fatalf("ReadNextLot on missing file: want nil error, got %v", err)
+	}
+	if loc != "" {
+		t.Fatalf("ReadNextLot on missing file: want empty string, got %q", loc)
+	}
+}
+
+// TestWriteReadNextLotRoundTrip asserts that WriteNextLot followed by
+// ReadNextLot returns the same location string.
+func TestWriteReadNextLotRoundTrip(t *testing.T) {
+	tmp := t.TempDir()
+	withConfigHome(t, tmp)
+	withFSO_USER(t, "botrous")
+
+	const wantLoc = "16318812"
+
+	if err := WriteNextLot(wantLoc); err != nil {
+		t.Fatalf("WriteNextLot: %v", err)
+	}
+
+	got, err := ReadNextLot()
+	if err != nil {
+		t.Fatalf("ReadNextLot: %v", err)
+	}
+	if got != wantLoc {
+		t.Fatalf("round-trip mismatch: want %q, got %q", wantLoc, got)
+	}
+}
+
+// TestClearNextLot asserts ClearNextLot removes the file so the next
+// ReadNextLot returns ("", nil) — preventing stale transition targets.
+func TestClearNextLot(t *testing.T) {
+	tmp := t.TempDir()
+	withConfigHome(t, tmp)
+	withFSO_USER(t, "ellis")
+
+	// Write then clear.
+	if err := WriteNextLot("12345678"); err != nil {
+		t.Fatalf("WriteNextLot: %v", err)
+	}
+	if err := ClearNextLot(); err != nil {
+		t.Fatalf("ClearNextLot: %v", err)
+	}
+
+	// After clear, Read should return ("", nil).
+	loc, err := ReadNextLot()
+	if err != nil {
+		t.Fatalf("ReadNextLot after clear: want nil error, got %v", err)
+	}
+	if loc != "" {
+		t.Fatalf("ReadNextLot after clear: want empty, got %q", loc)
+	}
+}
+
+// TestClearNextLotIdempotent asserts ClearNextLot is a no-op when the file
+// does not exist (prevents supervisor from crashing on double-clear).
+func TestClearNextLotIdempotent(t *testing.T) {
+	tmp := t.TempDir()
+	withConfigHome(t, tmp)
+	withFSO_USER(t, "marlo")
+
+	// No WriteNextLot first — file does not exist.
+	if err := ClearNextLot(); err != nil {
+		t.Fatalf("ClearNextLot on missing file: want nil error, got %v", err)
+	}
+}
+
+// TestWriteNextLotOverwrites asserts that a second WriteNextLot replaces the
+// previous location, so the most-recent transition target always wins.
+func TestWriteNextLotOverwrites(t *testing.T) {
+	tmp := t.TempDir()
+	withConfigHome(t, tmp)
+	withFSO_USER(t, "jin")
+
+	const first = "11111111"
+	const second = "22222222"
+
+	if err := WriteNextLot(first); err != nil {
+		t.Fatalf("first write: %v", err)
+	}
+	if err := WriteNextLot(second); err != nil {
+		t.Fatalf("second write: %v", err)
+	}
+
+	got, err := ReadNextLot()
+	if err != nil {
+		t.Fatalf("read: %v", err)
+	}
+	if got != second {
+		t.Fatalf("overwrite: want %q, got %q", second, got)
+	}
+}
+
+// TestWriteNextLotRejectsEmpty asserts WriteNextLot returns an error for
+// an empty location string.
+func TestWriteNextLotRejectsEmpty(t *testing.T) {
+	tmp := t.TempDir()
+	withConfigHome(t, tmp)
+	withFSO_USER(t, "sage")
+
+	if err := WriteNextLot(""); err == nil {
+		t.Fatal("expected error for empty lot location, got nil")
+	}
+}
