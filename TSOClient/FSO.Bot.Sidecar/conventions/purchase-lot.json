@@ -3,8 +3,33 @@
   "version": "1.0",
   "operation": "purchase-lot",
   "family": "property",
-  "description": "Purchase an empty lot on the current shard's terrain.",
-  "args": [],
+  "description": "Purchase an empty lot on the current shard's terrain. Pre-checks road-bit validity (CLAUDE.md gotcha 12) and already-owns guard before issuing the city-socket PDU. Updates owned-lots.json on success (I0-7 habitation block initialised to null).",
+  "args": [
+    {
+      "name": "target_lot_location",
+      "type": "string",
+      "required": true,
+      "description": "Packed tile coordinate as hex (0x00F9015C) or decimal uint32. MapCoordinates.Pack(x,y) = x<<16|y. Must have road bits: (GetRoad(x,y) & 0xF) != 0."
+    },
+    {
+      "name": "name",
+      "type": "string",
+      "required": true,
+      "description": "Lot name (max 64 chars). Must be unique on the shard."
+    },
+    {
+      "name": "start_fresh",
+      "type": "bool",
+      "required": false,
+      "description": "If true, bypass lot-state carry-over (for mayor-mode community lot placement). Defaults false."
+    },
+    {
+      "name": "allow_move",
+      "type": "bool",
+      "required": false,
+      "description": "If true, skip the ALREADY_OWNS pre-check. The server will charge a move fee. Use only when explicitly re-purchasing or moving. Defaults false."
+    }
+  ],
   "produces_tags": [
     {
       "tag": "freeso:purchase-lot",
@@ -14,23 +39,26 @@
   "antecedents": "none",
   "signing": "member_key",
   "rate_limit": {
-    "max": 30,
+    "max": 5,
     "per": "sender",
     "window": "1m"
   },
   "response": "sync",
-  "status": "scaffold",
+  "status": "implemented",
   "call_signatures": [
-    "cf $CF purchase-lot   # SCAFFOLD op — not yet implemented; handler may return ok:false or a stub. Prefer a concrete sibling op if your goal is actionable."
+    "cf $CF purchase-lot --target_lot_location 0x00F9015C --name \"marlo's place\"",
+    "cf $CF purchase-lot --target_lot_location 0x00F9015C --name \"marlo's place\" --start_fresh true",
+    "cf $CF purchase-lot --target_lot_location 0x00F9015C --name \"marlo's place\" --allow_move true"
   ],
   "common_mistakes": [
-    "This is a SCAFFOLD op — the convention is declared but the handler may be unimplemented or stubbed. Check the declaration's status field.",
-    "Relying on scaffold ops mid-run will either return a deferred marker or fail — prefer a concrete sibling op, and file an rd item if the missing behaviour blocks progress."
+    "target_lot_location must be the PACKED tile coordinate (x<<16|y), not the DB lot_id. See CLAUDE.md gotcha 11.",
+    "The target tile must have road bits — check CLAUDE.md gotcha 12: (GetRoad(x,y) & 0xF) != 0.",
+    "If the shard neighborhood has NHOOD_RESERVED (flag & 1), every non-mayor purchase fails. Escalate to an operator.",
+    "ALREADY_OWNS is returned if the persona already owns a lot; set allow_move=true only if you intend to pay the move fee."
   ],
   "perception_hints": [
-    "Your own persist_id (to avoid self-targeting): perception.avatar.persist_id",
+    "Current balance: perception.avatar.balance (or use query-self)",
     "Am I the owner? perception.lot.owner_is_me (true/false)",
-    "Target persist_id: perception.nearby_sims[].persist_id for Sims physically on the lot",
     "Relationships for picking a roommate candidate: perception.relationships[]"
   ]
 }

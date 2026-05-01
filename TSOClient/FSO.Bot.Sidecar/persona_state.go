@@ -7,6 +7,7 @@
 package main
 
 import (
+	"encoding/json"
 	"errors"
 	"fmt"
 	"os"
@@ -149,4 +150,98 @@ func ClearNextLot() error {
 		return fmt.Errorf("clear next-lot: %w", err)
 	}
 	return nil
+}
+
+// OwnedLotHabitation tracks I0-7: a parcel is "yours" only after the body has
+// eaten, slept, and used a toilet on it. Populated by the habitation watcher
+// (item 8 / freesoexperiment-xxx) from perception events.
+type OwnedLotHabitation struct {
+	FirstMealEatenHere *int64 `json:"first_meal_eaten_here"` // unix ms, nil = not yet
+	FirstSleepHere     *int64 `json:"first_sleep_here"`
+	FirstUseToiletHere *int64 `json:"first_use_toilet_here"`
+}
+
+// OwnedLotEntry is one record in owned-lots.json. Location is a decimal uint32
+// canonical string (same representation as next-lot).
+type OwnedLotEntry struct {
+	Name        string             `json:"name"`
+	LocationHex string             `json:"location_hex"`
+	PurchasedAt int64              `json:"purchased_at"` // unix ms
+	Habitation  OwnedLotHabitation `json:"habitation"`
+	IsHabitable bool               `json:"is_habitable"`
+}
+
+// ReadOwnedLots reads the owned-lots.json file for this persona. Returns an
+// empty slice (not nil) when the file does not exist (first purchase). Returns
+// an error on I/O or parse failures.
+func ReadOwnedLots() ([]OwnedLotEntry, error) {
+	dir, err := PersonaStateDir()
+	if err != nil {
+		return nil, err
+	}
+	path := filepath.Join(dir, "owned-lots.json")
+	data, err := os.ReadFile(path)
+	if err != nil {
+		if os.IsNotExist(err) {
+			return []OwnedLotEntry{}, nil // first purchase — no prior file
+		}
+		return nil, fmt.Errorf("read owned-lots.json: %w", err)
+	}
+	var entries []OwnedLotEntry
+	if err := json.Unmarshal(data, &entries); err != nil {
+		return nil, fmt.Errorf("parse owned-lots.json: %w", err)
+	}
+	return entries, nil
+}
+
+// WriteOwnedLots atomically writes entries to owned-lots.json. Creates the
+// persona state directory if necessary.
+func WriteOwnedLots(entries []OwnedLotEntry) error {
+	dir, err := PersonaStateDir()
+	if err != nil {
+		return err
+	}
+	if err := os.MkdirAll(dir, 0o700); err != nil {
+		return fmt.Errorf("mkdir persona state dir: %w", err)
+	}
+	path := filepath.Join(dir, "owned-lots.json")
+	data, err := json.MarshalIndent(entries, "", "  ")
+	if err != nil {
+		return fmt.Errorf("marshal owned-lots: %w", err)
+	}
+	tmp := path + ".tmp"
+	if err := os.WriteFile(tmp, data, 0o600); err != nil {
+		return fmt.Errorf("write owned-lots.json tmp: %w", err)
+	}
+	if err := os.Rename(tmp, path); err != nil {
+		return fmt.Errorf("rename owned-lots.json: %w", err)
+	}
+	return nil
+}
+
+// AppendOwnedLot appends a newly purchased lot to owned-lots.json. The new
+// entry's habitation block is zeroed (nil timestamps, is_habitable=false) per
+// I0-7: the body must eat/sleep/use-toilet to become habitable.
+//
+// If an entry with the same LocationHex already exists it is replaced (handles
+// the allow_move=true re-purchase case). This is an atomic read-modify-write:
+// the file is read, mutated, and written back via WriteOwnedLots.
+func AppendOwnedLot(entry OwnedLotEntry) error {
+	existing, err := ReadOwnedLots()
+	if err != nil {
+		return err
+	}
+	// Replace any existing entry for the same location.
+	replaced := false
+	for i, e := range existing {
+		if e.LocationHex == entry.LocationHex {
+			existing[i] = entry
+			replaced = true
+			break
+		}
+	}
+	if !replaced {
+		existing = append(existing, entry)
+	}
+	return WriteOwnedLots(existing)
 }

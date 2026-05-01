@@ -232,6 +232,15 @@ func main() {
 		}
 		log.Printf("convention handlers: %d property-family ops serving", propServers)
 
+		// Purchase-lot family (freesoexperiment-eaa): purchase-lot — was scaffold, now
+		// implemented. Road-bits pre-check via bot-cmd:probe-road, city-socket
+		// PurchaseLotRequest via bot-cmd:purchase-lot, owned-lots.json update on success.
+		purchaseServers, err := RegisterPurchaseLotHandlers(ctx, cf, botCmds)
+		if err != nil {
+			log.Fatalf("register purchase-lot handlers: %v", err)
+		}
+		log.Printf("convention handlers: %d purchase-lot-family ops serving", purchaseServers)
+
 		// Admin family (freesoexperiment-3df).
 		adminServers, err := RegisterAdminHandlers(ctx, cf, ipc)
 		if err != nil {
