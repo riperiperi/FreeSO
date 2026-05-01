@@ -193,7 +193,10 @@ namespace FSO.SimAntics.Utils
             bool diagCheck = (direction % 2 == 1);
             for (int i = 0; i < length; i++)
             {
-                if (target.OutsideClip((short)pos.X, (short)pos.Y, level)) return false;
+                if (target.OutsideClip((short)pos.X, (short)pos.Y, level))
+                {
+                    return false;
+                }
                 var wall = target.GetWall((short)pos.X, (short)pos.Y, level);
                 if ((wall.Segments & AnyDiag) == 0 && (!diagCheck || (wall.Segments == 0)))
                 {

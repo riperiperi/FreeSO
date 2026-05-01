@@ -82,8 +82,14 @@ namespace FSO.SimAntics.NetPlay.Model.Commands
 
         private bool TryPlace(VM vm, VMAvatar caller)
         {
-            if (Mode != PurchaseMode.Donate && !vm.PlatformState.CanPlaceNewUserObject(vm)) return false;
-            if (Mode == PurchaseMode.Donate && !vm.PlatformState.CanPlaceNewDonatedObject(vm)) return false;
+            if (Mode != PurchaseMode.Donate && !vm.PlatformState.CanPlaceNewUserObject(vm))
+            {
+                return false;
+            }
+            if (Mode == PurchaseMode.Donate && !vm.PlatformState.CanPlaceNewDonatedObject(vm))
+            {
+                return false;
+            }
 
             var group = vm.Context.CreateObjectInstance(GUID, LotTilePos.OUT_OF_WORLD, dir);
             if (group == null) return false;

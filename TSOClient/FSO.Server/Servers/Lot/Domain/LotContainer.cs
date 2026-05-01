@@ -2165,7 +2165,7 @@ namespace FSO.Server.Servers.Lot.Domain
                 using (var da = DAFactory.Get())
                 {
                     var lot = da.Lots.Get(Context.DbId);
-                    if (lot.owner_id == null)
+                    if (lot != null && lot.owner_id == null)
                     {
 
                         try

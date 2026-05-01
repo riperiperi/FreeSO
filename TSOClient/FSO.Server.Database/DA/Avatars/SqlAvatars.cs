@@ -295,11 +295,37 @@ namespace FSO.Server.Database.DA.Avatars
                 });
             }
 
-            var result = Context.Connection.Query<DbTransactionResult>("SELECT a1.budget AS source_budget, a2.budget AS dest_budget "
-                + "FROM"
-                + "(SELECT budget, count(budget) FROM " + (srcObj ? "fso_objects" : "fso_avatars") + " WHERE " + (srcObj ? "object_id" : "avatar_id") + " = @source_id) a1,"
-                + "(SELECT budget, count(budget) FROM " + (dstObj ? "fso_objects" : "fso_avatars") + " WHERE " + (dstObj ? "object_id" : "avatar_id") + " = @avatar_id) a2; ",
-                new { avatar_id = dest_id, source_id = source_id }).FirstOrDefault();
+            // When source or dest is uint.MaxValue (lot fund / nobody), the cross-join would return
+            // zero rows making the entire result null. Query only the side(s) that have a real ID.
+            DbTransactionResult result;
+            if (source_id == uint.MaxValue && dest_id == uint.MaxValue)
+            {
+                result = new DbTransactionResult();
+            }
+            else if (source_id == uint.MaxValue)
+            {
+                result = Context.Connection.Query<DbTransactionResult>(
+                    "SELECT 0 AS source_budget, budget AS dest_budget FROM "
+                    + (dstObj ? "fso_objects" : "fso_avatars") + " WHERE "
+                    + (dstObj ? "object_id" : "avatar_id") + " = @avatar_id;",
+                    new { avatar_id = dest_id }).FirstOrDefault();
+            }
+            else if (dest_id == uint.MaxValue)
+            {
+                result = Context.Connection.Query<DbTransactionResult>(
+                    "SELECT budget AS source_budget, 0 AS dest_budget FROM "
+                    + (srcObj ? "fso_objects" : "fso_avatars") + " WHERE "
+                    + (srcObj ? "object_id" : "avatar_id") + " = @source_id;",
+                    new { source_id = source_id }).FirstOrDefault();
+            }
+            else
+            {
+                result = Context.Connection.Query<DbTransactionResult>("SELECT a1.budget AS source_budget, a2.budget AS dest_budget "
+                    + "FROM"
+                    + "(SELECT budget, count(budget) FROM " + (srcObj ? "fso_objects" : "fso_avatars") + " WHERE " + (srcObj ? "object_id" : "avatar_id") + " = @source_id) a1,"
+                    + "(SELECT budget, count(budget) FROM " + (dstObj ? "fso_objects" : "fso_avatars") + " WHERE " + (dstObj ? "object_id" : "avatar_id") + " = @avatar_id) a2; ",
+                    new { avatar_id = dest_id, source_id = source_id }).FirstOrDefault();
+            }
             if (result != null)
             {
                 result.amount = amount;
