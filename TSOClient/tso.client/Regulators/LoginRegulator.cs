@@ -87,7 +87,13 @@ namespace FSO.Client.Regulators
                         {
                             var cdnurl = connectResult.UserAuthorized.FSOCDNUrl;
                             if (cdnurl != null)
+                            {
                                 ApiClient.CDNUrl = cdnurl;
+                                // Same URL hosts the FreeSO API — let the emoji
+                                // pipeline pull the bulk atlas + Discord guild
+                                // customs now that we know where to ask.
+                                GameFacade.Emojis?.OnApiAvailable(cdnurl);
+                            }
 
                             if (RequireUpdate(connectResult.UserAuthorized) && !FSOEnvironment.SoftwareKeyboard)
                             {

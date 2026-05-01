@@ -1,8 +1,12 @@
-﻿using Microsoft.Xna.Framework;
+﻿using FSO.Common.Utils;
+using Microsoft.Xna.Framework;
 using Microsoft.Xna.Framework.Graphics;
+using Newtonsoft.Json.Linq;
 using System;
 using System.Collections.Generic;
+using System.Net;
 using System.Text;
+using System.Threading;
 
 namespace FSO.Common.Rendering.Emoji
 {
@@ -11,6 +15,8 @@ namespace FSO.Common.Rendering.Emoji
         public EmojiDictionary Dict;
         public EmojiCache Cache;
         public Random DictRand = new Random();
+        private string _apiBase;
+        private bool _customsFetched;
 
         public Dictionary<string, string> TranslateShortcuts = new Dictionary<string, string>()
         {
@@ -71,6 +77,70 @@ namespace FSO.Common.Rendering.Emoji
         {
             Dict = new EmojiDictionary();
             Cache = new EmojiCache(gd);
+
+            // No CDN-time work here. The bulk atlas + customs manifest land via
+            // OnApiAvailable once login has resolved the FreeSO API URL.
+        }
+
+        /// <summary>
+        /// Called from <c>LoginRegulator</c> after <c>ApiClient.CDNUrl</c> is set.
+        /// Triggers the bulk-atlas pull (handled in <see cref="EmojiCache"/>) and
+        /// fetches the live custom-emoji manifest so any <c>:custom_name:</c> in
+        /// chat resolves correctly. Safe to call repeatedly.
+        /// </summary>
+        public void OnApiAvailable(string apiBase)
+        {
+            if (string.IsNullOrEmpty(apiBase)) return;
+            apiBase = apiBase.TrimEnd('/');
+            _apiBase = apiBase;
+            Cache.OnApiAvailable(apiBase);
+            FetchCustomsManifest();
+        }
+
+        private void FetchCustomsManifest()
+        {
+            if (_customsFetched) return;
+            _customsFetched = true;
+            var apiBase = _apiBase;
+            ThreadPool.QueueUserWorkItem(_ =>
+            {
+                string body;
+                try
+                {
+                    using (var client = new WebClient())
+                        body = client.DownloadString(apiBase + "/userapi/emoji/customs.json");
+                }
+                catch
+                {
+                    // Server may not have customs.json yet (bot hasn't synced) —
+                    // not fatal; user just won't see Discord guild customs until
+                    // next launch. Allow retry next time login fires.
+                    _customsFetched = false;
+                    return;
+                }
+
+                try
+                {
+                    var manifest = JObject.Parse(body);
+                    var emojis = manifest.Value<JArray>("emojis");
+                    if (emojis == null) return;
+                    GameThread.NextUpdate(__ =>
+                    {
+                        foreach (var entry in emojis)
+                        {
+                            var name = entry.Value<string>("name");
+                            if (string.IsNullOrEmpty(name)) continue;
+                            // Map :name: → "c:name" so EmojiCache.GetEmoji's URL
+                            // resolver routes it to /userapi/emoji/custom/{name}.png
+                            Dict.NameToEmojis[name] = EmojiCache.CustomEmojiPrefix + name;
+                        }
+                    });
+                }
+                catch
+                {
+                    // Bad JSON — leave dictionary alone.
+                }
+            });
         }
 
         public string EmojiFromName(string name)

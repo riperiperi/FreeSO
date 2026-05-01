@@ -77,7 +77,7 @@ namespace FSO.Server.Servers.Lot.Handlers
 
         public void Handle(IGluonSession session, TuningChanged request)
         {
-            Lots.UpdateTuning(request.UpdateInstantly);
+            Lots.UpdateTuning();
         }
 
         public void Handle(IGluonSession session, SetLotObjectLimitBonus request)

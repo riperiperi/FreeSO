@@ -208,7 +208,7 @@ namespace FSO.Server.Servers.Lot.Domain
             return true;
         }
 
-        public void UpdateTuning(bool immediately)
+        public void UpdateTuning()
         {
             LOG.Info("Updating tuning on lot server " + Config.Call_Sign + "...");
             using (var da = DAFactory.Get()) {

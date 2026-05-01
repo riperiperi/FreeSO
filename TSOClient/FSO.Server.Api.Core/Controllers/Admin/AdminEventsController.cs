@@ -9,6 +9,7 @@ using FSO.Server.Database.DA.Tuning;
 using FSO.Server.Protocol.Gluon.Packets;
 using Microsoft.AspNetCore.Cors;
 using Microsoft.AspNetCore.Mvc;
+using Newtonsoft.Json;
 
 // For more information on enabling MVC for empty projects, visit https://go.microsoft.com/fwlink/?LinkID=397860
 
@@ -158,11 +159,35 @@ namespace FSO.Server.Api.Core.Controllers.Admin
         // POST admin/events/push_tuning
         // Broadcasts a TuningChanged packet to all connected lot servers so they re-read
         // fso_tuning from the DB and push updates to all active lots immediately.
+        // Optional JSON body: {"message": "...", "sender_name": "Server"} — when message is
+        // present, also publishes a city-wide chat announcement so every connected client
+        // sees what just changed in their City chat tab.
         [HttpPost("push_tuning")]
         public IActionResult PushTuning()
         {
             var api = Api.INSTANCE;
             api.DemandModerator(Request);
+
+            string announceMessage = null;
+            string announceSender  = "Server";
+
+            if (Request.ContentLength.GetValueOrDefault() > 0)
+            {
+                try
+                {
+                    string body;
+                    using (var reader = new System.IO.StreamReader(Request.Body))
+                        body = reader.ReadToEndAsync().GetAwaiter().GetResult();
+                    if (!string.IsNullOrWhiteSpace(body))
+                    {
+                        dynamic payload = JsonConvert.DeserializeObject<dynamic>(body);
+                        announceMessage = (string)payload?.message;
+                        var sn = (string)payload?.sender_name;
+                        if (!string.IsNullOrWhiteSpace(sn)) announceSender = sn;
+                    }
+                }
+                catch { /* non-fatal — just skip the announcement */ }
+            }
 
             if (api.HostPool == null)
                 return new JsonResult(new { lot_servers_notified = 0, warning = "No host pool available." });
@@ -177,7 +202,20 @@ namespace FSO.Server.Api.Core.Controllers.Admin
                     count++;
                 }
             }
-            return new JsonResult(new { lot_servers_notified = count });
+
+            bool announced = false;
+            if (!string.IsNullOrWhiteSpace(announceMessage) && api.GlobalChatInjectBroadcast != null)
+            {
+                if (announceMessage.Length > 200) announceMessage = announceMessage.Substring(0, 200);
+                api.GlobalChatInjectBroadcast.Publish(JsonConvert.SerializeObject(new
+                {
+                    avatar_name = announceSender,
+                    message = announceMessage
+                }));
+                announced = true;
+            }
+
+            return new JsonResult(new { lot_servers_notified = count, announced });
         }
 
     }

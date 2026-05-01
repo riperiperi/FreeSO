@@ -329,13 +329,24 @@ namespace FSO.Client.UI.Panels
             StringBuilder txt = new StringBuilder();
             bool first = true;
             var channels = Owner.vm.TSOState.ChatChannels;
+            var activeChannel = Owner.ChatPanel?.ActiveChannel ?? 0;
+            var cityActive = activeChannel == UIChatPanel.GLOBAL_CHANNEL_ID;
             foreach (var evt in History)
             {
-                if (evt.Type == VMChatEventType.Message || evt.Type == VMChatEventType.MessageMe)
+                if (cityActive)
                 {
-                    if (evt.ChannelID == 255) evt.Channel = VMTSOChatChannel.CityChannel; // city-wide: always visible
-                    else
+                    // City tab: show ONLY city chat (channel 255) — no lot chat, joins,
+                    // arch logs, generic system messages or anything else mixed in.
+                    if (evt.Type != VMChatEventType.Message && evt.Type != VMChatEventType.MessageMe) continue;
+                    if (evt.ChannelID != UIChatPanel.GLOBAL_CHANNEL_ID) continue;
+                    evt.Channel = VMTSOChatChannel.CityChannel;
+                }
+                else
+                {
+                    if (evt.Type == VMChatEventType.Message || evt.Type == VMChatEventType.MessageMe)
                     {
+                        // City messages never bleed into lot tabs.
+                        if (evt.ChannelID == UIChatPanel.GLOBAL_CHANNEL_ID) continue;
                         //can be filtered out if we're not viewing that channel
                         if ((ShowChannels & (1 << evt.ChannelID)) == 0) continue;
                         if (evt.ChannelID == 7) evt.Channel = VMTSOChatChannel.AdminChannel;

@@ -2,8 +2,8 @@
 using FSO.Server.Database.DA.Utils;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
-using Microsoft.Net.Http.Headers;
 using System;
+using System.Globalization;
 using System.IO;
 using System.Net;
 using System.Xml;
@@ -86,6 +86,9 @@ namespace FSO.Server.Api.Core.Utils
         ///
         /// Returns null if the file doesn't exist (caller should fall back / 404).
         /// </summary>
+        // Headers are read/written as raw strings to avoid a hard load-time dependency on
+        // Microsoft.Net.Http.Headers, which the deployed netcoreapp2.2 runtime doesn't
+        // always ship at the exact patch version the build resolved against.
         public static IActionResult FileWithCache(HttpRequest request, string path, string contentType = "image/png")
         {
             FileInfo info;
@@ -104,27 +107,17 @@ namespace FSO.Server.Api.Core.Utils
             var lastModified = new DateTimeOffset(info.LastWriteTimeUtc).AddTicks(
                 -(info.LastWriteTimeUtc.Ticks % TimeSpan.TicksPerSecond));
             // ETag = mtime + size: stable across reads of the same file, changes on rewrite.
-            var etag = new EntityTagHeaderValue("\"" + info.LastWriteTimeUtc.Ticks.ToString("x")
-                + "-" + info.Length.ToString("x") + "\"");
+            var etag = "\"" + info.LastWriteTimeUtc.Ticks.ToString("x")
+                + "-" + info.Length.ToString("x") + "\"";
 
-            var headers = request.GetTypedHeaders();
-            bool notModified = false;
-            if (headers.IfNoneMatch != null && headers.IfNoneMatch.Count > 0)
-            {
-                foreach (var tag in headers.IfNoneMatch)
-                {
-                    if (tag.Tag == etag.Tag) { notModified = true; break; }
-                }
-            }
-            else if (headers.IfModifiedSince.HasValue && headers.IfModifiedSince.Value >= lastModified)
-            {
-                notModified = true;
-            }
+            bool notModified = MatchesETag(request.Headers["If-None-Match"], etag)
+                || (!request.Headers.ContainsKey("If-None-Match")
+                    && MatchesIfModifiedSince(request.Headers["If-Modified-Since"], lastModified));
 
             var response = request.HttpContext.Response;
-            response.Headers[HeaderNames.LastModified] = lastModified.ToString("R");
-            response.Headers[HeaderNames.ETag] = etag.ToString();
-            response.Headers[HeaderNames.CacheControl] = "public, max-age=300, must-revalidate";
+            response.Headers["Last-Modified"] = lastModified.ToString("R", CultureInfo.InvariantCulture);
+            response.Headers["ETag"] = etag;
+            response.Headers["Cache-Control"] = "public, max-age=300, must-revalidate";
 
             if (notModified)
             {
@@ -139,6 +132,34 @@ namespace FSO.Server.Api.Core.Utils
             {
                 return null;
             }
+        }
+
+        // Accepts the literal "*" wildcard or any comma-separated ETag matching ours.
+        // Tolerates the optional weak-validator prefix (W/) by stripping it before compare.
+        private static bool MatchesETag(Microsoft.Extensions.Primitives.StringValues ifNoneMatch, string etag)
+        {
+            if (ifNoneMatch.Count == 0) return false;
+            foreach (var raw in ifNoneMatch)
+            {
+                if (string.IsNullOrEmpty(raw)) continue;
+                foreach (var part in raw.Split(','))
+                {
+                    var trimmed = part.Trim();
+                    if (trimmed == "*") return true;
+                    if (trimmed.StartsWith("W/", StringComparison.Ordinal)) trimmed = trimmed.Substring(2);
+                    if (trimmed == etag) return true;
+                }
+            }
+            return false;
+        }
+
+        private static bool MatchesIfModifiedSince(Microsoft.Extensions.Primitives.StringValues ifModifiedSince, DateTimeOffset lastModified)
+        {
+            if (ifModifiedSince.Count == 0) return false;
+            if (!DateTimeOffset.TryParse(ifModifiedSince[0], CultureInfo.InvariantCulture,
+                    DateTimeStyles.AssumeUniversal | DateTimeStyles.AdjustToUniversal, out var since))
+                return false;
+            return since >= lastModified;
         }
     }
 }
