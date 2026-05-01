@@ -49,7 +49,9 @@ namespace FSO.Common.Rendering.Emoji
 
         // Bump if the on-disk format/atlas-layout changes — invalidates cached PNGs.
         // v2: switched origin from Twemoji CDN to the FreeSO server atlas endpoint.
-        private const string DiskCacheVersion = "2";
+        // v3: emojis.json regenerated with Discord-aligned shortcodes (gemoji set);
+        //     atlas slot ordering shifted, so the cached PNG is no longer valid.
+        private const string DiskCacheVersion = "3";
         private const string TwemojiVersion = "14.0.2";
         private const long SaveIntervalMs = 30000;
         // Throttle parallel custom-emoji fetches — bulk standard set comes in one

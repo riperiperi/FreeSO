@@ -51,7 +51,7 @@ namespace FSO.Common.Rendering.Emoji
             { "will", "thinking" },
             { "my", "relieved: :point_left" },
             { "all", "rainbow_flag" },
-            { "would", "tree" },
+            { "would", "deciduous_tree" },
             { "so", "woman_shrugging" },
             { "out", "outbox_tray" },
             { "if", "thinking" },
