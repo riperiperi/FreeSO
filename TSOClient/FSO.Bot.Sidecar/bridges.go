@@ -32,6 +32,11 @@ type Bridges struct {
 	// habWatcher observes perception events to track I0-7 habitation flags.
 	// Nil disables habitation tracking (e.g. --no-bot mode).
 	habWatcher *HabitationWatcher
+
+	// augmentor enriches perception ticks with sidecar-side fields before
+	// forwarding to the campfire (freesoexperiment-ef1: home_lot, civic
+	// affordances, mayor_status). Nil disables augmentation (e.g. --no-bot mode).
+	augmentor *PerceptionAugmentor
 }
 
 // NewBridges constructs a Bridges value. Call Run(ctx) once to start the
@@ -39,13 +44,13 @@ type Bridges struct {
 // ipc may be nil in tests that don't exercise the command channel.
 // botCmds may be nil when BotCmdPump is not in use (e.g. --no-bot mode).
 func NewBridges(cf *Campfire, bot *BotProcess, ipc *IPC) *Bridges {
-	return &Bridges{cf: cf, bot: bot, ipc: ipc, habWatcher: NewHabitationWatcher()}
+	return &Bridges{cf: cf, bot: bot, ipc: ipc, habWatcher: NewHabitationWatcher(), augmentor: NewPerceptionAugmentor()}
 }
 
 // NewBridgesWithBotCmd constructs a Bridges value with the BotCmdPump wired.
 // Used by the main supervisor loop when probe-lot / bot-exit-request are in use.
 func NewBridgesWithBotCmd(cf *Campfire, bot *BotProcess, ipc *IPC, botCmds *BotCmdPump) *Bridges {
-	return &Bridges{cf: cf, bot: bot, ipc: ipc, botCmds: botCmds, habWatcher: NewHabitationWatcher()}
+	return &Bridges{cf: cf, bot: bot, ipc: ipc, botCmds: botCmds, habWatcher: NewHabitationWatcher(), augmentor: NewPerceptionAugmentor()}
 }
 
 // eventEnvelope is the loose shape we parse from bot stdout. We keep it a map
@@ -146,6 +151,16 @@ func (b *Bridges) handle(line []byte) {
 	// the kind field and returns immediately — no overhead.
 	if env.Kind == "perception" && b.habWatcher != nil {
 		b.habWatcher.ObservePerception(line)
+	}
+
+	// Perception augmentor: enrich perception ticks with sidecar-side fields
+	// (home_lot, civic affordances, mayor_status) before forwarding to the
+	// campfire. The habitation watcher runs BEFORE augmentation so it sees the
+	// raw line and can update owned-lots.json; the augmentor then reads the
+	// freshly-updated is_habitable when it builds home_lot. Order matters.
+	// (freesoexperiment-ef1)
+	if env.Kind == "perception" && b.augmentor != nil {
+		line = b.augmentor.AugmentPerception(line)
 	}
 
 	if err := b.cf.BroadcastEvent(tag, line, b.simID); err != nil {
