@@ -887,6 +887,24 @@ namespace FSO.Server.Servers.Lot.Domain
             });
         }
 
+        /// <summary>
+        /// Push a new SkillLocks pool size to a specific avatar IF they are on this
+        /// lot. No-op otherwise. Called by LotHost broadcasting to every hosted lot
+        /// after the API raises the avatar's skilllock_bonus — only the one lot the
+        /// avatar is on does anything; all others early-return on the persist lookup.
+        /// </summary>
+        public void UpdateAvatarSkillLockLimit(uint avatar_id, short new_limit)
+        {
+            if (Lot == null || JobLot) return;
+            var avatar = Lot.GetAvatarByPersist(avatar_id);
+            if (avatar == null) return; // not on this lot
+            Lot.ForwardCommand(new VMNetSetAvatarSkillLocksCmd()
+            {
+                PersistID = avatar_id,
+                NewLimit = new_limit
+            });
+        }
+
         private void ResyncTime()
         {
             var time = DateTime.UtcNow;

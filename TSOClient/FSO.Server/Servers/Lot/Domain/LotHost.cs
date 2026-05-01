@@ -244,6 +244,28 @@ namespace FSO.Server.Servers.Lot.Domain
             return true;
         }
 
+        /// <summary>
+        /// Apply a new SkillLocks pool size to a single avatar in whichever hosted lot
+        /// they happen to be on. Walks every hosted lot and dispatches the update to
+        /// each one's container — the LotContainer ignores it if the avatar isn't on
+        /// that particular lot. Cheap enough at typical TSO scale; the alternative
+        /// (city-side avatar→lot lookup over Gluon) adds round-trip latency for a query
+        /// the lot already knows the answer to. DB was already updated by the API.
+        /// </summary>
+        public void UpdateAvatarSkillLockLimit(uint avatar_id, short new_limit)
+        {
+            List<LotHostEntry> lots;
+            lock (Lots) lots = Lots.Values.ToList();
+            foreach (var lot in lots)
+            {
+                var container = lot.Container;
+                lot.InBackground(() =>
+                {
+                    container?.UpdateAvatarSkillLockLimit(avatar_id, new_limit);
+                });
+            }
+        }
+
         private LotHostEntry GetLot(IVoltronSession session)
         {
             var lotId = (int?)session.GetAttribute("currentLot");

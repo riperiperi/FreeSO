@@ -1,6 +1,9 @@
 using System;
 using System.Net;
+using FSO.Server.Common;
 using FSO.Server.Database.DA.Avatars;
+using FSO.Server.Database.DA.Hosts;
+using FSO.Server.Protocol.Gluon.Packets;
 using Microsoft.AspNetCore.Cors;
 using Microsoft.AspNetCore.Mvc;
 
@@ -67,6 +70,7 @@ namespace FSO.Server.Api.Core.Controllers.Admin
             if (target > BonusMax) target = BonusMax;
 
             DbSkillLockBonusPurchase result;
+            uint avatarAgeDays;
             using (var da = api.DAFactory.Get())
             {
                 var avatar = da.Avatars.Get(avatarId);
@@ -75,6 +79,11 @@ namespace FSO.Server.Api.Core.Controllers.Admin
                 int fromStep = (int)avatar.skilllock_bonus;
                 int cost = CumulativeCost(target) - CumulativeCost(fromStep);
                 if (cost < 0) cost = 0;
+
+                // Capture age now so we can compute the new SkillLocks limit for the live
+                // broadcast. Matches the calc in LotContainer.BuildAvatarState (line 1422).
+                var now = Epoch.Now;
+                avatarAgeDays = (uint)((now - avatar.date) / ((long)60 * 60 * 24));
 
                 result = da.Avatars.PurchaseSkillLockBonus(avatarId, (uint)target, cost);
             }
@@ -94,6 +103,31 @@ namespace FSO.Server.Api.Core.Controllers.Admin
                     return StatusCode(500, new { error = "db_error" });
             }
 
+            // Live update: tell every lot server the new SkillLocks pool size for this
+            // avatar. Each server walks its hosted lots; the one (zero or one) that has
+            // the avatar pushes the change into the live VM via VMNetSetAvatarSkillLocksCmd.
+            // If the avatar isn't on a lot anywhere, the next BuildAvatarState (on next
+            // lot join) reads the new value from the DB.
+            int notified = 0;
+            if (api.HostPool != null)
+            {
+                int newLimit = 20 + (int)(avatarAgeDays / 7) + (int)result.NewBonus;
+                if (newLimit > short.MaxValue) newLimit = short.MaxValue;
+                var packet = new SetAvatarSkillLockLimit
+                {
+                    AvatarId = avatarId,
+                    NewLimit = (short)newLimit,
+                };
+                foreach (var host in api.HostPool.GetByRole(DbHostRole.lot))
+                {
+                    if (host.Connected)
+                    {
+                        host.Write(packet);
+                        notified++;
+                    }
+                }
+            }
+
             return new JsonResult(new
             {
                 ok = true,
@@ -101,6 +135,7 @@ namespace FSO.Server.Api.Core.Controllers.Admin
                 new_bonus = result.NewBonus,
                 cost_charged = result.CostCharged,
                 new_budget = result.NewBudget,
+                lot_servers_notified = notified,
             });
         }
     }

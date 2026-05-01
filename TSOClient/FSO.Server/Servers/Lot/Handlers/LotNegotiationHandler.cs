@@ -86,5 +86,14 @@ namespace FSO.Server.Servers.Lot.Handlers
             // returns false in that case. The DB write was already done by the API.
             Lots.UpdateObjectLimitBonus((int)request.LotId, request.TargetBonus);
         }
+
+        public void Handle(IGluonSession session, SetAvatarSkillLockLimit request)
+        {
+            // Walks every hosted lot and updates the matching avatar's SkillLocks. The
+            // ones not hosting that avatar early-return; the one that is hosting them
+            // forwards a server-only VM command to bring the live PersonData[70] in
+            // sync. DB was already updated by the API.
+            Lots.UpdateAvatarSkillLockLimit(request.AvatarId, request.NewLimit);
+        }
     }
 }

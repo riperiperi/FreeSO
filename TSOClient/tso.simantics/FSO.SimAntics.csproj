@@ -289,6 +289,7 @@
     <Compile Include="NetPlay\Model\Commands\VMNetChangeLotSizeCmd.cs" />
     <Compile Include="NetPlay\Model\Commands\VMNetChangeObjectLimitCmd.cs" />
     <Compile Include="NetPlay\Model\Commands\VMNetSetObjectLimitBonusCmd.cs" />
+    <Compile Include="NetPlay\Model\Commands\VMNetSetAvatarSkillLocksCmd.cs" />
     <Compile Include="NetPlay\Model\Commands\VMNetChatEditChanCmd.cs" />
     <Compile Include="NetPlay\Model\Commands\VMNetChatParamCmd.cs" />
     <Compile Include="NetPlay\Model\Commands\VMNetDirectControlCommand.cs" />

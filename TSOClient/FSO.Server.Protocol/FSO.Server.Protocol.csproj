@@ -155,6 +155,7 @@
     <Compile Include="Gluon\Packets\RequestTask.cs" />
     <Compile Include="Gluon\Packets\RequestTaskResponse.cs" />
     <Compile Include="Gluon\Packets\SendCityMail.cs" />
+    <Compile Include="Gluon\Packets\SetAvatarSkillLockLimit.cs" />
     <Compile Include="Gluon\Packets\SetLotObjectLimitBonus.cs" />
     <Compile Include="Gluon\Packets\ShardShutdownCompleteResponse.cs" />
     <Compile Include="Gluon\Packets\ShardShutdownRequest.cs" />

@@ -25,6 +25,7 @@
         InjectLotChat,
 
         SetLotObjectLimitBonus,
+        SetAvatarSkillLockLimit,
 
         Unknown
     }
@@ -71,6 +72,8 @@
                     return GluonPacketType.InjectLotChat;
                 case 0x0018:
                     return GluonPacketType.SetLotObjectLimitBonus;
+                case 0x0019:
+                    return GluonPacketType.SetAvatarSkillLockLimit;
                 default:
                     return GluonPacketType.Unknown;
             }
@@ -116,6 +119,8 @@
                     return 0x0017;
                 case GluonPacketType.SetLotObjectLimitBonus:
                     return 0x0018;
+                case GluonPacketType.SetAvatarSkillLockLimit:
+                    return 0x0019;
             }
 
             return 0xFFFF;

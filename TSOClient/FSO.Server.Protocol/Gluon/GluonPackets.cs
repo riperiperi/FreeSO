@@ -25,7 +25,8 @@ namespace FSO.Server.Protocol.Gluon
             typeof(SendCityMail),
             typeof(LotChatNotify),
             typeof(InjectLotChatPacket),
-            typeof(SetLotObjectLimitBonus)
+            typeof(SetLotObjectLimitBonus),
+            typeof(SetAvatarSkillLockLimit)
         };
 
         static GluonPackets()
