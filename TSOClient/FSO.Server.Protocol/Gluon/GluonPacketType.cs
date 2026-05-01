@@ -24,6 +24,8 @@
         LotChatNotify,
         InjectLotChat,
 
+        SetLotObjectLimitBonus,
+
         Unknown
     }
 
@@ -67,6 +69,8 @@
                     return GluonPacketType.LotChatNotify;
                 case 0x0017:
                     return GluonPacketType.InjectLotChat;
+                case 0x0018:
+                    return GluonPacketType.SetLotObjectLimitBonus;
                 default:
                     return GluonPacketType.Unknown;
             }
@@ -110,6 +114,8 @@
                     return 0x0016;
                 case GluonPacketType.InjectLotChat:
                     return 0x0017;
+                case GluonPacketType.SetLotObjectLimitBonus:
+                    return 0x0018;
             }
 
             return 0xFFFF;
