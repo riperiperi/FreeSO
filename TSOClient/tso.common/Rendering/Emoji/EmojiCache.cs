@@ -302,7 +302,11 @@ namespace FSO.Common.Rendering.Emoji
                         return;
                     }
 
-                    GameThread.NextUpdate(_ =>
+                    // Renamed to `state` (instead of the conventional `_`) because
+                    // the enclosing ThreadPool.QueueUserWorkItem lambda already
+                    // captures `_` as its own parameter, and newer C# rejects the
+                    // nested shadow under discard-pattern rules.
+                    GameThread.NextUpdate(state =>
                     {
                         try
                         {

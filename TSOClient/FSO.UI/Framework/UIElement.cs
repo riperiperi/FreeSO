@@ -12,6 +12,8 @@ using FSO.Common.Rendering.Framework.Model;
 using FSO.Common.Rendering.Framework.IO;
 using FSO.Common.Content;
 using FSO.Common;
+// GlobalSettings (FSO.Client) is visible without an extra using because this
+// file's namespace is FSO.Client.UI.Framework — a child of FSO.Client.
 
 namespace FSO.Client.UI.Framework
 {
@@ -548,6 +550,26 @@ namespace FSO.Client.UI.Framework
         public virtual void GameResized()
         {
 
+        }
+
+        /// <summary>
+        /// Returns a top-left position constrained so an element of <paramref name="size"/>
+        /// stays fully inside the current viewport (<see cref="GlobalSettings.Default.GraphicsWidth"/>
+        /// /Height, in DPI-normalized units). Use after a window resize or when restoring a
+        /// persisted position so floating UI doesn't end up off-screen.
+        ///
+        /// If the element is larger than the viewport in either axis, the top-left corner
+        /// is preferred (so the close button etc. stays reachable).
+        /// </summary>
+        public static Vector2 ClampToViewport(Vector2 position, Vector2 size)
+        {
+            var w = GlobalSettings.Default.GraphicsWidth;
+            var h = GlobalSettings.Default.GraphicsHeight;
+            var maxX = Math.Max(0, w - (int)size.X);
+            var maxY = Math.Max(0, h - (int)size.Y);
+            return new Vector2(
+                MathHelper.Clamp(position.X, 0, maxX),
+                MathHelper.Clamp(position.Y, 0, maxY));
         }
 
         /// <summary>

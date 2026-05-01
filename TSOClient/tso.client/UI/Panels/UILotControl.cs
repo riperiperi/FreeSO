@@ -227,6 +227,11 @@ namespace FSO.Client.UI.Panels
             MouseEvt.Region.Width = GlobalSettings.Default.GraphicsWidth;
             MouseEvt.Region.Height = GlobalSettings.Default.GraphicsHeight;
 
+            // If the pie menu happens to be open during the resize, re-fit it
+            // into the new viewport — without this it can be left dangling off
+            // the right/bottom of a shrunken window.
+            if (PieMenu != null) ClampPieMenuOnScreen(PieMenu);
+
             SetupQuery();
         }
 
@@ -526,6 +531,7 @@ namespace FSO.Client.UI.Panels
                                 this.Add(PieMenu);
                                 PieMenu.X = state.MouseState.X / FSOEnvironment.DPIScaleFactor;
                                 PieMenu.Y = state.MouseState.Y / FSOEnvironment.DPIScaleFactor;
+                                ClampPieMenuOnScreen(PieMenu);
                                 PieMenu.UpdateHeadPosition(state.MouseState.X, state.MouseState.Y);
                             } else
                             {
@@ -562,15 +568,41 @@ namespace FSO.Client.UI.Panels
             TipIsError = true;
         }
 
-        public void ClosePie() 
+        public void ClosePie()
         {
-            if (PieMenu != null) 
+            if (PieMenu != null)
             {
                 PieMenu.RemoveSimScene();
                 Queue.PieMenuClickPos = PieMenu.Position;
                 this.Remove(PieMenu);
                 PieMenu = null;
             }
+        }
+
+        // Shifts a freshly-positioned pie menu so its full content rect stays inside
+        // the viewport. Without this, clicking near a screen edge puts half (or more)
+        // of the menu off-screen — overflow stacks for >8 interactions made it worse.
+        // The head pointer / button highlight logic doesn't need to change because
+        // everything inside the menu is positioned relative to the menu's own X/Y.
+        private void ClampPieMenuOnScreen(UIPieMenu menu)
+        {
+            var bounds = menu.GetContentBounds();
+            var screenW = GlobalSettings.Default.GraphicsWidth;
+            var screenH = GlobalSettings.Default.GraphicsHeight;
+
+            // Push left/up first if we extend past the bottom-right; then push
+            // right/down if we now (or already) extend past the top-left. Order
+            // matters when the menu is wider/taller than the screen — in that
+            // (unlikely) case we keep the top-left corner visible.
+            var rightOver = (menu.X + bounds.Right) - screenW;
+            if (rightOver > 0) menu.X -= rightOver;
+            var leftUnder = -(menu.X + bounds.Left);
+            if (leftUnder > 0) menu.X += leftUnder;
+
+            var bottomOver = (menu.Y + bounds.Bottom) - screenH;
+            if (bottomOver > 0) menu.Y -= bottomOver;
+            var topUnder = -(menu.Y + bounds.Top);
+            if (topUnder > 0) menu.Y += topUnder;
         }
 
         public override Rectangle GetBounds()

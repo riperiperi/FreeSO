@@ -146,12 +146,21 @@ namespace FSO.Client.UI.Controls
             {
                 /** Drag the dialog box **/
                 var position = Parent.GetMousePosition(state.MouseState);
-                
+
                 if((position.X - m_dragOffsetX) < (GlobalSettings.Default.GraphicsWidth - m_DragTolerance) && (position.X - m_dragOffsetX) > 0)
                     this.X = position.X - m_dragOffsetX;
                 if ((position.Y - m_dragOffsetY) < (GlobalSettings.Default.GraphicsHeight - m_DragTolerance) && (position.Y - m_dragOffsetY) > 0)
                     this.Y = position.Y - m_dragOffsetY;
             }
+        }
+
+        public override void GameResized()
+        {
+            base.GameResized();
+            // After the viewport changes, tug the dialog back inside if the resize
+            // would have stranded it off-screen. Uses the dialog's actual bounds so
+            // a tall/wide dialog still fits as much as the viewport allows.
+            this.Position = ClampToViewport(this.Position, new Vector2(m_Bounds.Width, m_Bounds.Height));
         }
 
         public override void Draw(UISpriteBatch batch)

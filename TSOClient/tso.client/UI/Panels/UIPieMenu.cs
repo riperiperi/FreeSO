@@ -178,6 +178,37 @@ namespace FSO.Client.UI.Panels
             HeadCamera.ProjectionOrigin = new Vector2(100, 100);
         }
 
+        /// <summary>
+        /// Returns the menu's on-screen footprint relative to its anchor (X, Y), in
+        /// the same DPI-normalized units as <c>GlobalSettings.Default.GraphicsWidth/Height</c>.
+        /// Combines the head/bg disc (always ±100 in local space) with the radial
+        /// button layout (which can extend much further on overflow stacks). Used by
+        /// the caller to clamp the menu inside the viewport when the user clicks
+        /// near a screen edge.
+        /// </summary>
+        public Rectangle GetContentBounds()
+        {
+            // Head/bg disc — always present, fills (-100, -100) to (100, 100).
+            float minX = -100, minY = -100, maxX = 100, maxY = 100;
+            foreach (var btn in m_PieButtons)
+            {
+                if (btn.X < minX) minX = btn.X;
+                if (btn.Y < minY) minY = btn.Y;
+                var r = btn.X + btn.Width;
+                var b = btn.Y + btn.Size.Y;
+                if (r > maxX) maxX = r;
+                if (b > maxY) maxY = b;
+            }
+            // Buttons + bg are positioned in pre-scale local coords; multiply by
+            // the menu's own ScaleX/Y to get the rendered footprint. (We deliberately
+            // exclude DPIScaleFactor — the caller works in DPI-normalized units.)
+            return new Rectangle(
+                (int)(minX * ScaleX),
+                (int)(minY * ScaleY),
+                (int)((maxX - minX) * ScaleX),
+                (int)((maxY - minY) * ScaleY));
+        }
+
         public override void Update(FSO.Common.Rendering.Framework.Model.UpdateState state)
         {
             base.Update(state);

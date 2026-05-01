@@ -102,7 +102,12 @@ namespace FSO.Client.UI.Panels
             InvalidAreas.Add(new Rectangle(-100000, GlobalSettings.Default.GraphicsHeight - 230, 100230, 100230)); //ucp
 
             HistoryDialog = new UIChatDialog(owner);
-            HistoryDialog.Position = new Vector2(GlobalSettings.Default.ChatLocationX, GlobalSettings.Default.ChatLocationY);
+            // Clamp the restored position to the current viewport — a persisted
+            // X/Y from a larger window/monitor would otherwise spawn the dialog
+            // partly or fully off-screen on a smaller screen.
+            HistoryDialog.Position = ClampToViewport(
+                new Vector2(GlobalSettings.Default.ChatLocationX, GlobalSettings.Default.ChatLocationY),
+                HistoryDialog.Size);
             HistoryDialog.Visible = true;
             HistoryDialog.Opacity = 0.8f;
             HistoryDialog.OnSendMessage += SendMessage;
