@@ -376,7 +376,12 @@ namespace FSO.Server.DataService.Providers
                 AvatarSkills_LockLv_Mechanical = dbAvatar.lock_mechanical
             };
             result.Avatar_PrivacyMode = dbAvatar.privacy_mode;
-            result.Avatar_SkillsLockPoints = (ushort)(20 + result.Avatar_Age/7);
+            // Pool size = 20 base + age progression + portal-purchased bonus.
+            // Capped at ushort.MaxValue (~65k) defensively; in practice the portal caps
+            // skilllock_bonus at 100 so the sum can never exceed ~140 anyway.
+            var pool = 20 + (int)(result.Avatar_Age / 7) + (int)dbAvatar.skilllock_bonus;
+            if (pool > ushort.MaxValue) pool = ushort.MaxValue;
+            result.Avatar_SkillsLockPoints = (ushort)pool;
             result.Avatar_ModerationLevel = dbAvatar.moderation_level;
             result.Avatar_MayorNhood = (uint)(dbAvatar.mayor_nhood ?? 0);
             result.Avatar_Thumbnail = new cTSOGenericData(new byte[0]);

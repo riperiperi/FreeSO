@@ -26,6 +26,8 @@ namespace FSO.Server.Database.DA.Avatars
 
         int GetOtherLocks(uint avatar_id, string except);
 
+        DbSkillLockBonusPurchase PurchaseSkillLockBonus(uint avatar_id, uint target_bonus, int cost);
+
         int GetBudget(uint avatar_id);
         DbTransactionResult Transaction(uint source_id, uint avatar_id, int amount, short reason);
         DbTransactionResult Transaction(uint source_id, uint avatar_id, int amount, short reason, Func<bool> transactionInject);

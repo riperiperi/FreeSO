@@ -193,6 +193,65 @@ namespace FSO.Server.Database.DA.Avatars
             "lock_creativity"
         };
 
+        /// <summary>
+        /// Atomic purchase: raise the avatar's skilllock_bonus to <paramref name="target_bonus"/>
+        /// and debit <paramref name="cost"/> from their simoleon budget. Both rows are
+        /// SELECT ... FOR UPDATE-locked so concurrent purchases can't double-spend or
+        /// race the bonus value. Caller computes the cost from the canonical pricing
+        /// curve and just hands the precomputed value here.
+        /// </summary>
+        public DbSkillLockBonusPurchase PurchaseSkillLockBonus(uint avatar_id, uint target_bonus, int cost)
+        {
+            var result = new DbSkillLockBonusPurchase();
+            using (var t = Context.Connection.BeginTransaction())
+            {
+                try
+                {
+                    var row = Context.Connection.Query(
+                        "SELECT budget, skilllock_bonus FROM fso_avatars WHERE avatar_id = @id FOR UPDATE",
+                        new { id = avatar_id }, transaction: t).FirstOrDefault();
+                    if (row == null)
+                    {
+                        result.Status = SkillLockBonusPurchaseStatus.AvatarNotFound;
+                        t.Rollback();
+                        return result;
+                    }
+                    int budget = (int)row.budget;
+                    uint currentBonus = (uint)row.skilllock_bonus;
+                    if (target_bonus <= currentBonus)
+                    {
+                        result.Status = SkillLockBonusPurchaseStatus.NotAnUpgrade;
+                        t.Rollback();
+                        return result;
+                    }
+                    if (budget < cost)
+                    {
+                        result.Status = SkillLockBonusPurchaseStatus.InsufficientFunds;
+                        t.Rollback();
+                        return result;
+                    }
+
+                    Context.Connection.Execute(
+                        "UPDATE fso_avatars SET budget = budget - @cost, skilllock_bonus = @bonus "
+                        + "WHERE avatar_id = @id",
+                        new { id = avatar_id, cost = cost, bonus = target_bonus }, transaction: t);
+
+                    t.Commit();
+                    result.Status = SkillLockBonusPurchaseStatus.Success;
+                    result.NewBudget = budget - cost;
+                    result.NewBonus = target_bonus;
+                    result.CostCharged = cost;
+                    return result;
+                }
+                catch
+                {
+                    try { t.Rollback(); } catch { }
+                    result.Status = SkillLockBonusPurchaseStatus.DbError;
+                    return result;
+                }
+            }
+        }
+
         public int GetOtherLocks(uint avatar_id, string except)
         {
             string columns = "(";

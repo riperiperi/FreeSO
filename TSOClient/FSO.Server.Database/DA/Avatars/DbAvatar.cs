@@ -27,6 +27,9 @@
         public ushort lock_logic { get; set; }
         public ushort lock_body { get; set; }
         public ushort lock_creativity { get; set; }
+        // Purchasable bonus added on top of the age-derived skill lock pool.
+        // Avatar_SkillsLockPoints = 20 + Avatar_Age / 7 + skilllock_bonus.
+        public uint skilllock_bonus { get; set; }
         //skills
         public ushort skill_mechanical { get; set; }
         public ushort skill_cooking { get; set; }
