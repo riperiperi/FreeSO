@@ -212,10 +212,12 @@ func main() {
 		}
 		log.Printf("convention handlers: %d avatar-family ops serving", avatarServers)
 
-		// Navigation family (freesoexperiment-a61): go-home (already-home only), find-avatar.
-		// visit-lot ships with deferred:true marker — cross-lot transition needs -ca0.
+		// Navigation family (freesoexperiment-a61 / freesoexperiment-e66):
+		// go-home (already-home only), visit-lot (name-primary + hex fallback,
+		// real cross-lot transition via bot-cmd:probe-lot + bot-cmd:exit),
+		// find-avatar.
 		// find-lot DROPPED per verb-catalog.md (subsumed by visit-lot).
-		navServers, err := RegisterNavigationHandlers(ctx, cf, ipc)
+		navServers, err := RegisterNavigationHandlers(ctx, cf, ipc, botCmds, memStore)
 		if err != nil {
 			log.Fatalf("register navigation handlers: %v", err)
 		}

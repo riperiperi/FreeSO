@@ -10,6 +10,7 @@ import (
 	"context"
 	"encoding/json"
 	"fmt"
+	"strconv"
 	"strings"
 
 	"github.com/campfire-net/campfire/pkg/convention"
@@ -59,7 +60,7 @@ func RegisterNamingHandlers(ctx context.Context, cf *Campfire, store *MemoryStor
 	return started, nil
 }
 
-// nameHandler: binds <as> → one of target_object_id | target_sim_id | location.
+// nameHandler: binds <as> → one of target_object_id | target_sim_id | location | lot_location.
 //
 // Args:
 //
@@ -67,11 +68,13 @@ func RegisterNamingHandlers(ctx context.Context, cf *Campfire, store *MemoryStor
 //	                                  on lookup.
 //	target_object_id (int)          — ObjectID to bind the name to
 //	target_sim_id (int)             — Sim persist id to bind
-//	location (json {x,y,level})     — tile coords to bind
+//	location (json {x,y,level})     — tile coords to bind (a spot on a lot)
+//	lot_location (string)           — lot location code (hex "0x..." or decimal uint32)
+//	                                  to bind; used by visit-lot --my_name resolution.
 //	note (string, optional)         — free-form note stored alongside
 //
-// Exactly one of target_object_id, target_sim_id, or location must be present.
-// A name is overwritten if it already exists.
+// Exactly one of target_object_id, target_sim_id, location, or lot_location
+// must be present. A name is overwritten if it already exists.
 func nameHandler(store *MemoryStore) convention.HandlerFunc {
 	return func(ctx context.Context, req *convention.Request) (*convention.Response, error) {
 		as, _ := req.Args["as"].(string)
@@ -108,11 +111,20 @@ func nameHandler(store *MemoryStore) convention.HandlerFunc {
 			entry["level"] = loc.Level
 			count++
 		}
+		if llRaw, ok := req.Args["lot_location"]; ok && llRaw != nil {
+			ll, err := coerceLotLocation(llRaw)
+			if err != nil {
+				return errResp("name", "lot_location: "+err.Error())
+			}
+			entry["kind"] = "lot"
+			entry["lot_location"] = ll
+			count++
+		}
 		if count == 0 {
-			return errResp("name", "one of target_object_id, target_sim_id, or location is required")
+			return errResp("name", "one of target_object_id, target_sim_id, location, or lot_location is required")
 		}
 		if count > 1 {
-			return errResp("name", "only one of target_object_id, target_sim_id, or location may be set")
+			return errResp("name", "only one of target_object_id, target_sim_id, location, or lot_location may be set")
 		}
 
 		encoded, err := json.Marshal(entry)
@@ -274,4 +286,61 @@ func errResp(op, msg string) (*convention.Response, error) {
 	return &convention.Response{
 		Payload: map[string]any{"ok": false, "error": msg},
 	}, nil
+}
+
+// coerceLotLocation accepts a lot location code as a hex string ("0x..."),
+// decimal uint string, or a numeric value (float64/int64/etc.) and normalises
+// it to a canonical decimal uint32 string. The supervisor loop stores and reads
+// this value as a plain decimal string in the next-lot file; FSO_LOT_LOCATION
+// also accepts decimal. Hex-with-0x-prefix is accepted for agent ergonomics
+// (agents read lot_location from perception as hex-formatted strings).
+//
+// Returns an error if the value cannot be parsed or is zero (a zero location
+// code is never a valid lot — it means "not on a lot").
+func coerceLotLocation(raw any) (string, error) {
+	var u uint64
+	switch v := raw.(type) {
+	case string:
+		s := strings.TrimSpace(v)
+		if strings.HasPrefix(s, "0x") || strings.HasPrefix(s, "0X") {
+			n, err := strconv.ParseUint(s[2:], 16, 32)
+			if err != nil {
+				return "", fmt.Errorf("hex parse %q: %w", s, err)
+			}
+			u = n
+		} else {
+			n, err := strconv.ParseUint(s, 10, 32)
+			if err != nil {
+				return "", fmt.Errorf("decimal parse %q: %w", s, err)
+			}
+			u = n
+		}
+	case float64:
+		if v < 0 || v > 0xFFFFFFFF {
+			return "", fmt.Errorf("lot_location %v out of uint32 range", v)
+		}
+		u = uint64(v)
+	case int64:
+		if v < 0 {
+			return "", fmt.Errorf("lot_location %v must be non-negative", v)
+		}
+		u = uint64(v)
+	case int:
+		if v < 0 {
+			return "", fmt.Errorf("lot_location %v must be non-negative", v)
+		}
+		u = uint64(v)
+	case json.Number:
+		n, err := strconv.ParseUint(v.String(), 10, 32)
+		if err != nil {
+			return "", fmt.Errorf("json.Number parse %q: %w", v.String(), err)
+		}
+		u = n
+	default:
+		return "", fmt.Errorf("unexpected type %T for lot_location", raw)
+	}
+	if u == 0 {
+		return "", fmt.Errorf("lot_location 0 is not a valid lot (means 'not on a lot')")
+	}
+	return strconv.FormatUint(u, 10), nil
 }

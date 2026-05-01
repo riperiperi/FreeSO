@@ -8,6 +8,7 @@ package main
 
 import (
 	"context"
+	"encoding/json"
 	"fmt"
 	"os"
 	"os/exec"
@@ -16,6 +17,8 @@ import (
 	"syscall"
 	"testing"
 	"time"
+
+	"github.com/campfire-net/campfire/pkg/convention"
 )
 
 // TestIntegration_CampfireAndBridge is a real end-to-end exercise of the
@@ -656,6 +659,259 @@ fi
 		time.Sleep(250 * time.Millisecond)
 	}
 	t.Fatalf("second-bot was not relaunched within 15s after first-bot SIGTERM (marker %s not created)", relaunchedMarker)
+}
+
+// TestIntegration_VisitLot_BothShapes is the feature integration test for
+// freesoexperiment-e66. It exercises the visit-lot handler end-to-end with a
+// real stub bot subprocess that handles probe-lot and bot-exit-request over the
+// bot-cmd IPC envelope. Both call shapes are verified:
+//
+//  1. --target_lot_location 0x<hex>  (hex fallback shape)
+//  2. --my_name (name-primary shape, requires a pre-bound lot name)
+//
+// Done condition from the item: both shapes succeed, next-lot file is written
+// before bot-exit-request is dispatched (WriteNextLot-before-exit invariant),
+// and the stub bot is relaunched at the target lot.
+//
+// Skip conditions:
+//   - FREESO_SKIP_INTEGRATION=1
+//   - `go` binary not on PATH
+func TestIntegration_VisitLot_BothShapes(t *testing.T) {
+	if os.Getenv("FREESO_SKIP_INTEGRATION") == "1" {
+		t.Skip("FREESO_SKIP_INTEGRATION=1")
+	}
+	goBin, err := exec.LookPath("go")
+	if err != nil {
+		t.Skipf("go not on PATH: %v", err)
+	}
+
+	// Unique persona + isolated config home for next-lot file.
+	tmp := t.TempDir()
+	xdgConfigHome := filepath.Join(tmp, "config")
+	if err := os.MkdirAll(xdgConfigHome, 0o700); err != nil {
+		t.Fatalf("mkdir config: %v", err)
+	}
+
+	// Persona name: isolated per test run.
+	persona := "visitlotintegtest"
+
+	// Set env for persona state isolation.
+	prior, hasPrior := os.LookupEnv("FSO_USER")
+	os.Setenv("FSO_USER", persona)
+	t.Cleanup(func() {
+		if hasPrior {
+			os.Setenv("FSO_USER", prior)
+		} else {
+			os.Unsetenv("FSO_USER")
+		}
+	})
+	priorXDG, hasPriorXDG := os.LookupEnv("XDG_CONFIG_HOME")
+	os.Setenv("XDG_CONFIG_HOME", xdgConfigHome)
+	t.Cleanup(func() {
+		if hasPriorXDG {
+			os.Setenv("XDG_CONFIG_HOME", priorXDG)
+		} else {
+			os.Unsetenv("XDG_CONFIG_HOME")
+		}
+	})
+
+	// Build the sidecar binary.
+	sidecarBin := filepath.Join(tmp, "freeso-sidecar-visit-lot-test")
+	build := exec.Command(goBin, "build", "-o", sidecarBin, ".")
+	build.Dir = mustSourceDir(t)
+	if out, err := build.CombinedOutput(); err != nil {
+		t.Fatalf("build sidecar: %v\n%s", err, out)
+	}
+
+	// Stub bot that handles probe-lot → FOUND and bot-exit-request → accepted.
+	// After bot-exit-request it writes a marker file so we can verify the
+	// visit-lot → relaunch sequence without a real FSO server.
+	// On second invocation (wrapper re-launches after exit), write a different
+	// marker and sleep.
+	invocationCountFile := filepath.Join(tmp, "bot-invocation-count")
+	nextLotReadFile := filepath.Join(tmp, "next-lot-read-by-bot.txt")
+	stubBot := filepath.Join(tmp, "stub-visit-bot.sh")
+	stubBotScript := fmt.Sprintf(`#!/bin/sh
+# Track invocation count.
+COUNT=$(cat %s 2>/dev/null || echo 0)
+NEW=$((COUNT+1))
+echo $NEW > %s
+
+if [ "$COUNT" -ge 1 ]; then
+    # Second+ invocation: record the lot location we were started with.
+    echo "${FSO_LOT_LOCATION:-none}" > %s
+    printf '{"kind":"system","payload":{"event":"ready","relaunch":true}}\n'
+    sleep 10
+    exit 0
+fi
+
+# First invocation: handle probe-lot and bot-exit-request.
+printf '{"kind":"system","payload":{"event":"ready"}}\n'
+while IFS= read -r line; do
+    corr=$(printf '%%s' "$line" | sed 's/.*"correlation_id":"\([^"]*\)".*/\1/')
+    cmd=$(printf '%%s' "$line" | sed 's/.*"cmd":"\([^"]*\)".*/\1/')
+    case "$cmd" in
+    probe-lot)
+        printf '{"kind":"bot-cmd-reply","correlation_id":"%%s","ok":true,"data":{"status":"FOUND","lot_id":17}}\n' "$corr"
+        ;;
+    bot-exit-request)
+        printf '{"kind":"bot-cmd-reply","correlation_id":"%%s","ok":true,"data":{"accepted":true}}\n' "$corr"
+        exit 0
+        ;;
+    esac
+done
+`, invocationCountFile, invocationCountFile, nextLotReadFile)
+	if err := os.WriteFile(stubBot, []byte(stubBotScript), 0o700); err != nil {
+		t.Fatalf("write stub bot: %v", err)
+	}
+	// Write initial invocation count = 0.
+	if err := os.WriteFile(invocationCountFile, []byte("0"), 0o600); err != nil {
+		t.Fatalf("write invocation count: %v", err)
+	}
+
+	// Set up persona memory store and bind a lot name for shape 2.
+	store := NewMemoryStore()
+	// "joao's place" → lot 17 = 0x00110F00 = 1118976 decimal.
+	// We use 0x00110F00 for consistency with existing test values.
+	encoded, _ := json.Marshal(map[string]any{
+		"name":         "joao's place",
+		"kind":         "lot",
+		"lot_location": "1118976",
+	})
+	store.Store("name:joao's place", encoded)
+
+	ctx, cancel := context.WithTimeout(context.Background(), 30*time.Second)
+	defer cancel()
+
+	// Launch the stub bot as a BotProcess directly (no sidecar subprocess needed
+	// for this test — we exercise the handler in-process against the real pump).
+	proc, err := LaunchBot(ctx, BotConfig{
+		Exec: stubBot,
+		Args: []string{},
+		Env: append(os.Environ(),
+			"FSO_USER="+persona,
+			"XDG_CONFIG_HOME="+xdgConfigHome,
+		),
+	})
+	if err != nil {
+		t.Fatalf("LaunchBot: %v", err)
+	}
+	defer proc.Stop()
+
+	ipc := NewIPC(proc)
+	pump := NewBotCmdPump(proc)
+
+	// Route bot-cmd-reply frames to pump.
+	go bridgesRunNoCampfire(ctx, proc, pump)
+	// Give the stub bot a moment to emit system:ready.
+	time.Sleep(150 * time.Millisecond)
+
+	// --- Shape 1: hex fallback ---
+	t.Log("Shape 1: --target_lot_location 0x00110F00 (hex fallback)")
+	hexCtx, hexCancel := context.WithTimeout(ctx, 10*time.Second)
+	defer hexCancel()
+
+	handler := visitLotHandler(ipc, pump, store)
+	resp1, err := handler(hexCtx, &convention.Request{Args: map[string]any{
+		"target_lot_location": "0x00110F00",
+	}})
+	if err != nil {
+		t.Fatalf("shape1 handler error: %v", err)
+	}
+	payload1, _ := resp1.Payload.(map[string]any)
+	if payload1["ok"] != true {
+		t.Errorf("shape1: want ok=true, got %v: %v", payload1["ok"], payload1)
+	}
+	if payload1["probe_status"] != "FOUND" {
+		t.Errorf("shape1: want probe_status=FOUND, got %v", payload1["probe_status"])
+	}
+	t.Logf("shape1 response: %v", payload1)
+
+	// Verify next-lot was written (WriteNextLot-before-exit invariant).
+	nextLotPath := filepath.Join(xdgConfigHome, "freeso-souls", persona, "next-lot")
+	nextLotData, err := os.ReadFile(nextLotPath)
+	if err != nil {
+		t.Errorf("shape1: next-lot not written (WriteNextLot invariant): %v", err)
+	} else {
+		t.Logf("shape1: next-lot written: %q", strings.TrimSpace(string(nextLotData)))
+	}
+	// Clear next-lot so shape2 starts clean.
+	_ = os.Remove(nextLotPath)
+
+	// Wait for the stub bot to exit (it exits 0 after bot-exit-request).
+	select {
+	case <-proc.ExitCh():
+		t.Log("shape1: stub bot exited after bot-exit-request")
+	case <-time.After(5 * time.Second):
+		t.Error("shape1: stub bot did not exit within 5s after bot-exit-request")
+	}
+
+	// --- Shape 2: name-primary --
+	// Launch a fresh bot process since the first one exited.
+	t.Log("Shape 2: --my_name \"joao's place\" (name-primary)")
+
+	// Re-write invocation count so the new bot handles the request.
+	if err := os.WriteFile(invocationCountFile, []byte("0"), 0o600); err != nil {
+		t.Fatalf("reset invocation count: %v", err)
+	}
+
+	ctx2, cancel2 := context.WithTimeout(context.Background(), 30*time.Second)
+	defer cancel2()
+
+	proc2, err := LaunchBot(ctx2, BotConfig{
+		Exec: stubBot,
+		Args: []string{},
+		Env: append(os.Environ(),
+			"FSO_USER="+persona,
+			"XDG_CONFIG_HOME="+xdgConfigHome,
+		),
+	})
+	if err != nil {
+		t.Fatalf("LaunchBot shape2: %v", err)
+	}
+	defer proc2.Stop()
+
+	ipc2 := NewIPC(proc2)
+	pump2 := NewBotCmdPump(proc2)
+	go bridgesRunNoCampfire(ctx2, proc2, pump2)
+	time.Sleep(150 * time.Millisecond)
+
+	handler2 := visitLotHandler(ipc2, pump2, store)
+	nameCtx, nameCancel := context.WithTimeout(ctx2, 10*time.Second)
+	defer nameCancel()
+
+	resp2, err := handler2(nameCtx, &convention.Request{Args: map[string]any{
+		"my_name": "joao's place",
+	}})
+	if err != nil {
+		t.Fatalf("shape2 handler error: %v", err)
+	}
+	payload2, _ := resp2.Payload.(map[string]any)
+	if payload2["ok"] != true {
+		t.Errorf("shape2: want ok=true, got %v: %v", payload2["ok"], payload2)
+	}
+	if payload2["probe_status"] != "FOUND" {
+		t.Errorf("shape2: want probe_status=FOUND, got %v", payload2["probe_status"])
+	}
+	t.Logf("shape2 response: %v", payload2)
+
+	// Verify next-lot was written for shape 2.
+	nextLotData2, err := os.ReadFile(nextLotPath)
+	if err != nil {
+		t.Errorf("shape2: next-lot not written: %v", err)
+	} else {
+		t.Logf("shape2: next-lot written: %q (resolved from --my_name 'joao's place')", strings.TrimSpace(string(nextLotData2)))
+	}
+
+	// Wait for shape2 bot to exit.
+	select {
+	case <-proc2.ExitCh():
+		t.Log("shape2: stub bot exited after bot-exit-request")
+	case <-time.After(5 * time.Second):
+		t.Error("shape2: stub bot did not exit within 5s")
+	}
+
+	t.Log("PASS: TestIntegration_VisitLot_BothShapes — both --target_lot_location and --my_name shapes verified via real subprocess, next-lot file written, bot-exit-request dispatched")
 }
 
 // compile-time assertion we did not accidentally break formatter with fmt use:

@@ -8,16 +8,21 @@ package main
 
 import (
 	"context"
+	"encoding/json"
 	"fmt"
+	"log"
 
 	"github.com/campfire-net/campfire/pkg/convention"
 )
 
 // RegisterNavigationHandlers wires the navigation verb family
-// (freesoexperiment-a61). Ops served:
+// (freesoexperiment-a61 / freesoexperiment-e66). Ops served:
 //
 //	go-home     — already-home check + deferred cross-lot transition
-//	visit-lot   — deferred (HeadlessLotConnection has no reconnect primitive yet)
+//	visit-lot   — name-primary with hex fallback (freesoexperiment-e66):
+//	              resolves --my_name → lot_location, probes via bot-cmd:probe-lot,
+//	              writes next-lot, then issues bot-cmd:exit to trigger supervised
+//	              relaunch at the target lot.
 //	find-avatar — full wire PDU (FindAvatarRequest → FindAvatarResponse) on the
 //	              city socket
 //
@@ -26,17 +31,11 @@ import (
 // convention JSON, no handler (item constraint: "If d87-0's catalog
 // determines an op in this family has no wire path, DROP the op").
 //
-// Deferral honesty (per wave-2b standards): go-home and visit-lot emit
-// `deferred:true` in the response payload when they cannot perform the real
-// wire effect. The integration test hard-asserts presence of the marker —
-// never "accept ok=true OR ok=false as evidence of success". A follow-up item
-// (freesoexperiment-ca0) tracks the lot-transition implementation.
-//
 // Returns the count of opened servers.
-func RegisterNavigationHandlers(ctx context.Context, cf *Campfire, ipc *IPC) (int, error) {
+func RegisterNavigationHandlers(ctx context.Context, cf *Campfire, ipc *IPC, botCmds *BotCmdPump, store *MemoryStore) (int, error) {
 	ops := map[string]convention.HandlerFunc{
 		"go-home":     goHomeHandler(ipc),
-		"visit-lot":   visitLotHandler(ipc),
+		"visit-lot":   visitLotHandler(ipc, botCmds, store),
 		"find-avatar": findAvatarHandler(ipc),
 	}
 
@@ -72,18 +71,164 @@ func goHomeHandler(ipc *IPC) convention.HandlerFunc {
 	}
 }
 
-// visitLotHandler forwards the visit-lot request. Arg: target_lot_location
-// (required; location code — NOT a DB lot_id; hex string "0x..." or decimal
-// uint). The bot currently returns `ok:true, deferred:true` because
-// HeadlessLotConnection lacks a reconnect primitive; agents should branch on
-// the deferred marker. When the a61-transition follow-up lands, the same
-// wire contract (ok=true + non-deferred payload) becomes populated without
-// a client-visible shape change.
-func visitLotHandler(ipc *IPC) convention.HandlerFunc {
+// visitLotHandler implements the visit-lot convention with name-primary
+// resolution and hex fallback (freesoexperiment-e66, I0-5).
+//
+// Wire flow (Q3, cross-lot-first-class.md §Q3):
+//  1. Resolve target_lot_location:
+//     a. If --my_name is present: look up in the naming store. Entry must have
+//        kind=="lot" with a non-empty lot_location field. If not found or wrong
+//        kind → ok:false.
+//     b. Otherwise: use --target_lot_location directly (hex "0x..." or decimal).
+//  2. Issue bot-cmd:probe-lot to verify the target lot is reachable.
+//     FOUND → proceed. NOT_OPEN / error → ok:false (caller can retry later).
+//  3. WriteNextLot(lotLocation) — supervisor reads this AFTER bot exit.
+//     INVARIANT: WriteNextLot must complete before bot-cmd:exit is dispatched.
+//     The supervisor reads next-lot after bot exit; an async write or
+//     post-exit write means the supervisor sees stale/missing state and
+//     the cross-lot transition silently uses the default lot.
+//  4. Issue bot-cmd:bot-exit-request. Bot disconnects cleanly; supervisor
+//     detects exit-0, reads next-lot, relaunches at target lot.
+//
+// Both --my_name and --target_lot_location call shapes are mandatory (I0-5,
+// wire-protocol contract). Dropping either shape is escalation-required.
+func visitLotHandler(ipc *IPC, botCmds *BotCmdPump, store *MemoryStore) convention.HandlerFunc {
 	return func(ctx context.Context, req *convention.Request) (*convention.Response, error) {
-		args := pickArgs(req.Args, "target_lot_location")
-		return forwardIPC(ctx, ipc, "visit-lot", args)
+		// Step 1: resolve lot_location.
+		lotLocation, resolveErr := resolveLotLocation(req.Args, store)
+		if resolveErr != nil {
+			return &convention.Response{
+				Payload: map[string]any{"ok": false, "error": resolveErr.Error()},
+			}, nil
+		}
+
+		// Step 2: probe the target lot to confirm it is reachable.
+		// lot_location is a decimal string; convert to uint32 for the probe-lot arg.
+		var lotLocUint uint64
+		if _, err := fmt.Sscanf(lotLocation, "%d", &lotLocUint); err != nil {
+			return &convention.Response{
+				Payload: map[string]any{"ok": false, "error": fmt.Sprintf("parse lot_location %q: %v", lotLocation, err)},
+			}, nil
+		}
+
+		// If botCmds is nil (no bot subprocess, e.g. --no-bot mode), fall back
+		// gracefully with a deferred marker rather than panicking.
+		if botCmds == nil {
+			return &convention.Response{
+				Payload: map[string]any{
+					"ok":              false,
+					"error":           "visit-lot: bot-cmd channel not available (--no-bot mode or botCmds not wired)",
+					"deferred":        true,
+					"lot_location":    lotLocation,
+				},
+			}, nil
+		}
+
+		probeReply, probeErr := botCmds.Send(ctx, "probe-lot", map[string]any{
+			"lot_location": lotLocUint,
+		})
+		if probeErr != nil {
+			return &convention.Response{
+				Payload: map[string]any{"ok": false, "error": fmt.Sprintf("probe-lot failed: %v", probeErr)},
+			}, nil
+		}
+		if !probeReply.Ok {
+			return &convention.Response{
+				Payload: map[string]any{"ok": false, "error": fmt.Sprintf("probe-lot error: %s", probeReply.Error)},
+			}, nil
+		}
+		// Parse status from probe reply.
+		var probeData struct {
+			Status string `json:"status"`
+		}
+		if len(probeReply.Data) > 0 {
+			if err := json.Unmarshal(probeReply.Data, &probeData); err != nil {
+				log.Printf("visit-lot: probe-lot data parse error: %v (treating as UNKNOWN)", err)
+			}
+		}
+		if probeData.Status != "FOUND" {
+			return &convention.Response{
+				Payload: map[string]any{
+					"ok":           false,
+					"error":        fmt.Sprintf("lot not reachable: probe status=%q", probeData.Status),
+					"probe_status": probeData.Status,
+					"lot_location": lotLocation,
+				},
+			}, nil
+		}
+
+		// Step 3: INVARIANT — WriteNextLot must complete before bot-cmd:exit.
+		// The supervisor reads next-lot after bot exit; writing after exit means
+		// stale/missing state → cross-lot transition silently uses the default lot.
+		if err := WriteNextLot(lotLocation); err != nil {
+			return &convention.Response{
+				Payload: map[string]any{
+					"ok":    false,
+					"error": fmt.Sprintf("write next-lot: %v", err),
+				},
+			}, nil
+		}
+
+		// Step 4: issue bot-exit-request. Bot disconnects cleanly; supervisor
+		// detects exit-0, reads next-lot, relaunches at target lot.
+		exitReply, exitErr := botCmds.Send(ctx, "bot-exit-request", nil)
+		if exitErr != nil {
+			// next-lot is already written; supervisor will still pick it up when
+			// the bot eventually exits (or is killed). Log but return ok:true so
+			// the agent doesn't retry the whole sequence.
+			log.Printf("visit-lot: bot-exit-request error (next-lot written, supervisor will handle): %v", exitErr)
+			return &convention.Response{
+				Payload: map[string]any{
+					"ok":           true,
+					"lot_location": lotLocation,
+					"note":         "bot-exit-request timed out; transition queued via next-lot",
+				},
+			}, nil
+		}
+		if !exitReply.Ok {
+			log.Printf("visit-lot: bot-exit-request rejected: %s (next-lot written)", exitReply.Error)
+		}
+
+		return &convention.Response{
+			Payload: map[string]any{
+				"ok":           true,
+				"lot_location": lotLocation,
+				"probe_status": probeData.Status,
+			},
+		}, nil
 	}
+}
+
+// resolveLotLocation resolves the target lot location from request args.
+// Priority: --my_name (naming store, kind=="lot") → --target_lot_location.
+// Returns a canonical decimal uint32 string on success, or an error.
+func resolveLotLocation(args map[string]any, store *MemoryStore) (string, error) {
+	if myName, ok := args["my_name"].(string); ok && myName != "" {
+		entry := lookupName(store, myName)
+		if entry == nil {
+			return "", fmt.Errorf("name %q is not bound (use list-names to see current bindings, or 'name --as %q --lot_location 0x<hex>' to bind it)", myName, myName)
+		}
+		kind, _ := entry["kind"].(string)
+		if kind != "lot" {
+			return "", fmt.Errorf("name %q has kind %q, not \"lot\" — visit-lot requires a lot binding (use 'name --as %q --lot_location 0x<hex>')", myName, kind, myName)
+		}
+		ll, _ := entry["lot_location"].(string)
+		if ll == "" {
+			return "", fmt.Errorf("name %q has kind=\"lot\" but missing lot_location (re-bind with 'name --as %q --lot_location 0x<hex>')", myName, myName)
+		}
+		return ll, nil
+	}
+
+	// Fallback: --target_lot_location (hex or decimal string).
+	rawLL, ok := args["target_lot_location"]
+	if !ok || rawLL == nil {
+		return "", fmt.Errorf("one of --my_name or --target_lot_location is required")
+	}
+	ll, err := coerceLotLocation(rawLL)
+	if err != nil {
+		return "", fmt.Errorf("target_lot_location: %w", err)
+	}
+	return ll, nil
 }
 
 // findAvatarHandler forwards the find-avatar query. Arg: target_avatar_id

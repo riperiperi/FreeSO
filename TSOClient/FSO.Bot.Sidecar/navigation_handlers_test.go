@@ -8,6 +8,9 @@ package main
 
 import (
 	"context"
+	"encoding/json"
+	"os"
+	"path/filepath"
 	"testing"
 	"time"
 
@@ -92,65 +95,404 @@ func TestGoHomeHandlerForwardsDeferredMarker(t *testing.T) {
 	}
 }
 
-// TestVisitLotHandlerDispatchesIPC asserts target_lot_location is forwarded.
-func TestVisitLotHandlerDispatchesIPC(t *testing.T) {
+// TestVisitLotHandlerHexFallback asserts the hex fallback shape:
+// --target_lot_location "0x123456" → probe-lot → WriteNextLot → bot-exit-request.
+// This tests the full handler end-to-end with a stub BotCmdPump.
+func TestVisitLotHandlerHexFallback(t *testing.T) {
+	tmp := t.TempDir()
+	withFSO_USER(t, "visit-lot-test-hex")
+	withConfigHome(t, tmp)
+
 	fake := newFakeBotProcess()
 	ipc := NewIPC(fake.bot)
-	gotCmd := captureOneCommand(t, fake, ipc, map[string]any{
-		"kind": "response", "ok": true,
-		"payload": map[string]any{
-			"deferred":            true,
-			"deferred_reason":     "unimplemented",
-			"target_lot_location": "0x123456",
-			"bot_state_unchanged": true,
-		},
-	})
+	// Note: no separate drain goroutine — the test's inline goroutine below
+	// is the sole consumer of fake.stdinLines. IPC is not used by this handler
+	// path (visit-lot uses BotCmdPump, not IPC.Send). We do not drain ipc-cmd
+	// frames because the handler never sends any.
 
-	handler := visitLotHandler(ipc)
+	pump := NewBotCmdPump(fake.bot)
+	store := NewMemoryStore()
+
+	// Stub: respond to probe-lot with FOUND, then bot-exit-request with accepted:true.
+	// We need to handle two sequential bot-cmd frames.
+	go func() {
+		// First frame: probe-lot
+		line1 := <-fake.stdinLines
+		var req1 BotCmdRequest
+		if err := json.Unmarshal(line1, &req1); err != nil {
+			t.Errorf("unmarshal probe-lot req: %v", err)
+			return
+		}
+		if req1.Cmd != "probe-lot" {
+			t.Errorf("want cmd=probe-lot, got %q", req1.Cmd)
+			return
+		}
+		pump.Deliver(mustMarshal(map[string]any{
+			"kind":           "bot-cmd-reply",
+			"correlation_id": req1.CorrelationID,
+			"ok":             true,
+			"data":           map[string]any{"status": "FOUND", "lot_id": 17},
+		}))
+
+		// Second frame: bot-exit-request
+		line2 := <-fake.stdinLines
+		var req2 BotCmdRequest
+		if err := json.Unmarshal(line2, &req2); err != nil {
+			t.Errorf("unmarshal bot-exit req: %v", err)
+			return
+		}
+		if req2.Cmd != "bot-exit-request" {
+			t.Errorf("want cmd=bot-exit-request, got %q", req2.Cmd)
+			return
+		}
+		pump.Deliver(mustMarshal(map[string]any{
+			"kind":           "bot-cmd-reply",
+			"correlation_id": req2.CorrelationID,
+			"ok":             true,
+			"data":           map[string]any{"accepted": true},
+		}))
+	}()
+
+	handler := visitLotHandler(ipc, pump, store)
+	ctx, cancel := context.WithTimeout(context.Background(), 3*time.Second)
+	defer cancel()
+
+	resp, err := handler(ctx, &convention.Request{Args: map[string]any{
+		"target_lot_location": "0x00110F00",
+	}})
+	if err != nil {
+		t.Fatalf("handler error: %v", err)
+	}
+	payload, _ := resp.Payload.(map[string]any)
+	if payload == nil {
+		t.Fatalf("nil payload")
+	}
+	if payload["ok"] != true {
+		t.Errorf("want ok=true, got %v: %v", payload["ok"], payload)
+	}
+	if payload["probe_status"] != "FOUND" {
+		t.Errorf("want probe_status=FOUND, got %v", payload["probe_status"])
+	}
+	// Verify next-lot was written (WriteNextLot-before-exit invariant).
+	dir := filepath.Join(tmp, "freeso-souls", "visit-lot-test-hex")
+	nextLotPath := filepath.Join(dir, "next-lot")
+	// After the handler completes, next-lot should have been written.
+	// (The supervisor loop would have read+cleared it, but it hasn't run here.)
+	data, err := os.ReadFile(nextLotPath)
+	if err != nil {
+		t.Fatalf("next-lot not written (WriteNextLot invariant violated): %v", err)
+	}
+	// 0x00110F00 = 1117952 in decimal
+	got := string(data)
+	if got == "" || got == "\n" {
+		t.Errorf("next-lot file is empty")
+	}
+	t.Logf("next-lot content: %q (lot_location=%v)", got, payload["lot_location"])
+}
+
+// TestVisitLotHandlerMyNameShape asserts the name-primary shape:
+// --my_name bound to a lot → resolves to lot_location → probe → WriteNextLot → exit.
+func TestVisitLotHandlerMyNameShape(t *testing.T) {
+	tmp := t.TempDir()
+	withFSO_USER(t, "visit-lot-test-name")
+	withConfigHome(t, tmp)
+
+	fake := newFakeBotProcess()
+	ipc := NewIPC(fake.bot)
+	// No drain goroutine — test's goroutine is the sole stdin consumer.
+
+	pump := NewBotCmdPump(fake.bot)
+	store := NewMemoryStore()
+
+	// Pre-bind "joao's place" → lot_location = 16318812 (decimal = 0x00F9015C).
+	encoded, _ := json.Marshal(map[string]any{
+		"name":         "joao's place",
+		"kind":         "lot",
+		"lot_location": "16318812",
+	})
+	store.Store("name:joao's place", encoded)
+
+	// Stub: probe-lot → FOUND, then bot-exit-request → accepted.
+	go func() {
+		line1 := <-fake.stdinLines
+		var req1 BotCmdRequest
+		if err := json.Unmarshal(line1, &req1); err != nil {
+			t.Errorf("unmarshal probe-lot req: %v", err)
+			return
+		}
+		if req1.Cmd != "probe-lot" {
+			t.Errorf("want cmd=probe-lot, got %q", req1.Cmd)
+			return
+		}
+		pump.Deliver(mustMarshal(map[string]any{
+			"kind":           "bot-cmd-reply",
+			"correlation_id": req1.CorrelationID,
+			"ok":             true,
+			"data":           map[string]any{"status": "FOUND", "lot_id": 2},
+		}))
+
+		line2 := <-fake.stdinLines
+		var req2 BotCmdRequest
+		if err := json.Unmarshal(line2, &req2); err != nil {
+			t.Errorf("unmarshal bot-exit req: %v", err)
+			return
+		}
+		if req2.Cmd != "bot-exit-request" {
+			t.Errorf("want cmd=bot-exit-request, got %q", req2.Cmd)
+			return
+		}
+		pump.Deliver(mustMarshal(map[string]any{
+			"kind":           "bot-cmd-reply",
+			"correlation_id": req2.CorrelationID,
+			"ok":             true,
+			"data":           map[string]any{"accepted": true},
+		}))
+	}()
+
+	handler := visitLotHandler(ipc, pump, store)
+	ctx, cancel := context.WithTimeout(context.Background(), 3*time.Second)
+	defer cancel()
+
+	resp, err := handler(ctx, &convention.Request{Args: map[string]any{
+		"my_name": "joao's place",
+	}})
+	if err != nil {
+		t.Fatalf("handler error: %v", err)
+	}
+	payload, _ := resp.Payload.(map[string]any)
+	if payload == nil {
+		t.Fatalf("nil payload")
+	}
+	if payload["ok"] != true {
+		t.Errorf("want ok=true, got %v: %v", payload["ok"], payload)
+	}
+	if payload["probe_status"] != "FOUND" {
+		t.Errorf("want probe_status=FOUND, got %v", payload["probe_status"])
+	}
+	// Verify next-lot was written with the resolved lot_location.
+	dir := filepath.Join(tmp, "freeso-souls", "visit-lot-test-name")
+	data, err := os.ReadFile(filepath.Join(dir, "next-lot"))
+	if err != nil {
+		t.Fatalf("next-lot not written: %v", err)
+	}
+	t.Logf("next-lot=%q resolved from my_name=%q", data, "joao's place")
+}
+
+// TestVisitLotHandlerUnknownNameReturnsError asserts that an unbound --my_name
+// returns ok:false with a helpful error, not a panic or ok:true.
+func TestVisitLotHandlerUnknownNameReturnsError(t *testing.T) {
+	fake := newFakeBotProcess()
+	ipc := NewIPC(fake.bot)
+	// No probe-lot reaches the bot — handler returns early on name resolution failure.
+	// Drain stdin to prevent goroutine leaks from the fake BotProcess background reader.
+	go func() {
+		for range fake.stdinLines {
+		}
+	}()
+	pump := NewBotCmdPump(fake.bot)
+	store := NewMemoryStore()
+
+	handler := visitLotHandler(ipc, pump, store)
 	ctx, cancel := context.WithTimeout(context.Background(), 2*time.Second)
 	defer cancel()
-	_, err := handler(ctx, &convention.Request{Args: map[string]any{
-		"target_lot_location": "0x123456",
+	resp, err := handler(ctx, &convention.Request{Args: map[string]any{
+		"my_name": "nowhere-bound",
+	}})
+	if err != nil {
+		t.Fatalf("handler error: %v", err)
+	}
+	payload, _ := resp.Payload.(map[string]any)
+	if payload["ok"] != false {
+		t.Errorf("want ok=false for unbound name, got %v", payload)
+	}
+	if payload["error"] == nil || payload["error"] == "" {
+		t.Errorf("want non-empty error for unbound name")
+	}
+	t.Logf("error for unbound name: %v", payload["error"])
+}
+
+// TestVisitLotHandlerWrongKindName asserts that a name bound to a non-lot kind
+// (e.g. kind="object") returns ok:false with a descriptive error.
+func TestVisitLotHandlerWrongKindName(t *testing.T) {
+	fake := newFakeBotProcess()
+	ipc := NewIPC(fake.bot)
+	// Handler returns early before any bot-cmd — drain stdin to prevent leaks.
+	go func() {
+		for range fake.stdinLines {
+		}
+	}()
+	pump := NewBotCmdPump(fake.bot)
+	store := NewMemoryStore()
+
+	// Bind "the toilet" as kind=object.
+	encoded, _ := json.Marshal(map[string]any{
+		"name":             "the toilet",
+		"kind":             "object",
+		"target_object_id": int64(322),
+	})
+	store.Store("name:the toilet", encoded)
+
+	handler := visitLotHandler(ipc, pump, store)
+	ctx, cancel := context.WithTimeout(context.Background(), 2*time.Second)
+	defer cancel()
+	resp, err := handler(ctx, &convention.Request{Args: map[string]any{
+		"my_name": "the toilet",
+	}})
+	if err != nil {
+		t.Fatalf("handler error: %v", err)
+	}
+	payload, _ := resp.Payload.(map[string]any)
+	if payload["ok"] != false {
+		t.Errorf("want ok=false for wrong-kind name, got %v", payload)
+	}
+	t.Logf("error for wrong-kind: %v", payload["error"])
+}
+
+// TestVisitLotHandlerProbeNotOpen asserts that a NOT_OPEN probe reply causes
+// ok:false with probe_status in the response.
+func TestVisitLotHandlerProbeNotOpen(t *testing.T) {
+	fake := newFakeBotProcess()
+	ipc := NewIPC(fake.bot)
+	// No drain goroutine — the test's inline goroutine is the sole consumer.
+	pump := NewBotCmdPump(fake.bot)
+	store := NewMemoryStore()
+
+	go func() {
+		line := <-fake.stdinLines
+		var req BotCmdRequest
+		if err := json.Unmarshal(line, &req); err != nil {
+			t.Errorf("unmarshal: %v", err)
+			return
+		}
+		pump.Deliver(mustMarshal(map[string]any{
+			"kind":           "bot-cmd-reply",
+			"correlation_id": req.CorrelationID,
+			"ok":             true,
+			"data":           map[string]any{"status": "NOT_OPEN"},
+		}))
+	}()
+
+	handler := visitLotHandler(ipc, pump, store)
+	ctx, cancel := context.WithTimeout(context.Background(), 2*time.Second)
+	defer cancel()
+	resp, err := handler(ctx, &convention.Request{Args: map[string]any{
+		"target_lot_location": "0x00110F00",
+	}})
+	if err != nil {
+		t.Fatalf("handler error: %v", err)
+	}
+	payload, _ := resp.Payload.(map[string]any)
+	if payload["ok"] != false {
+		t.Errorf("want ok=false for NOT_OPEN lot, got %v", payload)
+	}
+	if payload["probe_status"] != "NOT_OPEN" {
+		t.Errorf("want probe_status=NOT_OPEN, got %v", payload["probe_status"])
+	}
+}
+
+// TestVisitLotHandlerMissingBothArgs asserts that a call with neither --my_name
+// nor --target_lot_location returns ok:false.
+func TestVisitLotHandlerMissingBothArgs(t *testing.T) {
+	fake := newFakeBotProcess()
+	ipc := NewIPC(fake.bot)
+	// Handler returns early before any bot-cmd — drain stdin to prevent leaks.
+	go func() {
+		for range fake.stdinLines {
+		}
+	}()
+	pump := NewBotCmdPump(fake.bot)
+	store := NewMemoryStore()
+
+	handler := visitLotHandler(ipc, pump, store)
+	ctx, cancel := context.WithTimeout(context.Background(), 2*time.Second)
+	defer cancel()
+	resp, err := handler(ctx, &convention.Request{Args: map[string]any{}})
+	if err != nil {
+		t.Fatalf("handler error: %v", err)
+	}
+	payload, _ := resp.Payload.(map[string]any)
+	if payload["ok"] != false {
+		t.Errorf("want ok=false for missing args, got %v", payload)
+	}
+}
+
+// TestVisitLotHandlerWriteNextLotBeforeExit is the veracity test for the
+// INVARIANT: WriteNextLot must complete before bot-cmd:exit is dispatched.
+// It verifies that the next-lot file exists BETWEEN probe-lot reply and
+// bot-exit-request — confirming ordering is correct.
+func TestVisitLotHandlerWriteNextLotBeforeExit(t *testing.T) {
+	tmp := t.TempDir()
+	withFSO_USER(t, "visit-lot-ordering-test")
+	withConfigHome(t, tmp)
+
+	fake := newFakeBotProcess()
+	ipc := NewIPC(fake.bot)
+	// No drain goroutine — test's inline goroutine is the sole stdin consumer.
+
+	pump := NewBotCmdPump(fake.bot)
+	store := NewMemoryStore()
+
+	nextLotPath := filepath.Join(tmp, "freeso-souls", "visit-lot-ordering-test", "next-lot")
+
+	nextLotExistedBeforeExit := make(chan bool, 1)
+
+	go func() {
+		// First: probe-lot reply
+		line1 := <-fake.stdinLines
+		var req1 BotCmdRequest
+		if err := json.Unmarshal(line1, &req1); err != nil {
+			t.Errorf("probe-lot unmarshal: %v", err)
+			return
+		}
+		pump.Deliver(mustMarshal(map[string]any{
+			"kind":           "bot-cmd-reply",
+			"correlation_id": req1.CorrelationID,
+			"ok":             true,
+			"data":           map[string]any{"status": "FOUND"},
+		}))
+
+		// Second: bot-exit-request.
+		// BEFORE replying, check that next-lot file already exists.
+		line2 := <-fake.stdinLines
+		var req2 BotCmdRequest
+		if err := json.Unmarshal(line2, &req2); err != nil {
+			t.Errorf("bot-exit unmarshal: %v", err)
+			return
+		}
+		_, statErr := os.Stat(nextLotPath)
+		nextLotExistedBeforeExit <- (statErr == nil)
+		pump.Deliver(mustMarshal(map[string]any{
+			"kind":           "bot-cmd-reply",
+			"correlation_id": req2.CorrelationID,
+			"ok":             true,
+			"data":           map[string]any{"accepted": true},
+		}))
+	}()
+
+	handler := visitLotHandler(ipc, pump, store)
+	ctx, cancel := context.WithTimeout(context.Background(), 3*time.Second)
+	defer cancel()
+
+	resp, err := handler(ctx, &convention.Request{Args: map[string]any{
+		"target_lot_location": "0x00F9015C",
 	}})
 	if err != nil {
 		t.Fatalf("handler: %v", err)
 	}
-	cmd := <-gotCmd
-	if cmd.Op != "visit-lot" {
-		t.Errorf("want op=visit-lot got %q", cmd.Op)
+	payload, _ := resp.Payload.(map[string]any)
+	if payload["ok"] != true {
+		t.Errorf("want ok=true: %v", payload)
 	}
-	if cmd.Args["target_lot_location"] != "0x123456" {
-		t.Errorf("target_lot_location not forwarded: %v", cmd.Args)
-	}
-}
 
-// TestVisitLotHandlerDropsUnknownArgs asserts pickArgs filters out convention-
-// framework args that the bot doesn't know about (same contract as the
-// movement handlers).
-func TestVisitLotHandlerDropsUnknownArgs(t *testing.T) {
-	fake := newFakeBotProcess()
-	ipc := NewIPC(fake.bot)
-	gotCmd := captureOneCommand(t, fake, ipc, map[string]any{
-		"kind": "response", "ok": true, "payload": map[string]any{},
-	})
-
-	handler := visitLotHandler(ipc)
-	ctx, cancel := context.WithTimeout(context.Background(), 2*time.Second)
-	defer cancel()
-	_, _ = handler(ctx, &convention.Request{Args: map[string]any{
-		"target_lot_location": "0x123456",
-		"extra_junk_field":    "ignore-me",
-		"message":             "also-ignore",
-	}})
-	cmd := <-gotCmd
-	if _, has := cmd.Args["extra_junk_field"]; has {
-		t.Errorf("extra_junk_field should not have been forwarded: %v", cmd.Args)
-	}
-	if _, has := cmd.Args["message"]; has {
-		t.Errorf("framework 'message' arg should not have been forwarded: %v", cmd.Args)
-	}
-	if cmd.Args["target_lot_location"] != "0x123456" {
-		t.Errorf("target_lot_location not forwarded: %v", cmd.Args)
+	select {
+	case existed := <-nextLotExistedBeforeExit:
+		if !existed {
+			t.Error("INVARIANT VIOLATED: next-lot file did NOT exist when bot-exit-request was dispatched — WriteNextLot must happen before bot-cmd:exit")
+		} else {
+			t.Log("INVARIANT VERIFIED: next-lot written before bot-exit-request dispatched")
+		}
+	case <-time.After(2 * time.Second):
+		t.Error("timed out waiting for ordering check")
 	}
 }
 
@@ -197,4 +539,13 @@ func TestFindAvatarHandlerDispatchesIPC(t *testing.T) {
 	if inner["on_lot"] != true {
 		t.Errorf("on_lot lost in forwardIPC: %v", inner)
 	}
+}
+
+// mustMarshal marshals v to JSON and panics on error. Test-only helper.
+func mustMarshal(v any) []byte {
+	b, err := json.Marshal(v)
+	if err != nil {
+		panic(err)
+	}
+	return b
 }

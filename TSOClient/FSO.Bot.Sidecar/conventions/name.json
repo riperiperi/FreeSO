@@ -3,12 +3,13 @@
   "version": "1.0",
   "operation": "name",
   "family": "memory",
-  "description": "Bind a human-readable name to a target you want to remember by identity instead of id. The naming is YOURS — 'the toilet', 'the shrub-trap', 'Kelly's spot'. Once named, use it in go-to with --my_name. Exactly one target kind per call: target_object_id (a VMEntity), target_sim_id (a Sim persist id), or location (tile x,y,level — for naming a spot, not an object). Names are case-insensitive on lookup; the original case is preserved for display. Re-naming overwrites. Storage is sidecar-local and session-scoped (lost on bot restart — identity continuation across sessions is -38a). This verb removes the need to carry ObjectIDs in your working memory; your private vocabulary of the world is what lets you talk about it like a place instead of a data structure.",
+  "description": "Bind a human-readable name to a target you want to remember by identity instead of id. The naming is YOURS — 'the toilet', 'the shrub-trap', 'Kelly's spot', 'joao's place'. Once named, use it in go-to with --my_name, or in visit-lot with --my_name (for lot bindings). Exactly one target kind per call: target_object_id (a VMEntity), target_sim_id (a Sim persist id), location (tile x,y,level — for naming a spot, not an object), or lot_location (a lot location code — for naming a lot you can visit-lot to). Names are case-insensitive on lookup; the original case is preserved for display. Re-naming overwrites. Storage is sidecar-local and session-scoped (lost on bot restart — identity continuation across sessions is -38a). This verb removes the need to carry ObjectIDs or lot location codes in your working memory; your private vocabulary of the world is what lets you talk about it like a place instead of a data structure.",
   "args": [
     {"name": "as", "type": "string", "required": true, "description": "The name you are giving this target. Free-form. Case-insensitive on lookup."},
     {"name": "target_object_id", "type": "integer", "required": false, "description": "ObjectID of the thing you're naming (e.g. a toilet, a sofa, a door)."},
     {"name": "target_sim_id", "type": "integer", "required": false, "description": "Persist id of the Sim you're naming."},
     {"name": "location", "type": "json", "required": false, "description": "{\"x\": tile_x, \"y\": tile_y, \"level\": 1}. Tile units. Use for naming a spot with no object there ('the shrub-trap', 'the corner I got stuck')."},
+    {"name": "lot_location", "type": "string", "required": false, "description": "Lot location code ('0x00F8F100' hex or decimal uint32). Use for naming a lot so you can visit-lot --my_name later. The value is the same packed location code from perception.lot.lot_id or find-avatar's lot_location field."},
     {"name": "note", "type": "string", "required": false, "description": "Optional free-form note stored with the name. Surfaces in list-names."}
   ],
   "produces_tags": [{"tag": "freeso:name", "cardinality": "exactly_one"}],
@@ -20,11 +21,13 @@
     "cf $CF name --as \"the toilet\" --target_object_id 322                               # name an object",
     "cf $CF name --as Kelly --target_sim_id 4                                            # name a Sim",
     "cf $CF name --as \"the shrub-trap\" --location '{\"x\":2,\"y\":6,\"level\":1}'           # name a spot",
+    "cf $CF name --as \"joao's place\" --lot_location 0x00F8F100                          # name a lot (use with visit-lot --my_name)",
     "cf $CF name --as \"the toilet\" --target_object_id 322 --note \"upstairs, master bath\""
   ],
   "common_mistakes": [
     "Passing both --target_object_id and --location: only one target kind per name.",
     "Using tile-scale coords for location in 1/16-tile units (wire units). Location is TILE units — the coords you see in perception.avatar.position.",
+    "Passing lot_id (DB integer) as lot_location — these are different. Use the packed location code (same value as perception.lot.lot_id or find-avatar's lot_location field).",
     "Relying on names across sessions today. Storage is session-scoped; persistent names across reboots await -38a."
   ],
   "perception_hints": [

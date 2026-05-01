@@ -3,13 +3,19 @@
   "version": "1.0",
   "operation": "visit-lot",
   "family": "navigation",
-  "description": "Join a specific (non-home) lot, leaving the current lot. On the wire this is: `FindLotRequest(LotId=<target_lot_location>, OpenIfClosed=true)` → `FindLotResponse` (ticket + host address) → a new Aries connection to the lot server → `RequestClientSessionResponse(ServiceIdent=\"JLT\")` → `JoinLotWithTransitionRequest(LotTransitionInfo{...})`. The city socket is reused; only the lot socket is rebuilt. On success you arrive at `(AvatarLotTilePosX, AvatarLotTilePosY)` facing `AvatarDirection`. Prerequisite: you have a live city connection and the target is NOT closed-roommate-only (or you are an invited visitor). IMPORTANT — `target_lot_location` is the lot **location code** (24-bit coordinate packing, the same value `avatar.LotLocation` returns from `AvatarDataServlet`), NOT the DB lot_id. OQ-3 locked this aliasing trap. Effect (when implemented): the bot's VM + perception projector + lot Aries socket are all torn down and rebuilt; a new perception stream opens on the new lot; the motive delta window resets because deltas across two different lot contexts are meaningless. Cost: one full lot-join handshake latency (~10s worst case). STATUS: deferred in current session — HeadlessLotConnection has no reconnect primitive today (see its doc: \"No reconnect logic — OQ-11 punted to a follow-up item\"). Calling this op returns `ok:false` with `deferred:true` and an error string pointing at the follow-up (`freesoexperiment-ca0`). Your bot state is unchanged. Agents: if you need to be on a specific lot, pass `FSO_LOT_LOCATION=0x<hex>` at bot startup for now.",
+  "description": "Join a specific (non-home) lot, leaving the current lot. On the wire this is: sidecar issues bot-cmd:probe-lot (city-socket FindLotRequest), confirms FOUND, writes next-lot, then issues bot-cmd:bot-exit-request. The sidecar supervisor detects the clean exit, reads next-lot, and relaunches the bot with FSO_LOT_LOCATION set to the target. The bot joins the target lot via the normal city-connect → JoinLotWithTransitionRequest flow on relaunch. Total elapsed: ~10-15s (probe + disconnect + rejoin). IMPORTANT — `target_lot_location` is the lot **location code** (24-bit coordinate packing, the same value `avatar.LotLocation` returns from `AvatarDataServlet`), NOT the DB lot_id. OQ-3 locked this aliasing trap. I0-2: perception is silent during transit (bot is dead between lots). I0-3: motives travel with the avatar (server-side fso_avatars). NAME-PRIMARY (I0-5): pass --my_name for a bound name of kind 'lot'; --target_lot_location is the hex/decimal escape hatch. Both shapes are mandatory wire-protocol contract.",
   "args": [
+    {
+      "name": "my_name",
+      "type": "string",
+      "required": false,
+      "description": "Your name for the target lot (bound with 'name --as <name> --lot_location 0x...'). Name-primary shape (I0-5). Takes precedence over --target_lot_location when both are present."
+    },
     {
       "name": "target_lot_location",
       "type": "uint",
-      "required": true,
-      "description": "Lot location code (24-bit coordinate packing; same value as avatar.LotLocation). NOT a DB lot_id."
+      "required": false,
+      "description": "Lot location code (hex '0x...' or decimal uint32). Hex fallback when --my_name is absent or unbound. One of my_name or target_lot_location is required."
     }
   ],
   "produces_tags": [
@@ -27,20 +33,23 @@
   },
   "response": "sync",
   "call_signatures": [
-    "cf $CF visit-lot --target_lot_location '0x00F8F0DC'                                                        # DEFERRED — returns ok:true with deferred:true and bot_state_unchanged:true"
+    "cf $CF visit-lot --my_name \"joao's place\"                                            # name-primary: resolve bound lot name → probe → WriteNextLot → bot-exit",
+    "cf $CF visit-lot --target_lot_location 0x00F8F0DC                                    # hex fallback: probe → WriteNextLot → bot-exit"
   ],
   "common_mistakes": [
-    "Expecting any wire effect — this op is DEFERRED. It returns ok:true with deferred:true and bot_state_unchanged:true; no lot transition happens.",
-    "target_lot_location missing → ok:false.",
-    "target_lot_location is a LOCATION CODE (uint, often hex-displayed 0x...), NOT a lot_id DB key."
+    "Using lot_id (DB integer) instead of lot_location (24-bit packed coordinate). These are NOT the same — see OQ-3.",
+    "Expecting an immediate result — the transition takes ~10-15s. The fulfillment fires when the exit is queued, not when the bot arrives.",
+    "Forgetting to bind a lot name first. Use: cf $CF name --as \"joao's place\" --lot_location 0x00F8F100"
   ],
   "perception_hints": [
     "Your current lot: perception.lot.lot_id and perception.lot.name",
     "Your position: perception.avatar.position",
-    "Home detection: go-home returns already_home:true when perception.lot.lot_id matches your home lot location"
+    "Home detection: go-home returns already_home:true when perception.lot.lot_id matches your home lot location",
+    "Probe status in response: probe_status field ('FOUND' means lot was open and reachable)"
   ],
   "refuse_conditions": [
-    "missing target_lot_location → ok:false",
-    "always returns deferred:true (no wire effect — HeadlessLotConnection has no reconnect primitive yet)"
+    "neither --my_name nor --target_lot_location present → ok:false",
+    "--my_name not bound or not kind='lot' → ok:false",
+    "probe-lot returns NOT_OPEN or error → ok:false with probe_status field"
   ]
 }
