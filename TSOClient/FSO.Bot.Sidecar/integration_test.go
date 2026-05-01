@@ -240,5 +240,194 @@ func mustSourceDir(t *testing.T) string {
 	return wd
 }
 
+// TestIntegration_PersistentBodyCfIDSurvivesRestart is the veracity gate for
+// freesoexperiment-cf2. It exercises StartCampfire's restart-and-resume branch
+// (campfire.go:73-103) which reads the persisted body-cf.id and conditionally
+// skips creating a new campfire on subsequent starts.
+//
+// Protocol:
+//  1. Build the freeso-sidecar binary in a temp dir (shared with the bridge test).
+//  2. Choose a unique persona name derived from the temp dir; set FSO_USER and
+//     XDG_CONFIG_HOME so the persona state dir is fully isolated to tmp.
+//  3. Launch sidecar with --no-bot (no real bot needed) and a fresh --cf-home.
+//     Wait for the "Campfire: <id>" line on stdout — this is the first campfire.
+//  4. SIGINT the first sidecar; wait for it to exit.
+//  5. Relaunch the sidecar with the SAME FSO_USER, XDG_CONFIG_HOME, and --cf-home.
+//     Wait for the admission block again.
+//  6. Assert: the campfire ID on the second run is IDENTICAL to the first.
+//     A fresh ID would mean StartCampfire ignored the persisted body-cf.id — that
+//     is the regression this test is designed to catch.
+//
+// Skip conditions (same envelope as TestIntegration_CampfireAndBridge):
+//   - FREESO_SKIP_INTEGRATION=1 → explicit opt-out.
+//   - `cf` binary not on PATH → skip (cf is required by StartCampfire for beacon generation,
+//     but the sidecar starts even without it; we skip conservatively to match the envelope).
+//
+// Note: the `go` binary must be on PATH for the build step — this is guaranteed
+// in any Go development environment.
+func TestIntegration_PersistentBodyCfIDSurvivesRestart(t *testing.T) {
+	if os.Getenv("FREESO_SKIP_INTEGRATION") == "1" {
+		t.Skip("FREESO_SKIP_INTEGRATION=1")
+	}
+	if _, err := exec.LookPath("cf"); err != nil {
+		t.Skipf("cf binary not on PATH: %v", err)
+	}
+
+	goBin, err := exec.LookPath("go")
+	if err != nil {
+		t.Skipf("go not on PATH: %v", err)
+	}
+
+	tmp := t.TempDir()
+
+	// Build the sidecar binary into tmp.
+	sidecarBin := filepath.Join(tmp, "freeso-sidecar-restart-test")
+	build := exec.Command(goBin, "build", "-o", sidecarBin, ".")
+	build.Dir = mustSourceDir(t)
+	if out, err := build.CombinedOutput(); err != nil {
+		t.Fatalf("build sidecar: %v\n%s", err, out)
+	}
+
+	// Unique persona: use last component of tmp (platform-specific random suffix).
+	// Must be alphanumeric (no path separators) so PersonaStateDir accepts it.
+	personaBase := filepath.Base(tmp)
+	// t.TempDir names are like "TestFoo123456789" — keep only alnum chars and truncate.
+	var personaRunes []byte
+	for _, c := range []byte(personaBase) {
+		if (c >= 'a' && c <= 'z') || (c >= 'A' && c <= 'Z') || (c >= '0' && c <= '9') {
+			personaRunes = append(personaRunes, c)
+		}
+	}
+	if len(personaRunes) > 32 {
+		personaRunes = personaRunes[:32]
+	}
+	persona := string(personaRunes)
+	if persona == "" {
+		persona = "restarttest"
+	}
+	t.Logf("persona: %s", persona)
+
+	// XDG_CONFIG_HOME → tmp so persona state is fully isolated.
+	xdgConfigHome := filepath.Join(tmp, "config")
+	if err := os.MkdirAll(xdgConfigHome, 0o700); err != nil {
+		t.Fatalf("mkdir xdg config home: %v", err)
+	}
+
+	// cf-home for the sidecar's campfire identity + store.
+	cfHome := filepath.Join(tmp, "cf-home")
+	if err := os.MkdirAll(cfHome, 0o700); err != nil {
+		t.Fatalf("mkdir cf-home: %v", err)
+	}
+
+	// buildEnv returns the environment for a sidecar subprocess with the
+	// persona and config-home pinned to our temp dirs.
+	buildEnv := func() []string {
+		env := os.Environ()
+		// Override FSO_USER and XDG_CONFIG_HOME for persona state isolation.
+		filtered := env[:0]
+		for _, e := range env {
+			if strings.HasPrefix(e, "FSO_USER=") || strings.HasPrefix(e, "XDG_CONFIG_HOME=") {
+				continue
+			}
+			filtered = append(filtered, e)
+		}
+		filtered = append(filtered,
+			"FSO_USER="+persona,
+			"XDG_CONFIG_HOME="+xdgConfigHome,
+		)
+		return filtered
+	}
+
+	// launchSidecar starts the sidecar subprocess with --no-bot. Returns the
+	// running *exec.Cmd with stdout/stderr already wired.
+	launchSidecar := func(t *testing.T, ctx context.Context) (*exec.Cmd, interface {
+		Read([]byte) (int, error)
+	}) {
+		t.Helper()
+		cmd := exec.CommandContext(ctx, sidecarBin,
+			"--no-bot",
+			"--cf-home", cfHome,
+			"--description", "restart-integration-test",
+		)
+		cmd.Env = buildEnv()
+
+		stdout, err := cmd.StdoutPipe()
+		if err != nil {
+			t.Fatalf("stdout pipe: %v", err)
+		}
+		stderr, err := cmd.StderrPipe()
+		if err != nil {
+			t.Fatalf("stderr pipe: %v", err)
+		}
+		if err := cmd.Start(); err != nil {
+			t.Fatalf("start sidecar: %v", err)
+		}
+		// Drain stderr into test log.
+		go func() {
+			buf := make([]byte, 4096)
+			for {
+				n, err := stderr.Read(buf)
+				if n > 0 {
+					t.Logf("sidecar-stderr: %s", strings.TrimRight(string(buf[:n]), "\n"))
+				}
+				if err != nil {
+					return
+				}
+			}
+		}()
+		return cmd, stdout
+	}
+
+	// --- First run ---
+	ctx1, cancel1 := context.WithTimeout(context.Background(), 30*time.Second)
+	defer cancel1()
+
+	t.Log("starting first sidecar instance")
+	cmd1, stdout1 := launchSidecar(t, ctx1)
+
+	id1 := waitForCampfireID(t, stdout1, 20*time.Second)
+	t.Logf("first run campfire id: %s", id1)
+
+	// Graceful shutdown: SIGINT.
+	if err := cmd1.Process.Signal(os.Interrupt); err != nil {
+		t.Logf("SIGINT first sidecar: %v (may have already exited)", err)
+	}
+	// Wait for the process to exit cleanly (up to 10s).
+	done1 := make(chan error, 1)
+	go func() { done1 <- cmd1.Wait() }()
+	select {
+	case <-done1:
+		t.Log("first sidecar exited")
+	case <-time.After(10 * time.Second):
+		t.Log("first sidecar did not exit within 10s after SIGINT; killing")
+		_ = cmd1.Process.Kill()
+		<-done1
+	}
+	cancel1()
+
+	// --- Second run (same persona, same cf-home) ---
+	ctx2, cancel2 := context.WithTimeout(context.Background(), 30*time.Second)
+	defer cancel2()
+
+	t.Log("starting second sidecar instance (same FSO_USER, same --cf-home)")
+	cmd2, stdout2 := launchSidecar(t, ctx2)
+	defer func() {
+		_ = cmd2.Process.Signal(os.Interrupt)
+		_, _ = cmd2.Process.Wait()
+	}()
+
+	id2 := waitForCampfireID(t, stdout2, 20*time.Second)
+	t.Logf("second run campfire id: %s", id2)
+	cancel2()
+
+	// --- Assertion: same ID across restart ---
+	if id1 != id2 {
+		t.Errorf("campfire ID changed across restart:\n  first:  %s\n  second: %s\nStartCampfire did not resume from persisted body-cf.id",
+			id1, id2)
+	} else {
+		t.Logf("PASS: campfire ID %s survived sidecar restart", id1)
+	}
+}
+
 // compile-time assertion we did not accidentally break formatter with fmt use:
 var _ = fmt.Sprintf
