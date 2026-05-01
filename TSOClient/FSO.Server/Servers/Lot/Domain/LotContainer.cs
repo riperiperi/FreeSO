@@ -1419,7 +1419,11 @@ namespace FSO.Server.Servers.Lot.Domain
             var rage = (uint)((now - user.register_date) / ((long)60 * 60 * 24));
             var age = (uint)((now - avatar.date) / ((long)60 * 60 * 24));
 
-            state.SkillLock = (short)(20 + age / 7);
+            // Skill-lock pool = base (20) + age progression + portal-purchased bonus.
+            // Without the +skilllock_bonus the purchased upgrade only appears in the
+            // city-side Avatar_SkillsLockPoints model and is dropped on the floor every
+            // time the avatar joins a lot. Match the calc in ServerAvatarProvider.LazyLoad.
+            state.SkillLock = (short)(20 + age / 7 + (int)avatar.skilllock_bonus);
             state.SkillLockBody = (short)(avatar.lock_body*100);
             state.SkillLockCharisma = (short)(avatar.lock_charisma * 100);
             state.SkillLockCooking = (short)(avatar.lock_cooking * 100);
