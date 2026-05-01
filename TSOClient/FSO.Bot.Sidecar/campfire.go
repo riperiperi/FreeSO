@@ -65,6 +65,20 @@ func StartCampfire(ctx context.Context, cfg CampfireConfig) (*Campfire, error) {
 	log.Printf("identity %s at %s", shortKey(pk), initRes.IdentityPath)
 
 	id := cfg.CampfireID
+
+	// Before creating a new campfire, check for a persisted body campfire ID.
+	// This implements I0-5: cf $CF must survive sidecar restarts.
+	// Reading is best-effort: if FSO_USER is unset or the file is absent, fall
+	// through to create a fresh campfire as before.
+	if id == "" {
+		if persisted, rerr := ReadBodyCfID(); rerr != nil {
+			log.Printf("read body-cf.id: %v (creating new campfire)", rerr)
+		} else if persisted != "" {
+			id = persisted
+			log.Printf("resumed body campfire from persona state: %s", shortID(id))
+		}
+	}
+
 	if id == "" {
 		transportDir := filepath.Join(cfg.Home, "campfires")
 		if err := os.MkdirAll(transportDir, 0o700); err != nil {
@@ -80,6 +94,11 @@ func StartCampfire(ctx context.Context, cfg CampfireConfig) (*Campfire, error) {
 		}
 		id = res.CampfireID
 		log.Printf("created invite-only campfire: %s", id)
+
+		// Persist the new ID so subsequent restarts resume the same campfire.
+		if werr := WriteBodyCfID(id); werr != nil {
+			log.Printf("write body-cf.id: %v (non-fatal — next restart will create a new campfire)", werr)
+		}
 	} else {
 		log.Printf("reusing campfire: %s", id)
 	}
