@@ -281,14 +281,23 @@ namespace FSO.SimAntics
 
             if (LastFrameSpeed != SpeedMultiplier)
             {
-                var allSounds = new List<HITSound>();
-                foreach (var ent in SoundEntities)
+                // Determine which transition we're on (if any) once, then iterate sound
+                // entities directly and Pause/Resume inline. Avoids the previous pattern of
+                // building a temp List<HITSound>, then ForEach with a closure — both
+                // allocations were paid even when neither transition was actually active.
+                bool pauseAll = SpeedMultiplier < 1 && SpeedMultiplier > -2 && LastFrameSpeed >= 1;
+                bool resumeAll = SpeedMultiplier >= 1 && LastFrameSpeed < 1;
+                if (pauseAll || resumeAll)
                 {
-                    allSounds.AddRange(ent.SoundThreads.Select(x => x.Sound));
+                    foreach (var ent in SoundEntities)
+                    {
+                        foreach (var thread in ent.SoundThreads)
+                        {
+                            if (pauseAll) thread.Sound.Pause();
+                            else thread.Sound.Resume();
+                        }
+                    }
                 }
-
-                if (SpeedMultiplier < 1 && SpeedMultiplier > -2 && LastFrameSpeed >= 1) allSounds.ForEach((x) => x.Pause()); 
-                else if (SpeedMultiplier >= 1 && LastFrameSpeed < 1) allSounds.ForEach((x) => x.Resume());
                 LastFrameSpeed = SpeedMultiplier;
             }
 
