@@ -226,13 +226,19 @@ namespace FSO.Server.Core
                 // BottomRight isometric tile→screen + level offset.
                 int sx = (-t.TileX + t.TileY) * z.TileHalfW;
                 int sy = (-t.TileX - t.TileY) * z.TileHalfH - (int)(t.Level * z.FloorPxHeight);
-                // Depth: lower-right (front) tiles have larger depth and must draw last.
-                // Higher levels also draw later (in front of lower floors).
-                int depth = (-t.TileX - t.TileY) * 1000 + t.Level * 10000;
-                // Negate so smaller "back" depth sorts first.
-                resolved.Add((image, sx, sy, -depth));
+                // Depth so we sort BACK-first (smallest depth) → FRONT-last (largest depth).
+                // In BottomRight isometric, "back" tiles have larger TileX+TileY (more
+                // negative sy). Use TileX+TileY directly so larger sums = front of view
+                // = drawn later. Higher levels are physically in front of lower floors.
+                int depth = (t.TileX + t.TileY) * 1000 + t.Level * 10000;
+                resolved.Add((image, sx, sy, depth));
             }
             if (resolved.Count == 0) return false;
+            // Ascending = back-to-front: larger depth (front of view) drawn last so it
+            // overpaints earlier tiles. Previously stored -depth, which inverted this and
+            // caused back tiles to overpaint front ones — visible on multi-tile asymmetric
+            // objects (e.g., a 3-tile bed appeared rotated 180° because the head sprite
+            // covered the foot end).
             resolved.Sort((a, b) => a.Depth.CompareTo(b.Depth));
 
             // Pass 1 – bounding box across all tiles.
