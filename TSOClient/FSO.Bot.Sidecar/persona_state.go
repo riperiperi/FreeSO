@@ -219,6 +219,30 @@ func WriteOwnedLots(entries []OwnedLotEntry) error {
 	return nil
 }
 
+// ReadHomeLotFromOwnedLots reads the first entry in owned-lots.json and returns
+// its LocationHex as a string suitable for FSO_HOME_LOT_LOCATION. Returns ("",
+// nil) when the file does not exist or is empty — persona owns no lot. Returns
+// an error on I/O or parse failures.
+//
+// "First entry" is the lowest-index entry in the JSON array, which is the
+// chronologically first purchase (AppendOwnedLot appends new purchases). The
+// C# bot parses both "0x..." hex and decimal forms, so passing LocationHex
+// directly is correct.
+func ReadHomeLotFromOwnedLots() (string, error) {
+	lots, err := ReadOwnedLots()
+	if err != nil {
+		return "", err
+	}
+	if len(lots) == 0 {
+		return "", nil // no owned lot — ok:false path in go-home
+	}
+	loc := strings.TrimSpace(lots[0].LocationHex)
+	if loc == "" {
+		return "", fmt.Errorf("owned-lots.json[0].location_hex is empty — corrupt entry")
+	}
+	return loc, nil
+}
+
 // AppendOwnedLot appends a newly purchased lot to owned-lots.json. The new
 // entry's habitation block is zeroed (nil timestamps, is_habitable=false) per
 // I0-7: the body must eat/sleep/use-toilet to become habitable.

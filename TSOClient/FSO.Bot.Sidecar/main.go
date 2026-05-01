@@ -119,8 +119,9 @@ func main() {
 			Exec: botExec,
 			Args: splitArgs(*botArgs),
 			// Inherits parent env including FSO_*. Credentials are environmental
-			// only — never placed on the CLI.
-			Env: os.Environ(),
+			// only — never placed on the CLI. FSO_HOME_LOT_LOCATION is injected
+			// from owned-lots.json so go-home reflects the post-purchase home.
+			Env: injectHomeLotEnv(os.Environ()),
 		})
 		if err != nil {
 			log.Fatalf("bot launch: %v", err)
@@ -367,8 +368,10 @@ func main() {
 			}
 
 			// Step 3: build env for relaunch, overriding FSO_LOT_LOCATION when
-			// a cross-lot transition was requested.
-			relaunchEnv := os.Environ()
+			// a cross-lot transition was requested, and always refreshing
+			// FSO_HOME_LOT_LOCATION from owned-lots.json (so go-home reflects
+			// any lot purchased during the previous bot session).
+			relaunchEnv := injectHomeLotEnv(os.Environ())
 			if lotOverride != "" {
 				// Replace FSO_LOT_LOCATION with the transition target. Strip
 				// any existing value and append the new one.
@@ -432,6 +435,49 @@ func main() {
 			go NewBridgesWithBotCmd(cf, newProc, ipc, botCmds).Run(ctx)
 		}
 	}
+}
+
+// injectHomeLotEnv reads the persona's first owned lot from owned-lots.json and
+// injects FSO_HOME_LOT_LOCATION into env, replacing any existing value. If no
+// owned lot is found (first purchase has not happened yet), the existing value
+// (or absence) is preserved — the C# bot returns ok:false from go-home when
+// FSO_HOME_LOT_LOCATION is 0 / absent.
+//
+// This is called on every bot launch (initial + relaunch) so go-home always
+// reflects the post-purchase home lot without requiring a sidecar restart.
+func injectHomeLotEnv(env []string) []string {
+	homeLoc, err := ReadHomeLotFromOwnedLots()
+	if err != nil {
+		log.Printf("supervisor: read home lot from owned-lots.json: %v (FSO_HOME_LOT_LOCATION unchanged)", err)
+		return env
+	}
+	if homeLoc == "" {
+		// No owned lots yet — don't inject. The bot will return ok:false from go-home.
+		log.Printf("supervisor: no owned lots — FSO_HOME_LOT_LOCATION not set")
+		// Still strip any stale value from a previous session to avoid go-home
+		// incorrectly navigating to a lot no longer owned.
+		filtered := make([]string, 0, len(env))
+		for _, e := range env {
+			if len(e) >= len("FSO_HOME_LOT_LOCATION=") &&
+				e[:len("FSO_HOME_LOT_LOCATION=")] == "FSO_HOME_LOT_LOCATION=" {
+				continue
+			}
+			filtered = append(filtered, e)
+		}
+		return filtered
+	}
+	// Replace any existing FSO_HOME_LOT_LOCATION with the first owned lot.
+	filtered := make([]string, 0, len(env))
+	for _, e := range env {
+		if len(e) >= len("FSO_HOME_LOT_LOCATION=") &&
+			e[:len("FSO_HOME_LOT_LOCATION=")] == "FSO_HOME_LOT_LOCATION=" {
+			continue
+		}
+		filtered = append(filtered, e)
+	}
+	filtered = append(filtered, "FSO_HOME_LOT_LOCATION="+homeLoc)
+	log.Printf("supervisor: home lot=%s injected into FSO_HOME_LOT_LOCATION", homeLoc)
+	return filtered
 }
 
 // botExitCh is a nil-safe helper: when proc is nil (--no-bot mode) it returns

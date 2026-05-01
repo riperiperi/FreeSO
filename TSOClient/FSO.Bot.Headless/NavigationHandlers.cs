@@ -65,11 +65,44 @@ public static class NavigationHandlers
         = new();
 
     /// <summary>
-    /// Home lot location captured at session start (from <c>avatar.LotLocation</c>). Static
-    /// because there is exactly one bot per process; this avoids weaving the value through
-    /// every handler call and keeps the signature simple.
+    /// Fallback home lot location captured at session start (from <c>avatar.LotLocation</c>).
+    /// Used only when <c>FSO_HOME_LOT_LOCATION</c> env var is 0 or absent. Static because
+    /// there is exactly one bot per process.
     /// </summary>
-    private static uint _homeLotLocation;
+    private static uint _fallbackHomeLotLocation;
+
+    /// <summary>
+    /// Reads the effective home lot location for this invocation.
+    /// Priority:
+    ///   1. <c>FSO_HOME_LOT_LOCATION</c> environment variable (set by the sidecar on each
+    ///      launch from <c>owned-lots.json</c> — the post-purchase home).
+    ///   2. <c>_fallbackHomeLotLocation</c> captured at registration from
+    ///      <c>avatar.LotLocation</c> (pre-purchase default).
+    ///
+    /// Re-reads the env on every call so a future in-process env update (if ever needed)
+    /// is picked up without restarting. Currently the only writer is the sidecar supervisor
+    /// which sets it before launching this process, so in practice the value is stable
+    /// across the bot's lifetime.
+    /// </summary>
+    internal static uint ReadHomeLotLocation()
+    {
+        var envVal = Environment.GetEnvironmentVariable("FSO_HOME_LOT_LOCATION");
+        if (!string.IsNullOrWhiteSpace(envVal))
+        {
+            // Accept both decimal and "0x..." hex forms.
+            if (envVal.StartsWith("0x", StringComparison.OrdinalIgnoreCase))
+            {
+                if (uint.TryParse(envVal.AsSpan(2), System.Globalization.NumberStyles.HexNumber, null, out uint parsed) && parsed != 0)
+                    return parsed;
+            }
+            else
+            {
+                if (uint.TryParse(envVal, out uint parsed) && parsed != 0)
+                    return parsed;
+            }
+        }
+        return _fallbackHomeLotLocation;
+    }
 
     public static void RegisterAll(CommandDispatcher dispatcher, HeadlessVMHost vmHost, AriesClient cityClient, uint homeLotLocation)
     {
@@ -77,7 +110,7 @@ public static class NavigationHandlers
         if (vmHost == null) throw new ArgumentNullException(nameof(vmHost));
         if (cityClient == null) throw new ArgumentNullException(nameof(cityClient));
 
-        _homeLotLocation = homeLotLocation;
+        _fallbackHomeLotLocation = homeLotLocation;
 
         // Wire a city subscriber for FindAvatarResponse. Done once at registration; the
         // city socket is long-lived for the life of the bot process.
@@ -96,13 +129,25 @@ public static class NavigationHandlers
     ///   {ok:true, already_home:true,  current_lot_location:"0xF8F0DC", home_lot_location:"0xF8F0DC"}
     ///   {ok:true, already_home:false, deferred:true, deferred_reason:"...",
     ///    current_lot_location:"0x...", home_lot_location:"0x..."}
+    ///   {ok:false, error:"no owned lot — persona has not purchased a lot yet"}
     /// </code>
     /// Agents MUST check <c>already_home</c> before assuming success. When
     /// <c>already_home=false</c>, the bot has not moved; <c>deferred=true</c> signals the
     /// cross-lot transition is unimplemented (tracked in rd follow-up).
+    /// When <c>ok=false</c> with no <c>home_lot_location</c>, the persona owns no lot.
     /// </summary>
     internal static CommandDispatcher.Response GoHome(HeadlessVMHost vmHost)
     {
+        // Re-read home lot location on every invocation: the sidecar sets
+        // FSO_HOME_LOT_LOCATION before launching this process from owned-lots.json.
+        // If the env var is 0 (absent or unset), no owned lot is known — return
+        // ok:false so the agent can branch correctly.
+        uint homeLotLocation = ReadHomeLotLocation();
+        if (homeLotLocation == 0)
+        {
+            return CommandDispatcher.Response.Fail("no owned lot — persona has not purchased a lot yet (FSO_HOME_LOT_LOCATION not set)");
+        }
+
         uint currentLotLocation = vmHost.RunUnderTickLock<uint>(() =>
         {
             var lotState = vmHost.VM?.TSOState as VMTSOLotState;
@@ -114,8 +159,8 @@ public static class NavigationHandlers
             return CommandDispatcher.Response.Fail("no live lot (TSOState.LotID == 0)");
         }
 
-        bool alreadyHome = currentLotLocation == _homeLotLocation;
-        string homeHex = "0x" + _homeLotLocation.ToString("X");
+        bool alreadyHome = currentLotLocation == homeLotLocation;
+        string homeHex = "0x" + homeLotLocation.ToString("X");
         string curHex = "0x" + currentLotLocation.ToString("X");
 
         if (alreadyHome)

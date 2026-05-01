@@ -371,3 +371,161 @@ func TestWriteNextLotRejectsEmpty(t *testing.T) {
 		t.Fatal("expected error for empty lot location, got nil")
 	}
 }
+
+// --- ReadHomeLotFromOwnedLots tests (freesoexperiment-084) ---
+
+// TestReadHomeLotFromOwnedLotsNoFile asserts that when owned-lots.json does not
+// exist, ReadHomeLotFromOwnedLots returns ("", nil) — persona owns no lot.
+func TestReadHomeLotFromOwnedLotsNoFile(t *testing.T) {
+	tmp := t.TempDir()
+	withConfigHome(t, tmp)
+	withFSO_USER(t, "botrous")
+
+	loc, err := ReadHomeLotFromOwnedLots()
+	if err != nil {
+		t.Fatalf("expected nil error for missing file, got: %v", err)
+	}
+	if loc != "" {
+		t.Fatalf("expected empty string for missing file, got %q", loc)
+	}
+}
+
+// TestReadHomeLotFromOwnedLotsFirstEntry asserts the first entry's LocationHex
+// is returned when owned-lots.json has one or more entries.
+func TestReadHomeLotFromOwnedLotsFirstEntry(t *testing.T) {
+	tmp := t.TempDir()
+	withConfigHome(t, tmp)
+	withFSO_USER(t, "botrous")
+
+	// Write an owned-lots.json with two entries; first should win.
+	entries := []OwnedLotEntry{
+		{Name: "Main", LocationHex: "0xF9015C", PurchasedAt: 1000},
+		{Name: "Cabin", LocationHex: "0x00110F00", PurchasedAt: 2000},
+	}
+	if err := WriteOwnedLots(entries); err != nil {
+		t.Fatalf("WriteOwnedLots: %v", err)
+	}
+
+	loc, err := ReadHomeLotFromOwnedLots()
+	if err != nil {
+		t.Fatalf("ReadHomeLotFromOwnedLots: %v", err)
+	}
+	if loc != "0xF9015C" {
+		t.Fatalf("expected first entry LocationHex %q, got %q", "0xF9015C", loc)
+	}
+}
+
+// TestReadHomeLotFromOwnedLotsEmptyArray asserts that an empty owned-lots.json
+// returns ("", nil) — no owned lots yet.
+func TestReadHomeLotFromOwnedLotsEmptyArray(t *testing.T) {
+	tmp := t.TempDir()
+	withConfigHome(t, tmp)
+	withFSO_USER(t, "ellis")
+
+	if err := WriteOwnedLots([]OwnedLotEntry{}); err != nil {
+		t.Fatalf("WriteOwnedLots empty: %v", err)
+	}
+
+	loc, err := ReadHomeLotFromOwnedLots()
+	if err != nil {
+		t.Fatalf("ReadHomeLotFromOwnedLots: %v", err)
+	}
+	if loc != "" {
+		t.Fatalf("expected empty string for empty array, got %q", loc)
+	}
+}
+
+// --- injectHomeLotEnv tests (freesoexperiment-084) ---
+
+// TestInjectHomeLotEnvInjectsWhenOwned asserts that injectHomeLotEnv adds
+// FSO_HOME_LOT_LOCATION to the env slice when owned-lots.json exists.
+func TestInjectHomeLotEnvInjectsWhenOwned(t *testing.T) {
+	tmp := t.TempDir()
+	withConfigHome(t, tmp)
+	withFSO_USER(t, "jin")
+
+	entries := []OwnedLotEntry{
+		{Name: "Home", LocationHex: "0xF9015C", PurchasedAt: 1000},
+	}
+	if err := WriteOwnedLots(entries); err != nil {
+		t.Fatalf("WriteOwnedLots: %v", err)
+	}
+
+	result := injectHomeLotEnv([]string{"FOO=bar", "BAZ=qux"})
+
+	found := ""
+	for _, e := range result {
+		if len(e) > len("FSO_HOME_LOT_LOCATION=") &&
+			e[:len("FSO_HOME_LOT_LOCATION=")] == "FSO_HOME_LOT_LOCATION=" {
+			found = e[len("FSO_HOME_LOT_LOCATION="):]
+		}
+	}
+	if found == "" {
+		t.Fatalf("FSO_HOME_LOT_LOCATION not injected: %v", result)
+	}
+	if found != "0xF9015C" {
+		t.Fatalf("wrong FSO_HOME_LOT_LOCATION: want %q, got %q", "0xF9015C", found)
+	}
+}
+
+// TestInjectHomeLotEnvNoOwnedLotsStripsStale asserts that injectHomeLotEnv
+// strips an existing FSO_HOME_LOT_LOCATION when no lots are owned — preventing
+// go-home from routing to a previously-owned lot after eviction/sale.
+func TestInjectHomeLotEnvNoOwnedLotsStripsStale(t *testing.T) {
+	tmp := t.TempDir()
+	withConfigHome(t, tmp)
+	withFSO_USER(t, "marlo")
+
+	// No owned-lots.json written → empty.
+	env := []string{"FOO=bar", "FSO_HOME_LOT_LOCATION=0xDEADBEEF"}
+	result := injectHomeLotEnv(env)
+
+	for _, e := range result {
+		if len(e) >= len("FSO_HOME_LOT_LOCATION=") &&
+			e[:len("FSO_HOME_LOT_LOCATION=")] == "FSO_HOME_LOT_LOCATION=" {
+			t.Errorf("stale FSO_HOME_LOT_LOCATION not stripped: %v", result)
+			return
+		}
+	}
+}
+
+// TestInjectHomeLotEnvReplacesExisting asserts that injectHomeLotEnv replaces
+// an existing FSO_HOME_LOT_LOCATION with the current owned-lots.json value.
+func TestInjectHomeLotEnvReplacesExisting(t *testing.T) {
+	tmp := t.TempDir()
+	withConfigHome(t, tmp)
+	withFSO_USER(t, "sage")
+
+	entries := []OwnedLotEntry{
+		{Name: "NewHome", LocationHex: "0x00110F00", PurchasedAt: 9000},
+	}
+	if err := WriteOwnedLots(entries); err != nil {
+		t.Fatalf("WriteOwnedLots: %v", err)
+	}
+
+	// Start with a stale value.
+	env := []string{"FSO_HOME_LOT_LOCATION=0xOLDVALUE", "OTHER=x"}
+	result := injectHomeLotEnv(env)
+
+	found := ""
+	for _, e := range result {
+		if len(e) > len("FSO_HOME_LOT_LOCATION=") &&
+			e[:len("FSO_HOME_LOT_LOCATION=")] == "FSO_HOME_LOT_LOCATION=" {
+			found = e[len("FSO_HOME_LOT_LOCATION="):]
+		}
+	}
+	if found != "0x00110F00" {
+		t.Fatalf("want FSO_HOME_LOT_LOCATION=0x00110F00, got %q in %v", found, result)
+	}
+	// Count occurrences — must be exactly one.
+	count := 0
+	for _, e := range result {
+		if len(e) >= len("FSO_HOME_LOT_LOCATION=") &&
+			e[:len("FSO_HOME_LOT_LOCATION=")] == "FSO_HOME_LOT_LOCATION=" {
+			count++
+		}
+	}
+	if count != 1 {
+		t.Errorf("expected exactly 1 FSO_HOME_LOT_LOCATION entry, got %d: %v", count, result)
+	}
+}
