@@ -10,7 +10,7 @@ fi
 # to fork the script just to point at a test server. Run with e.g.
 #   FREESO_SERVER_URL=https://localhost:8080 ./install.sh
 GAME_NAME="${GAME_NAME:-FreeSO}"
-SERVER_URL="${FREESO_SERVER_URL:-https://fso.icarey.net}"
+SERVER_URL="${FREESO_SERVER_URL:-https://api.edenso.net}"
 # Use the explicit release tag rather than `releases/latest/...` — when both
 # `latest-client` and `latest-server` tags exist, GitHub's "latest" is
 # whichever was published most recently and may resolve to the wrong one.

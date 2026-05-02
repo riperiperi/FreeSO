@@ -9,7 +9,7 @@ SETLOCAL EnableDelayedExpansion
 :: and resolves to the wrong one when both latest-client and latest-server
 :: tags exist.
 IF NOT DEFINED GAME_NAME       SET "GAME_NAME=FreeSO"
-IF NOT DEFINED FREESO_SERVER_URL  SET "FREESO_SERVER_URL=https://fso.icarey.net"
+IF NOT DEFINED FREESO_SERVER_URL  SET "FREESO_SERVER_URL=https://api.edenso.net"
 IF NOT DEFINED FREESO_CLIENT_URL  SET "FREESO_CLIENT_URL=https://github.com/TheGreatCodeholio/FreeSO/releases/download/latest-client/freeso-client-windows-ogl.zip"
 IF NOT DEFINED FREESO_TSO_URL     SET "FREESO_TSO_URL=https://archive.org/download/TheSimsOnline_201802/TSO.zip"
 IF NOT DEFINED FREESO_REMESH_URL  SET "FREESO_REMESH_URL=https://github.com/ItsSim/fsolauncher/releases/download/1.12.1-prod.24/remeshes-1.0.0-1726774408.zip"

@@ -35,7 +35,16 @@ namespace FSO.Server.Api.Core
                 options.AddPolicy("AdminAppPolicy",
                     builder =>
                     {
-                        builder.WithOrigins("https://freeso.org", "http://localhost:8080").AllowAnyMethod().AllowAnyHeader().AllowCredentials().WithExposedHeaders("content-disposition");
+                        // Origins allowed to make credentialed (cookie-bearing) calls
+                        // against admin endpoints. edenso.net is the production
+                        // portal; localhost:8080 / localhost:5000 are dev-time
+                        // portal/admin-app hosts.
+                        builder.WithOrigins(
+                            "https://edenso.net",
+                            "https://www.edenso.net",
+                            "http://localhost:8080",
+                            "http://localhost:5000"
+                        ).AllowAnyMethod().AllowAnyHeader().AllowCredentials().WithExposedHeaders("content-disposition");
                     });
             }).AddMvc().SetCompatibilityVersion(CompatibilityVersion.Version_2_1);
         }

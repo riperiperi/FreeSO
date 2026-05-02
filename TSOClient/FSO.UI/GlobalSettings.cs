@@ -20,15 +20,22 @@ namespace FSO.Client
                     if (defaultInstance.ChatWindowsOpacity == 0 || defaultInstance.ChatWindowsOpacity > 1)
                         defaultInstance.ChatWindowsOpacity = 1; //sanity check
 
-                    // Migrate any client with the upstream api.freeso.org URL onto this
-                    // fork's server. Catches both http (the original) and https (the
-                    // earlier auto-bumped form) so anyone updating from a vanilla FreeSO
-                    // install lands on our server instead of failing to connect.
-                    if (defaultInstance.GameEntryUrl == "http://api.freeso.org" ||
-                        defaultInstance.GameEntryUrl == "https://api.freeso.org")
+                    // Migrate any legacy URL onto the current production endpoint.
+                    // Catches:
+                    //   * api.freeso.org   — vanilla FreeSO upstream (http or https)
+                    //   * fso.icarey.net   — earlier name for this fork's server
+                    // so a player updating from any prior install lands on
+                    // api.edenso.net without having to re-run the installer.
+                    var legacyUrls = new[] {
+                        "http://api.freeso.org",
+                        "https://api.freeso.org",
+                        "http://fso.icarey.net",
+                        "https://fso.icarey.net",
+                    };
+                    if (System.Array.IndexOf(legacyUrls, defaultInstance.GameEntryUrl) >= 0)
                     {
-                        defaultInstance.GameEntryUrl = "https://fso.icarey.net";
-                        defaultInstance.CitySelectorUrl = "https://fso.icarey.net";
+                        defaultInstance.GameEntryUrl = "https://api.edenso.net";
+                        defaultInstance.CitySelectorUrl = "https://api.edenso.net";
                     }
                 }
                 return defaultInstance;
@@ -68,13 +75,14 @@ namespace FSO.Client
             { "LanguageCode", "1"},
             { "SurroundingLotMode", "2" },
 
-            // Server URLs: defaults point at this fork's server. The installer
-            // (install.sh / install.bat) writes the same values into config.ini,
-            // and the migration above repoints any vanilla-FreeSO config it
-            // finds. Override via the debug menu only — see UIDebugMenu.
+            // Server URLs: defaults point at the production API endpoint. The
+            // installer (install.sh / install.bat) writes the same values into
+            // config.ini, and the migration above repoints any legacy config
+            // (api.freeso.org / fso.icarey.net) it finds. Override via the
+            // debug menu only — see UIDebugMenu.
             { "UseCustomServer", "true" },
-            { "GameEntryUrl", "https://fso.icarey.net" },
-            { "CitySelectorUrl", "https://fso.icarey.net" },
+            { "GameEntryUrl", "https://api.edenso.net" },
+            { "CitySelectorUrl", "https://api.edenso.net" },
 
             { "TargetRefreshRate", "60" },
 
