@@ -6,10 +6,12 @@
 
 using System;
 using System.Collections.Concurrent;
+using System.Linq;
 using System.Text.Json.Nodes;
 using System.Threading;
 using System.Threading.Tasks;
 using FSO.Common.Domain.Realestate;
+using FSO.Files.Formats.tsodata;
 using FSO.Server.Clients;
 using FSO.Server.Protocol.Aries;
 using FSO.Server.Protocol.Electron.Model;
@@ -26,6 +28,7 @@ namespace FSO.Bot.Headless;
 /// <code>{"kind":"bot-cmd","cmd":"bot-exit-request","correlation_id":"&lt;uuid&gt;","args":{}}</code>
 /// <code>{"kind":"bot-cmd","cmd":"probe-road","correlation_id":"&lt;uuid&gt;","args":{"x":249,"y":348}}</code>
 /// <code>{"kind":"bot-cmd","cmd":"purchase-lot","correlation_id":"&lt;uuid&gt;","args":{"location_x":249,"location_y":348,"name":"marlo's place","start_fresh":false}}</code>
+/// <code>{"kind":"bot-cmd","cmd":"probe-bulletin","correlation_id":"&lt;uuid&gt;","args":{"neighborhood_id":1}}</code>
 /// </para>
 ///
 /// <para>
@@ -66,6 +69,7 @@ public static class BotCmdHandler
 {
     private static readonly ConcurrentDictionary<string, TaskCompletionSource<FindLotResponse>> _pendingProbes = new();
     private static readonly ConcurrentDictionary<string, TaskCompletionSource<PurchaseLotResponse>> _pendingPurchases = new();
+    private static readonly ConcurrentDictionary<string, TaskCompletionSource<BulletinResponse>> _pendingBulletins = new();
     private static readonly object _subscriberOnce = new();
     private static bool _subscriberAdded;
 
@@ -79,6 +83,7 @@ public static class BotCmdHandler
         {
             if (_subscriberAdded) return;
             cityAries.AddSubscriber(new ProbeLotSubscriber());
+            cityAries.AddSubscriber(new ProbeBulletinSubscriber());
             _subscriberAdded = true;
         }
     }
@@ -119,6 +124,10 @@ public static class BotCmdHandler
 
             case "purchase-lot":
                 await HandlePurchaseLotAsync(corrId, cityAries, args, ct);
+                return true;
+
+            case "probe-bulletin":
+                await HandleProbeBulletinAsync(corrId, cityAries, args, ct);
                 return true;
 
             case "bot-exit-request":
@@ -366,6 +375,137 @@ public static class BotCmdHandler
         }
     }
 
+    // ---- probe-bulletin ----
+
+    /// <summary>
+    /// probe-bulletin (freesoexperiment-923): issues <see cref="BulletinRequest"/>
+    /// with <c>Type=GET_MESSAGES</c> on the city Aries socket and awaits the
+    /// inbound <see cref="BulletinResponse"/>.
+    ///
+    /// <para>
+    /// This mirrors the sidecar-facing path in <see cref="CityHandlers.ViewBulletinAsync"/>
+    /// but is reached via the bot-cmd IPC channel rather than through the normal IPC
+    /// op dispatcher. The sidecar's <c>bulletinBoardHandler</c> (interaction_handlers.go)
+    /// sends <c>probe-bulletin</c> when the agent invokes
+    /// <c>interact-with object_type=bulletin_board</c>.
+    /// </para>
+    ///
+    /// <para>
+    /// <b>Args</b>: <c>neighborhood_id</c> (uint, optional; defaults to 1).
+    /// </para>
+    ///
+    /// <para>
+    /// <b>Reply data shape</b> (consumed by the sidecar's bulletinBoardHandler):
+    /// <code>{"messages":[{...},...], "count":N}</code>
+    /// Each message object matches the shape produced by
+    /// <see cref="CityHandlers.ViewBulletinAsync"/>:
+    /// <c>bulletin_id, nhood_id, sender_id, sender_name, subject, body, time,
+    /// type, flags, lot_id</c>.
+    /// </para>
+    ///
+    /// <para>
+    /// <b>Correlation model</b>: reuses the same FIFO TCS approach as
+    /// <see cref="ProbeBulletinSubscriber"/>. Only one <c>probe-bulletin</c>
+    /// is expected in flight at a time (serial IPC dispatch).
+    /// </para>
+    /// </summary>
+    private static async Task HandleProbeBulletinAsync(
+        string corrId,
+        AriesClient cityAries,
+        JsonObject args,
+        CancellationToken ct)
+    {
+        if (cityAries == null)
+        {
+            EmitReply(corrId, ok: false, error: "probe-bulletin: city socket unavailable");
+            return;
+        }
+
+        // Neighborhood id — optional, default 1 (workshop's only nhood).
+        uint nhoodId = 1;
+        var nhoodNode = args["neighborhood_id"];
+        if (nhoodNode != null)
+        {
+            try
+            {
+                if (nhoodNode is JsonValue nv && nv.TryGetValue<long>(out var lv))
+                    nhoodId = (uint)lv;
+                else
+                    nhoodId = uint.Parse(nhoodNode.ToString());
+            }
+            catch (Exception ex)
+            {
+                EmitReply(corrId, ok: false, error: $"probe-bulletin: bad neighborhood_id: {ex.Message}");
+                return;
+            }
+        }
+
+        // Register one-shot TCS keyed on corrId.
+        var tcs = _pendingBulletins.GetOrAdd(corrId,
+            _ => new TaskCompletionSource<BulletinResponse>(TaskCreationOptions.RunContinuationsAsynchronously));
+
+        try
+        {
+            cityAries.Write(new BulletinRequest
+            {
+                Type = BulletinRequestType.GET_MESSAGES,
+                TargetNHood = nhoodId,
+            });
+
+            using var cts = CancellationTokenSource.CreateLinkedTokenSource(ct);
+            cts.CancelAfter(TimeSpan.FromSeconds(10));
+
+            var first = await Task.WhenAny(tcs.Task, Task.Delay(Timeout.Infinite, cts.Token));
+            if (first != tcs.Task)
+            {
+                EmitReply(corrId, ok: false, error: "probe-bulletin: timeout waiting for BulletinResponse");
+                return;
+            }
+
+            var resp = await tcs.Task;
+            if (resp.Type != BulletinResponseType.MESSAGES)
+            {
+                EmitReply(corrId, ok: false, error: $"probe-bulletin: server returned {resp.Type}");
+                return;
+            }
+
+            var messages = (resp.Messages ?? Array.Empty<BulletinItem>()).Select(b => new
+            {
+                bulletin_id = (long)b.ID,
+                nhood_id = (long)b.NhoodID,
+                sender_id = (long)b.SenderID,
+                sender_name = b.SenderName ?? string.Empty,
+                subject = b.Subject ?? string.Empty,
+                body = b.Body ?? string.Empty,
+                time = b.Time,
+                type = b.Type.ToString(),
+                flags = (int)b.Flags,
+                lot_id = (long)b.LotID,
+            }).ToArray();
+
+            EmitReply(corrId, ok: true, data: new
+            {
+                neighborhood_id = (long)nhoodId,
+                count = messages.Length,
+                messages,
+            });
+        }
+        catch (OperationCanceledException)
+        {
+            EmitReply(corrId, ok: false, error: "probe-bulletin: cancelled");
+        }
+        catch (Exception ex)
+        {
+            EmitReply(corrId, ok: false, error: $"probe-bulletin: {ex.GetType().Name}: {ex.Message}");
+        }
+        finally
+        {
+            _pendingBulletins.TryRemove(
+                new System.Collections.Generic.KeyValuePair<string, TaskCompletionSource<BulletinResponse>>(
+                    corrId, tcs));
+        }
+    }
+
     // ---- bot-exit-request ----
 
     private static void HandleBotExitRequest(string corrId)
@@ -448,6 +588,46 @@ public static class BotCmdHandler
             foreach (var kv in _pendingPurchases)
                 kv.Value.TrySetCanceled();
             _pendingPurchases.Clear();
+        }
+        public void SessionIdle(AriesClient c) { }
+        public void InputClosed(AriesClient c) { }
+    }
+
+    // ---- probe-bulletin city-socket subscriber ----
+
+    /// <summary>
+    /// Forwards inbound <see cref="BulletinResponse"/> packets to pending
+    /// <c>probe-bulletin</c> TCS entries (keyed on correlation_id).
+    ///
+    /// <para>
+    /// Correlation strategy: like <see cref="ProbeLotSubscriber"/>, BulletinResponse
+    /// packets carry no client-chosen correlator field. Serial IPC dispatch means at
+    /// most one <c>probe-bulletin</c> is in flight at a time, so FIFO delivery is safe.
+    /// We iterate <see cref="_pendingBulletins"/> and complete the first incomplete TCS.
+    /// </para>
+    /// </summary>
+    private sealed class ProbeBulletinSubscriber : IAriesMessageSubscriber, IAriesEventSubscriber
+    {
+        public void MessageReceived(AriesClient client, object message)
+        {
+            if (message is BulletinResponse br)
+            {
+                foreach (var kv in _pendingBulletins)
+                {
+                    if (kv.Value.Task.IsCompleted) continue;
+                    kv.Value.TrySetResult(br);
+                    break;
+                }
+            }
+        }
+
+        public void SessionCreated(AriesClient c) { }
+        public void SessionOpened(AriesClient c) { }
+        public void SessionClosed(AriesClient c)
+        {
+            foreach (var kv in _pendingBulletins)
+                kv.Value.TrySetCanceled();
+            _pendingBulletins.Clear();
         }
         public void SessionIdle(AriesClient c) { }
         public void InputClosed(AriesClient c) { }
