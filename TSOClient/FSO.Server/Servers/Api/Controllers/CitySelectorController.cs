@@ -109,11 +109,48 @@ namespace FSO.Server.Servers.Api.Controllers
                         UserName = user.username
                     };
 
+                    // Announce the latest PUBLISHED client version for this branch (from
+                    // fso_updates), not the local server binary's version.txt. This decouples
+                    // client updates from server-binary deploys: after publishing a new client
+                    // build via the portal, clients are offered it on next login without
+                    // needing the FSO server itself to be redeployed/restarted.
+                    //
+                    // The local version.txt still drives this server's OWN update logic via
+                    // AutoUpdateUtility (which compares its UpdateID to branch.current_dist_id
+                    // to decide whether to schedule a server-binary self-update). That flow is
+                    // intentionally untouched here.
+                    var announceBranch = VersionName;
+                    var announceVersion = VersionNumber;
+                    try
+                    {
+                        var latest = db.Updates.GetRecentUpdatesForBranchByName(VersionName, 1)
+                            .FirstOrDefault();
+                        if (latest != null && !string.IsNullOrEmpty(latest.version_name))
+                        {
+                            var v = latest.version_name;
+                            var sp = v.LastIndexOf('-');
+                            if (sp != -1)
+                            {
+                                announceBranch = v.Substring(0, sp);
+                                announceVersion = v.Substring(sp + 1);
+                            }
+                            else
+                            {
+                                announceBranch = v;
+                                announceVersion = "0";
+                            }
+                        }
+                    }
+                    catch (Exception ex)
+                    {
+                        LOG.Warn(ex, "Could not look up latest published version for branch '{0}'; falling back to local version.txt", VersionName);
+                    }
+
                     var token = jwt.CreateToken(session);
                     return Response.AsXml(new UserAuthorized()
                     {
-                        FSOBranch = VersionName,
-                        FSOVersion = VersionNumber,
+                        FSOBranch = announceBranch,
+                        FSOVersion = announceVersion,
                         FSOUpdateUrl = DownloadURL
                     })
                             .WithCookie("fso", token.Token);
