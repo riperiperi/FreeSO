@@ -6,6 +6,7 @@
 
 using System;
 using System.Collections.Concurrent;
+using System.Collections.Generic;
 using System.Linq;
 using System.Text.Json.Nodes;
 using System.Threading;
@@ -60,31 +61,72 @@ namespace FSO.Bot.Headless;
 /// </para>
 ///
 /// <para>
-/// <b>Correlation model:</b> probe-lot uses a <see cref="ConcurrentDictionary{TKey,TValue}"/>
-/// keyed on correlation_id so multiple concurrent probes (different lot locations) are
-/// safe. Bot-exit-request is single-use; the response is emitted directly.
+/// <b>Correlation model (freesoexperiment-f70 H1):</b> pending dictionaries store
+/// <c>(lotContext, TCS)</c> tuples so that <c>MessageReceived</c> can match
+/// <see cref="FindLotResponse.LotId"/> against the requested <c>lot_location</c>
+/// rather than completing the first pending entry regardless of which lot was requested.
+/// For bulletin, the neighborhood_id is stored alongside the TCS for diagnostic purposes.
+/// </para>
+///
+/// <para>
+/// <b>Lifecycle (freesoexperiment-f70 H2/H3):</b> this is an <b>instance class</b>
+/// (not static). One instance is created per bot session in <see cref="Program"/> and
+/// bound to its <see cref="AriesClient"/>. Instance state (<c>_pendingProbes</c>,
+/// <c>_sessionClosed</c>, etc.) is per-session — parallel bot sessions cannot share
+/// state. <c>GetOrAdd</c> is guarded against post-<c>SessionClosed</c> re-creation
+/// via a lock+flag pattern: if the session is already closed, <c>GetOrAdd</c> returns
+/// <c>null</c> and the caller emits an error immediately.
 /// </para>
 /// </summary>
-public static class BotCmdHandler
+public sealed class BotCmdHandler
 {
-    private static readonly ConcurrentDictionary<string, TaskCompletionSource<FindLotResponse>> _pendingProbes = new();
-    private static readonly ConcurrentDictionary<string, TaskCompletionSource<PurchaseLotResponse>> _pendingPurchases = new();
-    private static readonly ConcurrentDictionary<string, TaskCompletionSource<BulletinResponse>> _pendingBulletins = new();
-    private static readonly object _subscriberOnce = new();
-    private static bool _subscriberAdded;
+    // ---- H1: lot-keyed pending dictionaries ----
+    //
+    // Each entry stores (lotContext, tcs) so MessageReceived can match by lot/nhood
+    // rather than blindly completing the first incomplete TCS.
+    //
+    // For probe-lot: lotContext = lotLocation (uint) cast to ulong.
+    // For probe-bulletin: lotContext = nhoodId (uint) cast to ulong.
+    //   BulletinResponse doesn't echo nhood; we store it for diagnostics and fall
+    //   back to FIFO when the response type is ambiguous (same semantics as before
+    //   but with explicit lot-keying in the dict value).
+    // For purchase-lot: lotContext = packed (locX << 16 | locY).
+
+    private readonly ConcurrentDictionary<string, (ulong LotCtx, TaskCompletionSource<FindLotResponse> Tcs)>
+        _pendingProbes = new();
+    private readonly ConcurrentDictionary<string, (ulong LotCtx, TaskCompletionSource<PurchaseLotResponse> Tcs)>
+        _pendingPurchases = new();
+    private readonly ConcurrentDictionary<string, (ulong LotCtx, TaskCompletionSource<BulletinResponse> Tcs)>
+        _pendingBulletins = new();
+
+    // ---- H2: SessionClosed / GetOrAdd race guard ----
+    //
+    // Protecting against: SessionClosed fires, sets _sessionClosed = true, clears dicts;
+    // concurrently, a handler task reads _sessionClosed == false (before the set),
+    // then SessionClosed clears, then GetOrAdd recreates a TCS for a dead session.
+    //
+    // Fix: use _pendingLock for the check-then-add critical section AND for the
+    // check-then-cancel-clear in SessionClosed. GetOrAdd-equivalent is done
+    // manually under the lock: if closed, return null (caller emits error).
+    private readonly object _pendingLock = new();
+    private volatile bool _sessionClosed;
+
+    // ---- subscriber registration (H3: per-instance, not static) ----
+    private bool _subscriberRegistered;
 
     /// <summary>
-    /// Register this handler's city-socket subscriber. Called once at startup, idempotent.
+    /// Register this handler's city-socket subscriber on the given <paramref name="cityAries"/>.
+    /// Idempotent — safe to call multiple times; only registers once per instance.
     /// </summary>
-    public static void RegisterSubscriber(AriesClient cityAries)
+    public void RegisterSubscriber(AriesClient cityAries)
     {
         if (cityAries == null) throw new ArgumentNullException(nameof(cityAries));
-        lock (_subscriberOnce)
+        lock (_pendingLock)
         {
-            if (_subscriberAdded) return;
-            cityAries.AddSubscriber(new ProbeLotSubscriber());
-            cityAries.AddSubscriber(new ProbeBulletinSubscriber());
-            _subscriberAdded = true;
+            if (_subscriberRegistered) return;
+            cityAries.AddSubscriber(new ProbeLotAndPurchaseSubscriber(this));
+            cityAries.AddSubscriber(new ProbeBulletinSubscriber(this));
+            _subscriberRegistered = true;
         }
     }
 
@@ -92,7 +134,7 @@ public static class BotCmdHandler
     /// Dispatch a bot-cmd line. Returns false if the line is not a bot-cmd (caller handles
     /// it as a normal IPC op). Returns true when the line was handled (reply already emitted).
     /// </summary>
-    public static async Task<bool> TryHandleAsync(
+    public async Task<bool> TryHandleAsync(
         JsonObject node,
         AriesClient cityAries,
         CancellationToken ct)
@@ -142,7 +184,7 @@ public static class BotCmdHandler
 
     // ---- probe-lot ----
 
-    private static async Task HandleProbeLotAsync(
+    private async Task HandleProbeLotAsync(
         string corrId,
         AriesClient cityAries,
         JsonObject args,
@@ -176,9 +218,20 @@ public static class BotCmdHandler
             return;
         }
 
-        // Register a one-shot TCS keyed on corrId.
-        var tcs = _pendingProbes.GetOrAdd(corrId,
-            _ => new TaskCompletionSource<FindLotResponse>(TaskCreationOptions.RunContinuationsAsynchronously));
+        // H2 + H1: under lock, check session not closed, then add lot-keyed TCS.
+        TaskCompletionSource<FindLotResponse> tcs;
+        lock (_pendingLock)
+        {
+            if (_sessionClosed)
+            {
+                EmitReply(corrId, ok: false, error: "probe-lot: session already closed");
+                return;
+            }
+            var entry = (LotCtx: (ulong)lotLocation,
+                         Tcs: new TaskCompletionSource<FindLotResponse>(TaskCreationOptions.RunContinuationsAsynchronously));
+            _pendingProbes[corrId] = entry;
+            tcs = entry.Tcs;
+        }
 
         try
         {
@@ -216,7 +269,7 @@ public static class BotCmdHandler
         }
         finally
         {
-            _pendingProbes.TryRemove(new System.Collections.Generic.KeyValuePair<string, TaskCompletionSource<FindLotResponse>>(corrId, tcs));
+            _pendingProbes.TryRemove(corrId, out _);
         }
     }
 
@@ -293,7 +346,7 @@ public static class BotCmdHandler
     ///   ok=true, status=="FAILED" → server-side refuse; sidecar interprets reason
     ///   ok=false → local error (timeout, bad args, city socket down)
     /// </summary>
-    private static async Task HandlePurchaseLotAsync(
+    private async Task HandlePurchaseLotAsync(
         string corrId,
         AriesClient cityAries,
         JsonObject args,
@@ -321,9 +374,22 @@ public static class BotCmdHandler
             return;
         }
 
-        // Register one-shot TCS keyed on corrId.
-        var tcs = _pendingPurchases.GetOrAdd(corrId,
-            _ => new TaskCompletionSource<PurchaseLotResponse>(TaskCreationOptions.RunContinuationsAsynchronously));
+        // H2 + H1: under lock, check session not closed, then add lot-keyed TCS.
+        // lot context = packed location (locX << 16 | locY).
+        TaskCompletionSource<PurchaseLotResponse> tcs;
+        lock (_pendingLock)
+        {
+            if (_sessionClosed)
+            {
+                EmitReply(corrId, ok: false, error: "purchase-lot: session already closed");
+                return;
+            }
+            var lotCtx = (ulong)(((uint)locX << 16) | locY);
+            var entry = (LotCtx: lotCtx,
+                         Tcs: new TaskCompletionSource<PurchaseLotResponse>(TaskCreationOptions.RunContinuationsAsynchronously));
+            _pendingPurchases[corrId] = entry;
+            tcs = entry.Tcs;
+        }
 
         try
         {
@@ -369,9 +435,7 @@ public static class BotCmdHandler
         }
         finally
         {
-            _pendingPurchases.TryRemove(
-                new System.Collections.Generic.KeyValuePair<string, TaskCompletionSource<PurchaseLotResponse>>(
-                    corrId, tcs));
+            _pendingPurchases.TryRemove(corrId, out _);
         }
     }
 
@@ -404,12 +468,13 @@ public static class BotCmdHandler
     /// </para>
     ///
     /// <para>
-    /// <b>Correlation model</b>: reuses the same FIFO TCS approach as
-    /// <see cref="ProbeBulletinSubscriber"/>. Only one <c>probe-bulletin</c>
-    /// is expected in flight at a time (serial IPC dispatch).
+    /// <b>Correlation model (H1)</b>: nhoodId is stored alongside the TCS so the
+    /// subscriber can log which nhood was requested. <see cref="BulletinResponse"/>
+    /// doesn't echo the nhood id; the subscriber uses FIFO completion (first incomplete
+    /// TCS), which is safe given serial IPC dispatch.
     /// </para>
     /// </summary>
-    private static async Task HandleProbeBulletinAsync(
+    private async Task HandleProbeBulletinAsync(
         string corrId,
         AriesClient cityAries,
         JsonObject args,
@@ -440,9 +505,20 @@ public static class BotCmdHandler
             }
         }
 
-        // Register one-shot TCS keyed on corrId.
-        var tcs = _pendingBulletins.GetOrAdd(corrId,
-            _ => new TaskCompletionSource<BulletinResponse>(TaskCreationOptions.RunContinuationsAsynchronously));
+        // H2 + H1: under lock, check session not closed, then add nhood-keyed TCS.
+        TaskCompletionSource<BulletinResponse> tcs;
+        lock (_pendingLock)
+        {
+            if (_sessionClosed)
+            {
+                EmitReply(corrId, ok: false, error: "probe-bulletin: session already closed");
+                return;
+            }
+            var entry = (LotCtx: (ulong)nhoodId,
+                         Tcs: new TaskCompletionSource<BulletinResponse>(TaskCreationOptions.RunContinuationsAsynchronously));
+            _pendingBulletins[corrId] = entry;
+            tcs = entry.Tcs;
+        }
 
         try
         {
@@ -500,9 +576,7 @@ public static class BotCmdHandler
         }
         finally
         {
-            _pendingBulletins.TryRemove(
-                new System.Collections.Generic.KeyValuePair<string, TaskCompletionSource<BulletinResponse>>(
-                    corrId, tcs));
+            _pendingBulletins.TryRemove(corrId, out _);
         }
     }
 
@@ -525,7 +599,7 @@ public static class BotCmdHandler
         {
             // Use the same CTS that SIGINT / CancelKeyPress cancels.
             // Field is internal to Program — we call the static helper.
-            BotCmdHandler.TriggerShutdown();
+            TriggerShutdown();
         }
         catch (Exception ex)
         {
@@ -543,37 +617,67 @@ public static class BotCmdHandler
         Program.RequestShutdown("[bot-cmd] bot-exit-request");
     }
 
-    // ---- city-socket subscriber ----
+    // ---- city-socket subscribers ----
 
-    private sealed class ProbeLotSubscriber : IAriesMessageSubscriber, IAriesEventSubscriber
+    /// <summary>
+    /// Forwards inbound <see cref="FindLotResponse"/> and <see cref="PurchaseLotResponse"/>
+    /// packets to the pending probe-lot and purchase-lot TCS entries.
+    ///
+    /// <para>
+    /// <b>H1 (lot-keyed correlation):</b> for <see cref="FindLotResponse"/>, we match
+    /// <c>resp.LotId</c> against the <c>LotCtx</c> stored alongside each TCS so that a
+    /// response for lot A doesn't resolve a pending probe-lot for lot B. For purchase-lot,
+    /// <see cref="PurchaseLotResponse"/> doesn't carry back the location; FIFO is used
+    /// (serial IPC dispatch means at most one purchase is in flight at a time).
+    /// </para>
+    ///
+    /// <para>
+    /// <b>H2 (SessionClosed safety):</b> <c>SessionClosed</c> sets the handler's
+    /// <c>_sessionClosed</c> flag under <c>_pendingLock</c> BEFORE clearing the dicts,
+    /// and calls <c>TrySetCanceled</c> on all pending TCSes. The lock prevents new TCSes
+    /// from being added after the session is closed.
+    /// </para>
+    /// </summary>
+    private sealed class ProbeLotAndPurchaseSubscriber : IAriesMessageSubscriber, IAriesEventSubscriber
     {
+        private readonly BotCmdHandler _handler;
+        public ProbeLotAndPurchaseSubscriber(BotCmdHandler handler) => _handler = handler;
+
         public void MessageReceived(AriesClient client, object message)
         {
-            // FindLotResponse → complete the first pending probe-lot TCS (FIFO).
+            // H1: match FindLotResponse by resp.LotId (lot-keyed correlation).
             if (message is FindLotResponse resp)
             {
-                // All TCS in _pendingProbes are from probe-lot calls. We can't
-                // distinguish by correlation_id alone here (server doesn't echo
-                // correlation_id). In practice at most one probe is pending at a time
-                // (serial IPC dispatch). FIFO delivery is correct.
-                foreach (var kv in _pendingProbes)
+                foreach (var kv in _handler._pendingProbes)
                 {
-                    if (kv.Value.Task.IsCompleted) continue;
-                    kv.Value.TrySetResult(resp);
-                    break;
+                    if (kv.Value.Tcs.Task.IsCompleted) continue;
+                    // Match the response's LotId against the stored lot context.
+                    if (kv.Value.LotCtx == resp.LotId)
+                    {
+                        kv.Value.Tcs.TrySetResult(resp);
+                        return;
+                    }
+                }
+                // No match by LotId — fall back to FIFO for the first incomplete TCS.
+                // This handles the case where the server echoes a different LotId than
+                // requested (e.g., NOT_OPEN responses where LotId may be 0).
+                foreach (var kv in _handler._pendingProbes)
+                {
+                    if (kv.Value.Tcs.Task.IsCompleted) continue;
+                    kv.Value.Tcs.TrySetResult(resp);
+                    return;
                 }
                 return;
             }
 
-            // PurchaseLotResponse → complete the first pending purchase-lot TCS.
-            // Same serial-dispatch reasoning as probe-lot: at most one purchase in flight.
+            // PurchaseLotResponse — FIFO (no lot-id echo in the response to match against).
             if (message is PurchaseLotResponse pr)
             {
-                foreach (var kv in _pendingPurchases)
+                foreach (var kv in _handler._pendingPurchases)
                 {
-                    if (kv.Value.Task.IsCompleted) continue;
-                    kv.Value.TrySetResult(pr);
-                    break;
+                    if (kv.Value.Tcs.Task.IsCompleted) continue;
+                    kv.Value.Tcs.TrySetResult(pr);
+                    return;
                 }
             }
         }
@@ -582,12 +686,21 @@ public static class BotCmdHandler
         public void SessionOpened(AriesClient c) { }
         public void SessionClosed(AriesClient c)
         {
-            foreach (var kv in _pendingProbes)
-                kv.Value.TrySetCanceled();
-            _pendingProbes.Clear();
-            foreach (var kv in _pendingPurchases)
-                kv.Value.TrySetCanceled();
-            _pendingPurchases.Clear();
+            // H2: set the closed flag and cancel all pending TCSes under lock.
+            // This prevents GetOrAdd-equivalent in handlers from recreating TCSes
+            // for a dead session.
+            List<TaskCompletionSource<FindLotResponse>>     probes;
+            List<TaskCompletionSource<PurchaseLotResponse>> purchases;
+            lock (_handler._pendingLock)
+            {
+                _handler._sessionClosed = true;
+                probes    = _handler._pendingProbes.Values.Select(v => v.Tcs).ToList();
+                purchases = _handler._pendingPurchases.Values.Select(v => v.Tcs).ToList();
+                _handler._pendingProbes.Clear();
+                _handler._pendingPurchases.Clear();
+            }
+            foreach (var tcs in probes)    tcs.TrySetCanceled();
+            foreach (var tcs in purchases) tcs.TrySetCanceled();
         }
         public void SessionIdle(AriesClient c) { }
         public void InputClosed(AriesClient c) { }
@@ -597,26 +710,34 @@ public static class BotCmdHandler
 
     /// <summary>
     /// Forwards inbound <see cref="BulletinResponse"/> packets to pending
-    /// <c>probe-bulletin</c> TCS entries (keyed on correlation_id).
+    /// <c>probe-bulletin</c> TCS entries.
     ///
     /// <para>
-    /// Correlation strategy: like <see cref="ProbeLotSubscriber"/>, BulletinResponse
-    /// packets carry no client-chosen correlator field. Serial IPC dispatch means at
-    /// most one <c>probe-bulletin</c> is in flight at a time, so FIFO delivery is safe.
-    /// We iterate <see cref="_pendingBulletins"/> and complete the first incomplete TCS.
+    /// <b>H1 (lot-keyed correlation):</b> <see cref="BulletinResponse"/> doesn't carry
+    /// back the neighborhood id. The subscriber falls back to FIFO delivery of the first
+    /// incomplete TCS. The nhood is stored in <c>LotCtx</c> alongside the TCS for
+    /// diagnostic purposes.
+    /// </para>
+    ///
+    /// <para>
+    /// <b>H2 (SessionClosed safety):</b> mirrors <see cref="ProbeLotAndPurchaseSubscriber"/>.
     /// </para>
     /// </summary>
     private sealed class ProbeBulletinSubscriber : IAriesMessageSubscriber, IAriesEventSubscriber
     {
+        private readonly BotCmdHandler _handler;
+        public ProbeBulletinSubscriber(BotCmdHandler handler) => _handler = handler;
+
         public void MessageReceived(AriesClient client, object message)
         {
             if (message is BulletinResponse br)
             {
-                foreach (var kv in _pendingBulletins)
+                // FIFO — BulletinResponse carries no nhood correlator.
+                foreach (var kv in _handler._pendingBulletins)
                 {
-                    if (kv.Value.Task.IsCompleted) continue;
-                    kv.Value.TrySetResult(br);
-                    break;
+                    if (kv.Value.Tcs.Task.IsCompleted) continue;
+                    kv.Value.Tcs.TrySetResult(br);
+                    return;
                 }
             }
         }
@@ -625,9 +746,15 @@ public static class BotCmdHandler
         public void SessionOpened(AriesClient c) { }
         public void SessionClosed(AriesClient c)
         {
-            foreach (var kv in _pendingBulletins)
-                kv.Value.TrySetCanceled();
-            _pendingBulletins.Clear();
+            // H2: cancel all pending bulletin TCSes under lock.
+            List<TaskCompletionSource<BulletinResponse>> bulletins;
+            lock (_handler._pendingLock)
+            {
+                _handler._sessionClosed = true;
+                bulletins = _handler._pendingBulletins.Values.Select(v => v.Tcs).ToList();
+                _handler._pendingBulletins.Clear();
+            }
+            foreach (var tcs in bulletins) tcs.TrySetCanceled();
         }
         public void SessionIdle(AriesClient c) { }
         public void InputClosed(AriesClient c) { }

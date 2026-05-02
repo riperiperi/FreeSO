@@ -391,10 +391,12 @@ public class Program
         {
             dispatcher = new CommandDispatcher();
 
-            // bot-cmd envelope (freesoexperiment-0de): register the BotCmdHandler city subscriber
+            // bot-cmd envelope (freesoexperiment-0de): create per-session BotCmdHandler instance
+            // (freesoexperiment-f70 H3: instance instead of static), register its city subscriber,
             // and wire the pre-dispatch hook so kind=="bot-cmd" lines bypass normal op-dispatch.
-            BotCmdHandler.RegisterSubscriber(cityAries);
-            dispatcher.BotCmdDispatch = (node, ct) => BotCmdHandler.TryHandleAsync(node, cityAries, ct);
+            var botCmdHandler = new BotCmdHandler();
+            botCmdHandler.RegisterSubscriber(cityAries);
+            dispatcher.BotCmdDispatch = (node, ct) => botCmdHandler.TryHandleAsync(node, cityAries, ct);
 
             MovementHandlers.RegisterAll(dispatcher, vmHost);
             GoToHandlers.RegisterAll(dispatcher, vmHost);
