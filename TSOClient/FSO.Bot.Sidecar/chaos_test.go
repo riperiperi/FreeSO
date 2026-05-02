@@ -21,9 +21,11 @@
 //	KILL_A (pre-fulfill probe-lot):    bot killed before probe-lot cmd arrives on stdin.
 //	                                   next-lot MUST NOT exist. Sidecar alive; relaunch fires.
 //	KILL_B (post-probe pre-exit):      probe-lot FOUND reply delivered; bot killed before
-//	                                   bot-exit-request. next-lot MUST NOT exist (WriteNextLot
-//	                                   happens after probe reply only if probe succeeded and
-//	                                   before exit — bot is dead before that step).
+//	                                   bot-exit-request. next-lot MUST be present with correct
+//	                                   lot ID. WriteNextLot (Step 3) runs before bot-exit-request
+//	                                   (Step 4); SIGKILL only affects the bot subprocess, not the
+//	                                   Go handler that already called WriteNextLot. Supervisor
+//	                                   consumes next-lot on relaunch.
 //	KILL_C (mid-FindLot / probe inflight): bot killed while waiting to write probe-lot reply.
 //	                                   next-lot MUST NOT exist. BotCmdPump Send times out or
 //	                                   errors; handler returns ok:false. Sidecar alive.
@@ -409,18 +411,17 @@ fi
 //
 // Asserts:
 //   - Sidecar PID alive after kill.
-//   - next-lot NOT present (WriteNextLot happens after probe-lot, before exit —
-//     but the bot dies at the FIFO before bot-exit-request arrives, meaning
-//     the handler's Send call for bot-exit-request will error. The handler
-//     already called WriteNextLot before the bot-exit-request Send, so
-//     next-lot IS written. The test verifies sidecar survival and next-lot
-//     state is intact — the supervisor will eventually consume it).
+//   - next-lot MUST be present with the correct lot ID (WriteNextLot runs in
+//     Step 3, before bot-exit-request in Step 4; the bot blocks on a FIFO
+//     between probe-lot reply and bot-exit-request, so SIGKILL races only
+//     the bot subprocess — not the Go handler goroutine that already called
+//     WriteNextLot. The write completes before the handler even attempts
+//     bot-exit-request Send). Supervisor reads next-lot on relaunch.
 //   - Sidecar survives and bot is relaunched.
 //
-// Note: Because the handler writes next-lot before sending bot-exit-request,
-// KILL_B exercises the case where next-lot is written but bot dies before
-// bot-exit-request is dispatched. The supervisor must still see and consume
-// next-lot on relaunch.
+// This test FAILS if WriteNextLot is removed from the supervisor exit path
+// or moved to after bot-exit-request, because next-lot would be absent
+// when the bot is killed at the FIFO.
 func TestChaos_KillB_PostProbeFOUND_PreExit(t *testing.T) {
 	goBin := chaosSkipCheck(t)
 	tmp := t.TempDir()
@@ -595,26 +596,37 @@ fi
 		t.Error("KILL_B: bot did not exit within 5s after SIGKILL")
 	}
 
-	// next-lot: since WriteNextLot runs BEFORE bot-exit-request, and the bot
-	// was killed AFTER the probe-lot reply (meaning the handler DID reach WriteNextLot),
-	// next-lot SHOULD be present.
+	// next-lot MUST be present with the correct lot ID.
+	//
+	// Invariant: visitLotHandler calls WriteNextLot (Step 3) synchronously
+	// BEFORE it sends bot-exit-request (Step 4). The bot is killed AFTER the
+	// probe-lot reply is delivered (probe-done marker present), at which point
+	// the handler goroutine has already returned from botCmds.Send("probe-lot")
+	// and is executing WriteNextLot. SIGKILL is sent to the bot subprocess
+	// only — it has no effect on the Go handler goroutine. WriteNextLot
+	// completes before the handler goroutine even attempts to send
+	// bot-exit-request. Therefore next-lot MUST be present after KILL_B with
+	// no timing ambiguity.
+	//
+	// The expected lot location is the decimal representation of 0x00110F00:
+	// x = 0x0011 = 17, y = 0x0F00 = 3840; packed = (17<<16)|3840 = 1117952.
+	const wantLotLocation = "1117952"
 	nextLotPath := filepath.Join(tmp2, "freeso-souls", strings.ToLower(persona), "next-lot")
 	data, err := os.ReadFile(nextLotPath)
 	if err != nil {
-		// If the bot died very fast (before WriteNextLot), this is also acceptable.
-		// The key invariant is: if next-lot is absent, WriteNextLot was never called
-		// (correct); if next-lot is present, it has a valid value (also correct).
-		t.Logf("KILL_B: next-lot not found (WriteNextLot may not have completed before kill): %v", err)
+		t.Errorf("KILL_B: next-lot file MUST be present after kill (WriteNextLot runs before bot-exit-request, bot kill cannot race it): %v", err)
 	} else {
 		loc := strings.TrimSpace(string(data))
 		if loc == "" {
-			t.Error("KILL_B: next-lot file exists but is empty — corrupt state")
+			t.Error("KILL_B: next-lot file exists but is empty — corrupt state (WriteNextLot write was partial)")
+		} else if loc != wantLotLocation {
+			t.Errorf("KILL_B: next-lot contains %q, want %q (target_lot_location 0x00110F00 = decimal 1117952)", loc, wantLotLocation)
 		} else {
-			t.Logf("KILL_B: next-lot present with value %q (WriteNextLot completed before bot died)", loc)
+			t.Logf("KILL_B: next-lot present with correct value %q — WriteNextLot-before-exit invariant holds", loc)
 		}
 	}
 
-	t.Log("PASS KILL_B: sidecar and in-process handler behaved correctly; bot killed post-probe pre-exit; no stuck await; next-lot state consistent")
+	t.Log("PASS KILL_B: WriteNextLot-before-exit invariant verified; next-lot present with correct lot ID; no stuck await")
 }
 
 // ─── KILL_C: bot killed while probe-lot reply is in flight ───────────────────
