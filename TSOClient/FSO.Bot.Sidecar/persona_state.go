@@ -13,6 +13,7 @@ import (
 	"os"
 	"path/filepath"
 	"strings"
+	"time"
 )
 
 // PersonaStateDir returns the per-persona config directory:
@@ -241,6 +242,45 @@ func ReadHomeLotFromOwnedLots() (string, error) {
 		return "", fmt.Errorf("owned-lots.json[0].location_hex is empty — corrupt entry")
 	}
 	return loc, nil
+}
+
+// SidecarFailedMarkerPath returns the path to the sidecar-failed marker file
+// for this persona. The file is written by the supervisor loop when all bot
+// relaunch attempts are exhausted so operators and orchestrators can detect
+// a zombie sidecar post-mortem.
+//
+// Returns ("", error) if the persona state dir cannot be derived.
+func SidecarFailedMarkerPath() (string, error) {
+	dir, err := PersonaStateDir()
+	if err != nil {
+		return "", err
+	}
+	return filepath.Join(dir, "sidecar-failed"), nil
+}
+
+// WriteSidecarFailedMarker atomically writes a failure marker to the persona
+// state directory. Content is a human-readable timestamp + message line so
+// operators can see when the failure occurred and why.
+//
+// Called by the supervisor loop immediately before os.Exit(1) so the marker
+// is always present when the process exits non-zero.
+func WriteSidecarFailedMarker(reason string) error {
+	path, err := SidecarFailedMarkerPath()
+	if err != nil {
+		return fmt.Errorf("WriteSidecarFailedMarker: derive path: %w", err)
+	}
+	if err := os.MkdirAll(filepath.Dir(path), 0o700); err != nil {
+		return fmt.Errorf("WriteSidecarFailedMarker: mkdir: %w", err)
+	}
+	content := fmt.Sprintf("%s %s\n", time.Now().UTC().Format(time.RFC3339), reason)
+	tmp := path + ".tmp"
+	if err := os.WriteFile(tmp, []byte(content), 0o600); err != nil {
+		return fmt.Errorf("WriteSidecarFailedMarker: write tmp: %w", err)
+	}
+	if err := os.Rename(tmp, path); err != nil {
+		return fmt.Errorf("WriteSidecarFailedMarker: rename: %w", err)
+	}
+	return nil
 }
 
 // AppendOwnedLot appends a newly purchased lot to owned-lots.json. The new

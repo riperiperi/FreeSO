@@ -435,8 +435,11 @@ func main() {
 				}
 			}
 			if newProc == nil {
-				log.Printf("supervisor: all relaunch attempts failed — waiting for signal")
-				continue
+				log.Printf("ERROR: bot supervisor: all relaunch attempts failed, sidecar exiting")
+				if mErr := WriteSidecarFailedMarker("bot supervisor: all relaunch attempts failed"); mErr != nil {
+					log.Printf("supervisor: write failure marker: %v", mErr)
+				}
+				os.Exit(1)
 			}
 			log.Printf("supervisor: relaunched bot pid=%d", newProc.Pid())
 
