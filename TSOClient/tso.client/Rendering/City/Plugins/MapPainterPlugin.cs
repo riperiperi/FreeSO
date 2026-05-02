@@ -2,6 +2,7 @@
 using FSO.Client.Rendering.City.Plugins.PainterModes;
 using FSO.Client.UI.Framework;
 using FSO.Client.UI.Model;
+using FSO.Common;
 using FSO.Common.Rendering.Framework.Model;
 using FSO.Content.Model;
 using FSO.Files;
@@ -14,6 +15,7 @@ namespace FSO.Client.Rendering.City.Plugins
 {
     public class MapPainterPlugin : AbstractCityPlugin
     {
+        private const float TooltipSeconds = 2;
         private static int ClientCommandID;
 
         private TerrainController Controller;
@@ -85,6 +87,9 @@ namespace FSO.Client.Rendering.City.Plugins
         public float BrushIntensity { get; set; }
 
         private IMapPainterMode Tool;
+
+        private string Tooltip;
+        private float TooltipTimer;
 
         public MapPainterPlugin(Terrain city) : base(city)
         {
@@ -217,6 +222,13 @@ namespace FSO.Client.Rendering.City.Plugins
                 }
             }
             //*/
+
+            if (TooltipTimer > 0)
+            {
+                state.UIState.SetTooltip(state, Tooltip);
+
+                TooltipTimer -= 1f / FSOEnvironment.RefreshRate;
+            }
         }
 
         private Texture2D LoadTex(string Path)
@@ -238,6 +250,14 @@ namespace FSO.Client.Rendering.City.Plugins
             }
             stream.Close();
             return result;
+        }
+
+        public void ShowError(int id)
+        {
+            HIT.HITVM.Get().PlaySoundEvent(UISounds.Error);
+
+            Tooltip = GameFacade.Strings.GetString("f130", id.ToString());
+            TooltipTimer = TooltipSeconds;
         }
     }
 

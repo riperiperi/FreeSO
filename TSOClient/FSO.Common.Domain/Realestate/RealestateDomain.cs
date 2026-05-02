@@ -66,6 +66,14 @@ namespace FSO.Common.Domain.Realestate
             }
             return true;
         }
+
+        public void Reset()
+        {
+            lock (_ByShard)
+            {
+                _ByShard.Clear();
+            }
+        }
     }
 
     public class ShardRealestateDomain : IShardRealestateDomain
@@ -78,6 +86,7 @@ namespace FSO.Common.Domain.Realestate
         public CityUndoStack UndoStack { get; private set; } = new CityUndoStack();
         private CityMap _BaseMap;
         private CityMap _PreTempMap;
+        private CityMap _UndoWorkingMap;
         private Rectangle? _TempChangeBounds;
 
         private List<CityEditBase> _Commands = [];
@@ -101,6 +110,21 @@ namespace FSO.Common.Domain.Realestate
             }
             //TODO: Hardcore
             _Pricing = new BasicLotPricingStrategy();
+        }
+
+        private CityMap GetUndoWorkingMap()
+        {
+            if (_UndoWorkingMap == null)
+            {
+                _UndoWorkingMap = new CityMap(_Map);
+            }
+            else
+            {
+                _UndoWorkingMap.Set(_Map);
+                _UndoWorkingMap.ConsumeDirty();
+            }
+
+            return _UndoWorkingMap;
         }
 
         public int GetPurchasePrice(ushort x, ushort y)
@@ -191,10 +215,8 @@ namespace FSO.Common.Domain.Realestate
             };
         }
 
-        public int AppendCommand(CityEditBase command)
+        public int AppendCommand(CityEditBase command, HashSet<uint> reservedTiles = null, HashSet<uint> toUpdate = null)
         {
-            UndoStack.AddCommand(command);
-
             if (_TempChangeBounds != null)
             {
                 // Undo any temp changes so we can apply the command for real
@@ -209,11 +231,13 @@ namespace FSO.Common.Domain.Realestate
                 return -1;
             }
 
+            UndoStack.AddCommand(command);
+
             int index = _Commands.Count;
 
             _Commands.Add(command);
 
-            CityMapUtils.ApplyCommand(_Map, command);
+            CityMapUtils.ApplyCommand(_Map, command, reservedTiles, toUpdate);
 
             if (OnMapChange != null)
             {
@@ -242,6 +266,11 @@ namespace FSO.Common.Domain.Realestate
             }
             else
             {
+                if (_MyTempCommand != null)
+                {
+                    SetMyTempCommand(null);
+                }
+
                 var matching = _TempCommands.FindIndex(x => x.AvatarId == command.AvatarId && x.UserModId == command.UserModId);
 
                 if (matching != -1)
@@ -283,7 +312,7 @@ namespace FSO.Common.Domain.Realestate
             ApplyTempCommands(new Rectangle(0, 0, 512, 512));
         }
 
-        public bool HandleUserCommand(CityUpdateCommand command)
+        public bool HandleUserCommand(CityUpdateCommand command, HashSet<uint> reservedTiles = null, HashSet<uint> toUpdate = null, HashSet<uint> blockedTiles = null)
         {
             switch (command.Mode)
             {
@@ -294,11 +323,64 @@ namespace FSO.Common.Domain.Realestate
                     if (toUndo != -1)
                     {
                         UndoStack.HandleUndo(_Commands[toUndo]);
-                        _Commands.RemoveAt(toUndo);
 
-                        // TODO: undo needs to set changed aspects with more granularity
-                        _Map.SetDirty(CityMapAspects.All);
-                        RedrawAll();
+                        // Replay the commands til we get to the undo command
+
+                        _Map.Set(_BaseMap);
+
+                        CityMapAspects undoAspects = CityMapAspects.None;
+                        Rectangle? undoBounds = null;
+                        for (int i = 0; i < _Commands.Count; i++)
+                        {
+                            var cmd = _Commands[i];
+                            bool isUndo = i == toUndo;
+                            var map = isUndo ? GetUndoWorkingMap() : _Map;
+
+                            if (CityMapUtils.ApplyCommand(map, cmd, isUndo ? reservedTiles : null, isUndo ? toUpdate : null, isUndo))
+                            {
+                                var modBounds = CityMapUtils.GetBounds(_Map, cmd);
+
+                                if (isUndo)
+                                {
+                                    undoBounds = Union(undoBounds, modBounds);
+                                }
+                            }
+
+                            if (isUndo)
+                            {
+                                // Determine if we're meant to skip this command or not...
+                                if (blockedTiles != null && blockedTiles.Count > 0 && toUpdate.Count > 0)
+                                {
+                                    var intersect = blockedTiles.Intersect(toUpdate);
+
+                                    if (intersect.Any())
+                                    {
+                                        // We can't undo this command without modifying a blocked tile.
+                                        // Clear the undo and replay the remaining commands
+                                        // (including the one we tried to undo, by deliberately not incrementing i)
+                                        toUndo = -1;
+                                        i--;
+                                        continue;
+                                    }
+                                }
+
+                                undoAspects |= map.ConsumeDirty();
+                            }
+                        }
+
+                        _PreTempMap?.Set(_Map);
+                        ApplyTempCommands(toUndo == -1 ? null : undoBounds);
+
+                        if (toUndo == -1)
+                        {
+                            return false;
+                        }
+                        else
+                        {
+                            _Commands.RemoveAt(toUndo);
+                            _Map.SetDirty(undoAspects);
+                        }
+
                         return true;
                     }
                     break;

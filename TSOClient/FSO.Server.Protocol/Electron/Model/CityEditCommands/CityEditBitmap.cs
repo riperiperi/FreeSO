@@ -233,6 +233,12 @@ namespace FSO.Server.Protocol.Electron.Model.CityEditCommands
             return (Data[dataIndex] & bit) != 0;
         }
 
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
+        public bool InBounds(int x, int y)
+        {
+            return x >= 0 && y >= 0 && x < Width && y < Height;
+        }
+
         public CityEditBitmap Trim()
         {
             int minX = 512, minY = 512, maxX = 0, maxY = 0;

@@ -7,22 +7,22 @@ namespace FSO.Common.Domain.Realestate
 {
     public enum RoadSegs : byte
     {
-        TopLeft = 1,
-        BottomLeft = 2,
-        BottomRight = 4,
-        TopRight = 8,
+        BottomLeft = 1,
+        BottomRight = 2,
+        TopRight = 4,
+        TopLeft = 8,
 
-        Right = 16,
+        Left = 16,
         Bottom = 32,
-        Left = 64,
+        Right = 64,
         Top = 128,
 
-        AllCorners = Bottom | Left | Top | Right
+        AllCorners = Bottom | Right | Top | Left
     }
 
     public static class CityMapUtils
     {
-        private static Point[] WLStartOff = {
+        private static readonly Point[] WLStartOff = {
             
             // Look at this way up <----
             // Starting at % line, going cw. Middle is (0,0), and below it is the tile (0,0)..
@@ -36,62 +36,62 @@ namespace FSO.Common.Domain.Realestate
             //       \  / +y
             //        \/
 
-            new Point(0, 0),
-            new Point(0, 0),
-            new Point(-1, 0),
-            new Point(0, -1),
+            new(0, 0),
+            new(0, 0),
+            new(-1, 0),
+            new(0, -1),
         };
 
-        private static RoadSegs[] WLMainSeg =
+        private static readonly RoadSegs[] WLMainSeg =
         {
-            RoadSegs.TopRight,
             RoadSegs.TopLeft,
-            RoadSegs.TopRight,
+            RoadSegs.BottomLeft,
             RoadSegs.TopLeft,
-        };
-
-        private static Point[] WLSubOff =
-        {
-            new Point(0, -1),
-            new Point(-1, 0),
-            new Point(0, -1),
-            new Point(-1, 0),
-        };
-
-        private static RoadSegs[] WLSubSeg =
-        {
             RoadSegs.BottomLeft,
-            RoadSegs.BottomRight,
-            RoadSegs.BottomLeft,
-            RoadSegs.BottomRight,
         };
 
-
-        private static Point[] WLStep =
+        private static readonly Point[] WLSubOff =
         {
-            new Point(1, 0),
-            new Point(0, 1),
-            new Point(-1, 0),
-            new Point(0, -1),
+            new(0, -1),
+            new(-1, 0),
+            new(0, -1),
+            new(-1, 0),
         };
 
-        private static ((RoadSegs line, RoadSegs corner), (RoadSegs line2, RoadSegs corner2))[] AdjEdgeToCorner =
+        private static readonly RoadSegs[] WLSubSeg =
+        {
+            RoadSegs.BottomRight,
+            RoadSegs.TopRight,
+            RoadSegs.BottomRight,
+            RoadSegs.TopRight,
+        };
+
+
+        private static readonly Point[] WLStep =
+        {
+            new(1, 0),
+            new(0, 1),
+            new(-1, 0),
+            new(0, -1),
+        };
+
+        private static readonly ((RoadSegs line, RoadSegs corner), (RoadSegs line2, RoadSegs corner2))[] AdjEdgeToCorner =
         [
-            ( // negative x?
-                (RoadSegs.BottomLeft, RoadSegs.Left),
-                (RoadSegs.TopRight, RoadSegs.Top)
+            ( // positive x
+                (RoadSegs.BottomRight, RoadSegs.Right),
+                (RoadSegs.TopLeft, RoadSegs.Top)
             ),
             ( // positive y
-                (RoadSegs.TopLeft, RoadSegs.Bottom),
-                (RoadSegs.BottomRight, RoadSegs.Left)
+                (RoadSegs.BottomLeft, RoadSegs.Bottom),
+                (RoadSegs.TopRight, RoadSegs.Right)
             ),
-            ( // positive x?
-                (RoadSegs.TopRight, RoadSegs.Right),
-                (RoadSegs.BottomLeft, RoadSegs.Bottom)
+            ( // negative x
+                (RoadSegs.TopLeft, RoadSegs.Left),
+                (RoadSegs.BottomRight, RoadSegs.Bottom)
             ),
             ( // negative y
-                (RoadSegs.BottomRight, RoadSegs.Top),
-                (RoadSegs.TopLeft, RoadSegs.Right)
+                (RoadSegs.TopRight, RoadSegs.Top),
+                (RoadSegs.BottomLeft, RoadSegs.Left)
             )
         ];
 
@@ -224,14 +224,14 @@ namespace FSO.Common.Domain.Realestate
             };
         }
 
-        public static bool ApplyCommand(CityMap map, CityEditBase command)
+        public static bool ApplyCommand(CityMap map, CityEditBase command, HashSet<uint> reservedTiles = null, HashSet<uint> toUpdate = null, bool forUndo = false)
         {
             return command switch
             {
-                CityEditRoad road => ApplyRoad(map, road),
-                CityEditPaint paint => ApplyPaint(map, paint),
-                CityEditAltitude alt => ApplyAltitude(map, alt),
-                CityEditForest forest => ApplyForest(map, forest),
+                CityEditRoad road => ApplyRoad(map, road, reservedTiles, toUpdate),
+                CityEditPaint paint => ApplyPaint(map, paint, reservedTiles, toUpdate, forUndo),
+                CityEditAltitude alt => ApplyAltitude(map, alt, reservedTiles, toUpdate, forUndo),
+                CityEditForest forest => ApplyForest(map, forest), // Forest doesn't update its tiles.
                 _ => false
             };
         }
@@ -380,9 +380,61 @@ namespace FSO.Common.Domain.Realestate
                     ApplyCornerRule(in rule2, in adjRoad, ref road);
                 }
             }
+
+            // Finally, do some cleanup for invalid corners
+
+            var roadSegs = (RoadSegs)road;
+
+            if (roadSegs.HasFlag(RoadSegs.BottomRight))
+            {
+                road &= (byte)~(RoadSegs.Bottom | RoadSegs.Right);
+            }
+
+            if (roadSegs.HasFlag(RoadSegs.TopRight))
+            {
+                road &= (byte)~(RoadSegs.Top | RoadSegs.Right);
+            }
+
+            if (roadSegs.HasFlag(RoadSegs.BottomLeft))
+            {
+                road &= (byte)~(RoadSegs.Bottom | RoadSegs.Left);
+            }
+
+            if (roadSegs.HasFlag(RoadSegs.TopLeft))
+            {
+                road &= (byte)~(RoadSegs.Top | RoadSegs.Left);
+            }
         }
 
-        public static bool ApplyRoad(CityMap map, CityEditRoad road)
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
+        private static uint GetMapCoord(Point pos)
+        {
+            return MapCoordinates.Pack((ushort)pos.X, (ushort)pos.Y);
+        }
+
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
+        private static void RegisterUpdate(HashSet<uint> reservedTiles, HashSet<uint> toUpdate, uint id)
+        {
+            if (reservedTiles.Contains(id))
+            {
+                toUpdate.Add(id);
+            }
+        }
+
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
+        private static void RegisterRoadUpdates(HashSet<uint> reservedTiles, HashSet<uint> toUpdate, Point pos)
+        {
+            // Road modifications only update the lot they're on top of.
+
+            if (reservedTiles != null)
+            {
+                uint id = GetMapCoord(pos);
+
+                RegisterUpdate(reservedTiles, toUpdate, id);
+            }
+        }
+
+        public static bool ApplyRoad(CityMap map, CityEditRoad road, HashSet<uint> reservedTiles, HashSet<uint> toUpdate)
         {
             byte[] roads = map.GetRawRoads();
 
@@ -432,6 +484,10 @@ namespace FSO.Common.Domain.Realestate
                 RecalculateCorner(map, roads, cornerPos);
                 RecalculateCorner(map, roads, subPos);
 
+                // These still trigger updates even when the road isn't updated
+                RegisterRoadUpdates(reservedTiles, toUpdate, cornerPos);
+                RegisterRoadUpdates(reservedTiles, toUpdate, subPos);
+
                 cornerPos += step;
             }
 
@@ -462,7 +518,35 @@ namespace FSO.Common.Domain.Realestate
             };
         }
 
-        public static bool ApplyPaint(CityMap map, CityEditPaint paint)
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
+        private static void RegisterTerrainUpdates(HashSet<uint> reservedTiles, HashSet<uint> toUpdate, Point pos, bool forUndo)
+        {
+            // Terrain modifications update all adjacent tiles, as it could affect the blend colour of the lot.
+
+            if (reservedTiles != null)
+            {
+                uint id = GetMapCoord(pos);
+                uint skip = 1u << 16;
+
+                RegisterUpdate(reservedTiles, toUpdate, id);
+
+                if (!forUndo)
+                {
+                    RegisterUpdate(reservedTiles, toUpdate, id - 1);
+                    RegisterUpdate(reservedTiles, toUpdate, id + 1);
+
+                    RegisterUpdate(reservedTiles, toUpdate, (id - 1) - skip);
+                    RegisterUpdate(reservedTiles, toUpdate, id - skip);
+                    RegisterUpdate(reservedTiles, toUpdate, id + 1 - skip);
+
+                    RegisterUpdate(reservedTiles, toUpdate, (id - 1) + skip);
+                    RegisterUpdate(reservedTiles, toUpdate, id + skip);
+                    RegisterUpdate(reservedTiles, toUpdate, id + 1 + skip);
+                }
+            }
+        }
+
+        public static bool ApplyPaint(CityMap map, CityEditPaint paint, HashSet<uint> reservedTiles, HashSet<uint> toUpdate, bool forUndo)
         {
             var reserved = GetReservedBitmap(map, paint);
             var bitmap = paint.Bitmap;
@@ -482,17 +566,30 @@ namespace FSO.Common.Domain.Realestate
 
                 for (int i = 0; i < line.count; i++)
                 {
-                    if (!reserved.IsSet(x++, y))
+                    if (!reserved.IsSet(x, y))
                     {
-                        anyChanged = true;
-                        if (isTerrainType && value == (byte)TerrainType.WATER)
-                        {
-                            forestType[mapIndex] = ForestType.NULL;
-                            forestDensity[mapIndex] = 0;
-                        }
+                        ref var existing = ref aspect[mapIndex];
 
-                        aspect[mapIndex++] = value;
+                        if (value != existing)
+                        {
+                            anyChanged = true;
+                            if (isTerrainType)
+                            {
+                                RegisterTerrainUpdates(reservedTiles, toUpdate, new Point(x, y), forUndo);
+
+                                if (value == (byte)TerrainType.WATER)
+                                {
+                                    forestType[mapIndex] = ForestType.NULL;
+                                    forestDensity[mapIndex] = 0;
+                                }
+                            }
+
+                            existing = value;
+                        }
                     }
+
+                    mapIndex++;
+                    x++;
                 }
             }
 
@@ -533,8 +630,8 @@ namespace FSO.Common.Domain.Realestate
                     {
                         ref var existingTerrain = ref terrainType[mapIndex];
                         ref var existingType = ref forestType[mapIndex];
-                        ref var existingDensity = ref forestDensity[mapIndex++];
-                        var newDensity = (byte)Math.Min(Math.Min(maxDensity, intensity[deltaIndex++]) * 64, 255);
+                        ref var existingDensity = ref forestDensity[mapIndex];
+                        var newDensity = (byte)Math.Min(Math.Min(maxDensity, intensity[deltaIndex]) * 64, 255);
 
                         if (erasing)
                         {
@@ -559,6 +656,9 @@ namespace FSO.Common.Domain.Realestate
                             }
                         }
                     }
+
+                    deltaIndex++;
+                    mapIndex++;
                 }
             }
 
@@ -591,7 +691,26 @@ namespace FSO.Common.Domain.Realestate
             return false;
         }
 
-        public static bool ApplyAltitude(CityMap map, CityEditAltitude altEdit)
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
+        private static void RegisterAltitudeUpdates(HashSet<uint> reservedTiles, HashSet<uint> toUpdate, Point pos)
+        {
+            // Altitude modifications happen on the top left vertex of a lot,
+            // So they also affect the lots up and to the left (including diagonal
+
+            if (reservedTiles != null)
+            {
+                uint id = GetMapCoord(pos);
+                uint skip = 1u << 16;
+
+                RegisterUpdate(reservedTiles, toUpdate, id - 1);
+                RegisterUpdate(reservedTiles, toUpdate, id);
+
+                RegisterUpdate(reservedTiles, toUpdate, (id - 1) - skip);
+                RegisterUpdate(reservedTiles, toUpdate, id - skip);
+            }
+        }
+
+        public static bool ApplyAltitude(CityMap map, CityEditAltitude altEdit, HashSet<uint> reservedTiles, HashSet<uint> toUpdate, bool forUndo)
         {
             var reserved = GetReservedBitmapAlt(map, altEdit);
             var bitmap = altEdit.Bitmap;
@@ -613,12 +732,17 @@ namespace FSO.Common.Domain.Realestate
 
                     for (int i = 0; i < line.count; i++)
                     {
-                        if (!reserved.IsSet(x++, y))
+                        if (!reserved.IsSet(x, y))
                         {
+                            RegisterAltitudeUpdates(reservedTiles, toUpdate, new Point(x, y));
                             anyData = true;
-                            ref var alt = ref altitudes[mapIndex++];
-                            alt = (byte)Math.Clamp(alt + deltas[deltaIndex++], 0, 255);
+                            ref var alt = ref altitudes[mapIndex];
+                            alt = (byte)Math.Clamp(alt + deltas[deltaIndex], 0, 255);
                         }
+
+                        mapIndex++;
+                        deltaIndex++;
+                        x++;
                     }
                 }
 
@@ -648,6 +772,7 @@ namespace FSO.Common.Domain.Realestate
                     int AutoRockSteepnessBlend = 2;
 
                     TerrainType[] type = map.GetRawTerrain();
+                    anyData = false;
 
                     foreach (var line in bitmap.GetSetLines())
                     {
@@ -676,7 +801,9 @@ namespace FSO.Common.Domain.Realestate
 
                                 var delta = max - min;
 
-                                ref TerrainType tileType = ref type[mapIndex];
+                                ref TerrainType existingType = ref type[mapIndex];
+
+                                TerrainType tileType;
 
                                 if (OverThreshold(delta, AutoRockSteepness, AutoRockSteepnessBlend, mapIndex))
                                 {
@@ -709,9 +836,15 @@ namespace FSO.Common.Domain.Realestate
                                     }
                                 }
 
-                                mapIndex++;
+                                if (existingType != tileType)
+                                {
+                                    anyData = true;
+                                    RegisterTerrainUpdates(reservedTiles, toUpdate, new Point(x, y), forUndo);
+                                    existingType = tileType;
+                                }
                             }
 
+                            mapIndex++;
                             lineX++;
                             x++;
                         }

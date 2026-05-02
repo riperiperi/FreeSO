@@ -23,6 +23,7 @@ namespace FSO.Server.Database.DA.Lots
 
         void RenameLot(int id, string newName);
         void SetDirty(int id, byte dirty);
+        void SetTerrainDirty(IEnumerable<uint> ids);
         DbLot Get3DWork();
 
         List<DbLot> SearchExact(int shard_id, string name, int limit);

@@ -9,6 +9,8 @@ namespace FSO.Server.Protocol.Electron.Packets
         Undo,
         SetCityName,
         SetThumbnail,
+        CommandError,
+        UndoError
     }
 
     public class CityUpdateCommand : AbstractElectronPacket

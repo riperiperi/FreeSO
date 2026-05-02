@@ -21,6 +21,7 @@ using FSO.Server.Common;
 using FSO.Server.Database.DA.Neighborhoods;
 using FSO.Files.RC;
 using FSO.Common.Domain;
+using FSO.Server.Protocol.Electron.Model.CityEditCommands;
 
 namespace FSO.Server.DataService.Providers
 {
@@ -34,14 +35,18 @@ namespace FSO.Server.DataService.Providers
             { LotCategory.welcome, 1 },
         };
 
-        private Dictionary<string, Lot> LotsByName = new Dictionary<string, Lot>();
+        private readonly Dictionary<string, Lot> LotsByName = [];
         public City CityRepresentation;
 
-        private IRealestateDomain GlobalRealestate;
-        private IShardRealestateDomain Realestate;
-        private int ShardId;
-        private IDAFactory DAFactory;
-        private IServerNFSProvider NFS;
+        private readonly IRealestateDomain GlobalRealestate;
+        private readonly IShardRealestateDomain Realestate;
+        private readonly int ShardId;
+        private readonly IDAFactory DAFactory;
+        private readonly IServerNFSProvider NFS;
+
+        private volatile int Version;
+
+        public CityEditBitmap AllLotsBitmap { get; }
         
         public ServerLotProvider([Named("ShardId")] int shardId, IRealestateDomain realestate, IDAFactory daFactory, IServerNFSProvider nfs)
         {
@@ -63,6 +68,8 @@ namespace FSO.Server.DataService.Providers
                 City_Top100ListIDs = ImmutableList.Create<uint>(),
                 City_TopTenNeighborhoodsVector = ImmutableList.Create<uint>()
             };
+
+            AllLotsBitmap = new CityEditBitmap(512, 512);
         }
 
         protected override void PreLoad(Callback<uint, Lot> appender)
@@ -100,6 +107,8 @@ namespace FSO.Server.DataService.Providers
         protected override void Insert(uint key, Lot value)
         {
             base.Insert(key, value);
+            Version++;
+
             lock (LotsByName) LotsByName[value.Lot_Name] = value;
             lock (CityRepresentation.City_ReservedLotInfo) CityRepresentation.City_ReservedLotInfo = CityRepresentation.City_ReservedLotInfo.SetItem(value.Lot_Location_Packed, value.Lot_IsOnline);
         }
@@ -109,6 +118,7 @@ namespace FSO.Server.DataService.Providers
             var value = base.Remove(key);
             if (value != null)
             {
+                Version++;
                 lock (LotsByName) LotsByName.Remove(value.Lot_Name);
                 lock (CityRepresentation.City_ReservedLotInfo) CityRepresentation.City_ReservedLotInfo = CityRepresentation.City_ReservedLotInfo.Remove(value.Lot_Location_Packed);
                 
@@ -454,6 +464,29 @@ namespace FSO.Server.DataService.Providers
                 }
             }
             return null;
+        }
+
+        public void AddLocationsTo(HashSet<uint> locations)
+        {
+            foreach (var pair in Values)
+            {
+                locations.Add(pair.Key);
+            }
+        }
+
+        public void UpdateReservedCache(HashSet<uint> reservedTiles, ref int version)
+        {
+            if (version == Version)
+            {
+                return;
+            }
+
+            reservedTiles.Clear();
+
+            foreach (var pair in Values)
+            {
+                reservedTiles.Add(pair.Key);
+            }
         }
     }
 }

@@ -18,9 +18,9 @@ namespace FSO.Common.Domain.RealestateDomain
         int GetSlope(ushort x, ushort y);
         CityMap GetMap();
         CityInitResponse GetInit();
-        int AppendCommand(CityEditBase command);
+        int AppendCommand(CityEditBase command, HashSet<uint> reservedTiles = null, HashSet<uint> toUpdate = null);
         void SetMyTempCommand(CityEditBase command);
-        bool HandleUserCommand(CityUpdateCommand command);
+        bool HandleUserCommand(CityUpdateCommand command, HashSet<uint> reservedTiles = null, HashSet<uint> toUpdate = null, HashSet<uint> blockedTiles = null);
         void TrackUndo(uint avatarId);
     }
 }

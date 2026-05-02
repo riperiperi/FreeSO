@@ -38,3 +38,5 @@
 50 ^Modified by %s^
 51 ^Rename City^
 52 ^Please enter a new name for the city. This name can be changed by anyone with access to the City Editor, at any time.^
+53 ^Can't modify open lots or out of bounds tiles.^
+54 ^Cannot undo as terrain around open lots would be changed.^

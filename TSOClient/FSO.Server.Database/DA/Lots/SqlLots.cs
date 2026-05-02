@@ -180,6 +180,11 @@ namespace FSO.Server.Database.DA.Lots
             }
         }
 
+        public void SetTerrainDirty(IEnumerable<uint> ids)
+        {
+            Context.Connection.Query("UPDATE fso_lots SET move_flags = 8 WHERE location in @ids AND move_flags = 0", new { ids });
+        }
+
         public DbLot Get3DWork()
         {
             var item = Context.Connection.Query<DbLot>("SELECT * FROM fso_lots WHERE thumb3d_dirty = 1 AND thumb3d_time < @time ORDER BY thumb3d_time LIMIT 1", new { time = Epoch.Now - 300 }).FirstOrDefault();

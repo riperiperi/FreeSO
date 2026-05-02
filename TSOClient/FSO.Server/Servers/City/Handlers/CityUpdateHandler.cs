@@ -3,10 +3,14 @@ using FSO.Common.Domain.Realestate;
 using FSO.Common.Domain.RealestateDomain;
 using FSO.Content.Model;
 using FSO.Server.Database.DA;
+using FSO.Server.DataService.Providers;
 using FSO.Server.Framework.Voltron;
+using FSO.Server.Protocol.Electron.Model.CityEditCommands;
 using FSO.Server.Protocol.Electron.Packets;
+using FSO.Server.Servers.City.Domain;
 using FSO.Server.Utils;
 using Microsoft.Xna.Framework;
+using Ninject;
 using NLog;
 using System.Collections.Concurrent;
 
@@ -29,6 +33,8 @@ namespace FSO.Server.Servers.City.Handlers
         private readonly IRealestateDomain Realestate;
         private readonly IDAFactory DAFactory;
         private readonly IServerNFSProvider NFS;
+        private readonly ServerLotProvider LotProvider;
+        private readonly LotAllocations ActiveLots;
 
         private bool Running;
 
@@ -41,12 +47,21 @@ namespace FSO.Server.Servers.City.Handlers
         private readonly AutoResetEvent UpdateReady;
         private readonly Thread UpdateThread;
 
-        public CityUpdateHandler(CityServerContext context, IRealestateDomain realestate, IDAFactory daFactory, IServerNFSProvider nfs)
+        // These variables are only used by the serial thread
+        private readonly HashSet<uint> ReservedTiles = [];
+        private int ReservedTilesVersion = -1;
+        private readonly HashSet<uint> ToUpdateWorking = [];
+        private readonly HashSet<uint> BlockedTilesWorking = [];
+
+        public CityUpdateHandler(CityServerContext context, IRealestateDomain realestate, IDAFactory daFactory, IServerNFSProvider nfs, IKernel kernel)
         {
             Context = context;
             Realestate = realestate;
             DAFactory = daFactory;
             NFS = nfs;
+
+            LotProvider = kernel.Get<ServerLotProvider>();
+            ActiveLots = kernel.Get<LotAllocations>();
 
             Running = true;
 
@@ -227,11 +242,26 @@ namespace FSO.Server.Servers.City.Handlers
                         if (session.AvatarId != packet.AvatarID)
                             return;
 
-                        // TODO: proper ordering, thread safety
-                        if (shard.HandleUserCommand(packet))
+                        var reservedTiles = ReservedTiles;
+                        var toUpdate = ToUpdateWorking;
+                        toUpdate.Clear();
+                        var blockedTiles = BlockedTilesWorking;
+                        blockedTiles.Clear();
+
+                        LotProvider.UpdateReservedCache(reservedTiles, ref ReservedTilesVersion);
+
+                        ActiveLots.AddSurroundingLocationsTo(blockedTiles);
+                        reservedTiles.UnionWith(blockedTiles);
+
+                        if (shard.HandleUserCommand(packet, reservedTiles, toUpdate, blockedTiles))
                         {
                             Context.Broadcast(packet);
                             ModifiedShards.Add(shard);
+                            SetMoveFlags(toUpdate);
+                        }
+                        else
+                        {
+                            session.Write(new CityUpdateCommand() { Mode = CityUpdateCommandMode.UndoError });
                         }
 
                         break;
@@ -261,6 +291,15 @@ namespace FSO.Server.Servers.City.Handlers
             }
         }
 
+        private void SetMoveFlags(HashSet<uint> locations)
+        {
+            if (locations.Count > 0)
+            {
+                using var da = DAFactory.Get();
+                da.Lots.SetTerrainDirty(locations);
+            }
+        }
+
         public async void Handle(IVoltronSession session, CityUpdateRequest packet)
         {
             var shard = GetShard(session);
@@ -278,11 +317,25 @@ namespace FSO.Server.Servers.City.Handlers
                 return;
             }
 
-            // TODO: Add reserved locations from the server (any open lots)
+            // Some tiles are always reserved, even if the client doesn't want to be.
 
             QueueAction(() =>
             {
-                int id = shard.AppendCommand(cmd);
+                var reservedTiles = ReservedTiles;
+                var toUpdate = ToUpdateWorking;
+                toUpdate.Clear();
+
+                LotProvider.UpdateReservedCache(reservedTiles, ref ReservedTilesVersion);
+
+                ActiveLots.AddSurroundingLocationsTo(cmd.ReservedLocations);
+
+                if (cmd is CityEditPaint paint && paint.Type == CityEditPaintType.TerrainType && paint.Value == (byte)TerrainType.WATER)
+                {
+                    // When drawing water, the reserved locations need to include all lots.
+                    cmd.ReservedLocations.UnionWith(reservedTiles);
+                }
+
+                int id = shard.AppendCommand(cmd, reservedTiles, toUpdate);
 
                 if (id != -1)
                 {
@@ -293,6 +346,12 @@ namespace FSO.Server.Servers.City.Handlers
                     });
 
                     ModifiedShards.Add(shard);
+
+                    SetMoveFlags(toUpdate);
+                }
+                else
+                {
+                    session.Write(new CityUpdateCommand() { Mode = CityUpdateCommandMode.CommandError });
                 }
             });
         }

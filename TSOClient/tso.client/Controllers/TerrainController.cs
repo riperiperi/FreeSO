@@ -1,5 +1,6 @@
 ﻿using FSO.Client.Regulators;
 using FSO.Client.Rendering.City;
+using FSO.Client.Rendering.City.Plugins;
 using FSO.Client.UI;
 using FSO.Client.UI.Controls;
 using FSO.Client.UI.Framework;
@@ -153,12 +154,17 @@ namespace FSO.Client.Controllers
             return Realestate.GetMap();
         }
 
+        public void HideTooltip()
+        {
+            CurrentHoverLot.Value = null;
+        }
+
         private void RefreshTooltip(BindingChange[] changes)
         {
             //Called if price, online or name change
             GameThread.NextUpdate((state) =>
             {
-                if (CurrentHoverLot.Value != null)
+                if (CurrentHoverLot.Value != null && View.Plugin == null)
                 {
                     var lot = CurrentHoverLot.Value;
                     var name = lot.Lot_Name;
@@ -733,6 +739,22 @@ namespace FSO.Client.Controllers
 
         public void MessageReceived(AriesClient client, object message)
         {
+            if (message is CityUpdateCommand cmd && View.Plugin is MapPainterPlugin map)
+            {
+                GameThread.NextUpdate(x =>
+                {
+                    switch (cmd.Mode)
+                    {
+                        case CityUpdateCommandMode.CommandError:
+                            Realestate.SetMyTempCommand(null);
+                            map.ShowError(53);
+                            break;
+                        case CityUpdateCommandMode.UndoError:
+                            map.ShowError(54);
+                            break;
+                    }
+                });
+            }
         }
     }
 }

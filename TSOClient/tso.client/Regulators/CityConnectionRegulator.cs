@@ -666,6 +666,7 @@ namespace FSO.Client.Regulators
                 case "Disconnected":
                     DiscordRpcEngine.Reset();
                     ((ClientShards)Shards).CurrentShard = null;
+                    Realestate.Reset();
                     ReestablishAttempt = 0;
                     CanReestablish = false;
                     ClearUserList();

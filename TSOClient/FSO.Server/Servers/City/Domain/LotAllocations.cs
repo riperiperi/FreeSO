@@ -395,6 +395,33 @@ namespace FSO.Server.Servers.City.Domain
             _Locks.TryRemove(lotId, out removed);
             return removed;
         }
+
+        public void AddLocationsTo(HashSet<uint> locations)
+        {
+            foreach (var pair in _Locks)
+            {
+                locations.Add(pair.Key);
+            }
+        }
+
+        public void AddSurroundingLocationsTo(HashSet<uint> locations)
+        {
+            foreach (var pair in _Locks)
+            {
+                locations.Add(pair.Key);
+                locations.Add(pair.Key - 1);
+                locations.Add(pair.Key + 1);
+
+                uint axis = 1u << 16;
+                locations.Add(pair.Key + axis);
+                locations.Add(pair.Key + axis - 1);
+                locations.Add(pair.Key + axis + 1);
+
+                locations.Add(pair.Key - axis);
+                locations.Add((pair.Key - axis) - 1);
+                locations.Add((pair.Key - axis) + 1);
+            }
+        }
     }
 
     public class TryFindLotResult

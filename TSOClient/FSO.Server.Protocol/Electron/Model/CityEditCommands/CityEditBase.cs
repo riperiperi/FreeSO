@@ -1,7 +1,5 @@
 ﻿using FSO.Common.Serialization;
 using Mina.Core.Buffer;
-using System.Drawing;
-using System.Runtime.InteropServices;
 
 namespace FSO.Server.Protocol.Electron.Model.CityEditCommands
 {
@@ -11,7 +9,7 @@ namespace FSO.Server.Protocol.Electron.Model.CityEditCommands
 
         public uint AvatarId;
         public int UserModId;
-        public uint[] ReservedLocations;
+        public HashSet<uint> ReservedLocations;
         public bool IsTemp;
 
         public virtual void Deserialize(IoBuffer input, ISerializationContext context)
@@ -25,9 +23,13 @@ namespace FSO.Server.Protocol.Electron.Model.CityEditCommands
                 throw new Exception("Invalid number of reserved locations for city edit");
             }
 
-            var reservedBytes = input.GetSlice(reservedCount * sizeof(uint)).GetBytes();
+            ReservedLocations = [];
 
-            ReservedLocations = MemoryMarshal.Cast<byte, uint>(reservedBytes).ToArray();
+            for (int i = 0; i < reservedCount; i++)
+            {
+                ReservedLocations.Add(input.GetUInt32());
+            }
+
             IsTemp = input.GetBool();
         }
 
@@ -38,10 +40,12 @@ namespace FSO.Server.Protocol.Electron.Model.CityEditCommands
 
             if (ReservedLocations != null)
             {
-                output.PutInt32(ReservedLocations.Length);
+                output.PutInt32(ReservedLocations.Count);
 
-                var cast = MemoryMarshal.Cast<uint, byte>(ReservedLocations.AsSpan()).ToArray();
-                output.Put(cast);
+                foreach (var location in ReservedLocations)
+                {
+                    output.PutUInt32(location);
+                }
             }
             else
             {

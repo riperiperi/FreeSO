@@ -396,6 +396,7 @@ namespace FSO.Client.UI.Panels.CityPainter
             {
                 Visible = true;
                 Terrain.Plugin = MapPainter;
+                TController.HideTooltip();
             }
             else
             {
