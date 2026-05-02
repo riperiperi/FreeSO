@@ -21,18 +21,23 @@ import (
 // RegisterCivicAccessHandlers (freesoexperiment-409) wires the grant-community-access
 // civic op.
 //
-// Design: community lot access is a sidecar-local gate. The sidecar maintains
-// community-access.json in the persona state directory. The visit-lot handler
-// reads this file before allowing a cross-lot transition to a community lot —
-// without a grant, community lot visits return CLOSED for non-mayor avatars.
+// Design: community lot access is a machine-global shared gate. The sidecar
+// maintains community-access.json in the shared state directory (NOT keyed by
+// persona/FSO_USER). This is critical for multi-persona deployments: baron's
+// sidecar (FSO_USER=baron) grants access, ellis's sidecar (FSO_USER=ellis)
+// reads the same file and sees the grant.
+//
+// Storage: SharedCommunityAccessDir() → XDG_DATA_HOME/freeso-souls-shared/
+// (falls back to ~/.local/share/freeso-souls-shared/). All sidecars on the
+// same machine share this directory.
 //
 // Authorization: mayor-only (check delegated to C# bot via bot-cmd:check-mayor,
 // or verified via FSO_MAYOR_NHOOD env var for test scenarios). The handler uses
 // the bot-cmd:check-mayor path when a bot is available, and falls back to
 // FSO_MAYOR_NHOOD for --no-bot mode.
 //
-// Persistence: community-access.json is written under PersonaStateDir() so it
-// survives sidecar restarts. Format: array of CommunityAccessGrant.
+// Persistence: community-access.json survives sidecar restarts. Format: array
+// of CommunityAccessGrant.
 func RegisterCivicAccessHandlers(ctx context.Context, cf *Campfire, botCmds *BotCmdPump) (int, error) {
 	ops := map[string]convention.HandlerFunc{
 		"grant-community-access": grantCommunityAccessHandler(botCmds),
@@ -66,9 +71,31 @@ type CommunityAccessGrant struct {
 	GrantedAt   int64  `json:"granted_at"`   // unix ms
 }
 
-// communityAccessMu guards concurrent writes to community-access.json. Multiple
-// sidecars on the same machine would each have their own copy under their persona
-// state dir — no cross-process coordination needed for the grant op.
+// SharedCommunityAccessDir returns the machine-global directory for community-access
+// state. This directory is NOT keyed by persona/FSO_USER — it is shared across all
+// sidecars on the same machine so that a grant written by baron's sidecar is
+// visible to ellis's sidecar.
+//
+// Path resolution:
+//  1. XDG_DATA_HOME/freeso-souls-shared/ (if XDG_DATA_HOME is set).
+//  2. HOME/.local/share/freeso-souls-shared/ (POSIX default).
+//  3. /tmp/freeso-souls-shared/ (last resort when HOME is also unset).
+//
+// Tests override this via XDG_DATA_HOME to get a per-test temp directory.
+func SharedCommunityAccessDir() string {
+	if xdg := strings.TrimSpace(os.Getenv("XDG_DATA_HOME")); xdg != "" {
+		return filepath.Join(xdg, "freeso-souls-shared")
+	}
+	if home, err := os.UserHomeDir(); err == nil && home != "" {
+		return filepath.Join(home, ".local", "share", "freeso-souls-shared")
+	}
+	return "/tmp/freeso-souls-shared"
+}
+
+// communityAccessMu guards concurrent writes to community-access.json.
+// Multiple sidecars on the same machine write to the same shared directory —
+// the mutex serialises in-process accesses, while the atomic tmp-rename
+// provides cross-process safety.
 var communityAccessMu sync.Mutex
 
 // grantCommunityAccessHandler implements the grant-community-access convention.
@@ -210,13 +237,12 @@ func checkMayorAuthorization(ctx context.Context, botCmds *BotCmdPump) (bool, er
 	return true, nil
 }
 
-// readCommunityAccess reads the community-access.json file for this persona.
+// readCommunityAccess reads the machine-global community-access.json file.
 // Returns an empty slice when the file does not exist.
+// Uses SharedCommunityAccessDir() — NOT PersonaStateDir() — so grants written
+// by any sidecar on this machine are visible to all other sidecars.
 func readCommunityAccess() ([]CommunityAccessGrant, error) {
-	dir, err := PersonaStateDir()
-	if err != nil {
-		return nil, err
-	}
+	dir := SharedCommunityAccessDir()
 	path := filepath.Join(dir, "community-access.json")
 	data, err := os.ReadFile(path)
 	if err != nil {
@@ -232,14 +258,13 @@ func readCommunityAccess() ([]CommunityAccessGrant, error) {
 	return grants, nil
 }
 
-// writeCommunityAccess atomically writes grants to community-access.json.
+// writeCommunityAccess atomically writes grants to the machine-global
+// community-access.json. Uses SharedCommunityAccessDir() — NOT PersonaStateDir()
+// — so the file is readable by any sidecar on this machine regardless of FSO_USER.
 func writeCommunityAccess(grants []CommunityAccessGrant) error {
-	dir, err := PersonaStateDir()
-	if err != nil {
-		return err
-	}
-	if err := os.MkdirAll(dir, 0o700); err != nil {
-		return fmt.Errorf("mkdir persona state dir: %w", err)
+	dir := SharedCommunityAccessDir()
+	if err := os.MkdirAll(dir, 0o755); err != nil {
+		return fmt.Errorf("mkdir shared community-access dir: %w", err)
 	}
 	path := filepath.Join(dir, "community-access.json")
 	data, err := json.MarshalIndent(grants, "", "  ")
@@ -247,7 +272,7 @@ func writeCommunityAccess(grants []CommunityAccessGrant) error {
 		return fmt.Errorf("marshal community-access: %w", err)
 	}
 	tmp := path + ".tmp"
-	if err := os.WriteFile(tmp, data, 0o600); err != nil {
+	if err := os.WriteFile(tmp, data, 0o644); err != nil {
 		return fmt.Errorf("write community-access.json tmp: %w", err)
 	}
 	if err := os.Rename(tmp, path); err != nil {
@@ -279,6 +304,28 @@ func HasCommunityAccess(lotID uint32, personaName string) bool {
 			continue
 		}
 		if g.PersonaName == "*" || g.PersonaName == target {
+			return true
+		}
+	}
+	return false
+}
+
+// IsCommunityGated returns true if the given lot_id has any grants registered
+// in community-access.json. A lot is "community-gated" once a mayor has issued
+// at least one grant-community-access for it — even if that grant covers only
+// specific personas or the wildcard "*". The visit-lot handler calls this to
+// decide whether to enforce the HasCommunityAccess check; lots without any
+// grants are ordinary residential lots and pass through unconditionally.
+func IsCommunityGated(lotID uint32) bool {
+	communityAccessMu.Lock()
+	defer communityAccessMu.Unlock()
+
+	grants, err := readCommunityAccess()
+	if err != nil {
+		return false
+	}
+	for _, g := range grants {
+		if g.LotID == lotID {
 			return true
 		}
 	}

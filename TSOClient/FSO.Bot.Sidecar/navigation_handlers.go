@@ -11,6 +11,8 @@ import (
 	"encoding/json"
 	"fmt"
 	"log"
+	"os"
+	"strings"
 
 	"github.com/campfire-net/campfire/pkg/convention"
 )
@@ -137,9 +139,10 @@ func visitLotHandler(ipc *IPC, botCmds *BotCmdPump, store *MemoryStore) conventi
 				Payload: map[string]any{"ok": false, "error": fmt.Sprintf("probe-lot error: %s", probeReply.Error)},
 			}, nil
 		}
-		// Parse status from probe reply.
+		// Parse status and lot_id from probe reply.
 		var probeData struct {
 			Status string `json:"status"`
+			LotID  uint32 `json:"lot_id"`
 		}
 		if len(probeReply.Data) > 0 {
 			if err := json.Unmarshal(probeReply.Data, &probeData); err != nil {
@@ -155,6 +158,26 @@ func visitLotHandler(ipc *IPC, botCmds *BotCmdPump, store *MemoryStore) conventi
 					"lot_location": lotLocation,
 				},
 			}, nil
+		}
+
+		// freesoexperiment-381: community-access gate.
+		// If the target lot is community-gated, the calling persona must have a grant.
+		// Persona identity = FSO_USER (lowercased). Lots without any grant entries are
+		// ordinary residential lots and pass through unconditionally.
+		if probeData.LotID != 0 && IsCommunityGated(probeData.LotID) {
+			persona := strings.ToLower(strings.TrimSpace(os.Getenv("FSO_USER")))
+			if !HasCommunityAccess(probeData.LotID, persona) {
+				return &convention.Response{
+					Payload: map[string]any{
+						"ok":           false,
+						"error":        "COMMUNITY_ACCESS_DENIED",
+						"reason":       "COMMUNITY_ACCESS_DENIED",
+						"lot_id":       probeData.LotID,
+						"lot_location": lotLocation,
+						"hint":         "This is a community lot. The mayor must grant you access via grant-community-access before you can visit.",
+					},
+				}, nil
+			}
 		}
 
 		// Step 3: INVARIANT — WriteNextLot must complete before bot-cmd:exit.

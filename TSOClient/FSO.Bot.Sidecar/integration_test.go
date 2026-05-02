@@ -715,6 +715,23 @@ func TestIntegration_VisitLot_BothShapes(t *testing.T) {
 		}
 	})
 
+	// Isolate SharedCommunityAccessDir so community-access.json from other
+	// tests or from the real machine does not interfere (lot 17 probe_id
+	// would trigger the gate if left ungated).
+	xdgDataHome := filepath.Join(tmp, "data")
+	if err := os.MkdirAll(xdgDataHome, 0o700); err != nil {
+		t.Fatalf("mkdir data: %v", err)
+	}
+	priorXDGData, hasPriorXDGData := os.LookupEnv("XDG_DATA_HOME")
+	os.Setenv("XDG_DATA_HOME", xdgDataHome)
+	t.Cleanup(func() {
+		if hasPriorXDGData {
+			os.Setenv("XDG_DATA_HOME", priorXDGData)
+		} else {
+			os.Unsetenv("XDG_DATA_HOME")
+		}
+	})
+
 	// Build the sidecar binary.
 	sidecarBin := filepath.Join(tmp, "freeso-sidecar-visit-lot-test")
 	build := exec.Command(goBin, "build", "-o", sidecarBin, ".")

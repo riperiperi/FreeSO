@@ -65,6 +65,7 @@ func TestGrantCommunityAccessNoAuth(t *testing.T) {
 	tmp := t.TempDir()
 	withFSO_USER(t, "grant-access-noauth-test")
 	withConfigHome(t, tmp)
+	withSharedDataHome(t, tmp)
 
 	// Ensure FSO_MAYOR_NHOOD is not set.
 	prior, hasPrior := os.LookupEnv("FSO_MAYOR_NHOOD")
@@ -101,6 +102,7 @@ func TestGrantCommunityAccessMayorBotCheck(t *testing.T) {
 	tmp := t.TempDir()
 	withFSO_USER(t, "grant-access-mayorbotcheck-test")
 	withConfigHome(t, tmp)
+	withSharedDataHome(t, tmp)
 
 	fake := newFakeBotProcess()
 	pump := NewBotCmdPump(fake.bot)
@@ -150,7 +152,7 @@ func TestGrantCommunityAccessMayorBotCheck(t *testing.T) {
 // access to a specific persona.
 //
 // Verifies:
-//   - community-access.json is written under PersonaStateDir.
+//   - community-access.json is written under SharedCommunityAccessDir (NOT PersonaStateDir).
 //   - HasCommunityAccess returns true for the granted persona + lot.
 //   - HasCommunityAccess returns false for a different persona.
 //   - Response carries ok=true, lot_id, persona_name, grant_count.
@@ -158,6 +160,7 @@ func TestGrantCommunityAccessSuccessPath(t *testing.T) {
 	tmp := t.TempDir()
 	withFSO_USER(t, "grant-access-success-test")
 	withConfigHome(t, tmp)
+	withSharedDataHome(t, tmp)
 
 	// Mayor via FSO_MAYOR_NHOOD env (no bot needed for mayor check).
 	prior, hasPrior := os.LookupEnv("FSO_MAYOR_NHOOD")
@@ -206,11 +209,18 @@ func TestGrantCommunityAccessSuccessPath(t *testing.T) {
 		t.Errorf("want idempotent=false (first grant), got %v", payload["idempotent"])
 	}
 
-	// Verify community-access.json was written.
-	dir := filepath.Join(tmp, "freeso-souls", "grant-access-success-test")
-	accessPath := filepath.Join(dir, "community-access.json")
+	// Verify community-access.json was written to the SHARED dir, not the persona dir.
+	// Shared dir = XDG_DATA_HOME/freeso-souls-shared/ (in tests, XDG_DATA_HOME=tmp).
+	sharedDir := filepath.Join(tmp, "freeso-souls-shared")
+	accessPath := filepath.Join(sharedDir, "community-access.json")
 	if _, err := os.Stat(accessPath); err != nil {
-		t.Fatalf("community-access.json not written: %v", err)
+		t.Fatalf("community-access.json not written to shared dir %s: %v", sharedDir, err)
+	}
+	// Verify NOT written to the old per-persona dir.
+	personaDir := filepath.Join(tmp, "freeso-souls", "grant-access-success-test")
+	personaAccessPath := filepath.Join(personaDir, "community-access.json")
+	if _, err := os.Stat(personaAccessPath); err == nil {
+		t.Errorf("community-access.json must NOT be written to per-persona dir %s (cross-persona bug)", personaAccessPath)
 	}
 
 	// Verify HasCommunityAccess gate — FELT EFFECT: persona now can visit the lot.
@@ -234,6 +244,7 @@ func TestGrantCommunityAccessWildcard(t *testing.T) {
 	tmp := t.TempDir()
 	withFSO_USER(t, "grant-access-wildcard-test")
 	withConfigHome(t, tmp)
+	withSharedDataHome(t, tmp)
 
 	os.Setenv("FSO_MAYOR_NHOOD", "1")
 	t.Cleanup(func() { os.Unsetenv("FSO_MAYOR_NHOOD") })
@@ -272,6 +283,7 @@ func TestGrantCommunityAccessIdempotent(t *testing.T) {
 	tmp := t.TempDir()
 	withFSO_USER(t, "grant-access-idempotent-test")
 	withConfigHome(t, tmp)
+	withSharedDataHome(t, tmp)
 
 	os.Setenv("FSO_MAYOR_NHOOD", "1")
 	t.Cleanup(func() { os.Unsetenv("FSO_MAYOR_NHOOD") })
@@ -325,6 +337,7 @@ func TestCommunityAccessRoundTrip(t *testing.T) {
 	tmp := t.TempDir()
 	withFSO_USER(t, "community-access-rt")
 	withConfigHome(t, tmp)
+	withSharedDataHome(t, tmp)
 
 	// Empty state.
 	grants, err := readCommunityAccess()
@@ -354,4 +367,98 @@ func TestCommunityAccessRoundTrip(t *testing.T) {
 	if grants[0].LotID != 17 || grants[0].PersonaName != "botrous" {
 		t.Errorf("grant[0]: want {17, botrous}, got %+v", grants[0])
 	}
+}
+
+// TestCrossPersonaGrant is the regression test for the CRITICAL bug identified
+// by the veracity adversary: grants written by one persona's sidecar must be
+// readable by a different persona's sidecar.
+//
+// Bug scenario (pre-fix):
+//   - baron's sidecar (FSO_USER=baron) calls grant-community-access for ellis on lot 17.
+//   - ellis's sidecar (FSO_USER=ellis) calls visit-lot on lot 17.
+//   - IsCommunityGated(17) reads from ~/.config/freeso-souls/ellis/community-access.json
+//     which is EMPTY — the gate is a no-op for every visitor.
+//
+// Fix: community-access.json lives in SharedCommunityAccessDir() (keyed by
+// XDG_DATA_HOME, NOT by FSO_USER). All sidecars on the same machine share it.
+//
+// This test will FAIL with the old per-PersonaStateDir storage and PASS with
+// SharedCommunityAccessDir storage — that's the mutation evidence.
+func TestCrossPersonaGrant(t *testing.T) {
+	tmp := t.TempDir()
+	// XDG_DATA_HOME → shared dir isolation for community-access.json.
+	withSharedDataHome(t, tmp)
+
+	// Mayor env var for grant authorization (no bot needed).
+	os.Setenv("FSO_MAYOR_NHOOD", "1")
+	t.Cleanup(func() { os.Unsetenv("FSO_MAYOR_NHOOD") })
+
+	ctx, cancel := context.WithTimeout(context.Background(), 5*time.Second)
+	defer cancel()
+
+	// --- Step 1: baron's sidecar grants ellis access to lot 17. ---
+	// baron is the mayor; FSO_USER=baron during grant.
+	withFSO_USER(t, "baron")
+	withConfigHome(t, tmp) // baron's persona state goes to tmp/freeso-souls/baron/
+
+	grantHandler := grantCommunityAccessHandler(nil)
+	grantResp, err := grantHandler(ctx, &convention.Request{Args: map[string]any{
+		"lot_id":       float64(17),
+		"persona_name": "ellis",
+	}})
+	if err != nil {
+		t.Fatalf("grant-community-access: %v", err)
+	}
+	grantPayload, _ := grantResp.Payload.(map[string]any)
+	if grantPayload["ok"] != true {
+		t.Fatalf("grant-community-access failed (prerequisite): %v", grantPayload)
+	}
+
+	// Verify grant was written to shared dir, NOT to baron's persona dir.
+	sharedAccessPath := filepath.Join(tmp, "freeso-souls-shared", "community-access.json")
+	if _, err := os.Stat(sharedAccessPath); err != nil {
+		t.Fatalf("grant must be in SharedCommunityAccessDir (%s), not found: %v", sharedAccessPath, err)
+	}
+	baronPersonaAccessPath := filepath.Join(tmp, "freeso-souls", "baron", "community-access.json")
+	if _, err := os.Stat(baronPersonaAccessPath); err == nil {
+		t.Errorf("grant must NOT be in baron's PersonaStateDir (%s) — cross-persona bug", baronPersonaAccessPath)
+	}
+	t.Logf("STEP 1 PASS: grant written to shared dir by baron's sidecar")
+
+	// --- Step 2: ellis's sidecar reads the grant (FSO_USER=ellis). ---
+	// Switch FSO_USER to ellis — simulates ellis's sidecar reading.
+	withFSO_USER(t, "ellis")
+	withConfigHome(t, tmp) // ellis's persona state goes to tmp/freeso-souls/ellis/
+
+	// IsCommunityGated must return true — lot 17 has a grant in the shared file.
+	if !IsCommunityGated(17) {
+		t.Fatal("CROSS-PERSONA BUG: IsCommunityGated(17) returned false when FSO_USER=ellis — " +
+			"grant written by baron's sidecar is not visible to ellis's sidecar. " +
+			"Storage must use SharedCommunityAccessDir, not PersonaStateDir.")
+	}
+
+	// HasCommunityAccess(17, "ellis") must return true.
+	if !HasCommunityAccess(17, "ellis") {
+		t.Fatal("CROSS-PERSONA BUG: HasCommunityAccess(17, ellis) returned false when FSO_USER=ellis — " +
+			"grant written by baron's sidecar is not visible to ellis's sidecar. " +
+			"Storage must use SharedCommunityAccessDir, not PersonaStateDir.")
+	}
+	t.Logf("STEP 2 PASS: ellis's sidecar sees baron's grant — cross-persona storage working")
+
+	// --- Step 3: marlo's sidecar (no grant) is denied. ---
+	withFSO_USER(t, "marlo")
+	withConfigHome(t, tmp) // marlo's persona state goes to tmp/freeso-souls/marlo/
+
+	// IsCommunityGated still returns true (lot 17 is still gated).
+	if !IsCommunityGated(17) {
+		t.Fatal("IsCommunityGated(17) returned false for marlo — shared state should still show gating")
+	}
+
+	// HasCommunityAccess must return false for marlo (no grant).
+	if HasCommunityAccess(17, "marlo") {
+		t.Fatal("HasCommunityAccess(17, marlo) returned true — marlo has no grant, must be denied")
+	}
+	t.Logf("STEP 3 PASS: marlo is denied (no grant) — gate discriminates correctly")
+
+	t.Logf("FULL CROSS-PERSONA TEST PASS: baron grants → ellis visits OK, marlo denied")
 }
