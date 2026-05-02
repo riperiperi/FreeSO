@@ -116,6 +116,81 @@ func TestIPCSendFailPayload(t *testing.T) {
 	}
 }
 
+// TestIPCRace_UpdateBot_Send exercises the concurrent UpdateBot / Send path
+// under the Go race detector (-race). Prior to the fix, i.bot was read in
+// Send() without holding i.mu while UpdateBot() wrote it under the lock —
+// a data race flagged by the detector.
+//
+// The test spins up N goroutines calling Send() on a fake bot that delivers
+// responses immediately, while a parallel goroutine repeatedly calls UpdateBot
+// with fresh fake bots. The race detector will catch unsynchronised accesses
+// on the unpatched code; the fixed code must pass cleanly.
+func TestIPCRace_UpdateBot_Send(t *testing.T) {
+	const (
+		senders   = 8
+		swaps     = 200
+		sendOps   = 50
+	)
+
+	// Build an IPC instance backed by a fake bot that auto-delivers responses.
+	fake := newFakeBotProcess()
+	ipc := NewIPC(fake.bot)
+
+	// autoResponder reads commands from a fake bot's stdinLines and delivers
+	// matching responses back to ipc.
+	autoRespond := func(f *fakeBotProcess) {
+		for line := range f.stdinLines {
+			var cmd Command
+			if err := json.Unmarshal(line, &cmd); err != nil {
+				continue
+			}
+			resp := map[string]any{
+				"kind":   "response",
+				"cmd_id": cmd.ID,
+				"ok":     true,
+			}
+			data, _ := json.Marshal(resp)
+			ipc.Deliver(data)
+		}
+	}
+	go autoRespond(fake)
+
+	ctx, cancel := context.WithTimeout(context.Background(), 10*time.Second)
+	defer cancel()
+
+	// Sender goroutines: each calls ipc.Send() repeatedly. Errors are
+	// acceptable (bot may have been swapped mid-write); races are not.
+	var wg sync.WaitGroup
+	for s := 0; s < senders; s++ {
+		wg.Add(1)
+		go func() {
+			defer wg.Done()
+			for n := 0; n < sendOps; n++ {
+				sendCtx, sendCancel := context.WithTimeout(ctx, 200*time.Millisecond)
+				_, _ = ipc.Send(sendCtx, "walk-to", map[string]any{"x": n, "y": n})
+				sendCancel()
+			}
+		}()
+	}
+
+	// Swapper goroutine: repeatedly replaces the underlying bot with a new
+	// fake. The new fake also needs an auto-responder so in-flight sends can
+	// complete.
+	wg.Add(1)
+	go func() {
+		defer wg.Done()
+		for n := 0; n < swaps; n++ {
+			newFake := newFakeBotProcess()
+			go autoRespond(newFake)
+			ipc.UpdateBot(newFake.bot)
+			// Tiny yield so senders get scheduled between swaps.
+			time.Sleep(time.Millisecond)
+		}
+	}()
+
+	wg.Wait()
+}
+
 // fakeBotProcess wraps a BotProcess with an in-memory stdin pipe so tests
 // don't need to spawn a real child. The bot field is the thing exposed to IPC.
 type fakeBotProcess struct {

@@ -75,7 +75,17 @@ func NewIPC(bot *BotProcess) *IPC {
 // enough to surface a stuck bot. Callers wanting different timeouts should
 // set one on ctx.
 func (i *IPC) Send(ctx context.Context, op string, args map[string]any) (*Response, error) {
-	if i == nil || i.bot == nil {
+	if i == nil {
+		return nil, errors.New("ipc: not wired to a bot process")
+	}
+	// Snapshot i.bot under i.mu to avoid a data race with UpdateBot(), which
+	// writes i.bot under the same lock. We read once into a local variable and
+	// release the lock before any I/O so we don't hold the lock across the
+	// blocking WriteStdin call.
+	i.mu.Lock()
+	bot := i.bot
+	i.mu.Unlock()
+	if bot == nil {
 		return nil, errors.New("ipc: not wired to a bot process")
 	}
 	if op == "" {
@@ -111,7 +121,7 @@ func (i *IPC) Send(ctx context.Context, op string, args map[string]any) (*Respon
 		i.mu.Unlock()
 	}()
 
-	if err := i.bot.WriteStdin(line); err != nil {
+	if err := bot.WriteStdin(line); err != nil {
 		return nil, fmt.Errorf("ipc write stdin (%s): %w", op, err)
 	}
 
