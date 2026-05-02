@@ -24,6 +24,11 @@
   </PropertyGroup>
 
   <ItemGroup>
+    <!-- Allow tests to access SqliteContext and other internal helpers -->
+    <InternalsVisibleTo Include="FSO.Server.Database.Tests" />
+  </ItemGroup>
+
+  <ItemGroup>
     <PackageReference Include="Dapper" Version="2.1.66" />
     <PackageReference Include="MySql.Data" Version="9.4.0" />
     <PackageReference Include="Ninject" Version="3.3.6" />
