@@ -8,7 +8,14 @@
     {
       "name": "target_persist_id",
       "type": "uint64",
-      "required": true
+      "required": false,
+      "description": "Hex or decimal persist_id of the candidate avatar. Mutually exclusive with target_avatar_name — if both are supplied, target_avatar_name takes precedence (I0-5 name-primary invariant)."
+    },
+    {
+      "name": "target_avatar_name",
+      "type": "string",
+      "required": false,
+      "description": "Name-store binding of the candidate avatar (kind=sim). Resolved to target_persist_id via the sidecar naming store. Takes precedence over target_persist_id when both are supplied. Preferred call shape per I0-5 name-primary invariant."
     },
     {
       "name": "neighborhood_id",
@@ -32,11 +39,14 @@
   "response": "sync",
   "status": "implemented",
   "call_signatures": [
-    "cf $CF vote --target_persist_id <candidate_persist_id>                                                          # defaults neighborhood_id=1; server refuses ELECTION_OVER on workshop (no active cycle)",
+    "cf $CF vote --target_avatar_name <name>                                                                          # preferred: resolve name from store (kind=sim); defaults neighborhood_id=1",
+    "cf $CF vote --target_avatar_name <name> --neighborhood_id <nhood>                                               # explicit nhood",
+    "cf $CF vote --target_persist_id <candidate_persist_id>                                                          # fallback: hex/decimal persist_id; defaults neighborhood_id=1; server refuses ELECTION_OVER on workshop (no active cycle)",
     "cf $CF vote --target_persist_id <pid> --neighborhood_id <nhood>                                                 # explicit nhood"
   ],
   "common_mistakes": [
-    "target_persist_id = 0 or missing → ok:false.",
+    "target_avatar_name not bound in name store (or bound with wrong kind) → ok:false with name-resolution error.",
+    "target_persist_id = 0 or missing (and no target_avatar_name) → ok:false.",
     "Self-vote → ok:false ('cannot vote for yourself').",
     "Server returns NHOOD_NO_ELECTION or ELECTION_OVER when no cycle active (workshop default state) → ok:false.",
     "YOU_MOVED_RECENTLY if caller moved in last 30 days (non-admin)."
@@ -47,8 +57,10 @@
     "Your lot membership (residency gate): perception.lot.owner_is_me or check is_roommate via query-lot"
   ],
   "refuse_conditions": [
-    "missing target_persist_id or target_persist_id <= 0 → ok:false",
-    "target_persist_id == own avatar_id → ok:false with 'cannot vote for yourself'",
+    "target_avatar_name present but not bound in name store → ok:false with name-resolution error",
+    "target_avatar_name bound with kind != sim → ok:false (name must be a sim binding)",
+    "neither target_avatar_name nor target_persist_id provided, or target_persist_id <= 0 → ok:false",
+    "target resolves to own avatar_id → ok:false with 'cannot vote for yourself'",
     "server NHOOD_NO_ELECTION / ELECTION_OVER → ok:false with response code",
     "10s timeout → ok:false"
   ]

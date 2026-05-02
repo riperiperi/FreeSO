@@ -255,26 +255,51 @@ public static class CityHandlers
 
     internal static async Task<CommandDispatcher.Response> VoteAsync(AriesClient cityAries, uint myAvatarId, JsonObject args, CancellationToken ct)
     {
-        uint nhoodId = ReadNhoodId(args);
+        var (targetAvatar, nhoodId, err) = ExtractElectionArgs(args, myAvatarId, "vote");
+        if (err != null) return CommandDispatcher.Response.Fail(err);
 
-        var targetPid = (long?)args["target_persist_id"] ?? 0L;
-        if (targetPid <= 0) return CommandDispatcher.Response.Fail("vote requires target_persist_id (> 0)");
-        if ((uint)targetPid == myAvatarId) return CommandDispatcher.Response.Fail("vote: cannot vote for yourself (server also refuses CANT_RATE_AVATAR-class checks)");
-
-        return await SendNhoodRequestAsync(cityAries, NhoodRequestType.VOTE, (uint)targetPid, nhoodId, "", 0, "vote", ct);
+        return await SendNhoodRequestAsync(cityAries, NhoodRequestType.VOTE, targetAvatar, nhoodId, "", 0, "vote", ct);
     }
 
     // ---- nominate ----
 
     internal static async Task<CommandDispatcher.Response> NominateAsync(AriesClient cityAries, uint myAvatarId, JsonObject args, CancellationToken ct)
     {
+        var (targetAvatar, nhoodId, err) = ExtractElectionArgs(args, myAvatarId, "nominate");
+        if (err != null) return CommandDispatcher.Response.Fail(err);
+
+        return await SendNhoodRequestAsync(cityAries, NhoodRequestType.NOMINATE, targetAvatar, nhoodId, "", 0, "nominate", ct);
+    }
+
+    /// <summary>
+    /// Extracts and validates vote/nominate wire args from the IPC JsonObject.
+    /// Returns (targetAvatar, nhoodId, null) on success, or (0, 0, errorMessage) on failure.
+    ///
+    /// <para>
+    /// This internal helper exposes the arg-extraction contract as a testable seam
+    /// (freesoexperiment-17f veracity rework v2 — CRITICAL contract test). The caller
+    /// (VoteAsync / NominateAsync) relies on this exact casting chain:
+    ///   args["target_persist_id"] → (long?) → (uint) → NhoodRequest.TargetAvatar.
+    /// A bug here (wrong JSON key, wrong cast, wrong field assignment) is invisible to
+    /// Go-side tests that only inspect the sidecar→bot-stdin wire. This seam ensures
+    /// the C# handler side of the contract is exercised.
+    /// </para>
+    ///
+    /// <para>
+    /// Production callers (<see cref="VoteAsync"/>, <see cref="NominateAsync"/>) use this
+    /// helper directly so the test covers the same code path — not a re-implementation.
+    /// </para>
+    /// </summary>
+    internal static (uint TargetAvatar, uint NhoodId, string Error) ExtractElectionArgs(
+        JsonObject args, uint myAvatarId, string verb)
+    {
         uint nhoodId = ReadNhoodId(args);
-
         var targetPid = (long?)args["target_persist_id"] ?? 0L;
-        if (targetPid <= 0) return CommandDispatcher.Response.Fail("nominate requires target_persist_id (> 0)");
-        if ((uint)targetPid == myAvatarId) return CommandDispatcher.Response.Fail("nominate: cannot nominate yourself");
-
-        return await SendNhoodRequestAsync(cityAries, NhoodRequestType.NOMINATE, (uint)targetPid, nhoodId, "", 0, "nominate", ct);
+        if (targetPid <= 0)
+            return (0, 0, $"{verb} requires target_persist_id (> 0)");
+        if ((uint)targetPid == myAvatarId)
+            return (0, 0, $"{verb}: cannot {verb} yourself (server also refuses CANT_RATE_AVATAR-class checks)");
+        return ((uint)targetPid, nhoodId, null);
     }
 
     private static async Task<CommandDispatcher.Response> SendNhoodRequestAsync(

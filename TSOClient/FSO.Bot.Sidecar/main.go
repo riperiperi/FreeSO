@@ -258,7 +258,9 @@ func main() {
 		log.Printf("convention handlers: %d mail-family ops serving", mailServers)
 
 		// City family (freesoexperiment-ded).
-		cityServers, err := RegisterCityHandlers(ctx, cf, ipc)
+		// memStore is passed so vote/nominate can resolve --target_avatar_name
+		// via the naming store (freesoexperiment-17f, I0-5 name-primary invariant).
+		cityServers, err := RegisterCityHandlers(ctx, cf, ipc, memStore)
 		if err != nil {
 			log.Fatalf("register city handlers: %v", err)
 		}
