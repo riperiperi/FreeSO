@@ -20,6 +20,11 @@
     <ProjectReference Include="..\tso.content\FSO.Content.csproj" />
     <ProjectReference Include="..\tso.simantics\FSO.SimAntics.csproj" />
     <ProjectReference Include="..\FSO.Content.TSO\FSO.Content.TSO.csproj" />
+    <!-- freesoexperiment-82b: tax-debit requires IAvatars.GetLivingInNhood +
+         IAvatars.Transaction to produce per-resident budget deltas. The bot
+         connects to MariaDB directly via FSO_DB_* env vars (same network as
+         the server container). -->
+    <ProjectReference Include="..\FSO.Server.Database\FSO.Server.Database.csproj" />
   </ItemGroup>
 
   <ItemGroup>
