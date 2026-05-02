@@ -140,12 +140,13 @@ namespace FSO.Server.Core
         // the matching DGRP zoom value (Far=1, Medium=2, Near=3).
         private struct ZoomGeometry
         {
-            public uint DgrpZoom;       // matches DGRP image Zoom field
-            public int AnchorX;         // CadgeWidth / 2
-            public int AnchorY;         // CadgeBaseLine
-            public int TileHalfW;       // TilePxWidth / 2
-            public int TileHalfH;       // TilePxHeight / 2
-            public float FloorPxHeight; // OneUnitDistance * cos(30°) * WorldUnitsPerTile
+            public uint DgrpZoom;            // matches DGRP image Zoom field
+            public int AnchorX;              // CadgeWidth / 2
+            public int AnchorY;              // CadgeBaseLine
+            public int TileHalfW;            // TilePxWidth / 2
+            public int TileHalfH;            // TilePxHeight / 2
+            public float OneUnitDistCos30;   // OneUnitDistance * cos(30°) — vertical px per Z tile
+            public float FloorPxHeight;      // OneUnitDistCos30 * WorldUnitsPerTile (per-level stride)
         }
 
         // Near zoom — what the in-game catalog uses. Sources from WorldSpace.Invalidate:
@@ -159,8 +160,39 @@ namespace FSO.Server.Core
             AnchorY = 348,
             TileHalfW = 64,
             TileHalfH = 32,
+            OneUnitDistCos30 = 78.4f,
             FloorPxHeight = 78.4f * 2.95f,
         };
+
+        // Direction probe order when the canonical LeftFront (0x10) view is missing.
+        // In-game catalog renders NORTH-facing objects with a BottomRight camera, which
+        // maps to DGRP direction 0x10. Some asymmetric objects only ship a subset of
+        // directions; without a deterministic order we'd fall back to FirstOrDefault and
+        // pick whichever happens to be first in the IFF — that's what produced the
+        // 180°-off thumbnails. Probe LeftBack/RightFront/RightBack in that order.
+        private static readonly uint[] DGRP_DIRECTION_PROBE = { 0x10, 0x40, 0x04, 0x01 };
+
+        private static DGRPImage GetCatalogImage(DGRP dgrp, uint zoom)
+        {
+            foreach (var d in DGRP_DIRECTION_PROBE)
+            {
+                var img = dgrp.GetImage(d, zoom, 0);
+                if (img != null && img.Sprites != null && img.Sprites.Length > 0) return img;
+            }
+            return dgrp.Images?.FirstOrDefault(i => i.Sprites != null && i.Sprites.Length > 0);
+        }
+
+        // Per-sprite resolved entry — replaces the previous per-tile resolved list so
+        // depth sorting and screen placement happen at sprite granularity, matching
+        // what tso.world's DGRPRenderer + Z-buffer does in-game.
+        private struct ResolvedSprite
+        {
+            public SPR2Frame Frame;
+            public int ScreenX;   // top-left of frame on the un-shifted canvas
+            public int ScreenY;
+            public bool Flip;
+            public float Depth;   // ascending = drawn first (back to front)
+        }
 
         private static bool TryRenderDGRPGroup(GameObject obj, OBJD masterObjd, IffFile spriteIff, string dir, string thumbPath)
         {
@@ -199,69 +231,89 @@ namespace FSO.Server.Core
             }
             if (tiles.Count == 0) return false;
 
-            // Match the in-game 2D catalog renderer exactly:
+            // Match the in-game 2D catalog renderer:
             //   WorldRotation.BottomRight (2) + Direction.NORTH (0x01) → DGRP direction 0x10
             //   (LeftFront). The DGRP sprites for that direction are anchored assuming the
-            //   BottomRight tile→screen formula, so we MUST use that same formula when
-            //   placing each tile or multi-tile objects (beds, sofas) end up scrambled.
-            const uint dgrpDirection = 0x10;
-            const uint dgrpRotation = 0;  // already-rotated direction supplied directly
-
-            // Per-zoom geometry constants extracted into NearZoom so they're named, sourced
-            // back to WorldSpace.Invalidate, and trivially swappable if we ever render
-            // catalog thumbs at a non-Near zoom.
+            //   BottomRight tile→screen formula, so we use that same formula below when
+            //   placing each tile.
             var z = NearZoom;
             const int pad = 16;
 
-            // Resolve every tile's DGRPImage and per-tile screen offset, then sort
-            // back-to-front so closer tiles overpaint farther ones (no Z-buffer here).
-            var resolved = new List<(DGRPImage Image, int OffsetX, int OffsetY, int Depth)>();
+            // Resolve every sprite (across every tile) into a flat list with its screen
+            // position and a 3D-derived depth. Sorting/compositing per-SPRITE rather than
+            // per-tile matches DGRPRenderer.ValidateSprite (tso.world) — without it,
+            // multi-sprite multi-tile objects layer wrong because sprites within
+            // different tiles can interleave in screen space.
+            var resolved = new List<ResolvedSprite>();
             foreach (var t in tiles)
             {
-                var image = t.DGRP.GetImage(dgrpDirection, z.DgrpZoom, dgrpRotation);
-                if (image == null)
-                    image = t.DGRP.Images?.FirstOrDefault(i => i.Sprites?.Length > 0);
-                if (image == null || image.Sprites == null || image.Sprites.Length == 0) continue;
+                var image = GetCatalogImage(t.DGRP, z.DgrpZoom);
+                if (image == null) continue;
 
-                // BottomRight isometric tile→screen + level offset.
-                int sx = (-t.TileX + t.TileY) * z.TileHalfW;
-                int sy = (-t.TileX - t.TileY) * z.TileHalfH - (int)(t.Level * z.FloorPxHeight);
-                // Isometric back-to-front depth, sorted ASCENDING for the painter's
-                // algorithm:
-                //   - Within a floor: tiles with larger (TileX + TileY) are farther in
-                //     the BottomRight view (more negative sy on screen) → must draw
-                //     FIRST so closer tiles overpaint them. Subtract TileX+TileY so
-                //     "back" gets the smallest value.
-                //   - Across floors: higher Level draws on top of lower floors, so
-                //     larger Level = larger depth. Multiplier large enough that any
-                //     ground-floor tile sorts before any upper-floor tile.
-                int depth = t.Level * 10000 - (t.TileX + t.TileY) * 1000;
-                resolved.Add((image, sx, sy, depth));
-            }
-            if (resolved.Count == 0) return false;
-            resolved.Sort((a, b) => a.Depth.CompareTo(b.Depth));
+                // BottomRight isometric tile→screen + per-floor stride.
+                int tileSx = (-t.TileX + t.TileY) * z.TileHalfW;
+                int tileSy = (-t.TileX - t.TileY) * z.TileHalfH - (int)(t.Level * z.FloorPxHeight);
+                int tileAnchorX = z.AnchorX + tileSx;
+                int tileAnchorY = z.AnchorY + tileSy;
 
-            // Pass 1 – bounding box across all tiles.
-            int minX = int.MaxValue, minY = int.MaxValue;
-            int maxX = int.MinValue, maxY = int.MinValue;
-            foreach (var r in resolved)
-            {
-                int tileAnchorX = z.AnchorX + r.OffsetX;
-                int tileAnchorY = z.AnchorY + r.OffsetY;
-                foreach (var spr in r.Image.Sprites)
+                foreach (var spr in image.Sprites)
                 {
+                    if (spr == null) continue;
                     var s2 = spriteIff.Get<SPR2>((ushort)spr.SpriteID);
                     if (s2 == null || spr.SpriteFrameIndex >= (uint)s2.Frames.Length) continue;
                     var frame = s2.Frames[(int)spr.SpriteFrameIndex];
                     frame.DecodeIfRequired(false);
                     if (frame.PixelData == null || frame.Width <= 0 || frame.Height <= 0) continue;
-                    int x = tileAnchorX + (int)spr.SpriteOffset.X;
-                    int y = tileAnchorY - frame.Height + (int)spr.SpriteOffset.Y;
-                    if (x < minX) minX = x;
-                    if (y < minY) minY = y;
-                    if (x + frame.Width > maxX) maxX = x + frame.Width;
-                    if (y + frame.Height > maxY) maxY = y + frame.Height;
+
+                    // Per-sprite ObjectOffset (tso.world DGRPRenderer.ValidateSprite):
+                    //   centerRelative = ObjectOffset * (1/16, 1/16, 1/5)
+                    //   pxOff = GetScreenFromTile(centerRelative, BottomRight)
+                    //   sprite.DestRect.X/Y += pxOff
+                    // Object's facing direction is NORTH for catalog thumbs, so
+                    // RadianDirection = 0 and the rotation matrix is identity — we can
+                    // skip Vector3.Transform and use the components directly.
+                    float crX = spr.ObjectOffset.X / 16f;
+                    float crY = spr.ObjectOffset.Y / 16f;
+                    float crZ = spr.ObjectOffset.Z / 5f;
+                    float pxOffX = (-crX + crY) * z.TileHalfW;
+                    float pxOffY = (-crX - crY) * z.TileHalfH - crZ * z.OneUnitDistCos30;
+
+                    int x = tileAnchorX + (int)spr.SpriteOffset.X + (int)pxOffX;
+                    int y = tileAnchorY - frame.Height + (int)spr.SpriteOffset.Y + (int)pxOffY;
+
+                    // Per-sprite back-to-front depth in tile-space world coords:
+                    //   - Within a floor: larger (worldX + worldY) is farther from the
+                    //     BottomRight camera → smaller depth = drawn first.
+                    //   - Across floors: higher worldZ paints on top → larger depth.
+                    //   - Z-major weighting ensures upper-floor sprites always sort
+                    //     above any ground-floor sprite regardless of X+Y.
+                    float worldX = t.TileX + crX;
+                    float worldY = t.TileY + crY;
+                    float worldZ = t.Level * 2.95f + crZ;
+                    float depth = worldZ * 1000f - (worldX + worldY);
+
+                    resolved.Add(new ResolvedSprite
+                    {
+                        Frame = frame,
+                        ScreenX = x,
+                        ScreenY = y,
+                        Flip = spr.Flip,
+                        Depth = depth,
+                    });
                 }
+            }
+            if (resolved.Count == 0) return false;
+            resolved.Sort((a, b) => a.Depth.CompareTo(b.Depth));
+
+            // Pass 1 – bounding box across all sprites.
+            int minX = int.MaxValue, minY = int.MaxValue;
+            int maxX = int.MinValue, maxY = int.MinValue;
+            foreach (var r in resolved)
+            {
+                if (r.ScreenX < minX) minX = r.ScreenX;
+                if (r.ScreenY < minY) minY = r.ScreenY;
+                if (r.ScreenX + r.Frame.Width > maxX) maxX = r.ScreenX + r.Frame.Width;
+                if (r.ScreenY + r.Frame.Height > maxY) maxY = r.ScreenY + r.Frame.Height;
             }
             if (minX == int.MaxValue || maxX <= minX || maxY <= minY) return false;
 
@@ -269,40 +321,29 @@ namespace FSO.Server.Core
             int canvasH = maxY - minY + pad * 2;
             var canvasBytes = new byte[canvasW * canvasH * 4]; // RGBA, zeroed = transparent
 
-            // Pass 2 – composite back-to-front using the depth-sorted order from above so
-            // closer tiles overpaint farther ones (no Z-buffer in the CPU compositor).
+            // Pass 2 – composite back-to-front in sorted order.
             foreach (var r in resolved)
             {
-                int tileAnchorX = z.AnchorX + r.OffsetX;
-                int tileAnchorY = z.AnchorY + r.OffsetY;
-                foreach (var spr in r.Image.Sprites)
+                int baseX = r.ScreenX - minX + pad;
+                int baseY = r.ScreenY - minY + pad;
+                int fw = r.Frame.Width, fh = r.Frame.Height;
+                bool flip = r.Flip;
+                var pixels = r.Frame.PixelData;
+
+                for (int py = 0; py < fh; py++)
                 {
-                    var s2 = spriteIff.Get<SPR2>((ushort)spr.SpriteID);
-                    if (s2 == null || spr.SpriteFrameIndex >= (uint)s2.Frames.Length) continue;
-                    var frame = s2.Frames[(int)spr.SpriteFrameIndex];
-                    frame.DecodeIfRequired(false);
-                    if (frame.PixelData == null) continue;
-
-                    int baseX = tileAnchorX + (int)spr.SpriteOffset.X - minX + pad;
-                    int baseY = tileAnchorY - frame.Height + (int)spr.SpriteOffset.Y - minY + pad;
-                    int fw = frame.Width, fh = frame.Height;
-                    bool flip = spr.Flip;
-
-                    for (int py = 0; py < fh; py++)
+                    for (int px = 0; px < fw; px++)
                     {
-                        for (int px = 0; px < fw; px++)
-                        {
-                            var c = frame.PixelData[py * fw + px];
-                            if (c.A == 0) continue;
-                            int cx = baseX + (flip ? fw - 1 - px : px);
-                            int cy = baseY + py;
-                            if ((uint)cx >= (uint)canvasW || (uint)cy >= (uint)canvasH) continue;
-                            int idx = (cy * canvasW + cx) * 4;
-                            canvasBytes[idx]     = c.R;
-                            canvasBytes[idx + 1] = c.G;
-                            canvasBytes[idx + 2] = c.B;
-                            canvasBytes[idx + 3] = c.A;
-                        }
+                        var c = pixels[py * fw + px];
+                        if (c.A == 0) continue;
+                        int cx = baseX + (flip ? fw - 1 - px : px);
+                        int cy = baseY + py;
+                        if ((uint)cx >= (uint)canvasW || (uint)cy >= (uint)canvasH) continue;
+                        int idx = (cy * canvasW + cx) * 4;
+                        canvasBytes[idx]     = c.R;
+                        canvasBytes[idx + 1] = c.G;
+                        canvasBytes[idx + 2] = c.B;
+                        canvasBytes[idx + 3] = c.A;
                     }
                 }
             }

@@ -5,6 +5,7 @@ using Newtonsoft.Json;
 using System;
 using System.Collections.Generic;
 using System.IO;
+using System.IO.Compression;
 using System.Linq;
 using System.Net;
 using System.Threading;
@@ -477,8 +478,12 @@ namespace FSO.Common.Rendering.Emoji
             }
         }
 
-        // Periodic save: snapshot on the game thread (must own the GD), then encode
-        // and write the PNG on a worker so we don't hitch the frame.
+        // Periodic save: snapshot pixels on the game thread (GetData requires the
+        // GL context), then encode and write the PNG on a worker so we don't hitch
+        // the frame. We deliberately do NOT round-trip through a staging Texture2D
+        // — Texture2D.SaveAsPng calls GetData internally, which on Linux/mono
+        // SIGSEGVs in libGLdispatch when invoked off the main thread. The pixel
+        // array we already have in managed memory is all the encoder needs.
         private void SaveAsync()
         {
             if (Volatile.Read(ref dirtySinceLastSave) == 0) return;
@@ -486,7 +491,6 @@ namespace FSO.Common.Rendering.Emoji
             Color[] pixels;
             int w, h;
             Dictionary<string, int> snapshot;
-            Texture2D staging;
             try
             {
                 w = EmojiTex.Width;
@@ -495,8 +499,6 @@ namespace FSO.Common.Rendering.Emoji
                 EmojiTex.GetData(pixels);
                 lock (EmojiToIndex)
                     snapshot = new Dictionary<string, int>(EmojiToIndex);
-                staging = new Texture2D(GD, w, h);
-                staging.SetData(pixels);
             }
             catch
             {
@@ -509,13 +511,8 @@ namespace FSO.Common.Rendering.Emoji
 
             ThreadPool.QueueUserWorkItem(_ =>
             {
-                try { WriteAtlas(staging, w, h, snapshot); }
+                try { WriteAtlas(pixels, w, h, snapshot); }
                 catch { /* disk full / permission denied — try again next tick */ }
-                finally
-                {
-                    // Dispose on the game thread; Texture2D.Dispose touches the device.
-                    GameThread.NextUpdate(__ => { try { staging.Dispose(); } catch { } });
-                }
             });
         }
 
@@ -532,27 +529,23 @@ namespace FSO.Common.Rendering.Emoji
                 Dictionary<string, int> snapshot;
                 lock (EmojiToIndex)
                     snapshot = new Dictionary<string, int>(EmojiToIndex);
-                using (var staging = new Texture2D(GD, w, h))
-                {
-                    staging.SetData(pixels);
-                    WriteAtlas(staging, w, h, snapshot);
-                }
+                WriteAtlas(pixels, w, h, snapshot);
                 Interlocked.Exchange(ref dirtySinceLastSave, 0);
             }
             catch { /* best-effort on shutdown */ }
         }
 
-        // Encodes the staging texture to PNG and writes the sidecar index. Atomic-ish:
+        // Encodes the pixel array to PNG and writes the sidecar index. Atomic-ish:
         // writes to .tmp paths first, then renames so a torn write leaves the previous
         // good cache in place.
-        private void WriteAtlas(Texture2D staging, int w, int h, Dictionary<string, int> cells)
+        private void WriteAtlas(Color[] pixels, int w, int h, Dictionary<string, int> cells)
         {
             Directory.CreateDirectory(CacheDir);
             var tmpAtlas = AtlasFile + ".tmp";
             var tmpIndex = IndexFile + ".tmp";
 
             using (var fs = File.Create(tmpAtlas))
-                staging.SaveAsPng(fs, w, h);
+                WritePng(fs, pixels, w, h);
 
             var idx = new DiskIndex
             {
@@ -568,6 +561,124 @@ namespace FSO.Common.Rendering.Emoji
             File.Move(tmpAtlas, AtlasFile);
             if (File.Exists(IndexFile)) File.Delete(IndexFile);
             File.Move(tmpIndex, IndexFile);
+        }
+
+        // ── Minimal CPU-only PNG encoder ─────────────────────────────────────────
+        // Writes a single-IDAT 8-bit RGBA PNG from a Color[] without touching any
+        // GPU resources. Replaces Texture2D.SaveAsPng so the save can run on a
+        // background thread on Linux (where GL is main-thread-only).
+        //
+        // Uses filter type 0 (None) on every scanline — no per-pixel prediction.
+        // That costs us a few hundred KB of compression vs MonoGame's filter
+        // selection but keeps the encoder tiny and predictable.
+
+        private static readonly byte[] PngSignature =
+            { 0x89, 0x50, 0x4E, 0x47, 0x0D, 0x0A, 0x1A, 0x0A };
+
+        private static void WritePng(Stream output, Color[] pixels, int width, int height)
+        {
+            output.Write(PngSignature, 0, PngSignature.Length);
+
+            // IHDR: width, height, bit depth=8, color type=6 (RGBA), zero compression/filter/interlace.
+            var ihdr = new byte[13];
+            WriteBeUInt32(ihdr, 0, (uint)width);
+            WriteBeUInt32(ihdr, 4, (uint)height);
+            ihdr[8] = 8; ihdr[9] = 6; ihdr[10] = 0; ihdr[11] = 0; ihdr[12] = 0;
+            WriteChunk(output, "IHDR", ihdr, 0, ihdr.Length);
+
+            // Build the filtered scanline buffer: one byte filter (0 = None) + RGBA per pixel.
+            int row = width * 4;
+            var raw = new byte[(row + 1) * height];
+            int p = 0;
+            for (int y = 0; y < height; y++)
+            {
+                raw[p++] = 0; // filter: None
+                int srcRowStart = y * width;
+                for (int x = 0; x < width; x++)
+                {
+                    var c = pixels[srcRowStart + x];
+                    raw[p++] = c.R;
+                    raw[p++] = c.G;
+                    raw[p++] = c.B;
+                    raw[p++] = c.A;
+                }
+            }
+
+            // IDAT: zlib stream = 2-byte header + deflate data + 4-byte adler32 of raw.
+            byte[] idat;
+            using (var ms = new MemoryStream())
+            {
+                ms.WriteByte(0x78); ms.WriteByte(0x9C); // zlib header (deflate, default)
+                using (var dfl = new DeflateStream(ms, CompressionLevel.Fastest, leaveOpen: true))
+                    dfl.Write(raw, 0, raw.Length);
+                uint adler = Adler32(raw);
+                ms.WriteByte((byte)(adler >> 24));
+                ms.WriteByte((byte)(adler >> 16));
+                ms.WriteByte((byte)(adler >> 8));
+                ms.WriteByte((byte)adler);
+                idat = ms.ToArray();
+            }
+            WriteChunk(output, "IDAT", idat, 0, idat.Length);
+
+            WriteChunk(output, "IEND", new byte[0], 0, 0);
+        }
+
+        private static void WriteChunk(Stream output, string type, byte[] data, int offset, int length)
+        {
+            var lenBuf = new byte[4];
+            WriteBeUInt32(lenBuf, 0, (uint)length);
+            output.Write(lenBuf, 0, 4);
+
+            var typeBuf = new byte[] { (byte)type[0], (byte)type[1], (byte)type[2], (byte)type[3] };
+            output.Write(typeBuf, 0, 4);
+
+            if (length > 0) output.Write(data, offset, length);
+
+            uint crc = Crc32(typeBuf, 0, 4);
+            crc = Crc32(data, offset, length, crc);
+            var crcBuf = new byte[4];
+            WriteBeUInt32(crcBuf, 0, crc);
+            output.Write(crcBuf, 0, 4);
+        }
+
+        private static void WriteBeUInt32(byte[] buf, int offset, uint v)
+        {
+            buf[offset    ] = (byte)(v >> 24);
+            buf[offset + 1] = (byte)(v >> 16);
+            buf[offset + 2] = (byte)(v >> 8);
+            buf[offset + 3] = (byte)v;
+        }
+
+        private static readonly uint[] Crc32Table = BuildCrc32Table();
+        private static uint[] BuildCrc32Table()
+        {
+            var t = new uint[256];
+            for (uint i = 0; i < 256; i++)
+            {
+                uint c = i;
+                for (int k = 0; k < 8; k++) c = ((c & 1) != 0) ? (0xEDB88320 ^ (c >> 1)) : (c >> 1);
+                t[i] = c;
+            }
+            return t;
+        }
+
+        private static uint Crc32(byte[] data, int offset, int length, uint seed = 0xFFFFFFFF)
+        {
+            uint c = seed;
+            for (int i = 0; i < length; i++) c = Crc32Table[(c ^ data[offset + i]) & 0xFF] ^ (c >> 8);
+            return c ^ 0xFFFFFFFF;
+        }
+
+        private static uint Adler32(byte[] data)
+        {
+            const uint MOD = 65521;
+            uint a = 1, b = 0;
+            for (int i = 0; i < data.Length; i++)
+            {
+                a = (a + data[i]) % MOD;
+                b = (b + a) % MOD;
+            }
+            return (b << 16) | a;
         }
     }
 }
