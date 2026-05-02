@@ -9,8 +9,16 @@ ARTIFACT_ZIP="freeso-client-windows-ogl.zip"
 CLIENT_DIR="${CLIENT_DIR:-$HOME/games/edenso}"
 GH_USER="${GH_USER:-$(whoami)}"
 
-# Folders/files inside CLIENT_DIR that are never overwritten
-PRESERVE=( game fso_cache PatchFiles FreeSO.exe.config )
+# Folders/files inside CLIENT_DIR that are never overwritten by the rsync.
+# Order matters for entries that include sub-paths (see exclude-loop below).
+#   game             — TSO content extracted by install.sh; never re-shipped
+#   fso_cache        — local emoji atlas + per-file caches
+#   PatchFiles       — runtime patch overlays
+#   FreeSO.exe.config — local .NET runtime config tweaks
+#   Content/config.ini — server URLs + per-user UI preferences. Without
+#                        preserving, every update reverts the user to the
+#                        in-code defaults and they have to re-run install.sh.
+PRESERVE=( game fso_cache PatchFiles FreeSO.exe.config Content/config.ini )
 
 STAGING="$(mktemp -d /tmp/freeso-client-update.XXXXXX)"
 trap 'rm -rf "$STAGING"' EXIT

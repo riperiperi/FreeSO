@@ -2,11 +2,21 @@
 SETLOCAL EnableDelayedExpansion
 
 :: ── Configuration ────────────────────────────────────────────────────────────
-SET "GAME_NAME=FreeSO"
-SET "SERVER_URL=https://fso.icarey.net"
-SET "CLIENT_URL=https://github.com/TheGreatCodeholio/FreeSO/releases/latest/download/freeso-client-windows-ogl.zip"
-SET "TSO_URL=https://archive.org/download/TheSimsOnline_201802/TSO.zip"
-SET "REMESH_URL=https://github.com/ItsSim/fsolauncher/releases/download/1.12.1-prod.24/remeshes-1.0.0-1726774408.zip"
+:: Env-var overrides for devs / community hosts. Set FREESO_SERVER_URL etc.
+:: before running to point at a different server / client / TSO source.
+:: Use the explicit `latest-client` release tag (not `releases/latest/...`)
+:: since GitHub's "latest" is whichever release was published most recently
+:: and resolves to the wrong one when both latest-client and latest-server
+:: tags exist.
+IF NOT DEFINED GAME_NAME       SET "GAME_NAME=FreeSO"
+IF NOT DEFINED FREESO_SERVER_URL  SET "FREESO_SERVER_URL=https://fso.icarey.net"
+IF NOT DEFINED FREESO_CLIENT_URL  SET "FREESO_CLIENT_URL=https://github.com/TheGreatCodeholio/FreeSO/releases/download/latest-client/freeso-client-windows-ogl.zip"
+IF NOT DEFINED FREESO_TSO_URL     SET "FREESO_TSO_URL=https://archive.org/download/TheSimsOnline_201802/TSO.zip"
+IF NOT DEFINED FREESO_REMESH_URL  SET "FREESO_REMESH_URL=https://github.com/ItsSim/fsolauncher/releases/download/1.12.1-prod.24/remeshes-1.0.0-1726774408.zip"
+SET "SERVER_URL=%FREESO_SERVER_URL%"
+SET "CLIENT_URL=%FREESO_CLIENT_URL%"
+SET "TSO_URL=%FREESO_TSO_URL%"
+SET "REMESH_URL=%FREESO_REMESH_URL%"
 SET "DEFAULT_INSTALL=%LOCALAPPDATA%\%GAME_NAME%"
 :: ─────────────────────────────────────────────────────────────────────────────
 

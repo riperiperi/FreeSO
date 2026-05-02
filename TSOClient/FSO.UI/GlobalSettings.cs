@@ -19,12 +19,17 @@ namespace FSO.Client
                         defaultInstance.DPIScaleFactor = 1; //sanity check
                     if (defaultInstance.ChatWindowsOpacity == 0 || defaultInstance.ChatWindowsOpacity > 1)
                         defaultInstance.ChatWindowsOpacity = 1; //sanity check
-                    if (defaultInstance.GameEntryUrl == "http://api.freeso.org")
-                    {
-                        defaultInstance.GameEntryUrl = "https://api.freeso.org";
-                        defaultInstance.CitySelectorUrl = "https://api.freeso.org";
-                    }
 
+                    // Migrate any client with the upstream api.freeso.org URL onto this
+                    // fork's server. Catches both http (the original) and https (the
+                    // earlier auto-bumped form) so anyone updating from a vanilla FreeSO
+                    // install lands on our server instead of failing to connect.
+                    if (defaultInstance.GameEntryUrl == "http://api.freeso.org" ||
+                        defaultInstance.GameEntryUrl == "https://api.freeso.org")
+                    {
+                        defaultInstance.GameEntryUrl = "https://fso.icarey.net";
+                        defaultInstance.CitySelectorUrl = "https://fso.icarey.net";
+                    }
                 }
                 return defaultInstance;
             }
@@ -63,9 +68,13 @@ namespace FSO.Client
             { "LanguageCode", "1"},
             { "SurroundingLotMode", "2" },
 
+            // Server URLs: defaults point at this fork's server. The installer
+            // (install.sh / install.bat) writes the same values into config.ini,
+            // and the migration above repoints any vanilla-FreeSO config it
+            // finds. Override via the debug menu only — see UIDebugMenu.
             { "UseCustomServer", "true" },
-            { "GameEntryUrl", "http://api.freeso.org" },
-            { "CitySelectorUrl", "http://api.freeso.org" },
+            { "GameEntryUrl", "https://fso.icarey.net" },
+            { "CitySelectorUrl", "https://fso.icarey.net" },
 
             { "TargetRefreshRate", "60" },
 

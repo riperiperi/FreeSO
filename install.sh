@@ -6,12 +6,18 @@ if [ "$EUID" -eq 0 ]; then
 fi
 
 # ── Configuration ────────────────────────────────────────────────────────────
-GAME_NAME="FreeSO"
-SERVER_URL="https://fso.icarey.net"
-CLIENT_URL="https://github.com/TheGreatCodeholio/FreeSO/releases/latest/download/freeso-client-windows-ogl.zip"
-TSO_URL="https://archive.org/download/TheSimsOnline_201802/TSO.zip"
-REMESH_URL="https://github.com/ItsSim/fsolauncher/releases/download/1.12.1-prod.24/remeshes-1.0.0-1726774408.zip"
-MACEXTRAS_URL="https://github.com/TheGreatCodeholio/FreeSO/releases/latest/download/macextras.zip"
+# Each URL is overridable via env var so devs / community hosts don't have
+# to fork the script just to point at a test server. Run with e.g.
+#   FREESO_SERVER_URL=https://localhost:8080 ./install.sh
+GAME_NAME="${GAME_NAME:-FreeSO}"
+SERVER_URL="${FREESO_SERVER_URL:-https://fso.icarey.net}"
+# Use the explicit release tag rather than `releases/latest/...` — when both
+# `latest-client` and `latest-server` tags exist, GitHub's "latest" is
+# whichever was published most recently and may resolve to the wrong one.
+CLIENT_URL="${FREESO_CLIENT_URL:-https://github.com/TheGreatCodeholio/FreeSO/releases/download/latest-client/freeso-client-windows-ogl.zip}"
+TSO_URL="${FREESO_TSO_URL:-https://archive.org/download/TheSimsOnline_201802/TSO.zip}"
+REMESH_URL="${FREESO_REMESH_URL:-https://github.com/ItsSim/fsolauncher/releases/download/1.12.1-prod.24/remeshes-1.0.0-1726774408.zip}"
+MACEXTRAS_URL="${FREESO_MACEXTRAS_URL:-https://github.com/TheGreatCodeholio/FreeSO/releases/download/latest-client/macextras.zip}"
 # ─────────────────────────────────────────────────────────────────────────────
 
 # ── Platform detection ───────────────────────────────────────────────────────
