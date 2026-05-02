@@ -285,6 +285,22 @@
       "requires": [
         "bec36bbc-1774-44cb-a7c5-03f4a00e801c"
       ]
+    },
+    {
+      "id": "da2b6de5-02e6-4ce2-a7ce-c70e5d638026",
+      "script": "changes/0032_object_limit_bonus.sql",
+      "idempotent": false,
+      "requires": [
+        "1235b96c-5a75-2159-b49d-909cb3198cda"
+      ]
+    },
+    {
+      "id": "3d61c01b-9b04-4140-be39-26f07b0e4a2d",
+      "script": "changes/0033_skilllock_bonus.sql",
+      "idempotent": false,
+      "requires": [
+        "1235b96c-5a75-2159-b49d-909cb3198cda"
+      ]
     }
   ]
 }
