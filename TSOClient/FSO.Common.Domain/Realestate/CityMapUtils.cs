@@ -553,6 +553,12 @@ namespace FSO.Common.Domain.Realestate
             }
         }
 
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
+        private static bool ReservedOrOob(CityEditBitmap reserved, int x, int y)
+        {
+            return !MapCoordinates.InBounds((ushort)x, (ushort)y) || reserved.IsSet(x, y);
+        }
+
         public static bool ApplyPaint(CityMap map, CityEditPaint paint, HashSet<uint> reservedTiles, HashSet<uint> toUpdate, bool forUndo)
         {
             var reserved = GetReservedBitmap(map, paint);
@@ -573,7 +579,7 @@ namespace FSO.Common.Domain.Realestate
 
                 for (int i = 0; i < line.count; i++)
                 {
-                    if (!reserved.IsSet(x, y))
+                    if (!ReservedOrOob(reserved, x, y))
                     {
                         ref var existing = ref aspect[mapIndex];
 
@@ -633,7 +639,7 @@ namespace FSO.Common.Domain.Realestate
 
                 for (int i = 0; i < line.count; i++)
                 {
-                    if (!reserved.IsSet(x++, y))
+                    if (!ReservedOrOob(reserved, x++, y))
                     {
                         ref var existingTerrain = ref terrainType[mapIndex];
                         ref var existingType = ref forestType[mapIndex];
@@ -739,7 +745,7 @@ namespace FSO.Common.Domain.Realestate
 
                     for (int i = 0; i < line.count; i++)
                     {
-                        if (!reserved.IsSet(x, y))
+                        if (!ReservedOrOob(reserved, x, y))
                         {
                             RegisterAltitudeUpdates(reservedTiles, toUpdate, new Point(x, y));
                             anyData = true;
@@ -795,7 +801,7 @@ namespace FSO.Common.Domain.Realestate
 
                         for (int i = 0; i < line.count; i++)
                         {
-                            if (i < line.count - 1 && hasNextLine && bitmap.IsSet(lineX + 1, nextLineY) && !reserved.IsSet(x, y))
+                            if (i < line.count - 1 && hasNextLine && bitmap.IsSet(lineX + 1, nextLineY) && !ReservedOrOob(reserved, x, y))
                             {
                                 var alt1 = altitudes[mapIndex];
                                 var alt2 = altitudes[mapIndex + map.Width];

@@ -207,9 +207,27 @@ sampler DistToColorSampler : register(s2) = sampler_state {
 	MIPFILTER = POINT; MINFILTER = POINT; MAGFILTER = POINT;
 };
 
+float getTerrain(float2 texCoord) {
+  // The coords snap to the nearest full tile on the map.
+  float mapSize = 512.0;
+  
+  float leftCornerY = 306.0 / mapSize;
+  float leftCornerY2 = 307.0 / mapSize;
+  float rightCornerY = 205.0 / mapSize;
+  float offset = 1.0 / mapSize;
+
+  float y = texCoord.y;
+  float xStart = y < leftCornerY ? (leftCornerY - y) + offset : (y - leftCornerY);
+  float xEnd = y < rightCornerY ? leftCornerY2 + y - offset : (1 - (y - rightCornerY));
+
+  texCoord.x = clamp(texCoord.x, xStart, xEnd);
+
+  return tex2D(TerrainSampler, texCoord).a;
+}
+
 float getSignedDistance(float2 texCoord) {
 	float2 size = ImageSize;
-	float value = tex2D(TerrainSampler, texCoord).a;
+	float value = getTerrain(texCoord);
 	float4 closestUVe = tex2D(TextureSampler, texCoord);
 	float2 closestUV = decodeUV(closestUVe);
 	
@@ -289,13 +307,13 @@ float4 terrainLighting(VertexOut v) : COLOR0
 {
 	float2 texCoord = v.texCoord;
 	float3 normal = treatNormal(tex2D(DistToColorSampler, texCoord));
+    float4 vertexColor = tex2D(TextureSampler, texCoord);
 
 	if (isOOB(texCoord)) {
-		return float4(1, 1, 1, 1);
+		return vertexColor;
 	}
 
-  // Diffuse term
-  float4 vertexColor = tex2D(TextureSampler, texCoord);
+    // Diffuse term
 	float refDiffuse = lightingTerm(float3(0, 0, 1), SunDir);
 	float diffuse = lightingTerm(normal, SunDir);
 
@@ -356,7 +374,7 @@ float4 forestOverlay(VertexOut v) : COLOR0
   float4 color = float4(Color.rgb, 1.0);
   float a = tex2D(TextureSampler, texCoord).a * 0.75 * Color.a;
 
-	float value = tex2D(TerrainSampler, texCoord).a;
+	float value = getTerrain(texCoord);
 	int type = int(round(value * 255));
 
 	if (!(type == 0 || type == 2)) {
