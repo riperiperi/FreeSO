@@ -19,7 +19,7 @@ namespace FSO.Common.Domain.RealestateDomain
         CityMap GetMap();
         CityInitResponse GetInit();
         int AppendCommand(CityEditBase command, HashSet<uint> reservedTiles = null, HashSet<uint> toUpdate = null);
-        void SetMyTempCommand(CityEditBase command);
+        bool SetMyTempCommand(CityEditBase command);
         bool HandleUserCommand(CityUpdateCommand command, HashSet<uint> reservedTiles = null, HashSet<uint> toUpdate = null, HashSet<uint> blockedTiles = null);
         void TrackUndo(uint avatarId);
     }

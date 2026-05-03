@@ -302,7 +302,7 @@ namespace FSO.Client.UI.Panels.CityPainter
 
         private void InvertBrush(UIElement button)
         {
-            
+            MapPainter.ErasingToggle = !MapPainter.ErasingToggle;
         }
 
         private void UpdateLockedGraphic()

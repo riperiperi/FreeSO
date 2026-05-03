@@ -257,7 +257,8 @@ namespace FSO.Common.Domain.Realestate
         /// Set the temp command for this client (modifications the client is performing).
         /// </summary>
         /// <param name="command"></param>
-        public void SetMyTempCommand(CityEditBase command)
+        /// <returns>True when all temp commands are valid</returns>
+        public bool SetMyTempCommand(CityEditBase command)
         {
             bool redraw = true;
             if (command == null)
@@ -287,8 +288,10 @@ namespace FSO.Common.Domain.Realestate
 
             if (redraw)
             {
-                ApplyTempCommands();
+                return ApplyTempCommands();
             }
+
+            return true;
         }
 
         private void RedrawAll()
@@ -405,7 +408,7 @@ namespace FSO.Common.Domain.Realestate
             }
         }
 
-        public void ApplyTempCommands(Rectangle? bounds = null)
+        public bool ApplyTempCommands(Rectangle? bounds = null)
         {
             // If we don't have a pre-temp copy, make it now.
             if (_PreTempMap == null && _TempCommands.Count > 0)
@@ -420,15 +423,20 @@ namespace FSO.Common.Domain.Realestate
                 _Map.Set(_PreTempMap);
             }
 
+            bool allTempValid = true;
+
             Rectangle? tempBounds = null;
             foreach (var temp in _TempCommands)
             {
-                if (CityMapUtils.ValidateCommand(_Map, temp) && CityMapUtils.ApplyCommand(_Map, temp))
+                bool valid = CityMapUtils.ValidateCommand(_Map, temp);
+                if (valid && CityMapUtils.ApplyCommand(_Map, temp))
                 {
                     var modBounds = CityMapUtils.GetBounds(_Map, temp);
 
                     tempBounds = Union(tempBounds, modBounds);
                 }
+
+                allTempValid = allTempValid && valid;
             }
 
             bounds = Union(tempBounds, bounds);
@@ -438,6 +446,8 @@ namespace FSO.Common.Domain.Realestate
             }
 
             _TempChangeBounds = tempBounds;
+
+            return allTempValid;
         }
 
         public void TrackUndo(uint avatarId)

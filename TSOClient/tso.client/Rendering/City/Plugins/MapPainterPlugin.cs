@@ -22,7 +22,7 @@ namespace FSO.Client.Rendering.City.Plugins
 
         public Vector2 LastPos;
 
-        public bool Erasing { get; private set; }
+        public bool Erasing => ErasingModifier != ErasingToggle;
         public bool Accelerate { get; private set; }
 
         public Color[] TerrainTypes = [
@@ -85,6 +85,8 @@ namespace FSO.Client.Rendering.City.Plugins
         public bool LockProperties { get; set; } = true;
         public bool Flatten { get; set; }
         public float BrushIntensity { get; set; }
+        public bool ErasingModifier { get; private set; }
+        public bool ErasingToggle { get; set; }
 
         private IMapPainterMode Tool;
 
@@ -127,6 +129,27 @@ namespace FSO.Client.Rendering.City.Plugins
             Tool?.TileMouseUp(tile);
         }
 
+        private void UpdateReserved(CityEditBase cmd)
+        {
+            if (cmd.ReservedLocations == null)
+            {
+                cmd.ReservedLocations = [];
+            }
+
+            var reserved = cmd.ReservedLocations;
+
+            reserved.Clear();
+
+            var tiles = City.LotTiles;
+
+            tiles.AddOpenLotSurroundingsTo(reserved);
+
+            if (LockProperties)
+            {
+                tiles.AddLocationsTo(reserved);
+            }
+        }
+
         public void Commit(bool hasChange)
         {
             if (hasChange)
@@ -137,8 +160,11 @@ namespace FSO.Client.Rendering.City.Plugins
                 {
                     cmd.UserModId = ClientCommandID;
 
-                    Controller.UpdateTempMapChange(cmd);
-                    Controller.CommitMapChange(cmd);
+                    UpdateReserved(cmd);
+                    if (Controller.UpdateTempMapChange(cmd))
+                    {
+                        Controller.CommitMapChange(cmd);
+                    }
 
                     ClientCommandID++;
                 }
@@ -158,6 +184,7 @@ namespace FSO.Client.Rendering.City.Plugins
             if (cmd != null)
             {
                 cmd.UserModId = ClientCommandID;
+                UpdateReserved(cmd);
 
                 Controller.UpdateTempMapChange(cmd);
             }
@@ -191,7 +218,7 @@ namespace FSO.Client.Rendering.City.Plugins
             Tool?.Update(state);
             
             var pressed = state.NewKeys;
-            Erasing = state.CtrlDown;
+            ErasingModifier = state.CtrlDown;
             Accelerate = state.ShiftDown;
 
             ///*

@@ -111,7 +111,7 @@ namespace FSO.Client.Controllers
             });
         }
 
-        public void UpdateTempMapChange(CityEditBase cmd)
+        public bool UpdateTempMapChange(CityEditBase cmd)
         {
             if (cmd != null)
             {
@@ -121,7 +121,15 @@ namespace FSO.Client.Controllers
                 // TODO: submit temp to city?
             }
 
-            Realestate.SetMyTempCommand(cmd);
+            bool valid = Realestate.SetMyTempCommand(cmd);
+
+            if (!valid && View.Plugin is MapPainterPlugin painter)
+            {
+                painter.ShowError(painter.LockProperties ? 55 : 53);
+                return false;
+            }
+
+            return true;
         }
 
         private void PurchaseRegulator_OnPurchased(int newBudget)
@@ -208,30 +216,16 @@ namespace FSO.Client.Controllers
         {
             if (CurrentCity.Value != null)
             {
-                var mapData = LotTileEntry.GenFromCity(CurrentCity.Value);
-                var mapDataFlat = mapData.Values.ToArray();
-                var neighJSON = CurrentCity.Value.City_NeighJSON;
-
-                //We know if lots are online, we can update the data service
-                DataService.GetMany<Lot>(mapDataFlat.Select(x => (object)(uint)x.packed_pos).ToArray()).ContinueWith(x =>
-                {
-                    if (!x.IsCompleted)
-                    {
-                        return;
-                    }
-
-                    foreach (var lot in x.Result)
-                    {
-                        if (mapData.TryGetValue(lot.Id, out var mapItem))
-                        {
-                            lot.Lot_IsOnline = (mapItem.flags & LotTileFlags.Online) == LotTileFlags.Online;
-                        }
-                    }
-                });
-
                 GameThread.NextUpdate((state) =>
                 {
-                    View.populateCityLookup(mapDataFlat);
+                    bool updated = View.LotTiles.UpdateWithCity(CurrentCity.Value, DataService);
+                    var neighJSON = CurrentCity.Value.City_NeighJSON;
+
+                    if (updated)
+                    {
+                        View.SignalCityDirty();
+                    }
+
                     if (neighJSON != LastLotJSON)
                     {
                         try

@@ -45,16 +45,17 @@ namespace FSO.Client.Rendering.City
         public int ShadowRes = 2048;
         public bool RegenData = false;
 
-        public LotTileEntry[] LotTileData = new LotTileEntry[0];
+        public readonly CityLotTiles LotTiles = new();
+        public IEnumerable<LotTileEntry> LotTileData => LotTiles.List;
         public bool LotTileDataDirty = true;
+
+        public Dictionary<Vector2, LotTileEntry> LotTileLookup => LotTiles.TileByVector;
+        public HashSet<int> OccupiedTiles => LotTiles.OccupiedTiles;
 
         public VertexBuffer LotOfflineVerts;
         public IndexBuffer LotOfflineInds;
         public VertexBuffer LotOnlineVerts;
         public IndexBuffer LotOnlineInds;
-
-        public Dictionary<Vector2, LotTileEntry> LotTileLookup = new Dictionary<Vector2, LotTileEntry>();
-        public HashSet<int> OccupiedTiles = new HashSet<int>();
 
         public bool HandleMouse = false;
         public CityMap MapData { get
@@ -204,24 +205,9 @@ namespace FSO.Client.Rendering.City
             GraphicsModeControl.ModeChanged += SwitchToMode;
         }
 
-        public void populateCityLookup(LotTileEntry[] TileData)
+        public void SignalCityDirty()
         {
             LotTileDataDirty = true;
-            LotTileData = TileData;
-            var oldLookup = new HashSet<Vector2>(LotTileLookup.Keys);
-            LotTileLookup = new Dictionary<Vector2, LotTileEntry>();
-            OccupiedTiles = new HashSet<int>();
-            for (int i = 0; i < TileData.Length; i++)
-            {
-                var tile = TileData[i];
-                LotTileLookup[new Vector2(tile.x, tile.y)] = tile;
-                OccupiedTiles.Add((int)tile.y * 512 + (int)tile.x);
-            }
-            oldLookup.ExceptWith(new HashSet<Vector2>(LotTileLookup.Keys));
-            foreach (var deleted in oldLookup)
-            {
-                //remove these from the cache.
-            }
         }
 
         public void GenerateAssets()
@@ -770,13 +756,13 @@ namespace FSO.Client.Rendering.City
             float iScale = (float)m_ScrWidth/(HB*2.0f);
 		
             float spotlightScale = (float)(iScale*(2.0*Math.Sqrt(0.5*0.5*2)/5.10));
-            LotTileEntry[] lots = LotTileData;
 
-            for (int i = 0; i < lots.Length; i++)
+            int i = 0;
+            foreach (var entry in LotTileData)
             {
-                if ((lots[i].flags & LotTileFlags.Spotlight) > 0)
+                if ((entry.flags & LotTileFlags.Spotlight) > 0)
                 {
-                    Vector2 pos = new Vector2(lots[i].x, lots[i].y);
+                    Vector2 pos = new Vector2(entry.x, entry.y);
                     Vector4 xy = transformSpr4(new Vector3(pos.X + 0.5f, MapData.ElevationData[((int)pos.Y * 512 + (int)pos.X)] / 12.0f, pos.Y + 0.5f)); //get position to place spotlight
                     Vector3 xyz = new Vector3(xy.X, xy.Y, 1);
 
@@ -791,6 +777,7 @@ namespace FSO.Client.Rendering.City
                     m_2DVerts.Add(new VertexPositionColor((xyz + (Vector3.Transform(new Vector3(-12, -100, 0), trans) * spotlightScale)), new Color(1, 1, 1, 0.0f))); //top two vertices set to 0 opacity, creates gradient for spotlight effect.
                     m_2DVerts.Add(new VertexPositionColor((xyz + (Vector3.Transform(new Vector3(12, -100, 0), trans) * spotlightScale)), new Color(1, 1, 1, 0.0f)));
                 }
+                i++;
             }
         }
 
@@ -826,10 +813,10 @@ namespace FSO.Client.Rendering.City
                 var offindices = new List<int>();
                 var offverts = new List<DGRP3DVert>();
                 var vCount = 0;
-                LotTileEntry[] lots = LotTileData;
-                for (int i = 0; i < lots.Length; i++)
+
+                foreach (var lot in LotTileData)
                 {
-                    bool online = ((lots[i].flags & LotTileFlags.Online) > 0);
+                    bool online = ((lot.flags & LotTileFlags.Online) > 0);
                     var indices = (online) ? onindices : offindices;
                     var verts = (online) ? onverts : offverts;
                     vCount = verts.Count;
@@ -840,8 +827,8 @@ namespace FSO.Client.Rendering.City
                     indices.Add(vCount + 2);
                     indices.Add(vCount + 3);
 
-                    short x = lots[i].x;
-                    short y = lots[i].y;
+                    short x = lot.x;
+                    short y = lot.y;
 
                     if (!MapData.IsInBounds(x, y)) continue;
 

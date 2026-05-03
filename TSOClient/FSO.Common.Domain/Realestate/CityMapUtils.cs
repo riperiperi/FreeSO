@@ -278,33 +278,40 @@ namespace FSO.Common.Domain.Realestate
         {
             if (pt.X < minX) minX = pt.X;
             if (pt.Y < minY) minY = pt.Y;
-            if (pt.X > maxX) maxX = pt.X;
-            if (pt.Y > maxY) maxY = pt.Y;
+            if (pt.X + 1 > maxX) maxX = pt.X + 1;
+            if (pt.Y + 1 > maxY) maxY = pt.Y + 1;
         }
 
         private static Rectangle GetRoadBounds(CityEditRoad road, bool corners)
         {
             bool xDir = (road.Direction % 2) == 0;
+            var direction = road.Direction;
 
-            Point step = WLStep[road.Direction];
-            Point start = new Point(road.StartX, road.StartY);
+            Point step = WLStep[direction];
+            Point start = new(road.StartX, road.StartY);
             int length = road.Length;
-            
+
+            Point subOff = WLSubOff[direction]; // Direction to place the sub segment of the wall
+
             if (corners)
             {
                 start -= step;
                 length += 2;
             }
 
+            start += WLStartOff[direction];
+
             Point end = start + new Point(step.X * length, step.Y * length);
 
-            int minX = start.X - 1;
-            int minY = start.Y - 1;
+            int minX = start.X;
+            int minY = start.Y;
             int maxX = start.X + 1;
             int maxY = start.Y + 1;
 
-            UpdateMinMax(end - new Point(1), ref minX, ref minY, ref maxX, ref maxY);
-            UpdateMinMax(end + new Point(1), ref minX, ref minY, ref maxX, ref maxY);
+            UpdateMinMax(start + subOff, ref minX, ref minY, ref maxX, ref maxY);
+
+            UpdateMinMax(end, ref minX, ref minY, ref maxX, ref maxY);
+            UpdateMinMax(end + subOff, ref minX, ref minY, ref maxX, ref maxY);
 
             return new Rectangle(minX, minY, maxX - minX, maxY - minY);
         }
