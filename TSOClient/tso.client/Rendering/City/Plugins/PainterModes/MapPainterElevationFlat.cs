@@ -167,6 +167,11 @@ namespace FSO.Client.Rendering.City.Plugins.PainterModes
             alt.AltitudeDeltas = deltas;
             alt.Trim();
 
+            if (alt.Bitmap == null)
+            {
+                return null;
+            }
+
             return alt;
         }
     }
