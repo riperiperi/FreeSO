@@ -117,7 +117,7 @@ namespace FSO.Client.UI.Controls
             }
         }
 
-        public int ButtonFrame => _Button.ButtonFrame;
+        public int ButtonFrame => _Button.CurrentFrame;
 
         public override Vector2 Size { get => new Vector2(_Button.Texture.Width / 4, _Button.Texture.Height); }
 
