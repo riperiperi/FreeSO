@@ -51,6 +51,7 @@ namespace FSO.Client.UI.Screens
         public UIBookmarks Bookmarks;
         public UIRelationshipDialog Relationships;
         public UIMapWaypoint YouAreHere, YourHouseHere;
+        internal UICityPainterAvatarLayer CityUpdateLayer;
 
         private Queue<SimConnectStateChange> StateChanges;
 
@@ -403,9 +404,11 @@ namespace FSO.Client.UI.Screens
 
             YouAreHere = new UIMapWaypoint(UIMapWaypoint.UIMapWaypointStyle.YouAreHere);
             YourHouseHere = new UIMapWaypoint(UIMapWaypoint.UIMapWaypointStyle.YourHouseHere);
+            CityUpdateLayer = new UICityPainterAvatarLayer(CityRenderer);
             
             AddAt(2, YouAreHere);
             AddAt(2, YourHouseHere);
+            AddAt(2, CityUpdateLayer);
         }
 
         private void InitializeMouse(){

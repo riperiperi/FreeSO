@@ -12,7 +12,8 @@ namespace FSO.Client.Rendering.City
         public const float EdgeDuration = 2f;
         public const float FadeTime = 0.5f;
         public const float FillIntensity = 0.25f;
-        public const float EdgeIntensity = 0.70f;
+        public const float EdgeFadeTime = 1f;
+        public const float EdgeIntensity = 0.60f;
 
         public readonly CityEditBitmap Bitmap = bitmap;
         public readonly Color Color = color;
@@ -36,12 +37,24 @@ namespace FSO.Client.Rendering.City
                 fillAlpha *= (VisibleDuration - Timer) / FadeTime;
             }
 
-            if (Timer > EdgeDuration - FadeTime)
+            if (Timer > EdgeDuration - EdgeFadeTime)
             {
-                edgeAlpha *= (EdgeDuration - Timer) / FadeTime;
+                edgeAlpha *= (EdgeDuration - Timer) / EdgeFadeTime;
             }
 
             return (Color * edgeAlpha, new Color(Color, fillAlpha));
+        }
+
+        public float GetArrowAlpha()
+        {
+            float arrowAlpha = 1;
+
+            if (Timer > EdgeDuration - EdgeFadeTime)
+            {
+                arrowAlpha *= (EdgeDuration - Timer) / EdgeFadeTime;
+            }
+
+            return arrowAlpha;
         }
 
         public static CityModification FromBitmap(CityEditBitmap bmp, Color color, uint avatarId)

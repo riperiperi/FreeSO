@@ -52,6 +52,8 @@ namespace FSO.Client.UI.Controls
             get { return m_isOver; }
         }
 
+        public bool AlwaysClickable { get; set; }
+
         /// <summary>
         /// Sets the margins to be used for automatic button widths. -1 (default) uses the width of the button ends.
         /// </summary>
@@ -322,7 +324,7 @@ namespace FSO.Client.UI.Controls
 
         protected void OnMouseEvent(UIMouseEventType type, UpdateState state)
         {
-            if ((m_Disabled || Opacity < 1f) && type != UIMouseEventType.MouseOut) { return; }
+            if (!AlwaysClickable && (m_Disabled || Opacity < 1f) && type != UIMouseEventType.MouseOut) { return; }
             Invalidate();
             switch (type)
             {

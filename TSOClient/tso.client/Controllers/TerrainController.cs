@@ -5,6 +5,7 @@ using FSO.Client.UI;
 using FSO.Client.UI.Controls;
 using FSO.Client.UI.Framework;
 using FSO.Client.UI.Panels;
+using FSO.Client.UI.Screens;
 using FSO.Common.DataService;
 using FSO.Common.DataService.Model;
 using FSO.Common.Domain.Realestate;
@@ -754,6 +755,8 @@ namespace FSO.Client.Controllers
             {
                 GameThread.NextUpdate(x =>
                 {
+                    var screen = UIScreen.Current as CoreGameScreen;
+
                     foreach (var item in response.Commands)
                     {
                         if (item.Command.AvatarId == Network.MyCharacter)
@@ -765,6 +768,7 @@ namespace FSO.Client.Controllers
                         if (mod != null)
                         {
                             View.AddModification(mod);
+                            screen?.CityUpdateLayer?.RegisterModification(mod);
                         }
                     }
                 });
