@@ -1516,6 +1516,10 @@ namespace FSO.Client.Rendering.City
 
         private void DrawModifications(SpriteBatch batch)
         {
+            if (Modifications.Count == 0) return;
+
+            batch.Begin();
+
             float iScale = (float)(1 / (GetIsoScale() * 2));
 
             foreach (var mod in Modifications)
@@ -1556,7 +1560,7 @@ namespace FSO.Client.Rendering.City
                                 DrawLine(px, xy, xy4, batch, 2, edgeColor);
                             }
 
-                            if (x >= 511 || !map.IsSet(x + 1, y))
+                            if (x >= map.Width - 1 || !map.IsSet(x + 1, y))
                             {
                                 DrawLine(px, xy2, xy3, batch, 2, edgeColor);
                             }
@@ -1566,7 +1570,7 @@ namespace FSO.Client.Rendering.City
                                 DrawLine(px, xy, xy2, batch, 2, edgeColor);
                             }
 
-                            if (y >= 511 || !map.IsSet(x, y + 1))
+                            if (y >= map.Height - 1 || !map.IsSet(x, y + 1))
                             {
                                 DrawLine(px, xy3, xy4, batch, 2, edgeColor);
                             }
@@ -1574,6 +1578,10 @@ namespace FSO.Client.Rendering.City
                     }
                 }
             }
+
+            batch.End();
+
+            Draw2DPoly(true);
         }
 
         private void RecalculateShadows()
