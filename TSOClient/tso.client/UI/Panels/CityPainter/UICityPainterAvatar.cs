@@ -45,6 +45,9 @@ namespace FSO.Client.UI.Panels.CityPainter
 
         public UICityPainterAvatar(Terrain city, uint avatarId, Texture2D baseTexture, Texture2D activeTexture)
         {
+            BaseTexture = baseTexture;
+            ActiveTexture = activeTexture;
+
             City = city;
             Background = new UIImage(baseTexture)
             {
