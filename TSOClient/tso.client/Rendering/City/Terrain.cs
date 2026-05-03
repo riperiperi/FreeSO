@@ -11,7 +11,6 @@ using FSO.Common.Rendering.Framework.Camera;
 using FSO.Common.Rendering.Framework.IO;
 using FSO.Common.Rendering.Framework.Model;
 using FSO.Content.Model;
-using FSO.Files;
 using FSO.Files.RC;
 using FSO.LotView;
 using FSO.LotView.Components;
@@ -21,10 +20,7 @@ using FSO.LotView.Utils.Camera;
 using Microsoft.Xna.Framework;
 using Microsoft.Xna.Framework.Graphics;
 using Microsoft.Xna.Framework.Input;
-using System;
 using System.Collections;
-using System.Collections.Generic;
-using System.IO;
 
 namespace FSO.Client.Rendering.City
 {
@@ -72,14 +68,13 @@ namespace FSO.Client.Rendering.City
         private IShardRealestateDomain Realestate;
         private ArrayList m_2DVerts;
 
-        public static uint[] MASK_COLORS = new uint[]{
+        public static uint[] MASK_COLORS = [
             new Color(0xFF, 0x00, 0xFF, 0xFF).PackedValue,
             new Color(0xFE, 0x02, 0xFE, 0xFF).PackedValue,
             new Color(0xFF, 0x01, 0xFF, 0xFF).PackedValue
-        };
+        ];
 
-        //TODO: NEW 3D
-        public ICityCamera Camera = (GraphicsModeControl.Mode == GlobalGraphicsMode.Full3D)?new CityCamera3D():(ICityCamera)new CityCamera2D();
+        public new ICityCamera Camera = (GraphicsModeControl.Mode == GlobalGraphicsMode.Full3D)?new CityCamera3D():new CityCamera2D();
 
         public static float NEAR_ZOOM_SIZE = 288;
         public TerrainZoomMode m_Zoomed
@@ -109,7 +104,6 @@ namespace FSO.Client.Rendering.City
 
         private MouseState m_MouseState, m_LastMouseState;
         private int m_ScrHeight, m_ScrWidth;
-        private Vector2 LastTargOff;
         public float m_ZoomProgress
         {
             get
@@ -128,17 +122,17 @@ namespace FSO.Client.Rendering.City
         private int[] m_SelTile = new int[] { -1, -1 };
         private Vector2? m_VecSelTile;
         private Matrix m_MovMatrix;
-        private int[][] m_SurTileOffs = new int[][] 
-        {
-            new int[] {0, -1},
-            new int[] {1, -1},
-            new int[] {1, 0},
-            new int[] {1, 1},
-            new int[] {0, 1},
-            new int[] {-1, 1},
-            new int[] {-1, 0},
-            new int[] {-1, -1},
-        };
+        private int[][] m_SurTileOffs =
+        [
+            [0, -1],
+            [1, -1],
+            [1, 0],
+            [1, 1],
+            [0, 1],
+            [-1, 1],
+            [-1, 0],
+            [-1, -1],
+        ];
 
         private float DayOffset = 0.25f;
         private float DayDuration = 0.60f;
@@ -165,6 +159,8 @@ namespace FSO.Client.Rendering.City
         private CityVertexColorGenerator VertexColorGenerator;
         private bool VertexColorDirty;
 
+        private List<CityModification> Modifications = [];
+
         public void LoadContent(GraphicsDevice GfxDevice)
         {
             Content = new CityContent();
@@ -189,14 +185,6 @@ namespace FSO.Client.Rendering.City
             Weather = new WeatherController(Particles);
             SkyDome = new AbstractSkyDome(Device, 0f);
             ParticleCamera = new BasicCamera(Device, Vector3.Zero, new Vector3(0, 0.5f, 0.86602540f), Vector3.Up);
-            //LoadContent(GfxDevice, Content);
-        }
-
-        public override void DeviceReset(GraphicsDevice Device)
-        {
-            //Dispose();
-            //LoadContent(m_GraphicsDevice);
-            //RegenData = true;
         }
 
         public void Initialize(IShardRealestateDomain realestate)
@@ -238,12 +226,16 @@ namespace FSO.Client.Rendering.City
             NearFacades = null;
         }
 
-        internal void DrawLine(Texture2D Fill, Vector2 Start, Vector2 End, SpriteBatch spriteBatch, int lineWidth, float opacity) //draws a line from Start to End.
+        internal void DrawLine(Texture2D fill, Vector2 start, Vector2 end, SpriteBatch spriteBatch, int lineWidth, Color tint) //draws a line from Start to End.
         {
-            double length = Math.Sqrt(Math.Pow(End.X - Start.X, 2) + Math.Pow(End.Y - Start.Y, 2));
-            float direction = (float)Math.Atan2(End.Y - Start.Y, End.X - Start.X);
-            Color tint = new Color(1f, 1f, 1f, 1f) * opacity;
-            spriteBatch.Draw(Fill, new Rectangle((int)Start.X, (int)Start.Y-(int)(lineWidth/2), (int)length, lineWidth), null, tint, direction, new Vector2(0, 0.5f), SpriteEffects.None, 0); //
+            double length = Math.Sqrt(Math.Pow(end.X - start.X, 2) + Math.Pow(end.Y - start.Y, 2));
+            float direction = (float)Math.Atan2(end.Y - start.Y, end.X - start.X);
+            spriteBatch.Draw(fill, new Rectangle((int)start.X, (int)start.Y - (int)(lineWidth / 2), (int)length, lineWidth), null, tint, direction, new Vector2(0, 0.5f), SpriteEffects.None, 0); //
+        }
+
+        internal void DrawLine(Texture2D fill, Vector2 start, Vector2 end, SpriteBatch spriteBatch, int lineWidth, float opacity) //draws a line from Start to End.
+        {
+            DrawLine(fill, start, end, spriteBatch, lineWidth, new Color(1f, 1f, 1f, 1f) * opacity);
         }
 
         internal void DrawSpike(Vector2 start, float height, SpriteBatch batch, int width, Color color)
@@ -361,130 +353,9 @@ namespace FSO.Client.Rendering.City
             }
         }
 
-        private Vector3 GetNormalAt(int x, int y)
-        {
-            var sum = new Vector3();
-            var rotToNormalXY = Matrix.CreateRotationZ((float)(Math.PI/2));
-            var rotToNormalZY = Matrix.CreateRotationX(-(float)(Math.PI / 2));
-
-            if (x < 511)
-            {
-                var vec = new Vector3();
-                vec.X = 1;
-                vec.Y = GetElevationPoint(x + 1, y) - GetElevationPoint(x, y);
-                vec = Vector3.Transform(vec, rotToNormalXY);
-                sum += vec;
-            }
-
-            if (x > 1)
-            {
-                var vec = new Vector3();
-                vec.X = 1;
-                vec.Y = GetElevationPoint(x, y) - GetElevationPoint(x-1, y);
-                vec = Vector3.Transform(vec, rotToNormalXY);
-                sum += vec;
-            }
-
-            if (y < 511)
-            {
-                var vec = new Vector3();
-                vec.Z = 1;
-                vec.Y = GetElevationPoint(x, y + 1) - GetElevationPoint(x, y);
-                vec = Vector3.Transform(vec, rotToNormalZY);
-                sum += vec;
-            }
-
-            if (y > 1)
-            {
-                var vec = new Vector3();
-                vec.Z = 1;
-                vec.Y = GetElevationPoint(x, y) - GetElevationPoint(x, y - 1);
-                vec = Vector3.Transform(vec, rotToNormalZY);
-                sum += vec;
-            }
-            if (sum != Vector3.Zero) sum.Normalize();
-            return sum;
-        }
-
-        private float GetElevationPoint(int x, int y)
-        {
-            return MapData.ElevationData[(y * 512 + x)] / 6.0f;
-        }
-
-        private Vector2 GetUVInTri(Vector2 a, Vector2 b, Vector2 c, Vector2 pt)
-        {
-            var ca = c - a;
-            var ba = b - a;
-            var pa = pt - a;
-
-            var ca2 = Vector2.Dot(ca, ca);
-            var ca_ba = Vector2.Dot(ca, ba);
-            var ca_pa = Vector2.Dot(ca, pa);
-            var ba2 = Vector2.Dot(ba, ba);
-            var ba_pa = Vector2.Dot(ba, pa);
-
-            var inv = 1 / (ca2 * ba2 - ca_ba * ca_ba);
-            return new Vector2(
-                (ca2 * ba_pa - ca_ba * ca_pa) * inv, //factor to b
-                (ba2 * ca_pa - ca_ba * ba_pa) * inv //factor to c
-                );
-
-        }
-
         public Vector2? GetHoverSquare(double[] bounds)
         {
             return EstTileAtPosWithScroll(m_MouseState.Position.ToVector2() / FSOEnvironment.DPIScaleFactor, null);
-
-            var isoScale = GetIsoScale();
-            double width = m_ScrWidth;
-            float iScale = (float)(1/(isoScale*2));
-            
-            Vector2 mid = Camera.CalculateR();
-            mid.X -= 6;
-            mid.Y += 6;
-            if (bounds == null) bounds = new double[] {Math.Round(mid.X-19), Math.Round(mid.Y-19), Math.Round(mid.X+19), Math.Round(mid.Y+19)};
-            double[] pos = new double[] { m_MouseState.X, m_MouseState.Y };
-
-            Vector2? best = null;
-            float bestZ = float.MaxValue;
-
-            for (int y=(int)bounds[3]; y>bounds[1]; y--) 
-            {
-                if (y < 0 || y > 511) continue;
-                for (int x=(int)bounds[0]; x<bounds[2]; x++) 
-                {
-                    if (x < 0 || x > 511) continue;
-                    //get the 4 points of this tile, and check if the mouse cursor is inside them.
-                    var xy = transformSpr3(new Vector3(x+0, MapData.ElevationData[(y*512+x)]/12.0f, y+0));
-                    var xy2 = transformSpr3(new Vector3(x + 1, MapData.ElevationData[(y * 512 + Math.Min(x + 1, 511))] / 12.0f, y + 0));
-                    var xy3 = transformSpr3(new Vector3(x + 1, MapData.ElevationData[(Math.Min(y + 1, 511) * 512 + Math.Min(x + 1, 511))] / 12.0f, y + 1));
-                    var xy4 = transformSpr3(new Vector3(x + 0, MapData.ElevationData[(Math.Min(y + 1, 511) * 512 + x)] / 12.0f, y + 1));
-                    var minZ = Math.Min(xy.Z, Math.Min(xy2.Z, Math.Min(xy3.Z, xy4.Z)));
-                    if (minZ > 0 && IsInsidePoly(new double[] { xy.X, xy.Y, xy2.X, xy2.Y, xy3.X, xy3.Y, xy4.X, xy4.Y }, pos) && minZ < bestZ)
-                    {
-                        bestZ = minZ;
-                        //find closest point as well, it can be used by plugins
-                        var vPos = new Vector2((float)pos[0], (float)pos[1]);
-                        
-                        var uv1 = GetUVInTri(vxy(xy), vxy(xy2), vxy(xy4), vPos);
-                        if (uv1.X + uv1.Y < 1)
-                        {
-                            best = new Vector2(x,y) + uv1;
-                        }
-                        else
-                        {
-                            var uv2 = GetUVInTri(vxy(xy3), vxy(xy4), vxy(xy2), vPos);
-                            best = new Vector2(x+1, y+1) - uv2;
-                        }
-                    }
-                }
-            }
-            return best;
-        }
-
-        private Vector2 vxy(Vector3 v)
-        {
-            return new Vector2(v.X, v.Y);
         }
 
 
@@ -619,36 +490,15 @@ namespace FSO.Client.Rendering.City
         }
         #endregion
 
-        private bool IsInsidePoly(double[] Poly, double[] Pos)
-        {
-            if (Poly.Length % 2 != 0) return false; //invalid polygon
-		    int n = Poly.Length / 2;
-		    bool result = false;
-		    
-            for (int i=0; i<n; i++)
-            {
-			    double x1 = Poly[i*2];
-                double y1 = Poly[i * 2 + 1];
-                double x2 = Poly[((i + 1) * 2) % Poly.Length];
-                double y2 = Poly[((i + 1) * 2 + 1) % Poly.Length];
-                double slope = (y2 - y1) / (x2 - x1);
-                double c = y1 - (slope * x1);
-                if ((Pos[1] < (slope * Pos[0]) + c) && (Pos[0] >= Math.Min(x1, x2)) && (Pos[0] < Math.Max(x1, x2))) 
-                    result = !(result);
-		    }
-
-		    return result;
-        }
-
         private void drawBorderSide(Vector2 xy, Vector2 xy2, Vector2 xy3, Vector2 xy4, SpriteBatch spriteBatch, float opacity)
         {
             double o = (17.0/144.0); //used for border segments
             double p = (1-o);
 
-            double[] int1 = new double[] { xy.X * p + xy2.X * o, xy.Y * p + xy2.Y * o };
-            double[] int2 = new double[] { xy4.X * p + xy3.X * o, xy4.Y * p + xy3.Y * o };
-            double[] int3 = new double[] { xy.X * o + xy2.X * p, xy.Y * o + xy2.Y * p };
-            double[] int4 = new double[] { xy4.X * o + xy3.X * p, xy4.Y * o + xy3.Y * p };
+            double[] int1 = [xy.X * p + xy2.X * o, xy.Y * p + xy2.Y * o];
+            double[] int2 = [xy4.X * p + xy3.X * o, xy4.Y * p + xy3.Y * o];
+            double[] int3 = [xy.X * o + xy2.X * p, xy.Y * o + xy2.Y * p];
+            double[] int4 = [xy4.X * o + xy3.X * p, xy4.Y * o + xy3.Y * p];
 
             DrawLine(Content.stpWhiteLine, new Vector2((float)(int1[0]), (float)(int1[1])), new Vector2((float)(int1[0] * p + int2[0] * o), (float)(int1[1] * p + int2[1] * o)), spriteBatch, 2, opacity);
             DrawLine(Content.stpWhiteLine, new Vector2((float)(int1[0] * p + int2[0] * o), (float)(int1[1] * p + int2[1] * o)), new Vector2((float)(int3[0] * p + int4[0] * o), (float)(int3[1] * p + int4[1] * o)), spriteBatch, 2,opacity);
@@ -703,12 +553,12 @@ namespace FSO.Client.Rendering.City
 
                         bool[] surTile = new bool[8];
                         for (int i=0; i<m_SurTileOffs.Length; i++) { //check 8 adjacent tiles to determine what combination of border lines to use. (road border draws between two buildable tiles)
-                            surTile[i] = (isLandBuildable(x + m_SurTileOffs[i][0], y + m_SurTileOffs[i][1]));
+                            surTile[i] = (IsLandBuildable(x + m_SurTileOffs[i][0], y + m_SurTileOffs[i][1]));
                         }
 
                         float opacity = baseOpacity * (float)(1.0 - (mousedist.Length() / 3.0));
 
-                        if (isLandBuildable(x, y))
+                        if (IsLandBuildable(x, y))
                         {
 
                             if (surTile[0]) drawBorderSide(xy, xy2, xy3, xy4, spriteBatch, opacity);
@@ -746,7 +596,7 @@ namespace FSO.Client.Rendering.City
             }
         }
 
-        private bool isLandBuildable(int x, int y) 
+        private bool IsLandBuildable(int x, int y) 
         {
             return FindController<TerrainController>().IsPurchasable(x, y);
         }
@@ -1183,6 +1033,18 @@ namespace FSO.Client.Rendering.City
         public override void Update(UpdateState state)
         {
             ITime++;
+
+            float updateRate = 1f / FSOEnvironment.RefreshRate;
+            for (int i = 0; i < Modifications.Count; i++)
+            {
+                var mod = Modifications[i];
+                mod.Timer += updateRate;
+                if (mod.Timer > CityModification.EdgeDuration)
+                {
+                    Modifications.RemoveAt(i--);
+                }
+            }
+
             if (!(GameFacade.Screens.CurrentUIScreen is CoreGameScreen)) return;
             CoreGameScreen CurrentUIScr = (CoreGameScreen)GameFacade.Screens.CurrentUIScreen;
 
@@ -1648,7 +1510,70 @@ namespace FSO.Client.Rendering.City
                 particle.GenericDraw(gfx, ParticleCamera, tint, false);
             }
 
+            DrawModifications(m_Batch);
             Plugin?.Draw(m_Batch);
+        }
+
+        private void DrawModifications(SpriteBatch batch)
+        {
+            float iScale = (float)(1 / (GetIsoScale() * 2));
+
+            foreach (var mod in Modifications)
+            {
+                var (edgeColor, fillColor) = mod.GetColors();
+                var px = Content.stpWhiteLine;
+
+                var map = mod.Bitmap;
+
+                for (int y = 0; y < map.Height; y++)
+                {
+                    for (int x = 0; x < map.Width; x++)
+                    {
+                        if (map.IsSet(x, y))
+                        {
+                            int tx = x + map.X;
+                            int ty = y + map.Y;
+
+                            PathTile(tx, ty, iScale, fillColor);
+
+                            var vxy = transformSpr3(new Vector3(tx + 0, MapData.ElevationData[(ty * 512 + tx)] / 12.0f, ty + 0));
+                            var vxy2 = transformSpr3(new Vector3(tx + 1, MapData.ElevationData[(ty * 512 + Math.Min(tx + 1, 511))] / 12.0f, ty + 0));
+                            var vxy3 = transformSpr3(new Vector3(tx + 1, MapData.ElevationData[(Math.Min(ty + 1, 511) * 512 + Math.Min(tx + 1, 511))] / 12.0f, ty + 1));
+                            var vxy4 = transformSpr3(new Vector3(tx + 0, MapData.ElevationData[(Math.Min(ty + 1, 511) * 512 + tx)] / 12.0f, ty + 1));
+
+                            var minZ = Math.Min(vxy.Z, Math.Min(vxy2.Z, Math.Min(vxy3.Z, vxy4.Z)));
+
+                            if (minZ < 0) continue;
+                            //Vector2 mousedist = ((xy + xy2 + xy3 + xy4) / 4.0f - new Vector2(m_MouseState.X, m_MouseState.Y));
+                            var xy = new Vector2(vxy.X, vxy.Y);
+                            var xy2 = new Vector2(vxy2.X, vxy2.Y);
+                            var xy3 = new Vector2(vxy3.X, vxy3.Y);
+                            var xy4 = new Vector2(vxy4.X, vxy4.Y);
+
+                            // Draw edges
+                            if (x <= 0 || !map.IsSet(x - 1, y))
+                            {
+                                DrawLine(px, xy, xy4, batch, 2, edgeColor);
+                            }
+
+                            if (x >= 511 || !map.IsSet(x + 1, y))
+                            {
+                                DrawLine(px, xy2, xy3, batch, 2, edgeColor);
+                            }
+
+                            if (y <= 0 || !map.IsSet(x, y - 1))
+                            {
+                                DrawLine(px, xy, xy2, batch, 2, edgeColor);
+                            }
+
+                            if (y >= 511 || !map.IsSet(x, y + 1))
+                            {
+                                DrawLine(px, xy3, xy4, batch, 2, edgeColor);
+                            }
+                        }
+                    }
+                }
+            }
         }
 
         private void RecalculateShadows()
@@ -2079,6 +2004,16 @@ namespace FSO.Client.Rendering.City
 
             PixelShader.CurrentTechnique = PixelShader.Techniques[2];
             VertexShader.CurrentTechnique = VertexShader.Techniques[2];
+        }
+
+        internal void AddModification(CityModification modification)
+        {
+            Modifications.Add(modification);
+        }
+
+        public override void DeviceReset(GraphicsDevice Device)
+        {
+
         }
     }
 

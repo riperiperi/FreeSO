@@ -8,6 +8,7 @@ namespace FSO.Server.Protocol.Electron.Model.CityEditCommands
         public const int MaxReservedLocations = 512 * 256;
 
         public uint AvatarId;
+        public uint Color = uint.MaxValue;
         public int UserModId;
         public HashSet<uint> ReservedLocations;
         public bool IsTemp;
@@ -15,6 +16,7 @@ namespace FSO.Server.Protocol.Electron.Model.CityEditCommands
         public virtual void Deserialize(IoBuffer input, ISerializationContext context)
         {
             AvatarId = input.GetUInt32();
+            Color = input.GetUInt32();
             UserModId = input.GetInt32();
             var reservedCount = input.GetInt32();
 
@@ -36,6 +38,7 @@ namespace FSO.Server.Protocol.Electron.Model.CityEditCommands
         public virtual void Serialize(IoBuffer output, ISerializationContext context)
         {
             output.PutUInt32(AvatarId);
+            output.PutUInt32(Color);
             output.PutInt32(UserModId);
 
             if (ReservedLocations != null)

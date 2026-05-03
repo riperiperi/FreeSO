@@ -87,6 +87,7 @@ namespace FSO.Client.Controllers
 
             var prevTemp = cmd.IsTemp;
             cmd.IsTemp = false;
+            cmd.Color = GlobalSettings.Default.ChatColor;
             Network.CityClient.Write(new CityUpdateRequest() { Command = new(cmd) });
             cmd.IsTemp = prevTemp;
         }
@@ -733,21 +734,43 @@ namespace FSO.Client.Controllers
 
         public void MessageReceived(AriesClient client, object message)
         {
-            if (message is CityUpdateCommand cmd && View.Plugin is MapPainterPlugin map)
+            if (View.Plugin is MapPainterPlugin map)
             {
-                GameThread.NextUpdate(x =>
+                if (message is CityUpdateCommand cmd)
                 {
-                    switch (cmd.Mode)
+                    GameThread.NextUpdate(x =>
                     {
-                        case CityUpdateCommandMode.CommandError:
-                            Realestate.SetMyTempCommand(null);
-                            map.ShowError(53);
-                            break;
-                        case CityUpdateCommandMode.UndoError:
-                            map.ShowError(54);
-                            break;
-                    }
-                });
+                        switch (cmd.Mode)
+                        {
+                            case CityUpdateCommandMode.CommandError:
+                                Realestate.SetMyTempCommand(null);
+                                map.ShowError(53);
+                                break;
+                            case CityUpdateCommandMode.UndoError:
+                                map.ShowError(54);
+                                break;
+                        }
+                    });
+                }
+                else if (message is CityUpdateResponse response)
+                {
+                    GameThread.NextUpdate(x =>
+                    {
+                        foreach (var item in response.Commands)
+                        {
+                            if (item.Command.AvatarId == Network.MyCharacter)
+                            {
+                                return;
+                            }
+
+                            var mod = CityModification.FromCommand(View.MapData, item.Command);
+                            if (mod != null)
+                            {
+                                View.AddModification(mod);
+                            }
+                        }
+                    });
+                }
             }
         }
     }
