@@ -23,6 +23,7 @@ namespace FSO.SimAntics.NetPlay.Model.Commands
 
         public override bool Verify(VM vm, VMAvatar caller)
         {
+            if (IsSpectator(caller)) return false;
             //since architecture commands must be run in order, we need to run all architecture commands synchronously.
             //it must be queued on the global link.
 

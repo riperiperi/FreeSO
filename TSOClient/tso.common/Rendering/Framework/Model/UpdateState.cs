@@ -43,6 +43,9 @@ namespace FSO.Common.Rendering.Framework.Model
         {
             get { return KeyboardState.IsKeyDown(Keys.LeftAlt) || KeyboardState.IsKeyDown(Keys.RightAlt); }
         }
+        public bool ActivationKeyPressed => NewKeys.Contains(Keys.Enter) || NewKeys.Contains(Keys.Space);
+        public bool FocusNextPressed => NewKeys.Contains(Keys.Tab) && !ShiftDown;
+        public bool FocusPrevPressed => NewKeys.Contains(Keys.Tab) && ShiftDown;
 
         public UIState UIState = new UIState();
         public InputManager InputManager;
@@ -59,6 +62,8 @@ namespace FSO.Common.Rendering.Framework.Model
         private List<Keys> KeyInRepeatMode = new List<Keys>();
 
         public List<Keys> NewKeys = new List<Keys>();
+        public int MouseWheelDelta;
+        private int _prevWheelPos;
         public int Depth;
 
         public bool WindowFocused;
@@ -75,6 +80,8 @@ namespace FSO.Common.Rendering.Framework.Model
         public void Update()
         {
             NewKeys.Clear();
+            MouseWheelDelta = (MouseState.ScrollWheelValue - _prevWheelPos) / 120;
+            _prevWheelPos = MouseState.ScrollWheelValue;
             Depth = 0;
 
             /**

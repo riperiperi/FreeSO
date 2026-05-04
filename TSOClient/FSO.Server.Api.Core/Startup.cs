@@ -35,7 +35,10 @@ namespace FSO.Server.Api.Core
                     {
                         builder.WithOrigins("https://freeso.org", "http://localhost:8080").AllowAnyMethod().AllowAnyHeader().AllowCredentials().WithExposedHeaders("content-disposition");
                     });
-            }).AddMvc().SetCompatibilityVersion(CompatibilityVersion.Version_2_1);
+            }).AddMvc(options =>
+            {
+                options.EnableEndpointRouting = false;
+            });
         }
 
         // This method gets called by the runtime. Use this method to configure the HTTP request pipeline.

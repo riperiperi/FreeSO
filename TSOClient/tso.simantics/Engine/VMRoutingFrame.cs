@@ -2,6 +2,7 @@
 using System.Collections.Generic;
 using System.Linq;
 using FSO.SimAntics.Model;
+using FSO.SimAntics.Model.TSOPlatform;
 using Microsoft.Xna.Framework;
 using FSO.LotView.Model;
 using FSO.Files.Formats.IFF.Chunks;
@@ -234,6 +235,13 @@ namespace FSO.SimAntics.Engine
             if (DestRoom == MyRoom || IgnoreRooms) return true; //we don't have to do any room finding for this
             else
             {
+                // Spectators cannot traverse between rooms (doors)
+                if (Caller is VMAvatar ava)
+                {
+                    if ((ava.TSOState as VMTSOAvatarState)?.IsSpectator == true)
+                        return false;
+                }
+
                 //find shortest room traversal to destination. Simple A* pathfind.
                 //Portals are considered nodes to allow multiple portals between rooms to be considered.
 

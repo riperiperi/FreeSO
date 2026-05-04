@@ -1,14 +1,18 @@
 ﻿using Microsoft.Xna.Framework;
+using Microsoft.Xna.Framework.Input;
 using FSO.Common.Rendering.Framework.IO;
 using FSO.Common.Rendering.Framework.Model;
 
 namespace FSO.Client.UI.Controls
 {
-    public class UIClickableLabel : UILabel
+    public class UIClickableLabel : UILabel, IFocusableUI
     {
         private UIMouseEventRef ClickHandler;
         public event ButtonClickDelegate OnButtonClick;
         public event UIMouseEvent OnMouseEvtExt;
+
+        public bool IsFocused { get; set; }
+        public int TabIndex { get; set; }
 
         public UIClickableLabel()
         {
@@ -50,6 +54,7 @@ namespace FSO.Client.UI.Controls
 
                 case UIMouseEventType.MouseDown:
                     m_isDown = true;
+                    state.InputManager.SetFocus(this);
                     break;
 
                 case UIMouseEventType.MouseUp:
@@ -67,5 +72,11 @@ namespace FSO.Client.UI.Controls
             OnMouseEvtExt?.Invoke(type, state);
         }
 
+        public override void Update(UpdateState state)
+        {
+            base.Update(state);
+            if (IsFocused && state.ActivationKeyPressed)
+                OnButtonClick?.Invoke(this);
+        }
     }
 }

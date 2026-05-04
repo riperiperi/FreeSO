@@ -23,12 +23,14 @@ namespace FSO.Common.Rendering.Framework.IO
 
             if (LastFocus != null)
             {
+                LastFocus.IsFocused = false;
                 LastFocus.OnFocusChanged(FocusEvent.FocusOut);
             }
 
             LastFocus = ui;
             if (ui != null)
             {
+                LastFocus.IsFocused = true;
                 LastFocus.OnFocusChanged(FocusEvent.FocusIn);
             }
         }

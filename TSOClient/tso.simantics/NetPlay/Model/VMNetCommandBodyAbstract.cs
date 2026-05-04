@@ -1,9 +1,16 @@
-﻿using System.IO;
+﻿using FSO.SimAntics.Model.TSOPlatform;
+using System.IO;
 
 namespace FSO.SimAntics.NetPlay.Model
 {
     public abstract class VMNetCommandBodyAbstract : VMSerializable
     {
+        protected static bool IsSpectator(VMAvatar caller)
+        {
+            if (caller == null) return false;
+            return ((VMTSOAvatarState)caller.TSOState)?.IsSpectator ?? false;
+        }
+
         public uint ActorUID;
         public bool FromNet = false;
 

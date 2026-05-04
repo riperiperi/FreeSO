@@ -1,0 +1,27 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN"
+        "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
+<plist version="1.0">
+    <dict>
+        <key>CFBundleName</key>
+        <string>FreeSO</string>
+        <key>CFBundleDisplayName</key>
+        <string>FreeSO</string>
+        <key>CFBundleIdentifier</key>
+        <string>org.freeso.fso</string>
+        <key>CFBundleVersion</key>
+        <string>1.0</string>
+        <key>CFBundleExecutable</key>
+        <string>FreeSO</string>
+        <key>CFBundleIconFile</key>
+        <string>Icon</string>
+        <key>LSApplicationCategoryType</key>
+        <string>public.app-category.simulation-games</string>
+        <key>LSMinimumSystemVersion</key>
+        <string>13.0</string>
+        <key>NSHumanReadableCopyright</key>
+        <string><![CDATA[
+Licensed under the Mozilla Public License, v. 2.0.
+FreeSO is not in any way affiliated with Electronic Arts or The Sims, it is an unofficial community run project.]]></string>
+    </dict>
+</plist>

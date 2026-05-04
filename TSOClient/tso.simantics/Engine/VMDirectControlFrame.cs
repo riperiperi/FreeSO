@@ -1,5 +1,6 @@
 ﻿using FSO.LotView.Model;
 using FSO.SimAntics.Model.Routing;
+using FSO.SimAntics.Model.TSOPlatform;
 using FSO.SimAntics.Model;
 using Microsoft.Xna.Framework;
 using System.Collections.Generic;
@@ -371,7 +372,7 @@ namespace FSO.SimAntics.Engine
                     }
                 }
 
-                if (portal != null && framePredict == 0)
+                if (portal != null && framePredict == 0 && !(((VMTSOAvatarState)Caller.TSOState)?.IsSpectator ?? false))
                 {
                     State = new VMDirectControlState();
 

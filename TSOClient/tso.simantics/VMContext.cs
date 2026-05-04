@@ -664,9 +664,12 @@ namespace FSO.SimAntics
 
         public void ProcessLightingChanges()
         {
-            for (int i = 0; i < DeferredLightingRefresh.Count; i++)
+            var visited = new HashSet<ushort>();
+            int remaining = DeferredLightingRefresh.Count;
+            foreach (var room in DeferredLightingRefresh)
             {
-                RefreshLighting(DeferredLightingRefresh.ElementAt(i), i == DeferredLightingRefresh.Count - 1, new HashSet<ushort>());
+                remaining--;
+                RefreshLighting(room, remaining == 0, visited);
             }
             DeferredLightingRefresh.Clear();
         }

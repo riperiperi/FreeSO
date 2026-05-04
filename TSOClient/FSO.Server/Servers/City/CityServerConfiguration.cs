@@ -19,6 +19,7 @@ namespace FSO.Server.Servers.City
         public CityServerMaintenanceConfiguration Maintenance;
 
         // Copied from base config
+        public bool AllOpenable;
         public ArchiveConfiguration Archive;
     }
 

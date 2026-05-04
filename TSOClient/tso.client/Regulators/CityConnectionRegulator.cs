@@ -45,6 +45,7 @@ namespace FSO.Client.Regulators
         public string ArchiveServerID { get; private set; }
         private string ArchiveToken;
         public ArchiveConfigFlags ArchiveConfig { get; private set; }
+        public bool SpectatorMode { get; private set; }
 
         private CityClient CityApi;
         private ShardSelectorServletResponse ShardSelectResponse;
@@ -342,6 +343,7 @@ namespace FSO.Client.Regulators
                     shard = data as ShardSelectorServletRequest;
                     CurrentShard = shard;
                     ShardSelectResponse = CityApi.ShardSelectorServlet(shard);
+                    SpectatorMode = ShardSelectResponse.SpectatorMode;
                     this.AsyncProcessMessage(ShardSelectResponse);
                     break;
 

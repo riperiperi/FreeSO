@@ -1,8 +1,11 @@
 ﻿using FSO.Client.Controllers;
 using FSO.Client.UI.Controls;
+using FSO.Client.UI.Framework;
 using FSO.Common;
 using FSO.Common.Rendering.Framework.Model;
+using FSO.Server.Clients;
 using Microsoft.Xna.Framework;
+using Ninject;
 
 namespace FSO.Client.UI.Archive
 {
@@ -12,72 +15,107 @@ namespace FSO.Client.UI.Archive
         public UITextBox AddressInput;
         public UIButton JoinButton;
 
+        private UIHBoxContainer modeBox;
+        private UIRadioButton ArchiveRadio;
+        private UIRadioButton ServerRadio;
+        private UILabel DescriptionLabel;
+        private UILabel NameLabel;
+        private UILabel AddressLabel;
+        private UIVBoxContainer ButtonBox;
+        private UIVBoxContainer CurrentLayout;
+
+        private bool IsServerMode => ServerRadio.Selected;
+
         public UIArchiveJoinDialog() : base(UIDialogStyle.Close, true)
         {
             Caption = "Join Server";
-            var vbox = new UIVBoxContainer();
 
-            var clientConfig = ClientArchiveConfiguration.Default;
+            // Mode selection
+            modeBox = new UIHBoxContainer();
+            modeBox.Add(ArchiveRadio = new UIRadioButton() { RadioGroup = "joinMode", Selected = true });
+            modeBox.Add(new UILabel() { Caption = "Archive" });
+            modeBox.Add(ServerRadio = new UIRadioButton() { RadioGroup = "joinMode" });
+            modeBox.Add(new UILabel() { Caption = "Online" });
+            modeBox.AutoSize();
 
-            vbox.Add(new UILabel()
+            DescriptionLabel = new UILabel()
             {
                 Caption = "Join a server hosted by another player by using their IP address or URL. Depending on the server settings, you might need an admin to verify you, so use a display name that makes it clear who you are.",
                 Size = new Vector2(300, 100),
                 Wrapped = true
-            });
+            };
 
-            vbox.Add(new UILabel()
-            {
-                Caption = "Display name:"
-            });
+            NameLabel = new UILabel() { Caption = "Display name:" };
+            NameInput = new UITextBox() { Size = new Vector2(150, 25) };
+            AddressLabel = new UILabel() { Caption = "Server address:" };
+            AddressInput = new UITextBox() { Size = new Vector2(300, 25) };
 
-            vbox.Add(NameInput = new UITextBox()
-            {
-                Size = new Microsoft.Xna.Framework.Vector2(150, 25)
-            });
+            ButtonBox = new UIVBoxContainer() { HorizontalAlignment = UIContainerHorizontalAlignment.Right };
+            ButtonBox.Add(JoinButton = new UIButton() { Caption = "Join", Disabled = true });
+            ButtonBox.AutoSize();
 
-            vbox.Add(new UILabel()
-            {
-                Caption = "Server address:"
-            });
-
-            vbox.Add(AddressInput = new UITextBox()
-            {
-                Size = new Microsoft.Xna.Framework.Vector2(300, 25)
-            });
-
-            var vbox2 = new UIVBoxContainer() { HorizontalAlignment = UIContainerHorizontalAlignment.Right };
-
-            vbox2.Add(JoinButton = new UIButton()
-            {
-                Caption = "Join",
-                Disabled = true
-            });
-
-            vbox2.AutoSize(); //TODO: somehow force horiz size from parent?
-
-            vbox.Add(vbox2);
-
-            vbox.AutoSize();
-            vbox.Position = new Vector2(20, 45);
-
-            SetSize((int)vbox.Size.X + 40, (int)vbox.Size.Y + 70);
-
-            Add(vbox);
-
-            NameInput.CurrentText = clientConfig.PlayerName;
-            AddressInput.CurrentText = clientConfig.LastJoinedHost;
+            NameInput.CurrentText = ClientArchiveConfiguration.Default.PlayerName;
 
             NameInput.OnChange += ValidateInputs;
+            NameInput.OnEnterPress += Submit;
             AddressInput.OnChange += ValidateInputs;
-
-            JoinButton.OnButtonClick += Join;
+            AddressInput.OnEnterPress += Submit;
+            JoinButton.OnButtonClick += Submit;
             CloseButton.OnButtonClick += Close;
+            ArchiveRadio.OnButtonClick += ModeChanged;
+            ServerRadio.OnButtonClick += ModeChanged;
 
+            BuildLayout();
             ValidateInputs(NameInput);
         }
 
-        private void SaveConfig()
+        private void BuildLayout()
+        {
+            if (CurrentLayout != null)
+                Remove(CurrentLayout);
+
+            bool server = IsServerMode;
+
+            CurrentLayout = new UIVBoxContainer();
+            CurrentLayout.Add(modeBox);
+
+            if (!server)
+            {
+                CurrentLayout.Add(DescriptionLabel);
+                CurrentLayout.Add(NameLabel);
+                CurrentLayout.Add(NameInput);
+            }
+
+            CurrentLayout.Add(AddressLabel);
+            CurrentLayout.Add(AddressInput);
+            CurrentLayout.Add(ButtonBox);
+
+            CurrentLayout.AutoSize();
+            CurrentLayout.Position = new Vector2(20, 45);
+            SetSize((int)CurrentLayout.Size.X + 40, (int)CurrentLayout.Size.Y + 70);
+            Add(CurrentLayout);
+
+            JoinButton.Caption = server ? "Connect" : "Join";
+            AddressInput.CurrentText = server
+                ? (GlobalSettings.Default.GameEntryUrl ?? "")
+                : ClientArchiveConfiguration.Default.LastJoinedHost;
+        }
+
+        private void ModeChanged(UIElement button)
+        {
+            BuildLayout();
+            ValidateInputs(AddressInput);
+        }
+
+        private void ValidateInputs(UIElement element)
+        {
+            if (IsServerMode)
+                JoinButton.Disabled = AddressInput.CurrentText.Length == 0;
+            else
+                JoinButton.Disabled = NameInput.CurrentText.Length == 0 || AddressInput.CurrentText.Length == 0;
+        }
+
+        private void SaveArchiveConfig()
         {
             var clientConfig = ClientArchiveConfiguration.Default;
 
@@ -86,21 +124,38 @@ namespace FSO.Client.UI.Archive
             clientConfig.Save();
         }
 
-        private void Close(Framework.UIElement button)
+        private void Close(UIElement button)
         {
-            SaveConfig();
+            if (!IsServerMode)
+                SaveArchiveConfig();
+
             FindController<ConnectArchiveController>().SwitchMode(ConnectArchiveMode.Landing);
         }
 
-        private void Join(Framework.UIElement button)
+        private void Submit(UIElement button)
         {
-            SaveConfig(); 
-            FSOFacade.Controller.ConnectToArchive(NameInput.CurrentText, AddressInput.CurrentText, false);
-        }
+            if (JoinButton.Disabled)
+                return;
 
-        private void ValidateInputs(Framework.UIElement element)
-        {
-            JoinButton.Disabled = NameInput.CurrentText.Length == 0 || AddressInput.CurrentText.Length == 0;
+            if (IsServerMode)
+            {
+                var url = AddressInput.CurrentText;
+                GlobalSettings.Default.GameEntryUrl = url;
+                GlobalSettings.Default.CitySelectorUrl = url;
+                GlobalSettings.Default.Save();
+
+                var kernel = FSOFacade.Kernel;
+                kernel.Get<AuthClient>().SetBaseUrl(url);
+                kernel.Get<CityClient>().SetBaseUrl(url);
+
+                UIScreen.RemoveDialog(this);
+                FSOFacade.Controller.ShowServerLogin();
+            }
+            else
+            {
+                SaveArchiveConfig();
+                FSOFacade.Controller.ConnectToArchive(NameInput.CurrentText, AddressInput.CurrentText, false);
+            }
         }
 
         public override void Update(UpdateState state)

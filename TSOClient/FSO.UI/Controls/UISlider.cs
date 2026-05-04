@@ -6,13 +6,16 @@ using Microsoft.Xna.Framework;
 using FSO.Client.Utils;
 using FSO.Common.Rendering.Framework.Model;
 using FSO.Common.Rendering.Framework.IO;
+using Microsoft.Xna.Framework.Input;
 
 namespace FSO.Client.UI.Controls
 {
     public delegate void ChangeDelegate(UIElement element);
 
-    public class UISlider : UIElement
+    public class UISlider : UIElement, IFocusableUI
     {
+        public bool IsFocused { get; set; }
+        public int TabIndex { get; set; } = -1;
         private MathCache m_LayoutCache = new MathCache();
         private Texture2D m_Texture;
 
@@ -158,6 +161,7 @@ namespace FSO.Client.UI.Controls
             {
                 case UIMouseEventType.MouseDown:
                     m_ThumbDown = true;
+                    state.InputManager.SetFocus(this);
                     m_ThumbMouseOffset = this.GetMousePosition(state.MouseState);
 
                     var layout = m_LayoutCache.Calculate("layout", x => CalculateLayout());
@@ -177,6 +181,25 @@ namespace FSO.Client.UI.Controls
         public override void Update(UpdateState state)
         {
             base.Update(state);
+
+            // Mouse wheel scrolling
+            if (IsFocused && state.MouseWheelDelta != 0)
+            {
+                float step = AllowDecimals ? 0.25f : 1f;
+                Value += state.MouseWheelDelta * step;
+            }
+
+            if (IsFocused && !m_ThumbDown)
+            {
+                float step = AllowDecimals ? 0.25f : 1f;
+                foreach (var key in state.NewKeys)
+                {
+                    if (key == Keys.Up || key == Keys.Right)
+                        Value += step;
+                    else if (key == Keys.Down || key == Keys.Left)
+                        Value -= step;
+                }
+            }
             if (m_ThumbDown)
             {
                 /** Dragging the thumb **/
@@ -344,6 +367,9 @@ namespace FSO.Client.UI.Controls
             this.increase = increase;
             this.decrease = decrease;
             this.Change = change;
+
+            increase.TabIndex = -1;
+            decrease.TabIndex = -1;
 
             increase.OnButtonClick += new ButtonClickDelegate(increase_OnButtonClick);
             decrease.OnButtonClick += new ButtonClickDelegate(decrease_OnButtonClick);

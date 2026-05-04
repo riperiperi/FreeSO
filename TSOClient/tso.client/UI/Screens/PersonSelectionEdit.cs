@@ -106,6 +106,7 @@ namespace FSO.Client.UI.Screens
 
             NameTextEdit.OnChange += new ChangeDelegate(NameTextEdit_OnChange);
             NameTextEdit.CurrentText = GlobalSettings.Default.LastUser;
+            GameFacade.Screens.inputManager.SetFocus(NameTextEdit);
 
             AcceptButton.Disabled = NameTextEdit.CurrentText.Length == 0;
             AcceptButton.OnButtonClick += new ButtonClickDelegate(AcceptButton_OnButtonClick);

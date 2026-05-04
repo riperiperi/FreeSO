@@ -29,6 +29,7 @@ namespace FSO.Server.Servers.Lot
         public int CityReportingInterval = 10000;
 
         // Copied from base config
+        public bool AllOpenable;
         public ArchiveConfiguration Archive;
     }
 
