@@ -9,6 +9,12 @@ namespace FSO.SimAntics.NetPlay.Model.Commands
         public float Pitch;
         public uint Style;
 
+        public override bool Verify(VM vm, VMAvatar caller)
+        {
+            if (IsSpectator(caller)) return false;
+            return true;
+        }
+
         public override bool Execute(VM vm, VMAvatar caller)
         {
             if (!vm.TS1 && (caller == null || caller.AvatarState.Permissions < VMTSOAvatarPermissions.Owner)) return false;

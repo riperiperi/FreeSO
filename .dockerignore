@@ -1,0 +1,13 @@
+.git
+**/bin
+**/obj
+**/node_modules
+docker/nfs
+**/publish
+**/debug
+**/release
+**/dist
+*.DotSettings.user
+.vs/
+.idea/
+**/.DS_Store

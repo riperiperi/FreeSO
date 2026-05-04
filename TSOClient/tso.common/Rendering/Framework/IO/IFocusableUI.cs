@@ -2,7 +2,9 @@
 {
     public interface IFocusableUI
     {
-        void OnFocusChanged(FocusEvent newFocus);
+        bool IsFocused { get; set; }
+        int TabIndex { get; }
+        void OnFocusChanged(FocusEvent newFocus) { }
     }
 
     public enum FocusEvent

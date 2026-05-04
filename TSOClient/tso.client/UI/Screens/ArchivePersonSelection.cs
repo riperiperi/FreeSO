@@ -322,7 +322,7 @@ namespace FSO.Client.UI.Screens
 
         public void OpenCAS(Framework.UIElement button)
         {
-            FSOFacade.Controller.GotoCAS();
+            FSOFacade.Controller.GotoCAS(true);
         }
 
         public void SetData(ArchiveAvatarsResponse data)

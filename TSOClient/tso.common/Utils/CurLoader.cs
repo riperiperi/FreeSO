@@ -77,9 +77,21 @@ namespace FSO.Common.Utils
                 outIO.Write(new char[] { 'B', 'M' });
                 outIO.Write(size + 14); //size, plus header
                 outIO.Write(0);
-                outIO.Write(14);
                 var data = new byte[size];
                 stream.Read(data, 0, size);
+
+                var biSize = BitConverter.ToInt32(data, 0);
+                var biBitCount = BitConverter.ToInt16(data, 14);
+                var biClrUsed = BitConverter.ToInt32(data, 32);
+
+                int paletteSize = 0;
+                if (biBitCount <= 8)
+                {
+                    int colorCount = biClrUsed != 0 ? biClrUsed : (1 << biBitCount);
+                    paletteSize = colorCount * 4;
+                }
+
+                outIO.Write(14 + biSize + paletteSize);
                 outIO.Write(data);
 
                 tempbmp.Seek(0, SeekOrigin.Begin);

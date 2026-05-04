@@ -9,6 +9,7 @@ using FSO.Common.Rendering.Framework.IO;
 using FSO.Common.Rendering.Framework.Model;
 using FSO.HIT;
 using FSO.Client.GameContent;
+using Microsoft.Xna.Framework.Input;
 
 namespace FSO.Client.UI.Controls
 {
@@ -17,7 +18,7 @@ namespace FSO.Client.UI.Controls
     /// <summary>
     /// A drawable, clickable button that is part of the GUI.
     /// </summary>
-    public class UIButton : UIElement
+    public class UIButton : UIElement, IFocusableUI
     {
         public static Texture2D StandardButton;
 
@@ -46,6 +47,19 @@ namespace FSO.Client.UI.Controls
         private UITooltipHandler m_TooltipHandler;
 
         private UIElementState m_State = UIElementState.Normal;
+        public bool IsFocused { get; set; }
+        public void OnFocusChanged(FocusEvent newFocus)
+        {
+            if (newFocus == FocusEvent.FocusOut) CurrentFrame = 0;
+            Invalidate();
+        }
+
+        private int _tabIndex = 0;
+        public virtual int TabIndex
+        {
+            get => m_Disabled ? -1 : _tabIndex;
+            set => _tabIndex = value;
+        }
 
         public bool Hovered
         {
@@ -210,7 +224,6 @@ namespace FSO.Client.UI.Controls
             set {
                 m_Texture = value;
                 m_Bounds = Rectangle.Empty;
-
                 m_Width = m_Texture.Width / m_ImageStates;
                 m_WidthDiv3 = m_Width / 3;
                 m_Height = m_Texture.Height / m_ButtonFrames;
@@ -221,7 +234,7 @@ namespace FSO.Client.UI.Controls
                     ClickHandler.Region.Width = (m_ResizeWidth == 0) ? m_Width : (int)m_ResizeWidth;
                     ClickHandler.Region.Height = m_Height;
                 }
-            } 
+            }
         }
         public void ActivateTooltip()
         {
@@ -328,6 +341,7 @@ namespace FSO.Client.UI.Controls
             {
                 case UIMouseEventType.MouseOver:
                     m_isOver = true;
+                    if (TabIndex >= 0) state.InputManager.SetFocus(this);
                     if (!m_isDown)
                     {
                         CurrentFrame = 2;
@@ -353,6 +367,7 @@ namespace FSO.Client.UI.Controls
                 case UIMouseEventType.MouseDown:
                     m_isDown = true;
                     CurrentFrame = 1;
+                    state.InputManager.SetFocus(this);
                     if (OnButtonDown != null)
                         OnButtonDown(this);
                     break;
@@ -369,6 +384,19 @@ namespace FSO.Client.UI.Controls
                     m_isDown = false;
                     CurrentFrame = m_isOver ? 2 : 0;
                     break;
+            }
+        }
+
+        public override void Update(UpdateState state)
+        {
+            base.Update(state);
+            if (IsFocused && !m_Disabled)
+            {
+                if (state.ActivationKeyPressed)
+                {
+                    OnButtonClick?.Invoke(this);
+                    HITVM.Get().PlaySoundEvent(UISounds.Click);
+                }
             }
         }
 
@@ -391,6 +419,10 @@ namespace FSO.Client.UI.Controls
             {
                 frame = 1;
             }
+            if (IsFocused && frame == 0)
+            {
+                frame = Math.Min(2, m_ImageStates - 1);
+            }
             if (ForceState > -1) frame = ForceState;
             frame = Math.Min(m_ImageStates - 1, frame);
             int offset = frame * m_Width;
@@ -404,7 +436,7 @@ namespace FSO.Client.UI.Controls
                 base.DrawLocalTexture(SBatch, m_Texture, new Rectangle(offset, vOffset, m_WidthDiv3, m_Height), Vector2.Zero);
 
                 /** center **/
-                base.DrawLocalTexture(SBatch, m_Texture, new Rectangle(offset + m_WidthDiv3, vOffset, m_WidthDiv3, m_Height), new Vector2(m_WidthDiv3, 0), new Vector2( (Width - (m_WidthDiv3 * 2)) / m_WidthDiv3, 1.0f));
+                base.DrawLocalTexture(SBatch, m_Texture, new Rectangle(offset + m_WidthDiv3, vOffset, m_WidthDiv3, m_Height), new Vector2(m_WidthDiv3, 0), new Vector2((Width - (m_WidthDiv3 * 2)) / m_WidthDiv3, 1.0f));
 
                 /** right **/
                 base.DrawLocalTexture(SBatch, m_Texture, new Rectangle(offset + (m_Width - m_WidthDiv3), vOffset, m_WidthDiv3, m_Height), new Vector2(Width - m_WidthDiv3, 0));

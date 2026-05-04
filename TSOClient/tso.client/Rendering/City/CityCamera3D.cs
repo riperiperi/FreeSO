@@ -394,7 +394,7 @@ namespace FSO.Client.Rendering.City
             //targHeight = Math.Max(heightAtCam, terrainHeight);
             CamHeight += (targHeight - CamHeight) * (1f - (float)Math.Pow(0.8f, 60f / FSOEnvironment.RefreshRate));
 
-            if (inCity && state.NewKeys.Contains(Microsoft.Xna.Framework.Input.Keys.Tab) && !state.AltDown)
+            if (inCity && state.NewKeys.Contains(Microsoft.Xna.Framework.Input.Keys.Tab) && !state.AltDown && state.InputManager.GetFocus() == null)
             {
                 CameraMode = !CameraMode;
             }

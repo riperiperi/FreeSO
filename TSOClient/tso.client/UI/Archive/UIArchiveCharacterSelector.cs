@@ -157,7 +157,7 @@ namespace FSO.Client.UI.Archive
 
         private void OpenCAS(Framework.UIElement button)
         {
-            FSOFacade.Controller.GotoCAS();
+            FSOFacade.Controller.GotoCAS(true);
         }
 
         public void SetData(ArchiveAvatarsResponse data)

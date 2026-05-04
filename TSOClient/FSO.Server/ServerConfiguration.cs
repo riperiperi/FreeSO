@@ -24,6 +24,9 @@ namespace FSO.Server
         [JsonProperty("updateBranch")]
         public string UpdateBranch;
 
+        [JsonProperty("allOpenable")]
+        public bool AllOpenable;
+
         [JsonProperty("archive")]
         public ArchiveConfiguration Archive; // If this is present, the server is running in archive mode
 

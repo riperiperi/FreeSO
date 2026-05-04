@@ -31,6 +31,7 @@ namespace FSO.Server.Core
             settings.Add("updateUrl", userApiConfig.UpdateUrl);
             settings.Add("cdnUrl", userApiConfig.CDNUrl);
             settings.Add("connectionString", config.Database.ConnectionString);
+            settings.Add("databaseEngine", config.Database.Engine ?? "mysql");
             settings.Add("NFSdir", config.SimNFS);
             settings.Add("smtpHost", userApiConfig.SmtpHost);
             settings.Add("smtpUser", userApiConfig.SmtpUser);
@@ -39,6 +40,8 @@ namespace FSO.Server.Core
             settings.Add("useProxy", userApiConfig.UseProxy.ToString());
             settings.Add("updateID", config.UpdateID?.ToString() ?? "");
             settings.Add("branchName", config.UpdateBranch);
+            settings.Add("allOpenable", config.AllOpenable.ToString());
+
 
             var api2 = new FSO.Server.Api.Core.Api();
             api2.Init(settings);

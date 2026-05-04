@@ -22,6 +22,7 @@ namespace FSO.SimAntics.NetPlay.Model.Commands
 
         public override bool Verify(VM vm, VMAvatar caller)
         {
+            if (IsSpectator(caller)) return false;
             if (caller == null || //caller must be on lot, be a build roommate.
             caller.AvatarState.Permissions < VMTSOAvatarPermissions.BuildBuyRoommate)
                 return false;

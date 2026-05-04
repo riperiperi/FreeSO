@@ -20,6 +20,8 @@ namespace FSO.Client.UI.Controls
     /// </summary>
     public class UITextEdit : UIElement, IFocusableUI, ITextControl
     {
+        public bool IsFocused { get; set; }
+        public int TabIndex { get; set; } = 0;
         /**
          * Standard modes
          */
@@ -355,11 +357,9 @@ namespace FSO.Client.UI.Controls
 
         #region IFocusableUI Members
 
-        private bool IsFocused;
         private string QueuedChange;
         public void OnFocusChanged(FocusEvent newFocus)
         {
-            IsFocused = newFocus == FocusEvent.FocusIn;
             if (IsFocused)
             {
                 m_cursorBlink = true;
@@ -416,6 +416,14 @@ namespace FSO.Client.UI.Controls
             }
             if (FSOEnvironment.SoftwareKeyboard && FSOEnvironment.SoftwareDepth && state.InputManager.GetFocus() == this) state.InputManager.SetFocus(null);
             if (m_IsReadOnly) { return; }
+
+            // Mouse wheel scrolling
+            if (IsFocused && state.MouseWheelDelta != 0)
+            {
+                VerticalScrollPosition -= state.MouseWheelDelta;
+                if (m_Slider != null)
+                    m_Slider.Value = VerticalScrollPosition;
+            }
 
             if (FlashOnEmpty)
             {

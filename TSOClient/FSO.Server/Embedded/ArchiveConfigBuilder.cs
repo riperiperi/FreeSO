@@ -26,7 +26,7 @@ namespace FSO.Server.Embedded
                 Database = new Database.DatabaseConfiguration()
                 {
                     Engine = "sqlite",
-                    ConnectionString = $"Data Source={dbPath};Version=3;UTF8Encoding=True",
+                    ConnectionString = $"Data Source={dbPath}",
                 },
                 
                 Services = new ServerConfigurationservices()
