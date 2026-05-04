@@ -841,6 +841,27 @@ public sealed class BotCmdHandler
     internal static TaxResidentResult[] ExecuteTaxDebit(string connStr, uint nhoodId, double taxRatePercent)
     {
         using var ctx = new MySqlContext(connStr);
+        return ExecuteTaxDebit(ctx, nhoodId, taxRatePercent);
+    }
+
+    /// <summary>
+    /// Core tax-debit loop. Accepts any <see cref="ISqlContext"/> — the caller owns the
+    /// context's lifetime. Exposed <c>internal</c> so unit tests can pass a SQLite-backed
+    /// context (no MariaDB required) while exercising the full debit formula, the
+    /// <c>dest=uint.MaxValue</c> economy-sink path, and the <c>reason=9</c> log-skip.
+    ///
+    /// <para>
+    /// Invariants (verified by unit tests in FSO.Bot.Headless.Tests):
+    /// <list type="number">
+    ///   <item>debit = floor(budget * taxRatePercent / 100.0), minimum 0.</item>
+    ///   <item>dest = uint.MaxValue → no avatar is credited; money leaves the economy.</item>
+    ///   <item>reason = 9 (MiscExpense) → fso_transactions INSERT is suppressed.</item>
+    ///   <item>budget = 0 → debit = 0 → resident skipped (no transaction).</item>
+    /// </list>
+    /// </para>
+    /// </summary>
+    internal static TaxResidentResult[] ExecuteTaxDebit(ISqlContext ctx, uint nhoodId, double taxRatePercent)
+    {
         var avatars = new SqlAvatars(ctx);
 
         // 1. Get all resident avatar_ids for this neighborhood.
