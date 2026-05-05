@@ -14,6 +14,7 @@ import (
 	"path/filepath"
 	"strings"
 	"sync"
+	"time"
 
 	"github.com/campfire-net/campfire/pkg/convention"
 )
@@ -312,4 +313,10 @@ func IsCommunityGated(lotID uint32) bool {
 		}
 	}
 	return false
+}
+
+// nowUnixMs returns the current time in unix milliseconds.
+// Moved here from zoning_handlers.go (freesoexperiment-c7f: zoning dropped).
+func nowUnixMs() int64 {
+	return time.Now().UnixMilli()
 }
