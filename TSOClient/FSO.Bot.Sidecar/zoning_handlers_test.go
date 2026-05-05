@@ -40,12 +40,18 @@ func withZoningFile(t *testing.T) (path string) {
 	return path
 }
 
+// mayorAugmentor returns a PerceptionAugmentor with is_mayor=true cached.
+// Shared by zoning tests that need to pass the mayor auth check.
+func mayorAugmentor(t *testing.T) *PerceptionAugmentor {
+	t.Helper()
+	aug := NewPerceptionAugmentor()
+	aug.AugmentPerception([]byte(`{"kind":"perception","mayor_status":{"is_mayor":true,"mayor_nhood":1}}`))
+	return aug
+}
+
 // TestSetZoningMissingZoneType asserts that a missing zone_type returns INVALID_ZONE_TYPE.
 func TestSetZoningMissingZoneType(t *testing.T) {
-	os.Setenv("FSO_MAYOR_NHOOD", "1")
-	t.Cleanup(func() { os.Unsetenv("FSO_MAYOR_NHOOD") })
-
-	handler := setZoningHandler(nil)
+	handler := setZoningHandler(mayorAugmentor(t))
 	ctx, cancel := context.WithTimeout(context.Background(), 2*time.Second)
 	defer cancel()
 
@@ -66,10 +72,7 @@ func TestSetZoningMissingZoneType(t *testing.T) {
 
 // TestSetZoningInvalidZoneType asserts that an unknown zone_type returns INVALID_ZONE_TYPE.
 func TestSetZoningInvalidZoneType(t *testing.T) {
-	os.Setenv("FSO_MAYOR_NHOOD", "1")
-	t.Cleanup(func() { os.Unsetenv("FSO_MAYOR_NHOOD") })
-
-	handler := setZoningHandler(nil)
+	handler := setZoningHandler(mayorAugmentor(t))
 	ctx, cancel := context.WithTimeout(context.Background(), 2*time.Second)
 	defer cancel()
 
@@ -91,16 +94,13 @@ func TestSetZoningInvalidZoneType(t *testing.T) {
 
 // TestSetZoningInvalidBounds asserts that x2 < x1 or y2 < y1 returns INVALID_BOUNDS.
 func TestSetZoningInvalidBounds(t *testing.T) {
-	os.Setenv("FSO_MAYOR_NHOOD", "1")
-	t.Cleanup(func() { os.Unsetenv("FSO_MAYOR_NHOOD") })
-
 	cases := []map[string]any{
 		{"x1": float64(200), "y1": float64(100), "x2": float64(100), "y2": float64(200)}, // x2 < x1
 		{"x1": float64(100), "y1": float64(200), "x2": float64(200), "y2": float64(100)}, // y2 < y1
 	}
 	for _, bounds := range cases {
 		bounds["zone_type"] = "residential"
-		handler := setZoningHandler(nil)
+		handler := setZoningHandler(mayorAugmentor(t))
 		ctx, cancel := context.WithTimeout(context.Background(), 2*time.Second)
 		defer cancel()
 
@@ -118,11 +118,12 @@ func TestSetZoningInvalidBounds(t *testing.T) {
 	}
 }
 
-// TestSetZoningNoAuth asserts that a non-mayor (FSO_MAYOR_NHOOD unset) gets NO_AUTH.
+// TestSetZoningNoAuth asserts that a non-mayor (augmentor with is_mayor=false) gets NO_AUTH.
 func TestSetZoningNoAuth(t *testing.T) {
-	os.Unsetenv("FSO_MAYOR_NHOOD")
+	// Augmentor with zero value: IsMayor=false.
+	augmentor := NewPerceptionAugmentor()
 
-	handler := setZoningHandler(nil)
+	handler := setZoningHandler(augmentor)
 	ctx, cancel := context.WithTimeout(context.Background(), 2*time.Second)
 	defer cancel()
 

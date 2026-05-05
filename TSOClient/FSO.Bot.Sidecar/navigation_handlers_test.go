@@ -17,6 +17,14 @@ import (
 	"github.com/campfire-net/campfire/pkg/convention"
 )
 
+// newMayorAugmentor returns a PerceptionAugmentor with is_mayor=true cached.
+// Used in test setup steps that call grant-community-access on behalf of a mayor.
+func newMayorAugmentor() *PerceptionAugmentor {
+	aug := NewPerceptionAugmentor()
+	aug.AugmentPerception([]byte(`{"kind":"perception","mayor_status":{"is_mayor":true,"mayor_nhood":1}}`))
+	return aug
+}
+
 // TestGoHomeHandlerDispatchesIPC asserts the go-home convention handler sends
 // an IPC command with op="go-home" and no args, and surfaces the bot's
 // already_home payload back to the caller.
@@ -559,11 +567,10 @@ func TestVisitLotHandlerCommunityAccessBlocked(t *testing.T) {
 	withSharedDataHome(t, tmp)
 
 	// Grant access to lot 17 for "botrous" only (not "ellis").
-	// Use FSO_MAYOR_NHOOD to authorise the grant handler.
-	os.Setenv("FSO_MAYOR_NHOOD", "1")
-	t.Cleanup(func() { os.Unsetenv("FSO_MAYOR_NHOOD") })
+	// Use a mayor augmentor to authorise the grant handler.
+	grantAug := newMayorAugmentor()
 
-	grantHandler := grantCommunityAccessHandler(nil)
+	grantHandler := grantCommunityAccessHandler(grantAug)
 	ctx, cancel := context.WithTimeout(context.Background(), 5*time.Second)
 	defer cancel()
 
@@ -650,10 +657,8 @@ func TestVisitLotHandlerCommunityAccessGranted(t *testing.T) {
 	withSharedDataHome(t, tmp)
 
 	// Grant botrous access to lot 17.
-	os.Setenv("FSO_MAYOR_NHOOD", "1")
-	t.Cleanup(func() { os.Unsetenv("FSO_MAYOR_NHOOD") })
-
-	grantHandler := grantCommunityAccessHandler(nil)
+	grantAug := newMayorAugmentor()
+	grantHandler := grantCommunityAccessHandler(grantAug)
 	ctx, cancel := context.WithTimeout(context.Background(), 5*time.Second)
 	defer cancel()
 
@@ -743,10 +748,8 @@ func TestVisitLotHandlerNonCommunityLotPassesThrough(t *testing.T) {
 	withSharedDataHome(t, tmp)
 
 	// Grant community access for lot 17 (but we'll be visiting lot 99 = non-community).
-	os.Setenv("FSO_MAYOR_NHOOD", "1")
-	t.Cleanup(func() { os.Unsetenv("FSO_MAYOR_NHOOD") })
-
-	grantHandler := grantCommunityAccessHandler(nil)
+	grantAug := newMayorAugmentor()
+	grantHandler := grantCommunityAccessHandler(grantAug)
 	ctx, cancel := context.WithTimeout(context.Background(), 5*time.Second)
 	defer cancel()
 

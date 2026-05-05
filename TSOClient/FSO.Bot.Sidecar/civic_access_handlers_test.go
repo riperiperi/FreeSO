@@ -58,24 +58,18 @@ func TestGrantCommunityAccessMissingPersona(t *testing.T) {
 	}
 }
 
-// TestGrantCommunityAccessNoAuth asserts that a non-mayor gets NO_AUTH.
-// Uses --no-bot mode with FSO_MAYOR_NHOOD unset (or "0").
+// TestGrantCommunityAccessNoAuth asserts that a non-mayor (augmentor with
+// is_mayor=false cached) gets NO_AUTH.
 func TestGrantCommunityAccessNoAuth(t *testing.T) {
 	tmp := t.TempDir()
 	withFSO_USER(t, "grant-access-noauth-test")
 	withConfigHome(t, tmp)
 	withSharedDataHome(t, tmp)
 
-	// Ensure FSO_MAYOR_NHOOD is not set.
-	prior, hasPrior := os.LookupEnv("FSO_MAYOR_NHOOD")
-	os.Unsetenv("FSO_MAYOR_NHOOD")
-	t.Cleanup(func() {
-		if hasPrior {
-			os.Setenv("FSO_MAYOR_NHOOD", prior)
-		}
-	})
+	// Augmentor with zero value: IsMayor=false.
+	augmentor := NewPerceptionAugmentor()
 
-	handler := grantCommunityAccessHandler(nil) // nil = --no-bot, falls back to env
+	handler := grantCommunityAccessHandler(augmentor)
 	ctx, cancel := context.WithTimeout(context.Background(), 2*time.Second)
 	defer cancel()
 
@@ -92,6 +86,37 @@ func TestGrantCommunityAccessNoAuth(t *testing.T) {
 	}
 	if payload["reason"] != "NO_AUTH" {
 		t.Errorf("want reason=NO_AUTH, got %v", payload["reason"])
+	}
+}
+
+// TestGrantCommunityAccessNilAugmentor asserts that a nil augmentor (perception
+// not yet established) causes the handler to fail closed with an error message
+// — not a silent NO_AUTH.
+func TestGrantCommunityAccessNilAugmentor(t *testing.T) {
+	tmp := t.TempDir()
+	withFSO_USER(t, "grant-access-nilaugmentor-test")
+	withConfigHome(t, tmp)
+	withSharedDataHome(t, tmp)
+
+	handler := grantCommunityAccessHandler(nil) // nil augmentor = perception not established
+	ctx, cancel := context.WithTimeout(context.Background(), 2*time.Second)
+	defer cancel()
+
+	resp, err := handler(ctx, &convention.Request{Args: map[string]any{
+		"lot_id":       float64(17),
+		"persona_name": "botrous",
+	}})
+	if err != nil {
+		t.Fatalf("handler error: %v", err)
+	}
+	payload, _ := resp.Payload.(map[string]any)
+	if payload["ok"] != false {
+		t.Errorf("want ok=false for nil augmentor, got %v", payload)
+	}
+	// The error field must contain the "perception not yet established" message.
+	errMsg, _ := payload["error"].(string)
+	if errMsg == "" {
+		t.Errorf("want non-empty error message for nil augmentor, got payload=%v", payload)
 	}
 }
 
@@ -173,18 +198,11 @@ func TestGrantCommunityAccessSuccessPath(t *testing.T) {
 	withConfigHome(t, tmp)
 	withSharedDataHome(t, tmp)
 
-	// Mayor via FSO_MAYOR_NHOOD env (no bot needed for mayor check).
-	prior, hasPrior := os.LookupEnv("FSO_MAYOR_NHOOD")
-	os.Setenv("FSO_MAYOR_NHOOD", "1")
-	t.Cleanup(func() {
-		if hasPrior {
-			os.Setenv("FSO_MAYOR_NHOOD", prior)
-		} else {
-			os.Unsetenv("FSO_MAYOR_NHOOD")
-		}
-	})
+	// Mayor via augmentor with is_mayor=true cached from a synthetic perception tick.
+	augmentor := NewPerceptionAugmentor()
+	augmentor.AugmentPerception([]byte(`{"kind":"perception","mayor_status":{"is_mayor":true,"mayor_nhood":1}}`))
 
-	handler := grantCommunityAccessHandler(nil) // nil = no bot, uses FSO_MAYOR_NHOOD
+	handler := grantCommunityAccessHandler(augmentor)
 	ctx, cancel := context.WithTimeout(context.Background(), 3*time.Second)
 	defer cancel()
 
@@ -257,10 +275,10 @@ func TestGrantCommunityAccessWildcard(t *testing.T) {
 	withConfigHome(t, tmp)
 	withSharedDataHome(t, tmp)
 
-	os.Setenv("FSO_MAYOR_NHOOD", "1")
-	t.Cleanup(func() { os.Unsetenv("FSO_MAYOR_NHOOD") })
+	augmentor := NewPerceptionAugmentor()
+	augmentor.AugmentPerception([]byte(`{"kind":"perception","mayor_status":{"is_mayor":true,"mayor_nhood":1}}`))
 
-	handler := grantCommunityAccessHandler(nil)
+	handler := grantCommunityAccessHandler(augmentor)
 	ctx, cancel := context.WithTimeout(context.Background(), 3*time.Second)
 	defer cancel()
 
@@ -296,10 +314,10 @@ func TestGrantCommunityAccessIdempotent(t *testing.T) {
 	withConfigHome(t, tmp)
 	withSharedDataHome(t, tmp)
 
-	os.Setenv("FSO_MAYOR_NHOOD", "1")
-	t.Cleanup(func() { os.Unsetenv("FSO_MAYOR_NHOOD") })
+	augmentor := NewPerceptionAugmentor()
+	augmentor.AugmentPerception([]byte(`{"kind":"perception","mayor_status":{"is_mayor":true,"mayor_nhood":1}}`))
 
-	handler := grantCommunityAccessHandler(nil)
+	handler := grantCommunityAccessHandler(augmentor)
 	ctx, cancel := context.WithTimeout(context.Background(), 5*time.Second)
 	defer cancel()
 
@@ -400,9 +418,9 @@ func TestCrossPersonaGrant(t *testing.T) {
 	// XDG_DATA_HOME → shared dir isolation for community-access.json.
 	withSharedDataHome(t, tmp)
 
-	// Mayor env var for grant authorization (no bot needed).
-	os.Setenv("FSO_MAYOR_NHOOD", "1")
-	t.Cleanup(func() { os.Unsetenv("FSO_MAYOR_NHOOD") })
+	// Mayor augmentor with is_mayor=true for grant authorization.
+	mayorAugmentor := NewPerceptionAugmentor()
+	mayorAugmentor.AugmentPerception([]byte(`{"kind":"perception","mayor_status":{"is_mayor":true,"mayor_nhood":1}}`))
 
 	ctx, cancel := context.WithTimeout(context.Background(), 5*time.Second)
 	defer cancel()
@@ -412,7 +430,7 @@ func TestCrossPersonaGrant(t *testing.T) {
 	withFSO_USER(t, "baron")
 	withConfigHome(t, tmp) // baron's persona state goes to tmp/freeso-souls/baron/
 
-	grantHandler := grantCommunityAccessHandler(nil)
+	grantHandler := grantCommunityAccessHandler(mayorAugmentor)
 	grantResp, err := grantHandler(ctx, &convention.Request{Args: map[string]any{
 		"lot_id":       float64(17),
 		"persona_name": "ellis",

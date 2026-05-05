@@ -32,8 +32,8 @@ import (
 // same machine share this directory.
 //
 // Authorization: mayor-only (freesoexperiment-ea0). Mayor status is read from
-// the latest perception tick cached in augmentor.LatestMayorStatus(). Falls
-// back to FSO_MAYOR_NHOOD env var when augmentor is nil (--no-bot mode).
+// the latest perception tick cached in augmentor.LatestMayorStatus(). Fails
+// closed when augmentor is nil or has no cached mayor_status.
 //
 // Persistence: community-access.json survives sidecar restarts. Format: array
 // of CommunityAccessGrant.
@@ -101,7 +101,7 @@ var communityAccessMu sync.Mutex
 //
 // Flow:
 //  1. Validate lot_id and persona_name.
-//  2. Verify caller is mayor via augmentor.LatestMayorStatus() (or FSO_MAYOR_NHOOD fallback).
+//  2. Verify caller is mayor via augmentor.LatestMayorStatus().
 //  3. Append grant to community-access.json under PersonaStateDir().
 //  4. Return {ok, lot_id, persona_name, grant_count}.
 func grantCommunityAccessHandler(augmentor *PerceptionAugmentor) convention.HandlerFunc {
@@ -139,7 +139,6 @@ func grantCommunityAccessHandler(augmentor *PerceptionAugmentor) convention.Hand
 
 		// --- Step 3: mayor authorization ---
 		// Read from latest perception tick (freesoexperiment-ea0).
-		// Fall back to FSO_MAYOR_NHOOD env var when augmentor is nil (--no-bot mode).
 		isMayor, authErr := checkMayorAuthorization(augmentor)
 		if authErr != nil {
 			return &convention.Response{
@@ -209,19 +208,15 @@ func grantCommunityAccessHandler(augmentor *PerceptionAugmentor) convention.Hand
 
 // checkMayorAuthorization returns true if the current avatar is the neighborhood
 // mayor. It reads from the latest perception tick cached in augmentor
-// (freesoexperiment-ea0). Falls back to FSO_MAYOR_NHOOD env var when augmentor
-// is nil (--no-bot / test mode).
+// (freesoexperiment-ea0). Fails closed when augmentor is nil or has no cached
+// mayor_status — returns (false, error) so callers surface "perception not yet
+// established" rather than silently denying or allowing.
 func checkMayorAuthorization(augmentor *PerceptionAugmentor) (bool, error) {
-	if augmentor != nil {
-		ms := augmentor.LatestMayorStatus()
-		return ms.IsMayor, nil
+	if augmentor == nil {
+		return false, fmt.Errorf("perception not yet established (augmentor is nil)")
 	}
-	// --no-bot fallback: check FSO_MAYOR_NHOOD env var.
-	mayorNhood := strings.TrimSpace(os.Getenv("FSO_MAYOR_NHOOD"))
-	if mayorNhood == "" || mayorNhood == "0" {
-		return false, nil
-	}
-	return true, nil
+	ms := augmentor.LatestMayorStatus()
+	return ms.IsMayor, nil
 }
 
 // readCommunityAccess reads the machine-global community-access.json file.
