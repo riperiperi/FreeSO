@@ -16,7 +16,8 @@ namespace FSO.Common
             set
             {
                 _DirectX = value;
-                PxOffset2D = _DirectX ? 0 : 0.5f;
+                // MacOS opengl drivers seem to have broken texel centers.
+                PxOffset2D = (_DirectX || !OperatingSystem.IsMacOS()) ? 0 : 0.5f;
             }
         }
         public static bool Linux = false;
