@@ -52,6 +52,14 @@ int intMod(int value, int mod) {
 	return value - ((value / mod) * mod);
 }
 
+float alpha8(float4 value) {
+#if OPENGL
+    return value.r;
+#else
+    return value.a;
+#endif
+}
+
 float4 encodeUV(float2 uv) {
 	int2 coord = int2(uv * ImageSize);
 
@@ -155,7 +163,7 @@ technique JumpFloodFinal {
 int EdgeValue;
 
 bool hasEdgeValue(float2 texCoord) {
-	float valueF = tex2D(TextureSampler, texCoord).a;
+	float valueF = alpha8(tex2D(TextureSampler, texCoord));
 	int value = int(round(valueF * 255.0));
 
 	return value == EdgeValue || value == 255;
@@ -169,7 +177,7 @@ float4 cityEdgeDetect(VertexOut v) : COLOR0
 	  float2 size = ImageSize;
 	  float2 invSize = 1.0 / size;
 		if (!hasEdgeValue(texCoord + float2(invSize.x, 0.0)) || !hasEdgeValue(texCoord - float2(invSize.x, 0.0)) || !hasEdgeValue(texCoord + float2(0.0, invSize.y)) || !hasEdgeValue(texCoord - float2(0.0, invSize.y))) {
-			float value = tex2D(TextureSampler, texCoord).a;
+			float value = alpha8(tex2D(TextureSampler, texCoord));
 			return float4(value, value, value, value);
 		}
 	}
@@ -222,7 +230,7 @@ float getTerrain(float2 texCoord) {
 
   texCoord.x = clamp(texCoord.x, xStart, xEnd);
 
-  return tex2D(TerrainSampler, texCoord).a;
+  return alpha8(tex2D(TerrainSampler, texCoord));
 }
 
 float getSignedDistance(float2 texCoord) {
@@ -266,14 +274,14 @@ float lightingTerm(float3 normal, float3 lightDir) {
 }
 
 float3 posAt(float2 texCoord) {
-	return float3(texCoord.x, texCoord.y, tex2D(TextureSampler, texCoord).a * TerrainScale);
+	return float3(texCoord.x, texCoord.y, alpha8(tex2D(TextureSampler, texCoord)) * TerrainScale);
 }
 
 float SpecularPower;
 float SpecularIntensity;
 
 bool isOOB(float2 texCoord) {
-	float value = tex2D(TerrainSampler, texCoord).a;
+	float value = alpha8(tex2D(TerrainSampler, texCoord));
 
 	return value == 1;
 }
@@ -372,7 +380,7 @@ float4 forestOverlay(VertexOut v) : COLOR0
 	float2 texCoord = v.texCoord;
 
   float4 color = float4(Color.rgb, 1.0);
-  float a = tex2D(TextureSampler, texCoord).a * 0.75 * Color.a;
+  float a = tex2D(TextureSampler, texCoord).a * 0.75 * Color.a; // Forest density is RGBA
 
 	float value = getTerrain(texCoord);
 	int type = int(round(value * 255));

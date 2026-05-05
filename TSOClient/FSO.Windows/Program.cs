@@ -61,7 +61,7 @@ namespace FSO.Windows
                     var bindThread = new Thread(x =>
                     {
                         var form = System.Windows.Forms.Form.FromHandle(window) as System.Windows.Forms.Form;
-                        form.BeginInvoke(() =>
+                        form?.BeginInvoke(() =>
                         {
                             form.AllowDrop = true;
                             form.DragEnter += (sender, e) =>
