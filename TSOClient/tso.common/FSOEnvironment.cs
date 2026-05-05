@@ -9,9 +9,22 @@ namespace FSO.Common
         public static string ContentDir = "Content/";
         public static string UserDir = "Content/";
         public static string GFXContentDir = "Content/OGL";
-        public static bool DirectX = false;
+        private static bool _DirectX = false;
+        public static bool DirectX
+        {
+            get { return _DirectX; }
+            set
+            {
+                _DirectX = value;
+                PxOffset2D = _DirectX ? 0 : 0.5f;
+            }
+        }
         public static bool Linux = false;
         public static bool UseMRT = true;
+        /// <summary>
+        /// Some platforms require a UV offset to realign pixel centers to avoid visual issues in 2D mode.
+        /// </summary>
+        public static float PxOffset2D = 0f;
         /// <summary>
         /// True if system does not support gl_FragDepth (eg. iOS). Uses alternate pipeline that abuses stencil buffer.
         /// </summary>
