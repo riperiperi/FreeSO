@@ -17,14 +17,6 @@ import (
 	"github.com/campfire-net/campfire/pkg/convention"
 )
 
-// newMayorAugmentor returns a PerceptionAugmentor with is_mayor=true cached.
-// Used in test setup steps that call grant-community-access on behalf of a mayor.
-func newMayorAugmentor() *PerceptionAugmentor {
-	aug := NewPerceptionAugmentor()
-	aug.AugmentPerception([]byte(`{"kind":"perception","mayor_status":{"is_mayor":true,"mayor_nhood":1}}`))
-	return aug
-}
-
 // TestGoHomeHandlerDispatchesIPC asserts the go-home convention handler sends
 // an IPC command with op="go-home" and no args, and surfaces the bot's
 // already_home payload back to the caller.
@@ -110,7 +102,6 @@ func TestVisitLotHandlerHexFallback(t *testing.T) {
 	tmp := t.TempDir()
 	withFSO_USER(t, "visit-lot-test-hex")
 	withConfigHome(t, tmp)
-	withSharedDataHome(t, tmp)
 
 	fake := newFakeBotProcess()
 	ipc := NewIPC(fake.bot)
@@ -205,7 +196,6 @@ func TestVisitLotHandlerMyNameShape(t *testing.T) {
 	tmp := t.TempDir()
 	withFSO_USER(t, "visit-lot-test-name")
 	withConfigHome(t, tmp)
-	withSharedDataHome(t, tmp)
 
 	fake := newFakeBotProcess()
 	ipc := NewIPC(fake.bot)
@@ -434,7 +424,6 @@ func TestVisitLotHandlerWriteNextLotBeforeExit(t *testing.T) {
 	tmp := t.TempDir()
 	withFSO_USER(t, "visit-lot-ordering-test")
 	withConfigHome(t, tmp)
-	withSharedDataHome(t, tmp)
 
 	fake := newFakeBotProcess()
 	ipc := NewIPC(fake.bot)
@@ -552,272 +541,6 @@ func TestFindAvatarHandlerDispatchesIPC(t *testing.T) {
 	}
 }
 
-// TestVisitLotHandlerCommunityAccessBlocked is the primary integration test for
-// freesoexperiment-381 (M1 finding). It asserts that visit-lot returns
-// ok:false + reason=COMMUNITY_ACCESS_DENIED when:
-//   - probe-lot returns FOUND with a lot_id that is community-gated
-//   - the calling persona (FSO_USER) has NOT been granted access
-//
-// Mutation evidence: the gate fires before WriteNextLot — no next-lot file is
-// written and no bot-exit-request reaches the bot.
-func TestVisitLotHandlerCommunityAccessBlocked(t *testing.T) {
-	tmp := t.TempDir()
-	withFSO_USER(t, "ellis") // caller is Ellis, who has no grant
-	withConfigHome(t, tmp)
-	withSharedDataHome(t, tmp)
-
-	// Grant access to lot 17 for "botrous" only (not "ellis").
-	// Use a mayor augmentor to authorise the grant handler.
-	grantAug := newMayorAugmentor()
-
-	grantHandler := grantCommunityAccessHandler(grantAug)
-	ctx, cancel := context.WithTimeout(context.Background(), 5*time.Second)
-	defer cancel()
-
-	grantResp, err := grantHandler(ctx, &convention.Request{Args: map[string]any{
-		"lot_id":       float64(17),
-		"persona_name": "botrous",
-	}})
-	if err != nil {
-		t.Fatalf("grant-community-access: %v", err)
-	}
-	grantPayload, _ := grantResp.Payload.(map[string]any)
-	if grantPayload["ok"] != true {
-		t.Fatalf("grant-community-access failed (prerequisite): %v", grantPayload)
-	}
-	// Confirm lot 17 is now community-gated and Ellis lacks access.
-	if !IsCommunityGated(17) {
-		t.Fatal("IsCommunityGated(17) should be true after grant for botrous")
-	}
-	if HasCommunityAccess(17, "ellis") {
-		t.Fatal("HasCommunityAccess(17, ellis) should be false before any grant for ellis")
-	}
-
-	fake := newFakeBotProcess()
-	ipc := NewIPC(fake.bot)
-	pump := NewBotCmdPump(fake.bot)
-	store := NewMemoryStore()
-
-	// Stub: probe-lot returns FOUND with lot_id=17 (the community-gated lot).
-	// The handler must block on the community-access check and never send bot-exit-request.
-	go func() {
-		line := <-fake.stdinLines
-		var req BotCmdRequest
-		if err := json.Unmarshal(line, &req); err != nil {
-			t.Errorf("unmarshal probe-lot req: %v", err)
-			return
-		}
-		if req.Cmd != "probe-lot" {
-			t.Errorf("want cmd=probe-lot, got %q", req.Cmd)
-		}
-		pump.Deliver(mustMarshal(map[string]any{
-			"kind":           "bot-cmd-reply",
-			"correlation_id": req.CorrelationID,
-			"ok":             true,
-			"data":           map[string]any{"status": "FOUND", "lot_id": 17},
-		}))
-		// Drain any further stdin (should be none — handler must stop after DENIED).
-		for range fake.stdinLines {
-		}
-	}()
-
-	handler := visitLotHandler(ipc, pump, store)
-	resp, err := handler(ctx, &convention.Request{Args: map[string]any{
-		"target_lot_location": "0x00110F00",
-	}})
-	if err != nil {
-		t.Fatalf("handler error: %v", err)
-	}
-	payload, _ := resp.Payload.(map[string]any)
-	if payload["ok"] != false {
-		t.Errorf("want ok=false for community-access denied, got %v: %v", payload["ok"], payload)
-	}
-	if payload["reason"] != "COMMUNITY_ACCESS_DENIED" {
-		t.Errorf("want reason=COMMUNITY_ACCESS_DENIED, got %v", payload["reason"])
-	}
-
-	// MUTATION EVIDENCE: next-lot must NOT have been written (gate fires before WriteNextLot).
-	dir := filepath.Join(tmp, "freeso-souls", "ellis")
-	nextLotPath := filepath.Join(dir, "next-lot")
-	if _, err := os.Stat(nextLotPath); err == nil {
-		t.Error("GATE BYPASSED: next-lot file was written despite COMMUNITY_ACCESS_DENIED — gate must block before WriteNextLot")
-	}
-	t.Logf("BLOCKED: community-access denied for ellis on lot 17 — next-lot not written, bot-exit-request not sent: %v", payload)
-}
-
-// TestVisitLotHandlerCommunityAccessGranted asserts that visit-lot proceeds
-// normally (probe → WriteNextLot → bot-exit-request) when the calling persona
-// has been granted access to a community-gated lot.
-//
-// Done condition: ok:true, probe_status=FOUND, next-lot written.
-func TestVisitLotHandlerCommunityAccessGranted(t *testing.T) {
-	tmp := t.TempDir()
-	withFSO_USER(t, "botrous") // Botrous has a grant for lot 17
-	withConfigHome(t, tmp)
-	withSharedDataHome(t, tmp)
-
-	// Grant botrous access to lot 17.
-	grantAug := newMayorAugmentor()
-	grantHandler := grantCommunityAccessHandler(grantAug)
-	ctx, cancel := context.WithTimeout(context.Background(), 5*time.Second)
-	defer cancel()
-
-	grantResp, err := grantHandler(ctx, &convention.Request{Args: map[string]any{
-		"lot_id":       float64(17),
-		"persona_name": "botrous",
-	}})
-	if err != nil {
-		t.Fatalf("grant-community-access: %v", err)
-	}
-	grantPayload, _ := grantResp.Payload.(map[string]any)
-	if grantPayload["ok"] != true {
-		t.Fatalf("grant-community-access failed (prerequisite): %v", grantPayload)
-	}
-	if !HasCommunityAccess(17, "botrous") {
-		t.Fatal("HasCommunityAccess(17, botrous) should be true after grant")
-	}
-
-	fake := newFakeBotProcess()
-	ipc := NewIPC(fake.bot)
-	pump := NewBotCmdPump(fake.bot)
-	store := NewMemoryStore()
-
-	// Stub: probe-lot → FOUND with lot_id=17, then bot-exit-request → accepted.
-	go func() {
-		line1 := <-fake.stdinLines
-		var req1 BotCmdRequest
-		if err := json.Unmarshal(line1, &req1); err != nil {
-			t.Errorf("unmarshal probe-lot req: %v", err)
-			return
-		}
-		pump.Deliver(mustMarshal(map[string]any{
-			"kind":           "bot-cmd-reply",
-			"correlation_id": req1.CorrelationID,
-			"ok":             true,
-			"data":           map[string]any{"status": "FOUND", "lot_id": 17},
-		}))
-
-		line2 := <-fake.stdinLines
-		var req2 BotCmdRequest
-		if err := json.Unmarshal(line2, &req2); err != nil {
-			t.Errorf("unmarshal bot-exit req: %v", err)
-			return
-		}
-		if req2.Cmd != "bot-exit-request" {
-			t.Errorf("want cmd=bot-exit-request, got %q", req2.Cmd)
-		}
-		pump.Deliver(mustMarshal(map[string]any{
-			"kind":           "bot-cmd-reply",
-			"correlation_id": req2.CorrelationID,
-			"ok":             true,
-			"data":           map[string]any{"accepted": true},
-		}))
-	}()
-
-	handler := visitLotHandler(ipc, pump, store)
-	resp, err := handler(ctx, &convention.Request{Args: map[string]any{
-		"target_lot_location": "0x00110F00",
-	}})
-	if err != nil {
-		t.Fatalf("handler error: %v", err)
-	}
-	payload, _ := resp.Payload.(map[string]any)
-	if payload["ok"] != true {
-		t.Errorf("want ok=true for granted botrous on community lot 17, got %v: %v", payload["ok"], payload)
-	}
-	if payload["probe_status"] != "FOUND" {
-		t.Errorf("want probe_status=FOUND, got %v", payload["probe_status"])
-	}
-
-	// GRANT PATH EVIDENCE: next-lot must have been written.
-	dir := filepath.Join(tmp, "freeso-souls", "botrous")
-	data, err := os.ReadFile(filepath.Join(dir, "next-lot"))
-	if err != nil {
-		t.Fatalf("next-lot not written (gate passed but WriteNextLot invariant violated): %v", err)
-	}
-	t.Logf("GRANTED: botrous on lot 17 — next-lot=%q, response=%v", data, payload)
-}
-
-// TestVisitLotHandlerNonCommunityLotPassesThrough asserts that a lot with no
-// community-access grants (ordinary residential lot) is not blocked by the
-// community-access gate even when community-access.json exists for other lots.
-func TestVisitLotHandlerNonCommunityLotPassesThrough(t *testing.T) {
-	tmp := t.TempDir()
-	withFSO_USER(t, "marlo") // persona with no grant
-	withConfigHome(t, tmp)
-	withSharedDataHome(t, tmp)
-
-	// Grant community access for lot 17 (but we'll be visiting lot 99 = non-community).
-	grantAug := newMayorAugmentor()
-	grantHandler := grantCommunityAccessHandler(grantAug)
-	ctx, cancel := context.WithTimeout(context.Background(), 5*time.Second)
-	defer cancel()
-
-	grantResp, err := grantHandler(ctx, &convention.Request{Args: map[string]any{
-		"lot_id":       float64(17), // gating lot 17, NOT lot 99
-		"persona_name": "botrous",
-	}})
-	if err != nil {
-		t.Fatalf("grant-community-access: %v", err)
-	}
-	grantPayload, _ := grantResp.Payload.(map[string]any)
-	if grantPayload["ok"] != true {
-		t.Fatalf("grant-community-access failed: %v", grantPayload)
-	}
-
-	// Lot 99 is not gated — no grants for it.
-	if IsCommunityGated(99) {
-		t.Fatal("IsCommunityGated(99) should be false (no grants for lot 99)")
-	}
-
-	fake := newFakeBotProcess()
-	ipc := NewIPC(fake.bot)
-	pump := NewBotCmdPump(fake.bot)
-	store := NewMemoryStore()
-
-	// Stub: probe-lot → FOUND with lot_id=99 (non-community lot), then bot-exit-request.
-	go func() {
-		line1 := <-fake.stdinLines
-		var req1 BotCmdRequest
-		if err := json.Unmarshal(line1, &req1); err != nil {
-			t.Errorf("unmarshal probe-lot req: %v", err)
-			return
-		}
-		pump.Deliver(mustMarshal(map[string]any{
-			"kind":           "bot-cmd-reply",
-			"correlation_id": req1.CorrelationID,
-			"ok":             true,
-			"data":           map[string]any{"status": "FOUND", "lot_id": 99},
-		}))
-
-		line2 := <-fake.stdinLines
-		var req2 BotCmdRequest
-		if err := json.Unmarshal(line2, &req2); err != nil {
-			t.Errorf("unmarshal bot-exit req: %v", err)
-			return
-		}
-		pump.Deliver(mustMarshal(map[string]any{
-			"kind":           "bot-cmd-reply",
-			"correlation_id": req2.CorrelationID,
-			"ok":             true,
-			"data":           map[string]any{"accepted": true},
-		}))
-	}()
-
-	handler := visitLotHandler(ipc, pump, store)
-	resp, err := handler(ctx, &convention.Request{Args: map[string]any{
-		"target_lot_location": "0x00630000",
-	}})
-	if err != nil {
-		t.Fatalf("handler error: %v", err)
-	}
-	payload, _ := resp.Payload.(map[string]any)
-	if payload["ok"] != true {
-		t.Errorf("want ok=true for non-community lot 99 (marlo has no grant but lot is not gated), got %v: %v", payload["ok"], payload)
-	}
-	t.Logf("PASS: non-community lot 99 passes through for marlo: %v", payload)
-}
-
 // mustMarshal marshals v to JSON and panics on error. Test-only helper.
 func mustMarshal(v any) []byte {
 	b, err := json.Marshal(v)
@@ -826,3 +549,4 @@ func mustMarshal(v any) []byte {
 	}
 	return b
 }
+

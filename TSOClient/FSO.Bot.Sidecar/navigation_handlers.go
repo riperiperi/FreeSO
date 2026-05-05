@@ -11,8 +11,6 @@ import (
 	"encoding/json"
 	"fmt"
 	"log"
-	"os"
-	"strings"
 
 	"github.com/campfire-net/campfire/pkg/convention"
 )
@@ -160,27 +158,9 @@ func visitLotHandler(ipc *IPC, botCmds *BotCmdPump, store *MemoryStore) conventi
 			}, nil
 		}
 
-		// freesoexperiment-381: community-access gate.
-		// If the target lot is community-gated, the calling persona must have a grant.
-		// Persona identity = FSO_USER (lowercased). Lots without any grant entries are
-		// ordinary residential lots and pass through unconditionally.
-		if probeData.LotID != 0 && IsCommunityGated(probeData.LotID) {
-			persona := strings.ToLower(strings.TrimSpace(os.Getenv("FSO_USER")))
-			if !HasCommunityAccess(probeData.LotID, persona) {
-				return &convention.Response{
-					Payload: map[string]any{
-						"ok":           false,
-						"error":        "COMMUNITY_ACCESS_DENIED",
-						"reason":       "COMMUNITY_ACCESS_DENIED",
-						"lot_id":       probeData.LotID,
-						"lot_location": lotLocation,
-						"hint":         "This is a community lot. The mayor must grant you access via grant-community-access before you can visit.",
-					},
-				}, nil
-			}
-		}
-
 		// Step 3: INVARIANT — WriteNextLot must complete before bot-cmd:exit.
+		// Server-side LotAdmit / LotRefuse is the access gate for community lots
+		// (freesoexperiment-f34: dropped sidecar-local community-access.json gate).
 		// The supervisor reads next-lot after bot exit; writing after exit means
 		// stale/missing state → cross-lot transition silently uses the default lot.
 		if err := WriteNextLot(lotLocation); err != nil {

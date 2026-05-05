@@ -47,27 +47,6 @@ func withConfigHome(t *testing.T, dir string) {
 	})
 }
 
-// withSharedDataHome overrides XDG_DATA_HOME so SharedCommunityAccessDir()
-// returns an isolated temp directory for test isolation. This is separate from
-// withConfigHome (XDG_CONFIG_HOME) because community-access.json is now a
-// machine-global shared file, not a per-persona file.
-//
-// Usage: call withSharedDataHome(t, t.TempDir()) in any test that exercises
-// readCommunityAccess / writeCommunityAccess / HasCommunityAccess /
-// IsCommunityGated.
-func withSharedDataHome(t *testing.T, dir string) {
-	t.Helper()
-	prior, hasPrior := os.LookupEnv("XDG_DATA_HOME")
-	os.Setenv("XDG_DATA_HOME", dir)
-	t.Cleanup(func() {
-		if hasPrior {
-			os.Setenv("XDG_DATA_HOME", prior)
-		} else {
-			os.Unsetenv("XDG_DATA_HOME")
-		}
-	})
-}
-
 // TestPersonaStateDirDerivesFromFSO_USER asserts PersonaStateDir builds
 // the correct path from FSO_USER.
 func TestPersonaStateDirDerivesFromFSO_USER(t *testing.T) {

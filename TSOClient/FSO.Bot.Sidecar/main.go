@@ -293,22 +293,16 @@ func main() {
 		}
 		log.Printf("convention handlers: %d build-buy-architecture-family ops serving", buildServers)
 
-		// Civic family (freesoexperiment-409): set-tax-rate, grant-community-access.
-		// Mayor-only felt powers — each produces an observable effect on a body
-		// (rate recorded, lot access change). set-zoning was dropped (c7f): engine
-		// has no zoning concept and the hardcoded /home/baron/projects/freeso-civic/
-		// path is non-portable.
+		// Civic family (freesoexperiment-409): set-tax-rate only.
+		// Mayor-only felt power — rate recorded, collection deferred to engine-side
+		// TaxCycleHandler (M2/M3). set-zoning dropped (c7f): engine has no zoning
+		// concept, hardcoded path non-portable. grant-community-access dropped (f34):
+		// server's LotAdmit is the sole gate; use lock-lot/unlock-lot + add-roommate.
 		taxServers, err := RegisterTaxHandlers(ctx, cf)
 		if err != nil {
 			log.Fatalf("register tax handlers: %v", err)
 		}
 		log.Printf("convention handlers: %d tax-family ops serving", taxServers)
-
-		civicAccessServers, err := RegisterCivicAccessHandlers(ctx, cf, augmentor)
-		if err != nil {
-			log.Fatalf("register civic-access handlers: %v", err)
-		}
-		log.Printf("convention handlers: %d civic-access-family ops serving", civicAccessServers)
 
 		// Single-dispatcher: one Subscribe goroutine handles every registered op
 		// instead of one Subscribe per op. Replaces the convention.Server fleet

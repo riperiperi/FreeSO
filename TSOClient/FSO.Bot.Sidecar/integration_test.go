@@ -715,9 +715,7 @@ func TestIntegration_VisitLot_BothShapes(t *testing.T) {
 		}
 	})
 
-	// Isolate SharedCommunityAccessDir so community-access.json from other
-	// tests or from the real machine does not interfere (lot 17 probe_id
-	// would trigger the gate if left ungated).
+	// Isolate XDG_DATA_HOME for per-test data dir isolation.
 	xdgDataHome := filepath.Join(tmp, "data")
 	if err := os.MkdirAll(xdgDataHome, 0o700); err != nil {
 		t.Fatalf("mkdir data: %v", err)
