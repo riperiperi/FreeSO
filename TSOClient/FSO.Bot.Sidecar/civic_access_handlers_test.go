@@ -8,7 +8,6 @@ package main
 
 import (
 	"context"
-	"encoding/json"
 	"os"
 	"path/filepath"
 	"testing"
@@ -96,39 +95,21 @@ func TestGrantCommunityAccessNoAuth(t *testing.T) {
 	}
 }
 
-// TestGrantCommunityAccessMayorBotCheck asserts that a non-mayor bot response
-// (check-mayor returns is_mayor=false) causes NO_AUTH refusal.
-func TestGrantCommunityAccessMayorBotCheck(t *testing.T) {
+// TestGrantCommunityAccessMayorPerceptionCheck asserts that when the augmentor
+// has cached is_mayor=false from the latest perception tick, grant-community-access
+// returns NO_AUTH. This replaces the old check-mayor bot-cmd test (ea0: mayor
+// status now comes from the VM perception tick, not a bot-cmd round-trip).
+func TestGrantCommunityAccessMayorPerceptionCheck(t *testing.T) {
 	tmp := t.TempDir()
 	withFSO_USER(t, "grant-access-mayorbotcheck-test")
 	withConfigHome(t, tmp)
 	withSharedDataHome(t, tmp)
 
-	fake := newFakeBotProcess()
-	pump := NewBotCmdPump(fake.bot)
+	// Augmentor with is_mayor=false cached (no tick yet → zero value).
+	augmentor := NewPerceptionAugmentor()
+	// Zero value: IsMayor=false, MayorNhood=0 — not a mayor.
 
-	go func() {
-		line := <-fake.stdinLines
-		var req BotCmdRequest
-		if err := json.Unmarshal(line, &req); err != nil {
-			t.Errorf("unmarshal check-mayor req: %v", err)
-			return
-		}
-		if req.Cmd != "check-mayor" {
-			t.Errorf("want cmd=check-mayor, got %q", req.Cmd)
-		}
-		pump.Deliver(mustMarshal(map[string]any{
-			"kind":           "bot-cmd-reply",
-			"correlation_id": req.CorrelationID,
-			"ok":             true,
-			"data": map[string]any{
-				"is_mayor":    false,
-				"mayor_nhood": 0,
-			},
-		}))
-	}()
-
-	handler := grantCommunityAccessHandler(pump)
+	handler := grantCommunityAccessHandler(augmentor)
 	ctx, cancel := context.WithTimeout(context.Background(), 3*time.Second)
 	defer cancel()
 
@@ -145,6 +126,36 @@ func TestGrantCommunityAccessMayorBotCheck(t *testing.T) {
 	}
 	if payload["reason"] != "NO_AUTH" {
 		t.Errorf("want reason=NO_AUTH, got %v", payload["reason"])
+	}
+}
+
+// TestGrantCommunityAccessMayorPerceptionIsMayor asserts that when the augmentor
+// has cached is_mayor=true, grant-community-access proceeds past the auth check.
+func TestGrantCommunityAccessMayorPerceptionIsMayor(t *testing.T) {
+	tmp := t.TempDir()
+	withFSO_USER(t, "grant-access-mayorperception-test")
+	withConfigHome(t, tmp)
+	withSharedDataHome(t, tmp)
+
+	// Augmentor with is_mayor=true cached via a synthetic perception tick.
+	augmentor := NewPerceptionAugmentor()
+	tickLine := []byte(`{"kind":"perception","mayor_status":{"is_mayor":true,"mayor_nhood":1}}`)
+	augmentor.AugmentPerception(tickLine) // populates the cache
+
+	handler := grantCommunityAccessHandler(augmentor)
+	ctx, cancel := context.WithTimeout(context.Background(), 3*time.Second)
+	defer cancel()
+
+	resp, err := handler(ctx, &convention.Request{Args: map[string]any{
+		"lot_id":       float64(17),
+		"persona_name": "botrous",
+	}})
+	if err != nil {
+		t.Fatalf("handler error: %v", err)
+	}
+	payload, _ := resp.Payload.(map[string]any)
+	if payload["ok"] != true {
+		t.Errorf("want ok=true for is_mayor=true augmentor, got %v", payload)
 	}
 }
 

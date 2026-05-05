@@ -31,16 +31,15 @@ import (
 // (falls back to ~/.local/share/freeso-souls-shared/). All sidecars on the
 // same machine share this directory.
 //
-// Authorization: mayor-only (check delegated to C# bot via bot-cmd:check-mayor,
-// or verified via FSO_MAYOR_NHOOD env var for test scenarios). The handler uses
-// the bot-cmd:check-mayor path when a bot is available, and falls back to
-// FSO_MAYOR_NHOOD for --no-bot mode.
+// Authorization: mayor-only (freesoexperiment-ea0). Mayor status is read from
+// the latest perception tick cached in augmentor.LatestMayorStatus(). Falls
+// back to FSO_MAYOR_NHOOD env var when augmentor is nil (--no-bot mode).
 //
 // Persistence: community-access.json survives sidecar restarts. Format: array
 // of CommunityAccessGrant.
-func RegisterCivicAccessHandlers(ctx context.Context, cf *Campfire, botCmds *BotCmdPump) (int, error) {
+func RegisterCivicAccessHandlers(ctx context.Context, cf *Campfire, augmentor *PerceptionAugmentor) (int, error) {
 	ops := map[string]convention.HandlerFunc{
-		"grant-community-access": grantCommunityAccessHandler(botCmds),
+		"grant-community-access": grantCommunityAccessHandler(augmentor),
 	}
 
 	decls, err := LoadDeclarations(conventionFiles)
@@ -102,10 +101,10 @@ var communityAccessMu sync.Mutex
 //
 // Flow:
 //  1. Validate lot_id and persona_name.
-//  2. Verify caller is mayor via bot-cmd:check-mayor (or FSO_MAYOR_NHOOD fallback).
+//  2. Verify caller is mayor via augmentor.LatestMayorStatus() (or FSO_MAYOR_NHOOD fallback).
 //  3. Append grant to community-access.json under PersonaStateDir().
 //  4. Return {ok, lot_id, persona_name, grant_count}.
-func grantCommunityAccessHandler(botCmds *BotCmdPump) convention.HandlerFunc {
+func grantCommunityAccessHandler(augmentor *PerceptionAugmentor) convention.HandlerFunc {
 	return func(ctx context.Context, req *convention.Request) (*convention.Response, error) {
 		args := req.Args
 
@@ -139,9 +138,9 @@ func grantCommunityAccessHandler(botCmds *BotCmdPump) convention.HandlerFunc {
 		}
 
 		// --- Step 3: mayor authorization ---
-		// Prefer bot-cmd:check-mayor when a bot is available.
-		// Fall back to FSO_MAYOR_NHOOD env var (non-zero = is mayor).
-		isMayor, authErr := checkMayorAuthorization(ctx, botCmds)
+		// Read from latest perception tick (freesoexperiment-ea0).
+		// Fall back to FSO_MAYOR_NHOOD env var when augmentor is nil (--no-bot mode).
+		isMayor, authErr := checkMayorAuthorization(augmentor)
 		if authErr != nil {
 			return &convention.Response{
 				Payload: map[string]any{
@@ -209,25 +208,13 @@ func grantCommunityAccessHandler(botCmds *BotCmdPump) convention.HandlerFunc {
 }
 
 // checkMayorAuthorization returns true if the current avatar is the neighborhood
-// mayor. It uses bot-cmd:check-mayor when botCmds is available, and falls back
-// to FSO_MAYOR_NHOOD env var (non-zero = mayor) in --no-bot mode.
-func checkMayorAuthorization(ctx context.Context, botCmds *BotCmdPump) (bool, error) {
-	if botCmds != nil {
-		reply, err := botCmds.Send(ctx, "check-mayor", nil)
-		if err != nil {
-			return false, fmt.Errorf("bot-cmd:check-mayor: %w", err)
-		}
-		var data struct {
-			IsMayor    bool   `json:"is_mayor"`
-			MayorNhood int    `json:"mayor_nhood"`
-			Reason     string `json:"reason,omitempty"`
-		}
-		if len(reply.Data) > 0 {
-			if perr := json.Unmarshal(reply.Data, &data); perr != nil {
-				return false, fmt.Errorf("check-mayor data parse: %w", perr)
-			}
-		}
-		return reply.Ok && data.IsMayor, nil
+// mayor. It reads from the latest perception tick cached in augmentor
+// (freesoexperiment-ea0). Falls back to FSO_MAYOR_NHOOD env var when augmentor
+// is nil (--no-bot / test mode).
+func checkMayorAuthorization(augmentor *PerceptionAugmentor) (bool, error) {
+	if augmentor != nil {
+		ms := augmentor.LatestMayorStatus()
+		return ms.IsMayor, nil
 	}
 	// --no-bot fallback: check FSO_MAYOR_NHOOD env var.
 	mayorNhood := strings.TrimSpace(os.Getenv("FSO_MAYOR_NHOOD"))

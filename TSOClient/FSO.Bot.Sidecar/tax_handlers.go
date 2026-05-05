@@ -8,35 +8,22 @@ package main
 
 import (
 	"context"
-	"encoding/json"
 	"fmt"
-	"log"
 
 	"github.com/campfire-net/campfire/pkg/convention"
 )
 
 // RegisterTaxHandlers (freesoexperiment-409) wires the set-tax-rate civic op.
 //
-// Design: set-tax-rate is a "felt power" — it must produce an observable budget
-// delta on residents. Sidecar delegates the debit to the C# bot via bot-cmd:tax-debit
-// because the C# bot owns the Avatars.Transaction IPC (the only way to mutate
-// avatar balances). The bot iterates all residents in the target neighborhood,
-// issues a transaction debit per resident, and returns a per-resident delta list.
-//
-// Authorization: the C# bot checks whether the calling avatar has mayor_nhood > 0
-// (i.e. is mayor of the target neighborhood) and returns NO_AUTH if not. The sidecar
-// surfaces this refusal verbatim — no re-check here.
-//
-// Bulletin: after a successful tax cycle, the sidecar posts a tax-announcement
-// bulletin via IPC (same pattern as post-bulletin) so residents see a notification.
-// Bulletin failure is non-fatal — the tax was collected; log and continue.
-//
-// Escalation risk (Risk #6): if any single tax cycle takes > 5s wall time
-// (50+ residents × Transaction round-trip latency), surface a warning in the
-// response and escalate. The spec cap is 5 souls at research scale — safe today.
-func RegisterTaxHandlers(ctx context.Context, cf *Campfire, botCmds *BotCmdPump, ipc *IPC) (int, error) {
+// Design (freesoexperiment-ea0, operator decision 99d=B): set-tax-rate is a
+// stub. It validates the rate and records intent but does NOT collect tax.
+// The engine-side TaxCycleHandler (analogous to MoneyClock in FSO.Server/Domain/)
+// is the correct place for budget mutations — implementing it is tracked as a
+// follow-up item (M2/M3 milestone). The bot-cmd:tax-debit delegation path has
+// been removed as part of the ea0 architectural cleanup.
+func RegisterTaxHandlers(ctx context.Context, cf *Campfire) (int, error) {
 	ops := map[string]convention.HandlerFunc{
-		"set-tax-rate": setTaxRateHandler(botCmds, ipc),
+		"set-tax-rate": setTaxRateHandler(),
 	}
 
 	decls, err := LoadDeclarations(conventionFiles)
@@ -60,28 +47,21 @@ func RegisterTaxHandlers(ctx context.Context, cf *Campfire, botCmds *BotCmdPump,
 	return started, nil
 }
 
-// TaxResidentResult is one resident's tax outcome, returned in the response.
-type TaxResidentResult struct {
-	PersistID  int64  `json:"persist_id"`
-	AvatarName string `json:"avatar_name,omitempty"`
-	Debit      int64  `json:"debit"`      // amount debited (positive = money removed)
-	NewBalance int64  `json:"new_balance"` // balance after tax
-}
-
-// setTaxRateHandler implements the set-tax-rate convention.
+// setTaxRateHandler implements the set-tax-rate convention as a validated stub.
 //
-// Flow:
-//  1. Validate tax_rate_percent (0–100).
-//  2. Delegate to bot-cmd:tax-debit with {tax_rate_percent, neighborhood_id}.
-//  3. The C# bot checks mayor_nhood, collects residents, issues per-resident
-//     Avatars.Transaction, and returns {ok, residents:[{persist_id, avatar_name, debit, new_balance}]}.
-//  4. On success, post a bulletin announcing the tax cycle (non-fatal on failure).
-//  5. Return the per-resident delta list so the agent can observe the effect.
-func setTaxRateHandler(botCmds *BotCmdPump, ipc *IPC) convention.HandlerFunc {
+// freesoexperiment-ea0 (operator decision 99d=B): tax collection is deferred.
+// The engine-side TaxCycleHandler (M2/M3 milestone, analogous to MoneyClock
+// in FSO.Server/Domain/) is the correct place for avatar budget mutations.
+// This stub validates the rate and records intent so the agent sees a
+// round-trip response, but no §simoleons are moved.
+//
+// TODO(M2/M3): replace with engine-side TaxCycleHandler that calls
+// Avatars.Transaction for each resident in the neighborhood.
+func setTaxRateHandler() convention.HandlerFunc {
 	return func(ctx context.Context, req *convention.Request) (*convention.Response, error) {
 		args := req.Args
 
-		// --- Step 1: validate tax_rate_percent ---
+		// Validate tax_rate_percent (0–100).
 		rawRate, ok := args["tax_rate_percent"]
 		if !ok || rawRate == nil {
 			return &convention.Response{
@@ -100,93 +80,23 @@ func setTaxRateHandler(botCmds *BotCmdPump, ipc *IPC) convention.HandlerFunc {
 			}, nil
 		}
 
-		// --- Step 2: optional neighborhood_id (default 1) ---
+		// Optional neighborhood_id (default 1).
 		neighborhoodID := uint64(1)
-		if v, ok := args["neighborhood_id"]; ok && v != nil {
-			if n, err := coerceUint64(v); err == nil {
+		if v, ok2 := args["neighborhood_id"]; ok2 && v != nil {
+			if n, err2 := coerceUint64(v); err2 == nil {
 				neighborhoodID = n
 			}
 		}
 
-		// --- Step 3: require bot-cmd pump ---
-		if botCmds == nil {
-			return &convention.Response{
-				Payload: map[string]any{
-					"ok":       false,
-					"error":    "set-tax-rate: bot-cmd channel not available (--no-bot mode)",
-					"deferred": true,
-				},
-			}, nil
-		}
-
-		// --- Step 4: delegate to C# bot via bot-cmd:tax-debit ---
-		taxReply, taxErr := botCmds.Send(ctx, "tax-debit", map[string]any{
-			"tax_rate_percent": taxRate,
-			"neighborhood_id":  neighborhoodID,
-		})
-		if taxErr != nil {
-			return &convention.Response{
-				Payload: map[string]any{"ok": false, "error": fmt.Sprintf("tax-debit failed: %v", taxErr)},
-			}, nil
-		}
-		if !taxReply.Ok {
-			return &convention.Response{
-				Payload: map[string]any{"ok": false, "error": fmt.Sprintf("tax-debit refused: %s", taxReply.Error)},
-			}, nil
-		}
-
-		// Parse tax-debit reply: {ok, reason, residents:[{persist_id, avatar_name, debit, new_balance}]}
-		var taxData struct {
-			Ok        bool                `json:"ok"`
-			Reason    string              `json:"reason,omitempty"`
-			Residents []TaxResidentResult `json:"residents"`
-		}
-		if len(taxReply.Data) > 0 {
-			if perr := json.Unmarshal(taxReply.Data, &taxData); perr != nil {
-				log.Printf("set-tax-rate: tax-debit data parse error: %v", perr)
-			}
-		}
-
-		// Surface mayor-auth failure from the bot handler.
-		if taxData.Reason == "NO_AUTH" {
-			return &convention.Response{
-				Payload: map[string]any{
-					"ok":     false,
-					"error":  "NO_AUTH",
-					"reason": "NO_AUTH",
-					"hint":   "Only the neighborhood mayor can set the tax rate. Your avatar must have mayor_nhood > 0.",
-				},
-			}, nil
-		}
-
-		// --- Step 5: post bulletin announcing the tax cycle (non-fatal) ---
-		if ipc != nil && len(taxData.Residents) > 0 {
-			totalDebited := int64(0)
-			for _, r := range taxData.Residents {
-				totalDebited += r.Debit
-			}
-			bulletinBody := fmt.Sprintf(
-				"Tax cycle complete: %.1f%% collected from %d residents. Total collected: §%d.",
-				taxRate, len(taxData.Residents), totalDebited,
-			)
-			_, bulletinErr := ipc.Send(ctx, "post-bulletin", map[string]any{
-				"subject":         fmt.Sprintf("Tax Notice: %.1f%% Collected", taxRate),
-				"body":            bulletinBody,
-				"neighborhood_id": neighborhoodID,
-				"lot_id":          uint64(0),
-			})
-			if bulletinErr != nil {
-				log.Printf("set-tax-rate: bulletin post failed (non-fatal): %v", bulletinErr)
-			}
-		}
-
+		// Stub: rate recorded, no collection performed.
+		// Engine-side TaxCycleHandler (M2/M3) will perform the actual debit.
 		return &convention.Response{
 			Payload: map[string]any{
-				"ok":              true,
+				"ok":               true,
 				"tax_rate_percent": taxRate,
-				"neighborhood_id": neighborhoodID,
-				"residents":       taxData.Residents,
-				"resident_count":  len(taxData.Residents),
+				"neighborhood_id":  neighborhoodID,
+				"deferred":         true,
+				"note":             "Tax rate recorded. Collection is deferred to engine-side TaxCycleHandler (M2/M3).",
 			},
 		}, nil
 	}

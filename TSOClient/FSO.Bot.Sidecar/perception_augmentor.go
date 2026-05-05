@@ -13,7 +13,11 @@ package main
 //   - body.current_lot.is_home        — true when current lot == home lot
 //   - body.current_lot.has_bulletin_board — MVP allowlist: community lot only
 //   - body.current_lot.has_ballot_box     — MVP allowlist: community lot only
-//   - mayor_status      — {is_mayor, current_mayor_name, election_phase} from mayor-status.json
+//
+// mayor_status is now emitted directly by the C# bot in each perception tick
+// (freesoexperiment-ea0). The augmentor caches the latest mayor_status from
+// the incoming tick so that convention handlers can read it synchronously via
+// LatestMayorStatus() without a bot-cmd round-trip.
 //
 // These are added as top-level keys on the perception JSON object before it is
 // forwarded to the campfire. The augmentation is a best-effort in-place merge:
@@ -36,26 +40,14 @@ package main
 // (hex string). This is NOT used by the augmentor at runtime — it is an env
 // var read by the dispatch-prompt builder (item 13) to inject the key-piece
 // paragraph into the wake prompt. Documented here for traceability.
-//
-// mayor-status.json schema:
-//
-//	{
-//	  "is_mayor": bool,
-//	  "current_mayor_name": string | null,
-//	  "election_phase": "none" | "nomination" | "election" | "results"
-//	}
-//
-// Written by bootstrap-mayor.sh (item 14). Read at augmentation time. If
-// absent, the zero value {is_mayor:false, current_mayor_name:null,
-// election_phase:"none"} is used — honest unknown.
 
 import (
 	"encoding/json"
 	"log"
 	"os"
-	"path/filepath"
 	"strconv"
 	"strings"
+	"sync"
 )
 
 // HomeLotProjection is the body.home_lot sub-tree emitted in perception.
@@ -65,11 +57,12 @@ type HomeLotProjection struct {
 	IsHabitable bool   `json:"is_habitable"`
 }
 
-// MayorStatus is the mayor_status sub-tree emitted in perception.
+// MayorStatus is the mayor_status sub-tree emitted in each perception tick by
+// the C# bot (freesoexperiment-ea0). The augmentor caches the latest value
+// so convention handlers can call LatestMayorStatus() without IPC.
 type MayorStatus struct {
-	IsMayor          bool    `json:"is_mayor"`
-	CurrentMayorName *string `json:"current_mayor_name"`
-	ElectionPhase    string  `json:"election_phase"`
+	IsMayor   bool `json:"is_mayor"`
+	MayorNhood int  `json:"mayor_nhood"`
 }
 
 // currentLotAffordances is the has_bulletin_board / has_ballot_box / is_home
@@ -80,14 +73,21 @@ type currentLotAffordances struct {
 	HasBallotBox     bool `json:"has_ballot_box"`
 }
 
-// PerceptionAugmentor holds configuration read once at sidecar startup.
-// It is safe to call AugmentPerception from the Bridge goroutine sequentially.
-// It is NOT goroutine-safe — callers must serialise access.
+// PerceptionAugmentor holds configuration read once at sidecar startup and
+// live state updated on every perception tick.
+//
+// AugmentPerception is called from the Bridge goroutine sequentially.
+// LatestMayorStatus is called from convention handler goroutines concurrently.
+// The mayorMu mutex guards mayorCache for cross-goroutine safety.
 type PerceptionAugmentor struct {
 	// communityLotLocation is the packed lot location of the community lot,
 	// normalised to lowercase hex without "0x" prefix (e.g. "00f9015e").
 	// Empty string means "no community lot known yet" — affordance flags are false.
 	communityLotLocation string
+
+	// mayorMu guards mayorCache.
+	mayorMu    sync.RWMutex
+	mayorCache MayorStatus
 }
 
 // NewPerceptionAugmentor constructs a PerceptionAugmentor. The community lot
@@ -138,34 +138,14 @@ func (a *PerceptionAugmentor) isCommunityLot(lotHex string) bool {
 	return normalizeLotHex(lotHex) == a.communityLotLocation
 }
 
-// readMayorStatus reads mayor-status.json from the persona state dir.
-// Returns the zero value with election_phase="none" when the file is absent
-// (before item 14 bootstrap) or unparseable. Never returns error — failures
-// are logged and the zero value is used.
-func readMayorStatus() MayorStatus {
-	zero := MayorStatus{ElectionPhase: "none"}
-	dir, err := PersonaStateDir()
-	if err != nil {
-		return zero
-	}
-	path := filepath.Join(dir, "mayor-status.json")
-	data, err := os.ReadFile(path)
-	if err != nil {
-		if os.IsNotExist(err) {
-			return zero
-		}
-		log.Printf("perception-augmentor: read mayor-status.json: %v", err)
-		return zero
-	}
-	var ms MayorStatus
-	if err := json.Unmarshal(data, &ms); err != nil {
-		log.Printf("perception-augmentor: parse mayor-status.json: %v", err)
-		return zero
-	}
-	if ms.ElectionPhase == "" {
-		ms.ElectionPhase = "none"
-	}
-	return ms
+// LatestMayorStatus returns the most recently cached MayorStatus from the
+// last perception tick emitted by the C# bot. Returns the zero value
+// {IsMayor:false, MayorNhood:0} before the first tick arrives.
+// Safe for concurrent callers (convention handler goroutines).
+func (a *PerceptionAugmentor) LatestMayorStatus() MayorStatus {
+	a.mayorMu.RLock()
+	defer a.mayorMu.RUnlock()
+	return a.mayorCache
 }
 
 // perceptionTopLevel is the minimal top-level decode of a perception tick
@@ -229,6 +209,21 @@ func (a *PerceptionAugmentor) AugmentPerception(line []byte) []byte {
 		return line
 	}
 
+	// --- mayor_status: cache from C# tick (freesoexperiment-ea0) ---
+	// The C# bot now emits mayor_status in each perception tick directly from
+	// VMTSOAvatarFlags.Mayor. We cache it for checkMayorAuthorization callers
+	// and pass the field through to campfire unchanged.
+	if rawMs, ok := tick["mayor_status"]; ok {
+		var ms MayorStatus
+		if err := json.Unmarshal(rawMs, &ms); err != nil {
+			log.Printf("perception-augmentor: parse mayor_status from tick: %v", err)
+		} else {
+			a.mayorMu.Lock()
+			a.mayorCache = ms
+			a.mayorMu.Unlock()
+		}
+	}
+
 	// --- home_lot ---
 	homeLot := buildHomeLotProjection()
 	homeLotJSON, err := json.Marshal(homeLot)
@@ -236,15 +231,6 @@ func (a *PerceptionAugmentor) AugmentPerception(line []byte) []byte {
 		log.Printf("perception-augmentor: marshal home_lot: %v (skipping field)", err)
 	} else {
 		tick["home_lot"] = json.RawMessage(homeLotJSON)
-	}
-
-	// --- mayor_status ---
-	ms := readMayorStatus()
-	msJSON, err := json.Marshal(ms)
-	if err != nil {
-		log.Printf("perception-augmentor: marshal mayor_status: %v (skipping field)", err)
-	} else {
-		tick["mayor_status"] = json.RawMessage(msJSON)
 	}
 
 	// --- lot.is_home, lot.has_bulletin_board, lot.has_ballot_box ---

@@ -163,6 +163,19 @@ public class PerceptionProjector
         // Recent events snapshot (stable copy).
         var recent = _recentEvents.ToList();
 
+        // Mayor status from VM avatar flags (freesoexperiment-ea0).
+        // VMTSOAvatarFlags.Mayor is set server-side from fso_avatars.mayor_nhood when
+        // mayor_nhood == lot's neighborhood_id. NhoodID comes from VMTSOLotState.
+        bool isMayor = me.TSOState is VMTSOAvatarState avaState &&
+                       avaState.Flags.HasFlag(VMTSOAvatarFlags.Mayor);
+        int mayorNhood = isMayor && lotState != null ? (int)lotState.NhoodID : 0;
+
+        var mayorStatus = new MayorStatusBlock
+        {
+            IsMayor = isMayor,
+            MayorNhood = mayorNhood,
+        };
+
         return new PerceptionTick
         {
             Kind = "perception",
@@ -177,6 +190,7 @@ public class PerceptionProjector
             Balance = balance,
             RecentEvents = recent,
             Lot = lot,
+            MayorStatus = mayorStatus,
         };
     }
 
@@ -708,6 +722,13 @@ public class PerceptionTick
     public long Balance { get; set; }
     public List<PerceptionEvent> RecentEvents { get; set; }
     public LotBlock Lot { get; set; }
+    /// <summary>
+    /// Mayor status derived from the VM avatar's <see cref="VMTSOAvatarFlags.Mayor"/> flag
+    /// (freesoexperiment-ea0). Replaces the env-var + file-based check-mayor pathway.
+    /// is_mayor=true means this avatar holds the Mayor flag in the current lot's VM.
+    /// mayor_nhood=0 when is_mayor=false.
+    /// </summary>
+    public MayorStatusBlock MayorStatus { get; set; }
 }
 
 public class AvatarBlock
@@ -803,4 +824,19 @@ public class PerceptionEvent
     public string Kind { get; set; }
     public string Text { get; set; }
     public Dictionary<string, object> Extras { get; set; }
+}
+
+/// <summary>
+/// Mayor status block emitted on every perception tick (freesoexperiment-ea0).
+/// Sourced from <see cref="VMTSOAvatarFlags.Mayor"/> in the live VM — no env var, no file.
+/// </summary>
+public class MayorStatusBlock
+{
+    /// <summary>True when the VM avatar carries the Mayor flag in this lot.</summary>
+    public bool IsMayor { get; set; }
+    /// <summary>
+    /// Neighborhood id this avatar is mayor of. 0 when IsMayor=false.
+    /// Read from <see cref="VMTSOLotState.NhoodID"/> — the lot the bot is currently on.
+    /// </summary>
+    public int MayorNhood { get; set; }
 }

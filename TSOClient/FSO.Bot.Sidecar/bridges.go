@@ -42,15 +42,16 @@ type Bridges struct {
 // NewBridges constructs a Bridges value. Call Run(ctx) once to start the
 // fan-out; it returns when the bot stdout channel closes or ctx is cancelled.
 // ipc may be nil in tests that don't exercise the command channel.
-// botCmds may be nil when BotCmdPump is not in use (e.g. --no-bot mode).
-func NewBridges(cf *Campfire, bot *BotProcess, ipc *IPC) *Bridges {
-	return &Bridges{cf: cf, bot: bot, ipc: ipc, habWatcher: NewHabitationWatcher(), augmentor: NewPerceptionAugmentor()}
+// augmentor may be nil to disable perception augmentation.
+func NewBridges(cf *Campfire, bot *BotProcess, ipc *IPC, augmentor *PerceptionAugmentor) *Bridges {
+	return &Bridges{cf: cf, bot: bot, ipc: ipc, habWatcher: NewHabitationWatcher(), augmentor: augmentor}
 }
 
 // NewBridgesWithBotCmd constructs a Bridges value with the BotCmdPump wired.
 // Used by the main supervisor loop when probe-lot / bot-exit-request are in use.
-func NewBridgesWithBotCmd(cf *Campfire, bot *BotProcess, ipc *IPC, botCmds *BotCmdPump) *Bridges {
-	return &Bridges{cf: cf, bot: bot, ipc: ipc, botCmds: botCmds, habWatcher: NewHabitationWatcher(), augmentor: NewPerceptionAugmentor()}
+// augmentor is shared with civic convention handlers for mayor status reads.
+func NewBridgesWithBotCmd(cf *Campfire, bot *BotProcess, ipc *IPC, botCmds *BotCmdPump, augmentor *PerceptionAugmentor) *Bridges {
+	return &Bridges{cf: cf, bot: bot, ipc: ipc, botCmds: botCmds, habWatcher: NewHabitationWatcher(), augmentor: augmentor}
 }
 
 // eventEnvelope is the loose shape we parse from bot stdout. We keep it a map

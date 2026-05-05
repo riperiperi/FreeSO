@@ -60,9 +60,9 @@ type ZoneEntry struct {
 }
 
 // RegisterZoningHandlers wires the set-zoning convention op.
-func RegisterZoningHandlers(ctx context.Context, cf *Campfire, botCmds *BotCmdPump) (int, error) {
+func RegisterZoningHandlers(ctx context.Context, cf *Campfire, augmentor *PerceptionAugmentor) (int, error) {
 	ops := map[string]convention.HandlerFunc{
-		"set-zoning": setZoningHandler(botCmds),
+		"set-zoning": setZoningHandler(augmentor),
 	}
 
 	decls, err := LoadDeclarations(conventionFiles)
@@ -90,10 +90,10 @@ func RegisterZoningHandlers(ctx context.Context, cf *Campfire, botCmds *BotCmdPu
 //
 // Flow:
 //  1. Validate zone_type, x1/y1/x2/y2.
-//  2. Verify caller is mayor.
+//  2. Verify caller is mayor via augmentor.LatestMayorStatus() (freesoexperiment-ea0).
 //  3. Append zone to /home/baron/projects/freeso-civic/zoning.json.
 //  4. Return {ok, zone_type, x1, y1, x2, y2, zone_count}.
-func setZoningHandler(botCmds *BotCmdPump) convention.HandlerFunc {
+func setZoningHandler(augmentor *PerceptionAugmentor) convention.HandlerFunc {
 	return func(ctx context.Context, req *convention.Request) (*convention.Response, error) {
 		args := req.Args
 
@@ -149,7 +149,7 @@ func setZoningHandler(botCmds *BotCmdPump) convention.HandlerFunc {
 		zoneName, _ := args["zone_name"].(string)
 
 		// --- Step 4: mayor authorization ---
-		isMayor, authErr := checkMayorAuthorization(ctx, botCmds)
+		isMayor, authErr := checkMayorAuthorization(augmentor)
 		if authErr != nil {
 			return &convention.Response{
 				Payload: map[string]any{

@@ -114,6 +114,10 @@ func main() {
 	// bot-exit-request over the same stdin/stdout channel, but a different wire
 	// shape. Declared at outer scope so UpdateBot is available in the supervisor loop.
 	var botCmds *BotCmdPump
+	// augmentor enriches perception ticks and caches mayor status for civic handlers
+	// (freesoexperiment-ea0). Declared at outer scope so the supervisor loop can
+	// pass it to new Bridges on bot relaunch. Nil in --no-bot mode.
+	var augmentor *PerceptionAugmentor
 	if !*noBot {
 		proc, err = LaunchBot(ctx, BotConfig{
 			Exec: botExec,
@@ -139,7 +143,10 @@ func main() {
 		botCmds = NewBotCmdPump(proc)
 
 		// 4. Start bridges with BotCmdPump wired so bot-cmd-reply frames are routed.
-		bridges := NewBridgesWithBotCmd(cf, proc, ipc, botCmds)
+		// The augmentor is created once here and shared with convention handlers
+		// that need mayor status (freesoexperiment-ea0).
+		augmentor = NewPerceptionAugmentor()
+		bridges := NewBridgesWithBotCmd(cf, proc, ipc, botCmds, augmentor)
 		go bridges.Run(ctx)
 
 		// 5. Register convention handlers for verb-family ops. Each op opens one
@@ -289,19 +296,19 @@ func main() {
 		// Civic family (freesoexperiment-409): set-tax-rate, grant-community-access,
 		// set-zoning. Mayor-only felt powers — each produces an observable effect on a
 		// body (budget delta, lot access change, zoning rejection).
-		taxServers, err := RegisterTaxHandlers(ctx, cf, botCmds, ipc)
+		taxServers, err := RegisterTaxHandlers(ctx, cf)
 		if err != nil {
 			log.Fatalf("register tax handlers: %v", err)
 		}
 		log.Printf("convention handlers: %d tax-family ops serving", taxServers)
 
-		civicAccessServers, err := RegisterCivicAccessHandlers(ctx, cf, botCmds)
+		civicAccessServers, err := RegisterCivicAccessHandlers(ctx, cf, augmentor)
 		if err != nil {
 			log.Fatalf("register civic-access handlers: %v", err)
 		}
 		log.Printf("convention handlers: %d civic-access-family ops serving", civicAccessServers)
 
-		zoningServers, err := RegisterZoningHandlers(ctx, cf, botCmds)
+		zoningServers, err := RegisterZoningHandlers(ctx, cf, augmentor)
 		if err != nil {
 			log.Fatalf("register zoning handlers: %v", err)
 		}
@@ -459,7 +466,7 @@ func main() {
 
 			// Start a new bridge goroutine over the new process stdout, with the
 			// BotCmdPump wired so bot-cmd-reply frames are routed correctly.
-			go NewBridgesWithBotCmd(cf, newProc, ipc, botCmds).Run(ctx)
+			go NewBridgesWithBotCmd(cf, newProc, ipc, botCmds, augmentor).Run(ctx)
 		}
 	}
 }

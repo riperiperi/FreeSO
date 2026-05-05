@@ -6,7 +6,7 @@
 
 package main
 
-// Integration tests for PerceptionAugmentor (freesoexperiment-ef1).
+// Integration tests for PerceptionAugmentor (freesoexperiment-ef1, updated ea0).
 //
 // Tests exercise:
 //   1. Non-perception events pass through unmodified.
@@ -17,8 +17,8 @@ package main
 //   6. lot.has_bulletin_board=false on non-community lot.
 //   7. lot.is_home=true when owner_is_me && home_lot present.
 //   8. lot.is_home=false when owner_is_me=false.
-//   9. mayor_status zero value when mayor-status.json absent.
-//   10. mayor_status populated from mayor-status.json when present.
+//   9. LatestMayorStatus() returns zero before first tick; no mayor_status injected on tick without it.
+//   10. mayor_status from C# tick is cached by augmentor and returned by LatestMayorStatus().
 //   11. Malformed JSON passes through original unchanged.
 //
 // Each test sets FSO_USER to a per-test temp persona so state dirs are isolated.
@@ -26,7 +26,6 @@ package main
 import (
 	"encoding/json"
 	"os"
-	"path/filepath"
 	"testing"
 	"time"
 )
@@ -360,75 +359,82 @@ func TestAugmentor_IsHomeFalseWhenNotOwner(t *testing.T) {
 	}
 }
 
-func TestAugmentor_MayorStatusZeroWhenFileAbsent(t *testing.T) {
-	cleanup := setupAugmentorTestEnv(t)
-	defer cleanup()
-
-	// No mayor-status.json written.
+// TestAugmentor_MayorStatusZeroBeforeFirstTick verifies that LatestMayorStatus()
+// returns the zero value (is_mayor=false, mayor_nhood=0) before any perception
+// tick has arrived. Also verifies that a tick WITHOUT mayor_status passes through
+// unchanged (augmentor does not inject a zero mayor_status block).
+// (freesoexperiment-ea0: mayor_status now comes from the C# VM tick, not a file.)
+func TestAugmentor_MayorStatusZeroBeforeFirstTick(t *testing.T) {
 	a := NewPerceptionAugmentor()
+
+	// Before any tick: cache is zero.
+	ms := a.LatestMayorStatus()
+	if ms.IsMayor {
+		t.Errorf("LatestMayorStatus().IsMayor = true before first tick, want false")
+	}
+	if ms.MayorNhood != 0 {
+		t.Errorf("LatestMayorStatus().MayorNhood = %d before first tick, want 0", ms.MayorNhood)
+	}
+
+	// A tick without mayor_status should pass through without injecting the field.
 	line := makeAugmentorPerceptionLine(2, true, "Baron's Main")
 	out := a.AugmentPerception(line)
 	m := decodeAugmented(t, out)
-
-	msRaw, exists := m["mayor_status"]
-	if !exists {
-		t.Fatal("augmented tick missing 'mayor_status' key")
-	}
-	msBytes, _ := json.Marshal(msRaw)
-	var ms MayorStatus
-	if err := json.Unmarshal(msBytes, &ms); err != nil {
-		t.Fatalf("decode mayor_status: %v", err)
-	}
-	if ms.IsMayor {
-		t.Errorf("mayor_status.is_mayor = true, want false (file absent)")
-	}
-	if ms.ElectionPhase != "none" {
-		t.Errorf("mayor_status.election_phase = %q, want %q", ms.ElectionPhase, "none")
-	}
-	if ms.CurrentMayorName != nil {
-		t.Errorf("mayor_status.current_mayor_name = %v, want nil", ms.CurrentMayorName)
+	if _, exists := m["mayor_status"]; exists {
+		t.Errorf("augmentor injected 'mayor_status' key when C# tick did not include it — want pass-through only")
 	}
 }
 
-func TestAugmentor_MayorStatusReadFromFile(t *testing.T) {
-	cleanup := setupAugmentorTestEnv(t)
-	defer cleanup()
-
-	// Write mayor-status.json.
-	dir, err := PersonaStateDir()
-	if err != nil {
-		t.Fatalf("PersonaStateDir: %v", err)
-	}
-	mayorName := "Baron"
-	ms := MayorStatus{
-		IsMayor:          true,
-		CurrentMayorName: &mayorName,
-		ElectionPhase:    "nomination",
-	}
-	data, _ := json.Marshal(ms)
-	if err := os.WriteFile(filepath.Join(dir, "mayor-status.json"), data, 0o600); err != nil {
-		t.Fatalf("write mayor-status.json: %v", err)
-	}
-
+// TestAugmentor_MayorStatusCachedFromTick verifies that when a perception tick
+// includes mayor_status from the C# bot, the augmentor caches it and
+// LatestMayorStatus() returns the cached value.
+// (freesoexperiment-ea0: mayor_status now comes from the C# VM tick, not a file.)
+func TestAugmentor_MayorStatusCachedFromTick(t *testing.T) {
 	a := NewPerceptionAugmentor()
-	line := makeAugmentorPerceptionLine(2, true, "Baron's Main")
-	out := a.AugmentPerception(line)
-	m := decodeAugmented(t, out)
 
-	msRaw := m["mayor_status"]
-	msBytes, _ := json.Marshal(msRaw)
-	var got MayorStatus
-	if err := json.Unmarshal(msBytes, &got); err != nil {
-		t.Fatalf("decode mayor_status: %v", err)
+	// Feed a tick with mayor_status={is_mayor:true, mayor_nhood:1}.
+	tick := map[string]any{
+		"kind": "perception",
+		"t":    time.Now().UnixMilli(),
+		"lot": map[string]any{
+			"lot_id":      int64(2),
+			"owner_is_me": true,
+			"name":        "Baron's Main",
+		},
+		"mayor_status": map[string]any{
+			"is_mayor":    true,
+			"mayor_nhood": 1,
+		},
 	}
-	if !got.IsMayor {
-		t.Errorf("mayor_status.is_mayor = false, want true")
+	lineBytes, _ := json.Marshal(tick)
+	a.AugmentPerception(lineBytes)
+
+	// Cache must now reflect is_mayor=true.
+	ms := a.LatestMayorStatus()
+	if !ms.IsMayor {
+		t.Errorf("LatestMayorStatus().IsMayor = false after tick with is_mayor=true, want true")
 	}
-	if got.ElectionPhase != "nomination" {
-		t.Errorf("mayor_status.election_phase = %q, want %q", got.ElectionPhase, "nomination")
+	if ms.MayorNhood != 1 {
+		t.Errorf("LatestMayorStatus().MayorNhood = %d, want 1", ms.MayorNhood)
 	}
-	if got.CurrentMayorName == nil || *got.CurrentMayorName != "Baron" {
-		t.Errorf("mayor_status.current_mayor_name = %v, want \"Baron\"", got.CurrentMayorName)
+
+	// Feed another tick with is_mayor=false — cache must update.
+	tick2 := map[string]any{
+		"kind": "perception",
+		"mayor_status": map[string]any{
+			"is_mayor":    false,
+			"mayor_nhood": 0,
+		},
+	}
+	line2, _ := json.Marshal(tick2)
+	a.AugmentPerception(line2)
+
+	ms2 := a.LatestMayorStatus()
+	if ms2.IsMayor {
+		t.Errorf("LatestMayorStatus().IsMayor = true after tick with is_mayor=false, want false")
+	}
+	if ms2.MayorNhood != 0 {
+		t.Errorf("LatestMayorStatus().MayorNhood = %d, want 0", ms2.MayorNhood)
 	}
 }
 
