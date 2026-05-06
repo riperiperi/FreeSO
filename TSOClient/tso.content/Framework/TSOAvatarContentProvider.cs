@@ -43,9 +43,13 @@ namespace FSO.Content.Framework
             }
             FileFolder = Path.Combine("Content/", fileFolder);
 
+            // Files first so loose Avatar/Collections/*.col (and other loose
+            // avatar content) override the FAR3-archived defaults. Required by
+            // the manage-packs / content-repo workflow — see
+            // Other/tools/CASOutfitImporter/docs/ARCHITECTURE.md.
             SetProviders(new List<IContentProvider<T>> {
-                FAR,
                 Files,
+                FAR,
                 Runtime
             });
         }
