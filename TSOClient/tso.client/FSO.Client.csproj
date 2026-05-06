@@ -158,6 +158,7 @@
     <Compile Include="Rendering\City\LotThumbContent.cs" />
     <Compile Include="Rendering\City\Model\CityNeighbourhood.cs" />
     <Compile Include="Rendering\City\Plugins\AbstractCityPlugin.cs" />
+    <Compile Include="Rendering\City\Plugins\CityBaker.cs" />
     <Compile Include="Rendering\City\Plugins\MapPainterPlugin.cs" />
     <Compile Include="Rendering\City\Plugins\NeighbourhoodEditPlugin.cs" />
     <Compile Include="Rendering\City\TLayerVertex.cs" />

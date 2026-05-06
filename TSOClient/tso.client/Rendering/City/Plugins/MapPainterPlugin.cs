@@ -520,7 +520,8 @@ namespace FSO.Client.Rendering.City.Plugins
                         if (Accelerate)
                         {
                             City.MapData.Save(dir);
-                            UIScreen.GlobalShowAlert(new UI.Controls.UIAlertOptions { Title = "Save Success", Message = "Saved city data " + i + "." }, true);
+                            CityBaker.Save(City.MapData, dir);
+                            UIScreen.GlobalShowAlert(new UI.Controls.UIAlertOptions { Title = "Save Success", Message = "Saved city data " + i + " (incl. vertexcolor + thumbnail)." }, true);
                         }
                         else if (Directory.Exists(dir))
                         {
