@@ -109,12 +109,18 @@ namespace FSO.Server.Core
                         // crop to just the left square.
                         if (img.Width > img.Height)
                             img.Mutate(x => x.Crop(new Rectangle(0, 0, img.Height, img.Height)));
-                        img.Mutate(x => x.Resize(new ResizeOptions
+                        // Only downscale if larger than the cap; native catalog BMPs are
+                        // typically 44×44 or 88×88 — upscaling them blurs the pixel art.
+                        const int cap = 512;
+                        if (img.Width > cap || img.Height > cap)
                         {
-                            Size = new Size(512, 512),
-                            Mode = ResizeMode.Max,
-                            Sampler = KnownResamplers.Lanczos3
-                        }));
+                            img.Mutate(x => x.Resize(new ResizeOptions
+                            {
+                                Size = new Size(cap, cap),
+                                Mode = ResizeMode.Max,
+                                Sampler = KnownResamplers.Lanczos3
+                            }));
+                        }
                         AtomicWritePng(thumbPath, fs => img.SaveAsPng(fs));
                     }
                 }
@@ -348,17 +354,57 @@ namespace FSO.Server.Core
                 }
             }
 
-            Directory.CreateDirectory(dir);
-            using (var canvas = Image.LoadPixelData<Rgba32>(canvasBytes, canvasW, canvasH))
+            // Trim transparent border to the painted bbox. The frame-union bbox
+            // we sized canvasW/H from is loose — sprites have transparent edges
+            // within them, so the actual painted region is usually smaller.
+            // Cropping makes the saved thumb fill the frame (no whitespace
+            // halo) and avoids a Lanczos3 upscale of a tiny silhouette inside
+            // a big empty canvas, which was the main reason small-object
+            // thumbs looked blurry.
+            int tMinX = canvasW, tMinY = canvasH, tMaxX = -1, tMaxY = -1;
+            for (int y = 0; y < canvasH; y++)
             {
-                // Scale to 512×512 with Lanczos3 — smooth but preserves pixel-art edges better
-                // than bilinear for small sprites.
-                canvas.Mutate(x => x.Resize(new ResizeOptions
+                int rowBase = y * canvasW * 4;
+                for (int x = 0; x < canvasW; x++)
                 {
-                    Size = new Size(512, 512),
-                    Mode = ResizeMode.Max,
-                    Sampler = KnownResamplers.Lanczos3
-                }));
+                    if (canvasBytes[rowBase + x * 4 + 3] == 0) continue;
+                    if (x < tMinX) tMinX = x; if (y < tMinY) tMinY = y;
+                    if (x > tMaxX) tMaxX = x; if (y > tMaxY) tMaxY = y;
+                }
+            }
+            if (tMaxX < tMinX || tMaxY < tMinY) return false;
+
+            const int trimPad = 4;
+            int x0 = Math.Max(0, tMinX - trimPad);
+            int y0 = Math.Max(0, tMinY - trimPad);
+            int x1 = Math.Min(canvasW - 1, tMaxX + trimPad);
+            int y1 = Math.Min(canvasH - 1, tMaxY + trimPad);
+            int outW = x1 - x0 + 1;
+            int outH = y1 - y0 + 1;
+            var trimmed = new byte[outW * outH * 4];
+            for (int y = 0; y < outH; y++)
+                Buffer.BlockCopy(canvasBytes, ((y0 + y) * canvasW + x0) * 4,
+                                 trimmed, y * outW * 4, outW * 4);
+
+            Directory.CreateDirectory(dir);
+            using (var canvas = Image.LoadPixelData<Rgba32>(trimmed, outW, outH))
+            {
+                // Only DOWNSCALE if the trimmed render exceeds the cap; never
+                // upscale (Lanczos on tiny pixel-art sprites blurs them).
+                // 512px on the long side keeps the cache file small while
+                // staying ≥ any in-game catalog cell size, and the API's
+                // consumers (browsers / in-game UI) scale down with their own
+                // sampler when displaying smaller.
+                const int cap = 512;
+                if (outW > cap || outH > cap)
+                {
+                    canvas.Mutate(x => x.Resize(new ResizeOptions
+                    {
+                        Size = new Size(cap, cap),
+                        Mode = ResizeMode.Max,
+                        Sampler = KnownResamplers.Lanczos3
+                    }));
+                }
                 AtomicWritePng(thumbPath, fs => canvas.SaveAsPng(fs));
             }
             return true;
