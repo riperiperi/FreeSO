@@ -80,9 +80,33 @@ namespace FSO.Client.UI.Screens
             CityRenderer.Initialize(cityMap);
 
             Log("    InitializeMap: LoadContent");
+            Log($"    InitializeMap: cwd = {System.Environment.CurrentDirectory}");
+            Log($"    InitializeMap: ContentDir = {FSOEnvironment.ContentDir}");
+            var expectedDir = System.IO.Path.Combine(System.Environment.CurrentDirectory, FSOEnvironment.ContentDir, "Cities", "city_0100");
+            Log($"    InitializeMap: expected city dir = {expectedDir}");
+            Log($"    InitializeMap: city dir exists = {System.IO.Directory.Exists(expectedDir)}");
+            if (System.IO.Directory.Exists(expectedDir))
+            {
+                foreach (var f in System.IO.Directory.GetFiles(expectedDir))
+                    Log($"      file: {System.IO.Path.GetFileName(f)} ({new System.IO.FileInfo(f).Length} bytes)");
+            }
+
             CityRenderer.LoadContent(GameFacade.GraphicsDevice);
 
             Log($"    InitializeMap: post-LoadContent — MapData={CityRenderer.MapData != null} Geometry={CityRenderer.Geometry != null} SubdivGeometry={CityRenderer.SubdivGeometry != null}");
+            if (CityRenderer.MapData != null)
+            {
+                var md = CityRenderer.MapData;
+                Log($"      MapData.Width = {md.Width}, Height = {md.Height}");
+                Log($"      ElevationData.Length = {md.ElevationData?.Length ?? -1}");
+                if (md.ElevationData != null && md.ElevationData.Length > 0)
+                {
+                    int min = 255, max = 0, sum = 0;
+                    foreach (var v in md.ElevationData) { if (v < min) min = v; if (v > max) max = v; sum += v; }
+                    Log($"      Elevation min/max/avg = {min}/{max}/{sum / md.ElevationData.Length}");
+                }
+                Log($"      TerrainTypeColorData.Length = {md.TerrainTypeColorData?.Length ?? -1}");
+            }
 
             CityRenderer.RegenData = true;
             CityRenderer.SetTimeOfDay(0.5);
