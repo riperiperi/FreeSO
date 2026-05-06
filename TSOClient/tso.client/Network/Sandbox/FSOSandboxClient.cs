@@ -2,12 +2,12 @@
 using System;
 using Mina.Core.Session;
 using System.Net;
-using System.Globalization;
 using Mina.Transport.Socket;
 using Mina.Core.Future;
 using Mina.Filter.Codec;
 using FSO.SimAntics.NetPlay.Model;
 using FSO.Common.Utils;
+using FSO.Server.Common;
 
 namespace FSO.Client.Network.Sandbox
 {
@@ -21,7 +21,7 @@ namespace FSO.Client.Network.Sandbox
 
         public void Connect(string address)
         {
-            Connect(CreateIPEndPoint(address));
+            Connect(IPEndPointUtils.CreateIPEndPoint(address));
         }
 
         public void Disconnect()
@@ -67,29 +67,6 @@ namespace FSO.Client.Network.Sandbox
             {
                 return Session != null && Session.Connected;
             }
-        }
-
-        public static IPEndPoint CreateIPEndPoint(string endPoint)
-        {
-            string[] ep = endPoint.Split(':');
-            if (ep.Length != 2) throw new FormatException("Invalid endpoint format");
-            System.Net.IPAddress ip;
-            if (!System.Net.IPAddress.TryParse(ep[0], out ip))
-            {
-                var addrs = Dns.GetHostEntry(ep[0]).AddressList;
-                if (addrs.Length == 0)
-                {
-                    throw new FormatException("Invalid ip-address");
-                }
-                else ip = addrs[0];
-            }
-
-            int port;
-            if (!int.TryParse(ep[1], NumberStyles.None, NumberFormatInfo.CurrentInfo, out port))
-            {
-                throw new FormatException("Invalid port");
-            }
-            return new IPEndPoint(ip, port);
         }
 
         public void ExceptionCaught(IoSession session, Exception cause)
