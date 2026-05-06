@@ -13,25 +13,29 @@ namespace FSO.Client.UI.Screens
     /// Loads a city via the live renderer, auto-enables MapPainterPlugin,
     /// and skips every UI element CoreGameScreen wires up for actual
     /// gameplay (UCP, Gizmo, message tray, Discord RPC, controllers, etc).
+    ///
+    /// Ctor is empty by design: heavy renderer setup happens in Initialize,
+    /// which the controller calls *after* the screen is added to the screen
+    /// stack. The Camera projection reads UIScreen.Current's dimensions, so
+    /// initializing before the screen is current produces a degenerate
+    /// projection and an invisible city. Mirrors EnterSandboxMode.
     /// </summary>
     public class CityEditorScreen : GameScreen, IDisposable
     {
         public Terrain CityRenderer;
 
-        // Default to Alphaville. A future stage exposes this via
-        // CityEditorHook so the FSO.CityEditor wrapper can pass a target
-        // directory in from a CLI arg or file-open dialog.
         private const int InitialCityId = 100;
 
-        public CityEditorScreen() : base()
+        public CityEditorScreen() : base() { }
+
+        public void Initialize()
         {
             CalculateMatrix();
             InitializeMap(InitialCityId);
 
             // Mirror the visible-camera state CoreGameScreen establishes
             // via its ZoomLevel=5 setter. Without these explicit values
-            // the renderer clears to the sun-tint colour but never draws
-            // any geometry — first-frame defaults aren't enough.
+            // first-frame defaults aren't enough — geometry never draws.
             CityRenderer.Visible = true;
             CityRenderer.m_Zoomed = TerrainZoomMode.Far;
             CityRenderer.m_ZoomProgress = 0;
