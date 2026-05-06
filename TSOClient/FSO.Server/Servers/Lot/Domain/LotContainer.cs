@@ -763,6 +763,7 @@ namespace FSO.Server.Servers.Lot.Domain
             LOG.Info("Resetting VM for lot with dbid = " + Context.DbId);
             IsSpectatorMode = (Context.Action == ClaimAction.LOT_SPECTATOR);
             VMGlobalLink = Kernel.Get<LotServerGlobalLink>();
+            VMGlobalLink.Readonly = IsSpectatorMode;
             if (AllowGuestOpening && !JobLot)
             {
                 var host = Kernel.Get<LiveSurroundHost>();
@@ -1269,7 +1270,7 @@ namespace FSO.Server.Servers.Lot.Domain
 
                     if (--LotSaveTicker <= 0)
                     {
-                        if (!IsSpectatorMode) SaveRing();
+                        SaveRing();
                         LotSaveTicker = LOT_SAVE_PERIOD;
 
                         Host.UpdateActiveVisitRecords();
@@ -1388,6 +1389,7 @@ namespace FSO.Server.Servers.Lot.Domain
         {
             LOG.Info("Transitioning lot " + Context.DbId + " from spectator mode to writable mode.");
             IsSpectatorMode = false;
+            VMGlobalLink.Readonly = IsSpectatorMode;
 
             bool loadedSave = false;
 
@@ -1442,6 +1444,7 @@ namespace FSO.Server.Servers.Lot.Domain
             LOG.Info("Transitioning lot " + Context.DbId + " to spectator mode.");
             SaveRing();
             IsSpectatorMode = true;
+            VMGlobalLink.Readonly = IsSpectatorMode;
 
             foreach (VMAvatar ava in Lot.Context.ObjectQueries.Avatars)
             {
