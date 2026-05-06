@@ -25,7 +25,17 @@ namespace FSO.Client.UI.Screens
 
         public CityEditorScreen() : base()
         {
+            CalculateMatrix();
             InitializeMap(InitialCityId);
+
+            // Mirror the visible-camera state CoreGameScreen establishes
+            // via its ZoomLevel=5 setter. Without these explicit values
+            // the renderer clears to the sun-tint colour but never draws
+            // any geometry — first-frame defaults aren't enough.
+            CityRenderer.Visible = true;
+            CityRenderer.m_Zoomed = TerrainZoomMode.Far;
+            CityRenderer.m_ZoomProgress = 0;
+
             CityRenderer.Plugin = new MapPainterPlugin(CityRenderer);
             CityEditorHook.Editor?.OnCityReady();
         }
@@ -39,6 +49,13 @@ namespace FSO.Client.UI.Screens
             CityRenderer.RegenData = true;
             CityRenderer.SetTimeOfDay(0.5);
             GameFacade.Scenes.Add(CityRenderer);
+        }
+
+        public override void GameResized()
+        {
+            base.GameResized();
+            CalculateMatrix();
+            CityRenderer?.Camera.ProjectionDirty();
         }
 
         public override void Update(UpdateState state)
