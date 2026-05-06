@@ -3,6 +3,10 @@ using System.Globalization;
 using System.Net;
 using System.Net.Sockets;
 
+// FSO.Server.Common defines its own IPAddress class; alias the BCL type
+// to avoid the name collision inside this file.
+using IPAddress = System.Net.IPAddress;
+
 namespace FSO.Server.Common
 {
     public class IPEndPointUtils
