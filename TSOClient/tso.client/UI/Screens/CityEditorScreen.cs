@@ -134,6 +134,19 @@ namespace FSO.Client.UI.Screens
                     $"renderer.RegenData={CityRenderer?.RegenData} " +
                     $"subdivReady={CityRenderer?.SubdivGeometry?.Ready} " +
                     $"plugin={CityRenderer?.Plugin?.GetType().Name ?? "null"}");
+
+                if (CityRenderer?.Geometry != null)
+                {
+                    var g = CityRenderer.Geometry;
+                    Log($"  Geometry: LayerPrims=[{string.Join(",", g.LayerPrims)}] RoadPrims={g.RoadPrims}");
+                    Log($"  Geometry.LayerVertices null counts: " +
+                        $"[{string.Join(",", System.Linq.Enumerable.Range(0, 5).Select(i => g.LayerVertices[i] == null ? "null" : g.LayerVertices[i].VertexCount.ToString()))}]");
+                }
+                if (CityRenderer?.Camera != null)
+                {
+                    var c = CityRenderer.Camera;
+                    Log($"  Camera: Zoomed={c.Zoomed} ZoomProgress={c.ZoomProgress:F3} LotZoomProgress={c.LotZoomProgress:F3}");
+                }
             }
         }
 
