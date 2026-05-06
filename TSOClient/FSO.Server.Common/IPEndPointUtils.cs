@@ -3,14 +3,14 @@ using System.Globalization;
 using System.Net;
 using System.Net.Sockets;
 
-// FSO.Server.Common defines its own IPAddress class; alias the BCL type
-// to avoid the name collision inside this file.
-using IPAddress = System.Net.IPAddress;
-
 namespace FSO.Server.Common
 {
     public class IPEndPointUtils
     {
+        // Note: this namespace defines its own IPAddress class, which
+        // shadows System.Net.IPAddress for unqualified references inside
+        // FSO.Server.Common. Every reference to the BCL type below is
+        // fully qualified for that reason.
         public static IPEndPoint CreateIPEndPoint(string endPoint)
         {
             if (string.IsNullOrEmpty(endPoint))
@@ -28,8 +28,8 @@ namespace FSO.Server.Common
             if (host.Length >= 2 && host[0] == '[' && host[host.Length - 1] == ']')
                 host = host.Substring(1, host.Length - 2);
 
-            IPAddress ip;
-            if (!IPAddress.TryParse(host, out ip))
+            System.Net.IPAddress ip;
+            if (!System.Net.IPAddress.TryParse(host, out ip))
             {
                 var addrs = Dns.GetHostEntry(host).AddressList;
                 if (addrs.Length == 0)
