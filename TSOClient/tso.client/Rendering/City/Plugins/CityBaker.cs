@@ -8,15 +8,20 @@ using Microsoft.Xna.Framework.Graphics;
 namespace FSO.Client.Rendering.City.Plugins
 {
     /// <summary>
-    /// Bakes the two output PNGs FreeSO requires alongside the five input
-    /// layers — vertexcolor.png and thumbnail.png — when the city painter
-    /// saves a city directory.
+    /// Bakes vertexcolor.png and thumbnail.png alongside the five input
+    /// layers when the city painter saves a city directory.
     ///
-    /// Current implementation: procedural Lambert-style hillshade modulated
-    /// by terraintype color. Output is "good enough to ship" — the city
-    /// loads and responds to terrain edits — but is not pixel-identical to
-    /// what the live engine renders. A future stage can replace either or
-    /// both with a real RenderTarget pass through the live shader.
+    /// The shader treats vertexcolor as a per-pixel multiplier on top of
+    /// the terrain texture (PixShader.fx:386: <c>Base *= tex2D(USampler, …);</c>),
+    /// with runtime diffuse lighting + shadows applied separately. Vertex-
+    /// color is therefore a *tint*, not a rendered snapshot — the official
+    /// "Crafting a City" doc instructs operators to paint it manually in
+    /// Photoshop. We do the same algorithmically.
+    ///
+    /// The tint constants are sampled from Alphaville's own vertexcolor.png
+    /// (city_0100), so output is faithful to the canonical look. A subtle
+    /// elevation hillshade matches the ~3% slope/flat brightness variation
+    /// that exists in Alphaville's bake.
     /// </summary>
     public static class CityBaker
     {
@@ -24,16 +29,28 @@ namespace FSO.Client.Rendering.City.Plugins
         private const int THUMB_W = 180;
         private const int THUMB_H = 135;
 
-        // Tuned to keep flat plateaus close to base color and put visible
-        // shading on the slopes. Sun comes from the northwest (the angle
-        // FreeSO's actual renderer uses for city lighting).
-        private const float SHADE_AMBIENT = 0.55f;
-        private const float SHADE_DIFFUSE = 0.45f;
+        // Canonical per-terrain tints sampled from city_0100/vertexcolor.png.
+        // See Documentation/Crafting a City.md for the manual editing guidance
+        // these constants algorithmically replace.
+        private static readonly Color GrassTint = new Color(169, 192, 140);
+        private static readonly Color WaterTint = new Color( 99, 168, 207);
+        private static readonly Color RockTint  = new Color(187, 189, 152);
+        private static readonly Color SnowTint  = new Color(228, 229, 218);
+        private static readonly Color SandTint  = new Color(229, 240, 236);
+
+        // Slope/flat brightness variation in Alphaville is ~3%. Keep the
+        // hillshade subtle so flat plateaus don't look quilted.
+        private const float SHADE_AMBIENT = 0.97f;
+        private const float SHADE_DIFFUSE = 0.05f;
         private const float SHADE_RANGE = 25f;
 
-        /// <summary>
-        /// Save vertexcolor.png and thumbnail.png into <paramref name="dir"/>.
-        /// </summary>
+        // Terrain type IDs from CityMapData.TerrainTypeMap (CityMapData.cs:19).
+        private const byte TT_GRASS = 0;
+        private const byte TT_SAND  = 1;
+        private const byte TT_ROCK  = 2;
+        private const byte TT_SNOW  = 3;
+        private const byte TT_WATER = 4;
+
         public static void Save(CityMapData map, string dir)
         {
             var shaded = ShadeColors(map);
@@ -43,14 +60,23 @@ namespace FSO.Client.Rendering.City.Plugins
             SaveTex(Path.Combine(dir, "thumbnail.png"), THUMB_W, THUMB_H, thumb);
         }
 
-        /// <summary>
-        /// Lambert-style hillshade modulated by terraintype color. One pass,
-        /// 512² pixels, allocates a single Color[] buffer.
-        /// </summary>
+        private static Color TintFor(byte terrainType)
+        {
+            switch (terrainType)
+            {
+                case TT_WATER: return WaterTint;
+                case TT_SAND:  return SandTint;
+                case TT_ROCK:  return RockTint;
+                case TT_SNOW:  return SnowTint;
+                case TT_GRASS:
+                default:       return GrassTint;
+            }
+        }
+
         private static Color[] ShadeColors(CityMapData map)
         {
             var elev = map.ElevationData;
-            var typeC = map.TerrainTypeColorData;
+            var type = map.TerrainType;
             var result = new Color[MAP_SIZE * MAP_SIZE];
 
             for (int y = 0; y < MAP_SIZE; y++)
@@ -61,32 +87,26 @@ namespace FSO.Client.Rendering.City.Plugins
                     int xSouth = (x + 1 < MAP_SIZE) ? x + 1 : x;
                     int idx = y * MAP_SIZE + x;
 
-                    // Slope: east-neighbour minus self, south-neighbour minus self.
                     int dx = elev[y * MAP_SIZE + xSouth] - elev[idx];
                     int dy = elev[yEast * MAP_SIZE + x] - elev[idx];
 
-                    // Sun from NW means surfaces facing NW are lit, SE shadowed.
-                    // Negative dx + negative dy → facing NW → bright.
                     float light = (-dx - dy) / SHADE_RANGE;
                     float shade = SHADE_AMBIENT + SHADE_DIFFUSE * light;
                     if (shade < 0f) shade = 0f;
                     if (shade > 1f) shade = 1f;
 
-                    var baseColor = typeC[idx];
+                    var tint = TintFor(type[idx]);
                     result[idx] = new Color(
-                        (byte)(baseColor.R * shade),
-                        (byte)(baseColor.G * shade),
-                        (byte)(baseColor.B * shade),
+                        (byte)(tint.R * shade),
+                        (byte)(tint.G * shade),
+                        (byte)(tint.B * shade),
                         (byte)255);
                 }
             }
             return result;
         }
 
-        /// <summary>
-        /// Naive box-filter downscale. We're shrinking ~8× so even simple
-        /// averaging gives an acceptable result for a 180×135 thumbnail.
-        /// </summary>
+        // Naive box-filter downscale — adequate for 180×135 from 512².
         private static Color[] Decimate(Color[] src, int srcW, int srcH, int dstW, int dstH)
         {
             var dst = new Color[dstW * dstH];
@@ -118,10 +138,8 @@ namespace FSO.Client.Rendering.City.Plugins
             return dst;
         }
 
-        /// <summary>
-        /// Mirrors CityMapData.SaveTex: GPU upload + deferred PNG write on
-        /// the game thread. Avoids cross-thread GraphicsDevice access.
-        /// </summary>
+        // Mirrors CityMapData.SaveTex: GPU upload + deferred PNG write
+        // on the game thread to avoid cross-thread GraphicsDevice access.
         private static void SaveTex(string filename, int width, int height, Color[] data)
         {
             var tex = new Texture2D(GameFacade.GraphicsDevice, width, height);
