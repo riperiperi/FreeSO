@@ -88,6 +88,7 @@
     <Compile Include="Controls\UISlider.cs" />
     <Compile Include="Controls\UITextBox.cs" />
     <Compile Include="Controls\UITextEdit.cs" />
+    <Compile Include="Debug\CityEditorHook.cs" />
     <Compile Include="Debug\IDEHook.cs" />
     <Compile Include="Framework\DoubleClick.cs" />
     <Compile Include="Framework\Font.cs" />

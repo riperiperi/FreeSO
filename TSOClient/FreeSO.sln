@@ -49,6 +49,8 @@ Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "FSO.IDE", "FSO.IDE\FSO.IDE.
 		{35253CE1-C864-4CD3-8249-4D1319748E8F} = {35253CE1-C864-4CD3-8249-4D1319748E8F}
 	EndProjectSection
 EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "FSO.CityEditor", "FSO.CityEditor\FSO.CityEditor.csproj", "{DB1B21A0-C68A-4CA2-89EE-464BC913D2BC}"
+EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "MonoGame.Framework.WindowsGL", "..\Other\libs\FSOMonoGame\MonoGame.Framework\MonoGame.Framework.WindowsGL.csproj", "{6D75E618-19CA-4C51-9546-F10965FBC0B8}"
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "MonoGame.Framework.Windows", "..\Other\libs\FSOMonoGame\MonoGame.Framework\MonoGame.Framework.Windows.csproj", "{7DE47032-A904-4C29-BD22-2D235E8D91BA}"
@@ -808,6 +810,36 @@ Global
 		{5DEB20EB-1EB7-48F9-922C-463ABAE56E63}.Windows|Any CPU.Build.0 = Release|Any CPU
 		{5DEB20EB-1EB7-48F9-922C-463ABAE56E63}.Windows|iPhone.ActiveCfg = Release|Any CPU
 		{5DEB20EB-1EB7-48F9-922C-463ABAE56E63}.Windows|iPhoneSimulator.ActiveCfg = Release|Any CPU
+		{DB1B21A0-C68A-4CA2-89EE-464BC913D2BC}.Android|Any CPU.ActiveCfg = Release|Any CPU
+		{DB1B21A0-C68A-4CA2-89EE-464BC913D2BC}.Android|Any CPU.Build.0 = Release|Any CPU
+		{DB1B21A0-C68A-4CA2-89EE-464BC913D2BC}.Android|iPhone.ActiveCfg = Release|Any CPU
+		{DB1B21A0-C68A-4CA2-89EE-464BC913D2BC}.Android|iPhoneSimulator.ActiveCfg = Release|Any CPU
+		{DB1B21A0-C68A-4CA2-89EE-464BC913D2BC}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{DB1B21A0-C68A-4CA2-89EE-464BC913D2BC}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{DB1B21A0-C68A-4CA2-89EE-464BC913D2BC}.Debug|iPhone.ActiveCfg = Debug|Any CPU
+		{DB1B21A0-C68A-4CA2-89EE-464BC913D2BC}.Debug|iPhone.Build.0 = Debug|Any CPU
+		{DB1B21A0-C68A-4CA2-89EE-464BC913D2BC}.Debug|iPhoneSimulator.ActiveCfg = Debug|Any CPU
+		{DB1B21A0-C68A-4CA2-89EE-464BC913D2BC}.Debug|iPhoneSimulator.Build.0 = Debug|Any CPU
+		{DB1B21A0-C68A-4CA2-89EE-464BC913D2BC}.iOS|Any CPU.ActiveCfg = Release|Any CPU
+		{DB1B21A0-C68A-4CA2-89EE-464BC913D2BC}.iOS|Any CPU.Build.0 = Release|Any CPU
+		{DB1B21A0-C68A-4CA2-89EE-464BC913D2BC}.iOS|iPhone.ActiveCfg = Release|Any CPU
+		{DB1B21A0-C68A-4CA2-89EE-464BC913D2BC}.iOS|iPhoneSimulator.ActiveCfg = Release|Any CPU
+		{DB1B21A0-C68A-4CA2-89EE-464BC913D2BC}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{DB1B21A0-C68A-4CA2-89EE-464BC913D2BC}.Release|Any CPU.Build.0 = Release|Any CPU
+		{DB1B21A0-C68A-4CA2-89EE-464BC913D2BC}.Release|iPhone.ActiveCfg = Release|Any CPU
+		{DB1B21A0-C68A-4CA2-89EE-464BC913D2BC}.Release|iPhone.Build.0 = Release|Any CPU
+		{DB1B21A0-C68A-4CA2-89EE-464BC913D2BC}.Release|iPhoneSimulator.ActiveCfg = Release|Any CPU
+		{DB1B21A0-C68A-4CA2-89EE-464BC913D2BC}.Release|iPhoneSimulator.Build.0 = Release|Any CPU
+		{DB1B21A0-C68A-4CA2-89EE-464BC913D2BC}.ServerRelease|Any CPU.ActiveCfg = Release|Any CPU
+		{DB1B21A0-C68A-4CA2-89EE-464BC913D2BC}.ServerRelease|Any CPU.Build.0 = Release|Any CPU
+		{DB1B21A0-C68A-4CA2-89EE-464BC913D2BC}.ServerRelease|iPhone.ActiveCfg = ServerRelease|Any CPU
+		{DB1B21A0-C68A-4CA2-89EE-464BC913D2BC}.ServerRelease|iPhone.Build.0 = ServerRelease|Any CPU
+		{DB1B21A0-C68A-4CA2-89EE-464BC913D2BC}.ServerRelease|iPhoneSimulator.ActiveCfg = ServerRelease|Any CPU
+		{DB1B21A0-C68A-4CA2-89EE-464BC913D2BC}.ServerRelease|iPhoneSimulator.Build.0 = ServerRelease|Any CPU
+		{DB1B21A0-C68A-4CA2-89EE-464BC913D2BC}.Windows|Any CPU.ActiveCfg = Release|Any CPU
+		{DB1B21A0-C68A-4CA2-89EE-464BC913D2BC}.Windows|Any CPU.Build.0 = Release|Any CPU
+		{DB1B21A0-C68A-4CA2-89EE-464BC913D2BC}.Windows|iPhone.ActiveCfg = Release|Any CPU
+		{DB1B21A0-C68A-4CA2-89EE-464BC913D2BC}.Windows|iPhoneSimulator.ActiveCfg = Release|Any CPU
 		{6D75E618-19CA-4C51-9546-F10965FBC0B8}.Android|Any CPU.ActiveCfg = Release|Any CPU
 		{6D75E618-19CA-4C51-9546-F10965FBC0B8}.Android|Any CPU.Build.0 = Release|Any CPU
 		{6D75E618-19CA-4C51-9546-F10965FBC0B8}.Android|iPhone.ActiveCfg = Release|Any CPU

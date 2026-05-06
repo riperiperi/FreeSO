@@ -6,6 +6,7 @@ on:
     paths:
       # Client-only projects
       - 'TSOClient/FSO.IDE/**'
+      - 'TSOClient/FSO.CityEditor/**'
       - 'TSOClient/FSO.Windows/**'
       - 'TSOClient/FSO.UI/**'
       - 'TSOClient/FSO.SimAntics.JIT/**'
@@ -108,6 +109,14 @@ jobs:
         run: |
           msbuild TSOClient/FreeSO.sln `
             /t:FSO_IDE `
+            /p:Configuration=Release `
+            /p:Platform="Any CPU" `
+            /p:OutDir="${{ github.workspace }}\publish\client"
+
+      - name: Build client (FSO.CityEditor)
+        run: |
+          msbuild TSOClient/FreeSO.sln `
+            /t:FSO_CityEditor `
             /p:Configuration=Release `
             /p:Platform="Any CPU" `
             /p:OutDir="${{ github.workspace }}\publish\client"
