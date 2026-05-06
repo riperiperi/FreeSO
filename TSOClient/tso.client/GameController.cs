@@ -94,6 +94,19 @@ namespace FSO.Client
         }
 
         /// <summary>
+        /// Boot directly into the city editor. Called instead of ShowLogin
+        /// when CityEditorHook.IsActive — i.e. when FSO.CityEditor.exe was
+        /// the launcher rather than FSO.exe.
+        /// </summary>
+        public void ShowCityEditor()
+        {
+            var screen = new CityEditorScreen();
+            GameFacade.Screens.RemoveCurrent();
+            GameFacade.Screens.AddScreen(screen);
+            DiscordRpcEngine.SendFSOPresence("Editing a City");
+        }
+
+        /// <summary>
         /// Go to the person selection page
         /// </summary>
         public void ShowPersonSelection()

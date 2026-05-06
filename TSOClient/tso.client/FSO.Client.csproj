@@ -457,6 +457,7 @@
     <Compile Include="UI\Panels\UISelectHouseView.cs" />
     <Compile Include="UI\Panels\UIUCP.cs" />
     <Compile Include="UI\Screens\TransitionScreen.cs" />
+    <Compile Include="UI\Screens\CityEditorScreen.cs" />
     <Compile Include="UI\Screens\CoreGameScreen.cs" />
     <Compile Include="UI\Screens\Credits.cs" />
     <Compile Include="UI\Screens\DebugTypeFaceScreen.cs" />

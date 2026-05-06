@@ -3,6 +3,7 @@ using FSO.Client.UI.Framework;
 using FSO.Client.UI.Controls;
 using FSO.HIT;
 using FSO.Client.Controllers;
+using FSO.Client.Debug;
 using FSO.Common.Rendering.Framework.Model;
 using FSO.Client.UI.Model;
 using FSO.Common.Utils;
@@ -105,7 +106,10 @@ namespace FSO.Client.UI.Screens
                     {
                         /** No more labels to show! Preload must be complete :) **/
                         CheckProgressTimer.Clear();
-                        FSOFacade.Controller.ShowLogin();
+                        if (CityEditorHook.IsActive)
+                            FSOFacade.Controller.ShowCityEditor();
+                        else
+                            FSOFacade.Controller.ShowLogin();
                         return;
                     }
                 }
@@ -113,7 +117,10 @@ namespace FSO.Client.UI.Screens
             if (percentDone >= 1)
             {
                 CheckProgressTimer.Clear();
-                FSOFacade.Controller.ShowLogin();
+                if (CityEditorHook.IsActive)
+                    FSOFacade.Controller.ShowCityEditor();
+                else
+                    FSOFacade.Controller.ShowLogin();
                 return;
             }
         }
