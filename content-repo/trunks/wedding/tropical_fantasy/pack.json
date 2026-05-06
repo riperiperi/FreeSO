@@ -1,0 +1,31 @@
+{
+  "name": "Tropical Fantasy",
+  "category": "trunks/wedding",
+  "gender": "f",
+  "type": "body",
+  "mode": "trunk:wedding",
+  "created_at": "2026-05-06T23:41:38Z",
+  "tool_version": "0.3.0",
+  "outfit_id": "CFF0D2994F465432",
+  "purchasable_id": "DFC7F464504F5446",
+  "collection_entry": {
+    "target": "wedding_female.col",
+    "type_id": "0x504F5446",
+    "file_id": "0xDFC7F464"
+  },
+  "files": [
+    "Content/Avatar/Meshes/User/tropical_fantasy_body_f.99106bcf6b5db827.mesh",
+    "Content/Avatar/Textures/User/tropical_fantasy_body_f_lgt.98d23d634d515437.png",
+    "Content/Avatar/Textures/User/tropical_fantasy_body_f_med.8a8d262e4d515437.png",
+    "Content/Avatar/Textures/User/tropical_fantasy_body_f_drk.859e1e294d515437.png",
+    "Content/Avatar/Bindings/User/tropical_fantasy_body_f_lgt.e5fce9c142434543.bnd",
+    "Content/Avatar/Bindings/User/tropical_fantasy_body_f_med.8eb1645442434543.bnd",
+    "Content/Avatar/Bindings/User/tropical_fantasy_body_f_drk.9a7d161442434543.bnd",
+    "Content/Avatar/Appearances/User/tropical_fantasy_body_f_lgt.8f849ec341505246.apr",
+    "Content/Avatar/Appearances/User/tropical_fantasy_body_f_med.9bdfa5ab41505246.apr",
+    "Content/Avatar/Appearances/User/tropical_fantasy_body_f_drk.bfad335f41505246.apr",
+    "Content/Avatar/Outfits/User/tropical_fantasy_body_f.cff0d2994f465432.oft",
+    "Content/Avatar/Purchasables/User/tropical_fantasy_body_f.dfc7f464504f5446.po",
+    "Content/Avatar/Collections/wedding_female.col"
+  ]
+}
