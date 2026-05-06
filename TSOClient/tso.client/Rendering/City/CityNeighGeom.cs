@@ -220,6 +220,13 @@ namespace FSO.Client.Rendering.City
 
         public void DrawHover(GraphicsDevice gd, SpriteBatch batch, Effect VertexShader, Effect PixelShader, CityContent content)
         {
+            // Nhood-hover banners need a UIContainer to live in. Only the
+            // live game's CoreGameScreen provides one; lighter screens
+            // (e.g. the city editor) skip this whole pass.
+            var coreScreen = UIScreen.Current as UI.Screens.CoreGameScreen;
+            if (coreScreen == null) return;
+            var bannerContainer = coreScreen.CityFloatingContainer;
+
             VertexShader.CurrentTechnique = VertexShader.Techniques[1];
             PixelShader.CurrentTechnique = PixelShader.Techniques[4];
 
@@ -236,7 +243,6 @@ namespace FSO.Client.Rendering.City
             }
 
             var toDraw = new HashSet<UINeighBanner>();
-            var bannerContainer = (UIScreen.Current as UI.Screens.CoreGameScreen).CityFloatingContainer;
 
             foreach (var hover in HoverPct)
             {
