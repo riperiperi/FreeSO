@@ -1,0 +1,3 @@
+# Vanilla snapshots are derived from the user's FAR3 archives — local, regen via
+# `manage-packs refresh-vanilla`. Don't commit; they vary per install version.
+_vanilla/

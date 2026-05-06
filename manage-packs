@@ -1,0 +1,6 @@
+#!/usr/bin/env bash
+# Convenience wrapper — run from the FreeSO source-tree root.
+# Forwards all args to Other/tools/ManagePacks/manage_packs.py.
+set -euo pipefail
+HERE="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
+exec python3 "$HERE/Other/tools/ManagePacks/manage_packs.py" --repo "$HERE/content-repo" "$@"

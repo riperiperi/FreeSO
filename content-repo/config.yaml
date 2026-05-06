@@ -1,0 +1,35 @@
+# manage-packs configuration. Used by Other/tools/ManagePacks/manage_packs.py.
+#
+# All paths are absolute. Edit them once after cloning, then never touch.
+#
+# Layout:
+#   /srv/dev_projects/personal/FreeSO/                  ← freeso_source
+#   ├── content-repo/                                   ← this directory
+#   │   ├── config.yaml                                 ← you are here
+#   │   ├── _vanilla/                                   ← FAR3-extracted snapshots
+#   │   ├── trunks/<type>/<name>/                       ← generated packs
+#   │   └── cas/<heads|bodies>/<gender>/<name>/
+#   └── TSOClient/FSO.Content.TSO/Content/Avatar/...    ← deploy target
+
+# Path to the FreeSO source-tree fork. Files installed by manage-packs land
+# under <freeso_source>/TSOClient/FSO.Content.TSO/Content/Avatar/...
+freeso_source: /srv/dev_projects/personal/FreeSO
+
+# Path to a working FreeSO game install. Used by `manage-packs refresh-vanilla`
+# to extract baseline collection files from FAR3 archives so we can show what
+# vanilla looks like and reset cleanly.
+game_dir: /home/ian/games/edenso/game/TSOClient
+
+# Trunk types known to VMEODTrunkPlugin. The script will treat each as a
+# separate management category. Comment lines back in as you author packs
+# for them.
+trunk_types:
+  - wedding
+  - scifi
+  - vegas
+  - vaudwest
+  - uniforms
+  - costumes
+  - oldworld
+  - sports
+  - toga
