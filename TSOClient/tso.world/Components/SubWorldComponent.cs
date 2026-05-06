@@ -55,14 +55,12 @@ namespace FSO.LotView.Components
             HasInit = HasInitGPU & HasInitBlueprint;
         }
 
-        public override void InitBlueprint(Blueprint blueprint)
+        public void InitBlueprintNoGPU(Blueprint blueprint)
         {
             this.Blueprint = blueprint;
             HasInitBlueprint = true;
             HasInit = HasInitGPU & HasInitBlueprint;
 
-            Light?.Init(Blueprint);
-            State.Rooms.Init(blueprint);
             blueprint.Changes.SetFlag(BlueprintGlobalChanges.ROOM_CHANGED);
             blueprint.Changes.SetFlag(BlueprintGlobalChanges.OUTDOORS_LIGHTING_CHANGED);
             Architecture = new WorldArchitecture(blueprint);
@@ -71,6 +69,18 @@ namespace FSO.LotView.Components
             State.Platform = Platform;
             State.Changes = blueprint.Changes;
             blueprint.Changes.Subworld = true;
+        }
+
+        public void InitBlueprintGPU(Blueprint blueprint)
+        {
+            Light?.Init(Blueprint);
+            State.Rooms.Init(blueprint);
+        }
+
+        public override void InitBlueprint(Blueprint blueprint)
+        {
+            InitBlueprintNoGPU(blueprint);
+            InitBlueprintGPU(blueprint);
         }
 
         public override void InitDefaultGraphicsMode()

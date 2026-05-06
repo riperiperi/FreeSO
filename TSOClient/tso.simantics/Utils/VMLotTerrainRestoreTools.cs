@@ -1,4 +1,5 @@
 ﻿using FSO.Common.Model;
+using FSO.Common.Utils;
 using FSO.Content.Model;
 using FSO.LotView;
 using FSO.LotView.Components;
@@ -1143,7 +1144,12 @@ namespace FSO.SimAntics.Utils
                     {
                         var blueprint = new Blueprint(size, size);
                         tempVM.Context.Blueprint = blueprint;
-                        subworld.InitBlueprint(blueprint);
+                        // This inits some GPU resources, so make sure it's done on the right thread.
+                        subworld.InitBlueprintNoGPU(blueprint);
+                        GameThread.InUpdate(() =>
+                        {
+                            subworld.InitBlueprintGPU(blueprint);
+                        });
                         tempVM.TSOState.LotID = newLocation;
                         tempVM.Context.Architecture = new VMArchitecture(size, size, blueprint, tempVM.Context);
 
@@ -1170,9 +1176,14 @@ namespace FSO.SimAntics.Utils
 
                     subworld.GlobalPosition = new Vector2((1 - y) * (size - 2), (x - 1) * (size - 2));
 
-                    vm.Context.Blueprint.SubWorlds.Add(subworld);
+                    // This could conflict with some main thread actions.
+                    GameThread.InUpdate(() =>
+                    {
+                        vm.Context.Blueprint.SubWorlds.Add(subworld);
+                    });
                 }
             }
+
             vm.Context.World.InitSubWorlds();
         }
     }

@@ -694,8 +694,9 @@ namespace FSO.LotView
             if (HasInit == false) { return; }
 
             FrameCounter++;
-            if (FrameCounter < LastCacheClear + 60*60)
+            if (FrameCounter > LastCacheClear + 60*60)
             {
+                LastCacheClear = FrameCounter;
                 State._2D.ClearTextureCache();
             }
             if (!UseBackbuffer)
