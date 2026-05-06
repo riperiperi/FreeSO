@@ -1,24 +1,22 @@
 using System;
+using System.IO;
 using FSO.Client.Debug;
 using FSO.Client.Rendering.City;
 using FSO.Client.Rendering.City.Plugins;
 using FSO.Client.UI.Framework;
+using FSO.Common;
 using FSO.Common.Rendering.Framework.Model;
+using FSO.Common.Utils;
+using Microsoft.Xna.Framework;
 
 namespace FSO.Client.UI.Screens
 {
     /// <summary>
-    /// Bare-bones screen used by FSO.CityEditor.exe.
-    ///
-    /// Loads a city via the live renderer, auto-enables MapPainterPlugin,
-    /// and skips every UI element CoreGameScreen wires up for actual
-    /// gameplay (UCP, Gizmo, message tray, Discord RPC, controllers, etc).
-    ///
-    /// Ctor is empty by design: heavy renderer setup happens in Initialize,
-    /// which the controller calls *after* the screen is added to the screen
-    /// stack. The Camera projection reads UIScreen.Current's dimensions, so
-    /// initializing before the screen is current produces a degenerate
-    /// projection and an invisible city. Mirrors EnterSandboxMode.
+    /// Bare-bones screen used by FSO.CityEditor.exe. Stage 3.6 — heavy
+    /// instrumentation in this build to track down a persistent
+    /// no-rendering issue. Logging lands at <see cref="LogPath"/>; the
+    /// red diagnostic rectangle is a visual sanity-check that this
+    /// screen is even reaching its Draw override.
     /// </summary>
     public class CityEditorScreen : GameScreen, IDisposable
     {
@@ -26,32 +24,67 @@ namespace FSO.Client.UI.Screens
 
         private const int InitialCityId = 100;
 
-        public CityEditorScreen() : base() { }
+        private static readonly string LogPath =
+            Path.Combine(FSOEnvironment.UserDir ?? Path.GetTempPath(), "cityeditor.log");
+
+        private int _drawCount;
+        private int _updateCount;
+
+        public CityEditorScreen() : base()
+        {
+            Log("=== ctor ===");
+            Log($"  UIScreen.Current = {UIScreen.Current?.GetType().Name ?? "null"}");
+        }
 
         public void Initialize()
         {
-            CalculateMatrix();
-            InitializeMap(InitialCityId);
+            Log("--- Initialize: begin ---");
+            Log($"  UIScreen.Current = {UIScreen.Current?.GetType().Name ?? "null"}");
+            Log($"  ScreenWidth/Height = {ScreenWidth} x {ScreenHeight}");
+            Log($"  GraphicsDevice = {(GameFacade.GraphicsDevice != null ? "ok" : "NULL")}");
 
-            // Mirror the visible-camera state CoreGameScreen establishes
-            // via its ZoomLevel=5 setter. Without these explicit values
-            // first-frame defaults aren't enough — geometry never draws.
-            CityRenderer.Visible = true;
-            CityRenderer.m_Zoomed = TerrainZoomMode.Far;
-            CityRenderer.m_ZoomProgress = 0;
+            try
+            {
+                CalculateMatrix();
+                Log("  CalculateMatrix done");
 
-            CityRenderer.Plugin = new MapPainterPlugin(CityRenderer);
-            CityEditorHook.Editor?.OnCityReady();
+                InitializeMap(InitialCityId);
+                Log($"  InitializeMap done — Camera={CityRenderer?.Camera?.GetType().Name}");
+
+                CityRenderer.Visible = true;
+                CityRenderer.m_Zoomed = TerrainZoomMode.Far;
+                CityRenderer.m_ZoomProgress = 0;
+
+                CityRenderer.Plugin = new MapPainterPlugin(CityRenderer);
+                Log("  Plugin = MapPainterPlugin");
+
+                CityEditorHook.Editor?.OnCityReady();
+                Log("--- Initialize: end (success) ---");
+            }
+            catch (Exception ex)
+            {
+                Log("INITIALIZE THREW: " + ex);
+            }
         }
 
         private void InitializeMap(int cityMap)
         {
+            Log("    InitializeMap: new Terrain");
             CityRenderer = new Terrain(GameFacade.GraphicsDevice);
             CityRenderer.m_GraphicsDevice = GameFacade.GraphicsDevice;
+
+            Log("    InitializeMap: Terrain.Initialize");
             CityRenderer.Initialize(cityMap);
+
+            Log("    InitializeMap: LoadContent");
             CityRenderer.LoadContent(GameFacade.GraphicsDevice);
+
+            Log($"    InitializeMap: post-LoadContent — MapData={CityRenderer.MapData != null} Geometry={CityRenderer.Geometry != null} SubdivGeometry={CityRenderer.SubdivGeometry != null}");
+
             CityRenderer.RegenData = true;
             CityRenderer.SetTimeOfDay(0.5);
+
+            Log("    InitializeMap: GameFacade.Scenes.Add");
             GameFacade.Scenes.Add(CityRenderer);
         }
 
@@ -65,6 +98,41 @@ namespace FSO.Client.UI.Screens
         public override void Update(UpdateState state)
         {
             base.Update(state);
+            _updateCount++;
+            if (_updateCount == 1 || _updateCount == 60 || _updateCount == 300)
+            {
+                Log($"Update tick {_updateCount}: " +
+                    $"sceneCount={GameFacade.Scenes?.Scenes?.Count} " +
+                    $"renderer.Visible={CityRenderer?.Visible} " +
+                    $"renderer.RegenData={CityRenderer?.RegenData} " +
+                    $"subdivReady={CityRenderer?.SubdivGeometry?.Ready} " +
+                    $"plugin={CityRenderer?.Plugin?.GetType().Name ?? "null"}");
+            }
+        }
+
+        public override void Draw(UISpriteBatch batch)
+        {
+            base.Draw(batch);
+            _drawCount++;
+
+            if (_drawCount == 1 || _drawCount == 60)
+            {
+                Log($"Draw tick {_drawCount} reached");
+            }
+
+            // Visible canary: a 200×80 red rectangle in the top-left.
+            // If you see this in the running editor, this screen IS being
+            // drawn — the issue is purely in the 3D scene below us.
+            // If you do NOT see this, the screen itself isn't drawing.
+            try
+            {
+                DrawLocalTexture(batch, TextureGenerator.GetPxWhite(batch.GraphicsDevice),
+                    null, new Vector2(20, 20), new Vector2(200, 80), Color.Red, 0f);
+            }
+            catch (Exception ex)
+            {
+                if (_drawCount == 1) Log("Diag rect draw threw: " + ex.Message);
+            }
         }
 
         public void Dispose()
@@ -74,6 +142,19 @@ namespace FSO.Client.UI.Screens
                 GameFacade.Scenes.Remove(CityRenderer);
                 CityRenderer.Dispose();
                 CityRenderer = null;
+            }
+        }
+
+        private static void Log(string msg)
+        {
+            try
+            {
+                File.AppendAllText(LogPath,
+                    $"[{DateTime.Now:HH:mm:ss.fff}] {msg}{Environment.NewLine}");
+            }
+            catch
+            {
+                // Logging must never crash the editor.
             }
         }
     }
