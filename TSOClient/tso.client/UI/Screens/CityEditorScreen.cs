@@ -24,8 +24,11 @@ namespace FSO.Client.UI.Screens
 
         private const int InitialCityId = 100;
 
+        // Same directory as FSO.CityEditor.exe — reliable on every platform,
+        // unlike FSOEnvironment.UserDir which is "Content/" on Linux desktop
+        // and resolves relative to whatever the cwd was at log time.
         private static readonly string LogPath =
-            Path.Combine(FSOEnvironment.UserDir ?? Path.GetTempPath(), "cityeditor.log");
+            Path.Combine(AppDomain.CurrentDomain.BaseDirectory, "cityeditor.log");
 
         private int _drawCount;
         private int _updateCount;
