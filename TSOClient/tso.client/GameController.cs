@@ -104,6 +104,13 @@ namespace FSO.Client
         /// </summary>
         public void ShowCityEditor()
         {
+            // Guard against the LoadingScreen's CheckProgressTimer firing
+            // multiple times before its Clear() takes effect. Without this
+            // we get duplicate CityEditorScreen instances each adding their
+            // own Terrain to GameFacade.Scenes, all calling Clear(white) on
+            // top of each other → blank white render.
+            if (GameFacade.Screens.CurrentUIScreen is CityEditorScreen) return;
+
             var screen = new CityEditorScreen();
             GameFacade.Screens.RemoveCurrent();
             GameFacade.Screens.AddScreen(screen);
