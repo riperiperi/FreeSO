@@ -1018,6 +1018,20 @@ namespace FSO.SimAntics.Engine
                 //if flags are empty apart from "Non-Empty", force everything but visitor. (a kind of default state)
                 if (tsoCompare == TSOFlags.NonEmpty) tsoCompare |= TSOFlags.AllowFriends | TSOFlags.AllowRoommates | TSOFlags.AllowObjectOwner;
 
+                // freesoexperiment-de7: generic food-category roommate bypass.
+                // TSO food objects (OBJDType.Food) restrict verbs like Serve/Eat to object owners
+                // in the original TTAB assets (CC-BY-ND — cannot modify). Research stance: no
+                // artificial food scarcity. If the callee is a food object and the caller is a
+                // roommate or higher, inject AllowRoommates into tsoCompare so the negative-flag
+                // check below does not block them. Visitors are NOT granted access by this bypass.
+                // Generic (all food objects) per operator decision — freesoexperiment-76f free-rides.
+                if (action.Callee is VMGameObject foodCallee
+                    && foodCallee.Object?.OBJ?.ObjectType == OBJDType.Food
+                    && avatar.AvatarState.Permissions >= VMTSOAvatarPermissions.Roommate)
+                {
+                    tsoCompare |= TSOFlags.AllowRoommates;
+                }
+
                 //DEBUG: enable debug interction for all CSRs.
                 if ((action.Flags & TTABFlags.Debug) > 0)
                 {
