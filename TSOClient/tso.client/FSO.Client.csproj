@@ -169,6 +169,7 @@
     <Compile Include="UI\Panels\EODs\UIGameshowBuzzerEOD.cs" />
     <Compile Include="UI\Panels\EODs\UIPropertySelectEOD.cs" />
     <Compile Include="UI\Panels\UIAbstractCatalogMode.cs" />
+    <Compile Include="UI\Panels\CityEditorToolbar.cs" />
     <Compile Include="UI\Panels\UICatalogSearchPanel.cs" />
     <Compile Include="UI\Panels\UIMotiveTooltip.cs" />
     <Compile Include="UI\Panels\Upgrades\UIUpgradeItem.cs" />

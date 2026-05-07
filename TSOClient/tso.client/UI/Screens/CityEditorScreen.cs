@@ -5,9 +5,9 @@ using FSO.Client.Debug;
 using FSO.Client.Rendering.City;
 using FSO.Client.Rendering.City.Plugins;
 using FSO.Client.UI.Framework;
+using FSO.Client.UI.Panels;
 using FSO.Common;
 using FSO.Common.Rendering.Framework.Model;
-using FSO.Common.Utils;
 using Microsoft.Xna.Framework;
 
 namespace FSO.Client.UI.Screens
@@ -100,8 +100,14 @@ namespace FSO.Client.UI.Screens
                     cam2d.m_WheelZoom = cam2d.m_WheelZoomTarg;
                 }
 
-                CityRenderer.Plugin = new MapPainterPlugin(CityRenderer);
+                var painter = new MapPainterPlugin(CityRenderer);
+                CityRenderer.Plugin = painter;
                 Log("  Plugin = MapPainterPlugin");
+
+                // Top-of-screen tool palette: mode + modifier buttons,
+                // brush size, save. All keyboard shortcuts still work.
+                Add(new CityEditorToolbar(painter, CityRenderer));
+                Log("  Toolbar added");
 
                 CityEditorHook.Editor?.OnCityReady();
                 Log("--- Initialize: end (success) ---");
@@ -197,24 +203,9 @@ namespace FSO.Client.UI.Screens
         {
             base.Draw(batch);
             _drawCount++;
-
             if (_drawCount == 1 || _drawCount == 60)
             {
                 Log($"Draw tick {_drawCount} reached");
-            }
-
-            // Visible canary: a 200×80 red rectangle in the top-left.
-            // If you see this in the running editor, this screen IS being
-            // drawn — the issue is purely in the 3D scene below us.
-            // If you do NOT see this, the screen itself isn't drawing.
-            try
-            {
-                DrawLocalTexture(batch, TextureGenerator.GetPxWhite(batch.GraphicsDevice),
-                    null, new Vector2(20, 20), new Vector2(200, 80), Color.Red, 0f);
-            }
-            catch (Exception ex)
-            {
-                if (_drawCount == 1) Log("Diag rect draw threw: " + ex.Message);
             }
         }
 
