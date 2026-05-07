@@ -22,9 +22,16 @@ namespace FSO.Client.UI.Panels
         private UIButton[] _WaterButtons;
         private UIButton[] _RoughnessButtons;
         private UIButton[] _ForestButtons;
+        private UIButton[] _RiversButtons;
+        private UIButton[] _LakesButtons;
+
+        // Captions for the two count-scale rows (Rivers / Lakes). Other
+        // rows use the default Low/Medium/High.
+        private static readonly string[] _DefaultLevelCaptions = { "Low", "Medium", "High" };
+        private static readonly string[] _CountCaptions        = { "None", "Few", "Many" };
 
         private const int W = 540;
-        private const int H = 360;
+        private const int H = 440;
 
         // Keep label / button geometry in sync — labels are right-aligned
         // up to LABEL_RIGHT, button row begins immediately after.
@@ -45,14 +52,18 @@ namespace FSO.Client.UI.Panels
             SetSize(W, H);
 
             BuildTypeRow(FIRST_ROW_Y);
-            BuildLevelRow("Avg Height:", FIRST_ROW_Y + ROW_HEIGHT * 1, out _HeightButtons,
-                lvl => { _Params.HeightAvg = lvl; RefreshLevelRow(_HeightButtons, _Params.HeightAvg); });
-            BuildLevelRow("Water Cover:", FIRST_ROW_Y + ROW_HEIGHT * 2, out _WaterButtons,
-                lvl => { _Params.WaterRatio = lvl; RefreshLevelRow(_WaterButtons, _Params.WaterRatio); });
-            BuildLevelRow("Roughness:", FIRST_ROW_Y + ROW_HEIGHT * 3, out _RoughnessButtons,
-                lvl => { _Params.Roughness = lvl; RefreshLevelRow(_RoughnessButtons, _Params.Roughness); });
-            BuildLevelRow("Forest:", FIRST_ROW_Y + ROW_HEIGHT * 4, out _ForestButtons,
-                lvl => { _Params.ForestDensity = lvl; RefreshLevelRow(_ForestButtons, _Params.ForestDensity); });
+            BuildLevelRow("Avg Height:", FIRST_ROW_Y + ROW_HEIGHT * 1, _DefaultLevelCaptions, out _HeightButtons,
+                lvl => { _Params.HeightAvg = lvl; RefreshLevelRow(_HeightButtons, _DefaultLevelCaptions, _Params.HeightAvg); });
+            BuildLevelRow("Water Cover:", FIRST_ROW_Y + ROW_HEIGHT * 2, _DefaultLevelCaptions, out _WaterButtons,
+                lvl => { _Params.WaterRatio = lvl; RefreshLevelRow(_WaterButtons, _DefaultLevelCaptions, _Params.WaterRatio); });
+            BuildLevelRow("Roughness:", FIRST_ROW_Y + ROW_HEIGHT * 3, _DefaultLevelCaptions, out _RoughnessButtons,
+                lvl => { _Params.Roughness = lvl; RefreshLevelRow(_RoughnessButtons, _DefaultLevelCaptions, _Params.Roughness); });
+            BuildLevelRow("Forest:", FIRST_ROW_Y + ROW_HEIGHT * 4, _DefaultLevelCaptions, out _ForestButtons,
+                lvl => { _Params.ForestDensity = lvl; RefreshLevelRow(_ForestButtons, _DefaultLevelCaptions, _Params.ForestDensity); });
+            BuildLevelRow("Rivers:", FIRST_ROW_Y + ROW_HEIGHT * 5, _CountCaptions, out _RiversButtons,
+                lvl => { _Params.Rivers = lvl; RefreshLevelRow(_RiversButtons, _CountCaptions, _Params.Rivers); });
+            BuildLevelRow("Lakes:", FIRST_ROW_Y + ROW_HEIGHT * 6, _CountCaptions, out _LakesButtons,
+                lvl => { _Params.Lakes = lvl; RefreshLevelRow(_LakesButtons, _CountCaptions, _Params.Lakes); });
 
             BuildBottomRow();
 
@@ -87,11 +98,10 @@ namespace FSO.Client.UI.Panels
             }
         }
 
-        private void BuildLevelRow(string label, int y, out UIButton[] buttons,
-            Action<CityProcGen.Level> onClick)
+        private void BuildLevelRow(string label, int y, string[] captions,
+            out UIButton[] buttons, Action<CityProcGen.Level> onClick)
         {
             Add(NewLabel(label, LEFT_PAD, y + 6));
-            string[] captions = { "Low", "Medium", "High" };
             CityProcGen.Level[] levels = {
                 CityProcGen.Level.Low, CityProcGen.Level.Medium, CityProcGen.Level.High
             };
@@ -148,12 +158,16 @@ namespace FSO.Client.UI.Panels
             _Params.WaterRatio = d.WaterRatio;
             _Params.Roughness = d.Roughness;
             _Params.ForestDensity = d.ForestDensity;
+            _Params.Rivers = d.Rivers;
+            _Params.Lakes = d.Lakes;
 
             RefreshTypeRow();
-            RefreshLevelRow(_HeightButtons, _Params.HeightAvg);
-            RefreshLevelRow(_WaterButtons, _Params.WaterRatio);
-            RefreshLevelRow(_RoughnessButtons, _Params.Roughness);
-            RefreshLevelRow(_ForestButtons, _Params.ForestDensity);
+            RefreshLevelRow(_HeightButtons, _DefaultLevelCaptions, _Params.HeightAvg);
+            RefreshLevelRow(_WaterButtons, _DefaultLevelCaptions, _Params.WaterRatio);
+            RefreshLevelRow(_RoughnessButtons, _DefaultLevelCaptions, _Params.Roughness);
+            RefreshLevelRow(_ForestButtons, _DefaultLevelCaptions, _Params.ForestDensity);
+            RefreshLevelRow(_RiversButtons, _CountCaptions, _Params.Rivers);
+            RefreshLevelRow(_LakesButtons, _CountCaptions, _Params.Lakes);
         }
 
         private void RefreshTypeRow()
@@ -170,12 +184,11 @@ namespace FSO.Client.UI.Panels
             }
         }
 
-        private void RefreshLevelRow(UIButton[] buttons, CityProcGen.Level current)
+        private void RefreshLevelRow(UIButton[] buttons, string[] captions, CityProcGen.Level current)
         {
             CityProcGen.Level[] levels = {
                 CityProcGen.Level.Low, CityProcGen.Level.Medium, CityProcGen.Level.High
             };
-            string[] captions = { "Low", "Medium", "High" };
             for (int i = 0; i < buttons.Length; i++)
             {
                 bool active = levels[i] == current;
