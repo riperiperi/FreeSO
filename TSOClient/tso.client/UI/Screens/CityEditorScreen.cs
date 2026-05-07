@@ -223,12 +223,23 @@ namespace FSO.Client.UI.Screens
         ///   2 = Near close   (zoom 1.0  — fine pixel-level edits)
         /// Tab cycles forward, Shift+Tab cycles backward, both wrap.
         /// </summary>
-        private int _zoomLevel = 1;
-        private static readonly (TerrainZoomMode mode, float zoomProg, float wheelTarg)[] _zoomLevels =
+        private struct ZoomPreset
         {
-            (TerrainZoomMode.Far,  0f, 0.55f),
-            (TerrainZoomMode.Near, 1f, 0.55f),
-            (TerrainZoomMode.Near, 1f, 1.00f),
+            public TerrainZoomMode Mode;
+            public float ZoomProg;
+            public float WheelTarg;
+            public ZoomPreset(TerrainZoomMode mode, float zoomProg, float wheelTarg)
+            {
+                Mode = mode; ZoomProg = zoomProg; WheelTarg = wheelTarg;
+            }
+        }
+
+        private int _zoomLevel = 1;
+        private static readonly ZoomPreset[] _zoomLevels =
+        {
+            new ZoomPreset(TerrainZoomMode.Far,  0f, 0.55f),
+            new ZoomPreset(TerrainZoomMode.Near, 1f, 0.55f),
+            new ZoomPreset(TerrainZoomMode.Near, 1f, 1.00f),
         };
 
         /// <summary>
@@ -264,9 +275,9 @@ namespace FSO.Client.UI.Screens
         private void ApplyZoomLevel(CityCamera2D cam)
         {
             var lvl = _zoomLevels[_zoomLevel];
-            CityRenderer.m_Zoomed = lvl.mode;
-            CityRenderer.m_ZoomProgress = lvl.zoomProg;
-            cam.m_WheelZoomTarg = lvl.wheelTarg;
+            CityRenderer.m_Zoomed = lvl.Mode;
+            CityRenderer.m_ZoomProgress = lvl.ZoomProg;
+            cam.m_WheelZoomTarg = lvl.WheelTarg;
         }
 
         private static void Log(string msg)
