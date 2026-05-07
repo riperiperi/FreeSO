@@ -59,6 +59,18 @@ namespace FSO.Client.UI.Screens
                 CityRenderer.m_Zoomed = TerrainZoomMode.Far;
                 CityRenderer.m_ZoomProgress = 0;
 
+                // Pre-warm m_WheelZoom away from 0. CityCamera2D.GetIsoScale
+                // computes ZisoScale = sqrt(0.5)/(288*m_WheelZoom). With
+                // m_WheelZoom == 0 (struct default) that's infinity, and
+                // even though far-view interpolation multiplies it by 0
+                // the IEEE result is NaN. Camera.Update normally ramps
+                // m_WheelZoom toward m_WheelZoomTarg each frame; jumping
+                // straight to the target avoids any first-frame NaN.
+                if (CityRenderer.Camera is CityCamera2D cam2d)
+                {
+                    cam2d.m_WheelZoom = cam2d.m_WheelZoomTarg;
+                }
+
                 CityRenderer.Plugin = new MapPainterPlugin(CityRenderer);
                 Log("  Plugin = MapPainterPlugin");
 

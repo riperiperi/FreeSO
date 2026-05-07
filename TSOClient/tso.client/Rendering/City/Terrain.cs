@@ -1138,8 +1138,14 @@ namespace FSO.Client.Rendering.City
         public override void Update(UpdateState state)
         {
             ITime++;
-            if (!(GameFacade.Screens.CurrentUIScreen is CoreGameScreen)) return;
-            CoreGameScreen CurrentUIScr = (CoreGameScreen)GameFacade.Screens.CurrentUIScreen;
+            // Gate kept the painter / camera from updating on any non-gameplay
+            // screen. Allow CityEditorScreen too — without Camera.Update the
+            // camera's m_WheelZoom stays at 0, ZisoScale = sqrt(0.5)/(288*0) =
+            // infinity, IsoScale = NaN, projection is degenerate, geometry
+            // renders to nowhere. CurrentUIScr was dead (unreferenced in the
+            // rest of the method); removed.
+            var current = GameFacade.Screens.CurrentUIScreen;
+            if (!(current is CoreGameScreen) && !(current is CityEditorScreen)) return;
 
             if (Visible)
             { //if we're not visible, do not update CityRenderer state...
