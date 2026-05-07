@@ -701,9 +701,14 @@ namespace FSO.Client.Rendering.City
             }
         }
 
-        private bool isLandBuildable(int x, int y) 
+        private bool isLandBuildable(int x, int y)
         {
-            return FindController<TerrainController>().IsPurchasable(x, y);
+            // No controller (e.g. CityEditorScreen) means we can't ask the
+            // realestate domain whether a tile is purchasable. Return false
+            // so DrawTileBorders simply skips drawing lot-edge highlights.
+            var ctrl = FindController<TerrainController>();
+            if (ctrl == null) return false;
+            return ctrl.IsPurchasable(x, y);
         }
 
         private void DrawSpotlights(float HB)
