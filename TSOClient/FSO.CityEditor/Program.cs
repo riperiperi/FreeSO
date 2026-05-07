@@ -50,9 +50,26 @@ namespace FSO.CityEditor
 
             // Register the editor hook before the game boots so the client's
             // screen-transition logic can pick city-editor mode on the way up.
-            // (The screen-side handling lands in a follow-up commit; for now
-            // the hook's mere presence is the signal.)
             CityEditorHook.SetEditor(new CityEditorBootstrap());
+
+            // Parse editor-specific CLI args. Supports:
+            //   --city <path>    absolute or relative path to a city dir
+            //                    containing the seven PNG layers
+            //   --cityid <num>   load a built-in city by ID (default 100)
+            for (int i = 0; i < args.Length; i++)
+            {
+                if (args[i] == "--city" && i + 1 < args.Length)
+                {
+                    CityEditorHook.RequestedCityPath = Path.GetFullPath(args[i + 1]);
+                    i++;
+                }
+                else if (args[i] == "--cityid" && i + 1 < args.Length)
+                {
+                    if (int.TryParse(args[i + 1], out var id))
+                        CityEditorHook.RequestedCityId = id;
+                    i++;
+                }
+            }
 
             if (!FSOProgram.InitWithArguments(args)) return;
             StartProxy.Start(FSOProgram.UseDX);

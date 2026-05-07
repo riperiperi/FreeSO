@@ -58,23 +58,40 @@ namespace FSO.Client.Rendering.City
         public static int[] RoadLayout = new int[] { -1, 5, 12, 13, 7, 6, 15, 14, 28, 29, 20, 21, 31, 30, 23, 22 };
         public static int[] RoadCLayout = new int[] { -1, 8, 2, 26, 3, 17, 16, 10, 25, 24, 9, 18, 1, 27, 11, 19 };
 
+        // Optional explicit path to a city directory. When set, LoadContent
+        // ignores cityNumber and reads from this directory instead. Used by
+        // FSO.CityEditor to load arbitrary maps from disk.
+        public static string PathOverride;
+
         public void LoadContent(GraphicsDevice gd, int cityNumber)
         {
             String gamepath = GameFacade.GameFilePath("");
 
-            string CityStr = "city_" + cityNumber.ToString("0000");
-            string ext = "bmp";
-            if (cityNumber >= 100)
+            string CityStr;
+            string ext;
+            if (!string.IsNullOrEmpty(PathOverride))
             {
-                //start FSO cities
-                //the first few will be client included
-                //probably after 200 will be inherited from content packs, when they are implemented
-                ext = "png";
-                CityStr = Path.Combine(FSOEnvironment.ContentDir, "Cities/", CityStr);
+                CityStr = PathOverride;
+                // Pick bmp / png by which file is present; default to png
+                // (FSO custom maps).
+                ext = File.Exists(Path.Combine(CityStr, "elevation.bmp")) ? "bmp" : "png";
             }
             else
             {
-                CityStr = gamepath + "cities/" + CityStr;
+                CityStr = "city_" + cityNumber.ToString("0000");
+                ext = "bmp";
+                if (cityNumber >= 100)
+                {
+                    //start FSO cities
+                    //the first few will be client included
+                    //probably after 200 will be inherited from content packs, when they are implemented
+                    ext = "png";
+                    CityStr = Path.Combine(FSOEnvironment.ContentDir, "Cities/", CityStr);
+                }
+                else
+                {
+                    CityStr = gamepath + "cities/" + CityStr;
+                }
             }
             VertexColor = LoadTex(CityStr + "/vertexcolor." + ext);
 

@@ -18,6 +18,22 @@ Loading `FSO.Client.dll` at runtime means:
 - Renderer improvements to FreeSO are picked up automatically; no
   duplicated city-rendering codebase to maintain.
 
+## Loading a specific city
+
+By default the editor opens `city_0100` (Alphaville) for editing. Two CLI
+args override this:
+
+```
+FSO.CityEditor.exe --city /path/to/city_directory   # load from disk path
+FSO.CityEditor.exe --cityid 200                      # load a built-in ID
+```
+
+`--city` accepts an absolute or relative path. The directory must contain
+the seven PNG layers (`elevation`, `terraintype`, `roadmap`, `forestdensity`,
+`foresttype`, `vertexcolor`, `thumbnail`). Use this to edit maps generated
+by `Other/tools/CityMapGenerator/` without first installing them under
+`Content/Cities/`.
+
 ## Distribution
 
 Release builds drop `FSO.CityEditor.exe` into the same `publish/client/`

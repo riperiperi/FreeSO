@@ -23,8 +23,6 @@ namespace FSO.Client.UI.Screens
     {
         public Terrain CityRenderer;
 
-        private const int InitialCityId = 100;
-
         // Same directory as FSO.CityEditor.exe — reliable on every platform,
         // unlike FSOEnvironment.UserDir which is "Content/" on Linux desktop
         // and resolves relative to whatever the cwd was at log time.
@@ -52,7 +50,21 @@ namespace FSO.Client.UI.Screens
                 CalculateMatrix();
                 Log("  CalculateMatrix done");
 
-                InitializeMap(InitialCityId);
+                // Honour the path override the launcher may have set from
+                // a CLI arg. Falls back to the requested city ID (default
+                // Alphaville).
+                int cityId = CityEditorHook.RequestedCityId;
+                if (!string.IsNullOrEmpty(CityEditorHook.RequestedCityPath))
+                {
+                    CityContent.PathOverride = CityEditorHook.RequestedCityPath;
+                    Log($"  Loading city from path: {CityEditorHook.RequestedCityPath}");
+                }
+                else
+                {
+                    Log($"  Loading city ID: {cityId}");
+                }
+
+                InitializeMap(cityId);
                 Log($"  InitializeMap done — Camera={CityRenderer?.Camera?.GetType().Name}");
 
                 CityRenderer.Visible = true;
