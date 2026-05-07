@@ -59,10 +59,18 @@ namespace FSO.Client.UI.Panels
         private const int ROW_Y_MODIFIER = 44;
         private const int ROW_Y_BRUSH = 78;
 
-        public CityEditorToolbar(MapPainterPlugin painter, Terrain city)
+        // The directory the user most recently loaded from / saved to.
+        // Used to pre-fill the Save / Load path prompts so the user
+        // doesn't have to retype the full path each time. null if the
+        // current map has never been associated with a directory yet
+        // (e.g., a fresh procedural Generate that hasn't been saved).
+        private string _CurrentPath;
+
+        public CityEditorToolbar(MapPainterPlugin painter, Terrain city, string initialPath)
         {
             _Painter = painter;
             _City = city;
+            _CurrentPath = initialPath;
             _ModeButtons = new UIButton[_Modes.Length];
             BuildModeRow();
             BuildModifierRow();
@@ -157,12 +165,39 @@ namespace FSO.Client.UI.Panels
 
         private void OnSaveClicked(UIElement _)
         {
+            // Pre-fill with the last known path so a user editing a
+            // loaded city can hit OK to save back to source. For a fresh
+            // procgen with no path yet, suggest a default under UserDir.
+            string suggested = _CurrentPath ?? Path.Combine(
+                FSOEnvironment.UserDir, "CityPainterSave2");
+
+            UIAlert prompt = null;
+            prompt = UIScreen.GlobalShowAlert(new UIAlertOptions
+            {
+                Title = "Save Map",
+                Message = "Enter the absolute directory path to save into.\n" +
+                          "Existing files in that directory will be overwritten.",
+                TextEntry = true,
+                Buttons = UIAlertButton.OkCancel(
+                    btn =>
+                    {
+                        var entered = prompt.ResponseText;
+                        UIScreen.RemoveDialog(prompt);
+                        if (!string.IsNullOrEmpty(entered)) SaveTo(entered);
+                    },
+                    btn => UIScreen.RemoveDialog(prompt))
+            }, true);
+            prompt.ResponseText = suggested;
+        }
+
+        private void SaveTo(string dir)
+        {
             try
             {
-                var dir = Path.Combine(FSOEnvironment.UserDir, "CityPainterSave2/");
                 Directory.CreateDirectory(dir);
                 _City.MapData.Save(dir);
                 CityBaker.Save(_City, dir);
+                _CurrentPath = dir;
                 _StatusLabel.Caption = "Saved to " + dir;
             }
             catch (Exception ex)
@@ -173,52 +208,40 @@ namespace FSO.Client.UI.Panels
 
         private void OnLoadClicked(UIElement _)
         {
-            // Slot dirs are written by Save (this toolbar) and the F2..F11
-            // hotkeys in MapPainterPlugin. Show the user only the ones that
-            // actually exist on disk.
-            var available = new System.Collections.Generic.List<int>();
-            for (int i = 2; i <= 11; i++)
-            {
-                var dir = Path.Combine(FSOEnvironment.UserDir, "CityPainterSave" + i + "/");
-                if (Directory.Exists(dir)) available.Add(i);
-            }
+            string suggested = _CurrentPath ?? "";
 
-            if (available.Count == 0)
+            UIAlert prompt = null;
+            prompt = UIScreen.GlobalShowAlert(new UIAlertOptions
             {
-                UIAlert.Alert("Load City",
-                    "No saved cities found.\nSave one first (Save button), then come back here.",
-                    true);
-                return;
-            }
-
-            UIAlert alert = null;
-            var buttons = new System.Collections.Generic.List<UIAlertButton>();
-            foreach (var slot in available)
-            {
-                var capturedSlot = slot;
-                buttons.Add(new UIAlertButton(UIAlertButtonType.OK,
-                    (btn) => { UIScreen.RemoveDialog(alert); LoadSlot(capturedSlot); },
-                    "Slot " + capturedSlot));
-            }
-            buttons.Add(new UIAlertButton(UIAlertButtonType.Cancel,
-                (btn) => { UIScreen.RemoveDialog(alert); }));
-
-            alert = UIScreen.GlobalShowAlert(new UIAlertOptions
-            {
-                Title = "Load City",
-                Message = "Pick a saved city to load.\nWarning: discards any unsaved changes.",
-                Buttons = buttons.ToArray()
+                Title = "Load Map",
+                Message = "Enter the absolute path to a city directory.\n" +
+                          "Warning: any unsaved changes will be discarded.",
+                TextEntry = true,
+                Buttons = UIAlertButton.OkCancel(
+                    btn =>
+                    {
+                        var entered = prompt.ResponseText;
+                        UIScreen.RemoveDialog(prompt);
+                        if (!string.IsNullOrEmpty(entered)) LoadFrom(entered);
+                    },
+                    btn => UIScreen.RemoveDialog(prompt))
             }, true);
+            prompt.ResponseText = suggested;
         }
 
-        private void LoadSlot(int slot)
+        private void LoadFrom(string dir)
         {
             try
             {
-                var dir = Path.Combine(FSOEnvironment.UserDir, "CityPainterSave" + slot + "/");
+                if (!Directory.Exists(dir))
+                {
+                    _StatusLabel.Caption = "Load failed: directory not found";
+                    return;
+                }
                 _City.MapData.Load(dir, LoadTex, "png");
                 _City.GenerateCityMesh(GameFacade.GraphicsDevice, null);
-                _StatusLabel.Caption = "Loaded slot " + slot;
+                _CurrentPath = dir;
+                _StatusLabel.Caption = "Loaded " + dir;
             }
             catch (Exception ex)
             {

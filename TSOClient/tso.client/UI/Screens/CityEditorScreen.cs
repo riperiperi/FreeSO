@@ -1,9 +1,11 @@
 using System;
+using System.Collections.Generic;
 using System.IO;
 using System.Linq;
 using FSO.Client.Debug;
 using FSO.Client.Rendering.City;
 using FSO.Client.Rendering.City.Plugins;
+using FSO.Client.UI.Controls;
 using FSO.Client.UI.Framework;
 using FSO.Client.UI.Panels;
 using FSO.Common;
@@ -22,6 +24,7 @@ namespace FSO.Client.UI.Screens
     public class CityEditorScreen : GameScreen, IDisposable
     {
         public Terrain CityRenderer;
+        private CityEditorToolbar _Toolbar;
 
         // Same directory as FSO.CityEditor.exe — reliable on every platform,
         // unlike FSOEnvironment.UserDir which is "Content/" on Linux desktop
@@ -50,72 +53,160 @@ namespace FSO.Client.UI.Screens
                 CalculateMatrix();
                 Log("  CalculateMatrix done");
 
-                // Honour the path override the launcher may have set from
-                // a CLI arg. Falls back to the requested city ID (default
-                // Alphaville).
-                int cityId = CityEditorHook.RequestedCityId;
+                // CLI arg → load directly. Otherwise fall through to the
+                // welcome dialog so the user picks a starting point. We
+                // no longer auto-load city_0100 — fresh installs may not
+                // even have it.
                 if (!string.IsNullOrEmpty(CityEditorHook.RequestedCityPath))
                 {
-                    CityContent.PathOverride = CityEditorHook.RequestedCityPath;
-                    Log($"  Loading city from path: {CityEditorHook.RequestedCityPath}");
+                    Log($"  CLI --city: {CityEditorHook.RequestedCityPath}");
+                    BeginEditing(CityEditorHook.RequestedCityPath, 0);
+                }
+                else if (CityEditorHook.RequestedCityId > 0)
+                {
+                    Log($"  CLI --cityid: {CityEditorHook.RequestedCityId}");
+                    BeginEditing(null, CityEditorHook.RequestedCityId);
                 }
                 else
                 {
-                    Log($"  Loading city ID: {cityId}");
+                    Log("  No CLI source — showing welcome dialog");
+                    ShowWelcomeDialog();
                 }
-
-                InitializeMap(cityId);
-                Log($"  InitializeMap done — Camera={CityRenderer?.Camera?.GetType().Name}");
-
-                CityRenderer.Visible = true;
-                // Start in Near zoom: the painter's mouse handling
-                // (Terrain.Update line ~1185) is gated on
-                // Camera.Zoomed == TerrainZoomMode.Near, so Far mode
-                // has no tile-hover / click / TileMouseDown forwarded to
-                // the plugin. Near view is what the in-game City Painter
-                // uses too — MapPainterPlugin sets ForceNear = true in
-                // its ctor.
-                CityRenderer.m_Zoomed = TerrainZoomMode.Near;
-                CityRenderer.m_ZoomProgress = 1;
-
-                // CoreGameScreen sets HandleMouse=true via a full-screen
-                // UICustomTooltipContainer that captures MouseOver events
-                // and forwards them to CityRenderer.UIMouseEvent. The
-                // editor screen IS the city — no "off-city" area for the
-                // mouse to be over — so we just turn on HandleMouse
-                // directly. Without this, the mouse-handling block in
-                // Terrain.Update bails out: no hover-tile, no click, no
-                // brush input, no edge-scroll cursor changes.
-                CityRenderer.HandleMouse = true;
-
-                // Pre-warm m_WheelZoom away from 0. CityCamera2D.GetIsoScale
-                // computes ZisoScale = sqrt(0.5)/(288*m_WheelZoom). With
-                // m_WheelZoom == 0 (struct default) that's infinity, and
-                // even though far-view interpolation multiplies it by 0
-                // the IEEE result is NaN. Camera.Update normally ramps
-                // m_WheelZoom toward m_WheelZoomTarg each frame; jumping
-                // straight to the target avoids any first-frame NaN.
-                if (CityRenderer.Camera is CityCamera2D cam2d)
-                {
-                    cam2d.m_WheelZoom = cam2d.m_WheelZoomTarg;
-                }
-
-                var painter = new MapPainterPlugin(CityRenderer);
-                CityRenderer.Plugin = painter;
-                Log("  Plugin = MapPainterPlugin");
-
-                // Top-of-screen tool palette: mode + modifier buttons,
-                // brush size, save. All keyboard shortcuts still work.
-                Add(new CityEditorToolbar(painter, CityRenderer));
-                Log("  Toolbar added");
-
-                CityEditorHook.Editor?.OnCityReady();
                 Log("--- Initialize: end (success) ---");
             }
             catch (Exception ex)
             {
                 Log("INITIALIZE THREW: " + ex);
             }
+        }
+
+        /// <summary>
+        /// Boots the renderer + plugin + toolbar against a chosen city
+        /// source. Either <paramref name="path"/> is a directory of PNG
+        /// layers, or <paramref name="cityId"/> is a non-zero built-in
+        /// city number; the other should be null/0.
+        /// </summary>
+        private void BeginEditing(string path, int cityId)
+        {
+            // Clean up any prior renderer/toolbar from a failed attempt
+            // so we don't leak Scenes registrations or stack toolbars.
+            if (CityRenderer != null)
+            {
+                GameFacade.Scenes.Remove(CityRenderer);
+                CityRenderer.Dispose();
+                CityRenderer = null;
+            }
+            if (_Toolbar != null)
+            {
+                Remove(_Toolbar);
+                _Toolbar = null;
+            }
+
+            if (!string.IsNullOrEmpty(path))
+                CityContent.PathOverride = path;
+
+            InitializeMap(cityId);
+            Log($"  InitializeMap done — Camera={CityRenderer?.Camera?.GetType().Name}");
+
+            CityRenderer.Visible = true;
+            // Start in Near zoom — Plugin mouse handling is gated on
+            // Near in Terrain.Update.
+            CityRenderer.m_Zoomed = TerrainZoomMode.Near;
+            CityRenderer.m_ZoomProgress = 1;
+
+            // No UICustomTooltipContainer wraps the editor screen, so we
+            // turn on HandleMouse directly (otherwise the mouse-handling
+            // block in Terrain.Update bails out).
+            CityRenderer.HandleMouse = true;
+
+            // Pre-warm m_WheelZoom away from 0 — GetIsoScale's
+            // sqrt(0.5)/(288*m_WheelZoom) goes to infinity at zero and
+            // produces NaN even after the far-view multiply.
+            if (CityRenderer.Camera is CityCamera2D cam2d)
+                cam2d.m_WheelZoom = cam2d.m_WheelZoomTarg;
+
+            var painter = new MapPainterPlugin(CityRenderer);
+            CityRenderer.Plugin = painter;
+
+            _Toolbar = new CityEditorToolbar(painter, CityRenderer, path);
+            Add(_Toolbar);
+            Log("  Toolbar added");
+
+            CityEditorHook.Editor?.OnCityReady();
+        }
+
+        /// <summary>
+        /// First-run UI when no CLI arg was supplied. Three buttons:
+        ///  • Load Map…   — text-prompt for an absolute directory path
+        ///  • Open Alphaville — only when the bundled city_0100 dir exists
+        ///  • Quit        — closes the editor process
+        /// User cancelling either prompt re-shows this dialog so the
+        /// editor never sits in a blank state.
+        /// </summary>
+        private void ShowWelcomeDialog()
+        {
+            string alphaPath = Path.Combine(
+                Environment.CurrentDirectory, FSOEnvironment.ContentDir,
+                "Cities", "city_0100");
+            bool hasAlphaville = Directory.Exists(alphaPath);
+
+            UIAlert dialog = null;
+            var buttons = new List<UIAlertButton>();
+
+            buttons.Add(new UIAlertButton(UIAlertButtonType.OK,
+                btn => { UIScreen.RemoveDialog(dialog); PromptForPath(); },
+                "Load Map..."));
+
+            if (hasAlphaville)
+            {
+                buttons.Add(new UIAlertButton(UIAlertButtonType.OK,
+                    btn => { UIScreen.RemoveDialog(dialog); BeginEditing(null, 100); },
+                    "Open Alphaville"));
+            }
+
+            buttons.Add(new UIAlertButton(UIAlertButtonType.Cancel,
+                btn => { UIScreen.RemoveDialog(dialog); GameFacade.Kill(); },
+                "Quit"));
+
+            dialog = UIScreen.GlobalShowAlert(new UIAlertOptions
+            {
+                Title = "FSO City Editor",
+                Message = hasAlphaville
+                    ? "Pick a starting point.\nLoad an existing city directory, or open the bundled Alphaville sample."
+                    : "No bundled city found. Load an existing city directory by entering its absolute path.",
+                Buttons = buttons.ToArray(),
+            }, true);
+        }
+
+        private void PromptForPath()
+        {
+            UIAlert.Prompt("Load Map",
+                "Enter the absolute path to a city directory.\n" +
+                "It must contain elevation.png, terraintype.png, roadmap.png,\n" +
+                "forestdensity.png, foresttype.png, vertexcolor.png, thumbnail.png.",
+                true,
+                path =>
+                {
+                    if (string.IsNullOrEmpty(path)) { ShowWelcomeDialog(); return; }
+                    if (!Directory.Exists(path))
+                    {
+                        ShowLoadFailedDialog("Directory does not exist:\n" + path);
+                        return;
+                    }
+                    try { BeginEditing(path, 0); }
+                    catch (Exception ex) { ShowLoadFailedDialog("Load failed: " + ex.Message); }
+                });
+        }
+
+        private void ShowLoadFailedDialog(string message)
+        {
+            UIAlert errAlert = null;
+            errAlert = UIScreen.GlobalShowAlert(new UIAlertOptions
+            {
+                Title = "Load Failed",
+                Message = message,
+                Buttons = UIAlertButton.Ok(_ => { UIScreen.RemoveDialog(errAlert); ShowWelcomeDialog(); }),
+            }, true);
         }
 
         private void InitializeMap(int cityMap)

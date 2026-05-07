@@ -18,10 +18,12 @@ namespace FSO.Client.Debug
         public static string RequestedCityPath;
 
         /// <summary>
-        /// Optional explicit city ID to load. Defaults to 100 (Alphaville)
-        /// when RequestedCityPath is null.
+        /// Optional explicit city ID to load. 0 means "no preselection";
+        /// the editor screen shows a welcome dialog and the user picks
+        /// a city to load (or generates a fresh one). Set non-zero by
+        /// FSO.CityEditor.exe's --cityid CLI arg.
         /// </summary>
-        public static int RequestedCityId = 100;
+        public static int RequestedCityId = 0;
 
         public static void SetEditor(ICityEditorInjector editor)
         {
