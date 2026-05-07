@@ -66,6 +66,16 @@ namespace FSO.Client.UI.Screens
                 CityRenderer.m_Zoomed = TerrainZoomMode.Near;
                 CityRenderer.m_ZoomProgress = 1;
 
+                // CoreGameScreen sets HandleMouse=true via a full-screen
+                // UICustomTooltipContainer that captures MouseOver events
+                // and forwards them to CityRenderer.UIMouseEvent. The
+                // editor screen IS the city — no "off-city" area for the
+                // mouse to be over — so we just turn on HandleMouse
+                // directly. Without this, the mouse-handling block in
+                // Terrain.Update bails out: no hover-tile, no click, no
+                // brush input, no edge-scroll cursor changes.
+                CityRenderer.HandleMouse = true;
+
                 // Pre-warm m_WheelZoom away from 0. CityCamera2D.GetIsoScale
                 // computes ZisoScale = sqrt(0.5)/(288*m_WheelZoom). With
                 // m_WheelZoom == 0 (struct default) that's infinity, and
