@@ -173,7 +173,9 @@ namespace FSO.Client.UI.Screens
         public override void Update(UpdateState state)
         {
             base.Update(state);
+            UpdateMouseHandling(state);
             HandleZoomKeys(state);
+            HandleZoomToCursor(state);
             _updateCount++;
             if (_updateCount == 1 || _updateCount == 60 || _updateCount == 300)
             {
@@ -245,6 +247,25 @@ namespace FSO.Client.UI.Screens
             new ZoomPreset(TerrainZoomMode.Near, 1f, 1.00f),
         };
 
+        // Toolbar lives at the top of the screen (rows at Y=10/44/78). The
+        // bottom of the brush-row buttons sits around Y≈100. Disable the
+        // city's mouse handling whenever the cursor is in this strip so
+        // clicks on toolbar buttons don't fall through and paint the map.
+        private const int TOOLBAR_BOTTOM_Y = 110;
+
+        // Tracks an active "center this tile" target while zoom is
+        // animating after a wheel scroll. Cleared once the zoom settles
+        // or the user wheels onto a new tile.
+        private Vector2? _CenterTile;
+        private float? _PrevWheelZoomTarg;
+
+        private void UpdateMouseHandling(UpdateState state)
+        {
+            if (CityRenderer == null) return;
+            float my = state.MouseState.Y / FSOEnvironment.DPIScaleFactor;
+            CityRenderer.HandleMouse = my >= TOOLBAR_BOTTOM_Y;
+        }
+
         /// <summary>
         /// Zoom controls — keyboard, since the editor doesn't have the
         /// UCP that the regular game uses for camera transitions.
@@ -252,7 +273,9 @@ namespace FSO.Client.UI.Screens
         ///   Shift + Tab   : cycle zoom level backward
         ///   + / =         : nudge wheel zoom in (Near only)
         ///   -             : nudge wheel zoom out (Near only)
-        /// Mouse wheel is handled by CityCamera2D.Update directly.
+        /// Mouse wheel is handled by CityCamera2D.Update directly; we
+        /// post-correct the offset in HandleZoomToCursor below so the
+        /// world point under the cursor stays put.
         /// </summary>
         private void HandleZoomKeys(UpdateState state)
         {
@@ -261,10 +284,41 @@ namespace FSO.Client.UI.Screens
 
             if (state.NewKeys.Contains(Microsoft.Xna.Framework.Input.Keys.Tab))
             {
+                // Capture the world tile under cursor in the CURRENT view
+                // before we change zoom state — that's the "anchor" we'll
+                // pin under the cursor in the destination view.
+                Vector2 anchor = CityRenderer.EstTileAtPosWithScroll(
+                    state.MouseState.Position.ToVector2() / FSOEnvironment.DPIScaleFactor,
+                    null);
+
                 _zoomLevel = state.ShiftDown
                     ? (_zoomLevel - 1 + _zoomLevels.Length) % _zoomLevels.Length
                     : (_zoomLevel + 1) % _zoomLevels.Length;
-                ApplyZoomLevel(cam);
+                var lvl = _zoomLevels[_zoomLevel];
+
+                // Snap the zoom state instantly (no animation). The anchor
+                // formula uses the new View/Projection, so a mid-interpolation
+                // snapshot would put the offset in the wrong place.
+                CityRenderer.m_Zoomed = lvl.Mode;
+                CityRenderer.m_ZoomProgress = lvl.ZoomProg;
+                cam.m_WheelZoomTarg = lvl.WheelTarg;
+                cam.m_WheelZoom = lvl.WheelTarg;
+                cam.ProjectionDirty();
+
+                // Far view is fixed-position (m_ViewOff is multiplied by
+                // ZoomProgress=0), so centering only matters for Near levels.
+                // Also skip when cursor is over the toolbar — the tile we'd
+                // compute under it is meaningless.
+                float toolbarY = state.MouseState.Y / FSOEnvironment.DPIScaleFactor;
+                if (lvl.Mode == TerrainZoomMode.Near && toolbarY >= TOOLBAR_BOTTOM_Y &&
+                    anchor.X >= 0 && anchor.X < 512 && anchor.Y >= 0 && anchor.Y < 512)
+                {
+                    CenterTileOnScreen(cam, anchor);
+                }
+
+                // Tab is one-shot — clear any active wheel-zoom centering.
+                _CenterTile = null;
+                _PrevWheelZoomTarg = cam.m_WheelZoomTarg;
             }
 
             // OemPlus is `=` on US keyboards; players also expect `+` to zoom in.
@@ -275,12 +329,86 @@ namespace FSO.Client.UI.Screens
                 cam.m_WheelZoomTarg = System.Math.Max(0.33f, cam.m_WheelZoomTarg - 0.01f);
         }
 
-        private void ApplyZoomLevel(CityCamera2D cam)
+        /// <summary>
+        /// Sets the camera's view offset so that the given world tile
+        /// projects to the screen center in the camera's current
+        /// View/Projection state. Must be called *after* the zoom state
+        /// has been snapped to its new value.
+        /// </summary>
+        private void CenterTileOnScreen(CityCamera2D cam, Vector2 tile)
         {
-            var lvl = _zoomLevels[_zoomLevel];
-            CityRenderer.m_Zoomed = lvl.Mode;
-            CityRenderer.m_ZoomProgress = lvl.ZoomProg;
-            cam.m_WheelZoomTarg = lvl.WheelTarg;
+            if (CityRenderer.MapData == null) return;
+
+            int tx = System.Math.Max(0, System.Math.Min(511, (int)tile.X));
+            int ty = System.Math.Max(0, System.Math.Min(511, (int)tile.Y));
+            float elev = CityRenderer.GetElevationAt(tx, ty) / 12f;
+
+            // Transform world point through current View matrix.
+            var world = new Vector3(tile.X, elev, tile.Y);
+            var vp = Vector3.Transform(world, cam.View);
+
+            float zp = CityRenderer.m_ZoomProgress;
+            if (zp < 0.001f) return;
+
+            // Center: the projection's CreateOrthographicOffCenter has
+            // screen_x = scrW/2 when proj_x = m_ViewOffX (likewise Y).
+            // So setting m_ViewOff = vp puts the tile at screen center.
+            // m_ViewOff = m_TargVOff * ZoomProgress (CityCamera2D.cs:426).
+            cam.m_TargVOffX = vp.X / zp;
+            cam.m_TargVOffY = vp.Y / zp;
+        }
+
+        /// <summary>
+        /// Wheel-zoom centering. When the user scrolls the wheel, capture
+        /// the world tile under the cursor as a center target. While the
+        /// resulting zoom animation is still running, re-center on that
+        /// tile every frame so the camera glides toward putting the
+        /// captured tile at screen center as it zooms — same shape as the
+        /// City Painter's "click in Far view to zoom and center on that
+        /// tile" behavior, but driven by the wheel.
+        /// </summary>
+        private void HandleZoomToCursor(UpdateState state)
+        {
+            if (CityRenderer == null || !(CityRenderer.Camera is CityCamera2D cam)) return;
+
+            float curWheelTarg = cam.m_WheelZoomTarg;
+            if (_PrevWheelZoomTarg == null)
+            {
+                _PrevWheelZoomTarg = curWheelTarg;
+                return;
+            }
+
+            // Detect a fresh wheel scroll: m_WheelZoomTarg jumped this
+            // frame (Camera.Update set it from the new ScrollWheelValue).
+            // The +/- nudge keys also tweak it — we treat them the same.
+            bool wheelEvent = System.Math.Abs(curWheelTarg - _PrevWheelZoomTarg.Value) > 0.001f;
+            _PrevWheelZoomTarg = curWheelTarg;
+
+            if (wheelEvent && CityRenderer.m_Zoomed == TerrainZoomMode.Near)
+            {
+                float toolbarY = state.MouseState.Y / FSOEnvironment.DPIScaleFactor;
+                if (toolbarY >= TOOLBAR_BOTTOM_Y)
+                {
+                    var t = CityRenderer.EstTileAtPosWithScroll(
+                        state.MouseState.Position.ToVector2() / FSOEnvironment.DPIScaleFactor,
+                        null);
+                    if (t.X >= 0 && t.X < 512 && t.Y >= 0 && t.Y < 512)
+                        _CenterTile = t;
+                }
+            }
+
+            // Re-center every frame until the zoom animation settles —
+            // m_WheelZoom catches up to m_WheelZoomTarg (CityCamera2D.cs:424).
+            // Without per-frame re-centering, isoScale changes during the
+            // animation drag the centered tile away from screen center.
+            if (_CenterTile.HasValue &&
+                CityRenderer.m_Zoomed == TerrainZoomMode.Near &&
+                CityRenderer.m_ZoomProgress > 0.5f)
+            {
+                CenterTileOnScreen(cam, _CenterTile.Value);
+                if (System.Math.Abs(cam.m_WheelZoom - cam.m_WheelZoomTarg) < 0.005f)
+                    _CenterTile = null;
+            }
         }
 
         private static void Log(string msg)
