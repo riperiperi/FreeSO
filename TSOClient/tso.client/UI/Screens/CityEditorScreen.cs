@@ -1,5 +1,6 @@
 using System;
 using System.IO;
+using System.Linq;
 using FSO.Client.Debug;
 using FSO.Client.Rendering.City;
 using FSO.Client.Rendering.City.Plugins;
@@ -140,7 +141,7 @@ namespace FSO.Client.UI.Screens
                     var g = CityRenderer.Geometry;
                     Log($"  Geometry: LayerPrims=[{string.Join(",", g.LayerPrims)}] RoadPrims={g.RoadPrims}");
                     Log($"  Geometry.LayerVertices null counts: " +
-                        $"[{string.Join(",", System.Linq.Enumerable.Range(0, 5).Select(i => g.LayerVertices[i] == null ? "null" : g.LayerVertices[i].VertexCount.ToString()))}]");
+                        $"[{string.Join(",", Enumerable.Range(0, 5).Select(i => g.LayerVertices[i] == null ? "null" : g.LayerVertices[i].VertexCount.ToString()))}]");
                 }
                 if (CityRenderer?.Camera != null)
                 {
