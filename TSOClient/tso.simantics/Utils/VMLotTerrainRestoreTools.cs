@@ -1184,7 +1184,10 @@ namespace FSO.SimAntics.Utils
                 }
             }
 
-            vm.Context.World.InitSubWorlds();
+            GameThread.InUpdate(() =>
+            {
+                vm.Context.World.InitSubWorlds();
+            });
         }
     }
 
