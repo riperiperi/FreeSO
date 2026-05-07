@@ -155,6 +155,7 @@ namespace FSO.Client.UI.Screens
         public override void Update(UpdateState state)
         {
             base.Update(state);
+            HandleZoomKeys(state);
             _updateCount++;
             if (_updateCount == 1 || _updateCount == 60 || _updateCount == 300)
             {
@@ -213,6 +214,41 @@ namespace FSO.Client.UI.Screens
                 CityRenderer.Dispose();
                 CityRenderer = null;
             }
+        }
+
+        /// <summary>
+        /// Zoom controls — keyboard, since the editor doesn't have the
+        /// UCP that the regular game uses for camera transitions.
+        ///   Tab           : toggle Near (paintable) ↔ Far (whole-map view)
+        ///   + / =         : zoom in within Near (raises wheel zoom target)
+        ///   -             : zoom out within Near
+        /// Mouse wheel is handled by CityCamera2D.Update directly.
+        /// </summary>
+        private void HandleZoomKeys(UpdateState state)
+        {
+            if (CityRenderer == null) return;
+            if (!(CityRenderer.Camera is CityCamera2D cam)) return;
+
+            if (state.NewKeys.Contains(Microsoft.Xna.Framework.Input.Keys.Tab))
+            {
+                if (CityRenderer.m_Zoomed == TerrainZoomMode.Far)
+                {
+                    CityRenderer.m_Zoomed = TerrainZoomMode.Near;
+                    CityRenderer.m_ZoomProgress = 1f;
+                }
+                else
+                {
+                    CityRenderer.m_Zoomed = TerrainZoomMode.Far;
+                    CityRenderer.m_ZoomProgress = 0f;
+                }
+            }
+
+            // OemPlus is `=` on US keyboards; players also expect `+` to zoom in.
+            // Camera only honours wheel-zoom in Near mode, so these no-op in Far.
+            if (state.KeyboardState.IsKeyDown(Microsoft.Xna.Framework.Input.Keys.OemPlus) && !state.CtrlDown)
+                cam.m_WheelZoomTarg = System.Math.Min(1.0f, cam.m_WheelZoomTarg + 0.01f);
+            if (state.KeyboardState.IsKeyDown(Microsoft.Xna.Framework.Input.Keys.OemMinus) && !state.CtrlDown)
+                cam.m_WheelZoomTarg = System.Math.Max(0.33f, cam.m_WheelZoomTarg - 0.01f);
         }
 
         private static void Log(string msg)
