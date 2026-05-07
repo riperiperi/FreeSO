@@ -56,8 +56,15 @@ namespace FSO.Client.UI.Screens
                 Log($"  InitializeMap done — Camera={CityRenderer?.Camera?.GetType().Name}");
 
                 CityRenderer.Visible = true;
-                CityRenderer.m_Zoomed = TerrainZoomMode.Far;
-                CityRenderer.m_ZoomProgress = 0;
+                // Start in Near zoom: the painter's mouse handling
+                // (Terrain.Update line ~1185) is gated on
+                // Camera.Zoomed == TerrainZoomMode.Near, so Far mode
+                // has no tile-hover / click / TileMouseDown forwarded to
+                // the plugin. Near view is what the in-game City Painter
+                // uses too — MapPainterPlugin sets ForceNear = true in
+                // its ctor.
+                CityRenderer.m_Zoomed = TerrainZoomMode.Near;
+                CityRenderer.m_ZoomProgress = 1;
 
                 // Pre-warm m_WheelZoom away from 0. CityCamera2D.GetIsoScale
                 // computes ZisoScale = sqrt(0.5)/(288*m_WheelZoom). With
