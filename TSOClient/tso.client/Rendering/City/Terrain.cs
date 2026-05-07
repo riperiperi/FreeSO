@@ -1131,7 +1131,10 @@ namespace FSO.Client.Rendering.City
                 }
             }
 
-            ((CoreGameScreen)GameFacade.Screens.CurrentUIScreen).ucp.UpdateZoomButton();
+            // CoreGameScreen owns the UCP; the city editor screen doesn't
+            // have one. Don't hard-cast — the cast would NRE on any
+            // non-CoreGameScreen surface (e.g. CityEditorScreen).
+            (GameFacade.Screens.CurrentUIScreen as CoreGameScreen)?.ucp.UpdateZoomButton();
         }
 
         private int ITime;
@@ -1182,7 +1185,12 @@ namespace FSO.Client.Rendering.City
 
                 if (HandleMouse && state.ProcessMouseEvents)
                 {
-                    if (Camera.Zoomed == TerrainZoomMode.Near)
+                    // Allow tile-hover and TileMouseDown forwarding in Far
+                    // view too when a Plugin (e.g. MapPainterPlugin) is
+                    // active. Without a plugin, Far-view click means
+                    // "zoom into a lot" so we keep the original gate.
+                    if (Camera.Zoomed == TerrainZoomMode.Near ||
+                        (Camera.Zoomed == TerrainZoomMode.Far && Plugin != null))
                     {
                         var currentTile = GetHoverSquare(null);
                         var curTileInt = (currentTile == null) ? new int[] { -1, -1 } : new int[] { (int)currentTile.Value.X, (int)currentTile.Value.Y};
