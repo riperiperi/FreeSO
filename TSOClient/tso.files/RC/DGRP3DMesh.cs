@@ -497,13 +497,14 @@ namespace FSO.Files.RC
                             for (int x = 0; x < w - 1; x++)
                             {
                                 //try make a triangle or two
-                                var quad = new int?[] {
-                                    QuickTryGet(dict, x+y*w),
-                                    QuickTryGet(dict, x+1+y*w),
-                                    QuickTryGet(dict, x+1+(y+1)*w),
-                                    QuickTryGet(dict, x+(y+1)*w)
-                                };
-                                var total = quad.Sum(v => (v == null) ? 0 : 1);
+                                int total = 0;
+                                Span<int?> quad = [
+                                    QuickTryGet(dict, x+y*w, ref total),
+                                    QuickTryGet(dict, x+1+y*w, ref total),
+                                    QuickTryGet(dict, x+1+(y+1)*w, ref total),
+                                    QuickTryGet(dict, x+(y+1)*w, ref total)
+                                ];
+
                                 if (total == 4)
                                 {
                                     var d1 = Vector3.DistanceSquared(verts[quad[0].Value].Position, verts[quad[2].Value].Position);
@@ -915,10 +916,14 @@ namespace FSO.Files.RC
         }
 
 
-        private int? QuickTryGet(Dictionary<int, int> dict, int pt)
+        private int? QuickTryGet(Dictionary<int, int> dict, int pt, ref int count)
         {
             int result;
-            if (dict.TryGetValue(pt, out result)) return result;
+            if (dict.TryGetValue(pt, out result))
+            {
+                count++;
+                return result;
+            }
             return null;
         }
     }

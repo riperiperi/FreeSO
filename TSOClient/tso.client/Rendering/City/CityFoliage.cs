@@ -128,6 +128,7 @@ namespace FSO.Client.Rendering.City
 
         private static readonly int[] TreeCounts = [1, 4, 7, 15];
 
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
         private static int O(int x, int y)
         {
             return (Math.Max(0, Math.Min(511, y)) * 512 + Math.Max(0, Math.Min(511, x)));
@@ -284,6 +285,14 @@ namespace FSO.Client.Rendering.City
 
                         var fBase = group.Index;
 
+                        Span<float> d =
+                        [
+                            md[O(ox - 1, oy - 1)], md[O(ox - 1, oy)], md[O(ox - 1, oy + 1)], md[O(ox - 1, oy + 2)],
+                            md[O(ox, oy - 1)], md[O(ox, oy)], md[O(ox, oy + 1)], md[O(ox, oy + 2)],
+                            md[O(ox + 1, oy - 1)], md[O(ox + 1, oy)], md[O(ox + 1, oy + 1)], md[O(ox + 1, oy + 2)],
+                            md[O(ox + 2, oy - 1)], md[O(ox + 2, oy)], md[O(ox + 2, oy + 1)], md[O(ox + 2, oy + 2)],
+                        ];
+
                         for (int i = 0; i < density; i++)
                         {
                             var subtype = (int)rand.Next((ulong)group.Count);
@@ -291,10 +300,10 @@ namespace FSO.Client.Rendering.City
                             var sy = (rand.Next(256) / 256f) * rangey + rangesy;
 
                             //get tree height
-                            float y1 = CityGeometry.Cubic(md[O(ox - 1, oy - 1)], md[O(ox - 1, oy)], md[O(ox - 1, oy + 1)], md[O(ox - 1, oy + 2)], sy, 0);
-                            float y2 = CityGeometry.Cubic(md[O(ox, oy - 1)], md[O(ox, oy)], md[O(ox, oy + 1)], md[O(ox, oy + 2)], sy, 0);
-                            float y3 = CityGeometry.Cubic(md[O(ox + 1, oy - 1)], md[O(ox + 1, oy)], md[O(ox + 1, oy + 1)], md[O(ox + 1, oy + 2)], sy, 0);
-                            float y4 = CityGeometry.Cubic(md[O(ox + 2, oy - 1)], md[O(ox + 2, oy)], md[O(ox + 2, oy + 1)], md[O(ox + 2, oy + 2)], sy, 0);
+                            float y1 = CityGeometry.Cubic(d[0], d[1], d[2], d[3], sy, 0);
+                            float y2 = CityGeometry.Cubic(d[4], d[5], d[6], d[7], sy, 0);
+                            float y3 = CityGeometry.Cubic(d[8], d[9], d[10], d[11], sy, 0);
+                            float y4 = CityGeometry.Cubic(d[12], d[13], d[14], d[15], sy, 0);
 
                             var h = CityGeometry.Cubic(y1, y2, y3, y4, sx, 0);
 

@@ -11,9 +11,6 @@ namespace FSO.Client.Rendering.City
 {
     public class CityGeometry
     {
-        private static Matrix RotToNormalXY = Matrix.CreateRotationZ((float)(Math.PI / 2));
-        private static Matrix RotToNormalZY = Matrix.CreateRotationX(-(float)(Math.PI / 2));
-
         //draw order:
         //grass, sand, rock, snow, water
         public CityMap MapData;
@@ -41,11 +38,10 @@ namespace FSO.Client.Rendering.City
 
         private Blend GetBlend(TerrainType[] TerrainTypeData, int i, int j)
         {
-            int[] edges;
+            Span<int> edges = [-1, -1, -1, -1];
             int sample;
             int t;
 
-            edges = new int[] { -1, -1, -1, -1 };
             sample = (int)TerrainTypeData[i * 512 + j];
             t = (int)TerrainTypeData[Math.Abs((i - 1) * 512 + j)];
 
@@ -72,10 +68,12 @@ namespace FSO.Client.Rendering.City
             for (int x = 0; x < 4; x++)
                 if (edges[x] < maxEdge && edges[x] != -1) maxEdge = edges[x];
 
-            Blend ReturnBlend = new Blend();
-            ReturnBlend.Binary = binary;
-            ReturnBlend.AtlasPosition = atlasPos;
-            ReturnBlend.MaxEdge = maxEdge;
+            Blend ReturnBlend = new Blend
+            {
+                Binary = binary,
+                AtlasPosition = atlasPos,
+                MaxEdge = maxEdge
+            };
 
             return ReturnBlend;
         }
@@ -84,42 +82,33 @@ namespace FSO.Client.Rendering.City
         {
             var sum = new Vector3();
 
+            float myElevation = GetElevationPoint(elevationData, x, y);
+
             if (x < 511)
             {
-                var vec = new Vector3();
-                vec.X = 1;
-                vec.Y = GetElevationPoint(elevationData, x + 1, y) - GetElevationPoint(elevationData, x, y);
-                vec = Vector3.Transform(vec, RotToNormalXY);
-                sum += vec;
+                sum.X -= GetElevationPoint(elevationData, x + 1, y) - myElevation;
+                sum.Y += 1;
             }
 
             if (x > 1)
             {
-                var vec = new Vector3();
-                vec.X = 1;
-                vec.Y = GetElevationPoint(elevationData, x, y) - GetElevationPoint(elevationData, x - 1, y);
-                vec = Vector3.Transform(vec, RotToNormalXY);
-                sum += vec;
+                sum.X -= myElevation - GetElevationPoint(elevationData, x - 1, y);
+                sum.Y += 1;
             }
 
             if (y < 511)
             {
-                var vec = new Vector3();
-                vec.Z = 1;
-                vec.Y = GetElevationPoint(elevationData, x, y + 1) - GetElevationPoint(elevationData, x, y);
-                vec = Vector3.Transform(vec, RotToNormalZY);
-                sum += vec;
+                sum.Z -= GetElevationPoint(elevationData, x, y + 1) - myElevation;
+                sum.Y += 1;
             }
 
             if (y > 1)
             {
-                var vec = new Vector3();
-                vec.Z = 1;
-                vec.Y = GetElevationPoint(elevationData, x, y) - GetElevationPoint(elevationData, x, y - 1);
-                vec = Vector3.Transform(vec, RotToNormalZY);
-                sum += vec;
+                sum.Z -= myElevation - GetElevationPoint(elevationData, x, y - 1);
+                sum.Y += 1;
             }
-            if (sum != Vector3.Zero) sum.Normalize();
+
+            if (sum.Y != 0) sum.Normalize();
             return sum;
         }
 
@@ -539,6 +528,7 @@ namespace FSO.Client.Rendering.City
             }
         }
 
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
         private int O(int x, int y, int minx, int maxx)
         {
             return (Math.Max(0, Math.Min(511, y)) * 512 + Math.Max(minx, Math.Min(maxx, x)));
@@ -655,14 +645,13 @@ namespace FSO.Client.Rendering.City
                         var xEdge = (i == range.Value.Y) ? -1f : 0f;
                         var xEdge2 = (i == range.Value.Bottom - 1) ? -1f : 0f;
 
-
-                        var d = new float[]
-                        {
+                        Span<float> d =
+                        [
                             md[O(j - 1, i - 1, rXS, rXE)], md[O(j - 1, i, rXS, rXE)], md[O(j - 1, i + 1, rXS2, rXE2)], md[O(j - 1, i + 2, rXS2, rXE2)],
                             md[O(j, i - 1, rXS, rXE)], md[O(j, i, rXS, rXE)], md[O(j, i + 1, rXS2, rXE2)], md[O(j, i + 2, rXS2, rXE2)],
                             md[O(j + 1, i - 1, rXS, rXE)], md[O(j + 1, i, rXS, rXE)], md[O(j + 1, i + 1, rXS2, rXE2)], md[O(j + 1, i + 2, rXS2, rXE2)],
                             md[O(j + 2, i - 1, rXS, rXE)], md[O(j + 2, i, rXS, rXE)], md[O(j + 2, i + 1, rXS2, rXE2)], md[O(j + 2, i + 2, rXS2, rXE2)],
-                        };
+                        ];
 
                         var normalTile = (j > rXS && j < rXE);
 
