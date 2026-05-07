@@ -159,8 +159,10 @@
     <Compile Include="Rendering\City\Model\CityNeighbourhood.cs" />
     <Compile Include="Rendering\City\Plugins\AbstractCityPlugin.cs" />
     <Compile Include="Rendering\City\Plugins\CityBaker.cs" />
+    <Compile Include="Rendering\City\Plugins\CityProcGen.cs" />
     <Compile Include="Rendering\City\Plugins\MapPainterPlugin.cs" />
     <Compile Include="Rendering\City\Plugins\NeighbourhoodEditPlugin.cs" />
+    <Compile Include="Rendering\City\Plugins\PerlinNoise.cs" />
     <Compile Include="Rendering\City\TLayerVertex.cs" />
     <Compile Include="UI\Controls\UIMapWaypoint.cs" />
     <Compile Include="UI\Panels\EODs\UICooldownEventEOD.cs" />
@@ -170,6 +172,7 @@
     <Compile Include="UI\Panels\EODs\UIPropertySelectEOD.cs" />
     <Compile Include="UI\Panels\UIAbstractCatalogMode.cs" />
     <Compile Include="UI\Panels\CityEditorToolbar.cs" />
+    <Compile Include="UI\Panels\UIGenerateMapDialog.cs" />
     <Compile Include="UI\Panels\UICatalogSearchPanel.cs" />
     <Compile Include="UI\Panels\UIMotiveTooltip.cs" />
     <Compile Include="UI\Panels\Upgrades\UIUpgradeItem.cs" />

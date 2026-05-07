@@ -141,7 +141,12 @@ namespace FSO.Client.UI.Panels
             var clear = new UIButton { Caption = "Clear", X = x, Y = ROW_Y_BRUSH, Width = 80 };
             clear.OnButtonClick += OnClearClicked;
             Add(clear);
-            x += 90;
+            x += 84;
+
+            var gen = new UIButton { Caption = "Generate", X = x, Y = ROW_Y_BRUSH, Width = 90 };
+            gen.OnButtonClick += OnGenerateClicked;
+            Add(gen);
+            x += 100;
 
             _StatusLabel = new UILabel {
                 Caption = "",
@@ -245,6 +250,25 @@ namespace FSO.Client.UI.Panels
                 "for the current map. Unsaved work will be lost.\n\nClear?",
                 true,
                 yes => { if (yes) ClearMap(); });
+        }
+
+        private void OnGenerateClicked(UIElement _)
+        {
+            var dlg = new UIGenerateMapDialog(p =>
+            {
+                try
+                {
+                    CityProcGen.Generate(_City.MapData, p);
+                    _City.GenerateCityMesh(GameFacade.GraphicsDevice, null);
+                    _StatusLabel.Caption =
+                        "Generated " + p.Type + " (seed " + p.Seed + ")";
+                }
+                catch (Exception ex)
+                {
+                    _StatusLabel.Caption = "Generate failed: " + ex.Message;
+                }
+            });
+            UIScreen.GlobalShowDialog(dlg, true);
         }
 
         // Reset all five engine layers to a blank-canvas baseline:
