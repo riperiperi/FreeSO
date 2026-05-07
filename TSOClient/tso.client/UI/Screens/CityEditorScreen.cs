@@ -217,11 +217,27 @@ namespace FSO.Client.UI.Screens
         }
 
         /// <summary>
+        /// Three discrete zoom levels:
+        ///   0 = Far          (whole-map overview, broad-stroke painting)
+        ///   1 = Near medium  (zoom 0.55 — typical detail work)
+        ///   2 = Near close   (zoom 1.0  — fine pixel-level edits)
+        /// Tab cycles forward, Shift+Tab cycles backward, both wrap.
+        /// </summary>
+        private int _zoomLevel = 1;
+        private static readonly (TerrainZoomMode mode, float zoomProg, float wheelTarg)[] _zoomLevels =
+        {
+            (TerrainZoomMode.Far,  0f, 0.55f),
+            (TerrainZoomMode.Near, 1f, 0.55f),
+            (TerrainZoomMode.Near, 1f, 1.00f),
+        };
+
+        /// <summary>
         /// Zoom controls — keyboard, since the editor doesn't have the
         /// UCP that the regular game uses for camera transitions.
-        ///   Tab           : toggle Near (paintable) ↔ Far (whole-map view)
-        ///   + / =         : zoom in within Near (raises wheel zoom target)
-        ///   -             : zoom out within Near
+        ///   Tab           : cycle zoom level forward
+        ///   Shift + Tab   : cycle zoom level backward
+        ///   + / =         : nudge wheel zoom in (Near only)
+        ///   -             : nudge wheel zoom out (Near only)
         /// Mouse wheel is handled by CityCamera2D.Update directly.
         /// </summary>
         private void HandleZoomKeys(UpdateState state)
@@ -231,16 +247,10 @@ namespace FSO.Client.UI.Screens
 
             if (state.NewKeys.Contains(Microsoft.Xna.Framework.Input.Keys.Tab))
             {
-                if (CityRenderer.m_Zoomed == TerrainZoomMode.Far)
-                {
-                    CityRenderer.m_Zoomed = TerrainZoomMode.Near;
-                    CityRenderer.m_ZoomProgress = 1f;
-                }
-                else
-                {
-                    CityRenderer.m_Zoomed = TerrainZoomMode.Far;
-                    CityRenderer.m_ZoomProgress = 0f;
-                }
+                _zoomLevel = state.ShiftDown
+                    ? (_zoomLevel - 1 + _zoomLevels.Length) % _zoomLevels.Length
+                    : (_zoomLevel + 1) % _zoomLevels.Length;
+                ApplyZoomLevel(cam);
             }
 
             // OemPlus is `=` on US keyboards; players also expect `+` to zoom in.
@@ -249,6 +259,14 @@ namespace FSO.Client.UI.Screens
                 cam.m_WheelZoomTarg = System.Math.Min(1.0f, cam.m_WheelZoomTarg + 0.01f);
             if (state.KeyboardState.IsKeyDown(Microsoft.Xna.Framework.Input.Keys.OemMinus) && !state.CtrlDown)
                 cam.m_WheelZoomTarg = System.Math.Max(0.33f, cam.m_WheelZoomTarg - 0.01f);
+        }
+
+        private void ApplyZoomLevel(CityCamera2D cam)
+        {
+            var lvl = _zoomLevels[_zoomLevel];
+            CityRenderer.m_Zoomed = lvl.mode;
+            CityRenderer.m_ZoomProgress = lvl.zoomProg;
+            cam.m_WheelZoomTarg = lvl.wheelTarg;
         }
 
         private static void Log(string msg)
