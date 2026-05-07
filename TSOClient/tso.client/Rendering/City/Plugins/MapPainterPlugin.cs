@@ -245,9 +245,12 @@ namespace FSO.Client.Rendering.City.Plugins
                     BrushFunc(BrushSize, (x, y, strength) =>
                     {
                         var index = ePos.X + x + (ePos.Y + y) * 512;
-                        if (index < 0 || index > City.MapData.ElevationData.Length) return;
+                        if (index < 0 || index >= City.MapData.ElevationData.Length) return;
                         elevations.Add(City.MapData.ElevationData[index]);
                     });
+
+                    // Brush entirely off-grid (mouse off the diamond mask) — nothing to draw.
+                    if (elevations.Count == 0) break;
 
                     var sorted = elevations.OrderBy(x => x).ToList();
                     var elevation = sorted[sorted.Count / 2]; //median
@@ -258,7 +261,7 @@ namespace FSO.Client.Rendering.City.Plugins
                         {
                             var multiplier = (Accelerate) ? 2 : 1;
                             var index = ePos.X + x + (ePos.Y + y) * 512;
-                            if (index < 0 || index > City.MapData.ElevationData.Length) return;
+                            if (index < 0 || index >= City.MapData.ElevationData.Length) return;
                             var elev = City.MapData.ElevationData[index];
 
                             var change = (elevation - elev) / 50f;
@@ -352,9 +355,11 @@ namespace FSO.Client.Rendering.City.Plugins
                         BrushFunc(BrushSize, (x, y, strength) =>
                         {
                             var index = wallPos.X + x + (wallPos.Y + y) * 512;
-                            if (index < 0 || index > City.MapData.ElevationData.Length) return;
+                            if (index < 0 || index >= City.MapData.ElevationData.Length) return;
                             elevations.Add(City.MapData.ElevationData[index]);
                         });
+
+                        if (elevations.Count == 0) break;
 
                         var sorted = elevations.OrderBy(x => x).ToList();
                         var elevation = sorted[sorted.Count / 2]; //median
@@ -365,7 +370,7 @@ namespace FSO.Client.Rendering.City.Plugins
                             if (strength > 0)
                             {
                                 var index = wallPos.X + x + (wallPos.Y + y) * 512;
-                                if (index < 0 || index > City.MapData.ElevationData.Length) return;
+                                if (index < 0 || index >= City.MapData.ElevationData.Length) return;
                                 var elev = City.MapData.ElevationData[index];
 
                                 var loc = new Point(wallPos.X + x, wallPos.Y + y);
@@ -497,7 +502,7 @@ namespace FSO.Client.Rendering.City.Plugins
                 foreach (var mod in ElevationMod)
                 {
                     var index = mod.Key.X + mod.Key.Y * 512;
-                    if (index < 0 || index > City.MapData.ElevationData.Length) continue;
+                    if (index < 0 || index >= City.MapData.ElevationData.Length) continue;
                     City.MapData.ElevationData[index] = (byte)Math.Max(0, Math.Min(255, Math.Round(City.MapData.ElevationData[index]+mod.Value)));
                 }
                 City.GenerateCityMesh(GameFacade.GraphicsDevice, ChangeBounds);
@@ -520,7 +525,7 @@ namespace FSO.Client.Rendering.City.Plugins
                         if (Accelerate)
                         {
                             City.MapData.Save(dir);
-                            CityBaker.Save(City.MapData, dir);
+                            CityBaker.Save(City, dir);
                             UIScreen.GlobalShowAlert(new UI.Controls.UIAlertOptions { Title = "Save Success", Message = "Saved city data " + i + " (incl. vertexcolor + thumbnail)." }, true);
                         }
                         else if (Directory.Exists(dir))

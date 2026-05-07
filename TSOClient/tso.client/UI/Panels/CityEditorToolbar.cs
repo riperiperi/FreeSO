@@ -6,7 +6,9 @@ using FSO.Client.UI.Controls;
 using FSO.Client.UI.Framework;
 using FSO.Common;
 using FSO.Common.Rendering.Framework.Model;
+using FSO.Files;
 using Microsoft.Xna.Framework;
+using Microsoft.Xna.Framework.Graphics;
 
 namespace FSO.Client.UI.Panels
 {
@@ -15,7 +17,7 @@ namespace FSO.Client.UI.Panels
     ///   1. Six mode buttons (Road / Terrain / Elev↑ / Flatten / Forest / Density)
     ///   2. Up to five modifier buttons, contextual to the current mode
     ///      (Terrain → Grass/Water/Rock/Snow/Sand, Forest types, density %)
-    ///   3. Brush size ± + Save + a one-line status label
+    ///   3. Brush size ± / Save / Load / Clear + a one-line status label
     ///
     /// All keyboard shortcuts still work; this is just a discoverability
     /// layer over the existing painter API.
@@ -129,6 +131,16 @@ namespace FSO.Client.UI.Panels
             var save = new UIButton { Caption = "Save", X = x, Y = ROW_Y_BRUSH, Width = 80 };
             save.OnButtonClick += OnSaveClicked;
             Add(save);
+            x += 84;
+
+            var load = new UIButton { Caption = "Load", X = x, Y = ROW_Y_BRUSH, Width = 80 };
+            load.OnButtonClick += OnLoadClicked;
+            Add(load);
+            x += 84;
+
+            var clear = new UIButton { Caption = "Clear", X = x, Y = ROW_Y_BRUSH, Width = 80 };
+            clear.OnButtonClick += OnClearClicked;
+            Add(clear);
             x += 90;
 
             _StatusLabel = new UILabel {
@@ -145,12 +157,123 @@ namespace FSO.Client.UI.Panels
                 var dir = Path.Combine(FSOEnvironment.UserDir, "CityPainterSave2/");
                 Directory.CreateDirectory(dir);
                 _City.MapData.Save(dir);
-                CityBaker.Save(_City.MapData, dir);
+                CityBaker.Save(_City, dir);
                 _StatusLabel.Caption = "Saved to " + dir;
             }
             catch (Exception ex)
             {
                 _StatusLabel.Caption = "Save failed: " + ex.Message;
+            }
+        }
+
+        private void OnLoadClicked(UIElement _)
+        {
+            // Slot dirs are written by Save (this toolbar) and the F2..F11
+            // hotkeys in MapPainterPlugin. Show the user only the ones that
+            // actually exist on disk.
+            var available = new System.Collections.Generic.List<int>();
+            for (int i = 2; i <= 11; i++)
+            {
+                var dir = Path.Combine(FSOEnvironment.UserDir, "CityPainterSave" + i + "/");
+                if (Directory.Exists(dir)) available.Add(i);
+            }
+
+            if (available.Count == 0)
+            {
+                UIAlert.Alert("Load City",
+                    "No saved cities found.\nSave one first (Save button), then come back here.",
+                    true);
+                return;
+            }
+
+            UIAlert alert = null;
+            var buttons = new System.Collections.Generic.List<UIAlertButton>();
+            foreach (var slot in available)
+            {
+                var capturedSlot = slot;
+                buttons.Add(new UIAlertButton(UIAlertButtonType.OK,
+                    (btn) => { UIScreen.RemoveDialog(alert); LoadSlot(capturedSlot); },
+                    "Slot " + capturedSlot));
+            }
+            buttons.Add(new UIAlertButton(UIAlertButtonType.Cancel,
+                (btn) => { UIScreen.RemoveDialog(alert); }));
+
+            alert = UIScreen.GlobalShowAlert(new UIAlertOptions
+            {
+                Title = "Load City",
+                Message = "Pick a saved city to load.\nWarning: discards any unsaved changes.",
+                Buttons = buttons.ToArray()
+            }, true);
+        }
+
+        private void LoadSlot(int slot)
+        {
+            try
+            {
+                var dir = Path.Combine(FSOEnvironment.UserDir, "CityPainterSave" + slot + "/");
+                _City.MapData.Load(dir, LoadTex, "png");
+                _City.GenerateCityMesh(GameFacade.GraphicsDevice, null);
+                _StatusLabel.Caption = "Loaded slot " + slot;
+            }
+            catch (Exception ex)
+            {
+                _StatusLabel.Caption = "Load failed: " + ex.Message;
+            }
+        }
+
+        // Mirrors MapPainterPlugin.LoadTex — small helper to materialize a
+        // PNG path into a Texture2D for CityMapData.Load.
+        private Texture2D LoadTex(string path)
+        {
+            using (var strm = new FileStream(path, FileMode.Open, FileAccess.Read, FileShare.Read))
+            {
+                try
+                {
+                    return ImageLoader.FromStream(GameFacade.GraphicsDevice, strm);
+                }
+                catch
+                {
+                    return new Texture2D(GameFacade.GraphicsDevice, 1, 1);
+                }
+            }
+        }
+
+        private void OnClearClicked(UIElement _)
+        {
+            UIAlert.YesNo("Clear Map",
+                "This wipes elevation, terrain type, roads, and forests\n" +
+                "for the current map. Unsaved work will be lost.\n\nClear?",
+                true,
+                yes => { if (yes) ClearMap(); });
+        }
+
+        // Reset all five engine layers to a blank-canvas baseline:
+        //   - elevation: flat, slightly above sea level (visible as land)
+        //   - terraintype: grass everywhere
+        //   - roads / forest density / forest type: empty
+        // The engine input file (vertexcolor.png) is regenerated by Save,
+        // so we don't need to touch that here.
+        private void ClearMap()
+        {
+            try
+            {
+                var md = _City.MapData;
+                int n = md.ElevationData.Length;
+                for (int i = 0; i < n; i++)
+                {
+                    md.ElevationData[i] = 64;          // flat plateau just above water
+                    md.TerrainType[i] = 0;             // grass
+                    md.TerrainTypeColorData[i] = new Color(0, 255, 0);
+                    md.RoadData[i] = 0;
+                    md.ForestDensityData[i] = 0;
+                    md.ForestTypeData[i] = new Color(0, 0, 0);
+                }
+                _City.GenerateCityMesh(GameFacade.GraphicsDevice, null);
+                _StatusLabel.Caption = "Map cleared";
+            }
+            catch (Exception ex)
+            {
+                _StatusLabel.Caption = "Clear failed: " + ex.Message;
             }
         }
 
