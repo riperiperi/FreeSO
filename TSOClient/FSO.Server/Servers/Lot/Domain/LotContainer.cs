@@ -1866,11 +1866,6 @@ namespace FSO.Server.Servers.Lot.Domain
 
         public void SaveAvatar(VMAvatar avatar, Action postSave = null)
         {
-            if (IsSpectatorMode)
-            {
-                if (postSave != null) Host.InBackground(() => postSave());
-                return;
-            }
             var statevm = new VMNetAvatarPersistState();
             statevm.Save(avatar);
             foreach (var relsID in avatar.ChangedRels)
