@@ -128,7 +128,13 @@ namespace FSO.Client.UI.Screens
             var painter = new MapPainterPlugin(CityRenderer);
             CityRenderer.Plugin = painter;
 
-            _Toolbar = new CityEditorToolbar(painter, CityRenderer, path);
+            // Don't pre-fill the toolbar's _CurrentPath with the bundled
+            // blank scaffold — otherwise Save would default to overwriting
+            // it, replacing the read-only template with whatever the user
+            // edited. Anything else (user-supplied path, built-in cityId)
+            // is fine to remember.
+            string toolbarPath = IsBlankScaffold(path) ? null : path;
+            _Toolbar = new CityEditorToolbar(painter, CityRenderer, toolbarPath);
             Add(_Toolbar);
             Log("  Toolbar added");
 
@@ -136,22 +142,36 @@ namespace FSO.Client.UI.Screens
         }
 
         /// <summary>
-        /// First-run UI when no CLI arg was supplied. Three buttons:
-        ///  • Load Map…   — text-prompt for an absolute directory path
+        /// First-run UI when no CLI arg was supplied. Buttons:
+        ///  • New Blank Map — loads the bundled city_blank scaffold
+        ///    (flat grass at sea-level + 4) so the user can paint or
+        ///    Generate without needing any existing city files.
+        ///  • Load Map…    — text-prompt for an absolute directory path
         ///  • Open Alphaville — only when the bundled city_0100 dir exists
-        ///  • Quit        — closes the editor process
-        /// User cancelling either prompt re-shows this dialog so the
-        /// editor never sits in a blank state.
+        ///  • Quit         — closes the editor process
+        /// User cancelling any prompt re-shows this dialog so the editor
+        /// never sits in a blank state.
         /// </summary>
         private void ShowWelcomeDialog()
         {
+            string blankPath = Path.Combine(
+                Environment.CurrentDirectory, FSOEnvironment.ContentDir,
+                "Cities", "city_blank");
             string alphaPath = Path.Combine(
                 Environment.CurrentDirectory, FSOEnvironment.ContentDir,
                 "Cities", "city_0100");
+            bool hasBlank      = Directory.Exists(blankPath);
             bool hasAlphaville = Directory.Exists(alphaPath);
 
             UIAlert dialog = null;
             var buttons = new List<UIAlertButton>();
+
+            if (hasBlank)
+            {
+                buttons.Add(new UIAlertButton(UIAlertButtonType.OK,
+                    btn => { UIScreen.RemoveDialog(dialog); BeginEditing(blankPath, 0); },
+                    "New Blank Map"));
+            }
 
             buttons.Add(new UIAlertButton(UIAlertButtonType.OK,
                 btn => { UIScreen.RemoveDialog(dialog); PromptForPath(); },
@@ -168,12 +188,22 @@ namespace FSO.Client.UI.Screens
                 btn => { UIScreen.RemoveDialog(dialog); GameFacade.Kill(); },
                 "Quit"));
 
+            string message;
+            if (hasBlank && hasAlphaville)
+                message = "Pick a starting point.\n"
+                        + "New Blank Map: flat grass canvas, ready for painting or Generate.\n"
+                        + "Load Map: open an existing city directory.\n"
+                        + "Open Alphaville: open the bundled sample city.";
+            else if (hasBlank)
+                message = "Pick a starting point.\n"
+                        + "New Blank Map starts you on a flat grass canvas.";
+            else
+                message = "No bundled scaffold found. Load an existing city directory by absolute path.";
+
             dialog = UIScreen.GlobalShowAlert(new UIAlertOptions
             {
                 Title = "FSO City Editor",
-                Message = hasAlphaville
-                    ? "Pick a starting point.\nLoad an existing city directory, or open the bundled Alphaville sample."
-                    : "No bundled city found. Load an existing city directory by entering its absolute path.",
+                Message = message,
                 Buttons = buttons.ToArray(),
             }, true);
         }
@@ -196,6 +226,20 @@ namespace FSO.Client.UI.Screens
                     try { BeginEditing(path, 0); }
                     catch (Exception ex) { ShowLoadFailedDialog("Load failed: " + ex.Message); }
                 });
+        }
+
+        // Path equality check that handles trailing-slash and case
+        // differences. The blank scaffold lives under the editor's
+        // ContentDir; matching by canonical name is enough.
+        private static bool IsBlankScaffold(string path)
+        {
+            if (string.IsNullOrEmpty(path)) return false;
+            try
+            {
+                var name = new DirectoryInfo(path).Name;
+                return string.Equals(name, "city_blank", StringComparison.OrdinalIgnoreCase);
+            }
+            catch { return false; }
         }
 
         private void ShowLoadFailedDialog(string message)
