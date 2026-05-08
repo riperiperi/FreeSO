@@ -59,6 +59,12 @@ namespace FSO.Client.UI.Panels
         private const int ROW_Y_MODIFIER = 44;
         private const int ROW_Y_BRUSH = 78;
 
+        // Neighborhood-edit toggle. _NeighPlugin is lazy-instantiated on
+        // first activation; we keep the reference around so re-entering
+        // neigh mode preserves the in-progress edit (Selected, etc.).
+        private UIButton _NeighButton;
+        private NeighbourhoodEditPlugin _NeighPlugin;
+
         // Status label auto-fade. Hold full-opacity for HOLD seconds,
         // then linearly fade to 0 over FADE seconds, then clear text.
         // SetStatus is called by every Save / Load / Generate / Clear
@@ -168,11 +174,18 @@ namespace FSO.Client.UI.Panels
             var gen = new UIButton { Caption = "Generate", X = x, Y = ROW_Y_BRUSH, Width = 90 };
             gen.OnButtonClick += OnGenerateClicked;
             Add(gen);
-            x += 100;
+            x += 94;
+
+            _NeighButton = new UIButton {
+                Caption = "Neigh", X = x, Y = ROW_Y_BRUSH, Width = 70,
+            };
+            _NeighButton.OnButtonClick += OnNeighClicked;
+            Add(_NeighButton);
+            x += 78;
 
             _StatusLabel = new UILabel {
                 Caption = "",
-                X = x, Y = ROW_Y_BRUSH + 4, Size = new Vector2(400, 22),
+                X = x, Y = ROW_Y_BRUSH + 4, Size = new Vector2(420, 22),
             };
             Add(_StatusLabel);
         }
@@ -329,6 +342,30 @@ namespace FSO.Client.UI.Panels
                 "for the current map. Unsaved work will be lost.\n\nClear?",
                 true,
                 yes => { if (yes) ClearMap(); });
+        }
+
+        // Toggle the active CityRenderer plugin between the map painter
+        // and the neighborhood editor. The map paint state survives the
+        // round-trip because we reuse the same MapPainterPlugin instance
+        // (held in _Painter); the neigh plugin is lazy-instantiated on
+        // first toggle and reused afterwards so the in-progress nhood
+        // edit (Selected, draft data) survives a flip back to paint.
+        private void OnNeighClicked(UIElement _)
+        {
+            bool nowInNeigh = !(_City.Plugin is NeighbourhoodEditPlugin);
+            if (nowInNeigh)
+            {
+                if (_NeighPlugin == null) _NeighPlugin = new NeighbourhoodEditPlugin(_City);
+                _City.Plugin = _NeighPlugin;
+                _NeighButton.Caption = "[Neigh]";
+                SetStatus("Neigh mode: Shift+click=add  Click+drag=move  Ctrl+click=delete  R=rename  C=color  Shift+F10=save  F10=load");
+            }
+            else
+            {
+                _City.Plugin = _Painter;
+                _NeighButton.Caption = "Neigh";
+                SetStatus("Paint mode");
+            }
         }
 
         private void OnGenerateClicked(UIElement _)
