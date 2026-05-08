@@ -66,23 +66,39 @@ namespace FSO.Server.Servers.Tasks.Domain
                         if (da.Events.GenericAvaTryParticipate(new DbGenericAvatarParticipation() { participation_name = eventName, participation_avatar = avatar.avatar_id}))
                         {
                             LOG.Info($"Sending {item.age} day birthday gift to {avatar.name}.");
-                            //award the object
-                            da.Objects.Create(new Database.DA.Objects.DbObject()
+                            //award the object (only if a non-zero guid was set —
+                            //allows config to give pure cash without an item)
+                            if (item.guid != 0)
                             {
-                                type = item.guid,
-                                shard_id = avatar.shard_id,
-                                owner_id = avatar.avatar_id,
-                                lot_id = null, //to inventory
-                                dyn_obj_name = ""
-                            });
+                                da.Objects.Create(new Database.DA.Objects.DbObject()
+                                {
+                                    type = item.guid,
+                                    shard_id = avatar.shard_id,
+                                    owner_id = avatar.avatar_id,
+                                    lot_id = null, //to inventory
+                                    dyn_obj_name = ""
+                                });
+                            }
 
-                            //send email
+                            //award simoleon credit if money > 0
+                            if (item.money > 0)
+                            {
+                                da.Avatars.CreditBudget(avatar.avatar_id, item.money);
+                                LOG.Info($"  + credited ${item.money} to {avatar.name}.");
+                            }
+
+                            //send email — append a money note if cash was awarded
                             if (item.mail_message != null)
                             {
+                                var body = item.mail_message;
+                                if (item.money > 0)
+                                {
+                                    body += $"\n\n(${item.money:N0} simoleons have been added to your account.)";
+                                }
                                 mailItems.Add(new MessageItem()
                                 {
                                     Subject = item.mail_subject ?? "Age Gift",
-                                    Body = item.mail_message,
+                                    Body = body,
                                     SenderID = uint.MaxValue,
                                     SenderName = item.mail_sender_name ?? "The Sims Online",
                                     TargetID = avatar.avatar_id,
@@ -117,6 +133,10 @@ namespace FSO.Server.Servers.Tasks.Domain
     {
         public float age { get; set; }
         public uint guid { get; set; }
+        // Optional simoleon credit. 0 (default) = no money, just the
+        // object gift. When non-zero, BirthdayGiftTask credits the
+        // avatar's budget by this amount on top of the inventory item.
+        public int money { get; set; } = 0;
         public string mail_subject { get; set; }
         public string mail_message { get; set; }
         public string mail_sender_name { get; set; }

@@ -282,6 +282,17 @@ namespace FSO.Server.Database.DA.Avatars
             return Context.Connection.Query<int>("SELECT budget FROM fso_avatars WHERE avatar_id = @id", new { id = avatar_id }).FirstOrDefault();
         }
 
+        public int CreditBudget(uint avatar_id, int amount)
+        {
+            // System credit — no debit side, used by milestone tasks
+            // and admin tools. Negative amounts also work (debit) but
+            // do NOT check for sufficient balance; balance can go
+            // negative. Use Transaction() if you need balance checks.
+            return Context.Connection.Execute(
+                "UPDATE fso_avatars SET budget = budget + @amount WHERE avatar_id = @id",
+                new { amount = amount, id = avatar_id });
+        }
+
         public DbTransactionResult Transaction(uint source_id, uint dest_id, int amount, short reason)
         {
             return Transaction(source_id, dest_id, amount, reason, null);
