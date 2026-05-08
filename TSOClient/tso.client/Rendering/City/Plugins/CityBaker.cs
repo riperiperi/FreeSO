@@ -33,15 +33,25 @@ namespace FSO.Client.Rendering.City.Plugins
         private const int RENDER_W = 720;
         private const int RENDER_H = 540;
 
-        // Canonical per-terrain tints sampled from city_0100/vertexcolor.png.
-        private static readonly Color GrassTint = new Color(169, 192, 140);
-        private static readonly Color WaterTint = new Color( 99, 168, 207);
-        private static readonly Color RockTint  = new Color(187, 189, 152);
-        private static readonly Color SnowTint  = new Color(228, 229, 218);
-        private static readonly Color SandTint  = new Color(229, 240, 236);
+        // Per-terrain tints sampled as in-diamond medians from the
+        // vibrant official cities (city_0008 / city_0010 / city_0030),
+        // not Alphaville (city_0100). Alphaville's water in particular
+        // is a dull (99, 168, 207) — the vibrant cities use a tropical
+        // cyan around (64, 220, 255) which is what makes their renders
+        // pop. These constants drive both saved vertexcolor.png and the
+        // live in-memory tint texture refreshed after Generate.
+        private static readonly Color GrassTint = new Color(130, 175,  95);
+        private static readonly Color WaterTint = new Color( 64, 220, 255);
+        private static readonly Color RockTint  = new Color(155, 160, 105);
+        private static readonly Color SnowTint  = new Color(240, 240, 230);
+        private static readonly Color SandTint  = new Color(250, 250, 220);
 
-        private const float SHADE_AMBIENT = 0.97f;
-        private const float SHADE_DIFFUSE = 0.05f;
+        // Diffuse weight bumped from 0.05 to 0.12 so terrain relief
+        // (slope-driven shading) is visibly readable in the bake. Below
+        // ~0.10 the result reads as a flat tint and the eye misses the
+        // hillshade entirely.
+        private const float SHADE_AMBIENT = 0.98f;
+        private const float SHADE_DIFFUSE = 0.12f;
         private const float SHADE_RANGE = 25f;
 
         private const byte TT_GRASS = 0;
