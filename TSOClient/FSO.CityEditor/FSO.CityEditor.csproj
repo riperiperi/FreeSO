@@ -98,6 +98,20 @@
       <Project>{c42962a1-8796-4f47-9dcd-79ed5904d8ca}</Project>
       <Name>FSO.Common</Name>
     </ProjectReference>
+    <!--
+      FSO.Content.TSO is a content-only project (the only .cs is
+      AssemblyInfo). We reference it so the bundled Content/Cities
+      tree — including city_blank/, the editor's default scaffold —
+      ships with FSO.CityEditor.exe even when the workflow only
+      builds the FSO_CityEditor target. ReferenceOutputAssembly=false
+      keeps the empty assembly out of the editor's binding graph
+      while still triggering the Content\**\*.* copy-to-output rule.
+    -->
+    <ProjectReference Include="..\FSO.Content.TSO\FSO.Content.TSO.csproj">
+      <Project>{b5b2c04d-b8e4-47c7-9731-48e30fd5f70d}</Project>
+      <Name>FSO.Content.TSO</Name>
+      <ReferenceOutputAssembly>false</ReferenceOutputAssembly>
+    </ProjectReference>
   </ItemGroup>
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
 </Project>
