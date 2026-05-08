@@ -355,27 +355,59 @@ namespace FSO.Client.Rendering.City.Plugins
         private static void CarveLakes(byte[] elev, Parameters p, Random rng)
         {
             int count = LevelInt(p.Lakes, 0, 2, 4);
+
+            // Per-type bias on lake style. Alpine = small + sharp-walled,
+            // valley = large + gentle. Mirrors what shows up in the
+            // official Mountains and Inland cities respectively.
+            float alpineBias;
+            switch (p.Type)
+            {
+                case MapType.Mountains: alpineBias = 0.75f; break;
+                case MapType.Inland:    alpineBias = 0.40f; break;
+                default:                alpineBias = 0.55f; break;
+            }
+
             for (int i = 0; i < count; i++)
             {
                 int cx, cy;
-                if (!FindInteriorTile(rng, 120, out cx, out cy)) continue;
+                if (!FindLowInteriorTile(elev, rng, 120, out cx, out cy)) continue;
 
-                int radius = rng.Next(14, 32);
-                // Depth in elevation units below the local terrain. We
-                // overshoot SEA_LEVEL so the basin stays water even after
-                // the percentile re-mapping in MapToBytes (already done by
-                // this point — these byte writes are absolute).
-                int depthOffset = rng.Next(35, 70);
-                CarveDepression(elev, cx, cy, radius, depthOffset);
+                bool alpine = rng.NextDouble() < alpineBias;
+                int radius      = alpine ? rng.Next(6, 13)  : rng.Next(25, 46);
+                int depthOffset = alpine ? rng.Next(25, 46) : rng.Next(50, 81);
+
+                // Sigma controls how steep the basin walls are. Alpine
+                // lakes use sigma = 0.35 * radius (sharper basin),
+                // valley lakes use 0.55 (gentler shores).
+                float sigmaScale = alpine ? 0.35f : 0.55f;
+                CarveDepression(elev, cx, cy, radius, depthOffset, sigmaScale);
             }
         }
 
-        private static void CarveDepression(byte[] elev, int cx, int cy, int radius, int depthOffset)
+        // Picks an in-diamond tile biased toward low elevation. Samples
+        // K candidates and returns the one with the lowest current value.
+        // Lake centers placed this way drop into existing valleys instead
+        // of materializing on top of mountains.
+        private static bool FindLowInteriorTile(byte[] elev, Random rng, int margin, out int sx, out int sy)
+        {
+            sx = sy = -1;
+            int bestE = int.MaxValue;
+            for (int t = 0; t < 200; t++)
+            {
+                int x, y;
+                if (!FindInteriorTile(rng, margin, out x, out y)) continue;
+                int e = elev[y * SIZE + x];
+                if (e < bestE) { bestE = e; sx = x; sy = y; }
+            }
+            return sx >= 0;
+        }
+
+        private static void CarveDepression(byte[] elev, int cx, int cy, int radius, int depthOffset, float sigmaScale = 0.5f)
         {
             int r2 = radius * radius;
-            // Falloff parameter — smaller value = sharper basin. 0.5 gives
-            // a clean Gaussian-shaped depression.
-            float sigma = radius * 0.5f;
+            // Falloff parameter — smaller sigmaScale = sharper basin.
+            // 0.35 ~ alpine (cliff-walled tarn), 0.55 ~ valley (broad shore).
+            float sigma = radius * sigmaScale;
             float twoSigma2 = 2f * sigma * sigma;
 
             for (int y = -radius; y <= radius; y++)
@@ -562,8 +594,12 @@ namespace FSO.Client.Rendering.City.Plugins
             for (int i = 0; i < N; i++)
                 t[i] = (elev[i] < SEA_LEVEL) ? TT_WATER : TT_GRASS;
 
-            // 2-tile sand band around all water (sea, lakes, rivers).
-            DilateSand(t);
+            // Slope-aware sand band around all water. Pass 1 always
+            // converts (1-tile beach, even on cliffs). Passes 2 and 3
+            // only convert tiles whose local slope is gentle, so flat
+            // coast gets a wide 2-3 tile beach and cliff coast stays
+            // narrow. Officials show this same pattern.
+            DilateSand(t, elev);
 
             // Rock from EITHER high elevation OR steep slope. Snow at the
             // very top. Mountains get lower thresholds for drama.
@@ -621,21 +657,42 @@ namespace FSO.Client.Rendering.City.Plugins
             return maxDelta;
         }
 
-        // Two-pass dilation of TT_WATER into adjacent land. Diagonals
-        // counted. Result: 2-tile-wide TT_SAND ring around every body of
-        // water (ocean, lake, river).
-        private static void DilateSand(byte[] t)
+        // Slope-aware sand dilation. First pass: every land tile with
+        // a water neighbor becomes sand (always at least a 1-tile beach
+        // — gives waves something to break on). Subsequent passes
+        // expand sand only where the local slope is gentle, so a flat
+        // shore gets a wide 2-3 tile beach while a cliff coast stays
+        // narrow.
+        private static void DilateSand(byte[] t, byte[] elev)
         {
+            const int GENTLE_SLOPE = 8;
+
+            // Pass 1 — unconditional ring around water.
+            var next = (byte[])t.Clone();
+            for (int y = 0; y < SIZE; y++)
+            {
+                for (int x = 0; x < SIZE; x++)
+                {
+                    int idx = y * SIZE + x;
+                    if (t[idx] != TT_GRASS) continue;
+                    if (HasNeighbor(t, x, y, TT_WATER))
+                        next[idx] = TT_SAND;
+                }
+            }
+            Array.Copy(next, t, N);
+
+            // Passes 2 and 3 — only convert if local slope is gentle.
             for (int pass = 0; pass < 2; pass++)
             {
-                var next = (byte[])t.Clone();
+                next = (byte[])t.Clone();
                 for (int y = 0; y < SIZE; y++)
                 {
                     for (int x = 0; x < SIZE; x++)
                     {
                         int idx = y * SIZE + x;
                         if (t[idx] != TT_GRASS) continue;
-                        if (HasNeighbor(t, x, y, pass == 0 ? TT_WATER : TT_SAND))
+                        if (!HasNeighbor(t, x, y, TT_SAND)) continue;
+                        if (MaxSlope(elev, x, y) <= GENTLE_SLOPE)
                             next[idx] = TT_SAND;
                     }
                 }
