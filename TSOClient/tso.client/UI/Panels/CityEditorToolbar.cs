@@ -283,6 +283,18 @@ namespace FSO.Client.UI.Panels
                     return;
                 }
                 _City.MapData.Load(dir, LoadTex, "png");
+                // CityMapData.Load only reads the five engine layers
+                // (elevation/terraintype/forest*/road). vertexcolor is
+                // owned by CityContent and only populated by its own
+                // LoadContent at city-init time — so without this
+                // explicit reload, a Load via the toolbar uses the
+                // stale GPU texture from the originally-launched city.
+                var vcPath = Path.Combine(dir, "vertexcolor.png");
+                if (File.Exists(vcPath) && _City.Content != null)
+                {
+                    _City.Content.VertexColor?.Dispose();
+                    _City.Content.VertexColor = LoadTex(vcPath);
+                }
                 RefreshMapDisplay();
                 _CurrentPath = dir;
                 SetStatus("Loaded " + dir);
