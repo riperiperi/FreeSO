@@ -145,9 +145,14 @@ namespace FSO.Client.UI.Panels
             Add(plus);
             x += 40;
 
-            var save = new UIButton { Caption = "Save", X = x, Y = ROW_Y_BRUSH, Width = 80 };
+            var save = new UIButton { Caption = "Save", X = x, Y = ROW_Y_BRUSH, Width = 60 };
             save.OnButtonClick += OnSaveClicked;
             Add(save);
+            x += 64;
+
+            var saveAs = new UIButton { Caption = "Save As", X = x, Y = ROW_Y_BRUSH, Width = 80 };
+            saveAs.OnButtonClick += OnSaveAsClicked;
+            Add(saveAs);
             x += 84;
 
             var load = new UIButton { Caption = "Load", X = x, Y = ROW_Y_BRUSH, Width = 80 };
@@ -172,11 +177,29 @@ namespace FSO.Client.UI.Panels
             Add(_StatusLabel);
         }
 
+        // Save: silent overwrite of the current path if known. Useful for
+        // iterative work — paint a bit, hit Save, paint, hit Save. If no
+        // current path exists yet (fresh procgen / loaded blank scaffold),
+        // falls through to the same prompt as Save As.
         private void OnSaveClicked(UIElement _)
         {
-            // Pre-fill with the last known path so a user editing a
-            // loaded city can hit OK to save back to source. For a fresh
-            // procgen with no path yet, suggest a default under UserDir.
+            if (!string.IsNullOrEmpty(_CurrentPath))
+            {
+                SaveTo(_CurrentPath);
+                return;
+            }
+            PromptForSavePath();
+        }
+
+        // Save As: always prompts. For exporting / branching to a new
+        // directory without overwriting the source.
+        private void OnSaveAsClicked(UIElement _)
+        {
+            PromptForSavePath();
+        }
+
+        private void PromptForSavePath()
+        {
             string suggested = _CurrentPath ?? Path.Combine(
                 FSOEnvironment.UserDir, "CityPainterSave2");
 
@@ -215,6 +238,18 @@ namespace FSO.Client.UI.Panels
             }
         }
 
+        // Forces a full re-bake of the city geometry + assets on the next
+        // Draw frame. Calling GenerateCityMesh alone sometimes leaves the
+        // visible mesh stale (the display lags until the user interacts
+        // with the map); setting RegenData=true plus invalidating the
+        // camera projection makes the next frame redraw cleanly.
+        private void RefreshMapDisplay()
+        {
+            _City.GenerateCityMesh(GameFacade.GraphicsDevice, null);
+            _City.RegenData = true;
+            _City.Camera?.ProjectionDirty();
+        }
+
         private void OnLoadClicked(UIElement _)
         {
             string suggested = _CurrentPath ?? "";
@@ -248,7 +283,7 @@ namespace FSO.Client.UI.Panels
                     return;
                 }
                 _City.MapData.Load(dir, LoadTex, "png");
-                _City.GenerateCityMesh(GameFacade.GraphicsDevice, null);
+                RefreshMapDisplay();
                 _CurrentPath = dir;
                 SetStatus("Loaded " + dir);
             }
@@ -291,7 +326,7 @@ namespace FSO.Client.UI.Panels
                 try
                 {
                     CityProcGen.Generate(_City.MapData, p);
-                    _City.GenerateCityMesh(GameFacade.GraphicsDevice, null);
+                    RefreshMapDisplay();
                     SetStatus("Generated " + p.Type + " (seed " + p.Seed + ")");
                 }
                 catch (Exception ex)
@@ -323,7 +358,7 @@ namespace FSO.Client.UI.Panels
                     md.ForestDensityData[i] = 0;
                     md.ForestTypeData[i] = new Color(0, 0, 0);
                 }
-                _City.GenerateCityMesh(GameFacade.GraphicsDevice, null);
+                RefreshMapDisplay();
                 SetStatus("Map cleared");
             }
             catch (Exception ex)

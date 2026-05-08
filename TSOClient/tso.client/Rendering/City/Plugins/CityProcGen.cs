@@ -116,6 +116,7 @@ namespace FSO.Client.Rendering.City.Plugins
             CarveRivers(elev, p, rng);
 
             var terrain = ClassifyTerrain(elev, p);
+            CleanupTinyFeatures(elev, terrain);
 
             Color[] forestType;
             byte[] forestDensity;
@@ -715,6 +716,66 @@ namespace FSO.Client.Rendering.City.Plugins
                 }
             }
             return false;
+        }
+
+        // Removes single-tile noise crumbs after classification:
+        //   - Land tiles surrounded by mostly water (1-tile islands) → water
+        //     plus elevation drop so the tile renders as proper sea.
+        //   - Water tiles surrounded by mostly land (1-tile pits) → grass
+        //     plus elevation raise so the tile sits above sea level.
+        // Only inner-512 tiles are checked so we don't have to bounds-check.
+        // Run after ClassifyTerrain (so the rock/snow/sand classification
+        // is already in place) and before GenerateForests (so cleaned tiles
+        // can become forested if they end up as grass).
+        private static void CleanupTinyFeatures(byte[] elev, byte[] terrain)
+        {
+            const int WATER_NEIGHBOR_THRESHOLD = 7; // out of 8
+            const int LAND_NEIGHBOR_THRESHOLD  = 7;
+
+            var newTerrain = (byte[])terrain.Clone();
+            var newElev = (byte[])elev.Clone();
+
+            for (int y = 1; y < SIZE - 1; y++)
+            {
+                for (int x = 1; x < SIZE - 1; x++)
+                {
+                    int idx = y * SIZE + x;
+                    byte t = terrain[idx];
+
+                    int waterN = 0, landN = 0;
+                    for (int dy = -1; dy <= 1; dy++)
+                    {
+                        for (int dx = -1; dx <= 1; dx++)
+                        {
+                            if (dx == 0 && dy == 0) continue;
+                            byte nt = terrain[(y + dy) * SIZE + (x + dx)];
+                            if (nt == TT_WATER) waterN++;
+                            else landN++;
+                        }
+                    }
+
+                    if (t != TT_WATER && waterN >= WATER_NEIGHBOR_THRESHOLD)
+                    {
+                        // Tiny island — drown it.
+                        newTerrain[idx] = TT_WATER;
+                        int ne = elev[idx] - 20;
+                        if (ne < 0) ne = 0;
+                        if (ne >= SEA_LEVEL) ne = SEA_LEVEL - 4;
+                        newElev[idx] = (byte)ne;
+                    }
+                    else if (t == TT_WATER && landN >= LAND_NEIGHBOR_THRESHOLD)
+                    {
+                        // Tiny pit — fill it.
+                        newTerrain[idx] = TT_GRASS;
+                        int ne = elev[idx];
+                        if (ne <= SEA_LEVEL + 1) ne = SEA_LEVEL + 4;
+                        newElev[idx] = (byte)ne;
+                    }
+                }
+            }
+
+            Array.Copy(newTerrain, terrain, N);
+            Array.Copy(newElev, elev, N);
         }
 
         private static Color[] TerrainTypeColors(byte[] t)

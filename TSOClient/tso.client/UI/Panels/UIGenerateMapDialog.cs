@@ -31,7 +31,12 @@ namespace FSO.Client.UI.Panels
         private static readonly string[] _CountCaptions        = { "None", "Few", "Many" };
 
         private const int W = 540;
-        private const int H = 440;
+        private const int H = 490;
+
+        // Last seed used (display + Reroll source). Set after each
+        // Generate / Reroll click; shown to the user so they can note
+        // a roll they liked.
+        private UILabel _SeedLabel;
 
         // Keep label / button geometry in sync — labels are right-aligned
         // up to LABEL_RIGHT, button row begins immediately after.
@@ -123,18 +128,36 @@ namespace FSO.Client.UI.Panels
 
         private void BuildBottomRow()
         {
-            int y = H - 50;
+            // Two rows: seed display on top, action buttons below.
+            int seedY = H - 92;
+            int btnY  = H - 50;
+
+            _SeedLabel = new UILabel {
+                Caption = "Last seed: (none yet)",
+                X = LEFT_PAD, Y = seedY + 4, Size = new Vector2(W - LEFT_PAD * 2, 22),
+            };
+            Add(_SeedLabel);
 
             var cancel = new UIButton {
                 Caption = "Cancel",
-                X = W - 280, Y = y, Width = 110,
+                X = LEFT_PAD, Y = btnY, Width = 90,
             };
             cancel.OnButtonClick += _ => UIScreen.RemoveDialog(this);
             Add(cancel);
 
+            // Reroll: regenerate with a new random seed but keep the
+            // current knob settings. Useful for "I like this style,
+            // give me a different roll of it".
+            var reroll = new UIButton {
+                Caption = "Reroll",
+                X = W - 270, Y = btnY, Width = 100,
+            };
+            reroll.OnButtonClick += _ => Generate();
+            Add(reroll);
+
             var generate = new UIButton {
                 Caption = "Generate",
-                X = W - 150, Y = y, Width = 120,
+                X = W - 150, Y = btnY, Width = 120,
             };
             generate.OnButtonClick += _ => Generate();
             Add(generate);
@@ -142,12 +165,11 @@ namespace FSO.Client.UI.Panels
 
         private void Generate()
         {
-            // Fresh random seed each click so identical knobs still
-            // produce different rolls. The caller (toolbar) shows the
-            // seed in the status label after generation so the user
-            // knows what was used.
+            // Fresh random seed each click. Shown in _SeedLabel after
+            // the callback returns so users can note a roll they liked.
             _Params.Seed = new Random().Next(int.MinValue + 1, int.MaxValue);
             _OnGenerate?.Invoke(_Params);
+            if (_SeedLabel != null) _SeedLabel.Caption = "Last seed: " + _Params.Seed;
         }
 
         private void ApplyTypeDefaults(CityProcGen.MapType type)
