@@ -267,10 +267,25 @@ namespace FSO.Client.Rendering.City.Plugins
             }
         }
 
+        // Picks the fraction-th percentile of in-diamond tile values.
+        // Critical that this filters to the playable diamond — half the
+        // canvas is outside, where ApplyDiamondMask has multiplied raw
+        // values to ~0. Including those zeros pulls the threshold down
+        // and makes the WaterRatio knob produce almost no water.
         private static float PercentileInDiamond(float[] raw, float frac)
         {
             var samples = new List<float>(N / 16);
-            for (int i = 0; i < N; i += 16) samples.Add(raw[i]);
+            // Stride of 4 in each axis = 1/16 of in-diamond tiles, plenty
+            // for a percentile estimate and avoids sorting 250k+ values.
+            for (int y = 0; y < SIZE; y += 4)
+            {
+                for (int x = 0; x < SIZE; x += 4)
+                {
+                    if (!InDiamond(x, y)) continue;
+                    samples.Add(raw[y * SIZE + x]);
+                }
+            }
+            if (samples.Count == 0) return 0f;
             samples.Sort();
             int idx = (int)Math.Floor(frac * (samples.Count - 1));
             return samples[Math.Max(0, Math.Min(samples.Count - 1, idx))];

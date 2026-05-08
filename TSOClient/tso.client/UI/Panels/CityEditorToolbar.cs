@@ -330,6 +330,27 @@ namespace FSO.Client.UI.Panels
             RefreshIfChanged();
         }
 
+        /// <summary>
+        /// True when the given point (in toolbar-local coords, which
+        /// equal screen coords because the toolbar sits at 0,0) lands
+        /// on top of any visible UIButton. Used by CityEditorScreen to
+        /// suppress city-renderer mouse handling only directly under
+        /// buttons — gaps between buttons stay paintable.
+        /// </summary>
+        public bool IsPointOverButton(float x, float y)
+        {
+            foreach (var child in GetChildren())
+            {
+                var btn = child as UIButton;
+                if (btn == null || !btn.Visible) continue;
+                var b = btn.GetBounds();
+                if (x >= btn.X && x < btn.X + b.Width &&
+                    y >= btn.Y && y < btn.Y + b.Height)
+                    return true;
+            }
+            return false;
+        }
+
         private void RefreshIfChanged()
         {
             if (_Painter.Mode != _LastMode)

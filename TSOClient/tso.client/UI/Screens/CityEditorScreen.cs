@@ -395,10 +395,11 @@ namespace FSO.Client.UI.Screens
             new ZoomPreset(TerrainZoomMode.Near, 1f, 1.00f),
         };
 
-        // Toolbar lives at the top of the screen (rows at Y=10/44/78). The
-        // bottom of the brush-row buttons sits around Y≈100. Disable the
-        // city's mouse handling whenever the cursor is in this strip so
-        // clicks on toolbar buttons don't fall through and paint the map.
+        // Was a strip-Y threshold; switched to per-button hit-test via
+        // CityEditorToolbar.IsPointOverButton so the user can still paint
+        // in the gaps between buttons in the toolbar zone. The threshold
+        // remains for HandleZoomToCursor's "is the cursor pointing at
+        // anything paintable" check, which is fine to keep coarse.
         private const int TOOLBAR_BOTTOM_Y = 110;
 
         // Tracks an active "center this tile" target while zoom is
@@ -410,8 +411,14 @@ namespace FSO.Client.UI.Screens
         private void UpdateMouseHandling(UpdateState state)
         {
             if (CityRenderer == null) return;
+            // Disable city-renderer mouse handling only when the cursor
+            // is directly over a toolbar button — gaps between buttons
+            // stay paintable. The toolbar is positioned at (0,0) in the
+            // screen so its child buttons' X/Y are screen coords.
+            float mx = state.MouseState.X / FSOEnvironment.DPIScaleFactor;
             float my = state.MouseState.Y / FSOEnvironment.DPIScaleFactor;
-            CityRenderer.HandleMouse = my >= TOOLBAR_BOTTOM_Y;
+            bool overButton = _Toolbar != null && _Toolbar.IsPointOverButton(mx, my);
+            CityRenderer.HandleMouse = !overButton;
         }
 
         /// <summary>
@@ -455,10 +462,12 @@ namespace FSO.Client.UI.Screens
 
                 // Far view is fixed-position (m_ViewOff is multiplied by
                 // ZoomProgress=0), so centering only matters for Near levels.
-                // Also skip when cursor is over the toolbar — the tile we'd
-                // compute under it is meaningless.
-                float toolbarY = state.MouseState.Y / FSOEnvironment.DPIScaleFactor;
-                if (lvl.Mode == TerrainZoomMode.Near && toolbarY >= TOOLBAR_BOTTOM_Y &&
+                // Also skip when cursor is directly on a toolbar button —
+                // the tile we'd compute under it is meaningless.
+                float bx = state.MouseState.X / FSOEnvironment.DPIScaleFactor;
+                float by = state.MouseState.Y / FSOEnvironment.DPIScaleFactor;
+                bool overBtn = _Toolbar != null && _Toolbar.IsPointOverButton(bx, by);
+                if (lvl.Mode == TerrainZoomMode.Near && !overBtn &&
                     anchor.X >= 0 && anchor.X < 512 && anchor.Y >= 0 && anchor.Y < 512)
                 {
                     CenterTileOnScreen(cam, anchor);
@@ -534,8 +543,10 @@ namespace FSO.Client.UI.Screens
 
             if (wheelEvent && CityRenderer.m_Zoomed == TerrainZoomMode.Near)
             {
-                float toolbarY = state.MouseState.Y / FSOEnvironment.DPIScaleFactor;
-                if (toolbarY >= TOOLBAR_BOTTOM_Y)
+                float bx = state.MouseState.X / FSOEnvironment.DPIScaleFactor;
+                float by = state.MouseState.Y / FSOEnvironment.DPIScaleFactor;
+                bool overBtn = _Toolbar != null && _Toolbar.IsPointOverButton(bx, by);
+                if (!overBtn)
                 {
                     var t = CityRenderer.EstTileAtPosWithScroll(
                         state.MouseState.Position.ToVector2() / FSOEnvironment.DPIScaleFactor,
