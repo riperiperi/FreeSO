@@ -138,7 +138,10 @@ namespace FSO.Server.Servers.City.Handlers
                 newAvatar.skin_tone = (byte)packet.SkinTone;
                 newAvatar.gender = packet.Gender == Protocol.Voltron.Model.Gender.FEMALE ? DbAvatarGender.female : DbAvatarGender.male;
                 newAvatar.user_id = session.UserId;
-                newAvatar.budget = 0;
+                // Configurable starter cash (services.cities[].starting_budget
+                // in config.json). Default 0 = vanilla FreeSO. Moderators
+                // get overwritten to 100000 below regardless.
+                newAvatar.budget = Context.Config?.Starting_Budget ?? 0;
 
                 if(packet.Gender == Protocol.Voltron.Model.Gender.MALE){
                     newAvatar.body_swimwear = 0x5470000000D;

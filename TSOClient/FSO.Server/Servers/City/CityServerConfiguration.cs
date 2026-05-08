@@ -7,6 +7,15 @@ namespace FSO.Server.Servers.City
         public int ID;
         public bool Timeout_No_Auth = true;
 
+        /// <summary>
+        /// Simoleons credited to a new avatar's budget when it's created
+        /// in this shard. Default 0 keeps the original FreeSO behavior
+        /// (start with nothing). Set in config.json under
+        /// services.cities[].starting_budget. Moderators always start
+        /// with 100000 — this only affects regular registrations.
+        /// </summary>
+        public int Starting_Budget = 0;
+
         public CityServerNhoodConfiguration Neighborhoods = new CityServerNhoodConfiguration();
         public CityServerMaintenanceConfiguration Maintenance;
     }
