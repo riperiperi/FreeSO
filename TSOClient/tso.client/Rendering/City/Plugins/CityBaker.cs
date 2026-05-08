@@ -57,6 +57,24 @@ namespace FSO.Client.Rendering.City.Plugins
             CaptureThumbnail(terrain, Path.Combine(dir, "thumbnail.png"));
         }
 
+        /// <summary>
+        /// Re-bakes the in-memory vertex color texture from the current
+        /// CityMapData and uploads to the live VertexColor GPU texture.
+        /// Call after CityProcGen.Generate so the elevation-based color
+        /// gradient (lush low / dry high) shows immediately, instead of
+        /// only after the user saves+reloads.
+        /// </summary>
+        public static void UpdateLiveVertexColor(Terrain terrain)
+        {
+            if (terrain == null || terrain.MapData == null
+                || terrain.Content == null || terrain.Content.VertexColor == null)
+                return;
+            var shaded = ShadeColors(terrain.MapData);
+            // Texture must be 512x512 to match the existing VertexColor
+            // — both the loaded and synthesized layers are this size.
+            terrain.Content.VertexColor.SetData(shaded);
+        }
+
         private static Color TintFor(byte terrainType)
         {
             switch (terrainType)
@@ -76,6 +94,11 @@ namespace FSO.Client.Rendering.City.Plugins
             var type = map.TerrainType;
             var result = new Color[MAP_SIZE * MAP_SIZE];
 
+            // Sea level matches the procgen baseline. Used for the
+            // height-above-sea normalisation that drives the
+            // lush/dry color gradient on grass tiles.
+            const byte SEA_LEVEL_BAKE = 60;
+
             for (int y = 0; y < MAP_SIZE; y++)
             {
                 int yEast = (y + 1 < MAP_SIZE) ? y + 1 : y;
@@ -93,6 +116,35 @@ namespace FSO.Client.Rendering.City.Plugins
                     if (shade > 1f) shade = 1f;
 
                     var tint = TintFor(type[idx]);
+
+                    // Elevation-based color variation for grass: at sea
+                    // level pull toward a more lush green; at high
+                    // elevation pull toward a drier, browner tone. Other
+                    // terrain types keep their canonical tint so sand
+                    // stays sand and snow stays snow regardless of
+                    // height. Variation amplitude is small so the
+                    // overall map still reads as Alphaville-style.
+                    if (type[idx] == TT_GRASS)
+                    {
+                        int height = elev[idx] - SEA_LEVEL_BAKE;
+                        if (height < 0) height = 0;
+                        float heightT = height / 130f;
+                        if (heightT > 1f) heightT = 1f;
+
+                        // dry shifts: +R, -G, -B; lush shifts: -R, +G, +B
+                        // Combined coefficients picked so transition is
+                        // visible but not garish (max 12 R, 8 G, 8 B).
+                        float dryAmt = heightT;
+                        float lushAmt = 1f - heightT;
+                        int r = tint.R + (int)(dryAmt * 12) - (int)(lushAmt * 4);
+                        int g = tint.G + (int)(lushAmt * 8) - (int)(dryAmt * 6);
+                        int b = tint.B + (int)(lushAmt * 4) - (int)(dryAmt * 8);
+                        if (r < 0) r = 0; if (r > 255) r = 255;
+                        if (g < 0) g = 0; if (g > 255) g = 255;
+                        if (b < 0) b = 0; if (b > 255) b = 255;
+                        tint = new Color((byte)r, (byte)g, (byte)b);
+                    }
+
                     result[idx] = new Color(
                         (byte)(tint.R * shade),
                         (byte)(tint.G * shade),

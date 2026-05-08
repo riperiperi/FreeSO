@@ -46,7 +46,17 @@ namespace FSO.Client.Rendering.City.Plugins
         private const byte TT_SNOW  = 3;
         private const byte TT_WATER = 4;
 
-        public enum MapType { Island, Coastal, Inland, Mountains }
+        public enum MapType
+        {
+            Island,       // single landmass, ocean around
+            Archipelago,  // many small islands, lots of water
+            Coastal,      // diagonal coastline, half land/half sea
+            Inland,       // mostly land, slight edge water
+            Lakeland,     // inland with heavy lake/river presence
+            Highland,     // moderate elevation, rolling hills
+            Mountains,    // dramatic peaks, steep slopes
+            Plateau,      // flat high ground with sharp cliff edges
+        }
         public enum Level   { Low, Medium, High }
 
         public class Parameters
@@ -73,9 +83,17 @@ namespace FSO.Client.Rendering.City.Plugins
                     case MapType.Island:
                         p.HeightAvg = Level.Medium;
                         p.WaterRatio = Level.Medium;
-                        p.Roughness = Level.High;       // dissected coastlines
+                        p.Roughness = Level.High;
                         p.ForestDensity = Level.Medium;
-                        p.Rivers = Level.Low;            // ocean is the water
+                        p.Rivers = Level.Low;
+                        p.Lakes = Level.Low;
+                        break;
+                    case MapType.Archipelago:
+                        p.HeightAvg = Level.Low;       // most of map is below water
+                        p.WaterRatio = Level.High;     // 55%+ water
+                        p.Roughness = Level.High;      // jagged little islands
+                        p.ForestDensity = Level.Medium;
+                        p.Rivers = Level.Low;
                         p.Lakes = Level.Low;
                         break;
                     case MapType.Coastal:
@@ -83,7 +101,7 @@ namespace FSO.Client.Rendering.City.Plugins
                         p.WaterRatio = Level.Medium;
                         p.Roughness = Level.High;
                         p.ForestDensity = Level.High;
-                        p.Rivers = Level.Medium;         // a river or two flowing into the ocean
+                        p.Rivers = Level.Medium;
                         p.Lakes = Level.Low;
                         break;
                     case MapType.Inland:
@@ -94,6 +112,22 @@ namespace FSO.Client.Rendering.City.Plugins
                         p.Rivers = Level.Medium;
                         p.Lakes = Level.Medium;
                         break;
+                    case MapType.Lakeland:
+                        p.HeightAvg = Level.Medium;
+                        p.WaterRatio = Level.Low;       // sea level low; water comes from lakes
+                        p.Roughness = Level.Medium;
+                        p.ForestDensity = Level.High;
+                        p.Rivers = Level.High;          // many rivers branching through
+                        p.Lakes = Level.High;
+                        break;
+                    case MapType.Highland:
+                        p.HeightAvg = Level.Medium;     // moderate elevation
+                        p.WaterRatio = Level.Low;
+                        p.Roughness = Level.Medium;
+                        p.ForestDensity = Level.High;
+                        p.Rivers = Level.Medium;
+                        p.Lakes = Level.Low;
+                        break;
                     case MapType.Mountains:
                         p.HeightAvg = Level.High;
                         p.WaterRatio = Level.Low;
@@ -101,6 +135,14 @@ namespace FSO.Client.Rendering.City.Plugins
                         p.ForestDensity = Level.High;
                         p.Rivers = Level.Medium;
                         p.Lakes = Level.Medium;
+                        break;
+                    case MapType.Plateau:
+                        p.HeightAvg = Level.High;       // raised core
+                        p.WaterRatio = Level.Low;
+                        p.Roughness = Level.Medium;     // top stays relatively flat
+                        p.ForestDensity = Level.Medium;
+                        p.Rivers = Level.Low;
+                        p.Lakes = Level.Low;
                         break;
                 }
                 return p;
@@ -113,10 +155,13 @@ namespace FSO.Client.Rendering.City.Plugins
 
             var elev = GenerateElevation(p);
             CarveLakes(elev, p, rng);
-            CarveRivers(elev, p, rng);
+            var riverEnds = new List<Point>();
+            CarveRivers(elev, p, rng, riverEnds);
 
             var terrain = ClassifyTerrain(elev, p);
             CleanupTinyFeatures(elev, terrain);
+            AddCliffLines(elev, terrain, p);
+            AddRiverDeltas(terrain, riverEnds);
 
             Color[] forestType;
             byte[] forestDensity;
@@ -153,10 +198,18 @@ namespace FSO.Client.Rendering.City.Plugins
 
             float heightBias = LevelFloat(p.HeightAvg, -0.25f, 0.0f, 0.30f);
 
-            // Mountains type amplifies everything so peaks reach the top
-            // of the byte range and slopes stay steep.
-            float typeAmp = (p.Type == MapType.Mountains) ? 1.4f : 1.0f;
-            bool useRidges = (p.Type == MapType.Mountains);
+            // Per-type elevation amplification + ridge-noise mode.
+            // Mountains: dramatic peaks. Plateau: high but capped.
+            // Highland: moderate amplification — rolling, not extreme.
+            float typeAmp;
+            bool useRidges;
+            switch (p.Type)
+            {
+                case MapType.Mountains: typeAmp = 1.4f; useRidges = true;  break;
+                case MapType.Plateau:   typeAmp = 1.2f; useRidges = false; break;
+                case MapType.Highland:  typeAmp = 1.15f; useRidges = false; break;
+                default:                typeAmp = 1.0f; useRidges = false; break;
+            }
 
             // Domain-warp settings: perturb sample coords by a low-freq
             // noise field so coastlines / ridges look organic instead of
@@ -214,16 +267,16 @@ namespace FSO.Client.Rendering.City.Plugins
         {
             float cx = SIZE * 0.5f;
             float cy = SIZE * 0.5f;
+            float dx = (x - cx) / cx;
+            float dy = (y - cy) / cy;
+            float r = (float)Math.Sqrt(dx * dx + dy * dy);
+
             switch (type)
             {
                 case MapType.Island:
                 {
-                    // Organic radial: instead of a clean circle, modulate
-                    // the effective radius by a low-frequency noise so the
-                    // landmass is irregular and may fragment into islands.
-                    float dx = (x - cx) / cx;
-                    float dy = (y - cy) / cy;
-                    float r = (float)Math.Sqrt(dx * dx + dy * dy);
+                    // Organic radial: warp effective radius by low-freq
+                    // noise so the landmass is irregular, may fragment.
                     float n = shapeNoise.Fractal(x / 80f, y / 80f, 2, 0.5f, 2f);
                     float warpedR = r * (0.85f + 0.30f * (1f - (n + 1f) * 0.5f));
                     float v = 1f - warpedR * 1.05f;
@@ -231,10 +284,22 @@ namespace FSO.Client.Rendering.City.Plugins
                     return v * v;
                 }
 
+                case MapType.Archipelago:
+                {
+                    // Noise-driven mask, no central bias — many small
+                    // islands scattered across the diamond. Strong fade
+                    // to deep water at the edges.
+                    float n = shapeNoise.Fractal(x / 50f, y / 50f, 3, 0.5f, 2f);
+                    float v = (n + 1f) * 0.5f; // 0..1
+                    // Central bias is mild — we want islands across the
+                    // whole diamond, not concentrated in the middle.
+                    float edgeFade = Math.Max(0f, 1f - r * 0.7f);
+                    return Math.Max(0f, (v - 0.40f) * 2.0f) * edgeFade;
+                }
+
                 case MapType.Coastal:
                 {
-                    // Diagonal coastline, with a noise-warped shoreline so
-                    // the boundary isn't a clean line.
+                    // Diagonal coastline with noise-warped shoreline.
                     float t = (x + y) / (2f * SIZE);
                     float n = shapeNoise.Fractal(x / 64f, y / 64f, 2, 0.5f, 2f);
                     float warped = t + n * 0.10f;
@@ -246,21 +311,40 @@ namespace FSO.Client.Rendering.City.Plugins
                 {
                     // Mostly land — slight edge falloff so the diamond
                     // boundary doesn't have a hard cliff.
-                    float dx = (x - cx) / cx;
-                    float dy = (y - cy) / cy;
-                    float r = (float)Math.Sqrt(dx * dx + dy * dy);
                     return Math.Max(0.55f, 1.15f - r * 0.55f);
+                }
+
+                case MapType.Lakeland:
+                {
+                    // Same as Inland — land coverage is similar; the
+                    // distinction is in lake/river density (DefaultsFor
+                    // sets those to High).
+                    return Math.Max(0.55f, 1.15f - r * 0.55f);
+                }
+
+                case MapType.Highland:
+                {
+                    // Rolling hills, gentle center bias, full land coverage.
+                    float n = shapeNoise.Fractal(x / 80f, y / 80f, 2, 0.5f, 2f);
+                    return Math.Max(0.65f, 1.10f - r * 0.40f + n * 0.05f);
                 }
 
                 case MapType.Mountains:
                 {
                     // Centered uplift with noise variation so peaks aren't
                     // a clean dome.
-                    float dx = (x - cx) / cx;
-                    float dy = (y - cy) / cy;
-                    float r = (float)Math.Sqrt(dx * dx + dy * dy);
                     float n = shapeNoise.Fractal(x / 96f, y / 96f, 2, 0.5f, 2f);
                     return Math.Max(0.5f, 1.30f - r * 0.55f + n * 0.08f);
+                }
+
+                case MapType.Plateau:
+                {
+                    // Flat-top mesa: full mask inside an inner radius,
+                    // sharp falloff outside. Combined with the cliff-line
+                    // pass downstream, the edges become visible cliffs.
+                    const float TOP_RADIUS = 0.55f;
+                    if (r < TOP_RADIUS) return 1f;
+                    return Math.Max(0f, 1f - (r - TOP_RADIUS) * 5f);
                 }
             }
             return 1f;
@@ -364,7 +448,10 @@ namespace FSO.Client.Rendering.City.Plugins
             switch (p.Type)
             {
                 case MapType.Mountains: alpineBias = 0.75f; break;
+                case MapType.Plateau:   alpineBias = 0.65f; break; // alpine tarns on the mesa
+                case MapType.Highland:  alpineBias = 0.55f; break;
                 case MapType.Inland:    alpineBias = 0.40f; break;
+                case MapType.Lakeland:  alpineBias = 0.30f; break; // big valley lakes
                 default:                alpineBias = 0.55f; break;
             }
 
@@ -433,7 +520,7 @@ namespace FSO.Client.Rendering.City.Plugins
 
         // ---- Rivers ------------------------------------------------------
 
-        private static void CarveRivers(byte[] elev, Parameters p, Random rng)
+        private static void CarveRivers(byte[] elev, Parameters p, Random rng, List<Point> deltaPoints)
         {
             int count = LevelInt(p.Rivers, 0, 2, 4);
             var taken = new HashSet<int>();
@@ -441,7 +528,13 @@ namespace FSO.Client.Rendering.City.Plugins
             {
                 int sx, sy;
                 if (!FindRiverStart(elev, rng, taken, out sx, out sy)) continue;
-                TraceRiver(elev, sx, sy);
+                Point endPoint;
+                bool reachedWater;
+                TraceRiver(elev, sx, sy, out endPoint, out reachedWater);
+                // Only mark a delta where the river actually flowed
+                // into water — dead-end traces would put a sand spot
+                // in the middle of dry land which looks wrong.
+                if (reachedWater) deltaPoints.Add(endPoint);
             }
         }
 
@@ -471,9 +564,13 @@ namespace FSO.Client.Rendering.City.Plugins
         // sits in a depression instead of a slot in flat ground), finds
         // the lowest non-backtrack neighbor, and moves there. Stops on
         // hitting water (sea or carved-lake tile), exhausting steps, or
-        // finding no descent.
-        private static void TraceRiver(byte[] elev, int sx, int sy)
+        // finding no descent. Returns the end point and whether the
+        // river successfully reached water — caller uses these to place
+        // a delta sand fan at the mouth.
+        private static void TraceRiver(byte[] elev, int sx, int sy, out Point endPoint, out bool reachedWater)
         {
+            reachedWater = false;
+            endPoint = new Point(sx, sy);
             const int CARVE_DEPTH = 12;       // depth below SEA_LEVEL at channel
             const int VALLEY_RADIUS = 6;       // tiles away from channel that get sloped
             const float VALLEY_DROP_FRAC = 0.35f; // max fraction of height-above-sea to drop
@@ -488,7 +585,7 @@ namespace FSO.Client.Rendering.City.Plugins
                 if (visited.Contains(idx)) break;
                 visited.Add(idx);
 
-                bool reachedWater = elev[idx] < SEA_LEVEL;
+                bool hitWater = elev[idx] < SEA_LEVEL;
 
                 // Carve a 2x2 block centered roughly on (x,y) so the
                 // channel is visibly thick. Center deepest, edges
@@ -532,7 +629,12 @@ namespace FSO.Client.Rendering.City.Plugins
                     }
                 }
 
-                if (reachedWater) break;
+                if (hitWater)
+                {
+                    endPoint = new Point(x, y);
+                    reachedWater = true;
+                    return;
+                }
 
                 int bestX = x, bestY = y, bestE = int.MaxValue;
                 for (int dy = -1; dy <= 1; dy++)
@@ -603,10 +705,16 @@ namespace FSO.Client.Rendering.City.Plugins
             DilateSand(t, elev);
 
             // Rock from EITHER high elevation OR steep slope. Snow at the
-            // very top. Mountains get lower thresholds for drama.
-            int rockFloor  = (p.Type == MapType.Mountains) ? 165 : 200;
-            int snowFloor  = (p.Type == MapType.Mountains) ? 215 : 235;
-            int slopeFloor = (p.Type == MapType.Mountains) ?  10 :  14;
+            // very top. Per-type tuning — Mountains/Plateau aggressive,
+            // Highland between Mountains and the lower-relief types.
+            int rockFloor, snowFloor, slopeFloor;
+            switch (p.Type)
+            {
+                case MapType.Mountains: rockFloor = 165; snowFloor = 215; slopeFloor = 10; break;
+                case MapType.Plateau:   rockFloor = 180; snowFloor = 240; slopeFloor = 12; break;
+                case MapType.Highland:  rockFloor = 190; snowFloor = 230; slopeFloor = 12; break;
+                default:                rockFloor = 200; snowFloor = 235; slopeFloor = 14; break;
+            }
 
             for (int y = 0; y < SIZE; y++)
             {
@@ -615,7 +723,13 @@ namespace FSO.Client.Rendering.City.Plugins
                     int idx = y * SIZE + x;
                     if (t[idx] != TT_GRASS) continue;
                     int e = elev[idx];
-                    if (e >= snowFloor)
+
+                    // Snow only on actual peaks — local maxima above the
+                    // snow_floor threshold. This avoids the "white plateau"
+                    // look when entire high regions otherwise cross the
+                    // threshold uniformly. Officials show snow as
+                    // scattered caps on individual summits.
+                    if (e >= snowFloor && IsLocalMax(elev, x, y, 2))
                     {
                         t[idx] = TT_SNOW;
                         continue;
@@ -634,6 +748,28 @@ namespace FSO.Client.Rendering.City.Plugins
             }
 
             return t;
+        }
+
+        // True if (x, y) is the highest tile in a (2*radius+1)² window.
+        // Used by snow classification: a peak by definition tops its own
+        // neighborhood, so radius=2 means snow appears as small scattered
+        // caps rather than as broad uniform high-elevation blocks.
+        private static bool IsLocalMax(byte[] elev, int x, int y, int radius)
+        {
+            int center = elev[y * SIZE + x];
+            for (int dy = -radius; dy <= radius; dy++)
+            {
+                int ny = y + dy;
+                if (ny < 0 || ny >= SIZE) continue;
+                for (int dx = -radius; dx <= radius; dx++)
+                {
+                    if (dx == 0 && dy == 0) continue;
+                    int nx = x + dx;
+                    if (nx < 0 || nx >= SIZE) continue;
+                    if (elev[ny * SIZE + nx] > center) return false;
+                }
+            }
+            return true;
         }
 
         // Largest absolute elevation delta to any 8-neighbor. Used as a
@@ -716,6 +852,84 @@ namespace FSO.Client.Rendering.City.Plugins
                 }
             }
             return false;
+        }
+
+        // Detects steep elevation transitions (large jumps to a higher
+        // neighbor) and forces rock on the lower-side grass tiles so
+        // the boundary reads as a visible cliff face. Mountains and
+        // Plateau types use a smaller delta threshold for more dramatic
+        // cliff bands; gentler types only catch the steepest jumps.
+        private static void AddCliffLines(byte[] elev, byte[] terrain, Parameters p)
+        {
+            int cliffDelta;
+            switch (p.Type)
+            {
+                case MapType.Mountains: cliffDelta = 28; break;
+                case MapType.Plateau:   cliffDelta = 32; break;
+                case MapType.Highland:  cliffDelta = 36; break;
+                default:                cliffDelta = 44; break;
+            }
+
+            var newTerrain = (byte[])terrain.Clone();
+            for (int y = 0; y < SIZE; y++)
+            {
+                for (int x = 0; x < SIZE; x++)
+                {
+                    int idx = y * SIZE + x;
+                    if (terrain[idx] != TT_GRASS) continue;
+                    int e = elev[idx];
+                    bool atCliffBase = false;
+                    for (int dy = -1; dy <= 1 && !atCliffBase; dy++)
+                    {
+                        int ny = y + dy;
+                        if (ny < 0 || ny >= SIZE) continue;
+                        for (int dx = -1; dx <= 1; dx++)
+                        {
+                            if (dx == 0 && dy == 0) continue;
+                            int nx = x + dx;
+                            if (nx < 0 || nx >= SIZE) continue;
+                            if (elev[ny * SIZE + nx] - e >= cliffDelta)
+                            {
+                                atCliffBase = true;
+                                break;
+                            }
+                        }
+                    }
+                    if (atCliffBase) newTerrain[idx] = TT_ROCK;
+                }
+            }
+            Array.Copy(newTerrain, terrain, N);
+        }
+
+        // Expands a fan of sand tiles around each river-mouth point so
+        // rivers visibly meet the sea/lake at a delta instead of just
+        // ending at a sharp grass-water boundary. Caller passes only
+        // points where TraceRiver actually reached water; dead-end
+        // rivers don't get deltas.
+        private static void AddRiverDeltas(byte[] terrain, List<Point> deltaPoints)
+        {
+            const int DELTA_RADIUS = 5;
+            int r2 = DELTA_RADIUS * DELTA_RADIUS;
+            foreach (var pt in deltaPoints)
+            {
+                for (int dy = -DELTA_RADIUS; dy <= DELTA_RADIUS; dy++)
+                {
+                    int ny = pt.Y + dy;
+                    if (ny < 0 || ny >= SIZE) continue;
+                    for (int dx = -DELTA_RADIUS; dx <= DELTA_RADIUS; dx++)
+                    {
+                        int d2 = dx * dx + dy * dy;
+                        if (d2 > r2) continue;
+                        int nx = pt.X + dx;
+                        if (nx < 0 || nx >= SIZE) continue;
+                        int idx = ny * SIZE + nx;
+                        // Convert grass to sand inside the radius. Skip
+                        // existing rock / snow / water — we only want
+                        // to expand the beach onto adjacent grass.
+                        if (terrain[idx] == TT_GRASS) terrain[idx] = TT_SAND;
+                    }
+                }
+            }
         }
 
         // Removes single-tile noise crumbs after classification:
@@ -805,13 +1019,20 @@ namespace FSO.Client.Rendering.City.Plugins
         {
             var primary = new PerlinNoise(unchecked(p.Seed ^ 0x55AA55AA));
             var cluster = new PerlinNoise(unchecked(p.Seed ^ 0x12345678));
+            var species = new PerlinNoise(unchecked(p.Seed ^ 0x3CDA9F11));
             type = new Color[N];
             density = new byte[N];
 
             // Threshold subtracted from the noise field's 0..1 range.
             // Lower = more forest. Targets ~15 / ~40 / ~60% of grass tiles.
             float threshold = LevelFloat(p.ForestDensity, 0.55f, 0.30f, 0.10f);
-            Color treeColor = ForestColorForType(p.Type);
+
+            // Two-species mix: primary + secondary chosen by a low-freq
+            // mask. Different regions of the map favor different species,
+            // so a single map can have e.g. fir-dominant valleys and
+            // birch-dominant ridges instead of one uniform species.
+            Color primarySp, secondarySp;
+            ForestSpeciesPair(p.Type, out primarySp, out secondarySp);
 
             for (int y = 0; y < SIZE; y++)
             {
@@ -820,19 +1041,23 @@ namespace FSO.Client.Rendering.City.Plugins
                     int i = y * SIZE + x;
                     if (terrain[i] != TT_GRASS) continue;
 
-                    // Cluster mask: low-frequency field that scales the
-                    // effective threshold and density. Patches form
-                    // because regions with low cluster value drop out
-                    // entirely while high-cluster regions stay dense.
+                    // Cluster mask: regions with low cluster value drop
+                    // out entirely so forests form patches instead of
+                    // speckling uniformly.
                     float c = cluster.Fractal(x / 96f, y / 96f, 2, 0.5f, 2f);
-                    float clusterStrength = (c + 1f) * 0.5f; // 0..1
+                    float clusterStrength = (c + 1f) * 0.5f;
                     if (clusterStrength < 0.25f) continue;
 
                     float n = primary.Fractal(x / 26f, y / 26f, 3, 0.5f, 2f);
                     float v = (n + 1f) * 0.5f - threshold;
                     if (v <= 0f) continue;
 
-                    type[i] = treeColor;
+                    // Species selection — wavelength 80 so a single
+                    // species covers a region of ~80 tiles before
+                    // transitioning, with sharp boundaries.
+                    float s = species.Fractal(x / 80f, y / 80f, 2, 0.5f, 2f);
+                    type[i] = (s >= 0f) ? primarySp : secondarySp;
+
                     int d = (int)(v * 1.6f * 255f * clusterStrength);
                     if (d > 255) d = 255;
                     density[i] = (byte)d;
@@ -840,15 +1065,28 @@ namespace FSO.Client.Rendering.City.Plugins
             }
         }
 
-        private static Color ForestColorForType(MapType t)
+        // Per-type primary/secondary species pair. Tree colors come from
+        // MapPainterPlugin.ForestTypes:
+        //   (0,   0x6A, 0x28) fir, (0,   0xEB, 0x42) birch,
+        //   (255, 0,    0)    cactus, (255, 0xFC, 0)    palm.
+        private static void ForestSpeciesPair(MapType t, out Color primary, out Color secondary)
         {
+            var fir    = new Color(0,   0x6A, 0x28);
+            var birch  = new Color(0,   0xEB, 0x42);
+            var palm   = new Color(255, 0xFC, 0);
+            var cactus = new Color(255, 0,    0);
+
             switch (t)
             {
-                case MapType.Island:    return new Color(255, 0xFC, 0);   // palm
-                case MapType.Coastal:   return new Color(0, 0xEB, 0x42);  // birch
-                case MapType.Inland:    return new Color(0, 0xEB, 0x42);  // birch
-                case MapType.Mountains: return new Color(0, 0x6A, 0x28);  // fir
-                default:                return new Color(0, 0x6A, 0x28);
+                case MapType.Island:      primary = palm;  secondary = birch; break;
+                case MapType.Archipelago: primary = palm;  secondary = cactus; break;
+                case MapType.Coastal:     primary = birch; secondary = fir;   break;
+                case MapType.Inland:      primary = birch; secondary = fir;   break;
+                case MapType.Lakeland:    primary = birch; secondary = fir;   break;
+                case MapType.Highland:    primary = fir;   secondary = birch; break;
+                case MapType.Mountains:   primary = fir;   secondary = birch; break;
+                case MapType.Plateau:     primary = birch; secondary = fir;   break;
+                default:                  primary = fir;   secondary = birch; break;
             }
         }
 

@@ -326,6 +326,11 @@ namespace FSO.Client.UI.Panels
                 try
                 {
                     CityProcGen.Generate(_City.MapData, p);
+                    // Re-bake the vertex color tint texture in-memory so
+                    // the elevation-driven lush/dry color gradient shows
+                    // immediately. Otherwise the visible tint stays
+                    // whatever was loaded from disk until next Save+Load.
+                    CityBaker.UpdateLiveVertexColor(_City);
                     RefreshMapDisplay();
                     SetStatus("Generated " + p.Type + " (seed " + p.Seed + ")");
                 }
