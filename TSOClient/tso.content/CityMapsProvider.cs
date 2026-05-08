@@ -27,8 +27,8 @@ namespace FSO.Content
             var dir = Content.GetPath("cities");
             foreach (var map in Directory.GetDirectories(dir))
             {
-                var id = int.Parse(Path.GetFileName(map).Replace("city_", ""));
-                DirCache[id] = map;
+                int id;
+                if (TryParseCityId(map, out id)) DirCache[id] = map;
             }
 
             dir = Path.Combine(FSOEnvironment.ContentDir, "Cities/");
@@ -36,10 +36,25 @@ namespace FSO.Content
             {
                 foreach (var map in Directory.GetDirectories(dir))
                 {
-                    var id = int.Parse(Path.GetFileName(map).Replace("city_", ""));
-                    DirCache[id] = map; // user content overrides game content
+                    int id;
+                    if (TryParseCityId(map, out id)) DirCache[id] = map; // user content overrides game content
                 }
             }
+        }
+
+        // Parses the numeric suffix of a "city_NNNN" directory name. Non-
+        // numeric names (e.g. "city_blank", a scaffold the FSO.CityEditor
+        // tool ships) are silently skipped — they're loaded by absolute
+        // path, not by this id-keyed cache.
+        private static bool TryParseCityId(string fullPath, out int id)
+        {
+            var name = Path.GetFileName(fullPath);
+            if (name == null || !name.StartsWith("city_"))
+            {
+                id = 0;
+                return false;
+            }
+            return int.TryParse(name.Substring("city_".Length), out id);
         }
 
         public CityMap Get(string id)
