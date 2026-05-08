@@ -138,10 +138,16 @@ namespace FSO.Server.Servers.City.Handlers
                 newAvatar.skin_tone = (byte)packet.SkinTone;
                 newAvatar.gender = packet.Gender == Protocol.Voltron.Model.Gender.FEMALE ? DbAvatarGender.female : DbAvatarGender.male;
                 newAvatar.user_id = session.UserId;
-                // Configurable starter cash (services.cities[].starting_budget
-                // in config.json). Default 0 = vanilla FreeSO. Moderators
-                // get overwritten to 100000 below regardless.
-                newAvatar.budget = Context.Config?.Starting_Budget ?? 0;
+                // Configurable starter cash (services.cities[].starting_budget).
+                // Two gates so it can't be farmed:
+                //   1. The user must not already have an avatar on this
+                //      shard — only the first sim per account claims it.
+                //   2. The shard's unique-user count must be below
+                //      Starting_Budget_Max_Count (-1 = no cap, but the
+                //      per-user gate still applies).
+                // Moderators get overwritten to 100000 unconditionally
+                // below regardless.
+                newAvatar.budget = ComputeStartingBudget(db, session.UserId);
 
                 if(packet.Gender == Protocol.Voltron.Model.Gender.MALE){
                     newAvatar.body_swimwear = 0x5470000000D;
@@ -223,6 +229,41 @@ namespace FSO.Server.Servers.City.Handlers
                 NewAvatarId = newId
             });
             session.Write(new TransmitCreateAvatarNotificationPDU { });
+        }
+
+        /// <summary>
+        /// Decides how many simoleons the new avatar should start with,
+        /// applying both the per-account "only your first sim claims it"
+        /// rule and the per-shard "first N users only" cap. Returns 0
+        /// when starter cash is disabled or when the user has already
+        /// claimed it.
+        /// </summary>
+        private int ComputeStartingBudget(IDA db, uint userId)
+        {
+            var cfg = Context.Config;
+            if (cfg == null) return 0;
+            int amount = cfg.Starting_Budget;
+            if (amount <= 0) return 0;
+
+            // Per-account gate: if this user already has any avatar on
+            // this shard, they've already had their shot at the starter
+            // (or they registered before the feature existed). Either
+            // way, no cash for the second/third sim.
+            bool userAlreadyOnShard = db.Avatars.GetByUserId(userId)
+                .Any(a => a.shard_id == Context.ShardId);
+            if (userAlreadyOnShard) return 0;
+
+            // Per-shard gate: optional cap on how many unique accounts
+            // the starter applies to. -1 means "no cap" (the per-account
+            // gate above is still enforced).
+            int max = cfg.Starting_Budget_Max_Count;
+            if (max >= 0)
+            {
+                int currentUserCount = db.Avatars.CountUniqueUsersOnShard(Context.ShardId);
+                if (currentUserCount >= max) return 0;
+            }
+
+            return amount;
         }
     }
 }

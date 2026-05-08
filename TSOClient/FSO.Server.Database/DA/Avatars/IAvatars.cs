@@ -18,6 +18,11 @@ namespace FSO.Server.Database.DA.Avatars
         IEnumerable<DbAvatar> All();
         IEnumerable<DbAvatar> All(int shard_id);
         PagedList<DbAvatar> AllByPage(int shard_id, int offset, int limit, string orderBy);
+        // Number of distinct user accounts that have at least one avatar
+        // on this shard. Used by the starter-budget cap so it counts
+        // unique players, not avatars (one user can have multiple sims
+        // and we only want to cap how many users got bootstrapped).
+        int CountUniqueUsersOnShard(int shard_id);
         List<uint> GetLivingInNhood(uint nhood_id);
         List<AvatarRating> GetPossibleCandidatesNhood(uint nhood_id);
 

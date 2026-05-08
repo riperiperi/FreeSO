@@ -282,6 +282,13 @@ namespace FSO.Server.Database.DA.Avatars
             return Context.Connection.Query<int>("SELECT budget FROM fso_avatars WHERE avatar_id = @id", new { id = avatar_id }).FirstOrDefault();
         }
 
+        public int CountUniqueUsersOnShard(int shard_id)
+        {
+            return Context.Connection.Query<int>(
+                "SELECT COUNT(DISTINCT user_id) FROM fso_avatars WHERE shard_id = @shard_id",
+                new { shard_id = shard_id }).FirstOrDefault();
+        }
+
         public int CreditBudget(uint avatar_id, int amount)
         {
             // System credit — no debit side, used by milestone tasks
