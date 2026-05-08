@@ -53,10 +53,12 @@ namespace FSO.Client.UI.Screens
                 CalculateMatrix();
                 Log("  CalculateMatrix done");
 
-                // CLI arg → load directly. Otherwise fall through to the
-                // welcome dialog so the user picks a starting point. We
-                // no longer auto-load city_0100 — fresh installs may not
-                // even have it.
+                // CLI arg → load directly. Otherwise auto-load the
+                // bundled blank scaffold so the editor lands on an
+                // editable canvas immediately. The welcome dialog is
+                // only shown as a fallback when the scaffold is missing
+                // (custom build with content stripped, etc.) — at that
+                // point we genuinely need user input to find a city.
                 if (!string.IsNullOrEmpty(CityEditorHook.RequestedCityPath))
                 {
                     Log($"  CLI --city: {CityEditorHook.RequestedCityPath}");
@@ -69,8 +71,19 @@ namespace FSO.Client.UI.Screens
                 }
                 else
                 {
-                    Log("  No CLI source — showing welcome dialog");
-                    ShowWelcomeDialog();
+                    string blankPath = Path.Combine(
+                        Environment.CurrentDirectory, FSOEnvironment.ContentDir,
+                        "Cities", "city_blank");
+                    if (Directory.Exists(blankPath))
+                    {
+                        Log($"  No CLI source — auto-loading blank scaffold: {blankPath}");
+                        BeginEditing(blankPath, 0);
+                    }
+                    else
+                    {
+                        Log("  No CLI source and no blank scaffold — falling back to welcome dialog");
+                        ShowWelcomeDialog();
+                    }
                 }
                 Log("--- Initialize: end (success) ---");
             }
