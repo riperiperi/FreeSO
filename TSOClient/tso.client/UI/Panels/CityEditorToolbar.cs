@@ -59,6 +59,15 @@ namespace FSO.Client.UI.Panels
         private const int ROW_Y_MODIFIER = 44;
         private const int ROW_Y_BRUSH = 78;
 
+        // Status label auto-fade. Hold full-opacity for HOLD seconds,
+        // then linearly fade to 0 over FADE seconds, then clear text.
+        // SetStatus is called by every Save / Load / Generate / Clear
+        // result so users get the same toast-style feedback across
+        // all operations.
+        private DateTime _StatusSetAt = DateTime.MinValue;
+        private const double STATUS_HOLD_SECONDS = 2.0;
+        private const double STATUS_FADE_SECONDS = 1.0;
+
         // The directory the user most recently loaded from / saved to.
         // Used to pre-fill the Save / Load path prompts so the user
         // doesn't have to retype the full path each time. null if the
@@ -198,11 +207,11 @@ namespace FSO.Client.UI.Panels
                 _City.MapData.Save(dir);
                 CityBaker.Save(_City, dir);
                 _CurrentPath = dir;
-                _StatusLabel.Caption = "Saved to " + dir;
+                SetStatus("Saved to " + dir);
             }
             catch (Exception ex)
             {
-                _StatusLabel.Caption = "Save failed: " + ex.Message;
+                SetStatus("Save failed: " + ex.Message);
             }
         }
 
@@ -235,17 +244,17 @@ namespace FSO.Client.UI.Panels
             {
                 if (!Directory.Exists(dir))
                 {
-                    _StatusLabel.Caption = "Load failed: directory not found";
+                    SetStatus("Load failed: directory not found");
                     return;
                 }
                 _City.MapData.Load(dir, LoadTex, "png");
                 _City.GenerateCityMesh(GameFacade.GraphicsDevice, null);
                 _CurrentPath = dir;
-                _StatusLabel.Caption = "Loaded " + dir;
+                SetStatus("Loaded " + dir);
             }
             catch (Exception ex)
             {
-                _StatusLabel.Caption = "Load failed: " + ex.Message;
+                SetStatus("Load failed: " + ex.Message);
             }
         }
 
@@ -283,12 +292,11 @@ namespace FSO.Client.UI.Panels
                 {
                     CityProcGen.Generate(_City.MapData, p);
                     _City.GenerateCityMesh(GameFacade.GraphicsDevice, null);
-                    _StatusLabel.Caption =
-                        "Generated " + p.Type + " (seed " + p.Seed + ")";
+                    SetStatus("Generated " + p.Type + " (seed " + p.Seed + ")");
                 }
                 catch (Exception ex)
                 {
-                    _StatusLabel.Caption = "Generate failed: " + ex.Message;
+                    SetStatus("Generate failed: " + ex.Message);
                 }
             });
             UIScreen.GlobalShowDialog(dlg, true);
@@ -316,18 +324,48 @@ namespace FSO.Client.UI.Panels
                     md.ForestTypeData[i] = new Color(0, 0, 0);
                 }
                 _City.GenerateCityMesh(GameFacade.GraphicsDevice, null);
-                _StatusLabel.Caption = "Map cleared";
+                SetStatus("Map cleared");
             }
             catch (Exception ex)
             {
-                _StatusLabel.Caption = "Clear failed: " + ex.Message;
+                SetStatus("Clear failed: " + ex.Message);
             }
         }
 
         public override void Update(UpdateState state)
         {
             base.Update(state);
+            UpdateStatusFade();
             RefreshIfChanged();
+        }
+
+        // Toast-style fade: hold, fade out, clear. Called every frame; a
+        // no-op once the label is empty.
+        private void UpdateStatusFade()
+        {
+            if (string.IsNullOrEmpty(_StatusLabel.Caption)) return;
+            double elapsed = (DateTime.Now - _StatusSetAt).TotalSeconds;
+            if (elapsed < STATUS_HOLD_SECONDS)
+            {
+                _StatusLabel.Opacity = 1f;
+            }
+            else if (elapsed < STATUS_HOLD_SECONDS + STATUS_FADE_SECONDS)
+            {
+                float t = (float)((elapsed - STATUS_HOLD_SECONDS) / STATUS_FADE_SECONDS);
+                _StatusLabel.Opacity = 1f - t;
+            }
+            else
+            {
+                _StatusLabel.Caption = "";
+                _StatusLabel.Opacity = 1f;
+            }
+        }
+
+        private void SetStatus(string text)
+        {
+            _StatusLabel.Caption = text;
+            _StatusLabel.Opacity = 1f;
+            _StatusSetAt = DateTime.Now;
         }
 
         /// <summary>

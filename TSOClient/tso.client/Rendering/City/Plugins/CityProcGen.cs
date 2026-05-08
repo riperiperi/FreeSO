@@ -137,6 +137,7 @@ namespace FSO.Client.Rendering.City.Plugins
         {
             var noise = new PerlinNoise(p.Seed);
             var shapeNoise = new PerlinNoise(unchecked(p.Seed ^ 0x5BD1E995));
+            var warpNoise = new PerlinNoise(unchecked(p.Seed ^ 0x7F4A7C15));
 
             // Three frequency bands. Coarse = continent shape, mid = ridges
             // and valleys, fine = coastline dissection. Roughness shifts
@@ -154,6 +155,15 @@ namespace FSO.Client.Rendering.City.Plugins
             // Mountains type amplifies everything so peaks reach the top
             // of the byte range and slopes stay steep.
             float typeAmp = (p.Type == MapType.Mountains) ? 1.4f : 1.0f;
+            bool useRidges = (p.Type == MapType.Mountains);
+
+            // Domain-warp settings: perturb sample coords by a low-freq
+            // noise field so coastlines / ridges look organic instead of
+            // smooth Perlin blobs. Warp wavelength ~64, amplitude 25 — a
+            // fraction of the coarse band's 96-tile wavelength so warping
+            // bends the shape without scrambling it.
+            const float WARP_SCALE = 1f / 64f;
+            const float WARP_AMP   = 25f;
 
             var raw = new float[N];
 
@@ -161,11 +171,23 @@ namespace FSO.Client.Rendering.City.Plugins
             {
                 for (int x = 0; x < SIZE; x++)
                 {
-                    float coarse = noise.Fractal(x * coarseScale, y * coarseScale,
+                    float wx = warpNoise.Fractal(x * WARP_SCALE,        y * WARP_SCALE,        2, 0.5f, 2f) * WARP_AMP;
+                    float wy = warpNoise.Fractal(x * WARP_SCALE + 100f, y * WARP_SCALE + 100f, 2, 0.5f, 2f) * WARP_AMP;
+                    float wxx = x + wx;
+                    float wyy = y + wy;
+
+                    float coarse = noise.Fractal(wxx * coarseScale, wyy * coarseScale,
                         3, 0.5f, 2f);
-                    float mid = noise.Fractal(x * midScale + 100f, y * midScale + 100f,
+
+                    // Mountains type swaps the mid octave for ridge noise:
+                    // 1 - 2*|n| has its maxima where the underlying noise
+                    // crosses zero, producing sharp ridge lines instead of
+                    // round hills. Result range matches Perlin's [-1, 1].
+                    float midRaw = noise.Fractal(wxx * midScale + 100f, wyy * midScale + 100f,
                         midOctaves, 0.5f, 2f);
-                    float fine = noise.Fractal(x * fineScale + 300f, y * fineScale + 300f,
+                    float mid = useRidges ? (1f - 2f * Math.Abs(midRaw)) : midRaw;
+
+                    float fine = noise.Fractal(wxx * fineScale + 300f, wyy * fineScale + 300f,
                         2, 0.5f, 2f);
 
                     float v = (coarse + mid * midWeight + fine * fineWeight) * typeAmp;
@@ -412,12 +434,17 @@ namespace FSO.Client.Rendering.City.Plugins
         }
 
         // Greedy gradient descent. Each step carves a 2-tile-wide channel
-        // below sea level, finds the lowest non-backtrack neighbor, and
-        // moves there. Stops on hitting water (sea or carved-lake tile),
-        // exhausting steps, or finding no descent.
+        // below sea level + a wider gentle valley around it (so the river
+        // sits in a depression instead of a slot in flat ground), finds
+        // the lowest non-backtrack neighbor, and moves there. Stops on
+        // hitting water (sea or carved-lake tile), exhausting steps, or
+        // finding no descent.
         private static void TraceRiver(byte[] elev, int sx, int sy)
         {
-            const int CARVE_DEPTH = 12; // depth below SEA_LEVEL
+            const int CARVE_DEPTH = 12;       // depth below SEA_LEVEL at channel
+            const int VALLEY_RADIUS = 6;       // tiles away from channel that get sloped
+            const float VALLEY_DROP_FRAC = 0.35f; // max fraction of height-above-sea to drop
+
             var visited = new HashSet<int>();
             int x = sx, y = sy;
             int prevX = -1, prevY = -1;
@@ -439,6 +466,38 @@ namespace FSO.Client.Rendering.City.Plugins
                 CarveOneIfHigher(elev, x + 1, y,     edge);
                 CarveOneIfHigher(elev, x,     y + 1, edge);
                 CarveOneIfHigher(elev, x + 1, y + 1, edge);
+
+                // Carve valley shoulders — Gaussian-falloff drop scaled
+                // by each tile's height above sea, so high-elevation
+                // segments cut dramatic valleys and near-coast segments
+                // stay subtle. Skips the inner 2x2 (already carved) and
+                // any tile already at or below sea (don't widen existing
+                // water bodies).
+                float vr2 = VALLEY_RADIUS * VALLEY_RADIUS;
+                float twoSigma2 = vr2 * 0.4f;
+                for (int dy = -VALLEY_RADIUS; dy <= VALLEY_RADIUS; dy++)
+                {
+                    int ny = y + dy;
+                    if (ny < 0 || ny >= SIZE) continue;
+                    for (int dx = -VALLEY_RADIUS; dx <= VALLEY_RADIUS; dx++)
+                    {
+                        if (Math.Abs(dx) <= 1 && Math.Abs(dy) <= 1) continue;
+                        float d2 = dx * dx + dy * dy;
+                        if (d2 > vr2) continue;
+                        int nx = x + dx;
+                        if (nx < 0 || nx >= SIZE) continue;
+                        int nidx = ny * SIZE + nx;
+                        int curE = elev[nidx];
+                        if (curE <= SEA_LEVEL + 2) continue;
+                        float falloff = (float)Math.Exp(-d2 / twoSigma2);
+                        int aboveSea = curE - SEA_LEVEL;
+                        int drop = (int)(falloff * aboveSea * VALLEY_DROP_FRAC);
+                        if (drop <= 0) continue;
+                        int newE = curE - drop;
+                        if (newE < SEA_LEVEL + 1) newE = SEA_LEVEL + 1;
+                        if (newE < curE) elev[nidx] = (byte)newE;
+                    }
+                }
 
                 if (reachedWater) break;
 
