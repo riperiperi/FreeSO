@@ -22,6 +22,7 @@ namespace FSO.Client.UI.Panels
         I3DRotate Rotate { get; }
         bool TVisible { get; }
         bool UserModZoom { get; set; }
+        bool MouseIsOn { get; }
         void ClearCenter();
     }
 
@@ -78,6 +79,8 @@ namespace FSO.Client.UI.Panels
         public float MaxZoom = 2f;
         public bool _3D;
 
+        private bool MouseIsOn => Master.MouseIsOn;
+
         public override void Update(UpdateState state)
         {
             var _3d = _3D;
@@ -99,12 +102,16 @@ namespace FSO.Client.UI.Panels
                 else if (state.WindowFocused && state.MouseState.ScrollWheelValue != LastMouseWheel)
                 {
                     var diff = state.MouseState.ScrollWheelValue - LastMouseWheel;
-                    Master.TargetZoom = Master.TargetZoom + diff / 1600f;
                     LastMouseWheel = state.MouseState.ScrollWheelValue;
-                    Master.TargetZoom = Math.Max(MinZoom, Math.Min(Master.TargetZoom, MaxZoom));
-                    Master.UserModZoom = true;
-                    ZoomFreezeTime = (10 * FSOEnvironment.RefreshRate) / 60;
-                    Master.ClearCenter();
+
+                    if (MouseIsOn)
+                    {
+                        Master.TargetZoom = Master.TargetZoom + diff / 1600f;
+                        Master.TargetZoom = Math.Max(MinZoom, Math.Min(Master.TargetZoom, MaxZoom));
+                        Master.UserModZoom = true;
+                        ZoomFreezeTime = (10 * FSOEnvironment.RefreshRate) / 60;
+                        Master.ClearCenter();
+                    }
                 }
                 ScrollWheelInvalid = invalidNow;
             }

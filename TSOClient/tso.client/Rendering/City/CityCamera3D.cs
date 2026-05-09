@@ -21,6 +21,7 @@ namespace FSO.Client.Rendering.City
         private Point LastMouse;
         private bool MouseWasDown;
         private UILotControlTouchHelper Touch;
+        public bool MouseIsOn { get; private set; } = true;
         public CityCameraCenter CenterCam { get; set; }
 
         // Set a center delta, then tween to 0 to smootly move to a target location.
@@ -253,8 +254,13 @@ namespace FSO.Client.Rendering.City
             {
                 Touch.MiceDown.Remove(state.CurrentMouseID);
             }
+            else if (type == UIMouseEventType.MouseOver)
+            {
+                MouseIsOn = true;
+            }
             else if (type == UIMouseEventType.MouseOut)
             {
+                MouseIsOn = false;
                 LastWheelPos = null;
             }
         }
@@ -307,24 +313,6 @@ namespace FSO.Client.Rendering.City
             }
             if (TargetZoom > 2f && inCity) TargetZoom -= (TargetZoom - 2f) * (1f - (float)Math.Pow(0.975f, 60f / FSOEnvironment.RefreshRate));
             Zoom3D += ((12f - (TargetZoom - 0.25f) * 6.8571428571428571428571428571429f) - Zoom3D) / 10;
-
-            /*
-             * replaced by touch helper
-             * 
-            if (LastWheelPos != null && state.WindowFocused && state.MouseState.ScrollWheelValue != 0 && Zoomed != TerrainZoomMode.Lot) {
-                var diff = state.MouseState.ScrollWheelValue - LastWheelPos.Value;
-                UserModZoom = diff != 0;
-                TargetZoom = TargetZoom + diff / 1600f;
-                TargetZoom = Math.Max(0.25f, Math.Min(TargetZoom, 2.5f));
-            }
-            if (state.WindowFocused)
-            {
-                LastWheelPos = state.MouseState.ScrollWheelValue;
-            } else
-            {
-                LastWheelPos = null;
-            }
-            */
 
             //rmb scroll
             if (state.MouseState.RightButton == ButtonState.Pressed)

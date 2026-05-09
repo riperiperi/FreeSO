@@ -69,8 +69,6 @@ namespace FSO.Client.UI.Screens
         public VMClientDriver Driver;
         public uint VisualBudget { get; set; }
 
-        private UIMouseEventRef MouseHitAreaEventRef = null;
-
         // Simantics VMs can be kept around for a load transition.
         private VM TransitionVM;
         private World TransitionWorld;

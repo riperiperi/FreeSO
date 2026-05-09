@@ -52,7 +52,7 @@ namespace FSO.Client.UI.Panels
         public bool IsFocused { get; set; }
         public int TabIndex { get; set; } = -1;
         private UIMouseEventRef MouseEvt;
-        public bool MouseIsOn;
+        public bool MouseIsOn { get; private set; }
 
         private UIPieMenu PieMenu;
         public UIChatPanel ChatPanel;

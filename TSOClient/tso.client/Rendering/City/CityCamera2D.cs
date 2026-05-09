@@ -61,11 +61,11 @@ namespace FSO.Client.Rendering.City
         public float m_WheelZoomTarg = 0.5f;
         private int? m_LastWheelPos; //null if invalid, increments in 120 it seems.
 
-        private Vector2 LastTargOff;
         public float m_ViewOffX, m_ViewOffY, m_TargVOffX, m_TargVOffY;
         private float m_ScrollSpeed;
         private Vector2 m_MouseStart;
         private bool WasRMBDown;
+        private bool MouseIsOn = true;
 
         public float GetIsoScale(int width, int height)
         {
@@ -87,8 +87,15 @@ namespace FSO.Client.Rendering.City
 
         public void MouseEvent(UIMouseEventType type, UpdateState state)
         {
-            if (type == UIMouseEventType.MouseOut)
+            if (type == UIMouseEventType.MouseOver)
+            {
+                MouseIsOn = true;
+            }
+            else if (type == UIMouseEventType.MouseOut)
+            {
+                MouseIsOn = false;
                 m_LastWheelPos = null;
+            }
         }
 
         public float AspectRatioMultiplier
@@ -342,7 +349,7 @@ namespace FSO.Client.Rendering.City
         {
             var screen = UIScreen.Current;
 
-            if (Zoomed == TerrainZoomMode.Near)
+            if (Zoomed == TerrainZoomMode.Near && MouseIsOn)
             {
                 if (m_LastWheelPos != null && Math.Abs(m_LastWheelPos.Value - state.MouseState.ScrollWheelValue) < 1000)
                     m_WheelZoomTarg = Math.Max(0.33f, Math.Min(1f, m_WheelZoomTarg - (m_LastWheelPos.Value - state.MouseState.ScrollWheelValue) / 1000f));
@@ -364,9 +371,6 @@ namespace FSO.Client.Rendering.City
             {
                 m_MouseStart = new Vector2(m_MouseState.X, m_MouseState.Y); //if middle mouse button activated, record where we started pressing it (to use for panning)
             }
-
-            LastTargOff = new Vector2(m_TargVOffX, m_TargVOffY);
-
 
             var rScale = 60f / FSOEnvironment.RefreshRate;
             if (Zoomed != TerrainZoomMode.Far) ZoomProgress += (1.0f - ZoomProgress) * (float)(1 - Math.Pow(4 / 5.0f, rScale));

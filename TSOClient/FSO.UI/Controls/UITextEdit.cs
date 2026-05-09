@@ -53,6 +53,7 @@ namespace FSO.Client.UI.Controls
          * Interaction
          */
         private UIMouseEventRef m_MouseEvent;
+        private bool m_MouseOver;
 
         protected int SelectionStart = -1;
         protected int SelectionEnd = -1;
@@ -305,13 +306,28 @@ namespace FSO.Client.UI.Controls
 
         public void OnMouseEvent(UIMouseEventType evt, UpdateState state)
         {
-            if (m_IsReadOnly) { return; }
+            if (m_IsReadOnly)
+            { 
+                switch (evt)
+                {
+                    case UIMouseEventType.MouseOver:
+                        m_MouseOver = true;
+                        break;
+
+                    case UIMouseEventType.MouseOut:
+                        m_MouseOver = false;
+                        break;
+                }
+                
+                return;
+            }
 
             if (NoFocusPassthrough != null && state.InputManager.GetFocus() != this)
             {
                 NoFocusPassthrough?.Invoke(evt, state);
                 return;
             }
+
             switch (evt)
             {
                 case UIMouseEventType.MouseDown:
@@ -332,10 +348,12 @@ namespace FSO.Client.UI.Controls
 
                 case UIMouseEventType.MouseOver:
                     GameFacade.Cursor.SetCursor(CursorType.IBeam);
+                    m_MouseOver = true;
                     break;
 
                 case UIMouseEventType.MouseOut:
                     GameFacade.Cursor.SetCursor(CursorType.Normal);
+                    m_MouseOver = false;
                     break;
 
                 case UIMouseEventType.MouseUp:
@@ -415,15 +433,16 @@ namespace FSO.Client.UI.Controls
                 }
             }
             if (FSOEnvironment.SoftwareKeyboard && FSOEnvironment.SoftwareDepth && state.InputManager.GetFocus() == this) state.InputManager.SetFocus(null);
-            if (m_IsReadOnly) { return; }
 
             // Mouse wheel scrolling
-            if (IsFocused && state.MouseWheelDelta != 0)
+            if (m_MouseOver && state.MouseWheelDelta != 0)
             {
                 VerticalScrollPosition -= state.MouseWheelDelta;
                 if (m_Slider != null)
                     m_Slider.Value = VerticalScrollPosition;
             }
+
+            if (m_IsReadOnly) { return; }
 
             if (FlashOnEmpty)
             {

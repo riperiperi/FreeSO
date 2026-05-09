@@ -317,6 +317,9 @@ namespace FSO.Client.Rendering.City
             Camera.ZoomProgress = old.ZoomProgress;
             Camera.CenterCam = old.CenterCam;
             Camera.Target = old.Target;
+
+            Camera.MouseEvent(HandleMouse ? UIMouseEventType.MouseOver : UIMouseEventType.MouseOut, null);
+
             if (Camera is CityCamera3D cam3D) cam3D.CenterTile = new Vector2(old.Target.X, old.Target.Z);
 
             if (Camera.Zoomed == TerrainZoomMode.Lot && LastWorld != null)
