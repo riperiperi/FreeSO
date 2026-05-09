@@ -242,13 +242,35 @@ namespace FSO.Client.UI.Controls
 
         public void OnFocusChanged(FocusEvent newFocus)
         {
-            if (newFocus == FocusEvent.FocusOut && open)
-                ToggleOpen();
+        }
+
+        private bool HasFocus(UpdateState state)
+        {
+            var focus = state.InputManager.GetFocus() as UIElement;
+
+            while (focus != null)
+            {
+                if (focus == this)
+                {
+                    return true;
+                }
+
+                focus = focus.Parent;
+            }
+
+            return false;
         }
 
         public override void Update(UpdateState state)
         {
             base.Update(state);
+
+            if (open && !HasFocus(state))
+            {
+                // If the focus isn't a child of us, then instantly close the dropdown.
+                ToggleOpen();
+            }
+
             if (!IsFocused) return;
 
             if (state.ActivationKeyPressed)
