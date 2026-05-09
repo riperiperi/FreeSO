@@ -80,10 +80,25 @@ namespace FSO.SimAntics.NetPlay.Drivers
             SandboxBans = new BanList();
         }
 
+        public void RecordAvatarStateForTransition(VM vm)
+        {
+            lock (Clients)
+            {
+                foreach (var client in Clients.Values)
+                {
+                    var ava = vm.GetAvatarByPersist(client.PersistID);
+                    if (ava != null)
+                    {
+                        client.AvatarState.Save(ava);
+                    }
+                }
+            }
+        }
+
         /// <summary>
         /// Recreates all client avatars after a VM state reload and triggers a full resync.
         /// </summary>
-        public void RejoinClients(VM vm)
+        public void RejoinClients(VM vm, VMTSOAvatarFlags withFlags = 0)
         {
             foreach (var avatar in vm.Context.ObjectQueries.Avatars.ToList())
                 avatar.Delete(true, vm.Context);
@@ -94,6 +109,7 @@ namespace FSO.SimAntics.NetPlay.Drivers
                 {
                     client.HadAvatar = false;
                     client.AvatarState.AvatarFlags &= ~VMTSOAvatarFlags.Spectator;
+                    client.AvatarState.AvatarFlags |= withFlags;
                     new VMNetSimJoinCmd
                     {
                         ActorUID = client.PersistID,

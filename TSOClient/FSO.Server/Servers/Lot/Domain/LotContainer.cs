@@ -1388,6 +1388,8 @@ namespace FSO.Server.Servers.Lot.Domain
         private void TransitionFromSpectatorMode()
         {
             LOG.Info("Transitioning lot " + Context.DbId + " from spectator mode to writable mode.");
+            LotActive.Reset();
+            VMDriver.RecordAvatarStateForTransition(Lot);
             IsSpectatorMode = false;
             VMGlobalLink.Readonly = IsSpectatorMode;
 
@@ -1437,24 +1439,34 @@ namespace FSO.Server.Servers.Lot.Domain
 
             LotSaveTicker = LOT_SAVE_PERIOD;
             AvatarSaveTicker = AVATAR_SAVE_PERIOD;
+
+            LotActive.Set();
         }
 
         private void TransitionToSpectatorMode()
         {
             LOG.Info("Transitioning lot " + Context.DbId + " to spectator mode.");
+            LotActive.Reset();
+            VMDriver.RecordAvatarStateForTransition(Lot);
+
+            // First, make sure the driver doesn't send any of this to the client (it might convince their client to disconnect)
+            VMDriver.Transitioning = true;
+
+            // Try to force everyone to leave the lot safely.
+            CleanLot();
+
+            // Save the lot with nobody on it.
             SaveRing();
+
+            // Transition to spectator mode and reintroduce the players who remained connected. (with a resync)
             IsSpectatorMode = true;
             VMGlobalLink.Readonly = IsSpectatorMode;
 
-            foreach (VMAvatar ava in Lot.Context.ObjectQueries.Avatars)
-            {
-                if (ava.KillTimeout != -1 || ava.AvatarState.Permissions > VMTSOAvatarPermissions.Visitor) continue;
-                ((VMTSOAvatarState)ava.TSOState).Flags |= VMTSOAvatarFlags.Spectator;
-            }
+            VMDriver.Transitioning = false;
 
-            VMDriver.SelfResync = true;
-            VMDriver.SyncAllClients();
+            VMDriver.RejoinClients(Lot, VMTSOAvatarFlags.Spectator);
             Lot.SignalChatEvent(new VMChatEvent(null, VMChatEventType.Generic, "Lot transitioned to spectator mode."));
+            LotActive.Set();
         }
 
         private bool TryBeginFreeRoam(uint persistID)
