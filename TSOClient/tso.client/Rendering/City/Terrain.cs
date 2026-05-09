@@ -954,10 +954,18 @@ namespace FSO.Client.Rendering.City
         public void UIMouseEvent(UIMouseEventType type, UpdateState state)
         {
             Camera.MouseEvent(type, state);
-            if (type == UIMouseEventType.MouseOver) HandleMouse = true;
-            if (type == UIMouseEventType.MouseOut)
+
+            switch (type)
             {
-                HandleMouse = false;
+                case UIMouseEventType.MouseDown:
+                    state.InputManager.SetFocus(null);
+                    break;
+                case UIMouseEventType.MouseOver:
+                    HandleMouse = true;
+                    break;
+                case UIMouseEventType.MouseOut:
+                    HandleMouse = false;
+                    break;
             }
         }
 
