@@ -536,6 +536,11 @@ namespace FSO.Common.Rendering.Framework.IO
                             mouse.LastMouseDown = mouse.LastMouseOver;
                             mouse.LastMouseDown.Callback(UIMouseEventType.MouseDown, state);
                         }
+                        else if (LastFocus != null)
+                        {
+                            // If nothing has been clicked, clear focus.
+                            SetFocus(null);
+                        }
                     }
                     else
                     {

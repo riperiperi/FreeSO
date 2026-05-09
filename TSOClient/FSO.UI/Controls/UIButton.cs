@@ -343,7 +343,6 @@ namespace FSO.Client.UI.Controls
             {
                 case UIMouseEventType.MouseOver:
                     m_isOver = true;
-                    if (TabIndex >= 0) state.InputManager.SetFocus(this);
                     if (!m_isDown)
                     {
                         CurrentFrame = 2;
