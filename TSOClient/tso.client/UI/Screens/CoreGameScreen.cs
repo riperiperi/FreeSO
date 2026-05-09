@@ -1004,6 +1004,12 @@ namespace FSO.Client.UI.Screens
                     var rnd = new Random();
                     dialog.Position = new Vector2(rnd.Next(Math.Max(0, ScreenWidth - 380)), rnd.Next(Math.Max(0, ScreenHeight - 180)));
                     break;
+                case VMEventType.Resync:
+                    if (ZoomLevel < 4)
+                    {
+                        SetTitle();
+                    }
+                    break;
             }
         }
 

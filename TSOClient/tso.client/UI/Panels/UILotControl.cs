@@ -196,6 +196,7 @@ namespace FSO.Client.UI.Panels
             RMBCursor = GetTexture(0x24B00000001); //exploreanchor.bmp
 
             vm.OnChatEvent += Vm_OnChatEvent;
+            vm.OnGenericVMEvent += Vm_OnGenericVMEvent;
             vm.OnDialog += vm_OnDialog;
             vm.OnBreakpoint += Vm_OnBreakpoint;
 
@@ -204,6 +205,14 @@ namespace FSO.Client.UI.Panels
             AvatarDS = new UIAvatarDataServiceUpdater(this);
             EODs = new UIEODController(this);
             this.Add(DonatorDialog);
+        }
+
+        private void Vm_OnGenericVMEvent(VMEventType type, object data)
+        {
+            if (type == VMEventType.Resync)
+            {
+                UpdateChatTitle();
+            }
         }
 
         public void SetDonatorDialogVisible(bool visible)

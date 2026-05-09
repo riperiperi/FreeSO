@@ -1036,6 +1036,7 @@ namespace FSO.SimAntics
         TS1LotChange,
         TS1BuildBuyChange,
         TSOUpgraded,
-        TSOUserLeaveBuildBuy
+        TSOUserLeaveBuildBuy,
+        Resync
     }
 }
