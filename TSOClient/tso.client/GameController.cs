@@ -467,13 +467,38 @@ namespace FSO.Client
             });
         }
 
+        private void ChangeState<TView>(Callback<TView> onCreated) where TView : UIScreen
+        {
+            Binding.DisposeAll();
+            GameThread.InUpdate(() =>
+            {
+                GameFacade.Cursor.SetCursor(Common.Rendering.Framework.CursorType.Normal); //reset cursor
+                if (CurrentController != null)
+                {
+                    if (CurrentController is IDisposable)
+                    {
+                        ((IDisposable)CurrentController).Dispose();
+                    }
+                }
+
+                var view = (UIScreen)Kernel.Get<TView>();
+                GameFacade.Screens.RemoveCurrent();
+                GameFacade.Screens.AddScreen(view);
+
+                CurrentController = null;
+                CurrentView = view;
+
+                onCreated((TView)view);
+            });
+        }
+
         public void EnterSandboxMode(string lotName, bool external)
         {
-            var screen = new SandboxGameScreen();
-            GameFacade.Screens.RemoveCurrent();
-            GameFacade.Screens.AddScreen(screen);
-            screen.Initialize(lotName, external);
-            DiscordRpcEngine.SendFSOPresence("Playing Sandbox Mode");
+            ChangeState<SandboxGameScreen>((screen) =>
+            {
+                screen.Initialize(lotName, external);
+                DiscordRpcEngine.SendFSOPresence("Playing Sandbox Mode");
+            });
         }
 
         public void ShowCredits()
