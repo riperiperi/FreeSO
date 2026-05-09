@@ -96,17 +96,22 @@ namespace CASOutfitImporter.Importer
 
     internal sealed class SkinImporter
     {
-        public const string ToolVersion = "0.3.0";
+        public const string ToolVersion = "0.4.0";
 
         // Per-kind TypeIDs. Choice is somewhat arbitrary — they only have to be
         // self-consistent across the files this tool emits. Each provider has its
         // own namespace, so cross-kind clash is impossible. Random pick is fine.
         private const uint TypeIdMesh        = 0x6B5DB827;
         private const uint TypeIdTexture     = 0x4D515437;
+        private const uint TypeIdThumbnail   = 0x54484D42; // 'THMB'
         private const uint TypeIdBinding     = 0x42434543;
         private const uint TypeIdAppearance  = 0x41505246;
         private const uint TypeIdOutfit      = 0x4F465432;
         private const uint TypeIdPurchasable = 0x504F5446;
+
+        // Long-edge size of the generated thumbnail PNG. UIGridViewer cells
+        // in the trunk EOD render at <100px; 96 keeps detail without bloat.
+        private const int ThumbnailMaxEdge = 96;
 
         // Default hand group — TSO-shipped female "huao" (idle) etc. The Outfit only
         // stores a uint reference, looked up by HandgroupProvider on the client. Bodies
@@ -179,6 +184,7 @@ namespace CASOutfitImporter.Importer
             var lgtTexRef = NewRef(TypeIdTexture);
             var medTexRef = NewRef(TypeIdTexture);
             var drkTexRef = NewRef(TypeIdTexture);
+            var thumbRef = NewRef(TypeIdThumbnail);
             var lgtBndRef = NewRef(TypeIdBinding);
             var medBndRef = NewRef(TypeIdBinding);
             var drkBndRef = NewRef(TypeIdBinding);
@@ -200,17 +206,25 @@ namespace CASOutfitImporter.Importer
                 ? TextureBuilder.BmpToPng(drkBmp, keyMagenta)
                 : TextureBuilder.SynthesizeTone(lgtBmp, 0.55f, keyMagenta);
 
+            // One thumbnail per outfit (downscaled light texture). All three
+            // appearances reference the same ContentRef — the trunk grid only
+            // shows the silhouette, and tone-specific thumbs would triple
+            // disk usage with no UX gain.
+            byte[] thumbPng = TextureBuilder.BuildThumbnailFromBmp(lgtBmp, keyMagenta, ThumbnailMaxEdge);
+
             // ---- 5. Bindings (one per skin tone, all referencing the same mesh) ----
             byte[] lgtBnd = BindingWriter.Write(mesh.PrimaryBone, meshRef, lgtTexRef);
             byte[] medBnd = BindingWriter.Write(mesh.PrimaryBone, meshRef, medTexRef);
             byte[] drkBnd = BindingWriter.Write(mesh.PrimaryBone, meshRef, drkTexRef);
 
             // ---- 6. Appearances ----
-            // Thumbnail id is left zero (engine falls back to rendering the mesh).
-            var noThumb = new ContentRef(0, 0);
-            byte[] lgtApr = AppearanceWriter.Write(noThumb, new[] { lgtBndRef });
-            byte[] medApr = AppearanceWriter.Write(noThumb, new[] { medBndRef });
-            byte[] drkApr = AppearanceWriter.Write(noThumb, new[] { drkBndRef });
+            // Each appearance points at the shared thumbnail ContentRef. CAS
+            // (PersonSelectionEdit) and the trunk EOD both call
+            // AvatarThumbnails.Get(thumbID) without null-checking, so a real
+            // ID here is required to keep them from NRE'ing on imports.
+            byte[] lgtApr = AppearanceWriter.Write(thumbRef, new[] { lgtBndRef });
+            byte[] medApr = AppearanceWriter.Write(thumbRef, new[] { medBndRef });
+            byte[] drkApr = AppearanceWriter.Write(thumbRef, new[] { drkBndRef });
 
             // ---- 7. Outfit ----
             uint region = req.Part == AvatarPart.Head ? OutfitWriter.RegionHead : OutfitWriter.RegionBody;
@@ -240,6 +254,7 @@ namespace CASOutfitImporter.Importer
             WriteContent(result, "Avatar/Textures/User",   IdEncoder.EmbedId($"{baseName}_lgt",       ".png",  lgtTexRef.TypeId, lgtTexRef.FileId), lgtPng);
             WriteContent(result, "Avatar/Textures/User",   IdEncoder.EmbedId($"{baseName}_med",       ".png",  medTexRef.TypeId, medTexRef.FileId), medPng);
             WriteContent(result, "Avatar/Textures/User",   IdEncoder.EmbedId($"{baseName}_drk",       ".png",  drkTexRef.TypeId, drkTexRef.FileId), drkPng);
+            WriteContent(result, "Avatar/Thumbnails/User", IdEncoder.EmbedId($"{baseName}_thumb",     ".png",  thumbRef.TypeId, thumbRef.FileId), thumbPng);
             WriteContent(result, "Avatar/Bindings/User",   IdEncoder.EmbedId($"{baseName}_lgt",       ".bnd",  lgtBndRef.TypeId, lgtBndRef.FileId), lgtBnd);
             WriteContent(result, "Avatar/Bindings/User",   IdEncoder.EmbedId($"{baseName}_med",       ".bnd",  medBndRef.TypeId, medBndRef.FileId), medBnd);
             WriteContent(result, "Avatar/Bindings/User",   IdEncoder.EmbedId($"{baseName}_drk",       ".bnd",  drkBndRef.TypeId, drkBndRef.FileId), drkBnd);

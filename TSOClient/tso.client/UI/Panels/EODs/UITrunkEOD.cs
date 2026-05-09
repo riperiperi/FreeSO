@@ -118,7 +118,12 @@ namespace FSO.Client.UI.Panels.EODs
                 dataProvider.Add(new UIGridViewerItem
                 {
                     Data = outfit,
-                    Thumb = new Promise<Texture2D>(x => Content.Content.Get().AvatarThumbnails.Get(thumbID).Get(GameFacade.GraphicsDevice))
+                    // Null-conditional on the AvatarThumbnails.Get call: outfits
+                    // produced by CASOutfitImporter older than 0.4 wrote
+                    // ThumbnailID=(0,0), and any future appearance with a
+                    // missing thumb would NRE here too. A null promise just
+                    // renders an empty grid cell instead of crashing.
+                    Thumb = new Promise<Texture2D>(x => Content.Content.Get().AvatarThumbnails.Get(thumbID)?.Get(GameFacade.GraphicsDevice))
                 });
             }
             // special case for skeleton costume added 23.10.18
@@ -132,7 +137,7 @@ namespace FSO.Client.UI.Panels.EODs
                 dataProvider.Add(new UIGridViewerItem
                 {
                     Data = skeletonBodyPurchaseable,
-                    Thumb = new Promise<Texture2D>(x => Content.Content.Get().AvatarThumbnails.Get(thumbnailID).Get(GameFacade.GraphicsDevice))
+                    Thumb = new Promise<Texture2D>(x => Content.Content.Get().AvatarThumbnails.Get(thumbnailID)?.Get(GameFacade.GraphicsDevice))
                 });
             }
             return dataProvider;

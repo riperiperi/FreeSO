@@ -154,41 +154,19 @@ FOR /F "usebackq tokens=2,*" %%A IN (
     `reg query "HKCU\Software\Microsoft\Windows\CurrentVersion\Explorer\Shell Folders" /v Programs 2^>nul`
 ) DO SET "STARTMENU=%%B"
 
-%PWS% -Command ^
-    "$ws = New-Object -ComObject WScript.Shell; ^
-     $s = $ws.CreateShortcut('%DESKTOP%\%GAME_NAME%.lnk'); ^
-     $s.TargetPath = '%EXE%'; ^
-     $s.WorkingDirectory = '%INSTALL_DIR%'; ^
-     $s.IconLocation = '%EXE%'; ^
-     $s.Save()"
+:: Each shortcut is one PowerShell call on a single line. cmd's ^ line
+:: continuation is NOT recognised inside double-quoted strings, so the
+:: previous multi-line form was being parsed as "run the cmdlet ^",
+:: producing  '^' is not recognized  errors. Single line, no ambiguity.
+%PWS% -Command "$s = (New-Object -ComObject WScript.Shell).CreateShortcut('%DESKTOP%\%GAME_NAME%.lnk'); $s.TargetPath = '%EXE%'; $s.WorkingDirectory = '%INSTALL_DIR%'; $s.IconLocation = '%EXE%'; $s.Save()"
 
-%PWS% -Command ^
-    "$ws = New-Object -ComObject WScript.Shell; ^
-     $s = $ws.CreateShortcut('%DESKTOP%\%GAME_NAME% (3D).lnk'); ^
-     $s.TargetPath = '%EXE%'; ^
-     $s.Arguments = '-3d'; ^
-     $s.WorkingDirectory = '%INSTALL_DIR%'; ^
-     $s.IconLocation = '%EXE%'; ^
-     $s.Save()"
+%PWS% -Command "$s = (New-Object -ComObject WScript.Shell).CreateShortcut('%DESKTOP%\%GAME_NAME% (3D).lnk'); $s.TargetPath = '%EXE%'; $s.Arguments = '-3d'; $s.WorkingDirectory = '%INSTALL_DIR%'; $s.IconLocation = '%EXE%'; $s.Save()"
 
 IF NOT EXIST "%STARTMENU%\%GAME_NAME%" MKDIR "%STARTMENU%\%GAME_NAME%"
 
-%PWS% -Command ^
-    "$ws = New-Object -ComObject WScript.Shell; ^
-     $s = $ws.CreateShortcut('%STARTMENU%\%GAME_NAME%\%GAME_NAME%.lnk'); ^
-     $s.TargetPath = '%EXE%'; ^
-     $s.WorkingDirectory = '%INSTALL_DIR%'; ^
-     $s.IconLocation = '%EXE%'; ^
-     $s.Save()"
+%PWS% -Command "$s = (New-Object -ComObject WScript.Shell).CreateShortcut('%STARTMENU%\%GAME_NAME%\%GAME_NAME%.lnk'); $s.TargetPath = '%EXE%'; $s.WorkingDirectory = '%INSTALL_DIR%'; $s.IconLocation = '%EXE%'; $s.Save()"
 
-%PWS% -Command ^
-    "$ws = New-Object -ComObject WScript.Shell; ^
-     $s = $ws.CreateShortcut('%STARTMENU%\%GAME_NAME%\%GAME_NAME% (3D).lnk'); ^
-     $s.TargetPath = '%EXE%'; ^
-     $s.Arguments = '-3d'; ^
-     $s.WorkingDirectory = '%INSTALL_DIR%'; ^
-     $s.IconLocation = '%EXE%'; ^
-     $s.Save()"
+%PWS% -Command "$s = (New-Object -ComObject WScript.Shell).CreateShortcut('%STARTMENU%\%GAME_NAME%\%GAME_NAME% (3D).lnk'); $s.TargetPath = '%EXE%'; $s.Arguments = '-3d'; $s.WorkingDirectory = '%INSTALL_DIR%'; $s.IconLocation = '%EXE%'; $s.Save()"
 
 :: ── Done ─────────────────────────────────────────────────────────────────────
 ECHO.
