@@ -110,7 +110,29 @@ namespace FSO.Server.Clients
         }
 
         public void Connect(string address){
-            Connect(IPEndPointUtils.CreateIPEndPoint(address));
+            // Happy-eyeballs: resolve all addresses (v4 first, v6 second) and try
+            // each in order. Falls back to v6 only if v4 fails to connect — fixes
+            // hangs on hosts that publish AAAA but have broken v6 routing.
+            var endpoints = IPEndPointUtils.ResolveAll(address);
+            if (endpoints.Length == 0)
+            {
+                SessionClosed(null);
+                return;
+            }
+
+            // Per-attempt timeout shorter than the original 10s when we have a
+            // backup family to try, so total wait stays bounded near 10s.
+            int perAttemptMs = endpoints.Length > 1 ? 5000 : 10000;
+
+            Task.Run(() =>
+            {
+                foreach (var ep in endpoints)
+                {
+                    if (TryConnectOnce(ep, perAttemptMs)) return;
+                }
+                // Every endpoint failed — propagate to subscribers exactly once.
+                SessionClosed(null);
+            });
         }
 
         public void Disconnect(){
@@ -121,6 +143,20 @@ namespace FSO.Server.Clients
         }
 
         public void Connect(IPEndPoint target)
+        {
+            // Single-endpoint connect retained for backward compat. Wraps
+            // TryConnectOnce in the same fire-and-forget shape callers expect.
+            Task.Run(() =>
+            {
+                if (!TryConnectOnce(target, 10000)) SessionClosed(null);
+            });
+        }
+
+        // Attempts a single Mina.NET connect, blocks the calling thread until it
+        // succeeds, fails, or times out. Returns true on success. Does NOT call
+        // SessionClosed on failure — the caller iterating over multiple addresses
+        // decides when to give up and notify subscribers.
+        private bool TryConnectOnce(IPEndPoint target, int timeoutMs)
         {
             if (Connector != null)
             {
@@ -135,9 +171,9 @@ namespace FSO.Server.Clients
             socketConnector.SessionConfig.NoDelay = true;
             Connector = socketConnector;
             var connector = Connector;
-            Connector.ConnectTimeoutInMillis = 10000;
+            Connector.ConnectTimeoutInMillis = timeoutMs;
             //Connector.FilterChain.AddLast("logging", new LoggingFilter());
-            
+
             Connector.Handler = this;
             //var ssl = new CustomSslFilter((X509Certificate)null);
             //ssl.SslProtocol = System.Security.Authentication.SslProtocols.Tls;
@@ -146,20 +182,20 @@ namespace FSO.Server.Clients
             Connector.FilterChain.AddLast("protocol", new ProtocolCodecFilter(new AriesProtocol(Kernel)));
             var future = Connector.Connect(target, (IoSession session, IConnectFuture future2) =>
             {
-                if (future2.Canceled || future2.Exception != null)
+                // Don't fire SessionClosed here on failure — caller (Connect(string))
+                // is iterating addresses and will retry the next one. Firing here
+                // would cause spurious disconnect events on the v4-fail-then-v6-succeed
+                // path.
+                if (!(future2.Canceled || future2.Exception != null))
                 {
-                   if (connector.Handler != null) SessionClosed(session);
+                    if (connector.Handler is NullIOHandler) session.Close(true);
+                    else this.Session = session;
                 }
-                
-                if (connector.Handler is NullIOHandler) session.Close(true);
-                else this.Session = session;
             });
 
-            Task.Run(() =>
-            {
-                if (!future.Await(10000)) SessionClosed(null);
-                if (future.Canceled || future.Exception != null) SessionClosed(null);
-            });
+            if (!future.Await(timeoutMs)) return false;
+            if (future.Canceled || future.Exception != null) return false;
+            return Session != null;
         }
 
         private void OnConnect(IoSession session, IConnectFuture future)

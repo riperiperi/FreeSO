@@ -29,8 +29,10 @@ namespace FSO.Server.Framework.Aries
         private AbstractAriesServerConfig Config;
         protected IDAFactory DAFactory;
 
-        private IoAcceptor Acceptor;
-        private IoAcceptor PlainAcceptor;
+        // Multiple acceptors so we can dual-bind v4 + v6 wildcards. .NET Core /
+        // Mina.NET creates IPv6 sockets with IPV6_V6ONLY=1, so a single "[::]"
+        // bind doesn't accept v4 traffic — we run one acceptor per family.
+        private List<IoAcceptor> Acceptors = new List<IoAcceptor>();
         private IServerDebugger Debugger;
 
         private AriesPacketRouter _Router = new AriesPacketRouter();
@@ -95,41 +97,77 @@ namespace FSO.Server.Framework.Aries
                 db.Hosts.CreateHost(CreateHost());
             }
 
-            Acceptor = new AsyncSocketAcceptor();
-
             try {
                 if (Config.Certificate != null)
                 {
                     var ssl = new SslFilter(new System.Security.Cryptography.X509Certificates.X509Certificate2(Config.Certificate));
                     ssl.SslProtocol = SslProtocols.Tls;
-                    Acceptor.FilterChain.AddLast("ssl", ssl);
-                    if (Debugger != null)
-                    {
-                        Acceptor.FilterChain.AddLast("packetLogger", new AriesProtocolLogger(Debugger.GetPacketLogger(), Kernel.Get<ISerializationContext>()));
-                        Debugger.AddSocketServer(this);
-                    }
-                    Acceptor.FilterChain.AddLast("protocol", new ProtocolCodecFilter(Kernel.Get<AriesProtocol>()));
-                    Acceptor.Handler = this;
+                    if (Debugger != null) Debugger.AddSocketServer(this);
 
-                    Acceptor.Bind(IPEndPointUtils.CreateIPEndPoint(Config.Binding));
-                    LOG.Info("Listening on " + Acceptor.LocalEndPoint + " with TLS");
+                    foreach (var ep in IPEndPointUtils.ExpandWildcardBindings(Config.Binding))
+                    {
+                        TryBind(ep, "with TLS", () => BuildSslAcceptor(ssl));
+                    }
                 }
 
                 //Bind in the plain too as a workaround until we can get Mina.NET to work nice for TLS in the AriesClient
-                PlainAcceptor = new AsyncSocketAcceptor();
-                if (Debugger != null){
-                    PlainAcceptor.FilterChain.AddLast("packetLogger", new AriesProtocolLogger(Debugger.GetPacketLogger(), Kernel.Get<ISerializationContext>()));
+                foreach (var ep in IPEndPointUtils.ExpandWildcardBindings(Config.Binding.Replace("100", "101")))
+                {
+                    TryBind(ep, "in the plain", BuildPlainAcceptor);
                 }
-
-                PlainAcceptor.FilterChain.AddLast("protocol", new ProtocolCodecFilter(Kernel.Get<AriesProtocol>()));
-                PlainAcceptor.Handler = this;
-                PlainAcceptor.Bind(IPEndPointUtils.CreateIPEndPoint(Config.Binding.Replace("100", "101")));
-                LOG.Info("Listening on " + PlainAcceptor.LocalEndPoint + " in the plain");
             }
             catch(Exception ex)
             {
                 LOG.Error("Unknown error bootstrapping server: "+ex.ToString(), ex);
             }
+        }
+
+        // Bind one endpoint, catch family-specific failures (e.g. IPv6 disabled
+        // at the kernel level) without aborting the rest of the bind list.
+        // We want a v4 bind to succeed even if the parallel v6 bind would throw.
+        private void TryBind(IPEndPoint ep, string descriptor, Func<IoAcceptor> factory)
+        {
+            try
+            {
+                var a = factory();
+                a.Bind(ep);
+                Acceptors.Add(a);
+                LOG.Info("Listening on " + a.LocalEndPoint + " " + descriptor);
+            }
+            catch (Exception ex)
+            {
+                // Common case: IPv6 is disabled on this host, [::] bind fails.
+                // The matching v4 bind on the same port should still succeed.
+                LOG.Warn("Failed to bind " + ep + " " + descriptor + ": " + ex.Message);
+            }
+        }
+
+        // Per-acceptor setup, factored out so we can call it once per IPEndPoint
+        // returned by ExpandWildcardBindings (which may be one or two endpoints
+        // depending on whether the binding host is a wildcard).
+        private IoAcceptor BuildPlainAcceptor()
+        {
+            var a = new AsyncSocketAcceptor();
+            if (Debugger != null)
+            {
+                a.FilterChain.AddLast("packetLogger", new AriesProtocolLogger(Debugger.GetPacketLogger(), Kernel.Get<ISerializationContext>()));
+            }
+            a.FilterChain.AddLast("protocol", new ProtocolCodecFilter(Kernel.Get<AriesProtocol>()));
+            a.Handler = this;
+            return a;
+        }
+
+        private IoAcceptor BuildSslAcceptor(SslFilter ssl)
+        {
+            var a = new AsyncSocketAcceptor();
+            a.FilterChain.AddLast("ssl", ssl);
+            if (Debugger != null)
+            {
+                a.FilterChain.AddLast("packetLogger", new AriesProtocolLogger(Debugger.GetPacketLogger(), Kernel.Get<ISerializationContext>()));
+            }
+            a.FilterChain.AddLast("protocol", new ProtocolCodecFilter(Kernel.Get<AriesProtocol>()));
+            a.Handler = this;
+            return a;
         }
 
         public ISessions Sessions
@@ -396,8 +434,8 @@ namespace FSO.Server.Framework.Aries
 
             var sendBye = UnexpectedDisconnectWaitSeconds > 0;
             UnexpectedDisconnectWaitSeconds = 0;
-            Acceptor.Dispose();
-            PlainAcceptor.Dispose();
+            foreach (var a in Acceptors) a.Dispose();
+            Acceptors.Clear();
 
             var sessionClone = _Sessions.Clone();
             foreach (var session in sessionClone)

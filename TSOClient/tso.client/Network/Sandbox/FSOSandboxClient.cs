@@ -1,5 +1,6 @@
 ﻿using Mina.Core.Service;
 using System;
+using System.Threading.Tasks;
 using Mina.Core.Session;
 using System.Net;
 using Mina.Transport.Socket;
@@ -21,7 +22,41 @@ namespace FSO.Client.Network.Sandbox
 
         public void Connect(string address)
         {
-            Connect(IPEndPointUtils.CreateIPEndPoint(address));
+            // Happy-eyeballs: prefer v4, fall back to v6 if the v4 path fails.
+            // Identical strategy to AriesClient.Connect; see IPEndPointUtils.ResolveAll.
+            var endpoints = IPEndPointUtils.ResolveAll(address);
+            if (endpoints.Length == 0) return;
+
+            int perAttemptMs = endpoints.Length > 1 ? 5000 : 10000;
+
+            Task.Run(() =>
+            {
+                foreach (var ep in endpoints)
+                {
+                    if (TryConnectOnce(ep, perAttemptMs)) return;
+                }
+                // All addresses exhausted. Sandbox client has no SessionClosed
+                // event to fire — the caller will see IsConnected == false.
+            });
+        }
+
+        // Single attempt; returns true on success. Same shape as
+        // AriesClient.TryConnectOnce so happy-eyeballs iteration above can run
+        // synchronously inside the Task.Run.
+        private bool TryConnectOnce(IPEndPoint target, int timeoutMs)
+        {
+            var socketConnector = new AsyncSocketConnector();
+            socketConnector.SessionConfig.NoDelay = true;
+            Connector = socketConnector;
+            Connector.ConnectTimeoutInMillis = timeoutMs;
+
+            Connector.Handler = this;
+            Connector.FilterChain.AddLast("protocol", new ProtocolCodecFilter(new FSOSandboxProtocol()));
+            var future = Connector.Connect(target, new Action<IoSession, IConnectFuture>(OnConnect));
+
+            if (!future.Await(timeoutMs)) return false;
+            if (future.Canceled || future.Exception != null) return false;
+            return Session != null;
         }
 
         public void Disconnect()
