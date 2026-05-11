@@ -154,6 +154,50 @@ namespace FSO.Server.Clients
             });
         }
 
+        // Daily quests — see edenso_server_data/design_daily_quests_v1.md.
+        // Both endpoints take avatar_id as a query parameter and are gated by
+        // the existing JWT cookie (set by AuthLogin). Server-side ownership
+        // check rejects requests where the cookie's user doesn't own the
+        // avatar.
+        public void GetDailyQuests(uint avatarId, Action<ApiDailyQuestList> callback)
+        {
+            var client = Client();
+            var request = new RestRequest("userapi/quests/today");
+            request.AddParameter("avatar_id", avatarId);
+
+            client.ExecuteAsync(request, (resp, h) =>
+            {
+                GameThread.NextUpdate(x =>
+                {
+                    if (resp.StatusCode != System.Net.HttpStatusCode.OK)
+                        callback(null);
+                    else
+                        callback(JsonConvert.DeserializeObject<ApiDailyQuestList>(resp.Content));
+                });
+            });
+        }
+
+        // Returns ApiDailyQuestClaimResult on success or null on any non-200
+        // (already claimed, not yet completed, etc.). Caller should refresh
+        // the dialog after either outcome so the UI reflects reality.
+        public void ClaimDailyQuest(uint avatarId, byte slot, Action<ApiDailyQuestClaimResult> callback)
+        {
+            var client = Client();
+            var request = new RestRequest($"userapi/quests/claim/{slot}", Method.POST);
+            request.AddParameter("avatar_id", avatarId);
+
+            client.ExecuteAsync(request, (resp, h) =>
+            {
+                GameThread.NextUpdate(x =>
+                {
+                    if (resp.StatusCode != System.Net.HttpStatusCode.OK)
+                        callback(null);
+                    else
+                        callback(JsonConvert.DeserializeObject<ApiDailyQuestClaimResult>(resp.Content));
+                });
+            });
+        }
+
         public void GetUpdateList(Action<ApiUpdate[]> callback)
         {
             var client = Client();

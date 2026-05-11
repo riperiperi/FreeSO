@@ -197,6 +197,16 @@ namespace FSO.Client.UI.Panels
                             vm.UseSchedule = false;
                             vm.Trace = new SimAntics.Engine.Debug.VMSyncTrace();
                         }
+                        else if (message == "/quests")
+                        {
+                            // Open the daily-quest tracker dialog. v1 entry
+                            // point until a dedicated toolbar button lands
+                            // (phase 1e). Intercepted client-side; never
+                            // sent as a chat message.
+                            UIScreen.GlobalShowDialog(
+                                new UIDailyQuestsDialog(Owner.ActiveEntity.PersistID), true);
+                            return;
+                        }
                         vm.SendCommand(new VMNetChatCmd
                         {
                             ActorUID = Owner.ActiveEntity.PersistID,

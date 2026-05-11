@@ -80,6 +80,7 @@
   </ItemGroup>
   <ItemGroup>
     <Compile Include="ApiClient.cs" />
+    <Compile Include="ApiDailyQuest.cs" />
     <Compile Include="ApiUpdate.cs" />
     <Compile Include="AriesClient.cs" />
     <Compile Include="AuthClient.cs" />

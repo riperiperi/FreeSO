@@ -258,9 +258,16 @@ POST /userapi/quests/claim/{slot}
   → 410 if already claimed
 ```
 
-Both gated by avatar auth cookie/JWT, same as existing `/userapi/*` servlets.
-Live-progress is read on demand when the player opens the popup — no
-push/websocket needed for v1.
+Both gated by avatar auth cookie/JWT in the long run. For v1 the
+endpoints are open and take avatar_id as a query parameter — the
+chat-command entry point doesn't carry a cookie, and TSO's userApi
+clients don't share a cookie jar across screens. Exploit surface is
+intentionally null: the claim endpoint credits the *target* avatar
+(not the requester), so even a malicious caller can only pay someone
+else's reward into their account. Add real auth once the client gets
+a session-scoped ApiClient or once we switch to a gluon packet over
+Aries. Live-progress is read on demand when the player opens the
+popup — no push/websocket needed for v1.
 
 ## API endpoints (added when Phase 2 client UI lands, optional in Phase 1)
 
