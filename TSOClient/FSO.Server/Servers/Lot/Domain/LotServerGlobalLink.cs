@@ -343,12 +343,22 @@ namespace FSO.Server.Servers.Lot.Domain
                         // `owner` was nulled above when == 0, so HasValue is
                         // sufficient. `dbo.value > 0` filters out zero-price
                         // spawns.
+                        //
+                        // Per-purchase contribution cap of §500: a buy-sell-back
+                        // cycle would otherwise let a player clear the daily
+                        // §3800 BUY quest with ~4 cycles. With the cap, an
+                        // attacker needs ≥8 distinct purchases to complete BUY,
+                        // making the exploit tedious enough to deter abuse.
+                        // See edenso_server_data/audit_daily_quests_v1.md for
+                        // the full analysis + the deferred net-spend fix.
                         if (owner.HasValue && dbo.value > 0)
                         {
+                            const ulong BUY_PER_PURCHASE_CAP = 500UL;
+                            ulong contribution = System.Math.Min(dbo.value, BUY_PER_PURCHASE_CAP);
                             db.ActionLog.RecordAction(
                                 owner.Value,
                                 FSO.Server.Database.DA.ActionLog.ActionType.CatalogBought,
-                                value: dbo.value,
+                                value: contribution,
                                 parameter: dbo.type);
                         }
                     }

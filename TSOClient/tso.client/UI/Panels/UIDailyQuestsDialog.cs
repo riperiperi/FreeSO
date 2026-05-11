@@ -1,6 +1,7 @@
 using System;
 using FSO.Client.UI.Controls;
 using FSO.Client.UI.Framework;
+using FSO.Common.Rendering.Framework.Model;
 using FSO.Common.Utils;
 using FSO.Server.Clients;
 using Microsoft.Xna.Framework;
@@ -57,7 +58,7 @@ namespace FSO.Client.UI.Panels
             Add(_emptyMessage);
 
             _footer = new UILabel();
-            _footer.Caption = "Quests reset at midnight UTC. Rewards land in your inbox.";
+            _footer.Caption = ComposeFooter();
             _footer.Position = new Vector2(32, DIALOG_HEIGHT - 40);
             _footer.Size = new Vector2(DIALOG_WIDTH - 64, 20);
             Add(_footer);
@@ -97,6 +98,25 @@ namespace FSO.Client.UI.Panels
                     }
                 }
             });
+        }
+
+        // Footer line — countdown to next midnight UTC + reminder that
+        // rewards land in the inbox if not claimed inline.
+        private static string ComposeFooter()
+        {
+            var now = DateTime.UtcNow;
+            var nextReset = now.Date.AddDays(1);
+            var remain = nextReset - now;
+            return $"Resets in {remain.Hours}h {remain.Minutes}m. " +
+                   "Unclaimed rewards also land in your inbox.";
+        }
+
+        // Recompose footer each tick so the countdown stays live. Cheap
+        // string assignment, no allocations matter at 60Hz.
+        public override void Update(UpdateState state)
+        {
+            base.Update(state);
+            _footer.Caption = ComposeFooter();
         }
 
         private void OnClaimClicked(byte slot)
