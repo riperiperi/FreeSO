@@ -47,7 +47,13 @@ public static class GoToHandlers
         var targetObj = (long?)args["target_object_id"];
         var targetSim = (long?)args["target_sim_id"];
         var objName = (string)args["object_name"];
-        var locArg = args["location"] as JsonObject;
+        // cf client sends type=json args as raw JSON strings (the executor validates
+        // them as strings in validateSingleValue). When the user passes
+        //   --location '{"x":42,"y":59,"level":2}'
+        // the wire payload contains "location":"{\"x\":42,\"y\":59,\"level\":2}" — a
+        // JSON string, not a nested object. We must parse it defensively.
+        // (freesoexperiment-f5e: GoToHandlers JsonObject cast returns null on live run)
+        var locArg = ParseJsonObjectArg(args["location"]);
         var interactionName = (string)args["interaction"];
         var maxDist = (long?)args["max_distance_tiles"] ?? 50;
 
@@ -229,5 +235,40 @@ public static class GoToHandlers
             queue_mode = queueMode,
             cancelled,
         });
+    }
+
+    /// <summary>
+    /// Parses a convention arg that has <c>type=json</c> in its declaration.
+    ///
+    /// The cf client (executor.go <c>validateSingleValue</c>) stores type=json args as
+    /// raw JSON strings — not as nested objects. When the payload is serialised with
+    /// <c>json.Marshal</c> the field arrives as a JSON string literal, e.g.
+    /// <c>"location":"{\"x\":42,\"y\":59,\"level\":2}"</c>. A direct
+    /// <c>node as JsonObject</c> cast returns null in that case.
+    ///
+    /// This helper accepts either:
+    /// <list type="bullet">
+    ///   <item>A <see cref="JsonObject"/> node (direct embed — future-proof if cf changes).</item>
+    ///   <item>A <see cref="JsonValue"/> whose string value is valid JSON (current cf behaviour).</item>
+    /// </list>
+    /// Returns null if the node is null, not a JSON object, or the string is not valid JSON.
+    /// </summary>
+    internal static JsonObject ParseJsonObjectArg(JsonNode node)
+    {
+        if (node == null) return null;
+        if (node is JsonObject obj) return obj;
+        if (node is JsonValue val && val.TryGetValue<string>(out var raw) && raw != null)
+        {
+            try
+            {
+                var parsed = JsonNode.Parse(raw);
+                return parsed as JsonObject;
+            }
+            catch (System.Text.Json.JsonException)
+            {
+                return null;
+            }
+        }
+        return null;
     }
 }

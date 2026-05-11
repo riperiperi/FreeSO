@@ -1,0 +1,47 @@
+{
+  "convention": "freeso-embodiment",
+  "version": "1.0",
+  "operation": "claim",
+  "family": "ownership",
+  "description": "Claim an in-world object as 'mine'. Prerequisite: none — the object must exist in the current lot but no ownership verification is performed by the engine; this is a sidecar-side intention marker. Effect: the sidecar writes a claim record to the persona's persistent state directory so the claim survives sidecar and session restarts. The claim appears in the next perception tick as body.my_objects[]. A second claim on the same object_id updates the note and timestamp (last-writer-wins). Cost: none in real seconds or motives. NOT a FreeSO wire action — this is a sidecar-only affordance and is invisible to other Sims unless you choose to speak about it. Use query-claims to list what you currently claim.",
+  "args": [
+    {
+      "name": "target_object_id",
+      "type": "uint",
+      "required": true,
+      "description": "The numeric object_id of the thing to claim. Obtain this from query-nearby or query-inventory. Must be a positive integer."
+    },
+    {
+      "name": "note",
+      "type": "string",
+      "required": false,
+      "description": "Optional short note about why you are claiming this object (e.g. 'my bed', 'the fridge I stocked'). Stored verbatim and returned by query-claims. Keep it brief — one clause."
+    }
+  ],
+  "produces_tags": [
+    {
+      "tag": "freeso:claim",
+      "cardinality": "exactly_one"
+    }
+  ],
+  "antecedents": "none",
+  "signing": "member_key",
+  "rate_limit": {
+    "max": 30,
+    "per": "sender",
+    "window": "1m"
+  },
+  "response": "sync",
+  "call_signatures": [
+    "cf $CF claim --target_object_id 352 --note 'my bed'",
+    "cf $CF claim --target_object_id 512"
+  ],
+  "common_mistakes": [
+    "Passing target_object_id as 0 — rejected with ok:false. Use a real object_id from query-nearby.",
+    "Treating a claim as engine-enforced ownership — it is not. Other Sims can still interact with the object. The claim is your internal affordance marker, not a lock.",
+    "Forgetting that claims survive sidecar restart but are per-persona — another Sim's sidecar does not see your claims."
+  ],
+  "refuse_conditions": [
+    "missing or zero target_object_id → ok:false with 'target_object_id is required and must be positive'"
+  ]
+}

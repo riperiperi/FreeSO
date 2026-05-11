@@ -20,16 +20,32 @@ import (
 // is the outer Go-side veracity guarantee: the handler translates the
 // convention request into the right IPC frame, which the bot dispatcher then
 // turns into the right VMNetGotoCmd (asserted by the C# xUnit golden test).
+//
+// The handler now performs a query-self call first when level is specified (to
+// detect cross-level navigation). This test wires query-self to return level=1
+// so the same-level pass-through fires and walk-to is forwarded normally.
 func TestWalkToHandlerDispatchesIPC(t *testing.T) {
 	fake := newFakeBotProcess()
 	ipc := NewIPC(fake.bot)
-	gotCmd := captureOneCommand(t, fake, ipc, map[string]any{
-		"kind": "response", "ok": true,
-		"payload": map[string]any{"queued": true, "x": 100, "y": 200},
-	})
+
+	// Wire a multi-op responder: query-self returns level=1 (same level as
+	// target), so the handler forwards walk-to directly without stair logic.
+	responses := map[string]map[string]any{
+		"query-self": {
+			"ok": true,
+			"payload": map[string]any{
+				"position": map[string]any{"x": 10.0, "y": 20.0, "level": 1.0},
+			},
+		},
+		"walk-to": {
+			"ok":      true,
+			"payload": map[string]any{"queued": true, "x": 100, "y": 200},
+		},
+	}
+	received := multiAutoResponder(t, fake, ipc, responses)
 
 	handler := walkToHandler(ipc)
-	ctx, cancel := context.WithTimeout(context.Background(), 2*time.Second)
+	ctx, cancel := context.WithTimeout(context.Background(), 3*time.Second)
 	defer cancel()
 	resp, err := handler(ctx, &convention.Request{
 		Args: map[string]any{
@@ -42,12 +58,26 @@ func TestWalkToHandlerDispatchesIPC(t *testing.T) {
 	if resp == nil {
 		t.Fatal("nil response")
 	}
-	cmd := <-gotCmd
-	if cmd.Op != "walk-to" {
-		t.Errorf("want op=walk-to got %q", cmd.Op)
+
+	// Collect commands and find walk-to.
+	var walkCmd *Command
+	drainLoop:
+	for {
+		select {
+		case cmd := <-received:
+			c := cmd // copy
+			if cmd.Op == "walk-to" {
+				walkCmd = &c
+			}
+		case <-time.After(200 * time.Millisecond):
+			break drainLoop
+		}
 	}
-	if cmd.Args["x"] != float64(100) || cmd.Args["y"] != float64(200) {
-		t.Errorf("args not forwarded: %v", cmd.Args)
+	if walkCmd == nil {
+		t.Fatal("walk-to IPC command never arrived")
+	}
+	if walkCmd.Args["x"] != float64(100) || walkCmd.Args["y"] != float64(200) {
+		t.Errorf("args not forwarded: %v", walkCmd.Args)
 	}
 	payload, _ := resp.Payload.(map[string]any)
 	if payload == nil || payload["ok"] != true {

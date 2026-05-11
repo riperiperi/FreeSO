@@ -145,7 +145,14 @@ func main() {
 		// 4. Start bridges with BotCmdPump wired so bot-cmd-reply frames are routed.
 		// The augmentor is created once here and shared with convention handlers
 		// that need mayor status (freesoexperiment-ea0).
-		augmentor = NewPerceptionAugmentor()
+		//
+		// Claim store (freesoexperiment-14b): load claims from disk before creating
+		// the augmentor so body.my_objects[] is correct from the very first tick.
+		claimStore := NewClaimStore()
+		if err := LoadClaims(claimStore); err != nil {
+			log.Printf("load claims from persona state: %v (starting with empty claim set)", err)
+		}
+		augmentor = NewPerceptionAugmentor(claimStore)
 		bridges := NewBridgesWithBotCmd(cf, proc, ipc, botCmds, augmentor)
 		go bridges.Run(ctx)
 
@@ -273,6 +280,16 @@ func main() {
 		}
 		log.Printf("convention handlers: %d city-family ops serving", cityServers)
 
+		// Ownership/claim family (freesoexperiment-14b): claim + query-claims.
+		// Sidecar-tier only: no engine extension, no DB column. Claims persist to
+		// claims.json in the persona state dir and are emitted as body.my_objects[]
+		// each tick via the augmentor.
+		claimServers, err := RegisterClaimHandlers(ctx, cf, claimStore)
+		if err != nil {
+			log.Fatalf("register claim handlers: %v", err)
+		}
+		log.Printf("convention handlers: %d claim-family ops serving", claimServers)
+
 		// Build-buy-catalog family (freesoexperiment-304): buy-object, place-from-inventory,
 		// move-object, delete-object, send-to-inventory, list-object-for-sale, buy-listed-object,
 		// upgrade-object. Lot-socket VMNet*Cmd PDUs; owner/own-object gating in the bot handler.
@@ -303,6 +320,16 @@ func main() {
 			log.Fatalf("register tax handlers: %v", err)
 		}
 		log.Printf("convention handlers: %d tax-family ops serving", taxServers)
+
+		// Dialog family (freesoexperiment-849): respond-to-dialog.
+		// Sends VMNetDialogResponseCmd to unblock a Sim waiting on a modal dialog
+		// (e.g. Restock Fridge budget entry). Agent reads dialog_id from perception
+		// recent_events[] kind=='dialog' and calls this op to answer.
+		dialogServers, err := RegisterDialogHandlers(ctx, cf, ipc)
+		if err != nil {
+			log.Fatalf("register dialog handlers: %v", err)
+		}
+		log.Printf("convention handlers: %d dialog-family ops serving", dialogServers)
 
 		// Single-dispatcher: one Subscribe goroutine handles every registered op
 		// instead of one Subscribe per op. Replaces the convention.Server fleet

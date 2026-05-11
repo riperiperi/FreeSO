@@ -83,22 +83,87 @@ public class PerceptionProjector
             // to this client. Defensive: if Caller matches MyAvatar, keep; otherwise include too
             // (server already scoped — we trust the VM driver gate).
             var text = BuildDialogText(info);
+
+            // Derive response_kind and button_labels from the dialog operand type.
+            // These guide the agent toward the right respond-to-dialog call (freesoexperiment-849).
+            var (responseKind, buttonLabels) = ClassifyDialogResponse(info);
+
+            // Derive integer range hints when available. For NumericEntry dialogs the
+            // operand encodes min/max in the string table entries — we cannot decode those
+            // without the STR resource, so we emit nulls. The agent should still call
+            // respond-to-dialog with response_kind=integer and a reasonable integer_value.
+            var extras = new Dictionary<string, object>
+            {
+                ["title"] = info.Title ?? string.Empty,
+                ["dialog_id"] = info.DialogID.ToString(),
+                ["caller"] = info.Caller?.ToString() ?? string.Empty,
+                ["icon"] = info.Icon?.ToString() ?? string.Empty,
+                ["response_kind"] = responseKind,
+                ["button_labels"] = buttonLabels,
+            };
+
+            // Yes/No button overrides when the operand carries explicit strings.
+            if (!string.IsNullOrEmpty(info.Yes))   extras["yes_label"]    = info.Yes;
+            if (!string.IsNullOrEmpty(info.No))    extras["no_label"]     = info.No;
+            if (!string.IsNullOrEmpty(info.Cancel)) extras["cancel_label"] = info.Cancel;
+
             var evt = new PerceptionEvent
             {
                 T = DateTimeOffset.UtcNow.ToUnixTimeMilliseconds(),
                 Kind = "dialog",
                 Text = text,
-                Extras = new Dictionary<string, object>
-                {
-                    ["title"] = info.Title ?? string.Empty,
-                    ["dialog_id"] = info.DialogID.ToString(),
-                    ["caller"] = info.Caller?.ToString() ?? string.Empty,
-                    ["icon"] = info.Icon?.ToString() ?? string.Empty,
-                },
+                Extras = extras,
             };
             AddRecentEvent(evt);
             OnDialogEvent?.Invoke(evt);
         };
+    }
+
+    /// <summary>
+    /// Classify the dialog's expected response kind and produce a human-readable
+    /// button label list based on the VMDialogInfo.Operand type.
+    ///
+    /// Returns (responseKind, buttonLabels) where:
+    ///   responseKind — "ok" | "ok_cancel" | "yes_no" | "yes_no_cancel" | "integer" | "string"
+    ///   buttonLabels — list of button label strings shown in the dialog UI
+    /// </summary>
+    private static (string responseKind, List<string> buttonLabels) ClassifyDialogResponse(VMDialogInfo info)
+    {
+        var op = info.Operand;
+        if (op == null) return ("ok", new List<string> { info.Yes ?? "OK" });
+
+        // Use VMDialogType to classify.
+        switch (op.Type)
+        {
+            case FSO.SimAntics.Primitives.VMDialogType.Message:
+                // Single OK button.
+                return ("ok", new List<string> { info.Yes ?? "OK" });
+
+            case FSO.SimAntics.Primitives.VMDialogType.YesNo:
+                return ("ok_cancel", new List<string>
+                {
+                    info.Yes ?? "Yes",
+                    info.No  ?? "No",
+                });
+
+            case FSO.SimAntics.Primitives.VMDialogType.YesNoCancel:
+                return ("ok_cancel", new List<string>
+                {
+                    info.Yes    ?? "Yes",
+                    info.No     ?? "No",
+                    info.Cancel ?? "Cancel",
+                });
+
+            case FSO.SimAntics.Primitives.VMDialogType.NumericEntry:
+                return ("integer", new List<string> { info.Yes ?? "OK", info.Cancel ?? "Cancel" });
+
+            case FSO.SimAntics.Primitives.VMDialogType.TextEntry:
+                return ("string", new List<string> { info.Yes ?? "OK", info.Cancel ?? "Cancel" });
+
+            default:
+                // For any other type, assume OK-only.
+                return ("ok", new List<string> { info.Yes ?? "OK" });
+        }
     }
 
     /// <summary>Build one tick perception object. Returns null if the avatar is not yet in the VM.</summary>

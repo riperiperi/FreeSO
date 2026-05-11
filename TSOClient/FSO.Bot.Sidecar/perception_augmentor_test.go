@@ -124,7 +124,7 @@ func TestAugmentor_NonPerceptionPassThrough(t *testing.T) {
 	cleanup := setupAugmentorTestEnv(t)
 	defer cleanup()
 
-	a := NewPerceptionAugmentor()
+	a := NewPerceptionAugmentor(nil)
 	dialog := []byte(`{"kind":"dialog","t":1000,"payload":{"text":"hello"}}`)
 	out := a.AugmentPerception(dialog)
 	if string(out) != string(dialog) {
@@ -137,7 +137,7 @@ func TestAugmentor_HomeLotNullWhenNoLotsOwned(t *testing.T) {
 	defer cleanup()
 
 	// No lots in owned-lots.json.
-	a := NewPerceptionAugmentor()
+	a := NewPerceptionAugmentor(nil)
 	line := makeAugmentorPerceptionLine(2, true, "Test Lot")
 	out := a.AugmentPerception(line)
 	m := decodeAugmented(t, out)
@@ -167,7 +167,7 @@ func TestAugmentor_HomeLotPopulatedWithIsHabitableFalse(t *testing.T) {
 		t.Fatalf("write owned-lots: %v", err)
 	}
 
-	a := NewPerceptionAugmentor()
+	a := NewPerceptionAugmentor(nil)
 	line := makeAugmentorPerceptionLine(3, true, "Botrous Corner")
 	out := a.AugmentPerception(line)
 	m := decodeAugmented(t, out)
@@ -219,7 +219,7 @@ func TestAugmentor_HomeLotIsHabitableTrueAfterHabitation(t *testing.T) {
 		t.Fatalf("write owned-lots: %v", err)
 	}
 
-	a := NewPerceptionAugmentor()
+	a := NewPerceptionAugmentor(nil)
 	line := makeAugmentorPerceptionLine(4, true, "Sage Retreat")
 	out := a.AugmentPerception(line)
 	m := decodeAugmented(t, out)
@@ -245,7 +245,7 @@ func TestAugmentor_CommunityLotAffordancesTrue(t *testing.T) {
 	// Set community lot to lot_id=17.
 	t.Setenv("FREESO_COMMUNITY_LOT_ID", "17")
 
-	a := NewPerceptionAugmentor()
+	a := NewPerceptionAugmentor(nil)
 	line := makeAugmentorPerceptionLine(17, false, "Town Hall")
 	out := a.AugmentPerception(line)
 	m := decodeAugmented(t, out)
@@ -268,7 +268,7 @@ func TestAugmentor_NonCommunityLotAffordancesFalse(t *testing.T) {
 	// Set community lot to lot_id=17, but current lot is 2.
 	t.Setenv("FREESO_COMMUNITY_LOT_ID", "17")
 
-	a := NewPerceptionAugmentor()
+	a := NewPerceptionAugmentor(nil)
 	line := makeAugmentorPerceptionLine(2, true, "Baron's Main")
 	out := a.AugmentPerception(line)
 	m := decodeAugmented(t, out)
@@ -291,7 +291,7 @@ func TestAugmentor_AffordancesFalseWhenCommunityLotNotSet(t *testing.T) {
 	// FREESO_COMMUNITY_LOT_ID not set.
 	os.Unsetenv("FREESO_COMMUNITY_LOT_ID")
 
-	a := NewPerceptionAugmentor()
+	a := NewPerceptionAugmentor(nil)
 	line := makeAugmentorPerceptionLine(17, false, "Town Hall")
 	out := a.AugmentPerception(line)
 	m := decodeAugmented(t, out)
@@ -321,7 +321,7 @@ func TestAugmentor_IsHomeTrueWhenOwnerIsMeAndHomeLotPresent(t *testing.T) {
 		t.Fatalf("write owned-lots: %v", err)
 	}
 
-	a := NewPerceptionAugmentor()
+	a := NewPerceptionAugmentor(nil)
 	// owner_is_me=true simulates being on your own lot.
 	line := makeAugmentorPerceptionLine(5, true, "My Place")
 	out := a.AugmentPerception(line)
@@ -347,7 +347,7 @@ func TestAugmentor_IsHomeFalseWhenNotOwner(t *testing.T) {
 		t.Fatalf("write owned-lots: %v", err)
 	}
 
-	a := NewPerceptionAugmentor()
+	a := NewPerceptionAugmentor(nil)
 	// owner_is_me=false — visiting someone else's lot.
 	line := makeAugmentorPerceptionLine(6, false, "Ellis's Corner")
 	out := a.AugmentPerception(line)
@@ -365,7 +365,7 @@ func TestAugmentor_IsHomeFalseWhenNotOwner(t *testing.T) {
 // unchanged (augmentor does not inject a zero mayor_status block).
 // (freesoexperiment-ea0: mayor_status now comes from the C# VM tick, not a file.)
 func TestAugmentor_MayorStatusZeroBeforeFirstTick(t *testing.T) {
-	a := NewPerceptionAugmentor()
+	a := NewPerceptionAugmentor(nil)
 
 	// Before any tick: cache is zero.
 	ms := a.LatestMayorStatus()
@@ -390,7 +390,7 @@ func TestAugmentor_MayorStatusZeroBeforeFirstTick(t *testing.T) {
 // LatestMayorStatus() returns the cached value.
 // (freesoexperiment-ea0: mayor_status now comes from the C# VM tick, not a file.)
 func TestAugmentor_MayorStatusCachedFromTick(t *testing.T) {
-	a := NewPerceptionAugmentor()
+	a := NewPerceptionAugmentor(nil)
 
 	// Feed a tick with mayor_status={is_mayor:true, mayor_nhood:1}.
 	tick := map[string]any{
@@ -442,7 +442,7 @@ func TestAugmentor_MalformedJSONPassThrough(t *testing.T) {
 	cleanup := setupAugmentorTestEnv(t)
 	defer cleanup()
 
-	a := NewPerceptionAugmentor()
+	a := NewPerceptionAugmentor(nil)
 	bad := []byte(`{"kind":"perception","t":bad_value}`)
 	out := a.AugmentPerception(bad)
 	if string(out) != string(bad) {
@@ -480,7 +480,7 @@ func TestAugmentor_HabitationWatcherRunsBeforeAugmentor(t *testing.T) {
 		t.Fatalf("write owned-lots: %v", err)
 	}
 
-	a := NewPerceptionAugmentor()
+	a := NewPerceptionAugmentor(nil)
 	line := makeAugmentorPerceptionLine(7, true, "Test Lot")
 	out := a.AugmentPerception(line)
 	m := decodeAugmented(t, out)

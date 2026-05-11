@@ -1,0 +1,62 @@
+{
+  "convention": "freeso-embodiment",
+  "version": "1.0",
+  "operation": "respond-to-dialog",
+  "family": "interaction",
+  "description": "Answer a modal dialog the VM raised (OK/Yes/No/Cancel/IntegerEntry/TextEntry).\n\nPrerequisite: a dialog event must be present in perception.recent_events[] with kind=='dialog'. Read extras.dialog_id from that event.\n\nEffect: unblocks the Sim's thread so the behavior that raised the dialog continues. For Restock Fridge the integer_value is the simoleon budget (e.g. 50); the fridge fills with food proportionally.\n\nCost: none — dialog responses are free in-world actions.\n\nresponse_kind values:\n  ok       — press the OK / Yes / single-button confirmation\n  cancel   — press Cancel / No / dismiss\n  integer  — enter a number (requires integer_value)\n  string   — enter text (requires string_value)",
+  "args": [
+    {
+      "name": "dialog_id",
+      "type": "string",
+      "required": true,
+      "description": "The dialog_id from perception.recent_events[].extras.dialog_id (uint64 encoded as string)."
+    },
+    {
+      "name": "response_kind",
+      "type": "string",
+      "required": true,
+      "enum": ["ok", "cancel", "integer", "string"],
+      "description": "Which button or entry form to use. 'ok' = press OK/Yes. 'cancel' = press Cancel/No. 'integer' = numeric entry, pair with integer_value. 'string' = text entry, pair with string_value."
+    },
+    {
+      "name": "integer_value",
+      "type": "integer",
+      "required": false,
+      "description": "Required when response_kind='integer'. The integer to enter — e.g. budget for Restock Fridge."
+    },
+    {
+      "name": "string_value",
+      "type": "string",
+      "required": false,
+      "description": "Required when response_kind='string'. The text to enter."
+    }
+  ],
+  "produces_tags": [
+    {
+      "tag": "freeso:respond-to-dialog",
+      "cardinality": "exactly_one"
+    }
+  ],
+  "antecedents": "none",
+  "signing": "member_key",
+  "rate_limit": {
+    "max": 30,
+    "per": "sender",
+    "window": "1m"
+  },
+  "response": "sync",
+  "status": "active",
+  "call_signatures": [
+    "cf $CF respond-to-dialog --dialog_id <id> --response_kind ok",
+    "cf $CF respond-to-dialog --dialog_id <id> --response_kind cancel",
+    "cf $CF respond-to-dialog --dialog_id <id> --response_kind integer --integer_value 50",
+    "cf $CF respond-to-dialog --dialog_id <id> --response_kind string --string_value 'hello'"
+  ],
+  "perception_hints": [
+    "Pending dialog dialog_id: perception.recent_events[] where kind=='dialog', look at .extras.dialog_id",
+    "Dialog prompt text: perception.recent_events[].text (includes title prefix if present)",
+    "Button labels: perception.recent_events[].extras.button_labels (array of strings)",
+    "Integer range: perception.recent_events[].extras.integer_min / .integer_max (when present)",
+    "After responding: perception.recent_events[] should show interaction resuming (interaction_start/end events)"
+  ]
+}

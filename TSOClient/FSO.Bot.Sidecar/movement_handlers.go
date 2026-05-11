@@ -63,9 +63,31 @@ func RegisterMovementHandlers(ctx context.Context, cf *Campfire, ipc *IPC) (int,
 //	target_object_id — in-VM object to approach
 //	target_sim_id — Sim persist_id to approach
 //	interaction, param0 — optional PDU fields (default interaction=4 "Run Here")
+//
+// Cross-level navigation (freesoexperiment-81d): when target level != current
+// level, the handler auto-detects stairs via query-nearby, queues a Climb-Stairs
+// interact-with on the closest stair first (queue_mode=queue), then appends the
+// original walk-to as a chained action (queue_mode=queue). If no stair is found,
+// the handler refuses with reason=category:no-stair-path.
 func walkToHandler(ipc *IPC) convention.HandlerFunc {
 	return func(ctx context.Context, req *convention.Request) (*convention.Response, error) {
 		args := pickArgs(req.Args, "x", "y", "level", "target_object_id", "target_sim_id", "interaction", "param0", "queue_mode")
+		targetLevel, hasLevel := ExtractTargetLevel(args)
+		if hasLevel && targetLevel > 0 {
+			stair, err := findStairForCrossLevel(ctx, ipc, targetLevel, 0)
+			if err != nil {
+				return &convention.Response{
+					Payload: map[string]any{
+						"ok":     false,
+						"reason": err.Error(),
+						"error":  "cross-level navigation failed: " + err.Error(),
+					},
+				}, nil
+			}
+			if stair != nil {
+				return queueStairThenDestination(ctx, ipc, stair, "walk-to", args)
+			}
+		}
 		return forwardIPC(ctx, ipc, "walk-to", args)
 	}
 }

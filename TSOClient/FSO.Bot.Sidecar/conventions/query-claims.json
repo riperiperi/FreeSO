@@ -1,0 +1,30 @@
+{
+  "convention": "freeso-embodiment",
+  "version": "1.0",
+  "operation": "query-claims",
+  "family": "ownership",
+  "description": "List all objects this Sim has claimed as 'mine'. Prerequisite: none. Effect: returns an array of claim records from the persona's persistent state, one per previously claimed object_id. Claims are per-persona (this Sim's claims only) and survive sidecar and session restarts. An empty claims array is normal for a newly-created persona. Cost: none. NOT a FreeSO wire action — reads the sidecar's local claim store only. Use claim to add or update a claim.",
+  "args": [],
+  "produces_tags": [
+    {
+      "tag": "freeso:query-claims",
+      "cardinality": "exactly_one"
+    }
+  ],
+  "antecedents": "none",
+  "signing": "member_key",
+  "rate_limit": {
+    "max": 60,
+    "per": "sender",
+    "window": "1m"
+  },
+  "response": "sync",
+  "call_signatures": [
+    "cf $CF query-claims"
+  ],
+  "common_mistakes": [
+    "Expecting to see other Sims' claims — query-claims returns only this persona's claims. Each Sim has its own independent claim store.",
+    "Assuming the claims list reflects engine ownership — claims are sidecar-side markers only and are not enforced by the FreeSO VM."
+  ],
+  "refuse_conditions": []
+}

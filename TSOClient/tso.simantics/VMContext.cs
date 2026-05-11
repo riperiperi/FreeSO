@@ -1401,6 +1401,16 @@ namespace FSO.SimAntics
             return CreateObjectInstance(GUID, pos, direction, 0, 0, false);
         }
 
+        /// <summary>
+        /// GUIDs for delivered food objects that should receive walkable-tile fallback placement
+        /// when their initial position is OUT_OF_WORLD or fails to place. The tile-finder searches
+        /// outward from the ordering Sim's position so that every Sim on the lot can reach the object.
+        /// </summary>
+        private static readonly HashSet<uint> DeliveredFoodGUIDs = new HashSet<uint>
+        {
+            0x543BE3FE, // Pizza Box (phone-ordered pizza delivery)
+        };
+
         public VMMultitileGroup CreateObjectInstance(UInt32 GUID, LotTilePos pos, Direction direction, short MainStackOBJ, short MainParam, bool ghostImage)
         {
             VMMultitileGroup group = new VMMultitileGroup();
@@ -1446,7 +1456,7 @@ namespace FSO.SimAntics
 
                             vmObject.MultitileGroup = group;
                             if (!ghostImage) VM.AddEntity(vmObject);
-                            
+
                         }
                     }
                 }
@@ -1455,6 +1465,14 @@ namespace FSO.SimAntics
 
                 // Placement failure leaves the object OOW.
                 group.ChangePosition(pos, direction, this, VMPlaceRequestFlags.Default);
+
+                // Walkable-tile fallback for delivered food objects (multi-tile path).
+                if (group.BaseObject?.Position == LotTilePos.OUT_OF_WORLD && DeliveredFoodGUIDs.Contains(GUID))
+                {
+                    var fallback = FindDeliveryTile(MainStackOBJ, direction);
+                    if (fallback != LotTilePos.OUT_OF_WORLD)
+                        group.ChangePosition(fallback, direction, this, VMPlaceRequestFlags.Default);
+                }
 
                 SetBirthTime(group);
                 return group;
@@ -1512,11 +1530,96 @@ namespace FSO.SimAntics
                     // Placement failure leaves the object OOW.
                     vmObject.SetPosition(pos, direction, this);
 
+                    // Walkable-tile fallback for delivered food objects (single-tile path).
+                    if (vmObject.Position == LotTilePos.OUT_OF_WORLD && DeliveredFoodGUIDs.Contains(GUID))
+                    {
+                        var fallback = FindDeliveryTile(MainStackOBJ, direction);
+                        if (fallback != LotTilePos.OUT_OF_WORLD)
+                            vmObject.SetPosition(fallback, direction, this);
+                    }
+
                     SetBirthTime(group);
-                    
+
                     return group;
                 }
             }
+        }
+
+        /// <summary>
+        /// Finds the nearest walkable floor tile for a delivered object.
+        /// Search order:
+        ///   (a) spiral outward from the ordering Sim's tile (MainStackOBJ entity position),
+        ///   (b) spiral from the lot centroid if no Sim context,
+        ///   (c) first walkable tile found anywhere on level 1.
+        /// "Walkable" here means: on level 1, inside lot bounds, floor tile present, not solid to avatars.
+        /// </summary>
+        private LotTilePos FindDeliveryTile(short simObjectId, Direction preferredDir)
+        {
+            // Determine search origin: prefer ordering Sim's position.
+            LotTilePos origin = LotTilePos.OUT_OF_WORLD;
+            if (simObjectId != 0)
+            {
+                var simEnt = VM.GetObjectById(simObjectId);
+                if (simEnt != null && simEnt.Position != LotTilePos.OUT_OF_WORLD)
+                    origin = simEnt.Position;
+            }
+
+            // Fall back to lot centroid if no valid Sim position.
+            if (origin == LotTilePos.OUT_OF_WORLD && Architecture != null)
+            {
+                origin = new LotTilePos(
+                    (short)(Architecture.Width * 8),   // tile coords are x << 4, so mid = (Width/2) << 4
+                    (short)(Architecture.Height * 8),
+                    1);
+            }
+
+            if (origin == LotTilePos.OUT_OF_WORLD || Architecture == null)
+                return LotTilePos.OUT_OF_WORLD;
+
+            // Search in a square spiral up to radius 8 tiles from origin.
+            int originTileX = origin.TileX;
+            int originTileY = origin.TileY;
+            const int MaxRadius = 8;
+            const sbyte Level = 1;
+
+            // Collect candidate tiles sorted by Manhattan distance from origin.
+            var candidates = new List<(int dist, short tx, short ty)>();
+            for (int dy = -MaxRadius; dy <= MaxRadius; dy++)
+            {
+                for (int dx = -MaxRadius; dx <= MaxRadius; dx++)
+                {
+                    int tx = originTileX + dx;
+                    int ty = originTileY + dy;
+                    if (tx < 1 || ty < 1 || tx >= Architecture.Width - 1 || ty >= Architecture.Height - 1)
+                        continue;
+                    candidates.Add((Math.Abs(dx) + Math.Abs(dy), (short)tx, (short)ty));
+                }
+            }
+            candidates.Sort((a, b) => a.dist.CompareTo(b.dist));
+
+            foreach (var (_, tx, ty) in candidates)
+            {
+                var candidate = new LotTilePos((short)(tx << 4), (short)(ty << 4), Level);
+                // Must have a floor tile (open indoor or outdoor surface).
+                if (Architecture.GetFloor(tx, ty, Level).Pattern == 0) continue;
+                // Must not be solid to avatars (walkable for Sims).
+                if (SolidToAvatars(candidate).Solid) continue;
+                return candidate;
+            }
+
+            // Fallback (c): scan entire level 1 for any walkable tile.
+            for (int ty = 1; ty < Architecture.Height - 1; ty++)
+            {
+                for (int tx = 1; tx < Architecture.Width - 1; tx++)
+                {
+                    var candidate = new LotTilePos((short)(tx << 4), (short)(ty << 4), Level);
+                    if (Architecture.GetFloor((short)tx, (short)ty, Level).Pattern == 0) continue;
+                    if (SolidToAvatars(candidate).Solid) continue;
+                    return candidate;
+                }
+            }
+
+            return LotTilePos.OUT_OF_WORLD;
         }
 
         public void SetBirthTime(VMEntity ent)

@@ -73,6 +73,15 @@ type currentLotAffordances struct {
 	HasBallotBox     bool `json:"has_ballot_box"`
 }
 
+// MyObjectEntry is one entry in the body.my_objects[] array emitted in each
+// perception tick. It mirrors ClaimEntry but only carries the fields relevant
+// to the agent's perception of what it owns.
+type MyObjectEntry struct {
+	ObjectID  int64  `json:"object_id"`
+	Note      string `json:"note"`
+	ClaimedAt int64  `json:"claimed_at"`
+}
+
 // PerceptionAugmentor holds configuration read once at sidecar startup and
 // live state updated on every perception tick.
 //
@@ -88,6 +97,11 @@ type PerceptionAugmentor struct {
 	// mayorMu guards mayorCache.
 	mayorMu    sync.RWMutex
 	mayorCache MayorStatus
+
+	// claimStore is the persona's claim store. When non-nil, AugmentPerception
+	// emits body.my_objects[] each tick from the store's current snapshot.
+	// When nil (e.g. in tests that don't need claims), my_objects is omitted.
+	claimStore *ClaimStore
 }
 
 // NewPerceptionAugmentor constructs a PerceptionAugmentor. The community lot
@@ -95,7 +109,10 @@ type PerceptionAugmentor struct {
 // e.g. "0x00F9015E" or "00F9015E" — both accepted). If the env var is absent
 // or malformed, the allowlist is empty and affordance flags will be false until
 // the sidecar is restarted with the env var set.
-func NewPerceptionAugmentor() *PerceptionAugmentor {
+//
+// claimStore may be nil (claims feature disabled / test context). When non-nil
+// the augmentor emits body.my_objects[] each tick from the store's snapshot.
+func NewPerceptionAugmentor(claimStore *ClaimStore) *PerceptionAugmentor {
 	raw := strings.TrimSpace(os.Getenv("FREESO_COMMUNITY_LOT_LOCATION"))
 	normalized := normalizeLotHex(raw)
 	if normalized != "" {
@@ -103,7 +120,7 @@ func NewPerceptionAugmentor() *PerceptionAugmentor {
 	} else {
 		log.Printf("perception-augmentor: FREESO_COMMUNITY_LOT_LOCATION not set — affordance flags will be false")
 	}
-	return &PerceptionAugmentor{communityLotLocation: normalized}
+	return &PerceptionAugmentor{communityLotLocation: normalized, claimStore: claimStore}
 }
 
 // normalizeLotHex strips an optional "0x" prefix and lowercases a lot location
@@ -239,6 +256,45 @@ func (a *PerceptionAugmentor) AugmentPerception(line []byte) []byte {
 	augmentedLot := augmentLotBlock(tick["lot"], homeLot, a)
 	if augmentedLot != nil {
 		tick["lot"] = augmentedLot
+	}
+
+	// --- body.my_objects[] (freesoexperiment-14b) ---
+	// Emit the Sim's current claim list from the in-memory store. Each entry
+	// is {object_id, note, claimed_at}. An empty or nil store emits an empty
+	// array (never null) so agents can always iterate without a nil check.
+	if a.claimStore != nil {
+		myObjects := a.claimStore.Snapshot()
+		entries := make([]MyObjectEntry, 0, len(myObjects))
+		for _, c := range myObjects {
+			entries = append(entries, MyObjectEntry{
+				ObjectID:  c.ObjectID,
+				Note:      c.Note,
+				ClaimedAt: c.ClaimedAt,
+			})
+		}
+		myObjectsJSON, merr := json.Marshal(entries)
+		if merr != nil {
+			log.Printf("perception-augmentor: marshal my_objects: %v (skipping field)", merr)
+		} else {
+			// Inject into the body sub-tree. Build the body map if absent.
+			var bodyMap map[string]json.RawMessage
+			if raw, ok := tick["body"]; ok && len(raw) > 0 {
+				if err := json.Unmarshal(raw, &bodyMap); err != nil {
+					log.Printf("perception-augmentor: decode body block: %v (creating fresh body for my_objects)", err)
+					bodyMap = nil
+				}
+			}
+			if bodyMap == nil {
+				bodyMap = make(map[string]json.RawMessage)
+			}
+			bodyMap["my_objects"] = json.RawMessage(myObjectsJSON)
+			bodyJSON, berr := json.Marshal(bodyMap)
+			if berr != nil {
+				log.Printf("perception-augmentor: re-encode body: %v (skipping my_objects)", berr)
+			} else {
+				tick["body"] = json.RawMessage(bodyJSON)
+			}
+		}
 	}
 
 	// Re-encode the full tick.

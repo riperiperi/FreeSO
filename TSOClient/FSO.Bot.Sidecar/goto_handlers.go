@@ -40,6 +40,14 @@ func RegisterGoToHandler(ctx context.Context, cf *Campfire, ipc *IPC, store *Mem
 // goToHandler: resolve --my_name (if present) against the name store, rewrite
 // to the appropriate lower-level selector, then forward to the bot. The bot
 // does VM-side picking for object_name/target_object_id/location and dispatch.
+//
+// Cross-level navigation (freesoexperiment-81d): after name resolution, if the
+// resolved target has a different level than the avatar's current level, the
+// handler auto-detects stairs via query-nearby, queues a Climb-Stairs interact-with
+// on the closest stair (queue_mode=queue), then appends the original go-to as a
+// chained action. If no stair is found, refuses with reason=category:no-stair-path.
+// The cross-level check only fires when a level can be determined from the args
+// (explicit location.level, or same-floor implied by absence of level key).
 func goToHandler(ipc *IPC, store *MemoryStore) convention.HandlerFunc {
 	return func(ctx context.Context, req *convention.Request) (*convention.Response, error) {
 		args := map[string]any{}
@@ -90,6 +98,28 @@ func goToHandler(ipc *IPC, store *MemoryStore) convention.HandlerFunc {
 						"error": fmt.Sprintf("name %q has unknown kind %q (store corruption?) — re-bind with the name verb", myName, kind),
 					},
 				}, nil
+			}
+		}
+
+		// Cross-level check: only fires when args carry an explicit target level
+		// (either in location.level or inferred from target_object/sim resolution).
+		// For target_object_id / target_sim_id without explicit level we don't know
+		// the target floor at the sidecar level — the bot resolves it from the VM.
+		// We only intervene when we can determine level at the sidecar layer.
+		targetLevel, hasLevel := ExtractTargetLevel(args)
+		if hasLevel && targetLevel > 0 {
+			stair, err := findStairForCrossLevel(ctx, ipc, targetLevel, 0)
+			if err != nil {
+				return &convention.Response{
+					Payload: map[string]any{
+						"ok":     false,
+						"reason": err.Error(),
+						"error":  "cross-level navigation failed: " + err.Error(),
+					},
+				}, nil
+			}
+			if stair != nil {
+				return queueStairThenDestination(ctx, ipc, stair, "go-to", args)
 			}
 		}
 
