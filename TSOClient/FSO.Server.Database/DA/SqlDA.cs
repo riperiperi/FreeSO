@@ -29,6 +29,8 @@ using FSO.Server.Database.DA.Elections;
 using FSO.Server.Database.DA.Bulletin;
 using FSO.Server.Database.DA.Updates;
 using FSO.Server.Database.DA.GlobalCooldowns;
+using FSO.Server.Database.DA.ActionLog;
+using FSO.Server.Database.DA.DailyQuests;
 
 namespace FSO.Server.Database.DA
 {
@@ -420,6 +422,26 @@ namespace FSO.Server.Database.DA
                     _Cooldowns = new SqlGlobalCooldowns(Context);
                 }
                 return _Cooldowns;
+            }
+        }
+
+        private IActionLog _ActionLog;
+        public IActionLog ActionLog
+        {
+            get
+            {
+                if (_ActionLog == null) _ActionLog = new SqlActionLog(Context);
+                return _ActionLog;
+            }
+        }
+
+        private IDailyQuests _DailyQuests;
+        public IDailyQuests DailyQuests
+        {
+            get
+            {
+                if (_DailyQuests == null) _DailyQuests = new SqlDailyQuests(Context);
+                return _DailyQuests;
             }
         }
 

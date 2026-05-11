@@ -40,6 +40,14 @@ namespace FSO.Server.Database.DA.Avatars
         // affected (1 on success, 0 if avatar_id missing). For
         // peer-to-peer transfers use Transaction() instead.
         int CreditBudget(uint avatar_id, int amount);
+
+        // Same as CreditBudget but also emits a MoneyEarned row into
+        // fso_action_log and bumps any matching EARN daily quest's
+        // progress. Use this for any system credit that should count
+        // as the avatar "earning" money (milestone payouts, starter
+        // budget, etc). Pass `source` to embed context (job GUID,
+        // quest reward id, etc.) — null is fine for unspecified.
+        int CreditBudgetAndRecord(uint avatar_id, int amount, uint? source = null);
         DbTransactionResult Transaction(uint source_id, uint avatar_id, int amount, short reason);
         DbTransactionResult Transaction(uint source_id, uint avatar_id, int amount, short reason, Func<bool> transactionInject);
         DbTransactionResult TestTransaction(uint source_id, uint avatar_id, int amount, short reason);

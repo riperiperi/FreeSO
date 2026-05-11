@@ -1,9 +1,11 @@
-﻿using FSO.Server.Database.DA.AuthTickets;
+﻿using FSO.Server.Database.DA.ActionLog;
+using FSO.Server.Database.DA.AuthTickets;
 using FSO.Server.Database.DA.AvatarClaims;
 using FSO.Server.Database.DA.Avatars;
 using FSO.Server.Database.DA.Bans;
 using FSO.Server.Database.DA.Bonus;
 using FSO.Server.Database.DA.Bookmarks;
+using FSO.Server.Database.DA.DailyQuests;
 using FSO.Server.Database.DA.DbEvents;
 using FSO.Server.Database.DA.Hosts;
 using FSO.Server.Database.DA.Inbox;
@@ -68,6 +70,12 @@ namespace FSO.Server.Database.DA
         IEmailConfirmations EmailConfirmations { get; }
         IUpdates Updates { get; }
         IGlobalCooldowns GlobalCooldowns { get; }
+
+        // Daily quests + the action ledger they read from. See
+        // edenso_server_data/design_daily_quests_v1.md.
+        IActionLog ActionLog { get; }
+        IDailyQuests DailyQuests { get; }
+
         void Flush();
     }
 }

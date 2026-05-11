@@ -300,6 +300,51 @@ namespace FSO.Server.Database.DA.Avatars
                 new { amount = amount, id = avatar_id });
         }
 
+        public int CreditBudgetAndRecord(uint avatar_id, int amount, uint? source = null)
+        {
+            // Credit the avatar's budget AND log it for daily-quest tracking.
+            // Negative amounts are NOT logged — debit doesn't count as earning.
+            // See edenso_server_data/design_daily_quests_v1.md for the model.
+            var rows = CreditBudget(avatar_id, amount);
+            if (rows <= 0 || amount <= 0) return rows;
+
+            uint now = (uint)DateTimeOffset.UtcNow.ToUnixTimeSeconds();
+            uint today = now / 86400;
+            ulong value = (ulong)amount;
+
+            // 1) Audit log — write-only for the daily-quest flow.
+            Context.Connection.Execute(
+                @"INSERT INTO fso_action_log
+                    (avatar_id, day, action_type, value, parameter, ts)
+                  VALUES (@avatar_id, @day, @action_type, @value, @parameter, @ts)",
+                new
+                {
+                    avatar_id,
+                    day = today,
+                    action_type = (byte)1, // ActionType.MoneyEarned
+                    value,
+                    parameter = source,
+                    ts = now
+                });
+
+            // 2) Bump any open EARN quests in-place. LEAST() caps at target;
+            //    completed_ts is stamped on the row that crosses the line.
+            Context.Connection.Execute(
+                @"UPDATE fso_daily_quests
+                     SET progress = LEAST(target, progress + @delta),
+                         completed_ts = CASE
+                             WHEN progress + @delta >= target THEN @ts
+                             ELSE completed_ts
+                         END
+                   WHERE avatar_id = @avatar_id
+                     AND day = @day
+                     AND quest_type = 1 /* Earn */
+                     AND completed_ts IS NULL",
+                new { avatar_id, day = today, delta = value, ts = now });
+
+            return rows;
+        }
+
         public DbTransactionResult Transaction(uint source_id, uint dest_id, int amount, short reason)
         {
             return Transaction(source_id, dest_id, amount, reason, null);

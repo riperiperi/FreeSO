@@ -301,6 +301,14 @@
       "requires": [
         "1235b96c-5a75-2159-b49d-909cb3198cda"
       ]
+    },
+    {
+      "id": "147fda14-08cf-4d4d-808b-065f3f714899",
+      "script": "changes/0034_daily_quests.sql",
+      "idempotent": false,
+      "requires": [
+        "bec36bbc-1774-44cb-a7c5-03f4a00e801c"
+      ]
     }
   ]
 }

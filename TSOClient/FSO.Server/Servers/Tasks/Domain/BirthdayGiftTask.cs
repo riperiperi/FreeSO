@@ -80,10 +80,12 @@ namespace FSO.Server.Servers.Tasks.Domain
                                 });
                             }
 
-                            //award simoleon credit if money > 0
+                            //award simoleon credit if money > 0. Use the
+                            //recording variant so the birthday simoleons count
+                            //toward any active EARN daily-quest for the player.
                             if (item.money > 0)
                             {
-                                da.Avatars.CreditBudget(avatar.avatar_id, item.money);
+                                da.Avatars.CreditBudgetAndRecord(avatar.avatar_id, item.money);
                                 LOG.Info($"  + credited ${item.money} to {avatar.name}.");
                             }
 
