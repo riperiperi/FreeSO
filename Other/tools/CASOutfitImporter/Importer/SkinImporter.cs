@@ -96,7 +96,7 @@ namespace CASOutfitImporter.Importer
 
     internal sealed class SkinImporter
     {
-        public const string ToolVersion = "0.4.0";
+        public const string ToolVersion = "0.4.1";
 
         // Per-kind TypeIDs. Choice is somewhat arbitrary — they only have to be
         // self-consistent across the files this tool emits. Each provider has its
@@ -113,11 +113,21 @@ namespace CASOutfitImporter.Importer
         // in the trunk EOD render at <100px; 96 keeps detail without bloat.
         private const int ThumbnailMaxEdge = 96;
 
-        // Default hand group — TSO-shipped female "huao" (idle) etc. The Outfit only
-        // stores a uint reference, looked up by HandgroupProvider on the client. Bodies
-        // need this; heads pass 0 (engine ignores it for region=head).
-        private const uint DefaultFemaleHandGroup = 1;
-        private const uint DefaultMaleHandGroup   = 2;
+        // Default hand group — the FAM/MAM "default" entries from
+        // avatardata/hands/groups/groups.dat. The Outfit stores a uint that the
+        // client resolves via HandgroupProvider.Get(typeId=18, fileId=N) → .hag
+        // file. Bodies need a real value; heads pass 0 (engine ignores for
+        // region=head).
+        //
+        // Values come from groups.dat manifest:
+        //   1  fam_bride01.hag  — bride hands (white gloves)
+        //   6  fam_default.hag  — bare adult-female hands  ← use this
+        //   11 mam_bride01.hag  — groom hands (white gloves)
+        //   16 mam_default.hag  — bare adult-male hands    ← use this
+        // Anything else (2, 3, 4, 12, 13, 14...) is a costume/wedding/uniform
+        // variant and adds gloves/cuffs that won't match a normal outfit.
+        private const uint DefaultFemaleHandGroup = 6;
+        private const uint DefaultMaleHandGroup   = 16;
 
         private readonly Random _rng = new Random();
 
