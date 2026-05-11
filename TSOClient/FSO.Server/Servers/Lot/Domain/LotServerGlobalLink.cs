@@ -331,6 +331,26 @@ namespace FSO.Server.Servers.Lot.Domain
                     {
                         var id = db.Objects.Create(dbo);
                         if (callback != null) callback(objid, id);
+
+                        // Count toward the daily BUY quest, but only when:
+                        //   * this is a real owner-of-record (not unowned
+                        //     furniture or world objects), and
+                        //   * the object had a non-zero price (skip
+                        //     script-spawned freebies, EOD prizes, etc).
+                        // The actual debit already happened upstream in
+                        // VMNetBuyObjectCmd → PerformTransaction; here we
+                        // just record the spend after the object lands.
+                        // `owner` was nulled above when == 0, so HasValue is
+                        // sufficient. `dbo.value > 0` filters out zero-price
+                        // spawns.
+                        if (owner.HasValue && dbo.value > 0)
+                        {
+                            db.ActionLog.RecordAction(
+                                owner.Value,
+                                FSO.Server.Database.DA.ActionLog.ActionType.CatalogBought,
+                                value: dbo.value,
+                                parameter: dbo.type);
+                        }
                     }
                 }
                 catch (Exception) { callback(objid, 0); }

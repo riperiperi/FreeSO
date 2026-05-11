@@ -848,6 +848,20 @@ namespace FSO.Server.Servers.Lot.Domain
                 if (id != null && id.HasValue){
                     session.SetAttribute("visitId", id.Value);
                 }
+
+                // Count toward daily VISIT quest, but only true visitors:
+                // owner/roommate arrivals at their own lot don't qualify as
+                // exploration. Idempotent — repeat visits to the same lot
+                // today don't double-count. See edenso_server_data/
+                // design_daily_quests_v1.md.
+                if (visitorType == DbLotVisitorType.visitor)
+                {
+                    da.ActionLog.RecordActionIdempotent(
+                        session.AvatarId,
+                        FSO.Server.Database.DA.ActionLog.ActionType.LotVisited,
+                        value: 1,
+                        parameter: (uint)Context.DbId);
+                }
             }
         }
 
