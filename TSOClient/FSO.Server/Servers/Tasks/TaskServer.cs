@@ -28,6 +28,7 @@ namespace FSO.Server.Servers.Tasks
             Engine.AddTask(DbTaskType.job_balance.ToString(), typeof(JobBalanceTask));
             Engine.AddTask(DbTaskType.neighborhood_tick.ToString(), typeof(NeighborhoodsTask));
             Engine.AddTask(DbTaskType.birthday_gift.ToString(), typeof(BirthdayGiftTask));
+            Engine.AddTask(DbTaskType.roll_daily_quests.ToString(), typeof(RollDailyQuestsTask));
         }
 
         public override void Start()

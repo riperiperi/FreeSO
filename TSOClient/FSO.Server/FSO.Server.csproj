@@ -214,6 +214,7 @@
     <Compile Include="Servers\Tasks\Domain\BirthdayGiftTask.cs" />
     <Compile Include="Servers\Tasks\Domain\JobBalanceTask.cs" />
     <Compile Include="Servers\Tasks\Domain\NeighborhoodsTask.cs" />
+    <Compile Include="Servers\Tasks\Domain\RollDailyQuestsTask.cs" />
     <Compile Include="Servers\Tasks\Domain\PruneDatabaseTask.cs" />
     <Compile Include="Framework\Aries\AbstractAriesServer.cs" />
     <Compile Include="Framework\Aries\AbstractAriesServerConfig.cs" />

@@ -22,7 +22,8 @@ namespace FSO.Server.Database.DA.Tasks
         multi_check,
         prune_abandoned_lots,
         neighborhood_tick,
-        birthday_gift
+        birthday_gift,
+        roll_daily_quests
     }
 
     public enum DbTaskStatus

@@ -66,5 +66,22 @@ namespace FSO.Server.Database.DA.DailyQuests
                      AND paid_ts IS NULL",
                 new { avatar_id, day, slot, ts });
         }
+
+        public IEnumerable<DbRollableAvatar> GetAvatarsNeedingRoll(uint day, uint activityCutoffEpoch)
+        {
+            return Context.Connection.Query<DbRollableAvatar>(
+                @"SELECT a.avatar_id          AS avatar_id,
+                         a.shard_id           AS shard_id,
+                         a.date               AS created_epoch,
+                         a.name               AS name
+                    FROM fso_avatars a
+                    JOIN fso_users u ON u.user_id = a.user_id
+                    LEFT JOIN fso_daily_quests q
+                      ON q.avatar_id = a.avatar_id AND q.day = @day
+                   WHERE u.last_login >= @cutoff
+                     AND q.avatar_id IS NULL
+                   GROUP BY a.avatar_id, a.shard_id, a.date, a.name",
+                new { day, cutoff = activityCutoffEpoch });
+        }
     }
 }
