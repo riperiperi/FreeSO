@@ -8,6 +8,13 @@ namespace FSO.Server.Protocol.CitySelector
         public string FSOBranch;
         public string FSOUpdateUrl;
         public string FSOCDNUrl;
+        // JWT minted by InitialConnectServlet; carried back over the XML
+        // response so the TSO client (which doesn't share a CookieContainer
+        // across screens) can stash it and present it as
+        // Authorization: Bearer <token> on subsequent /userapi/* calls.
+        // Existing endpoints continue to honour the JWT cookie; the new
+        // daily-quest endpoints honour the header.
+        public string FSOApiAuthToken;
 
         public System.Xml.XmlElement Serialize(System.Xml.XmlDocument doc)
         {
@@ -16,6 +23,8 @@ namespace FSO.Server.Protocol.CitySelector
             element.AppendTextNode("FSO-Branch", FSOBranch);
             element.AppendTextNode("FSO-UpdateUrl", FSOUpdateUrl);
             element.AppendTextNode("FSO-CDNUrl", FSOCDNUrl);
+            if (!string.IsNullOrEmpty(FSOApiAuthToken))
+                element.AppendTextNode("FSO-ApiAuthToken", FSOApiAuthToken);
             return element;
         }
 
@@ -25,6 +34,7 @@ namespace FSO.Server.Protocol.CitySelector
             this.FSOBranch = element.ReadTextNode("FSO-Branch");
             this.FSOUpdateUrl = element.ReadTextNode("FSO-UpdateUrl");
             this.FSOCDNUrl = element.ReadTextNode("FSO-CDNUrl");
+            this.FSOApiAuthToken = element.ReadTextNode("FSO-ApiAuthToken");
         }
     }
 }

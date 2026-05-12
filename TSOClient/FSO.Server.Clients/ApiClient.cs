@@ -155,15 +155,18 @@ namespace FSO.Server.Clients
         }
 
         // Daily quests — see edenso_server_data/design_daily_quests_v1.md.
-        // Both endpoints take avatar_id as a query parameter and are gated by
-        // the existing JWT cookie (set by AuthLogin). Server-side ownership
-        // check rejects requests where the cookie's user doesn't own the
-        // avatar.
-        public void GetDailyQuests(uint avatarId, Action<ApiDailyQuestList> callback)
+        // Both endpoints require the JWT minted by InitialConnectServlet.
+        // Caller passes the token explicitly (typically GameFacade.ApiAuthToken
+        // which LoginRegulator sets at login). Null/empty token still issues
+        // the request but the server will return 401 — callers can use that
+        // as the "not logged in" signal.
+        public void GetDailyQuests(uint avatarId, string authToken, Action<ApiDailyQuestList> callback)
         {
             var client = Client();
             var request = new RestRequest("userapi/quests/today");
             request.AddParameter("avatar_id", avatarId);
+            if (!string.IsNullOrEmpty(authToken))
+                request.AddHeader("Authorization", "Bearer " + authToken);
 
             client.ExecuteAsync(request, (resp, h) =>
             {
@@ -178,13 +181,16 @@ namespace FSO.Server.Clients
         }
 
         // Returns ApiDailyQuestClaimResult on success or null on any non-200
-        // (already claimed, not yet completed, etc.). Caller should refresh
-        // the dialog after either outcome so the UI reflects reality.
-        public void ClaimDailyQuest(uint avatarId, byte slot, Action<ApiDailyQuestClaimResult> callback)
+        // (already claimed, not yet completed, 401 expired, etc.). Caller
+        // should refresh the dialog after either outcome so the UI reflects
+        // reality.
+        public void ClaimDailyQuest(uint avatarId, byte slot, string authToken, Action<ApiDailyQuestClaimResult> callback)
         {
             var client = Client();
             var request = new RestRequest($"userapi/quests/claim/{slot}", Method.POST);
             request.AddParameter("avatar_id", avatarId);
+            if (!string.IsNullOrEmpty(authToken))
+                request.AddHeader("Authorization", "Bearer " + authToken);
 
             client.ExecuteAsync(request, (resp, h) =>
             {

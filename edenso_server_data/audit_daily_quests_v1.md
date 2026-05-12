@@ -71,10 +71,45 @@ API read        ─►  GET /userapi/quests/today            ─►  read-only
 
 ## API surface
 
-| Endpoint | Method | Auth | Reads / writes | Concern | Verdict |
-|---|---|---|---|---|---|
-| `/userapi/quests/today` | GET | none (v1) | read | leaks "what quests is avatar N doing today"? Not sensitive. | Safe. |
-| `/userapi/quests/claim/{slot}` | POST | none (v1) | writes: MarkPaid + CreditBudget (in that order, atomic) | credits the **target** avatar (URL param), not the requester. Worst-case griefer pays a stranger their own daily reward early. **No value extraction.** | Safe. |
+| Endpoint | Method | Auth | Reads / writes | Verdict |
+|---|---|---|---|---|
+| `/userapi/quests/today` | GET | **JWT Bearer required (phase 2)** | read | Safe. 401 if no token, 403 if avatar_id isn't yours. |
+| `/userapi/quests/claim/{slot}` | POST | **JWT Bearer required (phase 2)** | writes: MarkPaid + CreditBudget (atomic) | Safe. Same auth gates + race-safe payout. |
+
+### Auth implementation (phase 2)
+
+Both endpoints now require the JWT minted by InitialConnectServlet at
+login time. The client doesn't share a CookieContainer across screens
+(why we initially skipped auth), so we route the token through XML:
+
+1. `InitialConnectController` mints the JWT (already did this for cookie
+   auth) and now ALSO returns it inside `UserAuthorized.FSOApiAuthToken`.
+2. `LoginRegulator` reads `connectResult.UserAuthorized.FSOApiAuthToken`
+   and stashes the value in `GameFacade.ApiAuthToken`.
+3. `ApiClient.GetDailyQuests` / `ClaimDailyQuest` take the token as a
+   parameter and send it as `Authorization: Bearer <token>`.
+4. `DailyQuestsController` calls the existing `api.RequireAuthentication`
+   which validates the JWT signature against the server's `secret`
+   (config.json → `secret`). Returns 401 on missing/invalid/expired.
+5. After auth, server fetches the avatar, checks `avatar.user_id ==
+   user.UserID`. Returns 403 if not — so I can only claim/read MY OWN
+   avatar's quests, regardless of what `avatar_id` I put in the URL.
+6. `DisconnectController` clears `GameFacade.ApiAuthToken` on logout so
+   a stale token can't leak into the next session.
+
+JWT expiry: 1 day (existing `Expires = DateTimeOffset.Now.AddDays(1)`
+in InitialConnectController). Players reconnecting after a long break
+get a fresh token; in the meantime the old one rejects gracefully
+(401 → client shows "no quests" message with a "sign in" hint).
+
+### What the new auth closes
+
+| Attack | Before phase 2 | After phase 2 |
+|---|---|---|
+| Unauthenticated read of any avatar's quests | Allowed (info leak) | **401** |
+| Auto-claim everyone's quests via script | Allowed (griefing, players still got money) | **401** |
+| Forged Authorization header | n/a | Rejected — JWT signature check fails without server secret |
+| Token replay after logout | n/a | Server token's still signature-valid until expiry. **Acceptable.** Worst case: an attacker who already stole the token can read/claim the previous owner's quests for up to 1 day. Real session tokens with server-side revocation are phase 3+ work. |
 
 ### TOCTOU race fix on Claim (caught in phase 1.5 review)
 
@@ -152,7 +187,7 @@ input.
 
 1. ~~EARN quest rarely completes via gameplay — only triggers on milestone gifts.~~ **Fixed in phase 1.5** — Transaction hook now catches system→avatar credits.
 2. SKILL quest type omitted from pool — needs live SimAntics → userApi pipe. Phase 1.5+.
-3. API endpoints lack auth — accepted because exploit surface is null (claim credits target, not requester). Phase 2.
+3. ~~API endpoints lack auth~~ **Fixed in phase 2** — JWT Bearer + avatar ownership check. See "Auth implementation" section above.
 4. Multi-account farming is possible for VISIT — same as any per-account daily-reward system. Accepted.
 5. Sell-back leak into EARN — buy/sell-back cycle bumps EARN slightly. Phase 2 fix: net-spend tracking via VMNetDeleteObjectCmd refund hook.
 

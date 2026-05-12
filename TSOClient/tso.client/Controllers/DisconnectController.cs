@@ -60,6 +60,11 @@ namespace FSO.Client.Controllers
             totalComplete = 0;
             this.onDisconnected = onDisconnected;
 
+            // Clear the API auth token so a stale JWT from the previous
+            // session can't leak into the next one. LoginRegulator will
+            // set a fresh token on the next successful InitialConnect.
+            GameFacade.ApiAuthToken = null;
+
             if (forceLogin)
             {
                 targetComplete = 1;

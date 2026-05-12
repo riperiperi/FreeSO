@@ -40,6 +40,13 @@ namespace FSO.Client
         public static bool DirectX;
         public static bool EnableMod;
 
+        // JWT minted by /userapi/cityselector/app/InitialConnectServlet at
+        // login. Set on LoginRegulator success, cleared on disconnect.
+        // Used as Bearer token by ApiClient on /userapi endpoints that
+        // need session-scoped auth (daily quests in v1). Null when the
+        // player is on the login screen.
+        public static string ApiAuthToken;
+
         public static CursorManager Cursor;
 
         //Entries received from city server, see UIPacketHandlers.OnCityTokenResponse()

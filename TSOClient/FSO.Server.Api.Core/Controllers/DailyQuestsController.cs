@@ -14,34 +14,46 @@ namespace FSO.Server.Api.Core.Controllers
     // SqlAvatars / SqlActionLog. See edenso_server_data/
     // design_daily_quests_v1.md.
     //
-    // ** v1 auth note **
-    // These endpoints currently take avatar_id as a query parameter with
-    // NO auth check. The TSO client's userApi consumers don't share a
-    // cookie jar across screens, so cookie auth doesn't work from the
-    // chat-command entry point. Exploit surface is intentionally null:
-    //   - GET only reveals which quests an avatar is doing (not sensitive)
-    //   - POST claim credits the *target* avatar (the one in the URL),
-    //     not the requester, so claiming someone else's reward pays them
-    //     simoleons and takes nothing for the attacker.
-    // Real auth lands in phase 2 once the client gets a session-scoped
-    // ApiClient or we switch this to a gluon packet over Aries.
+    // ** Auth (phase 2) **
+    // Both endpoints require the JWT minted by InitialConnectServlet.
+    // The client retrieves the token from UserAuthorized.FSOApiAuthToken
+    // at login, stashes it in GameFacade.ApiAuthToken, and presents it
+    // as 'Authorization: Bearer <token>'. RequireAuthentication validates
+    // the signature against the server's JWT secret. avatar_id is taken
+    // from a query param but server-side verified to belong to the
+    // authenticated user — claiming someone else's avatar returns 403.
+    //
+    // Exploit surface after this commit:
+    //   - Unauthenticated griefing: closed (401).
+    //   - Information disclosure about other players' quests: closed (403).
+    //   - Race conditions on Claim: closed in 1.5 (mark-then-credit pattern).
+    //   - Forged JWT: requires the server's signing secret; not feasible.
     [EnableCors]
     [ApiController]
     public class DailyQuestsController : ControllerBase
     {
         // GET /userapi/quests/today?avatar_id=NNN
+        // Headers: Authorization: Bearer <token>
         //   → 200 [{slot,type,description,target,progress,reward,completed,claimed}]
-        //   → 404 if the avatar doesn't exist OR no quests rolled yet today
+        //   → 401 if the JWT is missing / invalid / expired
+        //   → 403 if avatar_id doesn't belong to the authenticated user
+        //   → 404 if no quests rolled yet today
         [HttpGet]
         [Route("userapi/quests/today")]
         public IActionResult Today([FromQuery(Name = "avatar_id")] uint avatar_id)
         {
             var api = Api.INSTANCE;
+            var user = api.RequireAuthentication(Request);
+
             using (var da = api.DAFactory.Get())
             {
-                if (da.Avatars.Get(avatar_id) == null)
+                var avatar = da.Avatars.Get(avatar_id);
+                if (avatar == null)
                     return ApiResponse.Json(HttpStatusCode.NotFound,
                         new JSONError("avatar not found"));
+                if (avatar.user_id != user.UserID)
+                    return ApiResponse.Json(HttpStatusCode.Forbidden,
+                        new JSONError("not your avatar"));
 
                 uint today = (uint)(DateTimeOffset.UtcNow.ToUnixTimeSeconds() / 86400);
                 var quests = da.DailyQuests.GetForDay(avatar_id, today).ToList();
@@ -55,25 +67,27 @@ namespace FSO.Server.Api.Core.Controllers
         }
 
         // POST /userapi/quests/claim/{slot}?avatar_id=NNN
-        //   → 200 { reward, new_balance }     reward paid into avatar budget
-        //   → 404 if avatar / quest doesn't exist
+        // Headers: Authorization: Bearer <token>
+        //   → 200 { reward, new_balance }
+        //   → 401 / 403 / 404 as above
         //   → 409 if quest not yet completed
-        //   → 410 if already claimed
-        //
-        // Provides snappier feedback than waiting for the next cron tick.
-        // The cron's payout pass treats any quest with paid_ts set as
-        // already done — so a same-day claim here is idempotent with the
-        // nightly sweep.
+        //   → 410 if already claimed (race-safe via MarkPaid rows-affected check)
         [HttpPost]
         [Route("userapi/quests/claim/{slot}")]
         public IActionResult Claim(byte slot, [FromQuery(Name = "avatar_id")] uint avatar_id)
         {
             var api = Api.INSTANCE;
+            var user = api.RequireAuthentication(Request);
+
             using (var da = api.DAFactory.Get())
             {
-                if (da.Avatars.Get(avatar_id) == null)
+                var avatar = da.Avatars.Get(avatar_id);
+                if (avatar == null)
                     return ApiResponse.Json(HttpStatusCode.NotFound,
                         new JSONError("avatar not found"));
+                if (avatar.user_id != user.UserID)
+                    return ApiResponse.Json(HttpStatusCode.Forbidden,
+                        new JSONError("not your avatar"));
 
                 uint today = (uint)(DateTimeOffset.UtcNow.ToUnixTimeSeconds() / 86400);
                 var quest = da.DailyQuests.GetForDay(avatar_id, today)

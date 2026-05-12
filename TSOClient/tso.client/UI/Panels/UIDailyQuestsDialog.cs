@@ -76,12 +76,13 @@ namespace FSO.Client.UI.Panels
             _emptyMessage.Visible = true;
             foreach (var r in _rows) r.Visible = false;
 
-            _api.GetDailyQuests(_avatarId, list =>
+            _api.GetDailyQuests(_avatarId, GameFacade.ApiAuthToken, list =>
             {
                 if (list == null || list.quests == null || list.quests.Count == 0)
                 {
-                    _emptyMessage.Caption =
-                        "No quests for today yet. Check back after midnight UTC.";
+                    _emptyMessage.Caption = string.IsNullOrEmpty(GameFacade.ApiAuthToken)
+                        ? "Sign in to view your daily quests."
+                        : "No quests for today yet. Check back after midnight UTC.";
                     return;
                 }
                 _emptyMessage.Visible = false;
@@ -121,7 +122,7 @@ namespace FSO.Client.UI.Panels
 
         private void OnClaimClicked(byte slot)
         {
-            _api.ClaimDailyQuest(_avatarId, slot, result =>
+            _api.ClaimDailyQuest(_avatarId, slot, GameFacade.ApiAuthToken, result =>
             {
                 // Pop a small confirmation either way — successful claim
                 // shows the reward, failures just refresh silently so the

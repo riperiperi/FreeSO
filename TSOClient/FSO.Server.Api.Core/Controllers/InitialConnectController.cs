@@ -64,7 +64,8 @@ namespace FSO.Server.Api.Core.Controllers
                         FSOBranch = shardOne.VersionName,
                         FSOVersion = shardOne.VersionNumber,
                         FSOUpdateUrl = update.full_zip,
-                        FSOCDNUrl = api.Config.CDNUrl
+                        FSOCDNUrl = api.Config.CDNUrl,
+                        FSOApiAuthToken = token.Token
                     });
                 }
                 else
@@ -74,7 +75,8 @@ namespace FSO.Server.Api.Core.Controllers
                         FSOBranch = shardOne.VersionName,
                         FSOVersion = shardOne.VersionNumber,
                         FSOUpdateUrl = api.Config.UpdateUrl,
-                        FSOCDNUrl = api.Config.CDNUrl
+                        FSOCDNUrl = api.Config.CDNUrl,
+                        FSOApiAuthToken = token.Token
                     });
                 }
                 Response.Cookies.Append("fso", token.Token, new Microsoft.AspNetCore.Http.CookieOptions()

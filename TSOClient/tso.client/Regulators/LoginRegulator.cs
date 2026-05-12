@@ -95,6 +95,15 @@ namespace FSO.Client.Regulators
                                 GameFacade.Emojis?.OnApiAvailable(cdnurl);
                             }
 
+                            // Stash the JWT for any /userapi/* call that needs
+                            // session-scoped auth (daily quests, future
+                            // achievements, etc). RestSharp's cookie jar isn't
+                            // shared across ApiClient instances on this client,
+                            // so we present the token as Authorization: Bearer
+                            // explicitly. Cleared in DisconnectController on
+                            // logout/disconnect.
+                            GameFacade.ApiAuthToken = connectResult.UserAuthorized.FSOApiAuthToken;
+
                             if (RequireUpdate(connectResult.UserAuthorized) && !FSOEnvironment.SoftwareKeyboard)
                             {
                                 AsyncTransition("UpdateRequired", connectResult.UserAuthorized);
