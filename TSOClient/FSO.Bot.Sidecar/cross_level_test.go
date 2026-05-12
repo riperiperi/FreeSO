@@ -49,6 +49,61 @@ func TestExtractTargetLevel_LevelZeroNotExtracted(t *testing.T) {
 	}
 }
 
+// TestExtractTargetLevel_WireFormatStringLocation is the regression test for
+// freesoexperiment-133. The cf executor (executor.go validateSingleValue) stores
+// type=json args as Go string values — not pre-parsed maps. This test builds args
+// in the exact wire format that arrives from cf and verifies ExtractTargetLevel
+// returns the correct level instead of (1, false).
+//
+// Before the fix: loc.(map[string]any) cast failed silently, returning (1, false).
+// After the fix: the string fallback parses the JSON and returns (2, true).
+func TestExtractTargetLevel_WireFormatStringLocation(t *testing.T) {
+	// Simulate what cf sends on the wire: location serialized as a JSON string.
+	wireArgs := map[string]any{
+		"location": `{"x":35,"y":70,"level":2}`, // string, not map[string]any
+	}
+	lv, ok := ExtractTargetLevel(wireArgs)
+	if !ok {
+		t.Fatal("want (2, true) for wire-format string location, got (_, false) — cross-level stair path would be skipped")
+	}
+	if lv != 2 {
+		t.Errorf("want level=2, got %d", lv)
+	}
+}
+
+// TestExtractTargetLevel_WireFormatStringLocationLevel1 verifies that a
+// wire-format string location with level=1 is NOT extracted (returns false),
+// since level=1 is the same as no cross-level navigation needed. This ensures
+// the zero-guard still applies after JSON unmarshaling.
+func TestExtractTargetLevel_WireFormatStringLocationLevel1Kept(t *testing.T) {
+	// level=1 in wire format — coerceInt64 returns 1 which is > 0, so it IS extracted.
+	// This is correct: if the agent explicitly passes level=1 and the avatar is on
+	// floor 2, the stair-detection path should engage (floor 2 != floor 1).
+	wireArgs := map[string]any{
+		"location": `{"x":10,"y":20,"level":1}`,
+	}
+	lv, ok := ExtractTargetLevel(wireArgs)
+	if !ok {
+		t.Fatal("want (1, true) for wire-format level=1, got (_, false)")
+	}
+	if lv != 1 {
+		t.Errorf("want level=1, got %d", lv)
+	}
+}
+
+// TestExtractTargetLevel_WireFormatStringInvalidJSON verifies that a malformed
+// JSON string in the location arg does not panic and returns (1, false).
+func TestExtractTargetLevel_WireFormatStringInvalidJSON(t *testing.T) {
+	wireArgs := map[string]any{
+		"location": `{not valid json`,
+	}
+	_, ok := ExtractTargetLevel(wireArgs)
+	// Invalid JSON → cannot extract → ok must be false (no panic).
+	if ok {
+		t.Error("malformed JSON string should return ok=false")
+	}
+}
+
 // ---------------------------------------------------------------------------
 // Unit tests: isStairObject
 // ---------------------------------------------------------------------------
@@ -595,6 +650,125 @@ func TestFindStairForCrossLevel_SameLevel(t *testing.T) {
 	}
 	if result != nil {
 		t.Errorf("expected nil result for same-level, got: %v", result)
+	}
+}
+
+// ---------------------------------------------------------------------------
+// TestGoToHandler_CrossLevel_WireFormatStringLocation (regression: freesoexperiment-133)
+//
+// This is the pipeline regression test for freesoexperiment-133. When cf sends
+// go-to with --location '{"x":35,"y":70,"level":2}', the executor serializes it
+// as a JSON string in the wire payload ("location":"{\"x\":35,\"y\":70,\"level\":2}").
+//
+// Before the fix: ExtractTargetLevel did loc.(map[string]any) — always failed for
+// a string arg — returned (1, false), so findStairForCrossLevel was never called,
+// and the handler forwarded go-to without queuing stairs. Live evidence: action_queue
+// showed mode=walk picked_name=tile(35,70,2), no Climb-Stairs entry.
+//
+// After the fix: the string fallback branch parses the JSON, extracts level=2,
+// triggers findStairForCrossLevel (avatar on level=1), finds the stair, queues
+// interact-with before go-to. Response carries cross_level=true.
+// ---------------------------------------------------------------------------
+
+func TestGoToHandler_CrossLevel_WireFormatStringLocation(t *testing.T) {
+	fake := newFakeBotProcess()
+	ipc := NewIPC(fake.bot)
+
+	responses := map[string]map[string]any{
+		"query-self": {
+			"ok": true,
+			"payload": map[string]any{
+				"position": map[string]any{"x": 5.0, "y": 5.0, "level": 1.0},
+			},
+		},
+		"query-nearby": {
+			"ok": true,
+			"payload": map[string]any{
+				"nearby_objects": []map[string]any{
+					{
+						"object_id":      99,
+						"name":           "Staircase",
+						"distance_tiles": 4.0,
+						"position":       map[string]any{"x": 9.0, "y": 9.0, "level": 1.0},
+					},
+				},
+			},
+		},
+		"query-pie-menu": {
+			"ok": true,
+			"payload": map[string]any{
+				"interactions": []map[string]any{
+					{"id": 1, "name": "Climb Stairs"},
+				},
+			},
+		},
+		"interact-with": {
+			"ok": true,
+			"payload": map[string]any{"queued": true, "callee_id": 99},
+		},
+		"go-to": {
+			"ok": true,
+			"payload": map[string]any{"queued": true},
+		},
+	}
+	received := multiAutoResponder(t, fake, ipc, responses)
+
+	store := NewMemoryStore()
+	handler := goToHandler(ipc, store)
+	ctx, cancel := context.WithTimeout(context.Background(), 5*time.Second)
+	defer cancel()
+
+	// Wire-format args: location is a JSON string, not a pre-parsed map.
+	// This is exactly what arrives from the cf executor.
+	resp, err := handler(ctx, &convention.Request{
+		Args: map[string]any{
+			"location": `{"x":35,"y":70,"level":2}`, // string, not map[string]any
+		},
+	})
+	if err != nil {
+		t.Fatalf("handler: %v", err)
+	}
+
+	var cmds []Command
+drainLoopWire:
+	for {
+		select {
+		case cmd := <-received:
+			cmds = append(cmds, cmd)
+		case <-time.After(300 * time.Millisecond):
+			break drainLoopWire
+		}
+	}
+
+	// Must have interact-with (Climb-Stairs) BEFORE go-to.
+	var interactIdx, goToIdx int = -1, -1
+	for i, cmd := range cmds {
+		if cmd.Op == "interact-with" {
+			interactIdx = i
+		}
+		if cmd.Op == "go-to" {
+			goToIdx = i
+		}
+	}
+	if interactIdx < 0 {
+		t.Errorf("[regression freesoexperiment-133] expected interact-with (Climb-Stairs) in IPC sequence for wire-format string location, got: %v", opsOf(cmds))
+	}
+	if goToIdx < 0 {
+		t.Errorf("[regression freesoexperiment-133] expected go-to in IPC sequence, got: %v", opsOf(cmds))
+	}
+	if interactIdx >= 0 && goToIdx >= 0 && interactIdx > goToIdx {
+		t.Errorf("[regression freesoexperiment-133] interact-with must come BEFORE go-to; got order: %v", opsOf(cmds))
+	}
+
+	payload, _ := resp.Payload.(map[string]any)
+	if payload == nil {
+		t.Fatal("nil payload")
+	}
+	if payload["cross_level"] != true {
+		t.Errorf("[regression freesoexperiment-133] expected cross_level=true in response, got: %v", payload)
+	}
+	if payload["stair_object_id"] == nil {
+		t.Errorf("[regression freesoexperiment-133] expected stair_object_id in response, got: %v", payload)
 	}
 }
 

@@ -39,8 +39,23 @@ func ExtractTargetLevel(args map[string]any) (int64, bool) {
 		}
 	}
 	// Nested location map (go-to style: {x, y, level}).
+	// The cf executor (executor.go validateSingleValue) stores type=json args as Go
+	// string values — not pre-parsed maps. When the agent calls:
+	//   cf $CF go-to --location '{"x":35,"y":70,"level":2}'
+	// the wire payload carries "location":"{\"x\":35,\"y\":70,\"level\":2}" — a JSON
+	// string, not a map. We must handle both shapes. (freesoexperiment-133: mirrors
+	// the C# ParseJsonObjectArg fix from freesoexperiment-f5e.)
 	if loc, ok := args["location"]; ok {
-		if locMap, ok2 := loc.(map[string]any); ok2 {
+		var locMap map[string]any
+		switch t := loc.(type) {
+		case map[string]any:
+			locMap = t
+		case string:
+			if err := json.Unmarshal([]byte(t), &locMap); err != nil {
+				locMap = nil
+			}
+		}
+		if locMap != nil {
 			if v, ok3 := locMap["level"]; ok3 {
 				if lv, ok4 := coerceInt64(v); ok4 && lv > 0 {
 					return lv, true
