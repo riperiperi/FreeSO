@@ -71,6 +71,19 @@ namespace FSO.Patcher
 
         public async Task<bool> ExtractEntry(ZipArchiveEntry entry, int tryNum)
         {
+            // Skip zip directory entries (FullName ending with "/" or "\").
+            // They carry no file content — they're just metadata to recreate
+            // the folder structure. Calling ExtractToFile on a directory path
+            // throws UnauthorizedAccessException on Linux/mono ("Access to
+            // the path '…/Content/Avatar/' is denied") and IOException on
+            // .NET on Windows. We materialise needed directories below via
+            // Directory.CreateDirectory(GetDirectoryName(targPath)) on every
+            // real file, so dropping directory entries here is fully safe.
+            if (entry.FullName.EndsWith("/") || entry.FullName.EndsWith("\\"))
+            {
+                return true;
+            }
+
             var name = (entry.FullName == "update.exe") ? "update2.exe" : entry.FullName;
             var targPath = Path.Combine("./", name);
             Directory.CreateDirectory(Path.GetDirectoryName(targPath));

@@ -46,6 +46,15 @@ namespace FSO.Patcher
 
         public async Task<bool> ExtractEntry(ZipArchiveEntry entry, int tryNum)
         {
+            // Skip zip directory entries (FullName ending with "/" or "\")
+            // — they have no file content; ExtractToFile would throw because
+            // the resolved path is a directory. See ReversiblePatcher for
+            // the full rationale.
+            if (entry.FullName.EndsWith("/") || entry.FullName.EndsWith("\\"))
+            {
+                return true;
+            }
+
             var name = (entry.FullName == "update.exe") ? "update2.exe" : entry.FullName;
             var targPath = Path.Combine("./", name);
             Directory.CreateDirectory(Path.GetDirectoryName(targPath));
