@@ -187,8 +187,15 @@ namespace FSO.LotRenderer.Tests
         /// 7 combos cover every parameter dimension at least once.
         ///
         /// Run: dotnet test FSO.LotRenderer.Tests --filter "PerFloorRotation"
+        ///
+        /// Note (8f1): xUnit 2.x only supports Timeout on async Task methods.  This
+        /// test is synchronous (it shells out to the renderer binary and blocks on
+        /// Process.WaitForExit) so [Fact(Timeout = ...)] would fail immediately with
+        /// "Tests marked with Timeout are only supported for async tests."  Plain [Fact]
+        /// is correct here — each individual Process.WaitForExit already has a 5-minute
+        /// timeout, and CI's overall job timeout is the outer bound.
         /// </summary>
-        [Fact(Timeout = 600_000)] // 10 min hard timeout
+        [Fact]
         public void PerFloorRotation_AllCombinations_ProduceDistinctValidPngs()
         {
             var rendererBin = FindRendererBinary();
