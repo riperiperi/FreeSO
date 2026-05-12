@@ -10,6 +10,7 @@ using Ninject;
 using NLog;
 using System;
 using System.Collections.Generic;
+using System.Net;
 using System.Security.Authentication;
 using System.Threading.Tasks;
 using FSO.Server.Common;
