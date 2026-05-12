@@ -309,6 +309,14 @@
       "requires": [
         "bec36bbc-1774-44cb-a7c5-03f4a00e801c"
       ]
+    },
+    {
+      "id": "f41b6a40-6797-4e76-95ba-f70f413bf6ea",
+      "script": "changes/0035_task_type_enum_roll_daily_quests.sql",
+      "idempotent": false,
+      "requires": [
+        "147fda14-08cf-4d4d-808b-065f3f714899"
+      ]
     }
   ]
 }
