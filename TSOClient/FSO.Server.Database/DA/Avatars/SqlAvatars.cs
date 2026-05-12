@@ -415,6 +415,64 @@ namespace FSO.Server.Database.DA.Avatars
                 });
             }
 
+            // Phase 1.5 — daily-quest EARN hook for system-credited income.
+            //
+            // Bumps fso_action_log + any open EARN daily-quest progress when
+            // money flows from the bank (source == uint.MaxValue) to an
+            // avatar (not an object). This catches the bulk of "earned"
+            // simoleons: job payouts, lot bonus rewards, event prizes —
+            // anywhere SimAntics or the city server calls Transaction with
+            // uint.MaxValue as source.
+            //
+            // Peer transfers (source = another avatar) are intentionally
+            // EXCLUDED to prevent collusion farming where two players ping
+            // money between accounts to complete each other's EARN quests.
+            //
+            // Known leak: object sell-back refunds also flow source=MAX →
+            // avatar, so they count too. Caps:
+            //   * EARN target maxes at §9000 (capped reward §5000)
+            //   * BUY hook is already capped at §500/purchase
+            // so the buy→sell→buy loop nets at most a few hundred simoleons
+            // of advantage over playing normally. See edenso_server_data/
+            // audit_daily_quests_v1.md for the full analysis + the
+            // deferred net-spend mitigation.
+            if (success && amount > 0
+                        && source_id == uint.MaxValue
+                        && dest_id != uint.MaxValue
+                        && !dstObj)
+            {
+                uint nowEpoch = (uint)DateTimeOffset.UtcNow.ToUnixTimeSeconds();
+                uint today = nowEpoch / 86400;
+                ulong value = (ulong)amount;
+
+                Context.Connection.Execute(
+                    @"INSERT INTO fso_action_log
+                        (avatar_id, day, action_type, value, parameter, ts)
+                      VALUES (@avatar_id, @day, @action_type, @value, @parameter, @ts)",
+                    new
+                    {
+                        avatar_id = dest_id,
+                        day = today,
+                        action_type = (byte)1, // ActionType.MoneyEarned
+                        value,
+                        parameter = (uint?)(uint)reason, // record reason so audit / future filtering works
+                        ts = nowEpoch
+                    });
+
+                Context.Connection.Execute(
+                    @"UPDATE fso_daily_quests
+                         SET progress = LEAST(target, progress + @delta),
+                             completed_ts = CASE
+                                 WHEN progress + @delta >= target THEN @ts
+                                 ELSE completed_ts
+                             END
+                       WHERE avatar_id = @avatar_id
+                         AND day = @day
+                         AND quest_type = 1 /* Earn */
+                         AND completed_ts IS NULL",
+                    new { avatar_id = dest_id, day = today, delta = value, ts = nowEpoch });
+            }
+
             var result = Context.Connection.Query<DbTransactionResult>("SELECT a1.budget AS source_budget, a2.budget AS dest_budget "
                 + "FROM"
                 + "(SELECT budget, count(budget) FROM " + (srcObj ? "fso_objects" : "fso_avatars") + " WHERE " + (srcObj ? "object_id" : "avatar_id") + " = @source_id) a1,"

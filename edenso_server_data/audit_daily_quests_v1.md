@@ -38,11 +38,13 @@ API read        ─►  GET /userapi/quests/today            ─►  read-only
 
 | Aspect | Verdict |
 |---|---|
-| Hook site | `Avatars.CreditBudgetAndRecord` — called only from BirthdayGiftTask in v1 |
-| Coverage | **Weak** — most player income (job rewards, peer transfers, refunds) flows through `Avatars.Transaction`, NOT `CreditBudget`. EARN quest will rarely complete via normal gameplay in v1. |
-| Exploit | **None** — birthday gift award is one-shot per milestone per avatar, gated by `fso_events.GenericAvaTryParticipate`. Not repeatable. |
-| Acceptable for v1? | Yes — broken-but-safe is preferable to broken-and-exploitable. EARN completion is rare in v1; document and ship. |
-| Phase 1.5+ fix | Hook `Avatars.Transaction` for `source == uint.MaxValue` (system→player) flows with a filtered reason-code allow-list. Carefully exclude sell-back refunds (see BUY exploit below). |
+| Hook sites | `Avatars.CreditBudgetAndRecord` (milestone gifts) + `Avatars.Transaction` (all system→avatar credits, **phase 1.5**) |
+| Coverage | **Now broad.** Every system payout (SimAntics job rewards, bonus payouts, event prizes, lot refunds) bumps EARN progress. |
+| Filter on Transaction hook | `success && amount > 0 && source_id == uint.MaxValue && !dstObj` — system source only, avatar dest only. Peer transfers EXCLUDED. |
+| Why exclude peer transfers | Two players could ping money back and forth to clear each other's EARN quests with zero net cost. By excluding source=avatar, this exploit closes. |
+| Known leak | Object sell-back refunds also flow source=MAX → avatar, so they DO count toward EARN. Combined with the BUY cap (§500/purchase), the buy→sell→buy loop nets at most a few hundred simoleons advantage over normal play. Bounded daily by quest reward caps (EARN §5000 + BUY §3000 = §8000 total). |
+| Acceptable for v1.5? | Yes — covers normal gameplay, exploit value is small and time-expensive. |
+| Future improvement (phase 2+) | Net-spend tracking via VMNetDeleteObjectCmd hook to neutralize sell-back leak entirely. |
 
 ### VISIT — Visit N unique lots today
 
@@ -103,12 +105,15 @@ input.
 
 1. **BUY per-purchase contribution cap** — `LotServerGlobalLink.RegisterNewObject` now records `min(price, 500)` toward BUY quest progress rather than the full price. Reduces sell-back cycle value: instead of 4 cycles to clear a §3800 target, an attacker needs ≥8 distinct purchases. Combined with sell-back depreciation, the exploit becomes time-expensive enough to deter most abuse. Full net-spend tracking is the proper fix; deferred (see BUY section above).
 
+2. **EARN hook on `Avatars.Transaction`** (phase 1.5) — bumps EARN progress when money flows from `uint.MaxValue` (the bank) to an avatar destination. Catches job rewards / bonuses / event prizes / lot refunds — i.e. genuinely earned simoleons via gameplay. Peer transfers (avatar → avatar) are deliberately excluded to prevent collusion farming.
+
 ## Known v1 limitations (deferred)
 
-1. EARN quest rarely completes via gameplay — only triggers on milestone gifts. Phase 1.5: hook `Avatars.Transaction` with a curated reason-code allow-list.
-2. SKILL quest type omitted from pool — needs live SimAntics → userApi pipe. Phase 1.5.
+1. ~~EARN quest rarely completes via gameplay — only triggers on milestone gifts.~~ **Fixed in phase 1.5** — Transaction hook now catches system→avatar credits.
+2. SKILL quest type omitted from pool — needs live SimAntics → userApi pipe. Phase 1.5+.
 3. API endpoints lack auth — accepted because exploit surface is null (claim credits target, not requester). Phase 2.
 4. Multi-account farming is possible for VISIT — same as any per-account daily-reward system. Accepted.
+5. Sell-back leak into EARN — buy/sell-back cycle bumps EARN slightly. Phase 2 fix: net-spend tracking via VMNetDeleteObjectCmd refund hook.
 
 ## Sign-off
 
