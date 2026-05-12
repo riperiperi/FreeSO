@@ -436,6 +436,8 @@ namespace FSO.LotRenderer
             vm.Init();
             vm.Load(marshal);
 
+            world.State._2D.Begin(world.State.Camera2D);
+
             SetOutsideTime(gd, vm, world, 0.5f, false);
             world.State.PrepareLighting();
             SetAllLights(vm, world, 0.5f, 0);
