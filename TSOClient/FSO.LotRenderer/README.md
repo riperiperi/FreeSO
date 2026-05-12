@@ -35,9 +35,14 @@ Output binary: `publish/linux-x64/freeso-renderer`
 
 ## Run
 
+The binary can be invoked from any working directory — it locates its `Content/` directory
+relative to the binary itself (via `Environment.ProcessPath`), not relative to the caller's CWD.
+
 ```bash
 export SDL_VIDEODRIVER=offscreen   # headless — no display needed
-./freeso-renderer \
+
+# Run from any directory — no need to cd into publish/linux-x64/ first.
+/path/to/publish/linux-x64/freeso-renderer \
   --api-url  http://workshop:9000 \
   --user     baron \
   --password test1234 \
@@ -86,10 +91,11 @@ The output PNG is decimated 2× (to half dimensions) before writing, matching th
 export SDL_VIDEODRIVER=offscreen
 export GAME=/home/baron/projects/freeso-experiment/GameAssets/TSOClient/
 export API=http://workshop:9000
+export RENDERER=/path/to/publish/linux-x64/freeso-renderer
 
 for level in 1 2 3; do
   for angle in iso-ne iso-nw iso-se iso-sw; do
-    ./freeso-renderer \
+    $RENDERER \
       --api-url $API --user baron --password test1234 \
       --game-path "$GAME" --debug-lot 16318812 \
       --level $level --angle $angle --zoom far \

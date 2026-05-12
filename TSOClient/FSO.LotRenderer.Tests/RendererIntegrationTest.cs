@@ -92,6 +92,79 @@ namespace FSO.LotRenderer.Tests
         }
 
         /// <summary>
+        /// Regression test for CWD sensitivity (freesoexperiment-785).
+        ///
+        /// Runs the renderer with WorkingDirectory = /tmp (NOT the binary directory) and asserts
+        /// success + valid PNG output.  Before the fix, the renderer used AppContext.BaseDirectory
+        /// (which on Linux self-contained binaries returns the process CWD) so it would crash with
+        /// DirectoryNotFoundException on "Content/" when invoked from any directory other than
+        /// publish/linux-x64/.  After the fix it uses Environment.ProcessPath (the binary's own
+        /// directory) so it works from any CWD.
+        /// </summary>
+        [Fact]
+        public void RenderLot2_FromArbitraryCwd_ProducesValidPng()
+        {
+            var outPath  = Path.Combine(Path.GetTempPath(), $"renderer-cwd-test-{Guid.NewGuid():N}.png");
+            var apiUrl   = Environment.GetEnvironmentVariable("FSO_RENDERER_API_URL")   ?? "http://workshop:9000";
+            var user     = Environment.GetEnvironmentVariable("FSO_RENDERER_USER")      ?? "baron";
+            var password = Environment.GetEnvironmentVariable("FSO_RENDERER_PASS")      ?? "test1234";
+            var gamePath = Environment.GetEnvironmentVariable("FSO_GAME_LOCATION")
+                           ?? "/home/baron/projects/freeso-experiment/GameAssets/";
+
+            var rendererBin = FindRendererBinary();
+            Assert.True(File.Exists(rendererBin),
+                $"freeso-renderer binary not found at: {rendererBin}\n" +
+                "Run 'dotnet build' on FSO.LotRenderer first.");
+
+            var psi = new ProcessStartInfo
+            {
+                FileName               = rendererBin,
+                Arguments              = $"--api-url {apiUrl} --user {user} --password {password} " +
+                                         $"--game-path \"{gamePath}\" --debug-lot 16318812 --out \"{outPath}\"",
+                UseShellExecute        = false,
+                RedirectStandardOutput = true,
+                RedirectStandardError  = true,
+                // Intentionally NOT the binary directory — this is what the regression tests.
+                WorkingDirectory       = Path.GetTempPath(),
+            };
+
+            if (string.IsNullOrEmpty(Environment.GetEnvironmentVariable("DISPLAY")) &&
+                string.IsNullOrEmpty(Environment.GetEnvironmentVariable("SDL_VIDEODRIVER")))
+            {
+                psi.Environment["SDL_VIDEODRIVER"] = "offscreen";
+            }
+
+            psi.Environment["FSO_GAME_LOCATION"] = gamePath;
+
+            var proc = Process.Start(psi);
+            Assert.NotNull(proc);
+
+            string stdout = proc.StandardOutput.ReadToEnd();
+            string stderr = proc.StandardError.ReadToEnd();
+            bool finished = proc.WaitForExit(TimeSpan.FromMinutes(5));
+
+            if (!string.IsNullOrEmpty(stdout)) Console.WriteLine("=== stdout ===\n" + stdout);
+            if (!string.IsNullOrEmpty(stderr)) Console.WriteLine("=== stderr ===\n" + stderr);
+
+            Assert.True(finished, "freeso-renderer did not finish within 5 minutes.");
+            Assert.Equal(0, proc.ExitCode);
+
+            Assert.True(File.Exists(outPath), $"Output PNG not written to {outPath}");
+
+            var bytes = File.ReadAllBytes(outPath);
+            Assert.True(bytes.Length >= 10_240,
+                $"PNG is too small ({bytes.Length} bytes — expected >= 10 KB). " +
+                "Likely blank or corrupt render.");
+
+            // PNG magic bytes: 89 50 4E 47 0D 0A 1A 0A
+            byte[] pngMagic = { 0x89, 0x50, 0x4E, 0x47, 0x0D, 0x0A, 0x1A, 0x0A };
+            for (int i = 0; i < pngMagic.Length; i++)
+            {
+                Assert.Equal(pngMagic[i], bytes[i]);
+            }
+        }
+
+        /// <summary>
         /// PerFloorRotation — S2 integration test.
         ///
         /// Renders lot 2 at representative combinations of --level / --angle / --zoom,

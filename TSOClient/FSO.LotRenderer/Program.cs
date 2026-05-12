@@ -120,7 +120,10 @@ namespace FSO.LotRenderer
             FSOEnvironment.Enable3D    = true;
             // OGL content path (not DX — we are Linux/Mesa, not DirectX)
             // Use absolute paths so the binary works regardless of working directory.
-            var baseDir = AppContext.BaseDirectory;
+            // NOTE: AppContext.BaseDirectory returns the process CWD on Linux for self-contained
+            // binaries, not the binary directory. Use Environment.ProcessPath instead.
+            var baseDir = Path.GetDirectoryName(Environment.ProcessPath)
+                          ?? AppContext.BaseDirectory;
             FSOEnvironment.GFXContentDir = Path.Combine(baseDir, "Content", "OGL") + Path.DirectorySeparatorChar;
             FSOEnvironment.ContentDir    = Path.Combine(baseDir, "Content") + Path.DirectorySeparatorChar;
             FSOEnvironment.Linux         = true;
@@ -191,7 +194,7 @@ namespace FSO.LotRenderer
 
             // Content providers need several directories to enumerate (even if empty).
             // Create stub directories that the providers expect but don't ship with the renderer.
-            var contentDir = Path.Combine(AppContext.BaseDirectory, "Content") + Path.DirectorySeparatorChar;
+            var contentDir = Path.Combine(baseDir, "Content") + Path.DirectorySeparatorChar;
             var stubDirs = new[]
             {
                 Path.Combine(contentDir, "Cities"),
