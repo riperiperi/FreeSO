@@ -196,7 +196,11 @@ namespace FSO.Server.Servers.Tasks
 
                 return taskId;
             }catch(Exception ex){
-                LOG.Error(ex, "unknown error starting task " + name);
+                // Append the exception detail to the message text so it
+                // surfaces in journald even when the NLog layout doesn't
+                // render ${exception}. Same pattern as the per-task
+                // continuation on line ~183.
+                LOG.Error(ex, "unknown error starting task " + name + ": " + ex.ToString());
                 return -1;
             }
         }
