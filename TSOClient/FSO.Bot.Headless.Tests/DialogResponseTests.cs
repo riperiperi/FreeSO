@@ -155,22 +155,43 @@ public class DialogResponseTests
         Assert.Contains("string_value", err, StringComparison.OrdinalIgnoreCase);
     }
 
-    // ---- No-avatar path (vm host is null) ----
+    // ---- No-session path (vm host is null) — null-vmHost guard ----
 
+    /// <summary>
+    /// Null-vmHost guard (freesoexperiment-dad backport): when vmHost is null, RespondToDialog
+    /// returns a specific "vmHost is null" error — not the generic "no live avatar" message —
+    /// so agents can distinguish "no bot session" from "session alive, avatar not spawned yet."
+    /// Guard was added in the late-iteration pass of freesoexperiment-849 (closed PR #44).
+    /// </summary>
     [Fact]
-    public void RespondToDialog_NullVMHost_NoAvatarError()
+    public void RespondToDialog_NullVMHost_ReturnsVmHostNullError()
     {
-        // RespondToDialog with a null vmHost after arg parsing completes (valid args)
-        // should return ok=false with "no live avatar".
         var args = new JsonObject
         {
             ["dialog_id"] = "12345",
             ["response_kind"] = "ok",
         };
-        // Passing null vmHost: will fail at the avatar presence check.
         var resp = DialogHandlers.RespondToDialog(null, args);
         Assert.False(resp.Ok);
-        Assert.Contains("avatar", resp.Error, StringComparison.OrdinalIgnoreCase);
+        // Explicit guard: error must identify vmHost as null, not "no live avatar".
+        Assert.Contains("vmHost", resp.Error, StringComparison.OrdinalIgnoreCase);
+    }
+
+    [Fact]
+    public void RespondToDialog_NullVMHost_NoAvatarError()
+    {
+        // After the null-vmHost guard was added (freesoexperiment-dad), passing null vmHost
+        // fires the guard before reaching the avatar-lookup path. The error is now the vmHost
+        // guard message, not "no live avatar". Test preserved for grep-ability; assertion updated.
+        var args = new JsonObject
+        {
+            ["dialog_id"] = "12345",
+            ["response_kind"] = "ok",
+        };
+        var resp = DialogHandlers.RespondToDialog(null, args);
+        Assert.False(resp.Ok);
+        // Guard fires before avatar lookup — error must NOT be the old "no live avatar" text.
+        Assert.DoesNotContain("no live avatar", resp.Error, StringComparison.OrdinalIgnoreCase);
     }
 
     // ---- Wire PDU class identity ----
@@ -186,8 +207,9 @@ public class DialogResponseTests
 
     /// <summary>
     /// Validate the ResponseCode mapping by calling RespondToDialog on a thin
-    /// stub CommandDispatcher (args parsed, vm=null so it bails out before SendCommand).
-    /// We only assert the error shape for the null-vm path to confirm arg parsing succeeded.
+    /// stub CommandDispatcher (args parsed, vmHost=null so the null-vmHost guard fires).
+    /// After the guard backport (freesoexperiment-dad), the error is "vmHost is null" —
+    /// not "no live avatar" — but args are parsed cleanly before the guard.
     ///
     /// Full ResponseCode → wire-PDU mapping is proven by the integration test
     /// (tests/integration/verb-dialog.sh) which exercises VMNetDialogResponseCmd.Execute().
@@ -195,7 +217,7 @@ public class DialogResponseTests
     [Theory]
     [InlineData("ok")]
     [InlineData("cancel")]
-    public void RespondToDialog_ValidKind_NoAvatarError_NotArgError(string kind)
+    public void RespondToDialog_ValidKind_NoSessionError_NotArgError(string kind)
     {
         var args = new JsonObject
         {
@@ -203,14 +225,16 @@ public class DialogResponseTests
             ["response_kind"] = kind,
         };
         var resp = DialogHandlers.RespondToDialog(null, args);
-        // Should fail with avatar error, NOT arg-validation error — args parsed cleanly.
+        // Should fail with the null-vmHost guard error, NOT arg-validation error.
         Assert.False(resp.Ok);
-        Assert.Contains("avatar", resp.Error, StringComparison.OrdinalIgnoreCase);
+        Assert.DoesNotContain("response_kind", resp.Error, StringComparison.OrdinalIgnoreCase);
+        Assert.DoesNotContain("dialog_id", resp.Error, StringComparison.OrdinalIgnoreCase);
     }
 
     [Fact]
-    public void RespondToDialog_IntegerKind_ValidArgs_NoAvatarError()
+    public void RespondToDialog_IntegerKind_ValidArgs_NoSessionError()
     {
+        // After null-vmHost guard: error is "vmHost is null", not "no live avatar".
         var args = new JsonObject
         {
             ["dialog_id"] = "1",
@@ -219,12 +243,13 @@ public class DialogResponseTests
         };
         var resp = DialogHandlers.RespondToDialog(null, args);
         Assert.False(resp.Ok);
-        Assert.Contains("avatar", resp.Error, StringComparison.OrdinalIgnoreCase);
+        Assert.Contains("vmHost", resp.Error, StringComparison.OrdinalIgnoreCase);
     }
 
     [Fact]
-    public void RespondToDialog_StringKind_ValidArgs_NoAvatarError()
+    public void RespondToDialog_StringKind_ValidArgs_NoSessionError()
     {
+        // After null-vmHost guard: error is "vmHost is null", not "no live avatar".
         var args = new JsonObject
         {
             ["dialog_id"] = "1",
@@ -233,6 +258,6 @@ public class DialogResponseTests
         };
         var resp = DialogHandlers.RespondToDialog(null, args);
         Assert.False(resp.Ok);
-        Assert.Contains("avatar", resp.Error, StringComparison.OrdinalIgnoreCase);
+        Assert.Contains("vmHost", resp.Error, StringComparison.OrdinalIgnoreCase);
     }
 }

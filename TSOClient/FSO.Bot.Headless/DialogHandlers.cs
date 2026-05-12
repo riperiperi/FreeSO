@@ -143,14 +143,18 @@ public static class DialogHandlers
                     $"respond-to-dialog: unknown response_kind '{responseKindArg}' (expected ok|cancel|integer|string)");
         }
 
+        // --- null-vmHost guard ---
+        // Explicit guard before the avatar-lookup path so tests and error messages
+        // distinguish "no session" (vmHost is null) from "session alive but avatar not
+        // yet spawned" (vmHost present, avatar lookup returns null). The two failure
+        // modes have different agent-facing meanings.
+        if (vmHost == null)
+            return CommandDispatcher.Response.Fail("respond-to-dialog: vmHost is null (no active bot session)");
+
         // --- avatar presence check (under tick lock to read BlockingState safely) ---
 
-        VMAvatar caller = null;
-        if (vmHost != null)
-        {
-            caller = vmHost.RunUnderTickLock<VMAvatar>(() =>
-                vmHost.VM?.GetAvatarByPersist(vmHost.MyAvatarPersistId));
-        }
+        var caller = vmHost.RunUnderTickLock<VMAvatar>(() =>
+            vmHost.VM?.GetAvatarByPersist(vmHost.MyAvatarPersistId));
 
         if (caller == null)
             return CommandDispatcher.Response.Fail("respond-to-dialog: no live avatar");
