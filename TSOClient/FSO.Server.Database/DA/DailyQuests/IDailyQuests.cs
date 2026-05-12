@@ -19,8 +19,14 @@ namespace FSO.Server.Database.DA.DailyQuests
         // payout pass in RollDailyQuestsTask.
         IEnumerable<DbDailyQuest> GetUnpaidForDay(uint day);
 
-        // Stamp paid_ts. Idempotent.
-        void MarkPaid(uint avatar_id, uint day, byte slot, uint ts);
+        // Atomically stamp paid_ts. Returns rows affected — 1 if this caller
+        // was the first to claim, 0 if the row was already marked paid.
+        // Callers MUST check the return value before crediting the reward;
+        // a 0 return means another request (or the cron) already paid out
+        // and this caller must not double-credit. Race-safe because MariaDB
+        // takes a row lock on UPDATE, so concurrent calls serialize and
+        // only the first wins.
+        int MarkPaid(uint avatar_id, uint day, byte slot, uint ts);
 
         // Avatars whose owning user logged in since `activityCutoffEpoch` AND
         // who have no daily-quest rows yet for `day`. Used by

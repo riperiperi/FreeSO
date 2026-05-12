@@ -57,9 +57,14 @@ namespace FSO.Server.Database.DA.DailyQuests
                 new { day });
         }
 
-        public void MarkPaid(uint avatar_id, uint day, byte slot, uint ts)
+        public int MarkPaid(uint avatar_id, uint day, byte slot, uint ts)
         {
-            Context.Connection.Execute(
+            // The WHERE paid_ts IS NULL clause is the race guard: only the
+            // first concurrent caller's UPDATE matches. ExecuteScalar with
+            // ROW_COUNT() is the conventional MariaDB pattern, but Dapper's
+            // Execute returns the affected-row count directly which is
+            // simpler.
+            return Context.Connection.Execute(
                 @"UPDATE fso_daily_quests
                      SET paid_ts = @ts
                    WHERE avatar_id = @avatar_id AND day = @day AND slot = @slot

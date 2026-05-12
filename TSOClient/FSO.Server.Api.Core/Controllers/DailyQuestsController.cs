@@ -91,11 +91,22 @@ namespace FSO.Server.Api.Core.Controllers
                     return ApiResponse.Json(HttpStatusCode.Gone,
                         new JSONError("already claimed"));
 
+                // Race-safe claim: mark FIRST (atomic via the WHERE
+                // paid_ts IS NULL guard in MarkPaid), credit ONLY if the
+                // mark succeeded. Two concurrent claim requests both
+                // pass the .HasValue checks above; without this ordering
+                // they'd both call CreditBudget and the player would
+                // double-collect. With this ordering the loser sees 0
+                // rows affected and gets a 410 — only one credit fires.
+                uint nowEpoch = (uint)DateTimeOffset.UtcNow.ToUnixTimeSeconds();
+                int claimed = da.DailyQuests.MarkPaid(avatar_id, today, slot, nowEpoch);
+                if (claimed == 0)
+                    return ApiResponse.Json(HttpStatusCode.Gone,
+                        new JSONError("already claimed"));
+
                 // Plain CreditBudget — quest rewards must NOT loop back
                 // into EARN quest progress. Same guarantee as the cron.
                 da.Avatars.CreditBudget(avatar_id, (int)quest.reward);
-                uint nowEpoch = (uint)DateTimeOffset.UtcNow.ToUnixTimeSeconds();
-                da.DailyQuests.MarkPaid(avatar_id, today, slot, nowEpoch);
 
                 int newBalance = da.Avatars.GetBudget(avatar_id);
                 return ApiResponse.Json(HttpStatusCode.OK,

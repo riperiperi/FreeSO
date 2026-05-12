@@ -74,7 +74,48 @@ API read        ─►  GET /userapi/quests/today            ─►  read-only
 | Endpoint | Method | Auth | Reads / writes | Concern | Verdict |
 |---|---|---|---|---|---|
 | `/userapi/quests/today` | GET | none (v1) | read | leaks "what quests is avatar N doing today"? Not sensitive. | Safe. |
-| `/userapi/quests/claim/{slot}` | POST | none (v1) | writes: CreditBudget + MarkPaid | credits the **target** avatar (URL param), not the requester. Worst-case griefer pays a stranger their own daily reward early. **No value extraction.** | Safe in v1. |
+| `/userapi/quests/claim/{slot}` | POST | none (v1) | writes: MarkPaid + CreditBudget (in that order, atomic) | credits the **target** avatar (URL param), not the requester. Worst-case griefer pays a stranger their own daily reward early. **No value extraction.** | Safe. |
+
+### TOCTOU race fix on Claim (caught in phase 1.5 review)
+
+The first cut of the Claim endpoint was vulnerable to a classic
+time-of-check-to-time-of-use race:
+
+```
+T1: GET quest, paid_ts IS NULL → pass
+T2: GET quest, paid_ts IS NULL → pass    ← T2 reads before T1 marks
+T1: CreditBudget(+reward)
+T2: CreditBudget(+reward)                 ← DOUBLE CREDIT
+T1: MarkPaid (UPDATE … WHERE paid_ts IS NULL) → rows=1
+T2: MarkPaid → rows=0 but already credited
+```
+
+Two concurrent claims would both pass the in-memory `paid_ts.HasValue`
+check, both call `CreditBudget`, only one would successfully `MarkPaid`
+— but the second credit had already fired. Exploit value: up to
+`3 quests × max reward §5000 = §15,000` extra per day per script-capable
+player.
+
+**Fix applied:**
+
+1. `IDailyQuests.MarkPaid` now returns rows affected (`int` not `void`).
+2. Claim endpoint reorders to **MarkPaid first, CreditBudget only if
+   MarkPaid returned 1**. The MariaDB row lock during UPDATE serializes
+   concurrent calls; only the first observer of `paid_ts IS NULL`
+   succeeds, the others get `rows=0` and a `410 Gone` response.
+3. Same reorder applied in `RollDailyQuestsTask.Run` so the cron
+   payout pass and a user manually claiming can't double-credit each
+   other if they overlap on the same row.
+
+### Race / concurrency on the other write paths
+
+| Path | Race-safe? | How |
+|---|---|---|
+| `IncrementProgress` (action hooks) | Yes | Single-statement UPDATE with `LEAST(target, progress + delta)` and `WHERE completed_ts IS NULL`. MariaDB row lock serializes concurrent UPDATEs; increments accumulate correctly. |
+| `RecordAction` (log insert) | Yes | Append-only INSERT; PK auto-increment. No conflict possible. |
+| `RecordActionIdempotent` | Yes | ExistsToday + INSERT + UPDATE without an outer transaction. Two simultaneous first-time visits could each pass ExistsToday and double-insert. Mitigation: the action_log is purely audit; the side-effect (quest progress UPDATE) is bounded by `LEAST(target, progress + 1)`. Worst case: two log rows for one visit, one extra +1 quest progress. The quest still caps at target. Minor double-counting, no money extracted. Accept. |
+| Roll task vs another roll task | Yes | `GetAvatarsNeedingRoll` LEFT JOIN against today's quest rows. Only one tick will see them as missing; the other sees them as inserted. |
+| Transaction hook | Yes | Inline UPDATE inside the same connection as the transaction commit. MariaDB row lock again. |
 
 Real auth (cookie or token) lands in Phase 2 when the client gets a
 session-scoped ApiClient. Documented in the design doc.

@@ -77,12 +77,20 @@ namespace FSO.Server.Servers.Tasks.Domain
 
                 foreach (var q in unpaid)
                 {
+                    // Race-safe payout: MarkPaid FIRST, credit ONLY if the
+                    // atomic UPDATE succeeded (rows affected > 0). Guards
+                    // against a manual claim via /userapi/quests/claim
+                    // racing the cron — without this ordering, both could
+                    // see paid_ts=null and double-credit. Quest reward must
+                    // never be paid more than once.
+                    int claimed = da.DailyQuests.MarkPaid(q.avatar_id, q.day, q.slot, nowEpoch);
+                    if (claimed == 0) continue; // someone else paid this one already
+
                     // NOTE: plain CreditBudget — quest rewards must NOT count
                     // toward EARN quest progress, or a completed EARN quest's
                     // payout would re-bump the (now-completed) EARN quest and
                     // feed back into tomorrow's EARN target trivially.
                     da.Avatars.CreditBudget(q.avatar_id, (int)q.reward);
-                    da.DailyQuests.MarkPaid(q.avatar_id, q.day, q.slot, nowEpoch);
 
                     payoutMail.Add(new MessageItem
                     {
