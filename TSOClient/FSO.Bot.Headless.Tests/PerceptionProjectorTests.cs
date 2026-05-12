@@ -291,6 +291,89 @@ public class PerceptionProjectorTests
         Assert.Contains("\"mode\":\"normal\"", json);
     }
 
+    /// <summary>
+    /// Verify NearbyObjectBlock carries the object_type field and it serializes
+    /// into the JSON output (freesoexperiment-d5b). We build a PerceptionTick with a
+    /// handcrafted NearbyObjectBlock to test the serialization shape without a live VM.
+    ///
+    /// ExtractObjectType is tested separately (it requires a VMEntity which needs
+    /// full VM + Content init — covered by the live integration test). This test
+    /// verifies the DTO schema and the JSON key name so the sidecar can rely on
+    /// "object_type" being present in the payload.
+    /// </summary>
+    [Fact]
+    public void NearbyObjectBlock_ObjectType_SerializesToJson()
+    {
+        var tick = new PerceptionTick
+        {
+            Kind = "perception",
+            T = 1700000000000L,
+            Avatar = new AvatarBlock
+            {
+                PersistId = 2, Name = "baron", Shard = "Alphaville",
+                Position = new PositionBlock { X = 32.5, Y = 40.0, Level = 1, Direction = "N" },
+                AnimationRaw = string.Empty, AnimationHuman = string.Empty,
+                ActionQueue = new List<ActionQueueItemBlock>(),
+            },
+            Motives = new Dictionary<string, MotiveBlock>(),
+            NearbyObjects = new List<NearbyObjectBlock>
+            {
+                new NearbyObjectBlock
+                {
+                    ObjectId = 10,
+                    Name = "Staircase",
+                    Category = "generic",
+                    ObjectType = "Portal",   // stairs are OBJDType.Portal
+                    Position = new PositionBlock { X = 34.0, Y = 42.0, Level = 1 },
+                    DistanceTiles = 2.0,
+                    Interactions = new List<InteractionBlock>(),
+                },
+                new NearbyObjectBlock
+                {
+                    ObjectId = 11,
+                    Name = "Fridge",
+                    Category = "food",
+                    ObjectType = "Normal",   // buyable objects are OBJDType.Normal
+                    Position = new PositionBlock { X = 35.0, Y = 43.0, Level = 1 },
+                    DistanceTiles = 3.0,
+                    Interactions = new List<InteractionBlock>(),
+                },
+            },
+            NearbySims = new List<NearbySimBlock>(),
+            Skills = new Dictionary<string, int>(),
+            Relationships = new List<RelationshipBlock>(),
+            Inventory = new List<InventoryItemBlock>(),
+            Balance = 1000,
+            RecentEvents = new List<PerceptionEvent>(),
+            Lot = new LotBlock
+            {
+                Name = "Main", LotId = 2, OwnerIsMe = true,
+                OtherAvatars = 0, SimTime = "12:00 PM", TimeOfDay = "afternoon",
+            },
+        };
+
+        var json = PerceptionEmitter.Serialize(tick);
+
+        using var doc = JsonDocument.Parse(json);
+        var root = doc.RootElement;
+
+        Assert.True(root.TryGetProperty("nearby_objects", out var nearbyArr));
+        Assert.Equal(2, nearbyArr.GetArrayLength());
+
+        // First entry: stair (Portal)
+        var stairEntry = nearbyArr[0];
+        Assert.True(stairEntry.TryGetProperty("object_type", out var stairType),
+            "object_type must be present in nearby_objects entries");
+        Assert.Equal("Portal", stairType.GetString());
+        Assert.Equal("Staircase", stairEntry.GetProperty("name").GetString());
+
+        // Second entry: fridge (Normal)
+        var fridgeEntry = nearbyArr[1];
+        Assert.True(fridgeEntry.TryGetProperty("object_type", out var fridgeType),
+            "object_type must be present in nearby_objects entries");
+        Assert.Equal("Normal", fridgeType.GetString());
+    }
+
     private static string FindContentFile(string fileName)
     {
         // Look in known locations: test output dir (CopyToOutput), build/Content, source tree.

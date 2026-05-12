@@ -4,6 +4,7 @@ using System.IO;
 using System.Linq;
 using System.Text.Json;
 using System.Text.RegularExpressions;
+using FSO.Files.Formats.IFF.Chunks;
 using FSO.SimAntics;
 using FSO.SimAntics.Engine;
 using FSO.SimAntics.Entities;
@@ -411,6 +412,7 @@ public class PerceptionProjector
 
             var name = e.Name ?? e.ToString();
             var category = ClassifyObjectCategory(e);
+            var objectType = ExtractObjectType(e);
             var hints = LookupHints(name);
 
             var interactions = pie.Select((p, idx) =>
@@ -433,6 +435,7 @@ public class PerceptionProjector
                 ObjectId = e.ObjectID,
                 Name = name,
                 Category = category,
+                ObjectType = objectType,
                 Position = new PositionBlock
                 {
                     X = e.Position.x / 16.0,
@@ -592,6 +595,25 @@ public class PerceptionProjector
             }
         }
         return "generic";
+    }
+
+    /// <summary>
+    /// Returns the string name of the OBJDType enum for a VMEntity.
+    /// Reads ObjectType from the entity's OBJD definition. Falls back to "Unknown"
+    /// when the entity has no Object/OBJ (e.g. pure VM entities without an IFF backing).
+    /// </summary>
+    internal static string ExtractObjectType(VMEntity e)
+    {
+        try
+        {
+            var objd = e?.Object?.OBJ;
+            if (objd == null) return OBJDType.Unknown.ToString();
+            return objd.ObjectType.ToString();
+        }
+        catch
+        {
+            return OBJDType.Unknown.ToString();
+        }
     }
 
     private Dictionary<string, InteractionHint> LookupHints(string catalogName)
@@ -836,6 +858,14 @@ public class NearbyObjectBlock
     public short ObjectId { get; set; }
     public string Name { get; set; }
     public string Category { get; set; }
+    /// <summary>
+    /// String name of the OBJDType enum value for this object (e.g. "Portal" for stairs,
+    /// "Normal" for buyable objects, "Food" for food items). Sourced from
+    /// <see cref="FSO.Files.Formats.IFF.Chunks.OBJDType"/> via the object's OBJD entry.
+    /// Enables type-aware filtering in the sidecar (e.g. stair detection by type rather
+    /// than name substring — freesoexperiment-d5b).
+    /// </summary>
+    public string ObjectType { get; set; }
     public PositionBlock Position { get; set; }
     public double DistanceTiles { get; set; }
     public List<InteractionBlock> Interactions { get; set; }

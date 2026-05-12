@@ -108,7 +108,10 @@ func TestExtractTargetLevel_WireFormatStringInvalidJSON(t *testing.T) {
 // Unit tests: isStairObject
 // ---------------------------------------------------------------------------
 
-func TestIsStairObject(t *testing.T) {
+// TestIsStairObject_NameFallback tests the backward-compat name-substring path.
+// When ObjectType is empty (older payload pre-dating freesoexperiment-d5b),
+// the function falls back to the name-substring heuristic.
+func TestIsStairObject_NameFallback(t *testing.T) {
 	cases := []struct {
 		name string
 		want bool
@@ -123,9 +126,46 @@ func TestIsStairObject(t *testing.T) {
 		{"Stairs Landing", true},
 	}
 	for _, c := range cases {
-		got := isStairObject(c.name)
+		obj := nearbyObject{Name: c.name, ObjectType: ""} // empty type = older payload
+		got := isStairObject(obj)
 		if got != c.want {
-			t.Errorf("isStairObject(%q): want %v, got %v", c.name, c.want, got)
+			t.Errorf("isStairObject(name=%q, type=): want %v, got %v", c.name, c.want, got)
+		}
+	}
+}
+
+// TestIsStairObject_TypeEnum tests the primary type-field path (freesoexperiment-d5b).
+// When ObjectType is set by the PerceptionProjector, type-aware filtering applies.
+func TestIsStairObject_TypeEnum(t *testing.T) {
+	cases := []struct {
+		name       string
+		objectType string
+		want       bool
+	}{
+		// Portal + stair name → stair
+		{"Staircase", "Portal", true},
+		{"stair", "Portal", true},
+		{"Spiral Staircase", "Portal", true},
+		// Portal + non-stair name → not a stair (door, window, pool equipment)
+		{"Door", "Portal", false},
+		{"Pool Ladder", "Portal", false},
+		{"Window", "Portal", false},
+		// Non-Portal types → never a stair
+		{"Refrigerator", "Normal", false},
+		{"Stair Painting", "Normal", false}, // name contains stair but type is Normal
+		{"Stair Rug", "Food", false},
+		// Unknown type falls back to name heuristic
+		{"Staircase", "Unknown", true},
+		{"Door", "Unknown", false},
+		// Empty type (backward compat) falls back to name heuristic
+		{"Staircase", "", true},
+		{"Door", "", false},
+	}
+	for _, c := range cases {
+		obj := nearbyObject{Name: c.name, ObjectType: c.objectType}
+		got := isStairObject(obj)
+		if got != c.want {
+			t.Errorf("isStairObject(name=%q, type=%q): want %v, got %v", c.name, c.objectType, c.want, got)
 		}
 	}
 }
@@ -650,6 +690,102 @@ func TestFindStairForCrossLevel_SameLevel(t *testing.T) {
 	}
 	if result != nil {
 		t.Errorf("expected nil result for same-level, got: %v", result)
+	}
+}
+
+// ---------------------------------------------------------------------------
+// TestFindStairForCrossLevel_TypeFieldPortal (freesoexperiment-d5b)
+//
+// When nearby_objects includes object_type="Portal" on a stair name, the type-field
+// path correctly identifies it as a stair and returns it as the cross-level result.
+// ---------------------------------------------------------------------------
+
+func TestFindStairForCrossLevel_TypeFieldPortal_StairName(t *testing.T) {
+	fake := newFakeBotProcess()
+	ipc := NewIPC(fake.bot)
+
+	// Avatar on level 1, target level 2. Query-nearby returns a Portal-typed stair.
+	responses := map[string]map[string]any{
+		"query-self": {
+			"ok": true,
+			"payload": map[string]any{
+				"position": map[string]any{"x": 1.0, "y": 1.0, "level": 1.0},
+			},
+		},
+		"query-nearby": {
+			"ok": true,
+			"payload": map[string]any{
+				"nearby_objects": []map[string]any{
+					{
+						"object_id":    55,
+						"name":         "Staircase",
+						"object_type":  "Portal",
+						"distance_tiles": 4.0,
+						"position":     map[string]any{"x": 5.0, "y": 5.0, "level": 1.0},
+					},
+				},
+			},
+		},
+	}
+	multiAutoResponder(t, fake, ipc, responses)
+
+	ctx, cancel := context.WithTimeout(context.Background(), 3*time.Second)
+	defer cancel()
+
+	result, err := findStairForCrossLevel(ctx, ipc, 2, 0)
+	if err != nil {
+		t.Fatalf("unexpected error: %v", err)
+	}
+	if result == nil {
+		t.Fatal("expected stair result, got nil — Portal+stair-name object should be found")
+	}
+	if result.ObjectID != 55 {
+		t.Errorf("expected ObjectID=55, got %d", result.ObjectID)
+	}
+}
+
+// TestFindStairForCrossLevel_TypeFieldNormal_StairNameExcluded verifies that an
+// object with object_type="Normal" is NOT selected as a stair even if its name
+// contains "stair". This is the key improvement over the old name-only heuristic:
+// an object called "Stair Painting" (Normal type) should not block navigation.
+func TestFindStairForCrossLevel_TypeFieldNormal_StairNameExcluded(t *testing.T) {
+	fake := newFakeBotProcess()
+	ipc := NewIPC(fake.bot)
+
+	responses := map[string]map[string]any{
+		"query-self": {
+			"ok": true,
+			"payload": map[string]any{
+				"position": map[string]any{"x": 1.0, "y": 1.0, "level": 1.0},
+			},
+		},
+		"query-nearby": {
+			"ok": true,
+			"payload": map[string]any{
+				"nearby_objects": []map[string]any{
+					{
+						"object_id":    20,
+						"name":         "Stair Painting",  // name contains stair but type is Normal
+						"object_type":  "Normal",
+						"distance_tiles": 2.0,
+						"position":     map[string]any{"x": 3.0, "y": 3.0, "level": 1.0},
+					},
+				},
+			},
+		},
+	}
+	multiAutoResponder(t, fake, ipc, responses)
+
+	ctx, cancel := context.WithTimeout(context.Background(), 3*time.Second)
+	defer cancel()
+
+	result, err := findStairForCrossLevel(ctx, ipc, 2, 0)
+	// Should return errNoStair — Normal-typed "Stair Painting" is not a portal.
+	if err == nil {
+		t.Errorf("expected no-stair-path error, got nil error with result: %v", result)
+	}
+	if result != nil {
+		t.Errorf("expected nil result for Normal-typed stair-named object, got: %v", result)
 	}
 }
 

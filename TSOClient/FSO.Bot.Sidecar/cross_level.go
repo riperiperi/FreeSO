@@ -202,6 +202,10 @@ func querySelfLevel(ctx context.Context, ipc *IPC) (int64, error) {
 type nearbyObject struct {
 	ObjectID      int64   `json:"object_id"`
 	Name          string  `json:"name"`
+	// ObjectType is the string name of the OBJDType enum value emitted by PerceptionProjector
+	// (freesoexperiment-d5b). Values: "Portal" for stairs/doors/windows, "Normal" for buyable
+	// objects, "Food", etc. Empty string on older payloads that pre-date the field.
+	ObjectType    string  `json:"object_type"`
 	DistanceTiles float64 `json:"distance_tiles"`
 	Position      struct {
 		Level float64 `json:"level"`
@@ -231,15 +235,35 @@ func queryNearbyObjects(ctx context.Context, ipc *IPC, radiusTiles float64) ([]n
 	return payload.NearbyObjects, nil
 }
 
-// isStairObject returns true when the object name looks like a stair portal.
-// The heuristic matches any name that contains "stair" (case-insensitive).
-// Stairs in FSO are OBJDType.Portal=8 (OBJD.cs:23) and always include "Stair"
-// in their user-facing name (catalog entries: stair.piff, stair2.piff,
-// stair3.piff, stair4.piff, stairsspiral.piff). The C# bot does not emit
-// OBJDType in the perception stream so name-matching is the only viable sidecar
-// heuristic without a C# engine change.
-func isStairObject(name string) bool {
-	return strings.Contains(strings.ToLower(name), "stair")
+// isStairObject returns true when the object is a stair portal.
+//
+// Primary path (freesoexperiment-d5b): when obj.ObjectType is set to "Portal"
+// AND the name contains "stair" (case-insensitive), it is definitively a stair.
+// FSO uses OBJDType.Portal=8 for stairs, doors, windows, and pool equipment —
+// we narrow Portal objects to stairs by requiring the name-substring check as
+// a secondary discriminator, since doors/windows are also Portal-typed.
+//
+// Backward-compat path: when obj.ObjectType is empty (older perception payloads
+// that pre-date freesoexperiment-d5b) or "Unknown", fall through to the
+// name-substring heuristic alone. This keeps cross-level navigation working
+// against old server images while the type field rolls out.
+//
+// Returns false (not panic) when obj.ObjectType is present but not "Portal" and
+// the name does not contain "stair", i.e. the type field explicitly excludes it.
+func isStairObject(obj nearbyObject) bool {
+	switch obj.ObjectType {
+	case "Portal":
+		// Portal-typed: require name-substring to distinguish stairs from
+		// doors, windows, and pool equipment (all share OBJDType.Portal=8).
+		return strings.Contains(strings.ToLower(obj.Name), "stair")
+	case "", "Unknown":
+		// Missing or unknown type from older payload — fall back to
+		// name-substring heuristic for backward compatibility.
+		return strings.Contains(strings.ToLower(obj.Name), "stair")
+	default:
+		// Any non-Portal type (Normal, Food, SimType, etc.) cannot be a stair.
+		return false
+	}
 }
 
 // pieMenuEntry is a minimal projection of one interact-with pie-menu entry,
@@ -334,7 +358,7 @@ func findStairForCrossLevel(ctx context.Context, ipc *IPC, targetLevel int64, ra
 	var best *crossLevelResult
 	bestDist := math.MaxFloat64
 	for _, obj := range objects {
-		if !isStairObject(obj.Name) {
+		if !isStairObject(obj) {
 			continue
 		}
 		if obj.DistanceTiles < bestDist {
