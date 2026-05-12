@@ -16,6 +16,12 @@ namespace FSO.Client.Controllers
         private UIAlert _UpdaterAlert;
         public ApiClient Api;
         private Action<bool> Continue;
+        // Version we're updating TO, captured from the UpdatePath when the
+        // player accepts. Passed to update.exe as --target-version so the
+        // patcher can write version.txt explicitly after extraction —
+        // defends against the recurring bug where the zip's version.txt
+        // doesn't overwrite the running client's copy on Linux/mono.
+        private string TargetVersion;
 
         public UpdateController(Action<bool> continueFunc)
         {
@@ -104,6 +110,12 @@ namespace FSO.Client.Controllers
         public void AcceptUpdate(UpdatePath path)
         {
             UIScreen.RemoveDialog(_UpdaterAlert);
+
+            // Capture the version we're updating TO — the last entry in
+            // the path (incremental updates may chain through several).
+            // Forwarded to update.exe so it can stamp version.txt at the
+            // end of extraction.
+            TargetVersion = path.Path.LastOrDefault()?.version_name;
 
             try
             {
@@ -227,17 +239,25 @@ namespace FSO.Client.Controllers
         {
             try
             {
+                // Prefix --target-version <ver> so the patcher can stamp
+                // version.txt explicitly after extraction. Whitespace-safe
+                // because version_name has no spaces in practice ("edenso-4"
+                // etc.) — but quote anyway in case that ever changes.
+                string verArg = !string.IsNullOrEmpty(TargetVersion)
+                    ? $"--target-version \"{TargetVersion}\" "
+                    : "";
+
                 if (FSOEnvironment.Linux)
                 {
                     var fsoargs = FSOEnvironment.Args;
                     if (fsoargs.Length > 0) fsoargs = " " + fsoargs;
-                    var args = new ProcessStartInfo("mono", "update.exe" + fsoargs);
+                    var args = new ProcessStartInfo("mono", "update.exe " + verArg.TrimEnd() + fsoargs);
                     args.UseShellExecute = false;
                     System.Diagnostics.Process.Start(args);
                 }
                 else
                 {
-                    var args = new ProcessStartInfo(".\\update.exe", FSOEnvironment.Args);
+                    var args = new ProcessStartInfo(".\\update.exe", verArg + FSOEnvironment.Args);
                     try
                     {
                         System.Diagnostics.Process.Start(args);

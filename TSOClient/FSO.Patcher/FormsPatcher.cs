@@ -218,24 +218,61 @@ namespace FSO.Patcher
 
         public void StartFreeSO()
         {
+            // Write version.txt explicitly from the --target-version arg if
+            // present — guards against the zip-extract-doesn't-overwrite
+            // bug that periodically left clients stuck on the old version
+            // after a successful update. See CLIPatcher.WriteTargetVersionIfPresent.
+            WriteTargetVersionIfPresent();
+
             try
             {
                 if (!File.Exists("FreeSO.exe")) File.Copy("FreeSO.exe.old", "FreeSO.exe", true);
+                var filteredArgs = FilterPatcherArgs(Args).ToArray();
                 if (Environment.OSVersion.Platform == PlatformID.Unix || Environment.OSVersion.Platform == PlatformID.MacOSX)
                 {
-                    var startArgs = new ProcessStartInfo("mono", "FreeSO.exe " + string.Join(" ", Args));
+                    var startArgs = new ProcessStartInfo("mono", "FreeSO.exe " + string.Join(" ", filteredArgs));
                     startArgs.UseShellExecute = false;
                     System.Diagnostics.Process.Start(startArgs);
                 }
                 else
                 {
-                    System.Diagnostics.Process.Start("FreeSO.exe", string.Join(" ", Args));
+                    System.Diagnostics.Process.Start("FreeSO.exe", string.Join(" ", filteredArgs));
                 }
             } catch (Exception)
             {
 
             }
             Application.Exit();
+        }
+
+        private void WriteTargetVersionIfPresent()
+        {
+            try
+            {
+                for (int i = 0; i + 1 < Args.Length; i++)
+                {
+                    if (Args[i] == "--target-version")
+                    {
+                        var ver = Args[i + 1];
+                        if (!string.IsNullOrEmpty(ver))
+                            File.WriteAllText("version.txt", ver);
+                        return;
+                    }
+                }
+            }
+            catch { /* swallow — version.txt is best-effort here */ }
+        }
+
+        private static IEnumerable<string> FilterPatcherArgs(IEnumerable<string> args)
+        {
+            bool skipNext = false;
+            foreach (var a in args)
+            {
+                if (skipNext) { skipNext = false; continue; }
+                if (a == "--target-version") { skipNext = true; continue; }
+                if (a == "--client" || a == "--extras") continue;
+                yield return a;
+            }
         }
 
         private void EmergencyDownload()

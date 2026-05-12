@@ -179,11 +179,21 @@ namespace FSO.Patcher
 
         public void StartFreeSO()
         {
+            // Write version.txt explicitly from the --target-version arg
+            // if one was passed. Belt-and-suspenders against the periodic
+            // bug where the file inside the patch zip fails to overwrite
+            // the running client's version.txt (Linux/mono observed it
+            // not extracting; root cause is file-locking / mono
+            // ExtractToFile quirks). With the explicit write, version.txt
+            // is correct after the update regardless of whether the zip
+            // extraction succeeded for that specific file.
+            WriteTargetVersionIfPresent();
+
             if (!File.Exists("FreeSO.exe")) File.Copy("FreeSO.exe.old", "FreeSO.exe", true);
             if (Environment.OSVersion.Platform == PlatformID.Unix || Environment.OSVersion.Platform == PlatformID.MacOSX)
             {
                 Console.WriteLine($"===== Starting FreeSO... Please wait! =====");
-                var args = string.Join(" ", Args);
+                var args = string.Join(" ", FilterPatcherArgs(Args));
                 if (args.Length > 0) args = " " + args;
                 var startArgs = new ProcessStartInfo("mono", "FreeSO.exe" + args);
                 startArgs.UseShellExecute = false;
@@ -191,9 +201,52 @@ namespace FSO.Patcher
             }
             else
             {
-                System.Diagnostics.Process.Start("FreeSO.exe", string.Join(" ", Args));
+                System.Diagnostics.Process.Start("FreeSO.exe", string.Join(" ", FilterPatcherArgs(Args)));
             }
             Environment.Exit(0);
+        }
+
+        // Scans Args for `--target-version <ver>` and writes that string to
+        // ./version.txt. Quiet no-op if the flag wasn't passed (older
+        // clients launching the new patcher) — we don't want to clobber
+        // the file in that case since we'd have no signal what to write.
+        private void WriteTargetVersionIfPresent()
+        {
+            try
+            {
+                for (int i = 0; i + 1 < Args.Length; i++)
+                {
+                    if (Args[i] == "--target-version")
+                    {
+                        var ver = Args[i + 1];
+                        if (!string.IsNullOrEmpty(ver))
+                        {
+                            File.WriteAllText("version.txt", ver);
+                            Console.WriteLine($"===== version.txt → {ver} =====");
+                        }
+                        return;
+                    }
+                }
+            }
+            catch (Exception e)
+            {
+                Console.WriteLine($"Failed to write version.txt: {e.Message}");
+            }
+        }
+
+        // Strip patcher-only flags before forwarding the remaining args to
+        // FreeSO.exe. Otherwise FSOProgram tries to parse e.g.
+        // "--target-version" as a game flag and logs a warning.
+        private static IEnumerable<string> FilterPatcherArgs(IEnumerable<string> args)
+        {
+            bool skipNext = false;
+            foreach (var a in args)
+            {
+                if (skipNext) { skipNext = false; continue; }
+                if (a == "--target-version") { skipNext = true; continue; }
+                if (a == "--client" || a == "--extras") continue;
+                yield return a;
+            }
         }
 
         public async Task DownloadAndAdvance()
