@@ -347,7 +347,17 @@ func findStairForCrossLevel(ctx context.Context, ipc *IPC, targetLevel int64, ra
 	}
 
 	// Cross-level requested. Find the closest stair object.
-	objects, nearErr := queryNearbyObjects(ctx, ipc, radiusTiles)
+	// Default radius 20 (the bot's query-nearby default) is too small for
+	// real-world lots — a residential lot is up to 64 tiles wide and a bot
+	// can spawn at one corner with the only stair at the other. Widen the
+	// default to 80 tiles, which covers all current TSO lot blueprints
+	// (size=64 max) plus a margin. Callers can still override with an
+	// explicit radius. freesoexperiment-306.
+	effRadius := radiusTiles
+	if effRadius <= 0 {
+		effRadius = 80
+	}
+	objects, nearErr := queryNearbyObjects(ctx, ipc, effRadius)
 	if nearErr != nil {
 		// Can't enumerate objects — refuse with no-stair-path so the agent
 		// knows navigation failed, rather than silently sending a walk command
