@@ -1,0 +1,33 @@
+<Project Sdk="Microsoft.NET.Sdk">
+
+  <PropertyGroup>
+    <TargetFramework>net9.0</TargetFramework>
+    <ImplicitUsings>enable</ImplicitUsings>
+    <Nullable>disable</Nullable>
+    <OutputType>Exe</OutputType>
+    <RootNamespace>FSO.LotRenderer</RootNamespace>
+    <AssemblyName>freeso-renderer</AssemblyName>
+    <FileAlignment>512</FileAlignment>
+    <AllowUnsafeBlocks>true</AllowUnsafeBlocks>
+    <!-- No net9.0-windows — Linux-portable -->
+  </PropertyGroup>
+
+  <ItemGroup>
+    <PackageReference Include="MonoGame.Framework.DesktopGL" Version="3.8.5-preview.2" />
+    <PackageReference Include="SixLabors.ImageSharp" Version="3.1.11" />
+    <PackageReference Include="Newtonsoft.Json" Version="13.0.4" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <ProjectReference Include="..\FSO.Server.Clients\FSO.Server.Clients.csproj" />
+    <ProjectReference Include="..\tso.common\FSO.Common.csproj" />
+    <ProjectReference Include="..\tso.content\FSO.Content.csproj" />
+    <ProjectReference Include="..\tso.files\FSO.Files.csproj" />
+    <ProjectReference Include="..\tso.simantics\FSO.SimAntics.csproj" />
+    <ProjectReference Include="..\tso.sound\FSO.HIT.csproj" />
+    <ProjectReference Include="..\tso.vitaboy.engine\FSO.Vitaboy.Engine.csproj" />
+    <ProjectReference Include="..\tso.vitaboy.model\FSO.Vitaboy.csproj" />
+    <ProjectReference Include="..\tso.world\FSO.LotView.csproj" />
+  </ItemGroup>
+
+</Project>
