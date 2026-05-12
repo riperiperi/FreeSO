@@ -4,14 +4,14 @@
 // Usage:
 //   SDL_VIDEODRIVER=offscreen freeso-renderer \
 //     --api-url http://workshop:9000 --user baron --password test1234 \
-//     --debug-lot 16318812 --level 1 --angle iso-ne \
+//     --debug-lot 16318812 --level 1 --angle iso-ne --zoom far \
 //     --out /tmp/lot2-test.png
 //
 // Note: --debug-lot expects the packed lot LOCATION (MapCoordinates.Pack(x,y) = x<<16|y),
 //       NOT the lot_id. Lot 2 (baron's Main) is at X=249, Y=348 → location 16318812.
 //
 // Or under xvfb-run:
-//   xvfb-run -a freeso-renderer --debug-lot 2 --out /tmp/lot2-test.png
+//   xvfb-run -a freeso-renderer --debug-lot 16318812 --out /tmp/lot2-test.png
 //
 // Required env or flags:
 //   FSO_RENDERER_API_URL   (or --api-url)    e.g. http://workshop:9000
@@ -19,6 +19,17 @@
 //   FSO_RENDERER_PASS      (or --password)   admin password
 //   FSO_GAME_LOCATION      (or --game-path)  path to TSOClient assets dir
 //                           default: /home/baron/projects/freeso-experiment/GameAssets/TSOClient/
+//
+// S2 flags (per-floor / per-angle / per-zoom):
+//   --level N        Floor to render (0 = terrain only, 1 = ground floor, …, max = bp.Stories)
+//                    Default: bp.Stories (top floor — same as GetLotThumb default).
+//   --angle <val>    Isometric camera angle. Choices: iso-ne, iso-nw, iso-se, iso-sw
+//                    Default: iso-ne  (TopLeft — same as GetLotThumb default).
+//   --zoom  <val>    Zoom level. Choices: far (576×576), med (576×576), near (1024×1024)
+//                    Default: far  (same as GetLotThumb default).
+//
+// When --level / --angle / --zoom are all at their defaults the output is identical to
+// what GetLotThumb produced in S1, so existing tooling is not affected.
 
 using FSO.Common;
 using FSO.Common.Rendering.Framework;
@@ -50,6 +61,12 @@ namespace FSO.LotRenderer
         static uint DebugLot = 16318812; // MapCoordinates.Pack(249, 348) — baron's lot 2
         static string OutPath = "/tmp/lot2-test.png";
 
+        // S2: per-floor / per-angle / per-zoom.
+        // -1 means "use bp.Stories" (same default as GetLotThumb).
+        static int            RenderLevel    = -1;
+        static WorldRotation? RenderRotation = null;  // null = TopLeft (iso-ne)
+        static WorldZoom?     RenderZoom     = null;  // null = Far
+
         static _3DLayer Layer;
         static GraphicsDevice GD;
         static HeadlessGraphicsDeviceService GDS;
@@ -67,9 +84,15 @@ namespace FSO.LotRenderer
                     case "--game-path": GamePath    = args[++i]; break;
                     case "--debug-lot": DebugLot    = uint.Parse(args[++i]); break;
                     case "--out":       OutPath     = args[++i]; break;
-                    // --level and --angle are recognised but level is handled via WorldState later (S2)
-                    case "--level":     { i++; break; }
-                    case "--angle":     { i++; break; }
+                    case "--level":
+                        RenderLevel = int.Parse(args[++i]);
+                        break;
+                    case "--angle":
+                        RenderRotation = ParseAngle(args[++i]);
+                        break;
+                    case "--zoom":
+                        RenderZoom = ParseZoom(args[++i]);
+                        break;
                     default:
                         Console.Error.WriteLine($"Unknown flag: {args[i]}");
                         break;
@@ -269,7 +292,24 @@ namespace FSO.LotRenderer
                 try
                 {
                     byte[] thumbPng = null;
-                    RenderFSOF(bytes, GD, compressed: true, (png) => thumbPng = png);
+
+                    // If any of --level / --angle / --zoom were specified, use GetLotThumbAt.
+                    // Otherwise fall through to RenderFSOF (which calls GetLotThumb, same as S1).
+                    bool useParamRender = RenderLevel >= 0 || RenderRotation.HasValue || RenderZoom.HasValue;
+
+                    if (useParamRender)
+                    {
+                        RenderFSOFAt(
+                            bytes, GD,
+                            level:    RenderLevel,
+                            rotation: RenderRotation ?? WorldRotation.TopLeft,
+                            zoom:     RenderZoom     ?? WorldZoom.Far,
+                            (png) => thumbPng = png);
+                    }
+                    else
+                    {
+                        RenderFSOF(bytes, GD, compressed: true, (png) => thumbPng = png);
+                    }
 
                     var outDir = Path.GetDirectoryName(OutPath);
                     if (!string.IsNullOrEmpty(outDir)) Directory.CreateDirectory(outDir);
@@ -352,6 +392,94 @@ namespace FSO.LotRenderer
                 threads.Clear();
             }
         }
+
+        // -----------------------------------------------------------------------
+        // S2: parameterized render — calls GetLotThumbAt instead of GetLotThumb.
+        // level=-1 means "use bp.Stories" (top floor, matching GetLotThumb default).
+        // -----------------------------------------------------------------------
+        public static void RenderFSOFAt(
+            byte[] fsov,
+            GraphicsDevice gd,
+            int level,
+            WorldRotation rotation,
+            WorldZoom zoom,
+            Action<byte[]> thumbAction = null)
+        {
+            var marshal = new VMMarshal();
+            using (var mem = new MemoryStream(fsov))
+                marshal.Deserialize(new BinaryReader(mem));
+
+            gd.Present();
+            var world = new World(gd);
+            world.Opacity = 1;
+            Layer.Add(world);
+
+            var globalLink = new VMTSOGlobalLinkStub();
+            var driver     = new VMServerDriver(globalLink);
+            var vm         = new VM(new VMContext(world), driver, new VMNullHeadlineProvider());
+            vm.Init();
+            vm.Load(marshal);
+
+            SetOutsideTime(gd, vm, world, 0.5f, false);
+            world.State.PrepareLighting();
+            SetAllLights(vm, world, 0.5f, 0);
+
+            if (thumbAction != null)
+            {
+                // Resolve level: -1 → bp.Stories (same as GetLotThumb default).
+                int effectiveLevel = level >= 0 ? level : vm.Context.Blueprint.Stories;
+
+                Console.WriteLine($"[renderer] GetLotThumbAt level={effectiveLevel} rotation={rotation} zoom={zoom}");
+                var bigThumb = world.GetLotThumbAt(gd, effectiveLevel, rotation, zoom);
+
+                using var stream = new MemoryStream();
+                // Decimate by 2 to match the same half-res output GetLotThumb uses in RenderFSOF.
+                var tex = TextureUtils.Decimate(bigThumb, gd, 2, false);
+                tex.SaveAsPng(stream, bigThumb.Width / 2, bigThumb.Height / 2);
+                thumbAction(stream.ToArray());
+                tex.Dispose();
+            }
+
+            Layer.Remove(world);
+            world.Dispose();
+            vm.Context.Ambience.Kill();
+            foreach (var ent in vm.Entities)
+            {
+                var threads = ent.SoundThreads;
+                for (int i = 0; i < threads.Count; i++)
+                    threads[i].Sound.RemoveOwner(ent.ObjectID);
+                threads.Clear();
+            }
+        }
+
+        // -----------------------------------------------------------------------
+        // Angle / zoom parsers (CLI string → FSO enum)
+        // -----------------------------------------------------------------------
+
+        /// <summary>
+        /// Maps ISO compass label to WorldRotation.
+        /// iso-ne = TopLeft (origin tile at top-left of screen — "north-east" camera)
+        /// iso-nw = TopRight
+        /// iso-se = BottomLeft
+        /// iso-sw = BottomRight
+        /// </summary>
+        public static WorldRotation ParseAngle(string s) => s.ToLowerInvariant() switch
+        {
+            "iso-ne" => WorldRotation.TopLeft,
+            "iso-nw" => WorldRotation.TopRight,
+            "iso-se" => WorldRotation.BottomLeft,
+            "iso-sw" => WorldRotation.BottomRight,
+            _ => throw new ArgumentException($"Unknown angle '{s}'. Valid: iso-ne, iso-nw, iso-se, iso-sw")
+        };
+
+        /// <summary>Maps zoom label to WorldZoom.</summary>
+        public static WorldZoom ParseZoom(string s) => s.ToLowerInvariant() switch
+        {
+            "far"  => WorldZoom.Far,
+            "med"  => WorldZoom.Medium,
+            "near" => WorldZoom.Near,
+            _ => throw new ArgumentException($"Unknown zoom '{s}'. Valid: far, med, near")
+        };
 
         // -----------------------------------------------------------------------
         static void SetAllLights(VM vm, World world, float outsideTime, short contribution)

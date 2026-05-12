@@ -123,6 +123,141 @@ namespace FSO.LotView.Platform
             return tex;
         }
 
+        /// <summary>
+        /// Parameterized sibling of GetLotThumb — renders at an arbitrary floor level, isometric
+        /// rotation, and zoom level without modifying the hardcoded defaults used by FacadeWorker.
+        ///
+        /// Buffer sizing:
+        ///   Far  → 576×576  (same as GetLotThumb, PreciseZoom = 1/4f)
+        ///   Med  → 576×576  (PreciseZoom = 1/2f — each tile 2× larger, fewer tiles visible)
+        ///   Near → 1024×1024 (PreciseZoom = 1f — full-size sprites; clamped at 1024 per spec)
+        ///
+        /// Callers: FSO.LotRenderer (renderer CLI). FacadeWorker still calls GetLotThumb.
+        /// </summary>
+        public Texture2D GetLotThumbAt(
+            GraphicsDevice gd,
+            WorldState state,
+            int level,
+            WorldRotation rotation,
+            WorldZoom zoom,
+            Action<Texture2D> rooflessCallback = null)
+        {
+            // --- Save current WorldState ---
+            var oldZoom           = state.Zoom;
+            var oldRotation       = state.Rotation;
+            var oldLevel          = state.Level;
+            var oldCutaway        = bp.Cutaway;
+            var wCam              = state.Camera2D;
+            var oldViewDimensions = wCam.ViewDimensions;
+            var oldPreciseZoom    = state.PreciseZoom;
+            var oldCenter         = state.CenterTile;
+            state.ForceCamera(Utils.Camera.CameraControllerType._2D);
+
+            state.RenderingThumbnail = true;
+
+            // --- Apply requested parameters ---
+            state.Zoom     = zoom;
+            state.Rotation = rotation;
+            // Clamp level to [0..bp.Stories]; Stories = total floors.
+            state.Level    = (sbyte)Math.Clamp(level, 0, bp.Stories);
+
+            // PreciseZoom and buffer size per zoom level (Near clamped at 1024).
+            float preciseZoom;
+            int   size;
+            switch (zoom)
+            {
+                case WorldZoom.Near:
+                    preciseZoom = 1f;
+                    size        = 1024; // max per spec
+                    break;
+                case WorldZoom.Medium:
+                    preciseZoom = 0.5f;
+                    size        = 576;
+                    break;
+                default: // Far
+                    preciseZoom = 0.25f;
+                    size        = 576;
+                    break;
+            }
+
+            state.PreciseZoom      = preciseZoom;
+            state._2D.PreciseZoom  = preciseZoom;
+            state.WorldSpace.Invalidate();
+            state.InvalidateCamera();
+
+            state._2D.ResizeBuffer(_2DWorldBatch.BUFFER_LOTTHUMB, size, size);
+
+            state.CenterTile = bp.GetThumbCenterTile(state);
+            state.CenterTile -= state.WorldSpace.GetTileFromScreen(
+                new Vector2(
+                    (size - state.WorldSpace.WorldPxWidth)  / state.PreciseZoom,
+                    (size - state.WorldSpace.WorldPxHeight) / state.PreciseZoom) / 2);
+            var pxOffset = -state.WorldSpace.GetScreenOffset();
+            bp.Cutaway = new bool[bp.Cutaway.Length];
+
+            var _2d = state._2D;
+            state.ClearLighting(false);
+            Promise<Texture2D> bufferTexture = null;
+            var lastLight = state.OutsideColor;
+            state.OutsideColor   = Color.White;
+            state._2D.OBJIDMode = false;
+            state.PrepareCamera();
+
+            try
+            {
+                using (var buffer = state._2D.WithBuffer(_2DWorldBatch.BUFFER_LOTTHUMB, ref bufferTexture))
+                {
+                    _2d.SetScroll(pxOffset);
+                    while (buffer.NextPass())
+                    {
+                        _2d.Pause();
+                        _2d.Resume();
+                        if (bp.FineArea != null) bp.FloorGeom.BuildableReset(gd, bp.FineArea);
+                        else bp.FloorGeom.SliceReset(gd, new Rectangle(6, 6, bp.Width - 13, bp.Height - 13));
+                        var build = state.SilentBuildMode;
+                        state.SilentBuildMode = 0;
+                        bp.Terrain.Draw(gd, state);
+                        bp.Terrain.DrawMask(gd, state, state.View, state.Projection);
+                        state.SilentBuildMode = build;
+                        bp.WallComp.Draw(gd, state);
+                        _2d.Pause();
+                        _2d.Resume();
+                        _2d.PrepareImmediate(Effects.WorldBatchTechniques.drawZSpriteDepthChannel);
+                        foreach (var obj in bp.Objects)
+                        {
+                            var tilePosition = obj.Position;
+                            _2d.OffsetPixel(state.WorldSpace.GetScreenFromTile(tilePosition));
+                            _2d.OffsetTile(tilePosition);
+                            obj.Draw(gd, state);
+                        }
+                        _2d.Pause();
+                        _2d.Resume();
+                        rooflessCallback?.Invoke(gd.GetRenderTargets()[0].RenderTarget as RenderTarget2D);
+                        bp.RoofComp.Draw(gd, state);
+                    }
+                }
+            }
+            finally
+            {
+                // --- Restore WorldState (even on exception) ---
+                bp.Changes.SetFlag(BlueprintGlobalChanges.LIGHTING_CHANGED);
+                bp.Changes.SetFlag(BlueprintGlobalChanges.FLOOR_CHANGED);
+                state.OutsideColor        = lastLight;
+                state.PreciseZoom         = oldPreciseZoom;
+                state.WorldSpace.Invalidate();
+                state.InvalidateCamera();
+                wCam.ViewDimensions       = oldViewDimensions;
+                state.Zoom                = oldZoom;
+                state.Rotation            = oldRotation;
+                state.Level               = oldLevel;
+                state.CenterTile          = oldCenter;
+                state.RenderingThumbnail  = false;
+                bp.Cutaway                = oldCutaway;
+            }
+
+            return bufferTexture.Get();
+        }
+
         public short GetObjectIDAtScreenPos(int x, int y, GraphicsDevice gd, WorldState state)
         {
             var ray = state.CameraRayAtScreenPos(new Vector2(x, y));

@@ -1019,6 +1019,20 @@ namespace FSO.LotView
             return Platform.GetLotThumb(gd, State, rooflessCallback);
         }
 
+        /// <summary>
+        /// Parameterized sibling — see WorldPlatform2D.GetLotThumbAt for full docs.
+        /// Does NOT mutate the existing GetLotThumb call surface used by FacadeWorker.
+        /// </summary>
+        public Texture2D GetLotThumbAt(GraphicsDevice gd, int level, WorldRotation rotation, WorldZoom zoom,
+            Action<Texture2D> rooflessCallback = null)
+        {
+            State._2D.Begin(this.State.Camera2D);
+            var platform2D = Platform as Platform.WorldPlatform2D;
+            if (platform2D == null)
+                throw new InvalidOperationException("GetLotThumbAt requires a WorldPlatform2D — 3D platform not supported.");
+            return platform2D.GetLotThumbAt(gd, State, level, rotation, zoom, rooflessCallback);
+        }
+
         public void ChangeAAMode(GraphicsDevice gd)
         {
             var lastm = PPXDepthEngine.MSAA;

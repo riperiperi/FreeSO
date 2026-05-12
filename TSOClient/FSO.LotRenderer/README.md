@@ -56,8 +56,47 @@ export SDL_VIDEODRIVER=offscreen   # headless — no display needed
 | `--game-path` | `FSO_GAME_LOCATION` | `/home/baron/projects/freeso-experiment/GameAssets/TSOClient/` | Must contain `tuning.dat` |
 | `--debug-lot` | — | `16318812` | Packed lot **location** (`x<<16|y`), NOT lot_id |
 | `--out` | — | `/tmp/lot2-test.png` | Output PNG path |
-| `--level` | — | (ignored, S2) | Floor level |
-| `--angle` | — | (ignored, S2) | Camera angle |
+| `--level` | — | top floor | Floor to render. `0` = terrain only, `1` = ground floor, `2` = 2nd floor, etc. Max: `bp.Stories`. When omitted, renders the topmost floor (same as `GetLotThumb` default). |
+| `--angle` | — | `iso-ne` | Isometric camera angle. See table below. |
+| `--zoom` | — | `far` | Zoom level. See table below. |
+
+### Angle matrix
+
+| `--angle` value | WorldRotation | Camera position | Output size |
+|-----------------|---------------|-----------------|-------------|
+| `iso-ne` | TopLeft | NE of lot | 576×576 (far/med), 1024×1024 (near) |
+| `iso-nw` | TopRight | NW of lot | 576×576 (far/med), 1024×1024 (near) |
+| `iso-se` | BottomLeft | SE of lot | 576×576 (far/med), 1024×1024 (near) |
+| `iso-sw` | BottomRight | SW of lot | 576×576 (far/med), 1024×1024 (near) |
+
+### Zoom matrix
+
+| `--zoom` value | WorldZoom | Buffer size | PreciseZoom | Notes |
+|----------------|-----------|-------------|-------------|-------|
+| `far` | Far | 576×576 | 0.25 | Default; matches S1 / FacadeWorker output |
+| `med` | Medium | 576×576 | 0.50 | Each tile 2× larger — fewer tiles, more detail |
+| `near` | Near | 1024×1024 | 1.00 | Full sprite resolution; clamped at 1024×1024 |
+
+The output PNG is decimated 2× (to half dimensions) before writing, matching the existing
+`GetLotThumb` pipeline. Buffer size is the render-target size; final PNG is half that.
+
+### Example — per-floor walkthrough of lot 2
+
+```bash
+export SDL_VIDEODRIVER=offscreen
+export GAME=/home/baron/projects/freeso-experiment/GameAssets/TSOClient/
+export API=http://workshop:9000
+
+for level in 1 2 3; do
+  for angle in iso-ne iso-nw iso-se iso-sw; do
+    ./freeso-renderer \
+      --api-url $API --user baron --password test1234 \
+      --game-path "$GAME" --debug-lot 16318812 \
+      --level $level --angle $angle --zoom far \
+      --out "/tmp/lot2_L${level}_${angle}.png"
+  done
+done
+```
 
 ### Packed location vs lot_id
 
@@ -74,12 +113,15 @@ Lot 2 (baron's Main at X=249, Y=348): `(249 << 16) | 348 = 16318812 = 0x00F9015C
 - `offscreen` — Mesa llvmpipe renders off-screen; no display needed. Preferred.
 - `x11` — requires a running X server or `xvfb-run -a`.
 
-## Integration test
+## Integration tests
+
+### S1 smoke test — single render
 
 ```bash
 SDL_VIDEODRIVER=offscreen \
   FSO_GAME_LOCATION=/home/baron/projects/freeso-experiment/GameAssets/TSOClient/ \
   dotnet test /home/baron/projects/freeso-experiment/FreeSO/TSOClient/FSO.LotRenderer.Tests \
+    --filter "RenderLot2" \
     --logger:"console;verbosity=detailed"
 ```
 
@@ -90,6 +132,35 @@ waits up to 5 minutes, then asserts:
 2. Output file exists
 3. File size >= 10 KB
 4. First 8 bytes match the PNG magic header `89 50 4E 47 0D 0A 1A 0A`
+
+### S2 per-floor / rotation / zoom test
+
+```bash
+SDL_VIDEODRIVER=offscreen \
+  FSO_GAME_LOCATION=/home/baron/projects/freeso-experiment/GameAssets/TSOClient/ \
+  dotnet test /home/baron/projects/freeso-experiment/FreeSO/TSOClient/FSO.LotRenderer.Tests \
+    --filter "PerFloorRotation" \
+    --logger:"console;verbosity=detailed"
+```
+
+The test (`RendererIntegrationTest.PerFloorRotation_AllCombinations_ProduceDistinctValidPngs`)
+renders 7 representative combinations (4 angles × 1 zoom at level 1, then 2 additional zooms,
+then level 2) and asserts:
+
+1. Each output PNG is >= 10 KB
+2. Every pair of outputs has > 1% byte-difference (no two combos produce identical images)
+
+Combinations rendered:
+
+| Level | Angle | Zoom |
+|-------|-------|------|
+| 1 | iso-ne | far |
+| 1 | iso-nw | far |
+| 1 | iso-se | far |
+| 1 | iso-sw | far |
+| 1 | iso-ne | med |
+| 1 | iso-ne | near |
+| 2 | iso-ne | far |
 
 ## Architecture notes
 
