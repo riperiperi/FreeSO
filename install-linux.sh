@@ -111,6 +111,27 @@ curl -fL --retry 3 --retry-delay 5 -o "$TEMPDIR/RemeshPackage.zip" "$REMESH_URL"
 
 # ── Extract everything into the install dir ─────────────────────────────────
 log "[4/5] Extracting client → $GAMEDIR"
+
+# Apply CLEANUP.txt manifest from the new client zip BEFORE extracting,
+# so any orphan files removed in this release also disappear from the
+# local install on update mode. (Reinstall fresh already rm -rf'd above.)
+# Skipped if the zip doesn't ship a CLEANUP.txt.
+CLEANUP_TMP="$TEMPDIR/CLEANUP.txt"
+if unzip -p "$TEMPDIR/client.zip" CLEANUP.txt > "$CLEANUP_TMP" 2>/dev/null && [[ -s "$CLEANUP_TMP" ]]; then
+    log "  Applying CLEANUP.txt manifest"
+    removed=0
+    while IFS= read -r path; do
+        path="${path%%$'\r'}"
+        # Skip blank lines, comments, unsafe paths
+        [[ -z "$path" || "$path" =~ ^[[:space:]]*# || "$path" == /* || "$path" == *..* ]] && continue
+        if [[ -e "$GAMEDIR/$path" ]]; then
+            rm -rf -- "$GAMEDIR/$path"
+            removed=$((removed + 1))
+        fi
+    done < "$CLEANUP_TMP"
+    log "  Removed $removed stale path(s)"
+fi
+
 unzip -q -o "$TEMPDIR/client.zip" -d "$GAMEDIR"
 
 log "[4/5] Extracting TSO content → $GAMEDIR/game"

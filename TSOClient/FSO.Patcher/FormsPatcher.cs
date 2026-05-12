@@ -107,6 +107,10 @@ namespace FSO.Patcher
                         FileCorrupt(path);
                         return;
                     }
+                    // Apply CLEANUP.txt manifest first so orphan files are
+                    // unlinked before we extract this release's content.
+                    // See CLIPatcher.ApplyCleanupManifest for the rationale.
+                    ApplyCleanupManifest(archive);
                     var patcher = new ReversiblePatcher(archive);
                     CurrentPatcher = patcher;
                     patcher.OnStatus += Patcher_OnStatus;
@@ -243,6 +247,35 @@ namespace FSO.Patcher
 
             }
             Application.Exit();
+        }
+
+        // Same one-relative-path-per-line manifest the CLI patcher uses.
+        // See CLIPatcher.ApplyCleanupManifest for full doc.
+        private static void ApplyCleanupManifest(ZipArchive archive)
+        {
+            var entry = archive.GetEntry("CLEANUP.txt");
+            if (entry == null) return;
+            int removed = 0, skipped = 0;
+            using (var sr = new StreamReader(entry.Open()))
+            {
+                string line;
+                while ((line = sr.ReadLine()) != null)
+                {
+                    line = line.Trim();
+                    if (line.Length == 0 || line.StartsWith("#")) continue;
+                    if (line.StartsWith("/") || line.StartsWith("\\") ||
+                        line.Contains("..")) { skipped++; continue; }
+                    var target = System.IO.Path.Combine("./", line);
+                    try
+                    {
+                        if (File.Exists(target))             { File.Delete(target); removed++; }
+                        else if (Directory.Exists(target))   { Directory.Delete(target, true); removed++; }
+                    }
+                    catch { /* swallow — manifest is advisory */ }
+                }
+            }
+            // Forms patcher logs to its status label rather than stdout;
+            // this happens before patcher is constructed so nothing to update.
         }
 
         private void WriteTargetVersionIfPresent()

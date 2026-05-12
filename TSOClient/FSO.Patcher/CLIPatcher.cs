@@ -57,6 +57,42 @@ namespace FSO.Patcher
             }
         }
 
+        // Apply a release's CLEANUP.txt — one relative path per line, each
+        // gets unlinked from the local install before extraction proceeds.
+        // Used to nuke files that were previously installed but are no
+        // longer part of the build (e.g. removed catalog objects, dead
+        // patches). Quiet no-op if the file isn't in the zip.
+        private static void ApplyCleanupManifest(ZipArchive archive)
+        {
+            var entry = archive.GetEntry("CLEANUP.txt");
+            if (entry == null) return;
+            int removed = 0, skipped = 0;
+            using (var sr = new StreamReader(entry.Open()))
+            {
+                string line;
+                while ((line = sr.ReadLine()) != null)
+                {
+                    line = line.Trim();
+                    if (line.Length == 0 || line.StartsWith("#")) continue;
+                    // Refuse absolute paths and parent-dir escapes so a
+                    // malformed manifest can't reach outside the install dir.
+                    if (line.StartsWith("/") || line.StartsWith("\\") ||
+                        line.Contains("..")) { skipped++; continue; }
+                    var target = System.IO.Path.Combine("./", line);
+                    try
+                    {
+                        if (File.Exists(target))      { File.Delete(target); removed++; }
+                        else if (Directory.Exists(target)) { Directory.Delete(target, true); removed++; }
+                    }
+                    catch (Exception e)
+                    {
+                        Console.WriteLine($"CLEANUP: could not remove {line}: {e.Message}");
+                    }
+                }
+            }
+            Console.WriteLine($"===== Cleanup: removed {removed} stale path(s), {skipped} unsafe entries skipped =====");
+        }
+
         private async Task AdvanceExtract()
         {
             if (PathProgress >= Path.Count)
@@ -80,6 +116,11 @@ namespace FSO.Patcher
                         FileCorrupt(path);
                         return;
                     }
+                    // Apply CLEANUP.txt FIRST so orphans go before we extract
+                    // anything from this release. Idempotent — re-applying
+                    // an already-applied cleanup is a no-op (rm of missing
+                    // files is fine).
+                    ApplyCleanupManifest(archive);
                     var patcher = new ReversiblePatcher(archive);
                     if (path.Contains("extra") && AllowMonogameMod)
                     {
