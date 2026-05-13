@@ -319,8 +319,7 @@ namespace FSO.LotRenderer.Tests
         {
             if (Environment.GetEnvironmentVariable("FSO_SKIP_ROOFLESS_TEST") == "1")
             {
-                Console.WriteLine("[test] FSO_SKIP_ROOFLESS_TEST=1 — skipping.");
-                return;
+                Assert.Skip("FSO_SKIP_ROOFLESS_TEST=1");
             }
 
             var rendererUrl = Environment.GetEnvironmentVariable("FSO_RENDERER_URL") ?? "http://127.0.0.1:9101";
@@ -333,16 +332,12 @@ namespace FSO.LotRenderer.Tests
                 var healthResp = await hc.GetAsync($"{rendererUrl}/health");
                 if (!healthResp.IsSuccessStatusCode)
                 {
-                    Console.WriteLine($"[test] Renderer health check failed ({healthResp.StatusCode}). Skipping roofless test.");
-                    Console.WriteLine("       Set FSO_RENDERER_URL or start: freeso-renderer --serve --port 9101");
-                    return;
+                    Assert.Skip($"Renderer health check failed ({healthResp.StatusCode}). Set FSO_RENDERER_URL or start: freeso-renderer --serve --port 9101");
                 }
             }
             catch (Exception ex)
             {
-                Console.WriteLine($"[test] Renderer not reachable at {rendererUrl}: {ex.Message}. Skipping roofless test.");
-                Console.WriteLine("       Set FSO_RENDERER_URL or start: freeso-renderer --serve --port 9101");
-                return;
+                Assert.Skip($"Renderer not reachable at {rendererUrl}: {ex.Message}. Set FSO_RENDERER_URL or start: freeso-renderer --serve --port 9101");
             }
 
             // Use lot 2 (baron's Main). Provide lot_location directly to avoid DB dependency.
