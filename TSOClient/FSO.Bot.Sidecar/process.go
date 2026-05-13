@@ -42,6 +42,12 @@ type BotProcess struct {
 	stdinMu     sync.Mutex
 	exitCh      chan error
 
+	// stdoutDone is closed by the scan goroutine once it has finished reading
+	// all stdout data. The Wait goroutine blocks on this before calling
+	// cmd.Wait() to satisfy the StdoutPipe contract: "it is incorrect to call
+	// Wait before all reads from the pipe have completed."
+	stdoutDone chan struct{}
+
 	stopOnce sync.Once
 }
 
@@ -79,6 +85,7 @@ func LaunchBot(ctx context.Context, cfg BotConfig) (*BotProcess, error) {
 		stdoutLines: make(chan []byte, 64),
 		stdin:       stdin,
 		exitCh:      make(chan error, 1),
+		stdoutDone:  make(chan struct{}),
 	}
 
 	// stderr → sidecar stderr, with a prefix so bot log lines are visibly
@@ -88,17 +95,32 @@ func LaunchBot(ctx context.Context, cfg BotConfig) (*BotProcess, error) {
 	// stdout → channel. Buffer size accepts larger-than-default lines so a full
 	// perception frame (which can be a few KB with many nearby objects) does
 	// not trip the scanner's token-too-long error.
+	//
+	// The scan goroutine MUST drain stdout to completion before returning —
+	// cmd.Wait() closes the pipe after the process exits, so returning early
+	// (e.g. on ctx.Done()) while stdout still has unread bytes causes a
+	// "file already closed" scan error and drops lines. When ctx is cancelled,
+	// exec.CommandContext kills the subprocess, which closes its stdout write
+	// end; sc.Scan() then returns false naturally — no explicit ctx.Done()
+	// select case needed here.
 	go func() {
+		defer close(p.stdoutDone) // signal Wait goroutine: safe to call cmd.Wait()
 		defer close(p.stdoutLines)
 		sc := bufio.NewScanner(stdout)
 		sc.Buffer(make([]byte, 4096), 1<<20) // 1 MiB cap per line
 		for sc.Scan() {
 			line := make([]byte, len(sc.Bytes()))
 			copy(line, sc.Bytes())
+			// Send line to consumer, or discard if context is done.
+			// Using ctx.Done() here ONLY as a discard path — NOT as an early
+			// return. We continue scanning until sc.Scan() returns false (EOF
+			// or error). This ensures all stdout is consumed before stdoutDone
+			// closes, satisfying the cmd.Wait() ordering constraint.
 			select {
-			case <-ctx.Done():
-				return
 			case p.stdoutLines <- line:
+			case <-ctx.Done():
+				// Consumer is gone; drain remaining stdout to unblock the
+				// subprocess and reach EOF — then fall through to the loop.
 			}
 		}
 		if err := sc.Err(); err != nil && !errors.Is(err, io.EOF) {
@@ -107,7 +129,11 @@ func LaunchBot(ctx context.Context, cfg BotConfig) (*BotProcess, error) {
 	}()
 
 	// Wait for process exit; surface on ExitCh.
+	// We must not call cmd.Wait() until the scan goroutine has finished
+	// reading stdout — cmd.Wait() closes the StdoutPipe, which would
+	// truncate any buffered-but-unread output. Block on stdoutDone first.
 	go func() {
+		<-p.stdoutDone
 		err := cmd.Wait()
 		select {
 		case p.exitCh <- err:

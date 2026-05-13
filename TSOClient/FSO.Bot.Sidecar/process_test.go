@@ -14,6 +14,7 @@ import (
 	"path/filepath"
 	"runtime"
 	"strings"
+	"sync"
 	"testing"
 	"time"
 )
@@ -103,6 +104,54 @@ func readCmdline(t *testing.T, pid int) string {
 		t.Fatalf("ps: %v", err)
 	}
 	return string(out)
+}
+
+// TestLaunchBotPipesStdoutNoPipeRace is a regression test for the pipe-close
+// race introduced by calling cmd.Wait() before the scan goroutine has finished
+// reading stdout. The race manifests as "expected 2 lines, got 0" because
+// cmd.Wait() closes the StdoutPipe, truncating any buffered output.
+//
+// The fix: the Wait goroutine blocks on stdoutDone before calling cmd.Wait(),
+// ensuring all stdout has been delivered to the Lines() channel first.
+//
+// This test runs the scenario 50 times in parallel to saturate the race window.
+// Without the fix, at least one iteration fails with 0 lines (seen in ~1/10
+// runs with -count=20 in CI). With the fix, all 50 must produce exactly 2 lines.
+func TestLaunchBotPipesStdoutNoPipeRace(t *testing.T) {
+	const iterations = 50
+	var wg sync.WaitGroup
+	wg.Add(iterations)
+	for i := 0; i < iterations; i++ {
+		i := i
+		go func() {
+			defer wg.Done()
+			ctx, cancel := context.WithTimeout(context.Background(), 5*time.Second)
+			defer cancel()
+
+			proc, err := LaunchBot(ctx, BotConfig{
+				Exec: "sh",
+				Args: []string{"-c", `printf '{"kind":"system","payload":{"event":"ready"}}\n{"kind":"perception","avatar":{"persist_id":2}}\n'`},
+				Env:  os.Environ(),
+			})
+			if err != nil {
+				t.Errorf("iter %d: LaunchBot: %v", i, err)
+				return
+			}
+			defer proc.Stop()
+
+			got := []string{}
+			for line := range proc.Lines() {
+				got = append(got, string(line))
+				if len(got) >= 2 {
+					break
+				}
+			}
+			if len(got) < 2 {
+				t.Errorf("iter %d: pipe-close race: expected 2 lines, got %d: %v", i, len(got), got)
+			}
+		}()
+	}
+	wg.Wait()
 }
 
 // TestLaunchBotPipesStdout: launch a simple program that writes a known line,
