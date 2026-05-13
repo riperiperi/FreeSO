@@ -9,6 +9,7 @@ package main
 import (
 	"context"
 	"encoding/json"
+	"strings"
 	"testing"
 	"time"
 
@@ -257,6 +258,8 @@ func TestCreateAvatarHandler_EngineNameTaken_SurfacesReason(t *testing.T) {
 
 func TestCreateAvatarHandler_BotCmdError_SurfacesError(t *testing.T) {
 	// Simulate bot-cmd-reply ok=false (e.g. bot not in chargen mode).
+	// The bot-cmd transport failure path uses the "error" key (not "reason").
+	// "reason" is reserved for engine-tier semantic categories (e.g. category:name-taken).
 	fake := newFakeBotProcess()
 	pump := NewBotCmdPump(fake.bot)
 
@@ -285,7 +288,33 @@ func TestCreateAvatarHandler_BotCmdError_SurfacesError(t *testing.T) {
 	if payload["ok"] != false {
 		t.Errorf("want ok=false for bot error reply, got %v", payload)
 	}
-	t.Logf("error from bot: %v", payload["reason"])
+	// Bot-cmd transport failures surface in the "error" key, not "reason".
+	errorMsg, _ := payload["error"].(string)
+	if errorMsg == "" {
+		t.Errorf("want non-empty error key for bot-cmd transport failure, got %v", payload)
+	}
+	t.Logf("error from bot (transport failure): %v", errorMsg)
+}
+
+// extractUint32 extracts a uint32 from a payload value using a type-switch
+// that handles both in-process uint32 (direct assignment) and float64 (JSON
+// round-trip deserialization via json.Unmarshal). The type-switch prevents
+// panics if the response crosses a JSON boundary in the future.
+func extractUint32(t *testing.T, payload map[string]any, key string) uint32 {
+	t.Helper()
+	v, ok := payload[key]
+	if !ok {
+		t.Fatalf("key %q not found in payload %v", key, payload)
+	}
+	switch x := v.(type) {
+	case uint32:
+		return x
+	case float64:
+		return uint32(x)
+	default:
+		t.Fatalf("unexpected type %T for key %q (value=%v); expected uint32 or float64", v, key, v)
+		return 0
+	}
 }
 
 func TestCreateAvatarHandler_Success_ReturnsAvatarID(t *testing.T) {
@@ -303,13 +332,53 @@ func TestCreateAvatarHandler_Success_ReturnsAvatarID(t *testing.T) {
 	if payload["ok"] != true {
 		t.Errorf("want ok=true for SUCCESS, got %v", payload)
 	}
-	// AvatarID is set from replyData.AvatarID (uint32) so cast to uint32.
-	avatarID, ok := payload["avatar_id"].(uint32)
-	if !ok || avatarID != 99 {
-		t.Errorf("want avatar_id=uint32(99), got type=%T value=%v", payload["avatar_id"], payload["avatar_id"])
+	// Use extractUint32 which handles both uint32 (in-process) and float64
+	// (JSON-deserialized). This prevents a type-assertion panic if the
+	// response ever crosses a JSON boundary (freesoexperiment-4e3).
+	avatarID := extractUint32(t, payload, "avatar_id")
+	if avatarID != 99 {
+		t.Errorf("want avatar_id=99, got %v", avatarID)
 	}
 	if payload["status"] != "SUCCESS" {
 		t.Errorf("want status=SUCCESS, got %v", payload["status"])
+	}
+}
+
+// TestCreateAvatarHandler_Success_AvatarID_JSONRoundTrip verifies that the
+// avatar_id field survives a JSON encode/decode round-trip. json.Unmarshal
+// converts JSON numbers to float64 by default, so a test using uint32 type
+// assertion would panic after the round-trip. This test exercises the
+// float64 branch of extractUint32.
+func TestCreateAvatarHandler_Success_AvatarID_JSONRoundTrip(t *testing.T) {
+	pump := stubBotCmdPump(t, map[string]any{
+		"status":    "SUCCESS",
+		"avatar_id": float64(42),
+	})
+	handler := createAvatarHandler(pump)
+
+	resp, err := callHandler(t, handler, validArgs())
+	if err != nil {
+		t.Fatalf("unexpected error: %v", err)
+	}
+	payload, _ := resp.Payload.(map[string]any)
+	if payload["ok"] != true {
+		t.Errorf("want ok=true for SUCCESS, got %v", payload)
+	}
+
+	// JSON round-trip: marshal the payload then unmarshal — number becomes float64.
+	encoded, encErr := json.Marshal(payload)
+	if encErr != nil {
+		t.Fatalf("marshal: %v", encErr)
+	}
+	var decoded map[string]any
+	if decErr := json.Unmarshal(encoded, &decoded); decErr != nil {
+		t.Fatalf("unmarshal: %v", decErr)
+	}
+
+	// After JSON round-trip the type is float64 — extractUint32 must handle it.
+	avatarID := extractUint32(t, decoded, "avatar_id")
+	if avatarID != 42 {
+		t.Errorf("want avatar_id=42 after JSON round-trip, got %v", avatarID)
 	}
 }
 
@@ -362,7 +431,10 @@ func callHandler(t *testing.T, h convention.HandlerFunc, args map[string]any) (*
 }
 
 // assertOkFalse checks that the response has ok=false and that the error
-// string contains the given keyword.
+// string contains the given keyword. The keyword check is strict — a test
+// that passes a keyword but the error doesn't mention it is a test failure.
+// This ensures the contract the parameter implies is actually enforced and
+// tests cannot pass vacuously on a wrong error message.
 func assertOkFalse(t *testing.T, resp *convention.Response, keyword string) {
 	t.Helper()
 	if resp == nil {
@@ -381,9 +453,12 @@ func assertOkFalse(t *testing.T, resp *convention.Response, keyword string) {
 		t.Errorf("want non-empty error mentioning %q, got empty error", keyword)
 		return
 	}
-	// keyword is a hint for diagnosability, not a hard match — the error messages
-	// are human-readable prose, not codes.
-	t.Logf("reject ok=false error=%q (keyword=%q present=%v)", errMsg, keyword, len(errMsg) > 0)
+	// Strict keyword check: the error message must contain the keyword.
+	// This prevents tests from passing vacuously with a wrong error message.
+	if !strings.Contains(errMsg, keyword) {
+		t.Errorf("error message did not contain expected keyword %q: got %q", keyword, errMsg)
+	}
+	t.Logf("reject ok=false error=%q (keyword=%q present=true)", errMsg, keyword)
 }
 
 // stubBotCmdPump returns a BotCmdPump that immediately delivers a fixed reply

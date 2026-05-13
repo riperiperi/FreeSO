@@ -282,12 +282,6 @@ func coerceLocation(raw any) (locationArg, error) {
 	return loc, nil
 }
 
-func errResp(op, msg string) (*convention.Response, error) {
-	return &convention.Response{
-		Payload: map[string]any{"ok": false, "error": msg},
-	}, nil
-}
-
 // coerceLotLocation accepts a lot location code as a hex string ("0x..."),
 // decimal uint string, or a numeric value (float64/int64/etc.) and normalises
 // it to a canonical decimal uint32 string. The supervisor loop stores and reads

@@ -147,10 +147,14 @@ func createAvatarHandler(botCmds *BotCmdPump) convention.HandlerFunc {
 		}
 
 		if !reply.Ok {
+			// Bot-cmd transport failure (e.g. bot not in chargen mode, send
+			// timeout). This is a sidecar/infrastructure error — use "error"
+			// (consistent with errResp and all other handler families).
+			// Distinct from engine-tier semantic categories (see below).
 			return &convention.Response{
 				Payload: map[string]any{
-					"ok":     false,
-					"reason": reply.Error,
+					"ok":    false,
+					"error": reply.Error,
 				},
 			}, nil
 		}
@@ -168,6 +172,10 @@ func createAvatarHandler(botCmds *BotCmdPump) convention.HandlerFunc {
 		}
 
 		if replyData.Status != "SUCCESS" {
+			// Engine-tier refusal (e.g. "category:name-taken", "category:invalid-guid").
+			// The "reason" field carries a semantic category code that agent code
+			// may pattern-match on (distinct from the free-form "error" field used
+			// for sidecar/infrastructure failures above).
 			return &convention.Response{
 				Payload: map[string]any{
 					"ok":     false,
@@ -187,5 +195,5 @@ func createAvatarHandler(botCmds *BotCmdPump) convention.HandlerFunc {
 	}
 }
 
-// Note: errResp and coerceUint64 are declared in naming_handlers.go and tax_handlers.go
-// respectively. They are shared across handler families in this package.
+// Note: errResp and coerceUint64 are declared in helpers.go and shared across
+// all handler families in this package.
