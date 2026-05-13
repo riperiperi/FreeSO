@@ -331,6 +331,15 @@ func main() {
 		}
 		log.Printf("convention handlers: %d dialog-family ops serving", dialogServers)
 
+		// Screenshot family (freesoexperiment-0a2): take-screenshot.
+		// Sidecar-side permission check (roommate-or-mayor), HTTP proxy to renderer,
+		// rate-limited (1 per soul per 10s, 10 per lot per minute).
+		screenshotServers, err := RegisterScreenshotHandlers(ctx, cf, ipc)
+		if err != nil {
+			log.Fatalf("register screenshot handlers: %v", err)
+		}
+		log.Printf("convention handlers: %d screenshot-family ops serving", screenshotServers)
+
 		// Single-dispatcher: one Subscribe goroutine handles every registered op
 		// instead of one Subscribe per op. Replaces the convention.Server fleet
 		// (which saturated SQLite at 103 × 500ms polls + per-poll fs sync) with

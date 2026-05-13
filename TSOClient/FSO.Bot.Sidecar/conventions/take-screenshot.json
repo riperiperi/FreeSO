@@ -1,0 +1,65 @@
+{
+  "convention": "freeso-embodiment",
+  "version": "1.0",
+  "operation": "take-screenshot",
+  "family": "rendering",
+  "description": "Request a screenshot of the current lot from the headless renderer. Requires roommate-or-mayor authority on the current lot. Returns path to the PNG file, image dimensions, and age of the cached frame. Rate limited: 1 per soul per 10 seconds, 10 per lot per minute.",
+  "args": [
+    {
+      "name": "level",
+      "type": "number",
+      "required": false,
+      "default": 1,
+      "description": "Floor level to render (0-7). Default 1 (ground floor). Ignore if lot has fewer floors."
+    },
+    {
+      "name": "angle",
+      "type": "string",
+      "required": false,
+      "default": "iso-ne",
+      "description": "Viewing angle: iso-ne (northeast isometric), iso-nw, iso-se, iso-sw. Default iso-ne."
+    },
+    {
+      "name": "zoom",
+      "type": "string",
+      "required": false,
+      "default": "medium",
+      "description": "Zoom level: small, medium, large. Affects pixel density of the output. Default medium."
+    },
+    {
+      "name": "roofless",
+      "type": "boolean",
+      "required": false,
+      "default": false,
+      "description": "If true, render without the roof so interior is visible. Default false."
+    }
+  ],
+  "produces_tags": [
+    {
+      "tag": "freeso:take-screenshot",
+      "cardinality": "exactly_one"
+    }
+  ],
+  "antecedents": "none",
+  "signing": "member_key",
+  "rate_limit": {
+    "max": 60,
+    "per": "sender",
+    "window": "1m"
+  },
+  "response": "sync",
+  "call_signatures": [
+    "cf $CF take-screenshot                                                                 # default: ground floor, NE isometric, medium zoom, roof on",
+    "cf $CF take-screenshot --level 1 --angle iso-ne --zoom medium --roofless false        # explicit defaults",
+    "cf $CF take-screenshot --level 0 --angle iso-sw --zoom large --roofless true          # bottom floor, SW angle, zoomed in, no roof"
+  ],
+  "common_mistakes": [
+    "Non-roommates (visitors) will receive category:not-permitted. Only roommates and the lot owner can take screenshots.",
+    "Rate limits are enforced: exceeding 1 per 10s per soul or 10 per minute per lot returns category:rate-limited.",
+    "The returned path is relative to /tmp/embody-$RUN/screenshots/ on the server; verify the file exists before transmission."
+  ],
+  "perception_hints": [
+    "Use screenshots to debug spatial reasoning or validate placement. The renderer reflects the lot's authoritative state.",
+    "Rendering latency is typically 500ms-2s per frame depending on lot complexity and first-frame cache misses."
+  ]
+}
