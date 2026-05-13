@@ -461,7 +461,11 @@ namespace FSO.LotRenderer
 
             // Switch to Full2D so World.InitDefaultGraphicsMode creates WorldPlatform2D,
             // which GetLotThumbAt requires.  Restored to Full3D in the finally block.
+            // try/finally ensures Full3D is restored even if an exception is thrown inside
+            // the render pipeline (freesoexperiment-499).
             GraphicsModeControl.ChangeMode(FSO.LotView.Model.GlobalGraphicsMode.Full2D);
+            try
+            {
             // Unset any active render target left by a previous render before Present().
             // GetLotThumbAt renders to an off-screen target and may leave it active on
             // the device; calling Present with an active render target throws on Mesa.
@@ -526,6 +530,10 @@ namespace FSO.LotRenderer
                     tex.SaveAsPng(stream, bigThumb.Width / 2, bigThumb.Height / 2);
                     thumbAction(stream.ToArray());
                     tex.Dispose();
+                    // Dispose the GPU render target returned by GetLotThumbAt — it is a
+                    // Texture2D/RenderTarget2D allocated on the GPU and must be freed
+                    // explicitly; otherwise each cache-miss render leaks one RT (freesoexperiment-2a1).
+                    bigThumb.Dispose();
                 }
             }
 
@@ -539,9 +547,13 @@ namespace FSO.LotRenderer
                     threads[i].Sound.RemoveOwner(ent.ObjectID);
                 threads.Clear();
             }
-
-            // Restore Full3D so subsequent RenderFSOF / RenderFSOFAt calls start clean.
-            GraphicsModeControl.ChangeMode(FSO.LotView.Model.GlobalGraphicsMode.Full3D);
+            }
+            finally
+            {
+                // Restore Full3D so subsequent RenderFSOF / RenderFSOFAt calls start clean.
+                // This runs even if an exception is thrown in the render pipeline (499).
+                GraphicsModeControl.ChangeMode(FSO.LotView.Model.GlobalGraphicsMode.Full3D);
+            }
         }
 
         // -----------------------------------------------------------------------
