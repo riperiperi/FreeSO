@@ -381,7 +381,7 @@ func TestAugmentor_MyObjectsEmitted(t *testing.T) {
 	store := NewClaimStore()
 	store.Upsert(ClaimEntry{ObjectID: 352, Note: "my bed", ClaimedAt: 9999})
 
-	a := NewPerceptionAugmentor(store)
+	a := NewPerceptionAugmentor(store, false)
 	tick := makeAugmentorPerceptionLine(2, true, "Test Lot")
 	out := a.AugmentPerception(tick)
 
@@ -434,7 +434,7 @@ func TestAugmentor_MyObjectsEmptyWhenNoClaims(t *testing.T) {
 	defer cleanup()
 
 	store := NewClaimStore() // empty
-	a := NewPerceptionAugmentor(store)
+	a := NewPerceptionAugmentor(store, false)
 	tick := makeAugmentorPerceptionLine(2, true, "Test Lot")
 	out := a.AugmentPerception(tick)
 
@@ -475,7 +475,7 @@ func TestAugmentor_NilClaimStore_NoMyObjects(t *testing.T) {
 	cleanup := setupClaimTestEnv(t)
 	defer cleanup()
 
-	a := NewPerceptionAugmentor(nil)
+	a := NewPerceptionAugmentor(nil, false)
 	tick := makeAugmentorPerceptionLine(2, true, "Test Lot")
 	out := a.AugmentPerception(tick)
 

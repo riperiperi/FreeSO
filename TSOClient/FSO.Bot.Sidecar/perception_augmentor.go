@@ -13,6 +13,8 @@ package main
 //   - body.current_lot.is_home        — true when current lot == home lot
 //   - body.current_lot.has_bulletin_board — MVP allowlist: community lot only
 //   - body.current_lot.has_ballot_box     — MVP allowlist: community lot only
+//   - chargen_pending   — true when bot is in --chargen-mode and no avatar persist_id
+//                         has appeared yet; false once avatar_id is known (freesoexperiment-b094)
 //
 // mayor_status is now emitted directly by the C# bot in each perception tick
 // (freesoexperiment-ea0). The augmentor caches the latest mayor_status from
@@ -40,6 +42,21 @@ package main
 // (hex string). This is NOT used by the augmentor at runtime — it is an env
 // var read by the dispatch-prompt builder (item 13) to inject the key-piece
 // paragraph into the wake prompt. Documented here for traceability.
+//
+// chargen_pending design (freesoexperiment-b094):
+// When the bot is launched with --chargen-mode it connects to the city socket
+// only — it never joins a lot and therefore the query-self convention op (which
+// requires a lot-joined VM) always fails. The kernel cannot use query-self to
+// detect whether an avatar exists yet. chargen_pending bridges that gap: the
+// augmentor reads the avatar.persist_id field in each perception tick (the C#
+// PerceptionEmitter emits it even in chargen-mode if the account already has an
+// avatar) and flips chargen_pending=false once a non-zero persist_id is seen.
+// Until then, chargen_pending=true signals "bot is in chargen-mode and no avatar
+// is known yet — call create-avatar."
+//
+// chargen_pending is omitted entirely from perception ticks when the bot is NOT
+// in chargen-mode (normal lot-joined sessions). This keeps the field absent in
+// the common case and avoids confusion.
 
 import (
 	"encoding/json"
@@ -48,6 +65,7 @@ import (
 	"strconv"
 	"strings"
 	"sync"
+	"sync/atomic"
 )
 
 // HomeLotProjection is the body.home_lot sub-tree emitted in perception.
@@ -102,6 +120,20 @@ type PerceptionAugmentor struct {
 	// emits body.my_objects[] each tick from the store's current snapshot.
 	// When nil (e.g. in tests that don't need claims), my_objects is omitted.
 	claimStore *ClaimStore
+
+	// chargenMode is true when the bot was launched with --chargen-mode.
+	// When true, chargen_pending is emitted in each perception tick until
+	// a non-zero avatar.persist_id is observed, at which point avatarKnown
+	// is set and chargen_pending becomes false.
+	// (freesoexperiment-b094)
+	chargenMode bool
+
+	// avatarKnown is set to 1 (atomically) the first time AugmentPerception
+	// sees a non-zero avatar.persist_id in a chargen-mode tick. Once set,
+	// chargen_pending is emitted as false for the remainder of the session.
+	// Using atomic so convention handlers can call IsChargenPending() safely
+	// from handler goroutines without a lock.
+	avatarKnown atomic.Int32
 }
 
 // NewPerceptionAugmentor constructs a PerceptionAugmentor. The community lot
@@ -112,7 +144,13 @@ type PerceptionAugmentor struct {
 //
 // claimStore may be nil (claims feature disabled / test context). When non-nil
 // the augmentor emits body.my_objects[] each tick from the store's snapshot.
-func NewPerceptionAugmentor(claimStore *ClaimStore) *PerceptionAugmentor {
+//
+// chargenMode should be true when the bot was launched with --chargen-mode.
+// When true, the augmentor emits chargen_pending=true in each perception tick
+// until a non-zero avatar.persist_id is observed, then switches to false.
+// When false (normal lot-joined mode), chargen_pending is omitted entirely.
+// (freesoexperiment-b094)
+func NewPerceptionAugmentor(claimStore *ClaimStore, chargenMode bool) *PerceptionAugmentor {
 	raw := strings.TrimSpace(os.Getenv("FREESO_COMMUNITY_LOT_LOCATION"))
 	normalized := normalizeLotHex(raw)
 	if normalized != "" {
@@ -120,7 +158,17 @@ func NewPerceptionAugmentor(claimStore *ClaimStore) *PerceptionAugmentor {
 	} else {
 		log.Printf("perception-augmentor: FREESO_COMMUNITY_LOT_LOCATION not set — affordance flags will be false")
 	}
-	return &PerceptionAugmentor{communityLotLocation: normalized, claimStore: claimStore}
+	if chargenMode {
+		log.Printf("perception-augmentor: chargen-mode=true — chargen_pending will be emitted in perception ticks")
+	}
+	return &PerceptionAugmentor{communityLotLocation: normalized, claimStore: claimStore, chargenMode: chargenMode}
+}
+
+// IsChargenPending returns true when the bot is in chargen-mode and no avatar
+// persist_id has been observed yet. Safe for concurrent callers.
+// (freesoexperiment-b094)
+func (a *PerceptionAugmentor) IsChargenPending() bool {
+	return a.chargenMode && a.avatarKnown.Load() == 0
 }
 
 // normalizeLotHex strips an optional "0x" prefix and lowercases a lot location
@@ -239,6 +287,34 @@ func (a *PerceptionAugmentor) AugmentPerception(line []byte) []byte {
 			a.mayorCache = ms
 			a.mayorMu.Unlock()
 		}
+	}
+
+	// --- chargen_pending (freesoexperiment-b094) ---
+	// Only emitted when the bot is in --chargen-mode. Reads avatar.persist_id
+	// from the tick; once a non-zero value appears, marks avatarKnown so
+	// subsequent ticks emit chargen_pending=false.
+	//
+	// chargen_pending is omitted entirely in normal (lot-joined) mode so it
+	// does not appear in live-session perception and cause confusion.
+	if a.chargenMode {
+		// Check avatar.persist_id in this tick.
+		if rawAvatar, ok := tick["avatar"]; ok && len(rawAvatar) > 0 {
+			var avatarBlock struct {
+				PersistID json.Number `json:"persist_id"`
+			}
+			dec := json.NewDecoder(bytesReader(rawAvatar))
+			dec.UseNumber()
+			if err := dec.Decode(&avatarBlock); err == nil {
+				pid := avatarBlock.PersistID.String()
+				if pid != "" && pid != "0" {
+					// Non-zero persist_id: avatar is known; chargen complete.
+					a.avatarKnown.Store(1)
+				}
+			}
+		}
+		chargenPending := a.avatarKnown.Load() == 0
+		cpJSON, _ := json.Marshal(chargenPending)
+		tick["chargen_pending"] = json.RawMessage(cpJSON)
 	}
 
 	// --- home_lot ---

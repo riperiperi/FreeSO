@@ -124,7 +124,7 @@ func TestAugmentor_NonPerceptionPassThrough(t *testing.T) {
 	cleanup := setupAugmentorTestEnv(t)
 	defer cleanup()
 
-	a := NewPerceptionAugmentor(nil)
+	a := NewPerceptionAugmentor(nil, false)
 	dialog := []byte(`{"kind":"dialog","t":1000,"payload":{"text":"hello"}}`)
 	out := a.AugmentPerception(dialog)
 	if string(out) != string(dialog) {
@@ -137,7 +137,7 @@ func TestAugmentor_HomeLotNullWhenNoLotsOwned(t *testing.T) {
 	defer cleanup()
 
 	// No lots in owned-lots.json.
-	a := NewPerceptionAugmentor(nil)
+	a := NewPerceptionAugmentor(nil, false)
 	line := makeAugmentorPerceptionLine(2, true, "Test Lot")
 	out := a.AugmentPerception(line)
 	m := decodeAugmented(t, out)
@@ -167,7 +167,7 @@ func TestAugmentor_HomeLotPopulatedWithIsHabitableFalse(t *testing.T) {
 		t.Fatalf("write owned-lots: %v", err)
 	}
 
-	a := NewPerceptionAugmentor(nil)
+	a := NewPerceptionAugmentor(nil, false)
 	line := makeAugmentorPerceptionLine(3, true, "Botrous Corner")
 	out := a.AugmentPerception(line)
 	m := decodeAugmented(t, out)
@@ -219,7 +219,7 @@ func TestAugmentor_HomeLotIsHabitableTrueAfterHabitation(t *testing.T) {
 		t.Fatalf("write owned-lots: %v", err)
 	}
 
-	a := NewPerceptionAugmentor(nil)
+	a := NewPerceptionAugmentor(nil, false)
 	line := makeAugmentorPerceptionLine(4, true, "Sage Retreat")
 	out := a.AugmentPerception(line)
 	m := decodeAugmented(t, out)
@@ -245,7 +245,7 @@ func TestAugmentor_CommunityLotAffordancesTrue(t *testing.T) {
 	// Set community lot to lot_id=17.
 	t.Setenv("FREESO_COMMUNITY_LOT_ID", "17")
 
-	a := NewPerceptionAugmentor(nil)
+	a := NewPerceptionAugmentor(nil, false)
 	line := makeAugmentorPerceptionLine(17, false, "Town Hall")
 	out := a.AugmentPerception(line)
 	m := decodeAugmented(t, out)
@@ -268,7 +268,7 @@ func TestAugmentor_NonCommunityLotAffordancesFalse(t *testing.T) {
 	// Set community lot to lot_id=17, but current lot is 2.
 	t.Setenv("FREESO_COMMUNITY_LOT_ID", "17")
 
-	a := NewPerceptionAugmentor(nil)
+	a := NewPerceptionAugmentor(nil, false)
 	line := makeAugmentorPerceptionLine(2, true, "Baron's Main")
 	out := a.AugmentPerception(line)
 	m := decodeAugmented(t, out)
@@ -291,7 +291,7 @@ func TestAugmentor_AffordancesFalseWhenCommunityLotNotSet(t *testing.T) {
 	// FREESO_COMMUNITY_LOT_ID not set.
 	os.Unsetenv("FREESO_COMMUNITY_LOT_ID")
 
-	a := NewPerceptionAugmentor(nil)
+	a := NewPerceptionAugmentor(nil, false)
 	line := makeAugmentorPerceptionLine(17, false, "Town Hall")
 	out := a.AugmentPerception(line)
 	m := decodeAugmented(t, out)
@@ -321,7 +321,7 @@ func TestAugmentor_IsHomeTrueWhenOwnerIsMeAndHomeLotPresent(t *testing.T) {
 		t.Fatalf("write owned-lots: %v", err)
 	}
 
-	a := NewPerceptionAugmentor(nil)
+	a := NewPerceptionAugmentor(nil, false)
 	// owner_is_me=true simulates being on your own lot.
 	line := makeAugmentorPerceptionLine(5, true, "My Place")
 	out := a.AugmentPerception(line)
@@ -347,7 +347,7 @@ func TestAugmentor_IsHomeFalseWhenNotOwner(t *testing.T) {
 		t.Fatalf("write owned-lots: %v", err)
 	}
 
-	a := NewPerceptionAugmentor(nil)
+	a := NewPerceptionAugmentor(nil, false)
 	// owner_is_me=false — visiting someone else's lot.
 	line := makeAugmentorPerceptionLine(6, false, "Ellis's Corner")
 	out := a.AugmentPerception(line)
@@ -365,7 +365,7 @@ func TestAugmentor_IsHomeFalseWhenNotOwner(t *testing.T) {
 // unchanged (augmentor does not inject a zero mayor_status block).
 // (freesoexperiment-ea0: mayor_status now comes from the C# VM tick, not a file.)
 func TestAugmentor_MayorStatusZeroBeforeFirstTick(t *testing.T) {
-	a := NewPerceptionAugmentor(nil)
+	a := NewPerceptionAugmentor(nil, false)
 
 	// Before any tick: cache is zero.
 	ms := a.LatestMayorStatus()
@@ -390,7 +390,7 @@ func TestAugmentor_MayorStatusZeroBeforeFirstTick(t *testing.T) {
 // LatestMayorStatus() returns the cached value.
 // (freesoexperiment-ea0: mayor_status now comes from the C# VM tick, not a file.)
 func TestAugmentor_MayorStatusCachedFromTick(t *testing.T) {
-	a := NewPerceptionAugmentor(nil)
+	a := NewPerceptionAugmentor(nil, false)
 
 	// Feed a tick with mayor_status={is_mayor:true, mayor_nhood:1}.
 	tick := map[string]any{
@@ -442,7 +442,7 @@ func TestAugmentor_MalformedJSONPassThrough(t *testing.T) {
 	cleanup := setupAugmentorTestEnv(t)
 	defer cleanup()
 
-	a := NewPerceptionAugmentor(nil)
+	a := NewPerceptionAugmentor(nil, false)
 	bad := []byte(`{"kind":"perception","t":bad_value}`)
 	out := a.AugmentPerception(bad)
 	if string(out) != string(bad) {
@@ -480,7 +480,7 @@ func TestAugmentor_HabitationWatcherRunsBeforeAugmentor(t *testing.T) {
 		t.Fatalf("write owned-lots: %v", err)
 	}
 
-	a := NewPerceptionAugmentor(nil)
+	a := NewPerceptionAugmentor(nil, false)
 	line := makeAugmentorPerceptionLine(7, true, "Test Lot")
 	out := a.AugmentPerception(line)
 	m := decodeAugmented(t, out)
@@ -531,5 +531,153 @@ func TestAugmentor_HabitationWatcherRunsBeforeAugmentor(t *testing.T) {
 	}
 	if !proj2.IsHabitable {
 		t.Errorf("home_lot.is_habitable = false after all habitation events, want true")
+	}
+}
+
+// ---- chargen_pending tests (freesoexperiment-b094) ----
+
+// makeChargenPerceptionLine creates a minimal perception tick for chargen-mode
+// testing. persist_id=0 means "no avatar yet"; a non-zero value means the
+// avatar already exists.
+func makeChargenPerceptionLine(persistID int64) []byte {
+	tick := map[string]any{
+		"kind": "perception",
+		"t":    time.Now().UnixMilli(),
+		"avatar": map[string]any{
+			"persist_id": persistID,
+			"name":       "NewSim",
+		},
+		"motives": map[string]any{},
+	}
+	b, _ := json.Marshal(tick)
+	return b
+}
+
+// TestAugmentor_ChargenPendingTrueWhenNoAvatar verifies that when the augmentor
+// is constructed with chargenMode=true and the first tick has persist_id=0,
+// chargen_pending=true is emitted.
+// (freesoexperiment-b094 done condition §1: sidecar test)
+func TestAugmentor_ChargenPendingTrueWhenNoAvatar(t *testing.T) {
+	// No tick environ needed — chargen_pending is independent of persona state files.
+	a := NewPerceptionAugmentor(nil, true) // chargenMode=true
+
+	line := makeChargenPerceptionLine(0) // persist_id=0 → no avatar yet
+	out := a.AugmentPerception(line)
+	m := decodeAugmented(t, out)
+
+	cp, exists := m["chargen_pending"]
+	if !exists {
+		t.Fatal("chargen_pending key absent from augmented tick in chargen-mode, want present")
+	}
+	if cp != true {
+		t.Errorf("chargen_pending = %v, want true when persist_id=0 in chargen-mode", cp)
+	}
+
+	// IsChargenPending() must agree.
+	if !a.IsChargenPending() {
+		t.Errorf("IsChargenPending() = false, want true when persist_id=0 in chargen-mode")
+	}
+}
+
+// TestAugmentor_ChargenPendingFalseAfterAvatarSeen verifies that once a tick
+// with a non-zero persist_id arrives, chargen_pending flips to false and stays
+// false on subsequent ticks.
+// (freesoexperiment-b094 done condition §1)
+func TestAugmentor_ChargenPendingFalseAfterAvatarSeen(t *testing.T) {
+	a := NewPerceptionAugmentor(nil, true) // chargenMode=true
+
+	// First tick: no avatar.
+	line1 := makeChargenPerceptionLine(0)
+	out1 := a.AugmentPerception(line1)
+	m1 := decodeAugmented(t, out1)
+	if m1["chargen_pending"] != true {
+		t.Errorf("tick1: chargen_pending = %v, want true before avatar seen", m1["chargen_pending"])
+	}
+
+	// Second tick: avatar appears (persist_id=42).
+	line2 := makeChargenPerceptionLine(42)
+	out2 := a.AugmentPerception(line2)
+	m2 := decodeAugmented(t, out2)
+	if m2["chargen_pending"] != false {
+		t.Errorf("tick2: chargen_pending = %v, want false after persist_id=42", m2["chargen_pending"])
+	}
+
+	// IsChargenPending() must also flip.
+	if a.IsChargenPending() {
+		t.Errorf("IsChargenPending() = true after persist_id seen, want false")
+	}
+
+	// Third tick: still false — not reset.
+	line3 := makeChargenPerceptionLine(42)
+	out3 := a.AugmentPerception(line3)
+	m3 := decodeAugmented(t, out3)
+	if m3["chargen_pending"] != false {
+		t.Errorf("tick3: chargen_pending = %v, want false (stays false after avatar seen)", m3["chargen_pending"])
+	}
+}
+
+// TestAugmentor_ChargenPendingAbsentInNormalMode verifies that when chargenMode=false
+// (normal lot-joined mode), the chargen_pending key is NOT emitted at all.
+// (freesoexperiment-b094: field must be absent in live sessions)
+func TestAugmentor_ChargenPendingAbsentInNormalMode(t *testing.T) {
+	cleanup := setupAugmentorTestEnv(t)
+	defer cleanup()
+
+	a := NewPerceptionAugmentor(nil, false) // chargenMode=false → normal mode
+
+	line := makeAugmentorPerceptionLine(2, true, "Baron's Main")
+	out := a.AugmentPerception(line)
+	m := decodeAugmented(t, out)
+
+	if _, exists := m["chargen_pending"]; exists {
+		t.Errorf("chargen_pending present in normal-mode tick, want absent (value=%v)", m["chargen_pending"])
+	}
+}
+
+// TestAugmentor_ChargenPendingTrueInitiallyThenFalseAfterCreate verifies the
+// full lifecycle: chargen_pending starts true, then the create-avatar op fires,
+// and the next tick (with persist_id from the new avatar) flips it to false.
+// This is the integration path exercised during a real chargen run.
+// (freesoexperiment-b094 done condition §1: deterministic x3)
+func TestAugmentor_ChargenPendingTrueInitiallyThenFalseAfterCreate(t *testing.T) {
+	for run := 1; run <= 3; run++ {
+		a := NewPerceptionAugmentor(nil, true)
+
+		// Tick 1: no avatar.
+		t1 := makeChargenPerceptionLine(0)
+		m1 := decodeAugmented(t, a.AugmentPerception(t1))
+		if m1["chargen_pending"] != true {
+			t.Errorf("run %d tick1: chargen_pending = %v, want true", run, m1["chargen_pending"])
+		}
+
+		// Simulate create-avatar succeeding: next tick has persist_id=99.
+		t2 := makeChargenPerceptionLine(99)
+		m2 := decodeAugmented(t, a.AugmentPerception(t2))
+		if m2["chargen_pending"] != false {
+			t.Errorf("run %d tick2: chargen_pending = %v, want false after create", run, m2["chargen_pending"])
+		}
+	}
+}
+
+// TestHasBotArg verifies that hasBotArg correctly detects --chargen-mode in
+// the parsed args slice. This covers the detection logic in main.go.
+// (freesoexperiment-b094)
+func TestHasBotArg(t *testing.T) {
+	cases := []struct {
+		args []string
+		flag string
+		want bool
+	}{
+		{[]string{"--emit-perception", "--chargen-mode"}, "--chargen-mode", true},
+		{[]string{"--emit-perception"}, "--chargen-mode", false},
+		{[]string{}, "--chargen-mode", false},
+		{[]string{"--chargen-mode"}, "--chargen-mode", true},
+		{[]string{"--chargen-mode-extra"}, "--chargen-mode", false}, // prefix mismatch
+	}
+	for _, c := range cases {
+		got := hasBotArg(c.args, c.flag)
+		if got != c.want {
+			t.Errorf("hasBotArg(%v, %q) = %v, want %v", c.args, c.flag, got, c.want)
+		}
 	}
 }

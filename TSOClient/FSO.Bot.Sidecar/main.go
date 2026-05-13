@@ -152,7 +152,10 @@ func main() {
 		if err := LoadClaims(claimStore); err != nil {
 			log.Printf("load claims from persona state: %v (starting with empty claim set)", err)
 		}
-		augmentor = NewPerceptionAugmentor(claimStore)
+		// chargenMode: detect --chargen-mode in the bot args so the augmentor
+		// can emit chargen_pending in perception ticks (freesoexperiment-b094).
+		chargenMode := hasBotArg(splitArgs(*botArgs), "--chargen-mode")
+		augmentor = NewPerceptionAugmentor(claimStore, chargenMode)
 		bridges := NewBridgesWithBotCmd(cf, proc, ipc, botCmds, augmentor)
 		go bridges.Run(ctx)
 
@@ -557,6 +560,18 @@ func botExitCh(p *BotProcess) <-chan error {
 		return nil
 	}
 	return p.ExitCh()
+}
+
+// hasBotArg returns true if the given flag (e.g. "--chargen-mode") is present
+// in the parsed bot args slice. Used to detect --chargen-mode so the augmentor
+// can emit chargen_pending in perception ticks (freesoexperiment-b094).
+func hasBotArg(args []string, flag string) bool {
+	for _, a := range args {
+		if a == flag {
+			return true
+		}
+	}
+	return false
 }
 
 // splitArgs tokenises a space-separated flag value. Does not support quoting;
