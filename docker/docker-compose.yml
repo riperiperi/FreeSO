@@ -8,6 +8,8 @@ services:
       MARIADB_DATABASE: fso
       MARIADB_USER: fsoserver
       MARIADB_PASSWORD: password
+    ports:
+      - "127.0.0.1:3306:3306"
     volumes:
       - mariadb_data:/var/lib/mysql
     healthcheck:

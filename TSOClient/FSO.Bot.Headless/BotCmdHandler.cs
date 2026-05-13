@@ -629,13 +629,8 @@ public sealed class BotCmdHandler
         JsonObject args,
         CancellationToken ct)
     {
-        if (cityAries == null)
-        {
-            EmitReply(corrId, ok: false, error: "create-avatar: city socket unavailable");
-            return;
-        }
-
-        // Parse args (already validated sidecar-side; parse again defensively).
+        // Parse and validate args first (freesoexperiment-07d): arg errors are caller mistakes
+        // regardless of server connectivity, so we reject before the socket check.
         string firstName, lastName, genderStr, skinToneStr, description;
         uint headGuid, bodyGuid;
         try
@@ -655,6 +650,22 @@ public sealed class BotCmdHandler
         catch (Exception ex)
         {
             EmitReply(corrId, ok: false, error: $"create-avatar: bad args: {ex.Message}");
+            return;
+        }
+
+        // Explicit gender validation — reject empty/unknown values (freesoexperiment-07d).
+        // Only "M" and "F" (case-insensitive) are valid; empty string must NOT silently map to MALE.
+        if (string.IsNullOrEmpty(genderStr) ||
+            (!genderStr.Equals("M", StringComparison.OrdinalIgnoreCase) &&
+             !genderStr.Equals("F", StringComparison.OrdinalIgnoreCase)))
+        {
+            EmitReply(corrId, ok: false, error: $"create-avatar: invalid gender '{genderStr}': must be M or F");
+            return;
+        }
+
+        if (cityAries == null)
+        {
+            EmitReply(corrId, ok: false, error: "create-avatar: city socket unavailable");
             return;
         }
 

@@ -62,7 +62,7 @@ namespace FSO.Bot.Headless.Tests;
 ///   <item><c>FSO_API_URL</c>         — default <c>http://workshop:9000/</c></item>
 ///   <item><c>FSO_SHARD</c>           — default <c>Alphaville</c></item>
 ///   <item><c>FSO_VERSION</c>         — default <c>Version 1.1097.1.0</c></item>
-///   <item><c>FSO_DB_CONN</c>         — default <c>Server=workshop;Port=3307;Uid=fsoserver;Pwd=password;Database=fso</c></item>
+///   <item><c>FSO_DB_CONN</c>         — default <c>Server=127.0.0.1;Port=3306;Uid=fsoserver;Pwd=password;Database=fso</c> (MariaDB bound to localhost via docker-compose ports)</item>
 /// </list>
 /// </summary>
 [Collection("chargen-integration")]
@@ -85,7 +85,7 @@ public sealed class ChargenHandlerTests
         EnvOr("FSO_VERSION", "Version 1.1097.1.0");
 
     private static string DbConn =>
-        EnvOr("FSO_DB_CONN", "Server=workshop;Port=3307;Uid=fsoserver;Pwd=password;Database=fso");
+        EnvOr("FSO_DB_CONN", "Server=127.0.0.1;Port=3306;Uid=fsoserver;Pwd=password;Database=fso");
 
     // ---- Unit-level dispatch tests (no server needed) ----
 
@@ -176,6 +176,39 @@ public sealed class ChargenHandlerTests
         Assert.DoesNotContain("unknown bot-cmd", error, StringComparison.OrdinalIgnoreCase);
     }
 
+    /// <summary>
+    /// create-avatar with gender="" must be rejected with ok=false and an error message
+    /// mentioning "gender" — must NOT silently map to MALE (freesoexperiment-07d regression guard).
+    /// </summary>
+    [Fact]
+    public async Task CreateAvatar_EmptyGender_EmitsOkFalseWithGenderError()
+    {
+        var handler = new BotCmdHandler();
+        var line = """
+            {"kind":"bot-cmd","cmd":"create-avatar","correlation_id":"c-ca-unit-4",
+             "args":{"first_name":"Tst","last_name":"Unit","gender":"",
+                     "head_guid":949,"body_guid":601}}
+            """;
+        var node = JsonNode.Parse(line.Replace("\n", " ")).AsObject();
+
+        string captured = null;
+        var latch = new ManualResetEventSlim();
+        using var _sub = PerceptionEmitterCapture.Capture(s => { captured = s; latch.Set(); });
+
+        var handled = await handler.TryHandleAsync(node, cityAries: null, default);
+
+        Assert.True(handled, "TryHandleAsync must return true for create-avatar (consumed)");
+        Assert.True(latch.Wait(TimeSpan.FromSeconds(2)), "no bot-cmd-reply emitted for gender=''");
+
+        var reply = JsonNode.Parse(captured).AsObject();
+        Assert.Equal("bot-cmd-reply", (string)reply["kind"]);
+        Assert.Equal("c-ca-unit-4",   (string)reply["correlation_id"]);
+        // Must be rejected — empty gender must not silently map to MALE (07d).
+        Assert.False((bool)reply["ok"], "gender='' must be rejected with ok=false, not silently accepted");
+        var error = (string)reply["error"] ?? string.Empty;
+        Assert.Contains("gender", error, StringComparison.OrdinalIgnoreCase);
+    }
+
     // ---- End-to-end integration test (live workshop server) ----
 
     /// <summary>
@@ -200,8 +233,9 @@ public sealed class ChargenHandlerTests
             "set FSO_INTEGRATION=1 to run live-server integration tests");
 
         // Step 1: Content.Init (required for AriesClient codec to parse CreateASimResponse).
+        // Default must be GameAssets/TSOClient/ — that is where tuning.dat lives (CLAUDE.md gotcha #10).
         var gameLocation = EnvOr("FSO_GAME_LOCATION",
-            "/home/baron/projects/freeso-experiment/GameAssets/");
+            "/home/baron/projects/freeso-experiment/GameAssets/TSOClient/");
         try
         {
             FSO.SimAntics.VMContext.InitVMConfig(false);
@@ -213,8 +247,10 @@ public sealed class ChargenHandlerTests
         }
 
         // Generate a unique test user so tests don't collide or leave permanent state.
+        // No hyphens in username — FSO userapi silently rejects hyphenated usernames
+        // with HTTP 200 + {"error":"bad_request","error_description":"user_invalid"} (freesoexperiment-a48).
         var suffix = Guid.NewGuid().ToString("N")[..8];
-        var testUser  = $"cg-test-{suffix}";
+        var testUser  = $"cgtest{suffix}";
         var testPass  = $"Test{suffix}1!";
         var testEmail = $"{testUser}@test.local";
 
@@ -234,6 +270,14 @@ public sealed class ChargenHandlerTests
             });
             var regResp = await http.PostAsync($"{ApiUrl}userapi/registration", regContent);
             regResp.EnsureSuccessStatusCode();
+            // FSO returns HTTP 200 even for bad_request (e.g. hyphenated username).
+            // Verify the body does not contain an error — a missing body-check was freesoexperiment-a48.
+            var regBody = await regResp.Content.ReadAsStringAsync();
+            // FSO returns HTTP 200 even for bad_request (e.g. hyphenated username) — verify body (freesoexperiment-a48).
+            Assert.False(regBody.Contains("\"error\"", StringComparison.Ordinal),
+                $"userapi registration returned an error body — check username format and server state: {regBody}");
+            Assert.False(regBody.Contains("bad_request", StringComparison.Ordinal),
+                $"userapi registration returned bad_request — username may contain invalid characters: {regBody}");
 
             // Step 3: Auth the new user to get a ticket.
             var auth = new AuthClient(ApiUrl);
@@ -290,8 +334,14 @@ public sealed class ChargenHandlerTests
 
             // Step 6: Dispatch bot-cmd:create-avatar via TryHandleAsync.
             var correlationId = Guid.NewGuid().ToString();
-            var avatarFirstName = $"Test{suffix[..4]}";
-            var avatarLastName  = $"Bot{suffix[4..]}";
+            // FSO NAME_VALIDATION requires letters + spaces only: ^([a-zA-Z]){1}([a-zA-Z ]){2,23}$
+            // Map hex suffix to alpha letters (a-p) so digits don't fail validation.
+            var alphaOnly = new string(suffix.Select(c =>
+                c >= '0' && c <= '9' ? (char)('A' + (c - '0')) :
+                c >= 'a' && c <= 'f' ? (char)('K' + (c - 'a')) :
+                char.ToUpper(c)).ToArray());
+            var avatarFirstName = $"Tst{alphaOnly[..4]}";
+            var avatarLastName  = $"Bot{alphaOnly[4..]}";
             var cmdLine = System.Text.Json.JsonSerializer.Serialize(new
             {
                 kind           = "bot-cmd",
@@ -332,7 +382,8 @@ public sealed class ChargenHandlerTests
             Assert.True((bool)reply["ok"], $"create-avatar failed: {reply["error"]}");
 
             var data = reply["data"].AsObject();
-            Assert.Equal("SUCCESS", (string)data["status"]);
+            Assert.True((string)data["status"] == "SUCCESS",
+                $"create-avatar returned status={(string)data["status"]} reason={(string)data["reason"]}");
             createdAvatarId = (uint)(long)data["avatar_id"];
             Assert.NotEqual(0u, createdAvatarId);
 
@@ -351,6 +402,19 @@ public sealed class ChargenHandlerTests
             // Name in DB is "FirstName LastName" combined.
             Assert.Contains(avatarFirstName, (string)row.name,    StringComparison.OrdinalIgnoreCase);
             Assert.Contains(avatarLastName,  (string)row.name,    StringComparison.OrdinalIgnoreCase);
+
+            // Verify the outfit GUIDs persisted correctly (freesoexperiment-eef).
+            // fso_avatars.head/body store the full 64-bit OutfitID; the RSGZWrapperPDU sends
+            // only the high 32 bits (that's the outfit "type ID" used in the catalog).
+            // The server writes back the full uint64, so we must compare the HIGH 32 bits only.
+            var headOutfitFull = (ulong)row.head_outfit_id;
+            var bodyOutfitFull = (ulong)row.body_outfit_id;
+            var headHigh32 = (uint)(headOutfitFull >> 32);
+            var bodyHigh32 = (uint)(bodyOutfitFull >> 32);
+            Assert.True(headHigh32 == 949u,
+                $"head outfit high-32 mismatch: DB full={headOutfitFull} high32={headHigh32} expected=949");
+            Assert.True(bodyHigh32 == 601u,
+                $"body outfit high-32 mismatch: DB full={bodyOutfitFull} high32={bodyHigh32} expected=601");
 
             // Disconnect city socket cleanly.
             try { cityAries.Disconnect(); } catch { }
