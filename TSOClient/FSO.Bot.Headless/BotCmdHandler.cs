@@ -17,6 +17,8 @@ using FSO.Server.Clients;
 using FSO.Server.Protocol.Aries;
 using FSO.Server.Protocol.Electron.Model;
 using FSO.Server.Protocol.Electron.Packets;
+using FSO.Server.Protocol.Voltron.Model;
+using FSO.Server.Protocol.Voltron.Packets;
 
 namespace FSO.Bot.Headless;
 
@@ -30,6 +32,7 @@ namespace FSO.Bot.Headless;
 /// <code>{"kind":"bot-cmd","cmd":"probe-road","correlation_id":"&lt;uuid&gt;","args":{"x":249,"y":348}}</code>
 /// <code>{"kind":"bot-cmd","cmd":"purchase-lot","correlation_id":"&lt;uuid&gt;","args":{"location_x":249,"location_y":348,"name":"marlo's place","start_fresh":false}}</code>
 /// <code>{"kind":"bot-cmd","cmd":"probe-bulletin","correlation_id":"&lt;uuid&gt;","args":{"neighborhood_id":1}}</code>
+/// <code>{"kind":"bot-cmd","cmd":"create-avatar","correlation_id":"&lt;uuid&gt;","args":{"first_name":"Vivi","last_name":"Romero","gender":"F","skin_tone":"light","head_guid":399,"body_guid":1192}}</code>
 /// </para>
 ///
 /// <para>
@@ -99,6 +102,10 @@ public sealed class BotCmdHandler
     private readonly ConcurrentDictionary<string, (ulong LotCtx, TaskCompletionSource<BulletinResponse> Tcs)>
         _pendingBulletins = new();
 
+    // create-avatar: FIFO (CreateASimResponse carries no correlator; serial IPC dispatch).
+    private readonly ConcurrentDictionary<string, TaskCompletionSource<CreateASimResponse>>
+        _pendingCreateSim = new();
+
     // ---- H2: SessionClosed / GetOrAdd race guard ----
     //
     // Protecting against: SessionClosed fires, sets _sessionClosed = true, clears dicts;
@@ -126,6 +133,7 @@ public sealed class BotCmdHandler
             if (_subscriberRegistered) return;
             cityAries.AddSubscriber(new ProbeLotAndPurchaseSubscriber(this));
             cityAries.AddSubscriber(new ProbeBulletinSubscriber(this));
+            cityAries.AddSubscriber(new CreateASimSubscriber(this));
             _subscriberRegistered = true;
         }
     }
@@ -170,6 +178,10 @@ public sealed class BotCmdHandler
 
             case "probe-bulletin":
                 await HandleProbeBulletinAsync(corrId, cityAries, args, ct);
+                return true;
+
+            case "create-avatar":
+                await HandleCreateAvatarAsync(corrId, cityAries, args, ct);
                 return true;
 
             case "bot-exit-request":
@@ -580,6 +592,153 @@ public sealed class BotCmdHandler
         }
     }
 
+    // ---- create-avatar (freesoexperiment-92a) ----
+
+    /// <summary>
+    /// create-avatar: sends <see cref="RSGZWrapperPDU"/> on the city Aries socket and
+    /// awaits the <see cref="CreateASimResponse"/> from the server's RegistrationHandler.
+    ///
+    /// <para>
+    /// The bot must be running in <c>--chargen-mode</c> (city-connected, no lot joined).
+    /// In normal (lot-joined) mode this command will still reach the city socket but the
+    /// server may reject it because the avatar claim is already in use — the sidecar returns
+    /// <c>ok:false reason:session-already-bound</c> in that case.
+    /// </para>
+    ///
+    /// <para>
+    /// <b>Args</b>:
+    ///   first_name  (string) — non-empty (validated sidecar-side before this is called)
+    ///   last_name   (string) — non-empty
+    ///   gender      (string) — "M" or "F" (upper-case, already normalised by sidecar)
+    ///   skin_tone   (string) — "light", "medium", or "dark" (lower-case, normalised)
+    ///   head_guid   (uint)   — high 32 bits of TSO head OutfitID (must be > 0)
+    ///   body_guid   (uint)   — high 32 bits of TSO body OutfitID (must be > 0)
+    ///   description (string) — avatar bio; may be empty
+    /// </para>
+    ///
+    /// <para>
+    /// <b>Reply data shape</b> (ok=true for both SUCCESS and engine-side FAILED, so
+    /// the sidecar can inspect status/reason without Go's forwardIPC hiding them):
+    /// <code>{"status":"SUCCESS","avatar_id":N}</code>
+    /// <code>{"status":"FAILED","reason":"NAME_TAKEN"}</code>
+    /// </para>
+    /// </summary>
+    private async Task HandleCreateAvatarAsync(
+        string corrId,
+        AriesClient cityAries,
+        JsonObject args,
+        CancellationToken ct)
+    {
+        if (cityAries == null)
+        {
+            EmitReply(corrId, ok: false, error: "create-avatar: city socket unavailable");
+            return;
+        }
+
+        // Parse args (already validated sidecar-side; parse again defensively).
+        string firstName, lastName, genderStr, skinToneStr, description;
+        uint headGuid, bodyGuid;
+        try
+        {
+            firstName   = (string)args["first_name"]  ?? throw new ArgumentException("first_name required");
+            lastName    = (string)args["last_name"]   ?? throw new ArgumentException("last_name required");
+            genderStr   = (string)args["gender"]      ?? throw new ArgumentException("gender required");
+            skinToneStr = (string)args["skin_tone"]   ?? "light";
+            description = (string)args["description"] ?? "";
+
+            headGuid = ParseUInt32Arg(args, "head_guid");
+            bodyGuid = ParseUInt32Arg(args, "body_guid");
+
+            if (headGuid == 0) throw new ArgumentException("head_guid must be > 0");
+            if (bodyGuid == 0) throw new ArgumentException("body_guid must be > 0");
+        }
+        catch (Exception ex)
+        {
+            EmitReply(corrId, ok: false, error: $"create-avatar: bad args: {ex.Message}");
+            return;
+        }
+
+        Gender gender = genderStr.Equals("F", StringComparison.OrdinalIgnoreCase) ? Gender.FEMALE : Gender.MALE;
+        SkinTone skinTone = skinToneStr switch
+        {
+            "medium" => SkinTone.MEDIUM,
+            "dark"   => SkinTone.DARK,
+            _        => SkinTone.LIGHT,
+        };
+
+        // H2: under lock, check session not closed, then register a TCS for the response.
+        TaskCompletionSource<CreateASimResponse> tcs;
+        lock (_pendingLock)
+        {
+            if (_sessionClosed)
+            {
+                EmitReply(corrId, ok: false, error: "create-avatar: session already closed");
+                return;
+            }
+            tcs = new TaskCompletionSource<CreateASimResponse>(TaskCreationOptions.RunContinuationsAsynchronously);
+            _pendingCreateSim[corrId] = tcs;
+        }
+
+        // FSO full name wire format: "FirstName LastName" as a single Name field.
+        string fullName = $"{firstName} {lastName}";
+
+        try
+        {
+            cityAries.Write(new RSGZWrapperPDU
+            {
+                Name         = fullName,
+                Description  = description,
+                Gender       = gender,
+                SkinTone     = skinTone,
+                HeadOutfitId = headGuid,
+                BodyOutfitId = bodyGuid,
+            });
+
+            using var cts = CancellationTokenSource.CreateLinkedTokenSource(ct);
+            cts.CancelAfter(TimeSpan.FromSeconds(15));
+
+            var first = await Task.WhenAny(tcs.Task, Task.Delay(Timeout.Infinite, cts.Token));
+            if (first != tcs.Task)
+            {
+                EmitReply(corrId, ok: false, error: "create-avatar: timeout waiting for CreateASimResponse");
+                return;
+            }
+
+            var resp = await tcs.Task;
+
+            if (resp.Status == CreateASimStatus.SUCCESS)
+            {
+                EmitReply(corrId, ok: true, data: new
+                {
+                    status    = "SUCCESS",
+                    avatar_id = (long)resp.NewAvatarId,
+                });
+            }
+            else
+            {
+                // Emit ok=true so the sidecar can translate reason into the convention
+                // response shape (ok:false, reason:"category:<name>").
+                EmitReply(corrId, ok: true, data: new
+                {
+                    status = "FAILED",
+                    reason = resp.Reason.ToString(),
+                });
+            }
+        }
+        catch (OperationCanceledException)
+        {
+            EmitReply(corrId, ok: false, error: "create-avatar: cancelled");
+        }
+        catch (Exception ex)
+        {
+            EmitReply(corrId, ok: false, error: $"create-avatar: {ex.GetType().Name}: {ex.Message}");
+        }
+        finally
+        {
+            _pendingCreateSim.TryRemove(corrId, out _);
+        }
+    }
+
     // ---- bot-exit-request ----
 
     private static void HandleBotExitRequest(string corrId)
@@ -760,6 +919,60 @@ public sealed class BotCmdHandler
         public void InputClosed(AriesClient c) { }
     }
 
+    // ---- create-avatar city-socket subscriber ----
+
+    /// <summary>
+    /// Forwards inbound <see cref="CreateASimResponse"/> packets to pending
+    /// <c>create-avatar</c> TCS entries.
+    ///
+    /// <para>
+    /// <b>FIFO delivery</b>: <see cref="CreateASimResponse"/> carries no echo of the
+    /// correlation_id, so we complete the first incomplete TCS. Serial IPC dispatch means
+    /// at most one <c>create-avatar</c> is in flight at a time — safe assumption.
+    /// </para>
+    ///
+    /// <para>
+    /// <b>SessionClosed</b>: mirrors <see cref="ProbeBulletinSubscriber"/> — sets the
+    /// handler's closed flag under lock and cancels all pending TCSes.
+    /// </para>
+    /// </summary>
+    private sealed class CreateASimSubscriber : IAriesMessageSubscriber, IAriesEventSubscriber
+    {
+        private readonly BotCmdHandler _handler;
+        public CreateASimSubscriber(BotCmdHandler handler) => _handler = handler;
+
+        public void MessageReceived(AriesClient client, object message)
+        {
+            if (message is CreateASimResponse resp)
+            {
+                // FIFO — no correlator in CreateASimResponse.
+                foreach (var kv in _handler._pendingCreateSim)
+                {
+                    if (kv.Value.Task.IsCompleted) continue;
+                    kv.Value.TrySetResult(resp);
+                    return;
+                }
+                Program.Log("[chargen] CreateASimResponse arrived with no pending TCS (stray packet)");
+            }
+        }
+
+        public void SessionCreated(AriesClient c) { }
+        public void SessionOpened(AriesClient c) { }
+        public void SessionClosed(AriesClient c)
+        {
+            List<TaskCompletionSource<CreateASimResponse>> pending;
+            lock (_handler._pendingLock)
+            {
+                _handler._sessionClosed = true;
+                pending = _handler._pendingCreateSim.Values.ToList();
+                _handler._pendingCreateSim.Clear();
+            }
+            foreach (var tcs in pending) tcs.TrySetCanceled();
+        }
+        public void SessionIdle(AriesClient c) { }
+        public void InputClosed(AriesClient c) { }
+    }
+
     // ---- helpers ----
 
     /// <summary>
@@ -773,6 +986,24 @@ public sealed class BotCmdHandler
         if (node is JsonValue v && v.TryGetValue<long>(out var lv)) return (ushort)lv;
         if (ushort.TryParse(node.ToString(), out var u)) return u;
         throw new ArgumentException($"{key} must be a valid ushort (got {node})");
+    }
+
+    /// <summary>
+    /// Read a uint32 arg from a JsonObject. Accepts int64 JSON numbers and numeric strings.
+    /// Throws ArgumentException on missing or bad value. Negative values are treated as 0
+    /// (will fail the caller's > 0 guard).
+    /// </summary>
+    private static uint ParseUInt32Arg(JsonObject args, string key)
+    {
+        var node = args[key];
+        if (node == null) throw new ArgumentException($"{key} required");
+        if (node is JsonValue v)
+        {
+            if (v.TryGetValue<long>(out var lv)) return lv < 0 ? 0u : (uint)lv;
+            if (v.TryGetValue<ulong>(out var ulv)) return (uint)Math.Min(ulv, uint.MaxValue);
+        }
+        if (uint.TryParse(node.ToString(), out var u)) return u;
+        throw new ArgumentException($"{key} must be a valid uint32 (got {node})");
     }
 
     // ---- emit helper ----

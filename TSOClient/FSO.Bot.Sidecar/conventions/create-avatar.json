@@ -1,0 +1,82 @@
+{
+  "convention": "freeso-embodiment",
+  "version": "1.0",
+  "operation": "create-avatar",
+  "family": "chargen",
+  "description": "Create a new TSO avatar for the currently authenticated user. The bot must be running in --chargen-mode (city-connected, no lot joined). Sends RSGZWrapperPDU on the city Voltron socket and awaits CreateASimResponse. On SUCCESS the server writes a new fso_avatars row and returns the new avatar_id. Only valid for sessions where the user has no avatar yet (or fewer than the per-account limit). Wire constraint: head_guid and body_guid are the high 32 bits of the TSO catalog OutfitID (the same uint32 the server stores in ValidMaleOutfits / ValidFemaleOutfits dict keys). Validation is engine-side: invalid GUIDs → ok:false reason:invalid-guid. Name collision → ok:false reason:name-taken.",
+  "args": [
+    {
+      "name": "first_name",
+      "type": "string",
+      "required": true,
+      "description": "Avatar first name. Must start with a letter, contain only letters and spaces, 3-24 chars. Engine validates."
+    },
+    {
+      "name": "last_name",
+      "type": "string",
+      "required": true,
+      "description": "Avatar last name. Same validation rules as first_name. Full name = first_name + ' ' + last_name."
+    },
+    {
+      "name": "description",
+      "type": "string",
+      "required": false,
+      "description": "Avatar bio / description. Max 499 printable ASCII chars. Defaults to empty string."
+    },
+    {
+      "name": "gender",
+      "type": "string",
+      "required": true,
+      "description": "Gender: 'M' or 'F' (case-insensitive). Determines which head/body catalog the engine validates against."
+    },
+    {
+      "name": "skin_tone",
+      "type": "string",
+      "required": false,
+      "description": "Skin tone: 'light', 'medium', or 'dark'. Defaults to 'light'."
+    },
+    {
+      "name": "head_guid",
+      "type": "uint",
+      "required": true,
+      "description": "Head outfit ID — the high 32 bits of the TSO OutfitID (uint32). Must be a valid entry in the ea_male_heads.col or ea_female_heads.col catalog matching the chosen gender."
+    },
+    {
+      "name": "body_guid",
+      "type": "uint",
+      "required": true,
+      "description": "Body outfit ID — the high 32 bits of the TSO OutfitID (uint32). Must be a valid entry in the ea_male.col or ea_female.col catalog matching the chosen gender."
+    }
+  ],
+  "produces_tags": [
+    {
+      "tag": "freeso:create-avatar",
+      "cardinality": "exactly_one"
+    }
+  ],
+  "antecedents": "none",
+  "signing": "member_key",
+  "rate_limit": {
+    "max": 3,
+    "per": "sender",
+    "window": "1m"
+  },
+  "response": "sync",
+  "call_signatures": [
+    "cf $CF create-avatar --first_name Vivi --last_name Romero --gender F --skin_tone light --head_guid 399 --body_guid 1192 --description 'A bright spark in Alphaville.'",
+    "cf $CF create-avatar --first_name Joao --last_name Silva --gender M --head_guid 949 --body_guid 601"
+  ],
+  "common_mistakes": [
+    "Passing the full 64-bit OutfitID instead of the high 32 bits. head_guid=4075923963917 is wrong; head_guid=949 is correct (4075923963917 >> 32).",
+    "Using a head GUID for the body slot or vice versa — the server validates against separate head/body catalogs.",
+    "Calling create-avatar when the bot is in normal (lot-joined) mode — the bot must be launched with --chargen-mode.",
+    "Reusing a first_name+last_name that already exists in fso_avatars — the engine returns reason:name-taken."
+  ],
+  "refuse_conditions": [
+    "first_name missing or empty → ok:false",
+    "last_name missing or empty → ok:false",
+    "gender not 'M' or 'F' → ok:false",
+    "head_guid or body_guid is 0 or missing → ok:false",
+    "engine validation failed → ok:false, reason in category:name-taken|invalid-guid|engine-refused"
+  ]
+}

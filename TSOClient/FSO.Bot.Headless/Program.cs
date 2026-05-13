@@ -140,6 +140,12 @@ public class Program
     {
         bool verifyMode = args.Any(a => a == "--verify-lot-join");
         bool emitPerception = args.Any(a => a == "--emit-perception");
+        // --chargen-mode: city-connected, no lot joined. Authenticates, connects city Aries
+        // socket, then waits for bot-cmd:create-avatar IPC commands. Returns when the IPC
+        // dispatcher is stopped (SIGINT / bot-cmd:bot-exit-request). Does NOT require the
+        // user to have any existing avatar — skips the AvatarDataServlet avatar-count check.
+        // Must be combined with --emit-perception to enable the IPC dispatcher.
+        bool chargenMode = args.Any(a => a == "--chargen-mode");
 
         // Critical: before *any* library code runs, reserve real stdout if we're going to emit
         // NDJSON on it. Upstream FSO libraries make bare Console.WriteLine calls (e.g. the VM
@@ -174,7 +180,7 @@ public class Program
         // In --emit-perception mode, stdout is reserved for NDJSON. Force all log writes to stderr.
         LogToStderr = emitPerception;
 
-        Log($"config api={apiUrl} user={username} shard={shardName} lot_location={(targetLotLocation == 0 ? "auto" : "0x" + targetLotLocation.ToString("X"))} hold={holdSecs}s verify={verifyMode} emit-perception={emitPerception} perception_hz={perceptionHz}");
+        Log($"config api={apiUrl} user={username} shard={shardName} lot_location={(targetLotLocation == 0 ? "auto" : "0x" + targetLotLocation.ToString("X"))} hold={holdSecs}s verify={verifyMode} emit-perception={emitPerception} chargen-mode={chargenMode} perception_hz={perceptionHz}");
         Log($"config gameLocation={gameLocation} tickHz={tickHz}");
         Log($"shutdown-hooks installed: CancelKeyPress + ProcessExit + UnhandledException → EnsureCleanDisconnect");
 
@@ -218,27 +224,54 @@ public class Program
         }
 
         var avatars = city.AvatarDataServlet();
-        if (avatars.Count == 0) { Log("no avatars"); return 3; }
-        var avatar = avatars.FirstOrDefault(a => a.ShardName == shardName) ?? avatars[0];
-        Log($"selected avatar id={avatar.ID} name={avatar.Name} lot_id={avatar.LotId} lot_location=0x{avatar.LotLocation:X} lot_name={avatar.LotName}");
 
-        if (targetLotLocation == 0)
+        // In chargen mode the user may have zero avatars — that's the point.
+        // We skip avatar/lot selection and go straight to city-connect.
+        if (!chargenMode && avatars.Count == 0) { Log("no avatars"); return 3; }
+
+        uint chargenAvatarId = 0; // 0 until the server assigns a new avatar_id
+        ShardSelectorServletResponse shardResp;
+
+        if (chargenMode)
         {
-            if (!avatar.LotLocation.HasValue || avatar.LotLocation.Value == 0)
+            // Chargen mode: use a zeroed avatar ID for the shard-selector so the city
+            // socket accepts us as an authenticated (but avatarless) client.
+            // The city server's CityHandler will let us send RSGZWrapperPDU for registration.
+            Log("chargen-mode: skipping avatar/lot selection; connecting to city for avatar creation");
+
+            // We still call ShardSelectorServlet — it authenticates us on the city socket.
+            // Avatar ID 0 is what the original game client sends before a new avatar exists.
+            shardResp = city.ShardSelectorServlet(new ShardSelectorServletRequest
             {
-                Log("avatar has no home lot and FSO_LOT_LOCATION unset — cannot continue");
-                return 3;
-            }
-            targetLotLocation = avatar.LotLocation.Value;
-            Log($"using avatar's home lot location 0x{targetLotLocation:X}");
+                ShardName = shardName,
+                AvatarID  = "0",
+            });
+            Log($"chargen shard-selector addr={shardResp.Address} playerId={shardResp.PlayerID}");
         }
-
-        var shardResp = city.ShardSelectorServlet(new ShardSelectorServletRequest
+        else
         {
-            ShardName = shardName,
-            AvatarID = avatar.ID.ToString()
-        });
-        Log($"shard-selector addr={shardResp.Address} playerId={shardResp.PlayerID} avatarId={shardResp.AvatarID}");
+            // Normal mode: select an existing avatar and resolve the target lot location.
+            var selectedAvatar = avatars.FirstOrDefault(a => a.ShardName == shardName) ?? avatars[0];
+            Log($"selected avatar id={selectedAvatar.ID} name={selectedAvatar.Name} lot_id={selectedAvatar.LotId} lot_location=0x{selectedAvatar.LotLocation:X} lot_name={selectedAvatar.LotName}");
+
+            if (targetLotLocation == 0)
+            {
+                if (!selectedAvatar.LotLocation.HasValue || selectedAvatar.LotLocation.Value == 0)
+                {
+                    Log("avatar has no home lot and FSO_LOT_LOCATION unset — cannot continue");
+                    return 3;
+                }
+                targetLotLocation = selectedAvatar.LotLocation.Value;
+                Log($"using avatar's home lot location 0x{targetLotLocation:X}");
+            }
+
+            shardResp = city.ShardSelectorServlet(new ShardSelectorServletRequest
+            {
+                ShardName = shardName,
+                AvatarID  = selectedAvatar.ID.ToString()
+            });
+            Log($"shard-selector addr={shardResp.Address} playerId={shardResp.PlayerID} avatarId={shardResp.AvatarID}");
+        }
 
         // 3. Build the two Aries sessions (city + lot). Both need the same Ninject wiring for the
         // protocol codec. Upstream keeps the two as distinct singletons; we do the same but inline.
@@ -260,8 +293,58 @@ public class Program
 
         var verify = new VerifyResult { ContentInit = true };
 
+        // --chargen-mode: city-only, no lot join. Connect to city, start the IPC dispatcher
+        // (bot-cmd channel only — no VM handlers), wait for create-avatar bot-cmds, then exit.
+        if (chargenMode)
+        {
+            // Chargen needs stdout reserved for NDJSON replies from bot-cmd.
+            if (emitPerception) PerceptionEmitter.ReserveStdout();
+            else                PerceptionEmitter.ReserveStdout(); // always needed in chargen
+
+            // Wire a minimal city-only disconnect callback.
+            Volatile.Write(ref _disconnectCallback, () => TryCleanDisconnectCityOnly(cityAries));
+
+            // Connect to city.
+            Log($"chargen: aries(city) → {shardResp.Address}");
+            cityAries.Connect(shardResp.Address);
+
+            if (!await cityListener.WaitForClientOnlineAck(TimeSpan.FromSeconds(20)))
+            {
+                Log("chargen: city connect timed out");
+                return 4;
+            }
+            verify.CityConnected = true;
+            Log("chargen: city connect ok — waiting for bot-cmd:create-avatar");
+
+            // Start a minimal IPC dispatcher: only the bot-cmd envelope is wired.
+            // No VM handlers (no lot, no VM), just create-avatar via BotCmdHandler.
+            var chargenBotCmdHandler = new BotCmdHandler();
+            chargenBotCmdHandler.RegisterSubscriber(cityAries);
+
+            var chargenDispatcher = new CommandDispatcher();
+            chargenDispatcher.BotCmdDispatch = (node, ct) => chargenBotCmdHandler.TryHandleAsync(node, cityAries, ct);
+            chargenDispatcher.Start();
+            Log("chargen: ipc dispatcher started (bot-cmd:create-avatar ready)");
+
+            // Hold until shutdown (SIGINT or bot-exit-request).
+            while (!_shutdownCts.IsCancellationRequested)
+            {
+                await Task.Delay(250);
+            }
+            Log("chargen: shutdown requested — exiting");
+
+            chargenDispatcher.Stop();
+            Interlocked.Exchange(ref _disconnectFired, 1);
+            await TryCleanDisconnectCityOnly(cityAries);
+            return _shutdownCts.IsCancellationRequested ? 130 : 0;
+        }
+
+        // ---- Normal (lot-joined) mode from here ----
+
         // 4. VM host. Created here (not lazily) so catchup ticks have somewhere to land as soon
         // as the lot socket flips to LotCommandStream.
+        // In chargen mode we never reach here — avatar is always found above (non-chargen path).
+        var avatar = avatars.FirstOrDefault(a => a.ShardName == shardName) ?? avatars[0];
         var vmHost = new HeadlessVMHost(avatar.ID);
         verify.VmInitOk = true;
 
@@ -582,6 +665,16 @@ public class Program
         try { cityAries.Disconnect(); } catch { }
         await Task.Delay(300);
         return ok;
+    }
+
+    /// <summary>
+    /// Clean disconnect for chargen mode (city-only; no lot socket to close).
+    /// </summary>
+    private static async Task<bool> TryCleanDisconnectCityOnly(AriesClient cityAries)
+    {
+        try { cityAries.Disconnect(); } catch (Exception e) { Log($"chargen-disconnect: {e.GetType().Name}: {e.Message}"); }
+        await Task.Delay(300);
+        return true;
     }
 
     private static uint ParseLocation(string s)

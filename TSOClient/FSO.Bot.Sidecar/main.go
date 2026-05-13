@@ -340,6 +340,16 @@ func main() {
 		}
 		log.Printf("convention handlers: %d screenshot-family ops serving", screenshotServers)
 
+		// Chargen family (freesoexperiment-92a): create-avatar.
+		// City-socket operation (RSGZWrapperPDU via bot-cmd:create-avatar).
+		// Bot must be launched with --chargen-mode for this to succeed; in normal
+		// (lot-joined) mode the bot-cmd returns ok:false/session-already-bound.
+		chargenServers, err := RegisterChargenHandlers(ctx, cf, botCmds)
+		if err != nil {
+			log.Fatalf("register chargen handlers: %v", err)
+		}
+		log.Printf("convention handlers: %d chargen-family ops serving", chargenServers)
+
 		// Single-dispatcher: one Subscribe goroutine handles every registered op
 		// instead of one Subscribe per op. Replaces the convention.Server fleet
 		// (which saturated SQLite at 103 × 500ms polls + per-poll fs sync) with
