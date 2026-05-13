@@ -67,8 +67,12 @@ namespace FSO.LotRenderer
         static WorldRotation? RenderRotation = null;  // null = TopLeft (iso-ne)
         static WorldZoom?     RenderZoom     = null;  // null = Far
 
+        // S3: HTTP service mode.
+        static bool ServeMode = false;
+        static int  ServePort = 9101;
+
         static _3DLayer Layer;
-        static GraphicsDevice GD;
+        internal static GraphicsDevice GD;
         static HeadlessGraphicsDeviceService GDS;
 
         static int Main(string[] args)
@@ -92,6 +96,12 @@ namespace FSO.LotRenderer
                         break;
                     case "--zoom":
                         RenderZoom = ParseZoom(args[++i]);
+                        break;
+                    case "--serve":
+                        ServeMode = true;
+                        break;
+                    case "--port":
+                        ServePort = int.Parse(args[++i]);
                         break;
                     default:
                         Console.Error.WriteLine($"Unknown flag: {args[i]}");
@@ -219,7 +229,24 @@ namespace FSO.LotRenderer
             Layer = new _3DLayer();
             Layer.Initialize(GD);
 
-            // --- Login and render ---
+            // --- S3 serve mode OR S1/S2 one-shot render ---
+            if (ServeMode)
+            {
+                Console.WriteLine("[renderer] Starting HTTP service mode...");
+                RendererServer.ApiUrl      = ApiUrl;
+                RendererServer.ApiUser     = ApiUser;
+                RendererServer.ApiPassword = ApiPassword;
+                RendererServer.DbConnectionString = Environment.GetEnvironmentVariable("FSO_DB_URL");
+                // Cache dir: env override → /var/lib/freeso-renderer/cache (with fallback inside Server)
+                RendererServer.CacheDir    = Environment.GetEnvironmentVariable("FSO_RENDERER_CACHE_DIR")
+                                             ?? "/var/lib/freeso-renderer/cache";
+                // Bind address: env override → localhost:port
+                RendererServer.BindAddress = Environment.GetEnvironmentVariable("FSO_RENDERER_BIND")
+                                             ?? $"127.0.0.1:{ServePort}";
+                return RendererServer.Run(ServePort);
+            }
+
+            // --- Login and render (one-shot) ---
             Console.WriteLine("[renderer] Logging in to API at: " + ApiUrl);
             return RunRenderLoop();
         }
@@ -425,6 +452,10 @@ namespace FSO.LotRenderer
             // Switch to Full2D so World.InitDefaultGraphicsMode creates WorldPlatform2D,
             // which GetLotThumbAt requires.  Restored to Full3D in the finally block.
             GraphicsModeControl.ChangeMode(FSO.LotView.Model.GlobalGraphicsMode.Full2D);
+            // Unset any active render target left by a previous render before Present().
+            // GetLotThumbAt renders to an off-screen target and may leave it active on
+            // the device; calling Present with an active render target throws on Mesa.
+            gd.SetRenderTarget(null);
             gd.Present();
             var world = new World(gd);
             world.Opacity = 1;
@@ -436,6 +467,12 @@ namespace FSO.LotRenderer
             vm.Init();
             vm.Load(marshal);
 
+            // Prime _2DWorldBatch.WorldCamera so Resume() doesn't NullRef.
+            // Resume() calls Begin(this.WorldCamera); WorldCamera is null until Begin()
+            // has been called at least once.  The normal World.Draw() loop calls Begin()
+            // first, but our headless Force2DPredraw bypasses that loop.
+            // SignalAllDirty() + Force2DPredraw (in SetAllLights) triggers RecacheWalls
+            // → _2d.Pause() / _2d.Resume() — if WorldCamera is still null, Resume throws.
             world.State._2D.Begin(world.State.Camera2D);
 
             SetOutsideTime(gd, vm, world, 0.5f, false);
