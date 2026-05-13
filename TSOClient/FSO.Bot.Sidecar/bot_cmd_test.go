@@ -534,3 +534,55 @@ func bridgesRunNoCampfire(ctx context.Context, proc *BotProcess, pump *BotCmdPum
 		}
 	}
 }
+
+// bridgesRunNoCampfireReady is like bridgesRunNoCampfire but signals the
+// returned channel when the bot emits its first system:ready event. Use this
+// instead of bridgesRunNoCampfire + time.Sleep when the caller needs to know
+// the bot is live and ready to accept stdin commands before proceeding.
+//
+// The returned channel is closed (never just sent to) so callers can select on
+// it safely even if the ready signal arrives before the select is reached.
+//
+// Usage:
+//
+//	ready := bridgesRunNoCampfireReady(ctx, proc, pump)
+//	select {
+//	case <-ready:
+//	case <-time.After(5 * time.Second):
+//	    t.Fatal("bot did not emit system:ready within 5s")
+//	case <-ctx.Done():
+//	    t.Fatal("context cancelled waiting for system:ready")
+//	}
+func bridgesRunNoCampfireReady(ctx context.Context, proc *BotProcess, pump *BotCmdPump) <-chan struct{} {
+	ready := make(chan struct{})
+	go func() {
+		signalled := false
+		for {
+			select {
+			case <-ctx.Done():
+				return
+			case line, ok := <-proc.Lines():
+				if !ok {
+					return
+				}
+				var env struct {
+					Kind    string `json:"kind"`
+					Payload struct {
+						Event string `json:"event"`
+					} `json:"payload"`
+				}
+				if jerr := json.Unmarshal(line, &env); jerr != nil {
+					continue
+				}
+				if !signalled && env.Kind == "system" && env.Payload.Event == "ready" {
+					close(ready)
+					signalled = true
+				}
+				if env.Kind == "bot-cmd-reply" {
+					pump.Deliver(line)
+				}
+			}
+		}
+	}()
+	return ready
+}

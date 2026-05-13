@@ -126,13 +126,26 @@ sleep 0.5
 	campfireID := waitForCampfireID(t, stdout, 20*time.Second)
 	t.Logf("campfire id: %s", campfireID)
 
-	// Give the bridges time to broadcast the stub bot's events.
-	time.Sleep(2 * time.Second)
-
 	// 5. Shell out to `cf read` in a separate process. We use the same CF_HOME
 	// as the sidecar so the read sees the same store.
+	//
+	// Poll for perception event instead of a fixed sleep: the stub bot emits
+	// system:ready + perception + dialog; the bridges propagate them
+	// asynchronously. We poll up to 5s for the perception broadcast to appear,
+	// then proceed to the full assertions. This is both faster (exits as soon as
+	// data is present) and deterministic (no race against a fixed timeout).
 	readCtx, readCancel := context.WithTimeout(context.Background(), 10*time.Second)
 	defer readCancel()
+	{
+		pollDeadline := time.Now().Add(5 * time.Second)
+		for time.Now().Before(pollDeadline) {
+			percPoll, _ := runCf(readCtx, cfBin, cfHome, "read", campfireID, "--all", "--peek", "--tag", "freeso:perception")
+			if strings.Contains(percPoll, `"persist_id":2`) || strings.Contains(percPoll, `"persist_id": 2`) {
+				break
+			}
+			time.Sleep(100 * time.Millisecond)
+		}
+	}
 
 	// Check declarations present.
 	declOut, err := runCf(readCtx, cfBin, cfHome, "read", campfireID, "--all", "--peek", "--tag", "convention:operation")
@@ -816,10 +829,15 @@ done
 	ipc := NewIPC(proc)
 	pump := NewBotCmdPump(proc)
 
-	// Route bot-cmd-reply frames to pump.
-	go bridgesRunNoCampfire(ctx, proc, pump)
-	// Give the stub bot a moment to emit system:ready.
-	time.Sleep(150 * time.Millisecond)
+	// Wait for system:ready instead of a fixed sleep — deterministic sync.
+	botReady1 := bridgesRunNoCampfireReady(ctx, proc, pump)
+	select {
+	case <-botReady1:
+	case <-time.After(5 * time.Second):
+		t.Fatal("shape1: bot did not emit system:ready within 5s")
+	case <-ctx.Done():
+		t.Fatal("shape1: context cancelled waiting for system:ready")
+	}
 
 	// --- Shape 1: hex fallback ---
 	t.Log("Shape 1: --target_lot_location 0x00110F00 (hex fallback)")
@@ -888,8 +906,16 @@ done
 
 	ipc2 := NewIPC(proc2)
 	pump2 := NewBotCmdPump(proc2)
-	go bridgesRunNoCampfire(ctx2, proc2, pump2)
-	time.Sleep(150 * time.Millisecond)
+
+	// Wait for system:ready instead of a fixed sleep — deterministic sync.
+	botReady2 := bridgesRunNoCampfireReady(ctx2, proc2, pump2)
+	select {
+	case <-botReady2:
+	case <-time.After(5 * time.Second):
+		t.Fatal("shape2: bot did not emit system:ready within 5s")
+	case <-ctx2.Done():
+		t.Fatal("shape2: context cancelled waiting for system:ready")
+	}
 
 	handler2 := visitLotHandler(ipc2, pump2, store)
 	nameCtx, nameCancel := context.WithTimeout(ctx2, 10*time.Second)

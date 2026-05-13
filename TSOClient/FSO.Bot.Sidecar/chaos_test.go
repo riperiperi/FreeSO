@@ -536,8 +536,15 @@ fi
 	pump := NewBotCmdPump(proc)
 	store := NewMemoryStore()
 
-	go bridgesRunNoCampfire(ctx2, proc, pump)
-	time.Sleep(100 * time.Millisecond)
+	// Wait for system:ready instead of a fixed sleep — deterministic sync.
+	botReady := bridgesRunNoCampfireReady(ctx2, proc, pump)
+	select {
+	case <-botReady:
+	case <-time.After(5 * time.Second):
+		t.Fatal("KILL_B: bot did not emit system:ready within 5s")
+	case <-ctx2.Done():
+		t.Fatal("KILL_B: context cancelled waiting for system:ready")
+	}
 
 	// Trigger visit-lot handler in-process. This will send probe-lot (bot replies
 	// FOUND and blocks on FIFO), then try to send bot-exit-request (which will
@@ -697,8 +704,16 @@ done
 
 	pump := NewBotCmdPump(proc)
 	store := NewMemoryStore()
-	go bridgesRunNoCampfire(ctx, proc, pump)
-	time.Sleep(100 * time.Millisecond)
+
+	// Wait for system:ready instead of a fixed sleep — deterministic sync.
+	botReady := bridgesRunNoCampfireReady(ctx, proc, pump)
+	select {
+	case <-botReady:
+	case <-time.After(5 * time.Second):
+		t.Fatal("KILL_C: bot did not emit system:ready within 5s")
+	case <-ctx.Done():
+		t.Fatal("KILL_C: context cancelled waiting for system:ready")
+	}
 
 	// Use a short context for the handler so it times out promptly.
 	handlerCtx, handlerCancel := context.WithTimeout(ctx, 5*time.Second)
