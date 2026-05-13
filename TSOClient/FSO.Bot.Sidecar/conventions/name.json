@@ -5,17 +5,56 @@
   "family": "memory",
   "description": "Bind a human-readable name to a target you want to remember by identity instead of id. The naming is YOURS — 'the toilet', 'the shrub-trap', 'Kelly's spot', 'joao's place'. Once named, use it in go-to with --my_name, or in visit-lot with --my_name (for lot bindings). Exactly one target kind per call: target_object_id (a VMEntity), target_sim_id (a Sim persist id), location (tile x,y,level — for naming a spot, not an object), or lot_location (a lot location code — for naming a lot you can visit-lot to). Names are case-insensitive on lookup; the original case is preserved for display. Re-naming overwrites. Storage is sidecar-local and session-scoped (lost on bot restart — identity continuation across sessions is -38a). This verb removes the need to carry ObjectIDs or lot location codes in your working memory; your private vocabulary of the world is what lets you talk about it like a place instead of a data structure.",
   "args": [
-    {"name": "as", "type": "string", "required": true, "description": "The name you are giving this target. Free-form. Case-insensitive on lookup."},
-    {"name": "target_object_id", "type": "integer", "required": false, "description": "ObjectID of the thing you're naming (e.g. a toilet, a sofa, a door)."},
-    {"name": "target_sim_id", "type": "integer", "required": false, "description": "Persist id of the Sim you're naming."},
-    {"name": "location", "type": "json", "required": false, "description": "{\"x\": tile_x, \"y\": tile_y, \"level\": 1}. Tile units. Use for naming a spot with no object there ('the shrub-trap', 'the corner I got stuck')."},
-    {"name": "lot_location", "type": "string", "required": false, "description": "Lot location code ('0x00F8F100' hex or decimal uint32). Use for naming a lot so you can visit-lot --my_name later. The value is the same packed location code from perception.lot.lot_id or find-avatar's lot_location field."},
-    {"name": "note", "type": "string", "required": false, "description": "Optional free-form note stored with the name. Surfaces in list-names."}
+    {
+      "name": "as",
+      "type": "string",
+      "required": true,
+      "description": "The name you are giving this target. Free-form. Case-insensitive on lookup."
+    },
+    {
+      "name": "target_object_id",
+      "type": "integer",
+      "required": false,
+      "description": "ObjectID of the thing you're naming (e.g. a toilet, a sofa, a door)."
+    },
+    {
+      "name": "target_sim_id",
+      "type": "integer",
+      "required": false,
+      "description": "Persist id of the Sim you're naming."
+    },
+    {
+      "name": "location",
+      "type": "json",
+      "required": false,
+      "description": "{\"x\": tile_x, \"y\": tile_y, \"level\": 1}. Tile units. Use for naming a spot with no object there ('the shrub-trap', 'the corner I got stuck')."
+    },
+    {
+      "name": "lot_location",
+      "type": "string",
+      "required": false,
+      "description": "Lot location code ('0x00F8F100' hex or decimal uint32). Use for naming a lot so you can visit-lot --my_name later. The value is the same packed location code from perception.lot.lot_id or find-avatar's lot_location field."
+    },
+    {
+      "name": "note",
+      "type": "string",
+      "required": false,
+      "description": "Optional free-form note stored with the name. Surfaces in list-names."
+    }
   ],
-  "produces_tags": [{"tag": "freeso:name", "cardinality": "exactly_one"}],
+  "produces_tags": [
+    {
+      "tag": "freeso:name",
+      "cardinality": "exactly_one"
+    }
+  ],
   "antecedents": "none",
   "signing": "member_key",
-  "rate_limit": {"max": 60, "per": "sender", "window": "1m"},
+  "rate_limit": {
+    "max": 60,
+    "per": "sender",
+    "window": "1m"
+  },
   "response": "sync",
   "call_signatures": [
     "cf $CF name --as \"the toilet\" --target_object_id 322                               # name an object",

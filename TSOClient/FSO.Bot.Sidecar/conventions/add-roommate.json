@@ -7,7 +7,7 @@
   "args": [
     {
       "name": "target_persist_id",
-      "type": "uint64",
+      "type": "integer",
       "required": true
     }
   ],

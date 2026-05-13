@@ -7,7 +7,7 @@
   "args": [
     {
       "name": "target_object_id",
-      "type": "uint",
+      "type": "integer",
       "required": true,
       "description": "The numeric object_id of the thing to claim. Obtain this from query-nearby or query-inventory. Must be a positive integer."
     },

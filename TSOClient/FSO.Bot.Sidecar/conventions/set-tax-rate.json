@@ -7,13 +7,13 @@
   "args": [
     {
       "name": "tax_rate_percent",
-      "type": "float64",
+      "type": "integer",
       "required": true,
-      "description": "Tax rate as a percentage of each resident's current balance (0.0–100.0). Values outside that range are refused with INVALID_TAX_RATE."
+      "description": "Tax rate as a whole-percent of each resident's current balance (0–100). Values outside that range are refused with INVALID_TAX_RATE. Sub-percent precision was dropped when the declaration type collapsed to integer (freesoexperiment-f47)."
     },
     {
       "name": "neighborhood_id",
-      "type": "uint32",
+      "type": "integer",
       "required": false,
       "description": "Target neighborhood (default 1 = Alphaville on workshop). Resident list is derived from fso_roommates rows in this neighborhood."
     }
@@ -34,12 +34,12 @@
   "response": "sync",
   "status": "implemented",
   "call_signatures": [
-    "cf $CF set-tax-rate --tax_rate_percent 5.0                                    # 5% tax on all residents in nhood 1",
-    "cf $CF set-tax-rate --tax_rate_percent 10.0 --neighborhood_id 1               # explicit nhood"
+    "cf $CF set-tax-rate --tax_rate_percent 5                                      # 5% tax on all residents in nhood 1",
+    "cf $CF set-tax-rate --tax_rate_percent 10 --neighborhood_id 1                 # explicit nhood"
   ],
   "common_mistakes": [
     "Only the mayor (fso_avatars.mayor_nhood > 0) can call this op — non-mayor gets NO_AUTH.",
-    "tax_rate_percent must be 0.0–100.0 — INVALID_TAX_RATE is returned otherwise.",
+    "tax_rate_percent must be 0–100 (integer) — INVALID_TAX_RATE is returned otherwise.",
     "The tax is applied immediately (on-demand) — there is no automatic schedule.",
     "Each resident's transaction appears as a negative budget delta on their next query-self."
   ],

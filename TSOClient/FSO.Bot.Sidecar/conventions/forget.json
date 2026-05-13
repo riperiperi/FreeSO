@@ -5,12 +5,26 @@
   "family": "memory",
   "description": "Remove a previously-set name binding. If the name was not set (or was already forgotten), returns ok:true with found:false — forget is idempotent. Use when a named thing has changed: the object got moved or sold, a Sim left, a spot is no longer meaningful. Does not delete any memory beyond the name binding; see remember/recall for general memory.",
   "args": [
-    {"name": "name", "type": "string", "required": true, "description": "The name to remove (case-insensitive)."}
+    {
+      "name": "name",
+      "type": "string",
+      "required": true,
+      "description": "The name to remove (case-insensitive)."
+    }
   ],
-  "produces_tags": [{"tag": "freeso:forget", "cardinality": "exactly_one"}],
+  "produces_tags": [
+    {
+      "tag": "freeso:forget",
+      "cardinality": "exactly_one"
+    }
+  ],
   "antecedents": "none",
   "signing": "member_key",
-  "rate_limit": {"max": 60, "per": "sender", "window": "1m"},
+  "rate_limit": {
+    "max": 60,
+    "per": "sender",
+    "window": "1m"
+  },
   "response": "sync",
   "call_signatures": [
     "cf $CF forget --name \"the toilet\"     # remove a name binding"

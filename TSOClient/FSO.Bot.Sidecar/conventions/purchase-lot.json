@@ -19,13 +19,13 @@
     },
     {
       "name": "start_fresh",
-      "type": "bool",
+      "type": "boolean",
       "required": false,
       "description": "If true, bypass lot-state carry-over (for mayor-mode community lot placement). Defaults false."
     },
     {
       "name": "allow_move",
-      "type": "bool",
+      "type": "boolean",
       "required": false,
       "description": "If true, skip the ALREADY_OWNS pre-check. The server will charge a move fee. Use only when explicitly re-purchasing or moving. Defaults false."
     }

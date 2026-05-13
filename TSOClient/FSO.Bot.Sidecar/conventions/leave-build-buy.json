@@ -7,7 +7,7 @@
   "args": [
     {
       "name": "build",
-      "type": "bool",
+      "type": "boolean",
       "required": false
     }
   ],

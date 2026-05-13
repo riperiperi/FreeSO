@@ -7,12 +7,12 @@
   "args": [
     {
       "name": "lot_size",
-      "type": "int64",
+      "type": "integer",
       "required": true
     },
     {
       "name": "lot_stories",
-      "type": "int64",
+      "type": "integer",
       "required": true
     }
   ],

@@ -37,13 +37,13 @@
     },
     {
       "name": "head_guid",
-      "type": "uint",
+      "type": "integer",
       "required": true,
       "description": "Head outfit ID — the high 32 bits of the TSO OutfitID (uint32). Must be a valid entry in the ea_male_heads.col or ea_female_heads.col catalog matching the chosen gender."
     },
     {
       "name": "body_guid",
-      "type": "uint",
+      "type": "integer",
       "required": true,
       "description": "Body outfit ID — the high 32 bits of the TSO OutfitID (uint32). Must be a valid entry in the ea_male.col or ea_female.col catalog matching the chosen gender."
     }

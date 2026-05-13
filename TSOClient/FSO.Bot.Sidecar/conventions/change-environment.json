@@ -7,13 +7,15 @@
   "args": [
     {
       "name": "guids_to_add",
-      "type": "list[int64]",
-      "required": false
+      "type": "integer",
+      "required": false,
+      "repeated": true
     },
     {
       "name": "guids_to_clear",
-      "type": "list[int64]",
-      "required": false
+      "type": "integer",
+      "required": false,
+      "repeated": true
     }
   ],
   "produces_tags": [

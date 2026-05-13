@@ -7,42 +7,42 @@
   "args": [
     {
       "name": "x",
-      "type": "int64",
+      "type": "integer",
       "required": true
     },
     {
       "name": "y",
-      "type": "int64",
+      "type": "integer",
       "required": true
     },
     {
       "name": "length",
-      "type": "int64",
+      "type": "integer",
       "required": true
     },
     {
       "name": "direction",
-      "type": "int64",
+      "type": "integer",
       "required": true
     },
     {
       "name": "level",
-      "type": "int64",
+      "type": "integer",
       "required": false
     },
     {
       "name": "pattern",
-      "type": "int64",
+      "type": "integer",
       "required": false
     },
     {
       "name": "style",
-      "type": "int64",
+      "type": "integer",
       "required": false
     },
     {
       "name": "remove",
-      "type": "bool",
+      "type": "boolean",
       "required": false
     }
   ],

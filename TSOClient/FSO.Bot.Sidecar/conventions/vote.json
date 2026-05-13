@@ -7,7 +7,7 @@
   "args": [
     {
       "name": "target_persist_id",
-      "type": "uint64",
+      "type": "integer",
       "required": false,
       "description": "Hex or decimal persist_id of the candidate avatar. Mutually exclusive with target_avatar_name — if both are supplied, target_avatar_name takes precedence (I0-5 name-primary invariant)."
     },
@@ -19,7 +19,7 @@
     },
     {
       "name": "neighborhood_id",
-      "type": "uint32",
+      "type": "integer",
       "required": false
     }
   ],

@@ -7,7 +7,7 @@
   "args": [
     {
       "name": "neighborhood_id",
-      "type": "uint32",
+      "type": "integer",
       "required": false
     }
   ],

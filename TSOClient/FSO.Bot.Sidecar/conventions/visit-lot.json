@@ -13,7 +13,7 @@
     },
     {
       "name": "target_lot_location",
-      "type": "uint",
+      "type": "integer",
       "required": false,
       "description": "Lot location code (hex '0x...' or decimal uint32). Hex fallback when --my_name is absent or unbound. One of my_name or target_lot_location is required."
     }

@@ -8,7 +8,10 @@ package main
 
 import (
 	"encoding/json"
+	"path/filepath"
 	"testing"
+
+	"github.com/campfire-net/campfire/pkg/convention"
 )
 
 // TestLoadDeclarations asserts every conventions/*.json parses into a valid
@@ -78,4 +81,43 @@ func TestDeclarationsSerialize(t *testing.T) {
 			t.Errorf("marshal %s: empty", d.Operation)
 		}
 	}
+}
+
+// TestDeclarationsLintClean asserts every conventions/*.json passes cf's lint —
+// the same gate that `cf convention adopt` runs before publishing. This is the
+// regression lock for freesoexperiment-f47: prior to that fix, 37/109 decls
+// failed lint on unknown arg-types (int64, uint64, float64, list[int64], …)
+// and `cf convention adopt` rejected them, leaving ~third of the verb catalog
+// uninvokable from cf CLI. The accepted vocabulary is fixed in
+// cf-conventions/cf-convention/parser.go (knownArgTypes): string, integer,
+// duration, boolean, key, campfire, message_id, json, tag_set, enum.
+func TestDeclarationsLintClean(t *testing.T) {
+	entries, err := conventionFiles.ReadDir("conventions")
+	if err != nil {
+		t.Fatalf("read embedded conventions dir: %v", err)
+	}
+	checked := 0
+	for _, e := range entries {
+		if e.IsDir() || filepath.Ext(e.Name()) != ".json" {
+			continue
+		}
+		payload, err := conventionFiles.ReadFile("conventions/" + e.Name())
+		if err != nil {
+			t.Errorf("read %s: %v", e.Name(), err)
+			continue
+		}
+		result := convention.Lint(payload)
+		for _, f := range result.Errors {
+			field := ""
+			if f.Field != "" {
+				field = " [" + f.Field + "]"
+			}
+			t.Errorf("%s: lint error%s: %s", e.Name(), field, f.Message)
+		}
+		checked++
+	}
+	if checked == 0 {
+		t.Fatalf("no conventions/*.json files found")
+	}
+	t.Logf("lint-checked %d declarations", checked)
 }

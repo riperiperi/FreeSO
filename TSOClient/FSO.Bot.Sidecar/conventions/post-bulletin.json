@@ -17,12 +17,12 @@
     },
     {
       "name": "neighborhood_id",
-      "type": "uint32",
+      "type": "integer",
       "required": false
     },
     {
       "name": "lot_id",
-      "type": "uint32",
+      "type": "integer",
       "required": false
     }
   ],

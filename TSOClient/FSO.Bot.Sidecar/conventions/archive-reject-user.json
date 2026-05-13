@@ -7,7 +7,7 @@
   "args": [
     {
       "name": "target_user_id",
-      "type": "uint",
+      "type": "integer",
       "required": true,
       "description": "fso_users.user_id of the pending user. This is NOT an avatar_id."
     }

@@ -7,12 +7,12 @@
   "args": [
     {
       "name": "target_object_id",
-      "type": "int64",
+      "type": "integer",
       "required": true
     },
     {
       "name": "cleanup_all",
-      "type": "bool",
+      "type": "boolean",
       "required": false
     }
   ],

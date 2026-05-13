@@ -7,12 +7,12 @@
   "args": [
     {
       "name": "style",
-      "type": "int64",
+      "type": "integer",
       "required": true
     },
     {
       "name": "pitch",
-      "type": "double",
+      "type": "integer",
       "required": false
     }
   ],

@@ -7,7 +7,7 @@
   "args": [
     {
       "name": "target_persist_id",
-      "type": "uint",
+      "type": "integer",
       "required": true,
       "description": "avatar_id (Sim persist id) of the user to kick."
     }

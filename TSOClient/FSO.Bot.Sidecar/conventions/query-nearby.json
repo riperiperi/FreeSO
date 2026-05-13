@@ -7,7 +7,7 @@
   "args": [
     {
       "name": "radius_tiles",
-      "type": "number",
+      "type": "integer",
       "required": false,
       "default": 20,
       "description": "Search radius in tiles (must be positive). Converted to engine-native 1/16-tile units internally. 20 tiles = a room plus adjacent rooms; matches what the perception stream uses."
