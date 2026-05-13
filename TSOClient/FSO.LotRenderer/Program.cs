@@ -119,6 +119,20 @@ namespace FSO.LotRenderer
             ApiPassword ??= Env("FSO_RENDERER_PASS",    "");
             GamePath    ??= Env("FSO_GAME_LOCATION",    "/home/baron/projects/freeso-experiment/GameAssets/TSOClient/");
 
+            // Fail-fast on missing credentials before expensive graphics/content init (freesoexperiment-015).
+            // An empty FSO_RENDERER_PASS would silently proceed through full asset loading then fail
+            // at AdminLoginAsync — slow and opaque.  Fail here with a clear message instead.
+            if (string.IsNullOrEmpty(ApiUser))
+            {
+                Console.Error.WriteLine("FSO_RENDERER_USER not set. See docs/ops/renderer-deployment.md for credential setup.");
+                return 2;
+            }
+            if (string.IsNullOrEmpty(ApiPassword))
+            {
+                Console.Error.WriteLine("FSO_RENDERER_PASS not set. See docs/ops/renderer-deployment.md for credential setup.");
+                return 2;
+            }
+
             // Normalize FSO_GAME_PATH: ensure trailing slash for Path.Combine to work correctly on Linux.
             // On Linux, Path.Combine treats relative FAR3 paths as absolute when the prefix lacks a separator.
             GamePath = Path.TrimEndingDirectorySeparator(GamePath) + Path.DirectorySeparatorChar;
@@ -506,8 +520,12 @@ namespace FSO.LotRenderer
                     // (after walls+objects, before RoofComp.Draw) while the render target is
                     // still live on the GPU.  We capture the half-res PNG bytes at that point
                     // and ignore the final (with-roof) texture returned by GetLotThumbAt.
+                    //
+                    // GetLotThumbAt always returns a GPU RenderTarget2D (bufferTexture.Get()).
+                    // Capture and dispose it to avoid a GPU texture leak on every roofless
+                    // render call (freesoexperiment-a30).
                     byte[] rooflessBytes = null;
-                    world.GetLotThumbAt(gd, effectiveLevel, rotation, zoom,
+                    var roofThumb = world.GetLotThumbAt(gd, effectiveLevel, rotation, zoom,
                         rooflessCallback: (rt) =>
                         {
                             // rt is the live RenderTarget2D — valid only inside this callback.
@@ -517,6 +535,10 @@ namespace FSO.LotRenderer
                             rooflessBytes = s.ToArray();
                             decimated.Dispose();
                         });
+                    // Dispose the returned GPU render target; we captured what we needed
+                    // in the callback above.  Not disposing leaks one RenderTarget2D per
+                    // roofless render (freesoexperiment-a30).
+                    roofThumb?.Dispose();
                     if (rooflessBytes != null)
                         thumbAction(rooflessBytes);
                 }

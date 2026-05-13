@@ -1,6 +1,7 @@
-// Regression tests for freesoexperiment-499 (mode-leak) and freesoexperiment-2a1 (bigThumb texture-leak).
+// Regression tests for freesoexperiment-499 (mode-leak), freesoexperiment-2a1 (bigThumb texture-leak),
+// and freesoexperiment-a30 (roofless path GetLotThumbAt return value not disposed).
 //
-// Both bugs are in TSOClient/FSO.LotRenderer/Program.cs RenderFSOFAt.
+// All bugs are in TSOClient/FSO.LotRenderer/Program.cs RenderFSOFAt.
 //
 // 499: GraphicsModeControl switched to Full2D at line ~457 but not in a try/finally.
 //      Any exception between ChangeMode(Full2D) and ChangeMode(Full3D) permanently leaved
@@ -8,6 +9,10 @@
 //
 // 2a1: GetLotThumbAt (non-roofless path) returns a GPU RenderTarget2D stored in `bigThumb`.
 //      Only the Decimate output (tex) was disposed; bigThumb leaked one RT per cache-miss render.
+//
+// a30: GetLotThumbAt (roofless path) also returns a GPU RenderTarget2D, but the return value
+//      was discarded entirely (no variable capture, no dispose). Each roofless render leaked
+//      one GPU RenderTarget2D.
 //
 // Test strategy (bugfix depth):
 //   - 499: call RenderFSOFAt with a valid (empty) marshal but null GraphicsDevice.
@@ -20,7 +25,11 @@
 //         is provided by the binary-run RSS hammer in the MANDATORY BINARY-RUN VERIFICATION GATE.
 //         This test verifies the fix is committed and not accidentally reverted.
 //
-// Run with: dotnet test TSOClient/FSO.LotRenderer.Tests --filter "RegressionTest_499_2a1"
+//   - a30: structural source verification via File.ReadAllText — confirms that the roofless path
+//         captures the GetLotThumbAt return value (roofThumb) and calls roofThumb?.Dispose().
+//         Same rationale as 2a1: a live GPU test needs real assets; source guard prevents revert.
+//
+// Run with: dotnet test TSOClient/FSO.LotRenderer.Tests --filter "RenderFSOFAt"
 
 using System;
 using System.IO;
@@ -145,6 +154,58 @@ namespace FSO.LotRenderer.Tests
             // Also assert the fix comment references freesoexperiment-2a1 so the
             // traceability is preserved and can't be silently dropped.
             Assert.Contains("freesoexperiment-2a1", source,
+                StringComparison.Ordinal);
+        }
+
+        /// <summary>
+        /// a30 regression: roofless path in RenderFSOFAt must capture and dispose the
+        /// RenderTarget2D returned by GetLotThumbAt.
+        ///
+        /// Pre-fix code called world.GetLotThumbAt(...) in the roofless branch and discarded
+        /// the return value entirely — no variable capture, no Dispose.  GetLotThumbAt always
+        /// returns bufferTexture.Get() (a GPU RenderTarget2D), so every roofless render leaked
+        /// one GPU texture.  The non-roofless path was fixed by freesoexperiment-2a1 (bigThumb.Dispose);
+        /// the roofless path was missed.
+        ///
+        /// A live GPU texture-disposal test requires real game assets and a GraphicsDevice —
+        /// evidence for that is the binary-run RSS hammer in the mandatory binary verification gate.
+        /// This source-inspection test guards against accidental reversion.
+        /// </summary>
+        [Fact]
+        public void RenderFSOFAt_RooflessPath_RoofThumbDispose_PresentInSource_Regressiona30()
+        {
+            var testDir = Path.GetDirectoryName(typeof(RenderFSOFAtRegressionTest).Assembly.Location)!;
+            string programCsPath = null;
+            var dir = new System.IO.DirectoryInfo(testDir);
+            while (dir != null)
+            {
+                var candidate = Path.Combine(dir.FullName, "FSO.LotRenderer", "Program.cs");
+                if (File.Exists(candidate))
+                {
+                    programCsPath = candidate;
+                    break;
+                }
+                dir = dir.Parent;
+            }
+
+            Assert.True(programCsPath != null && File.Exists(programCsPath),
+                $"Could not locate FSO.LotRenderer/Program.cs searching from {testDir}. " +
+                "Run dotnet build from the TSOClient root to ensure the source tree is intact.");
+
+            var source = File.ReadAllText(programCsPath);
+
+            // The fix for a30 captures the GetLotThumbAt return value as `roofThumb`
+            // in the roofless branch and then calls roofThumb?.Dispose().
+            // Assert capture variable: "var roofThumb = world.GetLotThumbAt"
+            Assert.Contains("var roofThumb = world.GetLotThumbAt", source,
+                StringComparison.Ordinal);
+
+            // Assert the dispose call is present.
+            Assert.Contains("roofThumb?.Dispose()", source,
+                StringComparison.Ordinal);
+
+            // Assert traceability comment references freesoexperiment-a30.
+            Assert.Contains("freesoexperiment-a30", source,
                 StringComparison.Ordinal);
         }
     }

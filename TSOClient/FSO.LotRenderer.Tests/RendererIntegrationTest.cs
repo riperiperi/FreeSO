@@ -236,6 +236,73 @@ namespace FSO.LotRenderer.Tests
         }
 
         /// <summary>
+        /// Regression test for freesoexperiment-015: renderer must exit quickly with a clear
+        /// error message when FSO_RENDERER_PASS is empty.
+        ///
+        /// Pre-fix: ApiPassword ??= Env("FSO_RENDERER_PASS", "") silently accepted empty string;
+        /// the renderer proceeded through full asset/graphics init (30-60s) then failed at
+        /// AdminLoginAsync with an opaque login error.
+        ///
+        /// Post-fix: the renderer checks string.IsNullOrEmpty(ApiPassword) immediately after
+        /// credential resolution (before any heavy init), writes a helpful message to stderr,
+        /// and exits with code 2.
+        ///
+        /// This test runs the renderer binary with FSO_RENDERER_PASS= (empty) and asserts:
+        ///   (a) exit within 2 seconds (fail-fast, before graphics/content init)
+        ///   (b) exit code != 0
+        ///   (c) stderr contains "FSO_RENDERER_PASS not set"
+        /// </summary>
+        [Fact]
+        public void Renderer_EmptyPass_FailsFastWithHelpfulMessage_Regression015()
+        {
+            var rendererBin = FindRendererBinary();
+            Assert.True(File.Exists(rendererBin),
+                $"freeso-renderer binary not found at: {rendererBin}\n" +
+                "Run 'dotnet publish' on FSO.LotRenderer first.");
+
+            var psi = new ProcessStartInfo
+            {
+                FileName               = rendererBin,
+                Arguments              = "--api-url http://workshop:9000",
+                UseShellExecute        = false,
+                RedirectStandardOutput = true,
+                RedirectStandardError  = true,
+            };
+
+            // Set empty FSO_RENDERER_PASS — this is the condition being tested.
+            // SDL_VIDEODRIVER=offscreen is deliberately NOT set so we confirm the renderer
+            // exits before reaching graphics init (which would require a display or offscreen driver).
+            // FSO_RENDERER_USER is also left empty to avoid any ambiguity about which guard fires first.
+            // The 015 spec requires fail-fast on empty FSO_RENDERER_PASS specifically.
+            // Set an explicit non-empty user so the PASS guard is the one that fires.
+            psi.Environment["FSO_RENDERER_PASS"] = "";
+            psi.Environment["FSO_RENDERER_USER"] = "baron";
+            // Ensure no inherited display prevents testing the no-graphics path.
+            psi.Environment.Remove("DISPLAY");
+            psi.Environment["SDL_VIDEODRIVER"] = "offscreen"; // safe to set — renderer exits before SDL init
+
+            var proc = Process.Start(psi);
+            Assert.NotNull(proc);
+
+            // The renderer must exit within 2 seconds — before any graphics or content init.
+            bool finished = proc.WaitForExit(TimeSpan.FromSeconds(2));
+            string stderr = proc.StandardError.ReadToEnd();
+            string stdout = proc.StandardOutput.ReadToEnd();
+
+            if (!string.IsNullOrEmpty(stdout)) Console.WriteLine("=== stdout ===\n" + stdout);
+            if (!string.IsNullOrEmpty(stderr)) Console.WriteLine("=== stderr ===\n" + stderr);
+
+            Assert.True(finished,
+                "Renderer did not exit within 2 seconds with empty FSO_RENDERER_PASS. " +
+                "It is likely running full graphics/content init instead of failing fast. " +
+                "(freesoexperiment-015)");
+
+            Assert.NotEqual(0, proc.ExitCode);
+
+            Assert.Contains("FSO_RENDERER_PASS not set", stderr, StringComparison.OrdinalIgnoreCase);
+        }
+
+        /// <summary>
         /// PerFloorRotation — S2 integration test.
         ///
         /// Renders lot 2 at representative combinations of --level / --angle / --zoom,
