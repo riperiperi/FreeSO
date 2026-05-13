@@ -2,8 +2,9 @@
 // Port of FSOFacadeWorker/Program.cs RenderFSOF, targeting net9.0 (not net9.0-windows).
 //
 // Usage:
+//   FSO_RENDERER_USER=baron FSO_RENDERER_PASS=<password> \
 //   SDL_VIDEODRIVER=offscreen freeso-renderer \
-//     --api-url http://workshop:9000 --user baron --password test1234 \
+//     --api-url http://workshop:9000 \
 //     --debug-lot 16318812 --level 1 --angle iso-ne --zoom far \
 //     --out /tmp/lot2-test.png
 //
@@ -16,7 +17,11 @@
 // Required env or flags:
 //   FSO_RENDERER_API_URL   (or --api-url)    e.g. http://workshop:9000
 //   FSO_RENDERER_USER      (or --user)       admin username
+//                           Prefer env over --user so the value does not appear in ps/proc.
 //   FSO_RENDERER_PASS      (or --password)   admin password
+//                           ALWAYS use env — never pass via --password in production;
+//                           --password is intentionally left without a default so the
+//                           process fails loudly if neither env nor flag is supplied.
 //   FSO_GAME_LOCATION      (or --game-path)  path to TSOClient assets dir
 //                           default: /home/baron/projects/freeso-experiment/GameAssets/TSOClient/
 //
@@ -110,8 +115,8 @@ namespace FSO.LotRenderer
             }
 
             ApiUrl      ??= Env("FSO_RENDERER_API_URL", "http://workshop:9000");
-            ApiUser     ??= Env("FSO_RENDERER_USER",    "baron");
-            ApiPassword ??= Env("FSO_RENDERER_PASS",    "test1234");
+            ApiUser     ??= Env("FSO_RENDERER_USER",    "");
+            ApiPassword ??= Env("FSO_RENDERER_PASS",    "");
             GamePath    ??= Env("FSO_GAME_LOCATION",    "/home/baron/projects/freeso-experiment/GameAssets/TSOClient/");
 
             // --- Platform init (Linux equivalent of FSO.Windows.Program.InitWindows) ---
