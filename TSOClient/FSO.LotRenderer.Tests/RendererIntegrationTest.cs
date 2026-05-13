@@ -385,12 +385,12 @@ namespace FSO.LotRenderer.Tests
         /// Runs against a live renderer (FSO_RENDERER_URL) and live FSO server.
         /// Skip via FSO_SKIP_ROOFLESS_TEST=1 if renderer is not available.
         /// </summary>
-        [Fact]
+        [SkippableFact]
         public async Task Roofless_ProducesDifferentPngFromWithRoof()
         {
             if (Environment.GetEnvironmentVariable("FSO_SKIP_ROOFLESS_TEST") == "1")
             {
-                Assert.Skip("FSO_SKIP_ROOFLESS_TEST=1");
+                throw new Xunit.SkipException("FSO_SKIP_ROOFLESS_TEST=1");
             }
 
             var rendererUrl = Environment.GetEnvironmentVariable("FSO_RENDERER_URL") ?? "http://127.0.0.1:9101";
@@ -403,12 +403,12 @@ namespace FSO.LotRenderer.Tests
                 var healthResp = await hc.GetAsync($"{rendererUrl}/health");
                 if (!healthResp.IsSuccessStatusCode)
                 {
-                    Assert.Skip($"Renderer health check failed ({healthResp.StatusCode}). Set FSO_RENDERER_URL or start: freeso-renderer --serve --port 9101");
+                    throw new Xunit.SkipException($"Renderer health check failed ({healthResp.StatusCode}). Set FSO_RENDERER_URL or start: freeso-renderer --serve --port 9101");
                 }
             }
             catch (Exception ex)
             {
-                Assert.Skip($"Renderer not reachable at {rendererUrl}: {ex.Message}. Set FSO_RENDERER_URL or start: freeso-renderer --serve --port 9101");
+                throw new Xunit.SkipException($"Renderer not reachable at {rendererUrl}: {ex.Message}. Set FSO_RENDERER_URL or start: freeso-renderer --serve --port 9101");
             }
 
             // Use lot 2 (baron's Main). Provide lot_location directly to avoid DB dependency.
