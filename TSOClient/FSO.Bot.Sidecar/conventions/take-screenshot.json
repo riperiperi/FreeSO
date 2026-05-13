@@ -7,7 +7,7 @@
   "args": [
     {
       "name": "level",
-      "type": "number",
+      "type": "integer",
       "required": false,
       "default": 1,
       "description": "Floor level to render (0-7). Default 1 (ground floor). Ignore if lot has fewer floors."

@@ -334,7 +334,7 @@ func main() {
 		// Screenshot family (freesoexperiment-0a2): take-screenshot.
 		// Sidecar-side permission check (roommate-or-mayor), HTTP proxy to renderer,
 		// rate-limited (1 per soul per 10s, 10 per lot per minute).
-		screenshotServers, err := RegisterScreenshotHandlers(ctx, cf, ipc)
+		screenshotServers, err := RegisterScreenshotHandlers(ctx, cf, ipc, augmentor)
 		if err != nil {
 			log.Fatalf("register screenshot handlers: %v", err)
 		}

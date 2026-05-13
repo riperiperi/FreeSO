@@ -54,6 +54,32 @@ func TestRateLimitLot(t *testing.T) {
 	}
 }
 
+// TestMapZoom verifies that the zoom vocabulary translation is correct.
+// freesoexperiment-b85: "medium" was forwarded verbatim; renderer only accepts far/med/near.
+func TestMapZoom(t *testing.T) {
+	cases := []struct {
+		in   string
+		want string
+	}{
+		{"small", "far"},
+		{"medium", "med"},
+		{"large", "near"},
+		// Renderer-native values pass through unchanged.
+		{"far", "far"},
+		{"med", "med"},
+		{"near", "near"},
+		// Unknown values fall back to "far".
+		{"", "far"},
+		{"huge", "far"},
+	}
+	for _, c := range cases {
+		got := mapZoom(c.in)
+		if got != c.want {
+			t.Errorf("mapZoom(%q) = %q, want %q", c.in, got, c.want)
+		}
+	}
+}
+
 // TestTakeScreenshotNotPermitted verifies that non-roommates are denied.
 func TestTakeScreenshotNotPermitted(t *testing.T) {
 	// Stub test for now: full integration test in verb-screenshot.sh

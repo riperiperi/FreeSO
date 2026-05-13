@@ -7,12 +7,16 @@
 package main
 
 import (
+	"bytes"
 	"context"
 	"encoding/json"
 	"fmt"
+	"io"
 	"net/http"
 	"os"
 	"path/filepath"
+	"strconv"
+	"strings"
 	"sync"
 	"time"
 
@@ -29,10 +33,14 @@ import (
 //   - Saves the PNG to /tmp/embody-$RUN/screenshots/ and returns the path.
 //   - Rate limits: 1 per soul per 10s, 10 per lot per minute.
 //
+// augmentor is shared with the bridge goroutine; it caches the latest
+// mayor_status from the C# bot's perception ticks so the handler can
+// check mayor authority without an extra IPC round-trip.
+//
 // Returns count of handlers registered. Missing declaration is an error.
-func RegisterScreenshotHandlers(ctx context.Context, cf *Campfire, ipc *IPC) (int, error) {
+func RegisterScreenshotHandlers(ctx context.Context, cf *Campfire, ipc *IPC, augmentor *PerceptionAugmentor) (int, error) {
 	ops := map[string]convention.HandlerFunc{
-		"take-screenshot": takeScreenshotHandler(ipc),
+		"take-screenshot": takeScreenshotHandler(ipc, augmentor),
 	}
 
 	decls, err := LoadDeclarations(conventionFiles)
@@ -122,14 +130,59 @@ func (rl *screenshotRateLimiter) check(soulID, lotID string) bool {
 	return true
 }
 
+// parseLotLocation converts a lot location string (hex "0x..." or decimal) to
+// a uint32 suitable for the renderer's JSON payload. Returns 0 and error on
+// failure. The renderer expects a numeric uint32, not a hex string.
+func parseLotLocation(s string) (uint32, error) {
+	s = strings.TrimSpace(s)
+	if s == "" {
+		return 0, fmt.Errorf("empty lot_location string")
+	}
+	lower := strings.ToLower(s)
+	var n uint64
+	var err error
+	if strings.HasPrefix(lower, "0x") {
+		n, err = strconv.ParseUint(lower[2:], 16, 32)
+	} else {
+		n, err = strconv.ParseUint(s, 10, 32)
+	}
+	if err != nil {
+		return 0, fmt.Errorf("parse lot_location %q: %w", s, err)
+	}
+	return uint32(n), nil
+}
+
+// mapZoom maps the declaration's zoom vocabulary (small/medium/large) to the
+// renderer's accepted enum values (far/med/near). The renderer's default is
+// "far"; freesoexperiment-b85 found that "medium" was being forwarded verbatim,
+// which caused the renderer to fall back to its default and silently ignore
+// the zoom arg. We keep the user-facing vocabulary friendly and translate here.
+func mapZoom(z string) string {
+	switch z {
+	case "small":
+		return "far"
+	case "medium":
+		return "med"
+	case "large":
+		return "near"
+	// Pass renderer-native values through unchanged so callers who know the
+	// renderer's enum can use it directly.
+	case "far", "med", "near":
+		return z
+	default:
+		return "far"
+	}
+}
+
 // takeScreenshotHandler processes a take-screenshot request.
 // Steps:
-//   1. Call query-lot to check roommate/owner status and get lot_id
-//   2. Rate-limit check (soul + lot)
-//   3. HTTP POST to renderer
-//   4. Save PNG to /tmp/embody-$RUN/screenshots/
-//   5. Return {path, width, height, age_sec}
-func takeScreenshotHandler(ipc *IPC) convention.HandlerFunc {
+//  1. Call query-lot to check roommate/owner/mayor status and get lot_id
+//  2. Rate-limit check (soul + lot)
+//  3. Resolve lot_location (for renderer when FSO_DB_URL is unset)
+//  4. HTTP POST to renderer with correct body (freesoexperiment-b85)
+//  5. Stream PNG from renderer to /tmp/embody-$RUN/screenshots/
+//  6. Return {path, width, height, age_sec}
+func takeScreenshotHandler(ipc *IPC, augmentor *PerceptionAugmentor) convention.HandlerFunc {
 	return func(ctx context.Context, req *convention.Request) (*convention.Response, error) {
 		// Step 1: Query lot to check permissions and get lot_id.
 		lotResp, err := forwardIPC(ctx, ipc, "query-lot", map[string]any{})
@@ -143,7 +196,9 @@ func takeScreenshotHandler(ipc *IPC) convention.HandlerFunc {
 		}
 
 		// Parse the lot response to get permissions.
-		lotPayload, ok := lotResp.Payload.(map[string]any)
+		// forwardIPC wraps the bot's payload as {"ok":true,"payload":{...}}.
+		// We need the inner payload map that contains lot_id, owner_is_me, etc.
+		outerPayload, ok := lotResp.Payload.(map[string]any)
 		if !ok {
 			return &convention.Response{
 				Payload: map[string]any{
@@ -152,18 +207,38 @@ func takeScreenshotHandler(ipc *IPC) convention.HandlerFunc {
 				},
 			}, nil
 		}
+		// Drill into the nested "payload" key from forwardIPC's wrapper.
+		lotPayload, ok := outerPayload["payload"].(map[string]any)
+		if !ok {
+			return &convention.Response{
+				Payload: map[string]any{
+					"ok":    false,
+					"error": fmt.Sprintf("query-lot inner payload missing or wrong type: %v", outerPayload),
+				},
+			}, nil
+		}
 
-		// Check if the caller is the owner or a roommate.
+		// freesoexperiment-d49: correct auth gate.
+		// Auth = owner OR roommate OR mayor.
+		// Prior bug: `!ownerIsMe && len(roommates) == 0` — wrong semantics; denied
+		// any non-owner on a lot with no roommates, and ignored mayor status entirely.
 		ownerIsMe, _ := lotPayload["owner_is_me"].(bool)
-		roommates, _ := lotPayload["roommates"].([]interface{})
+		isRoommate, _ := lotPayload["is_roommate"].(bool)
 
-		// Non-roommates and non-owners are not permitted.
-		if !ownerIsMe && len(roommates) == 0 {
+		// Mayor status comes from the augmentor's cache (populated each perception
+		// tick by the C# bot via PerceptionProjector.cs). This avoids an extra IPC
+		// round-trip and is consistent with the civic handler pattern.
+		var isMayor bool
+		if augmentor != nil {
+			isMayor = augmentor.LatestMayorStatus().IsMayor
+		}
+
+		if !ownerIsMe && !isRoommate && !isMayor {
 			return &convention.Response{
 				Payload: map[string]any{
 					"ok":       false,
 					"reason":   "NOT_PERMITTED",
-					"error":    "not-permitted: you must be the owner or a roommate to take screenshots",
+					"error":    "not-permitted: you must be the owner, a roommate, or the mayor to take screenshots",
 					"category": "not-permitted",
 				},
 			}, nil
@@ -197,25 +272,61 @@ func takeScreenshotHandler(ipc *IPC) convention.HandlerFunc {
 		if z, ok := req.Args["zoom"].(string); ok {
 			zoom = z
 		}
+		// freesoexperiment-b85: map declaration zoom vocab → renderer enum.
+		rendererZoom := mapZoom(zoom)
+
 		roofless := false
 		if r, ok := req.Args["roofless"].(bool); ok {
 			roofless = r
 		}
 
-		// Step 4: HTTP POST to renderer.
+		// Step 4: Resolve lot_location.
+		// The renderer uses lot_location (packed uint32) to locate the FSOV save
+		// when FSO_DB_URL is unset (the default in our setup). We read it from the
+		// persona's owned-lots.json (the home lot). This is correct for the primary
+		// use case where the bot is on its own lot.
+		// freesoexperiment-595b context: FSO_DB_URL unset is the normal state.
+		// The renderer requires a numeric uint32, NOT a hex string — parse accordingly.
+		lotLocationHex, locErr := ReadHomeLotFromOwnedLots()
+		var lotLocationUint uint32
+		if locErr == nil && lotLocationHex != "" {
+			if parsed, perr := parseLotLocation(lotLocationHex); perr == nil {
+				lotLocationUint = parsed
+			} else {
+				// Non-fatal: log and fall through; renderer will attempt DB lookup.
+				fmt.Printf("screenshot: parse lot_location %q: %v (renderer will use DB lookup)\n", lotLocationHex, perr)
+			}
+		}
+
+		// Step 5: HTTP POST to renderer.
+		// freesoexperiment-b85: prior bug had `_ = payloadBody` discarding the
+		// marshalled body and passing nil to client.Post, so the renderer received
+		// an empty body and responded {"error":"empty body"}.
 		rendererURL := "http://localhost:9101/render"
 		payload := map[string]any{
+			"shard":    "Alphaville",
+			"lot_id":   lotPayload["lot_id"],
 			"level":    level,
 			"angle":    angle,
-			"zoom":     zoom,
+			"zoom":     rendererZoom,
 			"roofless": roofless,
 		}
-		payloadBody, _ := json.Marshal(payload)
+		if lotLocationUint != 0 {
+			payload["lot_location"] = lotLocationUint
+		}
+
+		payloadBody, marshalErr := json.Marshal(payload)
+		if marshalErr != nil {
+			return &convention.Response{
+				Payload: map[string]any{
+					"ok":    false,
+					"error": fmt.Sprintf("marshal renderer payload: %v", marshalErr),
+				},
+			}, nil
+		}
 
 		client := &http.Client{Timeout: 30 * time.Second}
-		// TODO: Use payloadBody to send actual screenshot request
-		_ = payloadBody
-		resp, err := client.Post(rendererURL, "application/json", nil)
+		resp, err := client.Post(rendererURL, "application/json", bytes.NewReader(payloadBody))
 		if err != nil {
 			return &convention.Response{
 				Payload: map[string]any{
@@ -227,17 +338,68 @@ func takeScreenshotHandler(ipc *IPC) convention.HandlerFunc {
 		defer resp.Body.Close()
 
 		if resp.StatusCode != http.StatusOK {
+			// Try to read error body for diagnostic context.
+			errBody, _ := io.ReadAll(io.LimitReader(resp.Body, 512))
 			return &convention.Response{
 				Payload: map[string]any{
 					"ok":    false,
-					"error": fmt.Sprintf("renderer returned status %d", resp.StatusCode),
+					"error": fmt.Sprintf("renderer returned status %d: %s", resp.StatusCode, string(errBody)),
 				},
 			}, nil
 		}
 
-		// Step 5: Save PNG and return path.
-		// For now, we generate a filename and copy the response to disk.
-		// The actual implementation would stream the PNG from the renderer.
+		// Step 6: Parse the renderer's JSON response.
+		// The renderer returns {"path":"<cache-path>","width":W,"height":H,"age_sec":N}.
+		// The PNG is already on disk at the returned path; we copy it to SCREENSHOT_DIR
+		// so agents have a stable location independent of the renderer's cache layout.
+		bodyBytes, err := io.ReadAll(resp.Body)
+		if err != nil {
+			return &convention.Response{
+				Payload: map[string]any{
+					"ok":    false,
+					"error": fmt.Sprintf("read renderer response: %v", err),
+				},
+			}, nil
+		}
+		var renderResp struct {
+			Path   string  `json:"path"`
+			Width  int     `json:"width"`
+			Height int     `json:"height"`
+			AgeSec float64 `json:"age_sec"`
+			Error  string  `json:"error"`
+		}
+		if err := json.Unmarshal(bodyBytes, &renderResp); err != nil {
+			return &convention.Response{
+				Payload: map[string]any{
+					"ok":    false,
+					"error": func() string {
+					preview := len(bodyBytes)
+					if preview > 256 {
+						preview = 256
+					}
+					return fmt.Sprintf("parse renderer response: %v (body: %s)", err, string(bodyBytes[:preview]))
+				}(),
+				},
+			}, nil
+		}
+		if renderResp.Error != "" {
+			return &convention.Response{
+				Payload: map[string]any{
+					"ok":    false,
+					"error": fmt.Sprintf("renderer error: %s", renderResp.Error),
+				},
+			}, nil
+		}
+		if renderResp.Path == "" {
+			return &convention.Response{
+				Payload: map[string]any{
+					"ok":    false,
+					"error": "renderer returned empty path",
+				},
+			}, nil
+		}
+
+		// Copy from renderer cache to SCREENSHOT_DIR for agent-visible stable path.
 		screenshotDir := os.Getenv("SCREENSHOT_DIR")
 		if screenshotDir == "" {
 			screenshotDir = "/tmp/embody-demo/screenshots"
@@ -253,9 +415,20 @@ func takeScreenshotHandler(ipc *IPC) convention.HandlerFunc {
 
 		filename := filepath.Join(screenshotDir, fmt.Sprintf("screenshot-%d-%s.png", time.Now().UnixMilli(), angle))
 
-		// For testing: stub a dummy file.
-		// In the real implementation, copy resp.Body to the file.
-		if err := writeStubScreenshot(filename); err != nil {
+		// Copy the rendered PNG from the renderer's cache path to our screenshots dir.
+		srcData, err := os.ReadFile(renderResp.Path)
+		if err != nil {
+			// If the cache path is not accessible (renderer on different host), fall
+			// through to save the JSON body as a debug artifact. In practice the renderer
+			// and sidecar share the same filesystem.
+			return &convention.Response{
+				Payload: map[string]any{
+					"ok":    false,
+					"error": fmt.Sprintf("read rendered PNG from cache %s: %v", renderResp.Path, err),
+				},
+			}, nil
+		}
+		if err := os.WriteFile(filename, srcData, 0o600); err != nil {
 			return &convention.Response{
 				Payload: map[string]any{
 					"ok":    false,
@@ -264,36 +437,16 @@ func takeScreenshotHandler(ipc *IPC) convention.HandlerFunc {
 			}, nil
 		}
 
-		// Step 6: Return success.
+		// Step 7: Return success.
 		return &convention.Response{
 			Payload: map[string]any{
-				"ok":     true,
-				"path":   filename,
-				"width":  512, // stub
-				"height": 512, // stub
-				"age_sec": 0,  // fresh
+				"ok":      true,
+				"path":    filename,
+				"width":   renderResp.Width,
+				"height":  renderResp.Height,
+				"age_sec": renderResp.AgeSec,
+				"size":    len(srcData),
 			},
 		}, nil
 	}
-}
-
-// writeStubScreenshot creates a minimal valid PNG for testing.
-// In production, this would copy the actual renderer output.
-func writeStubScreenshot(path string) error {
-	// PNG header + IHDR chunk + IEND chunk (minimal valid PNG).
-	// Represents a 1x1 transparent pixel.
-	stub := []byte{
-		0x89, 0x50, 0x4e, 0x47, 0x0d, 0x0a, 0x1a, 0x0a, // PNG signature
-		0x00, 0x00, 0x00, 0x0d, // IHDR length
-		0x49, 0x48, 0x44, 0x52, // IHDR
-		0x00, 0x00, 0x02, 0x00, // width: 512
-		0x00, 0x00, 0x02, 0x00, // height: 512
-		0x08, 0x06, // bit depth 8, color type 6 (RGBA)
-		0x00, 0x00, 0x00, // compression, filter, interlace
-		0x72, 0x1f, 0xa3, 0xb1, // CRC
-		0x00, 0x00, 0x00, 0x00, // IEND length
-		0x49, 0x45, 0x4e, 0x44, // IEND
-		0xae, 0x42, 0x60, 0x82, // CRC
-	}
-	return os.WriteFile(path, stub, 0o600)
 }
