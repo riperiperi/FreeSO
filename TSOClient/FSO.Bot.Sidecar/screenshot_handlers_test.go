@@ -7,8 +7,11 @@
 package main
 
 import (
+	"context"
 	"testing"
 	"time"
+
+	"github.com/campfire-net/campfire/pkg/convention"
 )
 
 // TestRateLimitSoul verifies that the soul-level rate limit (1 per 10s) works.
@@ -80,22 +83,139 @@ func TestMapZoom(t *testing.T) {
 	}
 }
 
-// TestTakeScreenshotNotPermitted verifies that non-roommates are denied.
+// TestTakeScreenshotNotPermitted verifies that the permission gate (d49) rejects
+// a caller who is not the lot owner, not a roommate, and not the mayor.
+//
+// Strategy: invoke the real takeScreenshotHandler function with a fake IPC that
+// returns a query-lot payload where owner_is_me=false and is_roommate=false.
+// The augmentor has IsMayor=false (zero value). The handler must return
+// ok=false with reason="NOT_PERMITTED" before reaching the renderer HTTP POST.
 func TestTakeScreenshotNotPermitted(t *testing.T) {
-	// Stub test for now: full integration test in verb-screenshot.sh
-	// A real test would require mocking the IPC and campfire, which is deferred
-	// to the integration test that runs a full bot session.
-	t.Skip("full permission test deferred to integration test")
+	fake := newFakeBotProcess()
+	ipc := NewIPC(fake.bot)
+
+	// Wire query-lot to return a lot where the caller is neither owner nor roommate.
+	// The handler reads owner_is_me and is_roommate from the inner "payload" map.
+	responses := map[string]map[string]any{
+		"query-lot": {
+			"ok": true,
+			"payload": map[string]any{
+				"lot_id":      float64(42),
+				"owner_is_me": false,
+				"is_roommate": false,
+				"name":        "SomeLot",
+			},
+		},
+	}
+	multiAutoResponder(t, fake, ipc, responses)
+
+	// Augmentor with IsMayor=false (the zero value — no mayor tick cached).
+	augmentor := &PerceptionAugmentor{}
+
+	handler := takeScreenshotHandler(ipc, augmentor)
+	ctx, cancel := context.WithTimeout(context.Background(), 3*time.Second)
+	defer cancel()
+
+	resp, err := handler(ctx, &convention.Request{
+		Sender: "test-non-roommate",
+		Args:   map[string]any{},
+	})
+	if err != nil {
+		t.Fatalf("handler returned error: %v", err)
+	}
+	if resp == nil {
+		t.Fatal("handler returned nil response")
+	}
+
+	payload, ok := resp.Payload.(map[string]any)
+	if !ok {
+		t.Fatalf("payload is not map[string]any: %T", resp.Payload)
+	}
+
+	// Must be denied.
+	if payload["ok"] != false {
+		t.Errorf("expected ok=false for non-permitted caller, got ok=%v (full payload: %v)", payload["ok"], payload)
+	}
+	reason, _ := payload["reason"].(string)
+	if reason != "NOT_PERMITTED" {
+		t.Errorf("expected reason=NOT_PERMITTED, got %q (full payload: %v)", reason, payload)
+	}
 }
 
-// TestTakeScreenshotRateLimited verifies that exceeding the rate limit is denied.
+// TestTakeScreenshotRateLimited verifies that the per-soul rate limit is
+// enforced: a second request from the same soul within 10 seconds is denied.
+//
+// Strategy: invoke the real takeScreenshotHandler function twice. The first
+// call uses a fresh rate-limiter state and a query-lot that grants permission
+// (owner_is_me=true). After that first call records a timestamp in the global
+// rateLimiter, a second call must be denied with reason="RATE_LIMITED".
+//
+// We use a private rateLimiter instance (not the global one) to avoid
+// cross-test interference. The handler's rateLimiter reference is the global
+// package-level variable; we swap it temporarily under the test and restore it
+// via t.Cleanup.
 func TestTakeScreenshotRateLimited(t *testing.T) {
-	// Reset global rate limiter to a fresh state for this test.
-	rateLimiter.mu.Lock()
-	rateLimiter.souls = make(map[string][]time.Time)
-	rateLimiter.lots = make(map[string][]time.Time)
-	rateLimiter.mu.Unlock()
+	// Replace the global rateLimiter with a fresh instance for test isolation.
+	origRL := rateLimiter
+	testRL := &screenshotRateLimiter{
+		souls: make(map[string][]time.Time),
+		lots:  make(map[string][]time.Time),
+	}
+	rateLimiter = testRL
+	t.Cleanup(func() { rateLimiter = origRL })
 
-	// Stub test for now: full integration test in verb-screenshot.sh
-	t.Skip("full rate-limit test deferred to integration test")
+	// Pre-seed the rate-limiter so the soul "rl-test-soul" already has one
+	// request recorded within the last 10 seconds. This simulates the case where
+	// a first screenshot was already taken, causing the next call to be denied.
+	testRL.mu.Lock()
+	testRL.souls["rl-test-soul"] = []time.Time{time.Now()}
+	testRL.mu.Unlock()
+
+	// Wire query-lot to return a permitted lot (owner_is_me=true) so that the
+	// handler passes the auth gate and reaches the rate-limit check.
+	fake := newFakeBotProcess()
+	ipc := NewIPC(fake.bot)
+	responses := map[string]map[string]any{
+		"query-lot": {
+			"ok": true,
+			"payload": map[string]any{
+				"lot_id":      float64(7),
+				"owner_is_me": true,
+				"is_roommate": false,
+				"name":        "MyLot",
+			},
+		},
+	}
+	multiAutoResponder(t, fake, ipc, responses)
+
+	augmentor := &PerceptionAugmentor{}
+
+	handler := takeScreenshotHandler(ipc, augmentor)
+	ctx, cancel := context.WithTimeout(context.Background(), 3*time.Second)
+	defer cancel()
+
+	resp, err := handler(ctx, &convention.Request{
+		Sender: "rl-test-soul",
+		Args:   map[string]any{},
+	})
+	if err != nil {
+		t.Fatalf("handler returned error: %v", err)
+	}
+	if resp == nil {
+		t.Fatal("handler returned nil response")
+	}
+
+	payload, ok := resp.Payload.(map[string]any)
+	if !ok {
+		t.Fatalf("payload is not map[string]any: %T", resp.Payload)
+	}
+
+	// Must be rate-limited.
+	if payload["ok"] != false {
+		t.Errorf("expected ok=false for rate-limited caller, got ok=%v (full payload: %v)", payload["ok"], payload)
+	}
+	reason, _ := payload["reason"].(string)
+	if reason != "RATE_LIMITED" {
+		t.Errorf("expected reason=RATE_LIMITED, got %q (full payload: %v)", reason, payload)
+	}
 }
