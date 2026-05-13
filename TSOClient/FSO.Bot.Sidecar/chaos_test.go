@@ -836,9 +836,12 @@ if [ "$COUNT" -eq 0 ]; then
     echo $$ > %s
     printf '{"kind":"system","payload":{"event":"ready"}}\n'
     touch %s
-    # Sleep indefinitely — test kills us to trigger relaunch.
-    sleep 60
-    exit 0
+    # exec replaces the shell with sleep so no child process inherits the
+    # write-end of the stdout pipe. Without exec, "sleep 60" is a child of
+    # the shell; killing the shell by PID leaves sleep as an orphan that
+    # still holds the pipe open, so the sidecar scanner never sees EOF and
+    # supervisor.exitCh never fires — causing the 25s KILL_D timeout failure.
+    exec sleep 60
 elif [ "$COUNT" -eq 1 ]; then
     # Second launch (mid-restart kill target): record PID, write start marker, block on FIFO.
     echo $$ > %s
@@ -849,8 +852,7 @@ else
     # Third launch: signal supervisor is still alive.
     touch %s
     printf '{"kind":"system","payload":{"event":"ready","third_launch":true}}\n'
-    sleep 15
-    exit 0
+    exec sleep 15
 fi
 `, runCountFile, runCountFile,
 		firstBotPidFile, firstBotReadyMarker,
@@ -988,8 +990,12 @@ if [ "$COUNT" -eq 0 ]; then
     echo $$ > %s
     printf '{"kind":"system","payload":{"event":"ready"}}\n'
     touch %s
-    sleep 60
-    exit 0
+    # exec replaces the shell with sleep so no child process inherits the
+    # write-end of the stdout pipe. Without exec, "sleep 60" is a child of
+    # the shell; killing the shell by PID leaves sleep as an orphan that
+    # still holds the pipe open, so the sidecar scanner never sees EOF and
+    # supervisor.exitCh never fires — causing the 25s KILL_E timeout failure.
+    exec sleep 60
 elif [ "$COUNT" -eq 1 ]; then
     # Second launch: record PID, emit system:ready, write ready marker,
     # block before emitting any perception tick (kill target for post-ready pre-tick).
@@ -1002,8 +1008,7 @@ else
     # Third launch: signal continued supervision.
     touch %s
     printf '{"kind":"system","payload":{"event":"ready","third_launch":true}}\n'
-    sleep 15
-    exit 0
+    exec sleep 15
 fi
 `, runCountFile, runCountFile,
 		firstBotPidFile, firstBotReadyMarker,
