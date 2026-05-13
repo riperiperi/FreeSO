@@ -443,7 +443,8 @@ namespace FSO.LotRenderer
             int level,
             WorldRotation rotation,
             WorldZoom zoom,
-            Action<byte[]> thumbAction = null)
+            Action<byte[]> thumbAction = null,
+            bool roofless = false)
         {
             var marshal = new VMMarshal();
             using (var mem = new MemoryStream(fsov))
@@ -484,15 +485,39 @@ namespace FSO.LotRenderer
                 // Resolve level: -1 → bp.Stories (same as GetLotThumb default).
                 int effectiveLevel = level >= 0 ? level : vm.Context.Blueprint.Stories;
 
-                Console.WriteLine($"[renderer] GetLotThumbAt level={effectiveLevel} rotation={rotation} zoom={zoom}");
-                var bigThumb = world.GetLotThumbAt(gd, effectiveLevel, rotation, zoom);
+                Console.WriteLine($"[renderer] GetLotThumbAt level={effectiveLevel} rotation={rotation} zoom={zoom} roofless={roofless}");
 
-                using var stream = new MemoryStream();
-                // Decimate by 2 to match the same half-res output GetLotThumb uses in RenderFSOF.
-                var tex = TextureUtils.Decimate(bigThumb, gd, 2, false);
-                tex.SaveAsPng(stream, bigThumb.Width / 2, bigThumb.Height / 2);
-                thumbAction(stream.ToArray());
-                tex.Dispose();
+                if (roofless)
+                {
+                    // Roofless mode: the rooflessCallback fires inside the WithBuffer scope
+                    // (after walls+objects, before RoofComp.Draw) while the render target is
+                    // still live on the GPU.  We capture the half-res PNG bytes at that point
+                    // and ignore the final (with-roof) texture returned by GetLotThumbAt.
+                    byte[] rooflessBytes = null;
+                    world.GetLotThumbAt(gd, effectiveLevel, rotation, zoom,
+                        rooflessCallback: (rt) =>
+                        {
+                            // rt is the live RenderTarget2D — valid only inside this callback.
+                            using var s = new MemoryStream();
+                            var decimated = TextureUtils.Decimate(rt, gd, 2, false);
+                            decimated.SaveAsPng(s, rt.Width / 2, rt.Height / 2);
+                            rooflessBytes = s.ToArray();
+                            decimated.Dispose();
+                        });
+                    if (rooflessBytes != null)
+                        thumbAction(rooflessBytes);
+                }
+                else
+                {
+                    var bigThumb = world.GetLotThumbAt(gd, effectiveLevel, rotation, zoom);
+
+                    using var stream = new MemoryStream();
+                    // Decimate by 2 to match the same half-res output GetLotThumb uses in RenderFSOF.
+                    var tex = TextureUtils.Decimate(bigThumb, gd, 2, false);
+                    tex.SaveAsPng(stream, bigThumb.Width / 2, bigThumb.Height / 2);
+                    thumbAction(stream.ToArray());
+                    tex.Dispose();
+                }
             }
 
             Layer.Remove(world);

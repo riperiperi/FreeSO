@@ -298,6 +298,113 @@ namespace FSO.LotRenderer.Tests
                 string.Join("\n", failures));
         }
 
+        /// <summary>
+        /// Regression test for freesoexperiment-68d: roofless parameter must produce a
+        /// visually different PNG from the with-roof render.
+        ///
+        /// Before the fix, RenderAsync did not pass 'roofless' to RenderFSOFAt, so both
+        /// roofless=true and roofless=false produced identical PNGs (with-roof always).
+        /// The cache key already differed, so no cache collision — just wrong images.
+        ///
+        /// This test renders the same lot+level+angle+zoom twice via --serve HTTP:
+        ///   (a) roofless=false — with roof
+        ///   (b) roofless=true  — without roof
+        /// and asserts that the resulting PNGs have different MD5 hashes.
+        ///
+        /// Runs against a live renderer (FSO_RENDERER_URL) and live FSO server.
+        /// Skip via FSO_SKIP_ROOFLESS_TEST=1 if renderer is not available.
+        /// </summary>
+        [Fact]
+        public async Task Roofless_ProducesDifferentPngFromWithRoof()
+        {
+            if (Environment.GetEnvironmentVariable("FSO_SKIP_ROOFLESS_TEST") == "1")
+            {
+                Console.WriteLine("[test] FSO_SKIP_ROOFLESS_TEST=1 — skipping.");
+                return;
+            }
+
+            var rendererUrl = Environment.GetEnvironmentVariable("FSO_RENDERER_URL") ?? "http://127.0.0.1:9101";
+
+            // We need the renderer to be running as a --serve instance.
+            // Try a health check first; skip if it's not running.
+            try
+            {
+                using var hc = new System.Net.Http.HttpClient { Timeout = TimeSpan.FromSeconds(3) };
+                var healthResp = await hc.GetAsync($"{rendererUrl}/health");
+                if (!healthResp.IsSuccessStatusCode)
+                {
+                    Console.WriteLine($"[test] Renderer health check failed ({healthResp.StatusCode}). Skipping roofless test.");
+                    Console.WriteLine("       Set FSO_RENDERER_URL or start: freeso-renderer --serve --port 9101");
+                    return;
+                }
+            }
+            catch (Exception ex)
+            {
+                Console.WriteLine($"[test] Renderer not reachable at {rendererUrl}: {ex.Message}. Skipping roofless test.");
+                Console.WriteLine("       Set FSO_RENDERER_URL or start: freeso-renderer --serve --port 9101");
+                return;
+            }
+
+            // Use lot 2 (baron's Main). Provide lot_location directly to avoid DB dependency.
+            // 16318812 = MapCoordinates.Pack(249, 348)
+            const string basePayload = @"""shard"":""Alphaville"",""lot_id"":2,""lot_location"":16318812,""level"":1,""angle"":""iso-ne"",""zoom"":""far""";
+
+            using var client = new System.Net.Http.HttpClient { Timeout = TimeSpan.FromMinutes(5) };
+
+            // Render with-roof first.
+            Console.WriteLine("[test] Rendering with-roof (roofless=false)...");
+            var withRoofResp = await client.PostAsync(
+                $"{rendererUrl}/render",
+                new System.Net.Http.StringContent(
+                    $"{{{basePayload},\"roofless\":false}}",
+                    System.Text.Encoding.UTF8, "application/json"));
+            Assert.True(withRoofResp.IsSuccessStatusCode,
+                $"with-roof render failed: {withRoofResp.StatusCode}\n{await withRoofResp.Content.ReadAsStringAsync()}");
+            var withRoofJson = await withRoofResp.Content.ReadAsStringAsync();
+            Console.WriteLine($"  with-roof response: {withRoofJson}");
+
+            // Render roofless.
+            Console.WriteLine("[test] Rendering roofless (roofless=true)...");
+            var rooflessResp = await client.PostAsync(
+                $"{rendererUrl}/render",
+                new System.Net.Http.StringContent(
+                    $"{{{basePayload},\"roofless\":true}}",
+                    System.Text.Encoding.UTF8, "application/json"));
+            Assert.True(rooflessResp.IsSuccessStatusCode,
+                $"roofless render failed: {rooflessResp.StatusCode}\n{await rooflessResp.Content.ReadAsStringAsync()}");
+            var rooflessJson = await rooflessResp.Content.ReadAsStringAsync();
+            Console.WriteLine($"  roofless response: {rooflessJson}");
+
+            // Extract paths from JSON responses.
+            var withRoofPath = System.Text.Json.JsonDocument.Parse(withRoofJson)
+                .RootElement.GetProperty("path").GetString();
+            var rooflessPath = System.Text.Json.JsonDocument.Parse(rooflessJson)
+                .RootElement.GetProperty("path").GetString();
+
+            Assert.True(File.Exists(withRoofPath!), $"with-roof PNG not found at {withRoofPath}");
+            Assert.True(File.Exists(rooflessPath!), $"roofless PNG not found at {rooflessPath}");
+
+            // Compute MD5 of each file.
+            static string Md5(string path)
+            {
+                using var s = File.OpenRead(path);
+                using var md5 = System.Security.Cryptography.MD5.Create();
+                return BitConverter.ToString(md5.ComputeHash(s)).Replace("-", "").ToLowerInvariant();
+            }
+
+            var withRoofMd5 = Md5(withRoofPath!);
+            var rooflessMd5 = Md5(rooflessPath!);
+            var withRoofSize = new FileInfo(withRoofPath!).Length;
+            var rooflessSize = new FileInfo(rooflessPath!).Length;
+
+            Console.WriteLine($"  with-roof : {withRoofPath} ({withRoofSize} bytes, md5={withRoofMd5})");
+            Console.WriteLine($"  roofless  : {rooflessPath} ({rooflessSize} bytes, md5={rooflessMd5})");
+
+            // The two PNGs must be different — roofless removes the roof pixels.
+            Assert.NotEqual(withRoofMd5, rooflessMd5);
+            Console.WriteLine("[test] PASS: roofless and with-roof PNGs have different MD5 hashes.");
+        }
+
         private static string FindRendererBinary()
         {
             // 1. Explicit override via env var (useful in CI).

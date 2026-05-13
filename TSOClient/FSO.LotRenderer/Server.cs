@@ -318,7 +318,7 @@ namespace FSO.LotRenderer
                     return Results.Json(new RenderResponse { Path = cachePath, Width = w2, Height = h2, AgeSec = age2 });
                 }
 
-                byte[] pngBytes = await RenderAsync(fsov, req.Level, rotation, zoom);
+                byte[] pngBytes = await RenderAsync(fsov, req.Level, rotation, zoom, req.Roofless);
 
                 if (pngBytes == null || pngBytes.Length == 0)
                     return Results.Json(new { error = "Render returned empty PNG" },
@@ -383,10 +383,23 @@ namespace FSO.LotRenderer
         static Task<byte[]> FetchFSOVAsync(uint shardId, uint lotLocation)
         {
             var tcs = new TaskCompletionSource<byte[]>();
-            _ = _api.GetFSOV(shardId, lotLocation, bytes =>
+            // Fix (freesoexperiment-3b3): do NOT discard the task returned by GetFSOV.
+            // If GetFSOV throws synchronously (before the GameThread.NextUpdate callback
+            // fires), the discarded task carries the exception and the TCS is never
+            // completed, causing HandleRender to hang until Kestrel times out.
+            // Propagate any such exception to the TCS so the caller gets a proper error.
+            var fetchTask = _api.GetFSOV(shardId, lotLocation, bytes =>
             {
                 tcs.TrySetResult(bytes);
             });
+            if (fetchTask != null)
+            {
+                fetchTask.ContinueWith(t =>
+                {
+                    if (t.IsFaulted)
+                        tcs.TrySetException(t.Exception!.InnerExceptions);
+                }, TaskContinuationOptions.OnlyOnFaulted);
+            }
             return tcs.Task;
         }
 
@@ -394,7 +407,7 @@ namespace FSO.LotRenderer
         /// Render the given FSOV bytes on the FSO GameThread and return the PNG bytes.
         /// Must be called while holding _renderSem.
         /// </summary>
-        static Task<byte[]> RenderAsync(byte[] fsov, int level, WorldRotation rotation, WorldZoom zoom)
+        static Task<byte[]> RenderAsync(byte[] fsov, int level, WorldRotation rotation, WorldZoom zoom, bool roofless)
         {
             var tcs = new TaskCompletionSource<byte[]>();
 
@@ -407,7 +420,8 @@ namespace FSO.LotRenderer
 
                     // S2 parameterised render path — same logic as RenderStandaloneDebug.
                     Program.RenderFSOFAt(fsov, Program.GD, level, rotation, zoom,
-                        png => pngBytes = png);
+                        png => pngBytes = png,
+                        roofless: roofless);
 
                     tcs.TrySetResult(pngBytes);
                 }
