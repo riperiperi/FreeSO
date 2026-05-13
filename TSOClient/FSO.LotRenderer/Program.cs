@@ -119,6 +119,10 @@ namespace FSO.LotRenderer
             ApiPassword ??= Env("FSO_RENDERER_PASS",    "");
             GamePath    ??= Env("FSO_GAME_LOCATION",    "/home/baron/projects/freeso-experiment/GameAssets/TSOClient/");
 
+            // Normalize FSO_GAME_PATH: ensure trailing slash for Path.Combine to work correctly on Linux.
+            // On Linux, Path.Combine treats relative FAR3 paths as absolute when the prefix lacks a separator.
+            GamePath = Path.TrimEndingDirectorySeparator(GamePath) + Path.DirectorySeparatorChar;
+
             // --- Platform init (Linux equivalent of FSO.Windows.Program.InitWindows) ---
             FSO.Files.ImageLoaderHelpers.BitmapFunction = BitmapReader;
             FSO.Files.ImageLoaderHelpers.SavePNGFunc    = SavePNG;
