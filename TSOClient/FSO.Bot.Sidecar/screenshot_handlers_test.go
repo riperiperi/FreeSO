@@ -30,10 +30,41 @@ func TestRateLimitSoul(t *testing.T) {
 	if rl.check("soul1", "lot1") {
 		t.Error("second request allowed within 10s window")
 	}
+}
 
-	// After 10s + 1ms, should pass again
-	time.Sleep(100 * time.Millisecond) // Stub; real test would time-mock
-	// For a real test, we'd mock time or patch the rateLimiter's clock
+// TestRateLimitSoul_WindowExpiry verifies that once the 10s soul window has
+// elapsed, a new request from the same soul is allowed again (freesoexperiment-f5d,
+// subsumes freesoexperiment-07b). Runs synchronously by pre-seeding the soul's
+// timestamp slice with a time 11s in the past — no time.Sleep, no mock clock.
+// The check() method uses time.Now() at call time, and recent = timestamps After
+// (now - 10s); seeding a past timestamp simulates an elapsed window.
+func TestRateLimitSoul_WindowExpiry(t *testing.T) {
+	rl := &screenshotRateLimiter{
+		souls: make(map[string][]time.Time),
+		lots:  make(map[string][]time.Time),
+	}
+
+	// Pre-seed soul1 with a timestamp 11s in the past — outside the 10s soul window.
+	rl.mu.Lock()
+	rl.souls["soul1"] = []time.Time{time.Now().Add(-11 * time.Second)}
+	rl.mu.Unlock()
+
+	// The stale timestamp should be evicted and the request allowed.
+	if !rl.check("soul1", "lot1") {
+		t.Error("request denied despite soul window (10s) having expired")
+	}
+
+	// Sanity: the immediate follow-up must be denied (the previous call just
+	// recorded a fresh timestamp).
+	if rl.check("soul1", "lot1") {
+		t.Error("follow-up request allowed within the freshly-reset 10s window")
+	}
+
+	// Sanity: the lot's 60s window also has a fresh timestamp but is well under
+	// the 10-per-minute lot cap, so a different soul on the same lot is allowed.
+	if !rl.check("soul2", "lot1") {
+		t.Error("different soul on same lot denied — lot window misbehaving")
+	}
 }
 
 // TestRateLimitLot verifies that the lot-level rate limit (10 per 60s) works.
