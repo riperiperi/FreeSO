@@ -210,10 +210,10 @@ func TestBuyModeForwardingHandlersDispatchIPC(t *testing.T) {
 	}
 }
 
-// TestBuyModeDeclarationsPresent asserts all build-buy-catalog declarations load and
-// carry descriptions with ≥2 of Prerequisite/Effect/Cost plus expected required args.
-// find-cheap-catalog-guid is a test-support IPC helper (not in the verb catalog) —
-// not asserted here.
+// TestBuyModeDeclarationsPresent asserts all eight build-buy-catalog declarations load and
+// carry galtrader-style descriptions with expected required args. find-cheap-catalog-guid
+// is a test-support helper (buymode_handlers.go:23) — not in the verb catalog and not
+// asserted here.
 func TestBuyModeDeclarationsPresent(t *testing.T) {
 	decls, err := LoadDeclarations(conventionFiles)
 	if err != nil {
@@ -237,9 +237,8 @@ func TestBuyModeDeclarationsPresent(t *testing.T) {
 		{"list-object-for-sale", []string{"target_object_persist_id", "new_price"}},
 		{"buy-listed-object", []string{"target_object_persist_id"}},
 		{"upgrade-object", []string{"target_object_persist_id", "target_upgrade_level"}},
-		{"list-catalog-categories", nil},   // no required args; presence check only
-		// T5 (freesoexperiment-281a): search-catalog must be in ops map + have a declaration.
-		{"search-catalog", nil}, // all args optional; presence + description check only
+		{"search-catalog", nil},
+		{"list-catalog-categories", nil},
 	}
 
 	for _, w := range wants {

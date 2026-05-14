@@ -84,10 +84,7 @@ public static class BuyModeHandlers
         dispatcher.Register("buy-listed-object",     (args, ct) => Task.FromResult(BuyListedObject(vmHost, args)));
         dispatcher.Register("upgrade-object",        (args, ct) => Task.FromResult(UpgradeObject(vmHost, args)));
         dispatcher.Register("find-cheap-catalog-guid", (args, ct) => Task.FromResult(FindCheapCatalogGuid(vmHost, args)));
-        // search-catalog is the full convention op; find-cheap-catalog-guid keeps its old
-        // response shape for backward compatibility with existing integration tests. Both names
-        // route to FindCheapCatalogGuid; the verb parameter determines the response shape.
-        dispatcher.Register("search-catalog", (args, ct) => Task.FromResult(FindCheapCatalogGuid(vmHost, args, verb: "search-catalog")));
+        dispatcher.Register("search-catalog",          (args, ct) => Task.FromResult(FindCheapCatalogGuid(vmHost, args, verb: "search-catalog")));
         dispatcher.Register("list-catalog-categories", (args, ct) => Task.FromResult(ListCatalogCategories(vmHost, args)));
     }
 
@@ -413,320 +410,306 @@ public static class BuyModeHandlers
         });
     }
 
-    // ---- list-catalog-categories (freesoexperiment-2d1) ----
+    // ---- catalog search (find-cheap-catalog-guid + search-catalog) ----
 
-    /// <summary>
-    /// Category name map for the roommate-buyer whitelist (categories 12..20).
-    /// Taken from FSO.IDE/ResourceBrowser/XMLEntryEditor.cs — the authoritative IDE label
-    /// table for buy-panel object categories. Single English label per ID; no i18n.
-    /// </summary>
+    // Blacklist from VMNetBuyObjectCmd — never return this GUID.
+    private static readonly HashSet<uint> CatalogBlacklist = new() { 0x24C95F99u };
+
+    // Roommate whitelist (VMNetBuyObjectCmd.RoomieWhiteList): categories 12..20.
+    // Items outside this set are silently dropped by GetPurchaseMode for a
+    // BuildBuyRoommate caller, so helpers must restrict to these.
+    private static readonly HashSet<int> AllowedCategories = new() { 12, 13, 14, 15, 16, 17, 18, 19, 20 };
+
+    // Human-readable names for the allowed categories.
     private static readonly Dictionary<int, string> RoomieWhiteListCategoryNames = new()
     {
-        { 12, "Seating" },
-        { 13, "Surfaces" },
-        { 14, "Appliances" },
-        { 15, "Entertainment" },
-        { 16, "Skill and Job Objects" },
-        { 17, "Decorative" },
-        { 18, "Miscellaneous" },
-        { 19, "Lighting" },
-        { 20, "Pets and Pet Objects" },
+        { 12, "seating" },
+        { 13, "surfaces" },
+        { 14, "appliances" },
+        { 15, "entertainment" },
+        { 16, "skill" },
+        { 17, "decorative" },
+        { 18, "misc" },
+        { 19, "lighting" },
+        { 20, "pets" },
     };
 
-    /// <summary>
-    /// Return the category index for the roommate-buyer whitelist (categories 12..20).
-    /// One entry per category where at least one non-blacklisted, DisableLevel==0 item
-    /// exists. Categories with zero qualifying items are omitted from the response.
-    /// Output schema: <c>[{category_id, category_name, count}]</c> sorted by category_id.
-    /// No args; pure local-catalog read, no PDU emission.
-    /// </summary>
-    internal static CommandDispatcher.Response ListCatalogCategories(HeadlessVMHost vmHost, JsonObject args)
+    // Slug-to-category mapping for search-catalog --category <slug>.
+    private static readonly Dictionary<string, int> CategorySlugMap = new(StringComparer.OrdinalIgnoreCase)
     {
-        try
-        {
-            var content = Content.Content.Get();
-            var catalog = content.WorldCatalog;
-            if (catalog == null)
-                return CommandDispatcher.Response.Fail("list-catalog-categories: catalog not initialised");
+        { "seating",       12 },
+        { "surfaces",      13 },
+        { "appliances",    14 },
+        { "entertainment", 15 },
+        { "skill",         16 },
+        { "decorative",    17 },
+        { "misc",          18 },
+        { "lighting",      19 },
+        { "pets",          20 },
+    };
 
-            // Blacklist and whitelist mirror FindCheapCatalogGuid / VMNetBuyObjectCmd.
-            var blacklist = new HashSet<uint> { 0x24C95F99u };
-            var allowedCategories = new HashSet<int> { 12, 13, 14, 15, 16, 17, 18, 19, 20 };
-
-            var all = catalog.All();
-            if (all == null || all.Count == 0)
-                return CommandDispatcher.Response.Fail("list-catalog-categories: catalog empty");
-
-            var counts = all
-                .Where(i => i.DisableLevel == 0)
-                .Where(i => allowedCategories.Contains((int)i.Category))
-                .Where(i => !blacklist.Contains(i.GUID))
-                .GroupBy(i => (int)i.Category)
-                .Where(g => g.Any())
-                .OrderBy(g => g.Key)
-                .Select(g => (object)new
-                {
-                    category_id   = g.Key,
-                    category_name = RoomieWhiteListCategoryNames.TryGetValue(g.Key, out var name) ? name : $"unknown({g.Key})",
-                    count         = g.Count(),
-                })
-                .ToList();
-
-            return CommandDispatcher.Response.Success(new
-            {
-                verb       = "list-catalog-categories",
-                categories = counts,
-            });
-        }
-        catch (Exception ex)
-        {
-            return CommandDispatcher.Response.Fail($"list-catalog-categories: {ex.GetType().Name}: {ex.Message}");
-        }
-    }
-
-    // ---- search-catalog / find-cheap-catalog-guid (freesoexperiment-281a) ----
-
-    /// <summary>
-    /// Tier-bin thresholds computed lazily at first call from the live catalog snapshot.
-    /// Thresholds are snapshot-relative: recomputed when the bot reboots with a different
-    /// content snapshot. cheap = price ≤ P33; expensive = price > P67; moderate = in-between.
-    /// </summary>
+    // Tier bins: P33 / P67 percentiles over the whitelisted catalog, computed lazily.
     private static int _tierP33 = -1;
     private static int _tierP67 = -1;
     private static readonly object _tierLock = new();
 
-    private static (int p33, int p67) GetTierThresholds()
+    private static (int p33, int p67) EnsureTierBins()
     {
-        if (_tierP33 >= 0) return (_tierP33, _tierP67);
         lock (_tierLock)
         {
             if (_tierP33 >= 0) return (_tierP33, _tierP67);
+
             var content = Content.Content.Get();
-            var catalog = content.WorldCatalog;
-            var bl      = new HashSet<uint> { 0x24C95F99u };
-            var allowed = new HashSet<int>  { 12, 13, 14, 15, 16, 17, 18, 19, 20 };
-            var prices  = catalog.All()
+            var catalog = content?.WorldCatalog;
+            if (catalog == null) return (int.MaxValue, int.MaxValue);
+
+            var prices = catalog.All()
                 .Where(i => i.Price > 0 && i.DisableLevel == 0
-                         && allowed.Contains((int)i.Category) && !bl.Contains(i.GUID))
+                         && AllowedCategories.Contains((int)i.Category)
+                         && !CatalogBlacklist.Contains(i.GUID))
                 .Select(i => (int)i.Price)
                 .OrderBy(p => p)
                 .ToList();
-            if (prices.Count < 2) { _tierP33 = 0; _tierP67 = int.MaxValue; }
-            else
-            {
-                _tierP33 = prices[(int)(prices.Count * 0.33)];
-                _tierP67 = prices[(int)(prices.Count * 0.67)];
-            }
+
+            if (prices.Count == 0) return (int.MaxValue, int.MaxValue);
+
+            _tierP33 = prices[(int)(prices.Count * 0.33)];
+            _tierP67 = prices[(int)(prices.Count * 0.67)];
             return (_tierP33, _tierP67);
         }
     }
 
     /// <summary>
-    /// Category slug → ID map (subset of RoomieWhiteList 12..20). OrdinalIgnoreCase.
-    /// Unrecognised slugs resolve to -1 in <see cref="ParseCategory"/>.
+    /// Parses a category arg that may be an integer (12-20) or a slug name ("seating", etc.).
+    /// Returns -1 if absent, 0 if parse failed (to be treated as invalid by the caller).
     /// </summary>
-    private static readonly Dictionary<string, int> CategorySlugMap = new(StringComparer.OrdinalIgnoreCase)
+    private static int ParseCategoryArg(JsonNode node)
     {
-        { "seating",               12 }, { "seat",   12 }, { "chairs", 12 }, { "sofas",  12 },
-        { "surfaces",              13 }, { "tables", 13 },
-        { "appliances",            14 }, { "appliance", 14 },
-        { "entertainment",         15 },
-        { "skill-and-job-objects", 16 }, { "skill",  16 }, { "job",    16 },
-        { "decorative",            17 }, { "decor",  17 },
-        { "miscellaneous",         18 }, { "misc",   18 },
-        { "lighting",              19 }, { "lights", 19 },
-        { "pets-and-pet-objects",  20 }, { "pets",   20 },
-    };
-
-    /// <summary>
-    /// Parse the <c>category</c> arg (int 12..20 OR string slug).
-    /// Returns null (absent), valid category id (12..20), or -1 (out-of-whitelist → 0 results).
-    /// </summary>
-    private static int? ParseCategory(JsonObject args)
-    {
-        var node = args["category"];
-        if (node == null) return null;
+        if (node == null) return -1;
         if (node is JsonValue v)
         {
-            if (v.TryGetValue<long>(out var n))
-                return (n >= 12 && n <= 20) ? (int)n : -1;
-            if (v.TryGetValue<string>(out var s) && !string.IsNullOrWhiteSpace(s))
+            if (v.TryGetValue<long>(out var n)) return (int)n;
+            if (v.TryGetValue<string>(out var s) && !string.IsNullOrEmpty(s))
             {
-                if (CategorySlugMap.TryGetValue(s.Trim(), out var id)) return id;
-                if (int.TryParse(s.Trim(), out var ni)) return (ni >= 12 && ni <= 20) ? ni : -1;
-                return -1;
+                if (CategorySlugMap.TryGetValue(s, out var catId)) return catId;
+                if (int.TryParse(s, out var parsed)) return parsed;
             }
         }
-        return null;
+        return 0;
     }
 
     /// <summary>
-    /// Scan <see cref="Content.WorldCatalog"/> for non-blacklisted, user-placeable items
-    /// in the server's roommate whitelist (categories 12..20) with optional filters.
+    /// Backs both <c>find-cheap-catalog-guid</c> (legacy shape) and <c>search-catalog</c>
+    /// (new shape with filters). The <paramref name="verb"/> parameter selects the response
+    /// shape; all safety filters (blacklist, DisableLevel==0, AllowedCategories) are always
+    /// applied regardless of verb.
     ///
-    /// <para>
-    /// Shared entry point for two dispatcher ops:
-    /// <list type="bullet">
-    ///   <item><c>find-cheap-catalog-guid</c> (default, legacy): old response shape
-    ///     <c>{verb, max_price, count, candidates:[{guid, price, name, category}]}</c>
-    ///     preserved for backward compat with verb-buymode.sh integration test.</item>
-    ///   <item><c>search-catalog</c>: new shape
-    ///     <c>{verb, count, results:[{guid_hex, guid_decimal, name, price, category_id,
-    ///     category_name}], categories_summary:[{category_id, category_name, count}]}</c>.</item>
-    /// </list>
-    /// </para>
+    /// <para><b>find-cheap-catalog-guid</b> args: max_price (int, default 500), limit (int, default 5).
+    /// Response: <c>{verb, max_price, count, candidates:[{guid, price, name, category}]}</c></para>
     ///
-    /// New filter args (all optional for both ops):
-    /// <c>name</c> (case-insensitive substring), <c>category</c> (int 12..20 or slug),
-    /// <c>tier</c> ("cheap"/"moderate"/"expensive" — P33/P67, snapshot-relative),
-    /// <c>min_price</c>, <c>max_price</c>,
-    /// <c>limit</c> (clamped to [1,200]; default 25 for search-catalog, 5 for find-cheap).
-    /// No PDU emission. Pure local-catalog read.
+    /// <para><b>search-catalog</b> args: name (string), category (int|slug), tier (string),
+    /// min_price (int), max_price (int), limit (int, default 50, max 200).
+    /// Response: <c>{verb, count, results:[{guid_hex, guid_decimal, name, price, category_id, category_name}],
+    /// categories_summary:[{category_id, category_name, count}]}</c></para>
     /// </summary>
     internal static CommandDispatcher.Response FindCheapCatalogGuid(
         HeadlessVMHost vmHost, JsonObject args, string verb = "find-cheap-catalog-guid")
     {
         bool isSearchCatalog = verb == "search-catalog";
 
-        int limitRaw = (int)((long?)args["limit"] ?? (isSearchCatalog ? 25L : 5L));
-        // Server-side clamp: limit must be in [1, 200].
-        int limit    = Math.Clamp(limitRaw, 1, 200);
-
-        // max_price: find-cheap-catalog-guid defaults to 500 (backward compat);
-        // search-catalog defaults to no cap (int.MaxValue).
-        long rawMax  = (long?)args["max_price"] ?? (isSearchCatalog ? (long)int.MaxValue : 500L);
-        int maxPrice = (int)Math.Min(rawMax, int.MaxValue);
-        int minPrice = (int)((long?)args["min_price"] ?? 0L);
-
-        string nameFilter    = (string?)args["name"];
-        int?   categoryFilter = ParseCategory(args);
-        string tierFilter    = ((string?)args["tier"])?.Trim().ToLowerInvariant();
-
         try
         {
             var content = Content.Content.Get();
-            var catalog = content.WorldCatalog;
+            var catalog = content?.WorldCatalog;
             if (catalog == null)
                 return CommandDispatcher.Response.Fail($"{verb}: catalog not initialised");
-
-            // Safety filters: blacklist + roommate whitelist (categories 12..20) + DisableLevel==0.
-            // NON-NEGOTIABLE: mirrors VMNetBuyObjectCmd server-side gating so agents never
-            // discover items the server will silently drop on the buy command.
-            var blacklist         = new HashSet<uint> { 0x24C95F99u };
-            var allowedCategories = new HashSet<int>  { 12, 13, 14, 15, 16, 17, 18, 19, 20 };
 
             var all = catalog.All();
             if (all == null || all.Count == 0)
                 return CommandDispatcher.Response.Fail($"{verb}: catalog empty");
 
-            // Tier thresholds computed lazily (snapshot-relative — reset on bot reboot).
-            int p33 = 0, p67 = int.MaxValue;
-            if (!string.IsNullOrEmpty(tierFilter))
-                (p33, p67) = GetTierThresholds();
+            // Always-on safety filters.
+            var baseQuery = all
+                .Where(i => i.Price > 0 && i.DisableLevel == 0
+                         && AllowedCategories.Contains((int)i.Category)
+                         && !CatalogBlacklist.Contains(i.GUID));
 
-            IEnumerable<FSO.Content.Interfaces.ObjectCatalogItem> query = all
-                .Where(i => i.DisableLevel == 0)
-                .Where(i => allowedCategories.Contains((int)i.Category))
-                .Where(i => !blacklist.Contains(i.GUID))
-                .Where(i => i.Price >= (uint)minPrice)
-                .Where(i => i.Price <= (uint)maxPrice);
-
-            // Category filter (null = all whitelisted; -1 = out-of-range → empty).
-            if (categoryFilter.HasValue)
+            if (!isSearchCatalog)
             {
-                if (categoryFilter.Value == -1)
-                    query = Enumerable.Empty<FSO.Content.Interfaces.ObjectCatalogItem>();
-                else
-                    query = query.Where(i => (int)i.Category == categoryFilter.Value);
-            }
+                // ---- legacy find-cheap-catalog-guid ----
+                int maxPrice = (int)((long?)args["max_price"] ?? 500L);
+                int limit = (int)((long?)args["limit"] ?? 5L);
 
-            // Name filter (case-insensitive substring match on item Name).
-            if (!string.IsNullOrEmpty(nameFilter))
-                query = query.Where(i => (i.Name ?? "").Contains(nameFilter, StringComparison.OrdinalIgnoreCase));
-
-            // Tier filter.
-            if (!string.IsNullOrEmpty(tierFilter))
-            {
-                query = tierFilter switch
-                {
-                    "cheap"     => query.Where(i => i.Price <= (uint)p33),
-                    "expensive" => query.Where(i => i.Price >  (uint)p67),
-                    "moderate"  => query.Where(i => i.Price >  (uint)p33 && i.Price <= (uint)p67),
-                    _           => query, // unrecognised tier — no-op
-                };
-            }
-
-            var filtered = query.OrderBy(i => i.Price).ToList();
-
-            if (isSearchCatalog)
-            {
-                // New shape: guid_hex/guid_decimal/category_name + categories_summary.
-                var results = filtered
+                var candidates = baseQuery
+                    .Where(i => i.Price <= maxPrice)
+                    .OrderBy(i => i.Price)
                     .Take(limit)
                     .Select(i => (object)new
                     {
-                        guid_hex      = "0x" + i.GUID.ToString("X8"),
-                        guid_decimal  = (long)(uint)i.GUID,
-                        name          = i.Name ?? "",
-                        price         = (int)i.Price,
-                        category_id   = (int)i.Category,
-                        category_name = RoomieWhiteListCategoryNames.TryGetValue((int)i.Category, out var cn1)
-                                        ? cn1 : $"unknown({(int)i.Category})",
-                    })
-                    .ToList();
-
-                // categories_summary: full category landscape with same safety filters but
-                // WITHOUT name/tier/price filters — shows what exists before the agent filters.
-                var catSummary = all
-                    .Where(i => i.DisableLevel == 0)
-                    .Where(i => allowedCategories.Contains((int)i.Category))
-                    .Where(i => !blacklist.Contains(i.GUID))
-                    .GroupBy(i => (int)i.Category)
-                    .Where(g => g.Any())
-                    .Select(g => (object)new
-                    {
-                        category_id   = g.Key,
-                        category_name = RoomieWhiteListCategoryNames.TryGetValue(g.Key, out var cn2)
-                                        ? cn2 : $"unknown({g.Key})",
-                        count         = g.Count(),
-                    })
-                    .OrderBy(o => ((dynamic)o).category_id)
-                    .ToList();
-
-                return CommandDispatcher.Response.Success(new
-                {
-                    verb               = "search-catalog",
-                    count              = results.Count,
-                    results,
-                    categories_summary = catSummary,
-                });
-            }
-            else
-            {
-                // Legacy find-cheap-catalog-guid shape — backward compat for verb-buymode.sh.
-                var sorted = filtered
-                    .Take(limit)
-                    .Select(i => (object)new
-                    {
-                        guid     = (long)i.GUID,
-                        price    = (long)i.Price,
-                        name     = i.Name ?? "",
+                        guid = (long)i.GUID,
+                        price = (long)i.Price,
+                        name = i.Name ?? "",
                         category = (int)i.Category,
                     })
                     .ToList();
 
                 return CommandDispatcher.Response.Success(new
                 {
-                    verb      = "find-cheap-catalog-guid",
+                    verb = "find-cheap-catalog-guid",
                     max_price = maxPrice,
-                    count     = sorted.Count,
-                    candidates = sorted,
+                    count = candidates.Count,
+                    candidates,
                 });
             }
+
+            // ---- search-catalog ----
+            // Category filter: integer or slug.
+            int catFilter = ParseCategoryArg(args["category"]);
+            if (catFilter == 0)
+                return CommandDispatcher.Response.Fail($"search-catalog: unrecognised category value: {args["category"]}");
+            // catFilter == -1 → no filter (all categories)
+            if (catFilter > 0 && !AllowedCategories.Contains(catFilter))
+            {
+                // Caller asked for a category outside the whitelist — return 0 results, not an error.
+                return CommandDispatcher.Response.Success(new
+                {
+                    verb = "search-catalog",
+                    count = 0,
+                    results = Array.Empty<object>(),
+                    categories_summary = Array.Empty<object>(),
+                });
+            }
+
+            // Name filter.
+            string nameFilter = args["name"] is JsonValue nv && nv.TryGetValue<string>(out var ns) ? ns : null;
+
+            // Tier filter: cheap (≤P33), mid (P33..P67), expensive (>P67).
+            string tierFilter = args["tier"] is JsonValue tv && tv.TryGetValue<string>(out var ts) ? ts : null;
+            int? tierMin = null;
+            int? tierMax = null;
+            if (!string.IsNullOrEmpty(tierFilter))
+            {
+                var (p33, p67) = EnsureTierBins();
+                if (tierFilter.Equals("cheap", StringComparison.OrdinalIgnoreCase))
+                    tierMax = p33;
+                else if (tierFilter.Equals("mid", StringComparison.OrdinalIgnoreCase) ||
+                         tierFilter.Equals("medium", StringComparison.OrdinalIgnoreCase))
+                { tierMin = p33 + 1; tierMax = p67; }
+                else if (tierFilter.Equals("expensive", StringComparison.OrdinalIgnoreCase))
+                    tierMin = p67 + 1;
+                else
+                    return CommandDispatcher.Response.Fail($"search-catalog: unknown tier '{tierFilter}'; use cheap|mid|expensive");
+            }
+
+            int? minPrice = args["min_price"] != null ? (int)(long)args["min_price"] : (int?)null;
+            int? searchMaxPrice = args["max_price"] != null ? (int)(long)args["max_price"] : (int?)null;
+
+            // Server-side limit clamp: max 200.
+            int limitRaw = (int)((long?)args["limit"] ?? 50L);
+            int searchLimit = Math.Clamp(limitRaw, 1, 200);
+
+            var filtered = baseQuery;
+            if (catFilter > 0)
+                filtered = filtered.Where(i => (int)i.Category == catFilter);
+            if (!string.IsNullOrEmpty(nameFilter))
+                filtered = filtered.Where(i => (i.Name ?? "").Contains(nameFilter, StringComparison.OrdinalIgnoreCase));
+            if (tierMin.HasValue)
+                filtered = filtered.Where(i => (int)i.Price >= tierMin.Value);
+            if (tierMax.HasValue)
+                filtered = filtered.Where(i => (int)i.Price <= tierMax.Value);
+            if (minPrice.HasValue)
+                filtered = filtered.Where(i => (int)i.Price >= minPrice.Value);
+            if (searchMaxPrice.HasValue)
+                filtered = filtered.Where(i => (int)i.Price <= searchMaxPrice.Value);
+
+            var resultList = filtered
+                .OrderBy(i => i.Price)
+                .Take(searchLimit)
+                .Select(i => (object)new
+                {
+                    guid_hex     = "0x" + i.GUID.ToString("X8"),
+                    guid_decimal = (long)(uint)i.GUID,
+                    name         = i.Name ?? "",
+                    price        = (int)i.Price,
+                    category_id  = (int)i.Category,
+                    category_name = RoomieWhiteListCategoryNames.TryGetValue((int)i.Category, out var cn) ? cn : "",
+                })
+                .ToList();
+
+            // categories_summary: all categories present in the full (base+cat+name+tier+price) result set
+            // before the Take limit — but we want them from the unrestricted-by-limit query so it
+            // reflects the dataset, not just the page. Recompute from filtered (no Take).
+            var catSummary = filtered
+                .GroupBy(i => (int)i.Category)
+                .Select(g => (object)new
+                {
+                    category_id   = g.Key,
+                    category_name = RoomieWhiteListCategoryNames.TryGetValue(g.Key, out var cn2) ? cn2 : "",
+                    count         = g.Count(),
+                })
+                .OrderBy(o => ((dynamic)o).category_id)
+                .ToList();
+
+            return CommandDispatcher.Response.Success(new
+            {
+                verb    = "search-catalog",
+                count   = resultList.Count,
+                results = resultList,
+                categories_summary = catSummary,
+            });
         }
         catch (Exception ex)
         {
             return CommandDispatcher.Response.Fail($"{verb}: {ex.GetType().Name}: {ex.Message}");
+        }
+    }
+
+    // ---- list-catalog-categories ----
+
+    /// <summary>
+    /// Returns the set of whitelisted catalog categories (12..20) that have at least one
+    /// purchaseable, non-blacklisted item in <see cref="Content.WorldCatalog"/>, along with
+    /// item counts. Useful for agents to discover what categories are browsable before
+    /// calling <c>search-catalog --category</c>.
+    /// </summary>
+    internal static CommandDispatcher.Response ListCatalogCategories(HeadlessVMHost vmHost, JsonObject args)
+    {
+        try
+        {
+            var content = Content.Content.Get();
+            var catalog = content?.WorldCatalog;
+            if (catalog == null)
+                return CommandDispatcher.Response.Fail("list-catalog-categories: catalog not initialised");
+
+            var all = catalog.All();
+            if (all == null || all.Count == 0)
+                return CommandDispatcher.Response.Fail("list-catalog-categories: catalog empty");
+
+            var categories = all
+                .Where(i => i.Price > 0 && i.DisableLevel == 0
+                         && AllowedCategories.Contains((int)i.Category)
+                         && !CatalogBlacklist.Contains(i.GUID))
+                .GroupBy(i => (int)i.Category)
+                .Select(g => (object)new
+                {
+                    category_id   = g.Key,
+                    category_name = RoomieWhiteListCategoryNames.TryGetValue(g.Key, out var cn) ? cn : "",
+                    slug          = RoomieWhiteListCategoryNames.TryGetValue(g.Key, out var slug) ? slug : "",
+                    count         = g.Count(),
+                })
+                .OrderBy(o => ((dynamic)o).category_id)
+                .ToList();
+
+            return CommandDispatcher.Response.Success(new
+            {
+                verb       = "list-catalog-categories",
+                count      = categories.Count,
+                categories,
+            });
+        }
+        catch (Exception ex)
+        {
+            return CommandDispatcher.Response.Fail($"list-catalog-categories: {ex.GetType().Name}: {ex.Message}");
         }
     }
 }

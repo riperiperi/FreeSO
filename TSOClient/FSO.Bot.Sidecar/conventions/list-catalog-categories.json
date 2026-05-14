@@ -3,7 +3,7 @@
   "version": "1.0",
   "operation": "list-catalog-categories",
   "family": "build-buy-catalog",
-  "description": "List the category index for the buyable catalog. Prerequisite: none — pure local read, no VM or lot required. Returns one entry per category in the roommate-buyer whitelist (categories 12..20), with a human-readable name and the count of items currently available. Categories with zero qualifying items are omitted. Cost: none (no budget or lot state changed). Effect: provides the orientation map you need before calling search-catalog with a category filter — it tells you what kinds of things exist and how many of each, so you can decide where to shop without scanning the full item list.",
+  "description": "List the purchaseable object categories in the world catalog. Prerequisite: none — read-only catalog query, no build permission required. Effect: returns the set of whitelisted categories (12..20) that have at least one purchaseable, non-blacklisted item in Content.WorldCatalog, with item counts and both integer ID and slug name. Cost: none — no simoleon debit, no PDU emitted. Use this before search-catalog to discover which categories are browsable.",
   "args": [],
   "produces_tags": [
     {
@@ -14,22 +14,20 @@
   "antecedents": "none",
   "signing": "member_key",
   "rate_limit": {
-    "max": 60,
+    "max": 30,
     "per": "sender",
     "window": "1m"
   },
   "response": "sync",
   "status": "implemented",
   "call_signatures": [
-    "cf $CF list-catalog-categories                                                       # no args; returns [{category_id, category_name, count}] for whitelisted categories with ≥1 item"
+    "cf $CF list-catalog-categories   # returns categories array with id, name/slug, count"
   ],
   "common_mistakes": [
-    "Only categories 12..20 (the RoomieWhiteList) are returned — lower-numbered categories (appliances, etc.) require owner/builder permissions and are not returned here.",
-    "count reflects items where DisableLevel==0 and GUID not blacklisted — the same filter chain as find-cheap-catalog-guid and buy-object.",
-    "A category absent from the response means zero qualifying items exist, not that the category is undefined."
+    "Only categories 12..20 (the server roommate whitelist) are returned — admin/special categories are excluded.",
+    "A category with count=0 will not appear (only categories with ≥1 purchaseable item are listed)."
   ],
   "perception_hints": [
-    "Use the returned category_id values as the category filter argument when calling search-catalog.",
-    "count gives you a rough idea of selection depth before committing to a search."
+    "Use this before search-catalog to discover which category IDs and slugs are valid."
   ]
 }
