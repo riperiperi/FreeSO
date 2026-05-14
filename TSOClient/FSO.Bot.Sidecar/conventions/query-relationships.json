@@ -24,7 +24,7 @@
   ],
   "common_mistakes": [
     "These are LOCAL VM reads — they reflect whatever your client-side replica VM shows, which may lag the authoritative state by 1-2 ticks.",
-    "Do not rely on query-inventory until freesoexperiment-1a9 closes — it returns deferred:true with items=[]."
+    "Only Sims whose ObjectID is live in your current lot VM appear here — cross-lot relationships are not surfaced until the DataService feed is wired (freesoexperiment-1a9)."
   ],
   "perception_hints": [
     "These ops return the same shape as the corresponding perception slice; use for fresh mid-turn snapshots",

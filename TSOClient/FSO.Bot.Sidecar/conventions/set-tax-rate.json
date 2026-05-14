@@ -3,7 +3,7 @@
   "version": "1.0",
   "operation": "set-tax-rate",
   "family": "civic",
-  "description": "Set the neighborhood tax rate and collect taxes from all residents this cycle. Mayor-only. Each resident's budget is debited by (balance * tax_rate_percent / 100). A bulletin is posted announcing the tax. The response includes per-resident deltas so the calling agent can observe who was taxed and by how much.",
+  "description": "Record a mayoral tax-rate intent for the neighborhood. Mayor-only. KNOWN LIMITATION (freesoexperiment-d66): the engine-side TaxCycleHandler that would actually debit resident budgets is not yet implemented. This op validates the rate and returns ok:true with deferred:true — no §simoleons are moved, no bulletin is posted. When freesoexperiment-d66 closes, the response will include per-resident budget deltas. Until then, treat this op as a rate-intent registration only.",
   "args": [
     {
       "name": "tax_rate_percent",
@@ -32,25 +32,24 @@
     "window": "10m"
   },
   "response": "sync",
-  "status": "implemented",
+  "status": "stub",
   "call_signatures": [
-    "cf $CF set-tax-rate --tax_rate_percent 5                                      # 5% tax on all residents in nhood 1",
-    "cf $CF set-tax-rate --tax_rate_percent 10 --neighborhood_id 1                 # explicit nhood"
+    "cf $CF set-tax-rate --tax_rate_percent 5                                      # validated stub — returns ok:true, deferred:true; no actual debit",
+    "cf $CF set-tax-rate --tax_rate_percent 10 --neighborhood_id 1                 # explicit nhood; same stub behaviour"
   ],
   "common_mistakes": [
     "Only the mayor (fso_avatars.mayor_nhood > 0) can call this op — non-mayor gets NO_AUTH.",
     "tax_rate_percent must be 0–100 (integer) — INVALID_TAX_RATE is returned otherwise.",
-    "The tax is applied immediately (on-demand) — there is no automatic schedule.",
-    "Each resident's transaction appears as a negative budget delta on their next query-self."
+    "The response deferred:true means NO tax was collected — do not assume residents were debited.",
+    "No bulletin is posted by this stub — post-bulletin must be called separately if desired."
   ],
   "refuse_conditions": [
     "Caller is not the mayor of the target neighborhood → NO_AUTH",
-    "tax_rate_percent < 0 or > 100 → INVALID_TAX_RATE",
-    "Resident list is empty (no roommates in neighborhood) → ok:true with empty residents array"
+    "tax_rate_percent < 0 or > 100 → INVALID_TAX_RATE"
   ],
   "perception_hints": [
     "Your own mayor status: perception.avatar.mayor_nhood > 0 means you are mayor",
     "Current balance: perception.avatar.balance (use query-self for fresh value)",
-    "After tax: residents' budgets are immediately reduced — their next query-self shows the delta"
+    "Resident balances are NOT changed by this stub — query-self will not show a delta until freesoexperiment-d66 is resolved"
   ]
 }

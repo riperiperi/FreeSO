@@ -24,7 +24,7 @@
   ],
   "common_mistakes": [
     "These are LOCAL VM reads — they reflect whatever your client-side replica VM shows, which may lag the authoritative state by 1-2 ticks.",
-    "Do not rely on query-inventory until freesoexperiment-1a9 closes — it returns deferred:true with items=[]."
+    "lot_id is the DB lot identifier, not the lot location code (24-bit packed coordinate) — do not confuse with visit-lot's target_lot_location."
   ],
   "perception_hints": [
     "These ops return the same shape as the corresponding perception slice; use for fresh mid-turn snapshots",

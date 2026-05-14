@@ -33,7 +33,7 @@
   ],
   "common_mistakes": [
     "These are LOCAL VM reads — they reflect whatever your client-side replica VM shows, which may lag the authoritative state by 1-2 ticks.",
-    "Do not rely on query-inventory until freesoexperiment-1a9 closes — it returns deferred:true with items=[]."
+    "radius_tiles must be a positive integer; passing 0 or a negative value is refused."
   ],
   "perception_hints": [
     "These ops return the same shape as the corresponding perception slice; use for fresh mid-turn snapshots",
