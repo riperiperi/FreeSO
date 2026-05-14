@@ -34,13 +34,21 @@ func RegisterBuyModeHandlers(ctx context.Context, cf *Campfire, ipc *IPC) (int, 
 		// forwarder; filtering logic lives in BuyModeHandlers.FindCheapCatalogGuid.
 		"search-catalog": simpleForwardingHandler(ipc, "search-catalog",
 			"name", "category", "tier", "min_price", "max_price", "limit"),
-		"buy-object": simpleForwardingHandler(ipc, "buy-object",
+		// buy-object & place-from-inventory ride placementVerifyingHandler so
+		// callers get a structured {placed, persist_id, cost, hints} verdict
+		// instead of the ok:true / queued:true ack that conflates "bot received"
+		// with "VM placed" (OQ-8 silent-drop, see verifying_handler.go).
+		"buy-object": placementVerifyingHandler(ipc, "buy-object",
 			"guid", "x", "y", "level", "dir", "mode", "target_upgrade_level"),
-		"place-from-inventory": simpleForwardingHandler(ipc, "place-from-inventory",
+		"place-from-inventory": placementVerifyingHandler(ipc, "place-from-inventory",
 			"object_persist_id", "x", "y", "level", "dir", "mode"),
 		"move-object": simpleForwardingHandler(ipc, "move-object",
 			"target_object_id", "x", "y", "level", "dir"),
-		"delete-object": simpleForwardingHandler(ipc, "delete-object",
+		// delete-object rides deleteVerifyingHandler to (a) surface a structured
+		// {deleted:true|false} verdict instead of the silent OQ-8 ack, and
+		// (b) auto-retry against a subordinate tile when the caller targets a
+		// multitile master (master-tile no-op, freesoexperiment-850).
+		"delete-object": deleteVerifyingHandler(ipc, "delete-object",
 			"target_object_id", "cleanup_all"),
 		"send-to-inventory": simpleForwardingHandler(ipc, "send-to-inventory",
 			"target_object_persist_id"),

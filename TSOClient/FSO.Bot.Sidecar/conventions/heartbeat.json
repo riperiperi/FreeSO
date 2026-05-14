@@ -1,0 +1,37 @@
+{
+  "convention": "freeso-embodiment",
+  "version": "1.0",
+  "operation": "heartbeat",
+  "family": "diagnostics",
+  "description": "Sidecar liveness probe — returns the current state of the sidecar + bot pair without issuing a bot IPC. Designed to be cheap and answerable even when the bot itself is wedged. Prerequisite: none. Effect: read-only inspection of in-memory counters (uptime, perception count, last perception timestamp, IPC queue depth, last avatar position). Cost: negligible — no IPC round-trip, no campfire poll, no file access. Call this when a longer freeso:* op times out at the cf await layer and you need to know why: bot_running=false means the bot crashed and the supervisor is relaunching; perception_count=0 with bot_running=true means the bot is logging in or waiting on the VM to assign it to a lot; last_perception_ms_ago > 10000 means the bot was on the lot but is now wedged or got session-evicted; pending_ipc_count > 5 means the command queue is draining slowly (lot busy or VM stalled). Returns the same HealthSnapshot shape every time so callers can diff between heartbeats to detect motion.",
+  "args": [],
+  "produces_tags": [
+    {
+      "tag": "freeso:heartbeat",
+      "cardinality": "exactly_one"
+    }
+  ],
+  "antecedents": "none",
+  "signing": "member_key",
+  "rate_limit": {
+    "max": 120,
+    "per": "sender",
+    "window": "1m"
+  },
+  "response": "sync",
+  "status": "implemented",
+  "call_signatures": [
+    "cf $CF heartbeat                                                                     # no args; instant in-memory snapshot"
+  ],
+  "common_mistakes": [
+    "Treating heartbeat as authoritative position. The position field is the LAST observed perception — if the bot is in the middle of a teleport / lot change, it may be stale by up to last_perception_ms_ago milliseconds.",
+    "Calling heartbeat in a tight loop to wait for the bot to come up. The supervisor relaunches the bot on its own; one heartbeat every 2-5 seconds is plenty."
+  ],
+  "perception_hints": [
+    "heartbeat does NOT consult perception in real time; it reads cached state. The freshness signal is last_perception_ms_ago.",
+    "If bot_running=true but perception_count is unchanged across two heartbeats spaced >2s apart, the bot's stdout has stopped — either it's about to exit (supervisor will relaunch) or its perception emitter is wedged."
+  ],
+  "refuse_conditions": [
+    "Cannot refuse — pure local read. Always returns ok:true with the snapshot."
+  ]
+}

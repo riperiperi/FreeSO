@@ -118,6 +118,9 @@ func main() {
 	// (freesoexperiment-ea0). Declared at outer scope so the supervisor loop can
 	// pass it to new Bridges on bot relaunch. Nil in --no-bot mode.
 	var augmentor *PerceptionAugmentor
+	// health is the sidecar-lifetime health tracker for the heartbeat
+	// convention (Fix #3). Nil in --no-bot mode (no perception to track).
+	var health *SidecarHealth
 	if !*noBot {
 		proc, err = LaunchBot(ctx, BotConfig{
 			Exec: botExec,
@@ -156,7 +159,11 @@ func main() {
 		// can emit chargen_pending in perception ticks (freesoexperiment-b094).
 		chargenMode := hasBotArg(splitArgs(*botArgs), "--chargen-mode")
 		augmentor = NewPerceptionAugmentor(claimStore, chargenMode)
-		bridges := NewBridgesWithBotCmd(cf, proc, ipc, botCmds, augmentor)
+		// Health tracker for the heartbeat convention (Fix #3 — timeout
+		// diagnostic context). Lives for the sidecar's lifetime so its
+		// perception_count is cumulative across bot relaunches.
+		health = NewSidecarHealth()
+		bridges := NewBridgesWithBotCmd(cf, proc, ipc, botCmds, augmentor).WithHealth(health)
 		go bridges.Run(ctx)
 
 		// 5. Register convention handlers for verb-family ops. Each op opens one
@@ -352,6 +359,17 @@ func main() {
 			log.Fatalf("register chargen handlers: %v", err)
 		}
 		log.Printf("convention handlers: %d chargen-family ops serving", chargenServers)
+
+		// Diagnostics family (Fix #3 — timeout diagnostic context):
+		// heartbeat returns a cheap in-memory snapshot of sidecar+bot state.
+		// Agents call this when a longer freeso:* op times out at the cf
+		// await layer to understand why ("bot wedged", "perception stale",
+		// "supervisor relaunching", etc.) instead of guessing.
+		heartbeatServers, err := RegisterHeartbeatHandler(ctx, cf, proc, ipc, health)
+		if err != nil {
+			log.Fatalf("register heartbeat handler: %v", err)
+		}
+		log.Printf("convention handlers: %d diagnostics ops serving", heartbeatServers)
 
 		// Single-dispatcher: one Subscribe goroutine handles every registered op
 		// instead of one Subscribe per op. Replaces the convention.Server fleet

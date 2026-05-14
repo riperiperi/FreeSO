@@ -136,6 +136,21 @@ func (i *IPC) Send(ctx context.Context, op string, args map[string]any) (*Respon
 	}
 }
 
+// PendingCount returns the number of in-flight IPC requests awaiting a bot
+// response. Used by the heartbeat handler as a freshness signal — a high or
+// growing count means the bot isn't draining the dispatch queue, which
+// usually points at a wedged or session-evicted bot. Returns 0 if IPC isn't
+// wired (test paths, --no-bot mode).
+func (i *IPC) PendingCount() int {
+	if i == nil {
+		return 0
+	}
+	i.mu.Lock()
+	n := len(i.pending)
+	i.mu.Unlock()
+	return n
+}
+
 // UpdateBot hot-swaps the underlying BotProcess. Called by the supervisor loop
 // after relaunching the bot so all registered handlers automatically route
 // subsequent IPC.Send calls to the new process without re-registration.

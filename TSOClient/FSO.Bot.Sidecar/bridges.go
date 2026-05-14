@@ -43,6 +43,14 @@ type Bridges struct {
 	// across the bridge's lifetime. When disabled (FSO_USER unset or XDG dirs
 	// unavailable), Write is a no-op so the bridge continues running.
 	journal *JournalWriter
+
+	// health tracks perception cadence + last avatar position for the
+	// heartbeat convention. Constructed once at sidecar bringup and shared
+	// across bot relaunches (perception count is cumulative across the
+	// sidecar's lifetime; agents reading heartbeat want "is the bot alive
+	// right now," which a re-launched bot still answers correctly via the
+	// latest perception timestamp).
+	health *SidecarHealth
 }
 
 // NewBridges constructs a Bridges value. Call Run(ctx) once to start the
@@ -58,6 +66,15 @@ func NewBridges(cf *Campfire, bot *BotProcess, ipc *IPC, augmentor *PerceptionAu
 // augmentor is shared with civic convention handlers for mayor status reads.
 func NewBridgesWithBotCmd(cf *Campfire, bot *BotProcess, ipc *IPC, botCmds *BotCmdPump, augmentor *PerceptionAugmentor) *Bridges {
 	return &Bridges{cf: cf, bot: bot, ipc: ipc, botCmds: botCmds, habWatcher: NewHabitationWatcher(), augmentor: augmentor, journal: NewJournalWriter()}
+}
+
+// WithHealth attaches a SidecarHealth tracker. May be nil to disable health
+// recording. Returns the receiver for chained construction.
+func (b *Bridges) WithHealth(h *SidecarHealth) *Bridges {
+	if b != nil {
+		b.health = h
+	}
+	return b
 }
 
 // eventEnvelope is the loose shape we parse from bot stdout. We keep it a map
@@ -160,6 +177,15 @@ func (b *Bridges) handle(line []byte) {
 		b.habWatcher.ObservePerception(line)
 	}
 
+	// Health tracker: record perception freshness + last position so the
+	// heartbeat convention can answer "is the bot alive and on a lot?"
+	// without an IPC round-trip. Runs on every perception tick.
+	if env.Kind == "perception" && b.health != nil {
+		pos := extractPerceptionPosition(line)
+		onLot := perceptionHasLot(line)
+		b.health.RecordPerception(b.simID, pos, onLot)
+	}
+
 	// Perception augmentor: enrich perception ticks with sidecar-side fields
 	// (home_lot, civic affordances, mayor_status) before forwarding to the
 	// campfire. The habitation watcher runs BEFORE augmentation so it sees the
@@ -231,4 +257,50 @@ func extractPersistID(raw json.RawMessage) string {
 		return ""
 	}
 	return s
+}
+
+// extractPerceptionPosition decodes the avatar.position out of a perception
+// frame for the health tracker. Returns nil if absent or malformed — the
+// health snapshot then reports HavePerception=true but Position=nil, which
+// callers read as "bot alive but position unknown right now."
+func extractPerceptionPosition(line []byte) *perceptionPosition {
+	var env struct {
+		Avatar struct {
+			Position *struct {
+				Level json.Number `json:"level"`
+				X     json.Number `json:"x"`
+				Y     json.Number `json:"y"`
+			} `json:"position"`
+		} `json:"avatar"`
+	}
+	dec := json.NewDecoder(bytesReader(line))
+	dec.UseNumber()
+	if err := dec.Decode(&env); err != nil {
+		return nil
+	}
+	if env.Avatar.Position == nil {
+		return nil
+	}
+	level, _ := env.Avatar.Position.Level.Int64()
+	x, _ := env.Avatar.Position.X.Float64()
+	y, _ := env.Avatar.Position.Y.Float64()
+	return &perceptionPosition{Level: int(level), X: x, Y: y}
+}
+
+// perceptionHasLot reports whether the perception line contained a non-null
+// "lot" field. We use this as the heartbeat snapshot's OnLot flag — agents
+// asking heartbeat want a quick yes/no without parsing the lot payload.
+func perceptionHasLot(line []byte) bool {
+	var env struct {
+		Lot json.RawMessage `json:"lot"`
+	}
+	if err := json.Unmarshal(line, &env); err != nil {
+		return false
+	}
+	if len(env.Lot) == 0 {
+		return false
+	}
+	// `null` is 4 bytes — treat as absent.
+	s := string(env.Lot)
+	return s != "null"
 }
