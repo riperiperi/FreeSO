@@ -514,11 +514,17 @@ func TestHabitationWatcher_FSO_USER_UnsetNoOp(t *testing.T) {
 // This is the full integration path: bridge → watcher → persona state.
 // Uses the recordingCampfire stub (from bridges_test.go) to avoid needing a real
 // campfire store. Persona state is isolated via withFSO_USER + withConfigHome.
+//
+// Sets FREESO_BROADCAST_PERCEPTION=1 because this test asserts on the
+// broadcast side-effect (broadcasts[0].kind == "perception"). The default
+// is now "don't broadcast perception" — see
+// TestBridgePerceptionNotBroadcastByDefault.
 func TestHabitationWatcher_BridgeIntegration(t *testing.T) {
 	tmp := t.TempDir()
 	withFSO_USER(t, "hab-bridge-integ")
 	withConfigHome(t, tmp)
 	withOwnedLots(t)
+	t.Setenv("FREESO_BROADCAST_PERCEPTION", "1")
 
 	rec := newRecordingCampfire()
 	watcher := NewHabitationWatcher()

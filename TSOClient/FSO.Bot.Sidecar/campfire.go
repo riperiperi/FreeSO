@@ -246,6 +246,14 @@ func readMyPublishedDeclarations(client *protocol.Client, campfireID, myPubkeyHe
 		CampfireID: campfireID,
 		Sender:     myPubkeyHex,
 		Tags:       []string{"convention:operation"},
+		// SkipSync: our own publications are already in our local store —
+		// client.Send writes to both the filesystem transport AND the local
+		// SQLite store. We do not need to re-sync from the filesystem
+		// transport to see what WE'VE already sent. Without SkipSync, the
+		// SDK's syncIfFilesystem walks every .cbor file in the campfire
+		// directory (47k+ on our body-campfire), costing 10-30s per
+		// bringup just to learn things we already know.
+		SkipSync: true,
 	})
 	if err != nil {
 		return nil, fmt.Errorf("read my published declarations: %w", err)

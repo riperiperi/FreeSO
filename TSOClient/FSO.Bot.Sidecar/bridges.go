@@ -10,6 +10,7 @@ import (
 	"context"
 	"encoding/json"
 	"log"
+	"os"
 	"strconv"
 	"time"
 )
@@ -208,9 +209,35 @@ func (b *Bridges) handle(line []byte) {
 		}
 	}
 
+	// Perception is a stream, not a coordination event. Broadcasting it
+	// at FSO_PERCEPTION_HZ × N sims grew our body-campfire to 47k
+	// messages, which made every cf Read run a 30s filesystem scan in
+	// syncIfFilesystem. The journal writer above captures the same data
+	// with fsync; agents who want perception should read from there.
+	//
+	// Gated for opt-in compatibility: set FREESO_BROADCAST_PERCEPTION=1
+	// to restore the legacy broadcast. dialog and system events stay on
+	// the campfire because they are infrequent and genuinely
+	// coordination-shaped (bot-exited, dialog prompts).
+	if env.Kind == "perception" && !broadcastPerceptionEnabled() {
+		return
+	}
+
 	if err := b.cf.BroadcastEvent(tag, line, b.simID); err != nil {
 		log.Printf("bridge: broadcast %s: %v", tag, err)
 	}
+}
+
+// broadcastPerceptionEnabled reports whether the legacy "broadcast every
+// perception tick to the campfire" behaviour should be restored. Off by
+// default. Set FREESO_BROADCAST_PERCEPTION=1 (or "true") to opt back in.
+//
+// Read on every perception tick — kept cheap (single os.Getenv + small
+// string check). For a sidecar processing perception at 1Hz this is
+// nanoseconds; no need to cache.
+func broadcastPerceptionEnabled() bool {
+	v := os.Getenv("FREESO_BROADCAST_PERCEPTION")
+	return v == "1" || v == "true"
 }
 
 // emitBotExited is called once on shutdown so agents see a final marker.

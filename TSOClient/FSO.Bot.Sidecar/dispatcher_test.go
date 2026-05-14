@@ -24,7 +24,7 @@ import (
 // don't want it to come back silently.
 func TestRouterSubscribeRequest_ExcludesBridgeBroadcasts(t *testing.T) {
 	r := NewRouter()
-	req := r.routerSubscribeRequest("cf-id")
+	req := r.routerSubscribeRequest("cf-id", 0)
 	want := []string{"fulfills", "convention:operation", "freeso:perception", "freeso:dialog", "freeso:system"}
 	for _, w := range want {
 		found := false
@@ -47,7 +47,7 @@ func TestRouterSubscribeRequest_ExcludesBridgeBroadcasts(t *testing.T) {
 // round-trips; we want a test that fails loudly.
 func TestRouterSubscribeRequest_PollIntervalSane(t *testing.T) {
 	r := NewRouter()
-	req := r.routerSubscribeRequest("cf-id")
+	req := r.routerSubscribeRequest("cf-id", 0)
 	if req.PollInterval <= 0 {
 		t.Errorf("PollInterval = %v; must be positive", req.PollInterval)
 	}
@@ -62,8 +62,24 @@ func TestRouterSubscribeRequest_PollIntervalSane(t *testing.T) {
 // lockstep. A failing assertion here is the canary for that drift.
 func TestRouterSubscribeRequest_FreesoPrefix(t *testing.T) {
 	r := NewRouter()
-	req := r.routerSubscribeRequest("cf-id")
+	req := r.routerSubscribeRequest("cf-id", 0)
 	if len(req.TagPrefixes) == 0 || req.TagPrefixes[0] != "freeso:" {
 		t.Errorf("TagPrefixes = %v; want exactly [\"freeso:\"] as the first entry", req.TagPrefixes)
+	}
+}
+
+// TestRouterSubscribeRequest_PropagatesCursorFloor: serveOnce passes
+// time.Now().UnixNano() at boot to skip historical replay. The cf SDK's
+// SubscribeRequest docstring says "When 0, all existing messages are
+// returned first, then new ones are streamed." Our body-campfire has 47k+
+// historical messages; AfterTimestamp=0 means the initial sync-and-filter
+// walks every one. This test pins the wiring so a refactor of serveOnce
+// can't silently drop the cursor and reintroduce the regression.
+func TestRouterSubscribeRequest_PropagatesCursorFloor(t *testing.T) {
+	r := NewRouter()
+	const floor = int64(1234567890)
+	req := r.routerSubscribeRequest("cf-id", floor)
+	if req.AfterTimestamp != floor {
+		t.Errorf("AfterTimestamp = %d; want %d (must propagate caller's cursor floor)", req.AfterTimestamp, floor)
 	}
 }

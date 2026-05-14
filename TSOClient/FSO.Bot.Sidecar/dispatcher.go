@@ -103,10 +103,23 @@ func (r *Router) Serve(ctx context.Context, cf *Campfire) {
 
 // routerSubscribeRequest builds the SubscribeRequest the Router uses. Extracted
 // from serveOnce so unit tests can assert configuration (ExcludeTags presence,
-// poll interval) without spinning up a real campfire client.
-func (r *Router) routerSubscribeRequest(campfireID string) protocol.SubscribeRequest {
+// poll interval, cursor floor) without spinning up a real campfire client.
+//
+// afterTimestamp is the cursor floor — Subscribe returns only messages with
+// timestamp > afterTimestamp. Pass 0 to replay all history (default cf
+// behaviour, not what we want); pass time.Now().UnixNano() at boot to skip
+// historical replay (what we want — a request from N seconds ago when we
+// were down is stale, the requester long-since timed out).
+func (r *Router) routerSubscribeRequest(campfireID string, afterTimestamp int64) protocol.SubscribeRequest {
 	return protocol.SubscribeRequest{
 		CampfireID: campfireID,
+		// Process only messages that arrive AFTER we're up. SubscribeRequest's
+		// docstring (cf-protocol/protocol/subscribe.go): "When 0, all existing
+		// messages are returned first, then new ones are streamed." With 47k
+		// historical messages on our body-campfire, AfterTimestamp=0 means the
+		// initial sync-and-filter scans every one. Boot-time-now eliminates
+		// that scan and the stale-request replay.
+		AfterTimestamp: afterTimestamp,
 		// Match every freeso-embodiment op tag in one subscription.
 		TagPrefixes: []string{"freeso:"},
 		// Defensive excludes:
@@ -134,7 +147,12 @@ func (r *Router) routerSubscribeRequest(campfireID string) protocol.SubscribeReq
 }
 
 func (r *Router) serveOnce(ctx context.Context, cf *Campfire) error {
-	sub := cf.Client.Subscribe(ctx, r.routerSubscribeRequest(cf.ID))
+	// Cursor floor = "now". A restart of the Router (either at sidecar boot
+	// or after a reconnect-backoff) skips any historical messages and only
+	// processes new requests. Requests older than restart-time are by
+	// definition stale — the caller's cf await would have timed out already.
+	floor := time.Now().UnixNano()
+	sub := cf.Client.Subscribe(ctx, r.routerSubscribeRequest(cf.ID, floor))
 	for msg := range sub.Messages() {
 		r.dispatch(ctx, cf, msg)
 	}

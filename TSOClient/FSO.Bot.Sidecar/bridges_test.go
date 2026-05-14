@@ -52,6 +52,78 @@ func TestBridgeHandleUnknownKindDoesNotCrash(t *testing.T) {
 	}
 }
 
+// TestBridgePerceptionNotBroadcastByDefault: perception is a stream, not a
+// coordination event. Default behaviour must NOT broadcast — only the
+// journal write happens (verified elsewhere). The legacy broadcast is
+// gated behind FREESO_BROADCAST_PERCEPTION=1 for compatibility, off by
+// default. Without this gate, the body-campfire grows at 1Hz × N sims
+// and every cf Read scans the whole filesystem on sync. Regression here
+// silently reintroduces the 47k-message problem.
+func TestBridgePerceptionNotBroadcastByDefault(t *testing.T) {
+	t.Setenv("FREESO_BROADCAST_PERCEPTION", "")
+	rec := newRecordingCampfire()
+	b := &Bridges{cf: rec}
+	b.handle([]byte(`{"kind":"perception","t":1,"avatar":{"persist_id":2}}`))
+	if got := len(rec.recorder.(*recordingCampfire).broadcasts); got != 0 {
+		t.Errorf("got %d perception broadcasts; want 0 (default-off)", got)
+	}
+}
+
+// TestBridgePerceptionBroadcastWhenEnvSet: the opt-in path restores
+// pre-fix behaviour for callers that explicitly want stream-on-campfire.
+func TestBridgePerceptionBroadcastWhenEnvSet(t *testing.T) {
+	t.Setenv("FREESO_BROADCAST_PERCEPTION", "1")
+	rec := newRecordingCampfire()
+	b := &Bridges{cf: rec}
+	b.handle([]byte(`{"kind":"perception","t":1,"avatar":{"persist_id":2}}`))
+	bcasts := rec.recorder.(*recordingCampfire).broadcasts
+	if got := len(bcasts); got != 1 {
+		t.Fatalf("got %d broadcasts with env=1; want 1", got)
+	}
+	if bcasts[0].kind != "perception" {
+		t.Errorf("kind = %q; want perception", bcasts[0].kind)
+	}
+}
+
+// TestBridgeDialogAndSystemStillBroadcast: dialog and system events are
+// rare and genuinely coordination-shaped (dialog prompts, bot-exited).
+// They must keep broadcasting regardless of the perception gate. A
+// refactor that lumps "all bridge kinds" under the perception gate
+// would silently kill these channels.
+func TestBridgeDialogAndSystemStillBroadcast(t *testing.T) {
+	t.Setenv("FREESO_BROADCAST_PERCEPTION", "") // ensure default-off
+	rec := newRecordingCampfire()
+	b := &Bridges{cf: rec}
+	b.handle([]byte(`{"kind":"dialog","t":1,"payload":{"prompt":"hi"}}`))
+	b.handle([]byte(`{"kind":"system","t":2,"payload":{"event":"bot-exited"}}`))
+	bcasts := rec.recorder.(*recordingCampfire).broadcasts
+	if got := len(bcasts); got != 2 {
+		t.Fatalf("got %d broadcasts; want 2 (dialog + system both broadcast)", got)
+	}
+}
+
+// TestBroadcastPerceptionEnabled covers the env-var parser for the three
+// values agents are likely to set in practice. Anything else falls back to
+// default-off, including empty string and obvious off-states.
+func TestBroadcastPerceptionEnabled(t *testing.T) {
+	cases := map[string]bool{
+		"":      false,
+		"0":     false,
+		"false": false,
+		"no":    false,
+		"1":     true,
+		"true":  true,
+	}
+	for v, want := range cases {
+		t.Run("env="+v, func(t *testing.T) {
+			t.Setenv("FREESO_BROADCAST_PERCEPTION", v)
+			if got := broadcastPerceptionEnabled(); got != want {
+				t.Errorf("env=%q got %v want %v", v, got, want)
+			}
+		})
+	}
+}
+
 // TestBridgeHandleMalformedDropped — malformed JSON doesn't crash and doesn't
 // broadcast. We don't want the sidecar relaying noise to agents.
 func TestBridgeHandleMalformedDropped(t *testing.T) {
@@ -67,7 +139,12 @@ func TestBridgeHandleMalformedDropped(t *testing.T) {
 
 // TestBridgeCapturesSimID — the first perception with a persist_id should
 // set simID; subsequent events use it as the sim:<id> tag.
+//
+// Test sets FREESO_BROADCAST_PERCEPTION=1 to exercise the legacy broadcast
+// path so we can observe the tag composition. The default-off policy is
+// covered by TestBridgePerceptionNotBroadcastByDefault.
 func TestBridgeCapturesSimID(t *testing.T) {
+	t.Setenv("FREESO_BROADCAST_PERCEPTION", "1")
 	rec := newRecordingCampfire()
 	b := &Bridges{cf: rec}
 	b.handle([]byte(`{"kind":"system","payload":{"event":"ready"}}`))
