@@ -9,89 +9,58 @@ package main
 import (
 	"testing"
 
-	"github.com/campfire-net/campfire/pkg/protocol"
+	"github.com/campfire-net/campfire/pkg/convention"
 )
 
-// Tests for the idempotent-declaration-publish path. The campfire was
-// accumulating 113 new declaration messages on every sidecar restart,
-// inflating the cf-client-visible op list (340+ ops at peak — 3x the real
-// surface). The dedup path reads existing convention:operation broadcasts,
-// hashes by op-name + canonical JSON, and skips publication when the
-// content is byte-identical.
+// Tests for the idempotent-declaration-publish path. Sidecars used to
+// accumulate one full set of declarations per restart in the campfire
+// (340+ ops listed for 113 real declarations at peak — 3x duplication).
+// The fix uses cf's canonical dedup key — (convention, operation, version)
+// — same shape `cf convention promote` uses (cmd/cf/cmd/
+// convention_promote.go:155). We query the campfire for our own prior
+// publications (Sender-filtered Read), build a key set, and skip
+// publication for declarations already published under the same key.
 
-// TestHashBytes_Deterministic: hashing the same bytes twice produces the
-// same hex string. Surprising if it didn't, but it's a load-bearing
-// invariant — the whole dedup hinges on this being stable.
-func TestHashBytes_Deterministic(t *testing.T) {
-	a := hashBytes([]byte(`{"operation":"buy-object","version":"1.0"}`))
-	b := hashBytes([]byte(`{"operation":"buy-object","version":"1.0"}`))
-	if a != b {
-		t.Errorf("hashBytes is not deterministic: a=%s b=%s", a, b)
+// TestDeclarationKey_Canonical: the dedup key format MUST match cf's own
+// convention_promote.go format ("conv:op@version") so a declaration
+// published by our sidecar and a declaration promoted via `cf convention
+// promote` collapse to the same identity. If anyone in the toolchain
+// changes the separator, dedup silently misfires and we accumulate
+// duplicates again.
+func TestDeclarationKey_Canonical(t *testing.T) {
+	d := &convention.Declaration{
+		Convention: "freeso-embodiment",
+		Operation:  "buy-object",
+		Version:    "1.0",
 	}
-	if len(a) != 64 {
-		t.Errorf("hashBytes returned %d-char hash; want 64 (SHA-256 hex)", len(a))
+	got := declarationKey(d)
+	want := "freeso-embodiment:buy-object@1.0"
+	if got != want {
+		t.Errorf("declarationKey() = %q; want %q (must match cf convention_promote.go conflictKey)", got, want)
 	}
 }
 
-// TestHashBytes_DifferingPayloadsDiffer: a single byte change in the input
-// flips the hash. Confirms we're not accidentally collapsing payloads.
-func TestHashBytes_DifferingPayloadsDiffer(t *testing.T) {
-	a := hashBytes([]byte(`{"operation":"buy-object","version":"1.0"}`))
-	b := hashBytes([]byte(`{"operation":"buy-object","version":"1.1"}`))
-	if a == b {
-		t.Errorf("hashBytes collapses differing payloads to the same hash: %s", a)
+// TestDeclarationKey_VersionedDedup: bumping version produces a distinct
+// key, so a content-changed declaration (with bumped version) republishes
+// cleanly. This is the documented cf upgrade path — `cf convention
+// promote --force` overwrites by promote-time check; we accept it because
+// version bumped.
+func TestDeclarationKey_VersionedDedup(t *testing.T) {
+	a := &convention.Declaration{Convention: "freeso-embodiment", Operation: "buy-object", Version: "1.0"}
+	b := &convention.Declaration{Convention: "freeso-embodiment", Operation: "buy-object", Version: "1.1"}
+	if declarationKey(a) == declarationKey(b) {
+		t.Error("v1.0 and v1.1 of same op collapsed to the same key — version bump must be a distinct identity")
 	}
 }
 
-// TestBuildDeclarationHashMap_LatestWins: when the campfire has multiple
-// convention:operation broadcasts for the same op (e.g. from prior sidecar
-// boots), the LATEST publication's hash is the one we compare against. The
-// helper iterates ReadResult.Messages in timestamp order (oldest first),
-// so the last-seen entry overrides earlier ones — matches what a cf-client
-// schema cache would see.
-func TestBuildDeclarationHashMap_LatestWins(t *testing.T) {
-	msgs := []protocol.Message{
-		{Payload: []byte(`{"operation":"buy-object","version":"1.0"}`)},
-		{Payload: []byte(`{"operation":"buy-object","version":"1.1"}`)}, // latest
-		{Payload: []byte(`{"operation":"delete-object","version":"1.0"}`)},
-	}
-	got := buildDeclarationHashMap(msgs)
-	wantBuyHash := hashBytes(msgs[1].Payload) // latest of two for buy-object
-	if got["buy-object"] != wantBuyHash {
-		t.Errorf("buy-object hash = %s; want %s (latest publication)", got["buy-object"], wantBuyHash)
-	}
-	if got["delete-object"] != hashBytes(msgs[2].Payload) {
-		t.Errorf("delete-object hash unexpectedly differs")
-	}
-	if len(got) != 2 {
-		t.Errorf("map size = %d; want 2 (one entry per distinct op-name)", len(got))
-	}
-}
-
-// TestBuildDeclarationHashMap_MalformedSkipped: junk payloads (failed JSON
-// decode, empty operation name) are dropped without poisoning the map.
-// Production has historical malformed entries from earlier experiments;
-// dedup must tolerate them.
-func TestBuildDeclarationHashMap_MalformedSkipped(t *testing.T) {
-	msgs := []protocol.Message{
-		{Payload: []byte(`not-json`)},
-		{Payload: []byte(`{"operation":""}`)}, // empty op-name
-		{Payload: []byte(`{"operation":"valid-op","x":1}`)},
-	}
-	got := buildDeclarationHashMap(msgs)
-	if len(got) != 1 || got["valid-op"] == "" {
-		t.Errorf("got %+v; want a single entry for valid-op", got)
-	}
-}
-
-// TestBuildDeclarationHashMap_Empty: zero input yields an empty map (no
-// nil-panic in the dedup decision branch).
-func TestBuildDeclarationHashMap_Empty(t *testing.T) {
-	got := buildDeclarationHashMap(nil)
-	if got == nil {
-		t.Error("nil map returned; want non-nil empty map for downstream loop safety")
-	}
-	if len(got) != 0 {
-		t.Errorf("len=%d; want 0", len(got))
+// TestDeclarationKey_ConventionScoping: two conventions defining the
+// same operation name must NOT collide. Per cf, the dedup namespace is
+// convention-scoped — a future "social:speak" and "freeso:speak" can
+// coexist.
+func TestDeclarationKey_ConventionScoping(t *testing.T) {
+	a := &convention.Declaration{Convention: "freeso-embodiment", Operation: "speak", Version: "1.0"}
+	b := &convention.Declaration{Convention: "social", Operation: "speak", Version: "1.0"}
+	if declarationKey(a) == declarationKey(b) {
+		t.Error("speak in two conventions collapsed to the same key — conventions must namespace ops")
 	}
 }
