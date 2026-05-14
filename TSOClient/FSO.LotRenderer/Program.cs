@@ -394,6 +394,11 @@ namespace FSO.LotRenderer
             using (var mem = new MemoryStream(fsov))
                 marshal.Deserialize(new BinaryReader(mem));
 
+            // Unset any active render target left by a previous render before Present().
+            // GetLotThumb renders to an off-screen target and may leave it active on
+            // the device; calling Present with an active render target throws on Mesa.
+            // Mirrors the fix in RenderFSOFAt (freesoexperiment-499).
+            gd.SetRenderTarget(null);
             // Present before creating render targets — Mesa fence barrier needs this.
             // (FSOFacadeWorker does this too, line 193: GD.Present() before rendering)
             gd.Present();
@@ -406,6 +411,12 @@ namespace FSO.LotRenderer
             var vm         = new VM(new VMContext(world), driver, new VMNullHeadlineProvider());
             vm.Init();
             vm.Load(marshal);
+
+            // Prime _2DWorldBatch.WorldCamera so Resume() doesn't NullRef under SetAllLights
+            // → Force2DPredraw → RecacheWalls → _2d.Pause()/_2d.Resume(). WorldCamera is null
+            // until Begin() has been called once; the normal World.Draw() loop primes it but
+            // our headless path bypasses Draw(). Same fix as RenderFSOFAt (freesoexperiment-fde).
+            world.State._2D.Begin(world.State.Camera2D);
 
             SetOutsideTime(gd, vm, world, 0.5f, false);
             world.State.PrepareLighting();

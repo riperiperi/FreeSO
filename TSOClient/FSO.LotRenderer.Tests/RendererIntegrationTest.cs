@@ -538,6 +538,102 @@ namespace FSO.LotRenderer.Tests
             Console.WriteLine("[test] PASS: roofless and with-roof PNGs have different MD5 hashes.");
         }
 
+        /// <summary>
+        /// Regression test for RenderFSOF NRE in the standalone-debug path (freesoexperiment-c02 / I1).
+        ///
+        /// RenderFSOF (the no-level/rotation/zoom render code path) was missing two init steps that
+        /// its sister RenderFSOFAt already had:
+        ///   1. gd.SetRenderTarget(null) before gd.Present() — clears any stale render target left
+        ///      on the device, which Mesa's fence barrier rejects.
+        ///   2. world.State._2D.Begin(world.State.Camera2D) before SetOutsideTime — primes
+        ///      _2DWorldBatch.WorldCamera, which is null until Begin() has been called once.
+        ///      SetAllLights → Force2DPredraw → RecacheWalls → _2d.Pause()/_2d.Resume() NREs
+        ///      otherwise. Same NRE the freesoexperiment-fde fix addressed in RenderFSOFAt.
+        ///
+        /// The NRE is intermittent — it depends on FSOV/tick state at the moment of render.
+        /// This test loops 20 invocations to widen the catch radius. All must produce valid PNGs.
+        /// </summary>
+        [Fact]
+        public void RenderLot2_InRepeatedInvocations_AllProduceValidPngs_Regressionc02()
+        {
+            var apiUrl   = Environment.GetEnvironmentVariable("FSO_RENDERER_API_URL")   ?? "http://workshop:9000";
+            var user     = Environment.GetEnvironmentVariable("FSO_RENDERER_USER")      ?? "baron";
+            var password = Environment.GetEnvironmentVariable("FSO_RENDERER_PASS")      ?? "test1234";
+            var gamePath = Environment.GetEnvironmentVariable("FSO_GAME_LOCATION")
+                           ?? "/home/baron/projects/freeso-experiment/GameAssets/TSOClient/";
+
+            var rendererBin = FindRendererBinary();
+            Assert.True(File.Exists(rendererBin),
+                $"freeso-renderer binary not found at: {rendererBin}\n" +
+                "Run 'dotnet build' on FSO.LotRenderer first.");
+
+            const int iterations = 20;
+            var failures = new List<string>();
+
+            for (int i = 1; i <= iterations; i++)
+            {
+                var outPath = Path.Combine(Path.GetTempPath(), $"renderer-c02-{i:D2}-{Guid.NewGuid():N}.png");
+                var psi = new ProcessStartInfo
+                {
+                    FileName               = rendererBin,
+                    Arguments              = $"--api-url {apiUrl} --user {user} --password {password} " +
+                                             $"--game-path \"{gamePath}\" --debug-lot 16318812 --out \"{outPath}\"",
+                    UseShellExecute        = false,
+                    RedirectStandardOutput = true,
+                    RedirectStandardError  = true,
+                };
+                if (string.IsNullOrEmpty(Environment.GetEnvironmentVariable("DISPLAY")) &&
+                    string.IsNullOrEmpty(Environment.GetEnvironmentVariable("SDL_VIDEODRIVER")))
+                {
+                    psi.Environment["SDL_VIDEODRIVER"] = "offscreen";
+                }
+                psi.Environment["FSO_GAME_LOCATION"] = gamePath;
+
+                var proc = Process.Start(psi);
+                Assert.NotNull(proc);
+                string stdout = proc.StandardOutput.ReadToEnd();
+                string stderr = proc.StandardError.ReadToEnd();
+                bool finished = proc.WaitForExit(TimeSpan.FromMinutes(2));
+
+                if (!finished)
+                {
+                    failures.Add($"iter {i}: did not finish within 2 minutes.");
+                    try { proc.Kill(true); } catch { }
+                    continue;
+                }
+                if (proc.ExitCode != 0)
+                {
+                    failures.Add($"iter {i}: exit {proc.ExitCode}\nstdout:\n{stdout}\nstderr:\n{stderr}");
+                    continue;
+                }
+                if (!File.Exists(outPath))
+                {
+                    failures.Add($"iter {i}: PNG not written to {outPath}");
+                    continue;
+                }
+                var bytes = File.ReadAllBytes(outPath);
+                if (bytes.Length < 10_240)
+                {
+                    failures.Add($"iter {i}: PNG too small ({bytes.Length} bytes)");
+                    continue;
+                }
+                byte[] pngMagic = { 0x89, 0x50, 0x4E, 0x47, 0x0D, 0x0A, 0x1A, 0x0A };
+                bool magicOk = true;
+                for (int k = 0; k < pngMagic.Length; k++)
+                    if (bytes[k] != pngMagic[k]) { magicOk = false; break; }
+                if (!magicOk)
+                {
+                    failures.Add($"iter {i}: bad PNG magic");
+                    continue;
+                }
+                File.Delete(outPath);
+            }
+
+            Assert.True(failures.Count == 0,
+                $"{failures.Count}/{iterations} renderer invocations failed:\n" +
+                string.Join("\n---\n", failures));
+        }
+
         private static string FindRendererBinary()
         {
             // 1. Explicit override via env var (useful in CI).
