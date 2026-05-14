@@ -18,9 +18,9 @@ import (
 // list-object-for-sale, buy-listed-object, upgrade-object. All thin argument-pass
 // forwarding — the sidecar has no VM view, so owner/target gating lives in the C# handler.
 //
-// Plus find-cheap-catalog-guid, a test-support helper (not in the verb catalog) that reads
-// the bot's local Content.WorldCatalog and returns the cheapest user-placeable objects.
-// Used by the integration test to pick a throwaway GUID at runtime without hardcoding one.
+// Also: list-catalog-categories (category index, no args) and search-catalog
+// (freesoexperiment-281a: name/category/tier/min_price/max_price/limit filters; tier bins
+// computed at bot boot from live catalog P33/P67; limit clamped server-side to 200).
 //
 // OQ-8 (docs/design/verb-catalog.md:145): there is no build/buy mode-entry PDU. Gating is
 // server-side inside each VMNet*Cmd.Verify() via PlatformState.Validator.GetPurchaseMode.
@@ -28,6 +28,12 @@ import (
 // the effect (or absence) via the next perception frame.
 func RegisterBuyModeHandlers(ctx context.Context, cf *Campfire, ipc *IPC) (int, error) {
 	ops := map[string]convention.HandlerFunc{
+		"list-catalog-categories": simpleForwardingHandler(ipc, "list-catalog-categories"),
+		// search-catalog (freesoexperiment-281a): optional filter args forwarded as-is to
+		// the C# handler which applies them. All args are optional — the sidecar is a strict
+		// forwarder; filtering logic lives in BuyModeHandlers.FindCheapCatalogGuid.
+		"search-catalog": simpleForwardingHandler(ipc, "search-catalog",
+			"name", "category", "tier", "min_price", "max_price", "limit"),
 		"buy-object": simpleForwardingHandler(ipc, "buy-object",
 			"guid", "x", "y", "level", "dir", "mode", "target_upgrade_level"),
 		"place-from-inventory": simpleForwardingHandler(ipc, "place-from-inventory",
