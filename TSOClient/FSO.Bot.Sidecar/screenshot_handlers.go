@@ -12,6 +12,7 @@ import (
 	"encoding/json"
 	"fmt"
 	"io"
+	"math"
 	"net/http"
 	"os"
 	"path/filepath"
@@ -281,20 +282,44 @@ func takeScreenshotHandler(ipc *IPC, augmentor *PerceptionAugmentor) convention.
 		}
 
 		// Step 4: Resolve lot_location.
-		// The renderer uses lot_location (packed uint32) to locate the FSOV save
-		// when FSO_DB_URL is unset (the default in our setup). We read it from the
-		// persona's owned-lots.json (the home lot). This is correct for the primary
-		// use case where the bot is on its own lot.
-		// freesoexperiment-595b context: FSO_DB_URL unset is the normal state.
-		// The renderer requires a numeric uint32, NOT a hex string — parse accordingly.
-		lotLocationHex, locErr := ReadHomeLotFromOwnedLots()
+		// The renderer needs lot_location (packed uint32 = x<<16 | y) to locate the
+		// FSOV save on disk when FSO_DB_URL is unset (the default in our setup).
+		// Prefer the value already in lotPayload — the bot's query-lot returns the
+		// engine's VMTSOLotState.LotID, which IS the packed location (NOT the DB
+		// primary key from fso_lots). This avoids a misleading DB lookup that would
+		// fail with "Could not find lot_id=<location>" on residential lots where the
+		// engine LotID ≠ DB lot_id (freesoexperiment-884: previously the handler
+		// only filled lot_location from owned-lots.json, which was absent in the
+		// integration test harness and bot-with-no-home-lot cases).
+		//
+		// owned-lots.json remains a fallback, but the inline path is the primary.
 		var lotLocationUint uint32
-		if locErr == nil && lotLocationHex != "" {
-			if parsed, perr := parseLotLocation(lotLocationHex); perr == nil {
-				lotLocationUint = parsed
-			} else {
-				// Non-fatal: log and fall through; renderer will attempt DB lookup.
-				fmt.Printf("screenshot: parse lot_location %q: %v (renderer will use DB lookup)\n", lotLocationHex, perr)
+		if loc, ok := lotPayload["lot_id"]; ok {
+			switch v := loc.(type) {
+			case float64:
+				if v > 0 && v <= math.MaxUint32 {
+					lotLocationUint = uint32(v)
+				}
+			case int:
+				if v > 0 {
+					lotLocationUint = uint32(v)
+				}
+			case int64:
+				if v > 0 && v <= math.MaxUint32 {
+					lotLocationUint = uint32(v)
+				}
+			}
+		}
+		if lotLocationUint == 0 {
+			// Fallback: owned-lots.json (the persona's home lot). This is the original
+			// path; kept as a safety net for callers without a populated lotPayload.
+			lotLocationHex, locErr := ReadHomeLotFromOwnedLots()
+			if locErr == nil && lotLocationHex != "" {
+				if parsed, perr := parseLotLocation(lotLocationHex); perr == nil {
+					lotLocationUint = parsed
+				} else {
+					fmt.Printf("screenshot: parse lot_location %q: %v (renderer will use DB lookup)\n", lotLocationHex, perr)
+				}
 			}
 		}
 
