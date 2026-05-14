@@ -34,7 +34,7 @@ import (
 // Returns the count of opened servers.
 func RegisterNavigationHandlers(ctx context.Context, cf *Campfire, ipc *IPC, botCmds *BotCmdPump, store *MemoryStore) (int, error) {
 	ops := map[string]convention.HandlerFunc{
-		"go-home":     goHomeHandler(ipc),
+		"go-home":     goHomeHandler(ipc, botCmds, store),
 		"visit-lot":   visitLotHandler(ipc, botCmds, store),
 		"find-avatar": findAvatarHandler(ipc),
 	}
@@ -60,14 +60,156 @@ func RegisterNavigationHandlers(ctx context.Context, cf *Campfire, ipc *IPC, bot
 	return started, nil
 }
 
-// goHomeHandler forwards the go-home query to the bot. No args. Bot-side
-// handler compares TSOState.LotID against the avatar's home LotLocation and
-// returns {already_home, current_lot_location, home_lot_location} — plus
-// {deferred:true, deferred_reason} when the avatar is on a different lot and
-// the cross-lot transition path is not yet implemented.
-func goHomeHandler(ipc *IPC) convention.HandlerFunc {
+// goHomeHandler drives the go-home operation (freesoexperiment-ca0).
+//
+// Wire flow:
+//  1. Forward go-home to the bot. Bot reports {already_home, current_lot_location,
+//     home_lot_location} — always returns ok=true.
+//  2. If already_home=true: surface the bot's response as-is. Done.
+//  3. If already_home=false AND home_lot_location is known: drive a cross-lot
+//     transition via visitLotHandler logic (probe → WriteNextLot → bot-exit-request).
+//     This is the cross-lot go-home path (I0-3: motives carry; I0-2: blind moment
+//     during transit). Returns ok=true with transitioning=true.
+//  4. If already_home=false but no home lot (FSO_HOME_LOT_LOCATION absent): surface
+//     the bot's ok:false response (bot returns that when home_lot_location==0).
+//
+// The bot's deferred:true marker (legacy from the pre-ca0 stub) is consumed here
+// and NOT forwarded to the agent — the sidecar now handles the transition.
+func goHomeHandler(ipc *IPC, botCmds *BotCmdPump, store *MemoryStore) convention.HandlerFunc {
 	return func(ctx context.Context, req *convention.Request) (*convention.Response, error) {
-		return forwardIPC(ctx, ipc, "go-home", map[string]any{})
+		// Step 1: ask the bot where we are and what home is.
+		inner, err := forwardIPC(ctx, ipc, "go-home", map[string]any{})
+		if err != nil {
+			return nil, err
+		}
+
+		// Unwrap forwardIPC's outer envelope: {ok, payload: {already_home, ...}}
+		outerPayload, _ := inner.Payload.(map[string]any)
+		if outerPayload == nil {
+			return inner, nil
+		}
+		if outerPayload["ok"] != true {
+			// Bot-side failure (no owned lot, TSOState not ready, etc.).
+			return inner, nil
+		}
+		botPayload, _ := outerPayload["payload"].(map[string]any)
+		if botPayload == nil {
+			return inner, nil
+		}
+
+		alreadyHome, _ := botPayload["already_home"].(bool)
+		if alreadyHome {
+			// Already on home lot — surface bot response directly.
+			return inner, nil
+		}
+
+		// Step 3: not on home lot. Extract home_lot_location from the bot's response.
+		homeLotLocation, _ := botPayload["home_lot_location"].(string)
+		if homeLotLocation == "" {
+			// Bot reported ok:false for no-owned-lot. Surface as-is.
+			return inner, nil
+		}
+
+		// Trigger cross-lot transition to home lot using the same flow as visit-lot.
+		// Parse home_lot_location (hex "0x..." or decimal).
+		var lotLocUint uint64
+		if _, scanErr := fmt.Sscanf(homeLotLocation, "%d", &lotLocUint); scanErr != nil {
+			// Try hex parse.
+			if len(homeLotLocation) > 2 && (homeLotLocation[:2] == "0x" || homeLotLocation[:2] == "0X") {
+				if _, hexErr := fmt.Sscanf(homeLotLocation[2:], "%x", &lotLocUint); hexErr != nil {
+					return &convention.Response{
+						Payload: map[string]any{
+							"ok":    false,
+							"error": fmt.Sprintf("go-home: cannot parse home_lot_location %q: %v", homeLotLocation, hexErr),
+						},
+					}, nil
+				}
+			} else {
+				return &convention.Response{
+					Payload: map[string]any{
+						"ok":    false,
+						"error": fmt.Sprintf("go-home: cannot parse home_lot_location %q: %v", homeLotLocation, scanErr),
+					},
+				}, nil
+			}
+		}
+
+		if botCmds == nil {
+			return &convention.Response{
+				Payload: map[string]any{
+					"ok":              false,
+					"error":           "go-home: bot-cmd channel not available — cannot trigger cross-lot transition",
+					"already_home":    false,
+					"home_lot_location": homeLotLocation,
+				},
+			}, nil
+		}
+
+		// Probe the home lot to confirm it is reachable.
+		probeReply, probeErr := botCmds.Send(ctx, "probe-lot", map[string]any{
+			"lot_location": lotLocUint,
+		})
+		if probeErr != nil {
+			return &convention.Response{
+				Payload: map[string]any{
+					"ok":    false,
+					"error": fmt.Sprintf("go-home: probe-lot failed: %v", probeErr),
+				},
+			}, nil
+		}
+		if !probeReply.Ok {
+			return &convention.Response{
+				Payload: map[string]any{
+					"ok":    false,
+					"error": fmt.Sprintf("go-home: probe-lot error: %s", probeReply.Error),
+				},
+			}, nil
+		}
+		var probeData struct {
+			Status string `json:"status"`
+		}
+		if len(probeReply.Data) > 0 {
+			if err := json.Unmarshal(probeReply.Data, &probeData); err != nil {
+				log.Printf("go-home: probe-lot data parse error: %v (treating as UNKNOWN)", err)
+			}
+		}
+		if probeData.Status != "FOUND" {
+			return &convention.Response{
+				Payload: map[string]any{
+					"ok":           false,
+					"error":        fmt.Sprintf("home lot not reachable: probe status=%q", probeData.Status),
+					"probe_status": probeData.Status,
+				},
+			}, nil
+		}
+
+		// INVARIANT: WriteNextLot before bot-cmd:exit (same as visit-lot).
+		if err := WriteNextLot(homeLotLocation); err != nil {
+			return &convention.Response{
+				Payload: map[string]any{
+					"ok":    false,
+					"error": fmt.Sprintf("go-home: write next-lot: %v", err),
+				},
+			}, nil
+		}
+
+		// Trigger bot exit; supervisor relaunches at home lot.
+		exitReply, exitErr := botCmds.Send(ctx, "bot-exit-request", nil)
+		if exitErr != nil {
+			log.Printf("go-home: bot-exit-request error (next-lot written, supervisor will handle): %v", exitErr)
+		} else if !exitReply.Ok {
+			log.Printf("go-home: bot-exit-request rejected: %s (next-lot written)", exitReply.Error)
+		}
+
+		return &convention.Response{
+			Payload: map[string]any{
+				"ok":              true,
+				"already_home":    false,
+				"transitioning":   true,
+				"home_lot_location": homeLotLocation,
+				"probe_status":    probeData.Status,
+			},
+		}, nil
 	}
 }
 
