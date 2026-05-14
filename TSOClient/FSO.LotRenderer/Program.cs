@@ -159,6 +159,11 @@ namespace FSO.LotRenderer
                           ?? AppContext.BaseDirectory;
             FSOEnvironment.GFXContentDir = Path.Combine(baseDir, "Content", "OGL") + Path.DirectorySeparatorChar;
             FSOEnvironment.ContentDir    = Path.Combine(baseDir, "Content") + Path.DirectorySeparatorChar;
+            // tso.world, tso.common, and parts of tso.content open files via literal "Content/…"
+            // paths (e.g. Modelled3DPool, RoofComponent, 3DFloorGeometry pool textures, the
+            // BCF tuning loader). Setting cwd to baseDir lets all those resolve correctly without
+            // touching every individual call site (freesoexperiment-24a).
+            Environment.CurrentDirectory = baseDir;
             FSOEnvironment.Linux         = true;
             FSOEnvironment.DirectX       = false;
             FSOEnvironment.TexCompress   = false; // skip BC compression on llvmpipe

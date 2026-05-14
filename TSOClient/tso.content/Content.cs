@@ -201,8 +201,16 @@ namespace FSO.Content
 
         private void InitBasic()
         {
+            // Resolve the Content/ tree via FSOEnvironment.ContentDir rather than the literal
+            // string "Content/", which is cwd-relative and fails when the renderer (and other
+            // headless consumers) are invoked from an arbitrary working directory
+            // (freesoexperiment-24a, mirrors the freesoexperiment-785 fix for GFXContentDir).
+            // Callers that leave FSOEnvironment.ContentDir at its default "Content/" still get
+            // the original cwd-relative behavior — this only changes resolution when a caller
+            // has set ContentDir to an absolute path (as FSO.LotRenderer/Program.cs does).
+            var contentDir = FSOEnvironment.ContentDir;
             var contentFiles = new List<string>();
-            _ScanFiles("Content/", contentFiles, "Content/");
+            _ScanFiles(contentDir, contentFiles, contentDir);
             ContentFiles = contentFiles.ToArray();
             CustomUI.Init();
             if (!TS1)
@@ -214,7 +222,7 @@ namespace FSO.Content
                 DataDefinition = new TSODataDefinition();
                 try
                 {
-                    using (var stream = File.Open("Content/FSODataDefinition.dat", FileMode.Open, FileAccess.Read, FileShare.Read))
+                    using (var stream = File.Open(Path.Combine(contentDir, "FSODataDefinition.dat"), FileMode.Open, FileAccess.Read, FileShare.Read))
                     {
                         DataDefinition.Read(stream);
                     }
