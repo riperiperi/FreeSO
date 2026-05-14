@@ -3,7 +3,7 @@
   "version": "1.0",
   "operation": "go-home",
   "family": "navigation",
-  "description": "Return to your home lot — the one where your avatar is a roommate. Prerequisite: you are joined to a lot with a live VM (you have seen at least one perception tick). Effect: if you are ALREADY on your home lot (the common case after a clean session start — FSO_LOT_LOCATION defaults to the avatar's LotLocation, which IS the home lot), the handler returns immediately with `already_home:true` and does nothing on the wire. If you are on a DIFFERENT lot, a cross-lot transition is required; that path is unimplemented in the current bot (HeadlessLotConnection has no reconnect primitive — see OQ-11 and the freesoexperiment-ca0 follow-up) — the handler returns `already_home:false, deferred:true` with both `current_lot_location` and `home_lot_location` exposed so you can reason about the gap. Your state is unchanged in the deferred case; call `visit-lot` once that op ships, or wait for the reconnect primitive. Cost: one tick-locked VM read to pull TSOState.LotID for the comparison. Response payload fields: `already_home` (bool), `current_lot_location` (hex string `0x...`), `home_lot_location` (hex string `0x...`), and in the deferred case `deferred:true` + `deferred_reason`.",
+  "description": "Walk your body to your home lot — the one where your avatar is a roommate. On the wire this is: sidecar issues bot-cmd:go-home (IPC query to TSOState.LotID), compares against avatar.LotLocation. If already_home, returns immediately with no wire traffic beyond the comparison. If on a different lot, the sidecar initiates a cross-lot process-restart transition (probes the home lot with bot-cmd:probe-lot, writes next-lot, requests bot exit via bot-cmd:bot-exit-request). The supervisor detects the clean exit, reads next-lot, and relaunches the bot with FSO_LOT_LOCATION set to home lot. Total elapsed: ~10-15s (IPC + probe + disconnect + rejoin). I0-2: perception is silent during transit (bot is dead between lots). I0-3: motives travel with the avatar (server-side fso_avatars). Prerequisite: avatar must have a valid LotLocation (home lot location) — this is initialized at character creation and persists server-side.",
   "args": [],
   "produces_tags": [
     {
@@ -20,19 +20,20 @@
   },
   "response": "sync",
   "call_signatures": [
-    "cf $CF go-home                                                                                             # returns already_home:true if on home lot; deferred:true otherwise"
+    "cf $CF go-home                                                                                             # returns already_home:true if on home lot; transitioning:true otherwise"
   ],
   "common_mistakes": [
     "Expecting the bot to move when already_home:true — no wire traffic happens in that case.",
-    "Expecting a transition when on another lot — the deferred path returns deferred:true with bot_state_unchanged (HeadlessLotConnection has no reconnect primitive, freesoexperiment-ca0)."
+    "Expecting an immediate result when transitioning — the transition takes ~10-15s. The fulfillment fires when the exit is queued, not when the bot arrives on the home lot."
   ],
   "perception_hints": [
     "Your current lot: perception.lot.lot_id and perception.lot.name",
     "Your position: perception.avatar.position",
-    "Home detection: go-home returns already_home:true when perception.lot.lot_id matches your home lot location"
+    "Home detection: go-home returns already_home:true when perception.lot.lot_id matches your home lot location",
+    "Probe status in response: probe_status field ('FOUND' means home lot was open and reachable)"
   ],
   "refuse_conditions": [
     "no live lot (TSOState.LotID == 0) → ok:false",
-    "not already home → deferred:true (ok:true, bot state unchanged; cross-lot transition tracked as freesoexperiment-ca0)"
+    "avatar has no home lot (should not happen; server-side fso_avatars initialization) → ok:false"
   ]
 }
