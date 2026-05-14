@@ -70,12 +70,25 @@ func StartCampfire(ctx context.Context, cfg CampfireConfig) (*Campfire, error) {
 	// This implements I0-5: cf $CF must survive sidecar restarts.
 	// Reading is best-effort: if FSO_USER is unset or the file is absent, fall
 	// through to create a fresh campfire as before.
+	//
+	// Stickiness (freesoexperiment-f6d): once a persisted ID is found, verify
+	// the membership record still exists in the local campfire store before
+	// reusing it. If the store was wiped (e.g. /tmp cleanup, BOT_DATA path
+	// change) the membership is gone and we must create a fresh campfire rather
+	// than attempting to use an orphaned ID. The new ID is written back to
+	// body-cf.id so the next restart resumes from it.
 	if id == "" {
 		if persisted, rerr := ReadBodyCfID(); rerr != nil {
 			log.Printf("read body-cf.id: %v (creating new campfire)", rerr)
 		} else if persisted != "" {
-			id = persisted
-			log.Printf("resumed body campfire from persona state: %s", shortID(id))
+			// Verify the cached campfire is still reachable in our local store.
+			if reachErr := isCampfireReachable(client, persisted); reachErr != nil {
+				log.Printf("cached body-cf.id %s is unreachable (%v) — creating new campfire", shortID(persisted), reachErr)
+				// Fall through to create; old ID will be overwritten on success.
+			} else {
+				id = persisted
+				log.Printf("resumed body campfire from persona state: %s", shortID(id))
+			}
 		}
 	}
 
@@ -307,6 +320,24 @@ func shareBeacon(client *protocol.Client, campfireID string) (string, error) {
 	// config pointing at the transport. A follow-up item will promote this to
 	// a proper beacon once we wire p2p-http transport. Track in rd.
 	return "", fmt.Errorf("beacon generation deferred (use campfire-id directly)")
+}
+
+// isCampfireReachable checks whether the sidecar's local campfire store holds
+// a valid membership record for campfireID. If the store was wiped (e.g. the
+// bot-data directory was deleted or /tmp was flushed after a reboot), the
+// membership record will be absent and this returns an error — the caller
+// should create a fresh campfire and overwrite body-cf.id.
+//
+// This is a local store query (no network) and is fast.
+func isCampfireReachable(client *protocol.Client, campfireID string) error {
+	membership, err := client.GetMembership(campfireID)
+	if err != nil {
+		return fmt.Errorf("GetMembership: %w", err)
+	}
+	if membership == nil {
+		return fmt.Errorf("no membership record for %s", shortID(campfireID))
+	}
+	return nil
 }
 
 func shortID(id string) string {

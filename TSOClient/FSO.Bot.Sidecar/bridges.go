@@ -37,6 +37,12 @@ type Bridges struct {
 	// forwarding to the campfire (freesoexperiment-ef1: home_lot, civic
 	// affordances, mayor_status). Nil disables augmentation (e.g. --no-bot mode).
 	augmentor *PerceptionAugmentor
+
+	// journal writes perception events to the persona's journal directory
+	// (freesoexperiment-f6d). Constructed once at bridge creation and shared
+	// across the bridge's lifetime. When disabled (FSO_USER unset or XDG dirs
+	// unavailable), Write is a no-op so the bridge continues running.
+	journal *JournalWriter
 }
 
 // NewBridges constructs a Bridges value. Call Run(ctx) once to start the
@@ -44,14 +50,14 @@ type Bridges struct {
 // ipc may be nil in tests that don't exercise the command channel.
 // augmentor may be nil to disable perception augmentation.
 func NewBridges(cf *Campfire, bot *BotProcess, ipc *IPC, augmentor *PerceptionAugmentor) *Bridges {
-	return &Bridges{cf: cf, bot: bot, ipc: ipc, habWatcher: NewHabitationWatcher(), augmentor: augmentor}
+	return &Bridges{cf: cf, bot: bot, ipc: ipc, habWatcher: NewHabitationWatcher(), augmentor: augmentor, journal: NewJournalWriter()}
 }
 
 // NewBridgesWithBotCmd constructs a Bridges value with the BotCmdPump wired.
 // Used by the main supervisor loop when probe-lot / bot-exit-request are in use.
 // augmentor is shared with civic convention handlers for mayor status reads.
 func NewBridgesWithBotCmd(cf *Campfire, bot *BotProcess, ipc *IPC, botCmds *BotCmdPump, augmentor *PerceptionAugmentor) *Bridges {
-	return &Bridges{cf: cf, bot: bot, ipc: ipc, botCmds: botCmds, habWatcher: NewHabitationWatcher(), augmentor: augmentor}
+	return &Bridges{cf: cf, bot: bot, ipc: ipc, botCmds: botCmds, habWatcher: NewHabitationWatcher(), augmentor: augmentor, journal: NewJournalWriter()}
 }
 
 // eventEnvelope is the loose shape we parse from bot stdout. We keep it a map
@@ -162,6 +168,18 @@ func (b *Bridges) handle(line []byte) {
 	// (freesoexperiment-ef1)
 	if env.Kind == "perception" && b.augmentor != nil {
 		line = b.augmentor.AugmentPerception(line)
+	}
+
+	// Journal perception ticks to the persona's run-scoped journal directory
+	// (freesoexperiment-f6d). Journaling happens AFTER augmentation so the
+	// persisted entry includes all sidecar-side enrichments. Write is a no-op
+	// when the journal is disabled (FSO_USER unset, or RUN_ID unset → /tmp
+	// fallback used instead of XDG). Errors are logged but not fatal so a
+	// disk-full condition does not crash the sidecar.
+	if env.Kind == "perception" && b.journal != nil {
+		if jerr := b.journal.Write("perception", string(line)); jerr != nil {
+			log.Printf("bridge: journal perception: %v", jerr)
+		}
 	}
 
 	if err := b.cf.BroadcastEvent(tag, line, b.simID); err != nil {

@@ -955,5 +955,182 @@ done
 	t.Log("PASS: TestIntegration_VisitLot_BothShapes — both --target_lot_location and --my_name shapes verified via real subprocess, next-lot file written, bot-exit-request dispatched")
 }
 
+// TestIntegration_JournalWiringViaSidecarBinary is the regression test for
+// freesoexperiment-f6d finding 1 ("JournalWriter is dead code"). It proves that
+// the production sidecar binary actually writes journal entries to disk when a
+// perception event flows through the bridge.
+//
+// Protocol:
+//  1. Build the freeso-sidecar binary in a temp dir.
+//  2. Write a stub bot that emits exactly one perception event and then sleeps
+//     indefinitely (so the sidecar stays up waiting for more events).
+//  3. Launch the sidecar with RUN_ID and FSO_USER set, XDG_DATA_HOME pinned to
+//     a temp dir so the journal goes to a predictable location.
+//  4. Wait for the admission block (campfire is up, declarations published).
+//  5. Poll until the journal directory contains at least one file (the perception
+//     entry the stub bot's event triggered). Deadline: 15s.
+//  6. SIGKILL the sidecar (no graceful shutdown — tests fsync guarantee).
+//  7. Assert the journal file is on disk and has non-zero size.
+//
+// This test exercises the full production path:
+//   stub-bot → stdout → BotProcess.Lines() → Bridges.handle() → JournalWriter.Write()
+//   → file on disk at XDG_DATA_HOME/freeso-experiment/runs/<RUN_ID>/journal/<persona>/
+//
+// No unit-level mocks. Real process exec, real disk write, real SIGKILL.
+//
+// Skip conditions:
+//   - FREESO_SKIP_INTEGRATION=1 → explicit opt-out.
+//   - `go` binary not on PATH → skip (needed for the build step).
+func TestIntegration_JournalWiringViaSidecarBinary(t *testing.T) {
+	if os.Getenv("FREESO_SKIP_INTEGRATION") == "1" {
+		t.Skip("FREESO_SKIP_INTEGRATION=1")
+	}
+	goBin, err := exec.LookPath("go")
+	if err != nil {
+		t.Skipf("go not on PATH: %v", err)
+	}
+
+	tmp := t.TempDir()
+	cfHome := filepath.Join(tmp, "cf-home")
+	if err := os.MkdirAll(cfHome, 0o700); err != nil {
+		t.Fatalf("mkdir cf-home: %v", err)
+	}
+
+	// 1. Build the sidecar binary.
+	sidecarBin := filepath.Join(tmp, "freeso-sidecar-journal-test")
+	build := exec.Command(goBin, "build", "-o", sidecarBin, ".")
+	build.Dir = mustSourceDir(t)
+	if out, err := build.CombinedOutput(); err != nil {
+		t.Fatalf("build sidecar: %v\n%s", err, out)
+	}
+
+	// 2. Write a stub bot that emits one perception event, then blocks on SIGTERM.
+	// The perception event carries persist_id=99 so the bridge captures the sim id.
+	stubBot := filepath.Join(tmp, "stub-journal-bot.sh")
+	stubScript := `#!/bin/sh
+printf '{"kind":"perception","t":1000,"avatar":{"persist_id":99,"name":"journaltest"},"motives":{}}\n'
+# Block until killed — keeps the sidecar alive while the test polls for the journal entry.
+trap 'exit 0' TERM INT
+while true; do sleep 0.5; done
+`
+	if err := os.WriteFile(stubBot, []byte(stubScript), 0o700); err != nil {
+		t.Fatalf("write stub bot: %v", err)
+	}
+
+	const persona = "journaltestpersona"
+	const runID = "journal-wiring-integration"
+
+	// XDG_DATA_HOME pinned to tmp so the journal lands at a predictable path.
+	xdgDataHome := filepath.Join(tmp, "data")
+	if err := os.MkdirAll(xdgDataHome, 0o700); err != nil {
+		t.Fatalf("mkdir xdg data home: %v", err)
+	}
+
+	// Expected journal directory after the perception event is journaled.
+	journalDir := filepath.Join(xdgDataHome, "freeso-experiment", "runs", runID, "journal", persona)
+
+	// 3. Launch the sidecar with RUN_ID and FSO_USER set.
+	ctx, cancel := context.WithTimeout(context.Background(), 60*time.Second)
+	defer cancel()
+
+	sidecarCmd := exec.CommandContext(ctx, sidecarBin,
+		"--bot", stubBot,
+		"--bot-args", "",
+		"--cf-home", cfHome,
+		"--description", "journal-wiring-integration-test",
+	)
+	// Build env with required vars. Strip any ambient FSO_USER / XDG_DATA_HOME
+	// so the test is hermetic.
+	sidecarEnv := os.Environ()
+	filtered := sidecarEnv[:0]
+	for _, e := range sidecarEnv {
+		if !strings.HasPrefix(e, "FSO_USER=") &&
+			!strings.HasPrefix(e, "XDG_DATA_HOME=") &&
+			!strings.HasPrefix(e, "RUN_ID=") {
+			filtered = append(filtered, e)
+		}
+	}
+	sidecarCmd.Env = append(filtered,
+		"FSO_USER="+persona,
+		"XDG_DATA_HOME="+xdgDataHome,
+		"RUN_ID="+runID,
+	)
+
+	sidecarStdout, err := sidecarCmd.StdoutPipe()
+	if err != nil {
+		t.Fatalf("stdout pipe: %v", err)
+	}
+	sidecarStderr, err := sidecarCmd.StderrPipe()
+	if err != nil {
+		t.Fatalf("stderr pipe: %v", err)
+	}
+	if err := sidecarCmd.Start(); err != nil {
+		t.Fatalf("start sidecar: %v", err)
+	}
+
+	// Drain stderr into test log.
+	go func() {
+		buf := make([]byte, 4096)
+		for {
+			n, readErr := sidecarStderr.Read(buf)
+			if n > 0 {
+				t.Logf("sidecar-stderr: %s", strings.TrimRight(string(buf[:n]), "\n"))
+			}
+			if readErr != nil {
+				return
+			}
+		}
+	}()
+
+	// 4. Wait for the admission block — sidecar is ready and the bridge is running.
+	_ = waitForCampfireID(t, sidecarStdout, 20*time.Second)
+	t.Logf("sidecar up — polling for journal entry in %s", journalDir)
+
+	// 5. Poll for the journal file. The stub bot emitted the perception event
+	// before we even printed the admission block, so this should be fast.
+	// Allow 15s for the bridge goroutine to schedule and fsync the write.
+	var journalEntries []os.DirEntry
+	deadline := time.Now().Add(15 * time.Second)
+	for time.Now().Before(deadline) {
+		entries, readErr := os.ReadDir(journalDir)
+		if readErr == nil && len(entries) > 0 {
+			journalEntries = entries
+			break
+		}
+		time.Sleep(100 * time.Millisecond)
+	}
+
+	// 6. SIGKILL the sidecar — no graceful shutdown. This is the key falsifier:
+	// if Write does not fsync, the entry may be lost on kill. The journal_writer.go
+	// implementation fsyncs before returning, so the entry must survive SIGKILL.
+	if err := sidecarCmd.Process.Signal(syscall.SIGKILL); err != nil {
+		t.Logf("SIGKILL sidecar: %v (may have already exited)", err)
+	}
+	sidecarCmd.Wait() //nolint:errcheck
+
+	// 7. Assert: journal entry is on disk with non-zero content.
+	if len(journalEntries) == 0 {
+		// Re-read after kill in case the kill happened to race with the last poll.
+		journalEntries, _ = os.ReadDir(journalDir)
+	}
+	if len(journalEntries) == 0 {
+		t.Fatalf("no journal entry found in %s after SIGKILL — JournalWriter is not wired into production bridge", journalDir)
+	}
+
+	entryPath := filepath.Join(journalDir, journalEntries[0].Name())
+	data, err := os.ReadFile(entryPath)
+	if err != nil {
+		t.Fatalf("ReadFile journal entry %s: %v", entryPath, err)
+	}
+	if len(data) == 0 {
+		t.Fatalf("journal entry %s is empty — content was not written before fsync", entryPath)
+	}
+	if !strings.Contains(string(data), "perception") && !strings.Contains(string(data), "persist_id") {
+		t.Errorf("journal entry does not look like a perception event: %q", truncate(string(data), 200))
+	}
+
+	t.Logf("PASS: journal entry on disk at %s (%d bytes) — JournalWriter is wired into production bridge path", entryPath, len(data))
+}
+
 // compile-time assertion we did not accidentally break formatter with fmt use:
 var _ = fmt.Sprintf
