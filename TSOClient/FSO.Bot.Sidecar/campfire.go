@@ -8,7 +8,9 @@ package main
 
 import (
 	"context"
+	"crypto/sha256"
 	"embed"
+	"encoding/hex"
 	"encoding/json"
 	"fmt"
 	"log"
@@ -123,19 +125,47 @@ func StartCampfire(ctx context.Context, cfg CampfireConfig) (*Campfire, error) {
 		Router:       NewRouter(),
 	}
 
-	// Publish declarations.
+	// Publish declarations — idempotently. Previously every sidecar restart
+	// re-broadcast all 113+ declarations as fresh messages, which cf clients
+	// see as duplicates (one campfire grew to 340+ "ops listed" after a few
+	// dispatches). Now we read the existing convention:operation messages
+	// from the campfire, hash each by content, and only send a fresh
+	// publication for declarations that are missing or content-changed.
+	//
+	// The campfire keeps the older copies — they're not deleted — but no
+	// NEW duplicates accumulate per restart. A future `cf compact` pass can
+	// prune the historical duplicates if storage becomes a concern.
 	decls, err := LoadDeclarations(cfg.Declarations)
 	if err != nil {
 		return nil, fmt.Errorf("load declarations: %w", err)
 	}
 	log.Printf("loaded %d convention declarations", len(decls))
 
-	published := 0
+	existing, exErr := readExistingDeclarations(client, id)
+	if exErr != nil {
+		// Non-fatal: fall back to unconditional publish on read failure so a
+		// fresh campfire (no existing decls) still ends up populated. Log so
+		// operators can see when the dedup path is degraded.
+		log.Printf("declaration dedup: read existing failed (%v) — falling back to unconditional publish", exErr)
+		existing = nil
+	}
+
+	published, skipped := 0, 0
 	for _, d := range decls {
 		data, merr := json.Marshal(d)
 		if merr != nil {
 			log.Printf("marshal decl %s: %v", d.Operation, merr)
 			continue
+		}
+		// Dedup by op-name + content hash. If our local declaration matches
+		// the latest one already in the campfire (byte-identical canonical
+		// JSON), skip publish. If op-name is unknown OR the content has
+		// drifted, publish a fresh copy.
+		if existing != nil {
+			if prev, ok := existing[d.Operation]; ok && prev == hashBytes(data) {
+				skipped++
+				continue
+			}
 		}
 		_, serr := client.Send(protocol.SendRequest{
 			CampfireID: id,
@@ -154,8 +184,9 @@ func StartCampfire(ctx context.Context, cfg CampfireConfig) (*Campfire, error) {
 		}
 		published++
 	}
-	log.Printf("published %d/%d declarations to %s", published, len(decls), shortID(id))
-	cf.declCount = published
+	log.Printf("declarations: %d new/changed, %d unchanged (skipped), %d total local → %s",
+		published, skipped, len(decls), shortID(id))
+	cf.declCount = published + skipped
 
 	// Share beacon so the operator can hand it to the agent.
 	beacon := ""
@@ -183,6 +214,69 @@ func (c *Campfire) Close() error {
 		return nil
 	}
 	return c.Client.Close()
+}
+
+// readExistingDeclarations queries the campfire for prior convention:operation
+// broadcasts and returns a map of operation name → content hash of the
+// LATEST publication for that op. Used by the idempotent publish path to
+// skip declarations whose content is byte-identical to what's already in the
+// campfire.
+//
+// A "latest" semantics is enforced by iterating ReadResult.Messages, which
+// arrives in timestamp order (oldest first per the cf-protocol ReadResult
+// contract). So we overwrite the map entry as we walk; the final value is
+// the most recent broadcast.
+//
+// Returns (nil, err) on store/transport failure — the caller falls back to
+// unconditional publish (degrades correctly: campfire still ends up
+// populated; we just don't dedupe this session).
+func readExistingDeclarations(client *protocol.Client, campfireID string) (map[string]string, error) {
+	resp, err := client.Read(protocol.ReadRequest{
+		CampfireID: campfireID,
+		Tags:       []string{"convention:operation"},
+	})
+	if err != nil {
+		return nil, fmt.Errorf("read existing declarations: %w", err)
+	}
+	return buildDeclarationHashMap(resp.Messages), nil
+}
+
+// buildDeclarationHashMap reduces a list of convention:operation messages to
+// a (operation_name → content_hash) map. The latest entry wins for each
+// op-name, which preserves the "freshest publication is authoritative"
+// behaviour readers rely on. Extracted for unit-testability without spinning
+// up a real campfire.
+func buildDeclarationHashMap(msgs []protocol.Message) map[string]string {
+	out := make(map[string]string, len(msgs))
+	for _, msg := range msgs {
+		var op struct {
+			Operation string `json:"operation"`
+		}
+		if err := json.Unmarshal(msg.Payload, &op); err != nil {
+			// Malformed historical declaration — skip rather than failing
+			// the whole bringup. Old experiments may have left junk here.
+			continue
+		}
+		if op.Operation == "" {
+			continue
+		}
+		out[op.Operation] = hashBytes(msg.Payload)
+	}
+	return out
+}
+
+// hashBytes returns the SHA-256 of payload as a hex string. Used to compare
+// "is this declaration byte-identical to what's already published?"
+// without keeping the bytes in memory.
+//
+// Hash is over the marshaled JSON. Note that Go's json.Marshal produces
+// canonical output for a given Go value (struct field order is fixed; map
+// keys are sorted), so two equal Declaration values produce equal payloads.
+// If we ever switch to non-canonical encoding (CBOR, etc.) this needs a
+// canonicalization step before hashing.
+func hashBytes(b []byte) string {
+	h := sha256.Sum256(b)
+	return hex.EncodeToString(h[:])
 }
 
 // BroadcastEvent sends a single event to the campfire with the given tags.

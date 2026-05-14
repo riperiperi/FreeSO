@@ -45,13 +45,18 @@ type Router struct {
 	pollInterval time.Duration
 }
 
-// NewRouter creates a router with a default poll interval. 2s is well below
-// most operation latency tolerances and well above the per-poll sync cost.
+// NewRouter creates a router with a default poll interval. 250ms is fast
+// enough that build-loop agents stop noticing the receive-side wait and
+// cheap enough that the SQLite read cost is still negligible (our store
+// holds ~1000 messages per session — read-with-tag is an indexed lookup).
+// Previously 2s, which combined with the cf-client's 2s await poll yielded
+// 5+ sec round-trips even for trivial ops; halving each side gets us to a
+// regime where per-op cost is dominated by the handler, not the transport.
 func NewRouter() *Router {
 	return &Router{
 		handlers:     make(map[string]convention.HandlerFunc, 128),
 		decls:        make(map[string]*convention.Declaration, 128),
-		pollInterval: 2 * time.Second,
+		pollInterval: 250 * time.Millisecond,
 	}
 }
 
@@ -96,16 +101,40 @@ func (r *Router) Serve(ctx context.Context, cf *Campfire) {
 	}
 }
 
-func (r *Router) serveOnce(ctx context.Context, cf *Campfire) error {
-	sub := cf.Client.Subscribe(ctx, protocol.SubscribeRequest{
-		CampfireID: cf.ID,
+// routerSubscribeRequest builds the SubscribeRequest the Router uses. Extracted
+// from serveOnce so unit tests can assert configuration (ExcludeTags presence,
+// poll interval) without spinning up a real campfire client.
+func (r *Router) routerSubscribeRequest(campfireID string) protocol.SubscribeRequest {
+	return protocol.SubscribeRequest{
+		CampfireID: campfireID,
 		// Match every freeso-embodiment op tag in one subscription.
 		TagPrefixes: []string{"freeso:"},
-		// Defensive: never re-ingest our own fulfillments, never confuse a
-		// catalog declaration broadcast for a real request.
-		ExcludeTags:  []string{"fulfills", "convention:operation"},
+		// Defensive excludes:
+		//   - "fulfills" — our own response messages carry this; without exclusion
+		//     the Router would re-ingest them as new requests.
+		//   - "convention:operation" — declaration broadcasts at startup, not
+		//     invocations.
+		//   - "freeso:perception", "freeso:dialog", "freeso:system" — these
+		//     are bridge broadcasts FROM the bot TO the campfire. The Router's
+		//     freeso:* prefix matches them; without exclusion every perception
+		//     tick (1Hz × N sims) produces a `router: no handler registered
+		//     for op "perception"` convention:error message that floods the
+		//     campfire and pollutes cf reads. The fix is opt-out by event
+		//     family, not by op-name allowlist, so future event families
+		//     added in bridges.go inherit the protection.
+		ExcludeTags: []string{
+			"fulfills",
+			"convention:operation",
+			"freeso:perception",
+			"freeso:dialog",
+			"freeso:system",
+		},
 		PollInterval: r.pollInterval,
-	})
+	}
+}
+
+func (r *Router) serveOnce(ctx context.Context, cf *Campfire) error {
+	sub := cf.Client.Subscribe(ctx, r.routerSubscribeRequest(cf.ID))
 	for msg := range sub.Messages() {
 		r.dispatch(ctx, cf, msg)
 	}
