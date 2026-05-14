@@ -1,0 +1,40 @@
+{
+  "convention": "freeso-embodiment",
+  "version": "1.0",
+  "operation": "list-architecture-styles",
+  "family": "build-buy-architecture",
+  "description": "List the wall patterns, wall styles, and floor patterns you can paint/place on this lot. Wall patterns and floor patterns are the textures you select for paint-wall and paint-floor. Wall styles (5 in total) are the structural variants for place-wall. Prerequisite: none — this is a read-only catalog query; no lot ownership or permissions are required. Effect: returns three typed lists (wall_patterns, wall_styles, floor_patterns) sourced directly from the live WorldWallProvider and WorldFloorProvider loaded at bot startup. Cost: free. Roof styles are NOT in this list — they are a bare integer enum in the engine with no label catalog; if you need to know the current roof state, call query-architecture. Prices are per-unit (per-segment for walls, per-tile for floors) — multiply by the number of segments/tiles you intend to place to estimate cost.",
+  "args": [],
+  "produces_tags": [
+    {
+      "tag": "freeso:list-architecture-styles",
+      "cardinality": "exactly_one"
+    }
+  ],
+  "antecedents": "none",
+  "signing": "member_key",
+  "rate_limit": {
+    "max": 30,
+    "per": "sender",
+    "window": "1m"
+  },
+  "response": "sync",
+  "status": "implemented",
+  "call_signatures": [
+    "cf $CF list-architecture-styles                                                                         # returns wall_patterns, wall_styles (5), floor_patterns"
+  ],
+  "common_mistakes": [
+    "Roof styles are intentionally absent — VMArchitecture.RoofStyle has no label catalog. Use query-architecture to read the current roof state.",
+    "wall_patterns and wall_styles are separate lists: wall_patterns are textures (paint-wall); wall_styles are structural variants (place-wall).",
+    "Prices are per-unit, not per-lot: price_per_segment applies to each wall segment placed; price_per_tile applies to each floor tile painted."
+  ],
+  "perception_hints": [
+    "No perception state needed — list-architecture-styles is a catalog query, not a VM-state read.",
+    "Use id values from wall_patterns when calling paint-wall --pattern <id>.",
+    "Use id values from wall_styles when calling place-wall --style <id>.",
+    "Use id values from floor_patterns when calling paint-floor --pattern <id>."
+  ],
+  "refuse_conditions": [
+    "content providers not initialised → returns ok:false with 'list-architecture-styles: content providers not initialised'"
+  ]
+}

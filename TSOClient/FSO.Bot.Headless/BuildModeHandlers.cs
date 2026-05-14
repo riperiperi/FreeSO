@@ -6,8 +6,10 @@
 
 using System;
 using System.Collections.Generic;
+using System.Linq;
 using System.Text.Json.Nodes;
 using System.Threading.Tasks;
+using FSO.Content;
 using FSO.SimAntics;
 using FSO.SimAntics.Model;
 using FSO.SimAntics.Model.TSOPlatform;
@@ -88,7 +90,8 @@ public static class BuildModeHandlers
         dispatcher.Register("change-environment",(args, ct) => Task.FromResult(ChangeEnvironment(vmHost, args)));
         dispatcher.Register("change-lot-size",   (args, ct) => Task.FromResult(ChangeLotSize(vmHost, args)));
         dispatcher.Register("leave-build-buy",   (args, ct) => Task.FromResult(LeaveBuildBuy(vmHost, args)));
-        dispatcher.Register("query-architecture",(args, ct) => Task.FromResult(QueryArchitecture(vmHost, args)));
+        dispatcher.Register("query-architecture",        (args, ct) => Task.FromResult(QueryArchitecture(vmHost, args)));
+        dispatcher.Register("list-architecture-styles", (args, ct) => Task.FromResult(ListArchitectureStyles(vmHost, args)));
     }
 
     // ---- owner gate ----
@@ -556,5 +559,92 @@ public static class BuildModeHandlers
 
         if (payload == null) return CommandDispatcher.Response.Fail("query-architecture: no live VM");
         return CommandDispatcher.Response.Success(payload);
+    }
+
+    // ---- list-architecture-styles (freesoexperiment-8a8) ----
+
+    /// <summary>
+    /// Read-only catalog of wall patterns, wall styles, and floor patterns the agent can
+    /// reference when calling paint-wall, place-wall, and paint-floor.
+    ///
+    /// <para>
+    /// Three sub-lists are returned, each with typed pricing units:
+    ///   - <b>wall_patterns</b>: textures applied via paint-wall. Source: WorldWallProvider.Entries
+    ///     (WallReference dictionary). Price is per wall segment.
+    ///   - <b>wall_styles</b>: the 5 structural variants for place-wall (wall, picket fence, iron
+    ///     fence, privacy fence, banisters). Source: WorldWallProvider.WallStyleIDs[] →
+    ///     GetWallStyle(id). Price is per segment; is_door marks dynamic door styles.
+    ///   - <b>floor_patterns</b>: textures applied via paint-floor. Source: WorldFloorProvider.Entries
+    ///     (FloorReference dictionary). Price is per tile.
+    /// </para>
+    ///
+    /// <para>
+    /// Roof styles are intentionally excluded — VMArchitecture.RoofStyle is a bare uint with no
+    /// label catalog. Use set-roof with a numeric index (query-architecture returns current state).
+    /// No PDU emission; no VM lock needed (Content is immutable after Init).
+    /// </para>
+    /// </summary>
+    internal static CommandDispatcher.Response ListArchitectureStyles(HeadlessVMHost vmHost, JsonObject args)
+    {
+        try
+        {
+            var content = Content.Content.Get();
+            var walls = content.WorldWalls;
+            var floors = content.WorldFloors;
+
+            if (walls == null || floors == null)
+                return CommandDispatcher.Response.Fail("list-architecture-styles: content providers not initialised");
+
+            // Wall patterns: textures applied via paint-wall (one per wall face side).
+            var wallPatterns = walls.Entries.Values
+                .Select(e => (object)new
+                {
+                    id              = (long)e.ID,
+                    name            = e.Name ?? "",
+                    price_per_segment = (long)e.Price,
+                    description     = e.Description ?? "",
+                })
+                .ToList();
+
+            // Wall styles: the 5 structural variants (wall / picket fence / iron fence /
+            // privacy fence / banisters). WallStyleIDs is the authoritative source of the 5.
+            var wallStyles = walls.WallStyleIDs
+                .Select(id =>
+                {
+                    var style = walls.GetWallStyle(id);
+                    if (style == null) return null;
+                    return (object)new
+                    {
+                        id              = (long)style.ID,
+                        name            = style.Name ?? "",
+                        price_per_segment = (long)style.Price,
+                        is_door         = style.IsDoor,
+                    };
+                })
+                .Where(s => s != null)
+                .ToList();
+
+            // Floor patterns: textures applied via paint-floor (one per tile).
+            var floorPatterns = floors.Entries.Values
+                .Select(e => (object)new
+                {
+                    id             = (long)e.ID,
+                    name           = e.Name ?? "",
+                    price_per_tile = (long)e.Price,
+                    description    = e.Description ?? "",
+                })
+                .ToList();
+
+            return CommandDispatcher.Response.Success(new
+            {
+                wall_patterns  = wallPatterns,
+                wall_styles    = wallStyles,
+                floor_patterns = floorPatterns,
+            });
+        }
+        catch (Exception ex)
+        {
+            return CommandDispatcher.Response.Fail($"list-architecture-styles: {ex.GetType().Name}: {ex.Message}");
+        }
     }
 }

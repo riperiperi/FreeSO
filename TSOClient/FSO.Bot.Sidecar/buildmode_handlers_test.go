@@ -171,6 +171,16 @@ func TestBuildModeForwardingHandlersDispatchIPC(t *testing.T) {
 			wantForward: map[string]any{"build": true},
 			wantDropped: []string{"thumbnail_bytes"},
 		},
+		{
+			op:      "list-architecture-styles",
+			allowed: []string{}, // no args
+			inArgs: map[string]any{
+				// Any args should be dropped — this is a no-arg catalog read.
+				"spurious_arg": "ignored",
+			},
+			wantForward: map[string]any{},
+			wantDropped: []string{"spurious_arg"},
+		},
 	}
 
 	for _, tc := range cases {
@@ -236,6 +246,49 @@ func equalAny(a, b any) bool {
 	return a == b
 }
 
+// TestListArchitectureStylesDeclaration (T3): declaration-coverage check for
+// list-architecture-styles. The declaration must load, carry convention=freeso-embodiment,
+// family=build-buy-architecture, and have no required args (pure catalog read, no args).
+func TestListArchitectureStylesDeclaration(t *testing.T) {
+	decls, err := LoadDeclarations(conventionFiles)
+	if err != nil {
+		t.Fatalf("LoadDeclarations: %v", err)
+	}
+	var decl *convention.Declaration
+	for _, d := range decls {
+		if d.Operation == "list-architecture-styles" {
+			decl = d
+			break
+		}
+	}
+	if decl == nil {
+		t.Fatal("declaration missing: list-architecture-styles")
+	}
+	if decl.Convention != "freeso-embodiment" {
+		t.Errorf("convention=%q want freeso-embodiment", decl.Convention)
+	}
+	if decl.Description == "" {
+		t.Error("empty description")
+	}
+	// list-architecture-styles takes no args — verify no required args are declared.
+	for _, a := range decl.Args {
+		if a.Required {
+			t.Errorf("unexpected required arg %q — list-architecture-styles takes no args", a.Name)
+		}
+	}
+	// Description must carry prerequisite, effect, cost (galtrader-style).
+	lower := strings.ToLower(decl.Description)
+	hits := 0
+	for _, kw := range []string{"prerequisite", "effect", "cost"} {
+		if strings.Contains(lower, kw) {
+			hits++
+		}
+	}
+	if hits < 2 {
+		t.Errorf("description must carry >=2 of Prerequisite/Effect/Cost (got %d): %q", hits, decl.Description)
+	}
+}
+
 // TestBuildModeDeclarationsPresent asserts all ten build-buy-architecture declarations
 // load from the embedded conventions/ FS and carry galtrader-style descriptions with the
 // expected required args.
@@ -263,7 +316,8 @@ func TestBuildModeDeclarationsPresent(t *testing.T) {
 		{"set-roof", []string{"style"}},
 		{"change-environment", nil}, // both lists optional
 		{"change-lot-size", []string{"lot_size", "lot_stories"}},
-		{"leave-build-buy", nil}, // build is optional
+		{"leave-build-buy", nil},        // build is optional
+		{"list-architecture-styles", nil}, // no args — pure catalog read
 	}
 
 	for _, w := range wants {

@@ -53,6 +53,8 @@ func RegisterBuildModeHandlers(ctx context.Context, cf *Campfire, ipc *IPC) (int
 			"lot_size", "lot_stories"),
 		"leave-build-buy": simpleForwardingHandler(ipc, "leave-build-buy",
 			"build"),
+		// list-architecture-styles: no args — pure catalog read from C# side.
+		"list-architecture-styles": simpleForwardingHandler(ipc, "list-architecture-styles"),
 	}
 
 	decls, err := LoadDeclarations(conventionFiles)
