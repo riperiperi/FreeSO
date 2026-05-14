@@ -1,0 +1,54 @@
+{
+  "convention": "freeso-embodiment",
+  "version": "1.0",
+  "operation": "query-lot-objects",
+  "family": "queries",
+  "description": "Full dump of every entity on the current lot with exact tile coordinates. Unlike query-nearby (range-limited around the bot's position), this enumerates the entire VM entity list. Use this to plan placements: read the existing layout, pick an empty tile, then issue buy-object. Skips multi-tile non-root entries so a 2x3 object returns one entry per multitile-group, not six. Optional level filter narrows to one floor; optional guid_hex filter narrows to one catalog class. Pure local-VM read — no PDU, no transaction. Companion to the host-side fsov-dump tool which reads the same data from saved .fsov state files; this convention reads the live VM and stays current between SaveRing ticks.",
+  "args": [
+    {
+      "name": "level",
+      "type": "integer",
+      "required": false,
+      "description": "Filter to a single floor (0..3). Omit for all floors."
+    },
+    {
+      "name": "guid_hex",
+      "type": "string",
+      "required": false,
+      "description": "Filter to a single catalog class GUID, e.g. \"0x675C18AF\" (Fridge - Cheap). Cross-reference GameAssets/TSOClient/packingslips/catalog.xml. Omit for all classes."
+    }
+  ],
+  "produces_tags": [
+    {
+      "tag": "freeso:query-lot-objects",
+      "cardinality": "exactly_one"
+    }
+  ],
+  "antecedents": "none",
+  "signing": "member_key",
+  "rate_limit": {
+    "max": 30,
+    "per": "sender",
+    "window": "1m"
+  },
+  "response": "sync",
+  "status": "implemented",
+  "call_signatures": [
+    "cf $CF query-lot-objects                                                              # full lot dump",
+    "cf $CF query-lot-objects --level 3                                                    # only L3 entities",
+    "cf $CF query-lot-objects --guid_hex 0x675C18AF                                        # only Fridge - Cheap entities"
+  ],
+  "common_mistakes": [
+    "Treating x/y as subtiles. They are tile coords (already divided by 16). Multiply by 16 when passing to buy-object's x/y subtile args.",
+    "Using object_id when send-to-inventory needs persist_id. delete-object uses object_id; send-to-inventory uses persist_id.",
+    "Forgetting that the bot must be on the same lot. query-lot-objects always reflects the lot the bot is currently joined to."
+  ],
+  "perception_hints": [
+    "Compare against perception.nearby_objects[] to confirm a placement landed within the bot's view radius.",
+    "guid_hex matches the catalog GUID for the object class. The catalog name (e.g. 'Fridge - Cheap') comes from packingslips/catalog.xml.",
+    "Empty tile detection: for each candidate (x,y,level), iterate the response and check no entry has matching tile coords."
+  ],
+  "refuse_conditions": [
+    "no live VM (bot not joined to a lot yet) → ok:false 'no live VM'"
+  ]
+}

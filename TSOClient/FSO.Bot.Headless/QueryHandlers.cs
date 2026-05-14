@@ -43,6 +43,7 @@ public static class QueryHandlers
         dispatcher.Register("query-self",          (args, ct) => Task.FromResult(QuerySelf(vmHost, shardName)));
         dispatcher.Register("query-nearby",        (args, ct) => Task.FromResult(QueryNearby(vmHost, args)));
         dispatcher.Register("query-lot",           (args, ct) => Task.FromResult(QueryLot(vmHost, shardName)));
+        dispatcher.Register("query-lot-objects",   (args, ct) => Task.FromResult(QueryLotObjects(vmHost, args)));
         dispatcher.Register("query-relationships", (args, ct) => Task.FromResult(QueryRelationships(vmHost)));
         dispatcher.Register("query-inventory",     (args, ct) => Task.FromResult(QueryInventory(vmHost)));
     }
@@ -268,6 +269,75 @@ public static class QueryHandlers
                 neighborhood_id = (long)(lotState?.NhoodID ?? 0u),
                 other_avatars = vm.Entities.OfType<VMAvatar>().Count(a => a.PersistID != vmHost.MyAvatarPersistId),
             };
+        });
+
+        if (payload == null) return CommandDispatcher.Response.Fail("no live VM");
+        return CommandDispatcher.Response.Success(payload);
+    }
+
+    // ---- query-lot-objects ----
+
+    /// <summary>
+    /// query-lot-objects — full dump of every entity on the current lot with exact tile
+    /// coords. Unlike query-nearby (range-limited around the bot's position), this enumerates
+    /// every VMEntity in vm.Entities. Use this to plan placements: read the existing layout,
+    /// pick an empty tile, then buy-object. Skips multi-tile non-root entries so a 2x3 object
+    /// returns one entry per multitile-group, not six.
+    ///
+    /// <para>
+    /// Optional arg <c>level</c> (int) filters to one floor. Optional arg <c>guid_hex</c>
+    /// (string like "0x675C18AF") filters to one catalog class.
+    /// </para>
+    ///
+    /// <para>
+    /// Returns {count, objects:[{object_id, persist_id, guid_hex, x, y, level, dir, kind}]}.
+    /// x, y are tile coordinates (already divided by 16); multiply by 16 for buy-object subtiles.
+    /// </para>
+    /// </summary>
+    internal static CommandDispatcher.Response QueryLotObjects(HeadlessVMHost vmHost, JsonNode args)
+    {
+        int? filterLevel = null;
+        uint? filterGuid = null;
+        if (args is JsonObject obj)
+        {
+            if (obj["level"] is JsonValue lv && lv.TryGetValue<int>(out var li)) filterLevel = li;
+            if (obj["guid_hex"] is JsonValue gv && gv.TryGetValue<string>(out var gs))
+            {
+                var s = gs.Trim();
+                if (s.StartsWith("0x", StringComparison.OrdinalIgnoreCase)) s = s.Substring(2);
+                if (uint.TryParse(s, System.Globalization.NumberStyles.HexNumber, null, out var gu)) filterGuid = gu;
+            }
+        }
+
+        var payload = vmHost.RunUnderTickLock<object>(() =>
+        {
+            var vm = vmHost.VM;
+            if (vm == null) return null;
+
+            var objects = new List<object>();
+            foreach (var e in vm.Entities)
+            {
+                if (filterLevel.HasValue && e.Position.Level != filterLevel.Value) continue;
+                if (filterGuid.HasValue && e.Object.OBJ.GUID != filterGuid.Value) continue;
+                // Skip multi-tile non-root entries (same convention query-nearby uses).
+                if (e.MultitileGroup != null && e.MultitileGroup.Objects != null &&
+                    e.MultitileGroup.Objects.Count > 1 && e.MultitileGroup.BaseObject != e)
+                    continue;
+
+                bool isAvatar = e is VMAvatar;
+                objects.Add(new
+                {
+                    object_id = (int)e.ObjectID,
+                    persist_id = (long)e.PersistID,
+                    guid_hex = $"0x{e.Object.OBJ.GUID:X8}",
+                    x = e.Position.TileX,
+                    y = e.Position.TileY,
+                    level = (int)e.Position.Level,
+                    dir = isAvatar ? 0 : (int)((e as VMGameObject)?.Direction ?? 0),
+                    kind = isAvatar ? "avatar" : "object",
+                });
+            }
+            return new { count = objects.Count, objects };
         });
 
         if (payload == null) return CommandDispatcher.Response.Fail("no live VM");

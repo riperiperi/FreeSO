@@ -71,6 +71,7 @@ namespace FSO.LotRenderer
         static int            RenderLevel    = -1;
         static WorldRotation? RenderRotation = null;  // null = TopLeft (iso-ne)
         static WorldZoom?     RenderZoom     = null;  // null = Far
+        static bool           RenderRoofless = false;
 
         // S3: HTTP service mode.
         static bool ServeMode = false;
@@ -101,6 +102,9 @@ namespace FSO.LotRenderer
                         break;
                     case "--zoom":
                         RenderZoom = ParseZoom(args[++i]);
+                        break;
+                    case "--roofless":
+                        RenderRoofless = true;
                         break;
                     case "--serve":
                         ServeMode = true;
@@ -353,7 +357,7 @@ namespace FSO.LotRenderer
 
                     // If any of --level / --angle / --zoom were specified, use GetLotThumbAt.
                     // Otherwise fall through to RenderFSOF (which calls GetLotThumb, same as S1).
-                    bool useParamRender = RenderLevel >= 0 || RenderRotation.HasValue || RenderZoom.HasValue;
+                    bool useParamRender = RenderLevel >= 0 || RenderRotation.HasValue || RenderZoom.HasValue || RenderRoofless;
 
                     if (useParamRender)
                     {
@@ -362,7 +366,8 @@ namespace FSO.LotRenderer
                             level:    RenderLevel,
                             rotation: RenderRotation ?? WorldRotation.TopLeft,
                             zoom:     RenderZoom     ?? WorldZoom.Far,
-                            (png) => thumbPng = png);
+                            (png) => thumbPng = png,
+                            roofless: RenderRoofless);
                     }
                     else
                     {

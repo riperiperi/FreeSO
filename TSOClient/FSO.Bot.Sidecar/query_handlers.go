@@ -29,6 +29,7 @@ func RegisterQueryHandlers(ctx context.Context, cf *Campfire, ipc *IPC) (int, er
 		"query-self":          querySelfHandler(ipc),
 		"query-nearby":        queryNearbyHandler(ipc),
 		"query-lot":           queryLotHandler(ipc),
+		"query-lot-objects":   queryLotObjectsHandler(ipc),
 		"query-relationships": queryRelationshipsHandler(ipc),
 		"query-inventory":     queryInventoryHandler(ipc),
 	}
@@ -81,6 +82,20 @@ func queryNearbyHandler(ipc *IPC) convention.HandlerFunc {
 func queryLotHandler(ipc *IPC) convention.HandlerFunc {
 	return func(ctx context.Context, req *convention.Request) (*convention.Response, error) {
 		return forwardIPC(ctx, ipc, "query-lot", map[string]any{})
+	}
+}
+
+// queryLotObjectsHandler forwards the full lot-entity dump. Optional args:
+// level (int) filters to one floor, guid_hex (string) filters to one catalog
+// class. Returns {count, objects:[{object_id, persist_id, guid_hex, x, y,
+// level, dir, kind}]}. Use this to plan placements without depending on bot
+// perception range — every entity on the lot is returned. The fsov-dump
+// host-side tool reads the same data from saved .fsov files; this convention
+// reads the live VM and stays current between SaveRing ticks.
+func queryLotObjectsHandler(ipc *IPC) convention.HandlerFunc {
+	return func(ctx context.Context, req *convention.Request) (*convention.Response, error) {
+		args := pickArgs(req.Args, "level", "guid_hex")
+		return forwardIPC(ctx, ipc, "query-lot-objects", args)
 	}
 }
 
