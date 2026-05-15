@@ -18,6 +18,204 @@ import (
 	"github.com/campfire-net/campfire/pkg/convention"
 )
 
+// ExpectFn is the verdict callback for verifyingHandlerWithExpect.
+//
+// Implementations receive the pre- and post-snapshots, the filtered arg map,
+// and the IPC response from the forwarded op. They return:
+//
+//   - verdict  — a short identifier string (e.g. "placed", "silent-drop", "deleted").
+//   - hints    — a list of short identifiable hints for the caller to switch on.
+//   - payload  — the full structured response payload (merged into the response).
+//   - ok       — true on success (placed / deleted / etc.), false on failure.
+//
+// The framework handles pre/post snapshot acquisition, settle sleep, extended-
+// poll loop, and bot-rejection before invoking ExpectFn. ExpectFn is only
+// called when the IPC op returned ok:true and settle + optional polls are done.
+type ExpectFn func(pre, post lotSnapshot, args map[string]any, ipcResp *Response) (verdict string, hints []string, payload map[string]any, ok bool)
+
+// verifyingHandlerWithExpect is the generic snapshot-diff framework shared by
+// placementVerifyingHandler and deleteVerifyingHandler (and any future verifying
+// handlers). It handles:
+//
+//  1. Pre-snapshot (non-fatal on error — op proceeds in degraded mode).
+//  2. Forward the op.
+//  3. Bot-rejection fast-path: surfaces the error and returns immediately.
+//  4. Settle sleep (cfg.settleWait).
+//  5. Post-snapshot.
+//  6. Extended-poll loop: if the initial post shows balance changed but the
+//     expect predicate isn't satisfied yet, re-polls up to cfg.extendedPollTimeout.
+//  7. Calls expect(pre, post, args, ipcResp) and merges the returned payload
+//     into the convention.Response.
+//
+// The snapshotLevel and snapshotGuidHex parameters control what snapshot() reads;
+// callers pass the level and GUID relevant to their op (0/"" for a full-level dump).
+//
+// The extendedPollTrigger controls when the extended-poll loop fires: it should
+// return true when the post-snapshot shows evidence that the op was partially
+// applied (e.g. balance changed) but the verdict isn't conclusive yet.
+// A nil trigger disables extended polling.
+func verifyingHandlerWithExpect(
+	ipc *IPC,
+	op string,
+	allowedArgs []string,
+	snapshotLevel int,
+	snapshotGuidHex string,
+	extendedPollTrigger func(pre, post lotSnapshot) bool,
+	expect ExpectFn,
+	cfg verifyingHandlerConfig,
+) convention.HandlerFunc {
+	return func(ctx context.Context, req *convention.Request) (*convention.Response, error) {
+		args := pickArgs(req.Args, allowedArgs...)
+		t0 := time.Now()
+		log.Printf("verifying-handler[%s]: start (snapshot level=%d)", op, snapshotLevel)
+
+		// 1. Pre-snapshot (non-fatal).
+		pre, preErr := snapshot(ctx, ipc, snapshotLevel, snapshotGuidHex, cfg.snapshotTimeout)
+		log.Printf("verifying-handler[%s]: pre-snapshot done balance=%d objects=%d err=%v elapsed=%s",
+			op, pre.balance, len(pre.objects), preErr, time.Since(t0))
+
+		// 2. Forward the op.
+		sendCtx, sendCancel := context.WithTimeout(ctx, cfg.sendTimeout)
+		tSend := time.Now()
+		ipcResp, err := ipc.Send(sendCtx, op, args)
+		sendCancel()
+		log.Printf("verifying-handler[%s]: forward done ipc.ok=%v err=%v elapsed=%s",
+			op, ipcResp != nil && ipcResp.Ok, err, time.Since(tSend))
+		if err != nil {
+			return &convention.Response{Payload: map[string]any{
+				"ok":      false,
+				"verdict": "ipc-error",
+				"error":   err.Error(),
+				"op":      op,
+			}}, nil
+		}
+
+		// 3. Bot-side rejection fast-path.
+		if !ipcResp.Ok {
+			out := map[string]any{
+				"ok":      false,
+				"verdict": "bot-rejected",
+				"error":   ipcResp.Error,
+				"op":      op,
+			}
+			if len(ipcResp.Payload) > 0 {
+				var p map[string]any
+				if err := json.Unmarshal(ipcResp.Payload, &p); err == nil {
+					out["payload"] = p
+				}
+			}
+			return &convention.Response{Payload: out}, nil
+		}
+
+		// 4. Settle.
+		select {
+		case <-time.After(cfg.settleWait):
+		case <-ctx.Done():
+			return ctxCancelledResponse(op, ctx), nil
+		}
+
+		// 5. Post-snapshot.
+		tPost := time.Now()
+		post, postErr := snapshot(ctx, ipc, snapshotLevel, snapshotGuidHex, cfg.snapshotTimeout)
+		log.Printf("verifying-handler[%s]: post-snapshot done balance=%d objects=%d err=%v elapsed=%s",
+			op, post.balance, len(post.objects), postErr, time.Since(tPost))
+
+		// 6. Extended-poll loop.
+		//
+		// When the trigger fires (e.g. balance changed but no new persist_id),
+		// re-poll up to extendedPollTimeout before falling through to expect().
+		// This covers the two-phase server-side apply (Verify debits, Execute
+		// spawns on a later tick) pattern observed in both buy-object and
+		// delete-object.
+		resolvedAfterPoll := false
+		pollCount := 0
+		if cfg.extendedPollTimeout > 0 && extendedPollTrigger != nil &&
+			preErr == nil && postErr == nil && extendedPollTrigger(pre, post) {
+
+			pollDeadline := time.Now().Add(cfg.extendedPollTimeout)
+			for time.Now().Before(pollDeadline) {
+				if !sleepRespectCtx(ctx, cfg.extendedPollInterval) {
+					return ctxCancelledResponse(op, ctx), nil
+				}
+				pollCount++
+				tPoll := time.Now()
+				postPolled, pollErr := snapshot(ctx, ipc, snapshotLevel, snapshotGuidHex, cfg.snapshotTimeout)
+				log.Printf("verifying-handler[%s]: extended-poll #%d balance=%d objects=%d err=%v elapsed=%s",
+					op, pollCount, postPolled.balance, len(postPolled.objects), pollErr, time.Since(tPoll))
+				if pollErr != nil {
+					break
+				}
+				post = postPolled
+				// Stop polling as soon as the trigger no longer fires — the
+				// delta we were waiting for has landed.
+				if !extendedPollTrigger(pre, post) {
+					resolvedAfterPoll = true
+					log.Printf("verifying-handler[%s]: extended-poll resolved after %d polls (%s past settle)",
+						op, pollCount, time.Since(tPost))
+					break
+				}
+			}
+			if !resolvedAfterPoll {
+				log.Printf("verifying-handler[%s]: extended-poll exhausted after %d polls (%s); falling through",
+					op, pollCount, time.Since(tPost))
+			}
+		}
+
+		// 7. Invoke expect and merge the result into a response.
+		verdict, hints, extraPayload, _ := expect(pre, post, args, ipcResp)
+		out := map[string]any{
+			"op":      op,
+			"verdict": verdict,
+		}
+		for k, v := range extraPayload {
+			out[k] = v
+		}
+
+		// Merge snapshot errors: add the error string fields, and inject
+		// hint tokens so callers can switch on them without parsing the
+		// error string. These are appended AFTER expect() so the ExpectFn
+		// does not need to thread preErr/postErr through the ExpectFn
+		// signature (which is fixed by the spec).
+		if preErr != nil {
+			out["pre_snapshot_error"] = preErr.Error()
+			hints = append(hints, "pre-snapshot-failed")
+		}
+		if postErr != nil {
+			out["post_snapshot_error"] = postErr.Error()
+			hints = append(hints, "post-snapshot-failed")
+		}
+
+		if len(hints) > 0 {
+			// Merge with any hints the ExpectFn already placed in extraPayload
+			// (e.g. verdictResponse sets "hints" for the silent-drop path).
+			if existing, ok := out["hints"].([]string); ok {
+				// ExpectFn already set hints — append ours without duplicating.
+				seen := make(map[string]bool, len(existing))
+				for _, h := range existing {
+					seen[h] = true
+				}
+				merged := append([]string{}, existing...)
+				for _, h := range hints {
+					if !seen[h] {
+						merged = append(merged, h)
+						seen[h] = true
+					}
+				}
+				out["hints"] = merged
+			} else {
+				out["hints"] = hints
+			}
+		}
+
+		if resolvedAfterPoll {
+			out["resolved_after_poll"] = true
+			out["poll_count"] = pollCount
+		}
+		log.Printf("verifying-handler[%s]: done verdict=%s total_elapsed=%s", op, verdict, time.Since(t0))
+		return &convention.Response{Payload: out}, nil
+	}
+}
+
 // placementVerifyingHandler is buy-object's / place-from-inventory's robust
 // successor for the build-buy verb family.
 //
@@ -67,141 +265,32 @@ func placementVerifyingHandler(ipc *IPC, op string, allowedArgs ...string) conve
 
 // verifyingHandlerImpl is the inner implementation, parameterised on config so
 // tests can shrink settleWait without changing production defaults.
+// It delegates to verifyingHandlerWithExpect using the placement-specific
+// ExpectFn (verdictResponse) and trigger (balance dropped + no new persist_id).
 func verifyingHandlerImpl(ctx context.Context, ipc *IPC, op string, allowedArgs []string, cfg verifyingHandlerConfig, req *convention.Request) (*convention.Response, error) {
-	args := pickArgs(req.Args, allowedArgs...)
-	level := intArg(args, "level", 1)
-	t0 := time.Now()
-	log.Printf("verifying-handler[%s]: start (target level=%d)", op, level)
+	level := intArg(req.Args, "level", 1)
 
-	// 1. Pre-snapshot. A snapshot failure is non-fatal — we still try the
-	//    op so a wedged query-* path doesn't block builds outright. We
-	//    just flag it in the verdict so the agent knows the diff is
-	//    untrustworthy.
-	//
-	//    NOTE: do NOT pass the catalog guid as a filter to query-lot-objects.
-	//    TSO multitile objects expose an instance guid in vm.Entities that
-	//    differs from the catalog entry's guid the caller passed to buy-
-	//    object (operator-confirmed 2026-05-15: catalog Dresser-Castle-1
-	//    0xA607CC98 places as instance 0xA781AE64; catalog Bed-Double-Castle
-	//    0x17579980 places as instance 0x1478FD75). Filtering pre/post by
-	//    catalog guid hides the placement and every multitile buy verifies
-	//    as silent-drop. We diff by (object_id, persist_id) set instead —
-	//    the engine's canonical entity identity — and read the actual
-	//    instance guid back from the new entry for the response payload.
-	pre, preErr := snapshot(ctx, ipc, level, "", cfg.snapshotTimeout)
-	log.Printf("verifying-handler[%s]: pre-snapshot done balance=%d objects=%d err=%v elapsed=%s", op, pre.balance, len(pre.objects), preErr, time.Since(t0))
-
-	// 2. Forward the op.
-	sendCtx, sendCancel := context.WithTimeout(ctx, cfg.sendTimeout)
-	tSend := time.Now()
-	ipcResp, err := ipc.Send(sendCtx, op, args)
-	sendCancel()
-	log.Printf("verifying-handler[%s]: forward done ipc.ok=%v err=%v elapsed=%s", op, ipcResp != nil && ipcResp.Ok, err, time.Since(tSend))
-	if err != nil {
-		return &convention.Response{Payload: map[string]any{
-			"ok":      false,
-			"verdict": "ipc-error",
-			"error":   err.Error(),
-			"op":      op,
-		}}, nil
+	// placementExpect wraps verdictResponse as an ExpectFn. Snapshot errors
+	// are NOT passed to verdictResponse because the generic framework injects
+	// the error string fields and "pre/post-snapshot-failed" hints after
+	// expect() returns.
+	placementExpect := func(pre, post lotSnapshot, args map[string]any, ipcResp *Response) (string, []string, map[string]any, bool) {
+		resp := verdictResponse(op, args, pre, post, nil, nil, ipcResp)
+		pay := resp.Payload.(map[string]any)
+		verdict, _ := pay["verdict"].(string)
+		placed, _ := pay["placed"].(bool)
+		return verdict, nil, pay, placed
 	}
 
-	// 3. Bot-side rejection (e.g. caller-is-not-lot-owner gate). The bot
-	//    returned a structured error — surface it cleanly and skip the
-	//    settle/diff dance.
-	if !ipcResp.Ok {
-		out := map[string]any{
-			"ok":      false,
-			"verdict": "bot-rejected",
-			"error":   ipcResp.Error,
-			"op":      op,
-		}
-		// If the bot included a payload (e.g. owner_id/me for the
-		// not-lot-owner case), pass it through.
-		if len(ipcResp.Payload) > 0 {
-			var payload map[string]any
-			if err := json.Unmarshal(ipcResp.Payload, &payload); err == nil {
-				out["payload"] = payload
-			}
-		}
-		return &convention.Response{Payload: out}, nil
+	// placementTrigger: balance fell but no new persist_id has landed yet.
+	// Fires when the VM's two-phase apply (Verify debits, Execute spawns) has
+	// completed the debit but not the spawn.
+	placementTrigger := func(pre, post lotSnapshot) bool {
+		return newPersists(pre, post) == 0 && post.balance < pre.balance
 	}
 
-	// 4. Settle. The VM applies the command on its next tick (~33ms) and
-	//    perception emits at FSO_PERCEPTION_HZ (default 1 Hz). A settle
-	//    of 1500ms gives the VM at least one tick and reduces the
-	//    chance that the post-snapshot races the placement.
-	select {
-	case <-time.After(cfg.settleWait):
-	case <-ctx.Done():
-		return &convention.Response{Payload: map[string]any{
-			"ok":      false,
-			"verdict": "ctx-cancelled",
-			"error":   ctx.Err().Error(),
-			"op":      op,
-		}}, nil
-	}
-
-	// 5. Post-snapshot.
-	tPost := time.Now()
-	post, postErr := snapshot(ctx, ipc, level, "", cfg.snapshotTimeout)
-	log.Printf("verifying-handler[%s]: post-snapshot done balance=%d objects=%d err=%v elapsed=%s", op, post.balance, len(post.objects), postErr, time.Since(tPost))
-
-	// 5b. Extended-poll race fix: balance dropped but no new persist_id yet.
-	//
-	// VMNetBuyObjectCmd is two-phase server-side (Verify debits via async
-	// transaction + requeues, Execute spawns on a later tick). The balance-
-	// change delta routinely arrives before the spawn delta — without polling
-	// past the initial settle window we false-negative real placements with
-	// hint=balance-changed-no-object. Observed empirically 2026-05-15 on lot
-	// 2 L3 dresser + rug placements (both landed, both reported silent-drop).
-	//
-	// Strategy: while balance < pre.balance AND zero new persist_ids, re-
-	// snapshot every extendedPollInterval up to extendedPollTimeout. Exit on
-	// first new persist_id (verdict=placed) or timeout (verdict=silent-drop
-	// with the truthful balance-changed-no-object hint).
-	if cfg.extendedPollTimeout > 0 && preErr == nil && postErr == nil &&
-		newPersists(pre, post) == 0 && post.balance < pre.balance {
-
-		pollDeadline := time.Now().Add(cfg.extendedPollTimeout)
-		pollCount := 0
-		for time.Now().Before(pollDeadline) {
-			if !sleepRespectCtx(ctx, cfg.extendedPollInterval) {
-				return ctxCancelledResponse(op, ctx), nil
-			}
-			pollCount++
-			tPoll := time.Now()
-			postPolled, pollErr := snapshot(ctx, ipc, level, "", cfg.snapshotTimeout)
-			log.Printf("verifying-handler[%s]: extended-poll #%d balance=%d objects=%d err=%v elapsed=%s",
-				op, pollCount, postPolled.balance, len(postPolled.objects), pollErr, time.Since(tPoll))
-			if pollErr != nil {
-				// Snapshot errored mid-poll. Stop polling and let verdict
-				// surface the postErr we already have from the first attempt.
-				break
-			}
-			post = postPolled
-			if newPersists(pre, post) > 0 {
-				log.Printf("verifying-handler[%s]: extended-poll resolved race after %d polls (%s past settle)",
-					op, pollCount, time.Since(tPost))
-				resp := verdictResponse(op, args, pre, post, preErr, postErr, ipcResp)
-				// Annotate the verdict so callers can see the poll fired —
-				// useful for diagnostics + tuning extendedPollInterval.
-				if pay, ok := resp.Payload.(map[string]any); ok {
-					pay["resolved_after_poll"] = true
-					pay["poll_count"] = pollCount
-				}
-				log.Printf("verifying-handler[%s]: done total_elapsed=%s", op, time.Since(t0))
-				return resp, nil
-			}
-		}
-		log.Printf("verifying-handler[%s]: extended-poll exhausted after %d polls (%s); falling through to silent-drop",
-			op, pollCount, time.Since(tPost))
-	}
-
-	// 6. Diff & verdict.
-	resp := verdictResponse(op, args, pre, post, preErr, postErr, ipcResp)
-	log.Printf("verifying-handler[%s]: done total_elapsed=%s", op, time.Since(t0))
-	return resp, nil
+	handler := verifyingHandlerWithExpect(ipc, op, allowedArgs, level, "", placementTrigger, placementExpect, cfg)
+	return handler(ctx, req)
 }
 
 // newPersists counts the persist_ids present in post but not pre. Skips
@@ -295,10 +384,24 @@ type objectRef struct {
 	Dir       int
 }
 
+// ActionQueueEntry is one item from the avatar's interaction queue as returned
+// by query-self. The C# handler (QueryHandlers.cs:82) emits {interaction_id,
+// name, target_object_id, status} for each queued action. W7a (freesoexperiment-177)
+// confirmed action_queue is already on the wire; this struct parses it so
+// snapshot() callers (including the future interact-with verifier, W8) can diff
+// queue depth before and after an interaction request.
+type ActionQueueEntry struct {
+	InteractionID  int    `json:"interaction_id"`
+	Name           string `json:"name"`
+	TargetObjectID int    `json:"target_object_id"`
+	Status         string `json:"status"`
+}
+
 // lotSnapshot is one moment of bot-observable lot state, scoped to the level
 // and (optionally) catalog GUID the placement targets.
 type lotSnapshot struct {
-	balance      int64
+	balance     int64
+	actionQueue []ActionQueueEntry
 	objects      []objectRef
 	objectsByPID map[uint64]objectRef // index for fast diff
 }
@@ -321,12 +424,14 @@ func snapshot(ctx context.Context, ipc *IPC, level int, guidHex string, timeout 
 		return snap, fmt.Errorf("query-self bot-rejected: %s", selfResp.Error)
 	}
 	var selfPayload struct {
-		Balance json.Number `json:"balance"`
+		Balance     json.Number        `json:"balance"`
+		ActionQueue []ActionQueueEntry `json:"action_queue"`
 	}
 	if err := json.Unmarshal(selfResp.Payload, &selfPayload); err == nil {
 		if b, perr := selfPayload.Balance.Int64(); perr == nil {
 			snap.balance = b
 		}
+		snap.actionQueue = selfPayload.ActionQueue
 	}
 
 	// objects via query-lot-objects
@@ -644,161 +749,122 @@ func deleteVerifyingHandler(ipc *IPC, op string, allowedArgs ...string) conventi
 func deleteVerifyingHandlerImpl(ctx context.Context, ipc *IPC, op string, allowedArgs []string, cfg verifyingHandlerConfig, req *convention.Request) (*convention.Response, error) {
 	args := pickArgs(req.Args, allowedArgs...)
 	targetID, hasTarget := tryGetU64(args, "target_object_id")
-	t0 := time.Now()
 	log.Printf("delete-verifying[%s]: start target_object_id=%d", op, targetID)
 
-	// Pre-snapshot: full level dump. We need the multitile sibling list, so we
-	// take a wide snapshot rather than guid-narrowing.
-	pre, preErr := snapshot(ctx, ipc, 0, "", cfg.snapshotTimeout)
-	log.Printf("delete-verifying[%s]: pre-snapshot done objects=%d err=%v elapsed=%s", op, len(pre.objects), preErr, time.Since(t0))
-
-	// Find the target — get its persist_id and all sibling object_ids on the
-	// same persist_id.
-	var targetPID uint64
-	var siblings []objectRef
-	if hasTarget {
+	// resolvePIDAndSiblings extracts the target's persist_id and its sibling
+	// tiles from a pre-snapshot. Called by both the trigger and the ExpectFn to
+	// keep the logic co-located with the data it needs.
+	resolvePIDAndSiblings := func(pre lotSnapshot) (pid uint64, siblings []objectRef) {
+		if !hasTarget {
+			return 0, nil
+		}
 		for _, o := range pre.objects {
 			if o.ObjectID == targetID {
-				targetPID = o.PersistID
+				pid = o.PersistID
 				break
 			}
 		}
-		if targetPID != 0 {
+		if pid != 0 {
 			for _, o := range pre.objects {
-				if o.PersistID == targetPID && o.ObjectID != targetID {
+				if o.PersistID == pid && o.ObjectID != targetID {
 					siblings = append(siblings, o)
 				}
 			}
 		}
-	}
-	log.Printf("delete-verifying[%s]: resolved target_pid=%d siblings=%d", op, targetPID, len(siblings))
-
-	// First-attempt forward.
-	resp1, err := sendDelete(ctx, ipc, op, args, cfg.sendTimeout)
-	if err != nil {
-		return &convention.Response{Payload: map[string]any{
-			"ok":      false,
-			"verdict": "ipc-error",
-			"error":   err.Error(),
-			"op":      op,
-		}}, nil
-	}
-	if !resp1.Ok {
-		out := botRejectedPayload(op, resp1)
-		return &convention.Response{Payload: out}, nil
+		return pid, siblings
 	}
 
-	// Settle.
-	if !sleepRespectCtx(ctx, cfg.settleWait) {
-		return ctxCancelledResponse(op, ctx), nil
+	// Extended-poll trigger for delete: refund landed (balance went up) but the
+	// target's (oid, pid) tuple is still present. The entity-removal delta
+	// arrives on a later tick than the refund transaction.
+	deleteTrigger := func(pre, post lotSnapshot) bool {
+		pid, _ := resolvePIDAndSiblings(pre)
+		return objectTuplePresent(post, targetID, pid) && post.balance > pre.balance
 	}
 
-	// Post-snapshot: is the target's (object_id, persist_id) tuple gone?
-	//
-	// Tuple-based check (vs persist_id alone) handles the multitile partial-
-	// delete case: TSO multitile objects share one persist_id across many tiles
-	// but query-lot-objects only emits the BaseObject. When a master delete
-	// removes the master tile, a sibling tile becomes the new base and shows
-	// up in post under its own object_id. The shared persist_id is therefore
-	// "still present" — but the SPECIFIC object_id the caller asked to delete
-	// IS gone. Reporting that as silent-drop confused operator-driven cleanup
-	// (observed 2026-05-15: dresser oid 655 / pid 16778439 deleted, refund
-	// fired, but sibling oid 646 took over as base — verifier returned silent-
-	// drop). The caller's contract is "did the oid I named go away?". Answer
-	// that question by tuple lookup, not by pid alone.
-	post1, post1Err := snapshot(ctx, ipc, 0, "", cfg.snapshotTimeout)
-	log.Printf("delete-verifying[%s]: post1 objects=%d err=%v elapsed=%s", op, len(post1.objects), post1Err, time.Since(t0))
+	// deleteExpect implements the verdict logic, including the multitile-master
+	// retry. It captures ctx, ipc, cfg, op, args, targetID from the outer scope
+	// so the ExpectFn signature (defined in the spec) can remain context-free.
+	deleteExpect := func(pre, post lotSnapshot, _ map[string]any, ipcResp *Response) (string, []string, map[string]any, bool) {
+		targetPID, siblings := resolvePIDAndSiblings(pre)
+		log.Printf("delete-verifying[%s]: expect entry target_pid=%d siblings=%d", op, targetPID, len(siblings))
 
-	if targetPID == 0 || !objectTuplePresent(post1, targetID, targetPID) {
-		// Either we couldn't resolve the persist_id in pre (so we trust the
-		// bot's ok:true at face value), or the target's (oid, pid) tuple is
-		// gone — success.
-		return deleteVerdict(op, args, pre, post1, true, "", 0, resp1, preErr, post1Err)
-	}
-
-	// Extended-poll race fix (mirror of the placement path). Delete-object's
-	// server-side path also splits the refund-transaction and the entity-
-	// removal across ticks; the refund delta can arrive at the bot before the
-	// entity-removal delta, so a post-snapshot taken between the two would
-	// see balance up but persist_id still present. Polls past the initial
-	// settle window to give the removal delta time to land before falling
-	// back to the multitile-retry path.
-	if cfg.extendedPollTimeout > 0 && post1Err == nil && post1.balance > pre.balance {
-		pollDeadline := time.Now().Add(cfg.extendedPollTimeout)
-		pollCount := 0
-		for time.Now().Before(pollDeadline) {
-			if !sleepRespectCtx(ctx, cfg.extendedPollInterval) {
-				return ctxCancelledResponse(op, ctx), nil
-			}
-			pollCount++
-			postPolled, pollErr := snapshot(ctx, ipc, 0, "", cfg.snapshotTimeout)
-			log.Printf("delete-verifying[%s]: extended-poll #%d objects=%d err=%v", op, pollCount, len(postPolled.objects), pollErr)
-			if pollErr != nil {
-				break
-			}
-			post1 = postPolled
-			if !objectTuplePresent(post1, targetID, targetPID) {
-				log.Printf("delete-verifying[%s]: extended-poll resolved race after %d polls", op, pollCount)
-				resp, _ := deleteVerdict(op, args, pre, post1, true, "resolved-after-poll", 0, resp1, preErr, post1Err)
-				if pay, ok := resp.Payload.(map[string]any); ok {
-					pay["poll_count"] = pollCount
-				}
-				return resp, nil
-			}
+		if targetPID == 0 || !objectTuplePresent(post, targetID, targetPID) {
+			// Either we couldn't resolve the persist_id in pre (so we trust the
+			// bot's ok:true at face value), or the target's (oid, pid) tuple is
+			// gone — success.
+			resp, _ := deleteVerdict(op, args, pre, post, true, "", 0, ipcResp, nil, nil)
+			pay := resp.Payload.(map[string]any)
+			return "deleted", nil, pay, true
 		}
-		log.Printf("delete-verifying[%s]: extended-poll exhausted after %d polls; falling through to multitile retry", op, pollCount)
-	}
 
-	// First attempt didn't take. Multitile master-tile no-op is the most
-	// common cause when we have known siblings. Try the first subordinate.
-	if len(siblings) == 0 {
-		return deleteVerdict(op, args, pre, post1, false, "no-siblings-to-retry", 0, resp1, preErr, post1Err)
-	}
-
-	sub := siblings[0]
-	retryArgs := map[string]any{
-		"target_object_id": sub.ObjectID,
-	}
-	if v, ok := args["cleanup_all"]; ok {
-		retryArgs["cleanup_all"] = v
-	}
-	log.Printf("delete-verifying[%s]: master no-op suspected; retrying on subordinate object_id=%d (persist_id=%d)", op, sub.ObjectID, sub.PersistID)
-	resp2, err := sendDelete(ctx, ipc, op, retryArgs, cfg.sendTimeout)
-	if err != nil {
-		// Retry transport failure — surface it with the original pre-snapshot
-		// context so caller can act.
-		return &convention.Response{Payload: map[string]any{
-			"ok":              false,
-			"verdict":         "retry-ipc-error",
-			"error":           err.Error(),
-			"op":              op,
-			"first_attempt":   resp1.Payload,
-			"retry_target_id": sub.ObjectID,
-		}}, nil
-	}
-	if !resp2.Ok {
-		out := map[string]any{
-			"ok":              false,
-			"verdict":         "retry-bot-rejected",
-			"error":           resp2.Error,
-			"op":              op,
-			"retry_target_id": sub.ObjectID,
+		// Target's tuple still present after settle + optional poll.
+		// Multitile master-tile no-op is the most common cause when we have
+		// known siblings. Try the first subordinate.
+		if len(siblings) == 0 {
+			resp, _ := deleteVerdict(op, args, pre, post, false, "no-siblings-to-retry", 0, ipcResp, nil, nil)
+			pay := resp.Payload.(map[string]any)
+			return "silent-drop", []string{"no-siblings-to-retry"}, pay, false
 		}
-		return &convention.Response{Payload: out}, nil
+
+		sub := siblings[0]
+		retryArgs := map[string]any{
+			"target_object_id": sub.ObjectID,
+		}
+		if v, ok := args["cleanup_all"]; ok {
+			retryArgs["cleanup_all"] = v
+		}
+		log.Printf("delete-verifying[%s]: master no-op suspected; retrying on subordinate object_id=%d (persist_id=%d)", op, sub.ObjectID, sub.PersistID)
+		resp2, err := sendDelete(ctx, ipc, op, retryArgs, cfg.sendTimeout)
+		if err != nil {
+			pay := map[string]any{
+				"ok":              false,
+				"verdict":         "retry-ipc-error",
+				"error":           err.Error(),
+				"op":              op,
+				"first_attempt":   ipcResp.Payload,
+				"retry_target_id": sub.ObjectID,
+			}
+			return "retry-ipc-error", nil, pay, false
+		}
+		if !resp2.Ok {
+			pay := map[string]any{
+				"ok":              false,
+				"verdict":         "retry-bot-rejected",
+				"error":           resp2.Error,
+				"op":              op,
+				"retry_target_id": sub.ObjectID,
+			}
+			return "retry-bot-rejected", nil, pay, false
+		}
+
+		if !sleepRespectCtx(ctx, cfg.settleWait) {
+			// Context cancelled during retry settle — surface as ctx-cancelled.
+			pay := map[string]any{
+				"ok":      false,
+				"verdict": "ctx-cancelled",
+				"error":   ctx.Err().Error(),
+				"op":      op,
+			}
+			return "ctx-cancelled", nil, pay, false
+		}
+
+		post2, post2Err := snapshot(ctx, ipc, 0, "", cfg.snapshotTimeout)
+		log.Printf("delete-verifying[%s]: post2 objects=%d err=%v", op, len(post2.objects), post2Err)
+
+		if !objectTuplePresent(post2, targetID, targetPID) {
+			resp, _ := deleteVerdict(op, args, pre, post2, true, "retried-on-subordinate", sub.ObjectID, resp2, nil, post2Err)
+			pay := resp.Payload.(map[string]any)
+			return "deleted", nil, pay, true
+		}
+
+		resp, _ := deleteVerdict(op, args, pre, post2, false, "multitile-no-op-after-retry", sub.ObjectID, resp2, nil, post2Err)
+		pay := resp.Payload.(map[string]any)
+		return "silent-drop", []string{"multitile-no-op-after-retry"}, pay, false
 	}
 
-	if !sleepRespectCtx(ctx, cfg.settleWait) {
-		return ctxCancelledResponse(op, ctx), nil
-	}
-
-	post2, post2Err := snapshot(ctx, ipc, 0, "", cfg.snapshotTimeout)
-	log.Printf("delete-verifying[%s]: post2 objects=%d err=%v elapsed=%s", op, len(post2.objects), post2Err, time.Since(t0))
-
-	if !objectTuplePresent(post2, targetID, targetPID) {
-		return deleteVerdict(op, args, pre, post2, true, "retried-on-subordinate", sub.ObjectID, resp2, preErr, post2Err)
-	}
-
-	return deleteVerdict(op, args, pre, post2, false, "multitile-no-op-after-retry", sub.ObjectID, resp2, preErr, post2Err)
+	handler := verifyingHandlerWithExpect(ipc, op, allowedArgs, 0, "", deleteTrigger, deleteExpect, cfg)
+	return handler(ctx, req)
 }
 
 // sendDelete is a wrapper around ipc.Send for delete-family ops with a fresh

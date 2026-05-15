@@ -440,6 +440,100 @@ func TestSnapshot_BalanceAndObjects(t *testing.T) {
 	}
 }
 
+// TestSnapshot_ActionQueue verifies that snapshot() parses the action_queue
+// field from the query-self response (W7b — action_queue is already on the
+// wire per W7a/freesoexperiment-177; this test proves the Go parse works).
+//
+// The C# handler (QueryHandlers.cs:82) emits {interaction_id, name,
+// target_object_id, status} for each queued action. We confirm the struct
+// deserialises correctly and that an empty queue deserialises to an empty
+// (not nil) slice.
+func TestSnapshot_ActionQueue(t *testing.T) {
+	fake := newFakeBotProcess()
+	ipc := NewIPC(fake.bot)
+	script := map[string][]map[string]any{
+		"query-self": {{"ok": true, "payload": map[string]any{
+			"balance": 9000,
+			"action_queue": []any{
+				map[string]any{
+					"interaction_id":   42,
+					"name":             "Sleep",
+					"target_object_id": 101,
+					"status":           "running",
+				},
+				map[string]any{
+					"interaction_id":   43,
+					"name":             "Watch TV",
+					"target_object_id": 202,
+					"status":           "queued",
+				},
+			},
+		}}},
+		"query-lot-objects": {{"ok": true, "payload": map[string]any{"objects": []any{}}}},
+	}
+	_ = newScriptedResponder(t, fake, ipc, script)
+
+	ctx, cancel := context.WithTimeout(context.Background(), 1*time.Second)
+	defer cancel()
+	snap, err := snapshot(ctx, ipc, 0, "", 500*time.Millisecond)
+	if err != nil {
+		t.Fatalf("snapshot: %v", err)
+	}
+	if snap.balance != 9000 {
+		t.Errorf("balance = %d; want 9000", snap.balance)
+	}
+	if got, want := len(snap.actionQueue), 2; got != want {
+		t.Fatalf("len(actionQueue) = %d; want %d", got, want)
+	}
+	first := snap.actionQueue[0]
+	if first.InteractionID != 42 {
+		t.Errorf("actionQueue[0].InteractionID = %d; want 42", first.InteractionID)
+	}
+	if first.Name != "Sleep" {
+		t.Errorf("actionQueue[0].Name = %q; want Sleep", first.Name)
+	}
+	if first.TargetObjectID != 101 {
+		t.Errorf("actionQueue[0].TargetObjectID = %d; want 101", first.TargetObjectID)
+	}
+	if first.Status != "running" {
+		t.Errorf("actionQueue[0].Status = %q; want running", first.Status)
+	}
+	second := snap.actionQueue[1]
+	if second.Status != "queued" {
+		t.Errorf("actionQueue[1].Status = %q; want queued", second.Status)
+	}
+}
+
+// TestSnapshot_ActionQueue_Empty verifies that an empty action_queue field
+// (avatar is idle) results in an empty (not nil) slice, so callers can
+// safely take len() without a nil check.
+func TestSnapshot_ActionQueue_Empty(t *testing.T) {
+	fake := newFakeBotProcess()
+	ipc := NewIPC(fake.bot)
+	script := map[string][]map[string]any{
+		"query-self": {{"ok": true, "payload": map[string]any{
+			"balance":      5000,
+			"action_queue": []any{},
+		}}},
+		"query-lot-objects": {{"ok": true, "payload": map[string]any{"objects": []any{}}}},
+	}
+	_ = newScriptedResponder(t, fake, ipc, script)
+
+	ctx, cancel := context.WithTimeout(context.Background(), 1*time.Second)
+	defer cancel()
+	snap, err := snapshot(ctx, ipc, 0, "", 500*time.Millisecond)
+	if err != nil {
+		t.Fatalf("snapshot: %v", err)
+	}
+	// Empty queue must deserialise to non-nil empty slice (safe for len/range).
+	if snap.actionQueue == nil {
+		t.Error("actionQueue is nil; want empty slice for idle avatar")
+	}
+	if got := len(snap.actionQueue); got != 0 {
+		t.Errorf("len(actionQueue) = %d; want 0", got)
+	}
+}
+
 // TestGuidHexFromArgs spot-checks the small parser used to narrow the query-
 // lot-objects filter.
 func TestGuidHexFromArgs(t *testing.T) {
