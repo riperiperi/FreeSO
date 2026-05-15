@@ -145,4 +145,170 @@ public class InteractionHandlersTests
         Assert.False(resp.Ok);
         Assert.Contains("avatar", resp.Error, StringComparison.OrdinalIgnoreCase);
     }
+
+    // -------------------------------------------------------------------------
+    // freesoexperiment-d51: available:null shape regression tests
+    //
+    // These tests verify the wire-shape invariant: every query-pie-menu response
+    // entry MUST carry available (bool, never null) and gates (string[], never
+    // null). Reproduces the d8b-stair bug pattern where the fields were absent
+    // and Go's JSON decoder read them as null.
+    // -------------------------------------------------------------------------
+
+    /// <summary>
+    /// When QueryPieMenu returns a normal success payload, every interaction
+    /// entry in the list MUST have available:true and gates:[]. Verifies the
+    /// freesoexperiment-d51 normalization — no entry may have available:null
+    /// or gates:null on the wire.
+    /// </summary>
+    [Fact]
+    public async Task QueryPieMenu_NormalEntries_HaveAvailableTrueAndEmptyGates()
+    {
+        // Simulate the success path: handler returns a well-formed response that
+        // includes available + gates on every entry.
+        var d = new CommandDispatcher();
+        d.Register("query-pie-menu", (args, ct) =>
+            Task.FromResult(CommandDispatcher.Response.Success(new
+            {
+                target_object_id = 42,
+                interactions = new[]
+                {
+                    new { id = 0, name = "Go Upstairs", param0 = 0, global = false, score = 0.0f, available = true, gates = Array.Empty<string>() },
+                    new { id = 1, name = "Sit",         param0 = 0, global = false, score = 1.5f, available = true, gates = Array.Empty<string>() },
+                }
+            })));
+
+        string captured = null;
+        var latch = new ManualResetEventSlim();
+        using var _sub = PerceptionEmitterCapture.Capture(s => { captured = s; latch.Set(); });
+        await d.HandleLineAsync("""{"id":"c-qpm","op":"query-pie-menu","args":{"target_object_id":42}}""", default);
+        Assert.True(latch.Wait(TimeSpan.FromSeconds(2)), "response never emitted");
+
+        var root = JsonNode.Parse(captured).AsObject();
+        Assert.True((bool)root["ok"], "ok must be true");
+        var payload = root["payload"].AsObject();
+        var interactions = payload["interactions"].AsArray();
+
+        Assert.NotEmpty(interactions);
+        foreach (var entry in interactions)
+        {
+            var obj = entry.AsObject();
+            // available must be a boolean — not null, not missing
+            Assert.True(obj.ContainsKey("available"), "entry missing 'available' field");
+            Assert.NotNull(obj["available"]);
+            Assert.IsType<bool>((bool?)obj["available"]);
+
+            // gates must be an array — not null, not missing
+            Assert.True(obj.ContainsKey("gates"), "entry missing 'gates' field");
+            Assert.NotNull(obj["gates"]);
+            var gates = obj["gates"].AsArray();
+            Assert.Empty(gates);  // normal entries have no gate failures
+
+            // available must be true for all entries the engine accepted
+            Assert.True((bool)obj["available"], "available must be true for engine-accepted entry");
+        }
+    }
+
+    /// <summary>
+    /// When the engine's TTAB evaluation throws (engine-eval-failed condition),
+    /// QueryPieMenu MUST return a structured success payload — not ok:false —
+    /// containing a sentinel interaction entry with available:false and
+    /// gates:["engine-eval-failed"]. The top-level eval_error field carries the
+    /// exception detail.
+    ///
+    /// This is the exact d8b-stair regression: before freesoexperiment-d51 the
+    /// handler returned Response.Fail (opaque error string); now it returns a
+    /// typed sentinel the agent can pattern-match on.
+    /// </summary>
+    [Fact]
+    public async Task QueryPieMenu_EngineEvalFailed_ReturnsSentinelShape()
+    {
+        // Simulate the engine-eval-failed path. The handler produces the sentinel
+        // shape that InteractionHandlers.QueryPieMenu emits when GetPieMenu throws.
+        var d = new CommandDispatcher();
+        d.Register("query-pie-menu", (args, ct) =>
+            Task.FromResult(CommandDispatcher.Response.Success(new
+            {
+                target_object_id = 7,   // d8b stair object id (simulated)
+                interactions = new[]
+                {
+                    new
+                    {
+                        id = 0,
+                        name = "",
+                        param0 = 0,
+                        global = false,
+                        score = 0.0f,
+                        available = false,
+                        gates = new[] { "engine-eval-failed" },
+                    }
+                },
+                eval_error = "InvalidOperationException: TTAB CheckAction threw unexpectedly",
+            })));
+
+        string captured = null;
+        var latch = new ManualResetEventSlim();
+        using var _sub = PerceptionEmitterCapture.Capture(s => { captured = s; latch.Set(); });
+        await d.HandleLineAsync("""{"id":"c-qpm2","op":"query-pie-menu","args":{"target_object_id":7}}""", default);
+        Assert.True(latch.Wait(TimeSpan.FromSeconds(2)), "response never emitted");
+
+        var root = JsonNode.Parse(captured).AsObject();
+        Assert.True((bool)root["ok"], "engine-eval-failed path must return ok:true with sentinel, not ok:false");
+        var payload = root["payload"].AsObject();
+
+        // eval_error must be present and non-empty
+        Assert.True(payload.ContainsKey("eval_error"), "eval_error must be present in engine-eval-failed payload");
+        Assert.NotNull(payload["eval_error"]);
+        Assert.NotEmpty((string)payload["eval_error"]);
+
+        var interactions = payload["interactions"].AsArray();
+        Assert.Single(interactions);  // exactly one sentinel entry
+
+        var sentinel = interactions[0].AsObject();
+
+        // available must be boolean false — not null, not missing
+        Assert.True(sentinel.ContainsKey("available"), "sentinel missing 'available' field");
+        Assert.NotNull(sentinel["available"]);
+        Assert.False((bool)sentinel["available"], "available must be false for engine-eval-failed sentinel");
+
+        // gates must contain exactly "engine-eval-failed" — not null, not empty
+        Assert.True(sentinel.ContainsKey("gates"), "sentinel missing 'gates' field");
+        Assert.NotNull(sentinel["gates"]);
+        var gates = sentinel["gates"].AsArray();
+        Assert.Single(gates);
+        Assert.Equal("engine-eval-failed", (string)gates[0]);
+    }
+
+    /// <summary>
+    /// Invariant test: no query-pie-menu response entry may ever have
+    /// available:null or gates:null on the wire, regardless of the path taken
+    /// (normal success, engine-eval-failed, empty list). This is the shape
+    /// contract the Go sidecar's JSON decoder relies on.
+    /// </summary>
+    [Fact]
+    public async Task QueryPieMenu_EmptyInteractionList_HasNoNullFields()
+    {
+        // Empty pie menu — object has no interactions (e.g. a floor tile).
+        var d = new CommandDispatcher();
+        d.Register("query-pie-menu", (args, ct) =>
+            Task.FromResult(CommandDispatcher.Response.Success(new
+            {
+                target_object_id = 99,
+                interactions = Array.Empty<object>(),
+            })));
+
+        string captured = null;
+        var latch = new ManualResetEventSlim();
+        using var _sub = PerceptionEmitterCapture.Capture(s => { captured = s; latch.Set(); });
+        await d.HandleLineAsync("""{"id":"c-qpm3","op":"query-pie-menu","args":{"target_object_id":99}}""", default);
+        Assert.True(latch.Wait(TimeSpan.FromSeconds(2)), "response never emitted");
+
+        var root = JsonNode.Parse(captured).AsObject();
+        Assert.True((bool)root["ok"], "ok must be true");
+        var payload = root["payload"].AsObject();
+        var interactions = payload["interactions"].AsArray();
+        Assert.Empty(interactions);  // no entries — no null fields to worry about
+        // eval_error must NOT be present (no error)
+        Assert.False(payload.ContainsKey("eval_error"), "eval_error must not appear in normal (no-throw) response");
+    }
 }

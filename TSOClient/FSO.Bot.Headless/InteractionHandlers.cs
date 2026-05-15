@@ -146,11 +146,27 @@ public static class InteractionHandlers
     ///   "payload": {
     ///     "target_object_id": 17,
     ///     "interactions": [
-    ///       {"id": 3, "name": "Sit", "param0": 0, "global": false, "score": 0.0}
+    ///       {
+    ///         "id": 3, "name": "Sit", "param0": 0, "global": false, "score": 0.0,
+    ///         "available": true, "gates": []
+    ///       }
     ///     ]
     ///   }
     /// }
     /// </code>
+    ///
+    /// Wire-shape invariants (freesoexperiment-d51):
+    /// <list type="bullet">
+    ///   <item><c>available</c> is ALWAYS a boolean — never null. <c>true</c> for every entry
+    ///   that the engine's TTAB gate evaluation accepted. Interactions that failed the gate check
+    ///   are not included in the list (the engine drops them silently). There is no
+    ///   <c>available: null</c> shape.</item>
+    ///   <item><c>gates</c> is ALWAYS a string array — never null. Empty for normally-accepted
+    ///   interactions. Contains <c>"engine-eval-failed"</c> when an exception occurred during
+    ///   <see cref="VMEntity.GetPieMenu"/> — in that case the full list is replaced by a single
+    ///   sentinel entry whose <c>available</c> is <c>false</c>, and the top-level
+    ///   <c>eval_error</c> field carries the exception message for diagnostics.</item>
+    /// </list>
     /// </summary>
     internal static CommandDispatcher.Response QueryPieMenu(HeadlessVMHost vmHost, JsonObject args)
     {
@@ -196,19 +212,55 @@ public static class InteractionHandlers
                 return (CommandDispatcher.Response.Fail("query-pie-menu requires target_object_id or target_sim_id"), (short)0);
             }
 
+            // freesoexperiment-d51: engine-eval-failed normalization.
+            // When GetPieMenu throws, return a structured sentinel instead of Response.Fail so
+            // the caller receives a well-typed payload they can act on (available: false,
+            // gates: ["engine-eval-failed"]) rather than an opaque error string. The full
+            // exception message is preserved in eval_error for diagnostics.
             List<VMPieMenuInteraction> pie;
+            string evalError = null;
             try
             {
                 pie = callee.GetPieMenu(vm, caller, includeHidden, includeGlobal);
             }
             catch (Exception ex)
             {
-                return (CommandDispatcher.Response.Fail($"pie-menu compute: {ex.GetType().Name}: {ex.Message}"), targetObjectId);
+                evalError = $"{ex.GetType().Name}: {ex.Message}";
+                pie = null;
+            }
+
+            if (evalError != null)
+            {
+                // Engine threw during TTAB evaluation — return the sentinel shape so the agent
+                // sees a structured available:false + gates:["engine-eval-failed"] entry.
+                var sentinel = new List<object>(1)
+                {
+                    new
+                    {
+                        id = 0,
+                        name = "",
+                        param0 = 0,
+                        global = false,
+                        score = 0.0f,
+                        available = false,
+                        gates = new[] { "engine-eval-failed" },
+                    }
+                };
+                return (CommandDispatcher.Response.Success(new
+                {
+                    target_object_id = (int)targetObjectId,
+                    interactions = sentinel,
+                    eval_error = evalError,
+                }), targetObjectId);
             }
 
             // Project to POCOs while still under the lock — VMPieMenuInteraction references
             // VMEntity/TTABInteraction objects that mutate under the tick thread. We copy
             // the scalars and release.
+            // freesoexperiment-d51: available is always true for returned entries (the engine
+            // drops interactions that fail the TTAB gate check — they never appear here).
+            // gates is always an empty array for normal entries. Neither field is ever null.
+            var emptyGates = Array.Empty<string>();
             var items = new List<object>(pie?.Count ?? 0);
             if (pie != null)
             {
@@ -221,6 +273,8 @@ public static class InteractionHandlers
                         param0 = (int)e.Param0,
                         global = e.Global,
                         score = e.Score,
+                        available = true,
+                        gates = emptyGates,
                     });
                 }
             }

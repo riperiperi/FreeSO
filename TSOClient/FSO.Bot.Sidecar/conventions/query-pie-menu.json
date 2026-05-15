@@ -3,7 +3,7 @@
   "version": "1.0",
   "operation": "query-pie-menu",
   "family": "interaction",
-  "description": "Compute the pie-menu for a target object or Sim from your perspective. Prerequisite: you are in a lot with a live local VM (d87-a) and the target is present in that VM (visible in perception.nearby_objects or .nearby_sims). No outbound PDU — this is a local-VM query using VMEntity.GetPieMenu (the same call the perception emitter already exercises at 2048 pie-menus/64 ticks, freesoexperiment-66c); the result is what the UI pie-menu would show if you clicked that target. Effect: returns the list of interactions the engine will accept for interact-with on this target; each entry carries the TTAB id, display name, param0 variant, and whether it comes from the callee's GLOBAL TTAB (rare). Cost: one tick-lock acquisition — the computation reads TTAB data and runs CheckAction scripts that the tick thread also mutates, so it is serialized with the tick. Keep queries sparse; for continuous surveillance use the perception stream instead.",
+  "description": "Compute the pie-menu for a target object or Sim from your perspective. Prerequisite: you are in a lot with a live local VM (d87-a) and the target is present in that VM (visible in perception.nearby_objects or .nearby_sims). No outbound PDU — this is a local-VM query using VMEntity.GetPieMenu (the same call the perception emitter already exercises at 2048 pie-menus/64 ticks, freesoexperiment-66c); the result is what the UI pie-menu would show if you clicked that target. Effect: returns the list of interactions the engine will accept for interact-with on this target; each entry carries the TTAB id, display name, param0 variant, whether it comes from the callee's GLOBAL TTAB (rare), and ALWAYS a boolean available field and a string[] gates field (freesoexperiment-d51). Every returned entry has available:true and gates:[] — interactions the engine rejected are silently dropped and never appear here. If the engine throws during TTAB evaluation the interactions list contains a single sentinel entry with available:false and gates:[\"engine-eval-failed\"], and the top-level eval_error field carries the exception detail. Cost: one tick-lock acquisition — the computation reads TTAB data and runs CheckAction scripts that the tick thread also mutates, so it is serialized with the tick. Keep queries sparse; for continuous surveillance use the perception stream instead.",
   "args": [
     {
       "name": "target_object_id",
@@ -68,5 +68,10 @@
     "missing both target_object_id and target_sim_id → ok:false with 'requires target_object_id or target_sim_id'",
     "target_sim_id not in local VM → ok:false with 'sim <id> not in local VM'",
     "target_object_id not in local VM → ok:false with 'object <id> not in local VM'"
-  ]
+  ],
+  "response_shape": {
+    "target_object_id": "integer — resolved ObjectID of the callee",
+    "interactions": "array of interaction entries; each entry has: id (integer TTAB index), name (string), param0 (integer), global (boolean), score (float), available (boolean — ALWAYS present, NEVER null; true for all normally returned entries), gates (string array — ALWAYS present, NEVER null; empty [] for normal entries, [\"engine-eval-failed\"] when the engine threw during TTAB evaluation)",
+    "eval_error": "string — only present when interactions contains the engine-eval-failed sentinel; carries the exception type and message for diagnostics"
+  }
 }
