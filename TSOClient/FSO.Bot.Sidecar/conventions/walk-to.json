@@ -81,7 +81,7 @@
     "cf $CF walk-to --target_object_id 322 --queue_mode preempt                    # drop whatever is running and walk now (e.g. break out of a spawn-object Idle pin)"
   ],
   "common_mistakes": [
-    "Passing tile coords (44, 43) where the handler expects subtile/world coords (704, 688 = 44*16, 43*16).",
+    "Use `go-to` for tile destinations. walk-to is the subtile escape hatch — only reach for it when go-to can't express what you need.",
     "Omitting --level when using --x/--y — defaults to 1 (ground); pass explicitly for upper floors.",
     "Mixing --target_object_id with --x/--y — precedence is target_sim_id > target_object_id > x/y, so the coords are ignored.",
     "Assuming interaction=4 'Run Here' works on every object — it does for goto-routable tiles but non-routable entities (walls, locked doors) refuse at pathfind time."
