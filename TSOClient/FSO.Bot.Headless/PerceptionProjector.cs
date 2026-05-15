@@ -43,8 +43,25 @@ public class PerceptionProjector
     // Example: FSO_PERCEPTION_RADIUS=160 → 10-tile radius (half the default).
     // Use subtile units here (not tile units) to stay consistent with LotTilePos.Distance
     // and BuildNearbyObjects filtering, which both operate in subtile units.
-    private static readonly int NearbyDistanceMax = int.TryParse(
-        Environment.GetEnvironmentVariable("FSO_PERCEPTION_RADIUS"), out int parsed) ? parsed : 320;
+    //
+    // Per-instance so tests can inject a radius via the constructor override path without
+    // fighting static-readonly class-load-time initialization (freesoexperiment-81f).
+    private readonly int _nearbyDistanceMax;
+
+    private static int ParseRadiusEnv(int fallback = 320)
+    {
+        return int.TryParse(Environment.GetEnvironmentVariable("FSO_PERCEPTION_RADIUS"), out var v) ? v : fallback;
+    }
+
+    /// <summary>
+    /// Returns true when <paramref name="distanceSubtiles"/> is within the nearby radius.
+    /// Exposed <c>internal</c> so unit tests can verify the filter boundary directly without
+    /// constructing a live VM (freesoexperiment-81f behavioral test).
+    /// </summary>
+    internal bool IsWithinNearbyRadius(int distanceSubtiles) => distanceSubtiles <= _nearbyDistanceMax;
+
+    /// <summary>The effective nearby-object radius in subtile units (16 subtiles = 1 tile).</summary>
+    internal int NearbyDistanceMax => _nearbyDistanceMax;
 
     private readonly uint _myPersistId;
     private readonly string _shardName;
@@ -68,10 +85,19 @@ public class PerceptionProjector
     /// </summary>
     public event Action<PerceptionEvent> OnDialogEvent;
 
-    public PerceptionProjector(uint myPersistId, string shardName)
+    /// <param name="myPersistId">Persist ID of the avatar this projector tracks.</param>
+    /// <param name="shardName">Shard display name (e.g. "Alphaville").</param>
+    /// <param name="nearbyDistanceMaxOverride">
+    /// Optional override for the nearby-object radius (subtile units; 16 = 1 tile).
+    /// When null, reads <c>FSO_PERCEPTION_RADIUS</c> env var, defaulting to 320.
+    /// Pass a value here in tests to avoid fighting static class-load-time initialization
+    /// (freesoexperiment-81f).
+    /// </param>
+    public PerceptionProjector(uint myPersistId, string shardName, int? nearbyDistanceMaxOverride = null)
     {
         _myPersistId = myPersistId;
         _shardName = shardName ?? "Alphaville";
+        _nearbyDistanceMax = nearbyDistanceMaxOverride ?? ParseRadiusEnv(320);
         _animRules = LoadAnimationRules();
         _interactionHints = LoadInteractionHints();
     }
@@ -400,7 +426,7 @@ public class PerceptionProjector
             if (e is VMAvatar) continue;
             if (e.Position == LotTilePos.OUT_OF_WORLD) continue;
             int dist = LotTilePos.Distance(me.Position, e.Position);
-            if (dist > NearbyDistanceMax) continue;
+            if (!IsWithinNearbyRadius(dist)) continue;
 
             // Skip multi-tile non-root entries so we don't emit one entry per tile.
             if (e.MultitileGroup != null && e.MultitileGroup.Objects != null &&

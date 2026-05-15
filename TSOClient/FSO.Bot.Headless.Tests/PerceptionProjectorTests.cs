@@ -454,53 +454,48 @@ public class PerceptionProjectorTests
     }
 
     /// <summary>
-    /// W3a structural slim: FSO_PERCEPTION_RADIUS env var controls the nearby-object radius.
-    /// Objects beyond the radius (in subtile units; 16 subtiles = 1 tile) must be filtered out.
+    /// W3b veracity rework (freesoexperiment-81f): behavioral filter test for the nearby-object
+    /// radius. Replaces the tautological env-var test that never exercised actual filtering.
     ///
-    /// This test exercises BuildNearbyObjects filtering indirectly by verifying the constant
-    /// exposed as NearbyDistanceMax is driven by the env var. We verify that the constant
-    /// read from a fresh environment where FSO_PERCEPTION_RADIUS=160 would yield 160 (10 tiles),
-    /// excluding objects beyond 160 subtiles.
+    /// PerceptionProjector now accepts a <c>nearbyDistanceMaxOverride</c> constructor parameter so
+    /// tests can inject a specific radius without fighting static class-load-time initialization.
     ///
-    /// Note: NearbyDistanceMax is a static readonly field initialized at class load time, so
-    /// we verify the value is env-driven by checking that the env var parse logic works as
-    /// specified. In a real deployment, set FSO_PERCEPTION_RADIUS before process start.
+    /// The radius filter is exercised through <c>IsWithinNearbyRadius</c> (the same predicate
+    /// <c>BuildNearbyObjects</c> calls), and through the per-instance <c>NearbyDistanceMax</c>
+    /// property, with objects at controlled subtile distances (16 subtiles = 1 tile):
+    ///   - 100 subtiles (6.25 tiles) — within radius=160 → INCLUDED
+    ///   - 170 subtiles (10.6 tiles) — beyond radius=160 → EXCLUDED
+    ///
+    /// BuildNearbyObjects itself requires a live VM + Content (not constructible in unit tests
+    /// without full asset loading). We test the filter predicate directly via the internal seam
+    /// that BuildNearbyObjects delegates to — the same boundary the production path uses.
     /// </summary>
     [Fact]
-    public void Build_HonorsPerceptionRadiusEnv()
+    public void Build_FilterNearbyObjectsByRadius()
     {
-        // Verify env-parse logic: if the env var were 160, we'd get 160 (10 tiles).
-        // We test the parse expression directly since NearbyDistanceMax is static readonly
-        // (initialized at class load time, before this test can set env vars).
-        const string envVar = "FSO_PERCEPTION_RADIUS";
-        int parsedValue;
+        // Construct projector with radius=160 via the override path (freesoexperiment-81f).
+        // Production callers use the no-override ctor which reads FSO_PERCEPTION_RADIUS env var.
+        var projector = new PerceptionProjector(42, "Alphaville", nearbyDistanceMaxOverride: 160);
 
-        // Case 1: env var present and numeric → use it.
-        Environment.SetEnvironmentVariable(envVar, "160");
-        bool parsed = int.TryParse(Environment.GetEnvironmentVariable(envVar), out parsedValue);
-        int radius1 = parsed ? parsedValue : 320;
-        Assert.Equal(160, radius1);  // 10 tiles (160 subtiles)
+        // Verify the instance carries the injected radius (not a class-wide default).
+        Assert.Equal(160, projector.NearbyDistanceMax);
 
-        // Case 2: env var absent → default 320 (20 tiles).
-        Environment.SetEnvironmentVariable(envVar, null);
-        parsed = int.TryParse(Environment.GetEnvironmentVariable(envVar), out parsedValue);
-        int radius2 = parsed ? parsedValue : 320;
-        Assert.Equal(320, radius2);  // 20 tiles (320 subtiles) — the default
+        // Object at 100 subtiles (6.25 tiles) — within radius → must be INCLUDED.
+        Assert.True(projector.IsWithinNearbyRadius(100),
+            "Object at 100 subtiles must be within radius=160 and included in nearby_objects");
 
-        // Verify units: 160 subtiles / 16 = 10 tiles.
-        Assert.Equal(10, radius1 / 16);
-        // And 320 subtiles / 16 = 20 tiles.
-        Assert.Equal(20, radius2 / 16);
+        // Object at 170 subtiles (10.6 tiles) — beyond radius → must be EXCLUDED.
+        Assert.False(projector.IsWithinNearbyRadius(170),
+            "Object at 170 subtiles must be beyond radius=160 and excluded from nearby_objects");
 
-        // Verify NearbyDistanceMax as loaded by current process is one of the valid values
-        // (either 320 if no env var was set before class load, or the overridden value).
-        // Fetch via reflection to avoid CS0115 ambiguity on static field.
-        var field = typeof(PerceptionProjector).GetField("NearbyDistanceMax",
-            System.Reflection.BindingFlags.NonPublic | System.Reflection.BindingFlags.Static);
-        Assert.NotNull(field);
-        int loadedMax = (int)field.GetValue(null);
-        Assert.True(loadedMax == 320 || loadedMax == 160,
-            $"NearbyDistanceMax must be 320 (default) or 160 (test override), got {loadedMax}");
+        // Boundary: exact radius distance is included (<=, not <).
+        Assert.True(projector.IsWithinNearbyRadius(160),
+            "Object at exactly radius=160 subtiles must be included (boundary is inclusive)");
+
+        // Default ctor (no override) uses env var or 320. Verify the default path still works.
+        Environment.SetEnvironmentVariable("FSO_PERCEPTION_RADIUS", null);
+        var defaultProjector = new PerceptionProjector(42, "Alphaville");
+        Assert.Equal(320, defaultProjector.NearbyDistanceMax);
     }
 
     private static string FindContentFile(string fileName)
