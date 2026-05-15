@@ -10,6 +10,7 @@ using System.Linq;
 using System.Text.Json.Nodes;
 using System.Threading.Tasks;
 using FSO.Content;
+using FSO.Content.Interfaces;
 using FSO.LotView.Model;
 using FSO.SimAntics;
 using FSO.SimAntics.Entities;
@@ -479,6 +480,111 @@ public static class BuyModeHandlers
         }
     }
 
+    // Reverse-lookup index: iff filename → catalog entry (freesoexperiment-fe1).
+    //
+    // TSO multi-tile objects spawn one VMEntity per tile, each from a subordinate OBJD
+    // whose GUID differs from the master/catalog OBJD's GUID. e.g. "Bed - Double - Castle"
+    // has catalog GUID 0x17579980 but its placed BaseObject reports instance GUID
+    // 0x1478FD75. The relationship: every OBJD in a multitile group lives in the same
+    // iff file and shares a MasterID. The catalog entry's OBJD is the master (SubIndex
+    // == -1); the placed BaseObjects are subordinates (SubIndex != -1).
+    //
+    // We use the pre-populated <c>WorldObjects.Entries</c> dictionary (an OBJD index that
+    // <see cref="AbstractObjectProvider.Init"/> builds at startup from objecttable.xml +
+    // standalone iffs) to read each OBJD's <c>FileName</c>. We index by FileName rather
+    // than MasterID because <c>GameObjectReference.Group = (short)obj.MasterID</c>
+    // truncates uints and is only scoped within an iff (different iffs can use the same
+    // MasterID values). FileName uniquely identifies an iff. No iff parsing required: we
+    // don't touch <c>WorldObjects.Get</c>, which would load every catalog item's iff and
+    // OOM the 750 MB bot container.
+    private static Dictionary<string, ObjectCatalogItem> _catalogByFileName;
+    private static readonly object _byFilenameLock = new object();
+
+    private static Dictionary<string, ObjectCatalogItem> GetCatalogByFileName()
+    {
+        var map = _catalogByFileName;
+        if (map != null) return map;
+        lock (_byFilenameLock)
+        {
+            if (_catalogByFileName != null) return _catalogByFileName;
+            var built = new Dictionary<string, ObjectCatalogItem>(StringComparer.OrdinalIgnoreCase);
+            var content = Content.Content.Get();
+            var catalog = content?.WorldCatalog;
+            var provider = content?.WorldObjects;
+            if (catalog == null || provider == null)
+            {
+                _catalogByFileName = built;
+                return built;
+            }
+
+            foreach (var item in catalog.All())
+            {
+                if (!provider.Entries.TryGetValue(item.GUID, out var refEntry)) continue;
+                var fname = refEntry.FileName;
+                if (string.IsNullOrEmpty(fname)) continue;
+                if (!built.ContainsKey(fname)) built[fname] = item;
+            }
+
+            _catalogByFileName = built;
+            return built;
+        }
+    }
+
+    /// <summary>
+    /// Given a GUID that might be a catalog GUID or a placed subordinate OBJD GUID,
+    /// returns the matching catalog entry. Direct catalog lookup wins; on miss, falls back
+    /// to the iff-filename index (freesoexperiment-fe1).
+    /// </summary>
+    private static ObjectCatalogItem? FindCatalogEntryByAnyGuid(uint guid)
+    {
+        var content = Content.Content.Get();
+        var catalog = content?.WorldCatalog;
+        if (catalog == null) return null;
+
+        var direct = catalog.GetItemByGUID(guid);
+        if (direct.HasValue) return direct;
+
+        var provider = content.WorldObjects;
+        if (provider == null) return null;
+        if (!provider.Entries.TryGetValue(guid, out var refEntry)) return null;
+        var fname = refEntry.FileName;
+        if (string.IsNullOrEmpty(fname)) return null;
+
+        return GetCatalogByFileName().TryGetValue(fname, out var item) ? item : (ObjectCatalogItem?)null;
+    }
+
+    /// <summary>
+    /// Returns every OBJD GUID that lives in the same iff as the catalog entry (master
+    /// + subordinates), or just the catalog GUID for single-tile items. Used to populate
+    /// <c>instance_guids</c> in --guid_hex responses so agents see every GUID
+    /// query-lot-objects might report for placed copies of this item. Uses
+    /// <c>Provider.Entries</c> directly to avoid iff loads. Filtered by both FileName
+    /// and (where the master is set) MasterID, so unrelated OBJDs that happen to share
+    /// an iff don't leak in.
+    /// </summary>
+    private static List<uint> CollectSiblingInstanceGuids(uint catalogGuid)
+    {
+        var fallback = new List<uint> { catalogGuid };
+        var content = Content.Content.Get();
+        var provider = content?.WorldObjects;
+        if (provider == null) return fallback;
+        if (!provider.Entries.TryGetValue(catalogGuid, out var refEntry)) return fallback;
+        var fname = refEntry.FileName;
+        if (string.IsNullOrEmpty(fname)) return fallback;
+        short master = refEntry.Group;
+
+        var result = new List<uint> { catalogGuid };
+        foreach (var kv in provider.Entries)
+        {
+            if (!string.Equals(kv.Value.FileName, fname, StringComparison.OrdinalIgnoreCase)) continue;
+            if (master != 0 && kv.Value.Group != master) continue;
+            uint guid = (uint)kv.Key;
+            if (guid == catalogGuid) continue;
+            result.Add(guid);
+        }
+        return result;
+    }
+
     /// <summary>
     /// Parses a category arg that may be an integer (12-20) or a slug name ("seating", etc.).
     /// Returns -1 if absent, 0 if parse failed (to be treated as invalid by the caller).
@@ -563,7 +669,12 @@ public static class BuyModeHandlers
             }
 
             // ---- search-catalog ----
-            // guid_hex: reverse-lookup a single catalog entry (freesoexperiment-289).
+            // guid_hex: reverse-lookup a single catalog entry. Accepts either the catalog
+            // GUID (master OBJD's GUID, what buy-object expects) or the instance GUID (a
+            // subordinate OBJD's GUID, what query-lot-objects reports for placed multitile
+            // objects). For 1-tile items the two GUIDs are equal; for multitile items
+            // (beds, dressers, double tiles, etc.) they differ — pre-freesoexperiment-fe1
+            // operators had to enumerate the catalog to identify a placed multitile item.
             // Bypasses the whitelist + blacklist so any GUID seen via query-lot-objects can
             // be resolved (objects like 0x1478FD75 are present on lots but outside the
             // roommate-purchaseable whitelist; full enumeration misses them).
@@ -581,39 +692,53 @@ public static class BuyModeHandlers
                         $"search-catalog: malformed guid_hex '{guidHexFilter}' (expected 32-bit hex, optionally 0x-prefixed)");
                 }
 
-                // Bypass safety filters for reverse-lookup; agents asking about a GUID they
-                // observed on a tile need an answer even if the item is non-purchaseable.
-                var matchList = all
-                    .Where(i => i.GUID == guidParsed)
-                    .Select(i => (object)new
-                    {
-                        guid_hex     = "0x" + i.GUID.ToString("X8"),
-                        guid_decimal = (long)(uint)i.GUID,
-                        name         = i.Name ?? "",
-                        price        = (int)i.Price,
-                        category_id  = (int)i.Category,
-                        category_name = RoomieWhiteListCategoryNames.TryGetValue((int)i.Category, out var cnGuid) ? cnGuid : "",
-                    })
-                    .ToList();
+                // Accepts either the catalog GUID (master OBJD; what buy-object expects)
+                // or any subordinate instance GUID (what query-lot-objects reports for
+                // placed multitile BaseObjects) — see freesoexperiment-fe1.
+                ObjectCatalogItem? matched = FindCatalogEntryByAnyGuid(guidParsed);
+                List<uint> siblingGuids = matched.HasValue
+                    ? CollectSiblingInstanceGuids(matched.Value.GUID)
+                    : null;
 
-                var matchCatSummary = matchList.Count == 0
-                    ? (object)Array.Empty<object>()
-                    : new[]
+                if (matched is ObjectCatalogItem m)
+                {
+                    var instanceGuids = (siblingGuids ?? new List<uint> { m.GUID })
+                        .Select(u => "0x" + u.ToString("X8"))
+                        .ToList();
+                    var result = new
                     {
-                        new
-                        {
-                            category_id   = (int)((dynamic)matchList[0]).category_id,
-                            category_name = (string)((dynamic)matchList[0]).category_name,
-                            count         = 1,
-                        }
+                        guid_hex          = "0x" + m.GUID.ToString("X8"),
+                        guid_decimal      = (long)(uint)m.GUID,
+                        instance_guid_hex = "0x" + guidParsed.ToString("X8"),
+                        instance_guids    = instanceGuids,
+                        name              = m.Name ?? "",
+                        price             = (int)m.Price,
+                        category_id       = (int)m.Category,
+                        category_name     = RoomieWhiteListCategoryNames.TryGetValue((int)m.Category, out var cnGuid) ? cnGuid : "",
                     };
+                    return CommandDispatcher.Response.Success(new
+                    {
+                        verb               = "search-catalog",
+                        count              = 1,
+                        results            = new[] { (object)result },
+                        categories_summary = new[]
+                        {
+                            (object)new
+                            {
+                                category_id   = (int)m.Category,
+                                category_name = RoomieWhiteListCategoryNames.TryGetValue((int)m.Category, out var cn2) ? cn2 : "",
+                                count         = 1,
+                            }
+                        },
+                    });
+                }
 
                 return CommandDispatcher.Response.Success(new
                 {
                     verb               = "search-catalog",
-                    count              = matchList.Count,
-                    results            = matchList,
-                    categories_summary = matchCatSummary,
+                    count              = 0,
+                    results            = Array.Empty<object>(),
+                    categories_summary = Array.Empty<object>(),
                 });
             }
 

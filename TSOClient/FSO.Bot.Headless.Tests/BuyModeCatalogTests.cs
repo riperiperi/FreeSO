@@ -54,8 +54,11 @@ public sealed class BuyModeCatalogTests
     {
         get
         {
+            // basePath must be the TSOClient/ dir (the FSO server's "/game" mount target,
+            // see docker/docker-compose.yml). Content.Init looks for tuning.dat directly
+            // under basePath; pointing at GameAssets/ (the parent) fails to find it.
             var loc = Environment.GetEnvironmentVariable("FSO_GAME_LOCATION")
-                      ?? "/home/baron/projects/freeso-experiment/GameAssets/";
+                      ?? "/home/baron/projects/freeso-experiment/GameAssets/TSOClient/";
             if (!loc.EndsWith(Path.DirectorySeparatorChar)
                 && !loc.EndsWith(Path.AltDirectorySeparatorChar))
                 loc += Path.DirectorySeparatorChar;
@@ -261,5 +264,135 @@ public sealed class BuyModeCatalogTests
         var results = payload["results"]?.AsArray();
         Assert.NotNull(results);
         Assert.Empty(results);
+    }
+
+    // ---- T5–T8: --guid_hex catalog ↔ instance reverse lookup (freesoexperiment-fe1) ----
+    //
+    // TSO multi-tile objects have two GUIDs: the catalog GUID (master OBJD; what
+    // buy-object expects) and one or more instance GUIDs (subordinate OBJDs; what
+    // query-lot-objects reports for placed BaseObjects). Pre-fe1, --guid_hex only
+    // resolved the catalog GUID; pasting an instance GUID got count:0 and forced
+    // brute enumeration. T5–T8 lock in the bidirectional contract.
+    //
+    // T5: catalog GUID still resolves (regression for -289).
+    // T6: instance GUID resolves to the same catalog entry (the fix).
+    // T7: malformed/unknown GUID returns count:0.
+    // T8: instance_guids array contains both the catalog GUID and ≥1 subordinate
+    //     GUID for a known multitile item.
+
+    // Catalog GUID for "Bed - Double - Castle" — verified on the live workshop catalog
+    // (2026-05-15). This is the master OBJD's GUID; what buy-object accepts.
+    private const string BedCastleCatalogGuid = "0x17579980";
+    // BaseObject's OBJD GUID for the same bed when placed — verified via
+    // query-lot-objects on workshop lot 2 (master bedroom).
+    private const string BedCastleInstanceGuid = "0x1478FD75";
+
+    /// <summary>
+    /// T5 (regression — preserves -289 behaviour): passing the catalog GUID returns
+    /// the matching catalog entry with both <c>guid_hex</c> (catalog) and
+    /// <c>instance_guid_hex</c> (echoes the input) populated.
+    /// </summary>
+    [SkippableFact]
+    public void T5_GuidHexCatalogGuid_ReverseLookupReturnsEntry()
+    {
+        Skip.IfNot(IntegrationEnabled,
+            "set FSO_INTEGRATION=1 to run live-server integration tests");
+        Skip.IfNot(EnsureContentInit(out var skipReason), skipReason);
+
+        var args = new JsonObject { ["guid_hex"] = JsonValue.Create(BedCastleCatalogGuid) };
+        var resp = CallSearchCatalog(args);
+
+        Assert.True(resp.Ok, $"search-catalog --guid_hex {BedCastleCatalogGuid} failed: {resp.Error}");
+        var payload = PayloadOf(resp);
+        Assert.NotNull(payload);
+        Assert.Equal(1, (int)payload["count"]);
+
+        var item = payload["results"]?.AsArray()[0]?.AsObject();
+        Assert.NotNull(item);
+        Assert.Equal(BedCastleCatalogGuid, (string)item["guid_hex"], ignoreCase: true);
+        Assert.Equal(BedCastleCatalogGuid, (string)item["instance_guid_hex"], ignoreCase: true);
+        Assert.Contains("Bed", (string)item["name"]);
+        Assert.Contains("Castle", (string)item["name"]);
+    }
+
+    /// <summary>
+    /// T6 (the fix — freesoexperiment-fe1): passing the instance GUID
+    /// (subordinate OBJD GUID returned by query-lot-objects) resolves to the
+    /// same catalog entry as the catalog-GUID query. <c>guid_hex</c> reports the
+    /// catalog GUID; <c>instance_guid_hex</c> echoes the user's input.
+    /// </summary>
+    [SkippableFact]
+    public void T6_GuidHexInstanceGuid_ReverseLookupReturnsCatalogEntry()
+    {
+        Skip.IfNot(IntegrationEnabled,
+            "set FSO_INTEGRATION=1 to run live-server integration tests");
+        Skip.IfNot(EnsureContentInit(out var skipReason), skipReason);
+
+        var args = new JsonObject { ["guid_hex"] = JsonValue.Create(BedCastleInstanceGuid) };
+        var resp = CallSearchCatalog(args);
+
+        Assert.True(resp.Ok, $"search-catalog --guid_hex {BedCastleInstanceGuid} failed: {resp.Error}");
+        var payload = PayloadOf(resp);
+        Assert.NotNull(payload);
+        Assert.Equal(1, (int)payload["count"]);
+
+        var item = payload["results"]?.AsArray()[0]?.AsObject();
+        Assert.NotNull(item);
+        Assert.Equal(BedCastleCatalogGuid, (string)item["guid_hex"], ignoreCase: true);
+        Assert.Equal(BedCastleInstanceGuid, (string)item["instance_guid_hex"], ignoreCase: true);
+        Assert.Contains("Bed", (string)item["name"]);
+        Assert.Contains("Castle", (string)item["name"]);
+    }
+
+    /// <summary>
+    /// T7 (negative): a clearly-fake GUID misses both the catalog-direct lookup
+    /// and the instance reverse map, returning <c>count:0</c>.
+    /// </summary>
+    [SkippableFact]
+    public void T7_GuidHexUnknown_ReturnsZero()
+    {
+        Skip.IfNot(IntegrationEnabled,
+            "set FSO_INTEGRATION=1 to run live-server integration tests");
+        Skip.IfNot(EnsureContentInit(out var skipReason), skipReason);
+
+        var args = new JsonObject { ["guid_hex"] = JsonValue.Create("0xDEADBEEF") };
+        var resp = CallSearchCatalog(args);
+
+        Assert.True(resp.Ok, $"search-catalog --guid_hex 0xDEADBEEF failed: {resp.Error}");
+        var payload = PayloadOf(resp);
+        Assert.NotNull(payload);
+        Assert.Equal(0, (int)payload["count"]);
+        Assert.Empty(payload["results"].AsArray());
+    }
+
+    /// <summary>
+    /// T8: the <c>instance_guids</c> array enumerates every OBJD GUID in the
+    /// catalog item's iff that belongs to the same multitile group (master +
+    /// subordinates). For a multitile bed this must contain the catalog GUID
+    /// AND the instance GUID we observed on workshop lot 2.
+    /// </summary>
+    [SkippableFact]
+    public void T8_GuidHex_InstanceGuidsArrayContainsBothCatalogAndSubordinate()
+    {
+        Skip.IfNot(IntegrationEnabled,
+            "set FSO_INTEGRATION=1 to run live-server integration tests");
+        Skip.IfNot(EnsureContentInit(out var skipReason), skipReason);
+
+        var args = new JsonObject { ["guid_hex"] = JsonValue.Create(BedCastleCatalogGuid) };
+        var resp = CallSearchCatalog(args);
+
+        Assert.True(resp.Ok, $"search-catalog --guid_hex {BedCastleCatalogGuid} failed: {resp.Error}");
+        var payload = PayloadOf(resp);
+        var item = payload["results"]?.AsArray()[0]?.AsObject();
+        Assert.NotNull(item);
+
+        var instanceGuids = item["instance_guids"]?.AsArray()
+            ?.Select(n => (string)n)
+            .ToList();
+        Assert.NotNull(instanceGuids);
+        Assert.Contains(BedCastleCatalogGuid, instanceGuids, StringComparer.OrdinalIgnoreCase);
+        Assert.Contains(BedCastleInstanceGuid, instanceGuids, StringComparer.OrdinalIgnoreCase);
+        Assert.True(instanceGuids.Count >= 2,
+            $"multitile bed should have ≥2 entries in instance_guids; got {instanceGuids.Count}");
     }
 }
