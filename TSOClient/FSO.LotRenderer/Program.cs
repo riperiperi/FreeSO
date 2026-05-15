@@ -50,9 +50,12 @@ using FSO.SimAntics.Marshals;
 using FSO.SimAntics.Model;
 using FSO.SimAntics.NetPlay.Drivers;
 using Microsoft.Xna.Framework.Graphics;
+using SixLabors.Fonts;
 using SixLabors.ImageSharp;
+using SixLabors.ImageSharp.Drawing.Processing;
 using SixLabors.ImageSharp.Formats.Png;
 using SixLabors.ImageSharp.PixelFormats;
+using SixLabors.ImageSharp.Processing;
 
 namespace FSO.LotRenderer
 {
@@ -72,6 +75,13 @@ namespace FSO.LotRenderer
         static WorldRotation? RenderRotation = null;  // null = TopLeft (iso-ne)
         static WorldZoom?     RenderZoom     = null;  // null = Far
         static bool           RenderRoofless = false;
+        // freesoexperiment-81c: mark avatar tile positions on the rendered PNG.
+        // When true, after the lot draws but before PNG write, iterate VMAvatar
+        // entities on the rendered level, project (TileX, TileY) using the same
+        // formulas as scripts/embody/grid-overlay.py, and overlay a red dot +
+        // name label. Also adds a small caption band at the top of the image
+        // listing each avatar and its tile coords.
+        static bool           RenderMarkAvatars = false;
 
         // S3: HTTP service mode.
         static bool ServeMode = false;
@@ -105,6 +115,9 @@ namespace FSO.LotRenderer
                         break;
                     case "--roofless":
                         RenderRoofless = true;
+                        break;
+                    case "--mark-avatars":
+                        RenderMarkAvatars = true;
                         break;
                     case "--serve":
                         ServeMode = true;
@@ -357,7 +370,7 @@ namespace FSO.LotRenderer
 
                     // If any of --level / --angle / --zoom were specified, use GetLotThumbAt.
                     // Otherwise fall through to RenderFSOF (which calls GetLotThumb, same as S1).
-                    bool useParamRender = RenderLevel >= 0 || RenderRotation.HasValue || RenderZoom.HasValue || RenderRoofless;
+                    bool useParamRender = RenderLevel >= 0 || RenderRotation.HasValue || RenderZoom.HasValue || RenderRoofless || RenderMarkAvatars;
 
                     if (useParamRender)
                     {
@@ -367,7 +380,8 @@ namespace FSO.LotRenderer
                             rotation: RenderRotation ?? WorldRotation.TopLeft,
                             zoom:     RenderZoom     ?? WorldZoom.Far,
                             (png) => thumbPng = png,
-                            roofless: RenderRoofless);
+                            roofless: RenderRoofless,
+                            markAvatars: RenderMarkAvatars);
                     }
                     else
                     {
@@ -488,7 +502,8 @@ namespace FSO.LotRenderer
             WorldRotation rotation,
             WorldZoom zoom,
             Action<byte[]> thumbAction = null,
-            bool roofless = false)
+            bool roofless = false,
+            bool markAvatars = false)
         {
             var marshal = new VMMarshal();
             using (var mem = new MemoryStream(fsov))
@@ -533,7 +548,46 @@ namespace FSO.LotRenderer
                 // Resolve level: -1 → bp.Stories (same as GetLotThumb default).
                 int effectiveLevel = level >= 0 ? level : vm.Context.Blueprint.Stories;
 
-                Console.WriteLine($"[renderer] GetLotThumbAt level={effectiveLevel} rotation={rotation} zoom={zoom} roofless={roofless}");
+                Console.WriteLine($"[renderer] GetLotThumbAt level={effectiveLevel} rotation={rotation} zoom={zoom} roofless={roofless} markAvatars={markAvatars}");
+
+                // freesoexperiment-81c: capture avatar positions on the rendered level
+                // BEFORE the VM is disposed.  We post-process the PNG bytes after thumbAction
+                // captures them but before they are written to disk, overlaying red dots at
+                // each avatar's tile plus a name label, and a caption band listing coords.
+                List<(string Name, int X, int Y)> avatarMarks = null;
+                if (markAvatars)
+                {
+                    avatarMarks = new List<(string, int, int)>();
+                    foreach (var ent in vm.Entities)
+                    {
+                        if (ent is not FSO.SimAntics.VMAvatar av) continue;
+                        var pos = av.Position;
+                        if (pos.Level != effectiveLevel) continue;
+                        if (pos == FSO.LotView.Model.LotTilePos.OUT_OF_WORLD) continue;
+                        avatarMarks.Add((av.Name ?? "", pos.TileX, pos.TileY));
+                    }
+                    Console.WriteLine($"[renderer] mark-avatars: {avatarMarks.Count} on L{effectiveLevel}");
+                }
+
+                // Wrap thumbAction so we can intercept the raw PNG bytes, paint markers,
+                // and forward the modified PNG.  Identity-pass when markAvatars=false.
+                Action<byte[]> originalAction = thumbAction;
+                if (markAvatars)
+                {
+                    thumbAction = (raw) =>
+                    {
+                        try
+                        {
+                            var painted = OverlayAvatarMarks(raw, avatarMarks, effectiveLevel, rotation);
+                            originalAction(painted);
+                        }
+                        catch (Exception ex)
+                        {
+                            Console.Error.WriteLine($"[renderer] mark-avatars overlay failed: {ex.Message}");
+                            originalAction(raw);
+                        }
+                    };
+                }
 
                 if (roofless)
                 {
@@ -635,6 +689,114 @@ namespace FSO.LotRenderer
             "near" => WorldZoom.Near,
             _ => throw new ArgumentException($"Unknown zoom '{s}'. Valid: far, med, near")
         };
+
+        // -----------------------------------------------------------------------
+        // freesoexperiment-81c: overlay red dots + name labels on the PNG at each
+        // avatar's tile position, plus a caption band at the top of the image
+        // listing coords. Projection formulas match scripts/embody/grid-overlay.py
+        // (which in turn matches WorldState.GetScreenFromTile for the four iso angles).
+        // Auto-calibrates from image width: TPWH = W / 128.0 fits a 64×64 lot diamond.
+        //
+        // Caveat: ParseAngle in this file maps iso-XX to WorldRotation such that XX is
+        // in the foreground (bottom of image). We project here using the WorldRotation
+        // directly, applying the same per-rotation sx/sy formulas as GetScreenFromTile,
+        // then translate so tile (32,32) lands at image center.
+        // -----------------------------------------------------------------------
+        internal static byte[] OverlayAvatarMarks(byte[] pngBytes, List<(string Name, int X, int Y)> avatars,
+            int level, WorldRotation rotation)
+        {
+            if (pngBytes == null) return pngBytes;
+            using var inStream = new MemoryStream(pngBytes);
+            using var image = Image.Load<Rgba32>(inStream);
+            int W = image.Width;
+            int H = image.Height;
+
+            float TPWH = W / 128.0f;
+            float TPHH = TPWH / 2f;
+            float LZ   = TPWH * 2.5f;          // per-level pixel offset
+            float levelOffset = level * LZ;
+
+            // Per-rotation tile→screen projection (same as WorldState.GetScreenFromTile,
+            // dropping the z * cos(π/6) term and substituting LZ-per-level).
+            (float sx, float sy) Project(float tx, float ty)
+            {
+                switch (rotation)
+                {
+                    case WorldRotation.TopLeft:     return ((tx - ty) * TPWH, (tx + ty) * TPHH  - levelOffset);
+                    case WorldRotation.TopRight:    return ((-tx - ty) * TPWH, (tx - ty) * TPHH - levelOffset);
+                    case WorldRotation.BottomRight: return ((-tx + ty) * TPWH, (-tx - ty) * TPHH - levelOffset);
+                    case WorldRotation.BottomLeft:  return ((tx + ty) * TPWH, (-tx + ty) * TPHH - levelOffset);
+                }
+                return (0, 0);
+            }
+
+            // Center: tile (32,32) at image center, computed at z=0 (matching grid-overlay).
+            var (cx, cy) = Project(32f, 32f);
+            // Re-project center without levelOffset so center stays put across levels.
+            cy += levelOffset;
+            float ox = W / 2f - cx;
+            float oy = H / 2f - cy;
+
+            // Resolve a font — DejaVuSansMono is present in the renderer base image and
+            // most Linux dev hosts. Fall back to SystemFonts default if not.
+            Font labelFont;
+            try
+            {
+                if (SystemFonts.TryGet("DejaVu Sans Mono", out var fam))
+                    labelFont = fam.CreateFont(11f, FontStyle.Bold);
+                else
+                    labelFont = SystemFonts.Families.First().CreateFont(11f, FontStyle.Bold);
+            }
+            catch
+            {
+                labelFont = SystemFonts.Families.First().CreateFont(11f, FontStyle.Bold);
+            }
+
+            // Build caption text: "avatars: name(x,y), ..." or "avatars: (none on L<level>)".
+            string caption;
+            if (avatars == null || avatars.Count == 0)
+                caption = $"L{level} avatars: (none)";
+            else
+                caption = $"L{level} avatars: " + string.Join(", ", avatars.Select(a => $"{a.Name}({a.X},{a.Y})"));
+
+            var redFill   = Color.Red;
+            var redStroke = Color.DarkRed;
+            var white     = Color.White;
+            var black     = Color.Black;
+
+            image.Mutate(ctx =>
+            {
+                // Caption band: 20px black strip at top with white text.
+                ctx.Fill(new SolidBrush(Color.FromRgba(0, 0, 0, 200)),
+                    new SixLabors.ImageSharp.Drawing.RectangularPolygon(0, 0, W, 20));
+                ctx.DrawText(caption, labelFont, white, new PointF(4, 4));
+
+                if (avatars != null)
+                {
+                    foreach (var a in avatars)
+                    {
+                        var (sx, sy) = Project(a.X, a.Y);
+                        float px = sx + ox;
+                        float py = sy + oy;
+
+                        // Red filled circle radius 8 with dark-red outline.
+                        var circle = new SixLabors.ImageSharp.Drawing.EllipsePolygon(px, py, 8f);
+                        ctx.Fill(redFill, circle);
+                        ctx.Draw(redStroke, 2f, circle);
+
+                        // Name label with black outline behind white text for readability
+                        // against varied backgrounds.
+                        var labelPos = new PointF(px + 10, py - 14);
+                        ctx.DrawText(a.Name ?? "", labelFont, black, new PointF(labelPos.X + 1, labelPos.Y + 1));
+                        ctx.DrawText(a.Name ?? "", labelFont, white, labelPos);
+                    }
+                }
+            });
+
+            using var outStream = new MemoryStream();
+            image.Save(outStream, new PngEncoder());
+            return outStream.ToArray();
+        }
 
         // -----------------------------------------------------------------------
         static void SetAllLights(VM vm, World world, float outsideTime, short contribution)
