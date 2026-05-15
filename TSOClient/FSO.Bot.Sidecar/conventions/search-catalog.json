@@ -1,10 +1,16 @@
 {
   "convention": "freeso-embodiment",
-  "version": "1.0",
+  "version": "1.1",
   "operation": "search-catalog",
   "family": "build-buy-catalog",
-  "description": "Browse the world object catalog with optional filters. Prerequisite: none — this is a read-only catalog query; no lot access or build permission required. Effect: returns a filtered, sorted list of purchaseable items from Content.WorldCatalog, restricted to the server's roommate whitelist (categories 12..20). Cost: none — no simoleon debit, no PDU emitted. Filters: name (substring), category (integer 12..20 or slug: seating/surfaces/appliances/entertainment/skill/decorative/misc/lighting/pets), tier (cheap|mid|expensive — P33/P67 percentile bins over all whitelisted items), min_price, max_price. Limit clamp: max 200 results regardless of the limit arg. Response includes categories_summary listing all categories represented in the filtered result set.",
+  "description": "Browse the world object catalog with optional filters, or reverse-lookup a single item by GUID. Prerequisite: none — this is a read-only catalog query; no lot access or build permission required. Effect: returns a filtered, sorted list of purchaseable items from Content.WorldCatalog. By default restricted to the server's roommate whitelist (categories 12..20). Cost: none — no simoleon debit, no PDU emitted. Filters: guid_hex (reverse-lookup of a single catalog entry by hex GUID — bypasses category/tier/price/name filters and the whitelist so any object visible on a tile can be resolved), name (substring), category (integer 12..20 or slug: seating/surfaces/appliances/entertainment/skill/decorative/misc/lighting/pets), tier (cheap|mid|expensive — P33/P67 percentile bins over all whitelisted items), min_price, max_price. Limit clamp: max 200 results regardless of the limit arg. Response includes categories_summary listing all categories represented in the filtered result set.",
   "args": [
+    {
+      "name": "guid_hex",
+      "type": "string",
+      "required": false,
+      "description": "Hex GUID of a catalog entry (e.g. 0x17579980). If provided, returns the single matching item and ignores all other filters; the whitelist (categories 12..20) and blacklist are bypassed so objects seen via query-lot-objects can be resolved even if they are not normally purchaseable."
+    },
     {
       "name": "name",
       "type": "string",
@@ -55,16 +61,19 @@
     "cf $CF search-catalog                                                         # all whitelisted items (≤50)",
     "cf $CF search-catalog --category seating --tier cheap                         # cheap seating items",
     "cf $CF search-catalog --category 14 --max_price 500 --limit 10               # appliances ≤§500",
-    "cf $CF search-catalog --name lamp --tier mid                                  # mid-tier lamps"
+    "cf $CF search-catalog --name lamp --tier mid                                  # mid-tier lamps",
+    "cf $CF search-catalog --guid_hex 0x17579980                                   # reverse-lookup a single GUID"
   ],
   "common_mistakes": [
     "category outside whitelist (12..20) returns 0 results, not an error.",
     "limit > 200 is silently clamped to 200 server-side.",
     "tier=cheap/mid/expensive uses P33/P67 percentile bins computed lazily at first call — bins are snapshot-relative to the loaded catalog.",
-    "category accepts both integers (14) and slugs (appliances) — use list-catalog-categories to discover available slugs."
+    "category accepts both integers (14) and slugs (appliances) — use list-catalog-categories to discover available slugs.",
+    "guid_hex must be a 32-bit hex value (with or without 0x prefix); malformed values return an error, unknown GUIDs return count:0."
   ],
   "perception_hints": [
     "Use search-catalog before buy-object to pick a GUID you can afford: filter by max_price=<your balance>.",
-    "Use list-catalog-categories first to see which categories have items."
+    "Use list-catalog-categories first to see which categories have items.",
+    "Use --guid_hex when query-lot-objects shows a GUID you don't recognise — it bypasses the whitelist so non-purchaseable items resolve too."
   ]
 }

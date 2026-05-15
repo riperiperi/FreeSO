@@ -210,6 +210,120 @@ func TestBuyModeForwardingHandlersDispatchIPC(t *testing.T) {
 	}
 }
 
+// TestSearchCatalogForwardsGuidHex asserts the search-catalog handler forwards the
+// freesoexperiment-289 guid_hex reverse-lookup arg (the C# handler does the actual
+// lookup; the sidecar is a strict forwarder). Three cases parallel the C# integration
+// tests: (a) known GUID forwards as-is, (b) unknown GUID still forwards (C# returns
+// count:0), (c) malformed guid_hex still forwards (C# returns the error response).
+//
+// We don't try to validate guid_hex shape in the sidecar — keeping it a strict
+// forwarder means any future change to the accepted GUID syntax (e.g. allowing
+// dec/hex/with-or-without-0x) lives in one place (the C# handler), not two.
+func TestSearchCatalogForwardsGuidHex(t *testing.T) {
+	cases := []struct {
+		name   string
+		guid   string
+		wantOk bool
+	}{
+		{"known-guid", "0x17579980", true},
+		{"unknown-guid", "0xDEADBEEF", true},
+		{"malformed-guid", "not-hex", false},
+	}
+
+	allowed := []string{"name", "category", "tier", "min_price", "max_price", "limit", "guid_hex"}
+
+	for _, tc := range cases {
+		tc := tc
+		t.Run(tc.name, func(t *testing.T) {
+			fake := newFakeBotProcess()
+			ipc := NewIPC(fake.bot)
+
+			var reply map[string]any
+			if tc.wantOk {
+				reply = map[string]any{
+					"kind": "response", "ok": true,
+					"payload": map[string]any{
+						"verb":  "search-catalog",
+						"count": float64(0),
+					},
+				}
+			} else {
+				reply = map[string]any{
+					"kind":  "response",
+					"ok":    false,
+					"error": "search-catalog: malformed guid_hex '" + tc.guid + "' (expected 32-bit hex, optionally 0x-prefixed)",
+				}
+			}
+			gotCmd := captureOneCommand(t, fake, ipc, reply)
+
+			handler := simpleForwardingHandler(ipc, "search-catalog", allowed...)
+			ctx, cancel := context.WithTimeout(context.Background(), 2*time.Second)
+			defer cancel()
+			resp, err := handler(ctx, &convention.Request{
+				Args: map[string]any{
+					"guid_hex": tc.guid,
+					// Other filters MUST still forward — selection of which to ignore is C#-side.
+					"name":  "spoof",
+					"limit": float64(5),
+					// Out-of-schema — must NOT forward.
+					"price": float64(0),
+				},
+			})
+			if err != nil {
+				t.Fatalf("handler: %v", err)
+			}
+			if resp == nil {
+				t.Fatal("nil response")
+			}
+			cmd := <-gotCmd
+			if cmd.Op != "search-catalog" {
+				t.Errorf("want op=search-catalog got %q", cmd.Op)
+			}
+			if cmd.Args["guid_hex"] != tc.guid {
+				t.Errorf("guid_hex not forwarded: %v", cmd.Args)
+			}
+			if _, bad := cmd.Args["price"]; bad {
+				t.Errorf("price must NOT be forwarded: %v", cmd.Args)
+			}
+		})
+	}
+}
+
+// TestSearchCatalogDeclarationCarriesGuidHex asserts the search-catalog convention JSON
+// (the agent-side contract) declares the guid_hex arg per freesoexperiment-289.
+func TestSearchCatalogDeclarationCarriesGuidHex(t *testing.T) {
+	decls, err := LoadDeclarations(conventionFiles)
+	if err != nil {
+		t.Fatalf("LoadDeclarations: %v", err)
+	}
+	var sc *convention.Declaration
+	for _, d := range decls {
+		if d.Operation == "search-catalog" {
+			sc = d
+			break
+		}
+	}
+	if sc == nil {
+		t.Fatal("search-catalog declaration not found")
+	}
+	hasGuid := false
+	for _, a := range sc.Args {
+		if a.Name == "guid_hex" {
+			hasGuid = true
+			if a.Type != "string" {
+				t.Errorf("guid_hex arg type=%q want string", a.Type)
+			}
+			break
+		}
+	}
+	if !hasGuid {
+		t.Error("search-catalog declaration missing guid_hex arg (freesoexperiment-289)")
+	}
+	if !strings.Contains(strings.ToLower(sc.Description), "guid_hex") {
+		t.Error("search-catalog description must mention guid_hex (reverse-lookup contract)")
+	}
+}
+
 // TestBuyModeDeclarationsPresent asserts all eight build-buy-catalog declarations load and
 // carry galtrader-style descriptions with expected required args. find-cheap-catalog-guid
 // is a test-support helper (buymode_handlers.go:23) — not in the verb catalog and not

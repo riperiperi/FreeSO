@@ -563,6 +563,60 @@ public static class BuyModeHandlers
             }
 
             // ---- search-catalog ----
+            // guid_hex: reverse-lookup a single catalog entry (freesoexperiment-289).
+            // Bypasses the whitelist + blacklist so any GUID seen via query-lot-objects can
+            // be resolved (objects like 0x1478FD75 are present on lots but outside the
+            // roommate-purchaseable whitelist; full enumeration misses them).
+            string guidHexFilter = args["guid_hex"] is JsonValue gv && gv.TryGetValue<string>(out var gs) ? gs : null;
+            if (!string.IsNullOrEmpty(guidHexFilter))
+            {
+                var raw = guidHexFilter.Trim();
+                if (raw.StartsWith("0x", StringComparison.OrdinalIgnoreCase) ||
+                    raw.StartsWith("0X", StringComparison.Ordinal))
+                    raw = raw.Substring(2);
+                if (!uint.TryParse(raw, System.Globalization.NumberStyles.HexNumber,
+                        System.Globalization.CultureInfo.InvariantCulture, out var guidParsed))
+                {
+                    return CommandDispatcher.Response.Fail(
+                        $"search-catalog: malformed guid_hex '{guidHexFilter}' (expected 32-bit hex, optionally 0x-prefixed)");
+                }
+
+                // Bypass safety filters for reverse-lookup; agents asking about a GUID they
+                // observed on a tile need an answer even if the item is non-purchaseable.
+                var matchList = all
+                    .Where(i => i.GUID == guidParsed)
+                    .Select(i => (object)new
+                    {
+                        guid_hex     = "0x" + i.GUID.ToString("X8"),
+                        guid_decimal = (long)(uint)i.GUID,
+                        name         = i.Name ?? "",
+                        price        = (int)i.Price,
+                        category_id  = (int)i.Category,
+                        category_name = RoomieWhiteListCategoryNames.TryGetValue((int)i.Category, out var cnGuid) ? cnGuid : "",
+                    })
+                    .ToList();
+
+                var matchCatSummary = matchList.Count == 0
+                    ? (object)Array.Empty<object>()
+                    : new[]
+                    {
+                        new
+                        {
+                            category_id   = (int)((dynamic)matchList[0]).category_id,
+                            category_name = (string)((dynamic)matchList[0]).category_name,
+                            count         = 1,
+                        }
+                    };
+
+                return CommandDispatcher.Response.Success(new
+                {
+                    verb               = "search-catalog",
+                    count              = matchList.Count,
+                    results            = matchList,
+                    categories_summary = matchCatSummary,
+                });
+            }
+
             // Category filter: integer or slug.
             int catFilter = ParseCategoryArg(args["category"]);
             if (catFilter == 0)

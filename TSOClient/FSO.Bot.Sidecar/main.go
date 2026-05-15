@@ -523,7 +523,11 @@ func main() {
 
 			// Start a new bridge goroutine over the new process stdout, with the
 			// BotCmdPump wired so bot-cmd-reply frames are routed correctly.
-			go NewBridgesWithBotCmd(cf, newProc, ipc, botCmds, augmentor).Run(ctx)
+			// WithHealth re-attaches the sidecar-lifetime perception tracker so
+			// perception_count + last_perception_unix_ms keep updating across
+			// bot relaunches (matching the design comment in bridges.go).
+			// Without this, heartbeat freezes at the first bot's final values.
+			go NewBridgesWithBotCmd(cf, newProc, ipc, botCmds, augmentor).WithHealth(health).Run(ctx)
 		}
 	}
 }

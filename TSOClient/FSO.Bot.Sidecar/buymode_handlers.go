@@ -32,8 +32,11 @@ func RegisterBuyModeHandlers(ctx context.Context, cf *Campfire, ipc *IPC) (int, 
 		// search-catalog (freesoexperiment-281a): optional filter args forwarded as-is to
 		// the C# handler which applies them. All args are optional — the sidecar is a strict
 		// forwarder; filtering logic lives in BuyModeHandlers.FindCheapCatalogGuid.
+		// search-catalog (freesoexperiment-289): added guid_hex reverse-lookup arg.
+		// When guid_hex is set, the C# handler returns the single matching item and
+		// ignores all other filters. Useful for resolving a guid_hex seen in query-lot-objects.
 		"search-catalog": simpleForwardingHandler(ipc, "search-catalog",
-			"name", "category", "tier", "min_price", "max_price", "limit"),
+			"name", "category", "tier", "min_price", "max_price", "limit", "guid_hex"),
 		// buy-object & place-from-inventory ride placementVerifyingHandler so
 		// callers get a structured {placed, persist_id, cost, hints} verdict
 		// instead of the ok:true / queued:true ack that conflates "bot received"

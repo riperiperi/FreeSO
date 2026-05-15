@@ -70,15 +70,25 @@ func placementVerifyingHandler(ipc *IPC, op string, allowedArgs ...string) conve
 func verifyingHandlerImpl(ctx context.Context, ipc *IPC, op string, allowedArgs []string, cfg verifyingHandlerConfig, req *convention.Request) (*convention.Response, error) {
 	args := pickArgs(req.Args, allowedArgs...)
 	level := intArg(args, "level", 1)
-	guidHex := guidHexFromArgs(args)
 	t0 := time.Now()
-	log.Printf("verifying-handler[%s]: start (target level=%d guid_hex=%s)", op, level, guidHex)
+	log.Printf("verifying-handler[%s]: start (target level=%d)", op, level)
 
 	// 1. Pre-snapshot. A snapshot failure is non-fatal — we still try the
 	//    op so a wedged query-* path doesn't block builds outright. We
 	//    just flag it in the verdict so the agent knows the diff is
 	//    untrustworthy.
-	pre, preErr := snapshot(ctx, ipc, level, guidHex, cfg.snapshotTimeout)
+	//
+	//    NOTE: do NOT pass the catalog guid as a filter to query-lot-objects.
+	//    TSO multitile objects expose an instance guid in vm.Entities that
+	//    differs from the catalog entry's guid the caller passed to buy-
+	//    object (operator-confirmed 2026-05-15: catalog Dresser-Castle-1
+	//    0xA607CC98 places as instance 0xA781AE64; catalog Bed-Double-Castle
+	//    0x17579980 places as instance 0x1478FD75). Filtering pre/post by
+	//    catalog guid hides the placement and every multitile buy verifies
+	//    as silent-drop. We diff by (object_id, persist_id) set instead —
+	//    the engine's canonical entity identity — and read the actual
+	//    instance guid back from the new entry for the response payload.
+	pre, preErr := snapshot(ctx, ipc, level, "", cfg.snapshotTimeout)
 	log.Printf("verifying-handler[%s]: pre-snapshot done balance=%d objects=%d err=%v elapsed=%s", op, pre.balance, len(pre.objects), preErr, time.Since(t0))
 
 	// 2. Forward the op.
@@ -134,7 +144,7 @@ func verifyingHandlerImpl(ctx context.Context, ipc *IPC, op string, allowedArgs 
 
 	// 5. Post-snapshot.
 	tPost := time.Now()
-	post, postErr := snapshot(ctx, ipc, level, guidHex, cfg.snapshotTimeout)
+	post, postErr := snapshot(ctx, ipc, level, "", cfg.snapshotTimeout)
 	log.Printf("verifying-handler[%s]: post-snapshot done balance=%d objects=%d err=%v elapsed=%s", op, post.balance, len(post.objects), postErr, time.Since(tPost))
 
 	// 5b. Extended-poll race fix: balance dropped but no new persist_id yet.
@@ -161,7 +171,7 @@ func verifyingHandlerImpl(ctx context.Context, ipc *IPC, op string, allowedArgs 
 			}
 			pollCount++
 			tPoll := time.Now()
-			postPolled, pollErr := snapshot(ctx, ipc, level, guidHex, cfg.snapshotTimeout)
+			postPolled, pollErr := snapshot(ctx, ipc, level, "", cfg.snapshotTimeout)
 			log.Printf("verifying-handler[%s]: extended-poll #%d balance=%d objects=%d err=%v elapsed=%s",
 				op, pollCount, postPolled.balance, len(postPolled.objects), pollErr, time.Since(tPoll))
 			if pollErr != nil {
@@ -683,13 +693,26 @@ func deleteVerifyingHandlerImpl(ctx context.Context, ipc *IPC, op string, allowe
 		return ctxCancelledResponse(op, ctx), nil
 	}
 
-	// Post-snapshot: is the persist_id gone?
+	// Post-snapshot: is the target's (object_id, persist_id) tuple gone?
+	//
+	// Tuple-based check (vs persist_id alone) handles the multitile partial-
+	// delete case: TSO multitile objects share one persist_id across many tiles
+	// but query-lot-objects only emits the BaseObject. When a master delete
+	// removes the master tile, a sibling tile becomes the new base and shows
+	// up in post under its own object_id. The shared persist_id is therefore
+	// "still present" — but the SPECIFIC object_id the caller asked to delete
+	// IS gone. Reporting that as silent-drop confused operator-driven cleanup
+	// (observed 2026-05-15: dresser oid 655 / pid 16778439 deleted, refund
+	// fired, but sibling oid 646 took over as base — verifier returned silent-
+	// drop). The caller's contract is "did the oid I named go away?". Answer
+	// that question by tuple lookup, not by pid alone.
 	post1, post1Err := snapshot(ctx, ipc, 0, "", cfg.snapshotTimeout)
 	log.Printf("delete-verifying[%s]: post1 objects=%d err=%v elapsed=%s", op, len(post1.objects), post1Err, time.Since(t0))
 
-	if targetPID == 0 || !persistPresent(post1, targetPID) {
+	if targetPID == 0 || !objectTuplePresent(post1, targetID, targetPID) {
 		// Either we couldn't resolve the persist_id in pre (so we trust the
-		// bot's ok:true at face value), or it's gone — success.
+		// bot's ok:true at face value), or the target's (oid, pid) tuple is
+		// gone — success.
 		return deleteVerdict(op, args, pre, post1, true, "", 0, resp1, preErr, post1Err)
 	}
 
@@ -714,7 +737,7 @@ func deleteVerifyingHandlerImpl(ctx context.Context, ipc *IPC, op string, allowe
 				break
 			}
 			post1 = postPolled
-			if !persistPresent(post1, targetPID) {
+			if !objectTuplePresent(post1, targetID, targetPID) {
 				log.Printf("delete-verifying[%s]: extended-poll resolved race after %d polls", op, pollCount)
 				resp, _ := deleteVerdict(op, args, pre, post1, true, "resolved-after-poll", 0, resp1, preErr, post1Err)
 				if pay, ok := resp.Payload.(map[string]any); ok {
@@ -771,7 +794,7 @@ func deleteVerifyingHandlerImpl(ctx context.Context, ipc *IPC, op string, allowe
 	post2, post2Err := snapshot(ctx, ipc, 0, "", cfg.snapshotTimeout)
 	log.Printf("delete-verifying[%s]: post2 objects=%d err=%v elapsed=%s", op, len(post2.objects), post2Err, time.Since(t0))
 
-	if !persistPresent(post2, targetPID) {
+	if !objectTuplePresent(post2, targetID, targetPID) {
 		return deleteVerdict(op, args, pre, post2, true, "retried-on-subordinate", sub.ObjectID, resp2, preErr, post2Err)
 	}
 
@@ -790,6 +813,21 @@ func sendDelete(ctx context.Context, ipc *IPC, op string, args map[string]any, s
 func persistPresent(snap lotSnapshot, pid uint64) bool {
 	_, ok := snap.objectsByPID[pid]
 	return ok
+}
+
+// objectTuplePresent reports whether the snapshot contains an entry with both
+// the given object_id AND persist_id. Stricter than persistPresent — handles
+// the multitile partial-delete case where a master tile is gone but a
+// subordinate sibling promoted into the BaseObject slot under a different
+// object_id (the shared persist_id is "still present" in the broader sense,
+// but the caller's specifically-named oid is gone).
+func objectTuplePresent(snap lotSnapshot, oid, pid uint64) bool {
+	for _, o := range snap.objects {
+		if o.ObjectID == oid && o.PersistID == pid {
+			return true
+		}
+	}
+	return false
 }
 
 // sleepRespectCtx waits for the given duration but returns false if ctx is

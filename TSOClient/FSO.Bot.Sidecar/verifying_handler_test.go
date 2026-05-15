@@ -927,6 +927,193 @@ func TestPlacementVerifying_ExtendedPollTimesOut(t *testing.T) {
 	}
 }
 
+// TestPlaceMultitileWithDifferingInstanceGuid is the canonical bug
+// reproduction for freesoexperiment-88ee. TSO multitile objects expose an
+// INSTANCE guid in query-lot-objects that differs from the catalog entry's
+// GUID the caller passed to buy-object — operator-confirmed 2026-05-15:
+// catalog Dresser-Castle-1 0xA607CC98 (2785528984) placed as instance
+// guid_hex 0xA781AE64; catalog Bed-Double-Castle 0x17579980 placed as
+// instance 0x1478FD75. Pre-fix the verifier filtered query-lot-objects by
+// catalog guid, so the instance-guid'd placement never appeared in the
+// post-snapshot diff and every multitile buy verified as silent-drop with
+// hints:["balance-changed-no-object"]. The fix: snapshot ALL objects on the
+// target level, diff by (object_id, persist_id), and surface the instance
+// guid_hex from the new entry.
+//
+// Script: pre has unrelated object 100 (catalog guid 0x11111111); post has
+// 100 plus new object 200 with persist_id 16780200, guid_hex 0xA781AE64
+// (the INSTANCE guid — does NOT match the catalog guid 0xA607CC98 the
+// caller passed). Balance dropped §2500. Verdict must be placed=true with
+// object_id 200, persist_id 16780200, and guid_hex 0xA781AE64 (instance,
+// not catalog).
+func TestPlaceMultitileWithDifferingInstanceGuid(t *testing.T) {
+	fake := newFakeBotProcess()
+	ipc := NewIPC(fake.bot)
+
+	catalogGuid := float64(2785528984) // 0xA607CC98 — Dresser-Castle-1 catalog entry
+	preObjects := []any{
+		map[string]any{"object_id": 100, "persist_id": 16780100, "guid": 286331153, "guid_hex": "0x11111111", "x": 12, "y": 12, "level": 3, "dir": 0},
+	}
+	postObjects := []any{
+		map[string]any{"object_id": 100, "persist_id": 16780100, "guid": 286331153, "guid_hex": "0x11111111", "x": 12, "y": 12, "level": 3, "dir": 0},
+		// New entry — INSTANCE guid 0xA781AE64 (2810318948), does NOT match
+		// catalog guid 0xA607CC98 (2785528984) passed to buy-object.
+		map[string]any{"object_id": 200, "persist_id": 16780200, "guid": 2810318948, "guid_hex": "0xA781AE64", "x": 20, "y": 24, "level": 3, "dir": 0},
+	}
+	script := map[string][]map[string]any{
+		"query-self": {
+			{"ok": true, "payload": map[string]any{"balance": 10000}},
+			{"ok": true, "payload": map[string]any{"balance": 7500}},
+		},
+		"query-lot-objects": {
+			{"ok": true, "payload": map[string]any{"objects": preObjects}},
+			{"ok": true, "payload": map[string]any{"objects": postObjects}},
+		},
+		"buy-object": {{"ok": true, "payload": map[string]any{"queued": true}}},
+	}
+	_ = newScriptedResponder(t, fake, ipc, script)
+
+	handler := fastVerifyingHandler(ipc, "buy-object", "guid", "x", "y", "level", "dir")
+	ctx, cancel := context.WithTimeout(context.Background(), 3*time.Second)
+	defer cancel()
+
+	resp, err := handler(ctx, &convention.Request{Args: map[string]any{
+		"guid":  catalogGuid,
+		"x":     float64(320), // tile 20
+		"y":     float64(384), // tile 24
+		"level": float64(3),
+		"dir":   float64(0),
+	}})
+	if err != nil {
+		t.Fatalf("handler: %v", err)
+	}
+	pay := resp.Payload.(map[string]any)
+	if pay["placed"] != true {
+		t.Fatalf("placed = %v; want true (multitile placed but instance guid != catalog guid — pre-fix filtered it out); payload=%+v", pay["placed"], pay)
+	}
+	if pay["verdict"] != "placed" {
+		t.Errorf("verdict = %v; want placed", pay["verdict"])
+	}
+	if got, want := pay["object_id"], uint64(200); got != want {
+		t.Errorf("object_id = %v; want %v", got, want)
+	}
+	if got, want := pay["persist_id"], uint64(16780200); got != want {
+		t.Errorf("persist_id = %v; want %v", got, want)
+	}
+	// Critical: the returned guid_hex must be the INSTANCE guid the engine
+	// reported, NOT the catalog guid the caller passed. Agents that later
+	// pass this guid_hex to other ops (delete, move, search-catalog reverse
+	// lookup) need the engine's truth.
+	if got, want := pay["guid_hex"], "0xA781AE64"; got != want {
+		t.Errorf("guid_hex = %v; want %q (instance, not catalog 0xA607CC98)", got, want)
+	}
+	if got, want := pay["cost"], int64(2500); got != want {
+		t.Errorf("cost = %v; want 2500", got)
+	}
+}
+
+// TestPlaceFailsWhenNoNewObject: pre and post snapshots are identical (no
+// new tuple anywhere) but balance dropped — verdict must be silent-drop with
+// the balance-changed-no-object hint. This is the "snapshot keying fix did
+// not over-correct" guard: with unfiltered snapshots, we must still report
+// silent-drop when nothing actually placed.
+func TestPlaceFailsWhenNoNewObject(t *testing.T) {
+	fake := newFakeBotProcess()
+	ipc := NewIPC(fake.bot)
+
+	objects := []any{
+		map[string]any{"object_id": 100, "persist_id": 16780100, "guid": 286331153, "guid_hex": "0x11111111", "x": 12, "y": 12, "level": 1, "dir": 0},
+	}
+	// Enough post snapshots to outlast the extended-poll budget (200ms / 10ms ~= 21).
+	postBalance := map[string]any{"ok": true, "payload": map[string]any{"balance": 9800}}
+	postObjs := map[string]any{"ok": true, "payload": map[string]any{"objects": objects}}
+	balances := []map[string]any{{"ok": true, "payload": map[string]any{"balance": 10000}}}
+	objs := []map[string]any{{"ok": true, "payload": map[string]any{"objects": objects}}}
+	for i := 0; i < 30; i++ {
+		balances = append(balances, postBalance)
+		objs = append(objs, postObjs)
+	}
+
+	script := map[string][]map[string]any{
+		"query-self":        balances,
+		"query-lot-objects": objs,
+		"buy-object":        {{"ok": true, "payload": map[string]any{"queued": true}}},
+	}
+	_ = newScriptedResponder(t, fake, ipc, script)
+
+	handler := fastVerifyingHandler(ipc, "buy-object", "guid", "x", "y", "level", "dir")
+	ctx, cancel := context.WithTimeout(context.Background(), 3*time.Second)
+	defer cancel()
+
+	resp, _ := handler(ctx, &convention.Request{Args: map[string]any{
+		"guid":  float64(2785528984),
+		"x":     float64(80),
+		"y":     float64(112),
+		"level": float64(1),
+		"dir":   float64(0),
+	}})
+	pay := resp.Payload.(map[string]any)
+	if pay["placed"] != false {
+		t.Fatalf("placed = %v; want false (no new tuple appeared); payload=%+v", pay["placed"], pay)
+	}
+	if pay["verdict"] != "silent-drop" {
+		t.Errorf("verdict = %v; want silent-drop", pay["verdict"])
+	}
+	hints, _ := pay["hints"].([]string)
+	if !containsHint(hints, "balance-changed-no-object") {
+		t.Errorf("expected hint 'balance-changed-no-object', got %v", hints)
+	}
+}
+
+// TestDeleteMultitileWithDifferingInstanceGuid: delete-object on a multitile
+// whose instance guid_hex differs from any catalog guid the caller might
+// know. Pre has the target tile (object_id 653, persist_id 16778437, instance
+// guid 0xA781AE64); post does NOT. Verdict must be deleted=true regardless of
+// guid. This mirrors the placement fix: tracking is by (object_id, persist_id),
+// not by guid.
+func TestDeleteMultitileWithDifferingInstanceGuid(t *testing.T) {
+	fake := newFakeBotProcess()
+	ipc := NewIPC(fake.bot)
+
+	preObjects := []any{
+		map[string]any{"object_id": 653, "persist_id": 16778437, "guid": 2810318948, "guid_hex": "0xA781AE64", "x": 19, "y": 24, "level": 3, "dir": 4},
+		map[string]any{"object_id": 999, "persist_id": 16779000, "guid": 286331153, "guid_hex": "0x11111111", "x": 12, "y": 12, "level": 3, "dir": 0},
+	}
+	postObjects := []any{
+		map[string]any{"object_id": 999, "persist_id": 16779000, "guid": 286331153, "guid_hex": "0x11111111", "x": 12, "y": 12, "level": 3, "dir": 0},
+	}
+	script := map[string][]map[string]any{
+		"query-self": {
+			{"ok": true, "payload": map[string]any{"balance": 7500}},
+			{"ok": true, "payload": map[string]any{"balance": 9500}}, // §2000 refund
+		},
+		"query-lot-objects": {
+			{"ok": true, "payload": map[string]any{"objects": preObjects}},
+			{"ok": true, "payload": map[string]any{"objects": postObjects}},
+		},
+		"delete-object": {{"ok": true, "payload": map[string]any{"queued": true}}},
+	}
+	_ = newScriptedResponder(t, fake, ipc, script)
+
+	handler := fastDeleteHandler(ipc, "delete-object", "target_object_id", "cleanup_all")
+	ctx, cancel := context.WithTimeout(context.Background(), 3*time.Second)
+	defer cancel()
+
+	resp, _ := handler(ctx, &convention.Request{Args: map[string]any{
+		"target_object_id": float64(653),
+	}})
+	pay := resp.Payload.(map[string]any)
+	if pay["deleted"] != true {
+		t.Fatalf("deleted = %v; want true (target's (oid, pid) tuple gone from post regardless of guid); payload=%+v", pay["deleted"], pay)
+	}
+	if pay["verdict"] != "deleted" {
+		t.Errorf("verdict = %v; want deleted", pay["verdict"])
+	}
+	if got, want := pay["refund"], int64(2000); got != want {
+		t.Errorf("refund = %v; want 2000", got)
+	}
+}
+
 // TestPlacementVerifying_NoPollIfBalanceUnchanged: post-snapshot shows neither
 // balance change nor a new persist_id — the buy was rejected outright. We
 // must NOT enter the extended-poll loop (would burn the full timeout for
