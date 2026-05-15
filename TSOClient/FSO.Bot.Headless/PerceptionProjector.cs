@@ -33,12 +33,18 @@ namespace FSO.Bot.Headless;
 /// </summary>
 public class PerceptionProjector
 {
-    public const int RecentEventsCap = 10;
+    public const int RecentEventsCap = 5;
     public const int MotiveWindowSeconds = 60;
     // LotTilePos.Distance returns units of 1/16 tile per axis (x, y are short * 16). A
     // distance value of 16 = 1 tile. 320 = 20 tiles — roughly a room-plus-adjacent. This
     // keeps perception focused on what the avatar can reasonably interact with or sense.
-    private const int NearbyDistanceMax = 320;
+    //
+    // Override via FSO_PERCEPTION_RADIUS env var (subtile units; 16 subtiles = 1 tile).
+    // Example: FSO_PERCEPTION_RADIUS=160 → 10-tile radius (half the default).
+    // Use subtile units here (not tile units) to stay consistent with LotTilePos.Distance
+    // and BuildNearbyObjects filtering, which both operate in subtile units.
+    private static readonly int NearbyDistanceMax = int.TryParse(
+        Environment.GetEnvironmentVariable("FSO_PERCEPTION_RADIUS"), out int parsed) ? parsed : 320;
 
     private readonly uint _myPersistId;
     private readonly string _shardName;
@@ -195,6 +201,11 @@ public class PerceptionProjector
         var inventory = BuildInventory(me);
 
         // Avatar sub-tree.
+        // AnimationRaw is intentionally omitted from the wire shape (freesoexperiment-a78:
+        // structural slim pass). AnimationHuman is the legible field the agent uses;
+        // AnimationRaw is implementation detail noise that added ~5% tick size with no
+        // agent-visible benefit per the W3a spike. The C# field still exists on AvatarBlock
+        // (not removed) so in-process code that reads it for translation still compiles.
         var animRaw = me.CurrentAnimationState?.Anim?.Name ?? string.Empty;
         var avatar = new AvatarBlock
         {
@@ -208,7 +219,6 @@ public class PerceptionProjector
                 Level = me.Position.Level,
                 Direction = DirectionToCompass(me.RadianDirection),
             },
-            AnimationRaw = animRaw,
             AnimationHuman = TranslateAnimation(animRaw),
             ActionQueue = BuildActionQueue(me),
         };
@@ -824,6 +834,12 @@ public class AvatarBlock
     public string Name { get; set; }
     public string Shard { get; set; }
     public PositionBlock Position { get; set; }
+    /// <summary>
+    /// Raw FSO animation clip name. Kept as a C# field for in-process translation
+    /// (used by PerceptionProjector.TranslateAnimation) but excluded from the wire
+    /// shape (freesoexperiment-a78 structural slim). Agents use animation_human.
+    /// </summary>
+    [System.Text.Json.Serialization.JsonIgnore]
     public string AnimationRaw { get; set; }
     public string AnimationHuman { get; set; }
     public List<ActionQueueItemBlock> ActionQueue { get; set; }
