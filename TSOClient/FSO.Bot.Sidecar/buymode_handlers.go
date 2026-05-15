@@ -27,41 +27,7 @@ import (
 // On denial the server silently drops the command (no error PDU back) — the agent observes
 // the effect (or absence) via the next perception frame.
 func RegisterBuyModeHandlers(ctx context.Context, cf *Campfire, ipc *IPC) (int, error) {
-	ops := map[string]convention.HandlerFunc{
-		"list-catalog-categories": simpleForwardingHandler(ipc, "list-catalog-categories"),
-		// search-catalog (freesoexperiment-281a): optional filter args forwarded as-is to
-		// the C# handler which applies them. All args are optional — the sidecar is a strict
-		// forwarder; filtering logic lives in BuyModeHandlers.FindCheapCatalogGuid.
-		// search-catalog (freesoexperiment-289): added guid_hex reverse-lookup arg.
-		// When guid_hex is set, the C# handler returns the single matching item and
-		// ignores all other filters. Useful for resolving a guid_hex seen in query-lot-objects.
-		"search-catalog": simpleForwardingHandler(ipc, "search-catalog",
-			"name", "category", "tier", "min_price", "max_price", "limit", "guid_hex"),
-		// buy-object & place-from-inventory ride placementVerifyingHandler so
-		// callers get a structured {placed, persist_id, cost, hints} verdict
-		// instead of the ok:true / queued:true ack that conflates "bot received"
-		// with "VM placed" (OQ-8 silent-drop, see verifying_handler.go).
-		"buy-object": placementVerifyingHandler(ipc, "buy-object",
-			"guid", "x", "y", "level", "dir", "mode", "target_upgrade_level"),
-		"place-from-inventory": placementVerifyingHandler(ipc, "place-from-inventory",
-			"object_persist_id", "x", "y", "level", "dir", "mode"),
-		"move-object": simpleForwardingHandler(ipc, "move-object",
-			"target_object_id", "x", "y", "level", "dir"),
-		// delete-object rides deleteVerifyingHandler to (a) surface a structured
-		// {deleted:true|false} verdict instead of the silent OQ-8 ack, and
-		// (b) auto-retry against a subordinate tile when the caller targets a
-		// multitile master (master-tile no-op, freesoexperiment-850).
-		"delete-object": deleteVerifyingHandler(ipc, "delete-object",
-			"target_object_id", "cleanup_all"),
-		"send-to-inventory": simpleForwardingHandler(ipc, "send-to-inventory",
-			"target_object_persist_id"),
-		"list-object-for-sale": simpleForwardingHandler(ipc, "list-object-for-sale",
-			"target_object_persist_id", "new_price"),
-		"buy-listed-object": simpleForwardingHandler(ipc, "buy-listed-object",
-			"target_object_persist_id"),
-		"upgrade-object": simpleForwardingHandler(ipc, "upgrade-object",
-			"target_object_persist_id", "target_upgrade_level"),
-	}
+	ops := BuyModeOps(ipc)
 
 	decls, err := LoadDeclarations(conventionFiles)
 	if err != nil {
@@ -82,4 +48,33 @@ func RegisterBuyModeHandlers(ctx context.Context, cf *Campfire, ipc *IPC) (int, 
 		started++
 	}
 	return started, nil
+}
+
+// BuyModeOps returns the build-buy-catalog op handler map. Extracted so
+// batch-build (freesoexperiment-e5e) can dispatch into the same handler set
+// without re-implementing the verifying wrappers — every entry in a batch
+// gets the same structured verdict (placed/silent-drop/bot-rejected, hints,
+// balance_before/after) the single-op call would return.
+func BuyModeOps(ipc *IPC) map[string]convention.HandlerFunc {
+	return map[string]convention.HandlerFunc{
+		"list-catalog-categories": simpleForwardingHandler(ipc, "list-catalog-categories"),
+		"search-catalog": simpleForwardingHandler(ipc, "search-catalog",
+			"name", "category", "tier", "min_price", "max_price", "limit", "guid_hex"),
+		"buy-object": placementVerifyingHandler(ipc, "buy-object",
+			"guid", "x", "y", "level", "dir", "mode", "target_upgrade_level"),
+		"place-from-inventory": placementVerifyingHandler(ipc, "place-from-inventory",
+			"object_persist_id", "x", "y", "level", "dir", "mode"),
+		"move-object": simpleForwardingHandler(ipc, "move-object",
+			"target_object_id", "x", "y", "level", "dir"),
+		"delete-object": deleteVerifyingHandler(ipc, "delete-object",
+			"target_object_id", "cleanup_all"),
+		"send-to-inventory": simpleForwardingHandler(ipc, "send-to-inventory",
+			"target_object_persist_id"),
+		"list-object-for-sale": simpleForwardingHandler(ipc, "list-object-for-sale",
+			"target_object_persist_id", "new_price"),
+		"buy-listed-object": simpleForwardingHandler(ipc, "buy-listed-object",
+			"target_object_persist_id"),
+		"upgrade-object": simpleForwardingHandler(ipc, "upgrade-object",
+			"target_object_persist_id", "target_upgrade_level"),
+	}
 }

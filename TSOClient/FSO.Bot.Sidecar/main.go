@@ -320,6 +320,16 @@ func main() {
 		}
 		log.Printf("convention handlers: %d build-buy-architecture-family ops serving", buildServers)
 
+		// Batch family (freesoexperiment-e5e): batch-build folds N mutating build-buy
+		// ops into one cf round-trip. Composes the BuyMode + BuildMode op maps and
+		// dispatches each entry through the same handler the single-op call would
+		// use, so fe1's structured verdict shape carries through per entry.
+		batchServers, err := RegisterBatchHandlers(ctx, cf, ipc)
+		if err != nil {
+			log.Fatalf("register batch handlers: %v", err)
+		}
+		log.Printf("convention handlers: %d batch-family ops serving", batchServers)
+
 		// Civic family (freesoexperiment-409): set-tax-rate only.
 		// Mayor-only felt power — rate recorded, collection deferred to engine-side
 		// TaxCycleHandler (M2/M3). set-zoning dropped (c7f): engine has no zoning

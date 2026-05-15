@@ -1,0 +1,51 @@
+{
+  "convention": "freeso-embodiment",
+  "version": "1.0",
+  "operation": "batch-build",
+  "family": "batch",
+  "description": "Run N mutating build-buy ops in a single cf round-trip (freesoexperiment-e5e). Each entry dispatches through the same handler the single-op call would use, so the freesoexperiment-fe1 structured verdict (placed|silent-drop|bot-rejected, hints, balance_before/after, etc) carries through per entry. The engine PDU channel is still 1-at-a-time, but the cf round-trip floor is paid once instead of N times — for a 50-op furnished-room build the difference is ~2 min of cf overhead vs ~2.5s. NOT TRANSACTIONAL: the engine has no reverse-op for these commands. Default stop-on-first-failure leaves earlier successful ops in place — they are not undone. continue_on_failure=true opts in to best-effort mode for cases like 'demolish everything, ignore per-entry failures'. Allowed ops (mutating build-buy family only — search-catalog and list-catalog-categories do NOT belong in a batch and are rejected): buy-object, place-from-inventory, move-object, delete-object, send-to-inventory, list-object-for-sale, buy-listed-object, upgrade-object, place-wall, paint-wall, paint-floor, paint-grass, flatten-terrain, raise-terrain, set-roof, change-environment, change-lot-size.",
+  "args": [
+    {
+      "name": "ops",
+      "type": "json",
+      "required": true,
+      "description": "Array of op entries, each {op:string (one of the allowed verb names above), ...args for that verb}. The 'op' field is stripped before forwarding; everything else is passed through to the per-op handler. Pre-validated: a single bad op name in the batch rejects the entire batch BEFORE any PDU is sent."
+    },
+    {
+      "name": "continue_on_failure",
+      "type": "boolean",
+      "required": false,
+      "description": "Default false (stop-on-first-failure: halt and return halted_at + halt_reason on the first non-success verdict). Set true for best-effort mode (run all N ops regardless, return all N verdicts)."
+    }
+  ],
+  "produces_tags": [
+    {
+      "tag": "freeso:batch-build",
+      "cardinality": "exactly_one"
+    }
+  ],
+  "antecedents": "none",
+  "signing": "member_key",
+  "rate_limit": {
+    "max": 30,
+    "per": "sender",
+    "window": "1m"
+  },
+  "response": "sync",
+  "status": "implemented",
+  "call_signatures": [
+    "cf $CF batch-build --ops '[{op:\"buy-object\",guid:391616896,x:160,y:240,level:1,dir:\"NORTHWEST\"},{op:\"buy-object\",guid:391616896,x:160,y:256,level:1,dir:\"NORTHWEST\"}]'",
+    "cf $CF batch-build --ops '[...]' --continue_on_failure true"
+  ],
+  "common_mistakes": [
+    "Including a read-only op like search-catalog in a batch — rejected up front; do reads separately before composing the batch.",
+    "Expecting transactional rollback on halt — there is none. Earlier successful ops in the batch persist until you undo them yourself.",
+    "Mixing 'op' with verb-specific fields under the same key — each entry is an object with 'op' plus all the normal args for that verb. The 'op' field is stripped before forwarding.",
+    "Sending more than one batch concurrently to the same body — the per-op handlers serialise on the bot's tick lock, so concurrent batches will interleave entries in unpredictable order. Run one batch at a time per body."
+  ],
+  "perception_hints": [
+    "Use batch-build for any multi-op build sequence: room furnishing, demolition, wallpaper passes. The cf-round-trip saving compounds.",
+    "Inspect verdicts[i] for per-entry status — placed/deleted means success; silent-drop with hints tells you why a placement failed (tile-occupied, no-budget-debit, etc) the same way the single-op call does.",
+    "If halted_at is set, the agent should query-lot-objects to learn the actual placed state and decide whether to retry the remaining entries with adjusted coords."
+  ]
+}

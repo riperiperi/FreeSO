@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.Text.Json.Nodes;
 using System.Threading.Tasks;
 using FSO.SimAntics;
+using FSO.SimAntics.Engine;
 using FSO.SimAntics.Entities;
 using FSO.SimAntics.NetPlay.Model.Commands;
 
@@ -52,10 +53,14 @@ public static class InteractionHandlers
 
         dispatcher.Register("interact-with",
             (args, ct) => Task.FromResult(InteractWith(vmHost, args)));
+        dispatcher.Register("queue-interactions",
+            (args, ct) => Task.FromResult(QueueInteractions(vmHost, args)));
         dispatcher.Register("cancel-interaction",
             (args, ct) => Task.FromResult(CancelInteraction(vmHost, args)));
         dispatcher.Register("query-pie-menu",
             (args, ct) => Task.FromResult(QueryPieMenu(vmHost, args)));
+        dispatcher.Register("query-action-queue",
+            (args, ct) => Task.FromResult(QueryActionQueue(vmHost, args)));
     }
 
     /// <summary>
@@ -226,5 +231,168 @@ public static class InteractionHandlers
             }), targetObjectId);
         });
         return result.resp;
+    }
+
+    /// <summary>
+    /// queue-interactions — push N interactions onto the caller's action queue in one
+    /// call (freesoexperiment-36a). Replaces N sequential <c>interact-with</c> calls
+    /// at the cf round-trip floor with a single round-trip; engine same-tick atomicity
+    /// (VMNetDriver.InternalTick) guarantees the N PDUs land sequentially before any
+    /// next-tick BHAV pushes.
+    ///
+    /// <para>
+    /// Args: <c>interactions</c> (array, required, ≥1) of
+    /// <c>{interaction:int, callee_id:int, param0?:int, global?:bool}</c>, and one
+    /// <c>queue_mode</c> string ("queue" default cancels engine-Mode-Idle entries
+    /// first; "preempt" cancels the whole queue). queue_mode is applied ONCE before
+    /// the batch — applying it between entries would cancel earlier batch members
+    /// under the Idle-mode logic.
+    /// </para>
+    ///
+    /// <para>
+    /// Response: <c>{queued, cancelled, queue_mode}</c>. Does NOT include action_uids
+    /// — those are assigned by the engine in EnqueueAction (VMThread.cs:770) when the
+    /// PDU runs on the server tick, after the response is sent. Agents that need UIDs
+    /// (for selective cancellation) should call <c>query-action-queue</c> after the
+    /// batch lands.
+    /// </para>
+    ///
+    /// <para>
+    /// Validation is strict: any malformed entry rejects the entire batch BEFORE
+    /// queue_mode is applied, so a bad batch can't leave the caller with a wiped
+    /// queue and no replacement actions.
+    /// </para>
+    /// </summary>
+    internal static CommandDispatcher.Response QueueInteractions(HeadlessVMHost vmHost, JsonObject args)
+    {
+        var caller = vmHost?.VM?.GetAvatarByPersist(vmHost.MyAvatarPersistId);
+        if (caller == null) return CommandDispatcher.Response.Fail("no live avatar");
+
+        var arr = args["interactions"] as JsonArray;
+        if (arr == null)
+            return CommandDispatcher.Response.Fail("queue-interactions requires 'interactions' array");
+        if (arr.Count == 0)
+            return CommandDispatcher.Response.Fail("queue-interactions requires non-empty 'interactions' array");
+
+        var entries = new List<VMNetInteractionCmd>(arr.Count);
+        for (int i = 0; i < arr.Count; i++)
+        {
+            var e = arr[i] as JsonObject;
+            if (e == null)
+                return CommandDispatcher.Response.Fail($"queue-interactions[{i}]: entry is not an object");
+            var interaction = (long?)e["interaction"];
+            var calleeId = (long?)e["callee_id"];
+            if (!interaction.HasValue)
+                return CommandDispatcher.Response.Fail($"queue-interactions[{i}]: missing 'interaction' (TTAB index)");
+            if (!calleeId.HasValue || calleeId.Value == 0)
+                return CommandDispatcher.Response.Fail($"queue-interactions[{i}]: missing 'callee_id'");
+
+            entries.Add(new VMNetInteractionCmd
+            {
+                Interaction = checked((ushort)interaction.Value),
+                CalleeID = checked((short)calleeId.Value),
+                Param0 = (short)((long?)e["param0"] ?? 0),
+                Global = (bool?)e["global"] ?? false,
+                CallerID = caller.ObjectID,
+            });
+        }
+
+        var queueMode = QueueModeHelper.ReadQueueMode(args);
+        if (!QueueModeHelper.ApplyQueueMode(vmHost, queueMode, out var cancelled, out var qmErr))
+            return CommandDispatcher.Response.Fail(qmErr);
+
+        foreach (var cmd in entries)
+            vmHost.Driver.SendCommand(cmd);
+
+        return CommandDispatcher.Response.Success(new
+        {
+            queued = entries.Count,
+            cancelled,
+            queue_mode = queueMode,
+        });
+    }
+
+    /// <summary>
+    /// query-action-queue — return the caller's <c>Thread.Queue</c> contents on demand
+    /// (freesoexperiment-dbe). Perception already broadcasts the queue every tick via
+    /// <see cref="PerceptionProjector"/>'s ActionQueue block, but this verb gives the
+    /// agent a precision read right after a mutation (queue-interactions, cancel,
+    /// build batch) before the next perception fires.
+    ///
+    /// <para>
+    /// Args: <c>include_idle</c> (bool, default true) — when false, filters out
+    /// <see cref="VMQueueMode.Idle"/> engine-autopilot entries so the agent sees only
+    /// deliberate actions.
+    /// </para>
+    ///
+    /// <para>
+    /// Response: <c>{count, queue:[{action_uid, name, interaction_id, callee_id,
+    /// callee_kind, callee_guid_hex, mode, priority, param0, status}]}</c>.
+    /// <c>action_uid</c> is the cancellation handle (<c>q.UID</c>);
+    /// <c>interaction_id</c> is the TTAB index (<c>q.InteractionNumber</c>) — they are
+    /// distinct, do not confuse them. <c>status</c> is "running" for entry 0 (currently
+    /// executing) and "queued" for the rest.
+    /// </para>
+    /// </summary>
+    internal static CommandDispatcher.Response QueryActionQueue(HeadlessVMHost vmHost, JsonObject args)
+    {
+        if (vmHost == null) return CommandDispatcher.Response.Fail("no live avatar");
+        bool includeIdle = (bool?)args["include_idle"] ?? true;
+
+        var payload = vmHost.RunUnderTickLock<object>(() =>
+        {
+            var caller = vmHost.VM?.GetAvatarByPersist(vmHost.MyAvatarPersistId);
+            if (caller == null) return null;
+
+            var queue = caller.Thread?.Queue;
+            var items = new List<object>();
+            if (queue != null)
+            {
+                for (int i = 0; i < queue.Count; i++)
+                {
+                    var q = queue[i];
+                    if (!includeIdle && q.Mode == VMQueueMode.Idle) continue;
+
+                    string mode = q.Mode switch
+                    {
+                        VMQueueMode.Normal => "normal",
+                        VMQueueMode.Idle => "idle",
+                        VMQueueMode.ParentIdle => "parent-idle",
+                        VMQueueMode.ParentExit => "parent-exit",
+                        _ => q.Mode.ToString().ToLowerInvariant(),
+                    };
+
+                    string priority = Enum.IsDefined(typeof(VMQueuePriority), q.Priority)
+                        ? ((VMQueuePriority)q.Priority).ToString().ToLowerInvariant()
+                        : $"raw_{q.Priority}";
+
+                    short param0 = (q.Args != null && q.Args.Length > 0) ? q.Args[0] : (short)0;
+
+                    string calleeKind = q.Callee is VMAvatar ? "avatar"
+                        : q.Callee != null ? "object" : "";
+                    string calleeGuid = q.Callee?.Object?.OBJ != null
+                        ? "0x" + q.Callee.Object.OBJ.GUID.ToString("X8")
+                        : "";
+
+                    items.Add(new
+                    {
+                        action_uid      = (int)q.UID,
+                        name            = q.Name ?? "",
+                        interaction_id  = q.InteractionNumber,
+                        callee_id       = (int)(q.Callee?.ObjectID ?? 0),
+                        callee_kind     = calleeKind,
+                        callee_guid_hex = calleeGuid,
+                        mode,
+                        priority,
+                        param0          = (int)param0,
+                        status          = i == 0 ? "running" : "queued",
+                    });
+                }
+            }
+            return new { count = items.Count, queue = items };
+        });
+
+        if (payload == null) return CommandDispatcher.Response.Fail("no live avatar");
+        return CommandDispatcher.Response.Success(payload);
     }
 }

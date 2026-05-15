@@ -1,0 +1,51 @@
+{
+  "convention": "freeso-embodiment",
+  "version": "1.0",
+  "operation": "queue-interactions",
+  "family": "interaction",
+  "description": "Push N interactions onto the caller's action queue in one cf call (freesoexperiment-36a). Same wire semantics as N sequential interact-with calls, but folds N round-trips into 1. Engine same-tick atomicity (VMNetDriver.InternalTick) guarantees the N VMNetInteractionCmd PDUs land sequentially before any next-tick BHAV pushes. queue_mode is applied ONCE before the batch (applying it between entries would cancel earlier batch members under the Idle-mode logic). Validation is strict: any malformed entry rejects the entire batch BEFORE queue_mode is applied, so a bad batch cannot leave the caller with a wiped queue and no replacement actions. Response shape: {queued, cancelled, queue_mode}. Does NOT include action_uids — those are assigned by the engine in EnqueueAction when the PDU runs on the server tick, after this response is sent. Agents that need UIDs (for selective cancellation) should call query-action-queue after the batch lands.",
+  "args": [
+    {
+      "name": "interactions",
+      "type": "json",
+      "required": true,
+      "description": "Array of interaction entries, each {interaction:int (TTAB index), callee_id:int (target ObjectID, non-zero), param0?:int, global?:bool}. Must be non-empty. Engine cap MAX_USER_ACTIONS=20 applies cumulatively across the queue."
+    },
+    {
+      "name": "queue_mode",
+      "type": "string",
+      "required": false,
+      "description": "How the new interactions land in the queue. 'queue' (default): cancel only Mode.Idle engine-autopilot entries first, then enqueue. 'preempt': cancel ALL queue entries first. Applied ONCE before the batch."
+    }
+  ],
+  "produces_tags": [
+    {
+      "tag": "freeso:queue-interactions",
+      "cardinality": "exactly_one"
+    }
+  ],
+  "antecedents": "none",
+  "signing": "member_key",
+  "rate_limit": {
+    "max": 60,
+    "per": "sender",
+    "window": "1m"
+  },
+  "response": "sync",
+  "status": "implemented",
+  "call_signatures": [
+    "cf $CF queue-interactions --interactions '[{interaction:1,callee_id:17},{interaction:3,callee_id:42}]'",
+    "cf $CF queue-interactions --interactions '[...]' --queue_mode preempt"
+  ],
+  "common_mistakes": [
+    "Passing an empty interactions array — rejected with explicit error.",
+    "Confusing 'interaction' (TTAB index) with 'action_uid' (cancellation handle). The former goes in, the latter comes out via query-action-queue.",
+    "Expecting action_uids in the response — they aren't assigned until the engine ticks; query-action-queue right after to get them.",
+    "Exceeding MAX_USER_ACTIONS=20 cumulatively — extra entries silently drop on the engine side; call query-action-queue to verify."
+  ],
+  "perception_hints": [
+    "Stack pee→cook→shower→sleep in one call: queue_mode='queue' preserves deliberate actions already queued by the prefrontal-loop while cancelling lizard-brain Idle entries.",
+    "Use queue_mode='preempt' for 'drop everything else, do this list instead' — useful when an emergency motive forces a re-plan.",
+    "Call query-action-queue right after to read the assigned action_uids if you need to cancel specific entries later."
+  ]
+}

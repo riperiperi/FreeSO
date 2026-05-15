@@ -118,4 +118,31 @@ public class InteractionHandlersTests
         Assert.NotNull(typeof(FSO.SimAntics.NetPlay.Model.Commands.VMNetInteractionCmd));
         Assert.NotNull(typeof(FSO.SimAntics.NetPlay.Model.Commands.VMNetInteractionCancelCmd));
     }
+
+    // ---- queue-interactions / query-action-queue (freesoexperiment-36a / -dbe) ----
+    //
+    // Live-VM behaviour is covered by the integration smoke on workshop (the
+    // body-cf round-trip set), which proved: queue-interactions queues N
+    // entries in one cf call, query-action-queue returns the resulting UIDs,
+    // include_idle=false filters autopilot. Here we lock in the null-VM
+    // refuse path — both handlers must surface "no live avatar" rather than
+    // NRE'ing, since the bot occasionally runs with vmHost=null during
+    // disconnect-reconnect windows.
+
+    [Fact]
+    public void QueueInteractions_NullVMHost_ReturnsNoLiveAvatar()
+    {
+        var resp = InteractionHandlers.QueueInteractions(
+            null, new JsonObject { ["interactions"] = new JsonArray() });
+        Assert.False(resp.Ok);
+        Assert.Contains("avatar", resp.Error, StringComparison.OrdinalIgnoreCase);
+    }
+
+    [Fact]
+    public void QueryActionQueue_NullVMHost_ReturnsNoLiveAvatar()
+    {
+        var resp = InteractionHandlers.QueryActionQueue(null, new JsonObject());
+        Assert.False(resp.Ok);
+        Assert.Contains("avatar", resp.Error, StringComparison.OrdinalIgnoreCase);
+    }
 }

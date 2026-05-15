@@ -32,30 +32,7 @@ import (
 // commands (no negative-ACK) so a bot-side gate is the only way the agent gets a
 // synchronous error.
 func RegisterBuildModeHandlers(ctx context.Context, cf *Campfire, ipc *IPC) (int, error) {
-	ops := map[string]convention.HandlerFunc{
-		"place-wall": simpleForwardingHandler(ipc, "place-wall",
-			"x", "y", "level", "length", "direction", "pattern", "style", "remove"),
-		"paint-wall": simpleForwardingHandler(ipc, "paint-wall",
-			"x", "y", "level", "side", "pattern"),
-		"paint-floor": simpleForwardingHandler(ipc, "paint-floor",
-			"x", "y", "level", "width", "height", "pattern", "fill"),
-		"paint-grass": simpleForwardingHandler(ipc, "paint-grass",
-			"x", "y", "level", "pattern"),
-		"flatten-terrain": simpleForwardingHandler(ipc, "flatten-terrain",
-			"x", "y", "level", "width", "height"),
-		"raise-terrain": simpleForwardingHandler(ipc, "raise-terrain",
-			"x", "y", "level", "delta"),
-		"set-roof": simpleForwardingHandler(ipc, "set-roof",
-			"style", "pitch"),
-		"change-environment": simpleForwardingHandler(ipc, "change-environment",
-			"guids_to_add", "guids_to_clear"),
-		"change-lot-size": simpleForwardingHandler(ipc, "change-lot-size",
-			"lot_size", "lot_stories"),
-		"leave-build-buy": simpleForwardingHandler(ipc, "leave-build-buy",
-			"build"),
-		// list-architecture-styles: no args — pure catalog read from C# side.
-		"list-architecture-styles": simpleForwardingHandler(ipc, "list-architecture-styles"),
-	}
+	ops := BuildModeOps(ipc)
 
 	decls, err := LoadDeclarations(conventionFiles)
 	if err != nil {
@@ -76,4 +53,33 @@ func RegisterBuildModeHandlers(ctx context.Context, cf *Campfire, ipc *IPC) (int
 		started++
 	}
 	return started, nil
+}
+
+// BuildModeOps returns the build-buy-architecture op handler map. Extracted so
+// batch-build (freesoexperiment-e5e) can dispatch into the same handler set as
+// the single-op call.
+func BuildModeOps(ipc *IPC) map[string]convention.HandlerFunc {
+	return map[string]convention.HandlerFunc{
+		"place-wall": simpleForwardingHandler(ipc, "place-wall",
+			"x", "y", "level", "length", "direction", "pattern", "style", "remove"),
+		"paint-wall": simpleForwardingHandler(ipc, "paint-wall",
+			"x", "y", "level", "side", "pattern"),
+		"paint-floor": simpleForwardingHandler(ipc, "paint-floor",
+			"x", "y", "level", "width", "height", "pattern", "fill"),
+		"paint-grass": simpleForwardingHandler(ipc, "paint-grass",
+			"x", "y", "level", "pattern"),
+		"flatten-terrain": simpleForwardingHandler(ipc, "flatten-terrain",
+			"x", "y", "level", "width", "height"),
+		"raise-terrain": simpleForwardingHandler(ipc, "raise-terrain",
+			"x", "y", "level", "delta"),
+		"set-roof": simpleForwardingHandler(ipc, "set-roof",
+			"style", "pitch"),
+		"change-environment": simpleForwardingHandler(ipc, "change-environment",
+			"guids_to_add", "guids_to_clear"),
+		"change-lot-size": simpleForwardingHandler(ipc, "change-lot-size",
+			"lot_size", "lot_stories"),
+		"leave-build-buy": simpleForwardingHandler(ipc, "leave-build-buy",
+			"build"),
+		"list-architecture-styles": simpleForwardingHandler(ipc, "list-architecture-styles"),
+	}
 }

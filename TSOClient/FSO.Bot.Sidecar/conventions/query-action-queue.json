@@ -1,0 +1,44 @@
+{
+  "convention": "freeso-embodiment",
+  "version": "1.0",
+  "operation": "query-action-queue",
+  "family": "interaction",
+  "description": "Read the caller's Thread.Queue contents on demand (freesoexperiment-dbe). Perception broadcasts the queue every tick via the ActionQueue block, but this verb gives a precision read right after a mutation (queue-interactions, cancel-interaction, build batch) before the next perception fires. Useful for learning the action_uids that queue-interactions assigned (those UIDs aren't in queue-interactions' response — engine assigns them in EnqueueAction when the PDU runs server-side). Response: {count, queue:[{action_uid, name, interaction_id, callee_id, callee_kind, callee_guid_hex, mode, priority, param0, status}]}. action_uid is the cancellation handle (q.UID); interaction_id is the TTAB index (q.InteractionNumber) — they are distinct. status is 'running' for entry 0 (currently executing) and 'queued' for the rest.",
+  "args": [
+    {
+      "name": "include_idle",
+      "type": "boolean",
+      "required": false,
+      "description": "When false, filters out VMQueueMode.Idle engine-autopilot entries so the agent sees only deliberate actions. Default true."
+    }
+  ],
+  "produces_tags": [
+    {
+      "tag": "freeso:query-action-queue",
+      "cardinality": "exactly_one"
+    }
+  ],
+  "antecedents": "none",
+  "signing": "member_key",
+  "rate_limit": {
+    "max": 60,
+    "per": "sender",
+    "window": "1m"
+  },
+  "response": "sync",
+  "status": "implemented",
+  "call_signatures": [
+    "cf $CF query-action-queue",
+    "cf $CF query-action-queue --include_idle false"
+  ],
+  "common_mistakes": [
+    "Confusing action_uid (cancellation handle, what cancel-interaction wants) with interaction_id (TTAB index, what interact-with wants).",
+    "Reading the queue immediately after queue-interactions and being surprised it's not yet populated — the PDUs go through VMNetDriver.InternalTick on the next server tick; perception lag is ~1s. If urgent, re-query after a short delay; otherwise wait for the next perception frame.",
+    "Forgetting that 'running' (entry 0) is also IN the queue — the head entry is the currently-executing one; queue.length=0 means truly idle."
+  ],
+  "perception_hints": [
+    "Most of the time perception's ActionQueue block is fresh enough — use this verb only when you've just mutated the queue and can't wait for the next tick.",
+    "Use --include_idle false when you want to know 'has the prefrontal-loop given the body anything to do', filtering out lizard-brain autonomy entries.",
+    "Combine with queue-interactions: dispatch the batch, query-action-queue to read assigned UIDs, then cancel-interaction by UID if you need to drop a specific one later."
+  ]
+}

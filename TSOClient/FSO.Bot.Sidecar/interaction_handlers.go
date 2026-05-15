@@ -40,8 +40,10 @@ import (
 func RegisterInteractionHandlers(ctx context.Context, cf *Campfire, ipc *IPC, botCmds *BotCmdPump) (int, error) {
 	ops := map[string]convention.HandlerFunc{
 		"interact-with":      interactWithHandler(ipc, botCmds),
+		"queue-interactions": simpleForwardingHandler(ipc, "queue-interactions", "interactions", "queue_mode"),
 		"cancel-interaction": cancelInteractionHandler(ipc),
 		"query-pie-menu":     queryPieMenuHandler(ipc),
+		"query-action-queue": simpleForwardingHandler(ipc, "query-action-queue", "include_idle"),
 	}
 
 	decls, err := LoadDeclarations(conventionFiles)
