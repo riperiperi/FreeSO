@@ -9,6 +9,7 @@ package main
 import (
 	"context"
 	"fmt"
+	"log"
 
 	"github.com/campfire-net/campfire/pkg/convention"
 )
@@ -55,6 +56,10 @@ func goToHandler(ipc *IPC, store *MemoryStore) convention.HandlerFunc {
 			if v, ok := req.Args[k]; ok {
 				args[k] = v
 			}
+		}
+
+		if _, hasObjectName := args["object_name"]; hasObjectName {
+			log.Printf("DEPRECATED: go-to --object_name is deprecated; use --my_name (deliberate naming) or --target_object_id (from perception) instead")
 		}
 
 		if myName, ok := req.Args["my_name"].(string); ok && myName != "" {

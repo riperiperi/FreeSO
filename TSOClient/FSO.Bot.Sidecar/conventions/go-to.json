@@ -27,7 +27,8 @@
       "name": "object_name",
       "type": "string",
       "required": false,
-      "description": "Case-insensitive substring match against entity names. Picker returns the closest match within max_distance_tiles. Example: object_name='Toilet' matches 'Hygeia-O-Matic Toilet'."
+      "deprecated": true,
+      "description": "DEPRECATED — use `--my_name <bound-name>` (deliberate naming) or `--target_object_id <id>` (from perception) instead. Substring-match is lossy."
     },
     {
       "name": "location",
