@@ -10,9 +10,12 @@ import (
 	"context"
 	"fmt"
 	"log"
+	"sync"
 
 	"github.com/campfire-net/campfire/pkg/convention"
 )
+
+var objectNameDeprecationOnce sync.Once
 
 // RegisterGoToHandler wires the go-to convention. Handler resolves --my_name
 // against the sidecar's name map (built by the naming family on top of the
@@ -59,7 +62,9 @@ func goToHandler(ipc *IPC, store *MemoryStore) convention.HandlerFunc {
 		}
 
 		if _, hasObjectName := args["object_name"]; hasObjectName {
-			log.Printf("DEPRECATED: go-to --object_name is deprecated; use --my_name (deliberate naming) or --target_object_id (from perception) instead")
+			objectNameDeprecationOnce.Do(func() {
+				log.Printf("DEPRECATED: go-to --object_name is deprecated; use --my_name (deliberate naming) or --target_object_id (from perception) instead")
+			})
 		}
 
 		if myName, ok := req.Args["my_name"].(string); ok && myName != "" {

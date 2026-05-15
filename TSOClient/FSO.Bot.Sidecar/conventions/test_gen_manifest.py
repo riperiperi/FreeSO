@@ -151,3 +151,41 @@ class TestManifestGeneration:
         """Sanity: soul and non-soul op sets must be disjoint."""
         overlap = self.soul_ops & self.non_soul_ops
         assert not overlap, f"Op(s) appear in both soul and non-soul sets: {overlap}"
+
+    def test_every_soul_family_with_ops_appears_in_manifest(self):
+        """Every soul family that has ops must produce a manifest section.
+
+        This prevents silent-vanish: if someone mis-tags an op as family:'naming'
+        (which is in SOUL_FAMILIES but not FAMILY_ORDER), the manifest must still
+        emit a section for that family. Failing this test means a family with ops
+        was dropped from the manifest output.
+        """
+        # Compute which families have ops in the convention JSONs
+        families_in_ops = set()
+        for json_file in sorted(HERE.glob("*.json")):
+            try:
+                d = json.loads(json_file.read_text())
+            except Exception:
+                continue
+            family = d.get("family", "")
+            if family in SOUL_FAMILIES:
+                families_in_ops.add(family)
+
+        # Extract family headers from manifest (e.g., "## Movement" → "movement")
+        manifest_families = set()
+        for line in self.manifest_text.splitlines():
+            if line.startswith("## "):
+                # Convert "## Movement" → "movement" (and handle multi-word families like "Build Buy Catalog")
+                header_text = line[3:].strip()
+                # Reverse the title-case to lowercase with hyphens
+                # "Build Buy Catalog" → "build-buy-catalog"
+                # "Movement" → "movement"
+                family_key = header_text.lower().replace(" ", "-")
+                manifest_families.add(family_key)
+
+        missing_families = families_in_ops - manifest_families
+        assert not missing_families, (
+            f"Soul family(s) with ops missing from manifest sections: {sorted(missing_families)}. "
+            f"Families with ops: {sorted(families_in_ops)}. "
+            f"Manifest sections: {sorted(manifest_families)}"
+        )
