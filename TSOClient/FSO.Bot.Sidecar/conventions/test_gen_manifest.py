@@ -189,3 +189,31 @@ class TestManifestGeneration:
             f"Families with ops: {sorted(families_in_ops)}. "
             f"Manifest sections: {sorted(manifest_families)}"
         )
+
+    def test_no_op_uses_dead_naming_family(self):
+        """Assert that NO convention JSON declares family: 'naming'.
+
+        'naming' is a dead family in SOUL_FAMILIES but NOT in FAMILY_ORDER in _gen.py.
+        If a JSON is mis-tagged with family:'naming', _gen.py's overflow loop emits
+        a manifest section, making the mis-tag silent — the test_every_soul_family...
+        test will pass even though the operation was incorrectly tagged.
+
+        This test catches the mis-tag at source: it fails fast if any JSON declares
+        family:'naming', regardless of _gen.py behavior.
+        """
+        bad_family_ops = []
+        for json_file in sorted(HERE.glob("*.json")):
+            try:
+                d = json.loads(json_file.read_text())
+            except Exception:
+                continue
+            family = d.get("family", "")
+            if family == "naming":
+                op_name = d.get("operation", json_file.stem)
+                bad_family_ops.append(f"{json_file.name} (op: {op_name})")
+
+        assert not bad_family_ops, (
+            f"Dead family 'naming' in {len(bad_family_ops)} JSON(s): {bad_family_ops}. "
+            f"Naming ops live in family:'memory'; mis-tag will silently vanish via "
+            f"_gen.py overflow loop emitting '## Naming' section."
+        )
