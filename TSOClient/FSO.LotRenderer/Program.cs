@@ -604,18 +604,26 @@ namespace FSO.LotRenderer
         // -----------------------------------------------------------------------
 
         /// <summary>
-        /// Maps ISO compass label to WorldRotation.
-        /// iso-ne = TopLeft (origin tile at top-left of screen — "north-east" camera)
-        /// iso-nw = TopRight
-        /// iso-se = BottomLeft
-        /// iso-sw = BottomRight
+        /// Maps ISO compass label to WorldRotation. Convention: "iso-XX" means the
+        /// camera is positioned to the XX of the lot looking toward the opposite
+        /// corner, so the XX corner of the building is in the FOREGROUND (bottom
+        /// of image). Derived from the projection sy = max-at-corner table:
+        /// <list type="bullet">
+        /// <item><c>iso-ne</c> → NE in foreground → <c>WorldRotation.TopRight</c> (max sy at tile (63,0))</item>
+        /// <item><c>iso-nw</c> → NW in foreground → <c>WorldRotation.BottomRight</c> (max sy at tile (0,0))</item>
+        /// <item><c>iso-se</c> → SE in foreground → <c>WorldRotation.TopLeft</c> (max sy at tile (63,63))</item>
+        /// <item><c>iso-sw</c> → SW in foreground → <c>WorldRotation.BottomLeft</c> (max sy at tile (0,63))</item>
+        /// </list>
+        /// Pre-2026-05-15 the mapping was rotated 180° (iso-ne→TopLeft, etc.) so each
+        /// angle name showed the OPPOSITE corner in foreground. Fixed alongside the
+        /// grid-overlay.py projection alignment.
         /// </summary>
         public static WorldRotation ParseAngle(string s) => s.ToLowerInvariant() switch
         {
-            "iso-ne" => WorldRotation.TopLeft,
-            "iso-nw" => WorldRotation.TopRight,
-            "iso-se" => WorldRotation.BottomLeft,
-            "iso-sw" => WorldRotation.BottomRight,
+            "iso-ne" => WorldRotation.TopRight,
+            "iso-nw" => WorldRotation.BottomRight,
+            "iso-se" => WorldRotation.TopLeft,
+            "iso-sw" => WorldRotation.BottomLeft,
             _ => throw new ArgumentException($"Unknown angle '{s}'. Valid: iso-ne, iso-nw, iso-se, iso-sw")
         };
 

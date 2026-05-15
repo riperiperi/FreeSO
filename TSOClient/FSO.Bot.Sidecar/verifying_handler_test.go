@@ -84,9 +84,11 @@ func fastDeleteHandler(ipc *IPC, op string, allowedArgs ...string) convention.Ha
 
 func fastTestConfig() verifyingHandlerConfig {
 	return verifyingHandlerConfig{
-		settleWait:      10 * time.Millisecond,
-		snapshotTimeout: 1 * time.Second,
-		sendTimeout:     1 * time.Second,
+		settleWait:           10 * time.Millisecond,
+		snapshotTimeout:      1 * time.Second,
+		sendTimeout:          1 * time.Second,
+		extendedPollTimeout:  200 * time.Millisecond,
+		extendedPollInterval: 10 * time.Millisecond,
 	}
 }
 
@@ -799,7 +801,7 @@ func TestTryGetU64(t *testing.T) {
 // Confirms reflect-based config struct hygiene — at least these fields exist.
 // (Caught a typo'd field renaming once; cheap insurance.)
 func TestVerifyingConfigStructShape(t *testing.T) {
-	want := []string{"settleWait", "snapshotTimeout", "sendTimeout"}
+	want := []string{"settleWait", "snapshotTimeout", "sendTimeout", "extendedPollTimeout", "extendedPollInterval"}
 	got := []string{}
 	rt := reflect.TypeOf(verifyingHandlerConfig{})
 	for i := 0; i < rt.NumField(); i++ {
@@ -809,5 +811,169 @@ func TestVerifyingConfigStructShape(t *testing.T) {
 	sort.Strings(want)
 	if !reflect.DeepEqual(got, want) {
 		t.Errorf("config fields = %v; want %v", got, want)
+	}
+}
+
+// TestPlacementVerifying_ExtendedPollResolvesRace: server is two-phase — the
+// balance-change delta arrives before the spawn delta. Without extended
+// polling we false-negative this real placement as silent-drop. With the
+// poll, we re-snapshot until the spawn delta lands.
+//
+// Script: pre shows no object + balance 10000; post1 shows balance dropped
+// to 9800 but still no object (race); post2 (extended poll) shows the new
+// persist_id. Verdict must be placed=true with resolved_after_poll=true.
+func TestPlacementVerifying_ExtendedPollResolvesRace(t *testing.T) {
+	fake := newFakeBotProcess()
+	ipc := NewIPC(fake.bot)
+
+	script := map[string][]map[string]any{
+		"query-self": {
+			{"ok": true, "payload": map[string]any{"balance": 10000}}, // pre
+			{"ok": true, "payload": map[string]any{"balance": 9800}},  // post1 — balance dropped early
+			{"ok": true, "payload": map[string]any{"balance": 9800}},  // post2 — poll, balance stable
+		},
+		"query-lot-objects": {
+			{"ok": true, "payload": map[string]any{"objects": []any{}}}, // pre — empty
+			{"ok": true, "payload": map[string]any{"objects": []any{}}}, // post1 — race: still empty
+			{"ok": true, "payload": map[string]any{"objects": []any{    // post2 — spawn delta landed
+				map[string]any{"object_id": 200, "persist_id": 16780200, "guid": 1734088879, "guid_hex": "0x675C18AF", "x": 5, "y": 7, "level": 1, "dir": 0},
+			}}},
+		},
+		"buy-object": {{"ok": true, "payload": map[string]any{"queued": true}}},
+	}
+	_ = newScriptedResponder(t, fake, ipc, script)
+
+	handler := fastVerifyingHandler(ipc, "buy-object", "guid", "x", "y", "level", "dir")
+	ctx, cancel := context.WithTimeout(context.Background(), 3*time.Second)
+	defer cancel()
+
+	resp, err := handler(ctx, &convention.Request{Args: map[string]any{
+		"guid":  float64(1734088879),
+		"x":     float64(80),
+		"y":     float64(112),
+		"level": float64(1),
+		"dir":   float64(0),
+	}})
+	if err != nil {
+		t.Fatalf("handler: %v", err)
+	}
+	pay := resp.Payload.(map[string]any)
+	if pay["placed"] != true {
+		t.Fatalf("placed = %v; want true (extended poll should have resolved the race); payload=%+v", pay["placed"], pay)
+	}
+	if pay["verdict"] != "placed" {
+		t.Errorf("verdict = %v; want placed", pay["verdict"])
+	}
+	if pay["resolved_after_poll"] != true {
+		t.Errorf("resolved_after_poll = %v; want true (must annotate that the poll path fired)", pay["resolved_after_poll"])
+	}
+	if got, ok := pay["poll_count"].(int); !ok || got < 1 {
+		t.Errorf("poll_count = %v; want >=1", pay["poll_count"])
+	}
+	if got, want := pay["persist_id"], uint64(16780200); got != want {
+		t.Errorf("persist_id = %v; want %v", got, want)
+	}
+}
+
+// TestPlacementVerifying_ExtendedPollTimesOut: balance dropped but the spawn
+// delta never arrives within the poll budget. We must still fall back to
+// silent-drop with the balance-changed-no-object hint (the truthful verdict
+// at that point — money gone, no object materialized even after polling).
+func TestPlacementVerifying_ExtendedPollTimesOut(t *testing.T) {
+	fake := newFakeBotProcess()
+	ipc := NewIPC(fake.bot)
+
+	// Enough empty post-snapshots to outlast the entire extendedPollTimeout
+	// (200ms / 10ms interval = 20 polls, +1 initial post = 21+).
+	emptyPost := map[string]any{"ok": true, "payload": map[string]any{"objects": []any{}}}
+	emptyBalance := map[string]any{"ok": true, "payload": map[string]any{"balance": 9800}}
+	postObjects := []map[string]any{emptyPost}
+	postBalances := []map[string]any{emptyBalance}
+	for i := 0; i < 50; i++ {
+		postObjects = append(postObjects, emptyPost)
+		postBalances = append(postBalances, emptyBalance)
+	}
+	preObjects := []map[string]any{{"ok": true, "payload": map[string]any{"objects": []any{}}}}
+	preBalances := []map[string]any{{"ok": true, "payload": map[string]any{"balance": 10000}}}
+
+	script := map[string][]map[string]any{
+		"query-self":        append(preBalances, postBalances...),
+		"query-lot-objects": append(preObjects, postObjects...),
+		"buy-object":        {{"ok": true, "payload": map[string]any{"queued": true}}},
+	}
+	_ = newScriptedResponder(t, fake, ipc, script)
+
+	handler := fastVerifyingHandler(ipc, "buy-object", "guid", "x", "y", "level", "dir")
+	ctx, cancel := context.WithTimeout(context.Background(), 3*time.Second)
+	defer cancel()
+
+	resp, _ := handler(ctx, &convention.Request{Args: map[string]any{
+		"guid":  float64(1734088879),
+		"x":     float64(80),
+		"y":     float64(112),
+		"level": float64(1),
+		"dir":   float64(0),
+	}})
+	pay := resp.Payload.(map[string]any)
+	if pay["placed"] != false {
+		t.Fatalf("placed = %v; want false (spawn never arrived even after poll); payload=%+v", pay["placed"], pay)
+	}
+	if pay["verdict"] != "silent-drop" {
+		t.Errorf("verdict = %v; want silent-drop", pay["verdict"])
+	}
+	hints, _ := pay["hints"].([]string)
+	if !containsHint(hints, "balance-changed-no-object") {
+		t.Errorf("expected hint 'balance-changed-no-object', got %v", hints)
+	}
+}
+
+// TestPlacementVerifying_NoPollIfBalanceUnchanged: post-snapshot shows neither
+// balance change nor a new persist_id — the buy was rejected outright. We
+// must NOT enter the extended-poll loop (would burn the full timeout for
+// nothing). Verifies that the poll trigger predicate is balance-dropped.
+func TestPlacementVerifying_NoPollIfBalanceUnchanged(t *testing.T) {
+	fake := newFakeBotProcess()
+	ipc := NewIPC(fake.bot)
+
+	script := map[string][]map[string]any{
+		"query-self": {
+			{"ok": true, "payload": map[string]any{"balance": 10000}},
+			{"ok": true, "payload": map[string]any{"balance": 10000}}, // unchanged — no debit
+		},
+		"query-lot-objects": {
+			{"ok": true, "payload": map[string]any{"objects": []any{}}},
+			{"ok": true, "payload": map[string]any{"objects": []any{}}},
+		},
+		"buy-object": {{"ok": true, "payload": map[string]any{"queued": true}}},
+	}
+	_ = newScriptedResponder(t, fake, ipc, script)
+
+	handler := fastVerifyingHandler(ipc, "buy-object", "guid", "x", "y", "level", "dir")
+	ctx, cancel := context.WithTimeout(context.Background(), 500*time.Millisecond)
+	defer cancel()
+
+	start := time.Now()
+	resp, _ := handler(ctx, &convention.Request{Args: map[string]any{
+		"guid":  float64(1734088879),
+		"x":     float64(80),
+		"y":     float64(112),
+		"level": float64(1),
+		"dir":   float64(0),
+	}})
+	elapsed := time.Since(start)
+	pay := resp.Payload.(map[string]any)
+	if pay["verdict"] != "silent-drop" {
+		t.Errorf("verdict = %v; want silent-drop", pay["verdict"])
+	}
+	hints, _ := pay["hints"].([]string)
+	if !containsHint(hints, "no-budget-debit") {
+		t.Errorf("expected hint 'no-budget-debit', got %v", hints)
+	}
+	// Settle (10ms) + 2 snapshots; must NOT have waited extendedPollTimeout (200ms).
+	if elapsed > 150*time.Millisecond {
+		t.Errorf("handler took %v; want <150ms (must not poll when balance unchanged — the buy was rejected outright)", elapsed)
+	}
+	if _, hasPoll := pay["resolved_after_poll"]; hasPoll {
+		t.Errorf("payload has resolved_after_poll but balance didn't change; payload=%+v", pay)
 	}
 }

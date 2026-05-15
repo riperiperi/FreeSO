@@ -137,19 +137,86 @@ func verifyingHandlerImpl(ctx context.Context, ipc *IPC, op string, allowedArgs 
 	post, postErr := snapshot(ctx, ipc, level, guidHex, cfg.snapshotTimeout)
 	log.Printf("verifying-handler[%s]: post-snapshot done balance=%d objects=%d err=%v elapsed=%s", op, post.balance, len(post.objects), postErr, time.Since(tPost))
 
+	// 5b. Extended-poll race fix: balance dropped but no new persist_id yet.
+	//
+	// VMNetBuyObjectCmd is two-phase server-side (Verify debits via async
+	// transaction + requeues, Execute spawns on a later tick). The balance-
+	// change delta routinely arrives before the spawn delta — without polling
+	// past the initial settle window we false-negative real placements with
+	// hint=balance-changed-no-object. Observed empirically 2026-05-15 on lot
+	// 2 L3 dresser + rug placements (both landed, both reported silent-drop).
+	//
+	// Strategy: while balance < pre.balance AND zero new persist_ids, re-
+	// snapshot every extendedPollInterval up to extendedPollTimeout. Exit on
+	// first new persist_id (verdict=placed) or timeout (verdict=silent-drop
+	// with the truthful balance-changed-no-object hint).
+	if cfg.extendedPollTimeout > 0 && preErr == nil && postErr == nil &&
+		newPersists(pre, post) == 0 && post.balance < pre.balance {
+
+		pollDeadline := time.Now().Add(cfg.extendedPollTimeout)
+		pollCount := 0
+		for time.Now().Before(pollDeadline) {
+			if !sleepRespectCtx(ctx, cfg.extendedPollInterval) {
+				return ctxCancelledResponse(op, ctx), nil
+			}
+			pollCount++
+			tPoll := time.Now()
+			postPolled, pollErr := snapshot(ctx, ipc, level, guidHex, cfg.snapshotTimeout)
+			log.Printf("verifying-handler[%s]: extended-poll #%d balance=%d objects=%d err=%v elapsed=%s",
+				op, pollCount, postPolled.balance, len(postPolled.objects), pollErr, time.Since(tPoll))
+			if pollErr != nil {
+				// Snapshot errored mid-poll. Stop polling and let verdict
+				// surface the postErr we already have from the first attempt.
+				break
+			}
+			post = postPolled
+			if newPersists(pre, post) > 0 {
+				log.Printf("verifying-handler[%s]: extended-poll resolved race after %d polls (%s past settle)",
+					op, pollCount, time.Since(tPost))
+				resp := verdictResponse(op, args, pre, post, preErr, postErr, ipcResp)
+				// Annotate the verdict so callers can see the poll fired —
+				// useful for diagnostics + tuning extendedPollInterval.
+				if pay, ok := resp.Payload.(map[string]any); ok {
+					pay["resolved_after_poll"] = true
+					pay["poll_count"] = pollCount
+				}
+				log.Printf("verifying-handler[%s]: done total_elapsed=%s", op, time.Since(t0))
+				return resp, nil
+			}
+		}
+		log.Printf("verifying-handler[%s]: extended-poll exhausted after %d polls (%s); falling through to silent-drop",
+			op, pollCount, time.Since(tPost))
+	}
+
 	// 6. Diff & verdict.
 	resp := verdictResponse(op, args, pre, post, preErr, postErr, ipcResp)
 	log.Printf("verifying-handler[%s]: done total_elapsed=%s", op, time.Since(t0))
 	return resp, nil
 }
 
+// newPersists counts the persist_ids present in post but not pre. Skips
+// zero PIDs — those are entities that haven't been registered with the global
+// link yet and would race the diff anyway.
+func newPersists(pre, post lotSnapshot) int {
+	n := 0
+	for _, o := range post.objects {
+		if o.PersistID == 0 {
+			continue
+		}
+		if _, existed := pre.objectsByPID[o.PersistID]; !existed {
+			n++
+		}
+	}
+	return n
+}
+
 // verifyingHandlerConfig tunes the verdict pipeline. Exposed as a type so
 // tests can override (and a future env-var path can re-tune without code
 // changes).
 type verifyingHandlerConfig struct {
-	// settleWait is the pause between forwarding the op and the post-snapshot.
-	// Must cover at least one VM tick (~33ms) and one perception emission cycle
-	// (1s at FSO_PERCEPTION_HZ=1). Default 1500ms.
+	// settleWait is the pause between forwarding the op and the FIRST post-
+	// snapshot. Must cover at least one VM tick (~33ms) and one perception
+	// emission cycle (1s at FSO_PERCEPTION_HZ=1). Default 1500ms.
 	settleWait time.Duration
 
 	// snapshotTimeout caps the duration of one pre/post snapshot. Snapshots
@@ -161,6 +228,24 @@ type verifyingHandlerConfig struct {
 	// because the build IPC can legitimately block on the lot tick queue.
 	// Default 10s.
 	sendTimeout time.Duration
+
+	// extendedPollTimeout is the additional wall-clock budget the verdict path
+	// will burn polling for the spawn delta when the initial post-snapshot
+	// shows balance dropped but no new persist_id. Buy-object is two-phase
+	// server-side (VMNetBuyObjectCmd.Verify debits via async transaction and
+	// requeues, then Execute spawns on a LATER tick), so the balance-change
+	// delta routinely arrives before the spawn delta. Without this poll, the
+	// initial settleWait races the spawn and we false-negative real placements
+	// as "balance-changed-no-object" — money gone, no object reported, agent
+	// thinks the placement failed when it succeeded. Default 5s, polled at
+	// extendedPollInterval.
+	extendedPollTimeout time.Duration
+
+	// extendedPollInterval is how often the extended-poll path re-snapshots
+	// while waiting for the spawn delta. Default 400ms — small enough that
+	// most races resolve in 1–2 polls, large enough to avoid hammering the
+	// bot's tick lock.
+	extendedPollInterval time.Duration
 }
 
 func defaultVerifyingConfig() verifyingHandlerConfig {
@@ -178,6 +263,11 @@ func defaultVerifyingConfig() verifyingHandlerConfig {
 		// Build IPC send timeout — independent of snapshot cap; build commands
 		// can legitimately block on the lot tick queue.
 		sendTimeout: 10 * time.Second,
+		// Extended poll: covers the gap between balance-change delta and
+		// spawn delta. Empirically the spawn lands within 1-3 ticks of the
+		// transaction callback; 5s is generous headroom under load.
+		extendedPollTimeout:  5 * time.Second,
+		extendedPollInterval: 400 * time.Millisecond,
 	}
 }
 
@@ -601,6 +691,39 @@ func deleteVerifyingHandlerImpl(ctx context.Context, ipc *IPC, op string, allowe
 		// Either we couldn't resolve the persist_id in pre (so we trust the
 		// bot's ok:true at face value), or it's gone — success.
 		return deleteVerdict(op, args, pre, post1, true, "", 0, resp1, preErr, post1Err)
+	}
+
+	// Extended-poll race fix (mirror of the placement path). Delete-object's
+	// server-side path also splits the refund-transaction and the entity-
+	// removal across ticks; the refund delta can arrive at the bot before the
+	// entity-removal delta, so a post-snapshot taken between the two would
+	// see balance up but persist_id still present. Polls past the initial
+	// settle window to give the removal delta time to land before falling
+	// back to the multitile-retry path.
+	if cfg.extendedPollTimeout > 0 && post1Err == nil && post1.balance > pre.balance {
+		pollDeadline := time.Now().Add(cfg.extendedPollTimeout)
+		pollCount := 0
+		for time.Now().Before(pollDeadline) {
+			if !sleepRespectCtx(ctx, cfg.extendedPollInterval) {
+				return ctxCancelledResponse(op, ctx), nil
+			}
+			pollCount++
+			postPolled, pollErr := snapshot(ctx, ipc, 0, "", cfg.snapshotTimeout)
+			log.Printf("delete-verifying[%s]: extended-poll #%d objects=%d err=%v", op, pollCount, len(postPolled.objects), pollErr)
+			if pollErr != nil {
+				break
+			}
+			post1 = postPolled
+			if !persistPresent(post1, targetPID) {
+				log.Printf("delete-verifying[%s]: extended-poll resolved race after %d polls", op, pollCount)
+				resp, _ := deleteVerdict(op, args, pre, post1, true, "resolved-after-poll", 0, resp1, preErr, post1Err)
+				if pay, ok := resp.Payload.(map[string]any); ok {
+					pay["poll_count"] = pollCount
+				}
+				return resp, nil
+			}
+		}
+		log.Printf("delete-verifying[%s]: extended-poll exhausted after %d polls; falling through to multitile retry", op, pollCount)
 	}
 
 	// First attempt didn't take. Multitile master-tile no-op is the most
