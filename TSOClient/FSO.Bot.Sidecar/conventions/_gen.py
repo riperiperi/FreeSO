@@ -37,9 +37,12 @@ SOUL_FAMILIES = {
     "avatar",
     "build-buy-catalog",
     "property",
+    "batch",
 }
 
 # Display order for the manifest (soul families only, presentation order).
+# "batch" goes last because batch-build composes the build-buy-catalog ops —
+# agents read the primitives first, then learn they can pipeline them.
 FAMILY_ORDER = [
     "movement",
     "navigation",
@@ -50,6 +53,7 @@ FAMILY_ORDER = [
     "avatar",
     "property",
     "build-buy-catalog",
+    "batch",
 ]
 
 
