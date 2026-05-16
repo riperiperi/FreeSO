@@ -133,6 +133,25 @@ func goToHandler(ipc *IPC, store *MemoryStore) convention.HandlerFunc {
 			}
 		}
 
+		// When --interaction is set, the bot will dispatch VMNetInteractionCmd
+		// (walk-and-do) instead of VMNetGotoCmd (walk-only). Wrap with the
+		// verifying handler so the agent gets a structured verdict instead of a
+		// silent ok:true. Plain locomotion (no --interaction) stays on the fast
+		// path (forwardIPC) — no snapshot overhead.
+		if _, hasInteraction := args["interaction"]; hasInteraction {
+			h := verifyingHandlerWithExpect(
+				ipc,
+				"go-to",
+				[]string{"target_object_id", "target_sim_id", "object_name", "location", "interaction", "queue_mode", "max_distance_tiles"},
+				0,   // snapshotLevel: diff action_queue, not objects
+				"",  // snapshotGuidHex: not used
+				nil, // extendedPollTrigger: disabled (action_queue changes sync)
+				gotoInteractionExpect,
+				defaultGotoInteractVerifyingConfig(),
+			)
+			return h(ctx, req)
+		}
+
 		return forwardIPC(ctx, ipc, "go-to", args)
 	}
 }
