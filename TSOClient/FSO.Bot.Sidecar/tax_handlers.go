@@ -10,7 +10,7 @@ import (
 	"context"
 	"fmt"
 
-	"github.com/campfire-net/campfire/pkg/convention"
+	"github.com/campfire-net/campfire/cf-conventions/cf-convention"
 )
 
 // RegisterTaxHandlers (freesoexperiment-409) wires the set-tax-rate civic op.

@@ -10,7 +10,7 @@ import (
 	"context"
 	"fmt"
 
-	"github.com/campfire-net/campfire/pkg/convention"
+	"github.com/campfire-net/campfire/cf-conventions/cf-convention"
 )
 
 // RegisterIMHandlers loads the IM-family convention declaration (instant-message only for now)

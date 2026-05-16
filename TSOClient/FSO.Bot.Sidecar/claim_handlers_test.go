@@ -29,7 +29,7 @@ import (
 	"testing"
 	"time"
 
-	"github.com/campfire-net/campfire/pkg/convention"
+	"github.com/campfire-net/campfire/cf-conventions/cf-convention"
 )
 
 // setupClaimTestEnv sets FSO_USER to an isolated per-test persona derived from

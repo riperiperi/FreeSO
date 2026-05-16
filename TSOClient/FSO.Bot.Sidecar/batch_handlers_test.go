@@ -12,7 +12,7 @@ import (
 	"strings"
 	"testing"
 
-	"github.com/campfire-net/campfire/pkg/convention"
+	"github.com/campfire-net/campfire/cf-conventions/cf-convention"
 )
 
 func mockOp(payload map[string]any, err error) convention.HandlerFunc {

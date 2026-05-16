@@ -12,7 +12,7 @@ import (
 	"fmt"
 	"log"
 
-	"github.com/campfire-net/campfire/pkg/convention"
+	"github.com/campfire-net/campfire/cf-conventions/cf-convention"
 )
 
 // RegisterNavigationHandlers wires the navigation verb family

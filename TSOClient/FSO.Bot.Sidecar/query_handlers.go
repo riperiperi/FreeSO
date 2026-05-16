@@ -10,7 +10,7 @@ import (
 	"context"
 	"fmt"
 
-	"github.com/campfire-net/campfire/pkg/convention"
+	"github.com/campfire-net/campfire/cf-conventions/cf-convention"
 )
 
 // RegisterQueryHandlers wires the queries verb family (freesoexperiment-e9f):

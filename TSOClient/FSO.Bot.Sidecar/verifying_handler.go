@@ -15,7 +15,7 @@ import (
 	"strings"
 	"time"
 
-	"github.com/campfire-net/campfire/pkg/convention"
+	"github.com/campfire-net/campfire/cf-conventions/cf-convention"
 )
 
 // ExpectFn is the verdict callback for verifyingHandlerWithExpect.

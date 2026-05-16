@@ -11,7 +11,7 @@ import (
 	"testing"
 	"time"
 
-	"github.com/campfire-net/campfire/pkg/convention"
+	"github.com/campfire-net/campfire/cf-conventions/cf-convention"
 )
 
 // TestRespondToDialogHandlerForwardsArgs asserts that a respond-to-dialog convention

@@ -13,7 +13,7 @@ import (
 	"math"
 	"strings"
 
-	"github.com/campfire-net/campfire/pkg/convention"
+	"github.com/campfire-net/campfire/cf-conventions/cf-convention"
 )
 
 // crossLevelResult is returned by findStairForCrossLevel when a stair is required.

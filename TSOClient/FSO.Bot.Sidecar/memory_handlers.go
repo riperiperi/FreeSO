@@ -12,7 +12,7 @@ import (
 	"fmt"
 	"sync"
 
-	"github.com/campfire-net/campfire/pkg/convention"
+	"github.com/campfire-net/campfire/cf-conventions/cf-convention"
 )
 
 // MemoryStore is a thread-safe in-memory key→value store scoped to a single

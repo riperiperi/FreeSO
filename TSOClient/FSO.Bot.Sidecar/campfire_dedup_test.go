@@ -9,7 +9,7 @@ package main
 import (
 	"testing"
 
-	"github.com/campfire-net/campfire/pkg/convention"
+	"github.com/campfire-net/campfire/cf-conventions/cf-convention"
 )
 
 // Tests for the idempotent-declaration-publish path. Sidecars used to

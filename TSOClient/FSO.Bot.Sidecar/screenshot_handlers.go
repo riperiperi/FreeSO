@@ -21,7 +21,7 @@ import (
 	"sync"
 	"time"
 
-	"github.com/campfire-net/campfire/pkg/convention"
+	"github.com/campfire-net/campfire/cf-conventions/cf-convention"
 )
 
 // RegisterScreenshotHandlers (freesoexperiment-0a2) wires the take-screenshot

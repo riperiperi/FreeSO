@@ -12,7 +12,7 @@ import (
 	"testing"
 	"time"
 
-	"github.com/campfire-net/campfire/pkg/convention"
+	"github.com/campfire-net/campfire/cf-conventions/cf-convention"
 )
 
 // TestInstantMessageHandlerDispatchesIPC asserts the instant-message handler forwards the

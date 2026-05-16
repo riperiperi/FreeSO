@@ -2,8 +2,8 @@ filippo.io/edwards25519 v1.0.0-rc.1 h1:m0VOOB23frXZvAOK44usCgLWvtsxIoMCTBGJZlpmG
 filippo.io/edwards25519 v1.0.0-rc.1/go.mod h1:N1IkdkCkiLB6tki+MYJoSx2JTY9NUlxZE7eHn5EwJns=
 github.com/BurntSushi/toml v1.6.0 h1:dRaEfpa2VI55EwlIW72hMRHdWouJeRF7TPYhI+AUQjk=
 github.com/BurntSushi/toml v1.6.0/go.mod h1:ukJfTF/6rtPPRCnwkur4qwRxa8vTRFBF0uk2lLoLwho=
-github.com/campfire-net/campfire v0.19.2 h1:8VrIku6zSJpTboNop/VF8FAKMAPwUSbIRmQkCas9E9s=
-github.com/campfire-net/campfire v0.19.2/go.mod h1:7yy08WJj1VQnA8tcxOnO9QDwmh5K032BtUW8GO9EFeA=
+github.com/campfire-net/campfire v0.31.0 h1:24/L4nRF5ohYgqINfPUKWcSXlhcX7v1kNdu+MVzRGnQ=
+github.com/campfire-net/campfire v0.31.0/go.mod h1:rv1z1Ou4Xzfa7hCcyg0CoHMTgmoCYBQ7sXUsNjm+2nM=
 github.com/davecgh/go-spew v1.1.0 h1:ZDRjVQ15GmhC3fiQ8ni8+OwkZQO4DARzQgrnXU1Liz8=
 github.com/davecgh/go-spew v1.1.0/go.mod h1:J7Y8YcW2NihsgmVo/mv3lAwl/skON4iLHjSsI+c5H38=
 github.com/dustin/go-humanize v1.0.1 h1:GzkhY7T5VNhEkwH0PVJgjz+fX1rhBrR7pRT3mDkpeCY=

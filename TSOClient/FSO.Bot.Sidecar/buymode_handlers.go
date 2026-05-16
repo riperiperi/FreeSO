@@ -10,7 +10,7 @@ import (
 	"context"
 	"fmt"
 
-	"github.com/campfire-net/campfire/pkg/convention"
+	"github.com/campfire-net/campfire/cf-conventions/cf-convention"
 )
 
 // RegisterBuyModeHandlers (freesoexperiment-304) wires the build-buy-catalog verb family:

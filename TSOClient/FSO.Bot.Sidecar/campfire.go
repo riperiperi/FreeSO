@@ -17,8 +17,8 @@ import (
 	"sort"
 	"strings"
 
-	"github.com/campfire-net/campfire/pkg/convention"
-	"github.com/campfire-net/campfire/pkg/protocol"
+	"github.com/campfire-net/campfire/cf-conventions/cf-convention"
+	"github.com/campfire-net/campfire/cf-protocol/protocol"
 )
 
 // CampfireConfig parameterises campfire bringup.
@@ -260,7 +260,7 @@ func readMyPublishedDeclarations(client *protocol.Client, campfireID, myPubkeyHe
 	}
 	out := make(map[string]bool, len(resp.Messages))
 	for _, msg := range resp.Messages {
-		decl, _, perr := convention.Parse(msg.Tags, msg.Payload, msg.Sender, "")
+		decl, _, perr := convention.Parse(msg.Tags, msg.Payload, msg.Sender, "", nil)
 		if perr != nil {
 			// Historical malformed publication — skip rather than failing
 			// the whole bringup. Could log if it becomes noisy.

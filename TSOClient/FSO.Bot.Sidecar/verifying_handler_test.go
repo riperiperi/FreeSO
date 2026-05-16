@@ -14,7 +14,7 @@ import (
 	"testing"
 	"time"
 
-	"github.com/campfire-net/campfire/pkg/convention"
+	"github.com/campfire-net/campfire/cf-conventions/cf-convention"
 )
 
 // scriptedResponder feeds canned responses keyed by (op, call number) so a

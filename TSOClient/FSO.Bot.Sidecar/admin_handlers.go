@@ -10,7 +10,7 @@ import (
 	"context"
 	"fmt"
 
-	"github.com/campfire-net/campfire/pkg/convention"
+	"github.com/campfire-net/campfire/cf-conventions/cf-convention"
 )
 
 // RegisterAdminHandlers (freesoexperiment-3df) wires the admin verb family:

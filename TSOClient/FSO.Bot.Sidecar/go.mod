@@ -3,7 +3,7 @@ module github.com/3dl-dev/freeso-sidecar
 go 1.25.0
 
 require (
-	github.com/campfire-net/campfire v0.19.2
+	github.com/campfire-net/campfire v0.31.0
 	github.com/google/uuid v1.6.0
 )
 

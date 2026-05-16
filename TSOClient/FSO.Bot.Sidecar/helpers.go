@@ -9,7 +9,7 @@ package main
 import (
 	"fmt"
 
-	"github.com/campfire-net/campfire/pkg/convention"
+	"github.com/campfire-net/campfire/cf-conventions/cf-convention"
 )
 
 // errResp returns a convention.Response with ok=false and the given error

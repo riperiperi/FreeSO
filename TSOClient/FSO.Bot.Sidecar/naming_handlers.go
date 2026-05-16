@@ -13,7 +13,7 @@ import (
 	"strconv"
 	"strings"
 
-	"github.com/campfire-net/campfire/pkg/convention"
+	"github.com/campfire-net/campfire/cf-conventions/cf-convention"
 )
 
 // The naming family is a thin layer over the sidecar's in-memory store

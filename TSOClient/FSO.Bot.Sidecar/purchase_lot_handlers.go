@@ -13,7 +13,7 @@ import (
 	"log"
 	"time"
 
-	"github.com/campfire-net/campfire/pkg/convention"
+	"github.com/campfire-net/campfire/cf-conventions/cf-convention"
 )
 
 // RegisterPurchaseLotHandlers wires the purchase-lot convention op

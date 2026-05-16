@@ -14,7 +14,7 @@ import (
 	"strconv"
 	"strings"
 
-	"github.com/campfire-net/campfire/pkg/convention"
+	"github.com/campfire-net/campfire/cf-conventions/cf-convention"
 )
 
 // RegisterInteractionHandlers (freesoexperiment-2a8 / freesoexperiment-2ac) mirrors

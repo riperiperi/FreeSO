@@ -11,7 +11,7 @@ import (
 	"testing"
 	"time"
 
-	"github.com/campfire-net/campfire/pkg/convention"
+	"github.com/campfire-net/campfire/cf-conventions/cf-convention"
 )
 
 // TestSetTaxRateMissingRate asserts that a call without tax_rate_percent returns ok:false.

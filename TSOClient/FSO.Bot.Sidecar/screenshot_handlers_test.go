@@ -11,7 +11,7 @@ import (
 	"testing"
 	"time"
 
-	"github.com/campfire-net/campfire/pkg/convention"
+	"github.com/campfire-net/campfire/cf-conventions/cf-convention"
 )
 
 // TestRateLimitSoul verifies that the soul-level rate limit (1 per 10s) works.
