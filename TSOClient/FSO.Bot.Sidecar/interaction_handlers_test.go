@@ -416,6 +416,9 @@ func TestInteractWithBulletinBoard_NoBotCmds(t *testing.T) {
 
 // interactWithHandlerFast returns an interactWithHandler using the fast test
 // config so unit tests don't wait for the 1500ms settle.
+// It mirrors the W9 pre-check path in interactWithHandler (freesoexperiment-df2):
+// query-pie-menu is called before the verifying handler so tests that exercise
+// the pre-check path see the real gate.
 func interactWithHandlerFast(ipc *IPC, botCmds *BotCmdPump) convention.HandlerFunc {
 	verifyingHandler := verifyingHandlerWithExpect(
 		ipc,
@@ -429,6 +432,17 @@ func interactWithHandlerFast(ipc *IPC, botCmds *BotCmdPump) convention.HandlerFu
 		if objectType, _ := req.Args["object_type"].(string); objectType == "bulletin_board" {
 			return bulletinBoardHandler(ctx, botCmds)
 		}
+
+		// W9 pre-check (mirrors interactWithHandler).
+		calleeID := intArg(req.Args, "callee_id", -1)
+		interactionID := intArg(req.Args, "interaction", -1)
+		if calleeID >= 0 && interactionID >= 0 {
+			check := queryPieMenuPreCheck(ctx, ipc, calleeID, interactionID)
+			if check.refused {
+				return &convention.Response{Payload: check.refusalResp}, nil
+			}
+		}
+
 		return verifyingHandler(ctx, req)
 	}
 }
@@ -816,6 +830,243 @@ func hintsFromPayload(pay map[string]any) []string {
 		return out
 	}
 	return nil
+}
+
+// ---- W9 pre-check tests (freesoexperiment-df2) ----
+//
+// These tests exercise the query-pie-menu pre-check in interactWithHandler.
+// The pre-check fires synchronously before the verifying handler and refuses
+// immediately with verdict="bot-rejected" when the matching pie-menu entry
+// has available=false. It is fail-open: IPC errors fall through to the
+// verifying handler unchanged.
+
+// TestInteractWithPreCheck_UnavailableRefuses verifies the d8b stair case:
+// interact-with for an interaction whose pie-menu entry has available=false
+// returns bot-rejected immediately, BEFORE the interact-with IPC is sent.
+// No silent-drop should occur.
+func TestInteractWithPreCheck_UnavailableRefuses(t *testing.T) {
+	fake := newFakeBotProcess()
+	ipc := NewIPC(fake.bot)
+
+	// Script: query-pie-menu returns interaction 0 with available=false.
+	// interact-with must NOT be called (pre-check refuses before it reaches the IPC).
+	// query-self and query-lot-objects must NOT be called (pre-check exits before snapshot).
+	// We track that by asserting zero calls to "interact-with" in the received commands.
+	script := map[string][]map[string]any{
+		"query-pie-menu": {
+			{
+				"ok": true,
+				"payload": map[string]any{
+					"target_object_id": 23,
+					"interactions": []any{
+						map[string]any{
+							"id":        0,
+							"name":      "Go Upstairs",
+							"param0":    0,
+							"global":    false,
+							"available": false,
+							"gates":     []any{"engine-eval-failed"},
+						},
+					},
+				},
+			},
+		},
+	}
+	sr := newScriptedResponder(t, fake, ipc, script)
+
+	handler := interactWithHandlerFast(ipc, nil)
+	ctx, cancel := context.WithTimeout(context.Background(), 3*time.Second)
+	defer cancel()
+
+	resp, err := handler(ctx, &convention.Request{
+		Args: map[string]any{
+			"interaction": float64(0),
+			"callee_id":   float64(23), // d8b stair case (Stair-Bamboo)
+		},
+	})
+	if err != nil {
+		t.Fatalf("handler: %v", err)
+	}
+	if resp == nil {
+		t.Fatal("nil response")
+	}
+	pay := resp.Payload.(map[string]any)
+
+	// Must be bot-rejected.
+	if pay["verdict"] != "bot-rejected" {
+		t.Errorf("want verdict=bot-rejected, got %v (payload=%+v)", pay["verdict"], pay)
+	}
+	if pay["ok"] != false {
+		t.Errorf("want ok=false, got %v", pay["ok"])
+	}
+	if pay["reason"] != "interaction unavailable" {
+		t.Errorf("want reason='interaction unavailable', got %v", pay["reason"])
+	}
+	// available field must carry what the pie-menu returned.
+	if pay["available"] != false {
+		t.Errorf("want available=false in payload, got %v", pay["available"])
+	}
+	// gates must be present and carry the engine's hint.
+	gates := pay["gates"]
+	if gates == nil {
+		t.Error("want gates field in bot-rejected payload")
+	}
+
+	// CRITICAL: interact-with must NOT have been sent to the bot.
+	// The pre-check fires before the IPC stage, so interact-with should not appear
+	// among the commands received by the scripted responder. Drain non-blockingly.
+	drainTimeout := time.NewTimer(100 * time.Millisecond)
+	defer drainTimeout.Stop()
+	for {
+		select {
+		case cmd, ok := <-sr.recvd:
+			if !ok {
+				goto drained
+			}
+			if cmd.Op == "interact-with" {
+				t.Errorf("interact-with was forwarded to the bot despite pre-check refusing (no IPC should fire on available=false)")
+			}
+		case <-drainTimeout.C:
+			goto drained
+		}
+	}
+drained:
+	t.Logf("bot-rejected (pre-check) payload: %+v", pay)
+}
+
+// TestInteractWithPreCheck_AvailableProceeds verifies that when the pie-menu
+// returns available=true for the matching interaction, the handler proceeds to
+// the verifying path and returns a verdict (queued or interaction-started) as
+// normal — no spurious refusal.
+func TestInteractWithPreCheck_AvailableProceeds(t *testing.T) {
+	fake := newFakeBotProcess()
+	ipc := NewIPC(fake.bot)
+
+	// Script: query-pie-menu returns interaction 0 with available=true.
+	// Then the verifying handler runs: pre-snapshot, interact-with, post-snapshot
+	// (with new action_queue entry → verdict=queued).
+	script := map[string][]map[string]any{
+		"query-pie-menu": {
+			{
+				"ok": true,
+				"payload": map[string]any{
+					"target_object_id": 10,
+					"interactions": []any{
+						map[string]any{
+							"id":        0,
+							"name":      "Sit",
+							"param0":    0,
+							"global":    false,
+							"available": true,
+							"gates":     []any{},
+						},
+					},
+				},
+			},
+		},
+		"query-self": {
+			{"ok": true, "payload": map[string]any{"balance": 5000, "action_queue": []any{}}},
+			{"ok": true, "payload": map[string]any{"balance": 5000, "action_queue": []any{
+				map[string]any{"interaction_id": 1, "name": "Sit", "target_object_id": float64(10), "status": "queued"},
+			}}},
+		},
+		"query-lot-objects": {
+			{"ok": true, "payload": map[string]any{"objects": []any{}}},
+			{"ok": true, "payload": map[string]any{"objects": []any{}}},
+		},
+		"interact-with": {
+			{"ok": true, "payload": map[string]any{"queued": true, "callee_id": 10}},
+		},
+	}
+	_ = newScriptedResponder(t, fake, ipc, script)
+
+	handler := interactWithHandlerFast(ipc, nil)
+	ctx, cancel := context.WithTimeout(context.Background(), 3*time.Second)
+	defer cancel()
+
+	resp, err := handler(ctx, &convention.Request{
+		Args: map[string]any{
+			"interaction": float64(0),
+			"callee_id":   float64(10),
+		},
+	})
+	if err != nil {
+		t.Fatalf("handler: %v", err)
+	}
+	if resp == nil {
+		t.Fatal("nil response")
+	}
+	pay := resp.Payload.(map[string]any)
+
+	// Must reach the verifying handler and return a structured verdict.
+	verdict, _ := pay["verdict"].(string)
+	if verdict != "queued" && verdict != "interaction-started" {
+		t.Errorf("want verdict=queued or interaction-started when available=true, got %q (payload=%+v)", verdict, pay)
+	}
+	if pay["ok"] != true {
+		t.Errorf("want ok=true for success verdict, got %v", pay["ok"])
+	}
+	t.Logf("available=true, proceeded to verifying handler: verdict=%v", pay["verdict"])
+}
+
+// TestInteractWithPreCheck_PieMenuFailFallthrough verifies that when the
+// query-pie-menu IPC fails (bot returns ok=false), the pre-check is fail-open:
+// the handler falls through to the verifying handler and does NOT refuse.
+// Infrastructure failures in the pre-check must not block the caller.
+func TestInteractWithPreCheck_PieMenuFailFallthrough(t *testing.T) {
+	fake := newFakeBotProcess()
+	ipc := NewIPC(fake.bot)
+
+	// Script: query-pie-menu returns ok=false (bot refused).
+	// The pre-check falls through — the verifying handler then runs normally.
+	// We provide a silent-drop scenario (no new queue entry) as the fallback verdict.
+	script := map[string][]map[string]any{
+		"query-pie-menu": {
+			// Bot refuses the query (e.g. target not in VM).
+			{"ok": false, "error": "target_object_id not found in VM"},
+		},
+		"query-self": {
+			{"ok": true, "payload": map[string]any{"balance": 5000, "action_queue": []any{}}},
+			{"ok": true, "payload": map[string]any{"balance": 5000, "action_queue": []any{}}},
+		},
+		"query-lot-objects": {
+			{"ok": true, "payload": map[string]any{"objects": []any{}}},
+			{"ok": true, "payload": map[string]any{"objects": []any{}}},
+		},
+		"interact-with": {
+			{"ok": true, "payload": map[string]any{"queued": true}},
+		},
+	}
+	_ = newScriptedResponder(t, fake, ipc, script)
+
+	handler := interactWithHandlerFast(ipc, nil)
+	ctx, cancel := context.WithTimeout(context.Background(), 3*time.Second)
+	defer cancel()
+
+	resp, err := handler(ctx, &convention.Request{
+		Args: map[string]any{
+			"interaction": float64(0),
+			"callee_id":   float64(55),
+		},
+	})
+	if err != nil {
+		t.Fatalf("handler: %v", err)
+	}
+	if resp == nil {
+		t.Fatal("nil response")
+	}
+	pay := resp.Payload.(map[string]any)
+
+	// Must NOT be bot-rejected from the pre-check — must be a verifying verdict.
+	reason, _ := pay["reason"].(string)
+	if pay["verdict"] == "bot-rejected" && reason == "interaction unavailable" {
+		t.Errorf("pre-check must fall through on IPC failure, not refuse: payload=%+v", pay)
+	}
+	// Must have a verdict (the verifying handler ran).
+	if _, hasVerdict := pay["verdict"]; !hasVerdict {
+		t.Errorf("want structured verdict from verifying handler on pre-check infra failure, got %+v", pay)
+	}
+	t.Logf("pie-menu IPC fail → fell through to verifying handler: verdict=%v", pay["verdict"])
 }
 
 // TestBulletinBoardDeclarationHasObjectTypeArg verifies the interact-with declaration

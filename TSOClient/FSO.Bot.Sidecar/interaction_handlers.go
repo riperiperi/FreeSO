@@ -104,6 +104,27 @@ func interactWithHandler(ipc *IPC, botCmds *BotCmdPump) convention.HandlerFunc {
 		if objectType, _ := req.Args["object_type"].(string); objectType == "bulletin_board" {
 			return bulletinBoardHandler(ctx, botCmds)
 		}
+
+		// W9 (freesoexperiment-df2): query-pie-menu pre-check.
+		//
+		// Call sequence: pre-check → refuse-if-unavailable → verifyingHandler.
+		//
+		// We run this BEFORE entering the verifying handler so that unavailable
+		// interactions are refused immediately without consuming a settle wait or
+		// snapshot IPC. The pre-check is fail-open: if the query-pie-menu IPC
+		// itself fails (timeout, bot wedged), we fall through and let the
+		// verifying handler proceed normally. Infrastructure glitches must not
+		// block the caller.
+		calleeID := intArg(req.Args, "callee_id", -1)
+		interactionID := intArg(req.Args, "interaction", -1)
+		if calleeID >= 0 && interactionID >= 0 {
+			check := queryPieMenuPreCheck(ctx, ipc, calleeID, interactionID)
+			if check.refused {
+				return &convention.Response{Payload: check.refusalResp}, nil
+			}
+			// check.infraFailed → fall through to verifyingHandler.
+		}
+
 		return verifyingHandler(ctx, req)
 	}
 }

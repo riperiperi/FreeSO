@@ -6,7 +6,92 @@
 
 package main
 
-import "encoding/json"
+import (
+	"context"
+	"encoding/json"
+	"log"
+	"time"
+)
+
+// pieMenuQueryTimeout caps the query-pie-menu IPC call in the pre-check.
+// The query is a local-VM tick-lock acquisition — it should complete in well
+// under 1s on a healthy bot. We cap at 3s to match the snapshot IPC cap used
+// by the verifying handler, while staying short enough that a stuck bot
+// doesn't materially delay the rejection path.
+const pieMenuQueryTimeout = 3 * time.Second
+
+// pieMenuPreCheckResult is returned by queryPieMenuPreCheck.
+type pieMenuPreCheckResult struct {
+	// refused is true when the pre-check found the matching entry with
+	// available!=true. The caller must return refusalResp immediately and NOT
+	// forward the IPC.
+	refused     bool
+	refusalResp map[string]any
+
+	// infraFailed is true when the query-pie-menu IPC itself failed (network,
+	// timeout, bot rejected). Per spec the caller falls through and lets the
+	// verifying handler proceed normally — infrastructure failure must NOT block.
+	infraFailed bool
+	infraErr    string
+}
+
+// queryPieMenuPreCheck issues a query-pie-menu IPC for callee_id and looks up
+// the entry matching interactionID. Returns a pieMenuPreCheckResult describing
+// what to do next:
+//
+//   - refused=true  → the engine says available=false for this interaction;
+//     return refusalResp immediately without consuming a verifier slot.
+//   - infraFailed=true → the IPC itself failed (or entry not found); fall
+//     through to the verifying handler. Fail-open: infrastructure glitches
+//     must NOT block the caller.
+//   - neither       → the interaction is available; proceed normally.
+//
+// Delegates to queryPieMenu (cross_level.go) for the IPC call, reusing its
+// timeout (pieMenuQueryTimeout, 3s) and error handling.
+func queryPieMenuPreCheck(ctx context.Context, ipc *IPC, calleeID int, interactionID int) pieMenuPreCheckResult {
+	qctx, cancel := context.WithTimeout(ctx, pieMenuQueryTimeout)
+	defer cancel()
+
+	entries, err := queryPieMenu(qctx, ipc, int64(calleeID))
+	if err != nil {
+		log.Printf("pie-menu-pre-check: IPC error callee_id=%d interaction=%d: %v (falling through)", calleeID, interactionID, err)
+		return pieMenuPreCheckResult{infraFailed: true, infraErr: err.Error()}
+	}
+
+	// Find the matching entry by TTAB id (int64 in pieMenuEntry).
+	for _, entry := range entries {
+		if entry.ID != int64(interactionID) {
+			continue
+		}
+		if !entry.Available {
+			// Engine says this interaction is unavailable. Refuse immediately.
+			log.Printf("pie-menu-pre-check: REFUSING callee_id=%d interaction=%d available=false gates=%v", calleeID, interactionID, entry.Gates)
+			gates := entry.Gates
+			if gates == nil {
+				gates = []string{}
+			}
+			return pieMenuPreCheckResult{
+				refused: true,
+				refusalResp: map[string]any{
+					"ok":        false,
+					"verdict":   "bot-rejected",
+					"reason":    "interaction unavailable",
+					"available": entry.Available,
+					"gates":     gates,
+					"callee_id": calleeID,
+				},
+			}
+		}
+		// available=true → proceed.
+		log.Printf("pie-menu-pre-check: OK callee_id=%d interaction=%d available=true", calleeID, interactionID)
+		return pieMenuPreCheckResult{}
+	}
+
+	// Entry not found in the pie menu at all — treat as fall-through (the bot's
+	// IPC-level validation will catch a truly invalid interaction ID).
+	log.Printf("pie-menu-pre-check: interaction=%d not found in pie-menu for callee_id=%d (falling through)", interactionID, calleeID)
+	return pieMenuPreCheckResult{infraFailed: true, infraErr: "interaction not found in pie-menu"}
+}
 
 // interactExpectFn is the ExpectFn for interact-with. It diffs the action_queue
 // between the pre- and post-snapshots to determine whether the interaction was

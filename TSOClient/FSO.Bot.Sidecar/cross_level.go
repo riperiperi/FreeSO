@@ -268,9 +268,15 @@ func isStairObject(obj nearbyObject) bool {
 
 // pieMenuEntry is a minimal projection of one interact-with pie-menu entry,
 // as returned by query-pie-menu. ID is the TTAB index to pass to interact-with.
+// Available and Gates are present when W10 (freesoexperiment-d51) is live on
+// the server — the C# query-pie-menu handler always serialises them as of that
+// commit. Available is always bool (never null after W10).
+// Gates carries the engine's refuse-reason hints when Available is false.
 type pieMenuEntry struct {
-	ID   int64  `json:"id"`
-	Name string `json:"name"`
+	ID        int64    `json:"id"`
+	Name      string   `json:"name"`
+	Available bool     `json:"available"`
+	Gates     []string `json:"gates"`
 }
 
 // queryPieMenu issues a query-pie-menu IPC call for the given object and
