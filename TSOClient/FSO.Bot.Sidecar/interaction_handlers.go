@@ -76,15 +76,51 @@ func RegisterInteractionHandlers(ctx context.Context, cf *Campfire, ipc *IPC, bo
 //   - Checks FREESO_COMMUNITY_LOT_ID env: if unset or 0, refuses NO_AFFORDANCE.
 //   - Issues probe-bulletin bot-cmd via BotCmdPump.
 //   - Returns ok:true with kind="bulletin_listing" and the messages array.
+//
+// All other callee_ids go through verifyingHandlerWithExpect (freesoexperiment-824):
+// the handler snapshots action_queue before and after the IPC, diffs for a new
+// entry with matching target_object_id, and returns a structured verdict instead
+// of the silent ok:true that forwardIPC used to return.
+//
+//   - verdict="interaction-started" — new queue entry with status="running".
+//   - verdict="queued"             — new queue entry with any other status.
+//   - verdict="silent-drop"        — no new queue entry (TTAB rejection or range).
+//   - verdict="bot-rejected"       — bot refused at IPC parse / arg validation.
+var interactWithAllowedArgs = []string{"interaction", "callee_id", "param0", "global", "queue_mode"}
+
 func interactWithHandler(ipc *IPC, botCmds *BotCmdPump) convention.HandlerFunc {
+	verifyingHandler := verifyingHandlerWithExpect(
+		ipc,
+		"interact-with",
+		interactWithAllowedArgs,
+		0,    // snapshotLevel: 0 = no object filter; we diff action_queue, not objects
+		"",   // snapshotGuidHex: not used for interaction
+		nil,  // extendedPollTrigger: action_queue changes happen within one VM tick; no extended poll needed
+		interactExpectFn,
+		defaultInteractVerifyingConfig(),
+	)
 	return func(ctx context.Context, req *convention.Request) (*convention.Response, error) {
-		// Bulletin-board special path (freesoexperiment-2ac).
+		// Bulletin-board special path (freesoexperiment-2ac) — stays on forwardIPC.
 		if objectType, _ := req.Args["object_type"].(string); objectType == "bulletin_board" {
 			return bulletinBoardHandler(ctx, botCmds)
 		}
-		args := pickArgs(req.Args, "interaction", "callee_id", "param0", "global", "queue_mode")
-		return forwardIPC(ctx, ipc, "interact-with", args)
+		return verifyingHandler(ctx, req)
 	}
+}
+
+// defaultInteractVerifyingConfig returns a verifyingHandlerConfig tuned for
+// interact-with. Compared to the placement config:
+//   - settleWait is 1500ms — same as placement: one VM tick plus one perception
+//     emission cycle. The action_queue diff appears within one VM tick (~33ms),
+//     but we give the same generous window for consistency.
+//   - extendedPollTimeout is 0 — interaction queue entries appear synchronously
+//     on the first post-snapshot; no two-phase apply pattern like buy-object.
+//     Extended polling would add latency without benefit.
+//   - snapshotTimeout / sendTimeout same as default.
+func defaultInteractVerifyingConfig() verifyingHandlerConfig {
+	cfg := defaultVerifyingConfig()
+	cfg.extendedPollTimeout = 0 // disable extended polling for interact-with
+	return cfg
 }
 
 // bulletinBoardHandler implements the bulletin_board branch of interact-with.
