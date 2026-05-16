@@ -59,7 +59,7 @@ func TestIntegration_CampfireAndBridge(t *testing.T) {
 	if err != nil {
 		t.Skipf("go not on PATH: %v", err)
 	}
-	build := exec.Command(goBin, "build", "-o", sidecarBin, ".")
+	build := exec.Command(goBin, "build", "-buildvcs=false", "-o", sidecarBin, ".")
 	build.Dir = mustSourceDir(t)
 	if out, err := build.CombinedOutput(); err != nil {
 		t.Fatalf("build sidecar: %v\n%s", err, out)
@@ -299,7 +299,7 @@ func TestIntegration_PersistentBodyCfIDSurvivesRestart(t *testing.T) {
 
 	// Build the sidecar binary into tmp.
 	sidecarBin := filepath.Join(tmp, "freeso-sidecar-restart-test")
-	build := exec.Command(goBin, "build", "-o", sidecarBin, ".")
+	build := exec.Command(goBin, "build", "-buildvcs=false", "-o", sidecarBin, ".")
 	build.Dir = mustSourceDir(t)
 	if out, err := build.CombinedOutput(); err != nil {
 		t.Fatalf("build sidecar: %v\n%s", err, out)
@@ -494,7 +494,7 @@ func TestIntegration_SupervisorLoop_BotTermDoesNotKillSidecar(t *testing.T) {
 
 	// 1. Build the sidecar binary.
 	sidecarBin := filepath.Join(tmp, "freeso-sidecar-supervisor-test")
-	build := exec.Command(goBin, "build", "-o", sidecarBin, ".")
+	build := exec.Command(goBin, "build", "-buildvcs=false", "-o", sidecarBin, ".")
 	build.Dir = mustSourceDir(t)
 	if out, err := build.CombinedOutput(); err != nil {
 		t.Fatalf("build sidecar: %v\n%s", err, out)
@@ -745,7 +745,7 @@ func TestIntegration_VisitLot_BothShapes(t *testing.T) {
 
 	// Build the sidecar binary.
 	sidecarBin := filepath.Join(tmp, "freeso-sidecar-visit-lot-test")
-	build := exec.Command(goBin, "build", "-o", sidecarBin, ".")
+	build := exec.Command(goBin, "build", "-buildvcs=false", "-o", sidecarBin, ".")
 	build.Dir = mustSourceDir(t)
 	if out, err := build.CombinedOutput(); err != nil {
 		t.Fatalf("build sidecar: %v\n%s", err, out)
@@ -998,7 +998,7 @@ func TestIntegration_JournalWiringViaSidecarBinary(t *testing.T) {
 
 	// 1. Build the sidecar binary.
 	sidecarBin := filepath.Join(tmp, "freeso-sidecar-journal-test")
-	build := exec.Command(goBin, "build", "-o", sidecarBin, ".")
+	build := exec.Command(goBin, "build", "-buildvcs=false", "-o", sidecarBin, ".")
 	build.Dir = mustSourceDir(t)
 	if out, err := build.CombinedOutput(); err != nil {
 		t.Fatalf("build sidecar: %v\n%s", err, out)

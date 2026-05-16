@@ -61,7 +61,7 @@ func TestSupervisor_AllRelaunchAttemptsFail(t *testing.T) {
 
 	// Build the real sidecar binary.
 	sidecarBin := filepath.Join(tmp, "freeso-sidecar-exhaust")
-	build := exec.Command(goBin, "build", "-o", sidecarBin, ".")
+	build := exec.Command(goBin, "build", "-buildvcs=false", "-o", sidecarBin, ".")
 	build.Dir = mustSourceDir(t)
 	if out, err := build.CombinedOutput(); err != nil {
 		t.Fatalf("build sidecar: %v\n%s", err, out)

@@ -47,7 +47,7 @@ func TestBodyCfStickiness_SameIDAfterRelaunch(t *testing.T) {
 
 	// Build sidecar.
 	sidecarBin := filepath.Join(tmp, "freeso-sidecar-sticky")
-	build := exec.Command(goBin, "build", "-o", sidecarBin, ".")
+	build := exec.Command(goBin, "build", "-buildvcs=false", "-o", sidecarBin, ".")
 	build.Dir = mustSourceDir(t)
 	if out, err := build.CombinedOutput(); err != nil {
 		t.Fatalf("build sidecar: %v\n%s", err, out)
@@ -201,7 +201,7 @@ func TestBodyCfStickiness_NewIDWhenCfHomeWiped(t *testing.T) {
 	tmp := t.TempDir()
 
 	sidecarBin := filepath.Join(tmp, "freeso-sidecar-wipe")
-	build := exec.Command(goBin, "build", "-o", sidecarBin, ".")
+	build := exec.Command(goBin, "build", "-buildvcs=false", "-o", sidecarBin, ".")
 	build.Dir = mustSourceDir(t)
 	if out, err := build.CombinedOutput(); err != nil {
 		t.Fatalf("build sidecar: %v\n%s", err, out)

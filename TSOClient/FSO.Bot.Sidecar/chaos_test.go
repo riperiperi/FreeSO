@@ -79,7 +79,7 @@ func chaosSkipCheck(t *testing.T) string {
 func buildSidecarBin(t *testing.T, goBin, dst, suffix string) string {
 	t.Helper()
 	bin := filepath.Join(dst, "freeso-sidecar-"+suffix)
-	build := exec.Command(goBin, "build", "-o", bin, ".")
+	build := exec.Command(goBin, "build", "-buildvcs=false", "-o", bin, ".")
 	build.Dir = mustSourceDir(t)
 	if out, err := build.CombinedOutput(); err != nil {
 		t.Fatalf("build sidecar (%s): %v\n%s", suffix, err, out)

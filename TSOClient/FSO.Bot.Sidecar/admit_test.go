@@ -46,7 +46,7 @@ func TestAdmitAgentScript_EndToEnd(t *testing.T) {
 		t.Skipf("go not on PATH: %v", err)
 	}
 	sidecarBin := filepath.Join(tmp, "freeso-sidecar")
-	build := exec.Command(goBin, "build", "-o", sidecarBin, ".")
+	build := exec.Command(goBin, "build", "-buildvcs=false", "-o", sidecarBin, ".")
 	build.Dir = mustSourceDir(t)
 	if out, err := build.CombinedOutput(); err != nil {
 		t.Fatalf("build: %v\n%s", err, out)
