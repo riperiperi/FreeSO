@@ -1629,7 +1629,28 @@ namespace FSO.Client.UI.Panels
                         LastRectCutNotable = notableChange;
                     }
                 }
+
+                ApplyWallHoverLift();
             }
+        }
+
+        private void ApplyWallHoverLift()
+        {
+            if (CustomControl is not LotControls.IWallHoverTool) return;
+
+            var bp = vm.Context.Blueprint;
+            if (bp?.Cutaway == null) return;
+            var changed = false;
+            for (var y = MouseCutRect.Top; y < MouseCutRect.Bottom; y++)
+            for (var x = MouseCutRect.Left; x < MouseCutRect.Right; x++)
+            {
+                if (x < 0 || x >= bp.Width || y < 0 || y >= bp.Height) continue;
+                var i = y * bp.Width + x;
+                if (!bp.Cutaway[i]) continue;
+                bp.Cutaway[i] = false;
+                changed = true;
+            }
+            if (changed) bp.Changes.SetFlag(BlueprintGlobalChanges.WALL_CUT_CHANGED);
         }
 
         public void Dispose()

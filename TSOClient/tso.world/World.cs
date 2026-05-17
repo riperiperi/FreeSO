@@ -1001,6 +1001,23 @@ namespace FSO.LotView
             return Platform.GetObjectIDAtScreenPos(x, y, gd, State);
         }
 
+        public (Point Tile, sbyte Level, WallSegments Segment)? GetWallAtScreenPos(Vector2 screenPos)
+        {
+            if (Blueprint == null) return null;
+            var maxFloor = Math.Min(State.Level, Blueprint.Stories);
+
+            (Point Tile, sbyte Level, WallSegments Segment)? best = null;
+            float bestDist = 1000f;
+            for (sbyte floor = 1; floor <= maxFloor; floor++)
+            {
+                var hit = WallRaycaster.Raycast(State.CameraRayAtScreenPos(screenPos, floor), floor, Blueprint, bestDist);
+                if (hit == null) continue;
+                bestDist = hit.Value.Item1;
+                best = (hit.Value.Item2.Tile, floor, hit.Value.Item2.Segment);
+            }
+            return best;
+        }
+
          /// <summary>
         /// Gets an object group's thumbnail provided an array of objects.
         /// </summary>
