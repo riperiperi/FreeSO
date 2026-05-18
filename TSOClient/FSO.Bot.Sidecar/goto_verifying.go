@@ -6,7 +6,10 @@
 
 package main
 
-import "encoding/json"
+import (
+	"encoding/json"
+	"strings"
+)
 
 // gotoInteractionExpect is the ExpectFn for go-to when --interaction is set
 // (W11, freesoexperiment-596). The bot resolves the interaction name to a TTAB
@@ -129,8 +132,21 @@ func socialExpectFn(pre, post lotSnapshot, args map[string]any, ipcResp *Respons
 			calleeID = ack.CalleeID
 		}
 	}
-	// If the ack didn't carry callee_id, we cannot filter by target — tolerate
-	// any new action_queue entry (broadest possible match).
+	// matchedName from the bot ack: "Nice/Hug", "Romance/Blow a Kiss". The queue
+	// entry's name is the short variant ("Hug", "Blow a Kiss") because the engine
+	// commits the resolved leaf interaction. Fall back to suffix-match when the
+	// callee_id strict match misses (observed: bot ack callee_id is the target
+	// VMAvatar ObjectID; the queue entry's TargetObjectID is the spawned
+	// interaction socket sub-object, a different ObjectID).
+	matchedName := ""
+	if ipcResp != nil && len(ipcResp.Payload) > 0 {
+		var ack struct {
+			MatchedName string `json:"matched_name"`
+		}
+		if err := json.Unmarshal(ipcResp.Payload, &ack); err == nil {
+			matchedName = ack.MatchedName
+		}
+	}
 
 	// Collect pre action_queue UIDs for fast lookup.
 	preUIDs := make(map[int]bool, len(pre.actionQueue))
@@ -138,24 +154,54 @@ func socialExpectFn(pre, post lotSnapshot, args map[string]any, ipcResp *Respons
 		preUIDs[e.InteractionID] = true
 	}
 
-	for _, e := range post.actionQueue {
+	// Two passes: strict callee_id match first (preserves prior behavior),
+	// then matched_name suffix-match across non-idle new entries.
+	var fallback *ActionQueueEntry
+	for i := range post.actionQueue {
+		e := post.actionQueue[i]
 		if preUIDs[e.InteractionID] {
 			continue
 		}
-		if calleeID >= 0 && e.TargetObjectID != calleeID {
-			continue
+		if calleeID >= 0 && e.TargetObjectID == calleeID {
+			out := map[string]any{
+				"ok":               true,
+				"action_uid":       e.InteractionID,
+				"target_object_id": e.TargetObjectID,
+				"interaction_name": e.Name,
+				"status":           e.Status,
+				"callee_id":        calleeID,
+			}
+			if e.Status == "running" {
+				out["verdict"] = "interaction-started"
+				return "interaction-started", nil, out, true
+			}
+			out["verdict"] = "queued"
+			return "queued", nil, out, true
 		}
+		// Track first new entry whose name appears as the trailing segment of
+		// matched_name ("Nice/Hug" → "Hug"; "Romance/Blow a Kiss" → "Blow a Kiss").
+		if fallback == nil && matchedName != "" && e.Name != "" {
+			if matchedName == e.Name || strings.HasSuffix(matchedName, "/"+e.Name) {
+				ent := e
+				fallback = &ent
+			}
+		}
+	}
+
+	if fallback != nil {
 		out := map[string]any{
-			"ok":               true,
-			"action_uid":       e.InteractionID,
-			"target_object_id": e.TargetObjectID,
-			"interaction_name": e.Name,
-			"status":           e.Status,
+			"ok":                true,
+			"action_uid":        fallback.InteractionID,
+			"target_object_id":  fallback.TargetObjectID,
+			"interaction_name":  fallback.Name,
+			"status":            fallback.Status,
+			"matched_by":        "matched_name",
+			"matched_name":      matchedName,
 		}
 		if calleeID >= 0 {
 			out["callee_id"] = calleeID
 		}
-		if e.Status == "running" {
+		if fallback.Status == "running" {
 			out["verdict"] = "interaction-started"
 			return "interaction-started", nil, out, true
 		}

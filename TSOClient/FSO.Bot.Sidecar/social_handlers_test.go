@@ -338,6 +338,88 @@ func TestSocialExpectFn_AllFiveVerbs(t *testing.T) {
 	}
 }
 
+// TestSocialExpectFn_ObjectIDDriftFallback (sisters-shake-hands regression):
+// the bot's IPC ack reports callee_id as the target VMAvatar's ObjectID at
+// pie-menu lookup time; the engine commits the queue entry against a different
+// ObjectID (an interaction-socket sub-object). When matched_name is present and
+// matches a new entry's name (after stripping the path prefix), attribute it.
+func TestSocialExpectFn_ObjectIDDriftFallback(t *testing.T) {
+	pre := lotSnapshot{actionQueue: []ActionQueueEntry{}, objectsByPID: map[uint64]objectRef{}}
+	post := lotSnapshot{
+		actionQueue: []ActionQueueEntry{
+			// Engine-committed entry: target_object_id differs from ack callee_id;
+			// short name matches the trailing segment of matched_name.
+			{InteractionID: 14, Name: "Hug", TargetObjectID: 101, Status: "queued"},
+		},
+		objectsByPID: map[uint64]objectRef{},
+	}
+	ipcResp := &Response{Ok: true, Payload: []byte(
+		`{"queued":true,"verb":"be-friendly","interaction":61,"matched_name":"Nice/Hug","callee_id":98,"target_sim_id":3,"queue_mode":"queue","cancelled":2}`,
+	)}
+	verdict, _, payload, ok := socialExpectFn(pre, post, nil, ipcResp)
+	if verdict != "queued" {
+		t.Errorf("want verdict=queued (drift fallback), got %q", verdict)
+	}
+	if !ok {
+		t.Error("want ok=true for queued")
+	}
+	if payload["matched_by"] != "matched_name" {
+		t.Errorf("want matched_by=matched_name, got %v", payload["matched_by"])
+	}
+	if payload["target_object_id"] != 101 {
+		t.Errorf("want target_object_id=101, got %v", payload["target_object_id"])
+	}
+}
+
+// TestInteractExpectFn_SingleNewEntryFallback (sisters-shake-hands regression
+// for interact-with): when the bot ack reports queued:true but no new queue
+// entry matches callee_id strictly, and exactly one new non-idle entry exists,
+// attribute it to this op.
+func TestInteractExpectFn_SingleNewEntryFallback(t *testing.T) {
+	pre := lotSnapshot{actionQueue: []ActionQueueEntry{}, objectsByPID: map[uint64]objectRef{}}
+	post := lotSnapshot{
+		actionQueue: []ActionQueueEntry{
+			{InteractionID: 17, Name: "Greet", TargetObjectID: 101, Status: "running"},
+		},
+		objectsByPID: map[uint64]objectRef{},
+	}
+	args := map[string]any{"callee_id": 22, "interaction": 60}
+	ipcResp := &Response{Ok: true, Payload: []byte(`{"queued":true,"callee_id":22,"interaction":60,"cancelled":2,"queue_mode":"preempt"}`)}
+	verdict, _, payload, ok := interactExpectFn(pre, post, args, ipcResp)
+	if verdict != "interaction-started" {
+		t.Errorf("want interaction-started (single-new-entry fallback), got %q", verdict)
+	}
+	if !ok {
+		t.Error("want ok=true for interaction-started")
+	}
+	if payload["matched_by"] != "single-new-entry" {
+		t.Errorf("want matched_by=single-new-entry, got %v", payload["matched_by"])
+	}
+}
+
+// TestInteractExpectFn_NoAckQueuedNoFallback: the single-new-entry fallback
+// must NOT kick in when the bot ack does not confirm queued:true (e.g. the
+// op was a no-op). Preserves silent-drop verdict on unrelated traffic.
+func TestInteractExpectFn_NoAckQueuedNoFallback(t *testing.T) {
+	pre := lotSnapshot{actionQueue: []ActionQueueEntry{}, objectsByPID: map[uint64]objectRef{}}
+	post := lotSnapshot{
+		actionQueue: []ActionQueueEntry{
+			{InteractionID: 5, Name: "Cook", TargetObjectID: 88, Status: "queued"},
+		},
+		objectsByPID: map[uint64]objectRef{},
+	}
+	args := map[string]any{"callee_id": 17, "interaction": 0}
+	// queued:false — bot did not actually dispatch; the new entry is unrelated.
+	ipcResp := &Response{Ok: true, Payload: []byte(`{"queued":false,"callee_id":17}`)}
+	verdict, _, _, ok := interactExpectFn(pre, post, args, ipcResp)
+	if verdict != "silent-drop" {
+		t.Errorf("want silent-drop (no fallback when not queued), got %q", verdict)
+	}
+	if ok {
+		t.Error("want ok=false for silent-drop")
+	}
+}
+
 // TestDirectedSocialHandlersDispatchIPC_OldShape asserts the un-wrapped
 // directedSocialHandler (used in older tests) still forwards the op correctly.
 // This preserves the IPC shape contract that existed before W11.
