@@ -127,17 +127,50 @@ func interactExpectFn(pre, post lotSnapshot, args map[string]any, ipcResp *Respo
 		preUIDs[e.InteractionID] = true
 	}
 
-	// Scan post.actionQueue for new entries targeting callee_id.
+	// Scan post.actionQueue for new entries targeting callee_id. Strict-match
+	// first; on miss, fall back to single-new-entry attribution (see below).
+	var newEntries []ActionQueueEntry
 	for _, e := range post.actionQueue {
 		if preUIDs[e.InteractionID] {
-			// This entry existed before — not caused by our interact-with.
 			continue
 		}
-		if calleeID >= 0 && e.TargetObjectID != calleeID {
-			// New entry, but targeting a different object.
-			continue
+		if calleeID >= 0 && e.TargetObjectID == calleeID {
+			out := map[string]any{
+				"ok":               true,
+				"action_uid":       e.InteractionID,
+				"target_object_id": e.TargetObjectID,
+				"interaction_name": e.Name,
+				"status":           e.Status,
+				"callee_id":        calleeID,
+			}
+			if e.Status == "running" {
+				out["verdict"] = "interaction-started"
+				return "interaction-started", nil, out, true
+			}
+			out["verdict"] = "queued"
+			return "queued", nil, out, true
 		}
-		// New entry with matching target → success.
+		newEntries = append(newEntries, e)
+	}
+
+	// Fallback: when the bot's VMNetInteractionCmd dispatch reports ok=true but
+	// no new entry matches callee_id strictly, the engine has committed the
+	// queue entry against an interaction-socket sub-object whose ObjectID differs
+	// from the caller-supplied callee_id. If the bot ack confirms queued:true
+	// AND exactly one new non-idle entry exists in post, attribute it to this op.
+	// The queued:true gate keeps unrelated traffic (e.g. another agent's social
+	// landing in the same tick) from being mis-attributed when our IPC was a no-op.
+	ackQueued := false
+	if ipcResp != nil && len(ipcResp.Payload) > 0 {
+		var ack struct {
+			Queued bool `json:"queued"`
+		}
+		if err := json.Unmarshal(ipcResp.Payload, &ack); err == nil {
+			ackQueued = ack.Queued
+		}
+	}
+	if ackQueued && len(newEntries) == 1 {
+		e := newEntries[0]
 		out := map[string]any{
 			"ok":               true,
 			"action_uid":       e.InteractionID,
@@ -145,6 +178,7 @@ func interactExpectFn(pre, post lotSnapshot, args map[string]any, ipcResp *Respo
 			"interaction_name": e.Name,
 			"status":           e.Status,
 			"callee_id":        calleeID,
+			"matched_by":       "single-new-entry",
 		}
 		if e.Status == "running" {
 			out["verdict"] = "interaction-started"
