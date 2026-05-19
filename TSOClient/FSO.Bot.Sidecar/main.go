@@ -360,6 +360,16 @@ func main() {
 		}
 		log.Printf("convention handlers: %d screenshot-family ops serving", screenshotServers)
 
+		// Thumbnail family (automataisland-ca6): get-lot-thumbnail.
+		// Returns a base64-encoded PNG via the headless renderer. No permission
+		// gate. Hard 2s render timeout. 256KB size cap with auto-downsample.
+		// Returns error:not-on-lot when bot is in city mode.
+		thumbnailServers, err := RegisterThumbnailHandlers(ctx, cf, ipc)
+		if err != nil {
+			log.Fatalf("register thumbnail handlers: %v", err)
+		}
+		log.Printf("convention handlers: %d thumbnail-family ops serving", thumbnailServers)
+
 		// Chargen family (freesoexperiment-92a): create-avatar.
 		// City-socket operation (RSGZWrapperPDU via bot-cmd:create-avatar).
 		// Bot must be launched with --chargen-mode for this to succeed; in normal

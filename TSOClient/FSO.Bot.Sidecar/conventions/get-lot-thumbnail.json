@@ -3,7 +3,7 @@
   "version": "1.0",
   "operation": "get-lot-thumbnail",
   "family": "queries",
-  "description": "Request a lot's cached thumbnail from the city server.",
+  "description": "Return a base64-encoded PNG thumbnail of the current lot via the headless renderer. Bot must be on a lot; returns error:not-on-lot if in city mode. Render timeout is 2s; returns error:render-timeout if exceeded. Size limit 256KB; PNG is downsampled to fit if needed.",
   "args": [],
   "produces_tags": [
     {
@@ -19,16 +19,23 @@
     "window": "1m"
   },
   "response": "sync",
-  "status": "scaffold",
+  "status": "implemented",
   "call_signatures": [
-    "cf $CF get-lot-thumbnail   # SCAFFOLD op — not yet implemented; handler may return ok:false or a stub. Prefer a concrete sibling op if your goal is actionable."
+    "cf $CF get-lot-thumbnail   # returns {ok:true, thumbnail:<base64-PNG>, size_bytes:<N>} or {ok:false, error:<reason>}"
   ],
+  "response_fields": {
+    "ok": "bool — true on success",
+    "thumbnail": "string — base64-encoded PNG of the current lot view (present when ok=true)",
+    "size_bytes": "int — byte length of the raw PNG before base64 encoding (present when ok=true)",
+    "error": "string — error category on failure: 'not-on-lot', 'render-timeout', or a freeform diagnostic message"
+  },
   "common_mistakes": [
-    "This is a SCAFFOLD op — the convention is declared but the handler may be unimplemented or stubbed. Check the declaration's status field.",
-    "Relying on scaffold ops mid-run will either return a deferred marker or fail — prefer a concrete sibling op, and file an rd item if the missing behaviour blocks progress."
+    "Bot must be on a lot (joined via visit-lot); calling from city mode returns ok=false, error=not-on-lot.",
+    "Render timeout is 2s. On a complex lot the renderer may not respond in time; error=render-timeout is returned instead of hanging.",
+    "Output PNG is guaranteed ≤256KB. Very large lots are downsampled automatically."
   ],
   "perception_hints": [
-    "These ops return the same shape as the corresponding perception slice; use for fresh mid-turn snapshots",
-    "Perception already pushes this data at FSO_PERCEPTION_HZ — only call when you need data newer than the last tick"
+    "Use for periodic capture cadence (see docs/operating-mode.md). At 1 Hz perception the lot visual state updates rarely; polling more than once per minute is rarely useful.",
+    "The returned PNG is from the same renderer pipeline as take-screenshot but with no permission gate and no rate-limit per lot."
   ]
 }
