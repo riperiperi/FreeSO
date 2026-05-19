@@ -284,6 +284,16 @@ func purchaseLotHandler(botCmds *BotCmdPump) convention.HandlerFunc {
 
 // escalationHint returns a human-readable hint for specific server-side failure
 // reasons. NHOOD_RESERVED is the escalation risk called out in the item spec.
+//
+// (automataisland-e49) Two previously missing cases:
+//
+//   - LOT_NOT_PURCHASABLE: also covers the NRE path (server returns this after
+//     the null-guard fix when fso_neighborhoods is empty). Operator must seed the
+//     neighborhoods table or pick a tile within an existing neighborhood boundary.
+//
+//   - TH_NOT_MAYOR: returned for community lots because MayorMode=false is
+//     hardcoded in the bot handler — agents never run in mayor mode. Community
+//     lots require mayor-mode placement which the sidecar does not support.
 func escalationHint(reason string) string {
 	switch reason {
 	case "NHOOD_RESERVED":
@@ -294,6 +304,10 @@ func escalationHint(reason string) string {
 		return "The target tile is already occupied. Use a different target_lot_location."
 	case "NAME_TAKEN":
 		return "Lot name is already in use. Choose a different name."
+	case "LOT_NOT_PURCHASABLE":
+		return "ESCALATE: The target tile is not purchasable. Common causes: (1) fso_neighborhoods is empty — an operator must seed it before lots can be bought; (2) tile is water, out-of-bounds, or too steep; (3) tile already has a lot at this location."
+	case "TH_NOT_MAYOR":
+		return "Community lots require mayor-mode placement. The bot handler uses MayorMode=false — community lots cannot be purchased via the sidecar. Use a residential or money-category tile instead."
 	default:
 		return ""
 	}

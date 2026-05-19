@@ -67,6 +67,20 @@ namespace FSO.Server.Servers.City.Handlers
                 }
 
                 var targNhood = db.Neighborhoods.GetByLocation(packedLocation);
+                // (automataisland-e49) GetByLocation returns null when fso_neighborhoods is
+                // empty (e.g. fresh grid31337-test sandbox). Accessing .neighborhood_id on null
+                // threw a NullReferenceException that bypassed all typed-reason paths.
+                // Treat no-neighborhood as LOT_NOT_PURCHASABLE — the operator must seed
+                // fso_neighborhoods before lots can be purchased.
+                if (targNhood == null)
+                {
+                    session.Write(new PurchaseLotResponse()
+                    {
+                        Status = PurchaseLotStatus.FAILED,
+                        Reason = PurchaseLotFailureReason.LOT_NOT_PURCHASABLE
+                    });
+                    return;
+                }
                 var nhoodDS = await DataService.Get<Neighborhood>((uint)targNhood.neighborhood_id);
 
                 DbLot ownedLot;

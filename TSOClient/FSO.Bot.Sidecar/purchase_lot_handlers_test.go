@@ -483,6 +483,341 @@ func TestPurchaseLotHandlerNoBotMode(t *testing.T) {
 	}
 }
 
+// TestPurchaseLotHandlerLotNotPurchasable is the NEGATIVE gate regression test
+// for automataisland-e49.
+//
+// Before the fix, an empty fso_neighborhoods table caused the server-side
+// PurchaseLotHandler to NRE on targNhood.neighborhood_id — which was caught by
+// the generic catch(Exception ex) block and surfaced as:
+//
+//	ok:false error:"purchase-lot: NullReferenceException: Object reference not set..."
+//
+// After the fix, the server sends PurchaseLotStatus.FAILED / LOT_NOT_PURCHASABLE.
+// The sidecar converts that to ok=false, reason="LOT_NOT_PURCHASABLE" with a hint.
+func TestPurchaseLotHandlerLotNotPurchasable(t *testing.T) {
+	tmp := t.TempDir()
+	withFSO_USER(t, "purchase-lot-test-lot-not-purchasable")
+	withConfigHome(t, tmp)
+
+	fake := newFakeBotProcess()
+	pump := NewBotCmdPump(fake.bot)
+
+	go func() {
+		line1 := <-fake.stdinLines
+		var req1 BotCmdRequest
+		if err := json.Unmarshal(line1, &req1); err != nil {
+			t.Errorf("probe-road unmarshal: %v", err)
+			return
+		}
+		if req1.Cmd != "probe-road" {
+			t.Errorf("want cmd=probe-road, got %q", req1.Cmd)
+			return
+		}
+		pump.Deliver(mustMarshal(map[string]any{
+			"kind":           "bot-cmd-reply",
+			"correlation_id": req1.CorrelationID,
+			"ok":             true,
+			"data":           map[string]any{"has_road": true, "road_bits": 9, "x": 249, "y": 352},
+		}))
+
+		line2 := <-fake.stdinLines
+		var req2 BotCmdRequest
+		if err := json.Unmarshal(line2, &req2); err != nil {
+			t.Errorf("purchase-lot unmarshal: %v", err)
+			return
+		}
+		if req2.Cmd != "purchase-lot" {
+			t.Errorf("want cmd=purchase-lot, got %q", req2.Cmd)
+			return
+		}
+		pump.Deliver(mustMarshal(map[string]any{
+			"kind":           "bot-cmd-reply",
+			"correlation_id": req2.CorrelationID,
+			"ok":             true,
+			"data": map[string]any{
+				"status":    "FAILED",
+				"reason":    "LOT_NOT_PURCHASABLE",
+				"lot_id":    float64(0),
+				"new_funds": float64(1000000),
+			},
+		}))
+	}()
+
+	handler := purchaseLotHandler(pump)
+	ctx, cancel := context.WithTimeout(context.Background(), 5*time.Second)
+	defer cancel()
+
+	resp, err := handler(ctx, &convention.Request{Args: map[string]any{
+		"target_lot_location": "0x00F90160",
+		"name":                "unpurchasable lot",
+	}})
+	if err != nil {
+		t.Fatalf("handler error: %v", err)
+	}
+	payload, _ := resp.Payload.(map[string]any)
+
+	// NEGATIVE gate: typed refusal, NOT NRE.
+	if payload["ok"] != false {
+		t.Errorf("NEGATIVE gate: want ok=false for LOT_NOT_PURCHASABLE, got %v", payload)
+	}
+	if payload["reason"] != "LOT_NOT_PURCHASABLE" {
+		t.Errorf("NEGATIVE gate: want reason=LOT_NOT_PURCHASABLE, got %v", payload["reason"])
+	}
+	errStr, _ := payload["error"].(string)
+	if errStr == "" {
+		t.Error("want non-empty error string")
+	}
+	// Regression: old error string contained "NullReferenceException".
+	for i := 0; i <= len(errStr)-20; i++ {
+		if errStr[i:i+20] == "NullReferenceExceptio" {
+			t.Errorf("REGRESSION: NRE still surfaced in error field: %q", errStr)
+			break
+		}
+	}
+	hint, _ := payload["hint"].(string)
+	if hint == "" {
+		t.Error("want non-empty escalation hint for LOT_NOT_PURCHASABLE (missing case in escalationHint?)")
+	}
+	dir := filepath.Join(tmp, "freeso-souls", "purchase-lot-test-lot-not-purchasable")
+	ownedPath := filepath.Join(dir, "owned-lots.json")
+	if _, err := os.Stat(ownedPath); err == nil {
+		t.Error("owned-lots.json should NOT be written on a failed purchase")
+	}
+	t.Logf("LOT_NOT_PURCHASABLE response: reason=%v hint=%q", payload["reason"], hint)
+}
+
+// TestPurchaseLotHandlerCommunityLotTHNotMayor asserts that a community lot
+// purchase attempt returns reason=TH_NOT_MAYOR with an escalation hint.
+// Community lots require MayorMode=true; the bot handler hard-codes MayorMode=false.
+func TestPurchaseLotHandlerCommunityLotTHNotMayor(t *testing.T) {
+	tmp := t.TempDir()
+	withFSO_USER(t, "purchase-lot-test-community")
+	withConfigHome(t, tmp)
+
+	fake := newFakeBotProcess()
+	pump := NewBotCmdPump(fake.bot)
+
+	go func() {
+		line1 := <-fake.stdinLines
+		var req1 BotCmdRequest
+		if err := json.Unmarshal(line1, &req1); err != nil {
+			t.Errorf("probe-road unmarshal: %v", err)
+			return
+		}
+		pump.Deliver(mustMarshal(map[string]any{
+			"kind":           "bot-cmd-reply",
+			"correlation_id": req1.CorrelationID,
+			"ok":             true,
+			"data":           map[string]any{"has_road": true, "road_bits": 9, "x": 249, "y": 352},
+		}))
+
+		line2 := <-fake.stdinLines
+		var req2 BotCmdRequest
+		if err := json.Unmarshal(line2, &req2); err != nil {
+			t.Errorf("purchase-lot unmarshal: %v", err)
+			return
+		}
+		pump.Deliver(mustMarshal(map[string]any{
+			"kind":           "bot-cmd-reply",
+			"correlation_id": req2.CorrelationID,
+			"ok":             true,
+			"data": map[string]any{
+				"status":    "FAILED",
+				"reason":    "TH_NOT_MAYOR",
+				"lot_id":    float64(0),
+				"new_funds": float64(1000000),
+			},
+		}))
+	}()
+
+	handler := purchaseLotHandler(pump)
+	ctx, cancel := context.WithTimeout(context.Background(), 5*time.Second)
+	defer cancel()
+
+	resp, err := handler(ctx, &convention.Request{Args: map[string]any{
+		"target_lot_location": "0x00F90160",
+		"name":                "community hall",
+	}})
+	if err != nil {
+		t.Fatalf("handler error: %v", err)
+	}
+	payload, _ := resp.Payload.(map[string]any)
+
+	if payload["ok"] != false {
+		t.Errorf("want ok=false for TH_NOT_MAYOR, got %v", payload)
+	}
+	if payload["reason"] != "TH_NOT_MAYOR" {
+		t.Errorf("want reason=TH_NOT_MAYOR, got %v", payload["reason"])
+	}
+	hint, _ := payload["hint"].(string)
+	if hint == "" {
+		t.Error("want non-empty escalation hint for TH_NOT_MAYOR (missing case in escalationHint?)")
+	}
+	t.Logf("TH_NOT_MAYOR response: reason=%v hint=%q", payload["reason"], hint)
+}
+
+// TestPurchaseLotHandlerMoneyLotSuccess asserts that a Money-category lot purchase
+// succeeds. Category is server-assigned; sidecar protocol is identical to residential.
+func TestPurchaseLotHandlerMoneyLotSuccess(t *testing.T) {
+	tmp := t.TempDir()
+	withFSO_USER(t, "purchase-lot-test-money")
+	withConfigHome(t, tmp)
+
+	fake := newFakeBotProcess()
+	pump := NewBotCmdPump(fake.bot)
+
+	const moneyLotHex = "0x00FA0200"
+
+	go func() {
+		line1 := <-fake.stdinLines
+		var req1 BotCmdRequest
+		if err := json.Unmarshal(line1, &req1); err != nil {
+			t.Errorf("probe-road unmarshal: %v", err)
+			return
+		}
+		pump.Deliver(mustMarshal(map[string]any{
+			"kind":           "bot-cmd-reply",
+			"correlation_id": req1.CorrelationID,
+			"ok":             true,
+			"data":           map[string]any{"has_road": true, "road_bits": 9, "x": 250, "y": 512},
+		}))
+
+		line2 := <-fake.stdinLines
+		var req2 BotCmdRequest
+		if err := json.Unmarshal(line2, &req2); err != nil {
+			t.Errorf("purchase-lot unmarshal: %v", err)
+			return
+		}
+		pump.Deliver(mustMarshal(map[string]any{
+			"kind":           "bot-cmd-reply",
+			"correlation_id": req2.CorrelationID,
+			"ok":             true,
+			"data": map[string]any{
+				"status":    "SUCCESS",
+				"lot_id":    float64(200),
+				"new_funds": float64(800000),
+			},
+		}))
+	}()
+
+	handler := purchaseLotHandler(pump)
+	ctx, cancel := context.WithTimeout(context.Background(), 5*time.Second)
+	defer cancel()
+
+	resp, err := handler(ctx, &convention.Request{Args: map[string]any{
+		"target_lot_location": moneyLotHex,
+		"name":                "jin's job lot",
+	}})
+	if err != nil {
+		t.Fatalf("handler error: %v", err)
+	}
+	payload, _ := resp.Payload.(map[string]any)
+
+	if payload["ok"] != true {
+		t.Errorf("Money lot: want ok=true, got %v", payload)
+	}
+	if lotID, _ := payload["lot_id"].(int64); lotID != 200 {
+		t.Errorf("Money lot: want lot_id=200, got %v (type %T)", payload["lot_id"], payload["lot_id"])
+	}
+	if payload["location_hex"] != moneyLotHex {
+		t.Errorf("Money lot: want location_hex=%q, got %v", moneyLotHex, payload["location_hex"])
+	}
+	dir := filepath.Join(tmp, "freeso-souls", "purchase-lot-test-money")
+	data, readErr := os.ReadFile(filepath.Join(dir, "owned-lots.json"))
+	if readErr != nil {
+		t.Fatalf("owned-lots.json not written for Money lot: %v", readErr)
+	}
+	var entries []OwnedLotEntry
+	if err := json.Unmarshal(data, &entries); err != nil {
+		t.Fatalf("parse owned-lots.json: %v", err)
+	}
+	if len(entries) != 1 || entries[0].Name != "jin's job lot" {
+		t.Errorf("owned-lots.json: want 1 entry name=%q, got %v", "jin's job lot", entries)
+	}
+	t.Logf("Money lot success: lot_id=%v new_funds=%v", payload["lot_id"], payload["new_funds"])
+}
+
+// TestPurchaseLotHandlerWelcomeLotSuccess asserts that a Welcome-category lot
+// purchase succeeds. Category is server-assigned; sidecar protocol is identical.
+func TestPurchaseLotHandlerWelcomeLotSuccess(t *testing.T) {
+	tmp := t.TempDir()
+	withFSO_USER(t, "purchase-lot-test-welcome")
+	withConfigHome(t, tmp)
+
+	fake := newFakeBotProcess()
+	pump := NewBotCmdPump(fake.bot)
+
+	const welcomeLotHex = "0x00FB0300"
+
+	go func() {
+		line1 := <-fake.stdinLines
+		var req1 BotCmdRequest
+		if err := json.Unmarshal(line1, &req1); err != nil {
+			t.Errorf("probe-road unmarshal: %v", err)
+			return
+		}
+		pump.Deliver(mustMarshal(map[string]any{
+			"kind":           "bot-cmd-reply",
+			"correlation_id": req1.CorrelationID,
+			"ok":             true,
+			"data":           map[string]any{"has_road": true, "road_bits": 9, "x": 251, "y": 768},
+		}))
+
+		line2 := <-fake.stdinLines
+		var req2 BotCmdRequest
+		if err := json.Unmarshal(line2, &req2); err != nil {
+			t.Errorf("purchase-lot unmarshal: %v", err)
+			return
+		}
+		pump.Deliver(mustMarshal(map[string]any{
+			"kind":           "bot-cmd-reply",
+			"correlation_id": req2.CorrelationID,
+			"ok":             true,
+			"data": map[string]any{
+				"status":    "SUCCESS",
+				"lot_id":    float64(300),
+				"new_funds": float64(700000),
+			},
+		}))
+	}()
+
+	handler := purchaseLotHandler(pump)
+	ctx, cancel := context.WithTimeout(context.Background(), 5*time.Second)
+	defer cancel()
+
+	resp, err := handler(ctx, &convention.Request{Args: map[string]any{
+		"target_lot_location": welcomeLotHex,
+		"name":                "welcome center",
+	}})
+	if err != nil {
+		t.Fatalf("handler error: %v", err)
+	}
+	payload, _ := resp.Payload.(map[string]any)
+
+	if payload["ok"] != true {
+		t.Errorf("Welcome lot: want ok=true, got %v", payload)
+	}
+	if lotID, _ := payload["lot_id"].(int64); lotID != 300 {
+		t.Errorf("Welcome lot: want lot_id=300, got %v (type %T)", payload["lot_id"], payload["lot_id"])
+	}
+	if payload["location_hex"] != welcomeLotHex {
+		t.Errorf("Welcome lot: want location_hex=%q, got %v", welcomeLotHex, payload["location_hex"])
+	}
+	dir := filepath.Join(tmp, "freeso-souls", "purchase-lot-test-welcome")
+	data, readErr := os.ReadFile(filepath.Join(dir, "owned-lots.json"))
+	if readErr != nil {
+		t.Fatalf("owned-lots.json not written for Welcome lot: %v", readErr)
+	}
+	var entries []OwnedLotEntry
+	if err := json.Unmarshal(data, &entries); err != nil {
+		t.Fatalf("parse owned-lots.json: %v", err)
+	}
+	if len(entries) != 1 || entries[0].Name != "welcome center" {
+		t.Errorf("owned-lots.json: want 1 entry name=%q, got %v", "welcome center", entries)
+	}
+	t.Logf("Welcome lot success: lot_id=%v new_funds=%v", payload["lot_id"], payload["new_funds"])
+}
+
 // TestOwnedLotsRoundTrip tests the ReadOwnedLots / WriteOwnedLots /
 // AppendOwnedLot round-trip in persona_state.go (I0-7 backing store).
 func TestOwnedLotsRoundTrip(t *testing.T) {
