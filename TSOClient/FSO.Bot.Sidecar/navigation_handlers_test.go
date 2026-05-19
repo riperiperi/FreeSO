@@ -568,8 +568,10 @@ func TestVisitLotHandlerWriteNextLotBeforeExit(t *testing.T) {
 	}
 }
 
-// TestFindAvatarHandlerDispatchesIPC asserts target_avatar_id is forwarded and
-// the response payload shape is propagated.
+// TestFindAvatarHandlerDispatchesIPC asserts that --name resolves via the naming
+// store to a target_sim_id, which is forwarded as target_avatar_id in the IPC
+// command, and that the bot response payload is propagated unchanged.
+// (automataisland-6dc: canonical arg is "name", not "target_avatar_id")
 func TestFindAvatarHandlerDispatchesIPC(t *testing.T) {
 	fake := newFakeBotProcess()
 	ipc := NewIPC(fake.bot)
@@ -584,11 +586,19 @@ func TestFindAvatarHandlerDispatchesIPC(t *testing.T) {
 		},
 	})
 
-	handler := findAvatarHandler(ipc)
+	store := NewMemoryStore()
+	encoded, _ := json.Marshal(map[string]any{
+		"name":          "Lara Voss",
+		"kind":          "sim",
+		"target_sim_id": int64(2),
+	})
+	store.Store("name:lara voss", encoded)
+
+	handler := findAvatarHandler(ipc, store)
 	ctx, cancel := context.WithTimeout(context.Background(), 2*time.Second)
 	defer cancel()
 	resp, err := handler(ctx, &convention.Request{Args: map[string]any{
-		"target_avatar_id": float64(2),
+		"name": "Lara Voss",
 	}})
 	if err != nil {
 		t.Fatalf("handler: %v", err)
@@ -597,8 +607,10 @@ func TestFindAvatarHandlerDispatchesIPC(t *testing.T) {
 	if cmd.Op != "find-avatar" {
 		t.Errorf("want op=find-avatar got %q", cmd.Op)
 	}
+	// Handler resolves name→target_sim_id and forwards as target_avatar_id.
+	// Args arrive from JSON decode as float64; compare accordingly.
 	if cmd.Args["target_avatar_id"] != float64(2) {
-		t.Errorf("target_avatar_id not forwarded: %v", cmd.Args)
+		t.Errorf("target_avatar_id not forwarded correctly: %v", cmd.Args)
 	}
 	payload, _ := resp.Payload.(map[string]any)
 	inner, _ := payload["payload"].(map[string]any)
@@ -611,6 +623,104 @@ func TestFindAvatarHandlerDispatchesIPC(t *testing.T) {
 	if inner["on_lot"] != true {
 		t.Errorf("on_lot lost in forwardIPC: %v", inner)
 	}
+}
+
+// TestFindAvatarHandlerNotFound asserts that --name "Nonexistent" (not in store)
+// returns ok:false without dispatching an IPC command.
+// (automataisland-6dc: gate pair — unbound name → not-found error)
+func TestFindAvatarHandlerNotFound(t *testing.T) {
+	fake := newFakeBotProcess()
+	ipc := NewIPC(fake.bot)
+	// Drain stdin to prevent goroutine leak — handler should not send any IPC.
+	go func() {
+		for range fake.stdinLines {
+		}
+	}()
+
+	store := NewMemoryStore()
+	handler := findAvatarHandler(ipc, store)
+	ctx, cancel := context.WithTimeout(context.Background(), 2*time.Second)
+	defer cancel()
+	resp, err := handler(ctx, &convention.Request{Args: map[string]any{
+		"name": "Nonexistent",
+	}})
+	if err != nil {
+		t.Fatalf("handler: %v", err)
+	}
+	payload, _ := resp.Payload.(map[string]any)
+	if payload["ok"] != false {
+		t.Errorf("want ok=false for unbound name, got %v", payload)
+	}
+	if payload["error"] == nil || payload["error"] == "" {
+		t.Errorf("want non-empty error for unbound name")
+	}
+	t.Logf("error for unbound name: %v", payload["error"])
+}
+
+// TestFindAvatarHandlerOldArgRejected is the gate-pair test: calling find-avatar
+// with the OLD arg name "target_avatar_id" (instead of "name") returns ok:false.
+// This prevents silent-drop regressions where a renamed arg is silently ignored.
+// (automataisland-6dc: gate pair — old arg name → bad-args error)
+func TestFindAvatarHandlerOldArgRejected(t *testing.T) {
+	fake := newFakeBotProcess()
+	ipc := NewIPC(fake.bot)
+	// Handler returns early before any IPC — drain stdin.
+	go func() {
+		for range fake.stdinLines {
+		}
+	}()
+
+	store := NewMemoryStore()
+	handler := findAvatarHandler(ipc, store)
+	ctx, cancel := context.WithTimeout(context.Background(), 2*time.Second)
+	defer cancel()
+	// Calling with the old arg name — handler sees no "name" arg → ok:false.
+	resp, err := handler(ctx, &convention.Request{Args: map[string]any{
+		"target_avatar_id": float64(2),
+	}})
+	if err != nil {
+		t.Fatalf("handler: %v", err)
+	}
+	payload, _ := resp.Payload.(map[string]any)
+	if payload["ok"] != false {
+		t.Errorf("want ok=false when old arg name used (target_avatar_id instead of name), got %v", payload)
+	}
+	t.Logf("error for old arg name: %v", payload["error"])
+}
+
+// TestFindAvatarHandlerWrongKind asserts that a name bound with kind != "sim"
+// returns ok:false with a descriptive error.
+// (automataisland-6dc: gate pair — wrong-kind binding → error)
+func TestFindAvatarHandlerWrongKind(t *testing.T) {
+	fake := newFakeBotProcess()
+	ipc := NewIPC(fake.bot)
+	go func() {
+		for range fake.stdinLines {
+		}
+	}()
+
+	store := NewMemoryStore()
+	encoded, _ := json.Marshal(map[string]any{
+		"name": "Some Lot",
+		"kind": "lot",
+		"lot_location": "16318812",
+	})
+	store.Store("name:some lot", encoded)
+
+	handler := findAvatarHandler(ipc, store)
+	ctx, cancel := context.WithTimeout(context.Background(), 2*time.Second)
+	defer cancel()
+	resp, err := handler(ctx, &convention.Request{Args: map[string]any{
+		"name": "Some Lot",
+	}})
+	if err != nil {
+		t.Fatalf("handler: %v", err)
+	}
+	payload, _ := resp.Payload.(map[string]any)
+	if payload["ok"] != false {
+		t.Errorf("want ok=false for wrong-kind binding, got %v", payload)
+	}
+	t.Logf("error for wrong-kind: %v", payload["error"])
 }
 
 // TestI0_2_NoPerceptionDuringTransit — falsifying test for invariant I0-2:

@@ -3,13 +3,13 @@
   "version": "1.0",
   "operation": "find-avatar",
   "family": "navigation",
-  "description": "Ask the city server which lot another avatar is currently on (or none). On the wire this is `FindAvatarRequest{AvatarId}` → `FindAvatarResponse{AvatarId, Status, LotId}` — note the server-side `LotId` field is actually the lot **location code** (populated from the avatar's `AvatarClaim.location`), NOT a DB lot_id (same OQ-3 aliasing as `FindLotRequest`). Prerequisite: you have a live city socket (you are logged in — which is true whenever this handler is reachable). Effect: none on the world — a pure directory query. If the target has privacy_mode set, the server returns `Status=PRIVACY_ENABLED` and `LotId=0`; if the target is logged out or not claimed, `Status=NOT_ON_LOT` and `LotId=0`; if found, `Status=FOUND` and `LotId=<location>`. Cost: one round-trip to the city server (milliseconds; 10s client-side timeout). Response payload: `target_avatar_id` (uint), `status` (\"FOUND\" | \"NOT_ON_LOT\" | \"PRIVACY_ENABLED\" | \"IGNORING_THEM\" | \"IGNORING_YOU\"), `on_lot` (bool; true iff status == FOUND), `lot_location` (hex `0x...` or null), `lot_location_raw` (uint; 0 when not found). Use this when you know an avatar by DB id (e.g. from `query-nearby`'s `persist_id` field or from your own memory) and want to know where to `visit-lot` to them.",
+  "description": "Ask the city server which lot another avatar is currently on (or none). On the wire this is `FindAvatarRequest{AvatarId}` → `FindAvatarResponse{AvatarId, Status, LotId}` — note the server-side `LotId` field is actually the lot **location code** (populated from the avatar's `AvatarClaim.location`), NOT a DB lot_id (same OQ-3 aliasing as `FindLotRequest`). Prerequisite: you have a live city socket (you are logged in — which is true whenever this handler is reachable) AND the target avatar is bound in your naming store (`name --as \"Avatar Name\" --target_sim_id <id>`). Effect: none on the world — a pure directory query. If the target has privacy_mode set, the server returns `Status=PRIVACY_ENABLED` and `LotId=0`; if the target is logged out or not claimed, `Status=NOT_ON_LOT` and `LotId=0`; if found, `Status=FOUND` and `LotId=<location>`. Cost: one round-trip to the city server (milliseconds; 10s client-side timeout). Response payload: `persist_id` (uint), `status` (\"FOUND\" | \"NOT_ON_LOT\" | \"PRIVACY_ENABLED\" | \"IGNORING_THEM\" | \"IGNORING_YOU\"), `on_lot` (bool; true iff status == FOUND), `lot_location` (hex `0x...` or null), `lot_location_raw` (uint; 0 when not found). Use this when you know an avatar by name (bound via `name --as ... --target_sim_id ...`) and want to know where to `visit-lot` to them.",
   "args": [
     {
-      "name": "target_avatar_id",
-      "type": "integer",
+      "name": "name",
+      "type": "string",
       "required": true,
-      "description": "avatar_id (Sim persist id) of the target to locate."
+      "description": "Avatar name as bound in the naming store via `name --as \"Lara Voss\" --target_sim_id <id>`. The sidecar resolves the name to its persist_id and issues FindAvatarRequest on the city socket. Case-insensitive."
     }
   ],
   "produces_tags": [
@@ -27,11 +27,11 @@
   },
   "response": "sync",
   "call_signatures": [
-    "cf $CF find-avatar --target_avatar_id <avatar_id>                                                          # city-server directory query; 10s timeout"
+    "cf $CF find-avatar --name \"Lara Voss\"                                                                      # city-server directory query; 10s timeout; name must be bound via `name --as ... --target_sim_id`"
   ],
   "common_mistakes": [
-    "target_avatar_id is a uint avatar persist_id — not a user_id, not an ObjectID.",
-    "target_avatar_id = 0 → ok:false.",
+    "name must be bound in the naming store first: `name --as \"Lara Voss\" --target_sim_id <persist_id>`.",
+    "name resolution is case-insensitive but the binding must have kind=sim.",
     "LotId in the response is a LOCATION CODE, not a DB lot_id (OQ-3 aliasing).",
     "Status=PRIVACY_ENABLED returns LotId=0; do not confuse with NOT_ON_LOT."
   ],
@@ -41,9 +41,10 @@
     "Home detection: go-home returns already_home:true when perception.lot.lot_id matches your home lot location"
   ],
   "refuse_conditions": [
-    "missing target_avatar_id → ok:false",
-    "target_avatar_id not a valid uint → ok:false",
-    "target_avatar_id == 0 → ok:false",
+    "missing name → ok:false",
+    "name not bound in naming store → ok:false",
+    "name bound with kind != sim → ok:false",
+    "resolved target_sim_id == 0 → ok:false",
     "10s timeout with no FindAvatarResponse → ok:false"
   ]
 }

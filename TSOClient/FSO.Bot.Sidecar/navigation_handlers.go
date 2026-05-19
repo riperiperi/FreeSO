@@ -11,6 +11,7 @@ import (
 	"encoding/json"
 	"fmt"
 	"log"
+	"strings"
 
 	"github.com/campfire-net/campfire/cf-conventions/cf-convention"
 )
@@ -36,7 +37,7 @@ func RegisterNavigationHandlers(ctx context.Context, cf *Campfire, ipc *IPC, bot
 	ops := map[string]convention.HandlerFunc{
 		"go-home":     goHomeHandler(ipc, botCmds, store),
 		"visit-lot":   visitLotHandler(ipc, botCmds, store),
-		"find-avatar": findAvatarHandler(ipc),
+		"find-avatar": findAvatarHandler(ipc, store),
 	}
 
 	decls, err := LoadDeclarations(conventionFiles)
@@ -376,13 +377,58 @@ func resolveLotLocation(args map[string]any, store *MemoryStore) (string, error)
 	return ll, nil
 }
 
-// findAvatarHandler forwards the find-avatar query. Arg: target_avatar_id
-// (required; uint DB id — query-nearby's persist_id or any known avatar id).
-// Bot sends FindAvatarRequest on the city socket, awaits FindAvatarResponse,
-// returns {status, on_lot, lot_location, lot_location_raw, target_avatar_id}.
-func findAvatarHandler(ipc *IPC) convention.HandlerFunc {
+// findAvatarHandler resolves --name to a target_sim_id via the naming store and
+// forwards the find-avatar query to the bot.
+//
+// Wire flow:
+//  1. Resolve --name (string, case-insensitive) via lookupName in the naming
+//     store. The entry must have kind=="sim" with a non-zero target_sim_id.
+//  2. Forward as target_avatar_id to the bot over IPC. The bot issues
+//     FindAvatarRequest on the city socket and returns {status, on_lot,
+//     lot_location, lot_location_raw, target_avatar_id}.
+//
+// The canonical arg name is "name" (matches embodiment-runtime-design.md § A5).
+// Internally the IPC message still uses target_avatar_id — that is the bot-side
+// field name and is not exposed to the agent.
+func findAvatarHandler(ipc *IPC, store *MemoryStore) convention.HandlerFunc {
 	return func(ctx context.Context, req *convention.Request) (*convention.Response, error) {
-		args := pickArgs(req.Args, "target_avatar_id")
+		avatarName, _ := req.Args["name"].(string)
+		avatarName = strings.TrimSpace(avatarName)
+		if avatarName == "" {
+			return &convention.Response{
+				Payload: map[string]any{"ok": false, "error": "name is required"},
+			}, nil
+		}
+
+		entry := lookupName(store, avatarName)
+		if entry == nil {
+			return &convention.Response{
+				Payload: map[string]any{
+					"ok":    false,
+					"error": fmt.Sprintf("name %q is not bound (use `name --as %q --target_sim_id <persist_id>` to bind it)", avatarName, avatarName),
+				},
+			}, nil
+		}
+		kind, _ := entry["kind"].(string)
+		if kind != "sim" {
+			return &convention.Response{
+				Payload: map[string]any{
+					"ok":    false,
+					"error": fmt.Sprintf("name %q has kind %q, not \"sim\" — find-avatar requires a sim binding (use `name --as %q --target_sim_id <persist_id>`)", avatarName, kind, avatarName),
+				},
+			}, nil
+		}
+		simID, hasID := numericArg(entry, "target_sim_id")
+		if !hasID || simID == 0 {
+			return &convention.Response{
+				Payload: map[string]any{
+					"ok":    false,
+					"error": fmt.Sprintf("name %q has kind=sim but missing or zero target_sim_id (re-bind with `name --as %q --target_sim_id <persist_id>`)", avatarName, avatarName),
+				},
+			}, nil
+		}
+
+		args := map[string]any{"target_avatar_id": simID}
 		return forwardIPC(ctx, ipc, "find-avatar", args)
 	}
 }
