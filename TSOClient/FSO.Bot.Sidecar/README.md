@@ -19,6 +19,26 @@ Scaffold — no convention handlers yet (those land in `freesoexperiment-d87-d-*
 - Bridges each NDJSON line from the bot's stdout (`kind: perception | dialog | system | response`) into a campfire broadcast tagged `freeso:<kind>` + `sim:<persist_id>`.
 - Writes `.admit-info` to the CF_HOME so the helper can auto-discover the campfire id.
 
+## Convention registry — frozen at boot (Component 10 invariant)
+
+The sidecar's convention registry is **read-only after boot**. Every `conventions/*.json` declaration is loaded once when the process starts and embedded at compile time via `//go:embed conventions/*.json`. The set of ops the Router knows about is fixed for the entire session.
+
+**What this means for agents:**
+
+- Calling `cf $BODY_CF convention:promote --declaration '...'` during an active session returns `error:promotion-refused-during-session`. This is typed and predictable — the op appears in `tools/list` so callers know the refusal is intentional, not a missing handler.
+- The op `convention:promote` itself IS in `tools/list` (published at boot). Its sole purpose is to surface the typed refusal; it never registers new conventions.
+
+**Why:** Runtime promotion would allow an admitted agent to alter the verb surface mid-session, violating the sidecar's trust model. The registry freeze ensures that the op set visible in `tools/list` at boot is the op set for the entire session.
+
+**How to add a new convention:**
+
+1. Stop the sidecar (`SIGTERM`).
+2. Add the declaration JSON to `conventions/`.
+3. Rebuild: `go build -o ./bin/freeso-sidecar .`
+4. Restart — the new op appears in `tools/list` at boot.
+
+This design is Component 10 of the embodiment-runtime design (A8 resolution).
+
 ## Regenerating convention skeletons
 
 When the verb catalog changes:

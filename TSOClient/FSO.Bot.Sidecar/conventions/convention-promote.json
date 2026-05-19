@@ -1,0 +1,35 @@
+{
+  "convention": "freeso-embodiment",
+  "version": "1.0",
+  "operation": "convention:promote",
+  "family": "meta",
+  "description": "Attempt to register a new convention declaration into the sidecar's active session. This operation ALWAYS returns error:promotion-refused-during-session. The sidecar's convention registry is frozen at boot: declarations are loaded once from conventions/*.json when the sidecar starts and cannot be added, removed, or updated at runtime. This verb exists so the refusal is discoverable via tools/list and returns a predictable typed error instead of a generic 'no handler' response. To add a new convention, stop the sidecar, add the declaration JSON to conventions/, then restart — the new op will appear in tools/list on the next boot. This design is intentional: runtime promotion could allow an admitted agent to alter the verb surface mid-session, which violates the sidecar's trust model.",
+  "args": [
+    {
+      "name": "declaration",
+      "type": "json",
+      "required": true,
+      "description": "The convention declaration JSON to promote. Will be rejected — this arg is accepted for API symmetry with cf convention promote but is never acted upon."
+    }
+  ],
+  "produces_tags": [
+    {
+      "tag": "freeso:convention:promote",
+      "cardinality": "exactly_one"
+    }
+  ],
+  "antecedents": "none",
+  "signing": "member_key",
+  "response": "sync",
+  "status": "implemented",
+  "call_signatures": [
+    "cf $CF convention:promote --declaration '{\"convention\":\"freeso-embodiment\",\"operation\":\"new-verb\",...}'   # always returns error:promotion-refused-during-session"
+  ],
+  "common_mistakes": [
+    "Expecting runtime promotion to work — it never does. The registry is frozen at boot. Stop the sidecar, add the declaration file, restart.",
+    "Confusing this op with cf convention promote (the cf CLI command that publishes to a registry campfire). This op is sidecar-internal and always refuses."
+  ],
+  "refuse_conditions": [
+    "Always refused — returns error:promotion-refused-during-session regardless of the declaration content or the caller's identity."
+  ]
+}

@@ -401,6 +401,16 @@ func main() {
 		}
 		log.Printf("convention handlers: %d self-diagnostic ops serving (report-liveness, verify-perception)", diagServers)
 
+		// Meta family (automataisland-5bf — Component 10 invariant): convention:promote.
+		// The registry is frozen at boot; this handler refuses all runtime promotion
+		// attempts with a typed error:promotion-refused-during-session. Registered in
+		// both bot and no-bot modes so tools/list always surfaces the refusal verb.
+		promoteServers, err := RegisterPromoteHandler(ctx, cf)
+		if err != nil {
+			log.Fatalf("register promote handler: %v", err)
+		}
+		log.Printf("convention handlers: %d meta-family ops serving", promoteServers)
+
 		// Single-dispatcher: one Subscribe goroutine handles every registered op
 		// instead of one Subscribe per op. Replaces the convention.Server fleet
 		// (which saturated SQLite at 103 × 500ms polls + per-poll fs sync) with
@@ -442,6 +452,14 @@ func main() {
 			log.Fatalf("register diagnostic handlers (no-bot): %v", noBotDiagErr)
 		}
 		log.Printf("convention handlers: %d self-diagnostic ops serving (no-bot mode)", noBotDiagServers)
+
+		// Meta family (Component 10 invariant): convention:promote. Also wired in
+		// no-bot mode so the refusal verb is always discoverable regardless of mode.
+		promoteServers, err := RegisterPromoteHandler(ctx, cf)
+		if err != nil {
+			log.Fatalf("register promote handler: %v", err)
+		}
+		log.Printf("convention handlers: %d meta-family ops serving (no-bot mode)", promoteServers)
 
 		log.Printf("router: %d ops registered, starting single-dispatcher Serve", cf.Router.Count())
 		go cf.Router.Serve(ctx, cf)
