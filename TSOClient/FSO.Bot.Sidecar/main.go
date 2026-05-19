@@ -397,6 +397,19 @@ func main() {
 		// one TagPrefixes:["freeso:"] subscription. See dispatcher.go.
 		log.Printf("router: %d ops registered, starting single-dispatcher Serve", cf.Router.Count())
 		go cf.Router.Serve(ctx, cf)
+
+		// Wake-readiness futures (automataisland-5a4 — Component 2):
+		// Pre-publish world:ready / world:gone / identity:resolved on the body
+		// cf. world:ready fulfills when handlers green, bot on lot, perception
+		// flowing, broadcast bridge verified. world:gone fulfills when
+		// perception stalls past threshold. identity:resolved is fulfilled by
+		// the auto-join completion path (handled out-of-band today; this
+		// scaffold publishes the future so the talent's await never hangs on
+		// a missing message). The handler count snapshot below is taken AFTER
+		// all Register*Handlers calls finish so the world:ready handler-count
+		// gate is genuinely measuring "all expected handlers wired".
+		declaredOps := cf.Router.Count()
+		_ = startReadiness(ctx, cf, cf.Router, health, declaredOps)
 	} else {
 		log.Printf("running in --no-bot mode (campfire-only)")
 
@@ -411,6 +424,15 @@ func main() {
 
 		log.Printf("router: %d ops registered, starting single-dispatcher Serve", cf.Router.Count())
 		go cf.Router.Serve(ctx, cf)
+
+		// Wake-readiness futures (automataisland-5a4 — Component 2): pre-publish
+		// the three futures even in --no-bot mode so a talent awaiting them
+		// on the body cf at any point in the sidecar's lifetime sees them.
+		// In --no-bot mode, world:ready will never fulfill (no perception),
+		// and world:gone will fulfill once the threshold elapses (which is
+		// the correct signal for "no world here").
+		declaredOps := cf.Router.Count()
+		_ = startReadiness(ctx, cf, cf.Router, nil, declaredOps)
 	}
 
 	// Signal handling for clean shutdown.
