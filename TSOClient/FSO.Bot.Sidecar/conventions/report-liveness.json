@@ -1,0 +1,35 @@
+{
+  "convention": "freeso-embodiment",
+  "version": "1.0",
+  "operation": "report-liveness",
+  "family": "diagnostics",
+  "description": "Return a structured liveness snapshot from the sidecar: uptime, bot_connected, bridge_active, perception_tick_count_last_60s, handler_count, lot_id, last_perception_ts. Pure local read — no IPC, no campfire poll, no file I/O. Answerable even when the bot is wedged.",
+  "args": [],
+  "produces_tags": [
+    {
+      "tag": "freeso:report-liveness",
+      "cardinality": "exactly_one"
+    }
+  ],
+  "antecedents": "none",
+  "signing": "member_key",
+  "rate_limit": {
+    "max": 30,
+    "per": "sender",
+    "window": "1m"
+  },
+  "response": "sync",
+  "status": "implemented",
+  "call_signatures": [
+    "cf $BODY_CF report-liveness   # returns {sidecar_uptime_sec, bot_connected, bridge_active, perception_tick_count_last_60s, handler_count, lot_id, last_perception_ts}"
+  ],
+  "response_shape": {
+    "sidecar_uptime_sec": "int — seconds since sidecar started",
+    "bot_connected": "bool — bot subprocess is running",
+    "bridge_active": "bool — at least one perception tick seen in the last 60s",
+    "perception_tick_count_last_60s": "int — number of perception ticks in the last 60s",
+    "handler_count": "int — number of registered convention handlers",
+    "lot_id": "int — last known lot_id (0 if unknown)",
+    "last_perception_ts": "int — unix ms of last perception (0 if none)"
+  }
+}

@@ -389,7 +389,17 @@ func main() {
 		if err != nil {
 			log.Fatalf("register heartbeat handler: %v", err)
 		}
-		log.Printf("convention handlers: %d diagnostics ops serving", heartbeatServers)
+		log.Printf("convention handlers: %d diagnostics ops serving (heartbeat)", heartbeatServers)
+
+		// Self-diagnostic conventions (Component 9 — A6 resolution):
+		// report-liveness and verify-perception allow the talent to inspect
+		// bridge health from-character without Bash access (Trunk F preserved).
+		// Both ops are registered at boot (frozen registry — Component 10).
+		diagServers, diagErr := RegisterDiagnosticHandlers(ctx, cf, proc, health)
+		if diagErr != nil {
+			log.Fatalf("register diagnostic handlers: %v", diagErr)
+		}
+		log.Printf("convention handlers: %d self-diagnostic ops serving (report-liveness, verify-perception)", diagServers)
 
 		// Single-dispatcher: one Subscribe goroutine handles every registered op
 		// instead of one Subscribe per op. Replaces the convention.Server fleet
@@ -421,6 +431,17 @@ func main() {
 			log.Fatalf("register memory handlers: %v", err)
 		}
 		log.Printf("convention handlers: %d memory-family ops serving (no-bot mode)", memServers)
+
+		// Diagnostics (Component 9): report-liveness and verify-perception are
+		// also useful in --no-bot mode — they let a caller confirm the campfire
+		// broadcast path and inspect the zero-state (bot_connected=false,
+		// bridge_active=false). Registered with nil bot/health so the snapshot
+		// reflects "no bot" accurately.
+		noBotDiagServers, noBotDiagErr := RegisterDiagnosticHandlers(ctx, cf, nil, nil)
+		if noBotDiagErr != nil {
+			log.Fatalf("register diagnostic handlers (no-bot): %v", noBotDiagErr)
+		}
+		log.Printf("convention handlers: %d self-diagnostic ops serving (no-bot mode)", noBotDiagServers)
 
 		log.Printf("router: %d ops registered, starting single-dispatcher Serve", cf.Router.Count())
 		go cf.Router.Serve(ctx, cf)

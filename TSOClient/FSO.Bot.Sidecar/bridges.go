@@ -184,7 +184,8 @@ func (b *Bridges) handle(line []byte) {
 	if env.Kind == "perception" && b.health != nil {
 		pos := extractPerceptionPosition(line)
 		onLot := perceptionHasLot(line)
-		b.health.RecordPerception(b.simID, pos, onLot)
+		lotID := extractPerceptionLotID(line)
+		b.health.RecordPerceptionWithLot(b.simID, pos, onLot, lotID)
 	}
 
 	// Perception augmentor: enrich perception ticks with sidecar-side fields
@@ -330,4 +331,18 @@ func perceptionHasLot(line []byte) bool {
 	// `null` is 4 bytes — treat as absent.
 	s := string(env.Lot)
 	return s != "null"
+}
+
+// extractPerceptionLotID extracts the lot_id from a perception line's "lot"
+// field. Returns 0 if absent or unparseable.
+func extractPerceptionLotID(line []byte) int64 {
+	var env struct {
+		Lot struct {
+			LotID int64 `json:"lot_id"`
+		} `json:"lot"`
+	}
+	if err := json.Unmarshal(line, &env); err != nil {
+		return 0
+	}
+	return env.Lot.LotID
 }

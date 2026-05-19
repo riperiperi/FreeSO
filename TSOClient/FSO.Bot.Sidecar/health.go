@@ -25,6 +25,11 @@ import (
 // Three lock-free counters (atomic), one short critical section for the last
 // perception position. Reads are cheap so the heartbeat handler can fire
 // without blocking the bridge goroutine even on hot lots.
+//
+// recentPerceptionTimes is a 128-slot ring buffer of UnixNano timestamps for
+// the most recent 128 perception ticks. Used by LivenessSnapshotNow to count
+// ticks within the last 60 seconds without storing a full sliding window.
+// Protected by mu (same mutex as simID/lastPos/onLot).
 type SidecarHealth struct {
 	startTime time.Time
 
@@ -43,6 +48,12 @@ type SidecarHealth struct {
 	simID    string
 	lastPos  *perceptionPosition // last known position (level, x, y). nil if never observed.
 	onLot    bool                // most recent perception payload contained "lot" data
+	lotID    int64               // last known lot_id (0 = unknown). Updated by RecordPerceptionWithLot.
+
+	// recentPerceptionTimes: ring buffer of the last 128 perception tick
+	// timestamps (UnixNano). Protected by mu. recentHead is the write index.
+	recentPerceptionTimes [128]int64
+	recentHead            int
 }
 
 type perceptionPosition struct {
@@ -58,24 +69,82 @@ func NewSidecarHealth() *SidecarHealth {
 
 // RecordPerception is called by the bridge layer for each perception line.
 // Cheap; called from the bridge goroutine which is the single perception
-// reader.
+// reader. Delegates to RecordPerceptionWithLot with lotID=0.
 func (h *SidecarHealth) RecordPerception(simID string, pos *perceptionPosition, onLot bool) {
+	h.RecordPerceptionWithLot(simID, pos, onLot, 0)
+}
+
+// RecordPerceptionWithLot records a perception event with a known lot_id.
+// lotID=0 means unknown; the existing lotID is preserved (sticky). This is
+// called by the bridge layer when the perception line carries "lot.lot_id".
+func (h *SidecarHealth) RecordPerceptionWithLot(simID string, pos *perceptionPosition, onLot bool, lotID int64) {
 	if h == nil {
 		return
 	}
 	h.perceptionCount.Add(1)
-	h.lastPerceptionUnixMs.Store(time.Now().UnixMilli())
-	if simID != "" || pos != nil {
-		h.mu.Lock()
-		if simID != "" {
-			h.simID = simID
-		}
-		if pos != nil {
-			h.lastPos = pos
-		}
-		h.onLot = onLot
-		h.mu.Unlock()
+	nowMs := time.Now().UnixMilli()
+	h.lastPerceptionUnixMs.Store(nowMs)
+	h.mu.Lock()
+	if simID != "" {
+		h.simID = simID
 	}
+	if pos != nil {
+		h.lastPos = pos
+	}
+	h.onLot = onLot
+	if lotID != 0 {
+		h.lotID = lotID
+	}
+	// Advance ring buffer.
+	h.recentPerceptionTimes[h.recentHead] = time.Now().UnixNano()
+	h.recentHead = (h.recentHead + 1) % 128
+	h.mu.Unlock()
+}
+
+// LivenessSnapshot is the wire shape returned by the body__report-liveness
+// diagnostic convention (Component 9 — A6 resolution). Fields are a superset
+// of HealthSnapshot oriented towards "is the broadcast bridge alive?" rather
+// than "which operation timed out?"
+type LivenessSnapshot struct {
+	SidecarUptimeSec            int64 `json:"sidecar_uptime_sec"`
+	BotConnected                bool  `json:"bot_connected"`
+	BridgeActive                bool  `json:"bridge_active"`
+	PerceptionTickCountLast60s  int   `json:"perception_tick_count_last_60s"`
+	HandlerCount                int   `json:"handler_count"`
+	LotID                       int64 `json:"lot_id"`
+	LastPerceptionTs            int64 `json:"last_perception_ts"`
+}
+
+// LivenessSnapshotNow builds a LivenessSnapshot from the current tracker state.
+// bot may be nil (--no-bot mode). opsRegistered is the router's handler count.
+func (h *SidecarHealth) LivenessSnapshotNow(bot *BotProcess, opsRegistered int) LivenessSnapshot {
+	snap := LivenessSnapshot{
+		HandlerCount: opsRegistered,
+	}
+	if h == nil {
+		return snap
+	}
+	now := time.Now()
+	snap.SidecarUptimeSec = int64(now.Sub(h.startTime).Seconds())
+	lastMs := h.lastPerceptionUnixMs.Load()
+	snap.LastPerceptionTs = lastMs
+	snap.BridgeActive = lastMs > 0
+	if bot != nil {
+		snap.BotConnected = bot.Pid() > 0
+	}
+	// Count ticks in the ring buffer within the last 60 seconds.
+	cutoff := now.Add(-60 * time.Second).UnixNano()
+	h.mu.RLock()
+	snap.LotID = h.lotID
+	count := 0
+	for _, t := range h.recentPerceptionTimes {
+		if t > cutoff {
+			count++
+		}
+	}
+	h.mu.RUnlock()
+	snap.PerceptionTickCountLast60s = count
+	return snap
 }
 
 // HealthSnapshot is the wire shape returned by the heartbeat convention.

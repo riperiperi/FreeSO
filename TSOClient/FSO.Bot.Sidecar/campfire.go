@@ -16,6 +16,7 @@ import (
 	"path/filepath"
 	"sort"
 	"strings"
+	"time"
 
 	"github.com/campfire-net/campfire/cf-conventions/cf-convention"
 	"github.com/campfire-net/campfire/cf-protocol/protocol"
@@ -295,6 +296,44 @@ func (c *Campfire) BroadcastEvent(kind string, payload []byte, simID string) err
 		Tags:       tags,
 	})
 	return err
+}
+
+// readSyntheticTick reads recent freeso:perception messages from the local
+// campfire store and checks whether any of them contain the given corrToken.
+// Used by the verify-perception handler to confirm the synthetic tick we just
+// broadcast is visible in the store.
+//
+// afterTime is the lower-bound wall-clock: only messages sent at or after
+// this time are considered. We subtract 1s to absorb clock skew between the
+// broadcast and the store write.
+func (c *Campfire) readSyntheticTick(corrToken string, afterTime time.Time) (bool, error) {
+	afterNano := (afterTime.UnixNano() - int64(time.Second)) // 1s margin
+	resp, err := c.Client.Read(protocol.ReadRequest{
+		CampfireID:     c.ID,
+		Tags:           []string{"freeso:perception"},
+		AfterTimestamp: afterNano,
+		SkipSync:       false, // must sync to see our own send
+	})
+	if err != nil {
+		return false, fmt.Errorf("read synthetic tick: %w", err)
+	}
+	for _, msg := range resp.Messages {
+		// Fast path: check for corrToken string before full JSON parse.
+		if len(msg.Payload) == 0 {
+			continue
+		}
+		var env struct {
+			Token     string `json:"token"`
+			Synthetic bool   `json:"synthetic"`
+		}
+		if jerr := json.Unmarshal(msg.Payload, &env); jerr != nil {
+			continue
+		}
+		if env.Synthetic && env.Token == corrToken {
+			return true, nil
+		}
+	}
+	return false, nil
 }
 
 // LoadDeclarations reads every conventions/*.json into a convention.Declaration.

@@ -1,0 +1,48 @@
+{
+  "convention": "freeso-embodiment",
+  "version": "1.0",
+  "operation": "verify-perception",
+  "family": "diagnostics",
+  "description": "Trigger a synthetic perception tick from the sidecar and confirm it appears on the body campfire. The synthetic tick carries synthetic:true and does NOT touch the real FSO server or alter the bot's in-game state. Use this to verify the sidecar→campfire broadcast path is alive without waiting for a real game-world tick. Returns {tick_seen: bool, ts} within wait_seconds (default 5).",
+  "args": [
+    {
+      "name": "wait_seconds",
+      "type": "integer",
+      "required": false,
+      "default": 5,
+      "min": 1,
+      "max": 30,
+      "description": "How many seconds to wait for the synthetic tick to appear on the campfire. Default 5."
+    }
+  ],
+  "produces_tags": [
+    {
+      "tag": "freeso:verify-perception",
+      "cardinality": "exactly_one"
+    }
+  ],
+  "antecedents": "none",
+  "signing": "member_key",
+  "rate_limit": {
+    "max": 10,
+    "per": "sender",
+    "window": "1m"
+  },
+  "response": "sync",
+  "status": "implemented",
+  "call_signatures": [
+    "cf $BODY_CF verify-perception                           # default wait_seconds=5",
+    "cf $BODY_CF verify-perception --wait_seconds 10        # longer wait"
+  ],
+  "response_shape": {
+    "tick_seen": "bool — synthetic tick appeared on the campfire within wait_seconds",
+    "ts": "int — unix milliseconds when the synthetic tick was observed (0 if not seen)"
+  },
+  "common_mistakes": [
+    "Using verify-perception to check real perception — it only proves the sidecar→campfire broadcast path works, not that the bot is in-game.",
+    "Calling with wait_seconds=1 on a loaded system — allow at least 3s for the synthetic tick to round-trip through the campfire store."
+  ],
+  "refuse_conditions": [
+    "Returns tick_seen:false if the broadcast path is broken or the sidecar is in --no-bot mode and BroadcastEvent is disabled."
+  ]
+}
