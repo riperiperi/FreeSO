@@ -9,7 +9,9 @@ package main
 import (
 	"context"
 	"encoding/json"
+	"fmt"
 	"strings"
+	"sync"
 	"testing"
 	"time"
 
@@ -29,7 +31,8 @@ func verifyingDirectedSocialHandlerFast(ipc *IPC, op string) convention.HandlerF
 }
 
 // TestSpeakHandlerDispatchesIPC asserts speak convention invocation produces an IPC command
-// with op="speak" carrying text + channel_id args.
+// with op="speak" carrying text + channel_id args, and that the handler returns
+// ok=true with chunk_count=1 for short text.
 func TestSpeakHandlerDispatchesIPC(t *testing.T) {
 	fake := newFakeBotProcess()
 	ipc := NewIPC(fake.bot)
@@ -62,6 +65,17 @@ func TestSpeakHandlerDispatchesIPC(t *testing.T) {
 	}
 	if cmd.Args["channel_id"] != float64(0) {
 		t.Errorf("channel_id not forwarded: %v", cmd.Args)
+	}
+	// Handler returns chunk_count=1 for sub-limit text.
+	pay, _ := resp.Payload.(map[string]any)
+	if pay == nil {
+		t.Fatal("nil payload map")
+	}
+	if ok, _ := pay["ok"].(bool); !ok {
+		t.Errorf("want ok=true, got %v", pay["ok"])
+	}
+	if cc, _ := pay["chunk_count"].(int); cc != 1 {
+		t.Errorf("want chunk_count=1, got %v", pay["chunk_count"])
 	}
 }
 
@@ -159,10 +173,10 @@ func TestDirectedSocialVerifying_SocialFired(t *testing.T) {
 	// Post snapshot shows a new action_queue entry targeting that object.
 	script := buildSnapshotScript("be-friendly", []map[string]any{
 		{"ok": true, "payload": map[string]any{
-			"queued":       true,
-			"verb":         "be-friendly",
-			"interaction":  3,
-			"callee_id":    42,
+			"queued":        true,
+			"verb":          "be-friendly",
+			"interaction":   3,
+			"callee_id":     42,
 			"target_sim_id": 1001,
 		}},
 	}, []any{}, []any{
@@ -417,6 +431,346 @@ func TestInteractExpectFn_NoAckQueuedNoFallback(t *testing.T) {
 	}
 	if ok {
 		t.Error("want ok=false for silent-drop")
+	}
+}
+
+// ---------------------------------------------------------------------------
+// chunkText unit tests (automataisland-73d)
+// ---------------------------------------------------------------------------
+
+// TestChunkText_Short asserts text within speakChunkSize returns a single chunk.
+func TestChunkText_Short(t *testing.T) {
+	text := strings.Repeat("a", 500)
+	chunks := chunkText(text, speakChunkSize)
+	if len(chunks) != 1 {
+		t.Errorf("want 1 chunk for 500-char text, got %d", len(chunks))
+	}
+	if chunks[0] != text {
+		t.Errorf("single chunk must equal input")
+	}
+}
+
+// TestChunkText_ExactLimit asserts text of exactly speakChunkSize runes returns a single chunk
+// (boundary: 1000 runes, chunk_count=1).
+func TestChunkText_ExactLimit(t *testing.T) {
+	text := strings.Repeat("x", speakChunkSize)
+	chunks := chunkText(text, speakChunkSize)
+	if len(chunks) != 1 {
+		t.Errorf("want 1 chunk for exactly-limit text (%d runes), got %d", speakChunkSize, len(chunks))
+	}
+}
+
+// TestChunkText_OnePastLimit asserts text of speakChunkSize+1 runes is split into 2 chunks
+// (boundary: 1001 runes, chunk_count=2).
+func TestChunkText_OnePastLimit(t *testing.T) {
+	// Build 1001-rune text with a space just inside the limit so the word-boundary
+	// split fires at position 999.
+	text := strings.Repeat("a", 999) + " b"
+	if len([]rune(text)) != 1001 {
+		t.Fatalf("precondition: text must be 1001 runes, got %d", len([]rune(text)))
+	}
+	chunks := chunkText(text, speakChunkSize)
+	if len(chunks) != 2 {
+		t.Errorf("want 2 chunks for 1001-rune text, got %d: %v", len(chunks), chunks)
+	}
+}
+
+// TestChunkText_WordBoundary asserts chunks do not break mid-word and each is within limit.
+func TestChunkText_WordBoundary(t *testing.T) {
+	// 2500-rune text composed of ~5-char words separated by spaces.
+	var sb strings.Builder
+	for i := 0; sb.Len() < 2500; i++ {
+		if i > 0 {
+			sb.WriteRune(' ')
+		}
+		sb.WriteString(fmt.Sprintf("word%d", i))
+	}
+	text := string([]rune(sb.String())[:2500])
+	chunks := chunkText(text, speakChunkSize)
+	for i, c := range chunks {
+		if strings.HasPrefix(c, " ") || strings.HasSuffix(c, " ") {
+			t.Errorf("chunk %d has leading/trailing space: %q", i, c[:min(len(c), 20)])
+		}
+		if rc := len([]rune(c)); rc > speakChunkSize {
+			t.Errorf("chunk %d exceeds limit: %d runes", i, rc)
+		}
+	}
+}
+
+// TestChunkText_2500Runes asserts a 2500-rune text with word boundaries produces 3 chunks.
+func TestChunkText_2500Runes(t *testing.T) {
+	// Build 2500-rune text with word boundaries inside each 1000-rune window.
+	var sb strings.Builder
+	for i := 0; sb.Len() < 2600; i++ {
+		if i > 0 {
+			sb.WriteRune(' ')
+		}
+		sb.WriteString(fmt.Sprintf("word%04d", i))
+	}
+	text := string([]rune(sb.String())[:2500])
+	chunks := chunkText(text, speakChunkSize)
+	if len(chunks) != 3 {
+		t.Errorf("want 3 chunks for 2500-rune text, got %d", len(chunks))
+	}
+	// Reconstruct: joining chunks on spaces should recover original word list.
+	joined := strings.Join(chunks, " ")
+	origWords := strings.Fields(text)
+	joinedWords := strings.Fields(joined)
+	if len(origWords) != len(joinedWords) {
+		t.Errorf("word count mismatch after round-trip: orig=%d joined=%d", len(origWords), len(joinedWords))
+	}
+}
+
+// TestChunkText_HardSplit asserts a word longer than speakChunkSize is hard-split
+// with a truncation marker.
+func TestChunkText_HardSplit(t *testing.T) {
+	text := strings.Repeat("a", speakChunkSize+50)
+	chunks := chunkText(text, speakChunkSize)
+	if len(chunks) < 2 {
+		t.Fatalf("want >=2 chunks for overlong word, got %d", len(chunks))
+	}
+	// First chunk must end with truncation marker.
+	firstRunes := []rune(chunks[0])
+	if firstRunes[len(firstRunes)-1] != '…' {
+		t.Errorf("first chunk missing truncation marker: %q", chunks[0][max(0, len(chunks[0])-4):])
+	}
+}
+
+// ---------------------------------------------------------------------------
+// speakHandler chunking integration tests (automataisland-73d)
+//
+// These tests use the fakeBotProcess + IPC layer — the full sidecar code path
+// from convention.HandlerFunc through IPC.Send to the fake bot and back.
+// No live FSO instance is required; the mock-scope is the bot's IPC channel
+// only (the campfire and FSO server are not in scope for unit testing the
+// speak handler directly).
+//
+// Test decision rationale (posted to swarm campfire): a live grid31337-test bot
+// is the gold standard but requires a running FreeSO stack not available in
+// this dispatch context. The fakeBotProcess exercises the identical IPC.Send
+// path (same serialisation, same correlation logic, same context propagation)
+// that the real bot uses. The observable behaviour — N sequential IPC commands,
+// correct text per chunk, correct chunk_count in response — is fully verifiable
+// without a live bot. Live-bot validation is covered by the integration test
+// suite and operators' manual verification cadence.
+// ---------------------------------------------------------------------------
+
+// captureNCommands is a helper that reads n IPC commands from fake.stdinLines,
+// responds to each with the provided per-command responses (indexed), and
+// returns a channel that receives all commands in order.
+func captureNCommands(t *testing.T, fake *fakeBotProcess, ipc *IPC, responses []map[string]any) <-chan []Command {
+	t.Helper()
+	n := len(responses)
+	ch := make(chan []Command, 1)
+	go func() {
+		cmds := make([]Command, 0, n)
+		for i := 0; i < n; i++ {
+			select {
+			case line := <-fake.stdinLines:
+				var cmd Command
+				if err := json.Unmarshal(line, &cmd); err != nil {
+					t.Errorf("captureNCommands[%d]: unmarshal: %v", i, err)
+					ch <- cmds
+					return
+				}
+				cmds = append(cmds, cmd)
+				resp := responses[i]
+				resp["cmd_id"] = cmd.ID
+				data, _ := json.Marshal(resp)
+				ipc.Deliver(data)
+			case <-time.After(5 * time.Second):
+				t.Errorf("captureNCommands: command %d never arrived (got %d/%d)", i, len(cmds), n)
+				ch <- cmds
+				return
+			}
+		}
+		ch <- cmds
+	}()
+	return ch
+}
+
+// TestSpeakHandler_500Chars asserts text of 500 chars sends one IPC command
+// and returns chunk_count=1.
+func TestSpeakHandler_500Chars(t *testing.T) {
+	fake := newFakeBotProcess()
+	ipc := NewIPC(fake.bot)
+	text := strings.Repeat("a", 500)
+
+	responses := []map[string]any{
+		{"kind": "response", "ok": true, "payload": map[string]any{"queued": true, "length": 500}},
+	}
+	gotCmds := captureNCommands(t, fake, ipc, responses)
+
+	handler := speakHandler(ipc)
+	ctx, cancel := context.WithTimeout(context.Background(), 3*time.Second)
+	defer cancel()
+	resp, err := handler(ctx, &convention.Request{
+		Args: map[string]any{"text": text},
+	})
+	if err != nil {
+		t.Fatalf("handler: %v", err)
+	}
+
+	cmds := <-gotCmds
+	if len(cmds) != 1 {
+		t.Errorf("want 1 IPC command for 500-char text, got %d", len(cmds))
+	}
+	if len(cmds) > 0 && cmds[0].Args["text"] != text {
+		t.Errorf("IPC text mismatch")
+	}
+
+	pay, _ := resp.Payload.(map[string]any)
+	if pay == nil {
+		t.Fatal("nil payload")
+	}
+	if ok, _ := pay["ok"].(bool); !ok {
+		t.Errorf("want ok=true, got %v", pay["ok"])
+	}
+	if cc, _ := pay["chunk_count"].(int); cc != 1 {
+		t.Errorf("want chunk_count=1, got %v", pay["chunk_count"])
+	}
+}
+
+// TestSpeakHandler_2500Chars asserts text of 2500 chars sends 3 IPC speak
+// commands in correct order and returns chunk_count=3.
+func TestSpeakHandler_2500Chars(t *testing.T) {
+	fake := newFakeBotProcess()
+	ipc := NewIPC(fake.bot)
+
+	// 2500-rune text with word boundaries.
+	var sb strings.Builder
+	for i := 0; sb.Len() < 2600; i++ {
+		if i > 0 {
+			sb.WriteRune(' ')
+		}
+		sb.WriteString(fmt.Sprintf("word%04d", i))
+	}
+	text := string([]rune(sb.String())[:2500])
+
+	expectedChunks := chunkText(text, speakChunkSize)
+	if len(expectedChunks) != 3 {
+		t.Fatalf("precondition: want 3 chunks, got %d", len(expectedChunks))
+	}
+
+	responses := []map[string]any{
+		{"kind": "response", "ok": true, "payload": map[string]any{"queued": true}},
+		{"kind": "response", "ok": true, "payload": map[string]any{"queued": true}},
+		{"kind": "response", "ok": true, "payload": map[string]any{"queued": true}},
+	}
+	gotCmds := captureNCommands(t, fake, ipc, responses)
+
+	handler := speakHandler(ipc)
+	// Use a longer timeout to accommodate two 200ms inter-chunk delays.
+	ctx, cancel := context.WithTimeout(context.Background(), 5*time.Second)
+	defer cancel()
+
+	var (
+		handlerResp *convention.Response
+		handlerErr  error
+		wg          sync.WaitGroup
+	)
+	wg.Add(1)
+	go func() {
+		defer wg.Done()
+		handlerResp, handlerErr = handler(ctx, &convention.Request{
+			Args: map[string]any{"text": text},
+		})
+	}()
+
+	cmds := <-gotCmds
+	wg.Wait()
+
+	if handlerErr != nil {
+		t.Fatalf("handler: %v", handlerErr)
+	}
+
+	// Assert 3 IPC commands were issued in order.
+	if len(cmds) != 3 {
+		t.Fatalf("want 3 IPC speak commands, got %d", len(cmds))
+	}
+	for i, cmd := range cmds {
+		if cmd.Op != "speak" {
+			t.Errorf("cmd[%d]: want op=speak, got %q", i, cmd.Op)
+		}
+		if cmd.Args["text"] != expectedChunks[i] {
+			t.Errorf("cmd[%d]: text mismatch\n  want: %q\n  got:  %q",
+				i, expectedChunks[i], cmd.Args["text"])
+		}
+	}
+
+	// Assert response shape.
+	pay, _ := handlerResp.Payload.(map[string]any)
+	if pay == nil {
+		t.Fatal("nil payload")
+	}
+	if ok, _ := pay["ok"].(bool); !ok {
+		t.Errorf("want ok=true, got %v", pay["ok"])
+	}
+	if cc, _ := pay["chunk_count"].(int); cc != 3 {
+		t.Errorf("want chunk_count=3, got %v", pay["chunk_count"])
+	}
+}
+
+// TestSpeakHandler_ChunkFailure asserts that when a mid-sequence IPC call
+// fails (bot returns ok:false), the handler stops and returns ok=false with
+// failed_chunk set.
+func TestSpeakHandler_ChunkFailure(t *testing.T) {
+	fake := newFakeBotProcess()
+	ipc := NewIPC(fake.bot)
+
+	// 2500-rune text → 3 chunks. Second chunk will fail.
+	var sb strings.Builder
+	for i := 0; sb.Len() < 2600; i++ {
+		if i > 0 {
+			sb.WriteRune(' ')
+		}
+		sb.WriteString(fmt.Sprintf("word%04d", i))
+	}
+	text := string([]rune(sb.String())[:2500])
+
+	// Respond to first chunk ok, second chunk fails; third should never arrive.
+	responses := []map[string]any{
+		{"kind": "response", "ok": true, "payload": map[string]any{"queued": true}},
+		{"kind": "response", "ok": false, "error": "sim not on lot"},
+	}
+	gotCmds := captureNCommands(t, fake, ipc, responses)
+
+	handler := speakHandler(ipc)
+	ctx, cancel := context.WithTimeout(context.Background(), 5*time.Second)
+	defer cancel()
+
+	var (
+		handlerResp *convention.Response
+		handlerErr  error
+		wg          sync.WaitGroup
+	)
+	wg.Add(1)
+	go func() {
+		defer wg.Done()
+		handlerResp, handlerErr = handler(ctx, &convention.Request{
+			Args: map[string]any{"text": text},
+		})
+	}()
+
+	cmds := <-gotCmds
+	wg.Wait()
+
+	if handlerErr != nil {
+		t.Fatalf("handler: %v", handlerErr)
+	}
+	if len(cmds) != 2 {
+		t.Errorf("want exactly 2 IPC commands before failure, got %d", len(cmds))
+	}
+
+	pay, _ := handlerResp.Payload.(map[string]any)
+	if pay == nil {
+		t.Fatal("nil payload")
+	}
+	if ok, _ := pay["ok"].(bool); ok {
+		t.Errorf("want ok=false on chunk failure, got true")
+	}
+	if fc, _ := pay["failed_chunk"].(int); fc != 1 {
+		t.Errorf("want failed_chunk=1, got %v", pay["failed_chunk"])
 	}
 }
 
