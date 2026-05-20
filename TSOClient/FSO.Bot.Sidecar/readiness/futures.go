@@ -130,6 +130,7 @@ type Futures struct {
 	identityResolvedMsgID string
 	worldReadyDone        bool
 	worldGoneDone         bool
+	identityResolvedDone  bool
 	smokeOK               bool // set once by RunSmokeAtBoot; gates world:ready permanently
 
 	// gatePollInterval controls how often RunGates polls the world:ready
@@ -454,9 +455,14 @@ func (f *Futures) fulfillWorldGone(reason string, lastPerceptionMs int64) error 
 
 // FulfillIdentityResolved sends the identity:resolved fulfillment. Called by
 // the sidecar boot path once persona admit + home cf auto-join completes.
-// Idempotent: a second call returns nil without re-sending.
+// Idempotent: a second call returns nil without re-sending (matches the
+// worldReadyDone / worldGoneDone guard pattern).
 func (f *Futures) FulfillIdentityResolved() error {
 	f.mu.Lock()
+	if f.identityResolvedDone {
+		f.mu.Unlock()
+		return nil
+	}
 	futureID := f.identityResolvedMsgID
 	f.mu.Unlock()
 	if futureID == "" {
@@ -469,8 +475,13 @@ func (f *Futures) FulfillIdentityResolved() error {
 	if err != nil {
 		return fmt.Errorf("marshal: %w", err)
 	}
-	_, err = f.pub.Send(data, []string{tagFulfills, TagIdentityResolved}, []string{futureID})
-	return err
+	if _, err := f.pub.Send(data, []string{tagFulfills, TagIdentityResolved}, []string{futureID}); err != nil {
+		return err
+	}
+	f.mu.Lock()
+	f.identityResolvedDone = true
+	f.mu.Unlock()
+	return nil
 }
 
 // resolveWorldGoneThreshold reads FREESO_WORLD_GONE_THRESHOLD_SEC and returns

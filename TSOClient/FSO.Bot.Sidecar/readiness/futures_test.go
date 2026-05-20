@@ -378,6 +378,37 @@ func TestFulfillIdentityResolved(t *testing.T) {
 	}
 }
 
+// TestFulfillIdentityResolved_Idempotent: a second call is a no-op.
+// Matches the worldReadyDone / worldGoneDone guard pattern. Without the
+// guard a sidecar boot retry would double-publish identity:resolved.
+func TestFulfillIdentityResolved_Idempotent(t *testing.T) {
+	pub := newFakePublisher()
+	h := &fakeHandlers{}
+	p := &fakePerception{}
+	b := &fakeBridge{}
+	f := New(pub, h, p, b, 1, nil, "", "pk", 30)
+
+	ctx := context.Background()
+	if err := f.PublishAtBoot(ctx); err != nil {
+		t.Fatalf("PublishAtBoot: %v", err)
+	}
+	if err := f.FulfillIdentityResolved(); err != nil {
+		t.Fatalf("first FulfillIdentityResolved: %v", err)
+	}
+	if err := f.FulfillIdentityResolved(); err != nil {
+		t.Fatalf("second FulfillIdentityResolved: %v", err)
+	}
+	var count int
+	for _, e := range pub.snapshot() {
+		if containsTag(e.Tags, TagIdentityResolved) && containsTag(e.Tags, tagFulfills) {
+			count++
+		}
+	}
+	if count != 1 {
+		t.Errorf("want exactly 1 identity:resolved fulfillment after 2 calls; got %d", count)
+	}
+}
+
 // TestResolveWorldGoneThreshold_EnvOverride: the env var is honoured when
 // set to a positive integer.
 func TestResolveWorldGoneThreshold_EnvOverride(t *testing.T) {

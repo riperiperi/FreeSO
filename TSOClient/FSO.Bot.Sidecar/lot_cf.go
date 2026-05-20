@@ -37,9 +37,9 @@ package main
 //
 // Beacon files are written to /var/freeso/lot-beacons/<lot_id>.beacon. The file
 // contains the campfire ID hex string + "\n". The founding-circle convention
-// (Wave 5 items automataisland-c37, automataisland-230) reads from this directory
-// to discover newly available lot campfires. Operators can override the beacon
-// directory by setting LOT_CF_BEACON_DIR.
+// (Wave 5 build-coordination) reads from this directory to discover newly
+// available lot campfires. Operators can override the beacon directory by
+// setting LOT_CF_BEACON_DIR.
 //
 // # Recovery
 //
@@ -106,11 +106,20 @@ type LotCFIDs struct {
 	PublicKey ed25519.PublicKey
 }
 
-// DeriveLotCFIDs deterministically derives the campfire keypair for a lot_id.
+// DeriveLotCFIDs deterministically derives a campfire-style ed25519 keypair
+// from lot_id. This keypair is intended as a stable SIGNING identity for
+// producers that write to the lot campfire — NOT as the lot campfire's id.
+//
+// IMPORTANT: The actual lot campfire ID is the one returned by EnsureLotCF
+// and stored in beaconDir/<lot_id>.beacon. It is assigned randomly by
+// protocol.Client.Create() and is NOT recoverable from this function. Wave 5
+// build-coordination consumers must read the beacon file (or subscribe to the
+// founding-circle beacon projection) to discover the actual campfire ID — do
+// not call DeriveLotCFIDs(lotID).CampfireID expecting it to match.
 //
 // Derivation: seed = SHA256(lotCFPrefix + strconv.FormatInt(lotID, 10))
 // The 32-byte SHA256 output is used as the ed25519 private key seed.
-// The resulting campfire ID (hex-encoded public key, 64 chars) is stable
+// The resulting "campfire ID" (hex-encoded public key, 64 chars) is stable
 // across sidecar restarts for the same lot_id.
 func DeriveLotCFIDs(lotID int64) LotCFIDs {
 	input := lotCFPrefix + strconv.FormatInt(lotID, 10)

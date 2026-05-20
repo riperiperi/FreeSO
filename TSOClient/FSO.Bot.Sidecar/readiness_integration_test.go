@@ -98,14 +98,24 @@ done
 	)
 	// FREESO_BROADCAST_PERCEPTION=1 so the perception bridge actually
 	// broadcasts to the body cf. This is the gate (4) precondition.
+	// FREESO_SKIP_SMOKE_TEST=1 because this test exercises the wake-readiness
+	// future graph (5a4 Component 2), not the boot smoke test gate (f28).
+	// The integration test scaffold doesn't register every declared
+	// convention handler (e.g. admin/social ops live in handlers we don't
+	// boot here), so the smoke test would otherwise gate world:ready off
+	// even though the readiness-graph itself is healthy.
 	sidecarEnv := os.Environ()
 	filtered := sidecarEnv[:0]
 	for _, e := range sidecarEnv {
-		if !strings.HasPrefix(e, "FREESO_BROADCAST_PERCEPTION=") {
+		if !strings.HasPrefix(e, "FREESO_BROADCAST_PERCEPTION=") &&
+			!strings.HasPrefix(e, "FREESO_SKIP_SMOKE_TEST=") {
 			filtered = append(filtered, e)
 		}
 	}
-	sidecarCmd.Env = append(filtered, "FREESO_BROADCAST_PERCEPTION=1")
+	sidecarCmd.Env = append(filtered,
+		"FREESO_BROADCAST_PERCEPTION=1",
+		"FREESO_SKIP_SMOKE_TEST=1",
+	)
 
 	stdout, err := sidecarCmd.StdoutPipe()
 	if err != nil {
@@ -229,12 +239,15 @@ func TestIntegration_Readiness_WorldReadyDoesNotFulfillWithoutBroadcast(t *testi
 		"--description", "readiness-negative-test",
 	)
 	// Strip any inherited FREESO_BROADCAST_PERCEPTION and force 5s world:gone
-	// threshold for a tight test.
+	// threshold for a tight test. FREESO_SKIP_SMOKE_TEST=1 so the NEGATIVE
+	// gate isolates the broadcast-bridge-unverified failure mode from f28's
+	// smoke gate (otherwise world:ready not fulfilling could be either cause).
 	sidecarEnv := os.Environ()
 	filtered := sidecarEnv[:0]
 	for _, e := range sidecarEnv {
 		if strings.HasPrefix(e, "FREESO_BROADCAST_PERCEPTION=") ||
-			strings.HasPrefix(e, "FREESO_WORLD_GONE_THRESHOLD_SEC=") {
+			strings.HasPrefix(e, "FREESO_WORLD_GONE_THRESHOLD_SEC=") ||
+			strings.HasPrefix(e, "FREESO_SKIP_SMOKE_TEST=") {
 			continue
 		}
 		filtered = append(filtered, e)
@@ -242,6 +255,7 @@ func TestIntegration_Readiness_WorldReadyDoesNotFulfillWithoutBroadcast(t *testi
 	sidecarCmd.Env = append(filtered,
 		"FREESO_BROADCAST_PERCEPTION=0",
 		"FREESO_WORLD_GONE_THRESHOLD_SEC=5",
+		"FREESO_SKIP_SMOKE_TEST=1",
 	)
 
 	stdout, err := sidecarCmd.StdoutPipe()
