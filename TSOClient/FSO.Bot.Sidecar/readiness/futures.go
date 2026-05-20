@@ -105,10 +105,13 @@ type BridgeVerifier interface {
 // goroutines that fulfill them.
 //
 // Lifecycle:
-//   New(...) → PublishAtBoot(ctx) → RunGates(ctx) (background) → Close()
+//   New(...) → PublishAtBoot(ctx) → RunSmokeAtBoot() → RunGates(ctx) (background) → Close()
 //
 // PublishAtBoot is synchronous; it returns once all three futures have message
-// IDs. RunGates is non-blocking — it spawns the gate-check goroutines and
+// IDs. RunSmokeAtBoot runs the one-shot boot smoke test (handler-count parity
+// + skill referential integrity); its result permanently gates world:ready —
+// a failed smoke test prevents fulfillment for the sidecar's lifetime.
+// RunGates is non-blocking — it spawns the gate-check goroutines and
 // returns immediately so the sidecar boot path stays unblocked.
 type Futures struct {
 	pub             Publisher
@@ -116,15 +119,18 @@ type Futures struct {
 	perception      PerceptionWatcher
 	bridge          BridgeVerifier
 	declaredOps     int
+	declaredOpNames []string // op name list; used by the smoke test skill audit
+	skillsDir       string   // skill markdown dir to audit; empty = skip
 	personaPubkey   string
 	worldGoneSecs   int
 
-	mu                  sync.Mutex
-	worldReadyMsgID     string
-	worldGoneMsgID      string
+	mu                    sync.Mutex
+	worldReadyMsgID       string
+	worldGoneMsgID        string
 	identityResolvedMsgID string
-	worldReadyDone      bool
-	worldGoneDone       bool
+	worldReadyDone        bool
+	worldGoneDone         bool
+	smokeOK               bool // set once by RunSmokeAtBoot; gates world:ready permanently
 
 	// gatePollInterval controls how often RunGates polls the world:ready
 	// preconditions. 500ms balances responsiveness against churn.
@@ -136,9 +142,17 @@ type Futures struct {
 // gate (1) requires handlers.Count() to reach this number. personaPubkey is
 // included in the world:ready payload for downstream consumers.
 //
+// declaredOpNames is the ordered list of declared operation names from
+// conventions/*.json; used by the smoke test's skill referential integrity
+// audit. May be nil — only the count gate runs if the slice is empty.
+//
+// skillsDir is the path to the directory containing skill markdown files to
+// audit for convention references. Empty string means no skill audit is
+// performed (common in dev environments without a legion jail configured).
+//
 // worldGoneSecs of 0 selects the FREESO_WORLD_GONE_THRESHOLD_SEC env var (or
 // the default 30s if absent or unparseable).
-func New(pub Publisher, handlers HandlerCounter, perception PerceptionWatcher, bridge BridgeVerifier, declaredOps int, personaPubkey string, worldGoneSecs int) *Futures {
+func New(pub Publisher, handlers HandlerCounter, perception PerceptionWatcher, bridge BridgeVerifier, declaredOps int, declaredOpNames []string, skillsDir string, personaPubkey string, worldGoneSecs int) *Futures {
 	if worldGoneSecs <= 0 {
 		worldGoneSecs = resolveWorldGoneThreshold()
 	}
@@ -148,6 +162,8 @@ func New(pub Publisher, handlers HandlerCounter, perception PerceptionWatcher, b
 		perception:       perception,
 		bridge:           bridge,
 		declaredOps:      declaredOps,
+		declaredOpNames:  declaredOpNames,
+		skillsDir:        skillsDir,
 		personaPubkey:    personaPubkey,
 		worldGoneSecs:    worldGoneSecs,
 		gatePollInterval: 500 * time.Millisecond,
@@ -214,6 +230,35 @@ func (f *Futures) FutureIDs() (worldReady, worldGone, identityResolved string) {
 	return f.worldReadyMsgID, f.worldGoneMsgID, f.identityResolvedMsgID
 }
 
+// RunSmokeAtBoot executes the one-shot boot smoke test and stores the result.
+// It must be called AFTER all Register*Handlers calls have completed (so
+// handlers.Count() is final) and BEFORE RunGates (so the result is visible to
+// the world:ready gate before it starts polling).
+//
+// A failed smoke test permanently blocks world:ready for this sidecar
+// lifetime — the sidecar does not exit, diagnostic ops remain available, and
+// world:gone still arms normally. Only a clean sidecar restart can clear the
+// smoke-failed state.
+//
+// FREESO_SKIP_SMOKE_TEST=1 causes RunSmokeAtBoot to mark the smoke as passed
+// and return immediately (dev/CI iteration path only; never set in production
+// charts).
+func (f *Futures) RunSmokeAtBoot() SmokeResult {
+	result := RunSmokeTest(f.handlers.Count(), f.declaredOpNames, f.skillsDir)
+	f.mu.Lock()
+	f.smokeOK = result.Passed
+	f.mu.Unlock()
+	return result
+}
+
+// SmokeOK reports whether the boot smoke test passed. Always false until
+// RunSmokeAtBoot has been called.
+func (f *Futures) SmokeOK() bool {
+	f.mu.Lock()
+	defer f.mu.Unlock()
+	return f.smokeOK
+}
+
 // RunGates spawns two background goroutines: one polls the world:ready
 // preconditions and fulfills when all four gates are green; the other runs the
 // world:gone heartbeat and fulfills when perception goes stale. Returns
@@ -230,7 +275,20 @@ func (f *Futures) RunGates(ctx context.Context) {
 // runWorldReadyGate polls the four preconditions every gatePollInterval until
 // all four are green, then fulfills world:ready with the design payload.
 // Exits on ctx.Done or after fulfillment (single-shot).
+//
+// Smoke test gate (pre-condition): if RunSmokeAtBoot recorded a failure,
+// this goroutine exits immediately without ever polling — world:ready will
+// never fulfill for this sidecar lifetime. The operator must restart.
 func (f *Futures) runWorldReadyGate(ctx context.Context) {
+	// Smoke gate: permanent failure if smoke test did not pass.
+	f.mu.Lock()
+	smokeOK := f.smokeOK
+	f.mu.Unlock()
+	if !smokeOK {
+		log.Printf("readiness: world:ready permanently blocked — boot smoke test failed (restart sidecar to retry)")
+		return
+	}
+
 	ticker := time.NewTicker(f.gatePollInterval)
 	defer ticker.Stop()
 	var bridgeVerified bool

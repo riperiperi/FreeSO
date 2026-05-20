@@ -28,7 +28,7 @@ func TestPurchaseLotHandlerMissingLocation(t *testing.T) {
 		}
 	}()
 
-	handler := purchaseLotHandler(pump)
+	handler := purchaseLotHandler(pump, "", "")
 	ctx, cancel := context.WithTimeout(context.Background(), 2*time.Second)
 	defer cancel()
 
@@ -57,7 +57,7 @@ func TestPurchaseLotHandlerMissingName(t *testing.T) {
 		}
 	}()
 
-	handler := purchaseLotHandler(pump)
+	handler := purchaseLotHandler(pump, "", "")
 	ctx, cancel := context.WithTimeout(context.Background(), 2*time.Second)
 	defer cancel()
 
@@ -102,7 +102,7 @@ func TestPurchaseLotHandlerNoRoadBits(t *testing.T) {
 		}))
 	}()
 
-	handler := purchaseLotHandler(pump)
+	handler := purchaseLotHandler(pump, "", "")
 	ctx, cancel := context.WithTimeout(context.Background(), 3*time.Second)
 	defer cancel()
 
@@ -148,7 +148,7 @@ func TestPurchaseLotHandlerAlreadyOwns(t *testing.T) {
 		}
 	}()
 
-	handler := purchaseLotHandler(pump)
+	handler := purchaseLotHandler(pump, "", "")
 	ctx, cancel := context.WithTimeout(context.Background(), 2*time.Second)
 	defer cancel()
 
@@ -209,7 +209,7 @@ func TestPurchaseLotHandlerAllowMoveBypassesAlreadyOwns(t *testing.T) {
 		}))
 	}()
 
-	handler := purchaseLotHandler(pump)
+	handler := purchaseLotHandler(pump, "", "")
 	ctx, cancel := context.WithTimeout(context.Background(), 3*time.Second)
 	defer cancel()
 
@@ -307,7 +307,7 @@ func TestPurchaseLotHandlerSuccessPath(t *testing.T) {
 		}))
 	}()
 
-	handler := purchaseLotHandler(pump)
+	handler := purchaseLotHandler(pump, "", "")
 	ctx, cancel := context.WithTimeout(context.Background(), 5*time.Second)
 	defer cancel()
 
@@ -429,7 +429,7 @@ func TestPurchaseLotHandlerServerRefuseNhoodReserved(t *testing.T) {
 		}))
 	}()
 
-	handler := purchaseLotHandler(pump)
+	handler := purchaseLotHandler(pump, "", "")
 	ctx, cancel := context.WithTimeout(context.Background(), 5*time.Second)
 	defer cancel()
 
@@ -463,7 +463,7 @@ func TestPurchaseLotHandlerServerRefuseNhoodReserved(t *testing.T) {
 // TestPurchaseLotHandlerNoBotMode asserts that a nil botCmds returns a
 // deferred marker rather than panicking.
 func TestPurchaseLotHandlerNoBotMode(t *testing.T) {
-	handler := purchaseLotHandler(nil) // nil = --no-bot mode
+	handler := purchaseLotHandler(nil, "", "") // nil = --no-bot mode
 	ctx, cancel := context.WithTimeout(context.Background(), 2*time.Second)
 	defer cancel()
 
@@ -492,8 +492,13 @@ func TestPurchaseLotHandlerNoBotMode(t *testing.T) {
 //
 //	ok:false error:"purchase-lot: NullReferenceException: Object reference not set..."
 //
-// After the fix, the server sends PurchaseLotStatus.FAILED / LOT_NOT_PURCHASABLE.
-// The sidecar converts that to ok=false, reason="LOT_NOT_PURCHASABLE" with a hint.
+// After the fix, the server sends PurchaseLotStatus.FAILED / LOT_NOT_PURCHASABLE,
+// which the bot handler emits as ok=true, data:{status:"FAILED", reason:"LOT_NOT_PURCHASABLE"}.
+// The sidecar handler converts that to ok=false, reason="LOT_NOT_PURCHASABLE" with
+// a human-readable hint — a typed refusal, not an NRE.
+//
+// This test asserts that behavior (typed refusal path) and will FAIL if the
+// escalationHint function is missing the LOT_NOT_PURCHASABLE case (hint would be empty).
 func TestPurchaseLotHandlerLotNotPurchasable(t *testing.T) {
 	tmp := t.TempDir()
 	withFSO_USER(t, "purchase-lot-test-lot-not-purchasable")
@@ -503,6 +508,7 @@ func TestPurchaseLotHandlerLotNotPurchasable(t *testing.T) {
 	pump := NewBotCmdPump(fake.bot)
 
 	go func() {
+		// Frame 1: probe-road → has_road=true (road check passes)
 		line1 := <-fake.stdinLines
 		var req1 BotCmdRequest
 		if err := json.Unmarshal(line1, &req1); err != nil {
@@ -520,6 +526,8 @@ func TestPurchaseLotHandlerLotNotPurchasable(t *testing.T) {
 			"data":           map[string]any{"has_road": true, "road_bits": 9, "x": 249, "y": 352},
 		}))
 
+		// Frame 2: purchase-lot → FAILED/LOT_NOT_PURCHASABLE
+		// This is the post-fix path: server sends typed failure instead of NRE.
 		line2 := <-fake.stdinLines
 		var req2 BotCmdRequest
 		if err := json.Unmarshal(line2, &req2); err != nil {
@@ -533,7 +541,7 @@ func TestPurchaseLotHandlerLotNotPurchasable(t *testing.T) {
 		pump.Deliver(mustMarshal(map[string]any{
 			"kind":           "bot-cmd-reply",
 			"correlation_id": req2.CorrelationID,
-			"ok":             true,
+			"ok":             true, // bot emits ok=true so sidecar can inspect status/reason
 			"data": map[string]any{
 				"status":    "FAILED",
 				"reason":    "LOT_NOT_PURCHASABLE",
@@ -543,7 +551,7 @@ func TestPurchaseLotHandlerLotNotPurchasable(t *testing.T) {
 		}))
 	}()
 
-	handler := purchaseLotHandler(pump)
+	handler := purchaseLotHandler(pump, "", "")
 	ctx, cancel := context.WithTimeout(context.Background(), 5*time.Second)
 	defer cancel()
 
@@ -556,28 +564,27 @@ func TestPurchaseLotHandlerLotNotPurchasable(t *testing.T) {
 	}
 	payload, _ := resp.Payload.(map[string]any)
 
-	// NEGATIVE gate: typed refusal, NOT NRE.
+	// NEGATIVE gate: must be ok=false (typed refusal), NOT an NRE string.
 	if payload["ok"] != false {
 		t.Errorf("NEGATIVE gate: want ok=false for LOT_NOT_PURCHASABLE, got %v", payload)
 	}
 	if payload["reason"] != "LOT_NOT_PURCHASABLE" {
 		t.Errorf("NEGATIVE gate: want reason=LOT_NOT_PURCHASABLE, got %v", payload["reason"])
 	}
+	// Verify it is NOT an NRE surface (regression: the old error string contained "NullReferenceException").
 	errStr, _ := payload["error"].(string)
 	if errStr == "" {
 		t.Error("want non-empty error string")
 	}
-	// Regression: old error string contained "NullReferenceException".
-	for i := 0; i <= len(errStr)-20; i++ {
-		if errStr[i:i+20] == "NullReferenceExceptio" {
-			t.Errorf("REGRESSION: NRE still surfaced in error field: %q", errStr)
-			break
-		}
+	if len(errStr) > 0 && containsNRE(errStr) {
+		t.Errorf("REGRESSION: NRE still surfaced in error field: %q", errStr)
 	}
+	// Verify escalation hint is present and non-empty (requires LOT_NOT_PURCHASABLE in escalationHint).
 	hint, _ := payload["hint"].(string)
 	if hint == "" {
 		t.Error("want non-empty escalation hint for LOT_NOT_PURCHASABLE (missing case in escalationHint?)")
 	}
+	// Verify owned-lots.json was NOT written (failed purchase).
 	dir := filepath.Join(tmp, "freeso-souls", "purchase-lot-test-lot-not-purchasable")
 	ownedPath := filepath.Join(dir, "owned-lots.json")
 	if _, err := os.Stat(ownedPath); err == nil {
@@ -586,9 +593,24 @@ func TestPurchaseLotHandlerLotNotPurchasable(t *testing.T) {
 	t.Logf("LOT_NOT_PURCHASABLE response: reason=%v hint=%q", payload["reason"], hint)
 }
 
+// containsNRE is a helper for the NRE regression check. Returns true if the
+// error string contains "NullReferenceException" — the pre-fix failure mode.
+func containsNRE(s string) bool {
+	for i := 0; i <= len(s)-20; i++ {
+		if s[i:i+20] == "NullReferenceExceptio" {
+			return true
+		}
+	}
+	return false
+}
+
 // TestPurchaseLotHandlerCommunityLotTHNotMayor asserts that a community lot
 // purchase attempt returns reason=TH_NOT_MAYOR with an escalation hint.
-// Community lots require MayorMode=true; the bot handler hard-codes MayorMode=false.
+//
+// Community lots require MayorMode=true on the server side; the bot handler
+// hard-codes MayorMode=false. The server therefore returns TH_NOT_MAYOR for
+// any community-category tile. The sidecar must surface this as a typed
+// refusal with a hint explaining the constraint.
 func TestPurchaseLotHandlerCommunityLotTHNotMayor(t *testing.T) {
 	tmp := t.TempDir()
 	withFSO_USER(t, "purchase-lot-test-community")
@@ -598,6 +620,7 @@ func TestPurchaseLotHandlerCommunityLotTHNotMayor(t *testing.T) {
 	pump := NewBotCmdPump(fake.bot)
 
 	go func() {
+		// Frame 1: probe-road → has_road=true
 		line1 := <-fake.stdinLines
 		var req1 BotCmdRequest
 		if err := json.Unmarshal(line1, &req1); err != nil {
@@ -611,6 +634,7 @@ func TestPurchaseLotHandlerCommunityLotTHNotMayor(t *testing.T) {
 			"data":           map[string]any{"has_road": true, "road_bits": 9, "x": 249, "y": 352},
 		}))
 
+		// Frame 2: purchase-lot → FAILED/TH_NOT_MAYOR (community lot, MayorMode=false)
 		line2 := <-fake.stdinLines
 		var req2 BotCmdRequest
 		if err := json.Unmarshal(line2, &req2); err != nil {
@@ -630,7 +654,7 @@ func TestPurchaseLotHandlerCommunityLotTHNotMayor(t *testing.T) {
 		}))
 	}()
 
-	handler := purchaseLotHandler(pump)
+	handler := purchaseLotHandler(pump, "", "")
 	ctx, cancel := context.WithTimeout(context.Background(), 5*time.Second)
 	defer cancel()
 
@@ -656,8 +680,10 @@ func TestPurchaseLotHandlerCommunityLotTHNotMayor(t *testing.T) {
 	t.Logf("TH_NOT_MAYOR response: reason=%v hint=%q", payload["reason"], hint)
 }
 
-// TestPurchaseLotHandlerMoneyLotSuccess asserts that a Money-category lot purchase
-// succeeds. Category is server-assigned; sidecar protocol is identical to residential.
+// TestPurchaseLotHandlerMoneyLotSuccess asserts that a Money-category lot
+// purchase succeeds identically to a residential lot. The Money category is
+// determined by the server (job lots); from the sidecar's perspective the
+// protocol is identical — probe-road passes, purchase-lot returns SUCCESS.
 func TestPurchaseLotHandlerMoneyLotSuccess(t *testing.T) {
 	tmp := t.TempDir()
 	withFSO_USER(t, "purchase-lot-test-money")
@@ -666,13 +692,19 @@ func TestPurchaseLotHandlerMoneyLotSuccess(t *testing.T) {
 	fake := newFakeBotProcess()
 	pump := NewBotCmdPump(fake.bot)
 
-	const moneyLotHex = "0x00FA0200"
+	// Money lot location — arbitrary; the category is assigned server-side.
+	const moneyLotHex = "0x00FA0200" // x=250, y=512
 
 	go func() {
+		// Frame 1: probe-road → has_road=true
 		line1 := <-fake.stdinLines
 		var req1 BotCmdRequest
 		if err := json.Unmarshal(line1, &req1); err != nil {
 			t.Errorf("probe-road unmarshal: %v", err)
+			return
+		}
+		if req1.Cmd != "probe-road" {
+			t.Errorf("want probe-road, got %q", req1.Cmd)
 			return
 		}
 		pump.Deliver(mustMarshal(map[string]any{
@@ -682,10 +714,15 @@ func TestPurchaseLotHandlerMoneyLotSuccess(t *testing.T) {
 			"data":           map[string]any{"has_road": true, "road_bits": 9, "x": 250, "y": 512},
 		}))
 
+		// Frame 2: purchase-lot → SUCCESS
 		line2 := <-fake.stdinLines
 		var req2 BotCmdRequest
 		if err := json.Unmarshal(line2, &req2); err != nil {
 			t.Errorf("purchase-lot unmarshal: %v", err)
+			return
+		}
+		if req2.Cmd != "purchase-lot" {
+			t.Errorf("want purchase-lot, got %q", req2.Cmd)
 			return
 		}
 		pump.Deliver(mustMarshal(map[string]any{
@@ -700,7 +737,7 @@ func TestPurchaseLotHandlerMoneyLotSuccess(t *testing.T) {
 		}))
 	}()
 
-	handler := purchaseLotHandler(pump)
+	handler := purchaseLotHandler(pump, "", "")
 	ctx, cancel := context.WithTimeout(context.Background(), 5*time.Second)
 	defer cancel()
 
@@ -722,8 +759,10 @@ func TestPurchaseLotHandlerMoneyLotSuccess(t *testing.T) {
 	if payload["location_hex"] != moneyLotHex {
 		t.Errorf("Money lot: want location_hex=%q, got %v", moneyLotHex, payload["location_hex"])
 	}
+	// Verify owned-lots.json was written.
 	dir := filepath.Join(tmp, "freeso-souls", "purchase-lot-test-money")
-	data, readErr := os.ReadFile(filepath.Join(dir, "owned-lots.json"))
+	ownedPath := filepath.Join(dir, "owned-lots.json")
+	data, readErr := os.ReadFile(ownedPath)
 	if readErr != nil {
 		t.Fatalf("owned-lots.json not written for Money lot: %v", readErr)
 	}
@@ -731,14 +770,19 @@ func TestPurchaseLotHandlerMoneyLotSuccess(t *testing.T) {
 	if err := json.Unmarshal(data, &entries); err != nil {
 		t.Fatalf("parse owned-lots.json: %v", err)
 	}
-	if len(entries) != 1 || entries[0].Name != "jin's job lot" {
-		t.Errorf("owned-lots.json: want 1 entry name=%q, got %v", "jin's job lot", entries)
+	if len(entries) != 1 {
+		t.Fatalf("want 1 entry in owned-lots.json, got %d", len(entries))
+	}
+	if entries[0].Name != "jin's job lot" {
+		t.Errorf("entry.Name: want %q, got %q", "jin's job lot", entries[0].Name)
 	}
 	t.Logf("Money lot success: lot_id=%v new_funds=%v", payload["lot_id"], payload["new_funds"])
 }
 
 // TestPurchaseLotHandlerWelcomeLotSuccess asserts that a Welcome-category lot
-// purchase succeeds. Category is server-assigned; sidecar protocol is identical.
+// purchase succeeds. Welcome lots (Welcome Center) are treated identically by the
+// wire protocol — the category is assigned server-side. From the sidecar's
+// perspective the protocol is identical to residential.
 func TestPurchaseLotHandlerWelcomeLotSuccess(t *testing.T) {
 	tmp := t.TempDir()
 	withFSO_USER(t, "purchase-lot-test-welcome")
@@ -747,9 +791,11 @@ func TestPurchaseLotHandlerWelcomeLotSuccess(t *testing.T) {
 	fake := newFakeBotProcess()
 	pump := NewBotCmdPump(fake.bot)
 
-	const welcomeLotHex = "0x00FB0300"
+	// Welcome lot location — arbitrary; category is server-assigned.
+	const welcomeLotHex = "0x00FB0300" // x=251, y=768
 
 	go func() {
+		// Frame 1: probe-road → has_road=true
 		line1 := <-fake.stdinLines
 		var req1 BotCmdRequest
 		if err := json.Unmarshal(line1, &req1); err != nil {
@@ -763,6 +809,7 @@ func TestPurchaseLotHandlerWelcomeLotSuccess(t *testing.T) {
 			"data":           map[string]any{"has_road": true, "road_bits": 9, "x": 251, "y": 768},
 		}))
 
+		// Frame 2: purchase-lot → SUCCESS
 		line2 := <-fake.stdinLines
 		var req2 BotCmdRequest
 		if err := json.Unmarshal(line2, &req2); err != nil {
@@ -781,7 +828,7 @@ func TestPurchaseLotHandlerWelcomeLotSuccess(t *testing.T) {
 		}))
 	}()
 
-	handler := purchaseLotHandler(pump)
+	handler := purchaseLotHandler(pump, "", "")
 	ctx, cancel := context.WithTimeout(context.Background(), 5*time.Second)
 	defer cancel()
 
@@ -803,8 +850,10 @@ func TestPurchaseLotHandlerWelcomeLotSuccess(t *testing.T) {
 	if payload["location_hex"] != welcomeLotHex {
 		t.Errorf("Welcome lot: want location_hex=%q, got %v", welcomeLotHex, payload["location_hex"])
 	}
+	// Verify owned-lots.json was written.
 	dir := filepath.Join(tmp, "freeso-souls", "purchase-lot-test-welcome")
-	data, readErr := os.ReadFile(filepath.Join(dir, "owned-lots.json"))
+	ownedPath := filepath.Join(dir, "owned-lots.json")
+	data, readErr := os.ReadFile(ownedPath)
 	if readErr != nil {
 		t.Fatalf("owned-lots.json not written for Welcome lot: %v", readErr)
 	}
@@ -812,8 +861,11 @@ func TestPurchaseLotHandlerWelcomeLotSuccess(t *testing.T) {
 	if err := json.Unmarshal(data, &entries); err != nil {
 		t.Fatalf("parse owned-lots.json: %v", err)
 	}
-	if len(entries) != 1 || entries[0].Name != "welcome center" {
-		t.Errorf("owned-lots.json: want 1 entry name=%q, got %v", "welcome center", entries)
+	if len(entries) != 1 {
+		t.Fatalf("want 1 entry in owned-lots.json, got %d", len(entries))
+	}
+	if entries[0].Name != "welcome center" {
+		t.Errorf("entry.Name: want %q, got %q", "welcome center", entries[0].Name)
 	}
 	t.Logf("Welcome lot success: lot_id=%v new_funds=%v", payload["lot_id"], payload["new_funds"])
 }

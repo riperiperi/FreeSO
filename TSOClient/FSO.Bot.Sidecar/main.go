@@ -261,11 +261,20 @@ func main() {
 		// Purchase-lot family (freesoexperiment-eaa): purchase-lot — was scaffold, now
 		// implemented. Road-bits pre-check via bot-cmd:probe-road, city-socket
 		// PurchaseLotRequest via bot-cmd:purchase-lot, owned-lots.json update on success.
-		purchaseServers, err := RegisterPurchaseLotHandlers(ctx, cf, botCmds)
+		// On success: asynchronously creates the lot campfire (automataisland-9b4).
+		purchaseServers, err := RegisterPurchaseLotHandlers(ctx, cf, botCmds, absHome, cf.PublicKeyHex)
 		if err != nil {
 			log.Fatalf("register purchase-lot handlers: %v", err)
 		}
 		log.Printf("convention handlers: %d purchase-lot-family ops serving", purchaseServers)
+
+		// ensure-lot-cf (automataisland-9b4): one-shot recovery op for failed async
+		// lot-cf creation. Idempotent — safe to call for any lot_id at any time.
+		ensureLotCFServers, err := RegisterEnsureLotCFHandler(ctx, cf, absHome)
+		if err != nil {
+			log.Fatalf("register ensure-lot-cf handler: %v", err)
+		}
+		log.Printf("convention handlers: %d ensure-lot-cf ops serving", ensureLotCFServers)
 
 		// Admin family (freesoexperiment-3df).
 		adminServers, err := RegisterAdminHandlers(ctx, cf, ipc)
@@ -428,8 +437,13 @@ func main() {
 		// a missing message). The handler count snapshot below is taken AFTER
 		// all Register*Handlers calls finish so the world:ready handler-count
 		// gate is genuinely measuring "all expected handlers wired".
+		//
+		// declaredOpNames is extracted from the embedded conventions/*.json at
+		// this point (post-LoadDeclarations, which ran in StartCampfire).
+		// They are forwarded to the smoke test for skill referential integrity.
 		declaredOps := cf.Router.Count()
-		_ = startReadiness(ctx, cf, cf.Router, health, declaredOps)
+		declaredOpNames := conventionOpNames(conventionFiles)
+		_ = startReadiness(ctx, cf, cf.Router, health, declaredOps, declaredOpNames)
 	} else {
 		log.Printf("running in --no-bot mode (campfire-only)")
 
@@ -471,7 +485,8 @@ func main() {
 		// and world:gone will fulfill once the threshold elapses (which is
 		// the correct signal for "no world here").
 		declaredOps := cf.Router.Count()
-		_ = startReadiness(ctx, cf, cf.Router, nil, declaredOps)
+		declaredOpNames := conventionOpNames(conventionFiles)
+		_ = startReadiness(ctx, cf, cf.Router, nil, declaredOps, declaredOpNames)
 	}
 
 	// Signal handling for clean shutdown.

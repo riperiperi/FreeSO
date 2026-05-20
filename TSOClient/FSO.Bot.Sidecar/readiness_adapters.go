@@ -9,6 +9,7 @@ package main
 import (
 	"context"
 	"fmt"
+	"os"
 	"time"
 
 	"github.com/3dl-dev/freeso-sidecar/readiness"
@@ -148,22 +149,34 @@ func (v *liveBridgeVerifier) Verify(ctx context.Context) error {
 	return fmt.Errorf("probe %s not readable from body cf within deadline", probeID)
 }
 
-// startReadiness publishes the three wake-readiness futures and spawns the
-// gate goroutines. Returns the Futures handle so the caller can fulfill
-// identity:resolved at the right moment. On error the sidecar should not
-// fail — the futures are best-effort; a missing future means talents will
-// time out on await rather than learn the world is ready, which is recoverable.
-func startReadiness(ctx context.Context, cf *Campfire, router *Router, health *SidecarHealth, declaredOps int) *readiness.Futures {
+// startReadiness publishes the three wake-readiness futures, runs the boot
+// smoke test, and spawns the gate goroutines. Returns the Futures handle so
+// the caller can fulfill identity:resolved at the right moment.
+//
+// On error the sidecar should not fail — the futures are best-effort; a
+// missing future means talents will time out on await rather than learn the
+// world is ready, which is recoverable.
+//
+// declaredOps is the count of declared ops; declaredOpNames is the ordered
+// slice of their names (used by the skill referential integrity audit).
+// The skills directory is read from FREESO_SKILLS_DIR; empty means no audit.
+func startReadiness(ctx context.Context, cf *Campfire, router *Router, health *SidecarHealth, declaredOps int, declaredOpNames []string) *readiness.Futures {
 	pub := &campfirePublisher{cf: cf}
 	handlers := &routerHandlers{r: router}
 	perception := &healthPerception{h: health}
 	bridge := &liveBridgeVerifier{cf: cf}
-	f := readiness.New(pub, handlers, perception, bridge, declaredOps, cf.PublicKeyHex, 0)
+	skillsDir := os.Getenv("FREESO_SKILLS_DIR")
+	f := readiness.New(pub, handlers, perception, bridge, declaredOps, declaredOpNames, skillsDir, cf.PublicKeyHex, 0)
 	if err := f.PublishAtBoot(ctx); err != nil {
 		// Logged but non-fatal — see godoc rationale.
 		// (Sidecar continues; talents simply won't have the futures to await.)
 		return nil
 	}
+	// Run the one-shot boot smoke test. The result gates world:ready
+	// permanently — a failed smoke test blocks fulfillment for this lifetime.
+	// RunSmokeAtBoot must run AFTER PublishAtBoot (futures exist) and BEFORE
+	// RunGates (the gate goroutine reads smokeOK on first tick).
+	f.RunSmokeAtBoot()
 	f.RunGates(ctx)
 	return f
 }

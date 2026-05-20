@@ -128,7 +128,7 @@ func TestPublishAtBoot_PublishesThreeFutures(t *testing.T) {
 	h := &fakeHandlers{}
 	p := &fakePerception{}
 	b := &fakeBridge{}
-	f := New(pub, h, p, b, 5, "deadbeef", 30)
+	f := New(pub, h, p, b, 5, nil, "", "deadbeef", 30)
 
 	ctx, cancel := context.WithTimeout(context.Background(), 2*time.Second)
 	defer cancel()
@@ -172,11 +172,12 @@ func TestPublishAtBoot_PublishesThreeFutures(t *testing.T) {
 // HavePerceptionOnLot=true AND Bridge.Verify=nil. Payload must carry all four
 // fields from the design spec.
 func TestRunGates_WorldReady_FulfillsWhenAllGatesGreen(t *testing.T) {
+	t.Setenv("FREESO_SKIP_SMOKE_TEST", "1")
 	pub := newFakePublisher()
 	h := &fakeHandlers{}
 	p := &fakePerception{}
 	b := &fakeBridge{}
-	f := New(pub, h, p, b, 3, "abc123", 30)
+	f := New(pub, h, p, b, 3, nil, "", "abc123", 30)
 	f.gatePollInterval = 20 * time.Millisecond
 
 	ctx, cancel := context.WithCancel(context.Background())
@@ -184,6 +185,7 @@ func TestRunGates_WorldReady_FulfillsWhenAllGatesGreen(t *testing.T) {
 	if err := f.PublishAtBoot(ctx); err != nil {
 		t.Fatalf("PublishAtBoot: %v", err)
 	}
+	f.RunSmokeAtBoot()
 	f.RunGates(ctx)
 
 	// Gates start RED — should not fulfill yet.
@@ -232,12 +234,13 @@ func TestRunGates_WorldReady_FulfillsWhenAllGatesGreen(t *testing.T) {
 // gate pair. With perception flowing and handlers green BUT the bridge
 // verifier returning error, world:ready MUST NOT fulfill.
 func TestRunGates_WorldReady_DoesNotFulfillWhenBridgeFails(t *testing.T) {
+	t.Setenv("FREESO_SKIP_SMOKE_TEST", "1")
 	pub := newFakePublisher()
 	h := &fakeHandlers{}
 	p := &fakePerception{}
 	b := &fakeBridge{}
 	b.setErr(true) // bridge perpetually fails
-	f := New(pub, h, p, b, 2, "xyz", 30)
+	f := New(pub, h, p, b, 2, nil, "", "xyz", 30)
 	f.gatePollInterval = 20 * time.Millisecond
 
 	ctx, cancel := context.WithCancel(context.Background())
@@ -245,6 +248,7 @@ func TestRunGates_WorldReady_DoesNotFulfillWhenBridgeFails(t *testing.T) {
 	if err := f.PublishAtBoot(ctx); err != nil {
 		t.Fatalf("PublishAtBoot: %v", err)
 	}
+	f.RunSmokeAtBoot()
 	f.RunGates(ctx)
 
 	// Set the other three gates GREEN.
@@ -263,12 +267,13 @@ func TestRunGates_WorldReady_DoesNotFulfillWhenBridgeFails(t *testing.T) {
 // 1s, after 1.5s of no perception, world:gone MUST fulfill with the design
 // payload including a reason mentioning bridge / perception stoppage.
 func TestRunGates_WorldGone_FulfillsOnPerceptionStall(t *testing.T) {
+	t.Setenv("FREESO_SKIP_SMOKE_TEST", "1")
 	pub := newFakePublisher()
 	h := &fakeHandlers{}
 	p := &fakePerception{}
 	b := &fakeBridge{}
 	// 1s threshold for fast test.
-	f := New(pub, h, p, b, 5, "k", 1)
+	f := New(pub, h, p, b, 5, nil, "", "k", 1)
 	f.gatePollInterval = 20 * time.Millisecond
 
 	ctx, cancel := context.WithCancel(context.Background())
@@ -276,6 +281,7 @@ func TestRunGates_WorldGone_FulfillsOnPerceptionStall(t *testing.T) {
 	if err := f.PublishAtBoot(ctx); err != nil {
 		t.Fatalf("PublishAtBoot: %v", err)
 	}
+	f.RunSmokeAtBoot()
 	f.RunGates(ctx)
 
 	// Wait beyond threshold + heartbeat interval.
@@ -307,11 +313,12 @@ func TestRunGates_WorldGone_FulfillsOnPerceptionStall(t *testing.T) {
 // TestRunGates_WorldGone_DoesNotFulfillWhilePerceptionFresh: world:gone must
 // NOT fulfill when perception is flowing within the threshold window.
 func TestRunGates_WorldGone_DoesNotFulfillWhilePerceptionFresh(t *testing.T) {
+	t.Setenv("FREESO_SKIP_SMOKE_TEST", "1")
 	pub := newFakePublisher()
 	h := &fakeHandlers{}
 	p := &fakePerception{}
 	b := &fakeBridge{}
-	f := New(pub, h, p, b, 5, "k", 1) // 1s threshold
+	f := New(pub, h, p, b, 5, nil, "", "k", 1) // 1s threshold
 	f.gatePollInterval = 20 * time.Millisecond
 
 	ctx, cancel := context.WithCancel(context.Background())
@@ -319,6 +326,7 @@ func TestRunGates_WorldGone_DoesNotFulfillWhilePerceptionFresh(t *testing.T) {
 	if err := f.PublishAtBoot(ctx); err != nil {
 		t.Fatalf("PublishAtBoot: %v", err)
 	}
+	f.RunSmokeAtBoot()
 	f.RunGates(ctx)
 
 	// Keep perception fresh in a separate goroutine.
@@ -351,7 +359,7 @@ func TestFulfillIdentityResolved(t *testing.T) {
 	h := &fakeHandlers{}
 	p := &fakePerception{}
 	b := &fakeBridge{}
-	f := New(pub, h, p, b, 1, "pk", 30)
+	f := New(pub, h, p, b, 1, nil, "", "pk", 30)
 
 	ctx := context.Background()
 	if err := f.PublishAtBoot(ctx); err != nil {

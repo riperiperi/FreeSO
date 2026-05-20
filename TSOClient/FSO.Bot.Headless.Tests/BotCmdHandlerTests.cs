@@ -696,4 +696,167 @@ public class BotCmdHandlerTests
 
         await task2;
     }
+
+    // ---- purchase-lot bot-cmd tests (automataisland-e49) ----
+
+    /// <summary>
+    /// purchase-lot with a null cityAries must emit ok=false with
+    /// "city socket unavailable" — proves the cmd is routed, not "unknown bot-cmd".
+    /// </summary>
+    [Fact]
+    public async Task PurchaseLot_NullCitySocket_EmitsCitySocketUnavailable()
+    {
+        var handler = new BotCmdHandler();
+        var line = """{"kind":"bot-cmd","cmd":"purchase-lot","correlation_id":"c-pl-1","args":{"location_x":249,"location_y":352,"name":"marlo's place","start_fresh":false}}""";
+        var node = JsonNode.Parse(line).AsObject();
+
+        string captured = null;
+        var latch = new ManualResetEventSlim();
+        using var _sub = PerceptionEmitterCapture.Capture(s => { captured = s; latch.Set(); });
+
+        var handled = await handler.TryHandleAsync(node, cityAries: null, default);
+
+        Assert.True(handled, "TryHandleAsync must return true for purchase-lot (consumed)");
+        Assert.True(latch.Wait(TimeSpan.FromSeconds(2)), "bot-cmd-reply never emitted");
+
+        var reply = JsonNode.Parse(captured).AsObject();
+        Assert.Equal("bot-cmd-reply", (string)reply["kind"]);
+        Assert.Equal("c-pl-1",        (string)reply["correlation_id"]);
+        Assert.False((bool)reply["ok"]);
+
+        var error = (string)reply["error"] ?? string.Empty;
+        Assert.DoesNotContain("unknown bot-cmd", error, StringComparison.OrdinalIgnoreCase);
+        Assert.Contains("city socket unavailable", error, StringComparison.OrdinalIgnoreCase);
+    }
+
+    /// <summary>
+    /// purchase-lot with missing location_x must emit ok=false "bad args" (not NRE).
+    /// Regression gate: before the arg-validation fix any missing numeric arg could
+    /// throw NullReferenceException inside ParseUShort (node==null, no null check).
+    /// Now it throws ArgumentException which is caught and emitted as "bad args".
+    /// </summary>
+    [Fact]
+    public async Task PurchaseLot_MissingLocationX_EmitsBadArgs()
+    {
+        var handler = new BotCmdHandler();
+        // location_x deliberately absent.
+        var line = """{"kind":"bot-cmd","cmd":"purchase-lot","correlation_id":"c-pl-2","args":{"location_y":352,"name":"marlo's place"}}""";
+        var node = JsonNode.Parse(line).AsObject();
+
+        string captured = null;
+        var latch = new ManualResetEventSlim();
+        using var _sub = PerceptionEmitterCapture.Capture(s => { captured = s; latch.Set(); });
+
+        var handled = await handler.TryHandleAsync(node, cityAries: null, default);
+
+        Assert.True(handled);
+        Assert.True(latch.Wait(TimeSpan.FromSeconds(2)), "bot-cmd-reply never emitted");
+
+        var reply = JsonNode.Parse(captured).AsObject();
+        Assert.Equal("c-pl-2", (string)reply["correlation_id"]);
+        Assert.False((bool)reply["ok"]);
+
+        var error = (string)reply["error"] ?? string.Empty;
+        // Must be a typed argument error — NOT NullReferenceException.
+        Assert.DoesNotContain("NullReferenceException", error, StringComparison.OrdinalIgnoreCase);
+        Assert.Contains("bad args", error, StringComparison.OrdinalIgnoreCase);
+    }
+
+    /// <summary>
+    /// purchase-lot full round-trip: PurchaseLotResponse delivered by subscriber →
+    /// TCS resolves → ok=true reply with status/lot_id/new_funds. POSITIVE gate.
+    /// </summary>
+    [Fact]
+    public async Task PurchaseLot_FullRoundTrip_OkTrueWithLotId()
+    {
+        var handler = new BotCmdHandler();
+        var stub = new AriesClient(kernel: null);
+        handler.RegisterSubscriber(stub);
+
+        var line = """{"kind":"bot-cmd","cmd":"purchase-lot","correlation_id":"c-pl-3","args":{"location_x":249,"location_y":352,"name":"marlo's place","start_fresh":false}}""";
+        var node = JsonNode.Parse(line).AsObject();
+
+        string captured = null;
+        var latch = new ManualResetEventSlim();
+        using var _sub = PerceptionEmitterCapture.Capture(s => { captured = s; latch.Set(); });
+
+        // Dispatch in background — handler awaits PurchaseLotResponse.
+        var task = handler.TryHandleAsync(node, stub, default);
+
+        await Task.Delay(30); // Let TCS be registered before delivering response.
+
+        // Deliver a synthetic SUCCESS PurchaseLotResponse via the subscriber.
+        var response = new PurchaseLotResponse
+        {
+            Status   = PurchaseLotStatus.SUCCESS,
+            Reason   = PurchaseLotFailureReason.NONE,
+            NewLotId = 99u,
+            NewFunds = 950000,
+        };
+        stub.MessageReceived(session: null, message: response);
+
+        Assert.True(latch.Wait(TimeSpan.FromSeconds(3)), "bot-cmd-reply never emitted");
+        Assert.True(await task);
+
+        var reply = JsonNode.Parse(captured).AsObject();
+        Assert.Equal("bot-cmd-reply", (string)reply["kind"]);
+        Assert.Equal("c-pl-3",        (string)reply["correlation_id"]);
+        Assert.True((bool)reply["ok"], $"expected ok=true: {(string)reply["error"]}");
+
+        var data = reply["data"].AsObject();
+        Assert.Equal("SUCCESS", (string)data["status"]);
+        Assert.Equal(99L,       (long)data["lot_id"]);
+        Assert.Equal(950000L,   (long)data["new_funds"]);
+    }
+
+    /// <summary>
+    /// purchase-lot with a server-side FAILED/LOT_NOT_PURCHASABLE response
+    /// (the post-fix NRE path) must surface ok=true, status=FAILED, reason=LOT_NOT_PURCHASABLE.
+    ///
+    /// The Go sidecar converts ok=true+FAILED into ok=false with a typed reason.
+    /// This test verifies the C# layer contract: it must emit ok=true so the sidecar
+    /// can inspect status+reason rather than receiving a generic error string.
+    /// </summary>
+    [Fact]
+    public async Task PurchaseLot_ServerLotNotPurchasable_EmitsOkTrueWithFailedStatus()
+    {
+        var handler = new BotCmdHandler();
+        var stub = new AriesClient(kernel: null);
+        handler.RegisterSubscriber(stub);
+
+        var line = """{"kind":"bot-cmd","cmd":"purchase-lot","correlation_id":"c-pl-4","args":{"location_x":249,"location_y":352,"name":"unpurchasable","start_fresh":false}}""";
+        var node = JsonNode.Parse(line).AsObject();
+
+        string captured = null;
+        var latch = new ManualResetEventSlim();
+        using var _sub = PerceptionEmitterCapture.Capture(s => { captured = s; latch.Set(); });
+
+        var task = handler.TryHandleAsync(node, stub, default);
+        await Task.Delay(30);
+
+        // Server returns LOT_NOT_PURCHASABLE (post-fix path for empty fso_neighborhoods).
+        var response = new PurchaseLotResponse
+        {
+            Status   = PurchaseLotStatus.FAILED,
+            Reason   = PurchaseLotFailureReason.LOT_NOT_PURCHASABLE,
+            NewLotId = 0u,
+            NewFunds = 1000000,
+        };
+        stub.MessageReceived(session: null, message: response);
+
+        Assert.True(latch.Wait(TimeSpan.FromSeconds(3)), "bot-cmd-reply never emitted");
+        Assert.True(await task);
+
+        var reply = JsonNode.Parse(captured).AsObject();
+        Assert.Equal("c-pl-4", (string)reply["correlation_id"]);
+        // The C# layer emits ok=true so the Go sidecar can read status+reason.
+        Assert.True((bool)reply["ok"],
+            "C# must emit ok=true for server-side failures so Go can inspect status/reason");
+
+        var data = reply["data"].AsObject();
+        Assert.Equal("FAILED",              (string)data["status"]);
+        Assert.Equal("LOT_NOT_PURCHASABLE", (string)data["reason"]);
+        // Regression check — no NRE in the response.
+        Assert.DoesNotContain("NullReferenceException", data.ToJsonString(), StringComparison.OrdinalIgnoreCase);
+    }
 }

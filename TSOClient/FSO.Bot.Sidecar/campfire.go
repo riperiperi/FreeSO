@@ -388,6 +388,31 @@ func LoadDeclarations(efs embed.FS) ([]*convention.Declaration, error) {
 	return decls, nil
 }
 
+// conventionOpNames loads all embedded convention declarations and returns a
+// slice of their operation names. Used to seed the smoke test's skill
+// referential integrity audit.
+//
+// On load error (malformed JSON) the individual declaration is skipped and the
+// error is logged; the returned slice contains only successfully-parsed ops.
+// A completely empty slice causes the smoke test's count check to compare
+// handler_count against 0, which will (correctly) fail if any handlers are
+// registered — but this is an extremely unlikely path given the embedded files
+// are statically compiled in.
+func conventionOpNames(efs embed.FS) []string {
+	decls, err := LoadDeclarations(efs)
+	if err != nil {
+		log.Printf("conventionOpNames: load declarations: %v — skill integrity audit will have empty reference set", err)
+		return nil
+	}
+	names := make([]string, 0, len(decls))
+	for _, d := range decls {
+		if d.Operation != "" {
+			names = append(names, d.Operation)
+		}
+	}
+	return names
+}
+
 // printAdmissionBlock writes a paste-ready block to stdout so the operator can
 // admit an agent identity with a single copy-paste. The format is fixed so
 // scripts and humans can both consume it:
