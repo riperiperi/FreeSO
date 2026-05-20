@@ -134,6 +134,11 @@ type PerceptionAugmentor struct {
 	// Using atomic so convention handlers can call IsChargenPending() safely
 	// from handler goroutines without a lock.
 	avatarKnown atomic.Int32
+
+	// avatarID stores the persist_id observed the first time avatarKnown is set.
+	// Only meaningful when avatarKnown == 1. Protected by the atomic avatarKnown
+	// flag: written once (before avatarKnown is set to 1) and read-only after.
+	avatarID uint32
 }
 
 // NewPerceptionAugmentor constructs a PerceptionAugmentor. The community lot
@@ -164,11 +169,28 @@ func NewPerceptionAugmentor(claimStore *ClaimStore, chargenMode bool) *Perceptio
 	return &PerceptionAugmentor{communityLotLocation: normalized, claimStore: claimStore, chargenMode: chargenMode}
 }
 
+// IsChargenMode returns true when the bot was launched with --chargen-mode.
+// Safe for concurrent callers. (automataisland-9a8)
+func (a *PerceptionAugmentor) IsChargenMode() bool {
+	return a.chargenMode
+}
+
 // IsChargenPending returns true when the bot is in chargen-mode and no avatar
 // persist_id has been observed yet. Safe for concurrent callers.
 // (freesoexperiment-b094)
 func (a *PerceptionAugmentor) IsChargenPending() bool {
 	return a.chargenMode && a.avatarKnown.Load() == 0
+}
+
+// LastAvatarID returns the avatar persist_id from the first chargen-mode tick
+// that carried a non-zero persist_id. Returns 0 if chargen has not completed
+// or the bot is not in chargen-mode. Safe for concurrent callers.
+// (automataisland-9a8)
+func (a *PerceptionAugmentor) LastAvatarID() uint32 {
+	if a.avatarKnown.Load() == 0 {
+		return 0
+	}
+	return a.avatarID
 }
 
 // normalizeLotHex strips an optional "0x" prefix and lowercases a lot location
@@ -308,6 +330,11 @@ func (a *PerceptionAugmentor) AugmentPerception(line []byte) []byte {
 				pid := avatarBlock.PersistID.String()
 				if pid != "" && pid != "0" {
 					// Non-zero persist_id: avatar is known; chargen complete.
+					// Store the ID before setting avatarKnown so LastAvatarID()
+					// callers racing on the atomic see a valid ID. Written once.
+					if n, parseErr := avatarBlock.PersistID.Int64(); parseErr == nil && n > 0 {
+						a.avatarID = uint32(n)
+					}
 					a.avatarKnown.Store(1)
 				}
 			}

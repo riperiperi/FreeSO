@@ -443,7 +443,7 @@ func main() {
 		// They are forwarded to the smoke test for skill referential integrity.
 		declaredOps := cf.Router.Count()
 		declaredOpNames := conventionOpNames(conventionFiles)
-		_ = startReadiness(ctx, cf, cf.Router, health, declaredOps, declaredOpNames)
+		_ = startReadiness(ctx, cf, cf.Router, health, augmentor, declaredOps, declaredOpNames)
 	} else {
 		log.Printf("running in --no-bot mode (campfire-only)")
 
@@ -486,7 +486,7 @@ func main() {
 		// the correct signal for "no world here").
 		declaredOps := cf.Router.Count()
 		declaredOpNames := conventionOpNames(conventionFiles)
-		_ = startReadiness(ctx, cf, cf.Router, nil, declaredOps, declaredOpNames)
+		_ = startReadiness(ctx, cf, cf.Router, nil, nil, declaredOps, declaredOpNames)
 	}
 
 	// Signal handling for clean shutdown.

@@ -46,6 +46,33 @@ type routerHandlers struct{ r *Router }
 
 func (h *routerHandlers) Count() int { return h.r.Count() }
 
+// augmentorChargen adapts *PerceptionAugmentor to readiness.ChargenWatcher.
+// Safe to construct with nil augmentor — IsChargenMode returns false, which
+// causes chargen:ready to fulfill immediately at boot (correct for --no-bot mode
+// and any mode where chargen is not applicable).
+type augmentorChargen struct{ a *PerceptionAugmentor }
+
+func (c *augmentorChargen) IsChargenMode() bool {
+	if c.a == nil {
+		return false
+	}
+	return c.a.IsChargenMode()
+}
+
+func (c *augmentorChargen) IsChargenPending() bool {
+	if c.a == nil {
+		return false
+	}
+	return c.a.IsChargenPending()
+}
+
+func (c *augmentorChargen) LastAvatarID() uint32 {
+	if c.a == nil {
+		return 0
+	}
+	return c.a.LastAvatarID()
+}
+
 // healthPerception adapts *SidecarHealth to readiness.PerceptionWatcher.
 type healthPerception struct{ h *SidecarHealth }
 
@@ -149,7 +176,7 @@ func (v *liveBridgeVerifier) Verify(ctx context.Context) error {
 	return fmt.Errorf("probe %s not readable from body cf within deadline", probeID)
 }
 
-// startReadiness publishes the three wake-readiness futures, runs the boot
+// startReadiness publishes the four wake-readiness futures, runs the boot
 // smoke test, and spawns the gate goroutines. Returns the Futures handle so
 // the caller can fulfill identity:resolved at the right moment.
 //
@@ -160,13 +187,15 @@ func (v *liveBridgeVerifier) Verify(ctx context.Context) error {
 // declaredOps is the count of declared ops; declaredOpNames is the ordered
 // slice of their names (used by the skill referential integrity audit).
 // The skills directory is read from FREESO_SKILLS_DIR; empty means no audit.
-func startReadiness(ctx context.Context, cf *Campfire, router *Router, health *SidecarHealth, declaredOps int, declaredOpNames []string) *readiness.Futures {
+// augmentor may be nil (--no-bot mode) — chargen:ready fulfills immediately.
+func startReadiness(ctx context.Context, cf *Campfire, router *Router, health *SidecarHealth, augmentor *PerceptionAugmentor, declaredOps int, declaredOpNames []string) *readiness.Futures {
 	pub := &campfirePublisher{cf: cf}
 	handlers := &routerHandlers{r: router}
 	perception := &healthPerception{h: health}
 	bridge := &liveBridgeVerifier{cf: cf}
+	chargen := &augmentorChargen{a: augmentor}
 	skillsDir := os.Getenv("FREESO_SKILLS_DIR")
-	f := readiness.New(pub, handlers, perception, bridge, declaredOps, declaredOpNames, skillsDir, cf.PublicKeyHex, 0)
+	f := readiness.New(pub, handlers, perception, bridge, chargen, declaredOps, declaredOpNames, skillsDir, cf.PublicKeyHex, 0)
 	if err := f.PublishAtBoot(ctx); err != nil {
 		// Logged but non-fatal — see godoc rationale.
 		// (Sidecar continues; talents simply won't have the futures to await.)

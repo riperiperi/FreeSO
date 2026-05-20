@@ -119,16 +119,46 @@ func (b *fakeBridge) Verify(ctx context.Context) error {
 	return nil
 }
 
+// fakeChargen is a settable ChargenWatcher for tests.
+type fakeChargen struct {
+	mu             sync.Mutex
+	inChargenMode  bool
+	chargenPending bool
+	avatarID       uint32
+}
+
+func (c *fakeChargen) IsChargenMode() bool {
+	c.mu.Lock()
+	defer c.mu.Unlock()
+	return c.inChargenMode
+}
+func (c *fakeChargen) IsChargenPending() bool {
+	c.mu.Lock()
+	defer c.mu.Unlock()
+	return c.chargenPending
+}
+func (c *fakeChargen) LastAvatarID() uint32 {
+	c.mu.Lock()
+	defer c.mu.Unlock()
+	return c.avatarID
+}
+func (c *fakeChargen) setChargenComplete(avatarID uint32) {
+	c.mu.Lock()
+	defer c.mu.Unlock()
+	c.avatarID = avatarID
+	c.chargenPending = false
+}
+
 // ----- Tests -----
 
-// TestPublishAtBoot_PublishesThreeFutures: the spec says three future messages
-// MUST be on the body cf within boot, each tagged ["future", <semantic>].
-func TestPublishAtBoot_PublishesThreeFutures(t *testing.T) {
+// TestPublishAtBoot_PublishesFourFutures: four future messages MUST be on the
+// body cf within boot, each tagged ["future", <semantic>].
+func TestPublishAtBoot_PublishesFourFutures(t *testing.T) {
 	pub := newFakePublisher()
 	h := &fakeHandlers{}
 	p := &fakePerception{}
 	b := &fakeBridge{}
-	f := New(pub, h, p, b, 5, nil, "", "deadbeef", 30)
+	f := New(pub, h, p, b, nil, 5, nil, "", "deadbeef", 30)
 
 	ctx, cancel := context.WithTimeout(context.Background(), 2*time.Second)
 	defer cancel()
@@ -137,11 +167,16 @@ func TestPublishAtBoot_PublishesThreeFutures(t *testing.T) {
 	}
 
 	sends := pub.snapshot()
-	if len(sends) != 3 {
-		t.Fatalf("want 3 future sends at boot, got %d: %+v", len(sends), sends)
+	if len(sends) != 4 {
+		t.Fatalf("want 4 future sends at boot, got %d: %+v", len(sends), sends)
 	}
 
-	want := map[string]bool{TagWorldReady: false, TagWorldGone: false, TagIdentityResolved: false}
+	want := map[string]bool{
+		TagWorldReady:       false,
+		TagWorldGone:        false,
+		TagIdentityResolved: false,
+		TagChargenReady:     false,
+	}
 	for _, s := range sends {
 		if !containsTag(s.Tags, tagFuture) {
 			t.Errorf("future send %s missing 'future' tag; tags=%v", s.MsgID, s.Tags)
@@ -161,9 +196,9 @@ func TestPublishAtBoot_PublishesThreeFutures(t *testing.T) {
 		}
 	}
 
-	wr, wg, ir := f.FutureIDs()
-	if wr == "" || wg == "" || ir == "" {
-		t.Errorf("FutureIDs after PublishAtBoot: empty id in (%q,%q,%q)", wr, wg, ir)
+	wr, wg, ir, cr := f.FutureIDs()
+	if wr == "" || wg == "" || ir == "" || cr == "" {
+		t.Errorf("FutureIDs after PublishAtBoot: empty id in (%q,%q,%q,%q)", wr, wg, ir, cr)
 	}
 }
 
@@ -177,7 +212,7 @@ func TestRunGates_WorldReady_FulfillsWhenAllGatesGreen(t *testing.T) {
 	h := &fakeHandlers{}
 	p := &fakePerception{}
 	b := &fakeBridge{}
-	f := New(pub, h, p, b, 3, nil, "", "abc123", 30)
+	f := New(pub, h, p, b, nil, 3, nil, "", "abc123", 30)
 	f.gatePollInterval = 20 * time.Millisecond
 
 	ctx, cancel := context.WithCancel(context.Background())
@@ -240,7 +275,7 @@ func TestRunGates_WorldReady_DoesNotFulfillWhenBridgeFails(t *testing.T) {
 	p := &fakePerception{}
 	b := &fakeBridge{}
 	b.setErr(true) // bridge perpetually fails
-	f := New(pub, h, p, b, 2, nil, "", "xyz", 30)
+	f := New(pub, h, p, b, nil, 2, nil, "", "xyz", 30)
 	f.gatePollInterval = 20 * time.Millisecond
 
 	ctx, cancel := context.WithCancel(context.Background())
@@ -273,7 +308,7 @@ func TestRunGates_WorldGone_FulfillsOnPerceptionStall(t *testing.T) {
 	p := &fakePerception{}
 	b := &fakeBridge{}
 	// 1s threshold for fast test.
-	f := New(pub, h, p, b, 5, nil, "", "k", 1)
+	f := New(pub, h, p, b, nil, 5, nil, "", "k", 1)
 	f.gatePollInterval = 20 * time.Millisecond
 
 	ctx, cancel := context.WithCancel(context.Background())
@@ -318,7 +353,7 @@ func TestRunGates_WorldGone_DoesNotFulfillWhilePerceptionFresh(t *testing.T) {
 	h := &fakeHandlers{}
 	p := &fakePerception{}
 	b := &fakeBridge{}
-	f := New(pub, h, p, b, 5, nil, "", "k", 1) // 1s threshold
+	f := New(pub, h, p, b, nil, 5, nil, "", "k", 1) // 1s threshold
 	f.gatePollInterval = 20 * time.Millisecond
 
 	ctx, cancel := context.WithCancel(context.Background())
@@ -359,13 +394,13 @@ func TestFulfillIdentityResolved(t *testing.T) {
 	h := &fakeHandlers{}
 	p := &fakePerception{}
 	b := &fakeBridge{}
-	f := New(pub, h, p, b, 1, nil, "", "pk", 30)
+	f := New(pub, h, p, b, nil, 1, nil, "", "pk", 30)
 
 	ctx := context.Background()
 	if err := f.PublishAtBoot(ctx); err != nil {
 		t.Fatalf("PublishAtBoot: %v", err)
 	}
-	_, _, irID := f.FutureIDs()
+	_, _, irID, _ := f.FutureIDs()
 	if err := f.FulfillIdentityResolved(); err != nil {
 		t.Fatalf("FulfillIdentityResolved: %v", err)
 	}
@@ -379,14 +414,14 @@ func TestFulfillIdentityResolved(t *testing.T) {
 }
 
 // TestFulfillIdentityResolved_Idempotent: a second call is a no-op.
-// Matches the worldReadyDone / worldGoneDone guard pattern. Without the
-// guard a sidecar boot retry would double-publish identity:resolved.
+// Matches the worldReadyDone / worldGoneDone / chargenReadyDone guard pattern.
+// Without the guard a sidecar boot retry would double-publish identity:resolved.
 func TestFulfillIdentityResolved_Idempotent(t *testing.T) {
 	pub := newFakePublisher()
 	h := &fakeHandlers{}
 	p := &fakePerception{}
 	b := &fakeBridge{}
-	f := New(pub, h, p, b, 1, nil, "", "pk", 30)
+	f := New(pub, h, p, b, nil, 1, nil, "", "pk", 30)
 
 	ctx := context.Background()
 	if err := f.PublishAtBoot(ctx); err != nil {
@@ -406,6 +441,195 @@ func TestFulfillIdentityResolved_Idempotent(t *testing.T) {
 	}
 	if count != 1 {
 		t.Errorf("want exactly 1 identity:resolved fulfillment after 2 calls; got %d", count)
+	}
+}
+
+// TestRunGates_ChargenReady_FulfillsImmediately_NotInChargenMode: POSITIVE gate —
+// when chargen watcher reports IsChargenMode=false, chargen:ready MUST fulfill
+// immediately at boot with already_existed=true.
+func TestRunGates_ChargenReady_FulfillsImmediately_NotInChargenMode(t *testing.T) {
+	t.Setenv("FREESO_SKIP_SMOKE_TEST", "1")
+	pub := newFakePublisher()
+	h := &fakeHandlers{}
+	p := &fakePerception{}
+	b := &fakeBridge{}
+	// chargen watcher: not in chargen mode (normal lot-joined persona).
+	cg := &fakeChargen{inChargenMode: false}
+	f := New(pub, h, p, b, cg, 2, nil, "", "abc", 30)
+	f.gatePollInterval = 20 * time.Millisecond
+
+	ctx, cancel := context.WithCancel(context.Background())
+	defer cancel()
+	if err := f.PublishAtBoot(ctx); err != nil {
+		t.Fatalf("PublishAtBoot: %v", err)
+	}
+	f.RunSmokeAtBoot()
+	f.RunGates(ctx)
+
+	// chargen:ready should fulfill quickly (immediate path, no gate polling).
+	deadline := time.Now().Add(2 * time.Second)
+	for time.Now().Before(deadline) {
+		if hasFulfillment(pub.snapshot(), TagChargenReady) {
+			break
+		}
+		time.Sleep(20 * time.Millisecond)
+	}
+	ful := findFulfillment(pub.snapshot(), TagChargenReady)
+	if ful == nil {
+		t.Fatal("chargen:ready did not fulfill within 2s for non-chargen-mode boot")
+	}
+	// Payload must carry already_existed=true.
+	var got map[string]any
+	if err := json.Unmarshal(ful.Payload, &got); err != nil {
+		t.Fatalf("unmarshal chargen:ready payload: %v", err)
+	}
+	if v, ok := got["already_existed"].(bool); !ok || !v {
+		t.Errorf("chargen:ready payload: want already_existed=true (not in chargen mode); got %v", got)
+	}
+}
+
+// TestRunGates_ChargenReady_FulfillsAfterAvatarCreated: POSITIVE chargen path —
+// when IsChargenMode=true and IsChargenPending=true at boot, chargen:ready MUST
+// NOT fulfill immediately; it MUST fulfill once IsChargenPending flips to false.
+func TestRunGates_ChargenReady_FulfillsAfterAvatarCreated(t *testing.T) {
+	t.Setenv("FREESO_SKIP_SMOKE_TEST", "1")
+	pub := newFakePublisher()
+	h := &fakeHandlers{}
+	p := &fakePerception{}
+	b := &fakeBridge{}
+	cg := &fakeChargen{inChargenMode: true, chargenPending: true}
+	f := New(pub, h, p, b, cg, 2, nil, "", "abc", 30)
+	f.gatePollInterval = 20 * time.Millisecond
+
+	ctx, cancel := context.WithCancel(context.Background())
+	defer cancel()
+	if err := f.PublishAtBoot(ctx); err != nil {
+		t.Fatalf("PublishAtBoot: %v", err)
+	}
+	f.RunSmokeAtBoot()
+	f.RunGates(ctx)
+
+	// Should NOT fulfill while chargen is pending.
+	time.Sleep(150 * time.Millisecond)
+	if hasFulfillment(pub.snapshot(), TagChargenReady) {
+		t.Fatal("chargen:ready fulfilled while chargen still pending — regression")
+	}
+
+	// Simulate avatar creation completing.
+	cg.setChargenComplete(77)
+
+	// Should fulfill after the gate detects IsChargenPending=false.
+	deadline := time.Now().Add(2 * time.Second)
+	for time.Now().Before(deadline) {
+		if hasFulfillment(pub.snapshot(), TagChargenReady) {
+			break
+		}
+		time.Sleep(20 * time.Millisecond)
+	}
+	ful := findFulfillment(pub.snapshot(), TagChargenReady)
+	if ful == nil {
+		t.Fatal("chargen:ready did not fulfill within 2s after avatar creation")
+	}
+	// Payload must carry avatar_id and already_existed=false.
+	var got map[string]any
+	if err := json.Unmarshal(ful.Payload, &got); err != nil {
+		t.Fatalf("unmarshal chargen:ready payload: %v", err)
+	}
+	if v, ok := got["already_existed"].(bool); !ok || v {
+		t.Errorf("chargen:ready payload: want already_existed=false after chargen; got %v", got)
+	}
+	if got["avatar_id"] == nil {
+		t.Errorf("chargen:ready payload missing avatar_id; got %v", got)
+	}
+}
+
+// TestRunGates_ChargenReady_NilWatcher_FulfillsImmediately: NEGATIVE —
+// when ChargenWatcher is nil, chargen:ready MUST fulfill immediately at boot
+// (nil watcher = no chargen mode). This ensures callers that pass nil for the
+// watcher get the safe default behavior (non-chargen persona).
+func TestRunGates_ChargenReady_NilWatcher_FulfillsImmediately(t *testing.T) {
+	t.Setenv("FREESO_SKIP_SMOKE_TEST", "1")
+	pub := newFakePublisher()
+	h := &fakeHandlers{}
+	p := &fakePerception{}
+	b := &fakeBridge{}
+	f := New(pub, h, p, b, nil, 2, nil, "", "abc", 30)
+	f.gatePollInterval = 20 * time.Millisecond
+
+	ctx, cancel := context.WithCancel(context.Background())
+	defer cancel()
+	if err := f.PublishAtBoot(ctx); err != nil {
+		t.Fatalf("PublishAtBoot: %v", err)
+	}
+	f.RunSmokeAtBoot()
+	f.RunGates(ctx)
+
+	deadline := time.Now().Add(2 * time.Second)
+	for time.Now().Before(deadline) {
+		if hasFulfillment(pub.snapshot(), TagChargenReady) {
+			break
+		}
+		time.Sleep(20 * time.Millisecond)
+	}
+	if !hasFulfillment(pub.snapshot(), TagChargenReady) {
+		t.Fatal("chargen:ready did not fulfill within 2s with nil ChargenWatcher")
+	}
+}
+
+// TestFulfillChargenReady_Idempotent: calling FulfillChargenReady twice MUST
+// NOT send two fulfillment messages (idempotency guard via chargenReadyDone).
+func TestFulfillChargenReady_Idempotent(t *testing.T) {
+	pub := newFakePublisher()
+	h := &fakeHandlers{}
+	p := &fakePerception{}
+	b := &fakeBridge{}
+	f := New(pub, h, p, b, nil, 1, nil, "", "pk", 30)
+
+	ctx := context.Background()
+	if err := f.PublishAtBoot(ctx); err != nil {
+		t.Fatalf("PublishAtBoot: %v", err)
+	}
+	if err := f.FulfillChargenReady(42, false); err != nil {
+		t.Fatalf("first FulfillChargenReady: %v", err)
+	}
+	if err := f.FulfillChargenReady(42, false); err != nil {
+		t.Fatalf("second FulfillChargenReady: %v", err)
+	}
+	// Count chargen:ready fulfillments — must be exactly 1.
+	count := 0
+	for _, s := range pub.snapshot() {
+		if containsTag(s.Tags, tagFulfills) && containsTag(s.Tags, TagChargenReady) {
+			count++
+		}
+	}
+	if count != 1 {
+		t.Errorf("want exactly 1 chargen:ready fulfillment (idempotent); got %d", count)
+	}
+}
+
+// TestFulfillChargenReady_ThreadsAntecedent: the fulfillment MUST thread
+// chargen:ready future message ID as its antecedent.
+func TestFulfillChargenReady_ThreadsAntecedent(t *testing.T) {
+	pub := newFakePublisher()
+	h := &fakeHandlers{}
+	p := &fakePerception{}
+	b := &fakeBridge{}
+	f := New(pub, h, p, b, nil, 1, nil, "", "pk", 30)
+
+	ctx := context.Background()
+	if err := f.PublishAtBoot(ctx); err != nil {
+		t.Fatalf("PublishAtBoot: %v", err)
+	}
+	_, _, _, crID := f.FutureIDs()
+	if err := f.FulfillChargenReady(99, true); err != nil {
+		t.Fatalf("FulfillChargenReady: %v", err)
+	}
+	ful := findFulfillment(pub.snapshot(), TagChargenReady)
+	if ful == nil {
+		t.Fatal("chargen:ready fulfillment not sent")
+	}
+	if len(ful.Antecedents) != 1 || ful.Antecedents[0] != crID {
+		t.Errorf("fulfillment antecedents want [%s]; got %v", crID, ful.Antecedents)
 	}
 }
 

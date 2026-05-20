@@ -240,7 +240,7 @@ func TestSmoke_WorldReady_BlockedWhenHandlerMissing(t *testing.T) {
 	declaredOpNames := []string{"op-a", "op-b", "op-c"}
 	h.set(2) // ONE missing handler
 
-	f := New(pub, h, p, b, 3, declaredOpNames, "", "key", 30)
+	f := New(pub, h, p, b, nil, 3, declaredOpNames, "", "key", 30)
 	f.gatePollInterval = 20 * time.Millisecond
 
 	ctx, cancel := context.WithCancel(context.Background())
@@ -295,7 +295,7 @@ func TestSmoke_WorldReady_FulfillsWhenHandlersComplete(t *testing.T) {
 	declaredOpNames := []string{"op-a", "op-b", "op-c"}
 	h.set(3)
 
-	f := New(pub, h, p, b, 3, declaredOpNames, "", "key", 30)
+	f := New(pub, h, p, b, nil, 3, declaredOpNames, "", "key", 30)
 	f.gatePollInterval = 20 * time.Millisecond
 
 	ctx, cancel := context.WithCancel(context.Background())
@@ -349,7 +349,7 @@ func TestSmoke_WorldReady_BlockedBySkillUnknownRef(t *testing.T) {
 	declaredOpNames := []string{"speak", "walk-to"}
 	h.set(2) // handler count matches — only skill gate fails
 
-	f := New(pub, h, p, b, 2, declaredOpNames, dir, "key", 30)
+	f := New(pub, h, p, b, nil, 2, declaredOpNames, dir, "key", 30)
 	f.gatePollInterval = 20 * time.Millisecond
 
 	ctx, cancel := context.WithCancel(context.Background())
@@ -403,7 +403,7 @@ func TestSmoke_WorldReady_AllowsWithKnownSkillRef(t *testing.T) {
 	declaredOpNames := []string{"speak"}
 	h.set(1) // exactly 1 handler registered
 
-	f := New(pub, h, p, b, 1, declaredOpNames, dir, "key", 30)
+	f := New(pub, h, p, b, nil, 1, declaredOpNames, dir, "key", 30)
 	f.gatePollInterval = 20 * time.Millisecond
 
 	ctx, cancel := context.WithCancel(context.Background())

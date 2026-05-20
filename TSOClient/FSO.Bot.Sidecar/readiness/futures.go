@@ -4,7 +4,7 @@
  * http://mozilla.org/MPL/2.0/.
  */
 
-// Package readiness pre-publishes the three wake-readiness futures on the body
+// Package readiness pre-publishes the four wake-readiness futures on the body
 // campfire at sidecar boot and fulfills them as preconditions land.
 //
 // Component 2 of the embodiment-runtime design (embodiment-runtime-design.md
@@ -12,9 +12,11 @@
 // call is campfire_await(body, world:ready); a paired await on world:gone
 // surfaces lot death / bridge failure / perception stoppage as an escalation
 // trigger. identity:resolved fulfills when the persona is admitted to the body
-// cf + has auto-joined the home cf.
+// cf + has auto-joined the home cf. chargen:ready fulfills when bot has created
+// (or already has) an FSO avatar — talents in chargen mode await this future
+// before proceeding to lot-join mode.
 //
-// All three futures are pre-published at boot so a talent who reconnects sees
+// All four futures are pre-published at boot so a talent who reconnects sees
 // them regardless of current fulfillment state. Stale futures from a prior
 // sidecar boot (same persona, persona-stable body cf) are NOT actively swept
 // here — re-publication supersedes via antecedent threading at the consumer.
@@ -30,11 +32,14 @@
 //           synthetic tick into the body cf store
 //   - world:gone fulfills when perception ticks stop for >threshold,
 //     bot disconnects, or the bridge fails.
+//   - chargen:ready fulfills when avatar creation completes (or already existed
+//     at boot). Pre-published unconditionally so talents in chargen mode can
+//     await it without a race against sidecar startup.
 //
 // The futures package keeps NO sidecar-internal references: it consumes
 // minimal interfaces (Publisher, HandlerCounter, PerceptionWatcher,
-// BridgeVerifier) so it can be unit tested without dragging in the campfire
-// SDK or running a real bot.
+// BridgeVerifier, ChargenWatcher) so it can be unit tested without dragging in
+// the campfire SDK or running a real bot.
 package readiness
 
 import (
@@ -57,6 +62,7 @@ const (
 	TagWorldReady       = "world:ready"
 	TagWorldGone        = "world:gone"
 	TagIdentityResolved = "identity:resolved"
+	TagChargenReady     = "chargen:ready"
 )
 
 // Default world:gone heartbeat threshold. Overridable via
@@ -101,13 +107,30 @@ type BridgeVerifier interface {
 	Verify(ctx context.Context) error
 }
 
-// Futures owns the three pre-published wake-readiness future messages and the
+// ChargenWatcher reports chargen state for the chargen:ready future.
+//
+//   - IsChargenMode returns true when the bot was launched with --chargen-mode.
+//     When false, chargen:ready fulfills immediately at boot with
+//     already_existed=true (no chargen needed for this persona).
+//   - IsChargenPending returns true when the bot is in chargen-mode AND no
+//     avatar persist_id has been observed yet (avatar not yet created).
+//     Transitions to false once avatar creation completes; that transition
+//     is the fulfillment trigger.
+//   - LastAvatarID returns the avatar_id from the completed chargen, or 0 if
+//     chargen has not completed yet.
+type ChargenWatcher interface {
+	IsChargenMode() bool
+	IsChargenPending() bool
+	LastAvatarID() uint32
+}
+
+// Futures owns the four pre-published wake-readiness future messages and the
 // goroutines that fulfill them.
 //
 // Lifecycle:
 //   New(...) → PublishAtBoot(ctx) → RunSmokeAtBoot() → RunGates(ctx) (background) → Close()
 //
-// PublishAtBoot is synchronous; it returns once all three futures have message
+// PublishAtBoot is synchronous; it returns once all four futures have message
 // IDs. RunSmokeAtBoot runs the one-shot boot smoke test (handler-count parity
 // + skill referential integrity); its result permanently gates world:ready —
 // a failed smoke test prevents fulfillment for the sidecar's lifetime.
@@ -118,6 +141,7 @@ type Futures struct {
 	handlers        HandlerCounter
 	perception      PerceptionWatcher
 	bridge          BridgeVerifier
+	chargen         ChargenWatcher // may be nil when chargen watcher not available
 	declaredOps     int
 	declaredOpNames []string // op name list; used by the smoke test skill audit
 	skillsDir       string   // skill markdown dir to audit; empty = skip
@@ -128,9 +152,11 @@ type Futures struct {
 	worldReadyMsgID       string
 	worldGoneMsgID        string
 	identityResolvedMsgID string
+	chargenReadyMsgID     string
 	worldReadyDone        bool
 	worldGoneDone         bool
 	identityResolvedDone  bool
+	chargenReadyDone      bool // idempotency guard — set once when chargen:ready fulfills
 	smokeOK               bool // set once by RunSmokeAtBoot; gates world:ready permanently
 
 	// gatePollInterval controls how often RunGates polls the world:ready
@@ -151,9 +177,13 @@ type Futures struct {
 // audit for convention references. Empty string means no skill audit is
 // performed (common in dev environments without a legion jail configured).
 //
+// chargen is the ChargenWatcher for the chargen:ready future. Nil means
+// no chargen mode detection — chargen:ready will still be published at boot
+// but FulfillChargenReady must be called manually by the caller.
+//
 // worldGoneSecs of 0 selects the FREESO_WORLD_GONE_THRESHOLD_SEC env var (or
 // the default 30s if absent or unparseable).
-func New(pub Publisher, handlers HandlerCounter, perception PerceptionWatcher, bridge BridgeVerifier, declaredOps int, declaredOpNames []string, skillsDir string, personaPubkey string, worldGoneSecs int) *Futures {
+func New(pub Publisher, handlers HandlerCounter, perception PerceptionWatcher, bridge BridgeVerifier, chargen ChargenWatcher, declaredOps int, declaredOpNames []string, skillsDir string, personaPubkey string, worldGoneSecs int) *Futures {
 	if worldGoneSecs <= 0 {
 		worldGoneSecs = resolveWorldGoneThreshold()
 	}
@@ -162,6 +192,7 @@ func New(pub Publisher, handlers HandlerCounter, perception PerceptionWatcher, b
 		handlers:         handlers,
 		perception:       perception,
 		bridge:           bridge,
+		chargen:          chargen,
 		declaredOps:      declaredOps,
 		declaredOpNames:  declaredOpNames,
 		skillsDir:        skillsDir,
@@ -171,7 +202,7 @@ func New(pub Publisher, handlers HandlerCounter, perception PerceptionWatcher, b
 	}
 }
 
-// PublishAtBoot pre-publishes the three futures on the body cf. Returns the
+// PublishAtBoot pre-publishes the four futures on the body cf. Returns the
 // first error encountered. Callers should treat any error as fatal for the
 // sidecar — without the futures, talents will hang on their first await.
 func (f *Futures) PublishAtBoot(ctx context.Context) error {
@@ -201,14 +232,22 @@ func (f *Futures) PublishAtBoot(ctx context.Context) error {
 		return fmt.Errorf("publish identity:resolved future: %w", err)
 	}
 
+	crID, err := f.publishFuture(TagChargenReady, map[string]any{
+		"description": "fulfilled when avatar creation completes (chargen mode) or avatar already exists (normal mode)",
+	})
+	if err != nil {
+		return fmt.Errorf("publish chargen:ready future: %w", err)
+	}
+
 	f.mu.Lock()
 	f.worldReadyMsgID = wrID
 	f.worldGoneMsgID = wgID
 	f.identityResolvedMsgID = irID
+	f.chargenReadyMsgID = crID
 	f.mu.Unlock()
 
-	log.Printf("readiness: published futures world:ready=%s world:gone=%s identity:resolved=%s (threshold_sec=%d)",
-		shortID(wrID), shortID(wgID), shortID(irID), f.worldGoneSecs)
+	log.Printf("readiness: published futures world:ready=%s world:gone=%s identity:resolved=%s chargen:ready=%s (threshold_sec=%d)",
+		shortID(wrID), shortID(wgID), shortID(irID), shortID(crID), f.worldGoneSecs)
 	return nil
 }
 
@@ -222,13 +261,13 @@ func (f *Futures) publishFuture(semanticTag string, payload map[string]any) (str
 	return f.pub.Send(data, []string{tagFuture, semanticTag}, nil)
 }
 
-// FutureIDs returns the message IDs of the three pre-published futures. For
+// FutureIDs returns the message IDs of the four pre-published futures. For
 // inspection by tests / diagnostics. Returns empty strings if PublishAtBoot
 // has not run.
-func (f *Futures) FutureIDs() (worldReady, worldGone, identityResolved string) {
+func (f *Futures) FutureIDs() (worldReady, worldGone, identityResolved, chargenReady string) {
 	f.mu.Lock()
 	defer f.mu.Unlock()
-	return f.worldReadyMsgID, f.worldGoneMsgID, f.identityResolvedMsgID
+	return f.worldReadyMsgID, f.worldGoneMsgID, f.identityResolvedMsgID, f.chargenReadyMsgID
 }
 
 // RunSmokeAtBoot executes the one-shot boot smoke test and stores the result.
@@ -260,17 +299,20 @@ func (f *Futures) SmokeOK() bool {
 	return f.smokeOK
 }
 
-// RunGates spawns two background goroutines: one polls the world:ready
-// preconditions and fulfills when all four gates are green; the other runs the
-// world:gone heartbeat and fulfills when perception goes stale. Returns
-// immediately. Both goroutines exit on ctx.Done.
+// RunGates spawns background goroutines: one polls the world:ready
+// preconditions and fulfills when all four gates are green; the second runs
+// the world:gone heartbeat and fulfills when perception goes stale; the third
+// monitors chargen state and fulfills chargen:ready when the avatar is
+// created (or immediately if no chargen is needed). Returns immediately. All
+// goroutines exit on ctx.Done.
 //
 // FulfillIdentityResolved is the caller's responsibility (called from main
 // after admit + home-join completes); the persistent goroutines here only
-// own world:ready and world:gone.
+// own world:ready, world:gone, and chargen:ready.
 func (f *Futures) RunGates(ctx context.Context) {
 	go f.runWorldReadyGate(ctx)
 	go f.runWorldGoneHeartbeat(ctx)
+	go f.runChargenReadyGate(ctx)
 }
 
 // runWorldReadyGate polls the four preconditions every gatePollInterval until
@@ -481,6 +523,109 @@ func (f *Futures) FulfillIdentityResolved() error {
 	f.mu.Lock()
 	f.identityResolvedDone = true
 	f.mu.Unlock()
+	return nil
+}
+
+// runChargenReadyGate monitors chargen state and fulfills chargen:ready when
+// the avatar exists. Two paths:
+//
+//   - Not in chargen mode (chargen watcher absent or IsChargenMode=false):
+//     chargen:ready is fulfilled immediately at boot with already_existed=true.
+//     This covers the normal lot-joined persona who has no chargen to do.
+//
+//   - In chargen mode (IsChargenMode=true, IsChargenPending=true):
+//     polls until IsChargenPending transitions to false (avatar created),
+//     then fulfills chargen:ready with avatar_id payload.
+//
+//   - In chargen mode but avatar already exists at boot (IsChargenMode=true,
+//     IsChargenPending=false): fulfills immediately with already_existed=true.
+//     This handles a sidecar restart when chargen completed in a prior run.
+//
+// Single-shot: exits after fulfillment or ctx.Done.
+func (f *Futures) runChargenReadyGate(ctx context.Context) {
+	// Determine chargen mode state at gate entry.
+	inChargenMode := f.chargen != nil && f.chargen.IsChargenMode()
+
+	if !inChargenMode {
+		// Not a chargen boot — fulfill immediately (persona already has an avatar).
+		if err := f.FulfillChargenReady(0, true); err != nil {
+			log.Printf("readiness: fulfill chargen:ready (not-chargen-mode): %v", err)
+		}
+		return
+	}
+
+	// Check whether avatar already existed at boot (e.g. sidecar restart after
+	// successful chargen in a prior run).
+	if !f.chargen.IsChargenPending() {
+		avatarID := f.chargen.LastAvatarID()
+		if err := f.FulfillChargenReady(avatarID, true); err != nil {
+			log.Printf("readiness: fulfill chargen:ready (avatar-pre-exists): %v", err)
+		}
+		return
+	}
+
+	// Chargen mode, avatar not yet created — poll until IsChargenPending flips.
+	ticker := time.NewTicker(f.gatePollInterval)
+	defer ticker.Stop()
+	for {
+		select {
+		case <-ctx.Done():
+			return
+		case <-ticker.C:
+			if f.chargen.IsChargenPending() {
+				// Still waiting for avatar creation.
+				continue
+			}
+			// IsChargenPending flipped to false — chargen completed.
+			avatarID := f.chargen.LastAvatarID()
+			if err := f.FulfillChargenReady(avatarID, false); err != nil {
+				log.Printf("readiness: fulfill chargen:ready (chargen-completed): %v", err)
+				// Retry on next tick — fulfillment is idempotent via chargenReadyDone guard.
+				continue
+			}
+			return
+		}
+	}
+}
+
+// FulfillChargenReady sends the chargen:ready fulfillment. Called automatically
+// by runChargenReadyGate, or manually by callers who manage chargen state outside
+// the ChargenWatcher interface.
+//
+// avatarID is the ID of the created avatar (0 when already_existed=true and
+// the avatar_id is not available via the watcher). alreadyExisted=true means
+// no chargen was needed — the persona already had an avatar at sidecar boot.
+//
+// Idempotent: once chargenReadyDone is set, subsequent calls return nil without
+// re-sending (wave2-closeout idempotency pattern).
+func (f *Futures) FulfillChargenReady(avatarID uint32, alreadyExisted bool) error {
+	f.mu.Lock()
+	if f.chargenReadyDone {
+		f.mu.Unlock()
+		return nil
+	}
+	futureID := f.chargenReadyMsgID
+	f.mu.Unlock()
+
+	if futureID == "" {
+		return fmt.Errorf("chargen:ready future not yet published")
+	}
+	payload := map[string]any{
+		"avatar_id":       avatarID,
+		"already_existed": alreadyExisted,
+	}
+	data, err := json.Marshal(payload)
+	if err != nil {
+		return fmt.Errorf("marshal: %w", err)
+	}
+	_, err = f.pub.Send(data, []string{tagFulfills, TagChargenReady}, []string{futureID})
+	if err != nil {
+		return err
+	}
+	f.mu.Lock()
+	f.chargenReadyDone = true
+	f.mu.Unlock()
+	log.Printf("readiness: chargen:ready fulfilled (avatar_id=%d already_existed=%v)", avatarID, alreadyExisted)
 	return nil
 }
 
