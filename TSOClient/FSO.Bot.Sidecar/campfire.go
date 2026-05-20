@@ -307,6 +307,10 @@ func (c *Campfire) BroadcastEvent(kind string, payload []byte, simID string) err
 // this time are considered. We subtract 1s to absorb clock skew between the
 // broadcast and the store write.
 func (c *Campfire) readSyntheticTick(corrToken string, afterTime time.Time) (bool, error) {
+	if c.Client == nil {
+		// No campfire client — broadcast path is broken. tick_seen will be false.
+		return false, fmt.Errorf("campfire client is nil (broadcast path broken)")
+	}
 	afterNano := (afterTime.UnixNano() - int64(time.Second)) // 1s margin
 	resp, err := c.Client.Read(protocol.ReadRequest{
 		CampfireID:     c.ID,

@@ -43,6 +43,6 @@
     "Calling with wait_seconds=1 on a loaded system — allow at least 3s for the synthetic tick to round-trip through the campfire store."
   ],
   "refuse_conditions": [
-    "Returns tick_seen:false if the broadcast path is broken or the sidecar is in --no-bot mode and BroadcastEvent is disabled."
+    "Returns tick_seen:false if the campfire broadcast path is broken (BroadcastEvent returns an error or the campfire client is unavailable) and the synthetic tick does not appear in the local store within wait_seconds. The --no-bot flag does NOT disable BroadcastEvent — the sidecar campfire path is live regardless of bot connection state."
   ]
 }

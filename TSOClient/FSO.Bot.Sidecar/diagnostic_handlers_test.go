@@ -555,13 +555,23 @@ while true; do sleep 0.5; done
 	t.Logf("POSITIVE gate PASS: tick_seen=%v ts=%d", result.TickSeen, result.Ts)
 }
 
-// TestIntegration_VerifyPerception_NEGATIVE: sidecar in --no-bot mode.
-// verify-perception should still work (synthetic tick doesn't need the bot)
-// and return tick_seen=true (or at least return a valid response shape).
-// The true NEGATIVE (bot_connected=false) is covered by ReportLiveness_NEGATIVE.
+// TestIntegration_VerifyPerception_NoBotMode: sidecar in --no-bot mode.
+//
+// Design note: this is NOT a NEGATIVE gate for verify-perception — it is a
+// secondary POSITIVE. The verify-perception handler uses BroadcastEvent directly
+// (bypassing the FREESO_BROADCAST_PERCEPTION env gate), so the sidecar→campfire
+// write path is live even when the bot is absent. tick_seen=true is the correct
+// result in --no-bot mode.
+//
+// The true NEGATIVE for verify-perception — tick_seen=false when the campfire
+// write path is broken — is covered by TestVerifyPerceptionHandler_BroadcastFail
+// at the handler unit level.
+//
+// This test proves that --no-bot mode does not disable the broadcast path.
+// Callers can safely call verify-perception on a standby sidecar.
 //
 // Skip: FREESO_SKIP_INTEGRATION=1.
-func TestIntegration_VerifyPerception_NEGATIVE(t *testing.T) {
+func TestIntegration_VerifyPerception_NoBotMode(t *testing.T) {
 	if os.Getenv("FREESO_SKIP_INTEGRATION") == "1" {
 		t.Skip("FREESO_SKIP_INTEGRATION=1")
 	}
@@ -643,8 +653,9 @@ func TestIntegration_VerifyPerception_NEGATIVE(t *testing.T) {
 	}
 	t.Logf("verify-perception (no-bot) response: %s", truncate(verifyOut, 500))
 
-	// NEGATIVE gate: response must have the correct shape. tick_seen may be
-	// true or false depending on BroadcastEvent behaviour in no-bot mode.
+	// Secondary POSITIVE gate: tick_seen must be true.
+	// BroadcastEvent is not disabled in --no-bot mode; the sidecar campfire
+	// write path is live regardless of bot connection state.
 	var result struct {
 		TickSeen bool  `json:"tick_seen"`
 		Ts       int64 `json:"ts"`
@@ -652,10 +663,63 @@ func TestIntegration_VerifyPerception_NEGATIVE(t *testing.T) {
 	if err := parseConventionResponse(verifyOut, &result); err != nil {
 		t.Fatalf("parse verify-perception response: %v\nraw: %s", err, verifyOut)
 	}
-	// NEGATIVE gate: the response shape is valid (tick_seen is a bool field).
-	// We log the result — the convention works in --no-bot mode.
-	t.Logf("NEGATIVE gate PASS: verify-perception returned valid shape in --no-bot mode: tick_seen=%v ts=%d",
-		result.TickSeen, result.Ts)
+	if !result.TickSeen {
+		t.Errorf("no-bot mode FAIL: tick_seen=false; want true (BroadcastEvent is live in --no-bot mode)")
+	}
+	if result.TickSeen && result.Ts <= 0 {
+		t.Errorf("tick_seen=true but ts=%d; want > 0", result.Ts)
+	}
+	t.Logf("no-bot mode PASS: tick_seen=%v ts=%d (broadcast path is live without bot)", result.TickSeen, result.Ts)
+}
+
+// TestVerifyPerceptionHandler_BroadcastFail: NEGATIVE gate for verify-perception.
+//
+// This is the true negative: when the campfire broadcast path is broken
+// (Client is nil → readSyntheticTick returns an error on every poll), the
+// handler must return tick_seen=false.
+//
+// We induce the failure by calling makeVerifyPerceptionHandler with a
+// recording campfire (Client=nil). BroadcastEvent records the synthetic tick
+// instead of sending it to a real campfire store; readSyntheticTick returns
+// an error because Client is nil. After wait_seconds expires without finding
+// the corr token, tick_seen=false.
+//
+// This test does not require a running sidecar binary or cf binary — it calls
+// the handler function directly, which is the broadcast path under test.
+func TestVerifyPerceptionHandler_BroadcastFail(t *testing.T) {
+	// newRecordingCampfire sets recorder != nil (BroadcastEvent records, returns nil)
+	// and Client = nil (readSyntheticTick returns error — tick not in campfire store).
+	cf := newRecordingCampfire()
+
+	handler := makeVerifyPerceptionHandler(cf)
+	ctx, cancel := context.WithTimeout(context.Background(), 15*time.Second)
+	defer cancel()
+
+	// wait_seconds=1: the poll will spin for 1s, failing on every readSyntheticTick
+	// call (Client=nil), then return tick_seen=false.
+	resp, err := handler(ctx, &convention.Request{
+		Args: map[string]any{"wait_seconds": float64(1)},
+	})
+	if err != nil {
+		t.Fatalf("handler returned error: %v", err)
+	}
+
+	payload, ok := resp.Payload.(map[string]any)
+	if !ok {
+		t.Fatalf("payload is %T; want map[string]any", resp.Payload)
+	}
+
+	tickSeen, _ := payload["tick_seen"].(bool)
+	ts, _ := payload["ts"].(int64)
+
+	// NEGATIVE gate: broadcast path is broken → tick_seen must be false.
+	if tickSeen {
+		t.Errorf("NEGATIVE gate FAIL: tick_seen=true; want false (campfire client is nil, synthetic tick cannot be polled)")
+	}
+	if ts != 0 {
+		t.Errorf("ts=%d; want 0 (tick not seen)", ts)
+	}
+	t.Logf("NEGATIVE gate PASS: tick_seen=%v ts=%d (broken broadcast path correctly detected)", tickSeen, ts)
 }
 
 // ---------------------------------------------------------------------------
