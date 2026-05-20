@@ -510,14 +510,20 @@ func printAdmissionBlock(id, beacon, cfHome string) {
 	}
 }
 
-// shareBeacon produces a portable beacon string for campfireID by scanning the
-// default beacon directory. Returns the "beacon:<base64>" string on success.
+// shareBeacon produces a portable beacon string for the admission block.
 //
-// The beacon is published to the default beacon directory by protocol.Client.Create()
-// during campfire creation. shareBeacon reads it back from disk so the admission
-// block can display it without re-generating the beacon.
+// History: f3c briefly changed this to scan beacon.DefaultBeaconDir() so the
+// admission block could show a real beacon. That broke chaos tests (the user's
+// shared beacon dir accumulates many entries and the scan timed out past 20s).
+// Reverted to deferred behaviour — the admission block prints "Beacon: unavailable
+// (use campfire id directly)" and callers can still admit via --campfire-id.
+//
+// body-cf-beacon (the persona-stable Wave 3 file) is written separately at
+// campfire creation in StartCampfire using res.Beacon directly — no scan needed.
+// A follow-up item can promote shareBeacon to produce a real beacon once the
+// protocol.Client exposes a public Share helper.
 func shareBeacon(client *protocol.Client, campfireID string) (string, error) {
-	return scanBeaconStringForCampfire(campfireID, beacon.DefaultBeaconDir())
+	return "", fmt.Errorf("beacon generation deferred (use campfire-id directly)")
 }
 
 // encodeBeaconString encodes a campfire beacon.Beacon struct as the canonical
