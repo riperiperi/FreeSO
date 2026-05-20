@@ -45,6 +45,13 @@ func RegisterPromoteHandler(ctx context.Context, cf *Campfire) (int, error) {
 		// Component 10 invariant: registry is frozen at boot. Refuse always.
 		// Return a typed error so callers can match the specific condition
 		// (rather than parsing a generic router error string).
+		//
+		// The "declaration" arg is accepted for API symmetry with cf convention
+		// promote but ignored — explicitly discarded here so the arg name is
+		// referenced in source (declarations_test.go arg-name parity invariant:
+		// every declared required arg must appear as a string literal in the
+		// handler source, even when the handler refuses without acting on it).
+		_ = req.Args["declaration"]
 		return nil, fmt.Errorf("%s", ErrPromotionRefusedDuringSession)
 	}
 

@@ -91,6 +91,19 @@ sleep 0.5
 		"--cf-home", cfHome,
 		"--description", "freeso-e1a-integration",
 	)
+	// Perception broadcast is opt-in (FREESO_BROADCAST_PERCEPTION=1) since the
+	// default-off fix that prevented the 47k-message growth on body campfires.
+	// This test was written against the legacy broadcast model and asserts
+	// perception surfaces on the body campfire — keep that assertion meaningful
+	// by enabling broadcast explicitly. The default-off path is covered by
+	// TestBridgePerceptionNotBroadcastByDefault in bridges_test.go.
+	filteredEnv := make([]string, 0, len(os.Environ()))
+	for _, e := range os.Environ() {
+		if !strings.HasPrefix(e, "FREESO_BROADCAST_PERCEPTION=") {
+			filteredEnv = append(filteredEnv, e)
+		}
+	}
+	sidecar.Env = append(filteredEnv, "FREESO_BROADCAST_PERCEPTION=1")
 	stdout, err := sidecar.StdoutPipe()
 	if err != nil {
 		t.Fatalf("stdout pipe: %v", err)
