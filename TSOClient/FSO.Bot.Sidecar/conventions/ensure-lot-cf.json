@@ -1,0 +1,33 @@
+{
+  "convention": "freeso-embodiment",
+  "version": "1.0",
+  "operation": "ensure-lot-cf",
+  "family": "admin",
+  "description": "One-shot recovery op: ensures the lot campfire for lot_id exists with the owner admitted as creator and a beacon file written. Idempotent — safe to call multiple times. Use when the async lot-cf creation in purchase-lot failed (a .beacon.err file exists in the beacon dir). Returns the campfire_id on success.",
+  "args": [
+    {
+      "name": "lot_id",
+      "type": "integer",
+      "required": true,
+      "description": "The server-assigned FSO lot_id (fso_lots.lot_id). NOT the packed tile coordinate. Obtained from the lot_id field in the purchase-lot success response."
+    }
+  ],
+  "produces_tags": [
+    {
+      "tag": "freeso:ensure-lot-cf",
+      "cardinality": "exactly_one"
+    }
+  ],
+  "antecedents": "none",
+  "signing": "member_key",
+  "response": "sync",
+  "status": "implemented",
+  "call_signatures": [
+    "cf $CF ensure-lot-cf --lot_id 42"
+  ],
+  "common_mistakes": [
+    "lot_id is the server-assigned integer (from purchase-lot response), NOT the packed tile coordinate (target_lot_location).",
+    "This op is idempotent — calling it when the lot campfire already exists is a no-op.",
+    "If the beacon dir does not exist it is created automatically; no manual mkdir needed."
+  ]
+}

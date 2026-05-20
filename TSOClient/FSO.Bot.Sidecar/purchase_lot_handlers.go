@@ -28,6 +28,9 @@ import (
 //     {ok, lot_id, new_funds, status, reason}.
 //  4. On success: update owned-lots.json with the new entry (I0-7 habitation
 //     block zeroed — body must eat/sleep/use-toilet to mark habitable).
+//  5. On success: asynchronously create the lot campfire (automataisland-9b4) via
+//     SpawnLotCFAsync — purchase-lot response is returned immediately and does
+//     not block on campfire creation I/O.
 //
 // ESCALATION RISK: if Alphaville's fso_neighborhoods has flag & 1 set
 // (NHOOD_RESERVED), every non-mayor purchase returns NHOOD_RESERVED from the
@@ -38,9 +41,13 @@ import (
 // No direct DB queries here — the sidecar has no DB credentials. All state
 // mutations go through the C# bot (road-bits validation, PurchaseLotRequest)
 // or persona-state files (owned-lots.json).
-func RegisterPurchaseLotHandlers(ctx context.Context, cf *Campfire, botCmds *BotCmdPump) (int, error) {
+//
+// cfHome is the sidecar's campfire home directory (--cf-home), passed through
+// for lot-cf creation. ownerPubKeyHex is the sidecar's public key hex (the lot
+// owner identity). Both are used by SpawnLotCFAsync on the success path.
+func RegisterPurchaseLotHandlers(ctx context.Context, cf *Campfire, botCmds *BotCmdPump, cfHome, ownerPubKeyHex string) (int, error) {
 	ops := map[string]convention.HandlerFunc{
-		"purchase-lot": purchaseLotHandler(botCmds),
+		"purchase-lot": purchaseLotHandler(botCmds, cfHome, ownerPubKeyHex),
 	}
 
 	decls, err := LoadDeclarations(conventionFiles)
@@ -76,7 +83,10 @@ func RegisterPurchaseLotHandlers(ctx context.Context, cf *Campfire, botCmds *Bot
 //     but present for mayor-mode community lot placement.
 //   - allow_move (bool, default false): if true, skip the ALREADY_OWNS check.
 //     Set when the agent explicitly wants to re-purchase / move.
-func purchaseLotHandler(botCmds *BotCmdPump) convention.HandlerFunc {
+//
+// cfHome and ownerPubKeyHex are forwarded to SpawnLotCFAsync on the success path
+// (automataisland-9b4). Empty strings disable lot-cf creation (e.g. in --no-bot mode).
+func purchaseLotHandler(botCmds *BotCmdPump, cfHome, ownerPubKeyHex string) convention.HandlerFunc {
 	return func(ctx context.Context, req *convention.Request) (*convention.Response, error) {
 		args := req.Args
 
@@ -264,6 +274,22 @@ func purchaseLotHandler(botCmds *BotCmdPump) convention.HandlerFunc {
 			// agent sees the success response. The agent or orchestrator can
 			// re-read owned-lots.json on the next session to recover the entry.
 			log.Printf("purchase-lot: update owned-lots.json: %v (non-fatal — purchase succeeded)", werr)
+		}
+
+		// Step 8: async lot-cf creation (automataisland-9b4).
+		// Spawn a goroutine to create the lot campfire — purchase-lot response
+		// returns immediately. If cfHome is empty (e.g. test mode without a real
+		// campfire home), lot-cf creation is skipped with a log message.
+		if purchaseData.LotID > 0 {
+			if cfHome != "" {
+				SpawnLotCFAsync(LotCFConfig{
+					CfHome:         cfHome,
+					LotID:          purchaseData.LotID,
+					OwnerPubKeyHex: ownerPubKeyHex,
+				})
+			} else {
+				log.Printf("purchase-lot: lot %d — cfHome empty, skipping lot-cf creation", purchaseData.LotID)
+			}
 		}
 
 		return &convention.Response{
