@@ -9,6 +9,7 @@ package main
 import (
 	"context"
 	"embed"
+	"encoding/base64"
 	"encoding/json"
 	"fmt"
 	"log"
@@ -19,7 +20,9 @@ import (
 	"time"
 
 	"github.com/campfire-net/campfire/cf-conventions/cf-convention"
+	cfencoding "github.com/campfire-net/campfire/cf-protocol/encoding"
 	"github.com/campfire-net/campfire/cf-protocol/protocol"
+	"github.com/campfire-net/campfire/pkg/beacon"
 )
 
 // CampfireConfig parameterises campfire bringup.
@@ -113,8 +116,43 @@ func StartCampfire(ctx context.Context, cfg CampfireConfig) (*Campfire, error) {
 		if werr := WriteBodyCfID(id); werr != nil {
 			log.Printf("write body-cf.id: %v (non-fatal — next restart will create a new campfire)", werr)
 		}
+
+		// Write body-cf-beacon (automataisland-f3c): portable beacon string for
+		// Legion jail auto_join provisioning. Written once at campfire creation;
+		// subsequent boots resume the same campfire and find an existing beacon file.
+		// Idempotency guard: writeBodyCFBeaconIfAbsent skips write if file exists.
+		if res.Beacon != nil {
+			if beaconStr, encErr := encodeBeaconString(res.Beacon); encErr != nil {
+				log.Printf("encode body-cf-beacon: %v (non-fatal — beacon file absent)", encErr)
+			} else if wErr := writeBodyCFBeaconIfAbsent(beaconStr); wErr != nil {
+				log.Printf("write body-cf-beacon: %v (non-fatal — legion jail provisioning may need manual setup)", wErr)
+			} else {
+				log.Printf("body-cf-beacon written for persona (%s)", shortID(id))
+			}
+		} else {
+			log.Printf("body-cf-beacon: create result has no Beacon struct — skipping (non-fatal)")
+		}
 	} else {
 		log.Printf("reusing campfire: %s", id)
+
+		// On resume, ensure body-cf-beacon exists. Written at first creation; on a
+		// fresh install with an existing body-cf.id (e.g. migration or data move),
+		// the beacon file may be absent. Attempt to recover it from the local beacon
+		// directory so the Legion jail auto_join can be provisioned.
+		if existing, readErr := ReadBodyCFBeacon(); readErr != nil {
+			log.Printf("read body-cf-beacon on resume: %v (non-fatal)", readErr)
+		} else if existing == "" {
+			// File absent — try to reconstruct from the beacon directory.
+			if beaconStr, scanErr := scanBeaconStringForCampfire(id, beacon.DefaultBeaconDir()); scanErr != nil {
+				log.Printf("body-cf-beacon absent and scan failed: %v — beacon file will be missing (non-fatal)", scanErr)
+			} else if wErr := WriteBodyCFBeacon(beaconStr); wErr != nil {
+				log.Printf("write body-cf-beacon (resume recovery): %v (non-fatal)", wErr)
+			} else {
+				log.Printf("body-cf-beacon written (resume recovery) for persona (%s)", shortID(id))
+			}
+		} else {
+			log.Printf("body-cf-beacon already exists for persona — reusing (idempotent)")
+		}
 	}
 
 	cf := &Campfire{
@@ -472,15 +510,61 @@ func printAdmissionBlock(id, beacon, cfHome string) {
 	}
 }
 
-// shareBeacon invokes the campfire library to produce a portable beacon. The
-// beacon format lets `cf join <beacon>` bootstrap address + peers.
+// shareBeacon produces a portable beacon string for campfireID by scanning the
+// default beacon directory. Returns the "beacon:<base64>" string on success.
+//
+// The beacon is published to the default beacon directory by protocol.Client.Create()
+// during campfire creation. shareBeacon reads it back from disk so the admission
+// block can display it without re-generating the beacon.
 func shareBeacon(client *protocol.Client, campfireID string) (string, error) {
-	// protocol.Client does not currently expose a public "Share" helper; the
-	// `cf share` CLI does this via the beacon package. For scaffold stage we
-	// return the raw id, which `cf join <id>` accepts when there is a local
-	// config pointing at the transport. A follow-up item will promote this to
-	// a proper beacon once we wire p2p-http transport. Track in rd.
-	return "", fmt.Errorf("beacon generation deferred (use campfire-id directly)")
+	return scanBeaconStringForCampfire(campfireID, beacon.DefaultBeaconDir())
+}
+
+// encodeBeaconString encodes a campfire beacon.Beacon struct as the canonical
+// portable string: "beacon:" + base64.StdEncoding(CBOR(beacon)).
+// This matches the format produced by `cf share` (cmd/cf/cmd/share.go).
+func encodeBeaconString(b *beacon.Beacon) (string, error) {
+	data, err := cfencoding.Marshal(b)
+	if err != nil {
+		return "", fmt.Errorf("encode beacon CBOR: %w", err)
+	}
+	return "beacon:" + base64.StdEncoding.EncodeToString(data), nil
+}
+
+// scanBeaconStringForCampfire scans beaconDir for a beacon whose campfire ID
+// matches campfireID (exact hex match) and returns the encoded "beacon:<base64>"
+// string. Returns an error if no matching beacon is found or encoding fails.
+func scanBeaconStringForCampfire(campfireID, beaconDir string) (string, error) {
+	beacons, err := beacon.Scan(beaconDir)
+	if err != nil {
+		return "", fmt.Errorf("scan beacons in %s: %w", beaconDir, err)
+	}
+	for i := range beacons {
+		b := beacons[i]
+		if b.CampfireIDHex() == campfireID {
+			return encodeBeaconString(&b)
+		}
+	}
+	return "", fmt.Errorf("no beacon found for campfire %s in %s", shortID(campfireID), beaconDir)
+}
+
+// writeBodyCFBeaconIfAbsent writes the body-cf-beacon file only if it does not
+// already exist. This is the first-write-wins idempotency guard for the creation
+// path: once a beacon is written, subsequent sidecar restarts preserve the same
+// body cf and skip this write entirely.
+func writeBodyCFBeaconIfAbsent(beaconStr string) error {
+	existing, err := ReadBodyCFBeacon()
+	if err != nil {
+		// Treat read errors (other than not-exist) as "absent" and write anyway;
+		// a corrupt file is worse than a fresh one.
+		log.Printf("writeBodyCFBeaconIfAbsent: read check failed: %v — overwriting", err)
+		return WriteBodyCFBeacon(beaconStr)
+	}
+	if existing != "" {
+		log.Printf("writeBodyCFBeaconIfAbsent: beacon already exists — idempotent, skipping write")
+		return nil
+	}
+	return WriteBodyCFBeacon(beaconStr)
 }
 
 // isCampfireReachable checks whether the sidecar's local campfire store holds

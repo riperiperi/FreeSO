@@ -256,6 +256,208 @@ func TestReadBodyCfIDEmptyFile(t *testing.T) {
 	}
 }
 
+// --- body-cf-beacon tests (automataisland-f3c) ---
+
+// TestReadBodyCFBeaconMissing asserts ReadBodyCFBeacon returns ("", nil) when
+// the file does not exist — expected state before first sidecar boot / chargen.
+func TestReadBodyCFBeaconMissing(t *testing.T) {
+	tmp := t.TempDir()
+	withConfigHome(t, tmp)
+	withFSO_USER(t, "testpersona")
+
+	got, err := ReadBodyCFBeacon()
+	if err != nil {
+		t.Fatalf("ReadBodyCFBeacon on missing file: want nil error, got %v", err)
+	}
+	if got != "" {
+		t.Fatalf("ReadBodyCFBeacon on missing file: want empty string, got %q", got)
+	}
+}
+
+// TestWriteReadBodyCFBeaconRoundTrip is the POSITIVE gate: WriteBodyCFBeacon
+// followed by ReadBodyCFBeacon returns the same beacon string — simulating
+// sidecar boot with a fresh persona where the file is written once.
+func TestWriteReadBodyCFBeaconRoundTrip(t *testing.T) {
+	tmp := t.TempDir()
+	withConfigHome(t, tmp)
+	withFSO_USER(t, "mara-voss")
+
+	const wantBeacon = "beacon:SGVsbG8gd29ybGQgZnJvbSBhdXRvbWF0YS1pc2xhbmQ="
+
+	if err := WriteBodyCFBeacon(wantBeacon); err != nil {
+		t.Fatalf("WriteBodyCFBeacon: %v", err)
+	}
+
+	got, err := ReadBodyCFBeacon()
+	if err != nil {
+		t.Fatalf("ReadBodyCFBeacon: %v", err)
+	}
+	if got != wantBeacon {
+		t.Fatalf("round-trip mismatch: want %q, got %q", wantBeacon, got)
+	}
+}
+
+// TestBodyCFBeaconIdempotent is the IDEMPOTENT gate: when a beacon file already
+// exists, writeBodyCFBeaconIfAbsent preserves the existing beacon — simulating
+// a sidecar reboot that finds the existing file and skips creation of a new cf.
+func TestBodyCFBeaconIdempotent(t *testing.T) {
+	tmp := t.TempDir()
+	withConfigHome(t, tmp)
+	withFSO_USER(t, "lara-voss")
+
+	const firstBeacon = "beacon:Rmlyc3RCb290QmVhY29uRm9yTGFyYVZvc3M="
+	const secondBeacon = "beacon:U2Vjb25kQm9vdEJlYWNvbkZvckxhcmFWb3Nz"
+
+	// Write first beacon — simulates first boot.
+	if err := WriteBodyCFBeacon(firstBeacon); err != nil {
+		t.Fatalf("first WriteBodyCFBeacon: %v", err)
+	}
+
+	// Simulate second boot: writeBodyCFBeaconIfAbsent should preserve first beacon.
+	if err := writeBodyCFBeaconIfAbsent(secondBeacon); err != nil {
+		t.Fatalf("writeBodyCFBeaconIfAbsent: %v", err)
+	}
+
+	// Verify the first beacon is still present — not overwritten.
+	got, err := ReadBodyCFBeacon()
+	if err != nil {
+		t.Fatalf("ReadBodyCFBeacon after idempotent check: %v", err)
+	}
+	if got != firstBeacon {
+		t.Fatalf("idempotent guard failed: want %q (first beacon), got %q", firstBeacon, got)
+	}
+}
+
+// TestWriteBodyCFBeaconCreatesDir asserts WriteBodyCFBeacon creates the persona
+// state directory if it does not exist (mkdir-p semantics).
+func TestWriteBodyCFBeaconCreatesDir(t *testing.T) {
+	tmp := t.TempDir()
+	withConfigHome(t, tmp)
+	withFSO_USER(t, "founder")
+
+	const beaconVal = "beacon:dGVzdC1iZWFjb24tZm9yLWRpci1jcmVhdGlvbg=="
+
+	dir := filepath.Join(tmp, "freeso-souls", "founder")
+	if _, err := os.Stat(dir); !os.IsNotExist(err) {
+		t.Fatalf("expected dir to not exist before write, got: %v", err)
+	}
+
+	if err := WriteBodyCFBeacon(beaconVal); err != nil {
+		t.Fatalf("WriteBodyCFBeacon: %v", err)
+	}
+
+	if _, err := os.Stat(dir); err != nil {
+		t.Fatalf("directory not created: %v", err)
+	}
+	fpath := filepath.Join(dir, "body-cf-beacon")
+	if _, err := os.Stat(fpath); err != nil {
+		t.Fatalf("body-cf-beacon not created: %v", err)
+	}
+}
+
+// TestWriteBodyCFBeaconRejectsEmpty asserts WriteBodyCFBeacon returns an error
+// for an empty string.
+func TestWriteBodyCFBeaconRejectsEmpty(t *testing.T) {
+	tmp := t.TempDir()
+	withConfigHome(t, tmp)
+	withFSO_USER(t, "test-persona")
+
+	if err := WriteBodyCFBeacon(""); err == nil {
+		t.Fatal("expected error for empty beacon, got nil")
+	}
+}
+
+// TestWriteBodyCFBeaconRejectsInvalidPrefix asserts WriteBodyCFBeacon returns an
+// error for a string that does not start with "beacon:".
+func TestWriteBodyCFBeaconRejectsInvalidPrefix(t *testing.T) {
+	tmp := t.TempDir()
+	withConfigHome(t, tmp)
+	withFSO_USER(t, "test-persona")
+
+	for _, bad := range []string{
+		"not-a-beacon",
+		"campfire:abc",
+		"beacon", // no colon
+		"https://example.com",
+	} {
+		t.Run(bad, func(t *testing.T) {
+			if err := WriteBodyCFBeacon(bad); err == nil {
+				t.Errorf("WriteBodyCFBeacon(%q): expected error, got nil", bad)
+			}
+		})
+	}
+}
+
+// TestReadBodyCFBeaconStripsWhitespace asserts ReadBodyCFBeacon tolerates a
+// trailing newline (written by WriteBodyCFBeacon's atomic-write path).
+func TestReadBodyCFBeaconStripsWhitespace(t *testing.T) {
+	tmp := t.TempDir()
+	withConfigHome(t, tmp)
+	withFSO_USER(t, "whitespace-persona")
+
+	const beaconVal = "beacon:dGVzdA=="
+	dir := filepath.Join(tmp, "freeso-souls", "whitespace-persona")
+	if err := os.MkdirAll(dir, 0o700); err != nil {
+		t.Fatalf("mkdir: %v", err)
+	}
+	if err := os.WriteFile(filepath.Join(dir, "body-cf-beacon"), []byte(beaconVal+"\n"), 0o600); err != nil {
+		t.Fatalf("write: %v", err)
+	}
+
+	got, err := ReadBodyCFBeacon()
+	if err != nil {
+		t.Fatalf("ReadBodyCFBeacon: %v", err)
+	}
+	if got != beaconVal {
+		t.Fatalf("whitespace not stripped: want %q, got %q", beaconVal, got)
+	}
+}
+
+// TestReadBodyCFBeaconEmptyFile asserts ReadBodyCFBeacon returns an error when
+// the file exists but is empty — a sign of corrupt state.
+func TestReadBodyCFBeaconEmptyFile(t *testing.T) {
+	tmp := t.TempDir()
+	withConfigHome(t, tmp)
+	withFSO_USER(t, "corrupt-persona")
+
+	dir := filepath.Join(tmp, "freeso-souls", "corrupt-persona")
+	if err := os.MkdirAll(dir, 0o700); err != nil {
+		t.Fatalf("mkdir: %v", err)
+	}
+	if err := os.WriteFile(filepath.Join(dir, "body-cf-beacon"), []byte("  \n"), 0o600); err != nil {
+		t.Fatalf("write: %v", err)
+	}
+
+	_, err := ReadBodyCFBeacon()
+	if err == nil {
+		t.Fatal("expected error for empty body-cf-beacon, got nil")
+	}
+	if !strings.Contains(err.Error(), "empty") {
+		t.Fatalf("expected 'empty' in error, got: %v", err)
+	}
+}
+
+// TestReadBodyCFBeaconInvalidFormat asserts ReadBodyCFBeacon returns an error
+// when the file exists but does not contain a "beacon:" prefix — corrupt state.
+func TestReadBodyCFBeaconInvalidFormat(t *testing.T) {
+	tmp := t.TempDir()
+	withConfigHome(t, tmp)
+	withFSO_USER(t, "bad-format-persona")
+
+	dir := filepath.Join(tmp, "freeso-souls", "bad-format-persona")
+	if err := os.MkdirAll(dir, 0o700); err != nil {
+		t.Fatalf("mkdir: %v", err)
+	}
+	if err := os.WriteFile(filepath.Join(dir, "body-cf-beacon"), []byte("not-a-beacon-string\n"), 0o600); err != nil {
+		t.Fatalf("write: %v", err)
+	}
+
+	_, err := ReadBodyCFBeacon()
+	if err == nil {
+		t.Fatal("expected error for invalid format, got nil")
+	}
+}
+
 // --- next-lot tests (freesoexperiment-e5f) ---
 
 // TestReadNextLotMissing asserts ReadNextLot returns ("", nil) when the

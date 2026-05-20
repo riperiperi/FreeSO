@@ -27,6 +27,9 @@ import (
 // Files written under this directory (all optional, tolerated-missing):
 //
 //	body-cf.id      — hex campfire ID, persisted across sidecar restarts (this item)
+//	body-cf-beacon  — portable beacon string ("beacon:<base64>"), written at first
+//	                  sidecar boot / chargen completion (automataisland-f3c).
+//	                  Legion jail provisioning reads this for auto_join (item 781).
 //	next-lot        — packed lot location (hex uint32) for next bot launch
 //	owned-lots.json — JSON array of lot locations this persona owns
 func PersonaStateDir() (string, error) {
@@ -89,6 +92,75 @@ func WriteBodyCfID(campfireID string) error {
 	}
 	if err := os.Rename(tmp, path); err != nil {
 		return fmt.Errorf("rename body-cf.id: %w", err)
+	}
+	return nil
+}
+
+// ReadBodyCFBeacon reads the persisted body campfire beacon string for this persona.
+// The beacon string has the canonical form "beacon:<base64>" and is suitable for
+// passing to `cf join` or writing to an auto_join config block.
+//
+// Returns ("", nil) when the file does not exist (first boot — beacon not yet written).
+// Returns ("", error) on I/O or format errors.
+func ReadBodyCFBeacon() (string, error) {
+	dir, err := PersonaStateDir()
+	if err != nil {
+		return "", err
+	}
+	path := filepath.Join(dir, "body-cf-beacon")
+	data, err := os.ReadFile(path)
+	if err != nil {
+		if os.IsNotExist(err) {
+			return "", nil // first boot — beacon not yet written
+		}
+		return "", fmt.Errorf("read body-cf-beacon: %w", err)
+	}
+	beaconStr := strings.TrimSpace(string(data))
+	if beaconStr == "" {
+		return "", fmt.Errorf("body-cf-beacon is present but empty: %s", path)
+	}
+	if !strings.HasPrefix(beaconStr, "beacon:") {
+		return "", fmt.Errorf("body-cf-beacon has unexpected format (want 'beacon:...'): %s", path)
+	}
+	return beaconStr, nil
+}
+
+// WriteBodyCFBeacon atomically writes the canonical beacon string to body-cf-beacon,
+// creating the persona state directory if necessary.
+//
+// beaconStr must be a non-empty string starting with "beacon:" — the canonical form
+// produced by encoding a campfire beacon struct as CBOR + base64. Legion jail
+// provisioning reads this file for auto_join (automataisland-781).
+//
+// Idempotency: the caller is responsible for the idempotency guard. WriteBodyCFBeacon
+// always overwrites any existing file. Callers that want first-write-wins semantics
+// should call ReadBodyCFBeacon first and skip the write if a non-empty value is returned.
+func WriteBodyCFBeacon(beaconStr string) error {
+	if beaconStr == "" {
+		return errors.New("WriteBodyCFBeacon: beacon must not be empty")
+	}
+	if !strings.HasPrefix(beaconStr, "beacon:") {
+		truncated := beaconStr
+		if len(truncated) > 16 {
+			truncated = truncated[:16]
+		}
+		return fmt.Errorf("WriteBodyCFBeacon: beacon must start with 'beacon:', got %q", truncated)
+	}
+	dir, err := PersonaStateDir()
+	if err != nil {
+		return err
+	}
+	if err := os.MkdirAll(dir, 0o700); err != nil {
+		return fmt.Errorf("mkdir persona state dir: %w", err)
+	}
+	path := filepath.Join(dir, "body-cf-beacon")
+	tmp := path + ".tmp"
+	if err := os.WriteFile(tmp, []byte(beaconStr+"\n"), 0o600); err != nil {
+		return fmt.Errorf("write body-cf-beacon tmp: %w", err)
+	}
+	if err := os.Rename(tmp, path); err != nil {
+		os.Remove(tmp) //nolint:errcheck
+		return fmt.Errorf("rename body-cf-beacon: %w", err)
 	}
 	return nil
 }
