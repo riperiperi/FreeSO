@@ -31,6 +31,14 @@ type CampfireConfig struct {
 	CampfireID   string // if non-empty, reuse rather than create
 	Description  string
 	Declarations embed.FS // root dir "conventions/"
+
+	// AdditionalAdmitKeys is an optional list of hex-encoded Ed25519 public keys
+	// to admit as members when a NEW campfire is created (chargen-time auto-admit).
+	// Each key is admitted with role "member". The loop is a no-op when this slice
+	// is empty, so the field is safe to leave unset for existing flows.
+	// Errors are non-fatal and logged (missing / malformed keys do not abort bringup).
+	// Idempotent: Admit() is safe to call for a key that is already a member.
+	AdditionalAdmitKeys []string
 }
 
 // Campfire is the sidecar's handle to its private campfire.
@@ -131,6 +139,28 @@ func StartCampfire(ctx context.Context, cfg CampfireConfig) (*Campfire, error) {
 			}
 		} else {
 			log.Printf("body-cf-beacon: create result has no Beacon struct — skipping (non-fatal)")
+		}
+
+		// Chargen-time auto-admit (automataisland-67ed): admit any additional keys
+		// (e.g. engineer pubkey from FREESO_ENGINEER_PUBKEY) so observers can read
+		// the body campfire without a manual admit step.
+		// This loop runs ONLY when a new campfire is created — existing campfires
+		// (Mara, Lara) are not affected. Admit is idempotent; re-running after a
+		// store wipe that triggers campfire recreation will re-admit correctly.
+		for _, pk := range cfg.AdditionalAdmitKeys {
+			if pk == "" {
+				continue
+			}
+			admitErr := client.Admit(protocol.AdmitRequest{
+				CampfireID:      id,
+				MemberPubKeyHex: pk,
+				Role:            "member",
+			})
+			if admitErr != nil {
+				log.Printf("body-cf: auto-admit %s: %v (non-fatal)", shortKey(pk), admitErr)
+			} else {
+				log.Printf("body-cf: auto-admitted %s (role=member)", shortKey(pk))
+			}
 		}
 	} else {
 		log.Printf("reusing campfire: %s", id)

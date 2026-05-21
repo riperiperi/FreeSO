@@ -36,6 +36,8 @@
 //	--campfire-id    reuse an existing campfire instead of creating one
 //	                 (overrides FREESO_CF_CAMPFIRE)
 //	--no-bot         skip launching the bot (campfire-only mode, for testing)
+//	--engineer-pubkey hex pubkey auto-admitted as member at body-cf creation time
+//	                 (overrides FREESO_ENGINEER_PUBKEY; optional — no-op when unset)
 package main
 
 import (
@@ -61,6 +63,7 @@ func main() {
 	campfireID := flag.String("campfire-id", "", "reuse an existing campfire id (overrides FREESO_CF_CAMPFIRE)")
 	noBot := flag.Bool("no-bot", false, "skip launching the bot (campfire-only mode for testing)")
 	description := flag.String("description", "freeso.lot", "campfire description")
+	engineerPubkey := flag.String("engineer-pubkey", "", "hex pubkey to auto-admit as member at body-cf creation time (overrides FREESO_ENGINEER_PUBKEY)")
 	flag.Parse()
 
 	log.SetOutput(os.Stderr)
@@ -70,6 +73,17 @@ func main() {
 	// Resolve campfire id source: flag beats env.
 	if *campfireID == "" {
 		*campfireID = os.Getenv("FREESO_CF_CAMPFIRE")
+	}
+
+	// Resolve engineer pubkey: --engineer-pubkey flag beats FREESO_ENGINEER_PUBKEY env.
+	// When set, the pubkey is admitted as a member on body-cf creation (chargen-time).
+	// If unset, the loop is a no-op — existing flows are not affected.
+	if *engineerPubkey == "" {
+		*engineerPubkey = os.Getenv("FREESO_ENGINEER_PUBKEY")
+	}
+	var additionalAdmitKeys []string
+	if *engineerPubkey != "" {
+		additionalAdmitKeys = []string{*engineerPubkey}
 	}
 
 	// Normalise cf-home to absolute so relative paths survive a cwd change.
@@ -95,10 +109,11 @@ func main() {
 
 	// 1. Bring up the campfire: identity, create/resume, declarations, admission block.
 	cf, err := StartCampfire(ctx, CampfireConfig{
-		Home:        absHome,
-		CampfireID:  *campfireID,
-		Description: *description,
-		Declarations: conventionFiles,
+		Home:                absHome,
+		CampfireID:          *campfireID,
+		Description:         *description,
+		Declarations:        conventionFiles,
+		AdditionalAdmitKeys: additionalAdmitKeys,
 	})
 	if err != nil {
 		log.Fatalf("campfire bringup: %v", err)
