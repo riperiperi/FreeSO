@@ -143,5 +143,65 @@ namespace FSO.Server.Api.Core.Controllers.Admin
                 lot_servers_notified = notified,
             });
         }
+
+        public class FillMotivesRequest
+        {
+            // 0 / omitted = unrestricted (all avatars).
+            public uint avatar_id { get; set; }
+            // 0 / omitted = unrestricted (all hosted lots).
+            public int lot_id { get; set; }
+        }
+
+        /// <summary>
+        /// Admin-only motive top-up. Broadcasts a FillAvatarMotives Gluon packet to
+        /// every connected lot server, which forwards a VMNetFillMotivesCmd inside
+        /// each matching lot's running VM. Mirrors the in-game /maxmotives command:
+        /// touches only the seven decaying motives, only player avatars (no NPCs/pets),
+        /// and respects the per-category overfill cap via TuningCache.GetLimit().
+        ///
+        /// Targeting:
+        ///   {}                                        → every player on every lot
+        ///   { lot_id }                                → every player on that lot
+        ///   { avatar_id }                             → that one avatar (whichever lot they're on)
+        ///   { avatar_id, lot_id }                     → that one avatar, only if on that lot
+        ///
+        /// This endpoint does NOT update fso_avatars.motive_data for offline avatars —
+        /// the portal handles that DB write directly, so callers that want both should
+        /// do the UPDATE first (or in parallel) and then call this for live VMs.
+        /// </summary>
+        [HttpPost("fill_motives")]
+        public IActionResult FillMotives([FromBody] FillMotivesRequest body)
+        {
+            var api = Api.INSTANCE;
+            api.DemandModerator(Request);
+
+            if (body == null) body = new FillMotivesRequest();
+
+            int notified = 0;
+            if (api.HostPool != null)
+            {
+                var packet = new FillAvatarMotives
+                {
+                    AvatarId = body.avatar_id,
+                    LotId = body.lot_id,
+                };
+                foreach (var host in api.HostPool.GetByRole(DbHostRole.lot))
+                {
+                    if (host.Connected)
+                    {
+                        host.Write(packet);
+                        notified++;
+                    }
+                }
+            }
+
+            return new JsonResult(new
+            {
+                ok = true,
+                avatar_id = body.avatar_id,
+                lot_id = body.lot_id,
+                lot_servers_notified = notified,
+            });
+        }
     }
 }

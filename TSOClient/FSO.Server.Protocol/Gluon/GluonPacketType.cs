@@ -27,6 +27,8 @@
         SetLotObjectLimitBonus,
         SetAvatarSkillLockLimit,
 
+        FillAvatarMotives,
+
         Unknown
     }
 
@@ -74,6 +76,8 @@
                     return GluonPacketType.SetLotObjectLimitBonus;
                 case 0x0019:
                     return GluonPacketType.SetAvatarSkillLockLimit;
+                case 0x001A:
+                    return GluonPacketType.FillAvatarMotives;
                 default:
                     return GluonPacketType.Unknown;
             }
@@ -121,6 +125,8 @@
                     return 0x0018;
                 case GluonPacketType.SetAvatarSkillLockLimit:
                     return 0x0019;
+                case GluonPacketType.FillAvatarMotives:
+                    return 0x001A;
             }
 
             return 0xFFFF;

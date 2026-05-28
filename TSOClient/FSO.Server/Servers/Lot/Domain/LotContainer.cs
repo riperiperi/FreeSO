@@ -905,6 +905,23 @@ namespace FSO.Server.Servers.Lot.Domain
             });
         }
 
+        /// <summary>
+        /// Top up motives for one or every player avatar on this lot. Called by the
+        /// LotHost broadcaster after the admin API sends a FillAvatarMotives packet.
+        /// avatar_id == 0 fills everyone on the lot; otherwise it's a single-avatar
+        /// fill that is a no-op when the avatar isn't here. Job lots are skipped on
+        /// purpose — their NPC AI state is too fragile to mess with motives mid-shift.
+        /// </summary>
+        public void FillAvatarMotives(uint avatar_id)
+        {
+            if (Lot == null || JobLot) return;
+            if (avatar_id != 0 && Lot.GetAvatarByPersist(avatar_id) == null) return;
+            Lot.ForwardCommand(new VMNetFillMotivesCmd()
+            {
+                PersistID = avatar_id
+            });
+        }
+
         private void ResyncTime()
         {
             var time = DateTime.UtcNow;

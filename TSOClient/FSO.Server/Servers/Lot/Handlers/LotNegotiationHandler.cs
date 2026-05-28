@@ -95,5 +95,14 @@ namespace FSO.Server.Servers.Lot.Handlers
             // sync. DB was already updated by the API.
             Lots.UpdateAvatarSkillLockLimit(request.AvatarId, request.NewLimit);
         }
+
+        public void Handle(IGluonSession session, FillAvatarMotives request)
+        {
+            // Admin-initiated motive top-up. Targeting modes are encoded in the
+            // packet's two IDs (see FillAvatarMotives.cs). Offline-avatar persistence
+            // is handled separately by the portal (UPDATE fso_avatars.motive_data) —
+            // this handler only touches running VMs on this server.
+            Lots.FillAvatarMotives(request.LotId, request.AvatarId);
+        }
     }
 }

@@ -266,6 +266,39 @@ namespace FSO.Server.Servers.Lot.Domain
             }
         }
 
+        /// <summary>
+        /// Top up motives across the lots this server hosts. Three modes:
+        ///   avatar_id == 0, lot_id == 0  → every player on every hosted lot
+        ///   avatar_id == 0, lot_id != 0  → every player on that one lot (if hosted)
+        ///   avatar_id != 0                → that one avatar, wherever they are
+        /// Lots that don't match the filter early-out inside their container call.
+        /// Each lot's fill runs on its own thread to avoid serializing across lots.
+        /// </summary>
+        public void FillAvatarMotives(int lot_id, uint avatar_id)
+        {
+            if (lot_id != 0)
+            {
+                var lot = GetLot(lot_id);
+                if (lot == null) return;
+                lot.InBackground(() =>
+                {
+                    lot.Container?.FillAvatarMotives(avatar_id);
+                });
+                return;
+            }
+
+            List<LotHostEntry> lots;
+            lock (Lots) lots = Lots.Values.ToList();
+            foreach (var lot in lots)
+            {
+                var container = lot.Container;
+                lot.InBackground(() =>
+                {
+                    container?.FillAvatarMotives(avatar_id);
+                });
+            }
+        }
+
         private LotHostEntry GetLot(IVoltronSession session)
         {
             var lotId = (int?)session.GetAttribute("currentLot");
