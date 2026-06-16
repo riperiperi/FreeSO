@@ -18,6 +18,7 @@ namespace FSO.Server.Api.Core.Controllers
         [Route("userapi/city/{shardid}/city.json")]
         public IActionResult Get(int shardid)
         {
+            // TODO: support multiple shards
             var api = Api.INSTANCE;
 
             var now = Epoch.Now;

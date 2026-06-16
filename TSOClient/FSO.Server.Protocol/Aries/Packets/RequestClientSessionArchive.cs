@@ -6,6 +6,9 @@ namespace FSO.Server.Protocol.Aries.Packets
 {
     public class RequestClientSessionArchive : IAriesPacket
     {
+        public string Name;
+        public int PlayerCount;
+
         public string ServerKey;
         public string Nonce;
         public ArchiveConfigFlags ArchiveConfig;
@@ -15,6 +18,9 @@ namespace FSO.Server.Protocol.Aries.Packets
 
         public void Deserialize(IoBuffer input, ISerializationContext context)
         {
+            Name = input.GetPascalVLCString();
+            PlayerCount = input.GetInt32();
+
             ServerKey = input.GetPascalVLCString();
             Nonce = input.GetPascalVLCString();
             ArchiveConfig = input.GetEnum<ArchiveConfigFlags>();
@@ -30,6 +36,9 @@ namespace FSO.Server.Protocol.Aries.Packets
 
         public void Serialize(IoBuffer output, ISerializationContext context)
         {
+            output.PutPascalVLCString(Name);
+            output.PutInt32(PlayerCount);
+
             output.PutPascalVLCString(ServerKey);
             output.PutPascalVLCString(Nonce);
             output.PutEnum(ArchiveConfig);

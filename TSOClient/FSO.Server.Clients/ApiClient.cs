@@ -5,7 +5,7 @@ using RestSharp;
 
 namespace FSO.Server.Clients
 {
-    public class ApiClient : AbstractHttpClient
+    public class ApiClient : AbstractHttpClient, IDisposable
     {
         private RestClient client;
         public static string CDNUrl;
@@ -274,6 +274,39 @@ namespace FSO.Server.Clients
             {
                 GameThread.NextUpdate(_ => callback(null));
             }
+        }
+
+        public async Task<ApiStatus> GetStatus()
+        {
+            var client = Client();
+            var request = new RestRequest($"userapi/status.json", Method.Get)
+            {
+                Timeout = TimeSpan.FromSeconds(2)
+            };
+
+            try
+            {
+                RestResponse response = await client.ExecuteAsync(request);
+
+                if (response.StatusCode != System.Net.HttpStatusCode.OK || string.IsNullOrEmpty(response.Content))
+                {
+                    return null;
+                }
+                else
+                {
+                    var obj = JsonConvert.DeserializeObject<ApiStatus>(response.Content);
+                    return obj;
+                }
+            }
+            catch
+            {
+                return null;
+            }
+        }
+
+        public void Dispose()
+        {
+            client.Dispose();
         }
     }
 }

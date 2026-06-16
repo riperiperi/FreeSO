@@ -20,8 +20,15 @@
   </PropertyGroup>
 
   <ItemGroup>
+    <None Remove="version.json" />
+  </ItemGroup>
+
+  <ItemGroup>
     <Content Include="fso.ico" />
     <Content Include="Content\SDL2.dll" />
+    <Content Include="version.json">
+      <CopyToOutputDirectory>Always</CopyToOutputDirectory>
+    </Content>
     <Content Include="version.txt">
       <CopyToOutputDirectory>Always</CopyToOutputDirectory>
     </Content>

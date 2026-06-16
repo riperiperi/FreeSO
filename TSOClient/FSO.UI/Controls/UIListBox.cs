@@ -16,7 +16,15 @@ namespace FSO.Client.UI.Controls
         public void OnFocusChanged(FocusEvent newFocus)
         {
             if (newFocus == FocusEvent.FocusIn && m_SelectedRow < 0 && Items != null && Items.Count > 0)
-                InternalSelect(0);
+            {
+                int enabledIndex = AllowDisabledSelection ? 0 : Items.FindIndex(IsItemEnabled);
+
+                if (enabledIndex != -1)
+                {
+                    InternalSelect(enabledIndex);
+                }
+            }
+
             Invalidate();
         }
         private UIMouseEventRef MouseHandler;
@@ -289,10 +297,10 @@ namespace FSO.Client.UI.Controls
             if (IsFocused)
             {
                 if ((state.NewKeys.Remove(Keys.Up) || state.NewKeys.Remove(Keys.Left)) && Items.Count > 0)
-                    InternalSelect((m_SelectedRow < 0 ? Items.Count - 1 : (m_SelectedRow - 1 + Items.Count) % Items.Count));
+                    InternalSelect(LastRow(m_SelectedRow));
 
                 if ((state.NewKeys.Remove(Keys.Down) || state.NewKeys.Remove(Keys.Right)) && Items.Count > 0)
-                    InternalSelect((m_SelectedRow + 1) % Items.Count);
+                    InternalSelect(NextRow(m_SelectedRow));
 
                 if (SelectedItem != null && state.NewKeys.Contains(Keys.Enter))
                     OnDoubleClick?.Invoke(this);
@@ -306,6 +314,55 @@ namespace FSO.Client.UI.Controls
             else
             {
                 m_HoverRow = -1;
+            }
+        }
+
+        private static bool IsItemEnabled(UIListBoxItem item)
+        {
+            return !ValuePointer.Get<Boolean>(item.Disabled);
+        }
+
+        private int NextRow(int index)
+        {
+            if (AllowDisabledSelection)
+            {
+                return (index + 1) % Items.Count;
+            }
+            else
+            {
+                if (index < Items.Count - 1)
+                {
+                    int afterInd = Items.FindIndex(index + 1, IsItemEnabled);
+
+                    if (afterInd != -1)
+                    {
+                        return afterInd;
+                    }
+                }
+
+                return Items.FindIndex(IsItemEnabled);
+            }
+        }
+
+        private int LastRow(int index)
+        {
+            if (AllowDisabledSelection)
+            {
+                return (index < 0 ? Items.Count - 1 : (index - 1 + Items.Count) % Items.Count);
+            }
+            else
+            {
+                if (index > 0)
+                {
+                    int beforeInd = Items.FindLastIndex(index - 1, IsItemEnabled);
+
+                    if (beforeInd != -1)
+                    {
+                        return beforeInd;
+                    }
+                }
+
+                return Items.FindLastIndex(IsItemEnabled);
             }
         }
 

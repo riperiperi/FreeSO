@@ -41,3 +41,44 @@ jobs:
       with:
         name: FreeSOServer
         path: Artifacts/Server
+
+  create-release:
+    needs: [build]
+    runs-on: windows-latest
+    permissions:
+      contents: write
+    environment:
+      name: "Release"
+
+    steps:
+    - name: Checkout
+      uses: actions/checkout@v5
+    
+    - name: Install .NET Core
+      uses: actions/setup-dotnet@v5
+      with:
+        dotnet-version: 9.0.x
+
+    - name: Download Client
+      uses: actions/download-artifact@v4
+      with:
+        name: FreeSOClient
+        path: tempUpdate/windows
+
+    - name: Download Server
+      uses: actions/download-artifact@v4
+      with:
+        name: FreeSOServer
+        path: tempUpdate/windows-server
+
+    - name: Building Release
+      env:
+        GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        FSO_UPDATE_GITHUB_REPO: ${{ github.repository }}
+        FSO_UPDATE_CHANNEL_URL: ${{ vars.FSO_UPDATE_CHANNEL_URL }}
+        FSO_UPDATE_PUBLIC_KEY: ${{ secrets.FSO_UPDATE_PUBLIC_KEY }}
+        FSO_UPDATE_PRIVATE_KEY: ${{ secrets.FSO_UPDATE_PRIVATE_KEY }}
+      run: |
+        dotnet run -c Release -- "../../../../tempUpdate/"
+      working-directory: FreeSO/Other/tools/FSO.UpdateBuilder
+        

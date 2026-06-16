@@ -80,7 +80,7 @@ namespace FSO.Client.UI.Archive.Management
         private readonly List<UITableColumn> _columns;
         private List<UILabel> _columnLabels;
 
-        public UIGenericTable(List<UITableColumn> columns)
+        public UIGenericTable(List<UITableColumn> columns, int height = 300)
         {
             _columns = columns;
 
@@ -129,7 +129,7 @@ namespace FSO.Client.UI.Archive.Management
             });
 
             _listBox.InitDefaultSlider();
-            SetSize(_columns.Sum((col) => col.Width) + SliderWidth + 20, 300);
+            SetSize(_columns.Sum((col) => col.Width) + SliderWidth + 20, height);
             PopulateColumnLabels();
 
             _listBox.OnChange += _listBox_OnChange;

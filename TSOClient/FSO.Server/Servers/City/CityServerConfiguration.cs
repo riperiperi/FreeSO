@@ -21,6 +21,7 @@ namespace FSO.Server.Servers.City
         // Copied from base config
         public bool AllOpenable;
         public ArchiveConfiguration Archive;
+        public string Name;
     }
 
 

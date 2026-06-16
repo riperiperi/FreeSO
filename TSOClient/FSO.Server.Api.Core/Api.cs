@@ -43,9 +43,11 @@ namespace FSO.Server.Api.Core
             Config.CDNUrl = appSettings["cdnUrl"];
             Config.NFSdir = appSettings["nfsdir"];
             Config.UseProxy = bool.Parse(appSettings["useProxy"]);
+            Config.Name = appSettings["name"] ?? "";
             Config.UpdateID = (appSettings["updateID"] == "") ? (int?)null : int.Parse(appSettings["updateID"]);
             Config.BranchName = appSettings["branchName"] ?? "beta";
             Config.AllOpenable = bool.TryParse(appSettings["allOpenable"], out var allOpenable) && allOpenable;
+            Config.UpdateInfoJson = appSettings["updateInfoJson"]; // May be null
 
 
             // new smtp config vars

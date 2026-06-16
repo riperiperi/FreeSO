@@ -32,6 +32,8 @@ namespace FSO.Common
 
     public class ArchiveConfiguration
     {
+        [JsonProperty("name")]
+        public string Name { get; set; }
         [JsonProperty("flags")]
         public ArchiveConfigFlags Flags { get; set; }
         [JsonProperty("archiveDataDirectory")]
@@ -119,6 +121,7 @@ namespace FSO.Common
 
         private Dictionary<string, string> _DefaultValues = new Dictionary<string, string>()
         {
+            { "ServerName", "" },
             { "PlayerName", "" },
             { "LastJoinedHost", "127.0.0.1" },
             { "SelectedArchiveName", "FreeSO Archive" },
@@ -154,6 +157,7 @@ namespace FSO.Common
         public string ClientPublicKey { get; set; }
 
         // Server configuration
+        public string ServerName { get; set; }
         public int Flags { get; set; }
         public ushort CityPort { get; set; }
         public ushort LotPort { get; set; }
@@ -165,6 +169,7 @@ namespace FSO.Common
         {
             return new ArchiveConfiguration()
             {
+                Name = ServerName,
                 Flags = (ArchiveConfigFlags)Flags,
                 ArchiveDataDirectory = "",
                 CityPort = CityPort,
@@ -192,6 +197,14 @@ namespace FSO.Common
             ServerPrivateKey = rsa.ExportRSAPrivateKeyPem().Replace('\n', '^');
         }
 
+        private RSAParameters GetDummyParameters()
+        {
+            return new RSAParameters
+            {
+                
+            };
+        }
+
         private bool VerifyServerRsaKeys()
         {
             if (ServerPrivateKey == "" || ServerPublicKey == "")
@@ -203,19 +216,9 @@ namespace FSO.Common
 
             try
             {
-                var rsaParams = rsa.ExportParameters(false);
-
                 rsa.ImportFromPem(ServerPublicKey.Replace('^', '\n'));
 
-                // If the parameters were updated, it was valid.
-
                 var publicRsaParams = rsa.ExportParameters(false);
-
-                if (rsaParams.Equals(publicRsaParams))
-                {
-                    // No public key replacement...
-                    return false;
-                }
 
                 rsa.ImportFromPem(ServerPrivateKey.Replace('^', '\n'));
 
@@ -257,6 +260,22 @@ namespace FSO.Common
             {
                 Save();
             }
+        }
+
+        public static bool ValidDisplayName(string name)
+        {
+            // Maybe there's a better location for this.
+            return name != null && name.Length > 0 && name.Length <= 24;
+        }
+
+        public string GetDefaultServerName()
+        {
+            return $"{PlayerName}'s Server";
+        }
+
+        public string GetServerNameOrDefault()
+        {
+            return ServerName.Length > 0 ? ServerName : GetDefaultServerName();
         }
     }
 }

@@ -18,6 +18,7 @@ namespace FSO.Server.Embedded
 
             return new ServerConfiguration()
             {
+                Name = config.Name,
                 GameLocation = FSO.Content.Content.Get().BasePath,
                 Secret = Guid.NewGuid().ToString(),
                 Archive = config,

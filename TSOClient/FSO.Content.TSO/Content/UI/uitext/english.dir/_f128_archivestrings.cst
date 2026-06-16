@@ -101,7 +101,7 @@ IP has been copied to your clipboard.^
 80 ^Banned^
 81 ^Your user account/IP has been banned from this server. Contact the host to have the ban removed.^
 82 ^Invalid Name^
-83 ^The provided display name is invalid. It may be too long, short, or contain invalid characters.^
+83 ^Your display name should not be empty, at most 64 characters, and not contain certain special characters.^
 84 ^Display Name Taken^
 85 ^The provided display name is already in use. Please choose another one.
 
@@ -163,3 +163,28 @@ Enabling the city editor and starting the server will convert the save to use a 
 129 ^Reset to the original TSO tuning, or recommended FreeSO Archive tuning?^
 130 ^The Sims Online^
 131 ^FreeSO Archive^
+
+132 ^Server Type^
+133 ^Name^
+134 ^Version^
+135 ^Players^
+136 ^Forget^
+137 ^Copy IP^
+138 ^(offline)^
+139 ^Refresh^
+
+140 ^Archive Server^
+141 ^FreeSO Server^
+142 ^Discord Server^
+
+143 ^Display Name^
+144 ^Enter a display name to use on archive servers. When joining certain servers, you might need an admin to verify you, so use a display name that makes it clear who you are.^
+145 ^Display name:^
+146 ^Change Display Name^
+
+147 ^Add Server^
+148 ^Enter the IP address or URL of the server. You may need to include the port.^
+149 ^Found server: %s (%s).
+Add to the server list?^
+150 ^Contacting server...^
+151 ^Failed to contact the server.^

@@ -62,3 +62,29 @@ Remember that you should only install updates and content packs from servers you
 
 Error Message:
 %s^
+
+// Updater V2 (freeso archive)
+
+32 ^The %s update server couldn't be contacted.^
+33 ^%s is up to date!^
+34 ^An update is available for %s: (%s)^
+
+35 ^Ignore^
+36 ^Download & Install (%s)^
+
+40 ^This server is using a different version of FreeSO:
+
+Channel: %s
+Update: %s^
+
+41 ^This update is available for download. Do you want to update?^
+42 ^The update download couldn't be located - you may need to download this game version manually from the server host.^
+43 ^This update is available, but is older than your current game version. Do you want to downgrade?^
+44 ^Cancel^
+
+50 ^[color=red][s]This update is NOT signed by FreeSO.[/s][/color]
+Make sure that you fully trust this server before updating to this game version.^
+51 ^This update is NOT from the same channel as your client, but is signed by FreeSO. You could be switching to a beta or experimental client, so make sure to read the changelog for important information.^
+
+52 ^Unverified Game Version^
+53 ^Confirm update to this unverified game version? You may need to reinstall FreeSO to revert it.^

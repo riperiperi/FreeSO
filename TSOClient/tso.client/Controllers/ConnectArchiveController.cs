@@ -52,6 +52,35 @@ namespace FSO.Client.Controllers
             View.ShowSandboxMode();
         }
 
+        private void EnsureDisplayName(Action action)
+        {
+            var clientConfig = ClientArchiveConfiguration.Default;
+
+            if (!ClientArchiveConfiguration.ValidDisplayName(clientConfig.PlayerName))
+            {
+                ShowMainDialog(null);
+
+                UIArchiveDisplayName.ShowDisplayNameDialog((string newName) =>
+                {
+                    if (newName == null)
+                    {
+                        SwitchMode(ConnectArchiveMode.Landing);
+                    }
+                    else
+                    {
+                        ClientArchiveConfiguration.Default.PlayerName = newName;
+                        ClientArchiveConfiguration.Default.Save();
+
+                        action();
+                    }
+                });
+            }
+            else
+            {
+                action();
+            }
+        }
+
         public void SwitchMode(ConnectArchiveMode mode)
         {
             LastMode = mode;
@@ -60,10 +89,16 @@ namespace FSO.Client.Controllers
             switch (mode)
             {
                 case ConnectArchiveMode.Join:
-                    ShowMainDialog(new UIArchiveJoinDialog());
+                    EnsureDisplayName(() =>
+                    {
+                        ShowMainDialog(new UIArchiveJoinDialog());
+                    });
                     break;
                 case ConnectArchiveMode.JoinRPC:
-                    ShowMainDialog(new UIArchiveJoinRPCDialog());
+                    EnsureDisplayName(() =>
+                    {
+                        ShowMainDialog(new UIArchiveJoinRPCDialog());
+                    });
                     break;
                 case ConnectArchiveMode.Landing:
                     sandboxVisible = true;
@@ -76,7 +111,10 @@ namespace FSO.Client.Controllers
                     }
                     else
                     {
-                        ShowMainDialog(new UIArchiveCreateServer());
+                        EnsureDisplayName(() =>
+                        {
+                            ShowMainDialog(new UIArchiveCreateServer());
+                        });
                     }
                     break;
             }

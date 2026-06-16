@@ -1,4 +1,5 @@
-﻿using FSO.Common.Domain.Shards;
+﻿using FSO.Common;
+using FSO.Common.Domain.Shards;
 using FSO.Server.Common;
 using FSO.Server.Database.DA;
 using FSO.Server.Database.DA.ArchiveUsers;
@@ -29,6 +30,7 @@ namespace FSO.Server.Servers.City
     public class CityServer : AbstractAriesServer
     {
         private static Logger LOG = LogManager.GetCurrentClassLogger();
+        private ServerConfiguration RootConfig;
         private CityServerConfiguration Config;
         private ISessionGroup VoltronSessions;
         private CityLivenessEngine Liveness;
@@ -49,6 +51,10 @@ namespace FSO.Server.Servers.City
 
             return new RequestClientSessionArchive()
             {
+                Name = RootConfig.Name,
+                PlayerCount = CountPlayers(), // Maybe cache this?
+                // Update stuff
+
                 ServerKey = Config.Archive.ServerPublicKey.Replace('^','\n'),
                 Nonce = nonce,
                 ArchiveConfig = Config.Archive.Flags,
@@ -58,10 +64,11 @@ namespace FSO.Server.Servers.City
             };
         }
 
-        public CityServer(CityServerConfiguration config, IKernel kernel) : base(config, kernel)
+        public CityServer(ServerConfiguration rootConfig, CityServerConfiguration config, IKernel kernel) : base(config, kernel)
         {
             this.UnexpectedDisconnectWaitSeconds = 30;
             this.TimeoutIfNoAuth = config.Timeout_No_Auth;
+            this.RootConfig = rootConfig;
             this.Config = config;
             VoltronSessions = Sessions.GetOrCreateGroup(Groups.VOLTRON);
         }
@@ -158,7 +165,7 @@ namespace FSO.Server.Servers.City
 
         private bool ValidDisplayName(string name)
         {
-            return name != null && name.Length > 0 && name.Length < 100;
+            return name != null && name.Length > 0 && name.Length < 64;
         }
 
         private RSA TryGetCrypto()
@@ -293,7 +300,7 @@ namespace FSO.Server.Servers.City
 
                 // Try and update the display name.
 
-                if (!ValidDisplayName(packet.User))
+                if (!ClientArchiveConfiguration.ValidDisplayName(packet.User))
                 {
                     session.Write(new AnnouncementMsgPDU(true) { SenderID = "??cst:82", Subject = "Invalid Name", Message = "" });
                     session.Close();
@@ -456,6 +463,28 @@ namespace FSO.Server.Servers.City
 
             //Failed authentication
             rawSession.Close();
+        }
+
+        private int CountPlayers()
+        {
+            int players = 0;
+
+            var clone = Sessions.Clone();
+            foreach (var session in clone)
+            {
+                if (session is VoltronSession vSession)
+                {
+                    if (vSession.UserId != 0)
+                    {
+                        if (!vSession.Unverified)
+                        {
+                            players++;
+                        }
+                    }
+                }
+            }
+
+            return players;
         }
 
         public void BroadcastUserList(bool adminOnly)

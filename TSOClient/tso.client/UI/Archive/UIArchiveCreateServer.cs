@@ -3,10 +3,8 @@ using FSO.Client.Model.Archive;
 using FSO.Client.UI.Archive.Management;
 using FSO.Client.UI.Controls;
 using FSO.Client.UI.Framework;
-using FSO.Client.UI.Panels;
 using FSO.Client.Utils;
 using FSO.Common;
-using FSO.Common.DataService.Model;
 using FSO.Common.Utils;
 using FSO.Server.Embedded;
 using FSO.UI.Controls;
@@ -58,6 +56,7 @@ namespace FSO.Client.UI.Archive
             new ServerFlag(ArchiveConfigFlags.CityEditor, "City editor", false, 0, CityEditorHelp),
         };
 
+        private UIArchiveDisplayName DisplayName;
         private UIButton ExportButton;
         private UIButton UsersButton;
         private UIButton CustomPortsButton;
@@ -89,12 +88,13 @@ namespace FSO.Client.UI.Archive
             imageBg.SetSize(CITY_IMAGE_WIDTH + CITY_IMAGE_MARGIN * 2, CITY_IMAGE_HEIGHT + CITY_IMAGE_MARGIN * 2);
             headHbox.Add(imageBg);
 
-            var saveVbox = new UIVBoxContainer();
-
-            saveVbox.Add(new UILabel()
+            var saveVbox = new UIVBoxContainer()
             {
-                Caption = "Save File:"
-            });
+                Spacing = 0
+            };
+
+            saveVbox.Add(DisplayName = new UIArchiveDisplayName());
+            saveVbox.Add(new UISpacer(8));
 
             SaveCombo = new UICombobox()
             {
@@ -103,19 +103,21 @@ namespace FSO.Client.UI.Archive
             SaveCombo.OnSelect += UpdateSelectedSave;
 
             saveVbox.Add(SaveCombo);
+            saveVbox.Add(new UISpacer(5));
 
             PopulateSaves();
             SelectSaveByName(clientConfig.SelectedArchiveName);
 
             saveVbox.Add(new UILabel()
             {
-                Caption = "Display name:"
+                Caption = "Server name:"
             });
+            saveVbox.Add(new UISpacer(2));
 
             saveVbox.Add(NameInput = new UITextBox()
             {
                 Size = new Microsoft.Xna.Framework.Vector2(160, 25),
-                CurrentText = clientConfig.PlayerName,
+                CurrentText = clientConfig.GetServerNameOrDefault(),
             });
 
             saveVbox.AutoSize();
@@ -253,10 +255,23 @@ namespace FSO.Client.UI.Archive
             CloseButton.OnButtonClick += Close;
             ExportButton.OnButtonClick += Export;
             UsersButton.OnButtonClick += Users;
+            DisplayName.OnChange += DisplayNameChanged;
 
             ValidateInputs(NameInput);
 
             UpdateButtons();
+        }
+
+        private void DisplayNameChanged(string newName)
+        {
+            var clientConfig = ClientArchiveConfiguration.Default;
+            var defaultName = clientConfig.GetDefaultServerName();
+
+            if (NameInput.CurrentText == defaultName)
+            {
+                clientConfig.PlayerName = newName;
+                NameInput.CurrentText = clientConfig.GetDefaultServerName();
+            }
         }
 
         private void Cheats(UIElement button)
@@ -494,8 +509,11 @@ namespace FSO.Client.UI.Archive
             var clientConfig = ClientArchiveConfiguration.Default;
             var selected = SaveCombo.SelectedItem as ArchiveManifest;
 
+            var defaultName = clientConfig.GetDefaultServerName();
+            clientConfig.ServerName = defaultName == NameInput.CurrentText ? "" : NameInput.CurrentText;
+            Config.Name = clientConfig.GetServerNameOrDefault();
+
             clientConfig.ApplyHostConfig(Config);
-            clientConfig.PlayerName = NameInput.CurrentText;
             clientConfig.SelectedArchiveName = selected?.Name ?? "";
             clientConfig.Save();
         }

@@ -161,6 +161,7 @@ namespace FSO.Client.UI.Controls
             {
                 TextBox = new UITextBox();
                 TextBox.MaxChars = options.MaxChars;
+                TextBox.CurrentText = options.TextValue;
                 this.Add(TextBox);
             }
 
@@ -395,6 +396,7 @@ namespace FSO.Client.UI.Controls
         public UIContainer GenericAddition;
 
         public bool TextEntry = false;
+        public string TextValue = "";
         public UIAlertButton[] Buttons = new UIAlertButton[] { new UIAlertButton() };
     }
 

@@ -9,14 +9,13 @@ using FSO.Server.Servers.UserApi;
 using Newtonsoft.Json;
 using Ninject.Activation;
 using Ninject.Modules;
-using System;
-using System.Collections.Generic;
-using System.IO;
 
 namespace FSO.Server
 {
     public class ServerConfiguration
     {
+        [JsonProperty("name")]
+        public string Name;
         [JsonProperty("gameLocation")]
         public string GameLocation;
         [JsonProperty("simNFS")]

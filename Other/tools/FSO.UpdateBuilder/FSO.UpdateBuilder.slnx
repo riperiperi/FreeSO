@@ -1,0 +1,4 @@
+<Solution>
+  <Project Path="../../../Other/tools/FSO.UpdateBuilder/FSO.UpdateBuilder.csproj" />
+  <Project Path="../../../TSOClient/tso.files/FSO.Files.csproj" />
+</Solution>

@@ -34,6 +34,7 @@ namespace FSO.Server.Api.Core
         public bool SmtpEnabled { get; set;  }
         public bool UseProxy { get; set; }
 
+        public string Name { get; set; } = "";
         public int? UpdateID { get; set; }
 
         public string BranchName { get; set; } = "dev";
@@ -41,5 +42,6 @@ namespace FSO.Server.Api.Core
         public bool AllOpenable { get; set; }
 
         public IUpdateUploader UpdateUploader { get; set; }
+        public string UpdateInfoJson { get; set; }
     }
 }

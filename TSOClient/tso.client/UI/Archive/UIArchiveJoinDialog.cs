@@ -1,72 +1,255 @@
 ﻿using FSO.Client.Controllers;
+using FSO.Client.UI.Archive.Management;
 using FSO.Client.UI.Controls;
 using FSO.Client.UI.Framework;
+using FSO.Client.UI.Panels;
 using FSO.Common;
+using FSO.Common.Rendering.Framework.IO;
 using FSO.Common.Rendering.Framework.Model;
+using FSO.Common.Utils;
 using FSO.Server.Clients;
 using Microsoft.Xna.Framework;
+using Microsoft.Xna.Framework.Graphics;
 using Ninject;
 
 namespace FSO.Client.UI.Archive
 {
+    internal enum UIServerType
+    {
+        FreeSO,
+        Archive
+    }
+
+    internal class UIJoinServerEntry
+    {
+        private readonly UIArchiveJoinDialog Parent;
+        public readonly UIServerType ServerType;
+        public string Name;
+        public readonly string Address;
+
+        public bool IsFetching = true;
+
+        public StatusCheckResult? Result;
+
+        public UIJoinServerEntry(UIArchiveJoinDialog parent, UIServerType type, string name, string address)
+        {
+            Parent = parent;
+            ServerType = type;
+            Name = name;
+            Address = address;
+
+            Task.Run(RefreshStatus);
+        }
+
+        public async Task RefreshStatus()
+        {
+            StatusCheckResult result;
+            switch (ServerType)
+            {
+                case UIServerType.FreeSO:
+                    // If the server is FreeSO, try and request the `/userapi/status.json`.07
+                    result = await StatusChecker.FreeSOStatus(Address);
+                    break;
+                case UIServerType.Archive:
+                    // If it's archive, start a connection to the server, then disconnect after getting the RequestClientSessionArchive packet.
+                    // Disconnect after two seconds of not receiving this packet.
+                    result = await StatusChecker.ArchiveStatus(FSOFacade.Kernel, Address);
+                    break;
+                default:
+                    return;
+            }
+
+            GameThread.InUpdate(() =>
+            {
+                IsFetching = false;
+                Result = result;
+
+                // If the result's name/address doesn't match the saved one, we need to update it.
+                // TODO: save back to the config
+                if (result.IsOnline)
+                {
+                    if (Name != result.Name)
+                    {
+                        Name = result.Name;
+                    }
+                }
+
+                Parent?.UpdateServerTable(); // TODO: update just this item?
+            });
+        }
+    }
+
     internal class UIArchiveJoinDialog : UIDialog
     {
-        public UITextBox NameInput;
-        public UITextBox AddressInput;
+        public UIArchiveDisplayName DisplayName;
+        public UIButton AddServerButton;
         public UIButton JoinButton;
 
-        private UIHBoxContainer modeBox;
-        private UIRadioButton ArchiveRadio;
-        private UIRadioButton ServerRadio;
-        private UILabel DescriptionLabel;
-        private UILabel NameLabel;
-        private UILabel AddressLabel;
-        private UIVBoxContainer ButtonBox;
+        private UIHBoxContainer ButtonBox;
         private UIVBoxContainer CurrentLayout;
 
-        private bool IsServerMode => ServerRadio.Selected;
+        private UIJoinServerEntry[] Servers;
+        private UIGenericTable ServerTable;
+
+        private readonly Texture2D ActionsButtonTexture;
+        private readonly Texture2D ServerFreeSOIcon;
+        private readonly Texture2D ServerArchiveIcon;
+
 
         public UIArchiveJoinDialog() : base(UIDialogStyle.Close, true)
         {
             Caption = "Join Server";
 
-            // Mode selection
-            modeBox = new UIHBoxContainer();
-            modeBox.Add(ArchiveRadio = new UIRadioButton() { RadioGroup = "joinMode", Selected = true });
-            modeBox.Add(new UILabel() { Caption = "Archive" });
-            modeBox.Add(ServerRadio = new UIRadioButton() { RadioGroup = "joinMode" });
-            modeBox.Add(new UILabel() { Caption = "Online" });
-            modeBox.AutoSize();
+            var gd = GameFacade.GraphicsDevice;
 
-            DescriptionLabel = new UILabel()
-            {
-                Caption = "Join a server hosted by another player by using their IP address or URL. Depending on the server settings, you might need an admin to verify you, so use a display name that makes it clear who you are.",
-                Size = new Vector2(300, 100),
-                Wrapped = true
-            };
+            var ui = Content.Content.Get().CustomUI;
+            ActionsButtonTexture = ui.Get("archive_burgermenu.png").Get(gd);
 
-            NameLabel = new UILabel() { Caption = "Display name:" };
-            NameInput = new UITextBox() { Size = new Vector2(150, 25) };
-            AddressLabel = new UILabel() { Caption = "Server address:" };
-            AddressInput = new UITextBox() { Size = new Vector2(300, 25) };
+            ServerArchiveIcon = ui.Get("archive_simuser.png").Get(gd);
+            ServerFreeSOIcon = ui.Get("archive_simshared.png").Get(gd);
 
-            ButtonBox = new UIVBoxContainer() { HorizontalAlignment = UIContainerHorizontalAlignment.Right };
+            ButtonBox = new UIHBoxContainer() { VerticalAlignment = UIContainerVerticalAlignment.Middle };
+            ButtonBox.Add(AddServerButton = new UIButton() { Caption = "Add Server" });
             ButtonBox.Add(JoinButton = new UIButton() { Caption = "Join", Disabled = true });
             ButtonBox.AutoSize();
 
-            NameInput.CurrentText = ClientArchiveConfiguration.Default.PlayerName;
+            ServerTable = new UIGenericTable([
+                new UITableColumn("", 22),
+                new UITableColumn(GameFacade.Strings.GetString("f128", "133"), 192),
+                new UITableColumn(GameFacade.Strings.GetString("f128", "134"), 64),
+                new UITableColumn(GameFacade.Strings.GetString("f128", "135"), 64),
+                new UITableColumn("", 14),
+                ], 250)
+            { Loading = false };
 
-            NameInput.OnChange += ValidateInputs;
-            NameInput.OnEnterPress += Submit;
-            AddressInput.OnChange += ValidateInputs;
-            AddressInput.OnEnterPress += Submit;
+            DisplayName = new UIArchiveDisplayName();
+
+            AddServerButton.OnButtonClick += AddServer;
             JoinButton.OnButtonClick += Submit;
             CloseButton.OnButtonClick += Close;
-            ArchiveRadio.OnButtonClick += ModeChanged;
-            ServerRadio.OnButtonClick += ModeChanged;
 
             BuildLayout();
-            ValidateInputs(NameInput);
+
+            Servers = [
+                new UIJoinServerEntry(this, UIServerType.Archive, "riperiperi's Server", "127.0.0.1:33101"),
+                new UIJoinServerEntry(this, UIServerType.Archive, "Not A Server", "127.0.0.1:4321")
+            ];
+
+            UpdateServerTable();
+
+            ServerTable.OnChange += SelectionChanged;
+        }
+
+        private void AddServer(UIElement button)
+        {
+            var dialog = new UIArchiveAddServerDialog(AddServerResult);
+
+            GameScreen.ShowDialog(dialog, true);
+        }
+
+        private void AddServerResult(UIAddServerResult info)
+        {
+            var newServer = new UIJoinServerEntry(this, info.IsFreeSO ? UIServerType.FreeSO : UIServerType.Archive, info.Status.Name, info.Address);
+
+            Servers = [
+                newServer,
+                ..Servers
+            ];
+
+            UpdateServerTable();
+        }
+
+        private void SelectionChanged(UIElement element)
+        {
+            JoinButton.Disabled = ServerTable.SelectedIndex == -1 || (ServerTable.SelectedItem.Data as UIJoinServerEntry)?.Result?.IsOnline != true;
+        }
+
+        private Texture2D GetTypeIcon(UIServerType type)
+        {
+            switch (type)
+            {
+                case UIServerType.Archive:
+                    return ServerArchiveIcon;
+                case UIServerType.FreeSO:
+                    return ServerFreeSOIcon;
+            }
+
+            return null;
+        }
+
+        private void Refresh(UIJoinServerEntry server)
+        {
+            server.IsFetching = true;
+            Task.Run(server.RefreshStatus);
+
+            UpdateServerTable();
+        }
+
+        private void Forget(UIJoinServerEntry server)
+        {
+            // Remove the server from this list (and the saved history)
+
+            Servers = [.. Servers.Where(item => item != server)];
+
+            // TODO: save history
+
+            UpdateServerTable();
+        }
+
+        private void CopyIP(UIJoinServerEntry server)
+        {
+            ClipboardHandler.Default.Set(server.Address);
+            UIScreen.GlobalShowAlert(new UIAlertOptions()
+            {
+                Message = GameFacade.Strings.GetString("f128", "34"), // Copied to clipboard
+            }, true);
+        }
+
+        private void OpenActions(UIElement anchor, UIJoinServerEntry server)
+        {
+            var items = new List<UIContextMenuItem>
+            {
+                new(GameFacade.Strings.GetString("f128", "139"), () => { Refresh(server); }),
+                new(GameFacade.Strings.GetString("f128", "136"), () => { Forget(server); }),
+                new(GameFacade.Strings.GetString("f128", "137"), () => { CopyIP(server); }),
+            };
+
+            new UIContextMenu(anchor, items, ServerTable);
+        }
+
+        public void UpdateServerTable()
+        {
+            ServerTable.Items.Clear();
+            var items = ServerTable.Items;
+
+            // First, stable sort the servers by 
+
+            var orderedServers = Servers.OrderBy(server => !(server.Result?.IsOnline ?? false));
+
+            foreach (var server in orderedServers)
+            {
+                var actionButton = new UIButton(ActionsButtonTexture);
+
+                actionButton.OnButtonClick += (UIElement element) =>
+                {
+                    OpenActions(element, server);
+                };
+
+                var status = server.IsFetching ? null : server.Result;
+
+                items.Add(new UIListBoxItem(
+                    server,
+                    GetTypeIcon(server.ServerType),
+                    server.Name,
+                    status?.Version ?? "",
+                    status == null ? "--" : (status.Value.IsOnline ? status.Value.Players.ToString() : GameFacade.Strings.GetString("f128", "138")),
+                    actionButton)
+                {
+                    Disabled = status?.IsOnline != true
+                });
+            }
+
+            ServerTable.Items = items;
         }
 
         private void BuildLayout()
@@ -74,72 +257,49 @@ namespace FSO.Client.UI.Archive
             if (CurrentLayout != null)
                 Remove(CurrentLayout);
 
-            bool server = IsServerMode;
-
-            CurrentLayout = new UIVBoxContainer();
-            CurrentLayout.Add(modeBox);
-
-            if (!server)
-            {
-                CurrentLayout.Add(DescriptionLabel);
-                CurrentLayout.Add(NameLabel);
-                CurrentLayout.Add(NameInput);
-            }
-
-            CurrentLayout.Add(AddressLabel);
-            CurrentLayout.Add(AddressInput);
+            CurrentLayout = new UIVBoxContainer() { HorizontalAlignment = UIContainerHorizontalAlignment.Right };
+            CurrentLayout.Add(ServerTable);
             CurrentLayout.Add(ButtonBox);
-
             CurrentLayout.AutoSize();
-            CurrentLayout.Position = new Vector2(20, 45);
-            SetSize((int)CurrentLayout.Size.X + 40, (int)CurrentLayout.Size.Y + 70);
+            CurrentLayout.Position = new Vector2(20, 40);
+            SetSize((int)CurrentLayout.Size.X + 40, (int)CurrentLayout.Size.Y + 60);
             Add(CurrentLayout);
 
-            JoinButton.Caption = server ? "Connect" : "Join";
-            AddressInput.CurrentText = server
-                ? (GlobalSettings.Default.GameEntryUrl ?? "")
-                : ClientArchiveConfiguration.Default.LastJoinedHost;
-        }
+            DisplayName.AutoSize();
 
-        private void ModeChanged(UIElement button)
-        {
-            BuildLayout();
-            ValidateInputs(AddressInput);
-        }
+            CurrentLayout.Add(DisplayName);
+            DisplayName.Position = new Vector2(0, ButtonBox.Y + (ButtonBox.Size.Y - DisplayName.Size.Y) / 2);
 
-        private void ValidateInputs(UIElement element)
-        {
-            if (IsServerMode)
-                JoinButton.Disabled = AddressInput.CurrentText.Length == 0;
-            else
-                JoinButton.Disabled = NameInput.CurrentText.Length == 0 || AddressInput.CurrentText.Length == 0;
+            //JoinButton.Caption = server ? "Connect" : "Join";
         }
 
         private void SaveArchiveConfig()
         {
             var clientConfig = ClientArchiveConfiguration.Default;
 
-            clientConfig.PlayerName = NameInput.CurrentText;
-            clientConfig.LastJoinedHost = AddressInput.CurrentText;
+            //clientConfig.PlayerName = NameInput.CurrentText;
+            //clientConfig.LastJoinedHost = AddressInput.CurrentText;
             clientConfig.Save();
         }
 
         private void Close(UIElement button)
         {
-            if (!IsServerMode)
-                SaveArchiveConfig();
+            SaveArchiveConfig();
 
             FindController<ConnectArchiveController>().SwitchMode(ConnectArchiveMode.Landing);
         }
 
         private void Submit(UIElement button)
         {
-            if (JoinButton.Disabled)
+            var item = ServerTable.SelectedItem;
+            if (JoinButton.Disabled || item == null)
                 return;
 
-            if (IsServerMode)
+            var selected = item.Data as UIJoinServerEntry;
+
+            if (selected.ServerType == UIServerType.FreeSO)
             {
-                var url = AddressInput.CurrentText;
+                var url = selected.Address;
                 GlobalSettings.Default.GameEntryUrl = url;
                 GlobalSettings.Default.CitySelectorUrl = url;
                 GlobalSettings.Default.Save();
@@ -154,7 +314,8 @@ namespace FSO.Client.UI.Archive
             else
             {
                 SaveArchiveConfig();
-                FSOFacade.Controller.ConnectToArchive(NameInput.CurrentText, AddressInput.CurrentText, false);
+                var displayName = ClientArchiveConfiguration.Default.PlayerName;
+                FSOFacade.Controller.ConnectToArchive(displayName, selected.Address, false);
             }
         }
 
