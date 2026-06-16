@@ -79,6 +79,6 @@ jobs:
         FSO_UPDATE_PUBLIC_KEY: ${{ secrets.FSO_UPDATE_PUBLIC_KEY }}
         FSO_UPDATE_PRIVATE_KEY: ${{ secrets.FSO_UPDATE_PRIVATE_KEY }}
       run: |
-        dotnet run -c Release -- "../../../../tempUpdate/"
-      working-directory: FreeSO/Other/tools/FSO.UpdateBuilder
+        dotnet run -c Release -- "../../../tempUpdate/"
+      working-directory: Other/tools/FSO.UpdateBuilder
         
