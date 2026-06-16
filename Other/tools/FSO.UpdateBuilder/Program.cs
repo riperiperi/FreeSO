@@ -348,8 +348,8 @@ namespace FSO.UpdateBuilder
                 string serverPath = Path.Combine(workingDirectory, $"{target}-server");
 
                 // Insert version.json into the build.
-                File.WriteAllText(infoText, Path.Combine(clientPath, "version.json"));
-                File.WriteAllText(infoText, Path.Combine(serverPath, "version.json"));
+                File.WriteAllText(Path.Combine(clientPath, "version.json"), infoText);
+                File.WriteAllText(Path.Combine(serverPath, "version.json"), infoText);
 
                 // Build and upload client/server zips (with encrypted SHA-256 hash)
                 Console.WriteLine("  - Client Full Zip...");
