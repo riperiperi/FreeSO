@@ -67,7 +67,7 @@ namespace FSO.UpdateBuilder
             {
                 FileName = $"{zipQualifier}-{versionString}-{target}.zip",
                 ContentType = "application/zip",
-                RawData = mem,
+                RawData = new MemoryStream(mem.ToArray()),
             });
 
             var hash = SHA256.Create();
