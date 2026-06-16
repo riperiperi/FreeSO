@@ -155,7 +155,7 @@ namespace FSO.UpdateBuilder
 
             var releases = await client.Repository.Release.GetAll(authorName, repoName);
 
-            using LibGit2Sharp.Repository gitRepo = new LibGit2Sharp.Repository("./");
+            using LibGit2Sharp.Repository gitRepo = new LibGit2Sharp.Repository(Directory.GetParent(workingDirectory)!.FullName);
 
             var branches = gitRepo.Branches;
             var activeBranch = branches.First(x => x.IsCurrentRepositoryHead);
