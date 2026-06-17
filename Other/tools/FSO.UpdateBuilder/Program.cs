@@ -6,6 +6,7 @@ using System.IO.Compression;
 using System.Net.Http.Json;
 using System.Security.Cryptography;
 using System.Text;
+using System.Text.RegularExpressions;
 
 namespace FSO.UpdateBuilder
 {
@@ -16,6 +17,8 @@ namespace FSO.UpdateBuilder
 
     internal class Program
     {
+        private static Regex AssetUrlUntagged = new Regex("/untagged-[0-9a-f]+/");
+
         private static LibGit2Sharp.Commit? GetReleaseCommit(Release lastRelease, LibGit2Sharp.Repository gitRepo)
         {
             var lastTag = gitRepo.Tags.FirstOrDefault(tag => tag.FriendlyName == lastRelease.TagName);
@@ -28,7 +31,7 @@ namespace FSO.UpdateBuilder
             return null;
         }
 
-        private static async Task<bool> DownloadLastBuild(HttpClient http, FSOUpdateFile file, string workingDirectory, string platform, string[] targets)
+        private static async Task<bool> DownloadLastBuild(HttpClient http, FSOUpdateFile file, string workingDirectory, string platform, string[] targets, string version)
         {
             if (!targets.Contains(platform))
             {
@@ -39,7 +42,7 @@ namespace FSO.UpdateBuilder
 
             try
             {
-                var fileRequest = await http.GetAsync(file.zip);
+                var fileRequest = await http.GetAsync(FixAssetUrl(file.zip, version));
 
                 if (!fileRequest.IsSuccessStatusCode)
                 {
@@ -81,7 +84,7 @@ namespace FSO.UpdateBuilder
 
             return new FSOUpdateFile()
             {
-                zip = asset.BrowserDownloadUrl,
+                zip = FixAssetUrl(asset.BrowserDownloadUrl, versionString),
                 size = (int)mem.Length,
                 hash = Convert.ToBase64String(shaHash),
                 signature = crypto != null ? Convert.ToBase64String(crypto.SignHash(shaHash, HashAlgorithmName.SHA256, RSASignaturePadding.Pkcs1)) : "",
@@ -104,6 +107,11 @@ namespace FSO.UpdateBuilder
             }
         }
 
+        private static string FixAssetUrl(string url, string version)
+        {
+            return AssetUrlUntagged.Replace(url, $"/{version}/");
+        }
+
         static async Task Main(string[] args)
         {
             string workingDirectory = args[0] ?? "./";
@@ -113,7 +121,8 @@ namespace FSO.UpdateBuilder
 
             Console.WriteLine("Initializing GitHub Client");
             var client = new GitHubClient(new ProductHeaderValue("freeso-ci"));
-            var tokenAuth = new Octokit.Credentials(Environment.GetEnvironmentVariable("GH_TOKEN"));
+            var rawToken = Environment.GetEnvironmentVariable("GH_TOKEN");
+            var tokenAuth = new Octokit.Credentials(rawToken);
             client.Credentials = tokenAuth;
 
             string repoString = Environment.GetEnvironmentVariable("FSO_UPDATE_GITHUB_REPO") ?? "riperiperi/FreeSO";
@@ -265,6 +274,8 @@ namespace FSO.UpdateBuilder
                     // Download and extract the assets
                     var manifestAsset = lastRelease.Assets.FirstOrDefault(x => x.Name == $"manifest-{lastVersion.Value}.json");
                     var http = new HttpClient();
+                    http.DefaultRequestHeaders.Accept.Add(new System.Net.Http.Headers.MediaTypeWithQualityHeaderValue("application/octet-stream"));
+                    http.DefaultRequestHeaders.Authorization = new System.Net.Http.Headers.AuthenticationHeaderValue("Bearer", rawToken);
 
                     if (manifestAsset != null)
                     {
@@ -275,9 +286,9 @@ namespace FSO.UpdateBuilder
 
                             if (content != null)
                             {
-                                windowsDelta = await DownloadLastBuild(http, content.full.windows, workingDirectory, "windows", targets);
-                                macDelta = await DownloadLastBuild(http, content.full.mac, workingDirectory, "mac", targets);
-                                linuxDelta = await DownloadLastBuild(http, content.full.linux, workingDirectory, "linux", targets);
+                                windowsDelta = await DownloadLastBuild(http, content.full.windows, workingDirectory, "windows", targets, lastVersionString);
+                                macDelta = await DownloadLastBuild(http, content.full.mac, workingDirectory, "mac", targets, lastVersionString);
+                                linuxDelta = await DownloadLastBuild(http, content.full.linux, workingDirectory, "linux", targets, lastVersionString);
                             }
                         }
                     }
