@@ -394,14 +394,13 @@ namespace FSO.UpdateBuilder
             // Finally, upload the final manifest. This will get added to the update list by the update API.
 
             using var manifestStream = new MemoryStream();
-            var writer = new StreamWriter(manifestStream);
-            writer.Write(JsonConvert.SerializeObject(manifest));
+            var manifestData = Encoding.UTF8.GetBytes(JsonConvert.SerializeObject(manifest));
 
             await client.Repository.Release.UploadAsset(release, new ReleaseAssetUpload()
             {
                 FileName = $"manifest-{versionString}.json",
                 ContentType = "application/json",
-                RawData = new MemoryStream(manifestStream.ToArray()),
+                RawData = new MemoryStream(manifestData),
             });
 
             Console.WriteLine($"Undrafting release...");
