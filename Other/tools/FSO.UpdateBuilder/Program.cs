@@ -408,7 +408,7 @@ namespace FSO.UpdateBuilder
             await client.Repository.Release.Edit(authorName, repoName, release.Id, new ReleaseUpdate()
             {
                 Draft = false,
-                MakeLatest = MakeLatestQualifier.True,
+                MakeLatest = isPrerelease ? null : MakeLatestQualifier.True,
             });
 
             Console.WriteLine($"Done.");
