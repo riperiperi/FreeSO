@@ -13,7 +13,7 @@ namespace FSO.UpdateBuilder
 
     internal static class ConventionalCommits
     {
-        private static Regex ConventionalCommitsRegex = new Regex("^(build|chore|ci|docs|feat|fix|perf|refactor|revert|style|test){1}(\\([\\w\\-\\.]+\\))?(!)?: ([\\w ])+([\\s\\S]*)");
+        private static Regex ConventionalCommitsRegex = new Regex("^(build|chore|ci|docs|feat|fix|perf|refactor|revert|style|test){1}(\\([\\w\\-\\.]+\\))?(!)?: (([\\w .,!&/~()-])+)([\\s\\S]*)");
 
         private static bool SkipType(string type)
         {
@@ -47,6 +47,11 @@ namespace FSO.UpdateBuilder
             return bump;
         }
 
+        public static void TestParse(string msg)
+        {
+            var results = ConventionalCommitsRegex.Match(msg);
+        }
+
         public static bool AddToChangelog(StringBuilder changelog, ref ConventionalCommitsBump bump, Commit commit)
         {
             var results = ConventionalCommitsRegex.Match(commit.Message);
@@ -55,11 +60,11 @@ namespace FSO.UpdateBuilder
 
             if (results.Success)
             {
-                var type = results.Captures[0].Value;
-                var scope = results.Captures[1].Value;
-                var breaking = results.Captures[2].Value;
-                var message = results.Captures[3].Value;
-                var description = results.Captures[4].Value;
+                var type = results.Groups[1].Value;
+                var scope = results.Groups[2].Value;
+                var breaking = results.Groups[3].Value;
+                var message = results.Groups[4].Value;
+                var description = results.Groups[6].Value;
 
                 if (SkipType(type))
                 {
