@@ -259,7 +259,7 @@ namespace FSO.UpdateBuilder
 
                     Console.WriteLine($"Downloading client assets for {lastVersion} to create delta...");
                     // Download and extract the assets
-                    var manifestAsset = lastRelease.Assets.FirstOrDefault(x => x.Name == $"${lastVersion.Value}-manifest.json");
+                    var manifestAsset = lastRelease.Assets.FirstOrDefault(x => x.Name == $"manifest-{lastVersion.Value}.json");
                     var http = new HttpClient();
 
                     if (manifestAsset != null)
@@ -323,7 +323,7 @@ namespace FSO.UpdateBuilder
                 Body = $"Changelog:\n\n{changelogString}",
                 Prerelease = isPrerelease,
                 Draft = true,
-                TargetCommitish = activeBranch.Commits.First().Sha
+                TargetCommitish = activeBranch.Commits.First().Sha,
             });
 
             var manifest = new FSOUpdateMetadataStandalone()
@@ -396,13 +396,12 @@ namespace FSO.UpdateBuilder
             using var manifestStream = new MemoryStream();
             var writer = new StreamWriter(manifestStream);
             writer.Write(JsonConvert.SerializeObject(manifest));
-            manifestStream.Position = 0;
 
             await client.Repository.Release.UploadAsset(release, new ReleaseAssetUpload()
             {
-                FileName = $"{versionString}-manifest.json",
+                FileName = $"manifest-{versionString}.json",
                 ContentType = "application/json",
-                RawData = manifestStream,
+                RawData = new MemoryStream(manifestStream.ToArray()),
             });
 
             Console.WriteLine($"Undrafting release...");
