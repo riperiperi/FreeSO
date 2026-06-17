@@ -278,7 +278,10 @@ namespace FSO.UpdateBuilder
                     // Download and extract the assets
                     var manifestAsset = lastRelease.Assets.FirstOrDefault(x => x.Name == $"manifest-{lastVersion.Value}.json");
                     var http = new HttpClient();
+                    http.DefaultRequestHeaders.Accept.Clear();
                     http.DefaultRequestHeaders.Accept.Add(new System.Net.Http.Headers.MediaTypeWithQualityHeaderValue("application/octet-stream"));
+                    http.DefaultRequestHeaders.UserAgent.Clear();
+                    http.DefaultRequestHeaders.UserAgent.Add(new System.Net.Http.Headers.ProductInfoHeaderValue("freeso-ci"));
                     http.DefaultRequestHeaders.Authorization = new System.Net.Http.Headers.AuthenticationHeaderValue("Bearer", rawToken);
 
                     if (manifestAsset != null)
