@@ -312,7 +312,7 @@ namespace FSO.UpdateBuilder
                         }
                         else
                         {
-                            Console.WriteLine($"Couldn't download manifest: {manifestResponse.StatusCode} {manifestResponse.ReasonPhrase}");
+                            Console.WriteLine($"Couldn't download manifest: {manifestResponse.StatusCode} {manifestResponse.ReasonPhrase} {await manifestResponse.Content.ReadAsStringAsync()}");
                         }
                     }
                     else
