@@ -19,6 +19,7 @@
     <ApplicationDefaultFont>Segoe UI, 8.25pt</ApplicationDefaultFont>
 	<ForceDesignerDpiUnaware>true</ForceDesignerDpiUnaware>
 	<ErrorOnDuplicatePublishOutputFiles>false</ErrorOnDuplicatePublishOutputFiles>
+	<Deterministic>true</Deterministic>
   </PropertyGroup>
 
   <ItemGroup>
@@ -130,6 +131,10 @@
   <PropertyGroup>
     <NuGetGlobalPackages Condition=" '$(OS)' == 'Windows_NT' ">$(USERPROFILE)\.nuget\packages</NuGetGlobalPackages>
     <NuGetGlobalPackages Condition=" '$(OS)' != 'Windows_NT' ">$(HOME)/.nuget/packages</NuGetGlobalPackages>
+  </PropertyGroup>
+
+  <PropertyGroup Condition="'$(GITHUB_ACTIONS)' == 'true'">
+    <ContinuousIntegrationBuild>true</ContinuousIntegrationBuild>
   </PropertyGroup>
 
   <Target Name="CopyMonoGameDLLs" AfterTargets="Build">

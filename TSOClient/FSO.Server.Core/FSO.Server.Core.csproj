@@ -11,6 +11,11 @@
     <PublishAot>false</PublishAot>
     <IsAotCompatible>false</IsAotCompatible>
 	<SelfContained>False</SelfContained>
+	<Deterministic>true</Deterministic>
+  </PropertyGroup>
+
+  <PropertyGroup Condition="'$(GITHUB_ACTIONS)' == 'true'">
+	<ContinuousIntegrationBuild>true</ContinuousIntegrationBuild>
   </PropertyGroup>
 
   <ItemGroup>
