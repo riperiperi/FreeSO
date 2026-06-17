@@ -33,7 +33,7 @@ namespace FSO.UpdateBuilder
 
         private static async Task<bool> DownloadLastBuild(HttpClient http, FSOUpdateFile file, string workingDirectory, string platform, string[] targets, string version)
         {
-            if (!targets.Contains(platform))
+            if (!targets.Contains(platform) || file == null)
             {
                 return false;
             }
@@ -42,6 +42,7 @@ namespace FSO.UpdateBuilder
 
             try
             {
+                Console.WriteLine($"Trying to download old {platform} version from {FixAssetUrl(file.zip, version)}");
                 var fileRequest = await http.GetAsync(FixAssetUrl(file.zip, version));
 
                 if (!fileRequest.IsSuccessStatusCode)
@@ -53,15 +54,17 @@ namespace FSO.UpdateBuilder
 
                 ZipFile.ExtractToDirectory(zipStream, targetDirectory);
 
+                Console.WriteLine($"Downloaded old {platform} version.");
                 return true;
             }
-            catch (Exception)
+            catch (Exception e)
             {
+                Console.WriteLine($"Download failed: {FixAssetUrl(file.zip, version)}");
                 return false;
             }
         }
 
-        private static async Task<FSOUpdateFile> FolderToZip(GitHubClient client, Release release, string versionString, string target, string zipQualifier, string directory, RSA? crypto)
+        private static async Task<FSOUpdateFile> FolderToZip(GitHubClient client, Release release, string target, string versionString, string zipQualifier, string directory, RSA? crypto)
         {
             // Build a zip from the input directory.
 
@@ -72,7 +75,7 @@ namespace FSO.UpdateBuilder
 
             var asset = await client.Repository.Release.UploadAsset(release, new ReleaseAssetUpload()
             {
-                FileName = $"{zipQualifier}-{versionString}-{target}.zip",
+                FileName = $"{zipQualifier}-{target}-{versionString}.zip",
                 ContentType = "application/zip",
                 RawData = new MemoryStream(mem.ToArray()),
             });
