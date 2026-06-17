@@ -9,6 +9,10 @@ using System.Text;
 
 namespace FSO.UpdateBuilder
 {
+    internal class DeltaJson
+    {
+        public FileDiff[] Diffs { get; set; } = [];
+    }
 
     internal class Program
     {
@@ -381,6 +385,13 @@ namespace FSO.UpdateBuilder
                         System.IO.File.Copy(Path.Combine(clientPath, diff.Path), Path.Combine(deltaDir, diff.Path));
                     }
 
+                    var deltaJson = new DeltaJson()
+                    {
+                        Diffs = [..diffs]
+                    };
+
+                    File.WriteAllText(Path.Combine(deltaDir, "delta.json"), JsonConvert.SerializeObject(deltaJson));
+
                     Console.WriteLine($"    Building delta zip...");
                     FSOUpdateFile deltaInfo = await FolderToZip(client, release, target, versionString, "client-delta", deltaDir, crypto);
 
@@ -393,7 +404,6 @@ namespace FSO.UpdateBuilder
 
             // Finally, upload the final manifest. This will get added to the update list by the update API.
 
-            using var manifestStream = new MemoryStream();
             var manifestData = Encoding.UTF8.GetBytes(JsonConvert.SerializeObject(manifest));
 
             await client.Repository.Release.UploadAsset(release, new ReleaseAssetUpload()
