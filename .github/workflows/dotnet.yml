@@ -27,8 +27,8 @@ jobs:
       with:
         dotnet-version: 9.0.x
 
-    - run: dotnet publish TSOClient/FSO.IDE -c Release /p:ContinuousIntegrationBuild=true -r win-x64 --self-contained -o Artifacts/Client
-    - run: dotnet publish TSOClient/FSO.Server.Core -c Release /p:ContinuousIntegrationBuild=true -r win-x64 --self-contained -o Artifacts/Server
+    - run: dotnet publish TSOClient/FSO.IDE -c Release /p:ContinuousIntegrationBuild=true /p:Deterministic=true /p:EnableSourceLink=false /p:IncludeSourceRevisionInInformationalVersion=false -r win-x64 --self-contained -o Artifacts/Client
+    - run: dotnet publish TSOClient/FSO.Server.Core -c Release /p:ContinuousIntegrationBuild=true /p:Deterministic=true /p:EnableSourceLink=false /p:IncludeSourceRevisionInInformationalVersion=false -r win-x64 --self-contained -o Artifacts/Server
 
     - name: Upload client artifacts
       uses: actions/upload-artifact@v4
