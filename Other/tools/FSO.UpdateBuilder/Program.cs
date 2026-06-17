@@ -282,6 +282,7 @@ namespace FSO.UpdateBuilder
 
                     if (manifestAsset != null)
                     {
+                        Console.WriteLine($"Downloading manifest from {FixAssetUrl(manifestAsset.BrowserDownloadUrl, lastVersionString)}...");
                         var manifestResponse = await http.GetAsync(FixAssetUrl(manifestAsset.BrowserDownloadUrl, lastVersionString));
                         if (manifestResponse.IsSuccessStatusCode)
                         {
@@ -293,7 +294,19 @@ namespace FSO.UpdateBuilder
                                 macDelta = await DownloadLastBuild(http, content.full.mac, workingDirectory, "mac", targets, lastVersionString);
                                 linuxDelta = await DownloadLastBuild(http, content.full.linux, workingDirectory, "linux", targets, lastVersionString);
                             }
+                            else
+                            {
+                                Console.WriteLine($"Manifest failed to parse.");
+                            }
                         }
+                        else
+                        {
+                            Console.WriteLine($"Couldn't download manifest: {manifestResponse.StatusCode} {manifestResponse.ReasonPhrase}");
+                        }
+                    }
+                    else
+                    {
+                        Console.WriteLine($"Manifest asset was missing...");
                     }
                 }
                 else
