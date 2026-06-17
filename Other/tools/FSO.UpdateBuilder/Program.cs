@@ -282,7 +282,7 @@ namespace FSO.UpdateBuilder
 
                     if (manifestAsset != null)
                     {
-                        var manifestResponse = await http.GetAsync(manifestAsset.BrowserDownloadUrl);
+                        var manifestResponse = await http.GetAsync(FixAssetUrl(manifestAsset.BrowserDownloadUrl, lastVersionString));
                         if (manifestResponse.IsSuccessStatusCode)
                         {
                             var content = await manifestResponse.Content.ReadFromJsonAsync<FSOUpdateMetadata>();
