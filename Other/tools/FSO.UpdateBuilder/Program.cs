@@ -31,7 +31,7 @@ namespace FSO.UpdateBuilder
             return null;
         }
 
-        private static async Task<bool> DownloadLastBuild(HttpClient http, FSOUpdateFile file, string workingDirectory, string platform, string[] targets, string version)
+        private static async Task<bool> DownloadLastBuild(HttpClient http, FSOUpdateFile file, string workingDirectory, string platform, string[] targets, Func<string, string> correctAssetUrl)
         {
             if (!targets.Contains(platform) || file == null)
             {
@@ -40,10 +40,11 @@ namespace FSO.UpdateBuilder
 
             string targetDirectory = Path.Combine(workingDirectory, $"{platform}-old");
 
+            var url = correctAssetUrl(file.zip);
             try
             {
-                Console.WriteLine($"Trying to download old {platform} version from {FixAssetUrl(file.zip, version)}");
-                var fileRequest = await http.GetAsync(FixAssetUrl(file.zip, version));
+                Console.WriteLine($"Trying to download old {platform} version from {url}");
+                var fileRequest = await http.GetAsync(url);
 
                 if (!fileRequest.IsSuccessStatusCode)
                 {
@@ -59,7 +60,7 @@ namespace FSO.UpdateBuilder
             }
             catch (Exception e)
             {
-                Console.WriteLine($"Download failed: {FixAssetUrl(file.zip, version)}");
+                Console.WriteLine($"Download failed: {url}");
                 return false;
             }
         }
@@ -282,17 +283,27 @@ namespace FSO.UpdateBuilder
 
                     if (manifestAsset != null)
                     {
-                        Console.WriteLine($"Downloading manifest from {FixAssetUrl(manifestAsset.BrowserDownloadUrl, lastVersionString)}...");
-                        var manifestResponse = await http.GetAsync(FixAssetUrl(manifestAsset.BrowserDownloadUrl, lastVersionString));
+                        Console.WriteLine($"Downloading manifest from {FixAssetUrl(manifestAsset.Url, lastVersionString)}...");
+                        var manifestResponse = await http.GetAsync(FixAssetUrl(manifestAsset.Url, lastVersionString));
                         if (manifestResponse.IsSuccessStatusCode)
                         {
                             var content = await manifestResponse.Content.ReadFromJsonAsync<FSOUpdateMetadata>();
 
+                            string correctAssetUrl(string url)
+                            {
+                                url = FixAssetUrl(url, lastVersionString);
+
+                                // If the asset URL is on github, it might be private, in which case we want to access it via the API instead.
+                                var matchingAsset = lastRelease.Assets.FirstOrDefault(x => FixAssetUrl(x.BrowserDownloadUrl, lastVersionString) == url);
+
+                                return matchingAsset?.Url ?? url;
+                            }
+
                             if (content != null)
                             {
-                                windowsDelta = await DownloadLastBuild(http, content.full.windows, workingDirectory, "windows", targets, lastVersionString);
-                                macDelta = await DownloadLastBuild(http, content.full.mac, workingDirectory, "mac", targets, lastVersionString);
-                                linuxDelta = await DownloadLastBuild(http, content.full.linux, workingDirectory, "linux", targets, lastVersionString);
+                                windowsDelta = await DownloadLastBuild(http, content.full.windows, workingDirectory, "windows", targets, correctAssetUrl);
+                                macDelta = await DownloadLastBuild(http, content.full.mac, workingDirectory, "mac", targets, correctAssetUrl);
+                                linuxDelta = await DownloadLastBuild(http, content.full.linux, workingDirectory, "linux", targets, correctAssetUrl);
                             }
                             else
                             {
