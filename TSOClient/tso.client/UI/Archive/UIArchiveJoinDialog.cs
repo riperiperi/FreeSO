@@ -14,29 +14,23 @@ using Ninject;
 
 namespace FSO.Client.UI.Archive
 {
-    internal enum UIServerType
-    {
-        FreeSO,
-        Archive
-    }
-
     internal class UIJoinServerEntry
     {
         private readonly UIArchiveJoinDialog Parent;
-        public readonly UIServerType ServerType;
-        public string Name;
-        public readonly string Address;
+        public readonly ClientArchiveHistoryItem Item;
+
+        public ClientArchiveHistoryType ServerType => Item.ServerType;
+        public string Name => Item.Name;
+        public string Address => Item.Address;
 
         public bool IsFetching = true;
 
         public StatusCheckResult? Result;
 
-        public UIJoinServerEntry(UIArchiveJoinDialog parent, UIServerType type, string name, string address)
+        public UIJoinServerEntry(UIArchiveJoinDialog parent, ClientArchiveHistoryItem item)
         {
             Parent = parent;
-            ServerType = type;
-            Name = name;
-            Address = address;
+            Item = item;
 
             Task.Run(RefreshStatus);
         }
@@ -44,16 +38,16 @@ namespace FSO.Client.UI.Archive
         public async Task RefreshStatus()
         {
             StatusCheckResult result;
-            switch (ServerType)
+            switch (Item.ServerType)
             {
-                case UIServerType.FreeSO:
+                case ClientArchiveHistoryType.FreeSO:
                     // If the server is FreeSO, try and request the `/userapi/status.json`.07
-                    result = await StatusChecker.FreeSOStatus(Address);
+                    result = await StatusChecker.FreeSOStatus(Item.Address);
                     break;
-                case UIServerType.Archive:
+                case ClientArchiveHistoryType.Archive:
                     // If it's archive, start a connection to the server, then disconnect after getting the RequestClientSessionArchive packet.
                     // Disconnect after two seconds of not receiving this packet.
-                    result = await StatusChecker.ArchiveStatus(FSOFacade.Kernel, Address);
+                    result = await StatusChecker.ArchiveStatus(FSOFacade.Kernel, Item.Address);
                     break;
                 default:
                     return;
@@ -65,12 +59,12 @@ namespace FSO.Client.UI.Archive
                 Result = result;
 
                 // If the result's name/address doesn't match the saved one, we need to update it.
-                // TODO: save back to the config
+                // TODO: save back to the config?
                 if (result.IsOnline)
                 {
-                    if (Name != result.Name)
+                    if (Item.Name != result.Name)
                     {
-                        Name = result.Name;
+                        Item.Name = result.Name;
                     }
                 }
 
@@ -94,7 +88,7 @@ namespace FSO.Client.UI.Archive
         private readonly Texture2D ActionsButtonTexture;
         private readonly Texture2D ServerFreeSOIcon;
         private readonly Texture2D ServerArchiveIcon;
-
+        private readonly Texture2D ServerDiscordIcon;
 
         public UIArchiveJoinDialog() : base(UIDialogStyle.Close, true)
         {
@@ -107,6 +101,7 @@ namespace FSO.Client.UI.Archive
 
             ServerArchiveIcon = ui.Get("archive_simuser.png").Get(gd);
             ServerFreeSOIcon = ui.Get("archive_simshared.png").Get(gd);
+            ServerDiscordIcon = ui.Get("archive_discordserver.png").Get(gd);
 
             ButtonBox = new UIHBoxContainer() { VerticalAlignment = UIContainerVerticalAlignment.Middle };
             ButtonBox.Add(AddServerButton = new UIButton() { Caption = "Add Server" });
@@ -130,10 +125,12 @@ namespace FSO.Client.UI.Archive
 
             BuildLayout();
 
-            Servers = [
-                new UIJoinServerEntry(this, UIServerType.Archive, "riperiperi's Server", "127.0.0.1:33101"),
-                new UIJoinServerEntry(this, UIServerType.Archive, "Not A Server", "127.0.0.1:4321")
-            ];
+            var config = ClientArchiveConfiguration.Default;
+
+            Servers = [..config.JoinHistory.Select(x =>
+            {
+                return new UIJoinServerEntry(this, x);
+            })];
 
             UpdateServerTable();
 
@@ -149,12 +146,13 @@ namespace FSO.Client.UI.Archive
 
         private void AddServerResult(UIAddServerResult info)
         {
-            var newServer = new UIJoinServerEntry(this, info.IsFreeSO ? UIServerType.FreeSO : UIServerType.Archive, info.Status.Name, info.Address);
+            var newServerInfo = new ClientArchiveHistoryItem(info.IsFreeSO ? ClientArchiveHistoryType.FreeSO : ClientArchiveHistoryType.Archive, info.Status.Name, info.Address, 0);
 
-            Servers = [
-                newServer,
-                ..Servers
-            ];
+            var config = ClientArchiveConfiguration.Default;
+            config.RegisterJoin(newServerInfo);
+
+            Servers = [..config.JoinHistory.Select(x =>
+                Servers.FirstOrDefault(y => y.ServerType == x.ServerType && y.Address == x.Address) ?? new UIJoinServerEntry(this, x))];
 
             UpdateServerTable();
         }
@@ -164,14 +162,16 @@ namespace FSO.Client.UI.Archive
             JoinButton.Disabled = ServerTable.SelectedIndex == -1 || (ServerTable.SelectedItem.Data as UIJoinServerEntry)?.Result?.IsOnline != true;
         }
 
-        private Texture2D GetTypeIcon(UIServerType type)
+        private Texture2D GetTypeIcon(ClientArchiveHistoryType type)
         {
             switch (type)
             {
-                case UIServerType.Archive:
+                case ClientArchiveHistoryType.Archive:
                     return ServerArchiveIcon;
-                case UIServerType.FreeSO:
+                case ClientArchiveHistoryType.FreeSO:
                     return ServerFreeSOIcon;
+                case ClientArchiveHistoryType.DiscordArchive:
+                    return ServerDiscordIcon;
             }
 
             return null;
@@ -222,7 +222,7 @@ namespace FSO.Client.UI.Archive
             ServerTable.Items.Clear();
             var items = ServerTable.Items;
 
-            // First, stable sort the servers by 
+            // First, stable sort the servers by online status, so the online servers always appear at the top.
 
             var orderedServers = Servers.OrderBy(server => !(server.Result?.IsOnline ?? false));
 
@@ -273,19 +273,8 @@ namespace FSO.Client.UI.Archive
             //JoinButton.Caption = server ? "Connect" : "Join";
         }
 
-        private void SaveArchiveConfig()
-        {
-            var clientConfig = ClientArchiveConfiguration.Default;
-
-            //clientConfig.PlayerName = NameInput.CurrentText;
-            //clientConfig.LastJoinedHost = AddressInput.CurrentText;
-            clientConfig.Save();
-        }
-
         private void Close(UIElement button)
         {
-            SaveArchiveConfig();
-
             FindController<ConnectArchiveController>().SwitchMode(ConnectArchiveMode.Landing);
         }
         
@@ -300,12 +289,14 @@ namespace FSO.Client.UI.Archive
 
             var target = server.Result.Value.Version;
 
-            return false && current.Equals(target) ? null : target;
+            return current.Equals(target) ? null : target;
         }
 
         private void Join(UIJoinServerEntry selected)
         {
-            if (selected.ServerType == UIServerType.FreeSO)
+            ClientArchiveConfiguration.Default.RegisterJoin(selected.Item);
+
+            if (selected.ServerType == ClientArchiveHistoryType.FreeSO)
             {
                 var url = selected.Address;
                 GlobalSettings.Default.GameEntryUrl = url;
@@ -321,7 +312,6 @@ namespace FSO.Client.UI.Archive
             }
             else
             {
-                SaveArchiveConfig();
                 var displayName = ClientArchiveConfiguration.Default.PlayerName;
                 FSOFacade.Controller.ConnectToArchive(displayName, selected.Address, false);
             }

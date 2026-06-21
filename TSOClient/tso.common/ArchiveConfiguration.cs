@@ -1,7 +1,4 @@
 ﻿using Newtonsoft.Json;
-using System;
-using System.Collections.Generic;
-using System.IO;
 using System.Security.Cryptography;
 
 namespace FSO.Common
@@ -90,9 +87,56 @@ namespace FSO.Common
         }
     }
 
-    public class ClientArchiveConfiguration : IniConfig
+    public enum ClientArchiveHistoryType
     {
-        public override string HeadingComment => "Archive client + self-hosting configuration. Don't send this to other users, as it contains authentication keys!";
+        /// <summary>
+        /// MMO type server - user registration/login + mmo gameplay.
+        /// </summary>
+        FreeSO = 0,
+
+        /// <summary>
+        /// Archive server - anonymous authentication + archive gameplay.
+        /// </summary>
+        Archive = 1,
+
+        /// <summary>
+        /// Archive server, but triggered by a discord join.
+        /// Can only store one of these in history for quick rejoins. Address uses basic obfuscation.
+        /// </summary>
+        DiscordArchive = 2
+    }
+
+    public class ClientArchiveHistoryItem(ClientArchiveHistoryType serverType, string name, string address, ArchiveConfigFlags flags)
+    {
+        /// <summary>
+        /// The type of server.
+        /// </summary>
+        [JsonProperty("serverType")]
+        public ClientArchiveHistoryType ServerType { get; set; } = serverType;
+
+        /// <summary>
+        /// Friendly name of the server. Updated when the server responds to the status query.
+        /// </summary>
+        [JsonProperty("name")]
+        public string Name { get; set; } = name;
+
+        /// <summary>
+        /// Address of the server. If this is an archive server, will be hostname:port, otherwise it will be an http api base url.
+        /// </summary>
+        [JsonProperty("address")]
+        public string Address { get; set; } = address;
+
+        /// <summary>
+        /// If UPnP is set, the server list will try all possible UPnP ports if the last address:port failed to respond.
+        /// </summary>
+        [JsonProperty("flags")]
+        public ArchiveConfigFlags Flags { get; set; } = flags;
+    }
+
+    public class ClientArchiveConfiguration : JsonConfig
+    {
+        [JsonProperty("_comment")]
+        public string HeadingComment { get; set; } = "Archive client + self-hosting configuration. Don't send this to other users, as it contains authentication keys!";
 
         private static ClientArchiveConfiguration defaultInstance;
 
@@ -102,7 +146,7 @@ namespace FSO.Common
             {
                 if (defaultInstance == null)
                 {
-                    defaultInstance = new ClientArchiveConfiguration(Path.Combine(FSOEnvironment.UserDir, "archiveConfig.ini"));
+                    defaultInstance = Load<ClientArchiveConfiguration>(Path.Combine(FSOEnvironment.UserDir, "archiveConfig.json"));
 
                     defaultInstance.VerifyKeys();
                 }
@@ -115,53 +159,39 @@ namespace FSO.Common
             return Guid.NewGuid().ToString();
         }
 
-        public ClientArchiveConfiguration(string path) : base(path)
-        {
-        }
-
-        private Dictionary<string, string> _DefaultValues = new Dictionary<string, string>()
-        {
-            { "ServerName", "" },
-            { "PlayerName", "" },
-            { "LastJoinedHost", "127.0.0.1" },
-            { "SelectedArchiveName", "FreeSO Archive" },
-
-            { "ServerPrivateKey", "" },
-            { "ServerPublicKey", "" },
-            { "ClientPrivateKey", "" },
-            { "ClientPublicKey", "" },
-
-            { "Flags", ((int)ArchiveConfigFlags.Default).ToString() },
-            { "ArchiveDataDirectory", "" },
-            { "CityPort", "33101" },
-            { "LotPort", "34101" },
-            { "GameScale", "1" },
-        };
-
-        public override Dictionary<string, string> DefaultValues
-        {
-            get { return _DefaultValues; }
-            set { _DefaultValues = value; }
-        }
-
-
         // Client configuration
-        public string PlayerName { get; set; }
-        public string LastJoinedHost { get; set; }
-        public string SelectedArchiveName { get; set; }
+
+        [JsonProperty("playerName")]
+        public string PlayerName { get; set; } = "";
+        [JsonProperty("lastJoinedHost")]
+        public string LastJoinedHost { get; set; } = "127.0.0.1";
+        [JsonProperty("selectedArchiveName")]
+        public string SelectedArchiveName { get; set; } = "FreeSO Archive";
 
         // Keys
-        public string ServerPrivateKey { get; set; }
-        public string ServerPublicKey { get; set; }
-        public string ClientPrivateKey { get; set; }
-        public string ClientPublicKey { get; set; }
+        [JsonProperty("serverPrivateKey")]
+        public string ServerPrivateKey { get; set; } = "";
+        [JsonProperty("serverPublicKey")]
+        public string ServerPublicKey { get; set; } = "";
+        [JsonProperty("clientPrivateKey")]
+        public string ClientPrivateKey { get; set; } = "";
+        [JsonProperty("clientPublicKey")]
+        public string ClientPublicKey { get; set; } = "";
 
         // Server configuration
-        public string ServerName { get; set; }
-        public int Flags { get; set; }
-        public ushort CityPort { get; set; }
-        public ushort LotPort { get; set; }
+        [JsonProperty("serverName")]
+        public string ServerName { get; set; } = "";
+        [JsonProperty("flags")]
+        public int Flags { get; set; } = (int)ArchiveConfigFlags.Default;
+        [JsonProperty("cityPort")]
+        public ushort CityPort { get; set; } = 33101;
+        [JsonProperty("lotPort")]
+        public ushort LotPort { get; set; } = 34101;
+        [JsonProperty("gameScale")]
         public float GameScale { get; set; } = 1;
+
+        [JsonProperty("joinHistory")]
+        public List<ClientArchiveHistoryItem> JoinHistory = [];
 
         public EventConfig? Events;
 
@@ -195,14 +225,6 @@ namespace FSO.Common
 
             ServerPublicKey = rsa.ExportRSAPublicKeyPem().Replace('\n', '^');
             ServerPrivateKey = rsa.ExportRSAPrivateKeyPem().Replace('\n', '^');
-        }
-
-        private RSAParameters GetDummyParameters()
-        {
-            return new RSAParameters
-            {
-                
-            };
         }
 
         private bool VerifyServerRsaKeys()
@@ -276,6 +298,29 @@ namespace FSO.Common
         public string GetServerNameOrDefault()
         {
             return ServerName.Length > 0 ? ServerName : GetDefaultServerName();
+        }
+
+        public void RegisterJoin(ClientArchiveHistoryItem item)
+        {
+            var existing = JoinHistory.FindIndex(x => x.Address == item.Address && x.ServerType == item.ServerType);
+
+            if (existing != -1)
+            {
+                // If the item already exists, we're moving it to the top (so remove the old entry)
+                JoinHistory.RemoveAt(existing);
+            }
+
+            // Add it to the top.
+
+            if (item.ServerType == ClientArchiveHistoryType.DiscordArchive)
+            {
+                // Only remember one discord server at a time.
+                JoinHistory.RemoveAll(x => x.ServerType == ClientArchiveHistoryType.DiscordArchive);
+            }
+
+            JoinHistory.Insert(0, item);
+
+            Save();
         }
     }
 }
