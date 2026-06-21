@@ -86,7 +86,7 @@ namespace FSO.Client.Controllers
                             Name = GameFacade.Strings.GetString("f101", "10")
                         }
                     });
-                    downloader.OnComplete += (bool success) => {
+                    downloader.OnComplete += (bool success, string failedFile = null) => {
                         UIScreen.RemoveDialog(downloader);
                         UIScreen.GlobalShowAlert(new UIAlertOptions
                         {

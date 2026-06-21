@@ -47,7 +47,7 @@ namespace FSO.Server.Api.Core
             Config.UpdateID = (appSettings["updateID"] == "") ? (int?)null : int.Parse(appSettings["updateID"]);
             Config.BranchName = appSettings["branchName"] ?? "beta";
             Config.AllOpenable = bool.TryParse(appSettings["allOpenable"], out var allOpenable) && allOpenable;
-            Config.UpdateInfoJson = appSettings["updateInfoJson"]; // May be null
+            Config.VersionInfoJson = appSettings["versionInfoJson"]; // May be null
 
 
             // new smtp config vars

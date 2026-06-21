@@ -1,4 +1,5 @@
-﻿using FSO.Server.Api.Core.Services;
+﻿using FSO.Common;
+using FSO.Server.Api.Core.Services;
 using FSO.Server.Common;
 using FSO.Server.Servers.UserApi;
 using System.Collections.Specialized;
@@ -42,6 +43,7 @@ namespace FSO.Server.Core
             settings.Add("updateID", config.UpdateID?.ToString() ?? "");
             settings.Add("branchName", config.UpdateBranch);
             settings.Add("allOpenable", config.AllOpenable.ToString());
+            settings.Add("versionInfoJson", FSOVersionInfo.Current.ToJson());
 
 
             var api2 = new FSO.Server.Api.Core.Api();

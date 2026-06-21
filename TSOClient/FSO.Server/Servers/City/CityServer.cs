@@ -38,6 +38,7 @@ namespace FSO.Server.Servers.City
 
         private string ShardName;
         private string ShardMap;
+        private string VersionJson = FSOVersionInfo.Current.ToJson();
 
         private uint SessionUID;
 
@@ -53,7 +54,7 @@ namespace FSO.Server.Servers.City
             {
                 Name = RootConfig.Name,
                 PlayerCount = CountPlayers(), // Maybe cache this?
-                // Update stuff
+                VersionInfo = VersionJson,
 
                 ServerKey = Config.Archive.ServerPublicKey.Replace('^','\n'),
                 Nonce = nonce,

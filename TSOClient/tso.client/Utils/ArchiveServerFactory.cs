@@ -156,7 +156,7 @@ namespace FSO.Client.Utils
                             Name = manifest.Name
                         }
                     });
-                    downloader.OnComplete += (bool success) => {
+                    downloader.OnComplete += (bool success, string failedFile = null) => {
                         UIScreen.RemoveDialog(downloader);
 
                         if (success && ZipDataPresent(manifest, out string _))

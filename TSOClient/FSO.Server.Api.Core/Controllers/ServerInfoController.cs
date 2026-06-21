@@ -51,7 +51,7 @@ namespace FSO.Server.Api.Core.Controllers
                         }
 
                         LastModel.onlineCount = onlineCount;
-                        LastModel.updateInfo = api.Config.UpdateInfoJson;
+                        LastModel.versionInfo = api.Config.VersionInfoJson;
                     }
                 }
             }
@@ -68,6 +68,6 @@ namespace FSO.Server.Api.Core.Controllers
         public string name;
         public int[] shards;
         public int onlineCount;
-        public string updateInfo;
+        public string versionInfo;
     }
 }

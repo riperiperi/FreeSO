@@ -8,6 +8,7 @@ namespace FSO.Server.Protocol.Aries.Packets
     {
         public string Name;
         public int PlayerCount;
+        public string VersionInfo;
 
         public string ServerKey;
         public string Nonce;
@@ -20,6 +21,7 @@ namespace FSO.Server.Protocol.Aries.Packets
         {
             Name = input.GetPascalVLCString();
             PlayerCount = input.GetInt32();
+            VersionInfo = input.GetPascalVLCString();
 
             ServerKey = input.GetPascalVLCString();
             Nonce = input.GetPascalVLCString();
@@ -38,6 +40,7 @@ namespace FSO.Server.Protocol.Aries.Packets
         {
             output.PutPascalVLCString(Name);
             output.PutInt32(PlayerCount);
+            output.PutPascalVLCString(VersionInfo);
 
             output.PutPascalVLCString(ServerKey);
             output.PutPascalVLCString(Nonce);

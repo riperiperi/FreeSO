@@ -241,7 +241,7 @@ namespace FSO.Client.UI.Archive
                     server,
                     GetTypeIcon(server.ServerType),
                     server.Name,
-                    status?.Version ?? "",
+                    status?.Version?.id ?? "",
                     status == null ? "--" : (status.Value.IsOnline ? status.Value.Players.ToString() : GameFacade.Strings.GetString("f128", "138")),
                     actionButton)
                 {
@@ -288,15 +288,23 @@ namespace FSO.Client.UI.Archive
 
             FindController<ConnectArchiveController>().SwitchMode(ConnectArchiveMode.Landing);
         }
-
-        private void Submit(UIElement button)
+        
+        private FSOVersionInfo GetTargetUpdate(UIJoinServerEntry server)
         {
-            var item = ServerTable.SelectedItem;
-            if (JoinButton.Disabled || item == null)
-                return;
+            var current = FSOVersionInfo.Current;
 
-            var selected = item.Data as UIJoinServerEntry;
+            if (server.Result == null)
+            {
+                return null;
+            }
 
+            var target = server.Result.Value.Version;
+
+            return false && current.Equals(target) ? null : target;
+        }
+
+        private void Join(UIJoinServerEntry selected)
+        {
             if (selected.ServerType == UIServerType.FreeSO)
             {
                 var url = selected.Address;
@@ -316,6 +324,33 @@ namespace FSO.Client.UI.Archive
                 SaveArchiveConfig();
                 var displayName = ClientArchiveConfiguration.Default.PlayerName;
                 FSOFacade.Controller.ConnectToArchive(displayName, selected.Address, false);
+            }
+        }
+
+        private void Submit(UIElement button)
+        {
+            var item = ServerTable.SelectedItem;
+            if (JoinButton.Disabled || item == null)
+                return;
+
+            var selected = item.Data as UIJoinServerEntry;
+            var update = GetTargetUpdate(selected);
+
+            if (update != null)
+            {
+                var controller = new UpdateController((bool skip) =>
+                {
+                    if (skip)
+                    {
+                        Join(selected);
+                    }
+                });
+
+                controller.PromptUpdate(update);
+            }
+            else
+            {
+                Join(selected);
             }
         }
 

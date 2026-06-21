@@ -5,7 +5,7 @@
         public string name { get; set; }
         public int[] shards { get; set; }
         public int onlineCount { get; set; }
-        public string version { get; set; }
+        public string versionInfo { get; set; }
     }
 
 }

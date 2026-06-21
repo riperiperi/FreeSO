@@ -48,6 +48,7 @@
   </ItemGroup>
 
   <ItemGroup>
+    <ProjectReference Include="..\FSO.Patcher\FSO.Patcher.csproj" />
     <ProjectReference Include="..\tso.client\FSO.Client.csproj" />
     <ProjectReference Include="..\tso.common\FSO.Common.csproj" />
   </ItemGroup>

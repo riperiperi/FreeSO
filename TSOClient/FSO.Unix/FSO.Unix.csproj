@@ -16,7 +16,7 @@
 
     <ItemGroup>
         <Content Include="fso.ico" />
-        <EmbeddedResource Include="Icon.bmp" >
+        <EmbeddedResource Include="Icon.bmp">
             <LogicalName>Icon.bmp</LogicalName>
         </EmbeddedResource>
     </ItemGroup>
@@ -29,20 +29,21 @@
         <None Include="Icon.icns">
             <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
         </None>
-        <EmbeddedResource Include="Icon.icns" >
+        <EmbeddedResource Include="Icon.icns">
             <LogicalName>Icon.icns</LogicalName>
         </EmbeddedResource>
     </ItemGroup>
 
     <ItemGroup>
-        <PackageReference Include="MonoGame.Framework.DesktopGL" Version="3.8.5-preview.2"/>
-        <PackageReference Include="System.IO.FileSystem.Primitives" Version="4.3.0"/>
-        <ProjectReference Include="..\tso.client\FSO.Client.csproj"/>
-        <ProjectReference Include="..\tso.common\FSO.Common.csproj"/>
+        <PackageReference Include="MonoGame.Framework.DesktopGL" Version="3.8.5-preview.2" />
+        <PackageReference Include="System.IO.FileSystem.Primitives" Version="4.3.0" />
+        <ProjectReference Include="..\FSO.Patcher.Unix\FSO.Patcher.Unix.csproj" />
+        <ProjectReference Include="..\tso.client\FSO.Client.csproj" />
+        <ProjectReference Include="..\tso.common\FSO.Common.csproj" />
     </ItemGroup>
 
     <ItemGroup>
-        <PackageReference Include="SixLabors.ImageSharp" Version="3.1.11"/>
+        <PackageReference Include="SixLabors.ImageSharp" Version="3.1.11" />
     </ItemGroup>
 
     <Import Project="Sdk.targets" Sdk="Microsoft.NET.Sdk" />
@@ -51,38 +52,38 @@
     <Target Name="_IncrementalCleanPublishDirectory" />
 
     <Target Name="CreateMacAppBundle" AfterTargets="Publish" Condition=" '$(RuntimeIdentifier)' == 'osx-arm64' ">
-        <RemoveDir Directories="$(PublishDir)/FreeSO.app"/>
+        <RemoveDir Directories="$(PublishDir)/FreeSO.app" />
 
-        <Exec Command="sleep 2"/>
+        <Exec Command="sleep 2" />
 
-        <MakeDir Directories="$(PublishDir)/FreeSO.app/Contents/MacOS"/>
-        <MakeDir Directories="$(PublishDir)/FreeSO.app/Contents/Resources"/>
+        <MakeDir Directories="$(PublishDir)/FreeSO.app/Contents/MacOS" />
+        <MakeDir Directories="$(PublishDir)/FreeSO.app/Contents/Resources" />
 
-        <Copy SourceFiles="$(PublishDir)/FreeSO" DestinationFolder="$(PublishDir)/FreeSO.app/Contents/MacOS"/>
-        <Copy SourceFiles="$(PublishDir)/libSDL2-2.0.0.dylib" DestinationFolder="$(PublishDir)/FreeSO.app/Contents/MacOS"/>
-        <Copy SourceFiles="$(PublishDir)/libopenal.dylib" DestinationFolder="$(PublishDir)/FreeSO.app/Contents/MacOS"/>
-        <Copy SourceFiles="$(PublishDir)/libe_sqlite3.dylib" DestinationFolder="$(PublishDir)/FreeSO.app/Contents/MacOS" Condition="Exists('$(PublishDir)/libe_sqlite3.dylib')"/>
+        <Copy SourceFiles="$(PublishDir)/FreeSO" DestinationFolder="$(PublishDir)/FreeSO.app/Contents/MacOS" />
+        <Copy SourceFiles="$(PublishDir)/libSDL2-2.0.0.dylib" DestinationFolder="$(PublishDir)/FreeSO.app/Contents/MacOS" />
+        <Copy SourceFiles="$(PublishDir)/libopenal.dylib" DestinationFolder="$(PublishDir)/FreeSO.app/Contents/MacOS" />
+        <Copy SourceFiles="$(PublishDir)/libe_sqlite3.dylib" DestinationFolder="$(PublishDir)/FreeSO.app/Contents/MacOS" Condition="Exists('$(PublishDir)/libe_sqlite3.dylib')" />
 
         <ItemGroup>
-            <GameContent Include="$(PublishDir)/Content/**"/>
+            <GameContent Include="$(PublishDir)/Content/**" />
         </ItemGroup>
 
-        <Copy SourceFiles="@(GameContent)" DestinationFiles="@(GameContent->'$(PublishDir)/FreeSO.app/Contents/MacOS/Content/%(RecursiveDir)%(Filename)%(Extension)')" SkipUnchangedFiles="true"/>
-        <Copy SourceFiles="$(PublishDir)/version.txt" DestinationFolder="$(PublishDir)/FreeSO.app/Contents/MacOS"/>
+        <Copy SourceFiles="@(GameContent)" DestinationFiles="@(GameContent->'$(PublishDir)/FreeSO.app/Contents/MacOS/Content/%(RecursiveDir)%(Filename)%(Extension)')" SkipUnchangedFiles="true" />
+        <Copy SourceFiles="$(PublishDir)/version.txt" DestinationFolder="$(PublishDir)/FreeSO.app/Contents/MacOS" />
 
         <!-- Clean up existing symlink/folder if present -->
         <RemoveDir Directories="$(PublishDir)/FreeSO.app/Contents/Resources/Content" />
 
         <!-- Create symlink because Monogame has code that only searches bundles apps Content in /Resources -->
         <!-- But our application is built to look in the root Application folder /MacOS/Content -->
-        <Exec Command="ln -s ../MacOS/Content &quot;$(PublishDir)/FreeSO.app/Contents/Resources/Content&quot;"/>
+        <Exec Command="ln -s ../MacOS/Content &quot;$(PublishDir)/FreeSO.app/Contents/Resources/Content&quot;" />
 
-        <Copy SourceFiles="Icon.icns" DestinationFolder="$(PublishDir)/FreeSO.app/Contents/Resources"/>
-        <Copy SourceFiles="Info.plist" DestinationFolder="$(PublishDir)/FreeSO.app/Contents"/>
+        <Copy SourceFiles="Icon.icns" DestinationFolder="$(PublishDir)/FreeSO.app/Contents/Resources" />
+        <Copy SourceFiles="Info.plist" DestinationFolder="$(PublishDir)/FreeSO.app/Contents" />
 
-        <Exec Command="chmod +x &quot;$(PublishDir)/FreeSO.app/Contents/MacOS/FreeSO&quot;"/>
-        <Exec Command="chmod +x &quot;$(PublishDir)/FreeSO.app/Contents/MacOS/libSDL2-2.0.0.dylib&quot;"/>
-        <Exec Command="chmod +x &quot;$(PublishDir)/FreeSO.app/Contents/MacOS/libopenal.dylib&quot;"/>
+        <Exec Command="chmod +x &quot;$(PublishDir)/FreeSO.app/Contents/MacOS/FreeSO&quot;" />
+        <Exec Command="chmod +x &quot;$(PublishDir)/FreeSO.app/Contents/MacOS/libSDL2-2.0.0.dylib&quot;" />
+        <Exec Command="chmod +x &quot;$(PublishDir)/FreeSO.app/Contents/MacOS/libopenal.dylib&quot;" />
     </Target>
 
 </Project>

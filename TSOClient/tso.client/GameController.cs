@@ -233,7 +233,7 @@ namespace FSO.Client
 
         public void InitializeArchive()
         {
-            ChangeState<TransitionScreen, ConnectArchiveController>((view, controller) =>
+            ChangeState<TransitionScreenWithUpdate, ConnectArchiveController>((view, controller) =>
             {
                 controller.Initialize();
                 DiscordRpcEngine.SendFSOPresence("In Archive Mode");

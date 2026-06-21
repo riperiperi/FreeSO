@@ -1,6 +1,7 @@
 ﻿using FSO.Client.Utils;
 using FSO.Client.Utils.GameLocator;
 using FSO.Common;
+using FSO.Files.FSO;
 using FSO.UI;
 using System.Reflection;
 
@@ -177,19 +178,7 @@ namespace FSO.Client
 
         private string GetClientVersion()
         {
-            string ExeDir = GlobalSettings.Default.StartupPath;
-
-            if (File.Exists("version.txt"))
-            {
-                using (StreamReader Reader = new StreamReader(File.Open("version.txt", FileMode.Open, FileAccess.Read, FileShare.Read)))
-                {
-                    return Reader.ReadLine();
-                }
-            }
-            else
-            {
-                return "(?)";
-            }
+            return FSOVersionInfo.Current.id;
         }
     }
 }

@@ -1,13 +1,14 @@
-﻿using FSO.Server.Protocol.Aries.Packets;
+﻿using FSO.Common;
+using FSO.Server.Protocol.Aries.Packets;
 using Ninject;
 
 namespace FSO.Server.Clients
 {
-    public readonly struct StatusCheckResult(bool isOnline, string name = "", string version = "", int players = 0)
+    public readonly struct StatusCheckResult(bool isOnline, string name = "", FSOVersionInfo version = null, int players = 0)
     {
         public readonly bool IsOnline = isOnline;
         public readonly string Name = name;
-        public readonly string Version = version;
+        public readonly FSOVersionInfo Version = version;
         public readonly int Players = players;
     }
 
@@ -25,7 +26,7 @@ namespace FSO.Server.Clients
                     Source.TrySetResult(new StatusCheckResult(
                         true,
                         data.Name,
-                        "v1.0.0",
+                        FSOVersionInfo.FromJson(data.VersionInfo),
                         data.PlayerCount
                     ));
                 }
@@ -69,7 +70,7 @@ namespace FSO.Server.Clients
                     }
                     else
                     {
-                        return new StatusCheckResult(true, status.name, status.version, status.onlineCount);
+                        return new StatusCheckResult(true, status.name, FSOVersionInfo.FromJson(status.versionInfo), status.onlineCount);
                     }
                 }
             }

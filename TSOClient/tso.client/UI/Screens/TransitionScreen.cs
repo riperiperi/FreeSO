@@ -1,12 +1,14 @@
-﻿using FSO.Client.UI.Framework;
+﻿using FSO.Client.UI.Archive;
 using FSO.Client.UI.Controls;
+using FSO.Client.UI.Framework;
 using FSO.Client.UI.Panels;
 
 namespace FSO.Client.UI.Screens
 {
     public class TransitionScreen : GameScreen
     {
-        private UISetupBackground m_Background;
+        protected UISetupBackground m_Background;
+        protected UILabel VersionLabel;
         private UILoginProgress m_LoginProgress;
         private UIButton SandboxModeButton;
 
@@ -23,11 +25,13 @@ namespace FSO.Client.UI.Screens
             GameFacade.Cursor.SetCursor(Common.Rendering.Framework.CursorType.Hourglass);
             m_Background = new UISetupBackground();
 
-            var lbl = new UILabel();
-            lbl.Caption = "Version " + GlobalSettings.Default.ClientVersion;
-            lbl.X = 20;
-            lbl.Y = 558;
-            m_Background.BackgroundCtnr.Add(lbl);
+            VersionLabel = new UILabel
+            {
+                Caption = "Version " + GlobalSettings.Default.ClientVersion,
+                X = 20,
+                Y = 558
+            };
+            m_Background.BackgroundCtnr.Add(VersionLabel);
             this.Add(m_Background);
 
             m_LoginProgress = new UILoginProgress();
@@ -94,6 +98,22 @@ namespace FSO.Client.UI.Screens
             {
                 SandboxModeButton.Visible = visible;
             }
+        }
+    }
+
+    public class TransitionScreenWithUpdate : TransitionScreen
+    {
+        private UIAutoUpdater AutoUpdater;
+
+        public TransitionScreenWithUpdate() : base()
+        {
+            /** Auto updater **/
+            AutoUpdater = new UIAutoUpdater()
+            {
+                X = VersionLabel.X,
+                Y = VersionLabel.Y - 5
+            };
+            m_Background.BackgroundCtnr.Add(AutoUpdater);
         }
     }
 }

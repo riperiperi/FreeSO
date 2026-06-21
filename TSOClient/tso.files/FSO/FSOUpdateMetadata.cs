@@ -33,6 +33,12 @@
                 case "mac": mac = file; break;
             }
         }
+
+        public FSOUpdateFile CurrentPlatform()
+        {
+            // TODO
+            return windows;
+        }
     }
 
     /// <summary>
@@ -47,6 +53,19 @@
         public FSOUpdateCrossPlatformFile full { get; set; }
         public FSOUpdateCrossPlatformFile delta { get; set; }
         public string changelog { get; set; }
+
+        public FSOUpdateMetadata Clone()
+        {
+            return new FSOUpdateMetadata() {
+                id = id,
+                lastid = lastid,
+                date = date,
+                server = server,
+                full = full,
+                delta = delta,
+                changelog = changelog
+            };
+        }
     }
 
     /// <summary>
@@ -66,14 +85,14 @@
     {
         public string channel { get; set; }
         public string publicKey { get; set; }
-        public FSOUpdateMetadata[] updates { get; set; }
+        public FSOUpdateMetadata[] updates { get; set; } = [];
     }
 
     /// <summary>
     /// Update API response containing multiple update channels.
     /// </summary>
-    internal class FSOUpdateResponse
+    public class FSOUpdateResponse
     {
-        public FSOUpdateChannel[] channels { get; set; }
+        public FSOUpdateChannel[] channels { get; set; } = [];
     }
 }

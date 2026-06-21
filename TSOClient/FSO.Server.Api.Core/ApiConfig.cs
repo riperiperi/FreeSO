@@ -42,6 +42,6 @@ namespace FSO.Server.Api.Core
         public bool AllOpenable { get; set; }
 
         public IUpdateUploader UpdateUploader { get; set; }
-        public string UpdateInfoJson { get; set; }
+        public string VersionInfoJson { get; set; }
     }
 }

@@ -1354,7 +1354,7 @@ namespace FSO.Client.UI.Controls
         public void PositionChildSlider()
         {
             m_Slider.Position = this.Position + new Vector2(this.Width + ScrollbarGutter, 0);
-            m_Slider.SetSize(1, this.Height);
+            m_Slider.SetSize(13, this.Height);
         }
 
         void m_Slider_OnChange(UIElement element)
