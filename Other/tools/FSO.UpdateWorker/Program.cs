@@ -5,7 +5,7 @@ namespace FSO.UpdateWorker
 {
     internal class Program
     {
-        private const int CheckFrequency = 15000;
+        private const int CheckFrequency = 120000;
 
         static async Task Main(string[] args)
         {
