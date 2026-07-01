@@ -648,7 +648,7 @@ namespace FSO.Client.UI.Framework
         {
             var pos = LocalPoint(point);
 
-            bool align = scale == Vector2.One;
+            bool align = scale.X == 1 || scale.Y == 1;
 
             return align ? Vector2.Floor(pos) : pos;
         }

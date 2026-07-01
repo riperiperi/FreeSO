@@ -437,7 +437,7 @@ namespace FSO.Client.UI.Controls
                 base.DrawLocalTexture(SBatch, m_Texture, new Rectangle(offset, vOffset, m_WidthDiv3, m_Height), Vector2.Zero);
 
                 /** center **/
-                base.DrawLocalTexture(SBatch, m_Texture, new Rectangle(offset + m_WidthDiv3, vOffset, m_WidthDiv3, m_Height), new Vector2(m_WidthDiv3, 0), new Vector2((Width - (m_WidthDiv3 * 2)) / m_WidthDiv3, 1.0f));
+                base.DrawLocalTexture(SBatch, m_Texture, new Rectangle(offset + m_WidthDiv3, vOffset, m_WidthDiv3, m_Height), new Vector2(m_WidthDiv3, 0), new Vector2(MathF.Ceiling(Width - (m_WidthDiv3 * 2)) / m_WidthDiv3, 1.0f));
 
                 /** right **/
                 base.DrawLocalTexture(SBatch, m_Texture, new Rectangle(offset + (m_Width - m_WidthDiv3), vOffset, m_WidthDiv3, m_Height), new Vector2(Width - m_WidthDiv3, 0));
