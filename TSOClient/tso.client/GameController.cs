@@ -494,7 +494,7 @@ namespace FSO.Client
 
         public void EnterSandboxMode(string lotName, bool external)
         {
-            ChangeState<SandboxGameScreen>((screen) =>
+            ChangeState<SandboxGameScreen, SandboxGameScreenController>((screen, controller) =>
             {
                 screen.Initialize(lotName, external);
                 DiscordRpcEngine.SendFSOPresence("Playing Sandbox Mode");
