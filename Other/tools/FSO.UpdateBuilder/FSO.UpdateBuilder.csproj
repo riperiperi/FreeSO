@@ -13,6 +13,7 @@
   </ItemGroup>
 
   <ItemGroup>
+    <ProjectReference Include="..\..\..\TSOClient\tso.common\FSO.Common.csproj" />
     <ProjectReference Include="..\..\..\TSOClient\tso.files\FSO.Files.csproj" />
   </ItemGroup>
 
