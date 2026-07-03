@@ -17,7 +17,6 @@ namespace FSO.Client.UI.Controls
         {
             if (newFocus == FocusEvent.FocusIn && m_SelectedRow < 0 && Items != null && Items.Count > 0)
             {
-                // This shouldn't trigger if the focus change is from the mouse and is selecting a list item (at least, it shouldn't scroll yet)
                 int enabledIndex = AllowDisabledSelection ? 0 : Items.FindIndex(IsItemEnabled);
 
                 if (enabledIndex != -1)
