@@ -69,9 +69,9 @@ namespace FSO.Client.UI.Archive
                 Columns = new UIListBoxColumnCollection()
                 {
                     new UIListBoxColumn() { Width = 25, Alignment = TextAlignment.Left }, // Avatar button
-                    new UIListBoxColumn() { Width = 100, Alignment = TextAlignment.Left | TextAlignment.Middle }, // Display name, unique ID
+                    new UIListBoxColumn() { Width = 99, Alignment = TextAlignment.Left | TextAlignment.Middle }, // Display name, unique ID
                     new UIListBoxColumn() { Width = 20, Alignment = TextAlignment.Left | TextAlignment.Middle }, // Admin status
-                    new UIListBoxColumn() { Width = 14, Alignment = TextAlignment.Left | TextAlignment.Middle }, // Admin actions
+                    new UIListBoxColumn() { Width = 15, Alignment = TextAlignment.Left | TextAlignment.Middle }, // Admin actions
                 },
                 RowHeight = 20,
                 FontStyle = searchFont,
