@@ -133,7 +133,7 @@ namespace FSO.Client.UI.Panels
             Dropdown = new UIInboxDropdown();
             Dropdown.OnSearch += (query) =>
             {
-                (Parent.Controller as InboxController)?.Search(query, false);
+                FindController<InboxController>()?.Search(query, false);
             };
             Dropdown.OnSelect += (id, name) =>
             {
