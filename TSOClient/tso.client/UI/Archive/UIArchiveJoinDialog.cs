@@ -299,16 +299,9 @@ namespace FSO.Client.UI.Archive
             if (selected.ServerType == ClientArchiveHistoryType.FreeSO)
             {
                 var url = selected.Address;
-                GlobalSettings.Default.GameEntryUrl = url;
-                GlobalSettings.Default.CitySelectorUrl = url;
-                GlobalSettings.Default.Save();
-
-                var kernel = FSOFacade.Kernel;
-                kernel.Get<AuthClient>().SetBaseUrl(url);
-                kernel.Get<CityClient>().SetBaseUrl(url);
 
                 UIScreen.RemoveDialog(this);
-                FSOFacade.Controller.ShowServerLogin();
+                FSOFacade.Controller.ShowServerLogin(url);
             }
             else
             {

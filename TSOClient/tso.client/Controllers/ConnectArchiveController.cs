@@ -12,6 +12,7 @@ using FSO.HIT;
 using FSO.Server.Embedded;
 using FSO.Server.Protocol.CitySelector;
 using FSO.Server.Protocol.Electron.Packets;
+using FSO.Server.Protocol.Utils;
 using FSO.UI.Model;
 
 namespace FSO.Client.Controllers
@@ -175,10 +176,7 @@ namespace FSO.Client.Controllers
             this.onConnect = onConnect;
             this.onError = onError;
 
-            if (address.IndexOf(":") == -1)
-            {
-                address = address + ":33101";
-            }
+            address = PortTransformer.DefaultCityPort(address);
 
             CityConnectionRegulator.ConnectArchive(new ConnectArchiveRequest
             {

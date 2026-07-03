@@ -15,5 +15,17 @@
 
             return port.Length == 2 ? address + connType : address;
         }
+
+        public static string DefaultCityPort(string address)
+        {
+            int portSplit = address.LastIndexOf(":");
+
+            if (portSplit != -1)
+            {
+                return address;
+            }
+
+            return $"{address}:33101";
+        }
     }
 }

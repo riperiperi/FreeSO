@@ -1,5 +1,6 @@
 ﻿using FSO.Common;
 using FSO.Server.Protocol.Aries.Packets;
+using FSO.Server.Protocol.Utils;
 using Ninject;
 
 namespace FSO.Server.Clients
@@ -94,7 +95,7 @@ namespace FSO.Server.Clients
 
             try
             {
-                client.Connect(address);
+                client.Connect(PortTransformer.DefaultCityPort(address));
             }
             catch (Exception)
             {

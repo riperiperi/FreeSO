@@ -14,6 +14,7 @@ using FSO.Common.DatabaseService.Model;
 using FSO.Common.DataService.Model;
 using FSO.Common.Serialization.Primitives;
 using FSO.Common.Utils;
+using FSO.Server.Clients;
 using FSO.Server.Embedded;
 using FSO.Server.Protocol.CitySelector;
 using FSO.Server.Protocol.Electron.Packets;
@@ -99,6 +100,19 @@ namespace FSO.Client
             {
                 DiscordRpcEngine.SendFSOPresence("In Main Menu");
             });
+        }
+
+        public void ShowServerLogin(string url)
+        {
+            GlobalSettings.Default.GameEntryUrl = url;
+            GlobalSettings.Default.CitySelectorUrl = url;
+            GlobalSettings.Default.Save();
+
+            var kernel = FSOFacade.Kernel;
+            kernel.Get<AuthClient>().SetBaseUrl(url);
+            kernel.Get<CityClient>().SetBaseUrl(url);
+
+            ShowServerLogin();
         }
 
         /// <summary>

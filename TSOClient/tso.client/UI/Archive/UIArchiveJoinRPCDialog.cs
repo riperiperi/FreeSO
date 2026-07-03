@@ -1,7 +1,10 @@
 ﻿using FSO.Client.Controllers;
 using FSO.Client.UI.Controls;
+using FSO.Client.UI.Framework;
 using FSO.Common;
 using FSO.Common.Rendering.Framework.Model;
+using FSO.Common.Utils;
+using FSO.Server.Clients;
 using FSO.UI.Model;
 using Microsoft.Xna.Framework;
 
@@ -9,32 +12,22 @@ namespace FSO.Client.UI.Archive
 {
     internal class UIArchiveJoinRPCDialog : UIDialog
     {
-        public UITextBox NameInput;
-        public UIButton JoinButton;
+        private readonly UILabel JoinLabel;
+        private readonly UIVBoxContainer VBox;
 
         public UIArchiveJoinRPCDialog() : base(UIDialogStyle.Close, true)
         {
             Caption = GameFacade.Strings.GetString("f128", "117");
             var vbox = new UIVBoxContainer() { HorizontalAlignment = UIContainerHorizontalAlignment.Right };
+            VBox = vbox;
 
             var clientConfig = ClientArchiveConfiguration.Default;
 
-            vbox.Add(new UILabel()
+            vbox.Add(JoinLabel = new UILabel()
             {
                 Caption = GameFacade.Strings.GetString("f128", "118"),
                 Size = new Vector2(300, 35),
                 Wrapped = true
-            });
-
-            vbox.Add(NameInput = new UITextBox()
-            {
-                Size = new Microsoft.Xna.Framework.Vector2(300, 25)
-            });
-
-            vbox.Add(JoinButton = new UIButton()
-            {
-                Caption = "Join",
-                Disabled = true
             });
 
             vbox.AutoSize();
@@ -43,22 +36,71 @@ namespace FSO.Client.UI.Archive
             SetSize((int)vbox.Size.X + 40, (int)vbox.Size.Y + 70);
 
             Add(vbox);
-
-            NameInput.CurrentText = clientConfig.PlayerName;
-            NameInput.OnChange += ValidateInputs;
-
-            JoinButton.OnButtonClick += Join;
             CloseButton.OnButtonClick += Close;
 
-            ValidateInputs(NameInput);
+            CheckStatusAndJoin();
         }
 
-        private void SaveConfig()
+        private void CheckStatusAndJoin()
         {
-            var clientConfig = ClientArchiveConfiguration.Default;
+            var rpc = DiscordRpcEngine.Secret;
+            var hostname = rpc.Value.ServerHostname;
 
-            clientConfig.PlayerName = NameInput.CurrentText;
-            clientConfig.Save();
+            if (rpc.HasValue)
+            {
+                Task<StatusCheckResult> task;
+
+                if (rpc.Value.ArchiveMode)
+                {
+                    task = StatusChecker.ArchiveStatus(FSOFacade.Kernel, hostname);
+                }
+                else
+                {
+                    task = StatusChecker.FreeSOStatus(hostname);
+                }
+
+                task.ContinueWith(x =>
+                {
+                    GameThread.InUpdate(() =>
+                    {
+                        // If we're not active anymore, don't go through with the join.
+
+                        var myScreen = this.FindParent<UIScreen>();
+                        if (myScreen == null || myScreen != UIScreen.Current)
+                        {
+                            return;
+                        }
+
+                        if (x.IsFaulted || x.IsCanceled || !x.Result.IsOnline)
+                        {
+                            JoinLabel.Caption = GameFacade.Strings.GetString("f128", "152");
+                            JoinLabel.Size = new Vector2(300, 60);
+
+                            VBox.AutoSize();
+                            SetSize((int)VBox.Size.X + 40, (int)VBox.Size.Y + 70);
+                        }
+                        else
+                        {
+                            var historyItem = new ClientArchiveHistoryItem(
+                                rpc.Value.ArchiveMode ? ClientArchiveHistoryType.DiscordArchive : ClientArchiveHistoryType.FreeSO,
+                                x.Result.Name,
+                                hostname,
+                                0);
+
+                            ClientArchiveConfiguration.Default.RegisterJoin(historyItem);
+
+                            if (rpc.Value.ArchiveMode)
+                            {
+                                FSOFacade.Controller.ConnectToArchive(ClientArchiveConfiguration.Default.PlayerName, rpc.Value.ServerHostname, false);
+                            }
+                            else
+                            {
+                                FSOFacade.Controller.ShowServerLogin(rpc.Value.ServerHostname);
+                            }
+                        }
+                    });
+                });
+            }
         }
 
         public override void Update(UpdateState state)
@@ -75,21 +117,8 @@ namespace FSO.Client.UI.Archive
 
         private void Close(Framework.UIElement button)
         {
-            SaveConfig();
             DiscordRpcEngine.Secret = null;
             FindController<ConnectArchiveController>().SwitchMode(ConnectArchiveMode.Landing);
-        }
-
-        private void Join(Framework.UIElement button)
-        {
-            SaveConfig();
-            var rpc = DiscordRpcEngine.Secret;
-            FSOFacade.Controller.ConnectToArchive(NameInput.CurrentText, rpc.Value.ServerHostname, false);
-        }
-
-        private void ValidateInputs(Framework.UIElement element)
-        {
-            JoinButton.Disabled = NameInput.CurrentText.Length == 0;
         }
     }
 }

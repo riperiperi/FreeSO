@@ -136,7 +136,7 @@ You can send an invite from the + menu that appears next to the chat input.^
 115 ^This invite is for a different game server than the one you're currently on, and the person who sent the invite has not enabled server invites.^
 116 ^This invite is for a different game server than the one you're currently on. Would you like to switch servers?^
 117 ^Joining a server from Discord^
-118 ^Enter a Display Name to use on this server:^
+118 ^Getting server status... Please wait.^
 119 ^Unable to enable invites, as the address for this server could not be determined.^
 120 ^This invite to a specific property needs you to be on the same game server as the inviter, and they haven't enabled server invites.^
 
@@ -188,3 +188,4 @@ Enabling the city editor and starting the server will convert the save to use a 
 Add to the server list?^
 150 ^Contacting server...^
 151 ^Failed to contact the server.^
+152 ^Unable to join a server from a Discord invite. Make sure the host has either enabled UPnP or forwarded the server ports manually.^

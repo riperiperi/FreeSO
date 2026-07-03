@@ -250,8 +250,6 @@ namespace FSO.Server.Servers.City
                     return;
                 }
 
-                // TODO: check IP ban
-
                 var user = da.ArchiveUsers.GetByClientHash(clientId);
                 var ip = (session.IoSession.RemoteEndPoint as IPEndPoint).Address.ToString();
 
@@ -293,7 +291,7 @@ namespace FSO.Server.Servers.City
 
                 var ipBan = da.Bans.GetByIP(ip);
 
-                if (user.is_banned || ipBan != null)
+                if (user.is_banned || (ipBan != null && !superAdmin))
                 {
                     session.Write(new AnnouncementMsgPDU(true) { SenderID = "??cst:80", Subject = "Banned", Message = "" });
                     session.Close();
