@@ -240,7 +240,7 @@ namespace FSO.Client.UI.Archive
 
         private void OpenActions(UIElement anchor, ArchiveClient client)
         {
-            int myLevel = 2;
+            int myLevel = (int)FindController<FSO.Client.Controllers.CoreGameScreenController>().ModerationLevel;
             int theirLevel = (int)client.ModerationLevel;
 
             var items = new List<UIContextMenuItem>();

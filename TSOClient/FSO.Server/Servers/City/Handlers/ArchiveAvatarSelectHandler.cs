@@ -160,7 +160,7 @@ namespace FSO.Server.Servers.City.Handlers
 
                         var lifecycle = Kernel.Get<VoltronConnectionLifecycleHandler>();
 
-                        await lifecycle.AssignAvatar(vSession2);
+                        await lifecycle.AssignAvatar(vSession2, vSession2.ModerationLevel != ava.moderation_level);
                     }
                     else
                     {

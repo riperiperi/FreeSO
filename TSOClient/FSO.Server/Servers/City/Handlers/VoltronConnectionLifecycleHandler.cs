@@ -133,8 +133,13 @@ namespace FSO.Server.Servers.City.Handlers
             await AssignAvatar(voltronSession);
         }
 
-        public async Task AssignAvatar(IVoltronSession voltronSession)
+        public async Task AssignAvatar(IVoltronSession voltronSession, bool invalidateAvatar = false)
         {
+            if (invalidateAvatar)
+            {
+                DataService.Invalidate<Avatar>(voltronSession.AvatarId);
+            }
+
             //New avatar, enroll in voltron group
             var avatar = await DataService.Get<Avatar>(voltronSession.AvatarId); //can throw?
             //Mark as online

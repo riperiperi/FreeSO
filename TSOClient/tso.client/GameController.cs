@@ -216,7 +216,7 @@ namespace FSO.Client
                 new JoinLotProgressController(null, null),
                 new DisconnectController(null, null, null, null, null),
                 new GenericSearchController(null, null),
-                new NeighPageController(null, null),
+                new NeighPageController(null, null, null),
                 new RatingListController(null, null, null),
                 new RatingSummaryController(null, null, null),
                 new NeighborhoodActionController(null),

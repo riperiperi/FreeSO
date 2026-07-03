@@ -297,8 +297,7 @@ namespace FSO.Server.DataService.Providers
             if (!(key is uint)) return;
             var castKey = (uint)key;
             lock (Values) {
-                var val = Values[castKey];
-                if (val.Ready)
+                if (Values.TryGetValue(castKey, out var val) && val.Ready)
                 {
                     ((Avatar)val.GetReady()).Invalidated = true;
                 }

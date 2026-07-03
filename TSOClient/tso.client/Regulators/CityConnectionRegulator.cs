@@ -5,6 +5,7 @@ using FSO.Common;
 using FSO.Common.DatabaseService;
 using FSO.Common.DatabaseService.Model;
 using FSO.Common.DataService;
+using FSO.Common.DataService.Model;
 using FSO.Common.Domain.Realestate;
 using FSO.Common.Domain.RealestateDomain;
 using FSO.Common.Domain.Shards;
@@ -40,6 +41,9 @@ namespace FSO.Client.Regulators
         public AriesClient Client { get; internal set; }
         public CityConnectionMode Mode { get; internal set; } = CityConnectionMode.NORMAL;
         public ArchiveClientList UserList { get; internal set; }
+        public uint ModerationLevel { get; internal set; }
+
+        private Binding<Avatar> AvatarBinding;
 
         public ConnectArchiveRequest ArchiveSettings { get; private set; }
         public string ArchiveServerID { get; private set; }
@@ -199,6 +203,8 @@ namespace FSO.Client.Regulators
                 .OnlyTransitionFrom("Reconnect");
 
             ClearUserList();
+
+            AvatarBinding = new Binding<Avatar>().WithBinding(this, "ModerationLevel", "Avatar_ModerationLevel");
 
             GameThread.SetInterval(() =>
             {
@@ -510,6 +516,11 @@ namespace FSO.Client.Regulators
                         }
                         else
                         {
+                            var ava = (Avatar)x.Result;
+                            AvatarBinding.Value = ava;
+
+                            ModerationLevel = ava.Avatar_ModerationLevel;
+
                             AsyncTransition("ReceivedCharacterData");
                         }
                     });

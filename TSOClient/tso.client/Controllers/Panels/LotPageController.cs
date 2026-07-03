@@ -16,10 +16,10 @@ namespace FSO.Client.Controllers.Panels
         private Network.Network Network;
         private uint LotId;
 
-        // TODO: also allow if admin/mod
+        // Note: maybe should indicate if mod powers are causing the lot to be openable.
         public bool CanOpenAnyLot =>
             (Network.Mode == Regulators.CityConnectionMode.ARCHIVE && Network.ArchiveConfig.HasFlag(ArchiveConfigFlags.AllOpenable))
-            || Network.SpectatorMode;
+            || Network.SpectatorMode || Network.ModerationLevel > 0;
 
         public LotPageController(UILotPage view, IClientDataService dataService, Network.Network network)
         {

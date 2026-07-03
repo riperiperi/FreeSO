@@ -1,4 +1,6 @@
-﻿using FSO.Server.Database.DA;
+﻿using FSO.Common.DataService;
+using FSO.Common.DataService.Model;
+using FSO.Server.Database.DA;
 using FSO.Server.Framework.Aries;
 using FSO.Server.Framework.Voltron;
 using FSO.Server.Protocol.Electron.Model;
@@ -14,13 +16,15 @@ namespace FSO.Server.Servers.City.Handlers
         private IDAFactory DAFactory;
         private CityServerContext Context;
         private LotServerPicker LotServers;
+        private IDataService DataService;
 
-        public ArchiveModerationHandler(IDAFactory da, ISessions sessions, CityServerContext context, LotServerPicker lotServers)
+        public ArchiveModerationHandler(IDAFactory da, ISessions sessions, CityServerContext context, LotServerPicker lotServers, IDataService dataService)
         {
             this.DAFactory = da;
             this.Context = context;
             this.Sessions = sessions;
             this.LotServers = lotServers;
+            this.DataService = dataService;
         }
 
         public void Handle(IVoltronSession session, ArchiveModerationRequest packet)
@@ -93,6 +97,7 @@ namespace FSO.Server.Servers.City.Handlers
                             {
                                 // Update this sim's moderation level.
                                 da.Avatars.UpdateModerationLevel(avatarId, level);
+                                DataService.Invalidate<Avatar>(avatarId);
 
                                 // Try find the lot that the avatar is on.
                                 var claim = da.AvatarClaims.GetByAvatarID(avatarId);

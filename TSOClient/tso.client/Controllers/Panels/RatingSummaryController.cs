@@ -20,6 +20,8 @@ namespace FSO.Client.Controllers.Panels
         private BookmarkType CurrentType = BookmarkType.AVATAR;
         private uint RatingID = uint.MaxValue;
 
+        public uint ModerationLevel => Network.ModerationLevel;
+
         public RatingSummaryController(IUIAbstractRating view, IClientDataService dataService, Network.Network network)
         {
             this.Network = network;

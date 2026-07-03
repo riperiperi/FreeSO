@@ -11,6 +11,7 @@ using FSO.Common.Enum;
 using FSO.Common.Model;
 using FSO.Common.Utils;
 using FSO.Files.Formats.tsodata;
+using FSO.Server.DataService.Model;
 using FSO.Server.Protocol.Electron.Model;
 using FSO.Server.Protocol.Electron.Packets;
 using FSO.SimAntics.NetPlay;
@@ -47,6 +48,15 @@ namespace FSO.Client.Controllers
         public CityConnectionMode Mode => Network.Mode;
         public ArchiveConfigFlags ArchiveConfig => Network.ArchiveConfig;
         public ConnectArchiveRequest ArchiveHost => Network.ArchiveHost;
+        public uint ModerationLevel => Network.ModerationLevel;
+        private uint CityEditorThreshold =>
+            ArchiveConfig.HasFlag(ArchiveConfigFlags.CityEditorAllUsers) ? 0u :
+            (ArchiveConfig.HasFlag(ArchiveConfigFlags.CityEditorMods) ? 1u : 2u);
+
+        public bool AllowCityEditor => 
+            ArchiveConfig.HasFlag(ArchiveConfigFlags.CityEditor) && 
+            ModerationLevel >= CityEditorThreshold;
+
         public bool LocalTransition => ReconnectLotID != 0 && ReconnectTransition != null;
 
         public CoreGameScreenController(CoreGameScreen view, Network.Network network, IClientDataService dataService, IKernel kernel, LotConnectionRegulator joinLotRegulator)
@@ -68,7 +78,6 @@ namespace FSO.Client.Controllers
             Terrain = kernel.Get<TerrainController>(new ConstructorArgument("parent", this));
 
             view.Initialize(shard.Name, Terrain);
-            view.AllowCityEditor = ArchiveConfig.HasFlag(ArchiveConfigFlags.CityEditor); // TODO: only if admin
 
             if (Mode == CityConnectionMode.ARCHIVE)
                 view.ucp.InitArchive();

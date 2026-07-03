@@ -80,7 +80,6 @@ namespace FSO.Client.UI.Screens
 
         public UIButton CityEditButton;
         private UICityPainter CityPainter;
-        public bool AllowCityEditor;
 
         public bool InLot
         {
@@ -552,7 +551,7 @@ namespace FSO.Client.UI.Screens
                 GraphicsModeControl.ChangeMode((GraphicsModeControl.Mode == GlobalGraphicsMode.Full3D) ? GlobalGraphicsMode.Hybrid2D : GlobalGraphicsMode.Full3D);
             }
 
-            CityEditButton.Visible = AllowCityEditor && ZoomLevel >= 4 && (CityPainter == null || !CityPainter.Visible);
+            CityEditButton.Visible = FindController<CoreGameScreenController>()?.AllowCityEditor == true && ZoomLevel >= 4 && (CityPainter == null || !CityPainter.Visible);
         }
 
         public override void PreDraw(UISpriteBatch batch)

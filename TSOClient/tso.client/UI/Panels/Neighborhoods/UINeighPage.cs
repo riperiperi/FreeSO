@@ -419,14 +419,15 @@ namespace FSO.Client.UI.Panels.Neighborhoods
 
         private void RateSwitch(UIElement button)
         {
-            if (MayorIsMe || GameFacade.EnableMod)
+            var screen = FindController<CoreGameScreenController>();
+            if (MayorIsMe || (screen?.ModerationLevel ?? 0) > 0)
             {
                 CurrentMayorTab = UINeighMayorTabMode.Actions;
                 Redraw();
             }
             else
             {
-                FindController<CoreGameScreenController>()?.NeighborhoodProtocol?.BeginRating
+                screen?.NeighborhoodProtocol?.BeginRating
                     (CurrentNeigh.Value?.Id ?? 0,
                     CurrentNeigh.Value?.Neighborhood_MayorID ?? 0,
                     (success) =>
@@ -485,7 +486,8 @@ namespace FSO.Client.UI.Panels.Neighborhoods
 
         private void RenameAdmin(UIElement button)
         {
-            if (GameFacade.EnableMod)
+            var controller = FindController<NeighPageController>();
+            if (controller.ModerationLevel > 1)
             {
                 var lotName = new UILotPurchaseDialog();
                 lotName.OnNameChosen += (name) =>
@@ -493,7 +495,7 @@ namespace FSO.Client.UI.Panels.Neighborhoods
                     if (CurrentNeigh != null && CurrentNeigh.Value != null)
                     {
                         CurrentNeigh.Value.Neighborhood_Name = name;
-                        FindController<NeighPageController>().SaveName(CurrentNeigh.Value);
+                        controller.SaveName(CurrentNeigh.Value);
                     }
                     UIScreen.RemoveDialog(lotName);
 
@@ -635,7 +637,8 @@ namespace FSO.Client.UI.Panels.Neighborhoods
             }
             if (Visible && CurrentNeigh?.Value != null)
             {
-                if (GameFacade.EnableMod) DescriptionText.Mode = UITextEditMode.Editor;
+                var controller = FindController<NeighPageController>();
+                if (controller.ModerationLevel > 1) DescriptionText.Mode = UITextEditMode.Editor;
                 string mayorString;
                 if (CurrentNeigh.Value.Neighborhood_MayorID != 0)
                     mayorString = GameFacade.Strings.GetString("f115", "22", new string[] { MayorPersonButton.MainButton.Tooltip });
@@ -659,11 +662,13 @@ namespace FSO.Client.UI.Panels.Neighborhoods
 
         public void TrySaveDescription()
         {
-            if (CurrentNeigh != null && CurrentNeigh.Value != null && GameFacade.EnableMod
+            var controller = FindController<NeighPageController>();
+
+            if (CurrentNeigh != null && CurrentNeigh.Value != null && controller.ModerationLevel > 1
                 && DescriptionText.CurrentText != CurrentNeigh.Value.Neighborhood_Description && DescriptionChanged)
             {
                 CurrentNeigh.Value.Neighborhood_Description = DescriptionText.CurrentText;
-                FindController<NeighPageController>().SaveDescription(CurrentNeigh.Value);
+                controller.SaveDescription(CurrentNeigh.Value);
                 DescriptionChanged = false;
             }
         }
@@ -839,13 +844,15 @@ namespace FSO.Client.UI.Panels.Neighborhoods
 
             MayorElectionLabel.Visible = isMayor;
             MayorNominationLabel.Visible = isMayor;
-            
+
+            var screen = FindController<CoreGameScreenController>();
             var now = ClientEpoch.Now;
             bool hasMayor = false;
             bool iAmMayor = false;
+            uint moderationLevel = screen?.ModerationLevel ?? 0;
             
             if (CurrentNeigh.Value != null) {
-                iAmMayor = FindController<CoreGameScreenController>().IsMe(CurrentNeigh.Value.Neighborhood_MayorID);
+                iAmMayor = screen?.IsMe(CurrentNeigh.Value.Neighborhood_MayorID) ?? false;
                 MayorIsMe = iAmMayor;
                 if (CurrentTab == UINeighPageTab.Description && !DescriptionChanged)
                 {
@@ -891,7 +898,7 @@ namespace FSO.Client.UI.Panels.Neighborhoods
             }
 
             if (isMayor) {
-                var canUseExtraTools = iAmMayor || GameFacade.EnableMod;
+                var canUseExtraTools = iAmMayor || moderationLevel > 0;
                 MayorRatingFlairLabel.Caption = GameFacade.Strings.GetString("f115", (37 + (int)CurrentMayorTab).ToString());
                 RateButton.Caption = GameFacade.Strings.GetString("f115", (canUseExtraTools) ? "89" : "33");
                 if (!canUseExtraTools) CurrentMayorTab = UINeighMayorTabMode.Rate;
@@ -901,13 +908,13 @@ namespace FSO.Client.UI.Panels.Neighborhoods
 
             bool isRating = isMayor && CurrentMayorTab == UINeighMayorTabMode.Rate && hasMayor;
             MayorTabRateImage.Visible = isRating;
-            RateButton.Visible = isRating || GameFacade.EnableMod && isMayor;
+            RateButton.Visible = isRating || moderationLevel > 0 && isMayor;
             MayorRatingBox1.Visible = isRating;
             MayorRatingBox2.Visible = isRating;
 
             bool isMayorAction = isMayor && CurrentMayorTab == UINeighMayorTabMode.Actions;
 
-            MayorActionMod.Visible = isMayorAction && GameFacade.EnableMod;
+            MayorActionMod.Visible = isMayorAction && moderationLevel > 0;
             MayorActionMoveTH.Visible = isMayorAction;
             MayorActionMoveTH.Disabled = !HasTownHall;
             MayorActionNewTH.Visible = isMayorAction;

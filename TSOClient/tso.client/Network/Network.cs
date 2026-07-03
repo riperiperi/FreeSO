@@ -1,6 +1,7 @@
 ﻿using FSO.Client.Model;
 using FSO.Client.Regulators;
 using FSO.Common;
+using FSO.Common.DataService;
 using FSO.Common.Domain.Shards;
 using FSO.Server.Clients;
 using FSO.Server.Protocol.CitySelector;
@@ -65,6 +66,14 @@ namespace FSO.Client.Network
             get
             {
                 return Shards.All.First(x => x.Name == CityRegulator.CurrentShard.ShardName);
+            }
+        }
+
+        public uint ModerationLevel
+        {
+            get
+            {
+                return CityRegulator.ModerationLevel;
             }
         }
     }

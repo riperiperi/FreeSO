@@ -1,4 +1,5 @@
-﻿using FSO.Common.Domain;
+﻿using FSO.Common;
+using FSO.Common.Domain;
 using FSO.Common.Domain.Realestate;
 using FSO.Common.Domain.RealestateDomain;
 using FSO.Content.Model;
@@ -190,10 +191,15 @@ namespace FSO.Server.Servers.City.Handlers
 
             if (forEditor)
             {
-                if (!session.HasModerationLevel(1))
+                var flags = Context.Config.Archive?.Flags;
+                var threshold =
+                    (flags?.HasFlag(ArchiveConfigFlags.CityEditorAllUsers) ?? false) ? 0u :
+                    ((flags?.HasFlag(ArchiveConfigFlags.CityEditorMods) ?? false) ? 1u : 2u);
+
+                if (threshold > 0 && !session.HasModerationLevel((int)threshold))
                     return null;
 
-                if (!(Context.Config.Archive?.Flags.HasFlag(FSO.Common.ArchiveConfigFlags.CityEditor) ?? false))
+                if (!(flags?.HasFlag(FSO.Common.ArchiveConfigFlags.CityEditor) ?? false))
                     return null;
             }
 
