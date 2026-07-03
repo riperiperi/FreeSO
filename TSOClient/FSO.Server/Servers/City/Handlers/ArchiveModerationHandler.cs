@@ -32,11 +32,7 @@ namespace FSO.Server.Servers.City.Handlers
             if (session.IsAnonymous) return;
             using (var da = DAFactory.Get())
             {
-                var user = da.Users.GetById(session.UserId);
-                var mod = user.is_moderator;
-                var admin = user.is_admin;
-
-                int myLevel = user.is_admin ? 2 : (user.is_moderator ? 1 : 0);
+                int myLevel = (int)((session as VoltronSession)?.ModerationLevel ?? 0);
 
                 if (myLevel == 0) return;
 

@@ -8,7 +8,6 @@ using FSO.Server.Protocol.Electron.Model;
 using FSO.Server.Protocol.Electron.Packets;
 using Microsoft.Xna.Framework;
 using Microsoft.Xna.Framework.Graphics;
-using System.Collections.Generic;
 
 namespace FSO.Client.UI.Archive
 {
@@ -185,6 +184,7 @@ namespace FSO.Client.UI.Archive
                 case 1:
                     return UserModIcon;
                 case 2:
+                case 3:
                     return UserAdminIcon;
             }
 
@@ -238,36 +238,38 @@ namespace FSO.Client.UI.Archive
             new UIContextMenu(anchor, items, this);
         }
 
-        private void OpenActions(UIElement anchor, ArchiveClient client)
+        private void OpenActions(UIElement anchor, ArchiveClient client, int myLevel)
         {
-            int myLevel = (int)FindController<FSO.Client.Controllers.CoreGameScreenController>().ModerationLevel;
             int theirLevel = (int)client.ModerationLevel;
 
             var items = new List<UIContextMenuItem>();
 
-            if (myLevel == 2)
+            if (myLevel > theirLevel)
             {
-                // Change moderation level for this user
-                if (theirLevel != 2)
+                if (myLevel >= 2)
                 {
-                    items.Add(new UIContextMenuItem("Make Admin", () => { ChangePermissions(client, theirLevel, 2); }));
+                    // Change moderation level for this user
+                    if (theirLevel != 2)
+                    {
+                        items.Add(new UIContextMenuItem("Make Admin", () => { ChangePermissions(client, theirLevel, 2); }));
+                    }
+
+                    if (theirLevel != 1)
+                    {
+                        items.Add(new UIContextMenuItem("Make Moderator", () => { ChangePermissions(client, theirLevel, 1); }));
+                    }
+
+                    if (theirLevel != 0)
+                    {
+                        items.Add(new UIContextMenuItem("Revoke Admin/Mod", () => { ChangePermissions(client, theirLevel, 0); }));
+                    }
                 }
 
-                if (theirLevel != 1)
+                if (myLevel > 0)
                 {
-                    items.Add(new UIContextMenuItem("Make Moderator", () => { ChangePermissions(client, theirLevel, 1); }));
+                    items.Add(new UIContextMenuItem("Kick", () => { Kick(client); }));
+                    items.Add(new UIContextMenuItem("Ban", () => { Ban(client); }));
                 }
-
-                if (theirLevel != 0)
-                {
-                    items.Add(new UIContextMenuItem("Revoke Admin/Mod", () => { ChangePermissions(client, theirLevel, 0); }));
-                }
-            }
-
-            if (myLevel > 0 && myLevel > theirLevel)
-            {
-                items.Add(new UIContextMenuItem("Kick", () => { Kick(client); }));
-                items.Add(new UIContextMenuItem("Ban", () => { Ban(client); }));
             }
 
             new UIContextMenu(anchor, items, this);
@@ -298,7 +300,7 @@ namespace FSO.Client.UI.Archive
                         client,
                         "",
                         client.DisplayName,
-                        null,
+                        UserVerifyIcon,
                         actionButton)
                     {
                         CustomStyle = ListBoxColors,
@@ -306,13 +308,21 @@ namespace FSO.Client.UI.Archive
                     });
                 }
 
+                var screen = FindController<CoreGameScreenController>();
+
+                var myId = screen.MyID();
+                var myClient = list.Clients.FirstOrDefault(x => myId == x.AvatarId);
+                int myLevel = (int)(myClient.AvatarId != 0 ? myClient.ModerationLevel : screen.ModerationLevel);
+
                 foreach (var client in list.Clients)
                 {
                     var actionButton = new UIButton(AdminActionsButtonTexture);
 
+                    var hasActions = myLevel > client.ModerationLevel;
+
                     actionButton.OnButtonClick += (UIElement element) =>
                     {
-                        OpenActions(element, client);
+                        OpenActions(element, client, myLevel);
                     };
 
                     items.Add(new UIListBoxItem(
@@ -321,8 +331,8 @@ namespace FSO.Client.UI.Archive
                             ? (object)""
                             : new UIPersonButton() { FrameSize = UIPersonButtonSize.SMALL, AvatarId = client.AvatarId },
                         client.DisplayName,
-                        GetModIcon(client.ModerationLevel),
-                        actionButton)
+                        hasActions ? GetModIcon(client.ModerationLevel) : null,
+                        hasActions ? actionButton : GetModIcon(client.ModerationLevel))
                     {
                         CustomStyle = ListBoxColors
                     });

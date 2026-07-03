@@ -255,9 +255,10 @@ namespace FSO.Server.Servers.City
                 var user = da.ArchiveUsers.GetByClientHash(clientId);
                 var ip = (session.IoSession.RemoteEndPoint as IPEndPoint).Address.ToString();
 
-                bool forceAdmin = ip == "127.0.0.1";
+                // TODO: whitelist super admin ips?
+                bool superAdmin = ip == "127.0.0.1";
 
-                bool needsVerification = Config.Archive.Flags.HasFlag(FSO.Common.ArchiveConfigFlags.Verification) && !forceAdmin;
+                bool needsVerification = Config.Archive.Flags.HasFlag(FSO.Common.ArchiveConfigFlags.Verification) && !superAdmin;
 
                 if (user == null)
                 {
@@ -268,8 +269,8 @@ namespace FSO.Server.Servers.City
                         username = clientId,
                         user_state = Database.DA.Users.UserState.email_confirm,
                         email = "",
-                        is_admin = forceAdmin,
-                        is_moderator = forceAdmin,
+                        is_admin = superAdmin,
+                        is_moderator = superAdmin,
                         is_banned = false,
                         client_id = "0",
                         register_ip = ip,
@@ -325,7 +326,7 @@ namespace FSO.Server.Servers.City
                     user.display_name = packet.User;
                 }
 
-                if (forceAdmin && (!user.is_admin || !user.is_moderator))
+                if (superAdmin && (!user.is_admin || !user.is_moderator))
                 {
                     da.Users.UpdatePermissions(user.user_id, true, true);
                     user.is_admin = true;
@@ -337,7 +338,7 @@ namespace FSO.Server.Servers.City
                 var newSession = Sessions.UpgradeSession<VoltronSession>(session, x => {
                     x.UserId = user.user_id;
                     x.DisplayName = user.display_name;
-                    x.ModerationLevel = user.is_admin ? 2u : (user.is_moderator ? 1u : 0u);
+                    x.ModerationLevel = superAdmin ? 3u : user.is_admin ? 2u : (user.is_moderator ? 1u : 0u);
                     x.SessionUID = SessionUID++;
                     x.AvatarId = 0;
                     session.IsAuthenticated = true;
