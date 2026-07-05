@@ -355,7 +355,9 @@ namespace FSO.Client
             Disconnect(!InCity);
         }
 
-        public void Disconnect(bool toLogin){
+        public void Disconnect(bool toLogin)
+        {
+            DiscordRpcEngine.Secret = null;
             FatalAlertPriority = 0;
             ChangeState<TransitionScreen, DisconnectController>((view, controller) =>
             {

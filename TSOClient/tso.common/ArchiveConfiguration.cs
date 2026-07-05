@@ -324,5 +324,18 @@ namespace FSO.Common
 
             Save();
         }
+
+        public void RemoveJoin(ClientArchiveHistoryItem item)
+        {
+            var existing = JoinHistory.FindIndex(x => x.Address == item.Address && x.ServerType == item.ServerType);
+
+            if (existing != -1)
+            {
+                // If the item already exists, we're removing it.
+                JoinHistory.RemoveAt(existing);
+            }
+
+            Save();
+        }
     }
 }

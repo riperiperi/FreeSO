@@ -10,7 +10,6 @@ using FSO.Common.Utils;
 using FSO.Server.Clients;
 using Microsoft.Xna.Framework;
 using Microsoft.Xna.Framework.Graphics;
-using Ninject;
 
 namespace FSO.Client.UI.Archive
 {
@@ -45,6 +44,7 @@ namespace FSO.Client.UI.Archive
                     result = await StatusChecker.FreeSOStatus(Item.Address);
                     break;
                 case ClientArchiveHistoryType.Archive:
+                case ClientArchiveHistoryType.DiscordArchive:
                     // If it's archive, start a connection to the server, then disconnect after getting the RequestClientSessionArchive packet.
                     // Disconnect after two seconds of not receiving this packet.
                     result = await StatusChecker.ArchiveStatus(FSOFacade.Kernel, Item.Address);
