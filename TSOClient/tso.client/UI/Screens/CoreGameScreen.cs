@@ -512,7 +512,7 @@ namespace FSO.Client.UI.Screens
             if (secret != null)
             {
                 var joinAttempt = secret.Value;
-                bool joinLot = true;
+                bool joinLot = joinAttempt.LotID != 0;
                 // TODO: if the join attempt archive mode doesn't match archive mode enable, let the player know
                 if (joinAttempt.ArchiveMode)
                 {

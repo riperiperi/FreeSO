@@ -191,7 +191,7 @@ namespace FSO.Client.UI.Archive
 
             Servers = [.. Servers.Where(item => item != server)];
 
-            // TODO: save history
+            ClientArchiveConfiguration.Default.RemoveJoin(server.Item);
 
             UpdateServerTable();
         }
