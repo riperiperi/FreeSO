@@ -33,6 +33,7 @@ namespace FSO.Common
                 var str = File.ReadAllText(path);
 
                 var item = JsonConvert.DeserializeObject<T>(str);
+                item.ActivePath = path;
 
                 return item;
             }

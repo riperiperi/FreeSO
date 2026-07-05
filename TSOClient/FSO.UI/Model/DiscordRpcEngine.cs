@@ -1,6 +1,5 @@
 ﻿using FSO.Common.Enum;
-using System;
-
+using System.Text;
 using static FSO.UI.Model.DiscordRpc;
 
 namespace FSO.UI.Model
@@ -11,6 +10,34 @@ namespace FSO.UI.Model
         public string ServerID;
         public string ServerHostname;
         public uint LotID;
+
+        private static void XorBytes(byte[] data, byte[] pattern)
+        {
+            for (int i = 0; i < data.Length; i++)
+            {
+                data[i] ^= pattern[i % pattern.Length];
+            }
+        }
+
+        public static string EncodeHostname(string id, string hostname)
+        {
+            var hostnameBytes = Encoding.UTF8.GetBytes(hostname);
+            var idBytes = Encoding.UTF8.GetBytes(id);
+
+            XorBytes(hostnameBytes, idBytes);
+
+            return Convert.ToBase64String(hostnameBytes);
+        }
+
+        public static string DecodeHostname(string id, string encoded)
+        {
+            var encodedBytes = Convert.FromBase64String(encoded);
+            var idBytes = Encoding.UTF8.GetBytes(id);
+
+            XorBytes(encodedBytes, idBytes);
+
+            return Encoding.UTF8.GetString(encodedBytes);
+        }
 
         public RpcSecret(string secret)
         {
@@ -25,7 +52,7 @@ namespace FSO.UI.Model
                 }
 
                 ServerID = split[0];
-                ServerHostname = split[1];
+                ServerHostname = DecodeHostname(split[0], split[1]);
                 if (!uint.TryParse(split[2], out LotID))
                 {
                     LotID = 0;
@@ -46,7 +73,7 @@ namespace FSO.UI.Model
         {
             if (ArchiveMode)
             {
-                return $"#{ServerID ?? ""}#{ServerHostname ?? ""}#{LotID}";
+                return $"#{ServerID ?? ""}#{EncodeHostname(ServerID, ServerHostname ?? "")}#{LotID}";
             }
             else
             {
