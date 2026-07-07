@@ -247,7 +247,7 @@ namespace FSO.LotView.Components
                 rot.Up = new Vector3(0, 1, 0);
                 var invxz = (cam3d)?Matrix.Invert(rot): Matrix.Identity;
                 effect.Parameters["InvXZRotation"].SetValue(invxz * Matrix.CreateScale(0.5f));
-                effect.Parameters["SubColor"].SetValue(Bp.OutsideColor.ToVector4() * 0.6f * opacity);
+                effect.Parameters["SubColor"].SetValue(Bp.OutsideColor.ToVector4() * 0.6f * opacity * GetFadeAlpha());
             } else
             {
                 effect.Parameters["SubColor"].SetValue(Vector4.Zero);
@@ -257,6 +257,14 @@ namespace FSO.LotView.Components
             effect.Parameters["BpSize"].SetValue(new Vector2(Bp.Width * 3, Bp.Height * 3));
             effect.Parameters["Stories"].SetValue((float)(Bp.Stories + 1));
             InternalDraw(device, effect, scale2d, true, cam3d);
+        }
+
+        private float GetFadeAlpha()
+        {
+            var fade = FadeProgress ?? 0f;
+            if (fade < 0) fade = fade * fade; //give a bias to weather fading in
+
+            return 1 - Math.Abs(fade);
         }
 
         private Vector3 LastPosition;
@@ -294,7 +302,7 @@ namespace FSO.LotView.Components
                 rot.Up = new Vector3(0, 1, 0);
                 var invxz = Matrix.Invert(rot);
                 effect.Parameters["InvXZRotation"].SetValue(invxz * Matrix.CreateScale(0.5f));
-                effect.Parameters["SubColor"].SetValue(lightColor.ToVector4()*0.5f);// * new Vector4(0.25f, 0.25f, 0.5f, 0.25f));
+                effect.Parameters["SubColor"].SetValue(lightColor.ToVector4() * 0.5f * GetFadeAlpha());// * new Vector4(0.25f, 0.25f, 0.5f, 0.25f));
             }
             else
             {
@@ -313,10 +321,7 @@ namespace FSO.LotView.Components
         {
             effect.Parameters["BaseTex"].SetValue(Tex);
             effect.Parameters["IndoorsTex"].SetValue(Indoors);
-
-            var fade = FadeProgress ?? 0f;
-            if (fade < 0) fade = fade * fade; //give a bias to weather fading in
-            effect.Parameters["Color"].SetValue(Tint.ToVector4() * (1 - Math.Abs(fade)));
+            effect.Parameters["Color"].SetValue(Tint.ToVector4() * GetFadeAlpha());
 
             int exposureRate = 60; //FSOEnvironment.RefreshRate
             effect.Parameters["TimeRate"].SetValue(Math.Max(1,TimeRate)*0.001f/ exposureRate);
