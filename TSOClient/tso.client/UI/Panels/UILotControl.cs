@@ -133,7 +133,7 @@ namespace FSO.Client.UI.Panels
         public bool UserModZoom { get; set; }
         public bool StealFocus { get; set; }
 
-        public bool EnableTransitions = true;
+        public bool EnableTransitions => vm?.TSOState?.Flags.HasFlag(VMTSOLotStateFlags.AllowFreeRoam) ?? false;
 
         public void Scroll(Vector2 vec)
         {
@@ -1086,7 +1086,7 @@ namespace FSO.Client.UI.Panels
 
             if (GotoObject == null) GotoObject = vm.Context.CreateObjectInstance(GOTO_GUID, LotTilePos.OUT_OF_WORLD, Direction.NORTH, true).Objects[0];
 
-            if (EnableTransitions && TransitionObject == null)
+            if (TransitionObject == null && EnableTransitions)
             {
                 TransitionObject = vm.Context.CreateObjectInstance(TRANSITION_GUID, LotTilePos.OUT_OF_WORLD, Direction.NORTH, true).Objects[0];
             }

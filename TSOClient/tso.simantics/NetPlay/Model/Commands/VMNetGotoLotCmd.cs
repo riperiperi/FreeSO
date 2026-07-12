@@ -1,6 +1,7 @@
 ﻿using FSO.Common.Model;
 using FSO.LotView.Model;
 using FSO.SimAntics.Engine;
+using FSO.SimAntics.Model.TSOPlatform;
 using Microsoft.Xna.Framework;
 
 namespace FSO.SimAntics.NetPlay.Model.Commands
@@ -98,6 +99,11 @@ namespace FSO.SimAntics.NetPlay.Model.Commands
 
         public override bool Verify(VM vm, VMAvatar caller)
         {
+            if (!vm.TSOState.Flags.HasFlag(VMTSOLotStateFlags.AllowFreeRoam))
+            {
+                return false;
+            }
+
             // Ensure the target lot is in range.
             var relativeDir = GetLotRelativeDirection(vm);
 

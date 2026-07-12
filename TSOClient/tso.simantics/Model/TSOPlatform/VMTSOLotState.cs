@@ -10,7 +10,11 @@ namespace FSO.SimAntics.Model.TSOPlatform
     [Flags]
     public enum VMTSOLotStateFlags : uint
     {
-        Archived = 1
+        Archived = 1,
+        AllowFreeRoam = 2,
+        DebugAdmin = 4,
+        DebugMod = 8,
+        DebugAll = 16
     }
 
     public class VMTSOLotState : VMAbstractLotState

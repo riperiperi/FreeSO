@@ -841,7 +841,10 @@ namespace FSO.Server.Servers.Lot.Domain
             Lot.TSOState.LotID = LotPersist.location;
             Lot.TSOState.SkillMode = LotPersist.skill_mode;
             Lot.TSOState.PropertyCategory = (byte)LotPersist.category;
-            Lot.TSOState.Flags = LotPersist.ArchiveFlags != 0 ? VMTSOLotStateFlags.Archived : 0;
+            Lot.TSOState.Flags =
+                (LotPersist.ArchiveFlags != 0 ? VMTSOLotStateFlags.Archived : 0) | 
+                (AllowGuestOpening && !JobLot ? VMTSOLotStateFlags.AllowFreeRoam : 0);
+
             var isCommunity = LotPersist.category == LotCategory.community;
 
             if (isCommunity)

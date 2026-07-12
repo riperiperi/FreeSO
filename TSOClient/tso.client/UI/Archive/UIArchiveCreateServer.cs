@@ -20,6 +20,20 @@ namespace FSO.Client.UI.Archive
         private const int CITY_IMAGE_RADIUS = 8;
         private const int CITY_IMAGE_MARGIN = 4;
 
+        private struct ServerSubFlag
+        {
+            public ArchiveConfigFlags Value;
+            public string Caption;
+            public UIButton FlagCheck;
+            public UILabel Label;
+
+            public ServerSubFlag(ArchiveConfigFlags value, string caption)
+            {
+                Value = value;
+                Caption = caption;
+            }
+        }
+
         private struct ServerFlag
         {
             public ArchiveConfigFlags Value;
@@ -28,8 +42,9 @@ namespace FSO.Client.UI.Archive
             public int Indentation;
             public Action HelpAction;
             public UIButton FlagCheck;
+            public ServerSubFlag[] SubFlags;
 
-            public ServerFlag(ArchiveConfigFlags value, string caption, bool defaultValue, int indentation = 0, Action helpAction = null)
+            public ServerFlag(ArchiveConfigFlags value, string caption, bool defaultValue, int indentation = 0, Action helpAction = null, ServerSubFlag[] subFlags = null)
             {
                 Value = value;
                 Caption = caption;
@@ -37,24 +52,24 @@ namespace FSO.Client.UI.Archive
                 Indentation = indentation;
                 HelpAction = helpAction;
                 FlagCheck = null;
+                SubFlags = subFlags;
             }
         }
 
-        private ServerFlag[] Flags = new ServerFlag[]
-        {
+        private ServerFlag[] Flags =
+        [
             new ServerFlag(ArchiveConfigFlags.Offline, "Offline mode", false),
             new ServerFlag(ArchiveConfigFlags.UPnP, "Use UPnP", true, 0, UPnPHelp),
-            new ServerFlag(ArchiveConfigFlags.HideNames, "Hide display names", false),
             new ServerFlag(ArchiveConfigFlags.Verification, "Require user verification", false, 0, VerificationHelp),
+            new ServerFlag(ArchiveConfigFlags.CityEditor, "City editor", false, 0, CityEditorHelp, [new ServerSubFlag(ArchiveConfigFlags.CityEditorMods, "Mods"), new ServerSubFlag(ArchiveConfigFlags.CityEditorAllUsers, "All users")]),
             default, // Gap (flag value is 0)
-            new ServerFlag(ArchiveConfigFlags.AllOpenable, "All lots openable", true, 0, AllOpenableHelp),
-            new ServerFlag(ArchiveConfigFlags.DebugFeatures, "All-player debug mode", false, 0, DebugModeHelp),
-            //new ServerFlag(ArchiveConfigFlags.None, "Skill/money speed scale", false),
+            new ServerFlag(ArchiveConfigFlags.AllOpenable, "Free roam", true, 0, AllOpenableHelp),
+            new ServerFlag(ArchiveConfigFlags.DebugFeatures, "Debug interactions", true, 0, DebugModeHelp, [new ServerSubFlag(ArchiveConfigFlags.DebugFeaturesMods, "Mods"), new ServerSubFlag(ArchiveConfigFlags.DebugFeaturesAllUsers, "All users")]),
             new ServerFlag(ArchiveConfigFlags.AllowLotCreation, "Allow lot creation", true),
             new ServerFlag(ArchiveConfigFlags.AllowSimCreation, "Allow character creation", true),
             new ServerFlag(ArchiveConfigFlags.LockArchivedSims, "Lock archived characters", false, 1, ArchivedCharacterHelp),
-            new ServerFlag(ArchiveConfigFlags.CityEditor, "City editor", false, 0, CityEditorHelp),
-        };
+            new ServerFlag(ArchiveConfigFlags.HideNames, "Hide display names", false),
+        ];
 
         private UIArchiveDisplayName DisplayName;
         private UIButton ExportButton;
@@ -166,6 +181,40 @@ namespace FSO.Client.UI.Archive
                         var helpAction = flag.HelpAction;
                         helpBtn.OnButtonClick += (elem) => helpAction();
                         flagHbox.Add(helpBtn);
+                    }
+
+                    if (flag.SubFlags != null)
+                    {
+                        for (int j = 0; j < flag.SubFlags.Length; j++)
+                        {
+                            flagHbox.Add(new UISpacer(0));
+
+                            ref var sub = ref flag.SubFlags[j];
+
+                            var subcheck = new UIButton(GetTexture(0x0000083600000001))
+                            {
+                                Visible = check.Selected,
+                                Selected = Config.Flags.HasFlag(sub.Value)
+                            };
+                            sub.FlagCheck = subcheck;
+
+                            flagHbox.Add(subcheck);
+                            var subvalue = sub.Value;
+
+                            subcheck.OnButtonClick += (elem) =>
+                            {
+                                ToggleFlag(subvalue);
+                            };
+
+                            var label = new UILabel()
+                            {
+                                Caption = sub.Caption,
+                                Visible = check.Selected,
+                            };
+
+                            flagHbox.Add(label);
+                            sub.Label = label;
+                        }
                     }
 
                     flagHbox.AutoSize();
@@ -466,9 +515,27 @@ namespace FSO.Client.UI.Archive
 
             foreach (var item in Flags)
             {
+                bool selected = (item.Value & Config.Flags) != 0;
                 if (item.FlagCheck != null)
                 {
-                    item.FlagCheck.Selected = (item.Value & Config.Flags) != 0;
+                    item.FlagCheck.Selected = selected;
+                }
+
+                if (item.SubFlags != null)
+                {
+                    foreach (var sub in item.SubFlags)
+                    {
+                        if (sub.FlagCheck != null)
+                        {
+                            sub.FlagCheck.Visible = selected;
+                            sub.FlagCheck.Selected = (sub.Value & Config.Flags) != 0;
+                        }
+
+                        if (sub.Label != null)
+                        {
+                            sub.Label.Visible = selected;
+                        }
+                    }
                 }
             }
 
@@ -525,12 +592,12 @@ namespace FSO.Client.UI.Archive
 
         public static void AllOpenableHelp()
         {
-            UIAlert.Alert("All lots openable", "The original game server only allowed offline lots to be opened by their owner or roommates. When this option is set to true, any player can open any lot, as long as they are allowed to enter.", true);
+            UIAlert.Alert("Free roam", "The original game server only allowed offline lots to be opened by their owner or roommates, and empty lots couldn't be joined at all. When this option is set to true, any player can join any tile on the map.\n\nThis option will also allow players to travel seamlessly between properties by clicking on adjacent lots, or walking over the property boundary in direct control mode. Any sims present on adjacent lots also become visible.", true);
         }
 
         public static void DebugModeHelp()
         {
-            UIAlert.Alert("All-player debug mode", "The archive server gives admins the ability to spawn debug objects and use debug interactions. When this option is set to true, anyone can use in-lot debug features regardless of permissions.", true);
+            UIAlert.Alert("Debug interactions", "When enabled, the archive server gives admins the ability to spawn debug objects and use debug interactions. These interactions can optionally be enabled for moderators and all other users.", true);
         }
 
         public static void ArchivedCharacterHelp()

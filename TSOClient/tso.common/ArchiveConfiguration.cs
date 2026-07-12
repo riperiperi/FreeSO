@@ -20,6 +20,8 @@ namespace FSO.Common
         CityEditor = 1 << 10,
         CityEditorMods = 1 << 11,
         CityEditorAllUsers = 1 << 12,
+        DebugFeaturesMods = 1 << 13,
+        DebugFeaturesAllUsers = 1 << 14,
 
         DedicatedServer = 1 << 16,
 
