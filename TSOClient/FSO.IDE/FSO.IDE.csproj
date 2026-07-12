@@ -137,7 +137,7 @@
     <ContinuousIntegrationBuild>true</ContinuousIntegrationBuild>
   </PropertyGroup>
 
-  <Target Name="CopyMonoGameDLLs" AfterTargets="Build">
+  <Target Name="CopyMonoGameDLLsBuild" AfterTargets="Build">
     <!-- Remove root MonoGame.Framework.dll if it exists -->
     <Delete Files="$(OutputPath)MonoGame.Framework.dll" ContinueOnError="true" />
 
