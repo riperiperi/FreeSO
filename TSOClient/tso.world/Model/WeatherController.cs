@@ -164,7 +164,21 @@ namespace FSO.LotView.Model
         }
 
         public void SetWeather(short data) {
+            var oldData = WeatherData;
             WeatherData = data;
+
+            var isManual = IsManual;
+            var wasManual = (oldData & (1 << 8)) != 0;
+
+            if (!isManual && wasManual)
+            {
+                // Remove the manual weather instantly.
+                if (Current != null)
+                {
+                    Current.FadeProgress = 1;
+                    Current = null;
+                }
+            }
         }
 
         private int GetAutoWeatherIntensity(DateTime time)
