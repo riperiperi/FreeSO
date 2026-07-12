@@ -433,6 +433,16 @@ namespace FSO.Server.Servers.City.Domain
             return tcs.Task;
         }
 
+        public LotAllocation TryGet(uint rawId)
+        {
+            if (_Locks.TryGetValue(rawId, out var value))
+            {
+                return value;
+            }
+
+            return null;
+        }
+
         private LotAllocation Get(uint lotId)
         {
             return _Locks.GetOrAdd(lotId, x => {

@@ -1,6 +1,7 @@
 ﻿using FSO.Common.DataService;
 using FSO.Common.DataService.Model;
 using FSO.Server.Database.DA;
+using FSO.Server.Domain;
 using FSO.Server.Framework.Aries;
 using FSO.Server.Framework.Voltron;
 using FSO.Server.Protocol.Electron.Model;
@@ -16,14 +17,16 @@ namespace FSO.Server.Servers.City.Handlers
         private IDAFactory DAFactory;
         private CityServerContext Context;
         private LotServerPicker LotServers;
+        private readonly LotAllocations Allocations;
         private IDataService DataService;
 
-        public ArchiveModerationHandler(IDAFactory da, ISessions sessions, CityServerContext context, LotServerPicker lotServers, IDataService dataService)
+        public ArchiveModerationHandler(IDAFactory da, ISessions sessions, CityServerContext context, LotServerPicker lotServers, LotAllocations allocations, IDataService dataService)
         {
             this.DAFactory = da;
             this.Context = context;
             this.Sessions = sessions;
             this.LotServers = lotServers;
+            this.Allocations = allocations;
             this.DataService = dataService;
         }
 
@@ -102,23 +105,16 @@ namespace FSO.Server.Servers.City.Handlers
                                 {
                                     var lot = da.Lots.GetByLocation(Context.ShardId, claim.location);
 
-                                    if (lot != null)
+                                    var lotServer = Allocations.TryGet(claim.location & (uint)LotIdFlags.NormalMask)?.Server;
+                                    if (lotServer != null)
                                     {
-                                        var lotOwned = da.LotClaims.GetByLotID(lot.lot_id);
-                                        if (lotOwned != null)
+                                        //immediately notify lot of new roommate
+                                        lotServer.Write(new NotifyLotRoommateChange()
                                         {
-                                            var lotServer = LotServers.GetLotServerSession(lotOwned.owner);
-                                            if (lotServer != null)
-                                            {
-                                                //immediately notify lot of new roommate
-                                                lotServer.Write(new NotifyLotRoommateChange()
-                                                {
-                                                    AvatarId = avatarId,
-                                                    LotId = lot.lot_id,
-                                                    Change = Protocol.Gluon.Model.ChangeType.RELOAD_PERMISSIONS
-                                                });
-                                            }
-                                        }
+                                            AvatarId = avatarId,
+                                            LotId = lot?.lot_id ?? (int)claim.location,
+                                            Change = Protocol.Gluon.Model.ChangeType.RELOAD_PERMISSIONS
+                                        });
                                     }
                                 }
                             }
