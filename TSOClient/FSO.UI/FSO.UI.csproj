@@ -28,7 +28,7 @@
   </ItemGroup>
 
   <ItemGroup>
-    <PackageReference Include="FSOMina.NET" Version="1.0.0" />
+    <PackageReference Include="FSOMina.NET" Version="1.0.1" />
     <PackageReference Include="MonoGame.Framework.DesktopGL" Version="3.8.5-preview.2" />
     <PackageReference Include="MP3Sharp" Version="1.0.5" />
     <PackageReference Include="Newtonsoft.Json" Version="13.0.4" />
