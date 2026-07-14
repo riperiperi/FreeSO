@@ -1,4 +1,5 @@
-﻿using FSO.Common.Utils;
+﻿using FSO.Common.Domain.Realestate;
+using FSO.Common.Utils;
 using FSO.Content.Model;
 using FSO.Files.RC;
 using Microsoft.Xna.Framework;
@@ -46,13 +47,15 @@ namespace FSO.Client.Rendering.City
             public readonly int Count = count;
         }
 
-        public int ChunkSize = 16;
+        public const int ChunkSize = 16;
         public CityMap MapData;
         public Dictionary<int, CityFoliageChunk> Chunks = new Dictionary<int, CityFoliageChunk>();
 
         public DGRP3DVert[][] TreeVerts;
         public int[][] TreeInds;
         public readonly Matrix[] RotationMatrices;
+
+        private uint ActiveLocation;
 
         private readonly TreeGroup[] TreeGroups =
         [
@@ -144,7 +147,7 @@ namespace FSO.Client.Rendering.City
                 var x = i % 32;
                 var y = i / 32;
 
-                var chunkRect = new Rectangle(x * 16, y * 16, 16, 16);
+                var chunkRect = new Rectangle(x * ChunkSize, y * ChunkSize, ChunkSize, ChunkSize);
 
                 if (rect.Intersects(chunkRect))
                 {
@@ -153,25 +156,46 @@ namespace FSO.Client.Rendering.City
             }
         }
 
+        private void SetActiveLocation(uint location)
+        {
+            if (ActiveLocation != location)
+            {
+                foreach (var chunk in Chunks.Values)
+                {
+                    uint filtered = chunk.FilterActiveLocation(location);
+
+                    if (filtered != chunk.ActiveLocation)
+                    {
+                        chunk.ActiveLocation = filtered;
+                        chunk.Dirty = true;
+                    }
+                }
+
+                ActiveLocation = location;
+            }
+        }
+
         public void Draw(Terrain terrain, GraphicsDevice gd, CityContent content, Effect VertexShader, Effect PixelShader, int passIndex, int size, BoundingFrustum frustrum)
         {
             var camPos = terrain.Camera.CalculateR();
+            SetActiveLocation(terrain.ActiveLocation);
 
-            var cx = (int)Math.Round(camPos.X / 16);
-            var cy = (int)Math.Round(camPos.Y / 16);
+            var cx = (int)Math.Round(camPos.X / ChunkSize);
+            var cy = (int)Math.Round(camPos.Y / ChunkSize);
 
-            var invalid = Chunks.Keys.Where(i =>
+            var invalid = Chunks.Where(chunkPair =>
             {
-                var x = i % 32;
-                var y = i / 32;
+                var x = chunkPair.Value.X;
+                var y = chunkPair.Value.Y;
+
                 return (x < cx - 2) || (x > cx + 2) || (y < cy - 2) || (y > cy + 2);
             }).ToList();
 
             foreach (var c in invalid)
             {
-                var chunk = Chunks[c];
+                var chunk = c.Value;
                 chunk.Dispose();
-                Chunks.Remove(c);
+                Chunks.Remove(c.Key);
             }
 
             gd.RasterizerState = RasterizerState.CullNone;
@@ -225,7 +249,7 @@ namespace FSO.Client.Rendering.City
             }
         }
 
-        private (DGRP3DVert[], int[]) GetChunkData(int x, int y, HashSet<int> noTrees)
+        private (DGRP3DVert[], int[]) GetChunkData(int x, int y, HashSet<int> noTrees, uint activeLocation)
         {
             var verts = new List<DGRP3DVert>();
             var inds = new List<int>();
@@ -242,13 +266,16 @@ namespace FSO.Client.Rendering.City
             var forestDensityData = MapData.ForestDensityData;
             var roadData = MapData.RoadData;
 
+            var locationCoords = MapCoordinates.Unpack(activeLocation);
+            var treeCut = activeLocation == 0 ? Rectangle.Empty : new Rectangle(locationCoords.X - 1, locationCoords.Y - 1, 3, 3);
+
             for (int oy = starty; oy < endy; oy++)
             {
                 for (int ox = startx; ox < endx; ox++)
                 {
                     var ind = oy * 512 + ox;
                     var forestType = forestTypeData[ind];
-                    if (forestType != ForestType.NULL && !noTrees.Contains(ind))
+                    if (forestType != ForestType.NULL && !noTrees.Contains(ind) && !treeCut.Contains(ox, oy))
                     {
                         if (forestType == 0 && terrainTypeData[ind] == TerrainType.SNOW) forestType = ForestType.SNOW;
                         var densityN = ((forestDensityData[ind] * 4) / 255);
@@ -338,11 +365,13 @@ namespace FSO.Client.Rendering.City
                 return;
             }
 
+            chunk.ActiveLocation = ActiveLocation;
+
             chunk.Regenerating = true;
 
             Task.Run(() =>
             {
-                var (verts, inds) = GetChunkData(x, y, noTrees);
+                var (verts, inds) = GetChunkData(x, y, noTrees, chunk.ActiveLocation);
                 GameThread.NextUpdate(state =>
                 {
                     if (verts.Length > 0 && !chunk.Dead)
@@ -385,7 +414,7 @@ namespace FSO.Client.Rendering.City
         {
             var chunk = new CityFoliageChunk
             {
-                Bounds = new BoundingBox(new Vector3(x * ChunkSize, 0, y * ChunkSize), new Vector3((x + 1) * 32, 255 / 12f, (y + 1) * 32))
+                Bounds = new BoundingBox(new Vector3(x * ChunkSize, 0, y * ChunkSize), new Vector3((x + 1) * 32, 255 / 12f, (y + 1) * 32)),
             };
 
             RegenerateChunk(chunk, gd, x, y, noTrees);
@@ -416,10 +445,30 @@ namespace FSO.Client.Rendering.City
         public IndexBuffer Indices;
         public BoundingBox Bounds;
 
+        /// <summary>
+        /// Properties around the active location have their city view trees removed to avoid overlapping lot graphics.
+        /// If the active location doesn't overlap this chunk, it's set to 0.
+        /// </summary>
+        public uint ActiveLocation;
+
         public bool Dirty;
         public bool Regenerating;
 
         public bool Dead;
+
+        public uint FilterActiveLocation(uint location)
+        {
+            if (location == 0)
+            {
+                return 0;
+            }
+
+            var coords = MapCoordinates.Unpack(location);
+
+            var chunkRect = new Rectangle(X * 16, Y * 16, 16, 16);
+
+            return chunkRect.Contains(coords.X, coords.Y) ? location : 0;
+        }
 
         public bool ShouldRegenerate()
         {

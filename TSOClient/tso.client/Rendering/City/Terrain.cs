@@ -47,6 +47,7 @@ namespace FSO.Client.Rendering.City
 
         public Dictionary<Vector2, LotTileEntry> LotTileLookup => LotTiles.TileByVector;
         public HashSet<int> OccupiedTiles => LotTiles.OccupiedTiles;
+        public uint ActiveLocation;
 
         public VertexBuffer LotOfflineVerts;
         public IndexBuffer LotOfflineInds;
@@ -333,6 +334,14 @@ namespace FSO.Client.Rendering.City
             VertexColorDirty = true;
         }
 
+        private (int slicex, int slicey, CitySliceKey key) GetCitySliceKey(Vector2 pos)
+        {
+            var slicex = Math.Max(0, Math.Min(30, (int)Math.Round(pos.X / 16f) - 1));
+            var slicey = Math.Max(0, Math.Min(30, (int)Math.Round(pos.Y / 16f) - 1));
+            var slice = slicex + slicey * 32;
+            return (slicex, slicey, new CitySliceKey(slice, ActiveLocation));
+        }
+
         public void GenerateCityMesh(GraphicsDevice gd, Rectangle? range)
         {
             Geometry.MapData = Content.MapData;
@@ -346,12 +355,10 @@ namespace FSO.Client.Rendering.City
             else
             {
                 var pos = Camera.CalculateR();
-                var slicex = Math.Max(0, Math.Min(30, (int)Math.Round(pos.X / 16f) - 1));
-                var slicey = Math.Max(0, Math.Min(30, (int)Math.Round(pos.Y / 16f) - 1));
-                var slice = slicex + slicey * 32;
+                var (slicex, slicey, key) = GetCitySliceKey(pos);
 
                 Geometry.RegenMeshVerts(gd, true);
-                SubdivGeometry.SubRegenMeshVerts(m_GraphicsDevice, new Rectangle(slicex * 16, slicey * 16, 32, 32), 4, slice);
+                SubdivGeometry.SubRegenMeshVerts(m_GraphicsDevice, new Rectangle(slicex * 16, slicey * 16, 32, 32), 4, key);
                 Foliage.InvalidateChunks(range.Value);
             }
         }
@@ -1379,6 +1386,11 @@ namespace FSO.Client.Rendering.City
             return new BoundingFrustum(mvp);
         }
 
+        private void UpdateActiveLocation()
+        {
+            ActiveLocation = UIScreen.Current.FindController<CoreGameScreenController>()?.GetVisualLotID() ?? 0;
+        }
+
         private Matrix m_LightMatrix;
         public override void Draw(GraphicsDevice gfx)
         {
@@ -1387,6 +1399,8 @@ namespace FSO.Client.Rendering.City
             {
                 return;
             }
+
+            UpdateActiveLocation();
 
             m_GraphicsDevice = gfx;
 
@@ -1454,20 +1468,19 @@ namespace FSO.Client.Rendering.City
             //handle slices
             if (Camera.Zoomed == TerrainZoomMode.Far)
             {
-                if (SubdivGeometry.CurrentSlice != -1)
+                if (SubdivGeometry.CurrentSlice != null)
                 {
                     SubdivGeometry.Ready = -1;
-                    SubdivGeometry.CurrentSlice = -1;
+                    SubdivGeometry.CurrentSlice = null;
                 }
             } else
             {
                 var pos = Camera.CalculateR();
-                var slicex = Math.Max(0, Math.Min(30, (int)Math.Round(pos.X / 16f) - 1));
-                var slicey = Math.Max(0, Math.Min(30, (int)Math.Round(pos.Y / 16f) - 1));
-                var slice = slicex + slicey * 32;
-                if (SubdivGeometry.CurrentSlice != slice)
+                var (slicex, slicey, key) = GetCitySliceKey(pos);
+
+                if (SubdivGeometry.CurrentSlice != key)
                 {
-                    SubdivGeometry.SubRegenMeshVerts(m_GraphicsDevice, new Rectangle(slicex * 16, slicey * 16, 32, 32), 4, slice);
+                    SubdivGeometry.SubRegenMeshVerts(m_GraphicsDevice, new Rectangle(slicex * 16, slicey * 16, 32, 32), 4, key);
                 }
             }
 
@@ -1702,6 +1715,8 @@ namespace FSO.Client.Rendering.City
                 }
                 return;
             }
+
+            UpdateActiveLocation();
             m_GraphicsDevice = gfx;
 
             var world = Matrix.CreateTranslation(-LotPosition + new Vector3(-1 / 75f, -0.011f, 1 / 75f)) * Matrix.CreateRotationY((float)Math.PI / 2) * Matrix.CreateScale(75f * 3, 12 * 100 * Blueprint.TerrainFactorConst * 3, 75f * 3);
@@ -1758,6 +1773,15 @@ namespace FSO.Client.Rendering.City
             m_ScrHeight = m_GraphicsDevice.Viewport.Height;
             m_ScrWidth = m_GraphicsDevice.Viewport.Width;
 
+            // Update the current slice if necessary
+            var pos = Camera.CalculateR();
+            var (slicex, slicey, key) = GetCitySliceKey(pos);
+
+            if (SubdivGeometry.CurrentSlice != key)
+            {
+                SubdivGeometry.SubRegenMeshVerts(m_GraphicsDevice, new Rectangle(slicex * 16, slicey * 16, 32, 32), 4, key);
+            }
+
             if (RegenData) GenerateAssets(); //if assets are flagged as requiring regeneration, regenerate them!
 
             VertexShader.CurrentTechnique = VertexShader.Techniques[2];
@@ -1804,7 +1828,7 @@ namespace FSO.Client.Rendering.City
             VertexShader.CurrentTechnique.Passes[3].Apply();
 
             var controller = UIScreen.Current.FindController<CoreGameScreenController>();
-            var id = controller.GetVisualLotID();
+            var id = ActiveLocation;
 
             if (m_LotZoomProgress == 1)
             {

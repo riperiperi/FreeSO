@@ -1,14 +1,35 @@
-﻿using FSO.Common.Utils;
+﻿using FSO.Common.Domain.Realestate;
+using FSO.Common.Utils;
 using FSO.Content.Model;
 using Microsoft.Xna.Framework;
 using Microsoft.Xna.Framework.Graphics;
-using System;
-using System.Collections.Generic;
 using System.Runtime.CompilerServices;
-using System.Threading.Tasks;
 
 namespace FSO.Client.Rendering.City
 {
+    public readonly record struct CitySliceKey
+    {
+        public readonly int SliceID;
+        public readonly Rectangle? FlattenRect;
+
+        public CitySliceKey(int sliceID, uint lotId)
+        {
+            SliceID = sliceID;
+            FlattenRect = null;
+
+            if (lotId != 0)
+            {
+                // Try and build a flatten rect around the target lot.
+                // If surrounding lots are disabled, it only affects the current lot.
+                // If they're enabled, it affects the surrounding lots too.
+
+                var pos = MapCoordinates.Unpack(lotId);
+
+                FlattenRect = new Rectangle(pos.ToPoint(), new Point(1));
+            }
+        }
+    }
+
     public class CityGeometry
     {
         //draw order:
@@ -25,7 +46,7 @@ namespace FSO.Client.Rendering.City
         public int Width;
         public int Height;
         public int Ready = -1;
-        public int CurrentSlice = -1;
+        public CitySliceKey? CurrentSlice = null;
 
         private bool MeshRegenInProgress;
         private bool MeshDirty;
@@ -529,14 +550,42 @@ namespace FSO.Client.Rendering.City
         }
 
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        private int O(int x, int y, int minx, int maxx)
+        private static int O(int x, int y, int minx, int maxx)
         {
             return (Math.Max(0, Math.Min(511, y)) * 512 + Math.Max(minx, Math.Min(maxx, x)));
         }
 
-        public void SubRegenMeshVerts(GraphicsDevice gd, Rectangle? range, int subdiv, int cpos)
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
+        private static float GetContinuity(int x, int y, in Rectangle range, in Rectangle? flattenRect)
         {
-            CurrentSlice = cpos;
+            if (x <= range.X || x >= range.Right || y <= range.Y || y >= range.Bottom)
+            {
+                return -1;
+            }
+
+            if (flattenRect.HasValue)
+            {
+                Rectangle rect = flattenRect.Value;
+
+                if (x >= rect.X && x <= rect.Right && y >= rect.Y && y <= rect.Bottom)
+                {
+                    return -1;
+                }
+            }
+
+            return 0;
+        }
+
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
+        private static float Lerp(float a, float b, float t)
+        {
+            return a * (1 - t) + b * t;
+        }
+
+        public void SubRegenMeshVerts(GraphicsDevice gd, Rectangle range, int subdiv, CitySliceKey slice)
+        {
+            var cpos = slice.SliceID;
+            CurrentSlice = slice;
             var indices = new List<int>[5];
             var vertices = new List<TLayerVertex>[5];
 
@@ -560,11 +609,8 @@ namespace FSO.Client.Rendering.City
             float subd1f = 1f / subdiv;
             int vertCount = subd1 * subd1;
 
-            if (range.HasValue)
-            {
-                yStart = range.Value.Y;
-                yEnd = range.Value.Bottom;
-            }
+            yStart = range.Y;
+            yEnd = range.Bottom;
 
             Task.Run(() =>
             {
@@ -599,11 +645,8 @@ namespace FSO.Client.Rendering.City
                     xStart -= fadeRange;
                     xEnd += fadeRange;
 
-                    if (range.HasValue)
-                    {
-                        xStart = Math.Max(range.Value.X, xStart);
-                        xEnd = Math.Min(range.Value.Right, xEnd);
-                    }
+                    xStart = Math.Max(range.X, xStart);
+                    xEnd = Math.Min(range.Right, xEnd);
 
                     for (int j = xStart; j < xEnd; j++)
                     { //where the magic happens
@@ -639,11 +682,12 @@ namespace FSO.Client.Rendering.City
                         var normalRoad = roadByte & 15;
                         var cornerRoad = roadByte >> 4;
 
-                        var yEdge = (j == range.Value.X) ? -1f : 0f;
-                        var yEdge2 = (j == range.Value.Right - 1) ? -1f : 0f;
+                        // Also enforce continuity when within the FlattenRect
 
-                        var xEdge = (i == range.Value.Y) ? -1f : 0f;
-                        var xEdge2 = (i == range.Value.Bottom - 1) ? -1f : 0f;
+                        var cont00 = GetContinuity(j, i, range, in slice.FlattenRect);
+                        var cont10 = GetContinuity(j + 1, i, range, in slice.FlattenRect);
+                        var cont01 = GetContinuity(j, i + 1, range, in slice.FlattenRect);
+                        var cont11 = GetContinuity(j + 1, i + 1, range, in slice.FlattenRect);
 
                         Span<float> d =
                         [
@@ -658,15 +702,18 @@ namespace FSO.Client.Rendering.City
                         var yi = 0f;
                         for (int y = 0; y < subd1; y++)
                         {
-                            var lXE = (yi * xEdge2) + ((1 - yi) * xEdge);
                             var xi = 0f;
                             for (int x = 0; x < subd1; x++)
                             {
+                                var yEdge = Lerp(cont00, cont01, yi);
+                                var yEdge2 = Lerp(cont10, cont11, yi);
+
                                 float y1 = Cubic(d[0], d[1], d[2], d[3], yi, yEdge);
                                 float y2 = Cubic(d[4], d[5], d[6], d[7], yi, yEdge);
                                 float y3 = Cubic(d[8], d[9], d[10], d[11], yi, yEdge2);
                                 float y4 = Cubic(d[12], d[13], d[14], d[15], yi, yEdge2);
 
+                                var lXE = Lerp(yEdge, yEdge2, xi);
                                 var h = Cubic(y1, y2, y3, y4, xi, lXE);
 
                                 var lerpNX = Vector3.Lerp(norm1, norm2, xi);
