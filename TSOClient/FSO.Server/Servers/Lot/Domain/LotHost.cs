@@ -493,7 +493,7 @@ namespace FSO.Server.Servers.Lot.Domain
         //timeout for the background thread recieving more tasks.
         private static readonly int BACKGROUND_NOTIFY_TIMEOUT = 2000;
         //the number of times recieving no background tasks after which we assume the main thread is stuck in an infinite loop.
-        private static readonly int BACKGROUND_TIMEOUT_ABANDON_COUNT = 4;
+        private static readonly int BACKGROUND_TIMEOUT_ABANDON_COUNT = 2;
         private static readonly int BACKGROUND_TIMEOUT_SECONDS = 30;
         private uint LastTaskRecv = 0;
         private int BgTimeoutExpiredCount = 0;
@@ -517,8 +517,13 @@ namespace FSO.Server.Servers.Lot.Domain
 
                 if (tasks.Count > 1000) LOG.Error("Surprising number of background tasks for lot with dbid = " + Context.DbId + ": " + tasks.Count);
 
-                if (tasks.Count > 0) LastTaskRecv = Epoch.Now; //BgTimeoutExpiredCount = 0;
-                else if (Epoch.Now - LastTaskRecv > BACKGROUND_TIMEOUT_SECONDS) //++BgTimeoutExpiredCount > BACKGROUND_TIMEOUT_ABANDON_COUNT)
+                if (tasks.Count > 0)
+                {
+                    LastTaskRecv = Epoch.Now;
+                    BgTimeoutExpiredCount = 0;
+                }
+
+                else if (Epoch.Now - LastTaskRecv > BACKGROUND_TIMEOUT_SECONDS && ++BgTimeoutExpiredCount >= BACKGROUND_TIMEOUT_ABANDON_COUNT)
                 {
                     BgTimeoutExpiredCount = int.MinValue;
 
