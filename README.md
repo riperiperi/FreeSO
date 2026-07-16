@@ -20,6 +20,8 @@ The content system, HIT VM and SimAntics VM included within this repo support bo
 
 The FreeSO engine additionally supports a 3D mode, which allows you to see the game from a different perspective. 3D meshes are reconstructed at runtime from the z-buffers included with object sprites. FreeSO also generates 3D geometry for walls and floors at runtime, and switches to an alternate camera with different controls when the mode is enabled. 
 
+A large selection of objects from the game have specially crafted 3D models created by the community, as the generated 3D meshes can be garbled due to small details not encoding well into sprite form, and gaps between multitile parts. These are maintained separately at the [FSO.Remeshes](https://github.com/riperiperi/FSO.Remeshes) repository.
+
 The mode can be enabled via the launch parameter `-3d`. See the blog for more information. (http://freeso.org/the-impossible/)
 
 # Volcanic
