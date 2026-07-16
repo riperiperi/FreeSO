@@ -50,7 +50,9 @@ Looking for something to do? Check out the issues tagged as [help wanted](https:
 * [MonoGame](http://www.monogame.net): 3.8.5
 
 ## AI
-This repository does not accept AI assisted contributions in any form. FreeSO is a passion project born of the dedication and creativity of real people, each of whom has a storied history of playing the game, getting inspired by it, learning new skills to contribute and interacting with the community. Firing vague instructions at a prompt to make changes for changes sake is _not_ the kind of dedication that makes a project like this.
+**This repository does not accept AI assisted contributions in any form.**
+
+FreeSO is a passion project born of the dedication and creativity of real people, each of whom has a storied history of playing the game, getting inspired by it, learning new skills to contribute and interacting with the community. Firing vague instructions at a prompt to make changes for changes sake is _not_ the kind of dedication that makes a project like this.
 
 # License
 > This Source Code Form is subject to the terms of the Mozilla Public License, v. 2.0.
