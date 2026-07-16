@@ -1,16 +1,56 @@
 ﻿using FSO.Client;
 using FSO.Common.Utils;
+using FSO.LotView;
 using FSO.LotView.Components;
+using FSO.LotView.Model;
 using FSO.SimAntics;
+using FSO.SimAntics.Engine.TSOTransaction;
 using FSO.SimAntics.Entities;
+using FSO.SimAntics.Model;
+using FSO.SimAntics.NetPlay.Drivers;
 using Microsoft.Xna.Framework;
 using Microsoft.Xna.Framework.Graphics;
-using System;
 
 namespace FSO.UI.Utils
 {
     public static class CatThumbGenerator
     {
+        private static VM ThumbVM;
+
+        private static VM GetThumbVM()
+        {
+            if (ThumbVM == null)
+            {
+                var world = new ExternalWorld(GameFacade.GraphicsDevice);
+                world.Initialize(GameFacade.Scenes);
+                var context = new VMContext(world);
+
+                ThumbVM = new VM(context, new VMServerDriver(new VMTSOGlobalLinkStub()), new VMNullHeadlineProvider());
+                ThumbVM.Init();
+
+                var blueprint = new Blueprint(1, 1)
+                {
+                    Light =
+                    [
+                        new RoomLighting() { OutsideLight = 100 },
+                        new RoomLighting() { OutsideLight = 100 },
+                        new RoomLighting() { OutsideLight = 100 },
+                    ],
+                    OutsideColor = Color.White
+                };
+                blueprint.GenerateRoomLights();
+                blueprint.RoomColors[2].A /= 2;
+                world.State.AmbientLight.SetData(blueprint.RoomColors);
+                world.State.OutsidePx.SetData([Color.White]);
+
+                world.InitBlueprint(blueprint);
+                context.Blueprint = blueprint;
+                context.Architecture = new VMArchitecture(1, 1, blueprint, ThumbVM.Context);
+            }
+
+            return ThumbVM;
+        }
+
         public static Texture2D GenerateThumb(VMMultitileGroup obj, VM vm)
         {
             var gd = GameFacade.GraphicsDevice;
@@ -34,7 +74,15 @@ namespace FSO.UI.Utils
             var oldRts = gd.GetRenderTargets();
             gd.SetRenderTarget(result);
             gd.Clear(Color.Black);
-            sb.Begin(blendState: BlendState.AlphaBlend);
+            var sampler = new SamplerState()
+            {
+                AddressU = TextureAddressMode.Clamp,
+                AddressV = TextureAddressMode.Clamp,
+                AddressW = TextureAddressMode.Clamp,
+                Filter = TextureFilter.Linear,
+                MipMapLevelOfDetailBias = -0.5f,
+            };
+            sb.Begin(blendState: BlendState.NonPremultiplied, samplerState: sampler);
             var minScale = Math.Min(37f/newAgain.Width, 37f/newAgain.Height);
             if (minScale > 1) minScale = 1;
             var rect = new Rectangle(
@@ -55,6 +103,24 @@ namespace FSO.UI.Utils
             gd.SetRenderTargets(oldRts);
             newAgain.Dispose();
             return result;
+        }
+
+        public static Texture2D GenerateThumb(uint guid)
+        {
+            var vm = GetThumbVM();
+
+            var obj = vm.Context.CreateObjectInstance(guid, LotTilePos.OUT_OF_WORLD, Direction.NORTH, true);
+
+            if (obj == null)
+            {
+                return null;
+            }
+
+            var icon = GenerateThumb(obj, vm);
+
+            obj.Delete(vm.Context);
+
+            return icon;
         }
     }
 }

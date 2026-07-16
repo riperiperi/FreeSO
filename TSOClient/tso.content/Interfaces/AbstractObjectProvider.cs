@@ -2,6 +2,7 @@
 using FSO.Common.Utils;
 using FSO.Files.Formats.IFF;
 using FSO.Files.Formats.IFF.Chunks;
+using Microsoft.Xna.Framework.Graphics;
 using System;
 using System.Collections.Generic;
 using System.IO;
@@ -17,6 +18,8 @@ namespace FSO.Content.Interfaces
         public Dictionary<ulong, GameObjectReference> Entries;
         public Dictionary<ulong, GameObjectCatalogEnrich> CatalogEnrich = new Dictionary<ulong, GameObjectCatalogEnrich>();
         public List<GameObjectReference> ControllerObjects = new List<GameObjectReference>();
+
+        public Dictionary<ulong, Texture2D> IconCache = [];
 
         public AbstractObjectProvider(Content contentManager)
         {
@@ -203,6 +206,17 @@ namespace FSO.Content.Interfaces
             }
             if (guid == 0) return null;
             return Get(guid);
+        }
+
+        public Texture2D GetOrAddGeneratedIcon(uint guid, Func<Texture2D> generator)
+        {
+            if (!IconCache.TryGetValue(guid, out Texture2D result))
+            {
+                result = generator();
+                IconCache[guid] = result;
+            }
+
+            return result;
         }
     }
 }

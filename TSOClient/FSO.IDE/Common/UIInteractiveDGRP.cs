@@ -2,6 +2,7 @@
 using FSO.Client.UI.Framework;
 using FSO.Common.Rendering.Framework.Model;
 using FSO.Files.Formats.IFF.Chunks;
+using FSO.LotView;
 using FSO.LotView.Components;
 using FSO.LotView.Model;
 using FSO.SimAntics;

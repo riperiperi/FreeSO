@@ -120,6 +120,7 @@ namespace FSO.SimAntics
         public VMEntityTuning TuningReplacement;
         public bool Portal => EntryPoints[15].ActionFunction != 0;
         public bool Window => ((VMEntityFlags2)GetValue(VMStackObjectVariable.FlagField2)).HasFlag(VMEntityFlags2.ArchitectualWindow);
+        public OBJD GroupDefinition => MasterDefinition ?? Object.OBJ;
         public virtual bool MovesOften
         {
             get

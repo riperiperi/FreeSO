@@ -2,7 +2,6 @@
 using FSO.SimAntics;
 using FSO.SimAntics.Entities;
 using Microsoft.Xna.Framework.Graphics;
-using System;
 using FSO.Common.Rendering.Framework.Model;
 using FSO.Client;
 using FSO.SimAntics.NetPlay.Drivers;
@@ -11,6 +10,7 @@ using FSO.LotView.Model;
 using FSO.LotView.Components;
 using Microsoft.Xna.Framework;
 using FSO.SimAntics.Engine.TSOTransaction;
+using FSO.LotView;
 
 using Color = Microsoft.Xna.Framework.Color;
 

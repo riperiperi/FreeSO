@@ -1,11 +1,10 @@
 ﻿using FSO.Common;
 using FSO.Common.Rendering.Framework;
 using FSO.Common.Utils;
-using FSO.LotView;
 using FSO.LotView.Utils;
 using Microsoft.Xna.Framework.Graphics;
 
-namespace FSO.IDE.Common
+namespace FSO.LotView
 {
     public class ExternalWorld : World
     {
