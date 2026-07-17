@@ -263,6 +263,7 @@ namespace FSO.Client.UI.Screens
             CreditsButton.Tooltip = GameFacade.Strings.GetString("f128", "125");
             m_ExitButton.OnButtonClick += new ButtonClickDelegate(m_ExitButton_OnButtonClick);
             CASButton.OnButtonClick += OpenCAS;
+            CASButton.Disabled = true;
             AcceptButton.OnButtonClick += AcceptSelection;
             AcceptButton.Disabled = true;
             SearchBox.OnChange += (elem) =>
@@ -329,6 +330,9 @@ namespace FSO.Client.UI.Screens
         public void SetData(ArchiveAvatarsResponse data)
         {
             Data = data;
+
+            CASButton.Disabled = !data.CasEnabled;
+            PersonSlot.SetCasEnabled(data.CasEnabled);
 
             if (!data.IsVerified)
             {
@@ -604,6 +608,8 @@ namespace FSO.Client.UI.Screens
             AvatarButton.OnButtonClick += new ButtonClickDelegate(OnSelect);
             CityButton.OnButtonClick += new ButtonClickDelegate(OnSelect);
             HouseButton.OnButtonClick += new ButtonClickDelegate(OnSelect);
+
+            SetCasEnabled(false);
         }
 
         void OnSelect(UIElement button)
@@ -837,6 +843,11 @@ namespace FSO.Client.UI.Screens
         private void EnterTabButton_OnButtonClick(UIElement button)
         {
             SetTab(PersonSlotTab.EnterTab);
+        }
+
+        public void SetCasEnabled(bool enabled)
+        {
+            NewAvatarButton.Disabled = !enabled;
         }
 
         public void DeviceReset(GraphicsDevice device){

@@ -1,4 +1,5 @@
-﻿using FSO.Common.DataService;
+﻿using FSO.Common;
+using FSO.Common.DataService;
 using FSO.Server.Database.DA;
 using FSO.Server.Database.DA.AvatarClaims;
 using FSO.Server.Framework.Voltron;
@@ -67,8 +68,9 @@ namespace FSO.Server.Servers.City.Handlers
                     }
 
                     // permissions check - currently supports shared and owned avatars but pretty fixed
+                    bool canUseArchive = !Context.Config.Archive.Flags.HasFlag(ArchiveConfigFlags.LockArchivedSims) || session.HasModerationLevel(1);
 
-                    if (ava.user_id != session.UserId && ava.user_id != 1)
+                    if (ava.user_id != session.UserId && (!canUseArchive || ava.user_id != 1))
                     {
                         session.Response(ArchiveAvatarSelectCode.NoPermission);
                         return;

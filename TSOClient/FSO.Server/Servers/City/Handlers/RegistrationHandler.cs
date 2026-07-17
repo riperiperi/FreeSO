@@ -10,6 +10,7 @@ using FSO.Server.Common;
 using FSO.Server.Framework.Voltron;
 using FSO.Server.Protocol.Electron.Packets;
 using FSO.SimAntics.Engine.Scopes;
+using FSO.Common;
 
 namespace FSO.Server.Servers.City.Handlers
 {
@@ -70,6 +71,20 @@ namespace FSO.Server.Servers.City.Handlers
         /// <param name="packet"></param>
         public void Handle(IVoltronSession session, RSGZWrapperPDU packet)
         {
+            if (Context.Config.Archive != null)
+            {
+                if (!Context.Config.Archive.Flags.HasFlag(ArchiveConfigFlags.AllowSimCreation) && !session.HasModerationLevel(1))
+                {
+                    session.Write(new CreateASimResponse
+                    {
+                        Status = CreateASimStatus.FAILED,
+                        Reason = CreateASimFailureReason.CAS_DISABLED
+                    });
+
+                    return;
+                }
+            }
+
             PurchasableOutfit head = null;
             PurchasableOutfit body = null;
 
