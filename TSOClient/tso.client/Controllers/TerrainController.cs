@@ -267,7 +267,7 @@ namespace FSO.Client.Controllers
 
         public bool IsPurchasable(int x, int y)
         {
-            return Realestate.IsPurchasable((ushort)x, (ushort)y);
+            return Realestate.IsPurchasable((ushort)x, (ushort)y) && Parent.CanPurchaseLots;
         }
 
         private bool IsTileOccupied(int x, int y)

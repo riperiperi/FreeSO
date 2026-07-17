@@ -57,6 +57,11 @@ namespace FSO.Client.Controllers
             ArchiveConfig.HasFlag(ArchiveConfigFlags.CityEditor) && 
             ModerationLevel >= CityEditorThreshold;
 
+        public bool CanPurchaseLots =>
+            Mode != CityConnectionMode.ARCHIVE ||
+            ArchiveConfig.HasFlag(ArchiveConfigFlags.AllowLotCreation) ||
+            ModerationLevel > 0;
+
         public bool LocalTransition => ReconnectLotID != 0 && ReconnectTransition != null;
 
         public CoreGameScreenController(CoreGameScreen view, Network.Network network, IClientDataService dataService, IKernel kernel, LotConnectionRegulator joinLotRegulator)

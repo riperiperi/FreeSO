@@ -1,4 +1,5 @@
-﻿using FSO.Common.DataService;
+﻿using FSO.Common;
+using FSO.Common.DataService;
 using FSO.Common.DataService.Model;
 using FSO.Common.Domain.Realestate;
 using FSO.Common.Domain.RealestateDomain;
@@ -36,6 +37,19 @@ namespace FSO.Server.Servers.City.Handlers
         {
             if (session.IsAnonymous) //CAS users can't do this.
                 return;
+
+            if (Context.Config.Archive != null)
+            {
+                if (!Context.Config.Archive.Flags.HasFlag(ArchiveConfigFlags.AllowLotCreation) && !session.HasModerationLevel(1))
+                {
+                    session.Write(new PurchaseLotResponse()
+                    {
+                        Status = PurchaseLotStatus.FAILED,
+                        Reason = PurchaseLotFailureReason.PURCHASE_DISABLED
+                    });
+                    return;
+                }
+            }
 
             var isPurchasable = Realestate.IsPurchasable(packet.LotLocation_X, packet.LotLocation_Y);
 

@@ -50,6 +50,7 @@ namespace FSO.Server.Protocol.Electron.Packets
         NOT_OFFLINE_FOR_MOVE = 0x07,
         LOCATION_TAKEN = 0x08,
         NHOOD_RESERVED = 0x09,
+        PURCHASE_DISABLED = 0x10,
 
         TH_NOT_MAYOR = 0x80,
         TH_INCORRECT_NHOOD = 0x81,
