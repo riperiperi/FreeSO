@@ -277,9 +277,10 @@ namespace FSO.Client.Rendering.City
                     var forestType = forestTypeData[ind];
                     if (forestType != ForestType.NULL && !noTrees.Contains(ind) && !treeCut.Contains(ox, oy))
                     {
-                        if (forestType == 0 && terrainTypeData[ind] == TerrainType.SNOW) forestType = ForestType.SNOW;
+                        var terrainType = terrainTypeData[ind];
+                        if (forestType == 0 && terrainType == TerrainType.SNOW) forestType = ForestType.SNOW;
                         var densityN = ((forestDensityData[ind] * 4) / 255);
-                        if (densityN == 0) continue;
+                        if (densityN == 0 || terrainType == TerrainType.WATER) continue;
                         var density = TreeCounts[densityN - 1];
                         var rand = new SimpleRandom((ulong)(ind * 231458721));// new Random(ind);
 
