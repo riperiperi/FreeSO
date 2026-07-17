@@ -281,7 +281,7 @@ namespace FSO.Client.Controllers
             CurrentHoverLot.Value = null;
             if (HoverTimeout != null) { HoverTimeout.Clear(); }
 
-            if (Realestate.IsPurchasable((ushort)x, (ushort)y))
+            if (IsPurchasable(x, y))
             {
                 HoverTimeout = GameThread.SetTimeout(() =>
                 {
@@ -364,7 +364,7 @@ namespace FSO.Client.Controllers
                         Parent.ShowLotPage(id);
                     });
                 }
-                else if (!Realestate.IsPurchasable((ushort)x, (ushort)y))
+                else if (!IsPurchasable(x, y))
                     return;
                 else if (PlacingTownHall && View.NeighGeom.NhoodNearestDB(x, y) != TownHallNhood)
                 {
