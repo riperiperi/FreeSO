@@ -480,6 +480,11 @@ namespace FSO.Client.Controllers
             return Network.MyCharacter;
         }
 
+        public string TryGetUsername(uint id)
+        {
+            return Network.TryGetUsername(id);
+        }
+
         public void Dispose()
         {
             JoinLotRegulator.OnTransition -= JoinLotRegulator_OnTransition;

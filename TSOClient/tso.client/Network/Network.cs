@@ -76,5 +76,15 @@ namespace FSO.Client.Network
                 return CityRegulator.ModerationLevel;
             }
         }
+
+        public string TryGetUsername(uint id)
+        {
+            if (Mode == CityConnectionMode.ARCHIVE && !ArchiveConfig.HasFlag(ArchiveConfigFlags.HideNames) && CityRegulator.UserList != null)
+            {
+                return CityRegulator.UserList.Clients.FirstOrDefault(x => x.AvatarId == id).DisplayName;
+            }
+
+            return null;
+        }
     }
 }
