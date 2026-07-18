@@ -584,18 +584,21 @@ namespace FSO.Client.UI.Screens
             vm.Context.Clock.Hours = tsoTime.Item1;
             vm.Context.Clock.Minutes = tsoTime.Item2;
             
-            if (LotView.WorldConfig.Current.SurroundingLots > 0)
+            if (vm.Context.Architecture != null)
             {
-                SimAntics.Utils.VMLotTerrainRestoreTools.RestoreSurroundings(vm, vm.HollowAdj);
-            }
+                if (LotView.WorldConfig.Current.SurroundingLots > 0)
+                {
+                    SimAntics.Utils.VMLotTerrainRestoreTools.RestoreSurroundings(vm, vm.HollowAdj);
+                }
 
-            AssetStreaming.BeginStreaming(AssetStreamingMode.Lot);
-            while (!World.Preload(GameFacade.GraphicsDevice))
-            {
-                // Don't show anything until preloading completes.
-                AssetStreaming.DigestStreamUpdate();
+                AssetStreaming.BeginStreaming(AssetStreamingMode.Lot);
+                while (!World.Preload(GameFacade.GraphicsDevice))
+                {
+                    // Don't show anything until preloading completes.
+                    AssetStreaming.DigestStreamUpdate();
+                }
+                AssetStreaming.EndStreaming();
             }
-            AssetStreaming.EndStreaming();
         }
 
         public bool BlueprintReset(string path)
