@@ -8,6 +8,7 @@
         <AssemblyName>FreeSO</AssemblyName>
         <ApplicationIcon>fso.ico</ApplicationIcon>
         <PublishReadyToRun>false</PublishReadyToRun>
+        <PublishSingleFile Condition="'$(RuntimeIdentifier)' == 'osx-arm64'">true</PublishSingleFile>
         <TieredPGO>true</TieredPGO>
         <_EnableMacOSCodeSign Condition="'$(PublishSingleFile)' == 'true'">false</_EnableMacOSCodeSign>
         <PublishAot>false</PublishAot>
@@ -69,7 +70,7 @@
         </ItemGroup>
 
         <Copy SourceFiles="@(GameContent)" DestinationFiles="@(GameContent->'$(PublishDir)/FreeSO.app/Contents/MacOS/Content/%(RecursiveDir)%(Filename)%(Extension)')" SkipUnchangedFiles="true" />
-        <Copy SourceFiles="$(PublishDir)/version.txt" DestinationFolder="$(PublishDir)/FreeSO.app/Contents/MacOS" />
+        <Copy SourceFiles="$(PublishDir)/version.json" DestinationFolder="$(PublishDir)/FreeSO.app/Contents/MacOS" />
 
         <!-- Clean up existing symlink/folder if present -->
         <RemoveDir Directories="$(PublishDir)/FreeSO.app/Contents/Resources/Content" />
