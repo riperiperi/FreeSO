@@ -41,13 +41,13 @@ namespace FSO.Client.Network.Sandbox
             ((IoSession)cli.NetHandle).Write(msg);
         }
 
-        public void Broadcast(VMNetMessage msg, HashSet<VMNetClient> ignore)
+        public void Broadcast(VMNetMessage msg, HashSet<VMNetClient> include)
         {
             List<IoSession> cliClone;
             lock (Sessions) cliClone = new List<IoSession>(Sessions);
             foreach (var s in cliClone)
             {
-                if (ignore.Contains(s.GetAttribute('c'))) continue;
+                if (!include.Contains(s.GetAttribute('c'))) continue;
                 s.Write(msg);
             }
         }
