@@ -1729,6 +1729,37 @@ namespace FSO.Server.Servers.Lot.Domain
             if (RelationshipsToSave.Count > 0) BatchRelationshipSave();
         }
 
+        private bool IsAvatarDebug(uint modLevel)
+        {
+            if (Config.Archive != null)
+            {
+                // Use the archive flags to gate debug features
+                var flags = Config.Archive.Flags;
+
+                if (flags.HasFlag(FSO.Common.ArchiveConfigFlags.DebugFeatures))
+                {
+                    int requiredLevel = 2;
+
+                    if (flags.HasFlag(FSO.Common.ArchiveConfigFlags.DebugFeaturesAllUsers))
+                    {
+                        requiredLevel = 0;
+                    }
+                    else if (flags.HasFlag(FSO.Common.ArchiveConfigFlags.DebugFeaturesMods))
+                    {
+                        requiredLevel = 1;
+                    }
+
+                    return modLevel >= requiredLevel;
+                }
+                else
+                {
+                    return false;
+                }
+            }
+
+            return modLevel > 0;
+        }
+
         //Run on the background thread
         public void AvatarJoin(IVoltronSession session)
         {
@@ -1802,6 +1833,8 @@ namespace FSO.Server.Servers.Lot.Domain
                         state.AvatarFlags |= VMTSOAvatarFlags.Spectator;
                     }
                 }
+
+                state.AvatarFlags |= IsAvatarDebug((session as VoltronSession)?.ModerationLevel ?? 0) ? VMTSOAvatarFlags.Debug : 0;
 
                 Host.RecordStartVisit(session, visitorType);
 
@@ -2119,6 +2152,7 @@ namespace FSO.Server.Servers.Lot.Domain
             if (!signalled) return; //give up
             VMTSOAvatarPermissions newLevel = VMTSOAvatarPermissions.Visitor;
             VMChangePermissionsMode mode = VMChangePermissionsMode.NORMAL;
+            bool? debug = null;
             switch (change)
             {
                 case ChangeType.ADD_ROOMMATE:
@@ -2139,6 +2173,7 @@ namespace FSO.Server.Servers.Lot.Domain
                         var ava = da.Avatars.Get(avatar_id);
                         var roomies = da.Roommates.GetAvatarsLots(avatar_id);
                         newLevel = GetAvatarPermissions(ava, roomies);
+                        debug = IsAvatarDebug(ava.moderation_level);
                     }
                     break;
             }
@@ -2150,6 +2185,7 @@ namespace FSO.Server.Servers.Lot.Domain
                     TargetUID = avatar_id,
                     Level = newLevel,
                     Mode = mode,
+                    Debug = debug,
                     ReplaceUID = replace_id,
                     Verified = true,
                 });

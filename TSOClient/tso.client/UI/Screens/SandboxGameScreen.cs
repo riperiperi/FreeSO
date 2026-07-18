@@ -450,6 +450,7 @@ namespace FSO.Client.UI.Screens
                 SkinTone = (byte)settings.DebugSkin,
                 Gender = (short)(settings.DebugGender ? 0 : 1),
                 Permissions = SimAntics.Model.TSOPlatform.VMTSOAvatarPermissions.Admin,
+                AvatarFlags = SimAntics.Model.TSOPlatform.VMTSOAvatarFlags.Debug,
                 //CustomGUID = 0x396CD3D1,
                 Budget = 1000000,
             };

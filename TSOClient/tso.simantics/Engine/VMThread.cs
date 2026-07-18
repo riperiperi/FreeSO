@@ -1018,10 +1018,9 @@ namespace FSO.SimAntics.Engine
                 //if flags are empty apart from "Non-Empty", force everything but visitor. (a kind of default state)
                 if (tsoCompare == TSOFlags.NonEmpty) tsoCompare |= TSOFlags.AllowFriends | TSOFlags.AllowRoommates | TSOFlags.AllowObjectOwner;
 
-                //DEBUG: enable debug interction for all CSRs.
                 if ((action.Flags & TTABFlags.Debug) > 0)
                 {
-                    if ((tsoState & TSOFlags.AllowCSRs) > 0)
+                    if (avatar.AvatarState.Flags.HasFlag(VMTSOAvatarFlags.Debug))
                         return result; //do not bother running check
                     else
                         return null; //disable debug for everyone else.

@@ -94,7 +94,7 @@ namespace FSO.SimAntics.Model.Platform
                 var whitelist = (ava.AvatarState.Permissions == VMTSOAvatarPermissions.Roommate) ? RoomieWhiteList : BuilderWhiteList;
                 if (item == null || !whitelist.Contains(item.Value.Category))
                 {
-                    if (ava.AvatarState.Permissions != VMTSOAvatarPermissions.Admin) return PurchaseMode.Disallowed;
+                    if (!ava.AvatarState.Flags.HasFlag(VMTSOAvatarFlags.Debug)) return PurchaseMode.Disallowed;
                 }
             }
 

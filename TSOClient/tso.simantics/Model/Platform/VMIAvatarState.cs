@@ -5,5 +5,6 @@ namespace FSO.SimAntics.Model.Platform
     public interface VMIAvatarState
     {
         VMTSOAvatarPermissions Permissions { get; set; }
+        VMTSOAvatarFlags Flags { get; set; }
     }
 }

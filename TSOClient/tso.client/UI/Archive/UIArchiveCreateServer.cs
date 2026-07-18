@@ -597,7 +597,7 @@ namespace FSO.Client.UI.Archive
 
         public static void DebugModeHelp()
         {
-            UIAlert.Alert("Debug interactions", "When enabled, the archive server gives admins the ability to spawn debug objects and use debug interactions. These interactions can optionally be enabled for moderators and all other users.", true);
+            UIAlert.Alert("Debug interactions", "When enabled, the archive server gives admins the ability to spawn all debug objects from build mode and use debug interactions. These objects/interactions allow users to cheat money/skill, but can potentially cause object errors crash the game. If you want a 'safe' selection of debug objects for all players, you can enable the 'debug' catalog in the events configuration. \nThese interactions can optionally be enabled for moderators and all other users.", true);
         }
 
         public static void ArchivedCharacterHelp()

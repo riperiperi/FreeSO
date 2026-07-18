@@ -1,7 +1,5 @@
 ﻿using FSO.SimAntics.Model;
 using FSO.SimAntics.Model.TSOPlatform;
-using System.Collections.Generic;
-using System.IO;
 
 namespace FSO.SimAntics.NetPlay.Model.Commands
 {
@@ -10,6 +8,7 @@ namespace FSO.SimAntics.NetPlay.Model.Commands
         public uint TargetUID;
         public VMTSOAvatarPermissions Level;
         public VMChangePermissionsMode Mode;
+        public bool? Debug;
         public uint ReplaceUID; //for object inherit modes. Set implicitly for owner replacement.
         public bool Verified;
         public override bool Execute(VM vm)
@@ -113,6 +112,22 @@ namespace FSO.SimAntics.NetPlay.Model.Commands
                 if (level >= VMTSOAvatarPermissions.BuildBuyRoommate) vm.TSOState.BuildRoommates.Add(obj.PersistID);
                 if (level == VMTSOAvatarPermissions.Owner) vm.TSOState.OwnerID = pid;
                 else if (vm.TSOState.OwnerID == pid) vm.TSOState.OwnerID = 0;
+
+                if (Debug != null)
+                {
+                    var flags = obj.AvatarState.Flags;
+
+                    if (Debug.Value)
+                    {
+                        flags |= VMTSOAvatarFlags.Debug;
+                    }
+                    else
+                    {
+                        flags &= ~VMTSOAvatarFlags.Debug;
+                    }
+
+                    obj.AvatarState.Flags = flags;
+                }
             }
             return roomieChange && playerOwned;
         }
@@ -167,6 +182,12 @@ namespace FSO.SimAntics.NetPlay.Model.Commands
             writer.Write(ReplaceUID);
             writer.Write((byte)Level);
             writer.Write((byte)Mode);
+            writer.Write(Debug.HasValue);
+
+            if (Debug.HasValue)
+            {
+                writer.Write(Debug.Value);
+            }
         }
 
         public override void Deserialize(BinaryReader reader)
@@ -176,6 +197,9 @@ namespace FSO.SimAntics.NetPlay.Model.Commands
             ReplaceUID = reader.ReadUInt32();
             Level = (VMTSOAvatarPermissions)reader.ReadByte();
             Mode = (VMChangePermissionsMode)reader.ReadByte();
+
+            var hasDebug = reader.ReadBoolean();
+            Debug = hasDebug ? reader.ReadBoolean() : null;
         }
 
         #endregion
