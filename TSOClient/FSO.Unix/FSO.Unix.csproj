@@ -10,7 +10,7 @@
         <PublishReadyToRun>false</PublishReadyToRun>
         <PublishSingleFile>true</PublishSingleFile>
         <TieredPGO>true</TieredPGO>
-        <_EnableMacOSCodeSign Condition="'$(ForceSign)' != 'true'">false</_EnableMacOSCodeSign>
+        <_EnableMacOSCodeSign>false</_EnableMacOSCodeSign>
         <PublishAot>false</PublishAot>
         <PublishTrimmed>false</PublishTrimmed>
     </PropertyGroup>
@@ -63,6 +63,8 @@
 
         <MakeDir Directories="$(PublishDir)/FreeSO.app/Contents/MacOS" />
         <MakeDir Directories="$(PublishDir)/FreeSO.app/Contents/Resources" />
+
+        <Exec Command="codesign --force -s - &quot;$(PublishDir)/FreeSO&quot;" Condition="'$(ForceSign)' == 'true'"/> 
 
         <Copy SourceFiles="$(PublishDir)/FreeSO" DestinationFolder="$(PublishDir)/FreeSO.app/Contents/MacOS" />
         <Copy SourceFiles="$(PublishDir)/update" DestinationFolder="$(PublishDir)/FreeSO.app/Contents/MacOS" />
