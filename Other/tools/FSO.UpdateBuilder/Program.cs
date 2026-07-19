@@ -121,7 +121,7 @@ namespace FSO.UpdateBuilder
         private static void ExecuteZshScript(string command)
         {
             var info = new ProcessStartInfo();
-            info.FileName = "/bin/bash";
+            info.FileName = "/bin/zsh";
             info.Arguments = command;
             info.UseShellExecute = false;
             info.CreateNoWindow = true;
@@ -464,7 +464,7 @@ namespace FSO.UpdateBuilder
                 {
                     var appPath = Path.GetFullPath(Path.Combine(originalClientPath, "FreeSO.app"));
                     var dmgPath = Path.GetFullPath(Path.Combine(workingDirectory, "FreeSO.dmg"));
-                    ExecuteZshScript($"create-dmg {appPath} --no-code-sign --overwrite --no-version-in-filename && mv FreeSO.dmg {dmgPath}");
+                    ExecuteZshScript($"-c \"create-dmg {appPath} --no-code-sign --overwrite --no-version-in-filename && mv FreeSO.dmg {dmgPath}\"");
                     
                     await client.Repository.Release.UploadAsset(release, new ReleaseAssetUpload()
                     {
