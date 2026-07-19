@@ -49,6 +49,10 @@
 
     <Import Project="Sdk.targets" Sdk="Microsoft.NET.Sdk" />
 
+    <Target Name="UpdaterPublish" BeforeTargets="Publish"> 
+        <Exec Command="dotnet publish ../FSO.Patcher.Unix -c Release -r $(RuntimeIdentifier) -o &quot;$(PublishDir)&quot;" />
+    </Target>
+
     <!-- Override SDK target to prevent it from deleting native dylibs on repeated publishes -->
     <Target Name="_IncrementalCleanPublishDirectory" />
 
@@ -61,6 +65,7 @@
         <MakeDir Directories="$(PublishDir)/FreeSO.app/Contents/Resources" />
 
         <Copy SourceFiles="$(PublishDir)/FreeSO" DestinationFolder="$(PublishDir)/FreeSO.app/Contents/MacOS" />
+        <Copy SourceFiles="$(PublishDir)/update" DestinationFolder="$(PublishDir)/FreeSO.app/Contents/MacOS" />
         <Copy SourceFiles="$(PublishDir)/libSDL2-2.0.0.dylib" DestinationFolder="$(PublishDir)/FreeSO.app/Contents/MacOS" />
         <Copy SourceFiles="$(PublishDir)/libopenal.dylib" DestinationFolder="$(PublishDir)/FreeSO.app/Contents/MacOS" />
         <Copy SourceFiles="$(PublishDir)/libe_sqlite3.dylib" DestinationFolder="$(PublishDir)/FreeSO.app/Contents/MacOS" Condition="Exists('$(PublishDir)/libe_sqlite3.dylib')" />
@@ -83,6 +88,7 @@
         <Copy SourceFiles="Info.plist" DestinationFolder="$(PublishDir)/FreeSO.app/Contents" />
 
         <Exec Command="chmod +x &quot;$(PublishDir)/FreeSO.app/Contents/MacOS/FreeSO&quot;" />
+        <Exec Command="chmod +x &quot;$(PublishDir)/FreeSO.app/Contents/MacOS/update&quot;" />
         <Exec Command="chmod +x &quot;$(PublishDir)/FreeSO.app/Contents/MacOS/libSDL2-2.0.0.dylib&quot;" />
         <Exec Command="chmod +x &quot;$(PublishDir)/FreeSO.app/Contents/MacOS/libopenal.dylib&quot;" />
     </Target>

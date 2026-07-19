@@ -42,6 +42,12 @@ namespace FSO.Client.UI.Screens
                     File.Delete("update.exe");
                     File.Move("update2.exe", "update.exe");
                 }
+
+                if (File.Exists("update2"))
+                {
+                    File.Delete("update");
+                    File.Move("update2", "update");
+                }
             } catch (Exception) { 
                 //maybe signal to user that the updater update failed
             }

@@ -7,6 +7,9 @@
     <Nullable>enable</Nullable>
     <AssemblyName>update</AssemblyName>
     <ApplicationIcon>patcher.ico</ApplicationIcon>
+    <PublishTrimmed>true</PublishTrimmed>
+    <PublishSingleFile>true</PublishSingleFile>
+    <TrimmerRemoveSymbols>true</TrimmerRemoveSymbols>
   </PropertyGroup>
 
   <ItemGroup>
@@ -15,6 +18,10 @@
 
   <ItemGroup>
     <EmbeddedResource Include="patcher.ico" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <PackageReference Include="Mono.Posix.NETStandard" Version="1.0.0" />
   </ItemGroup>
 
 </Project>

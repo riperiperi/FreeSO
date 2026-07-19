@@ -8,8 +8,7 @@ on:
 
 jobs:
 
-  build:
-
+  build-win:
     strategy:
       matrix:
         configuration: [Release]
@@ -42,9 +41,49 @@ jobs:
         name: FreeSOServer
         path: Artifacts/Server
 
+  build-mac:
+    strategy:
+      matrix:
+        configuration: [Release]
+
+    runs-on: macos-latest
+
+    steps:
+    - name: Checkout
+      uses: actions/checkout@v5
+
+    # Install the .NET Core workload
+    - name: Install .NET Core
+      uses: actions/setup-dotnet@v5
+      with:
+        dotnet-version: 9.0.x
+
+    - run: dotnet publish TSOClient/FSO.Unix -c Release /p:ContinuousIntegrationBuild=true /p:Deterministic=true /p:EnableSourceLink=false /p:IncludeSourceRevisionInInformationalVersion=false -r osx-arm64 --self-contained -o Artifacts/Client
+    - run: dotnet publish TSOClient/FSO.Server.Core -c Release /p:ContinuousIntegrationBuild=true /p:Deterministic=true /p:EnableSourceLink=false /p:IncludeSourceRevisionInInformationalVersion=false -r osx-arm64 --self-contained -o Artifacts/Server
+
+    - name: Tar client
+      run: tar -czvf client.tar.gz -C Artifacts/Client FreeSO.app
+
+    - name: Upload client artifacts
+      uses: actions/upload-artifact@v4
+      with:
+        name: FreeSOClientMac
+        path: client.tar.gz
+        archive: false
+
+    - name: Tar server
+      run: tar -czvf server.tar.gz -C Artifacts/Server .
+
+    - name: Upload server artifacts
+      uses: actions/upload-artifact@v4
+      with:
+        name: FreeSOServerMac
+        path: server.tar.gz
+        archive: false
+
   create-release:
-    needs: [build]
-    runs-on: windows-latest
+    needs: [build-win, build-mac]
+    runs-on: macos-latest
     permissions:
       contents: write
     environment:
@@ -55,6 +94,11 @@ jobs:
       uses: actions/checkout@v5
       with:
         fetch-depth: 0
+
+    - uses: actions/setup-node@v7
+      with:
+        node-version: 24
+        cache: 'npm'
     
     - name: Install .NET Core
       uses: actions/setup-dotnet@v5
@@ -73,6 +117,28 @@ jobs:
         name: FreeSOServer
         path: tempUpdate/windows-server
 
+    - name: Download Client (mac)
+      uses: actions/download-artifact@v4
+      with:
+        name: FreeSOClientMac
+        path: tempUpdate/mac.tar.gz
+
+    - name: Download Server (mac)
+      uses: actions/download-artifact@v4
+      with:
+        name: FreeSOServer
+        path: tempUpdate/mac-server.tar.gz
+
+    - name: Untar client (mac)
+      run: mkdir tempUpdate/mac/ && tar -xzvf tempUpdate/mac.tar.gz -C tempUpdate/mac/
+
+    - name: Untar server (mac)
+      run: mkdir tempUpdate/mac-server/ && tar -xzvf tempUpdate/mac-server.tar.gz -C tempUpdate/mac-server/
+
+    - name: Install create-dmg
+      run: |
+        npm install --global create-dmg
+
     - name: Building Release
       env:
         GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
@@ -80,7 +146,7 @@ jobs:
         FSO_UPDATE_CHANNEL_URL: ${{ vars.FSO_UPDATE_CHANNEL_URL }}
         FSO_UPDATE_PUBLIC_KEY: ${{ secrets.FSO_UPDATE_PUBLIC_KEY }}
         FSO_UPDATE_PRIVATE_KEY: ${{ secrets.FSO_UPDATE_PRIVATE_KEY }}
+        FSO_UPDATE_TARGETS: "windows,mac"
       run: |
-        dotnet run -c Release -- "../../../tempUpdate/"
+        dotnet run -c Release -- "../../../tempUpdate/" 
       working-directory: Other/tools/FSO.UpdateBuilder
-        

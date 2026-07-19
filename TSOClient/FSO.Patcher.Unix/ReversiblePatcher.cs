@@ -65,9 +65,24 @@ namespace FSO.Patcher.Unix
             return ToExtract.Select(file => file.FullName).Where(name => !UnimportantFiles.Contains(name)).ToList();
         }
 
+        private string RewriteName(string fileName)
+        {
+            if (fileName == "update.exe")
+            {
+                return "update2.exe";
+            }
+
+            if (fileName == "update")
+            {
+                return "update2";
+            }
+
+            return fileName;
+        }
+
         public async Task<bool> ExtractEntry(ZipArchiveEntry entry, int tryNum)
         {
-            var name = (entry.FullName == "update.exe") ? "update2.exe" : entry.FullName;
+            var name = RewriteName(entry.FullName);
             var targPath = Path.Combine("./", name);
             Directory.CreateDirectory(Path.GetDirectoryName(targPath));
             try
@@ -105,13 +120,23 @@ namespace FSO.Patcher.Unix
 
         public static int RENAME_MAX_ATTEMPTS = 5;
 
+        private string GetFreeSOName()
+        {
+            if (Environment.OSVersion.Platform == PlatformID.Unix || Environment.OSVersion.Platform == PlatformID.MacOSX) {
+                return "FreeSO";
+            } else {
+                return "FreeSO.exe";
+            }
+        }
+
         public async Task<bool> AttemptRename(int renameRetry)
         {
             try
             {
-                File.Delete("FreeSO.exe.old");
-                if (File.Exists("FreeSO.exe"))  //shouldn't be in use, unless the user has incorrectly renamed and run the freeso executable
-                    File.Move("FreeSO.exe", "FreeSO.exe.old");
+                var fsoExe = GetFreeSOName();
+                File.Delete(fsoExe+".old");
+                if (File.Exists(fsoExe))  //shouldn't be in use, unless the user has incorrectly renamed and run the freeso executable
+                    File.Move(fsoExe, fsoExe+".old");
             }
             catch (Exception)
             {

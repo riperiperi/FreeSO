@@ -8,6 +8,7 @@ using System.Net.Http.Json;
 using System.Security.Cryptography;
 using System.Text;
 using System.Text.RegularExpressions;
+using System.Diagnostics;
 
 namespace FSO.UpdateBuilder
 {
@@ -115,6 +116,19 @@ namespace FSO.UpdateBuilder
         private static string FixAssetUrl(string url, string version)
         {
             return AssetUrlUntagged.Replace(url, $"/{version}/");
+        }
+
+        private static void ExecuteZshScript(string command)
+        {
+            var info = new ProcessStartInfo();
+            info.FileName = "/bin/bash";
+            info.Arguments = command;
+            info.UseShellExecute = false;
+            info.CreateNoWindow = true;
+
+            using var process = Process.Start(info);
+
+            process.WaitForExit();
         }
 
         static async Task Main(string[] args)
@@ -391,6 +405,13 @@ namespace FSO.UpdateBuilder
                 Console.WriteLine($"- {target}");
                 string clientPath = Path.Combine(workingDirectory, $"{target}");
                 string serverPath = Path.Combine(workingDirectory, $"{target}-server");
+                string originalClientPath = clientPath;
+
+                if (target == "mac")
+                {
+                    // Full zip and delta zip come from inside the bundle on macos.
+                    clientPath = Path.Combine(clientPath, "FreeSO.app/Contents/MacOS");
+                }
 
                 // Insert version.json into the build.
                 File.WriteAllText(Path.Combine(clientPath, "version.json"), infoText);
@@ -407,7 +428,7 @@ namespace FSO.UpdateBuilder
 
                 // If this target can build a client delta, do that here.
 
-                if (windowsDelta) // TODO: other targets
+                if ((target == "windows" && windowsDelta) || (target == "mac" && macDelta) || (target == "linux" && linuxDelta))
                 {
                     Console.WriteLine("  - Client Delta:");
                     Console.WriteLine("    Calculating diff...");
@@ -437,6 +458,20 @@ namespace FSO.UpdateBuilder
                     FSOUpdateFile deltaInfo = await FolderToZip(client, release, target, versionString, "client-delta", deltaDir, crypto);
 
                     manifest.delta!.SetPlatform(target, deltaInfo);
+                }
+
+                if (target == "mac")
+                {
+                    var appPath = Path.GetFullPath(Path.Combine(originalClientPath, "FreeSO.app"));
+                    var dmgPath = Path.GetFullPath(Path.Combine(workingDirectory, "FreeSO.dmg"));
+                    ExecuteZshScript($"create-dmg {appPath} --no-code-sign --overwrite --no-version-in-filename && mv FreeSO.dmg {dmgPath}");
+                    
+                    await client.Repository.Release.UploadAsset(release, new ReleaseAssetUpload()
+                    {
+                        FileName = $"installer-{target}-{versionString}.dmg",
+                        ContentType = "application/x-apple-diskimage",
+                        RawData = File.OpenRead(dmgPath),
+                    });
                 }
             }
 

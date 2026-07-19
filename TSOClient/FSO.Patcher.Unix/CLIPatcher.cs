@@ -1,6 +1,7 @@
 ﻿using System.Diagnostics;
 using System.IO.Compression;
 using System.Net;
+using Mono.Unix;
 
 namespace FSO.Patcher.Unix
 {
@@ -43,8 +44,9 @@ namespace FSO.Patcher.Unix
         {
             try
             {
-                if (File.Exists("FreeSO.exe.old"))
-                    File.Move("FreeSO.exe.old", "FreeSO.exe");
+                var fsoExe = GetFreeSOName();
+                if (File.Exists(fsoExe+".old"))
+                    File.Move(fsoExe+".old", fsoExe);
             }
             catch (Exception)
             {
@@ -172,21 +174,71 @@ namespace FSO.Patcher.Unix
             Console.WriteLine(message);
         }
 
+        private string GetFreeSOName()
+        {
+            if (Environment.OSVersion.Platform == PlatformID.Unix || Environment.OSVersion.Platform == PlatformID.MacOSX) {
+                return "FreeSO";
+            } else {
+                return "FreeSO.exe";
+            }
+        }
+
+        private bool ChmodX(string path) {
+            try
+            {
+                var fileInfo = new UnixFileInfo(path);
+
+                fileInfo.FileAccessPermissions = fileInfo.FileAccessPermissions | FileAccessPermissions.UserExecute | FileAccessPermissions.GroupExecute | FileAccessPermissions.OtherExecute;
+
+                fileInfo.Refresh();
+
+                return true;
+            }
+            catch
+            {
+                return false;
+            }
+        }
+
+        private void ChmodAllExes(string basePath)
+        {
+            var files = Directory.GetFiles(basePath);
+
+            foreach (var file in files)
+            {
+                if (System.IO.Path.GetFileName(file) == "update")
+                {
+                    continue;
+                }
+
+                var ext = System.IO.Path.GetExtension(file);
+
+                if (ext.Length == 0 || ext == ".dylib")
+                {
+                    if (!ChmodX(file))
+                    {
+                        Console.WriteLine($" ! Failed to chmod '{file}' - FreeSO may fail to launch.");
+                    }
+                }
+            }
+        }
+
         public void StartFreeSO()
         {
-            if (!File.Exists("FreeSO.exe")) File.Copy("FreeSO.exe.old", "FreeSO.exe", true);
+            var fsoExe = GetFreeSOName();
+            if (!File.Exists(fsoExe)) File.Copy(fsoExe+".old", fsoExe, true);
             if (Environment.OSVersion.Platform == PlatformID.Unix || Environment.OSVersion.Platform == PlatformID.MacOSX)
             {
                 Console.WriteLine($"===== Starting FreeSO... Please wait! =====");
+                ChmodAllExes("./");
                 var args = string.Join(" ", Args);
-                if (args.Length > 0) args = " " + args;
-                var startArgs = new ProcessStartInfo("mono", "FreeSO.exe" + args);
+                var startArgs = new ProcessStartInfo(fsoExe, args);
                 startArgs.UseShellExecute = false;
                 System.Diagnostics.Process.Start(startArgs);
             }
             else
             {
-                System.Diagnostics.Process.Start("FreeSO.exe", string.Join(" ", Args));
+                System.Diagnostics.Process.Start(fsoExe, string.Join(" ", Args));
             }
             Environment.Exit(0);
         }
@@ -219,7 +271,7 @@ namespace FSO.Patcher.Unix
 
         public void Begin()
         {
-            Console.WriteLine("===== FreeSO Patcher CLI - 2019 =====");
+            Console.WriteLine("===== FreeSO Patcher CLI - 2026 =====");
             Console.WriteLine(Path.Count + " update(s) to apply.");
 
             if (Args.Contains("--client"))
