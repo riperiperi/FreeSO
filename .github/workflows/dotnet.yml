@@ -62,23 +62,23 @@ jobs:
     - run: dotnet publish TSOClient/FSO.Server.Core -c Release /p:ContinuousIntegrationBuild=true /p:Deterministic=true /p:EnableSourceLink=false /p:IncludeSourceRevisionInInformationalVersion=false -r osx-arm64 --self-contained -o Artifacts/Server
 
     - name: Tar client
-      run: tar -czvf client.tar.gz -C Artifacts/Client FreeSO.app
+      run: tar -czvf mac.tar.gz -C Artifacts/Client FreeSO.app
 
     - name: Upload client artifacts
       uses: actions/upload-artifact@v7
       with:
         name: FreeSOClientMac
-        path: client.tar.gz
+        path: mac.tar.gz
         archive: false
 
     - name: Tar server
-      run: tar -czvf server.tar.gz -C Artifacts/Server .
+      run: tar -czvf mac-server.tar.gz -C Artifacts/Server .
 
     - name: Upload server artifacts
       uses: actions/upload-artifact@v7
       with:
         name: FreeSOServerMac
-        path: server.tar.gz
+        path: mac-server.tar.gz
         archive: false
 
   create-release:
@@ -119,14 +119,14 @@ jobs:
     - name: Download Client (mac)
       uses: actions/download-artifact@v8
       with:
-        name: FreeSOClientMac
-        path: tempUpdate/mac.tar.gz
+        name: mac.tar.gz
+        path: tempUpdate
 
     - name: Download Server (mac)
       uses: actions/download-artifact@v8
       with:
-        name: FreeSOServerMac
-        path: tempUpdate/mac-server.tar.gz
+        name: mac-server.tar.gz
+        path: tempUpdate
 
     - name: Untar client (mac)
       run: mkdir tempUpdate/mac/ && tar -xzvf tempUpdate/mac.tar.gz -C tempUpdate/mac/
