@@ -126,7 +126,7 @@ jobs:
     - name: Download Server (mac)
       uses: actions/download-artifact@v4
       with:
-        name: FreeSOServer
+        name: FreeSOServerMac
         path: tempUpdate/mac-server.tar.gz
 
     - name: Untar client (mac)
