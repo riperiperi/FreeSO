@@ -58,7 +58,7 @@ jobs:
       with:
         dotnet-version: 9.0.x
 
-    - run: dotnet publish TSOClient/FSO.Unix -c Release /p:ContinuousIntegrationBuild=true /p:Deterministic=true /p:EnableSourceLink=false /p:IncludeSourceRevisionInInformationalVersion=false -r osx-arm64 --self-contained -o Artifacts/Client
+    - run: dotnet publish TSOClient/FSO.Unix -c Release /p:ContinuousIntegrationBuild=true /p:Deterministic=true /p:EnableSourceLink=false /p:IncludeSourceRevisionInInformationalVersion=false /p:ForceSign=true -r osx-arm64 --self-contained -o Artifacts/Client
     - run: dotnet publish TSOClient/FSO.Server.Core -c Release /p:ContinuousIntegrationBuild=true /p:Deterministic=true /p:EnableSourceLink=false /p:IncludeSourceRevisionInInformationalVersion=false -r osx-arm64 --self-contained -o Artifacts/Server
 
     - name: Tar client

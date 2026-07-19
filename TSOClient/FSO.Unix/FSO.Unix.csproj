@@ -8,9 +8,9 @@
         <AssemblyName>FreeSO</AssemblyName>
         <ApplicationIcon>fso.ico</ApplicationIcon>
         <PublishReadyToRun>false</PublishReadyToRun>
-        <PublishSingleFile Condition="'$(RuntimeIdentifier)' == 'osx-arm64'">true</PublishSingleFile>
+        <PublishSingleFile>true</PublishSingleFile>
         <TieredPGO>true</TieredPGO>
-        <_EnableMacOSCodeSign Condition="'$(PublishSingleFile)' == 'true'">false</_EnableMacOSCodeSign>
+        <_EnableMacOSCodeSign Condition="'$(ForceSign)' != 'true'">false</_EnableMacOSCodeSign>
         <PublishAot>false</PublishAot>
         <PublishTrimmed>false</PublishTrimmed>
     </PropertyGroup>
@@ -91,6 +91,7 @@
         <Exec Command="chmod +x &quot;$(PublishDir)/FreeSO.app/Contents/MacOS/update&quot;" />
         <Exec Command="chmod +x &quot;$(PublishDir)/FreeSO.app/Contents/MacOS/libSDL2-2.0.0.dylib&quot;" />
         <Exec Command="chmod +x &quot;$(PublishDir)/FreeSO.app/Contents/MacOS/libopenal.dylib&quot;" />
+        <Exec Command="chmod +x &quot;$(PublishDir)/FreeSO.app/Contents/MacOS/libe_sqlite3.dylib&quot;" Condition="Exists('$(PublishDir)/FreeSO.app/Contents/MacOS/libe_sqlite3.dylib')" />
     </Target>
 
 </Project>
