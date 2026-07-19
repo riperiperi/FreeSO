@@ -30,13 +30,13 @@ jobs:
     - run: dotnet publish TSOClient/FSO.Server.Core -c Release /p:ContinuousIntegrationBuild=true /p:Deterministic=true /p:EnableSourceLink=false /p:IncludeSourceRevisionInInformationalVersion=false -r win-x64 --self-contained -o Artifacts/Server
 
     - name: Upload client artifacts
-      uses: actions/upload-artifact@v4
+      uses: actions/upload-artifact@v7
       with:
         name: FreeSOClient
         path: Artifacts/Client
 
     - name: Upload server artifacts
-      uses: actions/upload-artifact@v4
+      uses: actions/upload-artifact@v7
       with:
         name: FreeSOServer
         path: Artifacts/Server
@@ -65,7 +65,7 @@ jobs:
       run: tar -czvf client.tar.gz -C Artifacts/Client FreeSO.app
 
     - name: Upload client artifacts
-      uses: actions/upload-artifact@v4
+      uses: actions/upload-artifact@v7
       with:
         name: FreeSOClientMac
         path: client.tar.gz
@@ -75,7 +75,7 @@ jobs:
       run: tar -czvf server.tar.gz -C Artifacts/Server .
 
     - name: Upload server artifacts
-      uses: actions/upload-artifact@v4
+      uses: actions/upload-artifact@v7
       with:
         name: FreeSOServerMac
         path: server.tar.gz
@@ -105,25 +105,25 @@ jobs:
         dotnet-version: 9.0.x
 
     - name: Download Client
-      uses: actions/download-artifact@v4
+      uses: actions/download-artifact@v8
       with:
         name: FreeSOClient
         path: tempUpdate/windows
 
     - name: Download Server
-      uses: actions/download-artifact@v4
+      uses: actions/download-artifact@v8
       with:
         name: FreeSOServer
         path: tempUpdate/windows-server
 
     - name: Download Client (mac)
-      uses: actions/download-artifact@v4
+      uses: actions/download-artifact@v8
       with:
         name: FreeSOClientMac
         path: tempUpdate/mac.tar.gz
 
     - name: Download Server (mac)
-      uses: actions/download-artifact@v4
+      uses: actions/download-artifact@v8
       with:
         name: FreeSOServerMac
         path: tempUpdate/mac-server.tar.gz
