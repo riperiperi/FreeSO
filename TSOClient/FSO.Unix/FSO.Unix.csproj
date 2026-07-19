@@ -70,6 +70,7 @@
         <Copy SourceFiles="$(PublishDir)/update" DestinationFolder="$(PublishDir)/FreeSO.app/Contents/MacOS" />
         <Copy SourceFiles="$(PublishDir)/libSDL2-2.0.0.dylib" DestinationFolder="$(PublishDir)/FreeSO.app/Contents/MacOS" />
         <Copy SourceFiles="$(PublishDir)/libopenal.dylib" DestinationFolder="$(PublishDir)/FreeSO.app/Contents/MacOS" />
+        <Copy SourceFiles="$(PublishDir)/libMono.Unix.dylib" DestinationFolder="$(PublishDir)/FreeSO.app/Contents/MacOS" />
         <Copy SourceFiles="$(PublishDir)/libe_sqlite3.dylib" DestinationFolder="$(PublishDir)/FreeSO.app/Contents/MacOS" Condition="Exists('$(PublishDir)/libe_sqlite3.dylib')" />
 
         <ItemGroup>
@@ -93,6 +94,7 @@
         <Exec Command="chmod +x &quot;$(PublishDir)/FreeSO.app/Contents/MacOS/update&quot;" />
         <Exec Command="chmod +x &quot;$(PublishDir)/FreeSO.app/Contents/MacOS/libSDL2-2.0.0.dylib&quot;" />
         <Exec Command="chmod +x &quot;$(PublishDir)/FreeSO.app/Contents/MacOS/libopenal.dylib&quot;" />
+        <Exec Command="chmod +x &quot;$(PublishDir)/FreeSO.app/Contents/MacOS/libMono.Unix.dylib&quot;" />
         <Exec Command="chmod +x &quot;$(PublishDir)/FreeSO.app/Contents/MacOS/libe_sqlite3.dylib&quot;" Condition="Exists('$(PublishDir)/FreeSO.app/Contents/MacOS/libe_sqlite3.dylib')" />
     </Target>
 

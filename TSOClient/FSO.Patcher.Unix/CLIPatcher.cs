@@ -231,10 +231,21 @@ namespace FSO.Patcher.Unix
             {
                 Console.WriteLine($"===== Starting FreeSO... Please wait! =====");
                 ChmodAllExes("./");
-                var args = string.Join(" ", Args);
-                var startArgs = new ProcessStartInfo(fsoExe, args);
-                startArgs.UseShellExecute = false;
-                System.Diagnostics.Process.Start(startArgs);
+
+                if (OperatingSystem.IsMacOS())
+                {
+                    var args = string.Join(" ", Args);
+                    var startArgs = new ProcessStartInfo("open", $"../../ --args " + args);
+                    startArgs.UseShellExecute = false;
+                    System.Diagnostics.Process.Start(startArgs);
+                }
+                else
+                {
+                    var args = string.Join(" ", Args);
+                    var startArgs = new ProcessStartInfo(fsoExe, args);
+                    startArgs.UseShellExecute = false;
+                    System.Diagnostics.Process.Start(startArgs);
+                }
             }
             else
             {
