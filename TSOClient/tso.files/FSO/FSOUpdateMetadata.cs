@@ -36,8 +36,18 @@
 
         public FSOUpdateFile CurrentPlatform()
         {
-            // TODO
-            return windows;
+            if (OperatingSystem.IsMacOS())
+            {
+                return mac;
+            }
+            else if (OperatingSystem.IsWindows())
+            {
+                return windows;
+            }
+            else
+            {
+                return linux;
+            }
         }
     }
 

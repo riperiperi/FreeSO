@@ -15,6 +15,12 @@ namespace FSO.Common.Rendering.Framework
         {
             Device = device;
             Multisample = multisample;
+
+            if (OperatingSystem.IsMacOS())
+            {
+                Multisample = 0;
+            }
+
             SetSize(size);
         }
 
