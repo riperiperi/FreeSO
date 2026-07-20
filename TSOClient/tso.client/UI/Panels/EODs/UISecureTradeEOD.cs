@@ -450,7 +450,7 @@ namespace FSO.Client.UI.Panels.EODs
             //are we currently moving an inventory item?
             if (DragItem != null)
             {
-                DragItem.Position = GlobalPoint(state.MouseState.Position.ToVector2() - new Vector2(22, 22));
+                DragItem.Position = GlobalPoint(state.MouseState.Position.ToVector2()) - new Vector2(22, 22);
                 if (!mouseDown)
                 {
                     //try place the item down
@@ -473,7 +473,7 @@ namespace FSO.Client.UI.Panels.EODs
                         var index = Array.FindIndex(MyOffer.ObjectOffer, x => x != null && x.PID == DragUID);
                         if (index == -1)
                         {
-                            var targ = Math.Min(4, (state.MouseState.Position.X - myOfferRect.X) / 45);
+                            var targ = Math.Min(4, (state.MouseState.Position.X - myOfferRect.X) / (int)(45 * _Scale.X));
                             if (DragUID == 1 || DragUID == 2)
                             {
                                 MyOffer.ObjectOffer[targ] =

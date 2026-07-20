@@ -456,7 +456,7 @@ namespace FSO.Client.UI.Controls.Catalog
         {
             foreach (var entry in IconCache.Values)
             {
-                if (entry.Tag == this)
+                if (entry?.Tag == this)
                 {
                     entry.Dispose();
                 }
