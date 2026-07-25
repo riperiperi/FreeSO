@@ -89,7 +89,7 @@ namespace FSO.Client
             { "TS1IsSteamInstall", "false" },
             { "TS1InstallationConfigured", "false" },
 
-            { "Shadows3D", "false" },
+            { "Shadows3D", "true" },
             { "CitySkybox", "true" },
 
             { "LightingMode", "-1" },
@@ -109,7 +109,7 @@ namespace FSO.Client
             {"ChatDeltaScale", "8" },
             { "ChatWindowsOpacity", "0.8" },
 
-            { "ComplexShaders", "false" },
+            { "ComplexShaders", "true" },
             { "GlobalGraphicsMode", "0" }, //2d, 2d hybrid, 3d
             { "EnableTransitions", "true" },
 

@@ -11,6 +11,7 @@ using System.Collections.Generic;
 using System.Linq;
 using FSO.Common.Rendering.Framework.Model;
 using FSO.HIT;
+using FSO.Common;
 
 namespace FSO.Client.UI.Panels
 {
@@ -159,7 +160,7 @@ namespace FSO.Client.UI.Panels
             Frames = anim.Frames.Select(x=> ((ITextureRef)provider.Get(x)).Get(GameFacade.GraphicsDevice)).ToArray();
             SubFrame = frameTime;
             FrameTime = frameTime;
-            FrameTime *= GlobalSettings.Default.TargetRefreshRate;
+            FrameTime *= FSOEnvironment.RefreshRate;
             FrameTime /= 60;
             TotalFrames = pulsate ? (Frames.Length * 2 - 2) : Frames.Length;
         }

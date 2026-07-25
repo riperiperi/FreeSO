@@ -130,7 +130,7 @@ namespace FSO.Client
                 if (settings.Lighting)
                 {
                     if (settings.Shadows3D)
-                        settings.LightingMode = 2;
+                        settings.LightingMode = 3;
                     else
                         settings.LightingMode = 1;
                 }
