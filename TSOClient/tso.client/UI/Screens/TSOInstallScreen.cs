@@ -174,6 +174,23 @@ namespace FSO.Client.UI.Screens
 
         private void CheckDiskSpace(string path, string url)
         {
+            try
+            {
+                if (!Directory.Exists(path))
+                {
+                    Directory.CreateDirectory(path);
+                }
+
+                // Check that we can write here.
+                File.Create(Path.Combine(path, "dummy.txt")).Close();
+                File.Delete(Path.Combine(path, "dummy.txt"));
+            }
+            catch
+            {
+                ShowErrorDialog(GameFacade.Strings.GetString("f131", "16")); // Permissions error?
+                return;
+            }
+
             var info = new DriveInfo(Path.GetFullPath(path));
 
             if (info.AvailableFreeSpace < WARNING_SPACE)
@@ -217,23 +234,6 @@ namespace FSO.Client.UI.Screens
             DestPath = path;
             InstallerPath = installerPath;
             InstallerFolderPath = Path.Combine(DestPath, "installer");
-
-            try
-            {
-                if (!Directory.Exists(path))
-                {
-                    Directory.CreateDirectory(path);
-                }
-
-                // Check that we can write here.
-                File.Create(Path.Combine(path, "dummy.txt")).Close();
-                File.Delete(Path.Combine(path, "dummy.txt"));
-            }
-            catch
-            {
-                ShowErrorDialog(GameFacade.Strings.GetString("f131", "16")); // Permissions error?
-                return;
-            }
 
             var downloader = new UIWebDownloaderDialog(GameFacade.Strings.GetString("f131", "7"), [
                 new DownloadItem() {
