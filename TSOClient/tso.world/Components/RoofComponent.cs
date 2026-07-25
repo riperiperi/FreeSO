@@ -147,6 +147,15 @@ namespace FSO.LotView.Components
                 {
                     RegenRoof((sbyte)(i + 1), device, indoorsMap);
                 }
+                else if (RoofRects[i - 1]?.Count > 0)
+                {
+                    // Whole story has no indoor tiles left, clear the old roof so it stops rendering.
+
+                    RoofRects[i - 1] = null;
+                    var dg = Drawgroups[i - 1];
+                    dg?.Dispose();
+                    Drawgroups[i - 1] = null;
+                }
             }
 
             blueprint.SM64?.UpdateRoof();
@@ -446,11 +455,7 @@ namespace FSO.LotView.Components
             
             if (Drawgroups[level - 2] != null && Drawgroups[level - 2].NumPrimitives > 0)
             {
-                Drawgroups[level - 2].VertexBuffer.Dispose();
-                Drawgroups[level - 2].IndexBuffer.Dispose();
-
-                Drawgroups[level - 2].AdvVertexBuffer?.Dispose();
-                Drawgroups[level - 2].AdvIndexBuffer?.Dispose();
+                Drawgroups[level - 2].Dispose();
             }
 
             var result = new RoofDrawGroup() { Data = data };
@@ -780,11 +785,7 @@ namespace FSO.LotView.Components
             {
                 if (buf != null && buf.NumPrimitives > 0)
                 {
-                    buf.IndexBuffer.Dispose();
-                    buf.VertexBuffer.Dispose();
-                    
-                    buf.AdvIndexBuffer?.Dispose();
-                    buf.AdvVertexBuffer?.Dispose();
+                    buf.Dispose();
                 }
             }
         }
@@ -990,7 +991,7 @@ namespace FSO.LotView.Components
         public int AdvNumPrimitives;
     }
 
-    public class RoofDrawGroup
+    public class RoofDrawGroup : IDisposable
     {
         public RoofData Data;
 
@@ -1001,5 +1002,13 @@ namespace FSO.LotView.Components
         public IndexBuffer AdvIndexBuffer;
         public VertexBuffer AdvVertexBuffer;
         public int AdvNumPrimitives;
+
+        public void Dispose()
+        {
+            VertexBuffer?.Dispose();
+            IndexBuffer?.Dispose();
+            AdvVertexBuffer?.Dispose();
+            AdvIndexBuffer?.Dispose();
+        }
     }
 }
