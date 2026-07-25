@@ -1,4 +1,4 @@
-﻿using Microsoft.Xna.Framework;
+using Microsoft.Xna.Framework;
 using System.Collections.Generic;
 using FSO.LotView;
 using FSO.LotView.Components;
@@ -9,13 +9,13 @@ using FSO.SimAntics;
 using FSO.SimAntics.Entities;
 using FSO.SimAntics.Model;
 using FSO.SimAntics.NetPlay.Model.Commands;
-using FSO.SimAntics.Utils;
 using FSO.Client.UI.Model;
 
 namespace FSO.Client.UI.Panels.LotControls
 {
-    public class UIWallPainter : UICustomLotControl
+    public class UIWallPainter : UICustomLotControl, IWallHoverTool
     {
+        public ArchitectureHit Hover { get; private set; }
 
         VMMultitileGroup WallCursor;
         VM vm;
@@ -78,9 +78,20 @@ namespace FSO.Client.UI.Panels.LotControls
         public void Update(UpdateState state, bool scrolled)
         {
             ushort pattern = (state.CtrlDown) ? (ushort)0 : Pattern;
+            var mouse = Parent.GetScaledPoint(state.MouseState.Position);
 
-            var tilePos = World.EstTileAtPosWithScroll(Parent.GetScaledPoint(state.MouseState.Position).ToVector2());
-            Point cursor = new Point((int)tilePos.X, (int)tilePos.Y);
+            Hover = UIArchitectureTools.Pick(vm, World, mouse, includeObjects: false);
+
+            Point cursor;
+            if (Hover.Type == ArchitectureHitType.Wall)
+            {
+                cursor = Hover.Tile;
+            }
+            else
+            {
+                var tilePos = World.EstTileAtPosWithScroll(mouse.ToVector2());
+                cursor = new Point((int)tilePos.X, (int)tilePos.Y);
+            }
 
             if (!Drawing && Commands.Count > 0)
             {
@@ -110,44 +121,20 @@ namespace FSO.Client.UI.Panels.LotControls
                     Commands.Clear();
                     vm.Context.Architecture.SignalRedraw();
                 }
-                int dir = 0;
-                int altdir = 0;
-                Vector2 fract = new Vector2(tilePos.X - cursor.X, tilePos.Y - cursor.Y);
-                switch (World.State.CutRotation)
-                {
-                    case WorldRotation.BottomRight:
-                        if (fract.X - fract.Y > 0) { dir = 2; altdir = 3; }
-                        else { dir = 3; altdir = 2; }
-                        break;
-                    case WorldRotation.TopRight:
-                        if (fract.X + fract.Y > 1) { dir = 3; altdir = 0; }
-                        else { dir = 0; altdir = 3; }
-                        break;
-                    case WorldRotation.TopLeft:
-                        //+x is right down. +y is left down
-                        if (fract.X - fract.Y > 0) { dir = 1; altdir = 0; }
-                        else { dir = 0; altdir = 1; }
-                        break;
-                    case WorldRotation.BottomLeft:
-                        if (fract.X + fract.Y > 1) { dir = 2; altdir = 1; }
-                        else { dir = 1; altdir = 2; }
-                        break;
-                }
 
-                var finalDir = VMArchitectureTools.GetPatternDirection(vm.Context.Architecture, cursor, pattern, dir, altdir, World.State.Level);
-                if (finalDir != -1)
+                if (Hover.Type == ArchitectureHitType.Wall && Hover.Level == World.State.Level)
                 {
-                    CursorDir = (finalDir + 1) % 4;
+                    var (primary, alt) = Hover.PaintDir;
+                    CursorDir = (primary + 1) % 4;
                     var cmd = new VMArchitectureCommand
                     {
                         Type = VMArchitectureCommandType.PATTERN_DOT,
-                        level = World.State.Level,
+                        level = Hover.Level,
                         pattern = pattern,
-                        style = 0,
-                        x = cursor.X,
-                        y = cursor.Y,
-                        x2 = dir,
-                        y2 = altdir
+                        x = Hover.Tile.X,
+                        y = Hover.Tile.Y,
+                        x2 = primary,
+                        y2 = alt
                     };
                     if (!Commands.Contains(cmd))
                     {

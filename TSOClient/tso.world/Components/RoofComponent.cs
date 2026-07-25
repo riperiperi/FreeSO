@@ -147,6 +147,17 @@ namespace FSO.LotView.Components
                 {
                     RegenRoof((sbyte)(i + 1), device, indoorsMap);
                 }
+                else if (RoofRects[i - 1]?.Count > 0)
+                {
+                    // Whole story has no indoor tiles left, clear the old roof so it stops rendering.
+                    RoofRects[i - 1] = null;
+                    var dg = Drawgroups[i - 1];
+                    dg?.VertexBuffer?.Dispose();
+                    dg?.IndexBuffer?.Dispose();
+                    dg?.AdvVertexBuffer?.Dispose();
+                    dg?.AdvIndexBuffer?.Dispose();
+                    Drawgroups[i - 1] = null;
+                }
             }
 
             blueprint.SM64?.UpdateRoof();
