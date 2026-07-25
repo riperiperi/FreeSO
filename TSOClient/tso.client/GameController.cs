@@ -103,11 +103,34 @@ namespace FSO.Client
             GameFacade.Screens.AddScreen(screen);
         }
 
+        private void UpdaterCleanup()
+        {
+            try
+            {
+                if (File.Exists("update2.exe"))
+                {
+                    File.Delete("update.exe");
+                    File.Move("update2.exe", "update.exe");
+                }
+
+                if (File.Exists("update2"))
+                {
+                    File.Delete("update");
+                    File.Move("update2", "update");
+                }
+            }
+            catch (Exception)
+            {
+                //maybe signal to user that the updater update failed
+            }
+        }
+
         /// <summary>
         /// Show the login screen
         /// </summary>
         public void ShowLogin()
         {
+            UpdaterCleanup();
             InitializeArchive();
         }
 
