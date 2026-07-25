@@ -1228,7 +1228,8 @@ namespace FSO.Server.Servers.Lot.Domain
                                 TimeToShutdown = TICKRATE * 40;
                         }
 
-                        if (--TimeToShutdown < TICKRATE * 10)
+                        // Only do the following if there are definitely avatars on the property. (and we can verify their permissions)
+                        if (--TimeToShutdown < TICKRATE * 10 && preTickAvatars.Count > 0)
                         {
                             if (AllowGuestOpening)
                             {
