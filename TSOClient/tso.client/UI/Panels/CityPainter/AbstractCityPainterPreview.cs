@@ -1,5 +1,6 @@
 ﻿using FSO.Client.Rendering.City.Plugins;
 using FSO.Client.UI.Framework;
+using FSO.Common;
 using FSO.Common.Utils;
 using Microsoft.Xna.Framework;
 using Microsoft.Xna.Framework.Graphics;
@@ -29,7 +30,7 @@ namespace FSO.Client.UI.Panels.CityPainter
 
         protected Texture2D LoadFSOTex(string name)
         {
-            string path = Path.Combine("Content/Textures/terrain/", name);
+            string path = Path.Combine(FSOEnvironment.ContentDir, "Textures/terrain/", name);
 
             return TextureUtils.TextureFromFile(GameFacade.GraphicsDevice, path);
         }

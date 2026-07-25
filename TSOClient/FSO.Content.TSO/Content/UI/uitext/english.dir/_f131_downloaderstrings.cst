@@ -1,0 +1,35 @@
+1 ^Download The Sims Online^
+2 ^Welcome to FreeSO!
+
+The Sims Online's game files are required to play, but were not found on this computer. You can download and install The Sims Online automatically from archive.org. This requires around 2.8GB of space, though only 1.6 GB will be used at the end of installation.
+
+If TSO is installed on this computer, copy the path that contains TSOClient into the box below.^
+3 ^Path:^
+4 ^Download URL:^
+5 ^Quit^
+6 ^Download The Sims Online^
+
+7 ^Downloading The Sims Online (1/3)^
+8 ^Extracting The Sims Online (2/3)^
+9 ^Installing The Sims Online (3/3)^
+10 ^(%s/%s)^
+
+11 ^The Sims Online could not be downloaded. Ensure you have a stable internet connection and try again.^
+12 ^The Sims Online could not be extracted. The downloaded file is likely corrupted - ensure you have a stable internet connection and try again. Exception: %s^
+13 ^The Sims Online could not be installed. Exception: %s^
+14 ^The Sims Online has been successfully installed! The game will now restart.^
+15 ^OK^
+
+16 ^Couldn't write to the target directory. If you want to install The Sims Online in a protected directory such as Program Files, you need to run the game as Administrator.^
+17 ^Ran out of disk space. You should free up at least 3GB of disk space before installing The Sims Online, or install to a another drive that has enough free space.^
+18 ^FreeSO has detected that you're short on disk space on the target installation drive (under 3GB). It's likely that it will run out of disk space while installing the game. Are you sure you want to continue?^
+19 ^The Sims Online was detected in the specified folder. Do you want to use this installation for FreeSO?^
+20 ^Update Registry^
+21 ^FreeSO Only^
+22 ^Yes^
+23 ^Redownload^
+24 ^Cancel^
+25 ^The Sims Online Located^
+
+26 ^Use Existing Installation^
+27 ^No^

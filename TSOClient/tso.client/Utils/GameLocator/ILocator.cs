@@ -2,6 +2,11 @@
 {
     public interface ILocator
     {
+        static bool ValidPath(string path)
+        {
+            return File.Exists(Path.Combine(path, "tuning.dat"));
+        }
+
         string FindTheSimsOnline();
     }
 }

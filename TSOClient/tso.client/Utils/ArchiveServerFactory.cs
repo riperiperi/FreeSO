@@ -45,6 +45,7 @@ namespace FSO.Client.Utils
             // Database should exist, Data directory should exist.
             // Doesn't validate that they make any sense right now...
 
+            // This is allowed to use absolute paths right now. If users can download these from someone else, that should be changed.
             var dataFolder = Path.Combine(Path.GetDirectoryName(manifest.ActivePath), manifest.LocalDir);
 
             dir = null;
@@ -96,7 +97,7 @@ namespace FSO.Client.Utils
             string extractPath = Path.Combine(Path.GetDirectoryName(manifest.ActivePath), "data/");
             var extractor = new UIZipExtractDialog(null, path, extractPath);
 
-            extractor.OnComplete += (result) =>
+            extractor.OnComplete += (result, error) =>
             {
                 if (result)
                 {
@@ -115,7 +116,7 @@ namespace FSO.Client.Utils
                 }
             };
 
-            extractor.Start();
+            extractor.Start<MultithreadedZipExtractor>();
             UIScreen.GlobalShowDialog(extractor, true);
         }
 

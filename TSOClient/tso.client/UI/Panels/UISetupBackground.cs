@@ -1,6 +1,7 @@
 ﻿using FSO.Client.GameContent;
 using FSO.Client.UI.Controls;
 using FSO.Client.UI.Framework;
+using FSO.Common;
 using FSO.Common.Utils;
 using FSO.Files;
 using Microsoft.Xna.Framework;
@@ -36,7 +37,7 @@ namespace FSO.Client.UI.Panels
                 // Validate that the listed splash screens exist.
                 for (int i = 0; i < splashes.Length; i++)
                 {
-                    string path = Path.Combine("Content/SplashScreens/", splashes[i]);
+                    string path = Path.Combine(FSOEnvironment.ContentDir, "SplashScreens", splashes[i]);
 
                     if (File.Exists(path))
                     {

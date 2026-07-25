@@ -208,7 +208,10 @@ namespace FSO.Content
             if (!TS1)
             {
                 var allFiles = new List<string>();
-                _ScanFiles(BasePath, allFiles, BasePath);
+                if (!FSOEnvironment.MissingTSO)
+                {
+                    _ScanFiles(BasePath, allFiles, BasePath);
+                }
                 AllFiles = allFiles.ToArray();
                 UIGraphics?.Init();
                 DataDefinition = new TSODataDefinition();

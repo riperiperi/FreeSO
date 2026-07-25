@@ -1,0 +1,1 @@
+These files are manual recreations of the core TSO UI graphics, used for when TSO is not installed and the game is downloading/extracting the files.

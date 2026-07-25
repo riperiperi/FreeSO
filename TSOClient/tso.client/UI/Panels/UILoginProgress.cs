@@ -35,14 +35,14 @@ namespace FSO.Client.UI.Panels
 
             this.Add(new UILabel
             {
-                Caption = GameFacade.Strings.GetString("210", "2"),
+                Caption = GameFacade.Strings.GetString("f100", "10"),
                 X = 20,
                 Y = 44
             });
 
             this.Add(new UILabel
             {
-                Caption = GameFacade.Strings.GetString("210", "3"),
+                Caption = GameFacade.Strings.GetString("f100", "11"),
                 X = 20,
                 Y = 97
             });

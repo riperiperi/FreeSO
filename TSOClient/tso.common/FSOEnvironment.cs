@@ -9,6 +9,7 @@ namespace FSO.Common
         public static string ContentDir = "Content/";
         public static string UserDir = "Content/";
         public static string GFXContentDir = "Content/OGL";
+        public static bool MissingTSO = false;
         private static bool _DirectX = false;
         public static bool DirectX
         {

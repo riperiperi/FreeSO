@@ -117,15 +117,21 @@ namespace FSO.Client
 
             UseDX = MonogameLinker.Link(useDX);
 
-            var path = gameLocator.FindTheSimsOnline();
+            var settingsPath = GlobalSettings.Default.StartupPath;
+
+            var path = ILocator.ValidPath(settingsPath) ? settingsPath : gameLocator.FindTheSimsOnline();
+
+            if (!Path.EndsInDirectorySeparator(path))
+            {
+                path += Path.DirectorySeparatorChar;
+            }
 
             if (path != null)
             {
                 //check if this path has tso in it. tuning.dat should be a good indication.
-                if (!File.Exists(Path.Combine(path, "tuning.dat")))
+                if (!ILocator.ValidPath(path))
                 {
-                    ShowDialog("The Sims Online appears to be missing. The game expects TSO at directory '" + path + "', but some core files are missing from that folder. If you know you installed TSO into a different directory, please move it into the directory specified.");
-                    return false;
+                    FSOEnvironment.MissingTSO = true;
                 }
 
                 FSOEnvironment.Args = string.Join(" ", args);

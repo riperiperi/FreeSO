@@ -5,6 +5,7 @@ using System.Text;
 using System.IO;
 using FSO.Files.Formats.IFF;
 using FSO.Files.Formats.IFF.Chunks;
+using FSO.Common;
 
 namespace FSO.Client.GameContent
 {
@@ -22,7 +23,7 @@ namespace FSO.Client.GameContent
             {
                 LoadTS1();
             }
-            else
+            else if (!FSOEnvironment.MissingTSO)
             {
                 var tsodir = Path.Combine(GlobalSettings.Default.StartupPath, @"gamedata/uitext/");
 

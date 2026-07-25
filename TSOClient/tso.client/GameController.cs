@@ -72,8 +72,15 @@ namespace FSO.Client
         {
             var version = Content.Content.Get().VersionString;
             FSOProgram.RegisterDragCallback(GameFacade.Game.Window.Handle, DragDrop);
-            if (version == "1.1097.1.0") StartLoading();
-            else WrongVersion();
+            if (FSOEnvironment.MissingTSO)
+            {
+                TsoInstaller();
+            }
+            else
+            {
+                if (version == "1.1097.1.0") StartLoading();
+                else WrongVersion();
+            }
         }
 
         /// <summary>
@@ -82,6 +89,16 @@ namespace FSO.Client
         public void WrongVersion()
         {
             var screen = Kernel.Get<TSOVersionPatchScreen>();
+            GameFacade.Screens.RemoveCurrent();
+            GameFacade.Screens.AddScreen(screen);
+        }
+
+        /// <summary>
+        /// Shows up if The Sims Online isn't detected, allows the user to download and extract the game files.
+        /// </summary>
+        public void TsoInstaller()
+        {
+            var screen = Kernel.Get<TSOInstallScreen>();
             GameFacade.Screens.RemoveCurrent();
             GameFacade.Screens.AddScreen(screen);
         }

@@ -4,6 +4,7 @@ using System.IO;
 using System.Text;
 using FSO.Files.FAR3;
 using System.Globalization;
+using FSO.Common;
 
 namespace FSO.Files
 {
@@ -57,8 +58,14 @@ namespace FSO.Files
 		}
 
 		public Tuning(string Path)
-		{
-			try
+        {
+            if (FSOEnvironment.MissingTSO)
+            {
+				// Don't try to load the tuning.
+				return;
+            }
+
+            try
 			{
 				m_Reader = new BinaryReader(File.OpenRead(Path));
 			}
