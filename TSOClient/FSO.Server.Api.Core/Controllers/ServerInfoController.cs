@@ -39,7 +39,17 @@ namespace FSO.Server.Api.Core.Controllers
                         var shards = da.Shards.All();
                         // TODO: only list shards for this server?
                         LastModel.shards = [.. shards.Where(shard => ShardUp(shard.status)).Select(shard => shard.shard_id)];
-                        LastModel.name = api.Config.Name;
+
+                        string name = api.Config.Name;
+
+                        if (string.IsNullOrEmpty(name))
+                        {
+                            // Try pull the name from the first shard.
+
+                            name = shards.FirstOrDefault()?.name ?? "FreeSO Server";
+                        }
+
+                        LastModel.name = name;
 
                         int onlineCount = 0;
 

@@ -33,7 +33,7 @@ namespace FSO.Client.Controllers
                     View.LoginDialog.Visible = false;
                     View.LoginProgress.Visible = false;
                     var controller = new UpdateController(ContinueFromUpdate);
-                    controller.DoUpdate((info.FSOBranch ?? "") + "-" + (info.FSOVersion ?? ""), info.FSOUpdateUrl ?? "");
+                    controller.DoUpdate(info.GetVersion());
                     break;
             }
         }
@@ -51,111 +51,6 @@ namespace FSO.Client.Controllers
                 View.LoginDialog.Visible = true;
                 View.LoginProgress.Visible = true;
                 Regulator.AsyncReset();
-            }
-        }
-
-        public void DoUpdate(string branch, string version, string url)
-        {
-            View.LoginDialog.Visible = false;
-            View.LoginProgress.Visible = false;
-
-            var str = GlobalSettings.Default.ClientVersion;
-
-            var split = str.LastIndexOf('-');
-            int verNum = 0;
-            string curBranch = str;
-            if (split != -1)
-            {
-                int.TryParse(str.Substring(split + 1), out verNum);
-                curBranch = str.Substring(0, split);
-            }
-
-            _UpdaterAlert = UIScreen.GlobalShowAlert(new UIAlertOptions
-            {
-                Title = GameFacade.Strings.GetString("f101", "3"),
-                Message = GameFacade.Strings.GetString("f101", "4", new string[] { version, branch, verNum.ToString(), curBranch }),
-                Width = 500,
-                Buttons = UIAlertButton.YesNo(x =>
-                {
-                    UIScreen.RemoveDialog(_UpdaterAlert);
-                    var downloader = new UIWebDownloaderDialog(GameFacade.Strings.GetString("f101", "1"), new DownloadItem[]
-                    {
-                        new DownloadItem {
-                            Url = url,
-                            DestPath = "PatchFiles/patch.zip",
-                            Name = GameFacade.Strings.GetString("f101", "10")
-                        }
-                    });
-                    downloader.OnComplete += (bool success, string failedFile = null) => {
-                        UIScreen.RemoveDialog(downloader);
-                        UIScreen.GlobalShowAlert(new UIAlertOptions
-                        {
-                            Title = GameFacade.Strings.GetString("f101", "3"),
-                            Message = GameFacade.Strings.GetString("f101", "13"),
-                            Buttons = UIAlertButton.Ok(y =>
-                            {
-                                RestartGamePatch();
-                            })
-                        }, true);
-                    };
-                    GameThread.NextUpdate(y => UIScreen.GlobalShowDialog(downloader, true));
-                },
-                x =>
-                {
-                    GameThread.NextUpdate(state =>
-                    {
-                        UIScreen.RemoveDialog(_UpdaterAlert);
-                        if (state.ShiftDown)
-                        {
-                            _UpdaterAlert = UIScreen.GlobalShowAlert(new UIAlertOptions
-                            {
-                                Title = GameFacade.Strings.GetString("f101", "11"),
-                                Message = GameFacade.Strings.GetString("f101", "12"),
-                                Width = 500,
-                                Buttons = UIAlertButton.Ok(y =>
-                                {
-                                    Regulator.AsyncTransition("AvatarData");
-                                    UIScreen.RemoveDialog(_UpdaterAlert);
-                                    View.LoginDialog.Visible = true;
-                                    View.LoginProgress.Visible = true;
-                                })
-                            }, true);
-                        }
-                        else
-                        {
-                            View.LoginDialog.Visible = true;
-                            View.LoginProgress.Visible = true;
-                            Regulator.AsyncReset();
-                        }
-                    });
-                })
-            }, true);
-        }
-
-        public void RestartGamePatch()
-        {
-            if (FSOEnvironment.Linux)
-            {
-                System.Diagnostics.Process.Start("mono", "update.exe "+FSOEnvironment.Args);
-            }
-            else
-            {
-                var args = new ProcessStartInfo(".\\update.exe", FSOEnvironment.Args);
-                try
-                {
-
-                    System.Diagnostics.Process.Start(args);
-                }
-                catch (Exception)
-                {
-                    args.FileName = "update.exe";
-                    System.Diagnostics.Process.Start(args);
-                }
-            }
-
-            if (FSOFacade.Controller.CloseAttempt())
-            {
-                GameFacade.Kill();
             }
         }
 

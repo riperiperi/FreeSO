@@ -123,8 +123,9 @@ namespace FSO.Server.Servers.City
 
             IDAFactory da = Kernel.Get<IDAFactory>();
             using (var db = da.Get()){
-                var version = ServerVersion.Get();
-                db.Shards.UpdateStatus(shard.Id, Config.Internal_Host, Config.Public_Host, version.Name, version.Number, version.UpdateID);
+                var version = FSOVersionInfo.Current;
+
+                db.Shards.UpdateStatus(shard.Id, Config.Internal_Host, Config.Public_Host, version.channel, version.id, null);
                 ((Shards)shards).Update();
 
                 var oldClaims = db.LotClaims.GetAllByOwner(context.Config.Call_Sign).ToList();

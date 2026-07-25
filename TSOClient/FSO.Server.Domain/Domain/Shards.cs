@@ -69,8 +69,8 @@ namespace FSO.Server.Domain
                     Status = (Server.Protocol.CitySelector.ShardStatus)(byte)x.status,
                     PublicHost = x.public_host,
                     InternalHost = x.internal_host,
-                    VersionName = x.version_name,
-                    VersionNumber = x.version_number,
+                    VersionBranch = x.version_name,
+                    VersionId = x.version_number,
                     UpdateID = x.update_id
                 }).ToList();
             }

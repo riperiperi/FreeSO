@@ -145,16 +145,9 @@ namespace FSO.Client.Regulators
         {
             if (auth.FSOVersion == null) return false;
 
-            var str = GlobalSettings.Default.ClientVersion;
-            var authstr = auth.FSOBranch + "-" + auth.FSOVersion;
-
-            return str != authstr;
-
-            /*
-            var split = str.LastIndexOf('-');
-            int verNum = 0;
-            int.TryParse(split.)
-            */
+            var version = FSOVersionInfo.Current;
+            
+            return !version.Equals(auth.GetVersion());
         }
 
         protected override void OnBeforeTransition(RegulatorState oldState, RegulatorState newState, object data)

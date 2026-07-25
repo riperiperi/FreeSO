@@ -106,7 +106,7 @@ namespace FSO.Client.UI.Archive
                 GlobalSettings.Default.Save();
             });
 
-            controller.ShowUpdateDialogNew(path, true);
+            controller.ShowUpdateDialog(path, true);
         }
 
         private void SetLabel(string label, Color color)

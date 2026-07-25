@@ -1,4 +1,5 @@
-﻿using FSO.Server.Api.Core.Utils;
+﻿using FSO.Common;
+using FSO.Server.Api.Core.Utils;
 using FSO.Server.Common;
 using FSO.Server.Protocol.CitySelector;
 using FSO.Server.Servers.Api.JsonWebToken;
@@ -61,19 +62,22 @@ namespace FSO.Server.Api.Core.Controllers
                     var update = db.Updates.GetUpdate(shardOne.UpdateID.Value);
                     response = ApiResponse.Xml(HttpStatusCode.OK, new UserAuthorized()
                     {
-                        FSOBranch = shardOne.VersionName,
-                        FSOVersion = shardOne.VersionNumber,
+                        FSOBranch = shardOne.VersionBranch,
+                        FSOVersion = shardOne.VersionId,
                         FSOUpdateUrl = update.full_zip,
                         FSOCDNUrl = api.Config.CDNUrl
                     });
                 }
                 else
                 {
+                    var fsoVersion = FSOVersionInfo.Current;
+
                     response = ApiResponse.Xml(HttpStatusCode.OK, new UserAuthorized()
                     {
-                        FSOBranch = shardOne.VersionName,
-                        FSOVersion = shardOne.VersionNumber,
-                        FSOUpdateUrl = api.Config.UpdateUrl,
+                        FSOBranch = shardOne.VersionBranch,
+                        FSOVersion = shardOne.VersionId,
+                        FSOUpdateUrl = fsoVersion.channelUrl,
+                        FSOUpdateKey = fsoVersion.publicKey,
                         FSOCDNUrl = api.Config.CDNUrl
                     });
                 }
