@@ -464,14 +464,32 @@ namespace FSO.UpdateBuilder
                 {
                     var appPath = Path.GetFullPath(Path.Combine(originalClientPath, "FreeSO.app"));
                     var dmgPath = Path.GetFullPath(Path.Combine(workingDirectory, "FreeSO.dmg"));
-                    ExecuteZshScript($"-c \"create-dmg {appPath} --no-code-sign --overwrite --no-version-in-filename && mv FreeSO.dmg {dmgPath}\"");
-                    
-                    await client.Repository.Release.UploadAsset(release, new ReleaseAssetUpload()
+
+                    if (Directory.Exists(appPath))
                     {
-                        FileName = $"installer-{target}-{versionString}.dmg",
-                        ContentType = "application/x-apple-diskimage",
-                        RawData = File.OpenRead(dmgPath),
-                    });
+                        ExecuteZshScript($"-c \"create-dmg {appPath} --no-code-sign --overwrite --no-version-in-filename && mv FreeSO.dmg {dmgPath}\"");
+
+                        await client.Repository.Release.UploadAsset(release, new ReleaseAssetUpload()
+                        {
+                            FileName = $"installer-{target}-{versionString}.dmg",
+                            ContentType = "application/x-apple-diskimage",
+                            RawData = File.OpenRead(dmgPath),
+                        });
+                    }
+                }
+                else if (target == "windows")
+                {
+                    var msiPath = Path.GetFullPath(Path.Combine(workingDirectory, "FSO.Installer.Windows.msi"));
+
+                    if (File.Exists(msiPath))
+                    {
+                        await client.Repository.Release.UploadAsset(release, new ReleaseAssetUpload()
+                        {
+                            FileName = $"installer-{target}-{versionString}.msi",
+                            ContentType = "application/octet-stream",
+                            RawData = File.OpenRead(msiPath),
+                        });
+                    }
                 }
             }
 

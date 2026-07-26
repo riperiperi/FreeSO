@@ -41,6 +41,15 @@ jobs:
         name: FreeSOServer
         path: Artifacts/Server
 
+    - run: dotnet build TSOClient/FSO.Installer.Windows -c Release -o Artifacts/Installer
+
+    - name: Upload installer artifacts
+      uses: actions/upload-artifact@v7
+      with:
+        name: FreeSOInstaller
+        path: Artifacts/Installer/en-US/FSO.Installer.Windows.msi
+        archive: false
+
   build-mac:
     strategy:
       matrix:
@@ -115,6 +124,12 @@ jobs:
       with:
         name: FreeSOServer
         path: tempUpdate/windows-server
+        
+    - name: Download Installer
+      uses: actions/download-artifact@v8
+      with:
+        name: FSO.Installer.Windows.msi
+        path: tempUpdate
 
     - name: Download Client (mac)
       uses: actions/download-artifact@v8

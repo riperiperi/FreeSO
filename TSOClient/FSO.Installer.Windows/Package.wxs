@@ -1,0 +1,48 @@
+﻿<Wix xmlns="http://wixtoolset.org/schemas/v4/wxs"
+     xmlns:ui="http://wixtoolset.org/schemas/v4/wxs/ui">
+  <Package Id="FreeSO.Client" Name="FreeSO" Manufacturer="riperiperi" Version="1.0.0" Scope="perUser">
+    <MajorUpgrade DowngradeErrorMessage="!(loc.DowngradeError)" />
+	<Property Id="ALLUSERS" Secure="yes" Value="2" />
+	<Property Id="MSIINSTALLPERUSER" Secure="yes" Value="1" />
+	<MediaTemplate EmbedCab="yes" />
+
+	<Icon Id="icon.ico" SourceFile="..\tso.client\fso.ico"/>
+	<Property Id="ARPPRODUCTICON" Value="icon.ico" />
+
+    <WixVariable
+      Id="WixUILicenseRtf"
+      Value="license.rtf"
+      />
+
+    <ui:WixUI
+      Id="WixUI_InstallDir"
+      InstallDirectory="INSTALLFOLDER"
+    />
+
+    <UI>
+		  <Publish Dialog="ExitDialog"
+			Control="Finish"
+			Event="DoAction"
+			Value="LaunchApplication" Condition="WIXUI_EXITDIALOGOPTIONALCHECKBOX = 1 and NOT Installed" />
+    </UI>
+    <UIRef Id="WixUI_ErrorProgressText" />
+
+    <WixVariable
+      Id="WixUIDialogBmp"
+      Value="dialog.jpg"
+    />
+    <WixVariable
+      Id="WixUIBannerBmp"
+      Value="header.jpg"
+    />
+
+    <Property Id="WIXUI_EXITDIALOGOPTIONALCHECKBOXTEXT" Value="Launch FreeSO" />
+	<Property Id="WixShellExecTarget" Value="[INSTALLFOLDER]FreeSO.exe" />
+
+	<CustomAction Id="LaunchApplication" BinaryRef="Wix4UtilCA_$(sys.BUILDARCHSHORT)" DllEntry="WixShellExec" Impersonate="yes" Return="ignore" />
+
+    <Feature Id="Main">
+      <ComponentGroupRef Id="FreeSOClient" />
+    </Feature>
+  </Package>
+</Wix>

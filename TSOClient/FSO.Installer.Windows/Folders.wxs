@@ -1,0 +1,13 @@
+<Wix xmlns="http://wixtoolset.org/schemas/v4/wxs">
+  <Fragment>
+    <StandardDirectory Id="ProgramFiles6432Folder">
+      <Directory Id="INSTALLFOLDER" Name="FreeSO" />
+    </StandardDirectory>
+	<StandardDirectory Id="ProgramMenuFolder">
+	  <Directory Id="ApplicationProgramsFolder" Name="FreeSO"/>
+	</StandardDirectory>
+	<StandardDirectory Id="DesktopFolder">
+		
+	</StandardDirectory>
+  </Fragment>
+</Wix>
