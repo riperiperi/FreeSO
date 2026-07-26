@@ -253,8 +253,8 @@ namespace FSO.Client.UI.Panels
             }
             else
             {
-                // This lets the UI know it can delete the texture when it's removed.
-                UI.Icon.Tag = UI;
+                // This lets the UI know it can delete the texture when it's removed. (if it's not managed by another cache)
+                UI.Icon.Tag ??= UI;
             }
         }
 
