@@ -668,6 +668,23 @@ namespace FSO.SimAntics.Utils
             VM.Load(fsov);
             VM.UpdateFreeObjectID();
 
+            // Spawn controller objects that are missing from the saved lot.
+            // In vanilla TS1, these are spawned automatically and saved into OBJM.
+            // If the lot was never opened in vanilla, they won't be in the save,
+            // so we need to spawn them here.
+            var controllerObjects = content.WorldObjects.ControllerObjects.Select(x => (uint)x.ID).ToList();
+
+            foreach (var controller in controllerObjects)
+            {
+                // Check if controller already exists in the loaded lot
+                var exists = VM.Entities.Any(e => e.Object.OBJ.GUID == controller);
+                if (!exists)
+                {
+                    // Spawn missing controller at OUT_OF_WORLD
+                    VM.Context.CreateObjectInstance(controller, LotTilePos.OUT_OF_WORLD, Direction.NORTH);
+                }
+            }
+
             // Attempt to recover queue names.
             foreach (var ava in VM.Context.ObjectQueries.Avatars)
             {

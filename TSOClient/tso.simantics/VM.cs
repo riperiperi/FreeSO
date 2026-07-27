@@ -66,6 +66,12 @@ namespace FSO.SimAntics
         //we can assume one application won't be running TS1 and TSO at the same time.
         public bool Aborting = false;
 
+        /// <summary>
+        /// Global toggle for free will (autonomy). When disabled, player family Sims will not
+        /// autonomously choose actions. Visitors and pets still have free will.
+        /// </summary>
+        public static bool FreeWillEnabled = true;
+
         private const long TickInterval = 33 * TimeSpan.TicksPerMillisecond;
         public VMHollowAdjEntry[] HollowAdj;
 
