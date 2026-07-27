@@ -7,5 +7,6 @@ namespace FSO.Common.Domain.Realestate
         IShardRealestateDomain GetByShard(int shardId);
 
         bool ValidateLotName(string name);
+        void Reset();
     }
 }

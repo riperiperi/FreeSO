@@ -1,4 +1,5 @@
-﻿using System.Collections.Generic;
+﻿using FSO.Common.Model;
+using System.Collections.Generic;
 
 namespace FSO.SimAntics.NetPlay.Model
 {
@@ -10,6 +11,7 @@ namespace FSO.SimAntics.NetPlay.Model
         public uint PersistID;
         public string RemoteIP;
         public VMNetAvatarPersistState AvatarState; //initial... obviously this can change while the lot is running.
+        public LotTransitionInfo TransitionInfo;
         public bool HadAvatar;
         public int InactivityTicks;
         public object NetHandle;

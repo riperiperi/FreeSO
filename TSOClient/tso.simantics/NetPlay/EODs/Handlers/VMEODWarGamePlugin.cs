@@ -35,7 +35,7 @@ namespace FSO.SimAntics.NetPlay.EODs.Handlers
             {
                 // get the params, temp 0 is player type
                 var local = client.Invoker.Thread.TempRegisters;
-                if ((local != null) && (local[0] == (short)VMEODWarGamePlayers.Blue))
+                if (local[0] == (short)VMEODWarGamePlayers.Blue)
                 {
                     BluePlayerClient = client;
                     BluePlayerClient.Send("WarGame_Init", BluePlayerClient.Avatar.ObjectID + "%blue");

@@ -19,9 +19,9 @@ namespace FSO.Files.Formats.DBPF
         private uint NumEntries;
         private IoBuffer m_Reader;
 
-        private List<DBPFEntry> m_EntriesList = new List<DBPFEntry>();
-        private Dictionary<ulong, DBPFEntry> m_EntryByID = new Dictionary<ulong, DBPFEntry>();
-        private Dictionary<DBPFTypeID, List<DBPFEntry>> m_EntriesByType = new Dictionary<DBPFTypeID, List<DBPFEntry>>();
+        private List<DBPFEntry> m_EntriesList = [];
+        private Dictionary<ulong, DBPFEntry> m_EntryByID = [];
+        private Dictionary<DBPFTypeID, List<DBPFEntry>> m_EntriesByType = [];
 
         private IoBuffer Io;
 
@@ -30,13 +30,14 @@ namespace FSO.Files.Formats.DBPF
         /// </summary>
         public DBPFFile()
         {
+            DateCreated = (int)DateTimeOffset.UtcNow.ToUnixTimeSeconds();
         }
 
         /// <summary>
         /// Creates a DBPF instance from a path.
         /// </summary>
         /// <param name="file">The path to an DBPF archive.</param>
-        public DBPFFile(string file)
+        public DBPFFile(string file) : this()
         {
             var stream = File.OpenRead(file);
                 Read(stream);
@@ -48,9 +49,6 @@ namespace FSO.Files.Formats.DBPF
         /// <param name="stream">The stream to read from.</param>
         public void Read(Stream stream)
         {
-            m_EntryByID = new Dictionary<ulong,DBPFEntry>();
-            m_EntriesList = new List<DBPFEntry>();
-
             var io = IoBuffer.FromStream(stream, ByteOrder.LITTLE_ENDIAN);
             m_Reader = io;
             this.Io = io;
@@ -93,6 +91,11 @@ namespace FSO.Files.Formats.DBPF
                 var trashIndexOffset = io.ReadUInt32();
                 var trashIndexSize = io.ReadUInt32();
                 var indexMinor = io.ReadUInt32();
+
+                if (trashEntryCount != 0)
+                {
+
+                }
             }
             else if (version == 2.0)
             {
@@ -126,6 +129,76 @@ namespace FSO.Files.Formats.DBPF
             }
         }
 
+        public void Write(Stream stream)
+        {
+            var io = IoWriter.FromStream(stream, ByteOrder.LITTLE_ENDIAN);
+            io.WriteCString("DBPF", 4);
+
+            io.WriteUInt32(1); // major version
+            io.WriteUInt32(0); // minor version
+
+            io.Skip(12);
+
+            io.WriteInt32(DateCreated);
+            this.DateModified = (int)DateTimeOffset.UtcNow.ToUnixTimeSeconds();
+            io.WriteInt32(DateModified);
+
+            io.WriteUInt32(7); // index major version
+
+            io.WriteUInt32((uint)m_EntriesList.Count);
+
+            var indexOffsetMark = stream.Position;
+            io.WriteUInt32(0); // placeholder index offset and size, calculated after the file data is inserted
+            io.WriteUInt32(0);
+
+            io.WriteUInt32(0); // trashEntryCount
+            io.WriteUInt32(0); // trashIndexOffset
+            io.WriteUInt32(0); // trashIndexSize
+            io.WriteUInt32(0); // indexMinor
+
+            io.Skip(32);
+
+            var newEntries = new DBPFEntry[m_EntriesList.Count];
+            int i = 0;
+
+            // Insert entry data here.
+            foreach (var entry in m_EntriesList)
+            {
+                var data = GetEntry(entry);
+
+                newEntries[i++] = new DBPFEntry()
+                {
+                    FileOffset = (uint)stream.Position,
+                    FileSize = (uint)data.Length,
+                    GroupID = entry.GroupID,
+                    InstanceID = entry.InstanceID,
+                    TypeID = entry.TypeID
+                };
+
+                io.WriteBytes(data);
+                int skip = (4 - (data.Length % 4)) % 4;
+
+                io.Skip(skip);
+            }
+
+            // After all the entry data, insert the index, then go back and rewrite the index offset and size to be correct.
+
+            var indexStart = stream.Position;
+            foreach (var entry in newEntries)
+            {
+                io.WriteUInt32((uint)entry.TypeID);
+                io.WriteUInt32((uint)entry.GroupID);
+                io.WriteUInt32(entry.InstanceID);
+                io.WriteUInt32(entry.FileOffset);
+                io.WriteUInt32(entry.FileSize);
+            }
+            var indexEnd = stream.Position;
+
+            stream.Seek(indexOffsetMark, SeekOrigin.Begin);
+            io.WriteUInt32((uint)indexStart);
+            io.WriteUInt32((uint)(indexEnd - indexStart));
+        }
+
         /// <summary>
         /// Gets a DBPFEntry's data from this DBPF instance.
         /// </summary>
@@ -133,6 +206,11 @@ namespace FSO.Files.Formats.DBPF
         /// <returns>Data for entry.</returns>
         public byte[] GetEntry(DBPFEntry entry)
         {
+            if (entry.Data != null)
+            {
+                return entry.Data;
+            }
+
             m_Reader.Seek(SeekOrigin.Begin, entry.FileOffset);
 
             return m_Reader.ReadBytes((int)entry.FileSize);
@@ -152,6 +230,17 @@ namespace FSO.Files.Formats.DBPF
         }
 
         /// <summary>
+        /// Gets an entry from its ID (TypeID + FileID).
+        /// </summary>
+        /// <param name="type">The type of the entry.</param>
+        /// <param name="fileId">The file ID of the entry.</param>
+        /// <returns>The entry's data.</returns>
+        public byte[] GetItemByID(DBPFTypeID type, uint fileId)
+        {
+            return GetItemByID(((ulong)fileId << 32) | (ulong)type);
+        }
+
+        /// <summary>
         /// Gets all entries of a specific type.
         /// </summary>
         /// <param name="Type">The Type of the entry.</param>
@@ -161,12 +250,47 @@ namespace FSO.Files.Formats.DBPF
 
             var result = new List<KeyValuePair<uint, byte[]>>();
 
-            var entries = m_EntriesByType[Type];
-            for (int i = 0; i < entries.Count; i++)
+            if (m_EntriesByType.TryGetValue(Type, out var entries))
             {
-                result.Add(new KeyValuePair<uint, byte[]>(entries[i].InstanceID, GetEntry(entries[i])));
+                for (int i = 0; i < entries.Count; i++)
+                {
+                    result.Add(new KeyValuePair<uint, byte[]>(entries[i].InstanceID, GetEntry(entries[i])));
+                }
             }
+
             return result;
+        }
+
+        public void AddOrReplace(ulong id, DBPFGroupID groupId, byte[] data)
+        {
+            if (!m_EntryByID.TryGetValue(id, out DBPFEntry entry))
+            {
+                entry = new DBPFEntry()
+                {
+                    InstanceID = (uint)(id >> 32),
+                    TypeID = (DBPFTypeID)(uint)id,
+                };
+
+                m_EntryByID[id] = entry;
+                m_EntriesList.Add(entry);
+
+                if (!m_EntriesByType.TryGetValue(entry.TypeID, out var entries))
+                {
+                    entries = [];
+                    m_EntriesByType[entry.TypeID] = entries;
+                }
+
+                NumEntries++;
+                entries.Add(entry);
+            }
+
+            entry.GroupID = groupId;
+            entry.Data = data;
+        }
+
+        public void AddOrReplace(uint id, DBPFTypeID type, DBPFGroupID groupId, byte[] data)
+        {
+            AddOrReplace(((ulong)id << 32) | (ulong)(type), groupId, data);
         }
 
         #region IDisposable Members
@@ -176,7 +300,7 @@ namespace FSO.Files.Formats.DBPF
         /// </summary>
         public void Dispose()
         {
-            Io.Dispose();
+            Io?.Dispose();
         }
 
         #endregion

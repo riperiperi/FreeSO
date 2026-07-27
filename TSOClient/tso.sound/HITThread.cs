@@ -408,6 +408,11 @@ namespace FSO.HIT
 
         private void LocalVarSet(int location, int value)
         {
+            if (LocalVar == null)
+            {
+                LocalVar = new int[54];
+            }
+
             switch (location)
             {
                 case 0x12: //patch, switch active track

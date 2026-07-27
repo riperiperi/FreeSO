@@ -32,177 +32,187 @@ namespace FSO.SimAntics.NetPlay.Model.Commands
                 var args = Message.Substring(Math.Min(Message.Length, spaceIndex + 1), Math.Max(0, Message.Length - (spaceIndex + 1)));
                 var server = (VMServerDriver)vm.Driver;
                 VMEntity sim;
-                switch (cmd.ToLowerInvariant())
+
+                try
                 {
-                    case "ban":
-                        server.BanUser(vm, args);
-                        break;
-                    case "banip":
-                        server.BanIP(args);
-                        vm.SignalChatEvent(new VMChatEvent(null, VMChatEventType.Generic, "Added " + args + " to the IP ban list."));
-                        break;
-                    case "unban":
-                        server.SandboxBans.Remove(args.ToLowerInvariant().Trim(' '));
-                        vm.SignalChatEvent(new VMChatEvent(null, VMChatEventType.Generic, "Removed " + args + " from the IP ban list."));
-                        break;
-                    case "banlist":
-                        string result = "";
-                        foreach (var ban in server.SandboxBans.List()) result += ban + "\r\n";
-                        vm.SignalChatEvent(new VMChatEvent(null, VMChatEventType.Generic, "==== BANNED IPS: ==== \r\n"+result));
-                        break;
-                    case "builder":
-                        sim = vm.Entities.Where(x => x is VMAvatar && x.ToString().ToLowerInvariant().Trim(' ') == args.ToLowerInvariant().Trim(' ')).FirstOrDefault();
-                        if (sim != null)
-                        {
-                            vm.ForwardCommand(new VMChangePermissionsCmd()
+                    switch (cmd.ToLowerInvariant())
+                    {
+                        case "ban":
+                            server.BanUser(vm, args);
+                            break;
+                        case "banip":
+                            server.BanIP(args);
+                            vm.SignalChatEvent(new VMChatEvent(null, VMChatEventType.Generic, "Added " + args + " to the IP ban list."));
+                            break;
+                        case "unban":
+                            server.SandboxBans.Remove(args.ToLowerInvariant().Trim(' '));
+                            vm.SignalChatEvent(new VMChatEvent(null, VMChatEventType.Generic, "Removed " + args + " from the IP ban list."));
+                            break;
+                        case "banlist":
+                            string result = "";
+                            foreach (var ban in server.SandboxBans.List()) result += ban + "\r\n";
+                            vm.SignalChatEvent(new VMChatEvent(null, VMChatEventType.Generic, "==== BANNED IPS: ==== \r\n" + result));
+                            break;
+                        case "builder":
+                            sim = vm.Entities.Where(x => x is VMAvatar && x.ToString().ToLowerInvariant().Trim(' ') == args.ToLowerInvariant().Trim(' ')).FirstOrDefault();
+                            if (sim != null)
                             {
-                                TargetUID = sim.PersistID,
-                                Level = VMTSOAvatarPermissions.BuildBuyRoommate,
-                                Verified = true
-                            });
-                            vm.SignalChatEvent(new VMChatEvent(null, VMChatEventType.Generic, "Made " + sim.Name + " a build-roommate."));
-                        }
-                        break;
-                    case "admin":
-                        sim = vm.Entities.Where(x => x is VMAvatar && x.ToString().ToLowerInvariant().Trim(' ') == args.ToLowerInvariant().Trim(' ')).FirstOrDefault();
-                        if (sim != null)
-                        {
-                            vm.ForwardCommand(new VMChangePermissionsCmd()
-                            {
-                                TargetUID = sim.PersistID,
-                                Level = VMTSOAvatarPermissions.Admin,
-                                Verified = true
-                            });
-                            vm.SignalChatEvent(new VMChatEvent(null, VMChatEventType.Generic, "Made " + sim.Name + " an admin."));
-                        }
-                        break;
-                    case "roomie":
-                        sim = vm.Entities.Where(x => x is VMAvatar && x.ToString().ToLowerInvariant().Trim(' ') == args.ToLowerInvariant().Trim(' ')).FirstOrDefault();
-                        if (sim != null)
-                        {
-                            vm.ForwardCommand(new VMChangePermissionsCmd()
-                            {
-                                TargetUID = sim.PersistID,
-                                Level = VMTSOAvatarPermissions.Roommate,
-                                Verified = true
-                            });
-                            vm.SignalChatEvent(new VMChatEvent(null, VMChatEventType.Generic, "Made " + sim.Name + " a roommate."));
-                        }
-                        break;
-                    case "visitor":
-                        sim = vm.Entities.Where(x => x is VMAvatar && x.ToString().ToLowerInvariant().Trim(' ') == args.ToLowerInvariant().Trim(' ')).FirstOrDefault();
-                        if (sim != null)
-                        {
-                            vm.ForwardCommand(new VMChangePermissionsCmd()
-                            {
-                                TargetUID = sim.PersistID,
-                                Level = VMTSOAvatarPermissions.Visitor,
-                                Verified = true
-                            });
-                            vm.SignalChatEvent(new VMChatEvent(null, VMChatEventType.Generic, "Made " + sim.Name + " a visitor."));
-                        }
-                        break;
-                    case "close":
-                        if (FromNet) return false;
-                        vm.CloseNet(VMCloseNetReason.ServerShutdown);
-                        break;
-                    case "qtrday":
-                        var count = int.Parse(args);
-                        for (int i=0; i<count; i++)
-                        {
-                            vm.ProcessQTRDay();
-                        }
-                        vm.SignalChatEvent(new VMChatEvent(null, VMChatEventType.Generic, "Ran "+count+" quarter days."));
-                        break;
-                    case "setjob":
-                        var jobsplit = args.Split(' ');
-                        if (jobsplit.Length < 2) return true;
-                        var jobid = short.Parse(jobsplit[0]);
-                        var jobgrade = short.Parse(jobsplit[1]);
-                        avatar.SetPersonData(SimAntics.Model.VMPersonDataVariable.OnlineJobID, jobid);
-                        avatar.SetPersonData(SimAntics.Model.VMPersonDataVariable.OnlineJobGrade, jobgrade);
-                        vm.SignalChatEvent(new VMChatEvent(null, VMChatEventType.Generic, "Set "+avatar.ToString()+" job grade/type to "+jobgrade+"/"+jobid+"."));
-                        break;
-                    case "trace":
-                        //enables desync tracing
-                        vm.UseSchedule = false;
-                        vm.Trace = new Engine.Debug.VMSyncTrace();
-                        break;
-                    case "reload":
-                        //enables desync tracing
-                        var servD = vm.Driver as VMServerDriver;
-                        vm.SignalChatEvent(new VMChatEvent(null, VMChatEventType.Debug, "Manually requested self resync."));
-                        if (servD != null) servD.SelfResync = true;
-                        break;
-                    case "time":
-                        var timesplit = args.Split(' ');
-                        if (timesplit.Length < 2) return true;
-                        vm.Context.Clock.Hours = int.Parse(timesplit[0]);
-                        vm.Context.Clock.Minutes = int.Parse(timesplit[1]);
-                        vm.Context.Clock.MinuteFractions = 0;
-                        break;
-                    case "tickrate":
-                        /* TS1 has 30 ticks per minute (1 minute per 1 irl second)
-                         * TSO has 150 ticks per minute (1 minute per 5 irl second)*/
-                        if (int.TryParse(args, out var tick) && tick >= 1) vm.Context.Clock.TicksPerMinute = tick;
-                        else tick = vm.Context.Clock.TicksPerMinute = 30 * 5;
-                        vm.SignalChatEvent(new VMChatEvent(null, VMChatEventType.Generic, $"Set tickrate to {tick} ticks per minute."));
-                        break;
-                    case "speed":
-                        /* By default, 0 = paused, normal = 1, medium = 3, fast = 10 */
-                        if (int.TryParse(args, out var speed) && speed is >= 0 and <= 999) vm.SpeedMultiplier = speed;
-                        else vm.SpeedMultiplier = speed = 1;
-                        vm.SignalChatEvent(new VMChatEvent(null, VMChatEventType.Generic, $"Set speed multiplier to {speed}."));
-                        break;
-                    case "tuning":
-                        var tuningsplit = args.Split(' ');
-                        if (tuningsplit.Length < 4) return true;
-                        vm.Tuning.AddTuning(new Common.Model.DynTuningEntry()
-                        {
-                            tuning_type = tuningsplit[0],
-                            tuning_table = int.Parse(tuningsplit[1]),
-                            tuning_index = int.Parse(tuningsplit[2]),
-                            value = float.Parse(tuningsplit[3]),
-                        });
-                        vm.ForwardCommand(new VMNetTuningCmd()
-                        {
-                            Tuning = vm.Tuning
-                        });
-                        break;
-                    case "fixall":
-                        var fixCount = 0;
-                        foreach (var ent in vm.Entities)
-                        {
-                            if (ent is VMGameObject && ent == ent.MultitileGroup.BaseObject)
-                            {
-                                var state = (VMTSOObjectState)ent.TSOState;
-                                if (state.Broken)
+                                vm.ForwardCommand(new VMChangePermissionsCmd()
                                 {
-                                    foreach (var objr in ent.MultitileGroup.Objects)
-                                    {
-                                        ((VMGameObject)objr).DisableParticle(256);
-                                    }
-                                    fixCount++;
-                                }
-                                state.QtrDaysSinceLastRepair = 0;
-                                state.Wear = 0;
+                                    TargetUID = sim.PersistID,
+                                    Level = VMTSOAvatarPermissions.BuildBuyRoommate,
+                                    Verified = true
+                                });
+                                vm.SignalChatEvent(new VMChatEvent(null, VMChatEventType.Generic, "Made " + sim.Name + " a build-roommate."));
                             }
-                        }
-                        vm.SignalChatEvent(new VMChatEvent(null, VMChatEventType.Generic, "Fixed " + fixCount + " objects."));
-                        break;
-                    case "testcollision":
-                        vm.SignalChatEvent(new VMChatEvent(null, VMChatEventType.Debug, $"Scanning collision for lot { vm.TSOState.Name }."));
-                        try
-                        {
-                            var collisionValidator = new CollisionTestUtils();
-                            collisionValidator.VerifyAllCollision(vm);
-                            vm.SignalChatEvent(new VMChatEvent(null, VMChatEventType.Debug, "No issue detected with collision."));
-                        } catch (Exception e)
-                        {
-                            vm.SignalChatEvent(new VMChatEvent(null, VMChatEventType.Debug, e.Message));
-                        }
-                        break;
+                            break;
+                        case "admin":
+                            sim = vm.Entities.Where(x => x is VMAvatar && x.ToString().ToLowerInvariant().Trim(' ') == args.ToLowerInvariant().Trim(' ')).FirstOrDefault();
+                            if (sim != null)
+                            {
+                                vm.ForwardCommand(new VMChangePermissionsCmd()
+                                {
+                                    TargetUID = sim.PersistID,
+                                    Level = VMTSOAvatarPermissions.Admin,
+                                    Verified = true
+                                });
+                                vm.SignalChatEvent(new VMChatEvent(null, VMChatEventType.Generic, "Made " + sim.Name + " an admin."));
+                            }
+                            break;
+                        case "roomie":
+                            sim = vm.Entities.Where(x => x is VMAvatar && x.ToString().ToLowerInvariant().Trim(' ') == args.ToLowerInvariant().Trim(' ')).FirstOrDefault();
+                            if (sim != null)
+                            {
+                                vm.ForwardCommand(new VMChangePermissionsCmd()
+                                {
+                                    TargetUID = sim.PersistID,
+                                    Level = VMTSOAvatarPermissions.Roommate,
+                                    Verified = true
+                                });
+                                vm.SignalChatEvent(new VMChatEvent(null, VMChatEventType.Generic, "Made " + sim.Name + " a roommate."));
+                            }
+                            break;
+                        case "visitor":
+                            sim = vm.Entities.Where(x => x is VMAvatar && x.ToString().ToLowerInvariant().Trim(' ') == args.ToLowerInvariant().Trim(' ')).FirstOrDefault();
+                            if (sim != null)
+                            {
+                                vm.ForwardCommand(new VMChangePermissionsCmd()
+                                {
+                                    TargetUID = sim.PersistID,
+                                    Level = VMTSOAvatarPermissions.Visitor,
+                                    Verified = true
+                                });
+                                vm.SignalChatEvent(new VMChatEvent(null, VMChatEventType.Generic, "Made " + sim.Name + " a visitor."));
+                            }
+                            break;
+                        case "close":
+                            if (FromNet) return false;
+                            vm.CloseNet(VMCloseNetReason.ServerShutdown);
+                            break;
+                        case "qtrday":
+                            var count = int.Parse(args);
+                            for (int i = 0; i < count; i++)
+                            {
+                                vm.ProcessQTRDay();
+                            }
+                            vm.SignalChatEvent(new VMChatEvent(null, VMChatEventType.Generic, "Ran " + count + " quarter days."));
+                            break;
+                        case "setjob":
+                            var jobsplit = args.Split(' ');
+                            if (jobsplit.Length < 2) return true;
+                            var jobid = short.Parse(jobsplit[0]);
+                            var jobgrade = short.Parse(jobsplit[1]);
+                            avatar.SetPersonData(SimAntics.Model.VMPersonDataVariable.OnlineJobID, jobid);
+                            avatar.SetPersonData(SimAntics.Model.VMPersonDataVariable.OnlineJobGrade, jobgrade);
+                            vm.SignalChatEvent(new VMChatEvent(null, VMChatEventType.Generic, "Set " + avatar.ToString() + " job grade/type to " + jobgrade + "/" + jobid + "."));
+                            break;
+                        case "trace":
+                            //enables desync tracing
+                            vm.UseSchedule = false;
+                            vm.Trace = new Engine.Debug.VMSyncTrace();
+                            break;
+                        case "reload":
+                            //enables desync tracing
+                            var servD = vm.Driver as VMServerDriver;
+                            vm.SignalChatEvent(new VMChatEvent(null, VMChatEventType.Debug, "Manually requested self resync."));
+                            if (servD != null) servD.SelfResync = true;
+                            break;
+                        case "time":
+                            var timesplit = args.Split(' ');
+                            if (timesplit.Length < 2) return true;
+                            vm.Context.Clock.Hours = int.Parse(timesplit[0]);
+                            vm.Context.Clock.Minutes = int.Parse(timesplit[1]);
+                            vm.Context.Clock.MinuteFractions = 0;
+                            break;
+                        case "tickrate":
+                            /* TS1 has 30 ticks per minute (1 minute per 1 irl second)
+                             * TSO has 150 ticks per minute (1 minute per 5 irl second)*/
+                            if (int.TryParse(args, out var tick) && tick >= 1) vm.Context.Clock.TicksPerMinute = tick;
+                            else tick = vm.Context.Clock.TicksPerMinute = 30 * 5;
+                            vm.SignalChatEvent(new VMChatEvent(null, VMChatEventType.Generic, $"Set tickrate to {tick} ticks per minute."));
+                            break;
+                        case "speed":
+                            /* By default, 0 = paused, normal = 1, medium = 3, fast = 10 */
+                            if (int.TryParse(args, out var speed) && speed is >= 0 and <= 999) vm.SpeedMultiplier = speed;
+                            else vm.SpeedMultiplier = speed = 1;
+                            vm.SignalChatEvent(new VMChatEvent(null, VMChatEventType.Generic, $"Set speed multiplier to {speed}."));
+                            break;
+                        case "tuning":
+                            var tuningsplit = args.Split(' ');
+                            if (tuningsplit.Length < 4) return true;
+                            vm.Tuning.AddTuning(new Common.Model.DynTuningEntry()
+                            {
+                                tuning_type = tuningsplit[0],
+                                tuning_table = int.Parse(tuningsplit[1]),
+                                tuning_index = int.Parse(tuningsplit[2]),
+                                value = float.Parse(tuningsplit[3]),
+                            });
+                            vm.ForwardCommand(new VMNetTuningCmd()
+                            {
+                                Tuning = vm.Tuning
+                            });
+                            break;
+                        case "fixall":
+                            var fixCount = 0;
+                            foreach (var ent in vm.Entities)
+                            {
+                                if (ent is VMGameObject && ent == ent.MultitileGroup.BaseObject)
+                                {
+                                    var state = (VMTSOObjectState)ent.TSOState;
+                                    if (state.Broken)
+                                    {
+                                        foreach (var objr in ent.MultitileGroup.Objects)
+                                        {
+                                            ((VMGameObject)objr).DisableParticle(256);
+                                        }
+                                        fixCount++;
+                                    }
+                                    state.QtrDaysSinceLastRepair = 0;
+                                    state.Wear = 0;
+                                }
+                            }
+                            vm.SignalChatEvent(new VMChatEvent(null, VMChatEventType.Generic, "Fixed " + fixCount + " objects."));
+                            break;
+                        case "testcollision":
+                            vm.SignalChatEvent(new VMChatEvent(null, VMChatEventType.Debug, $"Scanning collision for lot {vm.TSOState.Name}."));
+                            try
+                            {
+                                var collisionValidator = new CollisionTestUtils();
+                                collisionValidator.VerifyAllCollision(vm);
+                                vm.SignalChatEvent(new VMChatEvent(null, VMChatEventType.Debug, "No issue detected with collision."));
+                            }
+                            catch (Exception e)
+                            {
+                                vm.SignalChatEvent(new VMChatEvent(null, VMChatEventType.Debug, e.Message));
+                            }
+                            break;
+                    }
                 }
+                catch (Exception e)
+                {
+                    vm.SignalChatEvent(new VMChatEvent(null, VMChatEventType.Generic, $"Failed to run chat command '{cmd}': {e.Message}."));
+                }
+
                 return true;
             }
             else

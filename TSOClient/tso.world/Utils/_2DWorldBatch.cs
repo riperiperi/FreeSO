@@ -722,7 +722,8 @@ namespace FSO.LotView.Utils
 
         private Vector2 GetUV(Texture2D Texture, float x, float y)
         {
-            return new Vector2(x / (float)Texture.Width, y / (float)Texture.Height);
+            float offset = FSOEnvironment.PxOffset2D;
+            return new Vector2((x + offset) / (float)Texture.Width, (y + offset) / (float)Texture.Height);
         }
 
         public void ResetMatrices(int width, int height)

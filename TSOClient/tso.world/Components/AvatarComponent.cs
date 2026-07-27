@@ -106,7 +106,7 @@ namespace FSO.LotView.Components
                 if (blueprint != null)
                 {
                     AltitudeNormal = blueprint.InterpNormal(_Position);
-                    AltitudeOff = new Vector3(0, 0, blueprint.InterpAltitude(_Position));
+                    AltitudeOff = new Vector3(0, 0, blueprint.InterpAltitudeWithSubworlds(_Position));
                 }
                 OnPositionChanged();
                 _WorldDirty = true;

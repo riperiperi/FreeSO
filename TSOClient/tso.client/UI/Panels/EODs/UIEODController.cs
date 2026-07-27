@@ -1,4 +1,5 @@
 ﻿using FSO.Client.UI.Framework;
+using FSO.Client.UI.Screens;
 using FSO.SimAntics.NetPlay.EODs.Handlers;
 using FSO.SimAntics.NetPlay.Model.Commands;
 using System;
@@ -103,8 +104,23 @@ namespace FSO.Client.UI.Panels.EODs
             }
         }
 
+        private void LazilyOpenLiveMode()
+        {
+            var ucp = (UIScreen.Current as IGameScreen)?.ucp;
+            if (ucp != null && ucp.CurrentPanel == -1)
+            {
+                ucp.SetPanel(1);
+            }
+        }
+
         public void ShowEODMode(EODLiveModeOpt mode)
         {
+            if (DisplayMode == null && mode != null)
+            {
+                Lot.StealFocus = true;
+                LazilyOpenLiveMode();
+            }
+
             DisplayMode = mode; //gets picked up by live mode
         }
 

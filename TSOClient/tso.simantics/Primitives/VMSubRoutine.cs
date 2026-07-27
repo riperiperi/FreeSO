@@ -1,6 +1,7 @@
 ﻿using FSO.SimAntics.Engine;
 using FSO.Files.Utils;
 using System.IO;
+using FSO.SimAntics.Model;
 
 namespace FSO.SimAntics.Primitives
 {
@@ -13,6 +14,11 @@ namespace FSO.SimAntics.Primitives
         public VMSubRoutineOperand()
         {
             Arguments = new short[4];
+        }
+
+        public VMSubRoutineOperand(in VMTempRegisters registers)
+        {
+            Arguments = registers.AsSpan()[..4].ToArray();
         }
 
         public VMSubRoutineOperand(short[] Args)

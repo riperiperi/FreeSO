@@ -163,9 +163,9 @@ namespace FSO.SimAntics.Entities
 
             var count = Objects.Count;
             VMEntity[] OldContainers = new VMEntity[count];
-            short[] OldSlotNum = new short[count];
-            bool[] RoomChange = new bool[count];
-            LotTilePos[] Targets = new LotTilePos[count];
+            Span<short> OldSlotNum = stackalloc short[count];
+            Span<bool> RoomChange = stackalloc bool[count];
+            Span<LotTilePos> Targets = stackalloc LotTilePos[count];
             for (int i = 0; i < count; i++)
             {
                 OldContainers[i] = Objects[i].Container;

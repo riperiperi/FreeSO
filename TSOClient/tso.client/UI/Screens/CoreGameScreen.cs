@@ -1,39 +1,43 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using FSO.Client.UI.Framework;
-using FSO.Client.UI.Panels;
-using FSO.Client.UI.Model;
-using FSO.Client.Rendering.City;
-using Microsoft.Xna.Framework;
-using FSO.Client.Utils;
-using FSO.Common.Rendering.Framework.Model;
-using FSO.Common.Rendering.Framework.IO;
-using FSO.Common.Rendering.Framework;
-using FSO.LotView;
-using FSO.LotView.Model;
-using FSO.SimAntics;
-using FSO.HIT;
-using FSO.SimAntics.NetPlay.Drivers;
-using FSO.SimAntics.NetPlay.Model.Commands;
-using FSO.SimAntics.NetPlay;
-using FSO.Client.UI.Controls;
-using FSO.Client.Controllers;
+﻿using FSO.Client.Controllers;
 using FSO.Client.Controllers.Panels;
 using FSO.Client.Debug;
-using FSO.Client.UI.Panels.WorldUI;
-using FSO.Common.Utils;
-using FSO.UI.Model;
-using FSO.Client.UI.Panels.Neighborhoods;
-using FSO.Server.Clients;
-using FSO.LotView.Utils.Camera;
+using FSO.Client.Rendering;
+using FSO.Client.Rendering.City;
 using FSO.Client.UI.Archive;
+using FSO.Client.UI.Controls;
+using FSO.Client.UI.Framework;
+using FSO.Client.UI.Model;
+using FSO.Client.UI.Panels;
+using FSO.Client.UI.Panels.CityPainter;
+using FSO.Client.UI.Panels.Neighborhoods;
+using FSO.Client.UI.Panels.WorldUI;
+using FSO.Client.Utils;
+using FSO.Common.Domain.Realestate;
+using FSO.Common.Domain.RealestateDomain;
+using FSO.Common.Model;
+using FSO.Common.Rendering.Framework;
+using FSO.Common.Rendering.Framework.IO;
+using FSO.Common.Rendering.Framework.Model;
+using FSO.Common.Utils;
+using FSO.HIT;
+using FSO.LotView;
+using FSO.LotView.Components;
+using FSO.LotView.Model;
+using FSO.LotView.Utils.Camera;
+using FSO.Server.Clients;
+using FSO.SimAntics;
+using FSO.SimAntics.NetPlay;
+using FSO.SimAntics.NetPlay.Drivers;
+using FSO.SimAntics.NetPlay.Model.Commands;
+using FSO.SimAntics.Utils;
+using FSO.UI.Model;
+using Microsoft.Xna.Framework;
 
 namespace FSO.Client.UI.Screens
 {
     public class CoreGameScreen : FSO.Client.UI.Framework.GameScreen, IGameScreen
     {
-        public UIUCP ucp;
+        public UIUCP ucp { get; set; }
         public UIGizmo gizmo;
         public UIInbox Inbox;
         public UIGameTitle Title;
@@ -47,6 +51,7 @@ namespace FSO.Client.UI.Screens
         public UIBookmarks Bookmarks;
         public UIRelationshipDialog Relationships;
         public UIMapWaypoint YouAreHere, YourHouseHere;
+        internal UICityPainterAvatarLayer CityUpdateLayer;
 
         private Queue<SimConnectStateChange> StateChanges;
 
@@ -64,7 +69,17 @@ namespace FSO.Client.UI.Screens
         public VMClientDriver Driver;
         public uint VisualBudget { get; set; }
 
-        private UIMouseEventRef MouseHitAreaEventRef = null;
+        // Simantics VMs can be kept around for a load transition.
+        private VM TransitionVM;
+        private World TransitionWorld;
+        private CameraControllers TransitionCameras;
+
+        public VM VisualVM => TransitionVM ?? vm;
+        public World VisualWorld => TransitionWorld ?? World;
+        public VisualSurroundPuppets SurroundPuppets { get; private set; }
+
+        public UIButton CityEditButton;
+        private UICityPainter CityPainter;
 
         public bool InLot
         {
@@ -222,25 +237,8 @@ namespace FSO.Client.UI.Screens
             */
             HITVM.Get().PlaySoundEvent(UIMusic.Map);
 
-            /*VMDebug = new UIButton()
-            {
-                Caption = "Simantics",
-                Y = 45,
-                Width = 100,
-                X = GlobalSettings.Default.GraphicsWidth - 110
-            };
-            VMDebug.OnButtonClick += new ButtonClickDelegate(VMDebug_OnButtonClick);
-            this.Add(VMDebug);*/
-
-            /*SaveHouseButton = new UIButton()
-            {
-                Caption = "Save House",
-                Y = 10,
-                Width = 100,
-                X = GlobalSettings.Default.GraphicsWidth - 110
-            };
-            SaveHouseButton.OnButtonClick += new ButtonClickDelegate(SaveHouseButton_OnButtonClick);
-            this.Add(SaveHouseButton);*/
+            var gd = GameFacade.GraphicsDevice;
+            var custom = Content.Content.Get().CustomUI;
 
             CityFloatingContainer = new UISortedContainer();
             Add(CityFloatingContainer);
@@ -314,6 +312,29 @@ namespace FSO.Client.UI.Screens
 
             var status = new UINetStatusTray();
             Add(status);
+
+            SurroundPuppets = new(this);
+
+            CityEditButton = new UIButton(custom.Get("cityedit_toggle.png").Get(gd))
+            {
+                Position = new Vector2(10, 10),
+                Tooltip = GameFacade.Strings.GetString("f130", "1")
+            };
+            CityEditButton.OnButtonClick += ToggleCityEdit;
+
+            Add(CityEditButton);
+        }
+
+        private void ToggleCityEdit(UIElement button)
+        {
+            if (CityPainter == null)
+            {
+                CityPainter = new UICityPainter(CityRenderer);
+                WindowContainer.Add(CityPainter);
+            }
+
+            CityPainter.Position = new Vector2(20, 20);
+            CityPainter.SetActive(true);
         }
 
         public override void GameResized()
@@ -329,13 +350,14 @@ namespace FSO.Client.UI.Screens
             gizmo.Y = ScreenHeight - 230;
             MessageTray.X = ScreenWidth - 70;
             World?.GameResized();
+            TransitionWorld?.GameResized();
             var oldPanel = ucp.CurrentPanel;
             ucp.SetPanel(-1);
             ucp.SetPanel(oldPanel);
             CityTooltipHitArea.SetSize(ScreenWidth, ScreenHeight);
         }
 
-        public void Initialize(string cityName, int cityMap, TerrainController terrainController)
+        public void Initialize(string cityName, TerrainController terrainController)
         {
             CalculateMatrix();
             CityFloatingContainer.ScaleX = 1f / Scale.X;
@@ -343,7 +365,7 @@ namespace FSO.Client.UI.Screens
 
             Title.SetTitle(cityName);
             GameFacade.CurrentCityName = cityName;
-            InitializeMap(cityMap);
+            InitializeMap(terrainController.Realestate);
             InitializeMouse();
             ZoomLevel = 5; //screen always starts at far zoom, city visible.
             CityRenderer.m_ZoomProgress = 0;
@@ -360,11 +382,11 @@ namespace FSO.Client.UI.Screens
             });
         }
 
-        private void InitializeMap(int cityMap)
+        private void InitializeMap(IShardRealestateDomain realestate)
         {
             CityRenderer = new Terrain(GameFacade.GraphicsDevice); //The Terrain class implements the ThreeDAbstract interface so that it can be treated as a scene but manage its own drawing and updates.
             CityRenderer.m_GraphicsDevice = GameFacade.GraphicsDevice;
-            CityRenderer.Initialize(cityMap);
+            CityRenderer.Initialize(realestate);
             CityRenderer.LoadContent(GameFacade.GraphicsDevice);
             CityRenderer.RegenData = true;
             CityRenderer.SetTimeOfDay(0.5);
@@ -379,9 +401,11 @@ namespace FSO.Client.UI.Screens
 
             YouAreHere = new UIMapWaypoint(UIMapWaypoint.UIMapWaypointStyle.YouAreHere);
             YourHouseHere = new UIMapWaypoint(UIMapWaypoint.UIMapWaypointStyle.YourHouseHere);
+            CityUpdateLayer = new UICityPainterAvatarLayer(CityRenderer);
             
             AddAt(2, YouAreHere);
             AddAt(2, YourHouseHere);
+            AddAt(2, CityUpdateLayer);
         }
 
         private void InitializeMouse(){
@@ -392,7 +416,7 @@ namespace FSO.Client.UI.Screens
             //GameFacade.Game.IsFixedTimeStep = (vm == null || vm.Ready);
 
             Visible = ((World?.Visible == false || World?.State.Cameras.HideUI != true) && !CityRenderer.Camera.HideUI);
-            bool directControl = (World?.State.Cameras.ActiveCamera as CameraControllerFP)?.CaptureMouse == true;
+            bool directControl = (VisualWorld?.State.Cameras.ActiveCamera as CameraControllerFP)?.CaptureMouse == true;
             GameFacade.Game.IsMouseVisible = Visible && !directControl;
 
             base.Update(state);
@@ -404,26 +428,16 @@ namespace FSO.Client.UI.Screens
             {
                 if (ZoomLevel > 3 && (CityRenderer.m_Zoomed == TerrainZoomMode.Near) != (ZoomLevel == 4)) ZoomLevel = (CityRenderer.m_Zoomed == TerrainZoomMode.Near) ? 4 : 5;
 
-                if (World != null) {
+                if (VisualWorld != null) {
                     if (CityRenderer.m_Zoomed == TerrainZoomMode.Lot)
                     {
-                        if (World.FrameCounter < 3)
-                        {
-                            //wait until the draw stage has stabalized a bit. tends to be like this
-                            // 1. heavy singular draw
-                            // 2. update * 30
-                            // 3. normal draws
-                            CityRenderer.m_LotZoomProgress = 0;
-                            World.Visible = true;
-                            World.Opacity = 0;
-                        }
-                        else if (World.FrameCounter == 5 && GlobalSettings.Default.CompatState < GlobalSettings.TARGET_COMPAT_STATE)
+                        if (VisualWorld.FrameCounter == 5 && GlobalSettings.Default.CompatState < GlobalSettings.TARGET_COMPAT_STATE)
                         {
                             GlobalSettings.Default.CompatState = GlobalSettings.TARGET_COMPAT_STATE;
                             GlobalSettings.Default.Save();
                         }
-                        else
-                            CityRenderer.InheritPosition(World, FindController<CoreGameScreenController>(), false);
+
+                       CityRenderer.InheritPosition(VisualWorld, FindController<CoreGameScreenController>(), false);
                     }
                     if (CityRenderer.m_LotZoomProgress > 0f && CityRenderer.m_LotZoomProgress < 1f)
                     {
@@ -439,10 +453,10 @@ namespace FSO.Client.UI.Screens
                             if (CityRenderer.m_LotZoomProgress < 0.0001f)
                             {
                                 CityRenderer.m_LotZoomProgress = 0f;
-                                World.Visible = false;
+                                VisualWorld.Visible = false;
                             }
                         }
-                        World.Opacity = Math.Max(0, (CityRenderer.m_LotZoomProgress - 0.5f) * 2);
+                        VisualWorld.Opacity = Math.Max(0, (CityRenderer.m_LotZoomProgress - 0.5f) * 2);
 
                         float scale = 1;
                         if (CityRenderer.Camera is CityCamera2D)
@@ -453,10 +467,10 @@ namespace FSO.Client.UI.Screens
                                 / cam.m_LotZoomSize;
                         }
 
-                        World.State.PreciseZoom = scale;
+                        VisualWorld.State.PreciseZoom = scale;
                     } else
                     {
-                        World.Opacity = (CityRenderer.m_Zoomed == TerrainZoomMode.Lot)?1f:0f;
+                        VisualWorld.Opacity = (CityRenderer.m_Zoomed == TerrainZoomMode.Lot)?1f:0f;
                     }
                 }
                 else if (CityRenderer.m_LotZoomProgress > 0)
@@ -479,7 +493,7 @@ namespace FSO.Client.UI.Screens
                 while (StateChanges.Count > 0)
                 {
                     var e = StateChanges.Dequeue();
-                    ClientStateChangeProcess(e.State, e.Progress);
+                    ClientStateChangeProcess(e.State, e.Progress, state);
                 }
             }
 
@@ -494,14 +508,39 @@ namespace FSO.Client.UI.Screens
                 }
             }
 
-            var joinAttempt = DiscordRpcEngine.Secret;
-            if (joinAttempt != null)
+            var secret = DiscordRpcEngine.Secret;
+            if (secret != null)
             {
-                var split = joinAttempt.Split('#');
-                uint lotID;
-                if (uint.TryParse(split[0], out lotID))
+                var joinAttempt = secret.Value;
+                bool joinLot = joinAttempt.LotID != 0;
+                // TODO: if the join attempt archive mode doesn't match archive mode enable, let the player know
+                if (joinAttempt.ArchiveMode)
                 {
-                    FindController<CoreGameScreenController>()?.JoinLot(lotID);
+                    if (joinAttempt.ServerID != DiscordRpcEngine.ArchiveID)
+                    {
+                        if (joinAttempt.ServerHostname == "")
+                        {
+                            UIAlert.Alert("", GameFacade.Strings.GetString("f128", "115"), true);
+                        }
+                        else
+                        {
+                            UIAlert.YesNo("", GameFacade.Strings.GetString("f128", "116"), true, (bool result) =>
+                            {
+                                if (result)
+                                {
+                                    FSOFacade.Controller.Disconnect(true);
+                                    GameThread.SetTimeout(() => { DiscordRpcEngine.Secret = joinAttempt; }, 100);
+                                }
+                            });
+                        }
+                        joinLot = false;
+                    }
+                }
+
+                if (joinLot)
+                {
+                    var lotId = joinAttempt.LotID;
+                    FindController<CoreGameScreenController>()?.JoinLot(lotId);
                 }
 
                 DiscordRpcEngine.Secret = null;
@@ -511,18 +550,22 @@ namespace FSO.Client.UI.Screens
             {
                 GraphicsModeControl.ChangeMode((GraphicsModeControl.Mode == GlobalGraphicsMode.Full3D) ? GlobalGraphicsMode.Hybrid2D : GlobalGraphicsMode.Full3D);
             }
+
+            CityEditButton.Visible = FindController<CoreGameScreenController>()?.AllowCityEditor == true && ZoomLevel >= 4 && (CityPainter == null || !CityPainter.Visible);
         }
 
         public override void PreDraw(UISpriteBatch batch)
         {
             base.PreDraw(batch);
+            SurroundPuppets?.PreDraw();
+
             if (vm != null)
             {
                 if (vm.FSOVAsyncLoading) { }
                 else if (!WorldLoaded && vm.Context.Blueprint != null)
                 {
                     var result = World.Preload(GameFacade.GraphicsDevice);
-                    if (result)
+                    if (result && vm.GetAvatarByPersist(vm.MyUID) != null)
                     {
                         WorldLoaded = true;
                         ClientStateChange(6, 1);
@@ -555,8 +598,33 @@ namespace FSO.Client.UI.Screens
             }
         }
 
-        public void CleanupLastWorld()
+        public void CleanupTransition()
         {
+            if (TransitionVM != null)
+            {
+                TransitionVM.SuppressBHAVChanges();
+                TransitionVM = null;
+
+                if (World != null)
+                {
+                    World.Visible = TransitionWorld.Visible;
+                }
+
+                GameFacade.Scenes.Remove(TransitionWorld);
+                TransitionWorld.Dispose();
+                TransitionWorld = null;
+
+                CityRenderer.DisposeOnLot();
+            }
+        }
+
+        public void CleanupLastWorld(bool cleanupTransition = true)
+        {
+            if (cleanupTransition)
+            {
+                CleanupTransition();
+            }
+
             if (vm == null) return;
 
             // Might be mid-load.
@@ -564,10 +632,22 @@ namespace FSO.Client.UI.Screens
 
             //clear our cache too, if the setting lets us do that
             DiscordRpcEngine.SendFSOPresence(gizmo.CurrentAvatar.Value.Avatar_Name, null, 0, 0, 0, 0, null, gizmo.CurrentAvatar.Value.Avatar_PrivacyMode > 0);
-            TimedReferenceController.Clear();
-            TimedReferenceController.Clear();
 
-            if (ZoomLevel < 4) ZoomLevel = 5;
+            bool localTransition = FindController<CoreGameScreenController>()?.LocalTransition ?? false;
+
+            if (!localTransition)
+            {
+                TimedReferenceController.Clear();
+                TimedReferenceController.Clear();
+
+                if (ZoomLevel < 4) ZoomLevel = 5;
+            }
+
+            if (localTransition)
+            {
+                vm.Context.Ambience.BeginTransition();
+            }
+
             vm.Context.Ambience.Kill();
             foreach (var ent in vm.Entities) { //stop object sounds
                 var threads = ent.SoundThreads;
@@ -579,18 +659,31 @@ namespace FSO.Client.UI.Screens
             }
             vm.CloseNet(VMCloseNetReason.LeaveLot);
             Driver.OnClientCommand -= VMSendCommand;
-            GameFacade.Scenes.Remove(World);
-            World.Dispose();
             LotControl.Dispose();
             this.Remove(LotControl);
             ucp.SetPanel(-1);
             ucp.SetInLot(false);
-            vm.SuppressBHAVChanges();
+
+            if (localTransition)
+            {
+                TransitionVM = vm;
+                TransitionWorld = World;
+
+                TransitionWorld.State.SimSpeed = 0;
+            }
+            else
+            {
+                vm.SuppressBHAVChanges();
+
+                GameFacade.Scenes.Remove(World);
+                World.Dispose();
+                CityRenderer.DisposeOnLot();
+            }
+
             vm = null;
             World = null;
             Driver = null;
             LotControl = null;
-            CityRenderer.DisposeOnLot();
         }
 
         public void InitiateLotSwitch()
@@ -610,6 +703,7 @@ namespace FSO.Client.UI.Screens
                     Buttons = new UIAlertButton[]
                     {
                     new UIAlertButton(UIAlertButtonType.Yes, (btn) => {
+                        controller.ReconnectTransition = null;
                         controller.ReconnectLotID = id;
                         vm?.SendCommand(new VMNetSimLeaveCmd());
                         RemoveDialog(SwitchLotDialog); SwitchLotDialog = null; }),
@@ -650,7 +744,7 @@ namespace FSO.Client.UI.Screens
             lock (StateChanges) StateChanges.Enqueue(new SimConnectStateChange(state, progress));
         }
 
-        public void ClientStateChangeProcess(int state, float progress)
+        public void ClientStateChangeProcess(int state, float progress, UpdateState updateState)
         {
             if (vm == null) return;
             switch (state) 
@@ -686,28 +780,175 @@ namespace FSO.Client.UI.Screens
                     UIScreen.RemoveDialog(JoinLotProgress);
                     CursorManager.INSTANCE.SetCursorPriority(0);
                     ZoomLevel = 1;
+
+                    InheritTransition(updateState);
+                    CleanupTransition();
+
                     ucp.SetInLot(true);
                     break;
             }
         }
 
+        private void InheritTransition(UpdateState state)
+        {
+            if (TransitionCameras == null)
+            {
+                return;
+            }
+
+            if (vm != null && World != null)
+            {
+                var myAvatar = vm.GetAvatarByPersist(vm.MyUID);
+
+                if (myAvatar == null)
+                {
+                    // Not here yet. We'll try to keep first person on a future tick.
+                    return;
+                }
+
+                var info = FindController<CoreGameScreenController>().ReconnectTransition;
+
+                if (info == null)
+                {
+                    // Should be impossible...
+                    return;
+                }
+
+                var lastWorld = TransitionWorld;
+                CameraControllers newCameras = World.State.Cameras;
+                World.State.DisableSmoothRotation = true;
+
+                var position = MapCoordinates.Unpack(vm.TSOState.LotID);
+                var previousElevation = CityRenderer.GetElevationAt(position.X + info.RelativeChangeY, position.Y - info.RelativeChangeX);
+                var currentElevation = CityRenderer.GetElevationAt(position.X, position.Y);
+
+                var baseAltDiff = (currentElevation - previousElevation) * 100;
+                var heightDiff = baseAltDiff * World.Architecture.Blueprint.TerrainFactor * 3;
+
+                TransitionCameras.Camera3D.CamHeight -= heightDiff;
+
+                if (lastWorld != null)
+                {
+                    var surroundsToKeep = info.GetSurroundingLotMask() ^ 0b111111111;
+                    var oldSubworlds = lastWorld.Architecture.Blueprint.SubWorlds;
+                    var newSubworlds = World.Architecture.Blueprint.SubWorlds;
+                    var size = World.Architecture.Blueprint.Width;
+                    int baseHeight = VMLotTerrainRestoreTools.GetBaseLevel(vm, 1, 1);
+                    bool anySubworldsMigrated = false;
+
+                    for (int i = 0; i < 9; i++)
+                    {
+                        if (i == 4) continue;
+
+                        uint bit = 1u << i;
+
+                        if ((surroundsToKeep & bit) != 0)
+                        {
+                            var oldIndex = info.GetOldSubworldForIndex(i);
+                            var oldSurround = oldSubworlds.Find(x => x.Index == oldIndex);
+
+                            if (oldSurround != null)
+                            {
+                                oldSubworlds.Remove(oldSurround);
+
+                                oldSurround.Index = i;
+                                int x = (i % 3);
+                                int y = (i / 3);
+                                oldSurround.GlobalPosition = new Vector2((1 - y) * (size - 2), (x - 1) * (size - 2));
+                                int newHeight = VMLotTerrainRestoreTools.GetBaseLevel(vm, x, y);
+                                var bp = oldSurround.Architecture.Blueprint;
+                                var oldAlt = bp.BaseAlt;
+                                bp.BaseAlt = baseHeight - newHeight;
+
+                                if (oldAlt != bp.BaseAlt)
+                                {
+                                    foreach (var obj in bp.Objects)
+                                    {
+                                        // Need to update the object altitudes
+                                        obj.Position = obj.UnmoddedPosition;
+                                    }
+
+                                    bp.AdjustBaseAlt(bp.BaseAlt - oldAlt);
+                                }
+
+                                newSubworlds.Add(oldSurround);
+                                anySubworldsMigrated = true;
+                            }
+                        }
+                    }
+
+                    if (anySubworldsMigrated)
+                    {
+                        World.InitSubWorlds();
+                    }
+
+                    var lastState = TransitionWorld.State;
+                    if (World.State.Level != lastState.Level) World.State.Level = lastState.Level;
+                    if (World.State.Rotation != lastState.Rotation) World.State.Rotation = lastState.Rotation;
+                    if (World.State.Zoom != lastState.Zoom) World.State.Zoom = lastState.Zoom;
+                    World.State.PreciseZoom = lastState.PreciseZoom;
+                    World.State.CenterTile = lastState.CenterTile - new Vector2(info.RelativeChangeX * (TransitionWorld.Architecture.Blueprint.Width - 2), info.RelativeChangeY * (TransitionWorld.Architecture.Blueprint.Height - 2));
+                    if (lastWorld.State.ScrollAnchor != null)
+                    {
+                        var myOldAvatar = TransitionVM?.GetAvatarByPersist(TransitionVM.MyUID);
+
+                        if (lastWorld.State.ScrollAnchor == myOldAvatar.WorldUI)
+                        {
+                            World.State.ScrollAnchor = myAvatar.WorldUI as AvatarComponent;
+                        }
+                    }
+                }
+
+                // TODO: shift camera height by surrounding lot height?
+                TransitionCamera(newCameras.Camera3D, TransitionCameras.Camera3D);
+                //TransitionCamera(newCameras.Camera2D, TransitionCameras.Camera2D);
+                //TransitionCamera(newCameras.CameraFirstPerson, TransitionCameras.CameraFirstPerson);
+                newCameras.CameraDirect.Inherit(TransitionCameras.CameraDirect);
+
+                if (myAvatar.GetPersonData(SimAntics.Model.VMPersonDataVariable.UnusedAndDoNotUse2) == 32767)
+                {
+                    World.ToggleFirstPerson(CameraControllerType.Direct);
+                    CityRenderer.m_LotZoomProgress = 1;
+
+                    if (TransitionCameras != null)
+                    {
+                        var camera = World.State.Cameras.CameraDirect;
+                        var lastCamera = TransitionCameras.CameraDirect;
+                        camera.RotationX = lastCamera.RotationX;
+                        camera.RotationY = lastCamera.RotationY;
+
+                        camera.FirstPersonAvatar = (LotView.Components.AvatarComponent)myAvatar.WorldUI;
+                        World.State.Cameras.Update(state, World);
+                        World.State.Cameras.PreDraw(World);
+                    }
+                }
+
+                World.State.DisableSmoothRotation = false;
+                LotControl.ResetTargetZoom();
+            }
+
+            TransitionCameras = null;
+        }
+
+        private void TransitionCamera(ICameraController camera, ICameraController previousCamera)
+        {
+            camera.BeforeActive(previousCamera, World);
+            camera.OnActive(previousCamera, World);
+            camera.InvalidateCamera(World.State);
+        }
+
         public void InitializeLot()
         {
-            CleanupLastWorld();
+            CleanupLastWorld(false);
 
-            /*
-            if (FSOEnvironment.Enable3D)
+            World = new World(GameFacade.GraphicsDevice)
             {
-                var rc = new LotView.RC.WorldRC(GameFacade.GraphicsDevice);
-                rc.SetSurroundingWorld(CityRenderer);
-                World = rc;
-            }
-            else */
-            World = new World(GameFacade.GraphicsDevice);
-            World.Surroundings = CityRenderer;
+                Surroundings = CityRenderer
+            };
 
             WorldLoaded = false;
             World.Opacity = 0;
+            World.Visible = false;
             GameFacade.Scenes.Add(World);
             Driver = new VMClientDriver(ClientStateChange);
             Driver.OnClientCommand += VMSendCommand;
@@ -733,7 +974,10 @@ namespace FSO.Client.UI.Screens
                 LotControl.Visible = false;
             }
 
-            ZoomLevel = Math.Max(ZoomLevel, 4);
+            if (TransitionWorld == null)
+            {
+                ZoomLevel = Math.Max(ZoomLevel, 4);
+            }
 
             if (IDEHook.IDE != null) IDEHook.IDE.StartIDE(vm);
 
@@ -757,12 +1001,20 @@ namespace FSO.Client.UI.Screens
                     var rnd = new Random();
                     dialog.Position = new Vector2(rnd.Next(Math.Max(0, ScreenWidth - 380)), rnd.Next(Math.Max(0, ScreenHeight - 180)));
                     break;
+                case VMEventType.Resync:
+                    if (ZoomLevel < 4)
+                    {
+                        SetTitle();
+                    }
+                    break;
             }
         }
 
-        private void VMLotSwitch(uint lotId)
+        private void VMLotSwitch(uint lotId, LotTransitionInfo transition)
         {
-            FindController<CoreGameScreenController>()?.SwitchLot(lotId);
+            TransitionCameras = World?.State?.Cameras;
+
+            FindController<CoreGameScreenController>()?.SwitchLot(lotId, transition);
         }
 
         private string lastLotTitle = "";
@@ -814,21 +1066,6 @@ namespace FSO.Client.UI.Screens
                 $"Your best bet is reinstalling FreeSO or The Sims Online. If this appears repeatedly, you definitely have an issue. You should also post this message on discord.",
                 true);
             vm.LoadErrors.Clear();
-        }
-
-        private void VMDebug_OnButtonClick(UIElement button)
-        {
-            /*
-            if (vm == null) return;
-
-            var debugTools = new Simantics(vm);
-
-            var window = GameFacade.Game.Window;
-            debugTools.Show();
-            debugTools.Location = new System.Drawing.Point(window.ClientBounds.X + window.ClientBounds.Width, window.ClientBounds.Y);
-            debugTools.UpdateAQLocation();
-            */
-
         }
 
         public void CloseInbox()

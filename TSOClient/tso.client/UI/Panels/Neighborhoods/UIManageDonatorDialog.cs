@@ -83,7 +83,7 @@ namespace FSO.Client.UI.Panels.Neighborhoods
 
         private void AddDonator(uint donator, string name)
         {
-            LotControl.vm.TSOState.Names.Precache(LotControl.vm, donator);
+            LotControl.vm.TSOState.Names.Precache(LotControl.vm, VMGlobalEntityType.Avatar, donator);
 
             if (Community)
             {
@@ -211,7 +211,7 @@ namespace FSO.Client.UI.Panels.Neighborhoods
                 return new UIListBoxItem(
                     x,
                     personBtn,
-                    LotControl.vm.TSOState.Names.GetNameForID(LotControl.vm, x),
+                    LotControl.vm.TSOState.Names.GetNameForID(LotControl.vm, VMGlobalEntityType.Avatar, x),
                     check,
                     deleteBtn
                     );

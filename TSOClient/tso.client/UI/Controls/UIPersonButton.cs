@@ -117,6 +117,10 @@ namespace FSO.Client.UI.Controls
             }
         }
 
+        public int ButtonFrame => _Button.CurrentFrame;
+
+        public override Vector2 Size { get => new Vector2(_Button.Texture.Width / 4, _Button.Texture.Height); }
+
         public override Rectangle GetBounds()
         {
             return _Button.GetBounds();
@@ -140,6 +144,12 @@ namespace FSO.Client.UI.Controls
                     DrawLocalTexture(batch, texture, null, new Vector2(2, 2), scale);
                 }
             }
+        }
+
+        public void SetButtonVisible(bool visible)
+        {
+            _Button.AlwaysClickable = !visible;
+            _Button.Opacity = visible ? 1 : 0.0001f;
         }
     }
 

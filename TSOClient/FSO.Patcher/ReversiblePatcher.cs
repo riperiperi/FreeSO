@@ -43,6 +43,7 @@ namespace FSO.Patcher
             "Content/config.ini",
             "NLog.config",
             "update.pdb",
+            "delta.json",
 
             //monogame in the base directory is not used on fso windows, and is manually replaced on unix
             "MonoGame.Framework.dll",

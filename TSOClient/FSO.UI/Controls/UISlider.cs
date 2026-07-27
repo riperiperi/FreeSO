@@ -6,18 +6,23 @@ using Microsoft.Xna.Framework;
 using FSO.Client.Utils;
 using FSO.Common.Rendering.Framework.Model;
 using FSO.Common.Rendering.Framework.IO;
+using Microsoft.Xna.Framework.Input;
 
 namespace FSO.Client.UI.Controls
 {
     public delegate void ChangeDelegate(UIElement element);
 
-    public class UISlider : UIElement
+    public class UISlider : UIElement, IFocusableUI
     {
+        public bool IsFocused { get; set; }
+        public int TabIndex { get; set; } = -1;
         private MathCache m_LayoutCache = new MathCache();
         private Texture2D m_Texture;
 
         /** Mouse handler for the thumb button **/
+        private UIMouseEventRef m_BackgroundEvent;
         private UIMouseEventRef m_ThumbEvent;
+        private bool m_MouseOver;
 
         public event ChangeDelegate OnChange;
         public event ChangeDelegate OnRangeChange;
@@ -58,6 +63,11 @@ namespace FSO.Client.UI.Controls
         [UIAttribute("size")]
         public override Vector2 Size
         {
+            get
+            {
+                return new Vector2(m_Width, m_Height);
+            }
+
             set
             {
                 SetSize(value.X, value.Y);
@@ -142,6 +152,7 @@ namespace FSO.Client.UI.Controls
         public UISlider()
         {
             m_ThumbEvent = this.ListenForMouse(new Rectangle(0, 0, 0, 0), new UIMouseEvent(OnThumbClick));
+            m_BackgroundEvent = this.ListenForMouse(new Rectangle(0, 0, 0, 0), new UIMouseEvent(OnBackgroundMouse));
         }
 
         private bool m_ThumbDown;
@@ -153,6 +164,7 @@ namespace FSO.Client.UI.Controls
             {
                 case UIMouseEventType.MouseDown:
                     m_ThumbDown = true;
+                    state.InputManager.SetFocus(this);
                     m_ThumbMouseOffset = this.GetMousePosition(state.MouseState);
 
                     var layout = m_LayoutCache.Calculate("layout", x => CalculateLayout());
@@ -166,12 +178,54 @@ namespace FSO.Client.UI.Controls
                 case UIMouseEventType.MouseUp:
                     m_ThumbDown = false;
                     break;
+
+                case UIMouseEventType.MouseOver:
+                    m_MouseOver = true;
+                    break;
+
+                case UIMouseEventType.MouseOut:
+                    m_MouseOver = false;
+                    break;
+            }
+        }
+
+        private void OnBackgroundMouse(UIMouseEventType type, UpdateState state)
+        {
+            switch (type)
+            {
+                case UIMouseEventType.MouseOver:
+                    m_MouseOver = true;
+                    break;
+
+                case UIMouseEventType.MouseOut:
+                    m_MouseOver = false;
+                    break;
             }
         }
 
         public override void Update(UpdateState state)
         {
             base.Update(state);
+
+            // Mouse wheel scrolling
+            if (m_MouseOver && state.MouseWheelDelta != 0)
+            {
+                float step = AllowDecimals ? 0.25f : 1f;
+                if (Orientation == 1) step *= -1;
+                Value += state.MouseWheelDelta * step;
+            }
+
+            if (IsFocused && !m_ThumbDown)
+            {
+                float step = AllowDecimals ? 0.25f : 1f;
+                foreach (var key in state.NewKeys)
+                {
+                    if (key == Keys.Up || key == Keys.Right)
+                        Value += step;
+                    else if (key == Keys.Down || key == Keys.Left)
+                        Value -= step;
+                }
+            }
             if (m_ThumbDown)
             {
                 /** Dragging the thumb **/
@@ -212,9 +266,12 @@ namespace FSO.Client.UI.Controls
         /// <param name="height"></param>
         public void SetSize(float width, float height)
         {
+            var minSize = (Orientation == 0 ? Texture?.Height : Texture?.Width) ?? 13;
             m_Width = width;
             m_Height = height;
             m_LayoutCache.Invalidate();
+
+            m_BackgroundEvent.Region = new Rectangle(0, 0, (int)Math.Max(minSize, width), (int)Math.Max(minSize, height));
         }
 
         private UISliderLayout CalculateLayout()
@@ -293,14 +350,21 @@ namespace FSO.Client.UI.Controls
 
             var layout = m_LayoutCache.Calculate("layout", x => CalculateLayout());
 
-            batch.Draw(m_Texture, layout.TrackStartTo, layout.TrackStartFrom, Color.White, 0, Vector2.Zero, _Scale, SpriteEffects.None, 0);
-            batch.Draw(m_Texture, layout.TrackMiddleTo, layout.TrackMiddleFrom, Color.White, 0, Vector2.Zero, layout.TrackMiddleScale, SpriteEffects.None, 0);
-            batch.Draw(m_Texture, layout.TrackEndTo, layout.TrackEndFrom, Color.White, 0, Vector2.Zero, _Scale, SpriteEffects.None, 0);
+            var color = Color.White;
+
+            if (Opacity < 1)
+            {
+                color *= Opacity;
+            }
+
+            batch.Draw(m_Texture, layout.TrackStartTo, layout.TrackStartFrom, color, 0, Vector2.Zero, _Scale, SpriteEffects.None, 0);
+            batch.Draw(m_Texture, layout.TrackMiddleTo, layout.TrackMiddleFrom, color, 0, Vector2.Zero, layout.TrackMiddleScale, SpriteEffects.None, 0);
+            batch.Draw(m_Texture, layout.TrackEndTo, layout.TrackEndFrom, color, 0, Vector2.Zero, _Scale, SpriteEffects.None, 0);
 
             if (m_MaxValue > m_MinValue)
             {
                 var buttonPosition = m_LayoutCache.Calculate("btn", x => CalculateButtonPosition(layout));
-                batch.Draw(m_Texture, buttonPosition, layout.ThumbFrom, Color.White, 0, Vector2.Zero, _Scale, SpriteEffects.None, 0);
+                batch.Draw(m_Texture, buttonPosition, layout.ThumbFrom, color, 0, Vector2.Zero, _Scale, SpriteEffects.None, 0);
             }
         }
 
@@ -332,6 +396,9 @@ namespace FSO.Client.UI.Controls
             this.increase = increase;
             this.decrease = decrease;
             this.Change = change;
+
+            increase.TabIndex = -1;
+            decrease.TabIndex = -1;
 
             increase.OnButtonClick += new ButtonClickDelegate(increase_OnButtonClick);
             decrease.OnButtonClick += new ButtonClickDelegate(decrease_OnButtonClick);

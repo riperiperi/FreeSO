@@ -35,17 +35,6 @@ namespace FSO.Client.UI.Screens
 
         public LoginScreen(LoginRegulator regulator)
         {
-            try
-            {
-                if (File.Exists("update2.exe"))
-                {
-                    File.Delete("update.exe");
-                    File.Move("update2.exe", "update.exe");
-                }
-            } catch (Exception) { 
-                //maybe signal to user that the updater update failed
-            }
-
             this.Regulator = regulator;
             regulator.Logout();
             
@@ -64,10 +53,12 @@ namespace FSO.Client.UI.Screens
             Background = new UISetupBackground();
 
             /** Client version **/
-            var lbl = new UILabel();
-            lbl.Caption = "Version " + GlobalSettings.Default.ClientVersion;
-            lbl.X = 20;
-            lbl.Y = 558;
+            var lbl = new UILabel
+            {
+                Caption = "Version " + GlobalSettings.Default.ClientVersion,
+                X = 20,
+                Y = 558
+            };
             Background.BackgroundCtnr.Add(lbl);
             this.Add(Background);
 

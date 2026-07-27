@@ -419,7 +419,7 @@ namespace FSO.SimAntics.Primitives
                     }
                 case VMGenericTSOCallMode.FSOGoToLotIDTemp01:
                     {
-                        if (context.Caller.PersistID == context.VM.MyUID)
+                        if (context.Caller.PersistID == context.VM.MyUID && !context.VM.Driver.RunningCatchup)
                         {
                             uint idLow = (uint)context.Thread.TempRegisters[0];
                             uint idHigh = (uint)context.Thread.TempRegisters[1] << 16;
@@ -468,6 +468,31 @@ namespace FSO.SimAntics.Primitives
                     {
                         var gobj = context.StackObject as VMGameObject;
                         return (gobj != null && !gobj.Disabled.HasFlag(VMGameObjectDisableFlags.LotCategoryWrong)) ? VMPrimitiveExitCode.GOTO_TRUE : VMPrimitiveExitCode.GOTO_FALSE;
+                    }
+                case VMGenericTSOCallMode.FSOShowCheckTreeTooltipTemp0Temp1:
+                    {
+                        // Show the string in STR#[temp 0][temp 1] as a tooltip for this object on hover.
+                        // Only works while we're executing in a check tree.
+
+                        if (context.Thread.IsCheck && context.Thread.ActionStrings != null)
+                        {
+                            STR table = context.ScopeResource.Get<STR>((ushort)context.Thread.TempRegisters[0]);
+
+                            if (table == null) return VMPrimitiveExitCode.GOTO_FALSE;
+
+                            var newName = VMDialogHandler.ParseDialogString(context, table.GetString(context.Thread.TempRegisters[1] - 1), table);
+
+                            context.Thread.ActionStrings.Add(new VMPieMenuInteraction()
+                            {
+                                Name = newName,
+                                Param0 = context.StackObjectID,
+                                IsTooltip = true
+                            });
+
+                            return VMPrimitiveExitCode.GOTO_TRUE;
+                        }
+
+                        return VMPrimitiveExitCode.GOTO_FALSE;
                     }
                 default:
                     return VMPrimitiveExitCode.GOTO_TRUE;

@@ -1,7 +1,7 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.IO;
-using xxHashSharp;
+using System.IO.Hashing;
 
 namespace FSO.Files.Utils
 {
@@ -39,14 +39,14 @@ namespace FSO.Files.Utils
             foreach (var removed in removedFiles)
             {
                 var bytes = GetFileBytes(Path.Combine(sourcePath, removed));
-                var hash = xxHash.CalculateHash(bytes).ToString("x8");
+                var hash = XxHash32.HashToUInt32(bytes).ToString("x8");
                 diffs.Add(new FileDiff(FileDiffType.Remove, removed, hash, null));
             }
 
             foreach (var added in addFiles)
             {
                 var bytes = GetFileBytes(Path.Combine(destPath, added));
-                var hash = xxHash.CalculateHash(bytes).ToString("x8");
+                var hash = XxHash32.HashToUInt32(bytes).ToString("x8");
                 diffs.Add(new FileDiff(FileDiffType.Add, added, null, hash));
             }
 
@@ -54,8 +54,8 @@ namespace FSO.Files.Utils
             {
                 var bytesBefore = GetFileBytes(Path.Combine(sourcePath, same));
                 var bytesAfter = GetFileBytes(Path.Combine(destPath, same));
-                var hashBefore = xxHash.CalculateHash(bytesBefore).ToString("x8");
-                var hashAfter = xxHash.CalculateHash(bytesAfter).ToString("x8");
+                var hashBefore = XxHash32.HashToUInt32(bytesBefore).ToString("x8");
+                var hashAfter = XxHash32.HashToUInt32(bytesAfter).ToString("x8");
                 diffs.Add(new FileDiff(
                     (hashBefore == hashAfter) ? FileDiffType.Unchanged : FileDiffType.Modify, 
                     same, hashBefore, hashAfter));

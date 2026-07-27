@@ -1,6 +1,7 @@
 ﻿using FSO.Server.Common;
+using JWT.Algorithms;
+using JWT.Builder;
 using Newtonsoft.Json;
-using System.Collections.Generic;
 
 namespace FSO.Server.Servers.Api.JsonWebToken
 {
@@ -21,7 +22,7 @@ namespace FSO.Server.Servers.Api.JsonWebToken
 
         public JWTUser DecodeToken(string token)
         {
-            var payload = JWT.JsonWebToken.Decode(token, Config.Key, true);
+            var payload = JwtBuilder.Create().WithAlgorithm(new HMACSHA384Algorithm()).WithSecret(Config.Key).Decode(token);
             Dictionary<string, string> payloadParsed = JsonConvert.DeserializeObject<Dictionary<string, string>>(payload);
             return Newtonsoft.Json.JsonConvert.DeserializeObject<JWTUser>(payloadParsed["data"]);
         }
@@ -41,7 +42,7 @@ namespace FSO.Server.Servers.Api.JsonWebToken
                 { "data", data }
             };
 
-            var token = JWT.JsonWebToken.Encode(payload, Config.Key, JWT.JwtHashAlgorithm.HS384);
+            var token = JwtBuilder.Create().WithAlgorithm(new HMACSHA384Algorithm()).WithSecret(Config.Key).Encode(payload);
             return new JWTInstance { Token = token, ExpiresIn = expiresIn };
         }
     }

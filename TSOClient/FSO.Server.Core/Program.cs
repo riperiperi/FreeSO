@@ -1,4 +1,5 @@
-﻿using FSO.Server.Api.Core.Services;
+﻿using FSO.Common;
+using FSO.Server.Api.Core.Services;
 using FSO.Server.Common;
 using FSO.Server.Servers.UserApi;
 using System.Collections.Specialized;
@@ -31,14 +32,19 @@ namespace FSO.Server.Core
             settings.Add("updateUrl", userApiConfig.UpdateUrl);
             settings.Add("cdnUrl", userApiConfig.CDNUrl);
             settings.Add("connectionString", config.Database.ConnectionString);
+            settings.Add("databaseEngine", config.Database.Engine ?? "mysql");
             settings.Add("NFSdir", config.SimNFS);
             settings.Add("smtpHost", userApiConfig.SmtpHost);
             settings.Add("smtpUser", userApiConfig.SmtpUser);
             settings.Add("smtpPassword", userApiConfig.SmtpPassword);
             settings.Add("smtpPort", userApiConfig.SmtpPort.ToString());
             settings.Add("useProxy", userApiConfig.UseProxy.ToString());
+            settings.Add("name", config.Name ?? "");
             settings.Add("updateID", config.UpdateID?.ToString() ?? "");
             settings.Add("branchName", config.UpdateBranch);
+            settings.Add("allOpenable", config.AllOpenable.ToString());
+            settings.Add("versionInfoJson", FSOVersionInfo.Current.ToJson());
+
 
             var api2 = new FSO.Server.Api.Core.Api();
             api2.Init(settings);

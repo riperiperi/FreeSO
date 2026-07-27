@@ -1,4 +1,5 @@
-﻿using FSO.Common.Serialization;
+﻿using FSO.Common.Model;
+using FSO.Common.Serialization;
 using Mina.Core.Buffer;
 
 namespace FSO.Server.Protocol.Electron.Packets

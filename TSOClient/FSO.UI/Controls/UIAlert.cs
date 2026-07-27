@@ -161,6 +161,7 @@ namespace FSO.Client.UI.Controls
             {
                 TextBox = new UITextBox();
                 TextBox.MaxChars = options.MaxChars;
+                TextBox.CurrentText = options.TextValue;
                 this.Add(TextBox);
             }
 
@@ -212,17 +213,17 @@ namespace FSO.Client.UI.Controls
                 h += size.Height;
             }
 
-            var buttonMaxWidth = (Buttons.Count == 0)? 0 : Buttons.Max(x => x.Width);
+            var buttonTotalWidth = Buttons.Sum(x => x.Width);
             var buttonSpacing = (Buttons.Count > 2) ? 5 : 50;
             SetSize(w, h);
 
-            var btnX = (w - ((Buttons.Count * buttonMaxWidth) + ((Buttons.Count - 1) * buttonSpacing))) / 2;
+            var btnX = (w - ((buttonTotalWidth) + ((Buttons.Count - 1) * buttonSpacing))) / 2;
             var btnY = h - 58;
             foreach (UIElement button in Buttons)
             {
                 button.Y = btnY;
                 button.X = btnX;
-                btnX += buttonMaxWidth + buttonSpacing;
+                btnX += button.Size.X + buttonSpacing;
             }
         }
 
@@ -283,7 +284,10 @@ namespace FSO.Client.UI.Controls
         {
             var btn = new UIButton();
             btn.Caption = label;
-            btn.Width = 100;
+
+            var labelWidth = btn.CaptionStyle.MeasureString(label).X;
+
+            btn.Width = Math.Max(100, labelWidth + 20);
 
             if(InternalHandler)
                 btn.OnButtonClick += new ButtonClickDelegate(x =>
@@ -392,6 +396,7 @@ namespace FSO.Client.UI.Controls
         public UIContainer GenericAddition;
 
         public bool TextEntry = false;
+        public string TextValue = "";
         public UIAlertButton[] Buttons = new UIAlertButton[] { new UIAlertButton() };
     }
 

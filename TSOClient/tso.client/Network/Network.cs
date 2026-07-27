@@ -1,6 +1,7 @@
 ﻿using FSO.Client.Model;
 using FSO.Client.Regulators;
 using FSO.Common;
+using FSO.Common.DataService;
 using FSO.Common.Domain.Shards;
 using FSO.Server.Clients;
 using FSO.Server.Protocol.CitySelector;
@@ -17,6 +18,7 @@ namespace FSO.Client.Network
 
         public CityConnectionMode Mode => CityRegulator.Mode;
         public ArchiveConfigFlags ArchiveConfig => CityRegulator.ArchiveConfig;
+        public bool SpectatorMode => CityRegulator.SpectatorMode;
         public ConnectArchiveRequest ArchiveHost => CityRegulator.ArchiveSettings;
 
         public Network(LoginRegulator loginReg, CityConnectionRegulator cityReg, LotConnectionRegulator lotReg, IShardsDomain shards)
@@ -65,6 +67,24 @@ namespace FSO.Client.Network
             {
                 return Shards.All.First(x => x.Name == CityRegulator.CurrentShard.ShardName);
             }
+        }
+
+        public uint ModerationLevel
+        {
+            get
+            {
+                return CityRegulator.ModerationLevel;
+            }
+        }
+
+        public string TryGetUsername(uint id)
+        {
+            if (Mode == CityConnectionMode.ARCHIVE && !ArchiveConfig.HasFlag(ArchiveConfigFlags.HideNames) && CityRegulator.UserList != null)
+            {
+                return CityRegulator.UserList.Clients.FirstOrDefault(x => x.AvatarId == id).DisplayName;
+            }
+
+            return null;
         }
     }
 }

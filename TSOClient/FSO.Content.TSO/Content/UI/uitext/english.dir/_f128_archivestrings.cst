@@ -20,7 +20,9 @@
 20 ^You're connected to a server hosted by this game client.^
 21 ^You're connected to a server hosted by another game client.^
 22 ^You're connected to a dedicated server.^
-23 ^You're offline. To connect with other players, select "Host Server" on the menu and uncheck "Offline Mode".^
+23 ^You're offline.
+
+To connect with other players, select "Host Server" on the menu and uncheck "Offline Mode".^
 24 ^If the game client hosting this server closes, everyone will disconnect!^
 25 ^!! View Server IP !!^
 26 ^Public IP:^
@@ -33,3 +35,157 @@
 33 ^Copy^
 34 ^Copied to clipboard!^
 35 ^(could not determine IP - are you offline?)^
+
+36 ^Export Config^
+37 ^Exports a config.json file that can be used by FSO.Server.Core to run a standalone version of the Archive server.
+
+If you use this on a different system, you will need to copy the archive data (usually in Content/), TSO game data and possibly adjust paths in the config.json.^
+38 ^Use absolute path for archive data^
+39 ^Use absolute path for TSO game data^
+40 ^Export^
+41 ^Export Error^
+42 ^Couldn't export config to "%s". Make sure FreeSO has the permission to write to the specified location.^
+43 ^Config successfully exported to "%s".^
+44 ^Path:^
+45 ^Config successfully exported to "%s".
+
+This path has been copied to your clipboard.^
+46 ^Can't export configuration without preparing the archive data first. Try running the server within the game client first.^
+47 ^Success^
+
+48 ^User List^
+49 ^Username^
+50 ^Avatar Count^
+51 ^Status^
+52 ^View Avatars^
+53 ^Show IP^
+54 ^Ban User^
+55 ^Unban User^
+
+56 ^IP Bans^
+
+57 ^Avatars owned by %s^
+58 ^Name^
+59 ^Lot^
+
+60 ^IP^
+61 ^Associated Accounts^
+62 ^Unban^
+63 ^Ban IP^
+
+64 ^Search: ^
+65 ^Delete Avatar^
+66 ^Delete User^
+
+67 ^Enter an IPv4 address to ban.^
+68 ^Are you sure you want to unban IP %s? This will also unban any user accounts that last used this IP.^
+
+69 ^Are you sure you want to delete the sim "%s"? This will remove everything that they own, and might also delete properties if their removal leaves no roommates.^
+
+70 ^User "%s"'s IP is %s.
+
+IP has been copied to your clipboard.^
+71 ^Are you sure you want to unban the user "%s"? This will also unban the last IP that used this account.^
+72 ^Are you sure you want to ban the user "%s"? This will also ban the last IP that used this account.^
+73 ^Are you sure you want to delete the user "%s"? This will transfer any avatars they own to the archive user.^
+
+74 ^Transfer to User^
+75 ^Select a user to transfer the sim %s to.^
+76 ^Transfer^
+77 ^Are you sure you want to transfer the sim %s to %s? This may affect some user generated content belonging to this avatar.^
+
+78 ^An unknown error occurred.^
+
+79 ^^
+
+80 ^Banned^
+81 ^Your user account/IP has been banned from this server. Contact the host to have the ban removed.^
+82 ^Invalid Name^
+83 ^Your display name should not be empty, at most 64 characters, and not contain certain special characters.^
+84 ^Display Name Taken^
+85 ^The provided display name is already in use. Please choose another one.
+
+If you're the user of this display name, you should either copy the configuration ini files from the installation you previously used to log into this server, or join with another display name and get the server owner to migrate any avatars to your new account.^
+86 ^Invalid Client ID^
+87 ^The server couldn't read your client ID. This may be a problem with the server or client key configuration.^
+88 ^Encryption Failure^
+89 ^The client and server were unable to exchange authentication keys. The public/private key configuration on the server may be incorrect.^
+90 ^Encryption Failure^
+91 ^Your client didn't respond correctly to the encryption challenge. Not sure how you'd get here.^
+92 ^Verification Rejected^
+93 ^An admin or moderator has rejected your verification request.^
+
+96 ^This client is already hosting a server. Please select an option:^
+97 ^User Management^
+98 ^Close Server^
+99 ^Join Server^
+
+100 ^Unable to select Avatar^
+101 ^The specified avatar was not found. Maybe it was just deleted?^
+102 ^You don't have permission to play as this avatar.^
+103 ^This avatar is currently in use by a client with the same ID (likely yourself), and the server was unable to fully disconnect the avatar to give it to this client. Please try again later.^
+104 ^This avatar is currently in use by another user. Please try again later.^
+105 ^An unknown error occurred while selecting that avatar.^
+
+110 ^Enable Discord Game Invites^
+111 ^Invites are now enabled. Sending a Discord game invite to someone will supply them with the public IP of this server, so be careful who you send an invite to.
+You can send an invite from the + menu that appears next to the chat input.^
+112 ^Discord Game Invites are Enabled^
+113 ^Unable to enable invites. This could be due to an issue with discord RPC, or the hostname is too complex.^
+114 ^This invite is for a FreeSO-based server, and you're in archive mode. Please find the appropriate client for the server you're connecting to.^
+115 ^This invite is for a different game server than the one you're currently on, and the person who sent the invite has not enabled server invites.^
+116 ^This invite is for a different game server than the one you're currently on. Would you like to switch servers?^
+117 ^Joining a server from Discord^
+118 ^Getting server status... Please wait.^
+119 ^Unable to enable invites, as the address for this server could not be determined.^
+120 ^This invite to a specific property needs you to be on the same game server as the inviter, and they haven't enabled server invites.^
+
+121 ^The city editor allows any player with administrator rights to modify the city while it's open, including terraforming and drawing roads. Changes to the city terrain are included with the archive save. You can see changes from other players in realtime, so feel free to collaborate with friends.
+
+Enabling the city editor and starting the server will convert the save to use a Dynamic city, meaning that clients will download the city map from the server when they join rather than load it from their game files. This may drastically change the appearance of cities that have artistic changes to their vertex color images (as these are now generated by FreeSO), such as Fancey Fields and Dragon's Cove. This will persist even when the city editor is disabled, so make sure you're fine with it first.^
+
+122 ^FreeSO Credits^
+123 ^Switch to The Sims Online original credits^
+124 ^Switch to FreeSO credits^
+125 ^View FreeSO/The Sims Online Credits^
+
+126 ^FreeSO inherits The Sims Online's gameplay, which was a classic MMO with a glacial pace of progression intended to make it hard to reach "the end". Archive mode has a different focus - pop-up gameplay sessions with small groups of people with much quicker gameplay progression. Of course, you can still configure things back to the original tuning if you want to replicate the MMO experience, or you have a VERY large group of players (in this case, maybe a full scale server would be more appropriate). 
+
+- "Skill speed" affects how quickly skills are gained. This affects the base rate - the percentage will appear the same. Note that skilling times still scale nonlinearly.
+
+- "Payout multiplier" affects simoleon payouts from single/group job objects, as well as payouts from the Restaurant, Robot Factory and Club jobs.
+
+- "Singleplayer penalty" affects how much slower skilling or making money by yourself is. TSO encouraged groups of at least 12 on skill/money lots by decreasing payouts and skill speeds below that. 100% is the full penalty that TSO applied, whereas 0% will make it equivalent to the player cap being reached. Note that penalties for being on the wrong lot type or not having many skilling stations still apply.^
+
+127 ^Help^
+128 ^Reset^
+
+129 ^Reset to the original TSO tuning, or recommended FreeSO Archive tuning?^
+130 ^The Sims Online^
+131 ^FreeSO Archive^
+
+132 ^Server Type^
+133 ^Name^
+134 ^Version^
+135 ^Players^
+136 ^Forget^
+137 ^Copy IP^
+138 ^(offline)^
+139 ^Refresh^
+
+140 ^Archive Server^
+141 ^FreeSO Server^
+142 ^Discord Server^
+
+143 ^Display Name^
+144 ^Enter a display name to use on archive servers. When joining certain servers, you might need an admin to verify you, so use a display name that makes it clear who you are.^
+145 ^Display name:^
+146 ^Change Display Name^
+
+147 ^Add Server^
+148 ^Enter the IP address or URL of the server. You may need to include the port.^
+149 ^Found server: %s (%s).
+Add to the server list?^
+150 ^Contacting server...^
+151 ^Failed to contact the server.^
+152 ^Unable to join a server from a Discord invite. Make sure the host has either enabled UPnP or forwarded the server ports manually.^

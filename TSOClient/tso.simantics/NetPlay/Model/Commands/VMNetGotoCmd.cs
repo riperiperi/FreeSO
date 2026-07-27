@@ -19,10 +19,16 @@ namespace FSO.SimAntics.NetPlay.Model.Commands
         {
             if (caller == null) return false;
             if (caller.Thread.Queue.Count >= VMThread.MAX_USER_ACTIONS) return false;
-            VMEntity callee = vm.Context.CreateObjectInstance(GOTO_GUID, new LotTilePos(x, y, level), Direction.NORTH).Objects[0];
+
+            return QueueGoto(vm, caller, new LotTilePos(x, y, level), Interaction, Param0);
+        }
+
+        public static bool QueueGoto(VM vm, VMAvatar caller, LotTilePos pos, int interactionNumber = 4, int param0 = 0)
+        {
+            VMEntity callee = vm.Context.CreateObjectInstance(GOTO_GUID, pos, Direction.NORTH).Objects[0];
             if (callee?.Position == LotTilePos.OUT_OF_WORLD) callee.Delete(true, vm.Context);
             if (callee == null) return false;
-            callee.PushUserInteraction(Interaction, caller, vm.Context, false, new short[] { Param0, 0, 0, 0 });
+            callee.PushUserInteraction(interactionNumber, caller, vm.Context, false, new short[] { 0, 0, 0, 0 });
 
             return true;
         }

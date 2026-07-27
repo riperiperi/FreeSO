@@ -10,6 +10,7 @@ using FSO.Server.Protocol.Voltron.Packets;
 using FSO.Server.Servers.Lot.Domain;
 using FSO.Server.Servers.Lot.Handlers;
 using FSO.Server.Servers.Lot.Lifecycle;
+using FSO.Server.Servers.Lot.Surround;
 using FSO.Server.Servers.Shared.Handlers;
 using Ninject;
 using NLog;
@@ -37,6 +38,7 @@ namespace FSO.Server.Servers.Lot
             Kernel.Bind<LotServerConfiguration>().ToConstant(Config);
             Kernel.Bind<LotHost>().To<LotHost>().InSingletonScope();
             Kernel.Bind<CityConnections>().To<CityConnections>().InSingletonScope();
+            Kernel.Bind<LiveSurroundHost>().To<LiveSurroundHost>().InSingletonScope();
             Kernel.Bind<LotServer>().ToConstant(this);
 
             LotLivenessTimer.AutoReset = true;
@@ -166,15 +168,31 @@ namespace FSO.Server.Servers.Lot
 
                         newSession.SetAttribute("cityCallSign", ticket.avatar_claim_owner);
 
+                        if (packet.ServiceIdent == "JLT")
+                        {
+                            // Join lot with transition
+                            // A followup request with the transition will be made.
+                            newSession.SetAttribute("joinLotTransition", true);
+                            newSession.SetAttribute("joinLotId", ticket.lot_id);
+
+                            // If the session hasn't tried to join the lot in 5 seconds, close it.
+                            Task.Delay(5000).ContinueWith((task) =>
+                            {
+                                if ((bool)newSession.GetAttribute("joinLotTransition"))
+                                {
+                                    newSession.SetAttribute("joinLotTransition", false);
+
+                                    ReturnClaim(newSession);
+                                }
+                            });
+
+                            return;
+                        }
+
                         //Try and join the lot, no reason to keep this connection alive if you can't get in
                         if (!Lots.TryJoin(ticket.lot_id, newSession))
                         {
-                            newSession.Close();
-                            using (var db = DAFactory.Get())
-                            {
-                                //return claim to the city we got it from.
-                                db.AvatarClaims.Claim(newSession.AvatarClaimId, Config.Call_Sign, (string)newSession.GetAttribute("cityCallSign"), 0);
-                            }
+                            ReturnClaim(newSession);
                         }
                         return;
                     }
@@ -185,10 +203,43 @@ namespace FSO.Server.Servers.Lot
             rawSession.Close();
         }
 
+        private void ReturnClaim(IVoltronSession voltronSession)
+        {
+            voltronSession.Close();
+            using (var db = DAFactory.Get())
+            {
+                //return claim to the city we got it from.
+                db.AvatarClaims.Claim(voltronSession.AvatarClaimId, Config.Call_Sign, (string)voltronSession.GetAttribute("cityCallSign"), 0);
+            }
+        }
+
+        public void HandleTransition(IVoltronSession voltronSession, JoinLotWithTransitionRequest joinTransition)
+        {
+            var transition = voltronSession.GetAttribute("joinLotTransition");
+            if (transition != null && (bool)transition)
+            {
+                var lot_id = (int)voltronSession.GetAttribute("joinLotId");
+
+                voltronSession.SetAttribute("joinLotTransition", false);
+                voltronSession.SetAttribute("lotTransitionInfo", joinTransition.Transition);
+
+                if (!Lots.TryJoin(lot_id, voltronSession))
+                {
+                    ReturnClaim(voltronSession);
+                }
+            }
+        }
+
         protected override void RouteMessage(IAriesSession session, object message)
         {
-            if(session is IVoltronSession)
+            if(session is IVoltronSession voltronSession)
             {
+                if (message is JoinLotWithTransitionRequest joinTransition)
+                {
+                    HandleTransition(voltronSession, joinTransition);
+                    return;
+                }
+
                 //Route to a specific lot
                 Lots.RouteMessage(session as IVoltronSession, message);
                 return;

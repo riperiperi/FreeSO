@@ -10,19 +10,19 @@ namespace FSO.SimAntics.JIT.Runtime
 
     public abstract class IInlineBHAV
     {
-        public abstract bool Execute(VMStackFrame context, ref byte instruction, params short[] args);
+        public abstract bool Execute(VMStackFrame context, ref byte instruction, params Span<short> args);
 
         public virtual int ArgCount => 4;
 
         public GameObject CodeOwner;
-        public bool Execute(VMStackFrame context, params short[] args)
+        public bool Execute(VMStackFrame context, params Span<short> args)
         {
             byte instruction = 0;
             var stackObj = context.StackObject;
             var stackObjID = context.StackObjectID;
             var oldArgs = context.Args;
             var oldLocals = context.Locals;
-            context.Args = args;
+            context.Args = new(args);
             var result = Execute(context, ref instruction, args);
             context.Args = oldArgs;
             context.Locals = oldLocals;
@@ -34,7 +34,7 @@ namespace FSO.SimAntics.JIT.Runtime
             return result;
         }
 
-        public bool ExecuteExternal(VMStackFrame context, params short[] args)
+        public bool ExecuteExternal(VMStackFrame context, params Span<short> args)
         {
             //we need to set the code owner to the correct object.
             //var oldCodeOwner = context.CodeOwner;

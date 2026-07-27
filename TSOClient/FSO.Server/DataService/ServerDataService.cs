@@ -12,6 +12,7 @@ namespace FSO.Server.DataService
         {
             AddProvider(kernel.Get<ServerAvatarProvider>());
             var lots = kernel.Get<ServerLotProvider>();
+            kernel.Bind<ServerLotProvider>().ToConstant(lots);
             AddProvider(lots);
             var city = kernel.Get<ServerCityProvider>();
             AddProvider(city);

@@ -446,13 +446,13 @@ namespace FSO.Client.UI.Panels
 
         private short GetFloorBlockableHover(Point pt)
         {
-            var tilePos = World.EstTileAtPosWithScroll3D(new Vector2(pt.X, pt.Y));
+            var tilePos = World.EstTileAtPosWithScroll3D(new Vector2(pt.X, pt.Y), canFail: true);
             var newHover = World.GetObjectIDAtScreenPos(pt.X,
                     pt.Y,
                     GameFacade.GraphicsDevice);
 
             var hobj = vm.GetObjectById(newHover);
-            if (hobj == null || hobj.Position.Level < tilePos.Z) newHover = 0;
+            if (!tilePos.HasValue || hobj == null || hobj.Position.Level < tilePos.Value.Z) newHover = 0;
             return newHover;
         }
 
@@ -550,7 +550,7 @@ namespace FSO.Client.UI.Panels
                     {
                         //can place on any level below
                         var tilePos = World.EstTileAtPosWithScroll3D(new Vector2(scaled.X, scaled.Y) + Holding.MousePosOffset * FSOEnvironment.DPIScaleFactor);
-                        MoveSelected(new Vector2(tilePos.X, tilePos.Y), (sbyte)tilePos.Z); // + Holding.TilePosOffset
+                        MoveSelected(new Vector2(tilePos.Value.X, tilePos.Value.Y), (sbyte)tilePos.Value.Z); // + Holding.TilePosOffset
                     }
                 }
             }

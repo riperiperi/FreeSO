@@ -1,70 +1,89 @@
-﻿using FSO.Server.Database;
+﻿using CommandLine;
+using FSO.Server.Database;
 using FSO.Server.DataService;
 using FSO.Server.Utils;
 using Ninject;
 using Ninject.Parameters;
-using System;
 
 namespace FSO.Server
 {
     public class Program
     {
+        private readonly struct ToolInfo(Type toolType, object toolOptions)
+        {
+            public readonly Type ToolType = toolType;
+            public readonly object ToolOptions = toolOptions;
+        }
+
         public static int Main(string[] args)
         {
-            Type toolType = null;
-            object toolOptions = null;
+            ToolInfo? toolInfo = null;
 
             string[] a2 = args;
             if (args.Length == 0) a2 = new string[] { "run" };
 
             var options = new ProgramOptions();
-            var switchIsValid = new CommandLine.Parser().ParseArguments(a2, options,
-                (verb, subOptions) =>
+            int result = Parser.Default.ParseArguments<
+                RunServerOptions, DatabaseInitOptions, ImportNhoodOptions, RestoreLotsOptions,
+                SqliteImportOptions, DataTrimOptions, ArchiveConvertOptions, ImportArchiveFeaturedOptions,
+                PluginAnonymizeOptions, BackupSelectionOptions>(a2)
+                .MapResult(
+                (RunServerOptions opts) =>
                 {
-                    switch (verb)
-                    {
-                        case "run":
-                            toolType = typeof(ToolRunServer);
-                            toolOptions = subOptions;
-                            break;
-                        case "db-init":
-                            toolType = typeof(ToolInitDatabase);
-                            toolOptions = subOptions;
-                            break;
-                        case "import-nhood":
-                            toolType = typeof(ToolImportNhood);
-                            toolOptions = subOptions;
-                            break;
-                        case "restore-lots":
-                            toolType = typeof(ToolRestoreLots);
-                            toolOptions = subOptions;
-                            break;
-                        case "sqlite-import":
-                            toolType = typeof(ToolSqliteImport);
-                            toolOptions = subOptions;
-                            break;
-                        case "data-trim":
-                            toolType = typeof(ToolDataTrim);
-                            toolOptions = subOptions;
-                            break;
-                        case "archive-convert":
-                            toolType = typeof(ToolArchiveConvert);
-                            toolOptions = subOptions;
-                            break;
-                        case "import-archive-featured":
-                            toolType = typeof(ToolImportArchiveFeatured);
-                            toolOptions = subOptions;
-                            break;
-                        default:
-                            Console.Write(options.GetUsage(verb));
-                            break;
-                    }
-                }
-            );
+                    toolInfo = new(typeof(ToolRunServer), opts);
+                    return 0;
+                },
+                (DatabaseInitOptions opts) =>
+                {
+                    toolInfo = new(typeof(ToolInitDatabase), opts);
+                    return 0;
+                },
+                (ImportNhoodOptions opts) =>
+                {
+                    toolInfo = new(typeof(ToolImportNhood), opts);
+                    return 0;
+                },
+                (RestoreLotsOptions opts) =>
+                {
+                    toolInfo = new(typeof(ToolRestoreLots), opts);
+                    return 0;
+                },
+                (SqliteImportOptions opts) =>
+                {
+                    toolInfo = new(typeof(ToolSqliteImport), opts);
+                    return 0;
+                },
+                (DataTrimOptions opts) =>
+                {
+                    toolInfo = new(typeof(ToolDataTrim), opts);
+                    return 0;
+                },
+                (ArchiveConvertOptions opts) =>
+                {
+                    toolInfo = new(typeof(ToolArchiveConvert), opts);
+                    return 0;
+                },
+                (ImportArchiveFeaturedOptions opts) =>
+                {
+                    toolInfo = new(typeof(ToolImportArchiveFeatured), opts);
+                    return 0;
+                },
+                (PluginAnonymizeOptions opts) =>
+                {
+                    toolInfo = new(typeof(ToolPluginAnonymize), opts);
+                    return 0;
+                },
+                (BackupSelectionOptions opts) =>
+                {
+                    toolInfo = new(typeof(ToolBackupSelection), opts);
+                    return 0;
+                },
+                errs => 1
+                );
 
-            if (!switchIsValid || toolType == null)
+            if (result == 1 || toolInfo == null)
             {
-                Environment.Exit(CommandLine.Parser.DefaultExitCodeFail);
+                Environment.Exit(1);
             }
 
             var kernel = new StandardKernel(
@@ -76,7 +95,7 @@ namespace FSO.Server
 
             //If db init, allow @ variables in the query itself. We could always enable this but for added security
             //we are conditionally adding it only for db migrations
-            if (toolType == typeof(ToolInitDatabase))
+            if (toolInfo.Value.ToolType == typeof(ToolInitDatabase))
             {
                 var config = kernel.Get<ServerConfiguration>();
                 if (!config.Database.ConnectionString.EndsWith(";")){
@@ -85,7 +104,7 @@ namespace FSO.Server
                 config.Database.ConnectionString += "Allow User Variables=True";
             }
 
-            var tool = (ITool)kernel.Get(toolType, new ConstructorArgument("options", toolOptions));
+            var tool = (ITool)kernel.Get(toolInfo.Value.ToolType, new ConstructorArgument("options", toolInfo.Value.ToolOptions));
             return tool.Run();
 
         }

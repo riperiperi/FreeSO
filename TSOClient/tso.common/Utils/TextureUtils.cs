@@ -338,6 +338,17 @@ namespace FSO.Common.Utils
             return Math.Max(MipDimension(width), MipDimension(height));
         }
 
+        public static int AlignUp(int value, int divisor)
+        {
+            int remainder = value % divisor;
+            return remainder > 0 ? (value + divisor - remainder) : value;
+        }
+
+        public static int CalculateMipCountDXT(int width, int height)
+        {
+            return Math.Max(MipDimension(AlignUp(width, 4)), MipDimension(AlignUp(height, 4)));
+        }
+
         public static void UploadWithMips(Texture2D Texture, GraphicsDevice gd, Color[] data)
         {
             UploadTexData(Texture, GenerateMips(Texture, data));
@@ -412,12 +423,11 @@ namespace FSO.Common.Utils
             UploadTexData(Texture, GenerateDXT1WithMips(Texture, w, h, data));
         }
 
-        public static TextureData<byte>[] GenerateDXT5WithMips(Texture2D Texture, int w, int h, Color[] data)
+        public static TextureData<byte>[] GenerateDXT5WithMips(int mips, int w, int h, Color[] data)
         {
             int level = 0;
             int dw = ((w + 3) / 4) * 4;
             int dh = ((h + 3) / 4) * 4;
-            int mips = Texture.LevelCount;
 
             var result = new TextureData<byte>[mips];
             Tuple<byte[], Point> dxt = null;
@@ -444,12 +454,21 @@ namespace FSO.Common.Utils
             return result;
         }
 
-        public static TextureData<byte>[] GenerateDXT1WithMips(Texture2D Texture, int w, int h, Color[] data)
+        public static TextureData<byte>[] GenerateDXT5WithMips(Texture2D Texture, int w, int h, Color[] data)
+        {
+            return GenerateDXT5WithMips(Texture.LevelCount, w, h, data);
+        }
+
+        public static TextureData<byte>[] GenerateDXT5WithMips(int w, int h, Color[] data)
+        {
+            return GenerateDXT5WithMips(CalculateMipCountDXT(w, h), w, h, data);
+        }
+
+        public static TextureData<byte>[] GenerateDXT1WithMips(int mips, int w, int h, Color[] data)
         {
             int level = 0;
             int dw = ((w + 3) / 4) * 4;
             int dh = ((h + 3) / 4) * 4;
-            int mips = Texture.LevelCount;
 
             var result = new TextureData<byte>[mips];
             Tuple<byte[], Point> dxt = null;
@@ -475,6 +494,16 @@ namespace FSO.Common.Utils
             }
 
             return result;
+        }
+
+        public static TextureData<byte>[] GenerateDXT1WithMips(Texture2D Texture, int w, int h, Color[] data)
+        {
+            return GenerateDXT1WithMips(Texture.LevelCount, w, h, data);
+        }
+
+        public static TextureData<byte>[] GenerateDXT1WithMips(int w, int h, Color[] data)
+        {
+            return GenerateDXT1WithMips(CalculateMipCountDXT(w, h), w, h, data);
         }
 
         public static void UploadTexData<T>(Texture2D texture, TextureData<T>[] data) where T : struct

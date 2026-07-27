@@ -11,6 +11,7 @@ namespace FSO.Server.Protocol.CitySelector
         public string AvatarID;
 
         public bool ExplicitPort;
+        public bool SpectatorMode;
 
         public bool PreAlpha = false;
 
@@ -29,6 +30,8 @@ namespace FSO.Server.Protocol.CitySelector
                 result.AppendTextNode("EntitlementLevel", "");
             }
             result.AppendTextNode("AvatarID", AvatarID); //freeso now uses this
+            if (SpectatorMode)
+                result.AppendTextNode("SpectatorMode", "1");
 
             return result;
         }
@@ -40,6 +43,7 @@ namespace FSO.Server.Protocol.CitySelector
             this.PlayerID = uint.Parse(element.ReadTextNode("PlayerID"));
 
             this.AvatarID = element.ReadTextNode("AvatarID");
+            this.SpectatorMode = element.ReadTextNode("SpectatorMode") == "1";
         }
 
         #endregion

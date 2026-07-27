@@ -189,9 +189,12 @@ namespace FSO.Server.Clients.Framework
 
         public void SyncProcessMessage(object message)
         {
-            if (this.CurrentState != null)
+            lock (this)
             {
-                this.CurrentState.ProcessMessage(message);
+                if (this.CurrentState != null)
+                {
+                    this.CurrentState.ProcessMessage(message);
+                }
             }
         }
 

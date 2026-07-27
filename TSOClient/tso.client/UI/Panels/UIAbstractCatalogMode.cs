@@ -21,6 +21,7 @@ namespace FSO.Client.UI.Panels
         public UIObjectHolder Holder;
         public UIQueryPanel QueryPanel { get { return LotController.QueryPanel; } }
         public UILotControl LotController;
+        public bool AnyChanges { get; protected set; }
         protected VMMultitileGroup BuyItem;
 
         protected UILabel ObjLimitLabel;
@@ -178,6 +179,7 @@ namespace FSO.Client.UI.Panels
         }
         private void HolderPutDown(UIObjectSelection holding, UpdateState state)
         {
+            AnyChanges = true;
             if (OldSelection != -1)
             {
                 if (!holding.IsBought && holding.InventoryPID == 0 && (state.ShiftDown))
@@ -198,6 +200,7 @@ namespace FSO.Client.UI.Panels
 
         private void HolderDelete(UIObjectSelection holding, UpdateState state)
         {
+            AnyChanges = true;
             if (OldSelection != -1)
             {
                 Catalog.SetActive(OldSelection, false);
@@ -268,6 +271,7 @@ namespace FSO.Client.UI.Panels
                     QueryPanel.Tab = 0;
                     QueryPanel.Active = true;
                 }
+                AnyChanges = true;
                 LotController.CustomControl = (UICustomLotControl)Activator.CreateInstance(item.Special.Control, LotController.vm, LotController.World, LotController, item.Special.Parameters);
             }
             else

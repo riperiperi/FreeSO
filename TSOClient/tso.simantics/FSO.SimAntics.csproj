@@ -24,8 +24,8 @@
   </PropertyGroup>
 
   <ItemGroup>
-    <PackageReference Include="FreeSO.HandEvaluator" Version="1.2.0" />
-    <PackageReference Include="MonoGame.Framework.DesktopGL" Version="3.8.4" />
+    <PackageReference Include="FreeSO.HandEvaluator.Core" Version="1.0.0" />
+    <PackageReference Include="MonoGame.Framework.DesktopGL" Version="3.8.5-preview.2" />
   </ItemGroup>
 
   <ItemGroup>

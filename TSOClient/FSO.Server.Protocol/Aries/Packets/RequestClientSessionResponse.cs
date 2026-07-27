@@ -26,7 +26,15 @@ namespace FSO.Server.Protocol.Aries.Packets
             this.Unknown = input.Get();
             this.ServiceIdent = input.GetString(3, Encoding.ASCII);
             this.Unknown2 = input.GetUInt16();
-            this.Password = input.GetString(32, Encoding.ASCII);
+
+            if (this.Unknown == 40)
+            {
+                this.Password = input.GetPascalVLCString();
+            }
+            else
+            {
+                this.Password = input.GetString(32, Encoding.ASCII);
+            }
         }
 
         public AriesPacketType GetPacketType()
@@ -44,7 +52,15 @@ namespace FSO.Server.Protocol.Aries.Packets
             output.Put(this.Unknown);
             output.PutString(this.ServiceIdent, 3, Encoding.ASCII);
             output.PutUInt16(this.Unknown2);
-            output.PutString(this.Password, 32, Encoding.ASCII);
+
+            if (this.Unknown == 40)
+            {
+                output.PutPascalVLCString(this.Password);
+            }
+            else
+            {
+                output.PutString(this.Password, 32, Encoding.ASCII);
+            }
         }
     }
 }

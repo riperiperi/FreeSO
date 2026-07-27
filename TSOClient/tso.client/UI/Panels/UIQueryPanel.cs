@@ -487,7 +487,7 @@ namespace FSO.Client.UI.Panels
                 CodeOwner = ent.Object,
                 StackObject = ent,
                 Routine = null,
-                Args = new short[4],
+                Args = default,
                 Thread = ent.Thread,
             };
 
@@ -625,7 +625,7 @@ namespace FSO.Client.UI.Panels
             if (entity is VMGameObject && ((VMTSOObjectState)entity.TSOState).OwnerID > 0)
             {
                 var ownerID = ((VMTSOObjectState)entity.TSOState).OwnerID;
-                owner = (vm.TSOState.Names.GetNameForID(vm, ownerID));
+                owner = (vm.TSOState.Names.GetNameForID(vm, VMGlobalEntityType.Avatar, ownerID));
                 if (((VMTSOObjectState)entity.TSOState).ObjectFlags.HasFlag(VMTSOObjectFlags.FSODonated))
                 {
                     ownerTable = "f114";
@@ -743,7 +743,7 @@ namespace FSO.Client.UI.Panels
         {
             base.InternalDraw(batch);
 
-            float scale = 0.7f;
+            float scale = 0.7f / FSOEnvironment.DPIScaleFactor;
             Texture2D thumb = null;
             if (Thumb3D != null)
             {

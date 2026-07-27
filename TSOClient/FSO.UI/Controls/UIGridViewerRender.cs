@@ -32,6 +32,7 @@ namespace FSO.Client.UI.Controls
             if (data != null)
             {
                 owner.SelectedItem = data;
+                GameFacade.Screens.inputManager.SetFocus(owner);
             }
         }
 

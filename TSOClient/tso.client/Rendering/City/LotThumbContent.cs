@@ -4,11 +4,6 @@ using FSO.Files;
 using FSO.Files.RC;
 using FSO.Server.Clients;
 using Microsoft.Xna.Framework.Graphics;
-using System;
-using System.Collections.Generic;
-using System.IO;
-using System.Linq;
-using System.Threading.Tasks;
 
 namespace FSO.Client.Rendering.City
 {
@@ -141,6 +136,19 @@ namespace FSO.Client.Rendering.City
                 entry.LotTexture?.Dispose();
             }
             entry.LotTexture = tex;
+            entry.Loaded = true;
+        }
+
+        public void OverrideLotFacade(uint shardID, uint location, FSOF fsof)
+        {
+            var entry = GetLotEntry(shardID, location, true);
+            entry.Held++; //keep this forever
+            if (entry.Loaded)
+            {
+                entry.LotFacade?.Dispose();
+            }
+            entry.LotFacade = fsof;
+            fsof?.LoadGPU(GameFacade.GraphicsDevice);
             entry.Loaded = true;
         }
 

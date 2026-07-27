@@ -1,7 +1,6 @@
 ﻿using FSO.Common.Utils;
-using System;
-using System.IO;
 using System.Net;
+using System.Security.Cryptography;
 
 namespace FSO.Client.UI.Panels
 {
@@ -12,7 +11,9 @@ namespace FSO.Client.UI.Panels
         private int CurrentItem;
         private DownloadItem ItemMeta;
 
-        public event Callback<bool> OnComplete;
+        public delegate void OnCompleteEvent(bool success, string failedFile = null);
+
+        public event OnCompleteEvent OnComplete;
 
         public UIWebDownloaderDialog(string title, DownloadItem[] items) : base()
         {
@@ -53,15 +54,44 @@ namespace FSO.Client.UI.Panels
             }
         }
 
+        private void Failure(string failedFile = null)
+        {
+            DeleteFiles();
+
+            GameThread.NextUpdate(x => OnComplete?.Invoke(false, failedFile));
+        }
+
         private void DownloadClient_DownloadFileCompleted(object sender, System.ComponentModel.AsyncCompletedEventArgs e)
         {
             if (e.Error != null || e.Cancelled)
             {
-                DeleteFiles();
-
-                GameThread.NextUpdate(x => OnComplete?.Invoke(false));
+                Failure(ItemMeta.Name);
                 return;
             }
+
+            if (ItemMeta.Size != 0)
+            {
+                var size = new FileInfo(ItemMeta.DestPath).Length;
+
+                if (size != ItemMeta.Size)
+                {
+                    Failure(ItemMeta.Name);
+                    return;
+                }
+            }
+
+            if (ItemMeta.Hash != null)
+            {
+                using FileStream file = File.OpenRead(ItemMeta.DestPath);
+                var hash = SHA256.HashData(file);
+
+                if (Convert.ToBase64String(hash) != ItemMeta.Hash)
+                {
+                    Failure(ItemMeta.Name);
+                    return;
+                }
+            }
+
             AdvanceDownloader();
         }
 
@@ -84,5 +114,8 @@ namespace FSO.Client.UI.Panels
         public string Url;
         public string DestPath;
         public string Name;
+
+        public int Size;
+        public string Hash;
     }
 }

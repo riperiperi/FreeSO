@@ -20,6 +20,8 @@ namespace FSO.Client.UI.Controls
     /// </summary>
     public class UITextEdit : UIElement, IFocusableUI, ITextControl
     {
+        public bool IsFocused { get; set; }
+        public int TabIndex { get; set; } = 0;
         /**
          * Standard modes
          */
@@ -51,6 +53,7 @@ namespace FSO.Client.UI.Controls
          * Interaction
          */
         private UIMouseEventRef m_MouseEvent;
+        private bool m_MouseOver;
 
         protected int SelectionStart = -1;
         protected int SelectionEnd = -1;
@@ -303,13 +306,28 @@ namespace FSO.Client.UI.Controls
 
         public void OnMouseEvent(UIMouseEventType evt, UpdateState state)
         {
-            if (m_IsReadOnly) { return; }
+            if (m_IsReadOnly)
+            { 
+                switch (evt)
+                {
+                    case UIMouseEventType.MouseOver:
+                        m_MouseOver = true;
+                        break;
+
+                    case UIMouseEventType.MouseOut:
+                        m_MouseOver = false;
+                        break;
+                }
+                
+                return;
+            }
 
             if (NoFocusPassthrough != null && state.InputManager.GetFocus() != this)
             {
                 NoFocusPassthrough?.Invoke(evt, state);
                 return;
             }
+
             switch (evt)
             {
                 case UIMouseEventType.MouseDown:
@@ -330,10 +348,12 @@ namespace FSO.Client.UI.Controls
 
                 case UIMouseEventType.MouseOver:
                     GameFacade.Cursor.SetCursor(CursorType.IBeam);
+                    m_MouseOver = true;
                     break;
 
                 case UIMouseEventType.MouseOut:
                     GameFacade.Cursor.SetCursor(CursorType.Normal);
+                    m_MouseOver = false;
                     break;
 
                 case UIMouseEventType.MouseUp:
@@ -355,11 +375,9 @@ namespace FSO.Client.UI.Controls
 
         #region IFocusableUI Members
 
-        private bool IsFocused;
         private string QueuedChange;
         public void OnFocusChanged(FocusEvent newFocus)
         {
-            IsFocused = newFocus == FocusEvent.FocusIn;
             if (IsFocused)
             {
                 m_cursorBlink = true;
@@ -415,6 +433,15 @@ namespace FSO.Client.UI.Controls
                 }
             }
             if (FSOEnvironment.SoftwareKeyboard && FSOEnvironment.SoftwareDepth && state.InputManager.GetFocus() == this) state.InputManager.SetFocus(null);
+
+            // Mouse wheel scrolling
+            if (m_MouseOver && state.MouseWheelDelta != 0)
+            {
+                VerticalScrollPosition -= state.MouseWheelDelta;
+                if (m_Slider != null)
+                    m_Slider.Value = VerticalScrollPosition;
+            }
+
             if (m_IsReadOnly) { return; }
 
             if (FlashOnEmpty)
@@ -1327,7 +1354,7 @@ namespace FSO.Client.UI.Controls
         public void PositionChildSlider()
         {
             m_Slider.Position = this.Position + new Vector2(this.Width + ScrollbarGutter, 0);
-            m_Slider.SetSize(1, this.Height);
+            m_Slider.SetSize(13, this.Height);
         }
 
         void m_Slider_OnChange(UIElement element)

@@ -1,0 +1,27 @@
+﻿<Project Sdk="Microsoft.NET.Sdk">
+
+  <PropertyGroup>
+    <OutputType>Exe</OutputType>
+    <TargetFramework>net9.0</TargetFramework>
+    <ImplicitUsings>enable</ImplicitUsings>
+    <Nullable>enable</Nullable>
+    <AssemblyName>update</AssemblyName>
+    <ApplicationIcon>patcher.ico</ApplicationIcon>
+    <PublishTrimmed>true</PublishTrimmed>
+    <PublishSingleFile>true</PublishSingleFile>
+    <TrimmerRemoveSymbols>true</TrimmerRemoveSymbols>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <Content Include="patcher.ico" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <EmbeddedResource Include="patcher.ico" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <PackageReference Include="Mono.Posix" Version="7.1.0-final.1.21458.1" />
+  </ItemGroup>
+
+</Project>

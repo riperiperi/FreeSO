@@ -644,10 +644,13 @@ namespace FSO.Client.UI.Framework
             return LocalPoint(new Vector2(x, y));
         }
 
-        public Vector2 FlooredLocalPoint(Vector2 point)
+        public Vector2 AlignedLocalPoint(Vector2 point, Vector2 scale)
         {
             var pos = LocalPoint(point);
-            return new Vector2((float)Math.Floor(pos.X), (float)Math.Floor(pos.Y));
+
+            bool align = scale.X == 1 || scale.Y == 1;
+
+            return align ? Vector2.Floor(pos) : pos;
         }
 
         /// <summary>
@@ -815,7 +818,7 @@ namespace FSO.Client.UI.Framework
             //pos.Y += style.BaselineOffset;
 
             /** Draw the string **/
-            pos = FlooredLocalPoint(pos);
+            pos = AlignedLocalPoint(pos, scale);
 
             if (style.VFont != null)
             {
@@ -826,7 +829,7 @@ namespace FSO.Client.UI.Framework
                     mat = ui.BatchMatrixStack.Peek();
 
                 if (style.Shadow)
-                    style.VFont.Draw(batch.GraphicsDevice, text, pos + new Vector2(FSOEnvironment.DPIScaleFactor), Color.Black, scale, mat);
+                    style.VFont.Draw(batch.GraphicsDevice, text, pos + new Vector2(FSOEnvironment.DPIScaleFactor), Color.Black * Opacity, scale, mat);
                 style.VFont.Draw(batch.GraphicsDevice, text, pos, style.GetColor(state) * Opacity, scale, mat);
 
                 if (mat != null)
@@ -836,7 +839,7 @@ namespace FSO.Client.UI.Framework
             }
             else
             {
-                if (style.Shadow) batch.DrawString(style.SpriteFont, text, pos + new Vector2(FSOEnvironment.DPIScaleFactor), Color.Black, 0, Vector2.Zero, scale, SpriteEffects.None, 0);
+                if (style.Shadow) batch.DrawString(style.SpriteFont, text, pos + new Vector2(FSOEnvironment.DPIScaleFactor), Color.Black * Opacity, 0, Vector2.Zero, scale, SpriteEffects.None, 0);
                 batch.DrawString(style.SpriteFont, text, pos, style.GetColor(state) * Opacity, 0, Vector2.Zero, scale, SpriteEffects.None, 0);
             }
 
@@ -868,7 +871,7 @@ namespace FSO.Client.UI.Framework
         {
             //if (!m_IsInvalidated)
             //{
-            batch.Draw(texture, FlooredLocalPoint(to), null, _BlendColor, 0.0f,
+            batch.Draw(texture, AlignedLocalPoint(to, _Scale), null, _BlendColor, 0.0f,
                         new Vector2(0.0f, 0.0f), _Scale, _SpriteEffects, 0.0f);
             //}
         }
@@ -885,7 +888,7 @@ namespace FSO.Client.UI.Framework
         {
             //if (!m_IsInvalidated)
             //{
-            batch.Draw(texture, FlooredLocalPoint(to), from, _BlendColor, 0.0f,
+            batch.Draw(texture, AlignedLocalPoint(to, _Scale), from, _BlendColor, 0.0f,
                         new Vector2(0.0f, 0.0f), _Scale, _SpriteEffects, 0.0f);
             //}
         }
@@ -903,8 +906,9 @@ namespace FSO.Client.UI.Framework
         {
             //if (!m_IsInvalidated)
             //{
-            batch.Draw(texture, FlooredLocalPoint(to), from, _BlendColor, 0.0f,
-                        new Vector2(0.0f, 0.0f), _Scale * scale, _SpriteEffects, 0.0f);
+            Vector2 finalScale = _Scale * scale;
+            batch.Draw(texture, AlignedLocalPoint(to, finalScale), from, _BlendColor, 0.0f,
+                        new Vector2(0.0f, 0.0f), finalScale, _SpriteEffects, 0.0f);
             //}
         }
 
@@ -923,8 +927,9 @@ namespace FSO.Client.UI.Framework
             //if (!m_IsInvalidated)
             //{
             DPISwitch(ref texture, ref scale, ref from);
-            batch.Draw(texture, FlooredLocalPoint(to), from, new Color(_BlendColor.ToVector4() * blend.ToVector4()), 0.0f,
-                        new Vector2(0.0f, 0.0f), _Scale * scale, _SpriteEffects, 0.0f);
+            Vector2 finalScale = _Scale * scale;
+            batch.Draw(texture, AlignedLocalPoint(to, finalScale), from, new Color(_BlendColor.ToVector4() * blend.ToVector4()), 0.0f,
+                        new Vector2(0.0f, 0.0f), finalScale, _SpriteEffects, 0.0f);
             //}
         }
 
@@ -959,8 +964,9 @@ namespace FSO.Client.UI.Framework
         public void DrawLocalTexture(SpriteBatch batch, Texture2D texture, Nullable<Rectangle> from, Vector2 to, Vector2 scale, Color color, float rotation, Vector2 origin)
         {
             DPISwitch(ref texture, ref scale, ref from);
-            batch.Draw(texture, FlooredLocalPoint(to), from, color, rotation,
-                        origin, _Scale * scale, _SpriteEffects, 0.0f);
+            Vector2 finalScale = _Scale * scale;
+            batch.Draw(texture, AlignedLocalPoint(to, finalScale), from, color, rotation,
+                        origin, finalScale, _SpriteEffects, 0.0f);
         }
 
         protected SpriteEffects SprEffects = SpriteEffects.None;
@@ -980,7 +986,7 @@ namespace FSO.Client.UI.Framework
                     var tex = texture;
                     Rectangle? from = new Rectangle(0, 0, Math.Min(texture.Width, dest.Width - x), Math.Min(texture.Height, dest.Height - y));
                     DPISwitch(ref tex, ref scale, ref from);
-                    batch.Draw(texture, FlooredLocalPoint(new Vector2(dest.X + x, dest.Y + y)), from, col, 0.0f,
+                    batch.Draw(texture, AlignedLocalPoint(new Vector2(dest.X + x, dest.Y + y), scale), from, col, 0.0f,
                         new Vector2(0.0f, 0.0f), scale, SpriteEffects.None, 0.0f);
                 }
             }

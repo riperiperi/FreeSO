@@ -1,4 +1,5 @@
-﻿using Microsoft.Xna.Framework;
+﻿using FSO.Common;
+using Microsoft.Xna.Framework;
 using Microsoft.Xna.Framework.Graphics;
 using System;
 
@@ -49,7 +50,8 @@ namespace FSO.LotView.Utils
 
         private Vector2 GetUV(Texture2D Texture, float x, float y)
         {
-            return new Vector2(x / (float)Texture.Width, y / (float)Texture.Height);
+            float offset = FSOEnvironment.PxOffset2D;
+            return new Vector2((x + offset) / (float)Texture.Width, (y + offset) / (float)Texture.Height);
         }
     }
 }

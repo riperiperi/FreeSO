@@ -28,58 +28,47 @@
         /// </summary>
         private void InitializeComponent()
         {
-            System.Windows.Forms.TreeNode treeNode1 = new System.Windows.Forms.TreeNode("Accessory Rack - Cheap");
-            System.Windows.Forms.TreeNode treeNode2 = new System.Windows.Forms.TreeNode("Accessory Rack - Expensive");
-            System.Windows.Forms.TreeNode treeNode3 = new System.Windows.Forms.TreeNode("Accessory Rack - Moderate");
-            System.Windows.Forms.TreeNode treeNode4 = new System.Windows.Forms.TreeNode("accessoryrack", new System.Windows.Forms.TreeNode[] {
-            treeNode1,
-            treeNode2,
-            treeNode3});
-            System.Windows.Forms.TreeNode treeNode5 = new System.Windows.Forms.TreeNode("Puzzle - 2 Person Portal - North");
-            System.Windows.Forms.TreeNode treeNode6 = new System.Windows.Forms.TreeNode("Puzzle - 2 Person Portal - South");
-            System.Windows.Forms.TreeNode treeNode7 = new System.Windows.Forms.TreeNode("Puzzle - 2 Person Portal - Tunnel");
-            System.Windows.Forms.TreeNode treeNode8 = new System.Windows.Forms.TreeNode("Puzzle - 2 Person Portal", new System.Windows.Forms.TreeNode[] {
-            treeNode5,
-            treeNode6,
-            treeNode7});
-            System.Windows.Forms.TreeNode treeNode9 = new System.Windows.Forms.TreeNode("2 Person Portal Controller");
-            System.Windows.Forms.TreeNode treeNode10 = new System.Windows.Forms.TreeNode("2personpuzzle", new System.Windows.Forms.TreeNode[] {
-            treeNode8,
-            treeNode9});
-            this.ObjectSearch = new System.Windows.Forms.TextBox();
-            this.ObjectTree = new System.Windows.Forms.TreeView();
-            this.ObjNameLabel = new System.Windows.Forms.Label();
-            this.ObjDescLabel = new System.Windows.Forms.Label();
-            this.SearchButton = new System.Windows.Forms.Button();
-            this.SearchDescribe = new System.Windows.Forms.Label();
-            this.ObjMultitileLabel = new System.Windows.Forms.Label();
-            this.ObjThumbnail = new FSO.IDE.Common.ObjThumbnailControl();
-            this.SuspendLayout();
+            TreeNode treeNode1 = new TreeNode("Accessory Rack - Cheap");
+            TreeNode treeNode2 = new TreeNode("Accessory Rack - Expensive");
+            TreeNode treeNode3 = new TreeNode("Accessory Rack - Moderate");
+            TreeNode treeNode4 = new TreeNode("accessoryrack", new TreeNode[] { treeNode1, treeNode2, treeNode3 });
+            TreeNode treeNode5 = new TreeNode("Puzzle - 2 Person Portal - North");
+            TreeNode treeNode6 = new TreeNode("Puzzle - 2 Person Portal - South");
+            TreeNode treeNode7 = new TreeNode("Puzzle - 2 Person Portal - Tunnel");
+            TreeNode treeNode8 = new TreeNode("Puzzle - 2 Person Portal", new TreeNode[] { treeNode5, treeNode6, treeNode7 });
+            TreeNode treeNode9 = new TreeNode("2 Person Portal Controller");
+            TreeNode treeNode10 = new TreeNode("2personpuzzle", new TreeNode[] { treeNode8, treeNode9 });
+            ObjectSearch = new TextBox();
+            ObjectTree = new TreeView();
+            ObjNameLabel = new Label();
+            ObjDescLabel = new Label();
+            SearchButton = new Button();
+            SearchDescribe = new Label();
+            ObjMultitileLabel = new Label();
+            ObjThumbnail = new FSO.IDE.Common.ObjThumbnailControl();
+            SuspendLayout();
             // 
             // ObjectSearch
             // 
-            this.ObjectSearch.Anchor = ((System.Windows.Forms.AnchorStyles)(((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Left) 
-            | System.Windows.Forms.AnchorStyles.Right)));
-            this.ObjectSearch.Location = new System.Drawing.Point(12, 13);
-            this.ObjectSearch.Name = "ObjectSearch";
-            this.ObjectSearch.Size = new System.Drawing.Size(210, 20);
-            this.ObjectSearch.TabIndex = 7;
-            this.ObjectSearch.TextChanged += new System.EventHandler(this.ObjectSearch_TextChanged);
-            this.ObjectSearch.KeyDown += new System.Windows.Forms.KeyEventHandler(this.ObjectSearch_KeyDown);
+            ObjectSearch.Anchor = AnchorStyles.Top | AnchorStyles.Left | AnchorStyles.Right;
+            ObjectSearch.Location = new Point(12, 13);
+            ObjectSearch.Name = "ObjectSearch";
+            ObjectSearch.Size = new Size(210, 22);
+            ObjectSearch.TabIndex = 7;
+            ObjectSearch.TextChanged += ObjectSearch_TextChanged;
+            ObjectSearch.KeyDown += ObjectSearch_KeyDown;
             // 
             // ObjectTree
             // 
-            this.ObjectTree.Anchor = ((System.Windows.Forms.AnchorStyles)((((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Bottom) 
-            | System.Windows.Forms.AnchorStyles.Left) 
-            | System.Windows.Forms.AnchorStyles.Right)));
-            this.ObjectTree.FullRowSelect = true;
-            this.ObjectTree.HideSelection = false;
-            this.ObjectTree.HotTracking = true;
-            this.ObjectTree.ImeMode = System.Windows.Forms.ImeMode.Off;
-            this.ObjectTree.Indent = 15;
-            this.ObjectTree.ItemHeight = 16;
-            this.ObjectTree.Location = new System.Drawing.Point(12, 39);
-            this.ObjectTree.Name = "ObjectTree";
+            ObjectTree.Anchor = AnchorStyles.Top | AnchorStyles.Bottom | AnchorStyles.Left | AnchorStyles.Right;
+            ObjectTree.FullRowSelect = true;
+            ObjectTree.HideSelection = false;
+            ObjectTree.HotTracking = true;
+            ObjectTree.ImeMode = ImeMode.Off;
+            ObjectTree.Indent = 15;
+            ObjectTree.ItemHeight = 16;
+            ObjectTree.Location = new Point(12, 39);
+            ObjectTree.Name = "ObjectTree";
             treeNode1.Name = "Node2";
             treeNode1.Text = "Accessory Rack - Cheap";
             treeNode2.Name = "Node3";
@@ -100,93 +89,91 @@
             treeNode9.Text = "2 Person Portal Controller";
             treeNode10.Name = "Node5";
             treeNode10.Text = "2personpuzzle";
-            this.ObjectTree.Nodes.AddRange(new System.Windows.Forms.TreeNode[] {
-            treeNode4,
-            treeNode10});
-            this.ObjectTree.RightToLeft = System.Windows.Forms.RightToLeft.No;
-            this.ObjectTree.ShowRootLines = false;
-            this.ObjectTree.Size = new System.Drawing.Size(272, 315);
-            this.ObjectTree.TabIndex = 9;
-            this.ObjectTree.TabStop = false;
-            this.ObjectTree.AfterSelect += new System.Windows.Forms.TreeViewEventHandler(this.ObjectTree_AfterSelect);
+            ObjectTree.Nodes.AddRange(new TreeNode[] { treeNode4, treeNode10 });
+            ObjectTree.RightToLeft = RightToLeft.No;
+            ObjectTree.ShowRootLines = false;
+            ObjectTree.Size = new Size(272, 315);
+            ObjectTree.TabIndex = 9;
+            ObjectTree.TabStop = false;
+            ObjectTree.AfterSelect += ObjectTree_AfterSelect;
             // 
             // ObjNameLabel
             // 
-            this.ObjNameLabel.Anchor = ((System.Windows.Forms.AnchorStyles)((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Right)));
-            this.ObjNameLabel.AutoEllipsis = true;
-            this.ObjNameLabel.Font = new System.Drawing.Font("Microsoft Sans Serif", 9.75F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((byte)(0)));
-            this.ObjNameLabel.Location = new System.Drawing.Point(294, 204);
-            this.ObjNameLabel.Name = "ObjNameLabel";
-            this.ObjNameLabel.Size = new System.Drawing.Size(186, 17);
-            this.ObjNameLabel.TabIndex = 12;
-            this.ObjNameLabel.Text = "Accessory Rack - Cheap";
-            this.ObjNameLabel.TextAlign = System.Drawing.ContentAlignment.TopCenter;
+            ObjNameLabel.Anchor = AnchorStyles.Top | AnchorStyles.Right;
+            ObjNameLabel.AutoEllipsis = true;
+            ObjNameLabel.Font = new Font("Microsoft Sans Serif", 9.75F, FontStyle.Regular, GraphicsUnit.Point, 0);
+            ObjNameLabel.Location = new Point(294, 204);
+            ObjNameLabel.Name = "ObjNameLabel";
+            ObjNameLabel.Size = new Size(186, 17);
+            ObjNameLabel.TabIndex = 12;
+            ObjNameLabel.Text = "Accessory Rack - Cheap";
+            ObjNameLabel.TextAlign = ContentAlignment.TopCenter;
             // 
             // ObjDescLabel
             // 
-            this.ObjDescLabel.Anchor = ((System.Windows.Forms.AnchorStyles)((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Right)));
-            this.ObjDescLabel.Location = new System.Drawing.Point(294, 222);
-            this.ObjDescLabel.Name = "ObjDescLabel";
-            this.ObjDescLabel.Size = new System.Drawing.Size(186, 17);
-            this.ObjDescLabel.TabIndex = 14;
-            this.ObjDescLabel.Text = "§2000 - Job Object";
-            this.ObjDescLabel.TextAlign = System.Drawing.ContentAlignment.TopCenter;
+            ObjDescLabel.Anchor = AnchorStyles.Top | AnchorStyles.Right;
+            ObjDescLabel.Location = new Point(294, 222);
+            ObjDescLabel.Name = "ObjDescLabel";
+            ObjDescLabel.Size = new Size(186, 17);
+            ObjDescLabel.TabIndex = 14;
+            ObjDescLabel.Text = "§2000 - Job Object";
+            ObjDescLabel.TextAlign = ContentAlignment.TopCenter;
             // 
             // SearchButton
             // 
-            this.SearchButton.Anchor = ((System.Windows.Forms.AnchorStyles)((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Right)));
-            this.SearchButton.Location = new System.Drawing.Point(228, 11);
-            this.SearchButton.Name = "SearchButton";
-            this.SearchButton.Size = new System.Drawing.Size(56, 23);
-            this.SearchButton.TabIndex = 15;
-            this.SearchButton.Text = "Search";
-            this.SearchButton.UseVisualStyleBackColor = true;
-            this.SearchButton.Click += new System.EventHandler(this.SearchButton_Click);
+            SearchButton.Anchor = AnchorStyles.Top | AnchorStyles.Right;
+            SearchButton.Location = new Point(228, 11);
+            SearchButton.Name = "SearchButton";
+            SearchButton.Size = new Size(56, 23);
+            SearchButton.TabIndex = 15;
+            SearchButton.Text = "Search";
+            SearchButton.UseVisualStyleBackColor = true;
+            SearchButton.Click += SearchButton_Click;
             // 
             // SearchDescribe
             // 
-            this.SearchDescribe.Anchor = ((System.Windows.Forms.AnchorStyles)((System.Windows.Forms.AnchorStyles.Bottom | System.Windows.Forms.AnchorStyles.Left)));
-            this.SearchDescribe.Location = new System.Drawing.Point(12, 357);
-            this.SearchDescribe.Name = "SearchDescribe";
-            this.SearchDescribe.Size = new System.Drawing.Size(234, 23);
-            this.SearchDescribe.TabIndex = 16;
-            this.SearchDescribe.Text = "Showing all objects.";
+            SearchDescribe.Anchor = AnchorStyles.Bottom | AnchorStyles.Left;
+            SearchDescribe.Location = new Point(12, 357);
+            SearchDescribe.Name = "SearchDescribe";
+            SearchDescribe.Size = new Size(234, 23);
+            SearchDescribe.TabIndex = 16;
+            SearchDescribe.Text = "Showing all objects.";
             // 
             // ObjMultitileLabel
             // 
-            this.ObjMultitileLabel.Anchor = ((System.Windows.Forms.AnchorStyles)((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Right)));
-            this.ObjMultitileLabel.Location = new System.Drawing.Point(294, 237);
-            this.ObjMultitileLabel.Name = "ObjMultitileLabel";
-            this.ObjMultitileLabel.Size = new System.Drawing.Size(186, 17);
-            this.ObjMultitileLabel.TabIndex = 17;
-            this.ObjMultitileLabel.Text = "Multitile Master Object";
-            this.ObjMultitileLabel.TextAlign = System.Drawing.ContentAlignment.TopCenter;
+            ObjMultitileLabel.Anchor = AnchorStyles.Top | AnchorStyles.Right;
+            ObjMultitileLabel.Location = new Point(294, 237);
+            ObjMultitileLabel.Name = "ObjMultitileLabel";
+            ObjMultitileLabel.Size = new Size(186, 17);
+            ObjMultitileLabel.TabIndex = 17;
+            ObjMultitileLabel.Text = "Multitile Master Object";
+            ObjMultitileLabel.TextAlign = ContentAlignment.TopCenter;
             // 
             // ObjThumbnail
             // 
-            this.ObjThumbnail.Anchor = ((System.Windows.Forms.AnchorStyles)((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Right)));
-            this.ObjThumbnail.Location = new System.Drawing.Point(294, 13);
-            this.ObjThumbnail.Name = "ObjThumbnail";
-            this.ObjThumbnail.Size = new System.Drawing.Size(186, 186);
-            this.ObjThumbnail.TabIndex = 19;
+            ObjThumbnail.Anchor = AnchorStyles.Top | AnchorStyles.Right;
+            ObjThumbnail.Location = new Point(294, 13);
+            ObjThumbnail.Name = "ObjThumbnail";
+            ObjThumbnail.Size = new Size(186, 186);
+            ObjThumbnail.TabIndex = 19;
             // 
             // ObjectBrowser
             // 
-            this.AutoScaleDimensions = new System.Drawing.SizeF(6F, 13F);
-            this.AutoScaleMode = System.Windows.Forms.AutoScaleMode.Font;
-            this.Controls.Add(this.ObjThumbnail);
-            this.Controls.Add(this.ObjMultitileLabel);
-            this.Controls.Add(this.SearchDescribe);
-            this.Controls.Add(this.SearchButton);
-            this.Controls.Add(this.ObjDescLabel);
-            this.Controls.Add(this.ObjNameLabel);
-            this.Controls.Add(this.ObjectSearch);
-            this.Controls.Add(this.ObjectTree);
-            this.Name = "ObjectBrowser";
-            this.Size = new System.Drawing.Size(492, 382);
-            this.Load += new System.EventHandler(this.ObjectBrowser_Load);
-            this.ResumeLayout(false);
-            this.PerformLayout();
+            AutoScaleDimensions = new SizeF(96F, 96F);
+            AutoScaleMode = AutoScaleMode.Dpi;
+            Controls.Add(ObjThumbnail);
+            Controls.Add(ObjMultitileLabel);
+            Controls.Add(SearchDescribe);
+            Controls.Add(SearchButton);
+            Controls.Add(ObjDescLabel);
+            Controls.Add(ObjNameLabel);
+            Controls.Add(ObjectSearch);
+            Controls.Add(ObjectTree);
+            Name = "ObjectBrowser";
+            Size = new Size(492, 382);
+            Load += ObjectBrowser_Load;
+            ResumeLayout(false);
+            PerformLayout();
 
         }
 

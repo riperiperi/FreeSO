@@ -11,7 +11,8 @@ namespace FSO.SimAntics.Model.TSOPlatform
         public VMTSOAvatarPermissions Permissions { get; set; } = VMTSOAvatarPermissions.Visitor;
         public HashSet<uint> IgnoredAvatars = new HashSet<uint>();
         public Dictionary<short, VMTSOJobInfo> JobInfo = new Dictionary<short, VMTSOJobInfo>();
-        public VMTSOAvatarFlags Flags;
+        public VMTSOAvatarFlags Flags { get; set; }
+        public bool IsSpectator => Flags.HasFlag(VMTSOAvatarFlags.Spectator);
         public Color ChatColor = Color.White;
         public sbyte ChatTTSPitch; //-100 to 100. 
         public byte ChatChannel = 255; //the chat channel this avatar is viewing. 255 = all.
@@ -105,8 +106,29 @@ namespace FSO.SimAntics.Model.TSOPlatform
     [Flags]
     public enum VMTSOAvatarFlags : uint
     {
+        /// <summary>
+        /// Isn't a roomie or owner of another lot.
+        /// </summary>
         CanBeRoommate = 1, //TODO: update on becoming roomie of another lot, while on this lot.
-        NewPlayer = 2, //under a week old
-        Mayor = 4, //is mayor of this neighborhood
+
+        /// <summary>
+        /// Under a week old.
+        /// </summary>
+        NewPlayer = 2,
+
+        /// <summary>
+        /// Is mayor of this neighborhood.
+        /// </summary>
+        Mayor = 4,
+
+        /// <summary>
+        /// Read-only visitor in spectator mode.
+        /// </summary>
+        Spectator = 8,
+
+        /// <summary>
+        /// Can use debug interactions. Tends to be set on moderators/administrators, but archive mode can enforce extra rules.
+        /// </summary>
+        Debug = 16,
     }
 }

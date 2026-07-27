@@ -36,6 +36,11 @@ namespace FSO.Server.Database.DA.Users
             return Context.Connection.Query<User>("SELECT * FROM fso_users WHERE register_ip = @ip ORDER BY register_date DESC", new { ip = ip }).AsList();
         }
 
+        public List<User> GetByLastIP(string ip)
+        {
+            return Context.Connection.Query<User>("SELECT * FROM fso_users WHERE last_ip = @ip ORDER BY register_date DESC", new { ip = ip }).AsList();
+        }
+
         public void UpdateConnectIP(uint id, string ip)
         {
             Context.Connection.Execute("UPDATE fso_users SET last_ip = @ip WHERE user_id = @user_id", new { user_id = id, ip = ip });
@@ -74,6 +79,11 @@ namespace FSO.Server.Database.DA.Users
             return new PagedList<User>(results, offset, total);
         }
 
+        public List<UserSummary> AllSummaries()
+        {
+            return Context.Connection.Query<UserSummary>("SELECT u.*, count(a.avatar_id) AS avatar_count FROM fso_users u LEFT OUTER JOIN fso_avatars a ON u.user_id = a.user_id GROUP BY u.user_id").ToList();
+        }
+
         public uint Create(User user)
         {
             return Context.Connection.Query<uint>(Context.CompatLayer(
@@ -81,6 +91,11 @@ namespace FSO.Server.Database.DA.Users
                 "is_admin = @is_admin, is_moderator = @is_moderator, is_banned = @is_banned; select LAST_INSERT_ID();"),
                 user
             ).First();
+        }
+
+        public bool Delete(uint id)
+        {
+            return Context.Connection.Execute("DELETE FROM fso_users WHERE user_id = @id", new { id = id }) > 0;
         }
 
         public void CreateAuth(UserAuthenticate auth)

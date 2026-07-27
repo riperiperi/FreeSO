@@ -1,6 +1,4 @@
-﻿using System;
-using System.Collections.Generic;
-using FSO.Client.UI.Framework;
+﻿using FSO.Client.UI.Framework;
 using FSO.Client.UI.Framework.Parser;
 using Microsoft.Xna.Framework;
 using Microsoft.Xna.Framework.Graphics;
@@ -13,6 +11,22 @@ namespace FSO.Client.UI.Controls
 {
     public class UIListBox : UIElement, IFocusableUI
     {
+        public bool IsFocused { get; set; }
+        public int TabIndex { get; set; } = 0;
+        public void OnFocusChanged(FocusEvent newFocus)
+        {
+            if (newFocus == FocusEvent.FocusIn && m_SelectedRow < 0 && Items != null && Items.Count > 0)
+            {
+                int enabledIndex = AllowDisabledSelection ? 0 : Items.FindIndex(IsItemEnabled);
+
+                if (enabledIndex != -1)
+                {
+                    InternalSelect(enabledIndex);
+                }
+            }
+
+            Invalidate();
+        }
         private UIMouseEventRef MouseHandler;
         public event ChangeDelegate OnChange;
         public event ButtonClickDelegate OnDoubleClick;
@@ -22,7 +36,6 @@ namespace FSO.Client.UI.Controls
 
         public bool AllowDisabledSelection = false;
         public bool Mask = false;
-        private bool IsFocused;
 
         public UIListBox()
         {
@@ -245,6 +258,14 @@ namespace FSO.Client.UI.Controls
         {
             base.Update(state);
 
+            // Mouse wheel scrolling
+            if (m_MouseOver && state.MouseWheelDelta != 0)
+            {
+                ScrollOffset = Math.Max(0, Math.Min(Items.Count - NumVisibleRows, ScrollOffset - state.MouseWheelDelta));
+                if (m_Slider != null)
+                    m_Slider.Value = ScrollOffset;
+            }
+
             if (UseChildElements)
             {
                 var i = 0;
@@ -275,13 +296,13 @@ namespace FSO.Client.UI.Controls
 
             if (IsFocused)
             {
-                if (state.NewKeys.Contains(Keys.Up) && Items.Count > 0) 
-                    InternalSelect((m_SelectedRow < 0 ? Items.Count - 1 : (m_SelectedRow - 1 + Items.Count) % Items.Count));
+                if ((state.NewKeys.Remove(Keys.Up) || state.NewKeys.Remove(Keys.Left)) && Items.Count > 0)
+                    InternalSelect(LastRow(m_SelectedRow));
 
-                if (state.NewKeys.Contains(Keys.Down) && Items.Count > 0) 
-                    InternalSelect((m_SelectedRow + 1) % Items.Count);
+                if ((state.NewKeys.Remove(Keys.Down) || state.NewKeys.Remove(Keys.Right)) && Items.Count > 0)
+                    InternalSelect(NextRow(m_SelectedRow));
 
-                if (SelectedItem != null && state.NewKeys.Contains(Keys.Enter)) 
+                if (SelectedItem != null && state.NewKeys.Contains(Keys.Enter))
                     OnDoubleClick?.Invoke(this);
             }
 
@@ -293,6 +314,55 @@ namespace FSO.Client.UI.Controls
             else
             {
                 m_HoverRow = -1;
+            }
+        }
+
+        private static bool IsItemEnabled(UIListBoxItem item)
+        {
+            return !ValuePointer.Get<Boolean>(item.Disabled);
+        }
+
+        private int NextRow(int index)
+        {
+            if (AllowDisabledSelection)
+            {
+                return (index + 1) % Items.Count;
+            }
+            else
+            {
+                if (index < Items.Count - 1)
+                {
+                    int afterInd = Items.FindIndex(index + 1, IsItemEnabled);
+
+                    if (afterInd != -1)
+                    {
+                        return afterInd;
+                    }
+                }
+
+                return Items.FindIndex(IsItemEnabled);
+            }
+        }
+
+        private int LastRow(int index)
+        {
+            if (AllowDisabledSelection)
+            {
+                return (index < 0 ? Items.Count - 1 : (index - 1 + Items.Count) % Items.Count);
+            }
+            else
+            {
+                if (index > 0)
+                {
+                    int beforeInd = Items.FindLastIndex(index - 1, IsItemEnabled);
+
+                    if (beforeInd != -1)
+                    {
+                        return beforeInd;
+                    }
+                }
+
+                return Items.FindLastIndex(IsItemEnabled);
             }
         }
 
@@ -324,7 +394,7 @@ namespace FSO.Client.UI.Controls
                         /** Cant deselect once selected **/
                         InternalSelect(row);
                     }
-                    GameFacade.Screens.inputManager.SetFocus(this);
+                    update.InputManager.SetFocus(this);
                     break;
             }
         }
@@ -423,7 +493,7 @@ namespace FSO.Client.UI.Controls
             if (Mask)
             {
                 var gd = batch.GraphicsDevice;
-                var size = Size;
+                var size = Size * Scale;
                 if (Target == null || (int)size.X != Target.Width || (int)size.Y != Target.Height)
                 {
                     Target?.Dispose();
@@ -434,8 +504,7 @@ namespace FSO.Client.UI.Controls
                 gd.Clear(Color.Transparent);
                 var pos = LocalPoint(0, 0);
 
-                var trans = Microsoft.Xna.Framework.Matrix.CreateTranslation(-pos.X, -pos.Y, 0)
-                    * Microsoft.Xna.Framework.Matrix.CreateScale(1/Scale.X, 1/Scale.Y, 1f);
+                var trans = Microsoft.Xna.Framework.Matrix.CreateTranslation(-pos.X, -pos.Y, 0);
                 batch.BatchMatrixStack.Push(trans);
                 batch.Begin(transformMatrix: trans, blendState: BlendState.AlphaBlend, sortMode: SpriteSortMode.Deferred);
                 batch.GraphicsDevice.RasterizerState = RasterizerState.CullNone;
@@ -457,7 +526,7 @@ namespace FSO.Client.UI.Controls
 
                 if (Target != null)
                 {
-                    DrawLocalTexture(batch, Target, Vector2.Zero);
+                    DrawLocalTexture(batch, Target, null, Vector2.Zero, new Vector2(1 / Scale.X, 1 / Scale.Y));
                 }
             }
             else
@@ -483,11 +552,11 @@ namespace FSO.Client.UI.Controls
 
                 var selected = rowIndex == m_SelectedRow || ValuePointer.Get<Boolean>(row.UseSelectedStyleByDefault);
                 var hover = rowIndex == m_HoverRow;
-                if (selected)
+                if (selected && m_SelectionTexture != null)
                 {
                     /** Draw selection background **/
-                    var white = TextureGenerator.GetPxWhite(batch.GraphicsDevice);
-                    DrawLocalTexture(batch, white, null, new Vector2(0, rowY), new Vector2(m_Width, RowHeight), m_SelectionFillColor);
+                    var fillColor = IsFocused ? m_SelectionFillColor : m_SelectionFillColor * 0.8f;
+                    DrawLocalTexture(batch, m_SelectionTexture, null, new Vector2(0, rowY), new Vector2(m_Width, RowHeight), fillColor);
                 }
 
                 var ts = TextStyle;
@@ -657,10 +726,6 @@ namespace FSO.Client.UI.Controls
             base.Removed();
         }
 
-        public void OnFocusChanged(FocusEvent newFocus)
-        {
-            IsFocused = newFocus == FocusEvent.FocusIn;
-        }
     }
 
     public class UIListBoxColumn

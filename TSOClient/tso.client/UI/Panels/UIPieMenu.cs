@@ -13,6 +13,7 @@ using FSO.Common.Rendering.Framework;
 using FSO.Common.Utils;
 using FSO.SimAntics.NetPlay.Model.Commands;
 using FSO.Common;
+using FSO.LotView.Model;
 
 namespace FSO.Client.UI.Panels
 {
@@ -78,7 +79,14 @@ namespace FSO.Client.UI.Panels
 
             for (int i = 0; i < pie.Count; i++)
             {
-                string[] depth = (pie[i].Name == null)?new string[] { "???" } :pie[i].Name.Split('/');
+                var pieItem = pie[i];
+
+                if (pieItem.IsTooltip)
+                {
+                    continue;
+                }
+
+                string[] depth = (pieItem.Name == null)?new string[] { "???" } : pieItem.Name.Split('/');
 
                 var category = m_PieTree; //set category to root
                 for (int j = 0; j < depth.Length-1; j++) //iterate through categories
@@ -116,9 +124,9 @@ namespace FSO.Client.UI.Panels
                     Category = false,
                     Name = name,
                     ColorMod = colorMod,
-                    ID = pie[i].ID,
-                    Param0 = pie[i].Param0,
-                    Global = pie[i].Global
+                    ID = pieItem.ID,
+                    Param0 = pieItem.Param0,
+                    Global = pieItem.Global
                 };
                 category.Children.Add(item);
                 category.ChildrenByName[item.Name] = item;
@@ -342,6 +350,26 @@ namespace FSO.Client.UI.Panels
                         x = m_Obj.Position.x,
                         y = m_Obj.Position.y,
                         level = m_Obj.Position.Level
+                    });
+                }
+                else if (m_Obj != null && m_Obj == m_Parent.TransitionObject)
+                {
+                    var targ = new LotTilePos(
+                        m_Obj.GetAttribute(3),
+                        m_Obj.GetAttribute(4),
+                        1);
+
+                    var targLot = (int)m_Obj.GetAttribute(1) | (m_Obj.GetAttribute(2) << 16);
+
+                    m_Parent.vm.SendCommand(new VMNetGotoLotCmd
+                    {
+                        Interaction = action.ID,
+                        Param0 = action.Param0,
+                        ActorUID = m_Caller.PersistID,
+                        x = targ.x,
+                        y = targ.y,
+                        level = 1, // TODO?
+                        LotLocation = (uint)targLot
                     });
                 }
                 else

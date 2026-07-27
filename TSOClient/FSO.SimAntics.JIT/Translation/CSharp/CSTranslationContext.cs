@@ -95,7 +95,7 @@ namespace FSO.SimAntics.JIT.Translation.CSharp
         //useful helpers
         public string Interface => (InlineFunction) ? "IInlineBHAV" : "IBHAV";
         public string FunctionHead => (InlineFunction) ?
-            "public override bool Execute(VMStackFrame context, ref byte instruction, params short[] args)" :
+            "public override bool Execute(VMStackFrame context, ref byte instruction, params Span<short> args)" :
             "public VMPrimitiveExitCode Execute(VMStackFrame context, ref byte instruction)";
         public string TrueExp => (InlineFunction) ? "true" : "VMPrimitiveExitCode.RETURN_TRUE";
         public string FalseExp => (InlineFunction) ? "false" : "VMPrimitiveExitCode.RETURN_FALSE";

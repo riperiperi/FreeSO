@@ -13,6 +13,18 @@ namespace FSO.Files.RC
 {
     public class FSOF
     {
+        // Constants for FSOF server validation
+        private const int EXPECTED_FLOOR_WIDTH = 384;
+        private const int EXPECTED_FLOOR_HEIGHT = 256;
+        private const int EXPECTED_WALL_WIDTH = 512;
+        private const int MAX_WALL_HEIGHT = 4096;
+
+        private const int MAX_FLOOR_TRIS = 10000;
+        private const int MAX_WALL_TRIS = 100000;
+
+        private const float MAX_XZ_POSITION = 77;
+        private const float MAX_Y_POSITION = 300;
+
         public int TexCompressionType; //RGBA8, DXT5
 
         public int FloorWidth;
@@ -98,6 +110,98 @@ namespace FSO.Files.RC
             {
                 compressed.Close();
             }
+        }
+
+        public void ValidateFSO(Stream stream)
+        {
+            using (var io = IoBuffer.FromStream(stream, ByteOrder.LITTLE_ENDIAN))
+            {
+                var fsof = io.ReadCString(4);
+                if (fsof != "FSOf") throw new Exception("Invalid FSOf!");
+                Version = io.ReadInt32();
+                Compressed = io.ReadByte() > 0;
+
+                if (Version < 0 || Version > CURRENT_VERSION)
+                {
+                    throw new Exception("Unknown FSOF Version");
+                }
+
+                GZipStream compressed = null;
+                var cio = io;
+                if (Compressed)
+                {
+                    compressed = new GZipStream(stream, CompressionMode.Decompress);
+                    cio = IoBuffer.FromStream(compressed, ByteOrder.LITTLE_ENDIAN);
+                }
+
+                TexCompressionType = cio.ReadInt32();
+                if (!(TexCompressionType == 1))
+                {
+                    throw new Exception("FSO compression must be 1 (DXT)");
+                }
+                FloorWidth = cio.ReadInt32();
+                FloorHeight = cio.ReadInt32();
+
+                if (!(FloorWidth == EXPECTED_FLOOR_WIDTH && FloorHeight == EXPECTED_FLOOR_HEIGHT))
+                {
+                    throw new Exception("Unexpected dimensions for floor texture");
+                }
+
+                WallWidth = cio.ReadInt32();
+                WallHeight = cio.ReadInt32();
+
+                if (!(WallWidth == EXPECTED_WALL_WIDTH && WallHeight <= MAX_WALL_HEIGHT))
+                {
+                    throw new Exception("Unexpected dimensions for wall texture");
+                }
+
+                var hasNight = cio.ReadByte() > 0;
+
+                if (!hasNight)
+                {
+                    throw new Exception("Must have night texture");
+                }
+
+                var floorTSize = cio.ReadInt32();
+                cio.ReadBytes(floorTSize);
+                var wallTSize = cio.ReadInt32();
+                cio.ReadBytes(wallTSize);
+
+                if (!(floorTSize == DXTSize(FloorWidth, FloorHeight) && wallTSize == DXTSize(WallWidth, WallHeight)))
+                {
+                    throw new Exception("Day wall/floor have incorrect size for DXT");
+                }
+
+                if (hasNight)
+                {
+                    floorTSize = cio.ReadInt32();
+                    cio.ReadBytes(floorTSize);
+                    wallTSize = cio.ReadInt32();
+                    cio.ReadBytes(wallTSize);
+
+                    if (!(floorTSize == DXTSize(FloorWidth, FloorHeight) && wallTSize == DXTSize(WallWidth, WallHeight)))
+                    {
+                        throw new Exception("Night wall/floor have incorrect size for DXT");
+                    }
+
+                    NightLightColor = new Color(cio.ReadUInt32());
+                }
+
+                var floor = ValidateVerts(cio, MAX_FLOOR_TRIS * 3, MAX_FLOOR_TRIS * 3);
+                FloorVertices = floor.Item1;
+                FloorIndices = floor.Item2;
+                var wall = ValidateVerts(cio, MAX_WALL_TRIS * 3, MAX_WALL_TRIS * 3);
+                WallVertices = wall.Item1;
+                WallIndices = wall.Item2;
+            }
+        }
+
+        private static int DXTSize(int width, int height)
+        {
+            width = ((width + 3) >> 2) << 2;
+            height = ((height + 3) >> 2) << 2;
+
+            return width * height;
         }
 
         public void Read(Stream stream)
@@ -216,17 +320,85 @@ namespace FSO.Files.RC
             WallIGPU?.Dispose();
         }
 
+        private static Tuple<DGRP3DVert[], int[]> ValidateVerts(IoBuffer io, int maxVerts, int maxIndices)
+        {
+            var vertCount = io.ReadInt32();
+            if (vertCount > maxVerts)
+            {
+                throw new Exception("Too many vertices");
+            }
+
+            var readVerts = ReadArray<DGRP3DVert>(io, vertCount);
+
+            var indCount = io.ReadInt32();
+            if (indCount > maxIndices)
+            {
+                throw new Exception("Too many indices");
+            }
+
+            var indices = ReadArray<int>(io, indCount);
+
+            bool valid = true;
+            foreach (int ind in indices)
+            {
+                if (ind < 0 || ind >= vertCount)
+                {
+                    valid = false;
+                    break;
+                }
+            }
+
+            if (!valid)
+            {
+                throw new Exception("Indices go out of bounds");
+            }
+
+            // Basic dimensions check
+
+            float maxNormalMagnitude = 1.01f * 1.01f;
+
+            foreach (var vert in readVerts)
+            {
+                if (float.IsNaN(vert.Position.X) || float.IsNaN(vert.Position.Y) || float.IsNaN(vert.Position.Z) || float.IsNaN(vert.Normal.X) || float.IsNaN(vert.Normal.Y) || float.IsNaN(vert.Normal.Z) || float.IsNaN(vert.TextureCoordinate.X) || float.IsNaN(vert.TextureCoordinate.Y))
+                {
+                    valid = false;
+                    break;
+                }
+
+                if (vert.Position.X < 0 || vert.Position.Z < 0 || vert.Position.X > MAX_XZ_POSITION || vert.Position.Z > MAX_XZ_POSITION || vert.Position.Y < -MAX_Y_POSITION || vert.Position.Y > MAX_Y_POSITION)
+                {
+                    valid = false;
+                    break;
+                }
+
+                if (vert.Normal.LengthSquared() > maxNormalMagnitude)
+                {
+                    valid = false;
+                    break;
+                }
+
+                if (vert.TextureCoordinate.X < 0.0 || vert.TextureCoordinate.X > 1.0 || vert.TextureCoordinate.Y < 0.0 || vert.TextureCoordinate.Y > 1.0)
+                {
+                    valid = false;
+                    break;
+                }
+            }
+
+            if (!valid)
+            {
+                throw new Exception("Vertex data out of range");
+            }
+
+            return new Tuple<DGRP3DVert[], int[]>(readVerts, indices);
+        }
+
         private Tuple<DGRP3DVert[], int[]> ReadVerts(IoBuffer io)
         {
             var vertCount = io.ReadInt32();
-            var bytes = io.ReadBytes(vertCount * Marshal.SizeOf(typeof(DGRP3DVert)));
-            var readVerts = new DGRP3DVert[vertCount];
-            var pinnedHandle = GCHandle.Alloc(readVerts, GCHandleType.Pinned);
-            Marshal.Copy(bytes, 0, pinnedHandle.AddrOfPinnedObject(), bytes.Length);
-            pinnedHandle.Free();
+            var readVerts = ReadArray<DGRP3DVert>(io, vertCount);
 
             var indCount = io.ReadInt32();
-            var indices = ToTArray<int>(io.ReadBytes(indCount * 4));
+            var indices = ReadArray<int>(io, indCount);
 
             return new Tuple<DGRP3DVert[], int[]>(readVerts, indices);
         }
@@ -234,34 +406,27 @@ namespace FSO.Files.RC
         private void WriteVerts(DGRP3DVert[] verts, int[] indices, IoWriter io)
         {
             io.WriteInt32(verts.Length);
-            foreach (var vert in verts)
-            {
-                io.WriteFloat(vert.Position.X);
-                io.WriteFloat(vert.Position.Y);
-                io.WriteFloat(vert.Position.Z);
-                io.WriteFloat(vert.TextureCoordinate.X);
-                io.WriteFloat(vert.TextureCoordinate.Y);
-                io.WriteFloat(vert.Normal.X);
-                io.WriteFloat(vert.Normal.Y);
-                io.WriteFloat(vert.Normal.Z);
-            }
+            WriteArray(io, verts);
 
             io.WriteInt32(indices.Length);
-            io.WriteBytes(ToByteArray(indices.ToArray()));
+            WriteArray(io, indices);
         }
 
-        private static T[] ToTArray<T>(byte[] input)
+        public static T[] ReadArray<T>(IoBuffer reader, int size) where T : unmanaged
         {
-            var result = new T[input.Length / Marshal.SizeOf(typeof(T))];
-            Buffer.BlockCopy(input, 0, result, 0, input.Length);
+            var result = new T[size];
+            var bytes = MemoryMarshal.Cast<T, byte>(result);
+
+            reader.ReadBytes(bytes);
+
             return result;
         }
 
-        private static byte[] ToByteArray<T>(T[] input)
+        public static void WriteArray<T>(IoWriter writer, T[] data) where T : unmanaged
         {
-            var result = new byte[input.Length * Marshal.SizeOf(typeof(T))];
-            Buffer.BlockCopy(input, 0, result, 0, result.Length);
-            return result;
+            var bytes = MemoryMarshal.Cast<T, byte>(data);
+
+            writer.WriteBytes(bytes);
         }
     }
 }

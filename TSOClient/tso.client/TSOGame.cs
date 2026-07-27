@@ -130,7 +130,7 @@ namespace FSO.Client
                 if (settings.Lighting)
                 {
                     if (settings.Shadows3D)
-                        settings.LightingMode = 2;
+                        settings.LightingMode = 3;
                     else
                         settings.LightingMode = 1;
                 }
@@ -181,9 +181,10 @@ namespace FSO.Client
 
             FSO.Content.Content.TS1Hybrid = GlobalSettings.Default.TS1HybridEnable;
             FSO.Content.Content.TS1HybridBasePath = GlobalSettings.Default.TS1HybridPath;
-            FSO.Content.Content.InitBasic(GlobalSettings.Default.StartupPath, GraphicsDevice);
             FSO.SimAntics.VMAvatar.MissingIconProvider = FSO.Client.UI.Model.UIIconCache.GetObject;
             FSO.SimAntics.VM.TestBinding = "Value";
+
+            FSO.Content.Content.InitBasic(GlobalSettings.Default.StartupPath, GraphicsDevice);
             //VMContext.InitVMConfig();
             base.Initialize();
 
@@ -201,7 +202,11 @@ namespace FSO.Client
             GameFacade.Emojis = new Common.Rendering.Emoji.EmojiProvider(GraphicsDevice);
             CurLoader.BmpLoaderFunc = Files.ImageLoader.FromStream;
             GameFacade.Cursor = new CursorManager(GraphicsDevice);
-            if (!GameFacade.Linux) GameFacade.Cursor.Init(FSO.Content.Content.Get().GetPath(""), false);
+
+            if (!FSOEnvironment.MissingTSO)
+            {
+                GameFacade.Cursor.Init(FSO.Content.Content.Get().GetPath(""), false);
+            }
 
             /** Init any computed values **/
             GameFacade.Init();

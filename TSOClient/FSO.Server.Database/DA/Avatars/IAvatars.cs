@@ -31,6 +31,7 @@ namespace FSO.Server.Database.DA.Avatars
         DbTransactionResult Transaction(uint source_id, uint avatar_id, int amount, short reason, Func<bool> transactionInject);
         DbTransactionResult TestTransaction(uint source_id, uint avatar_id, int amount, short reason);
 
+        void UpdateUser(uint id, uint user_id);
         void UpdateDescription(uint id, string description);
         void UpdatePrivacyMode(uint id, byte privacy);
         void UpdateAvatarLotSave(uint id, DbAvatar avatar);

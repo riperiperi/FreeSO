@@ -113,6 +113,18 @@ namespace FSO.LotView.Utils.Camera
                     }
                 }
             }
+            else if (previous is CameraController3D)
+            {
+                var _3d = (CameraController3D)previous;
+                _RotationX = _3d.RotationX;
+                _RotationY = _3d.RotationY;
+                _Zoom3D = _3d.Zoom3D;
+                InvalidateCamera(world.State);
+                var relative = ComputeCenterRelative();
+                //SwitchCenter = world.State.CenterTile - new Vector2(relative.X / WorldSpace.WorldUnitsPerTile, relative.Z / WorldSpace.WorldUnitsPerTile);
+
+                CamHeight = _3d.CamHeight;
+            }
             else if (previous is CameraController2D)
             {
                 //just guess camera zoom and rotation?

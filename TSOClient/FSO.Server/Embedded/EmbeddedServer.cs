@@ -19,7 +19,7 @@ namespace FSO.Server.Embedded
         private Thread ServerThread;
         private Action ShutdownAction;
 
-        private ArchiveConfiguration Config;
+        public ArchiveConfiguration Config { get; }
 
         public EmbeddedServer(ArchiveConfiguration config)
         {

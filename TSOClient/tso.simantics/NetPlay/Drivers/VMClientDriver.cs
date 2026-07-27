@@ -10,14 +10,16 @@ namespace FSO.SimAntics.NetPlay.Drivers
 
     public class VMClientDriver : VMNetDriver
     {
+        private const int BASE_TICKS_PER_PACKET = 1;
+
         private Queue<VMNetTick> TickBuffer;
 
         private Queue<VMNetCommandBodyAbstract> OutgoingCommands;
         private Queue<VMNetMessage> ServerMessages;
-        private const int TICKS_PER_PACKET = 4;
+        private int TicksPerPacket = BASE_TICKS_PER_PACKET;
         private const int BUFFER_STABLE_TICKS = 3 * 30; //if buffer does not drop below 2 large for this number of ticks, tighten buffer size
 
-        private int BufferSize = TICKS_PER_PACKET * 2;
+        private int BufferSize = BASE_TICKS_PER_PACKET * 2; 
         private int TicksSinceCloseCall = 0;
         private bool ReplenishBuffer = false; // when true, ticks run at half speed until BufferSize.
         private bool ExecutedAnything;
@@ -119,7 +121,7 @@ namespace FSO.SimAntics.NetPlay.Drivers
             else
             {
                 TicksSinceLastCommand = Math.Min(TicksSinceLastCommand, 0);
-                if (TickBuffer.Count <= TICKS_PER_PACKET) TicksSinceCloseCall = 0;
+                if (TickBuffer.Count <= TicksPerPacket) TicksSinceCloseCall = 0;
             }
 
             if (ReplenishBuffer)
@@ -131,7 +133,7 @@ namespace FSO.SimAntics.NetPlay.Drivers
             {
                 TicksSinceCloseCall = 0;
                 BufferSize--;
-                if (BufferSize < TICKS_PER_PACKET) BufferSize = TICKS_PER_PACKET;
+                if (BufferSize < TicksPerPacket) BufferSize = TicksPerPacket;
             }
 
             // === END BUFFER SIZE MANAGEMENT ===
@@ -140,6 +142,8 @@ namespace FSO.SimAntics.NetPlay.Drivers
             {
                 ExecutedAnything = true;
                 var tick = TickBuffer.Dequeue();
+                //Console.WriteLine($"CLIENT running tick [{tick.TickID}] with {string.Join(',', tick.Commands.Select(x => x.Type.ToString()))}");
+                RunningCatchup = tick.RunningCatchup;
                 InternalTick(vm, tick);
                 if (vm.FSOVAsyncLoading)
                 {
@@ -147,11 +151,6 @@ namespace FSO.SimAntics.NetPlay.Drivers
 
                     //right now we assume the sync tick is by itself, and sets "runTick" to false anyways
                     //so it does not need to be requeued
-                    /* requeue code
-                    var temp = new List<VMNetTick>(TickBuffer);
-                    temp.Insert(0, tick);
-                    TickBuffer = new Queue<VMNetTick>(temp);
-                    */
                     return false;
                 }
                 if (timer.ElapsedMilliseconds > 66)
@@ -226,6 +225,7 @@ namespace FSO.SimAntics.NetPlay.Drivers
             }
             else
             {
+                var runningCatchup = message.Type == VMNetMessageType.CatchupTick;
                 var tick = new VMNetTickList();
                 try
                 {
@@ -242,9 +242,18 @@ namespace FSO.SimAntics.NetPlay.Drivers
                     return;
                 }
 
+                if (tick.Ticks.Count > TicksPerPacket)
+                {
+                    TicksPerPacket = tick.Ticks.Count;
+
+                    TicksSinceCloseCall = 0;
+                    BufferSize = Math.Max(BufferSize, TicksPerPacket * 2);
+                }
+
                 for (int i = 0; i < tick.Ticks.Count; i++)
                 {
                     tick.Ticks[i].ImmediateMode = tick.ImmediateMode;
+                    tick.Ticks[i].RunningCatchup = runningCatchup;
                     TickBuffer.Enqueue(tick.Ticks[i]);
                 }
             }

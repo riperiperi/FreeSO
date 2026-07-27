@@ -79,6 +79,8 @@ namespace FSO.Client.UI.Controls
                 OKButton = new UIButton(GetTexture((ulong)9423158247425));
                 Add(OKBg);
                 Add(OKButton);
+
+                Overhang = new Vector2(4);
             }
 
             if ((style & UIDialogStyle.Close) > 0)

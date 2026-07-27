@@ -122,6 +122,24 @@ float4 lightInterp(float4 inPosition, float lightBleed) {
 	return lightColorIAvg(lTex, clamp((inPosition.y % 1) * 3, 0, 1), avg);
 }
 
+float4 lightInterpClamp(float4 inPosition, float lightBleed) {
+	inPosition.xyz *= WorldToLightFactor;
+	inPosition.xz = clamp(inPosition.xz, float2(0.0, 0.0), rcp(MapLayout));
+	inPosition.xz += LightOffset;
+
+	float level = min(Level, floor(inPosition.y) + 0.0001);
+	float belowLevel = level - 1;
+	float2 iPA = inPosition.xz + 1 / MapLayout * floor(float2(belowLevel % MapLayout.x, belowLevel / MapLayout.x));
+	inPosition.xz += 1 / MapLayout * floor(float2(level % MapLayout.x, level / MapLayout.x));
+
+	float4 lTex = tex2D(advLightSampler, inPosition.xz);
+
+	float avg = (lTex.r + lTex.g + lTex.b) / 3;
+	lTex.rgb = lerp(lTex.rgb, tex2D(advLightSampler, iPA).rgb, max(0, 1 - (inPosition.y % 1) * 2) * lightBleed);
+
+	return lightColorIAvg(lTex, clamp((inPosition.y % 1) * 3, 0, 1), avg);
+}
+
 float4 lightProcessDirectionLevel(float4 inPosition, float3 normal, float level) {
 	float2 orig = inPosition.x;
 	inPosition.xyz *= WorldToLightFactor;

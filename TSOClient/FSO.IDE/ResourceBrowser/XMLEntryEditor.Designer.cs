@@ -191,8 +191,8 @@
             // 
             // XMLEntryEditor
             // 
-            this.AutoScaleDimensions = new System.Drawing.SizeF(6F, 13F);
-            this.AutoScaleMode = System.Windows.Forms.AutoScaleMode.Font;
+            this.AutoScaleDimensions = new SizeF(96F, 96F);
+            this.AutoScaleMode = System.Windows.Forms.AutoScaleMode.Dpi;
             this.Controls.Add(this.CommentCheckbox);
             this.Controls.Add(this.CopiedLabel);
             this.Controls.Add(this.SalePriceUpDown);

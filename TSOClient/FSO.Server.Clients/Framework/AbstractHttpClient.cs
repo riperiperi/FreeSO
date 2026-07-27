@@ -7,6 +7,7 @@ namespace FSO.Server.Clients.Framework
     {
         public string BaseUrl { get; internal set; }
         private readonly CookieContainer Cookies = new CookieContainer();
+        private RestClient _client;
 
         public AbstractHttpClient(string baseUrl)
         {
@@ -16,24 +17,23 @@ namespace FSO.Server.Clients.Framework
         public virtual void SetBaseUrl(string url)
         {
             BaseUrl = url;
+            _client?.Dispose();
+            _client = null;
         }
 
         protected RestClient Client()
         {
-            var options = new RestClientOptions(BaseUrl)
+            if (_client == null)
             {
-                ConfigureMessageHandler = handler =>
+                var options = new RestClientOptions(BaseUrl)
                 {
-                    if (handler is HttpClientHandler httpHandler)
-                    {
-                        httpHandler.CookieContainer = Cookies;
-                    }
+                    CookieContainer = Cookies
+                };
 
-                    return handler;
-                }
-            };
+                _client = new RestClient(options);
+            }
 
-            return new RestClient(options);
+            return _client;
         }
     }
 }

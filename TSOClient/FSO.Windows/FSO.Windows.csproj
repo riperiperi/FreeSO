@@ -16,6 +16,7 @@
     <ApplicationIcon>fso.ico</ApplicationIcon>
     <PublishReadyToRun>true</PublishReadyToRun>
     <TieredPGO>true</TieredPGO>
+    <Deterministic>true</Deterministic>
   </PropertyGroup>
 
   <ItemGroup>
@@ -41,12 +42,13 @@
   </ItemGroup>
 
   <ItemGroup>
-    <PackageReference Include="MonoGame.Framework.DesktopGL" Version="3.8.4" />
-    <PackageReference Include="MonoGame.Framework.WindowsDX" Version="3.8.4" />
+    <PackageReference Include="MonoGame.Framework.DesktopGL" Version="3.8.5-preview.2" />
+    <PackageReference Include="MonoGame.Framework.WindowsDX" Version="3.8.5-preview.2" />
     <PackageReference Include="System.Speech" Version="9.0.9" />
   </ItemGroup>
 
   <ItemGroup>
+    <ProjectReference Include="..\FSO.Patcher\FSO.Patcher.csproj" />
     <ProjectReference Include="..\tso.client\FSO.Client.csproj" />
     <ProjectReference Include="..\tso.common\FSO.Common.csproj" />
   </ItemGroup>
@@ -56,21 +58,30 @@
     <NuGetGlobalPackages Condition=" '$(OS)' != 'Windows_NT' ">$(HOME)/.nuget/packages</NuGetGlobalPackages>
   </PropertyGroup>
 
+  <PropertyGroup Condition="'$(GITHUB_ACTIONS)' == 'true'">
+    <ContinuousIntegrationBuild>true</ContinuousIntegrationBuild>
+  </PropertyGroup>
+
   <Target Name="CopyMonoGameDLLs" AfterTargets="Build">
     <!-- Remove root MonoGame.Framework.dll if it exists -->
     <Delete Files="$(OutputPath)MonoGame.Framework.dll" ContinueOnError="true" />
 
     <MakeDir Directories="$(OutputPath)Monogame\Windows" />
     <ItemGroup>
-      <MGWindowsDX Include="$(NuGetGlobalPackages)\monogame.framework.windowsdx\3.8.4\lib\**\MonoGame.Framework.dll" />
+      <MGWindowsDX Include="$(NuGetGlobalPackages)\monogame.framework.windowsdx\3.8.5-preview.2\lib\**\MonoGame.Framework.dll" />
     </ItemGroup>
     <Copy SourceFiles="@(MGWindowsDX)" DestinationFolder="$(OutputPath)Monogame\Windows" SkipUnchangedFiles="true" />
 
     <MakeDir Directories="$(OutputPath)Monogame\WindowsGL" />
     <ItemGroup>
-      <MGDesktopGL Include="$(NuGetGlobalPackages)\monogame.framework.desktopgl\3.8.4\lib\**\MonoGame.Framework.dll" />
+      <MGDesktopGL Include="$(NuGetGlobalPackages)\monogame.framework.desktopgl\3.8.5-preview.2\lib\**\MonoGame.Framework.dll" />
     </ItemGroup>
     <Copy SourceFiles="@(MGDesktopGL)" DestinationFolder="$(OutputPath)Monogame\WindowsGL" SkipUnchangedFiles="true" />
+  </Target>
+
+  <Target Name="RestoreDotnetTools" BeforeTargets="Restore">
+    <Message Text="Restoring dotnet tools" Importance="High" />
+    <Exec Command="dotnet tool restore" />
   </Target>
 
   <ItemGroup>

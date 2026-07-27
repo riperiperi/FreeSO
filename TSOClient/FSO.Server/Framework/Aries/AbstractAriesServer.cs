@@ -39,12 +39,13 @@ namespace FSO.Server.Framework.Aries
         private int TotalConnectionCount;
         private int MigrationCount;
 
-        private List<IAriesSessionInterceptor> _SessionInterceptors = new List<IAriesSessionInterceptor>();
+        private List<IAriesSessionInterceptor> _SessionInterceptors = [];
+        private List<IDisposable> _DisposableHandlers = [];
 
         public int UnexpectedDisconnectWaitSeconds = 0;
         public bool TimeoutIfNoAuth;
 
-        protected virtual RequestClientSessionArchive ArchiveHandshake => null;
+        protected virtual RequestClientSessionArchive ArchiveHandshake(IoSession session) => null;
 
         public AbstractAriesServer(AbstractAriesServerConfig config, IKernel kernel)
         {
@@ -177,8 +178,15 @@ namespace FSO.Server.Framework.Aries
             {
                 var handlerInstance = Kernel.Get(handler);
                 _Router.AddHandlers(handlerInstance);
-                if(handlerInstance is IAriesSessionInterceptor){
-                    _SessionInterceptors.Add((IAriesSessionInterceptor)handlerInstance);
+
+                if (handlerInstance is IAriesSessionInterceptor interceptor)
+                {
+                    _SessionInterceptors.Add(interceptor);
+                }
+
+                if (handlerInstance is IDisposable disposable)
+                {
+                    _DisposableHandlers.Add(disposable);
                 }
             }
         }
@@ -203,7 +211,7 @@ namespace FSO.Server.Framework.Aries
             if (TimeoutIfNoAuth) ariesSession.TimeoutIfNoAuth(20000);
 
             //Ask for session info
-            var handshake = ArchiveHandshake;
+            var handshake = ArchiveHandshake(session);
             if (handshake != null)
             {
                 session.Write(handshake);
@@ -431,6 +439,11 @@ namespace FSO.Server.Framework.Aries
             {
                 if (sendBye) session.Write(new ServerByePDU());
                 session.Close();
+            }
+
+            foreach (var disposable in _DisposableHandlers)
+            {
+                disposable.Dispose();
             }
 
             MarkHostDown();

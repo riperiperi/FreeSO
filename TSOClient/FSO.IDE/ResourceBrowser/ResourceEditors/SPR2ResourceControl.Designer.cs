@@ -28,218 +28,218 @@
         /// </summary>
         private void InitializeComponent()
         {
-            this.ModeCombo = new System.Windows.Forms.ComboBox();
-            this.PreviewLabel = new System.Windows.Forms.Label();
-            this.SPRBox3 = new System.Windows.Forms.PictureBox();
-            this.SPRBox2 = new System.Windows.Forms.PictureBox();
-            this.SPRBox1 = new System.Windows.Forms.PictureBox();
-            this.FrameList = new System.Windows.Forms.ListBox();
-            this.FramesLabel = new System.Windows.Forms.Label();
-            this.NewButton = new System.Windows.Forms.Button();
-            this.ImportButton = new System.Windows.Forms.Button();
-            this.ExportButton = new System.Windows.Forms.Button();
-            this.DeleteButton = new System.Windows.Forms.Button();
-            this.ExportAll = new System.Windows.Forms.Button();
-            this.ImportAll = new System.Windows.Forms.Button();
-            this.AutoZooms = new System.Windows.Forms.CheckBox();
-            this.SPRSelector = new FSO.IDE.ResourceBrowser.OBJDSelectorControl();
-            this.SheetImport = new System.Windows.Forms.Button();
-            ((System.ComponentModel.ISupportInitialize)(this.SPRBox3)).BeginInit();
-            ((System.ComponentModel.ISupportInitialize)(this.SPRBox2)).BeginInit();
-            ((System.ComponentModel.ISupportInitialize)(this.SPRBox1)).BeginInit();
-            this.SuspendLayout();
+            ModeCombo = new ComboBox();
+            PreviewLabel = new Label();
+            SPRBox3 = new PictureBox();
+            SPRBox2 = new PictureBox();
+            SPRBox1 = new PictureBox();
+            FrameList = new ListBox();
+            FramesLabel = new Label();
+            NewButton = new Button();
+            ImportButton = new Button();
+            ExportButton = new Button();
+            DeleteButton = new Button();
+            ExportAll = new Button();
+            ImportAll = new Button();
+            AutoZooms = new CheckBox();
+            SPRSelector = new OBJDSelectorControl();
+            SheetImport = new Button();
+            ((System.ComponentModel.ISupportInitialize)SPRBox3).BeginInit();
+            ((System.ComponentModel.ISupportInitialize)SPRBox2).BeginInit();
+            ((System.ComponentModel.ISupportInitialize)SPRBox1).BeginInit();
+            SuspendLayout();
             // 
             // ModeCombo
             // 
-            this.ModeCombo.Anchor = ((System.Windows.Forms.AnchorStyles)((System.Windows.Forms.AnchorStyles.Bottom | System.Windows.Forms.AnchorStyles.Left)));
-            this.ModeCombo.DropDownStyle = System.Windows.Forms.ComboBoxStyle.DropDownList;
-            this.ModeCombo.FormattingEnabled = true;
-            this.ModeCombo.Items.AddRange(new object[] {
-            "Color",
-            "Alpha",
-            "Z-Buffer"});
-            this.ModeCombo.Location = new System.Drawing.Point(3, 431);
-            this.ModeCombo.Name = "ModeCombo";
-            this.ModeCombo.Size = new System.Drawing.Size(250, 21);
-            this.ModeCombo.TabIndex = 3;
-            this.ModeCombo.SelectedIndexChanged += new System.EventHandler(this.comboBox1_SelectedIndexChanged);
+            ModeCombo.Anchor = AnchorStyles.Bottom | AnchorStyles.Left;
+            ModeCombo.DropDownStyle = ComboBoxStyle.DropDownList;
+            ModeCombo.FormattingEnabled = true;
+            ModeCombo.Items.AddRange(new object[] { "Color", "Alpha", "Z-Buffer" });
+            ModeCombo.Location = new Point(3, 431);
+            ModeCombo.Name = "ModeCombo";
+            ModeCombo.Size = new Size(250, 21);
+            ModeCombo.TabIndex = 3;
+            ModeCombo.SelectedIndexChanged += comboBox1_SelectedIndexChanged;
             // 
             // PreviewLabel
             // 
-            this.PreviewLabel.Anchor = ((System.Windows.Forms.AnchorStyles)((System.Windows.Forms.AnchorStyles.Bottom | System.Windows.Forms.AnchorStyles.Left)));
-            this.PreviewLabel.AutoSize = true;
-            this.PreviewLabel.Location = new System.Drawing.Point(3, 21);
-            this.PreviewLabel.Name = "PreviewLabel";
-            this.PreviewLabel.Size = new System.Drawing.Size(48, 13);
-            this.PreviewLabel.TabIndex = 4;
-            this.PreviewLabel.Text = "Preview:";
+            PreviewLabel.Anchor = AnchorStyles.Bottom | AnchorStyles.Left;
+            PreviewLabel.AutoSize = true;
+            PreviewLabel.Location = new Point(3, 21);
+            PreviewLabel.Name = "PreviewLabel";
+            PreviewLabel.Size = new Size(49, 13);
+            PreviewLabel.TabIndex = 4;
+            PreviewLabel.Text = "Preview:";
             // 
             // SPRBox3
             // 
-            this.SPRBox3.Anchor = ((System.Windows.Forms.AnchorStyles)((System.Windows.Forms.AnchorStyles.Bottom | System.Windows.Forms.AnchorStyles.Left)));
-            this.SPRBox3.BorderStyle = System.Windows.Forms.BorderStyle.FixedSingle;
-            this.SPRBox3.Location = new System.Drawing.Point(219, 325);
-            this.SPRBox3.Name = "SPRBox3";
-            this.SPRBox3.Size = new System.Drawing.Size(34, 100);
-            this.SPRBox3.TabIndex = 2;
-            this.SPRBox3.TabStop = false;
+            SPRBox3.Anchor = AnchorStyles.Bottom | AnchorStyles.Left;
+            SPRBox3.BorderStyle = BorderStyle.FixedSingle;
+            SPRBox3.Location = new Point(219, 325);
+            SPRBox3.Name = "SPRBox3";
+            SPRBox3.Size = new Size(34, 100);
+            SPRBox3.SizeMode = PictureBoxSizeMode.Zoom;
+            SPRBox3.TabIndex = 2;
+            SPRBox3.TabStop = false;
             // 
             // SPRBox2
             // 
-            this.SPRBox2.Anchor = ((System.Windows.Forms.AnchorStyles)((System.Windows.Forms.AnchorStyles.Bottom | System.Windows.Forms.AnchorStyles.Left)));
-            this.SPRBox2.BorderStyle = System.Windows.Forms.BorderStyle.FixedSingle;
-            this.SPRBox2.Location = new System.Drawing.Point(145, 229);
-            this.SPRBox2.Name = "SPRBox2";
-            this.SPRBox2.Size = new System.Drawing.Size(68, 196);
-            this.SPRBox2.TabIndex = 1;
-            this.SPRBox2.TabStop = false;
+            SPRBox2.Anchor = AnchorStyles.Bottom | AnchorStyles.Left;
+            SPRBox2.BorderStyle = BorderStyle.FixedSingle;
+            SPRBox2.Location = new Point(145, 229);
+            SPRBox2.Name = "SPRBox2";
+            SPRBox2.Size = new Size(68, 196);
+            SPRBox2.SizeMode = PictureBoxSizeMode.Zoom;
+            SPRBox2.TabIndex = 1;
+            SPRBox2.TabStop = false;
             // 
             // SPRBox1
             // 
-            this.SPRBox1.Anchor = ((System.Windows.Forms.AnchorStyles)((System.Windows.Forms.AnchorStyles.Bottom | System.Windows.Forms.AnchorStyles.Left)));
-            this.SPRBox1.BorderStyle = System.Windows.Forms.BorderStyle.FixedSingle;
-            this.SPRBox1.Location = new System.Drawing.Point(3, 37);
-            this.SPRBox1.Name = "SPRBox1";
-            this.SPRBox1.Size = new System.Drawing.Size(136, 388);
-            this.SPRBox1.TabIndex = 0;
-            this.SPRBox1.TabStop = false;
+            SPRBox1.Anchor = AnchorStyles.Bottom | AnchorStyles.Left;
+            SPRBox1.BorderStyle = BorderStyle.FixedSingle;
+            SPRBox1.Location = new Point(3, 37);
+            SPRBox1.Name = "SPRBox1";
+            SPRBox1.Size = new Size(136, 388);
+            SPRBox1.SizeMode = PictureBoxSizeMode.Zoom;
+            SPRBox1.TabIndex = 0;
+            SPRBox1.TabStop = false;
             // 
             // FrameList
             // 
-            this.FrameList.FormattingEnabled = true;
-            this.FrameList.IntegralHeight = false;
-            this.FrameList.Location = new System.Drawing.Point(269, 37);
-            this.FrameList.Name = "FrameList";
-            this.FrameList.Size = new System.Drawing.Size(149, 305);
-            this.FrameList.TabIndex = 5;
-            this.FrameList.SelectedIndexChanged += new System.EventHandler(this.FrameList_SelectedIndexChanged);
+            FrameList.FormattingEnabled = true;
+            FrameList.IntegralHeight = false;
+            FrameList.Location = new Point(269, 37);
+            FrameList.Name = "FrameList";
+            FrameList.Size = new Size(149, 305);
+            FrameList.TabIndex = 5;
+            FrameList.SelectedIndexChanged += FrameList_SelectedIndexChanged;
             // 
             // FramesLabel
             // 
-            this.FramesLabel.AutoSize = true;
-            this.FramesLabel.Location = new System.Drawing.Point(266, 21);
-            this.FramesLabel.Name = "FramesLabel";
-            this.FramesLabel.Size = new System.Drawing.Size(55, 13);
-            this.FramesLabel.TabIndex = 6;
-            this.FramesLabel.Text = "Rotations:";
+            FramesLabel.AutoSize = true;
+            FramesLabel.Location = new Point(266, 21);
+            FramesLabel.Name = "FramesLabel";
+            FramesLabel.Size = new Size(60, 13);
+            FramesLabel.TabIndex = 6;
+            FramesLabel.Text = "Rotations:";
             // 
             // NewButton
             // 
-            this.NewButton.Location = new System.Drawing.Point(424, 37);
-            this.NewButton.Name = "NewButton";
-            this.NewButton.Size = new System.Drawing.Size(75, 23);
-            this.NewButton.TabIndex = 7;
-            this.NewButton.Text = "New";
-            this.NewButton.UseVisualStyleBackColor = true;
-            this.NewButton.Click += new System.EventHandler(this.NewButton_Click);
+            NewButton.Location = new Point(424, 37);
+            NewButton.Name = "NewButton";
+            NewButton.Size = new Size(75, 23);
+            NewButton.TabIndex = 7;
+            NewButton.Text = "New";
+            NewButton.UseVisualStyleBackColor = true;
+            NewButton.Click += NewButton_Click;
             // 
             // ImportButton
             // 
-            this.ImportButton.Location = new System.Drawing.Point(424, 66);
-            this.ImportButton.Name = "ImportButton";
-            this.ImportButton.Size = new System.Drawing.Size(75, 23);
-            this.ImportButton.TabIndex = 8;
-            this.ImportButton.Text = "Import";
-            this.ImportButton.UseVisualStyleBackColor = true;
-            this.ImportButton.Click += new System.EventHandler(this.ImportButton_Click);
+            ImportButton.Location = new Point(424, 66);
+            ImportButton.Name = "ImportButton";
+            ImportButton.Size = new Size(75, 23);
+            ImportButton.TabIndex = 8;
+            ImportButton.Text = "Import";
+            ImportButton.UseVisualStyleBackColor = true;
+            ImportButton.Click += ImportButton_Click;
             // 
             // ExportButton
             // 
-            this.ExportButton.Location = new System.Drawing.Point(424, 95);
-            this.ExportButton.Name = "ExportButton";
-            this.ExportButton.Size = new System.Drawing.Size(75, 23);
-            this.ExportButton.TabIndex = 9;
-            this.ExportButton.Text = "Export";
-            this.ExportButton.UseVisualStyleBackColor = true;
-            this.ExportButton.Click += new System.EventHandler(this.ExportButton_Click);
+            ExportButton.Location = new Point(424, 95);
+            ExportButton.Name = "ExportButton";
+            ExportButton.Size = new Size(75, 23);
+            ExportButton.TabIndex = 9;
+            ExportButton.Text = "Export";
+            ExportButton.UseVisualStyleBackColor = true;
+            ExportButton.Click += ExportButton_Click;
             // 
             // DeleteButton
             // 
-            this.DeleteButton.Location = new System.Drawing.Point(424, 124);
-            this.DeleteButton.Name = "DeleteButton";
-            this.DeleteButton.Size = new System.Drawing.Size(75, 23);
-            this.DeleteButton.TabIndex = 10;
-            this.DeleteButton.Text = "Delete";
-            this.DeleteButton.UseVisualStyleBackColor = true;
-            this.DeleteButton.Click += new System.EventHandler(this.DeleteButton_Click);
+            DeleteButton.Location = new Point(424, 124);
+            DeleteButton.Name = "DeleteButton";
+            DeleteButton.Size = new Size(75, 23);
+            DeleteButton.TabIndex = 10;
+            DeleteButton.Text = "Delete";
+            DeleteButton.UseVisualStyleBackColor = true;
+            DeleteButton.Click += DeleteButton_Click;
             // 
             // ExportAll
             // 
-            this.ExportAll.Location = new System.Drawing.Point(269, 377);
-            this.ExportAll.Name = "ExportAll";
-            this.ExportAll.Size = new System.Drawing.Size(149, 23);
-            this.ExportAll.TabIndex = 11;
-            this.ExportAll.Text = "Export All";
-            this.ExportAll.UseVisualStyleBackColor = true;
-            this.ExportAll.Click += new System.EventHandler(this.ExportAll_Click);
+            ExportAll.Location = new Point(269, 377);
+            ExportAll.Name = "ExportAll";
+            ExportAll.Size = new Size(149, 23);
+            ExportAll.TabIndex = 11;
+            ExportAll.Text = "Export All";
+            ExportAll.UseVisualStyleBackColor = true;
+            ExportAll.Click += ExportAll_Click;
             // 
             // ImportAll
             // 
-            this.ImportAll.Location = new System.Drawing.Point(269, 348);
-            this.ImportAll.Name = "ImportAll";
-            this.ImportAll.Size = new System.Drawing.Size(149, 23);
-            this.ImportAll.TabIndex = 12;
-            this.ImportAll.Text = "Import All";
-            this.ImportAll.UseVisualStyleBackColor = true;
-            this.ImportAll.Click += new System.EventHandler(this.ImportAll_Click);
+            ImportAll.Location = new Point(269, 348);
+            ImportAll.Name = "ImportAll";
+            ImportAll.Size = new Size(149, 23);
+            ImportAll.TabIndex = 12;
+            ImportAll.Text = "Import All";
+            ImportAll.UseVisualStyleBackColor = true;
+            ImportAll.Click += ImportAll_Click;
             // 
             // AutoZooms
             // 
-            this.AutoZooms.AutoSize = true;
-            this.AutoZooms.Checked = true;
-            this.AutoZooms.CheckState = System.Windows.Forms.CheckState.Checked;
-            this.AutoZooms.Location = new System.Drawing.Point(250, 0);
-            this.AutoZooms.Name = "AutoZooms";
-            this.AutoZooms.Size = new System.Drawing.Size(249, 17);
-            this.AutoZooms.TabIndex = 13;
-            this.AutoZooms.Text = "Automatically Generate Medium and Far Zooms";
-            this.AutoZooms.UseVisualStyleBackColor = true;
-            this.AutoZooms.CheckedChanged += new System.EventHandler(this.AutoZooms_CheckedChanged);
+            AutoZooms.AutoSize = true;
+            AutoZooms.Checked = true;
+            AutoZooms.CheckState = CheckState.Checked;
+            AutoZooms.Location = new Point(250, 0);
+            AutoZooms.Name = "AutoZooms";
+            AutoZooms.Size = new Size(269, 17);
+            AutoZooms.TabIndex = 13;
+            AutoZooms.Text = "Automatically Generate Medium and Far Zooms";
+            AutoZooms.UseVisualStyleBackColor = true;
+            AutoZooms.CheckedChanged += AutoZooms_CheckedChanged;
             // 
             // SPRSelector
             // 
-            this.SPRSelector.Location = new System.Drawing.Point(269, 406);
-            this.SPRSelector.Name = "SPRSelector";
-            this.SPRSelector.Size = new System.Drawing.Size(230, 46);
-            this.SPRSelector.TabIndex = 14;
+            SPRSelector.Location = new Point(269, 406);
+            SPRSelector.Name = "SPRSelector";
+            SPRSelector.Size = new Size(230, 46);
+            SPRSelector.TabIndex = 14;
             // 
             // SheetImport
             // 
-            this.SheetImport.Location = new System.Drawing.Point(424, 348);
-            this.SheetImport.Name = "SheetImport";
-            this.SheetImport.Size = new System.Drawing.Size(75, 52);
-            this.SheetImport.TabIndex = 15;
-            this.SheetImport.Text = "Import from TGA Sheet";
-            this.SheetImport.UseVisualStyleBackColor = true;
-            this.SheetImport.Click += new System.EventHandler(this.SheetImport_Click);
+            SheetImport.Location = new Point(424, 348);
+            SheetImport.Name = "SheetImport";
+            SheetImport.Size = new Size(75, 52);
+            SheetImport.TabIndex = 15;
+            SheetImport.Text = "Import from TGA Sheet";
+            SheetImport.UseVisualStyleBackColor = true;
+            SheetImport.Click += SheetImport_Click;
             // 
             // SPR2ResourceControl
             // 
-            this.AutoScaleDimensions = new System.Drawing.SizeF(6F, 13F);
-            this.AutoScaleMode = System.Windows.Forms.AutoScaleMode.Font;
-            this.Controls.Add(this.SheetImport);
-            this.Controls.Add(this.SPRSelector);
-            this.Controls.Add(this.AutoZooms);
-            this.Controls.Add(this.ImportAll);
-            this.Controls.Add(this.ExportAll);
-            this.Controls.Add(this.DeleteButton);
-            this.Controls.Add(this.ExportButton);
-            this.Controls.Add(this.ImportButton);
-            this.Controls.Add(this.NewButton);
-            this.Controls.Add(this.FramesLabel);
-            this.Controls.Add(this.FrameList);
-            this.Controls.Add(this.PreviewLabel);
-            this.Controls.Add(this.ModeCombo);
-            this.Controls.Add(this.SPRBox3);
-            this.Controls.Add(this.SPRBox2);
-            this.Controls.Add(this.SPRBox1);
-            this.Name = "SPR2ResourceControl";
-            this.Size = new System.Drawing.Size(502, 455);
-            ((System.ComponentModel.ISupportInitialize)(this.SPRBox3)).EndInit();
-            ((System.ComponentModel.ISupportInitialize)(this.SPRBox2)).EndInit();
-            ((System.ComponentModel.ISupportInitialize)(this.SPRBox1)).EndInit();
-            this.ResumeLayout(false);
-            this.PerformLayout();
+            AutoScaleDimensions = new SizeF(96F, 96F);
+            AutoScaleMode = AutoScaleMode.Dpi;
+            Controls.Add(SheetImport);
+            Controls.Add(SPRSelector);
+            Controls.Add(AutoZooms);
+            Controls.Add(ImportAll);
+            Controls.Add(ExportAll);
+            Controls.Add(DeleteButton);
+            Controls.Add(ExportButton);
+            Controls.Add(ImportButton);
+            Controls.Add(NewButton);
+            Controls.Add(FramesLabel);
+            Controls.Add(FrameList);
+            Controls.Add(PreviewLabel);
+            Controls.Add(ModeCombo);
+            Controls.Add(SPRBox3);
+            Controls.Add(SPRBox2);
+            Controls.Add(SPRBox1);
+            Name = "SPR2ResourceControl";
+            Size = new Size(502, 455);
+            ((System.ComponentModel.ISupportInitialize)SPRBox3).EndInit();
+            ((System.ComponentModel.ISupportInitialize)SPRBox2).EndInit();
+            ((System.ComponentModel.ISupportInitialize)SPRBox1).EndInit();
+            ResumeLayout(false);
+            PerformLayout();
 
         }
 

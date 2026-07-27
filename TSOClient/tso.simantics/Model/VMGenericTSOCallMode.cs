@@ -84,6 +84,7 @@
         FSOIsStackObjectTradable = 138,
         FSOSetStackObjectTransient = 139,
         FSOIsStackObjectPendingRoommateDeletion = 140,
-        FSOIsStackObjectAllowedByLotCategory = 141
+        FSOIsStackObjectAllowedByLotCategory = 141,
+        FSOShowCheckTreeTooltipTemp0Temp1 = 142
     }
 }

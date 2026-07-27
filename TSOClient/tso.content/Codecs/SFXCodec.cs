@@ -1,5 +1,4 @@
 ﻿using FSO.Content.Framework;
-using System.IO;
 using FSO.Files.XA;
 using FSO.Files.UTK;
 

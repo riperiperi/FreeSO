@@ -1,6 +1,7 @@
 ﻿using FSO.Client.Utils;
 using FSO.Client.Utils.GameLocator;
 using FSO.Common;
+using FSO.Files.FSO;
 using FSO.UI;
 using System.Reflection;
 
@@ -11,6 +12,8 @@ namespace FSO.Client
         public bool UseDX { get; set; }
 
         public static Action<string> ShowDialog = DefaultShowDialog;
+
+        public static Action<nint, Action<string>> RegisterDragCallback = (window, func) => { };
 
         public static void DefaultShowDialog(string text)
         {
@@ -86,6 +89,11 @@ namespace FSO.Client
                                 break;
                             case "3d":
                                 FSOEnvironment.Enable3D = true;
+                                FSOEnvironment.Default3D = true;
+                                break;
+                            case "2d":
+                                FSOEnvironment.Enable3D = false;
+                                FSOEnvironment.Default3D = false;
                                 break;
                             case "touch":
                                 FSOEnvironment.SoftwareKeyboard = true;
@@ -109,15 +117,21 @@ namespace FSO.Client
 
             UseDX = MonogameLinker.Link(useDX);
 
-            var path = gameLocator.FindTheSimsOnline();
+            var settingsPath = GlobalSettings.Default.StartupPath;
+
+            var path = ILocator.ValidPath(settingsPath) ? settingsPath : gameLocator.FindTheSimsOnline();
+
+            if (!Path.EndsInDirectorySeparator(path))
+            {
+                path += Path.DirectorySeparatorChar;
+            }
 
             if (path != null)
             {
                 //check if this path has tso in it. tuning.dat should be a good indication.
-                if (!File.Exists(Path.Combine(path, "tuning.dat")))
+                if (!ILocator.ValidPath(path))
                 {
-                    ShowDialog("The Sims Online appears to be missing. The game expects TSO at directory '" + path + "', but some core files are missing from that folder. If you know you installed TSO into a different directory, please move it into the directory specified.");
-                    return false;
+                    FSOEnvironment.MissingTSO = true;
                 }
 
                 FSOEnvironment.Args = string.Join(" ", args);
@@ -170,19 +184,7 @@ namespace FSO.Client
 
         private string GetClientVersion()
         {
-            string ExeDir = GlobalSettings.Default.StartupPath;
-
-            if (File.Exists("version.txt"))
-            {
-                using (StreamReader Reader = new StreamReader(File.Open("version.txt", FileMode.Open, FileAccess.Read, FileShare.Read)))
-                {
-                    return Reader.ReadLine();
-                }
-            }
-            else
-            {
-                return "(?)";
-            }
+            return FSOVersionInfo.Current.id;
         }
     }
 }

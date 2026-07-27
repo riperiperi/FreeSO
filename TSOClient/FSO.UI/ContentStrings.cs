@@ -5,6 +5,7 @@ using System.Text;
 using System.IO;
 using FSO.Files.Formats.IFF;
 using FSO.Files.Formats.IFF.Chunks;
+using FSO.Common;
 
 namespace FSO.Client.GameContent
 {
@@ -22,7 +23,7 @@ namespace FSO.Client.GameContent
             {
                 LoadTS1();
             }
-            else
+            else if (!FSOEnvironment.MissingTSO)
             {
                 var tsodir = Path.Combine(GlobalSettings.Default.StartupPath, @"gamedata/uitext/");
 
@@ -142,6 +143,56 @@ namespace FSO.Client.GameContent
             }
         }
 
+        public static Dictionary<string, string> ReadTable(string file)
+        {
+            var tableData = new Dictionary<string, string>();
+
+            var contentLines = File.ReadAllLines(file).ToList();
+            /** Expected pattern: {digit} ^ {TXT} ^ **/
+
+            var io = 0;
+            var pos = 0;
+            var index = 0;
+
+            for (int i = 0; i < contentLines.Count; i++)
+            {
+                var line = contentLines[i];
+                if (line.StartsWith("//"))
+                {
+                    /** Remove comment **/
+                    contentLines.RemoveAt(i);
+                    i--;
+                }
+            }
+
+            var content = String.Join("\r\n", contentLines.ToArray());
+
+            while ((pos = content.IndexOf("^", io)) != -1)
+            {
+                var id = content.Substring(io, pos - io).Trim();
+                var lastLB = id.LastIndexOf("\r\n");
+                if (lastLB != -1)
+                {
+                    id = id.Substring(lastLB + 2).Trim();
+                }
+                var endPOW = content.IndexOf("^", pos + 1);
+                if (endPOW == -1) { break; }
+
+                pos++;
+                var strValue = content.Substring(pos, endPOW - pos);
+                io = endPOW + 1;
+                if (id.Length == 0)
+                {
+                    id = index.ToString();
+                }
+
+                tableData[id] = strValue;
+                index++;
+            }
+
+            return tableData;
+        }
+
         /// <summary>
         /// Loads all string tables from a specified directory.
         /// </summary>
@@ -164,52 +215,8 @@ namespace FSO.Client.GameContent
                 if (second_ == -1) return;
 
                 tableID = tableID.Substring(1, second_ - 1);
-
-                var tableData = new Dictionary<string, string>();
-
-                var contentLines = File.ReadAllLines(file).ToList();
-                /** Expected pattern: {digit} ^ {TXT} ^ **/
-
-                var io = 0;
-                var pos = 0;
-                var index = 0;
-
-                for (int i = 0; i < contentLines.Count; i++){
-                    var line = contentLines[i];
-                    if (line.StartsWith("//"))
-                    {
-                        /** Remove comment **/
-                        contentLines.RemoveAt(i);
-                        i--;
-                    }
-                }
-
-                var content = String.Join("\r\n", contentLines.ToArray());
-
-                while ((pos = content.IndexOf("^", io)) != -1)
-                {
-                    var id = content.Substring(io, pos - io).Trim();
-                    var lastLB = id.LastIndexOf("\r\n");
-                    if (lastLB != -1)
-                    {
-                        id = id.Substring(lastLB + 2).Trim();
-                    }
-                    var endPOW = content.IndexOf("^", pos + 1);
-                    if (endPOW == -1) { break; }
-
-                    pos++;
-                    var strValue = content.Substring(pos, endPOW - pos);
-                    io = endPOW + 1;
-                    if (id.Length == 0)
-                    {
-                        id = index.ToString();
-                    }
-
-                    tableData[id] = strValue;
-                    index++;
-                }
-
-                table[tableID] = tableData; //overwrites previous.
+                
+                table[tableID] = ReadTable(file); //overwrites previous.
             }
         }
     }

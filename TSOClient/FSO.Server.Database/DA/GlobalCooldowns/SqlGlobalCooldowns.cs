@@ -14,15 +14,15 @@ namespace FSO.Server.Database.DA.GlobalCooldowns
         {
             if (useAccount)
                 return Context.Connection.Query<DbGlobalCooldowns>("SELECT * FROM fso_global_cooldowns WHERE object_guid = @guid AND " +
-                    "user_id = @id AND category = @category", new { guid = objguid, id = avatarOrUserid, category = category }).FirstOrDefault();
+                    "user_id = @id AND category = @category", new { guid = (ulong)objguid, id = avatarOrUserid, category = category }).FirstOrDefault();
             else
                 return Context.Connection.Query<DbGlobalCooldowns>("SELECT * FROM fso_global_cooldowns WHERE object_guid = @guid AND " +
-                    "avatar_id = @id AND category = @category", new { guid = objguid, id = avatarOrUserid, category = category }).FirstOrDefault();
+                    "avatar_id = @id AND category = @category", new { guid = (ulong)objguid, id = avatarOrUserid, category = category }).FirstOrDefault();
         }
 
         public List<DbGlobalCooldowns> GetAllByObj(uint objguid)
         {
-            return Context.Connection.Query<DbGlobalCooldowns>("SELECT * FROM fso_global_cooldowns WHERE object_guid = @guid", new { guid = objguid }).ToList();
+            return Context.Connection.Query<DbGlobalCooldowns>("SELECT * FROM fso_global_cooldowns WHERE object_guid = @guid", new { guid = (ulong)objguid }).ToList();
         }
 
         public List<DbGlobalCooldowns> GetAllByAvatar(uint avatarid)
@@ -33,7 +33,7 @@ namespace FSO.Server.Database.DA.GlobalCooldowns
         public List<DbGlobalCooldowns> GetAllByObjectAndAvatar(uint objguid, uint avatarid)
         {
             return Context.Connection.Query<DbGlobalCooldowns>("SELECT * FROM fso_global_cooldowns WHERE object_guid = @guid AND " +
-                "avatar_id = @avatarid", new { guid = objguid, avatarid = avatarid }).ToList();
+                "avatar_id = @avatarid", new { guid = (ulong)objguid, avatarid = avatarid }).ToList();
         }
         public bool Create(DbGlobalCooldowns newCooldown)
         {
@@ -43,7 +43,14 @@ namespace FSO.Server.Database.DA.GlobalCooldowns
         public bool Update(DbGlobalCooldowns updatedCooldown)
         {
             return Context.Connection.Execute("UPDATE fso_global_cooldowns SET expiry = @expiry WHERE object_guid = @object_guid AND " +
-                "avatar_id = @avatar_id AND user_id = @user_id AND category = @category", updatedCooldown) > 0;
+                "avatar_id = @avatar_id AND user_id = @user_id AND category = @category", 
+                new { 
+                    updatedCooldown.category, 
+                    updatedCooldown.avatar_id, 
+                    updatedCooldown.user_id, 
+                    object_guid = (ulong)updatedCooldown.object_guid,
+                    updatedCooldown.expiry
+                }) > 0;
         }
     }
 }

@@ -73,11 +73,11 @@ namespace FSO.SimAntics
         public static bool FreeWillEnabled = true;
 
         private const long TickInterval = 33 * TimeSpan.TicksPerMillisecond;
-        public byte[][] HollowAdj;
+        public VMHollowAdjEntry[] HollowAdj;
 
         public VMContext Context { get; internal set; }
 
-        public List<VMEntity> Entities = new List<VMEntity>();
+        public VMObjectList<VMEntity> Entities = [];
         public HashSet<VMEntity> SoundEntities = new HashSet<VMEntity>();
         public short[] GlobalState;
         public VMAbstractLotState PlatformState;
@@ -132,7 +132,7 @@ namespace FSO.SimAntics
         public delegate void VMRefreshHandler();
         public delegate void VMBreakpointHandler(VMEntity entity);
         public delegate void VMEODMessageHandler(VMNetEODMessageCmd msg);
-        public delegate void VMLotSwitchHandler(uint lotId);
+        public delegate void VMLotSwitchHandler(uint lotId, LotTransitionInfo transition);
         public delegate void VMGenericEvtHandler(VMEventType type, object data);
 
         public IVMTSOGlobalLink GlobalLink
@@ -280,6 +280,11 @@ namespace FSO.SimAntics
                 forward.Normalize();
                 listener.Forward = forward;
                 Context.World.State.SimSpeed = Math.Max(0, SpeedMultiplier);
+                if (Context.World.Visible && Context.World.FrameCounter != 0)
+                {
+                    Context.Ambience.SetVolumeWithCameraInfo(Context.World.State.CameraInfo());
+                }
+                Context.Ambience.Tick(this);
             }
 
             if (LastFrameSpeed != SpeedMultiplier)
@@ -290,8 +295,16 @@ namespace FSO.SimAntics
                     allSounds.AddRange(ent.SoundThreads.Select(x => x.Sound));
                 }
 
-                if (SpeedMultiplier < 1 && SpeedMultiplier > -2 && LastFrameSpeed >= 1) allSounds.ForEach((x) => x.Pause()); 
-                else if (SpeedMultiplier >= 1 && LastFrameSpeed < 1) allSounds.ForEach((x) => x.Resume());
+                if (SpeedMultiplier < 1 && SpeedMultiplier > -2 && LastFrameSpeed >= 1)
+                {
+                    Context.Ambience.Pause();
+                    allSounds.ForEach((x) => x.Pause());
+                }
+                else if (SpeedMultiplier >= 1 && LastFrameSpeed < 1)
+                {
+                    Context.Ambience.Resume();
+                    allSounds.ForEach((x) => x.Resume());
+                }
                 LastFrameSpeed = SpeedMultiplier;
             }
 
@@ -347,7 +360,7 @@ namespace FSO.SimAntics
 
         public void CloseNet(VMCloseNetReason reason)
         {
-            if (reason == VMCloseNetReason.LeaveLot && !Ready) return;
+            if (reason == VMCloseNetReason.LeaveLot && Driver.RunningCatchup) return;
             Driver.CloseReason = reason;
             Driver.Shutdown();
         }
@@ -486,70 +499,9 @@ namespace FSO.SimAntics
         {
             entity.ObjectID = ObjectId;
             ObjectsById.Add(entity.ObjectID, entity);
-            AddToObjList(this.Entities, entity);
+            this.Entities.AddToObjList(entity);
             if (!entity.GhostImage) Context.ObjectQueries.NewObject(entity);
             ObjectId = NextObjID();
-        }
-
-        public static void AddToObjList(List<VMEntity> list, VMEntity entity)
-        {
-            if (list.Count == 0) { list.Add(entity); return; }
-            int id = entity.ObjectID;
-            int max = list.Count;
-            int min = 0;
-            while (max>min)
-            {
-                int mid = (max+min) / 2;
-                int nid = list[mid].ObjectID;
-                if (id < nid) max = mid;
-                else if (id == nid) return; //do not add dupes
-                else min = mid+1;
-            }
-            list.Insert(min, entity);
-            // list.Insert((list[min].ObjectID>id)?min:((list[max].ObjectID > id)?max:max+1), entity);
-        }
-
-        public static void DeleteFromObjList(List<VMEntity> list, VMEntity entity)
-        {
-            if (list.Count == 0) { return; }
-            int id = entity.ObjectID;
-            int max = list.Count;
-            int min = 0;
-            while (max > min)
-            {
-                int mid = (max + min) / 2;
-                int nid = list[mid].ObjectID;
-                if (id < nid) max = mid;
-                else if (id == nid)
-                {
-                    list.RemoveAt(mid); //found it
-                    return;
-                }
-                else min = mid + 1;
-            }
-            //list.RemoveAt(min);
-        }
-
-        public static int FindNextIndexInObjList(List<VMEntity> list, short targId)
-        {
-            if (list.Count == 0) return 0;
-            int count = list.Count;
-            int max = count;
-            int min = 0;
-            while (max > min)
-            {
-                int mid = (max + min) / 2;
-                int nid = list[mid].ObjectID;
-                if (targId < nid) max = mid; //target object is below us
-                else if (targId == nid)
-                {
-                    //found it. find NEXT!
-                    return mid+1;
-                }
-                else min = mid + 1; //target object is above us
-            }
-            if (min >= count) return count;
-            return list[min].ObjectID > targId ? min : min+1;
         }
 
         /// <summary>
@@ -558,10 +510,10 @@ namespace FSO.SimAntics
         /// <param name="entity">The entity to remove.</param>
         public void RemoveEntity(VMEntity entity)
         {
-            if (Entities.Contains(entity))
+            if (Entities.FindInObjList(entity) != -1)
             {
                 Context.ObjectQueries.RemoveObject(entity);
-                DeleteFromObjList(Entities, entity);
+                Entities.DeleteFromObjList(entity);
                 ObjectsById.Remove(entity.ObjectID);
                 Scheduler.DescheduleTick(entity);
                 if (entity.ObjectID < ObjectId) ObjectId = entity.ObjectID; //this id is now the smallest free object id.
@@ -663,9 +615,9 @@ namespace FSO.SimAntics
             OnEODMessage?.Invoke(msg);
         }
 
-        public void SignalLotSwitch(uint lotId)
+        public void SignalLotSwitch(uint lotId, LotTransitionInfo transition = null)
         {
-            OnRequestLotSwitch?.Invoke(lotId);
+            OnRequestLotSwitch?.Invoke(lotId, transition);
         }
 
         public void SignalGenericVMEvt(VMEventType type, object data)
@@ -679,7 +631,7 @@ namespace FSO.SimAntics
                 ObjectsById = ObjectsById, ObjectQueries = Context.ObjectQueries, RandomSeed = Context.RandomSeed };
 
             Context.ObjectQueries = new VMObjectQueries(Context);
-            Entities = new List<VMEntity>();
+            Entities = [];
             ObjectsById = new Dictionary<short, VMEntity>();
             ObjectId = 1;
 
@@ -830,7 +782,7 @@ namespace FSO.SimAntics
             }
 
             SoundEntities = new HashSet<VMEntity>();
-            Entities = new List<VMEntity>();
+            Entities = [];
             Scheduler.Reset();
             ObjectsById = new Dictionary<short, VMEntity>();
             FSOVObjTotal = input.Entities.Length;
@@ -965,7 +917,8 @@ namespace FSO.SimAntics
                     }
                 });
             }
-            
+
+            Context.Ambience.InitAutoBase(this);
             Context.UpdateTSOBuildableArea();
             Tuning = input.Tuning;
             UpdateTuning();
@@ -1004,7 +957,7 @@ namespace FSO.SimAntics
             Context.Architecture.RegenRoomMap();
             Context.RegeneratePortalInfo();
 
-            Entities = new List<VMEntity>();
+            Entities = [];
             ObjectsById = new Dictionary<short, VMEntity>();
             var includedEnts = new List<VMHollowGameObjectMarshal>();
             foreach (var ent in input.Entities)
@@ -1075,7 +1028,7 @@ namespace FSO.SimAntics
 
     public class VMSandboxRestoreState
     {
-        public List<VMEntity> Entities;
+        public VMObjectList<VMEntity> Entities;
         public Dictionary<short, VMEntity> ObjectsById;
         public short ObjectId = 1;
         public VMObjectQueries ObjectQueries;
@@ -1088,6 +1041,8 @@ namespace FSO.SimAntics
         TSOTimeout,
         TS1LotChange,
         TS1BuildBuyChange,
-        TSOUpgraded
+        TSOUpgraded,
+        TSOUserLeaveBuildBuy,
+        Resync
     }
 }

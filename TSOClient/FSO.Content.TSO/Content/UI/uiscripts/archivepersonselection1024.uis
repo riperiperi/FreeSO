@@ -28,6 +28,7 @@
 	<DefineImage "CityThumbnailBusyImage"		assetID="0x00000B8200000001"> #./uigraphics/personselection/person_select_cityhouseiconbusy.tga
 
 	<DefineImage "CancelButtonImage"			assetID="archive/archive_casbutton.png">
+	<DefineImage "AcceptButtonImage"			assetID="0x0000081C00000001"> #./uigraphics/personselection/person_edit_acceptbtn.bmp
 
 	# Strings --------------------------------------------------------------------------------------
 
@@ -242,4 +243,5 @@
 	# CAS Button -----------------------------------------------------------------------------------------------------------
 
 	<AddButton "CASButton" id=1 image="CancelButtonImage"  position=(855,142)  tooltip="NewAvatarButtonCaption">
+	<AddButton "AcceptButton" id=2 image="AcceptButtonImage"  position=(855,198)>
 <End>

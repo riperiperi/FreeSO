@@ -398,7 +398,7 @@ namespace FSO.LotView
         public Tuple<float, float> Get3DTTHeights()
         {
             if (Blueprint == null) { return new Tuple<float, float>(0, 0); }
-            var terrainHeight = (Blueprint.InterpAltitude(new Vector3(State.CenterTile, 0))) * 3;
+            var terrainHeight = (Blueprint.InterpAltitudeWithSubworlds(new Vector3(State.CenterTile, 0))) * 3;
 
             float targHeight;
 
@@ -408,7 +408,7 @@ namespace FSO.LotView
             }
             else
             {
-                targHeight = Math.Max((Blueprint.InterpAltitude(new Vector3(State.Camera.Position.X, State.Camera.Position.Z, 0) / 3) + (State.Level - 1) * 2.95f) * 3, terrainHeight);
+                targHeight = Math.Max((Blueprint.InterpAltitudeWithSubworlds(new Vector3(State.Camera.Position.X, State.Camera.Position.Z, 0) / 3) + (State.Level - 1) * 2.95f) * 3, terrainHeight);
             }
 
             return new Tuple<float, float>(terrainHeight, targHeight);
@@ -521,7 +521,14 @@ namespace FSO.LotView
             }
             else
             {
-                State.CenterTile = new Vector2(pelvisCenter.X, pelvisCenter.Y);
+                if (!isFirstPerson)
+                {
+                    State.CenterTile = new Vector2(pelvisCenter.X, pelvisCenter.Y);
+                }
+                else
+                {
+                    State.Cameras.CameraDirect.PreDraw(this);
+                }
 
                 State.Cameras.CameraDirect.FirstPersonAvatar = isFirstPerson ? comp as AvatarComponent : null;
                 if (isFirstPerson && State.Cameras.ActiveType == CameraControllerType.Direct)
@@ -612,7 +619,7 @@ namespace FSO.LotView
             {
                 if (FSOEnvironment.Enable3D && CanSwitchCameras)
                 {
-                    if (state.NewKeys.Contains(Microsoft.Xna.Framework.Input.Keys.Tab))
+                    if (state.NewKeys.Contains(Microsoft.Xna.Framework.Input.Keys.Tab) && state.InputManager.GetFocus() == null)
                     {
                         ToggleFirstPerson(CameraControllerType.FirstPerson);
                     }
@@ -687,8 +694,9 @@ namespace FSO.LotView
             if (HasInit == false) { return; }
 
             FrameCounter++;
-            if (FrameCounter < LastCacheClear + 60*60)
+            if (FrameCounter > LastCacheClear + 60*60)
             {
+                LastCacheClear = FrameCounter;
                 State._2D.ClearTextureCache();
             }
             if (!UseBackbuffer)
@@ -820,6 +828,12 @@ namespace FSO.LotView
             if (level == -1) level = State.Level;
             var ray = State.CameraRayAtScreenPos(pos, level);
 
+            return EstTileAtPosWithScroll(ray, level).Value;
+        }
+
+        public Vector2? EstTileAtPosWithScroll(Ray ray, sbyte level, bool canFail = false)
+        {
+            Ray baseRay = ray;
             var baseBox = new BoundingBox(new Vector3(0, -5000, 0), new Vector3(Blueprint.Width * 3, 5000, Blueprint.Height * 3));
             if (baseBox.Contains(ray.Position) != ContainmentType.Contains)
             {
@@ -893,6 +907,29 @@ namespace FSO.LotView
                 if (iteration++ > 1000) break;
             }
 
+            // Failed to cast a ray into the main world. If there are subworlds, try there.
+            if (Blueprint.SubWorlds.Count > 0)
+            {
+                foreach (var nextWorld in Blueprint.SubWorlds)
+                {
+                    Ray newRay = baseRay;
+                    newRay.Position -= new Vector3(nextWorld.GlobalPosition.X * -3, nextWorld.Blueprint.BaseAlt * nextWorld.Blueprint.TerrainFactor * -3, nextWorld.GlobalPosition.Y * -3);
+                    var subPos = nextWorld.EstTileAtPosWithScroll(newRay, level, true);
+
+                    if (subPos == null)
+                    {
+                        continue;
+                    }
+
+                    return subPos.Value - nextWorld.GlobalPosition;
+                }
+            }
+
+            if (canFail)
+            {
+                return null;
+            }
+
             //fall back to base positioning
             var bplane = new Plane(new Vector3(0, 0, 0), new Vector3(Blueprint.Width * 3, 0, 0), new Vector3(0, 0, Blueprint.Height * 3));
             if (ray.Position.Y < 0)
@@ -910,25 +947,42 @@ namespace FSO.LotView
             return new Vector2(0, 0);
         }
 
-        public Vector3 EstTileAtPosWithScroll3D(Vector2 pos, sbyte startFloor = -1)
+        public Vector3? EstTileAtPosWithScroll3D(Vector2 pos, sbyte startFloor = -1, bool canFail = false)
         {
+            var initialRay = State.CameraRayAtScreenPos(pos, 1);
+
+            bool pointingUp = initialRay.Direction.Y > 0;
+
             if (startFloor == -1) startFloor = State.Level;
-            for (sbyte floor = startFloor; floor > 0; floor--)
+            sbyte endFloor = 0;
+            sbyte iterator = -1;
+
+            if (pointingUp)
             {
-                var result = EstTileAtPosWithScroll(pos, floor);
-                if (floor == 1 || (Blueprint.TileInbounds(result) && Blueprint.GetFloor((short)result.X, (short)result.Y, floor).Pattern != 0))
+                (startFloor, endFloor) = ((sbyte)(endFloor + 1), (sbyte)(startFloor + 1));
+                iterator = 1;
+            }
+
+            for (sbyte floor = startFloor; floor != endFloor; floor += iterator)
+            {
+                var ray = State.CameraRayAtScreenPos(pos, floor);
+                var result = EstTileAtPosWithScroll(ray, floor, true);
+                if (result.HasValue && (floor == 1 || (Blueprint.TileInbounds(result.Value) && Blueprint.GetFloor((short)result.Value.X, (short)result.Value.Y, floor).Pattern != 0)))
                 {
-                    return new Vector3(result, floor);
+                    return new Vector3(result.Value, floor);
                 }
             }
+
+            if (canFail) return null;
+
             return new Vector3(EstTileAtPosWithScroll(pos), State.Level);
         }
 
         public Vector3 EstTileAtPosWithScrollHeight(Vector2 pos, sbyte startFloor = -1)
         {
-            var result = EstTileAtPosWithScroll3D(pos, startFloor);
+            var result = EstTileAtPosWithScroll3D(pos, startFloor).Value;
 
-            float altitude = Blueprint.TileInbounds(new Vector2(result.X, result.Y)) ? Blueprint.InterpAltitude(result) : 0;
+            float altitude = Blueprint.InterpAltitudeWithSubworlds(result);
 
             result.Z = altitude + (result.Z-1) * 2.95f;
             return result;
@@ -1060,9 +1114,9 @@ namespace FSO.LotView
             return new ObjectComponent(obj);
         }
 
-        public virtual SubWorldComponent MakeSubWorld(GraphicsDevice gd)
+        public virtual SubWorldComponent MakeSubWorld(GraphicsDevice gd, int index)
         {
-            return new SubWorldComponent(gd);
+            return new SubWorldComponent(gd, index);
         }
 
         public BoundingBox[] SkyBounds;

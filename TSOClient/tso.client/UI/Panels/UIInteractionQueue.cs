@@ -10,6 +10,7 @@ using FSO.HIT;
 using FSO.SimAntics.NetPlay.Model.Commands;
 using FSO.Client.UI.Controls;
 using FSO.Common;
+using FSO.UI.Utils;
 
 namespace FSO.Client.UI.Panels
 {
@@ -244,6 +245,17 @@ namespace FSO.Client.UI.Panels
         public void UpdateInteractionIcon()
         {
             UI.Icon = IconOwner?.GetIcon(GameFacade.GraphicsDevice, 0);
+
+            if (UI.Icon == null)
+            {
+                uint guid = IconOwner.GroupDefinition.GUID;
+                UI.Icon = Content.Content.Get().WorldObjects.GetOrAddGeneratedIcon(guid, () => CatThumbGenerator.GenerateThumb(guid));
+            }
+            else
+            {
+                // This lets the UI know it can delete the texture when it's removed. (if it's not managed by another cache)
+                UI.Icon.Tag ??= UI;
+            }
         }
 
         public void UpdateInteractionResult()

@@ -39,14 +39,14 @@ namespace FSO.SimAntics.Engine.Primitives
                 }
                 else if (operand.Destination == 0)
                 {
-                    var result = context.Thread.RunInMyStack((VMRoutine)tree.bhav, context.StackObject.Object, context.Thread.TempRegisters, context.StackObject)
+                    var result = context.Thread.RunInMyStack((VMRoutine)tree.bhav, context.StackObject.Object, context.Thread.TempRegisters.AsSpan()[..4].ToArray(), context.StackObject)
                         ? VMPrimitiveExitCode.GOTO_TRUE : VMPrimitiveExitCode.GOTO_FALSE;
                     return (context.VM.Aborting) ? VMPrimitiveExitCode.ERROR : result;
                     //run in my stack
                 }
                 else
                 {
-                    var result = context.StackObject.Thread.RunInMyStack((VMRoutine)tree.bhav, context.StackObject.Object, context.Thread.TempRegisters, context.StackObject)
+                    var result = context.StackObject.Thread.RunInMyStack((VMRoutine)tree.bhav, context.StackObject.Object, context.Thread.TempRegisters.AsSpan()[..4].ToArray(), context.StackObject)
                         ? VMPrimitiveExitCode.GOTO_TRUE : VMPrimitiveExitCode.GOTO_FALSE;
                     return (context.VM.Aborting) ? VMPrimitiveExitCode.ERROR : result;
                     //run in stack obj's stack

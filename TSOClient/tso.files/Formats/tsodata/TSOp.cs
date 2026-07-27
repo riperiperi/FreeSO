@@ -1,4 +1,5 @@
 ﻿using DeltaQ.BsDiff;
+using FSO.Common.Utils;
 using FSO.Files.Utils;
 
 namespace TSOVersionPatcher
@@ -113,10 +114,10 @@ namespace TSOVersionPatcher
 
                     foreach (var file in sourceFiles)
                     {
-                        var destP = Path.Combine(dest, file);
+                        var destP = PathUtils.SafeCombine(dest, file);
                         Directory.CreateDirectory(Path.GetDirectoryName(destP));
 
-                        File.Copy(Path.Combine(source, file), destP);
+                        File.Copy(PathUtils.SafeCombine(source, file), destP);
                     }
                 }
 
@@ -126,8 +127,8 @@ namespace TSOVersionPatcher
                 foreach (var patch in Patches)
                 {
                     progress($"Patching {patch.FileTarget}...", fileNum / (float)total);
-                    var path = Path.Combine(source, patch.FileTarget);
-                    var dpath = Path.Combine(dest, patch.FileTarget);
+                    var path = PathUtils.SafeCombine(source, patch.FileTarget);
+                    var dpath = PathUtils.SafeCombine(dest, patch.FileTarget);
                     var data = File.ReadAllBytes(path);
                     Directory.CreateDirectory(Path.GetDirectoryName(dpath));
 
@@ -140,7 +141,7 @@ namespace TSOVersionPatcher
                 foreach (var add in Additions)
                 {
                     progress($"Adding {add.FileTarget}...", fileNum / (float)total);
-                    var dpath = Path.Combine(dest, add.FileTarget);
+                    var dpath = PathUtils.SafeCombine(dest, add.FileTarget);
                     Directory.CreateDirectory(Path.GetDirectoryName(dpath));
 
                     Str.Seek(add.Offset, SeekOrigin.Begin);
@@ -154,7 +155,7 @@ namespace TSOVersionPatcher
                     try
                     {
                         progress($"Deleting {del}...", fileNum / (float)total);
-                        File.Delete(Path.Combine(dest, del));
+                        File.Delete(PathUtils.SafeCombine(dest, del));
                         fileNum++;
                     }
                     catch

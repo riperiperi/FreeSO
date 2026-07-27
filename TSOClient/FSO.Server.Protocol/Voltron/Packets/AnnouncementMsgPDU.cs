@@ -12,6 +12,15 @@ namespace FSO.Server.Protocol.Voltron.Packets
         public string Subject = "";
         public string Message = "";
 
+        public AnnouncementMsgPDU()
+        {
+        }
+
+        public AnnouncementMsgPDU(bool critical)
+        {
+            Badge = (byte)(critical ? 255 : 0);
+        }
+
         public override void Deserialize(IoBuffer input, ISerializationContext context)
         {
             this.SenderID = input.GetPascalString();

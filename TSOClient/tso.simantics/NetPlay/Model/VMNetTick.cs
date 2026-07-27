@@ -8,6 +8,7 @@ namespace FSO.SimAntics.NetPlay.Model
         public uint TickID;
         public ulong RandomSeed;
         public bool ImmediateMode; //not serialized
+        public bool RunningCatchup; //not serialized
 
         public List<VMNetCommand> Commands;
 

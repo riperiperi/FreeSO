@@ -1,0 +1,21 @@
+﻿<Project Sdk="Microsoft.NET.Sdk">
+
+  <PropertyGroup>
+    <OutputType>Exe</OutputType>
+    <TargetFramework>net9.0</TargetFramework>
+    <ImplicitUsings>enable</ImplicitUsings>
+    <Nullable>enable</Nullable>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <PackageReference Include="CommandLineParser" Version="2.9.1" />
+    <PackageReference Include="SixLabors.ImageSharp" Version="3.1.12" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <ProjectReference Include="..\..\..\TSOClient\tso.common\FSO.Common.csproj" />
+    <ProjectReference Include="..\..\..\TSOClient\tso.content\FSO.Content.csproj" />
+    <ProjectReference Include="..\..\..\TSOClient\tso.files\FSO.Files.csproj" />
+  </ItemGroup>
+
+</Project>

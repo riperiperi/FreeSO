@@ -402,14 +402,14 @@ namespace FSO.Server.Servers.Lot.Domain
             }
         }
 
-        public void Broadcast(HashSet<uint> ignoreIDs, params object[] messages)
+        public void Broadcast(HashSet<uint> clientIDs, params object[] messages)
         {
             //TODO: Make this more efficient
             lock (_Visitors)
             {
                 foreach (var visitor in _Visitors.Values)
                 {
-                    if (ignoreIDs.Contains(visitor.AvatarId)) continue;
+                    if (clientIDs != null && !clientIDs.Contains(visitor.AvatarId)) continue;
                     try
                     {
                         visitor.Write(messages);
@@ -493,7 +493,7 @@ namespace FSO.Server.Servers.Lot.Domain
         //timeout for the background thread recieving more tasks.
         private static readonly int BACKGROUND_NOTIFY_TIMEOUT = 2000;
         //the number of times recieving no background tasks after which we assume the main thread is stuck in an infinite loop.
-        private static readonly int BACKGROUND_TIMEOUT_ABANDON_COUNT = 4;
+        private static readonly int BACKGROUND_TIMEOUT_ABANDON_COUNT = 2;
         private static readonly int BACKGROUND_TIMEOUT_SECONDS = 30;
         private uint LastTaskRecv = 0;
         private int BgTimeoutExpiredCount = 0;
@@ -517,8 +517,13 @@ namespace FSO.Server.Servers.Lot.Domain
 
                 if (tasks.Count > 1000) LOG.Error("Surprising number of background tasks for lot with dbid = " + Context.DbId + ": " + tasks.Count);
 
-                if (tasks.Count > 0) LastTaskRecv = Epoch.Now; //BgTimeoutExpiredCount = 0;
-                else if (Epoch.Now - LastTaskRecv > BACKGROUND_TIMEOUT_SECONDS) //++BgTimeoutExpiredCount > BACKGROUND_TIMEOUT_ABANDON_COUNT)
+                if (tasks.Count > 0)
+                {
+                    LastTaskRecv = Epoch.Now;
+                    BgTimeoutExpiredCount = 0;
+                }
+
+                else if (Epoch.Now - LastTaskRecv > BACKGROUND_TIMEOUT_SECONDS && ++BgTimeoutExpiredCount >= BACKGROUND_TIMEOUT_ABANDON_COUNT)
                 {
                     BgTimeoutExpiredCount = int.MinValue;
 
@@ -605,7 +610,7 @@ namespace FSO.Server.Servers.Lot.Domain
 
         public bool TryJoin(IVoltronSession session)
         {
-            if (Container.IsAvatarOnLot(session.AvatarId))
+            if (Container.IsAvatarOnLot(session.AvatarId, _Visitors))
             {
                 session.Write(new FSOVMProtocolMessage(true, "11", "12"));
                 return false; //already on the lot.
@@ -648,6 +653,36 @@ namespace FSO.Server.Servers.Lot.Domain
             Host.Sync(Context, Model);
         }
 
+        public void ReleaseDbAvatarClaim(IVoltronSession session)
+        {
+            if ((bool)(session.GetAttribute("releasedClaim") ?? false))
+            {
+                return;
+            }
+
+            using (var db = DAFactory.Get())
+            {
+                //return claim to the city we got it from.
+
+                if ((bool)(session.GetAttribute("returnClaim") ?? true))
+                    db.AvatarClaims.Claim(session.AvatarClaimId, Config.Call_Sign, (string)session.GetAttribute("cityCallSign"), 0);
+                else
+                    db.AvatarClaims.Delete(session.AvatarClaimId, Config.Call_Sign);
+
+                session.SetAttribute("releasedClaim", true);
+            }
+        }
+
+        public void ReleaseDbAvatarClaim(uint id)
+        {
+            IVoltronSession session = null;
+            lock (_Visitors)
+            {
+                _Visitors.TryGetValue(id, out session);
+            }
+            ReleaseDbAvatarClaim(session);
+        }
+
         public void ReleaseAvatarClaim(uint id)
         {
             IVoltronSession session = null;
@@ -679,15 +714,7 @@ namespace FSO.Server.Servers.Lot.Domain
 
             InBackground(() =>
             {
-                using (var db = DAFactory.Get())
-                {
-                    //return claim to the city we got it from.
-
-                    if ((bool)(session.GetAttribute("returnClaim") ?? true))
-                        db.AvatarClaims.Claim(session.AvatarClaimId, Config.Call_Sign, (string)session.GetAttribute("cityCallSign"), 0);
-                    else
-                        db.AvatarClaims.Delete(session.AvatarClaimId, Config.Call_Sign);
-                }
+                ReleaseDbAvatarClaim(session);
 
                 if (session.GetAttribute("visitId") != null)
                 {
@@ -841,9 +868,11 @@ namespace FSO.Server.Servers.Lot.Domain
     public interface ILotHost
     {
         void Send(uint avatarID, params object[] messages);
-        void Broadcast(HashSet<uint> ignoreIDs, params object[] messages);
+        void Broadcast(HashSet<uint> clientIDs, params object[] messages);
         void DropClient(uint avatarID);
         void InBackground(Callback cb);
+        void ReleaseDbAvatarClaim(IVoltronSession session);
+        void ReleaseDbAvatarClaim(uint avatarID);
         void ReleaseAvatarClaim(IVoltronSession session);
         void ReleaseAvatarClaim(uint avatarID);
         void Shutdown();

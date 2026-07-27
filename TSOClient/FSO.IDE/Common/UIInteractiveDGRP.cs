@@ -2,6 +2,7 @@
 using FSO.Client.UI.Framework;
 using FSO.Common.Rendering.Framework.Model;
 using FSO.Files.Formats.IFF.Chunks;
+using FSO.LotView;
 using FSO.LotView.Components;
 using FSO.LotView.Model;
 using FSO.SimAntics;
@@ -54,7 +55,7 @@ namespace FSO.IDE.Common
                     }
                     TargetOBJ = TempVM.Context.CreateObjectInstance(masterID, LotTilePos.OUT_OF_WORLD, Direction.SOUTH, true);
                     TargetOBJ.SetVisualPosition(new Vector3(0.5f, 0.5f, 0f), Direction.SOUTH, TempVM.Context);
-                    TempVM.Entities = TargetOBJ.Objects;
+                    TempVM.Entities = [.. TargetOBJ.Objects];
                     if (TargetOBJ == null) return;
                     TargetTile = TargetOBJ.Objects.FirstOrDefault(x => x.Object.OBJ.GUID == id);
                     if (TargetTile == null) TargetTile = TargetOBJ.BaseObject;

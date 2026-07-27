@@ -32,10 +32,10 @@ namespace FSO.Server.Database.DA.Tuning
 
         public bool ActivatePreset(int preset_id, int owner_id)
         {
-            return Context.Connection.Execute("INSERT IGNORE INTO fso_tuning (tuning_type, tuning_table, tuning_index, value, owner_type, owner_id) " +
+            return Context.Connection.Execute(Context.CompatLayer("INSERT IGNORE INTO fso_tuning (tuning_type, tuning_table, tuning_index, value, owner_type, owner_id) " +
                 "SELECT p.tuning_type, p.tuning_table, p.tuning_index, p.value, 'EVENT' as owner_type, @owner_id as owner_id " +
                 "FROM fso_tuning_preset_items as p " +
-                "WHERE p.preset_id = @preset_id", new { preset_id, owner_id }) > 0;
+                "WHERE p.preset_id = @preset_id"), new { preset_id, owner_id }) > 0;
         }
 
         public bool ClearPresetTuning(int owner_id)
@@ -52,7 +52,7 @@ namespace FSO.Server.Database.DA.Tuning
         {
             var result = Context.Connection.Query<int>(Context.CompatLayer("INSERT INTO fso_tuning_presets (name, description, flags) "
                 + "VALUES (@name, @description, @flags); SELECT LAST_INSERT_ID();"),
-                preset).FirstOrDefault();
+                new { preset.name, preset.description, preset.flags }).FirstOrDefault();
             return result;
         }
 
@@ -60,13 +60,23 @@ namespace FSO.Server.Database.DA.Tuning
         {
             var result = Context.Connection.Query<int>(Context.CompatLayer("INSERT INTO fso_tuning_preset_items (preset_id, tuning_type, tuning_table, tuning_index, value) "
                 + "VALUES (@preset_id, @tuning_type, @tuning_table, @tuning_index, @value); SELECT LAST_INSERT_ID();"),
-                item).FirstOrDefault();
+                new { item.preset_id, item.tuning_type, item.tuning_table, item.tuning_index, item.value }).FirstOrDefault();
             return result;
         }
 
         public bool DeletePreset(int preset_id)
         {
             return Context.Connection.Execute("DELETE FROM fso_tuning_presets WHERE preset_id = @preset_id", new { preset_id }) > 0;
+        }
+
+        public bool DeletePresetItem(int item_id)
+        {
+            return Context.Connection.Execute("DELETE FROM fso_tuning_preset_items WHERE item_id = @item_id", new { item_id }) > 0;
+        }
+
+        public void UpdatePresetItemValue(int item_id, float value)
+        {
+            Context.Connection.Query("UPDATE fso_tuning_preset_items SET value = @value WHERE item_id = @item_id", new { item_id, value });
         }
     }
 }

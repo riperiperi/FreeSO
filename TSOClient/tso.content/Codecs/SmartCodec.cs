@@ -22,7 +22,8 @@ namespace FSO.Content.Codecs
             {".wav", new SFXCodec() },
             {".mp3", new SFXCodec() },
             {".xa", new SFXCodec() },
-            {".utk", new SFXCodec() }
+            {".utk", new SFXCodec() },
+            {".fsc", new FSCCodec() }
         };
 
         public static object Decode(Stream stream, string extension)

@@ -426,7 +426,9 @@ namespace FSO.Client.UI.Panels
             }
 
             bool inBounds = CurrentLot.Value == null || CurrentLot.Value.Lot_Location_Packed < 0x10200 || CurrentLot.Value.Lot_Location_Packed >= 0x20000;
-            var canJoin = isMyProperty || isRoommate || (inBounds && (isOnline || isCommunity)) || (controller?.CanOpenAnyLot ?? false) || GameFacade.EnableMod;
+            var canJoin = isMyProperty || isRoommate || (inBounds && (isOnline || isCommunity)) || (controller?.CanOpenAnyLot ?? false);
+
+            // TODO (indicate that the rules are being broken if canJoin is true because of a nonzero mod level
 
             HouseNameButton.Disabled = !isMyProperty;
 

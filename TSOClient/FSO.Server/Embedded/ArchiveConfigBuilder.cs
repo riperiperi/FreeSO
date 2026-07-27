@@ -1,10 +1,4 @@
 ﻿using FSO.Common;
-using System;
-using System.Collections.Generic;
-using System.IO;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
 
 namespace FSO.Server.Embedded
 {
@@ -20,18 +14,22 @@ namespace FSO.Server.Embedded
 
             string binding = config.Flags.HasFlag(ArchiveConfigFlags.Offline) ? "127.0.0.1" : "0.0.0.0";
 
+            var dbPath = Path.Combine(config.ArchiveDataDirectory, "fsoarchive.db");
+
             return new ServerConfiguration()
             {
-                GameLocation = "unused",
+                Name = config.Name,
+                GameLocation = FSO.Content.Content.Get().BasePath,
                 Secret = Guid.NewGuid().ToString(),
                 Archive = config,
+                Events = config.Events,
                 SimNFS = config.ArchiveDataDirectory,
                 Database = new Database.DatabaseConfiguration()
                 {
                     Engine = "sqlite",
-                    ConnectionString = $"Data Source={Path.GetFullPath(Path.Combine(config.ArchiveDataDirectory, "fsoarchive.db"))};Version=3;UTF8Encoding=True",
+                    ConnectionString = $"Data Source={dbPath}",
                 },
-                
+
                 Services = new ServerConfigurationservices()
                 {
                     Tasks = new Servers.Tasks.TaskServerConfiguration()
@@ -107,6 +105,7 @@ namespace FSO.Server.Embedded
                             BirthdayGift = new Servers.Tasks.Domain.BirthdayGiftTaskTuning()
                             {
                                 items = new List<Servers.Tasks.Domain.BirthdayGiftItem>()
+                                /*
                                 {
                                     new Servers.Tasks.Domain.BirthdayGiftItem()
                                     {
@@ -117,6 +116,7 @@ namespace FSO.Server.Embedded
                                         mail_sender_name = "FreeSO Developers"
                                     }
                                 }
+                                */
                             }
                         }
                     },
@@ -130,11 +130,11 @@ namespace FSO.Server.Embedded
                             Internal_Host = $"127.0.0.1:{cityPort}",
                             Public_Host = $"{publicHost}:{cityPort}",
                             Use_SSL = false,
-                            
+
                             Neighborhoods = new Servers.City.CityServerNhoodConfiguration()
                             {
                                 Mayor_Elegibility_Limit = 4,
-                                Mayor_Elegilility_Falloff = 4,
+                                Mayor_Elegibility_Falloff = 4,
                                 Min_Nominations = 2,
                                 Election_Week_Align = true,
                                 Election_Move_Penalty = 14
@@ -144,7 +144,9 @@ namespace FSO.Server.Embedded
                                 Cron = "0 4 * * *",
                                 Timeout = 3600,
                                 Visits_Retention_Period = 7,
-                            }
+                            },
+
+                            Initial_Funds = config.InitialFunds
                         }
                     },
                     Lots = new List<Servers.Lot.LotServerConfiguration>()
@@ -157,6 +159,7 @@ namespace FSO.Server.Embedded
                             Public_Host = $"{publicHost}:{lotPort}",
                             Max_Lots = 100,
                             Use_SSL = false,
+                            Tick_Rate_Divider = config.Flags.HasFlag(ArchiveConfigFlags.ReducedTickRate) ? 4 : 1,
                             Cities = new Servers.Lot.LotServerConfigurationCity[]
                             {
                                 new Servers.Lot.LotServerConfigurationCity()
@@ -167,7 +170,7 @@ namespace FSO.Server.Embedded
                             }
                         }
                     }
-                } 
+                }
             };
         }
     }

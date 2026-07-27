@@ -77,7 +77,7 @@ namespace FSO.SimAntics.Primitives
                 var item = spread.Dequeue();
                 if (item == LotTilePos.OUT_OF_WORLD) continue;
 
-                var objat = query.GetObjectsAt(item) ?? new List<VMEntity>();
+                var objat = query.GetObjectsAt(item) ?? [];
 
                 if (first && !(objat?.Any(x => x.Object.OBJ.GUID == FIRE_GUID) ?? false))
                 {

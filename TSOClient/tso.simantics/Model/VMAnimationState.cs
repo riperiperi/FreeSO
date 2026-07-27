@@ -15,6 +15,7 @@ namespace FSO.SimAntics.Model
         public float Speed = 1.0f;
         public float Weight = 1.0f; //For animation blending. All active animations should add up to 1 but won't break if it doesn't.
         public bool Loop = false;
+        private List<TimePropertyListItem> TimePropertyListBuilder = new List<TimePropertyListItem>();
         public List<TimePropertyListItem> TimePropertyLists = new List<TimePropertyListItem>();
 
         public VMAnimationState(Animation animation, bool backwards)
@@ -27,11 +28,13 @@ namespace FSO.SimAntics.Model
                 CurrentFrame = Anim.NumFrames;
             }
 
-            GetTimeProps();
+            ResetTimeProps();
         }
         
-        private void GetTimeProps()
+        public void ResetTimeProps()
         {
+            TimePropertyListBuilder.Clear();
+
             var animation = Anim;
             foreach (var motion in animation.Motions)
             {
@@ -41,14 +44,15 @@ namespace FSO.SimAntics.Model
                 {
                     foreach (var item in tp.Items)
                     {
-                        TimePropertyLists.Add(item);
+                        TimePropertyListBuilder.Add(item);
                     }
                 }
             }
 
             /** Sort time property lists by time **/
             //stable sort
-            TimePropertyLists.OrderBy(x => x.ID); //.Sort(new TimePropertyListItemSorter());
+            TimePropertyLists.Clear();
+            TimePropertyLists.AddRange(TimePropertyListBuilder.OrderBy(x => x.ID));
         }
 
         #region VM Marshalling Functions
@@ -79,7 +83,7 @@ namespace FSO.SimAntics.Model
             Speed = input.Speed;
             Weight = input.Weight;
             Loop = input.Loop;
-            GetTimeProps();
+            ResetTimeProps();
 
             var currentFrame = CurrentFrame;
             var currentTime = (currentFrame * 1000) / 30;

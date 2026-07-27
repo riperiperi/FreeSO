@@ -30,7 +30,7 @@ namespace FSO.SimAntics.JIT.Runtime
 
         public override VMPrimitiveExitCode Execute(VMStackFrame frame, out VMInstruction instruction)
         {
-            var result = Function.Execute(frame, ref frame.InstructionPointer, frame.Args);
+            var result = Function.Execute(frame, ref frame.InstructionPointer, frame.Args.ToSpan());
             instruction = frame.GetCurrentInstruction();
             return result ? VMPrimitiveExitCode.RETURN_TRUE : VMPrimitiveExitCode.RETURN_FALSE;
         }

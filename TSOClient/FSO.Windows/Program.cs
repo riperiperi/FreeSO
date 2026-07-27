@@ -1,6 +1,7 @@
 ﻿using FSO.Client;
 using FSO.Client.UI.Panels;
 using FSO.Common.Rendering.Framework.IO;
+using FSO.Windows.Platform;
 using System.Drawing.Imaging;
 using System.Runtime.InteropServices;
 
@@ -14,6 +15,7 @@ namespace FSO.Windows
         /// The main entry point for the application.
         /// </summary>
 
+        [STAThread]
         public static void Main(string[] args)
         {
             InitWindows();
@@ -23,14 +25,17 @@ namespace FSO.Windows
                 var startProxy = new GameStartProxy();
                 startProxy.Start(UseDX);
             }
+
+            TimerControl?.Dispose();
         }
 
-
+        public static IDisposable TimerControl;
 
         public static void InitWindows()
         {
             //initialize some platform specific stuff
             FSO.Files.ImageLoaderHelpers.BitmapFunction = BitmapReader;
+            Application.SetHighDpiMode(HighDpiMode.PerMonitorV2);
             ClipboardHandler.Default = new WinFormsClipboard();
             FSO.Files.ImageLoaderHelpers.SavePNGFunc = SavePNG;
 
@@ -42,6 +47,45 @@ namespace FSO.Windows
             AppDomain.CurrentDomain.UnhandledException += CurrentDomain_UnhandledException;
             FSOProgram.ShowDialog = ShowDialog;
 
+            if (OperatingSystem.IsWindows())
+            {
+                // Monogame sleeps between frames to control update timing, which is governed by the timer resolution.
+                // Windows timer precision is low by default, so push it to give us better frame timing.
+                // We could actually get 0.5ms timing with another method, but this is a lot hackier and not too important for us.
+                TimerControl = new WindowsMultimediaTimerResolution(1);
+
+                // On linux and macos, timers are a lot more precise.
+
+                FSOProgram.RegisterDragCallback = (window, callback) =>
+                {
+                    var bindThread = new Thread(x =>
+                    {
+                        var form = System.Windows.Forms.Form.FromHandle(window) as System.Windows.Forms.Form;
+                        form?.BeginInvoke(() =>
+                        {
+                            form.AllowDrop = true;
+                            form.DragEnter += (sender, e) =>
+                            {
+                                if (e.Data.GetDataPresent(DataFormats.FileDrop))
+                                {
+                                    e.Effect = DragDropEffects.Copy;
+                                }
+                                else
+                                {
+                                    e.Effect = DragDropEffects.None;
+                                }
+                            };
+                            form.DragDrop += (sender, e) =>
+                            {
+                                var path = (e.Data.GetData(DataFormats.FileDrop) as string[])[0];
+                                callback(path);
+                            };
+                        });
+                    });
+                    bindThread.SetApartmentState(ApartmentState.STA);
+                    bindThread.Start();
+                };
+            }
         }
 
         public static void ShowDialog(string text)

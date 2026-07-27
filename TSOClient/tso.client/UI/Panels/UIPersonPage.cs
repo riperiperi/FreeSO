@@ -930,11 +930,12 @@ namespace FSO.Client.UI.Panels
             var isMe = false;
             var hasProperty = false;
             var privacyOn = false;
+            var screen = FindController<CoreGameScreenController>();
 
             if (CurrentAvatar != null && CurrentAvatar.Value != null)
             {
                 isOnline = CurrentAvatar.Value.Avatar_IsOnline;
-                isMe = FindController<CoreGameScreenController>().IsMe(CurrentAvatar.Value.Avatar_Id);
+                isMe = screen.IsMe(CurrentAvatar.Value.Avatar_Id);
                 hasProperty = CurrentAvatar.Value.Avatar_LotGridXY != 0;
 
                 if (CurrentAvatar.Value.Avatar_ModerationLevel != 0)
@@ -1038,7 +1039,7 @@ namespace FSO.Client.UI.Panels
             var isIncoming = _RelationshipsTab == UIRelationshipsTab.Incoming;
             var isOptions = _Tab == UIPersonPageTab.Options;
 
-            ModButton.Visible = GameFacade.EnableMod && isOptions;
+            ModButton.Visible = (screen?.ModerationLevel ?? 0) > 0 && isOptions;
 
             FindHouseButton.Disabled = !hasProperty;
 

@@ -1,7 +1,8 @@
-﻿using FSO.Client.UI.Framework;
-using FSO.Client;
-using FSO.IDE.Common.Debug;
+﻿using FSO.Client;
+using FSO.Client.UI.Framework;
+using FSO.Common.Utils;
 using FSO.Files.RC;
+using FSO.IDE.Common.Debug;
 
 namespace FSO.IDE.Common
 {
@@ -31,43 +32,43 @@ namespace FSO.IDE.Common
             else
             {
                 //reuse existing
-                lock (FSOUI)
+                GameThread.InUpdate(() =>
                 {
                     Renderer.SetGUID(GUID);
-                }
+                });
             }
         }
 
         public void ChangeWorld(int rotation, int zoom)
         {
-            lock (FSOUI)
+            GameThread.InUpdate(() =>
             {
                 Renderer.ChangeWorld(rotation, zoom);
-            }
+            });
         }
 
         public void ChangeGraphic(int gfx)
         {
-            lock (FSOUI)
+            GameThread.InUpdate(() =>
             {
                 Renderer.ChangeGraphic(gfx);
-            }
+            });
         }
 
         public void ForceUpdate()
         {
-            lock (FSOUI)
+            GameThread.InUpdate(() =>
             {
                 Renderer.ForceUpdate();
-            }
+            });
         }
 
         public void SetDynamic(int i)
         {
-            lock (FSOUI)
+            GameThread.InUpdate(() =>
             {
                 Renderer.SetDynamic(i);
-            }
+            });
         }
     }
 }

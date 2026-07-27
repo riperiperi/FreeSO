@@ -59,7 +59,7 @@ namespace FSO.SimAntics.Primitives
                     if (state.WriteResult) VMMemory.SetBigVariable(context, state.WriteScope, state.WriteData, state.Temp0Value);
                     if (state.TempWrite.Count > 0)
                     {
-                        var length = Math.Min(context.Thread.TempRegisters.Length, state.TempWrite.Count);
+                        var length = Math.Min(Model.VMTempRegisters.Length, state.TempWrite.Count);
                         for (int i=0; i<length; i++)
                         {
                             context.Thread.TempRegisters[i] = state.TempWrite[i];
@@ -217,8 +217,8 @@ namespace FSO.SimAntics.Primitives
                         {
                             var mypid = targetPID;
                             var data = new List<int>();
-                            var temps = context.Thread.TempRegisters;
-                            var attrCount = Math.Min(temps[0], temps.Length - 1);
+                            ref var temps = ref context.Thread.TempRegisters;
+                            var attrCount = Math.Min(temps[0], Model.VMTempRegisters.Length - 1);
                             for (int i = 0; i < attrCount; i++)
                             {
                                 data.Add(temps[i + 1]);

@@ -8,11 +8,18 @@ namespace FSO.Files.HIT
     {
         /// <summary>
         /// FSC is a tabulated plaintext format that describes a sequence of notes to be played. In this game it is used to sequence the ambient sounds.
-        /// The conditions in which the sequence is randomized are not entirely apparent, and have been mostly guessed.
         /// </summary>
         /// 
 
         public List<FSCNote> Notes;
+
+        /// <summary>
+        /// Each row contains a sequence of notes that play in parallel with other rows. (essentially, a track)
+        /// A column contains all the notes that need to evaluate to move to the next column. (essentially, one compound note)
+        /// Typically this is used to play ambience at a set interval, using the note probability to essentially
+        /// select one of many possible sounds to play at a time (or none)
+        /// </summary>
+        public FSCNote[][] NoteColumns;
 
         public string VersionCode;
 
@@ -20,7 +27,7 @@ namespace FSO.Files.HIT
         public ushort Priority;
         public ushort Min;
         public ushort Max;
-        public ushort Rows; //these seem to be outright lies, but let's leave them in
+        public ushort Rows;
         public ushort Columns;
         public ushort Tempo;
         public ushort BPB; //beats per bar
@@ -30,8 +37,6 @@ namespace FSO.Files.HIT
         public ushort QuanY;
         public ushort DiffX;
         public ushort DiffY;
-
-        public List<int> RandomJumpPoints;
         
         /// <summary>
         /// Creates a new hsm file.
@@ -55,8 +60,6 @@ namespace FSO.Files.HIT
         {
             var io = new StreamReader(stream);
 
-            Notes = new List<FSCNote>();
-            RandomJumpPoints = new List<int>();
             VersionCode = io.ReadLine();
             var line = io.ReadLine();
 
@@ -80,24 +83,31 @@ namespace FSO.Files.HIT
             DiffX = Convert.ToUInt16(Head[13]);
             DiffY = Convert.ToUInt16(Head[14]);
 
-            line = io.ReadLine();
+            NoteColumns = new FSCNote[Columns][];
 
-            while (line.StartsWith("#") || line.StartsWith("cells"))
-                line = io.ReadLine();
+            for (int i = 0; i < NoteColumns.Length; i++)
+            {
+                NoteColumns[i] = new FSCNote[Rows];
+            }
+
+            int column = 0;
+            int row = 0;
+
+            line = io.ReadLine();
 
             while (!io.EndOfStream) //read notes
             {
-                string line2 = io.ReadLine();
-                string[] Values = line2.Split('\t');
-                if (!line.StartsWith("#") && Values.Length == 20)
+                line = io.ReadLine();
+                string[] Values = line.Split('\t');
+                if (!line.StartsWith("#") && Values.Length >= 20)
                 {
                     var note = new FSCNote()
                     {
                         Volume = Convert.ToUInt16(Values[1]),
-                        Rand = Values[2] != "0",
+                        RandomVolume = Values[2] != "0",
                         LRPan = Convert.ToUInt16(Values[3]),
                         FBPan = Convert.ToUInt16(Values[4]),
-                        Rand2 = Values[5] != "0",
+                        RandomPan = Values[5] != "0",
 
                         Fin = Convert.ToUInt16(Values[6]),
                         FOut = Convert.ToUInt16(Values[7]),
@@ -109,45 +119,107 @@ namespace FSO.Files.HIT
                         Quant = Convert.ToUInt16(Values[12]),
                         Prob = Convert.ToUInt16(Values[13]),
                         pitchL = Convert.ToInt16(Values[14]),
-                        pitchR = Convert.ToInt16(Values[15]),
+                        pitchH = Convert.ToInt16(Values[15]),
 
                         Fast = Values[16] != "0",
                         GroupID = Convert.ToUInt16(Values[17]),
                         Stereo = Values[18] != "0",
-                        Filename = Values[19]
+                        Filename = Values[19],
+                        ExclusionCells = Values.Length > 20 ? ParseExclusionCells([.. Values.Skip(20).Where(x => x != "")]) : null
                     };
-                    if (note.Rand) RandomJumpPoints.Add(Notes.Count);
-                    Notes.Add(note);
+
+                    NoteColumns[column][row] = note;
+
+                    // Notes fill columns one at a time. Move onto the next column each note.
+                    column++;
+                    if (column >= Columns)
+                    {
+                        // When the row is full, move to the next row.
+                        column = 0;
+                        row++;
+                        if (row >= NoteColumns.Length)
+                        {
+                            break;
+                        }
+                    }
                 }
             }
 
             io.Close();
         }
+
+        private static FSCExclusionCell[] ParseExclusionCells(string[] split)
+        {
+            if (split.Length == 0)
+            {
+                return null;
+            }
+
+            var result = new FSCExclusionCell[split.Length];
+
+            for (int i = 0; i < split.Length; i++)
+            {
+                string elem = split[i];
+
+                if (elem.StartsWith("\"(") && elem.EndsWith(")\""))
+                {
+                    string[] parts = elem.Substring(2, elem.Length - 4).Split(',');
+                    if (parts.Length != 2 || !int.TryParse(parts[0], out int x) || !int.TryParse(parts[1], out int y))
+                    {
+                        return null;
+                    }
+
+                    result[i] = new FSCExclusionCell()
+                    {
+                        X = x,
+                        Y = y
+                    };
+                }
+                else
+                {
+                    return null;
+                }
+            }
+
+            return result;
+        }
+    }
+
+    public struct FSCExclusionCell
+    {
+        public int X;
+        public int Y;
     }
 
     public struct FSCNote
     {
         public ushort Volume; //0-1024
-        public bool Rand;
+        public bool RandomVolume;
         public ushort LRPan; //0-1024
         public ushort FBPan; //0-1024, front back
-        public bool Rand2;
+        public bool RandomPan;
 
         public ushort Fin;
         public ushort FOut;
-        public ushort dly;
-        public bool Rand3; //what
+        public ushort dly; // Delay?
+        public bool Rand3; // Randomize delay?
         public ushort Loop;
 
         public bool Loop2; //might be count then decider here
         public ushort Quant; //but then what is this?
-        public ushort Prob; //probably random probability, not sure of range (0-16?)
-        public short pitchL; //pitch offsets
-        public short pitchR;
+        public ushort Prob; // random probability of note playing in %
+        public short pitchL; //pitch range: low
+        public short pitchH; // pitch range: high
 
         public bool Fast;
         public ushort GroupID;
         public bool Stereo;
         public string Filename;
+
+        /// <summary>
+        /// Assumed behaviour: if this note plays, then the notes in the following cells cannot play.
+        /// Encoded in the file after the normal values, as "(x,y)" separated by tabs.
+        /// </summary>
+        public FSCExclusionCell[] ExclusionCells;
     }
 }

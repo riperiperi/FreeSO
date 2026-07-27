@@ -73,6 +73,8 @@ namespace FSO.Server.Clients
 
         private List<IAriesMessageSubscriber> MessageSubscribers = new List<IAriesMessageSubscriber>();
         private List<IAriesEventSubscriber> EventSubscribers = new List<IAriesEventSubscriber>();
+
+        public int Timeout = 10000;
         
         public AriesClient(IKernel kernel)
         {
@@ -135,7 +137,7 @@ namespace FSO.Server.Clients
             socketConnector.SessionConfig.NoDelay = true;
             Connector = socketConnector;
             var connector = Connector;
-            Connector.ConnectTimeoutInMillis = 10000;
+            Connector.ConnectTimeoutInMillis = Timeout;
             //Connector.FilterChain.AddLast("logging", new LoggingFilter());
             
             Connector.Handler = this;
@@ -157,7 +159,7 @@ namespace FSO.Server.Clients
 
             Task.Run(() =>
             {
-                if (!future.Await(10000)) SessionClosed(null);
+                if (!future.Await(Timeout)) SessionClosed(null);
                 if (future.Canceled || future.Exception != null) SessionClosed(null);
             });
         }

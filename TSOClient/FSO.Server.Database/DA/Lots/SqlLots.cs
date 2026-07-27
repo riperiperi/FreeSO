@@ -5,7 +5,7 @@ using FSO.Server.Database.DA.Roommates;
 using FSO.Server.Database.DA.Utils;
 using System;
 using System.Collections.Generic;
-using System.Data.SQLite;
+using Microsoft.Data.Sqlite;
 using System.Linq;
 
 namespace FSO.Server.Database.DA.Lots
@@ -149,9 +149,19 @@ namespace FSO.Server.Database.DA.Lots
  
         public List<DbLot> GetAdjToLocation(int shard_id, uint location)
         {
+            uint[] locations = new uint[8];
+            int i = 0;
+            for (int y = -1; y < 2; y++)
+            {
+                for (int x = -1; x < 2; x++)
+                {
+                    if (y == 0 && x == 0) continue;
+                    locations[i++] = (uint)(location + (x * 65536) + y);
+                }
+            }
+
             return Context.Connection.Query<DbLot>("SELECT * FROM fso_lots WHERE "
-                + "(ABS(CAST((location&65535) AS SIGNED) - CAST((@location&65535) AS SIGNED)) = 1 OR ABS(CAST((location/65536) AS SIGNED) - CAST((@location/65536) AS SIGNED)) = 1) "
-                + "AND shard_id = @shard_id AND move_flags = 0", new { location = location, shard_id = shard_id }).ToList();
+                + "shard_id = @shard_id AND location IN @locations AND move_flags = 0", new { locations, shard_id }).ToList();
         }
 
         public void RenameLot(int id, string newName)
@@ -168,6 +178,11 @@ namespace FSO.Server.Database.DA.Lots
             {
                 Context.Connection.Query("UPDATE fso_lots SET thumb3d_dirty = @dirty WHERE lot_id = @id", new { dirty = dirty, id = id });
             }
+        }
+
+        public void SetTerrainDirty(IEnumerable<uint> ids)
+        {
+            Context.Connection.Query("UPDATE fso_lots SET move_flags = 8 WHERE location in @ids AND move_flags = 0", new { ids });
         }
 
         public DbLot Get3DWork()
@@ -207,6 +222,17 @@ namespace FSO.Server.Database.DA.Lots
                 new { ring_backup_num = ring_backup_num, id = lot_id });
         }
 
+        public void UpdateRingBackupSilent(int lot_id, sbyte ring_backup_num)
+        {
+            Context.Connection.Query("UPDATE fso_lots SET ring_backup_num = @ring_backup_num WHERE lot_id = @id",
+                new { ring_backup_num, id = lot_id });
+        }
+
+        public void UpdateArchiveFlags(int lot_id, sbyte archive_flags)
+        {
+            Context.Connection.Query("UPDATE fso_lots SET archive_flags = @archive_flags WHERE lot_id = @id",
+                new { archive_flags, id = lot_id });
+        }
 
         public void CreateLotServerTicket(DbLotServerTicket ticket)
         {
@@ -270,7 +296,7 @@ namespace FSO.Server.Database.DA.Lots
         }
 
         private static string NHoodQuery =
-                "UPDATE fso_lots l" +
+                "UPDATE fso_lots l " +
                 "SET neighborhood_id = " +
                 "COALESCE((SELECT neighborhood_id " +
                 "FROM fso_neighborhoods n " +
@@ -291,7 +317,7 @@ namespace FSO.Server.Database.DA.Lots
 
         public int UpdateAllNeighborhoods(int shard_id)
         {
-            if (Context.Connection is SQLiteConnection)
+            if (Context.Connection is SqliteConnection)
             {
                 return Context.Connection.Execute(
                     NHoodSqliteQuery +
@@ -309,7 +335,7 @@ namespace FSO.Server.Database.DA.Lots
 
         public bool UpdateNeighborhood(int lot_id)
         {
-            if (Context.Connection is SQLiteConnection)
+            if (Context.Connection is SqliteConnection)
             {
                 return (Context.Connection.Execute(
                     NHoodSqliteQuery +

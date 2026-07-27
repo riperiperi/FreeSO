@@ -7,10 +7,20 @@ using Microsoft.Xna.Framework;
 
 namespace FSO.SimAntics.Model.TSOPlatform
 {
+    [Flags]
+    public enum VMTSOLotStateFlags : uint
+    {
+        Archived = 1,
+        AllowFreeRoam = 2,
+        DebugAdmin = 4,
+        DebugMod = 8,
+        DebugAll = 16
+    }
+
     public class VMTSOLotState : VMAbstractLotState
     {
         //ephemeral state
-        public IVMAvatarNameCache Names = new VMBasicAvatarNameCache();
+        public IVMGlobalNameCache Names = new VMBasicGlobalNameCache();
 
         //permanent state
         public string Name = "Lot";
@@ -30,6 +40,7 @@ namespace FSO.SimAntics.Model.TSOPlatform
         public byte SkillMode;
         public List<VMTSOChatChannel> ChatChannels = new List<VMTSOChatChannel>();
         public uint NhoodID;
+        public VMTSOLotStateFlags Flags;
 
         public bool CommunityLot
         {
@@ -96,6 +107,11 @@ namespace FSO.SimAntics.Model.TSOPlatform
             {
                 NhoodID = reader.ReadUInt32();
             }
+
+            if (Version > 38)
+            {
+                Flags = (VMTSOLotStateFlags)reader.ReadUInt32();
+            }
         }
 
         public override void SerializeInto(BinaryWriter writer)
@@ -122,6 +138,7 @@ namespace FSO.SimAntics.Model.TSOPlatform
                 channel.SerializeInto(writer);
             }
             writer.Write(NhoodID);
+            writer.Write((uint)Flags);
         }
 
         public override bool CanPlaceNewUserObject(VM vm)

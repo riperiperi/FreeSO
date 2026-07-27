@@ -261,8 +261,9 @@ namespace FSO.Client.UI.Controls
             var ThumbImg = Thumb.LotTexture;
             if (ThumbImg != null && BgImg != null && HoverImg != null)
             {
+                var dpi = FSOEnvironment.DPIScaleFactor;
                 var terrain = ((CoreGameScreen)GameFacade.Screens.CurrentUIScreen).CityRenderer;
-                var Size = new Vector2(80, 50);
+                var Size = new Vector2(80, 50) / dpi;
                 Vector2 startVec = new Vector2(40, 25) + Position;
                 Vector2? dest = UITerrainHighlight.GetEndpointFromLotId(terrain, startVec, (int)LotId);
                 if (!dest.HasValue) return;
@@ -290,7 +291,7 @@ namespace FSO.Client.UI.Controls
                 DrawLocalTexture(batch, (m_isOver && !m_isDown) ? HoverImg : BgImg, new Vector2());
 
                 var scale = new Vector2(0.25f, 0.25f);
-                DrawLocalTexture(batch, ThumbImg, null, new Vector2(40, 25) - new Vector2(32, 32), scale);
+                DrawLocalTexture(batch, ThumbImg, null, (new Vector2(40, 25) - new Vector2(32, 32)) / dpi, scale);
                 var px = TextureGenerator.GetPxWhite(batch.GraphicsDevice);
                 DrawLocalTexture(batch, px, null, new Vector2(0, 50), new Vector2(80, 16 * NameLabel.NumLines + 7), Color.Black * 0.6f);
 

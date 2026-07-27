@@ -144,6 +144,7 @@ namespace FSO.Client.UI.Screens
              * Button plumbing
              */
             CreditsButton.OnButtonClick += new ButtonClickDelegate(CreditsButton_OnButtonClick);
+            CreditsButton.Tooltip = GameFacade.Strings.GetString("f128", "125");
             m_ExitButton.OnButtonClick += new ButtonClickDelegate(m_ExitButton_OnButtonClick);
 
             /**

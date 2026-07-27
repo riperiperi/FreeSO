@@ -7,6 +7,7 @@ namespace FSO.Server.Database.DA.Users
     {
         User GetById(uint id);
         List<User> GetByRegisterIP(string ip);
+        List<User> GetByLastIP(string ip);
         void UpdateConnectIP(uint id, string ip);
         void UpdateBanned(uint id, bool banned);
         void UpdateClientID(uint id, string cid);
@@ -14,7 +15,9 @@ namespace FSO.Server.Database.DA.Users
         User GetByUsername(string username);
         UserAuthenticate GetAuthenticationSettings(uint userId);
         PagedList<User> All(int offset = 0, int limit = 20, string orderBy = "register_date");
+        List<UserSummary> AllSummaries();
         uint Create(User user);
+        bool Delete(uint id);
         void CreateAuth(UserAuthenticate auth);
         User GetByEmail(string email);
         void UpdateAuth(UserAuthenticate auth);

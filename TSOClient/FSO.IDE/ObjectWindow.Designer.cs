@@ -29,338 +29,341 @@
         private void InitializeComponent()
         {
             System.ComponentModel.ComponentResourceManager resources = new System.ComponentModel.ComponentResourceManager(typeof(ObjectWindow));
-            this.ObjCombo = new System.Windows.Forms.ComboBox();
-            this.SemiGlobalButton = new System.Windows.Forms.Button();
-            this.ObjMultitileLabel = new System.Windows.Forms.Label();
-            this.ObjDescLabel = new System.Windows.Forms.Label();
-            this.ObjNameLabel = new System.Windows.Forms.Label();
-            this.GlobalButton = new System.Windows.Forms.Button();
-            this.SGChangeButton = new System.Windows.Forms.Button();
-            this.AppearanceTab = new System.Windows.Forms.TabPage();
-            this.DrawgroupEdit = new FSO.IDE.ResourceBrowser.DGRPEditor();
-            this.tabPage3 = new System.Windows.Forms.TabPage();
-            this.FuncEditor = new FSO.IDE.ResourceBrowser.OBJfEditor();
-            this.tabPage2 = new System.Windows.Forms.TabPage();
-            this.IffResView = new FSO.IDE.ResourceBrowser.IFFResComponent();
-            this.DefinitionTab = new System.Windows.Forms.TabPage();
-            this.DefinitionEditor = new FSO.IDE.ResourceBrowser.OBJDEditor();
-            this.objPages = new System.Windows.Forms.TabControl();
-            this.Debug3D = new System.Windows.Forms.TabPage();
-            this.FSOMEdit = new FSO.IDE.ResourceBrowser.FSOMEditor();
-            this.XMLEntryTab = new System.Windows.Forms.TabPage();
-            this.XMLEdit = new FSO.IDE.ResourceBrowser.XMLEntryEditor();
-            this.PatchTab = new System.Windows.Forms.TabPage();
-            this.PIFFEditor = new FSO.IDE.ResourceBrowser.PIFFEditor();
-            this.NewOBJD = new System.Windows.Forms.Button();
-            this.DeleteOBJD = new System.Windows.Forms.Button();
-            this.ObjThumb = new FSO.IDE.Common.ObjThumbnailControl();
-            this.UpgradeTab = new System.Windows.Forms.TabPage();
-            this.UpgradeEditor = new FSO.IDE.ResourceBrowser.UpgradeEditor();
-            this.AppearanceTab.SuspendLayout();
-            this.tabPage3.SuspendLayout();
-            this.tabPage2.SuspendLayout();
-            this.DefinitionTab.SuspendLayout();
-            this.objPages.SuspendLayout();
-            this.Debug3D.SuspendLayout();
-            this.XMLEntryTab.SuspendLayout();
-            this.PatchTab.SuspendLayout();
-            this.UpgradeTab.SuspendLayout();
-            this.SuspendLayout();
+            ObjCombo = new ComboBox();
+            SemiGlobalButton = new Button();
+            ObjMultitileLabel = new Label();
+            ObjDescLabel = new Label();
+            ObjNameLabel = new Label();
+            GlobalButton = new Button();
+            SGChangeButton = new Button();
+            AppearanceTab = new TabPage();
+            DrawgroupEdit = new FSO.IDE.ResourceBrowser.DGRPEditor();
+            tabPage3 = new TabPage();
+            FuncEditor = new FSO.IDE.ResourceBrowser.OBJfEditor();
+            tabPage2 = new TabPage();
+            IffResView = new FSO.IDE.ResourceBrowser.IFFResComponent();
+            DefinitionTab = new TabPage();
+            DefinitionEditor = new FSO.IDE.ResourceBrowser.OBJDEditor();
+            objPages = new TabControl();
+            Debug3D = new TabPage();
+            FSOMEdit = new FSO.IDE.ResourceBrowser.FSOMEditor();
+            XMLEntryTab = new TabPage();
+            XMLEdit = new FSO.IDE.ResourceBrowser.XMLEntryEditor();
+            UpgradeTab = new TabPage();
+            UpgradeEditor = new FSO.IDE.ResourceBrowser.UpgradeEditor();
+            PatchTab = new TabPage();
+            PIFFEditor = new FSO.IDE.ResourceBrowser.PIFFEditor();
+            NewOBJD = new Button();
+            DeleteOBJD = new Button();
+            ObjThumb = new FSO.IDE.Common.ObjThumbnailControl();
+            AppearanceTab.SuspendLayout();
+            tabPage3.SuspendLayout();
+            tabPage2.SuspendLayout();
+            DefinitionTab.SuspendLayout();
+            objPages.SuspendLayout();
+            Debug3D.SuspendLayout();
+            XMLEntryTab.SuspendLayout();
+            UpgradeTab.SuspendLayout();
+            PatchTab.SuspendLayout();
+            SuspendLayout();
             // 
             // ObjCombo
             // 
-            this.ObjCombo.Anchor = ((System.Windows.Forms.AnchorStyles)((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Right)));
-            this.ObjCombo.DropDownStyle = System.Windows.Forms.ComboBoxStyle.DropDownList;
-            this.ObjCombo.FormattingEnabled = true;
-            this.ObjCombo.Location = new System.Drawing.Point(469, 12);
-            this.ObjCombo.Name = "ObjCombo";
-            this.ObjCombo.Size = new System.Drawing.Size(304, 21);
-            this.ObjCombo.TabIndex = 2;
-            this.ObjCombo.SelectedIndexChanged += new System.EventHandler(this.ObjCombo_SelectedIndexChanged);
+            ObjCombo.Anchor = AnchorStyles.Top | AnchorStyles.Right;
+            ObjCombo.DropDownStyle = ComboBoxStyle.DropDownList;
+            ObjCombo.FormattingEnabled = true;
+            ObjCombo.Location = new Point(469, 12);
+            ObjCombo.Name = "ObjCombo";
+            ObjCombo.Size = new Size(304, 21);
+            ObjCombo.TabIndex = 2;
+            ObjCombo.SelectedIndexChanged += ObjCombo_SelectedIndexChanged;
             // 
             // SemiGlobalButton
             // 
-            this.SemiGlobalButton.Anchor = ((System.Windows.Forms.AnchorStyles)((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Right)));
-            this.SemiGlobalButton.Location = new System.Drawing.Point(468, 37);
-            this.SemiGlobalButton.Name = "SemiGlobalButton";
-            this.SemiGlobalButton.Size = new System.Drawing.Size(171, 23);
-            this.SemiGlobalButton.TabIndex = 3;
-            this.SemiGlobalButton.Text = "Semi-Global (doorglobals)";
-            this.SemiGlobalButton.UseVisualStyleBackColor = true;
-            this.SemiGlobalButton.Click += new System.EventHandler(this.SemiGlobalButton_Click);
+            SemiGlobalButton.Anchor = AnchorStyles.Top | AnchorStyles.Right;
+            SemiGlobalButton.Location = new Point(468, 37);
+            SemiGlobalButton.Name = "SemiGlobalButton";
+            SemiGlobalButton.Size = new Size(171, 23);
+            SemiGlobalButton.TabIndex = 3;
+            SemiGlobalButton.Text = "Semi-Global (doorglobals)";
+            SemiGlobalButton.UseVisualStyleBackColor = true;
+            SemiGlobalButton.Click += SemiGlobalButton_Click;
             // 
             // ObjMultitileLabel
             // 
-            this.ObjMultitileLabel.Location = new System.Drawing.Point(61, 45);
-            this.ObjMultitileLabel.Name = "ObjMultitileLabel";
-            this.ObjMultitileLabel.Size = new System.Drawing.Size(186, 17);
-            this.ObjMultitileLabel.TabIndex = 20;
-            this.ObjMultitileLabel.Text = "Multitile Master Object";
+            ObjMultitileLabel.Location = new Point(61, 45);
+            ObjMultitileLabel.Name = "ObjMultitileLabel";
+            ObjMultitileLabel.Size = new Size(186, 17);
+            ObjMultitileLabel.TabIndex = 20;
+            ObjMultitileLabel.Text = "Multitile Master Object";
             // 
             // ObjDescLabel
             // 
-            this.ObjDescLabel.Location = new System.Drawing.Point(61, 30);
-            this.ObjDescLabel.Name = "ObjDescLabel";
-            this.ObjDescLabel.Size = new System.Drawing.Size(186, 17);
-            this.ObjDescLabel.TabIndex = 19;
-            this.ObjDescLabel.Text = "§2000 - Job Object";
+            ObjDescLabel.Location = new Point(61, 30);
+            ObjDescLabel.Name = "ObjDescLabel";
+            ObjDescLabel.Size = new Size(186, 17);
+            ObjDescLabel.TabIndex = 19;
+            ObjDescLabel.Text = "§2000 - Job Object";
             // 
             // ObjNameLabel
             // 
-            this.ObjNameLabel.AutoEllipsis = true;
-            this.ObjNameLabel.Font = new System.Drawing.Font("Microsoft Sans Serif", 9.75F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((byte)(0)));
-            this.ObjNameLabel.Location = new System.Drawing.Point(61, 12);
-            this.ObjNameLabel.Name = "ObjNameLabel";
-            this.ObjNameLabel.Size = new System.Drawing.Size(288, 17);
-            this.ObjNameLabel.TabIndex = 18;
-            this.ObjNameLabel.Text = "Accessory Rack - Cheap";
+            ObjNameLabel.AutoEllipsis = true;
+            ObjNameLabel.Font = new Font("Microsoft Sans Serif", 9.75F, FontStyle.Regular, GraphicsUnit.Point, 0);
+            ObjNameLabel.Location = new Point(61, 12);
+            ObjNameLabel.Name = "ObjNameLabel";
+            ObjNameLabel.Size = new Size(288, 17);
+            ObjNameLabel.TabIndex = 18;
+            ObjNameLabel.Text = "Accessory Rack - Cheap";
             // 
             // GlobalButton
             // 
-            this.GlobalButton.Anchor = ((System.Windows.Forms.AnchorStyles)((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Right)));
-            this.GlobalButton.Location = new System.Drawing.Point(698, 37);
-            this.GlobalButton.Name = "GlobalButton";
-            this.GlobalButton.Size = new System.Drawing.Size(75, 23);
-            this.GlobalButton.TabIndex = 21;
-            this.GlobalButton.Text = "Global";
-            this.GlobalButton.UseVisualStyleBackColor = true;
-            this.GlobalButton.Click += new System.EventHandler(this.GlobalButton_Click);
+            GlobalButton.Anchor = AnchorStyles.Top | AnchorStyles.Right;
+            GlobalButton.Location = new Point(698, 37);
+            GlobalButton.Name = "GlobalButton";
+            GlobalButton.Size = new Size(75, 23);
+            GlobalButton.TabIndex = 21;
+            GlobalButton.Text = "Global";
+            GlobalButton.UseVisualStyleBackColor = true;
+            GlobalButton.Click += GlobalButton_Click;
             // 
             // SGChangeButton
             // 
-            this.SGChangeButton.Anchor = ((System.Windows.Forms.AnchorStyles)((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Right)));
-            this.SGChangeButton.Location = new System.Drawing.Point(640, 37);
-            this.SGChangeButton.Name = "SGChangeButton";
-            this.SGChangeButton.Size = new System.Drawing.Size(52, 23);
-            this.SGChangeButton.TabIndex = 22;
-            this.SGChangeButton.Text = "Change";
-            this.SGChangeButton.UseVisualStyleBackColor = true;
-            this.SGChangeButton.Click += new System.EventHandler(this.SGChangeButton_Click);
+            SGChangeButton.Anchor = AnchorStyles.Top | AnchorStyles.Right;
+            SGChangeButton.Location = new Point(640, 37);
+            SGChangeButton.Name = "SGChangeButton";
+            SGChangeButton.Size = new Size(52, 23);
+            SGChangeButton.TabIndex = 22;
+            SGChangeButton.Text = "Change";
+            SGChangeButton.UseVisualStyleBackColor = true;
+            SGChangeButton.Click += SGChangeButton_Click;
             // 
             // AppearanceTab
             // 
-            this.AppearanceTab.Controls.Add(this.DrawgroupEdit);
-            this.AppearanceTab.Location = new System.Drawing.Point(4, 22);
-            this.AppearanceTab.Name = "AppearanceTab";
-            this.AppearanceTab.Size = new System.Drawing.Size(762, 459);
-            this.AppearanceTab.TabIndex = 4;
-            this.AppearanceTab.Text = "Appearance";
-            this.AppearanceTab.UseVisualStyleBackColor = true;
+            AppearanceTab.Controls.Add(DrawgroupEdit);
+            AppearanceTab.Location = new Point(4, 24);
+            AppearanceTab.Name = "AppearanceTab";
+            AppearanceTab.Size = new Size(192, 72);
+            AppearanceTab.TabIndex = 4;
+            AppearanceTab.Text = "Appearance";
+            AppearanceTab.UseVisualStyleBackColor = true;
             // 
             // DrawgroupEdit
             // 
-            this.DrawgroupEdit.Dock = System.Windows.Forms.DockStyle.Fill;
-            this.DrawgroupEdit.Location = new System.Drawing.Point(0, 0);
-            this.DrawgroupEdit.Name = "DrawgroupEdit";
-            this.DrawgroupEdit.Size = new System.Drawing.Size(762, 459);
-            this.DrawgroupEdit.TabIndex = 0;
+            DrawgroupEdit.Dock = DockStyle.Fill;
+            DrawgroupEdit.Location = new Point(0, 0);
+            DrawgroupEdit.Margin = new Padding(4, 3, 4, 3);
+            DrawgroupEdit.Name = "DrawgroupEdit";
+            DrawgroupEdit.Size = new Size(192, 72);
+            DrawgroupEdit.TabIndex = 0;
             // 
             // tabPage3
             // 
-            this.tabPage3.Controls.Add(this.FuncEditor);
-            this.tabPage3.Location = new System.Drawing.Point(4, 22);
-            this.tabPage3.Name = "tabPage3";
-            this.tabPage3.Size = new System.Drawing.Size(762, 459);
-            this.tabPage3.TabIndex = 2;
-            this.tabPage3.Text = "Entry Points";
-            this.tabPage3.UseVisualStyleBackColor = true;
+            tabPage3.Controls.Add(FuncEditor);
+            tabPage3.Location = new Point(4, 24);
+            tabPage3.Name = "tabPage3";
+            tabPage3.Size = new Size(192, 72);
+            tabPage3.TabIndex = 2;
+            tabPage3.Text = "Entry Points";
+            tabPage3.UseVisualStyleBackColor = true;
             // 
             // FuncEditor
             // 
-            this.FuncEditor.Dock = System.Windows.Forms.DockStyle.Fill;
-            this.FuncEditor.Location = new System.Drawing.Point(0, 0);
-            this.FuncEditor.Margin = new System.Windows.Forms.Padding(0);
-            this.FuncEditor.Name = "FuncEditor";
-            this.FuncEditor.Size = new System.Drawing.Size(762, 459);
-            this.FuncEditor.TabIndex = 0;
+            FuncEditor.Dock = DockStyle.Fill;
+            FuncEditor.Location = new Point(0, 0);
+            FuncEditor.Margin = new Padding(0);
+            FuncEditor.Name = "FuncEditor";
+            FuncEditor.Size = new Size(192, 72);
+            FuncEditor.TabIndex = 0;
             // 
             // tabPage2
             // 
-            this.tabPage2.Controls.Add(this.IffResView);
-            this.tabPage2.Location = new System.Drawing.Point(4, 22);
-            this.tabPage2.Name = "tabPage2";
-            this.tabPage2.Size = new System.Drawing.Size(762, 459);
-            this.tabPage2.TabIndex = 1;
-            this.tabPage2.Text = "Trees and Resources";
-            this.tabPage2.UseVisualStyleBackColor = true;
+            tabPage2.Controls.Add(IffResView);
+            tabPage2.Location = new Point(4, 24);
+            tabPage2.Name = "tabPage2";
+            tabPage2.Size = new Size(192, 72);
+            tabPage2.TabIndex = 1;
+            tabPage2.Text = "Trees and Resources";
+            tabPage2.UseVisualStyleBackColor = true;
             // 
             // IffResView
             // 
-            this.IffResView.Dock = System.Windows.Forms.DockStyle.Fill;
-            this.IffResView.Location = new System.Drawing.Point(0, 0);
-            this.IffResView.Margin = new System.Windows.Forms.Padding(0);
-            this.IffResView.Name = "IffResView";
-            this.IffResView.Size = new System.Drawing.Size(762, 459);
-            this.IffResView.TabIndex = 0;
+            IffResView.Dock = DockStyle.Fill;
+            IffResView.Location = new Point(0, 0);
+            IffResView.Margin = new Padding(0);
+            IffResView.Name = "IffResView";
+            IffResView.Size = new Size(192, 72);
+            IffResView.TabIndex = 0;
             // 
             // DefinitionTab
             // 
-            this.DefinitionTab.Controls.Add(this.DefinitionEditor);
-            this.DefinitionTab.Location = new System.Drawing.Point(4, 22);
-            this.DefinitionTab.Name = "DefinitionTab";
-            this.DefinitionTab.Padding = new System.Windows.Forms.Padding(3);
-            this.DefinitionTab.Size = new System.Drawing.Size(762, 459);
-            this.DefinitionTab.TabIndex = 0;
-            this.DefinitionTab.Text = "Object";
-            this.DefinitionTab.UseVisualStyleBackColor = true;
+            DefinitionTab.Controls.Add(DefinitionEditor);
+            DefinitionTab.Location = new Point(4, 22);
+            DefinitionTab.Name = "DefinitionTab";
+            DefinitionTab.Padding = new Padding(3);
+            DefinitionTab.Size = new Size(762, 459);
+            DefinitionTab.TabIndex = 0;
+            DefinitionTab.Text = "Object";
+            DefinitionTab.UseVisualStyleBackColor = true;
             // 
             // DefinitionEditor
             // 
-            this.DefinitionEditor.Location = new System.Drawing.Point(0, 0);
-            this.DefinitionEditor.Name = "DefinitionEditor";
-            this.DefinitionEditor.Size = new System.Drawing.Size(762, 459);
-            this.DefinitionEditor.TabIndex = 0;
+            DefinitionEditor.Location = new Point(0, 0);
+            DefinitionEditor.Margin = new Padding(4, 3, 4, 3);
+            DefinitionEditor.Name = "DefinitionEditor";
+            DefinitionEditor.Size = new Size(762, 459);
+            DefinitionEditor.TabIndex = 0;
             // 
             // objPages
             // 
-            this.objPages.Anchor = ((System.Windows.Forms.AnchorStyles)((((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Bottom) 
-            | System.Windows.Forms.AnchorStyles.Left) 
-            | System.Windows.Forms.AnchorStyles.Right)));
-            this.objPages.Controls.Add(this.DefinitionTab);
-            this.objPages.Controls.Add(this.tabPage2);
-            this.objPages.Controls.Add(this.tabPage3);
-            this.objPages.Controls.Add(this.AppearanceTab);
-            this.objPages.Controls.Add(this.Debug3D);
-            this.objPages.Controls.Add(this.XMLEntryTab);
-            this.objPages.Controls.Add(this.UpgradeTab);
-            this.objPages.Controls.Add(this.PatchTab);
-            this.objPages.Location = new System.Drawing.Point(7, 68);
-            this.objPages.Name = "objPages";
-            this.objPages.SelectedIndex = 0;
-            this.objPages.Size = new System.Drawing.Size(770, 485);
-            this.objPages.TabIndex = 0;
+            objPages.Anchor = AnchorStyles.Top | AnchorStyles.Bottom | AnchorStyles.Left | AnchorStyles.Right;
+            objPages.Controls.Add(DefinitionTab);
+            objPages.Controls.Add(tabPage2);
+            objPages.Controls.Add(tabPage3);
+            objPages.Controls.Add(AppearanceTab);
+            objPages.Controls.Add(Debug3D);
+            objPages.Controls.Add(XMLEntryTab);
+            objPages.Controls.Add(UpgradeTab);
+            objPages.Controls.Add(PatchTab);
+            objPages.Location = new Point(7, 68);
+            objPages.Name = "objPages";
+            objPages.SelectedIndex = 0;
+            objPages.Size = new Size(770, 485);
+            objPages.TabIndex = 0;
             // 
             // Debug3D
             // 
-            this.Debug3D.Controls.Add(this.FSOMEdit);
-            this.Debug3D.Location = new System.Drawing.Point(4, 22);
-            this.Debug3D.Name = "Debug3D";
-            this.Debug3D.Padding = new System.Windows.Forms.Padding(3);
-            this.Debug3D.Size = new System.Drawing.Size(762, 459);
-            this.Debug3D.TabIndex = 5;
-            this.Debug3D.Text = "3D Mode";
-            this.Debug3D.UseVisualStyleBackColor = true;
+            Debug3D.Controls.Add(FSOMEdit);
+            Debug3D.Location = new Point(4, 24);
+            Debug3D.Name = "Debug3D";
+            Debug3D.Padding = new Padding(3);
+            Debug3D.Size = new Size(192, 72);
+            Debug3D.TabIndex = 5;
+            Debug3D.Text = "3D Mode";
+            Debug3D.UseVisualStyleBackColor = true;
             // 
             // FSOMEdit
             // 
-            this.FSOMEdit.Location = new System.Drawing.Point(0, 0);
-            this.FSOMEdit.Margin = new System.Windows.Forms.Padding(0);
-            this.FSOMEdit.Name = "FSOMEdit";
-            this.FSOMEdit.Size = new System.Drawing.Size(762, 459);
-            this.FSOMEdit.TabIndex = 0;
+            FSOMEdit.Location = new Point(0, 0);
+            FSOMEdit.Margin = new Padding(0);
+            FSOMEdit.Name = "FSOMEdit";
+            FSOMEdit.Size = new Size(762, 459);
+            FSOMEdit.TabIndex = 0;
             // 
             // XMLEntryTab
             // 
-            this.XMLEntryTab.Controls.Add(this.XMLEdit);
-            this.XMLEntryTab.Location = new System.Drawing.Point(4, 22);
-            this.XMLEntryTab.Name = "XMLEntryTab";
-            this.XMLEntryTab.Size = new System.Drawing.Size(762, 459);
-            this.XMLEntryTab.TabIndex = 6;
-            this.XMLEntryTab.Text = "XML Entry";
-            this.XMLEntryTab.UseVisualStyleBackColor = true;
+            XMLEntryTab.Controls.Add(XMLEdit);
+            XMLEntryTab.Location = new Point(4, 24);
+            XMLEntryTab.Name = "XMLEntryTab";
+            XMLEntryTab.Size = new Size(192, 72);
+            XMLEntryTab.TabIndex = 6;
+            XMLEntryTab.Text = "XML Entry";
+            XMLEntryTab.UseVisualStyleBackColor = true;
             // 
             // XMLEdit
             // 
-            this.XMLEdit.Location = new System.Drawing.Point(-1, 0);
-            this.XMLEdit.Name = "XMLEdit";
-            this.XMLEdit.Size = new System.Drawing.Size(762, 459);
-            this.XMLEdit.TabIndex = 0;
-            // 
-            // PatchTab
-            // 
-            this.PatchTab.Controls.Add(this.PIFFEditor);
-            this.PatchTab.Location = new System.Drawing.Point(4, 22);
-            this.PatchTab.Name = "PatchTab";
-            this.PatchTab.Size = new System.Drawing.Size(762, 459);
-            this.PatchTab.TabIndex = 7;
-            this.PatchTab.Text = "Patch Info";
-            this.PatchTab.UseVisualStyleBackColor = true;
-            // 
-            // PIFFEditor
-            // 
-            this.PIFFEditor.Dock = System.Windows.Forms.DockStyle.Fill;
-            this.PIFFEditor.Location = new System.Drawing.Point(0, 0);
-            this.PIFFEditor.Name = "PIFFEditor";
-            this.PIFFEditor.Size = new System.Drawing.Size(762, 459);
-            this.PIFFEditor.TabIndex = 0;
-            // 
-            // NewOBJD
-            // 
-            this.NewOBJD.Location = new System.Drawing.Point(416, 11);
-            this.NewOBJD.Name = "NewOBJD";
-            this.NewOBJD.Size = new System.Drawing.Size(47, 23);
-            this.NewOBJD.TabIndex = 24;
-            this.NewOBJD.Text = "New";
-            this.NewOBJD.UseVisualStyleBackColor = true;
-            this.NewOBJD.Click += new System.EventHandler(this.NewOBJD_Click);
-            // 
-            // DeleteOBJD
-            // 
-            this.DeleteOBJD.Location = new System.Drawing.Point(355, 11);
-            this.DeleteOBJD.Name = "DeleteOBJD";
-            this.DeleteOBJD.Size = new System.Drawing.Size(55, 23);
-            this.DeleteOBJD.TabIndex = 25;
-            this.DeleteOBJD.Text = "Delete";
-            this.DeleteOBJD.UseVisualStyleBackColor = true;
-            this.DeleteOBJD.Click += new System.EventHandler(this.DeleteOBJD_Click);
-            // 
-            // ObjThumb
-            // 
-            this.ObjThumb.Location = new System.Drawing.Point(7, 12);
-            this.ObjThumb.Name = "ObjThumb";
-            this.ObjThumb.Size = new System.Drawing.Size(48, 48);
-            this.ObjThumb.TabIndex = 23;
+            XMLEdit.Location = new Point(-1, 0);
+            XMLEdit.Margin = new Padding(4, 3, 4, 3);
+            XMLEdit.Name = "XMLEdit";
+            XMLEdit.Size = new Size(762, 459);
+            XMLEdit.TabIndex = 0;
             // 
             // UpgradeTab
             // 
-            this.UpgradeTab.Controls.Add(this.UpgradeEditor);
-            this.UpgradeTab.Location = new System.Drawing.Point(4, 22);
-            this.UpgradeTab.Name = "UpgradeTab";
-            this.UpgradeTab.Size = new System.Drawing.Size(762, 459);
-            this.UpgradeTab.TabIndex = 8;
-            this.UpgradeTab.Text = "Upgrades";
-            this.UpgradeTab.UseVisualStyleBackColor = true;
+            UpgradeTab.Controls.Add(UpgradeEditor);
+            UpgradeTab.Location = new Point(4, 24);
+            UpgradeTab.Name = "UpgradeTab";
+            UpgradeTab.Size = new Size(192, 72);
+            UpgradeTab.TabIndex = 8;
+            UpgradeTab.Text = "Upgrades";
+            UpgradeTab.UseVisualStyleBackColor = true;
             // 
             // UpgradeEditor
             // 
-            this.UpgradeEditor.Dock = System.Windows.Forms.DockStyle.Fill;
-            this.UpgradeEditor.Location = new System.Drawing.Point(0, 0);
-            this.UpgradeEditor.Name = "UpgradeEditor";
-            this.UpgradeEditor.Size = new System.Drawing.Size(762, 459);
-            this.UpgradeEditor.TabIndex = 0;
+            UpgradeEditor.Dock = DockStyle.Fill;
+            UpgradeEditor.Location = new Point(0, 0);
+            UpgradeEditor.Margin = new Padding(4, 3, 4, 3);
+            UpgradeEditor.Name = "UpgradeEditor";
+            UpgradeEditor.Size = new Size(192, 72);
+            UpgradeEditor.TabIndex = 0;
+            // 
+            // PatchTab
+            // 
+            PatchTab.Controls.Add(PIFFEditor);
+            PatchTab.Location = new Point(4, 24);
+            PatchTab.Name = "PatchTab";
+            PatchTab.Size = new Size(192, 72);
+            PatchTab.TabIndex = 7;
+            PatchTab.Text = "Patch Info";
+            PatchTab.UseVisualStyleBackColor = true;
+            // 
+            // PIFFEditor
+            // 
+            PIFFEditor.Dock = DockStyle.Fill;
+            PIFFEditor.Location = new Point(0, 0);
+            PIFFEditor.Margin = new Padding(4, 3, 4, 3);
+            PIFFEditor.Name = "PIFFEditor";
+            PIFFEditor.Size = new Size(192, 72);
+            PIFFEditor.TabIndex = 0;
+            // 
+            // NewOBJD
+            // 
+            NewOBJD.Location = new Point(416, 11);
+            NewOBJD.Name = "NewOBJD";
+            NewOBJD.Size = new Size(47, 23);
+            NewOBJD.TabIndex = 24;
+            NewOBJD.Text = "New";
+            NewOBJD.UseVisualStyleBackColor = true;
+            NewOBJD.Click += NewOBJD_Click;
+            // 
+            // DeleteOBJD
+            // 
+            DeleteOBJD.Location = new Point(355, 11);
+            DeleteOBJD.Name = "DeleteOBJD";
+            DeleteOBJD.Size = new Size(55, 23);
+            DeleteOBJD.TabIndex = 25;
+            DeleteOBJD.Text = "Delete";
+            DeleteOBJD.UseVisualStyleBackColor = true;
+            DeleteOBJD.Click += DeleteOBJD_Click;
+            // 
+            // ObjThumb
+            // 
+            ObjThumb.Location = new Point(7, 12);
+            ObjThumb.Name = "ObjThumb";
+            ObjThumb.Size = new Size(48, 48);
+            ObjThumb.TabIndex = 23;
             // 
             // ObjectWindow
             // 
-            this.AutoScaleDimensions = new System.Drawing.SizeF(6F, 13F);
-            this.AutoScaleMode = System.Windows.Forms.AutoScaleMode.Font;
-            this.ClientSize = new System.Drawing.Size(784, 561);
-            this.Controls.Add(this.DeleteOBJD);
-            this.Controls.Add(this.NewOBJD);
-            this.Controls.Add(this.ObjThumb);
-            this.Controls.Add(this.SGChangeButton);
-            this.Controls.Add(this.GlobalButton);
-            this.Controls.Add(this.ObjMultitileLabel);
-            this.Controls.Add(this.ObjDescLabel);
-            this.Controls.Add(this.ObjNameLabel);
-            this.Controls.Add(this.SemiGlobalButton);
-            this.Controls.Add(this.ObjCombo);
-            this.Controls.Add(this.objPages);
-            this.FormBorderStyle = System.Windows.Forms.FormBorderStyle.FixedSingle;
-            this.Icon = ((System.Drawing.Icon)(resources.GetObject("$this.Icon")));
-            this.MaximizeBox = false;
-            this.Name = "ObjectWindow";
-            this.Text = "Edit Object - accessoryrack";
-            this.FormClosing += new System.Windows.Forms.FormClosingEventHandler(this.ObjectWindow_FormClosing);
-            this.AppearanceTab.ResumeLayout(false);
-            this.tabPage3.ResumeLayout(false);
-            this.tabPage2.ResumeLayout(false);
-            this.DefinitionTab.ResumeLayout(false);
-            this.objPages.ResumeLayout(false);
-            this.Debug3D.ResumeLayout(false);
-            this.XMLEntryTab.ResumeLayout(false);
-            this.PatchTab.ResumeLayout(false);
-            this.UpgradeTab.ResumeLayout(false);
-            this.ResumeLayout(false);
+            AutoScaleDimensions = new SizeF(96F, 96F);
+            AutoScaleMode = AutoScaleMode.Dpi;
+            ClientSize = new Size(784, 561);
+            Controls.Add(DeleteOBJD);
+            Controls.Add(NewOBJD);
+            Controls.Add(ObjThumb);
+            Controls.Add(SGChangeButton);
+            Controls.Add(GlobalButton);
+            Controls.Add(ObjMultitileLabel);
+            Controls.Add(ObjDescLabel);
+            Controls.Add(ObjNameLabel);
+            Controls.Add(SemiGlobalButton);
+            Controls.Add(ObjCombo);
+            Controls.Add(objPages);
+            FormBorderStyle = FormBorderStyle.FixedSingle;
+            Icon = (Icon)resources.GetObject("$this.Icon");
+            MaximizeBox = false;
+            Name = "ObjectWindow";
+            Text = "Edit Object - accessoryrack";
+            FormClosing += ObjectWindow_FormClosing;
+            AppearanceTab.ResumeLayout(false);
+            tabPage3.ResumeLayout(false);
+            tabPage2.ResumeLayout(false);
+            DefinitionTab.ResumeLayout(false);
+            objPages.ResumeLayout(false);
+            Debug3D.ResumeLayout(false);
+            XMLEntryTab.ResumeLayout(false);
+            UpgradeTab.ResumeLayout(false);
+            PatchTab.ResumeLayout(false);
+            ResumeLayout(false);
 
         }
 

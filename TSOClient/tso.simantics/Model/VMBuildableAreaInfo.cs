@@ -129,6 +129,8 @@ namespace FSO.SimAntics.Model
             var limit = GetObjectLimit(vm);
             vm.TSOState.ObjectLimit = limit;
 
+            var disableOverbudget = !vm.TSOState.Flags.HasFlag(TSOPlatform.VMTSOLotStateFlags.Archived);
+
             //community lots cannot go overbudget, as the object limit does not change!
             if (!vm.TSOState.CommunityLot)
             {
@@ -151,7 +153,7 @@ namespace FSO.SimAntics.Model
                     {
                         if (o is VMGameObject)
                         {
-                            if (i >= limit)
+                            if (i >= limit && disableOverbudget)
                             {
                                 ((VMGameObject)o).Disabled |= VMGameObjectDisableFlags.ObjectLimitExceeded;
                                 ((VMGameObject)o).Disabled &= ~VMGameObjectDisableFlags.ObjectLimitThreadDisable;

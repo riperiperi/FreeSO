@@ -171,6 +171,15 @@ namespace FSO.Files.Utils
         }
 
         /// <summary>
+        /// Writes a number of bytes to the current stream.
+        /// </summary>
+        /// <param name="bytes">Bytes to write out.</param>
+        public void WriteBytes(ReadOnlySpan<byte> bytes)
+        {
+            Writer.Write(bytes);
+        }
+
+        /// <summary>
         /// Writes a pascal string to the current stream, which is prefixed by a 16bit short.
         /// </summary>
         public void WriteLongPascalString(string value)

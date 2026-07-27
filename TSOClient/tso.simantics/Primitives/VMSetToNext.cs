@@ -1,11 +1,10 @@
-﻿using System.Linq;
+﻿using FSO.Files.Utils;
+using FSO.LotView.Model;
 using FSO.SimAntics.Engine;
-using FSO.Files.Utils;
 using FSO.SimAntics.Engine.Scopes;
 using FSO.SimAntics.Engine.Utils;
 using Microsoft.Xna.Framework;
-using System.IO;
-using FSO.LotView.Model;
+using System.Runtime.CompilerServices;
 
 namespace FSO.SimAntics.Primitives
 {
@@ -20,13 +19,44 @@ namespace FSO.SimAntics.Primitives
             new Point(0, 1),
             new Point(-1, 0),
         };
+
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
+        private void SetVariable(VMStackFrame context, VMSetToNextOperand operand, short result)
+        {
+            VMMemory.SetVariable(context, operand.TargetOwner, operand.TargetData, result);
+        }
+
+
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
+        private void SetVariable(VMStackFrame context, VMSetToNextOperand operand, VMEntity result)
+        {
+            if (operand.TargetOwner == VMVariableScope.StackObjectID)
+            {
+                context.StackObject = result;
+            }
+            else
+            {
+                SetVariable(context, operand, result.ObjectID);
+            }
+        }
+
         public override VMPrimitiveExitCode Execute(VMStackFrame context, VMPrimitiveOperand args)
         {
             var operand = (VMSetToNextOperand)args;
-            var targetValue = VMMemory.GetVariable(context, operand.TargetOwner, operand.TargetData);
             var entities = context.VM.Entities;
 
-            VMEntity Pointer = context.VM.GetObjectById(targetValue);
+            VMEntity Pointer;
+            short targetValue;
+            if (operand.TargetOwner == VMVariableScope.StackObjectID)
+            {
+                targetValue = context.StackObjectID;
+                Pointer = context.StackObjectSafe;
+            }
+            else
+            {
+                targetValue = VMMemory.GetVariable(context, operand.TargetOwner, operand.TargetData);
+                Pointer = context.VM.GetObjectById(targetValue);
+            }
 
             //re-evaluation of what this actually does:
             //tries to find the next object id (from the previous) that meets a specific condition.
@@ -37,7 +67,7 @@ namespace FSO.SimAntics.Primitives
             if (operand.SearchType == VMSetToNextSearchType.PartOfAMultipartTile) {
                 var result = MultitilePart(context, Pointer, targetValue);
                 if (result == 0) return VMPrimitiveExitCode.GOTO_FALSE;
-                VMMemory.SetVariable(context, operand.TargetOwner, operand.TargetData, result);
+                SetVariable(context, operand, result);
                 return VMPrimitiveExitCode.GOTO_TRUE;
             }
             else if (operand.SearchType == VMSetToNextSearchType.ObjectAdjacentToObjectInLocal)
@@ -46,7 +76,7 @@ namespace FSO.SimAntics.Primitives
                 if (result == null) return VMPrimitiveExitCode.GOTO_FALSE;
                 else
                 {
-                    VMMemory.SetVariable(context, operand.TargetOwner, operand.TargetData, result.ObjectID);
+                    SetVariable(context, operand, result);
                     return VMPrimitiveExitCode.GOTO_TRUE;
                 }
             }
@@ -54,21 +84,21 @@ namespace FSO.SimAntics.Primitives
             {
                 var next = Content.Content.Get().Jobs.SetToNext(targetValue);
                 if (next < 0) return VMPrimitiveExitCode.GOTO_FALSE;
-                VMMemory.SetVariable(context, operand.TargetOwner, operand.TargetData, next);
+                SetVariable(context, operand, next);
                 return VMPrimitiveExitCode.GOTO_TRUE;
             }
             else if (operand.SearchType == VMSetToNextSearchType.NeighborId)
             {
                 var next = Content.Content.Get().Neighborhood.SetToNext(targetValue);
                 if (next < 0) return VMPrimitiveExitCode.GOTO_FALSE;
-                VMMemory.SetVariable(context, operand.TargetOwner, operand.TargetData, next);
+                SetVariable(context, operand, next);
                 return VMPrimitiveExitCode.GOTO_TRUE;
             }
             else if (operand.SearchType == VMSetToNextSearchType.NeighborOfType)
             {
                 var next = Content.Content.Get().Neighborhood.SetToNext(targetValue, operand.GUID);
                 if (next < 0) return VMPrimitiveExitCode.GOTO_FALSE;
-                VMMemory.SetVariable(context, operand.TargetOwner, operand.TargetData, next);
+                SetVariable(context, operand, next);
                 return VMPrimitiveExitCode.GOTO_TRUE;
             } else {
 
@@ -106,7 +136,7 @@ namespace FSO.SimAntics.Primitives
 
                 bool loop = (operand.SearchType == VMSetToNextSearchType.ObjectOnSameTile) || (operand.SearchType == VMSetToNextSearchType.FamilyMember);
 
-                var ind = VM.FindNextIndexInObjList(entities, targetValue);
+                var ind = entities.FindNextIndexInObjList(targetValue);
                 for (int i=ind; i<entities.Count; i++) //generic search through all objects
                 {
                     var temp = entities[i];
@@ -140,7 +170,7 @@ namespace FSO.SimAntics.Primitives
                     }
                     if (found)
                     {
-                        VMMemory.SetVariable(context, operand.TargetOwner, operand.TargetData, temp.ObjectID);
+                        SetVariable(context, operand, temp);
                         return VMPrimitiveExitCode.GOTO_TRUE;
                     }
                 }
@@ -163,7 +193,7 @@ namespace FSO.SimAntics.Primitives
                     if (first == null || !entities.Contains(Pointer)) return VMPrimitiveExitCode.GOTO_FALSE; //no elements of this kind at all.
                     else
                     {
-                        VMMemory.SetVariable(context, operand.TargetOwner, operand.TargetData, first.ObjectID); //set to loop, so go back to lowest obj id.
+                        SetVariable(context, operand, first);
                         return VMPrimitiveExitCode.GOTO_TRUE;
                     }
                     //loop around

@@ -18,6 +18,7 @@ using FSO.Server.Framework.Voltron;
 using FSO.Server.Protocol.Electron.Packets;
 using FSO.Server.Protocol.Gluon.Model;
 using FSO.Server.Servers.City.Domain;
+using FSO.Server.Servers.Lot.Surround;
 using FSO.SimAntics;
 using FSO.SimAntics.Engine;
 using FSO.SimAntics.Marshals;
@@ -49,6 +50,10 @@ namespace FSO.Server.Servers.Lot.Domain
         private const bool TIME_DILATION_ENABLED = true;
         private const int TIME_DILATION_THRESHOLD_MS = 500; // Accelerate through half second pauses.
         private const int TIME_DILATION_SKIP_THRESHOLD_MS = 5000; // 5 seconds, or 1 ingame minute
+        private const int HOLLOW_UPDATE_FREQ_MS = 5000; // 5 seconds
+        private const uint HOLLOW_LOAD_ALL = 0b111111111;
+
+        private const uint TRANSITION_GUID = 0x746ED02B;
 
         private static Logger LOG = LogManager.GetCurrentClassLogger();
 
@@ -60,6 +65,8 @@ namespace FSO.Server.Servers.Lot.Domain
         private DbLot LotPersist;
         private List<DbLot> LotAdj;
         private List<DbRoommate> LotRoommates;
+        private CancellationTokenSource ClosedToken = new();
+        private long LastHollowBroadcast;
 
         private VM Lot;
         private VMServerDriver VMDriver;
@@ -92,7 +99,12 @@ namespace FSO.Server.Servers.Lot.Domain
         private bool ActiveYet;
         private Queue<Action> LotThreadActions = new Queue<Action>();
 
-        private bool AllowGuestOpening => Config.Archive != null && Config.Archive.Flags.HasFlag(FSO.Common.ArchiveConfigFlags.AllOpenable);
+        private LiveSurroundLotConnection SurroundConnection;
+        private HashSet<uint> FreeRoamLeaving = [];
+
+        private bool AllowGuestOpening => Config.AllOpenable || ArchiveFreeRoam;
+        private bool ArchiveFreeRoam => Config.Archive?.Flags.HasFlag(FSO.Common.ArchiveConfigFlags.AllOpenable) ?? false;
+        private bool IsSpectatorMode;
 
         private static HashSet<uint> ValidOOWGUIDs = new HashSet<uint>()
         {
@@ -383,7 +395,7 @@ namespace FSO.Server.Servers.Lot.Domain
                         var marshal = new VMMarshal();
                         marshal.Deserialize(file);
 
-                        if (LotPersist.move_flags > 0)
+                        if (LotPersist.MoveFlags > 0)
                         {
                             //must rotate lot to face its new road direction!
                             var oldDir = ((VMTSOLotState)marshal.PlatformState).Size >> 16;
@@ -430,7 +442,7 @@ namespace FSO.Server.Servers.Lot.Domain
 
         public bool SaveRing()
         {
-            if (TransientLot) return true; //transient lots never get saved.
+            if (TransientLot || IsSpectatorMode) return true; //transient/spectator lots never get saved.
             var newBackup = (sbyte)((LotPersist.ring_backup_num + 1) % Config.RingBufferSize);
             var lotStr = LotPersist.lot_id.ToString("x8");
             Directory.CreateDirectory(Path.Combine(Config.SimNFS, "Lots/" + lotStr + "/"));
@@ -458,7 +470,12 @@ namespace FSO.Server.Servers.Lot.Domain
                         using (var db = DAFactory.Get())
                         {
                             db.Lots.UpdateRingBackup(LotPersist.lot_id, newBackup);
-                            //db.Flush();
+
+                            if ((LotPersist.ArchiveFlags & LotArchiveFlags.ArchiveFromOldSave) != 0)
+                            {
+                                LotPersist.ArchiveFlags = LotArchiveFlags.ArchiveRules;
+                                db.Lots.UpdateArchiveFlags(LotPersist.lot_id, (sbyte)LotPersist.archive_flags);
+                            }
                         }
                     }
                     catch (Exception e)
@@ -532,14 +549,18 @@ namespace FSO.Server.Servers.Lot.Domain
 
             var persists = Lot.Context.ObjectQueries.MultitileByPersist.Keys.ToList();
             Dictionary<uint, DbObject> ownerInfo;
+            var adminOwners = new HashSet<uint>();
             using (var da = DAFactory.Get())
             {
                 ownerInfo = da.Objects.GetObjectOwners(persists).ToDictionary(x => x.object_id);
+                foreach (var id in ownerInfo.Values.Select(x => x.owner_id ?? 0).Where(x => x != 0 && !Lot.TSOState.Roommates.Contains(x)).Distinct())
+                    if (da.Avatars.GetModerationLevel(id) > 0) adminOwners.Add(id);
             }
 
             var ents = new List<VMEntity>(Lot.Entities);
             var needToCreate = new HashSet<uint>(RequiredGUIDs);
-            var removeAll = (LotPersist.move_flags & 6) > 0;
+            var removeAll = (LotPersist.MoveFlags & LotMoveFlags.ShouldClearObjects) > 0;
+            bool keepAsOwnerless = (LotPersist.ArchiveFlags & LotArchiveFlags.ArchiveFromOldSave) != 0;
             foreach (var ent in ents)
             {
                 needToCreate.Remove(ent.Object.OBJ.GUID);
@@ -571,7 +592,8 @@ namespace FSO.Server.Servers.Lot.Domain
                         //or if the object is not donated and the owner is not a roomie
                         if (info.lot_id != Context.DbId)
                             deleteMode = 2;
-                        else if (removeAll || !(Lot.TSOState.Roommates.Contains(((VMTSOObjectState)ent.TSOState).OwnerID) 
+                        else if (removeAll || !(Lot.TSOState.Roommates.Contains(((VMTSOObjectState)ent.TSOState).OwnerID)
+                            || adminOwners.Contains(((VMTSOObjectState)ent.TSOState).OwnerID)
                             || ((VMTSOObjectState)ent.TSOState).ObjectFlags.HasFlag(VMTSOObjectFlags.FSODonated)))
                             deleteMode = 1;
                     }
@@ -591,7 +613,19 @@ namespace FSO.Server.Servers.Lot.Domain
                             {
                                 total++;
                                 //this is run synchro.
-                                if (deleteMode == 1)
+                                if (keepAsOwnerless)
+                                {
+                                    foreach (var obj in delE.MultitileGroup.Objects)
+                                    {
+                                        if (obj.TSOState is VMTSOObjectState tsoobj)
+                                        {
+                                            tsoobj.OwnerID = 0;
+                                        }
+
+                                        obj.PersistID = 0;
+                                    }
+                                }
+                                else if (deleteMode == 1)
                                 {
                                     //return to inventory, since the object is actually on this lot
                                     VMGlobalLink.MoveToInventory(Lot, delE.MultitileGroup, (success, objid) =>
@@ -628,10 +662,10 @@ namespace FSO.Server.Servers.Lot.Domain
                 Lot.Context.CreateObjectInstance(obj, LotTilePos.OUT_OF_WORLD, Direction.NORTH);
             }
 
-            if ((LotPersist.move_flags & 2) > 0)
+            if ((LotPersist.MoveFlags & LotMoveFlags.New) > 0)
             {
                 BlueprintReset();
-                LotPersist.move_flags = 0;
+                LotPersist.MoveFlags = 0;
             }
         }
 
@@ -727,8 +761,17 @@ namespace FSO.Server.Servers.Lot.Domain
         public void ResetVM()
         {
             LOG.Info("Resetting VM for lot with dbid = " + Context.DbId);
+            IsSpectatorMode = (Context.Action == ClaimAction.LOT_SPECTATOR);
             VMGlobalLink = Kernel.Get<LotServerGlobalLink>();
+            VMGlobalLink.Readonly = IsSpectatorMode;
+            if (AllowGuestOpening && !JobLot)
+            {
+                var host = Kernel.Get<LiveSurroundHost>();
+                SurroundConnection = host.Connect(LotPersist.location, this, Host);
+            }
+
             VMDriver = new VMServerDriver(VMGlobalLink);
+            VMDriver.TicksPerPacket = Config.Tick_Rate_Divider;
             VMDriver.OnTickBroadcast += TickBroadcast;
             VMDriver.OnDirectMessage += DirectMessage;
             VMDriver.OnDropClient += DropClient;
@@ -748,10 +791,12 @@ namespace FSO.Server.Servers.Lot.Domain
 
             Lot = new VM(new VMContext(null), VMDriver, new VMNullHeadlineProvider());
             Lot.OnChatEvent += Lot_OnChatEvent;
+            Lot.OnGenericVMEvent += Lot_OnGenericVMEvent;
             Lot.Init();
 
             bool isNew = false;
-            bool isMoved = (LotPersist.move_flags > 0);
+            bool archiveOldSave = LotPersist.ArchiveFlags.HasFlag(LotArchiveFlags.ArchiveFromOldSave);
+            bool isMoved = LotPersist.MoveFlags > 0 || archiveOldSave;
             HollowLots = Task.Run(LoadAdj);
             if (!TransientLot && LotPersist.ring_backup_num > -1 && AttemptLoadRing())
             {
@@ -763,6 +808,27 @@ namespace FSO.Server.Servers.Lot.Domain
                 BlueprintReset();
             }
 
+            RefreshLotState(isNew, isMoved, archiveOldSave);
+
+            if (JobLot)
+            {
+                //for recording. must resave lot to get appropriate state changes from terrain population
+                //(important for playback to sync)
+                Lot.Tick();
+                Lot.ForwardCommand(new VMStateSyncCmd()
+                {
+                    State = Lot.Save(),
+                    Run = false,
+                });
+                Lot.Tick();
+            }
+
+            LotActive.Set();
+            ActiveYet = true;
+        }
+
+        private void RefreshLotState(bool isNew, bool isMoved, bool archiveOldSave)
+        {
             if (UnownedLot)
             {
                 // Maximum size (for admin placement)
@@ -775,6 +841,10 @@ namespace FSO.Server.Servers.Lot.Domain
             Lot.TSOState.LotID = LotPersist.location;
             Lot.TSOState.SkillMode = LotPersist.skill_mode;
             Lot.TSOState.PropertyCategory = (byte)LotPersist.category;
+            Lot.TSOState.Flags =
+                (LotPersist.ArchiveFlags != 0 ? VMTSOLotStateFlags.Archived : 0) | 
+                (AllowGuestOpening && !JobLot ? VMTSOLotStateFlags.AllowFreeRoam : 0);
+
             var isCommunity = LotPersist.category == LotCategory.community;
 
             if (isCommunity)
@@ -816,14 +886,22 @@ namespace FSO.Server.Servers.Lot.Domain
             Lot.Context.UpdateTSOBuildableArea();
 
             Lot.MyUID = uint.MaxValue - 1;
-            if ((LotPersist.move_flags & 2) > 0) isNew = true;
+            if ((LotPersist.MoveFlags & LotMoveFlags.New) > 0) isNew = true;
             ReturnInvalidObjects();
             if (!JobLot) ReturnOOWObjects();
 
+            var keepHeights = LotPersist.MoveFlags.HasFlag(LotMoveFlags.TerrainRegen) || archiveOldSave;
+            (byte[], short[])? restoreData = keepHeights ? VMLotTerrainRestoreTools.SnapshotTerrain(Lot) : null;
+
             var restoreType = UnownedLot ? RestoreLotType.Blank : (isCommunity ? RestoreLotType.Community : RestoreLotType.Normal);
-            if (isMoved || isNew) VMLotTerrainRestoreTools.RestoreTerrain(Lot, restoreType);
+            if (isMoved || isNew) VMLotTerrainRestoreTools.RestoreTerrain(Lot, restoreType, !keepHeights);
             VMLotTerrainRestoreTools.EnsureCoreObjects(Lot, restoreType);
             if (isNew) VMLotTerrainRestoreTools.PopulateBlankTerrain(Lot);
+
+            if (restoreData != null)
+            {
+                VMLotTerrainRestoreTools.RestoreBuildableTerrain(Lot, restoreData.Value);
+            }
 
             ResyncTime();
 
@@ -833,8 +911,9 @@ namespace FSO.Server.Servers.Lot.Domain
                 {
                     Tuning = Tuning
                 });
-                Lot.Tick();
             }
+
+            Lot.Tick();
 
             Lot.Context.UpdateTSOBuildableArea();
 
@@ -885,20 +964,83 @@ namespace FSO.Server.Servers.Lot.Domain
                     }
                 }
             }
-            LotActive.Set();
-            ActiveYet = true;
+        }
 
-            if (JobLot)
+        private void Lot_OnGenericVMEvent(VMEventType type, object data)
+        {
+            if (type == VMEventType.TSOUserLeaveBuildBuy)
             {
-                //for recording. must resave lot to get appropriate state changes from terrain population 
-                //(important for playback to sync)
-                Lot.Tick();
-                Lot.ForwardCommand(new VMStateSyncCmd()
+                var msg = (VMNetLeaveBuildBuyCmd)data;
+
+                bool broadcastUpdate = msg.Build || true;
+                if (broadcastUpdate)
                 {
-                    State = Lot.Save(),
-                    Run = false,
-                });
+                    if (LastHollowBroadcast == -1)
+                    {
+                        // In flight...
+                        return;
+                    }
+
+                    var msSinceLast = (Stopwatch.GetTimestamp() - LastHollowBroadcast) / (Stopwatch.Frequency / 1000);
+
+                    if (msSinceLast > HOLLOW_UPDATE_FREQ_MS)
+                    {
+                        HollowBroadcast();
+                    }
+                    else
+                    {
+                        LastHollowBroadcast = -1;
+                        Task.Delay((int)(HOLLOW_UPDATE_FREQ_MS - msSinceLast), ClosedToken.Token).ContinueWith((task) =>
+                        {
+                            if (!task.IsCanceled)
+                            {
+                                BlockOnLotThread(HollowBroadcast);
+                            }
+                        });
+                    }
+                }
             }
+        }
+
+        private void HollowBroadcast()
+        {
+            var didBroadcast = SurroundConnection?.HollowBroadcast((Action<byte[]> onData) =>
+            {
+                var hmarshal = Lot.HollowSave();
+
+                Host.InBackground(() => {
+                    try
+                    {
+
+                        byte[] data;
+                        using (var output = new MemoryStream())
+                        {
+                            hmarshal.SerializeInto(new BinaryWriter(output));
+                            data = output.ToArray();
+                        }
+
+                        onData(data);
+
+                        if (!TransientLot)
+                        {
+                            var lotStr = LotPersist.lot_id.ToString("x8");
+                            string path = Path.Combine(Config.SimNFS, "Lots/" + lotStr + "/hollow.fsoh");
+
+                            using (var output = new FileStream(path, FileMode.Create))
+                            {
+                                output.Write(data);
+                            }
+                        }
+                    }
+                    catch (Exception e)
+                    {
+                        LOG.Warn(e, "Failed to save hollow lot (to disk/db) with dbid = " + Context.DbId);
+                        LOG.Warn(e.StackTrace);
+                    }
+                });
+            }) ?? false;
+
+            LastHollowBroadcast = didBroadcast ? Stopwatch.GetTimestamp() : 0;
         }
 
         public void UpdateTuning(IEnumerable<DynTuningEntry> tuning)
@@ -982,14 +1124,14 @@ namespace FSO.Server.Servers.Lot.Domain
         {
             object packet = (msg.Type == VMNetMessageType.Direct) ?
                 (object)(new FSOVMDirectToClient() { Data = msg.Data })
-                : (object)(new FSOVMTickBroadcast() { Data = msg.Data });
+                : (object)(new FSOVMTickBroadcast() { Data = msg.Data, Catchup = msg.Type == VMNetMessageType.CatchupTick });
             Host.Send(target.PersistID, packet);
         }
 
-        private void TickBroadcast(VMNetMessage msg, HashSet<VMNetClient> ignore)
+        private void TickBroadcast(VMNetMessage msg, HashSet<VMNetClient> clients)
         {
-            HashSet<uint> ignoreIDs = new HashSet<uint>(ignore.Select(x => x.PersistID));
-            Host.Broadcast(ignoreIDs, new FSOVMTickBroadcast() { Data = msg.Data });
+            HashSet<uint> clientIDs = new HashSet<uint>(clients.Select(x => x.PersistID));
+            Host.Broadcast(clientIDs, new FSOVMTickBroadcast() { Data = msg.Data });
         }
 
         private void DereferenceLot()
@@ -1051,9 +1193,9 @@ namespace FSO.Server.Servers.Lot.Domain
                     lastTick++;
                     //sometimes avatars can be killed immediately after their kill timer starts (this frame will run the leave lot interaction)
                     //this works around that possibility. 
-                    var preTickAvatars = Lot.Context.ObjectQueries.AvatarsByPersist.Values.Select(x => x).ToList();
-                    var noRoomies = !(preTickAvatars.Any(x => ((VMTSOAvatarState)x.TSOState).Permissions > VMTSOAvatarPermissions.Visitor)) 
-                        && (LotPersist.admit_mode < 4 && LotPersist.category != LotCategory.community) && !AllowGuestOpening;
+                    var preTickAvatars = Lot.Context.ObjectQueries.AvatarsByPersist.Values.ToList();
+                    var noRoomies = !IsSpectatorMode
+                        && !preTickAvatars.Any(x => x.KillTimeout == -1 && x.AvatarState.Permissions > VMTSOAvatarPermissions.Visitor);
 
                     try
                     {
@@ -1074,24 +1216,37 @@ namespace FSO.Server.Servers.Lot.Domain
                         return; //background thread has already released all our avatars and our claim. exit immediately.
                     }
 
-                    if (noRoomies && !noRemainingUsers)
+                    if (noRoomies && !noRemainingUsers && !ArchiveFreeRoam)
                     {
                         if (TimeToShutdown == -1)
                         {
-                            TimeToShutdown = (Context.Action == ClaimAction.LOT_CLEANUP) ? 1 : TICKRATE * 40;
+                            if (Context.Action == ClaimAction.LOT_CLEANUP)
+                                TimeToShutdown = 1;
+                            else if (AllowGuestOpening)
+                                TimeToShutdown = TICKRATE * 15;
+                            else
+                                TimeToShutdown = TICKRATE * 40;
                         }
 
-                        if (--TimeToShutdown < TICKRATE * 10)
+                        // Only do the following if there are definitely avatars on the property. (and we can verify their permissions)
+                        if (--TimeToShutdown < TICKRATE * 10 && preTickAvatars.Count > 0)
                         {
-                            //no roommates are here, so all visitors must be kicked out.
-                            if (preTickAvatars.Count > 0)
+                            if (AllowGuestOpening)
                             {
-                                Host.Broadcast(new HashSet<uint>(), new FSOVMProtocolMessage(true, "21", "22"));
+                                TransitionToSpectatorMode();
                             }
-                            foreach (var avatar in preTickAvatars)
+                            else if (LotPersist.admit_mode < 4 && LotPersist.category != LotCategory.community)
                             {
-                                if (avatar.KillTimeout == -1) avatar.UserLeaveLot();
-                                VMDriver.DropAvatar(avatar);
+                                //no roommates are here, so all visitors must be kicked out.
+                                if (preTickAvatars.Count > 0)
+                                {
+                                    Host.Broadcast(null, new FSOVMProtocolMessage(true, "21", "22"));
+                                }
+                                foreach (var avatar in preTickAvatars)
+                                {
+                                    if (avatar.KillTimeout == -1) avatar.UserLeaveLot();
+                                    VMDriver.DropAvatar(avatar);
+                                }
                             }
                         }
                     }
@@ -1125,8 +1280,15 @@ namespace FSO.Server.Servers.Lot.Domain
                         Host.UpdateActiveVisitRecords();
                     }
 
+                    SurroundConnection?.SubmitTick(Lot, false);
+
+                    if (AllowGuestOpening && !JobLot)
+                    {
+                        TickFreeRoam();
+                    }
+
                     var beingKilled = preTickAvatars.Where(x => x.KillTimeout == 1);
-                    if (beingKilled.Count() > 0)
+                    if (beingKilled.Any())
                     {
                         //avatars that are being killed could die before their user disconnects. It's important to save them immediately.
                         SaveAvatars(beingKilled, true);
@@ -1227,15 +1389,331 @@ namespace FSO.Server.Servers.Lot.Domain
             evt.WaitOne();
         }
 
-        public bool IsAvatarOnLot(uint pid)
+        private void TransitionFromSpectatorMode()
+        {
+            LOG.Info("Transitioning lot " + Context.DbId + " from spectator mode to writable mode.");
+            LotActive.Reset();
+            VMDriver.RecordAvatarStateForTransition(Lot);
+            IsSpectatorMode = false;
+            VMGlobalLink.Readonly = IsSpectatorMode;
+
+            bool loadedSave = false;
+
+            if (LotPersist.ring_backup_num >= 0)
+            {
+                VMDriver.Transitioning = true;
+                try
+                {
+                    var path = Path.Combine(Config.SimNFS, $"Lots/{LotPersist.lot_id:x8}/state_{LotPersist.ring_backup_num}.fsov");
+                    using var file = new BinaryReader(File.OpenRead(path));
+                    var marshal = new VMMarshal();
+                    marshal.Deserialize(file);
+
+                    bool archiveOldSave = LotPersist.ArchiveFlags.HasFlag(LotArchiveFlags.ArchiveFromOldSave);
+                    bool isMoved = LotPersist.MoveFlags > 0 || archiveOldSave;
+
+                    if (isMoved)
+                    {
+                        var oldDir = ((VMTSOLotState)marshal.PlatformState).Size >> 16;
+                        var newDir = VMLotTerrainRestoreTools.PickRoadDir(Terrain.Roads[1, 1]);
+                        var rotate = new VMLotRotate(marshal);
+                        rotate.Rotate(((newDir - oldDir) + 4) % 4);
+                    }
+
+                    Lot.Load(marshal);
+                    CleanLot();
+                    Lot.Reset();
+                    RefreshLotState(isNew: false, isMoved, archiveOldSave); // archive old save?
+                    loadedSave = true;
+                }
+                catch (Exception e)
+                {
+                    LOG.Warn(e, "Failed to load lot save for spectator transition on lot " + Context.DbId);
+                }
+                finally
+                {
+                    VMDriver.Transitioning = false;
+                }
+            }
+
+            if (loadedSave)
+                VMDriver.RejoinClients(Lot);
+            else
+                VMDriver.SyncAllClients();
+
+            LotSaveTicker = LOT_SAVE_PERIOD;
+            AvatarSaveTicker = AVATAR_SAVE_PERIOD;
+
+            LotActive.Set();
+        }
+
+        private void TransitionToSpectatorMode()
+        {
+            LOG.Info("Transitioning lot " + Context.DbId + " to spectator mode.");
+            LotActive.Reset();
+            VMDriver.RecordAvatarStateForTransition(Lot);
+
+            // First, make sure the driver doesn't send any of this to the client (it might convince their client to disconnect)
+            VMDriver.Transitioning = true;
+
+            // Try to force everyone to leave the lot safely.
+            CleanLot();
+
+            // Save the lot with nobody on it.
+            SaveRing();
+
+            // Transition to spectator mode and reintroduce the players who remained connected. (with a resync)
+            IsSpectatorMode = true;
+            VMGlobalLink.Readonly = IsSpectatorMode;
+
+            VMDriver.Transitioning = false;
+
+            VMDriver.RejoinClients(Lot, VMTSOAvatarFlags.Spectator);
+            Lot.SignalChatEvent(new VMChatEvent(null, VMChatEventType.Generic, "Lot transitioned to spectator mode."));
+            LotActive.Set();
+        }
+
+        private bool TryBeginFreeRoam(uint persistID)
+        {
+            lock (FreeRoamLeaving)
+            {
+                if (!FreeRoamLeaving.Contains(persistID))
+                {
+                    FreeRoamLeaving.Add(persistID);
+                    return true;
+                }
+
+                return false;
+            }
+        }
+
+        public void TickFreeRoam()
+        {
+            foreach (var obj in Lot.Context.ObjectQueries.Avatars)
+            {
+                var ava = obj as VMAvatar;
+
+                var lastStack = ava.Thread.Stack.LastOrDefault();
+
+                if (ava.KillTimeout != -1)
+                {
+                    // Can't transition if they're already leaving.
+                    continue;
+                }
+
+                // Direct control free roam
+                if (lastStack is VMDirectControlFrame dcFrame)
+                {
+                    var edge = dcFrame.EdgeCheck(1);
+                    if (edge != default)
+                    {
+                        // User appears to be attempting to leave the property. See if the lot can be entered and then tell the client to go and join it.
+
+                        var location = LotPersist.location;
+                        var coords = MapCoordinates.Unpack(location);
+                        var cityOffset = LotTransitionInfo.RelativeChangeLotToCity(new Point(edge.X, edge.Y));
+                        coords.X += (ushort)cityOffset.X;
+                        coords.Y += (ushort)cityOffset.Y;
+
+                        if (Realestate.IsOpenable(coords.X, coords.Y))
+                        {
+                            if (!TryBeginFreeRoam(ava.PersistID)) continue;
+
+                            LOG.Info($"Edge check {edge} ({coords.X}, {coords.Y}) {Stopwatch.GetTimestamp()}");
+
+                            var pid = ava.PersistID;
+
+                            var info = new LotTransitionInfo()
+                            {
+                                BeforeLocation = LotPersist.location,
+                                RelativeChangeX = edge.X,
+                                RelativeChangeY = edge.Y,
+
+                                AvatarLotTilePosX = ava.Position.x,
+                                AvatarLotTilePosY = ava.Position.y,
+                                AvatarDirection = ava.RadianDirection,
+
+                                Type = LotTransitionType.DirectControl
+                            };
+
+                            SaveAvatar(ava, () =>
+                            {
+                                Host.ReleaseDbAvatarClaim(pid);
+
+                                Lot.ForwardCommand(new VMNetBeginFreeRoamCmd()
+                                {
+                                    AvatarPID = pid,
+                                    TargetLot = MapCoordinates.Pack(coords.X, coords.Y),
+                                    Transition = info
+                                });
+                            });
+                        }
+                    }
+                    // Preload lots if the avatar is close to the edge.
+                    // TODO
+
+                    // Future process:
+                    // Server detects advancement to edge and tries to start the process a bit early (other stuff is the same)
+                    //..
+                    // - Client gets request to hop to target lot and starts connecting in the background.
+                    // - JoinLot includes a position as before, but it can be significantly out of bounds
+                    // - Surrounding lots that can be reused from the previous lot are omitted to save space and time.
+                    // - Client seamless switch between the old world and the new one when it's fully ready (uses async preload)
+                    // - Client can correct its server position to better match the client (need to be aware of latency)
+                }
+                else if (lastStack.Callee.Object.GUID == TRANSITION_GUID)
+                {
+                    var transitionDest = lastStack.Callee;
+
+                    var transitionRequested = transitionDest.GetAttribute(5);
+
+                    if (transitionRequested != 0)
+                    {
+                        var idLow = transitionDest.GetAttribute(1);
+                        var idHigh = transitionDest.GetAttribute(2);
+                        var destX = transitionDest.GetAttribute(3);
+                        var destY = transitionDest.GetAttribute(4);
+
+                        var myCoords = MapCoordinates.Unpack(LotPersist.location);
+
+                        var location = (uint)((int)idLow | (idHigh << 16));
+                        var coords = MapCoordinates.Unpack(location);
+
+                        if (Realestate.IsOpenable(coords.X, coords.Y))
+                        {
+                            if (!TryBeginFreeRoam(ava.PersistID)) continue;
+
+                            var pid = ava.PersistID;
+                            var cityEdge = new Point(coords.X - myCoords.X, coords.Y - myCoords.Y);
+                            var edge = LotTransitionInfo.RelativeChangeCityToLot(cityEdge);
+
+                            var info = new LotTransitionInfo()
+                            {
+                                BeforeLocation = LotPersist.location,
+                                RelativeChangeX = edge.X,
+                                RelativeChangeY = edge.Y,
+
+                                AvatarLotTilePosX = ava.Position.x,
+                                AvatarLotTilePosY = ava.Position.y,
+                                AvatarDirection = ava.RadianDirection,
+
+                                Type = LotTransitionType.Routing,
+                                RoutingLotTilePosX = destX,
+                                RoutingLotTilePosY = destY,
+                                RoutingTargetLocation = location
+                            };
+
+                            SaveAvatar(ava, () =>
+                            {
+                                Host.ReleaseDbAvatarClaim(pid);
+
+                                Lot.ForwardCommand(new VMNetBeginFreeRoamCmd()
+                                {
+                                    AvatarPID = pid,
+                                    TargetLot = MapCoordinates.Pack(coords.X, coords.Y),
+                                    Transition = info
+                                });
+                            });
+                        }
+                    }
+                }
+            }
+        }
+
+        public void SendHollowLotData(uint location, byte[] data)
+        {
+            // Sends the given hollow lot data to the players on the lot.
+
+            var update = new VMHollowAdjEntry[9];
+
+            var myLocation = LotPersist?.location ?? 0;
+
+            if (LotPersist == null)
+            {
+                return;
+            }
+
+            for (int i = 0; i < 9; i++)
+            {
+                int x = (i % 3) - 1;
+                int y = (i / 3) - 1;
+
+                if (myLocation + (x * 65536) + y == location)
+                {
+                    var existingData = HollowLots.Result;
+                    existingData[i] = data;
+                    update[i] = new VMHollowAdjEntry(VMHollowAdjType.Hollow, data);
+                }
+                else
+                {
+                    update[i] = new VMHollowAdjEntry(VMHollowAdjType.None);
+                }
+            }
+
+            Lot?.SendCommand(new VMNetAdjHollowSyncCmd()
+            {
+                HollowAdj = update
+            });
+        }
+
+        public bool IsAvatarOnLot(uint pid, Dictionary<uint, IVoltronSession> visitors)
         {
             //we need to check if the avatar's sim is still on the lot. their data + claim might have left, but the avatar could still be here.
             bool result = false;
             if (!ActiveYet) return false; //we are not on an inactive lot.
+
+            bool waitForDeletion = false;
+
             BlockOnLotThread(() =>
             {
-                result = Lot.Context.ObjectQueries.AvatarsByPersist.ContainsKey(pid);
+                var ava = Lot.GetAvatarByPersist(pid);
+
+                lock (visitors)
+                {
+                    result = ava != null || visitors.ContainsKey(pid);
+                }
+
+                if (result && ava == null)
+                {
+                    // Their visitor entry should disappear soon.
+                    waitForDeletion = true;
+                }
+                else if (result && ava.KillTimeout != -1)
+                { 
+                    // If this avatar has started the leave lot animation, we might be able to get rid of them instantly.
+                    if (ava.Thread.Stack.Any(x => x.CalleePrivate.Name == "templateperson" && x.Routine.ID == 8373))
+                    {
+                        Lot.ForwardCommand(new VMNetDeleteObjectCmd()
+                        {
+                            ObjectID = ava.ObjectID,
+                            CleanupAll = true,
+                            Verified = true,
+                        });
+
+                        waitForDeletion = true;
+                    }
+                }
             });
+
+            if (waitForDeletion)
+            {
+                for (int i = 0; i < 30; i++)
+                {
+                    BlockOnLotThread(() =>
+                    {
+                        lock (visitors)
+                        {
+                            result = Lot.GetAvatarByPersist(pid) != null || visitors.ContainsKey(pid);
+                        }
+                    });
+
+                    if (!result)
+                    {
+                        break;
+                    }
+                }
+            }
+
             return result;
         }
 
@@ -1244,15 +1722,51 @@ namespace FSO.Server.Servers.Lot.Domain
             RelationshipsToSave.Clear();
             foreach (var avatar in avatars)
             {
-                if (avatar != null && avatar.PersistID != 0 && (ignoreKill || avatar.KillTimeout == -1)) SaveAvatar(avatar);
+                if (avatar != null && avatar.PersistID != 0 && (ignoreKill || avatar.KillTimeout == -1))
+                {
+                    SaveAvatar(avatar);
+                }
             }
             if (RelationshipsToSave.Count > 0) BatchRelationshipSave();
+        }
+
+        private bool IsAvatarDebug(uint modLevel)
+        {
+            if (Config.Archive != null)
+            {
+                // Use the archive flags to gate debug features
+                var flags = Config.Archive.Flags;
+
+                if (flags.HasFlag(FSO.Common.ArchiveConfigFlags.DebugFeatures))
+                {
+                    int requiredLevel = 2;
+
+                    if (flags.HasFlag(FSO.Common.ArchiveConfigFlags.DebugFeaturesAllUsers))
+                    {
+                        requiredLevel = 0;
+                    }
+                    else if (flags.HasFlag(FSO.Common.ArchiveConfigFlags.DebugFeaturesMods))
+                    {
+                        requiredLevel = 1;
+                    }
+
+                    return modLevel >= requiredLevel;
+                }
+                else
+                {
+                    return false;
+                }
+            }
+
+            return modLevel > 0;
         }
 
         //Run on the background thread
         public void AvatarJoin(IVoltronSession session)
         {
             LotActive.WaitOne(); //wait til we're active at least
+            SurroundConnection?.AvatarJoin(session.AvatarId);
+            lock (FreeRoamLeaving) FreeRoamLeaving.Remove(session.AvatarId);
             using (var da = DAFactory.Get())
             {
                 ClientCount++;
@@ -1268,10 +1782,13 @@ namespace FSO.Server.Servers.Lot.Domain
                 //Load all the avatars data
                 var state = StateFromDB(avatar, user, rels, jobinfo, myRoomieLots, myIgnored);
 
+                var transitionInfo = session.GetAttribute("lotTransitionInfo") as LotTransitionInfo;
+
                 var client = new VMNetClient();
                 client.AvatarState = state;
                 client.RemoteIP = session.IpAddress;
                 client.PersistID = session.AvatarId;
+                client.TransitionInfo = transitionInfo;
 
                 if (TimeToShutdown == 0)
                 {
@@ -1281,11 +1798,13 @@ namespace FSO.Server.Servers.Lot.Domain
                 }
 
                 var visitorType = DbLotVisitorType.visitor;
+                bool isRoommate = false;
                 if (myRoomieLots.Count > 0)
                 {
                     var roomieStatus = myRoomieLots.FindAll(x => x.lot_id == Context.DbId).FirstOrDefault();
                     if (roomieStatus != null && roomieStatus.is_pending == 0)
                     {
+                        isRoommate = true;
                         switch (roomieStatus.permissions_level)
                         {
                             case 0:
@@ -1298,10 +1817,32 @@ namespace FSO.Server.Servers.Lot.Domain
                         }
                     }
                 }
+
+                bool isAdmin = session.HasModerationLevel(1);
+                if (IsSpectatorMode)
+                {
+                    if (isRoommate || isAdmin)
+                    {
+                        // Roommate or admin joining, transition to writable mode
+                        lock (LotThreadActions)
+                        {
+                            LotThreadActions.Enqueue(() => TransitionFromSpectatorMode());
+                        }
+                    }
+                    else
+                    {
+                        state.AvatarFlags |= VMTSOAvatarFlags.Spectator;
+                    }
+                }
+
+                state.AvatarFlags |= IsAvatarDebug((session as VoltronSession)?.ModerationLevel ?? 0) ? VMTSOAvatarFlags.Debug : 0;
+
                 Host.RecordStartVisit(session, visitorType);
 
+                var hollowLoadMask = (transitionInfo?.GetSurroundingLotMask() ?? HOLLOW_LOAD_ALL);
+
                 VMDriver.ConnectClient(client);
-                VMDriver.SendDirectCommand(client, new VMNetAdjHollowSyncCmd { HollowAdj = HollowLots.Result });
+                VMDriver.SendDirectCommand(client, BuildHollowAsyncCmd(hollowLoadMask));
 
                 var vmInventory = new List<VMInventoryItem>();
                 foreach (var item in inventory)
@@ -1317,6 +1858,29 @@ namespace FSO.Server.Servers.Lot.Domain
                     VMDriver.SendDirectCommand(client, new VMNetSM64AnimDataCmd { AnimData = sm64Data });
                 }
             }
+        }
+
+        private VMNetAdjHollowSyncCmd BuildHollowAsyncCmd(uint loadMask)
+        {
+            return new VMNetAdjHollowSyncCmd
+            {
+                HollowAdj = [.. HollowLots.Result.Select((x, index) =>
+                    {
+                        uint bit = 1u << index;
+
+                        VMHollowAdjType type;
+                        if ((loadMask & bit) != 0)
+                        {
+                            type = x == null ? VMHollowAdjType.Terrain : VMHollowAdjType.Hollow;
+                        }
+                        else
+                        {
+                            type = VMHollowAdjType.Reuse;
+                        }
+
+                        return new VMHollowAdjEntry(type, x);
+                    })]
+            };
         }
 
         public static VMInventoryItem InventoryItemFromDB(DbObject obj)
@@ -1349,7 +1913,7 @@ namespace FSO.Server.Servers.Lot.Domain
             });
         }
 
-        public void SaveAvatar(VMAvatar avatar)
+        public void SaveAvatar(VMAvatar avatar, Action postSave = null)
         {
             var statevm = new VMNetAvatarPersistState();
             statevm.Save(avatar);
@@ -1399,6 +1963,8 @@ namespace FSO.Server.Servers.Lot.Domain
                 {
                     db.Avatars.UpdateAvatarLotSave(pid, dbState);
                     if (jobLevel != null) db.Avatars.UpdateAvatarJobLevel(jobLevel);
+
+                    postSave?.Invoke();
                 }
             });
         }
@@ -1477,23 +2043,26 @@ namespace FSO.Server.Servers.Lot.Domain
             }
             state.MotiveData = motives;
 
-            var relDict = new Dictionary<uint, List<int>>();
+            var relDict = new Dictionary<uint, List<int>>(rels.Count);
             foreach (var rel in rels)
             {
-                if (!relDict.ContainsKey(rel.to_id)) relDict[rel.to_id] = new List<int>();
-                var list = relDict[rel.to_id];
+                if (!relDict.TryGetValue(rel.to_id, out var list))
+                {
+                    list = [];
+                    relDict[rel.to_id] = list;
+                }
                 while (list.Count <= rel.index) list.Add(0);
                 list[(int)rel.index] = rel.value;
             }
 
             state.Relationships = new VMEntityPersistRelationshipMarshal[relDict.Count];
-            for (int i=0; i<relDict.Count; i++)
+            int relI = 0;
+            foreach (var dictItem in relDict)
             {
-                var dictItem = relDict.ElementAt(i);
                 var marshal = new VMEntityPersistRelationshipMarshal();
                 marshal.Target = dictItem.Key;
-                marshal.Values = dictItem.Value.ConvertAll(x => (short)x).ToArray();
-                state.Relationships[i] = marshal;
+                marshal.Values = [.. dictItem.Value.Select(x => (short)x)];
+                state.Relationships[relI++] = marshal;
             }
 
             return state;
@@ -1584,6 +2153,7 @@ namespace FSO.Server.Servers.Lot.Domain
             if (!signalled) return; //give up
             VMTSOAvatarPermissions newLevel = VMTSOAvatarPermissions.Visitor;
             VMChangePermissionsMode mode = VMChangePermissionsMode.NORMAL;
+            bool? debug = null;
             switch (change)
             {
                 case ChangeType.ADD_ROOMMATE:
@@ -1604,6 +2174,7 @@ namespace FSO.Server.Servers.Lot.Domain
                         var ava = da.Avatars.Get(avatar_id);
                         var roomies = da.Roommates.GetAvatarsLots(avatar_id);
                         newLevel = GetAvatarPermissions(ava, roomies);
+                        debug = IsAvatarDebug(ava.moderation_level);
                     }
                     break;
             }
@@ -1615,6 +2186,7 @@ namespace FSO.Server.Servers.Lot.Domain
                     TargetUID = avatar_id,
                     Level = newLevel,
                     Mode = mode,
+                    Debug = debug,
                     ReplaceUID = replace_id,
                     Verified = true,
                 });
@@ -1633,9 +2205,11 @@ namespace FSO.Server.Servers.Lot.Domain
         public void Shutdown()
         {
             //shut down this lot. Do a final save and close everything down.
+            ClosedToken?.Cancel();
+
             VMDriver.EndRecord();
             LOG.Info("Lot with dbid = " + Context.DbId + " shutting down.");
-            if ((LotPersist.move_flags & 4) > 0)
+            if ((LotPersist.MoveFlags & LotMoveFlags.PermanentDelete) > 0)
             {
                 //this lot is slated to be deleted from the database.
                 using (var da = DAFactory.Get())
@@ -1674,12 +2248,17 @@ namespace FSO.Server.Servers.Lot.Domain
                 }
             }
 
+            SurroundConnection?.Dispose();
+            SurroundConnection = null;
+
             Host.Shutdown();
         }
 
         //Run on the background thread
         public void AvatarLeave(IVoltronSession session)
         {
+            SurroundConnection?.AvatarLeave(session.AvatarId);
+
             //Exit lot, Persist the avatars data, remove avatar lock
             LOG.Info("Avatar "+session.AvatarId+" left lot "+Context.DbId);
 

@@ -11,6 +11,7 @@ using FSO.SimAntics.Model;
 using FSO.Content.Interfaces;
 using FSO.Client.UI.Panels;
 using System.Text.RegularExpressions;
+using FSO.UI.Utils;
 
 namespace FSO.Client.UI.Controls.Catalog
 {
@@ -428,17 +429,42 @@ namespace FSO.Client.UI.Controls.Catalog
         public Texture2D GetObjIcon(uint GUID)
         {
             if (!IconCache.ContainsKey(GUID)) {
-                var obj = Content.Content.Get().WorldObjects.Get(GUID);
+                var objs = Content.Content.Get().WorldObjects;
+                var obj = objs.Get(GUID);
                 if (obj == null)
                 {
                     IconCache[GUID] = null;
                     return null;
                 }
                 var bmp = obj.Resource.Get<BMP>(obj.OBJ.CatalogStringsID);
-                if (bmp != null) IconCache[GUID] = bmp.GetTexture(GameFacade.GraphicsDevice);
-                else IconCache[GUID] = null;
+
+                if (bmp != null)
+                {
+                    var result = bmp.GetTexture(GameFacade.GraphicsDevice);
+                    result.Tag = this; // We can dispose this texture later.
+                    IconCache[GUID] = result;
+                }
+                else
+                {
+                    IconCache[GUID] = objs.GetOrAddGeneratedIcon(GUID, () => CatThumbGenerator.GenerateThumb(GUID));
+                }
             }
             return IconCache[GUID];
+        }
+
+        public override void Removed()
+        {
+            foreach (var entry in IconCache.Values)
+            {
+                if (entry?.Tag == this)
+                {
+                    entry.Dispose();
+                }
+            }
+
+            IconCache.Clear();
+
+            base.Removed();
         }
 
         private class CatalogSorter : IComparer<UICatalogElement>

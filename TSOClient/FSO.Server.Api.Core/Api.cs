@@ -43,8 +43,12 @@ namespace FSO.Server.Api.Core
             Config.CDNUrl = appSettings["cdnUrl"];
             Config.NFSdir = appSettings["nfsdir"];
             Config.UseProxy = bool.Parse(appSettings["useProxy"]);
+            Config.Name = appSettings["name"] ?? "";
             Config.UpdateID = (appSettings["updateID"] == "") ? (int?)null : int.Parse(appSettings["updateID"]);
             Config.BranchName = appSettings["branchName"] ?? "beta";
+            Config.AllOpenable = bool.TryParse(appSettings["allOpenable"], out var allOpenable) && allOpenable;
+            Config.VersionInfoJson = appSettings["versionInfoJson"]; // May be null
+
 
             // new smtp config vars
             if (appSettings["smtpHost"]!=null&&
@@ -64,10 +68,9 @@ namespace FSO.Server.Api.Core
                 Key = System.Text.UTF8Encoding.UTF8.GetBytes(Config.Secret)
             });
 
-            // TODO: also pass engine
             var config = new Database.DatabaseConfiguration()
             {
-                Engine = "sqlite",
+                Engine = appSettings["databaseEngine"] ?? "mysql",
                 ConnectionString = appSettings["connectionString"]
             };
 
@@ -81,7 +84,7 @@ namespace FSO.Server.Api.Core
                     break;
             }
             
-            Shards = new Shards(DAFactory);
+            Shards = new Shards(DAFactory, null); // TODO: does this need nfs?
             Shards.AutoUpdate();
         }
 

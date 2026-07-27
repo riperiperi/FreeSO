@@ -48,6 +48,7 @@ namespace FSO.Server.Protocol.Electron.Packets
 
         public object OCode => 0;
         public bool IsVerified;
+        public bool CasEnabled;
         public uint[] RecentAvatars;
         public ArchiveAvatar[] UserAvatars;
         public ArchiveAvatar[] SharedAvatars;
@@ -55,6 +56,7 @@ namespace FSO.Server.Protocol.Electron.Packets
         public override void Deserialize(IoBuffer input, ISerializationContext context)
         {
             IsVerified = input.GetBool();
+            CasEnabled = input.GetBool();
 
             int recentCount = input.GetInt32();
 
@@ -106,6 +108,7 @@ namespace FSO.Server.Protocol.Electron.Packets
         public override void Serialize(IoBuffer output, ISerializationContext context)
         {
             output.PutBool(IsVerified);
+            output.PutBool(CasEnabled);
 
             output.PutInt32(RecentAvatars.Length);
 

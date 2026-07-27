@@ -1,4 +1,5 @@
 ﻿using FSO.SimAntics.NetPlay.Drivers;
+using FSO.SimAntics.Utils;
 using System.IO;
 using System.Linq;
 
@@ -41,7 +42,7 @@ namespace FSO.SimAntics.NetPlay.Model.Commands
                 return false;
             }
 
-            var enable = vm.Tuning.GetTuning("aprilfools", 0, 2023) ?? 0;
+            var enable = FirstPersonHelper.GetTuning(vm);
 
             if (enable == 0 && Enable) return false;
 

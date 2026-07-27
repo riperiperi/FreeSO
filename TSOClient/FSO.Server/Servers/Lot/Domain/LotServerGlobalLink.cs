@@ -38,6 +38,8 @@ namespace FSO.Server.Servers.Lot.Domain
         private CityConnections City;
         private bool WaitingOnArch;
 
+        public bool Readonly;
+
         public LotServerGlobalLink(LotServerConfiguration config, IDAFactory da, LotContext context, ILotHost host, CityConnections city)
         {
             DAFactory = da;
@@ -718,6 +720,12 @@ namespace FSO.Server.Servers.Lot.Domain
 
         public void DeleteObject(VM vm, uint objectPID, VMAsyncDeleteObjectCallback callback)
         {
+            if (Readonly)
+            {
+                callback(false);
+                return;
+            }
+
             Host.InBackground(() =>
             {
                 if (objectPID == 0) callback(true);
@@ -736,6 +744,11 @@ namespace FSO.Server.Servers.Lot.Domain
 
         public void SetSpotlightStatus(VM vm, bool on)
         {
+            if (Readonly)
+            {
+                return;
+            }
+
             Host.SetSpotlight(on);
         }
 

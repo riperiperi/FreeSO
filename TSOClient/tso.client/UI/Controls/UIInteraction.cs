@@ -142,5 +142,16 @@ namespace FSO.Client.UI.Controls
         {
             return new Rectangle(0, 0, ClickHandler.Region.Width, ClickHandler.Region.Height); 
         }
+
+        public override void Removed()
+        {
+            base.Removed();
+
+            if (Icon?.Tag == this)
+            {
+                Icon.Dispose();
+                Icon = null;
+            }
+        }
     }
 }

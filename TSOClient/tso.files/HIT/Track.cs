@@ -53,6 +53,7 @@ namespace FSO.Files.HIT
             TrackName = Values[2];
             SoundID = ParseHexString(Values[3]);
             TrackID = ParseHexString(Values[4]);
+
             if (Values[5] != "\r\n" && Values[5] != "ETKD" && Values[5] != "") //some tracks terminate here...
             {
                 ArgType = (HITArgs)ParseHexString(Values[5]);

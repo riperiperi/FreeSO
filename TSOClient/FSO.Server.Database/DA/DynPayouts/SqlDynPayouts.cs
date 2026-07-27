@@ -45,12 +45,15 @@ namespace FSO.Server.Database.DA.DynPayouts
             return true;
         }
 
-        public bool ReplaceDynTuning(List<DbTuning> dynTuning)
+        public bool ReplaceDynTuning(List<DbTuning> dynTuning, int owner = 1)
         {
             try
             {
-                var deleted = Context.Connection.Execute("DELETE FROM fso_tuning WHERE owner_type = 'DYNAMIC' AND owner_id = 1");
-                Context.Connection.ExecuteBufferedInsert("INSERT INTO fso_tuning (tuning_type, tuning_table, tuning_index, value, owner_type, owner_id) VALUES (@tuning_type, @tuning_table, @tuning_index, @value, @owner_type, @owner_id)", dynTuning, 100);
+                var deleted = Context.Connection.Execute($"DELETE FROM fso_tuning WHERE owner_type = 'DYNAMIC' AND owner_id = {owner}");
+                if (dynTuning.Count > 0)
+                {
+                    Context.Connection.ExecuteBufferedInsert("INSERT INTO fso_tuning (tuning_type, tuning_table, tuning_index, value, owner_type, owner_id) VALUES (@tuning_type, @tuning_table, @tuning_index, @value, @owner_type, @owner_id)", dynTuning, 100);
+                }
             } catch (SqlException)
             {
                 return false;

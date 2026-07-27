@@ -5,11 +5,11 @@ using FSO.Common.Rendering.Framework.IO;
 using FSO.Common.Rendering.Framework.Model;
 using FSO.Common.Utils;
 using FSO.UI.Controls;
+using FSO.UI.Model;
 using Microsoft.Xna.Framework;
 using Microsoft.Xna.Framework.Graphics;
 using System.Net;
 using System.Net.NetworkInformation;
-using System.Threading.Tasks;
 
 namespace FSO.Client.UI.Archive
 {
@@ -27,6 +27,7 @@ namespace FSO.Client.UI.Archive
         public UILabel ServerTypeLabel;
         public UILabel ServerWarningLabel;
         public UIButton ShowIPButton;
+        public UIButton DiscordButton;
 
         public UIHBoxContainer PublicIPContainer;
         public UILabel PublicIPLabel;
@@ -57,6 +58,13 @@ namespace FSO.Client.UI.Archive
             CopyStyle.Size = 8;
             CopyStyle.Shadow = true;
 
+            DiscordButton = new UIButton(ui.Get("archive_discord.png").Get(GameFacade.GraphicsDevice));
+            DiscordButton.OnButtonClick += EnableDiscord;
+
+            Add(DiscordButton);
+
+            UpdateDiscordButtonState();
+
             var addr = controller.ArchiveHost.CityAddress;
             int colonInd = addr.LastIndexOf(':');
             Port = colonInd == -1 ? ":33101" : addr.Substring(colonInd);
@@ -76,7 +84,8 @@ namespace FSO.Client.UI.Archive
 
             vbox.Add(ServerTypeLabel = new UILabel()
             {
-                Caption = GameFacade.Strings.GetString("f128", (20 + (int)serverType).ToString())
+                Caption = GameFacade.Strings.GetString("f128", (20 + (int)serverType).ToString()),
+                Wrapped = true,
             });
 
             if (serverType < ArchiveServerType.Dedicated)
@@ -107,6 +116,49 @@ namespace FSO.Client.UI.Archive
             RecalculateSize();
 
             Background.BlockInput();
+        }
+
+        private void UpdateDiscordButtonState()
+        {
+            var enabled = DiscordRpcEngine.PublicArchive;
+
+            DiscordButton.Tooltip = GameFacade.Strings.GetString("f128", enabled ? "112" : "110");
+            DiscordButton.Disabled = enabled;
+        }
+
+        private void EnableDiscord(UIElement button)
+        {
+            DiscordButton.Disabled = true;
+
+            if (ServerType == ArchiveServerType.ThisClient)
+            {
+                DetermineMyPublicIp().ContinueWith((task) =>
+                {
+                    GameThread.InUpdate(() =>
+                    {
+                        if (task.IsCanceled || task.IsFaulted)
+                        {
+                            UIAlert.Alert("", GameFacade.Strings.GetString("f128", "119"), true);
+                        }
+                        else
+                        {
+                            DiscordRpcEngine.SetArchiveAddress(AddPort(task.Result));
+                            UIAlert.Alert(GameFacade.Strings.GetString("f128", "110"), GameFacade.Strings.GetString("f128", "111"), true);
+                        }
+
+                        UpdateDiscordButtonState();
+                    });
+                });
+            }
+            else
+            {
+                var ip = FindController<CoreGameScreenController>().ArchiveHost.CityAddress;
+
+                DiscordRpcEngine.SetArchiveAddress(ip);
+                UIAlert.Alert(GameFacade.Strings.GetString("f128", "110"), GameFacade.Strings.GetString("f128", "111"), true);
+
+                UpdateDiscordButtonState();
+            }
         }
 
         public override void Update(UpdateState state)
@@ -140,7 +192,7 @@ namespace FSO.Client.UI.Archive
         {
             var screenWidth = GameFacade.Screens.CurrentUIScreen.ScreenWidth;
 
-            var pos = new Vector2((screenWidth - Size.X) / 2, 24);
+            var pos = new Vector2(MathF.Round((screenWidth - Size.X) / 2), 24);
 
             if (Position != pos)
             {
@@ -261,6 +313,17 @@ namespace FSO.Client.UI.Archive
 
             vbox.AutoSize();
 
+            if (ShowIPButton != null)
+            {
+                var showIPBase = vbox.Position + ShowIPButton.Position;
+
+                DiscordButton.Position = new Vector2(vbox.Size.X - 22, showIPBase.Y + 4);
+            }
+            else
+            {
+                DiscordButton.Visible = false;
+            }
+
             SetSize((int)vbox.Size.X + 40, (int)vbox.Size.Y + 70);
             PositionDialog();
         }
@@ -272,9 +335,9 @@ namespace FSO.Client.UI.Archive
             return Port == ":33101" ? ip : (ip + Port);
         }
 
-        private void DetermineMyPublicIp()
+        private Task<string> DetermineMyPublicIp()
         {
-            Task.Run(() =>
+            return Task.Run(() =>
             {
                 WebClient webClient = new WebClient();
 
@@ -311,6 +374,8 @@ namespace FSO.Client.UI.Archive
                         }
                     }
                 });
+
+                return result;
             });
         }
     }

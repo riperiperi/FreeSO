@@ -8,6 +8,7 @@ using NLog;
 using FSO.Server.Servers.Shared.Handlers;
 using FSO.Server.Servers.Tasks.Handlers;
 using FSO.Server.Database.DA.Tasks;
+using Newtonsoft.Json;
 
 namespace FSO.Server.Servers.Tasks
 {
@@ -67,16 +68,24 @@ namespace FSO.Server.Servers.Tasks
 
     public class TaskServerConfiguration : AbstractAriesServerConfig
     {
+        [JsonProperty("enabled")]
         public bool Enabled { get; set; } = true;
+        [JsonProperty("schedule")]
         public List<ScheduledTaskRunOptions> Schedule;
+        [JsonProperty("tuning")]
         public TaskTuning Tuning { get; set; }
     }
 
+    // Note: the tuning config types use the json casing so don't need the property attributes.
     public class TaskTuning
     {
+        [JsonProperty("bonus")]
         public BonusTaskTuning Bonus { get; set; }
+        [JsonProperty("shutdown")]
         public ShutdownTaskTuning Shutdown { get; set; }
+        [JsonProperty("jobBalance")]
         public JobBalanceTuning JobBalance { get; set; }
+        [JsonProperty("birthdayGift")]
         public BirthdayGiftTaskTuning BirthdayGift { get; set; }
     }
 }

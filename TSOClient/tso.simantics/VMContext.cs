@@ -67,7 +67,7 @@ namespace FSO.SimAntics
 
             if (oldContext == null)
             {
-                this.Ambience = new VMAmbientSound();
+                this.Ambience = VMAmbientSound.TryTransition();
             } else
             {
                 this.Ambience = oldContext.Ambience;
@@ -585,7 +585,7 @@ namespace FSO.SimAntics
             RoomInfo = new VMRoomInfo[Architecture.RoomData.Count()];
             for (int i = 0; i < RoomInfo.Length; i++)
             {
-                RoomInfo[i].Entities = new List<VMEntity>();
+                RoomInfo[i].Entities = [];
                 RoomInfo[i].Portals = new List<VMRoomPortal>();
                 RoomInfo[i].WindowPortals = new List<VMRoomPortal>();
                 RoomInfo[i].Room = Architecture.RoomData[i];
@@ -598,7 +598,7 @@ namespace FSO.SimAntics
             {
                 var room = GetObjectRoom(obj);
                 var roomInfo = RoomInfo[room];
-                VM.AddToObjList(roomInfo.Entities, obj);
+                roomInfo.Entities.AddToObjList(obj);
 
                 //register collision footprint (if present)
                 var footprint = obj.Footprint;
@@ -664,9 +664,12 @@ namespace FSO.SimAntics
 
         public void ProcessLightingChanges()
         {
-            for (int i = 0; i < DeferredLightingRefresh.Count; i++)
+            var visited = new HashSet<ushort>();
+            int remaining = DeferredLightingRefresh.Count;
+            foreach (var room in DeferredLightingRefresh)
             {
-                RefreshLighting(DeferredLightingRefresh.ElementAt(i), i == DeferredLightingRefresh.Count - 1, new HashSet<ushort>());
+                remaining--;
+                RefreshLighting(room, remaining == 0, visited);
             }
             DeferredLightingRefresh.Clear();
         }
@@ -944,7 +947,7 @@ namespace FSO.SimAntics
             if (roomChange)
             {
                 var roomInfo = RoomInfo[room];
-                VM.AddToObjList(roomInfo.Entities, obj); //if it's already in this room, this will do nothing
+                roomInfo.Entities.AddToObjList(obj); //if it's already in this room, this will do nothing
 
                 //register collision footprint (if present)
                 var footprint = obj.Footprint;
@@ -995,7 +998,7 @@ namespace FSO.SimAntics
             if (roomChange)
             {
                 var room = GetObjectRoom(obj);
-                VM.DeleteFromObjList(RoomInfo[room].Entities, obj);
+                RoomInfo[room].Entities.DeleteFromObjList(obj);
 
                 //unregister collision footprint (if present)
                 obj.Footprint?.Unregister();
@@ -1213,8 +1216,8 @@ namespace FSO.SimAntics
                 if (obj.MultitileGroup == target.MultitileGroup) continue;
                 var ghost = (short)((target.GhostImage || obj.GhostImage) ? 1 : 0);
 
-                if ((!(target.ExecuteEntryPoint(5, this, true, obj, new short[] { obj.ObjectID, ghost, 0, 0 })
-                        || obj.ExecuteEntryPoint(5, this, true, target, new short[] { target.ObjectID, ghost, 0, 0 })))
+                if ((!(target.ExecuteEntryPoint(5, this, true, obj, new([obj.ObjectID, ghost, 0, 0]))
+                        || obj.ExecuteEntryPoint(5, this, true, target, new([target.ObjectID, ghost, 0, 0]))))
                     )
                 {
                     var flags = (VMEntityFlags)obj.GetValue(VMStackObjectVariable.Flags);
@@ -1266,8 +1269,8 @@ namespace FSO.SimAntics
                     || (target.IgnoreIntersection != null && target.IgnoreIntersection.Objects.Contains(obj))) continue;
                 var ghost = (short)((target.GhostImage || obj.GhostImage) ? 1 : 0);
 
-                if ((!(target.ExecuteEntryPoint(5, this, true, obj, new short[] { obj.ObjectID, ghost, 0, 0 })
-                        || obj.ExecuteEntryPoint(5, this, true, target, new short[] { target.ObjectID, ghost, 0, 0 })))
+                if ((!(target.ExecuteEntryPoint(5, this, true, obj, new([obj.ObjectID, ghost, 0, 0]))
+                        || obj.ExecuteEntryPoint(5, this, true, target, new([target.ObjectID, ghost, 0, 0]))))
                     )
                 {
                     statusObj = obj; 
@@ -1566,7 +1569,7 @@ namespace FSO.SimAntics
             {
                 Architecture = Architecture.Save(),
                 Clock = Clock.Save(),
-                Ambience = new VMAmbientSoundMarshal { ActiveBits = Ambience.ActiveBits },
+                Ambience = new VMAmbientSoundMarshal { ActiveBits = (ulong)Ambience.UserBits },
                 RandomSeed = RandomSeed
             };
         }
@@ -1577,7 +1580,7 @@ namespace FSO.SimAntics
             Architecture = new VMArchitecture(input.Architecture, this, Blueprint);
             Clock = new VMClock(input.Clock);
 
-            for (int i=0; i<VMAmbientSound.SoundByBitField.Count; i++) Ambience.SetAmbience((byte)i, (input.Ambience.ActiveBits&((ulong)1<<i)) > 0);
+            Ambience.SetUserBits(input.Ambience.ActiveBits);
 
             if (VM.UseWorld)
             {

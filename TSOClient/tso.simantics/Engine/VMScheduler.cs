@@ -1,12 +1,12 @@
-﻿using System.Collections.Generic;
+﻿using FSO.SimAntics.Model;
 
 namespace FSO.SimAntics.Engine
 {
     public class VMScheduler
     {
         private VM vm;
-        private Dictionary<uint, List<VMEntity>> TickSchedule = new Dictionary<uint, List<VMEntity>>();
-        private List<VMEntity> TickThisFrame;
+        private Dictionary<uint, VMObjectList<VMEntity>> TickSchedule = [];
+        private VMObjectList<VMEntity> TickThisFrame;
         public HashSet<VMEntity> PendingDeletion = new HashSet<VMEntity>();
         public uint CurrentTickID;
         public short CurrentObjectID;
@@ -27,20 +27,19 @@ namespace FSO.SimAntics.Engine
         public void ScheduleTick(VMEntity ent, uint tick)
         {
             if (ent.Dead) return;
-            List<VMEntity> targEnts;
-            if (!TickSchedule.TryGetValue(tick, out targEnts))
+            if (!TickSchedule.TryGetValue(tick, out var targEnts))
             {
-                targEnts = new List<VMEntity>();
+                targEnts = [];
                 TickSchedule[tick] = targEnts;
             }
             ent.Thread.ScheduleIdleEnd = tick;
-            VM.AddToObjList(targEnts, ent);
+            targEnts.AddToObjList(ent);
         }
 
         public void ScheduleCurrentTick(VMEntity ent)
         {
             ent.Thread.ScheduleIdleEnd = CurrentTickID;
-            VM.AddToObjList(TickThisFrame, ent);
+            TickThisFrame.AddToObjList(ent);
         }
 
         public void DescheduleTick(VMEntity ent)
@@ -48,7 +47,7 @@ namespace FSO.SimAntics.Engine
             //on delete or interrupt.
             if (ent.Thread != null && ent.Thread.ScheduleIdleEnd > CurrentTickID)
             {
-                TickSchedule[ent.Thread.ScheduleIdleEnd].Remove(ent);
+                TickSchedule[ent.Thread.ScheduleIdleEnd].DeleteFromObjList(ent);
             }
         }
 
@@ -66,8 +65,7 @@ namespace FSO.SimAntics.Engine
             if (CurrentTickID == 0)
             {
                 //if we were on tick 0 it's likely we just resynced. Migrate ticks to the the correct tick id.
-                List<VMEntity> firstTick;
-                if (TickSchedule.TryGetValue(1, out firstTick))
+                if (TickSchedule.TryGetValue(1, out var firstTick))
                 {
                     TickSchedule[tickID] = firstTick; //new objects are queued on next tick.
                     if (tickID != 1) TickSchedule.Remove(1);

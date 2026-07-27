@@ -1,15 +1,13 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Diagnostics;
+﻿using System.Diagnostics;
 using FSO.Content.Model;
 using System.Text.RegularExpressions;
-using System.IO;
 using FSO.Files.Formats.DBPF;
 using FSO.Files.XA;
 using FSO.Files.UTK;
 using FSO.Files.HIT;
 using Microsoft.Xna.Framework.Audio;
 using FSO.Content.Interfaces;
+using FSO.Content.Framework;
 
 namespace FSO.Content
 {
@@ -18,6 +16,8 @@ namespace FSO.Content
     /// </summary>
     public class Audio : IAudioProvider
     {
+        private const bool TRACE_MISSING = false;
+
         private Content ContentManager;
         public bool Initialized;
 
@@ -26,6 +26,8 @@ namespace FSO.Content
         private Dictionary<uint, AudioReference> StationsById;
         private List<AudioReference> Modes;
 
+        private static Regex UserArchiveRegex = new Regex("^Audio/.*\\.dat");
+
         /** Audio DBPFs **/
         public DBPFFile TSOAudio; //TSOAudio.dat
         public DBPFFile tsov2; //tsov2.dat
@@ -33,6 +35,7 @@ namespace FSO.Content
         public DBPFFile EP5Samps; //EP5Samps.dat
         public DBPFFile EP2; //EP2.dat
         public DBPFFile Hitlists; //HitListsTemp.dat
+        public DBPFFile[] UserArchives;
         public Dictionary<uint, string> NightclubSounds = new Dictionary<uint, string>();
 
         public Dictionary<uint, Track> TracksById;
@@ -122,6 +125,7 @@ namespace FSO.Content
         public void Init()
         {
             if (Initialized) return;
+
             this.Stations = new List<AudioReference>();
             this.StationsById = new Dictionary<uint, AudioReference>();
             this.Modes = new List<AudioReference>();
@@ -172,6 +176,16 @@ namespace FSO.Content
             RegisterEvents(tsoV2);
             RegisterEvents(tsov3);
             RegisterEvents(turkey);
+
+            // Add any user defined audio files
+            var userFiles = ContentManager.ContentFiles.Where(x => UserArchiveRegex.IsMatch(x.Replace('\\', '/'))).ToArray();
+
+            UserArchives = new DBPFFile[userFiles.Length];
+            int i = 0;
+            foreach (var file in userFiles)
+            {
+                UserArchives[i++] = new DBPFFile(Path.Combine("Content/", file));
+            }
 
             //register the .xa files over in the nightclub folders.
             var files = Directory.GetFiles(content.GetPath("sounddata/nightclubsounds/"));
@@ -245,7 +259,7 @@ namespace FSO.Content
                     return dat; //either wav or mp3.
                 }
             }
-            else
+            else if (TRACE_MISSING)
                 Debug.WriteLine("Couldn't find sound!");
             return null;
         }
@@ -320,7 +334,7 @@ namespace FSO.Content
                         {
                             return TracksByBackupId[fallback];
                         }
-                        else
+                        else if (TRACE_MISSING)
                         {
                             Debug.WriteLine("Couldn't find track: " + value + ", with alternative " + fallback);
                         }
@@ -347,6 +361,14 @@ namespace FSO.Content
             if (data == null) data = GetAudioFrom(InstanceID, Stings, out filetype);
             if (data == null) data = GetAudioFrom(InstanceID, EP5Samps, out filetype);
             if (data == null) data = GetAudioFrom(InstanceID, EP2, out filetype);
+            if (data == null)
+            {
+                foreach (var archive in UserArchives)
+                {
+                    data = GetAudioFrom(InstanceID, archive, out filetype);
+                    if (data != null) break;
+                }
+            }
             if (data == null)
             {
                 string source;
@@ -394,6 +416,11 @@ namespace FSO.Content
         public Patch GetPatch(uint id, HITResourceGroup group)
         {
             return new Patch(id);
+        }
+
+        public FSC GetFSC(string path)
+        {
+            return new FSC(path);
         }
 
         /// <summary>

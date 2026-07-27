@@ -34,5 +34,9 @@ namespace FSO.Server.Database.DA.Objects
 
         bool GetDbObjectState(uint id, out byte[] data);
         bool SetDbObjectState(uint id, byte[] data);
+
+        List<DbObject> GetByType(uint guid);
+
+        int PurgeStateOnLot();
     }
 }

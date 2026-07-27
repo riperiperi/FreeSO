@@ -1,13 +1,8 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Linq;
+﻿using FSO.SimAntics.Model.TSOPlatform;
 using FSO.SimAntics.NetPlay.Model;
-using System.IO;
 using FSO.SimAntics.NetPlay.Model.Commands;
 using FSO.SimAntics.NetPlay.SandboxMode;
-using System.Threading;
 using FSO.SimAntics.Engine.TSOTransaction;
-using System.Threading.Tasks;
 
 namespace FSO.SimAntics.NetPlay.Drivers
 {
@@ -16,11 +11,12 @@ namespace FSO.SimAntics.NetPlay.Drivers
         private List<VMNetCommand> QueuedCmds;
         private List<VMNetCommand> DeferredCmds;
 
-        private const int TICKS_PER_PACKET = 4;
         private const int INACTIVITY_TICKS_WARN = 15 * 60 * 30;
         private const int INACTIVITY_TICKS_KICK = 20 * 60 * 30;
         private uint ProblemTick;
         private List<VMNetTick> TickBuffer;
+
+        public int TicksPerPacket = 4;
 
         // Networking Abstractions
         private uint LastDesyncTick;
@@ -28,6 +24,9 @@ namespace FSO.SimAntics.NetPlay.Drivers
         private const int DESYNC_LOOP_FREQ = 90 * 30; //less than 1.5 mins between desyncs indicates there ight be a problem.
 
         private Dictionary<uint, VMNetClient> Clients;
+
+        //runtime variable that contains what clients a tick should be broadcast to.
+        private HashSet<VMNetClient> BroadcastClients = [];
 
         private HashSet<VMNetClient> ClientsToDC;
         private HashSet<VMNetClient> ClientsToSync;
@@ -40,13 +39,13 @@ namespace FSO.SimAntics.NetPlay.Drivers
         private bool FastTick;
 
         //Sync and sync history
-        private const int MAX_HISTORY = (30 * 30) / TICKS_PER_PACKET;
+        private int MaxHistory => (30 * 30) / TicksPerPacket;
         private bool SyncSerializing; //this is set when we begin serializing the state on another thread.
         private byte[] LastSync;
         private List<byte[]> TicksSinceSync;
 
         public event VMServerBroadcastHandler OnTickBroadcast;
-        public delegate void VMServerBroadcastHandler(VMNetMessage msg, HashSet<VMNetClient> ignore);
+        public delegate void VMServerBroadcastHandler(VMNetMessage msg, HashSet<VMNetClient> clients);
 
         public event VMServerDirectHandler OnDirectMessage;
         public delegate void VMServerDirectHandler(VMNetClient target, VMNetMessage msg);
@@ -59,6 +58,9 @@ namespace FSO.SimAntics.NetPlay.Drivers
 
         public BanList SandboxBans;
         public bool SelfResync;
+        public bool Transitioning;
+
+        private volatile int _syncGeneration;
 
         private uint TickID = 1;
 
@@ -78,6 +80,47 @@ namespace FSO.SimAntics.NetPlay.Drivers
             SandboxBans = new BanList();
         }
 
+        public void RecordAvatarStateForTransition(VM vm)
+        {
+            lock (Clients)
+            {
+                foreach (var client in Clients.Values)
+                {
+                    var ava = vm.GetAvatarByPersist(client.PersistID);
+                    if (ava != null)
+                    {
+                        client.AvatarState.Save(ava);
+                    }
+                }
+            }
+        }
+
+        /// <summary>
+        /// Recreates all client avatars after a VM state reload and triggers a full resync.
+        /// </summary>
+        public void RejoinClients(VM vm, VMTSOAvatarFlags withFlags = 0)
+        {
+            foreach (var avatar in vm.Context.ObjectQueries.Avatars.ToList())
+                avatar.Delete(true, vm.Context);
+
+            lock (Clients)
+            {
+                foreach (var client in Clients.Values)
+                {
+                    client.HadAvatar = false;
+                    client.AvatarState.AvatarFlags &= ~VMTSOAvatarFlags.Spectator;
+                    client.AvatarState.AvatarFlags |= withFlags;
+                    new VMNetSimJoinCmd
+                    {
+                        ActorUID = client.PersistID,
+                        AvatarState = client.AvatarState,
+                    }.Execute(vm);
+                }
+            }
+            TickBuffer.Clear();
+            SyncAllClients(asNew: true);
+        }
+
         public void ConnectClient(VMNetClient client)
         {
             lock (Clients)
@@ -87,6 +130,7 @@ namespace FSO.SimAntics.NetPlay.Drivers
                 {
                     ActorUID = client.PersistID,
                     AvatarState = client.AvatarState,
+                    TransitionInfo = client.TransitionInfo
                 });
             }
             lock (ClientsToSync)
@@ -146,6 +190,11 @@ namespace FSO.SimAntics.NetPlay.Drivers
             SyncSerializing = true;
             TicksSinceSync = new List<byte[]>(); //start saving a history.
 
+            // This was advanced after we created the broadcats tick. The sync is an _alternative_ for the broadcast,
+            // and we should follow up by sending ticks that sequentially happen after it.
+            var tick = TickID - 1;
+
+            //Console.WriteLine($"[{tick}] Serializing tick with {string.Join(';', TickBuffer.Select(x => string.Join(',', x.Commands.Select(x => x.Type.ToString()))))}");
             var state = vm.Save(); //must be saved on lot thread. we can serialize elsewhere tho.
             var statecmd = new VMStateSyncCmd { State = state };
             if (vm.Trace != null)
@@ -159,11 +208,12 @@ namespace FSO.SimAntics.NetPlay.Drivers
                         new VMNetTick {
                             Commands = new List<VMNetCommand> { cmd },
                             RandomSeed = 0, //will be restored by client from cmd
-                            TickID = TickID
+                            TickID = tick
                         }
                     }
             };
 
+            var gen = _syncGeneration;
             Task.Run(() =>
             {
                 byte[] data;
@@ -175,9 +225,28 @@ namespace FSO.SimAntics.NetPlay.Drivers
                     }
                     data = stream.ToArray();
                 }
-                LastSync = data;
+                if (gen == _syncGeneration)
+                    LastSync = data;
                 SyncSerializing = false;
             });
+        }
+
+        public void SyncAllClients(bool asNew = false)
+        {
+            lock (ClientsToSync)
+            {
+                lock (Clients)
+                {
+                    foreach (var client in Clients.Values)
+                    {
+                        ClientsToSync.Add(client);
+                        if (asNew) NewClients.Add(client);
+                    }
+                }
+                _syncGeneration++;
+                LastSync = null;
+                FastTick = true;
+            }
         }
 
         private void SendState(VM vm)
@@ -204,9 +273,9 @@ namespace FSO.SimAntics.NetPlay.Drivers
             else if (LastSync != null)
             {
                 foreach (var client in ClientsToSync) {
-                    Send(client, new VMNetMessage(VMNetMessageType.BroadcastTick, LastSync));
+                    Send(client, new VMNetMessage(VMNetMessageType.CatchupTick, LastSync));
                     foreach (var tick in TicksSinceSync) //catch this client up with what happened since the last state was created.
-                        Send(client, new VMNetMessage(VMNetMessageType.BroadcastTick, tick));
+                        Send(client, new VMNetMessage(VMNetMessageType.CatchupTick, tick));
                 }
                 ClientsToSync.Clear();
                 NewClients.Clear(); //note that the lock for clientstosync is valid for newclients too.
@@ -332,10 +401,16 @@ namespace FSO.SimAntics.NetPlay.Drivers
 
             TickBuffer.Add(tick);
 
-            if (FastTick || TickBuffer.Count >= TICKS_PER_PACKET)
+            if (!Transitioning && (FastTick || TickBuffer.Count >= TicksPerPacket))
             {
+                BroadcastClients.Clear();
+                lock (Clients)
+                    BroadcastClients.UnionWith(Clients.Values);
+
                 lock (ClientsToSync)
                 {
+                    BroadcastClients.ExceptWith(NewClients);
+
                     SendTickBuffer();
                     SendState(vm);
 
@@ -365,7 +440,7 @@ namespace FSO.SimAntics.NetPlay.Drivers
 
             if (TicksSinceSync != null)
             {
-                if (TicksSinceSync.Count > MAX_HISTORY && !SyncSerializing)
+                if (TicksSinceSync.Count > MaxHistory && !SyncSerializing)
                 {
                     //when we have many seconds of ticks for the player to get through,
                     //it might take them a while to catch up, even after assets load
@@ -379,7 +454,8 @@ namespace FSO.SimAntics.NetPlay.Drivers
                 }
             }
 
-            Broadcast(new VMNetMessage(VMNetMessageType.BroadcastTick, data), NewClients);
+            //Console.WriteLine($"Sending tick with {string.Join(';', TickBuffer.Select(x => "[" + (x.TickID) + "] " + string.Join(',', x.Commands.Select(x => x.Type.ToString()))))}");
+            Broadcast(new VMNetMessage(VMNetMessageType.BroadcastTick, data), BroadcastClients);
 
             TickBuffer.Clear();
         }
@@ -423,9 +499,9 @@ namespace FSO.SimAntics.NetPlay.Drivers
             if (OnDirectMessage != null) OnDirectMessage(client, message);
         }
 
-        private void Broadcast(VMNetMessage message, HashSet<VMNetClient> ignore)
+        private void Broadcast(VMNetMessage message, HashSet<VMNetClient> clients)
         {
-            if (OnTickBroadcast != null) OnTickBroadcast(message, ignore);
+            if (OnTickBroadcast != null) OnTickBroadcast(message, clients);
         }
 
         private void DropClient(VMNetClient client)
@@ -435,6 +511,7 @@ namespace FSO.SimAntics.NetPlay.Drivers
 
         private void HandleClients(VM vm)
         {
+            if (Transitioning) return;
             lock (Clients)
             {
                 ClientsToDC.Clear();

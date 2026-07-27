@@ -32,6 +32,7 @@ using FSO.Server.Database.DA.Updates;
 using FSO.Server.Database.DA.GlobalCooldowns;
 using FSO.Server.Database.DA.ArchiveUsers;
 using FSO.Server.Database.DA.ArchiveFeatured;
+using FSO.Server.Database.DA.ArchiveRecents;
 
 namespace FSO.Server.Database.DA
 {
@@ -72,6 +73,7 @@ namespace FSO.Server.Database.DA
         IGlobalCooldowns GlobalCooldowns { get; }
         IArchiveUsers ArchiveUsers { get; }
         IArchiveFeatured ArchiveFeatured { get; }
+        IArchiveRecents ArchiveRecents { get; }
         void Flush();
     }
 }

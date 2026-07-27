@@ -3,6 +3,7 @@ using FSO.Client.UI.Model;
 using FSO.Common.Utils;
 using FSO.Server.Clients;
 using FSO.Server.Protocol.Electron.Packets;
+using FSO.UI.Model;
 using System;
 
 namespace FSO.Client.Controllers
@@ -62,6 +63,8 @@ namespace FSO.Client.Controllers
                         }
                     }
                 }
+
+                DiscordRpcEngine.SetArchivePlayers(UserList.Clients.Length);
             }
 
             UserList = newList;

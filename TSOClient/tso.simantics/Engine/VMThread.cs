@@ -55,8 +55,8 @@ namespace FSO.SimAntics.Engine
         public bool QueueDirty;
 
         public sbyte ActiveQueueBlock = -1; //cannot reorder items in the queue with index <= this.
-        public short[] TempRegisters = new short[20];
-        public int[] TempXL = new int[2];
+        public VMTempRegisters TempRegisters;
+        public VMTempXLRegisters TempXL;
         public VMPrimitiveExitCode LastStackExitCode = VMPrimitiveExitCode.GOTO_FALSE;
 
         public VMAsyncState BlockingState;
@@ -92,12 +92,12 @@ namespace FSO.SimAntics.Engine
         public static VMPrimitiveExitCode EvaluateCheck(VMContext context, VMEntity entity, VMStackFrame initFrame, VMQueuedAction action, List<VMPieMenuInteraction> actionStrings)
         {
             var temp = new VMThread(context, entity, 5);
-            var forceClone = !context.VM.Scheduler.RunningNow;
+            var forceClone = entity.Thread != null && !context.VM.Scheduler.RunningNow;
             //temps should only persist on check trees running within the vm tick to avoid desyncs.
             if (entity.Thread != null)
             {
-                temp.TempRegisters = forceClone?(short[])entity.Thread.TempRegisters.Clone() : entity.Thread.TempRegisters;
-                temp.TempXL = forceClone ? (int[])entity.Thread.TempXL.Clone() : entity.Thread.TempXL;
+                temp.TempRegisters = entity.Thread.TempRegisters;
+                temp.TempXL = entity.Thread.TempXL;
             }
             temp.IsCheck = true;
             temp.ActionStrings = actionStrings; //generate and place action strings in here
@@ -112,6 +112,14 @@ namespace FSO.SimAntics.Engine
                 temp.Tick();
                 temp.ThreadBreak = VMThreadBreakMode.Active; //cannot breakpoint in check trees
             }
+
+            // Need to copy temps back
+            if (forceClone)
+            {
+                entity.Thread.TempRegisters = temp.TempRegisters;
+                entity.Thread.TempXL = temp.TempXL;
+            }
+
             if (actionStrings != null && actionStrings.Count == 0)
             {
                 //add an action string containing any modified ads
@@ -442,12 +450,14 @@ namespace FSO.SimAntics.Engine
             var currentFrame = Stack.LastOrDefault();
             if (currentFrame == null) return;
 
-            if (currentFrame is VMRoutingFrame) HandleResult(currentFrame, null, ((VMRoutingFrame)currentFrame).Tick());
-            else if (currentFrame is VMDirectControlFrame) HandleResult(currentFrame, null, ((VMDirectControlFrame)currentFrame).Tick());
+            if (currentFrame.SpecialFrame)
+            {
+                if (currentFrame is VMRoutingFrame routing) HandleResult(currentFrame, null, routing.Tick());
+                else if (currentFrame is VMDirectControlFrame direct) HandleResult(currentFrame, null, direct.Tick());
+            }
             else
             {
-                VMInstruction instruction;
-                VMPrimitiveExitCode result = currentFrame.Routine.Execute(currentFrame, out instruction);
+                VMPrimitiveExitCode result = currentFrame.Routine.Execute(currentFrame, out VMInstruction instruction);
                 HandleResult(currentFrame, instruction, result);
             }
         }
@@ -505,7 +515,7 @@ namespace FSO.SimAntics.Engine
                 _StackObjectID = frame.StackObjectID, //pass this without doing a lookup
                 ActionTree = frame.ActionTree
             };
-            childFrame.Args = new short[(routine.Arguments > 4) ? routine.Arguments : 4];
+            childFrame.Args = new VMArguments((routine.Arguments > 4) ? routine.Arguments : 4);
             for (var i = 0; i < childFrame.Args.Length; i++)
             {
                 short argValue = (i > 3) ? (short)-1 : args.Arguments[i];
@@ -642,7 +652,7 @@ namespace FSO.SimAntics.Engine
 
         private void MoveToInstruction(VMStackFrame frame, byte instruction, bool continueExecution)
         {
-            if (frame is VMRoutingFrame)
+            if (frame.SpecialFrame && frame is VMRoutingFrame)
             {
                 //TODO: Handle returning false into the pathfinder (indicates failure)
                 return;
@@ -704,9 +714,11 @@ namespace FSO.SimAntics.Engine
 
         public void Pop(VMPrimitiveExitCode result)
         {
-            var discardResult = Stack[Stack.Count - 1].SpecialResult;
-            var contextSwitch = (Stack.Count > 1) && Stack.LastOrDefault().ActionTree != Stack[Stack.Count - 2].ActionTree;
-            Stack.RemoveAt(Stack.Count - 1);
+            var stackCount = Stack.Count;
+            var stackTop = Stack[stackCount - 1];
+            var discardResult = stackTop.SpecialResult;
+
+            Stack.RemoveAt(stackCount - 1);
             LastStackExitCode = result;
 
             if (discardResult == VMSpecialResult.Interaction) //interaction switching back to main (it cannot be the other way...)
@@ -726,7 +738,7 @@ namespace FSO.SimAntics.Engine
                     result = VMPrimitiveExitCode.GOTO_TRUE;
                 else if (result == VMPrimitiveExitCode.RETURN_FALSE)
                     result = VMPrimitiveExitCode.GOTO_FALSE;
-                var currentFrame = Stack.Last();
+                var currentFrame = Stack[^1];
                 HandleResult(currentFrame, currentFrame.GetCurrentInstruction(), result);
             }
             else // :(
@@ -742,7 +754,7 @@ namespace FSO.SimAntics.Engine
 
             /** Initialize the locals **/
             var numLocals = Math.Max(frame.Routine.Locals, frame.Routine.Arguments);
-            frame.Locals = new short[numLocals];
+            frame.Locals = numLocals == 0 ? [] : new short[numLocals];
             frame.Thread = this;
 
             frame.InstructionPointer = 0;
@@ -926,7 +938,7 @@ namespace FSO.SimAntics.Engine
             }
             if (action.CheckRoutine != null)
             {
-                var args = new short[4];
+                VMArguments args = default;
                 if (auto) args[0] = 1;
                 if (EvaluateCheck(Context, Entity, new VMStackFrame()
                 {
@@ -1006,10 +1018,9 @@ namespace FSO.SimAntics.Engine
                 //if flags are empty apart from "Non-Empty", force everything but visitor. (a kind of default state)
                 if (tsoCompare == TSOFlags.NonEmpty) tsoCompare |= TSOFlags.AllowFriends | TSOFlags.AllowRoommates | TSOFlags.AllowObjectOwner;
 
-                //DEBUG: enable debug interction for all CSRs.
                 if ((action.Flags & TTABFlags.Debug) > 0)
                 {
-                    if ((tsoState & TSOFlags.AllowCSRs) > 0)
+                    if (avatar.AvatarState.Flags.HasFlag(VMTSOAvatarFlags.Debug))
                         return result; //do not bother running check
                     else
                         return null; //disable debug for everyone else.
@@ -1032,7 +1043,7 @@ namespace FSO.SimAntics.Engine
             if ((!action.Flags.HasFlag(TTABFlags.FSOSkipPermissions) || ((action.Flags & TTABFlags.TSORunCheckAlways) > 0))
                 && action.CheckRoutine != null)
             {
-                var args = new short[4];
+                VMArguments args = default;
                 if (auto) args[0] = 1;
                 if (EvaluateCheck(Context, Entity, new VMStackFrame()
                 {
@@ -1096,8 +1107,8 @@ namespace FSO.SimAntics.Engine
                 Stack = stack,
                 Queue = queue,
                 ActiveQueueBlock = ActiveQueueBlock,
-                TempRegisters = (short[])TempRegisters.Clone(),
-                TempXL = (int[])TempXL.Clone(),
+                TempRegisters = TempRegisters.AsSpan().ToArray(),
+                TempXL = TempXL.AsSpan().ToArray(),
                 LastStackExitCode = LastStackExitCode,
 
                 BlockingState = BlockingState,
@@ -1133,8 +1144,8 @@ namespace FSO.SimAntics.Engine
             QueueDirty = true;
             foreach (var item in input.Queue) Queue.Add(new VMQueuedAction(item, context));
             ActiveQueueBlock = input.ActiveQueueBlock;
-            TempRegisters = input.TempRegisters;
-            TempXL = input.TempXL;
+            TempRegisters = new(input.TempRegisters);
+            TempXL = new(input.TempXL);
             LastStackExitCode = input.LastStackExitCode;
 
             BlockingState = input.BlockingState;

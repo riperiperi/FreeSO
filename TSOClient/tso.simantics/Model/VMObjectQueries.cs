@@ -1,24 +1,21 @@
 ﻿using FSO.LotView.Model;
 using FSO.SimAntics.Entities;
 using FSO.SimAntics.Model.TSOPlatform;
-using System;
-using System.Collections.Generic;
-using System.Linq;
 
 namespace FSO.SimAntics.Model
 {
     public class VMObjectQueries
     {
         private VMContext Context;
-        private Dictionary<int, List<VMEntity>> TileToObjects = new Dictionary<int, List<VMEntity>>();
+        private Dictionary<int, VMObjectList<VMEntity>> TileToObjects = [];
 
-        private Dictionary<uint, List<VMEntity>> ObjectsByGUID = new Dictionary<uint, List<VMEntity>>();
-        private Dictionary<short, List<VMEntity>> ObjectsByCategory = new Dictionary<short, List<VMEntity>>();
-        private Dictionary<string, List<VMEntity>> ObjectsBySemiGlobal = new Dictionary<string, List<VMEntity>>();
-        public List<VMEntity> Avatars = new List<VMEntity>();
-        public Dictionary<uint, VMAvatar> AvatarsByPersist = new Dictionary<uint, VMAvatar>();
-        public Dictionary<uint, VMMultitileGroup> MultitileByPersist = new Dictionary<uint, VMMultitileGroup>();
-        public List<VMEntity> WithAutonomy = new List<VMEntity>();
+        private Dictionary<uint, VMObjectList<VMEntity>> ObjectsByGUID = [];
+        private Dictionary<short, VMObjectList<VMEntity>> ObjectsByCategory = [];
+        private Dictionary<string, VMObjectList<VMEntity>> ObjectsBySemiGlobal = [];
+        public VMObjectList<VMEntity> Avatars = [];
+        public Dictionary<uint, VMAvatar> AvatarsByPersist = [];
+        public Dictionary<uint, VMMultitileGroup> MultitileByPersist = [];
+        public VMObjectList<VMEntity> WithAutonomy = [];
 
         public int NumUserObjects
         {
@@ -56,24 +53,22 @@ namespace FSO.SimAntics.Model
         {
             var off = GetOffest(ent.Position);
 
-            List<VMEntity> tile;
-            if (!TileToObjects.TryGetValue(off, out tile))
+            if (!TileToObjects.TryGetValue(off, out var tile))
             {
-                tile = new List<VMEntity>();
+                tile = [];
                 TileToObjects.Add(off, tile);
             }
 
-            VM.AddToObjList(tile, ent); //if it's already on this tile, this will do nothing
+            tile.AddToObjList(ent); //if it's already on this tile, this will do nothing
         }
 
         public void UnregisterObjectPos(VMEntity ent)
         {
             var off = GetOffest(ent.Position);
 
-            List<VMEntity> tile;
-            if (TileToObjects.TryGetValue(off, out tile))
+            if (TileToObjects.TryGetValue(off, out var tile))
             {
-                tile.Remove(ent);
+                tile.DeleteFromObjList(ent);
                 if (tile.Count == 0) TileToObjects.Remove(off);
             }
         }
@@ -126,54 +121,51 @@ namespace FSO.SimAntics.Model
 
         public void RegisterCategory(VMEntity obj, short category)
         {
-            List<VMEntity> tile;
-            if (!ObjectsByCategory.TryGetValue(category, out tile))
+            if (!ObjectsByCategory.TryGetValue(category, out var tile))
             {
-                tile = new List<VMEntity>();
+                tile = [];
                 ObjectsByCategory.Add(category, tile);
             }
 
             //debug check: use if things are going weird
             //if (!tile.Contains(obj))
-            VM.AddToObjList(tile, obj); 
+            tile.AddToObjList(obj); 
         }
 
         public void RemoveCategory(VMEntity obj, short category)
         {
-            List<VMEntity> tile;
-
-            if (ObjectsByCategory.TryGetValue(category, out tile))
+            if (ObjectsByCategory.TryGetValue(category, out var tile))
             {
-                VM.DeleteFromObjList(tile, obj);
+                tile.DeleteFromObjList(obj);
                 if (tile.Count == 0) ObjectsByCategory.Remove(category);
             }
         }
 
         public void RegisterSemiGlobal(VMEntity obj, string semiGlobal)
         {
-            List<VMEntity> tile;
+            VMObjectList<VMEntity> tile;
             if (semiGlobal != null)
             {
                 if (!ObjectsBySemiGlobal.TryGetValue(semiGlobal.ToLowerInvariant(), out tile))
                 {
-                    tile = new List<VMEntity>();
+                    tile = [];
                     ObjectsBySemiGlobal.Add(semiGlobal.ToLowerInvariant(), tile);
                 }
 
                 //debug check: use if things are going weird
                 //if (!tile.Contains(obj))
-                VM.AddToObjList(tile, obj);
+                tile.AddToObjList(obj);
             }
         }
 
         public void RemoveSemiGlobal(VMEntity obj, string semiGlobal)
         {
-            List<VMEntity> tile;
+            VMObjectList<VMEntity> tile;
             if (semiGlobal != null)
             {
                 if (ObjectsBySemiGlobal.TryGetValue(semiGlobal, out tile))
                 {
-                    VM.DeleteFromObjList(tile, obj);
+                    tile.DeleteFromObjList(obj);
                     if (tile.Count == 0) ObjectsBySemiGlobal.Remove(semiGlobal);
                 }
             }
@@ -183,14 +175,13 @@ namespace FSO.SimAntics.Model
         {
             var guid = obj.Object.OBJ.GUID;
 
-            List<VMEntity> list;
-            if (!ObjectsByGUID.TryGetValue(guid, out list))
+            if (!ObjectsByGUID.TryGetValue(guid, out var list))
             {
-                list = new List<VMEntity>();
+                list = [];
                 ObjectsByGUID.Add(guid, list);
             }
 
-            VM.AddToObjList(list, obj);
+            list.AddToObjList(obj);
             RegisterCategory(obj, obj.GetValue(VMStackObjectVariable.Category));
 
             if (obj.SemiGlobal != null)
@@ -203,13 +194,13 @@ namespace FSO.SimAntics.Model
 
             if (obj is VMAvatar)
             {
-                VM.AddToObjList(Avatars, obj);
+                Avatars.AddToObjList(obj);
                 if (obj.PersistID != 0) AvatarsByPersist[obj.PersistID] = (VMAvatar)obj;
             }
 
             if (obj.TreeTable != null && obj.TreeTable.AutoInteractions.Length > 0)
             {
-                VM.AddToObjList(WithAutonomy, obj);
+                WithAutonomy.AddToObjList(obj);
             }
         }
 
@@ -217,10 +208,9 @@ namespace FSO.SimAntics.Model
         {
             var guid = obj.Object.OBJ.GUID;
 
-            List<VMEntity> list;
-            if (ObjectsByGUID.TryGetValue(guid, out list))
+            if (ObjectsByGUID.TryGetValue(guid, out var list))
             {
-                VM.DeleteFromObjList(list, obj);
+                list.DeleteFromObjList(obj);
                 if (list.Count == 0) ObjectsByGUID.Remove(guid);
             }
 
@@ -236,7 +226,7 @@ namespace FSO.SimAntics.Model
 
             if (obj is VMAvatar)
             {
-                Avatars.Remove(obj);
+                Avatars.DeleteFromObjList(obj);
                 AvatarsByPersist.Remove(obj.PersistID);
             }
             else if (obj.PersistID > 0 && obj.MultitileGroup.Objects.Count == 1)
@@ -251,38 +241,34 @@ namespace FSO.SimAntics.Model
 
             if (obj.TreeTable != null && obj.TreeTable.AutoInteractions.Length > 0)
             {
-                WithAutonomy.Remove(obj);
+                WithAutonomy.DeleteFromObjList(obj);
             }
         }
 
-        public List<VMEntity> GetObjectsAt(LotTilePos pos)
+        public VMObjectList<VMEntity> GetObjectsAt(LotTilePos pos)
         {
             var off = GetOffest(pos);
 
-            List<VMEntity> tile;
-            TileToObjects.TryGetValue(off, out tile);
+            TileToObjects.TryGetValue(off, out var tile);
 
             return tile;
         }
 
-        public List<VMEntity> GetObjectsByGUID(uint guid)
+        public VMObjectList<VMEntity> GetObjectsByGUID(uint guid)
         {
-            List<VMEntity> tile;
-            ObjectsByGUID.TryGetValue(guid, out tile);
+            ObjectsByGUID.TryGetValue(guid, out var tile);
             return tile;
         }
 
-        public List<VMEntity> GetObjectsByCategory(short category)
+        public VMObjectList<VMEntity> GetObjectsByCategory(short category)
         {
-            List<VMEntity> tile;
-            ObjectsByCategory.TryGetValue(category, out tile);
+            ObjectsByCategory.TryGetValue(category, out var tile);
             return tile;
         }
 
-        public List<VMEntity> GetObjectsBySemiGlobal(string semiGlobal)
+        public VMObjectList<VMEntity> GetObjectsBySemiGlobal(string semiGlobal)
         {
-            List<VMEntity> tile;
-            ObjectsBySemiGlobal.TryGetValue(semiGlobal.ToLowerInvariant(), out tile);
+            ObjectsBySemiGlobal.TryGetValue(semiGlobal.ToLowerInvariant(), out var tile);
             return tile;
         }
     }

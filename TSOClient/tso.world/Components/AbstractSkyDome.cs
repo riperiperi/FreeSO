@@ -6,9 +6,6 @@ using FSO.Files;
 using FSO.LotView.Model;
 using Microsoft.Xna.Framework;
 using Microsoft.Xna.Framework.Graphics;
-using System;
-using System.Collections.Generic;
-using System.IO;
 
 namespace FSO.LotView.Components
 {
@@ -213,7 +210,7 @@ namespace FSO.LotView.Components
 
             if (LastSkyPos != time) BuildSkyDome(gd, time);
 
-            var color = ocolor - new Vector4(0.35f) * 1.5f + new Vector4(0.35f);
+            var color = (ocolor - new Vector4(0.35f)) * 1.5f + new Vector4(0.35f);
             color.W = 1;
             var wint = Math.Min(1f, weather.WeatherIntensity);
 
@@ -258,7 +255,7 @@ namespace FSO.LotView.Components
             var dist = 0.5f + pos.Y * 2;
             dist *= dist;
             dist += 0.5f;
-            if (night) dist = 35;
+            if (night) dist = 65;
             var sunMat = Matrix.CreateTranslation(0, 0, dist) * Matrix.CreateBillboard(pos, new Vector3(0, 0.4f, 0), Vector3.Up, null);
 
             var geom = WorldContent.GetTextureVerts(gd);
@@ -266,7 +263,25 @@ namespace FSO.LotView.Components
             effect.VertexColorEnabled = false;
             effect.TextureEnabled = true;
             effect.Texture = (night) ? TextureGenerator.GetMoon(gd) : TextureGenerator.GetSun(gd);
-            effect.DiffuseColor = FinaleUtils.BiasSunIntensity(new Vector3(color.X, color.Y, color.Z) * ((night) ? 2f : 0.6f), time);
+            gd.SamplerStates[0] = SamplerState.LinearClamp;
+
+            if (night)
+            {
+                var tint = new Vector3(color.X, color.Y, color.Z) * 0.6f;
+                var lightIntensity = new Vector3(color.X, color.Y, color.Z).Length() + 0.4f;
+                effect.DiffuseColor = FinaleUtils.BiasSunIntensity(new Vector3(lightIntensity) + tint, time);
+            }
+            else
+            {
+                float colorBias = Math.Abs(color.Z - color.X);
+
+                // when the colour is uniformly white, penalize the brightness a bit
+
+                color *= 0.6f + Math.Min(1f, colorBias / 0.8f) * 0.4f;
+
+                effect.DiffuseColor = FinaleUtils.BiasSunIntensity(new Vector3(color.X, color.Y, color.Z) * 0.6f, time);
+            }
+
             gd.BlendState = (night) ? BlendState.NonPremultiplied : BlendState.Additive;
 
             foreach (var pass in effect.CurrentTechnique.Passes)

@@ -1,14 +1,40 @@
-﻿using System;
-using System.Collections.Generic;
-using FSO.Files.HIT;
+﻿using FSO.Files.HIT;
 using FSO.Files.XA;
 using Microsoft.Xna.Framework.Audio;
-using System.IO;
 
 namespace FSO.HIT
 {
-    public class FSCPlayer
+    public class FSCPlayer : IDisposable
     {
+        private struct FSCNoteInstance : IDisposable
+        {
+            public SoundState State => Instance.State;
+            public readonly SoundEffectInstance Instance;
+            public readonly float Volume;
+
+            public FSCNoteInstance(SoundEffectInstance instance, float volume)
+            {
+                Instance = instance;
+                Volume = volume;
+            }
+
+            public void Pause()
+            {
+                Instance.Pause();
+            }
+
+            public void Resume()
+            {
+                Instance.Resume();
+            }
+
+            public void Dispose()
+            {
+                Instance.Stop();
+                Instance.Dispose();
+            }
+        }
+
         /// <summary>
         /// A Class to play FSC sequences. Bundled in with the HIT engine because it wouldn't really go anywhere else. :I
         /// </summary>
@@ -21,7 +47,10 @@ namespace FSO.HIT
         private string BaseDir;
         private float BeatLength;
         private float Volume = 1;
-        private List<SoundEffectInstance> SoundEffects;
+        private List<FSCNoteInstance> SoundEffects;
+        private bool Paused;
+        private int? LoopingNote;
+        private bool DisposeCache;
 
         private Dictionary<string, SoundEffect> SoundCache;
 
@@ -30,7 +59,7 @@ namespace FSO.HIT
             this.fsc = fsc;
             this.BaseDir = basedir;
             SoundCache = new Dictionary<string, SoundEffect>();
-            SoundEffects = new List<SoundEffectInstance>();
+            SoundEffects = new List<FSCNoteInstance>();
 
             BeatLength = 60.0f / fsc.Tempo;
             RestartFSC();
@@ -44,14 +73,49 @@ namespace FSO.HIT
         public void SetVolume(float volume)
         {
             Volume = volume;
+            RecalculateVolume();
         }
 
         public void RecalculateVolume()
         {
-
+            foreach (var inst in SoundEffects)
+            {
+                inst.Instance.Volume = GetFinalVolume(inst.Volume);
+            }
         }
 
-        public void Tick(float time) {
+        public void Pause()
+        {
+            Paused = true;
+
+            foreach (var inst in SoundEffects)
+            {
+                inst.Pause();
+            }
+        }
+
+        public void Resume()
+        {
+            Paused = false;
+
+            foreach (var inst in SoundEffects)
+            {
+                inst.Resume();
+            }
+        }
+
+        public void SetLoopingNote(float note)
+        {
+            LoopingNote = Math.Clamp((int)Math.Floor(note * fsc.NoteColumns.Length), 0, fsc.NoteColumns.Length);
+        }
+
+        public void Tick(float time)
+        {
+            if (Paused)
+            {
+                return;
+            }
+
             for (int i = 0; i < SoundEffects.Count; i++) //dispose and remove sound effect instances that are finished
             {
                 if (SoundEffects[i].State != SoundState.Playing)
@@ -71,66 +135,125 @@ namespace FSO.HIT
 
         private SoundEffect LoadSound(string filename)
         {
-            if (SoundCache.ContainsKey(filename)) return SoundCache[filename];
+            if (SoundCache.TryGetValue(filename, out var cached)) return cached;
             try
             {
-                byte[] data = new XAFile(BaseDir + filename).DecompressedData;
-                var stream = new MemoryStream(data);
-                var sfx = SoundEffect.FromStream(stream);
-                stream.Close();
+                var content = Content.Content.Get();
+                SoundEffect sfx;
+                if (content.TS1)
+                {
+                    sfx = content.Audio.GetSFX(new Patch() { Filename = Path.GetFileName(filename) });
+                }
+                else
+                {
+                    DisposeCache = true;
+                    byte[] data = new XAFile(BaseDir + filename).DecompressedData;
+                    var stream = new MemoryStream(data);
+                    sfx = SoundEffect.FromStream(stream);
+                    stream.Close();
+                }
+
                 SoundCache.Add(filename, sfx);
                 return sfx;
-            } catch (Exception)
+            }
+            catch (Exception)
             {
+                SoundCache[filename] = null;
                 return null;
             }
         }
 
         private void RestartFSC()
         {
-            if (fsc.RandomJumpPoints.Count == 0) CurrentPosition = 0;
-            else
-            {
-                CurrentPosition = fsc.RandomJumpPoints[new Random().Next(fsc.RandomJumpPoints.Count)];
-            }
+            CurrentPosition = 0;
+            LoopCount = -1;
+        }
+
+        private float GetFinalVolume(float volume)
+        {
+            return Math.Min(1, volume * Volume * HITVM.Get().GetMasterVolume(Model.HITVolumeGroup.AMBIENCE));
         }
 
         private void NextNote()
         {
             if (LoopCount == -1)
             {
-                var note = fsc.Notes[CurrentPosition++];
-                if (note.Rand || CurrentPosition >= fsc.Notes.Count)
+                if (LoopingNote != null)
                 {
-                    RestartFSC(); //current random segment ended. jump to another.
-                    note = fsc.Notes[CurrentPosition];
+                    CurrentPosition = LoopingNote.Value;
                 }
-                if (note.Filename != "NONE")
+
+                var noteColumn = fsc.NoteColumns[CurrentPosition++];
+
+                if (CurrentPosition >= fsc.NoteColumns.Length)
                 {
-                    bool play;
-                    if (note.Prob > 0) play = (new Random().Next(16) < note.Prob);
-                    else play = true;
+                    // Loops back to the start.
+                    CurrentPosition = 0;
+                }
 
-                    if (play)
+                LoopCount = (short)(Math.Max(-1, noteColumn.Max(x => x.Loop) - 2));
+
+                // Evaluate all of the notes, and see which we can play.
+
+                int y = 0;
+                foreach (var note in noteColumn)
+                {
+                    if (note.Filename != null && note.Filename != "NONE")
                     {
-                        float volume = (note.Volume / 1024.0f) * (fsc.MasterVolume / 1024.0f) * Volume * HITVM.Get().GetMasterVolume(Model.HITVolumeGroup.AMBIENCE);
-                        var sound = LoadSound(note.Filename);
+                        bool play;
+                        if (note.Prob > 0) play = (Random.Shared.Next(100) < note.Prob);
+                        else play = true;
 
-                        if (sound != null)
+                        bool exceedsMax = SoundEffects.Count >= fsc.Max;
+
+                        if (play && !exceedsMax)
                         {
-                            var instance = sound.CreateInstance();
-                            instance.Volume = volume;
-                            instance.Pan = (note.LRPan / 512.0f) - 1;
-                            instance.Play();
+                            float noteVolume = (note.Volume / 1024.0f);
+                            if (note.RandomVolume)
+                            {
+                                // Maybe this should allow for volumes closer to 0, but that didn't feel right.
+                                noteVolume *= Random.Shared.NextSingle() * 0.66f + 0.33f;
+                            }
+                            float volume = noteVolume * (fsc.MasterVolume / 1024.0f);
+                            var sound = LoadSound(note.Filename);
 
-                            SoundEffects.Add(instance);
+                            if (sound != null)
+                            {
+                                var instance = sound.CreateInstance();
+                                instance.Volume = GetFinalVolume(volume);
+
+                                float notePan = note.RandomPan ? (Random.Shared.Next(1000) / 500f - 1) : (note.LRPan / 512.0f - 1);
+                                float pitchRange = note.pitchH - note.pitchL;
+                                float pitch = (pitchRange != 0) ? Random.Shared.NextSingle() * pitchRange + note.pitchL : 0f;
+                                instance.Pitch = pitch / 12f;
+                                instance.Pan = notePan;
+                                instance.Play();
+
+                                SoundEffects.Add(new FSCNoteInstance(instance, volume));
+                            }
                         }
                     }
-                    LoopCount = (short)(note.Loop - 1);
-                }
 
+                    y++;
+                }
             }
             else LoopCount--;
+        }
+
+        public void Dispose()
+        {
+            foreach (var sound in SoundEffects)
+            {
+                sound.Dispose();
+            }
+
+            if (DisposeCache)
+            {
+                foreach (var sound in SoundCache.Values)
+                {
+                    sound?.Dispose();
+                }
+            }
         }
     }
 }

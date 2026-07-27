@@ -85,7 +85,7 @@ namespace FSO.Client.UI.Panels
             Name = avatar.Name;
             Message = avatar.Message;
             Gender = avatar.GetPersonData(SimAntics.Model.VMPersonDataVariable.Gender) > 0;
-            TTSContext?.Speak(Message.Replace('_', ' '), Gender, ((VMTSOAvatarState)avatar.TSOState).ChatTTSPitch);
+            TTSContext?.Speak(Message.Replace('_', ' '), Gender, ((VMTSOAvatarState)avatar.TSOState).ChatTTSPitch, avatar.PersistID);
             if (avatar.PersistID == 0)
                 BgColor = new Color(100, 100, 100); // NPC chat color  
             else if (((VMTSOAvatarState)avatar.TSOState).Permissions == VMTSOAvatarPermissions.Admin)   
@@ -344,6 +344,6 @@ namespace FSO.Client.UI.Panels
     {
         public static Func<ITTSContext> Provider;
         public abstract void Dispose();
-        public abstract void Speak(string text, bool gender, int pitch);
+        public abstract void Speak(string text, bool gender, int pitch, uint persistID);
     }
 }

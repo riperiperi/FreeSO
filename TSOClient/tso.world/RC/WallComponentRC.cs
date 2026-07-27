@@ -25,6 +25,8 @@ namespace FSO.LotView.RC
         public Dictionary<ushort, Wall> WallCache = new Dictionary<ushort, Wall>();
         public Dictionary<ushort, WallStyle> WallStyleCache = new Dictionary<ushort, WallStyle>();
 
+        private float HeightAdjust = 0;
+
         private Wall GetPattern(ushort id)
         {
             if (!WallCache.ContainsKey(id)) WallCache.Add(id, Content.Content.Get().WorldWalls.Get(id));
@@ -62,6 +64,8 @@ namespace FSO.LotView.RC
 
         public void Generate(GraphicsDevice device, WorldState world, bool cutaway, bool allowCut = true)
         {
+            HeightAdjust = 0;
+
             var wallContent = Content.Content.Get().WorldWalls;
             var floorContent = Content.Content.Get().WorldFloors;
             if (!cutaway) Dispose();
@@ -303,6 +307,11 @@ namespace FSO.LotView.RC
             }
         }
 
+        public void AdjustHeight(float diff)
+        {
+            HeightAdjust += diff;
+        }
+
         public void Draw(GraphicsDevice gd, WorldState state)
         {
             var effect = WorldContent.RCObject;
@@ -316,6 +325,11 @@ namespace FSO.LotView.RC
             gd.BlendState = BlendState.Opaque;
             if (!gd.RasterizerState.ScissorTestEnable) gd.RasterizerState = RasterizerState.CullCounterClockwise;
             var baseWorld = Matrix.CreateRotationX((float)Math.PI / 2) * Matrix.CreateScale(3f, -3f, 3f);
+            if (HeightAdjust != 0)
+            {
+                baseWorld = Matrix.CreateTranslation(new Vector3(0, 0, HeightAdjust)) * baseWorld;
+            }
+
             effect.World = baseWorld;
             effect.SideMask = 0f;
             effect.Level = (float)(state.Level - 0.999f);

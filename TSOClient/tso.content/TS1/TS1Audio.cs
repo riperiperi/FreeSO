@@ -25,9 +25,10 @@ namespace FSO.Content.TS1
         private TS1SubProvider<DecodedSFX> MP3Sounds;
         private TS1SubProvider<DecodedSFX> XASounds;
         private TS1SubProvider<DecodedSFX> UTKSounds;
+        private TS1SubProvider<FSC> FSCs;
 
         /** Audio Cache **/
-        public Dictionary<Patch, SoundEffect> SFXCache = new Dictionary<Patch, SoundEffect>();
+        public Dictionary<string, SoundEffect> SFXCache = new Dictionary<string, SoundEffect>();
 
         private Dictionary<string, HITEventRegistration> _Events = new Dictionary<string, HITEventRegistration>();
         public Dictionary<string, HITEventRegistration> Events
@@ -132,6 +133,7 @@ namespace FSO.Content.TS1
             MP3Sounds = new TS1SubProvider<DecodedSFX>(ContentManager.TS1Global, ".mp3");
             XASounds = new TS1SubProvider<DecodedSFX>(ContentManager.TS1Global, ".xa");
             UTKSounds = new TS1SubProvider<DecodedSFX>(ContentManager.TS1Global, ".utk");
+            FSCs = new TS1SubProvider<FSC>(ContentManager.TS1Global, ".fsc");
         }
 
         public void Init()
@@ -144,6 +146,7 @@ namespace FSO.Content.TS1
             MP3Sounds.Init();
             XASounds.Init();
             UTKSounds.Init();
+            FSCs.Init();
 
             var FilePattern = new Regex(@".*\.hot");
 
@@ -218,7 +221,7 @@ namespace FSO.Content.TS1
         public SoundEffect GetSFX(Patch patch)
         {
             if (patch == null) return null;
-            if (SFXCache.ContainsKey(patch)) return SFXCache[patch];
+            if (SFXCache.TryGetValue(patch.Filename, out var cached)) return cached;
 
             var aud = GetAudioFrom(patch.Filename);
             if (aud != null)
@@ -226,7 +229,7 @@ namespace FSO.Content.TS1
                 var stream = new MemoryStream(aud.Data);
                 var sfx = SoundEffect.FromStream(stream);
                 stream.Close();
-                SFXCache.Add(patch, sfx);
+                SFXCache.Add(patch.Filename, sfx);
                 switch (aud.Filetype)
                 {
                     case 2:
@@ -274,6 +277,11 @@ namespace FSO.Content.TS1
             Patch result = null;
             group.hot.Patches.TryGetValue(id, out result);
             return result;
+        }
+
+        public FSC GetFSC(string path)
+        {
+            return FSCs.Get(Path.GetFileName(path).ToLowerInvariant());
         }
     }
 }

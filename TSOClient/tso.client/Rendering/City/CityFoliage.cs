@@ -1,12 +1,10 @@
-﻿using FSO.Common.Utils;
+﻿using FSO.Common.Domain.Realestate;
+using FSO.Common.Utils;
+using FSO.Content.Model;
 using FSO.Files.RC;
 using Microsoft.Xna.Framework;
 using Microsoft.Xna.Framework.Graphics;
-using System;
-using System.Collections.Generic;
-using System.IO;
-using System.Linq;
-using System.Threading.Tasks;
+using System.Runtime.CompilerServices;
 
 namespace FSO.Client.Rendering.City
 {
@@ -17,37 +15,79 @@ namespace FSO.Client.Rendering.City
     /// </summary>
     public class CityFoliage : IDisposable
     {
-        public int ChunkSize = 16;
-        public CityMapData MapData;
+        private struct SimpleRandom
+        {
+            private ulong RandomSeed;
+
+            public SimpleRandom(ulong seed)
+            {
+                RandomSeed = seed;
+            }
+
+            /// <summary>
+            /// Returns a random number between 0 and less than the specified maximum.
+            /// </summary>
+            /// <param name="max">The upper bound of the random number.</param>
+            /// <returns></returns>
+            [MethodImpl(MethodImplOptions.AggressiveInlining)]
+            public ulong Next(ulong max)
+            {
+                if (max == 0) return 0;
+                RandomSeed ^= RandomSeed >> 12;
+                RandomSeed ^= RandomSeed << 25;
+                RandomSeed ^= RandomSeed >> 27;
+                return (RandomSeed * (ulong)(2685821657736338717)) % max;
+            }
+        }
+
+        private readonly struct TreeGroup(string name, int index, int count)
+        {
+            public readonly string Name = name;
+            public readonly int Index = index;
+            public readonly int Count = count;
+        }
+
+        public const int ChunkSize = 16;
+        public CityMap MapData;
         public Dictionary<int, CityFoliageChunk> Chunks = new Dictionary<int, CityFoliageChunk>();
 
         public DGRP3DVert[][] TreeVerts;
         public int[][] TreeInds;
+        public readonly Matrix[] RotationMatrices;
 
-        public string[] TreeGroups = new string[]
-        {
-            "pine",
-            "tree",
-            "palm",
-            "cactus", //3
-            "snow", //3
-        };
+        private uint ActiveLocation;
+
+        private readonly TreeGroup[] TreeGroups =
+        [
+            new("pine", 0, 4), //4 models
+            new("tree", 4, 4), //4 models
+            new("cactus", 8, 3), //3 models
+            new("palm", 11, 4), //4 models
+            new("snow", 15, 3) //3 models
+        ];
 
         public CityFoliage()
         {
             TreeVerts = new DGRP3DVert[18][];
-            TreeInds = new int[18][]; 
-            for (int i=0; i<18; i++)
-            {
-                var snow = (i >= 15);
-                var model = LoadModel(TreeGroups[(snow)?(4):(i / 4)] + (snow?(i-14):((i % 4) + 1)) + ".obj");
-                //var tree = Content.Content.Get().RCMeshes.Get(TreeGroups[i/4]+((i%4)+1)+".fsom");
+            TreeInds = new int[18][];
 
-                //var geom = tree.Geoms[0].ElementAt(0).Value;
-                TreeVerts[i] = model.Item1;
-                TreeInds[i] = model.Item2;
+            foreach (var group in TreeGroups)
+            {
+                for (int i = 0; i < group.Count; i++)
+                {
+                    var model = LoadModel(group.Name + (i + 1) + ".obj");
+
+                    TreeVerts[group.Index + i] = model.Item1;
+                    TreeInds[group.Index + i] = model.Item2;
+                }
             }
 
+            RotationMatrices = new Matrix[16];
+            int length = RotationMatrices.Length;
+            for (int i = 0; i < length; i++)
+            {
+                RotationMatrices[i] = Matrix.CreateRotationY((MathF.PI * 2 * i) / length);
+            }
         }
 
         public Tuple<DGRP3DVert[], int[]> LoadModel(string model)
@@ -89,41 +129,73 @@ namespace FSO.Client.Rendering.City
             return new Tuple<DGRP3DVert[], int[]>(outVerts.ToArray(), outInds.ToArray());
         }
 
-        private Dictionary<Color, int> ForestTypes = new Dictionary<Color, int>()
-        {
-            { new Color(0, 0x6A, 0x28), 0 },   //heavy forest
-            { new Color(0, 0xEB, 0x42), 1},   //light forest
-            { new Color(255, 0xFC, 0), 2 },   //palm
-            { new Color(255, 0, 0), 3},   //cacti
-            { new Color(0, 0, 0), -1}  //nothing; no forest
-        };
+        private static readonly int[] TreeCounts = [1, 4, 7, 15];
 
-        public int[] TreeCounts = new int[] { 1, 4, 7, 15 };
-
-        private int O(int x, int y)
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
+        private static int O(int x, int y)
         {
             return (Math.Max(0, Math.Min(511, y)) * 512 + Math.Max(0, Math.Min(511, x)));
+        }
+
+        public void InvalidateChunks(Rectangle rect)
+        {
+            foreach (var chunkPair in Chunks)
+            {
+                int i = chunkPair.Key;
+                var chunk = chunkPair.Value;
+
+                var x = i % 32;
+                var y = i / 32;
+
+                var chunkRect = new Rectangle(x * ChunkSize, y * ChunkSize, ChunkSize, ChunkSize);
+
+                if (rect.Intersects(chunkRect))
+                {
+                    chunk.Dirty = true;
+                }
+            }
+        }
+
+        private void SetActiveLocation(uint location)
+        {
+            if (ActiveLocation != location)
+            {
+                foreach (var chunk in Chunks.Values)
+                {
+                    uint filtered = chunk.FilterActiveLocation(location);
+
+                    if (filtered != chunk.ActiveLocation)
+                    {
+                        chunk.ActiveLocation = filtered;
+                        chunk.Dirty = true;
+                    }
+                }
+
+                ActiveLocation = location;
+            }
         }
 
         public void Draw(Terrain terrain, GraphicsDevice gd, CityContent content, Effect VertexShader, Effect PixelShader, int passIndex, int size, BoundingFrustum frustrum)
         {
             var camPos = terrain.Camera.CalculateR();
+            SetActiveLocation(terrain.ActiveLocation);
 
-            var cx = (int)Math.Round(camPos.X / 16);
-            var cy = (int)Math.Round(camPos.Y / 16);
+            var cx = (int)Math.Round(camPos.X / ChunkSize);
+            var cy = (int)Math.Round(camPos.Y / ChunkSize);
 
-            var invalid = Chunks.Keys.Where(i =>
+            var invalid = Chunks.Where(chunkPair =>
             {
-                var x = i % 32;
-                var y = i / 32;
+                var x = chunkPair.Value.X;
+                var y = chunkPair.Value.Y;
+
                 return (x < cx - 2) || (x > cx + 2) || (y < cy - 2) || (y > cy + 2);
             }).ToList();
 
             foreach (var c in invalid)
             {
-                var chunk = Chunks[c];
+                var chunk = c.Value;
                 chunk.Dispose();
-                Chunks.Remove(c);
+                Chunks.Remove(c.Key);
             }
 
             gd.RasterizerState = RasterizerState.CullNone;
@@ -143,7 +215,7 @@ namespace FSO.Client.Rendering.City
             VertexShader.CurrentTechnique = VertexShader.Techniques[1];
             VertexShader.CurrentTechnique.Passes[5].Apply();
 
-            var copy = terrain.OccupiedTiles;
+            HashSet<int> copy = terrain.OccupiedTiles;
 
             for (int y = Math.Max(0, cy-size); y<= Math.Min(31, cy + size); y++)
             {
@@ -151,9 +223,14 @@ namespace FSO.Client.Rendering.City
                 {
                     var ind = y * 32 + x;
                     CityFoliageChunk chunk;
-                    if (!Chunks.TryGetValue(ind, out chunk)) {
+                    if (!Chunks.TryGetValue(ind, out chunk))
+                    {
                         chunk = GenerateChunk(gd, x, y, copy);
                         Chunks.Add(chunk.Ind, chunk);
+                    }
+                    else if (chunk.ShouldRegenerate())
+                    {
+                        RegenerateChunk(chunk, gd, x, y, copy);
                     }
 
                     if (chunk.Indices != null && chunk.Bounds.Intersects(frustrum))
@@ -172,111 +249,177 @@ namespace FSO.Client.Rendering.City
             }
         }
 
-        public CityFoliageChunk GenerateChunk(GraphicsDevice gd, int x, int y, HashSet<int> noTrees)
+        private (DGRP3DVert[], int[]) GetChunkData(int x, int y, HashSet<int> noTrees, uint activeLocation)
         {
-            var chunk = new CityFoliageChunk();
-            chunk.Bounds = new BoundingBox(new Vector3(x * ChunkSize, 0, y * ChunkSize), new Vector3((x+1) * 32, 255 / 12f, (y+1) * 32));
+            var verts = new List<DGRP3DVert>();
+            var inds = new List<int>();
+            var md = MapData.ElevationData;
+            var baseMat = Matrix.CreateScale(1 / 75f);
 
-            Task.Run(() =>
+            var startx = x * ChunkSize;
+            var endx = startx + ChunkSize;
+            var starty = y * ChunkSize;
+            var endy = starty + ChunkSize;
+
+            var forestTypeData = MapData.ForestTypeData;
+            var terrainTypeData = MapData.TerrainType;
+            var forestDensityData = MapData.ForestDensityData;
+            var roadData = MapData.RoadData;
+
+            var locationCoords = MapCoordinates.Unpack(activeLocation);
+            var treeCut = activeLocation == 0 ? Rectangle.Empty : new Rectangle(locationCoords.X - 1, locationCoords.Y - 1, 3, 3);
+
+            for (int oy = starty; oy < endy; oy++)
             {
-                var verts = new List<DGRP3DVert>();
-                var inds = new List<int>();
-                var md = MapData.ElevationData;
-                var baseMat = Matrix.CreateScale(1 / 75f);
-
-                var startx = x * ChunkSize;
-                var endx = startx + ChunkSize;
-                var starty = y * ChunkSize;
-                var endy = starty + ChunkSize;
-
-                for (int oy = starty; oy < endy; oy++)
+                for (int ox = startx; ox < endx; ox++)
                 {
-                    for (int ox = startx; ox < endx; ox++)
+                    var ind = oy * 512 + ox;
+                    var forestType = forestTypeData[ind];
+                    if (forestType != ForestType.NULL && !noTrees.Contains(ind) && !treeCut.Contains(ox, oy))
                     {
-                        var ind = oy * 512 + ox;
-                        var forestType = ForestTypes[MapData.ForestTypeData[ind]];
-                        if (forestType != -1 && !noTrees.Contains(ind))
+                        var terrainType = terrainTypeData[ind];
+                        if (forestType == 0 && terrainType == TerrainType.SNOW) forestType = ForestType.SNOW;
+                        var densityN = ((forestDensityData[ind] * 4) / 255);
+                        if (densityN == 0 || terrainType == TerrainType.WATER) continue;
+                        var density = TreeCounts[densityN - 1];
+                        var rand = new SimpleRandom((ulong)(ind * 231458721));// new Random(ind);
+
+                        var road = roadData[ind] & 15;
+                        float rangesx = 0;
+                        float rangesy = 0;
+                        float rangex = 1;
+                        float rangey = 1;
+
+                        if ((road & 1) > 0)
                         {
-                            if (forestType == 0 && MapData.TerrainType[ind] == 3) forestType = 4;
-                            var densityN = ((MapData.ForestDensityData[ind] * 4) / 255);
-                            if (densityN == 0) continue;
-                            var density = TreeCounts[densityN - 1];
-                            var rand = new Random(ind);
+                            rangesx += 0.15f;
+                            rangex -= 0.15f;
+                        }
+                        if ((road & 2) > 0)
+                        {
+                            rangey -= 0.15f;
+                        }
+                        if ((road & 4) > 0)
+                        {
+                            rangex -= 0.15f;
+                        }
+                        if ((road & 8) > 0)
+                        {
+                            rangesy += 0.15f;
+                            rangey -= 0.15f;
+                        }
 
-                            var road = MapData.RoadData[ind] & 15;
-                            float rangesx = 0;
-                            float rangesy = 0;
-                            float rangex = 1;
-                            float rangey = 1;
+                        var group = TreeGroups[(int)forestType];
 
-                            if ((road & 1) > 0)
+                        var fBase = group.Index;
+
+                        Span<float> d =
+                        [
+                            md[O(ox - 1, oy - 1)], md[O(ox - 1, oy)], md[O(ox - 1, oy + 1)], md[O(ox - 1, oy + 2)],
+                            md[O(ox, oy - 1)], md[O(ox, oy)], md[O(ox, oy + 1)], md[O(ox, oy + 2)],
+                            md[O(ox + 1, oy - 1)], md[O(ox + 1, oy)], md[O(ox + 1, oy + 1)], md[O(ox + 1, oy + 2)],
+                            md[O(ox + 2, oy - 1)], md[O(ox + 2, oy)], md[O(ox + 2, oy + 1)], md[O(ox + 2, oy + 2)],
+                        ];
+
+                        for (int i = 0; i < density; i++)
+                        {
+                            var subtype = (int)rand.Next((ulong)group.Count);
+                            var sx = (rand.Next(256) / 256f) * rangex + rangesx;
+                            var sy = (rand.Next(256) / 256f) * rangey + rangesy;
+
+                            //get tree height
+                            float y1 = CityGeometry.Cubic(d[0], d[1], d[2], d[3], sy, 0);
+                            float y2 = CityGeometry.Cubic(d[4], d[5], d[6], d[7], sy, 0);
+                            float y3 = CityGeometry.Cubic(d[8], d[9], d[10], d[11], sy, 0);
+                            float y4 = CityGeometry.Cubic(d[12], d[13], d[14], d[15], sy, 0);
+
+                            var h = CityGeometry.Cubic(y1, y2, y3, y4, sx, 0);
+
+                            //add the tree
+
+                            var mat = baseMat * RotationMatrices[rand.Next((ulong)RotationMatrices.Length)];
+                            var pos = new Vector3(ox + sx, h / 12f, oy + sy);
+
+                            var model = fBase + subtype;
+                            var baseV = verts.Count;
+                            foreach (var vert in TreeVerts[model])
                             {
-                                rangesx += 0.15f;
-                                rangex -= 0.15f;
+                                var vCopy = vert;
+                                vCopy.Position = Vector3.Transform(vCopy.Position, mat);
+                                vCopy.Normal = pos;
+                                verts.Add(vCopy);
                             }
-                            if ((road & 2) > 0)
-                            {
-                                rangey -= 0.15f;
-                            }
-                            if ((road & 4) > 0)
-                            {
-                                rangex -= 0.15f;
-                            }
-                            if ((road & 8) > 0)
-                            {
-                                rangesy += 0.15f;
-                                rangey -= 0.15f;
-                            }
-                            var fBase = Math.Min(15, forestType * 4);
 
-                            for (int i = 0; i < density; i++)
-                            {
-                                var subtype = rand.Next((forestType >= 3) ? 3 : 4);
-                                var sx = (float)rand.NextDouble() * rangex + rangesx;
-                                var sy = (float)rand.NextDouble() * rangey + rangesy;
-
-                                //get tree height
-                                float y1 = CityGeometry.Cubic(md[O(ox - 1, oy - 1)], md[O(ox - 1, oy)], md[O(ox - 1, oy + 1)], md[O(ox - 1, oy + 2)], sy, 0);
-                                float y2 = CityGeometry.Cubic(md[O(ox, oy - 1)], md[O(ox, oy)], md[O(ox, oy + 1)], md[O(ox, oy + 2)], sy, 0);
-                                float y3 = CityGeometry.Cubic(md[O(ox + 1, oy - 1)], md[O(ox + 1, oy)], md[O(ox + 1, oy + 1)], md[O(ox + 1, oy + 2)], sy, 0);
-                                float y4 = CityGeometry.Cubic(md[O(ox + 2, oy - 1)], md[O(ox + 2, oy)], md[O(ox + 2, oy + 1)], md[O(ox + 2, oy + 2)], sy, 0);
-
-                                var h = CityGeometry.Cubic(y1, y2, y3, y4, sx, 0);
-
-                                //add the tree
-
-                                var mat = baseMat * Matrix.CreateRotationY((float)(Math.PI * 2 * rand.NextDouble()));
-                                var pos = new Vector3(ox + sx, h / 12f, oy + sy);
-
-                                var model = fBase + subtype;
-                                var baseV = verts.Count;
-                                foreach (var vert in TreeVerts[model])
-                                {
-                                    var vCopy = vert;
-                                    vCopy.Position = Vector3.Transform(vCopy.Position, mat);
-                                    vCopy.Normal = pos;
-                                    verts.Add(vCopy);
-                                }
-
-                                foreach (var tind in TreeInds[model]) inds.Add(tind + baseV);
-                            }
+                            foreach (var tind in TreeInds[model]) inds.Add(tind + baseV);
                         }
                     }
                 }
+            }
+
+            return ([..verts], [..inds]);
+        }
+
+        private void RegenerateChunk(CityFoliageChunk chunk, GraphicsDevice gd, int x, int y, HashSet<int> noTrees)
+        {
+            if (chunk.Dead)
+            {
+                return;
+            }
+
+            chunk.ActiveLocation = ActiveLocation;
+
+            chunk.Regenerating = true;
+
+            Task.Run(() =>
+            {
+                var (verts, inds) = GetChunkData(x, y, noTrees, chunk.ActiveLocation);
                 GameThread.NextUpdate(state =>
                 {
-                    if (verts.Count > 0 && !chunk.Dead)
+                    if (verts.Length > 0 && !chunk.Dead)
                     {
-                        var vbuf = new VertexBuffer(gd, typeof(DGRP3DVert), verts.Count, BufferUsage.None);
-                        vbuf.SetData(verts.ToArray());
-                        var ibuf = new IndexBuffer(gd, IndexElementSize.ThirtyTwoBits, inds.Count, BufferUsage.None);
-                        ibuf.SetData(inds.ToArray());
+                        VertexBuffer vbuf = chunk.Vertices;
+                        if (vbuf == null || vbuf.VertexCount != verts.Length)
+                        {
+                            vbuf?.Dispose();
+                            vbuf = new VertexBuffer(gd, typeof(DGRP3DVert), verts.Length, BufferUsage.None);
+                        }
+                        vbuf.SetData(verts);
+
+                        IndexBuffer ibuf = chunk.Indices;
+
+                        if (ibuf == null || ibuf.IndexCount != inds.Length)
+                        {
+                            ibuf?.Dispose();
+                            ibuf = new IndexBuffer(gd, IndexElementSize.ThirtyTwoBits, inds.Length, BufferUsage.None);
+                        }
+                        ibuf.SetData(inds);
 
                         chunk.Vertices = vbuf;
                         chunk.Indices = ibuf;
                     }
+                    else
+                    {
+                        chunk.Vertices?.Dispose();
+                        chunk.Indices?.Dispose();
+
+                        chunk.Vertices = null;
+                        chunk.Indices = null;
+                    }
+
+                    chunk.Regenerating = false;
                 });
             });
+        }
+
+        public CityFoliageChunk GenerateChunk(GraphicsDevice gd, int x, int y, HashSet<int> noTrees)
+        {
+            var chunk = new CityFoliageChunk
+            {
+                Bounds = new BoundingBox(new Vector3(x * ChunkSize, 0, y * ChunkSize), new Vector3((x + 1) * 32, 255 / 12f, (y + 1) * 32)),
+            };
+
+            RegenerateChunk(chunk, gd, x, y, noTrees);
+
             chunk.X = x;
             chunk.Y = y;
             chunk.Ind = y * 32 + x;
@@ -303,7 +446,42 @@ namespace FSO.Client.Rendering.City
         public IndexBuffer Indices;
         public BoundingBox Bounds;
 
+        /// <summary>
+        /// Properties around the active location have their city view trees removed to avoid overlapping lot graphics.
+        /// If the active location doesn't overlap this chunk, it's set to 0.
+        /// </summary>
+        public uint ActiveLocation;
+
+        public bool Dirty;
+        public bool Regenerating;
+
         public bool Dead;
+
+        public uint FilterActiveLocation(uint location)
+        {
+            if (location == 0)
+            {
+                return 0;
+            }
+
+            var coords = MapCoordinates.Unpack(location);
+
+            var chunkRect = new Rectangle(X * 16, Y * 16, 16, 16);
+
+            return chunkRect.Contains(coords.X, coords.Y) ? location : 0;
+        }
+
+        public bool ShouldRegenerate()
+        {
+            if (Dirty && !Regenerating)
+            {
+                Dirty = false;
+
+                return true;
+            }
+
+            return false;
+        }
 
         public void Dispose()
         {

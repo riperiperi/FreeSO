@@ -1,8 +1,6 @@
 ﻿using FSO.SimAntics.Model.Routing;
 using FSO.SimAntics.NetPlay.Model;
 using Microsoft.Xna.Framework;
-using System.Collections.Generic;
-using System.IO;
 using FSO.LotView.Model;
 
 namespace FSO.SimAntics.Model
@@ -11,7 +9,7 @@ namespace FSO.SimAntics.Model
     {
         public List<VMRoomPortal> Portals;
         public List<VMRoomPortal> WindowPortals;
-        public List<VMEntity> Entities;
+        public VMObjectList<VMEntity> Entities;
 
         public List<VMObstacle> DynamicObstacles;
         public VMObstacleSet StaticObstacles;

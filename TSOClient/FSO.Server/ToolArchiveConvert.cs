@@ -31,6 +31,20 @@ CREATE INDEX `fso_users_display_name` ON `fso_users`(`display_name`);";
 CREATE INDEX fso_archive_featured_category_shard_idx ON fso_archive_featured (category, shard_id);
 ";
 
+        private string ArchiveRecentsCreate = @"CREATE TABLE `fso_archive_recents` (
+	`user_id` INTEGER NOT NULL,
+	`avatar_id` INTEGER NOT NULL,
+    `last_timestamp` datetime NOT NULL DEFAULT current_timestamp,
+	PRIMARY KEY(`user_id`, `avatar_id`),
+	CONSTRAINT `fso_recent_user_fk` FOREIGN KEY(`user_id`) REFERENCES `fso_users`(`user_id`) ON DELETE CASCADE,
+	CONSTRAINT `fso_recent_avatar_fk` FOREIGN KEY(`avatar_id`) REFERENCES `fso_avatars`(`avatar_id`) ON DELETE CASCADE
+);
+CREATE INDEX fso_archive_recents_user_idx ON fso_archive_recents (user_id);
+";
+
+        private string ArchiveLotsFlags = @"ALTER TABLE `fso_lots`
+ADD COLUMN `archive_flags` tinyint(3) NOT NULL DEFAULT 0;";
+
         private string User1Update = "UPDATE `fso_users` SET username='archive', register_date=0, email='unused', register_ip='0', last_ip='0', client_id='0', last_login=0 WHERE user_id=1;";
 
         public ToolArchiveConvert(IDAFactory factory)
@@ -67,6 +81,14 @@ CREATE INDEX fso_archive_featured_category_shard_idx ON fso_archive_featured (ca
                 LOG.Info("Adding featured lots table");
 
                 RunCommand(da, ArchiveFeaturedCreate);
+
+                LOG.Info("Adding recent avatars table");
+
+                RunCommand(da, ArchiveRecentsCreate);
+
+                LOG.Info("Adding lot archive flags");
+
+                RunCommand(da, ArchiveLotsFlags);
 
                 LOG.Info("Removing avatar limit triggers");
 

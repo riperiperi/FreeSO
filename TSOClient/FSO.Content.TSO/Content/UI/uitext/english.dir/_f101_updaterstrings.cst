@@ -30,7 +30,7 @@ Remember that you should only install updates and content packs from servers you
 (you can ignore this by pressing the cheat combo from TS1, but it is DEV ONLY as your game will likely just crash.)^
 
 16 ^A patch is available to convert your TSO version into the correct one. It will be applied if you click OK. (only perform this operation once)^
-17 ^Your version could not be identified, so the FreeSO client does not know what to do with it. Please visit http://freeso.org for the correct way to download TSO files. (usually via a launcher)^
+17 ^Your version could not be identified, so the FreeSO client does not know what to do with it. Please visit https://freeso.org for the correct way to download TSO files. (usually via a launcher)^
 18 ^Patching TSO Files...^
 
 19 ^Fatal Error^
@@ -54,7 +54,7 @@ Remember that you should only install updates and content packs from servers you
 26 ^(current) ^
 
 27 ^Obtaining Update Info...^
-28 ^The file %s could not be downloaded or was empty/corrupted. You will now return to the login screen.^
+28 ^The file %s could not be downloaded or was empty/corrupted.^
 29 ^ Manifest^
 
 30 ^Updater failed!^
@@ -62,3 +62,74 @@ Remember that you should only install updates and content packs from servers you
 
 Error Message:
 %s^
+
+// Updater V2 (freeso archive)
+
+32 ^The %s update server couldn't be contacted.^
+33 ^%s is up to date!^
+34 ^An update is available for %s: (%s)^
+
+35 ^Ignore^
+36 ^Download & Install (%s)^
+37 ^Continue^
+
+40 ^This server is using a different version of FreeSO that isn't a direct update:
+
+Channel: %s
+Update: %s
+
+^
+
+41 ^This server's version is available for download. Do you want to update?^
+42 ^The update download couldn't be located - you may need to download this game version manually from the server host.^
+43 ^This server's version is available, but is older than your current game version. Do you want to downgrade?^
+44 ^Cancel^
+
+50 ^[color=red][s]This update is NOT signed by FreeSO.[/s][/color]
+Make sure that you fully trust this server before updating to this game version.^
+51 ^This update is NOT from the same channel as your client, but is signed. You could be switching to a beta or experimental client, so make sure to read the changelog for important information.^
+
+52 ^Unverified Game Version^
+53 ^Confirm update to this unverified game version? You may need to reinstall FreeSO to revert it.^
+
+54 ^The update hashes could not be verified - the update server may be configured incorrectly.^
+55 ^Auto Updater^
+
+56 ^[color=red][s]This update's signature does NOT match your client.[/s][/color]
+Make sure that you fully trust this server before updating to this game version.^
+57 ^[color=red][s]This update is not signed.[/s][/color]
+Make sure that you fully trust this server before updating to this game version.^
+58 ^This update is on a different server from your current update, but still has a matching signature.^
+
+59 ^Up to date^
+60 ^New update available! (%s)^
+61 ^A new update is available for download (%s). Do you want to update?^
+62 ^Fetching update data...^
+63 ^Update check failed^
+64 ^Couldn't reach the update server at:
+
+%s
+
+Check your internet connection, or for any information from the server owner.^
+65 ^You're currently up to date on the following update channel:
+
+Channel: %s
+Update: %s
+
+FreeSO will check for updates when it starts, or if a server you're connecting to has a different game version.^
+
+66 ^3D Mode Remesh Update^
+67 ^The FreeSO remesh package has received an update. The remesh package contains replacement 3D models and textures for objects from The Sims Online to improve the visuals in 3D mode.
+
+Would you like to download it now?^
+
+68 ^Download 3D Mode Remesh Package^
+69 ^The FreeSO remesh package contains replacement 3D models and textures for objects from The Sims Online to improve the visuals in 3D mode.
+
+Would you like to download it now?^
+
+70 ^Your version of the FreeSO remesh package is up to date.^
+71 ^Downloading 3D Mode Remeshes...^
+
+72 ^Development Version^
+73 ^This version of the client doesn't have an update channel.^

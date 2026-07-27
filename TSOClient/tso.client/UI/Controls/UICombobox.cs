@@ -1,9 +1,12 @@
 ﻿using FSO.Client.Controllers;
 using FSO.Client.UI.Framework;
 using FSO.Client.UI.Framework.Parser;
+using FSO.Common.Rendering.Framework.IO;
+using FSO.Common.Rendering.Framework.Model;
 using FSO.Common.Utils;
 using Microsoft.Xna.Framework;
 using Microsoft.Xna.Framework.Graphics;
+using Microsoft.Xna.Framework.Input;
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -20,8 +23,11 @@ namespace FSO.Client.UI.Controls
     /// Kind of hacks the message inbox dropdown into a combobox.
     /// Can be resized horizontally.
     /// </summary>
-    public class UICombobox : UIContainer
+    public class UICombobox : UIContainer, IFocusableUI
     {
+        public bool IsFocused { get; set; }
+        public int TabIndex { get; set; }
+
         public object SelectedItem
         {
             get
@@ -127,6 +133,13 @@ namespace FSO.Client.UI.Controls
 
             MenuListBox.OnChange += SelectComboboxElement;
 
+            MenuListBox.TextStyle = new UIListBoxTextStyle(MenuListBox.FontStyle)
+            {
+                SelectedColor = Color.Black,
+                HighlightedColor = new Color(255, 255, 255),
+                DisabledColor = new Color(150, 150, 150)
+            };
+
             UpdateSize();
         }
 
@@ -170,6 +183,7 @@ namespace FSO.Client.UI.Controls
         void DropDownButton_OnButtonClick(UIElement button)
         {
             ToggleOpen();
+            GameFacade.Screens.inputManager.SetFocus(this);
         }
 
         public void ToggleOpen()
@@ -223,6 +237,56 @@ namespace FSO.Client.UI.Controls
             else
             {
                 MenuTextEdit.CurrentText = _items[selected].Name;
+            }
+        }
+
+        public void OnFocusChanged(FocusEvent newFocus)
+        {
+        }
+
+        private bool HasFocus(UpdateState state)
+        {
+            var focus = state.InputManager.GetFocus() as UIElement;
+
+            while (focus != null)
+            {
+                if (focus == this)
+                {
+                    return true;
+                }
+
+                focus = focus.Parent;
+            }
+
+            return false;
+        }
+
+        public override void Update(UpdateState state)
+        {
+            base.Update(state);
+
+            if (open && !HasFocus(state))
+            {
+                // If the focus isn't a child of us, then instantly close the dropdown.
+                ToggleOpen();
+            }
+
+            if (!IsFocused) return;
+
+            if (state.ActivationKeyPressed)
+            {
+                if (!open) ToggleOpen();
+                else SelectComboboxElement(this);
+            }
+            if (state.NewKeys.Contains(Keys.Escape) && open)
+                ToggleOpen();
+            if (state.NewKeys.Contains(Keys.Up) && open && MenuListBox.SelectedIndex > 0)
+                MenuListBox.SelectedIndex--;
+            if (state.NewKeys.Contains(Keys.Down))
+            {
+                if (!open) ToggleOpen();
+                else if (MenuListBox.SelectedIndex < _items.Count - 1)
+                    MenuListBox.SelectedIndex++;
             }
         }
     }

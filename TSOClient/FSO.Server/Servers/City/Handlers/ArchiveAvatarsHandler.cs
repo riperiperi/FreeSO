@@ -1,4 +1,5 @@
-﻿using FSO.Common.DataService;
+﻿using FSO.Common;
+using FSO.Common.DataService;
 using FSO.Server.Database.DA;
 using FSO.Server.Database.DA.Avatars;
 using FSO.Server.Framework.Voltron;
@@ -6,7 +7,6 @@ using FSO.Server.Protocol.CitySelector;
 using FSO.Server.Protocol.Electron.Packets;
 using Ninject;
 using NLog;
-using System.Linq;
 
 namespace FSO.Server.Servers.City.Handlers
 {
@@ -17,11 +17,35 @@ namespace FSO.Server.Servers.City.Handlers
         private CityServerContext Context;
         private IKernel Kernel;
 
+        private Lock SharedAvatarsCacheLock = new();
+        private Task<ArchiveAvatar[]> SharedAvatarsCache;
+
         public ArchiveAvatarsHandler(CityServerContext context, IDAFactory da, IDataService dataService, IKernel kernel)
         {
             Context = context;
             DA = da;
             Kernel = kernel;
+        }
+
+        private ArchiveAvatar[] GetSharedAvatars(IDA da)
+        {
+            Task<ArchiveAvatar[]> task;
+
+            lock (SharedAvatarsCacheLock)
+            {
+                if (SharedAvatarsCache == null)
+                {
+                    SharedAvatarsCache = Task.Run(() =>
+                    {
+                        var shared = da.Avatars.GetSummaryByUserId(1);
+                        return shared.Select(ToArchiveAvatar).ToArray();
+                    });
+                }
+
+                task = SharedAvatarsCache;
+            }
+
+            return task.Result;
         }
 
         private static ArchiveAvatar ToArchiveAvatar(DbAvatarSummary ava)
@@ -55,9 +79,10 @@ namespace FSO.Server.Servers.City.Handlers
                     session.Write(new ArchiveAvatarsResponse()
                     {
                         IsVerified = false,
-                        RecentAvatars = new uint[0],
-                        UserAvatars = new ArchiveAvatar[0],
-                        SharedAvatars = new ArchiveAvatar[0],
+                        CasEnabled = false,
+                        RecentAvatars = [],
+                        UserAvatars = [],
+                        SharedAvatars = [],
                     });
 
                     return;
@@ -71,15 +96,29 @@ namespace FSO.Server.Servers.City.Handlers
 
                     // TODO: cache?
 
-                    var shared = da.Avatars.GetSummaryByUserId(1);
-                    var sharedAvatars = shared.Select(ToArchiveAvatar).ToArray();
+                    var archiveFlags = Context.Config.Archive.Flags;
 
-                    // TODO: database
-                    var recentAvatars = sharedAvatars.Where(x => x.Name == "burglar cop").Select(x => x.AvatarId).ToArray();
+                    bool canUseArchive = !archiveFlags.HasFlag(ArchiveConfigFlags.LockArchivedSims) || session.HasModerationLevel(1);
+
+                    ArchiveAvatar[] sharedAvatars;
+
+                    if (canUseArchive)
+                    {
+                        sharedAvatars = GetSharedAvatars(da);
+                    }
+                    else
+                    {
+                        sharedAvatars = [];
+                    }
+
+                    // Can't cache this obviously
+                    var mostRecent = da.ArchiveRecents.AvatarsByUser((int)session.UserId, 5);
+                    var recentAvatars = mostRecent.Where(x => userAvatars.Any(y => y.AvatarId == x) || sharedAvatars.Any(y => y.AvatarId == x)).Select(x => (uint)x).ToArray();
 
                     session.Write(new ArchiveAvatarsResponse()
                     {
                         IsVerified = true,
+                        CasEnabled = archiveFlags.HasFlag(ArchiveConfigFlags.AllowSimCreation) || session.HasModerationLevel(1),
                         UserAvatars = userAvatars,
                         SharedAvatars = sharedAvatars,
                         RecentAvatars = recentAvatars

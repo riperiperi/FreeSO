@@ -15,7 +15,7 @@ namespace FSO.SimAntics.Engine
         private static string[] valid = {
             "Object", "Me", "TempXL:", "Temp:", "$", "Attribute:", "DynamicStringLocal:", "Local:", "TimeLocal:", "NameLocal:",
             "FixedLocal:", "DynamicObjectName", "MoneyXL:", "JobOffer:", "Job:", "JobDesc:", "Param:", "Neighbor", "\r\n", "ListObject",
-            "CatalogLocal:", "DateLocal:", "ObjectLocal:", "\\n"
+            "CatalogLocal:", "DateLocal:", "ObjectLocal:", "LotLocal:", "\\n"
         };
 
         public static void ShowDialog(VMStackFrame context, VMDialogOperand operand, STR source)
@@ -91,7 +91,7 @@ namespace FSO.SimAntics.Engine
                         {
                             try
                             {
-                                if (cmdString == "DynamicStringLocal:" || cmdString == "TimeLocal:" || cmdString == "JobOffer:" || cmdString == "Job:" || cmdString == "JobDesc:" || cmdString == "DateLocal:")
+                                if (cmdString == "DynamicStringLocal:" || cmdString == "TimeLocal:" || cmdString == "JobOffer:" || cmdString == "Job:" || cmdString == "JobDesc:" || cmdString == "DateLocal:" || cmdString == "LotLocal:")
                                 {
                                     values[1] = -1;
                                     values[2] = -1;
@@ -146,6 +146,7 @@ namespace FSO.SimAntics.Engine
                                         //StackObjectOwnerID call sets the id to -1 if no owner found. (null is usually 0)
                                         output.Append(context.VM.TSOState.Names.GetNameForID(
                                             context.VM, 
+                                            VMGlobalEntityType.Avatar,
                                             (context.Callee.TSOState as VMTSOObjectState)?.OwnerID ?? 0
                                             ));
                                     } else
@@ -266,6 +267,18 @@ namespace FSO.SimAntics.Engine
                                 case "DateLocal:":
                                     var date = new DateTime(context.Locals[values[2]], context.Locals[values[1]], context.Locals[values[0]]);
                                     output.Append(date.ToLongDateString());
+                                    break;
+                                case "LotLocal:":
+                                    uint idLow = (uint)context.Locals[values[0]];
+                                    uint idHigh = (uint)context.Locals[values[1]] << 16;
+
+                                    uint persistId = idLow | idHigh;
+
+                                    output.Append(context.VM.TSOState.Names.GetNameForID(
+                                        context.VM,
+                                        VMGlobalEntityType.Lot,
+                                        persistId
+                                    ));
                                     break;
                                 case "\\n":
                                     output.Append("\n");

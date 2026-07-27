@@ -38,6 +38,13 @@ namespace FSO.Server.Protocol.Electron
         ArchiveClientList,
         ArchiveModerationRequest,
         VerificationNotification,
+        JoinLotWithTransitionRequest,
+        FSOVMSurroundPuppets,
+        CityUpdateRequest,
+        CityUpdateResponse,
+        CityUpdateCommand,
+        CityInitRequest,
+        CityInitResponse,
         Unknown = 0xFFFF
     }
 

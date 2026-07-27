@@ -18,6 +18,7 @@ namespace FSO.Client.UI.Panels
         public UITextEdit NameTextEdit { get; set; }
         public UIValidationMessages<string> NameTextEditValidation { get; set; }
         public UILabel MessageText { get; set; }
+        public UILabel TitleText { get; set; }
 
         public string TextTitle { get; set; }
         public string InvalidNameErrorTitle { get; set; }
@@ -68,6 +69,17 @@ namespace FSO.Client.UI.Panels
 
             OKButton.OnButtonClick += AcceptButton_OnButtonClick;
             CloseButton.OnButtonClick += CloseButton_OnButtonClick;
+        }
+        
+        public UILotPurchaseDialog AsRenameDialog(string existingName, string title, string caption)
+        {
+            NameTextEdit.CurrentText = existingName;
+            NameTextEdit_OnChange(NameTextEdit);
+
+            TitleText.Caption = title;
+            MessageText.Caption = caption;
+
+            return this;
         }
 
         private void CloseButton_OnButtonClick(Framework.UIElement button)

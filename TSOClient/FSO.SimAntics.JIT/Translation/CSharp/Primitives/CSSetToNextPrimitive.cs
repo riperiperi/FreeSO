@@ -109,7 +109,7 @@ namespace FSO.SimAntics.JIT.Translation.CSharp.Primitives
 
                 bool loop = (operand.SearchType == VMSetToNextSearchType.ObjectOnSameTile);
 
-                codeResult.Add($"var ind = (entities.Count < 4)?0:VM.FindNextIndexInObjList(entities, targetValue);");
+                codeResult.Add($"var ind = (entities.Count < 4)?0:entities.FindNextIndexInObjList(targetValue);");
                 codeResult.Add($"for (int i = ind; i < entities.Count; i++) {{");
                 codeResult.Add($"var tempObj = entities[i];");
 

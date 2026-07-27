@@ -1,4 +1,8 @@
-﻿namespace FSO.Server.Database.DA
+﻿using Dapper;
+using FSO.Server.Database.DA.Tuning;
+using FSO.Server.Database.SqliteCompat;
+
+namespace FSO.Server.Database.DA
 {
     public class MySqlDAFactory : IDAFactory
     {
@@ -7,6 +11,7 @@
         public MySqlDAFactory(DatabaseConfiguration config)
         {
             this.Config = config;
+            SqlMapper.AddTypeHandler(new DbEnumHandler<DbTuningType>());
         }
 
         public IDA Get()

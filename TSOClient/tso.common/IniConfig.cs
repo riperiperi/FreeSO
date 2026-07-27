@@ -22,6 +22,11 @@ namespace FSO.Common
             {
                 try
                 {
+                    if (prop.SetMethod == null)
+                    {
+                        return;
+                    }
+
                     if (prop.PropertyType != typeof(string))
                         prop.SetValue(this, Convert.ChangeType(value, prop.PropertyType, CultureInfo.InvariantCulture));
                     else prop.SetValue(this, value);
@@ -64,7 +69,7 @@ namespace FSO.Common
             }
         }
 
-        public void Save()
+        public virtual void Save()
         {
             try
             {

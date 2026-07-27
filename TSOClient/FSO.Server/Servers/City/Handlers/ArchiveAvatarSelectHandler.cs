@@ -1,4 +1,5 @@
-﻿using FSO.Common.DataService;
+﻿using FSO.Common;
+using FSO.Common.DataService;
 using FSO.Server.Database.DA;
 using FSO.Server.Database.DA.AvatarClaims;
 using FSO.Server.Framework.Voltron;
@@ -67,8 +68,9 @@ namespace FSO.Server.Servers.City.Handlers
                     }
 
                     // permissions check - currently supports shared and owned avatars but pretty fixed
+                    bool canUseArchive = !Context.Config.Archive.Flags.HasFlag(ArchiveConfigFlags.LockArchivedSims) || session.HasModerationLevel(1);
 
-                    if (ava.user_id != session.UserId && ava.user_id != 1)
+                    if (ava.user_id != session.UserId && (!canUseArchive || ava.user_id != 1))
                     {
                         session.Response(ArchiveAvatarSelectCode.NoPermission);
                         return;
@@ -150,8 +152,17 @@ namespace FSO.Server.Servers.City.Handlers
                     if (session is VoltronSession vSession2)
                     {
                         da.Avatars.UpdateModerationLevel(avatarId, (int)vSession2.ModerationLevel);
+                        if (userId != ava.user_id)
+                        {
+                            da.ArchiveRecents.RecordAvatarUse((int)userId, (int)avatarId);
+                        }
+
                         vSession2.AvatarId = avatarId;
                         vSession2.AvatarClaimId = claim.Value;
+
+                        var lifecycle = Kernel.Get<VoltronConnectionLifecycleHandler>();
+
+                        await lifecycle.AssignAvatar(vSession2, vSession2.ModerationLevel != ava.moderation_level);
                     }
                     else
                     {

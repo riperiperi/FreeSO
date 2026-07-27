@@ -1,17 +1,13 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using FSO.Common.Content;
+﻿using FSO.Common.Content;
+using FSO.Common.Utils;
+using FSO.Content.Codecs;
+using FSO.Content.Framework;
 using FSO.Content.Model;
+using FSO.Files.FAR1;
 using FSO.Files.Formats.IFF;
 using FSO.Files.Formats.IFF.Chunks;
-using FSO.Files.FAR1;
-using System.IO;
-using FSO.Content.Framework;
-using System.Text.RegularExpressions;
-using FSO.Content.Codecs;
 using Microsoft.Xna.Framework.Graphics;
-using FSO.Common.Utils;
+using System.Text.RegularExpressions;
 
 namespace FSO.Content
 {
@@ -68,10 +64,11 @@ namespace FSO.Content
                 {
                     ID = floorID,
                     FileName = "global",
+                    Hardness = HardnessFromChunkName(far.ChunkLabel),
 
                     Name = floorStrs.GetString((i - 1) * 3 + 1),
                     Price = int.Parse(floorStrs.GetString((i - 1) * 3 + 0)),
-                    Description = floorStrs.GetString((i - 1) * 3 + 2)
+                    Description = floorStrs.GetString((i - 1) * 3 + 2),
                 });
 
                 floorID++;
@@ -139,6 +136,7 @@ namespace FSO.Content
                 {
                     ID = floorID,
                     FileName = Path.GetFileName(entry.ToString().Replace('\\', '/')).ToLowerInvariant(),
+                    Hardness = HardnessFromChunkName(iff.GetLabel<SPR2>(1)),
 
                     Name = catStrings.GetString(0),
                     Price = int.Parse(catStrings.GetString(1)),
@@ -148,6 +146,27 @@ namespace FSO.Content
                 floorID++;
             }
             NumFloors = floorID;
+        }
+
+        private int HardnessFromChunkName(string name)
+        {
+            if (name == null || name.Length < 1)
+            {
+                return 2;
+            }
+
+            // This can be 'C'. Not sure what that means.
+            switch (name[0])
+            {
+                case 'H':
+                    return 2;
+                case 'M':
+                    return 1;
+                case 'S':
+                    return 0;
+            }
+
+            return 2;
         }
 
         /// <summary>
@@ -198,6 +217,7 @@ namespace FSO.Content
                     {
                         ID = floorID,
                         FileName = entry.Key,
+                        Hardness = HardnessFromChunkName(iff.GetLabel<SPR2>(1)),
 
                         Name = catStrings.GetString(0),
                         Price = int.Parse(catStrings.GetString(1)),
@@ -339,6 +359,7 @@ namespace FSO.Content
         public int Price; //remember these, just in place of a catalog
         public string Name;
         public string Description;
+        public int Hardness;
 
         private WorldFloorProvider Provider;
 

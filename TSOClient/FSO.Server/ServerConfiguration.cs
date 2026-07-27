@@ -6,44 +6,63 @@ using FSO.Server.Servers.City;
 using FSO.Server.Servers.Lot;
 using FSO.Server.Servers.Tasks;
 using FSO.Server.Servers.UserApi;
+using Newtonsoft.Json;
 using Ninject.Activation;
 using Ninject.Modules;
-using System;
-using System.Collections.Generic;
-using System.IO;
 
 namespace FSO.Server
 {
     public class ServerConfiguration
     {
+        [JsonProperty("name")]
+        public string Name;
+        [JsonProperty("gameLocation")]
         public string GameLocation;
+        [JsonProperty("simNFS")]
         public string SimNFS;
+        [JsonProperty("updateBranch")]
         public string UpdateBranch;
 
+        [JsonProperty("allOpenable")]
+        public bool AllOpenable;
+
+        [JsonProperty("archive")]
         public ArchiveConfiguration Archive; // If this is present, the server is running in archive mode
 
+        [JsonProperty("database")]
         public DatabaseConfiguration Database;
+        [JsonProperty("services")]
         public ServerConfigurationservices Services;
+        [JsonProperty("discord")]
         public DiscordConfiguration Discord;
 
         /// <summary>
         /// Secret string used as a key for signing JWT tokens for the admin system
         /// </summary>
+        [JsonProperty("secret")]
         public string Secret;
 
         /// <summary>
         /// Update ID this server is running on. All shards that we host will report needing this version, and this is reported with our host information.
         /// Loaded from updateID.txt if present.
         /// </summary>
+        [JsonProperty("updateID")]
         public int? UpdateID;
+
+        [JsonProperty("events")]
+        public EventConfig? Events; // If this is present, the server automatically schedules events on start.
     }
 
 
     public class ServerConfigurationservices
     {
+        [JsonProperty("userApi")]
         public ApiServerConfiguration UserApi;
+        [JsonProperty("tasks")]
         public TaskServerConfiguration Tasks;
+        [JsonProperty("cities")]
         public List<CityServerConfiguration> Cities;
+        [JsonProperty("lots")]
         public List<LotServerConfiguration> Lots;
     }
 

@@ -41,6 +41,7 @@ namespace FSO.Server.Database.DA.Inbox
 
         public List<DbInboxMsg> GetMessagesAfter(uint avatarID, DateTime after)
         {
+            after = after.AddMicroseconds(1); // Added due to sqlite not knowing what a > comparison is
             return Context.Connection.Query<DbInboxMsg>("SELECT * FROM fso_inbox WHERE target_id = @id AND time > @after", new { id = avatarID, after = after }).ToList();
         }
     }

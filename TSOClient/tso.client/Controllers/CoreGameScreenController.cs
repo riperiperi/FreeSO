@@ -3,12 +3,15 @@ using FSO.Client.Model;
 using FSO.Client.Regulators;
 using FSO.Client.UI.Framework;
 using FSO.Client.UI.Screens;
+using FSO.Client.Utils;
 using FSO.Common;
 using FSO.Common.DataService;
 using FSO.Common.DataService.Model;
 using FSO.Common.Enum;
+using FSO.Common.Model;
 using FSO.Common.Utils;
 using FSO.Files.Formats.tsodata;
+using FSO.Server.DataService.Model;
 using FSO.Server.Protocol.Electron.Model;
 using FSO.Server.Protocol.Electron.Packets;
 using FSO.SimAntics.NetPlay;
@@ -35,6 +38,7 @@ namespace FSO.Client.Controllers
         /// Lot to connect to immediately after disconnecting. Used for job lots and switching lots.
         /// </summary>
         public uint ReconnectLotID = 0;
+        public LotTransitionInfo ReconnectTransition;
 
         public TerrainController Terrain;
         public NeighborhoodActionController NeighborhoodProtocol;
@@ -44,6 +48,21 @@ namespace FSO.Client.Controllers
         public CityConnectionMode Mode => Network.Mode;
         public ArchiveConfigFlags ArchiveConfig => Network.ArchiveConfig;
         public ConnectArchiveRequest ArchiveHost => Network.ArchiveHost;
+        public uint ModerationLevel => Network.ModerationLevel;
+        private uint CityEditorThreshold =>
+            ArchiveConfig.HasFlag(ArchiveConfigFlags.CityEditorAllUsers) ? 0u :
+            (ArchiveConfig.HasFlag(ArchiveConfigFlags.CityEditorMods) ? 1u : 2u);
+
+        public bool AllowCityEditor => 
+            ArchiveConfig.HasFlag(ArchiveConfigFlags.CityEditor) && 
+            ModerationLevel >= CityEditorThreshold;
+
+        public bool CanPurchaseLots =>
+            Mode != CityConnectionMode.ARCHIVE ||
+            ArchiveConfig.HasFlag(ArchiveConfigFlags.AllowLotCreation) ||
+            ModerationLevel > 0;
+
+        public bool LocalTransition => ReconnectLotID != 0 && ReconnectTransition != null;
 
         public CoreGameScreenController(CoreGameScreen view, Network.Network network, IClientDataService dataService, IKernel kernel, LotConnectionRegulator joinLotRegulator)
         {
@@ -62,7 +81,11 @@ namespace FSO.Client.Controllers
 
             var shard = Network.MyShard;
             Terrain = kernel.Get<TerrainController>(new ConstructorArgument("parent", this));
-            view.Initialize(shard.Name, int.Parse(shard.Map), Terrain);
+
+            view.Initialize(shard.Name, Terrain);
+
+            if (Mode == CityConnectionMode.ARCHIVE)
+                view.ucp.InitArchive();
         }
 
         public void AddWindow(UIContainer window)
@@ -98,11 +121,12 @@ namespace FSO.Client.Controllers
                         break;
                     case "Disconnected":
                         Screen.CleanupLastWorld();
+
                         if (ReconnectLotID != 0)
                         {
-                            GameThread.SetTimeout(() => {
-                                if (ReconnectLotID != 0) JoinLot(ReconnectLotID);
-                            }, 100);
+                            GameThread.InUpdate(() => {
+                                if (ReconnectLotID != 0) JoinLot(ReconnectLotID, ReconnectTransition);
+                            });
                         }
                         //destroy the currently active lot (if possible)
                         break;
@@ -116,8 +140,8 @@ namespace FSO.Client.Controllers
                         //doesn't really need to be next update... but we don't want to catch the VM in a half-init state.
                         if (data == null) break;
                         VMNetMessage msg = null;
-                        if (data is FSOVMTickBroadcast)
-                            msg = new VMNetMessage(VMNetMessageType.BroadcastTick, ((FSOVMTickBroadcast)data).Data);
+                        if (data is FSOVMTickBroadcast broadcast)
+                            msg = new VMNetMessage(broadcast.Catchup ? VMNetMessageType.CatchupTick : VMNetMessageType.BroadcastTick, broadcast.Data);
                         else
                             msg = new VMNetMessage(VMNetMessageType.Direct, ((FSOVMDirectToClient)data).Data);
 
@@ -127,13 +151,14 @@ namespace FSO.Client.Controllers
             });
         }
 
-        public void JoinLot(uint id)
+        public void JoinLot(uint id, LotTransitionInfo transition = null)
         {
             var lot = JoinLotRegulator.GetCurrentLotID();
             if (lot == 0)
             {
-                JoinLotRegulator.JoinLot(id);
+                JoinLotRegulator.JoinLot(id, transition);
                 ReconnectLotID = 0;
+                ReconnectTransition = transition;
             }
             else if (lot == id)
             {
@@ -147,19 +172,35 @@ namespace FSO.Client.Controllers
             }
         }
 
-        public void SwitchLot(uint id)
+        public void SwitchLot(uint id, LotTransitionInfo transition)
         {
             if (JoinLotRegulator.GetCurrentLotID() == 0)
             {
-                JoinLotRegulator.JoinLot(id);
+                JoinLotRegulator.JoinLot(id, transition);
                 ReconnectLotID = 0;
+                ReconnectTransition = null;
             }
             else
             {
                 //force a switch to the target lot
+                JoinLotRegulator.LeavingLot = true;
                 ReconnectLotID = id;
+                ReconnectTransition = transition;
                 Screen.InitiateLotSwitch();
+
+                // If there's a transition, we can leave immediately.
+                if (transition != null)
+                {
+                    JoinLotRegulator.Disconnect();
+                }
             }
+        }
+
+        public uint GetVisualLotID()
+        {
+            uint lotID = Screen.VisualVM?.TSOState?.LotID ?? 0;
+
+            return lotID == 0 ? JoinLotRegulator.GetCurrentLotID() : lotID;
         }
 
         public uint GetCurrentLotID()
@@ -234,7 +275,7 @@ namespace FSO.Client.Controllers
             });
         }
 
-        public void UploadLotThumbnail()
+        public void UploadLotThumbnail(bool buildMode)
         {
             if (!Screen.InLot) return;
             var lotID = JoinLotRegulator.GetCurrentLotID();
@@ -248,12 +289,36 @@ namespace FSO.Client.Controllers
                 //tex.Dispose();
                 data = stream.ToArray();
             }
+
+            byte[] facadeData = null;
+
+            if (buildMode && FSOEnvironment.Enable3D)
+            {
+                var result = new FSOFHelper(GameFacade.GraphicsDevice, Screen.vm, Screen.vm.Context.World).GenerateIngameFSOF();
+                Terrain.OverrideLotFacade(lotID, result);
+
+                using var mem = new MemoryStream();
+
+                result.Save(mem);
+
+                facadeData = mem.ToArray();
+            }
+
             DataService.Get<Lot>(lotID).ContinueWith(x =>
             {
                 var lot = x.Result;
                 if (lot == null) return; //uh, oops!
                 lot.Lot_Thumbnail = new Common.Serialization.Primitives.cTSOGenericData(data);
-                DataService.Sync(lot, new string[] { "Lot_Thumbnail" });
+
+                if (facadeData != null)
+                {
+                    lot.Lot_Facade = new Common.Serialization.Primitives.cTSOGenericData(facadeData);
+                    DataService.Sync(lot, ["Lot_Thumbnail", "Lot_Facade"]);
+                }
+                else
+                {
+                    DataService.Sync(lot, ["Lot_Thumbnail"]);
+                }
             });
         }
 
@@ -398,7 +463,11 @@ namespace FSO.Client.Controllers
 
         public void HandleVMShutdown(VMCloseNetReason reason)
         {
-            JoinLotRegulator.AsyncTransition("Disconnect");
+            var state = JoinLotRegulator.CurrentState.Name;
+            if (state != "Disconnected" && state != "Disconnect")
+            {
+                JoinLotRegulator.AsyncTransition("Disconnect");
+            }
         }
 
         public bool IsMe(uint id)
@@ -409,6 +478,11 @@ namespace FSO.Client.Controllers
         public uint MyID()
         {
             return Network.MyCharacter;
+        }
+
+        public string TryGetUsername(uint id)
+        {
+            return Network.TryGetUsername(id);
         }
 
         public void Dispose()

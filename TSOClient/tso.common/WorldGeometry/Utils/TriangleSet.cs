@@ -19,7 +19,7 @@ namespace FSO.SimAntics.Model.Routing
     /// </summary>
     public class BaseTriangleSet
     {
-        public VMObstacleSetNode[] Nodes;
+        public TriangleSetNode[] Nodes;
         protected List<int> FreeList = new List<int>();
         protected int PoolInd = 0;
         public int Root = -1;
@@ -35,7 +35,7 @@ namespace FSO.SimAntics.Model.Routing
             if (last.Root != -1)
             {
                 Count = last.Count;
-                Nodes = (VMObstacleSetNode[])last.Nodes.Clone();
+                Nodes = (TriangleSetNode[])last.Nodes.Clone();
                 Root = last.Root;
                 FreeList = last.FreeList.ToList();
                 PoolInd = last.PoolInd;
@@ -57,7 +57,7 @@ namespace FSO.SimAntics.Model.Routing
         {
             if (Nodes == null)
             {
-                Nodes = new VMObstacleSetNode[capacity];
+                Nodes = new TriangleSetNode[capacity];
             }
             else
             {
@@ -82,7 +82,7 @@ namespace FSO.SimAntics.Model.Routing
         private int GetNode(IntersectRectDimension dir, BaseMeshTriangle rect)
         {
             var ind = GetNode();
-            Nodes[ind] = new VMObstacleSetNode()
+            Nodes[ind] = new TriangleSetNode()
             {
                 Dimension = dir,
                 Rect = rect,
@@ -118,7 +118,7 @@ namespace FSO.SimAntics.Model.Routing
             }
         }
 
-        private void AddAsChild(ref VMObstacleSetNode node, BaseMeshTriangle rect)
+        private void AddAsChild(ref TriangleSetNode node, BaseMeshTriangle rect)
         {
             bool rightSide = false;
             switch (node.Dimension)
@@ -150,7 +150,7 @@ namespace FSO.SimAntics.Model.Routing
             }
         }
 
-        public void RecursiveReAdd(VMObstacleSetNode node)
+        public void RecursiveReAdd(TriangleSetNode node)
         {
             Count--;
             Reclaim(node.Index);
@@ -168,7 +168,7 @@ namespace FSO.SimAntics.Model.Routing
             }
         }
 
-        public bool SearchForIntersect(ref VMObstacleSetNode node, BaseMeshTriangle rect)
+        public bool SearchForIntersect(ref TriangleSetNode node, BaseMeshTriangle rect)
         {
             if (node.Intersects(rect)) return true;
             //search in child nodes.
@@ -201,7 +201,7 @@ namespace FSO.SimAntics.Model.Routing
             }
         }
 
-        public void AllIntersect(ref VMObstacleSetNode node, BaseMeshTriangle rect, List<BaseMeshTriangle> result)
+        public void AllIntersect(ref TriangleSetNode node, BaseMeshTriangle rect, List<BaseMeshTriangle> result)
         {
             if (node.Intersects(rect)) result.Add(node.Rect);
             //search in child nodes.
@@ -237,7 +237,7 @@ namespace FSO.SimAntics.Model.Routing
             }
         }
 
-        public void OnEdge(ref VMObstacleSetNode node, BaseMeshTriangle rect, List<BaseMeshTriangle> result)
+        public void OnEdge(ref TriangleSetNode node, BaseMeshTriangle rect, List<BaseMeshTriangle> result)
         {
             if (node.OnEdge(rect)) result.Add(node.Rect);
             //search in child nodes.
@@ -333,7 +333,7 @@ namespace FSO.SimAntics.Model.Routing
         */
     }
 
-    public struct VMObstacleSetNode
+    public struct TriangleSetNode
     {
         public int LeftChild;
         public int RightChild;

@@ -19,6 +19,9 @@ using System.Collections.Immutable;
 using FSO.Common.Enum;
 using FSO.Server.Common;
 using FSO.Server.Database.DA.Neighborhoods;
+using FSO.Files.RC;
+using FSO.Common.Domain;
+using FSO.Server.Protocol.Electron.Model.CityEditCommands;
 
 namespace FSO.Server.DataService.Providers
 {
@@ -32,14 +35,18 @@ namespace FSO.Server.DataService.Providers
             { LotCategory.welcome, 1 },
         };
 
-        private Dictionary<string, Lot> LotsByName = new Dictionary<string, Lot>();
+        private readonly Dictionary<string, Lot> LotsByName = [];
         public City CityRepresentation;
 
-        private IRealestateDomain GlobalRealestate;
-        private IShardRealestateDomain Realestate;
-        private int ShardId;
-        private IDAFactory DAFactory;
-        private IServerNFSProvider NFS;
+        private readonly IRealestateDomain GlobalRealestate;
+        private readonly IShardRealestateDomain Realestate;
+        private readonly int ShardId;
+        private readonly IDAFactory DAFactory;
+        private readonly IServerNFSProvider NFS;
+
+        private volatile int Version;
+
+        public CityEditBitmap AllLotsBitmap { get; }
         
         public ServerLotProvider([Named("ShardId")] int shardId, IRealestateDomain realestate, IDAFactory daFactory, IServerNFSProvider nfs)
         {
@@ -61,6 +68,8 @@ namespace FSO.Server.DataService.Providers
                 City_Top100ListIDs = ImmutableList.Create<uint>(),
                 City_TopTenNeighborhoodsVector = ImmutableList.Create<uint>()
             };
+
+            AllLotsBitmap = new CityEditBitmap(512, 512);
         }
 
         protected override void PreLoad(Callback<uint, Lot> appender)
@@ -98,6 +107,8 @@ namespace FSO.Server.DataService.Providers
         protected override void Insert(uint key, Lot value)
         {
             base.Insert(key, value);
+            Version++;
+
             lock (LotsByName) LotsByName[value.Lot_Name] = value;
             lock (CityRepresentation.City_ReservedLotInfo) CityRepresentation.City_ReservedLotInfo = CityRepresentation.City_ReservedLotInfo.SetItem(value.Lot_Location_Packed, value.Lot_IsOnline);
         }
@@ -107,6 +118,7 @@ namespace FSO.Server.DataService.Providers
             var value = base.Remove(key);
             if (value != null)
             {
+                Version++;
                 lock (LotsByName) LotsByName.Remove(value.Lot_Name);
                 lock (CityRepresentation.City_ReservedLotInfo) CityRepresentation.City_ReservedLotInfo = CityRepresentation.City_ReservedLotInfo.Remove(value.Lot_Location_Packed);
                 
@@ -157,6 +169,7 @@ namespace FSO.Server.DataService.Providers
                 Lot_LastCatChange = lot.category_change_date,
                 Lot_Description = lot.description,
                 Lot_Thumbnail = new cTSOGenericData(new byte[0]),
+                Lot_Facade = new cTSOGenericData(new byte[0]),
                 Lot_NeighborhoodID = (uint)(nhood?.neighborhood_id ?? 0),
                 Lot_NeighborhoodName = nhood?.name ?? ""
             };
@@ -198,6 +211,7 @@ namespace FSO.Server.DataService.Providers
                 Lot_RoommateVec = ImmutableList.Create<uint>(),
 
                 Lot_Thumbnail = new cTSOGenericData(new byte[0]),
+                Lot_Facade = new cTSOGenericData(new byte[0]),
                 Lot_ThumbnailCheckSum = key
             };
         }
@@ -214,20 +228,40 @@ namespace FSO.Server.DataService.Providers
                     }
                     break;
                 case "Lot_Thumbnail":
-                    var imgpath = Path.Combine(NFS.GetBaseDirectory(), "Lots/" + lot.DbId.ToString("x8") + "/thumb.png");
-                    var data = (cTSOGenericData)value;
-
-                    using (var db = DAFactory.Get())
                     {
-                        db.Lots.SetDirty(lot.DbId, 1);
+                        var imgpath = Path.Combine(NFS.GetBaseDirectory(), "Lots/" + lot.DbId.ToString("x8") + "/thumb.png");
+                        var data = (cTSOGenericData)value;
+
+                        using (var db = DAFactory.Get())
+                        {
+                            db.Lots.SetDirty(lot.DbId, 1);
+                        }
+
+                        using (FileStream fs = File.Open(imgpath, FileMode.Create, FileAccess.Write, FileShare.None))
+                        {
+                            fs.Write(data.Data, 0, data.Data.Length);
+                        }
+                        lot.Lot_Thumbnail = new cTSOGenericData(new byte[0]);
+                        break;
                     }
 
-                    using (FileStream fs = File.Open(imgpath, FileMode.Create, FileAccess.Write, FileShare.None))
+                case "Lot_Facade":
                     {
-                        fs.Write(data.Data, 0, data.Data.Length);
+                        var imgpath = Path.Combine(NFS.GetBaseDirectory(), "Lots/" + lot.DbId.ToString("x8") + "/thumb.fsof");
+                        var data = (cTSOGenericData)value;
+
+                        using (var db = DAFactory.Get())
+                        {
+                            db.Lots.SetDirty(lot.DbId, 0); // Facade worker doesn't need to regen if the user sent it in
+                        }
+
+                        using (FileStream fs = File.Open(imgpath, FileMode.Create, FileAccess.Write, FileShare.None))
+                        {
+                            fs.Write(data.Data, 0, data.Data.Length);
+                        }
+                        lot.Lot_Facade = new cTSOGenericData(new byte[0]);
+                        break;
                     }
-                    lot.Lot_Thumbnail = new cTSOGenericData(new byte[0]);
-                    break;
                 case "Lot_Category":
                     uint minSkill;
                     if (!SkillGameplayCategory.TryGetValue((LotCategory)lot.Lot_Category, out minSkill)) minSkill = 0;
@@ -329,12 +363,38 @@ namespace FSO.Server.DataService.Providers
                     break;
                 //roommate only
                 case "Lot_Thumbnail":
-                    if (!context.HasModerationLevel(1))
                     {
-                        if (lot.Lot_Category == 11) context.DemandAvatar(lot.Lot_LeaderID, AvatarPermissions.WRITE);
-                        else context.DemandAvatars(roomies, AvatarPermissions.WRITE);
+                        if (!context.HasModerationLevel(1))
+                        {
+                            if (lot.Lot_Category == 11) context.DemandAvatar(lot.Lot_LeaderID, AvatarPermissions.WRITE);
+                            else context.DemandAvatars(roomies, AvatarPermissions.WRITE);
+                        }
+
+                        var dataValue = (cTSOGenericData)value;
+                        if (dataValue.Data.Length > 1024 * 1024)
+                        {
+                            throw new SecurityException("Thumbnail is too large");
+                        }
+                        //TODO: needs to be generic data, png, size 288x288
                     }
-                    //TODO: needs to be generic data, png, size 288x288, less than 1MB
+                    break;
+
+                case "Lot_Facade":
+                    {
+                        if (!context.HasModerationLevel(1))
+                        {
+                            if (lot.Lot_Category == 11) context.DemandAvatar(lot.Lot_LeaderID, AvatarPermissions.WRITE);
+                            else context.DemandAvatars(roomies, AvatarPermissions.WRITE);
+                        }
+
+                        var dataValue = (cTSOGenericData)value;
+
+                        var fsof = new FSOF();
+
+                        using var mem = new MemoryStream(dataValue.Data);
+
+                        fsof.ValidateFSO(mem);
+                    }
                     break;
                 case "Lot_IsOnline":
                 case "Lot_NumOccupants":
@@ -404,6 +464,29 @@ namespace FSO.Server.DataService.Providers
                 }
             }
             return null;
+        }
+
+        public void AddLocationsTo(HashSet<uint> locations)
+        {
+            foreach (var pair in Values)
+            {
+                locations.Add(pair.Key);
+            }
+        }
+
+        public void UpdateReservedCache(HashSet<uint> reservedTiles, ref int version)
+        {
+            if (version == Version)
+            {
+                return;
+            }
+
+            reservedTiles.Clear();
+
+            foreach (var pair in Values)
+            {
+                reservedTiles.Add(pair.Key);
+            }
         }
     }
 }

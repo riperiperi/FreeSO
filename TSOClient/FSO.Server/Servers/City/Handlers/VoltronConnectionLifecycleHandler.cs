@@ -45,16 +45,24 @@ namespace FSO.Server.Servers.City.Handlers
 
         public async void SessionClosed(IAriesSession session)
         {
-            if (!(session is IVoltronSession)) {
+            if (!(session is IVoltronSession))
+            {
                 return;
             }
 
             IVoltronSession voltronSession = (IVoltronSession)session;
             VoltronSessions.UnEnroll(session);
 
+            // TODO: If the user wasn't verified, then only admins need to know.
+            if (Context.Config.Archive != null && voltronSession.IsAuthenticated)
+            {
+                Context.BroadcastUserList(false);
+            }
+
             if (voltronSession.IsAnonymous) return;
 
-            Liveness.EnqueueChange(() => {
+            Liveness.EnqueueChange(() =>
+            {
                 //unenroll in voltron group, mark as offline in data service.
                 //since this can happen async make sure our session hasnt been reopened before trying to delete its claim
                 if (Sessions.GetByAvatarId(voltronSession.AvatarId)?.Connected == true) return;
@@ -87,10 +95,6 @@ namespace FSO.Server.Servers.City.Handlers
                     db.AvatarClaims.Delete(voltronSession.AvatarClaimId, Context.Config.Call_Sign);
                 }
             });
-
-            // Update the user list.
-            // TODO: If the user wasn't verified, then only admins need to know.
-            Context?.BroadcastUserList(false);
         }
 
         public void SessionCreated(IAriesSession session)
@@ -121,15 +125,26 @@ namespace FSO.Server.Servers.City.Handlers
             });
 
             //CAS, don't hydrate the user
-            if (voltronSession.IsAnonymous){
+            if (voltronSession.IsAnonymous)
+            {
                 return;
+            }
+
+            await AssignAvatar(voltronSession);
+        }
+
+        public async Task AssignAvatar(IVoltronSession voltronSession, bool invalidateAvatar = false)
+        {
+            if (invalidateAvatar)
+            {
+                DataService.Invalidate<Avatar>(voltronSession.AvatarId);
             }
 
             //New avatar, enroll in voltron group
             var avatar = await DataService.Get<Avatar>(voltronSession.AvatarId); //can throw?
             //Mark as online
             avatar.Avatar_IsOnline = true;
-            VoltronSessions.Enroll(newSession);
+            VoltronSessions.Enroll(voltronSession);
             Events.UserJoined(voltronSession);
             Neigh.UserJoined(voltronSession);
             TuningDomain.UserJoined(voltronSession);

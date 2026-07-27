@@ -7,6 +7,7 @@ using System.Text;
 
 namespace FSO.Server.Database.DA.Objects
 {
+    // NOTE: sqlite tends to interpret uint parameters as negative, which is a problem for GUID. I'm casting them all to long for now, but this might make mysql unhappy.
     public class SqlObjects : AbstractSqlDA, IObjects
     {
         public SqlObjects(ISqlContext context) : base(context){
@@ -23,7 +24,7 @@ namespace FSO.Server.Database.DA.Objects
                                         "dyn_obj_name, type, graphic, value, budget, upgrade_level, has_db_attributes) " +
                                         " VALUES (@shard_id, @owner_id, @lot_id, @dyn_obj_name, @type," +
                                         " @graphic, @value, @budget, @upgrade_level, @has_db_attributes); SELECT LAST_INSERT_ID();")
-                                        , obj).First();
+                                        , new DbObjectCreate(obj)).First();
         }
 
         public DbObject Get(uint id)
@@ -63,13 +64,13 @@ namespace FSO.Server.Database.DA.Objects
         public List<DbObject> ObjOfTypeForAvatar(uint avatar_id, uint guid)
         {
             return Context.Connection.Query<DbObject>("SELECT * FROM fso_objects WHERE owner_id = @avatar_id AND type = @guid",
-                new { avatar_id = avatar_id, guid = guid }).ToList();
+                new { avatar_id = avatar_id, guid = (ulong)guid }).ToList();
         }
 
         public List<DbObject> ObjOfTypeInAvatarInventory(uint avatar_id, uint guid)
         {
             return Context.Connection.Query<DbObject>("SELECT * FROM fso_objects WHERE owner_id = @avatar_id AND lot_id IS NULL AND type = @guid", 
-                new { avatar_id = avatar_id, guid = guid}).ToList();
+                new { avatar_id = avatar_id, guid = (ulong)guid }).ToList();
         }
 
         public int ReturnLostObjects(uint lot_id, IEnumerable<uint> object_ids)
@@ -219,7 +220,7 @@ namespace FSO.Server.Database.DA.Objects
         {
             return Context.Connection.Query<int>("SELECT SUM(a.value) " +
                 "FROM fso_object_attributes a JOIN fso_objects o ON a.object_id = o.object_id " +
-                "WHERE `type` = @guid AND `index` = @index", new { guid, index }).FirstOrDefault();
+                "WHERE `type` = @guid AND `index` = @index", new { guid = (ulong)guid, index }).FirstOrDefault();
         }
 
         public List<uint> ListIDs(bool onLot)
@@ -260,6 +261,18 @@ namespace FSO.Server.Database.DA.Objects
                 + "WHERE object_id = @object_id", new { object_id = id, inventory_state = data });
 
             return true;
+        }
+
+        public List<DbObject> GetByType(uint guid)
+        {
+            // SQLite trouble: it doesn't seem to accept this as uint here, and it converts it to signed. Passing as ulong instead.
+            return Context.Connection.Query<DbObject>("SELECT * FROM fso_objects WHERE type = @guid", new { guid = (ulong)guid }).ToList();
+        }
+
+
+        public int PurgeStateOnLot()
+        {
+            return Context.Connection.Execute("UPDATE fso_objects SET inventory_state = NULL WHERE lot_id IS NOT NULL");
         }
     }
 }

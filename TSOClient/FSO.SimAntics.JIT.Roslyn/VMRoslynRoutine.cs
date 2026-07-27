@@ -45,7 +45,7 @@ namespace FSO.SimAntics.JIT.Roslyn
 
         private VMPrimitiveExitCode ExecuteJITInline(VMStackFrame frame, out VMInstruction instruction)
         {
-            var result = IFunction.Execute(frame, ref frame.InstructionPointer, frame.Args);
+            var result = IFunction.Execute(frame, ref frame.InstructionPointer, frame.Args.ToSpan());
             instruction = frame.GetCurrentInstruction();
             return result ? VMPrimitiveExitCode.RETURN_TRUE : VMPrimitiveExitCode.RETURN_FALSE;
         }

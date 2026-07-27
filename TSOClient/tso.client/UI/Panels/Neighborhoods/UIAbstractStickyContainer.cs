@@ -108,7 +108,7 @@ namespace FSO.Client.UI.Panels.Neighborhoods
                 effect.Parameters["stickyPersp"].SetValue((Size.Y/240f) * -0.2f);
 
                 DrawLocalTexture(batch, Target, 
-                    new Rectangle((int)(-100*ScaleX), 0, (int)(Target.Width + 200 * ScaleX), Target.Height), 
+                    new Rectangle((int)(-100*Scale.X), 0, (int)(Target.Width + 200 * Scale.X), Target.Height), 
                     - (BackOffset.ToVector2() + new Vector2(100, 0)), new Vector2(1 / (Scale.X), 1 / (Scale.Y)));
                 batch.SetEffect();
             }

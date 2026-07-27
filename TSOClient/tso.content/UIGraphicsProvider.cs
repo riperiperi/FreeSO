@@ -42,24 +42,6 @@ namespace FSO.Content
             Files[0x3D3AEF0856DDBAC] = "uigraphics/friendshipweb/f_web_outbtn.bmp";
             //./uigraphics/eods/costumetrunk/eod_costumetrunkbodySkinBtn.bmp
             Pointers[0x0000028800000001] = 0x0000094600000001;
-
-            
-        }
-
-        public static string ReplacementImportDir = "D:/Stuff/waifu/UIScaled/";
-
-        public void ExportAll(GraphicsDevice gd)
-        {
-            var replacementExportDir = "D:/Stuff/waifu/UI/";
-            Directory.CreateDirectory(replacementExportDir);
-
-            foreach (var item in List())
-            {
-                var texr = item.Get();
-                var img = texr.GetImage();
-                using (var stream = File.Open(replacementExportDir + ((Far3ProviderEntry<ITextureRef>)item).ID.ToString("x16") + ".png", FileMode.Create))
-                    ImageLoaderHelpers.SavePNGFunc(img.Data, img.Width, img.Height, stream);
-            }
         }
 
         protected override ITextureRef ResolveById(ulong id)
@@ -78,15 +60,23 @@ namespace FSO.Content
                 }
             }
             var result = base.ResolveById(id);
-            /*
-            if (result.ReplacePath == null)
+
+            if (result == null)
             {
-                if (File.Exists(ReplacementImportDir + id.ToString("x16") + "_[NS-L3][x2.000000].png"))
+                // Try the fallback directory.
+                string path = $"Content/uigraphics/fallback/0x{id:x16}.png";
+
+                if (File.Exists(path))
                 {
-                    result.ReplacePath = ReplacementImportDir + id.ToString("x16") + "_[NS-L3][x2.000000].png";
+                    if (FilesCache.ContainsKey(id)) { return FilesCache[id]; }
+                    using (var stream = File.OpenRead(path))
+                    {
+                        FilesCache.Add(id, Codec.Decode(stream));
+                        return FilesCache[id];
+                    }
                 }
             }
-            */
+
             return result;
         }
     }

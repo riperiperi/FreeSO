@@ -11,6 +11,8 @@ using FSO.Common.Rendering.Framework.IO;
 using FSO.SimAntics.Model.TSOPlatform;
 using FSO.Client.UI.Panels.Chat;
 using FSO.Common.Utils;
+using FSO.Client.UI.Screens;
+using FSO.Client.Controllers;
 
 namespace FSO.Client.UI.Panels
 {
@@ -240,7 +242,7 @@ namespace FSO.Client.UI.Panels
                         {
                             var tts = GetOrCreateTTS();
                             var gender = avatar.GetPersonData(SimAntics.Model.VMPersonDataVariable.Gender) > 0;
-                            tts?.Speak(evt.Text[1].Replace('_', ' '), gender, ((VMTSOAvatarState)avatar.TSOState).ChatTTSPitch);
+                            tts?.Speak(evt.Text[1].Replace('_', ' '), gender, ((VMTSOAvatarState)avatar.TSOState).ChatTTSPitch, avatar.PersistID);
                         }
                     }
                 }
@@ -371,6 +373,18 @@ namespace FSO.Client.UI.Panels
                 return sanitary;
         }
 
+        private string GetAvatarExtra(uint senderUID)
+        {
+            if (senderUID == 0)
+            {
+                return "";
+            }
+
+            var username = FindController<CoreGameScreenController>()?.TryGetUsername(senderUID);
+
+            return username != null ? $" ({SanitizeBB(username)})" : "";
+        }
+
         public string RenderEvent(VMChatEvent evt)
         {
             var colorBefore = "[color=lightgray]";
@@ -378,7 +392,7 @@ namespace FSO.Client.UI.Panels
             var colorAfter = "[/s][/color]";
             var timestamp = evt.Timestamp;
             var showTimestamp = GlobalSettings.Default.ChatShowTimestamp;
-            var avatar = avatarColor + evt.Text[0] + colorAfter; //avatar names cannot normally contain bbcode
+            var avatar = avatarColor + evt.Text[0] + GetAvatarExtra(evt.SenderUID) + colorAfter; //avatar names cannot normally contain bbcode
             switch (evt.Type)
             {
                 case VMChatEventType.Message:

@@ -67,8 +67,8 @@
             // 
             // UnknownResourceControl
             // 
-            this.AutoScaleDimensions = new System.Drawing.SizeF(6F, 13F);
-            this.AutoScaleMode = System.Windows.Forms.AutoScaleMode.Font;
+            this.AutoScaleDimensions = new SizeF(96F, 96F);
+            this.AutoScaleMode = System.Windows.Forms.AutoScaleMode.Dpi;
             this.Controls.Add(this.groupBox1);
             this.Margin = new System.Windows.Forms.Padding(0);
             this.Name = "UnknownResourceControl";

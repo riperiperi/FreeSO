@@ -33,7 +33,7 @@ namespace FSO.Client.UI.Screens
 {
     public class SandboxGameScreen : FSO.Client.UI.Framework.GameScreen, IGameScreen
     {
-        public UIUCP ucp;
+        public UIUCP ucp { get; set; }
         public UIGameTitle Title;
 
         public UIContainer WindowContainer;
@@ -450,6 +450,7 @@ namespace FSO.Client.UI.Screens
                 SkinTone = (byte)settings.DebugSkin,
                 Gender = (short)(settings.DebugGender ? 0 : 1),
                 Permissions = SimAntics.Model.TSOPlatform.VMTSOAvatarPermissions.Admin,
+                AvatarFlags = SimAntics.Model.TSOPlatform.VMTSOAvatarFlags.Debug,
                 //CustomGUID = 0x396CD3D1,
                 Budget = 1000000,
             };
@@ -528,7 +529,8 @@ namespace FSO.Client.UI.Screens
                     ActiveFamily.SelectWholeFamily();
                     vm.TS1State.ActivateFamily(vm, ActiveFamily);
                 }
-                BlueprintReset(lotName);
+
+                bool fsov = BlueprintReset(lotName);
 
                 var experimentalTuning = new Common.Model.DynamicTuning(new List<Common.Model.DynTuningEntry> {
                     new Common.Model.DynTuningEntry() { tuning_type = "overfill", tuning_table = 255, tuning_index = 15, value = 200 },
@@ -548,7 +550,7 @@ namespace FSO.Client.UI.Screens
                 vm.TSOState.Size |= (10) | (3 << 8);
                 vm.Context.UpdateTSOBuildableArea();
 
-                if (vm.GetGlobalValue(11) > -1)
+                if (!fsov || vm.GetGlobalValue(11) > -1)
                 {
                     for (int y = 0; y < 3; y++)
                     {
@@ -583,26 +585,31 @@ namespace FSO.Client.UI.Screens
             vm.Context.Clock.Hours = tsoTime.Item1;
             vm.Context.Clock.Minutes = tsoTime.Item2;
             
-            if (LotView.WorldConfig.Current.SurroundingLots > 0)
+            if (vm.Context.Architecture != null)
             {
-                SimAntics.Utils.VMLotTerrainRestoreTools.RestoreSurroundings(vm, vm.HollowAdj);
-            }
+                if (LotView.WorldConfig.Current.SurroundingLots > 0)
+                {
+                    SimAntics.Utils.VMLotTerrainRestoreTools.RestoreSurroundings(vm, vm.HollowAdj);
+                }
 
-            AssetStreaming.BeginStreaming(AssetStreamingMode.Lot);
-            while (!World.Preload(GameFacade.GraphicsDevice))
-            {
-                // Don't show anything until preloading completes.
-                AssetStreaming.DigestStreamUpdate();
+                AssetStreaming.BeginStreaming(AssetStreamingMode.Lot);
+                while (!World.Preload(GameFacade.GraphicsDevice))
+                {
+                    // Don't show anything until preloading completes.
+                    AssetStreaming.DigestStreamUpdate();
+                }
+                AssetStreaming.EndStreaming();
             }
-            AssetStreaming.EndStreaming();
         }
 
-        public void BlueprintReset(string path)
+        public bool BlueprintReset(string path)
         {
             string filename = Path.GetFileName(path);
             try
             {
-                using (var file = new BinaryReader(File.OpenRead(Path.Combine(FSOEnvironment.UserDir, "LocalHouse/") + filename.Substring(0, filename.Length - 4) + ".fsov")))
+                var fsovPath = filename.EndsWith(".fsov") ? path : Path.Combine(FSOEnvironment.UserDir, "LocalHouse/") + filename.Substring(0, filename.Length - 4) + ".fsov";
+
+                using (var file = new BinaryReader(File.OpenRead(fsovPath)))
                 {
                     var marshal = new SimAntics.Marshals.VMMarshal();
                     marshal.Deserialize(file);
@@ -620,6 +627,8 @@ namespace FSO.Client.UI.Screens
                         ent.ExecuteEntryPoint(2, vm.Context, true);
                     }
                 }
+
+                return true;
             }
             catch (Exception)
             {
@@ -661,6 +670,8 @@ namespace FSO.Client.UI.Screens
                 });
             }
             vm.Tick();
+
+            return false;
         }
 
 
@@ -669,7 +680,7 @@ namespace FSO.Client.UI.Screens
             //hmm...
         }
 
-        private void VMLotSwitch(uint lotId)
+        private void VMLotSwitch(uint lotId, LotTransitionInfo transition)
         {
             if ((short)lotId == -1)
             {

@@ -26,7 +26,9 @@ namespace FSOFacadeWorker
                 IsFullScreen = false
             };
 
-            _GraphicsDevice = new GraphicsDevice(GraphicsAdapter.DefaultAdapter, GraphicsProfile.HiDef, Parameters);
+            var adapter = GraphicsAdapter.DefaultAdapter;
+
+            _GraphicsDevice = new GraphicsDevice(adapter, GraphicsProfile.HiDef, Parameters);
             _GraphicsDevice.Present();
         }
 

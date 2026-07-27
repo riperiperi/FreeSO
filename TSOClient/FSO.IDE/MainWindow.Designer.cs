@@ -28,392 +28,372 @@
         /// </summary>
         private void InitializeComponent()
         {
-            System.Windows.Forms.TreeNode treeNode1 = new System.Windows.Forms.TreeNode("(BHAV #4000) Init");
-            System.Windows.Forms.TreeNode treeNode2 = new System.Windows.Forms.TreeNode("(SPR2 #254) Fish Sprite");
-            System.Windows.Forms.TreeNode treeNode3 = new System.Windows.Forms.TreeNode("(DGRP #100) Dead 1");
-            System.Windows.Forms.TreeNode treeNode4 = new System.Windows.Forms.TreeNode("(DGRP #101) Dead 2");
-            System.Windows.Forms.TreeNode treeNode5 = new System.Windows.Forms.TreeNode("aquarium.iff", new System.Windows.Forms.TreeNode[] {
-            treeNode1,
-            treeNode2,
-            treeNode3,
-            treeNode4});
-            System.Windows.Forms.TreeNode treeNode6 = new System.Windows.Forms.TreeNode("(BHAV #4023) Interaction - Read Inscription");
-            System.Windows.Forms.TreeNode treeNode7 = new System.Windows.Forms.TreeNode("(CTSS #223) Plaque CTSS");
-            System.Windows.Forms.TreeNode treeNode8 = new System.Windows.Forms.TreeNode("Content/Objects/objPlaque.iff", new System.Windows.Forms.TreeNode[] {
-            treeNode6,
-            treeNode7});
+            TreeNode treeNode1 = new TreeNode("(BHAV #4000) Init");
+            TreeNode treeNode2 = new TreeNode("(SPR2 #254) Fish Sprite");
+            TreeNode treeNode3 = new TreeNode("(DGRP #100) Dead 1");
+            TreeNode treeNode4 = new TreeNode("(DGRP #101) Dead 2");
+            TreeNode treeNode5 = new TreeNode("aquarium.iff", new TreeNode[] { treeNode1, treeNode2, treeNode3, treeNode4 });
+            TreeNode treeNode6 = new TreeNode("(BHAV #4023) Interaction - Read Inscription");
+            TreeNode treeNode7 = new TreeNode("(CTSS #223) Plaque CTSS");
+            TreeNode treeNode8 = new TreeNode("Content/Objects/objPlaque.iff", new TreeNode[] { treeNode6, treeNode7 });
             System.ComponentModel.ComponentResourceManager resources = new System.ComponentModel.ComponentResourceManager(typeof(MainWindow));
-            this.CreateButton = new System.Windows.Forms.Button();
-            this.EditButton = new System.Windows.Forms.Button();
-            this.CloneButton = new System.Windows.Forms.Button();
-            this.menuStrip1 = new System.Windows.Forms.MenuStrip();
-            this.newToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
-            this.objectToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
-            this.semiGlobalToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
-            this.toolsToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
-            this.dataServiceEditorToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
-            this.simAnticsAOTToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
-            this.saveGlobalscsToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
-            this.avatarToolToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
-            this.openExternalIffToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
-            this.fieldEncodingReverserToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
-            this.windowToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
-            this.hideAllToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
-            this.toolStripSeparator1 = new System.Windows.Forms.ToolStripSeparator();
-            this.helpToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
-            this.aboutToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
-            this.UtilityTabs = new System.Windows.Forms.TabControl();
-            this.OverviewTab = new System.Windows.Forms.TabPage();
-            this.groupBox1 = new System.Windows.Forms.GroupBox();
-            this.ChunkSelection = new System.Windows.Forms.Label();
-            this.ChunkDiscard = new System.Windows.Forms.Button();
-            this.AllTable = new System.Windows.Forms.TableLayoutPanel();
-            this.SaveAll = new System.Windows.Forms.Button();
-            this.DiscardAll = new System.Windows.Forms.Button();
-            this.groupBox2 = new System.Windows.Forms.GroupBox();
-            this.IffSelection = new System.Windows.Forms.Label();
-            this.IffSave = new System.Windows.Forms.Button();
-            this.IffDiscard = new System.Windows.Forms.Button();
-            this.ChangesLabel = new System.Windows.Forms.Label();
-            this.ChangesView = new System.Windows.Forms.TreeView();
-            this.BrowserTab = new System.Windows.Forms.TabPage();
-            this.NewOBJButton = new System.Windows.Forms.Button();
-            this.Browser = new FSO.IDE.ObjectBrowser();
-            this.InspectorTab = new System.Windows.Forms.TabPage();
-            this.entityInspector1 = new FSO.IDE.EntityInspector();
-            this.houseSpyTS1ToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
-            this.menuStrip1.SuspendLayout();
-            this.UtilityTabs.SuspendLayout();
-            this.OverviewTab.SuspendLayout();
-            this.groupBox1.SuspendLayout();
-            this.AllTable.SuspendLayout();
-            this.groupBox2.SuspendLayout();
-            this.BrowserTab.SuspendLayout();
-            this.InspectorTab.SuspendLayout();
-            this.SuspendLayout();
+            CreateButton = new Button();
+            EditButton = new Button();
+            CloneButton = new Button();
+            menuStrip1 = new MenuStrip();
+            newToolStripMenuItem = new ToolStripMenuItem();
+            objectToolStripMenuItem = new ToolStripMenuItem();
+            semiGlobalToolStripMenuItem = new ToolStripMenuItem();
+            toolsToolStripMenuItem = new ToolStripMenuItem();
+            dataServiceEditorToolStripMenuItem = new ToolStripMenuItem();
+            simAnticsAOTToolStripMenuItem = new ToolStripMenuItem();
+            saveGlobalscsToolStripMenuItem = new ToolStripMenuItem();
+            avatarToolToolStripMenuItem = new ToolStripMenuItem();
+            openExternalIffToolStripMenuItem = new ToolStripMenuItem();
+            fieldEncodingReverserToolStripMenuItem = new ToolStripMenuItem();
+            houseSpyTS1ToolStripMenuItem = new ToolStripMenuItem();
+            windowToolStripMenuItem = new ToolStripMenuItem();
+            hideAllToolStripMenuItem = new ToolStripMenuItem();
+            toolStripSeparator1 = new ToolStripSeparator();
+            helpToolStripMenuItem = new ToolStripMenuItem();
+            aboutToolStripMenuItem = new ToolStripMenuItem();
+            UtilityTabs = new TabControl();
+            OverviewTab = new TabPage();
+            groupBox1 = new GroupBox();
+            ChunkSelection = new Label();
+            ChunkDiscard = new Button();
+            AllTable = new TableLayoutPanel();
+            SaveAll = new Button();
+            DiscardAll = new Button();
+            groupBox2 = new GroupBox();
+            IffSelection = new Label();
+            IffSave = new Button();
+            IffDiscard = new Button();
+            ChangesLabel = new Label();
+            ChangesView = new TreeView();
+            BrowserTab = new TabPage();
+            NewOBJButton = new Button();
+            Browser = new ObjectBrowser();
+            InspectorTab = new TabPage();
+            entityInspector1 = new EntityInspector();
+            menuStrip1.SuspendLayout();
+            UtilityTabs.SuspendLayout();
+            OverviewTab.SuspendLayout();
+            groupBox1.SuspendLayout();
+            AllTable.SuspendLayout();
+            groupBox2.SuspendLayout();
+            BrowserTab.SuspendLayout();
+            InspectorTab.SuspendLayout();
+            SuspendLayout();
             // 
             // CreateButton
             // 
-            this.CreateButton.Anchor = ((System.Windows.Forms.AnchorStyles)((System.Windows.Forms.AnchorStyles.Bottom | System.Windows.Forms.AnchorStyles.Right)));
-            this.CreateButton.Location = new System.Drawing.Point(531, 352);
-            this.CreateButton.Name = "CreateButton";
-            this.CreateButton.Size = new System.Drawing.Size(186, 23);
-            this.CreateButton.TabIndex = 21;
-            this.CreateButton.Text = "Create New Object Instance";
-            this.CreateButton.UseVisualStyleBackColor = true;
-            this.CreateButton.Click += new System.EventHandler(this.CreateButton_Click);
+            CreateButton.Anchor = AnchorStyles.Bottom | AnchorStyles.Right;
+            CreateButton.Location = new Point(531, 352);
+            CreateButton.Name = "CreateButton";
+            CreateButton.Size = new Size(186, 23);
+            CreateButton.TabIndex = 21;
+            CreateButton.Text = "Create New Object Instance";
+            CreateButton.UseVisualStyleBackColor = true;
+            CreateButton.Click += CreateButton_Click;
             // 
             // EditButton
             // 
-            this.EditButton.Anchor = ((System.Windows.Forms.AnchorStyles)((System.Windows.Forms.AnchorStyles.Bottom | System.Windows.Forms.AnchorStyles.Right)));
-            this.EditButton.Location = new System.Drawing.Point(531, 323);
-            this.EditButton.Name = "EditButton";
-            this.EditButton.Size = new System.Drawing.Size(186, 23);
-            this.EditButton.TabIndex = 20;
-            this.EditButton.Text = "Edit Object";
-            this.EditButton.UseVisualStyleBackColor = true;
-            this.EditButton.Click += new System.EventHandler(this.button2_Click);
+            EditButton.Anchor = AnchorStyles.Bottom | AnchorStyles.Right;
+            EditButton.Location = new Point(531, 323);
+            EditButton.Name = "EditButton";
+            EditButton.Size = new Size(186, 23);
+            EditButton.TabIndex = 20;
+            EditButton.Text = "Edit Object";
+            EditButton.UseVisualStyleBackColor = true;
+            EditButton.Click += button2_Click;
             // 
             // CloneButton
             // 
-            this.CloneButton.Anchor = ((System.Windows.Forms.AnchorStyles)((System.Windows.Forms.AnchorStyles.Bottom | System.Windows.Forms.AnchorStyles.Right)));
-            this.CloneButton.Enabled = false;
-            this.CloneButton.Location = new System.Drawing.Point(531, 410);
-            this.CloneButton.Name = "CloneButton";
-            this.CloneButton.Size = new System.Drawing.Size(186, 23);
-            this.CloneButton.TabIndex = 19;
-            this.CloneButton.Text = "Clone Object (.piff)";
-            this.CloneButton.UseVisualStyleBackColor = true;
-            this.CloneButton.Click += new System.EventHandler(this.button1_Click);
+            CloneButton.Anchor = AnchorStyles.Bottom | AnchorStyles.Right;
+            CloneButton.Enabled = false;
+            CloneButton.Location = new Point(531, 410);
+            CloneButton.Name = "CloneButton";
+            CloneButton.Size = new Size(186, 23);
+            CloneButton.TabIndex = 19;
+            CloneButton.Text = "Clone Object (.piff)";
+            CloneButton.UseVisualStyleBackColor = true;
+            CloneButton.Click += button1_Click;
             // 
             // menuStrip1
             // 
-            this.menuStrip1.Items.AddRange(new System.Windows.Forms.ToolStripItem[] {
-            this.newToolStripMenuItem,
-            this.toolsToolStripMenuItem,
-            this.windowToolStripMenuItem,
-            this.helpToolStripMenuItem});
-            this.menuStrip1.Location = new System.Drawing.Point(0, 0);
-            this.menuStrip1.Name = "menuStrip1";
-            this.menuStrip1.Size = new System.Drawing.Size(762, 24);
-            this.menuStrip1.TabIndex = 22;
-            this.menuStrip1.Text = "menuStrip1";
+            menuStrip1.Items.AddRange(new ToolStripItem[] { newToolStripMenuItem, toolsToolStripMenuItem, windowToolStripMenuItem, helpToolStripMenuItem });
+            menuStrip1.Location = new Point(0, 0);
+            menuStrip1.Name = "menuStrip1";
+            menuStrip1.Size = new Size(762, 24);
+            menuStrip1.TabIndex = 22;
+            menuStrip1.Text = "menuStrip1";
             // 
             // newToolStripMenuItem
             // 
-            this.newToolStripMenuItem.DropDownItems.AddRange(new System.Windows.Forms.ToolStripItem[] {
-            this.objectToolStripMenuItem,
-            this.semiGlobalToolStripMenuItem});
-            this.newToolStripMenuItem.Name = "newToolStripMenuItem";
-            this.newToolStripMenuItem.Size = new System.Drawing.Size(43, 20);
-            this.newToolStripMenuItem.Text = "New";
+            newToolStripMenuItem.DropDownItems.AddRange(new ToolStripItem[] { objectToolStripMenuItem, semiGlobalToolStripMenuItem });
+            newToolStripMenuItem.Name = "newToolStripMenuItem";
+            newToolStripMenuItem.Size = new Size(43, 20);
+            newToolStripMenuItem.Text = "New";
             // 
             // objectToolStripMenuItem
             // 
-            this.objectToolStripMenuItem.Name = "objectToolStripMenuItem";
-            this.objectToolStripMenuItem.Size = new System.Drawing.Size(139, 22);
-            this.objectToolStripMenuItem.Text = "Object";
-            this.objectToolStripMenuItem.Click += new System.EventHandler(this.NewOBJButton_Click);
+            objectToolStripMenuItem.Name = "objectToolStripMenuItem";
+            objectToolStripMenuItem.Size = new Size(139, 22);
+            objectToolStripMenuItem.Text = "Object";
+            objectToolStripMenuItem.Click += NewOBJButton_Click;
             // 
             // semiGlobalToolStripMenuItem
             // 
-            this.semiGlobalToolStripMenuItem.Name = "semiGlobalToolStripMenuItem";
-            this.semiGlobalToolStripMenuItem.Size = new System.Drawing.Size(139, 22);
-            this.semiGlobalToolStripMenuItem.Text = "Semi-Global";
-            this.semiGlobalToolStripMenuItem.Click += new System.EventHandler(this.semiGlobalToolStripMenuItem_Click);
+            semiGlobalToolStripMenuItem.Name = "semiGlobalToolStripMenuItem";
+            semiGlobalToolStripMenuItem.Size = new Size(139, 22);
+            semiGlobalToolStripMenuItem.Text = "Semi-Global";
+            semiGlobalToolStripMenuItem.Click += semiGlobalToolStripMenuItem_Click;
             // 
             // toolsToolStripMenuItem
             // 
-            this.toolsToolStripMenuItem.DropDownItems.AddRange(new System.Windows.Forms.ToolStripItem[] {
-            this.dataServiceEditorToolStripMenuItem,
-            this.simAnticsAOTToolStripMenuItem,
-            this.avatarToolToolStripMenuItem,
-            this.openExternalIffToolStripMenuItem,
-            this.fieldEncodingReverserToolStripMenuItem,
-            this.houseSpyTS1ToolStripMenuItem});
-            this.toolsToolStripMenuItem.Name = "toolsToolStripMenuItem";
-            this.toolsToolStripMenuItem.Size = new System.Drawing.Size(46, 20);
-            this.toolsToolStripMenuItem.Text = "Tools";
+            toolsToolStripMenuItem.DropDownItems.AddRange(new ToolStripItem[] { dataServiceEditorToolStripMenuItem, simAnticsAOTToolStripMenuItem, avatarToolToolStripMenuItem, openExternalIffToolStripMenuItem, fieldEncodingReverserToolStripMenuItem, houseSpyTS1ToolStripMenuItem });
+            toolsToolStripMenuItem.Name = "toolsToolStripMenuItem";
+            toolsToolStripMenuItem.Size = new Size(47, 20);
+            toolsToolStripMenuItem.Text = "Tools";
             // 
             // dataServiceEditorToolStripMenuItem
             // 
-            this.dataServiceEditorToolStripMenuItem.Name = "dataServiceEditorToolStripMenuItem";
-            this.dataServiceEditorToolStripMenuItem.Size = new System.Drawing.Size(199, 22);
-            this.dataServiceEditorToolStripMenuItem.Text = "Data Service Editor";
-            this.dataServiceEditorToolStripMenuItem.Click += new System.EventHandler(this.dataServiceEditorToolStripMenuItem_Click);
+            dataServiceEditorToolStripMenuItem.Name = "dataServiceEditorToolStripMenuItem";
+            dataServiceEditorToolStripMenuItem.Size = new Size(199, 22);
+            dataServiceEditorToolStripMenuItem.Text = "Data Service Editor";
+            dataServiceEditorToolStripMenuItem.Click += dataServiceEditorToolStripMenuItem_Click;
             // 
             // simAnticsAOTToolStripMenuItem
             // 
-            this.simAnticsAOTToolStripMenuItem.DropDownItems.AddRange(new System.Windows.Forms.ToolStripItem[] {
-            this.saveGlobalscsToolStripMenuItem});
-            this.simAnticsAOTToolStripMenuItem.Name = "simAnticsAOTToolStripMenuItem";
-            this.simAnticsAOTToolStripMenuItem.Size = new System.Drawing.Size(199, 22);
-            this.simAnticsAOTToolStripMenuItem.Text = "SimAntics AOT";
+            simAnticsAOTToolStripMenuItem.DropDownItems.AddRange(new ToolStripItem[] { saveGlobalscsToolStripMenuItem });
+            simAnticsAOTToolStripMenuItem.Name = "simAnticsAOTToolStripMenuItem";
+            simAnticsAOTToolStripMenuItem.Size = new Size(199, 22);
+            simAnticsAOTToolStripMenuItem.Text = "SimAntics AOT";
             // 
             // saveGlobalscsToolStripMenuItem
             // 
-            this.saveGlobalscsToolStripMenuItem.Name = "saveGlobalscsToolStripMenuItem";
-            this.saveGlobalscsToolStripMenuItem.Size = new System.Drawing.Size(215, 22);
-            this.saveGlobalscsToolStripMenuItem.Text = "Generate AOT Sources (.cs)";
-            this.saveGlobalscsToolStripMenuItem.Click += new System.EventHandler(this.saveGlobalscsToolStripMenuItem_Click);
+            saveGlobalscsToolStripMenuItem.Name = "saveGlobalscsToolStripMenuItem";
+            saveGlobalscsToolStripMenuItem.Size = new Size(216, 22);
+            saveGlobalscsToolStripMenuItem.Text = "Generate AOT Sources (.cs)";
+            saveGlobalscsToolStripMenuItem.Click += saveGlobalscsToolStripMenuItem_Click;
             // 
             // avatarToolToolStripMenuItem
             // 
-            this.avatarToolToolStripMenuItem.Name = "avatarToolToolStripMenuItem";
-            this.avatarToolToolStripMenuItem.Size = new System.Drawing.Size(199, 22);
-            this.avatarToolToolStripMenuItem.Text = "Avatar Tool";
-            this.avatarToolToolStripMenuItem.Click += new System.EventHandler(this.avatarToolToolStripMenuItem_Click);
+            avatarToolToolStripMenuItem.Name = "avatarToolToolStripMenuItem";
+            avatarToolToolStripMenuItem.Size = new Size(199, 22);
+            avatarToolToolStripMenuItem.Text = "Avatar Tool";
+            avatarToolToolStripMenuItem.Click += avatarToolToolStripMenuItem_Click;
             // 
             // openExternalIffToolStripMenuItem
             // 
-            this.openExternalIffToolStripMenuItem.Name = "openExternalIffToolStripMenuItem";
-            this.openExternalIffToolStripMenuItem.Size = new System.Drawing.Size(199, 22);
-            this.openExternalIffToolStripMenuItem.Text = "Open External Iff...";
-            this.openExternalIffToolStripMenuItem.Click += new System.EventHandler(this.openExternalIffToolStripMenuItem_Click);
+            openExternalIffToolStripMenuItem.Name = "openExternalIffToolStripMenuItem";
+            openExternalIffToolStripMenuItem.Size = new Size(199, 22);
+            openExternalIffToolStripMenuItem.Text = "Open External Iff...";
+            openExternalIffToolStripMenuItem.Click += openExternalIffToolStripMenuItem_Click;
             // 
             // fieldEncodingReverserToolStripMenuItem
             // 
-            this.fieldEncodingReverserToolStripMenuItem.Name = "fieldEncodingReverserToolStripMenuItem";
-            this.fieldEncodingReverserToolStripMenuItem.Size = new System.Drawing.Size(199, 22);
-            this.fieldEncodingReverserToolStripMenuItem.Text = "Field Encoding Reverser";
-            this.fieldEncodingReverserToolStripMenuItem.Click += new System.EventHandler(this.fieldEncodingReverserToolStripMenuItem_Click);
+            fieldEncodingReverserToolStripMenuItem.Name = "fieldEncodingReverserToolStripMenuItem";
+            fieldEncodingReverserToolStripMenuItem.Size = new Size(199, 22);
+            fieldEncodingReverserToolStripMenuItem.Text = "Field Encoding Reverser";
+            fieldEncodingReverserToolStripMenuItem.Click += fieldEncodingReverserToolStripMenuItem_Click;
+            // 
+            // houseSpyTS1ToolStripMenuItem
+            // 
+            houseSpyTS1ToolStripMenuItem.Name = "houseSpyTS1ToolStripMenuItem";
+            houseSpyTS1ToolStripMenuItem.Size = new Size(199, 22);
+            houseSpyTS1ToolStripMenuItem.Text = "House Spy (TS1)";
+            houseSpyTS1ToolStripMenuItem.Click += houseSpyTS1ToolStripMenuItem_Click;
             // 
             // windowToolStripMenuItem
             // 
-            this.windowToolStripMenuItem.DropDownItems.AddRange(new System.Windows.Forms.ToolStripItem[] {
-            this.hideAllToolStripMenuItem,
-            this.toolStripSeparator1});
-            this.windowToolStripMenuItem.Name = "windowToolStripMenuItem";
-            this.windowToolStripMenuItem.Size = new System.Drawing.Size(63, 20);
-            this.windowToolStripMenuItem.Text = "Window";
-            this.windowToolStripMenuItem.DropDownOpening += new System.EventHandler(this.windowToolStripMenuItem_DropDownOpening);
+            windowToolStripMenuItem.DropDownItems.AddRange(new ToolStripItem[] { hideAllToolStripMenuItem, toolStripSeparator1 });
+            windowToolStripMenuItem.Name = "windowToolStripMenuItem";
+            windowToolStripMenuItem.Size = new Size(63, 20);
+            windowToolStripMenuItem.Text = "Window";
+            windowToolStripMenuItem.DropDownOpening += windowToolStripMenuItem_DropDownOpening;
             // 
             // hideAllToolStripMenuItem
             // 
-            this.hideAllToolStripMenuItem.Name = "hideAllToolStripMenuItem";
-            this.hideAllToolStripMenuItem.Size = new System.Drawing.Size(116, 22);
-            this.hideAllToolStripMenuItem.Text = "Hide All";
-            this.hideAllToolStripMenuItem.Click += new System.EventHandler(this.hideAllToolStripMenuItem_Click);
+            hideAllToolStripMenuItem.Name = "hideAllToolStripMenuItem";
+            hideAllToolStripMenuItem.Size = new Size(116, 22);
+            hideAllToolStripMenuItem.Text = "Hide All";
+            hideAllToolStripMenuItem.Click += hideAllToolStripMenuItem_Click;
             // 
             // toolStripSeparator1
             // 
-            this.toolStripSeparator1.Name = "toolStripSeparator1";
-            this.toolStripSeparator1.Size = new System.Drawing.Size(113, 6);
+            toolStripSeparator1.Name = "toolStripSeparator1";
+            toolStripSeparator1.Size = new Size(113, 6);
             // 
             // helpToolStripMenuItem
             // 
-            this.helpToolStripMenuItem.DropDownItems.AddRange(new System.Windows.Forms.ToolStripItem[] {
-            this.aboutToolStripMenuItem});
-            this.helpToolStripMenuItem.Name = "helpToolStripMenuItem";
-            this.helpToolStripMenuItem.Size = new System.Drawing.Size(44, 20);
-            this.helpToolStripMenuItem.Text = "Help";
+            helpToolStripMenuItem.DropDownItems.AddRange(new ToolStripItem[] { aboutToolStripMenuItem });
+            helpToolStripMenuItem.Name = "helpToolStripMenuItem";
+            helpToolStripMenuItem.Size = new Size(44, 20);
+            helpToolStripMenuItem.Text = "Help";
             // 
             // aboutToolStripMenuItem
             // 
-            this.aboutToolStripMenuItem.Name = "aboutToolStripMenuItem";
-            this.aboutToolStripMenuItem.Size = new System.Drawing.Size(107, 22);
-            this.aboutToolStripMenuItem.Text = "About";
-            this.aboutToolStripMenuItem.Click += new System.EventHandler(this.aboutToolStripMenuItem_Click);
+            aboutToolStripMenuItem.Name = "aboutToolStripMenuItem";
+            aboutToolStripMenuItem.Size = new Size(107, 22);
+            aboutToolStripMenuItem.Text = "About";
+            aboutToolStripMenuItem.Click += aboutToolStripMenuItem_Click;
             // 
             // UtilityTabs
             // 
-            this.UtilityTabs.Anchor = ((System.Windows.Forms.AnchorStyles)((((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Bottom) 
-            | System.Windows.Forms.AnchorStyles.Left) 
-            | System.Windows.Forms.AnchorStyles.Right)));
-            this.UtilityTabs.Controls.Add(this.OverviewTab);
-            this.UtilityTabs.Controls.Add(this.BrowserTab);
-            this.UtilityTabs.Controls.Add(this.InspectorTab);
-            this.UtilityTabs.Location = new System.Drawing.Point(12, 27);
-            this.UtilityTabs.Name = "UtilityTabs";
-            this.UtilityTabs.SelectedIndex = 0;
-            this.UtilityTabs.Size = new System.Drawing.Size(738, 484);
-            this.UtilityTabs.TabIndex = 23;
+            UtilityTabs.Anchor = AnchorStyles.Top | AnchorStyles.Bottom | AnchorStyles.Left | AnchorStyles.Right;
+            UtilityTabs.Controls.Add(OverviewTab);
+            UtilityTabs.Controls.Add(BrowserTab);
+            UtilityTabs.Controls.Add(InspectorTab);
+            UtilityTabs.Location = new Point(12, 27);
+            UtilityTabs.Name = "UtilityTabs";
+            UtilityTabs.SelectedIndex = 0;
+            UtilityTabs.Size = new Size(738, 484);
+            UtilityTabs.TabIndex = 23;
             // 
             // OverviewTab
             // 
-            this.OverviewTab.Controls.Add(this.groupBox1);
-            this.OverviewTab.Controls.Add(this.AllTable);
-            this.OverviewTab.Controls.Add(this.groupBox2);
-            this.OverviewTab.Controls.Add(this.ChangesLabel);
-            this.OverviewTab.Controls.Add(this.ChangesView);
-            this.OverviewTab.Location = new System.Drawing.Point(4, 22);
-            this.OverviewTab.Name = "OverviewTab";
-            this.OverviewTab.Padding = new System.Windows.Forms.Padding(3);
-            this.OverviewTab.Size = new System.Drawing.Size(730, 458);
-            this.OverviewTab.TabIndex = 2;
-            this.OverviewTab.Text = "Resources";
-            this.OverviewTab.UseVisualStyleBackColor = true;
+            OverviewTab.Controls.Add(groupBox1);
+            OverviewTab.Controls.Add(AllTable);
+            OverviewTab.Controls.Add(groupBox2);
+            OverviewTab.Controls.Add(ChangesLabel);
+            OverviewTab.Controls.Add(ChangesView);
+            OverviewTab.Location = new Point(4, 22);
+            OverviewTab.Name = "OverviewTab";
+            OverviewTab.Padding = new Padding(3);
+            OverviewTab.Size = new Size(730, 458);
+            OverviewTab.TabIndex = 2;
+            OverviewTab.Text = "Resources";
+            OverviewTab.UseVisualStyleBackColor = true;
             // 
             // groupBox1
             // 
-            this.groupBox1.Anchor = ((System.Windows.Forms.AnchorStyles)((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Right)));
-            this.groupBox1.Controls.Add(this.ChunkSelection);
-            this.groupBox1.Controls.Add(this.ChunkDiscard);
-            this.groupBox1.Location = new System.Drawing.Point(592, 143);
-            this.groupBox1.Name = "groupBox1";
-            this.groupBox1.Size = new System.Drawing.Size(132, 66);
-            this.groupBox1.TabIndex = 30;
-            this.groupBox1.TabStop = false;
-            this.groupBox1.Text = "Chunk";
+            groupBox1.Anchor = AnchorStyles.Top | AnchorStyles.Right;
+            groupBox1.Controls.Add(ChunkSelection);
+            groupBox1.Controls.Add(ChunkDiscard);
+            groupBox1.Location = new Point(592, 143);
+            groupBox1.Name = "groupBox1";
+            groupBox1.Size = new Size(132, 66);
+            groupBox1.TabIndex = 30;
+            groupBox1.TabStop = false;
+            groupBox1.Text = "Chunk";
             // 
             // ChunkSelection
             // 
-            this.ChunkSelection.Location = new System.Drawing.Point(6, 16);
-            this.ChunkSelection.Name = "ChunkSelection";
-            this.ChunkSelection.Size = new System.Drawing.Size(120, 16);
-            this.ChunkSelection.TabIndex = 3;
-            this.ChunkSelection.Text = "6 in selection.";
+            ChunkSelection.Location = new Point(6, 16);
+            ChunkSelection.Name = "ChunkSelection";
+            ChunkSelection.Size = new Size(120, 16);
+            ChunkSelection.TabIndex = 3;
+            ChunkSelection.Text = "6 in selection.";
             // 
             // ChunkDiscard
             // 
-            this.ChunkDiscard.Location = new System.Drawing.Point(6, 35);
-            this.ChunkDiscard.Name = "ChunkDiscard";
-            this.ChunkDiscard.Size = new System.Drawing.Size(120, 23);
-            this.ChunkDiscard.TabIndex = 1;
-            this.ChunkDiscard.Text = "Discard Changes";
-            this.ChunkDiscard.UseVisualStyleBackColor = true;
-            this.ChunkDiscard.Click += new System.EventHandler(this.ChunkDiscard_Click);
+            ChunkDiscard.Location = new Point(6, 35);
+            ChunkDiscard.Name = "ChunkDiscard";
+            ChunkDiscard.Size = new Size(120, 23);
+            ChunkDiscard.TabIndex = 1;
+            ChunkDiscard.Text = "Discard Changes";
+            ChunkDiscard.UseVisualStyleBackColor = true;
+            ChunkDiscard.Click += ChunkDiscard_Click;
             // 
             // AllTable
             // 
-            this.AllTable.Anchor = ((System.Windows.Forms.AnchorStyles)(((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Left) 
-            | System.Windows.Forms.AnchorStyles.Right)));
-            this.AllTable.ColumnCount = 2;
-            this.AllTable.ColumnStyles.Add(new System.Windows.Forms.ColumnStyle(System.Windows.Forms.SizeType.Percent, 50F));
-            this.AllTable.ColumnStyles.Add(new System.Windows.Forms.ColumnStyle(System.Windows.Forms.SizeType.Percent, 50F));
-            this.AllTable.Controls.Add(this.SaveAll, 0, 0);
-            this.AllTable.Controls.Add(this.DiscardAll, 1, 0);
-            this.AllTable.Location = new System.Drawing.Point(6, 3);
-            this.AllTable.Margin = new System.Windows.Forms.Padding(0);
-            this.AllTable.Name = "AllTable";
-            this.AllTable.RowCount = 1;
-            this.AllTable.RowStyles.Add(new System.Windows.Forms.RowStyle(System.Windows.Forms.SizeType.Percent, 100F));
-            this.AllTable.Size = new System.Drawing.Size(580, 35);
-            this.AllTable.TabIndex = 24;
+            AllTable.Anchor = AnchorStyles.Top | AnchorStyles.Left | AnchorStyles.Right;
+            AllTable.ColumnCount = 2;
+            AllTable.ColumnStyles.Add(new ColumnStyle(SizeType.Percent, 50F));
+            AllTable.ColumnStyles.Add(new ColumnStyle(SizeType.Percent, 50F));
+            AllTable.Controls.Add(SaveAll, 0, 0);
+            AllTable.Controls.Add(DiscardAll, 1, 0);
+            AllTable.Location = new Point(6, 3);
+            AllTable.Margin = new Padding(0);
+            AllTable.Name = "AllTable";
+            AllTable.RowCount = 1;
+            AllTable.RowStyles.Add(new RowStyle(SizeType.Percent, 100F));
+            AllTable.Size = new Size(580, 35);
+            AllTable.TabIndex = 24;
             // 
             // SaveAll
             // 
-            this.SaveAll.Dock = System.Windows.Forms.DockStyle.Fill;
-            this.SaveAll.Location = new System.Drawing.Point(3, 3);
-            this.SaveAll.Name = "SaveAll";
-            this.SaveAll.Size = new System.Drawing.Size(284, 29);
-            this.SaveAll.TabIndex = 26;
-            this.SaveAll.Text = "Save All";
-            this.SaveAll.UseVisualStyleBackColor = true;
-            this.SaveAll.Click += new System.EventHandler(this.SaveAll_Click);
+            SaveAll.Dock = DockStyle.Fill;
+            SaveAll.Location = new Point(3, 3);
+            SaveAll.Name = "SaveAll";
+            SaveAll.Size = new Size(284, 29);
+            SaveAll.TabIndex = 26;
+            SaveAll.Text = "Save All";
+            SaveAll.UseVisualStyleBackColor = true;
+            SaveAll.Click += SaveAll_Click;
             // 
             // DiscardAll
             // 
-            this.DiscardAll.Dock = System.Windows.Forms.DockStyle.Fill;
-            this.DiscardAll.Location = new System.Drawing.Point(293, 3);
-            this.DiscardAll.Name = "DiscardAll";
-            this.DiscardAll.Size = new System.Drawing.Size(284, 29);
-            this.DiscardAll.TabIndex = 26;
-            this.DiscardAll.Text = "Discard All";
-            this.DiscardAll.UseVisualStyleBackColor = true;
-            this.DiscardAll.Click += new System.EventHandler(this.DiscardAll_Click);
+            DiscardAll.Dock = DockStyle.Fill;
+            DiscardAll.Location = new Point(293, 3);
+            DiscardAll.Name = "DiscardAll";
+            DiscardAll.Size = new Size(284, 29);
+            DiscardAll.TabIndex = 26;
+            DiscardAll.Text = "Discard All";
+            DiscardAll.UseVisualStyleBackColor = true;
+            DiscardAll.Click += DiscardAll_Click;
             // 
             // groupBox2
             // 
-            this.groupBox2.Anchor = ((System.Windows.Forms.AnchorStyles)((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Right)));
-            this.groupBox2.Controls.Add(this.IffSelection);
-            this.groupBox2.Controls.Add(this.IffSave);
-            this.groupBox2.Controls.Add(this.IffDiscard);
-            this.groupBox2.Location = new System.Drawing.Point(592, 41);
-            this.groupBox2.Name = "groupBox2";
-            this.groupBox2.Size = new System.Drawing.Size(132, 96);
-            this.groupBox2.TabIndex = 29;
-            this.groupBox2.TabStop = false;
-            this.groupBox2.Text = "Iff";
+            groupBox2.Anchor = AnchorStyles.Top | AnchorStyles.Right;
+            groupBox2.Controls.Add(IffSelection);
+            groupBox2.Controls.Add(IffSave);
+            groupBox2.Controls.Add(IffDiscard);
+            groupBox2.Location = new Point(592, 41);
+            groupBox2.Name = "groupBox2";
+            groupBox2.Size = new Size(132, 96);
+            groupBox2.TabIndex = 29;
+            groupBox2.TabStop = false;
+            groupBox2.Text = "Iff";
             // 
             // IffSelection
             // 
-            this.IffSelection.ForeColor = System.Drawing.SystemColors.ControlText;
-            this.IffSelection.Location = new System.Drawing.Point(6, 16);
-            this.IffSelection.Name = "IffSelection";
-            this.IffSelection.Size = new System.Drawing.Size(120, 16);
-            this.IffSelection.TabIndex = 3;
-            this.IffSelection.Text = "2 files selected.";
+            IffSelection.ForeColor = SystemColors.ControlText;
+            IffSelection.Location = new Point(6, 16);
+            IffSelection.Name = "IffSelection";
+            IffSelection.Size = new Size(120, 16);
+            IffSelection.TabIndex = 3;
+            IffSelection.Text = "2 files selected.";
             // 
             // IffSave
             // 
-            this.IffSave.Location = new System.Drawing.Point(6, 35);
-            this.IffSave.Name = "IffSave";
-            this.IffSave.Size = new System.Drawing.Size(120, 23);
-            this.IffSave.TabIndex = 2;
-            this.IffSave.Text = "Save Changes";
-            this.IffSave.UseVisualStyleBackColor = true;
-            this.IffSave.Click += new System.EventHandler(this.IffSave_Click);
+            IffSave.Location = new Point(6, 35);
+            IffSave.Name = "IffSave";
+            IffSave.Size = new Size(120, 23);
+            IffSave.TabIndex = 2;
+            IffSave.Text = "Save Changes";
+            IffSave.UseVisualStyleBackColor = true;
+            IffSave.Click += IffSave_Click;
             // 
             // IffDiscard
             // 
-            this.IffDiscard.Location = new System.Drawing.Point(6, 64);
-            this.IffDiscard.Name = "IffDiscard";
-            this.IffDiscard.Size = new System.Drawing.Size(120, 23);
-            this.IffDiscard.TabIndex = 1;
-            this.IffDiscard.Text = "Discard Changes";
-            this.IffDiscard.UseVisualStyleBackColor = true;
-            this.IffDiscard.Click += new System.EventHandler(this.IffDiscard_Click);
+            IffDiscard.Location = new Point(6, 64);
+            IffDiscard.Name = "IffDiscard";
+            IffDiscard.Size = new Size(120, 23);
+            IffDiscard.TabIndex = 1;
+            IffDiscard.Text = "Discard Changes";
+            IffDiscard.UseVisualStyleBackColor = true;
+            IffDiscard.Click += IffDiscard_Click;
             // 
             // ChangesLabel
             // 
-            this.ChangesLabel.Anchor = ((System.Windows.Forms.AnchorStyles)((System.Windows.Forms.AnchorStyles.Bottom | System.Windows.Forms.AnchorStyles.Left)));
-            this.ChangesLabel.Location = new System.Drawing.Point(6, 442);
-            this.ChangesLabel.Name = "ChangesLabel";
-            this.ChangesLabel.Size = new System.Drawing.Size(370, 16);
-            this.ChangesLabel.TabIndex = 27;
-            this.ChangesLabel.Text = "Changed 6 chunks in 2 files.";
+            ChangesLabel.Anchor = AnchorStyles.Bottom | AnchorStyles.Left;
+            ChangesLabel.Location = new Point(6, 442);
+            ChangesLabel.Name = "ChangesLabel";
+            ChangesLabel.Size = new Size(370, 16);
+            ChangesLabel.TabIndex = 27;
+            ChangesLabel.Text = "Changed 6 chunks in 2 files.";
             // 
             // ChangesView
             // 
-            this.ChangesView.Anchor = ((System.Windows.Forms.AnchorStyles)((((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Bottom) 
-            | System.Windows.Forms.AnchorStyles.Left) 
-            | System.Windows.Forms.AnchorStyles.Right)));
-            this.ChangesView.CheckBoxes = true;
-            this.ChangesView.FullRowSelect = true;
-            this.ChangesView.Indent = 10;
-            this.ChangesView.Location = new System.Drawing.Point(6, 41);
-            this.ChangesView.Name = "ChangesView";
+            ChangesView.Anchor = AnchorStyles.Top | AnchorStyles.Bottom | AnchorStyles.Left | AnchorStyles.Right;
+            ChangesView.CheckBoxes = true;
+            ChangesView.FullRowSelect = true;
+            ChangesView.Indent = 10;
+            ChangesView.Location = new Point(6, 41);
+            ChangesView.Name = "ChangesView";
             treeNode1.Name = "Node1";
             treeNode1.Text = "(BHAV #4000) Init";
             treeNode2.Name = "Node2";
@@ -430,102 +410,91 @@
             treeNode7.Text = "(CTSS #223) Plaque CTSS";
             treeNode8.Name = "Node6";
             treeNode8.Text = "Content/Objects/objPlaque.iff";
-            this.ChangesView.Nodes.AddRange(new System.Windows.Forms.TreeNode[] {
-            treeNode5,
-            treeNode8});
-            this.ChangesView.ShowRootLines = false;
-            this.ChangesView.Size = new System.Drawing.Size(580, 398);
-            this.ChangesView.TabIndex = 24;
-            this.ChangesView.AfterCheck += new System.Windows.Forms.TreeViewEventHandler(this.ChangesView_AfterCheck);
+            ChangesView.Nodes.AddRange(new TreeNode[] { treeNode5, treeNode8 });
+            ChangesView.ShowRootLines = false;
+            ChangesView.Size = new Size(580, 398);
+            ChangesView.TabIndex = 24;
+            ChangesView.AfterCheck += ChangesView_AfterCheck;
             // 
             // BrowserTab
             // 
-            this.BrowserTab.Controls.Add(this.NewOBJButton);
-            this.BrowserTab.Controls.Add(this.CreateButton);
-            this.BrowserTab.Controls.Add(this.CloneButton);
-            this.BrowserTab.Controls.Add(this.EditButton);
-            this.BrowserTab.Controls.Add(this.Browser);
-            this.BrowserTab.Location = new System.Drawing.Point(4, 22);
-            this.BrowserTab.Name = "BrowserTab";
-            this.BrowserTab.Padding = new System.Windows.Forms.Padding(3);
-            this.BrowserTab.Size = new System.Drawing.Size(730, 458);
-            this.BrowserTab.TabIndex = 0;
-            this.BrowserTab.Text = "Object Browser";
-            this.BrowserTab.UseVisualStyleBackColor = true;
+            BrowserTab.Controls.Add(NewOBJButton);
+            BrowserTab.Controls.Add(CreateButton);
+            BrowserTab.Controls.Add(CloneButton);
+            BrowserTab.Controls.Add(EditButton);
+            BrowserTab.Controls.Add(Browser);
+            BrowserTab.Location = new Point(4, 22);
+            BrowserTab.Name = "BrowserTab";
+            BrowserTab.Padding = new Padding(3);
+            BrowserTab.Size = new Size(730, 458);
+            BrowserTab.TabIndex = 0;
+            BrowserTab.Text = "Object Browser";
+            BrowserTab.UseVisualStyleBackColor = true;
             // 
             // NewOBJButton
             // 
-            this.NewOBJButton.Anchor = ((System.Windows.Forms.AnchorStyles)((System.Windows.Forms.AnchorStyles.Bottom | System.Windows.Forms.AnchorStyles.Right)));
-            this.NewOBJButton.Location = new System.Drawing.Point(531, 381);
-            this.NewOBJButton.Name = "NewOBJButton";
-            this.NewOBJButton.Size = new System.Drawing.Size(186, 23);
-            this.NewOBJButton.TabIndex = 22;
-            this.NewOBJButton.Text = "Create New Object";
-            this.NewOBJButton.UseVisualStyleBackColor = true;
-            this.NewOBJButton.Click += new System.EventHandler(this.NewOBJButton_Click);
+            NewOBJButton.Anchor = AnchorStyles.Bottom | AnchorStyles.Right;
+            NewOBJButton.Location = new Point(531, 381);
+            NewOBJButton.Name = "NewOBJButton";
+            NewOBJButton.Size = new Size(186, 23);
+            NewOBJButton.TabIndex = 22;
+            NewOBJButton.Text = "Create New Object";
+            NewOBJButton.UseVisualStyleBackColor = true;
+            NewOBJButton.Click += NewOBJButton_Click;
             // 
             // Browser
             // 
-            this.Browser.Anchor = ((System.Windows.Forms.AnchorStyles)((((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Bottom) 
-            | System.Windows.Forms.AnchorStyles.Left) 
-            | System.Windows.Forms.AnchorStyles.Right)));
-            this.Browser.Location = new System.Drawing.Point(3, 3);
-            this.Browser.Name = "Browser";
-            this.Browser.Size = new System.Drawing.Size(724, 452);
-            this.Browser.TabIndex = 0;
+            Browser.Dock = DockStyle.Fill;
+            Browser.Location = new Point(3, 3);
+            Browser.Margin = new Padding(4, 3, 4, 3);
+            Browser.Name = "Browser";
+            Browser.Size = new Size(724, 452);
+            Browser.TabIndex = 0;
             // 
             // InspectorTab
             // 
-            this.InspectorTab.Controls.Add(this.entityInspector1);
-            this.InspectorTab.Location = new System.Drawing.Point(4, 22);
-            this.InspectorTab.Name = "InspectorTab";
-            this.InspectorTab.Padding = new System.Windows.Forms.Padding(3);
-            this.InspectorTab.Size = new System.Drawing.Size(730, 458);
-            this.InspectorTab.TabIndex = 1;
-            this.InspectorTab.Text = "VMEntity Inspector";
-            this.InspectorTab.UseVisualStyleBackColor = true;
+            InspectorTab.Controls.Add(entityInspector1);
+            InspectorTab.Location = new Point(4, 22);
+            InspectorTab.Name = "InspectorTab";
+            InspectorTab.Padding = new Padding(3);
+            InspectorTab.Size = new Size(730, 458);
+            InspectorTab.TabIndex = 1;
+            InspectorTab.Text = "VMEntity Inspector";
+            InspectorTab.UseVisualStyleBackColor = true;
             // 
             // entityInspector1
             // 
-            this.entityInspector1.Anchor = ((System.Windows.Forms.AnchorStyles)((((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Bottom) 
-            | System.Windows.Forms.AnchorStyles.Left) 
-            | System.Windows.Forms.AnchorStyles.Right)));
-            this.entityInspector1.Location = new System.Drawing.Point(3, 3);
-            this.entityInspector1.Name = "entityInspector1";
-            this.entityInspector1.Size = new System.Drawing.Size(724, 452);
-            this.entityInspector1.TabIndex = 0;
-            // 
-            // houseSpyTS1ToolStripMenuItem
-            // 
-            this.houseSpyTS1ToolStripMenuItem.Name = "houseSpyTS1ToolStripMenuItem";
-            this.houseSpyTS1ToolStripMenuItem.Size = new System.Drawing.Size(199, 22);
-            this.houseSpyTS1ToolStripMenuItem.Text = "House Spy (TS1)";
-            this.houseSpyTS1ToolStripMenuItem.Click += new System.EventHandler(this.houseSpyTS1ToolStripMenuItem_Click);
+            entityInspector1.Dock = DockStyle.Fill;
+            entityInspector1.Location = new Point(3, 3);
+            entityInspector1.Margin = new Padding(4, 3, 4, 3);
+            entityInspector1.Name = "entityInspector1";
+            entityInspector1.Size = new Size(724, 452);
+            entityInspector1.TabIndex = 0;
             // 
             // MainWindow
             // 
-            this.AutoScaleDimensions = new System.Drawing.SizeF(6F, 13F);
-            this.AutoScaleMode = System.Windows.Forms.AutoScaleMode.Font;
-            this.ClientSize = new System.Drawing.Size(762, 523);
-            this.Controls.Add(this.UtilityTabs);
-            this.Controls.Add(this.menuStrip1);
-            this.Icon = ((System.Drawing.Icon)(resources.GetObject("$this.Icon")));
-            this.MainMenuStrip = this.menuStrip1;
-            this.Name = "MainWindow";
-            this.Text = "Volcanic";
-            this.Activated += new System.EventHandler(this.MainWindow_Activated);
-            this.FormClosed += new System.Windows.Forms.FormClosedEventHandler(this.MainWindow_FormClosed);
-            this.menuStrip1.ResumeLayout(false);
-            this.menuStrip1.PerformLayout();
-            this.UtilityTabs.ResumeLayout(false);
-            this.OverviewTab.ResumeLayout(false);
-            this.groupBox1.ResumeLayout(false);
-            this.AllTable.ResumeLayout(false);
-            this.groupBox2.ResumeLayout(false);
-            this.BrowserTab.ResumeLayout(false);
-            this.InspectorTab.ResumeLayout(false);
-            this.ResumeLayout(false);
-            this.PerformLayout();
+            AutoScaleDimensions = new SizeF(96F, 96F);
+            AutoScaleMode = AutoScaleMode.Dpi;
+            ClientSize = new Size(762, 523);
+            Controls.Add(UtilityTabs);
+            Controls.Add(menuStrip1);
+            Icon = (Icon)resources.GetObject("$this.Icon");
+            MainMenuStrip = menuStrip1;
+            Name = "MainWindow";
+            Text = "Volcanic";
+            Activated += MainWindow_Activated;
+            FormClosed += MainWindow_FormClosed;
+            menuStrip1.ResumeLayout(false);
+            menuStrip1.PerformLayout();
+            UtilityTabs.ResumeLayout(false);
+            OverviewTab.ResumeLayout(false);
+            groupBox1.ResumeLayout(false);
+            AllTable.ResumeLayout(false);
+            groupBox2.ResumeLayout(false);
+            BrowserTab.ResumeLayout(false);
+            InspectorTab.ResumeLayout(false);
+            ResumeLayout(false);
+            PerformLayout();
 
         }
 

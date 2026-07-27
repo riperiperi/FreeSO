@@ -23,12 +23,14 @@ namespace FSO.Common.Rendering.Framework.IO
 
             if (LastFocus != null)
             {
+                LastFocus.IsFocused = false;
                 LastFocus.OnFocusChanged(FocusEvent.FocusOut);
             }
 
             LastFocus = ui;
             if (ui != null)
             {
+                LastFocus.IsFocused = true;
                 LastFocus.OnFocusChanged(FocusEvent.FocusIn);
             }
         }
@@ -533,6 +535,11 @@ namespace FSO.Common.Rendering.Framework.IO
                         {
                             mouse.LastMouseDown = mouse.LastMouseOver;
                             mouse.LastMouseDown.Callback(UIMouseEventType.MouseDown, state);
+                        }
+                        else if (LastFocus != null)
+                        {
+                            // If nothing has been clicked, clear focus.
+                            SetFocus(null);
                         }
                     }
                     else

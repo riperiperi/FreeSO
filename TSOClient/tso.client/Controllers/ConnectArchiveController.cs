@@ -1,5 +1,6 @@
 ﻿using FSO.Client.Regulators;
 using FSO.Client.UI.Archive;
+using FSO.Client.UI.Archive.Management;
 using FSO.Client.UI.Controls;
 using FSO.Client.UI.Framework;
 using FSO.Client.UI.Model;
@@ -11,7 +12,8 @@ using FSO.HIT;
 using FSO.Server.Embedded;
 using FSO.Server.Protocol.CitySelector;
 using FSO.Server.Protocol.Electron.Packets;
-using System;
+using FSO.Server.Protocol.Utils;
+using FSO.UI.Model;
 
 namespace FSO.Client.Controllers
 {
@@ -19,7 +21,8 @@ namespace FSO.Client.Controllers
     {
         Landing,
         Create,
-        Join
+        Join,
+        JoinRPC
     }
 
     public class ConnectArchiveController : IDisposable
@@ -32,6 +35,7 @@ namespace FSO.Client.Controllers
         public LoadAvatarByIDResponse AvatarData;
 
         private ConnectArchiveMode LastMode;
+        private ArchiveAvatarSelectCode LastSelectCode = ArchiveAvatarSelectCode.Success;
 
         public ShardSelectorServletRequest Shard => CityConnectionRegulator.CurrentShard;
 
@@ -49,6 +53,35 @@ namespace FSO.Client.Controllers
             View.ShowSandboxMode();
         }
 
+        private void EnsureDisplayName(Action action)
+        {
+            var clientConfig = ClientArchiveConfiguration.Default;
+
+            if (!ClientArchiveConfiguration.ValidDisplayName(clientConfig.PlayerName))
+            {
+                ShowMainDialog(null);
+
+                UIArchiveDisplayName.ShowDisplayNameDialog((string newName) =>
+                {
+                    if (newName == null)
+                    {
+                        SwitchMode(ConnectArchiveMode.Landing);
+                    }
+                    else
+                    {
+                        ClientArchiveConfiguration.Default.PlayerName = newName;
+                        ClientArchiveConfiguration.Default.Save();
+
+                        action();
+                    }
+                });
+            }
+            else
+            {
+                action();
+            }
+        }
+
         public void SwitchMode(ConnectArchiveMode mode)
         {
             LastMode = mode;
@@ -57,18 +90,73 @@ namespace FSO.Client.Controllers
             switch (mode)
             {
                 case ConnectArchiveMode.Join:
-                    ShowMainDialog(new UIArchiveJoinDialog());
+                    EnsureDisplayName(() =>
+                    {
+                        ShowMainDialog(new UIArchiveJoinDialog());
+                    });
+                    break;
+                case ConnectArchiveMode.JoinRPC:
+                    EnsureDisplayName(() =>
+                    {
+                        ShowMainDialog(new UIArchiveJoinRPCDialog());
+                    });
                     break;
                 case ConnectArchiveMode.Landing:
                     sandboxVisible = true;
                     ShowMainDialog(new UIArchiveLandingDialog());
                     break;
                 case ConnectArchiveMode.Create:
-                    ShowMainDialog(new UIArchiveCreateServer());
+                    if (FSOFacade.Controller.HasServer())
+                    {
+                        ExistingServerDialog();
+                    }
+                    else
+                    {
+                        EnsureDisplayName(() =>
+                        {
+                            ShowMainDialog(new UIArchiveCreateServer());
+                        });
+                    }
                     break;
             }
 
             View.SetSandboxVisibility(sandboxVisible);
+        }
+
+        private void ExistingServerDialog()
+        {
+            var config = FSOFacade.Controller.GetServerConfig();
+
+            UIAlert alert = null;
+            alert = UIScreen.GlobalShowAlert(new UIAlertOptions()
+            {
+                Message = GameFacade.Strings.GetString("f128", "96"),
+                Width = 400,
+                Buttons = [
+                    new UIAlertButton(UIAlertButtonType.Yes, (btn =>
+                    {
+                        // User management
+                        UIScreen.RemoveDialog(alert);
+                        UIScreen.GlobalShowDialog(new UIArchiveUserManageDialog(new ArchiveManagement(config)), true);
+                    }), GameFacade.Strings.GetString("f128", "97")),
+                    new UIAlertButton(UIAlertButtonType.No, (btn =>
+                    {
+                        // Close server
+                        UIScreen.RemoveDialog(alert);
+                        FSOFacade.Controller.CloseServer(() =>
+                        {
+                            ShowMainDialog(new UIArchiveCreateServer());
+                        });
+                    }), GameFacade.Strings.GetString("f128", "98")),
+                    new UIAlertButton(UIAlertButtonType.Cancel, (btn =>
+                    {
+                        // Join server
+                        UIScreen.RemoveDialog(alert);
+                        ShowMainDialog(null);
+                        FSOFacade.Controller.ConnectToArchive(ClientArchiveConfiguration.Default.PlayerName, $"127.0.0.1:{config.CityPort}", true);
+                    }), GameFacade.Strings.GetString("f128", "99")),
+                ],
+            }, true);
         }
 
         public void ReturnToSAS(Callback onConnect, Callback onError)
@@ -88,10 +176,7 @@ namespace FSO.Client.Controllers
             this.onConnect = onConnect;
             this.onError = onError;
 
-            if (address.IndexOf(":") == -1)
-            {
-                address = address + ":33101";
-            }
+            address = PortTransformer.DefaultCityPort(address);
 
             CityConnectionRegulator.ConnectArchive(new ConnectArchiveRequest
             {
@@ -175,6 +260,27 @@ namespace FSO.Client.Controllers
             View.SetProgressArchive(0, "Awaiting user input");
         }
 
+        public void TickRPC()
+        {
+            var rpc = DiscordRpcEngine.Secret;
+
+            if (rpc != null)
+            {
+                if (rpc.Value.ArchiveMode)
+                {
+                    if (!string.IsNullOrEmpty(rpc.Value.ServerHostname))
+                    {
+                        SwitchMode(ConnectArchiveMode.JoinRPC);
+                    }
+                }
+                else
+                {
+                    UIAlert.Alert("", GameFacade.Strings.GetString("f128", "114"), true);
+                    DiscordRpcEngine.Secret = null;
+                }
+            }
+        }
+
         private void CityConnectionRegulator_OnTransition(string state, object data)
         {
             GameThread.NextUpdate((x) =>
@@ -186,6 +292,7 @@ namespace FSO.Client.Controllers
                         break;
                     case "ArchiveConnect":
                         //4  ^Starting engines^                 # City is Selected...
+                        LastSelectCode = ArchiveAvatarSelectCode.Success;
                         View.SetSandboxVisibility(false);
                         ShowMainDialog(null);
                         View.SetProgress((1.0f / 14.0f) * 100, 4);
@@ -201,12 +308,29 @@ namespace FSO.Client.Controllers
                         View.SetProgressArchive((5.0f / 14.0f) * 100, "Connected, awaiting avatar selection");
 
                         // Show the avatar selection UI.
-                        ShowMainDialog(new ArchivePersonSelection());
+                        // Need to force resize due to showing a screen as a dialog.
+                        var select = new ArchivePersonSelection() { ScaleX = 1, ScaleY = 1 };
+                        select.GameResized();
+
+                        ShowMainDialog(select);
+
+                        if (LastSelectCode != ArchiveAvatarSelectCode.Success)
+                        {
+                            select.ShowSelectionError(LastSelectCode);
+                            LastSelectCode = ArchiveAvatarSelectCode.Success;
+                        }
 
                         break;
                     case "ArchiveSelectAvatar":
                         View.SetProgressArchive((5.5f / 14.0f) * 100, "Selecting avatar");
                         ShowMainDialog(null);
+                        break;
+
+                    case "ArchiveSelectedAvatar":
+                        if (data is ArchiveAvatarSelectResponse sel)
+                        {
+                            LastSelectCode = sel.Code;
+                        }
                         break;
 
                     case "AskForAvatarData":
@@ -233,6 +357,15 @@ namespace FSO.Client.Controllers
                         //12 ^Metrics Purged^                   # Received Character data from DB...
                         View.SetProgress((9.0f / 14.0f) * 100, 12);
                         break;
+
+                    case "AskForCityData":
+                        View.SetProgress((10.0f / 14.0f) * 100, 8, "f100");
+                        break;
+
+                    case "ReceivedCityData":
+                        View.SetProgress((13.0f / 14.0f) * 100, 9, "f100");
+                        break;
+
                     case "Connected":
                         onConnect();
                         break;

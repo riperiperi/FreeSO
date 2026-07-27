@@ -138,8 +138,8 @@ namespace FSO.SimAntics.Engine.TSOTransaction
 
         public void LeaveLot(VM vm, VMAvatar avatar)
         {
-            //TODO: in the global server, this will save the avatar (and possibly lot) states and send back to server.
-            if (avatar.PersistID == vm.MyUID)
+            // Disconnect immediately on the client, at least if they aren't fast forwarding to the current lot state.
+            if (avatar.PersistID == vm.MyUID && !vm.Driver.RunningCatchup)
             {
                 //stub has some functionality here. if we have left lot, disconnect.
                 vm.CloseNet(VMCloseNetReason.LeaveLot);

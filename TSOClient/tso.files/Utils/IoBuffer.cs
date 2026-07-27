@@ -212,6 +212,15 @@ namespace FSO.Files.Utils
         }
 
         /// <summary>
+        /// Reads a span of bytes from the current stream.
+        /// </summary>
+        /// <param name="output">Byte span to read into</param>
+        public void ReadBytes(Span<byte> output)
+        {
+            Reader.BaseStream.ReadExactly(output);
+        }
+
+        /// <summary>
         /// Reads a number of bytes from the current stream.
         /// </summary>
         /// <param name="num">Number of bytes to read.</param>

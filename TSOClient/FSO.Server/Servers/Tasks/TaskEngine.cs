@@ -225,16 +225,23 @@ namespace FSO.Server.Servers.Tasks
 
     public class TaskRunOptions
     {
+        [JsonProperty("task")]
         public string Task;
+        [JsonProperty("allowTaskOverlap")]
         public bool AllowTaskOverlap = false;
+        [JsonProperty("run_if_missed")]
         public bool Run_If_Missed = false;
+        [JsonProperty("timeout")]
         public int Timeout = 3600; //1hr
+        [JsonProperty("shard_id")]
         public int? Shard_Id;
+        [JsonProperty("parameter")]
         public dynamic Parameter;
     }
 
     public class ScheduledTaskRunOptions : TaskRunOptions
     {
+        [JsonProperty("cron")]
         public string Cron;
         public CronSchedule CronSchedule;
     }

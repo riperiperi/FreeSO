@@ -340,6 +340,8 @@ namespace FSO.Client.UI.Panels.Neighborhoods
 
         public void SetPost(BulletinItem item)
         {
+            var screen = FindController<CoreGameScreenController>();
+
             ActiveItem = item;
             if (item == null)
             {
@@ -362,7 +364,7 @@ namespace FSO.Client.UI.Panels.Neighborhoods
                 PropertyButtonBG.Visible = true;
 
                 PersonButton.Visible = true;
-                PersonButton.AvatarId = FindController<CoreGameScreenController>()?.MyID() ?? 0;
+                PersonButton.AvatarId = screen?.MyID() ?? 0;
                 PersonButtonName.Visible = true;
                 PersonButtonBG.Visible = true;
 
@@ -408,8 +410,8 @@ namespace FSO.Client.UI.Panels.Neighborhoods
                 PersonButton.AvatarId = item.SenderID;
 
                 var canPromote = IsMayor && item.Type == BulletinType.Community;
-                var myPost = FindController<CoreGameScreenController>()?.IsMe(item.SenderID) ?? false;
-                var admin = GameFacade.EnableMod;
+                var myPost = screen?.IsMe(item.SenderID) ?? false;
+                var admin = screen?.ModerationLevel > 0;
 
                 RightButton.Visible = true;
                 if (canPromote)
@@ -421,7 +423,7 @@ namespace FSO.Client.UI.Panels.Neighborhoods
                 }
 
                 MiddleButton.Caption = GameFacade.Strings.GetString("f120", "35");
-                MiddleButton.Visible = !myPost && GameFacade.EnableMod;
+                MiddleButton.Visible = !myPost && screen?.ModerationLevel > 0;
             }
         }
 

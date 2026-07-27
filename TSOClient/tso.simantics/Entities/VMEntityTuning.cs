@@ -30,8 +30,8 @@ namespace FSO.SimAntics.Entities
                 {
                     AppendTable(tuning.GetTables(owner.SemiGlobal.MainIff.Filename), 8192);
                 }
-                // todo: global tuning replacement (?)
-                // AppendTable(?, 256);
+
+                AppendTable(tuning.GetTables("global.iff"), 256);
             }
         }
 

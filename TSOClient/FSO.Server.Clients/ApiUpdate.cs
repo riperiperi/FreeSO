@@ -1,4 +1,6 @@
-﻿using System;
+﻿using FSO.Common;
+using FSO.Files.FSO;
+using System;
 using System.Collections.Generic;
 using System.Linq;
 
@@ -60,6 +62,59 @@ namespace FSO.Server.Clients
                     result.Insert(0, follow);
                     if (follow.full_zip != null) return new UpdatePath(result, true); //we found a full zip
                     follow = (follow.last_update_id == null) ? null : updates.FirstOrDefault(x => x.update_id == follow.last_update_id.Value);
+                }
+            }
+
+            return null; //no clue what to do here, we could not find a full zip to build from. this is fatal.
+        }
+    }
+
+    public class UpdatePathNew
+    {
+        public List<FSOUpdateMetadata> Path;
+        public bool FullZipStart;
+
+        public FSOUpdateMetadata Destination => Path.LastOrDefault();
+
+        public UpdatePathNew(List<FSOUpdateMetadata> path, bool fullZip)
+        {
+            Path = path;
+            FullZipStart = fullZip;
+        }
+
+        public static UpdatePathNew FindPath(FSOUpdateChannel channel, FSOVersionInfo current, FSOVersionInfo target)
+        {
+            var to = channel.updates.FirstOrDefault(x => x.id == target.id);
+            if (to == null) return null; //cannot find update on this channel, we can't download it.
+            var from = (current.channel == channel.channel && current.publicKey == channel.publicKey) ?
+                channel.updates.FirstOrDefault(x => x.id == current.id) :
+                null;
+
+            if (from != null)
+            {
+                //search for route from "to" to "from". recursive search - we then return the updates in order of application
+                var follow = to;
+                var result = new List<FSOUpdateMetadata>();
+                while (follow != null)
+                {
+                    if (follow == from) return new UpdatePathNew(result, false); //we got here with incremental updates.
+                    result.Insert(0, follow);
+                    var myDelta = follow.delta?.CurrentPlatform();
+                    if (myDelta == null) break;
+                    follow = (follow.lastid == null) ? null : channel.updates.FirstOrDefault(x => x.id == follow.lastid);
+                }
+            }
+
+            //we couldn't find a path to our current version. find a path to any update that has a full zip.
+            {
+                var follow = to;
+                var result = new List<FSOUpdateMetadata>();
+                while (follow != null)
+                {
+                    result.Insert(0, follow);
+                    var myFull = follow.full?.CurrentPlatform();
+                    if (myFull != null) return new UpdatePathNew(result, true); //we found a full zip
+                    follow = (follow.lastid == null) ? null : channel.updates.FirstOrDefault(x => x.id == follow.lastid);
                 }
             }
 

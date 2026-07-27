@@ -1,0 +1,372 @@
+{
+  "timed": true,
+  "catalog": [
+    {
+      "label": "Spring",
+      "value": 1,
+      "startDate": "1-3",
+      "endDate": "1-6"
+    },
+    {
+      "label": "Summer",
+      "value": 2,
+      "startDate": "1-6",
+      "endDate": "1-9"
+    },
+    {
+      "label": "Autumn",
+      "value": 4,
+      "startDate": "1-9",
+      "endDate": "1-12"
+    },
+    {
+      "label": "Winter",
+      "value": 8,
+      "startDate": "1-12",
+      "endDate": "1-3"
+    },
+    {
+      "label": "Debug",
+      "value": 16
+    }
+  ],
+  "modifiers": [
+    {
+      "name": "spring",
+      "label": "Spring",
+      "type": "seasonal",
+      "startDate": "1-3",
+      "endDate": "1-4",
+      "options": [
+        {
+          "name": "lot-firefly",
+          "label": "Firefly Forest",
+          "category": "Lot",
+          "unique": "lot",
+          "tuning": {
+            "mailbox.iff:1:0": 1,
+            "phoneglobals.iff:0:0": 118,
+            "phoneglobals.iff:0:1": 381
+          },
+          "enableTimed": true
+        }
+      ]
+    },
+    {
+      "name": "af",
+      "label": "April Fools",
+      "type": "seasonal",
+      "startDate": "1-4",
+      "endDate": "2-4",
+      "options": [
+        {
+          "name": "fire",
+          "label": "Enable Fire (2017)",
+          "category": "Effects",
+          "tuning": {
+            "special:0:0": 1
+          },
+          "enableTimed": true
+        },
+        {
+          "name": "emoji",
+          "label": "Emoji Only (2018)",
+          "category": "Effects",
+          "tuning": {
+            "ui:0:0": 1
+          },
+          "enableTimed": false
+        },
+        {
+          "name": "pizza",
+          "label": "Pizza Roulette (2018)",
+          "category": "Effects",
+          "tuning": {
+            "global.iff:44:0": 1
+          },
+          "enableTimed": true
+        },
+        {
+          "name": "hat",
+          "label": "Hat Towers (2020)",
+          "category": "Effects",
+          "tuning": {
+            "global.iff:44:1": 1
+          },
+          "enableTimed": true
+        },
+        {
+          "name": "motives",
+          "label": "Inverted Motives (2020)",
+          "category": "Effects",
+          "tuning": {
+            "aprilfools:0:2020": 1
+          },
+          "enableTimed": false
+        },
+        {
+          "name": "amongso",
+          "label": "AmongSO (2021)",
+          "category": "Effects",
+          "tuning": {
+            "global.iff:44:2": 1
+          },
+          "enableTimed": true
+        },
+        {
+          "name": "platformer",
+          "label": "Platformer (2022, needs files)",
+          "category": "Effects",
+          "tuning": {
+            "platformer:0:0": 1
+          },
+          "enableTimed": false
+        },
+        {
+          "name": "peeso",
+          "label": "PeeSO (2024)",
+          "category": "Effects",
+          "tuning": {
+            "aprilfools:0:2019": 1,
+            "personglobals.iff:11:0": 1
+          },
+          "enableTimed": true
+        }
+      ]
+    },
+    {
+      "name": "summer",
+      "label": "Summer",
+      "type": "seasonal",
+      "startDate": "1-7",
+      "endDate": "1-8",
+      "options": [
+        {
+          "name": "lot-damn",
+          "label": "D.A.M.N Park",
+          "category": "Lot",
+          "unique": "lot",
+          "tuning": {
+            "mailbox.iff:1:0": 1,
+            "leavelot.iff:7:0": 1,
+            "phoneglobals.iff:0:0": 516,
+            "phoneglobals.iff:0:1": 1
+          },
+          "enableTimed": false
+        },
+        {
+          "name": "lot-fructose",
+          "label": "Fructose Monsoon",
+          "category": "Lot",
+          "unique": "lot",
+          "tuning": {
+            "mailbox.iff:1:0": 1,
+            "leavelot.iff:7:0": 1,
+            "phoneglobals.iff:0:0": 512,
+            "phoneglobals.iff:0:1": 1
+          },
+          "enableTimed": true
+        },
+        {
+          "name": "heatwave",
+          "label": "Heatwave",
+          "category": "Weather",
+          "unique": "weather",
+          "tuning": {
+            "city:0:0": 1
+          },
+          "enableTimed": false
+        },
+        {
+          "name": "fructose",
+          "label": "Fructose Monsoon",
+          "category": "Weather",
+          "unique": "weather",
+          "tuning": {
+            "city:0:2": 1
+          },
+          "enableTimed": false
+        }
+      ]
+    },
+    {
+      "name": "halloween",
+      "label": "Halloween",
+      "type": "seasonal",
+      "startDate": "24-10",
+      "endDate": "1-11",
+      "options": [
+        {
+          "name": "lot-circus",
+          "label": "The Forgotten Circus (2018)",
+          "category": "Lot",
+          "unique": "lot",
+          "tuning": {
+            "mailbox.iff:1:0": 2,
+            "leavelot.iff:7:0": 2,
+            "phoneglobals.iff:0:0": 517,
+            "phoneglobals.iff:0:1": 1
+          },
+          "enableTimed": false
+        },
+        {
+          "name": "lot-village",
+          "label": "The Hallowed Village (2019)",
+          "category": "Lot",
+          "unique": "lot",
+          "tuning": {
+            "mailbox.iff:1:0": 2,
+            "leavelot.iff:7:0": 2,
+            "phoneglobals.iff:0:0": 519,
+            "phoneglobals.iff:0:1": 1
+          },
+          "enableTimed": true
+        },
+        {
+          "name": "lot-christmas-nightmare",
+          "label": "Hilltop Horror Labyrinth (2020)",
+          "category": "Lot",
+          "unique": "lot",
+          "tuning": {
+            "mailbox.iff:1:0": 2,
+            "leavelot.iff:7:0": 2,
+            "phoneglobals.iff:0:0": 520,
+            "phoneglobals.iff:0:1": 1
+          },
+          "enableTimed": false
+        },
+        {
+          "name": "lot-asylum",
+          "label": "Haunted Escape Asylum (2021)",
+          "category": "Lot",
+          "unique": "lot",
+          "tuning": {
+            "mailbox.iff:1:0": 2,
+            "leavelot.iff:7:0": 2,
+            "phoneglobals.iff:0:0": 521,
+            "phoneglobals.iff:0:1": 1
+          },
+          "enableTimed": false
+        },
+        {
+          "name": "lot-trickvtreat",
+          "label": "Isle of Ghostly Terrors (2022)",
+          "category": "Lot",
+          "unique": "lot",
+          "tuning": {
+            "mailbox.iff:1:0": 2,
+            "leavelot.iff:7:0": 2,
+            "phoneglobals.iff:0:0": 522,
+            "phoneglobals.iff:0:1": 1
+          },
+          "enableTimed": false
+        },
+        {
+          "name": "lot-escaperoom",
+          "label": "Abyssal Torment Manor (2023)",
+          "category": "Lot",
+          "unique": "lot",
+          "tuning": {
+            "mailbox.iff:1:0": 2,
+            "leavelot.iff:7:0": 2,
+            "phoneglobals.iff:0:0": 306,
+            "phoneglobals.iff:0:1": 210
+          },
+          "enableTimed": false
+        },
+        {
+          "name": "lot-party",
+          "label": "Party Island (2024)",
+          "category": "Lot",
+          "unique": "lot",
+          "tuning": {
+            "mailbox.iff:1:0": 2,
+            "leavelot.iff:7:0": 2,
+            "phoneglobals.iff:0:0": 515,
+            "phoneglobals.iff:0:1": 1
+          },
+          "enableTimed": false
+        },
+        {
+          "name": "deadworld",
+          "label": "Dead World",
+          "category": "Weather & Extras",
+          "unique": "weather",
+          "tuning": {
+            "city:0:0": 2,
+            "city:0:2": 2,
+            "special:0:2": 0.01
+          },
+          "enableTimed": true
+        },
+        {
+          "name": "candy",
+          "label": "Candy & Zombies",
+          "category": "Weather & Extras",
+          "tuning": {
+            "global.iff:44:3": 1
+          },
+          "enableTimed": true
+        }
+      ]
+    },
+    {
+      "name": "winter",
+      "label": "Winter",
+      "type": "seasonal",
+      "startDate": "12-12",
+      "endDate": "29-1",
+      "options": [
+        {
+          "name": "lot-santa",
+          "label": "Santa's Snowdown Showdown",
+          "category": "Lot",
+          "unique": "lot",
+          "tuning": {
+            "phoneglobals.iff:0:0": 518,
+            "phoneglobals.iff:0:1": 1
+          },
+          "enableTimed": true
+        },
+        {
+          "name": "snowfall",
+          "label": "Snowfall",
+          "category": "Weather & Extras",
+          "unique": "weather",
+          "tuning": {
+            "global.iff:44:6": 1,
+            "city:0:0": 0
+          },
+          "enableTimed": true
+        },
+        {
+          "name": "snowball",
+          "label": "Snowball Fights",
+          "category": "Weather & Extras",
+          "tuning": {
+            "global.iff:44:4": 1
+          },
+          "enableTimed": true
+        },
+        {
+          "name": "tree",
+          "label": "Christmas Tree",
+          "category": "Weather & Extras",
+          "tuning": {
+            "global.iff:44:5": 1
+          },
+          "gift": {
+            "title": "Merry Christmas!",
+            "description": "It's that time of year again, can you believe it? A beautifully trimmed christmas tree has been delivered to your inventory to celebrate the occasion.\n Place your new tree and some freshly baked cookies next to a fireplace, and you might be in for a 12am celebrity visit...",
+            "guids": [
+              719571418
+            ]
+          },
+          "enableTimed": true,
+          "startDate": "18-12",
+          "endDate": "26-12"
+        }
+      ]
+    }
+  ]
+}

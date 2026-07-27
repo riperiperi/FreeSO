@@ -19,20 +19,19 @@ namespace FSO.Windows
         {
         }
 
-        public override void Speak(string text, bool gender, int ipitch)
+        public override void Speak(string text, bool gender, int ipitch, uint persistID)
         {
+            var voiceGender = (gender) ? System.Speech.Synthesis.VoiceGender.Female : System.Speech.Synthesis.VoiceGender.Male;
             var Synth = new System.Speech.Synthesis.SpeechSynthesizer();
-            try
-            {
-                Synth.SelectVoiceByHints((gender) ? System.Speech.Synthesis.VoiceGender.Female : System.Speech.Synthesis.VoiceGender.Male);
-            }
-            catch
-            {
-                //couldnt find any tts voices...
-                return;
-            }
             if (text == "") return;
+
             var voci = Synth.GetInstalledVoices();
+            var genderVoices = voci.Where(x => x.VoiceInfo.Gender == voiceGender).ToArray();
+            if (genderVoices.Length == 0) return;
+
+            uint voiceInd = persistID % (uint)genderVoices.Length;
+            Synth.SelectVoice(genderVoices[(int)voiceInd].VoiceInfo.Name);
+
             var stream = new System.IO.MemoryStream();
             var pitch = Math.Max(0.1f, ipitch / 100f + 1f); //below 0.1 is just stupid, so just clamp there.
             if (pitch < 1f)

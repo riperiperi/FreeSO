@@ -1,16 +1,21 @@
 ﻿using FSO.Client.Regulators;
 using FSO.Client.Rendering.City;
+using FSO.Client.Rendering.City.Plugins;
 using FSO.Client.UI;
 using FSO.Client.UI.Controls;
 using FSO.Client.UI.Framework;
 using FSO.Client.UI.Panels;
+using FSO.Client.UI.Screens;
 using FSO.Common.DataService;
 using FSO.Common.DataService.Model;
 using FSO.Common.Domain.Realestate;
 using FSO.Common.Domain.RealestateDomain;
 using FSO.Common.Utils;
+using FSO.Content.Model;
 using FSO.Files.RC;
+using FSO.Server.Clients;
 using FSO.Server.DataService.Model;
+using FSO.Server.Protocol.Electron.Model.CityEditCommands;
 using FSO.Server.Protocol.Electron.Packets;
 using Microsoft.Xna.Framework;
 using Microsoft.Xna.Framework.Graphics;
@@ -21,12 +26,13 @@ using System.Linq;
 
 namespace FSO.Client.Controllers
 {
-    public class TerrainController : IDisposable
+    public class TerrainController : IAriesMessageSubscriber, IDisposable
     {
         public CoreGameScreenController Parent;
+        public IShardRealestateDomain Realestate { get; }
+
         private Terrain View;
         private IClientDataService DataService;
-        private IShardRealestateDomain Realestate;
         private PurchaseLotRegulator PurchaseRegulator;
         private LotThumbContent LotThumbs;
         private uint ShardId;
@@ -60,6 +66,72 @@ namespace FSO.Client.Controllers
             CurrentCity = new Binding<City>().WithMultiBinding(RefreshCity, "City_ReservedLotInfo", "City_SpotlightsVector");
 
             LotThumbs = new LotThumbContent(parent.CityResource);
+
+            Realestate.TrackUndo(network.MyCharacter);
+            Realestate.OnMapChange += MapChange;
+
+            network.CityClient.AddSubscriber(this);
+        }
+
+        private void MapChange(Rectangle obj)
+        {
+            View.GenerateCityMesh(GameFacade.GraphicsDevice, obj);
+            View.RegenerateVertexColor();
+        }
+
+        public void CommitMapChange(CityEditBase cmd)
+        {
+            cmd.AvatarId = Network.MyCharacter;
+
+            // Send it over to the server.
+            // Make sure it's not temp (but don't overwrite it for the local copy)
+
+            var prevTemp = cmd.IsTemp;
+            cmd.IsTemp = false;
+            cmd.Color = GlobalSettings.Default.ChatColor;
+            Network.CityClient.Write(new CityUpdateRequest() { Command = new(cmd) });
+            cmd.IsTemp = prevTemp;
+        }
+
+        public void UpdateThumbnail(byte[] data)
+        {
+            Network.CityClient.Write(new CityUpdateCommand() { Mode = CityUpdateCommandMode.SetThumbnail, Thumbnail = data });
+        }
+
+        public void UpdateCityName(string name)
+        {
+            Network.CityClient.Write(new CityUpdateCommand() { Mode = CityUpdateCommandMode.SetCityName, CityName = name });
+        }
+
+        public void SendCityCommand(CityUpdateCommandMode mode, int uid)
+        {
+            Network.CityClient.Write(new CityUpdateCommand()
+            {
+                AvatarID = Network.MyCharacter,
+                Mode = mode,
+                TargetUID = uid
+            });
+        }
+
+        public bool UpdateTempMapChange(CityEditBase cmd)
+        {
+            if (cmd != null)
+            {
+                cmd.AvatarId = Network.MyCharacter;
+                cmd.IsTemp = true;
+
+                // TODO: submit temp to city?
+            }
+
+            bool valid = Realestate.SetMyTempCommand(cmd);
+
+            if (!valid && View.Plugin is MapPainterPlugin painter)
+            {
+                painter.ShowError(painter.LockProperties ? 55 : 53);
+                return false;
+            }
+
+            return true;
         }
 
         private void PurchaseRegulator_OnPurchased(int newBudget)
@@ -73,6 +145,8 @@ namespace FSO.Client.Controllers
             PurchaseRegulator.OnTransition -= PurchaseRegulator_OnTransition;
             PurchaseRegulator.OnPurchased -= PurchaseRegulator_OnPurchased;
 
+            Network.CityClient.RemoveSubscriber(this);
+
             LotThumbs.Dispose();
         }
 
@@ -85,12 +159,22 @@ namespace FSO.Client.Controllers
             CurrentHoverLot.Value = null;
         }
 
+        public CityMap GetCityMap()
+        {
+            return Realestate.GetMap();
+        }
+
+        public void HideTooltip()
+        {
+            CurrentHoverLot.Value = null;
+        }
+
         private void RefreshTooltip(BindingChange[] changes)
         {
             //Called if price, online or name change
             GameThread.NextUpdate((state) =>
             {
-                if (CurrentHoverLot.Value != null)
+                if (CurrentHoverLot.Value != null && View.Plugin == null)
                 {
                     var lot = CurrentHoverLot.Value;
                     var name = lot.Lot_Name;
@@ -134,30 +218,16 @@ namespace FSO.Client.Controllers
         {
             if (CurrentCity.Value != null)
             {
-                var mapData = LotTileEntry.GenFromCity(CurrentCity.Value);
-                var mapDataFlat = mapData.Values.ToArray();
-                var neighJSON = CurrentCity.Value.City_NeighJSON;
-
-                //We know if lots are online, we can update the data service
-                DataService.GetMany<Lot>(mapDataFlat.Select(x => (object)(uint)x.packed_pos).ToArray()).ContinueWith(x =>
-                {
-                    if (!x.IsCompleted)
-                    {
-                        return;
-                    }
-
-                    foreach (var lot in x.Result)
-                    {
-                        if (mapData.TryGetValue(lot.Id, out var mapItem))
-                        {
-                            lot.Lot_IsOnline = (mapItem.flags & LotTileFlags.Online) == LotTileFlags.Online;
-                        }
-                    }
-                });
-
                 GameThread.NextUpdate((state) =>
                 {
-                    View.populateCityLookup(mapDataFlat);
+                    bool updated = View.LotTiles.UpdateWithCity(CurrentCity.Value, DataService);
+                    var neighJSON = CurrentCity.Value.City_NeighJSON;
+
+                    if (updated)
+                    {
+                        View.SignalCityDirty();
+                    }
+
                     if (neighJSON != LastLotJSON)
                     {
                         try
@@ -197,7 +267,7 @@ namespace FSO.Client.Controllers
 
         public bool IsPurchasable(int x, int y)
         {
-            return Realestate.IsPurchasable((ushort)x, (ushort)y);
+            return Realestate.IsPurchasable((ushort)x, (ushort)y) && Parent.CanPurchaseLots;
         }
 
         private bool IsTileOccupied(int x, int y)
@@ -211,7 +281,7 @@ namespace FSO.Client.Controllers
             CurrentHoverLot.Value = null;
             if (HoverTimeout != null) { HoverTimeout.Clear(); }
 
-            if (Realestate.IsPurchasable((ushort)x, (ushort)y))
+            if (IsPurchasable(x, y))
             {
                 HoverTimeout = GameThread.SetTimeout(() =>
                 {
@@ -244,6 +314,11 @@ namespace FSO.Client.Controllers
         public void OverrideLotThumb(uint location, Texture2D tex)
         {
             LotThumbs.OverrideLotThumb(ShardId, location, tex);
+        }
+
+        public void OverrideLotFacade(uint location, FSOF tex)
+        {
+            LotThumbs.OverrideLotFacade(ShardId, location, tex);
         }
 
         public LotThumbEntry LockLotThumb(uint location)
@@ -289,7 +364,7 @@ namespace FSO.Client.Controllers
                         Parent.ShowLotPage(id);
                     });
                 }
-                else if (!Realestate.IsPurchasable((ushort)x, (ushort)y))
+                else if (!IsPurchasable(x, y))
                     return;
                 else if (PlacingTownHall && View.NeighGeom.NhoodNearestDB(x, y) != TownHallNhood)
                 {
@@ -655,6 +730,48 @@ namespace FSO.Client.Controllers
                     UIScreen.RemoveDialog(_ProgressAlert);
                     _ProgressAlert = null;
                 }
+            }
+        }
+
+        public void MessageReceived(AriesClient client, object message)
+        {
+            if (message is CityUpdateCommand cmd && View.Plugin is MapPainterPlugin map)
+            {
+                GameThread.NextUpdate(x =>
+                {
+                    switch (cmd.Mode)
+                    {
+                        case CityUpdateCommandMode.CommandError:
+                            Realestate.SetMyTempCommand(null);
+                            map.ShowError(53);
+                            break;
+                        case CityUpdateCommandMode.UndoError:
+                            map.ShowError(54);
+                            break;
+                    }
+                });
+            }
+            else if (message is CityUpdateResponse response)
+            {
+                GameThread.NextUpdate(x =>
+                {
+                    var screen = UIScreen.Current as CoreGameScreen;
+
+                    foreach (var item in response.Commands)
+                    {
+                        if (item.Command.AvatarId == Network.MyCharacter)
+                        {
+                            return;
+                        }
+
+                        var mod = CityModification.FromCommand(View.MapData, item.Command);
+                        if (mod != null)
+                        {
+                            View.AddModification(mod);
+                            screen?.CityUpdateLayer?.RegisterModification(mod);
+                        }
+                    }
+                });
             }
         }
     }

@@ -179,6 +179,23 @@ namespace FSO.LotView.Components
             }
         }
 
+        private Vector3 RotateCenterRelative(Vector3 centerRelative)
+        {
+            switch (_Direction)
+            {
+                case Direction.NORTH:
+                    return centerRelative;
+                case Direction.EAST:
+                    return new Vector3(-centerRelative.Y, centerRelative.X, centerRelative.Z);
+                case Direction.SOUTH:
+                    return new Vector3(-centerRelative.X, -centerRelative.Y, centerRelative.Z);
+                case Direction.WEST:
+                    return new Vector3(centerRelative.Y, -centerRelative.X, centerRelative.Z);
+                default:
+                    return centerRelative;
+            }
+        }
+
         public override Vector3 GetSLOTPosition(int slot, bool avatar)
         {
             var item = (ContainerSlots != null && ContainerSlots.Count > slot) ? ContainerSlots[slot] : null;
@@ -186,7 +203,7 @@ namespace FSO.LotView.Components
             {
                 var off = item.Offset;
                 var centerRelative = new Vector3(off.X * (1 / 16.0f), off.Y * (1 / 16.0f), ((item.Height != 5 && item.Height != 0) ? SLOT.HeightOffsets[item.Height - 1] : off.Z) * (1 / 5.0f));
-                centerRelative = Vector3.Transform(centerRelative, Matrix.CreateRotationZ(RadianDirection));
+                centerRelative = RotateCenterRelative(centerRelative);
                 if (avatar) centerRelative.Z = 0;
                 return this.Position + centerRelative;
             } else return this.Position;

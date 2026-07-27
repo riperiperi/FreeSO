@@ -14,7 +14,7 @@ namespace FSO.Client.Rendering.City
     public class CityCamera2D : ICityCamera
     {
         public static float NEAR_ZOOM_SIZE = 288;
-        public float m_WheelZoom;
+        public float m_WheelZoom = 0.5f;
         public float LotZoomProgress { get; set; } = 0;
         public float ZoomProgress { get; set; } //settable to avoid discontinuities
         public float m_LotZoomSize = 72 * 128; //near zoom, set by world
@@ -61,15 +61,15 @@ namespace FSO.Client.Rendering.City
         public float m_WheelZoomTarg = 0.5f;
         private int? m_LastWheelPos; //null if invalid, increments in 120 it seems.
 
-        private Vector2 LastTargOff;
         public float m_ViewOffX, m_ViewOffY, m_TargVOffX, m_TargVOffY;
         private float m_ScrollSpeed;
         private Vector2 m_MouseStart;
         private bool WasRMBDown;
+        private bool MouseIsOn = true;
 
-        public float GetIsoScale()
+        public float GetIsoScale(int width, int height)
         {
-            float ResScale = 768.0f / UIScreen.Current.ScreenHeight; //scales up the vertical height to match that of the target resolution (for the far view)
+            float ResScale = 768.0f / height; //scales up the vertical height to match that of the target resolution (for the far view)
             float FisoScale = (float)(Math.Sqrt(0.5 * 0.5 * 2) / 5.10f) * ResScale; // is 5.10 on far zoom
             float ZisoScale = (float)Math.Sqrt(0.5 * 0.5 * 2) / (NEAR_ZOOM_SIZE * m_WheelZoom);  // currently set 144 to near zoom
             float LisoScale = (float)Math.Sqrt(0.5 * 0.5 * 2) / m_LotZoomSize;  // currently set 144 to near zoom
@@ -79,10 +79,23 @@ namespace FSO.Client.Rendering.City
             return (1 - LotZoomProgress) * IsoScale + LotZoomProgress * LisoScale;
         }
 
+        public float GetIsoScale()
+        {
+            var screen = UIScreen.Current;
+            return GetIsoScale(screen.ScreenWidth, screen.ScreenHeight);
+        }
+
         public void MouseEvent(UIMouseEventType type, UpdateState state)
         {
-            if (type == UIMouseEventType.MouseOut)
+            if (type == UIMouseEventType.MouseOver)
+            {
+                MouseIsOn = true;
+            }
+            else if (type == UIMouseEventType.MouseOut)
+            {
+                MouseIsOn = false;
                 m_LastWheelPos = null;
+            }
         }
 
         public float AspectRatioMultiplier
@@ -245,10 +258,15 @@ namespace FSO.Client.Rendering.City
 
         public Matrix CalculateProjection()
         {
-            var isoScale = GetIsoScale();
             var screen = UIScreen.Current;
-            float HB = screen.ScreenWidth * isoScale;
-            float VB = screen.ScreenHeight * isoScale;
+            return CalculateProjection(screen.ScreenWidth, screen.ScreenHeight);
+        }
+
+        public Matrix CalculateProjection(int width, int height)
+        {
+            var isoScale = GetIsoScale(width, height);
+            float HB = width * isoScale;
+            float VB = height * isoScale;
 
             return Matrix.CreateOrthographicOffCenter(-HB + m_ViewOffX, HB + m_ViewOffX, -VB + m_ViewOffY, VB + m_ViewOffY, 0.1f, 524);
         }
@@ -287,7 +305,7 @@ namespace FSO.Client.Rendering.City
         {
             if (controller != null)
             {
-                var id = controller.GetCurrentLotID();
+                var id = controller.GetVisualLotID();
                 if (id != 0)
                 {
                     //center on this lot, with the given camera offset
@@ -331,7 +349,7 @@ namespace FSO.Client.Rendering.City
         {
             var screen = UIScreen.Current;
 
-            if (Zoomed == TerrainZoomMode.Near)
+            if (Zoomed == TerrainZoomMode.Near && MouseIsOn)
             {
                 if (m_LastWheelPos != null && Math.Abs(m_LastWheelPos.Value - state.MouseState.ScrollWheelValue) < 1000)
                     m_WheelZoomTarg = Math.Max(0.33f, Math.Min(1f, m_WheelZoomTarg - (m_LastWheelPos.Value - state.MouseState.ScrollWheelValue) / 1000f));
@@ -354,9 +372,6 @@ namespace FSO.Client.Rendering.City
                 m_MouseStart = new Vector2(m_MouseState.X, m_MouseState.Y); //if middle mouse button activated, record where we started pressing it (to use for panning)
             }
 
-            LastTargOff = new Vector2(m_TargVOffX, m_TargVOffY);
-
-
             var rScale = 60f / FSOEnvironment.RefreshRate;
             if (Zoomed != TerrainZoomMode.Far) ZoomProgress += (1.0f - ZoomProgress) * (float)(1 - Math.Pow(4 / 5.0f, rScale));
             if (Zoomed == TerrainZoomMode.Near)
@@ -376,25 +391,26 @@ namespace FSO.Client.Rendering.City
                 }
                 else if (GlobalSettings.Default.EdgeScroll && state.ProcessMouseEvents) //edge scroll check - do this even if mouse events are blocked
                 {
-                    if (m_MouseState.X > screen.ScreenWidth - 32)
+                    float scale = 1f / FSOEnvironment.DPIScaleFactor;
+                    if (m_MouseState.X * scale > screen.ScreenWidth - 32)
                     {
                         Triggered = true;
                         m_TargVOffX += m_ScrollSpeed * rScale;
                         CursorManager.INSTANCE.SetCursor(CursorType.ArrowRight);
                     }
-                    if (m_MouseState.X < 32)
+                    if (m_MouseState.X * scale < 32)
                     {
                         Triggered = true;
                         m_TargVOffX -= m_ScrollSpeed * rScale;
                         CursorManager.INSTANCE.SetCursor(CursorType.ArrowLeft);
                     }
-                    if (m_MouseState.Y > screen.ScreenHeight - 32)
+                    if (m_MouseState.Y * scale > screen.ScreenHeight - 32)
                     {
                         Triggered = true;
                         m_TargVOffY -= m_ScrollSpeed * rScale;
                         CursorManager.INSTANCE.SetCursor(CursorType.ArrowDown);
                     }
-                    if (m_MouseState.Y < 32)
+                    if (m_MouseState.Y * scale < 32)
                     {
                         Triggered = true;
                         m_TargVOffY += m_ScrollSpeed * rScale;

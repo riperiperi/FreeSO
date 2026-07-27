@@ -1,28 +1,28 @@
-﻿using System;
-using System.Collections.Generic;
-using FSO.Client.UI.Screens;
-using FSO.Client.Network;
-using FSO.Client.UI.Framework;
-using FSO.Client.GameContent;
-using Ninject;
-using FSO.Server.Protocol.CitySelector;
-using FSO.Client.Controllers;
-using FSO.Common.Utils;
-using FSO.Client.UI.Controls;
-using FSO.Client.UI.Panels;
-using FSO.Client.UI;
-using FSO.Common.DatabaseService.Model;
-using FSO.Server.Protocol.Electron.Packets;
-using FSO.Client.Utils;
-using FSO.Server.Protocol.Voltron.Packets;
+﻿using FSO.Client.Controllers;
 using FSO.Client.Controllers.Panels;
-using System.Collections.Immutable;
+using FSO.Client.GameContent;
+using FSO.Client.Network;
+using FSO.Client.UI;
+using FSO.Client.UI.Archive;
+using FSO.Client.UI.Controls;
+using FSO.Client.UI.Framework;
+using FSO.Client.UI.Panels;
+using FSO.Client.UI.Screens;
+using FSO.Client.Utils;
+using FSO.Common;
+using FSO.Common.DatabaseService.Model;
 using FSO.Common.DataService.Model;
 using FSO.Common.Serialization.Primitives;
+using FSO.Common.Utils;
+using FSO.Server.Clients;
+using FSO.Server.Embedded;
+using FSO.Server.Protocol.CitySelector;
+using FSO.Server.Protocol.Electron.Packets;
+using FSO.Server.Protocol.Voltron.Packets;
 using FSO.UI.Model;
 using MSDFData;
-using FSO.Server.Embedded;
-using FSO.Client.UI.Archive;
+using Ninject;
+using System.Collections.Immutable;
 
 namespace FSO.Client
 {
@@ -39,6 +39,9 @@ namespace FSO.Client
         private EmbeddedServer Server;
         private UIDialog ShutdownDialog;
         private uint? ArchiveLotId;
+
+        private UIAlert FatalAlert;
+        private int FatalAlertPriority;
 
         public GameController(IKernel kernel)
         {
@@ -68,8 +71,16 @@ namespace FSO.Client
         public void Start()
         {
             var version = Content.Content.Get().VersionString;
-            if (version == "1.1097.1.0") StartLoading();
-            else WrongVersion();
+            FSOProgram.RegisterDragCallback(GameFacade.Game.Window.Handle, DragDrop);
+            if (FSOEnvironment.MissingTSO)
+            {
+                TsoInstaller();
+            }
+            else
+            {
+                if (version == "1.1097.1.0") StartLoading();
+                else WrongVersion();
+            }
         }
 
         /// <summary>
@@ -83,29 +94,65 @@ namespace FSO.Client
         }
 
         /// <summary>
+        /// Shows up if The Sims Online isn't detected, allows the user to download and extract the game files.
+        /// </summary>
+        public void TsoInstaller()
+        {
+            var screen = Kernel.Get<TSOInstallScreen>();
+            GameFacade.Screens.RemoveCurrent();
+            GameFacade.Screens.AddScreen(screen);
+        }
+
+        private void UpdaterCleanup()
+        {
+            try
+            {
+                if (File.Exists("update2.exe"))
+                {
+                    File.Delete("update.exe");
+                    File.Move("update2.exe", "update.exe");
+                }
+
+                if (File.Exists("update2"))
+                {
+                    File.Delete("update");
+                    File.Move("update2", "update");
+                }
+            }
+            catch (Exception)
+            {
+                //maybe signal to user that the updater update failed
+            }
+        }
+
+        /// <summary>
         /// Show the login screen
         /// </summary>
         public void ShowLogin()
         {
-            bool archiveMode = true;
+            UpdaterCleanup();
+            InitializeArchive();
+        }
 
-            if (archiveMode)
+        public void ShowServerLogin()
+        {
+            ChangeState<LoginScreen, LoginController>((view, controller) =>
             {
-                InitializeArchive();
-            }
-            else
-            {
-                ChangeState<LoginScreen, LoginController>((view, controller) =>
-                {
-                    DiscordRpcEngine.SendFSOPresence("In Main Menu");
-                });
-            }
+                DiscordRpcEngine.SendFSOPresence("In Main Menu");
+            });
+        }
 
-            /*
-            var screen = Kernel.Get<LoginScreen>();
-            GameFacade.Screens.RemoveCurrent();
-            GameFacade.Screens.AddScreen(screen);
-            */
+        public void ShowServerLogin(string url)
+        {
+            GlobalSettings.Default.GameEntryUrl = url;
+            GlobalSettings.Default.CitySelectorUrl = url;
+            GlobalSettings.Default.Save();
+
+            var kernel = FSOFacade.Kernel;
+            kernel.Get<AuthClient>().SetBaseUrl(url);
+            kernel.Get<CityClient>().SetBaseUrl(url);
+
+            ShowServerLogin();
         }
 
         /// <summary>
@@ -164,7 +211,7 @@ namespace FSO.Client
             var casr = new Regulators.CreateASimRegulator(null);
             var purch = new Regulators.PurchaseLotRegulator(null);
             var conn = new Regulators.LotConnectionRegulator(null, null, null);
-            var t2 = new Regulators.CityConnectionRegulator(null, null, null, null, Kernel, null);
+            var t2 = new Regulators.CityConnectionRegulator(null, null, null, null, Kernel, null, null);
             var neigh = new Regulators.GenericActionRegulator<NhoodRequest, NhoodResponse>(null);
             var bulletin = new Regulators.GenericActionRegulator<BulletinRequest, BulletinResponse>(null);
             var regu = new Regulators.RegulatorsModule();
@@ -223,7 +270,7 @@ namespace FSO.Client
                 new JoinLotProgressController(null, null),
                 new DisconnectController(null, null, null, null, null),
                 new GenericSearchController(null, null),
-                new NeighPageController(null, null),
+                new NeighPageController(null, null, null),
                 new RatingListController(null, null, null),
                 new RatingSummaryController(null, null, null),
                 new NeighborhoodActionController(null),
@@ -240,7 +287,7 @@ namespace FSO.Client
 
         public void InitializeArchive()
         {
-            ChangeState<TransitionScreen, ConnectArchiveController>((view, controller) =>
+            ChangeState<TransitionScreenWithUpdate, ConnectArchiveController>((view, controller) =>
             {
                 controller.Initialize();
                 DiscordRpcEngine.SendFSOPresence("In Archive Mode");
@@ -318,7 +365,7 @@ namespace FSO.Client
 
         public void GotoCAS(bool archive = false){
             ChangeState<PersonSelectionEdit, PersonSelectionEditController>((view, controller) => {
-                controller.Archive = true;
+                controller.Archive = archive;
             });
         }
 
@@ -338,12 +385,20 @@ namespace FSO.Client
             });
         }
 
+        private bool InCity => CurrentController is CoreGameScreenController ||
+            CurrentController is ConnectCASController ||
+            CurrentController is ConnectCityController ||
+            CurrentController is PersonSelectionEditController;
+
         public void Disconnect()
         {
-            Disconnect(false);
+            Disconnect(!InCity);
         }
 
-        public void Disconnect(bool toLogin){
+        public void Disconnect(bool toLogin)
+        {
+            DiscordRpcEngine.Secret = null;
+            FatalAlertPriority = 0;
             ChangeState<TransitionScreen, DisconnectController>((view, controller) =>
             {
                 controller.Disconnect((forceLogin) => HandleDisconnect(forceLogin || toLogin), toLogin);
@@ -367,19 +422,51 @@ namespace FSO.Client
             FatalError(title, desc);
         }
 
+        public void FatalErrorMessage(AnnouncementMsgPDU pdu)
+        {
+            var sender = pdu.SenderID.Length > 2 ? pdu.SenderID.Substring(2) : "";
+
+            if (sender.StartsWith("cst:"))
+            {
+                var cstId = sender.Substring(4);
+                if (int.TryParse(cstId, out int cstNum)) {
+
+                    var title = GameFacade.Strings.GetString("f128", cstNum.ToString());
+                    var desc = GameFacade.Strings.GetString("f128", (cstNum + 1).ToString());
+                    FatalError(title, desc, 1);
+                    return;
+                }
+            }
+            else
+            {
+                FatalError(pdu.Subject, pdu.Message, 1);
+            }
+        }
+
         /// <summary>
         /// When something goes very wrong, e.g. the server connection drops
         /// This method should be used. The game controller will tell the user
         /// and then work to clean everything up
         /// </summary>
-        public void FatalError(string errorTitle, string errorMessage){
+        public void FatalError(string errorTitle, string errorMessage, int alertPriority = 0){
             if (ShutdownDialog != null)
             {
                 // If the game is shutting down, don't show any errors.
                 return;
             }
 
-            var alert = UIScreen.GlobalShowAlert(new UI.Controls.UIAlertOptions {
+            if (alertPriority < FatalAlertPriority && FatalAlert?.Parent == UIScreen.Current)
+            {
+                return;
+            }
+
+            if (FatalAlert != null)
+            {
+                UIScreen.RemoveDialog(FatalAlert);
+            }
+
+            FatalAlertPriority = alertPriority;
+            FatalAlert = UIScreen.GlobalShowAlert(new UI.Controls.UIAlertOptions {
                 Message = errorMessage,
                 Title = errorTitle,
                 Buttons = UIAlertButton.Ok(x => Disconnect())
@@ -436,21 +523,44 @@ namespace FSO.Client
             });
         }
 
+        private void ChangeState<TView>(Callback<TView> onCreated) where TView : UIScreen
+        {
+            Binding.DisposeAll();
+            GameThread.InUpdate(() =>
+            {
+                GameFacade.Cursor.SetCursor(Common.Rendering.Framework.CursorType.Normal); //reset cursor
+                if (CurrentController != null)
+                {
+                    if (CurrentController is IDisposable)
+                    {
+                        ((IDisposable)CurrentController).Dispose();
+                    }
+                }
+
+                var view = (UIScreen)Kernel.Get<TView>();
+                GameFacade.Screens.RemoveCurrent();
+                GameFacade.Screens.AddScreen(view);
+
+                CurrentController = null;
+                CurrentView = view;
+
+                onCreated((TView)view);
+            });
+        }
+
         public void EnterSandboxMode(string lotName, bool external)
         {
-            var screen = new SandboxGameScreen();
-            GameFacade.Screens.RemoveCurrent();
-            GameFacade.Screens.AddScreen(screen);
-            screen.Initialize(lotName, external);
-            DiscordRpcEngine.SendFSOPresence("Playing Sandbox Mode");
+            ChangeState<SandboxGameScreen, SandboxGameScreenController>((screen, controller) =>
+            {
+                screen.Initialize(lotName, external);
+                DiscordRpcEngine.SendFSOPresence("Playing Sandbox Mode");
+            });
         }
 
         public void ShowCredits()
         {
             var screen = Kernel.Get<Credits>();
-            GameFacade.Screens.RemoveCurrent();
-            GameFacade.Screens.AddScreen(screen);
-            DiscordRpcEngine.SendFSOPresence("Viewing Credits");
+            UIScreen.GlobalShowDialog(screen, true);
         }
 
         public void RegisterServer(EmbeddedServer server)
@@ -475,6 +585,38 @@ namespace FSO.Client
             return true;
         }
 
+        public bool HasServer()
+        {
+            return Server != null;
+        }
+
+        public void CloseServer(Action callback)
+        {
+            if (Server != null)
+            {
+                if (ShutdownDialog == null)
+                {
+                    ShutdownDialog = new UIArchiveServerStatusDialog(false, Server, () => {
+                        UIScreen.RemoveDialog(ShutdownDialog);
+                        ShutdownDialog = null;
+                        Server = null; 
+                        callback();
+                    });
+
+                    UIScreen.GlobalShowDialog(ShutdownDialog, true);
+
+                    return;
+                }
+            }
+
+            callback();
+        }
+
+        public ArchiveConfiguration GetServerConfig()
+        {
+            return Server?.Config;
+        }
+
         public void StartDebugTools()
         {
 			/*
@@ -497,6 +639,23 @@ namespace FSO.Client
             debugWindow.Show();
 			*/
             //debugWindow.PositionAroundGame(GameFacade.Game.Window);
+        }
+
+        private void DragDrop(string path)
+        {
+            var current = UIScreen.Current;
+            if (current is SandboxGameScreen || current is LoginScreen)
+            {
+                if (UIScreen.Current is SandboxGameScreen)
+                {
+                    var sand = (SandboxGameScreen)UIScreen.Current;
+                    sand.Initialize(path, false);
+                }
+                else
+                {
+                    FSOFacade.Controller.EnterSandboxMode(path, false);
+                }
+            }
         }
     }
 

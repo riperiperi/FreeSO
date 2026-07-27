@@ -1,27 +1,39 @@
 ﻿using FSO.Client.Controllers;
 using FSO.Client.Model.Archive;
+using FSO.Client.UI.Archive.Management;
 using FSO.Client.UI.Controls;
 using FSO.Client.UI.Framework;
-using FSO.Client.UI.Panels;
 using FSO.Client.Utils;
 using FSO.Common;
-using FSO.Common.Rendering.Framework.Model;
 using FSO.Common.Utils;
-using FSO.Server.Servers.Lot.Domain;
+using FSO.Server.Embedded;
 using FSO.UI.Controls;
 using Microsoft.Xna.Framework;
 using Microsoft.Xna.Framework.Graphics;
-using System;
-using System.Collections.Generic;
-using System.IO;
-using System.IO.Compression;
-using System.Linq;
-using System.Threading.Tasks;
 
 namespace FSO.Client.UI.Archive
 {
     internal class UIArchiveCreateServer : UIDialog
     {
+        private const int CITY_IMAGE_WIDTH = 148;
+        private const int CITY_IMAGE_HEIGHT = 112;
+        private const int CITY_IMAGE_RADIUS = 8;
+        private const int CITY_IMAGE_MARGIN = 4;
+
+        private struct ServerSubFlag
+        {
+            public ArchiveConfigFlags Value;
+            public string Caption;
+            public UIButton FlagCheck;
+            public UILabel Label;
+
+            public ServerSubFlag(ArchiveConfigFlags value, string caption)
+            {
+                Value = value;
+                Caption = caption;
+            }
+        }
+
         private struct ServerFlag
         {
             public ArchiveConfigFlags Value;
@@ -30,8 +42,9 @@ namespace FSO.Client.UI.Archive
             public int Indentation;
             public Action HelpAction;
             public UIButton FlagCheck;
+            public ServerSubFlag[] SubFlags;
 
-            public ServerFlag(ArchiveConfigFlags value, string caption, bool defaultValue, int indentation = 0, Action helpAction = null)
+            public ServerFlag(ArchiveConfigFlags value, string caption, bool defaultValue, int indentation = 0, Action helpAction = null, ServerSubFlag[] subFlags = null)
             {
                 Value = value;
                 Caption = caption;
@@ -39,35 +52,44 @@ namespace FSO.Client.UI.Archive
                 Indentation = indentation;
                 HelpAction = helpAction;
                 FlagCheck = null;
+                SubFlags = subFlags;
             }
         }
 
-        private ServerFlag[] Flags = new ServerFlag[]
-        {
+        private ServerFlag[] Flags =
+        [
             new ServerFlag(ArchiveConfigFlags.Offline, "Offline mode", false),
             new ServerFlag(ArchiveConfigFlags.UPnP, "Use UPnP", true, 0, UPnPHelp),
-            new ServerFlag(ArchiveConfigFlags.HideNames, "Hide display names", false),
             new ServerFlag(ArchiveConfigFlags.Verification, "Require user verification", false, 0, VerificationHelp),
+            new ServerFlag(ArchiveConfigFlags.CityEditor, "City editor", false, 0, CityEditorHelp, [new ServerSubFlag(ArchiveConfigFlags.CityEditorMods, "Mods"), new ServerSubFlag(ArchiveConfigFlags.CityEditorAllUsers, "All users")]),
             default, // Gap (flag value is 0)
-            new ServerFlag(ArchiveConfigFlags.AllOpenable, "All lots openable", true, 0, AllOpenableHelp),
-            new ServerFlag(ArchiveConfigFlags.DebugFeatures, "All-player debug mode", false, 0, DebugModeHelp),
-            //new ServerFlag(ArchiveConfigFlags.None, "Skill/money speed scale", false),
+            new ServerFlag(ArchiveConfigFlags.AllOpenable, "Free roam", true, 0, AllOpenableHelp),
+            new ServerFlag(ArchiveConfigFlags.DebugFeatures, "Debug interactions", true, 0, DebugModeHelp, [new ServerSubFlag(ArchiveConfigFlags.DebugFeaturesMods, "Mods"), new ServerSubFlag(ArchiveConfigFlags.DebugFeaturesAllUsers, "All users")]),
             new ServerFlag(ArchiveConfigFlags.AllowLotCreation, "Allow lot creation", true),
             new ServerFlag(ArchiveConfigFlags.AllowSimCreation, "Allow character creation", true),
             new ServerFlag(ArchiveConfigFlags.LockArchivedSims, "Lock archived characters", false, 1, ArchivedCharacterHelp),
-        };
+            new ServerFlag(ArchiveConfigFlags.HideNames, "Hide display names", false),
+        ];
 
+        private UIArchiveDisplayName DisplayName;
+        private UIButton ExportButton;
         private UIButton UsersButton;
         private UIButton CustomPortsButton;
+        private UIButton EventsButton;
+        private UIButton CheatsButton;
         private UIButton StartButton;
         private UITextBox NameInput;
         private ArchiveConfiguration Config;
         private Texture2D HelpButtonTexture = GetTexture(0x0000034200000001);
+        private UIImage CityImage;
 
         private UICombobox SaveCombo;
 
         public UIArchiveCreateServer() : base(UIDialogStyle.Close, true)
         {
+            var gd = GameFacade.GraphicsDevice;
+            var custom = Content.Content.Get().CustomUI;
+
             var clientConfig = ClientArchiveConfiguration.Default;
             Config = clientConfig.ToHostConfig();
 
@@ -75,31 +97,50 @@ namespace FSO.Client.UI.Archive
 
             var vbox = new UIVBoxContainer();
 
-            vbox.Add(new UILabel()
+            var headHbox = new UIHBoxContainer() { VerticalAlignment = UIContainerVerticalAlignment.Middle, Spacing = 10 };
+
+            var imageBg = new UIImage(custom.Get("archive_translist.png").Get(gd)).With9Slice(13, 13, 13, 13);
+            imageBg.SetSize(CITY_IMAGE_WIDTH + CITY_IMAGE_MARGIN * 2, CITY_IMAGE_HEIGHT + CITY_IMAGE_MARGIN * 2);
+            headHbox.Add(imageBg);
+
+            var saveVbox = new UIVBoxContainer()
             {
-                Caption = "Save File:"
-            });
+                Spacing = 0
+            };
+
+            saveVbox.Add(DisplayName = new UIArchiveDisplayName());
+            saveVbox.Add(new UISpacer(8));
 
             SaveCombo = new UICombobox()
             {
-                Width = 200
+                Width = 160
             };
+            SaveCombo.OnSelect += UpdateSelectedSave;
 
-            vbox.Add(SaveCombo);
+            saveVbox.Add(SaveCombo);
+            saveVbox.Add(new UISpacer(5));
 
             PopulateSaves();
             SelectSaveByName(clientConfig.SelectedArchiveName);
 
-            vbox.Add(new UILabel()
+            saveVbox.Add(new UILabel()
             {
-                Caption = "Display name:"
+                Caption = "Server name:"
+            });
+            saveVbox.Add(new UISpacer(2));
+
+            saveVbox.Add(NameInput = new UITextBox()
+            {
+                Size = new Microsoft.Xna.Framework.Vector2(160, 25),
+                CurrentText = clientConfig.GetServerNameOrDefault(),
             });
 
-            vbox.Add(NameInput = new UITextBox()
-            {
-                Size = new Microsoft.Xna.Framework.Vector2(150, 25),
-                CurrentText = clientConfig.PlayerName,
-            });
+            saveVbox.AutoSize();
+
+            headHbox.Add(saveVbox);
+
+            headHbox.AutoSize();
+            vbox.Add(headHbox);
 
             var flagsVbox = new UIVBoxContainer();
 
@@ -142,6 +183,40 @@ namespace FSO.Client.UI.Archive
                         flagHbox.Add(helpBtn);
                     }
 
+                    if (flag.SubFlags != null)
+                    {
+                        for (int j = 0; j < flag.SubFlags.Length; j++)
+                        {
+                            flagHbox.Add(new UISpacer(0));
+
+                            ref var sub = ref flag.SubFlags[j];
+
+                            var subcheck = new UIButton(GetTexture(0x0000083600000001))
+                            {
+                                Visible = check.Selected,
+                                Selected = Config.Flags.HasFlag(sub.Value)
+                            };
+                            sub.FlagCheck = subcheck;
+
+                            flagHbox.Add(subcheck);
+                            var subvalue = sub.Value;
+
+                            subcheck.OnButtonClick += (elem) =>
+                            {
+                                ToggleFlag(subvalue);
+                            };
+
+                            var label = new UILabel()
+                            {
+                                Caption = sub.Caption,
+                                Visible = check.Selected,
+                            };
+
+                            flagHbox.Add(label);
+                            sub.Label = label;
+                        }
+                    }
+
                     flagHbox.AutoSize();
 
                     flagsVbox.Add(flagHbox);
@@ -152,23 +227,42 @@ namespace FSO.Client.UI.Archive
                 }
             }
 
+            vbox.Add(new UISpacer(5));
+
             flagsVbox.AutoSize();
 
             vbox.Add(flagsVbox);
 
-            var actionsHbox = new UIHBoxContainer();
+            vbox.Add(new UISpacer(10));
 
-            actionsHbox.Add(UsersButton = new UIButton()
+            var actionsHbox = new UIHBoxContainer() { Spacing = 10 };
+
+            actionsHbox.Add(ExportButton = new UIButton(custom.Get("archive_configexport.png").Get(gd))
             {
-                Caption = "Users"
+                Tooltip = "Export Config"
             });
 
-            actionsHbox.Add(CustomPortsButton = new UIButton()
+            actionsHbox.Add(UsersButton = new UIButton(custom.Get("archive_configusers.png").Get(gd))
             {
-                Caption = "Custom Ports"
+                Tooltip = "Users"
             });
 
-            actionsHbox.Add(StartButton = new UIButton()
+            actionsHbox.Add(CustomPortsButton = new UIButton(custom.Get("archive_configports.png").Get(gd))
+            {
+                Tooltip = "Ports"
+            });
+
+            actionsHbox.Add(EventsButton = new UIButton(custom.Get("archive_configevents.png").Get(gd))
+            {
+                Tooltip = "Events"
+            });
+
+            actionsHbox.Add(CheatsButton = new UIButton(custom.Get("archive_configcheats.png").Get(gd))
+            {
+                Tooltip = "Cheats"
+            });
+
+            Add(StartButton = new UIButton()
             {
                 Caption = "Start"
             });
@@ -179,21 +273,179 @@ namespace FSO.Client.UI.Archive
             vbox.AutoSize();
             vbox.Position = new Vector2(20, 45);
 
+            // Manually position the start button at the bottom right of the box.
+
+            StartButton.Position = vbox.Position + vbox.Size - StartButton.Size + new Vector2(0, 5);
+
             // (hack) Move to end so it draws on top.
-            vbox.Remove(SaveCombo);
-            vbox.Add(SaveCombo);
+            saveVbox.Remove(SaveCombo);
+            saveVbox.Add(SaveCombo);
+
+            vbox.Remove(headHbox);
+            vbox.Add(headHbox);
+
+            // Added after auto sizing, since it floats on top.
+            headHbox.Add(CityImage = new UIImage()
+            {
+                Position = imageBg.Position + new Vector2(CITY_IMAGE_MARGIN),
+                Size = new Vector2(CITY_IMAGE_WIDTH, CITY_IMAGE_HEIGHT),
+            });
+
+            UpdateSelectedSave(SaveCombo);
 
             SetSize((int)vbox.Size.X + 40, (int)vbox.Size.Y + 70);
-            Add(vbox);
+            DynamicOverlay.Add(vbox);
 
             NameInput.OnChange += ValidateInputs;
             CustomPortsButton.OnButtonClick += ChangePorts;
+            EventsButton.OnButtonClick += EditEvents;
+            CheatsButton.OnButtonClick += Cheats;
             StartButton.OnButtonClick += Start;
             CloseButton.OnButtonClick += Close;
+            ExportButton.OnButtonClick += Export;
+            UsersButton.OnButtonClick += Users;
+            DisplayName.OnChange += DisplayNameChanged;
 
             ValidateInputs(NameInput);
 
             UpdateButtons();
+        }
+
+        private void DisplayNameChanged(string newName)
+        {
+            var clientConfig = ClientArchiveConfiguration.Default;
+            var defaultName = clientConfig.GetDefaultServerName();
+
+            if (NameInput.CurrentText == defaultName)
+            {
+                clientConfig.PlayerName = newName;
+                NameInput.CurrentText = clientConfig.GetDefaultServerName();
+            }
+        }
+
+        private void Cheats(UIElement button)
+        {
+            var selected = SaveCombo.SelectedItem as ArchiveManifest;
+
+            var factory = new ArchiveServerFactory(Config, null);
+            factory.Prepare(selected, (success) =>
+            {
+                if (success)
+                {
+                    UIScreen.GlobalShowDialog(new UIArchiveGameplayScale(Config), true);
+                }
+            });
+        }
+
+        private void NewFromTemplate(ArchiveManifest template)
+        {
+            var cityPicker = new UIArchiveCitySelector(template);
+            cityPicker.OnResult += (ArchiveManifest manifest) =>
+            {
+                SaveCombo.SelectedIndex = -1;
+                PopulateSaves();
+
+                int index = -1;
+                if (manifest != null)
+                {
+                    index = SaveCombo.Items.FindIndex(x => ((ArchiveManifest)x.Value).ActivePath == manifest.ActivePath);
+                }
+
+                if (index == -1)
+                {
+                    var clientConfig = ClientArchiveConfiguration.Default;
+                    SelectSaveByName(clientConfig.SelectedArchiveName);
+                }
+                else
+                {
+                    SaveCombo.SelectedIndex = index;
+                }
+            };
+
+            UIScreen.ShowDialog(cityPicker, true);
+        }
+
+        private void UpdateSelectedSave(object obj)
+        {
+            if (CityImage == null)
+            {
+                return;
+            }
+
+            if (CityImage.Texture != null)
+            {
+                CityImage.Texture.Dispose();
+            }
+
+            if (SaveCombo.SelectedIndex == -1)
+            {
+                CityImage.Texture = null;
+                return;
+            }
+
+            var selected = SaveCombo.SelectedItem as ArchiveManifest;
+
+            if (selected.Template)
+            {
+                NewFromTemplate(selected);
+            }
+
+            // Load the city image.
+
+            string map = selected.Map;
+
+            var fsoMap = int.Parse(map) >= 100;
+
+            try
+            {
+                var cityThumb = (fsoMap) ?
+                Path.Combine(FSOEnvironment.ContentDir, "Cities/city_" + map + "/thumbnail.png")
+                : GameFacade.GameFilePath("cities/city_" + map + "/thumbnail.bmp");
+
+                //Take a copy so we dont change the original when we alpha mask it
+                Texture2D cityThumbTex = TextureUtils.Resize(GameFacade.GraphicsDevice, TextureUtils.TextureFromFile(
+                   GameFacade.GraphicsDevice, cityThumb), CITY_IMAGE_WIDTH, CITY_IMAGE_HEIGHT);
+
+                var mask = TextureGenerator.GenerateRoundedRectangle(GameFacade.GraphicsDevice, Color.White, CITY_IMAGE_WIDTH, CITY_IMAGE_HEIGHT, CITY_IMAGE_RADIUS);
+                TextureUtils.CopyAlpha(ref cityThumbTex, mask);
+
+                mask.Dispose();
+
+                CityImage.Texture = cityThumbTex;
+            }
+            catch
+            {
+                CityImage.Texture = null;
+                return;
+            }
+        }
+
+        private void EditEvents(UIElement button)
+        {
+            var selected = SaveCombo.SelectedItem as ArchiveManifest;
+
+            var factory = new ArchiveServerFactory(Config, null);
+            factory.Prepare(selected, (success) =>
+            {
+                if (success)
+                {
+                    UIScreen.GlobalShowDialog(new UIArchiveEventsDialog(factory.GetConfig()), true);
+                }
+            });
+        }
+
+        private void Users(UIElement button)
+        {
+            var selected = SaveCombo.SelectedItem as ArchiveManifest;
+
+            var factory = new ArchiveServerFactory(Config, null);
+            factory.Prepare(selected, (success) =>
+            {
+                if (success)
+                {
+                    UIScreen.GlobalShowDialog(new UIArchiveUserManageDialog(new ArchiveManagement(factory.GetConfig())), true);
+                }
+            });
         }
 
         private void SelectSaveByName(string name)
@@ -220,40 +472,18 @@ namespace FSO.Client.UI.Archive
             UIScreen.GlobalShowDialog(portDialog, true);
         }
 
-        private List<ArchiveManifest> ListManifests()
+        private void Export(UIElement button)
         {
-            string[] dirs = Directory.GetDirectories(Path.Combine(FSOEnvironment.ContentDir, "ArchiveCities"));
-
-            var manifests = new List<ArchiveManifest>();
-
-            foreach (string dir in dirs)
-            {
-                if (File.Exists(Path.Combine(dir, "archive.ini")))
-                {
-                    try
-                    {
-                        var manifest = new ArchiveManifest(Path.Combine(dir, "archive.ini"));
-
-                        if (manifest.LocalDir != "" || manifest.ZipLocation != "")
-                        {
-                            manifests.Add(manifest);
-                        }
-                    }
-                    catch (Exception)
-                    {
-                        // Just ignore it.
-                    }
-                }
-            }
-
-            return manifests;
+            var selected = SaveCombo.SelectedItem as ArchiveManifest;
+            UIScreen.GlobalShowDialog(new UIArchiveConfigExportDialog(Config, selected), true);
         }
 
         private void PopulateSaves()
         {
-            var manifests = ListManifests();
+            var manifests = ArchiveSaves.ListManifests();
+            var templates = ArchiveSaves.ListManifests(true);
 
-            SaveCombo.Items = manifests.Select(x => new UIComboboxItem() { Name = x.Name, Value = x }).ToList();
+            SaveCombo.Items = [.. manifests.Select(x => new UIComboboxItem() { Name = x.Name, Value = x }), .. templates.Select(x => new UIComboboxItem() { Name = x.Name, Value = x }),];
 
             SaveCombo.SelectedIndex = manifests.Count > 0 ? 0 : -1;
         }
@@ -276,7 +506,7 @@ namespace FSO.Client.UI.Archive
         private void UpdateButtons()
         {
             CustomPortsButton.Disabled = Config.Flags.HasFlag(ArchiveConfigFlags.UPnP);
-            CustomPortsButton.Tooltip = CustomPortsButton.Disabled ? GameFacade.Strings.GetString("f128", "18") : null;
+            CustomPortsButton.Tooltip = CustomPortsButton.Disabled ? GameFacade.Strings.GetString("f128", "18") : "Ports";
         }
 
         private void ToggleFlag(ArchiveConfigFlags flag)
@@ -285,9 +515,27 @@ namespace FSO.Client.UI.Archive
 
             foreach (var item in Flags)
             {
+                bool selected = (item.Value & Config.Flags) != 0;
                 if (item.FlagCheck != null)
                 {
-                    item.FlagCheck.Selected = (item.Value & Config.Flags) != 0;
+                    item.FlagCheck.Selected = selected;
+                }
+
+                if (item.SubFlags != null)
+                {
+                    foreach (var sub in item.SubFlags)
+                    {
+                        if (sub.FlagCheck != null)
+                        {
+                            sub.FlagCheck.Visible = selected;
+                            sub.FlagCheck.Selected = (sub.Value & Config.Flags) != 0;
+                        }
+
+                        if (sub.Label != null)
+                        {
+                            sub.Label.Visible = selected;
+                        }
+                    }
                 }
             }
 
@@ -305,144 +553,6 @@ namespace FSO.Client.UI.Archive
             StartButton.Disabled = NameInput.CurrentText.Length == 0;
         }
 
-        private bool ValidateData(ArchiveManifest manifest, out string dir)
-        {
-            // Database should exist, Data directory should exist.
-            // Doesn't validate that they make any sense right now...
-
-            var dataFolder = manifest.LocalDir;
-
-            dir = null;
-
-            if (dataFolder == null || dataFolder == "")
-            {
-                // Try the data/ subfolder.
-
-                dataFolder = Path.Combine(Path.GetDirectoryName(manifest.ActivePath), "data");
-            }
-
-            if (dataFolder == null || !Directory.Exists(dataFolder))
-            {
-                return false;
-            }
-
-            dir = dataFolder;
-
-            var dbFile = Path.Combine(dataFolder, "fsoarchive.db");
-
-            return File.Exists(dbFile);
-        }
-
-        private bool ZipDataPresent(ArchiveManifest manifest, out string path)
-        {
-            var folder = Path.GetDirectoryName(manifest.ActivePath);
-
-            path = Path.Combine(folder, "archive.zip");
-
-            try
-            {
-                using (var file = ZipFile.OpenRead(path))
-                {
-
-                }
-            }
-            catch
-            {
-                return false;
-            }
-
-            // TODO: validate hash?
-
-            return File.Exists(path);
-        }
-
-        private void ExtractArchive(ArchiveManifest manifest, string path)
-        {
-            string extractPath = Path.Combine(Path.GetDirectoryName(manifest.ActivePath), "data/");
-            var extractor = new UIZipExtractDialog(null, path, extractPath);
-
-            extractor.OnComplete += (result) =>
-            {
-                UIScreen.RemoveDialog(extractor);
-
-                manifest.LocalDir = extractPath;
-                manifest.Save();
-
-                Config.ArchiveDataDirectory = extractPath;
-                StartWithConfig();
-            };
-
-            extractor.Start();
-            UIScreen.GlobalShowDialog(extractor, true);
-        }
-
-        private void RequestDownload(ArchiveManifest manifest)
-        {
-            var basePath = Path.GetDirectoryName(manifest.ActivePath);
-            var downloadPath = Path.Combine(basePath, "archive.zip");
-
-            Uri uri;
-            try
-            {
-                uri = new Uri(manifest.ZipLocation);
-            }
-            catch
-            {
-                Visible = true;
-                return;
-            }
-
-            var size = $"{int.Parse(manifest.Size) / (1024f * 1024f)} MB";
-
-            UIAlert alert = null;
-
-            alert = UIScreen.GlobalShowAlert(new UIAlertOptions
-            {
-                Title = GameFacade.Strings.GetString("f128", "1"),
-                Message = GameFacade.Strings.GetString("f128", "2", new string[] { manifest.Name, uri.Host, size }),
-                Width = 500,
-                Buttons = UIAlertButton.YesNo(x =>
-                {
-                    UIScreen.RemoveDialog(alert);
-                    var downloader = new UIWebDownloaderDialog(GameFacade.Strings.GetString("f128", "5"), new DownloadItem[]
-                    {
-                        new DownloadItem {
-                            Url = manifest.ZipLocation,
-                            DestPath = downloadPath,
-                            Name = manifest.Name
-                        }
-                    });
-                    downloader.OnComplete += (bool success) => {
-                        UIScreen.RemoveDialog(downloader);
-
-                        if (success && ZipDataPresent(manifest, out string _))
-                        {
-                            ExtractArchive(manifest, downloadPath);
-                        }
-                        else
-                        {
-                            Visible = true;
-                            UIScreen.GlobalShowAlert(new UIAlertOptions
-                            {
-                                Title = GameFacade.Strings.GetString("f128", "10"),
-                                Message = GameFacade.Strings.GetString("f128", "11"),
-                                Buttons = UIAlertButton.Ok()
-                            }, true);
-                        }
-                    };
-                    GameThread.NextUpdate(y => UIScreen.GlobalShowDialog(downloader, true));
-                },
-                x =>
-                {
-                    GameThread.NextUpdate(state =>
-                    {
-                        UIScreen.RemoveDialog(alert);
-                        Visible = true;
-                    });
-                })
-            }, true);
-        }
-
         private void Start(Framework.UIElement button)
         {
             SaveConfig();
@@ -450,52 +560,15 @@ namespace FSO.Client.UI.Archive
             Visible = false;
             var selected = SaveCombo.SelectedItem as ArchiveManifest;
 
-            if (ValidateData(selected, out string dir))
+            var factory = new ArchiveServerFactory(Config, FindController<ConnectArchiveController>());
+
+            factory.Start(selected, (bool success) =>
             {
-                Config.ArchiveDataDirectory = dir;
-                StartWithConfig();
-            }
-            else
-            {
-                if (ZipDataPresent(selected, out string zipPath))
+                if (!success)
                 {
-                    ExtractArchive(selected, zipPath);
+                    Visible = true;
                 }
-                else
-                {
-                    // Don't have anything - need to ask the user to download.
-
-                    RequestDownload(selected);
-                }
-            }
-        }
-
-        private async Task<bool> TryUPnP()
-        {
-            var cityNat = new NatPuncher("FreeSO Archive City Server");
-
-            var cityResult = await cityNat.NatPunch(33101, 1, 10);
-
-            if (cityResult == 0 || cityResult == ushort.MaxValue)
-            {
-                return false;
-            }
-
-            var lotNat = new NatPuncher("FreeSO Archive Lot Server", cityNat);
-
-            var lotResult = await lotNat.NatPunch(34101, 1, 10);
-
-            if (lotResult == 0 || lotResult == ushort.MaxValue)
-            {
-                cityNat.Dispose();
-                return false;
-            }
-
-            Config.CityPort = cityResult;
-            Config.LotPort = lotResult;
-            Config.Disposables = new IDisposable[] { cityNat, lotNat };
-
-            return true;
+            });
         }
 
         private void SaveConfig()
@@ -503,47 +576,13 @@ namespace FSO.Client.UI.Archive
             var clientConfig = ClientArchiveConfiguration.Default;
             var selected = SaveCombo.SelectedItem as ArchiveManifest;
 
+            var defaultName = clientConfig.GetDefaultServerName();
+            clientConfig.ServerName = defaultName == NameInput.CurrentText ? "" : NameInput.CurrentText;
+            Config.Name = clientConfig.GetServerNameOrDefault();
+
             clientConfig.ApplyHostConfig(Config);
-            clientConfig.PlayerName = NameInput.CurrentText;
             clientConfig.SelectedArchiveName = selected?.Name ?? "";
             clientConfig.Save();
-        }
-
-        private void StartWithConfig()
-        {
-            if (Config.Flags.HasFlag(ArchiveConfigFlags.UPnP))
-            {
-                var alert = UIScreen.GlobalShowAlert(new UIAlertOptions
-                {
-                    Title = GameFacade.Strings.GetString("f128", "14"),
-                    Message = GameFacade.Strings.GetString("f128", "15"),
-                    Buttons = new UIAlertButton[0]
-                }, true);
-
-                Task.Run(TryUPnP).ContinueWith(x =>
-                {
-                    bool result = x.Result;
-
-                    GameThread.NextUpdate(state =>
-                    {
-                        UIScreen.RemoveDialog(alert);
-                        if (result)
-                        {
-                            FindController<ConnectArchiveController>().CreateServer(Config);
-                        }
-                        else
-                        {
-                            // UPnP failed. Get the user to disable it.
-                            Visible = true;
-                            UIAlert.Alert(GameFacade.Strings.GetString("f128", "16"), GameFacade.Strings.GetString("f128", "17"), true);
-                        }
-                    });
-                });
-            }
-            else
-            {
-                FindController<ConnectArchiveController>().CreateServer(Config);
-            }
         }
 
         public static void UPnPHelp()
@@ -553,12 +592,12 @@ namespace FSO.Client.UI.Archive
 
         public static void AllOpenableHelp()
         {
-            UIAlert.Alert("All lots openable", "The original game server only allowed offline lots to be opened by their owner or roommates. When this option is set to true, any player can open any lot, as long as they are allowed to enter.", true);
+            UIAlert.Alert("Free roam", "The original game server only allowed offline lots to be opened by their owner or roommates, and empty lots couldn't be joined at all. When this option is set to true, any player can join any tile on the map.\n\nThis option will also allow players to travel seamlessly between properties by clicking on adjacent lots, or walking over the property boundary in direct control mode. Any sims present on adjacent lots also become visible.", true);
         }
 
         public static void DebugModeHelp()
         {
-            UIAlert.Alert("All-player debug mode", "The archive server gives admins the ability to spawn debug objects and use debug interactions. When this option is set to true, anyone can use in-lot debug features regardless of permissions.", true);
+            UIAlert.Alert("Debug interactions", "When enabled, the archive server gives admins the ability to spawn all debug objects from build mode and use debug interactions. These objects/interactions allow users to cheat money/skill, but can potentially cause object errors crash the game. If you want a 'safe' selection of debug objects for all players, you can enable the 'debug' catalog in the events configuration. \nThese interactions can optionally be enabled for moderators and all other users.", true);
         }
 
         public static void ArchivedCharacterHelp()
@@ -569,6 +608,10 @@ namespace FSO.Client.UI.Archive
         public static void VerificationHelp()
         {
             UIAlert.Alert("User verification", "Without user verification, any user with the server IP can connect and join the city - authentication is automatic. Users can be banned by client and IP, but new users are always given the benefit of the doubt. \n\nWhen this option is enabled, new users will require verification from an admin or mod before they can interact with the game server. You can verify users from the User List ingame, which appears at the bottom left in the UCP. The button will start flashing if there are any pending verifications.", true);
+        }
+        public static void CityEditorHelp()
+        {
+            UIAlert.Alert("City editor", GameFacade.Strings.GetString("f128", "121"), true);
         }
     }
 }

@@ -87,7 +87,7 @@ namespace FSO.Client.UI.Screens
                             Message = GameFacade.Strings.GetString("f101", "20", new string[] { message }),
                             Buttons = UIAlertButton.Ok(y =>
                             {
-                                RestartGame();
+                                FSOFacade.RestartGame();
                             })
                         }, true);
                     }
@@ -108,41 +108,11 @@ namespace FSO.Client.UI.Screens
                         Message = GameFacade.Strings.GetString("f101", "13"),
                         Buttons = UIAlertButton.Ok(y =>
                         {
-                            RestartGame();
+                            FSOFacade.RestartGame();
                         })
                     }, true);
                 });
             });
-        }
-
-        public void RestartGame()
-        {
-            try
-            {
-                if (FSOEnvironment.Linux)
-                {
-                    System.Diagnostics.Process.Start("mono", "FreeSO.exe " + FSOEnvironment.Args);
-                }
-                else
-                {
-                    var args = new ProcessStartInfo(".\\FreeSO.exe", FSOEnvironment.Args);
-                    try
-                    {
-
-                        System.Diagnostics.Process.Start(args);
-                    }
-                    catch (Exception)
-                    {
-                        args.FileName = "FreeSO.exe";
-                        System.Diagnostics.Process.Start(args);
-                    }
-                }
-            } catch
-            {
-
-            }
-
-            GameFacade.Kill();
         }
     }
 }

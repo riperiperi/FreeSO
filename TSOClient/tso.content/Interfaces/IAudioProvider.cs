@@ -42,6 +42,12 @@ namespace FSO.Content.Interfaces
         /// <returns>A Patch instance.</returns>
         Patch GetPatch(uint id, HITResourceGroup group);
 
+        /// <summary>
+        /// Gets an FSC (ambient sound) sequence for the given path.
+        /// </summary>
+        /// <param name="path">The path to the FSC</param>
+        /// <returns>An FSC instance.</returns>
+        FSC GetFSC(string path);
 
         /// <summary>
         /// A dictionary of sound events for the HIT VM to call upon. Should be generated when content initializes.

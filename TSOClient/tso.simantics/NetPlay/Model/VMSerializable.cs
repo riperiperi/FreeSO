@@ -17,7 +17,7 @@ namespace FSO.SimAntics.NetPlay.Model
             var result = new T[size];
             var bytes = MemoryMarshal.Cast<T, byte>(result);
 
-            reader.Read(bytes);
+            reader.BaseStream.ReadExactly(bytes);
 
             return result;
         }

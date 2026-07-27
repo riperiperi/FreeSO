@@ -25,6 +25,7 @@ namespace FSO.LotView.Model
         public bool IsManual => (WeatherData & (1 << 8)) > 0;
         public WeatherType WeatherType => (WeatherType)((WeatherData >> 9) & 3);
         public bool IsThunder => (WeatherData & (1 << 11)) > 0;
+        public ParticleType ParticleType => Current?.Mode ?? ParticleType.GENERIC_BOX;
 
         public float[] ModeToIntensity = new float[]
         {
@@ -163,7 +164,21 @@ namespace FSO.LotView.Model
         }
 
         public void SetWeather(short data) {
+            var oldData = WeatherData;
             WeatherData = data;
+
+            var isManual = IsManual;
+            var wasManual = (oldData & (1 << 8)) != 0;
+
+            if (!isManual && wasManual)
+            {
+                // Remove the manual weather instantly.
+                if (Current != null)
+                {
+                    Current.FadeProgress = 1;
+                    Current = null;
+                }
+            }
         }
 
         private int GetAutoWeatherIntensity(DateTime time)

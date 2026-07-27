@@ -1,33 +1,36 @@
-﻿using FSO.Common.Domain.Shards;
+﻿using FSO.Common;
+using FSO.Common.Domain.Shards;
 using FSO.Server.Common;
 using FSO.Server.Database.DA;
 using FSO.Server.Database.DA.ArchiveUsers;
 using FSO.Server.Database.DA.AvatarClaims;
+using FSO.Server.Database.DA.Bans;
 using FSO.Server.Database.DA.Hosts;
 using FSO.Server.Domain;
 using FSO.Server.Framework;
 using FSO.Server.Framework.Aries;
 using FSO.Server.Framework.Voltron;
 using FSO.Server.Protocol.Aries.Packets;
+using FSO.Server.Protocol.Electron;
 using FSO.Server.Protocol.Electron.Packets;
 using FSO.Server.Protocol.Voltron.Packets;
 using FSO.Server.Servers.City.Domain;
 using FSO.Server.Servers.City.Handlers;
 using FSO.Server.Servers.Shared.Handlers;
+using FSO.Server.Utils;
+using Mina.Core.Session;
 using Ninject;
 using NLog;
-using System;
-using System.Collections.Generic;
-using System.Linq;
 using System.Net;
-using System.Threading;
-using System.Threading.Tasks;
+using System.Security.Cryptography;
+using System.Text;
 
 namespace FSO.Server.Servers.City
 {
     public class CityServer : AbstractAriesServer
     {
         private static Logger LOG = LogManager.GetCurrentClassLogger();
+        private ServerConfiguration RootConfig;
         private CityServerConfiguration Config;
         private ISessionGroup VoltronSessions;
         private CityLivenessEngine Liveness;
@@ -35,22 +38,38 @@ namespace FSO.Server.Servers.City
 
         private string ShardName;
         private string ShardMap;
+        private string VersionJson = FSOVersionInfo.Current.ToJson();
 
         private uint SessionUID;
 
-        protected override RequestClientSessionArchive ArchiveHandshake => new RequestClientSessionArchive()
+        protected override RequestClientSessionArchive ArchiveHandshake(IoSession session)
         {
-            ServerKey = Config.Archive.ServerKey,
-            ArchiveConfig = Config.Archive.Flags,
-            ShardId = (uint)Config.ID,
-            ShardName = ShardName,
-            ShardMap = ShardMap,
-        };
+            if (Config.Archive == null) return null;
 
-        public CityServer(CityServerConfiguration config, IKernel kernel) : base(config, kernel)
+            var nonce = Convert.ToBase64String(RandomNumberGenerator.GetBytes(16));
+
+            session.SetAttribute("ArchiveNonce", nonce);
+
+            return new RequestClientSessionArchive()
+            {
+                Name = RootConfig.Name,
+                PlayerCount = CountPlayers(), // Maybe cache this?
+                VersionInfo = VersionJson,
+
+                ServerKey = Config.Archive.ServerPublicKey.Replace('^','\n'),
+                Nonce = nonce,
+                ArchiveConfig = Config.Archive.Flags,
+                ShardId = (uint)Config.ID,
+                ShardName = ShardName,
+                ShardMap = ShardMap,
+            };
+        }
+
+        public CityServer(ServerConfiguration rootConfig, CityServerConfiguration config, IKernel kernel) : base(config, kernel)
         {
             this.UnexpectedDisconnectWaitSeconds = 30;
             this.TimeoutIfNoAuth = config.Timeout_No_Auth;
+            this.RootConfig = rootConfig;
             this.Config = config;
             VoltronSessions = Sessions.GetOrCreateGroup(Groups.VOLTRON);
         }
@@ -70,6 +89,14 @@ namespace FSO.Server.Servers.City
             if (shard == null)
             {
                 throw new Exception("Unable to find a shard with id " + Config.ID + ", check it exists in the database");
+            }
+
+            if ((Config.Archive?.Flags ?? 0).HasFlag(FSO.Common.ArchiveConfigFlags.CityEditor) && shard.Map != "dynamic")
+            {
+                LOG.Warn("The map for city " + shard.Name + " is not dynamic, but the city editor is enabled. Converting city to dynamic...");
+                ((Shards)shards).MakeDynamic(Config.ID, CoreImageLoader.SavePNG);
+                shard = shards.GetById(Config.ID);
+                LOG.Warn("City " + shard.Name + " has been converted to dynamic.");
             }
 
             ShardName = shard.Name;
@@ -96,8 +123,9 @@ namespace FSO.Server.Servers.City
 
             IDAFactory da = Kernel.Get<IDAFactory>();
             using (var db = da.Get()){
-                var version = ServerVersion.Get();
-                db.Shards.UpdateStatus(shard.Id, Config.Internal_Host, Config.Public_Host, version.Name, version.Number, version.UpdateID);
+                var version = FSOVersionInfo.Current;
+
+                db.Shards.UpdateStatus(shard.Id, Config.Internal_Host, Config.Public_Host, version.channel, version.id, null);
                 ((Shards)shards).Update();
 
                 var oldClaims = db.LotClaims.GetAllByOwner(context.Config.Call_Sign).ToList();
@@ -139,7 +167,46 @@ namespace FSO.Server.Servers.City
 
         private bool ValidDisplayName(string name)
         {
-            return name != null && name.Length > 0 && name.Length < 100;
+            return name != null && name.Length > 0 && name.Length < 64;
+        }
+
+        private RSA TryGetCrypto()
+        {
+            try
+            {
+                var rsa = RSA.Create();
+
+                rsa.ImportFromPem(Config.Archive.ServerKey.Replace('^', '\n'));
+
+                return rsa;
+            }
+            catch (Exception)
+            {
+                return null;
+            }
+        }
+
+        private string TryDecrypt(string enc)
+        {
+            try
+            {
+                var rsa = TryGetCrypto();
+
+                if (rsa == null)
+                {
+                    return null;
+                }
+
+                var encrypted = Convert.FromBase64String(enc);
+
+                var decrypted = rsa.Decrypt(encrypted, RSAEncryptionPadding.Pkcs1);
+
+                return Encoding.UTF8.GetString(decrypted);
+            }
+            catch (Exception)
+            {
+                return null;
+            }
         }
 
         private void HandleArchiveAuth(AriesSession session, RequestClientSessionResponse packet)
@@ -148,23 +215,49 @@ namespace FSO.Server.Servers.City
             {
                 // Archive auth always starts as avatarless, but can be upgraded later
 
-                // Try and find by the provided ID (should be 32 chars)
+                // The "password" should be an encrypted nonce\clientID, base64 encoded. First step is trying to decrypt it.
+                // The note that client ID is different for each server.
 
-                if (packet.Password.Length != 32)
+                var password = TryDecrypt(packet.Password);
+
+                if (password == null)
                 {
-                    // Must be 32 character hash
+                    // Encryption failure.
+                    session.Write(new AnnouncementMsgPDU(true) { SenderID = "??cst:90", Subject = "Encryption Failure", Message = "" });
                     session.Close();
                     return;
                 }
 
-                // TODO: check IP ban
+                var nonceSplit = password.IndexOf('\\');
+                var nonce = nonceSplit == -1 ? null : password.Substring(0, nonceSplit);
+                var expectedNonce = (string)session.GetAttribute("ArchiveNonce");
+                if (expectedNonce == null || nonce != expectedNonce)
+                {
+                    // Nonce did not match (attempted replay?)
+                    session.Write(new AnnouncementMsgPDU(true) { SenderID = "??cst:88", Subject = "Encryption Failure", Message = "" });
+                    session.Close();
+                    return;
+                }
 
-                var user = da.ArchiveUsers.GetByClientHash(packet.Password);
+                var clientId = password.Substring(nonceSplit + 1);
+
+                // Try and find by the provided ID (should be 40 chars)
+
+                if (clientId.Length != 40)
+                {
+                    // Must be 40 character hash
+                    session.Write(new AnnouncementMsgPDU(true) { SenderID = "??cst:86", Subject = "Invalid Client ID", Message = "" });
+                    session.Close();
+                    return;
+                }
+
+                var user = da.ArchiveUsers.GetByClientHash(clientId);
                 var ip = (session.IoSession.RemoteEndPoint as IPEndPoint).Address.ToString();
 
-                bool forceAdmin = ip == "127.0.0.1";
+                // TODO: whitelist super admin ips?
+                bool superAdmin = ip == "127.0.0.1";
 
-                bool needsVerification = Config.Archive.Flags.HasFlag(FSO.Common.ArchiveConfigFlags.Verification) && !forceAdmin;
+                bool needsVerification = Config.Archive.Flags.HasFlag(FSO.Common.ArchiveConfigFlags.Verification) && !superAdmin;
 
                 if (user == null)
                 {
@@ -172,11 +265,11 @@ namespace FSO.Server.Servers.City
 
                     var newUser = new ArchiveUser()
                     {
-                        username = packet.Password,
+                        username = clientId,
                         user_state = Database.DA.Users.UserState.email_confirm,
                         email = "",
-                        is_admin = forceAdmin,
-                        is_moderator = forceAdmin,
+                        is_admin = superAdmin,
+                        is_moderator = superAdmin,
                         is_banned = false,
                         client_id = "0",
                         register_ip = ip,
@@ -197,10 +290,20 @@ namespace FSO.Server.Servers.City
                     da.Users.UpdateConnectIP(user.user_id, ip);
                 }
 
+                var ipBan = da.Bans.GetByIP(ip);
+
+                if (user.is_banned || (ipBan != null && !superAdmin))
+                {
+                    session.Write(new AnnouncementMsgPDU(true) { SenderID = "??cst:80", Subject = "Banned", Message = "" });
+                    session.Close();
+                    return;
+                }
+
                 // Try and update the display name.
 
-                if (!ValidDisplayName(packet.User))
+                if (!ClientArchiveConfiguration.ValidDisplayName(packet.User))
                 {
+                    session.Write(new AnnouncementMsgPDU(true) { SenderID = "??cst:82", Subject = "Invalid Name", Message = "" });
                     session.Close();
                     return;
                 }
@@ -212,7 +315,7 @@ namespace FSO.Server.Servers.City
 
                     if (otherUser != null)
                     {
-                        // TODO: report username is taken
+                        session.Write(new AnnouncementMsgPDU(true) { SenderID = "??cst:84", Subject = "Display Name Taken", Message = "" });
                         session.Close();
                         return;
                     }
@@ -222,7 +325,7 @@ namespace FSO.Server.Servers.City
                     user.display_name = packet.User;
                 }
 
-                if (forceAdmin && (!user.is_admin || !user.is_moderator))
+                if (superAdmin && (!user.is_admin || !user.is_moderator))
                 {
                     da.Users.UpdatePermissions(user.user_id, true, true);
                     user.is_admin = true;
@@ -234,7 +337,7 @@ namespace FSO.Server.Servers.City
                 var newSession = Sessions.UpgradeSession<VoltronSession>(session, x => {
                     x.UserId = user.user_id;
                     x.DisplayName = user.display_name;
-                    x.ModerationLevel = user.is_admin ? 2u : (user.is_moderator ? 1u : 0u);
+                    x.ModerationLevel = superAdmin ? 3u : user.is_admin ? 2u : (user.is_moderator ? 1u : 0u);
                     x.SessionUID = SessionUID++;
                     x.AvatarId = 0;
                     session.IsAuthenticated = true;
@@ -363,6 +466,28 @@ namespace FSO.Server.Servers.City
             rawSession.Close();
         }
 
+        private int CountPlayers()
+        {
+            int players = 0;
+
+            var clone = Sessions.Clone();
+            foreach (var session in clone)
+            {
+                if (session is VoltronSession vSession)
+                {
+                    if (vSession.UserId != 0)
+                    {
+                        if (!vSession.Unverified)
+                        {
+                            players++;
+                        }
+                    }
+                }
+            }
+
+            return players;
+        }
+
         public void BroadcastUserList(bool adminOnly)
         {
             Task.Run(() =>
@@ -466,6 +591,7 @@ namespace FSO.Server.Servers.City
                 typeof(NhoodHandler),
                 typeof(BulletinHandler),
                 typeof(CityResourceHandler),
+                typeof(CityUpdateHandler),
 
                 typeof(ArchiveAvatarsHandler),
                 typeof(ArchiveAvatarSelectHandler),

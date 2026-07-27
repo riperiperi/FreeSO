@@ -1,4 +1,7 @@
-﻿using FSO.Server.Database.DA;
+﻿using FSO.Common.DataService;
+using FSO.Common.DataService.Model;
+using FSO.Server.Database.DA;
+using FSO.Server.Domain;
 using FSO.Server.Framework.Aries;
 using FSO.Server.Framework.Voltron;
 using FSO.Server.Protocol.Electron.Model;
@@ -14,13 +17,17 @@ namespace FSO.Server.Servers.City.Handlers
         private IDAFactory DAFactory;
         private CityServerContext Context;
         private LotServerPicker LotServers;
+        private readonly LotAllocations Allocations;
+        private IDataService DataService;
 
-        public ArchiveModerationHandler(IDAFactory da, ISessions sessions, CityServerContext context, LotServerPicker lotServers)
+        public ArchiveModerationHandler(IDAFactory da, ISessions sessions, CityServerContext context, LotServerPicker lotServers, LotAllocations allocations, IDataService dataService)
         {
             this.DAFactory = da;
             this.Context = context;
             this.Sessions = sessions;
             this.LotServers = lotServers;
+            this.Allocations = allocations;
+            this.DataService = dataService;
         }
 
         public void Handle(IVoltronSession session, ArchiveModerationRequest packet)
@@ -28,11 +35,7 @@ namespace FSO.Server.Servers.City.Handlers
             if (session.IsAnonymous) return;
             using (var da = DAFactory.Get())
             {
-                var user = da.Users.GetById(session.UserId);
-                var mod = user.is_moderator;
-                var admin = user.is_admin;
-
-                int myLevel = user.is_admin ? 2 : (user.is_moderator ? 1 : 0);
+                int myLevel = (int)((session as VoltronSession)?.ModerationLevel ?? 0);
 
                 if (myLevel == 0) return;
 
@@ -93,6 +96,7 @@ namespace FSO.Server.Servers.City.Handlers
                             {
                                 // Update this sim's moderation level.
                                 da.Avatars.UpdateModerationLevel(avatarId, level);
+                                DataService.Invalidate<Avatar>(avatarId);
 
                                 // Try find the lot that the avatar is on.
                                 var claim = da.AvatarClaims.GetByAvatarID(avatarId);
@@ -101,23 +105,16 @@ namespace FSO.Server.Servers.City.Handlers
                                 {
                                     var lot = da.Lots.GetByLocation(Context.ShardId, claim.location);
 
-                                    if (lot != null)
+                                    var lotServer = Allocations.TryGet(claim.location & (uint)LotIdFlags.NormalMask)?.Server;
+                                    if (lotServer != null)
                                     {
-                                        var lotOwned = da.LotClaims.GetByLotID(lot.lot_id);
-                                        if (lotOwned != null)
+                                        //immediately notify lot of new roommate
+                                        lotServer.Write(new NotifyLotRoommateChange()
                                         {
-                                            var lotServer = LotServers.GetLotServerSession(lotOwned.owner);
-                                            if (lotServer != null)
-                                            {
-                                                //immediately notify lot of new roommate
-                                                lotServer.Write(new NotifyLotRoommateChange()
-                                                {
-                                                    AvatarId = avatarId,
-                                                    LotId = lot.lot_id,
-                                                    Change = Protocol.Gluon.Model.ChangeType.RELOAD_PERMISSIONS
-                                                });
-                                            }
-                                        }
+                                            AvatarId = avatarId,
+                                            LotId = lot?.lot_id ?? (int)claim.location,
+                                            Change = Protocol.Gluon.Model.ChangeType.RELOAD_PERMISSIONS
+                                        });
                                     }
                                 }
                             }

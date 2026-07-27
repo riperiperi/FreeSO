@@ -1,4 +1,5 @@
 ﻿using FSO.Files.Utils;
+using FSO.SimAntics.Model;
 using System.IO;
 
 namespace FSO.SimAntics.Engine.Primitives
@@ -30,7 +31,7 @@ namespace FSO.SimAntics.Engine.Primitives
                             CodeOwner = Behavior.owner,
                             StackObject = ent,
                             Routine = Behavior.routine,
-                            Args = new short[4]
+                            Args = default
                         }) == VMPrimitiveExitCode.RETURN_TRUE);
                     }
                     else Execute = true;
@@ -56,7 +57,7 @@ namespace FSO.SimAntics.Engine.Primitives
                         ActionTree = context.ActionTree
                     };
                     if (operand.Flags > 0 && context.ActionTree) context.Thread.ActiveAction.IconOwner = context.StackObject;
-                    childFrame.Args = new short[routine.Arguments];
+                    childFrame.Args = new VMArguments(routine.Arguments);
                     context.Thread.Push(childFrame);
                     return VMPrimitiveExitCode.CONTINUE;
                 }

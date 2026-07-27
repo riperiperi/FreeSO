@@ -16,6 +16,7 @@ namespace FSO.LotView.Model
     /// </summary>
     public class Blueprint
     {
+        public const float TerrainFactorConst = 3 / 160f;
         public List<BlueprintDamage> Damage = new List<BlueprintDamage>();
 
         public int Width;
@@ -113,13 +114,14 @@ namespace FSO.LotView.Model
 
         public short[] Altitude;
         public short[] AltitudeCenters;
-        public float TerrainFactor = 3 / 160f;
+        public float TerrainFactor = TerrainFactorConst;
         public int BaseAlt;
 
         // AF2022, obviously getting removed in a day
         public SM64Component SM64;
 
-        public Blueprint(int width, int height){
+        public Blueprint(int width, int height)
+        {
             this.Width = width;
             this.Height = height;
 
@@ -133,7 +135,7 @@ namespace FSO.LotView.Model
                 this.WCRC = new WallComponentRC();
                 WCRC.blueprint = this;
             }
-        
+
             RoomColors = new Color[65536];
             this.WallsAt = new List<int>[Stories];
             this.Walls = new WallTile[Stories][];
@@ -141,7 +143,7 @@ namespace FSO.LotView.Model
 
             this.Floors = new FloorTile[Stories][];
 
-            for (int i=0; i<Stories; i++)
+            for (int i = 0; i < Stories; i++)
             {
                 this.WallsAt[i] = new List<int>();
                 this.Walls[i] = new WallTile[numTiles];
@@ -156,18 +158,56 @@ namespace FSO.LotView.Model
             this.SM64 = new SM64Component(this);
         }
 
+        public void AdjustBaseAlt(int altDiff)
+        {
+            float heightDiff = altDiff * TerrainFactor * -3;
+
+            WCRC?.AdjustHeight(heightDiff / 3);
+            RoofComp?.AdjustHeight(heightDiff);
+        }
+
+        public void BoundAltPoint(ref int x, ref int y)
+        {
+            x = Math.Max(1, Math.Min(Width - 1, x));
+            y = Math.Max(1, Math.Min(Height - 1, y));
+        }
+
         public float GetAltitude(int x, int y)
         {
-            if (x <= 0 || y <= 0) return 0f;
-            return (AltitudeCenters[((y % Height) * Width + (x % Width))] - BaseAlt) * TerrainFactor;
+            BoundAltPoint(ref x, ref y);
+            if (AltitudeCenters == null) return 0;
+            return (AltitudeCenters[y * Width + x] - BaseAlt) * TerrainFactor;
         }
 
 
         public float GetAltPoint(int x, int y)
         {
             //x += 1; y += 1;
-            if (x <= 0 || y <= 0) return 0f;
-            return (Altitude[((y % Height) * Width + (x % Width))]);
+            BoundAltPoint(ref x, ref y);
+            return Altitude[y * Width + x];
+        }
+
+        public float InterpAltitudeWithSubworlds(Vector3 Position)
+        {
+            if (Position.X > 0 && Position.X < Width && Position.Y > 0 && Position.Y < Height)
+            {
+                return InterpAltitude(Position);
+            }
+
+            // Try find a subworld to get the altitude from
+
+            foreach (var subworld in SubWorlds)
+            {
+                var newPos = Position + new Vector3(subworld.GlobalPosition, 0);
+                var subBp = subworld.Architecture.Blueprint;
+
+                if (newPos.X > 0 && newPos.X < subBp.Width && newPos.Y > 0 && newPos.Y < subBp.Height)
+                {
+                    return subBp.InterpAltitude(newPos);
+                }
+            }
+
+            return InterpAltitude(Position);
         }
 
         public float InterpAltitude(Vector3 Position)
@@ -350,6 +390,38 @@ namespace FSO.LotView.Model
             return Floors[level-1][offset];
         }
 
+        public ushort GetPreciseFloor(Vector3 tile)
+        {
+            if (!TileInbounds(new Vector2(tile.X, tile.Y)))
+            {
+                return 0;
+            }
+
+            short tileX = (short)tile.X;
+            short tileY = (short)tile.Y;
+            float floorRelativeHeight = tile.Z - InterpAltitude(tile);
+
+            sbyte level = (sbyte)(Math.Max(0, Math.Min(Stories - 1, (int)(floorRelativeHeight / 2.95f))) + 1);
+
+            var wall = GetWall(tileX, tileY, level);
+            if ((wall.Segments & WallSegments.VerticalDiag) > 0)
+            {
+                if ((tile.X % 1) - (tile.Y % 1) > 0)
+                    return wall.TopLeftPattern;
+                else
+                    return wall.TopLeftStyle;
+            }
+            else if ((wall.Segments & WallSegments.HorizontalDiag) > 0)
+            {
+                if ((tile.X % 1) + (tile.Y % 1) > 15)
+                    return wall.TopLeftPattern;
+                else
+                    return wall.TopLeftStyle;
+            }
+
+            return GetFloor(tileX, tileY, level).Pattern;
+        }
+
         public bool TileInbounds(Vector2 tile)
         {
             return (tile.X >= 0 && tile.Y >= 0 && tile.X < Width && tile.Y < Height);
@@ -502,6 +574,20 @@ namespace FSO.LotView.Model
             }
 
             return false;
+        }
+
+        public bool IsIndoorsPrecise(Vector3 pos)
+        {
+            var terrainHeight = InterpAltitude(pos);
+            var effectiveHeight = pos.Z - terrainHeight;
+
+            int floor = (int)Math.Floor(effectiveHeight / 2.95f);
+            if (floor < 0 || floor >= Stories)
+            {
+                return false;
+            }
+
+            return IsIndoorsPrecise(new Vector2(pos.X, pos.Y), floor);
         }
 
         private byte[] GrassMask;

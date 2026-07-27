@@ -109,17 +109,17 @@ namespace FSO.Client.UI.Panels.Neighborhoods
             btnCaption.Size = 8;
             btnCaption.Shadow = true;
 
-            if (GameFacade.EnableMod)
+            DeleteButton = new UIButton(btnTex)
             {
-                DeleteButton = new UIButton(btnTex);
-                DeleteButton.Caption = "Delete";
-                DeleteButton.CaptionStyle = btnCaption;
-                DeleteButton.OnButtonClick += DeletePost;
-                DeleteButton.Width = 64;
-                DeleteButton.X = 135;
-                DeleteButton.Y = 4;
-                Add(DeleteButton);
-            }
+                Caption = "Delete",
+                CaptionStyle = btnCaption,
+                Width = 64,
+                X = 135,
+                Y = 4,
+                Visible = false
+            };
+            DeleteButton.OnButtonClick += DeletePost;
+            Add(DeleteButton);
 
             Size = new Vector2(475, 70);
             PxWhite = TextureGenerator.GetPxWhite(GameFacade.GraphicsDevice);
@@ -201,6 +201,8 @@ namespace FSO.Client.UI.Panels.Neighborhoods
             {
                 var cont = ControllerUtils.BindController<RatingSummaryController>(this);
                 cont.SetRating(RatingID);
+
+                DeleteButton.Visible = cont.ModerationLevel > 0;
             }
         }
 

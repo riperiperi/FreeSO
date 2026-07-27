@@ -30,115 +30,20 @@
     <EmbeddedResource Include="IconNormal.bmp" />
     <EmbeddedResource Include="Icon.bmp" />
     <Content Include="MIConvexHull.xml" />
-    <Content Include="Content\UI\hints\english.dir\land_money.json">
-      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
-    </Content>
-    <Content Include="Content\UI\hints\english.dir\land_money_2.json">
-      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
-    </Content>
-    <Content Include="Content\UI\hints\english.dir\land_skill_gameplay.json">
-      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
-    </Content>
-    <Content Include="Content\UI\hints\english.dir\screen_city_1.json">
-      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
-    </Content>
-    <Content Include="Content\UI\hints\english.dir\ui_lot_page.json">
-      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
-    </Content>
-    <Content Include="Content\UI\hints\english.dir\land_job0.json">
-      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
-    </Content>
-    <Content Include="Content\UI\hints\english.dir\land_job1.json">
-      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
-    </Content>
-    <Content Include="Content\UI\hints\english.dir\land_job2.json">
-      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
-    </Content>
-    <Content Include="Content\UI\hints\english.dir\land_entertainment.json">
-      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
-    </Content>
-    <Content Include="Content\UI\hints\english.dir\land_games.json">
-      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
-    </Content>
-    <Content Include="Content\UI\hints\english.dir\land_offbeat.json">
-      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
-    </Content>
-    <Content Include="Content\UI\hints\english.dir\land_owner.json">
-      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
-    </Content>
-    <Content Include="Content\UI\hints\english.dir\land_residence.json">
-      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
-    </Content>
-    <Content Include="Content\UI\hints\english.dir\land_romance.json">
-      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
-    </Content>
-    <Content Include="Content\UI\hints\english.dir\land_services.json">
-      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
-    </Content>
-    <Content Include="Content\UI\hints\english.dir\land_shopping.json">
-      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
-    </Content>
-    <Content Include="Content\UI\hints\english.dir\land_skills.json">
-      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
-    </Content>
-    <Content Include="Content\UI\hints\english.dir\land_welcome.json">
-      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
-    </Content>
-    <Content Include="Content\UI\hints\english.dir\screen_cas.json">
-      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
-    </Content>
-    <Content Include="Content\UI\hints\english.dir\screen_login.json">
-      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
-    </Content>
-    <Content Include="Content\UI\hints\english.dir\screen_sas.json">
-      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
-    </Content>
-    <Content Include="Content\UI\hints\english.dir\screen_sascity.json">
-      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
-    </Content>
-    <Content Include="Content\UI\hints\english.dir\ui_buildmode.json">
-      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
-    </Content>
-    <Content Include="Content\UI\hints\english.dir\ui_querypanel.json">
-      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
-    </Content>
-    <Content Include="Content\UI\hints\english.dir\vm_firstvisitor.json">
-      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
-    </Content>
-    <Content Include="Content\UI\hints\english.dir\land_community.json">
-      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
-    </Content>
-    <Content Include="Content\UI\hints\english.dir\ui_donator.json">
-      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
-    </Content>
-    <Content Include="Content\UI\hints\english.dir\ui_mayor_buildbuy.json">
-      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
-    </Content>
-    <Content Include="Content\UI\hints\english.dir\ui_mayor_donators.json">
-      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
-    </Content>
-    <Content Include="Content\UI\hints\english.dir\ui_bulletin_board.json">
-      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
-    </Content>
-    <Content Include="Content\UI\hints\english.dir\ui_neigh_page.json">
-      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
-    </Content>
-    <Content Include="Content\UI\hints\english.dir\ui_nhood_rules.json">
-      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
-    </Content>
-    <None Include="Content\ArchiveCities\FreeSO Archive\archive.ini">
-      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
-    </None>
+	  <Content Include="Content\**\*.*">
+		  <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+	  </Content>
     <None Include="Resources\Icon.bmp" />
     <None Include="Resources\ico256.fw.png" />
   </ItemGroup>
 
   <ItemGroup>
-    <PackageReference Include="MonoGame.Framework.DesktopGL" Version="3.8.4" />
-    <PackageReference Include="MonoGame.Framework.WindowsDX" Version="3.8.4" />
+    <PackageReference Include="MonoGame.Framework.DesktopGL" Version="3.8.5-preview.2" />
+    <PackageReference Include="MonoGame.Framework.WindowsDX" Version="3.8.5-preview.2" />
     <PackageReference Include="Newtonsoft.Json" Version="13.0.4" />
     <PackageReference Include="Ninject" Version="3.3.6" />
-    <PackageReference Include="Open.Nat" Version="2.1.0" />
+    <PackageReference Include="Open.NAT.Core" Version="2.1.0.5" />
+    <PackageReference Include="SharpZipLib" Version="1.4.2" />
     <PackageReference Include="System.IO.FileSystem.Primitives" Version="4.3.0" />
     <PackageReference Include="System.IO.FileSystem" Version="4.3.0" />
   </ItemGroup>
@@ -152,7 +57,6 @@
     <ProjectReference Include="..\FSO.Server.Database\FSO.Server.Database.csproj" />
     <ProjectReference Include="..\FSO.Server.DataService\FSO.Common.DataService.csproj" />
     <ProjectReference Include="..\FSO.Server.Protocol\FSO.Server.Protocol.csproj" />
-    <ProjectReference Include="..\FSO.Server.Updater\FSO.Server.Watchdog.csproj" />
     <ProjectReference Include="..\FSO.Server\FSO.Server.csproj" />
     <ProjectReference Include="..\FSO.UI\FSO.UI.csproj" />
     <ProjectReference Include="..\tso.common\FSO.Common.csproj" />

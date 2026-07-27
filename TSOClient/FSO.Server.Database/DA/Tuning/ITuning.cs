@@ -16,5 +16,8 @@ namespace FSO.Server.Database.DA.Tuning
         int CreatePreset(DbTuningPreset preset);
         int CreatePresetItem(DbTuningPresetItem item);
         bool DeletePreset(int preset_id);
+        bool DeletePresetItem(int item_id);
+
+        void UpdatePresetItemValue(int item_id, float value);
     }
 }

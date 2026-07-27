@@ -1,6 +1,7 @@
 ﻿using FSO.Content;
 using FSO.SimAntics.Marshals.Threads;
 using FSO.Files.Formats.IFF.Chunks;
+using FSO.SimAntics.Model;
 
 namespace FSO.SimAntics.Engine
 {
@@ -55,8 +56,8 @@ namespace FSO.SimAntics.Engine
                 StackObject = StackObject,
                 ActionTree = true
             };
-            if (Args == null) frame.Args = new short[4]; //always 4? i got crashes when i used the value provided by the routine, when for that same routine edith displayed 4 in the properties...
-            else frame.Args = Args; //WARNING - if you use this, the args array MUST have the same number of elements the routine is expecting!
+            if (Args == null) frame.Args = default;
+            else frame.Args = new VMArguments(Args); //WARNING - if you use this, the args array MUST have the same number of elements the routine is expecting!
             return frame;
         }
 

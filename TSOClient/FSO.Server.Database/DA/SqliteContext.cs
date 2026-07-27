@@ -1,7 +1,7 @@
 ﻿using System;
 using System.Data.Common;
 using System.Data;
-using System.Data.SQLite;
+using Microsoft.Data.Sqlite;
 using FSO.Server.Database.SqliteCompat;
 
 namespace FSO.Server.Database.DA
@@ -37,7 +37,7 @@ namespace FSO.Server.Database.DA
                     }
                     else
                     {
-                        _connection = new SQLiteConnection(_connectionString);
+                        _connection = new SqliteConnection(_connectionString);
                     }
                 }
 
@@ -54,7 +54,7 @@ namespace FSO.Server.Database.DA
             {
                 if (_pool != null)
                 {
-                    _pool.Return((SQLiteConnection)_connection);
+                    _pool.Return((SqliteConnection)_connection);
                 }
                 else
                 {
@@ -72,12 +72,23 @@ namespace FSO.Server.Database.DA
 
         public string CompatLayer(string sql, string updateKey = null)
         {
+            if (sql.StartsWith("INSERT IGNORE"))
+            {
+                sql = "INSERT OR " + sql.Substring("INSERT ".Length);
+            }
+
             sql = sql.Replace("LAST_INSERT_ID()", "last_insert_rowid()");
             sql = sql.Replace("NOW()", "CURRENT_TIMESTAMP");
 
             if (updateKey != null)
             {
                 sql = sql.Replace("ON DUPLICATE KEY UPDATE", $"ON CONFLICT({updateKey}) DO UPDATE SET");
+
+                var valuesPatch = "VALUES(`value`);";
+                if (sql.EndsWith(valuesPatch))
+                {
+                    sql = string.Concat(sql.AsSpan(0, sql.Length - valuesPatch.Length), "excluded.`value`;");
+                }
             }
 
             return sql;

@@ -42,43 +42,38 @@ namespace FSO.Server.Database.DA.Relationships
         public int UpdateMany(List<DbRelationship> entries)
         {
             var date = Epoch.Now;
-            var conn = (MySqlConnection)Context.Connection;
+
             int rows;
-            using (MySqlCommand cmd = new MySqlCommand("", conn))
+            try
             {
-                try
-                {
-                    StringBuilder sCommand = new StringBuilder("INSERT INTO fso_relationships (from_id, to_id, value, `index`, `date`) VALUES ");
+                StringBuilder sCommand = new StringBuilder("INSERT INTO fso_relationships (from_id, to_id, value, `index`, `date`) VALUES ");
 
-                    bool first = true;
-                    foreach (var item in entries)
-                    {
-                        if (!first) sCommand.Append(",");
-                        first = false;
-                        sCommand.Append("(");
-                        sCommand.Append(item.from_id);
-                        sCommand.Append(",");
-                        sCommand.Append(item.to_id);
-                        sCommand.Append(",");
-                        sCommand.Append(item.value);
-                        sCommand.Append(",");
-                        sCommand.Append(item.index);
-                        sCommand.Append(",");
-                        sCommand.Append(date);
-                        sCommand.Append(")");
-                    }
-                    sCommand.Append(" ON DUPLICATE KEY UPDATE value = VALUES(`value`); ");
-
-                    cmd.CommandTimeout = 300;
-                    cmd.CommandText = Context.CompatLayer(sCommand.ToString(), "`from_id`,`to_id`,`index`");
-                    rows = cmd.ExecuteNonQuery();
-                }
-                catch (Exception e)
+                bool first = true;
+                foreach (var item in entries)
                 {
-                    return -1;
+                    if (!first) sCommand.Append(',');
+                    first = false;
+                    sCommand.Append('(');
+                    sCommand.Append(item.from_id);
+                    sCommand.Append(',');
+                    sCommand.Append(item.to_id);
+                    sCommand.Append(',');
+                    sCommand.Append(item.value);
+                    sCommand.Append(',');
+                    sCommand.Append(item.index);
+                    sCommand.Append(',');
+                    sCommand.Append(date);
+                    sCommand.Append(')');
                 }
-                return rows;
+                sCommand.Append(" ON DUPLICATE KEY UPDATE value = VALUES(`value`);");
+
+                rows = Context.Connection.Execute(Context.CompatLayer(sCommand.ToString(), "`from_id`,`to_id`,`index`"), commandTimeout: 300);
             }
+            catch (Exception e)
+            {
+                return -1;
+            }
+            return rows;
         }
     }
 }

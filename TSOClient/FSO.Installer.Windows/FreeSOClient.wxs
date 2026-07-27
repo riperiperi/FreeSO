@@ -1,0 +1,44 @@
+<Wix xmlns="http://wixtoolset.org/schemas/v4/wxs">
+  <Fragment>
+    <ComponentGroup Id="FreeSOClient" Directory="INSTALLFOLDER">
+      <Files Include="..\..\Artifacts\Client\**" Directory="INSTALLFOLDER" />
+
+      <Component Id="ApplicationShortcut" Guid="0e6bc367-0768-4a81-8134-1640702cfe94">
+        <Shortcut Id="ApplicationStartMenuShortcut"
+          Name="FreeSO"
+          Description="FreeSO"
+          Target="[INSTALLFOLDER]FreeSO.exe"
+          WorkingDirectory="INSTALLFOLDER"
+          Directory="ApplicationProgramsFolder" />
+		<Shortcut Id="ApplicationStartMenuShortcutAlt"
+          Name="Volcanic"
+          Description="Volcanic IDE"
+          Target="[INSTALLFOLDER]Volcanic.exe"
+          WorkingDirectory="INSTALLFOLDER"
+          Directory="ApplicationProgramsFolder" />
+		<Shortcut Id="UninstallProduct"
+          Name="Uninstall FreeSO"
+          Target="[SystemFolder]msiexec.exe"
+          Arguments="/x [ProductCode]"
+          Description="Uninstalls FreeSO" 
+          Directory="ApplicationProgramsFolder" />
+        <RemoveFolder Id="CleanUpShortCut" Directory="ApplicationProgramsFolder" On="uninstall"/>
+        <RegistryValue Root="HKCU" Key="Software\riperiperi\FreeSO" Name="installed" Type="integer" Value="1" KeyPath="yes"/>
+      </Component>
+
+      <Component Id="ApplicationShortcutDesktop" Guid="1ed4adc2-0b58-4c53-8cf0-058c53cb4443">
+        <Shortcut Id="ApplicationDesktopShortcut"
+          Name="FreeSO"
+          Description="FreeSO"
+          Target="[INSTALLFOLDER]FreeSO.exe"
+          WorkingDirectory="INSTALLFOLDER"
+          Directory="DesktopFolder" />
+        <RegistryValue Root="HKCU" Key="Software\riperiperi\FreeSO" Name="installed" Type="integer" Value="1" KeyPath="yes"/>
+      </Component>
+
+	  <Component Guid="3b8bb5b7-d1db-4c49-b515-495f1a10ff94" Id="InstallFolderComponent">
+        <RemoveFolder Id="CleanUpInstall" Directory="INSTALLFOLDER" Subdirectory="Content" On="uninstall"/>
+      </Component>
+    </ComponentGroup>
+  </Fragment>
+</Wix>

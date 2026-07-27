@@ -22,6 +22,7 @@ using FSO.SimAntics.Engine;
 using FSO.SimAntics.Primitives;
 using FSO.SimAntics.Model.Platform;
 using FSO.SimAntics.Model.TS1Platform;
+using FSO.Common.Model;
 
 namespace FSO.SimAntics
 {
@@ -128,10 +129,11 @@ namespace FSO.SimAntics
             get { return _SkinTone; }
         }
 
+        private Vector3 _ServerVisualPosition;
         public override Vector3 VisualPosition
         {
-            get { return (UseWorld) ? ((AvatarComponent)WorldUI).StoredPosition : new Vector3(); }
-            set { if (UseWorld) WorldUI.Position = value; }
+            get { return (UseWorld) ? ((AvatarComponent)WorldUI).StoredPosition : _ServerVisualPosition; }
+            set { if (UseWorld) WorldUI.Position = value; else _ServerVisualPosition = value; }
         }
         public override float RadianDirection
         {
@@ -302,7 +304,7 @@ namespace FSO.SimAntics
 
                     var skinTone = data.GetString(14);
                     var skinToneSpl = skinTone.Split(';').Where(x => !string.IsNullOrEmpty(x)).ToArray();
-                    var randSkinTone = skinToneSpl[context.NextRandom((ulong)skinToneSpl.Length)];
+                    var randSkinTone = skinToneSpl.Length > 1 ? skinToneSpl[context.NextRandom((ulong)skinToneSpl.Length)] : skinToneSpl[0];
 
                     if (randSkinTone.Equals("lgt", StringComparison.InvariantCultureIgnoreCase)) SkinTone = AppearanceType.Light;
                     else if (randSkinTone.Equals("med", StringComparison.InvariantCultureIgnoreCase)) SkinTone = AppearanceType.Medium;
@@ -440,7 +442,7 @@ namespace FSO.SimAntics
             if (context.VM.EODHost != null) context.VM.EODHost.ForceDisconnect(this);
         }
 
-        private void HandleTimePropsEvent(TimePropertyListItem tp)
+        private void HandleTimePropsEvent(TimePropertyListItem tp, bool primaryAnimation)
         {
             VMAvatar avatar = this;
             var evt = tp.Properties["xevt"];
@@ -468,23 +470,15 @@ namespace FSO.SimAntics
             var owner = this;
             if (UseWorld && soundevt != null && owner.SoundThreads.FirstOrDefault(x => x.Name == soundevt) == null)
             {
-                var thread = FSO.HIT.HITVM.Get().PlaySoundEvent(soundevt);
-                if (thread != null)
+                PlayTimepropsSound(soundevt);
+            }
+
+            if (UseWorld)
+            {
+                var footstep = tp.Properties["footstep"];
+                if (footstep != null && primaryAnimation && GetPersonData(VMPersonDataVariable.IsGhost) == 0)
                 {
-
-                    if (thread is HITThread) SubmitHITVars((HITThread)thread);
-
-                    if (!thread.AlreadyOwns(owner.ObjectID)) thread.AddOwner(owner.ObjectID);
-
-                    var entry = new VMSoundEntry()
-                    {
-                        Sound = thread,
-                        Pan = true,
-                        Zoom = true,
-                    };
-                    owner.SoundThreads.Add(entry);
-                    owner.Thread?.Context?.VM?.SoundEntities?.Add(this);
-                    owner.TickSounds();
+                    PlayTimepropsSound(VMFootsteps.GetFootstepEvent(Thread.Context.VM, this));
                 }
             }
 
@@ -502,6 +496,29 @@ namespace FSO.SimAntics
                 var apr = (VM.UseWorld) ? FSO.Content.Content.Get().AvatarAppearances.Get(undress + ".apr") : null;
                 avatar.BoundAppearances.Remove(undress);
                 if (VM.UseWorld && apr != null) avatar.Avatar.RemoveAccessory(apr);
+            }
+        }
+
+        private void PlayTimepropsSound(string soundevt)
+        {
+            var owner = this;
+            var thread = FSO.HIT.HITVM.Get().PlaySoundEvent(soundevt);
+            if (thread != null)
+            {
+
+                if (thread is HITThread) SubmitHITVars((HITThread)thread);
+
+                if (!thread.AlreadyOwns(owner.ObjectID)) thread.AddOwner(owner.ObjectID);
+
+                var entry = new VMSoundEntry()
+                {
+                    Sound = thread,
+                    Pan = true,
+                    Zoom = true,
+                };
+                owner.SoundThreads.Add(entry);
+                owner.Thread?.Context?.VM?.SoundEntities?.Add(this);
+                owner.TickSounds();
             }
         }
 
@@ -541,6 +558,7 @@ namespace FSO.SimAntics
             //animation update for avatars
             VMAvatar avatar = this;
             float totalWeight = 0f;
+            float maxWeight = Animations.Count > 0 ? Animations.Max(x => x.Weight) : 0;
             foreach (var state in Animations)
             {
                 totalWeight += state.Weight;
@@ -564,7 +582,7 @@ namespace FSO.SimAntics
                             timeProps.RemoveAt(0);
                             i--;
 
-                            HandleTimePropsEvent(tp);
+                            HandleTimePropsEvent(tp, state.Weight == maxWeight);
                         }
                     }
                     else
@@ -578,7 +596,7 @@ namespace FSO.SimAntics
                             }
 
                             timeProps.RemoveAt(timeProps.Count - 1);
-                            HandleTimePropsEvent(tp);
+                            HandleTimePropsEvent(tp, state.Weight == maxWeight);
                         }
                     }
                 }
@@ -588,6 +606,7 @@ namespace FSO.SimAntics
                 {
                     if (state.Loop)
                     {
+                        state.ResetTimeProps();
                         if (state.PlayingBackwards) state.CurrentFrame += state.Anim.NumFrames;
                         else state.CurrentFrame -= state.Anim.NumFrames;
                     }
@@ -628,7 +647,7 @@ namespace FSO.SimAntics
             }
         }
 
-        public void UserLeaveLot()
+        public void UserLeaveLot(bool instant = false)
         {
             //interaction cancel should handle this
             //if (Thread.Context.VM.EODHost != null) Thread.Context.VM.EODHost.ForceDisconnect(this); //try this a lot.
@@ -647,7 +666,8 @@ namespace FSO.SimAntics
                 qaction.Flags |= TTABFlags.FSOSkipPermissions;
                 Thread.EnqueueAction(qaction);
             }
-            else
+           
+            if (instant || qaction == null)
             {
                 KillTimeout = FORCE_DELETE_TIMEOUT;
             }
@@ -1175,6 +1195,23 @@ namespace FSO.SimAntics
                 if (content.TS1) decimateMul = 2;
             }
             return (store > 0 && ico != null)?TextureUtils.Decimate(ico, gd, (1<<(2-store)) * decimateMul, false):ico;
+        }
+
+        public SurroundPuppet GetSurroundPuppet()
+        {
+            return new SurroundPuppet()
+            {
+                Delta = KillTimeout != -1 ? SurroundPuppetDelta.Leaving : 0,
+                PersistID = PersistID == 0 ? (uint)ObjectID | 0xFFFF0000u : PersistID,
+                SkinTone = (uint)SkinTone,
+                BodyOutfit = BodyOutfit?.ID ?? 0,
+                HeadOutfit = HeadOutfit?.ID ?? 0,
+                SkeletonName = Avatar?.Skeleton?.Name ?? "adult",
+                VisualPositionStart = new Vector4(VisualPositionStart ?? VisualPosition, (float)RadianDirection),
+                Velocity = new Vector4(VisualPositionStart == null ? new Vector3() : Velocity, (float)TurnVelocity),
+                Appearances = BoundAppearances.Count == 0 ? [] : [.. BoundAppearances],
+                Animations = [.. Animations.Select(x => new SurroundPuppetAnimation(x.Anim.Name, x.CurrentFrame, x.Speed, x.Weight, x.EndReached, x.PlayingBackwards, x.Loop))]
+            };
         }
 
         #region VM Marshalling Functions

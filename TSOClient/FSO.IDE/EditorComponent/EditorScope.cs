@@ -338,7 +338,7 @@ namespace FSO.IDE.EditorComponent
                     {
                         if (labels != null && keyID < labels.Entries.Length)
                         {
-                            return labels.Entries[keyID].Label + " #" + keyID;
+                            return bcon.ChunkLabel + ": " + labels.Entries[keyID].Label + " #" + keyID;
                         }
                         return bcon.ChunkLabel + " #" + keyID;
                     }
@@ -351,12 +351,12 @@ namespace FSO.IDE.EditorComponent
                     break;
                 case 2:
                     bcon = Globals.Resource.Get<BCON>((ushort)(tableID + 256));
-                    labels = Object.Resource.Get<TRCN>((ushort)(tableID + 256));
+                    labels = Globals.Resource.Get<TRCN>((ushort)(tableID + 256));
                     if (bcon != null)
                     {
                         if (labels != null && keyID < labels.Entries.Length)
                         {
-                            return labels.Entries[keyID].Label + " #" + keyID;
+                            return bcon.ChunkLabel + ": " + labels.Entries[keyID].Label + " #" + keyID;
                         }
                         return bcon.ChunkLabel + " #" + keyID;
                     }

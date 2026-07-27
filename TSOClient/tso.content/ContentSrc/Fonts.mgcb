@@ -1,0 +1,40 @@
+
+#----------------------------- Global Properties ----------------------------#
+
+/outputDir:../Content
+/intermediateDir:obj
+/platform:DesktopGL
+/config:
+/profile:Reach
+/compress:False
+
+#-------------------------------- References --------------------------------#
+
+/reference:..\..\..\Other\libs\MSDFExtension\bin\Release\net8.0\MSDFExtension.dll
+
+#---------------------------------- Content ---------------------------------#
+
+#begin Fonts/mobile.ini
+/importer:FieldFontImporter
+/processor:FieldFontProcessor
+/processorParam:ExternalPath=msdfgen.exe
+/processorParam:Resolution=32
+/processorParam:Range=4
+/build:Fonts/mobile.ini
+
+#begin Fonts/simdialogue.ini
+/importer:FieldFontImporter
+/processor:FieldFontProcessor
+/processorParam:ExternalPath=msdfgen.exe
+/processorParam:Resolution=32
+/processorParam:Range=4
+/build:Fonts/simdialogue.ini
+
+#begin Fonts/trebuchet.ini
+/importer:FieldFontImporter
+/processor:FieldFontProcessor
+/processorParam:ExternalPath=msdfgen.exe
+/processorParam:Resolution=32
+/processorParam:Range=4
+/build:Fonts/trebuchet.ini
+

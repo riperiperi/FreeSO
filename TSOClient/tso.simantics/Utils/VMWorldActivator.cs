@@ -44,7 +44,7 @@ namespace FSO.SimAntics.Utils
             if (size == 0) size = model.Size;
             model.Size = size;
             if (VM.UseWorld) this.Blueprint = new Blueprint(size, size);
-            VM.Entities = new List<VMEntity>();
+            VM.Entities = [];
             VM.Scheduler = new Engine.VMScheduler(VM);
             VM.Context = new VMContext(VM.Context.World);
             VM.Context.VM = VM;
@@ -100,7 +100,7 @@ namespace FSO.SimAntics.Utils
             {
                 foreach (var obj in model.Sounds)
                 {
-                    VM.Context.Ambience.SetAmbience(VM.Context.Ambience.GetAmbienceFromGUID(obj.ID), (obj.On == 1));
+                    VM.Context.Ambience.SetUserAmbience(VM.Context.Ambience.GetAmbienceFromGUID(obj.ID), (obj.On == 1));
                     
                     
                 }

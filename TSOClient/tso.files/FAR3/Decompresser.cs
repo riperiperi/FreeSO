@@ -2,6 +2,7 @@
 using System.Collections;
 using System.Collections.Generic;
 using System.IO;
+using System.Runtime.CompilerServices;
 
 namespace FSO.Files.FAR3
 {
@@ -33,45 +34,44 @@ namespace FSO.Files.FAR3
         ///  Copies data from source to destination array.<br>
         ///  The copy is byte by byte from srcPos to destPos and given length.
         /// </summary>
-        /// <param name="Src">The source array.</param>
-        /// <param name="SrcPos">The source Position.</param>
-        /// <param name="Dest">The destination array.</param>
-        /// <param name="DestPos">The destination Position.</param>
-        /// <param name="Length">The length.</param>
-        private void ArrayCopy2(byte[] Src, int SrcPos, ref byte[] Dest, int DestPos, long Length)
+        /// <param name="src">The source array.</param>
+        /// <param name="srcPos">The source Position.</param>
+        /// <param name="dest">The destination array.</param>
+        /// <param name="destPos">The destination Position.</param>
+        /// <param name="length">The length.</param>
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
+        private static void ArrayCopy2(Span<byte> src, int srcPos, Span<byte> dest, int destPos, int length)
         {
-            if (Dest.Length < DestPos + Length)
-            {
-                byte[] DestExt = new byte[(int)(DestPos + Length)];
-                Array.Copy(Dest, 0, DestExt, 0, Dest.Length);
-                Dest = DestExt;
-            }
-
-            for (int i = 0; i < Length/* - 1*/; i++)
-                Dest[DestPos + i] = Src[SrcPos + i];
+            src.Slice(srcPos, length).CopyTo(dest.Slice(destPos, length));
         }
 
         /// <summary>
         /// Copies data from array at destPos-srcPos to array at destPos.
         /// </summary>
         /// <param name="array">The array.</param>
-        /// <param name="srcPos">The Position to copy from (reverse from end of array!)</param>
+        /// <param name="offset">The Position to copy from (reverse from end of array!)</param>
         /// <param name="destPos">The Position to copy to.</param>
         /// <param name="length">The length of data to copy.</param>
-        private void OffsetCopy(ref byte[] array, int srcPos, int destPos, long length)
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
+        private static void OffsetCopy(Span<byte> array, int offset, int destPos, int length)
         {
-            srcPos = destPos - srcPos;
+            int srcPos = destPos - offset;
 
-            if (array.Length < destPos + length)
+            // This is a little complicated.
+            // If the length exceeds the offset, then we will start copying the data in a feedback loop.
+            // Normally memcpy could do this, but there's no c# equivalent.
+
+            if (length > offset || length < 8)
             {
-                byte[] NewArray = new byte[(int)(destPos + length)];
-                Array.Copy(array, 0, NewArray, 0, array.Length);
-                array = NewArray;
+                // This copy is also a bit faster if there's not much to copy.
+                for (int i = 0; i < length; i++)
+                {
+                    array[destPos + i] = array[srcPos + i];
+                }
             }
-
-            for (int i = 0; i < length /*- 1*/; i++)
+            else
             {
-                array[destPos + i] = array[srcPos + i];
+                array.Slice(srcPos, length).CopyTo(array.Slice(destPos, length));
             }
         }
 
@@ -110,6 +110,9 @@ namespace FSO.Files.FAR3
 	            int copyCount = 0;
 	            int index = -1;
 	            bool end = false;
+
+                Span<byte> dataSpan = Data;
+                Span<byte> compressedSpan = cData;
 
 	            // begin main compression loop
 	            while (index < Data.Length - 3)
@@ -200,7 +203,7 @@ namespace FSO.Files.FAR3
                             cData[writeIndex++] = (byte)(0xE0 + copyCount);
 				            copyCount = 4 * copyCount + 4;
 
-				            ArrayCopy2(Data, lastReadIndex, ref cData, writeIndex, copyCount);
+				            ArrayCopy2(dataSpan, lastReadIndex, compressedSpan, writeIndex, copyCount);
 				            lastReadIndex += copyCount;
 				            writeIndex += copyCount;
 			            }
@@ -231,7 +234,7 @@ namespace FSO.Files.FAR3
 			            }
 
 			            // do the offset copy
-			            ArrayCopy2(Data, lastReadIndex, ref cData, writeIndex, copyCount);
+			            ArrayCopy2(dataSpan, lastReadIndex, compressedSpan, writeIndex, copyCount);
 			            writeIndex += copyCount;
 			            lastReadIndex += copyCount;
 			            lastReadIndex += offsetCopyCount;
@@ -251,14 +254,14 @@ namespace FSO.Files.FAR3
                     cData[writeIndex++] = (byte)(0xE0 + copyCount);
 		            copyCount = 4 * copyCount + 4;
 
-		            ArrayCopy2(Data, lastReadIndex, ref cData, writeIndex, copyCount);
+		            ArrayCopy2(dataSpan, lastReadIndex, compressedSpan, writeIndex, copyCount);
 		            lastReadIndex += copyCount;
 		            writeIndex += copyCount;
 	            }
 
 	            copyCount = index - lastReadIndex;
 	            cData[writeIndex++] = (byte) (0xfc + copyCount);
-	            ArrayCopy2(Data, lastReadIndex, ref cData, writeIndex, copyCount);
+	            ArrayCopy2(dataSpan, lastReadIndex, compressedSpan, writeIndex, copyCount);
 	            writeIndex += copyCount;
 	            lastReadIndex += copyCount;
 
@@ -295,116 +298,116 @@ namespace FSO.Files.FAR3
         /// <returns>An uncompressed array of bytes.</returns>
         public byte[] Decompress(byte[] Data)
         {
-
-            MemoryStream MemData = new MemoryStream(Data);
-            BinaryReader Reader = new BinaryReader(MemData);
-
             if (Data.Length > 6)
             {
                 byte[] DecompressedData = new byte[(int)m_DecompressedSize];
+
+                Span<byte> dataSpan = Data;
+                Span<byte> decompressedSpan = DecompressedData;
+
                 int DataPos = 0;
 
                 int Pos = 0;
-                long Control1 = 0;
+                byte Control1 = 0;
 
-                while (Control1 != 0xFC && Pos < Data.Length)
+                while (Control1 != 0xFC && Pos < dataSpan.Length)
                 {
-                    Control1 = Data[Pos];
+                    Control1 = dataSpan[Pos];
                     Pos++;
 
-                    if (Pos == Data.Length)
+                    if (Pos == dataSpan.Length)
                         break;
 
                     if (Control1 >= 0 && Control1 <= 127)
                     {
                         // 0x00 - 0x7F
-                        long control2 = Data[Pos];
+                        byte control2 = dataSpan[Pos];
                         Pos++;
-                        long numberOfPlainText = (Control1 & 0x03);
-                        ArrayCopy2(Data, Pos, ref DecompressedData, DataPos, numberOfPlainText);
-                        DataPos += (int)numberOfPlainText;
-                        Pos += (int)numberOfPlainText;
+                        int numberOfPlainText = Control1 & 0x03;
+                        ArrayCopy2(dataSpan, Pos, decompressedSpan, DataPos, numberOfPlainText);
+                        DataPos += numberOfPlainText;
+                        Pos += numberOfPlainText;
 
-                        if (DataPos == (DecompressedData.Length))
+                        if (DataPos == (decompressedSpan.Length))
                             break;
 
-                        int offset = (int)(((Control1 & 0x60) << 3) + (control2) + 1);
-                        long numberToCopyFromOffset = ((Control1 & 0x1C) >> 2) + 3;
-                        OffsetCopy(ref DecompressedData, offset, DataPos, numberToCopyFromOffset);
-                        DataPos += (int)numberToCopyFromOffset;
+                        int offset = (((Control1 & 0x60) << 3) + (control2) + 1);
+                        int numberToCopyFromOffset = ((Control1 & 0x1C) >> 2) + 3;
+                        OffsetCopy(decompressedSpan, offset, DataPos, numberToCopyFromOffset);
+                        DataPos += numberToCopyFromOffset;
 
-                        if (DataPos == (DecompressedData.Length))
+                        if (DataPos == (decompressedSpan.Length))
                             break;
                     }
                     else if ((Control1 >= 128 && Control1 <= 191))
                     {
                         // 0x80 - 0xBF
-                        long control2 = Data[Pos];
+                        byte control2 = dataSpan[Pos];
                         Pos++;
-                        long control3 = Data[Pos];
+                        byte control3 = dataSpan[Pos];
                         Pos++;
 
-                        long numberOfPlainText = (control2 >> 6) & 0x03;
-                        ArrayCopy2(Data, Pos, ref DecompressedData, DataPos, numberOfPlainText);
-                        DataPos += (int)numberOfPlainText;
-                        Pos += (int)numberOfPlainText;
+                        int numberOfPlainText = (control2 >> 6) & 0x03;
+                        ArrayCopy2(dataSpan, Pos, decompressedSpan, DataPos, numberOfPlainText);
+                        DataPos += numberOfPlainText;
+                        Pos += numberOfPlainText;
 
-                        if (DataPos == (DecompressedData.Length))
+                        if (DataPos == (decompressedSpan.Length))
                             break;
 
-                        int offset = (int)(((control2 & 0x3F) << 8) + (control3) + 1);
-                        long numberToCopyFromOffset = (Control1 & 0x3F) + 4;
-                        OffsetCopy(ref DecompressedData, offset, DataPos, numberToCopyFromOffset);
-                        DataPos += (int)numberToCopyFromOffset;
+                        int offset = (((control2 & 0x3F) << 8) + (control3) + 1);
+                        int numberToCopyFromOffset = (Control1 & 0x3F) + 4;
+                        OffsetCopy(decompressedSpan, offset, DataPos, numberToCopyFromOffset);
+                        DataPos += numberToCopyFromOffset;
 
-                        if (DataPos == (DecompressedData.Length))
+                        if (DataPos == (decompressedSpan.Length))
                             break;
                     }
                     else if (Control1 >= 192 && Control1 <= 223)
                     {
                         // 0xC0 - 0xDF
-                        long numberOfPlainText = (Control1 & 0x03);
-                        long control2 = Data[Pos];
+                        int numberOfPlainText = (Control1 & 0x03);
+                        byte control2 = dataSpan[Pos];
                         Pos++;
-                        long control3 = Data[Pos];
+                        byte control3 = dataSpan[Pos];
                         Pos++;
-                        long control4 = Data[Pos];
+                        byte control4 = dataSpan[Pos];
                         Pos++;
-                        ArrayCopy2(Data, Pos, ref DecompressedData, DataPos, numberOfPlainText);
-                        DataPos += (int)numberOfPlainText;
-                        Pos += (int)numberOfPlainText;
+                        ArrayCopy2(dataSpan, Pos, decompressedSpan, DataPos, numberOfPlainText);
+                        DataPos += numberOfPlainText;
+                        Pos += numberOfPlainText;
 
-                        if (DataPos == (DecompressedData.Length))
+                        if (DataPos == (decompressedSpan.Length))
                             break;
 
-                        int offset = (int)(((Control1 & 0x10) << 12) + (control2 << 8) + (control3) + 1);
-                        long numberToCopyFromOffset = ((Control1 & 0x0C) << 6) + (control4) + 5;
-                        OffsetCopy(ref DecompressedData, offset, DataPos, numberToCopyFromOffset);
-                        DataPos += (int)numberToCopyFromOffset;
+                        int offset = (((Control1 & 0x10) << 12) + (control2 << 8) + (control3) + 1);
+                        int numberToCopyFromOffset = ((Control1 & 0x0C) << 6) + (control4) + 5;
+                        OffsetCopy(decompressedSpan, offset, DataPos, numberToCopyFromOffset);
+                        DataPos += numberToCopyFromOffset;
 
-                        if (DataPos == (DecompressedData.Length))
+                        if (DataPos == (decompressedSpan.Length))
                             break;
                     }
                     else if (Control1 >= 224 && Control1 <= 251)
                     {
                         // 0xE0 - 0xFB
-                        long numberOfPlainText = ((Control1 & 0x1F) << 2) + 4;
-                        ArrayCopy2(Data, Pos, ref DecompressedData, DataPos, numberOfPlainText);
-                        DataPos += (int)numberOfPlainText;
-                        Pos += (int)numberOfPlainText;
+                        int numberOfPlainText = ((Control1 & 0x1F) << 2) + 4;
+                        ArrayCopy2(dataSpan, Pos, decompressedSpan, DataPos, numberOfPlainText);
+                        DataPos += numberOfPlainText;
+                        Pos += numberOfPlainText;
 
-                        if (DataPos == (DecompressedData.Length))
+                        if (DataPos == (decompressedSpan.Length))
                             break;
                     }
                     else
                     {
-                        long numberOfPlainText = (Control1 & 0x03);
-                        ArrayCopy2(Data, Pos, ref DecompressedData, DataPos, numberOfPlainText);
+                        int numberOfPlainText = (Control1 & 0x03);
+                        ArrayCopy2(dataSpan, Pos, decompressedSpan, DataPos, numberOfPlainText);
 
-                        DataPos += (int)numberOfPlainText;
-                        Pos += (int)numberOfPlainText;
+                        DataPos += numberOfPlainText;
+                        Pos += numberOfPlainText;
 
-                        if (DataPos == (DecompressedData.Length))
+                        if (DataPos == (decompressedSpan.Length))
                             break;
                     }
                 }

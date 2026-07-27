@@ -151,10 +151,10 @@ namespace FSO.SimAntics.NetPlay.EODs.Handlers
         {
             var param = client.Invoker.Thread.TempRegisters;
             Mode = (VMEODPermissionDoorMode)param[0];
-            if (param.Length > 1) MaxFee = param[1];
-            if (param.Length > 2) PermissionState = param[2];
-            if (param.Length > 3) DoorFee = param[3];
-            if (param.Length > 4) Flags = param[4];
+            if (SimAntics.Model.VMTempRegisters.Length > 1) MaxFee = param[1];
+            if (SimAntics.Model.VMTempRegisters.Length > 2) PermissionState = param[2];
+            if (SimAntics.Model.VMTempRegisters.Length > 3) DoorFee = param[3];
+            if (SimAntics.Model.VMTempRegisters.Length > 4) Flags = param[4];
         }
     }
 

@@ -24,8 +24,8 @@
   </PropertyGroup>
 
   <ItemGroup>
+    <PackageReference Include="JWT" Version="11.0.0" />
     <PackageReference Include="Newtonsoft.Json" Version="13.0.4" />
-    <PackageReference Include="Portable.JWT" Version="1.0.5" />
   </ItemGroup>
 
   <ItemGroup>

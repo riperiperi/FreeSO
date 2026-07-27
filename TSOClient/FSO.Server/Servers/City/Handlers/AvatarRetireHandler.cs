@@ -39,7 +39,7 @@ namespace FSO.Server.Servers.City.Handlers
 
                     if (avatar.date > Epoch.Now - (60 * 60 * 24 * 7) && !da.Users.GetById(session.UserId).is_admin)
                     {
-                        session.Write(new Protocol.Voltron.Packets.AnnouncementMsgPDU()
+                        session.Write(new Protocol.Voltron.Packets.AnnouncementMsgPDU(true)
                         {
                             SenderID = "??" + "System",
                             Message = "\r\n" + "You cannot delete a sim younger than a week old!",

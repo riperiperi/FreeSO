@@ -2,6 +2,9 @@
 using FSO.Common.Domain.Shards;
 using FSO.Content.Model;
 using FSO.Server.Protocol.CitySelector;
+using FSO.Server.Protocol.Electron.Model.CityEditCommands;
+using FSO.Server.Protocol.Electron.Packets;
+using Microsoft.Xna.Framework;
 using System.Text.RegularExpressions;
 
 namespace FSO.Common.Domain.Realestate
@@ -42,7 +45,8 @@ namespace FSO.Common.Domain.Realestate
                 }
 
                 var shard = _Shards.GetById(shardId);
-                var item = new ShardRealestateDomain(shard, this._Content.CityMaps.Get(shard.Map));
+                var map = _Shards.GetMapForId(shardId);
+                var item = new ShardRealestateDomain(shard, map);
                 _ByShard.Add(shardId, item);
                 return item;
             }
@@ -62,6 +66,14 @@ namespace FSO.Common.Domain.Realestate
             }
             return true;
         }
+
+        public void Reset()
+        {
+            lock (_ByShard)
+            {
+                _ByShard.Clear();
+            }
+        }
     }
 
     public class ShardRealestateDomain : IShardRealestateDomain
@@ -69,11 +81,50 @@ namespace FSO.Common.Domain.Realestate
         private LotPricingStrategy _Pricing;
         private CityMap _Map;
 
+        public int ID { get; private set; }
+        public bool Dynamic => true;
+        public CityUndoStack UndoStack { get; private set; } = new CityUndoStack();
+        private CityMap _BaseMap;
+        private CityMap _PreTempMap;
+        private CityMap _UndoWorkingMap;
+        private Rectangle? _TempChangeBounds;
+
+        private List<CityEditBase> _Commands = [];
+        private CityEditBase _MyTempCommand;
+        private List<CityEditBase> _TempCommands = [];
+
+        private Task<byte[]> CompressedBaseData;
+
+        public event Action<Rectangle> OnMapChange;
+
         public ShardRealestateDomain(ShardStatusItem shard, CityMap map)
         {
             _Map = map;
+            ID = shard.Id;
+            if (Dynamic)
+            {
+                _Map = new(map);
+                _BaseMap = new(map);
+
+                CompressedBaseData = Task.Run(CompressMap);
+            }
             //TODO: Hardcore
             _Pricing = new BasicLotPricingStrategy();
+        }
+
+        private CityMap GetUndoWorkingMap()
+        {
+            if (_UndoWorkingMap == null)
+            {
+                _UndoWorkingMap = new CityMap(_Map);
+            }
+            else
+            {
+                _UndoWorkingMap.Set(_Map);
+                _UndoWorkingMap.ConsumeDirty();
+            }
+
+            return _UndoWorkingMap;
         }
 
         public int GetPurchasePrice(ushort x, ushort y)
@@ -143,6 +194,265 @@ namespace FSO.Common.Domain.Realestate
         public CityMap GetMap()
         {
             return _Map;
+        }
+
+        private byte[] CompressMap()
+        {
+            return _BaseMap.Save().Write();
+        }
+
+        private byte[] GetCompressedBaseData()
+        {
+            return CompressedBaseData.Result;
+        }
+
+        public CityInitResponse GetInit()
+        {
+            return new CityInitResponse()
+            {
+                CityData = GetCompressedBaseData(),
+                Commands = [.. _Commands.Select(x => new CityEditCommand(x))]
+            };
+        }
+
+        public int AppendCommand(CityEditBase command, HashSet<uint> reservedTiles = null, HashSet<uint> toUpdate = null)
+        {
+            if (_TempChangeBounds != null)
+            {
+                // Undo any temp changes so we can apply the command for real
+                _Map.Set(_PreTempMap);
+            }
+
+            // When a command appears for real, remove it from the temp command set.
+            _TempCommands.RemoveAll(x => x.AvatarId == command.AvatarId && x.UserModId == command.UserModId);
+
+            if (!CityMapUtils.ValidateCommand(_Map, command))
+            {
+                return -1;
+            }
+
+            UndoStack.AddCommand(command);
+
+            int index = _Commands.Count;
+
+            _Commands.Add(command);
+
+            CityMapUtils.ApplyCommand(_Map, command, reservedTiles, toUpdate);
+
+            if (OnMapChange != null)
+            {
+                var bound = CityMapUtils.GetBounds(_Map, command);
+
+                if (bound != null)
+                {
+                    _PreTempMap?.Set(_Map);
+                    ApplyTempCommands(bound);
+                }
+            }
+
+            return index;
+        }
+
+        /// <summary>
+        /// Set the temp command for this client (modifications the client is performing).
+        /// </summary>
+        /// <param name="command"></param>
+        /// <returns>True when all temp commands are valid</returns>
+        public bool SetMyTempCommand(CityEditBase command)
+        {
+            bool redraw = true;
+            if (command == null)
+            {
+                redraw = _TempCommands.Remove(_MyTempCommand);
+            }
+            else
+            {
+                if (_MyTempCommand != null)
+                {
+                    SetMyTempCommand(null);
+                }
+
+                var matching = _TempCommands.FindIndex(x => x.AvatarId == command.AvatarId && x.UserModId == command.UserModId);
+
+                if (matching != -1)
+                {
+                    _TempCommands[matching] = command;
+                }
+                else
+                {
+                    _TempCommands.Add(command);
+                }
+            }
+
+            _MyTempCommand = command;
+
+            if (redraw)
+            {
+                return ApplyTempCommands();
+            }
+
+            return true;
+        }
+
+        private void RedrawAll()
+        {
+            _Map.Set(_BaseMap);
+
+            Rectangle? tempBounds = null;
+            foreach (var cmd in _Commands)
+            {
+                if (CityMapUtils.ApplyCommand(_Map, cmd))
+                {
+                    var modBounds = CityMapUtils.GetBounds(_Map, cmd);
+
+                    tempBounds = Union(tempBounds, modBounds);
+                }
+            }
+
+            // TODO: combine all bounds before with all bounds now to get the range to invalidate.
+
+            _PreTempMap?.Set(_Map);
+            ApplyTempCommands(new Rectangle(0, 0, 512, 512));
+        }
+
+        public bool HandleUserCommand(CityUpdateCommand command, HashSet<uint> reservedTiles = null, HashSet<uint> toUpdate = null, HashSet<uint> blockedTiles = null)
+        {
+            switch (command.Mode)
+            {
+                case CityUpdateCommandMode.Undo:
+                    // Find the command with the given owner and ID, and undo it.
+                    var toUndo = _Commands.FindIndex(cmd => cmd.AvatarId == command.AvatarID && cmd.UserModId == command.TargetUID);
+
+                    if (toUndo != -1)
+                    {
+                        UndoStack.HandleUndo(_Commands[toUndo]);
+
+                        // Replay the commands til we get to the undo command
+
+                        _Map.Set(_BaseMap);
+
+                        CityMapAspects undoAspects = CityMapAspects.None;
+                        Rectangle? undoBounds = null;
+                        for (int i = 0; i < _Commands.Count; i++)
+                        {
+                            var cmd = _Commands[i];
+                            bool isUndo = i == toUndo;
+                            var map = isUndo ? GetUndoWorkingMap() : _Map;
+
+                            if (CityMapUtils.ApplyCommand(map, cmd, isUndo ? reservedTiles : null, isUndo ? toUpdate : null, isUndo))
+                            {
+                                var modBounds = CityMapUtils.GetBounds(_Map, cmd);
+
+                                if (isUndo)
+                                {
+                                    undoBounds = Union(undoBounds, modBounds);
+                                }
+                            }
+
+                            if (isUndo)
+                            {
+                                // Determine if we're meant to skip this command or not...
+                                if (blockedTiles != null && blockedTiles.Count > 0 && toUpdate.Count > 0)
+                                {
+                                    var intersect = blockedTiles.Intersect(toUpdate);
+
+                                    if (intersect.Any())
+                                    {
+                                        // We can't undo this command without modifying a blocked tile.
+                                        // Clear the undo and replay the remaining commands
+                                        // (including the one we tried to undo, by deliberately not incrementing i)
+                                        toUndo = -1;
+                                        i--;
+                                        continue;
+                                    }
+                                }
+
+                                undoAspects |= map.ConsumeDirty();
+                            }
+                        }
+
+                        _PreTempMap?.Set(_Map);
+                        ApplyTempCommands(toUndo == -1 ? null : undoBounds);
+
+                        if (toUndo == -1)
+                        {
+                            return false;
+                        }
+                        else
+                        {
+                            _Commands.RemoveAt(toUndo);
+                            _Map.SetDirty(undoAspects);
+                        }
+
+                        return true;
+                    }
+                    break;
+            }
+
+            return false;
+        }
+
+        private Rectangle? Union(Rectangle? first, Rectangle? second)
+        {
+            if (!first.HasValue)
+            {
+                return second;
+            }
+            else if (!second.HasValue)
+            {
+                return first;
+            }
+            else
+            {
+                return Rectangle.Union(first.Value, second.Value);
+            }
+        }
+
+        public bool ApplyTempCommands(Rectangle? bounds = null)
+        {
+            // If we don't have a pre-temp copy, make it now.
+            if (_PreTempMap == null && _TempCommands.Count > 0)
+            {
+                _PreTempMap = new(_Map);
+            }
+
+            // If there were previous temp changes, roll them back so we can apply the new ones
+            if (_TempChangeBounds != null)
+            {
+                bounds = Union(bounds, _TempChangeBounds);
+                _Map.Set(_PreTempMap);
+            }
+
+            bool allTempValid = true;
+
+            Rectangle? tempBounds = null;
+            foreach (var temp in _TempCommands)
+            {
+                bool valid = CityMapUtils.ValidateCommand(_Map, temp);
+                if (valid && CityMapUtils.ApplyCommand(_Map, temp))
+                {
+                    var modBounds = CityMapUtils.GetBounds(_Map, temp);
+
+                    tempBounds = Union(tempBounds, modBounds);
+                }
+
+                allTempValid = allTempValid && valid;
+            }
+
+            bounds = Union(tempBounds, bounds);
+            if (bounds != null)
+            {
+                OnMapChange?.Invoke(bounds.Value);
+            }
+
+            _TempChangeBounds = tempBounds;
+
+            return allTempValid;
+        }
+
+        public void TrackUndo(uint avatarId)
+        {
+            UndoStack.WatchAvatar(avatarId, _Commands);
         }
     }
 }

@@ -1,10 +1,7 @@
-﻿using System;
+﻿using FSO.Common.Utils;
 using System.Collections.Concurrent;
-using System.Collections.Generic;
-using System.IO;
 using System.IO.Compression;
-using System.Linq;
-using System.Threading;
+using static FSO.Client.Utils.MultithreadedZipExtractor;
 
 namespace FSO.Client.Utils
 {
@@ -12,10 +9,47 @@ namespace FSO.Client.Utils
     {
         Preparing,
         Extracting,
-        Completed
+        Completed,
+        Error
     }
 
-    public class MultithreadedZipExtractor : IDisposable
+    public abstract class AbstractExtractor : IDisposable
+    {
+        protected string _extractPath;
+        protected ZipExtractionProgressDelegate _onUpdate;
+
+        protected bool _failed;
+        public Exception Error { get; private set; }
+        public string Filename { get; protected set; }
+
+        public virtual void Start(string path, string extractPath, ZipExtractionProgressDelegate onUpdate)
+        {
+            Filename = Path.GetFileName(path);
+            _onUpdate = onUpdate;
+            _extractPath = extractPath;
+        }
+
+        public abstract void Dispose();
+
+        protected virtual void HandleError()
+        {
+
+        }
+
+        public void ReportError(Exception e)
+        {
+            if (Interlocked.Exchange(ref _failed, true) == false)
+            {
+                Error = e;
+
+                HandleError();
+
+                _onUpdate?.Invoke(ZipExtractionStatus.Error, 0, 0);
+            }
+        }
+    }
+
+    public class MultithreadedZipExtractor : AbstractExtractor
     {
         private struct QueuedFile
         {
@@ -26,7 +60,6 @@ namespace FSO.Client.Utils
         public delegate void ZipExtractionProgressDelegate(ZipExtractionStatus status, int extracted, int total);
         private const int IOThreadCount = 4;
 
-        private string _extractPath;
         private int _entryCount;
         private Thread _extractThread;
 
@@ -34,14 +67,23 @@ namespace FSO.Client.Utils
 
         private int _extractedCount;
         private bool _cancelled;
-        private ZipExtractionProgressDelegate _onUpdate;
+        private BlockingCollection<QueuedFile> _fileQueue;
 
-        public MultithreadedZipExtractor(string path, string extractPath, ZipExtractionProgressDelegate onUpdate)
+        public override void Start(string path, string extractPath, ZipExtractionProgressDelegate onUpdate)
         {
-            _onUpdate = onUpdate;
-            _extractPath = extractPath;
+            base.Start(path, extractPath, onUpdate);
 
-            _extractThread = new Thread(() => ExtractThread(path));
+            _extractThread = new Thread(() =>
+            {
+                try
+                {
+                    ExtractThread(path);
+                }
+                catch (Exception e)
+                {
+                    ReportError(e);
+                }
+            });
             _extractThread.Start();
         }
 
@@ -56,7 +98,7 @@ namespace FSO.Client.Utils
 
                 foreach (var entry in file.Entries)
                 {
-                    if (_cancelled) break;
+                    if (_cancelled || _failed) break;
 
                     if (entry.Name.Length == 0) continue;
 
@@ -73,6 +115,7 @@ namespace FSO.Client.Utils
                 }
 
                 var queue = new BlockingCollection<QueuedFile>(50);
+                _fileQueue = queue;
 
                 Thread[] consumers = new Thread[IOThreadCount];
 
@@ -84,7 +127,7 @@ namespace FSO.Client.Utils
 
                 foreach (var entry in entries)
                 {
-                    if (_cancelled) break;
+                    if (_cancelled || _failed) break;
 
                     bool tooBig = entry.Length > 10_000_000;
 
@@ -132,21 +175,44 @@ namespace FSO.Client.Utils
             }
         }
 
+        protected override void HandleError()
+        {
+            base.HandleError();
+
+            if (_fileQueue != null)
+            {
+
+                for (int i = 0; i < IOThreadCount; i++)
+                {
+                    // Wake the consumers so that they try to exit.
+
+                    _fileQueue.TryAdd(new QueuedFile());
+                }
+            }
+        }
+
         private void ConsumeIO(BlockingCollection<QueuedFile> queue)
         {
-            while (true)
+            try
             {
-                var item = queue.Take();
-
-                if (item.Data == null)
+                while (!_failed && !_cancelled)
                 {
-                    return;
+                    var item = queue.Take();
+
+                    if (item.Data == null)
+                    {
+                        return;
+                    }
+
+                    string realPath = GetDirectory(item.Path);
+                    File.WriteAllBytes(realPath, item.Data);
+
+                    SignalUpdate();
                 }
-
-                string realPath = GetDirectory(item.Path);
-                File.WriteAllBytes(realPath, item.Data);
-
-                SignalUpdate();
+            }
+            catch (Exception e)
+            {
+                ReportError(e);
             }
         }
 
@@ -160,7 +226,7 @@ namespace FSO.Client.Utils
         private string GetDirectory(string path)
         {
             string dir = Path.GetDirectoryName(path);
-            string targetDir = Path.Combine(_extractPath, dir);
+            string targetDir = PathUtils.SafeCombine(_extractPath, dir);
 
             bool isCreated = false;
             lock (_createdFolders)
@@ -178,10 +244,10 @@ namespace FSO.Client.Utils
                 }
             }
 
-            return Path.Combine(_extractPath, path);
+            return PathUtils.SafeCombine(_extractPath, path);
         }
 
-        public void Dispose()
+        public override void Dispose()
         {
             _cancelled = true;
         }

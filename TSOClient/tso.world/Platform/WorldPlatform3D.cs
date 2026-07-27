@@ -295,7 +295,7 @@ namespace FSO.LotView.Platform
                 obj.Direction = oldObjRot;
                 obj.Room = oldRoom;
                 obj.Container = oldContainer;
-                obj.UnmoddedPosition = oldObjPos;
+                obj.Position = oldObjPos;
                 obj.OnRotationChanged(state);
                 obj.OnZoomChanged(state);
             }

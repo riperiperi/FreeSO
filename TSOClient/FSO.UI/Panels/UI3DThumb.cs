@@ -1,4 +1,5 @@
 ﻿using FSO.Client;
+using FSO.Common;
 using FSO.Common.Rendering.Framework;
 using FSO.Common.Rendering.Framework.Camera;
 using FSO.LotView.Components;
@@ -30,7 +31,7 @@ namespace FSO.UI.Panels
         {
             Camera = new BasicCamera(GameFacade.GraphicsDevice, new Vector3(3, 1, 0), new Vector3(0, 0, 0), new Vector3(0, 1, 0));
             Camera.NearPlane = 0.001f;
-            Scene = new _3DTargetScene(GameFacade.GraphicsDevice, Camera, new Point(150, 150), 0);
+            Scene = new _3DTargetScene(GameFacade.GraphicsDevice, Camera, new Point((int)(150 * FSOEnvironment.DPIScaleFactor), (int)(150 * FSOEnvironment.DPIScaleFactor)), 0);
             Scene.Initialize(GameFacade.Scenes);
 
             if (Comp3D != null)

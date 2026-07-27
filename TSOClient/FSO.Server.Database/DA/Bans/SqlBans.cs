@@ -9,6 +9,11 @@ namespace FSO.Server.Database.DA.Bans
         {
         }
 
+        public List<DbBan> All()
+        {
+            return Context.Connection.Query<DbBan>("SELECT * FROM fso_ip_ban").ToList();
+        }
+
         public DbBan GetByIP(string ip)
         {
             return Context.Connection.Query<DbBan>("SELECT * FROM fso_ip_ban WHERE ip_address = @ip", new { ip = ip }).FirstOrDefault();
@@ -47,6 +52,11 @@ namespace FSO.Server.Database.DA.Bans
         public void Remove(uint user_id)
         {
             Context.Connection.Query("DELETE FROM fso_ip_ban WHERE user_id = @user_id", new { user_id = user_id });
+        }
+
+        public void RemoveByIp(string ip)
+        {
+            Context.Connection.Query("DELETE FROM fso_ip_ban WHERE ip_address = @ip_address", new { ip_address = ip });
         }
     }
 }

@@ -152,7 +152,7 @@ namespace FSO.Client.UI.Panels.Neighborhoods
 
         public void DrawGlobalTexture(SpriteBatch batch, Texture2D texture, Nullable<Rectangle> from, Vector2 to, Vector2 scale, Color blend)
         {
-            var pos = FlooredLocalPoint(Vector2.Zero)/_Scale;
+            var pos = AlignedLocalPoint(Vector2.Zero, _Scale)/_Scale;
             DrawLocalTexture(batch, texture, from, to/_Scale-pos, scale/_Scale, blend);
         }
 
@@ -163,7 +163,7 @@ namespace FSO.Client.UI.Panels.Neighborhoods
             _ScaleY = 1 / Parent.Scale.Y;
             
             CalculateMatrix();
-            var pos = FlooredLocalPoint(Vector2.Zero);
+            var pos = AlignedLocalPoint(Vector2.Zero, _Scale);
             DrawLocalString(batch, text, to - pos, style, bounds, align);
             //_Scale = scale;
             _ScaleX = scale.X;

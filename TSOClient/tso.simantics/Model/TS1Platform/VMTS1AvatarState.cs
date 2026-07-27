@@ -13,6 +13,10 @@ namespace FSO.SimAntics.Model.TS1Platform
         {
             get; set;
         }
+        public VMTSOAvatarFlags Flags
+        {
+            get; set;
+        }
 
         public override void Deserialize(BinaryReader reader)
         {

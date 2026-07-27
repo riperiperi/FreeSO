@@ -1,21 +1,40 @@
-﻿using FSO.Common.Utils;
+﻿using FSO.Common.Domain.Realestate;
+using FSO.Common.Utils;
+using FSO.Content.Model;
 using Microsoft.Xna.Framework;
 using Microsoft.Xna.Framework.Graphics;
-using System;
-using System.Collections.Generic;
 using System.Runtime.CompilerServices;
-using System.Threading.Tasks;
 
 namespace FSO.Client.Rendering.City
 {
+    public readonly record struct CitySliceKey
+    {
+        public readonly int SliceID;
+        public readonly Rectangle? FlattenRect;
+
+        public CitySliceKey(int sliceID, uint lotId)
+        {
+            SliceID = sliceID;
+            FlattenRect = null;
+
+            if (lotId != 0)
+            {
+                // Try and build a flatten rect around the target lot.
+                // If surrounding lots are disabled, it only affects the current lot.
+                // If they're enabled, it affects the surrounding lots too.
+
+                var pos = MapCoordinates.Unpack(lotId);
+
+                FlattenRect = new Rectangle(pos.ToPoint(), new Point(1));
+            }
+        }
+    }
+
     public class CityGeometry
     {
-        private static Matrix RotToNormalXY = Matrix.CreateRotationZ((float)(Math.PI / 2));
-        private static Matrix RotToNormalZY = Matrix.CreateRotationX(-(float)(Math.PI / 2));
-
         //draw order:
         //grass, sand, rock, snow, water
-        public CityMapData MapData;
+        public CityMap MapData;
         public IndexBuffer[] LayerIndices = new IndexBuffer[5];
         public VertexBuffer[] LayerVertices = new VertexBuffer[5];
         public int[][] LayerSubPrims = new int[5][];
@@ -27,7 +46,7 @@ namespace FSO.Client.Rendering.City
         public int Width;
         public int Height;
         public int Ready = -1;
-        public int CurrentSlice = -1;
+        public CitySliceKey? CurrentSlice = null;
 
         private bool MeshRegenInProgress;
         private bool MeshDirty;
@@ -38,23 +57,22 @@ namespace FSO.Client.Rendering.City
             return elevationData[(y * 512 + x)] / 6.0f;
         }
 
-        private Blend GetBlend(byte[] TerrainTypeData, int i, int j)
+        private Blend GetBlend(TerrainType[] TerrainTypeData, int i, int j)
         {
-            int[] edges;
+            Span<int> edges = [-1, -1, -1, -1];
             int sample;
             int t;
 
-            edges = new int[] { -1, -1, -1, -1 };
-            sample = TerrainTypeData[i * 512 + j];
-            t = TerrainTypeData[Math.Abs((i - 1) * 512 + j)];
+            sample = (int)TerrainTypeData[i * 512 + j];
+            t = (int)TerrainTypeData[Math.Abs((i - 1) * 512 + j)];
 
-            if ((i - 1 >= 0) && (t > sample) && t != 255) edges[0] = t;
-            t = TerrainTypeData[i * 512 + j + 1];
-            if ((j + 1 < 512) && (t > sample) && t != 255) edges[1] = t;
-            t = TerrainTypeData[Math.Min((i + 1), 511) * 512 + j];
-            if ((i + 1 < 512) && (t > sample) && t != 255) edges[2] = t;
-            t = TerrainTypeData[i * 512 + j - 1];
-            if ((j - 1 >= 0) && (t > sample) && t != 255) edges[3] = t;
+            if ((i - 1 >= 0) && (t > sample) && t != -1) edges[0] = t;
+            t = (int)TerrainTypeData[i * 512 + j + 1];
+            if ((j + 1 < 512) && (t > sample) && t != -1) edges[1] = t;
+            t = (int)TerrainTypeData[Math.Min((i + 1), 511) * 512 + j];
+            if ((i + 1 < 512) && (t > sample) && t != -1) edges[2] = t;
+            t = (int)TerrainTypeData[i * 512 + j - 1];
+            if ((j - 1 >= 0) && (t > sample) && t != -1) edges[3] = t;
 
 
             int binary =
@@ -71,10 +89,12 @@ namespace FSO.Client.Rendering.City
             for (int x = 0; x < 4; x++)
                 if (edges[x] < maxEdge && edges[x] != -1) maxEdge = edges[x];
 
-            Blend ReturnBlend = new Blend();
-            ReturnBlend.Binary = binary;
-            ReturnBlend.AtlasPosition = atlasPos;
-            ReturnBlend.MaxEdge = maxEdge;
+            Blend ReturnBlend = new Blend
+            {
+                Binary = binary,
+                AtlasPosition = atlasPos,
+                MaxEdge = maxEdge
+            };
 
             return ReturnBlend;
         }
@@ -83,42 +103,33 @@ namespace FSO.Client.Rendering.City
         {
             var sum = new Vector3();
 
+            float myElevation = GetElevationPoint(elevationData, x, y);
+
             if (x < 511)
             {
-                var vec = new Vector3();
-                vec.X = 1;
-                vec.Y = GetElevationPoint(elevationData, x + 1, y) - GetElevationPoint(elevationData, x, y);
-                vec = Vector3.Transform(vec, RotToNormalXY);
-                sum += vec;
+                sum.X -= GetElevationPoint(elevationData, x + 1, y) - myElevation;
+                sum.Y += 1;
             }
 
             if (x > 1)
             {
-                var vec = new Vector3();
-                vec.X = 1;
-                vec.Y = GetElevationPoint(elevationData, x, y) - GetElevationPoint(elevationData, x - 1, y);
-                vec = Vector3.Transform(vec, RotToNormalXY);
-                sum += vec;
+                sum.X -= myElevation - GetElevationPoint(elevationData, x - 1, y);
+                sum.Y += 1;
             }
 
             if (y < 511)
             {
-                var vec = new Vector3();
-                vec.Z = 1;
-                vec.Y = GetElevationPoint(elevationData, x, y + 1) - GetElevationPoint(elevationData, x, y);
-                vec = Vector3.Transform(vec, RotToNormalZY);
-                sum += vec;
+                sum.Z -= GetElevationPoint(elevationData, x, y + 1) - myElevation;
+                sum.Y += 1;
             }
 
             if (y > 1)
             {
-                var vec = new Vector3();
-                vec.Z = 1;
-                vec.Y = GetElevationPoint(elevationData, x, y) - GetElevationPoint(elevationData, x, y - 1);
-                vec = Vector3.Transform(vec, RotToNormalZY);
-                sum += vec;
+                sum.Z -= myElevation - GetElevationPoint(elevationData, x, y - 1);
+                sum.Y += 1;
             }
-            if (sum != Vector3.Zero) sum.Normalize();
+
+            if (sum.Y != 0) sum.Normalize();
             return sum;
         }
 
@@ -189,7 +200,7 @@ namespace FSO.Client.Rendering.City
 
             Action generate = () =>
             {
-                byte[] terrainType = MapData.TerrainType;
+                TerrainType[] terrainType = MapData.TerrainType;
                 byte[] roadData = MapData.RoadData;
                 byte[] elevationData = MapData.ElevationData;
 
@@ -230,7 +241,7 @@ namespace FSO.Client.Rendering.City
                             { //where the magic happens
                                 var ex = Math.Min(Math.Max(rXS, j), rXE - 1);
                                 var blendData = GetBlend(terrainType, i, ex); //gets information on what this tile blends into and what blend image to use for the alpha.
-                                var type = terrainType[((i * 512) + ex)];
+                                var type = (byte)terrainType[((i * 512) + ex)];
                                 byte roadByte = roadData[(i * 512 + ex)];
 
                                 if (type == 255)
@@ -497,8 +508,8 @@ namespace FSO.Client.Rendering.City
                     RoadIndices.SetData(roadIndices.ToArray());
                     RoadVertices = new VertexBuffer(gd, typeof(TLayerVertex), roadVertices.Count, BufferUsage.None);
                     RoadVertices.SetData(roadVertices.ToArray());
-                    RoadPrims = roadIndices.Count / 3;
                 }
+                RoadPrims = roadIndices.Count / 3;
             };
 
 
@@ -538,14 +549,43 @@ namespace FSO.Client.Rendering.City
             }
         }
 
-        private int O(int x, int y, int minx, int maxx)
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
+        private static int O(int x, int y, int minx, int maxx)
         {
             return (Math.Max(0, Math.Min(511, y)) * 512 + Math.Max(minx, Math.Min(maxx, x)));
         }
 
-        public void SubRegenMeshVerts(GraphicsDevice gd, Rectangle? range, int subdiv, int cpos)
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
+        private static float GetContinuity(int x, int y, in Rectangle range, in Rectangle? flattenRect)
         {
-            CurrentSlice = cpos;
+            if (x <= range.X || x >= range.Right || y <= range.Y || y >= range.Bottom)
+            {
+                return -1;
+            }
+
+            if (flattenRect.HasValue)
+            {
+                Rectangle rect = flattenRect.Value;
+
+                if (x >= rect.X && x <= rect.Right && y >= rect.Y && y <= rect.Bottom)
+                {
+                    return -1;
+                }
+            }
+
+            return 0;
+        }
+
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
+        private static float Lerp(float a, float b, float t)
+        {
+            return a * (1 - t) + b * t;
+        }
+
+        public void SubRegenMeshVerts(GraphicsDevice gd, Rectangle range, int subdiv, CitySliceKey slice)
+        {
+            var cpos = slice.SliceID;
+            CurrentSlice = slice;
             var indices = new List<int>[5];
             var vertices = new List<TLayerVertex>[5];
 
@@ -569,15 +609,12 @@ namespace FSO.Client.Rendering.City
             float subd1f = 1f / subdiv;
             int vertCount = subd1 * subd1;
 
-            if (range.HasValue)
-            {
-                yStart = range.Value.Y;
-                yEnd = range.Value.Bottom;
-            }
+            yStart = range.Y;
+            yEnd = range.Bottom;
 
             Task.Run(() =>
             {
-                byte[] terrainType = MapData.TerrainType;
+                TerrainType[] terrainType = MapData.TerrainType;
                 byte[] roadData = MapData.RoadData;
                 byte[] elevationData = MapData.ElevationData;
 
@@ -608,17 +645,14 @@ namespace FSO.Client.Rendering.City
                     xStart -= fadeRange;
                     xEnd += fadeRange;
 
-                    if (range.HasValue)
-                    {
-                        xStart = Math.Max(range.Value.X, xStart);
-                        xEnd = Math.Min(range.Value.Right, xEnd);
-                    }
+                    xStart = Math.Max(range.X, xStart);
+                    xEnd = Math.Min(range.Right, xEnd);
 
                     for (int j = xStart; j < xEnd; j++)
                     { //where the magic happens
                         var ex = Math.Min(Math.Max(rXS, j), rXE - 1);
                         var blendData = GetBlend(terrainType, i, ex); //gets information on what this tile blends into and what blend image to use for the alpha.
-                        var type = terrainType[((i * 512) + ex)];
+                        var type = (byte)terrainType[((i * 512) + ex)];
                         byte roadByte = roadData[(i * 512 + ex)];
 
                         if (type == 255)
@@ -648,35 +682,38 @@ namespace FSO.Client.Rendering.City
                         var normalRoad = roadByte & 15;
                         var cornerRoad = roadByte >> 4;
 
-                        var yEdge = (j == range.Value.X) ? -1f : 0f;
-                        var yEdge2 = (j == range.Value.Right - 1) ? -1f : 0f;
+                        // Also enforce continuity when within the FlattenRect
 
-                        var xEdge = (i == range.Value.Y) ? -1f : 0f;
-                        var xEdge2 = (i == range.Value.Bottom - 1) ? -1f : 0f;
+                        var cont00 = GetContinuity(j, i, range, in slice.FlattenRect);
+                        var cont10 = GetContinuity(j + 1, i, range, in slice.FlattenRect);
+                        var cont01 = GetContinuity(j, i + 1, range, in slice.FlattenRect);
+                        var cont11 = GetContinuity(j + 1, i + 1, range, in slice.FlattenRect);
 
-
-                        var d = new float[]
-                        {
+                        Span<float> d =
+                        [
                             md[O(j - 1, i - 1, rXS, rXE)], md[O(j - 1, i, rXS, rXE)], md[O(j - 1, i + 1, rXS2, rXE2)], md[O(j - 1, i + 2, rXS2, rXE2)],
                             md[O(j, i - 1, rXS, rXE)], md[O(j, i, rXS, rXE)], md[O(j, i + 1, rXS2, rXE2)], md[O(j, i + 2, rXS2, rXE2)],
                             md[O(j + 1, i - 1, rXS, rXE)], md[O(j + 1, i, rXS, rXE)], md[O(j + 1, i + 1, rXS2, rXE2)], md[O(j + 1, i + 2, rXS2, rXE2)],
                             md[O(j + 2, i - 1, rXS, rXE)], md[O(j + 2, i, rXS, rXE)], md[O(j + 2, i + 1, rXS2, rXE2)], md[O(j + 2, i + 2, rXS2, rXE2)],
-                        };
+                        ];
 
                         var normalTile = (j > rXS && j < rXE);
 
                         var yi = 0f;
                         for (int y = 0; y < subd1; y++)
                         {
-                            var lXE = (yi * xEdge2) + ((1 - yi) * xEdge);
                             var xi = 0f;
                             for (int x = 0; x < subd1; x++)
                             {
+                                var yEdge = Lerp(cont00, cont01, yi);
+                                var yEdge2 = Lerp(cont10, cont11, yi);
+
                                 float y1 = Cubic(d[0], d[1], d[2], d[3], yi, yEdge);
                                 float y2 = Cubic(d[4], d[5], d[6], d[7], yi, yEdge);
                                 float y3 = Cubic(d[8], d[9], d[10], d[11], yi, yEdge2);
                                 float y4 = Cubic(d[12], d[13], d[14], d[15], yi, yEdge2);
 
+                                var lXE = Lerp(yEdge, yEdge2, xi);
                                 var h = Cubic(y1, y2, y3, y4, xi, lXE);
 
                                 var lerpNX = Vector3.Lerp(norm1, norm2, xi);

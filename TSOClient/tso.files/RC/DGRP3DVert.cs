@@ -3,7 +3,7 @@ using System.Runtime.InteropServices;
 
 namespace Microsoft.Xna.Framework.Graphics
 {
-    [StructLayout(LayoutKind.Sequential, Pack = 1)]
+    [StructLayout(LayoutKind.Sequential, Pack = 1, Size = 32)]
     public struct DGRP3DVert : IVertexType
     {
         public Vector3 Position;
@@ -65,9 +65,9 @@ namespace Microsoft.Xna.Framework.Graphics
             VertexDeclaration = declaration;
         }
 
-        public static void GenerateNormals(bool invert, List<DGRP3DVert> verts, IList<int> indices)
+        public static void GenerateNormals(bool invert, Span<DGRP3DVert> verts, ReadOnlySpan<int> indices)
         {
-            for (int i = 0; i < indices.Count; i += 3)
+            for (int i = 0; i < indices.Length; i += 3)
             {
                 var v1 = verts[indices[i + 1]].Position - verts[indices[i]].Position;
                 var v2 = verts[indices[i + 2]].Position - verts[indices[i + 1]].Position;
@@ -75,18 +75,23 @@ namespace Microsoft.Xna.Framework.Graphics
                 for (int j = 0; j < 3; j++)
                 {
                     var id = indices[i + j];
-                    var v = verts[id];
-                    v.Normal += cross;
-                    verts[id] = v;
+                    verts[id].Normal += cross;
                 }
             }
 
-            for (int i = 0; i < verts.Count; i++)
+            for (int i = 0; i < verts.Length; i++)
             {
-                var v = verts[i];
-                v.Normal.Normalize();
-                verts[i] = v;
+                ref var v = ref verts[i];
+                if (v.Normal != Vector3.Zero)
+                {
+                    v.Normal.Normalize();
+                }
             }
+        }
+
+        public static void GenerateNormals(bool invert, List<DGRP3DVert> verts, List<int> indices)
+        {
+            GenerateNormals(invert, CollectionsMarshal.AsSpan(verts), CollectionsMarshal.AsSpan(indices));
         }
 
         public static List<int> StripToTri(List<int> ind)

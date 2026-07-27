@@ -64,7 +64,7 @@ namespace FSO.SimAntics.Utils
             var type = simi.GlobalData[35];
             var size = Size; //ts1 lots are 64x64... but we convert them into dynamic size.
             if (VM.UseWorld) this.Blueprint = new Blueprint(size, size);
-            VM.Entities = new List<VMEntity>();
+            VM.Entities = [];
             VM.Scheduler = new Engine.VMScheduler(VM);
             VM.TS1State.SimulationInfo = simi;
             VM.Context = new VMContext(VM.Context.World);

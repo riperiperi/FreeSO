@@ -10,10 +10,16 @@
     <AssemblyName>FSOFacadeWorker</AssemblyName>
     <FileAlignment>512</FileAlignment>
     <TrimMode>partial</TrimMode>
+    <AllowUnsafeBlocks>True</AllowUnsafeBlocks>
   </PropertyGroup>
 
   <ItemGroup>
     <None Include="facadeconfig.sample.json" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <PackageReference Include="MonoGame.Framework.WindowsDX" Version="3.8.5-preview.2" />
+    <PackageReference Include="System.Runtime.CompilerServices.Unsafe" Version="6.0.0" />
   </ItemGroup>
 
   <ItemGroup>
@@ -30,5 +36,19 @@
     <ProjectReference Include="..\tso.vitaboy.model\FSO.Vitaboy.csproj" />
     <ProjectReference Include="..\tso.world\FSO.LotView.csproj" />
   </ItemGroup>
+
+	<PropertyGroup>
+		<NuGetGlobalPackages Condition=" '$(OS)' == 'Windows_NT' ">$(USERPROFILE)\.nuget\packages</NuGetGlobalPackages>
+		<NuGetGlobalPackages Condition=" '$(OS)' != 'Windows_NT' ">$(HOME)/.nuget/packages</NuGetGlobalPackages>
+	</PropertyGroup>
+
+	<Target Name="CopyMonoGameDLLs" AfterTargets="Build">
+		<!-- Remove root MonoGame.Framework.dll if it exists -->
+		<Delete Files="$(OutputPath)MonoGame.Framework.dll" ContinueOnError="true" />
+		<ItemGroup>
+			<MGWindowsDX Include="$(NuGetGlobalPackages)\monogame.framework.windowsdx\3.8.5-preview.2\lib\**\MonoGame.Framework.dll" />
+		</ItemGroup>
+		<Copy SourceFiles="@(MGWindowsDX)" DestinationFolder="$(OutputPath)" SkipUnchangedFiles="true" />
+	</Target>
 
 </Project>

@@ -5,3 +5,7 @@
 5 ^Reconnecting to Lot Server... (%s/10)^
 6 ^3D Meshes Generating... (%s in queue)^
 7 ^Direct Control (F10)^
+8 ^Downloading City Data...^
+9 ^Downloaded City Data! Finishing up...^
+10 ^Overall Progress^
+11 ^Current Task^

@@ -460,7 +460,7 @@ namespace FSO.SimAntics
                         var meshes = Content.Content.Get().RCMeshes;
                         // somehow this leaks in the facade worker..
                         // they tend to be allocated a lot back to back, but they also allocate far apart
-                        part.Tex = meshes.GetTex("FSO_smoke.png").Value.Holder.GetTexture(meshes.GD); 
+                        part.Tex = meshes.GetTex("FSO_smoke.png", 65535).Value.Holder.GetTexture(meshes.GD); 
                         WorldUI.blueprint.ObjectParticles.Add(part);
                     });
                     ((ObjectComponent)WorldUI).Particles.Add(part);

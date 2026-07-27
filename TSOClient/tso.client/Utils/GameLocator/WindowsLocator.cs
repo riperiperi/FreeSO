@@ -14,7 +14,7 @@ namespace FSO.Client.Utils.GameLocator
 
             // Search relative directory similar to how macOS and Linux works; allows portability
             string localDir = @"../The Sims Online/TSOClient/";
-            if (File.Exists(Path.Combine(localDir, "tuning.dat"))) return localDir;
+            if (ILocator.ValidPath(localDir)) return localDir;
 
             using (var hklm = RegistryKey.OpenBaseKey(RegistryHive.LocalMachine, RegistryView.Registry32))
             {
@@ -29,13 +29,22 @@ namespace FSO.Client.Utils.GameLocator
                         RegistryKey tsoKey = maxisKey.OpenSubKey("The Sims Online");
                         string installDir = (string)tsoKey.GetValue("InstallDir");
                         installDir += @"\TSOClient\";
-                        return installDir.Replace('\\', '/');
+                        installDir = installDir.Replace('\\', '/');
+
+                        if (ILocator.ValidPath(installDir))
+                        {
+                            return installDir;
+                        }
                     }
                 }
             }
 
-            // Fall back to the default install location if the other two checks fail
-            return @"C:\Program Files\Maxis\The Sims Online\TSOClient\".Replace('\\', '/');
+            string defaultPath = "C:/Program Files/Maxis/The Sims Online/TSOClient/";
+
+            if (ILocator.ValidPath(defaultPath)) return defaultPath;
+
+            // If nothing was found, try appdata (the user will be asked to install here if it's not already there)
+            return Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.LocalApplicationData), "The Sims Online", "TSOClient");
         }
 
         private static bool is64BitProcess = (IntPtr.Size == 8);

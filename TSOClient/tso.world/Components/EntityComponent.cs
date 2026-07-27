@@ -116,8 +116,9 @@ namespace FSO.LotView.Components
             }
             set
             {
+                _UnmoddedPosition = value;
                 _Position = value;
-                if (blueprint != null) _Position.Z += blueprint.InterpAltitude(new Vector3(0.5f, 0.5f, 0) + _Position - MTOffset / 16) + MTOffset.Z / 16f;
+                if (blueprint != null) _Position.Z += blueprint.InterpAltitudeWithSubworlds(new Vector3(0.5f, 0.5f, 0) + _Position - MTOffset / 16) + MTOffset.Z / 16f;
                 OnPositionChanged();
                 _WorldDirty = true;
 
@@ -173,14 +174,16 @@ namespace FSO.LotView.Components
             }
         }
 
+        private Vector3 _UnmoddedPosition;
         public Vector3 UnmoddedPosition
         {
             get
             {
-                return _Position;
+                return _UnmoddedPosition;
             }
             set
             {
+                _UnmoddedPosition = value;
                 _Position = value;
                 OnPositionChanged();
                 _WorldDirty = true;

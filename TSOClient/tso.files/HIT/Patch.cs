@@ -10,6 +10,8 @@
         public uint FileID; //patches are stubbed out in TSO.
         public bool TSO;
 
+        public Patch() { }
+
         public Patch(uint id)
         {
             FileID = id;

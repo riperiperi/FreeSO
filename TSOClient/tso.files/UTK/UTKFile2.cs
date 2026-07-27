@@ -1,7 +1,4 @@
-﻿using System;
-using System.IO;
-
-namespace FSO.Files.UTK
+﻿namespace FSO.Files.UTK
 {
     /// <summary>
     /// Represents a *.UTK file.
@@ -95,10 +92,17 @@ namespace FSO.Files.UTK
         private int m_UnreadBitsValue, m_UnreadBitsCount;
         private bool m_HalvedExcitation;
         private byte m_VoicedThreshold;
-        private float[] m_InnovationPower = new float[64];
-        private float[] m_RC = new float[12];
-        private float[] m_History = new float[12];
-        private float[] m_DecompressedFrame = new float[756];
+        private readonly float[] m_InnovationPower = new float[64];
+        private readonly float[] m_RC = new float[12];
+        private readonly float[] m_History = new float[12];
+        private readonly float[] m_DecompressedFrame = new float[756];
+
+        // Work buffers to prevent allocation for each frame
+        private readonly float[] m_Excitation = new float[118]; //includes 5 0-valued samples to both the left and the right.
+        private readonly float[] m_RCDelta = new float[12];
+        private readonly float[] m_LPC = new float[12];
+        private readonly float[] m_RCTemp = new float[12];
+        private readonly float[] m_LPCTemp = new float[12];
 
         /// <summary>
         /// Returns a decompressed wav stream.
@@ -197,36 +201,6 @@ namespace FSO.Files.UTK
         }
 
         /// <summary>
-        /// Finds the lesser of two ints.
-        /// </summary>
-        /// <param name="A">The first value.</param>
-        /// <param name="B">The second value.</param>
-        /// <returns>The lesser of the two ints.</returns>
-        private int Lesser(int A, int B)
-        {
-            return (A < B ? A : B);
-        }
-
-        /// <summary>
-        /// Clamps a value between an upper and lower bound.
-        /// </summary>
-        /// <typeparam name="T">The type of the value to clamp.</typeparam>
-        /// <param name="value">The value to clamp.</param>
-        /// <param name="max">Upper bound.</param>
-        /// <param name="min">Lower bound.</param>
-        /// <returns></returns>
-        public static T Clamp<T>(T value, T max, T min)
-         where T : System.IComparable<T>
-        {
-            T result = value;
-            if (value.CompareTo(max) < 0)
-                result = max;
-            if (value.CompareTo(min) > 0)
-                result = min;
-            return result;
-        }
-
-        /// <summary>
         /// Decodes the UTK data in this file.
         /// </summary>
         public void UTKDecode()
@@ -235,13 +209,13 @@ namespace FSO.Files.UTK
 
             while (Frames > 0)
             {
-                int BlockSize = Lesser((int)Frames, 432);
+                int BlockSize = Math.Min((int)Frames, 432);
                 DecodeFrame();
 
                 for (int i = 0; i < BlockSize; i++)
                 {
                     int Value = (int)Math.Round(m_DecompressedFrame[324 + i]);
-                    Value = Clamp<int>(Value, -32768, 32767);
+                    Value = Math.Clamp(Value, -32768, 32767);
                     m_Writer.Write((ushort)Value);
                 }
 
@@ -255,8 +229,8 @@ namespace FSO.Files.UTK
 
         private void DecodeFrame()
         {
-            float[] Excitation = new float[118]; //includes 5 0-valued samples to both the left and the right.
-            float[] RCDelta = new float[12];
+            float[] Excitation = m_Excitation; //includes 5 0-valued samples to both the left and the right.
+            float[] RCDelta = m_RCDelta;
             bool Voiced = false;
 
             for (int i = 0; i < 12; i++)
@@ -281,7 +255,7 @@ namespace FSO.Files.UTK
 
                 if (m_HalvedExcitation == false)
                 {
-                    GenerateExcitation(5, ref Excitation, Voiced, 1);
+                    GenerateExcitation(5, Excitation, Voiced, 1);
                 }
                 else
                 {
@@ -290,7 +264,7 @@ namespace FSO.Files.UTK
                     bool FillWithZero = (ReadBits(1) != 0);
                     int Offset = 5 + (1 - Alignment);
 
-                    GenerateExcitation(5 + Alignment, ref Excitation, Voiced, 2);
+                    GenerateExcitation(5 + Alignment, Excitation, Voiced, 2);
 
                     if (FillWithZero)
                     {
@@ -326,7 +300,7 @@ namespace FSO.Files.UTK
             }
         }
 
-        private void GenerateExcitation(int Offset, ref float[] Excitation, bool Voiced, int Interval)
+        private void GenerateExcitation(int Offset, float[] Excitation, bool Voiced, int Interval)
         {
             if (Voiced)
             {
@@ -353,7 +327,7 @@ namespace FSO.Files.UTK
                     {
                         //Fill between 7 and 70 samples with 0s
                         int x = ReadBits(6) + 7;
-                        x = Lesser(x, (Offset + 108 - i) / Interval);
+                        x = Math.Min(x, (Offset + 108 - i) / Interval);
 
                         while (x > 0)
                         {
@@ -391,9 +365,9 @@ namespace FSO.Files.UTK
 
         private void Synthesize(int Sample, int Samples)
         {
-            float[] LPC = new float[12];
+            float[] LPC = m_LPC;
             int offset = -1;
-            RCtoLPC(ref m_RC, ref LPC);
+            RCtoLPC(m_RC, LPC);
 
             while (Samples > 0)
             {
@@ -408,10 +382,10 @@ namespace FSO.Files.UTK
             }
         }
 
-        private void RCtoLPC(ref float[] RC, ref float[] LPC)
+        private void RCtoLPC(float[] RC, float[] LPC)
         {
             int i, j;
-            float[] RCTemp = new float[12], LPCTemp = new float[12];
+            float[] RCTemp = m_RCTemp, LPCTemp = m_LPCTemp;
             RCTemp[0] = 1.0f;
             Array.Copy(RC, 0, RCTemp, 1, 11);
 

@@ -1,6 +1,9 @@
 ﻿using FSO.Client.Controllers;
 using FSO.Client.UI.Controls;
 using FSO.Client.UI.Framework;
+using FSO.Client.Utils;
+using FSO.Common;
+using FSO.Common.Rendering.Framework.Model;
 using Microsoft.Xna.Framework;
 using Microsoft.Xna.Framework.Graphics;
 using System;
@@ -110,7 +113,28 @@ namespace FSO.Client.UI.Archive
 
         private void QuickStart(Framework.UIElement button)
         {
-            throw new NotImplementedException();
+            Visible = false;
+
+            var config = FSOFacade.Controller.GetServerConfig();
+
+            if (config == null)
+            {
+                var factory = new ArchiveServerFactory(
+                    ArchiveServerFactory.GetQuickStartConfig(),
+                    FindController<ConnectArchiveController>());
+
+                factory.Start((success) =>
+                {
+                    if (!success)
+                    {
+                        Visible = true;
+                    }
+                });
+            }
+            else
+            {
+                FSOFacade.Controller.ConnectToArchive(ClientArchiveConfiguration.Default.PlayerName, $"127.0.0.1:{config.CityPort}", true);
+            }
         }
 
         private void Join(Framework.UIElement button)
@@ -121,6 +145,12 @@ namespace FSO.Client.UI.Archive
         private void Create(Framework.UIElement button)
         {
             FindController<ConnectArchiveController>().SwitchMode(ConnectArchiveMode.Create);
+        }
+
+        public override void Update(UpdateState state)
+        {
+            base.Update(state);
+            FindController<ConnectArchiveController>().TickRPC();
         }
     }
 }

@@ -5,10 +5,12 @@ namespace FSO.Server.Protocol.Electron.Packets
 {
     public class FSOVMTickBroadcast : AbstractElectronPacket
     {
+        public bool Catchup;
         public byte[] Data;
 
         public override void Deserialize(IoBuffer input, ISerializationContext context)
         {
+            Catchup = input.GetBool();
             var dataLen = input.GetInt32(); //TODO: limits? 4MB is probably reasonable.
             Data = new byte[dataLen];
             input.Get(Data, 0, dataLen);
@@ -21,6 +23,7 @@ namespace FSO.Server.Protocol.Electron.Packets
 
         public override void Serialize(IoBuffer output, ISerializationContext context)
         {
+            output.PutBool(Catchup);
             output.PutInt32(Data.Length);
             output.Put(Data, 0, Data.Length);
         }

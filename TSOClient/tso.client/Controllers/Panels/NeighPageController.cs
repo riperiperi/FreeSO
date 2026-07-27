@@ -14,14 +14,18 @@ namespace FSO.Client.Controllers.Panels
     {
         private UINeighPage View;
         private IClientDataService DataService;
+        private Network.Network Network;
         private ITopicSubscription Topic;
         private uint NeighId;
 
-        public NeighPageController(UINeighPage view, IClientDataService dataService)
+        public uint ModerationLevel => Network.ModerationLevel;
+
+        public NeighPageController(UINeighPage view, IClientDataService dataService, Network.Network network)
         {
             this.View = view;
             this.DataService = dataService;
             this.Topic = dataService.CreateTopicSubscription();
+            this.Network = network;
 
             ControllerUtils.BindController<RatingSummaryController>(this.View.MayorRatingBox1);
             ControllerUtils.BindController<RatingSummaryController>(this.View.MayorRatingBox2);

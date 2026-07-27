@@ -42,6 +42,7 @@ namespace FSO.Server.Protocol.Electron.Packets
         NAME_VALIDATION_ERROR = 0x02,
         DESC_VALIDATION_ERROR = 0x03,
         BODY_VALIDATION_ERROR = 0x04,
-        HEAD_VALIDATION_ERROR = 0x05
+        HEAD_VALIDATION_ERROR = 0x05,
+        CAS_DISABLED = 0x06
     }
 }

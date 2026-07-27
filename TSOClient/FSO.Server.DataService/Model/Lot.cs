@@ -180,6 +180,9 @@ namespace FSO.Common.DataService.Model
         [Persist]
         public cTSOGenericData Lot_Thumbnail { get; set; }
 
+        [Persist]
+        public cTSOGenericData Lot_Facade { get; set; }
+
         public uint Lot_ThumbnailCheckSum { get; set; }
 
         public bool IsDefaultName

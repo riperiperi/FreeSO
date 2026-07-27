@@ -1,4 +1,5 @@
-﻿using FSO.Server.Protocol.CitySelector;
+﻿using FSO.Content.Model;
+using FSO.Server.Protocol.CitySelector;
 using System.Collections.Generic;
 
 namespace FSO.Common.Domain.Shards
@@ -8,6 +9,7 @@ namespace FSO.Common.Domain.Shards
         List<ShardStatusItem> All { get; }
         ShardStatusItem GetById(int id);
         ShardStatusItem GetByName(string name);
+        CityMap GetMapForId(int id);
         int? CurrentShard { get; }
     }
 }

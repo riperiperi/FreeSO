@@ -19,6 +19,7 @@ using FSO.HIT;
 using FSO.Client.UI.Model;
 using FSO.LotView.Utils.Camera;
 using FSO.LotView.Model;
+using FSO.SimAntics.NetPlay.Model.Commands;
 
 namespace FSO.Client.UI.Panels
 {
@@ -193,11 +194,9 @@ namespace FSO.Client.UI.Panels
             SetMode(UCPMode.CityMode);
             Focus = UCPFocusMode.UCP;
             SetFocus(UCPFocusMode.Game);
-
-            InitArchive();
         }
 
-        private void InitArchive()
+        public void InitArchive()
         {
             var ui = Content.Content.Get().CustomUI;
             var gd = GameFacade.GraphicsDevice;
@@ -440,7 +439,8 @@ namespace FSO.Client.UI.Panels
             AdvanceFlashing(UserListFlashing, ref UserListFlashTime, BudgetButton);
 
             var keys = state.NewKeys;
-            var nofocus = state.InputManager.GetFocus() == null;
+            var focus = state.InputManager.GetFocus();
+            var nofocus = focus == null || focus is UIButton;
             base.Update(state);
             if (Game.InLot && state.WindowFocused)
             {
@@ -457,7 +457,7 @@ namespace FSO.Client.UI.Panels
                     if (activeCamera.UseRotateHold)
                     {
                         //if the zoom or rotation buttons are down, gradually change their values.
-                        var cam = Game.vm.Context.World.State.Cameras.Camera3D;
+                        var cam = cameras.Camera3D;
                         if (RotateClockwiseButton.IsDown || state.KeyboardState.IsKeyDown(Keys.OemPeriod)) cam.RotationX += 2f / FSOEnvironment.RefreshRate;
                         if (RotateCounterClockwiseButton.IsDown || state.KeyboardState.IsKeyDown(Keys.OemComma)) cam.RotationX -= 2f / FSOEnvironment.RefreshRate;
                     }
@@ -607,11 +607,22 @@ namespace FSO.Client.UI.Panels
 
             if (CurrentPanel != -1)
             {
+                var permissions = (Game.vm?.GetAvatarByPersist(Game.vm.MyUID)?.TSOState as VMTSOAvatarState)?.Permissions ?? VMTSOAvatarPermissions.Visitor;
                 switch (CurrentPanel)
                 {
                     case 3:
                     case 2:
-                        if (Game.InLot && (true || Game.vm.TSOState.Roommates.Contains(Game.vm.MyUID))) FindController<CoreGameScreenController>()?.UploadLotThumbnail();
+                        var changes = (Panel as UIAbstractCatalogPanel)?.AnyChanges ?? false;
+                        if (permissions >= VMTSOAvatarPermissions.Roommate && changes)
+                        {
+                            var isBuild = CurrentPanel == 3 && permissions >= VMTSOAvatarPermissions.BuildBuyRoommate;
+                            Game.vm?.SendCommand(new VMNetLeaveBuildBuyCmd()
+                            {
+                                Build = isBuild
+                            });
+
+                            FindController<CoreGameScreenController>()?.UploadLotThumbnail(isBuild);
+                        }
                         break;
                 }
                 DynamicOverlay.Remove(Panel);

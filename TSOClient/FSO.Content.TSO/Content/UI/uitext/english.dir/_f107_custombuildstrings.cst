@@ -1,6 +1,7 @@
 ﻿1 ^Terrain Tool^
 2 ^Flatten Tool^
 3 ^Grass Tool^
+4 ^Debug Objects (dangerous!)^
 
 101 ^Use this tool to create interesting landscapes, which will impress visitors and make the local council mad. Click on the corner of a tile and drag to change its height. This may raise additional tiles around the initial target to keep terrain from becoming too steep.
 

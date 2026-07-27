@@ -361,7 +361,7 @@ namespace FSO.Server.Servers.City.Domain
                         else
                         {
                             //is our placement outwith bounds?
-                            if (placement == -1 || placement >= config.Mayor_Elegilility_Falloff)
+                            if (placement == -1 || placement >= config.Mayor_Elegibility_Falloff)
                             {
                                 //make us ineligible.
                                 nhood.flag |= 2;

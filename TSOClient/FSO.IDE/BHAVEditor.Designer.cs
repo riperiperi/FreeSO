@@ -144,7 +144,7 @@ namespace FSO.IDE
             // 
             undoToolStripMenuItem.Name = "undoToolStripMenuItem";
             undoToolStripMenuItem.ShortcutKeys = Keys.Control | Keys.Z;
-            undoToolStripMenuItem.Size = new Size(180, 22);
+            undoToolStripMenuItem.Size = new Size(169, 22);
             undoToolStripMenuItem.Text = "Undo";
             undoToolStripMenuItem.Click += undoToolStripMenuItem_Click;
             // 
@@ -152,20 +152,20 @@ namespace FSO.IDE
             // 
             redoToolStripMenuItem.Name = "redoToolStripMenuItem";
             redoToolStripMenuItem.ShortcutKeys = Keys.Control | Keys.Y;
-            redoToolStripMenuItem.Size = new Size(180, 22);
+            redoToolStripMenuItem.Size = new Size(169, 22);
             redoToolStripMenuItem.Text = "Redo";
             redoToolStripMenuItem.Click += redoToolStripMenuItem_Click;
             // 
             // toolStripSeparator1
             // 
             toolStripSeparator1.Name = "toolStripSeparator1";
-            toolStripSeparator1.Size = new Size(177, 6);
+            toolStripSeparator1.Size = new Size(166, 6);
             // 
             // copyToolStripMenuItem
             // 
             copyToolStripMenuItem.Name = "copyToolStripMenuItem";
             copyToolStripMenuItem.ShortcutKeys = Keys.Control | Keys.C;
-            copyToolStripMenuItem.Size = new Size(180, 22);
+            copyToolStripMenuItem.Size = new Size(169, 22);
             copyToolStripMenuItem.Text = "Copy";
             copyToolStripMenuItem.Click += copyToolStripMenuItem_Click;
             // 
@@ -173,20 +173,20 @@ namespace FSO.IDE
             // 
             pasteStripMenuItem.Name = "pasteStripMenuItem";
             pasteStripMenuItem.ShortcutKeys = Keys.Control | Keys.V;
-            pasteStripMenuItem.Size = new Size(180, 22);
+            pasteStripMenuItem.Size = new Size(169, 22);
             pasteStripMenuItem.Text = "Paste";
             pasteStripMenuItem.Click += pasteToolStripMenuItem_Click;
             // 
             // toolStripSeparator2
             // 
             toolStripSeparator2.Name = "toolStripSeparator2";
-            toolStripSeparator2.Size = new Size(177, 6);
+            toolStripSeparator2.Size = new Size(166, 6);
             // 
             // removeToolStripMenuItem
             // 
             removeToolStripMenuItem.Name = "removeToolStripMenuItem";
             removeToolStripMenuItem.ShortcutKeys = Keys.Delete;
-            removeToolStripMenuItem.Size = new Size(180, 22);
+            removeToolStripMenuItem.Size = new Size(169, 22);
             removeToolStripMenuItem.Text = "Remove";
             removeToolStripMenuItem.Click += removeToolStripMenuItem_Click;
             // 
@@ -194,7 +194,7 @@ namespace FSO.IDE
             // 
             setFirstToolStripMenuItem.Name = "setFirstToolStripMenuItem";
             setFirstToolStripMenuItem.ShortcutKeys = Keys.Control | Keys.D1;
-            setFirstToolStripMenuItem.Size = new Size(180, 22);
+            setFirstToolStripMenuItem.Size = new Size(169, 22);
             setFirstToolStripMenuItem.Text = "Set as First";
             setFirstToolStripMenuItem.Click += setFirstToolStripMenuItem_Click;
             // 
@@ -635,8 +635,8 @@ namespace FSO.IDE
             // 
             // BHAVEditor
             // 
-            AutoScaleDimensions = new SizeF(6F, 13F);
-            AutoScaleMode = AutoScaleMode.Font;
+            AutoScaleDimensions = new SizeF(96F, 96F);
+            AutoScaleMode = AutoScaleMode.Dpi;
             ClientSize = new Size(1014, 592);
             Controls.Add(MainTable);
             Controls.Add(menuStrip1);

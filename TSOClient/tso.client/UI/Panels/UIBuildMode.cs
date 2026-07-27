@@ -27,6 +27,8 @@ namespace FSO.Client.UI.Panels
         public UIButton RoofButton { get; set; }
         public UIButton HandButton { get; set; }
 
+        public UIButton DebugButton { get; set; } = new UIButton();
+
         public Texture2D subtoolsBackground { get; set; }
         public Texture2D dividerImage { get; set; }
         
@@ -34,7 +36,7 @@ namespace FSO.Client.UI.Panels
 
         public UIImage SubToolBg;
         public UISlider SubtoolsSlider { get; set; }
-        public UIButton PreviousPageButton { get; set; } 
+        public UIButton PreviousPageButton { get; set; }
         public UIButton NextPageButton { get; set; }
 
         private UISlider RoofSlider;
@@ -45,6 +47,9 @@ namespace FSO.Client.UI.Panels
 
         public UIBuildMode(UILotControl lotController) : base("buildpanel", lotController)
         {
+            var gd = GameFacade.GraphicsDevice;
+            var ui = Content.Content.Get().CustomUI;
+
             Divider = new UIImage(dividerImage);
             Divider.Position = new Vector2(337, 14);
             this.AddAt(1, Divider);
@@ -71,7 +76,15 @@ namespace FSO.Client.UI.Panels
             RoofShallowBtn.X = 46;
             RoofShallowBtn.Y = 92;
             Add(RoofShallowBtn);
-            
+
+            DebugButton.Texture = ui.Get("archive_cat_debug.png").Get(gd);
+            DebugButton.X = 43;
+            DebugButton.Y = 50;
+            DebugButton.Tooltip = GameFacade.Strings.GetString("f107", "4");
+            Add(DebugButton);
+
+            TerrainButton.Tooltip = GameFacade.Strings.GetString("f107", "1");
+
             RoofSlider = new UISlider();
             RoofSlider.Orientation = 1;
             RoofSlider.Texture = GetTexture(0x4AB00000001);
@@ -117,6 +130,7 @@ namespace FSO.Client.UI.Panels
                 { WindowButton, 1 },
                 { RoofButton, 6 },
                 { HandButton, 28 },
+                { DebugButton, 29 },
             };
         }
 
@@ -182,7 +196,13 @@ namespace FSO.Client.UI.Panels
 
         public override void Update(UpdateState state)
         {
-            CategoryMap[TerrainButton] = (state.ShiftDown && (LotController?.ActiveEntity?.TSOState as VMTSOAvatarState)?.Permissions >= VMTSOAvatarPermissions.Admin) ? 29 : 10;
+            bool allowDebug = (LotController?.ActiveEntity?.TSOState as VMTSOAvatarState)?.Flags.HasFlag(VMTSOAvatarFlags.Debug) ?? false;
+
+            if (DebugButton.Visible != allowDebug)
+            {
+                DebugButton.Visible = allowDebug;
+            }
+
             var objCount = LotController.vm.Context.ObjectQueries.NumUserObjects;
             if (LastObjCount != objCount || LastDonator != LotController.ObjectHolder.DonateMode)
             {

@@ -1,5 +1,5 @@
 ﻿using FSO.Common.DataService;
-using FSO.Common.DataService.Framework;
+using FSO.Common.Domain;
 using Ninject.Modules;
 
 namespace FSO.Server.DataService

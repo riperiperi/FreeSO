@@ -28,7 +28,7 @@
     <PackageReference Include="MySql.Data" Version="9.4.0" />
     <PackageReference Include="Ninject" Version="3.3.6" />
     <PackageReference Include="System.Data.SqlClient" Version="4.9.0" />
-    <PackageReference Include="System.Data.SQLite.Core" Version="1.0.119" />
+    <PackageReference Include="Microsoft.Data.Sqlite" Version="10.0.2" />
   </ItemGroup>
 
   <ItemGroup>

@@ -83,10 +83,11 @@ namespace FSO.Client.UI.Screens
         private string[] PreloadLabels;
         private int CurrentPreloadLabel = 0;
         private bool InTween = false;
+        private bool Done = false;
 
         private void CheckPreloadLabel()
         {
-            if (Controller == null) { return; }
+            if (Controller == null || Done) { return; }
 
             /** Have we preloaded the correct percent? **/
             var percentDone = ((LoadingScreenController)Controller).Loader.Progress;
@@ -112,6 +113,7 @@ namespace FSO.Client.UI.Screens
             }
             if (percentDone >= 1)
             {
+                Done = true;
                 CheckProgressTimer.Clear();
                 FSOFacade.Controller.ShowLogin();
                 return;

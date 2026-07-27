@@ -31,11 +31,6 @@ namespace FSO.Client
                     {
                         defaultInstance.ArchiveClientGUID = GenerateGUID();
                     }
-
-                    if (defaultInstance.ArchiveServerGUID == "")
-                    {
-                        defaultInstance.ArchiveServerGUID = GenerateGUID();
-                    }
                 }
                 return defaultInstance;
             }
@@ -65,7 +60,7 @@ namespace FSO.Client
             { "FXVolume", "10"},
             { "MusicVolume", "10"},
             { "VoxVolume", "10"},
-            { "AmbienceVolume", "1"},
+            { "AmbienceVolume", "8"},
             { "StartupPath", ""},
             { "DocumentsPath", ""},
             { "Windowed", "true"},
@@ -94,7 +89,7 @@ namespace FSO.Client
             { "TS1IsSteamInstall", "false" },
             { "TS1InstallationConfigured", "false" },
 
-            { "Shadows3D", "false" },
+            { "Shadows3D", "true" },
             { "CitySkybox", "true" },
 
             { "LightingMode", "-1" },
@@ -114,13 +109,13 @@ namespace FSO.Client
             {"ChatDeltaScale", "8" },
             { "ChatWindowsOpacity", "0.8" },
 
-            { "ComplexShaders", "false" },
+            { "ComplexShaders", "true" },
             { "GlobalGraphicsMode", "0" }, //2d, 2d hybrid, 3d
             { "EnableTransitions", "true" },
 
-            { "ArchiveServerGUID", "" },
             { "ArchiveClientGUID", "" },
             { "TS1FreeWill", "true" },
+            { "IgnoreVersion", "" },
         };
 
         public override Dictionary<string, string> DefaultValues
@@ -194,8 +189,8 @@ namespace FSO.Client
         public bool EnableTransitions { get; set; }
 
 
-        public string ArchiveServerGUID { get; set; }
         public string ArchiveClientGUID { get; set; }
+        public string IgnoreVersion { get; set; }
 
         public bool TS1FreeWill { get; set; }
 

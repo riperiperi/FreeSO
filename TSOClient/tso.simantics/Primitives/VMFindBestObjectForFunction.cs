@@ -109,7 +109,7 @@ namespace FSO.SimAntics.Engine.Primitives
                                 CodeOwner = Behavior.owner,
                                 StackObject = ent,
                                 Routine = Behavior.routine,
-                                Args = new short[4]
+                                Args = default
                             });
 
                             Execute = (test == VMPrimitiveExitCode.RETURN_TRUE);

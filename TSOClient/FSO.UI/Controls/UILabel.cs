@@ -108,6 +108,16 @@ namespace FSO.Client.UI.Controls
         private UIWordWrapOutput _WrappedOutput = null;
         private bool _InDraw = false;
 
+        private void EnsureWrappedOutput()
+        {
+            if (_WrappedOutput == null)
+            {
+                var scale = new Vector2(CaptionStyle.Scale);
+                int width = m_Size.Width == 0 ? int.MaxValue : m_Size.Width;
+                _WrappedOutput = UIUtils.WordWrap(m_Text, width, CaptionStyle, MaxLines);
+            }
+        }
+
         public override void Draw(UISpriteBatch SBatch)
         {
             _InDraw = true;
@@ -124,11 +134,7 @@ namespace FSO.Client.UI.Controls
                 {
                     if (_Wrapped)
                     {
-                        if (_WrappedOutput == null)
-                        {
-                            var scale = new Vector2(CaptionStyle.Scale);
-                            _WrappedOutput = UIUtils.WordWrap(m_Text, m_Size.Width, CaptionStyle, MaxLines);
-                        }
+                        EnsureWrappedOutput();
 
                         if(_WrappedOutput == null || _WrappedOutput.Lines == null){
                             _InDraw = false;
@@ -176,7 +182,19 @@ namespace FSO.Client.UI.Controls
         {
             if (this.Size == default)
             {
-                this.Size = CaptionStyle.MeasureString(Caption);
+                if (Wrapped)
+                {
+                    EnsureWrappedOutput();
+
+                    if (_WrappedOutput != null)
+                    {
+                        this.Size = new Vector2(_WrappedOutput.MaxWidth, _WrappedOutput.Height);
+                    }
+                }
+                else
+                {
+                    this.Size = CaptionStyle.MeasureString(Caption);
+                }
             }
         }
     }

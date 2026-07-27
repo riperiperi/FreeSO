@@ -32,6 +32,15 @@ namespace FSO.Client.UI.Panels
             Divider.Texture = DividerImage;
             Add(Divider);
 
+            // FreeSO does implement this, but as part of each individual light rather than a global control.
+            LightColorsButton.Visible = false;
+
+            // This was never implemented in TSO. It also doesn't fit in FreeSO with the more integrated city surroundings.
+            // It could be useful for a "sandbox" type lot, or of the offbeat lot type were allowed to break established rules.
+            TimeOfDayButton.Visible = false;
+
+            SoundsButton.Position = LightColorsButton.Position;
+
             BtnToMode = new Dictionary<UIButton, int>()
             {
                 { LightColorsButton, 0 },
@@ -298,7 +307,7 @@ namespace FSO.Client.UI.Panels
                 item.CaptionStyle = item.CaptionStyle.Clone();
                 item.CaptionStyle.Shadow = true;
             }
-            var noPermission = (!lotController.vm.TSOState.BuildRoommates.Contains(lotController.vm.MyUID) && lotController.vm.TSOState.OwnerID != lotController.vm.MyUID);
+            var noPermission = (!lotController.vm.TSOState.BuildRoommates.Contains(lotController.vm.MyUID) && lotController.vm.TSOState.OwnerID != lotController.vm.MyUID && lotController.vm.TSOState.OwnerID != 0);
             var j = 0;
             foreach (var item in CheckButtons)
             {
@@ -404,7 +413,7 @@ namespace FSO.Client.UI.Panels
                     var name = col[i];
 
                     var snd = amb.GetAmbienceFromName(name);
-                    if (snd != null) ActiveBtns[j].Selected = amb.ActiveSounds.ContainsKey(amb.GetAmbienceFromGUID(snd.Value.GUID));
+                    if (snd != null) ActiveBtns[j].Selected = ((ulong)amb.UserBits & (1ul << (int)amb.GetAmbienceFromGUID(snd.Value.GUID))) != 0;
                 }
                 j++;
             }

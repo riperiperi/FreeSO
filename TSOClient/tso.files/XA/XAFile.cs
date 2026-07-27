@@ -1,6 +1,4 @@
-﻿using System.IO;
-
-namespace FSO.Files.XA
+﻿namespace FSO.Files.XA
 {
     public enum SoundType
     {
@@ -137,16 +135,20 @@ namespace FSO.Files.XA
 
             if (m_Channels == 1) //Mono
             {
+                var buffer = new byte[0xF];
                 while (m_Reader.BaseStream.Position < m_Reader.BaseStream.Length)
                 {
-                    DecompressMono(m_Reader.ReadBytes(0xF));
+                    m_Reader.Read(buffer);
+                    DecompressMono(buffer);
                 }
             }
             else if (m_Channels == 2) //Stereo
             {
+                var buffer = new byte[0x1E];
                 while (m_Reader.BaseStream.Position < m_Reader.BaseStream.Length)
                 {
-                    DecompressStereo(m_Reader.ReadBytes(0x1E));
+                    m_Reader.Read(buffer);
+                    DecompressStereo(buffer);
                 }
             }
         }

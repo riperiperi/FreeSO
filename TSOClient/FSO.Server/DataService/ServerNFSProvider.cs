@@ -1,4 +1,4 @@
-﻿using FSO.Common.DataService.Framework;
+﻿using FSO.Common.Domain;
 
 namespace FSO.Server.DataService
 {
@@ -13,6 +13,11 @@ namespace FSO.Server.DataService
         public string GetBaseDirectory()
         {
             return BasePath;
+        }
+
+        public string GetShardMapDirectory(int shardId)
+        {
+            return Path.Join(BasePath, $"City{shardId}");
         }
     }
 }

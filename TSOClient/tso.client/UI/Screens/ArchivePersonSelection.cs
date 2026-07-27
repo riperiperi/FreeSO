@@ -47,6 +47,7 @@ namespace FSO.Client.UI.Screens
 
         public LoginRegulator LoginRegulator;
         public UIButton CASButton { get; set; }
+        public UIButton AcceptButton { get; set; }
 
         public UITextBox SearchBox;
         public UIListBox AvatarListBox;
@@ -84,13 +85,12 @@ namespace FSO.Client.UI.Screens
             UIScript ui = null;
             ui = this.RenderScript("archivepersonselection1024.uis");
 
-            Position = new Vector2((GlobalSettings.Default.GraphicsWidth - 1024) / 2, (GlobalSettings.Default.GraphicsHeight - 768) / 2) * FSOEnvironment.DPIScaleFactor;
+            Position = new Vector2(ScaleX * (GlobalSettings.Default.GraphicsWidth - 1024) / 2, ScaleY * (GlobalSettings.Default.GraphicsHeight - 768) / 2);
 
             m_ExitButton = (UIButton)ui["ExitButton"];
 
             var numSlots = 1;
 
-            CreditsButton.Disabled = true;
             TitleLabel.Alignment = TextAlignment.Center | TextAlignment.Middle;
             TitleLabel.Size = new Vector2(620, 20); // For some reason, this changes to 525x20, so I need to change it back?
 
@@ -260,8 +260,12 @@ namespace FSO.Client.UI.Screens
              * Button plumbing
              */
             CreditsButton.OnButtonClick += new ButtonClickDelegate(CreditsButton_OnButtonClick);
+            CreditsButton.Tooltip = GameFacade.Strings.GetString("f128", "125");
             m_ExitButton.OnButtonClick += new ButtonClickDelegate(m_ExitButton_OnButtonClick);
             CASButton.OnButtonClick += OpenCAS;
+            CASButton.Disabled = true;
+            AcceptButton.OnButtonClick += AcceptSelection;
+            AcceptButton.Disabled = true;
             SearchBox.OnChange += (elem) =>
             {
                 RefreshList();
@@ -286,9 +290,15 @@ namespace FSO.Client.UI.Screens
             });
         }
 
+        private void AcceptSelection(UIElement button)
+        {
+            SelectAvatar(button, false);
+        }
+
         private void ChangedSelectedAvatar(UIElement element)
         {
             PersonSlot.AvatarButton.Disabled = AvatarListBox.SelectedItem == null;
+            AcceptButton.Disabled = PersonSlot.AvatarButton.Disabled;
 
             if (PersonSlot.AvatarButton.Disabled)
             {
@@ -314,12 +324,15 @@ namespace FSO.Client.UI.Screens
 
         public void OpenCAS(Framework.UIElement button)
         {
-            FSOFacade.Controller.GotoCAS();
+            FSOFacade.Controller.GotoCAS(true);
         }
 
         public void SetData(ArchiveAvatarsResponse data)
         {
             Data = data;
+
+            CASButton.Disabled = !data.CasEnabled;
+            PersonSlot.SetCasEnabled(data.CasEnabled);
 
             if (!data.IsVerified)
             {
@@ -345,7 +358,7 @@ namespace FSO.Client.UI.Screens
             }
             else
             {
-                var recentIds = new HashSet<uint>(Data.RecentAvatars);
+                var recentIds = Data.RecentAvatars;
 
                 var myItems = Data.UserAvatars
                     .Where(x => x.Name.ToLower().Contains(query) || x.LotName.ToLower().Contains(query))
@@ -357,8 +370,19 @@ namespace FSO.Client.UI.Screens
                         };
                     });
 
-                var recentItems = Data.SharedAvatars
-                    .Where(x => recentIds.Contains(x.AvatarId) && (x.Name.ToLower().Contains(query) || x.LotName.ToLower().Contains(query)))
+                var recentSorted = new ArchiveAvatar[Data.RecentAvatars.Length];
+
+                foreach (var shared in Data.SharedAvatars)
+                {
+                    int index = Array.IndexOf(recentIds, shared.AvatarId);
+                    if (index != -1)
+                    {
+                        recentSorted[index] = shared;                        
+                    }
+                }
+
+                var recentItems = recentSorted
+                    .Where(x => x.AvatarId != 0 && (x.Name.ToLower().Contains(query) || x.LotName.ToLower().Contains(query)))
                     .Select((ArchiveAvatar x) =>
                     {
                         return new UIListBoxItem(x, new object[] { SimIconRecent, x.Name, x.LotName })
@@ -393,11 +417,11 @@ namespace FSO.Client.UI.Screens
         public override void GameResized()
         {
             base.GameResized();
-            Position = new Vector2((GlobalSettings.Default.GraphicsWidth - 1024) / 2, (GlobalSettings.Default.GraphicsHeight - 768) / 2) * FSOEnvironment.DPIScaleFactor;
+            Position = new Vector2(ScaleX * (GlobalSettings.Default.GraphicsWidth - 1024) / 2, ScaleY * (GlobalSettings.Default.GraphicsHeight - 768) / 2);
             Background.SetSize(GlobalSettings.Default.GraphicsWidth, GlobalSettings.Default.GraphicsHeight);
             Background.Position = new Vector2((GlobalSettings.Default.GraphicsWidth - 1024) / -2, (GlobalSettings.Default.GraphicsHeight - 768) / -2);
             InvalidateMatrix();
-            Parent.InvalidateMatrix();
+            Parent?.InvalidateMatrix();
         }
 
         public void AsyncAPILotThumbnail(uint shardId, uint lotId, Action<Texture2D> callback)
@@ -462,6 +486,19 @@ namespace FSO.Client.UI.Screens
                 onOk(cityPicker.SelectedShard);
             };
             ShowDialog(cityPicker, true);
+        }
+
+        public void ShowSelectionError(ArchiveAvatarSelectCode code)
+        {
+            UIAlert alert = null;
+            alert = GlobalShowAlert(new UIAlertOptions()
+            {
+                Title = GameFacade.Strings.GetString("f128", "100"),
+                Message = GameFacade.Strings.GetString("f128", (100 + (int)code).ToString()) ,
+                Buttons = UIAlertButton.Ok(x => {
+                    RemoveDialog(alert);
+                }),
+            }, true);
         }
     }
 
@@ -571,6 +608,8 @@ namespace FSO.Client.UI.Screens
             AvatarButton.OnButtonClick += new ButtonClickDelegate(OnSelect);
             CityButton.OnButtonClick += new ButtonClickDelegate(OnSelect);
             HouseButton.OnButtonClick += new ButtonClickDelegate(OnSelect);
+
+            SetCasEnabled(false);
         }
 
         void OnSelect(UIElement button)
@@ -804,6 +843,11 @@ namespace FSO.Client.UI.Screens
         private void EnterTabButton_OnButtonClick(UIElement button)
         {
             SetTab(PersonSlotTab.EnterTab);
+        }
+
+        public void SetCasEnabled(bool enabled)
+        {
+            NewAvatarButton.Disabled = !enabled;
         }
 
         public void DeviceReset(GraphicsDevice device){

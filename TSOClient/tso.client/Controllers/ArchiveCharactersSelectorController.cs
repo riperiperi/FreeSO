@@ -30,9 +30,16 @@ namespace FSO.Client.Controllers
 
         private void Regulator_OnMessage(object data)
         {
-            if (data is VerificationNotification verification && verification.IsVerified)
+            if (data is VerificationNotification verification)
             {
-                Refresh();
+                if (verification.IsVerified)
+                {
+                    Refresh();
+                }
+                else
+                {
+                    FSOFacade.Controller.FatalError(GameFacade.Strings.GetString("f128", "92"), GameFacade.Strings.GetString("f128", "93"), 1);
+                }
             }
         }
 

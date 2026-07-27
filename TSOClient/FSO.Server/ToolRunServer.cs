@@ -1,6 +1,7 @@
-﻿using FSO.Common.DataService.Framework;
+﻿using FSO.Common.Domain;
 using FSO.Common.Utils;
 using FSO.Server.Common;
+using FSO.Server.Database.DA;
 using FSO.Server.DataService;
 using FSO.Server.Domain;
 using FSO.Server.Protocol.Electron.Packets;
@@ -141,6 +142,20 @@ namespace FSO.Server
             CityServers = new List<CityServer>();
             Kernel.Bind<IServerNFSProvider>().ToConstant(new ServerNFSProvider(Config.SimNFS));
 
+            if (Config.Events.HasValue)
+            {
+                LOG.Info("Scheduling events");
+
+                try
+                {
+                    EventGenerator.GenerateEvents(Kernel.Get<IDAFactory>(), Config.Events.Value);
+                }
+                catch (Exception e)
+                {
+                    LOG.Warn($"Unable to schedule events - may be in an incomplete state.", e);
+                }
+            }
+
             if (Config.Services.UserApi != null &&
                 Config.Services.UserApi.Enabled)
             {
@@ -168,6 +183,7 @@ namespace FSO.Server
             foreach (var cityServer in Config.Services.Cities)
             {
                 if (cityServer.Archive == null) cityServer.Archive = Config.Archive;
+                if (!cityServer.AllOpenable) cityServer.AllOpenable = Config.AllOpenable;
 
                 /**
                  * Need to create a kernel for each city server as there is some data they do not share
@@ -189,6 +205,7 @@ namespace FSO.Server
             foreach (var lotServer in Config.Services.Lots)
             {
                 if (lotServer.Archive == null) lotServer.Archive = Config.Archive;
+                if (!lotServer.AllOpenable) lotServer.AllOpenable = Config.AllOpenable;
 
                 if (lotServer.SimNFS == null) lotServer.SimNFS = Config.SimNFS;
                 var childKernel = new ChildKernel(

@@ -1,0 +1,43 @@
+1 ^Edit City^
+
+2 ^Elevation^
+3 ^Terrain Type^
+4 ^Roads^
+5 ^Trees^
+
+6 ^Undo^
+7 ^Redo^
+8 ^Update City Thumbnail^
+9 ^Lock Lot Terrain^
+10 ^Brush Size^
+11 ^Intensity^
+12 ^Spray Brush^
+13 ^Invert brush (or hold ctrl)^
+14 ^(inverted)^
+15 ^Close^
+16 ^City Editor^
+17 ^Click and drag to draw roads.^
+18 ^Unlock Lot Terrain^
+19 ^Close^
+
+20 ^Auto Terrain Type^
+21 ^Flatten^
+22 ^Natural Edge^
+
+30 ^Grass^
+31 ^Water^
+32 ^Rock^
+33 ^Snow^
+34 ^Sand^
+
+40 ^Heavy Forest^
+41 ^Light Forest^
+42 ^Cacti^
+43 ^Palm^
+
+50 ^Modified by %s^
+51 ^Rename City^
+52 ^Please enter a new name for the city. This name can be changed by anyone with access to the City Editor, at any time.^
+53 ^Can't modify open lots or out of bounds tiles.^
+54 ^Cannot undo as terrain around open lots would be changed.^
+55 ^Can't modify lot terrain when it's locked.^
