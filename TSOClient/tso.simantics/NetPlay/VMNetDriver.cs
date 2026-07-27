@@ -87,7 +87,7 @@ namespace FSO.SimAntics.NetPlay
                 }
             }
 
-            if (tick.TickID < LastTick + 1) System.Console.WriteLine("Tick wrong (duplicate/early)! Got " + tick.TickID + ", Missed " + ((int)tick.TickID - (LastTick + 1)));
+            if (tick.TickID < LastTick) System.Console.WriteLine("Tick wrong (backwards)! Got " + tick.TickID + ", Missed " + ((int)tick.TickID - (LastTick + 1)));
             else if (doTick && vm.Context.Ready)
             {
                 if (tick.TickID > LastTick + 1) System.Console.WriteLine("Tick wrong (skipped)! Got " + tick.TickID + ", Missed " + ((int)tick.TickID - (LastTick + 1)));
