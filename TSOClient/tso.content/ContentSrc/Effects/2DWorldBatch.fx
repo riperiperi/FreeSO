@@ -340,7 +340,7 @@ void psZDepthSprite(ZVertexOut v, out float4 color:COLOR0, out float4 depthB:COL
 		else if (v.roomVec.x != 0.0) {
 			//advanced lighting mode
 			float4 projection = mul(float4(v.screenPos.x, v.screenPos.y, d.x*d.y, d.y), iWVP);
-			pixel = gammaMul(pixel, lightProcessLevel(projection, v.objectID.y));
+			pixel = gammaMul(pixel, lightProcessLevel(projection, round(v.objectID.y)));
 			pixel.rgb += projection.yzw * 0.00000000001; //monogame keeps trying to optimise out entire matrix columns im like well played guys who needs those right
 		}
 		color = pixel;
@@ -401,7 +401,7 @@ void psZDepthSpriteDirLight(ZVertexOut v, out float4 color:COLOR0, out float4 de
 			//advanced lighting mode
 			float4 projection = mul(float4(v.screenPos.x, v.screenPos.y, d.x*d.y, d.y), iWVP);
 			float3 normal = normalize(cross(ddx(projection.xyz), -ddy(projection.xyz)));
-			pixel *= lightProcessDirectionLevel(projection, normal, v.objectID.y);
+			pixel *= lightProcessDirectionLevel(projection, normal, round(v.objectID.y));
 			pixel.rgb += projection.yzw * 0.00000000001; //monogame keeps trying to optimise out entire matrix columns im like well played guys who needs those right
 		}
 		color = pixel;
