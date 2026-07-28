@@ -59,18 +59,19 @@ float4 lightColorI(float4 intensities, float i) {
 	return lerp(OutsideDark, float4(intensities.rgb * LightingAdjust, 1), (fshad - MinAvg.x) * MinAvg.y);
 }
 
-float4 lightProcessLevel(float4 inPosition, float level) {
+float4 lightProcessLevel(float4 inPosition, int level) {
 	inPosition.xyz *= WorldToLightFactor;
 	inPosition.xz += LightOffset;
 
-	inPosition.xz += 1 / MapLayout * floor(float2(level % MapLayout.x, level / MapLayout.x));
+	int stride = int(MapLayout.x);
+	inPosition.xz += 1 / MapLayout * float2(int2(level % stride, level / stride));
 
 	float4 lTex = tex2D(advLightSampler, inPosition.xz);
 	return lightColor(lTex);
 }
 
 float4 lightProcess(float4 inPosition) {
-	return lightProcessLevel(inPosition, Level);
+	return lightProcessLevel(inPosition, int(Level));
 }
 
 float4 lightProcessFloor(float4 inPosition) {
@@ -140,12 +141,13 @@ float4 lightInterpClamp(float4 inPosition, float lightBleed) {
 	return lightColorIAvg(lTex, clamp((inPosition.y % 1) * 3, 0, 1), avg);
 }
 
-float4 lightProcessDirectionLevel(float4 inPosition, float3 normal, float level) {
+float4 lightProcessDirectionLevel(float4 inPosition, float3 normal, int level) {
 	float2 orig = inPosition.x;
 	inPosition.xyz *= WorldToLightFactor;
 	inPosition.xz += LightOffset;
 
-	inPosition.xz += 1 / MapLayout * floor(float2(level % MapLayout.x, level / MapLayout.x));
+	int stride = int(MapLayout.x);
+	inPosition.xz += 1 / MapLayout * float2(int2(level % stride, level / stride));
 
 	float4 lTex = tex2D(advLightSampler, inPosition.xz);
 	float4 color = lightColor(lTex);
@@ -163,7 +165,7 @@ float4 lightProcessDirectionLevel(float4 inPosition, float3 normal, float level)
 }
 
 float4 lightProcessDirection(float4 inPosition, float3 normal) {
-	return lightProcessDirectionLevel(inPosition, normal, Level);
+	return lightProcessDirectionLevel(inPosition, normal, int(Level));
 }
 
 //coeffs from http://chilliant.blogspot.com/2012/08/srgb-approximations-for-hlsl.html.
