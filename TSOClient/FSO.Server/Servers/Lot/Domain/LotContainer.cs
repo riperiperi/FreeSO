@@ -1818,7 +1818,9 @@ namespace FSO.Server.Servers.Lot.Domain
                     }
                 }
 
-                bool isAdmin = session.HasModerationLevel(1);
+                uint modLevel = avatar.moderation_level;
+
+                bool isAdmin = modLevel >= 1;
                 if (IsSpectatorMode)
                 {
                     if (isRoommate || isAdmin)
@@ -1835,7 +1837,7 @@ namespace FSO.Server.Servers.Lot.Domain
                     }
                 }
 
-                state.AvatarFlags |= IsAvatarDebug((session as VoltronSession)?.ModerationLevel ?? 0) ? VMTSOAvatarFlags.Debug : 0;
+                state.AvatarFlags |= IsAvatarDebug(modLevel) ? VMTSOAvatarFlags.Debug : 0;
 
                 Host.RecordStartVisit(session, visitorType);
 
