@@ -131,7 +131,10 @@ namespace FSO.Server.Clients
                 Connector.Handler = new NullIOHandler(); //don't hmu
                 //we can't cancel a mina.net connector, but we can sure as hell ~~avenge it~~ stop it from firing events.
                 //if we tried to dispose it, we'd get random disposed object exceptions because mina doesn't expect you to cancel that early.
-                Disconnect(); //if we have already established a connection, make sure it is closed.
+                if (Session.Connected)
+                {
+                    Disconnect(); //if we have already established a connection, make sure it is closed.
+                }
             }
             var socketConnector = new AsyncSocketConnector();
             socketConnector.SessionConfig.NoDelay = true;
