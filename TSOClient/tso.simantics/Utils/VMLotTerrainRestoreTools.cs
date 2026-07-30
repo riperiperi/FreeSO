@@ -942,8 +942,10 @@ namespace FSO.SimAntics.Utils
                             val = 0;
                         }
                     }
-                    val += arch.Terrain.GrassState[oy * arch.Width + ox];
-                    arch.Terrain.GrassState[oy * arch.Width + ox] = (byte)(Math.Max(0, Math.Min(255,val)));
+
+                    ref var target = ref arch.Terrain.GrassState[oy * arch.Width + ox];
+
+                    target = (byte)(target + (((255 - target) * val) / 255));
                 }
             }
         }

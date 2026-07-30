@@ -43,8 +43,11 @@ namespace FSO.LotView.Components
 
         private Color LightGreen = new Color(80, 116, 59);
         private Color LightBrown = new Color(157, 117, 65);
+        private Vector2 GreenLengthDensity = new Vector2(1, 1);
         private Color DarkGreen = new Color(8, 52, 8);
         private Color DarkBrown = new Color(81, 60, 18);
+        private Vector2 BrownLengthDensity = new Vector2(0.05f, 0.5f);
+
         private int GrassHeight;
         private float GrassDensityScale = 1f;
         public bool DepthMode;
@@ -123,23 +126,30 @@ namespace FSO.LotView.Components
         public void UpdateLotType()
         {
             int index = (int)LightType;
-            LightGreen = LotTypeGrassInfo.LightGreen[index];
-            DarkGreen = LotTypeGrassInfo.DarkGreen[index];
+            var dindex = (int)DarkType;
+            ref var light = ref LotTypeGrassInfo.Info[index];
+
+            LightGreen = light.LightGreen;
+            DarkGreen = light.DarkGreen;
+            GreenLengthDensity = light.GreenLengthDensity;
             if (LightType != DarkType)
             {
-                var dindex = (int)DarkType;
-                LightBrown = LotTypeGrassInfo.LightGreen[dindex];
-                DarkBrown = LotTypeGrassInfo.DarkGreen[dindex];
+                // Uses the "green" type of the secondary grass colour as the brown colour.
+                ref var dark = ref LotTypeGrassInfo.Info[dindex];
+                LightBrown = dark.LightGreen;
+                DarkBrown = dark.DarkGreen;
+                BrownLengthDensity = dark.GreenLengthDensity;
             }
             else
             {
-                LightBrown = LotTypeGrassInfo.LightBrown[index];
-                DarkBrown = LotTypeGrassInfo.DarkBrown[index];
+                LightBrown = light.LightBrown;
+                DarkBrown = light.DarkBrown;
+                BrownLengthDensity = light.BrownLengthDensity;
             }
-            GrassHeight = LotTypeGrassInfo.Heights[index];
+            GrassHeight = light.MaxHeight;
             if (!FSOEnvironment.UseMRT) GrassHeight /= 2;
             if (GrassHeight == 0) GrassHeight = 1;
-            GrassDensityScale = LotTypeGrassInfo.GrassDensity[index];
+            GrassDensityScale = light.BaseDensity;
         }
 
         private Vector3 GetNormalAt(int x, int y)
@@ -442,6 +452,9 @@ namespace FSO.LotView.Components
             Effect.LightBrown = LightBrown.ToVector4();
                 var light = new Vector3(0.3f, 1, -0.3f);
 
+            Effect.GreenLengthDensity = GreenLengthDensity;
+            Effect.BrownLengthDensity = BrownLengthDensity;
+
             Effect.LightVec = LightVec;
             Effect.UseTexture = false;
             Effect.ScreenSize = new Vector2(device.Viewport.Width, device.Viewport.Height) / world.PreciseZoom;
@@ -565,10 +578,13 @@ namespace FSO.LotView.Components
                 {
                     Effect.World = Matrix.Identity * Matrix.CreateTranslation(0, i * (20 / 522f) * grassScale - altOff, 0);
 
+                    Effect.LayerHeight = (i - 1) / (float)grassNum;
+
                     if (!parallax)
-                        Effect.GrassProb = grassDensity * ((grassNum - (i / (2f * grassNum))) / (float)grassNum);
+                        Effect.GrassProb = grassDensity; //Effect.GrassProb = grassDensity * ((grassNum - (i / (2f * grassNum))) / (float)grassNum);
                     else
                         Effect.GrassProb = grassDensity * ((4 - (2 / (2f * 4))) / (float)4);
+
                     Effect.ParallaxHeight = grassScale * (20 / 522f) * (100/512f) / 4;
                     offset += new Vector2(smat.Z, smat.W);
                         

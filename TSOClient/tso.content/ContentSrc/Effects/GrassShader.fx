@@ -11,8 +11,12 @@ float4 LightBrown;
 float4 DarkBrown;
 float4 DiffuseColor;
 float2 ScreenOffset;
+float LayerHeight;
 float GrassProb;
 float GrassFadeMul;
+
+float2 GreenLengthDensity;
+float2 BrownLengthDensity;
 
 float2 TexOffset;
 float4 TexMatrix;
@@ -293,6 +297,24 @@ float4 LightSpecular(float3 normal, float4 modelpos) {
 	return DiffuseColor*(1-pow(cosan, GrassShininess));
 }
 
+float2 GetLengthDensity(GrassPSVTX input)
+{
+    return lerp(GreenLengthDensity, BrownLengthDensity, input.GrassInfo.x);
+}
+
+void GrassDiscard(GrassPSVTX input, float2 rand)
+{
+    float2 lengthDensity = GetLengthDensity(input);
+	
+	// The closer to the top of the blade that we are, the less probable the blade is.
+    float bladeI = LayerHeight / lengthDensity.x;
+	
+    float adjustedProb = GrassProb * (1.0 - bladeI * 0.5) * lengthDensity.y;
+	
+    if (bladeI > 1.0 || rand.y > adjustedProb)
+        discard;
+}
+
 #if SIMPLE
 void BladesPS(GrassPSVTX input, out float4 color:COLOR0)
 {
@@ -301,9 +323,8 @@ void BladesPS(GrassPSVTX input, out float4 color:COLOR0)
 void BladesPS(GrassPSVTX input, out float4 color:COLOR0, out float4 depthB : COLOR1)
 {
 #endif
-
-    float2 rand = iterhash22(input.ScreenPos.xy+ScreenOffset); //nearest neighbour effect
-    if (rand.y > GrassProb*((2.0-input.GrassInfo.x)/2)) discard;
+    float2 rand = iterhash22(input.ScreenPos.xy + ScreenOffset); //nearest neighbour effect
+    GrassDiscard(input, rand);
     //grass blade here
 
     float d = input.GrassInfo.w;
@@ -332,8 +353,8 @@ void BladesPSSimple(GrassPSVTX input, out float4 color:COLOR0)
 void BladesPSSimple(GrassPSVTX input, out float4 color:COLOR0, out float4 depthB : COLOR1)
 {
 #endif
-	float2 rand = iterhash22(input.ScreenPos.xy + ScreenOffset); //nearest neighbour effect
-	if (rand.y > GrassProb*((2.0 - input.GrassInfo.x) / 2)) discard;
+    float2 rand = iterhash22(input.ScreenPos.xy + ScreenOffset); //nearest neighbour effect
+    GrassDiscard(input, rand);
 	//grass blade here
 
 	float d = input.GrassInfo.w;
@@ -357,8 +378,8 @@ void BladesPS3D(GrassPSVTX input, out float4 color:COLOR0)
 {
 	float a = 2 - sqrt(input.ScreenPos.z / (25 * GrassFadeMul));
 	if (a <= 0) discard;
-	float2 rand = iterhash22(input.GrassInfo.yz*100); //nearest neighbour effect
-	if (rand.y > GrassProb*((2.0 - input.GrassInfo.x) / 2)) discard;
+    float2 rand = iterhash22(input.GrassInfo.yz * 100); //nearest neighbour effect
+    GrassDiscard(input, rand);
 	//grass blade here
 
 	float bladeCol = rand.x*0.6;
@@ -750,7 +771,8 @@ void BasePS3D(GrassPSVTX input, out float4 color:COLOR0)
 			//blade mipmaps
 			float2 rand = tex2D(TerrainNoiseMipSampler, input.GrassInfo.yz * 100 / 1024.0).xy;
 			float multex = rand.x;
-			multex *= ((2.0 - input.GrassInfo.x) / 2);
+            float2 lengthDensity = GetLengthDensity(input);
+            multex *= (0.5 + lengthDensity.y * 0.5) * (0.75 + lengthDensity.x * 0.25); // Base intensity (0-1): density (0.5-1.0) * length (0.75-1.0)
 			multex = (multex - 0.5) * 2.5 + 0.5;
 			multex *= a;
 
@@ -782,7 +804,7 @@ technique DrawBase
 #else
         VertexShader = compile vs_3_0 GrassVS();
         PixelShader = compile ps_3_0 BasePSSimple();
-#endif;
+#endif
 
     }
 
@@ -795,7 +817,7 @@ technique DrawBase
 #else
 		VertexShader = compile vs_3_0 GrassVS();
 		PixelShader = compile ps_3_0 BasePS();
-#endif;
+#endif
 
 	}
 
@@ -808,7 +830,7 @@ technique DrawBase
 #else
 		VertexShader = compile vs_3_0 GrassVS();
 		PixelShader = compile ps_3_0 BasePS3D();
-#endif;
+#endif
 
 	}
 
@@ -821,7 +843,7 @@ technique DrawBase
 #else
 		VertexShader = compile vs_3_0 GrassParallaxVS();
 		PixelShader = compile ps_3_0 RoofParallaxPS3D();
-#endif;
+#endif
 	}
 #endif
 
@@ -834,7 +856,7 @@ technique DrawBase
 #else
 		VertexShader = compile vs_3_0 GrassParallaxVS();
 		PixelShader = compile ps_3_0 FloorParallaxPS3D();
-#endif;
+#endif
 	}
 #endif
 }
@@ -850,7 +872,7 @@ technique DrawGrid
 #else
 		VertexShader = compile vs_3_0 GrassVS();
 		PixelShader = compile ps_3_0 GridPS();
-#endif;
+#endif
 
 	}
 
@@ -863,7 +885,7 @@ technique DrawGrid
 #else
 		VertexShader = compile vs_3_0 GrassVS();
 		PixelShader = compile ps_3_0 GridPS3D();
-#endif;
+#endif
 
 	}
 
@@ -876,7 +898,7 @@ technique DrawGrid
 #else
 		VertexShader = compile vs_3_0 GrassVS();
 		PixelShader = compile ps_3_0 GridPSTex3D();
-#endif;
+#endif
 
 	}
 }
@@ -891,7 +913,7 @@ technique DrawBlades
 #else
 		VertexShader = compile vs_3_0 GrassVS();
 		PixelShader = compile ps_3_0 BladesPSSimple();
-#endif;
+#endif
 	}
 
 	pass MainBlades
@@ -902,7 +924,7 @@ technique DrawBlades
 #else
 		VertexShader = compile vs_3_0 GrassVS();
 		PixelShader = compile ps_3_0 BladesPS();
-#endif;
+#endif
 	}
 
 	pass MainBlades3D
@@ -913,7 +935,7 @@ technique DrawBlades
 #else
 		VertexShader = compile vs_3_0 GrassVS();
 		PixelShader = compile ps_3_0 BladesPS3D();
-#endif;
+#endif
 	}
 
 #if !SIMPLE
@@ -925,7 +947,7 @@ technique DrawBlades
 #else
 		VertexShader = compile vs_3_0 GrassParallaxVS();
 		PixelShader = compile ps_3_0 BladesParallaxPS3D();
-#endif;
+#endif
 	}
 #endif
 
@@ -942,7 +964,7 @@ technique DrawLMap
 #else
 		VertexShader = compile vs_3_0 GrassVS();
 		PixelShader = compile ps_3_0 BasePSLMap();
-#endif;
+#endif
 
 	}
 }
@@ -958,7 +980,7 @@ technique DrawMask
 #else
 		VertexShader = compile vs_3_0 GrassVS();
 		PixelShader = compile ps_3_0 BasePSMul();
-#endif;
+#endif
 
 	}
 }

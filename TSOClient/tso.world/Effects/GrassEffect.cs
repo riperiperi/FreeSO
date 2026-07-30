@@ -22,8 +22,12 @@ namespace FSO.LotView.Effects
         private EffectParameter pDarkBrown;
         private EffectParameter pDiffuseColor;
         private EffectParameter pScreenOffset;
+        private EffectParameter pLayerHeight;
         private EffectParameter pGrassProb;
         private EffectParameter pGrassFadeMul;
+
+        private EffectParameter pGreenLengthDensity;
+        private EffectParameter pBrownLengthDensity;
 
         private EffectParameter pTexOffset;
         private EffectParameter pTexMatrix;
@@ -136,6 +140,13 @@ namespace FSO.LotView.Effects
                 pScreenOffset.SetValue(value);
             }
         }
+        public float LayerHeight
+        {
+            set
+            {
+                pLayerHeight.SetValue(value);
+            }
+        }
         public float GrassProb
         {
             set
@@ -148,6 +159,21 @@ namespace FSO.LotView.Effects
             set
             {
                 pGrassFadeMul.SetValue(value);
+            }
+        }
+
+        public Vector2 GreenLengthDensity
+        {
+            set
+            {
+                pGreenLengthDensity.SetValue(value);
+            }
+        }
+        public Vector2 BrownLengthDensity
+        {
+            set
+            {
+                pBrownLengthDensity.SetValue(value);
             }
         }
 
@@ -419,8 +445,12 @@ namespace FSO.LotView.Effects
             pDarkBrown = Parameters["DarkBrown"];
             pDiffuseColor = Parameters["DiffuseColor"];
             pScreenOffset = Parameters["ScreenOffset"];
+            pLayerHeight = Parameters["LayerHeight"];
             pGrassProb = Parameters["GrassProb"];
             pGrassFadeMul = Parameters["GrassFadeMul"];
+
+            pGreenLengthDensity = Parameters["GreenLengthDensity"];
+            pBrownLengthDensity = Parameters["BrownLengthDensity"];
 
             pTexOffset = Parameters["TexOffset"];
             pTexMatrix = Parameters["TexMatrix"];
