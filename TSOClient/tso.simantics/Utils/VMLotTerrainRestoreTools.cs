@@ -1117,7 +1117,6 @@ namespace FSO.SimAntics.Utils
                             }
 
                             tempVM.HollowLoad(hollow);
-                            RestoreTerrain(tempVM, terrain.BlendN[x, y], terrain.Roads[x, y], RestoreLotType.Normal);
 
                             if (hollow.Version < 19)
                                 height = RestoreHeight(tempVM, terrain, x, y);
