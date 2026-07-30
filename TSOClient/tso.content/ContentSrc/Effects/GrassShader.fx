@@ -291,10 +291,12 @@ float4 LightDot(float3 normal) {
 	return CM(dot(LightVec, normalize(normal)) * 0.5f + 0.5f);
 }
 
-float4 LightSpecular(float3 normal, float4 modelpos) {
+float4 LightSpecular(float4 baseColor, float3 normal, float4 modelpos) {
+    float4 specColor = DiffuseColor * lerp(baseColor, float4(1.0, 1.0, 1.0, 1.0), 0.25);
+
 	float3 pos = normalize(CamPos - modelpos.xyz);
 	float cosan = abs(dot(pos, normal));
-	return DiffuseColor*(1-pow(cosan, GrassShininess));
+    return specColor * (1 - pow(cosan, GrassShininess));
 }
 
 float2 GetLengthDensity(GrassPSVTX input)
@@ -385,7 +387,8 @@ void BladesPS3D(GrassPSVTX input, out float4 color:COLOR0)
 	float bladeCol = rand.x*0.6;
 	float4 green = lerp(LightGreen, DarkGreen, bladeCol);
 	float4 brown = lerp(LightBrown, DarkBrown, bladeCol);
-	color = gammaMad(lerp(green, brown, input.GrassInfo.x), lightProcessFloor(input.ModelPos) * LightDot(input.Normal), LightSpecular(input.Normal, input.ModelPos));
+    float4 baseColor = lerp(green, brown, input.GrassInfo.x);
+	color = gammaMad(baseColor, lightProcessFloor(input.ModelPos) * LightDot(input.Normal), LightSpecular(baseColor, input.Normal, input.ModelPos));
 	color.a = a;
 	float fade = (1 - RectangleFade(input.ModelPos.xz, 0.0)); // Since it works with stacked layers, the fade needs to be a bit stronger.
 	color.a *= fade * fade;
@@ -503,7 +506,8 @@ void BladesParallaxPS3D(GrassParallaxPSVTX input, out float4 color:COLOR0)
 	float bladeCol = rand.x*0.6;
 	float4 green = lerp(LightGreen, DarkGreen, bladeCol);
 	float4 brown = lerp(LightBrown, DarkBrown, bladeCol);
-	color = gammaMad(lerp(green, brown, input.GrassInfo.x), lightProcessFloor(input.ModelPos) * LightDot(input.Normal), LightSpecular(input.Normal, input.ModelPos));
+    float4 baseColor = lerp(green, brown, input.GrassInfo.x);
+	color = gammaMad(baseColor, lightProcessFloor(input.ModelPos) * LightDot(input.Normal), LightSpecular(baseColor, input.Normal, input.ModelPos));
 	color.a = a;
 	color.a *= (1 - RectangleFade(input.ModelPos.xz, 0.0));
 	color.a *= Alpha;
@@ -753,18 +757,18 @@ void BasePS3D(GrassPSVTX input, out float4 color:COLOR0)
 #endif
 
 			if (color.a == 0) discard;
-			color = gammaMad(color, lightProcessRoof(input.ModelPos) * LightDot(input.Normal), LightSpecular(input.Normal, input.ModelPos));
+			color = gammaMad(color, lightProcessRoof(input.ModelPos) * LightDot(input.Normal), LightSpecular(color, input.Normal, input.ModelPos));
 			color.a *= (1 - RectangleFade(input.ModelPos.xz, FadeWidth / 2));
 		} else {
 			// Ceiling colour.
 			color = float4(0.76, 0.78, 0.80, 1.00);
 
-			color = gammaMad(color, lightProcessRoofCeiling(input.ModelPos) * LightDot(input.Normal), LightSpecular(input.Normal, input.ModelPos));
+			color = gammaMad(color, lightProcessRoofCeiling(input.ModelPos) * LightDot(input.Normal), LightSpecular(color, input.Normal, input.ModelPos));
 			color.a *= (1 - RectangleFade(input.ModelPos.xz, FadeWidth / 2));
 		}
 	}
 	else {
-		color = gammaMad(color, lightProcessRoof(input.ModelPos) * LightDot(input.Normal), LightSpecular(input.Normal, input.ModelPos));
+		color = gammaMad(color, lightProcessRoof(input.ModelPos) * LightDot(input.Normal), LightSpecular(color, input.Normal, input.ModelPos));
 		float a = 1 - (2 - sqrt(input.ScreenPos.z / (25 * GrassFadeMul)));
 		if (a > 0) {
 			a = min(1, a);

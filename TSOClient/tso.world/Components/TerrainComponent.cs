@@ -506,7 +506,7 @@ namespace FSO.LotView.Components
                 var pos = Vector3.Transform(new Vector3(0, 0, 20000), Matrix.Invert(flat));
                 Effect.CamPos = pos;
             }
-            Effect.DiffuseColor = world.OutsideColor.ToVector4() * Color.Lerp(LightGreen, Color.White, 0.25f).ToVector4();
+            Effect.DiffuseColor = world.OutsideColor.ToVector4();
 
             device.SetVertexBuffer(VertexBuffer);
             device.Indices = IndexBuffer;
