@@ -39,16 +39,51 @@ namespace FSO.UpdateWorker
 
             var cache = new ReleaseCache(client, http);
 
+            if (!config.clearCache)
+            {
+                cache.LoadCache(config.targetPath);
+            }
+
             while (true)
             {
-                var releases = await client.Repository.Release.GetAll(authorName, repoName);
-
-                if (await cache.AddReleases([ ..releases ]))
+                try
                 {
-                    cache.SaveResponse(config.targetPath);
-                }
+                    var releases = await client.Repository.Release.GetAll(authorName, repoName);
 
-                Thread.Sleep(CheckFrequency);
+                    if (await cache.AddReleases([.. releases]))
+                    {
+                        cache.SaveResponse(config.targetPath);
+                    }
+
+                    Thread.Sleep(CheckFrequency);
+
+                    /*
+                     * This only works when for a non-prerelease branch
+                    while (true)
+                    {
+                        Thread.Sleep(CheckFrequency);
+
+                        try
+                        {
+                            var latest = await client.Repository.Release.GetLatest(authorName, repoName);
+
+                            if (latest.Id != releases.FirstOrDefault()?.Id)
+                            {
+                                // Get the full release list if something changed.
+                                break;
+                            }
+                        }
+                        catch
+                        {
+                            // Try again later.
+                        }
+                    }
+                    */
+                }
+                catch
+                {
+                    Thread.Sleep(CheckFrequency);
+                }
             }
         }
     }

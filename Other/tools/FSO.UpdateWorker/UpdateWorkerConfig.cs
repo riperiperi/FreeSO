@@ -6,5 +6,6 @@
         public string repoName { get; set; } = "FreeSO";
         public string targetPath { get; set; } = "update.json";
         public string? githubToken { get; set; }
+        public bool clearCache { get; set; }
     }
 }

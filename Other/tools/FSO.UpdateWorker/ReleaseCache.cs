@@ -121,5 +121,29 @@ namespace FSO.UpdateWorker
             Console.WriteLine($"Saving updated releases to {path}");
             File.WriteAllText(path, JsonSerializer.Serialize(Response));
         }
+
+        public void LoadCache(string path)
+        {
+            try
+            {
+                var text = File.ReadAllText(path);
+
+                Response = JsonSerializer.Deserialize<FSOUpdateResponse>(text) ?? Response;
+
+                foreach (var channel in Response.channels)
+                {
+                    foreach (var update in channel.updates)
+                    {
+                        SeenTags.Add(update.id);
+                    }
+                }
+
+                Console.WriteLine($"Loaded cache from {path} with {SeenTags.Count} items.");
+            }
+            catch
+            {
+                Console.WriteLine($"Cache at {path} could not be loaded.");
+            }
+        }
     }
 }
