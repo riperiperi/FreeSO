@@ -12,7 +12,7 @@ namespace FSO.SimAntics.Model
         public byte EventsRun; //total # of xevts fired during anim. up to short if anything uses more than 255.
         public bool EndReached;
         public bool PlayingBackwards;
-        public float Speed = 1.0f;
+        public float Speed = 30 / 25f;
         public float Weight = 1.0f; //For animation blending. All active animations should add up to 1 but won't break if it doesn't.
         public bool Loop = false;
         private List<TimePropertyListItem> TimePropertyListBuilder = new List<TimePropertyListItem>();

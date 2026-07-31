@@ -18,8 +18,6 @@ namespace FSO.SimAntics.Engine.Primitives
             Animation animation;
             var id = (operand.IDFromParam) ? (ushort)(context.Args[operand.AnimationID]) : operand.AnimationID;
 
-            var newMode = true; // (context.VM.Tuning?.GetTuning("feature", 0, 0) ?? 0) != 0; //might need to disable this suddenly - too many things to test
-
             if (id == 0)
             { //reset
                 if (operand.Mode == 3)
@@ -42,12 +40,11 @@ namespace FSO.SimAntics.Engine.Primitives
                 if (animation == null)
                     return VMPrimitiveExitCode.GOTO_TRUE;
 
-                var state = new VMAnimationState(animation, operand.PlayBackwards);
+                var state = new VMAnimationState(animation, operand.PlayBackwards)
+                {
+                    Loop = true
+                };
 
-                if (context.VM.TS1 || newMode)
-                    state.Speed = 30 / 25f;
-
-                state.Loop = true;
                 avatar.Animations.Add(state);
                 avatar.Avatar.LeftHandGesture = SimHandGesture.Idle;
                 avatar.Avatar.RightHandGesture = SimHandGesture.Idle;
@@ -108,11 +105,12 @@ namespace FSO.SimAntics.Engine.Primitives
             {
                 case 1:
                     avatar.Animations.Clear();
-                    var state = new VMAnimationState(animation, operand.PlayBackwards);
-                    if (context.VM.TS1 || newMode)
-                        state.Speed = 30 / 25f;
+                    var state = new VMAnimationState(animation, operand.PlayBackwards)
+                    {
+                        Loop = true
+                    };
+
                     if (avatar.GetValue(VMStackObjectVariable.WalkStyle) == 1 && operand.Hurryable) state.Speed *= 2;
-                    state.Loop = true;
                     avatar.Animations.Add(state);
 
                     avatar.Avatar.LeftHandGesture = SimHandGesture.Idle;
@@ -128,8 +126,12 @@ namespace FSO.SimAntics.Engine.Primitives
                         /** Start it **/
                         avatar.Animations.Clear();
                         var astate = new VMAnimationState(animation, operand.PlayBackwards);
-                        if (context.VM.TS1 || newMode)
-                            astate.Speed = 30 / 25f;
+
+                        if (operand.PlayBackwards)
+                        {
+                            astate.EventsRun = (byte)(operand.ExpectedEventCount - 1);
+                        }
+
                         if (avatar.GetValue(VMStackObjectVariable.WalkStyle) == 1 && operand.Hurryable) astate.Speed *= 2;
                         avatar.Animations.Add(astate);
                     
@@ -141,28 +143,54 @@ namespace FSO.SimAntics.Engine.Primitives
                     {
                         var cAnim = avatar.CurrentAnimationState;
 
-                        //SPECIAL CASE: if we are ending the animation, and the number of events run < expected events
-                        //forcefully run those events, with id as their event number. (required for bath drain)
-                        if (cAnim.EndReached)
-                        {
-                            while (cAnim.EventsRun < operand.ExpectedEventCount)
-                            {
-                                cAnim.EventQueue.Add(cAnim.EventsRun++);
-                            }
-                        }
+                        int eventDirection = operand.PlayBackwards ? -1 : 1;
 
-                        if (cAnim.EventQueue.Count > 0) //favor events over end. do not want to miss any.
+                        while (cAnim.EventQueue.Count > 0) //favor events over end. do not want to miss any.
                         {
                             var code = cAnim.EventQueue[0];
                             cAnim.EventQueue.RemoveAt(0);
+                            
+                            // Events under 100 are expected to fire in sequence, and are ignored past the count defined in the primitive.
+                            if (code < 100)
+                            {
+                                if (code == avatar.CurrentAnimationState.EventsRun && code < operand.ExpectedEventCount && code >= 0)
+                                {
+                                    avatar.CurrentAnimationState.EventsRun += (byte)eventDirection;
+                                }
+                                else
+                                {
+                                    // Unexpected event (out of order or past the expected count)
+                                    continue;
+                                }
+                            }
+
                             if (operand.StoreFrameInLocal)
                                 VMMemory.SetVariable(context, VMVariableScope.Local, operand.LocalEventNumber, code);
                             else
                                 VMMemory.SetVariable(context, VMVariableScope.Parameters, 0, code);
+
                             return VMPrimitiveExitCode.GOTO_FALSE;
                         }
-                        else if (cAnim.EndReached)
+
+                        if (cAnim.EndReached)
                         {
+                            //SPECIAL CASE: if we are ending the animation, and the number of events run < expected events
+                            //forcefully run those events, with id as their event number. (required for bath drain)
+
+                            if (cAnim.EventsRun < operand.ExpectedEventCount) // This also works backwards, as it overflows to 255 after it hits 0
+                            {
+                                short code = cAnim.EventsRun;
+
+                                cAnim.EventsRun += (byte)eventDirection;
+
+                                if (operand.StoreFrameInLocal)
+                                    VMMemory.SetVariable(context, VMVariableScope.Local, operand.LocalEventNumber, code);
+                                else
+                                    VMMemory.SetVariable(context, VMVariableScope.Parameters, 0, code);
+
+                                return VMPrimitiveExitCode.GOTO_FALSE;
+                            }
+
                             avatar.Animations.Clear();
                             return VMPrimitiveExitCode.GOTO_TRUE;
                         }
@@ -173,6 +201,7 @@ namespace FSO.SimAntics.Engine.Primitives
                     }
                 case 2:
                     avatar.CarryAnimationState = new VMAnimationState(animation, false);
+
                     return VMPrimitiveExitCode.GOTO_TRUE;
             }
             return VMPrimitiveExitCode.GOTO_TRUE;

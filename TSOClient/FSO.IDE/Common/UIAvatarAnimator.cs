@@ -125,9 +125,10 @@ namespace FSO.IDE.Common
                             var animation = FSO.Content.Content.Get().AvatarAnimations.Get(anim + ".anim");
                             if (animation != null)
                             {
-                                var astate = new VMAnimationState(animation, false);
-                                astate.Speed = 30 / 25f;
-                                astate.Loop = true;
+                                var astate = new VMAnimationState(animation, false)
+                                {
+                                    Loop = true
+                                };
                                 ava.Animations.Clear();
                                 ava.Animations.Add(astate);
                             }

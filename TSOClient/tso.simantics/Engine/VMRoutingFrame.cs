@@ -730,8 +730,10 @@ namespace FSO.SimAntics.Engine
                             var anims = InPool ? avatar.SwimAnimations : avatar.WalkAnimations;
 
                             var animation = FSO.Content.Content.Get().AvatarAnimations.Get(anims[3] + ".anim");
-                            var state = new VMAnimationState(animation, false);
-                            state.Loop = true;
+                            var state = new VMAnimationState(animation, false)
+                            {
+                                Loop = true
+                            };
                             avatar.Animations.Add(state);
 
                             PreExit();

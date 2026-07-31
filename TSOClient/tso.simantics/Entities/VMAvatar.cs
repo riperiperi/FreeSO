@@ -451,7 +451,6 @@ namespace FSO.SimAntics
                 short eventValue = 0;
                 short.TryParse(evt, out eventValue);
                 avatar.CurrentAnimationState.EventQueue.Add(eventValue);
-                if (eventValue < 100) avatar.CurrentAnimationState.EventsRun++;
             }
             var rhevt = tp.Properties["righthand"];
             if (rhevt != null)
