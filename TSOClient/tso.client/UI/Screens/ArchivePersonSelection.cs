@@ -535,6 +535,7 @@ namespace FSO.Client.UI.Screens
         private UISim Sim;
 
         private PersonSlotTab _tab = PersonSlotTab.EnterTab;
+        private uint CityThumbShard = uint.MaxValue;
 
         public ArchivePersonSlot(ArchivePersonSelection screen)
         {
@@ -674,21 +675,6 @@ namespace FSO.Client.UI.Screens
             HouseThumb.Texture?.Dispose();
             HouseThumb.Texture = null;
 
-            var map = "0100"; // TODO: from archive
-
-            var cityThumb = (int.Parse(map) >= 100) ?
-                Path.Combine(FSOEnvironment.ContentDir, "Cities/city_" + map + "/thumbnail.png")
-                : GameFacade.GameFilePath("cities/city_" + map + "/thumbnail.bmp");
-
-            Texture2D cityThumbTex =
-                TextureUtils.Resize(
-                    GameFacade.GraphicsDevice,
-                    TextureUtils.TextureFromFile(GameFacade.GraphicsDevice, cityThumb),
-                    78,
-                    58);
-            TextureUtils.CopyAlpha(ref cityThumbTex, Screen.CityHouseButtonAlpha);
-            CityThumb.Texture = cityThumbTex;
-
             SetTab(_tab);
 
             Sim.Avatar.Appearance = (Vitaboy.AppearanceType)avatar.Type;
@@ -700,9 +686,79 @@ namespace FSO.Client.UI.Screens
             PersonDescriptionText.CurrentText = "Loading...";
 
             AsyncFetchAvatarData(1); // TODO: shard ID
+            AsyncFetchCityThumbData(1); // TODO: shard ID
+        }
+
+        private Texture2D MaskCityThumb(Texture2D thumb)
+        {
+            Texture2D cityThumbTex =
+                TextureUtils.Resize(
+                    GameFacade.GraphicsDevice,
+                    thumb,
+                78,
+                58);
+            TextureUtils.CopyAlpha(ref cityThumbTex, Screen.CityHouseButtonAlpha);
+            return cityThumbTex;
         }
 
         private int RequestNum = 0;
+
+        private void PrepareDefaultCityThumb()
+        {
+            var map = "0100"; // TODO: from archive
+
+            var cityThumb = (int.Parse(map) >= 100) ?
+                Path.Combine(FSOEnvironment.ContentDir, "Cities/city_" + map + "/thumbnail.png")
+                : GameFacade.GameFilePath("cities/city_" + map + "/thumbnail.bmp");
+
+            try
+            {
+                Texture2D cityThumbTex = TextureUtils.TextureFromFile(GameFacade.GraphicsDevice, cityThumb);
+                CityThumb.Texture = MaskCityThumb(cityThumbTex);
+                cityThumbTex.Dispose();
+            }
+            catch
+            {
+                // No city texture?
+            }
+        }
+
+        private void AsyncFetchCityThumbData(uint shardID)
+        {
+            if (CityThumbShard == shardID)
+            {
+                return;
+            }
+
+            CityThumbShard = shardID;
+
+            PrepareDefaultCityThumb();
+
+            var res = Screen.FindController<ArchiveCharactersSelectorController>().CityResource;
+
+            res.GetCityThumbnailAsync(shardID, (data) =>
+            {
+                if (data != null)
+                {
+                    try
+                    {
+                        Texture2D tex;
+
+                        using (var mem = new MemoryStream(data))
+                        {
+                            tex = ImageLoader.FromStream(GameFacade.GraphicsDevice, mem);
+                        }
+
+                        CityThumb.Texture = MaskCityThumb(tex);
+                        tex.Dispose();
+                    }
+                    catch
+                    {
+                        // Leave the existing texture.
+                    }
+                }
+            });
+        }
 
         private void AsyncFetchAvatarData(uint shardID)
         {

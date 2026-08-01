@@ -1,43 +1,17 @@
 ﻿using FSO.Common.DataService;
+using FSO.Common.Domain.Shards;
+using FSO.Content.Model;
 using FSO.Server.Database.DA;
 using FSO.Server.Framework.Voltron;
 using FSO.Server.Protocol.Electron.Packets;
 using Ninject;
 using NLog;
-using System;
 using System.Collections.Concurrent;
-using System.Collections.Generic;
-using System.IO;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
-
 using System.Runtime.Caching;
+using System.Text;
 
 namespace FSO.Server.Servers.City.Handlers
 {
-    public static class MemoryCacher
-    {
-        public static MemoryCache Default = new MemoryCache("city_resource");
-        public static object GetValue(string key)
-        {
-            MemoryCache memoryCache = Default;
-            return memoryCache.Get(key);
-        }
-
-        public static bool Add(string key, object value, DateTimeOffset absExpiration)
-        {
-            MemoryCache memoryCache = Default;
-            return memoryCache.Add(key, value, absExpiration);
-        }
-
-        public static void Delete(string key)
-        {
-            MemoryCache memoryCache = Default;
-            memoryCache.Remove(key);
-        }
-    }
-
     public class ShardLocationCache
     {
         public ConcurrentDictionary<uint, int> Dict = new ConcurrentDictionary<uint, int>();
@@ -56,15 +30,18 @@ namespace FSO.Server.Servers.City.Handlers
         private IDataService DataService;
         private CityServerContext Context;
         private ServerConfiguration Config;
+        private IShardsDomain Shards;
         private IKernel Kernel;
+        private MemoryCache MemoryCacher = new("city_resource");
 
-        public CityResourceHandler(CityServerContext context, IDAFactory da, IDataService dataService, IKernel kernel, ServerConfiguration config)
+        public CityResourceHandler(CityServerContext context, IDAFactory da, IDataService dataService, IKernel kernel, ServerConfiguration config, IShardsDomain shards)
         {
             Context = context;
             DA = da;
             DataService = dataService;
             Kernel = kernel;
             Config = config;
+            Shards = shards;
         }
 
         public static ConcurrentDictionary<int, ShardLocationCache> LotLocationCache = new ConcurrentDictionary<int, ShardLocationCache>();
@@ -104,7 +81,7 @@ namespace FSO.Server.Servers.City.Handlers
 
         public byte[] GetLotThumbnail(int shardid, uint id)
         {
-            var dat = (byte[])MemoryCacher.GetValue("lt" + shardid + ":" + id);
+            var dat = (byte[])MemoryCacher.Get("lt" + shardid + ":" + id);
             if (dat != null)
             {
                 return dat;
@@ -134,7 +111,7 @@ namespace FSO.Server.Servers.City.Handlers
 
         public byte[] GetLotFacade(int shardid, uint id)
         {
-            var dat = (byte[])MemoryCacher.GetValue("lf" + shardid + ":" + id);
+            var dat = (byte[])MemoryCacher.Get("lf" + shardid + ":" + id);
             if (dat != null)
             {
                 return dat;
@@ -179,6 +156,45 @@ namespace FSO.Server.Servers.City.Handlers
             return Encoding.UTF8.GetBytes(data);
         }
 
+        public byte[] GetCityThumbnail(int shardid)
+        {
+            var dat = (byte[])MemoryCacher.Get("ct" + shardid);
+            if (dat != null)
+            {
+                return dat;
+            }
+
+            try
+            { 
+                string path;
+                // Try and send the default thumbnail for this shard's map
+
+                var map = Shards.GetMapForId(shardid);
+                if (map != null && map.Thumbnail is FileTextureRef file)
+                {
+                    path = file.FilePath;
+
+                    if (!File.Exists(path))
+                    {
+                        return new byte[0];
+                    }
+                }
+                else
+                {
+                    return new byte[0];
+                }
+
+                var ndat = File.ReadAllBytes(path);
+                MemoryCacher.Add("ct" + shardid, ndat, DateTime.Now.Add(new TimeSpan(1, 0, 0)));
+
+                return ndat;
+            }
+            catch (Exception e)
+            {
+                return new byte[0];
+            }
+        }
+
         public void Handle(IVoltronSession session, CityResourceRequest packet)
         {
             byte[] data = null;
@@ -198,6 +214,9 @@ namespace FSO.Server.Servers.City.Handlers
                             break;
                         case CityResourceRequestType.AVATAR_DESCRIPTION:
                             data = GetAvatarDescription(shard, packet.ResourceID);
+                            break;
+                        case CityResourceRequestType.CITY_THUMBNAIL:
+                            data = GetCityThumbnail(shard);
                             break;
                     }
 

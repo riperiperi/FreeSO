@@ -90,6 +90,11 @@ namespace FSO.Server.Domain
         {
             var shard = GetById(id);
 
+            if (shard == null)
+            {
+                return null;
+            }
+
             if (shard.Map.StartsWith("dynamic"))
             {
                 var path = NFS.GetShardMapDirectory(id);

@@ -18,16 +18,16 @@ namespace FSO.Content.Model
 
     public class FileTextureRef : AbstractTextureRef
     {
-        private string _FilePath;
+        public readonly string FilePath;
 
         public FileTextureRef(string filepath)
         {
-            _FilePath = filepath;
+            FilePath = filepath;
         }
 
         protected override Stream GetStream()
         {
-            return new FileStream(_FilePath, FileMode.Open, FileAccess.Read, FileShare.Read);
+            return new FileStream(FilePath, FileMode.Open, FileAccess.Read, FileShare.Read);
         }
     }
 

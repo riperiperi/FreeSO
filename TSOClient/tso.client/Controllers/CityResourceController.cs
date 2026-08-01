@@ -50,49 +50,39 @@ namespace FSO.Client.Controllers
             };
         }
 
-        public void GetThumbnailAsync(uint shardID, uint location, Action<byte[]> callback)
+        private void GetResourceAsync(CityResourceRequestType type, uint shardID, uint id, Action<byte[]> callback)
         {
             callback = CallbackOnMainThread(callback);
             var requestId = GetRequestID();
 
             Network.CityClient.Write(new CityResourceRequest()
             {
-                Type = CityResourceRequestType.LOT_THUMBNAIL,
+                Type = type,
                 RequestID = requestId,
-                ResourceID = location,
+                ResourceID = id,
             });
 
             Callbacks.TryAdd(requestId, new CityResourceCallback(requestId, callback));
+        }
+
+        public void GetThumbnailAsync(uint shardID, uint location, Action<byte[]> callback)
+        {
+            GetResourceAsync(CityResourceRequestType.LOT_THUMBNAIL, shardID, location, callback);
         }
 
         public void GetFacadeAsync(uint shardID, uint location, Action<byte[]> callback)
         {
-            callback = CallbackOnMainThread(callback);
-            var requestId = GetRequestID();
-
-            Network.CityClient.Write(new CityResourceRequest()
-            {
-                Type = CityResourceRequestType.LOT_FACADE,
-                RequestID = requestId,
-                ResourceID = location,
-            });
-
-            Callbacks.TryAdd(requestId, new CityResourceCallback(requestId, callback));
+            GetResourceAsync(CityResourceRequestType.LOT_FACADE, shardID, location, callback);
         }
 
         public void GetAvatarDescriptionAsync(uint shardID, uint avatarId, Action<byte[]> callback)
         {
-            callback = CallbackOnMainThread(callback);
-            var requestId = GetRequestID();
+            GetResourceAsync(CityResourceRequestType.AVATAR_DESCRIPTION, shardID, avatarId, callback);
+        }
 
-            Network.CityClient.Write(new CityResourceRequest()
-            {
-                Type = CityResourceRequestType.AVATAR_DESCRIPTION,
-                RequestID = requestId,
-                ResourceID = avatarId,
-            });
-
-            Callbacks.TryAdd(requestId, new CityResourceCallback(requestId, callback));
+        public void GetCityThumbnailAsync(uint shardID, Action<byte[]> callback)
+        {
+            GetResourceAsync(CityResourceRequestType.CITY_THUMBNAIL, shardID, 0, callback);
         }
 
         public void MessageReceived(AriesClient client, object message)

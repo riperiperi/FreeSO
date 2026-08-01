@@ -37,6 +37,7 @@ namespace FSO.Server.Protocol.Electron.Packets
     {
         LOT_THUMBNAIL = 0,
         LOT_FACADE = 1,
-        AVATAR_DESCRIPTION = 2
+        AVATAR_DESCRIPTION = 2,
+        CITY_THUMBNAIL = 3,
     }
 }
