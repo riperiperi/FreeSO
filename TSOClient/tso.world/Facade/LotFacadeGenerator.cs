@@ -562,6 +562,8 @@ namespace FSO.LotView.Facade
             FloorTexture.Dispose();
             WallTarget.Dispose();
 
+            gd.Indices = null;
+
             return result;
         }
 
