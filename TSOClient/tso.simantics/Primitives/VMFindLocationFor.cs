@@ -41,9 +41,16 @@ namespace FSO.SimAntics.Primitives
                     obj.SetPosition(LotTilePos.OUT_OF_WORLD, Direction.NORTH, context.VM.Context, flags);
                     return VMPrimitiveExitCode.GOTO_TRUE;
                 case 2:
-                    //"smoke cloud" - halfway between callee and caller (is "caller" actually reference object?)
-                    var smokePos = context.Callee.Position;
-                    smokePos += context.Caller.Position;
+                    // "smoke cloud" - halfway between ref and the "attack target"
+                    // it's not entirely clear how TSO/TS1 do this, the only place the attack target is stored are:
+                    // TSO: in attribute 9 of the callee (person B), but this isn't true for the crafting table
+                    // TS1: other person with relationship to the callee (is involved (0): 1), this is never true in TSO
+                    // both: action icon (correct in all cases, but TS1 doesn't flinch if you change this)
+
+                    // For now, use the action icon owner.
+                    var smokeRef = context.Thread.ActiveAction.IconOwner;
+                    var smokePos = refObj.Position;
+                    smokePos += smokeRef.Position;
                     smokePos /= 2;
                     smokePos -= new LotTilePos(8, 8, 0); //smoke is 2x2... offset to center it.
                     return (obj.SetPosition(smokePos, Direction.NORTH, context.VM.Context).Status == VMPlacementError.Success)?
