@@ -365,6 +365,27 @@ namespace FSO.Client.UI.Archive
             UIScreen.ShowDialog(cityPicker, true);
         }
 
+        private Texture2D LoadCityThumbnail(string path)
+        {
+            try
+            {
+                //Take a copy so we dont change the original when we alpha mask it
+                Texture2D cityThumbTex = TextureUtils.Resize(GameFacade.GraphicsDevice, TextureUtils.TextureFromFile(
+                   GameFacade.GraphicsDevice, path), CITY_IMAGE_WIDTH, CITY_IMAGE_HEIGHT);
+
+                var mask = TextureGenerator.GenerateRoundedRectangle(GameFacade.GraphicsDevice, Color.White, CITY_IMAGE_WIDTH, CITY_IMAGE_HEIGHT, CITY_IMAGE_RADIUS);
+                TextureUtils.CopyAlpha(ref cityThumbTex, mask);
+
+                mask.Dispose();
+
+                return cityThumbTex;
+            }
+            catch
+            {
+                return null;
+            }
+        }
+
         private void UpdateSelectedSave(object obj)
         {
             if (CityImage == null)
@@ -392,32 +413,34 @@ namespace FSO.Client.UI.Archive
 
             // Load the city image.
 
-            string map = selected.Map;
-
-            var fsoMap = int.Parse(map) >= 100;
-
             try
             {
-                var cityThumb = (fsoMap) ?
-                Path.Combine(FSOEnvironment.ContentDir, "Cities/city_" + map + "/thumbnail.png")
-                : GameFacade.GameFilePath("cities/city_" + map + "/thumbnail.bmp");
+                if (selected.LocalDir != null)
+                {
+                    // TODO: get archive shard? currently just assumes it's 1
+                    var customThumbPath = Path.Combine(Path.GetDirectoryName(selected.ActivePath), selected.LocalDir, "City1/thumbnail.png");
 
-                //Take a copy so we dont change the original when we alpha mask it
-                Texture2D cityThumbTex = TextureUtils.Resize(GameFacade.GraphicsDevice, TextureUtils.TextureFromFile(
-                   GameFacade.GraphicsDevice, cityThumb), CITY_IMAGE_WIDTH, CITY_IMAGE_HEIGHT);
-
-                var mask = TextureGenerator.GenerateRoundedRectangle(GameFacade.GraphicsDevice, Color.White, CITY_IMAGE_WIDTH, CITY_IMAGE_HEIGHT, CITY_IMAGE_RADIUS);
-                TextureUtils.CopyAlpha(ref cityThumbTex, mask);
-
-                mask.Dispose();
-
-                CityImage.Texture = cityThumbTex;
+                    if (File.Exists(customThumbPath))
+                    {
+                        CityImage.Texture = LoadCityThumbnail(customThumbPath);
+                        return;
+                    }
+                }
             }
             catch
             {
-                CityImage.Texture = null;
-                return;
+                // Try load the default map image
             }
+
+            string map = selected.Map;
+            var fsoMap = int.Parse(map) >= 100;
+
+
+            var cityThumb = (fsoMap) ?
+                Path.Combine(FSOEnvironment.ContentDir, "Cities/city_" + map + "/thumbnail.png")
+                : GameFacade.GameFilePath("cities/city_" + map + "/thumbnail.bmp");
+
+            CityImage.Texture = LoadCityThumbnail(cityThumb);
         }
 
         private void EditEvents(UIElement button)
