@@ -87,7 +87,7 @@ namespace FSO.Patcher.Unix
                     if (PathProgress == 1)
                     {
                         //first patch
-                        if (CleanPatch)
+                        if (CleanPatch && Directory.Exists("Content/Patch/"))
                         {
                             foreach (var file in Directory.GetFiles("Content/Patch/"))
                             {
@@ -164,7 +164,20 @@ namespace FSO.Patcher.Unix
                 fileList += $"\r\n    ...and {remaining.Count - 9} more.";
             }
             else fileList = string.Join("\r\n", remaining);
-            Console.WriteLine("Couldn't write one or more files. Make sure you are not running an instance of FreeSO! \r\nFiles:\r\n\r\n" + fileList);
+
+            string errorText = "Couldn't write one or more files. Make sure you are not running an instance of FreeSO! \r\nFiles:\r\n\r\n" + fileList;
+
+            Console.WriteLine(errorText);
+
+            try
+            {
+                File.WriteAllText("updateError.txt", errorText);
+            }
+            catch
+            {
+                // Not urgent if we can't write the error message.
+            }
+
             return 0;
         }
 
@@ -226,7 +239,19 @@ namespace FSO.Patcher.Unix
         public void StartFreeSO()
         {
             var fsoExe = GetFreeSOName();
-            if (!File.Exists(fsoExe)) File.Copy(fsoExe+".old", fsoExe, true);
+            if (!File.Exists(fsoExe))
+            {
+                if (File.Exists(fsoExe + ".old"))
+                {
+                    File.Copy(fsoExe + ".old", fsoExe, true);
+                }
+                else
+                {
+                    Console.WriteLine($"FreeSO is not present. If you want to redownload the latest version of FreeSO, run with the --client argument.");
+                    return;
+                }
+            }
+
             if (Environment.OSVersion.Platform == PlatformID.Unix || Environment.OSVersion.Platform == PlatformID.MacOSX)
             {
                 Console.WriteLine($"===== Starting FreeSO... Please wait! =====");
@@ -287,15 +312,8 @@ namespace FSO.Patcher.Unix
 
             if (Args.Contains("--client"))
             {
-                Console.WriteLine("FreeSO client requested. Downloading from servo.freeso.org.");
-                ToDownload.Add("https://fso-builds.riperiperi.workers.dev/");
-            }
-
-            if (Args.Contains("--extras"))
-            {
-                Console.WriteLine("Unix Extras requested. Downloading from FreeSO.org.");
-                ToDownload.Add("http://freeso.org/stuff/macextras.zip");
-                AllowMonogameMod = true;
+                Console.WriteLine("FreeSO client requested. Downloading from freeso.org.");
+                ToDownload.Add("https://fso-archive-beta.riperiperi.workers.dev/");
             }
 
             if (ToDownload.Count > 0)

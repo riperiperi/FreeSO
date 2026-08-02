@@ -107,6 +107,19 @@ namespace FSO.Client
         {
             try
             {
+                if (File.Exists("updateError.txt"))
+                {
+                    UIAlert.Alert(GameFacade.Strings.GetString("f101", "30"), File.ReadAllText("updateError.txt"), true);
+                    File.Delete("updateError.txt");
+                }
+            }
+            catch (Exception)
+            {
+                //maybe signal to user that the updater update failed
+            }
+
+            try
+            {
                 if (File.Exists("update2.exe"))
                 {
                     File.Delete("update.exe");
@@ -130,8 +143,8 @@ namespace FSO.Client
         /// </summary>
         public void ShowLogin()
         {
-            UpdaterCleanup();
             InitializeArchive();
+            UpdaterCleanup();
         }
 
         public void ShowServerLogin()

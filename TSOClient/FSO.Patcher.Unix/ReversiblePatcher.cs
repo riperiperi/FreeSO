@@ -39,15 +39,19 @@ namespace FSO.Patcher.Unix
             "NLog.config",
             "update.pdb",
             "delta.json",
+            "updateError.txt",
 
             //monogame in the base directory is not used on fso windows, and is manually replaced on unix
             "MonoGame.Framework.dll",
             "MonoGame.Framework.xml",
+
         };
 
         public static HashSet<string> UnimportantFiles = new HashSet<string>()
         {
-            "discord-rpc.dll"
+            "discord-rpc.dll",
+            //runtime stuff - not really necessary to update
+            "ucrtbase.dll"
         };
 
         public static HashSet<string> DeferredUpdate = new HashSet<string>()
@@ -102,7 +106,7 @@ namespace FSO.Patcher.Unix
             catch (Exception e)
             {
                 if (e is DirectoryNotFoundException) return true;
-                if (tryNum++ > 3 || Errors.Count > 4)
+                if (tryNum++ > 3 || Errors.Count > 4 || UnimportantFiles.Contains(name))
                 {
                     Status($"Could not replace {targPath}!");
                     Errors.Add($"{targPath}: {e.Message}");

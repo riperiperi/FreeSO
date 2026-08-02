@@ -48,7 +48,6 @@
   </ItemGroup>
 
   <ItemGroup>
-    <ProjectReference Include="..\FSO.Patcher\FSO.Patcher.csproj" />
     <ProjectReference Include="..\tso.client\FSO.Client.csproj" />
     <ProjectReference Include="..\tso.common\FSO.Common.csproj" />
   </ItemGroup>
@@ -61,6 +60,10 @@
   <PropertyGroup Condition="'$(GITHUB_ACTIONS)' == 'true'">
     <ContinuousIntegrationBuild>true</ContinuousIntegrationBuild>
   </PropertyGroup>
+
+  <Target Name="UpdaterPublish" BeforeTargets="Publish">
+    <Exec Command="dotnet publish ../FSO.Patcher.Unix -c Release -r $(RuntimeIdentifier) -o &quot;$(PublishDir)&quot;" />
+  </Target>
 
   <Target Name="CopyMonoGameDLLs" AfterTargets="Build">
     <!-- Remove root MonoGame.Framework.dll if it exists -->

@@ -133,6 +133,11 @@
     <NuGetGlobalPackages Condition=" '$(OS)' != 'Windows_NT' ">$(HOME)/.nuget/packages</NuGetGlobalPackages>
   </PropertyGroup>
 
+
+  <Target Name="UpdaterPublish" BeforeTargets="Publish">
+    <Exec Command="dotnet publish ../FSO.Patcher.Unix -c Release -r $(RuntimeIdentifier) -o &quot;$(PublishDir)&quot;" />
+  </Target>
+
   <PropertyGroup Condition="'$(GITHUB_ACTIONS)' == 'true'">
     <ContinuousIntegrationBuild>true</ContinuousIntegrationBuild>
   </PropertyGroup>
