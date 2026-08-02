@@ -19,6 +19,16 @@ namespace FSO.Client.Utils
                     {
                         var manifest = new ArchiveManifest(Path.Combine(dir, "archive.ini"));
 
+                        if (string.IsNullOrEmpty(manifest.LocalDir))
+                        {
+                            // Try correct it to the default directory `data/` if it exists.
+
+                            if (File.Exists(Path.Combine(dir, "data/fsoarchive.db")))
+                            {
+                                manifest.LocalDir = "data/";
+                            }
+                        }
+
                         if (manifest.Template == template && (manifest.LocalDir != "" || manifest.ZipLocation != ""))
                         {
                             manifests.Add(manifest);
