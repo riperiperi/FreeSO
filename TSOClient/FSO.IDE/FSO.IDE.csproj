@@ -23,8 +23,8 @@
   </PropertyGroup>
 
   <ItemGroup>
-    <PackageReference Include="MonoGame.Framework.DesktopGL" Version="3.8.5-preview.2" />
-    <PackageReference Include="MonoGame.Framework.WindowsDX" Version="3.8.5-preview.2" />
+    <PackageReference Include="MonoGame.Framework.DesktopGL" Version="3.8.5" />
+    <PackageReference Include="MonoGame.Framework.WindowsDX" Version="3.8.5" />
     <PackageReference Include="SharpGLTF.Toolkit" Version="1.0.0-alpha0011" />
   </ItemGroup>
 
@@ -143,13 +143,13 @@
 
     <MakeDir Directories="$(OutputPath)Monogame\Windows" />
     <ItemGroup>
-      <MGWindowsDX Include="$(NuGetGlobalPackages)\monogame.framework.windowsdx\3.8.5-preview.2\lib\**\MonoGame.Framework.dll" />
+      <MGWindowsDX Include="$(NuGetGlobalPackages)\monogame.framework.windowsdx\3.8.5\lib\**\MonoGame.Framework.dll" />
     </ItemGroup>
     <Copy SourceFiles="@(MGWindowsDX)" DestinationFolder="$(OutputPath)Monogame\Windows" SkipUnchangedFiles="true" />
 
     <MakeDir Directories="$(OutputPath)Monogame\WindowsGL" />
     <ItemGroup>
-      <MGDesktopGL Include="$(NuGetGlobalPackages)\monogame.framework.desktopgl\3.8.5-preview.2\lib\**\MonoGame.Framework.dll" />
+      <MGDesktopGL Include="$(NuGetGlobalPackages)\monogame.framework.desktopgl\3.8.5\lib\**\MonoGame.Framework.dll" />
     </ItemGroup>
     <Copy SourceFiles="@(MGDesktopGL)" DestinationFolder="$(OutputPath)Monogame\WindowsGL" SkipUnchangedFiles="true" />
   </Target>
@@ -160,13 +160,13 @@
 
 		<MakeDir Directories="$(PublishDir)Monogame\Windows" />
 		<ItemGroup>
-			<MGWindowsDX Include="$(NuGetGlobalPackages)\monogame.framework.windowsdx\3.8.5-preview.2\lib\**\MonoGame.Framework.dll" />
+			<MGWindowsDX Include="$(NuGetGlobalPackages)\monogame.framework.windowsdx\3.8.5\lib\**\MonoGame.Framework.dll" />
 		</ItemGroup>
 		<Copy SourceFiles="@(MGWindowsDX)" DestinationFolder="$(PublishDir)Monogame\Windows" SkipUnchangedFiles="true" />
 
 		<MakeDir Directories="$(PublishDir)Monogame\WindowsGL" />
 		<ItemGroup>
-			<MGDesktopGL Include="$(NuGetGlobalPackages)\monogame.framework.desktopgl\3.8.5-preview.2\lib\**\MonoGame.Framework.dll" />
+			<MGDesktopGL Include="$(NuGetGlobalPackages)\monogame.framework.desktopgl\3.8.5\lib\**\MonoGame.Framework.dll" />
 		</ItemGroup>
 		<Copy SourceFiles="@(MGDesktopGL)" DestinationFolder="$(PublishDir)Monogame\WindowsGL" SkipUnchangedFiles="true" />
 	</Target>

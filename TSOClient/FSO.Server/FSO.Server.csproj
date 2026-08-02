@@ -27,7 +27,7 @@
 
   <ItemGroup>
     <PackageReference Include="CommandLineParser" Version="2.9.1" />
-    <PackageReference Include="MonoGame.Framework.DesktopGL" Version="3.8.5-preview.2" />
+    <PackageReference Include="MonoGame.Framework.DesktopGL" Version="3.8.5" />
     <PackageReference Include="Ninject" Version="3.3.6" />
     <PackageReference Include="Ninject.Extensions.ChildKernel" Version="3.3.0" />
     <PackageReference Include="NLog" Version="6.0.4" />
