@@ -3,12 +3,12 @@ using FSO.Files.FSO;
 using FSO.Files.Utils;
 using Newtonsoft.Json;
 using Octokit;
+using System.Diagnostics;
 using System.IO.Compression;
 using System.Net.Http.Json;
 using System.Security.Cryptography;
 using System.Text;
 using System.Text.RegularExpressions;
-using System.Diagnostics;
 
 namespace FSO.UpdateBuilder
 {
@@ -133,6 +133,13 @@ namespace FSO.UpdateBuilder
 
         static async Task Main(string[] args)
         {
+            if (args[0] == "--windowsMsi")
+            {
+                await WindowsMsiPackager();
+
+                return;
+            }
+
             string workingDirectory = args[0] ?? "./";
             Console.WriteLine($"FreeSO Update Packager (working directory: {workingDirectory})");
             Console.WriteLine("==============================================================");
@@ -513,6 +520,40 @@ namespace FSO.UpdateBuilder
             {
                 Draft = false,
                 MakeLatest = isPrerelease ? null : MakeLatestQualifier.True,
+            });
+
+            Console.WriteLine($"Done.");
+        }
+
+        private static async Task WindowsMsiPackager()
+        {
+            Console.WriteLine($"FreeSO Msi Packager");
+            Console.WriteLine("==============================================================");
+            Console.WriteLine("");
+
+            Console.WriteLine("Initializing GitHub Client");
+            var client = new GitHubClient(new ProductHeaderValue("freeso-ci"));
+            var rawToken = Environment.GetEnvironmentVariable("GH_TOKEN");
+            var tokenAuth = new Octokit.Credentials(rawToken);
+            client.Credentials = tokenAuth;
+
+            string repoString = Environment.GetEnvironmentVariable("FSO_UPDATE_GITHUB_REPO") ?? "riperiperi/FreeSO";
+            string[] splitRepo = repoString.Split('/');
+            string authorName = splitRepo[0];
+            string repoName = splitRepo[1];
+
+            // We want to add the installer MSI to the existing release.
+            // We can get the release tag from the version manifest.
+
+            var version = FSOVersionInfo.FromJson(File.ReadAllText("../../../Artifacts/Client/version.json"));
+
+            var release = await client.Repository.Release.Get(authorName, repoName, version.id);
+
+            await client.Repository.Release.UploadAsset(release, new ReleaseAssetUpload()
+            {
+                FileName = $"installer-windows-{version.id}.msi",
+                ContentType = "application/octet-stream",
+                RawData = File.OpenRead("../../../Artifacts/Installer/en-US/FSO.Installer.Windows.msi"),
             });
 
             Console.WriteLine($"Done.");

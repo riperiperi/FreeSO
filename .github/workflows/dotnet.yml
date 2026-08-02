@@ -41,15 +41,6 @@ jobs:
         name: FreeSOServer
         path: Artifacts/Server
 
-    - run: dotnet build TSOClient/FSO.Installer.Windows -c Release -o Artifacts/Installer
-
-    - name: Upload installer artifacts
-      uses: actions/upload-artifact@v7
-      with:
-        name: FreeSOInstaller
-        path: Artifacts/Installer/en-US/FSO.Installer.Windows.msi
-        archive: false
-
   build-mac:
     strategy:
       matrix:
@@ -124,12 +115,6 @@ jobs:
       with:
         name: FreeSOServer
         path: tempUpdate/windows-server
-        
-    - name: Download Installer
-      uses: actions/download-artifact@v8
-      with:
-        name: FSO.Installer.Windows.msi
-        path: tempUpdate
 
     - name: Download Client (mac)
       uses: actions/download-artifact@v8
@@ -163,4 +148,53 @@ jobs:
         FSO_UPDATE_TARGETS: "windows,mac"
       run: |
         dotnet run -c Release -- "../../../tempUpdate/" 
+      working-directory: Other/tools/FSO.UpdateBuilder
+
+    - name: Upload release manifest
+      uses: actions/upload-artifact@v7
+      with:
+        name: ReleaseManifest
+        path: tempUpdate/windows/version.json
+        archive: false
+
+  release-msi:
+    needs: [create-release]
+    runs-on: windows-latest
+    permissions:
+      contents: write
+
+    steps:
+    - name: Checkout
+      uses: actions/checkout@v5
+    
+    - name: Install .NET Core
+      uses: actions/setup-dotnet@v5
+      with:
+        dotnet-version: 9.0.x
+
+    - name: Download Client
+      uses: actions/download-artifact@v8
+      with:
+        name: FreeSOClient
+        path: Artifacts/Client
+
+    - name: Download Version Manifest
+      uses: actions/download-artifact@v8
+      with:
+        name: version.json
+        path: Artifacts/Client
+
+    - name: Building Windows Installer (.msi)
+      run: dotnet build TSOClient/FSO.Installer.Windows -c Release -o Artifacts/Installer
+
+    - name: Updating Release
+      env:
+        GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        FSO_UPDATE_GITHUB_REPO: ${{ github.repository }}
+        FSO_UPDATE_CHANNEL_URL: ${{ vars.FSO_UPDATE_CHANNEL_URL }}
+        FSO_UPDATE_PUBLIC_KEY: ${{ secrets.FSO_UPDATE_PUBLIC_KEY }}
+        FSO_UPDATE_PRIVATE_KEY: ${{ secrets.FSO_UPDATE_PRIVATE_KEY }}
+        FSO_UPDATE_TARGETS: "windows,mac"
+      run: |
+        dotnet run -c Release -- --windowsMsi
       working-directory: Other/tools/FSO.UpdateBuilder
