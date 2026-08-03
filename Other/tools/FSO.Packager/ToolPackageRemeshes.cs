@@ -527,13 +527,17 @@ namespace FSO.Packager
             Console.WriteLine($"  - Finalizing packages...");
 
             AddDirectoryChunk(CompressedPackage);
+
+            Credits.Metadata.Format = FSO3DPackageTextureFormat.Dxt;
             AddCreditsChunk(CompressedPackage);
 
+            Credits.Metadata.Format = FSO3DPackageTextureFormat.Credits;
             AddCreditsChunk(CreditsPackage);
 
             // For the uncompressed package, rewrite the texture types to all use MTEX
             ReplaceTypes(DBPFTypeID.MTX2, DBPFTypeID.MTEX);
             AddDirectoryChunk(UncompressedPackage);
+            Credits.Metadata.Format = FSO3DPackageTextureFormat.Png;
             AddCreditsChunk(UncompressedPackage);
 
             Console.WriteLine($"  - Writing packages...");

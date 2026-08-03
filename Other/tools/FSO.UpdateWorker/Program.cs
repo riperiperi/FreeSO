@@ -5,7 +5,7 @@ namespace FSO.UpdateWorker
 {
     internal class Program
     {
-        private const int CheckFrequency = 120000;
+        private const int CheckFrequency = 1000 * 60 * 2; // 4 minutes
 
         static async Task Main(string[] args)
         {
@@ -50,7 +50,13 @@ namespace FSO.UpdateWorker
                 {
                     var releases = await client.Repository.Release.GetAll(authorName, repoName);
 
-                    if (await cache.AddReleases([.. releases]))
+                    bool hasChange = await cache.AddReleases([.. releases]);
+
+                    var remeshReleases = await client.Repository.Release.GetAll(config.remeshAuthorName, config.remeshRepoName);
+
+                    hasChange |= await cache.AddRemeshes([.. remeshReleases], config);
+
+                    if (hasChange)
                     {
                         cache.SaveResponse(config.targetPath);
                     }

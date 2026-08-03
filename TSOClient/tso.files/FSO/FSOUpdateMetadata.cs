@@ -124,8 +124,8 @@
         public string description { get; set; }
         public string url { get; set; }
 
-        public FSORemeshFile dxt;
-        public FSORemeshFile png;
+        public FSORemeshFile dxt { get; set; }
+        public FSORemeshFile png { get; set; }
     }
 
     /// <summary>

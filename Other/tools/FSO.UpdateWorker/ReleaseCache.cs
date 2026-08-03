@@ -19,6 +19,82 @@ namespace FSO.UpdateWorker
             Http = http;
         }
 
+        public async Task<bool> AddRemeshes(List<Release> releases, UpdateWorkerConfig config)
+        {
+            bool changed = false;
+
+            foreach (var channelName in config.remeshChannels)
+            {
+                var latest = releases.FirstOrDefault(x => x.TagName.StartsWith($"{channelName}."));
+
+                if (latest == null)
+                {
+                    continue;
+                }
+
+                string[] split = latest.TagName.Split('.');
+
+                if (split.Length != 2 || !int.TryParse(split[1], out int version))
+                {
+                    continue;
+                }
+
+                var existing = Response.remeshes.FirstOrDefault(x => x.channel == channelName);
+
+                if (existing != null)
+                {
+                    // Only update if the version has increased.
+
+                    if (version <= existing.version)
+                    {
+                        continue;
+                    }
+                }
+
+                // Get the remesh's manifest and try to add it to the Response
+
+                var manifestAsset = latest.Assets.FirstOrDefault(x => x.Name == $"freeso-remeshes.json");
+
+                try
+                {
+                    if (manifestAsset != null)
+                    {
+                        // Assuming that we have permissions here.
+                        var assetUrl = manifestAsset.Url;
+
+                        var data = await Http.GetFromJsonAsync<FSORemeshChannel>(assetUrl);
+
+                        if (data?.channel != channelName)
+                        {
+                            Console.WriteLine($"Couldn't parse remesh JSON for {latest.TagName}, skipping.");
+                        }
+
+                        Response.remeshes = [..Response.remeshes.Where(x => x.channel != channelName), data];
+
+                        if (config.autoRemeshChannel == channelName)
+                        {
+                            Response.autoRemeshChannel = channelName;
+                        }
+
+                        Console.WriteLine($"Updating remesh channel '{channelName}'");
+
+                        changed = true;
+                    }
+                    else
+                    {
+                        Console.WriteLine($"Couldn't find manifest asset for {latest.TagName}, skipping.");
+                    }
+                }
+                catch
+                {
+                    // Nothing happens - this asset just gets skipped.
+                    Console.WriteLine($"Couldn't load remesh info for {latest.TagName}, skipping.");
+                }
+            }
+
+            return changed;
+        }
+
         public async Task<bool> AddReleases(List<Release> releases)
         {
             bool addedAny = false;
