@@ -2,6 +2,13 @@
 
 namespace FSO.Files.RC
 {
+    public enum FSO3DPackageTextureFormat : int
+    {
+        Credits, // No resources included.
+        Png,
+        Dxt,
+    }
+
     public class FSO3DPackageMetadata
     {
         public string Name;
@@ -9,12 +16,26 @@ namespace FSO.Files.RC
         public string Description;
         public string Url;
 
-        public void Read(IoBuffer io)
+        // Version 2 (auto updater)
+        public string ChannelName = "";
+        public string PublicKey = "";
+        public int Version;
+        public FSO3DPackageTextureFormat Format;
+
+        public void Read(IoBuffer io, int version)
         {
             Name = io.ReadVariableLengthPascalString();
             ID = io.ReadVariableLengthPascalString();
             Description = io.ReadVariableLengthPascalString();
             Url = io.ReadVariableLengthPascalString();
+
+            if (version > 1)
+            {
+                ChannelName = io.ReadVariableLengthPascalString();
+                PublicKey = io.ReadVariableLengthPascalString();
+                Version = io.ReadInt32();
+                Format = (FSO3DPackageTextureFormat)io.ReadInt32();
+            }
         }
 
         public void Write(IoWriter io)
@@ -23,6 +44,11 @@ namespace FSO.Files.RC
             io.WriteVariableLengthPascalString(ID);
             io.WriteVariableLengthPascalString(Description);
             io.WriteVariableLengthPascalString(Url);
+
+            io.WriteVariableLengthPascalString(ChannelName);
+            io.WriteVariableLengthPascalString(PublicKey);
+            io.WriteInt32(Version);
+            io.WriteInt32((int)Format);
         }
     }
 
@@ -128,7 +154,7 @@ namespace FSO.Files.RC
 
     public class FSO3DCredits
     {
-        private const int CURRENT_VERSION = 1;
+        private const int CURRENT_VERSION = 2;
 
         public int Version = CURRENT_VERSION;
         public FSO3DPackageMetadata Metadata;
@@ -143,7 +169,7 @@ namespace FSO.Files.RC
                 Version = io.ReadInt32();
 
                 Metadata = new FSO3DPackageMetadata();
-                Metadata.Read(io);
+                Metadata.Read(io, Version);
 
                 int authorCount = io.ReadInt32();
                 Authors = [];
@@ -161,7 +187,7 @@ namespace FSO.Files.RC
             using (var io = IoWriter.FromStream(stream, ByteOrder.LITTLE_ENDIAN))
             {
                 io.WriteCString("fCRE", 4);
-                io.WriteInt32(Version);
+                io.WriteInt32(CURRENT_VERSION);
 
                 Metadata.Write(io);
 

@@ -23,6 +23,7 @@ namespace FSO.Files.Formats.DBPF
         private Dictionary<ulong, DBPFEntry> m_EntryByID = [];
         private Dictionary<DBPFTypeID, List<DBPFEntry>> m_EntriesByType = [];
 
+        private Stream Stream;
         private IoBuffer Io;
 
         /// <summary>
@@ -39,8 +40,8 @@ namespace FSO.Files.Formats.DBPF
         /// <param name="file">The path to an DBPF archive.</param>
         public DBPFFile(string file) : this()
         {
-            var stream = File.OpenRead(file);
-                Read(stream);
+            Stream = File.OpenRead(file);
+                Read(Stream);
         }
 
         /// <summary>
@@ -51,6 +52,7 @@ namespace FSO.Files.Formats.DBPF
         {
             var io = IoBuffer.FromStream(stream, ByteOrder.LITTLE_ENDIAN);
             m_Reader = io;
+            this.Stream = stream;
             this.Io = io;
             
             var magic = io.ReadCString(4);
@@ -301,6 +303,7 @@ namespace FSO.Files.Formats.DBPF
         public void Dispose()
         {
             Io?.Dispose();
+            Stream?.Dispose();
         }
 
         #endregion

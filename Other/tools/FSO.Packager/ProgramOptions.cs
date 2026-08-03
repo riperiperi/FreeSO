@@ -18,6 +18,16 @@ namespace FSO.Packager
         public required string OutDirectory { get; set; }
     }
 
+    [Verb("release-remeshes", HelpText = "Weites version information to remesh packages, and generates manifest json that can be used with the FreeSO updater")]
+    public class ReleaseRemeshesOptions
+    {
+        [Value(0, Required = true, MetaName = "Source Directory")]
+        public required string SourceDirectory { get; set; }
+
+        [Option('g', "games", Default = "freeso,simitone", HelpText = "Specify games to generate packages for, comma separated")]
+        public required string Games { get; set; }
+    }
+
     [Verb("dummy", HelpText = "Verb that does nothing")]
     public class DummyOptions
     {

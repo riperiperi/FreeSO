@@ -38,11 +38,16 @@ namespace FSO.Packager
 
             ITool? tool = null;
 
-            int result = Parser.Default.ParseArguments<PackageRemeshesOptions, DummyOptions>(args)
+            int result = Parser.Default.ParseArguments<PackageRemeshesOptions, ReleaseRemeshesOptions, DummyOptions>(args)
                 .MapResult(
                 (PackageRemeshesOptions opts) =>
                 {
                     tool = new ToolPackageRemeshes(opts);
+                    return 0;
+                },
+                (ReleaseRemeshesOptions opts) =>
+                {
+                    tool = new ToolReleaseRemeshes(opts);
                     return 0;
                 },
                 (DummyOptions opts) =>

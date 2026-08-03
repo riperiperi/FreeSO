@@ -579,8 +579,12 @@ namespace FSO.Packager
 
         public int Run()
         {
-            GeneratePackage("freeso");
-            GeneratePackage("simitone");
+            var games = Options.Games.Split(',');
+
+            foreach (var game in games)
+            {
+                GeneratePackage(game);
+            }
 
             return 0;
         }

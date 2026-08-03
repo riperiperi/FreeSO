@@ -99,10 +99,42 @@
     }
 
     /// <summary>
+    /// Remesh file. 
+    /// </summary>
+    public class FSORemeshFile
+    {
+        public string url { get; set; }
+        public string hash { get; set; }
+        public string signature { get; set; }
+        public int size { get; set; }
+    }
+
+    /// <summary>
+    /// Remesh channel, containing the latest remesh package for the channel.
+    /// The client will automatically download remesh updates from the active channel if the public key matches the client.
+    /// </summary>
+    public class FSORemeshChannel
+    {
+        public string channel { get; set; }
+        public string publicKey { get; set; }
+        public int version { get; set; }
+
+        // Credits metadata
+        public string name { get; set; }
+        public string description { get; set; }
+        public string url { get; set; }
+
+        public FSORemeshFile dxt;
+        public FSORemeshFile png;
+    }
+
+    /// <summary>
     /// Update API response containing multiple update channels.
     /// </summary>
     public class FSOUpdateResponse
     {
         public FSOUpdateChannel[] channels { get; set; } = [];
+        public FSORemeshChannel[] remeshes { get; set; } = [];
+        public string autoRemeshChannel { get; set; } = null;
     }
 }

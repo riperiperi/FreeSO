@@ -1,8 +1,11 @@
-﻿using FSO.Files.Formats.DBPF;
+﻿using FSO.Common;
+using FSO.Common.Utils;
+using FSO.Files.Formats.DBPF;
 using FSO.Files.Formats.IFF.Chunks;
+using FSO.Files.FSO;
 using FSO.Files.RC;
-using FSO.Vitaboy;
 using Microsoft.Xna.Framework.Graphics;
+using System.Net;
 
 namespace FSO.Content
 {
@@ -135,10 +138,14 @@ namespace FSO.Content
 
     public class RCDBPFContent
     {
+        private static float? DownloadPercentage;
+
         private readonly List<RCDBPFFile> Files = [];
+        private string RootDir;
 
         public RCDBPFContent(string rootDir)
         {
+            RootDir = rootDir;
             // Scan for dbpf
 
             var files = Directory.GetFiles(rootDir);
@@ -208,6 +215,145 @@ namespace FSO.Content
         public FSO3DCredits[] GetCredits()
         {
             return [.. Files.Select(x => x.GetCredits())];
+        }
+
+        private void TryDeleteFile(string path)
+        {
+            try
+            {
+                File.Delete(path);
+            }
+            catch
+            {
+                // Do nothing
+            }
+        }
+
+        private FSO3DPackageTextureFormat GetPreferredFormat()
+        {
+            return FSOEnvironment.TexCompressSupport ? FSO3DPackageTextureFormat.Dxt : FSO3DPackageTextureFormat.Png;
+        }
+
+        private FSORemeshFile SelectFileByFormat(FSORemeshChannel channel, FSO3DPackageTextureFormat format)
+        {
+            FSORemeshFile result = null;
+
+            switch (format)
+            {
+                case FSO3DPackageTextureFormat.Png:
+                    result = channel.png;
+                    break;
+                case FSO3DPackageTextureFormat.Dxt:
+                    result = channel.dxt;
+                    break;
+            }
+
+            return result ?? channel.png;
+        }
+
+        public void TryUpdate(FSOUpdateResponse response)
+        {
+            if ((response.remeshes?.Length ?? 0) == 0)
+            {
+                return;
+            }
+
+            // Try find a remesh package to update.
+
+            foreach (var file in Files)
+            {
+                var credits = file.GetCredits();
+
+                var meta = credits.Metadata;
+
+                // Try find a channel that matches this installed remesh package.
+
+                var matching = response.remeshes.FirstOrDefault(x => x.channel == meta.ChannelName && x.publicKey == meta.PublicKey);
+
+                if (matching.version > meta.Version)
+                {
+                    DownloadPackage(matching, SelectFileByFormat(matching, meta.Format), file);
+
+                    // We can come back to update other packages after we download this one.
+                    return;
+                }
+            }
+
+            // Should we be downloading a channel automatically?
+
+            if (response.autoRemeshChannel != null)
+            {
+                var target = response.remeshes.FirstOrDefault(x => x.channel == response.autoRemeshChannel);
+
+                if (target != null && target.publicKey == FSOVersionInfo.Current.publicKey)
+                {
+                    var file = SelectFileByFormat(target, GetPreferredFormat());
+
+                    if (file != null)
+                    {
+                        DownloadPackage(target, file);
+                    }
+                }
+            }
+        }
+
+        private void DownloadPackage(FSORemeshChannel channel, FSORemeshFile file, RCDBPFFile toReplace = null)
+        {
+            if (!Uri.TryCreate(file.url, UriKind.Absolute, out var uri))
+            {
+                return;
+            }
+
+            string name = Path.GetFileName(uri.LocalPath);
+
+            var localPath = PathUtils.SafeCombine(RootDir, name);
+            var client = new WebClient();
+
+            DownloadPercentage = 0;
+
+            client.DownloadProgressChanged += (obj, evt) =>
+            {
+                DownloadPercentage = evt.ProgressPercentage / 100f;
+            };
+
+            client.DownloadFileCompleted += (obj, evt) =>
+            {
+                DownloadPercentage = null;
+
+                if (evt.Cancelled || evt.Error != null)
+                {
+                    TryDeleteFile(localPath);
+                }
+
+                // Try and load the new package.
+
+                GameThread.InUpdate(() =>
+                {
+                    try
+                    {
+                        var collection = new RCDBPFFile(localPath);
+
+                        AddCollection(collection);
+                        Files.Remove(toReplace);
+                    }
+                    catch (Exception e)
+                    {
+                        Console.WriteLine($"Failed to load downloaded remesh package {name}: {e}");
+
+                        // It's probably corrupted.
+                        TryDeleteFile(localPath);
+                    }
+                });
+            };
+            
+            try
+            {
+                client.DownloadFileAsync(uri, localPath);
+            }
+            catch
+            {
+
+            }
         }
     }
 }
