@@ -39,6 +39,9 @@ namespace FSO.Client.UI.Screens
             m_LoginProgress.Y = (ScreenHeight - (m_LoginProgress.Height + 20));
             m_LoginProgress.Opacity = 0.9f;
             this.Add(m_LoginProgress);
+
+            var status = new UINetStatusTray();
+            Add(status);
         }
 
         public override void GameResized()

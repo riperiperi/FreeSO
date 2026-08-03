@@ -40,6 +40,10 @@ namespace FSO.Client.UI.Panels
                 {
                     messages.Add(GameFacade.Strings.GetString("f100", "6", new string[] { status.RemeshesInProgress.ToString() }));
                 }
+                if (status.RemeshUpdateProgress.HasValue)
+                {
+                    messages.Add(GameFacade.Strings.GetString("f100", "12", new string[] { ((status.RemeshUpdateProgress ?? 0) * 100).ToString("0.00") }));
+                }
                 DCLabel.Caption = string.Join(", ", messages);
                 DCLabel.CaptionStyle.Color = status.Severe ? new Color(255, 122, 77) : Color.White;
                 var screen = UIScreen.Current;

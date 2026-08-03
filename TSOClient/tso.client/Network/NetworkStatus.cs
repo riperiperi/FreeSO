@@ -1,4 +1,5 @@
-﻿using FSO.Files.RC;
+﻿using FSO.Content;
+using FSO.Files.RC;
 
 namespace FSO.Client.Network
 {
@@ -14,11 +15,19 @@ namespace FSO.Client.Network
             }
         }
 
+        public float? RemeshUpdateProgress
+        {
+            get
+            {
+                return RCDBPFContent.DownloadPercentage;
+            }
+        }
+
         public bool Any
         {
             get
             {
-                return CityReconnectAttempt > 0 || LotReconnectAttempt > 0 || RemeshesInProgress > 0;
+                return CityReconnectAttempt > 0 || LotReconnectAttempt > 0 || RemeshesInProgress > 0 || RemeshUpdateProgress != null;
             }
         }
 

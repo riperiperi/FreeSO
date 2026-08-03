@@ -27,7 +27,7 @@
     <Content Include="fso.ico" />
     <Content Include="Content\SDL2.dll" />
     <Content Include="version.json">
-      <CopyToOutputDirectory>Always</CopyToOutputDirectory>
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </Content>
   </ItemGroup>
 

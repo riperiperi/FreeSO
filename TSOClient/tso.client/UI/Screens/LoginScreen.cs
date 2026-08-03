@@ -149,6 +149,9 @@ namespace FSO.Client.UI.Screens
                 //UIScreen.GlobalShowDialog(new Panels.Neighborhoods.UIBulletinDialog(), false);
                 //Content.Content.Get().UIGraphics.ExportAll(GameFacade.GraphicsDevice);
             });
+
+            var status = new UINetStatusTray();
+            Add(status);
         }
 
         public override void Update(UpdateState state)

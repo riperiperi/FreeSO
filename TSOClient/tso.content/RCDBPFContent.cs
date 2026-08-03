@@ -6,10 +6,11 @@ using FSO.Files.FSO;
 using FSO.Files.RC;
 using Microsoft.Xna.Framework.Graphics;
 using System.Net;
+using System.Security.Cryptography;
 
 namespace FSO.Content
 {
-    internal class RCDBPFFile
+    internal class RCDBPFFile : IDisposable
     {
         private readonly DBPFFile File;
         private readonly Lock StreamLock = new();
@@ -17,6 +18,8 @@ namespace FSO.Content
 
         private readonly Dictionary<FSO3DRef, DGRP3DMesh> Meshes = [];
         private readonly Dictionary<FSO3DRef, IDGRP3DTextureHolder> Textures = [];
+
+        private bool Disposed;
 
         public RCDBPFFile(string path)
         {
@@ -57,6 +60,8 @@ namespace FSO.Content
             {
                 if (!Meshes.TryGetValue(reference, out var result))
                 {
+                    if (Disposed) return null;
+
                     var meshData = File.GetItemByID((DBPFTypeID)reference.TypeID, reference.FileID);
 
                     // Deliberately doesn't close, as this is done asynchronously by DGRP3DMesh.
@@ -84,6 +89,8 @@ namespace FSO.Content
             {
                 if (!Textures.TryGetValue(reference, out var result))
                 {
+                    if (Disposed) return null;
+
                     var texData = File.GetItemByID((DBPFTypeID)reference.TypeID, reference.FileID);
                     using var texStream = new MemoryStream(texData);
 
@@ -134,11 +141,20 @@ namespace FSO.Content
                 return credits;
             }
         }
+
+        public void Dispose()
+        {
+            lock (StreamLock)
+            {
+                Disposed = true;
+                File.Dispose();
+            }
+        }
     }
 
     public class RCDBPFContent
     {
-        private static float? DownloadPercentage;
+        public static float? DownloadPercentage;
 
         private readonly List<RCDBPFFile> Files = [];
         private string RootDir;
@@ -272,7 +288,7 @@ namespace FSO.Content
 
                 if (matching.version > meta.Version)
                 {
-                    DownloadPackage(matching, SelectFileByFormat(matching, meta.Format), file);
+                    DownloadPackage(matching, SelectFileByFormat(matching, meta.Format), file, () => TryUpdate(response));
 
                     // We can come back to update other packages after we download this one.
                     return;
@@ -281,7 +297,7 @@ namespace FSO.Content
 
             // Should we be downloading a channel automatically?
 
-            if (response.autoRemeshChannel != null)
+            if (Files.Count == 0 && response.autoRemeshChannel != null)
             {
                 var target = response.remeshes.FirstOrDefault(x => x.channel == response.autoRemeshChannel);
 
@@ -297,11 +313,46 @@ namespace FSO.Content
             }
         }
 
-        private void DownloadPackage(FSORemeshChannel channel, FSORemeshFile file, RCDBPFFile toReplace = null)
+        private static RSA TryGetCrypto(string publicKey)
+        {
+            try
+            {
+                var rsa = RSA.Create();
+
+                rsa.ImportFromPem(publicKey.Replace('^', '\n'));
+
+                return rsa;
+            }
+            catch (Exception)
+            {
+                return null;
+            }
+        }
+
+        private void Unload(RCDBPFFile toReplace)
+        {
+            Files.Remove(toReplace);
+            toReplace.Dispose();
+        }
+
+
+        private void DownloadPackage(FSORemeshChannel channel, FSORemeshFile file, RCDBPFFile toReplace = null, Action onComplete = null)
         {
             if (!Uri.TryCreate(file.url, UriKind.Absolute, out var uri))
             {
                 return;
+            }
+
+            if (!string.IsNullOrEmpty(channel.publicKey))
+            {
+                // Make sure the file signature is valid.
+
+                var crypto = TryGetCrypto(channel.publicKey);
+
+                if (crypto == null || !crypto.VerifyHash(Convert.FromBase64String(file.hash), Convert.FromBase64String(file.signature), HashAlgorithmName.SHA256, RSASignaturePadding.Pkcs1))
+                {
+                    return;
+                }
             }
 
             string name = Path.GetFileName(uri.LocalPath);
@@ -323,6 +374,30 @@ namespace FSO.Content
                 if (evt.Cancelled || evt.Error != null)
                 {
                     TryDeleteFile(localPath);
+                    return;
+                }
+
+                if (file.size != 0)
+                {
+                    var size = new FileInfo(localPath).Length;
+
+                    if (size != file.size)
+                    {
+                        // Not valid.
+                        return;
+                    }
+                }
+
+                if (file.hash != null)
+                {
+                    using FileStream fileStr = File.OpenRead(localPath);
+                    var hash = SHA256.HashData(fileStr);
+
+                    if (Convert.ToBase64String(hash) != file.hash)
+                    {
+                        // Not valid.
+                        return;
+                    }
                 }
 
                 // Try and load the new package.
@@ -334,7 +409,8 @@ namespace FSO.Content
                         var collection = new RCDBPFFile(localPath);
 
                         AddCollection(collection);
-                        Files.Remove(toReplace);
+
+                        onComplete?.Invoke();
                     }
                     catch (Exception e)
                     {
@@ -348,6 +424,12 @@ namespace FSO.Content
             
             try
             {
+                if (toReplace != null)
+                {
+                    Unload(toReplace);
+                    TryDeleteFile(localPath);
+                }
+
                 client.DownloadFileAsync(uri, localPath);
             }
             catch

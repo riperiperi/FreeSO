@@ -280,6 +280,11 @@ namespace FSO.Client.Controllers
                 {
                     var result = JsonConvert.DeserializeObject<FSOUpdateResponse>(x.Result.Content);
 
+                    GameThread.InUpdate(() =>
+                    {
+                        Content.Content.Get().RCMeshes.Packages.TryUpdate(result);
+                    });
+
                     FSOUpdateChannel channel;
                     if (result != null && (channel = TryGetChannel(result, current)) != null)
                     {
