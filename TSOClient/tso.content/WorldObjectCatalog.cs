@@ -59,6 +59,9 @@ namespace FSO.Content
                     if (dCategory < 0) continue;
                     catalogEnrich.TryGetValue(dguid, out var enrich);
 
+                    string flagString = objectInfo.Attributes["f"]?.Value;
+                    uint flags = flagString != null ? Convert.ToUInt32(flagString) : 0;
+
                     var ditem = new ObjectCatalogItem()
                     {
                         GUID = dguid,
@@ -66,6 +69,7 @@ namespace FSO.Content
                         Price = Convert.ToUInt32(objectInfo.Attributes["p"].Value),
                         Name = objectInfo.Attributes["n"].Value,
                         Tags = objectInfo.Attributes["t"]?.Value,
+                        Flags = flags,
                         CatalogName = enrich?.CatalogName,
                         DisableLevel = Convert.ToByte(objectInfo.Attributes["r"]?.Value ?? "0")
                     };

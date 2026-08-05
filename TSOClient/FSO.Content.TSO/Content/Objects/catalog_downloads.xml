@@ -1,15 +1,24 @@
-﻿<Catalog>   
+﻿<Catalog>
+<!-- 
+  Catalog Flags:
+  1: Spring
+  2: Summer
+  4: Autumn
+  8: Winter
+  16: Debug
+-->
+
 <!-- SEASONAL CATALOG: SPRING -->
 
-   <P g="0FE699E4" s="3" p="15" t="spring, toddy, fae, fairy, mushroom" n="Fly Agaric Fungi" />
-   <P g="686B25FA" s="17" p="25" t="spring, toddy, fae, fairy, log, wood, cottage" n="Wooden Stepping Stones" />
-   <P g="7F49FE84" s="13" p="500" t="spring, toddy, fae, fairy, mushroom" n="Spotted Toadstool Table" />
-   <P g="6A17DB40" s="12" p="350" t="spring, toddy, fae, fairy, mushroom" n="Scarlet Spotted Stool" />
-   <P g="02B9C7D7" s="19" p="220" t="spring, toddy, fae, fairy" n="Flora Garden Lamp" />
-   <P g="59896C56" s="18" p="110" t="spring, toddy, fae, fairy" n="Leaf Note Sign" />
-   <P g="2D5A3261" s="17" p="300" t="spring, toddy, fae, fairy, cottage" n="Butterfly Hanging Boards" />
-   <P g="686B20CC" s="17" p="5" t="spring, toddy, fae, fairy, cottage" n="Rocks Border" />
-   <P g="5082D24A" s="17" p="5" t="spring, toddy, fae, fairy, cottage" n="Rocks Border Corner" />
+   <P g="0FE699E4" s="3" p="15" t="spring, toddy, fae, fairy, mushroom" n="Fly Agaric Fungi" f="1" />
+   <P g="686B25FA" s="17" p="25" t="spring, toddy, fae, fairy, log, wood, cottage" n="Wooden Stepping Stones" f="1" />
+   <P g="7F49FE84" s="13" p="500" t="spring, toddy, fae, fairy, mushroom" n="Spotted Toadstool Table" f="1" />
+   <P g="6A17DB40" s="12" p="350" t="spring, toddy, fae, fairy, mushroom" n="Scarlet Spotted Stool" f="1" />
+   <P g="02B9C7D7" s="19" p="220" t="spring, toddy, fae, fairy" n="Flora Garden Lamp" f="1" />
+   <P g="59896C56" s="18" p="110" t="spring, toddy, fae, fairy" n="Leaf Note Sign" f="1" />
+   <P g="2D5A3261" s="17" p="300" t="spring, toddy, fae, fairy, cottage" n="Butterfly Hanging Boards" f="1" />
+   <P g="686B20CC" s="17" p="5" t="spring, toddy, fae, fairy, cottage" n="Rocks Border" f="1" />
+   <P g="5082D24A" s="17" p="5" t="spring, toddy, fae, fairy, cottage" n="Rocks Border Corner" f="1" />
 
 <!--
    <P g="0FE699E4" s="29" p="15" t="spring, toddy, fae, fairy, mushroom"  n="Fly Agaric Fungi" />
@@ -47,10 +56,10 @@
 
 <!-- SEASONAL CATALOG: SUMMER --> 
 
-   <P g="0A2FC4D6" s="15" p="6000" t="summer, game, competion, battle" n="What-a-Balloon Box" />
-   <P g="26B7293A" s="17" p="150" t="summer" n="Decorative pool toy - Duck Float" />
-   <P g="05D4E7CD" s="17" p="150" t="summer" n="Decorative pool toy - Ring Float" />
-   <P g="150C79EE" s="18" p="3000" t="summer, costume props" n="Summer 2020 Accessory Rack" />
+   <P g="0A2FC4D6" s="15" p="6000" t="summer, game, competion, battle" n="What-a-Balloon Box" f="2" />
+   <P g="26B7293A" s="17" p="150" t="summer" n="Decorative pool toy - Duck Float" f="2" />
+   <P g="05D4E7CD" s="17" p="150" t="summer" n="Decorative pool toy - Ring Float" f="2" />
+   <P g="150C79EE" s="18" p="3000" t="summer, costume props" n="Summer 2020 Accessory Rack" f="2" />
 
    <P g="1F2B80FB" s="29" p="0" n="Beach Cabana" />
 
@@ -87,25 +96,25 @@
    
 <!-- SEASONAL CATALOG: AUTUMN -->
 
-   <P g="3FC802AC" s="17" p="60" t="pile, scatter, ground clutter" n="Wax Candy-like Floor Decorations" />
+   <P g="3FC802AC" s="17" p="60" t="pile, scatter, ground clutter" n="Wax Candy-like Floor Decorations" f="4" />
 
 
-   <P g="794AFED6" s="18" p="1500" t="candy bowl" n="Halloween Candy Dispenser" />
-   <P g="04EF513C" s="14" p="2400" n="Stove - Witch's Cauldron" />
-   <P g="07D7E3DD" s="17" p="430" n="Decorative Pumpkin Patch" />
-   <P g="08D7E3DD" s="17" p="860" n="The Giant Pumpkin Patch" />
-   <P g="92EF51A6" s="3" p="30" n="Dead Chic Tree" />
-   <P g="92EF51A7" s="3" p="30" n="Dead Chic Tree Grouping" />
-   <P g="0DA95AAA" s="29" p="400" t="toddy" n="Spooktacular tip jar" />
-   <P g="01EF5101" s="29" p="3000" t="toddy, buffet" n="Scarefest Snack Table" />
-   <P g="38EF5112" s="17" p="100" n="Commemorative Mini-Mystery Chest" />
+   <P g="794AFED6" s="18" p="1500" t="candy bowl" n="Halloween Candy Dispenser" f="4" />
+   <P g="04EF513C" s="14" p="2400" n="Stove - Witch's Cauldron" f="4" />
+   <P g="07D7E3DD" s="17" p="430" n="Decorative Pumpkin Patch" f="4" />
+   <P g="08D7E3DD" s="17" p="860" n="The Giant Pumpkin Patch" f="4" />
+   <P g="92EF51A6" s="3" p="30" n="Dead Chic Tree" f="4" />
+   <P g="92EF51A7" s="3" p="30" n="Dead Chic Tree Grouping" f="4" />
+   <P g="0DA95AAA" s="29" p="400" t="toddy" n="Spooktacular tip jar" f="4" />
+   <P g="01EF5101" s="29" p="3000" t="toddy, buffet" n="Scarefest Snack Table" f="4" />
+   <P g="38EF5112" s="17" p="100" n="Commemorative Mini-Mystery Chest" f="4" />
 
-   <P g="7F495D9E" s="13" p="500" t="toddy, mushroom" n="Cursed Toadstool Table" />
-   <P g="6A17D177" s="12" p="300" t="toddy, mushroom" n="Deadly Fungi Stool" />
-   <P g="79987862" s="19" p="450" t="toddy, lamp, light, pumpkin" n="Chains of the Veil" />
-   <P g="713C6827" s="17" p="30" t="toddy" n="DIY Front Lawn Flamingo Vulture " />
-   <P g="67B5658A" s="17" p="250000" t="toddy, vehicle" n="Pumpkin Patch Farm Truck" /> 
-   <P g="02B9A78F" s="19" p="100" t="toddy, lamp, light" n="Candle Border" />
+   <P g="7F495D9E" s="13" p="500" t="toddy, mushroom" n="Cursed Toadstool Table" f="4" />
+   <P g="6A17D177" s="12" p="300" t="toddy, mushroom" n="Deadly Fungi Stool" f="4" />
+   <P g="79987862" s="19" p="450" t="toddy, lamp, light, pumpkin" n="Chains of the Veil" f="4" />
+   <P g="713C6827" s="17" p="30" t="toddy" n="DIY Front Lawn Flamingo Vulture " f="4" />
+   <P g="67B5658A" s="17" p="250000" t="toddy, vehicle" n="Pumpkin Patch Farm Truck" f="4" /> 
+   <P g="02B9A78F" s="19" p="100" t="toddy, lamp, light" n="Candle Border" f="4" />
 
 <!-- 
    <P g="3FC802AC" s="29" p="60" t="pile, scatter, ground clutter" n="Wax Candy-like Floor Decorations" />
@@ -129,23 +138,23 @@
 -->
 
 
-   <P g="7402580F" s="17" p="500" n="&quot;Trick or Treat&quot; Team Banner" />
+   <P g="7402580F" s="17" p="500" n="&quot;Trick or Treat&quot; Team Banner" f="4" />
 <!-- <P g="7402580F" s="29" p="500" n="&quot;Trick or Treat&quot; Team Banner" /> -->
 
 <!-- -->
 <!-- SEASONAL CATALOG: WINTER -->
-   <P g="6E140796" s="17" p="25" t="winter, snow, candy, sweets" n="Candied Cane" />
-   <P g="69377F15" s="17" p="25" t="winter, snow, candy, sweets" n="The 'Pep Step'" />
-   <P g="2D5A41E8" s="18" p="55" t="winter, christams, cookies, biscuits" n="Santa Cookies" />
-   <P g="2D5A41E9" s="17" p="25" t="brandon" n="Wall Decor - bsj96 - Christmas Stockings" />
-   <P g="0D5792B8" s="17" p="500" n="&quot;Elves vs Reindeers&quot; Team Banner" />
-   <P g="713BAC08" s="17" p="450" t="toddy, costume props" n="Bit O' Baubles" /> 
-   <P g="67B60E3B" s="17" p="250000" t="winter, toddy, vehicle, truck" n="Camion de Noël" />
-   <P g="773CCD0A" s="14" p="1500" t="dica" n="H&amp;B's 'Atomic' Hot Cocoa Maker" />
+   <P g="6E140796" s="17" p="25" t="winter, snow, candy, sweets" n="Candied Cane" f="8" />
+   <P g="69377F15" s="17" p="25" t="winter, snow, candy, sweets" n="The 'Pep Step'" f="8" />
+   <P g="2D5A41E8" s="18" p="55" t="winter, christams, cookies, biscuits" n="Santa Cookies" f="8" />
+   <P g="2D5A41E9" s="17" p="25" t="brandon" n="Wall Decor - bsj96 - Christmas Stockings" f="8" />
+   <P g="0D5792B8" s="17" p="500" n="&quot;Elves vs Reindeers&quot; Team Banner" f="8" />
+   <P g="713BAC08" s="17" p="450" t="toddy, costume props" n="Bit O' Baubles" f="8" /> 
+   <P g="67B60E3B" s="17" p="250000" t="winter, toddy, vehicle, truck" n="Camion de Noël" f="8" />
+   <P g="773CCD0A" s="14" p="1500" t="dica" n="H&amp;B's 'Atomic' Hot Cocoa Maker" f="8" />
 
-   <P g="62F5043E" s="17" p="1800" t="winter, christmas, toddy" n="Legally Distinct “Grunch” Tree" />
-   <P g="2995A478" s="17" p="950"  t="winter, toddy" n="Burred-Lap Christmas Tree" />
-   <P g="692304CA" s="17" p="200" n="Dreaming of a Red Bow Tree" />
+   <P g="62F5043E" s="17" p="1800" t="winter, christmas, toddy" n="Legally Distinct “Grunch” Tree" f="8" />
+   <P g="2995A478" s="17" p="950"  t="winter, toddy" n="Burred-Lap Christmas Tree" f="8" />
+   <P g="692304CA" s="17" p="200" n="Dreaming of a Red Bow Tree" f="8" />
 
 <!--
    <P g="6E140796" s="29" p="25" t="winter, snow, candy, sweets" n="Candied Cane" />
@@ -585,6 +594,8 @@
 <P g="50578A2B" s="29" p="0" n="Jams Vs Money Controller - Money" />
 <P g="4134CA89" s="29" p="0" r="3" n="Jams Completed" />
 <P g="09ABDD10" s="29" p="0" r="3" n="Money Objects Completed" />
+
+<P g="23B1B856" s="29" p="0" n="The Mystic Bomb" />
 
 <P g="78306403" s="29" p="2017" n="The Freesy" />
    
