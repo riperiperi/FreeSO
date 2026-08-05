@@ -200,10 +200,7 @@ namespace FSO.Client.Controllers
 
         public void SelectAvatar(uint avatarId, uint lotId = 0)
         {
-            if (lotId != 0)
-            {
-                FSOFacade.Controller.SetArchiveLot(lotId);
-            }
+            FSOFacade.Controller.SetArchiveLot(lotId);
 
             CityConnectionRegulator.AsyncProcessMessage(new ArchiveAvatarSelectRequest()
             {

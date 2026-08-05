@@ -318,7 +318,7 @@ namespace FSO.Client
 
         public void SetArchiveLot(uint lotId)
         {
-            ArchiveLotId = lotId;
+            ArchiveLotId = lotId == 0 ? null : lotId;
         }
 
         public void ConnectToArchive(string displayName, string address, bool selfHost)
