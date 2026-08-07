@@ -37,7 +37,10 @@ namespace FSO.UpdateWorker
                 http.DefaultRequestHeaders.Authorization = new System.Net.Http.Headers.AuthenticationHeaderValue("Bearer", config.githubToken);
             }
 
-            var cache = new ReleaseCache(client, http);
+            var manifests = new ManifestCache(http);
+
+            var cache = new ReleaseCache(client, http, manifests);
+            var installer = new InstallerCache(manifests, config.installerPlatforms);
 
             if (!config.clearCache)
             {
@@ -48,9 +51,9 @@ namespace FSO.UpdateWorker
             {
                 try
                 {
-                    var releases = await client.Repository.Release.GetAll(authorName, repoName);
+                    List<Release> releases = [.. await client.Repository.Release.GetAll(authorName, repoName)];
 
-                    bool hasChange = await cache.AddReleases([.. releases]);
+                    bool hasChange = await cache.AddReleases(releases);
 
                     var remeshReleases = await client.Repository.Release.GetAll(config.remeshAuthorName, config.remeshRepoName);
 
@@ -59,6 +62,11 @@ namespace FSO.UpdateWorker
                     if (hasChange)
                     {
                         cache.SaveResponse(config.targetPath);
+                    }
+
+                    if (config.installerTargetPath != null && await installer.ProcessLatest(releases))
+                    {
+                        installer.SaveResponse(config.installerTargetPath);
                     }
 
                     Thread.Sleep(CheckFrequency);

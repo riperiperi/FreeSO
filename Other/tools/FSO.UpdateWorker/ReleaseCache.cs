@@ -9,14 +9,16 @@ namespace FSO.UpdateWorker
     {
         private readonly GitHubClient Client;
         private readonly HttpClient Http;
+        private readonly ManifestCache Manifests;
 
         private FSOUpdateResponse Response = new FSOUpdateResponse();
         private HashSet<string> SeenTags = [];
 
-        public ReleaseCache(GitHubClient client, HttpClient http)
+        public ReleaseCache(GitHubClient client, HttpClient http, ManifestCache manifests)
         {
             Client = client;
             Http = http;
+            Manifests = manifests;
         }
 
         public async Task<bool> AddRemeshes(List<Release> releases, UpdateWorkerConfig config)
@@ -69,7 +71,7 @@ namespace FSO.UpdateWorker
                             Console.WriteLine($"Couldn't parse remesh JSON for {latest.TagName}, skipping.");
                         }
 
-                        Response.remeshes = [..Response.remeshes.Where(x => x.channel != channelName), data];
+                        Response.remeshes = [.. Response.remeshes.Where(x => x.channel != channelName), data];
 
                         if (config.autoRemeshChannel == channelName)
                         {
@@ -126,36 +128,11 @@ namespace FSO.UpdateWorker
             }
 
             // Get the release's manifest and try to add it to the Response
+            var manifest = await Manifests.GetMetadata(release);
 
-            var manifestAsset = release.Assets.FirstOrDefault(x => x.Name == $"manifest-{release.TagName}.json");
-
-            try
+            if (manifest != null)
             {
-                if (manifestAsset != null)
-                {
-                    // Assuming that we have permissions here.
-                    var assetUrl = manifestAsset.Url;
-
-                    var data = await Http.GetFromJsonAsync<FSOUpdateMetadataStandalone>(assetUrl);
-
-                    if (data?.id != null)
-                    {
-                        AddReleaseManifest(data);
-                    }
-                    else
-                    {
-                        Console.WriteLine($"Couldn't parse update JSON for {release.TagName}, skipping.");
-                    }
-                }
-                else
-                {
-                    Console.WriteLine($"Couldn't find manifest asset for {release.TagName}, skipping.");
-                }
-            }
-            catch
-            {
-                // Nothing happens - this asset just gets skipped.
-                Console.WriteLine($"Couldn't load update info for {release.TagName}, skipping.");
+                AddReleaseManifest(manifest);
             }
 
             return true;
