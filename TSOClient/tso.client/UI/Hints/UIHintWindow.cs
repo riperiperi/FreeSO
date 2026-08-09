@@ -227,13 +227,21 @@ namespace FSO.Client.UI.Hints
         {
             var msg = hint.Body;
             msg = GameFacade.Emojis.EmojiToBB(msg);
+
+            var style = TextStyle.DefaultLabel.Clone();
+
+            if (hint.BodySize != null)
+            {
+                style.Size = hint.BodySize.Value;
+            }
+
             m_MessageText = TextRenderer.ComputeText(msg, new TextRendererOptions
             {
                 Alignment = TextAlignment.Left | TextAlignment.Top,
                 MaxWidth = 492,
                 Position = new Vector2(290, 65),
                 Scale = _Scale,
-                TextStyle = TextStyle.DefaultLabel,
+                TextStyle = style,
                 WordWrap = true,
                 TopLeftIconSpace = IconSpace,
                 BBCode = true

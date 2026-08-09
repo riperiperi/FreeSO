@@ -378,7 +378,13 @@ namespace FSO.Client.UI.Screens
 
             GameThread.NextUpdate(x =>
             {
-                FSOFacade.Hints.TriggerHint("screen:city");
+                var controller = FindController<CoreGameScreenController>();
+                if (controller.Mode != Regulators.CityConnectionMode.ARCHIVE)
+                {
+                    // This hint doesn't make sense in archive mode, since players should be encouraged to join any lot.
+                    // An archive specific city view hint should be triggered when returning to map, or when there's no welcome lot to join.
+                    FSOFacade.Hints.TriggerHint("screen:city");
+                }
             });
         }
 

@@ -54,7 +54,7 @@ namespace FSO.Client.UI.Hints
                 {
                     //register this hint
                     hint.Filename = fn;
-                    var r = new UIHintRef() { Filename = fn, GUID = hint.GUID };
+                    var r = new UIHintRef() { Filename = fn, GUID = hint.GUID, IgnoreDisable = hint.IgnoreDisable ?? false };
 
                     AllHints.Add(r);
                     List<UIHintRef> trigger = null;
@@ -79,6 +79,22 @@ namespace FSO.Client.UI.Hints
             {
                 TryShowHint(hint);
             }
+        }
+
+        public bool IsHintTriggered(string trigger)
+        {
+            List<UIHintRef> hintFiles = null;
+            if (!TriggerToHints.TryGetValue(trigger, out hintFiles))
+            {
+                return true; //no hints available
+            }
+
+            return hintFiles.All(x => IsHintTriggered(x));
+        }
+
+        public bool IsHintTriggered(UIHintRef r)
+        {
+            return ShownGUIDs.Contains(r.GUID);
         }
 
         public void TryShowHint(UIHintRef r)
@@ -126,7 +142,10 @@ namespace FSO.Client.UI.Hints
         {
             foreach (var hint in AllHints)
             {
-                ShownGUIDs.Add(hint.GUID);
+                if (!hint.IgnoreDisable)
+                {
+                    ShownGUIDs.Add(hint.GUID);
+                }
             }
             SaveRead();
         }
@@ -158,6 +177,7 @@ namespace FSO.Client.UI.Hints
     {
         public string Filename;
         public string GUID;
+        public bool IgnoreDisable;
     }
 
     public class UIHintRead

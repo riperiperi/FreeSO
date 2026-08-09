@@ -208,6 +208,11 @@ namespace FSO.Client.Controllers
             return JoinLotRegulator.GetCurrentLotID();
         }
 
+        public bool IsLotSelected()
+        {
+            return JoinLotRegulator.CurrentState.Name != "Disconnected";
+        }
+
         public void CallAvatar(uint avatarId){
             DataService.Get<Avatar>(avatarId).ContinueWith(x =>
             {

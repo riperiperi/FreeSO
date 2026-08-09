@@ -12,5 +12,7 @@
 
         public int? Order;
         public int? CatOrder;
+        public int? BodySize;
+        public bool? IgnoreDisable;
     }
 }

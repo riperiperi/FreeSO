@@ -875,6 +875,7 @@ namespace FSO.Client.UI.Panels
         {
             //hints for landing
             var hints = FSOFacade.Hints;
+            hints.TriggerHint($"lot:{GameFacade.CurrentCityName}:{vm.TSOState?.LotID ?? 0}");
             hints.TriggerHint("land");
 
             if (vm.MyUID == vm.TSOState.OwnerID)
