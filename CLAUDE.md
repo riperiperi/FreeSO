@@ -93,7 +93,18 @@ than once.
 
 ## Where things live
 
-- Repo: `~/Desktop/Github-Wiki/GitHub/FreeSO` (one folder, one worktree — keep
-  it that way)
-- Plan/findings/progress: repo root, single copy each, no duplicates elsewhere
-- Project docs: `PackTools/` — `START-HERE.md` first
+Three files at the repo root, read in this order. They are the only documents
+you need to start work:
+
+1. **`CLAUDE.md`** (this file) — the rules
+2. **`STATE.md`** — what exists today: what FreeSO gives us, what we added, what's ahead
+3. **`task_plan.md`** — what to do next and why it's in that order
+
+Everything else is in **`PackTools/docs/`** — 26 files of specs, design proposals
+for unbuilt things, and postmortems. Open one when you need it; do not read them
+to orient yourself, and treat any status line in them as a lead to verify rather
+than a fact. `docs/SCHEMA.md` and `docs/simantics-vocabulary.md` are the two you
+will actually need to author content.
+
+Repo lives at `~/Desktop/Github-Wiki/GitHub/FreeSO` — one folder, one worktree.
+Keep it that way.
