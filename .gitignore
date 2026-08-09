@@ -95,3 +95,10 @@ docker/archives/
 TSOClient/Mario
 
 Artifacts/
+
+# Local secrets for FSO.AgentBridge (Anthropic/OpenAI keys).
+# .env.local declared itself gitignored while it was not. Sessions share this
+# working tree; one `git add -A` would have published live keys.
+.env
+.env.local
+.env.*.local
