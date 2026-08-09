@@ -1,96 +1,115 @@
 # Task Plan
 
 ## What this is
-**A browser-based multiplayer life simulation with easy in-world creation, where rooms, objects and stories are shared and remixed.**
+> A player uploads a floor plan or a room photo. The AI builds their actual home in a real-geography city. Their friends visit and hang out inside it. All multiplayer, all live.
 
-Kat, 2026-08-08, the version that matters most: *"what i want is people to make a mini replica of their house themself and hang out with friends virtually."*
-
-That sentence is the product. Every pillar below serves it.
+Kat, 2026-08-08: *"what i want is people to make a mini replica of their house themself and hang out with friends virtually."* That sentence is the product. Everything below serves it.
 
 ### The three pillars
 1. **Browser-based multiplayer life simulation** — no install, click a link, your friends are already in there.
-2. **Easy in-world creation and customization** — make your house, your furniture, in the game, by describing it.
-3. **Sharing and remixing** — rooms, objects, and stories, not just objects.
+2. **Easy in-world creation and customization** — your house and your furniture, made by describing or showing.
+3. **Sharing and remixing** — rooms, objects, and stories.
 
 ### What this replaces
-Supersedes the framing in `PRODUCT-DIRECTION.md` (which centred "content worth having + player modding" and left browser-vs-desktop open). Browser is decided. Sharing/remixing moves from "deferred past MVP" to a pillar. The house-replica goal is new and reorders everything below.
+Supersedes `PRODUCT-DIRECTION.md` (which centred "content worth having + player modding" and left browser-vs-desktop open). Browser is decided, but moved late — it lowers install friction, it doesn't prove the idea. Sharing/remixing is now a pillar, not deferred. The house-replica goal reorders everything.
+
+**Mechanic decided 2026-08-08:** the AI builds the house **from a photo or floor plan**, then the player refines it conversationally. Not manual building with AI assistance.
 
 ## Current Phase
 Phase A
 
-## What "replica of your house" changes
-FreeSO **already has build mode** — walls, floors, multiple storeys, furniture placement, and lot save/load (`VMMarshal`, blueprints, plus an upstream `lot-serialize` branch). So the job is not "let people build houses." It is **making it fast to build *your* house**, and getting friends standing in it.
+## Why this is smaller than it looks
+**Houses are already data.** A lot is a blueprint XML — `<floors>`, `<walls>`, `<object>`, each with tile coordinates and a level. `XmlHouse.cs` parses it, `VMWorldActivator.LoadFromXML()` builds the world from it, and **`VMBlueprintRestoreCmd` is a live network command that takes that XML as raw bytes and rebuilds the lot mid-game** — the server already uses it to reset lots.
 
-That reorders the work: the multiplayer/hosting story stops being a browser prerequisite and becomes the product itself. Object authoring becomes supporting cast — you need *your* couch, not whimsical one-offs. Cities-from-geography stops being a separate pillar and becomes the setting: your house, in your actual neighbourhood.
+So nothing needs a house-building engine written. The AI's job is "read a floor plan, emit coordinates." The delivery path exists and is exercised by the server today.
+
+One constraint that shapes the work: `VMBlueprintRestoreCmd.Verify()` returns `!FromNet`, so a client cannot send it. The generator runs server-side.
 
 ## Phases
 
 ### Phase 0: Correct base — COMPLETE
 - [x] PackTools on `upstream/archive` (`packtools-on-archive`) — 56/56 + 48/48 green on net9.0
-- [x] Make Something panel + wiring ported (`8ddc26826`); client builds clean, 0 errors. Ported our hunks only — archive had since added the user list, city painter layer, surround puppets and city edit button that a wholesale copy would have deleted
+- [x] Make Something panel + wiring ported (`8ddc26826`); client builds clean. Our hunks only — archive had added the user list, city painter layer, surround puppets and city edit button that a wholesale copy would have deleted
 - [x] Duplication audit; stale docs corrected; standing rules in `CLAUDE.md`
 - **Status:** complete
 
-### Phase A: Watch the loop work — nobody has
-- [ ] Launch the client, open Buy Mode, **click "Make Something"** and watch an object appear. Everything is built and now builds on the right base; no human has seen it run.
-- [ ] Catalog thumbnails render blank. Lead: `UICatalog.GetObjIcon` reads a BMP chunk we never emit. **Check first** — archive added `IconCache`/`GetOrAddGeneratedIcon` that the old base lacked.
+### Phase A: Your house, from a photo
+Split deliberately. A1 is hours and carries no AI risk; if it fails, no amount of vision work matters.
+
+**A1 — prove the delivery path**
+- [ ] Hand-author a small blueprint XML: one room, four walls, a door, a floor
+- [ ] Load it through `VMBlueprintRestoreCmd` into a running lot; walk a Sim inside
+- [ ] Decide the scale mapping — lots are 77 tiles with `FloorClip`/`Offset`/`TargetSize`. "My 1,400 sq ft apartment" needs a tiles-per-foot rule and a rule for what gets dropped. **Unanswered, and it will bite in A2.**
+
+**A2 — vision → that same XML**
+- [ ] Floor-plan image → room layout → blueprint XML, compared against A1's known-good file
+- [ ] Cheap by construction: one XML per house, not 200 agent runs
+
+**A3 — the object loop, in passing**
+- [ ] Click "Make Something" in a running game and watch an object appear. Built, never seen by a human. It's the debug surface for the object pipeline, not the player experience.
+- [ ] Catalog thumbnails render blank. Lead: `UICatalog.GetObjIcon` reads a BMP chunk we never emit. **Check first** — archive added `IconCache`/`GetOrAddGeneratedIcon`.
 - **Status:** in_progress
 
-### Phase B: Friends in a lot together — this is the product, not plumbing
-- [ ] Get two people into one lot, hosted somewhere real. Archive Mode runs self-hosted off a local SQLite clone — establish what it takes for a second person to join.
-- [ ] **WebSocket gateway spike.** FreeSO speaks raw TCP (`AriesClient` → Mina); browsers cannot open raw TCP, no client-side workaround. No prior art here, upstream, or in the MonoGame/FNA community — the only open-ended piece in the plan.
-- **Why this is early:** "hang out with friends" is the point. A house nobody can visit is a screensaver.
+### Phase B: Friends in a house together (BYO)
+- [ ] Two players, one server, one generated San Francisco. Player 1's floor plan becomes a house at their real address; player 2 walks in.
+- [ ] Establish what a second person joining actually takes — Archive Mode is self-hosted off a local SQLite clone.
+- [ ] **Claiming a lot by real address** is what fuses the city and the house. It belongs here.
+- **Why early:** "hang out with friends" is the point. A house nobody can visit is a screensaver. This needs no browser.
 - **Status:** pending
 
-### Phase C: Build *your* house, fast
-- [ ] Establish the real baseline first: how long does building a small real house take in FreeSO's existing build mode today, by hand? Nobody has measured it. **Do not build tooling before knowing what's actually slow.**
-- [ ] Then target whatever that shows — plausible candidates: describe-a-room in the chat panel, floor-plan tracing, room templates. Pick after measuring.
-- [ ] Furniture matching real rooms — existing generators: chair, sofa, table, bed, lamp, storage, primitives.
+### Phase C: Make it look like mine
+- [ ] Photo of a room → wall colours, floors, furniture positions adjusted to match
+- [ ] Photo of a couch → generated look-alike, placed. Uses the working object pipeline and existing generators (chair, sofa, table, bed, lamp, storage, primitives).
+- [ ] Conversational fixes: "move the sofa left", "the window should be bigger"
+- [ ] **This is where agent world-blindness starts to matter** — "move the sofa two tiles left" needs to know where the sofa is. Either a world-query tool or regenerate-the-room wholesale.
 - **Status:** pending
 
-### Phase D: Sharing and remixing — pillar, not an afterthought
-- [ ] `SHARING-DESIGN.md` exists (publish, discover, fork, re-attribute, safety when a stranger's compiled behaviour runs on your lot) — design only, no code.
-- [ ] **Rooms, not just objects.** Lot serialization already exists in-engine (`VMMarshal`, blueprints, upstream `lot-serialize`) — check how far it gets before building anything.
-- [ ] Precedent worth copying: EA-Land's Custom Content Creator program — in-game upload, brand/collection/artist metadata, age rating, moderation for duplicates, no creator payment.
+### Phase D: Persistence and sharing
+- [ ] Houses survive restarts; publish, discover, fork, remix
+- [ ] **Rooms, not just objects.** Lot serialization already exists in-engine (`VMMarshal`, blueprints, upstream `lot-serialize`) — check how far it gets before building.
+- [ ] `SHARING-DESIGN.md` covers publish/discover/fork/re-attribute and safety when a stranger's compiled behaviour runs on your lot — design only, no code.
+- [ ] Precedent: EA-Land's Custom Content Creator program — in-game upload, brand/artist metadata, age rating, moderation for duplicates, no creator payment.
 - **Status:** pending
 
-### Phase E: Browser client port
-- [ ] `MonoGame.Framework.DesktopGL` → KNI `nkast.Xna.Framework.*` / BlazorGL, across client **and** audio (`tso.sound` depends on it too) — 2-4 weeks, well-trodden
+### Phase E: Original content
+- [ ] ~200 original objects, not 3,132 (`CATALOG-PARITY-PLAN.md`); Tier 1 (~70) is the motive loop
+- [ ] Generators still needed: toilet, shower, sink, stove, fridge
+- [ ] **Cost blocks this, not houses**: $0.08 trivial / $0.79 interactive / $1.72 complex per object. Recipes designed (`RECIPE-DESIGN.md`), unbuilt.
+- [ ] Gates clean browser distribution — a web server serving EA's assets is the blocker (`STRATEGY.private.md`)
+- **Status:** pending
+
+### Phase F: Browser client
+- [ ] **WebSocket gateway** — FreeSO speaks raw TCP (`AriesClient` → Mina); browsers cannot open raw TCP. No prior art here, upstream, or in the MonoGame/FNA community. The only open-ended unknown in the plan.
+- [ ] `MonoGame.Framework.DesktopGL` → KNI `nkast.Xna.Framework.*` / BlazorGL, across client **and** audio — 2-4 weeks, well-trodden
 - [ ] Content loading disk → HTTP fetch (~86 files use `FileStream`) — 1-2 weeks
 - [ ] Threading cleanup, 5 shipping files; `VMServerDriver` is the risky one — 1-2 weeks
-- **Gated on B.** Rendering first would produce a browser tab that renders a lot nobody can join.
+- **Last, deliberately.** It lowers install friction; it doesn't prove the idea. Upstream's built-in TSO installer already softens the BYO objection.
 - **Status:** pending
 
-### Phase F: Original content — gates legal browser distribution
-- [ ] A web server serving EA's assets is the blocker (`STRATEGY.private.md`). ~200 original objects, not 3,132 (`CATALOG-PARITY-PLAN.md`); Tier 1 (~70) is the motive loop.
-- [ ] Generators still needed: toilet, shower, sink, stove, fridge.
-- [ ] **Cost blocks scale**: $0.08 trivial / $0.79 interactive / $1.72 complex per object. At $1.72, 200 objects costs more than the game. Recipes designed (`RECIPE-DESIGN.md`), unbuilt.
-- **Status:** pending
-
-### Phase G: Your neighbourhood
-- [ ] **Read `citygen/generate_city.py` first** — exists, unreviewed, may be most of the job or a stub.
-- [ ] A city is stacked image layers (`Documentation/Crafting a City.md`): elevation, terrain type, roads on tile edges, forest type + density, vertex colour. Real elevation → elevation; coastline → water; OSM roads → roads.
-- [ ] Reference existing OSM→terrain work (Cities:Skylines OSM import, CityGen3D, Osmundi) rather than writing the transform from zero.
-- [ ] Server cannot distribute custom cities — bundle with client, point the shard's `map` at it.
-- **Status:** pending
+### Phase G: Neighbourhood scaling
+- [x] `citygen/generate_city.py` reviewed and run ✅ — San Francisco: 39.4 km square, elevation −5..781 m, 42,159 OSM road ways, full raster set written to disk
+- [ ] **Never loaded into the game.** Host it as a playable city; correct-looking PNGs are not a playable world.
+- [ ] Population, density, landmarks — an empty accurate map is a map, not a neighbourhood
+- **Status:** partly done
 
 ## Key Questions
-1. Does the WebSocket gateway come back buildable? If not, browser is off and the whole plan changes shape.
-2. What is actually slow about building a house by hand today? Unmeasured — and Phase C's design depends entirely on the answer.
-3. Can per-object cost get under ~$0.15 before the catalog gets built?
-4. Audience: adults who played the original, or new players? Shapes art direction and onboarding.
+1. **Does a hand-authored blueprint XML load cleanly into a live lot?** A1 answers it, and everything in Phase A depends on it.
+2. **What is the scale mapping from a real home to a 77-tile lot?** Unanswered; determines whether A2's output is usable.
+3. Can a vision model produce a valid room layout from a floor plan at all? The one genuinely untested integration.
+4. Does the WebSocket gateway come back buildable? Only affects Phase F now, not the whole plan.
+5. Can per-object cost get under ~$0.15 before the catalog gets built?
 
 ## Decisions Made
 | Decision | Rationale |
 |----------|-----------|
-| Browser target | Kat, 2026-08-08: "we want in browser if possible." Costs a gateway + ~200 original objects; buys no-install distribution and no EA exposure |
-| House replica + friends is the product | Kat's own framing. Reorders everything: multiplayer moves early, object authoring becomes supporting cast |
-| Sharing/remixing is a pillar, not deferred | Stated directly as one of three pillars |
+| AI builds the house from a photo/floor plan | Kat, 2026-08-08, chosen over manual-build-with-AI-assist and describe-it-in-chat |
+| House replica + friends is the product | Kat's own framing. Multiplayer moves early; object authoring becomes supporting cast |
+| Browser moved to the tail | It lowers install friction, it doesn't prove the idea. Its two costs — a gateway with no prior art, and ~200 original objects — shouldn't gate the demo |
+| Sharing/remixing is a pillar | Stated directly as one of three |
 | Build on `upstream/archive`, not `master` | `master` is a year stale; `archive` is where upstream develops, ships weekly, has native macOS CI |
-| Networking spike before rendering port | Rendering has named prior art; networking has none anywhere |
-| MVP stays on self-downloaded TSO assets | Legal and proven today; original content replaces it progressively |
+| MVP stays on self-downloaded TSO assets | Legal and proven; upstream now ships a built-in installer. Original content replaces them progressively |
 
 ## Notes
 - **Standing rules in `CLAUDE.md`** — check all four places before building anything (this tree, other branches, upstream, the wider world). Four duplications in one day is why.
-- Build mode, lot save/load, multiplayer, and visiting already exist in the engine. Assume a feature exists until proven otherwise.
+- Build mode, lot save/load, blueprint restore, multiplayer and visiting all already exist in the engine. **Assume a feature exists until proven otherwise.**
 - Compiling clean is not rendering. Verify by running.
