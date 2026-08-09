@@ -1,0 +1,11 @@
+{
+  "Size": 77,
+  "Rooms": [
+    { "Name": "living",  "X": 30, "Y": 30, "Width": 6, "Height": 5, "Floor": 3, "Level": 0 },
+    { "Name": "bedroom", "X": 36, "Y": 30, "Width": 4, "Height": 4, "Floor": 3, "Level": 0 }
+  ],
+  "Doors": [
+    { "Name": "front door",   "X": 30, "Y": 32, "Edge": "west",  "Guid": "0x23941850", "Level": 0 },
+    { "Name": "bedroom door", "X": 36, "Y": 31, "Edge": "west",  "Guid": "0x23941850", "Level": 0 }
+  ]
+}

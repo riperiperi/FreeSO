@@ -8,21 +8,24 @@ namespace FSO.HouseGen
     /// <summary>
     /// HouseLayout -> blueprint XML, deterministically. No AI in this path.
     ///
-    /// Wall storage convention, taken from the file A1 proved rather than from the enum:
-    /// every wall lives on the LOW edge of a tile. WallSegments has four adjacent bits
-    /// (TopLeft=1, TopRight=2, BottomRight=4, BottomLeft=8), but blueprints only ever author
-    /// the first two — the other two are what WallComponent produces when it rotates the view.
-    /// So a wall between (x-1,y) and (x,y) is TopLeft on (x,y), and a wall between (x,y-1) and
-    /// (x,y) is TopRight on (x,y). A room's east and south walls are therefore written on the
-    /// tile row/column just OUTSIDE the room.
+    /// Wall storage convention, established by running blueprints through the VM rather than by
+    /// reading the enum. A wall is identified by the LOW edge of a tile: a wall between (x-1,y)
+    /// and (x,y) is TopLeft on (x,y); between (x,y-1) and (x,y) it is TopRight on (x,y). A room's
+    /// east and south walls are therefore written on the row/column just OUTSIDE the room.
     ///
-    /// examples/house-one-room.xml carries a comment claiming BottomRight/BottomLeft are used
-    /// for east/south. The data in that same file does not do that, and the data is what loads.
+    /// Each wall is then written TWICE — once on that low edge, once as the mirrored high-edge bit
+    /// on the neighbour (BottomRight/BottomLeft). Enclosure does not need the mirror; doors do.
+    /// See AddWall.
+    ///
+    /// examples/house-one-room.xml carries a comment claiming BottomRight/BottomLeft encode east
+    /// and south walls. They do not — they are the same walls recorded from the other side.
     /// </summary>
     public static class BlueprintWriter
     {
         private const int TopLeft = 1;   // edge toward -x
         private const int TopRight = 2;  // edge toward -y
+        private const int BottomRight = 4; // edge toward +x — the mirror of the +x neighbour's TopLeft
+        private const int BottomLeft = 8;  // edge toward +y — the mirror of the +y neighbour's TopRight
 
         /// Smallest room dimension we will emit. Below this a room reads as a corridor
         /// artifact rather than a room, and doors have nowhere to go.
@@ -48,14 +51,27 @@ namespace FSO.HouseGen
 
                 for (int y = y0; y <= y1; y++)
                 {
-                    AddSegment(walls, room.Level, x0, y, TopLeft);      // west
-                    AddSegment(walls, room.Level, x1 + 1, y, TopLeft);  // east
+                    AddWall(walls, room.Level, x0, y, TopLeft);      // west
+                    AddWall(walls, room.Level, x1 + 1, y, TopLeft);  // east
                 }
                 for (int x = x0; x <= x1; x++)
                 {
-                    AddSegment(walls, room.Level, x, y0, TopRight);      // north
-                    AddSegment(walls, room.Level, x, y1 + 1, TopRight);  // south
+                    AddWall(walls, room.Level, x, y0, TopRight);      // north
+                    AddWall(walls, room.Level, x, y1 + 1, TopRight);  // south
                 }
+            }
+
+            // Checked here rather than in Validate because it needs the computed walls: a door in
+            // open air cuts nothing, places an object nobody can see the point of, and reports no
+            // error anywhere in the engine.
+            foreach (var door in layout.Doors)
+            {
+                int bit = IsWestEdge(door.Edge) ? TopLeft : TopRight;
+                if (!walls.TryGetValue((door.Level, door.X, door.Y), out var segs) || (segs & bit) == 0)
+                    throw new ArgumentException(
+                        $"Door at ({door.X},{door.Y}) edge \"{door.Edge}\" on level {door.Level} has no wall to cut. " +
+                        $"A door goes on the tile whose {(IsWestEdge(door.Edge) ? "west" : "north")} edge carries the wall — " +
+                        $"for a room's east or south wall that is the tile just outside the room.");
             }
 
             floors.Sort((a, b) => a.Level != b.Level ? a.Level - b.Level
@@ -89,10 +105,66 @@ namespace FSO.HouseGen
 
             sb.Append("    <pools />\n");
             sb.Append("  </world>\n");
-            sb.Append("  <objects />\n");
+
+            if (layout.Doors.Count == 0)
+            {
+                sb.Append("  <objects />\n");
+            }
+            else
+            {
+                sb.Append("  <objects>\n");
+                foreach (var door in layout.Doors)
+                {
+                    // Levels are NOT consistent across this format. VMWorldActivator adds +1 to
+                    // floor and wall levels, but takes an object's level as-is AND skips
+                    // SetPosition entirely when it is 0 — a level="0" object silently stays out
+                    // of world. So author levels stay 0-based everywhere in HouseLayout and get
+                    // converted here, once.
+                    int objectLevel = door.Level + 1;
+                    // The door group straddles the wall: it anchors on the tile BEFORE the wall
+                    // tile, so sub-object 0 sits west/north of the wall and sub-object 1 lands on
+                    // the wall tile itself. Anchoring on the wall tile puts the group one boundary
+                    // too far east/south and it silently refuses to place.
+                    bool west = IsWestEdge(door.Edge);
+                    int anchorX = west ? door.X - 1 : door.X;
+                    int anchorY = west ? door.Y : door.Y - 1;
+                    int dir = west ? 6 : 0; // 6 = WEST, 0 = NORTH
+                    sb.Append(string.Format(CultureInfo.InvariantCulture,
+                        "    <object guid=\"{0}\" level=\"{1}\" x=\"{2}\" y=\"{3}\" dir=\"{4}\" group=\"0\" />\n",
+                        door.Guid, objectLevel, anchorX, anchorY, dir));
+                }
+                sb.Append("  </objects>\n");
+            }
+
             sb.Append("  <sounds />\n");
             sb.Append("</house>\n");
             return sb.ToString();
+        }
+
+        /// <summary>
+        /// Records a wall on a tile's low edge AND its mirror on the neighbour's high edge.
+        ///
+        /// Enclosure only needs the low edge — A1 proved that with a single-sided file. Doors need
+        /// both, and the reason is worth writing down because the failure is silent. A door is a
+        /// two-tile group straddling the boundary between its tiles: sub-object 0 requires a wall
+        /// on its BottomRight (0x4), sub-object 1 requires one on its TopLeft (0x1) — the same
+        /// physical wall, read from each side. VMArchitecture.GetWall returns raw stored data and
+        /// never merges neighbours, so the BottomRight bit has to actually be stored on the west
+        /// tile or the group fails WallChangeValid with MustBeAgainstWall, and VMWorldActivator
+        /// discards that error and leaves the door out of world with nothing logged.
+        /// </summary>
+        private static void AddWall(Dictionary<(int, int, int), int> walls, int level, int x, int y, int bit)
+        {
+            AddSegment(walls, level, x, y, bit);
+            if (bit == TopLeft) AddSegment(walls, level, x - 1, y, BottomRight);
+            else AddSegment(walls, level, x, y - 1, BottomLeft);
+        }
+
+        private static bool IsWestEdge(string edge)
+        {
+            if (string.Equals(edge, "west", StringComparison.OrdinalIgnoreCase)) return true;
+            if (string.Equals(edge, "north", StringComparison.OrdinalIgnoreCase)) return false;
+            throw new ArgumentException($"Door edge must be \"west\" or \"north\", not \"{edge}\".");
         }
 
         private static void AddSegment(Dictionary<(int, int, int), int> walls, int level, int x, int y, int bit)

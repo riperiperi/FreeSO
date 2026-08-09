@@ -52,7 +52,12 @@ Sequenced so the vision model is the *last* variable introduced, not the first.
 - [x] **Deterministic layout → XML converter** — `PackTools/FSO.HouseGen/BlueprintWriter.cs`. No AI in this path. **Reproduces `examples/house-one-room.xml` element-for-element** from `examples/layouts/one-room.json`, which is the strongest check available: the known-good file is the test oracle.
 - [x] **Harness-verified, multi-room** — `examples/layouts/two-room-flat.json` → 46 floor tiles, 31 wall tiles / 34 segments, **3 indoor rooms** (baseline 1 + both rooms sealed independently). Shared walls dedupe: the party wall at x=36 appears once, bits OR-ed.
 - [x] Validation is non-vacuous — sub-2-tile rooms, overlapping rooms and out-of-grid rooms are each rejected with a message naming the room.
-- [ ] **Doors and windows.** Nothing walks between rooms yet. Two sealed boxes is architecture, not a home — this is the next increment and it gates "walk a Sim inside".
+- [x] **Doors.** `examples/layouts/two-room-flat-doors.json` → 4 objects placed, 0 out of world, **2 door cuts**, rooms still sealed. North-edge doors too (`one-room-north-door.json`). A door with no wall to cut is rejected by name.
+  - A door is an **object**, not a wall attribute: `VMEntityFlags2.ArchitectualDoor` makes it call `SetWallStyle`, clearing `TopLeftSolid`/`TopRightSolid` so `VMRoomMap` stops adding a pathing obstacle.
+  - Two things are both required, and each fails silently on its own — proven with a control run. **(1)** Every wall must be stored twice, low edge plus the mirrored high-edge bit on the neighbour: a door is a 2-tile group whose halves demand `TopLeft` and `BottomRight` of the *same* wall, and `GetWall` never merges neighbours. **(2)** The group anchors one tile *before* the wall tile; anchor on the wall itself and it targets the next boundary over.
+  - `VMWorldActivator.CreateObject` discards `SetPosition`'s error, so both failures present as "the door just isn't there". `--house` now reports objects placed/out-of-world, door cuts, and retries a failed placement to surface the real `VMPlacementError`.
+- [ ] **Windows.** Same object-on-a-wall mechanism, not yet tried.
+- [ ] Walk a Sim through a door — closes A1's last open item.
 - [ ] **Then** the vision model: floor-plan image → layout JSON. It only ever emits the model above; it never writes XML.
 - [ ] Cheap by construction: one XML per house, not 200 agent runs
 

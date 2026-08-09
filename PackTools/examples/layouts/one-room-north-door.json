@@ -1,0 +1,3 @@
+{ "Size": 77,
+  "Rooms": [{ "Name": "hall", "X": 30, "Y": 30, "Width": 5, "Height": 4, "Floor": 3, "Level": 0 }],
+  "Doors": [{ "X": 32, "Y": 30, "Edge": "north", "Guid": "0x23941850", "Level": 0 }] }

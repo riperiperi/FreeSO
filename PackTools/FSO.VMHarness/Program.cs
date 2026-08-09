@@ -94,9 +94,81 @@ namespace FSO.VMHarness
             int indoor = 0;
             if (arch.RoomData != null) foreach (var r in arch.RoomData) if (!r.IsOutside) indoor++;
 
+            // Doors are objects, not wall attributes: an object flagged ArchitectualDoor calls
+            // SetWallStyle on placement, which clears TopLeftSolid/TopRightSolid on its wall tile,
+            // which stops VMRoomMap adding a pathing obstacle there. So the only honest check that
+            // a door landed is to ask the architecture whether the wall it sits in is still solid.
+            int doorCuts = 0;
+            for (short x = 0; x < arch.Width; x++)
+                for (short y = 0; y < arch.Height; y++)
+                {
+                    var w = arch.GetWall(x, y, 1);
+                    if (w.TopLeftDoor) doorCuts++;
+                    if (w.TopRightDoor) doorCuts++;
+                }
+
+            // An object whose blueprint level is 0 is never positioned by VMWorldActivator
+            // (CreateObject only calls SetPosition when Level != 0) and sits out of world with no
+            // error raised. Report it rather than letting a door silently not exist.
+            int placed = 0, outOfWorld = 0;
+            foreach (var ent in vm.Entities)
+            {
+                if (ent is FSO.SimAntics.VMAvatar) continue;
+                if (ent.Position == LotTilePos.OUT_OF_WORLD) outOfWorld++; else placed++;
+            }
+
+            // The blueprint's own object list, re-read so a failed placement can be retried and
+            // its error surfaced. Same parse the restore command does.
+            var retryTargets = new List<FSO.LotView.Model.XmlHouseDataObject>();
+            if (outOfWorld > 0)
+            {
+                using (var fs = File.OpenRead(housePath))
+                {
+                    var model = (FSO.LotView.Model.XmlHouseData)
+                        new System.Xml.Serialization.XmlSerializer(typeof(FSO.LotView.Model.XmlHouseData)).Deserialize(fs);
+                    if (model.Objects != null) retryTargets.AddRange(model.Objects);
+                }
+            }
+
             Console.WriteLine("floor tiles:  " + floors);
             Console.WriteLine("wall tiles:   " + wallTiles + " (" + wallSegs + " segments)");
             Console.WriteLine("rooms:        " + rooms + " (" + indoor + " indoor)");
+            Console.WriteLine("objects:      " + placed + " placed, " + outOfWorld + " out of world");
+            Console.WriteLine("door cuts:    " + doorCuts);
+
+            // An out-of-world object means SetPosition refused and VMWorldActivator dropped the
+            // error on the floor. Say what the object wanted, so the next person does not have to
+            // bisect it: WallPlacementFlags' low nibble is the wall configuration it requires,
+            // compared against the tile's segments rotated into the object's frame.
+            foreach (var ent in vm.Entities)
+            {
+                if (ent is FSO.SimAntics.VMAvatar) continue;
+                if (ent.Position != LotTilePos.OUT_OF_WORLD) continue;
+                var wpf = ent.ObjectData[(int)FSO.SimAntics.Model.VMStackObjectVariable.WallPlacementFlags];
+                var f2 = (FSO.SimAntics.VMEntityFlags2)ent.ObjectData[(int)FSO.SimAntics.Model.VMStackObjectVariable.FlagField2];
+                bool isDoor = (f2 & FSO.SimAntics.VMEntityFlags2.ArchitectualDoor) > 0;
+                Console.WriteLine("  out of world: guid 0x" + ent.Object.OBJ.GUID.ToString("X8") +
+                    " wallPlacementFlags=0x" + wpf.ToString("X") +
+                    " subIndex=" + ent.Object.OBJ.SubIndex +
+                    " groupSize=" + ent.MultitileGroup.Objects.Count +
+                    (isDoor ? " [ArchitectualDoor]" : ""));
+
+                // VMWorldActivator.CreateObject discards SetPosition's result, so the reason an
+                // object refused placement is never reported anywhere. Retry it here purely to
+                // read the error back out.
+                // Matched by position, not GUID: the XML names a multitile master (a door is
+                // 0x23941850) while the entities in the world are its parts (0x048B353D +
+                // 0x79C2428F), so a GUID comparison never matches.
+                foreach (var o in retryTargets)
+                {
+                    var res = ent.SetPosition(
+                        LotTilePos.FromBigTile((short)o.X, (short)o.Y, (sbyte)o.Level),
+                        o.Direction, vm.Context, VMPlaceRequestFlags.AcceptSlots);
+                    Console.WriteLine("                retry at (" + o.X + "," + o.Y + ") level " + o.Level +
+                        " dir " + o.Direction + " -> " + res.Status);
+                    break;
+                }
+            }
 
             // Counting indoor rooms lot-wide is NOT a valid check: running this against
             // empty_lot_fso.xml (zero walls) still reports 1 indoor room, so "indoor > 0" passes
