@@ -1,0 +1,6 @@
+{
+  "Size": 77,
+  "Rooms": [
+    { "Name": "the A1 room", "X": 32, "Y": 32, "Width": 4, "Height": 4, "Floor": 3, "Level": 0 }
+  ]
+}

@@ -41,10 +41,19 @@ Split deliberately. A1 is hours and carries no AI risk; if it fails, no amount o
 - [x] Loads through `VMBlueprintRestoreCmd` into a live headless VM; the engine derives a **sealed interior** from it. Run: `~/.dotnet/dotnet PackTools/FSO.VMHarness/bin/Debug/net9.0/FSO.VMHarness.dll --house <xml>`
 - [x] Test is non-vacuous, proven both directions: the full house reports the probe tile indoors; the same house with 12 of 15 walls removed reports it outdoors and fails. (First version of the check was wrong — counting indoor rooms lot-wide reports 1 even for the empty lot, which has no walls at all.)
 - [ ] Walk a Sim inside — not yet done; architecture is proven, occupancy is not
-- [ ] Decide the scale mapping — lots are 77 tiles with `FloorClip`/`Offset`/`TargetSize`. "My 1,400 sq ft apartment" needs a tiles-per-foot rule and a rule for what gets dropped. **Unanswered, and it will bite in A2.**
+- [x] Decide the scale mapping — **answered, and it was the wrong worry.** `FloorClip`/`Offset`/`TargetSize` are job-lot machinery: `LotContainer.BlueprintReset` passes `Rectangle.Empty`, offset `(0,0)`, `targetSize = 0` for residential lots. Usable grid is ~75×75 = 5,625 tiles. At **1 tile = 1 metre**, a 1,400 sq ft home is ~130 tiles — roughly 12×11 of interior. Nothing gets dropped for capacity reasons; you could fit a mansion. The real limit is **legibility**: anything under 1 m (closets, narrow halls, island gaps) cannot be represented, and openings quantize to whole tile edges. Enforced as `MinRoomDimension = 2` in `BlueprintWriter`, which rejects rather than approximates.
 
 **A2 — vision → that same XML**
-- [ ] Floor-plan image → room layout → blueprint XML, compared against A1's known-good file
+
+Sequenced so the vision model is the *last* variable introduced, not the first.
+
+- [x] **Scale mapping decided** — see A1 above. 1 tile = 1 m.
+- [x] **Intermediate room-layout model** — `PackTools/FSO.HouseGen/RoomLayout.cs`. Rooms as tile rectangles. Exists so the vision step and the XML step fail separately: when a house comes out wrong, the layout says whether the model misread the plan or the converter mis-encoded it.
+- [x] **Deterministic layout → XML converter** — `PackTools/FSO.HouseGen/BlueprintWriter.cs`. No AI in this path. **Reproduces `examples/house-one-room.xml` element-for-element** from `examples/layouts/one-room.json`, which is the strongest check available: the known-good file is the test oracle.
+- [x] **Harness-verified, multi-room** — `examples/layouts/two-room-flat.json` → 46 floor tiles, 31 wall tiles / 34 segments, **3 indoor rooms** (baseline 1 + both rooms sealed independently). Shared walls dedupe: the party wall at x=36 appears once, bits OR-ed.
+- [x] Validation is non-vacuous — sub-2-tile rooms, overlapping rooms and out-of-grid rooms are each rejected with a message naming the room.
+- [ ] **Doors and windows.** Nothing walks between rooms yet. Two sealed boxes is architecture, not a home — this is the next increment and it gates "walk a Sim inside".
+- [ ] **Then** the vision model: floor-plan image → layout JSON. It only ever emits the model above; it never writes XML.
 - [ ] Cheap by construction: one XML per house, not 200 agent runs
 
 **A3 — the object loop, in passing**
@@ -96,7 +105,7 @@ Split deliberately. A1 is hours and carries no AI risk; if it fails, no amount o
 
 ## Key Questions
 1. **Does a hand-authored blueprint XML load cleanly into a live lot?** A1 answers it, and everything in Phase A depends on it.
-2. **What is the scale mapping from a real home to a 77-tile lot?** Unanswered; determines whether A2's output is usable.
+2. ~~**What is the scale mapping from a real home to a 77-tile lot?**~~ **Answered: 1 tile = 1 m, and capacity was never the constraint** — the 77/`FloorClip` framing was job-lot machinery. Legibility below 1 m is the real limit. See A1.
 3. Can a vision model produce a valid room layout from a floor plan at all? The one genuinely untested integration.
 4. Does the WebSocket gateway come back buildable? Only affects Phase F now, not the whole plan.
 5. Can per-object cost get under ~$0.15 before the catalog gets built?
