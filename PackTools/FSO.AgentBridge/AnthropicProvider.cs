@@ -39,6 +39,13 @@ namespace FSO.AgentBridge
         public void AddUserMessage(string text) =>
             _history.Add(new MessageParam { Role = Role.User, Content = text });
 
+        // A cache breakpoint looks back at most 20 content blocks to find the previous
+        // entry. One turn contributes 2 blocks per tool call (the tool_use and its result),
+        // so past ~10 calls in a turn the next request can't see the previous breakpoint and
+        // the whole conversation is re-written at full price. Measured: a 13-call turn cost
+        // ~20k re-written tokens (~$0.13) on the turn that followed it.
+        private const int ToolCallsPerTurnBeforeExtraBreakpoint = 8;
+
         public void AddToolResults(IReadOnlyList<LlmToolResult> results)
         {
             // All results in ONE user message — splitting them across messages trains the
@@ -49,6 +56,21 @@ namespace FSO.AgentBridge
                 Content = r.ResultJson,
                 IsError = r.IsError,
             }).ToList();
+
+            // On a big turn, plant an extra breakpoint partway through so the next request
+            // has one within the lookback window. Costs one of the 4 breakpoint slots and
+            // only on turns that would otherwise lose the cache entirely.
+            if (results.Count > ToolCallsPerTurnBeforeExtraBreakpoint)
+            {
+                var mid = blocks.Count / 2;
+                blocks[mid] = new ToolResultBlockParam
+                {
+                    ToolUseID = results[mid].Id,
+                    Content = results[mid].ResultJson,
+                    IsError = results[mid].IsError,
+                    CacheControl = new CacheControlEphemeral(),
+                };
+            }
 
             _history.Add(new MessageParam { Role = Role.User, Content = blocks });
         }

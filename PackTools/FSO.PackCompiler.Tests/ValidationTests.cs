@@ -44,6 +44,43 @@ namespace FSO.PackCompiler.Tests
             Assert.Contains(result.Diagnostics.Errors, e => e.Contains("unresolved label \"no_such_node\""));
         }
 
+        [Theory]
+        [InlineData("true")]
+        [InlineData("false")]
+        public void BareTrueFalse_IsAcceptedAsReturnLabel(string label)
+        {
+            // The most repeated authoring mistake by a wide margin — four times in one
+            // measured run, despite the error naming the valid values. Accepted as an alias
+            // rather than diagnosed better, because repeating an explained error is an
+            // affordance problem.
+            var pack = LoadExample();
+            pack["objects"][0]["trees"]["gossip_action"]["nodes"][0]["then"] = label;
+
+            var result = Validate(pack);
+            Assert.True(result.Success, string.Join("\n", result.Diagnostics.Errors));
+        }
+
+        [Fact]
+        public void NodeNamedTrue_StillWinsOverTheAlias()
+        {
+            // The alias is resolved after the node index, so a real node keeps its name.
+            var pack = LoadExample();
+            var nodes = (JArray)pack["objects"][0]["trees"]["gossip_action"]["nodes"];
+
+            // Append a node genuinely named "true" rather than renaming an existing one,
+            // which would break whatever already branches to it.
+            var real = (JObject)nodes[nodes.Count - 1].DeepClone();
+            real["id"] = "true";
+            real["then"] = "return true";
+            real["else"] = "error";
+            nodes.Add(real);
+
+            ((JObject)nodes[0])["then"] = "true";
+
+            var result = Validate(pack);
+            Assert.True(result.Success, string.Join("\n", result.Diagnostics.Errors));
+        }
+
         [Fact]
         public void UnresolvedAttributeName_IsError()
         {

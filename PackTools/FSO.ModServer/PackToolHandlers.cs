@@ -1,5 +1,9 @@
+using System.IO;
 using System.Linq;
 using System.ComponentModel;
+using FSO.Files.FAR1;
+using FSO.Files.Formats.IFF;
+using FSO.Files.Formats.IFF.Chunks;
 using FSO.PackCompiler;
 using ModelContextProtocol.Server;
 using Newtonsoft.Json.Linq;
@@ -42,7 +46,7 @@ namespace FSO.ModServer
             return new { ok = true, pack_session_id = session.Id };
         }
 
-        [McpServerTool(Name = "add_object"), Description("Add or replace an object stub in a pack session.")]
+        [McpServerTool(Name = "add_object"), Description("Add an object stub to a pack session. Re-adding an object that already has trees, interactions or dialog is rejected — fix individual pieces with add_tree/edit_tree_node/add_interaction/set_dialog_string instead. Pass replace=true only to deliberately start an object over.")]
         public static object AddObject(
             [Description("pack_session_id from create_pack")] string packSessionId,
             [Description("Object id, unique within the pack")] string id,
@@ -53,7 +57,8 @@ namespace FSO.ModServer
             [Description("Hex GUID of a base-game object to clone sprites from")] string cloneFromGuid = "",
             [Description("JSON string array of per-instance attribute names, e.g. [\"times_gossiped\"]")] string attributesJson = "",
             [Description("Tree name to use as the object's main loop entry point")] string entryMain = "",
-            [Description("Tree name to use as the object's init entry point")] string entryInit = "")
+            [Description("Tree name to use as the object's init entry point")] string entryInit = "",
+            [Description("Discard and rebuild an object that already has trees/interactions/dialog.")] bool replace = false)
         {
             if (!SessionStore.TryGet(packSessionId, out var session)) return Errors.UnknownSession(packSessionId);
 
@@ -95,15 +100,34 @@ namespace FSO.ModServer
 
                 var objects = (JArray)session.Pack["objects"];
                 var existingIndex = IndexOfObject(objects, id);
-                if (existingIndex >= 0) objects[existingIndex] = obj;
-                else objects.Add(obj);
 
-                return new { ok = true, object_id = id, guid = guidHex, replaced = existingIndex >= 0 };
+                if (existingIndex >= 0)
+                {
+                    // Re-adding used to silently discard the object's trees, interactions and
+                    // dialog. A model that hit a small error reached for this as its only
+                    // recovery, destroying a whole build to fix one duplicate name. Refuse
+                    // when there is real work to lose, and say what to use instead.
+                    var prev = (JObject)objects[existingIndex];
+                    var treeCount = ((JObject)prev["trees"])?.Count ?? 0;
+                    var interactionCount = ((JArray)prev["interactions"])?.Count ?? 0;
+                    var dialogCount = ((JObject)prev["strings"]?["dialog"])?.Count ?? 0;
+
+                    if (!replace && treeCount + interactionCount + dialogCount > 0)
+                        return Errors.Make("object_already_built", id, null, null, "id",
+                            $"\"{id}\" already has {treeCount} tree(s), {interactionCount} interaction(s) and {dialogCount} dialog string(s). Re-adding it would discard all of that. To change one thing, use add_tree/edit_tree_node, add_interaction (replace=true), or set_dialog_string. Pass replace=true only if you really mean to start this object over.");
+
+                    objects[existingIndex] = obj;
+                    return new { ok = true, object_id = id, guid = guidHex, replaced = true };
+                }
+
+                objects.Add(obj);
+                return new { ok = true, object_id = id, guid = guidHex, replaced = false };
             }
         }
 
-        [McpServerTool(Name = "add_interaction"), Description("Add one interaction (TTAB/TTAs entry) to an object. interactionJson matches SCHEMA.md's interaction shape, e.g. {\"name\":\"Gossip\",\"action\":\"gossip_action\",\"test\":\"gossip_test\",\"allow\":{\"visitors\":true}}.")]
-        public static object AddInteraction(string packSessionId, string objectId, string interactionJson)
+        [McpServerTool(Name = "add_interaction"), Description("Add one interaction (TTAB/TTAs entry) to an object. interactionJson matches SCHEMA.md's interaction shape, e.g. {\"name\":\"Gossip\",\"action\":\"gossip_action\",\"test\":\"gossip_test\",\"allow\":{\"visitors\":true}}. Adding a name that already exists is rejected; pass replace=true to overwrite that one interaction.")]
+        public static object AddInteraction(string packSessionId, string objectId, string interactionJson,
+            [Description("Overwrite an existing interaction with the same name instead of failing.")] bool replace = false)
         {
             if (!SessionStore.TryGet(packSessionId, out var session)) return Errors.UnknownSession(packSessionId);
             lock (session.Lock)
@@ -117,8 +141,23 @@ namespace FSO.ModServer
 
                 if (interaction["name"] == null) return Errors.MissingField(objectId, null, null, "name", "interaction requires a \"name\" field");
 
-                ((JArray)obj["interactions"]).Add(interaction);
-                return new { ok = true, object_id = objectId, interaction = (string)interaction["name"] };
+                // Appending blindly let a duplicate sit undetected until validate, at which
+                // point the only recovery tool was add_object — which wipes the whole object.
+                // Reject here, where the fix is one call and nothing else is lost.
+                var name = (string)interaction["name"];
+                var existing = (JArray)obj["interactions"];
+                for (int i = 0; i < existing.Count; i++)
+                {
+                    if ((string)existing[i]["name"] != name) continue;
+                    if (!replace)
+                        return Errors.Make("duplicate_interaction_name", objectId, null, null, "name",
+                            $"\"{objectId}\" already has an interaction named \"{name}\". Pass replace=true to overwrite just this interaction — do not re-add the object, which discards its trees and dialog.");
+                    existing[i] = interaction;
+                    return new { ok = true, object_id = objectId, interaction = name, replaced = true };
+                }
+
+                existing.Add(interaction);
+                return new { ok = true, object_id = objectId, interaction = name, replaced = false };
             }
         }
 
@@ -146,11 +185,12 @@ namespace FSO.ModServer
             }
         }
 
-        [McpServerTool(Name = "add_tree"), Description("Declare an empty named tree on an object, so edit_tree_node has a target. Fails if the tree already exists — use edit_tree_node to modify one.")]
+        [McpServerTool(Name = "add_tree"), Description("Declare a named tree on an object. Pass nodesJson to supply the whole tree in one call — strongly preferred over adding nodes one at a time, which costs a call per node and is the main reason builds run out of turns. Use edit_tree_node afterwards only to fix individual nodes. Fails if the tree already exists.")]
         public static object AddTree(
             string packSessionId, string objectId, string treeName,
             [Description("JSON string array of arg names")] string argsJson = "",
-            [Description("JSON string array of local names")] string localsJson = "")
+            [Description("JSON string array of local names")] string localsJson = "",
+            [Description("JSON array of SCHEMA.md node objects — the entire tree body, e.g. [{\"id\":\"idle\",\"prim\":\"idle_for_input\",\"ticks_param\":0,\"allow_push\":true,\"then\":\"idle\",\"else\":\"idle\"}]")] string nodesJson = "")
         {
             if (!SessionStore.TryGet(packSessionId, out var session)) return Errors.UnknownSession(packSessionId);
             lock (session.Lock)
@@ -163,13 +203,33 @@ namespace FSO.ModServer
                     return Errors.Make("duplicate_tree", objectId, treeName, null, null,
                         $"tree \"{treeName}\" already exists on \"{objectId}\" — use edit_tree_node/remove_tree_node to modify it");
 
+                JArray nodes;
+                if (string.IsNullOrEmpty(nodesJson))
+                {
+                    nodes = new JArray();
+                }
+                else
+                {
+                    try { nodes = JArray.Parse(nodesJson); }
+                    catch (System.Exception e) { return Errors.InvalidJson("nodesJson", e.Message); }
+
+                    for (int i = 0; i < nodes.Count; i++)
+                    {
+                        if (nodes[i].Type != JTokenType.Object)
+                            return Errors.Make("invalid_field_value", objectId, treeName, null, "nodesJson",
+                                $"nodesJson[{i}] is not an object — nodesJson is an array of SCHEMA.md node objects");
+                        if (string.IsNullOrEmpty((string)nodes[i]["id"]))
+                            return Errors.MissingField(objectId, treeName, null, "id", $"nodesJson[{i}] requires an \"id\" field");
+                    }
+                }
+
                 trees[treeName] = new JObject
                 {
                     ["args"] = ParseJsonOrEmpty(argsJson, new JArray()),
                     ["locals"] = ParseJsonOrEmpty(localsJson, new JArray()),
-                    ["nodes"] = new JArray(),
+                    ["nodes"] = nodes,
                 };
-                return new { ok = true, object_id = objectId, tree_name = treeName };
+                return new { ok = true, object_id = objectId, tree_name = treeName, node_count = nodes.Count };
             }
         }
 
@@ -321,13 +381,39 @@ namespace FSO.ModServer
                 return Errors.Make("game_content_missing", null, null, null, "game_location",
                     $"object table not found at \"{tablePath}\" — is \"{gameDir}\" a TSO content directory?");
 
-            var hits = BaseObjectIndex.Search(BaseObjectIndex.Load(gameDir), query, limit < 1 ? 1 : limit);
+            var boundedLimit = limit < 1 ? 1 : limit;
+            // Search wider than requested, because the unclonable-candidate filter below
+            // removes some hits — asking Search for exactly `limit` would silently return
+            // fewer than the caller wanted whenever a filtered hit was in that top slice.
+            var rawHits = BaseObjectIndex.Search(BaseObjectIndex.Load(gameDir), query, boundedLimit * 4);
+
+            var objectsDir = FindObjectsDir(gameDir);
+            var hits = new System.Collections.Generic.List<BaseObjectIndex.Entry>();
+            var droppedUnclonable = 0;
+            foreach (var h in rawHits)
+            {
+                if (hits.Count >= boundedLimit) break;
+                // A hit here only proves the object is in the base game's index, not that it's
+                // clonable: some entries' .iff has BaseGraphicID == 0 (no draw group), so
+                // clone_from_guid would silently produce another invisible object — exactly the
+                // failure this tool exists to prevent. Drop those rather than return them.
+                if (objectsDir != null && !HasDrawableAppearance(objectsDir, h.File))
+                {
+                    droppedUnclonable++;
+                    continue;
+                }
+                hits.Add(h);
+            }
+
             if (hits.Count == 0)
             {
                 // A miss must not leave "skip appearance" as the easy way out — that path
                 // produces an object that compiles clean and renders as nothing.
+                var reason = droppedUnclonable > 0
+                    ? $"\"{query}\" matched {droppedUnclonable} base-game object(s), but every match has no drawable appearance (BaseGraphicID == 0) and would clone into another invisible object."
+                    : $"nothing in the base game matched \"{query}\".";
                 return Errors.Make("no_base_object_match", null, null, null, "query",
-                    $"nothing in the base game matched \"{query}\". Retry with a broader or more generic word (\"gnome\" rather than \"garden gnome statue\", \"lamp\" rather than \"art deco floor lamp\"), or search for whatever common object is the closest shape. If nothing matches, use appearance.generated instead — do NOT leave the object without appearance, which compiles successfully and renders invisible.");
+                    $"{reason} Retry with a broader or more generic word (\"gnome\" rather than \"garden gnome statue\", \"lamp\" rather than \"art deco floor lamp\"), or search for whatever common object is the closest shape. If nothing matches, use appearance.generated instead — do NOT leave the object without appearance, which compiles successfully and renders invisible.");
             }
 
             return new
@@ -342,6 +428,47 @@ namespace FSO.ModServer
                 }).ToList(),
                 usage = "Set appearance: {\"clone_from_guid\": \"<guid>\"} on the object to reuse that object's sprites.",
             };
+        }
+
+        // ---- appearance-clonability check (BaseGraphicID == 0 guard) ------------------
+        //
+        // Duplicates AppearanceCloner's FAR-reading path rather than calling into it,
+        // deliberately: FSO.PackCompiler is out of scope for this change (owned elsewhere),
+        // and this check only needs OBJD.BaseGraphicID, not a full clone.
+
+        private static string FindObjectsDir(string gameDir)
+        {
+            foreach (var dir in Directory.GetDirectories(gameDir))
+            {
+                if (!string.Equals(Path.GetFileName(dir), "objectdata", System.StringComparison.OrdinalIgnoreCase)) continue;
+                foreach (var sub in Directory.GetDirectories(dir))
+                    if (string.Equals(Path.GetFileName(sub), "objects", System.StringComparison.OrdinalIgnoreCase)) return sub;
+            }
+            return null;
+        }
+
+        private static bool HasDrawableAppearance(string objectsDir, string fileName)
+        {
+            var farPath = Path.Combine(objectsDir, "objiff.far");
+            if (!File.Exists(farPath)) return true; // can't check — don't block on a missing archive
+
+            var archive = new FAR1Archive(farPath, true); // v1b: true for TSO archives
+            try
+            {
+                var entry = archive.GetAllFarEntries()
+                    .FirstOrDefault(e => string.Equals(e.Filename, fileName + ".iff", System.StringComparison.OrdinalIgnoreCase));
+                if (entry == null) return true; // can't check — don't block on a lookup miss
+
+                var bytes = archive.GetEntry(entry);
+                var iff = new IffFile();
+                using (var stream = new MemoryStream(bytes)) iff.Read(stream);
+                var objd = iff.List<OBJD>()?.FirstOrDefault();
+                return objd != null && objd.BaseGraphicID != 0;
+            }
+            finally
+            {
+                archive.Close();
+            }
         }
 
         [McpServerTool(Name = "test_in_vm"), Description("Compile the session's pack and run one object in FSO.VMHarness: place it, push an interaction, tick, and report a trace plus final state. scenarioJson matches MCP-DESIGN.md §3, e.g. {\"place_object\":\"gossip_gnome\",\"push_interaction\":\"Gossip\",\"max_ticks\":200,\"assertions\":[{\"type\":\"motive_at_least\",\"target\":\"sim\",\"motive\":\"social\",\"value\":10}]}. Requires a game content checkout on disk (see game_location) and FSO.VMHarness already built.")]

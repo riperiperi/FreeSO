@@ -125,6 +125,28 @@ namespace FSO.PackCompiler.Tests
                 foreach (var image in dgrp.Images)
                     foreach (var sprite in image.Sprites)
                         Assert.NotNull(iff.Get<SPR2>((ushort)sprite.SpriteID));
+
+            // Existence and cross-reference resolution are NOT proof it renders — a frame
+            // that never got decoded before the compiler wrote this .iff serializes as 0x0
+            // with no pixels, and every assertion above would still pass (this is exactly
+            // what happened before AppearanceCloner started forcing a decode: every one of
+            // these asserts was green while every clone_from_guid object was invisible).
+            // Actually decode a fresh frame and check it has real dimensions and real content.
+            var anyChecked = false;
+            foreach (var dgrp in dgrps)
+                foreach (var image in dgrp.Images)
+                    foreach (var sprite in image.Sprites)
+                    {
+                        var spr2 = iff.Get<SPR2>((ushort)sprite.SpriteID);
+                        var frame = spr2.Frames[sprite.SpriteFrameIndex];
+                        frame.DecodeIfRequired(false);
+                        Assert.True(frame.Width > 0 && frame.Height > 0,
+                            $"frame decoded to {frame.Width}x{frame.Height} — chunks existed but nothing would render");
+                        Assert.True(frame.PixelData.Count(p => p.A != 0) > 10,
+                            "frame decoded to real dimensions but essentially no opaque pixels");
+                        anyChecked = true;
+                    }
+            Assert.True(anyChecked);
         }
 
         [Fact]

@@ -120,6 +120,15 @@ namespace FSO.VMHarness
             var group = vm.Context.CreateObjectInstance(guid, new LotTilePos(32, 32, 1), Direction.NORTH);
             var target = group.Objects[0];
 
+            // CreateObjectInstance places unconditionally (it's how the VM instantiates test/
+            // network objects, not how Buy Mode validates a player's placement) — it does NOT
+            // surface whether this object could actually be placed there by a player. Call the
+            // same check Buy Mode does explicitly, so a "Must place on floor tile"-class bug
+            // (AllowedHeightFlags never set on compiler-authored objects) is caught by running
+            // the object through the real engine path, not by inspecting its bytecode.
+            var placement = vm.Context.GetObjPlace(target, new LotTilePos(32, 32, 1), Direction.NORTH, VMPlaceRequestFlags.UserPlacement);
+            Console.Error.WriteLine("GetObjPlace => " + placement.Status);
+
             var avatarGroup = vm.Context.CreateObjectInstance(VMAvatar.TEMPLATE_PERSON, new LotTilePos(30, 30, 1), Direction.NORTH);
             var avatar = (VMAvatar)avatarGroup.Objects[0];
 
@@ -139,6 +148,33 @@ namespace FSO.VMHarness
                         break;
                     }
                 }
+            }
+
+            // An object with no interactions is legitimate — a purely decorative object has
+            // nothing to push. Report that as a clean result rather than crashing: the caller
+            // can only see the exit code, so an unhandled NRE here looks to an authoring agent
+            // like "your object is broken", and it will burn its whole budget rewriting a
+            // perfectly good object trying to appease a harness that simply cannot test it.
+            if (ttab == null || ttab.Interactions == null || ttab.Interactions.Length == 0)
+            {
+                Console.Error.WriteLine("Object has no interactions — nothing to push.");
+                Console.WriteLine(JsonConvert.SerializeObject(new
+                {
+                    pushed_interaction = (string)null,
+                    placement_status = placement.Status.ToString(),
+                    trace = new List<TraceEvent>(),
+                    final_state = new Dictionary<string, object>
+                    {
+                        ["object_attribute_0"] = target.GetAttribute(0),
+                        ["object_attribute_1"] = target.GetAttribute(1),
+                        ["sim_motive_social"] = avatar.GetMotiveData(VMMotive.Social),
+                        ["sim_motive_fun"] = avatar.GetMotiveData(VMMotive.Fun),
+                        ["ticks_run"] = 0,
+                        ["tick_limit_hit"] = false,
+                        ["note"] = "object placed and instantiated successfully; it defines no interactions, so none was pushed",
+                    },
+                }, Formatting.Indented));
+                return;
             }
 
             var pushedEntry = ttab.Interactions[ttaIndex];
@@ -184,7 +220,7 @@ namespace FSO.VMHarness
                 ["tick_limit_hit"] = tick >= maxTicks
             };
 
-            var report = new { pushed_interaction = pushedName, trace, final_state = finalState };
+            var report = new { pushed_interaction = pushedName, placement_status = placement.Status.ToString(), trace, final_state = finalState };
             var json = JsonConvert.SerializeObject(report, Formatting.Indented);
             Console.WriteLine(json);
         }

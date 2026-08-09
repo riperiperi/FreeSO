@@ -105,6 +105,7 @@ namespace FSO.ModServer
                 errors = new List<ToolError>(),
                 warnings = warnings,
                 pushed_interaction = (string)harnessReport["pushed_interaction"],
+                placement_status = (string)harnessReport["placement_status"],
                 ticks_run = ticksRun,
                 tick_limit_hit = tickLimitHit,
                 trace = PackToolHandlers.ToPlain(trace),

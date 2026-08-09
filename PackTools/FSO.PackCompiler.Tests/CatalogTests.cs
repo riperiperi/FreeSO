@@ -57,6 +57,19 @@ namespace FSO.PackCompiler.Tests
             Assert.Equal("Gossip Gnome", p.GetAttribute("n"));
         }
 
+        // Catalog tests exercise upsert/write logic, not appearance — use a generated
+        // appearance (needs no game content dir) so they run unconditionally and aren't
+        // affected by Install's clone_from_guid graphics-missing gate (see InstallTests.cs).
+        private static JObject GossipGnomeWithGeneratedAppearance()
+        {
+            var pack = JObject.Parse(File.ReadAllText(TestPaths.Example("gossip-gnome.json")));
+            pack["objects"][0]["appearance"] = new JObject
+            {
+                ["generated"] = new JObject { ["generator"] = "chair" },
+            };
+            return pack;
+        }
+
         [Fact]
         public void Install_UpsertsCatalogIdempotently()
         {
@@ -70,12 +83,14 @@ namespace FSO.PackCompiler.Tests
                 "<Catalog>\n  <P g=\"DEADBEEF\" s=\"18\" p=\"55\" n=\"Unrelated Thing\" r=\"1\" />\n</Catalog>");
 
             // first install
-            var result = PackCompilerApi.Install(TestPaths.Example("gossip-gnome.json"), gameDir);
+            var firstPackPath = Path.Combine(TestPaths.TempDir(), "pack.json");
+            File.WriteAllText(firstPackPath, GossipGnomeWithGeneratedAppearance().ToString());
+            var result = PackCompilerApi.Install(firstPackPath, gameDir);
             Assert.True(result.Success, string.Join("\n", result.Diagnostics.Errors));
             Assert.True(File.Exists(Path.Combine(objectsDir, "gossip_gnome.iff")));
 
             // re-install with a changed price
-            var pack = JObject.Parse(File.ReadAllText(TestPaths.Example("gossip-gnome.json")));
+            var pack = GossipGnomeWithGeneratedAppearance();
             pack["objects"][0]["price"] = 250;
             var packPath = Path.Combine(TestPaths.TempDir(), "pack.json");
             File.WriteAllText(packPath, pack.ToString());
@@ -102,7 +117,9 @@ namespace FSO.PackCompiler.Tests
         public void Install_CreatesCatalogWhenMissing()
         {
             var gameDir = TestPaths.TempDir();
-            var result = PackCompilerApi.Install(TestPaths.Example("gossip-gnome.json"), gameDir);
+            var packPath = Path.Combine(TestPaths.TempDir(), "pack.json");
+            File.WriteAllText(packPath, GossipGnomeWithGeneratedAppearance().ToString());
+            var result = PackCompilerApi.Install(packPath, gameDir);
             Assert.True(result.Success, string.Join("\n", result.Diagnostics.Errors));
 
             var catalogPath = Path.Combine(gameDir, "Objects", "catalog_downloads.xml");

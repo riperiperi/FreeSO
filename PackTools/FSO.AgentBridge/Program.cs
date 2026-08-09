@@ -27,6 +27,7 @@ namespace FSO.AgentBridge
 
             if (args[0] == "--schemas") return PrintSchemas();
             if (args[0] == "--dispatch-test") return DispatchTest();
+            if (args[0] == "--ipc") return RunIpc(args.Length > 1 ? args[1] : "");
 
             ILlmProvider provider;
             try { provider = BuildProvider(); }
@@ -72,6 +73,98 @@ namespace FSO.AgentBridge
                               $"in {u.InputTokens} + cache(rd {u.CacheReadTokens} / wr {u.CacheWriteTokens}) | out {u.OutputTokens} | ~${u.EstimatedCostUsd:F3} at assumed rates]");
             return timedOut ? 1 : 0;
         }
+
+        /// <summary>
+        /// Line protocol for the in-game panel. The game spawns this process and reads stdout;
+        /// one tagged line per event, so the client needs no reference to this project and no
+        /// LLM SDK of its own.
+        ///
+        ///   N &lt;text&gt;   narration, already player-safe — show it verbatim
+        ///   G &lt;hex&gt;    finished; the object's GUID
+        ///   E &lt;text&gt;   player-safe error
+        ///
+        /// Nothing else goes to stdout: no metrics, no tool names, no JSON. That's the same
+        /// contract IMakeSomethingAgent states — the panel must never be able to leak a tool
+        /// name or a stack trace at the player. Diagnostics go to stderr, which the game logs
+        /// but never displays.
+        /// </summary>
+        static int RunIpc(string prompt)
+        {
+            if (string.IsNullOrWhiteSpace(prompt))
+            {
+                Console.WriteLine("E Tell me what you'd like me to make.");
+                return 2;
+            }
+
+            ILlmProvider provider;
+            try { provider = BuildProvider(); }
+            catch (Exception e)
+            {
+                // Configuration problems are ours, not the player's — say something they can act on.
+                Console.Error.WriteLine(e.Message);
+                Console.WriteLine("E I can't reach my workshop right now. Try again in a moment.");
+                return 2;
+            }
+
+            var done = new ManualResetEventSlim(false);
+            var exit = 1;
+            var agent = new MakeSomethingAgent(
+                provider,
+                dispatch: a => a(),
+                deliver: DeliverToDisk);
+
+            agent.OnNarration += line => { Console.WriteLine("N " + Sanitize(line)); Console.Out.Flush(); };
+            agent.OnObjectComplete += guid =>
+            {
+                // O carries everything the client needs to register the object live, before G
+                // announces completion — so the panel never says "ready" before it is.
+                var d = LastDelivery;
+                if (d != null)
+                {
+                    Console.WriteLine($"O {guid:X8}|{d.Category}|{d.Price}|{Sanitize(d.Name)}|{Sanitize(d.IffPath)}");
+                }
+                Console.WriteLine($"G {guid:X8}");
+                Console.Out.Flush();
+                exit = 0;
+                done.Set();
+            };
+            agent.OnError += msg =>
+            {
+                Console.WriteLine("E " + Sanitize(msg));
+                Console.Out.Flush();
+                done.Set();
+            };
+
+            agent.SendMessage(prompt);
+
+            if (!done.Wait(TimeSpan.FromMinutes(10)))
+            {
+                Console.WriteLine("E That took longer than expected. Nothing was made — try asking for something simpler.");
+                Console.Out.Flush();
+            }
+
+            var u = agent.Usage;
+            Console.Error.WriteLine($"[{provider.Name}/{provider.Model} | {u.Turns} turns | ~${u.EstimatedCostUsd:F3}]");
+            return exit;
+        }
+
+        /// <summary>
+        /// Newlines would split one event across several protocol lines and desynchronise the
+        /// reader, so they're flattened rather than trusted.
+        /// </summary>
+        static string Sanitize(string s) =>
+            (s ?? "").Replace("\r", " ").Replace("\n", " ").Trim();
+
+        /// <summary>What the game needs to register a freshly compiled object without recompiling.</summary>
+        class Delivery
+        {
+            public string IffPath;
+            public string Name;
+            public int Category;
+            public int Price;
+        }
+
+        static Delivery LastDelivery;
 
         /// <summary>
         /// Provider selection. FSO_AGENT_PROVIDER picks the backend ("anthropic" or "openai");
@@ -141,10 +234,25 @@ namespace FSO.AgentBridge
             if (result?["ok"]?.GetValue<bool>() != true) return null;
 
             var outDir = result["out_dir"]?.ToString();
-            var guidHex = result["report"]?["Objects"]?.AsArray()?.FirstOrDefault()?["Guid"]?.ToString();
+            var obj = result["report"]?["Objects"]?.AsArray()?.FirstOrDefault();
+            var guidHex = obj?["Guid"]?.ToString();
             if (guidHex == null) return null;
 
-            Console.WriteLine($"\nCompiled to {outDir}");
+            // Stash what the game needs to register this object without recompiling: the .iff
+            // on disk plus its Buy Mode entry. The report's Iff is a bare filename.
+            var cat = result["report"]?["CatalogEntries"]?.AsArray()?.FirstOrDefault();
+            LastDelivery = new Delivery
+            {
+                IffPath = System.IO.Path.Combine(outDir ?? "", obj?["Iff"]?.ToString() ?? ""),
+                Name = cat?["Name"]?.ToString() ?? "",
+                Category = cat?["Category"]?.GetValue<int>() ?? 0,
+                Price = cat?["Price"]?.GetValue<int>() ?? 0,
+            };
+
+            // stderr, not stdout: in --ipc mode stdout is a strict line protocol, and a build
+            // path is a diagnostic the player must never see. The console harness prints
+            // stderr too, so nothing is lost there.
+            Console.Error.WriteLine($"Compiled to {outDir}");
             return Convert.ToUInt32(guidHex.Replace("0x", ""), 16);
         }
 

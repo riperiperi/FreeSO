@@ -234,6 +234,23 @@ namespace FSO.AgentBridge
                 string sessionId = null;
                 if (tool.Name == "create_pack") sessionId = JsonNode.Parse(json)?["pack_session_id"]?.ToString();
 
+                // Diagnostic logging (stderr, never the player). Two cases matter:
+                //  - any failure, because a repeated failure is how a thrash loop starts;
+                //  - every `validate` result even when it passes, because the question
+                //    "is it rejecting the SAME thing repeatedly, or something new each
+                //    time?" is what separates a bad-diagnostics bug (ours, fixable) from
+                //    genuine schema difficulty (points at simplifying tree authoring).
+                var failed = JsonNode.Parse(json)?["ok"]?.GetValueKind() == JsonValueKind.False;
+                if (failed || tool.Name == "validate")
+                    Log($"{tool.Name} -> {Truncate(json, 700)}");
+
+                // Log what the model is actually authoring into trees. Turn counts alone
+                // can't distinguish "the validator keeps rejecting it" from "expressing this
+                // behaviour genuinely takes a dozen nodes" — and those want opposite fixes
+                // (better diagnostics vs. a coarser authoring primitive).
+                if (tool.Name is "edit_tree_node" or "add_tree")
+                    Log($"  ARGS {tool.Name}: {Truncate(call.ArgumentsJson, 320)}");
+
                 // A tool reporting ok:false is a RECOVERABLE result, not a transport error —
                 // the model reads the diagnostics and fixes its own mistake, which is the
                 // whole point of MCP-DESIGN.md §2's error contract.
@@ -253,6 +270,9 @@ namespace FSO.AgentBridge
             _dispatch(() => handler(message));
         }
 
+        private static string Truncate(string s, int max) =>
+            s != null && s.Length > max ? s.Substring(0, max) + "…[truncated]" : s;
+
         private void Log(string detail) =>
             Console.Error.WriteLine($"[MakeSomethingAgent/{_provider.Name}] {detail}");
 
@@ -268,6 +288,7 @@ How to talk:
 How to build:
 - Look up the vocabulary rather than guessing at primitive, scope, or category names.
 - EVERY object must have an appearance, or it is invisible in the game and the player sees nothing. Always set the object's appearance by cloning the sprites of a fitting base-game object. Choose one that resembles what the player described, and do this even when they say nothing about how it should look.
+- Build ONLY what the player asked for. Give the object the one behaviour they described and stop — do not add extra interactions, abilities, or flourishes they did not ask for. A thing that just sits there needs only an idle loop; it does not need to be pettable. Every extra behaviour costs the player waiting time, and they can always ask for more afterwards.
 - Validate as you go and fix what comes back; the diagnostics tell you exactly what's wrong.
 - Test the object actually behaves the way the player asked before you finish — compiling is not the same as working.
 - When you're done, say in one friendly sentence what they've got and that it's ready to place. Then stop.";

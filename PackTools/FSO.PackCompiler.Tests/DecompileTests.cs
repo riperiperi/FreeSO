@@ -23,7 +23,11 @@ namespace FSO.PackCompiler.Tests
             var jsonPath = Path.Combine(TestPaths.TempDir(), "decompiled.json");
             var dec = PackCompilerApi.Decompile(Path.Combine(dirA, "gossip_gnome.iff"), jsonPath);
             Assert.True(dec.Success, string.Join("\n", dec.Diagnostics.Errors));
-            Assert.Contains(dec.Diagnostics.Warnings, w => w.Contains("placeholder appearance"));
+            // Appearance provenance recovers the real appearance.clone_from_guid rather than
+            // fabricating a placeholder (see AppearanceProvenanceTests for dedicated coverage).
+            Assert.DoesNotContain(dec.Diagnostics.Warnings, w => w.Contains("placeholder appearance"));
+            var decompiledObj = (JObject)JObject.Parse(File.ReadAllText(jsonPath))["objects"][0];
+            Assert.Equal("0xC14849AC", (string)decompiledObj["appearance"]["clone_from_guid"]);
 
             var dirB = TestPaths.TempDir();
             var second = PackCompilerApi.Build(jsonPath, dirB);

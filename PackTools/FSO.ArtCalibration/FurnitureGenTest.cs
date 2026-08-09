@@ -43,6 +43,8 @@ namespace FSO.ArtCalibration
                 Kind = StorageGenerator.KindType.Bookshelf,
             }), 0x00000015, 9700, outDir);
 
+            GenAsymmetric("sofa", SofaGenerator.Build(new SofaGenerator.Params()), 0x00000017, 9850, outDir);
+
             GenAsymmetric("dresser", StorageGenerator.Build(new StorageGenerator.Params
             {
                 Kind = StorageGenerator.KindType.Dresser,

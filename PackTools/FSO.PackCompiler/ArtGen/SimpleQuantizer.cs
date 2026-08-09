@@ -23,8 +23,24 @@ namespace FSO.PackCompiler.ArtGen
         // the wrong colors, including landing on unused padding slots (0,0,0,0), which is
         // "reasonably lit" geometry decoding as flat black. Fixed by accumulating one global
         // color->index table across the whole object instead of resetting it per frame.
-        static readonly Dictionary<uint, byte> _lookup = new Dictionary<uint, byte>();
-        static readonly List<Color> _palette = new List<Color>();
+        //
+        // [ThreadStatic], not a plain static: xUnit runs test classes/methods concurrently on
+        // different threads by default, and SPR2FrameEncoder.QuantizeFrame is one shared static
+        // delegate — a plain static Dictionary here meant two objects being quantized on two
+        // threads at once corrupted each other's palette (one test's Reset() clearing state a
+        // concurrently-running test's SetData call was mid-accumulating into), which surfaced
+        // as PixelData decoding to null on an object that never had anything wrong with its own
+        // generator. Each thread gets its own accumulator; a single object build still happens
+        // on one thread (SpriteAssembler.AddAppearanceChunks's loop is sequential), so nothing
+        // about the accumulation logic itself changes — only which threads see which state.
+        [System.ThreadStatic] static Dictionary<uint, byte> _lookup;
+        [System.ThreadStatic] static List<Color> _palette;
+
+        static void EnsureInitialized()
+        {
+            _lookup ??= new Dictionary<uint, byte>();
+            _palette ??= new List<Color>();
+        }
 
         public static void Install()
         {
@@ -33,15 +49,18 @@ namespace FSO.PackCompiler.ArtGen
 
         /// <summary>Call once before rendering each new object's frames — the palette
         /// accumulates across SetData calls within one object build and must not leak
-        /// into the next object's (unrelated) color set.</summary>
+        /// into the next object's (unrelated) color set. Thread-local, so this only resets
+        /// the calling thread's accumulator.</summary>
         public static void Reset()
         {
+            EnsureInitialized();
             _lookup.Clear();
             _palette.Clear();
         }
 
         static Color[] Quantize(SPR2Frame frame, out byte[] bytes)
         {
+            EnsureInitialized();
             var px = frame.PixelData;
             bytes = new byte[px.Length];
 

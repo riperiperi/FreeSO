@@ -1,4 +1,6 @@
 using System.IO;
+using System.Linq;
+using FSO.Files.Formats.IFF;
 
 namespace FSO.PackCompiler
 {
@@ -79,6 +81,7 @@ namespace FSO.PackCompiler
             if (pack == null) return result;
 
             result.Report = new PackBuilder(result.Diagnostics, tsoContentDir).Install(pack, gameDir);
+            if (result.Success) StampProvenance(pack, result.Report, Path.Combine(gameDir, "Objects"));
             return result;
         }
 
@@ -89,8 +92,42 @@ namespace FSO.PackCompiler
             if (pack == null) return result;
 
             var builder = new PackBuilder(result.Diagnostics, gameDir);
-            result.Report = builder.Build(pack, outDir, write && !result.Diagnostics.HasErrors);
+            var didWrite = write && !result.Diagnostics.HasErrors;
+            result.Report = builder.Build(pack, outDir, didWrite);
+            if (didWrite && result.Success) StampProvenance(pack, result.Report, outDir);
             return result;
+        }
+
+        /// <summary>
+        /// Re-opens each just-written .iff and records how its appearance was authored (see
+        /// AppearanceProvenance), so Decompile() can recover it exactly instead of fabricating
+        /// a placeholder. A second pass over already-written files rather than something
+        /// PackBuilder does inline, deliberately: PackBuilder.cs is owned elsewhere.
+        ///
+        /// This re-read-then-rewrite hits the exact lazy-decode hazard AppearanceCloner's
+        /// ForceDecode exists for (see d49da53d5): a freshly-loaded SPR2Frame hasn't been
+        /// decoded, Write() serializes whatever's in Width/Height/PixelData with no fallback
+        /// to the original bytes, and an undecoded frame writes out as a silent 0x0 sprite —
+        /// this pass caused exactly that regression on its first version, caught by
+        /// AppearanceCloneTests going red. ForceDecode before every rewrite, not just this
+        /// object's own clone step, or every StampProvenance call reintroduces it.
+        /// </summary>
+        private static void StampProvenance(PackFile pack, BuildReport report, string dir)
+        {
+            foreach (var objReport in report.Objects)
+            {
+                var obj = pack.Objects.FirstOrDefault(o => o.Id == objReport.Id);
+                if (obj == null) continue; // shouldn't happen — report is derived from pack.Objects
+
+                var path = Path.Combine(dir, objReport.Iff);
+                if (!File.Exists(path)) continue;
+
+                var iff = new IffFile(path);
+                AppearanceCloner.ForceDecode(iff);
+                AppearanceProvenance.Write(iff, obj);
+                using (var stream = new FileStream(path, FileMode.Create))
+                    iff.Write(stream);
+            }
         }
 
         private static PackFile ParsePack(string packJsonPath, CompileResult result)

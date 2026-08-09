@@ -6,6 +6,7 @@ using System.Text.RegularExpressions;
 using FSO.Files.FAR1;
 using FSO.Files.Formats.IFF;
 using FSO.Files.Formats.IFF.Chunks;
+using Microsoft.Xna.Framework;
 
 namespace FSO.PackCompiler
 {
@@ -102,6 +103,15 @@ namespace FSO.PackCompiler
                 result.PalettesCopied += CopyChunks(src.List<PALT>(), target);
             }
 
+            // SPR2Frame/SPRFrame decode lazily (Width/Height/PixelData stay 0/null until
+            // DecodeIfRequired runs) — nothing else in the compile path ever calls it before
+            // PackBuilder writes the target .iff, and SPR2Frame.Write serializes whatever's
+            // currently in those fields with no fallback to the original raw bytes. Left
+            // undecoded, every copied frame gets written out as a 0x0 sprite: chunks present,
+            // DGRP resolves them, .iff loads fine — and the object is invisible in the client.
+            // Force it here so the target file always holds real, already-decoded pixel data.
+            ForceDecode(target);
+
             if (result.DrawGroupsCopied == 0)
             {
                 d.Error(diagPath, $"clone_from_guid: no DGRP draw groups found for 0x{sourceGuid:X8} (\"{fileName}\") — the clone would be invisible");
@@ -111,6 +121,72 @@ namespace FSO.PackCompiler
             result.Ok = true;
             return result;
         }
+
+        /// <summary>internal rather than private: PackCompilerApi's provenance stamping pass
+        /// re-reads and rewrites an already-written .iff (see StampProvenance), which hits the
+        /// identical lazy-decode hazard this exists for — reused rather than duplicated.</summary>
+        internal static void ForceDecode(IffFile target)
+        {
+            var spr2Chunks = target.List<SPR2>();
+            if (spr2Chunks != null)
+                foreach (var spr2 in spr2Chunks)
+                    foreach (var frame in spr2.Frames)
+                    {
+                        // Must be called with z=false first: DecodeIfRequired's z-buffer branch
+                        // guards on this.Flags, which is itself only populated by the decode it
+                        // guards — before the first decode, Flags is still its default 0, so an
+                        // initial DecodeIfRequired(true) silently short-circuits and decodes
+                        // nothing at all. z=false's guard checks PixelData==null instead, which
+                        // is a real precondition, so it actually runs — and the single decode it
+                        // triggers reads pixels AND the z-buffer together (whichever the frame's
+                        // real flags call for), so nothing here is left half-decoded.
+                        frame.DecodeIfRequired(false);
+                        RestorePalData(frame, target);
+                    }
+
+            var sprChunks = target.List<SPR>();
+            if (sprChunks != null)
+                foreach (var spr in sprChunks)
+                    foreach (var frame in spr.Frames)
+                        frame.DecodeIfRequired();
+        }
+
+        /// <summary>
+        /// SPR2Frame.Decode deliberately discards PalData after decoding (SPR2.cs:480, gated
+        /// on the same IffFile.RETAIN_CHUNK_DATA flag) — a memory optimization that's correct
+        /// for the game client's read-only rendering path, which never needs it again, but
+        /// wrong here: SPR2FrameEncoder.WriteFrame indexes into PalData unconditionally, so a
+        /// decoded-then-rewritten frame needs it back. Flipping the global RETAIN_CHUNK_DATA
+        /// flag instead would work, but it's a process-wide static — a compile that races
+        /// against another compile (xunit parallelizes test collections by default) could
+        /// flip it mid-decode elsewhere. Reconstructing PalData locally from the now-decoded
+        /// PixelData against the frame's own copied palette needs no shared mutable state.
+        /// </summary>
+        private static void RestorePalData(SPR2Frame frame, IffFile target)
+        {
+            if (frame.PalData != null || frame.PixelData == null) return;
+
+            var palette = target.Get<PALT>(frame.PaletteID);
+            if (palette == null) return;
+
+            var indexByColor = new Dictionary<uint, byte>();
+            for (int i = 0; i < palette.Colors.Length; i++)
+            {
+                var key = PackRgb(palette.Colors[i]);
+                if (!indexByColor.ContainsKey(key)) indexByColor[key] = (byte)i; // first match wins; visually identical either way
+            }
+
+            var palData = new byte[frame.PixelData.Length];
+            for (int i = 0; i < frame.PixelData.Length; i++)
+            {
+                var px = frame.PixelData[i];
+                if (px.A == 0) { palData[i] = (byte)frame.TransparentColorIndex; continue; }
+                palData[i] = indexByColor.TryGetValue(PackRgb(px), out var idx) ? idx : (byte)frame.TransparentColorIndex;
+            }
+            frame.PalData = palData;
+        }
+
+        private static uint PackRgb(Color c) => ((uint)c.R << 16) | ((uint)c.G << 8) | c.B;
 
         private static int CopyChunks<T>(List<T> chunks, IffFile target) where T : IffChunk
         {
@@ -124,27 +200,6 @@ namespace FSO.PackCompiler
                 if (target.Get<T>(chunk.ChunkID) != null) continue;
                 target.AddChunk(chunk);
                 count++;
-
-                // Frames are read lazily (header only) by SPR2Frame.Read; PixelData/PalData/
-                // ZBufferData stay null until something forces a full decode, and — same as
-                // FSO.IDE, the other tool that reads a chunk and writes it back out — decoding
-                // with IffFile.RETAIN_CHUNK_DATA false throws PalData away right after decode
-                // (it's normally only needed transiently to build a texture). We need PalData
-                // to re-serialize the frame into the target .iff, so decode with retention on,
-                // scoped to just this call so we don't change decode behavior anywhere else.
-                if (chunk is SPR2 spr2)
-                {
-                    var prevRetain = IffFile.RETAIN_CHUNK_DATA;
-                    IffFile.RETAIN_CHUNK_DATA = true;
-                    try
-                    {
-                        foreach (var frame in spr2.Frames) frame.DecodeIfRequired(false);
-                    }
-                    finally
-                    {
-                        IffFile.RETAIN_CHUNK_DATA = prevRetain;
-                    }
-                }
             }
             return count;
         }

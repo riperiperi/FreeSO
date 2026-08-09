@@ -15,7 +15,7 @@
       "name": "Pet Rock",
       "price": 15,
       "category": "misc",
-      "appearance": { "clone_from_guid": "0x1BD3B7B6" },
+      "appearance": { "clone_from_guid": "0x1B97FFBC" },
       "tags": ["rock", "pet"],
       "attributes": ["naps_taken"],
       "interactions": [

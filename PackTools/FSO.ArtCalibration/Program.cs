@@ -85,6 +85,22 @@ namespace FSO.ArtCalibration
                 return;
             }
 
+            if (args.Length > 0 && args[0] == "decodepackdir")
+            {
+                var packDir = args.Length > 1 ? args[1] : throw new Exception("usage: decodepackdir <packDir> [outDir]");
+                var outDir = args.Length > 2 ? args[2] : Path.Combine(Path.GetTempPath(), "fso-decodepackdir");
+                DecodePackDir.Run(packDir, outDir);
+                return;
+            }
+
+            if (args.Length > 0 && args[0] == "genparts")
+            {
+                var outDir = args.Length > 1 ? args[1] : Path.Combine(Path.GetTempPath(), "fso-genparts");
+                FSO.PackCompiler.ArtGen.SimpleQuantizer.Install();
+                GenericPartsTest.Run(outDir);
+                return;
+            }
+
             if (args.Length > 0 && args[0] == "validatelighting")
             {
                 var gameDirLv = args.Length > 1 ? args[1] : defaultGameDir;

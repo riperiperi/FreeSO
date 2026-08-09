@@ -42,8 +42,14 @@ namespace FSO.PackCompiler
     /// <summary>appearance.generated: parametric art, in place of appearance.clone_from_guid.</summary>
     public class PackGeneratedAppearance
     {
-        public string Generator; // only "chair" exists so far
+        public string Generator; // "chair" | "table" | "bed" | "lamp" | "storage" | "sofa" | "primitives"
         public ChairGenerator.Params ChairParams;
+        public TableGenerator.Params TableParams;
+        public BedGenerator.Params BedParams;
+        public LampGenerator.Params LampParams;
+        public StorageGenerator.Params StorageParams;
+        public SofaGenerator.Params SofaParams;
+        public PartsGenerator.Params PartsParams;
     }
 
     public class PackInteraction

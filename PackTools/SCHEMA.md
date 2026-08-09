@@ -98,10 +98,116 @@ Design rules:
   }
   ```
 
-  - `generator`: name of the parametric generator to run. v0.1 supports `chair` only; unknown names are a compile error. `params` is optional — omitted fields fall back to the generator's defaults (shown above for `chair`).
+  - `generator`: name of the parametric generator to run — `chair`, `table`, `bed`, `lamp`, `storage`, or `primitives`; unknown names are a compile error. `params` is optional — omitted fields fall back to the generator's defaults (shown above for `chair`, below for the rest).
   - Dimensions are in world units (one lot tile = one unit); `*_color` fields are `[r, g, b]` integers 0-255. Unknown `params` fields and non-positive dimensions are compile errors — a zero or negative size produces a degenerate mesh with no error from the renderer itself, so the compiler catches it here.
-  - The compiler renders all 12 views (4 directions × 3 zoom levels), quantizes them to a palette, and assembles `DGRP`/`SPR2`/`PALT` chunks inline into the emitted `.iff`, same file-locality requirement as `clone_from_guid` above.
-- `attributes`: named per-instance storage; compiler assigns indices.
+  - The compiler renders all 12 views (4 directions × 3 zoom levels) for most generators, quantizes them to a palette, and assembles `DGRP`/`SPR2`/`PALT` chunks inline into the emitted `.iff`, same file-locality requirement as `clone_from_guid` above. `lamp` and a round-`table`/pedestal-base `table` are rotationally symmetric — no side of the object looks different from another — so the compiler renders only 3 unique frames (one per zoom level) and points all 4 direction entries in the `DGRP` at the same sprite, instead of rendering (and storing) the same silhouette 4 times.
+
+  **`table`** — rectangular slab on four tapered legs, or a round top on a single pedestal:
+  ```json
+  "generated": {
+    "generator": "table",
+    "params": {
+      "top_shape": "rectangular",
+      "base_style": "four_leg",
+      "top_width": 2.4,
+      "top_depth": 1.2,
+      "top_diameter": 1.6,
+      "top_thickness": 0.12,
+      "height": 1.15,
+      "leg_top_width": 0.16,
+      "leg_bottom_width": 0.10,
+      "pedestal_top_radius": 0.10,
+      "pedestal_base_radius": 0.32,
+      "wood_color": [110, 74, 44],
+      "top_color": [168, 140, 92]
+    }
+  }
+  ```
+  `top_shape` is `rectangular` or `round`; `base_style` is `four_leg` or `pedestal`. `top_width`/`top_depth` only apply when `top_shape` is `rectangular`; `top_diameter` only when `round`. `leg_top_width`/`leg_bottom_width` only apply when `base_style` is `four_leg`; `pedestal_top_radius`/`pedestal_base_radius` only when `pedestal`. `round` + `pedestal` together is the rotationally-symmetric case (see above).
+
+  **`bed`** — frame on tapered legs, mattress, headboard, optional footboard:
+  ```json
+  "generated": {
+    "generator": "bed",
+    "params": {
+      "mattress_width": 1.9,
+      "mattress_depth": 2.4,
+      "mattress_thickness": 0.28,
+      "frame_thickness": 0.14,
+      "leg_height": 0.22,
+      "leg_width": 0.14,
+      "headboard_height": 0.9,
+      "headboard_thickness": 0.12,
+      "footboard": false,
+      "footboard_height": 0.35,
+      "frame_color": [96, 68, 42],
+      "mattress_color": [232, 228, 216],
+      "headboard_color": [140, 108, 70]
+    }
+  }
+  ```
+  `footboard_height` is only checked (must be `> 0`) when `footboard` is `true`.
+
+  **`lamp`** — tapered foot, stem, tapered shade; always rotationally symmetric:
+  ```json
+  "generated": {
+    "generator": "lamp",
+    "params": {
+      "base_radius": 0.28,
+      "base_height": 0.09,
+      "stem_radius": 0.045,
+      "stem_height": 0.95,
+      "shade_bottom_radius": 0.32,
+      "shade_top_radius": 0.22,
+      "shade_height": 0.38,
+      "base_color": [70, 62, 54],
+      "shade_color": [222, 208, 178]
+    }
+  }
+  ```
+
+  **`storage`** — bookshelf (open shelf cavities) or dresser (solid carcass with proud drawer-front bands):
+  ```json
+  "generated": {
+    "generator": "storage",
+    "params": {
+      "kind": "bookshelf",
+      "width": 0.9,
+      "depth": 0.35,
+      "height": 1.8,
+      "sections": 4,
+      "panel_thickness": 0.055,
+      "leg_height": 0.06,
+      "carcass_color": [108, 76, 46],
+      "accent_color": [58, 50, 40]
+    }
+  }
+  ```
+  `kind` is `bookshelf` or `dresser` — proportions differ (a dresser is typically wide and low, e.g. `width: 1.2, depth: 0.5, height: 0.85`), but the same params apply to both; `sections` means shelf cavities for a bookshelf, drawer bands for a dresser. `leg_height` may be `0` (no feet); every other dimension must be `> 0`. `panel_thickness` has a real floor in practice, not just `> 0` — a value too small to cover a few pixels at Near zoom (roughly 30px/world-unit) renders as an invisible seam rather than a visible shelf board or drawer gap; the default is tuned to stay visible.
+
+  **`primitives`** — a general small-object generator for whimsical one-offs that don't fit a furniture category (a gnome, a pet rock, a wishing well): assembles a mesh from an author-supplied list of `box`/`cylinder`/`cone`/`sphere` parts instead of a fixed named parameter set. See `GENERIC-GENERATOR-DESIGN.md` for the design rationale.
+  ```json
+  "generated": {
+    "generator": "primitives",
+    "params": {
+      "symmetric": false,
+      "parts": [
+        { "type": "cone", "pos": [0, 0.95, 0], "size": [0.32, 0.4, 0], "color": [180, 40, 40] },
+        { "type": "sphere", "pos": [0, 0.60, 0], "size": [0.3, 0.3, 0.3], "color": [230, 195, 150] },
+        { "type": "cylinder", "pos": [0, 0.28, 0], "size": [0.28, 0.55, 0.22], "color": [40, 80, 160] }
+      ]
+    }
+  }
+  ```
+  - Every part's `pos` is its geometric **center**, regardless of `type` — including `cylinder`/`cone`, which are otherwise base-centered at the primitive level. One uniform placement rule across all four types.
+  - `size` semantics differ per type: `box` is `[width, height, depth]`; `cylinder` is `[radius_bottom, height, radius_top]`; `cone` is `[radius_bottom, height, _unused]` (radius_top is forced to 0 — the third value is ignored, but the array must still have 3 entries); `sphere` is `[radius_x, radius_y, radius_z]` (an ellipsoid — equal values give a true sphere).
+  - `symmetric: true` is only correct when every part is centered on the vertical (Y) axis — the compiler does not verify this geometrically, it trusts the flag. Setting it on an object that isn't actually rotationally symmetric (e.g. anything with an off-axis part) silently renders the same single-angle view from all 4 directions, which is wrong for that object, not just a missed optimization.
+  - At least one part is required; an unknown `type`, a missing `pos`/`size` array of the wrong length, or a non-positive size component (in the dimensions that type actually uses) is a compile error. There is no enforced cap on part count — more than a handful rarely helps, since detail beyond silhouette/proportion/color doesn't survive TSO's render scale anyway (see `ART-PIPELINE-DESIGN.md`), but nothing stops you from trying.
+- `attributes`: named per-instance storage; compiler assigns indices. If the object declares no `entry_points.init` and no tree named `init`, the compiler **generates one** that zeroes every declared attribute — don't hand-write it.
+- **Boilerplate you no longer author.** Three things every pack used to write by hand are now supplied by the compiler. All three only ever *add*: name your own and yours wins.
+  - **`main_loop`** — omit `entry_points.main` and a standard `idle_for_input` loop is generated.
+  - **`init`** — omit it and attribute-zeroing is generated (above).
+  - **An always-true `test` tree** — omit an interaction's `test` entirely and it is always allowed. Writing a tree whose body is `1 == 1` is pure waste; it was never required.
 - `strings`: string tables by chunk role; ids are 1-based (0 = none) per engine convention.
 - `interactions` → TTAB/TTAs entries; `action`/`test` reference tree names.
 

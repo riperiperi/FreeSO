@@ -1,0 +1,197 @@
+{
+  "schema": "fso-pack/0.1",
+  "engine": "tso",
+  "pack": {
+    "id": "midcentury-collection",
+    "name": "Mid-Century Collection",
+    "author": "kat",
+    "version": "1.0.0",
+    "description": "A coherent five-piece furniture line: dining chair, armchair, sofa, coffee table, side table. One wood tone, one upholstery color, one leg profile, real furniture proportions (1 world unit = 1 foot, derived from ART-PIPELINE-CALIBRATION.md's floor-tile scale) — not five unrelated generated objects. Wood/upholstery colors deliberately separated in lightness/saturation (dark walnut vs. lighter saturated rust), not just hue — a first pass with both colors mid-toned rendered as a visually flat, nearly monotone silhouette once shaded."
+  },
+  "objects": [
+    {
+      "id": "midcentury_dining_chair",
+      "guid": "0x6B4F1001",
+      "name": "Midcentury Dining Chair",
+      "price": 90,
+      "category": "seating",
+      "tags": ["midcentury", "chair", "dining"],
+      "appearance": {
+        "generated": {
+          "generator": "chair",
+          "params": {
+            "seat_width": 1.5,
+            "seat_depth": 1.42,
+            "seat_height": 1.5,
+            "seat_thickness": 0.15,
+            "back_height": 1.17,
+            "back_thickness": 0.12,
+            "back_angle_deg": 10,
+            "leg_top_width": 0.146,
+            "leg_bottom_width": 0.104,
+            "arms": false,
+            "wood_color": [88, 56, 32],
+            "upholstery_color": [204, 128, 74]
+          }
+        }
+      },
+      "trees": {
+        "main_loop": {
+          "args": [], "locals": [],
+          "nodes": [
+            { "id": "idle", "prim": "idle_for_input", "ticks_param": 0, "allow_push": true, "then": "idle", "else": "idle" }
+          ]
+        }
+      },
+      "entry_points": { "main": "main_loop" }
+    },
+    {
+      "id": "midcentury_armchair",
+      "guid": "0x6B4F1002",
+      "name": "Midcentury Armchair",
+      "price": 220,
+      "category": "seating",
+      "tags": ["midcentury", "chair", "lounge"],
+      "appearance": {
+        "generated": {
+          "generator": "chair",
+          "params": {
+            "seat_width": 2.83,
+            "seat_depth": 3.0,
+            "seat_height": 1.42,
+            "seat_thickness": 0.18,
+            "back_height": 1.3,
+            "back_thickness": 0.15,
+            "back_angle_deg": 12,
+            "leg_top_width": 0.146,
+            "leg_bottom_width": 0.104,
+            "arms": true,
+            "arm_height": 0.58,
+            "arm_thickness": 0.25,
+            "wood_color": [88, 56, 32],
+            "upholstery_color": [204, 128, 74]
+          }
+        }
+      },
+      "trees": {
+        "main_loop": {
+          "args": [], "locals": [],
+          "nodes": [
+            { "id": "idle", "prim": "idle_for_input", "ticks_param": 0, "allow_push": true, "then": "idle", "else": "idle" }
+          ]
+        }
+      },
+      "entry_points": { "main": "main_loop" }
+    },
+    {
+      "id": "midcentury_sofa",
+      "guid": "0x6B4F1003",
+      "name": "Midcentury Sofa",
+      "price": 480,
+      "category": "seating",
+      "tags": ["midcentury", "sofa"],
+      "appearance": {
+        "generated": {
+          "generator": "sofa",
+          "params": {
+            "width": 6.5,
+            "seat_depth": 3.17,
+            "seat_height": 1.46,
+            "seat_thickness": 0.2,
+            "cushion_count": 3,
+            "back_height": 2.6,
+            "back_thickness": 0.55,
+            "back_angle_deg": 8,
+            "back_cap_height": 0.2,
+            "arm_width": 1.05,
+            "arm_height": 1.5,
+            "arm_cap_height": 0.16,
+            "leg_height": 0.2,
+            "leg_width": 0.146,
+            "wood_color": [88, 56, 32],
+            "upholstery_color": [204, 128, 74],
+            "seam_color": [158, 96, 54]
+          }
+        }
+      },
+      "trees": {
+        "main_loop": {
+          "args": [], "locals": [],
+          "nodes": [
+            { "id": "idle", "prim": "idle_for_input", "ticks_param": 0, "allow_push": true, "then": "idle", "else": "idle" }
+          ]
+        }
+      },
+      "entry_points": { "main": "main_loop" }
+    },
+    {
+      "id": "midcentury_coffee_table",
+      "guid": "0x6B4F1004",
+      "name": "Midcentury Coffee Table",
+      "price": 140,
+      "category": "surfaces",
+      "tags": ["midcentury", "table", "coffee"],
+      "appearance": {
+        "generated": {
+          "generator": "table",
+          "params": {
+            "top_shape": "rectangular",
+            "base_style": "four_leg",
+            "top_width": 3.67,
+            "top_depth": 2.0,
+            "top_thickness": 0.104,
+            "height": 1.5,
+            "leg_top_width": 0.146,
+            "leg_bottom_width": 0.104,
+            "wood_color": [88, 56, 32],
+            "top_color": [178, 132, 84]
+          }
+        }
+      },
+      "trees": {
+        "main_loop": {
+          "args": [], "locals": [],
+          "nodes": [
+            { "id": "idle", "prim": "idle_for_input", "ticks_param": 0, "allow_push": true, "then": "idle", "else": "idle" }
+          ]
+        }
+      },
+      "entry_points": { "main": "main_loop" }
+    },
+    {
+      "id": "midcentury_side_table",
+      "guid": "0x6B4F1005",
+      "name": "Midcentury Side Table",
+      "price": 95,
+      "category": "surfaces",
+      "tags": ["midcentury", "table", "side"],
+      "appearance": {
+        "generated": {
+          "generator": "table",
+          "params": {
+            "top_shape": "round",
+            "base_style": "tripod",
+            "top_diameter": 1.3,
+            "top_thickness": 0.11,
+            "height": 1.83,
+            "leg_top_width": 0.1,
+            "leg_bottom_width": 0.13,
+            "tripod_top_radius": 0.06,
+            "tripod_bottom_radius": 0.55,
+            "wood_color": [88, 56, 32],
+            "top_color": [178, 132, 84]
+          }
+        }
+      },
+      "trees": {
+        "main_loop": {
+          "args": [], "locals": [],
+          "nodes": [
+            { "id": "idle", "prim": "idle_for_input", "ticks_param": 0, "allow_push": true, "then": "idle", "else": "idle" }
+          ]
+        }
+      },
+      "entry_points": { "main": "main_loop" }
+    }
+  ]
+}

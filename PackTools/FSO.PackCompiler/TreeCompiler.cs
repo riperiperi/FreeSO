@@ -78,6 +78,19 @@ namespace FSO.PackCompiler
                 case "error": return POINTER_ERROR;
             }
             if (NodeIndex.TryGetValue(target, out var idx)) return idx;
+
+            // Authoring agents write "true"/"false" for "return true"/"return false" far more
+            // often than any other mistake — it was the single most repeated error across a
+            // measured run, four times in one build, despite the message below naming the
+            // valid values. Repeating a mistake that the error already explains is an
+            // affordance problem, not a diagnostics one, so accept the shorthand. Checked
+            // after NodeIndex so a node actually named "true" still wins.
+            switch (target)
+            {
+                case "true": return POINTER_RETURN_TRUE;
+                case "false": return POINTER_RETURN_FALSE;
+            }
+
             D.Error(path, "unresolved label \"" + target + "\" (not a node id in this tree, and not \"return true\"/\"return false\"/\"error\")");
             return POINTER_ERROR;
         }

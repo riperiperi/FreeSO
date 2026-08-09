@@ -410,6 +410,13 @@ namespace FSO.ModServer.Tests
             Assert.True(((JArray)result["trace"]).Count > 0);
             Assert.True((int)result["final_state"]["sim_motive_social"] >= 10);
 
+            // AllowedHeightFlags bit 0 unset makes every compiler-built object unplaceable
+            // ("Must place on floor tile") and renders it floating — a bug the suite was
+            // structurally blind to, since nothing else calls VMContext.GetObjPlace, the exact
+            // check Buy Mode runs. Verified by actually placing the object through the real
+            // engine path, not by inspecting the compiled bytecode.
+            Assert.Equal("Success", (string)result["placement_status"]);
+
             var assertion = (JObject)result["assertions"][0];
             Assert.True((bool)assertion["passed"]);
         }
@@ -545,6 +552,165 @@ namespace FSO.ModServer.Tests
         }
     }
 
+    public class NonDestructiveRecoveryTests
+    {
+        // A model that duplicated one interaction reached for add_object to recover, which
+        // silently wiped the object's trees and dialog — 11x the cost of a successful build
+        // and no object. The destructive path was the only recovery available.
+        private const string Gossip = "{\"name\":\"Gossip\",\"action\":\"a\",\"test\":\"t\"}";
+
+        private static string BuiltObject()
+        {
+            var pack = JObject.FromObject(PackToolHandlers.CreatePack("p", "P"));
+            var id = (string)pack["pack_session_id"];
+            PackToolHandlers.AddObject(id, "obj", "Obj", category: "misc", cloneFromGuid: "0xC14849AC");
+            PackToolHandlers.AddTree(id, "obj", "main", "", "",
+                "[{\"id\":\"idle\",\"prim\":\"idle_for_input\",\"ticks_param\":0,\"allow_push\":true,\"then\":\"idle\",\"else\":\"idle\"}]");
+            PackToolHandlers.SetDialogString(id, "obj", 1, "hello");
+            PackToolHandlers.AddInteraction(id, "obj", Gossip);
+            return id;
+        }
+
+        [Fact]
+        public void DuplicateInteraction_IsRejectedWithTheCheapRemedy()
+        {
+            var sessionId = BuiltObject();
+            var result = JObject.FromObject(PackToolHandlers.AddInteraction(sessionId, "obj", Gossip));
+
+            Assert.False((bool)result["ok"]);
+            Assert.Equal("duplicate_interaction_name", (string)result["errors"][0]["code"]);
+            // Must point at the one-call fix, not leave rebuilding as the obvious way out.
+            Assert.Contains("replace=true", (string)result["errors"][0]["message"]);
+        }
+
+        [Fact]
+        public void DuplicateInteraction_WithReplace_OverwritesJustThatOne()
+        {
+            var sessionId = BuiltObject();
+            var result = JObject.FromObject(PackToolHandlers.AddInteraction(sessionId, "obj",
+                "{\"name\":\"Gossip\",\"action\":\"b\",\"test\":\"t\"}", replace: true));
+
+            Assert.True((bool)result["ok"], result.ToString());
+            var pack = JObject.FromObject(PackToolHandlers.ReadPack(sessionId));
+            var obj = pack["pack"]["objects"][0];
+            Assert.Single((JArray)obj["interactions"]);
+            Assert.Equal("b", (string)obj["interactions"][0]["action"]);
+            Assert.NotEmpty((JObject)obj["trees"]);   // nothing else lost
+        }
+
+        [Fact]
+        public void ReAddingABuiltObject_IsRefusedAndLosesNothing()
+        {
+            var sessionId = BuiltObject();
+            var result = JObject.FromObject(PackToolHandlers.AddObject(sessionId, "obj", "Obj", category: "misc"));
+
+            Assert.False((bool)result["ok"]);
+            Assert.Equal("object_already_built", (string)result["errors"][0]["code"]);
+
+            var pack = JObject.FromObject(PackToolHandlers.ReadPack(sessionId));
+            var obj = pack["pack"]["objects"][0];
+            Assert.NotEmpty((JObject)obj["trees"]);
+            Assert.Single((JArray)obj["interactions"]);
+            Assert.NotEmpty((JObject)obj["strings"]["dialog"]);
+        }
+
+        [Fact]
+        public void ReAddingWithReplace_StartsOverDeliberately()
+        {
+            var sessionId = BuiltObject();
+            var result = JObject.FromObject(PackToolHandlers.AddObject(sessionId, "obj", "Obj",
+                category: "misc", replace: true));
+
+            Assert.True((bool)result["ok"], result.ToString());
+            var pack = JObject.FromObject(PackToolHandlers.ReadPack(sessionId));
+            Assert.Empty((JObject)pack["pack"]["objects"][0]["trees"]);
+        }
+
+        [Fact]
+        public void AddingAFreshObject_IsUnaffected()
+        {
+            var pack = JObject.FromObject(PackToolHandlers.CreatePack("p", "P"));
+            var id = (string)pack["pack_session_id"];
+            var first = JObject.FromObject(PackToolHandlers.AddObject(id, "obj", "Obj", category: "misc"));
+            Assert.True((bool)first["ok"]);
+
+            // Re-adding a bare stub is still allowed — nothing to lose.
+            var again = JObject.FromObject(PackToolHandlers.AddObject(id, "obj", "Obj2", category: "misc"));
+            Assert.True((bool)again["ok"], again.ToString());
+        }
+    }
+
+    public class AddTreeWithNodesTests
+    {
+        private static string NewSessionWithObject()
+        {
+            var pack = JObject.FromObject(PackToolHandlers.CreatePack("p", "P"));
+            var id = (string)pack["pack_session_id"];
+            PackToolHandlers.AddObject(id, "obj", "Obj", category: "misc", cloneFromGuid: "0xC14849AC");
+            return id;
+        }
+
+        private const string TwoNodes =
+            "[{\"id\":\"a\",\"prim\":\"idle_for_input\",\"ticks_param\":0,\"allow_push\":true,\"then\":\"b\",\"else\":\"b\"}," +
+            "{\"id\":\"b\",\"prim\":\"idle_for_input\",\"ticks_param\":0,\"allow_push\":true,\"then\":\"a\",\"else\":\"a\"}]";
+
+        [Fact]
+        public void NodesArriveWithTheTree()
+        {
+            // The whole point: one call per tree instead of one per node. Authoring a trivial
+            // object previously cost ~20 calls against a 25-turn cap, which is why builds ran
+            // out of budget before they could validate anything.
+            var sessionId = NewSessionWithObject();
+            var result = JObject.FromObject(PackToolHandlers.AddTree(sessionId, "obj", "main", "", "", TwoNodes));
+
+            Assert.True((bool)result["ok"], result.ToString());
+            Assert.Equal(2, (int)result["node_count"]);
+
+            var pack = JObject.FromObject(PackToolHandlers.ReadPack(sessionId));
+            var nodes = (JArray)pack["pack"]["objects"][0]["trees"]["main"]["nodes"];
+            Assert.Equal(2, nodes.Count);
+            Assert.Equal("a", (string)nodes[0]["id"]);
+        }
+
+        [Fact]
+        public void OmittingNodesStillDeclaresAnEmptyTree()
+        {
+            var sessionId = NewSessionWithObject();
+            var result = JObject.FromObject(PackToolHandlers.AddTree(sessionId, "obj", "main"));
+
+            Assert.True((bool)result["ok"], result.ToString());
+            Assert.Equal(0, (int)result["node_count"]);
+        }
+
+        [Fact]
+        public void MalformedNodesJson_IsRejected()
+        {
+            var sessionId = NewSessionWithObject();
+            var result = JObject.FromObject(PackToolHandlers.AddTree(sessionId, "obj", "main", "", "", "[{\"id\":"));
+            Assert.False((bool)result["ok"]);
+            Assert.Equal("invalid_json", (string)result["errors"][0]["code"]);
+        }
+
+        [Fact]
+        public void NodeWithoutId_IsRejectedLoudly()
+        {
+            var sessionId = NewSessionWithObject();
+            var result = JObject.FromObject(PackToolHandlers.AddTree(sessionId, "obj", "main", "", "",
+                "[{\"prim\":\"idle_for_input\"}]"));
+            Assert.False((bool)result["ok"]);
+            Assert.Equal("missing_required_field", (string)result["errors"][0]["code"]);
+        }
+
+        [Fact]
+        public void NonObjectNode_IsRejectedLoudly()
+        {
+            var sessionId = NewSessionWithObject();
+            var result = JObject.FromObject(PackToolHandlers.AddTree(sessionId, "obj", "main", "", "", "[\"a\"]"));
+            Assert.False((bool)result["ok"]);
+            Assert.Equal("invalid_field_value", (string)result["errors"][0]["code"]);
+        }
+    }
+
     public class FindBaseObjectTests
     {
         // The game content isn't present on every machine (CI has no TSO install), so the
@@ -605,6 +771,30 @@ namespace FSO.ModServer.Tests
             var result = JObject.FromObject(PackToolHandlers.FindBaseObject("chair", 3));
             Assert.True((bool)result["ok"], result.ToString());
             Assert.Equal(3, ((JArray)result["candidates"]).Count);
+        }
+
+        [Fact]
+        public void UnclonableCandidate_IsDroppedRatherThanReturned()
+        {
+            if (!HasGameContent) return;
+
+            // Fountain - Rock (0x1BD3B7B6, file "fountainrock") is a real base-game object-
+            // table entry whose .iff has BaseGraphicID == 0 — no draw group. Cloning it
+            // compiles clean and renders nothing, the exact failure this tool exists to
+            // prevent. It must never come back as a candidate.
+            var result = JObject.FromObject(PackToolHandlers.FindBaseObject("fountain rock"));
+
+            if (!(bool)result["ok"])
+            {
+                // Every match for this query was unclonable — still a pass, and the message
+                // must say so rather than reading like an ordinary no-match miss.
+                Assert.Equal("no_base_object_match", (string)result["errors"][0]["code"]);
+                Assert.Contains("no drawable appearance", (string)result["errors"][0]["message"]);
+                return;
+            }
+
+            var candidates = (JArray)result["candidates"];
+            Assert.DoesNotContain(candidates, c => (string)c["guid"] == "0x1BD3B7B6");
         }
 
         [Fact]

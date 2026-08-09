@@ -71,7 +71,20 @@ namespace FSO.PackCompiler
             var allBhavs = iff.List<BHAV>() ?? new List<BHAV>();
             foreach (var b in allBhavs.Where(x => x.ChunkID < PackBuilder.PRIVATE_TREE_BASE))
                 D.Error(iffPath, "BHAV " + b.ChunkID + " is not a private tree (< 4096); not representable in pack JSON");
-            var bhavs = allBhavs.Where(x => x.ChunkID >= PackBuilder.PRIVATE_TREE_BASE).OrderBy(x => x.ChunkID).ToList();
+
+            // PackBuilder.BuildPlacementInitTree always wires BHAV_Init to a compiler-owned
+            // tree (labeled "__placement_init") that sets AllowedHeightFlags then calls the
+            // pack's real init tree, if any — see that method for why. It's not user content:
+            // decompiling it as an ordinary tree would round-trip it back in as one on
+            // recompile, which then collides with a freshly synthesized one at the next id
+            // (PackBuilder assumed no user tree could already be named "__placement_init").
+            var placementInitBhav = objd.BHAV_Init != 0 ? iff.Get<BHAV>(objd.BHAV_Init) : null;
+            var isSyntheticPlacementInit = placementInitBhav?.ChunkLabel == "__placement_init";
+
+            var bhavs = allBhavs
+                .Where(x => x.ChunkID >= PackBuilder.PRIVATE_TREE_BASE)
+                .Where(x => !isSyntheticPlacementInit || x.ChunkID != placementInitBhav.ChunkID)
+                .OrderBy(x => x.ChunkID).ToList();
             if (bhavs.Count == 0) D.Error(iffPath, "no private BHAV chunks (a pack object needs at least one tree)");
 
             TreeNames = new Dictionary<ushort, string>();
@@ -95,14 +108,27 @@ namespace FSO.PackCompiler
             };
             if (objd.Price != 0) objJson["price"] = objd.Price;
 
-            // The original appearance.clone_from_guid/generated choice isn't stored anywhere
-            // recoverable from the emitted .iff (BaseGraphicID points at copied/rendered
-            // chunks, not at the source GUID or generator that produced them) — same
-            // can't-recover situation as attribute names below. Substitute a placeholder
-            // generator so the decompiled pack still compiles (appearance is now required),
-            // and warn so nobody mistakes the placeholder for the real appearance.
-            objJson["appearance"] = new JObject { ["generated"] = new JObject { ["generator"] = "chair" } };
-            D.Warn(iffPath, "original appearance could not be recovered from the .iff; substituted a placeholder appearance.generated (chair) — replace it by hand");
+            // The original appearance.clone_from_guid/generated choice isn't recoverable from
+            // BaseGraphicID/the rendered chunks themselves (those point at copied/rendered
+            // data, not at the source GUID or generator that produced it) — but objects built
+            // after provenance tracking landed carry it separately, in a reserved STR# chunk
+            // (see AppearanceProvenance). Prefer that; only fall back to a placeholder for
+            // .iffs that predate it.
+            var provenance = AppearanceProvenance.Read(iff);
+            if (provenance != null)
+            {
+                objJson["appearance"] = provenance;
+            }
+            else
+            {
+                // Same can't-recover situation as attribute names below. Substitute a
+                // placeholder generator so the decompiled pack still compiles (appearance is
+                // now required), and warn so nobody mistakes the placeholder for the real
+                // appearance — this .iff simply predates provenance tracking, this isn't a
+                // recovery failure on a newer object.
+                objJson["appearance"] = new JObject { ["generated"] = new JObject { ["generator"] = "chair" } };
+                D.Warn(iffPath, "this .iff predates appearance provenance tracking, so the original appearance.clone_from_guid/generated choice isn't recoverable; substituted a placeholder appearance.generated (chair) — replace it by hand");
+            }
 
             if (objd.NumAttributes > 0)
             {
@@ -145,7 +171,19 @@ namespace FSO.PackCompiler
 
             var entry = new JObject();
             if (objd.BHAV_MainID != 0) entry["main"] = EntryName(objd.BHAV_MainID, iffPath + " OBJD BHAV_MainID");
-            if (objd.BHAV_Init != 0) entry["init"] = EntryName(objd.BHAV_Init, iffPath + " OBJD BHAV_Init");
+            if (isSyntheticPlacementInit)
+            {
+                // The synthetic tree's second instruction (if present) is the private-tree-call
+                // to the pack's real init — its opcode IS that tree's chunk id, per CompileCall.
+                // No second instruction means the pack never declared its own init tree.
+                if (placementInitBhav.Instructions.Length > 1)
+                {
+                    var callToUserInit = placementInitBhav.Instructions[1].Opcode;
+                    if (callToUserInit >= PackBuilder.PRIVATE_TREE_BASE)
+                        entry["init"] = EntryName(callToUserInit, iffPath + " OBJD BHAV_Init (via __placement_init)");
+                }
+            }
+            else if (objd.BHAV_Init != 0) entry["init"] = EntryName(objd.BHAV_Init, iffPath + " OBJD BHAV_Init");
             if (entry.Count > 0) objJson["entry_points"] = entry;
 
             return new JObject

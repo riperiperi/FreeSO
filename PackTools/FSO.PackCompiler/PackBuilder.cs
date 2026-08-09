@@ -5,6 +5,7 @@ using FSO.Files.Formats.IFF;
 using FSO.Files.Formats.IFF.Chunks;
 using FSO.PackCompiler.ArtGen;
 using Newtonsoft.Json;
+using Newtonsoft.Json.Linq;
 
 namespace FSO.PackCompiler
 {
@@ -28,6 +29,13 @@ namespace FSO.PackCompiler
         // Base game content dir, or null. When null, appearance.clone_from_guid stays a
         // recorded note (no sprites) exactly as before — so compiling without a TSO install
         // keeps working.
+        //
+        // NOT the same directory as Install(pack, gameDir)'s "gameDir" parameter below, despite
+        // the matching name — this field is the SPRITE SOURCE (e.g. ~/Library/Application
+        // Support/The Sims Online/TSOClient), Install's parameter is the INSTALL TARGET (e.g.
+        // /Applications/FreeSO.app/Contents/MacOS/Content, where the .iff gets written). Mixing
+        // these up is the exact trap that let objects install silently invisible before Install()
+        // started checking ObjectReport.GraphicsMissing.
         private readonly string GameDir;
 
         public PackBuilder(Diagnostics d, string gameDir = null)
@@ -56,9 +64,34 @@ namespace FSO.PackCompiler
         /// Compiles the pack, copies the iffs into {gameDir}/Objects/ and upserts the
         /// objects' Buy Mode entries into {gameDir}/Objects/catalog_downloads.xml.
         /// </summary>
+        /// <param name="gameDir">The INSTALL TARGET — where the .iff and catalog_downloads.xml
+        /// get written (e.g. /Applications/FreeSO.app/Contents/MacOS/Content). NOT the same
+        /// directory as this class's GameDir field, which is the SPRITE SOURCE passed to the
+        /// constructor. Same word, two different directories — see GameDir's declaration.</param>
         public BuildReport Install(PackFile pack, string gameDir)
         {
             var report = Compile(pack, out var built);
+
+            // Install() means "deploy into an actual game" — unlike Build()/Validate(), there
+            // is no legitimate reason to install an object that will render as invisible, so
+            // GraphicsMissing (a soft Note everywhere else) becomes a hard error here, BEFORE
+            // anything is written. Naming both directories explicitly because they are easy to
+            // confuse: gameDir (this method's parameter — the INSTALL TARGET, where the .iff
+            // and catalog_downloads.xml get written, e.g. /Applications/FreeSO.app/Contents/
+            // MacOS/Content) is a different directory from this PackBuilder's GameDir field
+            // (the SPRITE SOURCE passed to the constructor, e.g. ~/Library/Application
+            // Support/The Sims Online/TSOClient, where clone_from_guid reads sprites FROM).
+            foreach (var obj in report.Objects)
+            {
+                if (obj.GraphicsMissing)
+                {
+                    D.Error(obj.Id,
+                        "install would deploy an object with no cloned sprites — it renders as invisible in Buy Mode. " +
+                        (GameDir == null
+                            ? "No sprite-source directory (the base game/TSO content install, e.g. ~/Library/Application Support/The Sims Online/TSOClient — NOT the install target " + gameDir + ") was supplied. Pass --tso-dir <dir>."
+                            : "A sprite-source directory (" + GameDir + ") was supplied but the clone copied zero graphics — this is a bug in AppearanceCloner, not a missing directory."));
+                }
+            }
 
             if (!D.HasErrors)
             {
@@ -114,6 +147,7 @@ namespace FSO.PackCompiler
             if (obj.CloneFromGuid != null && GameDir == null)
             {
                 objReport.Notes.Add("appearance.clone_from_guid recorded only: no base game content directory was supplied at compile time, so no sprites were copied — this object will be INVISIBLE in the game client");
+                objReport.GraphicsMissing = true;
             }
 
             // tree ids, in declaration order
@@ -142,6 +176,19 @@ namespace FSO.PackCompiler
                 compiled.Add((tree, compiler.Compile(tree)));
             }
 
+            // Every object needs AllowedHeightFlags bit 0 set (my_object[4] = 1) to be placeable
+            // at all — without it, VMContext.GetObjPlace (tso.simantics/VMContext.cs) reports
+            // "Must place on floor tile" and UIObjectHolder renders the object floating a level
+            // up, on every object we compile. Base-game objects get this from a semiglobal
+            // routine that runs before their own init logic; nothing wires our compiled objects
+            // into that inheritance, so it's never set. Rather than chase down and decompile
+            // that semiglobal, set it directly: a synthetic tree that runs first, sets the flag,
+            // then calls the pack's own init tree (if any) so authored init logic still runs.
+            var placementInitId = (ushort)(PRIVATE_TREE_BASE + obj.Trees.Count);
+            treeIds["__placement_init"] = placementInitId;
+            var placementInitTree = BuildPlacementInitTree(obj);
+            compiled.Add((placementInitTree, compiler.Compile(placementInitTree)));
+
             if (D.HasErrors) return (objReport, null); // refuse to emit on any error
 
             var iff = new IffFile();
@@ -158,7 +205,9 @@ namespace FSO.PackCompiler
             objd.SubIndex = -1;
             if (obj.Interactions.Count > 0) objd.TreeTableID = TTAB_ID;
             if (obj.EntryMain != null) objd.BHAV_MainID = treeIds[obj.EntryMain];
-            if (obj.EntryInit != null) objd.BHAV_Init = treeIds[obj.EntryInit];
+            // Always the synthetic placement-flags tree, never obj.EntryInit directly — see its
+            // construction above. It calls obj.EntryInit itself when the pack declares one.
+            objd.BHAV_Init = placementInitId;
 
             // Appearance: copy the source object's draw groups + sprites inline. Must happen
             // into this same IffFile — DGRP.GetTexture resolves its SPR2 through the chunk's
@@ -172,6 +221,16 @@ namespace FSO.PackCompiler
                     objd.BaseGraphicID = clone.BaseGraphicID;
                     objd.NumGraphics = clone.NumGraphics;
                     objReport.Notes.Add($"appearance cloned from \"{clone.SourceFile}\": {clone.DrawGroupsCopied} draw groups, {clone.SpritesCopied} sprites, {clone.PalettesCopied} palettes (BaseGraphicID={clone.BaseGraphicID}, NumGraphics={clone.NumGraphics})");
+                    if (clone.DrawGroupsCopied == 0 || clone.SpritesCopied == 0)
+                    {
+                        // A game content directory was supplied and the source GUID resolved, but
+                        // nothing was actually copied — "cloned nothing" is never a success, even
+                        // though clone.Ok is true here. Distinct from the no-GameDir case above,
+                        // which is an intentional, documented headless-testing mode; this is a bug.
+                        objReport.GraphicsMissing = true;
+                        D.Error($"$.objects[{obj.Id}].appearance.clone_from_guid",
+                            $"a game content directory was supplied and GUID {objReport.CloneFromGuid} resolved, but the clone copied {clone.DrawGroupsCopied} draw groups and {clone.SpritesCopied} sprites — the object would be invisible despite content being available; this indicates a bug in AppearanceCloner, not a missing directory");
+                    }
                 }
             }
 
@@ -185,6 +244,55 @@ namespace FSO.PackCompiler
                 var rendered = SpriteAssembler.RenderAllFrames(mesh);
                 SpriteAssembler.AddAppearanceChunks(iff, objd, obj.Name, GENERATED_APPEARANCE_ID, rendered);
                 objReport.Notes.Add($"appearance generated by \"chair\" generator: {rendered.Count} frames assembled (BaseGraphicID={objd.BaseGraphicID}, NumGraphics={objd.NumGraphics})");
+            }
+            else if (obj.Generated != null && obj.Generated.Generator == "table")
+            {
+                var tp = obj.Generated.TableParams;
+                var mesh = TableGenerator.Build(tp);
+                var rendered = TableGenerator.IsRotationallySymmetric(tp)
+                    ? SymmetricAssembler.RenderSymmetricFrames(mesh)
+                    : SpriteAssembler.RenderAllFrames(mesh);
+                SpriteAssembler.AddAppearanceChunks(iff, objd, obj.Name, GENERATED_APPEARANCE_ID, rendered);
+                objReport.Notes.Add($"appearance generated by \"table\" generator: {rendered.Count} frames assembled (BaseGraphicID={objd.BaseGraphicID}, NumGraphics={objd.NumGraphics})");
+            }
+            else if (obj.Generated != null && obj.Generated.Generator == "bed")
+            {
+                var mesh = BedGenerator.Build(obj.Generated.BedParams);
+                var rendered = SpriteAssembler.RenderAllFrames(mesh);
+                SpriteAssembler.AddAppearanceChunks(iff, objd, obj.Name, GENERATED_APPEARANCE_ID, rendered);
+                objReport.Notes.Add($"appearance generated by \"bed\" generator: {rendered.Count} frames assembled (BaseGraphicID={objd.BaseGraphicID}, NumGraphics={objd.NumGraphics})");
+            }
+            else if (obj.Generated != null && obj.Generated.Generator == "lamp")
+            {
+                // Always rotationally symmetric — see LampGenerator's class remarks.
+                var mesh = LampGenerator.Build(obj.Generated.LampParams);
+                var rendered = SymmetricAssembler.RenderSymmetricFrames(mesh);
+                SpriteAssembler.AddAppearanceChunks(iff, objd, obj.Name, GENERATED_APPEARANCE_ID, rendered);
+                objReport.Notes.Add($"appearance generated by \"lamp\" generator: {rendered.Count} frames assembled (BaseGraphicID={objd.BaseGraphicID}, NumGraphics={objd.NumGraphics})");
+            }
+            else if (obj.Generated != null && obj.Generated.Generator == "storage")
+            {
+                var mesh = StorageGenerator.Build(obj.Generated.StorageParams);
+                var rendered = SpriteAssembler.RenderAllFrames(mesh);
+                SpriteAssembler.AddAppearanceChunks(iff, objd, obj.Name, GENERATED_APPEARANCE_ID, rendered);
+                objReport.Notes.Add($"appearance generated by \"storage\" generator: {rendered.Count} frames assembled (BaseGraphicID={objd.BaseGraphicID}, NumGraphics={objd.NumGraphics})");
+            }
+            else if (obj.Generated != null && obj.Generated.Generator == "sofa")
+            {
+                var mesh = SofaGenerator.Build(obj.Generated.SofaParams);
+                var rendered = SpriteAssembler.RenderAllFrames(mesh);
+                SpriteAssembler.AddAppearanceChunks(iff, objd, obj.Name, GENERATED_APPEARANCE_ID, rendered);
+                objReport.Notes.Add($"appearance generated by \"sofa\" generator: {rendered.Count} frames assembled (BaseGraphicID={objd.BaseGraphicID}, NumGraphics={objd.NumGraphics})");
+            }
+            else if (obj.Generated != null && obj.Generated.Generator == "primitives")
+            {
+                var pp = obj.Generated.PartsParams;
+                var mesh = PartsGenerator.Build(pp);
+                var rendered = pp.Symmetric
+                    ? SymmetricAssembler.RenderSymmetricFrames(mesh)
+                    : SpriteAssembler.RenderAllFrames(mesh);
+                SpriteAssembler.AddAppearanceChunks(iff, objd, obj.Name, GENERATED_APPEARANCE_ID, rendered);
+                objReport.Notes.Add($"appearance generated by \"primitives\" generator: {rendered.Count} frames assembled (BaseGraphicID={objd.BaseGraphicID}, NumGraphics={objd.NumGraphics})");
             }
 
             // BHAVs
@@ -234,6 +342,53 @@ namespace FSO.PackCompiler
             SetStrings(anim, new[] { "" });
 
             return (objReport, iff);
+        }
+
+        // Builds a compiler-owned tree (not authored in pack JSON, so there's no PackParser
+        // path that produces one of these) that sets AllowedHeightFlags (my_object scope,
+        // index 4 = VMStackObjectVariable.AllowedHeightFlags) to 1 — bit 0, "allowed on floor"
+        // — then falls through to the pack's own init tree if it declared one.
+        private PackTree BuildPlacementInitTree(PackObject obj)
+        {
+            var path = obj.Path + ".__placement_init";
+            var hasUserInit = obj.EntryInit != null;
+
+            var setFlags = new PackNode
+            {
+                Id = "set_placement_flags",
+                Prim = "expression",
+                Then = hasUserInit ? "call_user_init" : "return true",
+                Else = "error",
+                Path = path + ".nodes[0]",
+            };
+            setFlags.Fields = JsonObj.From(JObject.Parse(
+                "{\"lhs\":{\"scope\":\"my_object\",\"value\":4},\"op\":\"=\",\"rhs\":{\"scope\":\"literal\",\"value\":1}}"),
+                setFlags.Path, D);
+
+            var tree = new PackTree
+            {
+                Name = "__placement_init",
+                Path = path,
+                Args = new List<string>(),
+                Locals = new List<string>(),
+            };
+            tree.Nodes.Add(setFlags);
+
+            if (hasUserInit)
+            {
+                var callUserInit = new PackNode
+                {
+                    Id = "call_user_init",
+                    Call = obj.EntryInit,
+                    Then = "return true",
+                    Else = "return false",
+                    Path = path + ".nodes[1]",
+                };
+                callUserInit.Fields = JsonObj.From(new JObject(), callUserInit.Path, D);
+                tree.Nodes.Add(callUserInit);
+            }
+
+            return tree;
         }
 
         private TTABInteraction BuildInteraction(PackInteraction inter, uint ttaIndex, Dictionary<string, ushort> treeIds)
@@ -323,6 +478,12 @@ namespace FSO.PackCompiler
         public string Iff;
         public string Category;
         public string CloneFromGuid;
+        // True when a clone_from_guid appearance ended up with zero copied graphics, for
+        // whatever reason (no game dir supplied, or a bug in AppearanceCloner) — the object
+        // will render as invisible. Install() upgrades this into a hard error; Build()/
+        // Validate() leave it as a Notes entry, since compiling without game content is an
+        // intentional, documented headless-testing mode (SCHEMA.md).
+        public bool GraphicsMissing;
         public Dictionary<string, int> Trees = new Dictionary<string, int>();
         public Dictionary<string, int> Attributes = new Dictionary<string, int>();
         public Dictionary<string, int> Interactions = new Dictionary<string, int>();

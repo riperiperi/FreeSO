@@ -28,9 +28,17 @@ namespace FSO.PackCompiler
                 case "build":
                 {
                     string outDir = null;
+                    string tsoDir = null;
                     for (int i = 2; i < args.Length; i++)
                     {
                         if (args[i] == "-o" && i + 1 < args.Length) outDir = args[++i];
+                        // Named --tso-dir, not --game-dir, to match `install`'s naming: this is
+                        // the SPRITE SOURCE (PackCompilerApi.Build's "gameDir" parameter is the
+                        // same directory concept as install's --tso-dir, not install's
+                        // --game-dir — see PackBuilder.GameDir's declaration for the full trap).
+                        // Reusing "--game-dir" here for a different directory than install means
+                        // would be the exact bug this whole fix exists to stop repeating.
+                        else if (args[i] == "--tso-dir" && i + 1 < args.Length) tsoDir = args[++i];
                         else
                         {
                             Console.Error.WriteLine("unknown argument: " + args[i]);
@@ -43,7 +51,12 @@ namespace FSO.PackCompiler
                         Console.Error.WriteLine("build requires -o <outdir>");
                         return 2;
                     }
-                    var result = PackCompilerApi.Build(packPath, outDir);
+                    // SCHEMA.md documents FSO_VM_GAME_LOCATION as a way to supply the base game
+                    // content dir for clone_from_guid; without this fallback the CLI silently
+                    // ignored it (only FSO.ModServer ever read the env var), so a bare `build`
+                    // was structurally invisible for clone_from_guid regardless of what was set.
+                    if (tsoDir == null) tsoDir = Environment.GetEnvironmentVariable("FSO_VM_GAME_LOCATION");
+                    var result = PackCompilerApi.Build(packPath, outDir, tsoDir);
                     Print(result);
                     if (result.Success)
                     {
@@ -117,8 +130,6 @@ namespace FSO.PackCompiler
                         foreach (var obj in result.Report.Objects)
                             Console.WriteLine("installed " + System.IO.Path.Combine(objectsDir, obj.Iff) + " (guid " + obj.Guid + ")");
                         Console.WriteLine("updated " + System.IO.Path.Combine(objectsDir, "catalog_downloads.xml"));
-                        if (tsoDir == null)
-                            Console.WriteLine("note: no TSO content dir found, so no sprites were cloned - the object will be INVISIBLE in game. Pass --tso-dir <dir>.");
                     }
                     return result.Success ? 0 : 1;
                 }
@@ -140,7 +151,9 @@ namespace FSO.PackCompiler
         private static void PrintUsage()
         {
             Console.Error.WriteLine("usage:");
-            Console.Error.WriteLine("  FSO.PackCompiler build <pack.json> -o <outdir>");
+            Console.Error.WriteLine("  FSO.PackCompiler build <pack.json> -o <outdir> [--tso-dir <dir>]");
+            Console.Error.WriteLine("    --tso-dir:  TSO install, where clone_from_guid reads sprites from");
+            Console.Error.WriteLine("      (default: $FSO_VM_GAME_LOCATION if set, else no sprites are cloned)");
             Console.Error.WriteLine("  FSO.PackCompiler validate <pack.json>");
             Console.Error.WriteLine("  FSO.PackCompiler decompile <object.iff> -o <pack.json>");
             Console.Error.WriteLine("  FSO.PackCompiler install <pack.json> [--game-dir <dir>] [--tso-dir <dir>]");
