@@ -1,3 +1,8 @@
+> **Context update 2026-08-08.** Cost now blocks exactly one thing: the ~200-object
+> original catalog (`../task_plan.md` Phase E). It does **not** block house generation —
+> a house is one blueprint XML, not 200 agent runs. That makes this lane important but no
+> longer urgent.
+
 # Recipe Authoring — Design (Tier 2)
 
 **Status: design only, nothing built.** Written while the AI authoring lane was parked so it can be resumed from a document rather than from memory. Supersedes nothing; Tier 1 (generated `main_loop`/`init`, implicit always-test) shipped in `57ab7d4dc`.

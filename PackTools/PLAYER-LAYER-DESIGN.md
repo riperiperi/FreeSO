@@ -1,3 +1,10 @@
+> **Superseded in part, 2026-08-08.** The player-facing experience is no longer "describe
+> an object and watch it appear" — it is **upload a floor plan or room photo, get your
+> house, invite friends in** (`../task_plan.md` Phase A–C). The chat panel described here
+> is now the *refinement* surface ("move the sofa left"), not the entry point, and the
+> Make Something dialog it specifies is a debug surface for the object pipeline. The
+> agent-runtime and live-delivery sections below remain accurate and still unbuilt.
+
 # Player-Facing Layer — Design Draft
 
 Status: design only, no code. This is the layer above MCP-DESIGN.md's agent tool surface — the thing an actual player (not a dev, not an agent operator) interacts with. Vision (Kat, 2026-08-08): "essentially they are building their own features" — a player describes what they want, never sees JSON or a tool call, and gets a working object in their game.

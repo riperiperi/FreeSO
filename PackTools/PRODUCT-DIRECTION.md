@@ -1,3 +1,22 @@
+> **Superseded 2026-08-08 (evening) — kept for the reasoning, not the conclusions.**
+>
+> The product is now stated in one line: *a player uploads a floor plan or room photo, the
+> AI builds their actual home in a real-geography city, and their friends visit and hang
+> out inside it.* See `../task_plan.md` and `../STATE.md`.
+>
+> What changed since this was written, same day:
+> - **The open browser-vs-bring-your-own decision is closed.** Browser, but late — it
+>   lowers install friction rather than proving the idea, so it sits at the tail.
+> - **"Mods mean more than objects" is now concrete**: the first mod anyone makes is their
+>   own house. Object authoring is supporting cast — you need *your* couch.
+> - **Cities stopped being a separate concern** and became the setting: your house, in your
+>   real neighbourhood.
+> - **Sharing and remixing was promoted** from post-MVP to a pillar.
+>
+> Still true and worth reading below: the simulation is the point and stays; FreeSO already
+> gives us multiplayer and lots; recreating EA's catalog is worth paying for only to unlock
+> distribution, not for its own sake; and both rejected framings are still rejected.
+
 # Product direction
 
 The single page everything else gets judged against.

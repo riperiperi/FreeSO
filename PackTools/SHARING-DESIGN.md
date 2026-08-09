@@ -1,3 +1,9 @@
+> **Promoted 2026-08-08.** Sharing and remixing is now one of the three product pillars,
+> not a post-MVP deferral. Scope widened with it: **rooms, not just objects** — a player
+> shares the house they built. Lot serialization already exists in-engine (`VMMarshal`,
+> blueprints, upstream `lot-serialize`); check how far that gets before building anything
+> here. See `../task_plan.md` Phase D.
+
 # Pack Sharing & Remix — Design Draft
 
 Status: design only, no code. Sits alongside MCP-DESIGN.md (agent tool surface) and PLAYER-LAYER-DESIGN.md (in-client UI). Those two explicitly punted sharing/moderation to "a later doc" — this is that doc. Scope: how a pack gets published, discovered, forked, re-attributed, and kept safe when a stranger's compiled behavior runs on someone else's lot.

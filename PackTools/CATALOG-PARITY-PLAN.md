@@ -1,3 +1,8 @@
+> **Re-scoped 2026-08-08.** The browser decision is made — we ship in a browser — but
+> browser work moved to the *tail* of the roadmap (`../task_plan.md` Phase F), so this
+> plan is no longer conditional, just late. It gates clean browser distribution, not the
+> demo. The "still open" line below is stale; the rest stands.
+
 > **Status: conditional.** This plan only applies if we ship in a **browser**,
 > where we must own everything we serve. If players bring their own copy of the
 > game, use EA's objects and point our generators at *new* furniture instead.

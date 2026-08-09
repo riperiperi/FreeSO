@@ -1,3 +1,10 @@
+> **Still accurate; re-sequenced 2026-08-08.** Browser is decided but moved to the tail
+> of the roadmap (`../task_plan.md` Phase F) — it lowers install friction rather than
+> proving the idea, and upstream's new built-in TSO installer softens the bring-your-own
+> objection considerably. The conclusion below is unchanged and load-bearing: **rendering
+> is the solved part, the raw-TCP→WebSocket gateway is the only open-ended unknown in the
+> whole plan.**
+
 # Browser viability — scoping, not building
 
 Status: assessment only, no code. Scope per Kat: **browser plays, desktop app authors/mods.**

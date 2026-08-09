@@ -1,3 +1,16 @@
+> **Historical, 2026-08-08 — the .NET 8 port it describes is superseded.**
+>
+> This documents porting the client to **net8.0** on top of a fork of stale `master`.
+> Upstream had already migrated the whole solution to **.NET 9** (PR #283), and we now
+> build on `upstream/archive` as `packtools-on-archive`, at net9.0, with upstream's own
+> native macOS CI and code signing. The survey in `UPSTREAM-BRANCHES.md` said as much at
+> the time; this document's outcome section contradicted it, and the contradiction went
+> unresolved for a day.
+>
+> Kept because the *method* is still useful — which projects the client actually depends
+> on, the WinForms cut and how it was confirmed safe, the dead-code exclusions, and the
+> MonoGame DesktopGL swap. Do not follow its target-framework conclusions.
+
 # .NET 8 Client Port — Scope
 
 Status: **Compiles clean AND launches — real window/audio subsystem init succeeds, the game boots and reaches content loading, then hits one precisely-identified blocker (a lost custom MonoGame content reader — see "Launch attempt outcome" at the bottom).** `FSO.Client.csproj` (the actual client, previously .NET Framework 4.5) targets net8.0 and builds clean, along with all its Framework-era dependencies, plus a new macOS platform head (`FSO.Mac`). See §"Outcome" and §"Launch attempt outcome" at the bottom for exactly what changed, what ran, and where it stopped.

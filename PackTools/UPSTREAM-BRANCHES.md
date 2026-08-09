@@ -26,7 +26,8 @@ done | sort -k2 -r
 | `upstream/archive-experiment-temp` | 2026-07-26 | net9.0 | |
 | `upstream/dotnet9-opt` | 2025-09-28 | net9.0 | Where the .NET modernization landed. |
 | `upstream/master` | 2025-08-22 | v4.5 | **Stale.** Not where development happens. |
-| `mac-port` (ours) | — | net8.0 | Forked from `master`, so it predates all of the above. |
+| `packtools-on-archive` (**ours**) | — | net9.0 | Based on `upstream/archive`. The branch to work on. |
+| `mac-port` (superseded) | — | net8.0 | Forked from `master`, so it predates all of the above. Kept for reference; do not build on it. |
 
 Everything else is a dependabot branch or a feature branch last touched between
 2015 and 2019.
@@ -37,7 +38,11 @@ branch that is actually maintained.
 
 ## Consequences for this fork
 
-Our branch predates the upstream .NET port, so anything absent here may exist
+**Resolved 2026-08-08:** we moved onto `upstream/archive` as `packtools-on-archive`, so
+this fork no longer predates the upstream .NET port. The lesson below still stands for
+anything else, and the two cases it cost us are kept as evidence.
+
+Our old branch predated the upstream .NET port, so anything absent there may exist
 upstream rather than not existing at all. Two concrete cases already hit:
 
 - `Other/libs/MSDFData/FieldFontReader.cs` — required to load the game's vector
