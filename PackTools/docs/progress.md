@@ -86,3 +86,26 @@ written to `CLAUDE.md`, `STATE.md` created, plan re-centred on house-from-a-phot
 Next action is A1 in `task_plan.md`: hand-write a blueprint XML, load it into a live lot
 via `VMBlueprintRestoreCmd`, walk a Sim inside. No AI involved; it either proves the house
 delivery path or says exactly what's broken.
+
+---
+
+## Doc review, 2026-08-08 (later)
+
+A1 landed after the session close above (`d962fed12`) — the "next action" line is kept as
+the historical record, not as a pointer. **Next action is now A2.**
+
+Swept all 30 docs for claims that disagree with the code, and verified the load-bearing
+ones by running them rather than reading them:
+
+- Re-ran both suites: 56/56 and 48/48, net9.0. Re-ran A1: probe tile inside an enclosed
+  room. All 8 commit hashes cited across the docs resolve; cost figures agree across four
+  documents; `archive` is exactly 373 ahead of `master`. No drift found in any of that.
+- **Catalog thumbnails are not blank on this branch** — upstream `4c89dab20` added a
+  `CatThumbGenerator` fallback to `UICatalog.GetObjIcon`. The open bug was a
+  `mac-port`-era carry-forward; removed from A3. The entry at line 39 above and
+  `findings.md:99` are left as-written (they were true when logged).
+- Corrected stale status lines in `START-HERE.md`, `GENERIC-GENERATOR-DESIGN.md`,
+  `CAPTURE-DESIGN.md`, `UPSTREAM-BRANCHES.md`; fixed the `citygen` path in `STATE.md` and
+  `task_plan.md`; bumped `FSO.ContactSheet` off net8.0 (builds clean).
+- **`RENDER-VERIFICATION-STATUS.md` does not name the binary it was verified against** —
+  and it cannot have been the branch we were on. See the note added to that file.

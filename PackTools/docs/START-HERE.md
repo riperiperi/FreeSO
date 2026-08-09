@@ -44,22 +44,27 @@ prove the idea. Its two costs — a WebSocket gateway with no prior art anywhere
 
 ## The next thing to do
 
-**A1: prove the delivery path, with no AI involved.**
+**A2: floor-plan image → blueprint XML.** The only missing link in Phase A.
 
-Houses are already data. A lot is a blueprint XML — `<floors>`, `<walls>`, `<object>`,
-each with tile coordinates and a level. `XmlHouse.cs` parses it,
-`VMWorldActivator.LoadFromXML()` builds the world, and **`VMBlueprintRestoreCmd` is a
-live network command that takes that XML as raw bytes and rebuilds a lot mid-game** —
-the server already uses it to reset lots.
+**A1 is done** (`d962fed12`). Houses are already data: a lot is a blueprint XML —
+`<floors>`, `<walls>`, `<object>`, each with tile coordinates and a level.
+`XmlHouse.cs` parses it, `VMWorldActivator.LoadFromXML()` builds the world, and
+**`VMBlueprintRestoreCmd` is a live network command that takes that XML as raw bytes
+and rebuilds a lot mid-game** — the server already uses it to reset lots. A hand-written
+`PackTools/examples/house-one-room.xml` goes through that path into a live headless VM
+and the engine derives a sealed interior from it:
 
-So: hand-write a small blueprint XML (one room, four walls, a door, a floor), load it
-into a running lot, walk a Sim inside. Hours, not days. If that fails, no amount of
-vision work matters.
+```sh
+~/.dotnet/dotnet PackTools/FSO.VMHarness/bin/Debug/net9.0/FSO.VMHarness.dll \
+  --house PackTools/examples/house-one-room.xml
+# -> 16 floor tiles, 15 wall tiles, probe (33,33) inside an enclosed room
+```
+
+So A2 has a known-good file to compare its output against. Still open from A1: nobody
+has walked a Sim inside — architecture is proven, occupancy is not.
 
 Note `VMBlueprintRestoreCmd.Verify()` returns `!FromNet` — a client cannot send it. The
 generator runs server-side.
-
-Then A2 (floor-plan image → that same XML) has a known-good file to compare against.
 
 **Unanswered and it will bite:** lots are 77 tiles with `FloorClip`/`Offset`/`TargetSize`.
 A real home needs a tiles-per-foot rule and a rule for what gets dropped.
@@ -86,9 +91,16 @@ A real home needs a tiles-per-foot rule and a rule for what gets dropped.
 
 **Working**: pack compiler + decompiler, MCP server (13 tools), headless VM harness, live
 object injection, agent bridge (pet rock ~$0.08, gnome ~$0.79, fortune cat ~$1.72), seven
-art generators, contact-sheet review, prompt caching, and `citygen` — San Francisco
-generated and verified (39.4 km square, 42,159 OSM ways).
+art generators, contact-sheet review, prompt caching, `PackTools/citygen` — San Francisco
+generated and verified (39.4 km square, 42,159 OSM ways) — and **blueprint XML → live
+enclosed house** (A1, `d962fed12`).
 
 **Not working / untested**: the Make Something panel has never been clicked by a human;
-catalog thumbnails render blank; the generated SF has never been loaded into the game;
-floor-plan → XML does not exist; per-object cost is too high for a 200-object catalog.
+no Sim has walked inside a generated house; the generated SF has never been loaded into
+the game; floor-plan → XML does not exist; per-object cost is too high for a 200-object
+catalog.
+
+**Fixed, don't re-chase**: catalog thumbnails. They rendered blank on `master`/`mac-port`
+because `UICatalog.GetObjIcon` set `null` when an object had no BMP chunk, and we emit
+none. Upstream `4c89dab20` added a `CatThumbGenerator.GenerateThumb` fallback on
+`archive`, so on this branch they render (`UICatalog.cs:449`).

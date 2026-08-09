@@ -101,18 +101,13 @@ actually receiving ongoing development.
 | `48144a5bf` Add in-game Make Something panel (UNVERIFIED) | **Partial — new files clean, two hook points need manual reapplication, one trivially and one not** | Checked the two files it hooks into, not assumed: `UIBuyMode.cs` is **byte-identical** between our fork point and `upstream/archive` (zero-diff) — our added button reapplies cleanly. `CoreGameScreen.cs` diffs at **387 insertions / 109 deletions** between the same two points — substantial upstream rework, so our small `OpenMakeSomething()`/`CloseMakeSomething()`/field addition needs a manual, deliberate re-hook there, not a mechanical reapply. The three new standalone files (`IMakeSomethingAgent.cs`, `StubMakeSomethingAgent.cs`, `UIMakeSomethingDialog.cs`) don't touch anything upstream changed — copy across cleanly regardless. Was already marked UNVERIFIED/uncompiled in its own commit message; still true here, no new information changes that. |
 | `08a68d67d` Document the upstream branch landscape | **Keep, this file** | Self-referential — update in place, which is what this section is doing. |
 
-### net8.0 → net9.0 for `PackTools/`
+### net8.0 → net9.0 for `PackTools/` — DONE
 
-Confirmed `upstream/archive`'s `FSO.Client.csproj` targets `net9.0`. Every
-`PackTools/` project currently targets `net8.0`. This is a low-risk bump (.NET
-8→9 doesn't remove APIs the way Framework→Core did), and it's the kind of thing
-that should be *verified by building*, not asserted from reasoning about
-version numbers — bump `TargetFramework` in each `PackTools/*.csproj` after the
-migration and run both test suites; if `MonoGame.Framework.DesktopGL 3.8.*`
-and the other NuGet packages already in use don't have net9-specific issues,
-this should be a one-line-per-project change. Not verified by actually building
-against net9 in this pass — flagging as the first thing to confirm once the
-branch exists, not asserting it's fine.
+Predicted low-risk; it was. All ten `PackTools/*.csproj` target `net9.0` on
+`packtools-on-archive`, and both suites are green there (56/56, 48/48, re-run
+2026-08-08). No net9-specific issues from `MonoGame.Framework.DesktopGL 3.8.*`
+or any other package already in use — it was a one-line-per-project change, as
+guessed.
 
 ### Rebase vs. fresh branch from `archive` — recommendation: **fresh branch, not a rebase**
 

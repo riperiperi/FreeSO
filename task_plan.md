@@ -49,7 +49,7 @@ Split deliberately. A1 is hours and carries no AI risk; if it fails, no amount o
 
 **A3 — the object loop, in passing**
 - [ ] Click "Make Something" in a running game and watch an object appear. Built, never seen by a human. It's the debug surface for the object pipeline, not the player experience.
-- [ ] Catalog thumbnails render blank. Lead: `UICatalog.GetObjIcon` reads a BMP chunk we never emit. **Check first** — archive added `IconCache`/`GetOrAddGeneratedIcon`.
+- [x] ~~Catalog thumbnails render blank~~ — **not a bug on this branch, don't re-chase.** Checked, as this line said to: `UICatalog.GetObjIcon` sets `null` on a missing BMP chunk (and we emit none) only on `master`. Upstream `4c89dab20` added a `CatThumbGenerator.GenerateThumb` fallback on `archive` (`UICatalog.cs:449`), so ours render. A `mac-port`-era bug that survived the base change.
 - **Status:** in_progress
 
 ### Phase B: Friends in a house together (BYO)
@@ -89,7 +89,7 @@ Split deliberately. A1 is hours and carries no AI risk; if it fails, no amount o
 - **Status:** pending
 
 ### Phase G: Neighbourhood scaling
-- [x] `citygen/generate_city.py` reviewed and run ✅ — San Francisco: 39.4 km square, elevation −5..781 m, 42,159 OSM road ways, full raster set written to disk
+- [x] `PackTools/citygen/generate_city.py` reviewed and run ✅ — San Francisco: 39.4 km square, elevation −5..781 m, 42,159 OSM road ways, full raster set written to disk
 - [ ] **Never loaded into the game.** Host it as a playable city; correct-looking PNGs are not a playable world.
 - [ ] Population, density, landmarks — an empty accurate map is a map, not a neighbourhood
 - **Status:** partly done

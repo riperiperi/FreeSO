@@ -46,7 +46,7 @@ The branch that is actually maintained. `master` has not moved since Aug 2025.
 ### House replication — the player-facing product
 | Piece | State |
 |---|---|
-| **Address → city** ✅ | `citygen/generate_city.py` turns a place name into FreeSO's full city raster set. Verified on San Francisco: 39.4 km square, elevation −5..781 m, 42,159 OSM road ways. Written to disk; **not yet loaded into the running game.** |
+| **Address → city** ✅ | `PackTools/citygen/generate_city.py` turns a place name into FreeSO's full city raster set. Verified on San Francisco: 39.4 km square, elevation −5..781 m, 42,159 OSM road ways. Written to disk; **not yet loaded into the running game.** |
 | **Blueprint → live house** ✅ | **Proven.** A hand-authored blueprint XML loads through `VMBlueprintRestoreCmd` into a running VM and the engine derives a sealed interior. `PackTools/examples/house-one-room.xml` + `FSO.VMHarness --house`. Verified both directions — remove the walls and the same probe reports outdoors. |
 | **Floor plan → blueprint** | **Not built.** Now the *only* missing link: vision → room layout → XML. The delivery path underneath it is proven, and there is a known-good file to compare output against. |
 | **Photo → furnishing** | **Not built.** Depends on the object pipeline below, which works. |
@@ -73,7 +73,9 @@ The branch that is actually maintained. `master` has not moved since Aug 2025.
 `simantics-vocabulary.md` (the VM's opcodes, scopes, operand layouts and silent-failure modes, reverse-engineered), `SCHEMA.md` (pack authoring format), `MODEL-EVALUATION.md` (which models can actually drive the bridge, measured).
 
 ### Design only — written, no code ⚠
-`PLAYER-LAYER-DESIGN.md`, `SHARING-DESIGN.md`, `RECIPE-DESIGN.md`, `CATALOG-PARITY-PLAN.md`, `BROWSER-VIABILITY.md`, `GENERIC-GENERATOR-DESIGN.md`, `FIRST-RUN-DESIGN.md`, `CAPTURE-DESIGN.md`, `NARRATION-CONTRACT.md`
+`PLAYER-LAYER-DESIGN.md`, `SHARING-DESIGN.md`, `RECIPE-DESIGN.md`, `CATALOG-PARITY-PLAN.md`, `BROWSER-VIABILITY.md`, `FIRST-RUN-DESIGN.md`, `CAPTURE-DESIGN.md`
+
+Two that were on this list and shouldn't be: `GENERIC-GENERATOR-DESIGN.md` is **built** (`ArtGen/PartsGenerator.cs`), and `NARRATION-CONTRACT.md` documents a system prompt that ships in `FSO.AgentBridge/MakeSomethingAgent.cs`.
 
 ---
 

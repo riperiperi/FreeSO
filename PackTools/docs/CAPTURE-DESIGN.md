@@ -1,6 +1,11 @@
 # In-Game Capture — Scope
 
-Status: scoped only, not built (client is about to migrate onto `upstream/archive`; building now would be throwaway per the request). No code changed by this pass.
+> **Status: scoped only, not built.** The original reason to wait — "the client is about
+> to migrate onto `upstream/archive`, so building now would be throwaway" — has expired;
+> that migration is done and `packtools-on-archive` is the base. Nothing here is blocked
+> any more, it is simply unbuilt and unscheduled (no roadmap phase in `../task_plan.md`
+> claims it). The `net8.0`-compatibility note in §"Pull in a managed NuGet encoder" now
+> reads `net9.0`. No code has ever been changed by this doc.
 
 ## 0. Why this matters (context from the research that prompted it)
 
@@ -43,7 +48,7 @@ Two separable problems:
 
 **GIF encoding**: nothing exists in-repo. Two real options, not a false choice:
 - **Hand-roll a minimal GIF89a encoder** — bounded, well-documented format (LZW compression + a 256-color-per-frame palette + Graphic Control Extension blocks for timing). Same category of effort as `PngWriter.cs` was tonight (a from-scratch encoder against a public spec, no new dependency) — proven this is a viable pattern for this project, not just theoretical. Real effort, not a rabbit hole: color quantization is the fiddly part (GIF's 256-color-per-frame ceiling), everything else is direct.
-- **Pull in a managed NuGet encoder** (e.g. `SixLabors.ImageSharp`, actively maintained, fully managed, no native interop, net8.0-compatible) — meaningfully faster to ship, at the cost of one new dependency the project doesn't currently carry. Given the project already takes NuGet dependencies pragmatically elsewhere (Newtonsoft.Json, MonoGame.Framework.DesktopGL itself), this isn't obviously against house style — flagging as the faster path, not asserting it's the "right" one; that's a call for whoever owns this next.
+- **Pull in a managed NuGet encoder** (e.g. `SixLabors.ImageSharp`, actively maintained, fully managed, no native interop, net9.0-compatible) — meaningfully faster to ship, at the cost of one new dependency the project doesn't currently carry. Given the project already takes NuGet dependencies pragmatically elsewhere (Newtonsoft.Json, MonoGame.Framework.DesktopGL itself), this isn't obviously against house style — flagging as the faster path, not asserting it's the "right" one; that's a call for whoever owns this next.
 
 **Not recommended for v1**: real video (MP4/H.264) — needs either a native encoder or an `ffmpeg` binary dependency, meaningfully heavier than what a "GIF-length shareable clip" actually requires. Skip.
 

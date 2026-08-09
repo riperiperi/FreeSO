@@ -4,6 +4,26 @@ Goal: confirm an AI-authorable object actually renders in the running game (not 
 compiles/installs cleanly) — see `ART-PIPELINE-DESIGN.md`/`SCHEMA.md` for why this
 specific gap matters (objects have compiled clean and rendered nothing before, silently).
 
+> **Scope correction, added 2026-08-08 during a doc review. Read before citing this.**
+>
+> This doc never records *which binary* Kat was looking at, and the result proves it was
+> not the branch being worked on at the time. It reports a correct chair thumbnail; our
+> packs emit no BMP chunk, and on `master`/`mac-port` `UICatalog.GetObjIcon` sets the icon
+> to `null` when the BMP is missing, which draws blank. Only `archive` has the
+> `CatThumbGenerator.GenerateThumb` fallback (upstream `4c89dab20`) that can produce that
+> thumbnail. So this was almost certainly the **shipped v0.5.3-beta release**, an
+> archive-based build, at a time when the working branch was still `mac-port`/net8.0.
+>
+> Two consequences, and they point in opposite directions:
+> - **Good:** the result carries forward. `packtools-on-archive` has the same fallback, so
+>   the rendering conclusion holds on our current base.
+> - **Bad:** what was proven is *upstream's client loading an installed pack from a content
+>   directory*. Nothing we built was in the loop. Our client path is still unwitnessed, and
+>   the Make Something panel has still never been clicked by a human.
+>
+> Anything below that reads "end to end" or "the real client" means the sentence above.
+> Name the binary next time.
+
 ## Result: it renders. This is the first time anyone has watched that happen.
 
 Kat got into a live, hosted lot and opened Buy Mode → Seating. `Verify Stool`

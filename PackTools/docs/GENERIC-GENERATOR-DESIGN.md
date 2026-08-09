@@ -1,6 +1,11 @@
 # Generic Small-Object Generator — Design Draft
 
-Status: design only, no code. Companion to `ART-PIPELINE-DESIGN.md`/`ART-PIPELINE-CALIBRATION.md` (the render pipeline these findings all depend on) and the five furniture generators in `PackTools/FSO.PackCompiler/ArtGen/` (chair, table, bed, lamp, storage).
+> **Status: BUILT, 2026-08-08.** This is no longer a design draft — the parts-list
+> generator it proposes ships as `PackTools/FSO.PackCompiler/ArtGen/PartsGenerator.cs`,
+> which cites this doc by name. Read it as the rationale for a thing that exists, not as
+> a proposal. If the code and this doc disagree, the code is authoritative.
+
+Companion to `ART-PIPELINE-DESIGN.md`/`ART-PIPELINE-CALIBRATION.md` (the render pipeline these findings all depend on) and the six named furniture generators in `PackTools/FSO.PackCompiler/ArtGen/` (chair, sofa, table, bed, lamp, storage). The text below says "five" throughout — it was written before `SofaGenerator.cs` landed.
 
 ## 0. The gap this addresses
 
