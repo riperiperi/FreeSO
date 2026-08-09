@@ -16,7 +16,7 @@ Supersedes `PRODUCT-DIRECTION.md` (which centred "content worth having + player 
 **Mechanic decided 2026-08-08:** the AI builds the house **from a photo or floor plan**, then the player refines it conversationally. Not manual building with AI assistance.
 
 ## Current Phase
-Phase A
+Phase A — A1 done, A2 next
 
 ## Why this is smaller than it looks
 **Houses are already data.** A lot is a blueprint XML — `<floors>`, `<walls>`, `<object>`, each with tile coordinates and a level. `XmlHouse.cs` parses it, `VMWorldActivator.LoadFromXML()` builds the world from it, and **`VMBlueprintRestoreCmd` is a live network command that takes that XML as raw bytes and rebuilds the lot mid-game** — the server already uses it to reset lots.
@@ -36,9 +36,11 @@ One constraint that shapes the work: `VMBlueprintRestoreCmd.Verify()` returns `!
 ### Phase A: Your house, from a photo
 Split deliberately. A1 is hours and carries no AI risk; if it fails, no amount of vision work matters.
 
-**A1 — prove the delivery path**
-- [ ] Hand-author a small blueprint XML: one room, four walls, a door, a floor
-- [ ] Load it through `VMBlueprintRestoreCmd` into a running lot; walk a Sim inside
+**A1 — prove the delivery path — DONE ✅** (`d962fed12`)
+- [x] Hand-authored `PackTools/examples/house-one-room.xml`: one 4x4 room, 16 floor tiles, 15 wall tiles
+- [x] Loads through `VMBlueprintRestoreCmd` into a live headless VM; the engine derives a **sealed interior** from it. Run: `~/.dotnet/dotnet PackTools/FSO.VMHarness/bin/Debug/net9.0/FSO.VMHarness.dll --house <xml>`
+- [x] Test is non-vacuous, proven both directions: the full house reports the probe tile indoors; the same house with 12 of 15 walls removed reports it outdoors and fails. (First version of the check was wrong — counting indoor rooms lot-wide reports 1 even for the empty lot, which has no walls at all.)
+- [ ] Walk a Sim inside — not yet done; architecture is proven, occupancy is not
 - [ ] Decide the scale mapping — lots are 77 tiles with `FloorClip`/`Offset`/`TargetSize`. "My 1,400 sq ft apartment" needs a tiles-per-foot rule and a rule for what gets dropped. **Unanswered, and it will bite in A2.**
 
 **A2 — vision → that same XML**

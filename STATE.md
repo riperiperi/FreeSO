@@ -47,7 +47,8 @@ The branch that is actually maintained. `master` has not moved since Aug 2025.
 | Piece | State |
 |---|---|
 | **Address → city** ✅ | `citygen/generate_city.py` turns a place name into FreeSO's full city raster set. Verified on San Francisco: 39.4 km square, elevation −5..781 m, 42,159 OSM road ways. Written to disk; **not yet loaded into the running game.** |
-| **Floor plan → house** | **Not built.** The target format exists (blueprint XML) and the loader exists (`VMWorldActivator`). Missing piece is vision → room layout → XML. This is the critical untested integration. |
+| **Blueprint → live house** ✅ | **Proven.** A hand-authored blueprint XML loads through `VMBlueprintRestoreCmd` into a running VM and the engine derives a sealed interior. `PackTools/examples/house-one-room.xml` + `FSO.VMHarness --house`. Verified both directions — remove the walls and the same probe reports outdoors. |
+| **Floor plan → blueprint** | **Not built.** Now the *only* missing link: vision → room layout → XML. The delivery path underneath it is proven, and there is a known-good file to compare output against. |
 | **Photo → furnishing** | **Not built.** Depends on the object pipeline below, which works. |
 | **Friends inside it** | FreeSO's multiplayer, unchanged. Untested with an AI-generated house. |
 
