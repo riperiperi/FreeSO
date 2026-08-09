@@ -1,7 +1,7 @@
-﻿using FSO.Files.Formats.IFF.Chunks;
+﻿using FSO.Content;
+using FSO.Files.Formats.IFF.Chunks;
 using FSO.SimAntics.Engine.Scopes;
 using FSO.SimAntics.Model;
-using System;
 
 namespace FSO.SimAntics.Engine
 {
@@ -178,23 +178,35 @@ namespace FSO.SimAntics.Engine
             return !(suitName == null || suitName == "" || suitName == "ADDED");
         }
 
+        public static object GetSuit(VMAvatar avatar, VMSuitScope scope, ushort id)
+        {
+            // This isn't fantastic - when this is called from SetPersonData we don't have info on the active thread.
+            // The object scope can be lost if coming from another thread right now, but other scopes will work.
+            var context = avatar.Thread.Stack.LastOrDefault();
+            return GetSuit(avatar, context?.CodeOwner, avatar.Thread.Context.Globals, scope, id);
+        }
+
         public static object GetSuit(VMStackFrame context, VMSuitScope scope, ushort id)
         {
-            STR suitTable = null;
+            return GetSuit((VMAvatar)context.Caller, context.CodeOwner, context.Global, scope, id);
+        }
 
-            var avatar = (VMAvatar)context.Caller;
+        public static object GetSuit(VMAvatar avatar, GameObject codeOwner, GameGlobal global, VMSuitScope scope, ushort id)
+        {
+            STR suitTable = null;
+            var vm = avatar.Thread.Context.VM;
 
             switch (scope)
             {
                 case VMSuitScope.Object:
-                    suitTable = context.CodeOwner.Resource.Get<STR>(304);
+                    suitTable = codeOwner.Resource.Get<STR>(304);
                     break;
                 case VMSuitScope.Global:
-                    suitTable = context.Global.Resource.Get<STR>(304);
+                    suitTable = global.Resource.Get<STR>(304);
                     break;
                 case VMSuitScope.Person:
                     //get outfit from person
-                    if (context.VM.TS1) return GetPersonSuitTS1((VMAvatar)context.Caller, id);
+                    if (vm.TS1) return GetPersonSuitTS1(avatar, id);
 
                     var type = (VMPersonSuits)id;
                     bool male = (avatar.GetPersonData(VMPersonDataVariable.Gender) == 0);
@@ -209,7 +221,7 @@ namespace FSO.SimAntics.Engine
                         case VMPersonSuits.DefaultSwimwear:
                             return avatar.DefaultSuits.Swimwear.ID;
                         case VMPersonSuits.JobOutfit:
-                            if (context.VM.TS1) return null;
+                            if (vm.TS1) return null;
                             var job = avatar.GetPersonData(VMPersonDataVariable.OnlineJobID);
                             if (job < 1 || job > 5) return null;
                             var level = Math.Max(0, Math.Min(2, ((int)avatar.GetPersonData(VMPersonDataVariable.OnlineJobGrade) + 1) / 4));

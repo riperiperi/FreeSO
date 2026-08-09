@@ -949,7 +949,7 @@ namespace FSO.SimAntics
                     if (Thread.Context.VM.TS1) BodyOutfit = VMSuitProvider.GetPersonSuitTS1(this, (ushort)value);
                     else
                     {
-                        var suit = VMSuitProvider.GetSuit(Thread.Stack.LastOrDefault(), Engine.Scopes.VMSuitScope.Person, (ushort)value);
+                        var suit = VMSuitProvider.GetSuit(this, Engine.Scopes.VMSuitScope.Person, (ushort)value);
                         if (suit is VMOutfitReference) BodyOutfit = suit as VMOutfitReference;
                         if (suit is ulong) BodyOutfit = new VMOutfitReference((ulong)suit);
                     }
