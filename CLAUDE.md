@@ -100,6 +100,12 @@ you need to start work:
 2. **`STATE.md`** — what exists today: what FreeSO gives us, what we added, what's ahead
 3. **`task_plan.md`** — what to do next and why it's in that order
 
+**`AGENTS.md` is a symlink to this file.** Codex and other agents look for that
+name; they get these same bytes. It briefly existed as a real copy — identical
+except for one self-referential line — which is this document's own failure mode
+aimed at the document itself. **Never replace it with a copy.** If you need the
+rules under a third name, symlink again.
+
 Everything else is in **`PackTools/docs/`** — 26 files of specs, design proposals
 for unbuilt things, and postmortems. Open one when you need it; do not read them
 to orient yourself, and treat any status line in them as a lead to verify rather
