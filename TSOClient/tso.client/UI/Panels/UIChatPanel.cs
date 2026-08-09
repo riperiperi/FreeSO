@@ -371,7 +371,7 @@ namespace FSO.Client.UI.Panels
 
         public void SetLotName(string name)
         {
-            HistoryDialog.LotName = name;
+            HistoryDialog.LotName = GameFacade.Strings.TransformLotName(name);
             HistoryDialog.RenderTitle();
         }
     }

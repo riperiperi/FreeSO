@@ -90,7 +90,7 @@ namespace FSO.Client.UI.Panels
                 var controller = GameFacade.Screens.CurrentUIScreen.FindController<FSO.Client.Controllers.CoreGameScreenController>();
                 if (controller != null)
                 {
-                    controller.ShowLotPage(controller.GetCurrentLotID());
+                    controller.ShowLotPage(LotControl.vm.TSOState?.LotID ?? 0);
                     return;
                 }
             }

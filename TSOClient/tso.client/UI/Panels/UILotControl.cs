@@ -285,7 +285,7 @@ namespace FSO.Client.UI.Panels
 
         public string GetLotTitle()
         {
-            var title = vm.LotName + " - " + vm.Entities.Count(x => x is VMAvatar && x.PersistID != 0);
+            var title = GameFacade.Strings.TransformLotName(vm.LotName) + " - " + vm.Entities.Count(x => x is VMAvatar && x.PersistID != 0);
             if (IsSpectator) title += " (Spectator)";
             return title;
         }

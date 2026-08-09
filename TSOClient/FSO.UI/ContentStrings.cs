@@ -1,11 +1,13 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.IO;
+﻿using FSO.Common;
 using FSO.Files.Formats.IFF;
 using FSO.Files.Formats.IFF.Chunks;
-using FSO.Common;
+using FSO.SimAntics.Model;
+using FSO.Vitaboy;
+using System;
+using System.Collections.Generic;
+using System.IO;
+using System.Linq;
+using System.Text;
 
 namespace FSO.Client.GameContent
 {
@@ -218,6 +220,21 @@ namespace FSO.Client.GameContent
                 
                 table[tableID] = ReadTable(file); //overwrites previous.
             }
+        }
+
+        public string TransformLotName(string name)
+        {
+            if (name.StartsWith('{') && name.EndsWith('}'))
+            {
+                var split = name.Substring(1, name.Length - 2).Split(':');
+
+                if (split.Length == 3 && split[0] == "job" && int.TryParse(split[1], out int type) && int.TryParse(split[2], out int level))
+                {
+                    return GetString("UIText", "f132", (type * 100 + level).ToString()) ?? name;
+                }
+            }
+
+            return name;
         }
     }
 }

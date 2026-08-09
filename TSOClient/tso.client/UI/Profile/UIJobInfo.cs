@@ -67,6 +67,17 @@ namespace FSO.Client.UI.Panels.Profile
             PromotionPercentage = (int)(promotionPercentage * 100);
             MaxLevel = (jobGrade == 10);
         }
+
+        public static JobInformation FromLotInfo(int jobGrade, int jobLotType)
+        {
+            int type = jobLotType switch
+            {
+                2 => 4,
+                _ => jobLotType + 1
+            };
+
+            return new JobInformation(jobGrade, type, 0);
+        }
     }
 
     public class UIJobInfo : UIAlert

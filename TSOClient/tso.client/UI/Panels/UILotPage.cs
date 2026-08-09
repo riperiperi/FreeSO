@@ -3,16 +3,15 @@ using FSO.Client.Controllers.Panels;
 using FSO.Client.Rendering.City;
 using FSO.Client.UI.Controls;
 using FSO.Client.UI.Framework;
+using FSO.Client.UI.Panels.Profile;
 using FSO.Client.UI.Screens;
 using FSO.Client.Utils;
 using FSO.Common.DataService.Model;
 using FSO.Common.Enum;
+using FSO.Common.Rendering.Framework.Model;
 using FSO.Common.Utils;
 using Microsoft.Xna.Framework;
 using Microsoft.Xna.Framework.Graphics;
-using System;
-using System.Collections.Generic;
-using FSO.Common.Rendering.Framework.Model;
 
 namespace FSO.Client.UI.Panels
 {
@@ -66,6 +65,14 @@ namespace FSO.Client.UI.Panels
         public Texture2D HouseCategory_CommunityButtonImage;
         public Texture2D RoommateThumbButtonImage { get; set; }
         public Texture2D VisitorThumbButtonImage { get; set; }
+
+        public string LotName
+        {
+            set
+            {
+                HouseNameButton.Caption = GameFacade.Strings.TransformLotName(value);
+            }
+        }
 
         private UILotThumbButton LotThumbnail { get; set; }
         private UIRoommateList RoommateList { get; set; }
@@ -159,7 +166,7 @@ namespace FSO.Client.UI.Panels
             HouseCategory_CommunityButtonImage = ui.Get("lotp_community_small.png").Get(GameFacade.GraphicsDevice);
 
             CurrentLot = new Binding<Lot>()
-                .WithBinding(HouseNameButton, "Caption", "Lot_Name")
+                .WithBinding(this, "LotName", "Lot_Name")
                 .WithBinding(NeighborhoodNameButton, "Caption", "Lot_NeighborhoodName")
                 .WithBinding(HouseValueLabel, "Caption", "Lot_Price", x => MoneyFormatter.Format((uint)x))
                 .WithBinding(OccupantsNumberLabel, "Caption", "Lot_NumOccupants", x => x.ToString())
@@ -416,7 +423,7 @@ namespace FSO.Client.UI.Panels
                 if (OriginalDescription != CurrentLot.Value.Lot_Description)
                 {
                     OriginalDescription = CurrentLot.Value.Lot_Description;
-                    HouseDescriptionTextEdit.CurrentText = OriginalDescription;
+                    HouseDescriptionTextEdit.CurrentText = TransformLotDescription(CurrentLot.Value.Lot_Name, OriginalDescription);
                 }
 
                 if (isEmpty)
@@ -466,6 +473,24 @@ namespace FSO.Client.UI.Panels
                 LotThumbnail.Disabled = true;
             }
         }
+
+        private string TransformLotDescription(string name, string desc)
+        {
+            if (name.StartsWith('{') && name.EndsWith('}') && desc.StartsWith('{') && desc.EndsWith('}'))
+            {
+                var split = desc.Substring(1, name.Length - 2).Split(':');
+
+                if (split.Length == 3 && split[0] == "job" && int.TryParse(split[1], out int type) && int.TryParse(split[2], out int level))
+                {
+                    string lotName = GameFacade.Strings.GetString("UIText", "f132", (type * 100 + level).ToString()) ?? "Unknown";
+                    JobInformation jobInfo = JobInformation.FromLotInfo(level, type);
+                    return GameFacade.Strings.GetString("f132", "1000", [jobInfo.Type, jobInfo.Title, level.ToString(), jobInfo.Hours, jobInfo.CarpoolHours]);
+                }
+            }
+
+            return desc;
+        }
+
         public override void Draw(UISpriteBatch batch)
         {
             if (!Visible) return;

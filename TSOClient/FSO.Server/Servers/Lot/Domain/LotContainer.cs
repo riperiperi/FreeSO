@@ -838,7 +838,7 @@ namespace FSO.Server.Servers.Lot.Domain
             Lot.TSOState.Terrain = Terrain;
             Lot.TSOState.Name = LotPersist.name;
             Lot.TSOState.NhoodID = LotPersist.neighborhood_id;
-            Lot.TSOState.LotID = LotPersist.location;
+            Lot.TSOState.LotID = LotPersist.location & (uint)(LotIdFlags.NormalMask);
             Lot.TSOState.SkillMode = LotPersist.skill_mode;
             Lot.TSOState.PropertyCategory = (byte)LotPersist.category;
             Lot.TSOState.Flags =
