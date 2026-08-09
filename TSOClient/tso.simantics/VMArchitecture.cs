@@ -202,7 +202,7 @@ namespace FSO.SimAntics
             //notify the lotview this has changed too, so it can be drawn.
             BuildableArea = area;
             BuildableFloors = floors;
-            if (VM.UseWorld)
+            if (VM.UseWorld && WorldUI.Terrain != null)
             {
                 WorldUI.BuildableArea = BuildableArea;
                 WorldUI.Terrain.TerrainDirty = true;

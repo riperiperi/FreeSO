@@ -1165,6 +1165,9 @@ namespace FSO.SimAntics.Utils
                         height = RestoreHeight(tempVM, terrain, x, y);
                         tempVM.Context.Blueprint.BaseAlt = (int)((baseHeight - height));
 
+                        tempVM.TSOState.Size = 10 | (3 << 8); // Maximum size for admin placement on unowned lot (matches what it looks like in free roam)
+                        tempVM.Context.UpdateTSOBuildableArea();
+                        EnsureCoreObjects(tempVM, RestoreLotType.Blank);
                         PopulateBlankTerrain(tempVM);
                         tempVM.Context.Architecture.ClearDirty();
                         tempVM.Context.Architecture.RegenRoomMap();
