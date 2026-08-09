@@ -20,13 +20,45 @@ feel like a mistake while it is happening.
 
 ### Before starting anything non-trivial
 
-- `git log --all --oneline -- <path>` — has any branch already touched this?
-- `git branch -a` and `git worktree list` — is another branch or working
-  directory already on it?
-- Check the actual code, not a status line in a doc. Docs here go stale within
-  hours; several already have. **A doc saying "not yet implemented" is a lead to
-  verify, never a fact.**
-- For engine-level work, check upstream first: `riperiperi/FreeSO`.
+Check all four places, in this order. All of them, every time — the four
+duplications above each came from checking some but not others.
+
+**1. This working tree — did we already build it?**
+```sh
+grep -rn "<symbol or concept>" PackTools/ TSOClient/   # does it exist right now?
+```
+Includes code an earlier session in *this* conversation wrote. Do not trust
+memory of what was built; look.
+
+**2. Other branches and worktrees — did another session build it?**
+```sh
+git log --all --oneline -- <path>     # any branch ever touched this file?
+git log --all -S "<symbol>" --oneline # any branch ever contained this code?
+git branch -a && git worktree list    # what else is checked out right now?
+```
+Parallel sessions share this machine. `-S` is the important one: it finds code
+by content across all history, including branches you did not know existed.
+
+**3. Upstream — did the maintainer already build it?**
+```sh
+git log upstream/archive --oneline -S "<symbol>"
+gh pr list --repo riperiperi/FreeSO --state all --search "<keyword>"
+```
+Upstream is active and ships weekly. Check `archive`, not just `master`.
+
+**4. The wider world — did someone else already build it?**
+Forks (`gh api repos/riperiperi/FreeSO/forks`), the community
+(`forum.freeso.org`, `freesoeod.wordpress.com`, tutorials), and general prior
+art. The `AllowedHeightFlags` bug was documented publicly for years before it
+was rediscovered here from engine source.
+
+**Then: check the actual code, not a status line in a doc.** Docs here go stale
+within hours; several already have. **A doc saying "not yet implemented" is a
+lead to verify, never a fact.**
+
+If it already exists: use it, extend it, or fix it. Do not re-create it. If it
+exists but is wrong, say so and fix that — a rewrite disguised as a fix is still
+duplication.
 
 ### Upstream branches
 
