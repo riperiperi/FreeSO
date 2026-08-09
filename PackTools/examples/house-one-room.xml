@@ -1,0 +1,64 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!--
+  A1: the smallest possible hand-authored house, written to prove the delivery path
+  before any AI is involved. One 4x4 room at tiles (32,32)-(35,35), floor pattern 3,
+  walls around the outside, no door yet.
+
+  Wall segments is a bitfield of which EDGES of that tile carry wall:
+    TopLeft = 1, TopRight = 2, BottomRight = 4, BottomLeft = 8
+  In FreeSO's isometric grid, for a tile at (x,y): TopLeft is the edge toward -x,
+  TopRight is toward -y, BottomRight is toward +x, BottomLeft is toward +y.
+  So a room's north-west corner tile carries TopLeft|TopRight = 3.
+
+  Level is 0-based here and gets +1 applied by VMWorldActivator (floor 1 = ground).
+-->
+<house xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xmlns:xsd="http://www.w3.org/2001/XMLSchema">
+  <size>77</size>
+  <category>0</category>
+  <world>
+    <floors>
+      <floor level="0" x="32" y="32" value="3" />
+      <floor level="0" x="33" y="32" value="3" />
+      <floor level="0" x="34" y="32" value="3" />
+      <floor level="0" x="35" y="32" value="3" />
+      <floor level="0" x="32" y="33" value="3" />
+      <floor level="0" x="33" y="33" value="3" />
+      <floor level="0" x="34" y="33" value="3" />
+      <floor level="0" x="35" y="33" value="3" />
+      <floor level="0" x="32" y="34" value="3" />
+      <floor level="0" x="33" y="34" value="3" />
+      <floor level="0" x="34" y="34" value="3" />
+      <floor level="0" x="35" y="34" value="3" />
+      <floor level="0" x="32" y="35" value="3" />
+      <floor level="0" x="33" y="35" value="3" />
+      <floor level="0" x="34" y="35" value="3" />
+      <floor level="0" x="35" y="35" value="3" />
+    </floors>
+    <walls>
+      <!-- west edge (TopLeft = 1) plus north edge (TopRight = 2) on the corner -->
+      <wall level="0" x="32" y="32" segments="3" placement="0" tls="1" trs="1" tlp="2" trp="2" brp="2" blp="2" />
+      <wall level="0" x="33" y="32" segments="2" placement="0" tls="1" trs="1" tlp="2" trp="2" brp="2" blp="2" />
+      <wall level="0" x="34" y="32" segments="2" placement="0" tls="1" trs="1" tlp="2" trp="2" brp="2" blp="2" />
+      <wall level="0" x="35" y="32" segments="2" placement="0" tls="1" trs="1" tlp="2" trp="2" brp="2" blp="2" />
+
+      <wall level="0" x="32" y="33" segments="1" placement="0" tls="1" trs="1" tlp="2" trp="2" brp="2" blp="2" />
+      <wall level="0" x="32" y="34" segments="1" placement="0" tls="1" trs="1" tlp="2" trp="2" brp="2" blp="2" />
+      <wall level="0" x="32" y="35" segments="1" placement="0" tls="1" trs="1" tlp="2" trp="2" brp="2" blp="2" />
+
+      <!-- east edge (BottomRight = 4) -->
+      <wall level="0" x="36" y="32" segments="1" placement="0" tls="1" trs="1" tlp="2" trp="2" brp="2" blp="2" />
+      <wall level="0" x="36" y="33" segments="1" placement="0" tls="1" trs="1" tlp="2" trp="2" brp="2" blp="2" />
+      <wall level="0" x="36" y="34" segments="1" placement="0" tls="1" trs="1" tlp="2" trp="2" brp="2" blp="2" />
+      <wall level="0" x="36" y="35" segments="1" placement="0" tls="1" trs="1" tlp="2" trp="2" brp="2" blp="2" />
+
+      <!-- south edge (TopRight = 2 on the row below) -->
+      <wall level="0" x="32" y="36" segments="2" placement="0" tls="1" trs="1" tlp="2" trp="2" brp="2" blp="2" />
+      <wall level="0" x="33" y="36" segments="2" placement="0" tls="1" trs="1" tlp="2" trp="2" brp="2" blp="2" />
+      <wall level="0" x="34" y="36" segments="2" placement="0" tls="1" trs="1" tlp="2" trp="2" brp="2" blp="2" />
+      <wall level="0" x="35" y="36" segments="2" placement="0" tls="1" trs="1" tlp="2" trp="2" brp="2" blp="2" />
+    </walls>
+    <pools />
+  </world>
+  <objects />
+  <sounds />
+</house>

@@ -1,4 +1,5 @@
 using FSO.Common.Utils;
+using Microsoft.Xna.Framework;
 using FSO.Content;
 using FSO.LotView.Model;
 using FSO.SimAntics;
@@ -21,6 +22,101 @@ namespace FSO.VMHarness
     /// </summary>
     class Program
     {
+        /// <summary>
+        /// Loads a blueprint XML into a headless VM and reports what the architecture actually
+        /// contains afterwards. Asserts on tile state rather than on the command returning
+        /// without throwing — a blueprint that parses but places nothing looks identical to a
+        /// working one from the outside.
+        /// </summary>
+        static void HouseMain(string[] args)
+        {
+            var housePath = Path.GetFullPath(args.Length > 1 ? args[1] : "PackTools/examples/house-one-room.xml");
+            var gameLocation = args.Length > 2 ? args[2] :
+                Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.UserProfile),
+                    "Library/Application Support/The Sims Online/TSOClient");
+            if (!gameLocation.EndsWith(Path.DirectorySeparatorChar.ToString()))
+                gameLocation += Path.DirectorySeparatorChar;
+
+            if (!File.Exists(housePath)) throw new Exception("Blueprint not found at " + housePath);
+            if (!Directory.Exists(gameLocation)) throw new Exception("TSO game content not found at " + gameLocation);
+
+            // FSO resolves its own content by relative path, so run from a scratch dir holding a
+            // symlinked copy of the repo's Content tree (same approach as the object harness).
+            var repoRoot = RepoRoot();
+            var fsoContentDir = Path.Combine(repoRoot, "TSOClient", "FSO.Content.TSO", "Content");
+            var work = Path.Combine(Path.GetTempPath(), "fso-househarness-work");
+            if (Directory.Exists(work)) Directory.Delete(work, true);
+            var workContent = Path.Combine(work, "Content");
+            Directory.CreateDirectory(workContent);
+            foreach (var entry in Directory.GetFileSystemEntries(fsoContentDir))
+            {
+                var link = Path.Combine(workContent, Path.GetFileName(entry));
+                if (Directory.Exists(entry)) Directory.CreateSymbolicLink(link, entry);
+                else File.CreateSymbolicLink(link, entry);
+            }
+            Directory.SetCurrentDirectory(work);
+
+            Console.Error.WriteLine("Booting headless VM...");
+            VM.UseWorld = false;
+            VMContext.InitVMConfig(false);
+            Content.Content.Init(gameLocation, ContentMode.SERVER);
+
+            var vm = new VM(new VMContext(null), new VMServerDriver(new VMTSOGlobalLinkStub()), new VMNullHeadlineProvider());
+            vm.Init();
+
+            Console.Error.WriteLine("Restoring blueprint: " + housePath);
+            vm.SendCommand(new VMBlueprintRestoreCmd
+            {
+                JobLevel = -1,
+                XMLData = File.ReadAllBytes(housePath),
+                FloorClipX = 0, FloorClipY = 0, FloorClipWidth = 0, FloorClipHeight = 0,
+                OffsetX = 0, OffsetY = 0, TargetSize = 0
+            });
+            vm.Tick();
+
+            var arch = vm.Context.Architecture;
+            int floors = 0, wallTiles = 0, wallSegs = 0;
+            for (short x = 0; x < arch.Width; x++)
+            {
+                for (short y = 0; y < arch.Height; y++)
+                {
+                    if (arch.GetFloor(x, y, 1).Pattern != 0) floors++;
+                    var w = arch.GetWall(x, y, 1);
+                    if (w.Segments != 0)
+                    {
+                        wallTiles++;
+                        for (int b = 0; b < 4; b++) if (((int)w.Segments & (1 << b)) != 0) wallSegs++;
+                    }
+                }
+            }
+
+            var rooms = arch.RoomData?.Count ?? 0;
+            int indoor = 0;
+            if (arch.RoomData != null) foreach (var r in arch.RoomData) if (!r.IsOutside) indoor++;
+
+            Console.WriteLine("floor tiles:  " + floors);
+            Console.WriteLine("wall tiles:   " + wallTiles + " (" + wallSegs + " segments)");
+            Console.WriteLine("rooms:        " + rooms + " (" + indoor + " indoor)");
+
+            // Counting indoor rooms lot-wide is NOT a valid check: running this against
+            // empty_lot_fso.xml (zero walls) still reports 1 indoor room, so "indoor > 0" passes
+            // for a lot with no house on it. Assert on a specific tile instead — the one the
+            // caller says is inside the room — and confirm the engine agrees it is not outside.
+            if (floors == 0) throw new Exception("FAIL: blueprint loaded but no floor tiles landed.");
+            if (wallTiles == 0) throw new Exception("FAIL: blueprint loaded but no walls landed.");
+
+            var probe = args.Length > 3
+                ? new Point(int.Parse(args[3].Split(',')[0]), int.Parse(args[3].Split(',')[1]))
+                : new Point(33, 33); // interior of house-one-room.xml
+            var roomAt = arch.Rooms[0].Map[probe.X + probe.Y * arch.Width] & 0xFFFF;
+            var isOutside = roomAt >= arch.RoomData.Count || arch.RoomData[(int)roomAt].IsOutside;
+            Console.WriteLine("probe tile:   (" + probe.X + "," + probe.Y + ") -> room " + roomAt +
+                (isOutside ? " (OUTSIDE)" : " (indoors)"));
+            if (isOutside)
+                throw new Exception("FAIL: tile (" + probe.X + "," + probe.Y + ") is still outdoors — the walls do not enclose it.");
+            Console.WriteLine("OK: the probe tile is inside an enclosed room.");
+        }
+
         static string RepoRoot()
         {
             var dir = AppContext.BaseDirectory;
@@ -33,6 +129,16 @@ namespace FSO.VMHarness
 
         static void Main(string[] args)
         {
+            // --house <blueprint.xml> [gameLocation]: load a hand-authored (or generated) house
+            // into a live VM and report what actually landed in the architecture. Separate entry
+            // point because it needs no compiled object at all — it exercises the blueprint
+            // delivery path on its own, which is what makes it useful as a first check.
+            if (args.Length > 0 && args[0] == "--house")
+            {
+                HouseMain(args);
+                return;
+            }
+
             var gameLocation = args.Length > 0 ? args[0] :
                 Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.UserProfile),
                     "Library/Application Support/The Sims Online/TSOClient");
