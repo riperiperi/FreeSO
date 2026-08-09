@@ -1,0 +1,178 @@
+{
+  "schema": "fso-pack/0.1",
+  "engine": "tso",
+  "pack": {
+    "id": "pet-rock",
+    "name": "Pet Rock",
+    "author": "kat",
+    "version": "1.0.0",
+    "description": "The lowest-maintenance pet. Admire it, let it multiply, or retire it with dignity."
+  },
+  "objects": [
+    {
+      "id": "pet_rock",
+      "guid": "0x6B4F0003",
+      "name": "Pet Rock",
+      "price": 15,
+      "category": "misc",
+      "appearance": { "clone_from_guid": "0x1BD3B7B6" },
+      "tags": ["rock", "pet"],
+      "attributes": ["naps_taken"],
+      "interactions": [
+        {
+          "name": "Admire",
+          "action": "admire_action",
+          "test": "always_test",
+          "allow": { "visitors": true, "owner": true, "roommates": true },
+          "autonomy": { "advertised_motives": { "fun": 10 } }
+        },
+        {
+          "name": "Multiply",
+          "action": "multiply_action",
+          "test": "always_test",
+          "allow": { "owner": true, "roommates": true }
+        },
+        {
+          "name": "Retire",
+          "action": "retire_action",
+          "test": "always_test",
+          "allow": { "owner": true }
+        }
+      ],
+      "trees": {
+        "admire_action": {
+          "args": ["nap_ticks"],
+          "locals": [],
+          "nodes": [
+            {
+              "id": "walk_up",
+              "prim": "goto_relative",
+              "location": "in_front_of",
+              "direction": "facing",
+              "then": "enjoy",
+              "else": "return false"
+            },
+            {
+              "id": "enjoy",
+              "prim": "set_motive_deltas",
+              "motive": "fun",
+              "delta": { "scope": "literal", "value": 5 },
+              "max": { "scope": "literal", "value": 100 },
+              "once": true,
+              "then": "nap",
+              "else": "error"
+            },
+            {
+              "id": "nap",
+              "prim": "sleep",
+              "ticks_param": "nap_ticks",
+              "then": "count_nap",
+              "else": "count_nap"
+            },
+            {
+              "id": "count_nap",
+              "prim": "expression",
+              "lhs": { "scope": "my_attributes", "name": "naps_taken" },
+              "op": "+=",
+              "rhs": { "scope": "literal", "value": 1 },
+              "then": "return true",
+              "else": "error"
+            }
+          ]
+        },
+        "multiply_action": {
+          "args": [],
+          "locals": ["spawned"],
+          "nodes": [
+            {
+              "id": "spawn",
+              "prim": "create_object_instance",
+              "guid": "0x6B4F0003",
+              "position": "in_front_of_me",
+              "fail_if_non_empty": true,
+              "then": "remember",
+              "else": "return false"
+            },
+            {
+              "id": "remember",
+              "prim": "expression",
+              "lhs": { "scope": "local", "name": "spawned" },
+              "op": "=",
+              "rhs": { "scope": "stack_object_id" },
+              "then": "greet",
+              "else": "error"
+            },
+            {
+              "id": "greet",
+              "prim": "push_interaction",
+              "interaction": "Admire",
+              "object_var": { "scope": "local", "name": "spawned" },
+              "priority": "user_driven",
+              "then": "return true",
+              "else": "return true"
+            }
+          ]
+        },
+        "retire_action": {
+          "args": [],
+          "locals": [],
+          "nodes": [
+            {
+              "id": "farewell",
+              "prim": "remove_object_instance",
+              "target": "me",
+              "cleanup_all": true,
+              "then": "return true",
+              "else": "return true"
+            }
+          ]
+        },
+        "always_test": {
+          "args": [],
+          "locals": [],
+          "nodes": [
+            {
+              "id": "always",
+              "prim": "expression",
+              "lhs": { "scope": "literal", "value": 1 },
+              "op": "==",
+              "rhs": { "scope": "literal", "value": 1 },
+              "then": "return true",
+              "else": "return false"
+            }
+          ]
+        },
+        "init": {
+          "args": [],
+          "locals": [],
+          "nodes": [
+            {
+              "id": "zero",
+              "prim": "expression",
+              "lhs": { "scope": "my_attributes", "name": "naps_taken" },
+              "op": "=",
+              "rhs": { "scope": "literal", "value": 0 },
+              "then": "return true",
+              "else": "error"
+            }
+          ]
+        },
+        "main_loop": {
+          "args": [],
+          "locals": [],
+          "nodes": [
+            {
+              "id": "idle",
+              "prim": "idle_for_input",
+              "ticks_param": 0,
+              "allow_push": true,
+              "then": "idle",
+              "else": "idle"
+            }
+          ]
+        }
+      },
+      "entry_points": { "main": "main_loop", "init": "init" }
+    }
+  ]
+}

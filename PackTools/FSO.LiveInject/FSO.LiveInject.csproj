@@ -1,0 +1,18 @@
+<Project Sdk="Microsoft.NET.Sdk">
+
+  <PropertyGroup>
+    <TargetFramework>net9.0</TargetFramework>
+    <Nullable>disable</Nullable>
+    <RootNamespace>FSO.LiveInject</RootNamespace>
+    <AllowUnsafeBlocks>true</AllowUnsafeBlocks>
+    <NoWarn>$(NoWarn);NU1701</NoWarn>
+    <InvariantGlobalization>true</InvariantGlobalization>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <ProjectReference Include="..\FSO.PackCompiler\FSO.PackCompiler.csproj" />
+    <ProjectReference Include="..\..\TSOClient\tso.simantics\FSO.SimAntics.csproj" />
+    <ProjectReference Include="..\..\TSOClient\tso.content\FSO.Content.csproj" />
+  </ItemGroup>
+
+</Project>

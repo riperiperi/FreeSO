@@ -88,6 +88,17 @@ namespace FSO.Content
             catalogEnrich.Clear();
         }
 
+        /// <summary>
+        /// Registers one catalog item into the live, already-initialized catalog —
+        /// for objects compiled and injected after startup (see FSO.LiveInject).
+        /// ItemsByCategory/ItemsByGUID are otherwise only populated once, in Init().
+        /// </summary>
+        public static void AddLive(ObjectCatalogItem item)
+        {
+            ItemsByCategory[item.Category].Add(item);
+            ItemsByGUID[item.GUID] = item;
+        }
+
         public List<ObjectCatalogItem> All()
         {
             var result = new List<ObjectCatalogItem>();

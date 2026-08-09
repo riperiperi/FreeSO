@@ -1,0 +1,10 @@
+{
+  "mcpServers": {
+    "fso-modserver": {
+      "command": "dotnet",
+      "args": [
+        "/absolute/path/to/FreeSO/PackTools/FSO.ModServer/bin/Debug/net8.0/FSO.ModServer.dll"
+      ]
+    }
+  }
+}

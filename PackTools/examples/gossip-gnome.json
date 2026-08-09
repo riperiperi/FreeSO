@@ -1,0 +1,149 @@
+{
+  "schema": "fso-pack/0.1",
+  "engine": "tso",
+  "pack": {
+    "id": "gossip-gnome",
+    "name": "Gossip Gnome",
+    "author": "kat",
+    "version": "1.0.0",
+    "description": "A garden gnome Sims can talk to. Listens. Judges silently. Restores a little social."
+  },
+  "objects": [
+    {
+      "id": "gossip_gnome",
+      "guid": "0x6B4F0001",
+      "name": "Gossip Gnome",
+      "price": 120,
+      "category": "decorative",
+      "appearance": { "clone_from_guid": "0xC14849AC" },
+      "tags": ["gnome", "gossip"],
+      "attributes": ["times_gossiped"],
+      "strings": {
+        "dialog": {
+          "1": "The gnome listens intently.",
+          "2": "Nice."
+        }
+      },
+      "interactions": [
+        {
+          "name": "Gossip",
+          "action": "gossip_action",
+          "test": "gossip_test",
+          "allow": { "visitors": true, "owner": true, "roommates": true },
+          "autonomy": { "advertised_motives": { "social": 20 } }
+        }
+      ],
+      "trees": {
+        "gossip_action": {
+          "args": [],
+          "locals": ["dialog_roll"],
+          "nodes": [
+            {
+              "id": "walk_over",
+              "prim": "goto_relative",
+              "location": "in_front_of",
+              "direction": "facing",
+              "then": "check_ok",
+              "else": "return false"
+            },
+            {
+              "id": "check_ok",
+              "call": "gossip_test",
+              "args": [],
+              "then": "chat_anim",
+              "else": "return false"
+            },
+            {
+              "id": "chat_anim",
+              "prim": "animate",
+              "animation": { "source": "person_stock", "id": 64 },
+              "expected_event_count": 1,
+              "then": "pick_line",
+              "else": "pick_line"
+            },
+            {
+              "id": "pick_line",
+              "prim": "random_number",
+              "destination": { "scope": "local", "name": "dialog_roll" },
+              "range": { "scope": "literal", "value": 2 },
+              "then": "listen_dialog",
+              "else": "error"
+            },
+            {
+              "id": "listen_dialog",
+              "prim": "dialog_private",
+              "message": 1,
+              "type": "message",
+              "continue": true,
+              "then": "reward",
+              "else": "reward"
+            },
+            {
+              "id": "reward",
+              "prim": "expression",
+              "lhs": { "scope": "my_motives", "name": "social" },
+              "op": "+=",
+              "rhs": { "scope": "literal", "value": 15 },
+              "then": "count_it",
+              "else": "error"
+            },
+            {
+              "id": "count_it",
+              "prim": "expression",
+              "lhs": { "scope": "my_attributes", "name": "times_gossiped" },
+              "op": "+=",
+              "rhs": { "scope": "literal", "value": 1 },
+              "then": "return true",
+              "else": "error"
+            }
+          ]
+        },
+        "gossip_test": {
+          "args": [],
+          "locals": [],
+          "nodes": [
+            {
+              "id": "always",
+              "prim": "expression",
+              "lhs": { "scope": "literal", "value": 1 },
+              "op": "==",
+              "rhs": { "scope": "literal", "value": 1 },
+              "then": "return true",
+              "else": "return false"
+            }
+          ]
+        },
+        "init": {
+          "args": [],
+          "locals": [],
+          "nodes": [
+            {
+              "id": "zero_count",
+              "prim": "expression",
+              "lhs": { "scope": "my_attributes", "name": "times_gossiped" },
+              "op": "=",
+              "rhs": { "scope": "literal", "value": 0 },
+              "then": "return true",
+              "else": "error"
+            }
+          ]
+        },
+        "main_loop": {
+          "args": [],
+          "locals": [],
+          "nodes": [
+            {
+              "id": "idle",
+              "prim": "idle_for_input",
+              "ticks_param": 0,
+              "allow_push": true,
+              "then": "idle",
+              "else": "idle"
+            }
+          ]
+        }
+      },
+      "entry_points": { "main": "main_loop", "init": "init" }
+    }
+  ]
+}

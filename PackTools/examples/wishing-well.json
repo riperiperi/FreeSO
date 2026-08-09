@@ -1,0 +1,163 @@
+{
+  "schema": "fso-pack/0.1",
+  "engine": "tso",
+  "pack": {
+    "id": "wishing-well",
+    "name": "Wishing Well",
+    "author": "kat",
+    "version": "1.0.0",
+    "description": "Toss a coin, make a wish. The well grants a little fun, five wishes per well."
+  },
+  "objects": [
+    {
+      "id": "wishing_well",
+      "guid": "0x6B4F0002",
+      "name": "Wishing Well",
+      "price": 350,
+      "category": "decorative",
+      "appearance": { "clone_from_guid": "0xA82CA08E" },
+      "tags": ["well", "wish", "fountain"],
+      "attributes": ["wishes_made"],
+      "strings": {
+        "dialog": {
+          "1": "The water shimmers expectantly. Make a wish?",
+          "2": "Wish",
+          "3": "Walk away",
+          "4": "Wishing Well"
+        }
+      },
+      "interactions": [
+        {
+          "name": "Make a Wish",
+          "action": "wish_action",
+          "test": "wish_test",
+          "allow": { "visitors": true, "owner": true, "roommates": true },
+          "autonomy": { "advertised_motives": { "fun": 30 } }
+        }
+      ],
+      "trees": {
+        "wish_action": {
+          "args": [],
+          "locals": [],
+          "nodes": [
+            {
+              "id": "walk_up",
+              "prim": "goto_relative",
+              "location": "in_front_of",
+              "direction": "facing",
+              "then": "ask",
+              "else": "return false"
+            },
+            {
+              "id": "ask",
+              "prim": "dialog_private",
+              "type": "yes_no",
+              "message": 1,
+              "yes": 2,
+              "no": 3,
+              "title": 4,
+              "then": "toss",
+              "else": "return false"
+            },
+            {
+              "id": "toss",
+              "prim": "play_sound",
+              "event_id": 42,
+              "volume": 80,
+              "then": "sparkle",
+              "else": "sparkle"
+            },
+            {
+              "id": "sparkle",
+              "prim": "set_balloon_headline",
+              "group": "balloon",
+              "index": 5,
+              "duration": 60,
+              "then": "roll",
+              "else": "roll"
+            },
+            {
+              "id": "roll",
+              "prim": "random_number",
+              "destination": { "scope": "temps", "value": 0 },
+              "range": { "scope": "literal", "value": 3 },
+              "then": "grant",
+              "else": "error"
+            },
+            {
+              "id": "grant",
+              "prim": "expression",
+              "lhs": { "scope": "my_motives", "name": "fun" },
+              "op": "+=",
+              "rhs": { "scope": "literal", "value": 10 },
+              "then": "count",
+              "else": "error"
+            },
+            {
+              "id": "count",
+              "prim": "expression",
+              "lhs": { "scope": "my_attributes", "name": "wishes_made" },
+              "op": "+=",
+              "rhs": { "scope": "literal", "value": 1 },
+              "then": "return true",
+              "else": "error"
+            }
+          ]
+        },
+        "wish_test": {
+          "args": [],
+          "locals": [],
+          "nodes": [
+            {
+              "id": "is_well",
+              "prim": "test_object_type",
+              "guid": "0x6B4F0002",
+              "object_id": { "scope": "stack_object_id" },
+              "then": "gate",
+              "else": "return false"
+            },
+            {
+              "id": "gate",
+              "prim": "expression",
+              "lhs": { "scope": "my_attributes", "name": "wishes_made" },
+              "op": "<",
+              "rhs": { "scope": "literal", "value": 5 },
+              "then": "return true",
+              "else": "return false"
+            }
+          ]
+        },
+        "init": {
+          "args": [],
+          "locals": [],
+          "nodes": [
+            {
+              "id": "zero",
+              "prim": "expression",
+              "lhs": { "scope": "my_attributes", "name": "wishes_made" },
+              "op": "=",
+              "rhs": { "scope": "literal", "value": 0 },
+              "then": "return true",
+              "else": "error"
+            }
+          ]
+        },
+        "main_loop": {
+          "args": [],
+          "locals": [],
+          "nodes": [
+            {
+              "id": "idle",
+              "prim": "idle_for_input",
+              "ticks_param": 0,
+              "allow_push": true,
+              "then": "idle",
+              "else": "idle"
+            }
+          ]
+        }
+      },
+      "entry_points": { "main": "main_loop", "init": "init" }
+    }
+  ]
+}

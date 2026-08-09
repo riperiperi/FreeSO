@@ -1,0 +1,241 @@
+{
+  "schema": "fso-pack/0.1",
+  "engine": "tso",
+  "pack": {
+    "id": "fortune-cat",
+    "name": "Fortune Cat",
+    "author": "kat",
+    "version": "1.0.0",
+    "description": "A maneki-neko that beckons luck, whispers fortunes, and occasionally gives orders."
+  },
+  "objects": [
+    {
+      "id": "fortune_cat",
+      "guid": "0x6B4F0005",
+      "name": "Fortune Cat",
+      "price": 180,
+      "category": "decorative",
+      "appearance": { "clone_from_guid": "0xC14849AC" },
+      "tags": ["cat", "fortune", "luck"],
+      "attributes": ["fortunes_told"],
+      "strings": {
+        "dialog": {
+          "1": "The cat's paw sways. Good fortune approaches from the east.",
+          "2": "Psst. Buy the pinball machine. Trust me.",
+          "3": "Fortune Cat"
+        }
+      },
+      "interactions": [
+        {
+          "name": "Beckon Luck",
+          "action": "beckon_action",
+          "test": "always_test",
+          "allow": { "visitors": true, "owner": true, "roommates": true },
+          "autonomy": { "advertised_motives": { "fun": 20 } }
+        },
+        {
+          "name": "Hear Whisper",
+          "action": "whisper_action",
+          "test": "always_test",
+          "allow": { "visitors": true, "owner": true, "roommates": true }
+        },
+        {
+          "name": "Obey the Cat",
+          "action": "command_action",
+          "test": "always_test",
+          "allow": { "owner": true, "roommates": true }
+        }
+      ],
+      "trees": {
+        "beckon_action": {
+          "args": [],
+          "locals": ["history"],
+          "nodes": [
+            {
+              "id": "approach",
+              "prim": "goto_relative",
+              "location": "anywhere_near",
+              "direction": "any_direction",
+              "then": "charm",
+              "else": "return false"
+            },
+            {
+              "id": "charm",
+              "prim": "change_suit_or_accessory",
+              "suit": 5,
+              "scope": "person",
+              "update": true,
+              "then": "shine",
+              "else": "shine"
+            },
+            {
+              "id": "shine",
+              "prim": "set_balloon_headline",
+              "group": "magic",
+              "index": 2,
+              "duration": 90,
+              "then": "announce",
+              "else": "announce"
+            },
+            {
+              "id": "announce",
+              "prim": "dialog_global",
+              "type": "message",
+              "message": 1,
+              "title": 3,
+              "continue": true,
+              "then": "seed",
+              "else": "seed"
+            },
+            {
+              "id": "seed",
+              "prim": "expression",
+              "lhs": { "scope": "temps", "value": 1 },
+              "op": "=",
+              "rhs": { "scope": "literal", "value": 4 },
+              "then": "roll",
+              "else": "error"
+            },
+            {
+              "id": "roll",
+              "prim": "random_number",
+              "destination": { "scope": "temps", "value": 0 },
+              "range": { "scope": "temps", "value": 1 },
+              "then": "remember",
+              "else": "error"
+            },
+            {
+              "id": "remember",
+              "prim": "expression",
+              "lhs": { "scope": "local", "name": "history" },
+              "op": "push",
+              "rhs": { "scope": "temps", "value": 0 },
+              "then": "recall",
+              "else": "error"
+            },
+            {
+              "id": "recall",
+              "prim": "expression",
+              "lhs": { "scope": "temps", "value": 2 },
+              "op": "pop",
+              "rhs": { "scope": "local", "name": "history" },
+              "then": "tally",
+              "else": "error"
+            },
+            {
+              "id": "tally",
+              "prim": "expression",
+              "lhs": { "scope": "my_attributes", "name": "fortunes_told" },
+              "op": "+=",
+              "rhs": { "scope": "literal", "value": 1 },
+              "then": "return true",
+              "else": "error"
+            }
+          ]
+        },
+        "whisper_action": {
+          "args": [],
+          "locals": [],
+          "nodes": [
+            {
+              "id": "sneak",
+              "prim": "goto_relative",
+              "location": "behind",
+              "direction": "facing",
+              "then": "murmur",
+              "else": "return false"
+            },
+            {
+              "id": "murmur",
+              "prim": "dialog_semiglobal",
+              "type": "message",
+              "message": 2,
+              "title": 3,
+              "continue": true,
+              "then": "return true",
+              "else": "return true"
+            }
+          ]
+        },
+        "command_action": {
+          "args": [],
+          "locals": ["target"],
+          "nodes": [
+            {
+              "id": "mark",
+              "prim": "expression",
+              "lhs": { "scope": "local", "name": "target" },
+              "op": "=",
+              "rhs": { "scope": "stack_object_id" },
+              "then": "choose",
+              "else": "error"
+            },
+            {
+              "id": "choose",
+              "prim": "expression",
+              "lhs": { "scope": "temps", "value": 0 },
+              "op": "=",
+              "rhs": { "scope": "literal", "value": 0 },
+              "then": "order",
+              "else": "error"
+            },
+            {
+              "id": "order",
+              "prim": "push_interaction",
+              "interaction": "from_temp",
+              "object_var": { "scope": "local", "name": "target" },
+              "priority": "user_driven",
+              "then": "return true",
+              "else": "return true"
+            }
+          ]
+        },
+        "always_test": {
+          "args": [],
+          "locals": [],
+          "nodes": [
+            {
+              "id": "always",
+              "prim": "expression",
+              "lhs": { "scope": "literal", "value": 1 },
+              "op": "==",
+              "rhs": { "scope": "literal", "value": 1 },
+              "then": "return true",
+              "else": "return false"
+            }
+          ]
+        },
+        "init": {
+          "args": [],
+          "locals": [],
+          "nodes": [
+            {
+              "id": "zero",
+              "prim": "expression",
+              "lhs": { "scope": "my_attributes", "name": "fortunes_told" },
+              "op": "=",
+              "rhs": { "scope": "literal", "value": 0 },
+              "then": "return true",
+              "else": "error"
+            }
+          ]
+        },
+        "main_loop": {
+          "args": [],
+          "locals": [],
+          "nodes": [
+            {
+              "id": "idle",
+              "prim": "idle_for_input",
+              "ticks_param": 0,
+              "allow_push": true,
+              "then": "idle",
+              "else": "idle"
+            }
+          ]
+        }
+      },
+      "entry_points": { "main": "main_loop", "init": "init" }
+    }
+  ]
+}

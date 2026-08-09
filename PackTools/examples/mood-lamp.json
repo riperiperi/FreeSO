@@ -1,0 +1,136 @@
+{
+  "schema": "fso-pack/0.1",
+  "engine": "tso",
+  "pack": {
+    "id": "mood-lamp",
+    "name": "Mood Lamp",
+    "author": "kat",
+    "version": "1.0.0",
+    "description": "A lamp that warms up in steps and announces its vibe to the room."
+  },
+  "objects": [
+    {
+      "id": "mood_lamp",
+      "guid": "0x6B4F0004",
+      "name": "Mood Lamp",
+      "price": 95,
+      "category": "lighting",
+      "appearance": { "clone_from_guid": "0xBA67EAD2" },
+      "tags": ["lamp", "mood", "ambient"],
+      "attributes": ["brightness"],
+      "interactions": [
+        {
+          "name": "Toggle",
+          "action": "toggle_action",
+          "test": "lamp_test",
+          "allow": { "visitors": true, "owner": true, "roommates": true }
+        }
+      ],
+      "trees": {
+        "toggle_action": {
+          "args": [],
+          "locals": [],
+          "nodes": [
+            {
+              "id": "walk_to_slot",
+              "prim": "goto_routing_slot",
+              "slot": { "type": "literal", "value": 0 },
+              "then": "warm_up",
+              "else": "return false"
+            },
+            {
+              "id": "warm_up",
+              "call": "set_brightness",
+              "args": [3],
+              "then": "announce",
+              "else": "return false"
+            },
+            {
+              "id": "announce",
+              "prim": "show_string",
+              "string_id": 1,
+              "then": "find_seat",
+              "else": "find_seat"
+            },
+            {
+              "id": "find_seat",
+              "prim": "find_best_object_for_function",
+              "function": 7,
+              "then": "return true",
+              "else": "return true"
+            }
+          ]
+        },
+        "set_brightness": {
+          "args": ["level"],
+          "locals": ["i"],
+          "nodes": [
+            {
+              "id": "step",
+              "prim": "expression",
+              "lhs": { "scope": "local", "name": "i" },
+              "op": "inc_and_less",
+              "rhs": { "scope": "parameters", "name": "level" },
+              "then": "step",
+              "else": "store"
+            },
+            {
+              "id": "store",
+              "prim": "expression",
+              "lhs": { "scope": "my_attributes", "name": "brightness" },
+              "op": "=",
+              "rhs": { "scope": "parameters", "name": "level" },
+              "then": "return true",
+              "else": "error"
+            }
+          ]
+        },
+        "lamp_test": {
+          "args": [],
+          "locals": [],
+          "nodes": [
+            {
+              "id": "always",
+              "prim": "expression",
+              "lhs": { "scope": "literal", "value": 1 },
+              "op": "==",
+              "rhs": { "scope": "literal", "value": 1 },
+              "then": "return true",
+              "else": "return false"
+            }
+          ]
+        },
+        "init": {
+          "args": [],
+          "locals": [],
+          "nodes": [
+            {
+              "id": "dark",
+              "prim": "expression",
+              "lhs": { "scope": "my_attributes", "name": "brightness" },
+              "op": "=",
+              "rhs": { "scope": "literal", "value": 0 },
+              "then": "return true",
+              "else": "error"
+            }
+          ]
+        },
+        "main_loop": {
+          "args": [],
+          "locals": [],
+          "nodes": [
+            {
+              "id": "idle",
+              "prim": "idle_for_input",
+              "ticks_param": 0,
+              "allow_push": true,
+              "then": "idle",
+              "else": "idle"
+            }
+          ]
+        }
+      },
+      "entry_points": { "main": "main_loop", "init": "init" }
+    }
+  ]
+}
