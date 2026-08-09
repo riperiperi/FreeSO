@@ -48,13 +48,24 @@ this flag in their own `init` BHAV; our generator's `init` tree (in `PackBuilder
 only zeroes declared attributes and never touches it, so it stays 0 on every object we
 emit.
 
-**Fix** (not yet implemented — `PackBuilder.cs` is owned by other sessions, coordinate
-before editing): generated `init` trees need to set `my_object` scope index 4
-(`AllowedHeightFlags`) to the value a working base-game chair uses (confirm by
-decompiling one's init BHAV rather than assuming — there may be a wider mask for
-floor+terrain both). Add a regression test on the emitted OBJD/init, since this is
-exactly the class of bug a headless VM harness can't see (placement/draw-offset only
-matters with `UseWorld` true).
+**Fix — LANDED** in `50cfb5323` ("Fix every compiled object being unplaceable and
+rendering floating"), later the same day this section was written. This paragraph
+previously read "not yet implemented"; that was stale, and a later session nearly
+re-implemented it on the strength of this doc alone. **Check the code before trusting
+a status line in here.**
+
+What shipped, in `PackBuilder.cs`: rather than editing the pack's own init tree, the
+compiler synthesizes its own `__placement_init` tree that runs first, sets
+`my_object[4]` (`VMStackObjectVariable.AllowedHeightFlags`) to `1` via an `expression`
+node, then falls through to the pack's authored init tree if it declared one — so user
+init logic still runs. The "decompile a base-game chair to confirm the mask" step was
+skipped deliberately: bit 0 alone ("allowed on floor") is what `VMContext.GetObjPlace`
+and `UIObjectHolder` actually read, so a wider mask wasn't needed to clear the bug.
+
+Regression test exists and is byte-level, not behavioural-approximate:
+`RoundTripTests` asserts BHAV 4100's first instruction is opcode `0x02` with operand
+`04 00 01 00 00 05 03 07` — literally `my_object[4] = 1` — plus the sub-routine call
+into the user init. Green on the archive base (56/56).
 
 ## Process notes, for next time
 
