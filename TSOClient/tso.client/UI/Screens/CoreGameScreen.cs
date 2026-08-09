@@ -40,6 +40,7 @@ namespace FSO.Client.UI.Screens
         public UIUCP ucp { get; set; }
         public UIGizmo gizmo;
         public UIInbox Inbox;
+        public UIMakeSomethingDialog MakeSomething;
         public UIGameTitle Title;
         public UIArchiveUserList UserList;
 
@@ -309,6 +310,16 @@ namespace FSO.Client.UI.Screens
                 userListController.FlashCallback = FlashUserList;
             }
             WindowContainer.Add(UserList);
+
+            // Real agent when FSO.AgentBridge is present, canned narration otherwise, so the
+            // panel stays demoable on a machine without the authoring toolchain or API keys —
+            // it shows the loop instead of an error.
+            MakeSomething = new UIMakeSomethingDialog();
+            MakeSomething.Visible = false;
+            MakeSomething.SetAgent(System.IO.File.Exists(ProcessMakeSomethingAgent.BridgePath)
+                ? (IMakeSomethingAgent)new ProcessMakeSomethingAgent()
+                : new StubMakeSomethingAgent());
+            WindowContainer.Add(MakeSomething);
 
             var status = new UINetStatusTray();
             Add(status);
@@ -1104,6 +1115,19 @@ namespace FSO.Client.UI.Screens
         public void FlashUserList(bool flash)
         {
             ucp.FlashUserList(flash);
+        }
+
+        public void OpenMakeSomething()
+        {
+            MakeSomething.Visible = true;
+            MakeSomething.X = GlobalSettings.Default.GraphicsWidth / 2 - 200;
+            MakeSomething.Y = GlobalSettings.Default.GraphicsHeight / 2 - 160;
+            WindowContainer.SendToFront(MakeSomething);
+        }
+
+        public void CloseMakeSomething()
+        {
+            MakeSomething.Visible = false;
         }
 
         private void MouseHandler(UIMouseEventType type, UpdateState state)

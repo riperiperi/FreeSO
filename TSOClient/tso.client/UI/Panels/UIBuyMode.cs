@@ -9,6 +9,7 @@ using FSO.Common.Rendering.Framework.Model;
 using FSO.SimAntics.Model;
 using Microsoft.Xna.Framework;
 using FSO.Content.Interfaces;
+using FSO.Client.UI.Screens;
 
 namespace FSO.Client.UI.Panels
 {
@@ -61,6 +62,7 @@ namespace FSO.Client.UI.Panels
 
         public UIButton MapBuildingModeButton { get; set; }
         public UIButton PetsButton { get; set; }
+        public UIButton MakeSomethingButton { get; set; }
 
         private List<VMInventoryItem> LastInventory;
         private List<UICatalogElement> CurrentInventory;
@@ -87,6 +89,16 @@ namespace FSO.Client.UI.Panels
             this.AddAt(5, InventoryCatalogVisitorIcon);
 
             Catalog.Position = new Microsoft.Xna.Framework.Vector2(275, 7);
+
+            // "Make Something" entry point (PLAYER-LAYER-DESIGN.md §1) — added purely in code,
+            // like InventoryButtonBackgroundImage/CatBg above, rather than via buypanel.uis:
+            // that script ships as original EA content and isn't source-controlled in this repo.
+            MakeSomethingButton = new UIButton();
+            MakeSomethingButton.Caption = "Make Something";
+            MakeSomethingButton.Position = new Microsoft.Xna.Framework.Vector2(Background.Width - 140, 5);
+            MakeSomethingButton.Width = 130;
+            MakeSomethingButton.OnButtonClick += MakeSomethingButton_OnButtonClick;
+            this.Add(MakeSomethingButton);
 
             //MapBuildingModeButton.OnButtonClick += ChangeCategory;
             InventoryButton.OnButtonClick += ChangeCategory;
@@ -324,6 +336,12 @@ namespace FSO.Client.UI.Panels
             InventoryCatalogVisitorPreviousPageButton.Disabled = true;
 
             return;
+        }
+
+        void MakeSomethingButton_OnButtonClick(UIElement button)
+        {
+            var screen = (GameFacade.Screens.CurrentUIScreen as CoreGameScreen);
+            screen?.OpenMakeSomething();
         }
 
         public void SetMode(int mode)
