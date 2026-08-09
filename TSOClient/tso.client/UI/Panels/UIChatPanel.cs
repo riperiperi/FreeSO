@@ -34,6 +34,8 @@ namespace FSO.Client.UI.Panels
             }
         }
 
+        public static bool HistoryVisiblePreference = true;
+
         public List<UIChatBalloon> Labels;
         public List<Rectangle> InvalidAreas;
         private UILotControl Owner;
@@ -95,7 +97,7 @@ namespace FSO.Client.UI.Panels
 
             HistoryDialog = new UIChatDialog(owner);
             HistoryDialog.Position = new Vector2(GlobalSettings.Default.ChatLocationX, GlobalSettings.Default.ChatLocationY);
-            HistoryDialog.Visible = true;
+            HistoryDialog.Visible = HistoryVisiblePreference;
             HistoryDialog.Opacity = 0.8f;
             HistoryDialog.OnSendMessage += SendMessage;
             this.Add(HistoryDialog);
@@ -317,6 +319,7 @@ namespace FSO.Client.UI.Panels
             if (state.NewKeys.Contains(Keys.H) && state.CtrlDown)
             {
                 HistoryDialog.Visible = !HistoryDialog.Visible;
+                HistoryVisiblePreference = HistoryDialog.Visible;
                 if (HistoryDialog.Visible) state.InputManager.SetFocus(HistoryDialog.ChatEntryTextEdit);
                 else state.InputManager.SetFocus(null);
             }

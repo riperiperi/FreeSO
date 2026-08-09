@@ -187,6 +187,7 @@ namespace FSO.Client.UI.Panels
         private void CloseButton_OnButtonClick(UIElement button)
         {
             //hide self.
+            UIChatPanel.HistoryVisiblePreference = false;
             Visible = false;
         }
 
