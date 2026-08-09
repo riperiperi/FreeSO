@@ -33,6 +33,7 @@ namespace FSO.Client.Model.Archive
         public string Map { get; set; }
         public string ZipLocation { get; set; }
         public string ZipHash { get; set; }
+        public string ZipSize { get; set; }
         public string LocalDir { get; set; }
         public bool Template { get; set; }
     }

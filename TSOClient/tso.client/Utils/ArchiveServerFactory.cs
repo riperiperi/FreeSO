@@ -92,6 +92,11 @@ namespace FSO.Client.Utils
             return File.Exists(path);
         }
 
+        private static string BytesToMiB(long bytes)
+        {
+            return $"{bytes / (1024f * 1024f):0.00} MiB";
+        }
+
         private void ExtractArchive(ArchiveManifest manifest, string path, Action<bool> onResult)
         {
             string extractPath = Path.Combine(Path.GetDirectoryName(manifest.ActivePath), "data/");
@@ -105,6 +110,18 @@ namespace FSO.Client.Utils
 
                     manifest.LocalDir = "data/";
                     manifest.Save();
+
+                    GameThread.SetTimeout(() =>
+                    {
+                        try
+                        {
+                            File.Delete(path);
+                        }
+                        catch
+                        {
+                            // Not fatal, just wastes a lot of disk space.
+                        }
+                    }, 100);
 
                     Config.ArchiveDataDirectory = extractPath;
                     onResult(true);
@@ -137,46 +154,82 @@ namespace FSO.Client.Utils
                 return;
             }
 
-            var size = $"{int.Parse(manifest.Size) / (1024f * 1024f)} MB";
+            _ = long.TryParse(manifest.ZipSize, out long zipSize);
+            _ = long.TryParse(manifest.Size, out long size);
 
             UIAlert alert = null;
 
-            alert = UIScreen.GlobalShowAlert(new UIAlertOptions
+            var startDownload = () =>
             {
-                Title = GameFacade.Strings.GetString("f128", "1"),
-                Message = GameFacade.Strings.GetString("f128", "2", new string[] { manifest.Name, uri.Host, size }),
-                Width = 500,
-                Buttons = UIAlertButton.YesNo(x =>
-                {
-                    UIScreen.RemoveDialog(alert);
-                    var downloader = new UIWebDownloaderDialog(GameFacade.Strings.GetString("f128", "5"), new DownloadItem[]
-                    {
+                var downloader = new UIWebDownloaderDialog(GameFacade.Strings.GetString("f128", "5"),
+                   [
                         new DownloadItem {
                             Url = manifest.ZipLocation,
                             DestPath = downloadPath,
                             Name = manifest.Name
                         }
-                    });
-                    downloader.OnComplete += (bool success, string failedFile = null) => {
-                        UIScreen.RemoveDialog(downloader);
+                   ]);
 
-                        if (success && ZipDataPresent(manifest, out string _))
+                downloader.OnComplete += (bool success, string failedFile = null) =>
+                {
+                    UIScreen.RemoveDialog(downloader);
+
+                    if (success && ZipDataPresent(manifest, out _))
+                    {
+                        ExtractArchive(manifest, downloadPath, onResult);
+                    }
+                    else
+                    {
+                        UIScreen.GlobalShowAlert(new UIAlertOptions
                         {
-                            ExtractArchive(manifest, downloadPath, onResult);
-                        }
-                        else
+                            Title = GameFacade.Strings.GetString("f128", "10"),
+                            Message = GameFacade.Strings.GetString("f128", "11"),
+                            Buttons = UIAlertButton.Ok()
+                        }, true);
+
+                        onResult(false);
+                    }
+                };
+                GameThread.NextUpdate(y => UIScreen.GlobalShowDialog(downloader, true));
+            };
+
+            long warningSpace = zipSize + size;
+
+            alert = UIScreen.GlobalShowAlert(new UIAlertOptions
+            {
+                Title = GameFacade.Strings.GetString("f128", "1"),
+                Message = GameFacade.Strings.GetString("f128", "2", [manifest.Name, uri.Host, BytesToMiB(zipSize), BytesToMiB(size)]),
+                Width = 500,
+                Buttons = UIAlertButton.YesNo(x =>
+                {
+                    UIScreen.RemoveDialog(alert);
+                    var info = new DriveInfo(Path.GetFullPath(basePath));
+                    if (info.AvailableFreeSpace < warningSpace)
+                    {
+                        UIAlert alert = null;
+
+                        alert = UIScreen.GlobalShowAlert(new()
                         {
-                            UIScreen.GlobalShowAlert(new UIAlertOptions
+                            Title = GameFacade.Strings.GetString("f128", "154"),
+                            Message = GameFacade.Strings.GetString("f128", "153", [BytesToMiB(warningSpace), BytesToMiB(info.AvailableFreeSpace)]),
+                            Buttons = UIAlertButton.YesNo(x =>
                             {
-                                Title = GameFacade.Strings.GetString("f128", "10"),
-                                Message = GameFacade.Strings.GetString("f128", "11"),
-                                Buttons = UIAlertButton.Ok()
-                            }, true);
+                                UIScreen.RemoveDialog(alert);
 
-                            onResult(false);
-                        }
-                    };
-                    GameThread.NextUpdate(y => UIScreen.GlobalShowDialog(downloader, true));
+                                startDownload();
+                            },
+                            x =>
+                            {
+                                UIScreen.RemoveDialog(alert);
+
+                                onResult(false);
+                            })
+                        }, true);
+                    }
+                    else
+                    {
+                        startDownload();
+                    }
                 },
                 x =>
                 {
