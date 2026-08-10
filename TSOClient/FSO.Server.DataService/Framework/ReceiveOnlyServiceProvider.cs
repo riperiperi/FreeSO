@@ -1,14 +1,11 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Threading;
-using System.Threading.Tasks;
+﻿using System.Collections.Concurrent;
 
 namespace FSO.Common.DataService.Framework
 {
     public abstract class ReceiveOnlyServiceProvider<KEY, VALUE> : AbstractDataServiceProvider<KEY, VALUE> where VALUE : IModel
     {
         //protected Dictionary<KEY, VALUE> Items = new Dictionary<KEY, VALUE>();
-        protected Dictionary<KEY, Task<object>> Values = new Dictionary<KEY, Task<object>>();
+        protected ConcurrentDictionary<KEY, Task<object>> Values = [];
         protected TimeSpan LazyLoadTimeout = TimeSpan.FromSeconds(10);
 
         public override Task<object> Get(object key)
@@ -20,22 +17,7 @@ namespace FSO.Common.DataService.Framework
 
             var castKey = (KEY)key;
 
-            if (Values.ContainsKey(castKey))
-            {
-                return Values[castKey];
-            }
-
-            lock (Values)
-            {
-                if (Values.ContainsKey(castKey))
-                {
-                    return Values[castKey];
-                }
-
-                var result = ResolveMissingKey(castKey);
-                Values.Add(castKey, result);
-                return result;
-            }
+            return Values.GetOrAdd(castKey, (KEY key) => ResolveMissingKey(key));
         }
 
         private Task<object> ResolveMissingKey(object key)
