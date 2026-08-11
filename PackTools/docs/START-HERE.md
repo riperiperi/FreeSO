@@ -44,30 +44,53 @@ prove the idea. Its two costs — a WebSocket gateway with no prior art anywhere
 
 ## The next thing to do
 
-**A2: floor-plan image → blueprint XML.** The only missing link in Phase A.
+**Floor-plan image → layout JSON.** That is the whole remaining gap in Phase A, and it is
+one step wide. Everything downstream of that JSON is verified end to end, pixels included.
 
-**A1 is done** (`d962fed12`). Houses are already data: a lot is a blueprint XML —
-`<floors>`, `<walls>`, `<object>`, each with tile coordinates and a level.
-`XmlHouse.cs` parses it, `VMWorldActivator.LoadFromXML()` builds the world, and
-**`VMBlueprintRestoreCmd` is a live network command that takes that XML as raw bytes
-and rebuilds a lot mid-game** — the server already uses it to reset lots. A hand-written
-`PackTools/examples/house-one-room.xml` goes through that path into a live headless VM
-and the engine derives a sealed interior from it:
+What already exists, so do not rebuild it:
+
+- **`PackTools/FSO.HouseGen`** — `HouseLayout` (rooms as tile rectangles, doors on wall
+  edges) and `BlueprintWriter`, layout JSON → blueprint XML, deterministic, no AI in the
+  path. The vision model's only job is to emit that JSON.
+- **The delivery path** — `XmlHouse.cs` parses the XML, `VMWorldActivator.LoadFromXML()`
+  builds the world, and `VMBlueprintRestoreCmd` rebuilds a lot mid-game from raw bytes.
+- **Two oracles.** `examples/house-one-room.xml` is hand-authored and the writer reproduces
+  it element-for-element on the low edges. `examples/layouts/kat-flat.json` is a
+  three-room flat with doors that has been **seen standing in the client**.
 
 ```sh
-~/.dotnet/dotnet PackTools/FSO.VMHarness/bin/Debug/net9.0/FSO.VMHarness.dll \
-  --house PackTools/examples/house-one-room.xml
-# -> 16 floor tiles, 15 wall tiles, probe (33,33) inside an enclosed room
+# layout -> blueprint (ALWAYS pass --base, see below)
+~/.dotnet/dotnet PackTools/FSO.HouseGen/bin/Debug/net9.0/FSO.HouseGen.dll \
+  PackTools/examples/layouts/kat-flat.json out.xml \
+  --base TSOClient/FSO.Content.TSO/Content/Blueprints/empty_lot_fso.xml
+
+# blueprint -> live VM, reports rooms/doors/objects and the lot-phone check
+~/.dotnet/dotnet PackTools/FSO.VMHarness/bin/Debug/net9.0/FSO.VMHarness.dll --house out.xml
 ```
 
-So A2 has a known-good file to compare its output against. Still open from A1: nobody
-has walked a Sim inside — architecture is proven, occupancy is not.
+To see one in the game: copy the XML into
+`~/Library/Application Support/The Sims Online/TSOClient/housedata/blueprints/`, launch
+FreeSO, click **Sandbox Mode** (top-left of the login screen), pick the file. **Keep `0`
+out of the filename** — `BlueprintReset` infers a job level from the path via
+`path.Substring(path.IndexOf('0'), 2)` and will clip and offset the house if that parses.
+
+Three things that pass every headless check and still fail:
+
+1. **No lot phone (`0x313D2F9A`) → grey screen.** `VMWorldActivator` sets
+   `VM.TSOState.Size` only when the blueprint contains it. Always generate with `--base`.
+2. **Objects use a different level convention than floors and walls.** Floors/walls get
+   `+1` applied; objects do not, and `level="0"` skips positioning entirely.
+3. **Walls must be written twice** — low edge plus the mirrored high-edge bit on the
+   neighbour. Enclosure works without it; doors do not.
+
+Scale mapping is settled: **1 tile = 1 metre**, minimum room dimension 2 tiles. The
+`FloorClip`/`TargetSize` machinery is job-lot only; a residential lot gives ~75x75 usable,
+so capacity is never the constraint — legibility below 1 m is.
+
+Still open from A1: nobody has walked a Sim through a door.
 
 Note `VMBlueprintRestoreCmd.Verify()` returns `!FromNet` — a client cannot send it. The
 generator runs server-side.
-
-**Unanswered and it will bite:** lots are 77 tiles with `FloorClip`/`Offset`/`TargetSize`.
-A real home needs a tiles-per-foot rule and a rule for what gets dropped.
 
 ## How to work here
 
