@@ -95,10 +95,16 @@ art generators, contact-sheet review, prompt caching, `PackTools/citygen` — Sa
 generated and verified (39.4 km square, 42,159 OSM ways) — and **blueprint XML → live
 enclosed house** (A1, `d962fed12`).
 
+**Seen on screen, 2026-08-10**: a generated three-room house with doors, standing on a lot
+in the real client via Sandbox Mode (`FSO.HouseGen` + `examples/layouts/kat-flat.json`).
+The first visible output of this pipeline. Note the trap it cost a day to find: a blueprint
+with no lot phone (`0x313D2F9A`) passes every architecture check and renders a grey screen —
+generate with `--base Content/Blueprints/empty_lot_fso.xml`.
+
 **Not working / untested**: the Make Something panel has never been clicked by a human;
-no Sim has walked inside a generated house; the generated SF has never been loaded into
-the game; floor-plan → XML does not exist; per-object cost is too high for a 200-object
-catalog.
+no Sim has walked *through a door* yet; the generated SF has never been loaded into
+the game; **floor-plan image → layout JSON does not exist** (the last missing link);
+per-object cost is too high for a 200-object catalog.
 
 **Fixed, don't re-chase**: catalog thumbnails. They rendered blank on `master`/`mac-port`
 because `UICatalog.GetObjIcon` set `null` when an object had no BMP chunk, and we emit

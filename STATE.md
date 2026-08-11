@@ -48,7 +48,8 @@ The branch that is actually maintained. `master` has not moved since Aug 2025.
 |---|---|
 | **Address → city** ✅ | `PackTools/citygen/generate_city.py` turns a place name into FreeSO's full city raster set. Verified on San Francisco: 39.4 km square, elevation −5..781 m, 42,159 OSM road ways. Written to disk; **not yet loaded into the running game.** |
 | **Blueprint → live house** ✅ | **Proven.** A hand-authored blueprint XML loads through `VMBlueprintRestoreCmd` into a running VM and the engine derives a sealed interior. `PackTools/examples/house-one-room.xml` + `FSO.VMHarness --house`. Verified both directions — remove the walls and the same probe reports outdoors. |
-| **Floor plan → blueprint** | **Not built.** Now the *only* missing link: vision → room layout → XML. The delivery path underneath it is proven, and there is a known-good file to compare output against. |
+| **Layout → blueprint → rendered house** ✅ | **Seen on screen, 2026-08-10.** `FSO.HouseGen` turns a room-layout JSON into blueprint XML; `kat-flat.json` (living/bedroom/bathroom, three doors) loads through Sandbox Mode and **stands on the lot in the real client** — walls up, floors down, all three doorways cut. Kat's screenshot, not a harness assertion. |
+| **Floor plan → layout JSON** | **Not built.** Now the *only* missing link, and the narrowest it has ever been: an image becomes the small typed layout the converter already consumes. Everything downstream of that JSON is verified end to end, pixels included. |
 | **Photo → furnishing** | **Not built.** Depends on the object pipeline below, which works. |
 | **Friends inside it** | FreeSO's multiplayer, unchanged. Untested with an AI-generated house. |
 

@@ -56,8 +56,13 @@ Sequenced so the vision model is the *last* variable introduced, not the first.
   - A door is an **object**, not a wall attribute: `VMEntityFlags2.ArchitectualDoor` makes it call `SetWallStyle`, clearing `TopLeftSolid`/`TopRightSolid` so `VMRoomMap` stops adding a pathing obstacle.
   - Two things are both required, and each fails silently on its own — proven with a control run. **(1)** Every wall must be stored twice, low edge plus the mirrored high-edge bit on the neighbour: a door is a 2-tile group whose halves demand `TopLeft` and `BottomRight` of the *same* wall, and `GetWall` never merges neighbours. **(2)** The group anchors one tile *before* the wall tile; anchor on the wall itself and it targets the next boundary over.
   - `VMWorldActivator.CreateObject` discards `SetPosition`'s error, so both failures present as "the door just isn't there". `--house` now reports objects placed/out-of-world, door cuts, and retries a failed placement to surface the real `VMPlacementError`.
+- [x] **SEEN IN THE GAME, 2026-08-10.** `kat-flat.xml` via Sandbox Mode: three rooms standing on the lot, walls up, floors down, three door frames in the wall line (confirmed again in walls-down view). Kat's screenshots. First time this pipeline has produced anything visible.
+  - **A house is not a lot.** `VMWorldActivator.LoadFromXML` sets `VM.TSOState.Size` and the placement offset *only* if the blueprint contains the lot phone `0x313D2F9A`. Without it, `VMLotTerrainRestoreTools` and `VMContext` have no lot, and the client draws an empty grey screen while every architecture check passes. Generate with `--base Content/Blueprints/empty_lot_fso.xml`.
+  - All of that is behind `if (VM.UseWorld)`, which the harness sets false — so the harness is structurally incapable of catching it. It now reports `lot phone: present/MISSING` as the one rendering prerequisite it can check.
+  - The Buy Mode NRE (`UICatalogItem.MouseEvt` → `CreateObjectInstance`) was the no-world symptom, not a content bug. It disappeared when the lot appeared.
 - [ ] **Windows.** Same object-on-a-wall mechanism, not yet tried.
 - [ ] Walk a Sim through a door — closes A1's last open item.
+- [ ] Floor patterns are placeholder (`3`). A home wants wood/carpet per room; cosmetic, cheap.
 - [ ] **Then** the vision model: floor-plan image → layout JSON. It only ever emits the model above; it never writes XML.
 - [ ] Cheap by construction: one XML per house, not 200 agent runs
 
