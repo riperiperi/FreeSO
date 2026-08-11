@@ -31,7 +31,59 @@ namespace FSO.HouseGen
         /// artifact rather than a room, and doors have nowhere to go.
         public const int MinRoomDimension = 2;
 
+        /// <summary>
+        /// Writes the layout on top of a base lot (normally Content/Blueprints/empty_lot_fso.xml).
+        ///
+        /// A house is not a lot. VMWorldActivator.LoadFromXML looks for the lot phone
+        /// (0x313D2F9A) in the blueprint's object list and only then sets VM.TSOState.Size and
+        /// the placement Offset. No phone, no lot size — and VMLotTerrainRestoreTools and
+        /// VMContext both read that size, so the client draws nothing at all. None of this runs
+        /// headlessly, where UseWorld is false, so a blueprint can pass every architecture check
+        /// and still render an empty grey screen.
+        ///
+        /// Basing on the real empty lot also brings its ground (1269 floor tiles), roads and
+        /// mailbox, which is what an actual lot looks like anyway.
+        /// </summary>
+        public static string Write(HouseLayout layout, string baseLotXmlPath)
+        {
+            var baseFloors = new List<string>();
+            var baseObjects = new List<string>();
+            int baseSize = layout.Size;
+            string baseCategory = "0";
+
+            if (!string.IsNullOrEmpty(baseLotXmlPath))
+            {
+                var doc = System.Xml.Linq.XDocument.Load(baseLotXmlPath);
+                var house = doc.Root;
+                baseSize = int.Parse(house.Element("size").Value, CultureInfo.InvariantCulture);
+                baseCategory = house.Element("category")?.Value ?? "0";
+
+                var world = house.Element("world");
+                var floorsEl = world?.Element("floors");
+                if (floorsEl != null)
+                    foreach (var f in floorsEl.Elements("floor")) baseFloors.Add(f.ToString());
+
+                var objectsEl = house.Element("objects");
+                if (objectsEl != null)
+                    foreach (var o in objectsEl.Elements("object")) baseObjects.Add(o.ToString());
+
+                if (!baseObjects.Exists(o => o.IndexOf("313D2F9A", StringComparison.OrdinalIgnoreCase) >= 0))
+                    throw new ArgumentException(
+                        $"Base lot \"{baseLotXmlPath}\" has no lot phone (0x313D2F9A). Without it " +
+                        "VMWorldActivator never sets VM.TSOState.Size and the client renders nothing.");
+
+                layout.Size = baseSize;
+            }
+
+            return Write(layout, baseFloors, baseObjects, baseCategory);
+        }
+
         public static string Write(HouseLayout layout)
+        {
+            return Write(layout, new List<string>(), new List<string>(), "0");
+        }
+
+        private static string Write(HouseLayout layout, List<string> baseFloors, List<string> baseObjects, string category)
         {
             Validate(layout);
 
@@ -85,10 +137,14 @@ namespace FSO.HouseGen
             sb.Append("<?xml version=\"1.0\" encoding=\"utf-8\"?>\n");
             sb.Append("<house xmlns:xsi=\"http://www.w3.org/2001/XMLSchema-instance\" xmlns:xsd=\"http://www.w3.org/2001/XMLSchema\">\n");
             sb.Append("  <size>").Append(layout.Size).Append("</size>\n");
-            sb.Append("  <category>0</category>\n");
+            sb.Append("  <category>").Append(category).Append("</category>\n");
             sb.Append("  <world>\n");
 
             sb.Append("    <floors>\n");
+            // Base ground first. VMWorldActivator applies these in document order via SetFloor,
+            // so a room tile authored later simply overwrites the grass underneath it.
+            foreach (var raw in baseFloors)
+                sb.Append("      ").Append(raw).Append("\n");
             foreach (var f in floors)
                 sb.Append(string.Format(CultureInfo.InvariantCulture,
                     "      <floor level=\"{0}\" x=\"{1}\" y=\"{2}\" value=\"{3}\" />\n",
@@ -106,13 +162,18 @@ namespace FSO.HouseGen
             sb.Append("    <pools />\n");
             sb.Append("  </world>\n");
 
-            if (layout.Doors.Count == 0)
+            if (layout.Doors.Count == 0 && baseObjects.Count == 0)
             {
                 sb.Append("  <objects />\n");
             }
             else
             {
                 sb.Append("  <objects>\n");
+                // The base lot's own objects — phone, mailbox, road/terrain controllers. The ones
+                // at (-2048,-2048) with level 0 are deliberately out of world; VMWorldActivator
+                // skips SetPosition when level is 0, which is exactly what they want.
+                foreach (var raw in baseObjects)
+                    sb.Append("    ").Append(raw).Append("\n");
                 foreach (var door in layout.Doors)
                 {
                     // Levels are NOT consistent across this format. VMWorldActivator adds +1 to

@@ -136,6 +136,18 @@ namespace FSO.VMHarness
             Console.WriteLine("objects:      " + placed + " placed, " + outOfWorld + " out of world");
             Console.WriteLine("door cuts:    " + doorCuts);
 
+            // This harness runs with UseWorld = false, so it can never tell you whether something
+            // DRAWS. The one rendering prerequisite it can check cheaply is the lot phone:
+            // VMWorldActivator.LoadFromXML only sets VM.TSOState.Size (which
+            // VMLotTerrainRestoreTools and VMContext both read) when the blueprint contains
+            // 0x313D2F9A. Without it every check below still passes and the client shows an empty
+            // grey screen — which is exactly what happened on 2026-08-10.
+            var hasPhone = File.ReadAllText(housePath).IndexOf("313D2F9A", StringComparison.OrdinalIgnoreCase) >= 0;
+            Console.WriteLine("lot phone:    " + (hasPhone
+                ? "present (0x313D2F9A) — lot size will be set"
+                : "MISSING — architecture is fine but the CLIENT WILL RENDER NOTHING. " +
+                  "Generate with --base Content/Blueprints/empty_lot_fso.xml."));
+
             // An out-of-world object means SetPosition refused and VMWorldActivator dropped the
             // error on the floor. Say what the object wanted, so the next person does not have to
             // bisect it: WallPlacementFlags' low nibble is the wall configuration it requires,
