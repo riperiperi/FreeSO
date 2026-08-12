@@ -340,8 +340,7 @@ namespace FSO.Client.UI.Panels
 
         void MakeSomethingButton_OnButtonClick(UIElement button)
         {
-            var screen = (GameFacade.Screens.CurrentUIScreen as CoreGameScreen);
-            screen?.OpenMakeSomething();
+            (GameFacade.Screens.CurrentUIScreen as IGameScreen)?.OpenMakeSomething();
         }
 
         public void SetMode(int mode)

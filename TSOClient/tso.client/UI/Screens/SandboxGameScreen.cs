@@ -35,6 +35,7 @@ namespace FSO.Client.UI.Screens
     {
         public UIUCP ucp { get; set; }
         public UIGameTitle Title;
+        public UIMakeSomethingDialog MakeSomething;
 
         public UIContainer WindowContainer;
         public FSOSandboxServer SandServer;
@@ -176,6 +177,15 @@ namespace FSO.Client.UI.Screens
             WindowContainer = new UIContainer();
             Add(WindowContainer);
 
+            // Same wiring as CoreGameScreen: sandbox is how generated houses are loaded,
+            // and UIBuyMode's button used to no-op here (it only cast to CoreGameScreen).
+            MakeSomething = new UIMakeSomethingDialog();
+            MakeSomething.Visible = false;
+            MakeSomething.SetAgent(System.IO.File.Exists(ProcessMakeSomethingAgent.BridgePath)
+                ? (IMakeSomethingAgent)new ProcessMakeSomethingAgent()
+                : new StubMakeSomethingAgent());
+            WindowContainer.Add(MakeSomething);
+
             if (Content.Content.Get().TS1)
             {
                 TS1NeighPanel = new UINeighborhoodSelectionPanel(4);
@@ -201,6 +211,14 @@ namespace FSO.Client.UI.Screens
             var oldPanel = ucp.CurrentPanel;
             ucp.SetPanel(-1);
             ucp.SetPanel(oldPanel);
+        }
+
+        public void OpenMakeSomething()
+        {
+            MakeSomething.Visible = true;
+            MakeSomething.X = GlobalSettings.Default.GraphicsWidth / 2 - 200;
+            MakeSomething.Y = GlobalSettings.Default.GraphicsHeight / 2 - 160;
+            WindowContainer.SendToFront(MakeSomething);
         }
 
         public void Initialize(string propertyName, bool external)

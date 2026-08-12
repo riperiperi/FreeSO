@@ -16,5 +16,7 @@ namespace FSO.Client.UI.Screens
         UILotControl LotControl { get; set; }
         VM vm { get; set; }
         UIUCP ucp { get; set; }
+
+        void OpenMakeSomething();
     }
 }
