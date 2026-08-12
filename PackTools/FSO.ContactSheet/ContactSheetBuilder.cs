@@ -169,6 +169,14 @@ namespace FSO.ContactSheet
                 var generated = appearance["generated"] as JObject;
                 if (generated != null) { result[id] = "gen:" + (string)generated["generator"]; continue; }
 
+                var imported = appearance["imported"] as JObject;
+                if (imported != null)
+                {
+                    var model = (string)(imported["provenance"]?["model"]) ?? (string)imported["mesh"];
+                    result[id] = "import:" + model;
+                    continue;
+                }
+
                 result[id] = "no appearance";
             }
             return result;

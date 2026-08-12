@@ -25,6 +25,8 @@ namespace FSO.PackCompiler
 
             switch (command)
             {
+                case "import-batch":
+                    return RunImportBatch(args);
                 case "build":
                 {
                     string outDir = null;
@@ -140,6 +142,48 @@ namespace FSO.PackCompiler
             }
         }
 
+        private static int RunImportBatch(string[] args)
+        {
+            if (args.Length < 2)
+            {
+                Console.Error.WriteLine("import-batch requires <manifest.csv>");
+                PrintUsage();
+                return 2;
+            }
+            var manifest = args[1];
+            string outJson = null;
+            string packId = "cc0-import";
+            string packName = "CC0 Import";
+            for (int i = 2; i < args.Length; i++)
+            {
+                if (args[i] == "-o" && i + 1 < args.Length) outJson = args[++i];
+                else if (args[i] == "--pack-id" && i + 1 < args.Length) packId = args[++i];
+                else if (args[i] == "--pack-name" && i + 1 < args.Length) packName = args[++i];
+                else
+                {
+                    Console.Error.WriteLine("unknown argument: " + args[i]);
+                    PrintUsage();
+                    return 2;
+                }
+            }
+            if (outJson == null)
+            {
+                Console.Error.WriteLine("import-batch requires -o <pack.json>");
+                return 2;
+            }
+            try
+            {
+                ImportBatchGenerator.Generate(manifest, outJson, packId, packName);
+                Console.WriteLine("wrote " + outJson);
+                return 0;
+            }
+            catch (Exception e)
+            {
+                Console.Error.WriteLine("error: " + e.Message);
+                return 1;
+            }
+        }
+
         private static void Print(CompileResult result)
         {
             foreach (var w in result.Diagnostics.Warnings) Console.WriteLine("warning: " + w);
@@ -151,6 +195,8 @@ namespace FSO.PackCompiler
         private static void PrintUsage()
         {
             Console.Error.WriteLine("usage:");
+            Console.Error.WriteLine("  FSO.PackCompiler import-batch <manifest.csv> -o <pack.json> [--pack-id <id>] [--pack-name <name>]");
+            Console.Error.WriteLine("    CSV columns: obj_path,name,category,height,symmetric,provenance_model[,guid]");
             Console.Error.WriteLine("  FSO.PackCompiler build <pack.json> -o <outdir> [--tso-dir <dir>]");
             Console.Error.WriteLine("    --tso-dir:  TSO install, where clone_from_guid reads sprites from");
             Console.Error.WriteLine("      (default: $FSO_VM_GAME_LOCATION if set, else no sprites are cloned)");

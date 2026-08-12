@@ -1,0 +1,1723 @@
+{
+  "schema": "fso-pack/0.1",
+  "engine": "tso",
+  "pack": {
+    "id": "kenney-tier1",
+    "name": "Kenney Tier 1",
+    "author": "kat",
+    "version": "1.0.0",
+    "description": "Batch-imported CC0 meshes"
+  },
+  "objects": [
+    {
+      "id": "chairdesk",
+      "guid": "0x7F9D7639",
+      "name": "Desk Chair",
+      "price": 100,
+      "category": "seating",
+      "appearance": {
+        "imported": {
+          "mesh": "../assets/cc0/kenney/Models/chairDesk.obj",
+          "height": 1.5,
+          "symmetric": false,
+          "provenance": {
+            "source": "Kenney Tier 1",
+            "license": "CC0",
+            "model": "chairDesk"
+          }
+        }
+      },
+      "trees": {
+        "main_loop": {
+          "args": [],
+          "locals": [],
+          "nodes": [
+            {
+              "id": "idle",
+              "prim": "idle_for_input",
+              "ticks_param": 0,
+              "allow_push": true,
+              "then": "idle",
+              "else": "idle"
+            }
+          ]
+        }
+      },
+      "entry_points": {
+        "main": "main_loop"
+      }
+    },
+    {
+      "id": "chaircushion",
+      "guid": "0x7F8AB261",
+      "name": "Cushion Chair",
+      "price": 100,
+      "category": "seating",
+      "appearance": {
+        "imported": {
+          "mesh": "../assets/cc0/kenney/Models/chairCushion.obj",
+          "height": 1.5,
+          "symmetric": false,
+          "provenance": {
+            "source": "Kenney Tier 1",
+            "license": "CC0",
+            "model": "chairCushion"
+          }
+        }
+      },
+      "trees": {
+        "main_loop": {
+          "args": [],
+          "locals": [],
+          "nodes": [
+            {
+              "id": "idle",
+              "prim": "idle_for_input",
+              "ticks_param": 0,
+              "allow_push": true,
+              "then": "idle",
+              "else": "idle"
+            }
+          ]
+        }
+      },
+      "entry_points": {
+        "main": "main_loop"
+      }
+    },
+    {
+      "id": "chairrounded",
+      "guid": "0x7F827B71",
+      "name": "Rounded Chair",
+      "price": 100,
+      "category": "seating",
+      "appearance": {
+        "imported": {
+          "mesh": "../assets/cc0/kenney/Models/chairRounded.obj",
+          "height": 1.5,
+          "symmetric": false,
+          "provenance": {
+            "source": "Kenney Tier 1",
+            "license": "CC0",
+            "model": "chairRounded"
+          }
+        }
+      },
+      "trees": {
+        "main_loop": {
+          "args": [],
+          "locals": [],
+          "nodes": [
+            {
+              "id": "idle",
+              "prim": "idle_for_input",
+              "ticks_param": 0,
+              "allow_push": true,
+              "then": "idle",
+              "else": "idle"
+            }
+          ]
+        }
+      },
+      "entry_points": {
+        "main": "main_loop"
+      }
+    },
+    {
+      "id": "loungechairrelax",
+      "guid": "0x7FB78AB0",
+      "name": "Relax Lounge Chair",
+      "price": 100,
+      "category": "seating",
+      "appearance": {
+        "imported": {
+          "mesh": "../assets/cc0/kenney/Models/loungeChairRelax.obj",
+          "height": 1.4,
+          "symmetric": false,
+          "provenance": {
+            "source": "Kenney Tier 1",
+            "license": "CC0",
+            "model": "loungeChairRelax"
+          }
+        }
+      },
+      "trees": {
+        "main_loop": {
+          "args": [],
+          "locals": [],
+          "nodes": [
+            {
+              "id": "idle",
+              "prim": "idle_for_input",
+              "ticks_param": 0,
+              "allow_push": true,
+              "then": "idle",
+              "else": "idle"
+            }
+          ]
+        }
+      },
+      "entry_points": {
+        "main": "main_loop"
+      }
+    },
+    {
+      "id": "loungesofa",
+      "guid": "0x7F3AF53D",
+      "name": "Lounge Sofa",
+      "price": 100,
+      "category": "seating",
+      "appearance": {
+        "imported": {
+          "mesh": "../assets/cc0/kenney/Models/loungeSofa.obj",
+          "height": 1.2,
+          "symmetric": false,
+          "provenance": {
+            "source": "Kenney Tier 1",
+            "license": "CC0",
+            "model": "loungeSofa"
+          }
+        }
+      },
+      "trees": {
+        "main_loop": {
+          "args": [],
+          "locals": [],
+          "nodes": [
+            {
+              "id": "idle",
+              "prim": "idle_for_input",
+              "ticks_param": 0,
+              "allow_push": true,
+              "then": "idle",
+              "else": "idle"
+            }
+          ]
+        }
+      },
+      "entry_points": {
+        "main": "main_loop"
+      }
+    },
+    {
+      "id": "loungesofalong",
+      "guid": "0x7F132E3C",
+      "name": "Long Lounge Sofa",
+      "price": 100,
+      "category": "seating",
+      "appearance": {
+        "imported": {
+          "mesh": "../assets/cc0/kenney/Models/loungeSofaLong.obj",
+          "height": 1.2,
+          "symmetric": false,
+          "provenance": {
+            "source": "Kenney Tier 1",
+            "license": "CC0",
+            "model": "loungeSofaLong"
+          }
+        }
+      },
+      "trees": {
+        "main_loop": {
+          "args": [],
+          "locals": [],
+          "nodes": [
+            {
+              "id": "idle",
+              "prim": "idle_for_input",
+              "ticks_param": 0,
+              "allow_push": true,
+              "then": "idle",
+              "else": "idle"
+            }
+          ]
+        }
+      },
+      "entry_points": {
+        "main": "main_loop"
+      }
+    },
+    {
+      "id": "loungesofacorner",
+      "guid": "0x7F8D794C",
+      "name": "Corner Lounge Sofa",
+      "price": 100,
+      "category": "seating",
+      "appearance": {
+        "imported": {
+          "mesh": "../assets/cc0/kenney/Models/loungeSofaCorner.obj",
+          "height": 1.2,
+          "symmetric": false,
+          "provenance": {
+            "source": "Kenney Tier 1",
+            "license": "CC0",
+            "model": "loungeSofaCorner"
+          }
+        }
+      },
+      "trees": {
+        "main_loop": {
+          "args": [],
+          "locals": [],
+          "nodes": [
+            {
+              "id": "idle",
+              "prim": "idle_for_input",
+              "ticks_param": 0,
+              "allow_push": true,
+              "then": "idle",
+              "else": "idle"
+            }
+          ]
+        }
+      },
+      "entry_points": {
+        "main": "main_loop"
+      }
+    },
+    {
+      "id": "loungesofaottoman",
+      "guid": "0x7F7E21B4",
+      "name": "Lounge Ottoman",
+      "price": 100,
+      "category": "seating",
+      "appearance": {
+        "imported": {
+          "mesh": "../assets/cc0/kenney/Models/loungeSofaOttoman.obj",
+          "height": 0.8,
+          "symmetric": false,
+          "provenance": {
+            "source": "Kenney Tier 1",
+            "license": "CC0",
+            "model": "loungeSofaOttoman"
+          }
+        }
+      },
+      "trees": {
+        "main_loop": {
+          "args": [],
+          "locals": [],
+          "nodes": [
+            {
+              "id": "idle",
+              "prim": "idle_for_input",
+              "ticks_param": 0,
+              "allow_push": true,
+              "then": "idle",
+              "else": "idle"
+            }
+          ]
+        }
+      },
+      "entry_points": {
+        "main": "main_loop"
+      }
+    },
+    {
+      "id": "table",
+      "guid": "0x7F00A457",
+      "name": "Dining Table",
+      "price": 100,
+      "category": "surfaces",
+      "appearance": {
+        "imported": {
+          "mesh": "../assets/cc0/kenney/Models/table.obj",
+          "height": 1.15,
+          "symmetric": false,
+          "provenance": {
+            "source": "Kenney Tier 1",
+            "license": "CC0",
+            "model": "table"
+          }
+        }
+      },
+      "trees": {
+        "main_loop": {
+          "args": [],
+          "locals": [],
+          "nodes": [
+            {
+              "id": "idle",
+              "prim": "idle_for_input",
+              "ticks_param": 0,
+              "allow_push": true,
+              "then": "idle",
+              "else": "idle"
+            }
+          ]
+        }
+      },
+      "entry_points": {
+        "main": "main_loop"
+      }
+    },
+    {
+      "id": "tablecross",
+      "guid": "0x7F1C4AFE",
+      "name": "Cross Leg Table",
+      "price": 100,
+      "category": "surfaces",
+      "appearance": {
+        "imported": {
+          "mesh": "../assets/cc0/kenney/Models/tableCross.obj",
+          "height": 1.15,
+          "symmetric": false,
+          "provenance": {
+            "source": "Kenney Tier 1",
+            "license": "CC0",
+            "model": "tableCross"
+          }
+        }
+      },
+      "trees": {
+        "main_loop": {
+          "args": [],
+          "locals": [],
+          "nodes": [
+            {
+              "id": "idle",
+              "prim": "idle_for_input",
+              "ticks_param": 0,
+              "allow_push": true,
+              "then": "idle",
+              "else": "idle"
+            }
+          ]
+        }
+      },
+      "entry_points": {
+        "main": "main_loop"
+      }
+    },
+    {
+      "id": "tablecoffee",
+      "guid": "0x7F045363",
+      "name": "Coffee Table",
+      "price": 100,
+      "category": "surfaces",
+      "appearance": {
+        "imported": {
+          "mesh": "../assets/cc0/kenney/Models/tableCoffee.obj",
+          "height": 0.9,
+          "symmetric": false,
+          "provenance": {
+            "source": "Kenney Tier 1",
+            "license": "CC0",
+            "model": "tableCoffee"
+          }
+        }
+      },
+      "trees": {
+        "main_loop": {
+          "args": [],
+          "locals": [],
+          "nodes": [
+            {
+              "id": "idle",
+              "prim": "idle_for_input",
+              "ticks_param": 0,
+              "allow_push": true,
+              "then": "idle",
+              "else": "idle"
+            }
+          ]
+        }
+      },
+      "entry_points": {
+        "main": "main_loop"
+      }
+    },
+    {
+      "id": "tablecoffeeglass",
+      "guid": "0x7F00635C",
+      "name": "Glass Coffee Table",
+      "price": 100,
+      "category": "surfaces",
+      "appearance": {
+        "imported": {
+          "mesh": "../assets/cc0/kenney/Models/tableCoffeeGlass.obj",
+          "height": 0.9,
+          "symmetric": false,
+          "provenance": {
+            "source": "Kenney Tier 1",
+            "license": "CC0",
+            "model": "tableCoffeeGlass"
+          }
+        }
+      },
+      "trees": {
+        "main_loop": {
+          "args": [],
+          "locals": [],
+          "nodes": [
+            {
+              "id": "idle",
+              "prim": "idle_for_input",
+              "ticks_param": 0,
+              "allow_push": true,
+              "then": "idle",
+              "else": "idle"
+            }
+          ]
+        }
+      },
+      "entry_points": {
+        "main": "main_loop"
+      }
+    },
+    {
+      "id": "tableround",
+      "guid": "0x7F01D9E8",
+      "name": "Round Table",
+      "price": 100,
+      "category": "surfaces",
+      "appearance": {
+        "imported": {
+          "mesh": "../assets/cc0/kenney/Models/tableRound.obj",
+          "height": 1.15,
+          "symmetric": true,
+          "provenance": {
+            "source": "Kenney Tier 1",
+            "license": "CC0",
+            "model": "tableRound"
+          }
+        }
+      },
+      "trees": {
+        "main_loop": {
+          "args": [],
+          "locals": [],
+          "nodes": [
+            {
+              "id": "idle",
+              "prim": "idle_for_input",
+              "ticks_param": 0,
+              "allow_push": true,
+              "then": "idle",
+              "else": "idle"
+            }
+          ]
+        }
+      },
+      "entry_points": {
+        "main": "main_loop"
+      }
+    },
+    {
+      "id": "bedsingle",
+      "guid": "0x7FC241FE",
+      "name": "Single Bed",
+      "price": 100,
+      "category": "surfaces",
+      "appearance": {
+        "imported": {
+          "mesh": "../assets/cc0/kenney/Models/bedSingle.obj",
+          "height": 1.0,
+          "symmetric": false,
+          "provenance": {
+            "source": "Kenney Tier 1",
+            "license": "CC0",
+            "model": "bedSingle"
+          }
+        }
+      },
+      "trees": {
+        "main_loop": {
+          "args": [],
+          "locals": [],
+          "nodes": [
+            {
+              "id": "idle",
+              "prim": "idle_for_input",
+              "ticks_param": 0,
+              "allow_push": true,
+              "then": "idle",
+              "else": "idle"
+            }
+          ]
+        }
+      },
+      "entry_points": {
+        "main": "main_loop"
+      }
+    },
+    {
+      "id": "beddouble",
+      "guid": "0x7F0191E1",
+      "name": "Double Bed",
+      "price": 100,
+      "category": "surfaces",
+      "appearance": {
+        "imported": {
+          "mesh": "../assets/cc0/kenney/Models/bedDouble.obj",
+          "height": 1.0,
+          "symmetric": false,
+          "provenance": {
+            "source": "Kenney Tier 1",
+            "license": "CC0",
+            "model": "bedDouble"
+          }
+        }
+      },
+      "trees": {
+        "main_loop": {
+          "args": [],
+          "locals": [],
+          "nodes": [
+            {
+              "id": "idle",
+              "prim": "idle_for_input",
+              "ticks_param": 0,
+              "allow_push": true,
+              "then": "idle",
+              "else": "idle"
+            }
+          ]
+        }
+      },
+      "entry_points": {
+        "main": "main_loop"
+      }
+    },
+    {
+      "id": "bedbunk",
+      "guid": "0x7FA85FDB",
+      "name": "Bunk Bed",
+      "price": 100,
+      "category": "surfaces",
+      "appearance": {
+        "imported": {
+          "mesh": "../assets/cc0/kenney/Models/bedBunk.obj",
+          "height": 2.0,
+          "symmetric": false,
+          "provenance": {
+            "source": "Kenney Tier 1",
+            "license": "CC0",
+            "model": "bedBunk"
+          }
+        }
+      },
+      "trees": {
+        "main_loop": {
+          "args": [],
+          "locals": [],
+          "nodes": [
+            {
+              "id": "idle",
+              "prim": "idle_for_input",
+              "ticks_param": 0,
+              "allow_push": true,
+              "then": "idle",
+              "else": "idle"
+            }
+          ]
+        }
+      },
+      "entry_points": {
+        "main": "main_loop"
+      }
+    },
+    {
+      "id": "lamproundtable",
+      "guid": "0x7F9A7698",
+      "name": "Round Table Lamp",
+      "price": 100,
+      "category": "lighting",
+      "appearance": {
+        "imported": {
+          "mesh": "../assets/cc0/kenney/Models/lampRoundTable.obj",
+          "height": 1.0,
+          "symmetric": true,
+          "provenance": {
+            "source": "Kenney Tier 1",
+            "license": "CC0",
+            "model": "lampRoundTable"
+          }
+        }
+      },
+      "trees": {
+        "main_loop": {
+          "args": [],
+          "locals": [],
+          "nodes": [
+            {
+              "id": "idle",
+              "prim": "idle_for_input",
+              "ticks_param": 0,
+              "allow_push": true,
+              "then": "idle",
+              "else": "idle"
+            }
+          ]
+        }
+      },
+      "entry_points": {
+        "main": "main_loop"
+      }
+    },
+    {
+      "id": "lampsquaretable",
+      "guid": "0x7F9E7E3A",
+      "name": "Square Table Lamp",
+      "price": 100,
+      "category": "lighting",
+      "appearance": {
+        "imported": {
+          "mesh": "../assets/cc0/kenney/Models/lampSquareTable.obj",
+          "height": 1.0,
+          "symmetric": false,
+          "provenance": {
+            "source": "Kenney Tier 1",
+            "license": "CC0",
+            "model": "lampSquareTable"
+          }
+        }
+      },
+      "trees": {
+        "main_loop": {
+          "args": [],
+          "locals": [],
+          "nodes": [
+            {
+              "id": "idle",
+              "prim": "idle_for_input",
+              "ticks_param": 0,
+              "allow_push": true,
+              "then": "idle",
+              "else": "idle"
+            }
+          ]
+        }
+      },
+      "entry_points": {
+        "main": "main_loop"
+      }
+    },
+    {
+      "id": "lamproundfloor",
+      "guid": "0x7F119968",
+      "name": "Round Floor Lamp",
+      "price": 100,
+      "category": "lighting",
+      "appearance": {
+        "imported": {
+          "mesh": "../assets/cc0/kenney/Models/lampRoundFloor.obj",
+          "height": 2.0,
+          "symmetric": true,
+          "provenance": {
+            "source": "Kenney Tier 1",
+            "license": "CC0",
+            "model": "lampRoundFloor"
+          }
+        }
+      },
+      "trees": {
+        "main_loop": {
+          "args": [],
+          "locals": [],
+          "nodes": [
+            {
+              "id": "idle",
+              "prim": "idle_for_input",
+              "ticks_param": 0,
+              "allow_push": true,
+              "then": "idle",
+              "else": "idle"
+            }
+          ]
+        }
+      },
+      "entry_points": {
+        "main": "main_loop"
+      }
+    },
+    {
+      "id": "lampsquarefloor",
+      "guid": "0x7F29DD82",
+      "name": "Square Floor Lamp",
+      "price": 100,
+      "category": "lighting",
+      "appearance": {
+        "imported": {
+          "mesh": "../assets/cc0/kenney/Models/lampSquareFloor.obj",
+          "height": 2.0,
+          "symmetric": false,
+          "provenance": {
+            "source": "Kenney Tier 1",
+            "license": "CC0",
+            "model": "lampSquareFloor"
+          }
+        }
+      },
+      "trees": {
+        "main_loop": {
+          "args": [],
+          "locals": [],
+          "nodes": [
+            {
+              "id": "idle",
+              "prim": "idle_for_input",
+              "ticks_param": 0,
+              "allow_push": true,
+              "then": "idle",
+              "else": "idle"
+            }
+          ]
+        }
+      },
+      "entry_points": {
+        "main": "main_loop"
+      }
+    },
+    {
+      "id": "bookcaseclosed",
+      "guid": "0x7F2E0206",
+      "name": "Closed Bookcase",
+      "price": 100,
+      "category": "surfaces",
+      "appearance": {
+        "imported": {
+          "mesh": "../assets/cc0/kenney/Models/bookcaseClosed.obj",
+          "height": 1.8,
+          "symmetric": false,
+          "provenance": {
+            "source": "Kenney Tier 1",
+            "license": "CC0",
+            "model": "bookcaseClosed"
+          }
+        }
+      },
+      "trees": {
+        "main_loop": {
+          "args": [],
+          "locals": [],
+          "nodes": [
+            {
+              "id": "idle",
+              "prim": "idle_for_input",
+              "ticks_param": 0,
+              "allow_push": true,
+              "then": "idle",
+              "else": "idle"
+            }
+          ]
+        }
+      },
+      "entry_points": {
+        "main": "main_loop"
+      }
+    },
+    {
+      "id": "bookcaseopen",
+      "guid": "0x7F691FEA",
+      "name": "Open Bookcase",
+      "price": 100,
+      "category": "surfaces",
+      "appearance": {
+        "imported": {
+          "mesh": "../assets/cc0/kenney/Models/bookcaseOpen.obj",
+          "height": 1.8,
+          "symmetric": false,
+          "provenance": {
+            "source": "Kenney Tier 1",
+            "license": "CC0",
+            "model": "bookcaseOpen"
+          }
+        }
+      },
+      "trees": {
+        "main_loop": {
+          "args": [],
+          "locals": [],
+          "nodes": [
+            {
+              "id": "idle",
+              "prim": "idle_for_input",
+              "ticks_param": 0,
+              "allow_push": true,
+              "then": "idle",
+              "else": "idle"
+            }
+          ]
+        }
+      },
+      "entry_points": {
+        "main": "main_loop"
+      }
+    },
+    {
+      "id": "cabinetbeddrawer",
+      "guid": "0x7F23CF46",
+      "name": "Bed Drawer Cabinet",
+      "price": 100,
+      "category": "surfaces",
+      "appearance": {
+        "imported": {
+          "mesh": "../assets/cc0/kenney/Models/cabinetBedDrawer.obj",
+          "height": 1.0,
+          "symmetric": false,
+          "provenance": {
+            "source": "Kenney Tier 1",
+            "license": "CC0",
+            "model": "cabinetBedDrawer"
+          }
+        }
+      },
+      "trees": {
+        "main_loop": {
+          "args": [],
+          "locals": [],
+          "nodes": [
+            {
+              "id": "idle",
+              "prim": "idle_for_input",
+              "ticks_param": 0,
+              "allow_push": true,
+              "then": "idle",
+              "else": "idle"
+            }
+          ]
+        }
+      },
+      "entry_points": {
+        "main": "main_loop"
+      }
+    },
+    {
+      "id": "cabinettelevision",
+      "guid": "0x7F2F1A3E",
+      "name": "Television Cabinet",
+      "price": 100,
+      "category": "surfaces",
+      "appearance": {
+        "imported": {
+          "mesh": "../assets/cc0/kenney/Models/cabinetTelevision.obj",
+          "height": 1.2,
+          "symmetric": false,
+          "provenance": {
+            "source": "Kenney Tier 1",
+            "license": "CC0",
+            "model": "cabinetTelevision"
+          }
+        }
+      },
+      "trees": {
+        "main_loop": {
+          "args": [],
+          "locals": [],
+          "nodes": [
+            {
+              "id": "idle",
+              "prim": "idle_for_input",
+              "ticks_param": 0,
+              "allow_push": true,
+              "then": "idle",
+              "else": "idle"
+            }
+          ]
+        }
+      },
+      "entry_points": {
+        "main": "main_loop"
+      }
+    },
+    {
+      "id": "desk",
+      "guid": "0x7F3D2690",
+      "name": "Desk",
+      "price": 100,
+      "category": "surfaces",
+      "appearance": {
+        "imported": {
+          "mesh": "../assets/cc0/kenney/Models/desk.obj",
+          "height": 1.15,
+          "symmetric": false,
+          "provenance": {
+            "source": "Kenney Tier 1",
+            "license": "CC0",
+            "model": "desk"
+          }
+        }
+      },
+      "trees": {
+        "main_loop": {
+          "args": [],
+          "locals": [],
+          "nodes": [
+            {
+              "id": "idle",
+              "prim": "idle_for_input",
+              "ticks_param": 0,
+              "allow_push": true,
+              "then": "idle",
+              "else": "idle"
+            }
+          ]
+        }
+      },
+      "entry_points": {
+        "main": "main_loop"
+      }
+    },
+    {
+      "id": "deskcorner",
+      "guid": "0x7F96ED6D",
+      "name": "Corner Desk",
+      "price": 100,
+      "category": "surfaces",
+      "appearance": {
+        "imported": {
+          "mesh": "../assets/cc0/kenney/Models/deskCorner.obj",
+          "height": 1.15,
+          "symmetric": false,
+          "provenance": {
+            "source": "Kenney Tier 1",
+            "license": "CC0",
+            "model": "deskCorner"
+          }
+        }
+      },
+      "trees": {
+        "main_loop": {
+          "args": [],
+          "locals": [],
+          "nodes": [
+            {
+              "id": "idle",
+              "prim": "idle_for_input",
+              "ticks_param": 0,
+              "allow_push": true,
+              "then": "idle",
+              "else": "idle"
+            }
+          ]
+        }
+      },
+      "entry_points": {
+        "main": "main_loop"
+      }
+    },
+    {
+      "id": "stoolbar",
+      "guid": "0x7F4B6046",
+      "name": "Bar Stool",
+      "price": 100,
+      "category": "seating",
+      "appearance": {
+        "imported": {
+          "mesh": "../assets/cc0/kenney/Models/stoolBar.obj",
+          "height": 1.4,
+          "symmetric": true,
+          "provenance": {
+            "source": "Kenney Tier 1",
+            "license": "CC0",
+            "model": "stoolBar"
+          }
+        }
+      },
+      "trees": {
+        "main_loop": {
+          "args": [],
+          "locals": [],
+          "nodes": [
+            {
+              "id": "idle",
+              "prim": "idle_for_input",
+              "ticks_param": 0,
+              "allow_push": true,
+              "then": "idle",
+              "else": "idle"
+            }
+          ]
+        }
+      },
+      "entry_points": {
+        "main": "main_loop"
+      }
+    },
+    {
+      "id": "bench",
+      "guid": "0x7F5D1A89",
+      "name": "Bench",
+      "price": 100,
+      "category": "seating",
+      "appearance": {
+        "imported": {
+          "mesh": "../assets/cc0/kenney/Models/bench.obj",
+          "height": 1.0,
+          "symmetric": false,
+          "provenance": {
+            "source": "Kenney Tier 1",
+            "license": "CC0",
+            "model": "bench"
+          }
+        }
+      },
+      "trees": {
+        "main_loop": {
+          "args": [],
+          "locals": [],
+          "nodes": [
+            {
+              "id": "idle",
+              "prim": "idle_for_input",
+              "ticks_param": 0,
+              "allow_push": true,
+              "then": "idle",
+              "else": "idle"
+            }
+          ]
+        }
+      },
+      "entry_points": {
+        "main": "main_loop"
+      }
+    },
+    {
+      "id": "benchcushion",
+      "guid": "0x7F7A7044",
+      "name": "Cushion Bench",
+      "price": 100,
+      "category": "seating",
+      "appearance": {
+        "imported": {
+          "mesh": "../assets/cc0/kenney/Models/benchCushion.obj",
+          "height": 1.0,
+          "symmetric": false,
+          "provenance": {
+            "source": "Kenney Tier 1",
+            "license": "CC0",
+            "model": "benchCushion"
+          }
+        }
+      },
+      "trees": {
+        "main_loop": {
+          "args": [],
+          "locals": [],
+          "nodes": [
+            {
+              "id": "idle",
+              "prim": "idle_for_input",
+              "ticks_param": 0,
+              "allow_push": true,
+              "then": "idle",
+              "else": "idle"
+            }
+          ]
+        }
+      },
+      "entry_points": {
+        "main": "main_loop"
+      }
+    },
+    {
+      "id": "ruground",
+      "guid": "0x7FB910DA",
+      "name": "Round Rug",
+      "price": 100,
+      "category": "decorative",
+      "appearance": {
+        "imported": {
+          "mesh": "../assets/cc0/kenney/Models/rugRound.obj",
+          "height": 0.05,
+          "symmetric": true,
+          "provenance": {
+            "source": "Kenney Tier 1",
+            "license": "CC0",
+            "model": "rugRound"
+          }
+        }
+      },
+      "trees": {
+        "main_loop": {
+          "args": [],
+          "locals": [],
+          "nodes": [
+            {
+              "id": "idle",
+              "prim": "idle_for_input",
+              "ticks_param": 0,
+              "allow_push": true,
+              "then": "idle",
+              "else": "idle"
+            }
+          ]
+        }
+      },
+      "entry_points": {
+        "main": "main_loop"
+      }
+    },
+    {
+      "id": "rugsquare",
+      "guid": "0x7FE10297",
+      "name": "Square Rug",
+      "price": 100,
+      "category": "decorative",
+      "appearance": {
+        "imported": {
+          "mesh": "../assets/cc0/kenney/Models/rugSquare.obj",
+          "height": 0.05,
+          "symmetric": false,
+          "provenance": {
+            "source": "Kenney Tier 1",
+            "license": "CC0",
+            "model": "rugSquare"
+          }
+        }
+      },
+      "trees": {
+        "main_loop": {
+          "args": [],
+          "locals": [],
+          "nodes": [
+            {
+              "id": "idle",
+              "prim": "idle_for_input",
+              "ticks_param": 0,
+              "allow_push": true,
+              "then": "idle",
+              "else": "idle"
+            }
+          ]
+        }
+      },
+      "entry_points": {
+        "main": "main_loop"
+      }
+    },
+    {
+      "id": "rugrectangle",
+      "guid": "0x7FE3B4E0",
+      "name": "Rectangle Rug",
+      "price": 100,
+      "category": "decorative",
+      "appearance": {
+        "imported": {
+          "mesh": "../assets/cc0/kenney/Models/rugRectangle.obj",
+          "height": 0.05,
+          "symmetric": false,
+          "provenance": {
+            "source": "Kenney Tier 1",
+            "license": "CC0",
+            "model": "rugRectangle"
+          }
+        }
+      },
+      "trees": {
+        "main_loop": {
+          "args": [],
+          "locals": [],
+          "nodes": [
+            {
+              "id": "idle",
+              "prim": "idle_for_input",
+              "ticks_param": 0,
+              "allow_push": true,
+              "then": "idle",
+              "else": "idle"
+            }
+          ]
+        }
+      },
+      "entry_points": {
+        "main": "main_loop"
+      }
+    },
+    {
+      "id": "plantsmall1",
+      "guid": "0x7F08EF3E",
+      "name": "Small Plant",
+      "price": 100,
+      "category": "decorative",
+      "appearance": {
+        "imported": {
+          "mesh": "../assets/cc0/kenney/Models/plantSmall1.obj",
+          "height": 0.8,
+          "symmetric": true,
+          "provenance": {
+            "source": "Kenney Tier 1",
+            "license": "CC0",
+            "model": "plantSmall1"
+          }
+        }
+      },
+      "trees": {
+        "main_loop": {
+          "args": [],
+          "locals": [],
+          "nodes": [
+            {
+              "id": "idle",
+              "prim": "idle_for_input",
+              "ticks_param": 0,
+              "allow_push": true,
+              "then": "idle",
+              "else": "idle"
+            }
+          ]
+        }
+      },
+      "entry_points": {
+        "main": "main_loop"
+      }
+    },
+    {
+      "id": "plantsmall2",
+      "guid": "0x7F779602",
+      "name": "Small Plant 2",
+      "price": 100,
+      "category": "decorative",
+      "appearance": {
+        "imported": {
+          "mesh": "../assets/cc0/kenney/Models/plantSmall2.obj",
+          "height": 0.8,
+          "symmetric": true,
+          "provenance": {
+            "source": "Kenney Tier 1",
+            "license": "CC0",
+            "model": "plantSmall2"
+          }
+        }
+      },
+      "trees": {
+        "main_loop": {
+          "args": [],
+          "locals": [],
+          "nodes": [
+            {
+              "id": "idle",
+              "prim": "idle_for_input",
+              "ticks_param": 0,
+              "allow_push": true,
+              "then": "idle",
+              "else": "idle"
+            }
+          ]
+        }
+      },
+      "entry_points": {
+        "main": "main_loop"
+      }
+    },
+    {
+      "id": "trashcan",
+      "guid": "0x7FE1460E",
+      "name": "Trash Can",
+      "price": 100,
+      "category": "misc",
+      "appearance": {
+        "imported": {
+          "mesh": "../assets/cc0/kenney/Models/trashcan.obj",
+          "height": 1.0,
+          "symmetric": true,
+          "provenance": {
+            "source": "Kenney Tier 1",
+            "license": "CC0",
+            "model": "trashcan"
+          }
+        }
+      },
+      "trees": {
+        "main_loop": {
+          "args": [],
+          "locals": [],
+          "nodes": [
+            {
+              "id": "idle",
+              "prim": "idle_for_input",
+              "ticks_param": 0,
+              "allow_push": true,
+              "then": "idle",
+              "else": "idle"
+            }
+          ]
+        }
+      },
+      "entry_points": {
+        "main": "main_loop"
+      }
+    },
+    {
+      "id": "kitchenfridgesmall",
+      "guid": "0x7F22F526",
+      "name": "Small Fridge",
+      "price": 100,
+      "category": "appliances",
+      "appearance": {
+        "imported": {
+          "mesh": "../assets/cc0/kenney/Models/kitchenFridgeSmall.obj",
+          "height": 1.8,
+          "symmetric": false,
+          "provenance": {
+            "source": "Kenney Tier 1",
+            "license": "CC0",
+            "model": "kitchenFridgeSmall"
+          }
+        }
+      },
+      "trees": {
+        "main_loop": {
+          "args": [],
+          "locals": [],
+          "nodes": [
+            {
+              "id": "idle",
+              "prim": "idle_for_input",
+              "ticks_param": 0,
+              "allow_push": true,
+              "then": "idle",
+              "else": "idle"
+            }
+          ]
+        }
+      },
+      "entry_points": {
+        "main": "main_loop"
+      }
+    },
+    {
+      "id": "kitchenstoveelectric",
+      "guid": "0x7FFF327B",
+      "name": "Electric Stove",
+      "price": 100,
+      "category": "appliances",
+      "appearance": {
+        "imported": {
+          "mesh": "../assets/cc0/kenney/Models/kitchenStoveElectric.obj",
+          "height": 1.2,
+          "symmetric": false,
+          "provenance": {
+            "source": "Kenney Tier 1",
+            "license": "CC0",
+            "model": "kitchenStoveElectric"
+          }
+        }
+      },
+      "trees": {
+        "main_loop": {
+          "args": [],
+          "locals": [],
+          "nodes": [
+            {
+              "id": "idle",
+              "prim": "idle_for_input",
+              "ticks_param": 0,
+              "allow_push": true,
+              "then": "idle",
+              "else": "idle"
+            }
+          ]
+        }
+      },
+      "entry_points": {
+        "main": "main_loop"
+      }
+    },
+    {
+      "id": "bathroomsink",
+      "guid": "0x7FE05628",
+      "name": "Bathroom Sink",
+      "price": 100,
+      "category": "misc",
+      "appearance": {
+        "imported": {
+          "mesh": "../assets/cc0/kenney/Models/bathroomSink.obj",
+          "height": 1.0,
+          "symmetric": false,
+          "provenance": {
+            "source": "Kenney Tier 1",
+            "license": "CC0",
+            "model": "bathroomSink"
+          }
+        }
+      },
+      "trees": {
+        "main_loop": {
+          "args": [],
+          "locals": [],
+          "nodes": [
+            {
+              "id": "idle",
+              "prim": "idle_for_input",
+              "ticks_param": 0,
+              "allow_push": true,
+              "then": "idle",
+              "else": "idle"
+            }
+          ]
+        }
+      },
+      "entry_points": {
+        "main": "main_loop"
+      }
+    },
+    {
+      "id": "bathroomcabinet",
+      "guid": "0x7F57FF0A",
+      "name": "Bathroom Cabinet",
+      "price": 100,
+      "category": "surfaces",
+      "appearance": {
+        "imported": {
+          "mesh": "../assets/cc0/kenney/Models/bathroomCabinet.obj",
+          "height": 1.2,
+          "symmetric": false,
+          "provenance": {
+            "source": "Kenney Tier 1",
+            "license": "CC0",
+            "model": "bathroomCabinet"
+          }
+        }
+      },
+      "trees": {
+        "main_loop": {
+          "args": [],
+          "locals": [],
+          "nodes": [
+            {
+              "id": "idle",
+              "prim": "idle_for_input",
+              "ticks_param": 0,
+              "allow_push": true,
+              "then": "idle",
+              "else": "idle"
+            }
+          ]
+        }
+      },
+      "entry_points": {
+        "main": "main_loop"
+      }
+    },
+    {
+      "id": "sidetable",
+      "guid": "0x7FA5801A",
+      "name": "Side Table",
+      "price": 100,
+      "category": "surfaces",
+      "appearance": {
+        "imported": {
+          "mesh": "../assets/cc0/kenney/Models/sideTable.obj",
+          "height": 0.9,
+          "symmetric": false,
+          "provenance": {
+            "source": "Kenney Tier 1",
+            "license": "CC0",
+            "model": "sideTable"
+          }
+        }
+      },
+      "trees": {
+        "main_loop": {
+          "args": [],
+          "locals": [],
+          "nodes": [
+            {
+              "id": "idle",
+              "prim": "idle_for_input",
+              "ticks_param": 0,
+              "allow_push": true,
+              "then": "idle",
+              "else": "idle"
+            }
+          ]
+        }
+      },
+      "entry_points": {
+        "main": "main_loop"
+      }
+    },
+    {
+      "id": "sidetabledrawers",
+      "guid": "0x7FDBE26D",
+      "name": "Side Table Drawers",
+      "price": 100,
+      "category": "surfaces",
+      "appearance": {
+        "imported": {
+          "mesh": "../assets/cc0/kenney/Models/sideTableDrawers.obj",
+          "height": 0.9,
+          "symmetric": false,
+          "provenance": {
+            "source": "Kenney Tier 1",
+            "license": "CC0",
+            "model": "sideTableDrawers"
+          }
+        }
+      },
+      "trees": {
+        "main_loop": {
+          "args": [],
+          "locals": [],
+          "nodes": [
+            {
+              "id": "idle",
+              "prim": "idle_for_input",
+              "ticks_param": 0,
+              "allow_push": true,
+              "then": "idle",
+              "else": "idle"
+            }
+          ]
+        }
+      },
+      "entry_points": {
+        "main": "main_loop"
+      }
+    },
+    {
+      "id": "televisionmodern",
+      "guid": "0x7F7910F3",
+      "name": "Modern Television",
+      "price": 100,
+      "category": "electronics",
+      "appearance": {
+        "imported": {
+          "mesh": "../assets/cc0/kenney/Models/televisionModern.obj",
+          "height": 1.0,
+          "symmetric": false,
+          "provenance": {
+            "source": "Kenney Tier 1",
+            "license": "CC0",
+            "model": "televisionModern"
+          }
+        }
+      },
+      "trees": {
+        "main_loop": {
+          "args": [],
+          "locals": [],
+          "nodes": [
+            {
+              "id": "idle",
+              "prim": "idle_for_input",
+              "ticks_param": 0,
+              "allow_push": true,
+              "then": "idle",
+              "else": "idle"
+            }
+          ]
+        }
+      },
+      "entry_points": {
+        "main": "main_loop"
+      }
+    },
+    {
+      "id": "computerkeyboard",
+      "guid": "0x7F984566",
+      "name": "Computer Keyboard",
+      "price": 100,
+      "category": "electronics",
+      "appearance": {
+        "imported": {
+          "mesh": "../assets/cc0/kenney/Models/computerKeyboard.obj",
+          "height": 0.4,
+          "symmetric": false,
+          "provenance": {
+            "source": "Kenney Tier 1",
+            "license": "CC0",
+            "model": "computerKeyboard"
+          }
+        }
+      },
+      "trees": {
+        "main_loop": {
+          "args": [],
+          "locals": [],
+          "nodes": [
+            {
+              "id": "idle",
+              "prim": "idle_for_input",
+              "ticks_param": 0,
+              "allow_push": true,
+              "then": "idle",
+              "else": "idle"
+            }
+          ]
+        }
+      },
+      "entry_points": {
+        "main": "main_loop"
+      }
+    },
+    {
+      "id": "plantsmall3",
+      "guid": "0x7FE8BEC8",
+      "name": "Small Plant 3",
+      "price": 100,
+      "category": "decorative",
+      "appearance": {
+        "imported": {
+          "mesh": "../assets/cc0/kenney/Models/plantSmall3.obj",
+          "height": 0.8,
+          "symmetric": true,
+          "provenance": {
+            "source": "Kenney Tier 1",
+            "license": "CC0",
+            "model": "plantSmall3"
+          }
+        }
+      },
+      "trees": {
+        "main_loop": {
+          "args": [],
+          "locals": [],
+          "nodes": [
+            {
+              "id": "idle",
+              "prim": "idle_for_input",
+              "ticks_param": 0,
+              "allow_push": true,
+              "then": "idle",
+              "else": "idle"
+            }
+          ]
+        }
+      },
+      "entry_points": {
+        "main": "main_loop"
+      }
+    },
+    {
+      "id": "books",
+      "guid": "0x7F397C0F",
+      "name": "Stack of Books",
+      "price": 100,
+      "category": "decorative",
+      "appearance": {
+        "imported": {
+          "mesh": "../assets/cc0/kenney/Models/books.obj",
+          "height": 0.5,
+          "symmetric": false,
+          "provenance": {
+            "source": "Kenney Tier 1",
+            "license": "CC0",
+            "model": "books"
+          }
+        }
+      },
+      "trees": {
+        "main_loop": {
+          "args": [],
+          "locals": [],
+          "nodes": [
+            {
+              "id": "idle",
+              "prim": "idle_for_input",
+              "ticks_param": 0,
+              "allow_push": true,
+              "then": "idle",
+              "else": "idle"
+            }
+          ]
+        }
+      },
+      "entry_points": {
+        "main": "main_loop"
+      }
+    }
+  ]
+}

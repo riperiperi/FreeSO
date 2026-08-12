@@ -121,19 +121,17 @@ namespace FSO.PackCompiler
                 obj.CloneFromGuid = appearance.OptGuid("clone_from_guid");
                 var generated = appearance.OptObj("generated");
                 if (generated != null) obj.Generated = ParseGeneratedAppearance(generated);
+                var imported = appearance.OptObj("imported");
+                if (imported != null) obj.Imported = ParseImportedAppearance(imported);
                 appearance.Done();
 
-                if (obj.CloneFromGuid != null && obj.Generated != null)
-                    D.Error(appearance.Path, "appearance.clone_from_guid and appearance.generated are mutually exclusive");
+                var modes = (obj.CloneFromGuid != null ? 1 : 0) + (obj.Generated != null ? 1 : 0) + (obj.Imported != null ? 1 : 0);
+                if (modes > 1)
+                    D.Error(appearance.Path, "appearance.clone_from_guid, appearance.generated, and appearance.imported are mutually exclusive");
             }
 
-            // An object with no appearance at all compiles "successfully" but is invisible in
-            // the client with no signal anywhere — the same silent-failure class clone_from_guid
-            // without a game dir already guards against (that path at least leaves a build-report
-            // note). Fail loud instead, per SCHEMA.md's rationale: the VM doesn't care an object
-            // has no graphics, so nothing else will catch this.
-            if (obj.CloneFromGuid == null && obj.Generated == null)
-                D.Error(o.Path, "object has no appearance (\"appearance.clone_from_guid\" or \"appearance.generated\") — it would be invisible in the client");
+            if (obj.CloneFromGuid == null && obj.Generated == null && obj.Imported == null)
+                D.Error(o.Path, "object has no appearance (\"appearance.clone_from_guid\", \"appearance.generated\", or \"appearance.imported\") — it would be invisible in the client");
 
             var attrs = o.OptArr("attributes");
             if (attrs != null)
@@ -289,6 +287,30 @@ namespace FSO.PackCompiler
 
             o.Done();
             return gen;
+        }
+
+        private PackImportedAppearance ParseImportedAppearance(JsonObj o)
+        {
+            var imp = new PackImportedAppearance();
+            imp.Mesh = o.ReqString("mesh");
+            imp.Height = o.OptDouble("height", 1.0);
+            imp.Symmetric = o.OptBool("symmetric", false);
+            if (imp.Height <= 0)
+                D.Error(o.Path + ".height", "height must be > 0");
+
+            var prov = o.OptObj("provenance");
+            if (prov != null)
+            {
+                imp.Provenance.Source = prov.OptString("source");
+                imp.Provenance.Url = prov.OptString("url");
+                imp.Provenance.License = prov.OptString("license");
+                imp.Provenance.Retrieved = prov.OptString("retrieved");
+                imp.Provenance.Model = prov.OptString("model");
+                prov.Done();
+            }
+
+            o.Done();
+            return imp;
         }
 
         private ChairGenerator.Params ParseChairParams(JsonObj p)

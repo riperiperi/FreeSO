@@ -41,21 +41,19 @@ Sims cannot live there.
 | Dining Table | 74 | 6 | `table` | |
 | Coffee / side table | 11 | 6 | `table` | done for mid-century |
 | Bed | 78 | 8 | `bed` | |
-| Toilet | 15 | 4 | **needed** | plumbing |
-| Shower | 4 | 3 | **needed** | plumbing |
-| Tub | 17 | 3 | **needed** | plumbing |
-| Sink | 8 | 4 | **needed** | plumbing |
-| Stove | 6 | 4 | **needed** | appliance |
-| Fridge | 4 | 3 | **needed** | appliance |
+| Toilet | 15 | 4 | **import** | CC0 Quaternius — `plumbing-pilot.json` |
+| Shower | 4 | 3 | **import** | CC0 Quaternius — `plumbing-pilot.json` |
+| Tub | 17 | 3 | **import** | CC0 Quaternius — `plumbing-pilot.json` |
+| Sink | 8 | 4 | **import** | CC0 Quaternius — `plumbing-pilot.json` |
+| Stove | 6 | 4 | **import** | CC0 Quaternius — `plumbing-pilot.json` |
+| Fridge | 4 | 3 | **import** | CC0 Quaternius — `plumbing-pilot.json` |
 | Counter | 25 | 6 | `storage` | surface + cabinet |
 | Lamp (table/floor) | 59 | 8 | `lamp` | |
 | Trash | 8 | 2 | `primitives` | |
 
-**Six generators do not exist yet** — toilet, shower, tub, sink, stove, fridge.
-All are box-and-cylinder compositions; the `primitives` composer may cover the
-first pass, with named generators only where construction knowledge repays it
-(the storage generator's "shelf boards need real thickness or they vanish"
-lesson is the precedent).
+**Tier-1 plumbing/appliance art is import-first, not generator-first.** Six CC0 Quaternius meshes cover toilet/shower/tub/sink/stove/fridge silhouettes via `appearance.imported` (`examples/plumbing-pilot.json`). Kenney CC0 kit bulk-import covers seating/surfaces/beds/lamps (`examples/kenney-tier1.json`, 45 objects). Parametric generators remain for palette/dimension variants.
+
+**Behavior is separate from art.** Plumbing pilot ships original BHAV trees (walk-to + motive restore), not EA clones — browser-clean.
 
 ## Tier 2 — a lot feels empty without these (~70 objects)
 
@@ -88,7 +86,7 @@ yet. Revisit after Tier 3.
   ("Walnut Dining Chair"); EA's specific product names are not.
 - Modern collections take the **design language** of contemporary retailers —
   proportions, palettes, materials — and **never their brand or product names**.
-- Nothing derives from EA's art. Generated only.
+- Nothing derives from EA's art. **CC0 imports and generated art only** — see `assets/cc0/PROVENANCE.json`.
 
 ## Honest constraint
 
@@ -101,8 +99,8 @@ Deferred deliberately, not ruled out.
 
 ## Order of work
 
-1. Six missing Tier 1 generators (plumbing + appliances) — the true blocker.
-2. Tier 1 parity in one coherent style, contact-sheeted as a set.
+1. ~~Six missing Tier 1 generators~~ **Done via CC0 import** — Quaternius pilot + Kenney tier-1 batch.
+2. Tier 1 parity in one coherent style, contact-sheeted as a set — Kenney tier-1 + plumbing pilot contact-sheeted.
 3. Tier 2, prioritising paintings and rugs for the effort-to-effect ratio.
 4. Second and third collections (Scandinavian, contemporary) across Tier 1+2.
 5. Tier 3 venue objects.

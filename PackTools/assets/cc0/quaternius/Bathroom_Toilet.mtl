@@ -1,0 +1,12 @@
+# Blender MTL File: 'Bathroom_Toilet.blend'
+# Material Count: 1
+
+newmtl White
+Ns 96.078431
+Ka 1.000000 1.000000 1.000000
+Kd 0.358380 0.354633 0.343527
+Ks 0.500000 0.500000 0.500000
+Ke 0.000000 0.000000 0.000000
+Ni 1.000000
+d 1.000000
+illum 2

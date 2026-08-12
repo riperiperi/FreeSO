@@ -1,0 +1,21 @@
+{
+  "pack": "Quaternius Ultimate House Interior Pack",
+  "url": "https://opengameart.org/content/lowpoly-house-interior-pack",
+  "license": "CC0",
+  "retrieved": "2026-08-11",
+  "models": [
+    { "file": "Bathroom_Toilet.obj", "model": "Bathroom_Toilet", "used_by": "plumbing-pilot.json#cc0_toilet" },
+    { "file": "Bathroom_Shower1.obj", "model": "Bathroom_Shower1", "used_by": "plumbing-pilot.json#cc0_shower" },
+    { "file": "Bathroom_Bathtub.obj", "model": "Bathroom_Bathtub", "used_by": "plumbing-pilot.json#cc0_tub" },
+    { "file": "Bathroom_Sink.obj", "model": "Bathroom_Sink", "used_by": "plumbing-pilot.json#cc0_sink" },
+    { "file": "Kitchen_Oven.obj", "model": "Kitchen_Oven", "used_by": "plumbing-pilot.json#cc0_stove" },
+    { "file": "Kitchen_Fridge.obj", "model": "Kitchen_Fridge", "used_by": "plumbing-pilot.json#cc0_fridge" }
+  ],
+  "kenney": {
+    "pack": "Kenney Furniture Kit",
+    "url": "https://opengameart.org/content/furniture-kit",
+    "license": "CC0",
+    "retrieved": "2026-08-11",
+    "note": "Full kit kept as source (120 OBJ in assets/cc0/kenney/Models/). kenney-tier1.csv selects 45 furnishings; walls/floors/doors stay unused (CATALOG-PARITY-PLAN excluded them)."
+  }
+}

@@ -137,7 +137,10 @@ namespace FSO.PackCompiler
                 result.Diagnostics.Error(packJsonPath, "file not found");
                 return null;
             }
-            return new PackParser(result.Diagnostics).Parse(File.ReadAllText(packJsonPath));
+            var pack = new PackParser(result.Diagnostics).Parse(File.ReadAllText(packJsonPath));
+            if (pack != null)
+                pack.PackDirectory = Path.GetDirectoryName(Path.GetFullPath(packJsonPath));
+            return pack;
         }
     }
 }

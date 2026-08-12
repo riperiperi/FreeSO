@@ -1,0 +1,350 @@
+{
+  "schema": "fso-pack/0.1",
+  "engine": "tso",
+  "pack": {
+    "id": "plumbing-pilot",
+    "name": "CC0 Plumbing Pilot",
+    "author": "kat",
+    "version": "1.0.0",
+    "description": "Six Tier-1 plumbing/appliance silhouettes imported from Quaternius CC0 House Interior Pack, with original motive-restoring Use interactions."
+  },
+  "objects": [
+    {
+      "id": "cc0_toilet",
+      "guid": "0x6B4F2001",
+      "name": "CC0 Toilet",
+      "price": 180,
+      "category": "misc",
+      "tags": ["cc0", "plumbing", "bathroom"],
+      "appearance": {
+        "imported": {
+          "mesh": "../assets/cc0/quaternius/Bathroom_Toilet.obj",
+          "height": 1.4,
+          "provenance": {
+            "source": "Quaternius Ultimate House Interior Pack",
+            "url": "https://opengameart.org/content/lowpoly-house-interior-pack",
+            "license": "CC0",
+            "retrieved": "2026-08-11",
+            "model": "Bathroom_Toilet"
+          }
+        }
+      },
+      "interactions": [
+        {
+          "name": "Use",
+          "action": "use_action",
+          "test": "use_test",
+          "allow": { "visitors": true, "owner": true, "roommates": true },
+          "autonomy": { "advertised_motives": { "bladder": 30 } }
+        }
+      ],
+      "trees": {
+        "use_action": {
+          "args": [],
+          "locals": [],
+          "nodes": [
+            { "id": "walk", "prim": "goto_relative", "location": "in_front_of", "direction": "facing", "then": "relieve", "else": "return false" },
+            { "id": "relieve", "prim": "expression", "lhs": { "scope": "my_motives", "name": "bladder" }, "op": "-=", "rhs": { "scope": "literal", "value": 50 }, "then": "done", "else": "error" },
+            { "id": "done", "prim": "expression", "lhs": { "scope": "literal", "value": 1 }, "op": "==", "rhs": { "scope": "literal", "value": 1 }, "then": "return true", "else": "return false" }
+          ]
+        },
+        "use_test": {
+          "args": [],
+          "locals": [],
+          "nodes": [
+            { "id": "always", "prim": "expression", "lhs": { "scope": "literal", "value": 1 }, "op": "==", "rhs": { "scope": "literal", "value": 1 }, "then": "return true", "else": "return false" }
+          ]
+        },
+        "main_loop": {
+          "args": [],
+          "locals": [],
+          "nodes": [
+            { "id": "idle", "prim": "idle_for_input", "ticks_param": 0, "allow_push": true, "then": "idle", "else": "idle" }
+          ]
+        }
+      },
+      "entry_points": { "main": "main_loop" }
+    },
+    {
+      "id": "cc0_shower",
+      "guid": "0x6B4F2002",
+      "name": "CC0 Shower",
+      "price": 320,
+      "category": "misc",
+      "tags": ["cc0", "plumbing", "bathroom"],
+      "appearance": {
+        "imported": {
+          "mesh": "../assets/cc0/quaternius/Bathroom_Shower1.obj",
+          "height": 2.0,
+          "provenance": {
+            "source": "Quaternius Ultimate House Interior Pack",
+            "url": "https://opengameart.org/content/lowpoly-house-interior-pack",
+            "license": "CC0",
+            "retrieved": "2026-08-11",
+            "model": "Bathroom_Shower1"
+          }
+        }
+      },
+      "interactions": [
+        {
+          "name": "Take Shower",
+          "action": "use_action",
+          "test": "use_test",
+          "allow": { "visitors": true, "owner": true, "roommates": true },
+          "autonomy": { "advertised_motives": { "hygiene": 30 } }
+        }
+      ],
+      "trees": {
+        "use_action": {
+          "args": [],
+          "locals": [],
+          "nodes": [
+            { "id": "walk", "prim": "goto_relative", "location": "in_front_of", "direction": "facing", "then": "clean", "else": "return false" },
+            { "id": "clean", "prim": "expression", "lhs": { "scope": "my_motives", "name": "hygiene" }, "op": "-=", "rhs": { "scope": "literal", "value": 50 }, "then": "done", "else": "error" },
+            { "id": "done", "prim": "expression", "lhs": { "scope": "literal", "value": 1 }, "op": "==", "rhs": { "scope": "literal", "value": 1 }, "then": "return true", "else": "return false" }
+          ]
+        },
+        "use_test": {
+          "args": [],
+          "locals": [],
+          "nodes": [
+            { "id": "always", "prim": "expression", "lhs": { "scope": "literal", "value": 1 }, "op": "==", "rhs": { "scope": "literal", "value": 1 }, "then": "return true", "else": "return false" }
+          ]
+        },
+        "main_loop": {
+          "args": [],
+          "locals": [],
+          "nodes": [
+            { "id": "idle", "prim": "idle_for_input", "ticks_param": 0, "allow_push": true, "then": "idle", "else": "idle" }
+          ]
+        }
+      },
+      "entry_points": { "main": "main_loop" }
+    },
+    {
+      "id": "cc0_tub",
+      "guid": "0x6B4F2003",
+      "name": "CC0 Bathtub",
+      "price": 450,
+      "category": "misc",
+      "tags": ["cc0", "plumbing", "bathroom"],
+      "appearance": {
+        "imported": {
+          "mesh": "../assets/cc0/quaternius/Bathroom_Bathtub.obj",
+          "height": 1.0,
+          "provenance": {
+            "source": "Quaternius Ultimate House Interior Pack",
+            "url": "https://opengameart.org/content/lowpoly-house-interior-pack",
+            "license": "CC0",
+            "retrieved": "2026-08-11",
+            "model": "Bathroom_Bathtub"
+          }
+        }
+      },
+      "interactions": [
+        {
+          "name": "Take Bath",
+          "action": "use_action",
+          "test": "use_test",
+          "allow": { "visitors": true, "owner": true, "roommates": true },
+          "autonomy": { "advertised_motives": { "hygiene": 35, "comfort": 15 } }
+        }
+      ],
+      "trees": {
+        "use_action": {
+          "args": [],
+          "locals": [],
+          "nodes": [
+            { "id": "walk", "prim": "goto_relative", "location": "in_front_of", "direction": "facing", "then": "clean", "else": "return false" },
+            { "id": "clean", "prim": "expression", "lhs": { "scope": "my_motives", "name": "hygiene" }, "op": "-=", "rhs": { "scope": "literal", "value": 60 }, "then": "comfort", "else": "error" },
+            { "id": "comfort", "prim": "expression", "lhs": { "scope": "my_motives", "name": "comfort" }, "op": "-=", "rhs": { "scope": "literal", "value": 20 }, "then": "done", "else": "error" },
+            { "id": "done", "prim": "expression", "lhs": { "scope": "literal", "value": 1 }, "op": "==", "rhs": { "scope": "literal", "value": 1 }, "then": "return true", "else": "return false" }
+          ]
+        },
+        "use_test": {
+          "args": [],
+          "locals": [],
+          "nodes": [
+            { "id": "always", "prim": "expression", "lhs": { "scope": "literal", "value": 1 }, "op": "==", "rhs": { "scope": "literal", "value": 1 }, "then": "return true", "else": "return false" }
+          ]
+        },
+        "main_loop": {
+          "args": [],
+          "locals": [],
+          "nodes": [
+            { "id": "idle", "prim": "idle_for_input", "ticks_param": 0, "allow_push": true, "then": "idle", "else": "idle" }
+          ]
+        }
+      },
+      "entry_points": { "main": "main_loop" }
+    },
+    {
+      "id": "cc0_sink",
+      "guid": "0x6B4F2004",
+      "name": "CC0 Sink",
+      "price": 120,
+      "category": "misc",
+      "tags": ["cc0", "plumbing", "bathroom"],
+      "appearance": {
+        "imported": {
+          "mesh": "../assets/cc0/quaternius/Bathroom_Sink.obj",
+          "height": 1.0,
+          "provenance": {
+            "source": "Quaternius Ultimate House Interior Pack",
+            "url": "https://opengameart.org/content/lowpoly-house-interior-pack",
+            "license": "CC0",
+            "retrieved": "2026-08-11",
+            "model": "Bathroom_Sink"
+          }
+        }
+      },
+      "interactions": [
+        {
+          "name": "Wash Hands",
+          "action": "use_action",
+          "test": "use_test",
+          "allow": { "visitors": true, "owner": true, "roommates": true },
+          "autonomy": { "advertised_motives": { "hygiene": 15 } }
+        }
+      ],
+      "trees": {
+        "use_action": {
+          "args": [],
+          "locals": [],
+          "nodes": [
+            { "id": "walk", "prim": "goto_relative", "location": "in_front_of", "direction": "facing", "then": "clean", "else": "return false" },
+            { "id": "clean", "prim": "expression", "lhs": { "scope": "my_motives", "name": "hygiene" }, "op": "-=", "rhs": { "scope": "literal", "value": 25 }, "then": "done", "else": "error" },
+            { "id": "done", "prim": "expression", "lhs": { "scope": "literal", "value": 1 }, "op": "==", "rhs": { "scope": "literal", "value": 1 }, "then": "return true", "else": "return false" }
+          ]
+        },
+        "use_test": {
+          "args": [],
+          "locals": [],
+          "nodes": [
+            { "id": "always", "prim": "expression", "lhs": { "scope": "literal", "value": 1 }, "op": "==", "rhs": { "scope": "literal", "value": 1 }, "then": "return true", "else": "return false" }
+          ]
+        },
+        "main_loop": {
+          "args": [],
+          "locals": [],
+          "nodes": [
+            { "id": "idle", "prim": "idle_for_input", "ticks_param": 0, "allow_push": true, "then": "idle", "else": "idle" }
+          ]
+        }
+      },
+      "entry_points": { "main": "main_loop" }
+    },
+    {
+      "id": "cc0_stove",
+      "guid": "0x6B4F2005",
+      "name": "CC0 Stove",
+      "price": 380,
+      "category": "appliances",
+      "tags": ["cc0", "kitchen", "appliance"],
+      "appearance": {
+        "imported": {
+          "mesh": "../assets/cc0/quaternius/Kitchen_Oven.obj",
+          "height": 1.2,
+          "provenance": {
+            "source": "Quaternius Ultimate House Interior Pack",
+            "url": "https://opengameart.org/content/lowpoly-house-interior-pack",
+            "license": "CC0",
+            "retrieved": "2026-08-11",
+            "model": "Kitchen_Oven"
+          }
+        }
+      },
+      "interactions": [
+        {
+          "name": "Cook",
+          "action": "use_action",
+          "test": "use_test",
+          "allow": { "visitors": true, "owner": true, "roommates": true },
+          "autonomy": { "advertised_motives": { "hunger": 25 } }
+        }
+      ],
+      "trees": {
+        "use_action": {
+          "args": [],
+          "locals": [],
+          "nodes": [
+            { "id": "walk", "prim": "goto_relative", "location": "in_front_of", "direction": "facing", "then": "eat", "else": "return false" },
+            { "id": "eat", "prim": "expression", "lhs": { "scope": "my_motives", "name": "hunger" }, "op": "-=", "rhs": { "scope": "literal", "value": 40 }, "then": "done", "else": "error" },
+            { "id": "done", "prim": "expression", "lhs": { "scope": "literal", "value": 1 }, "op": "==", "rhs": { "scope": "literal", "value": 1 }, "then": "return true", "else": "return false" }
+          ]
+        },
+        "use_test": {
+          "args": [],
+          "locals": [],
+          "nodes": [
+            { "id": "always", "prim": "expression", "lhs": { "scope": "literal", "value": 1 }, "op": "==", "rhs": { "scope": "literal", "value": 1 }, "then": "return true", "else": "return false" }
+          ]
+        },
+        "main_loop": {
+          "args": [],
+          "locals": [],
+          "nodes": [
+            { "id": "idle", "prim": "idle_for_input", "ticks_param": 0, "allow_push": true, "then": "idle", "else": "idle" }
+          ]
+        }
+      },
+      "entry_points": { "main": "main_loop" }
+    },
+    {
+      "id": "cc0_fridge",
+      "guid": "0x6B4F2006",
+      "name": "CC0 Fridge",
+      "price": 420,
+      "category": "appliances",
+      "tags": ["cc0", "kitchen", "appliance"],
+      "appearance": {
+        "imported": {
+          "mesh": "../assets/cc0/quaternius/Kitchen_Fridge.obj",
+          "height": 2.0,
+          "provenance": {
+            "source": "Quaternius Ultimate House Interior Pack",
+            "url": "https://opengameart.org/content/lowpoly-house-interior-pack",
+            "license": "CC0",
+            "retrieved": "2026-08-11",
+            "model": "Kitchen_Fridge"
+          }
+        }
+      },
+      "interactions": [
+        {
+          "name": "Get Snack",
+          "action": "use_action",
+          "test": "use_test",
+          "allow": { "visitors": true, "owner": true, "roommates": true },
+          "autonomy": { "advertised_motives": { "hunger": 20 } }
+        }
+      ],
+      "trees": {
+        "use_action": {
+          "args": [],
+          "locals": [],
+          "nodes": [
+            { "id": "walk", "prim": "goto_relative", "location": "in_front_of", "direction": "facing", "then": "eat", "else": "return false" },
+            { "id": "eat", "prim": "expression", "lhs": { "scope": "my_motives", "name": "hunger" }, "op": "-=", "rhs": { "scope": "literal", "value": 30 }, "then": "done", "else": "error" },
+            { "id": "done", "prim": "expression", "lhs": { "scope": "literal", "value": 1 }, "op": "==", "rhs": { "scope": "literal", "value": 1 }, "then": "return true", "else": "return false" }
+          ]
+        },
+        "use_test": {
+          "args": [],
+          "locals": [],
+          "nodes": [
+            { "id": "always", "prim": "expression", "lhs": { "scope": "literal", "value": 1 }, "op": "==", "rhs": { "scope": "literal", "value": 1 }, "then": "return true", "else": "return false" }
+          ]
+        },
+        "main_loop": {
+          "args": [],
+          "locals": [],
+          "nodes": [
+            { "id": "idle", "prim": "idle_for_input", "ticks_param": 0, "allow_push": true, "then": "idle", "else": "idle" }
+          ]
+        }
+      },
+      "entry_points": { "main": "main_loop" }
+    }
+  ]
+}

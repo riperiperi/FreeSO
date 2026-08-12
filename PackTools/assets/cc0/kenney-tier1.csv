@@ -1,0 +1,46 @@
+# obj_path,name,category,height,symmetric,provenance_model
+kenney/Models/chairDesk.obj,Desk Chair,seating,1.5,false,chairDesk
+kenney/Models/chairCushion.obj,Cushion Chair,seating,1.5,false,chairCushion
+kenney/Models/chairRounded.obj,Rounded Chair,seating,1.5,false,chairRounded
+kenney/Models/loungeChairRelax.obj,Relax Lounge Chair,seating,1.4,false,loungeChairRelax
+kenney/Models/loungeSofa.obj,Lounge Sofa,seating,1.2,false,loungeSofa
+kenney/Models/loungeSofaLong.obj,Long Lounge Sofa,seating,1.2,false,loungeSofaLong
+kenney/Models/loungeSofaCorner.obj,Corner Lounge Sofa,seating,1.2,false,loungeSofaCorner
+kenney/Models/loungeSofaOttoman.obj,Lounge Ottoman,seating,0.8,false,loungeSofaOttoman
+kenney/Models/table.obj,Dining Table,surfaces,1.15,false,table
+kenney/Models/tableCross.obj,Cross Leg Table,surfaces,1.15,false,tableCross
+kenney/Models/tableCoffee.obj,Coffee Table,surfaces,0.9,false,tableCoffee
+kenney/Models/tableCoffeeGlass.obj,Glass Coffee Table,surfaces,0.9,false,tableCoffeeGlass
+kenney/Models/tableRound.obj,Round Table,surfaces,1.15,true,tableRound
+kenney/Models/bedSingle.obj,Single Bed,surfaces,1.0,false,bedSingle
+kenney/Models/bedDouble.obj,Double Bed,surfaces,1.0,false,bedDouble
+kenney/Models/bedBunk.obj,Bunk Bed,surfaces,2.0,false,bedBunk
+kenney/Models/lampRoundTable.obj,Round Table Lamp,lighting,1.0,true,lampRoundTable
+kenney/Models/lampSquareTable.obj,Square Table Lamp,lighting,1.0,false,lampSquareTable
+kenney/Models/lampRoundFloor.obj,Round Floor Lamp,lighting,2.0,true,lampRoundFloor
+kenney/Models/lampSquareFloor.obj,Square Floor Lamp,lighting,2.0,false,lampSquareFloor
+kenney/Models/bookcaseClosed.obj,Closed Bookcase,surfaces,1.8,false,bookcaseClosed
+kenney/Models/bookcaseOpen.obj,Open Bookcase,surfaces,1.8,false,bookcaseOpen
+kenney/Models/cabinetBedDrawer.obj,Bed Drawer Cabinet,surfaces,1.0,false,cabinetBedDrawer
+kenney/Models/cabinetTelevision.obj,Television Cabinet,surfaces,1.2,false,cabinetTelevision
+kenney/Models/desk.obj,Desk,surfaces,1.15,false,desk
+kenney/Models/deskCorner.obj,Corner Desk,surfaces,1.15,false,deskCorner
+kenney/Models/stoolBar.obj,Bar Stool,seating,1.4,true,stoolBar
+kenney/Models/bench.obj,Bench,seating,1.0,false,bench
+kenney/Models/benchCushion.obj,Cushion Bench,seating,1.0,false,benchCushion
+kenney/Models/rugRound.obj,Round Rug,decorative,0.05,true,rugRound
+kenney/Models/rugSquare.obj,Square Rug,decorative,0.05,false,rugSquare
+kenney/Models/rugRectangle.obj,Rectangle Rug,decorative,0.05,false,rugRectangle
+kenney/Models/plantSmall1.obj,Small Plant,decorative,0.8,true,plantSmall1
+kenney/Models/plantSmall2.obj,Small Plant 2,decorative,0.8,true,plantSmall2
+kenney/Models/trashcan.obj,Trash Can,misc,1.0,true,trashcan
+kenney/Models/kitchenFridgeSmall.obj,Small Fridge,appliances,1.8,false,kitchenFridgeSmall
+kenney/Models/kitchenStoveElectric.obj,Electric Stove,appliances,1.2,false,kitchenStoveElectric
+kenney/Models/bathroomSink.obj,Bathroom Sink,misc,1.0,false,bathroomSink
+kenney/Models/bathroomCabinet.obj,Bathroom Cabinet,surfaces,1.2,false,bathroomCabinet
+kenney/Models/sideTable.obj,Side Table,surfaces,0.9,false,sideTable
+kenney/Models/sideTableDrawers.obj,Side Table Drawers,surfaces,0.9,false,sideTableDrawers
+kenney/Models/televisionModern.obj,Modern Television,electronics,1.0,false,televisionModern
+kenney/Models/computerKeyboard.obj,Computer Keyboard,electronics,0.4,false,computerKeyboard
+kenney/Models/plantSmall3.obj,Small Plant 3,decorative,0.8,true,plantSmall3
+kenney/Models/books.obj,Stack of Books,decorative,0.5,false,books

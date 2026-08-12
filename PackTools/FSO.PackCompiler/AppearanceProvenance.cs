@@ -53,6 +53,28 @@ namespace FSO.PackCompiler
                     },
                 };
             }
+            else if (obj.Imported != null)
+            {
+                var imported = new JObject
+                {
+                    ["mesh"] = obj.Imported.Mesh,
+                    ["height"] = obj.Imported.Height,
+                    ["symmetric"] = obj.Imported.Symmetric,
+                };
+                if (obj.Imported.Provenance != null &&
+                    (!string.IsNullOrEmpty(obj.Imported.Provenance.Source) ||
+                     !string.IsNullOrEmpty(obj.Imported.Provenance.Model)))
+                {
+                    var prov = new JObject();
+                    if (!string.IsNullOrEmpty(obj.Imported.Provenance.Source)) prov["source"] = obj.Imported.Provenance.Source;
+                    if (!string.IsNullOrEmpty(obj.Imported.Provenance.Url)) prov["url"] = obj.Imported.Provenance.Url;
+                    if (!string.IsNullOrEmpty(obj.Imported.Provenance.License)) prov["license"] = obj.Imported.Provenance.License;
+                    if (!string.IsNullOrEmpty(obj.Imported.Provenance.Retrieved)) prov["retrieved"] = obj.Imported.Provenance.Retrieved;
+                    if (!string.IsNullOrEmpty(obj.Imported.Provenance.Model)) prov["model"] = obj.Imported.Provenance.Model;
+                    imported["provenance"] = prov;
+                }
+                appearance = new JObject { ["imported"] = imported };
+            }
             else
             {
                 return; // no appearance authored — nothing to record

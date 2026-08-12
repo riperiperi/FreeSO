@@ -102,6 +102,31 @@ Design rules:
   - Dimensions are in world units (one lot tile = one unit); `*_color` fields are `[r, g, b]` integers 0-255. Unknown `params` fields and non-positive dimensions are compile errors — a zero or negative size produces a degenerate mesh with no error from the renderer itself, so the compiler catches it here.
   - The compiler renders all 12 views (4 directions × 3 zoom levels) for most generators, quantizes them to a palette, and assembles `DGRP`/`SPR2`/`PALT` chunks inline into the emitted `.iff`, same file-locality requirement as `clone_from_guid` above. `lamp` and a round-`table`/pedestal-base `table` are rotationally symmetric — no side of the object looks different from another — so the compiler renders only 3 unique frames (one per zoom level) and points all 4 direction entries in the `DGRP` at the same sprite, instead of rendering (and storing) the same silhouette 4 times.
 
+- `appearance.imported`: renders **original art** from a CC0 mesh file (OBJ + MTL). Mutually exclusive with `clone_from_guid` and `generated`. Mesh paths are relative to the pack JSON file's directory.
+
+  ```json
+  "appearance": {
+    "imported": {
+      "mesh": "../assets/cc0/quaternius/Bathroom_Toilet.obj",
+      "height": 1.4,
+      "symmetric": false,
+      "provenance": {
+        "source": "Quaternius Ultimate House Interior Pack",
+        "url": "https://opengameart.org/content/lowpoly-house-interior-pack",
+        "license": "CC0",
+        "retrieved": "2026-08-11",
+        "model": "Bathroom_Toilet"
+      }
+    }
+  }
+  ```
+
+  - `mesh`: path to an OBJ file. Companion MTL in the same directory supplies per-face `Kd` colours (`Kd * 255`, per `CATALOG-SOURCING.md`).
+  - `height`: target height in world units after normalization (bottom at Y=0, centered on X/Z).
+  - `symmetric`: when `true`, renders one view per zoom and mirrors it across all four directions (same as rotationally-symmetric generators).
+  - `provenance`: license record for browser distribution. Required fields: `source`, `license`, `model`; `url` and `retrieved` recommended.
+  - Batch import: `FSO.PackCompiler import-batch <manifest.csv> -o <pack.json>` — CSV columns `obj_path,name,category,height,symmetric,provenance_model[,guid]`.
+
   **`table`** — rectangular slab on four tapered legs, or a round top on a single pedestal:
   ```json
   "generated": {

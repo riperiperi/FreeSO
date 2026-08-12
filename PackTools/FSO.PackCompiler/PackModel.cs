@@ -7,6 +7,7 @@ namespace FSO.PackCompiler
     {
         public string Schema;
         public string Engine;
+        public string PackDirectory; // directory containing the pack JSON — resolves relative mesh paths
         public PackMeta Meta = new PackMeta();
         public List<PackObject> Objects = new List<PackObject>();
     }
@@ -30,6 +31,7 @@ namespace FSO.PackCompiler
         public List<string> Tags = new List<string>();
         public uint? CloneFromGuid;
         public PackGeneratedAppearance Generated;
+        public PackImportedAppearance Imported;
         public List<string> Attributes = new List<string>();
         public SortedDictionary<int, string> DialogStrings = new SortedDictionary<int, string>();
         public List<PackInteraction> Interactions = new List<PackInteraction>();
@@ -37,6 +39,24 @@ namespace FSO.PackCompiler
         public string EntryMain;
         public string EntryInit;
         public string Path; // json path for diagnostics
+    }
+
+    /// <summary>appearance.imported: CC0 mesh file rendered through ArtGen.</summary>
+    public class PackImportedAppearance
+    {
+        public string Mesh;
+        public double Height = 1.0;
+        public bool Symmetric;
+        public PackImportProvenance Provenance = new PackImportProvenance();
+    }
+
+    public class PackImportProvenance
+    {
+        public string Source;
+        public string Url;
+        public string License;
+        public string Retrieved;
+        public string Model;
     }
 
     /// <summary>appearance.generated: parametric art, in place of appearance.clone_from_guid.</summary>
