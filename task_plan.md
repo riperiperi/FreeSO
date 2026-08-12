@@ -111,14 +111,14 @@ Sequenced so the vision model is the *last* variable introduced, not the first.
 - [x] **Browser session response path** — after type-2000 handshake, JS client sends `RequestClientSessionResponse` (type 21); fake city replies with Voltron `HostOnlinePDU`. Stage UI through HostOnline. 5/5 gateway tests. Live join still needs valid PKCS#1 token + ClientOnline → avatar → lot on 34101.
 - [x] **KNI Blazor speaks Aries** — `FSO.BrowserAries` + BrowserClient auto-join through gateway to LotJoined (integration test).
 - [x] **Aries city + lot join (handshake)** — FindLot FOUND → `/lot` type 22 → ticket type 21 → HostOnline → ClientOnline → empty `FSOVMTickBroadcast`.
-- [ ] **Lot VM stream / lot view** — real tick contents; LotView in Blazor (S5).
+- [ ] **Lot VM stream / real LotView** — real tick contents; wire `FSO.LotView` (needs Mario stub + S3 iOS XNBs).
+- [x] **S5 lot placeholder** — after `LotJoined` (or `?lot=1`), BrowserClient draws isometric grass diamonds (FreeSO GRASS colors); WASD pan. Not real LotView.
 - [x] **KNI BlazorGL S0 + S2 texture** — `FSO.BrowserClient` loads `HttpContentStore` → `Texture2D` (`sample-content/textures/squares.png`).
 - [x] **KNI S1** — `FSO_GRAPHICS` switch; lib chain through `FSO.Client` on KNI; Mac on MonoGame.
 - [x] **Content store wired** — Composite (BasePath + Content/) + GetResource/FileProvider; remaining providers/TS1 still disk.
-- [ ] S3–S8 of KNI-MIGRATION (effects, audio, lot view in Blazor, threads, full join)
+- [ ] S3–S4, S6, S8 of KNI-MIGRATION (effects, audio, threads, full UI); real S5 LotView
 - [ ] Threading cleanup; `VMServerDriver` is the risky one — 1-2 weeks
 - **Status:** in_progress
-
 ### Phase G: Neighbourhood scaling
 - [x] `PackTools/citygen/generate_city.py` reviewed and run ✅ — San Francisco: 39.4 km square, elevation −5..781 m, 42,159 OSM road ways, full raster set written to disk
 - [ ] **Never loaded into the game.** Host it as a playable city; correct-looking PNGs are not a playable world.

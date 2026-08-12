@@ -36,8 +36,10 @@ namespace FSO_BrowserClient.Pages
                 var joinParam = QueryValue(uri, "join");
                 var autoJoin = joinParam != "0"
                     && (gatewayExplicit != null || joinParam == "1");
+                // ?lot=1 — isometric placeholder without gateway (S5 visual stand-in).
+                var forceLot = QueryValue(uri, "lot") == "1";
 
-                _game = new FSO_BrowserClientGame(contentBase, gateway, autoJoin);
+                _game = new FSO_BrowserClientGame(contentBase, gateway, autoJoin, forceLot);
                 _game.Run();
             }
 

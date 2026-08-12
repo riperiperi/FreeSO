@@ -68,9 +68,9 @@ The branch that is actually maintained. `master` has not moved since Aug 2025.
 | **`ContactSheet` / `ArtCalibration`** | Render-and-review surfaces for generated art | used to fix real sprite bugs |
 | **`FSO.WsGateway`** | WebSocket↔TCP byte gateway + JS Aries protocol debugger (`wwwroot/`) | 5/5 tests. Live handshake proven; browser now also sends type-21 session response and reaches canned `HostOnlinePDU` on the fake city. Join-lot still open. |
 | **`FSO.BrowserContent`** | `IContentStore` — File / Http / **Composite** (`Content/` overlay) | Tests green. Wired into `Content.GetResource` + `FileProvider` (BasePath + Content/). `FAR3Archive(Stream)`. |
-| **KNI migration plan** | Library-first retarget to `nkast.Xna.Framework.*`, then BlazorGL head | `docs/KNI-MIGRATION.md` — S0–S1 done; S2 texture-via-HTTP in BrowserClient |
-| **`FSO.BrowserClient`** | KNI BlazorGL — HTTP texture + **Aries join** via `FSO.BrowserAries` | Auto-joins gateway after load; stage bars → LotJoined |
-| **`FSO.BrowserAries`** | WASM-safe Aries codec + `ArchiveJoinDemo` (city→lot) | 5 unit tests + gateway integration → LotJoined |
+| **KNI migration plan** | Library-first retarget to `nkast.Xna.Framework.*`, then BlazorGL head | `docs/KNI-MIGRATION.md` — S0–S2 + S7 handshake done; S5 **placeholder** isometric floor in BrowserClient |
+| **`FSO.BrowserClient`** | KNI BlazorGL — texture + Aries join + **iso lot placeholder** | After `LotJoined` (or `?lot=1`): grass diamond grid, WASD pan. Real LotView still blocked. |
+| **`FSO.BrowserAries`** | WASM-safe Aries codec + `ArchiveJoinDemo` (city→lot) | Unit + gateway integration → LotJoined |
 | **KNI S1 graphics switch** | `FSO_GRAPHICS=MonoGame\|Kni` via `Directory.Build.props` + `msbuild/FSO.Xna.packages.targets` | Lib chain through `FSO.Client` builds on KNI; `FSO.Mac` on MonoGame |
 | **Aries join path** | City through FindLot + **lot** `/lot` type 22→21→HostOnline→ClientOnline→empty VM tick | Fake city 33101 + fake lot 34101; gateway demo auto-opens `/lot`. Real VM state still open. |
 

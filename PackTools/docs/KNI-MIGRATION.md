@@ -149,7 +149,7 @@ After library swap, desktop heads use `nkast.Kni.Platform.SDL2.GL`.
 | S2 | Content seam over HTTP; one FAR/IFF → Texture2D | Texture on screen — **DONE for PNG path**: Composite store + Blazor `HttpContentStore` → `Texture2D` (`squares.png`). FAR entry → texture still open. |
 | S3 | Fetch `Content/OGL` XNBs; load effects (start **iOS/GLVer=2**) | Effects load |
 | S4 | Retarget HIT; one SoundEffect under autoplay rules | Audio beep |
-| S5 | LotView + Vitaboy; empty lot | Lot camera + floor |
+| S5 | LotView + Vitaboy; empty lot | Lot camera + floor — **placeholder DONE**: BrowserClient draws FreeSO grass-colored isometric diamonds after `LotJoined` (or `?lot=1`). Real `FSO.LotView` blocked on Mario.dll, S3 iOS XNBs over HTTP, TFM. |
 | S6 | Thread→Task on play path | No `new Thread` on join |
 | S7 | Wire WsGateway + full Aries session | Join lot — **DONE for handshake**: JS demo + `FSO.BrowserAries`/`BrowserClient` reach LotJoined against fakes. Real VM state still open. |
 | S8 | Full UI shell + catalog over HTTP | “Load a lot” demo |

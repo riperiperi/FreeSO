@@ -38,7 +38,19 @@ cd PackTools/FSO.BrowserClient && dotnet run
 
 With `?gateway=…` in the URL (or `?join=1`), the client auto-joins after ~1.5s;
 **Space** always starts a join. Use `?join=0` to disable auto-join even when
-`gateway` is set. Stage bars turn green on `LotJoined`.
+`gateway` is set. On `LotJoined`, the UI switches to an **isometric grass lot
+placeholder** (WASD / arrows to pan). This is not real `FSO.LotView` yet — see
+`../docs/KNI-MIGRATION.md` S5.
+
+### Lot placeholder without gateway
+
+```
+http://localhost:5259/?lot=1
+```
+
+Shows the same isometric floor immediately (no Aries). Useful while fakes/gateway
+are down.
+
 ## Content seam
 
 - `FSO.BrowserContent` (`net8`/`net9`) — `HttpContentStore` / `FileContentStore` / composite
@@ -51,6 +63,6 @@ With `?gateway=…` in the URL (or `?join=1`), the client auto-joins after ~1.5s
 
 ## Next
 
-Lot view / effects in Blazor; real VM tick payload; live Archive RSA path.
+Real `FSO.LotView` (Mario stub + S3 iOS XNBs); real VM tick payload; live Archive RSA path.
 
 See `../docs/KNI-MIGRATION.md` and root `task_plan.md` Phase F.
