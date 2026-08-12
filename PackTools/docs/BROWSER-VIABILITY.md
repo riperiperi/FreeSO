@@ -8,10 +8,10 @@
 > Legal gating (§4) is explicitly waived by Kat for now — CC0 catalog work proceeds in
 > parallel rather than as a prerequisite.
 >
-> **KNI render spike (2026-08-11):** `PackTools/FSO.BrowserClient` — `kni-blazor-gl` template
-> (net8.0, KNI 4.2.9001). Minimal FreeSO-branded WebGL host; not a client port yet. See its
-> `README.md` for `dotnet run` / `dotnet publish`. Next: retarget FreeSO packages to
-> `nkast.Xna.Framework.*` and speak Aries over the gateway.
+> **KNI + content + Aries (2026-08-11, later same day):** `FSO.BrowserClient` loads a real
+> PNG via `HttpContentStore` → `Texture2D`. Lib chain builds with `-p:FSO_GRAPHICS=Kni`.
+> Gateway demo reaches ClientOnline + ignore-list ack against the fake city. Still open:
+> avatar select / FindLot / lot TCP, effects, lot view in Blazor. See `KNI-MIGRATION.md`.
 
 > **Older note, 2026-08-08.** Browser is decided but moved to the tail
 > of the roadmap (`../task_plan.md` Phase F) — it lowers install friction rather than
