@@ -160,21 +160,137 @@ namespace FSO.WsGateway.Tests
             }
         }
 
+        /// <summary>
+        /// Documents the wire format the browser must emit for the Archive handshake reply:
+        /// RequestClientSessionResponse (Aries type 21) with Unknown=40 so Password is
+        /// PascalVLC (base64 RSA ciphertext on a live server). Fixed fields are Mina
+        /// PutString(..., ASCII) — NUL-padded to the field width.
+        /// </summary>
+        [Fact]
+        public void SessionResponse_ArchiveMode_WireFormat()
+        {
+            var sent = new RequestClientSessionResponse
+            {
+                User = "BrowserDemo",
+                AriesVersion = "",
+                Email = "",
+                Authserv = "",
+                Product = 0,
+                Unknown = 40,
+                ServiceIdent = "",
+                Unknown2 = 4,
+                Password = "dGVzdA==", // stand-in for base64(RSA_PKCS1(nonce\userId))
+            };
+
+            var payload = SerializeAriesPayload(sent);
+
+            // Fixed block before password:
+            // 112 User + 80 AriesVersion + 40 Email + 84 Authserv
+            // + 2 Product + 1 Unknown + 3 ServiceIdent + 2 Unknown2 = 324
+            const int passwordOffset = 324;
+            Assert.Equal(passwordOffset + 1 + "dGVzdA==".Length, payload.Length);
+            Assert.Equal(40, payload[318]); // Unknown
+
+            // User is ASCII at offset 0, NUL-padded to 112.
+            Assert.Equal((byte)'B', payload[0]);
+            Assert.Equal(0, payload[11]); // "BrowserDemo".Length == 11
+
+            // Password is PascalVLC immediately after the fixed block.
+            Assert.Equal((byte)"dGVzdA==".Length, payload[passwordOffset]);
+            Assert.Equal("dGVzdA==", System.Text.Encoding.UTF8.GetString(payload, passwordOffset + 1, 8));
+
+            // Round-trip through the real deserializer.
+            var io = IoBuffer.Wrap(payload);
+            io.Order = ByteOrder.LittleEndian;
+            var decoded = new RequestClientSessionResponse();
+            decoded.Deserialize(io, null);
+            Assert.Equal(sent.User, decoded.User);
+            Assert.Equal(40, decoded.Unknown);
+            Assert.Equal(4, decoded.Unknown2);
+            Assert.Equal(sent.Password, decoded.Password);
+        }
+
+        /// <summary>
+        /// Browser → gateway → TCP: a type-21 Archive session response survives the bridge
+        /// and deserializes with FreeSO's protocol code — the send half of the handshake test.
+        /// </summary>
+        [Fact]
+        public async Task SessionResponse_SurvivesTheBridge()
+        {
+            var sent = new RequestClientSessionResponse
+            {
+                User = "BrowserDemo",
+                AriesVersion = "",
+                Email = "",
+                Authserv = "",
+                Unknown = 40,
+                ServiceIdent = "",
+                Unknown2 = 4,
+                Password = "dGVzdA==",
+            };
+            var frame = AriesFrame(21, sent);
+            var tcs = new TaskCompletionSource<byte[]>(TaskCreationOptions.RunContinuationsAsynchronously);
+
+            var (listener, port) = TcpServer(async stream =>
+            {
+                var buf = new byte[frame.Length];
+                var got = 0;
+                while (got < buf.Length)
+                {
+                    var n = await stream.ReadAsync(buf.AsMemory(got, buf.Length - got));
+                    if (n == 0) break;
+                    got += n;
+                }
+                tcs.TrySetResult(buf.AsSpan(0, got).ToArray());
+            });
+
+            var (gateway, ws) = await ConnectThroughGateway(port);
+            try
+            {
+                await ws.SendAsync(frame, WebSocketMessageType.Binary, true, CancellationToken.None);
+                var received = await tcs.Task.WaitAsync(TimeSpan.FromSeconds(10));
+
+                Assert.Equal(21u, BitConverter.ToUInt32(received, 0));
+                var payloadSize = BitConverter.ToUInt32(received, 8);
+                Assert.Equal((uint)(frame.Length - 12), payloadSize);
+
+                var payload = IoBuffer.Wrap(received, 12, (int)payloadSize);
+                payload.Order = ByteOrder.LittleEndian;
+                var decoded = new RequestClientSessionResponse();
+                decoded.Deserialize(payload, null);
+                Assert.Equal(sent.User, decoded.User);
+                Assert.Equal(40, decoded.Unknown);
+                Assert.Equal(sent.Password, decoded.Password);
+            }
+            finally
+            {
+                listener.Stop();
+                await gateway.Stop();
+            }
+        }
+
         /// <summary>Aries framing per AriesProtocolEncoder.EncodeAries: 12-byte LE header + payload.</summary>
         private static byte[] AriesFrame(uint packetType, IAriesPacket packet)
+        {
+            var payloadBytes = SerializeAriesPayload(packet);
+            var frame = new byte[12 + payloadBytes.Length];
+            BitConverter.GetBytes(packetType).CopyTo(frame, 0);
+            BitConverter.GetBytes(0u).CopyTo(frame, 4); // timestamp, unused by the decoder
+            BitConverter.GetBytes((uint)payloadBytes.Length).CopyTo(frame, 8);
+            payloadBytes.CopyTo(frame, 12);
+            return frame;
+        }
+
+        private static byte[] SerializeAriesPayload(IAriesPacket packet)
         {
             var payload = IoBuffer.Allocate(128);
             payload.Order = ByteOrder.LittleEndian;
             payload.AutoExpand = true;
             packet.Serialize(payload, null);
             payload.Flip();
-
-            var frame = new byte[12 + payload.Remaining];
-            BitConverter.GetBytes(packetType).CopyTo(frame, 0);
-            BitConverter.GetBytes(0u).CopyTo(frame, 4); // timestamp, unused by the decoder
-            BitConverter.GetBytes((uint)payload.Remaining).CopyTo(frame, 8);
-            payload.Get(frame, 12, frame.Length - 12);
-            return frame;
+            var bytes = new byte[payload.Remaining];
+            payload.Get(bytes, 0, bytes.Length);
+            return bytes;
         }
     }
 }

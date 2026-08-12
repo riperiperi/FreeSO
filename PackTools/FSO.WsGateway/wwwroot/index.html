@@ -2,73 +2,216 @@
 <html lang="en">
 <head>
 <meta charset="utf-8">
-<title>FreeSO Browser Client — Aries over WebSocket</title>
+<title>Phase F — Aries protocol debugger</title>
 <style>
-  :root { color-scheme: dark; }
+  :root {
+    color-scheme: dark;
+    --bg: #0c0e14;
+    --panel: #141824;
+    --border: #2a3148;
+    --text: #e8eaf2;
+    --muted: #8b93ad;
+    --accent: #5b8cff;
+    --ok: #3ecf8e;
+    --warn: #e6b84d;
+    --bad: #f07178;
+  }
+  * { box-sizing: border-box; }
   body {
-    margin: 0; min-height: 100vh; display: grid; place-items: center;
-    background: #0f1220; color: #e6e8f0;
-    font: 15px/1.5 -apple-system, "Segoe UI", Roboto, sans-serif;
+    margin: 0; min-height: 100vh; background: var(--bg); color: var(--text);
+    font: 14px/1.45 "IBM Plex Sans", "Segoe UI", sans-serif;
   }
-  .card {
-    background: #181c30; border: 1px solid #2a2f4a; border-radius: 14px;
-    padding: 28px 32px; width: min(560px, 90vw);
-    box-shadow: 0 12px 40px rgba(0,0,0,.45);
+  main {
+    max-width: 920px; margin: 0 auto; padding: 28px 20px 48px;
   }
-  h1 { font-size: 19px; margin: 0 0 4px; }
-  .sub { color: #8b91b3; font-size: 13px; margin-bottom: 20px; }
-  .row { display: flex; gap: 8px; margin-bottom: 16px; }
+  h1 { font-size: 22px; margin: 0 0 4px; letter-spacing: -0.02em; }
+  .sub { color: var(--muted); margin-bottom: 22px; max-width: 62ch; }
+  .panel {
+    background: var(--panel); border: 1px solid var(--border); border-radius: 10px;
+    padding: 16px 18px; margin-bottom: 14px;
+  }
+  .row { display: flex; flex-wrap: wrap; gap: 10px; align-items: center; }
+  label { color: var(--muted); font-size: 12px; display: block; margin-bottom: 4px; }
+  input[type=text] {
+    background: #0c0e14; border: 1px solid var(--border); color: var(--text);
+    border-radius: 6px; padding: 8px 10px; min-width: 180px; font: inherit;
+  }
   button {
-    background: #4f6ef7; color: white; border: 0; border-radius: 8px;
-    padding: 9px 18px; font-size: 14px; cursor: pointer;
+    background: var(--accent); color: #fff; border: 0; border-radius: 7px;
+    padding: 9px 16px; font: inherit; cursor: pointer;
   }
-  button:disabled { background: #333a5c; cursor: default; }
-  .status { font-size: 13px; padding: 3px 10px; border-radius: 999px; align-self: center; }
-  .status.idle { background: #2a2f4a; color: #8b91b3; }
-  .status.open { background: #123c26; color: #52d98b; }
-  .status.closed { background: #3c1220; color: #f26d8d; }
-  dl { display: grid; grid-template-columns: auto 1fr; gap: 4px 16px; margin: 0; }
-  dt { color: #8b91b3; }
-  dd { margin: 0; font-variant-numeric: tabular-nums; }
-  #handshake { display: none; margin-top: 4px; }
+  button:disabled { background: #333a52; color: #7a8199; cursor: default; }
+  .stages {
+    display: grid; grid-template-columns: repeat(5, 1fr); gap: 6px; list-style: none;
+    margin: 0; padding: 0;
+  }
+  .stages li {
+    border: 1px solid var(--border); border-radius: 8px; padding: 8px 8px 10px;
+    color: var(--muted); font-size: 11px; text-align: center; background: #0f121c;
+  }
+  .stages li strong { display: block; font-size: 12px; color: var(--text); margin-bottom: 2px; }
+  .stages li.on { border-color: var(--accent); color: #c5d4ff; }
+  .stages li.done { border-color: #2f6b4f; color: #9fd9bb; }
+  .stages li.fail { border-color: var(--bad); color: #ffb4b8; }
+  dl { display: grid; grid-template-columns: 140px 1fr; gap: 4px 12px; margin: 0; }
+  dt { color: var(--muted); }
+  dd { margin: 0; word-break: break-word; font-variant-numeric: tabular-nums; }
+  .pill {
+    display: inline-block; font-size: 12px; padding: 3px 10px; border-radius: 999px;
+    background: #2a2f4a; color: var(--muted);
+  }
+  .pill.open { background: #123c26; color: var(--ok); }
+  .pill.closed { background: #3c1220; color: #f26d8d; }
+  .pill.warn { background: #3a3014; color: var(--warn); }
   #log {
-    margin-top: 18px; padding: 10px 12px; background: #10131f; border-radius: 8px;
-    font: 12px/1.6 ui-monospace, Menlo, monospace; color: #9aa0c0;
-    max-height: 160px; overflow-y: auto; white-space: pre-wrap;
+    margin: 0; padding: 10px 12px; background: #0c0e14; border-radius: 8px;
+    font: 12px/1.55 ui-monospace, Menlo, monospace; color: #9aa3c0;
+    max-height: 280px; overflow-y: auto; white-space: pre-wrap;
   }
+  .note {
+    border-left: 3px solid var(--warn); padding: 8px 12px; color: #d8c896;
+    background: #221c0e; border-radius: 0 6px 6px 0; font-size: 13px;
+  }
+  .note code { color: #ffe6a0; }
+  h2 { font-size: 13px; text-transform: uppercase; letter-spacing: 0.06em;
+       color: var(--muted); margin: 0 0 10px; }
 </style>
 </head>
 <body>
-<div class="card">
-  <h1>FreeSO in the browser</h1>
-  <div class="sub">Aries protocol over a WebSocket bridge — no plugins, no TCP.</div>
-  <div class="row">
-    <button id="connect">Connect to city server</button>
-    <span class="status idle" id="status">idle</span>
+<main>
+  <h1>Phase F — Aries protocol debugger</h1>
+  <p class="sub">
+    Browser client over the WS↔TCP gateway. Decodes the Archive city handshake
+    (<code>RequestClientSessionArchive</code>, type 2000), then sends the real next
+    packet (<code>RequestClientSessionResponse</code>, type 21). Auth crypto is
+    attempted; full join still needs Voltron/Electron after <code>HostOnlinePDU</code>.
+  </p>
+
+  <div class="panel">
+    <h2>Controls</h2>
+    <div class="row">
+      <div>
+        <label for="displayName">Display name (≤24)</label>
+        <input id="displayName" type="text" maxlength="24" value="BrowserDemo">
+      </div>
+      <div style="align-self:end" class="row">
+        <button id="connect">Connect /city</button>
+        <span class="pill" id="status">idle</span>
+      </div>
+    </div>
   </div>
-  <dl id="handshake">
-    <dt>Server</dt><dd id="f-name"></dd>
-    <dt>Players online</dt><dd id="f-players"></dd>
-    <dt>Version</dt><dd id="f-version"></dd>
-    <dt>Shard</dt><dd id="f-shard"></dd>
-    <dt>City map</dt><dd id="f-map"></dd>
-  </dl>
-  <div id="log"></div>
-</div>
+
+  <div class="panel">
+    <h2>Protocol stage</h2>
+    <ol class="stages" id="stages">
+      <li data-stage="idle"><strong>1. Idle</strong>not connected</li>
+      <li data-stage="connected"><strong>2. Connected</strong>WS open</li>
+      <li data-stage="handshake"><strong>3. Handshake</strong>type 2000</li>
+      <li data-stage="session-sent"><strong>4. Session sent</strong>type 21</li>
+      <li data-stage="next"><strong>5. Next packet</strong>server reply</li>
+    </ol>
+  </div>
+
+  <div class="panel" id="handshakePanel" hidden>
+    <h2>Handshake (← server type 2000)</h2>
+    <dl>
+      <dt>Server</dt><dd id="f-name"></dd>
+      <dt>Players</dt><dd id="f-players"></dd>
+      <dt>Version</dt><dd id="f-version"></dd>
+      <dt>Shard</dt><dd id="f-shard"></dd>
+      <dt>Map</dt><dd id="f-map"></dd>
+      <dt>Nonce</dt><dd id="f-nonce"></dd>
+      <dt>ServerKey</dt><dd id="f-key"></dd>
+    </dl>
+  </div>
+
+  <div class="panel" id="sessionPanel" hidden>
+    <h2>Session response (→ client type 21)</h2>
+    <dl>
+      <dt>User</dt><dd id="s-user"></dd>
+      <dt>Unknown</dt><dd id="s-unknown">40 (archive password = PascalVLC)</dd>
+      <dt>Password mode</dt><dd id="s-pwmode"></dd>
+      <dt>Frame size</dt><dd id="s-size"></dd>
+    </dl>
+  </div>
+
+  <div class="panel" id="nextPanel" hidden>
+    <h2>Next server packet</h2>
+    <dl>
+      <dt>Aries type</dt><dd id="n-type"></dd>
+      <dt>Decoded</dt><dd id="n-decoded"></dd>
+    </dl>
+  </div>
+
+  <div class="panel note" id="blockerNote">
+    <strong>Join-lot blockers after this step:</strong>
+    live Archive auth requires RSAES-PKCS1-v1_5 encrypt of
+    <code>nonce\SHA1(guid+serverKey)</code> with the server PEM
+    (<code>Unknown=40</code> path). WebCrypto refuses PKCS#1 encrypt, so this page
+    ships a small BigInt PKCS#1 encrypt. After a valid auth the server sends
+    Voltron <code>HostOnlinePDU</code> (Aries type 0, subtype 0x001e); the client
+    must then send <code>ClientOnlinePDU</code> + ignore/invincible PDUs, pick an
+    avatar, then find/join a lot on 34101 — none of that is here yet. Against the
+    fake city server, a structurally valid type 21 is enough to get a canned
+    <code>HostOnlinePDU</code>.
+  </div>
+
+  <div class="panel">
+    <h2>Packet log</h2>
+    <div id="log"></div>
+  </div>
+</main>
 
 <script>
-// Minimal Aries decoder. Framing per AriesProtocolEncoder.cs:
-//   12-byte little-endian header: uint32 type, uint32 timestamp, uint32 payloadSize.
-// Strings are PascalVLC (IoBufferUtils.PutPascalVLCString): LEB128 varint length + UTF-8.
+// Aries framing (AriesProtocolEncoder): 12-byte LE header = type, timestamp, payloadSize.
+// Archive handshake strings: PascalVLC (LEB128 length + UTF-8).
+// Session response fixed fields: Mina PutString(field, n, ASCII) = NUL-padded to n bytes.
+// Archive password (Unknown==40): PascalVLC string (base64 RSA ciphertext).
+
+const ARIES = {
+  Voltron: 0,
+  RequestClientSessionResponse: 21,
+  RequestClientSessionArchive: 2000,
+};
+const VOLTRON = { AnnouncementMsgPDU: 0x0005, HostOnlinePDU: 0x001e };
 
 const logEl = document.getElementById('log');
 const log = (m) => { logEl.textContent += m + '\n'; logEl.scrollTop = logEl.scrollHeight; };
 
+let stageOrder = ['idle', 'connected', 'handshake', 'session-sent', 'next'];
+let currentStage = 'idle';
+let reached = new Set(['idle']);
+
+function setStage(stage, failed) {
+  currentStage = stage;
+  if (!failed) reached.add(stage);
+  const idx = stageOrder.indexOf(stage);
+  document.querySelectorAll('#stages li').forEach((li) => {
+    const s = li.dataset.stage;
+    li.classList.remove('on', 'done', 'fail');
+    const si = stageOrder.indexOf(s);
+    if (failed && s === stage) li.classList.add('fail');
+    else if (s === stage) li.classList.add('on');
+    else if (reached.has(s) && si < idx) li.classList.add('done');
+  });
+}
+
+function setStatus(cls, text) {
+  const el = document.getElementById('status');
+  el.className = 'pill ' + cls;
+  el.textContent = text;
+}
+
 class ByteReader {
-  constructor(bytes) { this.v = new DataView(bytes.buffer, bytes.byteOffset, bytes.byteLength); this.o = 0; this.bytes = bytes; }
-  u16() { const x = this.v.getUint16(this.o, true); this.o += 2; return x; }
-  u32() { const x = this.v.getUint32(this.o, true); this.o += 4; return x; }
-  i32() { const x = this.v.getInt32(this.o, true); this.o += 4; return x; }
+  constructor(bytes) {
+    this.bytes = bytes;
+    this.v = new DataView(bytes.buffer, bytes.byteOffset, bytes.byteLength);
+    this.o = 0;
+  }
+  u8() { return this.bytes[this.o++]; }
+  u16(le = true) { const x = this.v.getUint16(this.o, le); this.o += 2; return x; }
+  u32(le = true) { const x = this.v.getUint32(this.o, le); this.o += 4; return x; }
+  i32(le = true) { const x = this.v.getInt32(this.o, le); this.o += 4; return x; }
   vlcString() {
     let len = 0, shift = 0, b;
     do { b = this.bytes[this.o++]; len |= (b & 0x7f) << shift; shift += 7; } while (b & 0x80);
@@ -76,9 +219,15 @@ class ByteReader {
     this.o += len;
     return s;
   }
+  pascalString() {
+    const b0 = this.u8() & 0x7f, b1 = this.u8(), b2 = this.u8(), b3 = this.u8();
+    const len = (b0 << 24) | (b1 << 16) | (b2 << 8) | b3;
+    let s = '';
+    for (let i = 0; i < len; i++) s += String.fromCharCode(this.u8());
+    return s;
+  }
 }
 
-// Accumulates stream bytes and yields complete Aries frames.
 class AriesFramer {
   constructor() { this.buf = new Uint8Array(0); }
   push(chunk) {
@@ -115,37 +264,341 @@ function decodeArchiveHandshake(payload) {
   };
 }
 
-const statusEl = document.getElementById('status');
-function setStatus(cls, text) { statusEl.className = 'status ' + cls; statusEl.textContent = text; }
+function encodeVlcString(s) {
+  const data = new TextEncoder().encode(s ?? '');
+  let n = data.length;
+  const out = [];
+  let first = true;
+  while (n > 0 || first) {
+    out.push((n > 127 ? 0x80 : 0) | (n & 0x7f));
+    n >>= 7;
+    first = false;
+  }
+  const buf = new Uint8Array(out.length + data.length);
+  buf.set(out, 0);
+  buf.set(data, out.length);
+  return buf;
+}
+
+function encodeFixedAscii(s, fieldSize) {
+  // Mina PutString(s, fieldSize, ASCII): write bytes, NUL-pad to fieldSize.
+  const out = new Uint8Array(fieldSize);
+  const src = new TextEncoder().encode(s ?? '');
+  out.set(src.subarray(0, fieldSize));
+  return out;
+}
+
+function concatBytes(parts) {
+  let n = 0;
+  for (const p of parts) n += p.length;
+  const out = new Uint8Array(n);
+  let o = 0;
+  for (const p of parts) { out.set(p, o); o += p.length; }
+  return out;
+}
+
+function ariesFrame(type, payload) {
+  const frame = new Uint8Array(12 + payload.length);
+  const v = new DataView(frame.buffer);
+  v.setUint32(0, type, true);
+  v.setUint32(4, 0, true);
+  v.setUint32(8, payload.length, true);
+  frame.set(payload, 12);
+  return frame;
+}
+
+/** Archive-mode RequestClientSessionResponse (type 21), Unknown=40. */
+function encodeSessionResponse({ user, password }) {
+  const parts = [
+    encodeFixedAscii(user, 112),
+    encodeFixedAscii('', 80),   // AriesVersion
+    encodeFixedAscii('', 40),   // Email
+    encodeFixedAscii('', 84),   // Authserv
+  ];
+  // Product(2) + Unknown(1) + ServiceIdent(3) + Unknown2(2) = 8
+  const mid = new Uint8Array(8);
+  const mv = new DataView(mid.buffer);
+  mv.setUint16(0, 0, true);     // Product
+  mid[2] = 40;                  // Unknown — archive uses PascalVLC password
+  // ServiceIdent[3..5] left 0
+  mv.setUint16(6, 4, true);     // Unknown2 (4 = fresh; 1 = re-establish)
+  parts.push(mid);
+  parts.push(encodeVlcString(password));
+  return concatBytes(parts);
+}
+
+function clientGuid() {
+  const key = 'fso.archiveClientGuid';
+  let g = localStorage.getItem(key);
+  if (!g) {
+    g = crypto.randomUUID();
+    localStorage.setItem(key, g);
+  }
+  return g;
+}
+
+async function archiveHash(client, server) {
+  const data = new TextEncoder().encode(client + server);
+  const dig = await crypto.subtle.digest('SHA-1', data);
+  return [...new Uint8Array(dig)].map(b => b.toString(16).toUpperCase().padStart(2, '0')).join('');
+}
+
+// --- Minimal RSA PKCS#1 v1.5 encrypt (WebCrypto refuses RSAES-PKCS1-v1_5) ---
+
+function pemToDer(pem) {
+  const b64 = pem.replace(/-----BEGIN [^-]+-----/, '')
+    .replace(/-----END [^-]+-----/, '')
+    .replace(/\s+/g, '');
+  const bin = atob(b64);
+  const out = new Uint8Array(bin.length);
+  for (let i = 0; i < bin.length; i++) out[i] = bin.charCodeAt(i);
+  return out;
+}
+
+function readAsn1(bytes, offset) {
+  const tag = bytes[offset++];
+  let len = bytes[offset++];
+  if (len & 0x80) {
+    const n = len & 0x7f;
+    len = 0;
+    for (let i = 0; i < n; i++) len = (len << 8) | bytes[offset++];
+  }
+  const value = bytes.subarray(offset, offset + len);
+  return { tag, value, next: offset + len };
+}
+
+function parseRsaPublicKeyPem(pem) {
+  if (!/BEGIN RSA PUBLIC KEY/.test(pem) && !/BEGIN PUBLIC KEY/.test(pem)) {
+    throw new Error('not a PEM public key');
+  }
+  let der = pemToDer(pem);
+  let seq = readAsn1(der, 0);
+  if (seq.tag !== 0x30) throw new Error('expected SEQUENCE');
+  // SPKI: SEQUENCE { AlgorithmIdentifier, BIT STRING (RSAPublicKey) }
+  if (/BEGIN PUBLIC KEY/.test(pem)) {
+    let o = 0;
+    const alg = readAsn1(seq.value, o); o = alg.next;
+    const bit = readAsn1(seq.value, o);
+    if (bit.tag !== 0x03) throw new Error('expected BIT STRING');
+    const rsaDer = bit.value.subarray(1); // unused-bits byte
+    seq = readAsn1(rsaDer, 0);
+  }
+  let o = 0;
+  const nNode = readAsn1(seq.value, o); o = nNode.next;
+  const eNode = readAsn1(seq.value, o);
+  if (nNode.tag !== 0x02 || eNode.tag !== 0x02) throw new Error('expected INTEGERs');
+  const nBytes = nNode.value[0] === 0 ? nNode.value.subarray(1) : nNode.value;
+  const eBytes = eNode.value[0] === 0 ? eNode.value.subarray(1) : eNode.value;
+  return {
+    n: bytesToBigInt(nBytes),
+    e: bytesToBigInt(eBytes),
+    k: nBytes.length,
+  };
+}
+
+function bytesToBigInt(bytes) {
+  let x = 0n;
+  for (const b of bytes) x = (x << 8n) | BigInt(b);
+  return x;
+}
+
+function bigIntToBytes(x, len) {
+  const out = new Uint8Array(len);
+  for (let i = len - 1; i >= 0; i--) {
+    out[i] = Number(x & 0xffn);
+    x >>= 8n;
+  }
+  return out;
+}
+
+function modPow(base, exp, mod) {
+  let r = 1n;
+  base %= mod;
+  while (exp > 0n) {
+    if (exp & 1n) r = (r * base) % mod;
+    base = (base * base) % mod;
+    exp >>= 1n;
+  }
+  return r;
+}
+
+function rsaPkcs1Encrypt(pem, plaintextBytes) {
+  const { n, e, k } = parseRsaPublicKeyPem(pem);
+  if (plaintextBytes.length > k - 11) throw new Error('message too long for key');
+  const em = new Uint8Array(k);
+  em[0] = 0x00;
+  em[1] = 0x02;
+  const psLen = k - plaintextBytes.length - 3;
+  const ps = new Uint8Array(psLen);
+  crypto.getRandomValues(ps);
+  for (let i = 0; i < ps.length; i++) if (ps[i] === 0) ps[i] = 1;
+  em.set(ps, 2);
+  em[2 + psLen] = 0x00;
+  em.set(plaintextBytes, 3 + psLen);
+  const m = bytesToBigInt(em);
+  const c = modPow(m, e, n);
+  return bigIntToBytes(c, k);
+}
+
+function b64(bytes) {
+  let s = '';
+  for (const b of bytes) s += String.fromCharCode(b);
+  return btoa(s);
+}
+
+function decodeVoltronInner(payload) {
+  if (payload.length < 6) return { error: 'short voltron payload' };
+  const r = new ByteReader(payload);
+  const subtype = r.u16(false); // BE
+  const size = r.u32(false);    // includes 6-byte header
+  const body = payload.subarray(6);
+  if (subtype === VOLTRON.HostOnlinePDU) {
+    const br = new ByteReader(body);
+    return {
+      name: 'HostOnlinePDU',
+      subtype,
+      hostReservedWords: br.u16(false),
+      hostVersion: br.u16(false),
+      clientBufSize: br.u16(false),
+    };
+  }
+  if (subtype === VOLTRON.AnnouncementMsgPDU) {
+    const br = new ByteReader(body);
+    return {
+      name: 'AnnouncementMsgPDU',
+      subtype,
+      senderID: br.pascalString(),
+      senderAccount: br.pascalString(),
+      badge: br.u8(),
+      isAlertable: br.u8(),
+      subject: br.pascalString(),
+      message: br.pascalString(),
+    };
+  }
+  return { name: 'Voltron', subtype, size, bodyLen: body.length };
+}
+
+async function buildArchivePassword(handshake) {
+  const guid = clientGuid();
+  const userId = await archiveHash(guid, handshake.serverKey);
+  const plain = new TextEncoder().encode(`${handshake.nonce}\\${userId}`);
+  try {
+    const cipher = rsaPkcs1Encrypt(handshake.serverKey, plain);
+    return {
+      password: b64(cipher),
+      mode: 'RSA-PKCS1-v1_5 (SHA1 client id, base64 ciphertext)',
+      userId,
+      guid,
+    };
+  } catch (err) {
+    // Fake server sends a non-PEM key; live Archive sends ExportRSAPublicKeyPem.
+    return {
+      password: 'browser-demo-unencrypted',
+      mode: 'PLACEHOLDER — PKCS#1 encrypt skipped (' + err.message + '). Live server will reject with AnnouncementMsgPDU / Encryption Failure.',
+      userId,
+      guid,
+      skipped: true,
+    };
+  }
+}
+
+async function handleHandshake(ws, hs) {
+  document.getElementById('f-name').textContent = hs.name;
+  document.getElementById('f-players').textContent = hs.playerCount;
+  document.getElementById('f-version').textContent = hs.versionInfo;
+  document.getElementById('f-shard').textContent = hs.shardName + ' (#' + hs.shardId + ')';
+  document.getElementById('f-map').textContent = hs.shardMap;
+  document.getElementById('f-nonce').textContent = hs.nonce;
+  document.getElementById('f-key').textContent =
+    hs.serverKey.length > 80 ? hs.serverKey.slice(0, 80) + '…' : hs.serverKey;
+  document.getElementById('handshakePanel').hidden = false;
+  setStage('handshake');
+  setStatus('open', 'handshake received');
+  log('decoded RequestClientSessionArchive from "' + hs.name + '"');
+
+  const user = document.getElementById('displayName').value.trim() || 'BrowserDemo';
+  const auth = await buildArchivePassword(hs);
+  const payload = encodeSessionResponse({ user, password: auth.password });
+  const frame = ariesFrame(ARIES.RequestClientSessionResponse, payload);
+
+  document.getElementById('s-user').textContent = user;
+  document.getElementById('s-pwmode').textContent = auth.mode;
+  document.getElementById('s-size').textContent = frame.length + ' bytes (12 header + ' + payload.length + ' payload)';
+  document.getElementById('sessionPanel').hidden = false;
+
+  ws.send(frame);
+  setStage('session-sent');
+  setStatus(auth.skipped ? 'warn' : 'open', auth.skipped ? 'type 21 sent (no RSA)' : 'type 21 sent');
+  log('sent RequestClientSessionResponse type 21 (' + frame.length + ' B); guid=' + auth.guid.slice(0, 8) + '… userId=' + auth.userId.slice(0, 8) + '…');
+  if (auth.skipped) log('auth note: ' + auth.mode);
+}
+
+function handleNextPacket(frame) {
+  document.getElementById('nextPanel').hidden = false;
+  document.getElementById('n-type').textContent = frame.type +
+    (frame.type === ARIES.Voltron ? ' (Voltron)' : '');
+  let decoded;
+  if (frame.type === ARIES.Voltron) {
+    decoded = decodeVoltronInner(frame.payload);
+    document.getElementById('n-decoded').textContent = JSON.stringify(decoded);
+    if (decoded.name === 'HostOnlinePDU') {
+      setStage('next');
+      setStatus('open', 'HostOnlinePDU');
+      log('received HostOnlinePDU — city session accepted (fake or live). Next real step: ClientOnlinePDU.');
+    } else if (decoded.name === 'AnnouncementMsgPDU') {
+      setStage('next', true);
+      setStatus('closed', decoded.subject || 'rejected');
+      log('received AnnouncementMsgPDU: ' + decoded.subject + ' (' + decoded.senderID + ') — expected on live without valid RSA token.');
+    } else {
+      setStage('next');
+      setStatus('open', 'voltron 0x' + decoded.subtype.toString(16));
+      log('received Voltron subtype 0x' + decoded.subtype.toString(16));
+    }
+  } else {
+    document.getElementById('n-decoded').textContent = frame.payload.length + ' byte payload (undecoded)';
+    setStage('next');
+    setStatus('open', 'type ' + frame.type);
+    log('received aries type ' + frame.type + ', ' + frame.payload.length + ' bytes');
+  }
+}
+
+setStage('idle');
 
 document.getElementById('connect').addEventListener('click', () => {
   const url = (location.protocol === 'https:' ? 'wss://' : 'ws://') + location.host + '/city';
+  logEl.textContent = '';
   log('connecting ' + url);
+  reached = new Set(['idle']);
+  setStage('idle');
+  document.getElementById('handshakePanel').hidden = true;
+  document.getElementById('sessionPanel').hidden = true;
+  document.getElementById('nextPanel').hidden = true;
+
   const ws = new WebSocket(url);
   ws.binaryType = 'arraybuffer';
   const framer = new AriesFramer();
+  let sawHandshake = false;
   document.getElementById('connect').disabled = true;
 
-  ws.onopen = () => { setStatus('open', 'socket open'); log('websocket open, waiting for server handshake'); };
+  ws.onopen = () => {
+    setStage('connected');
+    setStatus('open', 'socket open');
+    log('websocket open — waiting for RequestClientSessionArchive');
+  };
   ws.onerror = () => log('websocket error');
   ws.onclose = (e) => {
     setStatus('closed', 'closed');
     document.getElementById('connect').disabled = false;
     log('closed (' + e.code + (e.reason ? ': ' + e.reason : '') + ')');
   };
-  ws.onmessage = (e) => {
+  ws.onmessage = async (e) => {
     for (const frame of framer.push(new Uint8Array(e.data))) {
-      log('aries frame: type ' + frame.type + ', ' + frame.payload.length + ' bytes');
-      if (frame.type === 2000) { // RequestClientSessionArchive
-        const hs = decodeArchiveHandshake(frame.payload);
-        document.getElementById('f-name').textContent = hs.name;
-        document.getElementById('f-players').textContent = hs.playerCount;
-        document.getElementById('f-version').textContent = hs.versionInfo;
-        document.getElementById('f-shard').textContent = hs.shardName + ' (#' + hs.shardId + ')';
-        document.getElementById('f-map').textContent = hs.shardMap;
-        document.getElementById('handshake').style.display = 'grid';
-        setStatus('open', 'handshake received');
-        log('decoded RequestClientSessionArchive from "' + hs.name + '"');
+      log('← aries frame type ' + frame.type + ', ' + frame.payload.length + ' bytes');
+      if (frame.type === ARIES.RequestClientSessionArchive && !sawHandshake) {
+        sawHandshake = true;
+        await handleHandshake(ws, decodeArchiveHandshake(frame.payload));
+      } else if (sawHandshake) {
+        handleNextPacket(frame);
       }
     }
   };

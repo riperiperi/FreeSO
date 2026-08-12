@@ -66,7 +66,10 @@ The branch that is actually maintained. `master` has not moved since Aug 2025.
 | **`import-batch` CLI** | CSV manifest → pack JSON with imported appearances | `FSO.PackCompiler import-batch` |
 | **"Make Something" panel** | Buy Mode button → chat → object appears live. A debug surface for the object pipeline, not the player experience. | builds clean on net9.0; **never yet clicked by a human** |
 | **`ContactSheet` / `ArtCalibration`** | Render-and-review surfaces for generated art | used to fix real sprite bugs |
-| **`FSO.WsGateway`** | WebSocket↔TCP byte gateway in front of Archive city/lot ports, so a browser can reach the raw-TCP Aries servers unchanged. Also serves a JS Aries demo client (`wwwroot/`). | 3/3 tests, and **proven against Kat's live archive server 2026-08-11**: browser decoded the real handshake ("Kat's Server", v0.6.0-beta, shard San Francisco (5)). The browser-networking unknown is closed. |
+| **`FSO.WsGateway`** | WebSocket↔TCP byte gateway + JS Aries protocol debugger (`wwwroot/`) | 5/5 tests. Live handshake proven; browser now also sends type-21 session response and reaches canned `HostOnlinePDU` on the fake city. Join-lot still open. |
+| **`FSO.BrowserContent`** | `IContentStore` seam — `FileContentStore` (desktop) / `HttpContentStore` (browser). Not yet wired into `tso.content`. | 9/9 tests; next plug-in is `Content.GetResource` (`CONTENT-HTTP-SEAM.md`) |
+| **KNI migration plan** | Library-first retarget to `nkast.Xna.Framework.*`, then BlazorGL head | `docs/KNI-MIGRATION.md` — S0–S8 spike sequence |
+| **`FSO.BrowserClient`** | KNI BlazorGL spike (net8.0) — clear `#0f1220` + accent panel | Builds + publishes; `dotnet run` → http://localhost:5259. S0 of KNI-MIGRATION done. |
 
 ### Engine changes we made (small, in `TSOClient/`)
 - `WorldObjectCatalog.AddLive()` — register a catalog item after startup

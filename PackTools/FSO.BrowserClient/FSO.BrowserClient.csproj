@@ -1,0 +1,52 @@
+﻿<Project Sdk="Microsoft.NET.Sdk.BlazorWebAssembly">
+
+  <PropertyGroup>
+    <EnableDefaultCompileItems>false</EnableDefaultCompileItems>
+    <TargetFramework>net8.0</TargetFramework>
+    <Nullable>disable</Nullable>
+    <ImplicitUsings>disable</ImplicitUsings>
+    <RootNamespace>FSO_BrowserClient</RootNamespace>
+    <AssemblyName>FSO_BrowserClient</AssemblyName>
+    <DefineConstants>$(DefineConstants);BLAZORGL</DefineConstants>
+    <KniPlatform>BlazorGL</KniPlatform>
+  </PropertyGroup>
+
+  <PropertyGroup>
+    <BlazorEnableTimeZoneSupport>false</BlazorEnableTimeZoneSupport>
+    <!--<InvariantGlobalization>true</InvariantGlobalization>-->
+  </PropertyGroup>
+
+  <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Debug|AnyCPU' ">
+  </PropertyGroup>
+
+  <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Release|AnyCPU' ">
+  </PropertyGroup>
+
+  <ItemGroup>
+    <Compile Include="Pages\Index.razor.cs" />
+    <Compile Include="Program.cs" />
+    <Compile Include="FSO.BrowserClientGame.cs" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <PackageReference Include="nkast.Xna.Framework" Version="4.2.9001" />
+    <PackageReference Include="nkast.Xna.Framework.Content" Version="4.2.9001" />
+    <PackageReference Include="nkast.Xna.Framework.Graphics" Version="4.2.9001" />
+    <PackageReference Include="nkast.Xna.Framework.Audio" Version="4.2.9001" />
+    <PackageReference Include="nkast.Xna.Framework.Media" Version="4.2.9001" />
+    <PackageReference Include="nkast.Xna.Framework.Input" Version="4.2.9001" />
+    <PackageReference Include="nkast.Xna.Framework.Game" Version="4.2.9001" />
+    <PackageReference Include="nkast.Xna.Framework.Devices" Version="4.2.9001" />
+    <PackageReference Include="nkast.Xna.Framework.Storage" Version="4.2.9001" />
+    <PackageReference Include="nkast.Xna.Framework.XR" Version="4.2.9001" />
+    <PackageReference Include="nkast.Kni.Platform.Blazor.GL" Version="4.2.9001.2" />
+    <!-- Content.Pipeline.Builder ships MGCB.exe (Windows). Spike draws with a runtime
+         Texture2D — no .mgcb assets — so omit the builder on macOS/Linux hosts. -->
+  </ItemGroup>
+
+  <ItemGroup Condition=" '$(TargetFramework)' == 'net8.0' ">
+    <PackageReference Include="Microsoft.AspNetCore.Components.WebAssembly" Version="8.0.17" />
+    <PackageReference Include="Microsoft.AspNetCore.Components.WebAssembly.DevServer" Version="8.0.17" PrivateAssets="all" />
+  </ItemGroup>
+
+</Project>

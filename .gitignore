@@ -102,3 +102,11 @@ Artifacts/
 .env
 .env.local
 .env.*.local
+
+# KNI Blazor publish output
+PackTools/FSO.BrowserClient/bin/
+PackTools/FSO.BrowserClient/obj/
+PackTools/FSO.BrowserContent/bin/
+PackTools/FSO.BrowserContent/obj/
+PackTools/FSO.BrowserContent.Tests/bin/
+PackTools/FSO.BrowserContent.Tests/obj/
