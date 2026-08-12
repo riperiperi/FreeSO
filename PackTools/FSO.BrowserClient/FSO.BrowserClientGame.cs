@@ -1,5 +1,7 @@
 ﻿using System;
+using System.Threading;
 using System.Threading.Tasks;
+using FSO.BrowserAries;
 using FSO.BrowserContent;
 using Microsoft.Xna.Framework;
 using Microsoft.Xna.Framework.Graphics;
@@ -8,17 +10,19 @@ using Microsoft.Xna.Framework.Input;
 namespace FSO_BrowserClient
 {
     /// <summary>
-    /// KNI/BlazorGL spike: clear color + one texture loaded through <see cref="HttpContentStore"/>.
+    /// KNI/BlazorGL spike: HTTP texture + optional Aries city→lot join via gateway.
     /// </summary>
     public class FSO_BrowserClientGame : Game
     {
-        static readonly Color ClearBlue = new Color(15, 18, 32);      // #0f1220
-        static readonly Color AccentBlue = new Color(79, 110, 247);   // #4f6ef7
-        static readonly Color PanelBlue = new Color(24, 28, 48);      // #181c30
+        static readonly Color ClearBlue = new Color(15, 18, 32);
+        static readonly Color AccentBlue = new Color(79, 110, 247);
+        static readonly Color PanelBlue = new Color(24, 28, 48);
         static readonly Color LabelBlue = new Color(140, 170, 255);
         static readonly Color ErrorRed = new Color(220, 80, 90);
+        static readonly Color OkGreen = new Color(62, 207, 142);
 
         readonly string _contentBaseUrl;
+        readonly string _gatewayBase;
 
         GraphicsDeviceManager graphics;
         SpriteBatch spriteBatch;
@@ -26,19 +30,21 @@ namespace FSO_BrowserClient
         Texture2D sampleTexture;
         string loadStatus = "loading…";
         bool loadStarted;
+        bool joinStarted;
+        bool spaceWasDown;
 
-        /// <param name="contentBaseUrl">Absolute URL of the sample-content root (trailing slash OK).</param>
-        public FSO_BrowserClientGame(string contentBaseUrl)
+        ArchiveJoinDemo join;
+        CancellationTokenSource joinCts;
+
+        /// <param name="contentBaseUrl">Absolute URL of sample-content root.</param>
+        /// <param name="gatewayBase">Gateway base (http://127.0.0.1:8087 or ws://…).</param>
+        public FSO_BrowserClientGame(string contentBaseUrl, string gatewayBase)
         {
             _contentBaseUrl = contentBaseUrl ?? throw new ArgumentNullException(nameof(contentBaseUrl));
+            _gatewayBase = gatewayBase ?? throw new ArgumentNullException(nameof(gatewayBase));
             graphics = new GraphicsDeviceManager(this);
             Content.RootDirectory = "Content";
             Window.Title = "FreeSO Browser";
-        }
-
-        protected override void Initialize()
-        {
-            base.Initialize();
         }
 
         protected override void LoadContent()
@@ -59,23 +65,32 @@ namespace FSO_BrowserClient
             try
             {
                 using var store = new HttpContentStore(_contentBaseUrl);
-                // Relative to sample-content/ — proves IContentStore path used by Content.GetResource.
                 using (var stream = await store.OpenAsync("textures/squares.png").ConfigureAwait(true))
                 {
                     sampleTexture = Texture2D.FromStream(GraphicsDevice, stream);
                 }
-                loadStatus = "HttpContentStore → Texture2D OK";
+                loadStatus = "texture OK — press Space to join via gateway";
             }
             catch (Exception ex)
             {
-                loadStatus = "load failed: " + ex.GetType().Name + ": " + ex.Message;
-                System.Diagnostics.Debug.WriteLine(loadStatus);
+                loadStatus = "texture failed: " + ex.GetType().Name + ": " + ex.Message;
                 Console.WriteLine(loadStatus);
             }
         }
 
+        void StartJoin()
+        {
+            if (joinStarted) return;
+            joinStarted = true;
+            joinCts = new CancellationTokenSource();
+            join = new ArchiveJoinDemo(_gatewayBase);
+            join.Changed += () => { /* status read each Draw */ };
+            _ = join.RunAsync(joinCts.Token);
+        }
+
         protected override void UnloadContent()
         {
+            joinCts?.Cancel();
             sampleTexture?.Dispose();
             sampleTexture = null;
             pixel?.Dispose();
@@ -84,8 +99,8 @@ namespace FSO_BrowserClient
 
         protected override void Update(GameTime gameTime)
         {
-            KeyboardState keyboardState = Keyboard.GetState();
-            GamePadState gamePadState = GamePad.GetState(PlayerIndex.One);
+            var keyboardState = Keyboard.GetState();
+            var gamePadState = GamePad.GetState(PlayerIndex.One);
 
             if (keyboardState.IsKeyDown(Keys.Escape) ||
                 keyboardState.IsKeyDown(Keys.Back) ||
@@ -95,6 +110,14 @@ namespace FSO_BrowserClient
                 catch (PlatformNotSupportedException) { /* ignore */ }
             }
 
+            var space = keyboardState.IsKeyDown(Keys.Space);
+            if (space && !spaceWasDown) StartJoin();
+            spaceWasDown = space;
+
+            // Auto-join shortly after texture load so CI/smoke doesn't need keyboard.
+            if (!joinStarted && sampleTexture != null && gameTime.TotalGameTime.TotalSeconds > 1.5)
+                StartJoin();
+
             base.Update(gameTime);
         }
 
@@ -103,8 +126,8 @@ namespace FSO_BrowserClient
             GraphicsDevice.Clear(ClearBlue);
 
             var vp = GraphicsDevice.Viewport;
-            int panelW = Math.Min(480, vp.Width - 40);
-            int panelH = sampleTexture != null ? 280 : 140;
+            int panelW = Math.Min(520, vp.Width - 40);
+            int panelH = 320;
             int panelX = (vp.Width - panelW) / 2;
             int panelY = (vp.Height - panelH) / 2;
 
@@ -112,29 +135,68 @@ namespace FSO_BrowserClient
             spriteBatch.Draw(pixel, new Rectangle(panelX, panelY, panelW, panelH), PanelBlue);
             spriteBatch.Draw(pixel, new Rectangle(panelX, panelY, panelW, 6), AccentBlue);
 
-            // Status bar (stand-in for fonts): green-ish when OK, red-ish on error, blue while loading.
-            Color statusColor = sampleTexture != null ? LabelBlue
-                : (loadStatus != null && loadStatus.StartsWith("load failed", StringComparison.Ordinal) ? ErrorRed : AccentBlue);
-            spriteBatch.Draw(pixel, new Rectangle(panelX + 24, panelY + 24, panelW - 48, 10), statusColor);
+            // Texture status bar
+            Color texColor = sampleTexture != null ? LabelBlue
+                : (loadStatus != null && loadStatus.StartsWith("texture failed", StringComparison.Ordinal) ? ErrorRed : AccentBlue);
+            spriteBatch.Draw(pixel, new Rectangle(panelX + 24, panelY + 24, panelW - 48, 8), texColor);
 
             if (sampleTexture != null)
             {
-                int texSize = Math.Min(180, panelW - 48);
-                int texX = panelX + (panelW - texSize) / 2;
-                int texY = panelY + 56;
-                spriteBatch.Draw(sampleTexture, new Rectangle(texX, texY, texSize, texSize), Color.White);
-                spriteBatch.Draw(pixel, new Rectangle(texX, texY + texSize + 16, texSize, 8), AccentBlue);
+                int texSize = 96;
+                spriteBatch.Draw(sampleTexture, new Rectangle(panelX + 24, panelY + 48, texSize, texSize), Color.White);
             }
-            else
-            {
-                int barY = panelY + 56;
-                spriteBatch.Draw(pixel, new Rectangle(panelX + 40, barY, panelW - 80, 14), LabelBlue);
-                spriteBatch.Draw(pixel, new Rectangle(panelX + 40, barY + 28, (panelW - 80) * 2 / 3, 10), statusColor);
-            }
+
+            // Join stage bars (12 slots)
+            DrawJoinStages(panelX + 140, panelY + 48, panelW - 164);
+
+            // Bottom status strip color
+            Color joinColor = ErrorRed;
+            if (join == null) joinColor = AccentBlue;
+            else if (join.Stage == JoinStage.LotJoined) joinColor = OkGreen;
+            else if (join.Stage != JoinStage.Failed) joinColor = LabelBlue;
+            spriteBatch.Draw(pixel, new Rectangle(panelX + 24, panelY + panelH - 28, panelW - 48, 10), joinColor);
 
             spriteBatch.End();
-
             base.Draw(gameTime);
+        }
+
+        void DrawJoinStages(int x, int y, int width)
+        {
+            var stages = new[]
+            {
+                JoinStage.CityConnecting, JoinStage.CityHandshake, JoinStage.CitySessionSent,
+                JoinStage.CityHostOnline, JoinStage.CityClientOnline, JoinStage.AvatarSelect,
+                JoinStage.FindLot, JoinStage.LotConnecting, JoinStage.LotSession,
+                JoinStage.LotHostOnline, JoinStage.LotJoined,
+            };
+            int gap = 4;
+            int h = 10;
+            int n = stages.Length;
+            int w = Math.Max(4, (width - gap * (n - 1)) / n);
+            var current = join?.Stage ?? JoinStage.Idle;
+
+            for (int i = 0; i < n; i++)
+            {
+                Color c = new Color(40, 44, 64);
+                if (join != null)
+                {
+                    if (join.Stage == JoinStage.Failed && stages[i] == JoinStage.LotJoined)
+                        c = ErrorRed;
+                    else if ((int)current >= (int)stages[i] && current != JoinStage.Failed)
+                        c = stages[i] == JoinStage.LotJoined && current == JoinStage.LotJoined ? OkGreen : AccentBlue;
+                }
+                spriteBatch.Draw(pixel, new Rectangle(x + i * (w + gap), y, w, h), c);
+            }
+
+            // Second row: echo progress as wider bar fill
+            float t = 0;
+            if (join != null && join.Stage != JoinStage.Failed && join.Stage != JoinStage.Idle)
+                t = Math.Min(1f, (int)join.Stage / (float)JoinStage.LotJoined);
+            int fill = (int)((width) * t);
+            spriteBatch.Draw(pixel, new Rectangle(x, y + 24, width, 8), new Color(40, 44, 64));
+            if (fill > 0)
+                spriteBatch.Draw(pixel, new Rectangle(x, y + 24, fill, 8),
+                    join?.Stage == JoinStage.LotJoined ? OkGreen : LabelBlue);
         }
     }
 }

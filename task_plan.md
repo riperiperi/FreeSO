@@ -109,8 +109,9 @@ Sequenced so the vision model is the *last* variable introduced, not the first.
 - [x] **Gateway vs live server — PROVEN, 2026-08-11, by Kat herself.** FreeSO hosting Archive Mode (Quick Start, ports 33101/34101), browser at the gateway demo page: decoded `RequestClientSessionArchive` from the live game — "Kat's Server", 1 player online, v0.6.0-beta manifest + RSA key, shard "San Francisco (5)", map 0902. A real browser, the real server, zero server changes. **The networking unknown is closed.**
 - [x] **Browser speaks Aries — seen in a real browser, 2026-08-11.** `FSO.WsGateway/wwwroot/index.html`: a JS Aries framer + decoder (12-byte LE header, PascalVLC varint strings) served by the gateway itself. Verified in Chrome against a fake city server (`tools/fake-city-server.py`) emitting the byte-exact handshake: page connects over WS, decodes `RequestClientSessionArchive`, displays server name/players/shard/map. Screenshot taken by browser automation.
 - [x] **Browser session response path** — after type-2000 handshake, JS client sends `RequestClientSessionResponse` (type 21); fake city replies with Voltron `HostOnlinePDU`. Stage UI through HostOnline. 5/5 gateway tests. Live join still needs valid PKCS#1 token + ClientOnline → avatar → lot on 34101.
-- [x] **Aries city + lot join (handshake)** — FindLot FOUND → `/lot` type 22 → ticket type 21 → HostOnline → ClientOnline → empty `FSOVMTickBroadcast`. Fake lot server + auto-open in wwwroot demo.
-- [ ] **Lot VM stream** — real tick contents / lot state; wire into KNI client (.NET-WASM protocol or grow JS).
+- [x] **KNI Blazor speaks Aries** — `FSO.BrowserAries` + BrowserClient auto-join through gateway to LotJoined (integration test).
+- [x] **Aries city + lot join (handshake)** — FindLot FOUND → `/lot` type 22 → ticket type 21 → HostOnline → ClientOnline → empty `FSOVMTickBroadcast`.
+- [ ] **Lot VM stream / lot view** — real tick contents; LotView in Blazor (S5).
 - [x] **KNI BlazorGL S0 + S2 texture** — `FSO.BrowserClient` loads `HttpContentStore` → `Texture2D` (`sample-content/textures/squares.png`).
 - [x] **KNI S1** — `FSO_GRAPHICS` switch; lib chain through `FSO.Client` on KNI; Mac on MonoGame.
 - [x] **Content store wired** — Composite (BasePath + Content/) + GetResource/FileProvider; remaining providers/TS1 still disk.

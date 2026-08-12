@@ -50,6 +50,7 @@
   </ItemGroup>
 
   <ItemGroup>
+    <ProjectReference Include="..\FSO.BrowserAries\FSO.BrowserAries.csproj" />
     <ProjectReference Include="..\FSO.BrowserContent\FSO.BrowserContent.csproj" />
   </ItemGroup>
 

@@ -24,17 +24,31 @@ namespace FSO_BrowserClient.Pages
         [JSInvokable]
         public void TickDotNet()
         {
-            // init game
             if (_game == null)
             {
-                // Hosted under wwwroot/sample-content/ — same origin as the Blazor app.
                 var contentBase = new Uri(new Uri(Navigation.BaseUri), "sample-content/").AbsoluteUri;
-                _game = new FSO_BrowserClientGame(contentBase);
+                // Default gateway; override with ?gateway=ws://host:8087
+                var gateway = QueryValue(Navigation.ToAbsoluteUri(Navigation.Uri), "gateway")
+                    ?? "http://127.0.0.1:8087";
+
+                _game = new FSO_BrowserClientGame(contentBase, gateway);
                 _game.Run();
             }
 
-            // run gameloop
             _game.Tick();
+        }
+
+        static string QueryValue(Uri uri, string key)
+        {
+            var q = uri.Query;
+            if (string.IsNullOrEmpty(q) || q.Length < 2) return null;
+            foreach (var part in q.TrimStart('?').Split('&'))
+            {
+                var kv = part.Split(new[] { '=' }, 2);
+                if (kv.Length == 2 && string.Equals(Uri.UnescapeDataString(kv[0]), key, StringComparison.OrdinalIgnoreCase))
+                    return Uri.UnescapeDataString(kv[1]);
+            }
+            return null;
         }
     }
 }

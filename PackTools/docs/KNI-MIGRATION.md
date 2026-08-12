@@ -151,7 +151,7 @@ After library swap, desktop heads use `nkast.Kni.Platform.SDL2.GL`.
 | S4 | Retarget HIT; one SoundEffect under autoplay rules | Audio beep |
 | S5 | LotView + Vitaboy; empty lot | Lot camera + floor |
 | S6 | Thread→Task on play path | No `new Thread` on join |
-| S7 | Wire WsGateway + full Aries session | Join lot |
+| S7 | Wire WsGateway + full Aries session | Join lot — **DONE for handshake**: JS demo + `FSO.BrowserAries`/`BrowserClient` reach LotJoined against fakes. Real VM state still open. |
 | S8 | Full UI shell + catalog over HTTP | “Load a lot” demo |
 
 ---

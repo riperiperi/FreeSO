@@ -1,8 +1,8 @@
 # FSO.BrowserClient
 
-KNI / BlazorGL spike for **Phase F** (browser FreeSO). Not a FreeSO client port — a
-minimal WebGL game host that builds, runs in the browser, and proves the KNI path works
-in this tree.
+KNI / BlazorGL spike for **Phase F** (browser FreeSO). Loads a content texture over
+HTTP and runs the Archive city→lot Aries join through `FSO.WsGateway` (see
+`FSO.BrowserAries`).
 
 Template: `nkast.Kni.Templates` → `kni-blazor-gl` (net8.0, KNI 4.2.9001).
 
@@ -10,62 +10,45 @@ Template: `nkast.Kni.Templates` → `kni-blazor-gl` (net8.0, KNI 4.2.9001).
 
 - .NET SDK 8+ (`~/.dotnet/dotnet` is fine)
 - WASM workload: `dotnet workload install wasm-tools`
-- Spike omits `nkast.Xna.Framework.Content.Pipeline.Builder` (ships `MGCB.exe`, Windows-only).
-  Runtime-drawn graphics only. Re-add the builder when real `.mgcb` content lands (or use a
-  cross-platform MGCB host).
+- For join demo: gateway + fake city/lot (below)
 
-## Run (dev server)
+## Run (texture only)
 
 ```sh
 cd PackTools/FSO.BrowserClient
 dotnet run
 ```
 
-Opens a Blazor WASM host at **http://localhost:5259** (see
-`Properties/launchSettings.json`). Dark-blue canvas + a texture loaded through
-`HttpContentStore` from `wwwroot/sample-content/textures/squares.png` (same FreeSO
-`Content/Textures/squares.png` used on desktop).
+http://localhost:5259 — canvas with `HttpContentStore` → `Texture2D`.
 
-## Publish (static files)
+## Run (texture + Aries join)
 
 ```sh
-cd PackTools/FSO.BrowserClient
-dotnet publish -c Release
+# terminals 1–3
+python3 PackTools/FSO.WsGateway/tools/fake-city-server.py 33101
+python3 PackTools/FSO.WsGateway/tools/fake-lot-server.py 34101
+dotnet run --project PackTools/FSO.WsGateway -- --listen http://127.0.0.1:8087
+
+# terminal 4
+cd PackTools/FSO.BrowserClient && dotnet run
+# or: http://localhost:5259/?gateway=ws://127.0.0.1:8087
 ```
 
-Output lands under:
+After ~1.5s (or Space) the client joins city→lot; stage bars turn green on
+`LotJoined`.
 
-```
-bin/Release/net8.0/publish/wwwroot/
-```
+## Content seam
 
-Serve that folder with any static file server (or Kestrel). For local smoke:
-
-```sh
-dotnet serve -d bin/Release/net8.0/publish/wwwroot -p 5500
-# or: python3 -m http.server 5500 -d bin/Release/net8.0/publish/wwwroot
-```
+- `FSO.BrowserContent` (`net8`/`net9`) — `HttpContentStore` / `FileContentStore` / composite
+- Sample asset: `wwwroot/sample-content/textures/squares.png`
 
 ## Networking
 
-This spike does **not** talk to the game yet. The proven WS↔TCP bridge is
-[`../FSO.WsGateway`](../FSO.WsGateway) (Aries handshake decoded in a real browser against
-Kat's Archive server). Wire the KNI client to `ws://…/city` and `ws://…/lot` next —
-gateway demo lives at `FSO.WsGateway/wwwroot/`.
+- `FSO.BrowserAries` — WASM-safe Aries framer + `ArchiveJoinDemo` (no Mina)
+- Gateway: [`../FSO.WsGateway`](../FSO.WsGateway)
 
-## Content seam (S2)
+## Next
 
-- `FSO.BrowserContent` is multi-targeted (`net8.0;net9.0`) and referenced here.
-- Game ctor takes an absolute content base URL (`Navigation.BaseUri + "sample-content/"`).
-- Load path: `HttpContentStore.OpenAsync("textures/squares.png")` → `Texture2D.FromStream`.
-- Desktop `Content.GetResource` uses the same `IContentStore` abstraction (default
-  `FileContentStore`). See `../docs/CONTENT-HTTP-SEAM.md`.
+Lot view / effects in Blazor; real VM tick payload; live Archive RSA path.
 
-## Next steps (real client)
-
-1. Grow game code inside `FSO.BrowserClientGame` (lot view, effects).
-2. Serve real FreeSO `Content/` + game data from a static host; swap sample URL.
-3. Speak Aries over the gateway (reuse `FSO.Server.Protocol` in WASM, or grow from the
-   JS seed in `FSO.WsGateway/wwwroot`).
-
-See `../docs/KNI-MIGRATION.md`, `../docs/BROWSER-VIABILITY.md`, and root `task_plan.md` Phase F.
+See `../docs/KNI-MIGRATION.md` and root `task_plan.md` Phase F.
