@@ -37,7 +37,8 @@ namespace FSO.PackCompiler.Tests
             // BHAV_Init points at the compiler-synthesized placement-flags tree (allocated
             // after the pack's own 4 trees: gossip_action/gossip_test/init/main_loop = 4096-4099,
             // so this one lands at 4100), not straight at the pack's "init" — see PackBuilder's
-            // BuildPlacementInitTree. It sets AllowedHeightFlags then calls the pack's init.
+            // BuildPlacementInitTree. It sets AllowedHeightFlags + PlacementFlags then calls
+            // the pack's init.
             Assert.Equal(4100, objd.BHAV_Init);
             Assert.Equal(2000, objd.CatalogStringsID);
             Assert.Equal(129, objd.AnimationTableID);
@@ -45,16 +46,21 @@ namespace FSO.PackCompiler.Tests
             // ---- compiler-synthesized placement-init tree (BHAV 4100) ----
             var placementInit = iff.Get<BHAV>(4100);
             Assert.NotNull(placementInit);
-            Assert.Equal(2, placementInit.Instructions.Length);
+            Assert.Equal(3, placementInit.Instructions.Length);
 
-            // set_placement_flags: expression (0x02) — my_object[4] (AllowedHeightFlags) = literal 1
+            // set_height_flags: expression (0x02) — my_object[4] (AllowedHeightFlags) = literal 1
             // LhsData i16, RhsData i16, IsSigned, Operator(= is 5), LhsScope(my_object=3), RhsScope(literal=7)
             AssertInstruction(placementInit.Instructions[0], 0x02, t: 1, f: 253,
                 operand: new byte[] { 0x04, 0x00, 0x01, 0x00, 0x00, 0x05, 0x03, 0x07 });
 
+            // set_placement_flags: expression (0x02) — my_object[42] (PlacementFlags) = literal 3
+            // (OnFloor | OnTerrain). Without this, buy mode rejects every tile.
+            AssertInstruction(placementInit.Instructions[1], 0x02, t: 2, f: 253,
+                operand: new byte[] { 0x2A, 0x00, 0x03, 0x00, 0x00, 0x05, 0x03, 0x07 });
+
             // call_user_init: private tree call to "init" (opcode = its chunk id 4098),
             // VMSubRoutineOperand = four int16 args, all zero
-            AssertInstruction(placementInit.Instructions[1], 4098, t: 254, f: 255,
+            AssertInstruction(placementInit.Instructions[2], 4098, t: 254, f: 255,
                 operand: new byte[] { 0, 0, 0, 0, 0, 0, 0, 0 });
 
             // ---- gossip_action (BHAV 4096) ----

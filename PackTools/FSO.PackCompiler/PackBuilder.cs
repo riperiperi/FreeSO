@@ -373,23 +373,38 @@ namespace FSO.PackCompiler
         // Builds a compiler-owned tree (not authored in pack JSON, so there's no PackParser
         // path that produces one of these) that sets AllowedHeightFlags (my_object scope,
         // index 4 = VMStackObjectVariable.AllowedHeightFlags) to 1 — bit 0, "allowed on floor"
-        // — then falls through to the pack's own init tree if it declared one.
+        // — and PlacementFlags (index 42 = VMStackObjectVariable.PlacementFlags) to 3 —
+        // OnFloor | OnTerrain, the base-furniture default; without it the flags stay 0 and
+        // buy mode rejects every tile ("must be placed on terrain") — then falls through to
+        // the pack's own init tree if it declared one.
         private PackTree BuildPlacementInitTree(PackObject obj)
         {
             var path = obj.Path + ".__placement_init";
             var hasUserInit = obj.EntryInit != null;
 
-            var setFlags = new PackNode
+            var setHeightFlags = new PackNode
+            {
+                Id = "set_height_flags",
+                Prim = "expression",
+                Then = "set_placement_flags",
+                Else = "error",
+                Path = path + ".nodes[0]",
+            };
+            setHeightFlags.Fields = JsonObj.From(JObject.Parse(
+                "{\"lhs\":{\"scope\":\"my_object\",\"value\":4},\"op\":\"=\",\"rhs\":{\"scope\":\"literal\",\"value\":1}}"),
+                setHeightFlags.Path, D);
+
+            var setPlacementFlags = new PackNode
             {
                 Id = "set_placement_flags",
                 Prim = "expression",
                 Then = hasUserInit ? "call_user_init" : "return true",
                 Else = "error",
-                Path = path + ".nodes[0]",
+                Path = path + ".nodes[1]",
             };
-            setFlags.Fields = JsonObj.From(JObject.Parse(
-                "{\"lhs\":{\"scope\":\"my_object\",\"value\":4},\"op\":\"=\",\"rhs\":{\"scope\":\"literal\",\"value\":1}}"),
-                setFlags.Path, D);
+            setPlacementFlags.Fields = JsonObj.From(JObject.Parse(
+                "{\"lhs\":{\"scope\":\"my_object\",\"value\":42},\"op\":\"=\",\"rhs\":{\"scope\":\"literal\",\"value\":3}}"),
+                setPlacementFlags.Path, D);
 
             var tree = new PackTree
             {
@@ -398,7 +413,8 @@ namespace FSO.PackCompiler
                 Args = new List<string>(),
                 Locals = new List<string>(),
             };
-            tree.Nodes.Add(setFlags);
+            tree.Nodes.Add(setHeightFlags);
+            tree.Nodes.Add(setPlacementFlags);
 
             if (hasUserInit)
             {
@@ -408,7 +424,7 @@ namespace FSO.PackCompiler
                     Call = obj.EntryInit,
                     Then = "return true",
                     Else = "return false",
-                    Path = path + ".nodes[1]",
+                    Path = path + ".nodes[2]",
                 };
                 callUserInit.Fields = JsonObj.From(new JObject(), callUserInit.Path, D);
                 tree.Nodes.Add(callUserInit);

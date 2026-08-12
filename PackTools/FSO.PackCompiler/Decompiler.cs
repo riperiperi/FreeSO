@@ -173,15 +173,14 @@ namespace FSO.PackCompiler
             if (objd.BHAV_MainID != 0) entry["main"] = EntryName(objd.BHAV_MainID, iffPath + " OBJD BHAV_MainID");
             if (isSyntheticPlacementInit)
             {
-                // The synthetic tree's second instruction (if present) is the private-tree-call
-                // to the pack's real init — its opcode IS that tree's chunk id, per CompileCall.
-                // No second instruction means the pack never declared its own init tree.
-                if (placementInitBhav.Instructions.Length > 1)
-                {
-                    var callToUserInit = placementInitBhav.Instructions[1].Opcode;
-                    if (callToUserInit >= PackBuilder.PRIVATE_TREE_BASE)
-                        entry["init"] = EntryName(callToUserInit, iffPath + " OBJD BHAV_Init (via __placement_init)");
-                }
+                // The synthetic tree ends with a private-tree-call to the pack's real init,
+                // if it declared one — its opcode IS that tree's chunk id, per CompileCall.
+                // Scan rather than index: the number of flag-setting expressions before the
+                // call has changed across compiler versions.
+                var callToUserInit = placementInitBhav.Instructions
+                    .FirstOrDefault(inst => inst.Opcode >= PackBuilder.PRIVATE_TREE_BASE);
+                if (callToUserInit != null)
+                    entry["init"] = EntryName(callToUserInit.Opcode, iffPath + " OBJD BHAV_Init (via __placement_init)");
             }
             else if (objd.BHAV_Init != 0) entry["init"] = EntryName(objd.BHAV_Init, iffPath + " OBJD BHAV_Init");
             if (entry.Count > 0) objJson["entry_points"] = entry;
