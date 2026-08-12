@@ -23,13 +23,16 @@
     <IsAotCompatible>True</IsAotCompatible>
   </PropertyGroup>
 
+  <PropertyGroup>
+    <FSOUseXnaPackages>true</FSOUseXnaPackages>
+  </PropertyGroup>
+
   <ItemGroup>
     <Folder Include="Screens\" />
   </ItemGroup>
 
   <ItemGroup>
     <PackageReference Include="DeltaQ" Version="2.1.0" />
-    <PackageReference Include="MonoGame.Framework.DesktopGL" Version="3.8.5" />
     <PackageReference Include="Newtonsoft.Json" Version="13.0.4" />
     <PackageReference Include="Ninject" Version="3.3.6" />
     <PackageReference Include="System.IO.Hashing" Version="10.0.0" />

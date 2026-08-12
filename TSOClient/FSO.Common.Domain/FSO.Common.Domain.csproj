@@ -9,10 +9,10 @@
     <AssemblyName>FSO.Common.Domain</AssemblyName>
     <FileAlignment>512</FileAlignment>
     <IsAotCompatible>True</IsAotCompatible>
+    <FSOUseXnaPackages>true</FSOUseXnaPackages>
   </PropertyGroup>
 
   <ItemGroup>
-    <PackageReference Include="MonoGame.Framework.DesktopGL" Version="3.8.5" />
     <PackageReference Include="Ninject" Version="3.3.6" />
   </ItemGroup>
 

@@ -142,7 +142,10 @@ namespace FSO.Common.Rendering.Framework
 
         private void TouchStub(UpdateState state)
         {
-            var test = TouchPanel.EnableMouseTouchPoint;
+            // MonoGame exposes EnableMouseTouchPoint; KNI 4.x does not.
+#if !FSO_KNI
+            _ = TouchPanel.EnableMouseTouchPoint;
+#endif
             TouchCollection touches = TouchPanel.GetState();
 			if (touches.Count != lastTouchCount) touchedFrames = 0;
 			lastTouchCount = touches.Count;

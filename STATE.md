@@ -70,6 +70,7 @@ The branch that is actually maintained. `master` has not moved since Aug 2025.
 | **`FSO.BrowserContent`** | `IContentStore` seam — `FileContentStore` (desktop) / `HttpContentStore` (browser). Not yet wired into `tso.content`. | 9/9 tests; next plug-in is `Content.GetResource` (`CONTENT-HTTP-SEAM.md`) |
 | **KNI migration plan** | Library-first retarget to `nkast.Xna.Framework.*`, then BlazorGL head | `docs/KNI-MIGRATION.md` — S0–S8 spike sequence |
 | **`FSO.BrowserClient`** | KNI BlazorGL spike (net8.0) — clear `#0f1220` + accent panel | Builds + publishes; `dotnet run` → http://localhost:5259. S0 of KNI-MIGRATION done. |
+| **KNI S1 graphics switch** | `FSO_GRAPHICS=MonoGame\|Kni` via root `Directory.Build.props` + `build/FSO.Xna.packages.targets` | Opted in: Domain, Common, Files, Content, Vitaboy.model, MSDFData. Both modes build Domain; `FSO.Mac` still green on default MonoGame. |
 
 ### Engine changes we made (small, in `TSOClient/`)
 - `WorldObjectCatalog.AddLive()` — register a catalog item after startup

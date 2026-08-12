@@ -144,8 +144,8 @@ After library swap, desktop heads use `nkast.Kni.Platform.SDL2.GL`.
 
 | Step | Deliverable | Exit criteria |
 |---|---|---|
-| S0 | Empty BlazorGL `Game` + clear color | Canvas paints |
-| S1 | Retarget Domain → Files → Common → Content | libs build on KNI |
+| S0 | Empty BlazorGL `Game` + clear color | Canvas paints — **DONE** (`PackTools/FSO.BrowserClient`) |
+| S1 | Retarget Domain → Files → Common → Content | libs build on KNI — **partial**: Domain/Common/Files/Content/Vitaboy.model/MSDFData on `FSO_GRAPHICS` switch; HIT/SimAntics/LotView/UI/Client still DesktopGL-only |
 | S2 | Content seam over HTTP; one FAR/IFF → Texture2D | Texture on screen |
 | S3 | Fetch `Content/OGL` XNBs; load effects (start **iOS/GLVer=2**) | Effects load |
 | S4 | Retarget HIT; one SoundEffect under autoplay rules | Audio beep |
@@ -176,16 +176,27 @@ Lower risk than feared: `System.Drawing` nearly all IDE/Windows; MP3Player alrea
 
 ## 6. Concrete next steps
 
-1. Pin KNI 4.x; document PackageReference blocks for libs vs SDL2.GL vs Blazor.GL.
-2. `Directory.Build.props` switch: `FSO_GRAPHICS=MonoGame|Kni` so desktop doesn’t break mid-spike.
-3. Prove clear-screen BlazorGL head (`PackTools/FSO.BrowserClient` or `TSOClient/FSO.Blazor`).
-4. `IContentBlobStore` / stream factory — HTTP for Blazor, `File.Open*` for desktop; route `Content.GetResource` + FAR through it.
-5. Retarget packages bottom-up (§4.1).
+1. ~~Pin KNI 4.x; document PackageReference blocks for libs vs SDL2.GL vs Blazor.GL.~~ — pinned **4.2.9001** in root `Directory.Build.props` (`FSOKniVersion`); lib set in `build/FSO.Xna.packages.targets`.
+2. ~~`Directory.Build.props` switch: `FSO_GRAPHICS=MonoGame|Kni`.~~ — default `MonoGame`; build with `-p:FSO_GRAPHICS=Kni`. Opt-in projects set `<FSOUseXnaPackages>true</FSOUseXnaPackages>`.
+3. ~~Prove clear-screen BlazorGL head.~~ — `PackTools/FSO.BrowserClient`.
+4. `IContentBlobStore` / stream factory — HTTP seam exists (`FSO.BrowserContent`); still need to route `Content.GetResource` + FAR through it.
+5. Retarget remaining packages bottom-up (§4.1): HIT → SimAntics → LotView → UI → Client (Domain/Files/Common/Content/Vitaboy.model/MSDFData done).
 6. Force `FSOEnvironment.GLVer = 2`, validate iOS FX → mgfx for WebGL.
 7. Replace Threads in `AbstractRegulator`, `UIElement.Async`, `ContentPreloader`, `FileSystemCache`.
 8. Gate GamePad / Discord / drag-drop / locators / zip-cab behind runtime flags.
 9. Integrate WsGateway URL into Blazor config; continue Aries session work.
 10. Refresh `BROWSER-VIABILITY.md` Thread § and networking § to point here / WsGateway.
+
+### 6.1 S1 verify commands
+
+```bash
+# Desktop path unchanged
+dotnet build TSOClient/FSO.Common.Domain/FSO.Common.Domain.csproj
+dotnet build TSOClient/FSO.Mac/FSO.Mac.csproj
+
+# KNI library path
+dotnet build TSOClient/FSO.Common.Domain/FSO.Common.Domain.csproj -p:FSO_GRAPHICS=Kni
+```
 
 ---
 

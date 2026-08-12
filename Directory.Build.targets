@@ -1,0 +1,4 @@
+<Project>
+  <Import Project="$(MSBuildThisFileDirectory)build/FSO.Xna.packages.targets"
+          Condition="'$(FSOUseXnaPackages)' == 'true'" />
+</Project>

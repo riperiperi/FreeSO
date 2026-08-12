@@ -19,9 +19,9 @@
     <IsAotCompatible>True</IsAotCompatible>
   </PropertyGroup>
 
-  <ItemGroup>
-    <PackageReference Include="MonoGame.Framework.DesktopGL" Version="3.8.5" />
-  </ItemGroup>
+  <PropertyGroup>
+    <FSOUseXnaPackages>true</FSOUseXnaPackages>
+  </PropertyGroup>
 
   <ItemGroup>
     <ProjectReference Include="..\tso.common\FSO.Common.csproj" />

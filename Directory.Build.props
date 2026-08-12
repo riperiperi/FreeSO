@@ -1,0 +1,22 @@
+<Project>
+  <!--
+    FSO_GRAPHICS selects the XNA-compatible framework for opted-in libraries
+    (those with FSOUseXnaPackages=true). Default stays MonoGame so desktop
+    heads keep working while KNI BlazorGL is spiked.
+
+      MonoGame (default): MonoGame.Framework.DesktopGL
+      Kni:                nkast.Xna.Framework* (platform-free; heads add Platform.*)
+
+    Override per build:  dotnet build -p:FSO_GRAPHICS=Kni
+    Docs: PackTools/docs/KNI-MIGRATION.md
+  -->
+  <PropertyGroup>
+    <FSO_GRAPHICS Condition="'$(FSO_GRAPHICS)' == ''">MonoGame</FSO_GRAPHICS>
+    <FSOMonoGameVersion Condition="'$(FSOMonoGameVersion)' == ''">3.8.5</FSOMonoGameVersion>
+    <FSOKniVersion Condition="'$(FSOKniVersion)' == ''">4.2.9001</FSOKniVersion>
+  </PropertyGroup>
+
+  <PropertyGroup Condition="'$(FSO_GRAPHICS)' == 'Kni'">
+    <DefineConstants>$(DefineConstants);FSO_KNI</DefineConstants>
+  </PropertyGroup>
+</Project>

@@ -111,7 +111,8 @@ Sequenced so the vision model is the *last* variable introduced, not the first.
 - [x] **Browser session response path** — after type-2000 handshake, JS client sends `RequestClientSessionResponse` (type 21); fake city replies with Voltron `HostOnlinePDU`. Stage UI through HostOnline. 5/5 gateway tests. Live join still needs valid PKCS#1 token + ClientOnline → avatar → lot on 34101.
 - [ ] **Full browser Aries client** — join city past HostOnline (ClientOnline, avatar select, FindLot) and `/lot` session; then either .NET-WASM reusing `FSO.Server.Protocol`, or grow this JS seed inside the KNI client.
 - [x] **KNI BlazorGL S0 spike** — `PackTools/FSO.BrowserClient` (template `kni-blazor-gl`, net8.0, KNI 4.2.9001). Builds, publishes, runs at http://localhost:5259. Migration map in `docs/KNI-MIGRATION.md`.
-- [ ] `MonoGame.Framework.DesktopGL` → KNI `nkast.Xna.Framework.*` / BlazorGL, across client **and** audio — remaining S1–S8 of KNI-MIGRATION (2-4 weeks, well-trodden)
+- [x] **KNI S1 (partial)** — `Directory.Build.props` `FSO_GRAPHICS=MonoGame|Kni` switch; Domain → Content → Files → Common (+ Vitaboy.model, MSDFData) opt into `build/FSO.Xna.packages.targets`. `dotnet build … -p:FSO_GRAPHICS=Kni` succeeds; default MonoGame + `FSO.Mac` still succeed. One API shim: `TouchPanel.EnableMouseTouchPoint` under `#if !FSO_KNI`.
+- [ ] Finish S1 retarget (HIT, SimAntics, LotView, UI, Client) then S2–S8 of KNI-MIGRATION
 - [ ] Content loading disk → HTTP fetch (~86 files use `FileStream`) — 1-2 weeks. *(swarm: HTTP content seam spike in flight 2026-08-11)*
 - [ ] Threading cleanup, 5 shipping files; `VMServerDriver` is the risky one — 1-2 weeks
 - **Status:** in_progress — four parallel agents deployed 2026-08-11: KNI spike, KNI migration map, HTTP content seam, Aries session path
