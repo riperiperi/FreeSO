@@ -10,8 +10,8 @@
 >
 > **KNI + content + Aries (2026-08-11, later same day):** `FSO.BrowserClient` loads a real
 > PNG via `HttpContentStore` → `Texture2D`. Lib chain builds with `-p:FSO_GRAPHICS=Kni`.
-> Gateway demo reaches ClientOnline + ignore-list ack against the fake city. Still open:
-> avatar select / FindLot / lot TCP, effects, lot view in Blazor. See `KNI-MIGRATION.md`.
+> Gateway demo reaches **FindLotResponse FOUND** (address) against the fake city. Still open:
+> lot TCP/WS join, effects, lot view in Blazor. See `KNI-MIGRATION.md`.
 
 > **Older note, 2026-08-08.** Browser is decided but moved to the tail
 > of the roadmap (`../task_plan.md` Phase F) — it lowers install friction rather than

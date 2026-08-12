@@ -42,7 +42,7 @@
   }
   button:disabled { background: #333a52; color: #7a8199; cursor: default; }
   .stages {
-    display: grid; grid-template-columns: repeat(6, 1fr); gap: 6px; list-style: none;
+    display: grid; grid-template-columns: repeat(8, 1fr); gap: 6px; list-style: none;
     margin: 0; padding: 0;
   }
   .stages li {
@@ -81,11 +81,9 @@
 <main>
   <h1>Phase F — Aries protocol debugger</h1>
   <p class="sub">
-    Browser client over the WS↔TCP gateway. Decodes the Archive city handshake
-    (<code>RequestClientSessionArchive</code>, type 2000), then sends type 21,
-    then after <code>HostOnlinePDU</code> bursts <code>ClientOnlinePDU</code> +
-    ignore/invincible. Fake city replies with <code>SetIgnoreListResponsePDU</code>.
-    Avatar select / FindLot still open.
+    Browser client over the WS↔TCP gateway. Runs the Archive city session through
+    handshake → type 21 → HostOnline → ClientOnline → Electron avatar select →
+    <code>FindLotResponse</code> with a lot address. Lot TCP on 34101 is next.
   </p>
 
   <div class="panel">
@@ -94,6 +92,14 @@
       <div>
         <label for="displayName">Display name (≤24)</label>
         <input id="displayName" type="text" maxlength="24" value="BrowserDemo">
+      </div>
+      <div>
+        <label for="avatarId">Avatar id</label>
+        <input id="avatarId" type="text" maxlength="10" value="1" style="min-width:80px">
+      </div>
+      <div>
+        <label for="lotId">Lot id</label>
+        <input id="lotId" type="text" maxlength="10" value="1" style="min-width:80px">
       </div>
       <div style="align-self:end" class="row">
         <button id="connect">Connect /city</button>
@@ -105,12 +111,14 @@
   <div class="panel">
     <h2>Protocol stage</h2>
     <ol class="stages" id="stages">
-      <li data-stage="idle"><strong>1. Idle</strong>not connected</li>
-      <li data-stage="connected"><strong>2. Connected</strong>WS open</li>
-      <li data-stage="handshake"><strong>3. Handshake</strong>type 2000</li>
-      <li data-stage="session-sent"><strong>4. Session sent</strong>type 21</li>
-      <li data-stage="host-online"><strong>5. HostOnline</strong>0x001e</li>
-      <li data-stage="client-online"><strong>6. ClientOnline</strong>ignore ack</li>
+      <li data-stage="idle"><strong>1. Idle</strong></li>
+      <li data-stage="connected"><strong>2. WS</strong></li>
+      <li data-stage="handshake"><strong>3. HS</strong></li>
+      <li data-stage="session-sent"><strong>4. Sess</strong></li>
+      <li data-stage="host-online"><strong>5. Host</strong></li>
+      <li data-stage="client-online"><strong>6. Online</strong></li>
+      <li data-stage="avatar-select"><strong>7. Avatar</strong></li>
+      <li data-stage="find-lot"><strong>8. FindLot</strong></li>
     </ol>
   </div>
 
@@ -138,19 +146,29 @@
   </div>
 
   <div class="panel" id="nextPanel" hidden>
-    <h2>Next server packet</h2>
+    <h2>Latest server packet</h2>
     <dl>
       <dt>Aries type</dt><dd id="n-type"></dd>
       <dt>Decoded</dt><dd id="n-decoded"></dd>
     </dl>
   </div>
 
+  <div class="panel" id="lotPanel" hidden>
+    <h2>FindLot result</h2>
+    <dl>
+      <dt>Status</dt><dd id="l-status"></dd>
+      <dt>Lot id</dt><dd id="l-lot"></dd>
+      <dt>Ticket</dt><dd id="l-ticket"></dd>
+      <dt>Address</dt><dd id="l-address"></dd>
+      <dt>User</dt><dd id="l-user"></dd>
+    </dl>
+  </div>
+
   <div class="panel note" id="blockerNote">
-    <strong>Still open for join-lot:</strong>
-    Archive avatar select (Electron 30/31), DataService avatar load, then
-    <code>FindLotRequest</code> → lot TCP on 34101 + another HostOnline/ClientOnline.
-    Live Archive still needs valid RSA PKCS#1 of <code>nonce\userId</code>
-    (this page ships a BigInt encrypt; fake city skips crypto).
+    <strong>Still open:</strong>
+    open lot TCP/WS to the FindLot address (34101) + lot HostOnline/ClientOnline.
+    Real Archive still needs RSA PKCS#1 auth + DataService avatar load before Connected;
+    this demo skips those against the fake city.
   </div>
 
   <div class="panel">
@@ -167,6 +185,7 @@
 
 const ARIES = {
   Voltron: 0,
+  Electron: 1000,
   RequestClientSessionResponse: 21,
   RequestClientSessionArchive: 2000,
 };
@@ -178,14 +197,22 @@ const VOLTRON = {
   SetIgnoreListResponsePDU: 0x0035,
   SetInvinciblePDU: 0x0036,
 };
+const ELECTRON = {
+  FindLotRequest: 5,
+  FindLotResponse: 6,
+  ArchiveAvatarSelectRequest: 30,
+  ArchiveAvatarSelectResponse: 31,
+};
 
 const logEl = document.getElementById('log');
 const log = (m) => { logEl.textContent += m + '\n'; logEl.scrollTop = logEl.scrollHeight; };
 
-let stageOrder = ['idle', 'connected', 'handshake', 'session-sent', 'host-online', 'client-online'];
+let stageOrder = ['idle', 'connected', 'handshake', 'session-sent', 'host-online', 'client-online', 'avatar-select', 'find-lot'];
 let currentStage = 'idle';
 let reached = new Set(['idle']);
 let sentClientOnline = false;
+let sentAvatarSelect = false;
+let sentFindLot = false;
 
 function setStage(stage, failed) {
   currentStage = stage;
@@ -326,6 +353,16 @@ function voltronFrame(subtype, body) {
   return ariesFrame(ARIES.Voltron, voltronPayload(subtype, body));
 }
 
+function electronFrame(subtype, body) {
+  return ariesFrame(ARIES.Electron, voltronPayload(subtype, body));
+}
+
+function u32be(n) {
+  const b = new Uint8Array(4);
+  new DataView(b.buffer).setUint32(0, n >>> 0, false);
+  return b;
+}
+
 /** Real client burst after HostOnline (CityConnectionRegulator). */
 function encodeClientOnlineBurst() {
   const clientOnline = voltronFrame(VOLTRON.ClientOnlinePDU, new Uint8Array(22)); // all-zero body
@@ -333,6 +370,54 @@ function encodeClientOnlineBurst() {
   const invBody = new Uint8Array(4); // Action=0 BE
   const invincible = voltronFrame(VOLTRON.SetInvinciblePDU, invBody);
   return concatBytes([clientOnline, ignoreList, invincible]);
+}
+
+function encodeAvatarSelectRequest(avatarId) {
+  return electronFrame(ELECTRON.ArchiveAvatarSelectRequest, u32be(avatarId));
+}
+
+function encodeFindLotRequest(lotId, openIfClosed) {
+  const body = new Uint8Array(5);
+  body.set(u32be(lotId), 0);
+  body[4] = openIfClosed ? 1 : 0;
+  return electronFrame(ELECTRON.FindLotRequest, body);
+}
+
+function decodeElectronInner(payload) {
+  if (payload.length < 6) return { error: 'short electron payload' };
+  const r = new ByteReader(payload);
+  const subtype = r.u16(false);
+  const size = r.u32(false);
+  const body = payload.subarray(6);
+  if (subtype === ELECTRON.ArchiveAvatarSelectResponse) {
+    const br = new ByteReader(body);
+    return { name: 'ArchiveAvatarSelectResponse', subtype, code: br.u16(false) };
+  }
+  if (subtype === ELECTRON.FindLotResponse) {
+    const br = new ByteReader(body);
+    return {
+      name: 'FindLotResponse',
+      subtype,
+      status: br.u16(false),
+      lotId: br.u32(false),
+      lotServerTicket: br.vlcString(),
+      address: br.vlcString(),
+      user: br.vlcString(),
+    };
+  }
+  return { name: 'Electron', subtype, size, bodyLen: body.length };
+}
+
+function continueAfterPreferences(ws) {
+  if (!sentAvatarSelect) {
+    sentAvatarSelect = true;
+    const avatarId = parseInt(document.getElementById('avatarId').value, 10) || 1;
+    const frame = encodeAvatarSelectRequest(avatarId);
+    ws.send(frame);
+    setStage('avatar-select');
+    setStatus('open', 'avatar select sent');
+    log('sent ArchiveAvatarSelectRequest avatarId=' + avatarId + ' (' + frame.length + ' B)');
+  }
 }
 
 /** Archive-mode RequestClientSessionResponse (type 21), Unknown=40. */
@@ -573,8 +658,9 @@ async function handleHandshake(ws, hs) {
 
 function handleNextPacket(ws, frame) {
   document.getElementById('nextPanel').hidden = false;
-  document.getElementById('n-type').textContent = frame.type +
-    (frame.type === ARIES.Voltron ? ' (Voltron)' : '');
+  const typeLabel = frame.type === ARIES.Voltron ? ' (Voltron)'
+    : frame.type === ARIES.Electron ? ' (Electron)' : '';
+  document.getElementById('n-type').textContent = frame.type + typeLabel;
   let decoded;
   if (frame.type === ARIES.Voltron) {
     decoded = decodeVoltronInner(frame.payload);
@@ -593,8 +679,8 @@ function handleNextPacket(ws, frame) {
       setStage('client-online');
       setStatus('open', 'ignore ack OK');
       log('received SetIgnoreListResponsePDU status=' + decoded.statusCode +
-        ' reason="' + decoded.reasonText + '" max=' + decoded.maxNumberOfIgnored +
-        ' — city preferences accepted. Next: ArchiveAvatarSelect / FindLot.');
+        ' reason="' + decoded.reasonText + '" max=' + decoded.maxNumberOfIgnored);
+      continueAfterPreferences(ws);
     } else if (decoded.name === 'AnnouncementMsgPDU') {
       setStage('host-online', true);
       setStatus('closed', decoded.subject || 'rejected');
@@ -602,6 +688,47 @@ function handleNextPacket(ws, frame) {
     } else {
       setStatus('open', 'voltron 0x' + decoded.subtype.toString(16));
       log('received Voltron subtype 0x' + decoded.subtype.toString(16));
+    }
+  } else if (frame.type === ARIES.Electron) {
+    decoded = decodeElectronInner(frame.payload);
+    document.getElementById('n-decoded').textContent = JSON.stringify(decoded);
+    if (decoded.name === 'ArchiveAvatarSelectResponse') {
+      if (decoded.code === 0) {
+        setStage('avatar-select');
+        setStatus('open', 'avatar OK');
+        log('received ArchiveAvatarSelectResponse Success — sending FindLotRequest…');
+        if (!sentFindLot) {
+          sentFindLot = true;
+          const lotId = parseInt(document.getElementById('lotId').value, 10) || 1;
+          const fl = encodeFindLotRequest(lotId, false);
+          ws.send(fl);
+          log('sent FindLotRequest lotId=' + lotId + ' (' + fl.length + ' B)');
+        }
+      } else {
+        setStage('avatar-select', true);
+        setStatus('closed', 'avatar code ' + decoded.code);
+        log('ArchiveAvatarSelectResponse code=' + decoded.code);
+      }
+    } else if (decoded.name === 'FindLotResponse') {
+      document.getElementById('lotPanel').hidden = false;
+      document.getElementById('l-status').textContent = decoded.status + (decoded.status === 0 ? ' (FOUND)' : '');
+      document.getElementById('l-lot').textContent = decoded.lotId;
+      document.getElementById('l-ticket').textContent = decoded.lotServerTicket;
+      document.getElementById('l-address').textContent = decoded.address;
+      document.getElementById('l-user').textContent = decoded.user;
+      if (decoded.status === 0) {
+        setStage('find-lot');
+        setStatus('open', 'lot @ ' + decoded.address);
+        log('received FindLotResponse FOUND → ' + decoded.address +
+          ' ticket=' + decoded.lotServerTicket + ' — next: open /lot WS to that host.');
+      } else {
+        setStage('find-lot', true);
+        setStatus('closed', 'FindLot ' + decoded.status);
+        log('FindLotResponse status=' + decoded.status);
+      }
+    } else {
+      setStatus('open', 'electron 0x' + decoded.subtype.toString(16));
+      log('received Electron subtype 0x' + decoded.subtype.toString(16));
     }
   } else {
     document.getElementById('n-decoded').textContent = frame.payload.length + ' byte payload (undecoded)';
@@ -618,10 +745,13 @@ document.getElementById('connect').addEventListener('click', () => {
   log('connecting ' + url);
   reached = new Set(['idle']);
   sentClientOnline = false;
+  sentAvatarSelect = false;
+  sentFindLot = false;
   setStage('idle');
   document.getElementById('handshakePanel').hidden = true;
   document.getElementById('sessionPanel').hidden = true;
   document.getElementById('nextPanel').hidden = true;
+  document.getElementById('lotPanel').hidden = true;
 
   const ws = new WebSocket(url);
   ws.binaryType = 'arraybuffer';

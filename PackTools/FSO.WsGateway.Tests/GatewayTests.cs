@@ -271,6 +271,44 @@ namespace FSO.WsGateway.Tests
         }
 
         /// <summary>
+        /// Electron FindLotResponse FOUND body the fake city / browser decode against.
+        /// Aries type 1000, subtype 6, BE body: status u16, lotId u32, 3× PascalVLC.
+        /// </summary>
+        [Fact]
+        public void FindLotResponse_Found_WireFormat()
+        {
+            var sent = new FSO.Server.Protocol.Electron.Packets.FindLotResponse
+            {
+                Status = FSO.Server.Protocol.Electron.Model.FindLotResponseStatus.FOUND,
+                LotId = 1,
+                LotServerTicket = "demo-ticket",
+                Address = "127.0.0.1:34101",
+                User = "1",
+            };
+            var payload = IoBuffer.Allocate(64);
+            payload.Order = ByteOrder.BigEndian;
+            payload.AutoExpand = true;
+            sent.Serialize(payload, null);
+            payload.Flip();
+            var body = new byte[payload.Remaining];
+            payload.Get(body, 0, body.Length);
+
+            Assert.Equal(0, body[0]); // status FOUND hi
+            Assert.Equal(0, body[1]); // status FOUND lo
+            Assert.Equal(0, body[2]); Assert.Equal(0, body[3]); Assert.Equal(0, body[4]); Assert.Equal(1, body[5]); // lotId=1
+
+            // Round-trip
+            var io = IoBuffer.Wrap(body);
+            io.Order = ByteOrder.BigEndian;
+            var decoded = new FSO.Server.Protocol.Electron.Packets.FindLotResponse();
+            decoded.Deserialize(io, null);
+            Assert.Equal(sent.Status, decoded.Status);
+            Assert.Equal(sent.LotId, decoded.LotId);
+            Assert.Equal(sent.Address, decoded.Address);
+            Assert.Equal(sent.LotServerTicket, decoded.LotServerTicket);
+        }
+
+        /// <summary>
         /// Documents the post-HostOnline client burst the browser must emit:
         /// ClientOnlinePDU (0x000a, 22-byte zero body) inside Aries type 0.
         /// </summary>

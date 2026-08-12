@@ -71,7 +71,7 @@ The branch that is actually maintained. `master` has not moved since Aug 2025.
 | **KNI migration plan** | Library-first retarget to `nkast.Xna.Framework.*`, then BlazorGL head | `docs/KNI-MIGRATION.md` — S0–S1 done; S2 texture-via-HTTP in BrowserClient |
 | **`FSO.BrowserClient`** | KNI BlazorGL spike — `HttpContentStore` → `Texture2D.FromStream` (`sample-content/textures/squares.png`) | Builds; `dotnet run` → http://localhost:5259 |
 | **KNI S1 graphics switch** | `FSO_GRAPHICS=MonoGame\|Kni` via `Directory.Build.props` + `msbuild/FSO.Xna.packages.targets` | Lib chain through `FSO.Client` builds on KNI; `FSO.Mac` on MonoGame |
-| **Aries city session** | Gateway demo past HostOnline → ClientOnline burst → ignore-list ack | Fake city + wwwroot JS; avatar select / FindLot still open |
+| **Aries city session** | Handshake → HostOnline → ClientOnline → avatar select → **FindLot FOUND** with address | Fake city + wwwroot JS E2E; lot TCP/WS on 34101 still open |
 
 ### Engine changes we made (small, in `TSOClient/`)
 - `WorldObjectCatalog.AddLive()` — register a catalog item after startup
