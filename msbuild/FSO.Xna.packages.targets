@@ -1,0 +1,25 @@
+<Project>
+  <!--
+    Shared XNA package set for library projects.
+    Opt in with <FSOUseXnaPackages>true</FSOUseXnaPackages> in the .csproj
+    and remove any local MonoGame.Framework.* PackageReference.
+  -->
+
+  <ItemGroup Condition="'$(FSO_GRAPHICS)' != 'Kni'">
+    <PackageReference Include="MonoGame.Framework.DesktopGL" Version="$(FSOMonoGameVersion)" />
+  </ItemGroup>
+
+  <!-- KNI 4.x library set — no platform package (SDL2.GL / Blazor.GL stay on heads). -->
+  <ItemGroup Condition="'$(FSO_GRAPHICS)' == 'Kni'">
+    <PackageReference Include="nkast.Xna.Framework" Version="$(FSOKniVersion)" />
+    <PackageReference Include="nkast.Xna.Framework.Content" Version="$(FSOKniVersion)" />
+    <PackageReference Include="nkast.Xna.Framework.Devices" Version="$(FSOKniVersion)" />
+    <PackageReference Include="nkast.Xna.Framework.Graphics" Version="$(FSOKniVersion)" />
+    <PackageReference Include="nkast.Xna.Framework.Audio" Version="$(FSOKniVersion)" />
+    <PackageReference Include="nkast.Xna.Framework.Media" Version="$(FSOKniVersion)" />
+    <PackageReference Include="nkast.Xna.Framework.Input" Version="$(FSOKniVersion)" />
+    <PackageReference Include="nkast.Xna.Framework.Game" Version="$(FSOKniVersion)" />
+    <PackageReference Include="nkast.Xna.Framework.Storage" Version="$(FSOKniVersion)" />
+    <PackageReference Include="nkast.Xna.Framework.XR" Version="$(FSOKniVersion)" />
+  </ItemGroup>
+</Project>

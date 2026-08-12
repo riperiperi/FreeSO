@@ -37,9 +37,13 @@
     <None Include="Resources\ico256.fw.png" />
   </ItemGroup>
 
+  <PropertyGroup>
+    <FSOUseXnaPackages>true</FSOUseXnaPackages>
+  </PropertyGroup>
+
   <ItemGroup>
-    <PackageReference Include="MonoGame.Framework.DesktopGL" Version="3.8.5" />
-    <PackageReference Include="MonoGame.Framework.WindowsDX" Version="3.8.5" />
+    <!-- Dual DX/GL linker stays on MonoGame desktop only; KNI heads pick a platform package. -->
+    <PackageReference Include="MonoGame.Framework.WindowsDX" Version="$(FSOMonoGameVersion)" Condition="'$(FSO_GRAPHICS)' != 'Kni'" />
     <PackageReference Include="Newtonsoft.Json" Version="13.0.4" />
     <PackageReference Include="Ninject" Version="3.3.6" />
     <PackageReference Include="Open.NAT.Core" Version="2.1.0.5" />

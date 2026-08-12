@@ -21,6 +21,7 @@ using FSO.UI.Model;
 using Microsoft.Xna.Framework;
 using Microsoft.Xna.Framework.Audio;
 using Microsoft.Xna.Framework.Graphics;
+using Microsoft.Xna.Framework.Input;
 using MSDFData;
 using Ninject;
 
@@ -273,11 +274,16 @@ namespace FSO.Client
         }
 
         /// <summary>
-        /// Run this instance with GameRunBehavior forced as Synchronous.
+        /// Run this instance with GameRunBehavior forced as Synchronous (MonoGame).
+        /// KNI 4.x has no GameRunBehavior overload — platform Run() is already sync on desktop.
         /// </summary>
         public new void Run()
         {
+#if FSO_KNI
+            base.Run();
+#else
             Run(GameRunBehavior.Synchronous);
+#endif
         }
 
         /// <summary>
@@ -298,6 +304,21 @@ namespace FSO.Client
             GameFacade.Focus = false;
         }
 
+#if FSO_KNI
+        // KNI 4.x: OnExiting(EventArgs) — no Cancel. CloseAttempt still runs for cleanup UX.
+        protected override void OnExiting(EventArgs args)
+        {
+            base.OnExiting(args);
+            var kernel = FSOFacade.Kernel;
+            if (kernel != null)
+            {
+                kernel.Get<LotConnectionRegulator>()?.Disconnect();
+                kernel.Get<CityConnectionRegulator>()?.Disconnect();
+            }
+            GameThread.SetKilled();
+            _ = FSOFacade.Controller?.CloseAttempt() ?? true;
+        }
+#else
         protected override void OnExiting(object sender, ExitingEventArgs args)
         {
             base.OnExiting(sender, args);
@@ -311,6 +332,7 @@ namespace FSO.Client
 
             args.Cancel = !(FSOFacade.Controller?.CloseAttempt() ?? true);
         }
+#endif
 
         /// <summary>
         /// LoadContent will be called once per game and is the place to load

@@ -23,9 +23,12 @@
     <IsAotCompatible>True</IsAotCompatible>
   </PropertyGroup>
 
+  <PropertyGroup>
+    <FSOUseXnaPackages>true</FSOUseXnaPackages>
+  </PropertyGroup>
+
   <ItemGroup>
     <PackageReference Include="FreeSO.HandEvaluator.Core" Version="1.0.0" />
-    <PackageReference Include="MonoGame.Framework.DesktopGL" Version="3.8.5" />
   </ItemGroup>
 
   <ItemGroup>
