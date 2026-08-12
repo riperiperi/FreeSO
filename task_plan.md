@@ -112,7 +112,8 @@ Sequenced so the vision model is the *last* variable introduced, not the first.
 - [ ] **Full browser Aries client** — join city past HostOnline (ClientOnline, avatar select, FindLot) and `/lot` session; then either .NET-WASM reusing `FSO.Server.Protocol`, or grow this JS seed inside the KNI client.
 - [x] **KNI BlazorGL S0 spike** — `PackTools/FSO.BrowserClient` (template `kni-blazor-gl`, net8.0, KNI 4.2.9001). Builds, publishes, runs at http://localhost:5259. Migration map in `docs/KNI-MIGRATION.md`.
 - [x] **KNI S1** — `Directory.Build.props` `FSO_GRAPHICS=MonoGame|Kni` + `msbuild/FSO.Xna.packages.targets`. Opted-in through `FSO.Client` (Domain/Common/Files/Content/Vitaboy*/HIT/LotView/SimAntics/UI/Server/Client). `dotnet build FSO.Client -p:FSO_GRAPHICS=Kni` green; `FSO.Mac` default MonoGame green. Shims: `TouchPanel.EnableMouseTouchPoint`, `OnExiting`/`GameRunBehavior`, Archive `System.Numerics.Vector2` usings.
-- [ ] S2–S8 of KNI-MIGRATION (HTTP content into `Content.GetResource`, effects, audio, lot view in Blazor, threads, Aries join)
+- [x] **S2 (partial)** — `Content.Store` + `GetResource` / BasePath `FileProvider` through `IContentStore`; `FAR3Archive(Stream)`. Content/ + TS1 overlays and remaining providers still disk.
+- [ ] S3–S8 of KNI-MIGRATION (effects, audio, lot view in Blazor, threads, Aries join) + finish content hotspots
 - [ ] Content loading disk → HTTP fetch (~86 files use `FileStream`) — 1-2 weeks. *(swarm: HTTP content seam spike in flight 2026-08-11)*
 - [ ] Threading cleanup, 5 shipping files; `VMServerDriver` is the risky one — 1-2 weeks
 - **Status:** in_progress — four parallel agents deployed 2026-08-11: KNI spike, KNI migration map, HTTP content seam, Aries session path

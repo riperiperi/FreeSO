@@ -33,6 +33,7 @@
 
   <ItemGroup>
     <ProjectReference Include="..\..\Other\libs\MSDFData\MSDFData.csproj" />
+    <ProjectReference Include="..\..\PackTools\FSO.BrowserContent\FSO.BrowserContent.csproj" />
     <ProjectReference Include="..\tso.common\FSO.Common.csproj" />
     <ProjectReference Include="..\tso.files\FSO.Files.csproj" />
     <ProjectReference Include="..\tso.vitaboy.model\FSO.Vitaboy.csproj" />

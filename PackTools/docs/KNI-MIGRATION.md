@@ -146,7 +146,7 @@ After library swap, desktop heads use `nkast.Kni.Platform.SDL2.GL`.
 |---|---|---|
 | S0 | Empty BlazorGL `Game` + clear color | Canvas paints — **DONE** (`PackTools/FSO.BrowserClient`) |
 | S1 | Retarget Domain → Files → Common → Content (+ through Client) | libs build on KNI — **DONE for shipping lib chain**: Domain/Common/Files/Content/Vitaboy*/HIT/LotView/SimAntics/UI/Server/Client on `FSO_GRAPHICS` switch. Desktop heads still MonoGame platform packages. |
-| S2 | Content seam over HTTP; one FAR/IFF → Texture2D | Texture on screen |
+| S2 | Content seam over HTTP; one FAR/IFF → Texture2D | Texture on screen — **partial**: `GetResource` + FAR3 stream ctor + BasePath FileProvider wired; Blazor texture demo still open |
 | S3 | Fetch `Content/OGL` XNBs; load effects (start **iOS/GLVer=2**) | Effects load |
 | S4 | Retarget HIT; one SoundEffect under autoplay rules | Audio beep |
 | S5 | LotView + Vitaboy; empty lot | Lot camera + floor |

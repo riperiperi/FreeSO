@@ -1,8 +1,10 @@
 # Content HTTP seam (spike)
 
-Status: **spike only** — `PackTools/FSO.BrowserContent`. Not wired into `tso.content`.
-Desktop game paths are unchanged. Pair with `BROWSER-VIABILITY.md` (filesystem §) and
-`FSO.WsGateway` (networking already spiked).
+Status: **wired into `Content.GetResource` + BasePath `FileProvider`** (2026-08-11).
+`Content.Store` defaults to `FileContentStore(BasePath)`; browser swaps `HttpContentStore`
+via `Content.SetStore`. FAR3 archives load once through the store into a seekable stream
+(`FAR3Archive(Stream)`). Content/ and TS1 overlays in `FileProvider` still use
+`File.OpenRead`. Pair with `BROWSER-VIABILITY.md` / `FSO.WsGateway`.
 
 ## Why
 

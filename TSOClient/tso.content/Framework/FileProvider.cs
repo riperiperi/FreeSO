@@ -109,13 +109,14 @@ namespace FSO.Content.Framework
 
                 if (EntriesByName.ContainsKey(name))
                 {
-                    var fullPath = UseContent? ("Content/"+EntriesByName[name]):(UseTS1?Path.Combine(ContentManager.TS1BasePath, EntriesByName[name]):ContentManager.GetPath(EntriesByName[name]));
-                    using (var reader = File.OpenRead(fullPath))
+                    var relative = EntriesByName[name];
+                    var displayPath = UseContent ? ("Content/" + relative) : (UseTS1 ? Path.Combine(ContentManager.TS1BasePath, relative) : ContentManager.GetPath(relative));
+                    using (var reader = OpenEntryStream(relative))
                     {
                         T item;
-                        if (Codec == null) item = (T)SmartCodec.Decode(reader, Path.GetExtension(fullPath));
+                        if (Codec == null) item = (T)SmartCodec.Decode(reader, Path.GetExtension(displayPath));
                         else item = Codec.Decode(reader);
-                        if (item is IFileInfoUtilizer) ((IFileInfoUtilizer)item).SetFilename(Path.GetFileName(fullPath));
+                        if (item is IFileInfoUtilizer) ((IFileInfoUtilizer)item).SetFilename(Path.GetFileName(displayPath));
                         Cache.Add(name, item);
                         return item;
                     }
@@ -128,16 +129,30 @@ namespace FSO.Content.Framework
         {
             if (EntriesByName.ContainsKey(name))
             {
-                var fullPath = UseContent ? ("Content/" + EntriesByName[name]) : (UseTS1 ? Path.Combine(ContentManager.TS1BasePath, EntriesByName[name]) : ContentManager.GetPath(EntriesByName[name]));
-                using (var reader = File.OpenRead(fullPath))
+                var relative = EntriesByName[name];
+                var displayPath = UseContent ? ("Content/" + relative) : (UseTS1 ? Path.Combine(ContentManager.TS1BasePath, relative) : ContentManager.GetPath(relative));
+                using (var reader = OpenEntryStream(relative))
                 {
                     T item;
-                    if (Codec == null) item = (T)SmartCodec.Decode(reader, Path.GetExtension(fullPath));
+                    if (Codec == null) item = (T)SmartCodec.Decode(reader, Path.GetExtension(displayPath));
                     else item = Codec.Decode(reader);
                     return item;
                 }
             }
             return default(T);
+        }
+
+        /// <summary>
+        /// BasePath files go through <see cref="Content.OpenFromStore"/>; Content/ and TS1
+        /// overlays still use absolute <see cref="File.OpenRead"/> until a composite store exists.
+        /// </summary>
+        private Stream OpenEntryStream(string relative)
+        {
+            if (UseContent)
+                return File.OpenRead("Content/" + relative);
+            if (UseTS1)
+                return File.OpenRead(Path.Combine(ContentManager.TS1BasePath, relative));
+            return ContentManager.OpenFromStore(relative);
         }
 
         public List<FileContentReference<T>> GetEntriesForExtension(string ext)

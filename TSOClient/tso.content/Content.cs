@@ -1,5 +1,6 @@
 ﻿using System.Collections.Generic;
 using System.IO;
+using FSO.BrowserContent;
 using FSO.Files.FAR3;
 using Microsoft.Xna.Framework.Graphics;
 using FSO.Common.Content;
@@ -87,6 +88,13 @@ namespace FSO.Content
         public string VersionString = "unidentified";
         public bool Inited = false;
 
+        /// <summary>
+        /// Byte source for <see cref="GetResource"/> (and eventually other loaders).
+        /// Defaults to <see cref="FileContentStore"/> over <see cref="BasePath"/>.
+        /// Browser builds swap in <see cref="HttpContentStore"/>.
+        /// </summary>
+        public IContentStore Store { get; private set; }
+
         public ChangeManager Changes;
 
         /// <summary>
@@ -100,6 +108,7 @@ namespace FSO.Content
             this.BasePath = basePath;
             this.Device = device;
             this.Mode = mode;
+            this.Store = new FileContentStore(basePath);
 
             ImageLoader.PremultiplyPNG = 1;// (FSOEnvironment.DirectX)?0:1;
 
@@ -355,6 +364,33 @@ namespace FSO.Content
         private Dictionary<string, FAR3Archive> Archives;
 
         /// <summary>
+        /// Replace the content byte source. Clears cached FAR3 archives opened via the previous store.
+        /// </summary>
+        public void SetStore(IContentStore store)
+        {
+            if (store == null) throw new System.ArgumentNullException(nameof(store));
+            if (Archives != null)
+            {
+                foreach (var archive in Archives.Values)
+                    archive.Dispose();
+                Archives.Clear();
+            }
+            Store = store;
+        }
+
+        /// <summary>
+        /// Open a content-relative path through <see cref="Store"/> (sync wrapper for HTTP stores).
+        /// </summary>
+        public Stream OpenFromStore(string relativePath)
+        {
+            if (Store is FileContentStore files)
+                return files.Open(relativePath);
+
+            var bytes = Store.ReadAllBytesAsync(relativePath).ConfigureAwait(false).GetAwaiter().GetResult();
+            return new MemoryStream(bytes, writable: false);
+        }
+
+        /// <summary>
         /// Gets a resource using a path and ID.
         /// </summary>
         /// <param name="path">The path to the file. If this path is to an archive, assetID can be null.</param>
@@ -367,7 +403,8 @@ namespace FSO.Content
                 /** Archive **/
                 if (!Archives.ContainsKey(path))
                 {
-                    FAR3Archive newArchive = new FAR3Archive(GetPath(path));
+                    // One HTTP GET (or File open) for the whole FAR; entries stay in-memory seeks.
+                    FAR3Archive newArchive = new FAR3Archive(OpenFromStore(path), path);
                     Archives.Add(path, newArchive);
                 }
 
@@ -378,7 +415,7 @@ namespace FSO.Content
 
             if (path.EndsWith(".bmp") || path.EndsWith(".png") || path.EndsWith(".tga")) path = "uigraphics/" + path;
 
-            return File.OpenRead(GetPath(path));
+            return OpenFromStore(path);
         }
 
         /** World **/
