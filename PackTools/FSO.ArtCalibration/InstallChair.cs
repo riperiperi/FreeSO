@@ -60,7 +60,7 @@ namespace FSO.ArtCalibration
         ""main_loop"": {{
           ""args"": [], ""locals"": [],
           ""nodes"": [
-            {{ ""id"": ""idle"", ""prim"": ""idle_for_input"", ""ticks_param"": 0, ""allow_push"": true, ""then"": ""idle"", ""else"": ""idle"" }}
+            {{ ""id"": ""idle"", ""prim"": ""idle_for_input"", ""ticks_param"": 0, ""allow_push"": false, ""then"": ""idle"", ""else"": ""idle"" }}
           ]
         }}
       }},

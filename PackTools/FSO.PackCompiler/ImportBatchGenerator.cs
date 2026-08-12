@@ -82,7 +82,8 @@ namespace FSO.PackCompiler
                                     ["id"] = "idle",
                                     ["prim"] = "idle_for_input",
                                     ["ticks_param"] = 0,
-                                    ["allow_push"] = true,
+                                    // false: AttemptPush casts Caller to VMAvatar (furniture crash)
+                                    ["allow_push"] = false,
                                     ["then"] = "idle",
                                     ["else"] = "idle",
                                 },

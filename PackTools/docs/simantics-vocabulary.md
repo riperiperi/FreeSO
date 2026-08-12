@@ -164,7 +164,9 @@ New object id lands in stack object.
 
 ### idle_for_input (0x11) — `VMIdleForInputOperand`, VMIdleForInput.cs:53-66
 | 0-1 | StackVarToDec | int16 | parameter index holding tick count (like sleep) |
-| 2-3 | AllowPush | uint16 | 1 = queued interactions may interrupt this idle |
+| 2-3 | AllowPush | uint16 | 1 = queued interactions may interrupt this idle via `VMThread.AttemptPush` |
+
+**Trap — furniture must use AllowPush = 0.** `AttemptPush` does `((VMAvatar)Entity).GetPersonData(Priority)` (VMThread.cs:208). On a `VMGameObject` that throws `Unable to cast object of type 'VMGameObject' to type 'VMAvatar'`, suppresses, and resets the object. Every PackTools-authored object main_loop hit this until 2026-08-11.
 
 ## 3. VMVariableScope — where expressions read/write
 

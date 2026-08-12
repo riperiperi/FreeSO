@@ -230,7 +230,7 @@ Design rules:
   - At least one part is required; an unknown `type`, a missing `pos`/`size` array of the wrong length, or a non-positive size component (in the dimensions that type actually uses) is a compile error. There is no enforced cap on part count — more than a handful rarely helps, since detail beyond silhouette/proportion/color doesn't survive TSO's render scale anyway (see `ART-PIPELINE-DESIGN.md`), but nothing stops you from trying.
 - `attributes`: named per-instance storage; compiler assigns indices. If the object declares no `entry_points.init` and no tree named `init`, the compiler **generates one** that zeroes every declared attribute — don't hand-write it.
 - **Boilerplate you no longer author.** Three things every pack used to write by hand are now supplied by the compiler. All three only ever *add*: name your own and yours wins.
-  - **`main_loop`** — omit `entry_points.main` and a standard `idle_for_input` loop is generated.
+  - **`main_loop`** — omit `entry_points.main` and a standard `idle_for_input` loop is generated (`allow_push: false`). **Never set `allow_push: true` on furniture** — that path calls `VMThread.AttemptPush`, which casts the caller to `VMAvatar` and crashes with `Unable to cast VMGameObject to VMAvatar`. `allow_push` is for Sims only.
   - **`init`** — omit it and attribute-zeroing is generated (above).
   - **An always-true `test` tree** — omit an interaction's `test` entirely and it is always allowed. Writing a tree whose body is `1 == 1` is pure waste; it was never required.
 - `strings`: string tables by chunk role; ids are 1-based (0 = none) per engine convention.

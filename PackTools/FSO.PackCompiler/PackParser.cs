@@ -783,10 +783,13 @@ namespace FSO.PackCompiler
 
             if (!hasMain && trees[DefaultMainTree] == null)
             {
+                // allow_push must be false on object main: IdleForInput's push path casts
+                // Caller to VMAvatar (VMThread.AttemptPush), which crashes furniture as
+                // "Unable to cast VMGameObject to VMAvatar". allow_push is for Sims only.
                 trees[DefaultMainTree] = JObject.Parse(@"{
                     ""args"": [], ""locals"": [],
                     ""nodes"": [ { ""id"": ""idle"", ""prim"": ""idle_for_input"",
-                                   ""ticks_param"": 0, ""allow_push"": true,
+                                   ""ticks_param"": 0, ""allow_push"": false,
                                    ""then"": ""idle"", ""else"": ""idle"" } ] }");
                 entry ??= (JObject)(raw["entry_points"] = new JObject());
                 entry["main"] = DefaultMainTree;

@@ -63,7 +63,7 @@ namespace FSO.PackCompiler.Tests
                                     new JObject
                                     {
                                         ["id"] = "idle", ["prim"] = "idle_for_input", ["ticks_param"] = 0,
-                                        ["allow_push"] = true, ["then"] = "idle", ["else"] = "idle",
+                                        ["allow_push"] = false, ["then"] = "idle", ["else"] = "idle",
                                     },
                                 },
                             },
@@ -208,7 +208,7 @@ namespace FSO.PackCompiler.Tests
                                 ["args"] = new JArray(), ["locals"] = new JArray(),
                                 ["nodes"] = new JArray
                                 {
-                                    new JObject { ["id"] = "idle", ["prim"] = "idle_for_input", ["ticks_param"] = 0, ["allow_push"] = true, ["then"] = "idle", ["else"] = "idle" },
+                                    new JObject { ["id"] = "idle", ["prim"] = "idle_for_input", ["ticks_param"] = 0, ["allow_push"] = false, ["then"] = "idle", ["else"] = "idle" },
                                 },
                             },
                         },

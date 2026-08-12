@@ -117,9 +117,9 @@ namespace FSO.PackCompiler.Tests
 
             // ---- main_loop (BHAV 4099) ----
             var main = iff.Get<BHAV>(4099);
-            // idle_for_input (0x11): StackVarToDec 0, AllowPush 1; loops to itself
+            // idle_for_input (0x11): StackVarToDec 0, AllowPush 0; loops to itself
             AssertInstruction(main.Instructions[0], 0x11, t: 0, f: 0,
-                operand: new byte[] { 0x00, 0x00, 0x01, 0x00, 0x00, 0x00, 0x00, 0x00 });
+                operand: new byte[] { 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00 });
 
             // ---- TTAB / TTAs ----
             var ttab = iff.Get<TTAB>(128);
