@@ -143,14 +143,6 @@ namespace FSO.SimAntics.Marshals
                     Preserialized = mem.ToArray();
                 }
             }
-
-            var test = new VMArchitectureMarshal();
-
-            using (var mem = new MemoryStream(Preserialized))
-            {
-                using var io = new BinaryReader(mem);
-                test.Deserialize(io);
-            }
         }
     }
 

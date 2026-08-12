@@ -1,6 +1,5 @@
 ﻿using FSO.SimAntics.Engine;
 using FSO.Files.Utils;
-using System.IO;
 
 namespace FSO.SimAntics.Primitives
 {
@@ -9,26 +8,31 @@ namespace FSO.SimAntics.Primitives
         public override VMPrimitiveExitCode Execute(VMStackFrame context, VMPrimitiveOperand args)
         {
             var operand = (VMSleepOperand)args;
-            var idleStart = context.Thread.ScheduleIdleStart;
+            var thread = context.Thread;
+            var idleStart = thread.ScheduleIdleStart;
+            var vm = context.VM;
+            var scheduler = vm.Scheduler;
 
-            context.Args[operand.StackVarToDec] -= (short)((idleStart != 0 && idleStart < context.VM.Scheduler.CurrentTickID) ? (context.VM.Scheduler.CurrentTickID - idleStart) : 1);
+            ref short arg = ref context.Args.GetRef(operand.StackVarToDec);
 
-            if (context.Thread.Interrupt)
+            arg -= (short)((idleStart != 0 && idleStart < scheduler.CurrentTickID) ? (scheduler.CurrentTickID - idleStart) : 1);
+
+            if (thread.Interrupt)
             {
-                context.Thread.ScheduleIdleStart = 0;
-                context.Thread.Interrupt = false;
+                thread.ScheduleIdleStart = 0;
+                thread.Interrupt = false;
                 return VMPrimitiveExitCode.GOTO_TRUE;
             }
 
-            if (context.Args[operand.StackVarToDec] <= -1) { 
-                context.Thread.ScheduleIdleStart = 0;
-                context.VM.Context.NextRandom(1); //rng cycle - for desync detect
+            if (arg <= -1) { 
+                thread.ScheduleIdleStart = 0;
+                vm.Context.NextRandom(1); //rng cycle - for desync detect
                 return (context.Caller.Dead)?VMPrimitiveExitCode.GOTO_TRUE_NEXT_TICK:VMPrimitiveExitCode.GOTO_TRUE;
             }
             else
             {
-                context.Thread.ScheduleIdleStart = context.VM.Scheduler.CurrentTickID;
-                context.VM.Scheduler.ScheduleTickIn(context.Caller, (uint)context.Args[operand.StackVarToDec]+1);
+                thread.ScheduleIdleStart = scheduler.CurrentTickID;
+                scheduler.ScheduleTickIn(context.Caller, (uint)arg+1);
                 return VMPrimitiveExitCode.CONTINUE_FUTURE_TICK;
             }
         }

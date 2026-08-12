@@ -17,7 +17,7 @@ namespace FSO.Client.UI.Panels
 
         public UIDebugMenu() : base(UIDialogStyle.Tall, true)
         {
-            SetSize(500, 340);
+            SetSize(500, 320);
             Caption = "Debug Tools";
 
             Position = new Microsoft.Xna.Framework.Vector2(
@@ -47,43 +47,44 @@ namespace FSO.Client.UI.Panels
             };
             Add(ContentBrowserBtn);
 
-            var connectLocalBtn = new UIButton();
-            connectLocalBtn.Caption = (GlobalSettings.Default.UseCustomServer) ? "Use default server (TSO)" : "Use custom defined server";
-            connectLocalBtn.Position = new Microsoft.Xna.Framework.Vector2(160, 90);
-            connectLocalBtn.Width = 300;
-            connectLocalBtn.OnButtonClick += x =>
-            {
-                GlobalSettings.Default.UseCustomServer = !GlobalSettings.Default.UseCustomServer;
-                connectLocalBtn.Caption = (GlobalSettings.Default.UseCustomServer) ? "Use default server (TSO)" : "Use custom defined server";
-                GlobalSettings.Default.Save();
-            };
-            Add(connectLocalBtn);
-
             var cityPainterBtn = new UIButton();
-            cityPainterBtn.Caption = "City Painter";
-            cityPainterBtn.Position = new Microsoft.Xna.Framework.Vector2(160, 130);
-            cityPainterBtn.Width = 150;
+            cityPainterBtn.Caption = "Trigger hollow.fsoh regeneration";
+            cityPainterBtn.Position = new Microsoft.Xna.Framework.Vector2(160, 90);
+            cityPainterBtn.Width = 300;
             cityPainterBtn.OnButtonClick += x =>
             {
                 var core = (GameFacade.Screens.CurrentUIScreen as CoreGameScreen);
                 if (core == null) return;
-                if (core.CityRenderer.Plugin == null)
+
+                var controller = core.FindController<CoreGameScreenController>();
+
+                if (controller == null) return;
+
+                if (controller.ModerationLevel < 3)
                 {
-                    core.CityRenderer.Plugin = new Rendering.City.Plugins.MapPainterPlugin(core.CityRenderer);
-                    cityPainterBtn.Caption = "Disable Painter";
+                    UIScreen.GlobalShowAlert(new UIAlertOptions()
+                    {
+                        Message = "You must be super admin to run this command."
+                    }, true);
+                    return;
                 }
-                else
+
+                UIAlert.YesNo("Lot cleanup", "Do you want to fully re-save lots that have been moved (yes), or just update all lots (no)?", true, (answer) =>
                 {
-                    core.CityRenderer.Plugin = null;
-                    cityPainterBtn.Caption = "City Painter";
-                }
+                    controller.RegenerateHollowLots(answer);
+
+                    UIScreen.GlobalShowAlert(new UIAlertOptions()
+                    {
+                        Message = "Regenerating hollow lots - this might take some time. Check the logs for the current progress."
+                    }, true);
+                });
             };
             Add(cityPainterBtn);
 
             var ngbhBtn = new UIButton();
             ngbhBtn.Caption = "Ngbh Editor";
-            ngbhBtn.Position = new Microsoft.Xna.Framework.Vector2(160+150, 130);
-            ngbhBtn.Width = 150;
+            ngbhBtn.Position = new Microsoft.Xna.Framework.Vector2(160, 130);
+            ngbhBtn.Width = 300;
             ngbhBtn.OnButtonClick += x =>
             {
                 var core = (GameFacade.Screens.CurrentUIScreen as CoreGameScreen);
@@ -96,7 +97,7 @@ namespace FSO.Client.UI.Panels
                 else
                 {
                     core.CityRenderer.Plugin = null;
-                    ngbhBtn.Caption = "Ngbh Editor";
+                    ngbhBtn.Caption = "Neighborhood Editor (local)";
                 }
             };
             Add(ngbhBtn);
@@ -199,36 +200,16 @@ namespace FSO.Client.UI.Panels
                 }, true);
             };
             Add(saveUpgradesBtn);
-
-            serverNameBox = new UITextBox();
-            serverNameBox.X = 50;
-            serverNameBox.Y = 340 - 54;
-            serverNameBox.SetSize(500 - 100, 25);
-            serverNameBox.CurrentText = GlobalSettings.Default.GameEntryUrl;
-
-            Add(serverNameBox);
         }
-        private UITextBox serverNameBox;
 
         public override void Update(UpdateState state)
         {
             base.Update(state);
             if (state.NewKeys.Contains(Microsoft.Xna.Framework.Input.Keys.M))
             {
-                //temporary until data service can inform people they're mod
-                //now i know what you're thinking - but these requests are permission checked server side anyways
+                // Enables client-side permissions overrides. (similar to move-objects)
+                // Now I know what you're thinking - but these requests are permission checked server side anyways.
                 GameFacade.EnableMod = true;
-            }
-
-            if (serverNameBox.CurrentText != GlobalSettings.Default.GameEntryUrl)
-            {
-                GlobalSettings.Default.GameEntryUrl = serverNameBox.CurrentText;
-                GlobalSettings.Default.CitySelectorUrl = serverNameBox.CurrentText;
-                var auth = FSOFacade.Kernel.Get<AuthClient>();
-                auth.SetBaseUrl(serverNameBox.CurrentText);
-                var city = FSOFacade.Kernel.Get<CityClient>();
-                city.SetBaseUrl(serverNameBox.CurrentText);
-                GlobalSettings.Default.Save();
             }
         }
     }

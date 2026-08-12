@@ -115,10 +115,10 @@ namespace FSO.LotView.RC
                     g.UseOffset = (topMode != 4);
 
                     var p1 = new Vector3(from.X + x, from.Y + y, 0);
-                    var a1 = blueprint.InterpAltitude(p1) + (level - 1) * 2.95f;
+                    var a1 = blueprint.InterpAltitude(Vector3.Round(p1)) + (level - 1) * 2.95f;
                     p1.Z = a1;
                     var p2 = new Vector3(to.X + x, to.Y + y, 0);
-                    var a2 = blueprint.InterpAltitude(p2) + (level - 1) * 2.95f;
+                    var a2 = blueprint.InterpAltitude(Vector3.Round(p2)) + (level - 1) * 2.95f;
                     p2.Z = a2;
 
                     //generate the geometry for this line

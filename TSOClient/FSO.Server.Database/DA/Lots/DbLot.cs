@@ -5,6 +5,8 @@ namespace FSO.Server.Database.DA.Lots
     [Flags]
     public enum LotMoveFlags
     {
+        None = 0,
+
         /// <summary>
         /// This lot has moved.
         /// Flatten the buildable area, regenerate the terrain.

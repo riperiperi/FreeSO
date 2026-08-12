@@ -466,6 +466,16 @@ namespace FSO.Client.Controllers
             });
         }
 
+        public void RegenerateHollowLots(bool completeMoves)
+        {
+            Network.CityClient.Write(new CityUpdateCommand()
+            {
+                AvatarID = Network.MyCharacter,
+                Mode = CityUpdateCommandMode.HollowLotRefresh,
+                TargetUID = completeMoves ? 1 : 0
+            });
+        }
+
         public void HandleVMShutdown(VMCloseNetReason reason)
         {
             var state = JoinLotRegulator.CurrentState.Name;

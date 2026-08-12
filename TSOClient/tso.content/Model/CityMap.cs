@@ -287,7 +287,7 @@ namespace FSO.Content.Model
 
             TerrainType maxEdge = Model.TerrainType.WATER;
 
-            for (int i = 0; i < 8; i++)
+            for (int i = 0; i < 8; i += 2)
                 if (edges[i] < maxEdge && edges[i] != Model.TerrainType.NULL) maxEdge = edges[i];
 
             TerrainBlend ReturnBlend = new TerrainBlend();

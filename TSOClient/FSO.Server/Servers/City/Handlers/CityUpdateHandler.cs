@@ -2,12 +2,14 @@
 using FSO.Common.Domain;
 using FSO.Common.Domain.Realestate;
 using FSO.Common.Domain.RealestateDomain;
+using FSO.Common.Security;
 using FSO.Content.Model;
 using FSO.Server.Database.DA;
 using FSO.Server.DataService.Providers;
 using FSO.Server.Framework.Voltron;
 using FSO.Server.Protocol.Electron.Model.CityEditCommands;
 using FSO.Server.Protocol.Electron.Packets;
+using FSO.Server.Protocol.Gluon.Model;
 using FSO.Server.Servers.City.Domain;
 using FSO.Server.Utils;
 using Microsoft.Xna.Framework;
@@ -210,6 +212,18 @@ namespace FSO.Server.Servers.City.Handlers
 
         public async void Handle(IVoltronSession session, CityUpdateCommand packet)
         {
+            if (session.IsAnonymous)
+            {
+                return;
+            }
+
+            if (packet.Mode == CityUpdateCommandMode.HollowLotRefresh && session.HasModerationLevel(3))
+            {
+                // This can be called even when the city editor is disabled.
+                _ = Task.Run(() => HollowLotRefresh(packet.TargetUID));
+                return;
+            }
+
             var shard = GetShard(session);
 
             if (shard == null || Running == false)
@@ -383,6 +397,68 @@ namespace FSO.Server.Servers.City.Handlers
             }
 
             File.Move(tempPath, filePath, true);
+        }
+
+        private bool HollowRefreshActive;
+
+        private async Task HollowLotRefresh(int mode)
+        {
+            if (Interlocked.Exchange(ref HollowRefreshActive, true) == true)
+            {
+                return;
+            }
+
+            bool completeMoves = mode == 1;
+            ClaimAction action = completeMoves ? ClaimAction.LOT_CLEANUP : ClaimAction.LOT_CLEANUP_HOLLOW;
+
+            using var da = DAFactory.Get();
+
+            var lots = new HashSet<uint>(); 
+            LotProvider.AddLocationsTo(lots);
+
+            int total = lots.Count;
+
+            LOG.Info($"Starting hollow lot refresh for {lots.Count} lots...");
+
+            int i = 0;
+            int refreshCount = 0;
+            foreach (var lotId in lots)
+            {
+                if (completeMoves)
+                {
+                    // Only complete moves for properties that have non-zero move flags.
+                    var lot = da.Lots.GetByLocation(Context.ShardId, lotId);
+
+                    if (lot == null || lot.MoveFlags == Database.DA.Lots.LotMoveFlags.None)
+                    {
+                        LOG.Info($"Skipped lot {lotId} ({i}/{total})...");
+                        i++;
+                        continue;
+                    }
+                }
+
+                try
+                {
+                    LOG.Info($"Queuing hollow refresh for {lotId} ({i}/{total})...");
+                    refreshCount++;
+                    await ActiveLots.TryFindOrOpen(lotId, 0, NullSecurityContext.INSTANCE, action);
+                }
+                catch (Exception e)
+                {
+                    LOG.Info($"Error: Failed to start hollow lot: {e.Message}");
+                }
+
+                i++;
+
+                while (ActiveLots.ActiveCount > 20)
+                {
+                    await Task.Delay(20);
+                }
+            }
+
+            LOG.Info($"Finished hollow refresh (completed {refreshCount})! Still might need to wait for lots to close.");
+
+            Interlocked.Exchange(ref HollowRefreshActive, false);
         }
 
         public void Dispose()

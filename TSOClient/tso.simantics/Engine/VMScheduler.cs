@@ -4,10 +4,10 @@ namespace FSO.SimAntics.Engine
 {
     public class VMScheduler
     {
-        private VM vm;
-        private Dictionary<uint, VMObjectList<VMEntity>> TickSchedule = [];
+        private readonly VM vm;
+        private readonly Dictionary<uint, VMObjectList<VMEntity>> TickSchedule = [];
         private VMObjectList<VMEntity> TickThisFrame;
-        public HashSet<VMEntity> PendingDeletion = new HashSet<VMEntity>();
+        public readonly HashSet<VMEntity> PendingDeletion = [];
         public uint CurrentTickID;
         public short CurrentObjectID;
         public bool RunningNow;

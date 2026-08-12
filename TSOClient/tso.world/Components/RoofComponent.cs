@@ -269,10 +269,10 @@ namespace FSO.LotView.Components
 
                 var heightMod = 0;// height / 400f;
                 var pitch = RoofPitch;
-                var tl = ToWorldPos(rect.x1, rect.y1, 0, level, pitch) + new Vector3(0, heightMod, 0);
-                var tr = ToWorldPos(rect.x2, rect.y1, 0, level, pitch) + new Vector3(0, heightMod, 0);
-                var bl = ToWorldPos(rect.x1, rect.y2, 0, level, pitch) + new Vector3(0, heightMod, 0);
-                var br = ToWorldPos(rect.x2, rect.y2, 0, level, pitch) + new Vector3(0, heightMod, 0);
+                var tl = ToWorldPos(rect.x1, rect.y1, 0, level, pitch, 8, 8) + new Vector3(0, heightMod, 0);
+                var tr = ToWorldPos(rect.x2, rect.y1, 0, level, pitch, -8, 8) + new Vector3(0, heightMod, 0);
+                var bl = ToWorldPos(rect.x1, rect.y2, 0, level, pitch, 8, -8) + new Vector3(0, heightMod, 0);
+                var br = ToWorldPos(rect.x2, rect.y2, 0, level, pitch, -8, -8) + new Vector3(0, heightMod, 0);
                 
                 var m_tl = ToWorldPos(rect.x1 + height, rect.y1 + height, height, level, pitch) + new Vector3(0, heightMod, 0);
                 var m_tr = ToWorldPos(rect.x2 - height, rect.y1 + height, height, level, pitch) + new Vector3(0, heightMod, 0);
@@ -483,9 +483,9 @@ namespace FSO.LotView.Components
             Drawgroups[level - 2] = result;
         }
 
-        private Vector3 ToWorldPos(int x, int y, int z, int level, float pitch)
+        private Vector3 ToWorldPos(int x, int y, int z, int level, float pitch, int xBias = 0, int yBias = 0)
         {
-            return new Vector3((x / 16f) * 3f, (z * pitch / 16f) * 3f + ((level - 1) * 2.95f * 3f) + blueprint.GetAltitude(x / 16, y / 16) * 3, (y / 16f) * 3f);
+            return new Vector3((x / 16f) * 3f, (z * pitch / 16f) * 3f + ((level - 1) * 2.95f * 3f) + (blueprint.GetAltPoint((x + xBias) / 16, (y + yBias) / 16) - blueprint.BaseAlt) * blueprint.TerrainFactor * 3, (y / 16f) * 3f);
         }
 
         private static Point[] advanceByDir = new Point[]

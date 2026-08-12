@@ -111,5 +111,23 @@ namespace FSO.SimAntics.Model
 
             return BaseArgs[..Length];
         }
+
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
+        public ref short GetRef(int index)
+        {
+            if (index >= Length)
+            {
+                ThrowIndexOutOfRangeException();
+            }
+
+            if (index < 4)
+            {
+                return ref BaseArgs[index];
+            }
+            else
+            {
+                return ref ExtraArgs[index - 4];
+            }
+        }
     }
 }

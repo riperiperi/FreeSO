@@ -181,9 +181,11 @@ namespace FSO.Server.Servers.Lot.Domain
             Kernel = kernel;
             Config = config;
 
-            TransientLot = context.SpecialLot;
+            TransientLot = context.SpecialLot || context.Action == ClaimAction.LOT_CLEANUP_HOLLOW;
             UnownedLot = context.UnownedLot;
             JobLot = context.JobLot;
+
+            var skipAdj = context.Action.IsCleanup();
             if (JobLot) {
                 var jobPacked = Context.DbId - 0x200;
                 var jobLevel = (short)((jobPacked - 1) & 0xF);
@@ -234,7 +236,7 @@ namespace FSO.Server.Servers.Lot.Domain
 
                 using (var db = DAFactory.Get())
                 {
-                    LotAdj = db.Lots.GetAdjToLocation(context.ShardId, LotPersist.location);
+                    LotAdj = skipAdj ? [] : db.Lots.GetAdjToLocation(context.ShardId, LotPersist.location);
                     Tuning = new DynamicTuning(db.Tuning.All());
                 }
 
@@ -248,7 +250,7 @@ namespace FSO.Server.Servers.Lot.Domain
                 using (var db = DAFactory.Get())
                 {
                     LotPersist = db.Lots.Get(context.DbId);
-                    LotAdj = db.Lots.GetAdjToLocation(context.ShardId, LotPersist.location);
+                    LotAdj = skipAdj ? [] : db.Lots.GetAdjToLocation(context.ShardId, LotPersist.location);
                     LotRoommates = db.Roommates.GetLotRoommates(context.DbId);
                     Tuning = new DynamicTuning(db.Tuning.All());
                 }
@@ -345,8 +347,14 @@ namespace FSO.Server.Servers.Lot.Domain
 
         public byte[][] LoadAdj()
         {
-            LOG.Info("Loading adj lots for lot with dbid = " + Context.DbId);
             var result = new byte[9][];
+
+            if (Context.Action.IsCleanup())
+            {
+                return result;
+            }
+
+            LOG.Info("Loading adj lots for lot with dbid = " + Context.DbId);
             var myPos = MapCoordinates.Unpack(LotPersist.location);
             foreach (var lot in LotAdj)
             {
@@ -383,6 +391,7 @@ namespace FSO.Server.Servers.Lot.Domain
             //first let's try load our adjacent lots.
             int attempts = 0;
             var lotStr = LotPersist.lot_id.ToString("x8");
+            int initialBackup = LotPersist.ring_backup_num;
 
             while (++attempts < Config.RingBufferSize)
             {
@@ -415,8 +424,13 @@ namespace FSO.Server.Servers.Lot.Domain
                         } 
                     }
 
-                    using (var db = DAFactory.Get())
-                        db.Lots.UpdateRingBackup(LotPersist.lot_id, LotPersist.ring_backup_num);
+                    if (LotPersist.ring_backup_num != initialBackup)
+                    {
+                        // Avoid the server trying to load this invalid save again.
+
+                        using var db = DAFactory.Get();
+                        db.Lots.UpdateRingBackupSilent(LotPersist.lot_id, LotPersist.ring_backup_num);
+                    }
 
                     return true;
                 }
@@ -438,6 +452,39 @@ namespace FSO.Server.Servers.Lot.Domain
 
             throw new Exception("failed to load lot!");
             return false;
+        }
+
+        public bool SaveHollow()
+        {
+            var lotStr = LotPersist.lot_id.ToString("x8");
+            Directory.CreateDirectory(Path.Combine(Config.SimNFS, "Lots/" + lotStr + "/"));
+            try
+            {
+                var hmarshal = Lot.HollowSave();
+
+                Host.InBackground(() => {
+                    try
+                    {
+                        string path = Path.Combine(Config.SimNFS, "Lots/" + lotStr + "/hollow.fsoh");
+                        using (var output = new FileStream(path, FileMode.Create))
+                        {
+                            hmarshal.SerializeInto(new BinaryWriter(output));
+                        }
+                    }
+                    catch (Exception e)
+                    {
+                        LOG.Warn(e, "Failed to save holow lot (to disk/db) with dbid = " + Context.DbId);
+                        LOG.Warn(e.StackTrace);
+                    }
+                });
+                return true;
+            }
+            catch (Exception e)
+            {
+                LOG.Warn(e, "Failed to save hollow lot with dbid = " + Context.DbId);
+                LOG.Warn(e.StackTrace);
+                return false;
+            }
         }
 
         public bool SaveRing()
@@ -798,7 +845,7 @@ namespace FSO.Server.Servers.Lot.Domain
             bool archiveOldSave = LotPersist.ArchiveFlags.HasFlag(LotArchiveFlags.ArchiveFromOldSave);
             bool isMoved = LotPersist.MoveFlags > 0 || archiveOldSave;
             HollowLots = Task.Run(LoadAdj);
-            if (!TransientLot && LotPersist.ring_backup_num > -1 && AttemptLoadRing())
+            if (((!TransientLot) || Context.Action == ClaimAction.LOT_CLEANUP_HOLLOW) && LotPersist.ring_backup_num > -1 && AttemptLoadRing())
             {
                 LOG.Info("Successfully loaded and cleaned fsov for dbid = " + Context.DbId);
             }
@@ -1179,7 +1226,7 @@ namespace FSO.Server.Servers.Lot.Domain
                 long lastTick = 0;
                 long skippedTimeMs = 0;
 
-                if (Context.Action != ClaimAction.LOT_CLEANUP)
+                if (!Context.Action.IsCleanup())
                 {
                     // Someone will be joining us, so might as well get sync prepared now.
                     VMDriver.PrepareSync(Lot);
@@ -1220,7 +1267,7 @@ namespace FSO.Server.Servers.Lot.Domain
                     {
                         if (TimeToShutdown == -1)
                         {
-                            if (Context.Action == ClaimAction.LOT_CLEANUP)
+                            if (Context.Action.IsCleanup())
                                 TimeToShutdown = 1;
                             else if (AllowGuestOpening)
                                 TimeToShutdown = TICKRATE * 15;
@@ -1257,7 +1304,7 @@ namespace FSO.Server.Servers.Lot.Domain
                         {
                             //lot shuts down 20 seconds after everyone leaves
                             //if we're doing a cleanup action, it closes immediately
-                            TimeToShutdown = (Context.Action == ClaimAction.LOT_CLEANUP) ? 1 : TICKRATE * 20;
+                            TimeToShutdown = (Context.Action.IsCleanup()) ? 1 : TICKRATE * 20;
                         }
                         else
                         {
@@ -2211,43 +2258,53 @@ namespace FSO.Server.Servers.Lot.Domain
 
             VMDriver.EndRecord();
             LOG.Info("Lot with dbid = " + Context.DbId + " shutting down.");
-            if ((LotPersist.MoveFlags & LotMoveFlags.PermanentDelete) > 0)
-            {
-                //this lot is slated to be deleted from the database.
-                using (var da = DAFactory.Get())
-                {
-                    da.Lots.Delete(Context.DbId);
-                    var lotStr = LotPersist.lot_id.ToString("x8");
-                    Directory.Delete(Path.Combine(Config.SimNFS, "Lots/" + lotStr + "/"), true);
-                }
-            }
-            try
-            {
-                ReturnInvalidObjects();
-            }
-            catch (Exception e) { }
-            SaveRing();
 
-            //if we have a null owner, this lot needs to be deleted.
-
-            if (!(TransientLot || LotPersist.category == LotCategory.community)) {
-                using (var da = DAFactory.Get())
+            if (!TransientLot)
+            {
+                if ((LotPersist.MoveFlags & LotMoveFlags.PermanentDelete) > 0)
                 {
-                    var lot = da.Lots.Get(Context.DbId);
-                    if (lot.owner_id == null)
+                    //this lot is slated to be deleted from the database.
+                    using (var da = DAFactory.Get())
                     {
-
-                        try
-                        {
-                            var lotStr = LotPersist.lot_id.ToString("x8");
-                            Directory.Delete(Path.Combine(Config.SimNFS, "Lots/" + lotStr + "/"), true);
-                        } catch (Exception)
-                        {
-                            
-                        }
-                        //note that the lot has to be deleted from db by lot allocations, since it still needs to unlock the location this property was at.
+                        da.Lots.Delete(Context.DbId);
+                        var lotStr = LotPersist.lot_id.ToString("x8");
+                        Directory.Delete(Path.Combine(Config.SimNFS, "Lots/" + lotStr + "/"), true);
                     }
                 }
+                try
+                {
+                    ReturnInvalidObjects();
+                }
+                catch (Exception e) { }
+
+                SaveRing();
+
+                //if we have a null owner, this lot needs to be deleted.
+                if (LotPersist.category != LotCategory.community)
+                {
+                    using (var da = DAFactory.Get())
+                    {
+                        var lot = da.Lots.Get(Context.DbId);
+                        if (lot.owner_id == null)
+                        {
+
+                            try
+                            {
+                                var lotStr = LotPersist.lot_id.ToString("x8");
+                                Directory.Delete(Path.Combine(Config.SimNFS, "Lots/" + lotStr + "/"), true);
+                            }
+                            catch (Exception)
+                            {
+
+                            }
+                            //note that the lot has to be deleted from db by lot allocations, since it still needs to unlock the location this property was at.
+                        }
+                    }
+                }
+            }
+            else if (Context.Action == ClaimAction.LOT_CLEANUP_HOLLOW && !Context.SpecialLot && !IsSpectatorMode)
+            {
+                SaveHollow();
             }
 
             SurroundConnection?.Dispose();

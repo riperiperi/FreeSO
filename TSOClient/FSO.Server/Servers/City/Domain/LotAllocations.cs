@@ -30,6 +30,7 @@ namespace FSO.Server.Servers.City.Domain
 
         private bool AllowGuestOpening => Context.Config.AllOpenable || ArchiveFreeRoam;
         private bool ArchiveFreeRoam => Context.Config.Archive?.Flags.HasFlag(FSO.Common.ArchiveConfigFlags.AllOpenable) ?? false;
+        public int ActiveCount => _Locks.Count;
 
         public LotAllocations(LotServerPicker PickingEngine, IDAFactory daFactory, CityServerContext context, IKernel kernel)
         {
@@ -40,14 +41,14 @@ namespace FSO.Server.Servers.City.Domain
             this.Realestate = kernel.Get<IRealestateDomain>().GetByShard(Context.ShardId);
         }
 
-        public Task<TryFindLotResult> TryFindOrOpen(uint lotId, uint avatarId, ISecurityContext security)
+        public Task<TryFindLotResult> TryFindOrOpen(uint lotId, uint avatarId, ISecurityContext security, ClaimAction openAction = ClaimAction.DEFAULT)
         {
-            return TryFind(lotId, avatarId, true, security);
+            return TryFind(lotId, avatarId, true, security, openAction);
         }
 
-        public Task<TryFindLotResult> TryFind(uint lotId, uint avatarId, ISecurityContext security)
+        public Task<TryFindLotResult> TryFind(uint lotId, uint avatarId, ISecurityContext security, ClaimAction openAction = ClaimAction.DEFAULT)
         {
-            return TryFind(lotId, avatarId, false, security);
+            return TryFind(lotId, avatarId, false, security, openAction);
         }
 
         public void OnTransferClaimResponse(TransferClaimResponse response)
@@ -147,7 +148,7 @@ namespace FSO.Server.Servers.City.Domain
         /// <param name="openIfClosed"></param>
         /// <returns></returns>
 
-        private Task<TryFindLotResult> TryFind(uint lotId, uint avatarId, bool openIfClosed, ISecurityContext security)
+        private Task<TryFindLotResult> TryFind(uint lotId, uint avatarId, bool openIfClosed, ISecurityContext security, ClaimAction openAction)
         {
             bool jobLot = false;
             var originalId = lotId;
@@ -295,13 +296,17 @@ namespace FSO.Server.Servers.City.Domain
                                     Status = FindLotResponseStatus.CLAIM_FAILED
                                 });
                             }
-                            ClaimAction openAction;
-                            if (avatarId == 0)
-                                openAction = ClaimAction.LOT_CLEANUP;
-                            else if (AllowGuestOpening && !ArchiveFreeRoam && !isRoommate && !isAdmin)
-                                openAction = ClaimAction.LOT_SPECTATOR;
-                            else
-                                openAction = ClaimAction.LOT_HOST;
+
+                            if (openAction == ClaimAction.DEFAULT)
+                            {
+                                if (avatarId == 0)
+                                    openAction = ClaimAction.LOT_CLEANUP;
+                                else if (AllowGuestOpening && !ArchiveFreeRoam && !isRoommate && !isAdmin)
+                                    openAction = ClaimAction.LOT_SPECTATOR;
+                                else
+                                    openAction = ClaimAction.LOT_HOST;
+                            }
+
                             allocation.SetLot(lot, (uint)Context.ShardId, openAction);
                         }
                         else { 
