@@ -271,6 +271,39 @@ namespace FSO.WsGateway.Tests
         }
 
         /// <summary>
+        /// Lot type-21 uses Unknown=39 and a 32-byte ASCII ticket (not PascalVLC).
+        /// </summary>
+        [Fact]
+        public void SessionResponse_LotMode_WireFormat()
+        {
+            var sent = new RequestClientSessionResponse
+            {
+                User = "1",
+                AriesVersion = "",
+                Email = "",
+                Authserv = "",
+                Unknown = 39,
+                ServiceIdent = "",
+                Unknown2 = 4,
+                Password = "demo-ticket",
+            };
+            var payload = SerializeAriesPayload(sent);
+            Assert.Equal(39, payload[318]);
+            Assert.Equal(324 + 32, payload.Length);
+            Assert.Equal((byte)'d', payload[324]);
+            // NUL-padded after "demo-ticket"
+            Assert.Equal(0, payload[324 + "demo-ticket".Length]);
+
+            var io = IoBuffer.Wrap(payload);
+            io.Order = ByteOrder.LittleEndian;
+            var decoded = new RequestClientSessionResponse();
+            decoded.Deserialize(io, null);
+            Assert.Equal(39, decoded.Unknown);
+            Assert.Equal("demo-ticket", decoded.Password);
+            Assert.Equal("1", decoded.User);
+        }
+
+        /// <summary>
         /// Electron FindLotResponse FOUND body the fake city / browser decode against.
         /// Aries type 1000, subtype 6, BE body: status u16, lotId u32, 3× PascalVLC.
         /// </summary>

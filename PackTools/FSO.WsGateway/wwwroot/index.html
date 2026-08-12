@@ -42,7 +42,7 @@
   }
   button:disabled { background: #333a52; color: #7a8199; cursor: default; }
   .stages {
-    display: grid; grid-template-columns: repeat(8, 1fr); gap: 6px; list-style: none;
+    display: grid; grid-template-columns: repeat(10, 1fr); gap: 4px; list-style: none;
     margin: 0; padding: 0;
   }
   .stages li {
@@ -81,9 +81,9 @@
 <main>
   <h1>Phase F — Aries protocol debugger</h1>
   <p class="sub">
-    Browser client over the WS↔TCP gateway. Runs the Archive city session through
-    handshake → type 21 → HostOnline → ClientOnline → Electron avatar select →
-    <code>FindLotResponse</code> with a lot address. Lot TCP on 34101 is next.
+    Browser client over the WS↔TCP gateway. City session through FindLot, then a
+    second WS to <code>/lot</code>: type 22 → ticket type 21 → HostOnline →
+    ClientOnline → empty VM tick. Fake city on 33101 + fake lot on 34101.
   </p>
 
   <div class="panel">
@@ -119,6 +119,8 @@
       <li data-stage="client-online"><strong>6. Online</strong></li>
       <li data-stage="avatar-select"><strong>7. Avatar</strong></li>
       <li data-stage="find-lot"><strong>8. FindLot</strong></li>
+      <li data-stage="lot-session"><strong>9. Lot sess</strong></li>
+      <li data-stage="lot-joined"><strong>10. Lot OK</strong></li>
     </ol>
   </div>
 
@@ -165,10 +167,9 @@
   </div>
 
   <div class="panel note" id="blockerNote">
-    <strong>Still open:</strong>
-    open lot TCP/WS to the FindLot address (34101) + lot HostOnline/ClientOnline.
-    Real Archive still needs RSA PKCS#1 auth + DataService avatar load before Connected;
-    this demo skips those against the fake city.
+    <strong>Still open for a real join:</strong>
+    VM tick contents (lot state), DataService avatar load on live Archive, RSA city auth.
+    This demo proves city FindLot + lot session handshake end-to-end against fakes.
   </div>
 
   <div class="panel">
@@ -187,6 +188,7 @@ const ARIES = {
   Voltron: 0,
   Electron: 1000,
   RequestClientSessionResponse: 21,
+  RequestClientSession: 22,
   RequestClientSessionArchive: 2000,
 };
 const VOLTRON = {
@@ -200,6 +202,7 @@ const VOLTRON = {
 const ELECTRON = {
   FindLotRequest: 5,
   FindLotResponse: 6,
+  FSOVMTickBroadcast: 7,
   ArchiveAvatarSelectRequest: 30,
   ArchiveAvatarSelectResponse: 31,
 };
@@ -207,12 +210,14 @@ const ELECTRON = {
 const logEl = document.getElementById('log');
 const log = (m) => { logEl.textContent += m + '\n'; logEl.scrollTop = logEl.scrollHeight; };
 
-let stageOrder = ['idle', 'connected', 'handshake', 'session-sent', 'host-online', 'client-online', 'avatar-select', 'find-lot'];
+let stageOrder = ['idle', 'connected', 'handshake', 'session-sent', 'host-online', 'client-online', 'avatar-select', 'find-lot', 'lot-session', 'lot-joined'];
 let currentStage = 'idle';
 let reached = new Set(['idle']);
 let sentClientOnline = false;
 let sentAvatarSelect = false;
 let sentFindLot = false;
+let lotWs = null;
+let lastFindLot = null;
 
 function setStage(stage, failed) {
   currentStage = stage;
@@ -405,7 +410,84 @@ function decodeElectronInner(payload) {
       user: br.vlcString(),
     };
   }
+  if (subtype === ELECTRON.FSOVMTickBroadcast) {
+    const br = new ByteReader(body);
+    const catchup = br.u8();
+    const dataLen = br.u32(false); // GetInt32 BE — length only for demo
+    return { name: 'FSOVMTickBroadcast', subtype, catchup, dataLen };
+  }
   return { name: 'Electron', subtype, size, bodyLen: body.length };
+}
+
+function openLotConnection(findLot) {
+  lastFindLot = findLot;
+  if (lotWs) {
+    try { lotWs.close(); } catch (_) { /* ignore */ }
+    lotWs = null;
+  }
+  const url = (location.protocol === 'https:' ? 'wss://' : 'ws://') + location.host + '/lot';
+  log('opening lot WS ' + url + ' (ticket=' + findLot.lotServerTicket + ')');
+  const ws = new WebSocket(url);
+  ws.binaryType = 'arraybuffer';
+  lotWs = ws;
+  const framer = new AriesFramer();
+  let sawLotSession = false;
+  let sentLotClientOnline = false;
+
+  ws.onopen = () => {
+    setStage('lot-session');
+    setStatus('open', 'lot WS open');
+    log('lot websocket open — waiting for RequestClientSession (22)');
+  };
+  ws.onerror = () => log('lot websocket error');
+  ws.onclose = (e) => {
+    log('lot closed (' + e.code + (e.reason ? ': ' + e.reason : '') + ')');
+    if (lotWs === ws) lotWs = null;
+  };
+  ws.onmessage = (e) => {
+    for (const frame of framer.push(new Uint8Array(e.data))) {
+      log('← lot aries type ' + frame.type + ', ' + frame.payload.length + ' bytes');
+      if (frame.type === ARIES.RequestClientSession && !sawLotSession) {
+        sawLotSession = true;
+        const payload = encodeLotSessionResponse({
+          user: findLot.user || '1',
+          ticket: findLot.lotServerTicket || 'demo-ticket',
+        });
+        const out = ariesFrame(ARIES.RequestClientSessionResponse, payload);
+        ws.send(out);
+        setStage('lot-session');
+        setStatus('open', 'lot type 21 sent');
+        log('sent lot RequestClientSessionResponse Unknown=39 (' + out.length + ' B)');
+      } else if (frame.type === ARIES.Voltron) {
+        const decoded = decodeVoltronInner(frame.payload);
+        document.getElementById('n-type').textContent = 'lot ' + frame.type + ' (Voltron)';
+        document.getElementById('n-decoded').textContent = JSON.stringify(decoded);
+        document.getElementById('nextPanel').hidden = false;
+        if (decoded.name === 'HostOnlinePDU' && !sentLotClientOnline) {
+          sentLotClientOnline = true;
+          const online = encodeLotClientOnline();
+          ws.send(online);
+          log('lot HostOnlinePDU — sent ClientOnlinePDU only (' + online.length + ' B)');
+          setStatus('open', 'lot ClientOnline sent');
+        }
+      } else if (frame.type === ARIES.Electron) {
+        const decoded = decodeElectronInner(frame.payload);
+        document.getElementById('n-type').textContent = 'lot ' + frame.type + ' (Electron)';
+        document.getElementById('n-decoded').textContent = JSON.stringify(decoded);
+        document.getElementById('nextPanel').hidden = false;
+        if (decoded.name === 'FSOVMTickBroadcast') {
+          setStage('lot-joined');
+          setStatus('open', 'lot joined');
+          log('lot FSOVMTickBroadcast catchup=' + decoded.catchup +
+            ' dataLen=' + decoded.dataLen + ' — lot session stream started (demo complete).');
+        } else {
+          log('lot Electron subtype 0x' + decoded.subtype.toString(16));
+        }
+      } else {
+        log('lot undecoded type ' + frame.type);
+      }
+    }
+  };
 }
 
 function continueAfterPreferences(ws) {
@@ -438,6 +520,28 @@ function encodeSessionResponse({ user, password }) {
   parts.push(mid);
   parts.push(encodeVlcString(password));
   return concatBytes(parts);
+}
+
+/** Lot-mode type 21: Unknown=39, Password = 32-byte ASCII ticket (not VLC). */
+function encodeLotSessionResponse({ user, ticket }) {
+  const parts = [
+    encodeFixedAscii(user, 112),
+    encodeFixedAscii('', 80),
+    encodeFixedAscii('', 40),
+    encodeFixedAscii('', 84),
+  ];
+  const mid = new Uint8Array(8);
+  const mv = new DataView(mid.buffer);
+  mv.setUint16(0, 0, true);
+  mid[2] = 39;
+  mv.setUint16(6, 4, true);
+  parts.push(mid);
+  parts.push(encodeFixedAscii(ticket, 32));
+  return concatBytes(parts);
+}
+
+function encodeLotClientOnline() {
+  return voltronFrame(VOLTRON.ClientOnlinePDU, new Uint8Array(22));
 }
 
 function clientGuid() {
@@ -720,7 +824,8 @@ function handleNextPacket(ws, frame) {
         setStage('find-lot');
         setStatus('open', 'lot @ ' + decoded.address);
         log('received FindLotResponse FOUND → ' + decoded.address +
-          ' ticket=' + decoded.lotServerTicket + ' — next: open /lot WS to that host.');
+          ' ticket=' + decoded.lotServerTicket + ' — opening /lot…');
+        openLotConnection(decoded);
       } else {
         setStage('find-lot', true);
         setStatus('closed', 'FindLot ' + decoded.status);
@@ -747,6 +852,11 @@ document.getElementById('connect').addEventListener('click', () => {
   sentClientOnline = false;
   sentAvatarSelect = false;
   sentFindLot = false;
+  lastFindLot = null;
+  if (lotWs) {
+    try { lotWs.close(); } catch (_) { /* ignore */ }
+    lotWs = null;
+  }
   setStage('idle');
   document.getElementById('handshakePanel').hidden = true;
   document.getElementById('sessionPanel').hidden = true;
@@ -766,9 +876,12 @@ document.getElementById('connect').addEventListener('click', () => {
   };
   ws.onerror = () => log('websocket error');
   ws.onclose = (e) => {
-    setStatus('closed', 'closed');
-    document.getElementById('connect').disabled = false;
-    log('closed (' + e.code + (e.reason ? ': ' + e.reason : '') + ')');
+    // Keep Connect enabled only when both city and lot are done/closed.
+    if (!lotWs || lotWs.readyState === WebSocket.CLOSED) {
+      document.getElementById('connect').disabled = false;
+    }
+    setStatus('closed', 'city closed');
+    log('city closed (' + e.code + (e.reason ? ': ' + e.reason : '') + ')');
   };
   ws.onmessage = async (e) => {
     for (const frame of framer.push(new Uint8Array(e.data))) {
