@@ -27,11 +27,17 @@ namespace FSO_BrowserClient.Pages
             if (_game == null)
             {
                 var contentBase = new Uri(new Uri(Navigation.BaseUri), "sample-content/").AbsoluteUri;
+                var uri = Navigation.ToAbsoluteUri(Navigation.Uri);
                 // Default gateway; override with ?gateway=ws://host:8087
-                var gateway = QueryValue(Navigation.ToAbsoluteUri(Navigation.Uri), "gateway")
-                    ?? "http://127.0.0.1:8087";
+                var gatewayExplicit = QueryValue(uri, "gateway");
+                var gateway = gatewayExplicit ?? "http://127.0.0.1:8087";
+                // Auto-join when gateway is in the URL (smoke/demo), or ?join=1.
+                // ?join=0 disables auto-join (Space still works). Bare / stays texture-only.
+                var joinParam = QueryValue(uri, "join");
+                var autoJoin = joinParam != "0"
+                    && (gatewayExplicit != null || joinParam == "1");
 
-                _game = new FSO_BrowserClientGame(contentBase, gateway);
+                _game = new FSO_BrowserClientGame(contentBase, gateway, autoJoin);
                 _game.Run();
             }
 

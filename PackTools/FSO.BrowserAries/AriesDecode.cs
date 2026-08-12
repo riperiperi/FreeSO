@@ -85,6 +85,20 @@ public static class AriesDecode
             && TryReadPascalVlc(body, ref o, out user);
     }
 
+    /// <summary>
+    /// Electron ArchiveAvatarSelectResponse (subtype 31): BE u16 code
+    /// (<c>ArchiveAvatarSelectCode.Success = 0</c>).
+    /// </summary>
+    public static bool TryDecodeAvatarSelectResponse(ReadOnlySpan<byte> electronPayload, out ushort code)
+    {
+        code = 0;
+        if (!TryVoltronSubtype(electronPayload, out var subtype) || subtype != 31) return false;
+        var body = electronPayload.Slice(6);
+        if (body.Length < 2) return false;
+        code = BinaryPrimitives.ReadUInt16BigEndian(body);
+        return true;
+    }
+
     public static string? TryDecodeArchiveHandshakeName(ReadOnlySpan<byte> payload)
     {
         var o = 0;

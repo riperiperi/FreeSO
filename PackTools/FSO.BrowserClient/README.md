@@ -20,6 +20,8 @@ dotnet run
 ```
 
 http://localhost:5259 — canvas with `HttpContentStore` → `Texture2D`.
+No auto-join (avoids a red Failed bar when the gateway is down). Press **Space**
+to join via the default gateway `http://127.0.0.1:8087`.
 
 ## Run (texture + Aries join)
 
@@ -31,12 +33,12 @@ dotnet run --project PackTools/FSO.WsGateway -- --listen http://127.0.0.1:8087
 
 # terminal 4
 cd PackTools/FSO.BrowserClient && dotnet run
-# or: http://localhost:5259/?gateway=ws://127.0.0.1:8087
+# open: http://localhost:5259/?gateway=ws://127.0.0.1:8087
 ```
 
-After ~1.5s (or Space) the client joins city→lot; stage bars turn green on
-`LotJoined`.
-
+With `?gateway=…` in the URL (or `?join=1`), the client auto-joins after ~1.5s;
+**Space** always starts a join. Use `?join=0` to disable auto-join even when
+`gateway` is set. Stage bars turn green on `LotJoined`.
 ## Content seam
 
 - `FSO.BrowserContent` (`net8`/`net9`) — `HttpContentStore` / `FileContentStore` / composite

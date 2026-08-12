@@ -23,6 +23,7 @@ namespace FSO_BrowserClient
 
         readonly string _contentBaseUrl;
         readonly string _gatewayBase;
+        readonly bool _autoJoin;
 
         GraphicsDeviceManager graphics;
         SpriteBatch spriteBatch;
@@ -38,10 +39,12 @@ namespace FSO_BrowserClient
 
         /// <param name="contentBaseUrl">Absolute URL of sample-content root.</param>
         /// <param name="gatewayBase">Gateway base (http://127.0.0.1:8087 or ws://…).</param>
-        public FSO_BrowserClientGame(string contentBaseUrl, string gatewayBase)
+        /// <param name="autoJoin">When true, start city→lot join ~1.5s after texture load.</param>
+        public FSO_BrowserClientGame(string contentBaseUrl, string gatewayBase, bool autoJoin = false)
         {
             _contentBaseUrl = contentBaseUrl ?? throw new ArgumentNullException(nameof(contentBaseUrl));
             _gatewayBase = gatewayBase ?? throw new ArgumentNullException(nameof(gatewayBase));
+            _autoJoin = autoJoin;
             graphics = new GraphicsDeviceManager(this);
             Content.RootDirectory = "Content";
             Window.Title = "FreeSO Browser";
@@ -69,7 +72,9 @@ namespace FSO_BrowserClient
                 {
                     sampleTexture = Texture2D.FromStream(GraphicsDevice, stream);
                 }
-                loadStatus = "texture OK — press Space to join via gateway";
+                loadStatus = _autoJoin
+                    ? "texture OK — auto-join shortly (Space also works)"
+                    : "texture OK — press Space to join (or ?gateway=…&join=1)";
             }
             catch (Exception ex)
             {
@@ -114,8 +119,9 @@ namespace FSO_BrowserClient
             if (space && !spaceWasDown) StartJoin();
             spaceWasDown = space;
 
-            // Auto-join shortly after texture load so CI/smoke doesn't need keyboard.
-            if (!joinStarted && sampleTexture != null && gameTime.TotalGameTime.TotalSeconds > 1.5)
+            // Auto-join only when enabled (?gateway= or ?join=1; disabled by ?join=0).
+            if (_autoJoin && !joinStarted && sampleTexture != null
+                && gameTime.TotalGameTime.TotalSeconds > 1.5)
                 StartJoin();
 
             base.Update(gameTime);

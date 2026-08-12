@@ -137,6 +137,13 @@ public sealed class ArchiveJoinDemo : IAsyncDisposable
                     {
                         if (esub == 31 && !sentFindLot)
                         {
+                            if (!AriesDecode.TryDecodeAvatarSelectResponse(frame.Payload, out var selectCode)
+                                || selectCode != 0)
+                            {
+                                Set(JoinStage.Failed,
+                                    "AvatarSelect failed code=" + selectCode);
+                                return;
+                            }
                             sentFindLot = true;
                             await city.SendAsync(AriesCodec.EncodeFindLotRequest(_lotId),
                                 WebSocketMessageType.Binary, true, cancellationToken).ConfigureAwait(false);

@@ -72,4 +72,19 @@ public class AriesCodecTests
         Assert.Equal("127.0.0.1:34101", addr);
         Assert.Equal("1", user);
     }
+
+    [Fact]
+    public void DecodeAvatarSelect_SuccessAndFailure()
+    {
+        var ok = AriesCodec.VoltronStyleInner(31, new byte[] { 0, 0 });
+        Assert.True(AriesDecode.TryDecodeAvatarSelectResponse(ok, out var code));
+        Assert.Equal(0, code);
+
+        var inUse = AriesCodec.VoltronStyleInner(31, new byte[] { 0, 4 }); // InUse
+        Assert.True(AriesDecode.TryDecodeAvatarSelectResponse(inUse, out code));
+        Assert.Equal(4, code);
+
+        var wrongSubtype = AriesCodec.VoltronStyleInner(30, new byte[] { 0, 0 });
+        Assert.False(AriesDecode.TryDecodeAvatarSelectResponse(wrongSubtype, out _));
+    }
 }
