@@ -94,18 +94,25 @@ Sequenced so the vision model is the *last* variable introduced, not the first.
 
 ### Phase E: Original content
 - [ ] ~200 original objects, not 3,132 (`CATALOG-PARITY-PLAN.md`); Tier 1 (~70) is the motive loop
-- [ ] Generators still needed: toilet, shower, sink, stove, fridge
-- [ ] **Cost blocks this, not houses**: $0.08 trivial / $0.79 interactive / $1.72 complex per object. Recipes designed (`RECIPE-DESIGN.md`), unbuilt.
+- [x] **Art import pipeline** — `ObjImporter`, `appearance.imported`, `import-batch` CLI, provenance tracking
+- [x] **Plumbing/appliance pilot** — 6 Quaternius CC0 imports + original motive BHAVs (`examples/plumbing-pilot.json`)
+- [x] **Kenney tier-1 batch** — 45 CC0 imports (`examples/kenney-tier1.json`, manifest at `assets/cc0/kenney-tier1.csv`)
+- [ ] Remaining Tier 1+2+3 to ~200 — Kenney full kit + Quaternius gaps + generators for parametric variants
+- [ ] **Cost partially lifted for art** — imports replace $0.79/object agent runs; behavior still authored as trees/recipes
 - [ ] Gates clean browser distribution — a web server serving EA's assets is the blocker (`STRATEGY.private.md`)
-- **Status:** pending
+- **Status:** in_progress
 
 ### Phase F: Browser client
-- [ ] **WebSocket gateway** — FreeSO speaks raw TCP (`AriesClient` → Mina); browsers cannot open raw TCP. No prior art here, upstream, or in the MonoGame/FNA community. The only open-ended unknown in the plan.
+**Pulled forward by Kat, 2026-08-11** (*"i want to make a browser based multiplayer version. dont worry about ea"*) — original-content gating no longer blocks starting this; the CC0 catalog replaces EA assets in parallel, not as a prerequisite.
+
+- [x] **WebSocket gateway spike — the open unknown, now derisked at the byte level.** `PackTools/FSO.WsGateway`: a WS↔TCP byte pipe (Kestrel, no NuGet deps, ~120 lines) in front of the existing Archive ports. Works because Aries is a length-prefixed byte stream (`CustomCumulativeProtocolDecoder` reassembles regardless of chunking), so **zero FreeSO server changes**. Proof: a real `RequestClientSessionArchive` (type 2000, the packet `CityServer.ArchiveHandshake` sends on connect), serialized by `FSO.Server.Protocol` itself, framed per `AriesProtocolEncoder`, survives the bridge and deserializes — 3/3 tests. Routes are fixed (`/city`→33101, `/lot`→34101), not an open proxy.
+- [x] **Gateway vs live server — PROVEN, 2026-08-11, by Kat herself.** FreeSO hosting Archive Mode (Quick Start, ports 33101/34101), browser at the gateway demo page: decoded `RequestClientSessionArchive` from the live game — "Kat's Server", 1 player online, v0.6.0-beta manifest + RSA key, shard "San Francisco (5)", map 0902. A real browser, the real server, zero server changes. **The networking unknown is closed.**
+- [x] **Browser speaks Aries — seen in a real browser, 2026-08-11.** `FSO.WsGateway/wwwroot/index.html`: a JS Aries framer + decoder (12-byte LE header, PascalVLC varint strings) served by the gateway itself. Verified in Chrome against a fake city server (`tools/fake-city-server.py`) emitting the byte-exact handshake: page connects over WS, decodes `RequestClientSessionArchive`, displays server name/players/shard/map. Screenshot taken by browser automation.
+- [ ] **Full browser Aries client** — the demo decodes the handshake; a playable client needs the response path (session request, Electron/Voltron inner framing, the actual game protocol) — either .NET-WASM reusing `FSO.Server.Protocol`, or grown from this JS seed inside the KNI client.
 - [ ] `MonoGame.Framework.DesktopGL` → KNI `nkast.Xna.Framework.*` / BlazorGL, across client **and** audio — 2-4 weeks, well-trodden
 - [ ] Content loading disk → HTTP fetch (~86 files use `FileStream`) — 1-2 weeks
 - [ ] Threading cleanup, 5 shipping files; `VMServerDriver` is the risky one — 1-2 weeks
-- **Last, deliberately.** It lowers install friction; it doesn't prove the idea. Upstream's built-in TSO installer already softens the BYO objection.
-- **Status:** pending
+- **Status:** in_progress
 
 ### Phase G: Neighbourhood scaling
 - [x] `PackTools/citygen/generate_city.py` reviewed and run ✅ — San Francisco: 39.4 km square, elevation −5..781 m, 42,159 OSM road ways, full raster set written to disk

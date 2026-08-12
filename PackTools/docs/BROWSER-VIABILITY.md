@@ -1,4 +1,14 @@
-> **Still accurate; re-sequenced 2026-08-08.** Browser is decided but moved to the tail
+> **Re-sequenced again 2026-08-11: Phase F pulled forward by Kat, and the networking spike
+> this doc recommended has landed.** `PackTools/FSO.WsGateway` is a WS↔TCP byte gateway in
+> front of the existing Archive ports (33101/34101) — zero FreeSO changes, because Aries is
+> a length-prefixed byte stream and `CustomCumulativeProtocolDecoder` reassembles from any
+> chunking. Proven by piping a real `RequestClientSessionArchive` through the bridge and
+> deserializing it with the shipping protocol code (3/3 tests). The "open-ended unknown"
+> below is now a bounded engineering task; still unproven against a *live* archive server.
+> Legal gating (§4) is explicitly waived by Kat for now — CC0 catalog work proceeds in
+> parallel rather than as a prerequisite.
+
+> **Older note, 2026-08-08.** Browser is decided but moved to the tail
 > of the roadmap (`../task_plan.md` Phase F) — it lowers install friction rather than
 > proving the idea, and upstream's new built-in TSO installer softens the bring-your-own
 > objection considerably. The conclusion below is unchanged and load-bearing: **rendering

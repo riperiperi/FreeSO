@@ -1,6 +1,6 @@
 # Project state
 
-Last verified: 2026-08-08. Branch: `packtools-on-archive`.
+Last verified: 2026-08-11. Branch: `packtools-on-archive`.
 
 > **What this project does:** A player uploads a floor plan or a room photo. The AI builds their actual home in a real-geography city. Their friends visit and hang out inside it. All multiplayer, all live.
 
@@ -56,14 +56,17 @@ The branch that is actually maintained. `master` has not moved since Aug 2025.
 ### AI modding infrastructure — internal, powers the above
 | Component | What it does | Evidence |
 |---|---|---|
-| **`FSO.PackCompiler`** | JSON pack → real `.iff`, and back. Reuses `tso.files` serialization, so output is indistinguishable from base-game content. | 56/56 tests, incl. byte-identical compile→decompile→recompile |
+| **`FSO.PackCompiler`** | JSON pack → real `.iff`, and back. Reuses `tso.files` serialization, so output is indistinguishable from base-game content. | 62/62 tests, incl. byte-identical compile→decompile→recompile + 6 import tests |
 | **`FSO.ModServer`** | MCP server, 13 tools over stdio JSON-RPC: `create_pack`, `add_object`, `add_interaction`, `add_tree`, `edit_tree_node`, `remove_tree_node`, `validate`, `compile`, `test_in_vm`, `decompile_object`, `set_dialog_string`, `find_base_object`, `list_vocabulary` | 48/48; verified over live JSON-RPC to a subprocess |
 | **`FSO.VMHarness`** | Headless scripted VM runs with step-through traces, so an agent sees *why* something misbehaved | exercised by both suites |
 | **`FSO.LiveInject`** | Registers a compiled object into an already-running game — no restart | proof harness boots a VM, ticks, injects, interacts |
 | **`FSO.AgentBridge`** | Plain language in, compiled object out. Anthropic/OpenAI providers, turn caps, prompt caching. | pet rock $0.084 / gnome $0.788 / fortune cat $1.718, independently verified |
 | **Art generators** | Original parametric art: chair, sofa, table, bed, lamp, storage, generic primitives | real DGRP/SPR2 chunks; palette-corruption guards |
+| **CC0 mesh import** | `ObjImporter` + `appearance.imported` — Kenney/Quaternius OBJ+MTL through same sprite pipeline | 51 objects (6 Quaternius + 45 Kenney tier-1). Plumbing installed to FreeSO.app; Kenney pack generated, not installed. Provenance in `assets/cc0/PROVENANCE.json` |
+| **`import-batch` CLI** | CSV manifest → pack JSON with imported appearances | `FSO.PackCompiler import-batch` |
 | **"Make Something" panel** | Buy Mode button → chat → object appears live. A debug surface for the object pipeline, not the player experience. | builds clean on net9.0; **never yet clicked by a human** |
 | **`ContactSheet` / `ArtCalibration`** | Render-and-review surfaces for generated art | used to fix real sprite bugs |
+| **`FSO.WsGateway`** | WebSocket↔TCP byte gateway in front of Archive city/lot ports, so a browser can reach the raw-TCP Aries servers unchanged. Also serves a JS Aries demo client (`wwwroot/`). | 3/3 tests, and **proven against Kat's live archive server 2026-08-11**: browser decoded the real handshake ("Kat's Server", v0.6.0-beta, shard San Francisco (5)). The browser-networking unknown is closed. |
 
 ### Engine changes we made (small, in `TSOClient/`)
 - `WorldObjectCatalog.AddLive()` — register a catalog item after startup
@@ -88,8 +91,8 @@ Two that were on this list and shouldn't be: `GENERIC-GENERATOR-DESIGN.md` is **
 | **B — Friends in a house together (BYO)** | Two players, one server, one generated San Francisco. One uploads a floor plan and gets a house at their real address; the other walks in. | pending |
 | **C — Make it look like mine** | Photo-based furnishing and conversational refinement: "move the sofa left", "the window should be bigger". Extends A using the working object pipeline. | pending |
 | **D — Persistence and sharing** | Houses survive restarts; publish, discover, fork, remix. Lot serialization already exists in-engine — check before building. | pending |
-| **E — Original content** | ~200 original objects so a shared house looks right without EA assets. Blocked on per-object cost. | pending |
-| **F — Browser client** | KNI/BlazorGL port, content over HTTP, threading. Plus the WebSocket gateway — the only open-ended unknown. Last, because it lowers install friction rather than proving the idea. | pending |
+| **E — Original content** | ~200 original objects so a shared house looks right without EA assets. CC0 import pipeline live; 51 objects imported (6 Quaternius plumbing + 45 Kenney tier-1). | in_progress |
+| **F — Browser client** | KNI/BlazorGL port, content over HTTP, threading. WebSocket gateway **proven against the live game** (`PackTools/FSO.WsGateway`): a browser decoded the Archive handshake from Kat's running server, zero server changes. Networking unknown closed; rendering port is the remaining bulk. Pulled forward by Kat 2026-08-11. | in_progress |
 | **G — Neighbourhood scaling** | SF generation is done and verified. Remaining: host it as a playable city and let a player claim a lot by address. | partly done |
 
 ---
@@ -102,7 +105,7 @@ Two that were on this list and shouldn't be: `GENERIC-GENERATOR-DESIGN.md` is **
 
 **Untested, not unbuilt.** The object loop is complete in code and has never run in front of a person — latency, ambiguity, error handling and multiplayer behaviour all unknown.
 
-**Cost blocks scale.** $1.72 for a complex object; 200 objects would cost more than the game. Recipes designed, unbuilt. Output tokens are the entire bill.
+**Cost blocks scale for agent-authored objects, not CC0 imports.** Art import removes per-object LLM cost for catalog building; behavior trees are still hand/recipe-authored. Recipes designed, unbuilt.
 
 **The agent is blind to live world state.** Not a problem for generating a house from scratch. It becomes one during conversational refinement — "move the sofa two tiles left" requires knowing where the sofa is. Deferrable to Phase C.
 
