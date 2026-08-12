@@ -1,4 +1,5 @@
 ﻿using System;
+using Microsoft.AspNetCore.Components;
 using Microsoft.JSInterop;
 using Microsoft.Xna.Framework;
 
@@ -6,6 +7,8 @@ namespace FSO_BrowserClient.Pages
 {
     public partial class Index
     {
+        [Inject] NavigationManager Navigation { get; set; }
+
         Game _game;
 
         protected override void OnAfterRender(bool firstRender)
@@ -24,13 +27,14 @@ namespace FSO_BrowserClient.Pages
             // init game
             if (_game == null)
             {
-                _game = new FSO_BrowserClientGame();
+                // Hosted under wwwroot/sample-content/ — same origin as the Blazor app.
+                var contentBase = new Uri(new Uri(Navigation.BaseUri), "sample-content/").AbsoluteUri;
+                _game = new FSO_BrowserClientGame(contentBase);
                 _game.Run();
             }
 
             // run gameloop
             _game.Tick();
         }
-
     }
 }

@@ -109,14 +109,14 @@ Sequenced so the vision model is the *last* variable introduced, not the first.
 - [x] **Gateway vs live server — PROVEN, 2026-08-11, by Kat herself.** FreeSO hosting Archive Mode (Quick Start, ports 33101/34101), browser at the gateway demo page: decoded `RequestClientSessionArchive` from the live game — "Kat's Server", 1 player online, v0.6.0-beta manifest + RSA key, shard "San Francisco (5)", map 0902. A real browser, the real server, zero server changes. **The networking unknown is closed.**
 - [x] **Browser speaks Aries — seen in a real browser, 2026-08-11.** `FSO.WsGateway/wwwroot/index.html`: a JS Aries framer + decoder (12-byte LE header, PascalVLC varint strings) served by the gateway itself. Verified in Chrome against a fake city server (`tools/fake-city-server.py`) emitting the byte-exact handshake: page connects over WS, decodes `RequestClientSessionArchive`, displays server name/players/shard/map. Screenshot taken by browser automation.
 - [x] **Browser session response path** — after type-2000 handshake, JS client sends `RequestClientSessionResponse` (type 21); fake city replies with Voltron `HostOnlinePDU`. Stage UI through HostOnline. 5/5 gateway tests. Live join still needs valid PKCS#1 token + ClientOnline → avatar → lot on 34101.
-- [ ] **Full browser Aries client** — join city past HostOnline (ClientOnline, avatar select, FindLot) and `/lot` session; then either .NET-WASM reusing `FSO.Server.Protocol`, or grow this JS seed inside the KNI client.
-- [x] **KNI BlazorGL S0 spike** — `PackTools/FSO.BrowserClient` (template `kni-blazor-gl`, net8.0, KNI 4.2.9001). Builds, publishes, runs at http://localhost:5259. Migration map in `docs/KNI-MIGRATION.md`.
-- [x] **KNI S1** — `Directory.Build.props` `FSO_GRAPHICS=MonoGame|Kni` + `msbuild/FSO.Xna.packages.targets`. Opted-in through `FSO.Client` (Domain/Common/Files/Content/Vitaboy*/HIT/LotView/SimAntics/UI/Server/Client). `dotnet build FSO.Client -p:FSO_GRAPHICS=Kni` green; `FSO.Mac` default MonoGame green. Shims: `TouchPanel.EnableMouseTouchPoint`, `OnExiting`/`GameRunBehavior`, Archive `System.Numerics.Vector2` usings.
-- [x] **S2 (partial)** — `Content.Store` + `GetResource` / BasePath `FileProvider` through `IContentStore`; `FAR3Archive(Stream)`. Content/ + TS1 overlays and remaining providers still disk.
-- [ ] S3–S8 of KNI-MIGRATION (effects, audio, lot view in Blazor, threads, Aries join) + finish content hotspots
-- [ ] Content loading disk → HTTP fetch (~86 files use `FileStream`) — 1-2 weeks. *(swarm: HTTP content seam spike in flight 2026-08-11)*
-- [ ] Threading cleanup, 5 shipping files; `VMServerDriver` is the risky one — 1-2 weeks
-- **Status:** in_progress — four parallel agents deployed 2026-08-11: KNI spike, KNI migration map, HTTP content seam, Aries session path
+- [x] **Aries past HostOnline** — browser ClientOnline + ignore/invincible burst; fake city SetIgnoreListResponsePDU. Avatar select / FindLot / lot still open.
+- [ ] **Full browser Aries client** — ArchiveAvatarSelect → FindLot → `/lot`; .NET-WASM protocol or grow JS seed in KNI client.
+- [x] **KNI BlazorGL S0 + S2 texture** — `FSO.BrowserClient` loads `HttpContentStore` → `Texture2D` (`sample-content/textures/squares.png`).
+- [x] **KNI S1** — `FSO_GRAPHICS` switch; lib chain through `FSO.Client` on KNI; Mac on MonoGame.
+- [x] **Content store wired** — Composite (BasePath + Content/) + GetResource/FileProvider; remaining providers/TS1 still disk.
+- [ ] S3–S8 of KNI-MIGRATION (effects, audio, lot view in Blazor, threads, full join)
+- [ ] Threading cleanup; `VMServerDriver` is the risky one — 1-2 weeks
+- **Status:** in_progress
 
 ### Phase G: Neighbourhood scaling
 - [x] `PackTools/citygen/generate_city.py` reviewed and run ✅ — San Francisco: 39.4 km square, elevation −5..781 m, 42,159 OSM road ways, full raster set written to disk

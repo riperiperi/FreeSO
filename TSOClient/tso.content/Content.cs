@@ -108,7 +108,7 @@ namespace FSO.Content
             this.BasePath = basePath;
             this.Device = device;
             this.Mode = mode;
-            this.Store = new FileContentStore(basePath);
+            this.Store = CreateDefaultStore(basePath);
 
             ImageLoader.PremultiplyPNG = 1;// (FSOEnvironment.DirectX)?0:1;
 
@@ -379,10 +379,25 @@ namespace FSO.Content
         }
 
         /// <summary>
+        /// Default store: TSO client directory + optional <c>Content/</c> overlay (cwd).
+        /// </summary>
+        public static IContentStore CreateDefaultStore(string basePath)
+        {
+            var primary = new FileContentStore(basePath);
+            var overlayDir = Path.GetFullPath("Content");
+            if (Directory.Exists(overlayDir))
+                return new CompositeContentStore(primary, new FileContentStore(overlayDir));
+            return primary;
+        }
+
+        /// <summary>
         /// Open a content-relative path through <see cref="Store"/> (sync wrapper for HTTP stores).
+        /// Paths may be BasePath-relative or <c>Content/…</c> when a composite store is installed.
         /// </summary>
         public Stream OpenFromStore(string relativePath)
         {
+            if (Store is CompositeContentStore composite)
+                return composite.Open(relativePath);
             if (Store is FileContentStore files)
                 return files.Open(relativePath);
 

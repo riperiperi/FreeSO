@@ -1,10 +1,12 @@
 # Content HTTP seam (spike)
 
-Status: **wired into `Content.GetResource` + BasePath `FileProvider`** (2026-08-11).
-`Content.Store` defaults to `FileContentStore(BasePath)`; browser swaps `HttpContentStore`
-via `Content.SetStore`. FAR3 archives load once through the store into a seekable stream
-(`FAR3Archive(Stream)`). Content/ and TS1 overlays in `FileProvider` still use
-`File.OpenRead`. Pair with `BROWSER-VIABILITY.md` / `FSO.WsGateway`.
+Status: **wired** (2026-08-11).
+`Content.Store` defaults to `CompositeContentStore(FileContentStore(BasePath),
+FileContentStore(Content/))` when the overlay dir exists. Browser swaps
+`HttpContentStore` / composite HTTP via `Content.SetStore`. FAR3 archives load
+once through the store (`FAR3Archive(Stream)`). Blazor spike loads
+`sample-content/textures/squares.png` → `Texture2D`. TS1 hybrid paths still
+absolute disk. Pair with `BROWSER-VIABILITY.md` / `FSO.WsGateway`.
 
 ## Why
 

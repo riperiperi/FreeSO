@@ -3,6 +3,7 @@ using System.Net.Sockets;
 using System.Net.WebSockets;
 using FSO.Server.Protocol.Aries;
 using FSO.Server.Protocol.Aries.Packets;
+using FSO.Server.Protocol.Voltron.Packets;
 using Mina.Core.Buffer;
 using Xunit;
 
@@ -267,6 +268,42 @@ namespace FSO.WsGateway.Tests
                 listener.Stop();
                 await gateway.Stop();
             }
+        }
+
+        /// <summary>
+        /// Documents the post-HostOnline client burst the browser must emit:
+        /// ClientOnlinePDU (0x000a, 22-byte zero body) inside Aries type 0.
+        /// </summary>
+        [Fact]
+        public void ClientOnlinePDU_WireFormat_AllZeroBody()
+        {
+            var payload = IoBuffer.Allocate(64);
+            payload.Order = ByteOrder.BigEndian;
+            payload.AutoExpand = true;
+            new ClientOnlinePDU().Serialize(payload, null);
+            payload.Flip();
+            Assert.Equal(22, payload.Remaining);
+
+            // Voltron header + body, then Aries wrap (as browser encodeClientOnlineBurst).
+            var body = new byte[22];
+            payload.Get(body, 0, 22);
+            Assert.All(body, b => Assert.Equal(0, b));
+
+            var voltron = new byte[6 + 22];
+            // subtype 0x000a BE, size 28 BE
+            voltron[0] = 0x00; voltron[1] = 0x0a;
+            voltron[2] = 0x00; voltron[3] = 0x00; voltron[4] = 0x00; voltron[5] = 0x1c;
+            body.CopyTo(voltron, 6);
+
+            var frame = new byte[12 + voltron.Length];
+            BitConverter.GetBytes(0u).CopyTo(frame, 0); // Aries Voltron
+            BitConverter.GetBytes(0u).CopyTo(frame, 4);
+            BitConverter.GetBytes((uint)voltron.Length).CopyTo(frame, 8);
+            voltron.CopyTo(frame, 12);
+
+            Assert.Equal(40, frame.Length); // 12 + 28
+            Assert.Equal(0x0a, frame[13]);
+            Assert.Equal(0x1c, frame[17]);
         }
 
         /// <summary>Aries framing per AriesProtocolEncoder.EncodeAries: 12-byte LE header + payload.</summary>

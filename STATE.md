@@ -67,10 +67,11 @@ The branch that is actually maintained. `master` has not moved since Aug 2025.
 | **"Make Something" panel** | Buy Mode button → chat → object appears live. A debug surface for the object pipeline, not the player experience. | builds clean on net9.0; **never yet clicked by a human** |
 | **`ContactSheet` / `ArtCalibration`** | Render-and-review surfaces for generated art | used to fix real sprite bugs |
 | **`FSO.WsGateway`** | WebSocket↔TCP byte gateway + JS Aries protocol debugger (`wwwroot/`) | 5/5 tests. Live handshake proven; browser now also sends type-21 session response and reaches canned `HostOnlinePDU` on the fake city. Join-lot still open. |
-| **`FSO.BrowserContent`** | `IContentStore` seam — `FileContentStore` (desktop) / `HttpContentStore` (browser) | 9/9 tests. **Wired:** `Content.GetResource` + BasePath `FileProvider` via `Content.Store` / `SetStore`; `FAR3Archive(Stream)` |
-| **KNI migration plan** | Library-first retarget to `nkast.Xna.Framework.*`, then BlazorGL head | `docs/KNI-MIGRATION.md` — S0–S8 spike sequence |
-| **`FSO.BrowserClient`** | KNI BlazorGL spike (net8.0) — clear `#0f1220` + accent panel | Builds + publishes; `dotnet run` → http://localhost:5259. S0 of KNI-MIGRATION done. |
-| **KNI S1 graphics switch** | `FSO_GRAPHICS=MonoGame\|Kni` via root `Directory.Build.props` + `msbuild/FSO.Xna.packages.targets` | Shipping lib chain opted in through `FSO.Client`. `dotnet build FSO.Client -p:FSO_GRAPHICS=Kni` succeeds; `FSO.Mac` still green on default MonoGame. |
+| **`FSO.BrowserContent`** | `IContentStore` — File / Http / **Composite** (`Content/` overlay) | Tests green. Wired into `Content.GetResource` + `FileProvider` (BasePath + Content/). `FAR3Archive(Stream)`. |
+| **KNI migration plan** | Library-first retarget to `nkast.Xna.Framework.*`, then BlazorGL head | `docs/KNI-MIGRATION.md` — S0–S1 done; S2 texture-via-HTTP in BrowserClient |
+| **`FSO.BrowserClient`** | KNI BlazorGL spike — `HttpContentStore` → `Texture2D.FromStream` (`sample-content/textures/squares.png`) | Builds; `dotnet run` → http://localhost:5259 |
+| **KNI S1 graphics switch** | `FSO_GRAPHICS=MonoGame\|Kni` via `Directory.Build.props` + `msbuild/FSO.Xna.packages.targets` | Lib chain through `FSO.Client` builds on KNI; `FSO.Mac` on MonoGame |
+| **Aries city session** | Gateway demo past HostOnline → ClientOnline burst → ignore-list ack | Fake city + wwwroot JS; avatar select / FindLot still open |
 
 ### Engine changes we made (small, in `TSOClient/`)
 - `WorldObjectCatalog.AddLive()` — register a catalog item after startup

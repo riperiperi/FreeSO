@@ -1,7 +1,7 @@
 namespace FSO.BrowserContent;
 
 /// <summary>Shared path normalization / traversal guards for content stores.</summary>
-internal static class ContentPath
+public static class ContentPath
 {
     public static string NormalizeRelative(string relativePath)
     {

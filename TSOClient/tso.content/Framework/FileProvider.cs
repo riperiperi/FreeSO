@@ -143,15 +143,15 @@ namespace FSO.Content.Framework
         }
 
         /// <summary>
-        /// BasePath files go through <see cref="Content.OpenFromStore"/>; Content/ and TS1
-        /// overlays still use absolute <see cref="File.OpenRead"/> until a composite store exists.
+        /// BasePath and Content/ overlay go through <see cref="Content.OpenFromStore"/>
+        /// (composite store). TS1 hybrid still uses absolute disk paths.
         /// </summary>
         private Stream OpenEntryStream(string relative)
         {
-            if (UseContent)
-                return File.OpenRead("Content/" + relative);
             if (UseTS1)
                 return File.OpenRead(Path.Combine(ContentManager.TS1BasePath, relative));
+            if (UseContent)
+                return ContentManager.OpenFromStore("Content/" + relative);
             return ContentManager.OpenFromStore(relative);
         }
 
