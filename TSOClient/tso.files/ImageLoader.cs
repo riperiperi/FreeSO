@@ -163,9 +163,22 @@ namespace FSO.Files
 
         public static Texture2D MipTextureFromFile(GraphicsDevice gd, string filePath)
         {
-            using (var stream = new FileStream(filePath, FileMode.Open, FileAccess.Read, FileShare.Read))
+            // TitleContainer, not FileStream: WASM (BlazorGL) has no filesystem, and there
+            // TitleContainer fetches over HTTP. On desktop it reads relative to the app dir,
+            // which is what these callers already pass.
+            try
             {
-                return FromStreamAvgMips(gd, stream);
+                using (var stream = Microsoft.Xna.Framework.TitleContainer.OpenStream(filePath))
+                {
+                    return FromStreamAvgMips(gd, stream);
+                }
+            }
+            catch (Exception)
+            {
+                using (var stream = new FileStream(filePath, FileMode.Open, FileAccess.Read, FileShare.Read))
+                {
+                    return FromStreamAvgMips(gd, stream);
+                }
             }
         }
 

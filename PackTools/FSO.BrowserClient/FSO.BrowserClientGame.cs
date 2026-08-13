@@ -525,6 +525,7 @@ namespace FSO_BrowserClient
                 Console.WriteLine("real LotView draw failed → diamonds: " + Truncate(ex.Message, 140));
                 if (ex.InnerException != null)
                     Console.WriteLine("  inner: " + ex.InnerException.Message);
+                Console.WriteLine("  stack: " + Truncate(ex.StackTrace ?? "(none)", 1200));
                 DisposeRealLot();
                 realLotStatus = "real LotView draw failed → diamonds";
                 return false;

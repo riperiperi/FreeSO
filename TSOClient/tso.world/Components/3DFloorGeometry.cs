@@ -281,7 +281,10 @@ namespace FSO.LotView.Components
             var buggedTex = WorldConfig.Current.AdvancedLighting ? 1 : 0;
             //assumes the effect and all its parameters have been set up already
             //we just need to get the right texture and offset
-            var flrContent = Content.Content.Get().WorldFloors;
+            // BrowserClient runs LotView without the TSO content manager (no game assets fetched
+            // yet), so there are no floor patterns to look up. Terrain still draws.
+            var flrContent = Content.Content.Get()?.WorldFloors;
+            if (flrContent == null) return;
 
             e.TexOffset = new Vector2();// TexOffset[zoom]*-1f);
             var tmat = TexMat[rot];
