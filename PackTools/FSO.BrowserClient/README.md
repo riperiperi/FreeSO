@@ -80,9 +80,9 @@ Also loads stock FreeSO MGFX 11 from `sample-content/effects/colorpoly2D.xnb`.
 
 Placeholder diamonds stay until this passes. Do **not** wire `ExternalWorld` early.
 
-1. **KNI MGCB rebuild** of lot `*iOS.fx` → KNIF XNBs (`GrassShaderiOS`, `2DWorldBatchiOS`, …). Stock FreeSO MGFX 11 XNBs will not `Content.Load` on KNI 4.2.
-2. **Mario / SM64 optional** — `Blueprint` must not construct `SM64Component` on WASM.
-3. **`WorldContent.Init` MapGeneration** — fall back when `MapGenerationiOS` missing (landed in LotView).
+1. **KNI MGCB rebuild** — `colorpoly2D` KNIF **DONE** (CI + committed under `wwwroot/Content/Effects/`). Still need lot set: `GrassShaderiOS`, `2DWorldBatchiOS`, …
+2. **Mario / SM64 optional** — **DONE** (`FSO_NO_SM64` / `BLAZORGL` stub).
+3. **`WorldContent.Init` MapGeneration** — **DONE** (fallback when `MapGenerationiOS` missing).
 4. **Dual-target LotView closure to net8** (Common/Files/Content/HIT/Vitaboy*/LotView) — BrowserClient is net8; libs are net9.
 5. **Thin WASM seam** — gate Mina/HIT/Threads/File scans as needed.
 6. **Wire `ExternalWorld` + `TerrainComponent.UpdateTerrain`** behind a flag; keep diamond fallback.
