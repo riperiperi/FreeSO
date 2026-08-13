@@ -2,9 +2,10 @@
 
 Minimum `WorldContent.LoadEffects` set for GLVer=2 (prefer `*iOS` variants),
 plus `colorpoly2D` BrowserClient probe. Rebuilt via
-`.github/workflows/kni-effects-blazor.yml` → artifact `kni-effects-blazorgl`.
+`.github/workflows/kni-effects-blazor.yml` → artifact `kni-effects-blazorgl`
+(run [31663582278](https://github.com/katrinalaszlo/FreeSO/actions/runs/31663582278)).
 
-Expected names (after a successful CI expand):
+Landed (all 11 — see `BUILD-RESULTS.md`):
 
 - `colorpoly2D.xnb`
 - `GrassShaderiOS.xnb`
@@ -18,5 +19,5 @@ Expected names (after a successful CI expand):
 - `SpriteEffectsiOS.xnb`
 - `MapGeneration.xnb`
 
-See `BUILD-RESULTS.md` (copied from CI) for which effects EffectProcessor
-accepted. Stock FreeSO MGFX 11 copies live under `wwwroot/sample-content/effects/`.
+Stock FreeSO MGFX 11 copies live under `wwwroot/sample-content/effects/`.
+LotView is not wired into BrowserClient yet.
