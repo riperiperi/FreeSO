@@ -56,7 +56,29 @@ namespace FSO_BrowserClient.Pages
                     forceRealLot = true;
                 }
 
-                _game = new FSO_BrowserClientGame(contentBase, gateway, autoJoin, forceLot, probeXnb, forceRealLot, houseUrl);
+                // ?furnish=png (default until the FX rebuild lands) — billboard layer.
+                // ?furnish=real — real DGRP sprites via RealFurnitureLayer; blocked on
+                // the KNIF 2DWorldBatch rebuild (see SESSION-LANES).
+                var furnishReal = QueryValue(uri, "furnish") == "real";
+                // ?objtech=drawZSprite|drawSimple|… — A/B the object pass technique (debug).
+                var objtech = QueryValue(uri, "objtech");
+                if (objtech != null && Enum.TryParse<FSO.LotView.Effects.WorldBatchTechniques>(objtech, out var tech))
+                    FSO.LotView.WorldEntities.ObjectTechniqueOverride = tech;
+                var spriteTest = QueryValue(uri, "spritetest");
+                FSO_BrowserClientGame.SpriteTest = spriteTest == "1" || spriteTest == "2";
+                FSO_BrowserClientGame.SpriteTestBasic = spriteTest == "2";
+                FSO_BrowserClientGame.DepthOutProbe = QueryValue(uri, "depthout") == "1";
+                FSO_BrowserClientGame.RedrawProbe = QueryValue(uri, "redraw") == "1";
+                var v2diag = QueryValue(uri, "v2diag");
+                RealFurnitureLayer.V2Diag = v2diag == "1";
+                RealFurnitureLayer.V2AllMagenta = v2diag == "2";
+                // ?zoom=near|medium|far and ?rot=0..3 pin the camera for probes.
+                var zoomParam = QueryValue(uri, "zoom");
+                var rotParam = QueryValue(uri, "rot");
+                var rot = int.TryParse(rotParam, out var r) ? r : -1;
+
+                _game = new FSO_BrowserClientGame(contentBase, gateway, autoJoin, forceLot, probeXnb, forceRealLot, houseUrl,
+                    furnishReal, zoomParam, rot);
                 _game.Run();
             }
 

@@ -37,6 +37,8 @@
     <Compile Include="FSO.BrowserClientGame.cs" />
     <Compile Include="BlueprintArchLoader.cs" />
     <Compile Include="FurnitureLayer.cs" />
+    <Compile Include="PackObjectLoader.cs" />
+    <Compile Include="RealFurnitureLayer.cs" />
   </ItemGroup>
 
   <ItemGroup>

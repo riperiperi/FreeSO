@@ -1,0 +1,350 @@
+[
+ {
+  "id": "chairdesk",
+  "iff": "chairdesk.iff",
+  "guid": "0x7F9D7639",
+  "png": "chairdesk.png"
+ },
+ {
+  "id": "chaircushion",
+  "iff": "chaircushion.iff",
+  "guid": "0x7F8AB261",
+  "png": "chaircushion.png"
+ },
+ {
+  "id": "chairrounded",
+  "iff": "chairrounded.iff",
+  "guid": "0x7F827B71",
+  "png": "chairrounded.png"
+ },
+ {
+  "id": "loungechairrelax",
+  "iff": "loungechairrelax.iff",
+  "guid": "0x7FB78AB0",
+  "png": "loungechairrelax.png"
+ },
+ {
+  "id": "loungesofa",
+  "iff": "loungesofa.iff",
+  "guid": "0x7F3AF53D",
+  "png": "loungesofa.png"
+ },
+ {
+  "id": "loungesofalong",
+  "iff": "loungesofalong.iff",
+  "guid": "0x7F132E3C",
+  "png": "loungesofalong.png"
+ },
+ {
+  "id": "loungesofacorner",
+  "iff": "loungesofacorner.iff",
+  "guid": "0x7F8D794C",
+  "png": "loungesofacorner.png"
+ },
+ {
+  "id": "loungesofaottoman",
+  "iff": "loungesofaottoman.iff",
+  "guid": "0x7F7E21B4",
+  "png": "loungesofaottoman.png"
+ },
+ {
+  "id": "table",
+  "iff": "table.iff",
+  "guid": "0x7F00A457",
+  "png": "table.png"
+ },
+ {
+  "id": "tablecross",
+  "iff": "tablecross.iff",
+  "guid": "0x7F1C4AFE",
+  "png": "tablecross.png"
+ },
+ {
+  "id": "tablecoffee",
+  "iff": "tablecoffee.iff",
+  "guid": "0x7F045363",
+  "png": "tablecoffee.png"
+ },
+ {
+  "id": "tablecoffeeglass",
+  "iff": "tablecoffeeglass.iff",
+  "guid": "0x7F00635C",
+  "png": "tablecoffeeglass.png"
+ },
+ {
+  "id": "tableround",
+  "iff": "tableround.iff",
+  "guid": "0x7F01D9E8",
+  "png": "tableround.png"
+ },
+ {
+  "id": "bedsingle",
+  "iff": "bedsingle.iff",
+  "guid": "0x7FC241FE",
+  "png": "bedsingle.png"
+ },
+ {
+  "id": "beddouble",
+  "iff": "beddouble.iff",
+  "guid": "0x7F0191E1",
+  "png": "beddouble.png"
+ },
+ {
+  "id": "bedbunk",
+  "iff": "bedbunk.iff",
+  "guid": "0x7FA85FDB",
+  "png": "bedbunk.png"
+ },
+ {
+  "id": "lamproundtable",
+  "iff": "lamproundtable.iff",
+  "guid": "0x7F9A7698",
+  "png": "lamproundtable.png"
+ },
+ {
+  "id": "lampsquaretable",
+  "iff": "lampsquaretable.iff",
+  "guid": "0x7F9E7E3A",
+  "png": "lampsquaretable.png"
+ },
+ {
+  "id": "lamproundfloor",
+  "iff": "lamproundfloor.iff",
+  "guid": "0x7F119968",
+  "png": "lamproundfloor.png"
+ },
+ {
+  "id": "lampsquarefloor",
+  "iff": "lampsquarefloor.iff",
+  "guid": "0x7F29DD82",
+  "png": "lampsquarefloor.png"
+ },
+ {
+  "id": "bookcaseclosed",
+  "iff": "bookcaseclosed.iff",
+  "guid": "0x7F2E0206",
+  "png": "bookcaseclosed.png"
+ },
+ {
+  "id": "bookcaseopen",
+  "iff": "bookcaseopen.iff",
+  "guid": "0x7F691FEA",
+  "png": "bookcaseopen.png"
+ },
+ {
+  "id": "cabinetbeddrawer",
+  "iff": "cabinetbeddrawer.iff",
+  "guid": "0x7F23CF46",
+  "png": "cabinetbeddrawer.png"
+ },
+ {
+  "id": "cabinettelevision",
+  "iff": "cabinettelevision.iff",
+  "guid": "0x7F2F1A3E",
+  "png": "cabinettelevision.png"
+ },
+ {
+  "id": "desk",
+  "iff": "desk.iff",
+  "guid": "0x7F3D2690",
+  "png": "desk.png"
+ },
+ {
+  "id": "deskcorner",
+  "iff": "deskcorner.iff",
+  "guid": "0x7F96ED6D",
+  "png": "deskcorner.png"
+ },
+ {
+  "id": "stoolbar",
+  "iff": "stoolbar.iff",
+  "guid": "0x7F4B6046",
+  "png": "stoolbar.png"
+ },
+ {
+  "id": "bench",
+  "iff": "bench.iff",
+  "guid": "0x7F5D1A89",
+  "png": "bench.png"
+ },
+ {
+  "id": "benchcushion",
+  "iff": "benchcushion.iff",
+  "guid": "0x7F7A7044",
+  "png": "benchcushion.png"
+ },
+ {
+  "id": "ruground",
+  "iff": "ruground.iff",
+  "guid": "0x7FB910DA",
+  "png": "ruground.png"
+ },
+ {
+  "id": "rugsquare",
+  "iff": "rugsquare.iff",
+  "guid": "0x7FE10297",
+  "png": "rugsquare.png"
+ },
+ {
+  "id": "rugrectangle",
+  "iff": "rugrectangle.iff",
+  "guid": "0x7FE3B4E0",
+  "png": "rugrectangle.png"
+ },
+ {
+  "id": "plantsmall1",
+  "iff": "plantsmall1.iff",
+  "guid": "0x7F08EF3E",
+  "png": "plantsmall1.png"
+ },
+ {
+  "id": "plantsmall2",
+  "iff": "plantsmall2.iff",
+  "guid": "0x7F779602",
+  "png": "plantsmall2.png"
+ },
+ {
+  "id": "trashcan",
+  "iff": "trashcan.iff",
+  "guid": "0x7FE1460E",
+  "png": "trashcan.png"
+ },
+ {
+  "id": "kitchenfridgesmall",
+  "iff": "kitchenfridgesmall.iff",
+  "guid": "0x7F22F526",
+  "png": "kitchenfridgesmall.png"
+ },
+ {
+  "id": "kitchenstoveelectric",
+  "iff": "kitchenstoveelectric.iff",
+  "guid": "0x7FFF327B",
+  "png": "kitchenstoveelectric.png"
+ },
+ {
+  "id": "bathroomsink",
+  "iff": "bathroomsink.iff",
+  "guid": "0x7FE05628",
+  "png": "bathroomsink.png"
+ },
+ {
+  "id": "bathroomcabinet",
+  "iff": "bathroomcabinet.iff",
+  "guid": "0x7F57FF0A",
+  "png": "bathroomcabinet.png"
+ },
+ {
+  "id": "sidetable",
+  "iff": "sidetable.iff",
+  "guid": "0x7FA5801A",
+  "png": "sidetable.png"
+ },
+ {
+  "id": "sidetabledrawers",
+  "iff": "sidetabledrawers.iff",
+  "guid": "0x7FDBE26D",
+  "png": "sidetabledrawers.png"
+ },
+ {
+  "id": "televisionmodern",
+  "iff": "televisionmodern.iff",
+  "guid": "0x7F7910F3",
+  "png": "televisionmodern.png"
+ },
+ {
+  "id": "computerkeyboard",
+  "iff": "computerkeyboard.iff",
+  "guid": "0x7F984566",
+  "png": "computerkeyboard.png"
+ },
+ {
+  "id": "plantsmall3",
+  "iff": "plantsmall3.iff",
+  "guid": "0x7FE8BEC8",
+  "png": "plantsmall3.png"
+ },
+ {
+  "id": "books",
+  "iff": "books.iff",
+  "guid": "0x7F397C0F",
+  "png": "books.png"
+ },
+ {
+  "id": "midcentury_dining_chair",
+  "iff": "midcentury_dining_chair.iff",
+  "guid": "0x6B4F1001",
+  "png": "midcentury_dining_chair.png"
+ },
+ {
+  "id": "midcentury_armchair",
+  "iff": "midcentury_armchair.iff",
+  "guid": "0x6B4F1002",
+  "png": "midcentury_armchair.png"
+ },
+ {
+  "id": "midcentury_sofa",
+  "iff": "midcentury_sofa.iff",
+  "guid": "0x6B4F1003",
+  "png": "midcentury_sofa.png"
+ },
+ {
+  "id": "midcentury_coffee_table",
+  "iff": "midcentury_coffee_table.iff",
+  "guid": "0x6B4F1004",
+  "png": "midcentury_coffee_table.png"
+ },
+ {
+  "id": "midcentury_side_table",
+  "iff": "midcentury_side_table.iff",
+  "guid": "0x6B4F1005",
+  "png": "midcentury_side_table.png"
+ },
+ {
+  "id": "cc0_toilet",
+  "iff": "cc0_toilet.iff",
+  "guid": "0x6B4F2001",
+  "png": "cc0_toilet.png"
+ },
+ {
+  "id": "cc0_shower",
+  "iff": "cc0_shower.iff",
+  "guid": "0x6B4F2002",
+  "png": "cc0_shower.png"
+ },
+ {
+  "id": "cc0_tub",
+  "iff": "cc0_tub.iff",
+  "guid": "0x6B4F2003",
+  "png": "cc0_tub.png"
+ },
+ {
+  "id": "cc0_sink",
+  "iff": "cc0_sink.iff",
+  "guid": "0x6B4F2004",
+  "png": "cc0_sink.png"
+ },
+ {
+  "id": "cc0_stove",
+  "iff": "cc0_stove.iff",
+  "guid": "0x6B4F2005",
+  "png": "cc0_stove.png"
+ },
+ {
+  "id": "cc0_fridge",
+  "iff": "cc0_fridge.iff",
+  "guid": "0x6B4F2006",
+  "png": "cc0_fridge.png"
+ },
+ {
+  "id": "pet_rock",
+  "iff": "pet_rock.iff",
+  "guid": "0x6B4F0003",
+  "png": null
+ },
+ {
+  "id": "gossip_gnome",
+  "iff": "gossip_gnome.iff",
+  "guid": "0x6B4F0001",
+  "png": null
+ }
+]
