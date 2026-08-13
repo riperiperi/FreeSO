@@ -1,6 +1,6 @@
 # Project state
 
-Last verified: 2026-08-11. Branch: `packtools-on-archive`.
+Last verified: 2026-08-12. Branch: `packtools-on-archive`.
 
 > **What this project does:** A player uploads a floor plan or a room photo. The AI builds their actual home in a real-geography city. Their friends visit and hang out inside it. All multiplayer, all live.
 
@@ -49,9 +49,11 @@ The branch that is actually maintained. `master` has not moved since Aug 2025.
 | **Address → city** ✅ | `PackTools/citygen/generate_city.py` turns a place name into FreeSO's full city raster set. Verified on San Francisco: 39.4 km square, elevation −5..781 m, 42,159 OSM road ways. Written to disk; **not yet loaded into the running game.** |
 | **Blueprint → live house** ✅ | **Proven.** A hand-authored blueprint XML loads through `VMBlueprintRestoreCmd` into a running VM and the engine derives a sealed interior. `PackTools/examples/house-one-room.xml` + `FSO.VMHarness --house`. Verified both directions — remove the walls and the same probe reports outdoors. |
 | **Layout → blueprint → rendered house** ✅ | **Seen on screen, 2026-08-10.** `FSO.HouseGen` turns a room-layout JSON into blueprint XML; `kat-flat.json` (living/bedroom/bathroom, three doors) loads through Sandbox Mode and **stands on the lot in the real client** — walls up, floors down, all three doorways cut. Kat's screenshot, not a harness assertion. |
-| **Floor plan → layout JSON** | **Not built.** Now the *only* missing link, and the narrowest it has ever been: an image becomes the small typed layout the converter already consumes. Everything downstream of that JSON is verified end to end, pixels included. |
+| **Windows on generated houses** ✅ | Same wall-object path as doors (`ArchitectualWindow`, GUID `0x44E8992A`). `4caba4c23`. Does not cut pathing. |
+| **Floor plan → layout JSON** | **Not built — this window.** The only missing product link: an image becomes the typed layout the converter already consumes. Everything downstream of that JSON is verified end to end, pixels included. Desktop path is enough for the video. |
+| **Walk a Sim through a door** | **WIP, uncommitted.** `FSO.VMHarness --walk`: control (no door) → `NO PATH` ✓; with doors, path found then routing frame vanishes at tick 1 still in room 2. Occupancy proof, not the north-star. Leave it; do not mix with vision. |
 | **Photo → furnishing** | **Not built.** Depends on the object pipeline below, which works. |
-| **Friends inside it** | FreeSO's multiplayer, unchanged. Untested with an AI-generated house. |
+| **Friends inside it** | FreeSO's multiplayer, unchanged. Untested with an AI-generated house. After the house looks like a house. |
 
 ### AI modding infrastructure — internal, powers the above
 | Component | What it does | Evidence |
@@ -69,7 +71,7 @@ The branch that is actually maintained. `master` has not moved since Aug 2025.
 | **`FSO.WsGateway`** | WebSocket↔TCP byte gateway + JS Aries protocol debugger (`wwwroot/`) | 5/5 tests. Live handshake proven; browser now also sends type-21 session response and reaches canned `HostOnlinePDU` on the fake city. Join-lot still open. |
 | **`FSO.BrowserContent`** | `IContentStore` — File / Http / **Composite** (`Content/` overlay) | Tests green. Wired into `Content.GetResource` + `FileProvider` (BasePath + Content/). `FAR3Archive(Stream)`. |
 | **KNI migration plan** | Library-first retarget to `nkast.Xna.Framework.*`, then BlazorGL head | `docs/KNI-MIGRATION.md` — S0–S2 + S7 done; S3 **partial** (BasicEffect OK; FreeSO MGFX 11 XNBs blocked); S5 placeholder floor + **LotView closure `net8;net9`** |
-| **`FSO.BrowserClient`** | KNI BlazorGL — texture + Aries join + iso lot + **BasicEffect** | `?lot=1`: grass diamonds + green “effect OK (BasicEffect)” + triangle. `?effect=1`: FreeSO XNB probe fails (format wall). LotView libs dual-target net8; **ProjectReference not wired yet**. |
+| **`FSO.BrowserClient`** | KNI BlazorGL — texture + Aries join + iso lot + **BasicEffect** | Scaffolding landed (`?lot=real` wires `ExternalWorld`; pixels not proven, often falls back to diamonds). **Parked.** Diamond / debug Blazor is a tech spike, not the product. Browser polish after the house looks like Sims. |
 | **`FSO.BrowserAries`** | WASM-safe Aries codec + `ArchiveJoinDemo` (city→lot) | Unit + gateway integration → LotJoined |
 | **KNI S1 graphics switch** | `FSO_GRAPHICS=MonoGame\|Kni` via `Directory.Build.props` + `msbuild/FSO.Xna.packages.targets` | Lib chain through `FSO.Client` builds on KNI; `FSO.Mac` on MonoGame |
 | **Aries join path** | City through FindLot + **lot** `/lot` type 22→21→HostOnline→ClientOnline→empty VM tick | Fake city 33101 + fake lot 34101; gateway demo auto-opens `/lot`. Real VM state still open. |
@@ -93,12 +95,12 @@ Two that were on this list and shouldn't be: `GENERIC-GENERATOR-DESIGN.md` is **
 
 | Phase | Goal | State |
 |---|---|---|
-| **A — Your house, from a photo** | Upload a floor plan → AI emits blueprint XML → the house stands on a lot. The first real integration, and the north-star video. | next |
+| **A — Your house, from a photo** | Upload a floor plan → AI emits blueprint XML → the house stands on a lot. The first real integration, and the north-star video. Desktop path is fine. | **this window** — vision is the remaining link; layout→XML→lot is proven; windows landed |
 | **B — Friends in a house together (BYO)** | Two players, one server, one generated San Francisco. One uploads a floor plan and gets a house at their real address; the other walks in. | pending |
 | **C — Make it look like mine** | Photo-based furnishing and conversational refinement: "move the sofa left", "the window should be bigger". Extends A using the working object pipeline. | pending |
 | **D — Persistence and sharing** | Houses survive restarts; publish, discover, fork, remix. Lot serialization already exists in-engine — check before building. | pending |
 | **E — Original content** | ~200 original objects so a shared house looks right without EA assets. CC0 import pipeline live; 51 objects imported (6 Quaternius plumbing + 45 Kenney tier-1). | in_progress |
-| **F — Browser client** | KNI/BlazorGL port, content over HTTP, threading. WebSocket gateway **proven against the live game** (`PackTools/FSO.WsGateway`): a browser decoded the Archive handshake from Kat's running server, zero server changes. Networking unknown closed; rendering port is the remaining bulk. Pulled forward by Kat 2026-08-11. | in_progress |
+| **F — Browser client** | KNI/BlazorGL port, content over HTTP, threading. Gateway + join + KNIF + optional Mario + LotView net8 dual-target + `?lot=real` all landed as scaffolding. **Parked** until Phase A looks like Sims. The diamond screen is not the goal. | parked |
 | **G — Neighbourhood scaling** | SF generation is done and verified. Remaining: host it as a playable city and let a player claim a lot by address. | partly done |
 
 ---

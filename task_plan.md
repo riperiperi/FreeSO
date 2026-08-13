@@ -16,7 +16,7 @@ Supersedes `PRODUCT-DIRECTION.md` (which centred "content worth having + player 
 **Mechanic decided 2026-08-08:** the AI builds the house **from a photo or floor plan**, then the player refines it conversationally. Not manual building with AI assistance.
 
 ## Current Phase
-Phase A — A1 done, A2 next
+Phase A — A2 vision (floor plan → layout JSON). Desktop path. Browser parked.
 
 ## Why this is smaller than it looks
 **Houses are already data.** A lot is a blueprint XML — `<floors>`, `<walls>`, `<object>`, each with tile coordinates and a level. `XmlHouse.cs` parses it, `VMWorldActivator.LoadFromXML()` builds the world from it, and **`VMBlueprintRestoreCmd` is a live network command that takes that XML as raw bytes and rebuilds the lot mid-game** — the server already uses it to reset lots.
@@ -60,10 +60,10 @@ Sequenced so the vision model is the *last* variable introduced, not the first.
   - **A house is not a lot.** `VMWorldActivator.LoadFromXML` sets `VM.TSOState.Size` and the placement offset *only* if the blueprint contains the lot phone `0x313D2F9A`. Without it, `VMLotTerrainRestoreTools` and `VMContext` have no lot, and the client draws an empty grey screen while every architecture check passes. Generate with `--base Content/Blueprints/empty_lot_fso.xml`.
   - All of that is behind `if (VM.UseWorld)`, which the harness sets false — so the harness is structurally incapable of catching it. It now reports `lot phone: present/MISSING` as the one rendering prerequisite it can check.
   - The Buy Mode NRE (`UICatalogItem.MouseEvt` → `CreateObjectInstance`) was the no-world symptom, not a content bug. It disappeared when the lot appeared.
-- [ ] **Windows.** Same object-on-a-wall mechanism, not yet tried.
-- [ ] Walk a Sim through a door — closes A1's last open item.
+- [x] **Windows.** Same wall-object path as doors (`ArchitectualWindow`, GUID `0x44E8992A`). `4caba4c23`. Does not cut pathing.
+- [ ] Walk a Sim through a door — occupancy, not the video. Uncommitted `--walk` in `FSO.VMHarness/Program.cs`: no-door control fails correctly; with doors, path found then routing frame vanishes at tick 1 still in room 2. **Leave it.** Do not mix with vision.
 - [ ] Floor patterns are placeholder (`3`). A home wants wood/carpet per room; cosmetic, cheap.
-- [ ] **Then** the vision model: floor-plan image → layout JSON. It only ever emits the model above; it never writes XML.
+- [ ] **This window: vision.** Floor-plan image → layout JSON. It only ever emits the model above; it never writes XML. Desktop path is enough for the north-star video. Friends walk in after that looks like Sims.
 - [ ] Cheap by construction: one XML per house, not 200 agent runs
 
 **A3 — the object loop, in passing**
@@ -119,7 +119,8 @@ Sequenced so the vision model is the *last* variable introduced, not the first.
 - [x] **Content store wired** — Composite (BasePath + Content/) + GetResource/FileProvider; remaining providers/TS1 still disk.
 - [ ] S3 full (KNI-rebuilt LotView FX), S4, S6, S8; real S5 LotView
 - [ ] Threading cleanup; `VMServerDriver` is the risky one — 1-2 weeks
-- **Status:** in_progress
+- **Parked 2026-08-12.** Scaffolding is enough. Diamond / debug Blazor is not the product. Resume after Phase A looks like Sims.
+- **Status:** parked
 ### Phase G: Neighbourhood scaling
 - [x] `PackTools/citygen/generate_city.py` reviewed and run ✅ — San Francisco: 39.4 km square, elevation −5..781 m, 42,159 OSM road ways, full raster set written to disk
 - [ ] **Never loaded into the game.** Host it as a playable city; correct-looking PNGs are not a playable world.
