@@ -43,10 +43,14 @@ namespace FSO_BrowserClient
         long localTicks;
         long syncedAtTick = -1;
         bool autoChatSent;
+        bool interactArmed, interactSeen;
 
         /// <summary>When set, sent as chat ~3s after sync — lets a concurrent native
         /// smoke client observe the browser without any UI interaction.</summary>
         public string AutoChat;
+
+        /// <summary>Formatted chat lines for the DOM overlay.</summary>
+        public event Action<string> OnChatLine;
 
         // Billboard resources (packs manifest: guid → png under objects/).
         readonly Dictionary<uint, Texture2D> texByGuid = new Dictionary<uint, Texture2D>();
@@ -104,6 +108,9 @@ namespace FSO_BrowserClient
                 var line = $"chat[{evt.SenderUID}] {text}";
                 ChatLog.Add(line);
                 Console.WriteLine("vm " + line);
+                // Sender name is resolved VM-side into the text for talk events;
+                // show the raw line — good enough for the overlay.
+                OnChatLine?.Invoke(text ?? "");
             };
 
             Console.WriteLine($"vm connecting {wsUrl}...");
@@ -149,11 +156,62 @@ namespace FSO_BrowserClient
 
             if (Synced && localTicks % 300 == 0)
                 Console.WriteLine($"vm tick={localTicks} entities={vm.Entities.Count} hash={EntityHash()}");
+
+            // After SendInteraction, report when it lands in our avatar's queue —
+            // the "interaction executes in the VM" acceptance line.
+            if (interactArmed && !interactSeen)
+            {
+                var act = MyAvatar?.Thread?.Queue?.FirstOrDefault(q => q.Name != null && q.Name != "Idle");
+                if (act != null)
+                {
+                    interactSeen = true;
+                    Console.WriteLine($"vm INTERACTION IN QUEUE at tick {localTicks}: {act.Name} " +
+                        $"(mode {act.Mode}, priority {act.Priority})");
+                }
+            }
         }
 
         public void SendChat(string message)
         {
             vm?.SendCommand(new VMNetChatCmd { Message = message });
+        }
+
+        public VMAvatar MyAvatar =>
+            vm?.Entities.OfType<VMAvatar>().FirstOrDefault(a => a.PersistID == PersistID);
+
+        /// <summary>
+        /// Real TTAB pie menu for the nearest in-world object to a tile — the same
+        /// GetPieMenu (TestFunction check trees included) the desktop client runs.
+        /// </summary>
+        public (VMEntity target, List<VMPieMenuInteraction> pie) PieMenuAt(Vector2 tile)
+        {
+            var ava = MyAvatar;
+            if (ava == null || !Synced) return (null, null);
+            VMEntity best = null;
+            float bestDist = 1.6f; // ~1.5 tile pick radius
+            foreach (var ent in vm.Entities)
+            {
+                if (ent is VMAvatar) continue;
+                if (ent.Position == LotTilePos.OUT_OF_WORLD) continue;
+                var d = Vector2.Distance(new Vector2(ent.Position.x / 16f, ent.Position.y / 16f), tile);
+                if (d < bestDist) { bestDist = d; best = ent; }
+            }
+            if (best == null) return (null, null);
+            var pie = best.GetPieMenu(vm, ava, false, true);
+            return (best, pie);
+        }
+
+        public void SendInteraction(short calleeID, byte interactionID)
+        {
+            vm?.SendCommand(new VMNetInteractionCmd
+            {
+                Interaction = interactionID,
+                CalleeID = calleeID,
+                Global = false,
+            });
+            interactArmed = true;
+            interactSeen = false;
+            Console.WriteLine($"vm sent interaction {interactionID} on object {calleeID}");
         }
 
         /// <summary>Same per-entity hash LotHostLite logs, for cross-runtime comparison.</summary>
@@ -210,37 +268,50 @@ namespace FSO_BrowserClient
             Console.WriteLine($"vm arch applied: {bp.WallsAt[0].Count} wall tiles on ground floor");
         }
 
-        /// <summary>Fetch pack billboard textures (packs/manifest.json guid → objects/png).</summary>
+        /// <summary>
+        /// Fetch pack billboard textures (packs/manifest.json guid → objects/png).
+        /// Progressive: capsules + any already-fetched furniture draw immediately;
+        /// fetches run concurrently (a sequential loop starves for minutes when two
+        /// SwiftShader tabs share the CPU).
+        /// </summary>
         public async Task LoadBillboardsAsync(GraphicsDevice gd, string baseUrl)
         {
             try
             {
+                simTex = MakeSimTexture(gd);
+                texturesReady = true;
                 using var http = new HttpClient();
+                Console.WriteLine("vm billboards: fetching manifest");
                 var manifest = JArray.Parse(await http.GetStringAsync(
                     new Uri(new Uri(baseUrl), "packs/manifest.json")).ConfigureAwait(true));
+                var tasks = new List<Task>();
                 foreach (var o in manifest)
                 {
                     var png = (string)o["png"];
                     var guidStr = (string)o["guid"];
                     if (png == null || guidStr == null) continue;
                     var guid = Convert.ToUInt32(guidStr.Replace("0x", ""), 16);
-                    try
-                    {
-                        var bytes = await http.GetByteArrayAsync(
-                            new Uri(new Uri(baseUrl), "objects/" + png)).ConfigureAwait(true);
-                        using var ms = new MemoryStream(bytes);
-                        texByGuid[guid] = Texture2D.FromStream(gd, ms);
-                    }
-                    catch { /* individual sprite missing is non-fatal */ }
+                    tasks.Add(FetchTextureAsync(http, gd, baseUrl, png, guid));
                 }
-                simTex = MakeSimTexture(gd);
-                texturesReady = true;
+                await Task.WhenAll(tasks).ConfigureAwait(true);
                 Console.WriteLine($"vm billboards ready: {texByGuid.Count} pack textures");
             }
             catch (Exception ex)
             {
                 Console.WriteLine("vm billboards failed: " + ex.Message);
             }
+        }
+
+        async Task FetchTextureAsync(HttpClient http, GraphicsDevice gd, string baseUrl, string png, uint guid)
+        {
+            try
+            {
+                var bytes = await http.GetByteArrayAsync(
+                    new Uri(new Uri(baseUrl), "objects/" + png)).ConfigureAwait(true);
+                using var ms = new MemoryStream(bytes);
+                texByGuid[guid] = Texture2D.FromStream(gd, ms);
+            }
+            catch { /* individual sprite missing is non-fatal */ }
         }
 
         static Texture2D MakeSimTexture(GraphicsDevice gd)

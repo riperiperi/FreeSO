@@ -1,4 +1,6 @@
 ﻿using System;
+using System.Collections.Generic;
+using System.Linq;
 using System.Threading;
 using System.Threading.Tasks;
 using FSO.BrowserAries;
@@ -78,6 +80,21 @@ namespace FSO_BrowserClient
         bool vmLotInited;
         bool vmArchApplied;
         int vmArchWaitFrames;
+        bool vmLeftWasDown;
+        /// <summary>Fired when a click lands a real TTAB pie menu:
+        /// (calleeObjectID, [(optionID, name)], screenX, screenY). Index renders
+        /// it as a DOM overlay.</summary>
+        public event Action<short, List<(byte id, string name)>, int, int> OnPieMenu;
+        /// <summary>Chat lines from the shared VM, forwarded to the DOM overlay.</summary>
+        public event Action<string> OnChatLine;
+        /// <summary>Fired once when the VM client starts (shows the chat overlay).</summary>
+        public event Action OnVmStarted;
+
+        /// <summary>DOM chat box submitted a message.</summary>
+        public void SendChatFromUi(string message)
+        {
+            if (!string.IsNullOrWhiteSpace(message)) vmClient?.SendChat(message.Trim());
+        }
 
         GraphicsDeviceManager graphics;
         SpriteBatch spriteBatch;
@@ -551,11 +568,16 @@ namespace FSO_BrowserClient
                     vmStarted = true;
                     vmClient = new VmLotClient(_vmName);
                     vmClient.AutoChat = $"hello from {_vmName}";
+                    vmClient.OnChatLine += (line) => OnChatLine?.Invoke(line);
                     vmClient.Start(_gatewayBase);
                     _ = vmClient.LoadBillboardsAsync(GraphicsDevice, _wwwrootBase);
+                    OnVmStarted?.Invoke();
                 }
 
                 vmClient?.Update(gameTime.ElapsedGameTime.TotalSeconds);
+
+                // Clicks arrive from JS via OnCanvasClick — KNI's Mouse.GetState
+                // misses synthetic (and some real) clicks under BlazorGL.
 
                 if (vmClient != null && vmClient.Synced && !vmLotInited)
                 {
@@ -731,6 +753,63 @@ namespace FSO_BrowserClient
             }
 
             base.Update(gameTime);
+        }
+
+        /// <summary>Canvas click (from JS interop) → tile → nearest VM object → pie menu.</summary>
+        public void OnCanvasClick(float x, float y)
+        {
+            if (vmClient == null || !vmClient.Synced || !DrawRealLot) return;
+            var tile = realWorld.State.WorldSpace.GetTileAtPosWithScroll(new Vector2(x, y));
+            RequestPieMenu(tile, (int)x, (int)y);
+        }
+
+        void RequestPieMenu(Vector2 tile, int screenX, int screenY)
+        {
+            try
+            {
+                var (target, pie) = vmClient.PieMenuAt(tile);
+                if (target == null)
+                {
+                    Console.WriteLine($"pie: no object near tile {tile.X:F1},{tile.Y:F1}");
+                    return;
+                }
+                var guid = target.Object?.OBJ?.GUID ?? 0;
+                var items = (pie ?? new List<FSO.SimAntics.VMPieMenuInteraction>())
+                    .Select(p => (p.ID, p.Name)).ToList();
+                Console.WriteLine($"pie menu on 0x{guid:X8} (obj {target.ObjectID}): " +
+                    (items.Count == 0 ? "(empty)" : string.Join(", ", items.Select(p => $"{p.ID}:{p.Name}"))));
+                if (items.Count > 0)
+                    OnPieMenu?.Invoke(target.ObjectID, items, screenX, screenY);
+            }
+            catch (Exception ex)
+            {
+                Console.WriteLine("pie menu failed: " + ex.Message);
+            }
+        }
+
+        /// <summary>DOM overlay (or test hook) picked an option.</summary>
+        public void SelectPieOption(short calleeID, byte interactionID)
+        {
+            vmClient?.SendInteraction(calleeID, interactionID);
+        }
+
+        /// <summary>Test hook: pie menu by tile coordinate, bypassing the mouse.</summary>
+        public string DebugPieAt(float tileX, float tileY)
+        {
+            if (vmClient == null || !vmClient.Synced) return "[]";
+            var (target, pie) = vmClient.PieMenuAt(new Vector2(tileX, tileY));
+            if (target == null || pie == null) return "[]";
+            var items = pie.Select(p => $"{{\"id\":{p.ID},\"name\":\"{p.Name?.Replace("\"", "'")}\",\"callee\":{target.ObjectID}}}");
+            return "[" + string.Join(",", items) + "]";
+        }
+
+        /// <summary>Test hook: screen position of a tile centre (for real click tests).</summary>
+        public string DebugScreenPos(float tileX, float tileY)
+        {
+            if (realWorld == null) return "{}";
+            var space = realWorld.State.WorldSpace;
+            var screen = space.GetScreenFromTile(new Vector2(tileX, tileY)) + space.GetPointScreenOffset();
+            return $"{{\"x\":{(int)screen.X},\"y\":{(int)screen.Y}}}";
         }
 
         protected override void Draw(GameTime gameTime)

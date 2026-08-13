@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Linq;
 using Microsoft.AspNetCore.Components;
 using Microsoft.JSInterop;
 using Microsoft.Xna.Framework;
@@ -19,6 +20,38 @@ namespace FSO_BrowserClient.Pages
             {
                 JsRuntime.InvokeAsync<object>("initRenderJS", DotNetObjectReference.Create(this));
             }
+        }
+
+        // Pie menu bridge: DOM overlay buttons (or window.fsoDebug test hooks)
+        // land here via the DotNetObjectReference initRenderJS captured.
+        [JSInvokable]
+        public void PieSelect(int calleeID, int optionID)
+        {
+            (_game as FSO_BrowserClientGame)?.SelectPieOption((short)calleeID, (byte)optionID);
+        }
+
+        [JSInvokable]
+        public string DebugPie(float tileX, float tileY)
+        {
+            return (_game as FSO_BrowserClientGame)?.DebugPieAt(tileX, tileY) ?? "[]";
+        }
+
+        [JSInvokable]
+        public string DebugScreenPos(float tileX, float tileY)
+        {
+            return (_game as FSO_BrowserClientGame)?.DebugScreenPos(tileX, tileY) ?? "{}";
+        }
+
+        [JSInvokable]
+        public void CanvasClick(float x, float y)
+        {
+            (_game as FSO_BrowserClientGame)?.OnCanvasClick(x, y);
+        }
+
+        [JSInvokable]
+        public void ChatSend(string message)
+        {
+            (_game as FSO_BrowserClientGame)?.SendChatFromUi(message);
         }
 
         [JSInvokable]
@@ -86,6 +119,17 @@ namespace FSO_BrowserClient.Pages
 
                 _game = new FSO_BrowserClientGame(contentBase, gateway, autoJoin, forceLot, probeXnb, forceRealLot, houseUrl,
                     furnishReal, zoomParam, rot, vmMode, vmName, Navigation.BaseUri);
+                var game = (FSO_BrowserClientGame)_game;
+                game.OnPieMenu += (callee, items, x, y) =>
+                {
+                    var json = "[" + string.Join(",", items.Select(p =>
+                        $"{{\"id\":{p.id},\"name\":\"{(p.name ?? "").Replace("\"", "'")}\"}}")) + "]";
+                    ((IJSInProcessRuntime)JsRuntime).InvokeVoid("fsoPie.show", (int)callee, json, x, y);
+                };
+                game.OnVmStarted += () =>
+                    ((IJSInProcessRuntime)JsRuntime).InvokeVoid("fsoChat.init");
+                game.OnChatLine += (line) =>
+                    ((IJSInProcessRuntime)JsRuntime).InvokeVoid("fsoChat.push", line);
                 _game.Run();
             }
 
