@@ -29,10 +29,10 @@ namespace FSO.Client.UI.Framework
             }
         }
 
-        public static UIAlert GlobalShowAlert(UIAlertOptions options, bool modal)
+        public static UIAlert GlobalShowAlert(UIAlertOptions options, bool modal, bool focus = false)
         {
             var alert = new UIAlert(options);
-            GlobalShowDialog(alert, modal);
+            GlobalShowDialog(alert, modal, focus);
             alert.CenterAround(UIScreen.Current, -(int)UIScreen.Current.X * 2, -(int)UIScreen.Current.Y * 2);
             return alert;
         }
@@ -41,12 +41,13 @@ namespace FSO.Client.UI.Framework
         /// Adds a popup dialog
         /// </summary>
         /// <param name="dialog"></param>
-        public static void GlobalShowDialog(UIElement dialog, bool modal)
+        public static void GlobalShowDialog(UIElement dialog, bool modal, bool focus = false)
         {
             GlobalShowDialog(new DialogReference
             {
                 Dialog = dialog,
-                Modal = modal
+                Modal = modal,
+                Focus = focus
             });
         }
 

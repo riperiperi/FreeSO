@@ -370,15 +370,13 @@ namespace FSO.Client.UI.Panels
                     return;
             }
 
-            var alert = UIScreen.GlobalShowAlert(options, false);
+            var alert = UIScreen.GlobalShowAlert(options, false, true);
 
             if (info.Block)
             {
                 BlockingDialog = alert;
                 LastDialogID = info.DialogID;
             }
-
-            StealFocus = true;
 
             var entity = info.Icon;
             if (entity is VMGameObject)

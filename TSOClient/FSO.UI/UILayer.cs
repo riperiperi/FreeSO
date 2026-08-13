@@ -298,6 +298,8 @@ namespace FSO.Client.UI
             }
             state.MouseEvents.Clear();
 
+            ValidateFocus(inputManager);
+
             state.InputManager = inputManager;
             Content.Content.Get()?.Changes.RunResModifications();
             mainUI.Update(state);
@@ -329,6 +331,34 @@ namespace FSO.Client.UI
 
             Tooltip = state.UIState.Tooltip;
             TooltipProperties = state.UIState.TooltipProperties;
+        }
+
+        private void ValidateFocus(InputManager inputManager)
+        {
+            var current = inputManager.GetFocus();
+            var root = UIScreen.Current;
+
+            if (current != null && current is UIElement elem)
+            {
+                // If the element is no longer visible or doesn't exist on the current screen, it should lose focus.
+
+                do
+                {
+                    if (!elem.Visible)
+                    {
+                        inputManager.SetFocus(null);
+                    }
+
+                    if (elem == root)
+                    {
+                        return;
+                    }
+
+                    elem = elem.Parent;
+                } while (elem != null);
+
+                inputManager.SetFocus(null);
+            }
         }
 
         private void HandleFocusNavigation(UpdateState state, UIContainer root)
@@ -459,7 +489,7 @@ namespace FSO.Client.UI
             Dialogs.Add(dialog);
             AdjustModal();
 
-            if (dialog.Modal)
+            if (dialog.Modal || dialog.Focus)
             {
                 var focusables = new List<IFocusableUI>();
                 CollectFocusables(dialog.Dialog, focusables);
@@ -567,6 +597,7 @@ namespace FSO.Client.UI
     {
         public UIElement Dialog;
         public bool Modal;
+        public bool Focus;
         public object Controller;
         public UIContainer LogicalParent;
     }
