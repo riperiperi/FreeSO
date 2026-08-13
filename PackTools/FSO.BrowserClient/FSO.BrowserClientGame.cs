@@ -101,6 +101,9 @@ namespace FSO_BrowserClient
             _probeFreeSoXnb = probeFreeSoXnb;
             _forceRealLot = forceRealLot;
             graphics = new GraphicsDeviceManager(this);
+            // Lot FX are SM3 (vs_3_0/ps_3_0); KNI WebGL defaults to Reach, which
+            // rejects them ("Shader model 3.0 is not supported ... 'Reach'").
+            graphics.GraphicsProfile = GraphicsProfile.HiDef;
             Content.RootDirectory = "Content";
             Window.Title = "FreeSO Browser";
 
