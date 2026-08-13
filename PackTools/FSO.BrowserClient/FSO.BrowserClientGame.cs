@@ -512,12 +512,22 @@ namespace FSO_BrowserClient
             base.Draw(gameTime);
         }
 
+        bool realLotDebugDumped;
+
         bool TryDrawRealLot()
         {
             try
             {
                 realWorld.Force2DPredraw(GraphicsDevice);
                 realWorld.Draw(GraphicsDevice);
+                if (!realLotDebugDumped)
+                {
+                    realLotDebugDumped = true;
+                    var st = realWorld.State;
+                    Console.WriteLine($"lotdbg camMode={st.CameraMode} zoom={st.Zoom} precise={st.PreciseZoom} " +
+                        $"worldPx={st.WorldSpace.WorldPx} center={st.CenterTile} level={st.Level} " +
+                        $"terrainVB={(realBlueprint?.Terrain != null)} proj.M11={st.Projection.M11:F4} view.M41={st.View.M41:F1},{st.View.M42:F1}");
+                }
                 return true;
             }
             catch (Exception ex)
