@@ -1,0 +1,29 @@
+{
+  "comment": "Furniture placements for grove.xml (rooms: living 28,27 4x5 / dining 28,32 / kitchen 28,35 / bed2 32,27 / closet 36,27 / hall 32,31 / bath1 32,33 / maids 32,35 / corridor 35,33 / master 38,27 4x6 / sitting 38,33 / bath2 38,35). AI-imported CC0 objects, sprites in /objects.",
+  "furniture": [
+    { "id": "midcentury_sofa", "x": 29, "y": 28 },
+    { "id": "tablecoffee", "x": 29, "y": 30 },
+    { "id": "televisionmodern", "x": 31, "y": 30 },
+    { "id": "tableround", "x": 29, "y": 33 },
+    { "id": "midcentury_dining_chair", "x": 28, "y": 33 },
+    { "id": "midcentury_dining_chair", "x": 30, "y": 33 },
+    { "id": "cc0_fridge", "x": 28, "y": 36 },
+    { "id": "kitchenstoveelectric", "x": 29, "y": 37 },
+    { "id": "cc0_sink", "x": 30, "y": 37 },
+    { "id": "bedsingle", "x": 33, "y": 28 },
+    { "id": "sidetable", "x": 35, "y": 27 },
+    { "id": "beddouble", "x": 39, "y": 28 },
+    { "id": "cabinetbeddrawer", "x": 41, "y": 27 },
+    { "id": "lamproundtable", "x": 38, "y": 27 },
+    { "id": "cc0_toilet", "x": 33, "y": 33 },
+    { "id": "bathroomsink", "x": 34, "y": 34 },
+    { "id": "cc0_shower", "x": 40, "y": 35 },
+    { "id": "cc0_toilet", "x": 39, "y": 36 },
+    { "id": "loungechairrelax", "x": 39, "y": 33 },
+    { "id": "plantsmall1", "x": 35, "y": 31 }
+  ],
+  "sims": [
+    { "name": "Kat", "x": 33, "y": 31, "color": [90, 200, 255] },
+    { "name": "Friend", "x": 30, "y": 29, "color": [255, 150, 90] }
+  ]
+}

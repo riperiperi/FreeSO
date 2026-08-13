@@ -31,6 +31,7 @@
     <Compile Include="Program.cs" />
     <Compile Include="FSO.BrowserClientGame.cs" />
     <Compile Include="BlueprintArchLoader.cs" />
+    <Compile Include="FurnitureLayer.cs" />
   </ItemGroup>
 
   <ItemGroup>

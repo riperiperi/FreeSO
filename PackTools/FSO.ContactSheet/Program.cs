@@ -22,10 +22,12 @@ namespace FSO.ContactSheet
             string packDir = args[0];
             string outPath = null;
             string tsoDir = null;
+            string exportDir = null;
             for (int i = 1; i < args.Length; i++)
             {
                 if (args[i] == "-o" && i + 1 < args.Length) outPath = args[++i];
                 else if (args[i] == "--tso-dir" && i + 1 < args.Length) tsoDir = args[++i];
+                else if (args[i] == "--export-dir" && i + 1 < args.Length) exportDir = args[++i];
                 else
                 {
                     Console.Error.WriteLine("unknown argument: " + args[i]);
@@ -39,9 +41,9 @@ namespace FSO.ContactSheet
                 Console.Error.WriteLine("no such directory: " + packDir);
                 return 2;
             }
-            if (outPath == null)
+            if (outPath == null && exportDir == null)
             {
-                Console.Error.WriteLine("contact sheet requires -o <sheet.png>");
+                Console.Error.WriteLine("contact sheet requires -o <sheet.png> and/or --export-dir <dir>");
                 return 2;
             }
             if (tsoDir == null) tsoDir = Environment.GetEnvironmentVariable("FSO_VM_GAME_LOCATION");
@@ -53,7 +55,30 @@ namespace FSO.ContactSheet
                 return 1;
             }
 
-            Compositor.WriteSheet(cells, outPath);
+            if (outPath != null) Compositor.WriteSheet(cells, outPath);
+
+            if (exportDir != null)
+            {
+                // Per-object near-zoom PNGs + manifest, for the browser client's
+                // sprite-billboard furniture (it has no TSO content system).
+                Directory.CreateDirectory(exportDir);
+                var manifest = new System.Text.StringBuilder();
+                manifest.Append("[\n");
+                var first = true;
+                foreach (var cell in cells)
+                {
+                    if (cell.ObjectId == null || !cell.FramesByZoom.TryGetValue("NEAR", out var near)) continue;
+                    var png = cell.ObjectId + ".png";
+                    FSO.PackCompiler.ArtGen.PngWriter.Write(
+                        Path.Combine(exportDir, png), near.Pixels, near.Width, near.Height);
+                    if (!first) manifest.Append(",\n");
+                    first = false;
+                    manifest.Append($"  {{\"id\": \"{cell.ObjectId}\", \"guid\": \"0x{cell.Guid:X8}\", \"png\": \"{png}\", \"w\": {near.Width}, \"h\": {near.Height}}}");
+                }
+                manifest.Append("\n]\n");
+                File.WriteAllText(Path.Combine(exportDir, "manifest.json"), manifest.ToString());
+                Console.WriteLine("exported sprites + manifest to " + exportDir);
+            }
 
             int errorRows = 0;
             foreach (var cell in cells)

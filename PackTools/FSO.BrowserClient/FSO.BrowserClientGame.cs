@@ -54,6 +54,8 @@ namespace FSO_BrowserClient
         bool houseFetchStarted;
         bool houseApplied;
         JoinStage? lastLoggedJoinStage;
+        FurnitureLayer furniture;
+        bool furnitureFetchStarted;
         readonly bool _probeFreeSoXnb;
 
         GraphicsDeviceManager graphics;
@@ -467,6 +469,13 @@ namespace FSO_BrowserClient
                 houseFetchStarted = true;
                 _ = FetchHouseAsync();
             }
+            if (_houseUrl != null && realLotReady && !furnitureFetchStarted)
+            {
+                furnitureFetchStarted = true;
+                furniture = new FurnitureLayer();
+                var furnishUrl = _houseUrl.Replace(".xml", "-furnish.json");
+                _ = furniture.LoadAsync(GraphicsDevice, new Uri(new Uri(_houseUrl), "/").AbsoluteUri, furnishUrl);
+            }
             if (pendingHouseXml != null && realLotReady && !houseApplied)
             {
                 houseApplied = true;
@@ -571,6 +580,7 @@ namespace FSO_BrowserClient
                 DrawBasicEffectTriangle();
 
                 spriteBatch.Begin();
+                if (DrawRealLot && furniture != null) furniture.Draw(spriteBatch, realWorld.State);
                 DrawLotStatusStrip();
                 spriteBatch.End();
             }

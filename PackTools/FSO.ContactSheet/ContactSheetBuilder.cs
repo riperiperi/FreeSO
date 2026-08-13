@@ -29,6 +29,8 @@ namespace FSO.ContactSheet
         {
             public string Label;      // object id + source, e.g. "chair_a (gen:chair)"
             public string PackFile;
+            public string ObjectId;
+            public uint Guid;
             public List<string> Errors = new List<string>();
             public Dictionary<string, RenderedFrame> FramesByZoom = new Dictionary<string, RenderedFrame>(); // zoom name -> frame, missing = not rendered
         }
@@ -69,6 +71,7 @@ namespace FSO.ContactSheet
                     {
                         Label = objReport.Id + " (" + (sources.TryGetValue(objReport.Id, out var s) ? s : "?") + ")",
                         PackFile = Path.GetFileName(packPath),
+                        ObjectId = objReport.Id,
                     };
 
                     var iffPath = Path.Combine(outDir, objReport.Iff);
@@ -86,6 +89,7 @@ namespace FSO.ContactSheet
                         freshIff.Read(stream);
 
                     var objd = freshIff.List<OBJD>()?.FirstOrDefault();
+                    if (objd != null) cell.Guid = objd.GUID;
                     if (objd == null || objd.BaseGraphicID == 0)
                     {
                         cell.Errors.Add("no graphics (BaseGraphicID=0) — invisible in the client");
