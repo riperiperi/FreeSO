@@ -3,6 +3,14 @@ using System.Threading;
 using System.Threading.Tasks;
 using FSO.BrowserAries;
 using FSO.BrowserContent;
+using FSO.Common;
+using FSO.Common.Rendering.Framework;
+using FSO.Common.Rendering.Framework.Model;
+using FSO.Common.Utils;
+using FSO.Content.Model;
+using FSO.LotView;
+using FSO.LotView.Components;
+using FSO.LotView.Model;
 using Microsoft.Xna.Framework;
 using Microsoft.Xna.Framework.Graphics;
 using Microsoft.Xna.Framework.Input;
@@ -13,9 +21,11 @@ namespace FSO_BrowserClient
     /// KNI/BlazorGL spike: HTTP texture + Aries city→lot join + isometric lot placeholder.
     /// S3: prefer <c>Content.Load&lt;Effect&gt;("Effects/colorpoly2D")</c> (KNIF from
     /// FSO.BrowserEffects); fall back to <see cref="BasicEffect"/>. Stock FreeSO MGFX 11
-    /// probe via <c>?effect=1</c> (sample-content). Real LotView still blocked.
+    /// probe via <c>?effect=1</c> (sample-content).
+    /// S5: <c>?lot=real</c> attempts <see cref="ExternalWorld"/> + flat grass terrain;
+    /// <c>?lot=1</c> stays diamond placeholder (also the failure fallback).
     /// </summary>
-    public class FSO_BrowserClientGame : Game
+    public class FSO_BrowserClientGame : Microsoft.Xna.Framework.Game
     {
         static readonly Color ClearBlue = new Color(15, 18, 32);
         static readonly Color AccentBlue = new Color(79, 110, 247);
@@ -32,11 +42,13 @@ namespace FSO_BrowserClient
         const int LotSize = 16;
         const int TileHalfW = 18;
         const int TileHalfH = 9;
+        const int RealLotSize = 64;
 
         readonly string _contentBaseUrl;
         readonly string _gatewayBase;
         readonly bool _autoJoin;
         readonly bool _forceLotView;
+        readonly bool _forceRealLot;
         readonly bool _probeFreeSoXnb;
 
         GraphicsDeviceManager graphics;
@@ -50,41 +62,77 @@ namespace FSO_BrowserClient
         string loadStatus = "loading…";
         string effectStatus = "effect: not yet";
         string freeSoXnbStatus;
+        string realLotStatus;
         bool effectOk;
         bool kniEffectLoaded;
         bool loadStarted;
         bool joinStarted;
         bool spaceWasDown;
+        bool realLotReady;
+        bool realLotAttempted;
 
         ArchiveJoinDemo join;
         CancellationTokenSource joinCts;
 
         Vector2 lotPan;
 
+        _3DLayer lotLayer;
+        ExternalWorld realWorld;
+        Blueprint realBlueprint;
+
         /// <param name="contentBaseUrl">Absolute URL of sample-content root.</param>
         /// <param name="gatewayBase">Gateway base (http://127.0.0.1:8087 or ws://…).</param>
         /// <param name="autoJoin">When true, start city→lot join ~1.5s after texture load.</param>
-        /// <param name="forceLotView">When true (<c>?lot=1</c>), show isometric placeholder without joining.</param>
+        /// <param name="forceLotView">When true (<c>?lot=1</c> or <c>?lot=real</c>), show lot floor without joining.</param>
         /// <param name="probeFreeSoXnb">When true (<c>?effect=1</c>), Content.Load stock FreeSO colorpoly2D from sample-content.</param>
+        /// <param name="forceRealLot">When true (<c>?lot=real</c>), try ExternalWorld + TerrainComponent.</param>
         public FSO_BrowserClientGame(
             string contentBaseUrl,
             string gatewayBase,
             bool autoJoin = false,
             bool forceLotView = false,
-            bool probeFreeSoXnb = false)
+            bool probeFreeSoXnb = false,
+            bool forceRealLot = false)
         {
             _contentBaseUrl = contentBaseUrl ?? throw new ArgumentNullException(nameof(contentBaseUrl));
             _gatewayBase = gatewayBase ?? throw new ArgumentNullException(nameof(gatewayBase));
             _autoJoin = autoJoin;
             _forceLotView = forceLotView;
             _probeFreeSoXnb = probeFreeSoXnb;
+            _forceRealLot = forceRealLot;
             graphics = new GraphicsDeviceManager(this);
             Content.RootDirectory = "Content";
             Window.Title = "FreeSO Browser";
+
+            // WebGL-aligned flags before any LotView / WorldContent work.
+            ApplyWebGlEnvironmentEarly();
         }
 
         bool ShowLotFloor =>
             _forceLotView || (join != null && join.Stage == JoinStage.LotJoined);
+
+        bool DrawRealLot => realLotReady && realWorld != null;
+
+        /// <summary>
+        /// Match FSODroid / iOS WebGL constraints so WorldContent picks *iOS effect suffixes
+        /// and TitleContainer can see wwwroot/Content.
+        /// </summary>
+        static void ApplyWebGlEnvironmentEarly()
+        {
+            FSOEnvironment.GLVer = 2;
+            FSOEnvironment.SoftwareDepth = true;
+            FSOEnvironment.UseMRT = false;
+            FSOEnvironment.TexCompress = false;
+            FSOEnvironment.TexCompressSupport = false;
+            FSOEnvironment.DirectX = false;
+            FSOEnvironment.Linux = true;
+            FSOEnvironment.EnableNPOTMip = false;
+            FSOEnvironment.MSAASupport = false;
+            // TitleContainer root for BlazorGL = wwwroot/; effects live in wwwroot/Content/Effects/.
+            FSOEnvironment.GFXContentDir = "Content";
+            FSOEnvironment.ContentDir = "Content/";
+            FSOEnvironment.UserDir = "Content/";
+        }
 
         protected override void LoadContent()
         {
@@ -100,11 +148,110 @@ namespace FSO_BrowserClient
             if (_probeFreeSoXnb)
                 ProbeFreeSoEffectXnb();
 
+            if (_forceRealLot && !realLotAttempted)
+            {
+                realLotAttempted = true;
+                TryInitRealLot();
+            }
+
             if (!loadStarted)
             {
                 loadStarted = true;
                 _ = LoadSampleViaHttpStoreAsync();
             }
+        }
+
+        /// <summary>
+        /// Best-effort empty flat-grass lot via ExternalWorld. Any failure → diamonds.
+        /// </summary>
+        void TryInitRealLot()
+        {
+            try
+            {
+                FSOEnvironment.GameThread = Thread.CurrentThread;
+                GameThread.NoGame = true;
+                GameThread.UpdateExecuting = true;
+                GameThread.Game = Thread.CurrentThread;
+
+                WorldConfig.Current = new WorldConfig
+                {
+                    LightingMode = 0,
+                    SurroundingLots = 0,
+                    Weather = false,
+                };
+
+                WorldContent.Init(Services, FSOEnvironment.GFXContentDir);
+
+                lotLayer = new _3DLayer();
+                lotLayer.Initialize(GraphicsDevice);
+
+                realWorld = new ExternalWorld(GraphicsDevice);
+                lotLayer.AddExternal(realWorld);
+
+                var size = RealLotSize;
+                realBlueprint = new Blueprint(size, size);
+                realBlueprint.BuildableArea = new Rectangle(1, 1, size - 2, size - 2);
+                realBlueprint.Light = new[]
+                {
+                    new RoomLighting { OutsideLight = 100 },
+                    new RoomLighting { OutsideLight = 100 },
+                    new RoomLighting { OutsideLight = 100 },
+                };
+                realBlueprint.OutsideColor = Color.White;
+                realBlueprint.GenerateRoomLights();
+
+                var heights = new short[size * size];
+                var grass = new byte[size * size];
+                var rng = new Random(1);
+                for (int i = 0; i < grass.Length; i++)
+                    grass[i] = (byte)rng.Next(0, 90);
+
+                realBlueprint.Altitude = heights;
+                realBlueprint.AltitudeCenters = heights;
+
+                var terrain = new TerrainComponent(new Rectangle(0, 0, size, size), realBlueprint);
+                realBlueprint.Terrain = terrain;
+                terrain.Initialize(GraphicsDevice, realWorld.State);
+                terrain.UpdateTerrain(TerrainType.GRASS, TerrainType.GRASS, heights, grass);
+
+                realWorld.InitBlueprint(realBlueprint);
+                realWorld.State.WorldSize = size;
+                realWorld.State.CenterTile = new Vector2(size / 2f, size / 2f);
+                if (realWorld.State.AmbientLight != null)
+                    realWorld.State.AmbientLight.SetData(realBlueprint.RoomColors);
+                if (realWorld.State.OutsidePx != null)
+                    realWorld.State.OutsidePx.SetData(new[] { Color.White });
+
+                // Drain any InUpdate callbacks queued during InitBlueprint.
+                GameThread.DigestUpdate(new UpdateState());
+
+                realLotReady = true;
+                realLotStatus = "real LotView OK (empty grass)";
+                Console.WriteLine(realLotStatus);
+            }
+            catch (Exception ex)
+            {
+                realLotReady = false;
+                realLotStatus = "real LotView failed → diamonds: " + Truncate(ex.Message, 140);
+                Console.WriteLine(realLotStatus);
+                if (ex.InnerException != null)
+                    Console.WriteLine("  inner: " + ex.InnerException.Message);
+                Console.WriteLine(ex.StackTrace);
+                DisposeRealLot();
+            }
+            finally
+            {
+                GameThread.UpdateExecuting = false;
+            }
+        }
+
+        void DisposeRealLot()
+        {
+            try { realWorld?.Dispose(); } catch { /* ignore */ }
+            realWorld = null;
+            realBlueprint = null;
+            lotLayer = null;
+            realLotReady = false;
         }
 
         /// <summary>
@@ -206,7 +353,11 @@ namespace FSO_BrowserClient
                 {
                     sampleTexture = Texture2D.FromStream(GraphicsDevice, stream);
                 }
-                if (_forceLotView)
+                if (_forceRealLot)
+                    loadStatus = realLotReady
+                        ? "texture OK — real LotView + " + effectStatus
+                        : "texture OK — real LotView failed, diamonds + " + effectStatus;
+                else if (_forceLotView)
                     loadStatus = "texture OK — lot + " + effectStatus;
                 else if (_autoJoin)
                     loadStatus = "texture OK — auto-join shortly (Space also works)";
@@ -233,6 +384,7 @@ namespace FSO_BrowserClient
         protected override void UnloadContent()
         {
             joinCts?.Cancel();
+            DisposeRealLot();
             sampleTexture?.Dispose();
             sampleTexture = null;
             kniEffect = null;
@@ -267,16 +419,53 @@ namespace FSO_BrowserClient
 
             if (ShowLotFloor)
             {
-                const float panSpeed = 120f;
                 float dt = (float)gameTime.ElapsedGameTime.TotalSeconds;
-                if (keyboardState.IsKeyDown(Keys.Left) || keyboardState.IsKeyDown(Keys.A))
-                    lotPan.X += panSpeed * dt;
-                if (keyboardState.IsKeyDown(Keys.Right) || keyboardState.IsKeyDown(Keys.D))
-                    lotPan.X -= panSpeed * dt;
-                if (keyboardState.IsKeyDown(Keys.Up) || keyboardState.IsKeyDown(Keys.W))
-                    lotPan.Y += panSpeed * dt;
-                if (keyboardState.IsKeyDown(Keys.Down) || keyboardState.IsKeyDown(Keys.S))
-                    lotPan.Y -= panSpeed * dt;
+                if (DrawRealLot)
+                {
+                    // Pan CenterTile (tile units) for real LotView camera.
+                    const float tilePan = 8f;
+                    var ct = realWorld.State.CenterTile;
+                    if (keyboardState.IsKeyDown(Keys.Left) || keyboardState.IsKeyDown(Keys.A))
+                        ct.X -= tilePan * dt;
+                    if (keyboardState.IsKeyDown(Keys.Right) || keyboardState.IsKeyDown(Keys.D))
+                        ct.X += tilePan * dt;
+                    if (keyboardState.IsKeyDown(Keys.Up) || keyboardState.IsKeyDown(Keys.W))
+                        ct.Y -= tilePan * dt;
+                    if (keyboardState.IsKeyDown(Keys.Down) || keyboardState.IsKeyDown(Keys.S))
+                        ct.Y += tilePan * dt;
+                    realWorld.State.CenterTile = ct;
+                }
+                else
+                {
+                    const float panSpeed = 120f;
+                    if (keyboardState.IsKeyDown(Keys.Left) || keyboardState.IsKeyDown(Keys.A))
+                        lotPan.X += panSpeed * dt;
+                    if (keyboardState.IsKeyDown(Keys.Right) || keyboardState.IsKeyDown(Keys.D))
+                        lotPan.X -= panSpeed * dt;
+                    if (keyboardState.IsKeyDown(Keys.Up) || keyboardState.IsKeyDown(Keys.W))
+                        lotPan.Y += panSpeed * dt;
+                    if (keyboardState.IsKeyDown(Keys.Down) || keyboardState.IsKeyDown(Keys.S))
+                        lotPan.Y -= panSpeed * dt;
+                }
+            }
+
+            if (DrawRealLot)
+            {
+                try
+                {
+                    GameThread.UpdateExecuting = true;
+                    GameThread.DigestUpdate(new UpdateState());
+                }
+                catch (Exception ex)
+                {
+                    Console.WriteLine("real LotView update failed → diamonds: " + Truncate(ex.Message, 120));
+                    DisposeRealLot();
+                    realLotStatus = "real LotView update failed → diamonds";
+                }
+                finally
+                {
+                    GameThread.UpdateExecuting = false;
+                }
             }
 
             base.Update(gameTime);
@@ -288,9 +477,21 @@ namespace FSO_BrowserClient
 
             if (ShowLotFloor)
             {
-                spriteBatch.Begin();
-                DrawLotPlaceholder();
-                spriteBatch.End();
+                if (DrawRealLot)
+                {
+                    if (!TryDrawRealLot())
+                    {
+                        spriteBatch.Begin();
+                        DrawLotPlaceholder();
+                        spriteBatch.End();
+                    }
+                }
+                else
+                {
+                    spriteBatch.Begin();
+                    DrawLotPlaceholder();
+                    spriteBatch.End();
+                }
 
                 DrawBasicEffectTriangle();
 
@@ -306,6 +507,25 @@ namespace FSO_BrowserClient
             }
 
             base.Draw(gameTime);
+        }
+
+        bool TryDrawRealLot()
+        {
+            try
+            {
+                realWorld.Force2DPredraw(GraphicsDevice);
+                realWorld.Draw(GraphicsDevice);
+                return true;
+            }
+            catch (Exception ex)
+            {
+                Console.WriteLine("real LotView draw failed → diamonds: " + Truncate(ex.Message, 140));
+                if (ex.InnerException != null)
+                    Console.WriteLine("  inner: " + ex.InnerException.Message);
+                DisposeRealLot();
+                realLotStatus = "real LotView draw failed → diamonds";
+                return false;
+            }
         }
 
         void DrawBasicEffectTriangle()
@@ -415,8 +635,14 @@ namespace FSO_BrowserClient
             spriteBatch.Draw(pixel, new Rectangle(12, 10, 100, 8), effectOk ? OkGreen : ErrorRed);
             if (kniEffectLoaded)
                 spriteBatch.Draw(pixel, new Rectangle(12, 10, 50, 8), new Color(40, 255, 180));
+            // Real LotView indicator: lime when drawing ExternalWorld, amber when failed/fallback
+            if (_forceRealLot)
+            {
+                var realColor = realLotReady ? new Color(180, 255, 80) : new Color(255, 180, 60);
+                spriteBatch.Draw(pixel, new Rectangle(120, 10, 40, 8), realColor);
+            }
             if (!string.IsNullOrEmpty(freeSoXnbStatus))
-                spriteBatch.Draw(pixel, new Rectangle(120, 10, 60, 8), ErrorRed);
+                spriteBatch.Draw(pixel, new Rectangle(168, 10, 60, 8), ErrorRed);
             if (sampleTexture != null)
                 spriteBatch.Draw(sampleTexture, new Rectangle(vp.Width - 40, 4, 20, 20), Color.White);
         }

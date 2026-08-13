@@ -9,6 +9,10 @@
     <AssemblyName>FSO_BrowserClient</AssemblyName>
     <DefineConstants>$(DefineConstants);BLAZORGL</DefineConstants>
     <KniPlatform>BlazorGL</KniPlatform>
+    <!-- Align LotView closure with KNI + Mario stub (also in Directory.Build.props). -->
+    <FSO_GRAPHICS>Kni</FSO_GRAPHICS>
+    <FSO_NO_SM64>true</FSO_NO_SM64>
+    <BLAZORGL>true</BLAZORGL>
   </PropertyGroup>
 
   <PropertyGroup>
@@ -53,6 +57,13 @@
   <ItemGroup>
     <ProjectReference Include="..\FSO.BrowserAries\FSO.BrowserAries.csproj" />
     <ProjectReference Include="..\FSO.BrowserContent\FSO.BrowserContent.csproj" />
+    <!--
+      LotView + deps live under TSOClient/; their Directory.Build.props would default
+      FSO_GRAPHICS=MonoGame. AdditionalProperties force KNI + FSO_NO_SM64 for the
+      whole reference subgraph so bare `dotnet build` (no -p:) succeeds.
+    -->
+    <ProjectReference Include="..\..\TSOClient\tso.world\FSO.LotView.csproj"
+                      AdditionalProperties="FSO_GRAPHICS=Kni;FSO_NO_SM64=true;BLAZORGL=true" />
   </ItemGroup>
 
 </Project>

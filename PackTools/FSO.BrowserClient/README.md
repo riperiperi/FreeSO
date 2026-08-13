@@ -38,9 +38,9 @@ cd PackTools/FSO.BrowserClient && dotnet run
 
 With `?gateway=…` in the URL (or `?join=1`), the client auto-joins after ~1.5s;
 **Space** always starts a join. Use `?join=0` to disable auto-join even when
-`gateway` is set. On `LotJoined`, the UI switches to an **isometric grass lot
-placeholder** (WASD / arrows to pan). This is not real `FSO.LotView` yet — see
-`../docs/KNI-MIGRATION.md` S5.
+`gateway` is set. On `LotJoined`, the UI switches to the **isometric diamond
+placeholder** (WASD / arrows to pan). For real `FSO.LotView`, use `?lot=real`
+(see below / `../docs/KNI-MIGRATION.md` S5).
 
 ### Lot placeholder + S3 effects (no gateway)
 
@@ -76,16 +76,33 @@ Also loads stock FreeSO MGFX 11 from `sample-content/effects/colorpoly2D.xnb`.
 - `FSO.BrowserAries` — WASM-safe Aries framer + `ArchiveJoinDemo` (no Mina)
 - Gateway: [`../FSO.WsGateway`](../FSO.WsGateway)
 
+### Real LotView attempt (S5)
+
+```
+http://localhost:5259/?lot=real
+# or: http://localhost:5259/?lot=real=1
+```
+
+Tries `WorldContent.Init` + `ExternalWorld` + flat grass `TerrainComponent.UpdateTerrain`.
+On any failure → same diamond floor as `?lot=1`. Console: `real LotView OK…` or
+`real LotView failed → diamonds: …`. Status strip: lime pill = real path active;
+amber = fell back. `?lot=1` stays diamonds only.
+
+Build pulls `FSO.LotView` with `FSO_GRAPHICS=Kni` + `FSO_NO_SM64` via
+`Directory.Build.rsp` (global `/p:` for the whole ref graph) plus ProjectReference
+`AdditionalProperties`. Bare `dotnet build` — no extra `-p:` needed.
+
 ## Next — real LotView checklist (ordered)
 
-Placeholder diamonds stay until this passes. Do **not** wire `ExternalWorld` early.
-
-1. **KNI MGCB rebuild** — `colorpoly2D` KNIF **DONE** (CI + committed under `wwwroot/Content/Effects/`). Still need lot set: `GrassShaderiOS`, `2DWorldBatchiOS`, …
+1. **KNI MGCB rebuild** — **DONE** for lot set under `wwwroot/Content/Effects/`
+   (`colorpoly2D`, `GrassShaderiOS`, `2DWorldBatchiOS`, `gradpoly2D`, `LightMap2D`,
+   `SSAA`, `RCObjectiOS`, `ParticleShader`, `VitaboyiOS`, `SpriteEffectsiOS`,
+   `MapGeneration`). Rebuild via `PackTools/FSO.BrowserEffects` / CI when FX change.
 2. **Mario / SM64 optional** — **DONE** (`FSO_NO_SM64` / `BLAZORGL` stub).
 3. **`WorldContent.Init` MapGeneration** — **DONE** (fallback when `MapGenerationiOS` missing).
-4. **Dual-target LotView closure to net8** — **DONE** (`net8.0;net9.0` on Common/Files/Content/HIT/Vitaboy*/LotView + TargaImagePCL). BrowserClient still not ProjectReferenced.
-5. **Thin WASM seam** — gate Mina/HIT/Threads/File scans as needed.
-6. **Wire `ExternalWorld` + `TerrainComponent.UpdateTerrain`** behind a flag; keep diamond fallback.
+4. **Dual-target LotView closure to net8** — **DONE** (`net8.0;net9.0` on Common/Files/Content/HIT/Vitaboy*/LotView + TargaImagePCL). **BrowserClient ProjectReference wired** (`FSO_GRAPHICS=Kni` + `FSO_NO_SM64`).
+5. **Thin WASM seam** — gate Mina/HIT/Threads/File scans as needed (Mina comes in via `FSO.Common`; compile-only so far).
+6. **Wire `ExternalWorld` + `TerrainComponent.UpdateTerrain`** — **DONE** behind `?lot=real` / `?lot=real=1`; diamond fallback on failure. Best-effort empty terrain; verify pixels in browser.
 7. Real VM tick payload; live Archive RSA path.
 
 See `../docs/KNI-MIGRATION.md` and root `task_plan.md` Phase F.

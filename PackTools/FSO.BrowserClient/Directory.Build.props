@@ -1,4 +1,14 @@
 <Project>
   <!-- Inherit repo-wide FSO_GRAPHICS / KNI version pins. -->
   <Import Project="$([MSBuild]::GetPathOfFileAbove('Directory.Build.props', '$(MSBuildThisFileDirectory)..'))" />
+
+  <!--
+    BrowserClient is KNI/BlazorGL only. Force KNI + no Mario for this project and
+    (via AdditionalProperties on ProjectReference) for the LotView closure.
+  -->
+  <PropertyGroup>
+    <FSO_GRAPHICS>Kni</FSO_GRAPHICS>
+    <FSO_NO_SM64>true</FSO_NO_SM64>
+    <BLAZORGL>true</BLAZORGL>
+  </PropertyGroup>
 </Project>

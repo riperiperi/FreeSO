@@ -9,7 +9,7 @@ namespace FSO_BrowserClient.Pages
     {
         [Inject] NavigationManager Navigation { get; set; }
 
-        Game _game;
+        Microsoft.Xna.Framework.Game _game;
 
         protected override void OnAfterRender(bool firstRender)
         {
@@ -36,17 +36,28 @@ namespace FSO_BrowserClient.Pages
                 var joinParam = QueryValue(uri, "join");
                 var autoJoin = joinParam != "0"
                     && (gatewayExplicit != null || joinParam == "1");
-                // ?lot=1 — isometric placeholder without gateway (S5 visual stand-in).
-                var forceLot = QueryValue(uri, "lot") == "1";
+                // ?lot=1 — isometric diamond placeholder (default lot view).
+                // ?lot=real or ?lot=real=1 — attempt real FSO.LotView (ExternalWorld + terrain).
+                var lotParam = QueryValue(uri, "lot");
+                var forceLot = lotParam == "1" || IsRealLotParam(lotParam);
+                var forceRealLot = IsRealLotParam(lotParam);
                 // ?effect=1 — probe stock FreeSO MGFX 11 under sample-content (expected fail; S3).
                 // KNIF Content.Load of wwwroot/Content/Effects/colorpoly2D runs unconditionally.
                 var probeXnb = QueryValue(uri, "effect") == "1";
 
-                _game = new FSO_BrowserClientGame(contentBase, gateway, autoJoin, forceLot, probeXnb);
+                _game = new FSO_BrowserClientGame(contentBase, gateway, autoJoin, forceLot, probeXnb, forceRealLot);
                 _game.Run();
             }
 
             _game.Tick();
+        }
+
+        static bool IsRealLotParam(string lotParam)
+        {
+            if (string.IsNullOrEmpty(lotParam)) return false;
+            // Accept ?lot=real and ?lot=real=1 (value "real=1" after single '=' split).
+            return lotParam.Equals("real", StringComparison.OrdinalIgnoreCase)
+                || lotParam.StartsWith("real=", StringComparison.OrdinalIgnoreCase);
         }
 
         static string QueryValue(Uri uri, string key)

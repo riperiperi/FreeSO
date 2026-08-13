@@ -1,0 +1,3 @@
+/p:FSO_GRAPHICS=Kni
+/p:FSO_NO_SM64=true
+/p:BLAZORGL=true
