@@ -5,27 +5,169 @@
 
 .NOTES
   Windows only (needs system d3dcompiler_47.dll). See README.md for Mac blocker.
+  Builds each listed .fx separately so one EffectProcessor failure does not block
+  the rest (colorpoly2D must succeed).
 #>
 $ErrorActionPreference = "Stop"
 $Root = Split-Path -Parent $MyInvocation.MyCommand.Path
 $Repo = Resolve-Path (Join-Path $Root "..\..")
 $ClientEffects = Join-Path $Repo "PackTools\FSO.BrowserClient\wwwroot\Content\Effects"
+$ContentDir = Join-Path $Root "Content"
+$BuiltEffects = Join-Path $Root "wwwroot\Content\Effects"
+$ResultsPath = Join-Path $Root "BUILD-RESULTS.md"
 
-Write-Host "Building FSO.BrowserEffects (KniPlatform=BlazorGL)…"
+# WorldContent.LoadEffects (GLVer=2) minimum + colorpoly2D probe.
+$Effects = @(
+  "colorpoly2D",
+  "GrassShaderiOS",
+  "2DWorldBatchiOS",
+  "gradpoly2D",
+  "LightMap2D",
+  "SSAA",
+  "RCObjectiOS",
+  "ParticleShader",
+  "VitaboyiOS",
+  "SpriteEffectsiOS",
+  "MapGeneration"
+)
+
+function Find-MgcbExe {
+  $pkgRoot = Join-Path $env:USERPROFILE ".nuget\packages\nkast.xna.framework.content.pipeline.builder"
+  if (-not (Test-Path $pkgRoot)) { return $null }
+  $exe = Get-ChildItem -Path $pkgRoot -Recurse -Filter "MGCB.exe" -ErrorAction SilentlyContinue |
+    Sort-Object FullName -Descending |
+    Select-Object -First 1
+  if ($exe) { return $exe.FullName }
+  return $null
+}
+
+function Write-OneMgcb([string]$fxName, [string]$mgcbPath, [string]$outDir, [string]$objDir) {
+  # Use forward slashes — MGCB accepts them on Windows and avoids escaping issues.
+  $outFwd = ($outDir -replace '\\', '/')
+  $objFwd = ($objDir -replace '\\', '/')
+  $rel = "Effects/$fxName.fx"
+  @"
+#----------------------------- Global Properties ----------------------------#
+
+/outputDir:$outFwd
+/intermediateDir:$objFwd
+/platform:BlazorGL
+/config:
+/profile:Reach
+/compress:False
+
+#---------------------------------- Content ---------------------------------#
+
+#begin $rel
+/importer:EffectImporter
+/processor:EffectProcessor
+/build:$rel
+"@ | Set-Content -Path $mgcbPath -Encoding ASCII
+}
+
+Write-Host "Building FSO.BrowserEffects (KniPlatform=BlazorGL, per-effect)…"
 Push-Location $Root
 try {
-  dotnet build -c Release --nologo
-  if ($LASTEXITCODE -ne 0) { throw "dotnet build failed ($LASTEXITCODE)" }
+  dotnet restore FSO.BrowserEffects.csproj --nologo -v q
+  if ($LASTEXITCODE -ne 0) { throw "dotnet restore failed ($LASTEXITCODE)" }
 
-  $built = Join-Path $Root "wwwroot\Content\Effects"
-  if (-not (Test-Path (Join-Path $built "colorpoly2D.xnb"))) {
-    throw "Expected XNB missing: $built\colorpoly2D.xnb"
+  $mgcb = Find-MgcbExe
+  if (-not $mgcb) { throw "Could not locate MGCB.exe under ~/.nuget/packages/nkast.xna.framework.content.pipeline.builder (restore first)" }
+  Write-Host "Using MGCB: $mgcb"
+
+  New-Item -ItemType Directory -Force -Path $BuiltEffects | Out-Null
+  # Keep previously built colorpoly2D if present; remove other stale xnbs from this project's wwwroot
+  Get-ChildItem $BuiltEffects -Filter *.xnb -ErrorAction SilentlyContinue |
+    Where-Object { $_.BaseName -ne "colorpoly2D" -or $Effects -contains $_.BaseName } |
+    ForEach-Object { } # no-op: we overwrite per success below
+
+  $ok = New-Object System.Collections.Generic.List[string]
+  $fail = New-Object System.Collections.Generic.List[string]
+  $tempMgcb = Join-Path $ContentDir "_one.mgcb"
+  $cliOut = Join-Path $Root "wwwroot\Content"
+  New-Item -ItemType Directory -Force -Path $cliOut | Out-Null
+
+  foreach ($name in $Effects) {
+    $fxPath = Join-Path $ContentDir "Effects\$name.fx"
+    if (-not (Test-Path $fxPath)) {
+      Write-Host "SKIP missing source: $name.fx"
+      [void]$fail.Add("$name (source missing)")
+      continue
+    }
+
+    $cliObj = Join-Path $Root "obj\Effects\$name"
+    New-Item -ItemType Directory -Force -Path $cliObj | Out-Null
+    Write-OneMgcb -fxName $name -mgcbPath $tempMgcb -outDir $cliOut -objDir $cliObj
+
+    Write-Host "--- Building $name.fx ---"
+    $code = 1
+    Push-Location $ContentDir
+    try {
+      $prevEap = $ErrorActionPreference
+      $ErrorActionPreference = "Continue"
+      & $mgcb "/@:$tempMgcb" 2>&1 | ForEach-Object { Write-Host $_ }
+      $code = $LASTEXITCODE
+      $ErrorActionPreference = $prevEap
+    }
+    finally {
+      Pop-Location
+    }
+
+    $xnb = Join-Path $BuiltEffects "$name.xnb"
+    if (-not (Test-Path $xnb)) {
+      $candidates = @(
+        (Join-Path $cliOut "Effects\$name.xnb"),
+        (Join-Path $cliOut "$name.xnb"),
+        (Join-Path $Root "Content\bin\BlazorGL\Effects\$name.xnb")
+      )
+      foreach ($c in $candidates) {
+        if (Test-Path $c) {
+          Copy-Item -Force $c $xnb
+          break
+        }
+      }
+    }
+
+    if ((Test-Path $xnb) -and ($code -eq 0)) {
+      Write-Host "OK $name.xnb ($((Get-Item $xnb).Length) bytes)"
+      [void]$ok.Add($name)
+    }
+    else {
+      Write-Host "FAIL $name (exit=$code)"
+      [void]$fail.Add($name)
+      if (Test-Path $xnb) { Remove-Item -Force $xnb }
+    }
+  }
+
+  if (Test-Path $tempMgcb) { Remove-Item -Force $tempMgcb }
+
+  $lines = @(
+    "# FSO.BrowserEffects build results",
+    "",
+    "Generated by ``build.ps1`` on $((Get-Date).ToUniversalTime().ToString('yyyy-MM-dd HH:mm:ss')) UTC.",
+    "",
+    "## Succeeded",
+    ""
+  )
+  if ($ok.Count -eq 0) { $lines += "(none)" } else { foreach ($n in $ok) { $lines += "- ``$n.xnb``" } }
+  $lines += "", "## Failed", ""
+  if ($fail.Count -eq 0) { $lines += "(none)" } else { foreach ($n in $fail) { $lines += "- ``$n``" } }
+  $lines += ""
+  $lines -join "`n" | Set-Content -Path $ResultsPath -Encoding UTF8
+  Write-Host "Wrote $ResultsPath"
+
+  if (-not (Test-Path (Join-Path $BuiltEffects "colorpoly2D.xnb"))) {
+    throw "Expected XNB missing: $BuiltEffects\colorpoly2D.xnb (minimum required)"
   }
 
   New-Item -ItemType Directory -Force -Path $ClientEffects | Out-Null
-  Copy-Item -Force (Join-Path $built "*.xnb") $ClientEffects
+  Copy-Item -Force (Join-Path $BuiltEffects "*.xnb") $ClientEffects
+  Copy-Item -Force $ResultsPath (Join-Path $ClientEffects "BUILD-RESULTS.md")
   Write-Host "Copied XNBs → $ClientEffects"
   Get-ChildItem $ClientEffects -Filter *.xnb | ForEach-Object { Write-Host "  $($_.Name) ($($_.Length) bytes)" }
+  if ($fail.Count -gt 0) {
+    Write-Host "WARNING: $($fail.Count) effect(s) failed — see BUILD-RESULTS.md"
+  }
 }
 finally {
   Pop-Location

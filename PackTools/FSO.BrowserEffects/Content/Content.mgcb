@@ -1,4 +1,3 @@
-
 #----------------------------- Global Properties ----------------------------#
 
 /outputDir:bin/$(Platform)
@@ -13,9 +12,61 @@
 
 #---------------------------------- Content ---------------------------------#
 
-# FreeSO simplest 2D color poly effect (source under Content/Effects/).
+# Minimum WorldContent.LoadEffects set for GLVer=2 (iOS variants where they exist).
+# Sibling .fx files (GrassShader.fx, LightingCommon.fx, etc.) live next to these for
+# #include resolution but are not /build targets.
+
 #begin Effects/colorpoly2D.fx
 /importer:EffectImporter
 /processor:EffectProcessor
 /build:Effects/colorpoly2D.fx
 
+#begin Effects/GrassShaderiOS.fx
+/importer:EffectImporter
+/processor:EffectProcessor
+/build:Effects/GrassShaderiOS.fx
+
+#begin Effects/2DWorldBatchiOS.fx
+/importer:EffectImporter
+/processor:EffectProcessor
+/build:Effects/2DWorldBatchiOS.fx
+
+#begin Effects/gradpoly2D.fx
+/importer:EffectImporter
+/processor:EffectProcessor
+/build:Effects/gradpoly2D.fx
+
+#begin Effects/LightMap2D.fx
+/importer:EffectImporter
+/processor:EffectProcessor
+/build:Effects/LightMap2D.fx
+
+#begin Effects/SSAA.fx
+/importer:EffectImporter
+/processor:EffectProcessor
+/build:Effects/SSAA.fx
+
+#begin Effects/RCObjectiOS.fx
+/importer:EffectImporter
+/processor:EffectProcessor
+/build:Effects/RCObjectiOS.fx
+
+#begin Effects/ParticleShader.fx
+/importer:EffectImporter
+/processor:EffectProcessor
+/build:Effects/ParticleShader.fx
+
+#begin Effects/VitaboyiOS.fx
+/importer:EffectImporter
+/processor:EffectProcessor
+/build:Effects/VitaboyiOS.fx
+
+#begin Effects/SpriteEffectsiOS.fx
+/importer:EffectImporter
+/processor:EffectProcessor
+/build:Effects/SpriteEffectsiOS.fx
+
+#begin Effects/MapGeneration.fx
+/importer:EffectImporter
+/processor:EffectProcessor
+/build:Effects/MapGeneration.fx

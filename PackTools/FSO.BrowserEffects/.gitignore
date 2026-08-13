@@ -3,4 +3,6 @@ obj/
 wwwroot/
 Content/obj/
 Content/bin/
+Content/_one.mgcb
+BUILD-RESULTS.md
 *.kniContent

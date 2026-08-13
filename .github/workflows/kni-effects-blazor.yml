@@ -26,7 +26,9 @@ jobs:
         uses: actions/upload-artifact@v7
         with:
           name: kni-effects-blazorgl
-          path: PackTools/FSO.BrowserClient/wwwroot/Content/Effects/*.xnb
+          path: |
+            PackTools/FSO.BrowserClient/wwwroot/Content/Effects/*.xnb
+            PackTools/FSO.BrowserClient/wwwroot/Content/Effects/BUILD-RESULTS.md
 
       - name: Header sanity (not stock MonoGame MGFX)
         shell: pwsh
@@ -38,3 +40,8 @@ jobs:
             throw "XNB still references MonoGame.Framework — expected KNI rebuild"
           }
           Write-Host "OK: $xnb ($($bytes.Length) bytes) — no MonoGame.Framework reader string"
+          Get-ChildItem "PackTools/FSO.BrowserClient/wwwroot/Content/Effects" -Filter *.xnb |
+            ForEach-Object { Write-Host "artifact: $($_.Name) ($($_.Length) bytes)" }
+          if (Test-Path "PackTools/FSO.BrowserClient/wwwroot/Content/Effects/BUILD-RESULTS.md") {
+            Get-Content "PackTools/FSO.BrowserClient/wwwroot/Content/Effects/BUILD-RESULTS.md"
+          }

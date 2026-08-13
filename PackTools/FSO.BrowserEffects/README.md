@@ -3,6 +3,30 @@
 Rebuild FreeSO `.fx` shaders with **KNI MGCB** for **BlazorGL** (KNIF XNBs that
 `Content.Load<Effect>` accepts).
 
+## Minimum lot FX set (GLVer=2 / WorldContent.LoadEffects)
+
+Built from `TSOClient/tso.content/ContentSrc/Effects/` into
+`Content/Effects/` (plus `#include` siblings: `GrassShader.fx`, `RCObject.fx`,
+`Vitaboy.fx`, `SpriteEffects.fx`, `LightingCommon.fx`):
+
+| Asset name (Content.Load) | Source `.fx` |
+|---|---|
+| `Effects/colorpoly2D` | `colorpoly2D.fx` (BrowserClient probe) |
+| `Effects/GrassShaderiOS` | `GrassShaderiOS.fx` → includes `GrassShader.fx` |
+| `Effects/2DWorldBatchiOS` | `2DWorldBatchiOS.fx` |
+| `Effects/gradpoly2D` | `gradpoly2D.fx` |
+| `Effects/LightMap2D` | `LightMap2D.fx` |
+| `Effects/SSAA` | `SSAA.fx` |
+| `Effects/RCObjectiOS` | `RCObjectiOS.fx` → includes `RCObject.fx` |
+| `Effects/ParticleShader` | `ParticleShader.fx` |
+| `Effects/VitaboyiOS` | `VitaboyiOS.fx` → includes `Vitaboy.fx` |
+| `Effects/SpriteEffectsiOS` | `SpriteEffectsiOS.fx` → includes `SpriteEffects.fx` |
+| `Effects/MapGeneration` | `MapGeneration.fx` (no iOS variant; Init falls back) |
+
+`build.ps1` compiles each effect separately so a single EffectProcessor failure
+does not block the rest. `colorpoly2D` must succeed. See `BUILD-RESULTS.md`
+after a CI/Windows run for per-effect status.
+
 ## Why not Mac?
 
 Verified 2026-08-12 on Apple Silicon with
@@ -46,15 +70,18 @@ CI: `.github/workflows/kni-effects-blazor.yml` (windows-latest) uploads
 
 ## Consume in BrowserClient
 
-Place `colorpoly2D.xnb` at:
+Place rebuilt XNBs at:
 
-`PackTools/FSO.BrowserClient/wwwroot/Content/Effects/colorpoly2D.xnb`
+`PackTools/FSO.BrowserClient/wwwroot/Content/Effects/*.xnb`
 
 Then open `http://localhost:5259/?lot=1` — green status
 **effect OK (Content.Load colorpoly2D)** when KNIF loads; otherwise BasicEffect
 fallback. Stock FreeSO MGFX 11 probe: `?lot=1&effect=1` (sample-content).
 
+LotView is **not** wired into BrowserClient yet; these XNBs are staged for that.
+
 ## Source
 
-`Content/Effects/colorpoly2D.fx` — copy of
-`TSOClient/tso.content/ContentSrc/Effects/colorpoly2D.fx` (46 lines).
+Copies under `Content/Effects/` from
+`TSOClient/tso.content/ContentSrc/Effects/`. Tiny `*iOS.fx` wrappers need their
+sibling `.fx` files beside them for `#include`.
