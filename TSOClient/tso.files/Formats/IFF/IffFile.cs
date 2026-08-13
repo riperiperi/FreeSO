@@ -77,6 +77,57 @@ namespace FSO.Files.Formats.IFF
             {"PNG_", typeof(PNG) }
         };
 
+        // Mono on WASM fails Activator.CreateInstance for types never constructed
+        // directly (MissingMethodException, one chunk type at a time), so chunk
+        // instantiation goes through these compile-time factories instead.
+        public static Dictionary<string, Func<IffChunk>> CHUNK_FACTORIES = new Dictionary<string, Func<IffChunk>>()
+        {
+            {"STR#", () => new STR()},
+            {"CTSS", () => new CTSS()},
+            {"PALT", () => new PALT()},
+            {"OBJD", () => new OBJD()},
+            {"DGRP", () => new DGRP()},
+            {"SPR#", () => new SPR()},
+            {"SPR2", () => new SPR2()},
+            {"BHAV", () => new BHAV()},
+            {"TPRP", () => new TPRP()},
+            {"SLOT", () => new SLOT()},
+            {"GLOB", () => new GLOB()},
+            {"BCON", () => new BCON()},
+            {"TTAB", () => new TTAB()},
+            {"OBJf", () => new OBJf()},
+            {"TTAs", () => new TTAs()},
+            {"FWAV", () => new FWAV()},
+            {"BMP_", () => new BMP()},
+            {"PIFF", () => new PIFF()},
+            {"TRCN", () => new TRCN()},
+
+            {"objt", () => new OBJT()},
+            {"Arry", () => new ARRY()},
+            {"ObjM", () => new OBJM()},
+            {"WALm", () => new WALm()},
+            {"FLRm", () => new FLRm()},
+            {"CARR", () => new CARR()},
+
+            {"NBRS", () => new NBRS()},
+            {"FAMI", () => new FAMI()},
+            {"NGBH", () => new NGBH()},
+            {"FAMs", () => new FAMs()},
+            {"THMB", () => new THMB()},
+            {"SIMI", () => new SIMI()},
+            {"TATT", () => new TATT()},
+            {"HOUS", () => new HOUS()},
+
+            {"TREE", () => new TREE()},
+            {"FCNS", () => new FCNS()},
+
+            {"FSOR", () => new FSOR()},
+            {"FSOM", () => new FSOM()},
+            {"MTEX", () => new MTEX()},
+            {"FSOV", () => new FSOV()},
+            {"PNG_", () => new PNG()}
+        };
+
         public IffRuntimeInfo RuntimeInfo = new IffRuntimeInfo();
         private Dictionary<Type, Dictionary<ushort, object>> ByChunkId;
         private Dictionary<Type, List<object>> ByChunkType;
@@ -209,7 +260,7 @@ namespace FSO.Files.Formats.IFF
             else
             {
                 Type chunkClass = CHUNK_TYPES[chunkType];
-                IffChunk newChunk = (IffChunk)Activator.CreateInstance(chunkClass);
+                IffChunk newChunk = CHUNK_FACTORIES[chunkType]();
                 newChunk.ChunkID = chunkID;
                 newChunk.OriginalID = chunkID;
                 newChunk.ChunkFlags = chunkFlags;
