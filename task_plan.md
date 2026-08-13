@@ -16,7 +16,7 @@ Supersedes `PRODUCT-DIRECTION.md` (which centred "content worth having + player 
 **Mechanic decided 2026-08-08:** the AI builds the house **from a photo or floor plan**, then the player refines it conversationally. Not manual building with AI assistance.
 
 ## Current Phase
-Phase A — A2 vision (floor plan → layout JSON). Desktop path. Browser parked.
+Phase A — A2 vision proven on synthetic plan; next is a real floor-plan photo → Sandbox Mode. Browser parked.
 
 ## Why this is smaller than it looks
 **Houses are already data.** A lot is a blueprint XML — `<floors>`, `<walls>`, `<object>`, each with tile coordinates and a level. `XmlHouse.cs` parses it, `VMWorldActivator.LoadFromXML()` builds the world from it, and **`VMBlueprintRestoreCmd` is a live network command that takes that XML as raw bytes and rebuilds the lot mid-game** — the server already uses it to reset lots.
@@ -63,7 +63,9 @@ Sequenced so the vision model is the *last* variable introduced, not the first.
 - [x] **Windows.** Same wall-object path as doors (`ArchitectualWindow`, GUID `0x44E8992A`). `4caba4c23`. Does not cut pathing.
 - [ ] Walk a Sim through a door — occupancy, not the video. Uncommitted `--walk` in `FSO.VMHarness/Program.cs`: no-door control fails correctly; with doors, path found then routing frame vanishes at tick 1 still in room 2. **Leave it.** Do not mix with vision.
 - [ ] Floor patterns are placeholder (`3`). A home wants wood/carpet per room; cosmetic, cheap.
-- [ ] **This window: vision.** Floor-plan image → layout JSON. It only ever emits the model above; it never writes XML. Desktop path is enough for the north-star video. Friends walk in after that looks like Sims.
+- [x] **Vision (synthetic).** `FSO.HouseGen --from-image` → layout JSON only; validates through `BlueprintWriter`. Default `claude-opus-5`. `examples/floorplans/kat-flat.png` → correct L topology (bath door north on bed–bath wall; living not stretched); harness OK (4 indoor, 3 door cuts, lot phone). Output: `examples/layouts/kat-flat-from-image.json`. Scale not pixel-matched to the hand layout.
+- [x] **Real floor-plan photo** through the same CLI (2026-08-13). `examples/floorplans/grove-2br-97sqm.jpg` (Wikimedia CC BY-SA, real 2BR marketing plan) → 13 rooms / 10 doors / 12 windows, topology matches the drawing; harness: 14 indoor rooms, 10 door cuts, lot phone present. The original failure was infra, not vision: opus-5 thinks by default and `max_tokens: 4096` was consumed entirely by thinking (`stop_reason: max_tokens`, zero text) — raised to 16000 and the error now reports stop_reason.
+- [ ] **Sandbox Mode pixels** for the grove plan. That is the video still. Needs Kat in the game: `examples/grove-2br-from-image.xml`.
 - [ ] Cheap by construction: one XML per house, not 200 agent runs
 
 **A3 — the object loop, in passing**
@@ -130,7 +132,7 @@ Sequenced so the vision model is the *last* variable introduced, not the first.
 ## Key Questions
 1. **Does a hand-authored blueprint XML load cleanly into a live lot?** A1 answers it, and everything in Phase A depends on it.
 2. ~~**What is the scale mapping from a real home to a 77-tile lot?**~~ **Answered: 1 tile = 1 m, and capacity was never the constraint** — the 77/`FloorClip` framing was job-lot machinery. Legibility below 1 m is the real limit. See A1.
-3. Can a vision model produce a valid room layout from a floor plan at all? The one genuinely untested integration.
+3. ~~Can a vision model produce a valid room layout from a floor plan at all?~~ **Yes on a labeled synthetic plan (2026-08-13).** Real photo still unchecked.
 4. Does the WebSocket gateway come back buildable? Only affects Phase F now, not the whole plan.
 5. Can per-object cost get under ~$0.15 before the catalog gets built?
 

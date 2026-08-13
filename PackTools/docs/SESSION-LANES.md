@@ -7,7 +7,7 @@ Same worktree: `packtools-on-archive`. One folder. Do not cross lanes.
 | **Phase F — browser** | parked 2026-08-12 | — | `FSO.HouseGen`, `FSO.VMHarness`, `examples/layouts` |
 | **Phase A — house** | this window (handoff 2026-08-12 23:21) | `FSO.HouseGen`, `FSO.VMHarness`, `examples/layouts`, house examples, `STATE.md`, `task_plan.md` | `FSO.Browser*`, LotView, `:5259`, KNI rebuild paths |
 
-## Live status (2026-08-12 ~23:24 PDT)
+## Live status (2026-08-13)
 
 ### Goal
 Floor plan / photo → AI builds house on a lot → friends hang out there. Desktop path is fine for the video. Browser polish after that looks like Sims.
@@ -18,7 +18,7 @@ Parked. Join-city scaffolding, KNIF, Mario-optional, LotView net8 dual-target, `
 ### Phase A (this window)
 - Committed: `4caba4c23` — windows on generated houses (local **ahead 1**, not pushed).
 - Uncommitted WIP: `PackTools/FSO.VMHarness/Program.cs` — `--walk`. Routing frame vanishes at tick 1. **Leave it.** Occupancy proof, not the north-star.
-- **Now:** floor-plan image → layout JSON (`FSO.HouseGen --from-image`). Converter + lot load already proven.
+- **`--from-image` proven on a real photo (2026-08-13):** `grove-2br-97sqm.jpg` → 13 rooms, harness green. Fixed: opus-5 default thinking ate the whole 4096 `max_tokens` (→ "empty text"); now 16000. Next: Sandbox Mode pixels (`examples/grove-2br-from-image.xml`).
 
 ## Shared collision surface
 `STATE.md`, `task_plan.md` — re-read HEAD before editing; throwaway-index + **exact paths only**. Never `git add -A`.

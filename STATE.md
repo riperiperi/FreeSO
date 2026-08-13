@@ -50,7 +50,7 @@ The branch that is actually maintained. `master` has not moved since Aug 2025.
 | **Blueprint → live house** ✅ | **Proven.** A hand-authored blueprint XML loads through `VMBlueprintRestoreCmd` into a running VM and the engine derives a sealed interior. `PackTools/examples/house-one-room.xml` + `FSO.VMHarness --house`. Verified both directions — remove the walls and the same probe reports outdoors. |
 | **Layout → blueprint → rendered house** ✅ | **Seen on screen, 2026-08-10.** `FSO.HouseGen` turns a room-layout JSON into blueprint XML; `kat-flat.json` (living/bedroom/bathroom, three doors) loads through Sandbox Mode and **stands on the lot in the real client** — walls up, floors down, all three doorways cut. Kat's screenshot, not a harness assertion. |
 | **Windows on generated houses** ✅ | Same wall-object path as doors (`ArchitectualWindow`, GUID `0x44E8992A`). `4caba4c23`. Does not cut pathing. |
-| **Floor plan → layout JSON** | **Not built — this window.** The only missing product link: an image becomes the typed layout the converter already consumes. Everything downstream of that JSON is verified end to end, pixels included. Desktop path is enough for the video. |
+| **Floor plan → layout JSON** ✅ | **Proven 2026-08-13.** `FSO.HouseGen --from-image` (Anthropic vision → `HouseLayout` only; `BlueprintWriter` still deterministic). Default model `claude-opus-5` (sonnet-4-5 stretched the L and put the bath door on the living wall). Synthetic `examples/floorplans/kat-flat.png` → 3 rooms / 3 doors / 2 windows, bath door on bed–bath north wall; harness: 4 indoor rooms, 3 door cuts, lot phone present, probe indoors. Scale ≠ oracle tile-for-tile. **Real photo proven 2026-08-13:** `grove-2br-97sqm.jpg` → 13 rooms / 10 doors / 12 windows, harness green (14 indoor, 10 cuts, lot phone). Gotcha fixed: opus-5 thinks by default, so `max_tokens: 4096` went entirely to thinking → "empty text"; now 16000 + stop_reason in the error. Sandbox pixels pending. |
 | **Walk a Sim through a door** | **WIP, uncommitted.** `FSO.VMHarness --walk`: control (no door) → `NO PATH` ✓; with doors, path found then routing frame vanishes at tick 1 still in room 2. Occupancy proof, not the north-star. Leave it; do not mix with vision. |
 | **Photo → furnishing** | **Not built.** Depends on the object pipeline below, which works. |
 | **Friends inside it** | FreeSO's multiplayer, unchanged. Untested with an AI-generated house. After the house looks like a house. |
@@ -95,7 +95,7 @@ Two that were on this list and shouldn't be: `GENERIC-GENERATOR-DESIGN.md` is **
 
 | Phase | Goal | State |
 |---|---|---|
-| **A — Your house, from a photo** | Upload a floor plan → AI emits blueprint XML → the house stands on a lot. The first real integration, and the north-star video. Desktop path is fine. | **this window** — vision is the remaining link; layout→XML→lot is proven; windows landed |
+| **A — Your house, from a photo** | Upload a floor plan → AI emits blueprint XML → the house stands on a lot. The first real integration, and the north-star video. Desktop path is fine. | **vision link closed on synthetic plan** — next: a real floor-plan photo through the same path, then Sandbox Mode pixels |
 | **B — Friends in a house together (BYO)** | Two players, one server, one generated San Francisco. One uploads a floor plan and gets a house at their real address; the other walks in. | pending |
 | **C — Make it look like mine** | Photo-based furnishing and conversational refinement: "move the sofa left", "the window should be bigger". Extends A using the working object pipeline. | pending |
 | **D — Persistence and sharing** | Houses survive restarts; publish, discover, fork, remix. Lot serialization already exists in-engine — check before building. | pending |
@@ -107,7 +107,7 @@ Two that were on this list and shouldn't be: `GENERIC-GENERATOR-DESIGN.md` is **
 
 ## Known gaps and risks
 
-**Floor-plan-to-lot translation is untested — this decides Phase A.** We can compile and inject objects. We have never tested whether a vision model can turn a floor-plan image into a valid room layout, or whether the resulting blueprint XML loads cleanly. The format and loader exist; the translation does not.
+**Floor-plan vision works on a labeled synthetic plan; a real photo is still unchecked.** Synthetic → layout → XML → harness OK (2026-08-13). Scale fidelity and messy real-world plans are the remaining risk before calling Phase A done for the video.
 
 **The generated SF has never been loaded into the game.** It produced correct-looking rasters on disk. Playable is a claim nobody has checked.
 

@@ -1,0 +1,71 @@
+{
+  "Size": 77,
+  "Rooms": [
+    {
+      "Name": "living",
+      "X": 28,
+      "Y": 28,
+      "Width": 12,
+      "Height": 8,
+      "Floor": 3,
+      "Level": 0
+    },
+    {
+      "Name": "bedroom",
+      "X": 40,
+      "Y": 28,
+      "Width": 8,
+      "Height": 8,
+      "Floor": 3,
+      "Level": 0
+    },
+    {
+      "Name": "bathroom",
+      "X": 40,
+      "Y": 36,
+      "Width": 8,
+      "Height": 5,
+      "Floor": 3,
+      "Level": 0
+    }
+  ],
+  "Doors": [
+    {
+      "X": 28,
+      "Y": 32,
+      "Edge": "west",
+      "Guid": "0x23941850",
+      "Level": 0
+    },
+    {
+      "X": 40,
+      "Y": 30,
+      "Edge": "west",
+      "Guid": "0x23941850",
+      "Level": 0
+    },
+    {
+      "X": 43,
+      "Y": 36,
+      "Edge": "north",
+      "Guid": "0x23941850",
+      "Level": 0
+    }
+  ],
+  "Windows": [
+    {
+      "X": 33,
+      "Y": 28,
+      "Edge": "north",
+      "Guid": "0x44E8992A",
+      "Level": 0
+    },
+    {
+      "X": 28,
+      "Y": 34,
+      "Edge": "west",
+      "Guid": "0x44E8992A",
+      "Level": 0
+    }
+  ]
+}

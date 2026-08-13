@@ -115,3 +115,6 @@ PackTools/FSO.BrowserAries/bin/
 PackTools/FSO.BrowserAries/obj/
 PackTools/FSO.BrowserAries.Tests/bin/
 PackTools/FSO.BrowserAries.Tests/obj/
+
+# Generated blueprints from HouseGen --from-image / layout runs
+PackTools/examples/out/
