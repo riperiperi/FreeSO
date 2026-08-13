@@ -53,6 +53,7 @@ namespace FSO_BrowserClient
         string pendingHouseXml;
         bool houseFetchStarted;
         bool houseApplied;
+        JoinStage? lastLoggedJoinStage;
         readonly bool _probeFreeSoXnb;
 
         GraphicsDeviceManager graphics;
@@ -419,7 +420,9 @@ namespace FSO_BrowserClient
 
         void StartJoin()
         {
-            if (joinStarted || _forceLotView) return;
+            // Forced lot view used to exclude joining; ?house= + ?join=1 now run both —
+            // the AI house renders locally while the Aries join runs to LotJoined.
+            if (joinStarted) return;
             joinStarted = true;
             joinCts = new CancellationTokenSource();
             join = new ArchiveJoinDemo(_gatewayBase);
@@ -728,6 +731,18 @@ namespace FSO_BrowserClient
                 spriteBatch.Draw(pixel, new Rectangle(168, 10, 60, 8), ErrorRed);
             if (sampleTexture != null)
                 spriteBatch.Draw(sampleTexture, new Rectangle(vp.Width - 40, 4, 20, 20), Color.White);
+            // Join stage chip: gray = not started, amber = in progress, green = LotJoined.
+            if (joinStarted && join != null)
+            {
+                var joinColor = join.Stage == JoinStage.LotJoined ? OkGreen
+                    : new Color(255, 180, 60);
+                spriteBatch.Draw(pixel, new Rectangle(236, 10, 40, 8), joinColor);
+                if (join.Stage != lastLoggedJoinStage)
+                {
+                    lastLoggedJoinStage = join.Stage;
+                    Console.WriteLine($"joinstage {join.Stage}");
+                }
+            }
         }
 
         void DrawDiamond(int cx, int cy, int halfW, int halfH, Color color)
