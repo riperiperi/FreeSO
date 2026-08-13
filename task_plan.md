@@ -111,12 +111,13 @@ Sequenced so the vision model is the *last* variable introduced, not the first.
 - [x] **Browser session response path** — after type-2000 handshake, JS client sends `RequestClientSessionResponse` (type 21); fake city replies with Voltron `HostOnlinePDU`. Stage UI through HostOnline. 5/5 gateway tests. Live join still needs valid PKCS#1 token + ClientOnline → avatar → lot on 34101.
 - [x] **KNI Blazor speaks Aries** — `FSO.BrowserAries` + BrowserClient auto-join through gateway to LotJoined (integration test).
 - [x] **Aries city + lot join (handshake)** — FindLot FOUND → `/lot` type 22 → ticket type 21 → HostOnline → ClientOnline → empty `FSOVMTickBroadcast`.
-- [ ] **Lot VM stream / real LotView** — real tick contents; wire `FSO.LotView` (needs Mario stub + S3 iOS XNBs).
+- [ ] **Lot VM stream / real LotView** — real tick contents; wire `FSO.LotView` (needs Mario stub + **KNI-rebuilt** iOS XNBs).
 - [x] **S5 lot placeholder** — after `LotJoined` (or `?lot=1`), BrowserClient draws isometric grass diamonds (FreeSO GRASS colors); WASD pan. Not real LotView.
 - [x] **KNI BlazorGL S0 + S2 texture** — `FSO.BrowserClient` loads `HttpContentStore` → `Texture2D` (`sample-content/textures/squares.png`).
+- [x] **KNI S3 partial (effects)** — `BasicEffect` on lot view (green status + triangle). Stock FreeSO XNBs (MGFX 11) fail `Content.Load` (`?effect=1`); need KNI MGCB rebuild of `*iOS.fx`.
 - [x] **KNI S1** — `FSO_GRAPHICS` switch; lib chain through `FSO.Client` on KNI; Mac on MonoGame.
 - [x] **Content store wired** — Composite (BasePath + Content/) + GetResource/FileProvider; remaining providers/TS1 still disk.
-- [ ] S3–S4, S6, S8 of KNI-MIGRATION (effects, audio, threads, full UI); real S5 LotView
+- [ ] S3 full (KNI-rebuilt LotView FX), S4, S6, S8; real S5 LotView
 - [ ] Threading cleanup; `VMServerDriver` is the risky one — 1-2 weeks
 - **Status:** in_progress
 ### Phase G: Neighbourhood scaling

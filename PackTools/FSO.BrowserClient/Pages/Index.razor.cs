@@ -38,8 +38,10 @@ namespace FSO_BrowserClient.Pages
                     && (gatewayExplicit != null || joinParam == "1");
                 // ?lot=1 — isometric placeholder without gateway (S5 visual stand-in).
                 var forceLot = QueryValue(uri, "lot") == "1";
+                // ?effect=1 — probe Content.Load of stock FreeSO colorpoly2D.xnb (expected fail; S3).
+                var probeXnb = QueryValue(uri, "effect") == "1";
 
-                _game = new FSO_BrowserClientGame(contentBase, gateway, autoJoin, forceLot);
+                _game = new FSO_BrowserClientGame(contentBase, gateway, autoJoin, forceLot, probeXnb);
                 _game.Run();
             }
 

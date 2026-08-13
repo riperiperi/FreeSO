@@ -11,8 +11,9 @@ namespace FSO_BrowserClient
 {
     /// <summary>
     /// KNI/BlazorGL spike: HTTP texture + Aries city→lot join + isometric lot placeholder.
-    /// Real FSO.LotView is blocked (Mario.dll / S3 effects / TFM); this draws a grass diamond
-    /// grid after LotJoined (or with <c>?lot=1</c>) as the S5 visual stand-in.
+    /// S3: <see cref="BasicEffect"/> proves GPU effects on the lot view; stock FreeSO XNBs
+    /// (MGFX 11) are documented to fail via optional <c>?effect=1</c> Content.Load probe.
+    /// Real FSO.LotView still blocked (Mario.dll / KNI-rebuilt iOS FX / TFM).
     /// </summary>
     public class FSO_BrowserClientGame : Game
     {
@@ -36,12 +37,18 @@ namespace FSO_BrowserClient
         readonly string _gatewayBase;
         readonly bool _autoJoin;
         readonly bool _forceLotView;
+        readonly bool _probeFreeSoXnb;
 
         GraphicsDeviceManager graphics;
         SpriteBatch spriteBatch;
         Texture2D pixel;
         Texture2D sampleTexture;
+        BasicEffect basicEffect;
+        VertexPositionColor[] effectTriangle;
         string loadStatus = "loading…";
+        string effectStatus = "effect: not yet";
+        string freeSoXnbStatus;
+        bool effectOk;
         bool loadStarted;
         bool joinStarted;
         bool spaceWasDown;
@@ -55,16 +62,19 @@ namespace FSO_BrowserClient
         /// <param name="gatewayBase">Gateway base (http://127.0.0.1:8087 or ws://…).</param>
         /// <param name="autoJoin">When true, start city→lot join ~1.5s after texture load.</param>
         /// <param name="forceLotView">When true (<c>?lot=1</c>), show isometric placeholder without joining.</param>
+        /// <param name="probeFreeSoXnb">When true (<c>?effect=1</c>), Content.Load FreeSO colorpoly2D and surface the MGFX error.</param>
         public FSO_BrowserClientGame(
             string contentBaseUrl,
             string gatewayBase,
             bool autoJoin = false,
-            bool forceLotView = false)
+            bool forceLotView = false,
+            bool probeFreeSoXnb = false)
         {
             _contentBaseUrl = contentBaseUrl ?? throw new ArgumentNullException(nameof(contentBaseUrl));
             _gatewayBase = gatewayBase ?? throw new ArgumentNullException(nameof(gatewayBase));
             _autoJoin = autoJoin;
             _forceLotView = forceLotView;
+            _probeFreeSoXnb = probeFreeSoXnb;
             graphics = new GraphicsDeviceManager(this);
             Content.RootDirectory = "Content";
             Window.Title = "FreeSO Browser";
@@ -79,10 +89,65 @@ namespace FSO_BrowserClient
             pixel = new Texture2D(GraphicsDevice, 1, 1);
             pixel.SetData(new[] { Color.White });
 
+            InitBasicEffect();
+
+            if (_probeFreeSoXnb)
+                ProbeFreeSoEffectXnb();
+
             if (!loadStarted)
             {
                 loadStarted = true;
                 _ = LoadSampleViaHttpStoreAsync();
+            }
+        }
+
+        void InitBasicEffect()
+        {
+            try
+            {
+                basicEffect = new BasicEffect(GraphicsDevice)
+                {
+                    VertexColorEnabled = true,
+                    LightingEnabled = false,
+                    TextureEnabled = false,
+                };
+                effectTriangle = new[]
+                {
+                    new VertexPositionColor(new Vector3(0f, 0.35f, 0f), Color.Lime),
+                    new VertexPositionColor(new Vector3(-0.3f, -0.25f, 0f), Color.OrangeRed),
+                    new VertexPositionColor(new Vector3(0.3f, -0.25f, 0f), Color.CornflowerBlue),
+                };
+                effectOk = true;
+                effectStatus = "effect OK (BasicEffect)";
+                Console.WriteLine(effectStatus);
+            }
+            catch (Exception ex)
+            {
+                effectOk = false;
+                effectStatus = "effect failed: " + ex.GetType().Name + ": " + Truncate(ex.Message, 120);
+                Console.WriteLine(effectStatus);
+            }
+        }
+
+        /// <summary>
+        /// Negative test: stock FreeSO MonoGame XNB (MGFX 11) cannot load on KNI 4.2
+        /// (MGFX 10 / KNIF 11–12 only). Surfaces the exact exception for docs.
+        /// Asset: wwwroot/Content/Effects/colorpoly2D.xnb (also under sample-content/effects/).
+        /// </summary>
+        void ProbeFreeSoEffectXnb()
+        {
+            try
+            {
+                var effect = Content.Load<Effect>("Effects/colorpoly2D");
+                freeSoXnbStatus = "FreeSO XNB unexpected OK: " + (effect?.GetType().Name ?? "null");
+                Console.WriteLine(freeSoXnbStatus);
+            }
+            catch (Exception ex)
+            {
+                freeSoXnbStatus = "FreeSO XNB blocked: " + Truncate(ex.Message, 160);
+                Console.WriteLine(freeSoXnbStatus);
+                if (ex.InnerException != null)
+                    Console.WriteLine("  inner: " + ex.InnerException.Message);
             }
         }
 
@@ -96,7 +161,7 @@ namespace FSO_BrowserClient
                     sampleTexture = Texture2D.FromStream(GraphicsDevice, stream);
                 }
                 if (_forceLotView)
-                    loadStatus = "texture OK — lot placeholder (?lot=1)";
+                    loadStatus = "texture OK — lot + " + effectStatus;
                 else if (_autoJoin)
                     loadStatus = "texture OK — auto-join shortly (Space also works)";
                 else
@@ -124,6 +189,8 @@ namespace FSO_BrowserClient
             joinCts?.Cancel();
             sampleTexture?.Dispose();
             sampleTexture = null;
+            basicEffect?.Dispose();
+            basicEffect = null;
             pixel?.Dispose();
             pixel = null;
         }
@@ -170,13 +237,55 @@ namespace FSO_BrowserClient
         {
             GraphicsDevice.Clear(ShowLotFloor ? new Color(20, 28, 18) : ClearBlue);
 
-            spriteBatch.Begin();
             if (ShowLotFloor)
+            {
+                spriteBatch.Begin();
                 DrawLotPlaceholder();
+                spriteBatch.End();
+
+                DrawBasicEffectTriangle();
+
+                spriteBatch.Begin();
+                DrawLotStatusStrip();
+                spriteBatch.End();
+            }
             else
+            {
+                spriteBatch.Begin();
                 DrawJoinPanel();
-            spriteBatch.End();
+                spriteBatch.End();
+            }
+
             base.Draw(gameTime);
+        }
+
+        void DrawBasicEffectTriangle()
+        {
+            if (!effectOk || basicEffect == null || effectTriangle == null) return;
+
+            // Small triangle, lower-right of the lot view (NDC-ish via ortho world).
+            basicEffect.World = Matrix.CreateScale(0.22f)
+                * Matrix.CreateTranslation(0.72f, -0.62f, 0f);
+            basicEffect.View = Matrix.Identity;
+            basicEffect.Projection = Matrix.CreateOrthographicOffCenter(
+                -1f, 1f, -1f, 1f, -1f, 1f);
+
+            GraphicsDevice.BlendState = BlendState.Opaque;
+            GraphicsDevice.DepthStencilState = DepthStencilState.None;
+            GraphicsDevice.RasterizerState = RasterizerState.CullNone;
+
+            foreach (var pass in basicEffect.CurrentTechnique.Passes)
+            {
+                pass.Apply();
+                GraphicsDevice.DrawUserPrimitives(
+                    PrimitiveType.TriangleList, effectTriangle, 0, 1);
+            }
+
+            // Restore defaults SpriteBatch expects.
+            GraphicsDevice.BlendState = BlendState.AlphaBlend;
+            GraphicsDevice.DepthStencilState = DepthStencilState.None;
+            GraphicsDevice.RasterizerState = RasterizerState.CullCounterClockwise;
+            GraphicsDevice.SamplerStates[0] = SamplerState.LinearClamp;
         }
 
         void DrawJoinPanel()
@@ -202,6 +311,12 @@ namespace FSO_BrowserClient
 
             DrawJoinStages(panelX + 140, panelY + 48, panelW - 164);
 
+            // Effect / FreeSO-XNB status bar (S3)
+            Color effectBar = effectOk ? OkGreen : ErrorRed;
+            spriteBatch.Draw(pixel, new Rectangle(panelX + 24, panelY + panelH - 52, panelW - 48, 8), effectBar);
+            if (!string.IsNullOrEmpty(freeSoXnbStatus))
+                spriteBatch.Draw(pixel, new Rectangle(panelX + 24, panelY + panelH - 40, panelW - 48, 6), ErrorRed);
+
             Color joinColor = ErrorRed;
             if (join == null) joinColor = AccentBlue;
             else if (join.Stage == JoinStage.LotJoined) joinColor = OkGreen;
@@ -212,14 +327,6 @@ namespace FSO_BrowserClient
         void DrawLotPlaceholder()
         {
             var vp = GraphicsDevice.Viewport;
-
-            // Status strip
-            spriteBatch.Draw(pixel, new Rectangle(0, 0, vp.Width, 28), PanelBlue);
-            spriteBatch.Draw(pixel, new Rectangle(0, 0, vp.Width, 4), OkGreen);
-            spriteBatch.Draw(pixel, new Rectangle(12, 10, 80, 8), OkGreen);
-            if (sampleTexture != null)
-                spriteBatch.Draw(sampleTexture, new Rectangle(vp.Width - 40, 4, 20, 20), Color.White);
-
             float originX = vp.Width * 0.5f + lotPan.X;
             float originY = 72f + lotPan.Y;
 
@@ -239,11 +346,25 @@ namespace FSO_BrowserClient
                     Color fill = house ? HousePad : (checker ? GrassLight : GrassDark);
 
                     DrawDiamond((int)sx, (int)sy, TileHalfW, TileHalfH, fill);
-                    // thin edge on house pad
                     if (house && (x == 5 || x == 10 || y == 5 || y == 10))
                         DrawDiamondOutline((int)sx, (int)sy, TileHalfW, TileHalfH, GrassEdge);
                 }
             }
+        }
+
+        void DrawLotStatusStrip()
+        {
+            var vp = GraphicsDevice.Viewport;
+
+            spriteBatch.Draw(pixel, new Rectangle(0, 0, vp.Width, 28), PanelBlue);
+            // Top edge: green when BasicEffect OK, else red
+            spriteBatch.Draw(pixel, new Rectangle(0, 0, vp.Width, 4), effectOk ? OkGreen : ErrorRed);
+            // Short pill = "effect OK (BasicEffect)" signal
+            spriteBatch.Draw(pixel, new Rectangle(12, 10, 100, 8), effectOk ? OkGreen : ErrorRed);
+            if (!string.IsNullOrEmpty(freeSoXnbStatus))
+                spriteBatch.Draw(pixel, new Rectangle(120, 10, 60, 8), ErrorRed);
+            if (sampleTexture != null)
+                spriteBatch.Draw(sampleTexture, new Rectangle(vp.Width - 40, 4, 20, 20), Color.White);
         }
 
         void DrawDiamond(int cx, int cy, int halfW, int halfH, Color color)
@@ -258,7 +379,6 @@ namespace FSO_BrowserClient
 
         void DrawDiamondOutline(int cx, int cy, int halfW, int halfH, Color color)
         {
-            // four edges as 1px diamonds inset — keep cheap: top/bottom tips + mid ring
             spriteBatch.Draw(pixel, new Rectangle(cx - 1, cy - halfH, 2, 1), color);
             spriteBatch.Draw(pixel, new Rectangle(cx - 1, cy + halfH, 2, 1), color);
             spriteBatch.Draw(pixel, new Rectangle(cx - halfW, cy - 1, 1, 2), color);
@@ -301,6 +421,12 @@ namespace FSO_BrowserClient
             if (fill > 0)
                 spriteBatch.Draw(pixel, new Rectangle(x, y + 24, fill, 8),
                     join?.Stage == JoinStage.LotJoined ? OkGreen : LabelBlue);
+        }
+
+        static string Truncate(string s, int max)
+        {
+            if (string.IsNullOrEmpty(s) || s.Length <= max) return s;
+            return s.Substring(0, max - 1) + "…";
         }
     }
 }
