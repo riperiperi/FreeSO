@@ -185,6 +185,17 @@ namespace FSO_BrowserClient
 
                 WorldContent.Init(Services, FSOEnvironment.GFXContentDir);
 
+                // The SIMPLE (iOS) shaders do software depth: they sample depthMap and
+                // discard any pixel behind it. Desktop binds it per-frame via
+                // PPXDepthEngine; here it's never bound, so the zero texture makes EVERY
+                // pixel discard — terrain "draws" but rasterizes nothing. Bind far depth
+                // (white unpacks to max) so nothing is culled until the depth pipeline
+                // is wired for WebGL.
+                var farDepth = new Texture2D(GraphicsDevice, 1, 1);
+                farDepth.SetData(new[] { Color.White });
+                WorldContent.GrassEffect.Parameters["depthMap"]?.SetValue(farDepth);
+                WorldContent.RCObject.Parameters["depthMap"]?.SetValue(farDepth);
+
                 lotLayer = new _3DLayer();
                 lotLayer.Initialize(GraphicsDevice);
 
@@ -218,6 +229,10 @@ namespace FSO_BrowserClient
                 terrain.UpdateTerrain(TerrainType.GRASS, TerrainType.GRASS, heights, grass);
 
                 realWorld.InitBlueprint(realBlueprint);
+                // Normally Changes' FLOOR_CHANGED dirty flag triggers this; our hand-built
+                // blueprint never gets one, and without it FloorGeom has no ground tiles —
+                // terrain "draws" zero primitives.
+                realBlueprint.FloorGeom.FullReset(GraphicsDevice, false);
                 realWorld.State.WorldSize = size;
                 realWorld.State.CenterTile = new Vector2(size / 2f, size / 2f);
                 if (realWorld.State.AmbientLight != null)

@@ -281,10 +281,10 @@ namespace FSO.LotView.Components
             var buggedTex = WorldConfig.Current.AdvancedLighting ? 1 : 0;
             //assumes the effect and all its parameters have been set up already
             //we just need to get the right texture and offset
-            // BrowserClient runs LotView without the TSO content manager (no game assets fetched
-            // yet), so there are no floor patterns to look up. Terrain still draws.
+            // BrowserClient runs LotView without the TSO content manager (no game assets
+            // fetched yet). flrContent stays null there; bare terrain (id 0) and water
+            // don't need it, floor-pattern tiles are skipped below.
             var flrContent = Content.Content.Get()?.WorldFloors;
-            if (flrContent == null) return;
 
             e.TexOffset = new Vector2();// TexOffset[zoom]*-1f);
             var tmat = TexMat[rot];
@@ -347,6 +347,9 @@ namespace FSO.LotView.Components
                     gd.Indices = dat;
 
                     var id = type.Key;
+                    // No TSO content manager (browser): only bare terrain (0) and air (65503)
+                    // can draw; patterns and pools need floor sprites we don't have.
+                    if (flrContent == null && id != 0 && id != 65503) continue;
                     var doubleDraw = false;
                     Texture2D SPR = null;
                     Texture2D pSPR = null;
@@ -445,7 +448,7 @@ namespace FSO.LotView.Components
                         }
                         else
                         {
-                            var flr = flrContent.Get(id);
+                            var flr = flrContent?.Get(id);
 
                             if (flr == null) continue;
 
