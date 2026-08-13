@@ -18,6 +18,11 @@
   <PropertyGroup>
     <BlazorEnableTimeZoneSupport>false</BlazorEnableTimeZoneSupport>
     <!--<InvariantGlobalization>true</InvariantGlobalization>-->
+    <!-- Release publish trimming strips XmlSerializer ctors (XmlHouseData fails with
+         XmlConstructorInaccessible) and would silently drop VM reflection paths later.
+         PublishTrimmed=false is NOT viable on net8 wasm (facade typeref failures at
+         boot: System.OperatingSystem in System.Runtime 8.0), so publish -c Debug for
+         the demo; Release trimming (TrimmerRootAssembly roots) is a polish item. -->
   </PropertyGroup>
 
   <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Debug|AnyCPU' ">

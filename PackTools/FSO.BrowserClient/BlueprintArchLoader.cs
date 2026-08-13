@@ -1,7 +1,8 @@
 using System;
 using System.Collections.Generic;
-using System.IO;
-using System.Xml.Serialization;
+using System.Globalization;
+using System.Linq;
+using System.Xml.Linq;
 using FSO.LotView.Model;
 
 namespace FSO_BrowserClient
@@ -11,15 +12,15 @@ namespace FSO_BrowserClient
     /// Blueprint — no VM. Mirrors the arch subset of VMWorldActivator.LoadFromXML:
     /// SetFloor/SetWall become direct array writes, then the change signals drive
     /// FloorGeom/WCRC regeneration on the next PreDraw.
+    /// Parses with XDocument, not XmlSerializer: the reflection serializer fails
+    /// under WASM publish (XmlConstructorInaccessible after ILStrip), and this
+    /// format is 2 element shapes + attributes.
     /// </summary>
     public static class BlueprintArchLoader
     {
         public static void Load(Blueprint bp, string houseXml)
         {
-            XmlHouseData model;
-            var serializer = new XmlSerializer(typeof(XmlHouseData));
-            using (var reader = new StringReader(houseXml))
-                model = (XmlHouseData)serializer.Deserialize(reader);
+            var model = ParseHouse(houseXml);
 
             var w = bp.Width;
             var h = bp.Height;
@@ -61,6 +62,63 @@ namespace FSO_BrowserClient
             bp.SignalFloorChange();
             bp.SignalRoomChange();
             bp.SignalWallChange();
+        }
+
+        /// <summary>
+        /// Attribute-by-attribute parse into the same model classes VMWorldActivator
+        /// consumes, so the two loaders stay comparable field-for-field.
+        /// </summary>
+        public static XmlHouseData ParseHouse(string houseXml)
+        {
+            var doc = XDocument.Parse(houseXml);
+            var house = doc.Root ?? throw new FormatException("no root element");
+            var world = house.Element("world") ?? throw new FormatException("no <world>");
+
+            int A(XElement e, string name) =>
+                int.TryParse((string)e.Attribute(name), NumberStyles.Integer,
+                    CultureInfo.InvariantCulture, out var v) ? v : 0;
+
+            return new XmlHouseData
+            {
+                Size = int.TryParse((string)house.Element("size"), out var size) ? size : 0,
+                World = new XmlHouseDataWorld
+                {
+                    Floors = (world.Element("floors")?.Elements("floor") ?? Enumerable.Empty<XElement>())
+                        .Select(f => new XmlHouseDataFloor
+                        {
+                            Level = A(f, "level"),
+                            X = (short)A(f, "x"),
+                            Y = (short)A(f, "y"),
+                            Value = A(f, "value"),
+                        }).ToList(),
+                    Walls = (world.Element("walls")?.Elements("wall") ?? Enumerable.Empty<XElement>())
+                        .Select(w => new XmlHouseDataWall
+                        {
+                            Level = A(w, "level"),
+                            X = A(w, "x"),
+                            Y = A(w, "y"),
+                            _Segments = A(w, "segments"),
+                            Placement = A(w, "placement"),
+                            LeftStyle = A(w, "tls"),
+                            RightStyle = A(w, "trs"),
+                            TopLeftPattern = A(w, "tlp"),
+                            TopRightPattern = A(w, "trp"),
+                            BottomRightPattern = A(w, "brp"),
+                            BottomLeftPattern = A(w, "blp"),
+                        }).ToList(),
+                    Pools = new List<XmlHouseDataPool>(),
+                },
+                Objects = (house.Element("objects")?.Elements("object") ?? Enumerable.Empty<XElement>())
+                    .Select(o => new XmlHouseDataObject
+                    {
+                        GUID = ((string)o.Attribute("guid") ?? "0").Replace("0x", ""),
+                        Level = A(o, "level"),
+                        X = A(o, "x"),
+                        Y = A(o, "y"),
+                        Dir = A(o, "dir"),
+                        Group = A(o, "group"),
+                    }).ToList(),
+            };
         }
 
         public static Microsoft.Xna.Framework.Vector2 WallCentroid(Blueprint bp)
