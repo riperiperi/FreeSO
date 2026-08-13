@@ -44,9 +44,10 @@ namespace FSO.LotHostLite
             var tsoDir = Arg(args, "--tso-dir") ?? throw new ArgumentException("--tso-dir required");
             var port = ushort.Parse(Arg(args, "--port", "37564"));
             var packsDir = Arg(args, "--packs");
+            var bareObjects = args.Contains("--bare-objects");
             if (!tsoDir.EndsWith(Path.DirectorySeparatorChar.ToString())) tsoDir += Path.DirectorySeparatorChar;
 
-            BootContent(tsoDir, packsDir, "fso-lothostlite-work");
+            BootContent(tsoDir, packsDir, "fso-lothostlite-work", bareObjects);
 
             Console.WriteLine("[host] booting headless VM...");
             VM.UseWorld = false;
@@ -167,8 +168,11 @@ namespace FSO.LotHostLite
 
         /// <summary>Symlink the repo's FSO content overlay into a scratch working dir
         /// (Content scanners are relative-path based) and copy pack .iffs into its
-        /// Content/Objects so the standalone scan registers their GUIDs.</summary>
-        public static void BootContent(string tsoDir, string packsDir, string workName)
+        /// Content/Objects so the standalone scan registers their GUIDs.
+        /// bareObjects drops the repo's own Objects iffs, leaving packs only — the
+        /// content layout the browser bundle ships, and every lockstep participant
+        /// must resolve the same GUID set.</summary>
+        public static void BootContent(string tsoDir, string packsDir, string workName, bool bareObjects = false)
         {
             var repoRoot = RepoRoot();
             var fsoContentDir = Path.Combine(repoRoot, "TSOClient", "FSO.Content.TSO", "Content");
@@ -191,7 +195,10 @@ namespace FSO.LotHostLite
                 var realObjects = Path.Combine(work, "ObjectsReal");
                 Directory.CreateDirectory(realObjects);
                 foreach (var f in Directory.GetFiles(new DirectoryInfo(objectsLink).LinkTarget ?? objectsLink))
+                {
+                    if (bareObjects && f.EndsWith(".iff")) continue;
                     File.CreateSymbolicLink(Path.Combine(realObjects, Path.GetFileName(f)), f);
+                }
                 File.Delete(objectsLink);
                 Directory.Move(realObjects, objectsLink);
                 foreach (var iff in Directory.GetFiles(packsDir, "*.iff"))

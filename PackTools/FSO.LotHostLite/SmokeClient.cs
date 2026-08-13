@@ -36,7 +36,7 @@ namespace FSO.LotHostLite
             var ticks = int.Parse(Arg("--ticks", "300"));
             if (!tsoDir.EndsWith(Path.DirectorySeparatorChar.ToString())) tsoDir += Path.DirectorySeparatorChar;
 
-            Program.BootContent(tsoDir, Arg("--packs"), "fso-smoke-" + name);
+            Program.BootContent(tsoDir, Arg("--packs"), "fso-smoke-" + name, args.Contains("--bare-objects"));
 
             Console.WriteLine($"[{name}] booting client VM...");
             VM.UseWorld = false;

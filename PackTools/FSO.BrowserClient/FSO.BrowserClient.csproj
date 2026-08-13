@@ -73,6 +73,10 @@
     -->
     <ProjectReference Include="..\..\TSOClient\tso.world\FSO.LotView.csproj"
                       AdditionalProperties="FSO_GRAPHICS=Kni;FSO_NO_SM64=true;BLAZORGL=true" />
+    <!-- Full SimAntics VM in the browser (?vm=1): lockstep client over the sandbox
+         protocol. Same forced-property trick as LotView above. -->
+    <ProjectReference Include="..\..\TSOClient\tso.simantics\FSO.SimAntics.csproj"
+                      AdditionalProperties="FSO_GRAPHICS=Kni;FSO_NO_SM64=true;BLAZORGL=true" />
   </ItemGroup>
 
 </Project>
