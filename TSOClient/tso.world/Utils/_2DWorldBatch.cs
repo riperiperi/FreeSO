@@ -411,7 +411,19 @@ namespace FSO.LotView.Utils
                 effect.pixelTexture = sprite.Pixel;
                 if (sprite.Depth != null) effect.depthTexture = sprite.Depth;
                 if (sprite.Mask != null) effect.maskTexture = sprite.Mask;
-                
+
+                if (AliasedMatrixWorkaround)
+                {
+                    // KNIF: only matrix writes issued immediately before Apply reach
+                    // the GPU reliably; re-write the pixel ortho into every VP slot
+                    // per draw (the exact sequence the working probe uses).
+                    var pix = this.View * this.Projection;
+                    effect.viewProjection = pix;
+                    effect.worldViewProjection = pix;
+                    effect.rotProjection = pix;
+                    effect.iWVP = Matrix.Invert(pix);
+                }
+
                 EffectPassCollection passes = effect.CurrentTechnique.Passes;
 
                 EffectPass pass = passes[Math.Min(passes.Count - 1, WorldConfig.Current.DirPassOffset)];

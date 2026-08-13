@@ -231,10 +231,18 @@ namespace FSO_BrowserClient
                 // garbage. drawZSprite + depthOutMode=true skips the software depth
                 // discard and has no depth-output branch — draw-order occlusion until
                 // the FX are rebuilt with distinct semantics (?objtech= overrides).
-                WorldContent._2DWorldBatchEffect.depthOutMode = true;
-                if (WorldEntities.ObjectTechniqueOverride == null)
-                    WorldEntities.ObjectTechniqueOverride = FSO.LotView.Effects.WorldBatchTechniques.drawZSprite;
-                FSO.LotView.Utils._2DWorldBatch.AliasedMatrixWorkaround = true;
+                if (FixedFx)
+                {
+                    // Rebuilt FX (distinct matrix semantics): vanilla engine path.
+                    WorldContent._2DWorldBatchEffect.depthOutMode = false;
+                }
+                else
+                {
+                    WorldContent._2DWorldBatchEffect.depthOutMode = true;
+                    if (WorldEntities.ObjectTechniqueOverride == null)
+                        WorldEntities.ObjectTechniqueOverride = FSO.LotView.Effects.WorldBatchTechniques.drawZSprite;
+                    FSO.LotView.Utils._2DWorldBatch.AliasedMatrixWorkaround = true;
+                }
 
                 // RC (flat-color) walls in the fixed 2D camera — the sprite wall path
                 // needs TSO content. Light factors normally come from LMapBatch, which
@@ -697,6 +705,9 @@ namespace FSO_BrowserClient
         public static bool SpriteTest;
         public static bool SpriteTestBasic;
         public static bool DepthOutProbe;
+        /// <summary>?fx=fixed — run the vanilla effect path (rebuilt XNBs with
+        /// distinct matrix semantics); off = KNIF-alias workarounds.</summary>
+        public static bool FixedFx;
         /// <summary>?redraw=1 — after the world pass, re-draw the real ObjectComponents
         /// standalone with a fresh PrepareImmediate (same objects, isolated state).</summary>
         public static bool RedrawProbe;

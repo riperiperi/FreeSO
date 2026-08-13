@@ -69,6 +69,7 @@ namespace FSO_BrowserClient.Pages
                 FSO_BrowserClientGame.SpriteTestBasic = spriteTest == "2";
                 FSO_BrowserClientGame.DepthOutProbe = QueryValue(uri, "depthout") == "1";
                 FSO_BrowserClientGame.RedrawProbe = QueryValue(uri, "redraw") == "1";
+                FSO_BrowserClientGame.FixedFx = QueryValue(uri, "fx") == "fixed";
                 var v2diag = QueryValue(uri, "v2diag");
                 RealFurnitureLayer.V2Diag = v2diag == "1";
                 RealFurnitureLayer.V2AllMagenta = v2diag == "2";
