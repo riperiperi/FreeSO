@@ -67,7 +67,7 @@ namespace FSO.SimAntics.Engine
                     {
                         if (primitive.OperandModel != null)
                         {
-                            VMPrimitiveOperand operand = (VMPrimitiveOperand)Activator.CreateInstance(primitive.OperandModel);
+                            VMPrimitiveOperand operand = VMOperandFactories.Create(primitive.OperandModel);
                             operand.Read(bhavInstruction.Operand);
                             instruction.Operand = operand;
                         }

@@ -78,8 +78,14 @@ namespace FSO_BrowserClient.Pages
                 var rotParam = QueryValue(uri, "rot");
                 var rot = int.TryParse(rotParam, out var r) ? r : -1;
 
+                // ?vm=1 — join the shared lockstep VM through the gateway /sandbox
+                // route: content bundle → MEMFS → SERVER Content.Init → local
+                // SimAntics VM in lockstep with LotHostLite. ?name= labels the avatar.
+                var vmMode = QueryValue(uri, "vm") == "1";
+                var vmName = QueryValue(uri, "name");
+
                 _game = new FSO_BrowserClientGame(contentBase, gateway, autoJoin, forceLot, probeXnb, forceRealLot, houseUrl,
-                    furnishReal, zoomParam, rot);
+                    furnishReal, zoomParam, rot, vmMode, vmName, Navigation.BaseUri);
                 _game.Run();
             }
 

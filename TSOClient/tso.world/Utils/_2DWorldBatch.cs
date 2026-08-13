@@ -275,7 +275,10 @@ namespace FSO.LotView.Utils
 
         public void Resume()
         {
-            this.Begin(this.WorldCamera);
+            // Wall/object recaches can run from PreDraw before the world has ever
+            // drawn a frame (VM-fed blueprints apply arch immediately); WorldCamera
+            // is only set by Begin, so resuming with none yet is a no-op bracket.
+            if (this.WorldCamera != null) this.Begin(this.WorldCamera);
         }
 
         public _2DWorldRenderPlane WithBuffer(int bufferIndex, ref Promise<Texture2D> output, int depthBufferIndex, ref Promise<Texture2D> depthOutput)

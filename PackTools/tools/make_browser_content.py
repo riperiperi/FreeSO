@@ -101,10 +101,17 @@ def main():
     all_dirs.sort()
 
     tar_path = os.path.join(args.out, 'content.tar.gz')
+    # Strict USTAR: the browser extractor (BrowserContentBoot) is a minimal
+    # hand-rolled ustar reader — System.Formats.Tar is PlatformNotSupported on
+    # browser-wasm. PAX/GNU extensions would smuggle in 'x'/'L' entries.
+    over = [p for p in ([e['path'] for e in entries] + all_dirs) if len(p) > 100]
+    if over:
+        print('FATAL: paths exceed ustar name field (100):', over[:5], file=sys.stderr)
+        sys.exit(1)
     # mtime=0 + sorted entries keeps the blob byte-stable across rebuilds.
     with open(tar_path, 'wb') as raw:
         with gzip.GzipFile(fileobj=raw, mode='wb', compresslevel=6, mtime=0) as gz:
-            with tarfile.open(fileobj=gz, mode='w') as tar:
+            with tarfile.open(fileobj=gz, mode='w', format=tarfile.USTAR_FORMAT) as tar:
                 # Explicit dir entries so empty dirs (cities/, sound trees) survive
                 # extraction — content scans crash on their absence.
                 for d in all_dirs:

@@ -67,6 +67,17 @@ namespace FSO_BrowserClient
         readonly int _initialRotation; // ?rot=0..3
         bool qWasDown, eWasDown;
         readonly bool _probeFreeSoXnb;
+        // ?vm=1 — join the shared lockstep VM (LotHostLite via gateway /sandbox):
+        // content bundle → MEMFS → Content.Init(SERVER) → full local SimAntics VM.
+        readonly bool _vmMode;
+        readonly string _vmName;
+        readonly string _wwwrootBase; // base URI for tso-content/, packs/, objects/
+        VmLotClient vmClient;
+        bool vmStarted;
+        bool vmContentStarted;
+        bool vmLotInited;
+        bool vmArchApplied;
+        int vmArchWaitFrames;
 
         GraphicsDeviceManager graphics;
         SpriteBatch spriteBatch;
@@ -113,7 +124,10 @@ namespace FSO_BrowserClient
             string houseUrl = null,
             bool furnishReal = true,
             string initialZoom = null,
-            int initialRotation = -1)
+            int initialRotation = -1,
+            bool vmMode = false,
+            string vmName = null,
+            string wwwrootBase = null)
         {
             _contentBaseUrl = contentBaseUrl ?? throw new ArgumentNullException(nameof(contentBaseUrl));
             _gatewayBase = gatewayBase ?? throw new ArgumentNullException(nameof(gatewayBase));
@@ -121,6 +135,9 @@ namespace FSO_BrowserClient
             _furnishReal = furnishReal;
             _initialZoom = initialZoom;
             _initialRotation = initialRotation;
+            _vmMode = vmMode;
+            _vmName = vmName ?? ("browser" + new Random().Next(1000));
+            _wwwrootBase = wwwrootBase;
             _autoJoin = autoJoin;
             _forceLotView = forceLotView;
             _probeFreeSoXnb = probeFreeSoXnb;
@@ -137,7 +154,7 @@ namespace FSO_BrowserClient
         }
 
         bool ShowLotFloor =>
-            _forceLotView || (join != null && join.Stage == JoinStage.LotJoined);
+            _forceLotView || vmLotInited || (join != null && join.Stage == JoinStage.LotJoined);
 
         bool DrawRealLot => realLotReady && realWorld != null;
 
@@ -192,7 +209,7 @@ namespace FSO_BrowserClient
         /// <summary>
         /// Best-effort empty flat-grass lot via ExternalWorld. Any failure → diamonds.
         /// </summary>
-        void TryInitRealLot()
+        void TryInitRealLot(int lotSize = RealLotSize)
         {
             try
             {
@@ -258,7 +275,7 @@ namespace FSO_BrowserClient
                 realWorld = new ExternalWorld(GraphicsDevice);
                 lotLayer.AddExternal(realWorld);
 
-                var size = RealLotSize;
+                var size = lotSize;
                 realBlueprint = new Blueprint(size, size);
                 realBlueprint.BuildableArea = new Rectangle(1, 1, size - 2, size - 2);
                 realBlueprint.Light = new[]
@@ -517,6 +534,65 @@ namespace FSO_BrowserClient
             if (space && !spaceWasDown) StartJoin();
             spaceWasDown = space;
 
+            if (_vmMode)
+            {
+                if (!vmContentStarted)
+                {
+                    vmContentStarted = true;
+                    var tarUrl = new Uri(new Uri(_wwwrootBase), "tso-content/content.tar.gz").AbsoluteUri;
+                    _ = BrowserContentBoot.RunAsync(tarUrl);
+                }
+                loadStatus = BrowserContentBoot.Ready
+                    ? (vmClient?.Status ?? "vm starting")
+                    : BrowserContentBoot.Status;
+
+                if (BrowserContentBoot.Ready && !vmStarted)
+                {
+                    vmStarted = true;
+                    vmClient = new VmLotClient(_vmName);
+                    vmClient.AutoChat = $"hello from {_vmName}";
+                    vmClient.Start(_gatewayBase);
+                    _ = vmClient.LoadBillboardsAsync(GraphicsDevice, _wwwrootBase);
+                }
+
+                vmClient?.Update(gameTime.ElapsedGameTime.TotalSeconds);
+
+                if (vmClient != null && vmClient.Synced && !vmLotInited)
+                {
+                    vmLotInited = true;
+                    realLotAttempted = true;
+                    TryInitRealLot(vmClient.vm.Context.Architecture.Width);
+                    // Let the world draw a couple of clean frames before signalling
+                    // wall changes: RecacheWalls resumes the 2D batch, which needs a
+                    // WorldCamera that only exists after the first Begin.
+                    vmArchWaitFrames = 3;
+                }
+                if (vmLotInited && !vmArchApplied && realLotReady && --vmArchWaitFrames <= 0)
+                {
+                    vmArchApplied = true;
+                    try
+                    {
+                        vmClient.ApplyArchitecture(realBlueprint);
+                        realBlueprint.FloorGeom.FullReset(GraphicsDevice, false);
+                        var centroid = BlueprintArchLoader.WallCentroid(realBlueprint);
+                        realWorld.State.CenterTile = centroid;
+                        realWorld.State.Zoom = _initialZoom switch
+                        {
+                            "near" => WorldZoom.Near,
+                            "medium" => WorldZoom.Medium,
+                            _ => WorldZoom.Far,
+                        };
+                        if (_initialRotation >= 0 && _initialRotation < 4)
+                            realWorld.State.Rotation = (WorldRotation)_initialRotation;
+                    }
+                    catch (Exception ex)
+                    {
+                        Console.WriteLine("vm arch apply failed: " + ex.Message);
+                        Console.WriteLine("  stack: " + Truncate(ex.StackTrace ?? "", 800));
+                    }
+                }
+            }
+
             if (_houseUrl != null && !houseFetchStarted)
             {
                 houseFetchStarted = true;
@@ -683,6 +759,7 @@ namespace FSO_BrowserClient
 
                 spriteBatch.Begin();
                 if (DrawRealLot && furniture != null) furniture.Draw(spriteBatch, realWorld.State);
+                if (DrawRealLot && vmClient != null) vmClient.DrawEntities(spriteBatch, realWorld.State);
                 DrawLotStatusStrip();
                 spriteBatch.End();
             }
