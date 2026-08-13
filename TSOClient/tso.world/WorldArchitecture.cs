@@ -79,9 +79,15 @@ namespace FSO.LotView
             state.PrepareCulling(pxOffset);
         }
 
+        /// <summary>
+        /// Draw RC (3D geometry) walls even in the fixed 2D camera. Used by the browser
+        /// client, which has no TSO wall sprites for the classic 2D wall path.
+        /// </summary>
+        public static bool ForceRCWalls2D;
+
         public void DrawDynamic(GraphicsDevice gd, WorldState state, bool roofs)
         {
-            if (state.CameraMode > CameraRenderMode._2D)
+            if (state.CameraMode > CameraRenderMode._2D || ForceRCWalls2D)
             {
                 var effect = WorldContent.RCObject;
                 gd.BlendState = BlendState.NonPremultiplied;

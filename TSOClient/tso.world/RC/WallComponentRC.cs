@@ -29,12 +29,14 @@ namespace FSO.LotView.RC
 
         private Wall GetPattern(ushort id)
         {
+            if (Content.Content.Get() == null) return null; // browser: no TSO content, flat-color walls
             if (!WallCache.ContainsKey(id)) WallCache.Add(id, Content.Content.Get().WorldWalls.Get(id));
             return WallCache[id];
         }
 
         private WallStyle GetStyle(ushort id)
         {
+            if (Content.Content.Get() == null) return null;
             if (!WallStyleCache.ContainsKey(id)) WallStyleCache.Add(id, Content.Content.Get().WorldWalls.GetWallStyle(id));
             return WallStyleCache[id];
         }
@@ -66,8 +68,6 @@ namespace FSO.LotView.RC
         {
             HeightAdjust = 0;
 
-            var wallContent = Content.Content.Get().WorldWalls;
-            var floorContent = Content.Content.Get().WorldFloors;
             if (!cutaway) Dispose();
             var white = Color.White.ToVector4();
             var whitepx = Common.Utils.TextureGenerator.GetPxWhite(device);
@@ -108,8 +108,10 @@ namespace FSO.LotView.RC
                 };
 
                 Action<int, int, Vector2, Vector2, ushort, ushort, int, float, float, float> addLineGeom = (int x, int y, Vector2 from, Vector2 to, ushort pattern, ushort style, int topMode, float starttc, float endtc, float aboveFloor) => {
-                    var tex = world._2D.GetTexture(GetPattern(pattern)?.Near?.Frames[2]);
-                    var mask = world._2D.GetTexture(GetStyle(style)?.WallsUpNear?.Frames[(topMode != 4) ? 0 : 2]);
+                    // Browser (no TSO content): flat white walls. The mask fallback is
+                    // mandatory — psWallRC discards pixels where the mask alpha is low.
+                    var tex = world._2D.GetTexture(GetPattern(pattern)?.Near?.Frames[2]) ?? whitepx;
+                    var mask = world._2D.GetTexture(GetStyle(style)?.WallsUpNear?.Frames[(topMode != 4) ? 0 : 2]) ?? whitepx;
 
                     var g = Fetch(tex, mask, style, grp);
                     g.UseOffset = (topMode != 4);
@@ -344,6 +346,8 @@ namespace FSO.LotView.RC
                 {
                     if (g.PrimCount == 0) continue;
                     effect.AnisoTex = g.Pixel;
+                    // SIMPLE (iOS/browser) psWallRC samples TexSampler = MeshTex, not Aniso.
+                    effect.MeshTex = g.Pixel;
                     effect.MaskTex = g.Mask;
 
                     if (lastSideMask != g.UseOffset)

@@ -49,6 +49,10 @@ namespace FSO_BrowserClient
         readonly bool _autoJoin;
         readonly bool _forceLotView;
         readonly bool _forceRealLot;
+        readonly string _houseUrl;
+        string pendingHouseXml;
+        bool houseFetchStarted;
+        bool houseApplied;
         readonly bool _probeFreeSoXnb;
 
         GraphicsDeviceManager graphics;
@@ -92,10 +96,12 @@ namespace FSO_BrowserClient
             bool autoJoin = false,
             bool forceLotView = false,
             bool probeFreeSoXnb = false,
-            bool forceRealLot = false)
+            bool forceRealLot = false,
+            string houseUrl = null)
         {
             _contentBaseUrl = contentBaseUrl ?? throw new ArgumentNullException(nameof(contentBaseUrl));
             _gatewayBase = gatewayBase ?? throw new ArgumentNullException(nameof(gatewayBase));
+            _houseUrl = houseUrl;
             _autoJoin = autoJoin;
             _forceLotView = forceLotView;
             _probeFreeSoXnb = probeFreeSoXnb;
@@ -195,6 +201,14 @@ namespace FSO_BrowserClient
                 farDepth.SetData(new[] { Color.White });
                 WorldContent.GrassEffect.Parameters["depthMap"]?.SetValue(farDepth);
                 WorldContent.RCObject.Parameters["depthMap"]?.SetValue(farDepth);
+
+                // RC (flat-color) walls in the fixed 2D camera — the sprite wall path
+                // needs TSO content. Light factors normally come from LMapBatch, which
+                // never runs with State.Light == null; psWallRC divides by MapLayout.
+                WorldArchitecture.ForceRCWalls2D = true;
+                WorldContent.RCObject.MapLayout = new Vector2(3, 2);
+                WorldContent.RCObject.Parameters["WorldToLightFactor"]?.SetValue(
+                    new Vector3(1f / (3 * 75), 1f / (3 * 2.95f), 1f / (3 * 75)));
 
                 lotLayer = new _3DLayer();
                 lotLayer.Initialize(GraphicsDevice);
@@ -362,6 +376,20 @@ namespace FSO_BrowserClient
             }
         }
 
+        async Task FetchHouseAsync()
+        {
+            try
+            {
+                using var http = new System.Net.Http.HttpClient();
+                pendingHouseXml = await http.GetStringAsync(_houseUrl).ConfigureAwait(true);
+                Console.WriteLine($"house xml fetched ({pendingHouseXml.Length} bytes)");
+            }
+            catch (Exception ex)
+            {
+                Console.WriteLine("house xml fetch failed: " + ex.Message);
+            }
+        }
+
         async Task LoadSampleViaHttpStoreAsync()
         {
             try
@@ -430,6 +458,32 @@ namespace FSO_BrowserClient
             var space = keyboardState.IsKeyDown(Keys.Space);
             if (space && !spaceWasDown) StartJoin();
             spaceWasDown = space;
+
+            if (_houseUrl != null && !houseFetchStarted)
+            {
+                houseFetchStarted = true;
+                _ = FetchHouseAsync();
+            }
+            if (pendingHouseXml != null && realLotReady && !houseApplied)
+            {
+                houseApplied = true;
+                try
+                {
+                    BlueprintArchLoader.Load(realBlueprint, pendingHouseXml);
+                    realBlueprint.FloorGeom.FullReset(GraphicsDevice, false);
+                    // Frame the house: centre on its wall centroid, widest fixed zoom.
+                    var centroid = BlueprintArchLoader.WallCentroid(realBlueprint);
+                    realWorld.State.CenterTile = centroid;
+                    realWorld.State.Zoom = WorldZoom.Far;
+                    Console.WriteLine($"house arch loaded: {realBlueprint.WallsAt[0].Count} wall tiles, centre {centroid}");
+                }
+                catch (Exception ex)
+                {
+                    Console.WriteLine("house arch load failed: " + ex.Message);
+                    Console.WriteLine("  stack: " + Truncate(ex.StackTrace ?? "", 800));
+                }
+                pendingHouseXml = null;
+            }
 
             if (_autoJoin && !joinStarted && sampleTexture != null
                 && gameTime.TotalGameTime.TotalSeconds > 1.5)

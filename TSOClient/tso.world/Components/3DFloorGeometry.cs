@@ -347,12 +347,31 @@ namespace FSO.LotView.Components
                     gd.Indices = dat;
 
                     var id = type.Key;
-                    // No TSO content manager (browser): only bare terrain (0) and air (65503)
-                    // can draw; patterns and pools need floor sprites we don't have.
-                    if (flrContent == null && id != 0 && id != 65503) continue;
+                    // No TSO content manager (browser): pools still need sprites, but plain
+                    // pattern tiles draw as flat color (white px tinted per pattern id).
+                    var flatFloor = flrContent == null && id != 0 && id < 65503;
+                    if (flrContent == null && id >= 65503 && id != 0) continue;
                     var doubleDraw = false;
                     Texture2D SPR = null;
                     Texture2D pSPR = null;
+
+                    if (flatFloor)
+                    {
+                        SPR = TextureGenerator.GetPxWhite(gd);
+                        e.UseTexture = true;
+                        e.IgnoreColor = true;
+                        var hue = (id * 2654435761u);
+                        e.DiffuseColor = new Vector4(
+                            0.55f + (hue & 0xFF) / 1024f,
+                            0.5f + ((hue >> 8) & 0xFF) / 1024f,
+                            0.45f + ((hue >> 16) & 0xFF) / 1024f, 1f);
+                        e.BaseTex = SPR;
+                        e.TexSize = new Vector2(1, 1);
+                        pass.Apply();
+                        gd.DrawIndexedPrimitives(PrimitiveType.TriangleList, 0, 0, type.Value.GeomForOffset.Count * 2);
+                        e.DiffuseColor = Vector4.One;
+                        continue;
+                    }
 
                     if (id == 0)
                     {

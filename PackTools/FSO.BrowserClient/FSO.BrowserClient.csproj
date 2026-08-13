@@ -30,6 +30,7 @@
     <Compile Include="Pages\Index.razor.cs" />
     <Compile Include="Program.cs" />
     <Compile Include="FSO.BrowserClientGame.cs" />
+    <Compile Include="BlueprintArchLoader.cs" />
   </ItemGroup>
 
   <ItemGroup>

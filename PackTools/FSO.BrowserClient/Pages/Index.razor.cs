@@ -45,7 +45,18 @@ namespace FSO_BrowserClient.Pages
                 // KNIF Content.Load of wwwroot/Content/Effects/colorpoly2D runs unconditionally.
                 var probeXnb = QueryValue(uri, "effect") == "1";
 
-                _game = new FSO_BrowserClientGame(contentBase, gateway, autoJoin, forceLot, probeXnb, forceRealLot);
+                // ?house=<name> — fetch wwwroot/houses/<name>.xml and load its floors/walls
+                // into the real lot (implies ?lot=real).
+                var houseParam = QueryValue(uri, "house");
+                string houseUrl = null;
+                if (houseParam != null)
+                {
+                    houseUrl = new Uri(new Uri(Navigation.BaseUri), $"houses/{houseParam}.xml").AbsoluteUri;
+                    forceLot = true;
+                    forceRealLot = true;
+                }
+
+                _game = new FSO_BrowserClientGame(contentBase, gateway, autoJoin, forceLot, probeXnb, forceRealLot, houseUrl);
                 _game.Run();
             }
 

@@ -110,6 +110,9 @@ namespace FSO.LotView.Components
 
         public override void Draw(GraphicsDevice device, WorldState world)
         {
+            // Browser: sprite walls need TSO wall/mask sprites we don't have. RC walls
+            // (WallComponentRC, flat color) cover it there instead.
+            if (Content.Content.Get() == null) return;
             var timer = new System.Diagnostics.Stopwatch();
             timer.Start();
 
