@@ -98,6 +98,7 @@ namespace FSO.VMHarness
             // SetWallStyle on placement, which clears TopLeftSolid/TopRightSolid on its wall tile,
             // which stops VMRoomMap adding a pathing obstacle there. So the only honest check that
             // a door landed is to ask the architecture whether the wall it sits in is still solid.
+            // Windows share the wall-object placement but do NOT set TopLeftDoor/TopRightDoor.
             int doorCuts = 0;
             for (short x = 0; x < arch.Width; x++)
                 for (short y = 0; y < arch.Height; y++)
@@ -110,11 +111,14 @@ namespace FSO.VMHarness
             // An object whose blueprint level is 0 is never positioned by VMWorldActivator
             // (CreateObject only calls SetPosition when Level != 0) and sits out of world with no
             // error raised. Report it rather than letting a door silently not exist.
-            int placed = 0, outOfWorld = 0;
+            int placed = 0, outOfWorld = 0, windows = 0, doors = 0;
             foreach (var ent in vm.Entities)
             {
                 if (ent is FSO.SimAntics.VMAvatar) continue;
                 if (ent.Position == LotTilePos.OUT_OF_WORLD) outOfWorld++; else placed++;
+                var f2 = (FSO.SimAntics.VMEntityFlags2)ent.ObjectData[(int)FSO.SimAntics.Model.VMStackObjectVariable.FlagField2];
+                if ((f2 & FSO.SimAntics.VMEntityFlags2.ArchitectualWindow) > 0) windows++;
+                if ((f2 & FSO.SimAntics.VMEntityFlags2.ArchitectualDoor) > 0) doors++;
             }
 
             // The blueprint's own object list, re-read so a failed placement can be retried and
@@ -134,6 +138,8 @@ namespace FSO.VMHarness
             Console.WriteLine("wall tiles:   " + wallTiles + " (" + wallSegs + " segments)");
             Console.WriteLine("rooms:        " + rooms + " (" + indoor + " indoor)");
             Console.WriteLine("objects:      " + placed + " placed, " + outOfWorld + " out of world");
+            Console.WriteLine("doors:        " + doors + " entities flagged ArchitectualDoor");
+            Console.WriteLine("windows:      " + windows + " entities flagged ArchitectualWindow");
             Console.WriteLine("door cuts:    " + doorCuts);
 
             // This harness runs with UseWorld = false, so it can never tell you whether something

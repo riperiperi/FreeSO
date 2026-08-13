@@ -1,0 +1,11 @@
+{
+  "Size": 77,
+  "Rooms": [
+    { "Name": "hall", "X": 30, "Y": 30, "Width": 5, "Height": 4, "Floor": 3, "Level": 0 }
+  ],
+  "Doors": [],
+  "Windows": [
+    { "X": 32, "Y": 30, "Edge": "north", "Guid": "0x44E8992A", "Level": 0 },
+    { "X": 30, "Y": 31, "Edge": "west",  "Guid": "0x44E8992A", "Level": 0 }
+  ]
+}

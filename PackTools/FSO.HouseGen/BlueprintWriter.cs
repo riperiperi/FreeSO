@@ -113,18 +113,13 @@ namespace FSO.HouseGen
                 }
             }
 
-            // Checked here rather than in Validate because it needs the computed walls: a door in
-            // open air cuts nothing, places an object nobody can see the point of, and reports no
+            // Checked here rather than in Validate because it needs the computed walls: a door or
+            // window in open air places an object nobody can see the point of, and reports no
             // error anywhere in the engine.
             foreach (var door in layout.Doors)
-            {
-                int bit = IsWestEdge(door.Edge) ? TopLeft : TopRight;
-                if (!walls.TryGetValue((door.Level, door.X, door.Y), out var segs) || (segs & bit) == 0)
-                    throw new ArgumentException(
-                        $"Door at ({door.X},{door.Y}) edge \"{door.Edge}\" on level {door.Level} has no wall to cut. " +
-                        $"A door goes on the tile whose {(IsWestEdge(door.Edge) ? "west" : "north")} edge carries the wall — " +
-                        $"for a room's east or south wall that is the tile just outside the room.");
-            }
+                RequireWall(walls, door.Level, door.X, door.Y, door.Edge, "Door");
+            foreach (var window in layout.Windows)
+                RequireWall(walls, window.Level, window.X, window.Y, window.Edge, "Window");
 
             floors.Sort((a, b) => a.Level != b.Level ? a.Level - b.Level
                                 : a.Y != b.Y ? a.Y - b.Y : a.X - b.X);
@@ -162,7 +157,7 @@ namespace FSO.HouseGen
             sb.Append("    <pools />\n");
             sb.Append("  </world>\n");
 
-            if (layout.Doors.Count == 0 && baseObjects.Count == 0)
+            if (layout.Doors.Count == 0 && layout.Windows.Count == 0 && baseObjects.Count == 0)
             {
                 sb.Append("  <objects />\n");
             }
@@ -175,25 +170,9 @@ namespace FSO.HouseGen
                 foreach (var raw in baseObjects)
                     sb.Append("    ").Append(raw).Append("\n");
                 foreach (var door in layout.Doors)
-                {
-                    // Levels are NOT consistent across this format. VMWorldActivator adds +1 to
-                    // floor and wall levels, but takes an object's level as-is AND skips
-                    // SetPosition entirely when it is 0 — a level="0" object silently stays out
-                    // of world. So author levels stay 0-based everywhere in HouseLayout and get
-                    // converted here, once.
-                    int objectLevel = door.Level + 1;
-                    // The door group straddles the wall: it anchors on the tile BEFORE the wall
-                    // tile, so sub-object 0 sits west/north of the wall and sub-object 1 lands on
-                    // the wall tile itself. Anchoring on the wall tile puts the group one boundary
-                    // too far east/south and it silently refuses to place.
-                    bool west = IsWestEdge(door.Edge);
-                    int anchorX = west ? door.X - 1 : door.X;
-                    int anchorY = west ? door.Y : door.Y - 1;
-                    int dir = west ? 6 : 0; // 6 = WEST, 0 = NORTH
-                    sb.Append(string.Format(CultureInfo.InvariantCulture,
-                        "    <object guid=\"{0}\" level=\"{1}\" x=\"{2}\" y=\"{3}\" dir=\"{4}\" group=\"0\" />\n",
-                        door.Guid, objectLevel, anchorX, anchorY, dir));
-                }
+                    AppendWallObject(sb, door.Guid, door.Level, door.X, door.Y, door.Edge);
+                foreach (var window in layout.Windows)
+                    AppendWallObject(sb, window.Guid, window.Level, window.X, window.Y, window.Edge);
                 sb.Append("  </objects>\n");
             }
 
@@ -221,11 +200,45 @@ namespace FSO.HouseGen
             else AddSegment(walls, level, x, y - 1, BottomLeft);
         }
 
+        /// <summary>
+        /// Shared door/window XML emission. Levels are NOT consistent across this format:
+        /// VMWorldActivator adds +1 to floor and wall levels, but takes an object's level as-is
+        /// AND skips SetPosition entirely when it is 0 — a level="0" object silently stays out
+        /// of world. Author levels stay 0-based in HouseLayout and convert here, once.
+        ///
+        /// The multitile group straddles the wall: it anchors on the tile BEFORE the wall tile,
+        /// so sub-object 0 sits west/north of the wall and sub-object 1 lands on the wall tile.
+        /// Anchoring on the wall tile puts the group one boundary too far and it silently refuses.
+        /// </summary>
+        private static void AppendWallObject(StringBuilder sb, string guid, int level, int x, int y, string edge)
+        {
+            int objectLevel = level + 1;
+            bool west = IsWestEdge(edge);
+            int anchorX = west ? x - 1 : x;
+            int anchorY = west ? y : y - 1;
+            int dir = west ? 6 : 0; // 6 = WEST, 0 = NORTH
+            sb.Append(string.Format(CultureInfo.InvariantCulture,
+                "    <object guid=\"{0}\" level=\"{1}\" x=\"{2}\" y=\"{3}\" dir=\"{4}\" group=\"0\" />\n",
+                guid, objectLevel, anchorX, anchorY, dir));
+        }
+
+        private static void RequireWall(
+            Dictionary<(int Level, int X, int Y), int> walls,
+            int level, int x, int y, string edge, string kind)
+        {
+            int bit = IsWestEdge(edge) ? TopLeft : TopRight;
+            if (!walls.TryGetValue((level, x, y), out var segs) || (segs & bit) == 0)
+                throw new ArgumentException(
+                    $"{kind} at ({x},{y}) edge \"{edge}\" on level {level} has no wall to cut. " +
+                    $"A {kind.ToLowerInvariant()} goes on the tile whose {(IsWestEdge(edge) ? "west" : "north")} edge carries the wall — " +
+                    $"for a room's east or south wall that is the tile just outside the room.");
+        }
+
         private static bool IsWestEdge(string edge)
         {
             if (string.Equals(edge, "west", StringComparison.OrdinalIgnoreCase)) return true;
             if (string.Equals(edge, "north", StringComparison.OrdinalIgnoreCase)) return false;
-            throw new ArgumentException($"Door edge must be \"west\" or \"north\", not \"{edge}\".");
+            throw new ArgumentException($"Wall-object edge must be \"west\" or \"north\", not \"{edge}\".");
         }
 
         private static void AddSegment(Dictionary<(int, int, int), int> walls, int level, int x, int y, int bit)

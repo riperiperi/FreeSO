@@ -22,6 +22,8 @@ namespace FSO.HouseGen
         public List<Room> Rooms = new List<Room>();
 
         public List<Door> Doors = new List<Door>();
+
+        public List<Window> Windows = new List<Window>();
     }
 
     /// <summary>
@@ -46,6 +48,26 @@ namespace FSO.HouseGen
 
         /// Room level, 0-based like Room.Level. The writer converts to the objects-are-1-based
         /// convention that VMWorldActivator expects.
+        public int Level = 0;
+    }
+
+    /// <summary>
+    /// Same wall-object placement as a door (multitile group straddling the low edge), but with
+    /// ArchitectualWindow — it styles the wall without clearing solidity, so it does not open a
+    /// pathing portal. Coordinates name the wall tile, not the XML anchor (see BlueprintWriter).
+    /// </summary>
+    public class Window
+    {
+        public int X;
+        public int Y;
+
+        /// "west" (TopLeft) or "north" (TopRight).
+        public string Edge = "west";
+
+        /// "Window - Single Pane" (0x44E8992A), from packingslips/objecttable.xml via the same
+        /// path as find_base_object — never guess a GUID.
+        public string Guid = "0x44E8992A";
+
         public int Level = 0;
     }
 

@@ -9,5 +9,9 @@
     { "X": 30, "Y": 32, "Edge": "west",  "Guid": "0x23941850", "Level": 0 },
     { "X": 36, "Y": 31, "Edge": "west",  "Guid": "0x23941850", "Level": 0 },
     { "X": 37, "Y": 34, "Edge": "north", "Guid": "0x23941850", "Level": 0 }
+  ],
+  "Windows": [
+    { "X": 32, "Y": 30, "Edge": "north", "Guid": "0x44E8992A", "Level": 0 },
+    { "X": 30, "Y": 33, "Edge": "west",  "Guid": "0x44E8992A", "Level": 0 }
   ]
 }
