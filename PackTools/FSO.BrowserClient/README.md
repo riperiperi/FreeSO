@@ -83,7 +83,7 @@ Placeholder diamonds stay until this passes. Do **not** wire `ExternalWorld` ear
 1. **KNI MGCB rebuild** — `colorpoly2D` KNIF **DONE** (CI + committed under `wwwroot/Content/Effects/`). Still need lot set: `GrassShaderiOS`, `2DWorldBatchiOS`, …
 2. **Mario / SM64 optional** — **DONE** (`FSO_NO_SM64` / `BLAZORGL` stub).
 3. **`WorldContent.Init` MapGeneration** — **DONE** (fallback when `MapGenerationiOS` missing).
-4. **Dual-target LotView closure to net8** (Common/Files/Content/HIT/Vitaboy*/LotView) — BrowserClient is net8; libs are net9.
+4. **Dual-target LotView closure to net8** — **DONE** (`net8.0;net9.0` on Common/Files/Content/HIT/Vitaboy*/LotView + TargaImagePCL). BrowserClient still not ProjectReferenced.
 5. **Thin WASM seam** — gate Mina/HIT/Threads/File scans as needed.
 6. **Wire `ExternalWorld` + `TerrainComponent.UpdateTerrain`** behind a flag; keep diamond fallback.
 7. Real VM tick payload; live Archive RSA path.

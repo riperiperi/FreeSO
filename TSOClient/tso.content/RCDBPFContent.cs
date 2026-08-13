@@ -13,7 +13,8 @@ namespace FSO.Content
     internal class RCDBPFFile : IDisposable
     {
         private readonly DBPFFile File;
-        private readonly Lock StreamLock = new();
+        // object (not System.Threading.Lock) — Lock is net9+; LotView closure dual-targets net8.
+        private readonly object StreamLock = new();
         public readonly FSO3DDirectory Directory;
 
         private readonly Dictionary<FSO3DRef, DGRP3DMesh> Meshes = [];
