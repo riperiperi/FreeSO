@@ -15,6 +15,19 @@ namespace FSO.PackCompiler
     /// </summary>
     public static class ImportBatchGenerator
     {
+        // Which motive a basic "Use" restores, per catalog category. Decorative and
+        // misc items stay interaction-free — decor has no believable motive.
+        static string MotiveForCategory(string category)
+        {
+            switch (category)
+            {
+                case "seating": return "comfort";
+                case "appliances": return "hunger";
+                case "electronics": return "fun";
+                default: return null;
+            }
+        }
+
         public static void Generate(string manifestCsvPath, string outPackJsonPath, string packId, string packName)
         {
             var manifestDir = Path.GetDirectoryName(Path.GetFullPath(manifestCsvPath)) ?? ".";
@@ -92,6 +105,75 @@ namespace FSO.PackCompiler
                     },
                     ["entry_points"] = new JObject { ["main"] = "main_loop" },
                 });
+
+                // Without a declared interaction PackBuilder emits no TTAB, so the object
+                // has no pie menu at all. Give every import a basic "Use" that restores the
+                // motive its category suggests — same shape as examples/plumbing-pilot.json.
+                var motive = MotiveForCategory(category);
+                if (motive != null)
+                {
+                    var obj = (JObject)objects[objects.Count - 1];
+                    obj["interactions"] = new JArray
+                    {
+                        new JObject
+                        {
+                            ["name"] = "Use",
+                            ["action"] = "use_action",
+                            ["test"] = "use_test",
+                            ["allow"] = new JObject { ["visitors"] = true, ["owner"] = true, ["roommates"] = true },
+                            ["autonomy"] = new JObject
+                            {
+                                ["advertised_motives"] = new JObject { [motive] = 30 },
+                            },
+                        },
+                    };
+                    var trees = (JObject)obj["trees"];
+                    trees["use_action"] = new JObject
+                    {
+                        ["args"] = new JArray(),
+                        ["locals"] = new JArray(),
+                        ["nodes"] = new JArray
+                        {
+                            new JObject
+                            {
+                                ["id"] = "walk",
+                                ["prim"] = "goto_relative",
+                                ["location"] = "in_front_of",
+                                ["direction"] = "facing",
+                                ["then"] = "restore",
+                                ["else"] = "return false",
+                            },
+                            new JObject
+                            {
+                                ["id"] = "restore",
+                                ["prim"] = "expression",
+                                ["lhs"] = new JObject { ["scope"] = "my_motives", ["name"] = motive },
+                                ["op"] = "+=",
+                                ["rhs"] = new JObject { ["scope"] = "literal", ["value"] = 25 },
+                                ["then"] = "return true",
+                                ["else"] = "return false",
+                            },
+                        },
+                    };
+                    trees["use_test"] = new JObject
+                    {
+                        ["args"] = new JArray(),
+                        ["locals"] = new JArray(),
+                        ["nodes"] = new JArray
+                        {
+                            new JObject
+                            {
+                                ["id"] = "always",
+                                ["prim"] = "expression",
+                                ["lhs"] = new JObject { ["scope"] = "literal", ["value"] = 1 },
+                                ["op"] = "==",
+                                ["rhs"] = new JObject { ["scope"] = "literal", ["value"] = 1 },
+                                ["then"] = "return true",
+                                ["else"] = "return false",
+                            },
+                        },
+                    };
+                }
             }
 
             var pack = new JObject

@@ -13,6 +13,9 @@ namespace FSO.PackCompiler.ArtGen
     /// </summary>
     public static class ObjImporter
     {
+        // 1 tile = 1 metre = 3 world units (ScaleByZoom calibration in SpriteAssembler).
+        public const double WorldUnitsPerMetre = 3.0;
+
         public class Params
         {
             public string MeshPath;
@@ -153,7 +156,10 @@ namespace FSO.PackCompiler.ArtGen
 
             var sizeY = maxY - minY;
             if (sizeY < 1e-9) throw new InvalidDataException("mesh has zero height");
-            var scale = targetHeight / sizeY;
+            // height is authored in metres; the sprite renderer is calibrated at
+            // 3 world units per tile and 1 tile = 1 metre (ART-PIPELINE-CALIBRATION.md).
+            // Without this factor every import came out ~1/3 size in game.
+            var scale = targetHeight * WorldUnitsPerMetre / sizeY;
             var cx = (minX + maxX) / 2;
             var cz = (minZ + maxZ) / 2;
 

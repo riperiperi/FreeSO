@@ -41,11 +41,78 @@
               "else": "idle"
             }
           ]
+        },
+        "use_action": {
+          "args": [],
+          "locals": [],
+          "nodes": [
+            {
+              "id": "walk",
+              "prim": "goto_relative",
+              "location": "in_front_of",
+              "direction": "facing",
+              "then": "restore",
+              "else": "return false"
+            },
+            {
+              "id": "restore",
+              "prim": "expression",
+              "lhs": {
+                "scope": "my_motives",
+                "name": "comfort"
+              },
+              "op": "+=",
+              "rhs": {
+                "scope": "literal",
+                "value": 25
+              },
+              "then": "return true",
+              "else": "return false"
+            }
+          ]
+        },
+        "use_test": {
+          "args": [],
+          "locals": [],
+          "nodes": [
+            {
+              "id": "always",
+              "prim": "expression",
+              "lhs": {
+                "scope": "literal",
+                "value": 1
+              },
+              "op": "==",
+              "rhs": {
+                "scope": "literal",
+                "value": 1
+              },
+              "then": "return true",
+              "else": "return false"
+            }
+          ]
         }
       },
       "entry_points": {
         "main": "main_loop"
-      }
+      },
+      "interactions": [
+        {
+          "name": "Use",
+          "action": "use_action",
+          "test": "use_test",
+          "allow": {
+            "visitors": true,
+            "owner": true,
+            "roommates": true
+          },
+          "autonomy": {
+            "advertised_motives": {
+              "comfort": 30
+            }
+          }
+        }
+      ]
     },
     {
       "id": "chaircushion",
@@ -79,11 +146,78 @@
               "else": "idle"
             }
           ]
+        },
+        "use_action": {
+          "args": [],
+          "locals": [],
+          "nodes": [
+            {
+              "id": "walk",
+              "prim": "goto_relative",
+              "location": "in_front_of",
+              "direction": "facing",
+              "then": "restore",
+              "else": "return false"
+            },
+            {
+              "id": "restore",
+              "prim": "expression",
+              "lhs": {
+                "scope": "my_motives",
+                "name": "comfort"
+              },
+              "op": "+=",
+              "rhs": {
+                "scope": "literal",
+                "value": 25
+              },
+              "then": "return true",
+              "else": "return false"
+            }
+          ]
+        },
+        "use_test": {
+          "args": [],
+          "locals": [],
+          "nodes": [
+            {
+              "id": "always",
+              "prim": "expression",
+              "lhs": {
+                "scope": "literal",
+                "value": 1
+              },
+              "op": "==",
+              "rhs": {
+                "scope": "literal",
+                "value": 1
+              },
+              "then": "return true",
+              "else": "return false"
+            }
+          ]
         }
       },
       "entry_points": {
         "main": "main_loop"
-      }
+      },
+      "interactions": [
+        {
+          "name": "Use",
+          "action": "use_action",
+          "test": "use_test",
+          "allow": {
+            "visitors": true,
+            "owner": true,
+            "roommates": true
+          },
+          "autonomy": {
+            "advertised_motives": {
+              "comfort": 30
+            }
+          }
+        }
+      ]
     },
     {
       "id": "chairrounded",
@@ -117,11 +251,78 @@
               "else": "idle"
             }
           ]
+        },
+        "use_action": {
+          "args": [],
+          "locals": [],
+          "nodes": [
+            {
+              "id": "walk",
+              "prim": "goto_relative",
+              "location": "in_front_of",
+              "direction": "facing",
+              "then": "restore",
+              "else": "return false"
+            },
+            {
+              "id": "restore",
+              "prim": "expression",
+              "lhs": {
+                "scope": "my_motives",
+                "name": "comfort"
+              },
+              "op": "+=",
+              "rhs": {
+                "scope": "literal",
+                "value": 25
+              },
+              "then": "return true",
+              "else": "return false"
+            }
+          ]
+        },
+        "use_test": {
+          "args": [],
+          "locals": [],
+          "nodes": [
+            {
+              "id": "always",
+              "prim": "expression",
+              "lhs": {
+                "scope": "literal",
+                "value": 1
+              },
+              "op": "==",
+              "rhs": {
+                "scope": "literal",
+                "value": 1
+              },
+              "then": "return true",
+              "else": "return false"
+            }
+          ]
         }
       },
       "entry_points": {
         "main": "main_loop"
-      }
+      },
+      "interactions": [
+        {
+          "name": "Use",
+          "action": "use_action",
+          "test": "use_test",
+          "allow": {
+            "visitors": true,
+            "owner": true,
+            "roommates": true
+          },
+          "autonomy": {
+            "advertised_motives": {
+              "comfort": 30
+            }
+          }
+        }
+      ]
     },
     {
       "id": "loungechairrelax",
@@ -155,11 +356,78 @@
               "else": "idle"
             }
           ]
+        },
+        "use_action": {
+          "args": [],
+          "locals": [],
+          "nodes": [
+            {
+              "id": "walk",
+              "prim": "goto_relative",
+              "location": "in_front_of",
+              "direction": "facing",
+              "then": "restore",
+              "else": "return false"
+            },
+            {
+              "id": "restore",
+              "prim": "expression",
+              "lhs": {
+                "scope": "my_motives",
+                "name": "comfort"
+              },
+              "op": "+=",
+              "rhs": {
+                "scope": "literal",
+                "value": 25
+              },
+              "then": "return true",
+              "else": "return false"
+            }
+          ]
+        },
+        "use_test": {
+          "args": [],
+          "locals": [],
+          "nodes": [
+            {
+              "id": "always",
+              "prim": "expression",
+              "lhs": {
+                "scope": "literal",
+                "value": 1
+              },
+              "op": "==",
+              "rhs": {
+                "scope": "literal",
+                "value": 1
+              },
+              "then": "return true",
+              "else": "return false"
+            }
+          ]
         }
       },
       "entry_points": {
         "main": "main_loop"
-      }
+      },
+      "interactions": [
+        {
+          "name": "Use",
+          "action": "use_action",
+          "test": "use_test",
+          "allow": {
+            "visitors": true,
+            "owner": true,
+            "roommates": true
+          },
+          "autonomy": {
+            "advertised_motives": {
+              "comfort": 30
+            }
+          }
+        }
+      ]
     },
     {
       "id": "loungesofa",
@@ -193,11 +461,78 @@
               "else": "idle"
             }
           ]
+        },
+        "use_action": {
+          "args": [],
+          "locals": [],
+          "nodes": [
+            {
+              "id": "walk",
+              "prim": "goto_relative",
+              "location": "in_front_of",
+              "direction": "facing",
+              "then": "restore",
+              "else": "return false"
+            },
+            {
+              "id": "restore",
+              "prim": "expression",
+              "lhs": {
+                "scope": "my_motives",
+                "name": "comfort"
+              },
+              "op": "+=",
+              "rhs": {
+                "scope": "literal",
+                "value": 25
+              },
+              "then": "return true",
+              "else": "return false"
+            }
+          ]
+        },
+        "use_test": {
+          "args": [],
+          "locals": [],
+          "nodes": [
+            {
+              "id": "always",
+              "prim": "expression",
+              "lhs": {
+                "scope": "literal",
+                "value": 1
+              },
+              "op": "==",
+              "rhs": {
+                "scope": "literal",
+                "value": 1
+              },
+              "then": "return true",
+              "else": "return false"
+            }
+          ]
         }
       },
       "entry_points": {
         "main": "main_loop"
-      }
+      },
+      "interactions": [
+        {
+          "name": "Use",
+          "action": "use_action",
+          "test": "use_test",
+          "allow": {
+            "visitors": true,
+            "owner": true,
+            "roommates": true
+          },
+          "autonomy": {
+            "advertised_motives": {
+              "comfort": 30
+            }
+          }
+        }
+      ]
     },
     {
       "id": "loungesofalong",
@@ -231,11 +566,78 @@
               "else": "idle"
             }
           ]
+        },
+        "use_action": {
+          "args": [],
+          "locals": [],
+          "nodes": [
+            {
+              "id": "walk",
+              "prim": "goto_relative",
+              "location": "in_front_of",
+              "direction": "facing",
+              "then": "restore",
+              "else": "return false"
+            },
+            {
+              "id": "restore",
+              "prim": "expression",
+              "lhs": {
+                "scope": "my_motives",
+                "name": "comfort"
+              },
+              "op": "+=",
+              "rhs": {
+                "scope": "literal",
+                "value": 25
+              },
+              "then": "return true",
+              "else": "return false"
+            }
+          ]
+        },
+        "use_test": {
+          "args": [],
+          "locals": [],
+          "nodes": [
+            {
+              "id": "always",
+              "prim": "expression",
+              "lhs": {
+                "scope": "literal",
+                "value": 1
+              },
+              "op": "==",
+              "rhs": {
+                "scope": "literal",
+                "value": 1
+              },
+              "then": "return true",
+              "else": "return false"
+            }
+          ]
         }
       },
       "entry_points": {
         "main": "main_loop"
-      }
+      },
+      "interactions": [
+        {
+          "name": "Use",
+          "action": "use_action",
+          "test": "use_test",
+          "allow": {
+            "visitors": true,
+            "owner": true,
+            "roommates": true
+          },
+          "autonomy": {
+            "advertised_motives": {
+              "comfort": 30
+            }
+          }
+        }
+      ]
     },
     {
       "id": "loungesofacorner",
@@ -269,11 +671,78 @@
               "else": "idle"
             }
           ]
+        },
+        "use_action": {
+          "args": [],
+          "locals": [],
+          "nodes": [
+            {
+              "id": "walk",
+              "prim": "goto_relative",
+              "location": "in_front_of",
+              "direction": "facing",
+              "then": "restore",
+              "else": "return false"
+            },
+            {
+              "id": "restore",
+              "prim": "expression",
+              "lhs": {
+                "scope": "my_motives",
+                "name": "comfort"
+              },
+              "op": "+=",
+              "rhs": {
+                "scope": "literal",
+                "value": 25
+              },
+              "then": "return true",
+              "else": "return false"
+            }
+          ]
+        },
+        "use_test": {
+          "args": [],
+          "locals": [],
+          "nodes": [
+            {
+              "id": "always",
+              "prim": "expression",
+              "lhs": {
+                "scope": "literal",
+                "value": 1
+              },
+              "op": "==",
+              "rhs": {
+                "scope": "literal",
+                "value": 1
+              },
+              "then": "return true",
+              "else": "return false"
+            }
+          ]
         }
       },
       "entry_points": {
         "main": "main_loop"
-      }
+      },
+      "interactions": [
+        {
+          "name": "Use",
+          "action": "use_action",
+          "test": "use_test",
+          "allow": {
+            "visitors": true,
+            "owner": true,
+            "roommates": true
+          },
+          "autonomy": {
+            "advertised_motives": {
+              "comfort": 30
+            }
+          }
+        }
+      ]
     },
     {
       "id": "loungesofaottoman",
@@ -307,11 +776,78 @@
               "else": "idle"
             }
           ]
+        },
+        "use_action": {
+          "args": [],
+          "locals": [],
+          "nodes": [
+            {
+              "id": "walk",
+              "prim": "goto_relative",
+              "location": "in_front_of",
+              "direction": "facing",
+              "then": "restore",
+              "else": "return false"
+            },
+            {
+              "id": "restore",
+              "prim": "expression",
+              "lhs": {
+                "scope": "my_motives",
+                "name": "comfort"
+              },
+              "op": "+=",
+              "rhs": {
+                "scope": "literal",
+                "value": 25
+              },
+              "then": "return true",
+              "else": "return false"
+            }
+          ]
+        },
+        "use_test": {
+          "args": [],
+          "locals": [],
+          "nodes": [
+            {
+              "id": "always",
+              "prim": "expression",
+              "lhs": {
+                "scope": "literal",
+                "value": 1
+              },
+              "op": "==",
+              "rhs": {
+                "scope": "literal",
+                "value": 1
+              },
+              "then": "return true",
+              "else": "return false"
+            }
+          ]
         }
       },
       "entry_points": {
         "main": "main_loop"
-      }
+      },
+      "interactions": [
+        {
+          "name": "Use",
+          "action": "use_action",
+          "test": "use_test",
+          "allow": {
+            "visitors": true,
+            "owner": true,
+            "roommates": true
+          },
+          "autonomy": {
+            "advertised_motives": {
+              "comfort": 30
+            }
+          }
+        }
+      ]
     },
     {
       "id": "table",
@@ -1029,11 +1565,78 @@
               "else": "idle"
             }
           ]
+        },
+        "use_action": {
+          "args": [],
+          "locals": [],
+          "nodes": [
+            {
+              "id": "walk",
+              "prim": "goto_relative",
+              "location": "in_front_of",
+              "direction": "facing",
+              "then": "restore",
+              "else": "return false"
+            },
+            {
+              "id": "restore",
+              "prim": "expression",
+              "lhs": {
+                "scope": "my_motives",
+                "name": "comfort"
+              },
+              "op": "+=",
+              "rhs": {
+                "scope": "literal",
+                "value": 25
+              },
+              "then": "return true",
+              "else": "return false"
+            }
+          ]
+        },
+        "use_test": {
+          "args": [],
+          "locals": [],
+          "nodes": [
+            {
+              "id": "always",
+              "prim": "expression",
+              "lhs": {
+                "scope": "literal",
+                "value": 1
+              },
+              "op": "==",
+              "rhs": {
+                "scope": "literal",
+                "value": 1
+              },
+              "then": "return true",
+              "else": "return false"
+            }
+          ]
         }
       },
       "entry_points": {
         "main": "main_loop"
-      }
+      },
+      "interactions": [
+        {
+          "name": "Use",
+          "action": "use_action",
+          "test": "use_test",
+          "allow": {
+            "visitors": true,
+            "owner": true,
+            "roommates": true
+          },
+          "autonomy": {
+            "advertised_motives": {
+              "comfort": 30
+            }
+          }
+        }
+      ]
     },
     {
       "id": "bench",
@@ -1067,11 +1670,78 @@
               "else": "idle"
             }
           ]
+        },
+        "use_action": {
+          "args": [],
+          "locals": [],
+          "nodes": [
+            {
+              "id": "walk",
+              "prim": "goto_relative",
+              "location": "in_front_of",
+              "direction": "facing",
+              "then": "restore",
+              "else": "return false"
+            },
+            {
+              "id": "restore",
+              "prim": "expression",
+              "lhs": {
+                "scope": "my_motives",
+                "name": "comfort"
+              },
+              "op": "+=",
+              "rhs": {
+                "scope": "literal",
+                "value": 25
+              },
+              "then": "return true",
+              "else": "return false"
+            }
+          ]
+        },
+        "use_test": {
+          "args": [],
+          "locals": [],
+          "nodes": [
+            {
+              "id": "always",
+              "prim": "expression",
+              "lhs": {
+                "scope": "literal",
+                "value": 1
+              },
+              "op": "==",
+              "rhs": {
+                "scope": "literal",
+                "value": 1
+              },
+              "then": "return true",
+              "else": "return false"
+            }
+          ]
         }
       },
       "entry_points": {
         "main": "main_loop"
-      }
+      },
+      "interactions": [
+        {
+          "name": "Use",
+          "action": "use_action",
+          "test": "use_test",
+          "allow": {
+            "visitors": true,
+            "owner": true,
+            "roommates": true
+          },
+          "autonomy": {
+            "advertised_motives": {
+              "comfort": 30
+            }
+          }
+        }
+      ]
     },
     {
       "id": "benchcushion",
@@ -1105,11 +1775,78 @@
               "else": "idle"
             }
           ]
+        },
+        "use_action": {
+          "args": [],
+          "locals": [],
+          "nodes": [
+            {
+              "id": "walk",
+              "prim": "goto_relative",
+              "location": "in_front_of",
+              "direction": "facing",
+              "then": "restore",
+              "else": "return false"
+            },
+            {
+              "id": "restore",
+              "prim": "expression",
+              "lhs": {
+                "scope": "my_motives",
+                "name": "comfort"
+              },
+              "op": "+=",
+              "rhs": {
+                "scope": "literal",
+                "value": 25
+              },
+              "then": "return true",
+              "else": "return false"
+            }
+          ]
+        },
+        "use_test": {
+          "args": [],
+          "locals": [],
+          "nodes": [
+            {
+              "id": "always",
+              "prim": "expression",
+              "lhs": {
+                "scope": "literal",
+                "value": 1
+              },
+              "op": "==",
+              "rhs": {
+                "scope": "literal",
+                "value": 1
+              },
+              "then": "return true",
+              "else": "return false"
+            }
+          ]
         }
       },
       "entry_points": {
         "main": "main_loop"
-      }
+      },
+      "interactions": [
+        {
+          "name": "Use",
+          "action": "use_action",
+          "test": "use_test",
+          "allow": {
+            "visitors": true,
+            "owner": true,
+            "roommates": true
+          },
+          "autonomy": {
+            "advertised_motives": {
+              "comfort": 30
+            }
+          }
+        }
+      ]
     },
     {
       "id": "ruground",
@@ -1371,11 +2108,78 @@
               "else": "idle"
             }
           ]
+        },
+        "use_action": {
+          "args": [],
+          "locals": [],
+          "nodes": [
+            {
+              "id": "walk",
+              "prim": "goto_relative",
+              "location": "in_front_of",
+              "direction": "facing",
+              "then": "restore",
+              "else": "return false"
+            },
+            {
+              "id": "restore",
+              "prim": "expression",
+              "lhs": {
+                "scope": "my_motives",
+                "name": "hunger"
+              },
+              "op": "+=",
+              "rhs": {
+                "scope": "literal",
+                "value": 25
+              },
+              "then": "return true",
+              "else": "return false"
+            }
+          ]
+        },
+        "use_test": {
+          "args": [],
+          "locals": [],
+          "nodes": [
+            {
+              "id": "always",
+              "prim": "expression",
+              "lhs": {
+                "scope": "literal",
+                "value": 1
+              },
+              "op": "==",
+              "rhs": {
+                "scope": "literal",
+                "value": 1
+              },
+              "then": "return true",
+              "else": "return false"
+            }
+          ]
         }
       },
       "entry_points": {
         "main": "main_loop"
-      }
+      },
+      "interactions": [
+        {
+          "name": "Use",
+          "action": "use_action",
+          "test": "use_test",
+          "allow": {
+            "visitors": true,
+            "owner": true,
+            "roommates": true
+          },
+          "autonomy": {
+            "advertised_motives": {
+              "hunger": 30
+            }
+          }
+        }
+      ]
     },
     {
       "id": "kitchenstoveelectric",
@@ -1409,11 +2213,78 @@
               "else": "idle"
             }
           ]
+        },
+        "use_action": {
+          "args": [],
+          "locals": [],
+          "nodes": [
+            {
+              "id": "walk",
+              "prim": "goto_relative",
+              "location": "in_front_of",
+              "direction": "facing",
+              "then": "restore",
+              "else": "return false"
+            },
+            {
+              "id": "restore",
+              "prim": "expression",
+              "lhs": {
+                "scope": "my_motives",
+                "name": "hunger"
+              },
+              "op": "+=",
+              "rhs": {
+                "scope": "literal",
+                "value": 25
+              },
+              "then": "return true",
+              "else": "return false"
+            }
+          ]
+        },
+        "use_test": {
+          "args": [],
+          "locals": [],
+          "nodes": [
+            {
+              "id": "always",
+              "prim": "expression",
+              "lhs": {
+                "scope": "literal",
+                "value": 1
+              },
+              "op": "==",
+              "rhs": {
+                "scope": "literal",
+                "value": 1
+              },
+              "then": "return true",
+              "else": "return false"
+            }
+          ]
         }
       },
       "entry_points": {
         "main": "main_loop"
-      }
+      },
+      "interactions": [
+        {
+          "name": "Use",
+          "action": "use_action",
+          "test": "use_test",
+          "allow": {
+            "visitors": true,
+            "owner": true,
+            "roommates": true
+          },
+          "autonomy": {
+            "advertised_motives": {
+              "hunger": 30
+            }
+          }
+        }
+      ]
     },
     {
       "id": "bathroomsink",
@@ -1599,11 +2470,78 @@
               "else": "idle"
             }
           ]
+        },
+        "use_action": {
+          "args": [],
+          "locals": [],
+          "nodes": [
+            {
+              "id": "walk",
+              "prim": "goto_relative",
+              "location": "in_front_of",
+              "direction": "facing",
+              "then": "restore",
+              "else": "return false"
+            },
+            {
+              "id": "restore",
+              "prim": "expression",
+              "lhs": {
+                "scope": "my_motives",
+                "name": "fun"
+              },
+              "op": "+=",
+              "rhs": {
+                "scope": "literal",
+                "value": 25
+              },
+              "then": "return true",
+              "else": "return false"
+            }
+          ]
+        },
+        "use_test": {
+          "args": [],
+          "locals": [],
+          "nodes": [
+            {
+              "id": "always",
+              "prim": "expression",
+              "lhs": {
+                "scope": "literal",
+                "value": 1
+              },
+              "op": "==",
+              "rhs": {
+                "scope": "literal",
+                "value": 1
+              },
+              "then": "return true",
+              "else": "return false"
+            }
+          ]
         }
       },
       "entry_points": {
         "main": "main_loop"
-      }
+      },
+      "interactions": [
+        {
+          "name": "Use",
+          "action": "use_action",
+          "test": "use_test",
+          "allow": {
+            "visitors": true,
+            "owner": true,
+            "roommates": true
+          },
+          "autonomy": {
+            "advertised_motives": {
+              "fun": 30
+            }
+          }
+        }
+      ]
     },
     {
       "id": "computerkeyboard",
@@ -1637,11 +2575,78 @@
               "else": "idle"
             }
           ]
+        },
+        "use_action": {
+          "args": [],
+          "locals": [],
+          "nodes": [
+            {
+              "id": "walk",
+              "prim": "goto_relative",
+              "location": "in_front_of",
+              "direction": "facing",
+              "then": "restore",
+              "else": "return false"
+            },
+            {
+              "id": "restore",
+              "prim": "expression",
+              "lhs": {
+                "scope": "my_motives",
+                "name": "fun"
+              },
+              "op": "+=",
+              "rhs": {
+                "scope": "literal",
+                "value": 25
+              },
+              "then": "return true",
+              "else": "return false"
+            }
+          ]
+        },
+        "use_test": {
+          "args": [],
+          "locals": [],
+          "nodes": [
+            {
+              "id": "always",
+              "prim": "expression",
+              "lhs": {
+                "scope": "literal",
+                "value": 1
+              },
+              "op": "==",
+              "rhs": {
+                "scope": "literal",
+                "value": 1
+              },
+              "then": "return true",
+              "else": "return false"
+            }
+          ]
         }
       },
       "entry_points": {
         "main": "main_loop"
-      }
+      },
+      "interactions": [
+        {
+          "name": "Use",
+          "action": "use_action",
+          "test": "use_test",
+          "allow": {
+            "visitors": true,
+            "owner": true,
+            "roommates": true
+          },
+          "autonomy": {
+            "advertised_motives": {
+              "fun": 30
+            }
+          }
+        }
+      ]
     },
     {
       "id": "plantsmall3",
