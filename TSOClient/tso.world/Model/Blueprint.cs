@@ -155,7 +155,10 @@ namespace FSO.LotView.Model
 
             this.Changes = new BlueprintChanges(this);
 
+#if !FSO_NO_SM64
+            // Mario.dll is not available on BlazorGL/WASM; callers already null-check SM64.
             this.SM64 = new SM64Component(this);
+#endif
         }
 
         public void AdjustBaseAlt(int altDiff)

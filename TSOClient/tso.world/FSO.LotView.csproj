@@ -23,6 +23,17 @@
     <FSOUseXnaPackages>true</FSOUseXnaPackages>
   </PropertyGroup>
 
+  <!--
+    Mario/SM64 is desktop-only (native PE Mario.dll). Opt out for BlazorGL/WASM:
+      -p:FSO_NO_SM64=true
+      -p:BLAZORGL=true
+    Desktop MonoGame/KNI builds leave this unset and keep full SM64.
+  -->
+  <PropertyGroup Condition="'$(FSO_NO_SM64)' == 'true' Or '$(BLAZORGL)' == 'true'">
+    <FSO_NO_SM64>true</FSO_NO_SM64>
+    <DefineConstants>$(DefineConstants);FSO_NO_SM64</DefineConstants>
+  </PropertyGroup>
+
   <ItemGroup>
     <ProjectReference Include="..\tso.common\FSO.Common.csproj" />
     <ProjectReference Include="..\tso.content\FSO.Content.csproj" />
@@ -32,10 +43,16 @@
     <ProjectReference Include="..\tso.vitaboy.model\FSO.Vitaboy.csproj" />
   </ItemGroup>
 
-  <ItemGroup>
+  <ItemGroup Condition="'$(FSO_NO_SM64)' != 'true'">
     <Reference Include="Mario">
       <HintPath>Mario.dll</HintPath>
     </Reference>
+    <Compile Remove="Components\SM64Component.Stub.cs" />
+  </ItemGroup>
+
+  <ItemGroup Condition="'$(FSO_NO_SM64)' == 'true'">
+    <Compile Remove="Components\SM64Component.cs" />
+    <Compile Remove="Components\SM64Geo\**" />
   </ItemGroup>
 
 </Project>
