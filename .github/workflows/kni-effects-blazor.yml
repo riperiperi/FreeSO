@@ -1,0 +1,40 @@
+name: KNI BlazorGL effects
+
+# Rebuild FreeSO .fx → KNIF XNBs for BrowserClient (Windows MGCB / d3dcompiler).
+on:
+  workflow_dispatch:
+  push:
+    paths:
+      - "PackTools/FSO.BrowserEffects/**"
+      - ".github/workflows/kni-effects-blazor.yml"
+
+jobs:
+  build-effects:
+    runs-on: windows-latest
+    steps:
+      - uses: actions/checkout@v5
+
+      - uses: actions/setup-dotnet@v5
+        with:
+          dotnet-version: 8.0.x
+
+      - name: Build BlazorGL effect XNBs
+        shell: pwsh
+        run: .\PackTools\FSO.BrowserEffects\build.ps1
+
+      - name: Upload XNBs
+        uses: actions/upload-artifact@v7
+        with:
+          name: kni-effects-blazorgl
+          path: PackTools/FSO.BrowserClient/wwwroot/Content/Effects/*.xnb
+
+      - name: Header sanity (not stock MonoGame MGFX)
+        shell: pwsh
+        run: |
+          $xnb = "PackTools/FSO.BrowserClient/wwwroot/Content/Effects/colorpoly2D.xnb"
+          $bytes = [System.IO.File]::ReadAllBytes($xnb)
+          $ascii = [System.Text.Encoding]::ASCII.GetString($bytes)
+          if ($ascii -match "MonoGame\.Framework") {
+            throw "XNB still references MonoGame.Framework — expected KNI rebuild"
+          }
+          Write-Host "OK: $xnb ($($bytes.Length) bytes) — no MonoGame.Framework reader string"

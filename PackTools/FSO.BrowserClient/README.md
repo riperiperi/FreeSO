@@ -42,14 +42,17 @@ With `?gateway=…` in the URL (or `?join=1`), the client auto-joins after ~1.5s
 placeholder** (WASD / arrows to pan). This is not real `FSO.LotView` yet — see
 `../docs/KNI-MIGRATION.md` S5.
 
-### Lot placeholder + S3 BasicEffect (no gateway)
+### Lot placeholder + S3 effects (no gateway)
 
 ```
 http://localhost:5259/?lot=1
 ```
 
-Isometric floor + green status strip **effect OK (BasicEffect)** and a small
-colored triangle (GPU effect path). Built-in `BasicEffect` — not a FreeSO XNB.
+Isometric floor + effect status strip + small triangle. BrowserClient always tries
+`Content.Load<Effect>("Effects/colorpoly2D")` from `wwwroot/Content/Effects/`
+(KNIF rebuild). If missing/unreadable → **BasicEffect fallback** (still green).
+Teal half-pill = KNIF load succeeded. Rebuild on Windows/CI:
+`PackTools/FSO.BrowserEffects` (Mac MGCB blocked — needs `d3dcompiler_47.dll`).
 
 ### FreeSO XNB negative probe (S3 format wall)
 
@@ -57,18 +60,16 @@ colored triangle (GPU effect path). Built-in `BasicEffect` — not a FreeSO XNB.
 http://localhost:5259/?lot=1&effect=1
 ```
 
-Also runs `Content.Load<Effect>("Effects/colorpoly2D")` against
-`wwwroot/Content/Effects/colorpoly2D.xnb` (copy of iOS stock). **Expected fail:**
-KNI 4.2 only accepts MGFX 10 / KNIF 11–12; FreeSO ships MGFX 11. Red pill next to
-the green BasicEffect strip; exact message in the browser console
-(`FreeSO XNB blocked: …`). Same bytes also under `wwwroot/sample-content/effects/`.
+Also loads stock FreeSO MGFX 11 from `sample-content/effects/colorpoly2D.xnb`.
+**Expected fail** on KNI 4.2 (MGFX 10 / KNIF 11–12 only). Red pill; console
+`FreeSO XNB blocked: …`.
 
 ## Content seam
 
 - `FSO.BrowserContent` (`net8`/`net9`) — `HttpContentStore` / `FileContentStore` / composite
 - Sample texture: `wwwroot/sample-content/textures/squares.png`
-- Sample FreeSO effects (transport only): `wwwroot/sample-content/effects/*.xnb`
-- ContentManager probe: `wwwroot/Content/Effects/colorpoly2D.xnb`
+- Stock FreeSO effects (transport / negative probe): `wwwroot/sample-content/effects/*.xnb`
+- KNIF Content.Load target: `wwwroot/Content/Effects/colorpoly2D.xnb` (from FSO.BrowserEffects)
 
 ## Networking
 

@@ -147,7 +147,7 @@ After library swap, desktop heads use `nkast.Kni.Platform.SDL2.GL`.
 | S0 | Empty BlazorGL `Game` + clear color | Canvas paints — **DONE** (`PackTools/FSO.BrowserClient`) |
 | S1 | Retarget Domain → Files → Common → Content (+ through Client) | libs build on KNI — **DONE for shipping lib chain**: Domain/Common/Files/Content/Vitaboy*/HIT/LotView/SimAntics/UI/Server/Client on `FSO_GRAPHICS` switch. Desktop heads still MonoGame platform packages. |
 | S2 | Content seam over HTTP; one FAR/IFF → Texture2D | Texture on screen — **DONE for PNG path**: Composite store + Blazor `HttpContentStore` → `Texture2D` (`squares.png`). FAR entry → texture still open. |
-| S3 | Fetch `Content/OGL` XNBs; load effects (start **iOS/GLVer=2**) | **Partial:** HTTP/`wwwroot` transport ready (`sample-content/effects/` + `Content/Effects/colorpoly2D.xnb`). Stock FreeSO iOS/OGL XNBs are **MGFX 11** (some older **MGFX 8**); KNI 4.2.9001 only accepts **MGFX 10** or **KNIF 11/12** — drop-in `Content.Load` **fails** (probe: `?lot=1&effect=1`). GPU path proven with built-in **`BasicEffect`** on lot placeholder (green status + tiny triangle). Full LotView effects still need **KNI MGCB rebuild** of `*iOS.fx`. |
+| S3 | Fetch `Content/OGL` XNBs; load effects (start **iOS/GLVer=2**) | **Scaffolded (Mac blocked):** BrowserClient tries `Content.Load<Effect>("Effects/colorpoly2D")` then **BasicEffect** fallback. Stock FreeSO XNBs = **MGFX 11** (probe `?lot=1&effect=1` via `sample-content/effects/`). KNI 4.2.9001 needs **MGFX 10** / **KNIF 11/12**. Rebuild project: `PackTools/FSO.BrowserEffects` (`KniContentReference` + Builder 4.2.9001). **Mac blocker (2026-08-12):** `dotnet MGCB.dll` runs, but EffectProcessor needs Windows `d3dcompiler_47.dll` (see that README). Windows/CI: `build.ps1` / `.github/workflows/kni-effects-blazor.yml` → copy XNB to `BrowserClient/wwwroot/Content/Effects/`. Green KNIF status when that file is present. |
 | S4 | Retarget HIT; one SoundEffect under autoplay rules | Audio beep |
 | S5 | LotView + Vitaboy; empty lot | Lot camera + floor — **placeholder DONE**: BrowserClient draws FreeSO grass-colored isometric diamonds after `LotJoined` (or `?lot=1`) + S3 `BasicEffect` triangle. Real `FSO.LotView` blocked on Mario.dll, **KNI-rebuilt** iOS XNBs, TFM. |
 | S6 | Thread→Task on play path | No `new Thread` on join |
@@ -181,7 +181,7 @@ Lower risk than feared: `System.Drawing` nearly all IDE/Windows; MP3Player alrea
 3. ~~Prove clear-screen BlazorGL head.~~ — `PackTools/FSO.BrowserClient`.
 4. `IContentBlobStore` / stream factory — HTTP seam exists (`FSO.BrowserContent`); still need to route `Content.GetResource` + FAR through it.
 5. ~~Retarget remaining packages bottom-up (§4.1).~~ — shipping lib chain through `FSO.Client` done; desktop heads still on MonoGame platform packages.
-6. Force `FSOEnvironment.GLVer = 2`; **rebuild** `ContentSrc/Effects/*iOS.fx` with KNI MGCB (BlazorGL/OpenGL) — stock FreeSO MGFX 11 XNBs will not load.
+6. Force `FSOEnvironment.GLVer = 2`; **rebuild** `ContentSrc/Effects/*iOS.fx` with KNI MGCB (BlazorGL/OpenGL) on **Windows/CI** (`PackTools/FSO.BrowserEffects` — Mac cannot run EffectProcessor). Stock FreeSO MGFX 11 XNBs will not load.
 7. Replace Threads in `AbstractRegulator`, `UIElement.Async`, `ContentPreloader`, `FileSystemCache`.
 8. Gate GamePad / Discord / drag-drop / locators / zip-cab behind runtime flags.
 9. Integrate WsGateway URL into Blazor config; continue Aries session work.

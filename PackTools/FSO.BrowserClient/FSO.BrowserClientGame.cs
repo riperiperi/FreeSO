@@ -11,9 +11,9 @@ namespace FSO_BrowserClient
 {
     /// <summary>
     /// KNI/BlazorGL spike: HTTP texture + Aries city→lot join + isometric lot placeholder.
-    /// S3: <see cref="BasicEffect"/> proves GPU effects on the lot view; stock FreeSO XNBs
-    /// (MGFX 11) are documented to fail via optional <c>?effect=1</c> Content.Load probe.
-    /// Real FSO.LotView still blocked (Mario.dll / KNI-rebuilt iOS FX / TFM).
+    /// S3: prefer <c>Content.Load&lt;Effect&gt;("Effects/colorpoly2D")</c> (KNIF from
+    /// FSO.BrowserEffects); fall back to <see cref="BasicEffect"/>. Stock FreeSO MGFX 11
+    /// probe via <c>?effect=1</c> (sample-content). Real LotView still blocked.
     /// </summary>
     public class FSO_BrowserClientGame : Game
     {
@@ -44,11 +44,14 @@ namespace FSO_BrowserClient
         Texture2D pixel;
         Texture2D sampleTexture;
         BasicEffect basicEffect;
+        Effect kniEffect;
+        Microsoft.Xna.Framework.Content.ContentManager sampleContent;
         VertexPositionColor[] effectTriangle;
         string loadStatus = "loading…";
         string effectStatus = "effect: not yet";
         string freeSoXnbStatus;
         bool effectOk;
+        bool kniEffectLoaded;
         bool loadStarted;
         bool joinStarted;
         bool spaceWasDown;
@@ -62,7 +65,7 @@ namespace FSO_BrowserClient
         /// <param name="gatewayBase">Gateway base (http://127.0.0.1:8087 or ws://…).</param>
         /// <param name="autoJoin">When true, start city→lot join ~1.5s after texture load.</param>
         /// <param name="forceLotView">When true (<c>?lot=1</c>), show isometric placeholder without joining.</param>
-        /// <param name="probeFreeSoXnb">When true (<c>?effect=1</c>), Content.Load FreeSO colorpoly2D and surface the MGFX error.</param>
+        /// <param name="probeFreeSoXnb">When true (<c>?effect=1</c>), Content.Load stock FreeSO colorpoly2D from sample-content.</param>
         public FSO_BrowserClientGame(
             string contentBaseUrl,
             string gatewayBase,
@@ -89,7 +92,10 @@ namespace FSO_BrowserClient
             pixel = new Texture2D(GraphicsDevice, 1, 1);
             pixel.SetData(new[] { Color.White });
 
-            InitBasicEffect();
+            // S3: KNIF XNB first (wwwroot/Content/Effects/); BasicEffect always for draw + fallback status.
+            TryLoadKniEffectXnb();
+            InitBasicEffectForDraw();
+            EnsureEffectTriangle();
 
             if (_probeFreeSoXnb)
                 ProbeFreeSoEffectXnb();
@@ -101,7 +107,33 @@ namespace FSO_BrowserClient
             }
         }
 
-        void InitBasicEffect()
+        /// <summary>
+        /// Load KNI-rebuilt colorpoly2D (BlazorGL KNIF). Built by PackTools/FSO.BrowserEffects
+        /// on Windows/CI — not stock FreeSO MGFX 11.
+        /// </summary>
+        void TryLoadKniEffectXnb()
+        {
+            try
+            {
+                kniEffect = Content.Load<Effect>("Effects/colorpoly2D");
+                if (kniEffect == null)
+                    throw new InvalidOperationException("Content.Load returned null");
+                kniEffectLoaded = true;
+                effectOk = true;
+                effectStatus = "effect OK (Content.Load colorpoly2D)";
+                Console.WriteLine(effectStatus);
+            }
+            catch (Exception ex)
+            {
+                kniEffectLoaded = false;
+                kniEffect = null;
+                Console.WriteLine("KNI XNB Content.Load failed: " + Truncate(ex.Message, 120));
+                if (ex.InnerException != null)
+                    Console.WriteLine("  inner: " + ex.InnerException.Message);
+            }
+        }
+
+        void InitBasicEffectForDraw()
         {
             try
             {
@@ -111,34 +143,48 @@ namespace FSO_BrowserClient
                     LightingEnabled = false,
                     TextureEnabled = false,
                 };
-                effectTriangle = new[]
+                if (!kniEffectLoaded)
                 {
-                    new VertexPositionColor(new Vector3(0f, 0.35f, 0f), Color.Lime),
-                    new VertexPositionColor(new Vector3(-0.3f, -0.25f, 0f), Color.OrangeRed),
-                    new VertexPositionColor(new Vector3(0.3f, -0.25f, 0f), Color.CornflowerBlue),
-                };
-                effectOk = true;
-                effectStatus = "effect OK (BasicEffect)";
-                Console.WriteLine(effectStatus);
+                    effectOk = true;
+                    effectStatus = "effect OK (BasicEffect fallback)";
+                }
+                Console.WriteLine(kniEffectLoaded
+                    ? "BasicEffect ready (draw helper; status from Content.Load)"
+                    : effectStatus);
             }
             catch (Exception ex)
             {
-                effectOk = false;
-                effectStatus = "effect failed: " + ex.GetType().Name + ": " + Truncate(ex.Message, 120);
-                Console.WriteLine(effectStatus);
+                if (!kniEffectLoaded)
+                {
+                    effectOk = false;
+                    effectStatus = "effect failed: " + ex.GetType().Name + ": " + Truncate(ex.Message, 120);
+                }
+                Console.WriteLine("BasicEffect init failed: " + ex.Message);
             }
         }
 
+        void EnsureEffectTriangle()
+        {
+            if (effectTriangle != null) return;
+            effectTriangle = new[]
+            {
+                new VertexPositionColor(new Vector3(0f, 0.35f, 0f), Color.Lime),
+                new VertexPositionColor(new Vector3(-0.3f, -0.25f, 0f), Color.OrangeRed),
+                new VertexPositionColor(new Vector3(0.3f, -0.25f, 0f), Color.CornflowerBlue),
+            };
+        }
+
         /// <summary>
-        /// Negative test: stock FreeSO MonoGame XNB (MGFX 11) cannot load on KNI 4.2
-        /// (MGFX 10 / KNIF 11–12 only). Surfaces the exact exception for docs.
-        /// Asset: wwwroot/Content/Effects/colorpoly2D.xnb (also under sample-content/effects/).
+        /// Negative test: stock FreeSO MonoGame XNB (MGFX 11) under sample-content/effects/.
+        /// KNI 4.2 accepts MGFX 10 / KNIF 11–12 only.
         /// </summary>
         void ProbeFreeSoEffectXnb()
         {
             try
             {
-                var effect = Content.Load<Effect>("Effects/colorpoly2D");
+                sampleContent ??= new Microsoft.Xna.Framework.Content.ContentManager(
+                    Services, "sample-content");
+                var effect = sampleContent.Load<Effect>("effects/colorpoly2D");
                 freeSoXnbStatus = "FreeSO XNB unexpected OK: " + (effect?.GetType().Name ?? "null");
                 Console.WriteLine(freeSoXnbStatus);
             }
@@ -189,6 +235,9 @@ namespace FSO_BrowserClient
             joinCts?.Cancel();
             sampleTexture?.Dispose();
             sampleTexture = null;
+            kniEffect = null;
+            sampleContent?.Dispose();
+            sampleContent = null;
             basicEffect?.Dispose();
             basicEffect = null;
             pixel?.Dispose();
@@ -261,9 +310,10 @@ namespace FSO_BrowserClient
 
         void DrawBasicEffectTriangle()
         {
-            if (!effectOk || basicEffect == null || effectTriangle == null) return;
+            // Triangle uses BasicEffect. KNIF Content.Load success is the S3 status signal
+            // (colorpoly2D wants View/Projection uniforms + matching VS input).
+            if (basicEffect == null || effectTriangle == null) return;
 
-            // Small triangle, lower-right of the lot view (NDC-ish via ortho world).
             basicEffect.World = Matrix.CreateScale(0.22f)
                 * Matrix.CreateTranslation(0.72f, -0.62f, 0f);
             basicEffect.View = Matrix.Identity;
@@ -281,7 +331,6 @@ namespace FSO_BrowserClient
                     PrimitiveType.TriangleList, effectTriangle, 0, 1);
             }
 
-            // Restore defaults SpriteBatch expects.
             GraphicsDevice.BlendState = BlendState.AlphaBlend;
             GraphicsDevice.DepthStencilState = DepthStencilState.None;
             GraphicsDevice.RasterizerState = RasterizerState.CullCounterClockwise;
@@ -311,9 +360,12 @@ namespace FSO_BrowserClient
 
             DrawJoinStages(panelX + 140, panelY + 48, panelW - 164);
 
-            // Effect / FreeSO-XNB status bar (S3)
+            // Effect / FreeSO-XNB status bar (S3): green = any GPU effect path; brighter
+            // second segment when KNIF Content.Load succeeded.
             Color effectBar = effectOk ? OkGreen : ErrorRed;
             spriteBatch.Draw(pixel, new Rectangle(panelX + 24, panelY + panelH - 52, panelW - 48, 8), effectBar);
+            if (kniEffectLoaded)
+                spriteBatch.Draw(pixel, new Rectangle(panelX + 24, panelY + panelH - 52, (panelW - 48) / 2, 8), new Color(40, 255, 180));
             if (!string.IsNullOrEmpty(freeSoXnbStatus))
                 spriteBatch.Draw(pixel, new Rectangle(panelX + 24, panelY + panelH - 40, panelW - 48, 6), ErrorRed);
 
@@ -357,10 +409,12 @@ namespace FSO_BrowserClient
             var vp = GraphicsDevice.Viewport;
 
             spriteBatch.Draw(pixel, new Rectangle(0, 0, vp.Width, 28), PanelBlue);
-            // Top edge: green when BasicEffect OK, else red
+            // Top edge: green when effect path OK, else red
             spriteBatch.Draw(pixel, new Rectangle(0, 0, vp.Width, 4), effectOk ? OkGreen : ErrorRed);
-            // Short pill = "effect OK (BasicEffect)" signal
+            // Pill: solid green = BasicEffect fallback; split teal = KNIF Content.Load
             spriteBatch.Draw(pixel, new Rectangle(12, 10, 100, 8), effectOk ? OkGreen : ErrorRed);
+            if (kniEffectLoaded)
+                spriteBatch.Draw(pixel, new Rectangle(12, 10, 50, 8), new Color(40, 255, 180));
             if (!string.IsNullOrEmpty(freeSoXnbStatus))
                 spriteBatch.Draw(pixel, new Rectangle(120, 10, 60, 8), ErrorRed);
             if (sampleTexture != null)

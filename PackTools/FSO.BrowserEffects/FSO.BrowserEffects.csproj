@@ -1,0 +1,31 @@
+<Project Sdk="Microsoft.NET.Sdk">
+
+  <!--
+    KNI content project: rebuild FreeSO .fx → BlazorGL KNIF XNBs.
+
+    Mac/Linux: MGCB managed entry works (`dotnet MGCB.dll`), but EffectProcessor
+    P/Invokes Windows-only d3dcompiler_47.dll + libmojoshader_64.dll — build fails.
+    Build on Windows (local or .github/workflows/kni-effects-blazor.yml), then copy
+    XNBs into FSO.BrowserClient/wwwroot/Content/Effects/.
+
+    See README.md and PackTools/docs/KNI-MIGRATION.md S3.
+  -->
+
+  <PropertyGroup>
+    <TargetFramework>net8.0</TargetFramework>
+    <KniPlatform>BlazorGL</KniPlatform>
+    <EnableDefaultCompileItems>false</EnableDefaultCompileItems>
+    <EnableDefaultContentItems>false</EnableDefaultContentItems>
+    <Nullable>disable</Nullable>
+    <ImplicitUsings>disable</ImplicitUsings>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <PackageReference Include="nkast.Xna.Framework.Content.Pipeline.Builder" Version="4.2.9001" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <KniContentReference Include="Content\Content.mgcb" />
+  </ItemGroup>
+
+</Project>
