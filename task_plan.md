@@ -16,7 +16,9 @@ Supersedes `PRODUCT-DIRECTION.md` (which centred "content worth having + player 
 **Mechanic decided 2026-08-08:** the AI builds the house **from a photo or floor plan**, then the player refines it conversationally. Not manual building with AI assistance.
 
 ## Current Phase
-Phase A — A2 vision proven on synthetic plan; next is a real floor-plan photo → Sandbox Mode. Browser parked.
+Phase A — vision proven on a **real photo** (grove, 2026-08-13); only the Sandbox screenshot of it remains. Then Phase B (second player in the house). **Browser unparked** — Kat restated the goal 2026-08-13: *"a browser based, multiplayer sims with ai generated mods"*; Phase F resumes after the grove screenshot, not after further polish.
+
+**Run the game with `-2d`** (`/Applications/FreeSO.app/Contents/MacOS/FreeSO -2d`) — v0.6.0 silently forces 3D and breaks sprite rendering (STATE.md).
 
 ## Why this is smaller than it looks
 **Houses are already data.** A lot is a blueprint XML — `<floors>`, `<walls>`, `<object>`, each with tile coordinates and a level. `XmlHouse.cs` parses it, `VMWorldActivator.LoadFromXML()` builds the world from it, and **`VMBlueprintRestoreCmd` is a live network command that takes that XML as raw bytes and rebuilds the lot mid-game** — the server already uses it to reset lots.

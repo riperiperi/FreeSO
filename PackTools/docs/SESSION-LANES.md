@@ -18,7 +18,9 @@ Parked. Join-city scaffolding, KNIF, Mario-optional, LotView net8 dual-target, `
 ### Phase A (this window)
 - Committed: `4caba4c23` — windows on generated houses (local **ahead 1**, not pushed).
 - Uncommitted WIP: `PackTools/FSO.VMHarness/Program.cs` — `--walk`. Routing frame vanishes at tick 1. **Leave it.** Occupancy proof, not the north-star.
-- **`--from-image` proven on a real photo (2026-08-13):** `grove-2br-97sqm.jpg` → 13 rooms, harness green. Fixed: opus-5 default thinking ate the whole 4096 `max_tokens` (→ "empty text"); now 16000. Next: Sandbox Mode pixels (`examples/grove-2br-from-image.xml`).
+- **`--from-image` proven on a real photo (2026-08-13):** `grove-2br-97sqm.jpg` → 13 rooms, harness green. Fixed: opus-5 default thinking ate the whole 4096 `max_tokens` (→ "empty text"); now 16000.
+- **In-game session 2026-08-13 (late):** kat-flat-from-image seen rendering correctly after the `-2d` fix (v0.6.0 silently forces 3D — STATE.md). Imported objects were ⅓ size + no pie menu — fixed in `7b12e6e87`, packs reinstalled. Grove blueprint is installed as `housedata/blueprints/grove-flat.xml`, screenshot still owed.
+- **Next session:** (1) grove-flat Sandbox screenshot, (2) Phase B two-players-in-the-house, (3) resume Phase F browser (`?lot=real` + committed KNIF XNBs — test what renders). Kat's goal statement unparks the browser.
 
 ## Shared collision surface
 `STATE.md`, `task_plan.md` — re-read HEAD before editing; throwaway-index + **exact paths only**. Never `git add -A`.
