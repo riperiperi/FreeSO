@@ -34,7 +34,8 @@ namespace FSO.LotView
             SpriteEffect = new Effects.SpriteEffect(ContentManager.Load<Effect>("Effects/SpriteEffects" + EffectSuffix));
             ParticleEffect = new LightMappedEffect(ContentManager.Load<Effect>("Effects/ParticleShader"));
             AvatarEffect = new LightMappedEffect(ContentManager.Load<Effect>("Effects/Vitaboy" + EffectSuffix));
-            MapGenerationEffect = new MapGeneration(ContentManager.Load<Effect>("Effects/MapGeneration" + EffectSuffix));
+            // MapGeneration has no shipped *iOS.xnb; GLVer=2 would otherwise crash Init before any lot draw.
+            MapGenerationEffect = new MapGeneration(LoadEffectPreferSuffix("Effects/MapGeneration"));
 
             Files.RC.Utils.DepthTreatment.SpriteEffect = SpriteEffect;
 
@@ -53,6 +54,21 @@ namespace FSO.LotView
         public static string EffectSuffix
         {
             get { return ((FSOEnvironment.GLVer == 2) ?"iOS":""); }
+        }
+
+        /// <summary>
+        /// Load <paramref name="baseName"/> + <see cref="EffectSuffix"/>, falling back to the unsuffixed asset
+        /// when the iOS/WebGL variant is missing (e.g. MapGeneration).
+        /// </summary>
+        static Effect LoadEffectPreferSuffix(string baseName)
+        {
+            var suffix = EffectSuffix;
+            if (suffix.Length > 0)
+            {
+                try { return ContentManager.Load<Effect>(baseName + suffix); }
+                catch (ContentLoadException) { /* fall through */ }
+            }
+            return ContentManager.Load<Effect>(baseName);
         }
 
         public static WorldBatchEffect _2DWorldBatchEffect;

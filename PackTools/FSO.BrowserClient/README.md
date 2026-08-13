@@ -75,9 +75,16 @@ the green BasicEffect strip; exact message in the browser console
 - `FSO.BrowserAries` — WASM-safe Aries framer + `ArchiveJoinDemo` (no Mina)
 - Gateway: [`../FSO.WsGateway`](../FSO.WsGateway)
 
-## Next
+## Next — real LotView checklist (ordered)
 
-Real `FSO.LotView` needs Mario stub + **KNI MGCB rebuild** of `*iOS.fx` (stock
-FreeSO XNBs will not load); real VM tick payload; live Archive RSA path.
+Placeholder diamonds stay until this passes. Do **not** wire `ExternalWorld` early.
+
+1. **KNI MGCB rebuild** of lot `*iOS.fx` → KNIF XNBs (`GrassShaderiOS`, `2DWorldBatchiOS`, …). Stock FreeSO MGFX 11 XNBs will not `Content.Load` on KNI 4.2.
+2. **Mario / SM64 optional** — `Blueprint` must not construct `SM64Component` on WASM.
+3. **`WorldContent.Init` MapGeneration** — fall back when `MapGenerationiOS` missing (landed in LotView).
+4. **Dual-target LotView closure to net8** (Common/Files/Content/HIT/Vitaboy*/LotView) — BrowserClient is net8; libs are net9.
+5. **Thin WASM seam** — gate Mina/HIT/Threads/File scans as needed.
+6. **Wire `ExternalWorld` + `TerrainComponent.UpdateTerrain`** behind a flag; keep diamond fallback.
+7. Real VM tick payload; live Archive RSA path.
 
 See `../docs/KNI-MIGRATION.md` and root `task_plan.md` Phase F.
