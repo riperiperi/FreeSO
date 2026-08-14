@@ -8,15 +8,15 @@
 // 
 // NewLine - starts a new line with the following arguments:
 //
-// |line height|font size|font color
+//   |line height|font size|font color
 //
 // LineEntry - adds a text to be displayed on the line with arguments:
 //
-// |Center, Left, Right or integer to specify left offset|text|optional underline color
+//   |Center, Left, Right or integer to specify left offset|text|optional underline color
 //
-// Object - Adds an object credit.
+// ObjectFile - Adds credits for an object file. It finds all guids with a valid CTSS and adds a line for each.
 //
-// |Center, Left, Right or integer to specify left offset|GUID|optional custom name
+//   |Filename|Optional comma separated GUID whitelist (empty means all, "x" means none)|Optional comma separated list of object names (to add to the end)
 //
 // RemeshPackage - Automatically generates remesh package credits from the installed remesh pack. (no arguments)
 
@@ -119,8 +119,425 @@
 ^LineEntry|Center|OBJECTS|247,232,145^
 ^NewLine|5|7|180,210,226^
 
-^NewLine|25|10|255,64,64^
-^LineEntry|Center|Object credits WIP^
+
+^NewLine|25|12|210,240,250^
+^LineEntry|Center|riperiperi|210,240,250^
+^NewLine|5|7|180,210,226^
+
+^ObjectFile|fso_lot_link.iff^
+^ObjectFile|fso_hween_skeledeco.iff^
+^ObjectFile|thinking.iff^
+^ObjectFile|ballflood.iff|x|April Fools Ball Flood^
+^ObjectFile|fso_cat_test.iff|x|Controllable Cat^
+^ObjectFile|fso_snowball_controller.iff|x|Snowball Fight Controller^
+^ObjectFile|fso_firewater.iff|x|April Fools Pool Fire^
+^ObjectFile|fso_surrounding_link.iff|x|Free Roam Goto Target^
+^ObjectFile|fso_event_tally.iff|x|Event Tally Digit^
+^ObjectFile|auto_candle.iff|x|Handheld Candle Spawner^
+^ObjectFile|fso_af2020_hat.iff|x|April Fools Hat Tower^
+^ObjectFile|fso_awards_lots.iff|x|2018 AFAs Lot Awards^
+^ObjectFile|Anni2018.iff|x|FreeSO.ml Annivarsary Sculpture^
+
+^ObjectFile|npc_fso_grimevent.iff|x|Halloween NPCs,Accessories by S1ndle and Andrew^
+^ObjectFile|npc_fso_halloween2022.iff|x|Halloween 2022 Event^
+^ObjectFile|npc_fso_halloween2024.iff|x|Halloween 2024 Event^
+^ObjectFile|npc_fso_pizzaman.iff|x|Pizzaman NPC^
+^ObjectFile|npc_fso_santa.iff|x|Santa NPC^
+^ObjectFile|npc_fso_skeleton.iff|x|Jack-o-Lantern Skeleton NPC^
+^ObjectFile|npc_fso_snowball.iff|x|Christmas NPCs,Accessories by S1ndle^
+^ObjectFile|npc_fso_soccer.iff|x|Soccer Skeleton NPC^
+^ObjectFile|npc_fso_trapdoor.iff|x|Trapdoor Skeleton NPC^
+^ObjectFile|npc_fso_witch.iff|x|Madge Cal NPC^
+
+^ObjectFile|fso_vehicle_controller.iff|x|Drivable Vehicle Controller^
+^ObjectFile|fso_water_balloon_controller.iff|x|Water Balloon Game Controller^
+
+^NewLine|18|10|180,210,226^
+^LineEntry|Center|Various object patches for overfill, upgrades and bugfixes.^
+^NewLine|8|10|180,210,226^
+
+
+^NewLine|10|12|210,240,250^
+^NewLine|25|12|210,240,250^
+^LineEntry|Center|S1ndle (art) & riperiperi (script)|210,240,250^
+^NewLine|5|7|180,210,226^
+
+^ObjectFile|event_treasure.iff^
+^ObjectFile|trapdoor_trap.iff^
+^ObjectFile|cage_trap.iff^
+^ObjectFile|floor_trap.iff^
+^ObjectFile|fso_bulletin_board.iff^
+^ObjectFile|fso_candy_dispense.iff^
+^ObjectFile|fso_candy_token.iff|x|Halloween Candy Token^
+^ObjectFile|fso_candy_well.iff|x|Mr Tickles' Well^
+^ObjectFile|fso_halloween_flag.iff^
+^ObjectFile|fso_hween_signs.iff^
+^ObjectFile|fso_halloween_team_token.iff|x|Halloween Team Token^
+^ObjectFile|fso_souls_dispenser.iff|x|Soul Scavenger Hunt Controller^
+^ObjectFile|fso_souls_token.iff|x|Halloween Souls Token^
+^ObjectFile|fso_drivable_broomstick.iff^
+^ObjectFile|fso_drivable_sleigh.iff^
+^ObjectFile|fso_event_prizebooth.iff|x|Event Prize Booth^
+^ObjectFile|fso_snowball.iff|x|Snow Pile,Snowball,Snowball Game Controller^
+^ObjectFile|fso_snowball_event_present.iff|x|Big Present^
+^ObjectFile|fso_christmas_flag.iff^
+^ObjectFile|fso_christmas_team_token.iff|x|Elves vs. Reindeer Token^
+^ObjectFile|fso_vehicle_key_token.iff|x|Vehicle Key^
+^ObjectFile|fso_water_balloon.iff^
+^ObjectFile|fso_rc_car.iff^
+^ObjectFile|fso_escape_room.iff^
+^ObjectFile|fso_game_door.iff^
+^ObjectFile|fso_christmas_bob.iff|x|Snowball Team Plumbbob^
+^ObjectFile|fso_event_immortal.iff^
+^ObjectFile|fso_awards_lotspecial_2022.iff^
+
+
+^NewLine|10|12|210,240,250^
+^NewLine|25|12|210,240,250^
+^LineEntry|Center|S1ndle (art) & Raeven (script)|210,240,250^
+^NewLine|5|7|180,210,226^
+
+^ObjectFile|fso_holiday_EggNog.iff^
+^ObjectFile|deco_daddi_logo.iff^
+^ObjectFile|deco_momi_logo.iff^
+^ObjectFile|lighted_daddi_logo.iff^
+^ObjectFile|lighted_momi_logo.iff^
+^ObjectFile|fso_autumn_portrait.iff^
+^ObjectFile|fso-autumn-witchcauldron.iff^
+^ObjectFile|fso_pumpkinpatch.iff^
+^ObjectFile|food_s1_xmaspudding.iff|x|Christmas Pudding^
+^ObjectFile|painting_s1_AFA2018.iff^
+^ObjectFile|painting_s1_jackpotPoster.iff^
+^ObjectFile|fso_holiday_cookies.iff^
+^ObjectFile|fso_communitygrill.iff^
+^ObjectFile|fso_community_buffettable.iff^
+^ObjectFile|fso_hottub_ballpit.iff^
+^ObjectFile|fso_winter2019_lawnOrnament.iff^
+^ObjectFile|fso_winter2019_stepstones.iff^
+^ObjectFile|fsoDecor-miniMysteryChest.iff^
+^ObjectFile|Casino_2-Tile_Bar_CC.iff^
+^ObjectFile|Casino_Area-3x3_CC.iff^
+^ObjectFile|Casino_Cabinet-Drawer_CC.iff^
+^ObjectFile|Casino_Column_CC.iff^
+^ObjectFile|Casino_End_Display_CC.iff^
+^ObjectFile|Casino_Island_CC.iff^
+^ObjectFile|Casino_Lamps_Dice_3_CC.iff^
+^ObjectFile|Casino_Neon_Wall_CC.iff^
+^ObjectFile|Casino_Runner-1x4_CC.iff^
+^ObjectFile|decoration_taxicab_blue.iff^
+^ObjectFile|decoration_taxicab_yellow.iff^
+^ObjectFile|fso_food_icecreamPlatter.iff^
+^ObjectFile|fso_autumn_MadgeCal_chest.iff^
+^ObjectFile|fso_party-lightstring.iff^
+^ObjectFile|fso_holiday_festivegreenery.iff^
+^ObjectFile|fso_holiday_tipjar.iff^
+^ObjectFile|fso_MrTickles_ThanksYou.iff^
+^ObjectFile|Chair_fso_Bouncy_Beach_Ball.iff^
+
+
+^NewLine|10|12|210,240,250^
+^NewLine|25|12|210,240,250^
+^LineEntry|Center|S1ndle|210,240,250^
+^NewLine|5|7|180,210,226^
+
+^ObjectFile|ToiletHolder.iff^
+^ObjectFile|ToiletStack.iff^
+^ObjectFile|fso_summer_condiments.iff^
+^ObjectFile|fso_decor_2-in-1_Racing_Banner.iff^
+^ObjectFile|fso_endstatue.iff^
+^ObjectFile|fso-halloween-deco-candy-pile.iff^
+^ObjectFile|fso_hballoon_2018.iff^
+^ObjectFile|fso_award_stand.iff^
+^ObjectFile|fso_deco_easteregg.iff^
+^ObjectFile|fso_holiday_mistletoe.iff^
+^ObjectFile|mailbox.spf.piff|x|Halloween Event Mailbox^
+^ObjectFile|leavelot.spf.piff|x|Halloween Event Payphone^
+
+
+^NewLine|10|12|210,240,250^
+^NewLine|25|12|210,240,250^
+^LineEntry|Center|S1ndle (art) & The Architect (script)|210,240,250^
+^NewLine|5|7|180,210,226^
+
+^ObjectFile|slotmachine04_Xtreasure.iff^
+^ObjectFile|slotmachine05_Jackpot.iff^
+^ObjectFile|fso_casino_holdem.iff^
+^ObjectFile|Casino_Sign_CC.iff^
+
+
+^NewLine|10|12|210,240,250^
+^NewLine|25|12|210,240,250^
+^LineEntry|Center|Dica (art) & dotequals (script)|210,240,250^
+^NewLine|5|7|180,210,226^
+
+^ObjectFile|momistation.iff^
+^ObjectFile|fso_zombie_spawner.iff^
+
+^NewLine|10|12|210,240,250^
+^NewLine|25|12|210,240,250^
+^LineEntry|Center|Dica (art) & riperiperi (script)|210,240,250^
+^NewLine|5|7|180,210,226^
+
+^ObjectFile|3TileClock.iff^
+^ObjectFile|fso_event_jams.iff|x|Jams vs. Money Token,Uses Dica's Jams Remesh^
+
+
+^NewLine|10|12|210,240,250^
+^NewLine|25|12|210,240,250^
+^LineEntry|Center|Dica (art) & Raeven (script)|210,240,250^
+^NewLine|5|7|180,210,226^
+
+// S1ndle put the graphics in this iff?
+^ObjectFile|fso_winter2019_cocoa.iff^
+^ObjectFile|drain-small.iff^ 
+^ObjectFile|fso_dead_tree.iff^ 
+^ObjectFile|fso_autumn_lanterns.iff^ 
+^ObjectFile|fso_decor-centerpiece_dica.iff^ 
+
+
+^NewLine|10|12|210,240,250^
+^NewLine|25|12|210,240,250^
+^LineEntry|Center|jwofles (art) & Raeven (script)|210,240,250^
+^NewLine|5|7|180,210,226^
+
+^ObjectFile|fso_decor_poolfloat-duck.iff^ 
+^ObjectFile|fso_decor_poolfloat-ring.iff^ 
+^ObjectFile|fso_holiday_craftbench.iff^ 
+^ObjectFile|fso_holiday_craftnotions.iff^ 
+
+
+^NewLine|10|12|210,240,250^
+^NewLine|25|12|210,240,250^
+^LineEntry|Center|dotequals|210,240,250^
+^NewLine|5|7|180,210,226^
+
+^ObjectFile|fso_zombie.iff|x|Halloween Zombie NPC^
+
+
+^NewLine|10|12|210,240,250^
+^NewLine|25|12|210,240,250^
+^LineEntry|Center|Toddy|210,240,250^
+^NewLine|5|7|180,210,226^
+
+^ObjectFile|fso-8bit-doormat.iff^
+^ObjectFile|fso-8bit-pride-box.iff^
+^ObjectFile|fso-8bit-pride-cloudlamp.iff^
+^ObjectFile|fso-8bit-pride-counter.iff^
+^ObjectFile|fso-8bit-pride-mirror.iff^
+^ObjectFile|fso-8bit-pride-table.iff^
+^ObjectFile|fso-decor-toddy-bauble.iff^
+^ObjectFile|fso-decor-toddy-Burlap.iff^
+^ObjectFile|fso-decor-toddy-Grmas.iff^
+^ObjectFile|fso-decor-toddy-Red_Bow.iff^
+^ObjectFile|fso-decor-toddy-Wall_Bow.iff^
+^ObjectFile|fso-winter-toddy-baublechest.iff^
+^ObjectFile|fso-winter-toddy-christmas-truck.iff^
+^ObjectFile|fso-winter-toddy-nutcrackertipjar.iff^
+^ObjectFile|fso-gummy-bear.iff^
+^ObjectFile|fso_decor_toddy_sunflowerpot.iff^
+^ObjectFile|fso-summer-pink-limo.iff^
+^ObjectFile|fso-summer-biscuit-rugs.iff^
+^ObjectFile|fso-summer-candy-border.iff^
+^ObjectFile|fso-summer-cookiecakestand-table.iff^
+^ObjectFile|fso-summer-gummybear-tipjar.iff^
+^ObjectFile|fso-summer-heart-lamp-wall.iff^
+^ObjectFile|fso-summer-ice-cream-shrub.iff^
+^ObjectFile|fso-summer-icecream-truck.iff^
+^ObjectFile|fso-summer-lollipop-lamp.iff^
+^ObjectFile|fso-summer-macaron-column.iff^
+^ObjectFile|fso-summer-marshmallow-stool.iff^
+^ObjectFile|fso-summer-milkcarton-tipjar.iff^
+^ObjectFile|fso-summer-star-lamp.iff^
+^ObjectFile|fso_summer-cotton-candy-tree.iff^
+^ObjectFile|fso-spring-butterfly-wall.iff^
+^ObjectFile|fso-spring-fairy-chest.iff^
+^ObjectFile|fso-spring-fairy-statue.iff^
+^ObjectFile|fso-spring-fireflies-light.iff^
+^ObjectFile|fso-spring-floor-lamp.iff^
+^ObjectFile|fso-spring-flower-lamp.iff^
+^ObjectFile|fso-spring-forest-map.iff^
+^ObjectFile|fso-spring-leaf-sign-board.iff^
+^ObjectFile|fso-spring-mushroom-bush.iff^
+^ObjectFile|fso-spring-mushroom-lamp.iff^
+^ObjectFile|fso-spring-mushroom-stool.iff^
+^ObjectFile|fso-spring-mushroom-table.iff^
+^ObjectFile|fso-spring-rock-fence.iff^
+^ObjectFile|fso-spring-scale.iff^
+^ObjectFile|fso-spring-wooden-stepping-stones.iff^
+^ObjectFile|fso-halloween-vultures.iff^
+^ObjectFile|fso-halloween-mushroom-stool.iff^
+^ObjectFile|fso-halloween-mushroom-table.iff^
+^ObjectFile|fso-halloween-skeletonlamp.iff^
+^ObjectFile|fso-halloween-pumpkinfences.iff^
+^ObjectFile|fso-halloween-pumpkin-pot.iff^
+^ObjectFile|fso-halloween-skeleton-ceilinglamp.iff^
+^ObjectFile|fso-halloween-skeletoncandelabra.iff^
+^ObjectFile|fso-halloween-candleborder.iff^
+^ObjectFile|fso-halloween-mirror.iff^
+^ObjectFile|fso-halloween-plant-tipjar.iff^
+^ObjectFile|fso-halloween-truck.iff^
+^ObjectFile|mailbox.spf.piff|x|Summer Event Mailbox^
+^ObjectFile|leavelot.spf.piff|x|Summer Event Payphone^
+
+
+^NewLine|10|12|210,240,250^
+^NewLine|25|12|210,240,250^
+^LineEntry|Center|Toddy (art) & riperiperi (script)|210,240,250^
+^NewLine|5|7|180,210,226^
+
+^ObjectFile|fso_music_box.iff^
+^ObjectFile|amogus.iff^
+
+
+^NewLine|10|12|210,240,250^
+^NewLine|25|12|210,240,250^
+^LineEntry|Center|Toddy (art) & Raeven (script)|210,240,250^
+^NewLine|5|7|180,210,226^
+
+^ObjectFile|fsoFood_HalloweenCake.iff^
+^ObjectFile|fsoFood_HalloweenCupcake.iff^
+^ObjectFile|fso-summer-gumball-float.iff^
+^ObjectFile|fso_table_toddy_ScarefestDinTable.iff^
+^ObjectFile|fso-halloween-scarefest-squaretable.iff^
+^ObjectFile|fso_holiday_toddy_ScarefestSnackTable.iff^
+^ObjectFile|fso_holiday_toddy_SpooktacularTipJar.iff^
+^ObjectFile|fso_chair_toddy-ScarefestDinChair.iff^
+^ObjectFile|fso_event_luckyboxmachine.iff^
+^ObjectFile|fso-summer-massivecake.iff^
+
+
+^NewLine|10|12|210,240,250^
+^NewLine|25|12|210,240,250^
+^LineEntry|Center|Raeven|210,240,250^
+^NewLine|5|7|180,210,226^
+
+^ObjectFile|npc_CaretakerAvery.iff|x|Caretaker Avery NPC^
+^ObjectFile|fso_GreenbeardBarrelCollection.iff^
+^ObjectFile|fso_decor_clutter_bones.iff^
+^ObjectFile|TSOPorts/*.piff|x|Fixed unused but included TS1 objects to work in TSO!,(there are a lot of these)^
+
+
+^NewLine|10|12|210,240,250^
+^NewLine|25|12|210,240,250^
+^LineEntry|Center|Heyty|210,240,250^
+^NewLine|5|7|180,210,226^
+
+^ObjectFile|heyty_bookcase.iff^
+^ObjectFile|heyty_bookpile.iff^
+^ObjectFile|heyty_coffinjar.iff^
+^ObjectFile|heyty_crystalball.iff^
+^ObjectFile|heyty_old_mop.iff^
+^ObjectFile|heyty_sign.iff^
+^ObjectFile|heyty_sign_tiny.iff^
+^ObjectFile|heyty_vanityitems.iff^
+
+
+^NewLine|10|12|210,240,250^
+^NewLine|25|12|210,240,250^
+^LineEntry|Center|Heyty (art) & Daat (script)|210,240,250^
+^NewLine|5|7|180,210,226^
+
+^ObjectFile|cursebook_set_permission.iff^
+^ObjectFile|curse_book_fx.iff|x|Curse Book Special FX^
+
+
+^NewLine|10|12|210,240,250^
+^NewLine|25|12|210,240,250^
+^LineEntry|Center|Mixa97sr|210,240,250^
+^NewLine|5|7|180,210,226^
+
+^ObjectFile|Halloween_Station.iff^
+^ObjectFile|Christmas_Station.iff^
+^ObjectFile|GhostLampFloating.iff^
+^ObjectFile|lamp_cicd_snowman.iff^
+^ObjectFile|Lamp_m97s_ChristmasCandle.iff^
+^ObjectFile|fso_holiday_ceiling_lights.iff^
+^ObjectFile|fso_holiday_stringlights.iff^
+^ObjectFile|poolslide.piff|x|Replacement Pool Slide Animation^
+
+
+^NewLine|10|12|210,240,250^
+^NewLine|25|12|210,240,250^
+^LineEntry|Center|Mars (art) & Raeven (script)|210,240,250^
+^NewLine|5|7|180,210,226^
+
+^ObjectFile|fso_skill_body_woodChopLog.iff^
+^ObjectFile|fso-mars_spiral-wood-decor.iff^
+
+
+^NewLine|10|12|210,240,250^
+^NewLine|25|12|210,240,250^
+^LineEntry|Center|Andrew Knoll|210,240,250^
+^NewLine|5|7|180,210,226^
+
+^ObjectFile|fso_1000day_prize.iff^
+^ObjectFile|fso_alarm_light.iff^
+^ObjectFile|fso_killer_crypt.iff^
+^ObjectFile|fso_magic_book.iff^
+^ObjectFile|fso-outside-shower.iff^
+^ObjectFile|fso_face_mask_sign.iff^
+^ObjectFile|fso_flags_pride.iff^
+^ObjectFile|sunbathing_towel.iff^
+^ObjectFile|fso_hand_sanitizer.iff^
+^ObjectFile|spring_ceiling_high_pole.iff^
+^ObjectFile|fso_hearts_on_heads_spawner.iff|x|Hearts on Heads^
+^ObjectFile|fso_global_accessory_controller.iff|x|Global Accessory Controller^
+^ObjectFile|fso_hide_and_search_controller.iff|x|Book of Hiding Controller^
+^ObjectFile|fso_duck_trophy.iff|x|Duck Trophy^
+
+
+^NewLine|10|12|210,240,250^
+^NewLine|25|12|210,240,250^
+^LineEntry|Center|Andrew Knoll & jwofles|210,240,250^
+^NewLine|5|7|180,210,226^
+
+^ObjectFile|summer_accessories_rack.iff^
+
+
+^NewLine|10|12|210,240,250^
+^NewLine|25|12|210,240,250^
+^LineEntry|Center|Andrew Knoll (art) & The Architect (script)|210,240,250^
+^NewLine|5|7|180,210,226^
+
+^ObjectFile|buzzer_game_host.iff^
+^ObjectFile|buzzer_game_podium.iff^
+
+
+^NewLine|10|12|210,240,250^
+^NewLine|25|12|210,240,250^
+^LineEntry|Center|BrandonSJ96|210,240,250^
+^NewLine|5|7|180,210,226^
+
+^ObjectFile|rugs_bsj96_christmas2019.iff^
+^ObjectFile|decor_bsj96_christmasstockings.iff^
+^ObjectFile|diningtable_bsj96_coffin.iff^
+^ObjectFile|bsj96_Table_End_Vacation_CC.iff^
+
+
+^NewLine|10|12|210,240,250^
+^NewLine|25|12|210,240,250^
+^LineEntry|Center|The Architect|210,240,250^
+^NewLine|5|7|180,210,226^
+
+^ObjectFile|roulette-croupiers-fso.iff|x|Roulette Croupier NPC^
+^ObjectFile|blackjack_dealers-fso.iff|x|Blackjack Dealer NPC^
+^ObjectFile|fso_casino_holdem_NPCdealers.iff|x|Casino Hold'em NPC^
+^ObjectFile|blackjack.piff|x|Blackjack Table^
+
+
+^NewLine|10|12|210,240,250^
+^NewLine|25|12|210,240,250^
+^LineEntry|Center|Collin|210,240,250^
+^NewLine|5|7|180,210,226^
+
+^ObjectFile|fso-decor-big-rhysie.iff^
+^ObjectFile|FreeSO_Award_2018_3.iff|x|The Rhysie^
+
+^NewLine|23|12|210,240,250^
+^NewLine|13|9|255,255,255^
+^LineEntry|Center|Thanks to Fawn & S1ndle for writing lots of catalog/dialog text!^
+^NewLine|25|9|255,255,255^
+^LineEntry|Center|"TSOPorts/" catalog entries were written by forum members.^
 
 ^NewLine|25|10|180,210,226^
 

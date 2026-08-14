@@ -3,8 +3,11 @@ using FSO.Client.UI.Framework.Parser;
 using FSO.Common;
 using FSO.Common.Rendering.Framework.Model;
 using FSO.Common.Utils;
+using FSO.Content;
+using FSO.Files.Formats.IFF.Chunks;
 using FSO.Files.RC;
 using Microsoft.Xna.Framework;
+using System.Globalization;
 
 namespace FSO.Client.UI.Panels
 {
@@ -88,6 +91,7 @@ namespace FSO.Client.UI.Panels
         private float ScrollSpeed = 21; //pixels per second
         private float ActiveScroll;
         private FSO3DCredits[] RemeshCredits;
+        private Dictionary<string, List<GameObjectReference>> ObjectsByFilename;
 
         public UICreditsPanel()
         {
@@ -101,6 +105,33 @@ namespace FSO.Client.UI.Panels
             ActiveScroll = 0;
 
             Blocks = BuildBlocks(fso ? FreeSOCredits() : MaxisCredits());
+        }
+
+        private Dictionary<string, List<GameObjectReference>> EnsureObjectsByFilename()
+        {
+            if (ObjectsByFilename == null)
+            {
+                var objProvider = Content.Content.Get().WorldObjects;
+
+                var byFilename = new Dictionary<string, List<GameObjectReference>>();
+
+                foreach (var item in objProvider.Entries)
+                {
+                    var filename = Path.GetFileNameWithoutExtension(item.Value.FileName);
+
+                    if (!byFilename.TryGetValue(filename, out var list))
+                    {
+                        list = [];
+                        byFilename.Add(filename, list);
+                    }
+
+                    list.Add(item.Value);
+                }
+
+                ObjectsByFilename = byFilename;
+            }
+
+            return ObjectsByFilename;
         }
 
         private IEnumerable<string> RemeshPackageCredits()
@@ -176,6 +207,111 @@ namespace FSO.Client.UI.Panels
             yield break;
         }
 
+        private IEnumerable<string> ObjectFileCredits(string arguments)
+        {
+            var split = arguments.Split('|');
+
+            if (split.Length < 2)
+            {
+                yield break;
+            }
+
+            var filename = split[1];
+            var iffs = EnsureObjectsByFilename();
+
+            TextStyle measure = BaseStyle.Clone();
+            measure.Size = 10;
+            var maxCreditWidth = ((int)Size.X) - 20;
+
+            bool printedFilename = false;
+
+            float filenameWidth = measure.MeasureString(filename).X;
+
+            // List the objects belonging to this iff file.
+            if (filename.EndsWith(".iff") && iffs.TryGetValue(filename[..^4], out var iffObjs))
+            {
+                HashSet<uint> guidWhitelist = null;
+                if (split.Length >= 3)
+                {
+                    var whitelistStr = split[2];
+                    if (whitelistStr != "")
+                    {
+                        guidWhitelist = [];
+                        if (whitelistStr != "x")
+                        {
+                            var whitelistSplit = whitelistStr.Split(",");
+
+                            foreach (var item in whitelistSplit)
+                            {
+                                if (uint.TryParse(item, NumberStyles.HexNumber, CultureInfo.InvariantCulture, out uint guid))
+                                {
+                                    guidWhitelist.Add(guid);
+                                }
+                            }
+                        }
+                    }
+                }
+
+                HashSet<string> seenNames = [];
+
+                foreach (var obj in iffObjs)
+                {
+                    if ((obj.SubIndex != -1 && obj.Group != 0) || (guidWhitelist != null && !guidWhitelist.Contains((uint)obj.ID)))
+                    {
+                        continue;
+                    }
+
+                    // Try to get the object's CTSS.
+
+                    var res = obj.Get();
+
+                    var ctss = res.Resource.Get<CTSS>(res.OBJ.CatalogStringsID);
+                    string name = ctss?.GetString(0);
+
+                    if (string.IsNullOrEmpty(name) || seenNames.Contains(name))
+                    {
+                        continue;
+                    }
+
+                    seenNames.Add(name);
+
+                    if (!printedFilename)
+                    {
+                        bool tooBig = measure.MeasureString(name).X + filenameWidth > maxCreditWidth;
+                        yield return $"NewLine|{(tooBig ? "18" : "0")}|10|210,240,250";
+                        yield return $"LineEntry|Left|{filename}";
+                        printedFilename = true;
+                    }
+
+                    yield return "NewLine|18|10|180,210,226";
+                    yield return $"LineEntry|Right|{name}";
+                }
+            }
+
+            if (split.Length >= 4)
+            {
+                // Extra items for this iff
+                var extraStr = split[3];
+                var extraSplit = extraStr.Split(",");
+
+                foreach (var extra in extraSplit)
+                {
+                    if (!printedFilename)
+                    {
+                        bool tooBig = measure.MeasureString(extra).X + filenameWidth > maxCreditWidth;
+                        yield return $"NewLine|{(tooBig ? "18" : "0")}|10|210,240,250";
+                        yield return $"LineEntry|Left|{filename}";
+                        printedFilename = true;
+                    }
+
+                    yield return "NewLine|18|10|180,210,226";
+                    yield return $"LineEntry|Right|{extra}";
+                }
+            }
+
+            yield return "NewLine|8|10|180,210,226";
+        }
+
         private IEnumerable<string> CSTCredits(string cst)
         {
             int index = 1;
@@ -193,6 +329,13 @@ namespace FSO.Client.UI.Panels
                     if (message == "RemeshPackage")
                     {
                         foreach (var line in RemeshPackageCredits())
+                        {
+                            yield return line;
+                        }
+                    }
+                    else if (message.StartsWith("ObjectFile|"))
+                    {
+                        foreach (var line in ObjectFileCredits(message))
                         {
                             yield return line;
                         }
@@ -318,8 +461,10 @@ namespace FSO.Client.UI.Panels
 
             float edgeMargin = 10;
 
+            int i = 0;
             foreach (var block in Blocks)
             {
+                i++;
                 float top = block.Y + areaHeight - ActiveScroll;
                 float bottom = top + block.LineInfo.LineHeight;
 
@@ -331,7 +476,20 @@ namespace FSO.Client.UI.Panels
                 if (bottom > 0)
                 {
                     // Draw this item
-                    float edgeDist = Math.Min(Math.Max(top - block.LineInfo.LineHeight, 0), Math.Max(areaHeight - bottom, 0));
+                    var opacityHeight = block.LineInfo.LineHeight;
+
+                    if (opacityHeight == 0)
+                    {
+                        var nextIndex = Blocks.FindIndex(i, (x) => x.LineInfo.LineHeight != 0);
+
+                        if (nextIndex != -1)
+                        {
+                            opacityHeight = Blocks[nextIndex].LineInfo.LineHeight;
+                            bottom = top + opacityHeight;
+                        }
+                    }
+
+                    float edgeDist = Math.Min(Math.Max(top - opacityHeight, 0), Math.Max(areaHeight - bottom, 0));
                     float opacity = Math.Clamp(edgeDist / edgeMargin, 0, 1);
 
                     style.Color = block.LineInfo.FontColor * opacity;
