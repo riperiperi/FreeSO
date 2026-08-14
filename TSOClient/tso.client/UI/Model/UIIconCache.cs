@@ -58,7 +58,7 @@ namespace FSO.Client.UI.Model
             if (headOft == 0) headOft = bodyOft;
 
             Texture2D result = null;
-            if (!AvatarHeadCache.TryGetValue(headOft, out result))
+            if (!AvatarHeadCache.TryGetValue(headOft, out result) || result.IsDisposed)
             {
                 var ofts = Content.Content.Get().AvatarOutfits;
                 var oft = ofts.Get(headOft);
@@ -66,6 +66,7 @@ namespace FSO.Client.UI.Model
                 else
                 {
                     result = GenHeadTex(oft, ofts.GetNameByID(headOft));
+                    result.Tag = "GenHeadTex";
                 }
                 AvatarHeadCache[headOft] = result;
             }
