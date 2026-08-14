@@ -898,7 +898,7 @@ namespace FSO.Client.UI.Screens
                     {
                         var myOldAvatar = TransitionVM?.GetAvatarByPersist(TransitionVM.MyUID);
 
-                        if (lastWorld.State.ScrollAnchor == myOldAvatar.WorldUI)
+                        if (myOldAvatar != null && lastWorld.State.ScrollAnchor == myOldAvatar.WorldUI)
                         {
                             World.State.ScrollAnchor = myAvatar.WorldUI as AvatarComponent;
                         }

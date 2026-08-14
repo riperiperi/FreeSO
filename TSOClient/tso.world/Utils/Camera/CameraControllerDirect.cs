@@ -175,7 +175,7 @@ namespace FSO.LotView.Utils.Camera
                 if (ThirdPersonDistance > 0)
                 {
                     var originalHeadPos = headPos;
-                    var tpPos = FirstPersonAvatar.Position + new Vector3(0, 0, 1.77f);
+                    var tpPos = FirstPersonAvatar.Position + new Vector3(0, 0, FirstPersonAvatar.IsPet ? 0.65f : 1.77f) * FirstPersonAvatar.Scale;
 
                     var frontVec = GetCameraDirection();
                     frontVec.Normalize();

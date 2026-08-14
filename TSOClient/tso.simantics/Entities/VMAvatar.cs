@@ -240,7 +240,11 @@ namespace FSO.SimAntics
                 var avatarc = (AvatarComponent)WorldUI;
                 avatarc.Avatar = Avatar;
                 var type = BodyStrings?.GetString(0) ?? "adult";
-                if (type != "adult" && type != "child") avatarc.IsPet = true;
+                if (type != "adult" && type != "child")
+                {
+                    avatarc.IsPet = true;
+                    avatarc.UseNormal = true;
+                }
             }
 
 
