@@ -891,6 +891,18 @@ namespace FSO.SimAntics
 
             //just a few final changes to refresh everything, and avoid signalling objects
             var clock = Context.Clock;
+            if (VM.UseWorld)
+            {
+                if (lastBp != null)
+                {
+                    Context.Blueprint.Weather.Inherit(lastBp.Weather);
+                }
+                else
+                {
+                    Context.Blueprint.Weather.UpdateLighting();
+                }
+            }
+
             Context.Architecture.SetTimeOfDay();
 
             Context.Architecture.SignalAllDirty();

@@ -73,66 +73,16 @@ namespace FSO.LotView.Model
 
         public void Update()
         {
-            var now = DateTime.UtcNow;
-            var i = Math.Min(((now.Minute * 60) + (now.Second)) / 150f, 1f);
-            //DECEMBER TEMP: snow replace
-            //TODO: tie to tuning, or serverside weather system.
-            //right now this is based on an rng advanced relative to the current UTC hour, with a fixed seed.
-            //should also eventually introduce rain
-
-            var ocolor = TintColor ?? Bp.OutsideColor.ToVector4();
-            var color = SRGBToLinear(LinearToSRGB(ocolor) - new Vector4(0.35f) * 1.5f + new Vector4(0.35f));
-            color.W = 1;
-            var wint = Math.Min(1f, WeatherIntensity);
-            FogColor = (color * new Color(0x80, 0xC0, 0xFF, 0xFF).ToVector4()) * (1 - wint * 0.75f) + LinearToSRGB(ocolor) * (wint * 0.75f);
-            FogColor.W = (wint) * (15 * 75f) + (1 - wint) * (300f * 75f);
             var enabled = WorldConfig.Current.Weather;
 
-            ParticleType ptype;
+            var particle = UpdateLighting();
 
-            if (IsManual && !FinaleUtils.IsFinale())
+            if (!particle.HasValue)
             {
-                if (WeatherData == LastWeatherData && enabled == LastEnabled) return;
-                LastWeatherData = WeatherData;
-                LastEnabled = enabled;
-
-                var type = WeatherType;
-                WeatherIntensity = (WeatherData & 0xFF) / 100f;
-                Darken = (type == WeatherType.Rain) ? WeatherIntensity : 0;
-
-                switch (type)
-                {
-                    case WeatherType.Snow:
-                        ptype = ParticleType.SNOW;
-                        break;
-                    default:
-                        ptype = ParticleType.RAIN;
-                        break;
-                }
-            }
-            else
-            {
-                if (LastI == i && LastHour == now.Hour && (Current?.Time ?? 0) < 100 && enabled == LastEnabled) return;
-
-                var curInt = GetAutoWeatherIntensity(now);
-                var lastInt = GetAutoWeatherIntensity(now - new TimeSpan(1, 0, 0));
-                LastI = i;
-                LastHour = now.Hour;
-                LastEnabled = enabled;
-
-                WeatherIntensity = ModeToIntensity[curInt] * i + ModeToIntensity[lastInt] * (1 - i);
-                Darken = ModeToDarken[curInt] * i + ModeToDarken[lastInt] * (1 - i);
-
-                ptype = (ParticleType)(curInt / 3);
+                return;
             }
 
-            OutsideWeatherTint = Color.Lerp(Color.White, new Color(159, 164, 181), Darken);
-
-            if (Bp != null)
-            {
-                Bp.OutsideWeatherTint = new Color(159, 164, 181);
-                Bp.OutsideWeatherTintP = Darken;
-            }
+            var ptype = particle.Value;
 
             if (WeatherIntensity > 0.01f && enabled)
             {
@@ -161,6 +111,84 @@ namespace FSO.LotView.Model
                     Current = null;
                 }
             }
+        }
+
+        public ParticleType? UpdateLighting()
+        {
+            var enabled = WorldConfig.Current.Weather;
+            var now = DateTime.UtcNow;
+            var i = Math.Min(((now.Minute * 60) + (now.Second)) / 150f, 1f);
+            //DECEMBER TEMP: snow replace
+            //TODO: tie to tuning, or serverside weather system.
+            //right now this is based on an rng advanced relative to the current UTC hour, with a fixed seed.
+            //should also eventually introduce rain
+
+            var ocolor = TintColor ?? Bp.OutsideColor.ToVector4();
+            var color = SRGBToLinear(LinearToSRGB(ocolor) - new Vector4(0.35f) * 1.5f + new Vector4(0.35f));
+            color.W = 1;
+            var wint = Math.Min(1f, WeatherIntensity);
+            FogColor = (color * new Color(0x80, 0xC0, 0xFF, 0xFF).ToVector4()) * (1 - wint * 0.75f) + LinearToSRGB(ocolor) * (wint * 0.75f);
+            FogColor.W = (wint) * (15 * 75f) + (1 - wint) * (300f * 75f);
+
+            ParticleType ptype;
+
+            if (IsManual && !FinaleUtils.IsFinale())
+            {
+                if (WeatherData == LastWeatherData && enabled == LastEnabled) return null;
+                LastWeatherData = WeatherData;
+                LastEnabled = enabled;
+
+                var type = WeatherType;
+                WeatherIntensity = (WeatherData & 0xFF) / 100f;
+                Darken = (type == WeatherType.Rain) ? WeatherIntensity : 0;
+
+                switch (type)
+                {
+                    case WeatherType.Snow:
+                        ptype = ParticleType.SNOW;
+                        break;
+                    default:
+                        ptype = ParticleType.RAIN;
+                        break;
+                }
+            }
+            else
+            {
+                if (LastI == i && LastHour == now.Hour && (Current?.Time ?? 0) < 100 && enabled == LastEnabled) return null;
+
+                var curInt = GetAutoWeatherIntensity(now);
+                var lastInt = GetAutoWeatherIntensity(now - new TimeSpan(1, 0, 0));
+                LastI = i;
+                LastHour = now.Hour;
+                LastEnabled = enabled;
+
+                WeatherIntensity = ModeToIntensity[curInt] * i + ModeToIntensity[lastInt] * (1 - i);
+                Darken = ModeToDarken[curInt] * i + ModeToDarken[lastInt] * (1 - i);
+
+                ptype = (ParticleType)(curInt / 3);
+            }
+
+            UpdateTint();
+
+            return ptype;
+        }
+
+        private void UpdateTint()
+        {
+            OutsideWeatherTint = Color.Lerp(Color.White, new Color(159, 164, 181), Darken);
+
+            if (Bp != null)
+            {
+                Bp.OutsideWeatherTint = new Color(159, 164, 181);
+                Bp.OutsideWeatherTintP = Darken;
+            }
+        }
+
+        public void Inherit(WeatherController other)
+        {
+            Darken = other.Darken;
+
+            UpdateTint();
         }
 
         public void SetWeather(short data) {
