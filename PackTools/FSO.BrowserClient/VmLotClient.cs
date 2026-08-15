@@ -48,6 +48,12 @@ namespace FSO_BrowserClient
         bool wsConnected;
         bool wsErrored;
         int wsRetryTicks;
+        bool walkInSent;
+        Texture2D markerTex;
+        List<(short X, short Y)> walkCandidates;
+        (short X, short Y)? walkTarget;
+        Vector2? houseCentre;
+        long lastWalkTry = -1000;
 
         /// <summary>When set, sent as chat ~3s after sync — lets a concurrent native
         /// smoke client observe the browser without any UI interaction.</summary>
@@ -179,6 +185,54 @@ namespace FSO_BrowserClient
                     $"arch {vm.Context.Architecture.Width}x{vm.Context.Architecture.Height}, hash={EntityHash()}");
             }
 
+            // Avatars join at the lot edge and just stand there. Route ours into
+            // the house so the sim is visibly in the scene — the same walk the
+            // desktop client queues, via the engine's own goto routing.
+            // Retry down the candidate list: a failed route is silent (the queue
+            // just empties), so one attempt is indistinguishable from a sim that
+            // refuses to move — which is exactly what shipped a moment ago.
+            if (Synced && !walkInSent && localTicks - syncedAtTick > 60
+                && localTicks - lastWalkTry > 75)
+            {
+                var me = MyAvatar;
+                if (me != null && me.GetValue(VMStackObjectVariable.Hidden) == 0)
+                {
+                    if (walkCandidates == null) walkCandidates = WalkTargets();
+                    // Never stack gotos: while the sim is walking its queue holds
+                    // "Run Here", and re-sending sent it back out of the house again.
+                    var busy = me.Thread?.Queue?.Any(q => q.Name != null && q.Name != "Idle") ?? false;
+                    if (busy) { lastWalkTry = localTicks; return; }
+                    var arrived = houseCentre.HasValue
+                        && Vector2.Distance(new Vector2(me.Position.TileX, me.Position.TileY),
+                                            houseCentre.Value) <= 5f;
+                    if (arrived)
+                    {
+                        walkInSent = true;
+                        Console.WriteLine("vm sim is inside the house");
+                    }
+                    else if (walkCandidates.Count > 0)
+                    {
+                        var target = walkCandidates[0];
+                        walkCandidates.RemoveAt(0);
+                        walkTarget = target;
+                        lastWalkTry = localTicks;
+                        // VMNetGotoCmd's x/y are LotTilePos units (1/16 tile), not
+                        // tiles: passing tiles walked the sim to the lot corner and
+                        // off-screen. Same conversion FromBigTile does.
+                        vm.SendCommand(new VMNetGotoCmd
+                        {
+                            x = (short)((target.X << 4) + 8),
+                            y = (short)((target.Y << 4) + 8),
+                            level = 1,
+                            Interaction = 4, // "walk here" on the goto object
+                            Param0 = 0,
+                        });
+                        Console.WriteLine($"vm walking into the house → tile {target.X},{target.Y}");
+                    }
+                    else walkInSent = true; // out of candidates; stop trying
+                }
+            }
+
             if (Synced && AutoChat != null && !autoChatSent && localTicks - syncedAtTick > 90)
             {
                 autoChatSent = true;
@@ -206,6 +260,66 @@ namespace FSO_BrowserClient
         public void SendChat(string message)
         {
             vm?.SendCommand(new VMNetChatCmd { Message = message });
+        }
+
+        /// <summary>
+        /// Walkable tiles inside the house, nearest the middle first. The furniture
+        /// centroid alone is not routable — it lands in a wall or on a table, the
+        /// route fails silently and the sim never leaves the lot edge — so candidates
+        /// are floor tiles with nothing standing on them, and the caller retries down
+        /// the list.
+        /// </summary>
+        List<(short X, short Y)> WalkTargets(int max = 40)
+        {
+            var arch = vm.Context.Architecture;
+            if (arch?.Floors == null || arch.Floors.Length == 0) return new List<(short, short)>();
+            var floors = arch.Floors[0];
+
+            long sx = 0, sy = 0; int n = 0;
+            var occupied = new HashSet<int>();
+            foreach (var ent in vm.Entities)
+            {
+                if (ent.Position == LotTilePos.OUT_OF_WORLD) continue;
+                if (ent is VMAvatar) continue;
+                occupied.Add(ent.Position.TileY * arch.Width + ent.Position.TileX);
+                sx += ent.Position.TileX; sy += ent.Position.TileY; n++;
+            }
+            if (n == 0) return new List<(short, short)>();
+            var cx = sx / (float)n; var cy = sy / (float)n;
+
+            houseCentre = new Vector2(cx, cy);
+            var candidates = new List<((short X, short Y) tile, float dist)>();
+            for (int y = 0; y < arch.Height; y++)
+            {
+                for (int x = 0; x < arch.Width; x++)
+                {
+                    var off = y * arch.Width + x;
+                    if (off >= floors.Length || floors[off].Pattern == 0) continue; // no floor = outside
+                    if (occupied.Contains(off)) continue;
+                    // Multi-tile furniture covers tiles its base position doesn't
+                    // report, and the engine's goto silently no-ops on a blocked
+                    // destination — so require a clear ring around the tile too.
+                    var crowded = false;
+                    for (int ny = -1; ny <= 1 && !crowded; ny++)
+                        for (int nx = -1; nx <= 1; nx++)
+                            if (occupied.Contains((y + ny) * arch.Width + (x + nx))) { crowded = true; break; }
+                    if (crowded) continue;
+                    var dx = x - cx; var dy = y - cy;
+                    // Floor tiles exist beyond the house too (patios, the blueprint's
+                    // wider floor area); anything far from the furniture is not "inside".
+                    if (dx * dx + dy * dy > 100) continue;
+                    candidates.Add((((short)x, (short)y), dx * dx + dy * dy));
+                }
+            }
+            return candidates.OrderBy(c => c.dist).Take(max).Select(c => c.tile).ToList();
+        }
+
+        /// <summary>Tile of my sim, for the camera to follow. Null until it exists.</summary>
+        public Vector2? MyTile()
+        {
+            var me = MyAvatar;
+            if (me == null || me.Position == LotTilePos.OUT_OF_WORLD) return null;
+            return new Vector2(me.Position.x / 16f, me.Position.y / 16f);
         }
 
         public VMAvatar MyAvatar =>
@@ -311,6 +425,7 @@ namespace FSO_BrowserClient
             try
             {
                 simTex = MakeSimTexture(gd);
+                markerTex = MakeMarkerTexture(gd);
                 texturesReady = true;
                 using var http = new HttpClient();
                 Console.WriteLine("vm billboards: fetching manifest");
@@ -344,6 +459,27 @@ namespace FSO_BrowserClient
                 texByGuid[guid] = Texture2D.FromStream(gd, ms);
             }
             catch { /* individual sprite missing is non-fatal */ }
+        }
+
+        /// <summary>Down-pointing arrow drawn over your own sim — with capsule
+        /// placeholders and no canvas font, players couldn't tell which one is
+        /// theirs (or spot it at all against the lot).</summary>
+        static Texture2D MakeMarkerTexture(GraphicsDevice gd)
+        {
+            const int w = 18, h = 14;
+            var px = new Color[w * h];
+            for (int y = 0; y < h; y++)
+            {
+                var half = (int)((1f - y / (float)h) * (w / 2f));
+                for (int x = 0; x < w; x++)
+                {
+                    var inside = Math.Abs(x - w / 2) <= half;
+                    px[y * w + x] = inside ? Color.White : Color.Transparent;
+                }
+            }
+            var tex = new Texture2D(gd, w, h);
+            tex.SetData(px);
+            return tex;
         }
 
         static Texture2D MakeSimTexture(GraphicsDevice gd)
@@ -387,6 +523,8 @@ namespace FSO_BrowserClient
                 {
                     var tint = TintFor(ava.PersistID);
                     draws.Add((tile.X + tile.Y + 0.01f, simTex, tile, true, tint));
+                    if (ava.PersistID == PersistID && markerTex != null)
+                        draws.Add((tile.X + tile.Y + 0.02f, markerTex, tile, true, Color.Yellow));
                 }
                 else
                 {
@@ -407,6 +545,8 @@ namespace FSO_BrowserClient
                 var h = d.tex.Height * drawScale;
                 var pos = new Vector2(screen.X - w / 2,
                     screen.Y - h + space.TilePxHeightHalf * (d.isSim ? 0.5f : 1f));
+                // Float the "this is you" arrow above the capsule's head.
+                if (d.tex == markerTex) pos.Y -= 56f;
                 sb.Draw(d.tex, pos, null, d.tint, 0f, Vector2.Zero, drawScale, SpriteEffects.None, 0f);
             }
         }

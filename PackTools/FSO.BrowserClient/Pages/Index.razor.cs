@@ -43,6 +43,12 @@ namespace FSO_BrowserClient.Pages
         }
 
         [JSInvokable]
+        public string DebugMe()
+        {
+            return (_game as FSO_BrowserClientGame)?.DebugMe() ?? "{}";
+        }
+
+        [JSInvokable]
         public void CanvasClick(float x, float y)
         {
             (_game as FSO_BrowserClientGame)?.OnCanvasClick(x, y);

@@ -81,6 +81,7 @@ namespace FSO_BrowserClient
         bool vmArchApplied;
         int vmArchWaitFrames;
         bool vmLeftWasDown;
+        bool followSim = true;
         /// <summary>Fired when a click lands a real TTAB pie menu:
         /// (calleeObjectID, [(optionID, name)], screenX, screenY). Index renders
         /// it as a DOM overlay.</summary>
@@ -588,6 +589,15 @@ namespace FSO_BrowserClient
 
                 vmClient?.Update(gameTime.ElapsedGameTime.TotalSeconds);
 
+                // Keep your own sim on screen. It joins at the lot edge, far from
+                // the house, and a capsule at the frame edge (or just outside it)
+                // reads as "there is no sim". Any manual pan hands control back.
+                if (followSim && DrawRealLot && vmClient != null)
+                {
+                    var tile = vmClient.MyTile();
+                    if (tile.HasValue) realWorld.State.CenterTile = tile.Value;
+                }
+
                 // Clicks arrive from JS via OnCanvasClick — KNI's Mouse.GetState
                 // misses synthetic (and some real) clicks under BlazorGL.
 
@@ -709,6 +719,11 @@ namespace FSO_BrowserClient
                     // Pan CenterTile (tile units) for real LotView camera.
                     const float tilePan = 8f;
                     var ct = realWorld.State.CenterTile;
+                    if (keyboardState.IsKeyDown(Keys.Left) || keyboardState.IsKeyDown(Keys.A)
+                        || keyboardState.IsKeyDown(Keys.Right) || keyboardState.IsKeyDown(Keys.D)
+                        || keyboardState.IsKeyDown(Keys.Up) || keyboardState.IsKeyDown(Keys.W)
+                        || keyboardState.IsKeyDown(Keys.Down) || keyboardState.IsKeyDown(Keys.S))
+                        followSim = false; // manual pan wins
                     if (keyboardState.IsKeyDown(Keys.Left) || keyboardState.IsKeyDown(Keys.A))
                         ct.X -= tilePan * dt;
                     if (keyboardState.IsKeyDown(Keys.Right) || keyboardState.IsKeyDown(Keys.D))
@@ -813,6 +828,25 @@ namespace FSO_BrowserClient
             if (target == null || pie == null) return "[]";
             var items = pie.Select(p => $"{{\"id\":{p.ID},\"name\":\"{p.Name?.Replace("\"", "'")}\",\"callee\":{target.ObjectID}}}");
             return "[" + string.Join(",", items) + "]";
+        }
+
+        /// <summary>Test hook: where is my sim, and is it drawable? Visual QA
+        /// needs the truth about the avatar, not an inference from pixels.</summary>
+        public string DebugMe()
+        {
+            var ava = vmClient?.MyAvatar;
+            if (ava == null) return "{\"found\":false}";
+            var pos = ava.Position;
+            var queue = string.Join(";", ava.Thread?.Queue?.Select(q => q.Name ?? "?") ?? new string[0]);
+            var screen = realWorld == null ? Vector2.Zero
+                : realWorld.State.WorldSpace.GetScreenFromTile(new Vector2(pos.x / 16f, pos.y / 16f))
+                  + realWorld.State.WorldSpace.GetPointScreenOffset();
+            return "{\"found\":true"
+                + $",\"tileX\":{pos.x / 16f:F1},\"tileY\":{pos.y / 16f:F1},\"level\":{pos.Level}"
+                + $",\"outOfWorld\":{(pos == FSO.LotView.Model.LotTilePos.OUT_OF_WORLD).ToString().ToLower()}"
+                + $",\"hidden\":{ava.GetValue(FSO.SimAntics.Model.VMStackObjectVariable.Hidden)}"
+                + $",\"screenX\":{(int)screen.X},\"screenY\":{(int)screen.Y}"
+                + $",\"queue\":\"{queue}\"}}";
         }
 
         /// <summary>Test hook: screen position of a tile centre (for real click tests).</summary>

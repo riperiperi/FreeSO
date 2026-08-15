@@ -143,7 +143,16 @@ dotnet build -c Debug "$REPO/PackTools/FSO.WsGateway" | tail -2
 # a two-day-old app once and cost hours of "same thing" debugging.
 REV="$(git -C "$REPO" rev-parse --short HEAD 2>/dev/null || echo unknown)"
 PUB_REV="$(cat "$PUBLISH_DIR/wwwroot/build-rev.txt" 2>/dev/null || echo none)"
-if [ "$REBUILD" = 1 ] || [ ! -f "$PUBLISH_DIR/wwwroot/index.html" ] || [ "$PUB_REV" != "$REV" ]; then
+# Rev alone isn't enough: uncommitted edits (the normal state while working on
+# the client) would keep serving the previous publish and look like the change
+# had no effect. Any newer source file forces a republish too.
+STAMP="$PUBLISH_DIR/wwwroot/build-rev.txt"
+NEWER_SRC=""
+[ -f "$STAMP" ] && NEWER_SRC="$(find "$REPO/PackTools/FSO.BrowserClient" "$REPO/TSOClient/tso.world" \
+    "$REPO/TSOClient/tso.simantics" "$REPO/TSOClient/tso.content" \
+    \( -name '*.cs' -o -name '*.html' -o -name '*.csproj' \) -newer "$STAMP" -print -quit 2>/dev/null)"
+if [ "$REBUILD" = 1 ] || [ ! -f "$PUBLISH_DIR/wwwroot/index.html" ] || [ "$PUB_REV" != "$REV" ] || [ -n "$NEWER_SRC" ]; then
+    [ -n "$NEWER_SRC" ] && echo "  (source newer than publish: ${NEWER_SRC#$REPO/})"
     step "publishing FSO.BrowserClient @ $REV → $PUBLISH_DIR (a few minutes; was: $PUB_REV)"
     rm -rf "$PUBLISH_DIR"
     dotnet publish -c Debug "$REPO/PackTools/FSO.BrowserClient" -o "$PUBLISH_DIR" | tail -2

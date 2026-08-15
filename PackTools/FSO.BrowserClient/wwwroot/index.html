@@ -207,6 +207,7 @@
         window.fsoDebug = {
             pie: (tx, ty) => window.theInstance.invokeMethod('DebugPie', tx, ty),
             screenPos: (tx, ty) => window.theInstance.invokeMethod('DebugScreenPos', tx, ty),
+            me: () => window.theInstance.invokeMethod('DebugMe'),
             interact: (callee, id) => window.theInstance.invokeMethod('PieSelect', callee, id),
         };
 
