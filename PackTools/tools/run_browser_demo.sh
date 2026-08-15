@@ -25,7 +25,11 @@ PORT_HTTP="${PORT_HTTP:-5259}"
 PORT_GATEWAY="${PORT_GATEWAY:-8087}"
 PORT_SANDBOX="${PORT_SANDBOX:-37564}"
 REBUILD=0
-[ "${1:-}" = "--rebuild" ] && REBUILD=1
+DOCTOR=0
+case "${1:-}" in
+    --rebuild) REBUILD=1 ;;
+    --doctor)  DOCTOR=1 ;;
+esac
 
 LOG_DIR="${LOG_DIR:-$OUT_DIR/logs}"
 HOUSE="$REPO/PackTools/FSO.BrowserClient/wwwroot/houses/grove.xml"
@@ -48,6 +52,66 @@ fi
 export DOTNET_ROOT="${DOTNET_ROOT:-$(dirname "$(command -v dotnet)")}"
 
 step() { echo; echo "==> $*"; }
+
+# --- ports -------------------------------------------------------------------
+# Leftover processes from earlier runs owning these ports caused every
+# "nothing changed / not reachable" failure in the field. The demo owns these
+# three ports, so free them ourselves — but only when the squatter is
+# recognisably part of this demo; anything else is reported, never killed.
+port_pids() {
+    if command -v lsof >/dev/null 2>&1; then
+        lsof -ti ":$1" 2>/dev/null || true
+    else
+        ss -tlnp 2>/dev/null | grep ":$1 " | grep -oE 'pid=[0-9]+' | cut -d= -f2 | sort -u
+    fi
+}
+
+free_our_port() {
+    local port="$1" pid args
+    for pid in $(port_pids "$port"); do
+        args="$(ps -p "$pid" -o args= 2>/dev/null || true)"
+        case "$args" in
+            *FSO.WsGateway*|*FSO.LotHostLite*|*serve.py*|*http.server*|*browser-publish*)
+                echo "  :$port was held by an earlier demo process ($pid) — stopping it"
+                kill -9 "$pid" 2>/dev/null || true
+                ;;
+            "")  ;; # vanished between listing and inspection
+            *)
+                echo "FATAL: :$port is held by something that is not part of this demo:" >&2
+                echo "    pid $pid: $args" >&2
+                echo "  Quit that program (or set PORT_HTTP/PORT_GATEWAY/PORT_SANDBOX) and rerun." >&2
+                exit 1
+                ;;
+        esac
+    done
+}
+
+doctor() {
+    echo "FreeSO browser demo — status"
+    echo "  repo:     $REPO @ $(git -C "$REPO" rev-parse --short HEAD 2>/dev/null || echo '?') on $(git -C "$REPO" branch --show-current 2>/dev/null || echo '?')"
+    echo "  packs:    $(ls "$PACKS_DIR"/*.iff 2>/dev/null | wc -l | tr -d ' ') iff files in $PACKS_DIR"
+    echo "  bundle:   $([ -f "$OUT_DIR/content.tar.gz" ] && echo present || echo MISSING) ($OUT_DIR/content.tar.gz)"
+    echo "  publish:  build $(cat "$PUBLISH_DIR/wwwroot/build-rev.txt" 2>/dev/null || echo NONE)"
+    local p name
+    for p in "$PORT_HTTP:web" "$PORT_GATEWAY:gateway" "$PORT_SANDBOX:lot host"; do
+        name="${p#*:}"; p="${p%%:*}"
+        if (exec 3<>"/dev/tcp/127.0.0.1/$p") 2>/dev/null; then
+            exec 3<&- 3>&-
+            echo "  :$p       LISTENING ($name)"
+        else
+            echo "  :$p       DOWN      ($name)"
+        fi
+    done
+    local log
+    for log in host gateway http; do
+        if [ -s "$LOG_DIR/$log.log" ]; then
+            echo "  --- last line of $log.log:"
+            echo "      $(tail -1 "$LOG_DIR/$log.log")"
+        fi
+    done
+}
+
+if [ "$DOCTOR" = 1 ]; then doctor; exit 0; fi
 
 # 1. Content bundle (needs TSO_DIR only when building it).
 if [ "$REBUILD" = 1 ] || [ ! -f "$OUT_DIR/content.tar.gz" ]; then
@@ -104,6 +168,12 @@ cleanup() {
     wait 2>/dev/null || true
 }
 trap cleanup EXIT INT TERM
+
+step "freeing demo ports"
+free_our_port "$PORT_SANDBOX"
+free_our_port "$PORT_GATEWAY"
+free_our_port "$PORT_HTTP"
+sleep 1
 
 step "starting lot host (sandbox :$PORT_SANDBOX)"
 "$HOST_BIN" --house "$HOUSE" --tso-dir "$OUT_DIR/tso/" --bare-objects \
@@ -187,6 +257,10 @@ echo
 echo "      http://127.0.0.1:$PORT_HTTP/?vm=1&name=you"
 echo
 echo "  Click furniture for its pie menu; chat box bottom-left."
-echo "  Logs: $LOG_DIR/{host,gateway,http}.log — Ctrl-C stops all."
+echo
+echo "  THIS TERMINAL IS NOW BUSY running the demo. Anything you type here is"
+echo "  queued, not run — open a new tab (Cmd+T) for other commands, e.g."
+echo "      ./PackTools/tools/run_browser_demo.sh --doctor"
+echo "  Ctrl-C here stops everything. Logs: $LOG_DIR/{host,gateway,http}.log"
 echo "============================================================"
 wait
