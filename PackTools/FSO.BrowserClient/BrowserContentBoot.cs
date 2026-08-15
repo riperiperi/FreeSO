@@ -99,6 +99,7 @@ namespace FSO_BrowserClient
                 if (prefix.Length > 0) name = prefix + "/" + name;
                 var size = Convert.ToInt64(ReadString(header, 124, 12).Trim(), 8);
                 var type = (char)header[156];
+                if (entries % 128 == 0) Status = $"downloading + extracting content ({entries}/~1540 files)";
 
                 var dest = Path.Combine(destRoot, name);
                 if (type == '5' || name.EndsWith("/"))

@@ -130,6 +130,11 @@ namespace FSO_BrowserClient.Pages
                     ((IJSInProcessRuntime)JsRuntime).InvokeVoid("fsoChat.init");
                 game.OnChatLine += (line) =>
                     ((IJSInProcessRuntime)JsRuntime).InvokeVoid("fsoChat.push", line);
+                game.OnStatusText += (text) =>
+                    ((IJSInProcessRuntime)JsRuntime).InvokeVoid("fsoStatus.set", text ?? "");
+                if (!vmMode)
+                    ((IJSInProcessRuntime)JsRuntime).InvokeVoid("fsoStatus.set",
+                        "Not in game mode — open " + Navigation.BaseUri + "?vm=1&name=you to join the shared lot.");
                 _game.Run();
             }
 

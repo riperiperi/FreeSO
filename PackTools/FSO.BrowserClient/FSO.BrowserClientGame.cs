@@ -89,6 +89,16 @@ namespace FSO_BrowserClient
         public event Action<string> OnChatLine;
         /// <summary>Fired once when the VM client starts (shows the chat overlay).</summary>
         public event Action OnVmStarted;
+        /// <summary>Human-readable boot/status text for the DOM overlay; "" hides it.</summary>
+        public event Action<string> OnStatusText;
+        string lastPushedStatus;
+
+        void PushStatus(string text)
+        {
+            if (text == lastPushedStatus) return;
+            lastPushedStatus = text;
+            OnStatusText?.Invoke(text);
+        }
 
         /// <summary>DOM chat box submitted a message.</summary>
         public void SendChatFromUi(string message)
@@ -562,6 +572,8 @@ namespace FSO_BrowserClient
                 loadStatus = BrowserContentBoot.Ready
                     ? (vmClient?.Status ?? "vm starting")
                     : BrowserContentBoot.Status;
+                // Readable progress until the lot is on screen, then hide.
+                PushStatus(vmArchApplied ? "" : loadStatus);
 
                 if (BrowserContentBoot.Ready && !vmStarted)
                 {

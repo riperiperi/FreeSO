@@ -130,6 +130,26 @@
             hide() { if (this.el) { this.el.remove(); this.el = null; } },
         };
 
+        // Boot status overlay: readable text for what the tab is doing (the
+        // canvas status panel only draws placeholder bars — no font). Driven
+        // from .NET each time the status changes; empty text hides it.
+        window.fsoStatus = {
+            el: null,
+            set(text) {
+                if (!text) { if (this.el) { this.el.remove(); this.el = null; } return; }
+                if (!this.el) {
+                    var el = document.createElement('div');
+                    el.id = 'fsoStatus';
+                    el.style.cssText = 'position:fixed;top:12px;left:50%;transform:translateX(-50%);' +
+                        'z-index:1100;background:rgba(24,28,48,0.92);border:1px solid #4f6ef7;border-radius:8px;' +
+                        'padding:8px 16px;font:14px sans-serif;color:#cdd6ff;max-width:80%;text-align:center;';
+                    document.body.appendChild(el);
+                    this.el = el;
+                }
+                this.el.textContent = text;
+            },
+        };
+
         // Chat overlay (?vm=1): log + input, bottom-left. Lines come from the
         // shared VM's chat events; Enter sends a VMNetChatCmd.
         window.fsoChat = {
