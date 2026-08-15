@@ -34,6 +34,20 @@ Eliminated with probes (do not re-chase): textures (CPU decode, GPU round-trip, 
 
 **Fix attempted and insufficient (2026-08-13, late):** `2DWorldBatchiOS.fx` rebuilt via CI with distinct matrix semantics + 5-attr `vsSimple` (both changes verified in the shipped XNB) — behavior unchanged. Per-draw matrix re-writes inside `DrawImmediate` (the exact sequence of the working probe) — unchanged. The stable anomaly: one specific hand-built `_2DStandaloneSprite` (created ~50s in, inside `DrawSpriteTest`) renders through the batch every time; every DGRP-built or layer-built sprite through the byte-identical call path renders nothing — same technique, same uniforms, same textures (GPU round-trip verified on the live instance), same vertex data (logged at draw), same depth/blend/RT state. Suspect: per-VertexBuffer/Texture GL object state at creation time under KNI BlazorGL. Next tools if resumed: SpectorJS/WebGL call capture in a headed browser, or a KNI-source-level trace of buffer/attribute binding. `?furnish=real`, `?fx=fixed`, `?spritetest=`, `?v2diag=` all remain wired for whoever picks this up. **Billboards remain the visible furniture** (Kat-approved look); furniture *behavior* is fully served by the VM path (see LotHostLite — pie menus + interactions proven in lockstep).
 
+### Running the browser demo (2026-08-15)
+
+`PackTools/tools/run_browser_demo.sh` is the supported way to start it —
+preflight, builds, three services, readiness checks that actually verify each one
+is listening and serving. `--doctor` (in a *second* terminal tab; the script's own
+tab is busy) prints the state of everything. **`PackTools/FSO.BrowserClient/README.md`
+is the play/troubleshoot doc**; it replaced the 2026-08-11 spike notes.
+
+An evening was lost to the runner rather than the game: a surviving publish dir
+serving a two-day-old app, a squatting dev server, a gateway binary older than the
+`--sandbox` flag, an empty packs dir from `dotnet` missing on PATH, and a 404 on
+the content bundle. Each now fails loudly and early; don't reintroduce
+"build only if the binary is missing" or symlink staging.
+
 ## Shared collision surface
 `STATE.md`, `task_plan.md` — re-read HEAD before editing; throwaway-index + **exact paths only**. Never `git add -A`.
 

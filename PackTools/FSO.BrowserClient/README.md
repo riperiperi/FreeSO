@@ -1,108 +1,151 @@
-# FSO.BrowserClient
+# FSO.BrowserClient — The Sims Online in a browser tab
 
-KNI / BlazorGL spike for **Phase F** (browser FreeSO). Loads a content texture over
-HTTP and runs the Archive city→lot Aries join through `FSO.WsGateway` (see
-`FSO.BrowserAries`).
+Runs the **full SimAntics VM in WebAssembly**, in lockstep with a headless lot host
+(`../FSO.LotHostLite`) over FreeSO's sandbox protocol. Two browser tabs are two
+players in one live world: same house, same furniture, same simulation, chat and
+pie-menu interactions crossing between them.
 
-Template: `nkast.Kni.Templates` → `kni-blazor-gl` (net8.0, KNI 4.2.9001).
+Not a mockup and not a replay — each tab boots the real content system, runs the
+real VM, and stays in sync tick for tick (verified by matching entity hashes).
 
-## Prerequisites
+## Play
 
-- .NET SDK 8+ (`~/.dotnet/dotnet` is fine)
-- WASM workload: `dotnet workload install wasm-tools`
-- For join demo: gateway + fake city/lot (below)
-
-## Run (texture only)
-
-```sh
-cd PackTools/FSO.BrowserClient
-dotnet run
-```
-
-http://localhost:5259 — canvas with `HttpContentStore` → `Texture2D`.
-No auto-join (avoids a red Failed bar when the gateway is down). Press **Space**
-to join via the default gateway `http://127.0.0.1:8087`.
-
-## Run (texture + Aries join)
+**You need:** .NET 9 SDK, Python 3, Chrome, and a TSO install (the folder that
+contains `objectdata/` — the same files desktop FreeSO uses).
 
 ```sh
-# terminals 1–3
-python3 PackTools/FSO.WsGateway/tools/fake-city-server.py 33101
-python3 PackTools/FSO.WsGateway/tools/fake-lot-server.py 34101
-dotnet run --project PackTools/FSO.WsGateway -- --listen http://127.0.0.1:8087
+cd <repo>
 
-# terminal 4
-cd PackTools/FSO.BrowserClient && dotnet run
-# open: http://localhost:5259/?gateway=ws://127.0.0.1:8087
+# 0. dotnet on PATH (macOS installs it outside the default PATH)
+export PATH="$PATH:/usr/local/share/dotnet:$HOME/.dotnet"
+
+# 1. point at your TSO install
+TSO_DIR=$(dirname "$(find ~ -maxdepth 6 -type d -name objectdata 2>/dev/null | head -1)")
+echo "$TSO_DIR"          # sanity-check this looks right
+
+# 2. compile the furniture — once, ~10 min
+for j in PackTools/examples/*.json; do
+  dotnet run --project PackTools/FSO.PackCompiler -- build "$j" -o ~/packs-out --tso-dir "$TSO_DIR" || true
+done
+
+# 3. start everything
+TSO_DIR="$TSO_DIR" ./PackTools/tools/run_browser_demo.sh
 ```
 
-With `?gateway=…` in the URL (or `?join=1`), the client auto-joins after ~1.5s;
-**Space** always starts a join. Use `?join=0` to disable auto-join even when
-`gateway` is set. On `LotJoined`, the UI switches to the **isometric diamond
-placeholder** (WASD / arrows to pan). For real `FSO.LotView`, use `?lot=real`
-(see below / `../docs/KNI-MIGRATION.md` S5).
-
-### Lot placeholder + S3 effects (no gateway)
+Wait for **`Demo is up`**, then open in Chrome:
 
 ```
-http://localhost:5259/?lot=1
+http://127.0.0.1:5259/?vm=1&name=kat
 ```
 
-Isometric floor + effect status strip + small triangle. BrowserClient always tries
-`Content.Load<Effect>("Effects/colorpoly2D")` from `wwwroot/Content/Effects/`
-(KNIF rebuild). If missing/unreadable → **BasicEffect fallback** (still green).
-Teal half-pill = KNIF load succeeded. Rebuild on Windows/CI:
-`PackTools/FSO.BrowserEffects` (Mac MGCB blocked — needs `d3dcompiler_47.dll`).
+Open it a second time with a different `name=` — that's player two, in the same
+house.
 
-### FreeSO XNB negative probe (S3 format wall)
+### Controls
+
+| | |
+|---|---|
+| **Click furniture** | its real pie menu — pick an option and your sim performs it |
+| **Chat box** (bottom-left) | Enter to send; everyone in the lot sees it |
+| **Arrows / WASD** | pan (this also stops the camera following your sim) |
+| **1 / 2 / 3** | zoom near / medium / far |
+| **Q / E** | rotate the lot |
+
+Your sim is the capsule with the **yellow arrow**; it walks into the house by
+itself when you join, and the camera follows it until you pan away.
+
+## What the script does, and how long it takes
+
+| Phase | First run | Later runs |
+|---|---|---|
+| preflight | instant | instant |
+| content bundle (`tools/make_browser_content.py`) | ~5 min | skipped |
+| build lot host + gateway | ~1 min | seconds (incremental) |
+| publish the browser app | ~3 min | skipped unless code changed |
+| start + readiness checks | ~30 s | ~30 s |
+
+Then each browser tab downloads the ~200 MB bundle once and boots the content
+system in-tab (~20 s), which is what the status banner at the top is counting.
+
+The script **owns** ports 5259 / 8087 / 37564: it stops its own leftovers from
+previous runs, and refuses to start if something else holds them.
+
+## When something goes wrong
+
+The terminal running the script is **busy** — anything you type into it is
+queued, not run. Use a second terminal tab, and start with:
+
+```sh
+./PackTools/tools/run_browser_demo.sh --doctor
+```
+
+which prints the repo revision, furniture count, bundle, published build, which
+ports are listening, and the last line of each service log.
+
+| Symptom | Cause | Fix |
+|---|---|---|
+| `✗ dotnet not found on PATH` | macOS installs .NET outside the default PATH | run the `export PATH=…` line above |
+| `✗ no compiled furniture in …` | step 2 skipped, or it ran without dotnet on PATH | run step 2; expect ~60 `.iff` files |
+| `✗ no content bundle … and TSO_DIR is not set` | first run needs the game files | set `TSO_DIR` as in step 1 |
+| `FATAL: :8087 is held by something that is not part of this demo` | another program owns the port | quit it, or `lsof -ti :8087 \| xargs kill -9` |
+| `FATAL: gateway died` | usually a stale binary or a taken port | the log tail is printed; rerun after freeing ports |
+| `FATAL: the game content bundle is not being served` | bundle missing or unreadable | delete `~/browser-content` and rerun with `TSO_DIR` set |
+| Page loads but no banner, no `build …` tag | browser cached an old build | hard reload (**Cmd+Shift+R**) |
+| Banner sticks on `game server not reachable` | tab opened before the host was ready | it retries by itself; wait for `Demo is up` |
+| `content boot failed: …` in the banner | the tab could not fetch/extract the bundle | `--doctor`, then rerun |
+
+Reset everything and start clean:
+
+```sh
+rm -rf ~/browser-publish ~/browser-content    # keeps ~/packs-out (the slow part)
+```
+
+## Tests
+
+`tests/` runs the game headlessly through Playwright (`npm i playwright`):
+
+```sh
+node tests/pie_menu_vm.js  http://127.0.0.1:5259 /tmp/pie      # click → pie menu → interaction runs
+node tests/two_tab_vm.js   http://127.0.0.1:5259 /tmp/twotab   # two tabs, chat crosses, no desync
+node tests/visual_qa.js    http://127.0.0.1:5259 /tmp/qa       # screenshots through a session
+```
+
+`visual_qa.js` exists because console assertions passed while the game was
+visibly broken — look at its frames before believing a green test.
+
+## How it fits together
 
 ```
-http://localhost:5259/?lot=1&effect=1
+browser tab  ──ws──►  FSO.WsGateway  ──tcp──►  FSO.LotHostLite
+ (SimAntics VM)        (/sandbox route)         (SimAntics VM, authoritative ticks)
 ```
 
-Also loads stock FreeSO MGFX 11 from `sample-content/effects/colorpoly2D.xnb`.
-**Expected fail** on KNI 4.2 (MGFX 10 / KNIF 11–12 only). Red pill; console
-`FreeSO XNB blocked: …`.
+- `BrowserContentBoot.cs` — fetches `content.tar.gz`, extracts it into MEMFS (a
+  hand-rolled ustar reader; `System.Formats.Tar` is unsupported on wasm), then
+  runs the stock `Content.Init` in SERVER mode
+- `BrowserSandboxClient.cs` — `ClientWebSocket` speaking the sandbox protocol's
+  9-byte framing, with auto-retry until the host is up
+- `VmLotClient.cs` — `VMClientDriver` + local `VM`, pie menus, chat, the walk-in,
+  and the entity billboards drawn from live VM state
+- `tools/make_browser_content.py` — builds the trimmed content bundle (the file
+  list is `tools/browser-content-files.txt`, derived from what a real session
+  actually opens)
 
-## Content seam
+### URL parameters
 
-- `FSO.BrowserContent` (`net8`/`net9`) — `HttpContentStore` / `FileContentStore` / composite
-- Sample texture: `wwwroot/sample-content/textures/squares.png`
-- Stock FreeSO effects (transport / negative probe): `wwwroot/sample-content/effects/*.xnb`
-- KNIF Content.Load target: `wwwroot/Content/Effects/colorpoly2D.xnb` (from FSO.BrowserEffects)
+| | |
+|---|---|
+| `?vm=1&name=…` | the game: shared VM, pie menus, chat |
+| `?house=grove` | arch-only view, no VM (older path, still works) |
+| `?lot=real` | terrain only |
+| `?furnish=png\|real` | billboard vs DGRP furniture in the no-VM path |
+| `?zoom=near\|medium\|far`, `?rot=0..3` | pin the camera (used by tests) |
 
-## Networking
+## Known gaps
 
-- `FSO.BrowserAries` — WASM-safe Aries framer + `ArchiveJoinDemo` (no Mina)
-- Gateway: [`../FSO.WsGateway`](../FSO.WsGateway)
-
-### Real LotView attempt (S5)
-
-```
-http://localhost:5259/?lot=real
-# or: http://localhost:5259/?lot=real=1
-```
-
-Tries `WorldContent.Init` + `ExternalWorld` + flat grass `TerrainComponent.UpdateTerrain`.
-On any failure → same diamond floor as `?lot=1`. Console: `real LotView OK…` or
-`real LotView failed → diamonds: …`. Status strip: lime pill = real path active;
-amber = fell back. `?lot=1` stays diamonds only.
-
-Build pulls `FSO.LotView` with `FSO_GRAPHICS=Kni` + `FSO_NO_SM64` via
-`Directory.Build.rsp` (global `/p:` for the whole ref graph) plus ProjectReference
-`AdditionalProperties`. Bare `dotnet build` — no extra `-p:` needed.
-
-## Next — real LotView checklist (ordered)
-
-1. **KNI MGCB rebuild** — **DONE** for lot set under `wwwroot/Content/Effects/`
-   (`colorpoly2D`, `GrassShaderiOS`, `2DWorldBatchiOS`, `gradpoly2D`, `LightMap2D`,
-   `SSAA`, `RCObjectiOS`, `ParticleShader`, `VitaboyiOS`, `SpriteEffectsiOS`,
-   `MapGeneration`). Rebuild via `PackTools/FSO.BrowserEffects` / CI when FX change.
-2. **Mario / SM64 optional** — **DONE** (`FSO_NO_SM64` / `BLAZORGL` stub).
-3. **`WorldContent.Init` MapGeneration** — **DONE** (fallback when `MapGenerationiOS` missing).
-4. **Dual-target LotView closure to net8** — **DONE** (`net8.0;net9.0` on Common/Files/Content/HIT/Vitaboy*/LotView + TargaImagePCL). **BrowserClient ProjectReference wired** (`FSO_GRAPHICS=Kni` + `FSO_NO_SM64`).
-5. **Thin WASM seam** — gate Mina/HIT/Threads/File scans as needed (Mina comes in via `FSO.Common`; compile-only so far).
-6. **Wire `ExternalWorld` + `TerrainComponent.UpdateTerrain`** — **DONE** behind `?lot=real` / `?lot=real=1`; diamond fallback on failure. Best-effort empty terrain; verify pixels in browser.
-7. Real VM tick payload; live Archive RSA path.
-
-See `../docs/KNI-MIGRATION.md` and root `task_plan.md` Phase F.
+- **Sims are capsules.** Vitaboy avatar rendering is not wired up in the browser.
+- **Furniture is billboards.** True DGRP sprites don't rasterise through the KNI
+  batch — a real anomaly, documented in `../docs/SESSION-LANES.md`. Billboards are
+  fed from live VM positions, so behaviour is correct even though the art is flat.
+- **No depth against walls** — draw order only.
+- **The lot host stands in for the archive server**; no accounts, no city.

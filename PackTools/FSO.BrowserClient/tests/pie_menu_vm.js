@@ -47,10 +47,24 @@ const { chromium } = require('playwright');
   console.log(pieReady ? '[ok]' : '[FAIL]', 'debug pie:', pie);
   pass &= pieReady;
 
-  // Real path: project the rock to screen, click the canvas, expect the DOM menu.
-  const posJson = await page.evaluate(([x, y]) => window.fsoDebug.screenPos(x, y), [rockX, rockY]);
-  const pos = JSON.parse(posJson);
-  console.log('[info] rock screen pos', posJson);
+  // The camera follows your sim, and the sim starts at the lot edge ~40 tiles
+  // from the house: clicking before it walks in projects the target far outside
+  // the viewport, onto nothing. Wait for it to arrive, then zoom out.
+  await waitFor('sim inside the house', () => has('vm sim is inside the house'), 180000);
+  await page.keyboard.press('Digit3');
+  await page.waitForTimeout(2000);
+  const view = page.viewportSize();
+  let pos = null;
+  for (let i = 0; i < 15; i++) {
+    pos = JSON.parse(await page.evaluate(([x, y]) => window.fsoDebug.screenPos(x, y), [rockX, rockY]));
+    if (pos.x > 4 && pos.y > 4 && pos.x < view.width - 4 && pos.y < view.height - 4) break;
+    await page.waitForTimeout(1000); // sim still walking; camera still moving
+  }
+  console.log('[info] rock screen pos', JSON.stringify(pos));
+  if (!(pos.x > 4 && pos.y > 4 && pos.x < view.width - 4 && pos.y < view.height - 4)) {
+    console.log('[FAIL] target never came on screen — cannot click it');
+    pass = false;
+  }
   await page.mouse.click(pos.x, pos.y);
   pass &= await waitFor('pie menu console line', () => has('pie menu on 0x'));
   const menuVisible = await page.waitForSelector('#fsoPieMenu', { timeout: 10000 }).then(() => true).catch(() => false);

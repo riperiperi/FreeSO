@@ -113,6 +113,60 @@ doctor() {
 
 if [ "$DOCTOR" = 1 ]; then doctor; exit 0; fi
 
+# Everything that went wrong on a second machine was detectable in seconds, but
+# surfaced twenty minutes later (or in the browser, in another program). Check it
+# all up front, and say exactly which one failed.
+preflight() {
+    local problems=0
+    note() { echo "  ✗ $*" >&2; problems=$((problems + 1)); }
+
+    command -v python3 >/dev/null 2>&1 || note "python3 not found (needed for the bundle and the web server)"
+
+    if ! command -v dotnet >/dev/null 2>&1; then
+        note "dotnet not found on PATH — this silently produces an empty furniture folder.
+      try: export PATH=\"\$PATH:/usr/local/share/dotnet:\$HOME/.dotnet\""
+    fi
+
+    local need_bundle=0
+    [ "$REBUILD" = 1 ] && need_bundle=1
+    [ -s "$OUT_DIR/content.tar.gz" ] || need_bundle=1
+    if [ "$need_bundle" = 1 ]; then
+        if [ -z "${TSO_DIR:-}" ]; then
+            note "no content bundle at $OUT_DIR and TSO_DIR is not set.
+      TSO_DIR must point at your TSO install (the folder containing objectdata/).
+      find it: find ~ -maxdepth 6 -type d -name objectdata"
+        elif [ ! -f "$TSO_DIR/objectdata/globals/global.iff" ]; then
+            note "TSO_DIR does not look like a TSO install: $TSO_DIR
+      expected: \$TSO_DIR/objectdata/globals/global.iff"
+        fi
+        # The bundle needs room for the tree plus the tarball, and the publish
+        # another few hundred MB.
+        local avail
+        avail="$(df -Pk "$(dirname "$OUT_DIR")" 2>/dev/null | awk 'NR==2 {print int($4/1024)}')"
+        [ -n "$avail" ] && [ "$avail" -lt 1200 ] && \
+            note "only ${avail}MB free near $OUT_DIR; the bundle + publish need ~1.2GB"
+    fi
+
+    if ! ls "$PACKS_DIR"/*.iff >/dev/null 2>&1; then
+        note "no compiled furniture in $PACKS_DIR — build it first (~10 min):
+      for j in \"$REPO\"/PackTools/examples/*.json; do dotnet run --project \"$REPO\"/PackTools/FSO.PackCompiler -- build \"\$j\" -o \"$PACKS_DIR\" --tso-dir \"\$TSO_DIR\"; done"
+    fi
+
+    for f in "$HOUSE" "$FURNISH" "$MANIFEST"; do
+        [ -f "$f" ] || note "missing repo file: $f"
+    done
+
+    if [ "$problems" -gt 0 ]; then
+        echo >&2
+        echo "FATAL: $problems problem(s) above — nothing was built or started." >&2
+        exit 1
+    fi
+    echo "preflight ok (dotnet $(dotnet --version 2>/dev/null || echo '?'), $(ls "$PACKS_DIR"/*.iff 2>/dev/null | wc -l | tr -d ' ') furniture files)"
+}
+
+step "preflight"
+preflight
+
 # 1. Content bundle (needs TSO_DIR only when building it).
 if [ "$REBUILD" = 1 ] || [ ! -f "$OUT_DIR/content.tar.gz" ]; then
     [ -n "${TSO_DIR:-}" ] || { echo "FATAL: no bundle at $OUT_DIR and TSO_DIR not set" >&2; exit 1; }
@@ -163,17 +217,14 @@ else
     step "publish is current (build $PUB_REV)"
 fi
 
-# 3. Stage the bundle into the served tree.
-mkdir -p "$PUBLISH_DIR/wwwroot/tso-content" "$LOG_DIR"
-ln -sf "$OUT_DIR/content.tar.gz" "$PUBLISH_DIR/wwwroot/tso-content/content.tar.gz"
-ln -sf "$OUT_DIR/content-manifest.json" "$PUBLISH_DIR/wwwroot/tso-content/content-manifest.json"
-# A dangling link here reaches the player as a bare 404 inside the game, minutes
-# later, with nothing in the terminal — check the link resolves to a real file.
-if [ ! -s "$PUBLISH_DIR/wwwroot/tso-content/content.tar.gz" ]; then
-    echo "FATAL: staged content bundle is missing or empty." >&2
-    echo "  link: $PUBLISH_DIR/wwwroot/tso-content/content.tar.gz" >&2
-    echo "  target: $OUT_DIR/content.tar.gz" >&2
-    ls -l "$OUT_DIR" 2>/dev/null >&2 || echo "  (no $OUT_DIR at all — rebuild with TSO_DIR set)" >&2
+# 3. The bundle is served straight from $OUT_DIR by the route in serve.py — no
+# staging, no symlinks. Remove any links left by older versions of this script so
+# they can't shadow the route with a dangling target.
+mkdir -p "$LOG_DIR"
+rm -rf "$PUBLISH_DIR/wwwroot/tso-content"
+if [ ! -s "$OUT_DIR/content.tar.gz" ]; then
+    echo "FATAL: content bundle missing or empty: $OUT_DIR/content.tar.gz" >&2
+    ls -l "$OUT_DIR" 2>/dev/null >&2 || echo "  (no $OUT_DIR at all — rerun with TSO_DIR set to rebuild)" >&2
     exit 1
 fi
 
@@ -208,18 +259,40 @@ step "starting static server (http :$PORT_HTTP, no-store)"
 # Cache-Control: no-store — a browser-cached stale app is indistinguishable
 # from a broken one; never let the demo be served from cache.
 cat > "$LOG_DIR/serve.py" <<'PYEOF'
-import functools, http.server, sys
-class NoStoreHandler(http.server.SimpleHTTPRequestHandler):
+import functools, http.server, os, sys, posixpath, urllib.parse
+
+WWWROOT, BUNDLE = sys.argv[2], sys.argv[3]
+
+class DemoHandler(http.server.SimpleHTTPRequestHandler):
+    """Serves the published app, plus /tso-content/ mapped straight onto the
+    bundle directory. The bundle used to be symlinked into wwwroot, which
+    reached one machine as a bare 404 inside the running game; a route has no
+    filesystem hop to get wrong."""
+
+    def translate_path(self, path):
+        clean = posixpath.normpath(urllib.parse.unquote(path.split('?', 1)[0].split('#', 1)[0]))
+        if clean.startswith('/tso-content/'):
+            rel = clean[len('/tso-content/'):]
+            # normpath already collapsed '..'; refuse anything still escaping.
+            if rel.startswith('/') or rel.startswith('..'):
+                return os.path.join(WWWROOT, 'nonexistent')
+            return os.path.join(BUNDLE, rel)
+        return super().translate_path(path)
+
     def end_headers(self):
+        # Cache-Control: no-store — a browser-cached stale app is
+        # indistinguishable from a broken one.
         self.send_header('Cache-Control', 'no-store')
         super().end_headers()
+
     def log_message(self, fmt, *args):
         sys.stderr.write("%s - %s\n" % (self.address_string(), fmt % args))
+
 http.server.ThreadingHTTPServer(
     ('127.0.0.1', int(sys.argv[1])),
-    functools.partial(NoStoreHandler, directory=sys.argv[2])).serve_forever()
+    functools.partial(DemoHandler, directory=WWWROOT)).serve_forever()
 PYEOF
-python3 "$LOG_DIR/serve.py" "$PORT_HTTP" "$PUBLISH_DIR/wwwroot" > "$LOG_DIR/http.log" 2>&1 &
+python3 "$LOG_DIR/serve.py" "$PORT_HTTP" "$PUBLISH_DIR/wwwroot" "$OUT_DIR" > "$LOG_DIR/http.log" 2>&1 &
 PIDS+=($!)
 
 # The port must be OURS serving THIS build: a leftover server from an old demo
@@ -231,14 +304,16 @@ SERVED_REV="$(curl -sf "http://127.0.0.1:$PORT_HTTP/build-rev.txt" 2>/dev/null |
 # symlink handling and server roots have both broken this, and the only symptom
 # is a 404 inside the running game.
 BUNDLE_CODE="$(curl -s -o /dev/null -w '%{http_code}' -r 0-1 \
-    "http://127.0.0.1:$PORT_HTTP/tso-content/content.tar.gz" 2>/dev/null || echo 000)"
+    "http://127.0.0.1:$PORT_HTTP/tso-content/content.tar.gz" 2>/dev/null)"
+BUNDLE_CODE="${BUNDLE_CODE:-000}"
 case "$BUNDLE_CODE" in
     200|206) ;;
     *)
         echo "FATAL: the game content bundle is not being served (HTTP $BUNDLE_CODE)." >&2
         echo "  url:  http://127.0.0.1:$PORT_HTTP/tso-content/content.tar.gz" >&2
-        echo "  file: $PUBLISH_DIR/wwwroot/tso-content/content.tar.gz" >&2
-        ls -lL "$PUBLISH_DIR/wwwroot/tso-content/" 2>&1 | sed 's/^/    /' >&2
+        echo "  file: $OUT_DIR/content.tar.gz" >&2
+        ls -l "$OUT_DIR" 2>&1 | sed 's/^/    /' >&2
+        tail -3 "$LOG_DIR/http.log" 2>/dev/null | sed 's/^/    /' >&2
         exit 1
         ;;
 esac
