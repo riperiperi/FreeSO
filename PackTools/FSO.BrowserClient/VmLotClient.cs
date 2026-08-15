@@ -44,6 +44,10 @@ namespace FSO_BrowserClient
         long syncedAtTick = -1;
         bool autoChatSent;
         bool interactArmed, interactSeen;
+        string wsUrl;
+        bool wsConnected;
+        bool wsErrored;
+        int wsRetryTicks;
 
         /// <summary>When set, sent as chat ~3s after sync — lets a concurrent native
         /// smoke client observe the browser without any UI interaction.</summary>
@@ -66,18 +70,50 @@ namespace FSO_BrowserClient
         public void Start(string gatewayBase)
         {
             var wsBase = gatewayBase.Replace("http://", "ws://").Replace("https://", "wss://").TrimEnd('/');
-            var wsUrl = wsBase + "/sandbox";
+            wsUrl = wsBase + "/sandbox";
 
             driver = new VMClientDriver((state, progress) =>
                 Console.WriteLine($"vm net state {state} ({progress:F2})"));
+
+            // The VM lives across connection retries; only the socket is remade.
+            vm = new VM(new VMContext(null), driver, new VMNullHeadlineProvider());
+            vm.Init();
+            vm.MyUID = PersistID;
+            vm.OnChatEvent += (evt) =>
+            {
+                var text = evt.Text is string[] arr ? string.Join(" | ", arr) : evt.Text?.ToString();
+                var line = $"chat[{evt.SenderUID}] {text}";
+                ChatLog.Add(line);
+                Console.WriteLine("vm " + line);
+                // Sender name is resolved VM-side into the text for talk events;
+                // show the raw line — good enough for the overlay.
+                OnChatLine?.Invoke(text ?? "");
+            };
+
+            ConnectWs();
+        }
+
+        /// <summary>(Re)create the WS client and connect. The tab often loads
+        /// before the lot host finishes booting; a one-shot connect turns that
+        /// race into a permanent "ws error", so Update retries through here.</summary>
+        void ConnectWs()
+        {
+            wsErrored = false;
             cli = new BrowserSandboxClient();
             driver.OnClientCommand += (msg) => cli.Write(new VMNetMessage(VMNetMessageType.Command, msg));
             driver.OnShutdown += (reason) => { Status = "shutdown: " + reason; cli.Disconnect(); };
             cli.OnMessage += driver.ServerMessage;
-            cli.OnError += (err) => { Status = "ws error: " + err; Console.WriteLine("vm ws error: " + err); };
+            cli.OnError += (err) =>
+            {
+                wsErrored = true;
+                if (!wsConnected) Status = "game server not reachable — retrying…";
+                else Status = "ws error: " + err;
+                Console.WriteLine("vm ws error: " + err);
+            };
 
             cli.OnConnectComplete += () =>
             {
+                wsConnected = true;
                 Console.WriteLine($"vm connected, sending AvatarData persist={PersistID}");
                 Status = "joined, syncing";
                 var myState = new VMNetAvatarPersistState()
@@ -99,22 +135,8 @@ namespace FSO_BrowserClient
                 dat.Close();
             };
 
-            vm = new VM(new VMContext(null), driver, new VMNullHeadlineProvider());
-            vm.Init();
-            vm.MyUID = PersistID;
-            vm.OnChatEvent += (evt) =>
-            {
-                var text = evt.Text is string[] arr ? string.Join(" | ", arr) : evt.Text?.ToString();
-                var line = $"chat[{evt.SenderUID}] {text}";
-                ChatLog.Add(line);
-                Console.WriteLine("vm " + line);
-                // Sender name is resolved VM-side into the text for talk events;
-                // show the raw line — good enough for the overlay.
-                OnChatLine?.Invoke(text ?? "");
-            };
-
             Console.WriteLine($"vm connecting {wsUrl}...");
-            Status = "connecting " + wsUrl;
+            if (!wsConnected) Status = "connecting to game server…";
             cli.Connect(wsUrl);
         }
 
@@ -123,6 +145,16 @@ namespace FSO_BrowserClient
         {
             if (vm == null) return;
             cli.Pump();
+
+            // Retry a never-established connection every ~3s: the tab often
+            // loads before the lot host/gateway finish booting.
+            if (!wsConnected && wsErrored && ++wsRetryTicks >= 180)
+            {
+                wsRetryTicks = 0;
+                Console.WriteLine("vm ws retrying...");
+                try { cli.Disconnect(); } catch { }
+                ConnectWs();
+            }
 
             tickAccum += elapsedSeconds;
             const double tickLen = 1.0 / 30.0;
