@@ -35,6 +35,7 @@ namespace FSO.PackCompiler.ArtGen
         // about the accumulation logic itself changes — only which threads see which state.
         [System.ThreadStatic] static Dictionary<uint, byte> _lookup;
         [System.ThreadStatic] static List<Color> _palette;
+        [System.ThreadStatic] static bool _warnedOverflow;
 
         static void EnsureInitialized()
         {
@@ -56,6 +57,7 @@ namespace FSO.PackCompiler.ArtGen
             EnsureInitialized();
             _lookup.Clear();
             _palette.Clear();
+            _warnedOverflow = false;
         }
 
         static Color[] Quantize(SPR2Frame frame, out byte[] bytes)
@@ -74,6 +76,16 @@ namespace FSO.PackCompiler.ArtGen
                 {
                     if (_palette.Count >= 255)
                     {
+                        // Silent clamping is how a leaked palette turned whole objects into
+                        // one flat colour without anyone noticing; say so once per build.
+                        if (!_warnedOverflow)
+                        {
+                            _warnedOverflow = true;
+                            System.Console.Error.WriteLine(
+                                "WARNING: sprite palette overflowed 255 colours — further pixels " +
+                                "collapse to one index (objects will render flat). Is Reset() " +
+                                "being called per object?");
+                        }
                         idx = 254; // defensive clamp; shouldn't trigger for flat-shaded output
                     }
                     else

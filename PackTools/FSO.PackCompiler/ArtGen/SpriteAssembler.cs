@@ -76,6 +76,13 @@ namespace FSO.PackCompiler.ArtGen
             // default outside FSO.IDE's own startup path, so the first SetData call here
             // would otherwise NullReferenceException.
             SimpleQuantizer.Install();
+            // One PALT per object means one palette per object. Without this reset the
+            // accumulator carried colours across every object in a build: past 255 entries
+            // each further colour clamped to index 254, so every object after the ~sixth
+            // rendered as a single flat colour — the "green toilet" that made imported
+            // furniture look untextured in game. Only the calibration tests reset, which is
+            // why single-object builds always looked right.
+            SimpleQuantizer.Reset();
 
             objd.BaseGraphicID = chunkId;
             objd.NumGraphics = 1;
