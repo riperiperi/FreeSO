@@ -67,14 +67,14 @@ else
 fi
 
 # 2. Builds.
-if [ "$REBUILD" = 1 ] || [ ! -x "$HOST_BIN" ]; then
-    step "building FSO.LotHostLite"
-    dotnet build -c Debug "$REPO/PackTools/FSO.LotHostLite" | tail -2
-fi
-if [ "$REBUILD" = 1 ] || [ ! -x "$GATEWAY_BIN" ]; then
-    step "building FSO.WsGateway"
-    dotnet build -c Debug "$REPO/PackTools/FSO.WsGateway" | tail -2
-fi
+# Always build (incremental — seconds when nothing changed). "Build only if the
+# binary is missing" shipped a real failure: a gateway binary left over from an
+# older checkout predated the --sandbox flag, so it exited 2 on an unknown
+# argument and nothing ever listened on the WS port.
+step "building FSO.LotHostLite"
+dotnet build -c Debug "$REPO/PackTools/FSO.LotHostLite" | tail -2
+step "building FSO.WsGateway"
+dotnet build -c Debug "$REPO/PackTools/FSO.WsGateway" | tail -2
 # Republish whenever the checked-out code changed — a stale publish dir served
 # a two-day-old app once and cost hours of "same thing" debugging.
 REV="$(git -C "$REPO" rev-parse --short HEAD 2>/dev/null || echo unknown)"
