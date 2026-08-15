@@ -83,6 +83,11 @@ jobs:
 
   create-release:
     needs: [build-win, build-mac]
+    # Only mainline pushes publish a release. With "**" push triggers, every
+    # feature-branch push otherwise cuts (or collides with) a versioned beta:
+    # the first push published its own release, and each later push failed
+    # with tag already_exists. release-msi needs: this job, so it skips too.
+    if: github.event_name == 'push' && (github.ref == 'refs/heads/packtools-on-archive' || github.ref == 'refs/heads/archive' || github.ref == 'refs/heads/master')
     runs-on: macos-latest
     permissions:
       contents: write
