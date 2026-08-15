@@ -167,6 +167,15 @@ fi
 mkdir -p "$PUBLISH_DIR/wwwroot/tso-content" "$LOG_DIR"
 ln -sf "$OUT_DIR/content.tar.gz" "$PUBLISH_DIR/wwwroot/tso-content/content.tar.gz"
 ln -sf "$OUT_DIR/content-manifest.json" "$PUBLISH_DIR/wwwroot/tso-content/content-manifest.json"
+# A dangling link here reaches the player as a bare 404 inside the game, minutes
+# later, with nothing in the terminal — check the link resolves to a real file.
+if [ ! -s "$PUBLISH_DIR/wwwroot/tso-content/content.tar.gz" ]; then
+    echo "FATAL: staged content bundle is missing or empty." >&2
+    echo "  link: $PUBLISH_DIR/wwwroot/tso-content/content.tar.gz" >&2
+    echo "  target: $OUT_DIR/content.tar.gz" >&2
+    ls -l "$OUT_DIR" 2>/dev/null >&2 || echo "  (no $OUT_DIR at all — rebuild with TSO_DIR set)" >&2
+    exit 1
+fi
 
 # 4. Start everything; kill the whole tree on exit.
 PIDS=()
@@ -218,6 +227,22 @@ PIDS+=($!)
 # changed". curl build-rev.txt and require this publish's rev.
 sleep 2
 SERVED_REV="$(curl -sf "http://127.0.0.1:$PORT_HTTP/build-rev.txt" 2>/dev/null | tr -d '[:space:]' || true)"
+# The game content must be fetchable over HTTP, not merely present on disk:
+# symlink handling and server roots have both broken this, and the only symptom
+# is a 404 inside the running game.
+BUNDLE_CODE="$(curl -s -o /dev/null -w '%{http_code}' -r 0-1 \
+    "http://127.0.0.1:$PORT_HTTP/tso-content/content.tar.gz" 2>/dev/null || echo 000)"
+case "$BUNDLE_CODE" in
+    200|206) ;;
+    *)
+        echo "FATAL: the game content bundle is not being served (HTTP $BUNDLE_CODE)." >&2
+        echo "  url:  http://127.0.0.1:$PORT_HTTP/tso-content/content.tar.gz" >&2
+        echo "  file: $PUBLISH_DIR/wwwroot/tso-content/content.tar.gz" >&2
+        ls -lL "$PUBLISH_DIR/wwwroot/tso-content/" 2>&1 | sed 's/^/    /' >&2
+        exit 1
+        ;;
+esac
+
 if [ "$SERVED_REV" != "$REV" ]; then
     echo "FATAL: :$PORT_HTTP is serving build '${SERVED_REV:-nothing}' instead of '$REV'." >&2
     echo "  Another (old) server owns the port — dev servers show up as plain" >&2
