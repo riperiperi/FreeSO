@@ -75,10 +75,19 @@ if [ "$REBUILD" = 1 ] || [ ! -x "$GATEWAY_BIN" ]; then
     step "building FSO.WsGateway"
     dotnet build -c Debug "$REPO/PackTools/FSO.WsGateway" | tail -2
 fi
-if [ "$REBUILD" = 1 ] || [ ! -f "$PUBLISH_DIR/wwwroot/index.html" ]; then
-    step "publishing FSO.BrowserClient → $PUBLISH_DIR (a few minutes)"
+# Republish whenever the checked-out code changed — a stale publish dir served
+# a two-day-old app once and cost hours of "same thing" debugging.
+REV="$(git -C "$REPO" rev-parse --short HEAD 2>/dev/null || echo unknown)"
+PUB_REV="$(cat "$PUBLISH_DIR/wwwroot/build-rev.txt" 2>/dev/null || echo none)"
+if [ "$REBUILD" = 1 ] || [ ! -f "$PUBLISH_DIR/wwwroot/index.html" ] || [ "$PUB_REV" != "$REV" ]; then
+    step "publishing FSO.BrowserClient @ $REV → $PUBLISH_DIR (a few minutes; was: $PUB_REV)"
     rm -rf "$PUBLISH_DIR"
     dotnet publish -c Debug "$REPO/PackTools/FSO.BrowserClient" -o "$PUBLISH_DIR" | tail -2
+    echo "$REV" > "$PUBLISH_DIR/wwwroot/build-rev.txt"
+    # Stamp the page so the browser shows which build it's running.
+    sed -i.bak "s/__FSO_BUILD_REV__/$REV/g" "$PUBLISH_DIR/wwwroot/index.html" && rm -f "$PUBLISH_DIR/wwwroot/index.html.bak"
+else
+    step "publish is current (build $PUB_REV)"
 fi
 
 # 3. Stage the bundle into the served tree.
@@ -107,10 +116,35 @@ step "starting gateway (ws :$PORT_GATEWAY)"
     --sandbox "127.0.0.1:$PORT_SANDBOX" > "$LOG_DIR/gateway.log" 2>&1 &
 PIDS+=($!)
 
-step "starting static server (http :$PORT_HTTP)"
-python3 -m http.server "$PORT_HTTP" --bind 127.0.0.1 \
-    --directory "$PUBLISH_DIR/wwwroot" > "$LOG_DIR/http.log" 2>&1 &
+step "starting static server (http :$PORT_HTTP, no-store)"
+# Cache-Control: no-store — a browser-cached stale app is indistinguishable
+# from a broken one; never let the demo be served from cache.
+cat > "$LOG_DIR/serve.py" <<'PYEOF'
+import functools, http.server, sys
+class NoStoreHandler(http.server.SimpleHTTPRequestHandler):
+    def end_headers(self):
+        self.send_header('Cache-Control', 'no-store')
+        super().end_headers()
+    def log_message(self, fmt, *args):
+        sys.stderr.write("%s - %s\n" % (self.address_string(), fmt % args))
+http.server.ThreadingHTTPServer(
+    ('127.0.0.1', int(sys.argv[1])),
+    functools.partial(NoStoreHandler, directory=sys.argv[2])).serve_forever()
+PYEOF
+python3 "$LOG_DIR/serve.py" "$PORT_HTTP" "$PUBLISH_DIR/wwwroot" > "$LOG_DIR/http.log" 2>&1 &
 PIDS+=($!)
+
+# The port must be OURS serving THIS build: a leftover server from an old demo
+# session squatting the port serves a stale app and looks exactly like "nothing
+# changed". curl build-rev.txt and require this publish's rev.
+sleep 2
+SERVED_REV="$(curl -sf "http://127.0.0.1:$PORT_HTTP/build-rev.txt" 2>/dev/null | tr -d '[:space:]' || true)"
+if [ "$SERVED_REV" != "$REV" ]; then
+    echo "FATAL: :$PORT_HTTP is serving build '${SERVED_REV:-nothing}' instead of '$REV'." >&2
+    echo "  Another (old) server likely owns the port. Free it and rerun:" >&2
+    echo "    pkill -f 'http.server' ; pkill -f serve.py" >&2
+    exit 1
+fi
 
 # 5. Readiness: the host is the slow one (content boot ~15s).
 for i in $(seq 1 60); do

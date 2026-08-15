@@ -130,6 +130,18 @@
             hide() { if (this.el) { this.el.remove(); this.el = null; } },
         };
 
+        // Build tag, bottom-right: run_browser_demo.sh substitutes the git rev
+        // at publish time, so a stale served build is visible at a glance.
+        // (Unsubstituted placeholder = not published through the demo script.)
+        window.addEventListener('DOMContentLoaded', () => {
+            var tag = document.createElement('div');
+            tag.id = 'fsoBuildTag';
+            tag.textContent = 'build __FSO_BUILD_REV__';
+            tag.style.cssText = 'position:fixed;right:8px;bottom:6px;z-index:1100;' +
+                'font:11px monospace;color:#5a6390;pointer-events:none;';
+            document.body.appendChild(tag);
+        });
+
         // Boot status overlay: readable text for what the tab is doing (the
         // canvas status panel only draws placeholder bars — no font). Driven
         // from .NET each time the status changes; empty text hides it.
