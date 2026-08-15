@@ -147,14 +147,38 @@ if [ "$SERVED_REV" != "$REV" ]; then
     exit 1
 fi
 
-# 5. Readiness: the host is the slow one (content boot ~15s).
+# 5. Readiness. Every service must be PROVEN listening: a gateway that lost its
+# port to a leftover process used to die here while the script still announced
+# "Demo is up", and the only symptom was ws errors in the browser minutes later.
+wait_tcp() { # host port seconds
+    local end=$((SECONDS + $3))
+    while [ $SECONDS -lt $end ]; do
+        (exec 3<>"/dev/tcp/$1/$2") 2>/dev/null && { exec 3<&- 3>&-; return 0; }
+        sleep 1
+    done
+    return 1
+}
+service_died() { # name logfile
+    echo "FATAL: $1 died — last lines of $2:" >&2
+    tail -15 "$2" >&2
+    echo "  If it says 'address already in use', a process from an earlier run owns" >&2
+    echo "  the port (dev servers show up as plain 'dotnet' — kill by PORT, not name):" >&2
+    echo "    lsof -ti :$PORT_HTTP :$PORT_GATEWAY :$PORT_SANDBOX | xargs kill -9" >&2
+    exit 1
+}
+
+# The lot host is the slow one (content boot ~15s).
 for i in $(seq 1 60); do
     grep -q "ticking 30Hz" "$LOG_DIR/host.log" 2>/dev/null && break
-    kill -0 "${PIDS[0]}" 2>/dev/null || { echo "FATAL: lot host died — $LOG_DIR/host.log:" >&2; tail -15 "$LOG_DIR/host.log" >&2; exit 1; }
+    kill -0 "${PIDS[0]}" 2>/dev/null || service_died "lot host" "$LOG_DIR/host.log"
     sleep 2
 done
 grep -q "ticking 30Hz" "$LOG_DIR/host.log" || { echo "FATAL: lot host never became ready" >&2; exit 1; }
 grep -m1 "furnished" "$LOG_DIR/host.log" || true
+
+kill -0 "${PIDS[1]}" 2>/dev/null || service_died "gateway" "$LOG_DIR/gateway.log"
+wait_tcp 127.0.0.1 "$PORT_SANDBOX" 15 || service_died "lot host (not listening on $PORT_SANDBOX)" "$LOG_DIR/host.log"
+wait_tcp 127.0.0.1 "$PORT_GATEWAY" 15 || service_died "gateway (not listening on $PORT_GATEWAY)" "$LOG_DIR/gateway.log"
 
 echo
 echo "============================================================"
