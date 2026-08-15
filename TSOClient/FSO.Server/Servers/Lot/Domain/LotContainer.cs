@@ -1728,7 +1728,7 @@ namespace FSO.Server.Servers.Lot.Domain
                 else if (result && ava.KillTimeout != -1)
                 { 
                     // If this avatar has started the leave lot animation, we might be able to get rid of them instantly.
-                    if (ava.Thread.Stack.Any(x => x.CalleePrivate.Name == "templateperson" && x.Routine.ID == 8373))
+                    if (ava.Thread.Stack.Any(x => x.Callee == ava && x.Routine.ID == 8373))
                     {
                         Lot.ForwardCommand(new VMNetDeleteObjectCmd()
                         {

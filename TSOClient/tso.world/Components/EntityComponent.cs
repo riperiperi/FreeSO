@@ -254,7 +254,7 @@ namespace FSO.LotView.Components
                 new Vector4(0, 0, 0, 1));
         }
 
-        private Matrix NormalToMatrix()
+        protected Matrix NormalToMatrix()
         {
             return NormalToMatrix(VisualNormal, Vector3.Backward, Vector3.Right);
         }

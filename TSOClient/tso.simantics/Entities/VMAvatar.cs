@@ -71,7 +71,6 @@ namespace FSO.SimAntics
         public int KillTimeout = -1;
         private static readonly int FORCE_DELETE_TIMEOUT = 60 * 30;
         private readonly ushort LEAVE_LOT_TREE = 8373;
-        private readonly ushort LEAVE_LOT_ACTION = 173;
 
         /*
             APPEARANCE DATA
@@ -654,7 +653,7 @@ namespace FSO.SimAntics
         {
             //interaction cancel should handle this
             //if (Thread.Context.VM.EODHost != null) Thread.Context.VM.EODHost.ForceDisconnect(this); //try this a lot.
-            if (Thread.Queue.Exists(x => x.ActionRoutine.ID == LEAVE_LOT_TREE && Thread.Queue.IndexOf(x) <= Thread.ActiveQueueBlock+1)) return; //we're already leaving
+            if (Thread.Queue.Exists(x => x.Callee == this && x.ActionRoutine.ID == LEAVE_LOT_TREE && Thread.Queue.IndexOf(x) <= Thread.ActiveQueueBlock+1)) return; //we're already leaving
             var actions = new List<VMQueuedAction>(Thread.Queue);
             foreach (var action in actions)
             {
@@ -663,7 +662,19 @@ namespace FSO.SimAntics
 
             var tree = GetRoutineWithOwner(LEAVE_LOT_TREE, Thread.Context);
 
-            var qaction = GetAction(LEAVE_LOT_ACTION, this, Thread.Context, false);
+            VMQueuedAction qaction = null;
+
+            // Try find the "leave lot" action on the current tree table, and enqueue it.
+            if (TreeTable != null)
+            {
+                var index = TreeTable.Interactions.FirstOrDefault(x => x.ActionFunction == LEAVE_LOT_TREE)?.TTAIndex;
+
+                if (index != null)
+                {
+                    qaction = GetAction((int)index.Value, this, Thread.Context, false);
+                }
+            }
+
             if (qaction != null)
             {
                 qaction.Flags |= TTABFlags.FSOSkipPermissions;

@@ -38,6 +38,7 @@ namespace FSO.Client.Regulators
             }
         }
 
+        private bool InLot;
         public bool LeavingLot;
 
         private FindLotResponse FindLotResponse;
@@ -210,6 +211,9 @@ namespace FSO.Client.Regulators
                     //When we join a property, get the lot info to update the thumbnail cache
                     DataService.Request(Server.DataService.Model.MaskedStruct.PropertyPage_LotInfo, LotId);
                     break;
+                case "LotCommandStream":
+                    InLot = true;
+                    break;
                 case "UnexpectedDisconnect":
                     if (LeavingLot || ReestablishAttempt > 0)
                     {
@@ -294,6 +298,7 @@ namespace FSO.Client.Regulators
                     break;
 
                 case "Disconnected":
+                    InLot = false;
                     ReestablishAttempt = 0;
                     break;
             }
@@ -317,7 +322,7 @@ namespace FSO.Client.Regulators
 
         public uint GetCurrentLotID()
         {
-            if (CurrentState.Name == "LotCommandStream") return LotId;
+            if (InLot) return LotId;
             else return 0;
         }
 
