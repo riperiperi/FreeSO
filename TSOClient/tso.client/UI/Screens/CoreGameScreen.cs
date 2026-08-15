@@ -385,6 +385,18 @@ namespace FSO.Client.UI.Screens
                     // An archive specific city view hint should be triggered when returning to map, or when there's no welcome lot to join.
                     FSOFacade.Hints.TriggerHint("screen:city");
                 }
+                else if (!controller.ArchiveConfig.HasFlag(Common.ArchiveConfigFlags.Offline) && FSOFacade.Controller.HasServer())
+                {
+                    GameThreadInterval interval = null;
+                    interval = GameThread.SetInterval(() =>
+                    {
+                        if (!FSOFacade.Hints.IsShowingHint())
+                        {
+                            FSOFacade.Hints.TriggerHint("screen:archive_host");
+                            interval.Clear();
+                        }
+                    }, 1000);
+                }
             });
         }
 

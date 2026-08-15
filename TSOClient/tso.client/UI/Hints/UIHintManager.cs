@@ -171,6 +171,11 @@ namespace FSO.Client.UI.Hints
         {
             return AllHints.Select(x => LoadHint(x.Filename)).Where(x => x != null).OrderBy(x => x.Order ?? 0).ToList();
         }
+
+        public bool IsShowingHint()
+        {
+            return !(HintAlert == null || HintAlert.Dead);
+        }
     }
 
     public class UIHintRef

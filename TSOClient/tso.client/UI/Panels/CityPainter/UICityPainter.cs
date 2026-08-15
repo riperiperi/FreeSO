@@ -394,6 +394,8 @@ namespace FSO.Client.UI.Panels.CityPainter
         {
             if (active)
             {
+                FSOFacade.Hints.TriggerHint("ui:city_editor");
+
                 Visible = true;
                 Terrain.Plugin = MapPainter;
                 TController.HideTooltip();

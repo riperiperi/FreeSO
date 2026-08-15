@@ -478,7 +478,7 @@ namespace FSO.SimAntics
             if (UseWorld)
             {
                 var footstep = tp.Properties["footstep"];
-                if (footstep != null && primaryAnimation && GetPersonData(VMPersonDataVariable.IsGhost) == 0)
+                if (footstep != null && primaryAnimation && GetPersonData(VMPersonDataVariable.IsGhost) == 0 && Thread?.Context?.VM != null)
                 {
                     PlayTimepropsSound(VMFootsteps.GetFootstepEvent(Thread.Context.VM, this));
                 }

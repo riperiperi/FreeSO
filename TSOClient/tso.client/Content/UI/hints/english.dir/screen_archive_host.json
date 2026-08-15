@@ -1,0 +1,8 @@
+﻿{
+  "guid": "b6c88af3-0ea5-451c-b714-97cb732afeb1",
+  "trigger": "screen:archive_host",
+  "title": "Archive Server",
+  "category": "Archive Mode",
+  "image": "hint_archive_server.png",
+  "body": "[s][color=white]You're hosting an Archive Server![/color][/s]\nOther players should be able to join you as long as your game client remains open. Click the [s][color=white](i)[/color][/s] next to the city/lot name to see information about your server, like the IP the server is accessible from on each of your network interfaces. \n\nYou can also enable Discord join functionality, so that people don't have to manually enter your IP each time. This will share your public IP, so if you're using a private VPN like Hamachi, you should instead manually share the IP for that interface.\n\nIf you've enabled user verification (or need to eject some unwanted visitors), you should check out the User List button on the UCP at the bottom left. It'll start flashing if anyone is waiting to be verified, so keep an eye on it!\n\nIf you're having trouble getting other people to connect, check out [s][color=white]https://freeso.org/port-forwarding[/color][/s] ! No, we can't embed links in the game."
+}

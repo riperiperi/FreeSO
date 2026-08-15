@@ -53,6 +53,7 @@ namespace FSO.Client.UI.Panels
             {
                 Caption = "i",
                 CaptionStyle = btnCaption,
+                Tooltip = GameFacade.Strings.GetString("f128", "19"),
                 Width = 20,
                 Y = 2,
                 Visible = false
