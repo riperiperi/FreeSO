@@ -141,8 +141,9 @@ sleep 2
 SERVED_REV="$(curl -sf "http://127.0.0.1:$PORT_HTTP/build-rev.txt" 2>/dev/null | tr -d '[:space:]' || true)"
 if [ "$SERVED_REV" != "$REV" ]; then
     echo "FATAL: :$PORT_HTTP is serving build '${SERVED_REV:-nothing}' instead of '$REV'." >&2
-    echo "  Another (old) server likely owns the port. Free it and rerun:" >&2
-    echo "    pkill -f 'http.server' ; pkill -f serve.py" >&2
+    echo "  Another (old) server owns the port — dev servers show up as plain" >&2
+    echo "  'dotnet', so kill by PORT, not by name, then rerun:" >&2
+    echo "    lsof -ti :$PORT_HTTP | xargs kill -9" >&2
     exit 1
 fi
 
