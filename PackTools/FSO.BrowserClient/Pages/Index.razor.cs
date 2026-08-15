@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Linq;
 using Microsoft.AspNetCore.Components;
 using Microsoft.JSInterop;
 using Microsoft.Xna.Framework;
@@ -19,6 +20,38 @@ namespace FSO_BrowserClient.Pages
             {
                 JsRuntime.InvokeAsync<object>("initRenderJS", DotNetObjectReference.Create(this));
             }
+        }
+
+        // Pie menu bridge: DOM overlay buttons (or window.fsoDebug test hooks)
+        // land here via the DotNetObjectReference initRenderJS captured.
+        [JSInvokable]
+        public void PieSelect(int calleeID, int optionID)
+        {
+            (_game as FSO_BrowserClientGame)?.SelectPieOption((short)calleeID, (byte)optionID);
+        }
+
+        [JSInvokable]
+        public string DebugPie(float tileX, float tileY)
+        {
+            return (_game as FSO_BrowserClientGame)?.DebugPieAt(tileX, tileY) ?? "[]";
+        }
+
+        [JSInvokable]
+        public string DebugScreenPos(float tileX, float tileY)
+        {
+            return (_game as FSO_BrowserClientGame)?.DebugScreenPos(tileX, tileY) ?? "{}";
+        }
+
+        [JSInvokable]
+        public void CanvasClick(float x, float y)
+        {
+            (_game as FSO_BrowserClientGame)?.OnCanvasClick(x, y);
+        }
+
+        [JSInvokable]
+        public void ChatSend(string message)
+        {
+            (_game as FSO_BrowserClientGame)?.SendChatFromUi(message);
         }
 
         [JSInvokable]
@@ -56,7 +89,47 @@ namespace FSO_BrowserClient.Pages
                     forceRealLot = true;
                 }
 
-                _game = new FSO_BrowserClientGame(contentBase, gateway, autoJoin, forceLot, probeXnb, forceRealLot, houseUrl);
+                // ?furnish=png (default until the FX rebuild lands) — billboard layer.
+                // ?furnish=real — real DGRP sprites via RealFurnitureLayer; blocked on
+                // the KNIF 2DWorldBatch rebuild (see SESSION-LANES).
+                var furnishReal = QueryValue(uri, "furnish") == "real";
+                // ?objtech=drawZSprite|drawSimple|… — A/B the object pass technique (debug).
+                var objtech = QueryValue(uri, "objtech");
+                if (objtech != null && Enum.TryParse<FSO.LotView.Effects.WorldBatchTechniques>(objtech, out var tech))
+                    FSO.LotView.WorldEntities.ObjectTechniqueOverride = tech;
+                var spriteTest = QueryValue(uri, "spritetest");
+                FSO_BrowserClientGame.SpriteTest = spriteTest == "1" || spriteTest == "2";
+                FSO_BrowserClientGame.SpriteTestBasic = spriteTest == "2";
+                FSO_BrowserClientGame.DepthOutProbe = QueryValue(uri, "depthout") == "1";
+                FSO_BrowserClientGame.RedrawProbe = QueryValue(uri, "redraw") == "1";
+                FSO_BrowserClientGame.FixedFx = QueryValue(uri, "fx") == "fixed";
+                var v2diag = QueryValue(uri, "v2diag");
+                RealFurnitureLayer.V2Diag = v2diag == "1";
+                RealFurnitureLayer.V2AllMagenta = v2diag == "2";
+                // ?zoom=near|medium|far and ?rot=0..3 pin the camera for probes.
+                var zoomParam = QueryValue(uri, "zoom");
+                var rotParam = QueryValue(uri, "rot");
+                var rot = int.TryParse(rotParam, out var r) ? r : -1;
+
+                // ?vm=1 — join the shared lockstep VM through the gateway /sandbox
+                // route: content bundle → MEMFS → SERVER Content.Init → local
+                // SimAntics VM in lockstep with LotHostLite. ?name= labels the avatar.
+                var vmMode = QueryValue(uri, "vm") == "1";
+                var vmName = QueryValue(uri, "name");
+
+                _game = new FSO_BrowserClientGame(contentBase, gateway, autoJoin, forceLot, probeXnb, forceRealLot, houseUrl,
+                    furnishReal, zoomParam, rot, vmMode, vmName, Navigation.BaseUri);
+                var game = (FSO_BrowserClientGame)_game;
+                game.OnPieMenu += (callee, items, x, y) =>
+                {
+                    var json = "[" + string.Join(",", items.Select(p =>
+                        $"{{\"id\":{p.id},\"name\":\"{(p.name ?? "").Replace("\"", "'")}\"}}")) + "]";
+                    ((IJSInProcessRuntime)JsRuntime).InvokeVoid("fsoPie.show", (int)callee, json, x, y);
+                };
+                game.OnVmStarted += () =>
+                    ((IJSInProcessRuntime)JsRuntime).InvokeVoid("fsoChat.init");
+                game.OnChatLine += (line) =>
+                    ((IJSInProcessRuntime)JsRuntime).InvokeVoid("fsoChat.push", line);
                 _game.Run();
             }
 

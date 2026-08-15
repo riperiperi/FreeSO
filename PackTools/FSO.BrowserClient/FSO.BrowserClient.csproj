@@ -18,6 +18,11 @@
   <PropertyGroup>
     <BlazorEnableTimeZoneSupport>false</BlazorEnableTimeZoneSupport>
     <!--<InvariantGlobalization>true</InvariantGlobalization>-->
+    <!-- Release publish trimming strips XmlSerializer ctors (XmlHouseData fails with
+         XmlConstructorInaccessible) and would silently drop VM reflection paths later.
+         PublishTrimmed=false is NOT viable on net8 wasm (facade typeref failures at
+         boot: System.OperatingSystem in System.Runtime 8.0), so publish -c Debug for
+         the demo; Release trimming (TrimmerRootAssembly roots) is a polish item. -->
   </PropertyGroup>
 
   <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Debug|AnyCPU' ">
@@ -32,6 +37,11 @@
     <Compile Include="FSO.BrowserClientGame.cs" />
     <Compile Include="BlueprintArchLoader.cs" />
     <Compile Include="FurnitureLayer.cs" />
+    <Compile Include="PackObjectLoader.cs" />
+    <Compile Include="RealFurnitureLayer.cs" />
+    <Compile Include="BrowserContentBoot.cs" />
+    <Compile Include="BrowserSandboxClient.cs" />
+    <Compile Include="VmLotClient.cs" />
   </ItemGroup>
 
   <ItemGroup>
@@ -65,6 +75,10 @@
       whole reference subgraph so bare `dotnet build` (no -p:) succeeds.
     -->
     <ProjectReference Include="..\..\TSOClient\tso.world\FSO.LotView.csproj"
+                      AdditionalProperties="FSO_GRAPHICS=Kni;FSO_NO_SM64=true;BLAZORGL=true" />
+    <!-- Full SimAntics VM in the browser (?vm=1): lockstep client over the sandbox
+         protocol. Same forced-property trick as LotView above. -->
+    <ProjectReference Include="..\..\TSOClient\tso.simantics\FSO.SimAntics.csproj"
                       AdditionalProperties="FSO_GRAPHICS=Kni;FSO_NO_SM64=true;BLAZORGL=true" />
   </ItemGroup>
 

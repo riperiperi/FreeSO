@@ -27,6 +27,12 @@ namespace FSO.LotView
     /// </summary>
     public class WorldEntities
     {
+        /// <summary>
+        /// Debug: force the technique used for the dynamic/immediate object pass
+        /// (e.g. drawZSprite to A/B the software-depth discard on WebGL).
+        /// </summary>
+        public static Effects.WorldBatchTechniques? ObjectTechniqueOverride;
+
         public bool UseStaticBuffer;
         public Blueprint Blueprint;
 
@@ -124,7 +130,7 @@ namespace FSO.LotView
             
             _2d.OffsetPixel(new Vector2());
             _2d.OffsetTile(new Vector3());
-            _2d.PrepareImmediate(Effects.WorldBatchTechniques.drawZSpriteDepthChannel);
+            _2d.PrepareImmediate(ObjectTechniqueOverride ?? Effects.WorldBatchTechniques.drawZSpriteDepthChannel);
 
             //if we're not using static, draw all the objects here instead
             //TODO: in-place re-order the dynamic objects list to shorten sort time? might not matter for lists this short, and would make it harder to use a hashset

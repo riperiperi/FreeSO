@@ -31,6 +31,8 @@ namespace FSO.Common.Utils
 
         private static RenderTarget2D ActiveColor;
         private static RenderTarget2D ActiveDepth;
+        /// <summary>True when a software-depth target is bound (RenderPPXDepth will run its two-pass branch).</summary>
+        public static bool HasActiveDepth => ActiveDepth != null;
         private static int StencilValue;
 
         public static void SetPPXTarget(RenderTarget2D color, RenderTarget2D depth, bool clear)

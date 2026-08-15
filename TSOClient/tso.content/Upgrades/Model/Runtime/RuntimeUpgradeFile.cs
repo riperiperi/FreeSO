@@ -42,7 +42,16 @@ namespace FSO.Content.Upgrades.Model.Runtime
             if (obj == null) {
                 //last resort, attempt to find an entry that uses this file.
                 obj = content.WorldObjects.Get(File.Name);
-                if (obj == null) throw new Exception($"Could not load upgrades for file {File.Name}. If this object does not exist, remove it from the upgrades file.");
+                if (obj == null)
+                {
+                    //trimmed content bundles (headless hosts, the browser client) may not
+                    //ship every object upgrades.json mentions. an absent object can never
+                    //be instanced, so empty tuning for it is safe — and identical on every
+                    //lockstep participant sharing the trimmed bundle.
+                    System.Diagnostics.Debug.WriteLine($"Upgrades: skipping {File.Name} (object not in content)");
+                    Loaded = true;
+                    return;
+                }
             }
 
             var res = obj.Resource;

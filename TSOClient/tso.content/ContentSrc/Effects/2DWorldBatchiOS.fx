@@ -1,9 +1,9 @@
-/**
+﻿/**
  * Various effects for rendering the 2D world.
  */
 float4x4 viewProjection : ViewProjection;
-float4x4 worldViewProjection : ViewProjection;
-float4x4 rotProjection : ViewProjection;
+float4x4 worldViewProjection : WorldViewProjection;
+float4x4 rotProjection : RotProjection;
 float4x4 iWVP;
 float worldUnitsPerTile = 2.5;
 float3 dirToFront;
@@ -93,17 +93,28 @@ float4 packObjID(float id) {
  *		pixelTexture - Texture to sample for the pixel output
  */
 
+struct ZVertexIn {
+	float4 position: SV_Position0;
+    float2 texCoords : TEXCOORD0;
+    float3 worldCoords : TEXCOORD1;
+    float2 objectID : TEXCOORD2;
+	float2 room : TEXCOORD3;
+};
+
 struct SimpleVertex {
     float4 position: SV_Position0;
     float2 texCoords : TEXCOORD0;
     float objectID : TEXCOORD1;
 };
 
-SimpleVertex vsSimple(SimpleVertex v){
+SimpleVertex vsSimple(ZVertexIn v){
     SimpleVertex result;
     result.position = mul(v.position, viewProjection);
     result.texCoords = v.texCoords;
-    result.objectID = v.objectID;
+    result.objectID = v.objectID.x;
+    //consume the remaining attributes: KNI BlazorGL misbinds the whole vertex
+    //layout when the declaration has more elements than the shader inputs.
+    result.position.w += (v.worldCoords.x + v.room.x) * 0.0000001;
     return result;
 }
 
@@ -159,14 +170,6 @@ technique drawSimpleID {
  *		depthTexture - Texture to sample for the zbuffer values
  *		worldPosition - Position of the object in the world
  */
-
-struct ZVertexIn {
-	float4 position: SV_Position0;
-    float2 texCoords : TEXCOORD0;
-    float3 worldCoords : TEXCOORD1;
-    float2 objectID : TEXCOORD2;
-	float2 room : TEXCOORD3;
-};
 
 struct ZVertexOut {
 	float4 position: SV_Position0;

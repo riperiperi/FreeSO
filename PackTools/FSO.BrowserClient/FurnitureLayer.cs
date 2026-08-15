@@ -29,6 +29,12 @@ namespace FSO_BrowserClient
         readonly List<Placement> placements = new List<Placement>();
         public bool Ready { get; private set; }
 
+        /// <summary>
+        /// False when RealFurnitureLayer owns the furniture (this layer then only
+        /// draws the capsule sims, which stay placeholders until Vitaboy lands).
+        /// </summary>
+        public bool DrawFurniture = true;
+
         public async Task LoadAsync(GraphicsDevice gd, string baseUrl, string furnishUrl)
         {
             using var http = new HttpClient();
@@ -102,8 +108,9 @@ namespace FSO_BrowserClient
 
             foreach (var p in placements.OrderBy(p => p.Tile.X + p.Tile.Y))
             {
-                var screen = space.GetScreenFromTile(p.Tile + new Vector2(0.5f, 0.5f)) + offset;
                 var isSim = p.Label != null;
+                if (!DrawFurniture && !isSim) continue;
+                var screen = space.GetScreenFromTile(p.Tile + new Vector2(0.5f, 0.5f)) + offset;
                 var drawScale = isSim ? 1f : scale;
                 var w = p.Tex.Width * drawScale;
                 var h = p.Tex.Height * drawScale;

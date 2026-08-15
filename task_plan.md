@@ -76,11 +76,12 @@ Sequenced so the vision model is the *last* variable introduced, not the first.
 - **Status:** in_progress
 
 ### Phase B: Friends in a house together (BYO)
-- [ ] Two players, one server, one generated San Francisco. Player 1's floor plan becomes a house at their real address; player 2 walks in.
+- [x] **Core proven 2026-08-13 (remote session):** `FSO.LotHostLite` — a ~200-line headless lockstep lot host over FreeSO's own sandbox protocol (no city server, no DB, no RSA) — hosts the AI-generated grove house; any mix of native smoke clients and **browser tabs** join one shared VM: state sync, chat both ways, TTAB pie menus, interactions in the avatar queue, identical entity hashes over hundreds of ticks, zero desyncs.
+- [ ] Two players, one server, one generated San Francisco. Player 1's floor plan becomes a house at their real address; player 2 walks in. (Sandbox host stands in for the archive server; real archive server still ahead.)
 - [ ] Establish what a second person joining actually takes — Archive Mode is self-hosted off a local SQLite clone.
 - [ ] **Claiming a lot by real address** is what fuses the city and the house. It belongs here.
 - **Why early:** "hang out with friends" is the point. A house nobody can visit is a screensaver. This needs no browser.
-- **Status:** pending
+- **Status:** in_progress — engine + browser core done, archive-server path open
 
 ### Phase C: Make it look like mine
 - [ ] Photo of a room → wall colours, floors, furniture positions adjusted to match
@@ -115,7 +116,7 @@ Sequenced so the vision model is the *last* variable introduced, not the first.
 - [x] **Browser session response path** — after type-2000 handshake, JS client sends `RequestClientSessionResponse` (type 21); fake city replies with Voltron `HostOnlinePDU`. Stage UI through HostOnline. 5/5 gateway tests. Live join still needs valid PKCS#1 token + ClientOnline → avatar → lot on 34101.
 - [x] **KNI Blazor speaks Aries** — `FSO.BrowserAries` + BrowserClient auto-join through gateway to LotJoined (integration test).
 - [x] **Aries city + lot join (handshake)** — FindLot FOUND → `/lot` type 22 → ticket type 21 → HostOnline → ClientOnline → empty `FSOVMTickBroadcast`.
-- [ ] **Lot VM stream / real LotView** — real tick contents; wire `FSO.LotView` (needs Mario stub + **KNI-rebuilt** iOS XNBs).
+- [x] **Lot VM stream — DONE 2026-08-13 (remote session), via the sandbox protocol instead of Aries.** `?vm=1`: full SimAntics VM in the browser (253MB trimmed content bundle → MEMFS → SERVER `Content.Init`), `VMClientDriver` over a WS sandbox client through the gateway `/sandbox` route to `FSO.LotHostLite`. Two tabs + native clients share one world (identical hashes, 0 desyncs); real TTAB pie menu on click sends interactions; chat overlay. Tests: `FSO.BrowserClient/tests/{two_tab_vm,pie_menu_vm}.js`. Aries/archive-server join remains open (sandbox host stands in).
 - [x] **S5 lot placeholder** — after `LotJoined` (or `?lot=1`), BrowserClient draws isometric grass diamonds (FreeSO GRASS colors); WASD pan. Not real LotView.
 - [x] **KNI BlazorGL S0 + S2 texture** — `FSO.BrowserClient` loads `HttpContentStore` → `Texture2D` (`sample-content/textures/squares.png`).
 - [x] **KNI S3 partial (effects)** — `BasicEffect` on lot view (green status + triangle). Stock FreeSO XNBs (MGFX 11) fail `Content.Load` (`?effect=1`); need KNI MGCB rebuild of `*iOS.fx`.

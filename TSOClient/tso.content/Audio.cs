@@ -146,19 +146,19 @@ namespace FSO.Content
                 }
             }
 
-            TSOAudio = new DBPFFile(ContentManager.GetPath("TSOAudio.dat"));
-            tsov2 = new DBPFFile(ContentManager.GetPath("tsov2.dat"));
-            Stings = new DBPFFile(ContentManager.GetPath("Stings.dat"));
-            EP5Samps = new DBPFFile(ContentManager.GetPath("EP5Samps.dat"));
-            EP2 = new DBPFFile(ContentManager.GetPath("EP2.dat"));
-            Hitlists = new DBPFFile(ContentManager.GetPath("HitListsTemp.dat"));
+            TSOAudio = LoadDBPFOrNull(ContentManager.GetPath("TSOAudio.dat"));
+            tsov2 = LoadDBPFOrNull(ContentManager.GetPath("tsov2.dat"));
+            Stings = LoadDBPFOrNull(ContentManager.GetPath("Stings.dat"));
+            EP5Samps = LoadDBPFOrNull(ContentManager.GetPath("EP5Samps.dat"));
+            EP2 = LoadDBPFOrNull(ContentManager.GetPath("EP2.dat"));
+            Hitlists = LoadDBPFOrNull(ContentManager.GetPath("HitListsTemp.dat"));
 
             SFXCache = new Dictionary<uint, SoundEffect>();
             TracksById = new Dictionary<uint, Track>();
             TracksByBackupId = new Dictionary<uint, Track>();
             HitlistsById = new Dictionary<uint, Hitlist>();
 
-            AddTracksFrom(TSOAudio);
+            if (TSOAudio != null) AddTracksFrom(TSOAudio);
 
             //load events
             _Events = new Dictionary<string, HITEventRegistration>();
@@ -188,7 +188,8 @@ namespace FSO.Content
             }
 
             //register the .xa files over in the nightclub folders.
-            var files = Directory.GetFiles(content.GetPath("sounddata/nightclubsounds/"));
+            var nightclubPath = content.GetPath("sounddata/nightclubsounds/");
+            var files = Directory.Exists(nightclubPath) ? Directory.GetFiles(nightclubPath) : new string[0];
             foreach (var file in files)
             {
                 if (!file.EndsWith(".xa")) continue;
@@ -229,10 +230,21 @@ namespace FSO.Content
         /// <param name="InstanceID">The InstanceID of the audio.</param>
         /// <param name="dbpf">The DBPF to search.</param>
         /// <returns>The audio as a stream of bytes.</returns>
-        private byte[] GetAudioFrom(uint InstanceID, DBPFFile dbpf, out byte filetype) 
+        /// <summary>
+        /// Trimmed content bundles (headless hosts, the browser client) may omit the
+        /// large audio archives entirely; sound lookups against a missing archive
+        /// resolve to silence instead of failing content boot.
+        /// </summary>
+        private DBPFFile LoadDBPFOrNull(string path)
+        {
+            if (path == null || !File.Exists(path)) return null;
+            return new DBPFFile(path);
+        }
+
+        private byte[] GetAudioFrom(uint InstanceID, DBPFFile dbpf, out byte filetype)
         {
             filetype = 0;
-            if (InstanceID == 0)
+            if (InstanceID == 0 || dbpf == null)
                 return null;
 
             //all game sfx has type id 0x2026960B
@@ -272,6 +284,7 @@ namespace FSO.Content
         /// <returns>A Hitlist instance.</returns>
         private Hitlist GetHitlistFrom(uint InstanceID, DBPFFile dbpf)
         {
+            if (dbpf == null) return null;
             var hit = dbpf.GetItemByID((ulong)DBPFTypeID.HIT + (((ulong)InstanceID) << 32));
             if (hit != null) return new Hitlist(hit);
 

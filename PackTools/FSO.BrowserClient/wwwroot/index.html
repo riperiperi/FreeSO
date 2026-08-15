@@ -91,9 +91,90 @@
             canvas.height = holder.clientHeight;
             // disable context menu on right click
             canvas.addEventListener("contextmenu", e => e.preventDefault());
+            // ?vm=1 pie menu: KNI's Mouse.GetState misses synthetic/headless
+            // clicks, so route canvas clicks through interop directly.
+            canvas.addEventListener("click", (e) => {
+                var r = canvas.getBoundingClientRect();
+                try { instance.invokeMethod('CanvasClick', e.clientX - r.left, e.clientY - r.top); }
+                catch (err) { /* game not constructed yet */ }
+            });
 
             // begin game loop
             window.requestAnimationFrame(tickJS);
+        };
+
+        // Pie menu DOM overlay (?vm=1): the game raises OnPieMenu with real TTAB
+        // options; clicking one sends a VMNetInteractionCmd into the shared VM.
+        window.fsoPie = {
+            el: null,
+            show(callee, itemsJson, x, y) {
+                this.hide();
+                var items = JSON.parse(itemsJson);
+                var el = document.createElement('div');
+                el.id = 'fsoPieMenu';
+                el.style.cssText = 'position:fixed;z-index:1000;background:#181c30;border:1px solid #4f6ef7;' +
+                    'border-radius:8px;padding:4px;font:14px sans-serif;color:#cdd6ff;min-width:120px;' +
+                    'left:' + Math.min(x, window.innerWidth - 160) + 'px;top:' + Math.min(y, window.innerHeight - 40 * items.length) + 'px;';
+                items.forEach((it) => {
+                    var b = document.createElement('div');
+                    b.textContent = it.name;
+                    b.style.cssText = 'padding:6px 10px;cursor:pointer;border-radius:5px;';
+                    b.onmouseenter = () => b.style.background = '#4f6ef7';
+                    b.onmouseleave = () => b.style.background = '';
+                    b.onclick = () => { window.theInstance.invokeMethod('PieSelect', callee, it.id); this.hide(); };
+                    el.appendChild(b);
+                });
+                document.body.appendChild(el);
+                this.el = el;
+            },
+            hide() { if (this.el) { this.el.remove(); this.el = null; } },
+        };
+
+        // Chat overlay (?vm=1): log + input, bottom-left. Lines come from the
+        // shared VM's chat events; Enter sends a VMNetChatCmd.
+        window.fsoChat = {
+            box: null, log: null,
+            init() {
+                if (this.box) return;
+                var box = document.createElement('div');
+                box.id = 'fsoChat';
+                box.style.cssText = 'position:fixed;left:10px;bottom:10px;z-index:900;width:320px;' +
+                    'font:13px sans-serif;color:#cdd6ff;';
+                var log = document.createElement('div');
+                log.style.cssText = 'max-height:150px;overflow-y:auto;background:rgba(24,28,48,0.85);' +
+                    'border-radius:8px 8px 0 0;padding:6px 8px;display:none;';
+                var input = document.createElement('input');
+                input.id = 'fsoChatInput';
+                input.placeholder = 'chat…';
+                input.style.cssText = 'width:100%;box-sizing:border-box;background:rgba(24,28,48,0.85);' +
+                    'border:1px solid #4f6ef7;border-radius:0 0 8px 8px;color:#fff;padding:6px 8px;outline:none;';
+                input.addEventListener('keydown', (e) => {
+                    if (e.key === 'Enter' && input.value.trim()) {
+                        window.theInstance.invokeMethod('ChatSend', input.value);
+                        input.value = '';
+                    }
+                    e.stopPropagation();
+                });
+                box.appendChild(log); box.appendChild(input);
+                document.body.appendChild(box);
+                this.box = box; this.log = log;
+            },
+            push(line) {
+                if (!this.box) this.init();
+                this.log.style.display = 'block';
+                var el = document.createElement('div');
+                el.textContent = line;
+                this.log.appendChild(el);
+                this.log.scrollTop = this.log.scrollHeight;
+            },
+        };
+
+        // Headless test hooks (Playwright): tile-space pie menu + interaction,
+        // and tile→screen projection so tests can click the real canvas path.
+        window.fsoDebug = {
+            pie: (tx, ty) => window.theInstance.invokeMethod('DebugPie', tx, ty),
+            screenPos: (tx, ty) => window.theInstance.invokeMethod('DebugScreenPos', tx, ty),
+            interact: (callee, id) => window.theInstance.invokeMethod('PieSelect', callee, id),
         };
 
         window.addEventListener("keydown", function(event)

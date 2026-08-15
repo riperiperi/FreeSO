@@ -1,4 +1,6 @@
 ﻿using System;
+using System.Collections.Generic;
+using System.Linq;
 using System.Threading;
 using System.Threading.Tasks;
 using FSO.BrowserAries;
@@ -56,7 +58,43 @@ namespace FSO_BrowserClient
         JoinStage? lastLoggedJoinStage;
         FurnitureLayer furniture;
         bool furnitureFetchStarted;
+        PackObjectLoader packs;
+        bool packsFetchStarted;
+        bool realFurniturePlaced;
+        RealFurnitureLayer realFurniture;
+        Newtonsoft.Json.Linq.JObject furnishDoc;
+        bool furnishFetchStarted;
+        readonly bool _furnishReal;   // ?furnish=real (default) → ObjectComponents; ?furnish=png → legacy billboards
+        readonly string _initialZoom; // ?zoom=near|medium|far for deterministic probes
+        readonly int _initialRotation; // ?rot=0..3
+        bool qWasDown, eWasDown;
         readonly bool _probeFreeSoXnb;
+        // ?vm=1 — join the shared lockstep VM (LotHostLite via gateway /sandbox):
+        // content bundle → MEMFS → Content.Init(SERVER) → full local SimAntics VM.
+        readonly bool _vmMode;
+        readonly string _vmName;
+        readonly string _wwwrootBase; // base URI for tso-content/, packs/, objects/
+        VmLotClient vmClient;
+        bool vmStarted;
+        bool vmContentStarted;
+        bool vmLotInited;
+        bool vmArchApplied;
+        int vmArchWaitFrames;
+        bool vmLeftWasDown;
+        /// <summary>Fired when a click lands a real TTAB pie menu:
+        /// (calleeObjectID, [(optionID, name)], screenX, screenY). Index renders
+        /// it as a DOM overlay.</summary>
+        public event Action<short, List<(byte id, string name)>, int, int> OnPieMenu;
+        /// <summary>Chat lines from the shared VM, forwarded to the DOM overlay.</summary>
+        public event Action<string> OnChatLine;
+        /// <summary>Fired once when the VM client starts (shows the chat overlay).</summary>
+        public event Action OnVmStarted;
+
+        /// <summary>DOM chat box submitted a message.</summary>
+        public void SendChatFromUi(string message)
+        {
+            if (!string.IsNullOrWhiteSpace(message)) vmClient?.SendChat(message.Trim());
+        }
 
         GraphicsDeviceManager graphics;
         SpriteBatch spriteBatch;
@@ -100,11 +138,23 @@ namespace FSO_BrowserClient
             bool forceLotView = false,
             bool probeFreeSoXnb = false,
             bool forceRealLot = false,
-            string houseUrl = null)
+            string houseUrl = null,
+            bool furnishReal = true,
+            string initialZoom = null,
+            int initialRotation = -1,
+            bool vmMode = false,
+            string vmName = null,
+            string wwwrootBase = null)
         {
             _contentBaseUrl = contentBaseUrl ?? throw new ArgumentNullException(nameof(contentBaseUrl));
             _gatewayBase = gatewayBase ?? throw new ArgumentNullException(nameof(gatewayBase));
             _houseUrl = houseUrl;
+            _furnishReal = furnishReal;
+            _initialZoom = initialZoom;
+            _initialRotation = initialRotation;
+            _vmMode = vmMode;
+            _vmName = vmName ?? ("browser" + new Random().Next(1000));
+            _wwwrootBase = wwwrootBase;
             _autoJoin = autoJoin;
             _forceLotView = forceLotView;
             _probeFreeSoXnb = probeFreeSoXnb;
@@ -121,7 +171,7 @@ namespace FSO_BrowserClient
         }
 
         bool ShowLotFloor =>
-            _forceLotView || (join != null && join.Stage == JoinStage.LotJoined);
+            _forceLotView || vmLotInited || (join != null && join.Stage == JoinStage.LotJoined);
 
         bool DrawRealLot => realLotReady && realWorld != null;
 
@@ -176,7 +226,7 @@ namespace FSO_BrowserClient
         /// <summary>
         /// Best-effort empty flat-grass lot via ExternalWorld. Any failure → diamonds.
         /// </summary>
-        void TryInitRealLot()
+        void TryInitRealLot(int lotSize = RealLotSize)
         {
             try
             {
@@ -204,6 +254,29 @@ namespace FSO_BrowserClient
                 farDepth.SetData(new[] { Color.White });
                 WorldContent.GrassEffect.Parameters["depthMap"]?.SetValue(farDepth);
                 WorldContent.RCObject.Parameters["depthMap"]?.SetValue(farDepth);
+                // The 2D sprite batch (object sprites) does the same software-depth
+                // discard. PPXDepthEngine only binds depthMap when ActiveDepth exists,
+                // which ExternalWorld never sets up — unbound, EVERY object sprite
+                // pixel is culled. Far depth = draw-order-only occlusion for now.
+                WorldContent._2DWorldBatchEffect.Parameters["depthMap"]?.SetValue(farDepth);
+                // Interim object pass for aliased KNIF matrices (see _2DWorldBatch
+                // PrepareImmediate): with viewProjection re-asserted last, ALL aliased
+                // matrix slots hold the pixel matrix, so vsZSprite's depth outputs are
+                // garbage. drawZSprite + depthOutMode=true skips the software depth
+                // discard and has no depth-output branch — draw-order occlusion until
+                // the FX are rebuilt with distinct semantics (?objtech= overrides).
+                if (FixedFx)
+                {
+                    // Rebuilt FX (distinct matrix semantics): vanilla engine path.
+                    WorldContent._2DWorldBatchEffect.depthOutMode = false;
+                }
+                else
+                {
+                    WorldContent._2DWorldBatchEffect.depthOutMode = true;
+                    if (WorldEntities.ObjectTechniqueOverride == null)
+                        WorldEntities.ObjectTechniqueOverride = FSO.LotView.Effects.WorldBatchTechniques.drawZSprite;
+                    FSO.LotView.Utils._2DWorldBatch.AliasedMatrixWorkaround = true;
+                }
 
                 // RC (flat-color) walls in the fixed 2D camera — the sprite wall path
                 // needs TSO content. Light factors normally come from LMapBatch, which
@@ -219,7 +292,7 @@ namespace FSO_BrowserClient
                 realWorld = new ExternalWorld(GraphicsDevice);
                 lotLayer.AddExternal(realWorld);
 
-                var size = RealLotSize;
+                var size = lotSize;
                 realBlueprint = new Blueprint(size, size);
                 realBlueprint.BuildableArea = new Rectangle(1, 1, size - 2, size - 2);
                 realBlueprint.Light = new[]
@@ -393,6 +466,20 @@ namespace FSO_BrowserClient
             }
         }
 
+        async Task FetchFurnishAsync(string furnishUrl)
+        {
+            try
+            {
+                using var http = new System.Net.Http.HttpClient();
+                var json = await http.GetStringAsync(furnishUrl).ConfigureAwait(true);
+                furnishDoc = Newtonsoft.Json.Linq.JObject.Parse(json);
+            }
+            catch (Exception ex)
+            {
+                Console.WriteLine("furnish json fetch failed: " + ex.Message);
+            }
+        }
+
         async Task LoadSampleViaHttpStoreAsync()
         {
             try
@@ -464,6 +551,70 @@ namespace FSO_BrowserClient
             if (space && !spaceWasDown) StartJoin();
             spaceWasDown = space;
 
+            if (_vmMode)
+            {
+                if (!vmContentStarted)
+                {
+                    vmContentStarted = true;
+                    var tarUrl = new Uri(new Uri(_wwwrootBase), "tso-content/content.tar.gz").AbsoluteUri;
+                    _ = BrowserContentBoot.RunAsync(tarUrl);
+                }
+                loadStatus = BrowserContentBoot.Ready
+                    ? (vmClient?.Status ?? "vm starting")
+                    : BrowserContentBoot.Status;
+
+                if (BrowserContentBoot.Ready && !vmStarted)
+                {
+                    vmStarted = true;
+                    vmClient = new VmLotClient(_vmName);
+                    vmClient.AutoChat = $"hello from {_vmName}";
+                    vmClient.OnChatLine += (line) => OnChatLine?.Invoke(line);
+                    vmClient.Start(_gatewayBase);
+                    _ = vmClient.LoadBillboardsAsync(GraphicsDevice, _wwwrootBase);
+                    OnVmStarted?.Invoke();
+                }
+
+                vmClient?.Update(gameTime.ElapsedGameTime.TotalSeconds);
+
+                // Clicks arrive from JS via OnCanvasClick — KNI's Mouse.GetState
+                // misses synthetic (and some real) clicks under BlazorGL.
+
+                if (vmClient != null && vmClient.Synced && !vmLotInited)
+                {
+                    vmLotInited = true;
+                    realLotAttempted = true;
+                    TryInitRealLot(vmClient.vm.Context.Architecture.Width);
+                    // Let the world draw a couple of clean frames before signalling
+                    // wall changes: RecacheWalls resumes the 2D batch, which needs a
+                    // WorldCamera that only exists after the first Begin.
+                    vmArchWaitFrames = 3;
+                }
+                if (vmLotInited && !vmArchApplied && realLotReady && --vmArchWaitFrames <= 0)
+                {
+                    vmArchApplied = true;
+                    try
+                    {
+                        vmClient.ApplyArchitecture(realBlueprint);
+                        realBlueprint.FloorGeom.FullReset(GraphicsDevice, false);
+                        var centroid = BlueprintArchLoader.WallCentroid(realBlueprint);
+                        realWorld.State.CenterTile = centroid;
+                        realWorld.State.Zoom = _initialZoom switch
+                        {
+                            "near" => WorldZoom.Near,
+                            "medium" => WorldZoom.Medium,
+                            _ => WorldZoom.Far,
+                        };
+                        if (_initialRotation >= 0 && _initialRotation < 4)
+                            realWorld.State.Rotation = (WorldRotation)_initialRotation;
+                    }
+                    catch (Exception ex)
+                    {
+                        Console.WriteLine("vm arch apply failed: " + ex.Message);
+                        Console.WriteLine("  stack: " + Truncate(ex.StackTrace ?? "", 800));
+                    }
+                }
+            }
+
             if (_houseUrl != null && !houseFetchStarted)
             {
                 houseFetchStarted = true;
@@ -473,8 +624,38 @@ namespace FSO_BrowserClient
             {
                 furnitureFetchStarted = true;
                 furniture = new FurnitureLayer();
+                // In real-furniture mode the layer still owns the capsule sims;
+                // its billboards stay as the ?furnish=png fallback.
+                furniture.DrawFurniture = !_furnishReal;
                 var furnishUrl = _houseUrl.Replace(".xml", "-furnish.json");
                 _ = furniture.LoadAsync(GraphicsDevice, new Uri(new Uri(_houseUrl), "/").AbsoluteUri, furnishUrl);
+            }
+            if (_houseUrl != null && _furnishReal && realLotReady && !packsFetchStarted)
+            {
+                packsFetchStarted = true;
+                packs = new PackObjectLoader();
+                packs.ProbeDevice = GraphicsDevice;
+                _ = packs.LoadAsync(new Uri(new Uri(_houseUrl), "/").AbsoluteUri);
+            }
+            if (_houseUrl != null && _furnishReal && !furnishFetchStarted)
+            {
+                furnishFetchStarted = true;
+                _ = FetchFurnishAsync(_houseUrl.Replace(".xml", "-furnish.json"));
+            }
+            if (_furnishReal && !realFurniturePlaced && houseApplied
+                && packs != null && packs.Ready && furnishDoc != null)
+            {
+                realFurniturePlaced = true;
+                try
+                {
+                    realFurniture = new RealFurnitureLayer();
+                    realFurniture.Place(realWorld, realBlueprint, packs, furnishDoc);
+                }
+                catch (Exception ex)
+                {
+                    Console.WriteLine("furniture real placement failed: " + ex.Message);
+                    Console.WriteLine("  stack: " + Truncate(ex.StackTrace ?? "", 800));
+                }
             }
             if (pendingHouseXml != null && realLotReady && !houseApplied)
             {
@@ -486,7 +667,14 @@ namespace FSO_BrowserClient
                     // Frame the house: centre on its wall centroid, widest fixed zoom.
                     var centroid = BlueprintArchLoader.WallCentroid(realBlueprint);
                     realWorld.State.CenterTile = centroid;
-                    realWorld.State.Zoom = WorldZoom.Far;
+                    realWorld.State.Zoom = _initialZoom switch
+                    {
+                        "near" => WorldZoom.Near,
+                        "medium" => WorldZoom.Medium,
+                        _ => WorldZoom.Far,
+                    };
+                    if (_initialRotation >= 0 && _initialRotation < 4)
+                        realWorld.State.Rotation = (WorldRotation)_initialRotation;
                     Console.WriteLine($"house arch loaded: {realBlueprint.WallsAt[0].Count} wall tiles, centre {centroid}");
                 }
                 catch (Exception ex)
@@ -518,6 +706,18 @@ namespace FSO_BrowserClient
                     if (keyboardState.IsKeyDown(Keys.Down) || keyboardState.IsKeyDown(Keys.S))
                         ct.Y += tilePan * dt;
                     realWorld.State.CenterTile = ct;
+
+                    // Zoom 1/2/3, rotate Q/E — exercised by the sprite probes.
+                    if (keyboardState.IsKeyDown(Keys.D1)) realWorld.State.Zoom = WorldZoom.Near;
+                    if (keyboardState.IsKeyDown(Keys.D2)) realWorld.State.Zoom = WorldZoom.Medium;
+                    if (keyboardState.IsKeyDown(Keys.D3)) realWorld.State.Zoom = WorldZoom.Far;
+                    var q = keyboardState.IsKeyDown(Keys.Q);
+                    var e = keyboardState.IsKeyDown(Keys.E);
+                    if (q && !qWasDown)
+                        realWorld.State.Rotation = (WorldRotation)(((int)realWorld.State.Rotation + 3) % 4);
+                    if (e && !eWasDown)
+                        realWorld.State.Rotation = (WorldRotation)(((int)realWorld.State.Rotation + 1) % 4);
+                    qWasDown = q; eWasDown = e;
                 }
                 else
                 {
@@ -555,6 +755,63 @@ namespace FSO_BrowserClient
             base.Update(gameTime);
         }
 
+        /// <summary>Canvas click (from JS interop) → tile → nearest VM object → pie menu.</summary>
+        public void OnCanvasClick(float x, float y)
+        {
+            if (vmClient == null || !vmClient.Synced || !DrawRealLot) return;
+            var tile = realWorld.State.WorldSpace.GetTileAtPosWithScroll(new Vector2(x, y));
+            RequestPieMenu(tile, (int)x, (int)y);
+        }
+
+        void RequestPieMenu(Vector2 tile, int screenX, int screenY)
+        {
+            try
+            {
+                var (target, pie) = vmClient.PieMenuAt(tile);
+                if (target == null)
+                {
+                    Console.WriteLine($"pie: no object near tile {tile.X:F1},{tile.Y:F1}");
+                    return;
+                }
+                var guid = target.Object?.OBJ?.GUID ?? 0;
+                var items = (pie ?? new List<FSO.SimAntics.VMPieMenuInteraction>())
+                    .Select(p => (p.ID, p.Name)).ToList();
+                Console.WriteLine($"pie menu on 0x{guid:X8} (obj {target.ObjectID}): " +
+                    (items.Count == 0 ? "(empty)" : string.Join(", ", items.Select(p => $"{p.ID}:{p.Name}"))));
+                if (items.Count > 0)
+                    OnPieMenu?.Invoke(target.ObjectID, items, screenX, screenY);
+            }
+            catch (Exception ex)
+            {
+                Console.WriteLine("pie menu failed: " + ex.Message);
+            }
+        }
+
+        /// <summary>DOM overlay (or test hook) picked an option.</summary>
+        public void SelectPieOption(short calleeID, byte interactionID)
+        {
+            vmClient?.SendInteraction(calleeID, interactionID);
+        }
+
+        /// <summary>Test hook: pie menu by tile coordinate, bypassing the mouse.</summary>
+        public string DebugPieAt(float tileX, float tileY)
+        {
+            if (vmClient == null || !vmClient.Synced) return "[]";
+            var (target, pie) = vmClient.PieMenuAt(new Vector2(tileX, tileY));
+            if (target == null || pie == null) return "[]";
+            var items = pie.Select(p => $"{{\"id\":{p.ID},\"name\":\"{p.Name?.Replace("\"", "'")}\",\"callee\":{target.ObjectID}}}");
+            return "[" + string.Join(",", items) + "]";
+        }
+
+        /// <summary>Test hook: screen position of a tile centre (for real click tests).</summary>
+        public string DebugScreenPos(float tileX, float tileY)
+        {
+            if (realWorld == null) return "{}";
+            var space = realWorld.State.WorldSpace;
+            var screen = space.GetScreenFromTile(new Vector2(tileX, tileY)) + space.GetPointScreenOffset();
+            return $"{{\"x\":{(int)screen.X},\"y\":{(int)screen.Y}}}";
+        }
+
         protected override void Draw(GameTime gameTime)
         {
             GraphicsDevice.Clear(ShowLotFloor ? new Color(20, 28, 18) : ClearBlue);
@@ -581,6 +838,7 @@ namespace FSO_BrowserClient
 
                 spriteBatch.Begin();
                 if (DrawRealLot && furniture != null) furniture.Draw(spriteBatch, realWorld.State);
+                if (DrawRealLot && vmClient != null) vmClient.DrawEntities(spriteBatch, realWorld.State);
                 DrawLotStatusStrip();
                 spriteBatch.End();
             }
@@ -595,6 +853,201 @@ namespace FSO_BrowserClient
         }
 
         bool realLotDebugDumped;
+        bool furnDrawDumped;
+
+        /// <summary>?spritetest=1 — draw one hand-built magenta _2DStandaloneSprite
+        /// through PrepareImmediate/DrawImmediate to isolate batch machinery from
+        /// per-sprite DGRP data.</summary>
+        public static bool SpriteTest;
+        public static bool SpriteTestBasic;
+        public static bool DepthOutProbe;
+        /// <summary>?fx=fixed — run the vanilla effect path (rebuilt XNBs with
+        /// distinct matrix semantics); off = KNIF-alias workarounds.</summary>
+        public static bool FixedFx;
+        /// <summary>?redraw=1 — after the world pass, re-draw the real ObjectComponents
+        /// standalone with a fresh PrepareImmediate (same objects, isolated state).</summary>
+        public static bool RedrawProbe;
+        FSO.LotView.Utils._2DStandaloneSprite testSprite;
+
+        void DrawSpriteTest()
+        {
+            var st = realWorld.State;
+            if (testSprite == null)
+            {
+                if (st.WorldRectangle.Width == 0) return;
+                var tex = new Texture2D(GraphicsDevice, 64, 64);
+                var px = new Color[64 * 64];
+                for (int i = 0; i < px.Length; i++) px[i] = Color.Magenta;
+                tex.SetData(px);
+                testSprite = new FSO.LotView.Utils._2DStandaloneSprite
+                {
+                    Pixel = tex,
+                    RenderMode = FSO.LotView.Utils._2DBatchRenderMode.NO_DEPTH,
+                    SrcRect = new Rectangle(0, 0, 64, 64),
+                    DestRect = new Rectangle(0, 0, 64, 64),
+                    Room = 65535,
+                    Floor = 1,
+                    ObjectID = 1,
+                    AbsoluteWorldPosition = new Vector3(32 * 3f, 0f, 32 * 3f),
+                };
+                // Alpha8 — the format SPR2 Z textures actually use (GetZTexture).
+                var dtex = new Texture2D(GraphicsDevice, 64, 64, false, SurfaceFormat.Alpha8);
+                var dpx = new byte[64 * 64];
+                for (int i = 0; i < dpx.Length; i++) dpx[i] = 255; // far depth
+                dtex.SetData(dpx);
+                testSprite.Depth = dtex;
+                testSprite.RenderMode = FSO.LotView.Utils._2DBatchRenderMode.Z_BUFFER;
+                Console.WriteLine("spritetest armed");
+                var eff = WorldContent._2DWorldBatchEffect;
+                var names = new System.Text.StringBuilder();
+                for (int i = 0; i < eff.Techniques.Count; i++)
+                    names.Append($"[{i}]{eff.Techniques[i].Name}({eff.Techniques[i].Passes.Count}p) ");
+                Console.WriteLine($"fx2d techniques: {names}");
+                var pnames = new System.Text.StringBuilder();
+                foreach (var p in eff.Parameters) pnames.Append(p.Name).Append(' ');
+                Console.WriteLine($"fx2d parameters: {pnames}");
+            }
+            // Track the live culling rect — the camera moves when the house applies.
+            testSprite.AbsoluteDestRect = new Rectangle(
+                st.WorldRectangle.Center.X - 32, st.WorldRectangle.Center.Y - 32, 64, 64);
+            testSprite.PrepareVertices(GraphicsDevice);
+            var rectVp = st.WorldRectangle;
+            var pixelView = new Matrix(
+                1f, 0f, 0f, 0f,
+                0f, -1f, 0f, 0f,
+                0f, 0f, -1f, 0f,
+                0f, 0f, 0f, 1f);
+            var pixelProj = Matrix.CreateOrthographicOffCenter(
+                rectVp.X - 1.5f, rectVp.X + rectVp.Width - 1.5f,
+                -rectVp.Y - rectVp.Height - 0.5f, -rectVp.Y - 0.5f, 0, 1);
+            var pixelVP = pixelView * pixelProj;
+
+            var _2d = st._2D;
+            _2d.OffsetPixel(new Vector2());
+            _2d.OffsetTile(new Vector3());
+            _2d.PrepareImmediate(FSO.LotView.Effects.WorldBatchTechniques.drawSimple);
+            // Merge hypothesis: KNIF may collapse same-semantic matrices; feed the
+            // pixel ortho into all three slots for this test draw.
+            WorldContent._2DWorldBatchEffect.worldViewProjection = pixelVP;
+            WorldContent._2DWorldBatchEffect.rotProjection = pixelVP;
+            WorldContent._2DWorldBatchEffect.iWVP = Matrix.Invert(pixelVP);
+            // Depth state parity with the BasicEffect bisect draw.
+            GraphicsDevice.DepthStencilState = DepthStencilState.None;
+            _2d.DrawImmediate(testSprite);
+            _2d.EndImmediate();
+
+            // A: +96 — real component's textures on my quad (matrix override kept).
+            // B: +192 — my textures, NO matrix override (PrepareImmediate world matrices).
+            Texture2D realPix = null, realDepth = null;
+            if (realBlueprint.Objects.Count > 0)
+            {
+                try
+                {
+                    var comp0 = realBlueprint.Objects[0];
+                    var dgrpField = typeof(ObjectComponent).GetField("dgrp",
+                        System.Reflection.BindingFlags.NonPublic | System.Reflection.BindingFlags.Instance);
+                    var rend = dgrpField.GetValue(comp0);
+                    var itemsField = rend.GetType().GetField("Items",
+                        System.Reflection.BindingFlags.NonPublic | System.Reflection.BindingFlags.Instance);
+                    foreach (var item in (System.Collections.IEnumerable)itemsField.GetValue(rend))
+                    {
+                        var sp = (FSO.LotView.Utils._2DStandaloneSprite)item.GetType().GetField("Sprite").GetValue(item);
+                        realPix = sp.Pixel; realDepth = sp.Depth;
+                        break;
+                    }
+                }
+                catch { }
+            }
+
+            var savedPix = testSprite.Pixel;
+            var savedDepth = testSprite.Depth;
+            for (int variant = 0; variant < 2; variant++)
+            {
+                var off = 96 + variant * 96;
+                if (variant == 0 && realPix != null) { testSprite.Pixel = realPix; testSprite.Depth = realDepth; }
+                else { testSprite.Pixel = savedPix; testSprite.Depth = savedDepth; }
+                testSprite.AbsoluteDestRect = new Rectangle(
+                    st.WorldRectangle.Center.X - 32 + off, st.WorldRectangle.Center.Y - 32, 64, 64);
+                testSprite.PrepareVertices(GraphicsDevice);
+                _2d.PrepareImmediate(FSO.LotView.Effects.WorldBatchTechniques.drawZSprite);
+                if (variant == 0)
+                {
+                    // Overlap theory: only re-assert viewProjection AFTER PrepareImmediate's
+                    // worldViewProjection write. If registers alias, last write wins.
+                    var eff2 = WorldContent._2DWorldBatchEffect;
+                    var vpField = typeof(FSO.LotView.Utils._2DWorldBatch).GetField("ViewProjection",
+                        System.Reflection.BindingFlags.NonPublic | System.Reflection.BindingFlags.Instance);
+                    var batchVP = (Matrix)vpField.GetValue(_2d);
+                    eff2.viewProjection = batchVP;
+                }
+                GraphicsDevice.DepthStencilState = DepthStencilState.None;
+                _2d.DrawImmediate(testSprite);
+                _2d.EndImmediate();
+            }
+            testSprite.Pixel = savedPix;
+            testSprite.Depth = savedDepth;
+
+            // Variant: same effect/technique, but a 3-element vertex struct that matches
+            // the shader's SimpleVertex input exactly (is the 5-element _2DSpriteVertex
+            // declaration what breaks KNI attribute binding?).
+            {
+                var eff = WorldContent._2DWorldBatchEffect;
+                eff.SetTechnique(FSO.LotView.Effects.WorldBatchTechniques.drawSimple);
+                eff.viewProjection = pixelVP;
+                eff.pixelTexture = testSprite.Pixel;
+                var r = testSprite.AbsoluteDestRect;
+                r.Offset(-96, 0);
+                var verts = new MiniSpriteVertex[]
+                {
+                    new MiniSpriteVertex(new Vector3(r.Left, r.Top, 0), new Vector2(0, 0)),
+                    new MiniSpriteVertex(new Vector3(r.Right, r.Top, 0), new Vector2(1, 0)),
+                    new MiniSpriteVertex(new Vector3(r.Right, r.Bottom, 0), new Vector2(1, 1)),
+                    new MiniSpriteVertex(new Vector3(r.Left, r.Bottom, 0), new Vector2(0, 1)),
+                };
+                var inds = new short[] { 0, 1, 2, 0, 2, 3 };
+                eff.CurrentTechnique.Passes[0].Apply();
+                GraphicsDevice.DrawUserIndexedPrimitives(PrimitiveType.TriangleList, verts, 0, 4, inds, 0, 2);
+            }
+
+            // Bisect (?spritetest=2): same vertex buffer, known-good BasicEffect,
+            // ResetMatrices-equivalent ortho.
+            if (basicEffect != null && SpriteTestBasic)
+            {
+                basicEffect.World = Matrix.Identity;
+                basicEffect.View = pixelView;
+                basicEffect.Projection = pixelProj;
+                basicEffect.TextureEnabled = true;
+                basicEffect.Texture = testSprite.Pixel;
+                basicEffect.VertexColorEnabled = false;
+                GraphicsDevice.BlendState = BlendState.AlphaBlend;
+                GraphicsDevice.DepthStencilState = DepthStencilState.None;
+                basicEffect.CurrentTechnique.Passes[0].Apply();
+                GraphicsDevice.SetVertexBuffer(testSprite.GPUVertices);
+                GraphicsDevice.DrawIndexedPrimitives(PrimitiveType.TriangleList, 0, 0, 2);
+                basicEffect.TextureEnabled = false;
+            }
+        }
+
+        struct MiniSpriteVertex : IVertexType
+        {
+            public Vector3 Position;
+            public Vector2 TexCoord;
+            public float ObjectID;
+
+            public MiniSpriteVertex(Vector3 pos, Vector2 uv)
+            {
+                Position = pos;
+                TexCoord = uv;
+                ObjectID = 0;
+            }
+
+            public static readonly VertexDeclaration Declaration = new VertexDeclaration(
+                new VertexElement(0, VertexElementFormat.Vector3, VertexElementUsage.Position, 0),
+                new VertexElement(12, VertexElementFormat.Vector2, VertexElementUsage.TextureCoordinate, 0),
+                new VertexElement(20, VertexElementFormat.Single, VertexElementUsage.TextureCoordinate, 1));
+
+            VertexDeclaration IVertexType.VertexDeclaration => Declaration;
+        }
 
         bool TryDrawRealLot()
         {
@@ -602,6 +1055,83 @@ namespace FSO_BrowserClient
             {
                 realWorld.Force2DPredraw(GraphicsDevice);
                 realWorld.Draw(GraphicsDevice);
+                realFurniture?.Draw(GraphicsDevice, realWorld.State);
+                if (SpriteTest) DrawSpriteTest();
+                if (RedrawProbe && realFurniturePlaced)
+                {
+                    var st = realWorld.State;
+                    var _2d = st._2D;
+                    GraphicsDevice.DepthStencilState = DepthStencilState.None;
+                    _2d.OffsetPixel(new Vector2());
+                    _2d.OffsetTile(new Vector3());
+                    _2d.PrepareImmediate(FSO.LotView.Effects.WorldBatchTechniques.drawZSprite);
+                    var dgrpField = typeof(ObjectComponent).GetField("dgrp",
+                        System.Reflection.BindingFlags.NonPublic | System.Reflection.BindingFlags.Instance);
+                    foreach (var o in realBlueprint.Objects)
+                    {
+                        // Force a fresh VB upload — is the house-apply-time SetData stale?
+                        try
+                        {
+                            var rend = dgrpField.GetValue(o);
+                            var itemsField = rend.GetType().GetField("Items",
+                                System.Reflection.BindingFlags.NonPublic | System.Reflection.BindingFlags.Instance);
+                            foreach (var item in (System.Collections.IEnumerable)itemsField.GetValue(rend))
+                            {
+                                var sp = (FSO.LotView.Utils._2DStandaloneSprite)item.GetType().GetField("Sprite").GetValue(item);
+                                // Sampler-clobber test: skip the depthTexture bind entirely.
+                                sp.Depth = null;
+                                sp.PrepareVertices(GraphicsDevice);
+                            }
+                        }
+                        catch { }
+                        o.Draw(GraphicsDevice, st);
+                    }
+                    _2d.EndImmediate();
+                }
+                if (!furnDrawDumped && realFurniturePlaced)
+                {
+                    furnDrawDumped = true;
+                    var st = realWorld.State;
+                    int drawable = 0;
+                    foreach (var o in realBlueprint.Objects)
+                        if (o.Level <= st.Level && o.DoDraw(st)) drawable++;
+                    var f = realBlueprint.Objects.Count > 0 ? realBlueprint.Objects[0] : null;
+                    Console.WriteLine($"furndraw drawable={drawable}/{realBlueprint.Objects.Count} " +
+                        $"rect={st.WorldRectangle} bounding={f?.Bounding} order={f?.DrawOrder} level={st.Level}");
+                    var cam2 = st.Camera2D;
+                    var vp2 = cam2.View * cam2.Projection;
+                    Console.WriteLine($"cam2dbg viewM11={cam2.View.M11:F4} viewM41={cam2.View.M41:F1},{cam2.View.M42:F1} " +
+                        $"projM11={cam2.Projection.M11:F6} vpM11={vp2.M11:F6} vpM41={vp2.M41:F2},{vp2.M42:F2}");
+                    try
+                    {
+                        var comp = realBlueprint.Objects[0];
+                        var dgrpField = typeof(ObjectComponent).GetField("dgrp",
+                            System.Reflection.BindingFlags.NonPublic | System.Reflection.BindingFlags.Instance);
+                        var rend = dgrpField.GetValue(comp);
+                        var itemsField = rend.GetType().GetField("Items",
+                            System.Reflection.BindingFlags.NonPublic | System.Reflection.BindingFlags.Instance)
+                            ?? rend.GetType().GetField("Items", System.Reflection.BindingFlags.Public | System.Reflection.BindingFlags.Instance);
+                        var items = (System.Collections.IEnumerable)itemsField.GetValue(rend);
+                        foreach (var item in items)
+                        {
+                            var sprite = (FSO.LotView.Utils._2DStandaloneSprite)item.GetType().GetField("Sprite").GetValue(item);
+                            Console.WriteLine($"spritedbg abs={sprite.AbsoluteDestRect} src={sprite.SrcRect} dest={sprite.DestRect} " +
+                                $"flip={sprite.FlipHorizontally} pixel={sprite.Pixel?.Width}x{sprite.Pixel?.Height} " +
+                                $"gpuv={(sprite.GPUVertices != null)} mode={sprite.RenderMode} room={sprite.Room} floor={sprite.Floor} " +
+                                $"absWorld={sprite.AbsoluteWorldPosition}");
+                            if (sprite.Pixel != null)
+                            {
+                                var lbuf = new Color[sprite.Pixel.Width * sprite.Pixel.Height];
+                                sprite.Pixel.GetData(lbuf);
+                                int lvis = 0;
+                                foreach (var p in lbuf) if (p.A > 0) lvis++;
+                                Console.WriteLine($"livetex visiblePx={lvis}/{lbuf.Length}");
+                            }
+                            break;
+                        }
+                    }
+                    catch (Exception rex) { Console.WriteLine("spritedbg failed: " + rex.Message); }
+                }
                 if (!realLotDebugDumped)
                 {
                     realLotDebugDumped = true;

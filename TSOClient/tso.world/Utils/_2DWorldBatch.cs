@@ -81,6 +81,7 @@ namespace FSO.LotView.Utils
         private short ObjectID;
         
         public bool OutputDepth = false;
+        static bool _ReassertLogged;
         public bool OBJIDMode = false;
         public Texture2D AmbientLight;
         public Texture2D AdvLight;
@@ -274,7 +275,10 @@ namespace FSO.LotView.Utils
 
         public void Resume()
         {
-            this.Begin(this.WorldCamera);
+            // Wall/object recaches can run from PreDraw before the world has ever
+            // drawn a frame (VM-fed blueprints apply arch immediately); WorldCamera
+            // is only set by Begin, so resuming with none yet is a no-op bracket.
+            if (this.WorldCamera != null) this.Begin(this.WorldCamera);
         }
 
         public _2DWorldRenderPlane WithBuffer(int bufferIndex, ref Promise<Texture2D> output, int depthBufferIndex, ref Promise<Texture2D> depthOutput)
@@ -346,7 +350,30 @@ namespace FSO.LotView.Utils
 
             effect.SetTechnique(technique);
             Device.Indices = SpriteIndices;
+
+            // KNIF (BlazorGL) collapses the three ViewProjection-semantic matrices at
+            // compile time such that the vertex POSITION transform reads
+            // worldViewProjection's registers. Until the FX are rebuilt with distinct
+            // semantics, write the pixel-space matrix into every collapsed slot. The
+            // depth varyings become meaningless — pair with drawZSprite +
+            // depthOutMode=true (no software depth compare) on this platform.
+            if (AliasedMatrixWorkaround)
+            {
+                var pix = this.View * this.Projection;
+                effect.viewProjection = pix;
+                effect.worldViewProjection = pix;
+                effect.rotProjection = pix;
+                effect.iWVP = Matrix.Invert(pix);
+                if (!_ReassertLogged)
+                {
+                    _ReassertLogged = true;
+                    System.Console.WriteLine("2dbatch: aliased-matrix workaround active (all VP slots = pixel ortho)");
+                }
+            }
         }
+
+        /// <summary>Browser/KNIF-only: see PrepareImmediate. Set by the BlazorGL client.</summary>
+        public static bool AliasedMatrixWorkaround;
 
         public void EnsureIndices()
         {
@@ -371,12 +398,35 @@ namespace FSO.LotView.Utils
                 Device.Indices = null; //monogame why
                 Device.Indices = SpriteIndices;
             }
+            // With software depth but no depth target (browser/ExternalWorld),
+            // RenderPPXDepth's else branch inherits whatever hardware depth state the
+            // arch pass left — terrain/RC-wall z culls every sprite quad (z=0). The
+            // software-depth branch disables hardware depth via its stencil states;
+            // match that here.
+            var restoreDS = (DepthStencilState)null;
+            if (FSOEnvironment.SoftwareDepth && !PPXDepthEngine.HasActiveDepth)
+            {
+                restoreDS = Device.DepthStencilState;
+                Device.DepthStencilState = DepthStencilState.None;
+            }
             PPXDepthEngine.RenderPPXDepth(effect, false, (depth) =>
             {
                 effect.pixelTexture = sprite.Pixel;
                 if (sprite.Depth != null) effect.depthTexture = sprite.Depth;
                 if (sprite.Mask != null) effect.maskTexture = sprite.Mask;
-                
+
+                if (AliasedMatrixWorkaround)
+                {
+                    // KNIF: only matrix writes issued immediately before Apply reach
+                    // the GPU reliably; re-write the pixel ortho into every VP slot
+                    // per draw (the exact sequence the working probe uses).
+                    var pix = this.View * this.Projection;
+                    effect.viewProjection = pix;
+                    effect.worldViewProjection = pix;
+                    effect.rotProjection = pix;
+                    effect.iWVP = Matrix.Invert(pix);
+                }
+
                 EffectPassCollection passes = effect.CurrentTechnique.Passes;
 
                 EffectPass pass = passes[Math.Min(passes.Count - 1, WorldConfig.Current.DirPassOffset)];
@@ -387,6 +437,7 @@ namespace FSO.LotView.Utils
                     Device.DrawIndexedPrimitives(PrimitiveType.TriangleList, 0, 0, 2);
                 }
             });
+            if (restoreDS != null) Device.DepthStencilState = restoreDS;
         }
 
         public void EndImmediate()
@@ -418,6 +469,9 @@ namespace FSO.LotView.Utils
                 var inv = Matrix.Invert(mat);
                 effect.iWVP = inv;
                 effect.rotProjection = ((WorldCamera)this.WorldCamera).GetRotationMatrix() * this.WorldCamera.Projection;
+                // See PrepareImmediate: KNIF aliases the ViewProjection-semantic
+                // matrices; re-assert the position matrix after the others.
+                effect.viewProjection = this.View * this.Projection;
                 //effect.Parameters["depthOutMode"].SetValue(outputDepth && (!FSOEnvironment.UseMRT));
             }
 

@@ -20,11 +20,22 @@ namespace FSO.SimAntics.Model.TSOPlatform
         };
         public static Dictionary<Type, VMAsyncStateType> TypeMarshal = TypeResolve.ToDictionary(x => x.Value, x => x.Key);
 
+        // Compile-time constructors: Mono on WASM fails Activator.CreateInstance
+        // (Arg_NoDefCTor) for types never directly constructed in the compiled app.
+        public static Dictionary<VMAsyncStateType, Func<VMAsyncState>> TypeFactories = new Dictionary<VMAsyncStateType, Func<VMAsyncState>>()
+        {
+            { VMAsyncStateType.TransferFunds, () => new VMTransferFundsState() },
+            { VMAsyncStateType.DialogResult, () => new VMDialogResult() },
+            { VMAsyncStateType.PluginState, () => new VMEODPluginThreadState() },
+            { VMAsyncStateType.InventoryOp, () => new VMInventoryOpState() }
+        };
+
         public static VMAsyncState DeserializeGeneric(BinaryReader reader, int version)
         {
             var type = (VMAsyncStateType)reader.ReadByte();
-            Type cmdType = TypeResolve[type];
-            var state = (VMAsyncState)Activator.CreateInstance(cmdType);
+            var state = TypeFactories.TryGetValue(type, out var factory)
+                ? factory()
+                : (VMAsyncState)Activator.CreateInstance(TypeResolve[type]);
             state.Version = version;
             state.Deserialize(reader);
             return state;
