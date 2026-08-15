@@ -52,7 +52,13 @@ step() { echo; echo "==> $*"; }
 # 1. Content bundle (needs TSO_DIR only when building it).
 if [ "$REBUILD" = 1 ] || [ ! -f "$OUT_DIR/content.tar.gz" ]; then
     [ -n "${TSO_DIR:-}" ] || { echo "FATAL: no bundle at $OUT_DIR and TSO_DIR not set" >&2; exit 1; }
-    [ -d "$PACKS_DIR" ] || { echo "FATAL: PACKS_DIR $PACKS_DIR not found (run FSO.PackCompiler build first)" >&2; exit 1; }
+    # Empty is as fatal as missing: a bundle without packs means an unfurnished
+    # lot and every furnish entry failing at host boot.
+    if ! ls "$PACKS_DIR"/*.iff >/dev/null 2>&1; then
+        echo "FATAL: no .iff files in PACKS_DIR $PACKS_DIR — build them first:" >&2
+        echo "  for j in \"$REPO\"/PackTools/examples/*.json; do dotnet run --project \"$REPO\"/PackTools/FSO.PackCompiler -- build \"\$j\" -o \"$PACKS_DIR\" --tso-dir \"\$TSO_DIR\"; done" >&2
+        exit 1
+    fi
     step "building content bundle → $OUT_DIR (a few minutes)"
     python3 "$SCRIPT_DIR/make_browser_content.py" \
         --tso-dir "$TSO_DIR" --repo "$REPO" --packs "$PACKS_DIR" --out "$OUT_DIR"
