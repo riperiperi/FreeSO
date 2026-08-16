@@ -343,6 +343,11 @@ namespace FSO_BrowserClient
                 if (d < bestDist) { bestDist = d; best = ent; }
             }
             if (best == null) return (null, null);
+            // Multi-tile objects keep their whole interaction table on the group
+            // master: every part's OBJD carries TreeTableID 65535, so GetPieMenu on a
+            // part returns nothing. Clicking a bed's foot must open the bed's menu,
+            // not silence.
+            if (best.MultitileGroup?.Objects?.Count > 0) best = best.MultitileGroup.Objects[0];
             var pie = best.GetPieMenu(vm, ava, false, true);
             return (best, pie);
         }
@@ -533,11 +538,19 @@ namespace FSO_BrowserClient
                 }
                 else
                 {
-                    // one billboard per multitile group, at the lead part
-                    if (ent.MultitileGroup != null && ent.MultitileGroup.Objects.Count > 0
-                        && ent.MultitileGroup.Objects[0] != ent) continue;
                     var guid = ent.Object?.OBJ?.GUID ?? 0;
-                    if (!texByGuid.TryGetValue(guid, out var tex)) continue;
+                    if (!texByGuid.TryGetValue(guid, out var tex))
+                    {
+                        // No art for this GUID. If it is a part of a multitile group
+                        // whose lead does have art, the lead already drew for the
+                        // whole group (that is how our single-billboard pack objects
+                        // work) — so drop it silently.
+                        continue;
+                    }
+                    // Real EA furniture has art per part, and the VM puts each part on
+                    // its own tile, so drawing every part with its own billboard is
+                    // what reassembles a 1x3 bed. Pack objects only ever have art on
+                    // the lead, so they are unaffected.
                     draws.Add((tile.X + tile.Y, tex, tile, false, Color.White));
                 }
             }

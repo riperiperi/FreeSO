@@ -1,0 +1,8 @@
+[
+ { "id": "ea_bed_single",     "guid": "0x0E82C943", "note": "Bed - Single - Cheap; TTAB 129 Sleep/Make Bed/Tuck In" },
+ { "id": "ea_bed_double",     "guid": "0x3089D8D2", "note": "Bed - Double - Cheap" },
+ { "id": "ea_sofa_loveseat",  "guid": "0x4EF4EA16", "note": "Sofa - Loveseat Cheap 1; TTAB 129 Sit/Nap" },
+ { "id": "ea_sofa",           "guid": "0x9BE0E2BF", "note": "Sofa - Cheap 1" },
+ { "id": "ea_dining_chair",   "guid": "0x26BFBB29", "note": "Chair - Dining - Cheap; slot 128, sit 4100 / stand 4102" },
+ { "id": "ea_fridge",         "guid": "0x675C18AF", "note": "Fridge - Cheap; TTAB 128 Have A Snack" }
+]

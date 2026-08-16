@@ -52,6 +52,10 @@ namespace FSO_BrowserClient
             {
                 var id = (string)o["id"];
                 var guid = Convert.ToUInt32((string)o["guid"], 16);
+                // EA objects in the manifest carry no iff of their own — their
+                // behaviour comes from objiff.far in the content bundle, and only
+                // their billboard png is ours. Nothing to load here.
+                if ((string)o["iff"] == null) continue;
                 try
                 {
                     var bytes = await http.GetByteArrayAsync(new Uri(packsBase, (string)o["iff"]));

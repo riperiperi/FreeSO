@@ -1,0 +1,15 @@
+<Project Sdk="Microsoft.NET.Sdk">
+
+  <PropertyGroup>
+    <OutputType>Exe</OutputType>
+    <TargetFramework>net9.0</TargetFramework>
+    <Nullable>disable</Nullable>
+    <RootNamespace>FSO.EaBillboards</RootNamespace>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <!-- PackCompiler brings FSO.Files (FAR1/IFF/DGRP/SPR2) and ArtGen.PngWriter. -->
+    <ProjectReference Include="..\FSO.PackCompiler\FSO.PackCompiler.csproj" />
+  </ItemGroup>
+
+</Project>

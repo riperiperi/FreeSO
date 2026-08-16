@@ -1,8 +1,8 @@
 {
- "comment": "Furniture placements for grove.xml (rooms: living 28,27 4x5 / dining 28,32 / kitchen 28,35 / bed2 32,27 / closet 36,27 / hall 32,31 / bath1 32,33 / maids 32,35 / corridor 35,33 / master 38,27 4x6 / sitting 38,33 / bath2 38,35). AI-imported CC0 objects, sprites in /objects.",
+ "comment": "Furniture placements for grove.xml. Beds, sofa, dining chairs and fridge are real EA base-game objects placed by GUID \u2014 their behaviour ships in the content bundle (objiff.far) and their billboards are exported by FSO.EaBillboards. The rest are AI-imported CC0 objects with sprites in /objects.",
  "furniture": [
   {
-   "id": "midcentury_sofa",
+   "id": "ea_sofa_loveseat",
    "x": 29,
    "y": 28
   },
@@ -22,17 +22,17 @@
    "y": 33
   },
   {
-   "id": "midcentury_dining_chair",
+   "id": "ea_dining_chair",
    "x": 28,
    "y": 33
   },
   {
-   "id": "midcentury_dining_chair",
+   "id": "ea_dining_chair",
    "x": 30,
    "y": 33
   },
   {
-   "id": "cc0_fridge",
+   "id": "ea_fridge",
    "x": 28,
    "y": 36
   },
@@ -47,7 +47,7 @@
    "y": 37
   },
   {
-   "id": "bedsingle",
+   "id": "ea_bed_single",
    "x": 33,
    "y": 28
   },
@@ -57,7 +57,7 @@
    "y": 27
   },
   {
-   "id": "beddouble",
+   "id": "ea_bed_double",
    "x": 39,
    "y": 28
   },

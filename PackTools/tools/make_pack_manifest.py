@@ -56,6 +56,16 @@ def main():
                 "png": png_by_id.get(oid),
             })
 
+    # EA base-game objects: behaviour comes from objiff.far inside the content
+    # bundle, and the art is exported to wwwroot/objects by FSO.EaBillboards. They
+    # have no .iff of our own, so they are appended here rather than built. Without
+    # this merge a regeneration silently drops every real Sims object from the lot.
+    ea = WWWROOT / "objects" / "ea-manifest.json"
+    if ea.exists():
+        ea_rows = json.loads(ea.read_text())
+        manifest.extend(ea_rows)
+        print(f"merged {len(ea_rows)} EA rows from {ea}")
+
     (out_dir / "manifest.json").write_text(json.dumps(manifest, indent=1) + "\n")
     print(f"wrote {out_dir / 'manifest.json'}: {len(manifest)} objects")
     if missing:

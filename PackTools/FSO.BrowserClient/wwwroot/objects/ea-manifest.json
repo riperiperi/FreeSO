@@ -1,0 +1,22 @@
+[
+ { "id": "ea_bed_single", "iff": null, "guid": "0x0E82C943", "png": null },
+ { "id": "ea_bed_single_p1", "iff": null, "guid": "0x52E7E5B7", "png": "ea_bed_single_p1.png" },
+ { "id": "ea_bed_single_p257", "iff": null, "guid": "0x4F4592F1", "png": "ea_bed_single_p257.png" },
+ { "id": "ea_bed_single_p513", "iff": null, "guid": "0x7D828304", "png": "ea_bed_single_p513.png" },
+ { "id": "ea_bed_double", "iff": null, "guid": "0x3089D8D2", "png": null },
+ { "id": "ea_bed_double_p0", "iff": null, "guid": "0x308BECBA", "png": "ea_bed_double_p0.png" },
+ { "id": "ea_bed_double_p1", "iff": null, "guid": "0x30889380", "png": "ea_bed_double_p1.png" },
+ { "id": "ea_bed_double_p256", "iff": null, "guid": "0x308BBC27", "png": "ea_bed_double_p256.png" },
+ { "id": "ea_bed_double_p257", "iff": null, "guid": "0x3088BEE5", "png": "ea_bed_double_p257.png" },
+ { "id": "ea_bed_double_p512", "iff": null, "guid": "0x308AF42D", "png": "ea_bed_double_p512.png" },
+ { "id": "ea_bed_double_p513", "iff": null, "guid": "0x3089C968", "png": "ea_bed_double_p513.png" },
+ { "id": "ea_sofa_loveseat", "iff": null, "guid": "0x4EF4EA16", "png": null },
+ { "id": "ea_sofa_loveseat_p0", "iff": null, "guid": "0x4EF5C773", "png": "ea_sofa_loveseat_p0.png" },
+ { "id": "ea_sofa_loveseat_p256", "iff": null, "guid": "0x4EF7E8D4", "png": "ea_sofa_loveseat_p256.png" },
+ { "id": "ea_sofa", "iff": null, "guid": "0x9BE0E2BF", "png": null },
+ { "id": "ea_sofa_p0", "iff": null, "guid": "0xB7F7FEC8", "png": "ea_sofa_p0.png" },
+ { "id": "ea_sofa_p256", "iff": null, "guid": "0x389CB727", "png": "ea_sofa_p256.png" },
+ { "id": "ea_sofa_p512", "iff": null, "guid": "0x389FFF2D", "png": "ea_sofa_p512.png" },
+ { "id": "ea_dining_chair", "iff": null, "guid": "0x26BFBB29", "png": "ea_dining_chair.png" },
+ { "id": "ea_fridge", "iff": null, "guid": "0x675C18AF", "png": "ea_fridge.png" }
+]
