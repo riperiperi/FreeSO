@@ -37,6 +37,12 @@ namespace FSO_BrowserClient.Pages
         }
 
         [JSInvokable]
+        public string DebugObjectAt(float tileX, float tileY)
+        {
+            return (_game as FSO_BrowserClientGame)?.DebugObjectAt(tileX, tileY) ?? "{}";
+        }
+
+        [JSInvokable]
         public string DebugScreenPos(float tileX, float tileY)
         {
             return (_game as FSO_BrowserClientGame)?.DebugScreenPos(tileX, tileY) ?? "{}";

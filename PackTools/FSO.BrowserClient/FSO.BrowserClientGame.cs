@@ -830,6 +830,21 @@ namespace FSO_BrowserClient
             return "[" + string.Join(",", items) + "]";
         }
 
+        /// <summary>Test hook: what object is actually at this tile? An empty pie
+        /// menu means "nothing to do here" *or* "nothing is here" — telling those
+        /// apart decides whether furniture needs behaviour or just moving.</summary>
+        public string DebugObjectAt(float tileX, float tileY)
+        {
+            if (vmClient == null || !vmClient.Synced) return "{\"found\":false}";
+            var (target, pie) = vmClient.PieMenuAt(new Vector2(tileX, tileY));
+            if (target == null) return "{\"found\":false}";
+            var guid = target.Object?.OBJ?.GUID ?? 0;
+            var name = (target.Object?.OBJ?.ChunkLabel ?? target.ToString() ?? "").Replace("\"", "'");
+            return $"{{\"found\":true,\"guid\":\"0x{guid:X8}\",\"name\":\"{name}\"" +
+                   $",\"objectID\":{target.ObjectID},\"tileX\":{target.Position.TileX},\"tileY\":{target.Position.TileY}" +
+                   $",\"options\":{(pie?.Count ?? 0)}}}";
+        }
+
         /// <summary>Test hook: where is my sim, and is it drawable? Visual QA
         /// needs the truth about the avatar, not an inference from pixels.</summary>
         public string DebugMe()

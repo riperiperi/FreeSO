@@ -1071,11 +1071,78 @@
               "else": "idle"
             }
           ]
+        },
+        "use_action": {
+          "args": [],
+          "locals": [],
+          "nodes": [
+            {
+              "id": "walk",
+              "prim": "goto_relative",
+              "location": "in_front_of",
+              "direction": "facing",
+              "then": "apply",
+              "else": "return false"
+            },
+            {
+              "id": "apply",
+              "prim": "expression",
+              "lhs": {
+                "scope": "my_motives",
+                "name": "energy"
+              },
+              "op": "+=",
+              "rhs": {
+                "scope": "literal",
+                "value": 60
+              },
+              "then": "return true",
+              "else": "error"
+            }
+          ]
+        },
+        "use_test": {
+          "args": [],
+          "locals": [],
+          "nodes": [
+            {
+              "id": "always",
+              "prim": "expression",
+              "lhs": {
+                "scope": "literal",
+                "value": 1
+              },
+              "op": "==",
+              "rhs": {
+                "scope": "literal",
+                "value": 1
+              },
+              "then": "return true",
+              "else": "return false"
+            }
+          ]
         }
       },
       "entry_points": {
         "main": "main_loop"
-      }
+      },
+      "interactions": [
+        {
+          "name": "Sleep",
+          "action": "use_action",
+          "test": "use_test",
+          "allow": {
+            "visitors": true,
+            "owner": true,
+            "roommates": true
+          },
+          "autonomy": {
+            "advertised_motives": {
+              "energy": 40
+            }
+          }
+        }
+      ]
     },
     {
       "id": "beddouble",
@@ -1109,11 +1176,78 @@
               "else": "idle"
             }
           ]
+        },
+        "use_action": {
+          "args": [],
+          "locals": [],
+          "nodes": [
+            {
+              "id": "walk",
+              "prim": "goto_relative",
+              "location": "in_front_of",
+              "direction": "facing",
+              "then": "apply",
+              "else": "return false"
+            },
+            {
+              "id": "apply",
+              "prim": "expression",
+              "lhs": {
+                "scope": "my_motives",
+                "name": "energy"
+              },
+              "op": "+=",
+              "rhs": {
+                "scope": "literal",
+                "value": 60
+              },
+              "then": "return true",
+              "else": "error"
+            }
+          ]
+        },
+        "use_test": {
+          "args": [],
+          "locals": [],
+          "nodes": [
+            {
+              "id": "always",
+              "prim": "expression",
+              "lhs": {
+                "scope": "literal",
+                "value": 1
+              },
+              "op": "==",
+              "rhs": {
+                "scope": "literal",
+                "value": 1
+              },
+              "then": "return true",
+              "else": "return false"
+            }
+          ]
         }
       },
       "entry_points": {
         "main": "main_loop"
-      }
+      },
+      "interactions": [
+        {
+          "name": "Sleep",
+          "action": "use_action",
+          "test": "use_test",
+          "allow": {
+            "visitors": true,
+            "owner": true,
+            "roommates": true
+          },
+          "autonomy": {
+            "advertised_motives": {
+              "energy": 40
+            }
+          }
+        }
+      ]
     },
     {
       "id": "bedbunk",
@@ -2318,11 +2452,78 @@
               "else": "idle"
             }
           ]
+        },
+        "use_action": {
+          "args": [],
+          "locals": [],
+          "nodes": [
+            {
+              "id": "walk",
+              "prim": "goto_relative",
+              "location": "in_front_of",
+              "direction": "facing",
+              "then": "apply",
+              "else": "return false"
+            },
+            {
+              "id": "apply",
+              "prim": "expression",
+              "lhs": {
+                "scope": "my_motives",
+                "name": "hygiene"
+              },
+              "op": "+=",
+              "rhs": {
+                "scope": "literal",
+                "value": 20
+              },
+              "then": "return true",
+              "else": "error"
+            }
+          ]
+        },
+        "use_test": {
+          "args": [],
+          "locals": [],
+          "nodes": [
+            {
+              "id": "always",
+              "prim": "expression",
+              "lhs": {
+                "scope": "literal",
+                "value": 1
+              },
+              "op": "==",
+              "rhs": {
+                "scope": "literal",
+                "value": 1
+              },
+              "then": "return true",
+              "else": "return false"
+            }
+          ]
         }
       },
       "entry_points": {
         "main": "main_loop"
-      }
+      },
+      "interactions": [
+        {
+          "name": "Wash Hands",
+          "action": "use_action",
+          "test": "use_test",
+          "allow": {
+            "visitors": true,
+            "owner": true,
+            "roommates": true
+          },
+          "autonomy": {
+            "advertised_motives": {
+              "hygiene": 15
+            }
+          }
+        }
+      ]
     },
     {
       "id": "bathroomcabinet",

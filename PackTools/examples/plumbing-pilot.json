@@ -15,7 +15,11 @@
       "name": "CC0 Toilet",
       "price": 180,
       "category": "misc",
-      "tags": ["cc0", "plumbing", "bathroom"],
+      "tags": [
+        "cc0",
+        "plumbing",
+        "bathroom"
+      ],
       "appearance": {
         "imported": {
           "mesh": "../assets/cc0/quaternius/Bathroom_Toilet.obj",
@@ -34,8 +38,16 @@
           "name": "Use",
           "action": "use_action",
           "test": "use_test",
-          "allow": { "visitors": true, "owner": true, "roommates": true },
-          "autonomy": { "advertised_motives": { "bladder": 30 } }
+          "allow": {
+            "visitors": true,
+            "owner": true,
+            "roommates": true
+          },
+          "autonomy": {
+            "advertised_motives": {
+              "bladder": 30
+            }
+          }
         }
       ],
       "trees": {
@@ -43,27 +55,85 @@
           "args": [],
           "locals": [],
           "nodes": [
-            { "id": "walk", "prim": "goto_relative", "location": "in_front_of", "direction": "facing", "then": "relieve", "else": "return false" },
-            { "id": "relieve", "prim": "expression", "lhs": { "scope": "my_motives", "name": "bladder" }, "op": "-=", "rhs": { "scope": "literal", "value": 50 }, "then": "done", "else": "error" },
-            { "id": "done", "prim": "expression", "lhs": { "scope": "literal", "value": 1 }, "op": "==", "rhs": { "scope": "literal", "value": 1 }, "then": "return true", "else": "return false" }
+            {
+              "id": "walk",
+              "prim": "goto_relative",
+              "location": "in_front_of",
+              "direction": "facing",
+              "then": "relieve",
+              "else": "return false"
+            },
+            {
+              "id": "relieve",
+              "prim": "expression",
+              "lhs": {
+                "scope": "my_motives",
+                "name": "bladder"
+              },
+              "op": "+=",
+              "rhs": {
+                "scope": "literal",
+                "value": 50
+              },
+              "then": "done",
+              "else": "error"
+            },
+            {
+              "id": "done",
+              "prim": "expression",
+              "lhs": {
+                "scope": "literal",
+                "value": 1
+              },
+              "op": "==",
+              "rhs": {
+                "scope": "literal",
+                "value": 1
+              },
+              "then": "return true",
+              "else": "return false"
+            }
           ]
         },
         "use_test": {
           "args": [],
           "locals": [],
           "nodes": [
-            { "id": "always", "prim": "expression", "lhs": { "scope": "literal", "value": 1 }, "op": "==", "rhs": { "scope": "literal", "value": 1 }, "then": "return true", "else": "return false" }
+            {
+              "id": "always",
+              "prim": "expression",
+              "lhs": {
+                "scope": "literal",
+                "value": 1
+              },
+              "op": "==",
+              "rhs": {
+                "scope": "literal",
+                "value": 1
+              },
+              "then": "return true",
+              "else": "return false"
+            }
           ]
         },
         "main_loop": {
           "args": [],
           "locals": [],
           "nodes": [
-            { "id": "idle", "prim": "idle_for_input", "ticks_param": 0, "allow_push": false, "then": "idle", "else": "idle" }
+            {
+              "id": "idle",
+              "prim": "idle_for_input",
+              "ticks_param": 0,
+              "allow_push": false,
+              "then": "idle",
+              "else": "idle"
+            }
           ]
         }
       },
-      "entry_points": { "main": "main_loop" }
+      "entry_points": {
+        "main": "main_loop"
+      }
     },
     {
       "id": "cc0_shower",
@@ -71,7 +141,11 @@
       "name": "CC0 Shower",
       "price": 320,
       "category": "misc",
-      "tags": ["cc0", "plumbing", "bathroom"],
+      "tags": [
+        "cc0",
+        "plumbing",
+        "bathroom"
+      ],
       "appearance": {
         "imported": {
           "mesh": "../assets/cc0/quaternius/Bathroom_Shower1.obj",
@@ -90,8 +164,16 @@
           "name": "Take Shower",
           "action": "use_action",
           "test": "use_test",
-          "allow": { "visitors": true, "owner": true, "roommates": true },
-          "autonomy": { "advertised_motives": { "hygiene": 30 } }
+          "allow": {
+            "visitors": true,
+            "owner": true,
+            "roommates": true
+          },
+          "autonomy": {
+            "advertised_motives": {
+              "hygiene": 30
+            }
+          }
         }
       ],
       "trees": {
@@ -99,27 +181,85 @@
           "args": [],
           "locals": [],
           "nodes": [
-            { "id": "walk", "prim": "goto_relative", "location": "in_front_of", "direction": "facing", "then": "clean", "else": "return false" },
-            { "id": "clean", "prim": "expression", "lhs": { "scope": "my_motives", "name": "hygiene" }, "op": "-=", "rhs": { "scope": "literal", "value": 50 }, "then": "done", "else": "error" },
-            { "id": "done", "prim": "expression", "lhs": { "scope": "literal", "value": 1 }, "op": "==", "rhs": { "scope": "literal", "value": 1 }, "then": "return true", "else": "return false" }
+            {
+              "id": "walk",
+              "prim": "goto_relative",
+              "location": "in_front_of",
+              "direction": "facing",
+              "then": "clean",
+              "else": "return false"
+            },
+            {
+              "id": "clean",
+              "prim": "expression",
+              "lhs": {
+                "scope": "my_motives",
+                "name": "hygiene"
+              },
+              "op": "+=",
+              "rhs": {
+                "scope": "literal",
+                "value": 50
+              },
+              "then": "done",
+              "else": "error"
+            },
+            {
+              "id": "done",
+              "prim": "expression",
+              "lhs": {
+                "scope": "literal",
+                "value": 1
+              },
+              "op": "==",
+              "rhs": {
+                "scope": "literal",
+                "value": 1
+              },
+              "then": "return true",
+              "else": "return false"
+            }
           ]
         },
         "use_test": {
           "args": [],
           "locals": [],
           "nodes": [
-            { "id": "always", "prim": "expression", "lhs": { "scope": "literal", "value": 1 }, "op": "==", "rhs": { "scope": "literal", "value": 1 }, "then": "return true", "else": "return false" }
+            {
+              "id": "always",
+              "prim": "expression",
+              "lhs": {
+                "scope": "literal",
+                "value": 1
+              },
+              "op": "==",
+              "rhs": {
+                "scope": "literal",
+                "value": 1
+              },
+              "then": "return true",
+              "else": "return false"
+            }
           ]
         },
         "main_loop": {
           "args": [],
           "locals": [],
           "nodes": [
-            { "id": "idle", "prim": "idle_for_input", "ticks_param": 0, "allow_push": false, "then": "idle", "else": "idle" }
+            {
+              "id": "idle",
+              "prim": "idle_for_input",
+              "ticks_param": 0,
+              "allow_push": false,
+              "then": "idle",
+              "else": "idle"
+            }
           ]
         }
       },
-      "entry_points": { "main": "main_loop" }
+      "entry_points": {
+        "main": "main_loop"
+      }
     },
     {
       "id": "cc0_tub",
@@ -127,7 +267,11 @@
       "name": "CC0 Bathtub",
       "price": 450,
       "category": "misc",
-      "tags": ["cc0", "plumbing", "bathroom"],
+      "tags": [
+        "cc0",
+        "plumbing",
+        "bathroom"
+      ],
       "appearance": {
         "imported": {
           "mesh": "../assets/cc0/quaternius/Bathroom_Bathtub.obj",
@@ -146,8 +290,17 @@
           "name": "Take Bath",
           "action": "use_action",
           "test": "use_test",
-          "allow": { "visitors": true, "owner": true, "roommates": true },
-          "autonomy": { "advertised_motives": { "hygiene": 35, "comfort": 15 } }
+          "allow": {
+            "visitors": true,
+            "owner": true,
+            "roommates": true
+          },
+          "autonomy": {
+            "advertised_motives": {
+              "hygiene": 35,
+              "comfort": 15
+            }
+          }
         }
       ],
       "trees": {
@@ -155,28 +308,100 @@
           "args": [],
           "locals": [],
           "nodes": [
-            { "id": "walk", "prim": "goto_relative", "location": "in_front_of", "direction": "facing", "then": "clean", "else": "return false" },
-            { "id": "clean", "prim": "expression", "lhs": { "scope": "my_motives", "name": "hygiene" }, "op": "-=", "rhs": { "scope": "literal", "value": 60 }, "then": "comfort", "else": "error" },
-            { "id": "comfort", "prim": "expression", "lhs": { "scope": "my_motives", "name": "comfort" }, "op": "-=", "rhs": { "scope": "literal", "value": 20 }, "then": "done", "else": "error" },
-            { "id": "done", "prim": "expression", "lhs": { "scope": "literal", "value": 1 }, "op": "==", "rhs": { "scope": "literal", "value": 1 }, "then": "return true", "else": "return false" }
+            {
+              "id": "walk",
+              "prim": "goto_relative",
+              "location": "in_front_of",
+              "direction": "facing",
+              "then": "clean",
+              "else": "return false"
+            },
+            {
+              "id": "clean",
+              "prim": "expression",
+              "lhs": {
+                "scope": "my_motives",
+                "name": "hygiene"
+              },
+              "op": "+=",
+              "rhs": {
+                "scope": "literal",
+                "value": 60
+              },
+              "then": "comfort",
+              "else": "error"
+            },
+            {
+              "id": "comfort",
+              "prim": "expression",
+              "lhs": {
+                "scope": "my_motives",
+                "name": "comfort"
+              },
+              "op": "+=",
+              "rhs": {
+                "scope": "literal",
+                "value": 20
+              },
+              "then": "done",
+              "else": "error"
+            },
+            {
+              "id": "done",
+              "prim": "expression",
+              "lhs": {
+                "scope": "literal",
+                "value": 1
+              },
+              "op": "==",
+              "rhs": {
+                "scope": "literal",
+                "value": 1
+              },
+              "then": "return true",
+              "else": "return false"
+            }
           ]
         },
         "use_test": {
           "args": [],
           "locals": [],
           "nodes": [
-            { "id": "always", "prim": "expression", "lhs": { "scope": "literal", "value": 1 }, "op": "==", "rhs": { "scope": "literal", "value": 1 }, "then": "return true", "else": "return false" }
+            {
+              "id": "always",
+              "prim": "expression",
+              "lhs": {
+                "scope": "literal",
+                "value": 1
+              },
+              "op": "==",
+              "rhs": {
+                "scope": "literal",
+                "value": 1
+              },
+              "then": "return true",
+              "else": "return false"
+            }
           ]
         },
         "main_loop": {
           "args": [],
           "locals": [],
           "nodes": [
-            { "id": "idle", "prim": "idle_for_input", "ticks_param": 0, "allow_push": false, "then": "idle", "else": "idle" }
+            {
+              "id": "idle",
+              "prim": "idle_for_input",
+              "ticks_param": 0,
+              "allow_push": false,
+              "then": "idle",
+              "else": "idle"
+            }
           ]
         }
       },
-      "entry_points": { "main": "main_loop" }
+      "entry_points": {
+        "main": "main_loop"
+      }
     },
     {
       "id": "cc0_sink",
@@ -184,7 +409,11 @@
       "name": "CC0 Sink",
       "price": 120,
       "category": "misc",
-      "tags": ["cc0", "plumbing", "bathroom"],
+      "tags": [
+        "cc0",
+        "plumbing",
+        "bathroom"
+      ],
       "appearance": {
         "imported": {
           "mesh": "../assets/cc0/quaternius/Bathroom_Sink.obj",
@@ -203,8 +432,16 @@
           "name": "Wash Hands",
           "action": "use_action",
           "test": "use_test",
-          "allow": { "visitors": true, "owner": true, "roommates": true },
-          "autonomy": { "advertised_motives": { "hygiene": 15 } }
+          "allow": {
+            "visitors": true,
+            "owner": true,
+            "roommates": true
+          },
+          "autonomy": {
+            "advertised_motives": {
+              "hygiene": 15
+            }
+          }
         }
       ],
       "trees": {
@@ -212,27 +449,85 @@
           "args": [],
           "locals": [],
           "nodes": [
-            { "id": "walk", "prim": "goto_relative", "location": "in_front_of", "direction": "facing", "then": "clean", "else": "return false" },
-            { "id": "clean", "prim": "expression", "lhs": { "scope": "my_motives", "name": "hygiene" }, "op": "-=", "rhs": { "scope": "literal", "value": 25 }, "then": "done", "else": "error" },
-            { "id": "done", "prim": "expression", "lhs": { "scope": "literal", "value": 1 }, "op": "==", "rhs": { "scope": "literal", "value": 1 }, "then": "return true", "else": "return false" }
+            {
+              "id": "walk",
+              "prim": "goto_relative",
+              "location": "in_front_of",
+              "direction": "facing",
+              "then": "clean",
+              "else": "return false"
+            },
+            {
+              "id": "clean",
+              "prim": "expression",
+              "lhs": {
+                "scope": "my_motives",
+                "name": "hygiene"
+              },
+              "op": "+=",
+              "rhs": {
+                "scope": "literal",
+                "value": 25
+              },
+              "then": "done",
+              "else": "error"
+            },
+            {
+              "id": "done",
+              "prim": "expression",
+              "lhs": {
+                "scope": "literal",
+                "value": 1
+              },
+              "op": "==",
+              "rhs": {
+                "scope": "literal",
+                "value": 1
+              },
+              "then": "return true",
+              "else": "return false"
+            }
           ]
         },
         "use_test": {
           "args": [],
           "locals": [],
           "nodes": [
-            { "id": "always", "prim": "expression", "lhs": { "scope": "literal", "value": 1 }, "op": "==", "rhs": { "scope": "literal", "value": 1 }, "then": "return true", "else": "return false" }
+            {
+              "id": "always",
+              "prim": "expression",
+              "lhs": {
+                "scope": "literal",
+                "value": 1
+              },
+              "op": "==",
+              "rhs": {
+                "scope": "literal",
+                "value": 1
+              },
+              "then": "return true",
+              "else": "return false"
+            }
           ]
         },
         "main_loop": {
           "args": [],
           "locals": [],
           "nodes": [
-            { "id": "idle", "prim": "idle_for_input", "ticks_param": 0, "allow_push": false, "then": "idle", "else": "idle" }
+            {
+              "id": "idle",
+              "prim": "idle_for_input",
+              "ticks_param": 0,
+              "allow_push": false,
+              "then": "idle",
+              "else": "idle"
+            }
           ]
         }
       },
-      "entry_points": { "main": "main_loop" }
+      "entry_points": {
+        "main": "main_loop"
+      }
     },
     {
       "id": "cc0_stove",
@@ -240,7 +535,11 @@
       "name": "CC0 Stove",
       "price": 380,
       "category": "appliances",
-      "tags": ["cc0", "kitchen", "appliance"],
+      "tags": [
+        "cc0",
+        "kitchen",
+        "appliance"
+      ],
       "appearance": {
         "imported": {
           "mesh": "../assets/cc0/quaternius/Kitchen_Oven.obj",
@@ -259,8 +558,16 @@
           "name": "Cook",
           "action": "use_action",
           "test": "use_test",
-          "allow": { "visitors": true, "owner": true, "roommates": true },
-          "autonomy": { "advertised_motives": { "hunger": 25 } }
+          "allow": {
+            "visitors": true,
+            "owner": true,
+            "roommates": true
+          },
+          "autonomy": {
+            "advertised_motives": {
+              "hunger": 25
+            }
+          }
         }
       ],
       "trees": {
@@ -268,27 +575,85 @@
           "args": [],
           "locals": [],
           "nodes": [
-            { "id": "walk", "prim": "goto_relative", "location": "in_front_of", "direction": "facing", "then": "eat", "else": "return false" },
-            { "id": "eat", "prim": "expression", "lhs": { "scope": "my_motives", "name": "hunger" }, "op": "-=", "rhs": { "scope": "literal", "value": 40 }, "then": "done", "else": "error" },
-            { "id": "done", "prim": "expression", "lhs": { "scope": "literal", "value": 1 }, "op": "==", "rhs": { "scope": "literal", "value": 1 }, "then": "return true", "else": "return false" }
+            {
+              "id": "walk",
+              "prim": "goto_relative",
+              "location": "in_front_of",
+              "direction": "facing",
+              "then": "eat",
+              "else": "return false"
+            },
+            {
+              "id": "eat",
+              "prim": "expression",
+              "lhs": {
+                "scope": "my_motives",
+                "name": "hunger"
+              },
+              "op": "+=",
+              "rhs": {
+                "scope": "literal",
+                "value": 40
+              },
+              "then": "done",
+              "else": "error"
+            },
+            {
+              "id": "done",
+              "prim": "expression",
+              "lhs": {
+                "scope": "literal",
+                "value": 1
+              },
+              "op": "==",
+              "rhs": {
+                "scope": "literal",
+                "value": 1
+              },
+              "then": "return true",
+              "else": "return false"
+            }
           ]
         },
         "use_test": {
           "args": [],
           "locals": [],
           "nodes": [
-            { "id": "always", "prim": "expression", "lhs": { "scope": "literal", "value": 1 }, "op": "==", "rhs": { "scope": "literal", "value": 1 }, "then": "return true", "else": "return false" }
+            {
+              "id": "always",
+              "prim": "expression",
+              "lhs": {
+                "scope": "literal",
+                "value": 1
+              },
+              "op": "==",
+              "rhs": {
+                "scope": "literal",
+                "value": 1
+              },
+              "then": "return true",
+              "else": "return false"
+            }
           ]
         },
         "main_loop": {
           "args": [],
           "locals": [],
           "nodes": [
-            { "id": "idle", "prim": "idle_for_input", "ticks_param": 0, "allow_push": false, "then": "idle", "else": "idle" }
+            {
+              "id": "idle",
+              "prim": "idle_for_input",
+              "ticks_param": 0,
+              "allow_push": false,
+              "then": "idle",
+              "else": "idle"
+            }
           ]
         }
       },
-      "entry_points": { "main": "main_loop" }
+      "entry_points": {
+        "main": "main_loop"
+      }
     },
     {
       "id": "cc0_fridge",
@@ -296,7 +661,11 @@
       "name": "CC0 Fridge",
       "price": 420,
       "category": "appliances",
-      "tags": ["cc0", "kitchen", "appliance"],
+      "tags": [
+        "cc0",
+        "kitchen",
+        "appliance"
+      ],
       "appearance": {
         "imported": {
           "mesh": "../assets/cc0/quaternius/Kitchen_Fridge.obj",
@@ -315,8 +684,16 @@
           "name": "Get Snack",
           "action": "use_action",
           "test": "use_test",
-          "allow": { "visitors": true, "owner": true, "roommates": true },
-          "autonomy": { "advertised_motives": { "hunger": 20 } }
+          "allow": {
+            "visitors": true,
+            "owner": true,
+            "roommates": true
+          },
+          "autonomy": {
+            "advertised_motives": {
+              "hunger": 20
+            }
+          }
         }
       ],
       "trees": {
@@ -324,27 +701,85 @@
           "args": [],
           "locals": [],
           "nodes": [
-            { "id": "walk", "prim": "goto_relative", "location": "in_front_of", "direction": "facing", "then": "eat", "else": "return false" },
-            { "id": "eat", "prim": "expression", "lhs": { "scope": "my_motives", "name": "hunger" }, "op": "-=", "rhs": { "scope": "literal", "value": 30 }, "then": "done", "else": "error" },
-            { "id": "done", "prim": "expression", "lhs": { "scope": "literal", "value": 1 }, "op": "==", "rhs": { "scope": "literal", "value": 1 }, "then": "return true", "else": "return false" }
+            {
+              "id": "walk",
+              "prim": "goto_relative",
+              "location": "in_front_of",
+              "direction": "facing",
+              "then": "eat",
+              "else": "return false"
+            },
+            {
+              "id": "eat",
+              "prim": "expression",
+              "lhs": {
+                "scope": "my_motives",
+                "name": "hunger"
+              },
+              "op": "+=",
+              "rhs": {
+                "scope": "literal",
+                "value": 30
+              },
+              "then": "done",
+              "else": "error"
+            },
+            {
+              "id": "done",
+              "prim": "expression",
+              "lhs": {
+                "scope": "literal",
+                "value": 1
+              },
+              "op": "==",
+              "rhs": {
+                "scope": "literal",
+                "value": 1
+              },
+              "then": "return true",
+              "else": "return false"
+            }
           ]
         },
         "use_test": {
           "args": [],
           "locals": [],
           "nodes": [
-            { "id": "always", "prim": "expression", "lhs": { "scope": "literal", "value": 1 }, "op": "==", "rhs": { "scope": "literal", "value": 1 }, "then": "return true", "else": "return false" }
+            {
+              "id": "always",
+              "prim": "expression",
+              "lhs": {
+                "scope": "literal",
+                "value": 1
+              },
+              "op": "==",
+              "rhs": {
+                "scope": "literal",
+                "value": 1
+              },
+              "then": "return true",
+              "else": "return false"
+            }
           ]
         },
         "main_loop": {
           "args": [],
           "locals": [],
           "nodes": [
-            { "id": "idle", "prim": "idle_for_input", "ticks_param": 0, "allow_push": false, "then": "idle", "else": "idle" }
+            {
+              "id": "idle",
+              "prim": "idle_for_input",
+              "ticks_param": 0,
+              "allow_push": false,
+              "then": "idle",
+              "else": "idle"
+            }
           ]
         }
       },
-      "entry_points": { "main": "main_loop" }
+      "entry_points": {
+        "main": "main_loop"
+      }
     }
   ]
 }

@@ -208,6 +208,7 @@
             pie: (tx, ty) => window.theInstance.invokeMethod('DebugPie', tx, ty),
             screenPos: (tx, ty) => window.theInstance.invokeMethod('DebugScreenPos', tx, ty),
             me: () => window.theInstance.invokeMethod('DebugMe'),
+            objectAt: (tx, ty) => window.theInstance.invokeMethod('DebugObjectAt', tx, ty),
             interact: (callee, id) => window.theInstance.invokeMethod('PieSelect', callee, id),
         };
 
