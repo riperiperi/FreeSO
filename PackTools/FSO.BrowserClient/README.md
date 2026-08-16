@@ -8,6 +8,10 @@ pie-menu interactions crossing between them.
 Not a mockup and not a replay — each tab boots the real content system, runs the
 real VM, and stays in sync tick for tick (verified by matching entity hashes).
 
+Sims render as real skinned Vitaboy bodies by default, and the demo house is
+furnished with real base-game EA objects (placed by GUID, not just CC0 packs) —
+click one for its real pie menu.
+
 ## Play
 
 **You need:** .NET 9 SDK, Python 3, Chrome, and a TSO install (the folder that
@@ -51,8 +55,8 @@ house.
 | **1 / 2 / 3** | zoom near / medium / far |
 | **Q / E** | rotate the lot |
 
-Your sim is the capsule with the **yellow arrow**; it walks into the house by
-itself when you join, and the camera follows it until you pan away.
+Your sim is the one with the **yellow arrow** over its head; it walks into the
+house by itself when you join, and the camera follows it until you pan away.
 
 ## What the script does, and how long it takes
 
@@ -105,9 +109,12 @@ rm -rf ~/browser-publish ~/browser-content    # keeps ~/packs-out (the slow part
 `tests/` runs the game headlessly through Playwright (`npm i playwright`):
 
 ```sh
-node tests/pie_menu_vm.js  http://127.0.0.1:5259 /tmp/pie      # click → pie menu → interaction runs
-node tests/two_tab_vm.js   http://127.0.0.1:5259 /tmp/twotab   # two tabs, chat crosses, no desync
-node tests/visual_qa.js    http://127.0.0.1:5259 /tmp/qa       # screenshots through a session
+node tests/pie_menu_vm.js       http://127.0.0.1:5259 /tmp/pie      # click → pie menu → interaction runs
+node tests/two_tab_vm.js        http://127.0.0.1:5259 /tmp/twotab   # two tabs, chat crosses, no desync
+node tests/visual_qa.js         http://127.0.0.1:5259 /tmp/qa       # screenshots through a session
+node tests/mixed_mode_vm.js     http://127.0.0.1:5259               # ?vitaboy=1 vs plain tab, entity-hash desync check
+node tests/interaction_audit.js http://127.0.0.1:5259 grove         # every furnished object's real pie menu, usable count
+node tests/ea_interaction.js    http://127.0.0.1:5259 <x> <y> "<Option Name>"  # queue → route → arrive, not just menu presence
 ```
 
 `visual_qa.js` exists because console assertions passed while the game was
@@ -136,6 +143,7 @@ browser tab  ──ws──►  FSO.WsGateway  ──tcp──►  FSO.LotHostLi
 | | |
 |---|---|
 | `?vm=1&name=…` | the game: shared VM, pie menus, chat |
+| `?vitaboy=0` | capsule sims instead of the default real skinned bodies |
 | `?house=grove` | arch-only view, no VM (older path, still works) |
 | `?lot=real` | terrain only |
 | `?furnish=png\|real` | billboard vs DGRP furniture in the no-VM path |
@@ -143,9 +151,16 @@ browser tab  ──ws──►  FSO.WsGateway  ──tcp──►  FSO.LotHostLi
 
 ## Known gaps
 
-- **Sims are capsules.** Vitaboy avatar rendering is not wired up in the browser.
-- **Furniture is billboards.** True DGRP sprites don't rasterise through the KNI
+- **Furniture art is billboards.** True DGRP sprites don't rasterise through the KNI
   batch — a real anomaly, documented in `../docs/SESSION-LANES.md`. Billboards are
   fed from live VM positions, so behaviour is correct even though the art is flat.
+- **Sleep on EA beds queues, then silently reverts to Idle.** Diagnosed, not fixed:
+  `VM.OnDialog` is now wired up (browser + `FSO.LotHostLite`), so a real SimAntics
+  exception would be visible — none fires. Neither `VMMemory.GetSlot` returning null
+  nor `VMSlotParser` finding zero routing candidates fires either (both are now
+  logged). Whatever rejects the interaction is earlier in the bed's own behavior tree
+  than any routing/slot primitive; pinning down the exact primitive needs BHAV
+  bytecode disassembly. Sitting (chairs) and every other tested interaction route and
+  complete normally.
 - **No depth against walls** — draw order only.
 - **The lot host stands in for the archive server**; no accounts, no city.
