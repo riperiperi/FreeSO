@@ -5,6 +5,7 @@ using FSO.LotView;
 using FSO.LotView.Model;
 using FSO.SimAntics;
 using FSO.SimAntics.Entities;
+using FSO.SimAntics.Model;
 using FSO.Vitaboy;
 using Microsoft.Xna.Framework;
 using Microsoft.Xna.Framework.Graphics;
@@ -117,16 +118,12 @@ namespace FSO_BrowserClient
                 {
                     // Where do the matrices actually put this sim? A silent layer and
                     // a layer drawing off-screen look identical from the console.
-                    var head = model.Skeleton.GetBone("HEAD")?.AbsolutePosition ?? Vector3.Zero;
-                    var clip = Vector4.Transform(new Vector4(head, 1), world * state.View * state.Projection);
-                    var ndc = new Vector2(clip.X / clip.W, clip.Y / clip.W);
+                    var headBone = model.Skeleton.GetBone("HEAD")?.AbsolutePosition ?? Vector3.Zero;
+                    var clip = Vector4.Transform(new Vector4(headBone, 1), world * state.View * state.Projection);
                     var vp = gd.Viewport;
-                    Console.WriteLine($"vitaboy: sim {ava.ObjectID} tile={pos.X:F1},{pos.Y:F1} " +
-                        $"head-ndc={ndc.X:F2},{ndc.Y:F2} screen=" +
-                        $"{(int)((ndc.X + 1) * 0.5f * vp.Width)},{(int)((1 - ndc.Y) * 0.5f * vp.Height)} " +
-                        $"bindings={model.Bindings.Count} " +
-                        $"meshes={model.Bindings.Count(b => b.Mesh != null)} " +
-                        $"textures={model.Bindings.Count(b => b.Texture != null)}");
+                    Console.WriteLine($"vitaboy: sim {ava.ObjectID} at tile {pos.X:F1},{pos.Y:F1}, " +
+                        $"head on screen {(int)((clip.X / clip.W + 1) * 0.5f * vp.Width)}," +
+                        $"{(int)((1 - clip.Y / clip.W) * 0.5f * vp.Height)}");
                 }
             }
 
@@ -158,9 +155,6 @@ namespace FSO_BrowserClient
                     return null;
                 }
 
-                step = "skeleton";
-                var skel = content.AvatarSkeletons?.Get("adult.skel");
-                Console.WriteLine($"vitaboy: adult.skel={(skel == null ? "MISSING" : skel.Bones?.Length.ToString() + " bones")}");
                 step = "model ctor";
                 var model = new AdultVitaboyModel();
                 if (model.Skeleton == null)
@@ -169,17 +163,19 @@ namespace FSO_BrowserClient
                     failed.Add(ava.ObjectID);
                     return null;
                 }
-                step = "appearance";
-                model.Appearance = ava.SkinTone;
-
                 // The VM keeps outfit references whether or not it has a world, so
-                // the browser reads what the host already decided for this sim.
+                // the browser reads what the host already decided for this sim — and
+                // then fixes it up, because in a sandbox nobody decided anything.
                 step = "outfit lookup";
-                var body = ava.BodyOutfit?.GetContent();
-                var head = ava.HeadOutfit?.GetContent();
-                Console.WriteLine($"vitaboy: sim {ava.ObjectID} bodyRef={ava.BodyOutfit?.Name ?? "null"}/{ava.BodyOutfit?.ID ?? 0:x16} " +
-                    $"headRef={ava.HeadOutfit?.Name ?? "null"}/{ava.HeadOutfit?.ID ?? 0:x16} " +
-                    $"bodyContent={(body == null ? "null" : "ok")} headContent={(head == null ? "null" : "ok")}");
+                var look = Look.For(ava.PersistID);
+                var body = Dressed(content, ava.BodyOutfit, look.Body, "body");
+                var head = Dressed(content, ava.HeadOutfit, look.Head, "head");
+
+                step = "appearance";
+                // The outfit carries light/medium/dark variants; picking the tone here
+                // rather than trusting SkinTone means the fallback look is complete.
+                model.Appearance = ava.SkinTone == AppearanceType.Light ? look.Skin : ava.SkinTone;
+
                 step = "body";
                 if (body != null)
                 {
@@ -187,14 +183,10 @@ namespace FSO_BrowserClient
                     model.Handgroup = body; // adults use the body outfit for hands
                 }
                 step = "head";
-                // Sandbox joins carry no head reference, so without a fallback the
-                // sim renders decapitated. This is the same default VMAvatar itself
-                // reaches for when a person has no head data.
-                head = head ?? FSO.Content.Content.Get().AvatarOutfits.Get(0x000003a00000000D);
                 if (head != null) model.Head = head;
                 if (body == null && head == null)
                 {
-                    Status = $"sim {ava.ObjectID} has no outfit references";
+                    Status = $"sim {ava.ObjectID} has no usable outfit";
                     failed.Add(ava.ObjectID);
                     return null;
                 }
@@ -202,9 +194,8 @@ namespace FSO_BrowserClient
                 step = "reload skeleton";
                 model.ReloadSkeleton();
                 models[ava.ObjectID] = model;
-                Console.WriteLine($"vitaboy: built sim {ava.ObjectID} " +
-                    $"body={body?.GetType().Name ?? "none"} head={head?.GetType().Name ?? "none"} " +
-                    $"bindings={model.Bindings.Count}");
+                Console.WriteLine($"vitaboy: dressed sim {ava.ObjectID} as {look.Name} " +
+                    $"({model.Bindings.Count} bindings, {model.Appearance} skin)");
                 return model;
             }
             catch (Exception e)
@@ -216,6 +207,87 @@ namespace FSO_BrowserClient
                 Console.WriteLine($"vitaboy: {Status} (at {step})");
                 Console.WriteLine(e.StackTrace);
                 return null;
+            }
+        }
+
+        /// <summary>
+        /// Resolve an outfit, replacing TSO's own placeholder with a real one.
+        ///
+        /// A sim who never went through character creation gets
+        /// VMAvatarDefaultSuits.Daywear, and that is literally
+        /// "mab000_xy__proxy.oft" — the blue question-mark texture TSO shows for
+        /// content it has not downloaded. It resolves perfectly and renders an
+        /// alien. Anything whose name says proxy gets swapped for the chosen look.
+        /// </summary>
+        static Outfit Dressed(FSO.Content.Content content, VMOutfitReference vmRef, ulong fallbackId, string what)
+        {
+            var outfits = content.AvatarOutfits;
+            var chosen = vmRef?.GetContent();
+            if (chosen != null && vmRef.ID != 0)
+            {
+                var name = outfits.GetNameByID(vmRef.ID) ?? "";
+                if (!name.Contains("proxy", StringComparison.OrdinalIgnoreCase)) return chosen;
+            }
+            var real = outfits.Get(fallbackId);
+            if (real == null) Console.WriteLine($"vitaboy: no {what} outfit for 0x{fallbackId:x16}");
+            return real ?? chosen;
+        }
+
+        /// <summary>
+        /// A stable appearance per player, derived from PersistID.
+        ///
+        /// Nobody in this build has a character creator, so without this every sim on
+        /// the lot is the same person. PersistID is assigned by the host and is
+        /// identical in every client, so each player looks the same to everyone
+        /// without adding a single byte to the lockstep protocol.
+        ///
+        /// IDs are TSO base-game outfit file ids (type 0x0D), read out of
+        /// avatardata/{bodies,heads}/outfits. Bodies and heads are gendered, so both
+        /// are picked from the same side of the split.
+        /// </summary>
+        readonly struct Look
+        {
+            public readonly ulong Body;
+            public readonly ulong Head;
+            public readonly AppearanceType Skin;
+            public readonly string Name;
+
+            Look(ulong body, ulong head, AppearanceType skin, string name)
+            { Body = body; Head = head; Skin = skin; Name = name; }
+
+            const ulong Oft = 0x0000000D; // outfit type id, low half of the content id
+
+            static ulong Id(uint file) => Oft | ((ulong)file << 32);
+
+            static readonly (uint body, uint head, string name)[] Male =
+            {
+                (0x252, 0x3a1, "casual"),
+                (0x256, 0x3a2, "nerd"),
+                (0x25b, 0x3a4, "slob"),
+                (0x25d, 0x3a6, "alt"),
+                (0x258, 0x3a8, "ross"),
+            };
+
+            static readonly (uint body, uint head, string name)[] Female =
+            {
+                (0x007, 0x186, "mom"),
+                (0x00d, 0x18b, "ave"),
+                (0x011, 0x18e, "lynn"),
+                (0x00a, 0x190, "scrubs"),
+            };
+
+            static readonly AppearanceType[] Skins =
+            { AppearanceType.Light, AppearanceType.Medium, AppearanceType.Dark };
+
+            public static Look For(uint persistID)
+            {
+                // Knuth multiplicative hash: adjacent PersistIDs (which is what a
+                // sandbox hands out) must not produce adjacent-looking sims.
+                var h = persistID * 2654435761u;
+                var set = ((h >> 8) & 1) == 0 ? Male : Female;
+                var pick = set[(h >> 9) % (uint)set.Length];
+                return new Look(Id(pick.body), Id(pick.head),
+                    Skins[(h >> 16) % (uint)Skins.Length], pick.name);
             }
         }
 

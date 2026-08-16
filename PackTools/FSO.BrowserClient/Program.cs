@@ -11,6 +11,8 @@ namespace FSO_BrowserClient
     {
         private static async Task Main(string[] args)
         {
+            BrowserImageLoader.Install();
+
             var builder = WebAssemblyHostBuilder.CreateDefault(args);
             builder.RootComponents.Add<App>("#app");
             builder.RootComponents.Add<HeadOutlet>("head::after");
