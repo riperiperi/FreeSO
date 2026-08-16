@@ -905,16 +905,14 @@ namespace FSO_BrowserClient
 
                 spriteBatch.Begin();
                 if (DrawRealLot && furniture != null) furniture.Draw(spriteBatch, realWorld.State);
-                if (DrawRealLot && vmClient != null) vmClient.DrawEntities(spriteBatch, realWorld.State, vitaboy);
+                // Real Sims bodies interleave into this same per-tile depth order
+                // now (see DrawEntities' doc comment) — a sim on a tile "behind" a
+                // table draws behind it, not on top of it. DrawEntities flushes and
+                // reopens the batch around each body draw as needed.
+                if (DrawRealLot && vmClient != null)
+                    vmClient.DrawEntities(GraphicsDevice, spriteBatch, realWorld.State,
+                        VitaboyLayer.Enabled ? vitaboy : null);
                 spriteBatch.End();
-
-                // Real Sims bodies last, and outside the sprite batch — they are a
-                // plain 3D draw that SpriteBatch.Begin would stomp. Drawing them over
-                // the billboards rather than under is deliberate: the billboards have
-                // no depth either, and a sim swallowed by a table reads as no sim at
-                // all. Correct sorting waits on the ledgered depth work.
-                if (DrawRealLot && VitaboyLayer.Enabled && vmClient != null)
-                    vitaboy.Draw(GraphicsDevice, realWorld.State, vmClient.vm);
 
                 spriteBatch.Begin();
                 DrawLotStatusStrip();
