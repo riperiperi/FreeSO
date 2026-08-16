@@ -108,6 +108,18 @@ namespace FSO.SimAntics
         private short ObjectId = 1;
 
         internal VMNetDriver Driver;
+
+        /// <summary>
+        /// The real, server-synchronized tick this VM has processed, for
+        /// diagnostics — NOT how many times a caller has invoked <see cref="Tick"/>.
+        /// A client's Tick() call runs zero to thousands of buffered ticks depending
+        /// on network catch-up state, so a caller's own call-count is not comparable
+        /// across two independently-paced clients (a browser tab's, say). This is:
+        /// the same TickID two clients agree on if and only if they are replaying
+        /// the same lockstep stream, which is what "in sync" actually means.
+        /// </summary>
+        public uint CurrentSyncTick => Driver?.CurrentTick ?? 0;
+
         public VMHeadlineRendererProvider Headline;
 
         public bool Ready;

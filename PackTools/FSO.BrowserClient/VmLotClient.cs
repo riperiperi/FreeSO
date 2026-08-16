@@ -41,6 +41,7 @@ namespace FSO_BrowserClient
         VMClientDriver driver;
         double tickAccum;
         long localTicks;
+        uint lastSyncTickLogged = uint.MaxValue; // dedupe: CurrentSyncTick can repeat within a catch-up burst
         long syncedAtTick = -1;
         bool autoChatSent;
         bool interactArmed, interactSeen;
@@ -173,6 +174,19 @@ namespace FSO_BrowserClient
                 vm.Tick();
                 GameThread.UpdateExecuting = false;
                 localTicks++;
+
+                // Sample right after each real vm.Tick() call, keyed on the real
+                // synced TickID, not on localTicks — see CurrentSyncTick's doc
+                // comment. Checking here (once per real tick this client executes)
+                // is what makes the modulo boundary land exactly in the normal
+                // 1-tick-per-call steady state; checking after the whole burst that
+                // a catch-up call can run would frequently skip past it.
+                if (Synced && lastSyncTickLogged != vm.CurrentSyncTick && vm.CurrentSyncTick % 30 == 0)
+                {
+                    lastSyncTickLogged = vm.CurrentSyncTick;
+                    Console.WriteLine($"vm tick={localTicks} synctick={vm.CurrentSyncTick} " +
+                        $"entities={vm.Entities.Count} hash={EntityHash()}");
+                }
             }
             if (guard >= 10) tickAccum = 0; // fell far behind (tab hidden); drop time
 
@@ -240,8 +254,6 @@ namespace FSO_BrowserClient
                 Console.WriteLine("vm sent chat: " + AutoChat);
             }
 
-            if (Synced && localTicks % 300 == 0)
-                Console.WriteLine($"vm tick={localTicks} entities={vm.Entities.Count} hash={EntityHash()}");
 
             // After SendInteraction, report when it lands in our avatar's queue —
             // the "interaction executes in the VM" acceptance line.
