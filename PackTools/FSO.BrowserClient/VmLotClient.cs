@@ -355,15 +355,28 @@ namespace FSO_BrowserClient
         {
             var ava = MyAvatar;
             if (ava == null || !Synced) return (null, null);
-            VMEntity best = null;
-            float bestDist = 1.6f; // ~1.5 tile pick radius
+            // Windows and doors are real placed VMEntity instances (from the house XML's
+            // <objects>, loaded before Furnish() places furniture), not architecture
+            // metadata — so a flat nearest-neighbour search treats a window exactly like
+            // any other object, and a furniture piece against a wall routinely loses a
+            // proximity tie to the window/door behind it. Bucket them separately: any
+            // furniture within the normal pick radius always wins, and a window/door is
+            // only picked when nothing else qualifies and the click is close to the
+            // fixture itself (a much tighter radius than furniture gets).
+            VMEntity bestFurniture = null, bestArch = null;
+            float bestFurnitureDist = 1.6f; // ~1.5 tile pick radius
+            float bestArchDist = 0.75f; // fallback only, once furniture has had first pick
             foreach (var ent in vm.Entities)
             {
                 if (ent is VMAvatar) continue;
                 if (ent.Position == LotTilePos.OUT_OF_WORLD) continue;
                 var d = Vector2.Distance(new Vector2(ent.Position.x / 16f, ent.Position.y / 16f), tile);
-                if (d < bestDist) { bestDist = d; best = ent; }
+                var flags2 = (VMEntityFlags2)ent.GetValue(VMStackObjectVariable.FlagField2);
+                var isArch = (flags2 & (VMEntityFlags2.ArchitectualWindow | VMEntityFlags2.ArchitectualDoor)) != 0;
+                if (isArch) { if (d < bestArchDist) { bestArchDist = d; bestArch = ent; } }
+                else { if (d < bestFurnitureDist) { bestFurnitureDist = d; bestFurniture = ent; } }
             }
+            var best = bestFurniture ?? bestArch;
             if (best == null) return (null, null);
             // Do NOT redirect a multitile part to its master here. Parts carry
             // TreeTableID 65535, but VMEntity.UseTreeTableOf copies the master's
