@@ -120,7 +120,7 @@ namespace FSO.Client.UI.Archive.Management
 
             Add(_statusLabel = new UILabel()
             {
-                Caption = "Loading...",
+                Caption = GameFacade.Strings.GetString("f128", "330"),
                 Position = _listBox.Position,
                 Size = _listBox.Size,
                 Wrapped = true,

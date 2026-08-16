@@ -13,7 +13,7 @@ using System.Net.NetworkInformation;
 
 namespace FSO.Client.UI.Archive
 {
-    internal class UIArchiveHostInformation : UIDialog
+    internal class UIArchiveHostInformation : UIArchiveDialog
     {
         private enum ArchiveServerType : int
         {
@@ -42,7 +42,7 @@ namespace FSO.Client.UI.Archive
 
         public UIArchiveHostInformation(CoreGameScreenController controller) : base(UIDialogStyle.Close, false)
         {
-            Caption = GameFacade.Strings.GetString("f128", "19");
+            Caption = GetString("19");
             var ui = Content.Content.Get().CustomUI;
             CopyButtonTexture = ui.Get("chat_cat.png").Get(GameFacade.GraphicsDevice);
 
@@ -84,7 +84,7 @@ namespace FSO.Client.UI.Archive
 
             vbox.Add(ServerTypeLabel = new UILabel()
             {
-                Caption = GameFacade.Strings.GetString("f128", (20 + (int)serverType).ToString()),
+                Caption = GetString((20 + (int)serverType).ToString()),
                 Wrapped = true,
             });
 
@@ -92,7 +92,7 @@ namespace FSO.Client.UI.Archive
             {
                 vbox.Add(ServerWarningLabel = new UILabel()
                 {
-                    Caption = GameFacade.Strings.GetString("f128", "24"),
+                    Caption = GetString("24"),
                     CaptionStyle = warningStyle
                 });
             }
@@ -103,7 +103,7 @@ namespace FSO.Client.UI.Archive
 
                 vbox.Add(ShowIPButton = new UIButton()
                 {
-                    Caption = GameFacade.Strings.GetString("f128", "25")
+                    Caption = GetString("25")
                 });
 
                 ShowIPButton.OnButtonClick += ShowIPs;
@@ -122,7 +122,7 @@ namespace FSO.Client.UI.Archive
         {
             var enabled = DiscordRpcEngine.PublicArchive;
 
-            DiscordButton.Tooltip = GameFacade.Strings.GetString("f128", enabled ? "112" : "110");
+            DiscordButton.Tooltip = GetString(enabled ? "112" : "110");
             DiscordButton.Disabled = enabled;
         }
 
@@ -138,12 +138,12 @@ namespace FSO.Client.UI.Archive
                     {
                         if (task.IsCanceled || task.IsFaulted)
                         {
-                            UIAlert.Alert("", GameFacade.Strings.GetString("f128", "119"), true);
+                            UIAlert.Alert("", GetString("119"), true);
                         }
                         else
                         {
                             DiscordRpcEngine.SetArchiveAddress(AddPort(task.Result));
-                            UIAlert.Alert(GameFacade.Strings.GetString("f128", "110"), GameFacade.Strings.GetString("f128", "111"), true);
+                            UIAlert.Alert(GetString("110"), GetString("111"), true);
                         }
 
                         UpdateDiscordButtonState();
@@ -155,7 +155,7 @@ namespace FSO.Client.UI.Archive
                 var ip = FindController<CoreGameScreenController>().ArchiveHost.CityAddress;
 
                 DiscordRpcEngine.SetArchiveAddress(ip);
-                UIAlert.Alert(GameFacade.Strings.GetString("f128", "110"), GameFacade.Strings.GetString("f128", "111"), true);
+                UIAlert.Alert(GetString("110"), GetString("111"), true);
 
                 UpdateDiscordButtonState();
             }
@@ -207,14 +207,14 @@ namespace FSO.Client.UI.Archive
 
             vbox.Add(new UILabel()
             {
-                Caption = GameFacade.Strings.GetString("f128", "26"), // Public IP:
+                Caption = GetString("26"), // Public IP:
                 CaptionStyle = TitleStyle,
             });
 
             var hbox = new UIHBoxContainer();
             hbox.Add(PublicIPLabel = new UILabel()
             {
-                Caption = GameFacade.Strings.GetString("f128", "27") // fetching
+                Caption = GetString("27") // fetching
             });
             hbox.AutoSize();
 
@@ -231,7 +231,7 @@ namespace FSO.Client.UI.Archive
                 // Display private IPs too
                 vbox.Add(new UILabel()
                 {
-                    Caption = GameFacade.Strings.GetString("f128", "28"), // Private IPs:
+                    Caption = GetString("28"), // Private IPs:
                     CaptionStyle = TitleStyle,
                 });
 
@@ -289,7 +289,7 @@ namespace FSO.Client.UI.Archive
             var btn = new UIButton()
             {
                 Texture = CopyButtonTexture,
-                Caption = GameFacade.Strings.GetString("f128", "33"), // Copy
+                Caption = GetString("33"), // Copy
                 CaptionStyle = CopyStyle,
             };
 
@@ -298,7 +298,7 @@ namespace FSO.Client.UI.Archive
                 ClipboardHandler.Default.Set(copyString);
                 UIScreen.GlobalShowAlert(new UIAlertOptions()
                 {
-                    Message = GameFacade.Strings.GetString("f128", "34"), // Copied to clipboard
+                    Message = GetString("34"), // Copied to clipboard
                 }, true);
             };
 
@@ -362,7 +362,7 @@ namespace FSO.Client.UI.Archive
                     {
                         if (result == null)
                         {
-                            PublicIPLabel.Caption = GameFacade.Strings.GetString("f128", "35");
+                            PublicIPLabel.Caption = GetString("35");
                         }
                         else
                         {

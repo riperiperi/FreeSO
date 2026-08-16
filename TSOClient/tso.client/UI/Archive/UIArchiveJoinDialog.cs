@@ -73,7 +73,7 @@ namespace FSO.Client.UI.Archive
         }
     }
 
-    internal class UIArchiveJoinDialog : UIDialog
+    internal class UIArchiveJoinDialog : UIArchiveDialog
     {
         public UIArchiveDisplayName DisplayName;
         public UIButton AddServerButton;
@@ -92,7 +92,7 @@ namespace FSO.Client.UI.Archive
 
         public UIArchiveJoinDialog() : base(UIDialogStyle.Close, true)
         {
-            Caption = "Join Server";
+            Caption = GetString("99");
 
             var gd = GameFacade.GraphicsDevice;
 
@@ -104,15 +104,15 @@ namespace FSO.Client.UI.Archive
             ServerDiscordIcon = ui.Get("archive_discordserver.png").Get(gd);
 
             ButtonBox = new UIHBoxContainer() { VerticalAlignment = UIContainerVerticalAlignment.Middle };
-            ButtonBox.Add(AddServerButton = new UIButton() { Caption = "Add Server" });
+            ButtonBox.Add(AddServerButton = new UIButton() { Caption = GetString("147") });
             ButtonBox.Add(JoinButton = new UIButton() { Caption = "Join", Disabled = true });
             ButtonBox.AutoSize();
 
             ServerTable = new UIGenericTable([
                 new UITableColumn("", 22),
-                new UITableColumn(GameFacade.Strings.GetString("f128", "133"), 192),
-                new UITableColumn(GameFacade.Strings.GetString("f128", "134"), 64),
-                new UITableColumn(GameFacade.Strings.GetString("f128", "135"), 64),
+                new UITableColumn(GetString("133"), 192),
+                new UITableColumn(GetString("134"), 64),
+                new UITableColumn(GetString("135"), 64),
                 new UITableColumn("", 14),
                 ], 250)
             { Loading = false };
@@ -201,7 +201,7 @@ namespace FSO.Client.UI.Archive
             ClipboardHandler.Default.Set(server.Address);
             UIScreen.GlobalShowAlert(new UIAlertOptions()
             {
-                Message = GameFacade.Strings.GetString("f128", "34"), // Copied to clipboard
+                Message = GetString("34"), // Copied to clipboard
             }, true);
         }
 
@@ -209,9 +209,9 @@ namespace FSO.Client.UI.Archive
         {
             var items = new List<UIContextMenuItem>
             {
-                new(GameFacade.Strings.GetString("f128", "139"), () => { Refresh(server); }),
-                new(GameFacade.Strings.GetString("f128", "136"), () => { Forget(server); }),
-                new(GameFacade.Strings.GetString("f128", "137"), () => { CopyIP(server); }),
+                new(GetString("139"), () => { Refresh(server); }),
+                new(GetString("136"), () => { Forget(server); }),
+                new(GetString("137"), () => { CopyIP(server); }),
             };
 
             new UIContextMenu(anchor, items, ServerTable);
@@ -242,7 +242,7 @@ namespace FSO.Client.UI.Archive
                     GetTypeIcon(server.ServerType),
                     server.Name,
                     status?.Version?.id ?? "",
-                    status == null ? "--" : (status.Value.IsOnline ? status.Value.Players.ToString() : GameFacade.Strings.GetString("f128", "138")),
+                    status == null ? "--" : (status.Value.IsOnline ? status.Value.Players.ToString() : GetString("138")),
                     actionButton)
                 {
                     Disabled = status?.IsOnline != true

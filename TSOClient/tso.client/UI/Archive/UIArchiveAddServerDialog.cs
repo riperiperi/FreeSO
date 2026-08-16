@@ -13,7 +13,7 @@ namespace FSO.Client.UI.Archive
         public readonly bool IsFreeSO = isFreeSO;
     }
 
-    internal class UIArchiveAddServerDialog : UIDialog
+    internal class UIArchiveAddServerDialog : UIArchiveDialog
     {
         private readonly UILabel DescriptionLabel;
         private readonly UILabel AddressLabel;
@@ -38,7 +38,7 @@ namespace FSO.Client.UI.Archive
 
             RootBox.Add(DescriptionLabel = new UILabel()
             {
-                Caption = GameFacade.Strings.GetString("f128", "148"),
+                Caption = GetString("148"),
                 Size = new Vector2(300, 50),
                 Wrapped = true
             });
@@ -53,7 +53,7 @@ namespace FSO.Client.UI.Archive
             });
             RootBox.Add(AddressInput = new UITextBox() { Size = new Vector2(300, 25) });
 
-            RootBox.Add(AddButton = new UIButton() { Caption = GameFacade.Strings.GetString("f128", "147"), Disabled = true });
+            RootBox.Add(AddButton = new UIButton() { Caption = GetString("147"), Disabled = true });
 
             Add(RootBox);
 
@@ -86,7 +86,7 @@ namespace FSO.Client.UI.Archive
         private void Reset()
         {
             StatusStyle.Color = new Color(255, 122, 77);
-            StatusLabel.Caption = GameFacade.Strings.GetString("f128", "151");
+            StatusLabel.Caption = GetString("151");
             AddressInput.Mode = UITextEditMode.Editor;
             IsFetching = false;
             AddressChanged(AddressInput);
@@ -97,7 +97,7 @@ namespace FSO.Client.UI.Archive
             var address = AddressInput.CurrentText;
             IsFetching = true;
             StatusStyle.Color = Color.White;
-            StatusLabel.Caption = GameFacade.Strings.GetString("f128", "150");
+            StatusLabel.Caption = GetString("150");
             AddButton.Disabled = true;
             AddressInput.Mode = UITextEditMode.ReadOnly;
 

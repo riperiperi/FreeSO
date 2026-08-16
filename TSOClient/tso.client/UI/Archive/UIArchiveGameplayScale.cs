@@ -6,7 +6,7 @@ using Microsoft.Xna.Framework;
 
 namespace FSO.Client.UI.Archive
 {
-    internal class UIArchiveGameplayScale : UIDialog
+    internal class UIArchiveGameplayScale : UIArchiveDialog
     {
         public UITextBox FundsInput;
 
@@ -29,7 +29,7 @@ namespace FSO.Client.UI.Archive
         public UIArchiveGameplayScale(ArchiveConfiguration config) : base(UIDialogStyle.OK, true)
         {
             Config = config;
-            Caption = "Skill/Money Cheats";
+            Caption = GetString("300");
             var vbox = new UIVBoxContainer() { HorizontalAlignment = UIContainerHorizontalAlignment.Center };
 
             config.LoadEvents();
@@ -45,7 +45,7 @@ namespace FSO.Client.UI.Archive
 
             vbox.Add(desc = new UILabel()
             {
-                Caption = "Increase the speed of skilling or the payout of money objects.\nSome objects may not correctly report multiplied payouts - keep an eye on your balance.",
+                Caption = GetString("301"),
                 Wrapped = true
             });
 
@@ -55,7 +55,7 @@ namespace FSO.Client.UI.Archive
 
             fundsBox.Add(new UILabel()
             {
-                Caption = "Starting funds: "
+                Caption = GetString("302")
             });
 
             fundsBox.Add(new UISpacer(250, 5));
@@ -84,7 +84,7 @@ namespace FSO.Client.UI.Archive
 
             skillBox.Add(new UILabel()
             {
-                Caption = "Skill speed: "
+                Caption = GetString("303")
             });
 
             skillBox.Add(SkillSlider = new UISlider()
@@ -113,7 +113,7 @@ namespace FSO.Client.UI.Archive
 
             payoutBox.Add(new UILabel()
             {
-                Caption = "Payout multiplier: "
+                Caption = GetString("304")
             });
 
             payoutBox.Add(PayoutSlider = new UISlider()
@@ -142,7 +142,7 @@ namespace FSO.Client.UI.Archive
 
             penaltyBox.Add(new UILabel()
             {
-                Caption = "Singleplayer Penalty: "
+                Caption = GetString("305")
             });
 
             penaltyBox.Add(PenaltySlider = new UISlider()
@@ -171,12 +171,12 @@ namespace FSO.Client.UI.Archive
 
             buttonsBox.Add(HelpButton = new UIButton()
             {
-                Caption = GameFacade.Strings.GetString("f128", "127")
+                Caption = GetString("127")
             });
 
             buttonsBox.Add(ResetButton = new UIButton()
             {
-                Caption = GameFacade.Strings.GetString("f128", "128")
+                Caption = GetString("128")
             });
 
             vbox.Add(buttonsBox);
@@ -229,11 +229,11 @@ namespace FSO.Client.UI.Archive
             UIAlert alert = null;
             alert = UIScreen.GlobalShowAlert(new UIAlertOptions()
             {
-                Title = GameFacade.Strings.GetString("f128", "128"),
-                Message = GameFacade.Strings.GetString("f128", "129"),
+                Title = GetString("128"),
+                Message = GetString("129"),
                 Buttons = [
-                    new UIAlertButton(UIAlertButtonType.Yes, (btn) => { Reset(ref Events, true); UpdateAll(); UIScreen.RemoveDialog(alert); }, GameFacade.Strings.GetString("f128", "130")),
-                    new UIAlertButton(UIAlertButtonType.No, (btn) => { Reset(ref Events, false); UpdateAll(); UIScreen.RemoveDialog(alert); }, GameFacade.Strings.GetString("f128", "131"))
+                    new UIAlertButton(UIAlertButtonType.Yes, (btn) => { Reset(ref Events, true); UpdateAll(); UIScreen.RemoveDialog(alert); }, GetString("130")),
+                    new UIAlertButton(UIAlertButtonType.No, (btn) => { Reset(ref Events, false); UpdateAll(); UIScreen.RemoveDialog(alert); }, GetString("131"))
                 ]
             }, true);
         }
@@ -261,8 +261,8 @@ namespace FSO.Client.UI.Archive
             UIAlert alert = null;
             alert = UIScreen.GlobalShowAlert(new UIAlertOptions()
             {
-                Title = GameFacade.Strings.GetString("f128", "127"),
-                Message = GameFacade.Strings.GetString("f128", "126"),
+                Title = GetString("127"),
+                Message = GetString("126"),
                 Width = 600,
                 Buttons = [
                     new UIAlertButton(UIAlertButtonType.OK, (btn) => { UIScreen.RemoveDialog(alert); }),

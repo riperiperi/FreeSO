@@ -10,7 +10,7 @@ using Microsoft.Xna.Framework;
 
 namespace FSO.Client.UI.Archive
 {
-    internal class UIArchiveConfigExportDialog : UIDialog
+    internal class UIArchiveConfigExportDialog : UIArchiveDialog
     {
         public UITextBox PathInput;
         public UIButton ExportButton;
@@ -25,14 +25,14 @@ namespace FSO.Client.UI.Archive
             Config = config;
             Manifest = manifest;
 
-            Caption = GameFacade.Strings.GetString("f128", "36");
+            Caption = GetString("36");
             var vbox = new UIVBoxContainer() { HorizontalAlignment = UIContainerHorizontalAlignment.Center };
 
             UILabel desc;
 
             vbox.Add(desc = new UILabel()
             {
-                Caption = GameFacade.Strings.GetString("f128", "37"),
+                Caption = GetString("37"),
                 Wrapped = true
             });
 
@@ -42,7 +42,7 @@ namespace FSO.Client.UI.Archive
 
             pathBox.Add(new UILabel()
             {
-                Caption = GameFacade.Strings.GetString("f128", "44")
+                Caption = GetString("44")
             });
 
             pathBox.Add(PathInput = new UITextBox() { });
@@ -53,8 +53,8 @@ namespace FSO.Client.UI.Archive
 
             var flagsVbox = new UIVBoxContainer();
 
-            CreateCheck(flagsVbox, GameFacade.Strings.GetString("f128", "38"), ArchiveAbsolute, (bool value) => { ArchiveAbsolute = value; });
-            CreateCheck(flagsVbox, GameFacade.Strings.GetString("f128", "39"), TSOAbsolute, (bool value) => { TSOAbsolute = value; });
+            CreateCheck(flagsVbox, GetString("38"), ArchiveAbsolute, (bool value) => { ArchiveAbsolute = value; });
+            CreateCheck(flagsVbox, GetString("39"), TSOAbsolute, (bool value) => { TSOAbsolute = value; });
 
             flagsVbox.AutoSize();
 
@@ -66,7 +66,7 @@ namespace FSO.Client.UI.Archive
 
             vbox2.Add(ExportButton = new UIButton()
             {
-                Caption = GameFacade.Strings.GetString("f128", "40")
+                Caption = GetString("40")
             });
 
             vbox2.AutoSize(); //TODO: somehow force horiz size from parent?
@@ -133,13 +133,13 @@ namespace FSO.Client.UI.Archive
                         }
 
                         UIAlert.Alert(
-                            GameFacade.Strings.GetString("f128", "47"),
-                            GameFacade.Strings.GetString("f128", clipboardSuccess ? "45" : "43", [path]),
+                            GetString("47"),
+                            GetString(clipboardSuccess ? "45" : "43", path),
                             true);
                     }
                     catch (Exception)
                     {
-                        UIAlert.Alert(GameFacade.Strings.GetString("f128", "41"), GameFacade.Strings.GetString("f128", "42", [path]), true);
+                        UIAlert.Alert(GetString("41"), GetString("42", path), true);
                     }
                 }
             });

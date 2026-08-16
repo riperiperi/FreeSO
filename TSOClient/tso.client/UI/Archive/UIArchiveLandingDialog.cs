@@ -6,15 +6,10 @@ using FSO.Common;
 using FSO.Common.Rendering.Framework.Model;
 using Microsoft.Xna.Framework;
 using Microsoft.Xna.Framework.Graphics;
-using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
 
 namespace FSO.Client.UI.Archive
 {
-    internal class UIArchiveLandingDialog : UIDialog
+    internal class UIArchiveLandingDialog : UIArchiveDialog
     {
         public UIButton CreateButton;
         public UIButton JoinButton;
@@ -63,7 +58,7 @@ namespace FSO.Client.UI.Archive
                 Position = new Vector2((Width - QuickStartButtonImage.Width / 4) / 2, Height - 36),
                 Size = new Vector2(QuickStartButtonImage.Width / 4, QuickStartButtonImage.Height),
                 CaptionStyle = LargeButtonTextStyle,
-                Caption = "Quick Start"
+                Caption = GetString("240")
             };
 
             DynamicOverlay.Add(QuickStartButton);
@@ -84,7 +79,7 @@ namespace FSO.Client.UI.Archive
                 Size = new Vector2(0, 1),
                 Alignment = Framework.TextAlignment.Center | Framework.TextAlignment.Top,
                 CaptionStyle = LargeButtonTextStyle,
-                Caption = "Host Server"
+                Caption = GetString("241")
             });
 
             Add(JoinButtonText = new UILabel()
@@ -93,12 +88,12 @@ namespace FSO.Client.UI.Archive
                 Size = new Vector2(0, 1),
                 Alignment = Framework.TextAlignment.Center | Framework.TextAlignment.Top,
                 CaptionStyle = LargeButtonTextStyle,
-                Caption = "Join Server"
+                Caption = GetString("99")
             });
 
             Add(new UILabel()
             {
-                Caption = "Host or join a server to get started.",
+                Caption = GetString("242"),
                 Position = new Vector2(Width / 2, 59),
                 Alignment = Framework.TextAlignment.Center | Framework.TextAlignment.Top,
                 Size = new Vector2(0, 1)
@@ -108,7 +103,7 @@ namespace FSO.Client.UI.Archive
             JoinButton.OnButtonClick += Join;
             QuickStartButton.OnButtonClick += QuickStart;
 
-            QuickStartButton.Tooltip = "Quick Start will begin a singleplayer session of the last used archive data.";
+            QuickStartButton.Tooltip = GetString("243");
         }
 
         private void QuickStart(Framework.UIElement button)

@@ -11,7 +11,7 @@ using Microsoft.Xna.Framework.Graphics;
 
 namespace FSO.Client.UI.Archive
 {
-    public class UIArchiveUserList : UIDialog
+    public class UIArchiveUserList : UIArchiveDialog
     {
         private ArchiveClientList LastList;
         private UIImage ListBackground;
@@ -28,7 +28,7 @@ namespace FSO.Client.UI.Archive
 
         public UIArchiveUserList() : base(UIDialogStyle.Close, true)
         {
-            Caption = "User List";
+            Caption = GetString("270");
 
             var gd = GameFacade.GraphicsDevice;
 
@@ -141,7 +141,7 @@ namespace FSO.Client.UI.Archive
 
         private void Kick(ArchiveClient client)
         {
-            UIAlert.YesNo($"Kick {client.DisplayName}", $"Are you sure you want to kick {client.DisplayName} from the server?", true, (bool result) =>
+            UIAlert.YesNo(GetString("271", client.DisplayName), GetString("272", client.DisplayName), true, (bool result) =>
             {
                 if (result)
                 {
@@ -153,7 +153,7 @@ namespace FSO.Client.UI.Archive
 
         private void Ban(ArchiveClient client)
         {
-            UIAlert.YesNo($"Ban {client.DisplayName}", $"Are you sure you want to ban {client.DisplayName} from the server? They won't be able to rejoin from the same client or IP, until they are manually unbanned from the users list.", true, (bool result) =>
+            UIAlert.YesNo(GetString("273", client.DisplayName), GetString("274", client.DisplayName), true, (bool result) =>
             {
                 if (result)
                 {
@@ -165,7 +165,7 @@ namespace FSO.Client.UI.Archive
 
         private void Ban(ArchivePendingVerification client)
         {
-            UIAlert.YesNo($"Ban {client.DisplayName}", $"Are you sure you want to ban {client.DisplayName} from the server? They won't be able to apply for verification from the same client or IP, until they are manually unbanned from the users list.", true, (bool result) =>
+            UIAlert.YesNo(GetString("273", client.DisplayName), GetString("275", client.DisplayName), true, (bool result) =>
             {
                 if (result)
                 {
@@ -198,11 +198,11 @@ namespace FSO.Client.UI.Archive
             switch (level)
             {
                 case 0:
-                    return "User";
+                    return GetString("276");
                 case 1:
-                    return "Moderator";
+                    return GetString("277");
                 case 2:
-                    return "Administrator";
+                    return GetString("278");
             }
 
             return level.ToString(); //TODO
@@ -213,7 +213,7 @@ namespace FSO.Client.UI.Archive
             string before = GetModString(currentLevel);
             string after = GetModString(targetLevel);
 
-            UIAlert.YesNo($"Ban {client.DisplayName}", $"Are you sure you want change {client.DisplayName} from {before} to {after}?", true, (bool result) =>
+            UIAlert.YesNo(GetString("273", client.DisplayName), GetString("279", client.DisplayName, before, after), true, (bool result) =>
             {
                 if (result)
                 {
@@ -230,9 +230,9 @@ namespace FSO.Client.UI.Archive
 
             if (myLevel > 0)
             {
-                items.Add(new UIContextMenuItem("Approve", () => { Approve(client); }));
-                items.Add(new UIContextMenuItem("Reject", () => { Reject(client); }));
-                items.Add(new UIContextMenuItem("Ban", () => { Ban(client); }));
+                items.Add(new UIContextMenuItem(GetString("280"), () => { Approve(client); }));
+                items.Add(new UIContextMenuItem(GetString("281"), () => { Reject(client); }));
+                items.Add(new UIContextMenuItem(GetString("282"), () => { Ban(client); }));
             }
 
             new UIContextMenu(anchor, items, this);
@@ -251,24 +251,24 @@ namespace FSO.Client.UI.Archive
                     // Change moderation level for this user
                     if (theirLevel != 2)
                     {
-                        items.Add(new UIContextMenuItem("Make Admin", () => { ChangePermissions(client, theirLevel, 2); }));
+                        items.Add(new UIContextMenuItem(GetString("283"), () => { ChangePermissions(client, theirLevel, 2); }));
                     }
 
                     if (theirLevel != 1)
                     {
-                        items.Add(new UIContextMenuItem("Make Moderator", () => { ChangePermissions(client, theirLevel, 1); }));
+                        items.Add(new UIContextMenuItem(GetString("284"), () => { ChangePermissions(client, theirLevel, 1); }));
                     }
 
                     if (theirLevel != 0)
                     {
-                        items.Add(new UIContextMenuItem("Revoke Admin/Mod", () => { ChangePermissions(client, theirLevel, 0); }));
+                        items.Add(new UIContextMenuItem(GetString("285"), () => { ChangePermissions(client, theirLevel, 0); }));
                     }
                 }
 
                 if (myLevel > 0)
                 {
-                    items.Add(new UIContextMenuItem("Kick", () => { Kick(client); }));
-                    items.Add(new UIContextMenuItem("Ban", () => { Ban(client); }));
+                    items.Add(new UIContextMenuItem(GetString("286"), () => { Kick(client); }));
+                    items.Add(new UIContextMenuItem(GetString("282"), () => { Ban(client); }));
                 }
             }
 
@@ -279,7 +279,7 @@ namespace FSO.Client.UI.Archive
         {
             LastList = list;
 
-            Caption = $"User List ({list?.Clients?.Length ?? 0})";
+            Caption = GetString("287", (list?.Clients?.Length ?? 0).ToString());
 
             bool flash = FlashActive();
 

@@ -11,7 +11,7 @@ using Microsoft.Xna.Framework.Graphics;
 
 namespace FSO.Client.UI.Archive
 {
-    public class UIArchiveCitySelector : UIDialog
+    public class UIArchiveCitySelector : UIArchiveDialog
     {
         private const int StatusOnlineWidth = 153;
         private const int TruncateCityNameWidth = 43;
@@ -164,18 +164,18 @@ namespace FSO.Client.UI.Archive
 
             saveVbox.Add(new UILabel()
             {
-                Caption = "Save name:"
+                Caption = GetString("320")
             });
 
             saveVbox.Add(NameInput = new UITextBox()
             {
                 Size = new Microsoft.Xna.Framework.Vector2(166, 25),
-                CurrentText = "New Save",
+                CurrentText = GetString("321"),
             });
 
             saveVbox.Add(new UILabel()
             {
-                Caption = "Description:"
+                Caption = GetString("322")
             });
 
             saveVbox.Add(DescriptionInput = new UITextEdit()
@@ -268,8 +268,8 @@ namespace FSO.Client.UI.Archive
                 {
                     cst = new()
                     {
-                        { "1", "Unknown City" },
-                        { "2", "This city data is missing info.cst, so it doesn't have a name or description." },
+                        { "1", GetString("323") },
+                        { "2", GetString("324") },
                     };
                 }
                 else
@@ -359,7 +359,7 @@ namespace FSO.Client.UI.Archive
                 {
                     Visible = true;
                     Directory.Delete(dstFolder, true);
-                    UIAlert.Alert("Unknown error", "Failed to create the save file from template.", true);
+                    UIAlert.Alert(GetString("325"), GetString("326"), true);
                 }
             });
         }

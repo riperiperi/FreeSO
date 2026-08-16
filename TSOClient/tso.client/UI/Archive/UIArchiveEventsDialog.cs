@@ -7,7 +7,7 @@ using Microsoft.Xna.Framework.Graphics;
 
 namespace FSO.Client.UI.Archive
 {
-    internal class UIArchiveEventsDialog : UIDialog
+    internal class UIArchiveEventsDialog : UIArchiveDialog
     {
         private ArchiveConfiguration Config;
         private EventConfig Events;
@@ -38,7 +38,7 @@ namespace FSO.Client.UI.Archive
             var custom = Content.Content.Get().CustomUI;
             var tabTex = custom.Get("archive_tab.png").Get(gd);
 
-            Caption = "Events";
+            Caption = GetString("310");
             Config = config;
 
             config.LoadEvents();
@@ -64,10 +64,10 @@ namespace FSO.Client.UI.Archive
 
             modeHbox.Add(new UILabel()
             {
-                Caption = "Event schedule:"
+                Caption = GetString("311") // Event schedule:
             });
-            AddCheck(modeHbox, "Timed", (check) => check.Selected = !ManualMode, (elem) => ManualMode = false, true);
-            AddCheck(modeHbox, "Manual", (check) => check.Selected = ManualMode, (elem) => ManualMode = true, true);
+            AddCheck(modeHbox, GetString("312"), (check) => check.Selected = !ManualMode, (elem) => ManualMode = false, true); // Timed
+            AddCheck(modeHbox, GetString("313"), (check) => check.Selected = ManualMode, (elem) => ManualMode = true, true); // Manual
 
             modeHbox.AutoSize();
 
@@ -120,11 +120,11 @@ namespace FSO.Client.UI.Archive
             var manualHbox = new UIHBoxContainer();
             manualHbox.Add(ManualClearButton = new UIButton()
             {
-                Caption = "Clear"
+                Caption = GetString("314")
             });
             manualHbox.Add(ManualTimedButton = new UIButton()
             {
-                Caption = "Simulate Timed"
+                Caption = GetString("315")
             });
 
             ManualClearButton.OnButtonClick += ClearManual;

@@ -14,7 +14,9 @@
 14 ^UPnP^
 15 ^Attempting to forward ports with UPnP...^
 16 ^UPnP Failed^
-17 ^Failed to forward ports with UPnP! Either enable UPnP on your router, or disable the UPnP setting and set the server ports manually.^
+17 ^Failed to forward ports with UPnP! Either enable UPnP on your router, or disable the UPnP setting and set the server ports manually.
+
+For more information, see https://freeso.org/port-forwarding .^
 18 ^Disable UPnP to manually set ports.^
 19 ^Server Information^
 20 ^You're connected to a server hosted by this game client.^
@@ -96,7 +98,7 @@ IP has been copied to your clipboard.^
 
 78 ^An unknown error occurred.^
 
-79 ^^
+79 ^Start^
 
 80 ^Banned^
 81 ^Your user account/IP has been banned from this server. Contact the host to have the ban removed.^
@@ -192,3 +194,100 @@ Add to the server list?^
 
 153 ^FreeSO has detected that you're short on disk space on the installation drive (%s needed, %s available). It's likely that it will run out of disk space while downloading and extracting this archive save. Are you sure you want to continue?^
 154 ^Low Disk Space^
+
+
+200 ^Offline Mode^
+201 ^Use UPnP^
+202 ^Require user verification^
+203 ^City editor^
+204 ^Free roam^
+205 ^Debug interactions^
+206 ^Allow lot creation^
+207 ^Allow character creation^
+208 ^Lock archived characters^
+209 ^Hide display names^
+
+211 ^UPnP attempts to automatically forward ports on your router to allow public access to your game server. Some routers have this disabled by default or simply don't support it, in which case you'll need to uncheck this option and manually forward the ports.^
+212 ^Without user verification, any user with the server IP can connect and join the city - authentication is automatic. Users can be banned by client and IP, but new users are always given the benefit of the doubt. 
+
+When this option is enabled, new users will require verification from an admin or mod before they can interact with the game server. You can verify users from the User List ingame, which appears at the bottom left in the UCP. The button will start flashing if there are any pending verifications.^
+214 ^The original game server only allowed offline lots to be opened by their owner or roommates, and empty lots couldn't be joined at all. When this option is set to true, any player can join any tile on the map.
+
+This option will also allow players to travel seamlessly between properties by clicking on adjacent lots, or walking over the property boundary in direct control mode. Any sims present on adjacent lots also become visible.^
+215 ^When enabled, the archive server gives admins the ability to spawn all debug objects from build mode and use debug interactions. These objects/interactions allow users to cheat money/skill, but can potentially cause object errors crash the game. If you want a 'safe' selection of debug objects for all players, you can enable the 'debug' catalog in the events configuration. 
+These interactions can optionally be enabled for moderators and all other users.^
+218 ^The archive server allows players to enter the game as any character that has been archived, or create their own. When this option is set to true, only admins and mods can enter the game as archived characters - normal users must create their own.^
+
+
+220 ^Mods^
+221 ^All users^
+
+
+230 ^Server name:^
+231 ^Export Config^
+232 ^Users^
+233 ^Ports^
+234 ^Events^
+235 ^Cheats^
+
+240 ^Quick Start^
+241 ^Host Server^
+242 ^Host or join a server to get started.^
+243 ^Quick Start will begin a singleplayer session of the last used archive data.^
+
+250 ^Custom Ports^
+251 ^Choose TCP ports for the server. For public access, these ports should be forwarded in your router settings.^
+252 ^City: ^
+253 ^Lot: ^
+
+260 ^Archive Server^
+261 ^Starting archive server. Please wait...^
+262 ^Safely shutting down archive server before closing.^
+
+270 ^User List^
+271 ^Kick %s^
+272 ^Are you sure you want to kick %s from the server?^
+273 ^Ban %s^
+274 ^Are you sure you want to ban %s from the server? They won't be able to rejoin from the same client or IP, until they are manually unbanned from the users list.^
+275 ^Are you sure you want to ban %s from the server? They won't be able to apply for verification from the same client or IP, until they are manually unbanned from the users list.^
+276 ^User^
+277 ^Moderator^
+278 ^Administrator^
+279 ^Are you sure you want change %s from %s to %s?^
+280 ^Approve^
+281 ^Reject^
+282 ^Ban^
+283 ^Make Admin^
+284 ^Make Moderator^
+285 ^Revoke Admin/Mod^
+286 ^Kick^
+287 ^User List (%s)^
+
+300 ^Skill/Money Cheats^
+301 ^Increase the speed of skilling or the payout of money objects.
+Some objects may not correctly report multiplied payouts - keep an eye on your balance.^
+302 ^Starting funds: ^
+303 ^Skill speed: ^
+304 ^Payout multiplier: ^
+305 ^Singleplayer Penalty: ^
+
+310 ^Events^
+311 ^Event schedule:^
+312 ^Timed^
+313 ^Manual^
+314 ^Clear^
+315 ^Simulate Timed^
+
+320 ^Save name:^
+321 ^New Save^
+322 ^Description:^
+323 ^Unknown City^
+324 ^This city data is missing info.cst, so it doesn't have a name or description.^
+325 ^Unknown error^
+326 ^Failed to create the save file from template.^
+
+330 ^Loading...^
+331 ^Waiting for verification...^
+332 ^Search^
+333 ^Name^
+334 ^Lot^

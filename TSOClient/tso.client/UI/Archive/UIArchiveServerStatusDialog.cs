@@ -1,13 +1,11 @@
 ﻿using FSO.Client.UI.Controls;
-using FSO.Client.UI.Framework;
 using FSO.Common.Rendering.Framework.Model;
 using FSO.Common.Utils;
 using FSO.Server.Embedded;
-using System;
 
 namespace FSO.Client.UI.Archive
 {
-    internal class UIArchiveServerStatusDialog : UIDialog
+    internal class UIArchiveServerStatusDialog : UIArchiveDialog
     {
         private readonly UILabel InfoText;
         private bool WaitStart;
@@ -20,11 +18,11 @@ namespace FSO.Client.UI.Archive
             WaitStart = waitStart;
             OnComplete = onComplete;
             Server = server;
-            Caption = "Archive Server";
+            Caption = GetString("260");
 
             Add(InfoText = new UILabel()
             {
-                Caption = waitStart ? "Starting archive server. Please wait..." : "Safely shutting down archive server before closing.",
+                Caption = waitStart ? GetString("261") : GetString("262"),
                 Position = new Microsoft.Xna.Framework.Vector2(20, 45),
                 Size = new Microsoft.Xna.Framework.Vector2(200, 50),
                 Wrapped = true,

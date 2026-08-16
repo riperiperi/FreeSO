@@ -2,25 +2,24 @@
 using FSO.Client.UI.Framework;
 using FSO.Common;
 using Microsoft.Xna.Framework;
-using System;
 
 namespace FSO.Client.UI.Archive
 {
-    internal class UIArchiveServerPorts : UIDialog
+    internal class UIArchiveServerPorts : UIArchiveDialog
     {
         public UITextBox LotInput;
         public UITextBox CityInput;
 
         public UIArchiveServerPorts(ArchiveConfiguration config, Action onClose) : base(UIDialogStyle.OK, true)
         {
-            Caption = "Custom Ports";
+            Caption = GetString("250");
             var vbox = new UIVBoxContainer() { HorizontalAlignment = UIContainerHorizontalAlignment.Center };
 
             UILabel desc;
 
             vbox.Add(desc = new UILabel()
             {
-                Caption = "Choose TCP ports for the server. For public access, these ports should be forwarded in your router settings.",
+                Caption = GetString("251"),
                 Wrapped = true
             });
 
@@ -30,7 +29,7 @@ namespace FSO.Client.UI.Archive
 
             cityPortBox.Add(new UILabel()
             {
-                Caption = "City: "
+                Caption = GetString("252")
             });
 
             cityPortBox.Add(CityInput = new UITextBox() { });
@@ -41,7 +40,7 @@ namespace FSO.Client.UI.Archive
 
             lotPortBox.Add(new UILabel()
             {
-                Caption = "Lot: "
+                Caption = GetString("253")
             });
 
             lotPortBox.Add(LotInput = new UITextBox() { });

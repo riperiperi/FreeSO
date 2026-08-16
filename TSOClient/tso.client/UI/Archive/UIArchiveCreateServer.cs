@@ -13,7 +13,7 @@ using Microsoft.Xna.Framework.Graphics;
 
 namespace FSO.Client.UI.Archive
 {
-    internal class UIArchiveCreateServer : UIDialog
+    internal class UIArchiveCreateServer : UIArchiveDialog
     {
         private const int CITY_IMAGE_WIDTH = 148;
         private const int CITY_IMAGE_HEIGHT = 112;
@@ -38,17 +38,15 @@ namespace FSO.Client.UI.Archive
         {
             public ArchiveConfigFlags Value;
             public string Caption;
-            public bool DefaultValue;
             public int Indentation;
             public Action HelpAction;
             public UIButton FlagCheck;
             public ServerSubFlag[] SubFlags;
 
-            public ServerFlag(ArchiveConfigFlags value, string caption, bool defaultValue, int indentation = 0, Action helpAction = null, ServerSubFlag[] subFlags = null)
+            public ServerFlag(ArchiveConfigFlags value, string caption, int indentation = 0, Action helpAction = null, ServerSubFlag[] subFlags = null)
             {
                 Value = value;
                 Caption = caption;
-                DefaultValue = defaultValue;
                 Indentation = indentation;
                 HelpAction = helpAction;
                 FlagCheck = null;
@@ -58,17 +56,17 @@ namespace FSO.Client.UI.Archive
 
         private ServerFlag[] Flags =
         [
-            new ServerFlag(ArchiveConfigFlags.Offline, "Offline mode", false),
-            new ServerFlag(ArchiveConfigFlags.UPnP, "Use UPnP", true, 0, UPnPHelp),
-            new ServerFlag(ArchiveConfigFlags.Verification, "Require user verification", false, 0, VerificationHelp),
-            new ServerFlag(ArchiveConfigFlags.CityEditor, "City editor", false, 0, CityEditorHelp, [new ServerSubFlag(ArchiveConfigFlags.CityEditorMods, "Mods"), new ServerSubFlag(ArchiveConfigFlags.CityEditorAllUsers, "All users")]),
+            new ServerFlag(ArchiveConfigFlags.Offline, GetString("200")),
+            new ServerFlag(ArchiveConfigFlags.UPnP, GetString("201"), 0, UPnPHelp),
+            new ServerFlag(ArchiveConfigFlags.Verification, GetString("202"), 0, VerificationHelp),
+            new ServerFlag(ArchiveConfigFlags.CityEditor, GetString("203"), 0, CityEditorHelp, [new ServerSubFlag(ArchiveConfigFlags.CityEditorMods, GetString("220")), new ServerSubFlag(ArchiveConfigFlags.CityEditorAllUsers, GetString("221"))]),
             default, // Gap (flag value is 0)
-            new ServerFlag(ArchiveConfigFlags.AllOpenable, "Free roam", true, 0, AllOpenableHelp),
-            new ServerFlag(ArchiveConfigFlags.DebugFeatures, "Debug interactions", true, 0, DebugModeHelp, [new ServerSubFlag(ArchiveConfigFlags.DebugFeaturesMods, "Mods"), new ServerSubFlag(ArchiveConfigFlags.DebugFeaturesAllUsers, "All users")]),
-            new ServerFlag(ArchiveConfigFlags.AllowLotCreation, "Allow lot creation", true),
-            new ServerFlag(ArchiveConfigFlags.AllowSimCreation, "Allow character creation", true),
-            new ServerFlag(ArchiveConfigFlags.LockArchivedSims, "Lock archived characters", false, 1, ArchivedCharacterHelp),
-            new ServerFlag(ArchiveConfigFlags.HideNames, "Hide display names", false),
+            new ServerFlag(ArchiveConfigFlags.AllOpenable, GetString("204"), 0, AllOpenableHelp),
+            new ServerFlag(ArchiveConfigFlags.DebugFeatures, GetString("205"), 0, DebugModeHelp, [new ServerSubFlag(ArchiveConfigFlags.DebugFeaturesMods, GetString("220")), new ServerSubFlag(ArchiveConfigFlags.DebugFeaturesAllUsers, GetString("221"))]),
+            new ServerFlag(ArchiveConfigFlags.AllowLotCreation, GetString("206")),
+            new ServerFlag(ArchiveConfigFlags.AllowSimCreation, GetString("207")),
+            new ServerFlag(ArchiveConfigFlags.LockArchivedSims, GetString("208"), 1, ArchivedCharacterHelp),
+            new ServerFlag(ArchiveConfigFlags.HideNames, GetString("209")),
         ];
 
         private UIArchiveDisplayName DisplayName;
@@ -93,7 +91,7 @@ namespace FSO.Client.UI.Archive
             var clientConfig = ClientArchiveConfiguration.Default;
             Config = clientConfig.ToHostConfig();
 
-            Caption = "Host Server";
+            Caption = GetString("241");
 
             var vbox = new UIVBoxContainer();
 
@@ -125,7 +123,7 @@ namespace FSO.Client.UI.Archive
 
             saveVbox.Add(new UILabel()
             {
-                Caption = "Server name:"
+                Caption = GetString("230")
             });
             saveVbox.Add(new UISpacer(2));
 
@@ -239,32 +237,32 @@ namespace FSO.Client.UI.Archive
 
             actionsHbox.Add(ExportButton = new UIButton(custom.Get("archive_configexport.png").Get(gd))
             {
-                Tooltip = "Export Config"
+                Tooltip = GetString("231")
             });
 
             actionsHbox.Add(UsersButton = new UIButton(custom.Get("archive_configusers.png").Get(gd))
             {
-                Tooltip = "Users"
+                Tooltip = GetString("232")
             });
 
             actionsHbox.Add(CustomPortsButton = new UIButton(custom.Get("archive_configports.png").Get(gd))
             {
-                Tooltip = "Ports"
+                Tooltip = GetString("233")
             });
 
             actionsHbox.Add(EventsButton = new UIButton(custom.Get("archive_configevents.png").Get(gd))
             {
-                Tooltip = "Events"
+                Tooltip = GetString("234")
             });
 
             actionsHbox.Add(CheatsButton = new UIButton(custom.Get("archive_configcheats.png").Get(gd))
             {
-                Tooltip = "Cheats"
+                Tooltip = GetString("235")
             });
 
             Add(StartButton = new UIButton()
             {
-                Caption = "Start"
+                Caption = GetString("79")
             });
 
             actionsHbox.AutoSize();
@@ -511,25 +509,10 @@ namespace FSO.Client.UI.Archive
             SaveCombo.SelectedIndex = manifests.Count > 0 ? 0 : -1;
         }
 
-        private ArchiveConfigFlags GetDefaultFlags()
-        {
-            ArchiveConfigFlags result = ArchiveConfigFlags.None;
-
-            foreach (var flag in Flags)
-            {
-                if (flag.DefaultValue)
-                {
-                    result |= flag.Value;
-                }
-            }
-
-            return result;
-        }
-
         private void UpdateButtons()
         {
             CustomPortsButton.Disabled = Config.Flags.HasFlag(ArchiveConfigFlags.UPnP);
-            CustomPortsButton.Tooltip = CustomPortsButton.Disabled ? GameFacade.Strings.GetString("f128", "18") : "Ports";
+            CustomPortsButton.Tooltip = CustomPortsButton.Disabled ? GetString("18") : GetString("233");
         }
 
         private void ToggleFlag(ArchiveConfigFlags flag)
@@ -610,31 +593,32 @@ namespace FSO.Client.UI.Archive
 
         public static void UPnPHelp()
         {
-            UIAlert.Alert("UPnP", "UPnP attempts to automatically forward ports on your router to allow public access to your game server. Some routers have this disabled by default or simply don't support it, in which case you'll need to uncheck this option and manually forward the ports.", true);
+            UIAlert.Alert(GetString("201"), GetString("211"), true);
         }
 
         public static void AllOpenableHelp()
         {
-            UIAlert.Alert("Free roam", "The original game server only allowed offline lots to be opened by their owner or roommates, and empty lots couldn't be joined at all. When this option is set to true, any player can join any tile on the map.\n\nThis option will also allow players to travel seamlessly between properties by clicking on adjacent lots, or walking over the property boundary in direct control mode. Any sims present on adjacent lots also become visible.", true);
+            UIAlert.Alert(GetString("204"), GetString("214"), true);
         }
 
         public static void DebugModeHelp()
         {
-            UIAlert.Alert("Debug interactions", "When enabled, the archive server gives admins the ability to spawn all debug objects from build mode and use debug interactions. These objects/interactions allow users to cheat money/skill, but can potentially cause object errors crash the game. If you want a 'safe' selection of debug objects for all players, you can enable the 'debug' catalog in the events configuration. \nThese interactions can optionally be enabled for moderators and all other users.", true);
+            UIAlert.Alert(GetString("205"), GetString("215"), true);
         }
 
         public static void ArchivedCharacterHelp()
         {
-            UIAlert.Alert("Lock archived characters", "The archive server allows players to enter the game as any character that has been archived, or create their own. When this option is set to true, only admins and mods can enter the game as archived characters - normal users must create their own.", true);
+            UIAlert.Alert(GetString("208"), GetString("218"), true);
         }
 
         public static void VerificationHelp()
         {
-            UIAlert.Alert("User verification", "Without user verification, any user with the server IP can connect and join the city - authentication is automatic. Users can be banned by client and IP, but new users are always given the benefit of the doubt. \n\nWhen this option is enabled, new users will require verification from an admin or mod before they can interact with the game server. You can verify users from the User List ingame, which appears at the bottom left in the UCP. The button will start flashing if there are any pending verifications.", true);
+            UIAlert.Alert(GetString("202"), GetString("212"), true);
         }
+
         public static void CityEditorHelp()
         {
-            UIAlert.Alert("City editor", GameFacade.Strings.GetString("f128", "121"), true);
+            UIAlert.Alert(GetString("203"), GetString("121"), true);
         }
     }
 }

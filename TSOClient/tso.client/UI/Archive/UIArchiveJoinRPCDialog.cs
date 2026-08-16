@@ -10,14 +10,14 @@ using Microsoft.Xna.Framework;
 
 namespace FSO.Client.UI.Archive
 {
-    internal class UIArchiveJoinRPCDialog : UIDialog
+    internal class UIArchiveJoinRPCDialog : UIArchiveDialog
     {
         private readonly UILabel JoinLabel;
         private readonly UIVBoxContainer VBox;
 
         public UIArchiveJoinRPCDialog() : base(UIDialogStyle.Close, true)
         {
-            Caption = GameFacade.Strings.GetString("f128", "117");
+            Caption = GetString("117");
             var vbox = new UIVBoxContainer() { HorizontalAlignment = UIContainerHorizontalAlignment.Right };
             VBox = vbox;
 
@@ -25,7 +25,7 @@ namespace FSO.Client.UI.Archive
 
             vbox.Add(JoinLabel = new UILabel()
             {
-                Caption = GameFacade.Strings.GetString("f128", "118"),
+                Caption = GetString("118"),
                 Size = new Vector2(300, 35),
                 Wrapped = true
             });
@@ -73,7 +73,7 @@ namespace FSO.Client.UI.Archive
 
                         if (x.IsFaulted || x.IsCanceled || !x.Result.IsOnline)
                         {
-                            JoinLabel.Caption = GameFacade.Strings.GetString("f128", "152");
+                            JoinLabel.Caption = GetString("152");
                             JoinLabel.Size = new Vector2(300, 60);
 
                             VBox.AutoSize();

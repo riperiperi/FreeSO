@@ -10,7 +10,7 @@ using Microsoft.Xna.Framework.Graphics;
 
 namespace FSO.Client.UI.Archive.Management
 {
-    internal class UIArchiveBanManageDialog : UIDialog
+    internal class UIArchiveBanManageDialog : UIArchiveDialog
     {
         private ArchiveManagement Management;
 
@@ -32,14 +32,14 @@ namespace FSO.Client.UI.Archive.Management
             var ui = Content.Content.Get().CustomUI;
             AdminActionsButtonTexture = ui.Get("archive_burgermenu.png").Get(gd);
 
-            Caption = GameFacade.Strings.GetString("f128", "56");
+            Caption = GetString("56");
             var vbox = new UIVBoxContainer() { HorizontalAlignment = UIContainerHorizontalAlignment.Center };
 
             var searchContainer = new UIHBoxContainer() { VerticalAlignment = UIContainerVerticalAlignment.Middle };
 
             searchContainer.Add(new UILabel()
             {
-                Caption = GameFacade.Strings.GetString("f128", "64")
+                Caption = GetString("64")
             });
 
             searchContainer.Add(SearchBox = new UITextBox() { });
@@ -52,8 +52,8 @@ namespace FSO.Client.UI.Archive.Management
             vbox.Add(new UISpacer(1, 8));
 
             vbox.Add(IpTable = new UIGenericTable([
-                new UITableColumn(GameFacade.Strings.GetString("f128", "60"), 128),
-                new UITableColumn(GameFacade.Strings.GetString("f128", "61"), 128),
+                new UITableColumn(GetString("60"), 128),
+                new UITableColumn(GetString("61"), 128),
                 new UITableColumn("", 14),
                 ])
             { Loading = true });
@@ -65,7 +65,7 @@ namespace FSO.Client.UI.Archive.Management
 
             vbox2.Add(AddIpButton = new UIButton()
             {
-                Caption = GameFacade.Strings.GetString("f128", "63")
+                Caption = GetString("63")
             });
 
             vbox2.AutoSize(); //TODO: somehow force horiz size from parent?
@@ -93,7 +93,7 @@ namespace FSO.Client.UI.Archive.Management
 
         private void BanIp(UIElement button)
         {
-            UIAlert.Prompt("", GameFacade.Strings.GetString("f128", "67"), true, (string ip) =>
+            UIAlert.Prompt("", GetString("67"), true, (string ip) =>
             {
                 if (ip != null)
                 {
@@ -103,7 +103,7 @@ namespace FSO.Client.UI.Archive.Management
                     }
                     catch
                     {
-                        UIAlert.Alert("", GameFacade.Strings.GetString("f128", "78"), true);
+                        UIAlert.Alert("", GetString("78"), true);
                         return;
                     }
 
@@ -166,7 +166,7 @@ namespace FSO.Client.UI.Archive.Management
 
         private void UnbanIp(ArchiveDbIpBan ip)
         {
-            UIAlert.Prompt(GameFacade.Strings.GetString("f128", "68", [ip.IP]), (result, alert) =>
+            UIAlert.Prompt(GetString("68", ip.IP), (result, alert) =>
             {
                 if (result)
                 {
@@ -176,7 +176,7 @@ namespace FSO.Client.UI.Archive.Management
                     }
                     catch
                     {
-                        UIAlert.Alert("", GameFacade.Strings.GetString("f128", "78"), true);
+                        UIAlert.Alert("", GetString("78"), true);
                         return;
                     }
 
@@ -189,7 +189,7 @@ namespace FSO.Client.UI.Archive.Management
         {
             var items = new List<UIContextMenuItem>
             {
-                new UIContextMenuItem(GameFacade.Strings.GetString("f128", "62"), () => { UnbanIp(ip); })
+                new UIContextMenuItem(GetString("62"), () => { UnbanIp(ip); })
             };
 
             new UIContextMenu(anchor, items, IpTable);

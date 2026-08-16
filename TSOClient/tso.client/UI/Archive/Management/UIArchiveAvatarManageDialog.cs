@@ -10,7 +10,7 @@ using System.Numerics;
 
 namespace FSO.Client.UI.Archive.Management
 {
-    internal class UIArchiveAvatarManageDialog : UIDialog
+    internal class UIArchiveAvatarManageDialog : UIArchiveDialog
     {
         private ArchiveManagement Management;
 
@@ -33,14 +33,14 @@ namespace FSO.Client.UI.Archive.Management
             var ui = Content.Content.Get().CustomUI;
             AdminActionsButtonTexture = ui.Get("archive_burgermenu.png").Get(gd);
 
-            Caption = GameFacade.Strings.GetString("f128", "57", [ user.Name ]);
+            Caption = GetString("57", user.Name);
             var vbox = new UIVBoxContainer() { HorizontalAlignment = UIContainerHorizontalAlignment.Center };
 
             var searchContainer = new UIHBoxContainer() { VerticalAlignment = UIContainerVerticalAlignment.Middle };
 
             searchContainer.Add(new UILabel()
             {
-                Caption = GameFacade.Strings.GetString("f128", "64")
+                Caption = GetString("64")
             });
 
             searchContainer.Add(SearchBox = new UITextBox() { });
@@ -53,8 +53,8 @@ namespace FSO.Client.UI.Archive.Management
             vbox.Add(new UISpacer(1, 8));
 
             vbox.Add(AvatarTable = new UIGenericTable([
-                new UITableColumn(GameFacade.Strings.GetString("f128", "58"), 128),
-                new UITableColumn(GameFacade.Strings.GetString("f128", "59"), 128),
+                new UITableColumn(GetString("58"), 128),
+                new UITableColumn(GetString("59"), 128),
                 new UITableColumn("", 14),
                 ])
             { Loading = true });
@@ -66,7 +66,7 @@ namespace FSO.Client.UI.Archive.Management
 
             vbox2.Add(IPBansButton = new UIButton()
             {
-                Caption = GameFacade.Strings.GetString("f128", "56")
+                Caption = GetString("56")
             });
 
             vbox2.AutoSize(); //TODO: somehow force horiz size from parent?
@@ -146,7 +146,7 @@ namespace FSO.Client.UI.Archive.Management
 
         private void DeleteAvatar(ArchiveDbAvatar avatar)
         {
-            UIAlert.Prompt(GameFacade.Strings.GetString("f128", "69", [avatar.Name]), (result, alert) =>
+            UIAlert.Prompt(GetString("69", avatar.Name), (result, alert) =>
             {
                 if (result)
                 {
@@ -156,7 +156,7 @@ namespace FSO.Client.UI.Archive.Management
                     }
                     catch
                     {
-                        UIAlert.Alert("", GameFacade.Strings.GetString("f128", "78"), true);
+                        UIAlert.Alert("", GetString("78"), true);
                         return;
                     }
 
@@ -174,8 +174,8 @@ namespace FSO.Client.UI.Archive.Management
         {
             var items = new List<UIContextMenuItem>
             {
-                new UIContextMenuItem(GameFacade.Strings.GetString("f128", "65"), () => { DeleteAvatar(avatar); }),
-                new UIContextMenuItem(GameFacade.Strings.GetString("f128", "74"), () => { TransferAvatar(avatar); })
+                new UIContextMenuItem(GetString("65"), () => { DeleteAvatar(avatar); }),
+                new UIContextMenuItem(GetString("74"), () => { TransferAvatar(avatar); })
             };
 
             new UIContextMenu(anchor, items, AvatarTable);

@@ -9,7 +9,6 @@ using FSO.Client.UI.Panels;
 using FSO.Client.Utils;
 using FSO.Common;
 using FSO.Common.Utils;
-using FSO.Common.Utils.Cache;
 using FSO.Files;
 using FSO.HIT;
 using FSO.Server.Clients;
@@ -17,10 +16,6 @@ using FSO.Server.Protocol.CitySelector;
 using FSO.Server.Protocol.Electron.Packets;
 using Microsoft.Xna.Framework;
 using Microsoft.Xna.Framework.Graphics;
-using System;
-using System.Collections.Generic;
-using System.IO;
-using System.Linq;
 using System.Text;
 
 namespace FSO.Client.UI.Screens
@@ -170,21 +165,21 @@ namespace FSO.Client.UI.Screens
 
             Add(SearchLabel = new UILabel()
             {
-                Caption = "Search",
+                Caption = GameFacade.Strings.GetString("f128", "332"),
                 Position = new Vector2(394, 92) + offset,
                 CaptionStyle = titleFont
             });
 
             Add(ListNameLabel = new UILabel()
             {
-                Caption = "Name",
+                Caption = GameFacade.Strings.GetString("f128", "333"),
                 Position = new Vector2(397, 230) + offset,
                 CaptionStyle = titleFont
             });
 
             Add(ListNameLabel = new UILabel()
             {
-                Caption = "Lot",
+                Caption = GameFacade.Strings.GetString("f128", "334"),
                 Position = new Vector2(397 + 163, 230) + offset,
                 CaptionStyle = titleFont
             });
@@ -246,7 +241,7 @@ namespace FSO.Client.UI.Screens
 
             Add(StatusLabel = new UILabel()
             {
-                Caption = "Loading...",
+                Caption = GameFacade.Strings.GetString("f128", "330"),
                 Position = AvatarListBox.Position,
                 Size = AvatarListBox.Size,
                 Wrapped = true,
@@ -337,7 +332,7 @@ namespace FSO.Client.UI.Screens
             if (!data.IsVerified)
             {
                 StatusLabel.Visible = true;
-                StatusLabel.Caption = "Waiting for verification...";
+                StatusLabel.Caption = GameFacade.Strings.GetString("f128", "331");
             }
             else
             {
@@ -683,7 +678,7 @@ namespace FSO.Client.UI.Screens
 
             Sim.Visible = true;
 
-            PersonDescriptionText.CurrentText = "Loading...";
+            PersonDescriptionText.CurrentText = GameFacade.Strings.GetString("f128", "330");
 
             AsyncFetchAvatarData(1); // TODO: shard ID
             AsyncFetchCityThumbData(1); // TODO: shard ID
