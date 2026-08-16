@@ -24,13 +24,17 @@ namespace FSO_BrowserClient
     /// WorldContent.AvatarEffect — so we replicate DrawAvatars' device and effect
     /// setup and skip the batch entirely.
     ///
-    /// Behind ?vitaboy=1. Capsules stay the default until this is proven.
+    /// On by default; ?vitaboy=0 opts back to capsules (the known-good fallback
+    /// where real bodies don't render). mixed_mode_vm.js ran a ?vitaboy=1 tab and
+    /// a plain tab through 60s+ of shared lockstep VM and found zero desyncs, which
+    /// is what cleared this to become the default.
     /// </summary>
     public class VitaboyLayer
     {
-        /// <summary>?vitaboy=1. Also gates passing a GraphicsDevice to the content
-        /// boot — the avatar mesh/texture providers are device-gated, so without
-        /// it Content.AvatarMeshes is null and there is nothing to draw.</summary>
+        /// <summary>On by default; ?vitaboy=0 disables. Also gates passing a
+        /// GraphicsDevice to the content boot — the avatar mesh/texture providers
+        /// are device-gated, so without it Content.AvatarMeshes is null and there
+        /// is nothing to draw.</summary>
         public static bool Enabled;
 
         public static string Status { get; private set; } = "off";
