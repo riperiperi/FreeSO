@@ -6,4 +6,10 @@
     <ImplicitUsings>enable</ImplicitUsings>
   </PropertyGroup>
 
+  <ItemGroup>
+    <!-- Accounts for the hosted build (Users.cs). Nothing wires it up yet; the
+         local demo runs without a database. -->
+    <PackageReference Include="Npgsql" Version="9.0.4" />
+  </ItemGroup>
+
 </Project>
