@@ -296,19 +296,22 @@ namespace FSO_BrowserClient
                     var off = y * arch.Width + x;
                     if (off >= floors.Length || floors[off].Pattern == 0) continue; // no floor = outside
                     if (occupied.Contains(off)) continue;
-                    // Multi-tile furniture covers tiles its base position doesn't
-                    // report, and the engine's goto silently no-ops on a blocked
-                    // destination — so require a clear ring around the tile too.
-                    var crowded = false;
-                    for (int ny = -1; ny <= 1 && !crowded; ny++)
-                        for (int nx = -1; nx <= 1; nx++)
-                            if (occupied.Contains((y + ny) * arch.Width + (x + nx))) { crowded = true; break; }
-                    if (crowded) continue;
                     var dx = x - cx; var dy = y - cy;
                     // Floor tiles exist beyond the house too (patios, the blueprint's
                     // wider floor area); anything far from the furniture is not "inside".
                     if (dx * dx + dy * dy > 100) continue;
-                    candidates.Add((((short)x, (short)y), dx * dx + dy * dy));
+                    // Rank by elbow room, do not demand it. Requiring a completely
+                    // clear ring was survivable when every object was a 1x1 pack
+                    // billboard; against real EA furniture — a bed is three tiles, a
+                    // sofa two or three — it eliminated the whole middle of the house
+                    // and left only closets and bathrooms, which route badly. Open
+                    // tiles still sort first, so the good targets are tried first and
+                    // the cramped ones remain as fallbacks instead of vanishing.
+                    var blockedNeighbours = 0;
+                    for (int ny = -1; ny <= 1; ny++)
+                        for (int nx = -1; nx <= 1; nx++)
+                            if (occupied.Contains((y + ny) * arch.Width + (x + nx))) blockedNeighbours++;
+                    candidates.Add((((short)x, (short)y), blockedNeighbours * 100f + dx * dx + dy * dy));
                 }
             }
             return candidates.OrderBy(c => c.dist).Take(max).Select(c => c.tile).ToList();

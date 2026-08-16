@@ -28,6 +28,9 @@ const { chromium } = require('playwright');
   const t1 = Date.now();
   while (Date.now() - t1 < 120000 && !has('vm sim is inside the house')) await page.waitForTimeout(2000);
 
+  // Give the walk-in time to finish. A sim photographed at the lot edge is a
+  // true picture of the wrong moment.
+  await page.waitForTimeout(25000);
   for (const [label, wait] of [['settled', 3000], ['near', 0]]) {
     if (label === 'near') await page.keyboard.press('Digit1');
     await page.waitForTimeout(wait || 4000);
