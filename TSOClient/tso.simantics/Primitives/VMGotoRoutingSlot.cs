@@ -1,6 +1,7 @@
 ﻿using FSO.Files.Utils;
 using FSO.SimAntics.Engine.Utils;
 using FSO.SimAntics.Engine.Scopes;
+using System;
 using System.IO;
 
 namespace FSO.SimAntics.Engine.Primitives
@@ -13,7 +14,15 @@ namespace FSO.SimAntics.Engine.Primitives
             if (context.Thread.IsCheck) return VMPrimitiveExitCode.GOTO_FALSE;
 
             var slot = VMMemory.GetSlot(context, operand.Type, operand.Data);
-            if (slot == null) return VMPrimitiveExitCode.GOTO_FALSE;
+            if (slot == null)
+            {
+                var so = context.StackObject;
+                var routeCount = (so?.Slots != null && so.Slots.Slots.ContainsKey(3)) ? so.Slots.Slots[3].Count : -1;
+                Console.WriteLine($"vm GetSlot null: scope={operand.Type} data={operand.Data} " +
+                    $"stackObj={so?.ObjectID} guid={so?.Object?.OBJ?.GUID:X8} slotID={so?.Object?.OBJ?.SlotID} " +
+                    $"hasSlots={so?.Slots != null} type3Count={routeCount}");
+                return VMPrimitiveExitCode.GOTO_FALSE;
+            }
 
             var obj = context.StackObject;
             if (obj == null) return VMPrimitiveExitCode.GOTO_FALSE;

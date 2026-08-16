@@ -846,9 +846,18 @@ namespace FSO_BrowserClient
             // object's own for anything single-tile.
             var guid = target.GroupDefinition?.GUID ?? target.Object?.OBJ?.GUID ?? 0;
             var name = (target.Object?.OBJ?.ChunkLabel ?? target.ToString() ?? "").Replace("\"", "'");
+            // Runtime Flags, not OBJD data: DisallowPersonIntersection/AllowPersonIntersection
+            // are usually set by the object's own init BHAV at creation, not baked into the
+            // chunk, so this is the only place to actually see whether a sim can route onto
+            // this object's own tile (see WorldUI.AvatarSolid in VMEntity.SetValue).
+            var flags = (FSO.SimAntics.VMEntityFlags)target.GetValue(FSO.SimAntics.Model.VMStackObjectVariable.Flags);
+            var allowPI = flags.HasFlag(FSO.SimAntics.VMEntityFlags.AllowPersonIntersection);
+            var disallowPI = flags.HasFlag(FSO.SimAntics.VMEntityFlags.DisallowPersonIntersection);
             return $"{{\"found\":true,\"guid\":\"0x{guid:X8}\",\"name\":\"{name}\"" +
                    $",\"objectID\":{target.ObjectID},\"tileX\":{target.Position.TileX},\"tileY\":{target.Position.TileY}" +
-                   $",\"options\":{(pie?.Count ?? 0)}}}";
+                   $",\"options\":{(pie?.Count ?? 0)}" +
+                   $",\"flags\":\"0x{(int)flags:X4}\",\"allowPersonIntersection\":{allowPI.ToString().ToLower()}" +
+                   $",\"disallowPersonIntersection\":{disallowPI.ToString().ToLower()}}}";
         }
 
         /// <summary>Test hook: where is my sim, and is it drawable? Visual QA

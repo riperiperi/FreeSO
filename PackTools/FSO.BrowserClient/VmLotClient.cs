@@ -87,6 +87,12 @@ namespace FSO_BrowserClient
             vm = new VM(new VMContext(null), driver, new VMNullHeadlineProvider());
             vm.Init();
             vm.MyUID = PersistID;
+            // Diagnostic only: VMThread's per-tick exception handler already catches
+            // SimAntics exceptions and calls SignalDialog with the details, but nothing
+            // in this pipeline read it, so every engine-level failure looked identical
+            // to a clean, silent routing rejection. Surface it so real errors are visible.
+            vm.OnDialog += (info) =>
+                Console.WriteLine($"vm dialog [{info.Title}] {info.Message}");
             vm.OnChatEvent += (evt) =>
             {
                 var text = evt.Text is string[] arr ? string.Join(" | ", arr) : evt.Text?.ToString();

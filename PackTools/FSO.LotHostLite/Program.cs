@@ -68,6 +68,10 @@ namespace FSO.LotHostLite
 
             var vm = new VM(new VMContext(null), driver, new VMNullHeadlineProvider());
             vm.Init();
+            // Diagnostic only: SimAntics exceptions are caught per-tick and reported via
+            // SignalDialog, but nothing here read it — every engine failure was silent.
+            vm.OnDialog += (info) =>
+                Console.WriteLine($"[host] vm dialog [{info.Title}] {info.Message}");
 
             Console.WriteLine("[host] restoring blueprint: " + housePath);
             vm.SendCommand(new VMBlueprintRestoreCmd
