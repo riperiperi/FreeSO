@@ -57,6 +57,7 @@ namespace FSO_BrowserClient
         bool houseApplied;
         JoinStage? lastLoggedJoinStage;
         FurnitureLayer furniture;
+        readonly VitaboyLayer vitaboy = new VitaboyLayer();
         bool furnitureFetchStarted;
         PackObjectLoader packs;
         bool packsFetchStarted;
@@ -568,7 +569,7 @@ namespace FSO_BrowserClient
                 {
                     vmContentStarted = true;
                     var tarUrl = new Uri(new Uri(_wwwrootBase), "tso-content/content.tar.gz").AbsoluteUri;
-                    _ = BrowserContentBoot.RunAsync(tarUrl);
+                    _ = BrowserContentBoot.RunAsync(tarUrl, VitaboyLayer.Enabled ? GraphicsDevice : null);
                 }
                 loadStatus = BrowserContentBoot.Ready
                     ? (vmClient?.Status ?? "vm starting")
@@ -899,7 +900,18 @@ namespace FSO_BrowserClient
 
                 spriteBatch.Begin();
                 if (DrawRealLot && furniture != null) furniture.Draw(spriteBatch, realWorld.State);
-                if (DrawRealLot && vmClient != null) vmClient.DrawEntities(spriteBatch, realWorld.State);
+                if (DrawRealLot && vmClient != null) vmClient.DrawEntities(spriteBatch, realWorld.State, vitaboy);
+                spriteBatch.End();
+
+                // Real Sims bodies last, and outside the sprite batch — they are a
+                // plain 3D draw that SpriteBatch.Begin would stomp. Drawing them over
+                // the billboards rather than under is deliberate: the billboards have
+                // no depth either, and a sim swallowed by a table reads as no sim at
+                // all. Correct sorting waits on the ledgered depth work.
+                if (DrawRealLot && VitaboyLayer.Enabled && vmClient != null)
+                    vitaboy.Draw(GraphicsDevice, realWorld.State, vmClient.vm);
+
+                spriteBatch.Begin();
                 DrawLotStatusStrip();
                 spriteBatch.End();
             }

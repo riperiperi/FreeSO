@@ -41,6 +41,7 @@
     <Compile Include="RealFurnitureLayer.cs" />
     <Compile Include="BrowserContentBoot.cs" />
     <Compile Include="BrowserSandboxClient.cs" />
+    <Compile Include="VitaboyLayer.cs" />
     <Compile Include="VmLotClient.cs" />
   </ItemGroup>
 

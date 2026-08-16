@@ -44,6 +44,18 @@ namespace FSO.Content
             INSTANCE = new Content(basepath, mode, null, true);
         }
 
+        /// <summary>
+        /// SERVER-mode content that can still draw avatars. The browser client runs
+        /// a full VM (so it wants SERVER's object/tuning setup, not CLIENT's UI and
+        /// sprite loading) while also rendering sims, which needs the device-gated
+        /// avatar mesh/texture providers.
+        /// </summary>
+        public static void Init(string basepath, ContentMode mode, GraphicsDevice device)
+        {
+            if (INSTANCE != null) return;
+            INSTANCE = new Content(basepath, mode, device, true);
+        }
+
         public static void InitBasic(string basepath, GraphicsDevice device)
         {
             if (INSTANCE != null) return;
@@ -300,7 +312,12 @@ namespace FSO.Content
                 Neighborhood = new TS1NeighborhoodProvider(this);
             } else
             {
-                if (Mode == ContentMode.CLIENT) AvatarHandgroups.Init();
+                // Gate on the provider existing, not on CLIENT mode. AvatarHandgroups
+                // is built whenever there is a GraphicsDevice, and reading one before
+                // Init has indexed the archive is a null deref inside FAR3Provider —
+                // which is exactly what a device-carrying SERVER boot (the browser)
+                // hits the moment it sets a sim's Handgroup.
+                AvatarHandgroups?.Init();
                 AvatarBindings.Init();
                 AvatarOutfits.Init();
                 AvatarPurchasables.Init();

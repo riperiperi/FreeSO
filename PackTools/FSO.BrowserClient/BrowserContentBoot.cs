@@ -7,6 +7,7 @@ using System.Net.Http;
 using System.Threading.Tasks;
 using FSO.Content;
 using FSO.SimAntics;
+using Microsoft.Xna.Framework.Graphics;
 
 namespace FSO_BrowserClient
 {
@@ -30,7 +31,13 @@ namespace FSO_BrowserClient
 
         const string BundleRoot = "/bundle";
 
-        public static async Task RunAsync(string contentTarUrl)
+        /// <param name="device">
+        /// Pass the live GraphicsDevice to get avatar meshes and textures — the
+        /// providers behind them are device-gated in Content's constructor, so a
+        /// null device leaves AvatarMeshes/AvatarTextures null and every sim is
+        /// invisible. Null is still valid for a render-free boot.
+        /// </param>
+        public static async Task RunAsync(string contentTarUrl, GraphicsDevice device = null)
         {
             if (Started) return;
             Started = true;
@@ -61,7 +68,7 @@ namespace FSO_BrowserClient
                 Directory.SetCurrentDirectory(BundleRoot + "/work");
                 VM.UseWorld = false;
                 VMContext.InitVMConfig(false);
-                FSO.Content.Content.Init(BundleRoot + "/tso/", ContentMode.SERVER);
+                FSO.Content.Content.Init(BundleRoot + "/tso/", ContentMode.SERVER, device);
                 Console.WriteLine($"Content.Init done ({sw.Elapsed.TotalSeconds:F1}s total)");
 
                 Status = "content ready";

@@ -507,7 +507,11 @@ namespace FSO_BrowserClient
         /// Live entity billboards: pack objects by GUID texture, avatars as tinted
         /// capsules — positions straight out of the shared VM every frame.
         /// </summary>
-        public void DrawEntities(SpriteBatch sb, WorldState state)
+        /// <param name="vitaboy">
+        /// When a sim already has a real Vitaboy body on screen, its capsule is
+        /// skipped — the "this is you" marker still floats above it.
+        /// </param>
+        public void DrawEntities(SpriteBatch sb, WorldState state, VitaboyLayer vitaboy = null)
         {
             if (!texturesReady || vm == null) return;
             var space = state.WorldSpace;
@@ -522,7 +526,8 @@ namespace FSO_BrowserClient
                 if (ent is VMAvatar ava)
                 {
                     var tint = TintFor(ava.PersistID);
-                    draws.Add((tile.X + tile.Y + 0.01f, simTex, tile, true, tint));
+                    if (vitaboy?.HasModel(ava.ObjectID) != true)
+                        draws.Add((tile.X + tile.Y + 0.01f, simTex, tile, true, tint));
                     if (ava.PersistID == PersistID && markerTex != null)
                         draws.Add((tile.X + tile.Y + 0.02f, markerTex, tile, true, Color.Yellow));
                 }

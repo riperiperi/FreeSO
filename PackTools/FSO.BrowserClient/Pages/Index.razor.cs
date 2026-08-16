@@ -128,6 +128,10 @@ namespace FSO_BrowserClient.Pages
                 // SimAntics VM in lockstep with LotHostLite. ?name= labels the avatar.
                 var vmMode = QueryValue(uri, "vm") == "1";
                 var vmName = QueryValue(uri, "name");
+                // ?vitaboy=1 — draw real skinned Sims instead of capsules. Also
+                // makes the content boot pass a GraphicsDevice, which is what turns
+                // on the avatar mesh/texture providers.
+                VitaboyLayer.Enabled = QueryValue(uri, "vitaboy") == "1";
 
                 _game = new FSO_BrowserClientGame(contentBase, gateway, autoJoin, forceLot, probeXnb, forceRealLot, houseUrl,
                     furnishReal, zoomParam, rot, vmMode, vmName, Navigation.BaseUri);

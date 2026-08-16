@@ -183,15 +183,20 @@ namespace FSO.Vitaboy
         {
             var content = FSO.Content.Content.Get();
             var instance = new AvatarBindingInstance();
+            // Null-tolerant: on a content set without avatar art (a headless host, or
+            // a browser bundle that ships only some meshes) a missing limb should not
+            // draw, rather than take down the whole client with an NRE. AvatarBindings
+            // above is already guarded this way.
             if (binding.MeshName != null)
             {
-                instance.Mesh = content.AvatarMeshes.Get(binding.MeshName);
-                instance.Texture = content.AvatarTextures.Get(binding.TextureName ?? instance.Mesh.TextureName);
+                instance.Mesh = content.AvatarMeshes?.Get(binding.MeshName);
+                var texName = binding.TextureName ?? instance.Mesh?.TextureName;
+                instance.Texture = (texName == null) ? null : content.AvatarTextures?.Get(texName);
             }
             else
             {
-                instance.Mesh = content.AvatarMeshes.Get(binding.MeshTypeID, binding.MeshFileID);
-                instance.Texture = content.AvatarTextures.Get(binding.TextureTypeID, binding.TextureFileID);
+                instance.Mesh = content.AvatarMeshes?.Get(binding.MeshTypeID, binding.MeshFileID);
+                instance.Texture = content.AvatarTextures?.Get(binding.TextureTypeID, binding.TextureFileID);
             }
 
             /*if (instance.Mesh != null)
