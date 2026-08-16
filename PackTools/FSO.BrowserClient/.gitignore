@@ -1,0 +1,5 @@
+# Test output. The Playwright suites under tests/ write screenshots, console
+# dumps and the interaction audit here; they are evidence for one run, not
+# artifacts to track.
+shots/
+interaction-audit.json
