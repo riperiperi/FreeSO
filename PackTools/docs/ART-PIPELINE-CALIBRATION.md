@@ -241,7 +241,9 @@ Per direction: the rasterizer stays (no Blender), promoted out of "throwaway mea
 
 ### 11a. Real depth (replacing §10's fixed band)
 
-`Renderer.cs` now normalizes each sprite's own computed depth buffer (`dMin`/`dMax`, already an affine function of screen position per face — this was already being computed in §10, just not used for the final byte mapping) into `[35, 250]` — clear of the `<32` reserved band (§4b) and never touching `255` (the background sentinel, §4c) — instead of a fixed placeholder band.
+`Renderer.cs` now normalizes each sprite's own computed depth buffer (`dMin`/`dMax`, already an affine function of screen position per face — this was already being computed in §10, just not used for the final byte mapping) into a fixed output band, clear of the `<32` reserved band (§4b) and never touching `255` (the background sentinel, §4c) — instead of a fixed placeholder band.
+
+**The band is `[135, 210]`, not the full `[35, 250]` it first used.** Spanning the whole low-254 range is legal by §4b/§4c but wrong in practice: `DGRP3DMesh` reads the z-byte spread as extrusion depth, so a 215-wide span extruded ~3× too far and the object exploded into long triangles in Full 3D. `[135, 210]` is the band base-game furniture actually occupies (§4a measured `[133, 212]` on the cardboard box across all 12 frames). Asserted by `SpriteCageOffsetTests`.
 
 **Validated on a known-slanted surface**, per the ask, using a standalone 20°-tilted plane (independent of the chair, so the test isn't entangled with other geometry): rendered, round-tripped through the real encoder → `.iff` → real decoder, then sampled a vertical scanline through the tilt. Result: **34 samples, z-range [65-214], monotonic across the full scanline, zero samples below 32, zero samples touching 255 except true background.** Depth behaves exactly as it should for a real slanted surface.
 

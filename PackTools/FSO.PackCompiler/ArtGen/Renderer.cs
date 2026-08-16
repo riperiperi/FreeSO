@@ -108,15 +108,16 @@ namespace FSO.PackCompiler.ArtGen
                 }
             }
 
-            // Real per-sprite depth normalization (not a fixed band): map this sprite's own
-            // observed [dMin,dMax] depth span across the usable byte range, staying clear of
-            // the low reserved band (<32, per ART-PIPELINE-CALIBRATION.md §4b) and never
-            // touching 255 (the hard background/far sentinel, §4c).
+            // Per-sprite depth normalization into the band base-game furniture actually uses
+            // (~[133,212] on the cardboard-box calibration object — ART-PIPELINE-CALIBRATION.md
+            // §4a/§4c). Mapping across the full low-254 range ([35,250]) made DGRP3DMesh
+            // extrude depth ~3× too far and explode as long triangles in Full 3D. Stay clear
+            // of the <32 reserved band (§4b) and never touch 255 (background sentinel).
             double dMin = double.MaxValue, dMax = double.MinValue;
             for (int i = 0; i < depthBuf.Length; i++)
                 if (covered[i]) { dMin = Math.Min(dMin, depthBuf[i]); dMax = Math.Max(dMax, depthBuf[i]); }
 
-            const byte zLow = 35, zHigh = 250;
+            const byte zLow = 135, zHigh = 210;
             var zbuf = new byte[width * height];
             for (int i = 0; i < zbuf.Length; i++)
             {

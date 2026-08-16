@@ -97,9 +97,18 @@ namespace FSO.PackCompiler.ArtGen
 
             foreach (var kv in rendered)
             {
+                var (zoom, _) = kv.Key;
                 var rf = kv.Value;
                 var sf = new SPR2Frame(spr2);
-                var rect = new Rectangle(0, 0, rf.Width, rf.Height);
+                // Place the tight render into the SPR2 "cage" the way base-game furniture
+                // and FSO.IDE AutoOffset do (DGRPEditor.cs): half-cage width 68, baseline
+                // distance 348, feet a further 24*zFactor below the baseline. zFactor is
+                // 1 / 0.5 / 0.25 at Near / Medium / Far. Without this, SpriteOffset stays
+                // (0,0) and DGRP3DMesh reconstructs the mesh at the wrong cage origin.
+                var zFactor = ZoomFactor(zoom);
+                int posX = (int)Math.Round(68 * zFactor - rf.Width / 2.0);
+                int posY = (int)Math.Round(372 * zFactor - rf.Height);
+                var rect = new Rectangle(posX, posY, rf.Width, rf.Height);
                 var quantPalette = sf.SetData(rf.Pixels, rf.Z, rect);
                 // All frames of one object must decode against the SAME palette (one PALT per
                 // DGRP/SPR2 chunk set), so every frame's pixel indices mean the same colors.
@@ -124,12 +133,34 @@ namespace FSO.PackCompiler.ArtGen
             {
                 var (zoom, dirName) = kv.Key;
                 var dirBit = Directions.First(x => x.name == dirName).dir;
+                var frame = frames[frameIndexOf[kv.Key]];
+                var zFactor = ZoomFactor(zoom);
+                // Same formula as FSO.IDE ResourceBrowser.DGRPEditor.AutoOffset.
+                var spriteOffset = new Vector2(
+                    (int)((-68 * zFactor) + frame.Position.X),
+                    (-348 * zFactor) + frame.Height + frame.Position.Y);
                 var img = new DGRPImage(dgrp) { Direction = dirBit, Zoom = zoom };
-                img.Sprites = new[] { new DGRPSprite(dgrp) { SpriteID = chunkId, SpriteFrameIndex = (uint)frameIndexOf[kv.Key] } };
+                img.Sprites = new[]
+                {
+                    new DGRPSprite(dgrp)
+                    {
+                        SpriteID = chunkId,
+                        SpriteFrameIndex = (uint)frameIndexOf[kv.Key],
+                        SpriteOffset = spriteOffset,
+                    },
+                };
                 images.Add(img);
             }
             dgrp.Images = images.ToArray();
         }
+
+        /// <summary>Near=1, Medium=1/2, Far=1/4 — matches FSO.IDE AutoOffset zFactor.</summary>
+        public static float ZoomFactor(uint zoom) => zoom switch
+        {
+            3 => 1.0f,
+            2 => 0.5f,
+            _ => 0.25f,
+        };
 
         /// <summary>Renders all 12 frames for a mesh and assembles them into a standalone .iff (own OBJD, no behavior).</summary>
         public static IffFile BuildIff(Mesh mesh, string objectName, uint guid, ushort chunkId,
