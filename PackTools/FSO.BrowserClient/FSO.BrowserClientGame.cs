@@ -839,7 +839,12 @@ namespace FSO_BrowserClient
             if (vmClient == null || !vmClient.Synced) return "{\"found\":false}";
             var (target, pie) = vmClient.PieMenuAt(new Vector2(tileX, tileY));
             if (target == null) return "{\"found\":false}";
-            var guid = target.Object?.OBJ?.GUID ?? 0;
+            // Report the group's GUID, not the part's. A multitile object is placed
+            // by its master GUID but clicked on one of its parts, so a caller
+            // checking "did I hit the bed I placed" needs the master to compare
+            // against — GroupDefinition is the master OBJD for a part and the
+            // object's own for anything single-tile.
+            var guid = target.GroupDefinition?.GUID ?? target.Object?.OBJ?.GUID ?? 0;
             var name = (target.Object?.OBJ?.ChunkLabel ?? target.ToString() ?? "").Replace("\"", "'");
             return $"{{\"found\":true,\"guid\":\"0x{guid:X8}\",\"name\":\"{name}\"" +
                    $",\"objectID\":{target.ObjectID},\"tileX\":{target.Position.TileX},\"tileY\":{target.Position.TileY}" +

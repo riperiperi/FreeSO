@@ -343,11 +343,11 @@ namespace FSO_BrowserClient
                 if (d < bestDist) { bestDist = d; best = ent; }
             }
             if (best == null) return (null, null);
-            // Multi-tile objects keep their whole interaction table on the group
-            // master: every part's OBJD carries TreeTableID 65535, so GetPieMenu on a
-            // part returns nothing. Clicking a bed's foot must open the bed's menu,
-            // not silence.
-            if (best.MultitileGroup?.Objects?.Count > 0) best = best.MultitileGroup.Objects[0];
+            // Do NOT redirect a multitile part to its master here. Parts carry
+            // TreeTableID 65535, but VMEntity.UseTreeTableOf copies the master's
+            // table onto every part at creation, so each part has the full menu —
+            // and which part you clicked is meaningful: the cushions of a sofa are
+            // separate seats. Retargeting would sit everyone on the same end.
             var pie = best.GetPieMenu(vm, ava, false, true);
             return (best, pie);
         }
