@@ -176,7 +176,8 @@ namespace FSO.Server.Servers.Lot.Domain
         [
             "oj-rest-controller.iff",
             "oj-robotfactorycontroller.iff",
-            "oj-nc-controller.iff"
+            "oj-nc-controller.iff",
+            "income_mul"
         ];
 
         public LotContainer(IDAFactory da, LotContext context, ILotHost host, IKernel kernel, LotServerConfiguration config, IRealestateDomain realestate)

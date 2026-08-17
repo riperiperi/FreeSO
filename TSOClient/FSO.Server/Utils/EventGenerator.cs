@@ -265,7 +265,7 @@ namespace FSO.Server.Utils
                         dynTuning.Add(new DbTuning()
                         {
                             tuning_type = owner,
-                            tuning_table = level,
+                            tuning_table = level - 4096,
                             tuning_index = index,
                             value = value(i++),
                             owner_type = DbTuningType.DYNAMIC,
