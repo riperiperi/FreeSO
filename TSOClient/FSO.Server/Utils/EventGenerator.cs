@@ -249,6 +249,57 @@ namespace FSO.Server.Utils
                 });
             }
 
+            int speedyJobProgression = config.speedyJobProgression ?? 0;
+
+            if (speedyJobProgression == 1)
+            {
+                const int RestXpPerDay = 8;
+                const int FactoryXpPerDay = 8;
+                const int NcXpPerDay = 7;
+
+                void AllLevels(string owner, Span<int> levelList, int index, Func<int, short> value)
+                {
+                    int i = 0;
+                    foreach (var level in levelList)
+                    {
+                        dynTuning.Add(new DbTuning()
+                        {
+                            tuning_type = owner,
+                            tuning_table = level,
+                            tuning_index = index,
+                            value = value(i++),
+                            owner_type = DbTuningType.DYNAMIC,
+                            owner_id = 2
+                        });
+                    }
+                }
+
+                void AllLevelsConst(string owner, Span<int> levelList, int index, short value)
+                {
+                    AllLevels(owner, levelList, index, (index) => value);
+                }
+
+                // Restaurant
+                Span<int> restaurantLevels = [4096, 4102, 4103, 4104, 4105, 4106, 4107, 4108, 4109, 4110, 4111];
+
+                AllLevelsConst("oj-rest-controller.iff", restaurantLevels, 4, 0); // Friends requirement to 0
+                AllLevels("oj-rest-controller.iff", restaurantLevels, 5, (i) => (short)(i * RestXpPerDay));
+
+                // Factory
+                Span<int> factoryLevels = [4096, 4097, 4098, 4099, 4100, 4101, 4102, 4103, 4104, 4105, 4106];
+
+                AllLevelsConst("oj-robotfactorycontroller.iff", factoryLevels, 3, 0); // Friends requirement to 0
+                AllLevels("oj-robotfactorycontroller.iff", factoryLevels, 4, (i) => (short)(i * FactoryXpPerDay));
+
+                // Nightclub
+                Span<int> ncLevels = [4104, 4105, 4106, 4107, 4108, 4109, 4110, 4111, 4112, 4113, 4114];
+
+                AllLevelsConst("oj-nc-controller.iff", ncLevels, 1, 0); // DJ Friends requirement to 0
+                AllLevels("oj-nc-controller.iff", ncLevels, 2, (i) => (short)(i * NcXpPerDay)); // DJ xp level
+                AllLevelsConst("oj-nc-controller.iff", ncLevels, 4, 0); // Dancer Friends requirement to 0
+                AllLevels("oj-nc-controller.iff", ncLevels, 5, (i) => (short)(i * NcXpPerDay)); // Dancer xp level
+            }
+
             da.DynPayouts.ReplaceDynTuning(dynTuning, 2);
         }
 

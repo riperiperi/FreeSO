@@ -172,6 +172,13 @@ namespace FSO.Server.Servers.Lot.Domain
             0x352A8ACE
         };
 
+        private static HashSet<string> JobTuningFilter =
+        [
+            "oj-rest-controller.iff",
+            "oj-robotfactorycontroller.iff",
+            "oj-nc-controller.iff"
+        ];
+
         public LotContainer(IDAFactory da, LotContext context, ILotHost host, IKernel kernel, LotServerConfiguration config, IRealestateDomain realestate)
         {
             VM.UseWorld = false;
@@ -201,15 +208,11 @@ namespace FSO.Server.Servers.Lot.Domain
                 LotAdj = new List<DbLot>();
                 LotRoommates = new List<DbRoommate>();
                 Terrain = new VMTSOSurroundingTerrain();
-                Tuning = new DynamicTuning(new DynTuningEntry[] {
-                    new DynTuningEntry()
-                    {
-                        tuning_type = "feature",
-                        tuning_table = 0,
-                        tuning_index = 1,
-                        value = 1
-                    }
-                });
+
+                using (var db = DAFactory.Get())
+                {
+                    Tuning = new DynamicTuning(db.Tuning.All(), JobTuningFilter);
+                }
 
                 for (int y = 0; y < 3; y++)
                 {

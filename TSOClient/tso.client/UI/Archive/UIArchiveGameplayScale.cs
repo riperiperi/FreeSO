@@ -19,6 +19,8 @@ namespace FSO.Client.UI.Archive
         public UISlider PenaltySlider;
         public UILabel PenaltyDisplay;
 
+        public UIButton SpeedyJobCheck;
+
         public UIButton HelpButton;
         public UIButton ResetButton;
 
@@ -165,6 +167,23 @@ namespace FSO.Client.UI.Archive
 
             vbox.Add(penaltyBox);
 
+            var jobBox = new UIHBoxContainer() { VerticalAlignment = UIContainerVerticalAlignment.Middle };
+
+            jobBox.Add(SpeedyJobCheck = new UIButton(GetTexture(0x0000083600000001))
+            {
+                Tooltip = GetString("307")
+            });
+
+            jobBox.Add(new UILabel()
+            {
+                Caption = GetString("306"),
+                Tooltip = GetString("307")
+            });
+
+            vbox.Add(new UISpacer(10));
+
+            vbox.Add(jobBox);
+
             vbox.Add(new UISpacer(10));
 
             var buttonsBox = new UIHBoxContainer();
@@ -189,10 +208,12 @@ namespace FSO.Client.UI.Archive
             SkillSlider.OnChange += SkillSlider_OnChange;
             PayoutSlider.OnChange += PayoutSlider_OnChange;
             PenaltySlider.OnChange += PenaltySlider_OnChange;
+            SpeedyJobCheck.OnButtonClick += SpeedyJobCheck_OnButtonClick;
 
             UpdateDisplay(SkillDisplay, SkillSlider);
             UpdateDisplay(PayoutDisplay, PayoutSlider);
             UpdateDisplay(PenaltyDisplay, PenaltySlider, true);
+            SpeedyJobCheck.Selected = Events.speedyJobProgression == 1;
 
             vbox.AutoSize();
             vbox.Position = new Vector2(20, 35);
@@ -210,6 +231,22 @@ namespace FSO.Client.UI.Archive
 
                 UIScreen.RemoveDialog(this);
             };
+        }
+
+        private void SpeedyJobCheck_OnButtonClick(UIElement button)
+        {
+            IsChanged = true;
+
+            if (SpeedyJobCheck.Selected)
+            {
+                Events.speedyJobProgression = 0;
+            }
+            else
+            {
+                Events.speedyJobProgression = 1;
+            }
+
+            SpeedyJobCheck.Selected = Events.speedyJobProgression == 1;
         }
 
         private void FundsInput_OnChange(UIElement element)
@@ -243,6 +280,7 @@ namespace FSO.Client.UI.Archive
             events.skillSpeed = tso ? null : 5;
             events.payoutScale = tso ? null : 5;
             events.singleplayerPenalty = tso ? null : 0;
+            events.speedyJobProgression = tso ? 0 : 1;
         }
 
         private void UpdateAll()
@@ -250,6 +288,7 @@ namespace FSO.Client.UI.Archive
             SkillSlider.Value = Events.skillSpeed ?? 1;
             PayoutSlider.Value = Events.payoutScale ?? 1;
             PenaltySlider.Value = Events.singleplayerPenalty ?? 1;
+            SpeedyJobCheck.Selected = Events.speedyJobProgression == 1;
 
             UpdateDisplay(SkillDisplay, SkillSlider);
             UpdateDisplay(PayoutDisplay, PayoutSlider);

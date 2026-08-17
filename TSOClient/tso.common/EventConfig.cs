@@ -49,6 +49,7 @@
         public float? skillSpeed;
         public float? payoutScale;
         public float? singleplayerPenalty;
+        public int? speedyJobProgression;
 
         public static EventConfig FromJson(string json)
         {

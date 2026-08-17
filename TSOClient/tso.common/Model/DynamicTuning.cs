@@ -45,6 +45,17 @@ namespace FSO.Common.Model
             }
         }
 
+        public DynamicTuning(IEnumerable<DynTuningEntry> entries, HashSet<string> filter)
+        {
+            foreach (var entry in entries)
+            {
+                if (filter.Contains(entry.tuning_type))
+                {
+                    AddTuning(entry);
+                }
+            }
+        }
+
         public void AddTuning(DynTuningEntry entry)
         {
             Dictionary<int, Dictionary<int, float>> tables;
